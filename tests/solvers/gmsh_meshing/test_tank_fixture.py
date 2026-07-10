@@ -49,18 +49,14 @@ def valid_spec_data() -> dict:
     }
 
 
-def _expected_member_geometry(spec: TankFixtureSpec) -> tuple[dict, dict]:
+def _expected_longitudinal_geometry(spec: TankFixtureSpec) -> dict:
     member = spec.members
     tank = spec.tank
     long_x = 0.5 * (tank.longitudinal_leg_width - member.thickness)
     long_z = tank.transverse_leg_length + member.edge_clearance
     long_mid_z = long_z + 0.5 * spec.longitudinal_member_span
     long_open = spec.longitudinal_opening
-    trans_x = tank.longitudinal_leg_width + member.edge_clearance
-    trans_z = 0.5 * (tank.transverse_leg_length - member.thickness)
-    trans_mid_x = trans_x + 0.5 * spec.transverse_member_span
-    trans_open = spec.transverse_opening
-    longitudinal = {
+    return {
         "orientation": "longitudinal-z",
         "bounds": (
             long_x,
@@ -84,7 +80,16 @@ def _expected_member_geometry(spec: TankFixtureSpec) -> tuple[dict, dict]:
         * long_open.vertical_radius
         * long_open.span_radius,
     }
-    transverse = {
+
+
+def _expected_transverse_geometry(spec: TankFixtureSpec) -> dict:
+    member = spec.members
+    tank = spec.tank
+    trans_x = tank.longitudinal_leg_width + member.edge_clearance
+    trans_z = 0.5 * (tank.transverse_leg_length - member.thickness)
+    trans_mid_x = trans_x + 0.5 * spec.transverse_member_span
+    trans_open = spec.transverse_opening
+    return {
         "orientation": "transverse-x",
         "bounds": (
             trans_x,
@@ -108,7 +113,10 @@ def _expected_member_geometry(spec: TankFixtureSpec) -> tuple[dict, dict]:
         * trans_open.transverse_radius
         * trans_open.vertical_radius,
     }
-    return longitudinal, transverse
+
+
+def _expected_member_geometry(spec: TankFixtureSpec) -> tuple[dict, dict]:
+    return _expected_longitudinal_geometry(spec), _expected_transverse_geometry(spec)
 
 
 def _assert_perforated_member_geometry(spec: TankFixtureSpec, summary) -> None:

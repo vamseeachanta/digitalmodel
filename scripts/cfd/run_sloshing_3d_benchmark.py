@@ -83,6 +83,10 @@ def run_at_ranks(work_dir: Path, cpb: int, end_time: float, dt: float,
                  n: int) -> Dict[str, Any]:
     """Fresh meshed case, then TIME only the solver stage at n ranks."""
     case = work_dir / f"s3d_bench_cpb{cpb}_np{n:02d}"
+    if case.is_symlink() or case.is_file():
+        case.unlink()
+    elif case.exists():
+        shutil.rmtree(case)
     ncells = build_case(case, cpb, end_time, dt)
     # setup (untimed): mesh + init + (decompose)
     if _sh(["blockMesh"], case, case / "log.blockMesh") != 0:

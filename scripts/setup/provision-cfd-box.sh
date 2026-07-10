@@ -27,6 +27,10 @@ OPENMPI_PACKAGE_VERSION="4.1.6-7ubuntu2"
 OPENFOAM_INSTALLER_SHA256="f7fa288327e936b5a85e3e4a0b29bf039c06d214916f39400b830b63a3310b5b"
 REPO_URL="${REPO_URL:-https://github.com/vamseeachanta/digitalmodel.git}"
 REPO_DIR="${REPO_DIR:-$HOME/digitalmodel}"
+ASSETUTILITIES_URL="https://github.com/vamseeachanta/assetutilities.git"
+ASSETUTILITIES_COMMIT="993f1b5ddc90b56ecf531bedb1b84f5efe096700"
+ASSETUTILITIES_TREE="5f7434fcb3a348a7e04bf9de228e6ce2c49a87cb"
+ASSETUTILITIES_DIR="${ASSETUTILITIES_DIR:-$(dirname "$REPO_DIR")/assetutilities}"
 WORK_DIR="${WORK_DIR:-$HOME/cfd_work}"
 OF_BASHRC="/usr/lib/openfoam/openfoam2312/etc/bashrc"
 
@@ -43,6 +47,32 @@ require_clean_repo() {
       && git diff --cached --quiet \
       && [[ -z "$(git ls-files --others --exclude-standard)" ]] ) \
     || die "repository must be clean before frozen CFD environment setup: $repo"
+}
+
+verify_pinned_dependency() {
+  local repo="$1"
+  [[ -d "$repo/.git" ]] || die "assetutilities is not a git checkout: $repo"
+  require_clean_repo "$repo"
+  [[ "$(git -C "$repo" remote get-url origin)" == "$ASSETUTILITIES_URL" ]] \
+    || die "assetutilities origin drift at $repo"
+  [[ "$(git -C "$repo" rev-parse HEAD)" == "$ASSETUTILITIES_COMMIT" ]] \
+    || die "assetutilities commit drift at $repo"
+  [[ "$(git -C "$repo" rev-parse 'HEAD^{tree}')" == "$ASSETUTILITIES_TREE" ]] \
+    || die "assetutilities tree drift at $repo"
+}
+
+provision_assetutilities() {
+  if [[ -e "$ASSETUTILITIES_DIR" || -L "$ASSETUTILITIES_DIR" ]]; then
+    verify_pinned_dependency "$ASSETUTILITIES_DIR"
+    return
+  fi
+  mkdir -p "$(dirname "$ASSETUTILITIES_DIR")"
+  log "cloning pinned assetutilities sibling → $ASSETUTILITIES_DIR…"
+  git clone -q --no-checkout "$ASSETUTILITIES_URL" "$ASSETUTILITIES_DIR" \
+    || die "could not clone pinned assetutilities dependency"
+  git -C "$ASSETUTILITIES_DIR" checkout --detach -q "$ASSETUTILITIES_COMMIT" \
+    || die "could not checkout pinned assetutilities commit"
+  verify_pinned_dependency "$ASSETUTILITIES_DIR"
 }
 
 # ---- preflight ------------------------------------------------------------- #
@@ -127,6 +157,8 @@ if [[ "${SKIP_CLONE:-0}" != "1" ]]; then
     git clone -q "$REPO_URL" "$REPO_DIR"
   fi
   require_clean_repo "$REPO_DIR"
+  provision_assetutilities
+  verify_pinned_dependency "$ASSETUTILITIES_DIR"
   log "installing the locked CFD Python environment…"
   ( cd "$REPO_DIR" \
       && uv sync --frozen --extra cfd --extra test \
@@ -141,6 +173,7 @@ printf '  OpenFOAM : %s\n' "$(package_version openfoam2312-default)"
 printf '  OpenMPI  : %s\n' "$(package_version openmpi-bin)"
 printf '  uv       : %s\n' "$(uv --version 2>/dev/null || echo '?')"
 printf '  repo     : %s @ %s\n' "$REPO_DIR" "$(git -C "$REPO_DIR" rev-parse --short HEAD 2>/dev/null || echo 'not cloned')"
+printf '  dependency: %s @ %s\n' "$ASSETUTILITIES_DIR" "$(git -C "$ASSETUTILITIES_DIR" rev-parse --short HEAD 2>/dev/null || echo 'not cloned')"
 printf '  work dir : %s\n' "$WORK_DIR"
 cat <<EOF
 

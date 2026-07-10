@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import os
 import tempfile
 from dataclasses import dataclass
@@ -19,28 +20,32 @@ from ._msh2_contract import (
 )
 
 MESH_OPTIONS = {
-    "Mesh.MshFileVersion": 2.2,
-    "Mesh.Binary": 0.0,
-    "Mesh.SaveAll": 0.0,
-    "Mesh.ElementOrder": 1.0,
-    "Mesh.Algorithm3D": 4.0,
-    "Mesh.OptimizeNetgen": 1.0,
-    "Mesh.OptimizeThreshold": 1.0,
-    "Mesh.Reproducible": 1.0,
-    "Mesh.RandomSeed": 0.0,
-    "General.NumThreads": 1.0,
-    "Mesh.MaxNumThreads1D": 1.0,
+    "Mesh.MshFileVersion": 2.2, "Mesh.Binary": 0.0, "Mesh.SaveAll": 0.0,
+    "Mesh.ElementOrder": 1.0, "Mesh.Algorithm3D": 4.0,
+    "Mesh.OptimizeNetgen": 1.0, "Mesh.OptimizeThreshold": 1.0,
+    "Mesh.Reproducible": 1.0, "Mesh.RandomSeed": 0.0,
+    "General.NumThreads": 1.0, "Mesh.MaxNumThreads1D": 1.0,
     "Mesh.MaxNumThreads2D": 1.0,
     "Mesh.MaxNumThreads3D": 1.0,
 }
 
 
 @dataclass(frozen=True)
+class PerforatedMemberGeometry:
+    orientation: str
+    entity: tuple[int, int]
+    bounds: tuple[float, ...]
+    volume: float
+    opening_bounds: tuple[float, ...]
+    opening_volume: float
+    opening_surface_tags: tuple[int, ...]
+
+
+@dataclass(frozen=True)
 class FixtureBuildSummary:
     output_path: Path
     volume_count: int
-    member_count: int
-    opening_count: int
+    member_geometry: tuple[PerforatedMemberGeometry, ...]
     fluid_volume: float
     wall_surface_tags: tuple[int, ...]
     atmosphere_surface_tags: tuple[int, ...]
@@ -50,6 +55,14 @@ class FixtureBuildSummary:
     shape_min_jacobian: float
     mesh_options: dict[str, float]
     reopened_serialized_mesh: bool
+
+    @property
+    def member_count(self) -> int:
+        return len(self.member_geometry)
+
+    @property
+    def opening_count(self) -> int:
+        return sum(len(member.opening_surface_tags) for member in self.member_geometry)
 
 
 def _gmsh_module():
@@ -74,14 +87,20 @@ def build_tank_fixture(
         gmsh.clear()
         gmsh.option.setNumber("General.Terminal", 0)
         _set_mesh_options(gmsh)
-        volume_tags = _build_occ_geometry(gmsh, spec)
+        volume_tags, members = _build_occ_geometry(gmsh, spec)
         groups = _classify_and_tag_surfaces(gmsh, spec, volume_tags)
         fluid_volume = _validate_occ_volume(gmsh, spec, volume_tags)
         minimum, shape_minimum = _generate_and_check_mesh(gmsh, spec)
         contract = _write_verified_mesh(gmsh, output)
         validate_msh2_contract(contract)
-        return _summary(
-            output, volume_tags, groups, fluid_volume, minimum, shape_minimum
+        return FixtureBuildSummary(
+            output_path=output, volume_count=len(volume_tags),
+            member_geometry=members, fluid_volume=fluid_volume,
+            wall_surface_tags=groups["walls"], atmosphere_surface_tags=groups["atmosphere"],
+            unassigned_surface_tags=groups["unassigned"], overlapping_surface_tags=groups["overlap"],
+            min_signed_determinant=minimum, shape_min_jacobian=shape_minimum,
+            mesh_options=dict(MESH_OPTIONS),
+            reopened_serialized_mesh=True,
         )
     finally:
         if owns_session:
@@ -93,7 +112,7 @@ def _set_mesh_options(gmsh: Any) -> None:
         gmsh.option.setNumber(name, value)
 
 
-def _build_occ_geometry(gmsh: Any, spec: "TankFixtureSpec") -> list[int]:
+def _build_occ_geometry(gmsh: Any, spec: "TankFixtureSpec"):
     tank = spec.tank
     occ = gmsh.model.occ
     longitudinal_leg = occ.addBox(
@@ -107,17 +126,16 @@ def _build_occ_geometry(gmsh: Any, spec: "TankFixtureSpec") -> list[int]:
         removeObject=True, removeTool=True,
     )
     members = _build_perforated_members(gmsh, spec)
-    result, _ = occ.cut(fluid, members, removeObject=True, removeTool=True)
+    entities = [member.entity for member in members]
+    result, _ = occ.cut(fluid, entities, removeObject=True, removeTool=True)
     occ.synchronize()
     volume_tags = sorted(tag for dim, tag in result if dim == 3)
     if len(volume_tags) != 1:
         raise ValueError(f"fixture must contain one connected fluid volume, got {len(volume_tags)}")
-    return volume_tags
+    return volume_tags, members
 
 
-def _build_perforated_members(
-    gmsh: Any, spec: "TankFixtureSpec"
-) -> list[tuple[int, int]]:
+def _build_perforated_members(gmsh: Any, spec: "TankFixtureSpec") -> tuple[PerforatedMemberGeometry, ...]:
     occ = gmsh.model.occ
     member = spec.members
     tank = spec.tank
@@ -139,12 +157,83 @@ def _build_perforated_members(
         gmsh, spec, transverse_x0, transverse_z0
     )
     transverse_result, _ = occ.cut([(3, transverse)], [transverse_opening])
-    return [item for item in long_result + transverse_result if item[0] == 3]
+    occ.synchronize()
+    return (
+        _validated_member(gmsh, spec, "longitudinal-z", long_result),
+        _validated_member(gmsh, spec, "transverse-x", transverse_result),
+    )
 
 
-def _longitudinal_opening(
-    gmsh: Any, spec: "TankFixtureSpec", x0: float, z0: float
-) -> tuple[int, int]:
+def _member_contract(spec: "TankFixtureSpec", orientation: str):
+    member = spec.members
+    tank = spec.tank
+    if orientation == "longitudinal-z":
+        span = spec.longitudinal_member_span
+        x0 = 0.5 * (tank.longitudinal_leg_width - member.thickness)
+        z0 = tank.transverse_leg_length + member.edge_clearance
+        opening = spec.longitudinal_opening
+        bounds = (x0, 0.0, z0, x0 + member.thickness, member.height, z0 + span)
+        opening_bounds = (
+            x0, 0.5 * member.height - opening.vertical_radius,
+            z0 + 0.5 * span - opening.span_radius, x0 + member.thickness,
+            0.5 * member.height + opening.vertical_radius,
+            z0 + 0.5 * span + opening.span_radius,
+        )
+        opening_volume = member.thickness * math.pi * opening.vertical_radius * opening.span_radius
+        return bounds, opening_bounds, member.thickness * member.height * span, opening_volume
+    span = spec.transverse_member_span
+    x0 = tank.longitudinal_leg_width + member.edge_clearance
+    z0 = 0.5 * (tank.transverse_leg_length - member.thickness)
+    opening = spec.transverse_opening
+    mid_x = x0 + 0.5 * span
+    bounds = (x0, 0.0, z0, x0 + span, member.height, z0 + member.thickness)
+    opening_bounds = (
+        mid_x - opening.transverse_radius, 0.5 * member.height - opening.vertical_radius,
+        z0, mid_x + opening.transverse_radius,
+        0.5 * member.height + opening.vertical_radius, z0 + member.thickness,
+    )
+    opening_volume = member.thickness * math.pi * opening.transverse_radius * opening.vertical_radius
+    return bounds, opening_bounds, span * member.height * member.thickness, opening_volume
+
+
+def _validated_member(
+    gmsh: Any, spec: "TankFixtureSpec", orientation: str, result: list[tuple[int, int]]
+) -> PerforatedMemberGeometry:
+    entities = tuple(item for item in result if item[0] == 3)
+    if len(entities) != 1:
+        raise ValueError(f"{orientation} member cut produced {len(entities)} volumes")
+    entity = entities[0]
+    expected_bounds, opening_bounds, gross_volume, expected_opening = _member_contract(spec, orientation)
+    tolerance = max(max(map(abs, expected_bounds)), 1.0) * 1e-6
+    bounds = tuple(gmsh.model.getBoundingBox(*entity))
+    if any(abs(actual - expected) > tolerance for actual, expected in zip(bounds, expected_bounds)):
+        raise ValueError(f"{orientation} member bounds differ: {bounds}")
+    volume = gmsh.model.occ.getMass(*entity)
+    if not math.isclose(volume, gross_volume - expected_opening, rel_tol=1e-8, abs_tol=1e-12):
+        raise ValueError(f"{orientation} perforated volume differs: {volume}")
+    opening_volume = gross_volume - volume
+    surfaces = (
+        (tag, tuple(gmsh.model.getBoundingBox(dim, tag)))
+        for dim, tag in gmsh.model.getBoundary([entity], combined=False, oriented=False)
+        if dim == 2
+    )
+    opening_surfaces = tuple(
+        (tag, surface_bounds) for tag, surface_bounds in surfaces
+        if all(
+            abs(actual - expected) <= tolerance
+            for actual, expected in zip(surface_bounds, opening_bounds)
+        )
+    )
+    if len(opening_surfaces) != 1:
+        raise ValueError(f"{orientation} requires one through-opening surface")
+    opening_tag, actual_opening_bounds = opening_surfaces[0]
+    return PerforatedMemberGeometry(
+        orientation, entity, bounds, volume, actual_opening_bounds,
+        opening_volume, (opening_tag,),
+    )
+
+
+def _longitudinal_opening(gmsh: Any, spec: "TankFixtureSpec", x0: float, z0: float) -> tuple[int, int]:
     opening = spec.longitudinal_opening
     if opening.span_radius >= opening.vertical_radius:
         radii = (opening.span_radius, opening.vertical_radius)
@@ -166,9 +255,7 @@ def _longitudinal_opening(
     return next(item for item in extrusion if item[0] == 3)
 
 
-def _transverse_opening(
-    gmsh: Any, spec: "TankFixtureSpec", x0: float, z0: float
-) -> tuple[int, int]:
+def _transverse_opening(gmsh: Any, spec: "TankFixtureSpec", x0: float, z0: float) -> tuple[int, int]:
     opening = spec.transverse_opening
     if opening.transverse_radius >= opening.vertical_radius:
         radii = (opening.transverse_radius, opening.vertical_radius)
@@ -190,9 +277,7 @@ def _transverse_opening(
     return next(item for item in extrusion if item[0] == 3)
 
 
-def _classify_and_tag_surfaces(
-    gmsh: Any, spec: "TankFixtureSpec", volume_tags: list[int]
-) -> dict[str, tuple[int, ...]]:
+def _classify_and_tag_surfaces(gmsh: Any, spec: "TankFixtureSpec", volume_tags: list[int]):
     boundary = gmsh.model.getBoundary(
         [(3, tag) for tag in volume_tags], combined=True, oriented=False
     )
@@ -221,9 +306,7 @@ def _is_top_surface(gmsh: Any, tag: int, top: float, tolerance: float) -> bool:
     return abs(ymin - top) <= tolerance and abs(ymax - top) <= tolerance
 
 
-def _add_physical_group(
-    gmsh: Any, dimension: int, entity_tags: list[int], name: str
-) -> None:
+def _add_physical_group(gmsh: Any, dimension: int, entity_tags: list[int], name: str) -> None:
     _, physical_id = PHYSICAL_NAMES[name]
     gmsh.model.addPhysicalGroup(dimension, entity_tags, physical_id)
     gmsh.model.setPhysicalName(dimension, physical_id, name)
@@ -314,28 +397,3 @@ def _validate_reopened_mesh(gmsh: Any) -> None:
     element_types = set(gmsh.model.mesh.getElementTypes())
     if element_types != {2, 4}:
         raise ValueError(f"reopened MSH has unexpected element types: {element_types}")
-
-
-def _summary(
-    output: Path,
-    volume_tags: list[int],
-    groups: dict[str, tuple[int, ...]],
-    fluid_volume: float,
-    minimum: float,
-    shape_minimum: float,
-) -> FixtureBuildSummary:
-    return FixtureBuildSummary(
-        output_path=output,
-        volume_count=len(volume_tags),
-        member_count=2,
-        opening_count=2,
-        fluid_volume=fluid_volume,
-        wall_surface_tags=groups["walls"],
-        atmosphere_surface_tags=groups["atmosphere"],
-        unassigned_surface_tags=groups["unassigned"],
-        overlapping_surface_tags=groups["overlap"],
-        min_signed_determinant=minimum,
-        shape_min_jacobian=shape_minimum,
-        mesh_options=dict(MESH_OPTIONS),
-        reopened_serialized_mesh=True,
-    )

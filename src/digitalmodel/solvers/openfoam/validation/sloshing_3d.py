@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import math
-import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -222,9 +221,13 @@ def write_sloshing_case(case: Path | str, config: Sloshing3DConfig, boundary_con
     case_path = Path(case)
     contract = boundary_contract or BENCHMARK_CONTRACT
     _validate(config, contract)
-    if case_path.exists():
-        shutil.rmtree(case_path)
-    (case_path / "system").mkdir(parents=True)
+    try:
+        case_path.mkdir(parents=True)
+    except FileExistsError as exc:
+        raise FileExistsError(
+            f"case destination already exists: {case_path}"
+        ) from exc
+    (case_path / "system").mkdir()
     (case_path / "constant").mkdir()
     (case_path / "0").mkdir()
     return _write_dictionaries(case_path, config, contract)
