@@ -139,6 +139,10 @@ def _add_camera_flythrough(centre: tuple[float, float, float], radius: float) ->
     bpy.context.collection.objects.link(target)
 
     camera_data = bpy.data.cameras.new("camera")
+    # Field spans are km-scale; Blender's default clip_end (100 m) would cull
+    # the entire scene and render only the world background.
+    camera_data.clip_start = max(0.1, 0.001 * radius)
+    camera_data.clip_end = 10.0 * radius
     camera = bpy.data.objects.new("camera", camera_data)
     bpy.context.collection.objects.link(camera)
     bpy.context.scene.camera = camera
