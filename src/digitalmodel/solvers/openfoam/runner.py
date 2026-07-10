@@ -34,6 +34,12 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional
 
+from .prebuilt_mesh import (
+    PrebuiltExecution,
+    PrebuiltMeshError,
+    prepare_prebuilt_execution,
+)
+
 # OpenFOAM utilities can return rc=0 yet write a fatal error to their log.
 # NOTE: do NOT add "Floating point exception" here — OpenFOAM's normal startup
 # banner prints "trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE)."
@@ -149,7 +155,12 @@ class OpenFOAMRunner:
     # ------------------------------------------------------------------ #
     #  public API                                                         #
     # ------------------------------------------------------------------ #
-    def run(self, case_dir: Path | str) -> OpenFOAMRunResult:
+    def run(
+        self,
+        case_dir: Path | str,
+        *,
+        prebuilt_manifest: Path | str | None = None,
+    ) -> OpenFOAMRunResult:
         """Mesh + solve + (optionally) convert. Fail-closed on a missing
         OpenFOAM install or a missing/invalid case directory."""
         case = Path(case_dir)
@@ -158,40 +169,84 @@ class OpenFOAMRunner:
             case_dir=case,
             solver=self._config.solver,
         )
+        using_prebuilt = prebuilt_manifest is not None
+        preflight = self._preflight(case, result, using_prebuilt)
+        if preflight is None:
+            return result
+        _, stages = preflight
 
+        execution: PrebuiltExecution | None = None
+        start = time.monotonic()
+        try:
+            execution_case = case
+            if prebuilt_manifest is not None:
+                execution = prepare_prebuilt_execution(case, prebuilt_manifest)
+                execution_case = execution.case_dir
+                result.case_dir = execution_case
+            self._execute_stages(result, execution_case, stages, start)
+            if execution is not None:
+                execution.verify_unchanged()
+        except PrebuiltMeshError as exc:
+            self._fail(result, str(exc))
+            result.duration_seconds = time.monotonic() - start
+        finally:
+            if execution is not None:
+                execution.release()
+        return result
+
+    def _preflight(
+        self,
+        case: Path,
+        result: OpenFOAMRunResult,
+        using_prebuilt: bool,
+    ) -> tuple[str, list[tuple[OpenFOAMRunStatus, list[str]]]] | None:
         problem = self._validate_case(case)
         if problem is not None:
-            result.status = OpenFOAMRunStatus.FAILED
-            result.error_message = problem
-            return result
-
+            self._fail(result, problem)
+            return None
         solver = self._config.solver or self._read_solver(case)
         result.solver = solver
         if solver is None:
-            result.status = OpenFOAMRunStatus.FAILED
-            result.error_message = (
+            self._fail(
+                result,
                 "Could not determine solver: pass config.solver or add "
-                "'application' to system/controlDict"
+                "'application' to system/controlDict",
             )
-            return result
-
+            return None
         if self._config.dry_run:
             result.status = OpenFOAMRunStatus.DRY_RUN
-            return result
-
-        if not self._openfoam_available():
+            return None
+        required = self._required_executable(solver, using_prebuilt)
+        if required is not None and not self._openfoam_available(required):
             result.status = OpenFOAMRunStatus.DRY_RUN
             result.error_message = (
                 "No OpenFOAM installation found on PATH "
-                f"('{self._config.mesh_utility}' not found); no results produced"
+                f"('{required}' not found); no results produced"
             )
-            return result
+            return None
+        try:
+            stages = self._stage_plan(solver, using_prebuilt)
+        except ValueError as exc:
+            self._fail(result, str(exc))
+            return None
+        return solver, stages
 
-        start = time.monotonic()
-        # Build the ordered list of (status, utility-argv) stages.
-        stages: list[tuple[OpenFOAMRunStatus, list[str]]] = [
-            (OpenFOAMRunStatus.MESHING, [self._config.mesh_utility]),
-        ]
+    def _stage_plan(
+        self, solver: str, using_prebuilt: bool
+    ) -> list[tuple[OpenFOAMRunStatus, list[str]]]:
+        if using_prebuilt and any(
+            (
+                self._config.run_snappy,
+                self._config.merge_meshes_source,
+                self._config.run_topo_set,
+                self._config.subset_mesh_set,
+                self._config.subset_mesh_patch,
+            )
+        ):
+            raise ValueError("prebuilt mesh cannot use mesh-modifying stages")
+        stages: list[tuple[OpenFOAMRunStatus, list[str]]] = []
+        if not using_prebuilt:
+            stages.append((OpenFOAMRunStatus.MESHING, [self._config.mesh_utility]))
         if self._config.run_snappy:
             stages.append(
                 (OpenFOAMRunStatus.MESHING, ["snappyHexMesh", "-overwrite"])
@@ -206,11 +261,9 @@ class OpenFOAMRunner:
             stages.append((OpenFOAMRunStatus.MESHING, ["topoSet"]))
         if self._config.subset_mesh_set or self._config.subset_mesh_patch:
             if not (self._config.subset_mesh_set and self._config.subset_mesh_patch):
-                result.status = OpenFOAMRunStatus.FAILED
-                result.error_message = (
+                raise ValueError(
                     "subset_mesh_set and subset_mesh_patch must be given together"
                 )
-                return result
             stages.append((
                 OpenFOAMRunStatus.MESHING,
                 ["subsetMesh", "-overwrite", self._config.subset_mesh_set,
@@ -222,7 +275,15 @@ class OpenFOAMRunner:
             stages.append((OpenFOAMRunStatus.RUNNING, [solver]))
             if self._config.to_vtk:
                 stages.append((OpenFOAMRunStatus.RUNNING, ["foamToVTK"]))
+        return stages
 
+    def _execute_stages(
+        self,
+        result: OpenFOAMRunResult,
+        case: Path,
+        stages: list[tuple[OpenFOAMRunStatus, list[str]]],
+        start: float,
+    ) -> None:
         for status, argv in stages:
             result.status = status
             stage = self._run_stage(case, argv)
@@ -233,10 +294,22 @@ class OpenFOAMRunner:
                     f"Stage '{stage.name}' failed: {stage.error_message}"
                 )
                 result.duration_seconds = time.monotonic() - start
-                return result
+                return
 
         result.status = OpenFOAMRunStatus.COMPLETED
         result.duration_seconds = time.monotonic() - start
+
+    def _required_executable(self, solver: str, using_prebuilt: bool) -> str | None:
+        if not using_prebuilt:
+            return self._config.mesh_utility
+        if self._config.run_set_fields:
+            return "setFields"
+        return solver if self._config.run_solver else None
+
+    @staticmethod
+    def _fail(result: OpenFOAMRunResult, message: str) -> OpenFOAMRunResult:
+        result.status = OpenFOAMRunStatus.FAILED
+        result.error_message = message
         return result
 
     # ------------------------------------------------------------------ #
@@ -268,8 +341,9 @@ class OpenFOAMRunner:
             return None
         return None
 
-    def _openfoam_available(self) -> bool:
-        return shutil.which(self._config.mesh_utility) is not None
+    @staticmethod
+    def _openfoam_available(executable: str) -> bool:
+        return shutil.which(executable) is not None
 
     def _run_stage(self, case: Path, argv: list[str]) -> StageResult:
         name = argv[0]
