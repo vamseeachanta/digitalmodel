@@ -12,6 +12,7 @@ Modules:
 - benchmarks:          SubseaIQ concept-selection and architecture benchmarks — #1861/#2053
 - timeline:            Milestone-based schedule benchmark analytics — #2060
 - workflow:            End-to-end FDP screening orchestrator — #1858/#1848
+- onshore_layout:      Onshore tracer — YAML layout + terrain routing + screening — #1508
 """
 
 from .schematic_generator import generate_field_schematic, SOLVEIG_PHASE2_CONFIG
@@ -75,6 +76,15 @@ from .concept_comparison_note import (
     render_comparison_note,
     build_comparison_note,
 )
+from .onshore_layout import (
+    FieldLayout,
+    TerrainGrid,
+    build_layout,
+    darcy_weisbach_pressure_drop,
+    load_field_config,
+    screen_layout,
+    swamee_jain_friction_factor,
+)
 
 __all__ = [
     # Schematics (WRK-192)
@@ -137,4 +147,12 @@ __all__ = [
     "weight_sensitivity_sweep",
     "render_comparison_note",
     "build_comparison_note",
+    # Onshore layout tracer (#1508)
+    "FieldLayout",
+    "TerrainGrid",
+    "build_layout",
+    "darcy_weisbach_pressure_drop",
+    "load_field_config",
+    "screen_layout",
+    "swamee_jain_friction_factor",
 ]
