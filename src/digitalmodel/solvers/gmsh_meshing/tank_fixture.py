@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Mapping
+
+import yaml
 
 
 EXPECTED_FRAME = {
@@ -238,6 +241,16 @@ def _parse_transverse_opening(
     )
 
 
+def load_tank_fixture_spec(path: Path | str) -> TankFixtureSpec:
+    source = Path(path)
+    if not source.is_file():
+        raise FileNotFoundError(f"tank fixture input not found: {source}")
+    loaded = yaml.safe_load(source.read_text(encoding="utf-8"))
+    if not isinstance(loaded, Mapping):
+        raise ValueError("tank fixture input must contain a mapping")
+    return TankFixtureSpec.from_mapping(loaded)
+
+
 from ._tank_fixture_gmsh import (  # noqa: E402
     FixtureBuildSummary,
     Msh2Contract,
@@ -252,4 +265,5 @@ __all__ = [
     "TankFixtureSpec",
     "build_tank_fixture",
     "inspect_msh2",
+    "load_tank_fixture_spec",
 ]

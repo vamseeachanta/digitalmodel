@@ -7,12 +7,14 @@ import math
 from pathlib import Path
 
 import pytest
+import yaml
 
 from digitalmodel.solvers.gmsh_meshing.tank_fixture import (
     EXPECTED_FRAME,
     TankFixtureSpec,
     build_tank_fixture,
     inspect_msh2,
+    load_tank_fixture_spec,
 )
 
 
@@ -217,3 +219,22 @@ def test_source_mesh_promotion_uses_temporary_sibling(
     assert temporary.parent == destination.parent == output.parent
     assert temporary != destination
     assert destination == output
+
+
+def test_public_fixture_is_synthetic_si_methodology_input() -> None:
+    repo_root = next(
+        parent
+        for parent in Path(__file__).resolve().parents
+        if (parent / "pyproject.toml").is_file()
+    )
+    fixture = repo_root / "examples" / "cfd" / "synthetic_l_tank" / "input.yml"
+
+    raw = yaml.safe_load(fixture.read_text(encoding="utf-8"))
+    spec = load_tank_fixture_spec(fixture)
+
+    assert raw["metadata"] == {
+        "name": "synthetic_l_tank",
+        "purpose": "methodology_bridge_validation_only",
+        "engineering_claim": "none",
+    }
+    assert spec == TankFixtureSpec.from_mapping(valid_spec_data())
