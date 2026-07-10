@@ -51,7 +51,8 @@ require_clean_repo() {
 
 verify_pinned_dependency() {
   local repo="$1"
-  [[ -d "$repo/.git" ]] || die "assetutilities is not a git checkout: $repo"
+  git -C "$repo" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+    || die "assetutilities is not a git checkout: $repo"
   require_clean_repo "$repo"
   [[ "$(git -C "$repo" remote get-url origin)" == "$ASSETUTILITIES_URL" ]] \
     || die "assetutilities origin drift at $repo"

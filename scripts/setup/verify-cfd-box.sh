@@ -45,7 +45,8 @@ package_is_held "openmpi-bin" \
   && ok "openmpi-bin is held" || bad "openmpi-bin is not held"
 package_is_held "libopenmpi-dev" \
   && ok "libopenmpi-dev is held" || bad "libopenmpi-dev is not held"
-[[ -d "$ASSETUTILITIES_DIR/.git" ]] \
+git -C "$ASSETUTILITIES_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+  && ok "assetutilities sibling is a Git worktree" \
   || bad "assetutilities sibling checkout is missing: $ASSETUTILITIES_DIR"
 [[ "$(git -C "$ASSETUTILITIES_DIR" remote get-url origin 2>/dev/null || true)" == "$ASSETUTILITIES_URL" ]] \
   || bad "assetutilities origin must equal $ASSETUTILITIES_URL"
