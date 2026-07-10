@@ -10,6 +10,7 @@ import os
 import re
 import shutil
 import subprocess
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -21,7 +22,6 @@ from digitalmodel.solvers.gmsh_meshing.tank_fixture import (
 from digitalmodel.solvers.openfoam.gmsh_bridge import (
     BridgeToolchain,
     GmshBridgeError,
-    hash_tree,
     prepare_gmsh_poly_mesh,
 )
 from digitalmodel.solvers.openfoam.poly_mesh_contract import DEFAULT_BOUNDARY_CONTRACT
@@ -36,6 +36,7 @@ from digitalmodel.solvers.openfoam.smoke import (
     plan_smoke,
     write_reduced_evidence,
 )
+from digitalmodel.solvers.openfoam.smoke_evidence import capture_pre_run_artifacts
 from digitalmodel.solvers.openfoam.validation.sloshing_3d import (
     Sloshing3DConfig,
     write_sloshing_case,
@@ -47,6 +48,8 @@ DEFAULT_INPUT = REPO_ROOT / "examples/cfd/synthetic_l_tank/input.yml"
 DEFAULT_EVIDENCE = REPO_ROOT / "docs/api/cfd/synthetic-l-tank-smoke.json"
 OPENFOAM_PACKAGE_VERSION = "2312.260127-2"
 OPENMPI_PACKAGE_VERSION = "4.1.6-7ubuntu2"
+ASSETUTILITIES_COMMIT = "993f1b5ddc90b56ecf531bedb1b84f5efe096700"
+ASSETUTILITIES_ROOT = (REPO_ROOT.parent / "assetutilities").resolve()
 
 
 def visible_cpu_count() -> int:
@@ -70,17 +73,42 @@ def run_pipeline(
     delta_t: float,
     time_precision: int,
     execution_class: str,
+    projected_load_per_core: float | None = None,
 ) -> SmokeResult:
     """Build, convert, snapshot, execute, and attest one synthetic smoke."""
     plan = plan_smoke(ranks, visible_cpus, selected_ranks)
-    execution_metrics = _execution_metrics(visible_cpus)
+    metrics = _execution_metrics(
+        visible_cpus, projected_load_per_core, execution_class
+    )
+    dispatcher = {
+        "ranks": ranks,
+        "selected_ranks": selected_ranks,
+        "visible_cpus": visible_cpus,
+        "load_threshold": plan.threshold,
+        "projected_load_per_core": projected_load_per_core,
+        **metrics,
+    }
+    source_before = _source_provenance()
+    dependency_before = _dependency_provenance()
     spec, source, case = _prepare_case(
         work_dir, input_yaml, cpb, end_time, delta_t, ranks
     )
     bridge = prepare_gmsh_poly_mesh(case, source, toolchain=_toolchain())
     execution = prepare_prebuilt_execution(case, bridge.manifest_path)
+    return _execute_attested_smoke(
+        plan, execution, bridge, spec, evidence, end_time, time_precision,
+        execution_class, dispatcher, source_before, dependency_before,
+    )
+
+
+def _execute_attested_smoke(
+    plan, execution, bridge, spec, evidence, end_time, time_precision,
+    execution_class, dispatcher, source_before, dependency_before,
+) -> SmokeResult:
     try:
+        artifacts = _capture_pre_run_artifacts(execution.case_dir)
         angle = _prescribed_yaw_angle(execution.case_dir, end_time)
+        origin = (0.5 * spec.tank.breadth, 0.0, 0.5 * spec.tank.length)
         result = execute_smoke(
             plan,
             execution.case_dir,
@@ -88,20 +116,30 @@ def run_pipeline(
             time_precision=time_precision,
             length=spec.tank.length,
             rotation_radians=angle,
-            origin=(0.5 * spec.tank.breadth, 0.0, 0.5 * spec.tank.length),
+            origin=origin,
         )
         execution.verify_unchanged()
-        context = _evidence_context(
-            execution_case=execution.case_dir,
-            bridge_manifest=bridge.manifest,
-            execution_class=execution_class,
-            execution_metrics=execution_metrics,
-        )
+        source_after = _source_provenance()
+        dependency_after = _dependency_provenance()
+        _require_unchanged(source_before, source_after, "source")
+        _require_unchanged(dependency_before, dependency_after, "assetutilities")
         write_reduced_evidence(
             evidence,
             result,
             bridge_manifest=bridge.manifest,
-            **context,
+            artifacts=artifacts,
+            source_provenance={
+                "pre_execution": source_before,
+                "post_execution": source_after,
+            },
+            dependency_provenance={
+                "assetutilities": {
+                    "pre_execution": dependency_before,
+                    "post_execution": dependency_after,
+                }
+            },
+            execution_class=execution_class,
+            dispatcher=dispatcher,
         )
         return result
     finally:
@@ -118,7 +156,9 @@ def _prepare_case(
 ) -> tuple[TankFixtureSpec, Path, Path]:
     work_dir.mkdir(parents=True, exist_ok=True)
     spec = load_tank_fixture_spec(input_yaml)
-    case = work_dir / "synthetic-l-tank-case"
+    run_dir = Path(tempfile.mkdtemp(prefix="synthetic-l-tank.run-", dir=work_dir))
+    run_dir.chmod(0o700)
+    case = run_dir / "case"
     write_sloshing_case(
         case,
         Sloshing3DConfig(
@@ -172,49 +212,58 @@ def _package_version(package: str, expected: str) -> str:
     return actual
 
 
-def _evidence_context(
-    *,
-    execution_case: Path,
-    bridge_manifest: dict[str, Any],
+def _capture_pre_run_artifacts(case: Path) -> dict[str, Any]:
+    return capture_pre_run_artifacts(REPO_ROOT, case)
+
+
+def _execution_metrics(
+    visible_cpus: int,
+    projected_load_per_core: float | None,
     execution_class: str,
-    execution_metrics: dict[str, float],
-) -> dict[str, Any]:
-    if bridge_manifest.get("status") != "completed":
-        raise SmokeError("bridge manifest must be completed")
-    artifacts = {
-        "uv_lock": _file_artifact(REPO_ROOT / "uv.lock", "uv.lock"),
-        "input": _file_artifact(execution_case / "input.yml", "input.yml"),
-        "source_msh": _file_artifact(
-            execution_case / "source.msh", "source.msh"
-        ),
-        "initial_fields": _tree_artifact(execution_case / "0", "0"),
-        "system": _tree_artifact(execution_case / "system", "system"),
-        "poly_mesh": _tree_artifact(
-            execution_case / "constant" / "polyMesh", "constant/polyMesh"
-        ),
-    }
-    return {
-        "artifacts": artifacts,
-        "source_provenance": _source_provenance(),
-        "execution_class": execution_class,
-        "execution_metrics": execution_metrics,
-    }
-
-
-def _execution_metrics(visible_cpus: int) -> dict[str, float]:
+) -> dict[str, float]:
+    if projected_load_per_core is None and execution_class != "test":
+        raise SmokeError("dispatcher projected load/core is required")
+    if projected_load_per_core is not None and (
+        isinstance(projected_load_per_core, bool)
+        or not math.isfinite(projected_load_per_core)
+        or projected_load_per_core < 0
+        or projected_load_per_core > 1.5
+    ):
+        raise SmokeError("projected load/core must be between 0 and 1.5")
     try:
         load1 = os.getloadavg()[0]
     except OSError as exc:
         raise SmokeError("one-minute load average is unavailable") from exc
-    return {"load1": load1, "load_per_core": load1 / visible_cpus}
+    load_per_core = load1 / visible_cpus
+    if not math.isfinite(load_per_core) or load_per_core < 0 or load_per_core > 1.5:
+        raise SmokeError("actual load/core exceeds fixed threshold 1.5")
+    return {"actual_load1": load1, "actual_load_per_core": load_per_core}
 
 
 def _source_provenance() -> dict[str, Any]:
-    status = _git_output("status", "--porcelain", "--untracked-files=all")
+    return _repo_provenance(REPO_ROOT)
+
+
+def _dependency_provenance() -> dict[str, Any]:
+    provenance = _repo_provenance(ASSETUTILITIES_ROOT)
+    if provenance["commit"] != ASSETUTILITIES_COMMIT:
+        raise SmokeError(
+            f"assetutilities commit must equal {ASSETUTILITIES_COMMIT}"
+        )
+    return provenance
+
+
+def _require_unchanged(before: dict[str, Any], after: dict[str, Any], label: str) -> None:
+    if before != after:
+        raise SmokeError(f"{label} provenance changed during smoke execution")
+
+
+def _repo_provenance(repo_root: Path) -> dict[str, Any]:
+    status = _git_output(repo_root, "status", "--porcelain", "--untracked-files=all")
     if status:
-        raise SmokeError("source checkout must be clean before live execution")
-    commit = _git_output("rev-parse", "HEAD")
-    tracked = _git_output("ls-files", "-s", "-z", binary=True)
+        raise SmokeError(f"{repo_root.name} checkout must be clean before execution")
+    commit = _git_output(repo_root, "rev-parse", "HEAD")
+    tracked = _git_output(repo_root, "ls-files", "-s", "-z", binary=True)
     return {
         "clean": True,
         "commit": commit,
@@ -222,41 +271,22 @@ def _source_provenance() -> dict[str, Any]:
     }
 
 
-def _git_output(*args: str, binary: bool = False) -> Any:
+def _git_output(repo_root: Path, *args: str, binary: bool = False) -> Any:
     try:
         process = subprocess.run(
             ["git", *args],
-            cwd=REPO_ROOT,
+            cwd=repo_root,
             capture_output=True,
             text=not binary,
             check=False,
             shell=False,
             timeout=30,
         )
-    except subprocess.TimeoutExpired as exc:
-        raise SmokeError(f"git {' '.join(args)} timed out") from exc
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise SmokeError(f"git {' '.join(args)} failed to execute") from exc
     if process.returncode != 0:
         raise SmokeError(f"git {' '.join(args)} failed")
     return process.stdout if binary else process.stdout.strip()
-
-
-def _file_artifact(path: Path, relative: str) -> dict[str, Any]:
-    content = path.read_bytes()
-    return {
-        "path": relative,
-        "size": len(content),
-        "sha256": hashlib.sha256(content).hexdigest(),
-    }
-
-
-def _tree_artifact(path: Path, relative: str) -> dict[str, Any]:
-    tree = hash_tree(path)
-    return {
-        "path": relative,
-        "file_count": tree.file_count,
-        "total_bytes": tree.total_bytes,
-        "tree_sha256": tree.sha256,
-    }
 
 
 def _prescribed_yaw_angle(case: Path, end_time: float) -> float:
@@ -271,6 +301,18 @@ def _prescribed_yaw_angle(case: Path, end_time: float) -> float:
     if abs(angle) <= 0.0:
         raise SmokeError("configured yaw is zero at the final time")
     return angle
+
+
+def _projected_load_from_environment(execution_class: str) -> float | None:
+    value = os.environ.get("CFD_DISPATCH_PROJECTED_LOAD_PER_CORE")
+    if value is None:
+        if execution_class == "test":
+            return None
+        raise ValueError("CFD_DISPATCH_PROJECTED_LOAD_PER_CORE is required")
+    try:
+        return float(value)
+    except ValueError as exc:
+        raise ValueError("CFD_DISPATCH_PROJECTED_LOAD_PER_CORE must be numeric") from exc
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -309,6 +351,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.execution_class is None:
         print("CFD_EXECUTION_CLASS is required; run through the dispatcher")
         return 2
+    try:
+        projected_load = _projected_load_from_environment(args.execution_class)
+    except ValueError as exc:
+        print(exc)
+        return 2
     ranks = args.ranks or selected
     try:
         run_pipeline(
@@ -327,6 +374,7 @@ def main(argv: list[str] | None = None) -> int:
             delta_t=args.delta_t,
             time_precision=args.time_precision,
             execution_class=args.execution_class,
+            projected_load_per_core=projected_load,
         )
     except (GmshBridgeError, OSError, PrebuiltMeshError, SmokeError, ValueError) as exc:
         print(f"synthetic smoke failed: {exc}")

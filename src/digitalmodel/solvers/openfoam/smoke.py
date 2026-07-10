@@ -3,16 +3,15 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import math
 import re
 import subprocess
-import tempfile
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Sequence
+
+from .smoke_evidence import EvidenceValidationError, write_evidence
 
 
 SMOKE_LOAD_THRESHOLD = 1.5
@@ -80,6 +79,13 @@ class StageEvidence:
 class MotionCheck:
     max_displacement: float
     max_rotation_error: float
+    axis: tuple[float, float, float]
+    angle_radians: float
+    origin: tuple[float, float, float]
+    point_count: int
+    initial_points_sha256: str
+    reconstructed_points_sha256: str
+    tolerance: float
 
 
 @dataclass(frozen=True)
@@ -90,6 +96,8 @@ class SmokeResult:
     step_count: int
     wall_seconds: float
     motion: MotionCheck
+    expected_end_time: float
+    time_tolerance: float
 
     @property
     def status(self) -> str:
@@ -144,6 +152,8 @@ def verify_rigid_rotation(
     rotation_radians: float,
     length: float,
     origin: tuple[float, float, float] = (0.0, 0.0, 0.0),
+    initial_points_sha256: str = "",
+    reconstructed_points_sha256: str = "",
 ) -> MotionCheck:
     """Verify a nonzero prescribed rigid rotation about the frozen z axis."""
     if not math.isfinite(rotation_radians) or abs(rotation_radians) <= 0.0:
@@ -163,19 +173,25 @@ def verify_rigid_rotation(
         max_error = max(max_error, error)
     if max_displacement <= 1e-8 * length:
         raise SmokeError("prescribed rotation produced no measurable displacement")
-    if max_error > 1e-6 * length:
+    tolerance = 1e-6 * length
+    if max_error > tolerance:
         raise SmokeError(f"rotation error {max_error} exceeds tolerance")
-    return MotionCheck(max_displacement, max_error)
+    return MotionCheck(
+        max_displacement,
+        max_error,
+        (0.0, 0.0, 1.0),
+        rotation_radians,
+        origin,
+        len(initial),
+        initial_points_sha256,
+        reconstructed_points_sha256,
+        tolerance,
+    )
 
 
 def execute_smoke(
-    plan: SmokePlan,
-    case_dir: Path | str,
-    *,
-    end_time: float,
-    time_precision: int,
-    length: float,
-    rotation_radians: float,
+    plan: SmokePlan, case_dir: Path | str, *, end_time: float,
+    time_precision: int, length: float, rotation_radians: float,
     origin: tuple[float, float, float] = (0.0, 0.0, 0.0),
     timeout_seconds: int = 7200,
     runner: Callable[..., subprocess.CompletedProcess] = subprocess.run,
@@ -187,6 +203,7 @@ def execute_smoke(
     case = Path(case_dir)
     initial_path = case / "constant" / "polyMesh" / "points"
     initial = parse_points(initial_path)
+    initial_digest = _sha256_file(initial_path)
     stages: list[StageEvidence] = []
     final_time: float | None = None
     step_count = 0
@@ -200,13 +217,16 @@ def execute_smoke(
             )
     if final_time is None:
         raise SmokeError("solver stage did not execute")
-    reconstructed = parse_points(_reconstructed_points_path(case))
+    reconstructed_path = _reconstructed_points_path(case)
+    reconstructed = parse_points(reconstructed_path)
     motion = verify_rigid_rotation(
         initial,
         reconstructed,
         rotation_radians=rotation_radians,
         length=length,
         origin=origin,
+        initial_points_sha256=initial_digest,
+        reconstructed_points_sha256=_sha256_file(reconstructed_path),
     )
     return SmokeResult(
         plan,
@@ -215,6 +235,8 @@ def execute_smoke(
         step_count,
         time.monotonic() - started,
         motion,
+        end_time,
+        10 ** (-time_precision),
     )
 
 
@@ -225,80 +247,24 @@ def write_reduced_evidence(
     bridge_manifest: dict[str, Any],
     artifacts: dict[str, Any],
     source_provenance: dict[str, Any],
+    dependency_provenance: dict[str, Any],
     execution_class: str,
-    execution_metrics: dict[str, Any],
+    dispatcher: dict[str, Any],
 ) -> None:
     """Atomically write reduced evidence for a semantically completed smoke."""
-    destination = Path(path)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    payload = _evidence_payload(
-        result,
-        bridge_manifest,
-        artifacts,
-        source_provenance,
-        execution_class,
-        execution_metrics,
-    )
-    descriptor, temporary_name = tempfile.mkstemp(
-        prefix=f".{destination.name}.", suffix=".tmp", dir=destination.parent
-    )
-    temporary = Path(temporary_name)
     try:
-        with open(descriptor, "w", encoding="utf-8") as stream:
-            json.dump(payload, stream, indent=2, sort_keys=True)
-            stream.write("\n")
-        temporary.replace(destination)
-    finally:
-        temporary.unlink(missing_ok=True)
-
-
-def _evidence_payload(
-    result: SmokeResult,
-    bridge_manifest: dict[str, Any],
-    artifacts: dict[str, Any],
-    source_provenance: dict[str, Any],
-    execution_class: str,
-    execution_metrics: dict[str, Any],
-) -> dict[str, Any]:
-    if result.status != "completed":
-        raise SmokeError("only completed smoke results may produce evidence")
-    if bridge_manifest.get("status") != "completed":
-        raise SmokeError("completed bridge attestation is required")
-    if source_provenance.get("clean") is not True:
-        raise SmokeError("clean source provenance is required")
-    if execution_class not in {"dedicated", "shared-fallback", "test"}:
-        raise SmokeError("execution_class must be generic and approved")
-    if any(
-        not isinstance(execution_metrics.get(key), (int, float))
-        or execution_metrics[key] < 0
-        for key in ("load1", "load_per_core")
-    ):
-        raise SmokeError("execution load metrics must be nonnegative numbers")
-    return {
-        "schema_version": 1,
-        "status": result.status,
-        "purpose": "methodology_bridge_validation_only",
-        "engineering_claim": "none",
-        "created_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
-        "execution_class": execution_class,
-        "execution_metrics": execution_metrics,
-        "ranks": result.plan.ranks,
-        "visible_cpus": result.plan.visible_cpus,
-        "selected_dispatcher_ranks": result.plan.selected_ranks,
-        "load_threshold": result.plan.threshold,
-        "final_time": result.final_time,
-        "step_count": result.step_count,
-        "wall_seconds": result.wall_seconds,
-        "seconds_per_step": result.seconds_per_step,
-        "motion": {
-            "max_displacement": result.max_displacement,
-            "max_rotation_error": result.max_rotation_error,
-        },
-        "stages": [stage.to_dict() for stage in result.stages],
-        "bridge": bridge_manifest,
-        "artifacts": artifacts,
-        "source_provenance": source_provenance,
-    }
+        write_evidence(
+            path,
+            result,
+            bridge_manifest=bridge_manifest,
+            artifacts=artifacts,
+            source_provenance=source_provenance,
+            dependency_provenance=dependency_provenance,
+            execution_class=execution_class,
+            dispatcher=dispatcher,
+        )
+    except EvidenceValidationError as exc:
+        raise SmokeError(str(exc)) from exc
 
 
 def _rotate_z(
@@ -397,3 +363,7 @@ def _is_time_name(value: str) -> bool:
 
 def _sha256(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _sha256_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()

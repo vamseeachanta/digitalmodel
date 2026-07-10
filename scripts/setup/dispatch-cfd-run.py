@@ -214,6 +214,8 @@ def evaluate_host(
     requested_ranks: int | None,
     max_load_per_core: float,
 ) -> Candidate:
+    if max_load_per_core != 1.5:
+        raise ValueError("maximum load/core is fixed at 1.5")
     if not probe.reachable:
         return Candidate(host, probe, profile, None, False, probe.reason, None)
     if profile is None:
@@ -233,7 +235,7 @@ def evaluate_host(
             None,
         )
     projected_load_per_core = (probe.load1 + row.ranks) / probe.cores
-    if max_load_per_core > 0 and projected_load_per_core > max_load_per_core:
+    if projected_load_per_core > max_load_per_core:
         return Candidate(
             host,
             probe,
@@ -287,6 +289,7 @@ def build_ssh_command(
         remote_command, host=candidate.host.name, ranks=candidate.row.ranks
     )
     execution_class = "dedicated" if candidate.host.dedicated else "shared-fallback"
+    projected_load = (candidate.probe.load1 + candidate.row.ranks) / candidate.probe.cores
     remote_shell = (
         'export PATH="$HOME/.npm-global/bin:$HOME/.local/bin:$PATH"; '
         f"source {shlex.quote(openfoam_bashrc)} || exit $?; "
@@ -295,6 +298,7 @@ def build_ssh_command(
         f"export CFD_DISPATCH_HOST={shlex.quote(candidate.host.name)}; "
         f"export CFD_DISPATCH_RANKS={candidate.row.ranks}; "
         f"export CFD_EXECUTION_CLASS={execution_class}; "
+        f"export CFD_DISPATCH_PROJECTED_LOAD_PER_CORE={projected_load:.17g}; "
         f"export CFD_DISPATCH_S_PER_STEP={candidate.predicted_s_per_step}; "
         f"{command}"
     )
@@ -339,13 +343,8 @@ def build_parser() -> argparse.ArgumentParser:
         default=[],
         help="name=cores,load1[,hostname]",
     )
-    parser.add_argument(
-        "--ranks",
-        type=int,
-        default=None,
-        help="rank count to compare and dispatch",
-    )
-    parser.add_argument("--max-load-per-core", type=float, default=1.5)
+    parser.add_argument("--ranks", type=int, default=None, help="rank count to compare and dispatch")
+    parser.add_argument("--max-load-per-core", type=float, choices=(1.5,), default=1.5)
     parser.add_argument("--repo-dir", default="~/digitalmodel")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("remote_command", nargs=argparse.REMAINDER)
