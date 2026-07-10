@@ -163,11 +163,16 @@ def test_mesh_options_and_repeat_build_are_deterministic(serialized_meshes) -> N
     _, first, second, first_summary, second_summary = serialized_meshes
 
     assert first.read_bytes() == second.read_bytes()
+    assert first_summary.shape_min_jacobian > 0.17
+    assert second_summary.shape_min_jacobian > 0.17
     assert first_summary.mesh_options == second_summary.mesh_options == {
         "Mesh.MshFileVersion": 2.2,
         "Mesh.Binary": 0.0,
         "Mesh.SaveAll": 0.0,
         "Mesh.ElementOrder": 1.0,
+        "Mesh.Algorithm3D": 4.0,
+        "Mesh.OptimizeNetgen": 1.0,
+        "Mesh.OptimizeThreshold": 1.0,
         "Mesh.Reproducible": 1.0,
         "Mesh.RandomSeed": 0.0,
         "General.NumThreads": 1.0,
