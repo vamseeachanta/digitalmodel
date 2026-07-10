@@ -3,8 +3,8 @@
 # state matching ace-linux-2, so benchmarks are reproducible (digitalmodel #1495).
 #
 # Installs (idempotent — safe to re-run):
-#   * OpenFOAM ESI v2312  (dl.openfoam.com apt repo; pkg openfoam2312-default)
-#   * OpenMPI 4.1.x       (Ubuntu openmpi-bin + libopenmpi-dev)
+#   * OpenFOAM ESI v2312 package 2312.260127-2
+#   * OpenMPI packages 4.1.6-7ubuntu2
 #   * build tools, git, curl
 #   * uv                  (astral installer)
 #   * gh                  (GitHub CLI, optional — for issues/PRs/scheduled runs)
@@ -19,20 +19,31 @@
 #   REPO_DIR   where to clone digitalmodel   (default: $HOME/digitalmodel)
 #   WORK_DIR   scratch for CFD case trees    (default: $HOME/cfd_work)
 #   REPO_URL   git remote                    (default: https://github.com/vamseeachanta/digitalmodel.git)
-#   OF_VERSION OpenFOAM ESI version          (default: 2312 — MUST match a-l-2 for reproducible benchmarks)
 #   SKIP_CLONE / SKIP_GH   set to 1 to skip that stage
 set -euo pipefail
 
-OF_VERSION="${OF_VERSION:-2312}"
+OPENFOAM_PACKAGE_VERSION="2312.260127-2"
+OPENMPI_PACKAGE_VERSION="4.1.6-7ubuntu2"
+OPENFOAM_INSTALLER_SHA256="f7fa288327e936b5a85e3e4a0b29bf039c06d214916f39400b830b63a3310b5b"
 REPO_URL="${REPO_URL:-https://github.com/vamseeachanta/digitalmodel.git}"
 REPO_DIR="${REPO_DIR:-$HOME/digitalmodel}"
 WORK_DIR="${WORK_DIR:-$HOME/cfd_work}"
-OF_BASHRC="/usr/lib/openfoam/openfoam${OF_VERSION}/etc/bashrc"
+OF_BASHRC="/usr/lib/openfoam/openfoam2312/etc/bashrc"
 
 log()  { printf '\033[1;34m[provision]\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m[provision] WARN:\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[1;31m[provision] ERROR:\033[0m %s\n' "$*" >&2; exit 1; }
 have() { command -v "$1" >/dev/null 2>&1; }
+package_version() { dpkg-query -W -f='${Version}' "$1" 2>/dev/null || true; }
+
+require_clean_repo() {
+  local repo="$1"
+  ( cd "$repo" \
+      && git diff --quiet \
+      && git diff --cached --quiet \
+      && [[ -z "$(git ls-files --others --exclude-standard)" ]] ) \
+    || die "repository must be clean before frozen CFD environment setup: $repo"
+}
 
 # ---- preflight ------------------------------------------------------------- #
 [[ "$(uname -s)" == "Linux" ]] || die "Linux only (this box is $(uname -s))."
@@ -44,25 +55,42 @@ SUDO=""; [[ $EUID -ne 0 ]] && SUDO="sudo"
 $SUDO true 2>/dev/null || die "Need root or passwordless sudo for apt installs."
 
 # ---- base packages --------------------------------------------------------- #
-log "installing base packages (build tools, git, curl, OpenMPI)…"
+log "installing base packages (build tools, git, curl)…"
 export DEBIAN_FRONTEND=noninteractive
 $SUDO apt-get update -qq
 $SUDO apt-get install -y -qq \
   build-essential git curl ca-certificates gnupg \
-  openmpi-bin libopenmpi-dev \
   rclone   # cloud data sync (inputs/outputs/reports) for the headless box
 
-# ---- OpenFOAM ESI v${OF_VERSION} ------------------------------------------- #
-if [[ -r "$OF_BASHRC" ]]; then
-  log "OpenFOAM v${OF_VERSION} already present ($OF_BASHRC) — skipping install."
-else
-  log "adding the OpenFOAM ESI apt repo (dl.openfoam.com) and installing openfoam${OF_VERSION}-default…"
-  # ESI's canonical repo installer (adds signed repo for the current codename).
-  curl -fsSL https://dl.openfoam.com/add-debian-repo.sh | $SUDO bash
+log "installing exact OpenMPI packages…"
+$SUDO apt-get install -y -qq --allow-downgrades --allow-change-held-packages \
+  "openmpi-bin=${OPENMPI_PACKAGE_VERSION}" \
+  "libopenmpi-dev=${OPENMPI_PACKAGE_VERSION}"
+[[ "$(package_version openmpi-bin)" == "$OPENMPI_PACKAGE_VERSION" ]] \
+  || die "openmpi-bin version does not match $OPENMPI_PACKAGE_VERSION"
+[[ "$(package_version libopenmpi-dev)" == "$OPENMPI_PACKAGE_VERSION" ]] \
+  || die "libopenmpi-dev version does not match $OPENMPI_PACKAGE_VERSION"
+$SUDO apt-mark hold openmpi-bin libopenmpi-dev >/dev/null
+
+# ---- OpenFOAM ESI v2312 --------------------------------------------------- #
+if [[ "$(package_version openfoam2312-default)" != "$OPENFOAM_PACKAGE_VERSION" ]]; then
+  log "installing exact openfoam2312-default package…"
+  installer="$(mktemp)"
+  curl -fsSL -o "$installer" https://dl.openfoam.com/add-debian-repo.sh \
+    || { rm -f "$installer"; die "OpenFOAM repo installer download failed"; }
+  printf '%s  %s\n' "$OPENFOAM_INSTALLER_SHA256" "$installer" \
+    | sha256sum -c - >/dev/null \
+    || { rm -f "$installer"; die "OpenFOAM repo installer checksum mismatch"; }
+  $SUDO bash "$installer"
+  rm -f "$installer"
   $SUDO apt-get update -qq
-  $SUDO apt-get install -y -qq "openfoam${OF_VERSION}-default"
-  [[ -r "$OF_BASHRC" ]] || die "OpenFOAM install did not produce $OF_BASHRC — check apt output."
+  $SUDO apt-get install -y -qq --allow-downgrades --allow-change-held-packages \
+    "openfoam2312-default=${OPENFOAM_PACKAGE_VERSION}"
 fi
+[[ "$(package_version openfoam2312-default)" == "$OPENFOAM_PACKAGE_VERSION" ]] \
+  || die "openfoam2312-default version does not match $OPENFOAM_PACKAGE_VERSION"
+[[ -r "$OF_BASHRC" ]] || die "OpenFOAM install did not produce $OF_BASHRC"
+$SUDO apt-mark hold openfoam2312-default openmpi-bin libopenmpi-dev >/dev/null
 
 # ---- uv (Python toolchain) ------------------------------------------------- #
 if have uv; then
@@ -89,23 +117,28 @@ fi
 # ---- clone the CFD ecosystem + install deps -------------------------------- #
 if [[ "${SKIP_CLONE:-0}" != "1" ]]; then
   if [[ -d "$REPO_DIR/.git" ]]; then
+    require_clean_repo "$REPO_DIR"
     log "digitalmodel already at $REPO_DIR — fetching latest main…"
     git -C "$REPO_DIR" fetch origin -q && git -C "$REPO_DIR" checkout main -q \
-      && git -C "$REPO_DIR" pull --ff-only origin main -q || warn "could not fast-forward main (local changes?)."
+      && git -C "$REPO_DIR" pull --ff-only origin main -q \
+      || die "could not fast-forward the clean main checkout"
   else
     log "cloning digitalmodel → $REPO_DIR…"
     git clone -q "$REPO_URL" "$REPO_DIR"
   fi
-  log "installing Python deps (uv venv + editable install)…"
-  ( cd "$REPO_DIR" && uv venv -q && UV_NO_SOURCES=true uv pip install -q -e . \
-      && uv pip install -q pytest pyyaml loguru click matplotlib )
+  require_clean_repo "$REPO_DIR"
+  log "installing the locked CFD Python environment…"
+  ( cd "$REPO_DIR" \
+      && uv sync --frozen --extra cfd --extra test \
+      && uv run --frozen --extra cfd python -c \
+        'import gmsh; assert gmsh.__version__ == "4.15.1"' )
   mkdir -p "$WORK_DIR"
 fi
 
 # ---- summary --------------------------------------------------------------- #
 log "DONE. Toolchain summary:"
-printf '  OpenFOAM : %s\n' "$(dpkg -l 2>/dev/null | awk '/openfoam'"$OF_VERSION"'-default/{print $3; exit}' || echo '?')"
-printf '  OpenMPI  : %s\n' "$(mpirun --version 2>/dev/null | head -1 || echo '?')"
+printf '  OpenFOAM : %s\n' "$(package_version openfoam2312-default)"
+printf '  OpenMPI  : %s\n' "$(package_version openmpi-bin)"
 printf '  uv       : %s\n' "$(uv --version 2>/dev/null || echo '?')"
 printf '  repo     : %s @ %s\n' "$REPO_DIR" "$(git -C "$REPO_DIR" rev-parse --short HEAD 2>/dev/null || echo 'not cloned')"
 printf '  work dir : %s\n' "$WORK_DIR"

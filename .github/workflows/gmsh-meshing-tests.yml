@@ -1,119 +1,73 @@
-name: GMSH Meshing Module Tests
+name: Gmsh and OpenFOAM Bridge Tests
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
-      - 'src/digitalmodel/modules/gmsh_meshing/**'
-      - 'tests/domains/gmsh_meshing/**'
-      - '.github/workflows/gmsh-meshing-tests.yml'
+      - "src/digitalmodel/solvers/gmsh_meshing/**"
+      - "src/digitalmodel/solvers/openfoam/**"
+      - "tests/solvers/gmsh_meshing/**"
+      - "tests/solvers/openfoam/**"
+      - "scripts/cfd/run_synthetic_tank_3d_smoke.py"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/gmsh-meshing-tests.yml"
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
-      - 'src/digitalmodel/modules/gmsh_meshing/**'
-      - 'tests/domains/gmsh_meshing/**'
+      - "src/digitalmodel/solvers/gmsh_meshing/**"
+      - "src/digitalmodel/solvers/openfoam/**"
+      - "tests/solvers/gmsh_meshing/**"
+      - "tests/solvers/openfoam/**"
+      - "scripts/cfd/run_synthetic_tank_3d_smoke.py"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/gmsh-meshing-tests.yml"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  test:
-    name: Test GMSH Meshing Module
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        python-version: ['3.10', '3.11']
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e .
-        pip install pytest pytest-cov pytest-mock gmsh numpy scipy
-
-    - name: Run unit tests
-      run: |
-        pytest tests/domains/gmsh_meshing/test_gmsh_unit.py -v --cov=src/digitalmodel/modules/gmsh_meshing --cov-report=term-missing --cov-report=xml
-
-    - name: Run CLI tests
-      run: |
-        pytest tests/domains/gmsh_meshing/test_gmsh_cli.py -v
-
-    - name: Upload coverage to Codecov
-      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./coverage.xml
-        flags: gmsh-meshing
-        name: gmsh-meshing-coverage
-
-  lint:
-    name: Code Quality
+  focused-tests:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 20
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-        cache: 'pip'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
 
-    - name: Install linting tools
-      run: |
-        python -m pip install --upgrade pip
-        pip install ruff black isort mypy
+      - name: Set up Python
+        run: uv python install 3.11
 
-    - name: Run ruff
-      run: |
-        ruff check src/digitalmodel/modules/gmsh_meshing
+      - name: Sync locked environment
+        run: uv sync --frozen --extra cfd --extra test
 
-    - name: Run black
-      run: |
-        black --check src/digitalmodel/modules/gmsh_meshing tests/domains/gmsh_meshing
+      - name: Verify Gmsh import
+        run: >-
+          uv run --frozen --extra cfd python -c
+          'import gmsh; assert gmsh.__version__ == "4.15.1"'
 
-    - name: Run isort
-      run: |
-        isort --check-only src/digitalmodel/modules/gmsh_meshing tests/domains/gmsh_meshing
+      - name: Run bridge tests
+        run: |
+          uv run --frozen --extra cfd --extra test pytest -q \
+            tests/solvers/gmsh_meshing/test_tank_fixture.py \
+            tests/solvers/openfoam/test_poly_mesh_contract.py \
+            tests/solvers/openfoam/test_gmsh_bridge.py \
+            tests/solvers/openfoam/test_runner.py \
+            tests/solvers/openfoam/test_runner_prebuilt.py \
+            tests/solvers/openfoam/validation/test_sloshing_3d.py
 
-  cli-validation:
-    name: CLI Command Validation
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-
-    - name: Install package
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e .
-        pip install gmsh
-
-    - name: Test CLI installation
-      run: |
-        gmsh-meshing --version
-
-    - name: Test box command
-      run: |
-        gmsh-meshing box --length 1.0 --width 1.0 --height 1.0 --element-size 0.5 --output test_box.msh
-
-    - name: Test cylinder command
-      run: |
-        gmsh-meshing cylinder --radius 1.0 --height 2.0 --element-size 0.5 --output test_cylinder.msh
+      - name: Lint bridge paths
+        run: |
+          uv run --frozen --extra cfd ruff check \
+            src/digitalmodel/solvers/gmsh_meshing \
+            src/digitalmodel/solvers/openfoam \
+            tests/solvers/gmsh_meshing/test_tank_fixture.py \
+            tests/solvers/openfoam/test_poly_mesh_contract.py \
+            tests/solvers/openfoam/test_gmsh_bridge.py \
+            tests/solvers/openfoam/test_runner_prebuilt.py
