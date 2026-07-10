@@ -222,6 +222,9 @@ def _bridge_manifest() -> dict:
         "status": "completed",
         "created_utc": "2026-07-10T12:00:00Z",
         "source_msh": {"path": "source.msh", "sha256": "a" * 64, "format": "2.2"},
+        "case_inputs": {
+            "tree_sha256": "9" * 64, "file_count": 12, "total_bytes": 200,
+        },
         "poly_mesh": {
             "path": "constant/polyMesh",
             "tree_sha256": "b" * 64,
@@ -346,6 +349,12 @@ def test_evidence_writer_is_closed_self_validating_and_atomic(tmp_path: Path) ->
     assert validate_evidence(payload) is payload
     assert output.read_text(encoding="utf-8").endswith("\n")
     assert not list(tmp_path.glob(".evidence.json.*.tmp"))
+
+
+def test_evidence_preserves_bridge_case_input_attestation(tmp_path: Path) -> None:
+    payload = json.loads(_write_valid_evidence(tmp_path).read_text(encoding="utf-8"))
+
+    assert payload["bridge"]["case_inputs"] == _bridge_manifest()["case_inputs"]
 
 
 def test_evidence_validator_rejects_unknown_and_missing_records(tmp_path: Path) -> None:
