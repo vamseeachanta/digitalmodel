@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import re
 import shutil
 import subprocess
@@ -33,10 +32,11 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from digitalmodel.solvers.openfoam.motion import (
-    MotionType, PrescribedMotion, render_dynamic_mesh_dict_body)
+from digitalmodel.solvers.openfoam.validation.sloshing_3d import (
+    Sloshing3DConfig,
+    write_sloshing_case,
+)
 
-G = 9.80665
 _REPO = Path(__file__).resolve().parents[2]
 _MANIFEST = _REPO / "docs" / "api" / "cfd" / "sloshing-3d-benchmark.json"
 
@@ -50,150 +50,6 @@ ROLL_DEG = 4.0
 _H = "FoamFile {{ version 2.0; format ascii; class {cls}; object {obj}; }}\n"
 
 
-def _first_mode_period() -> float:
-    # transverse first mode: omega1^2 = (pi g / L) tanh(pi h / L)
-    h = FILL * BREADTH
-    w2 = (math.pi * G / BREADTH) * math.tanh(math.pi * h / BREADTH)
-    return 2.0 * math.pi / math.sqrt(w2)
-
-
-def _blockmesh(nx: int, ny: int, nz: int) -> str:
-    f = "{:.6g}".format
-    return _H.format(cls="dictionary", obj="blockMeshDict") + f"""
-scale 1;
-vertices
-(
-    (0 0 0) ({f(BREADTH)} 0 0) ({f(BREADTH)} {f(HEIGHT)} 0) (0 {f(HEIGHT)} 0)
-    (0 0 {f(LENGTH)}) ({f(BREADTH)} 0 {f(LENGTH)}) ({f(BREADTH)} {f(HEIGHT)} {f(LENGTH)}) (0 {f(HEIGHT)} {f(LENGTH)})
-);
-blocks ( hex (0 1 2 3 4 5 6 7) ({nx} {ny} {nz}) simpleGrading (1 1 1) );
-edges ();
-boundary
-(
-    leftWall  {{ type wall; faces ( (0 4 7 3) ); }}
-    rightWall {{ type wall; faces ( (1 2 6 5) ); }}
-    lowerWall {{ type wall; faces ( (0 1 5 4) ); }}
-    frontWall {{ type wall; faces ( (0 3 2 1) ); }}
-    backWall  {{ type wall; faces ( (4 5 6 7) ); }}
-    atmosphere {{ type patch; faces ( (3 7 6 2) ); }}
-);
-mergePatchPairs ();
-"""
-
-
-_WALLS = ("leftWall", "rightWall", "lowerWall", "frontWall", "backWall")
-
-
-def _field_U() -> str:
-    walls = "\n".join(f"    {w} {{ type movingWallVelocity; value uniform (0 0 0); }}" for w in _WALLS)
-    return _H.format(cls="volVectorField", obj="U") + f"""
-dimensions [0 1 -1 0 0 0 0];
-internalField uniform (0 0 0);
-boundaryField
-{{
-{walls}
-    atmosphere {{ type pressureInletOutletVelocity; value uniform (0 0 0); }}
-}}
-"""
-
-
-def _field_prgh() -> str:
-    walls = "\n".join(f"    {w} {{ type fixedFluxPressure; value uniform 0; }}" for w in _WALLS)
-    return _H.format(cls="volScalarField", obj="p_rgh") + f"""
-dimensions [1 -1 -2 0 0 0 0];
-internalField uniform 0;
-boundaryField
-{{
-{walls}
-    atmosphere {{ type totalPressure; p0 uniform 0; }}
-}}
-"""
-
-
-def _field_alpha() -> str:
-    walls = "\n".join(f"    {w} {{ type zeroGradient; }}" for w in _WALLS)
-    return _H.format(cls="volScalarField", obj="alpha.water") + f"""
-dimensions [0 0 0 0 0 0 0];
-internalField uniform 0;
-boundaryField
-{{
-{walls}
-    atmosphere {{ type inletOutlet; inletValue uniform 0; value uniform 0; }}
-}}
-"""
-
-
-def _control(end_time: float, dt: float) -> str:
-    # Write only at the end (minimise IO so the timing reflects the solver).
-    return _H.format(cls="dictionary", obj="controlDict") + f"""
-application interFoam;
-startFrom startTime; startTime 0; stopAt endTime;
-endTime {end_time:.6g}; deltaT {dt:.6g};
-writeControl adjustableRunTime; writeInterval {end_time:.6g}; purgeWrite 1;
-writeFormat ascii; writePrecision 8; writeCompression off;
-timeFormat general; timePrecision 8; runTimeModifiable no;
-adjustTimeStep yes; maxCo 0.9; maxAlphaCo 0.9; maxDeltaT 0.01;
-"""
-
-
-_FVSCHEMES = """
-ddtSchemes { default Euler; }
-gradSchemes { default Gauss linear; }
-divSchemes
-{
-    div(rhoPhi,U) Gauss linearUpwind grad(U);
-    div(phi,alpha) Gauss vanLeer;
-    div(phirb,alpha) Gauss linear;
-    div(((rho*nuEff)*dev2(T(grad(U))))) Gauss linear;
-}
-laplacianSchemes { default Gauss linear corrected; }
-interpolationSchemes { default linear; }
-snGradSchemes { default corrected; }
-"""
-
-_FVSOLUTION = """
-solvers
-{
-    "alpha.water.*"
-    {
-        nAlphaCorr 2; nAlphaSubCycles 1; cAlpha 1;
-        MULESCorr yes; nLimiterIter 5;
-        solver smoothSolver; smoother symGaussSeidel; tolerance 1e-8; relTol 0;
-    }
-    "pcorr.*" { solver PCG; preconditioner DIC; tolerance 1e-5; relTol 0; }
-    p_rgh { solver PCG; preconditioner DIC; tolerance 1e-07; relTol 0.05; }
-    p_rghFinal { $p_rgh; relTol 0; }
-    U { solver smoothSolver; smoother symGaussSeidel; tolerance 1e-06; relTol 0; }
-    cellDisplacement { solver PCG; preconditioner DIC; tolerance 1e-06; relTol 0; }
-}
-PIMPLE { momentumPredictor no; nOuterCorrectors 2; nCorrectors 3; nNonOrthogonalCorrectors 0; }
-relaxationFactors { equations { ".*" 1; } }
-"""
-
-_TRANSPORT = """
-phases (water air);
-water { transportModel Newtonian; nu 1e-06; rho 1000; }
-air   { transportModel Newtonian; nu 1.48e-05; rho 1; }
-sigma 0.07;
-"""
-
-
-def _setfields() -> str:
-    h = FILL * BREADTH
-    f = "{:.6g}".format
-    return _H.format(cls="dictionary", obj="setFieldsDict") + f"""
-defaultFieldValues ( volScalarFieldValue alpha.water 0 );
-regions
-(
-    boxToCell
-    {{
-        box (0 0 0) ({f(BREADTH)} {f(h)} {f(LENGTH)});
-        fieldValues ( volScalarFieldValue alpha.water 1 );
-    }}
-);
-"""
-
-
 def _decompose(n: int) -> str:
     return _H.format(cls="dictionary", obj="decomposeParDict") + f"""
 numberOfSubdomains {n};
@@ -203,37 +59,10 @@ method scotch;
 
 def build_case(case: Path, cpb: int, end_time: float, dt: float) -> int:
     """Write a complete 3D interFoam forced-roll case; return the cell count."""
-    if case.exists():
-        shutil.rmtree(case)
-    (case / "system").mkdir(parents=True)
-    (case / "constant").mkdir()
-    (case / "0").mkdir()
-    nx = cpb
-    ny = max(1, round(HEIGHT / BREADTH * cpb))
-    nz = max(1, round(LENGTH / BREADTH * cpb))
-    (case / "system" / "blockMeshDict").write_text(_blockmesh(nx, ny, nz))
-    (case / "system" / "controlDict").write_text(_control(end_time, dt))
-    (case / "system" / "fvSchemes").write_text(_H.format(cls="dictionary", obj="fvSchemes") + _FVSCHEMES)
-    (case / "system" / "fvSolution").write_text(_H.format(cls="dictionary", obj="fvSolution") + _FVSOLUTION)
-    (case / "system" / "setFieldsDict").write_text(_setfields())
-    (case / "constant" / "transportProperties").write_text(
-        _H.format(cls="dictionary", obj="transportProperties") + _TRANSPORT)
-    (case / "constant" / "g").write_text(
-        _H.format(cls="uniformDimensionedVectorField", obj="g")
-        + "dimensions [0 1 -2 0 0 0 0];\nvalue (0 -9.81 0);\n")
-    (case / "constant" / "turbulenceProperties").write_text(
-        _H.format(cls="dictionary", obj="turbulenceProperties") + "simulationType laminar;\n")
-    # Roll about the longitudinal (z) axis through the floor centre — engine YAW.
-    roll = PrescribedMotion(MotionType.YAW, amplitude=ROLL_DEG,
-                            period=_first_mode_period(),
-                            origin=(0.5 * BREADTH, 0.0, 0.5 * LENGTH))
-    (case / "constant" / "dynamicMeshDict").write_text(
-        _H.format(cls="dictionary", obj="dynamicMeshDict") + "\n"
-        + render_dynamic_mesh_dict_body(roll) + "\n")
-    (case / "0" / "U").write_text(_field_U())
-    (case / "0" / "p_rgh").write_text(_field_prgh())
-    (case / "0" / "alpha.water").write_text(_field_alpha())
-    return nx * ny * nz
+    return write_sloshing_case(
+        case,
+        Sloshing3DConfig(cpb=cpb, end_time=end_time, delta_t=dt),
+    )
 
 
 def _sh(argv: List[str], cwd: Path, log: Path, timeout: int = 7200) -> int:
@@ -293,7 +122,6 @@ def collect(cpb: int, end_time: float, rows: List[Dict[str, Any]],
         min(done, key=lambda r: r["ranks"]) if done else None)
     for r in done:
         if base:
-            sp = base["s_per_step"] * base["ranks"] / r["s_per_step"]  # normalise to 1-rank equiv
             r["speedup_vs_1rank"] = round(base["s_per_step"] / r["s_per_step"], 3)
             r["parallel_efficiency"] = round(
                 (base["s_per_step"] / r["s_per_step"]) / (r["ranks"] / base["ranks"]), 3)
