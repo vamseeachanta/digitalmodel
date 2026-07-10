@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import subprocess
 from pathlib import Path
@@ -39,6 +40,9 @@ def make_case(root: Path) -> Path:
         "FoamFile { object controlDict; }\napplication interFoam;\n",
         encoding="utf-8",
     )
+    (case / "0" / "alpha.water").write_text("initial field\n", encoding="utf-8")
+    (case / "constant" / "g").write_text("gravity\n", encoding="utf-8")
+    (case / "input.yml").write_text("fixture: synthetic\n", encoding="utf-8")
     return case
 
 
@@ -146,11 +150,10 @@ def test_conversion_runs_fixed_argv_promotes_mesh_and_writes_manifest_last(
     tmp_path: Path, monkeypatch
 ) -> None:
     case = make_case(tmp_path)
-    source = write_source_msh(tmp_path / "source.msh")
+    source = write_source_msh(case / "source.msh")
     calls: list = []
     manifest_observations: list[bool] = []
     from digitalmodel.solvers.openfoam import gmsh_bridge
-
     real_write = gmsh_bridge._atomic_write_json
 
     def observe_manifest(destination: Path, payload: dict) -> None:
@@ -179,6 +182,15 @@ def test_conversion_runs_fixed_argv_promotes_mesh_and_writes_manifest_last(
     assert result.manifest["status"] == "completed"
     assert result.manifest["schema_version"] == 1
     assert result.manifest["toolchain"] == TOOLCHAIN.to_dict()
+    assert result.manifest["source_msh"] == {
+        "path": "source.msh",
+        "sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
+        "size": source.stat().st_size,
+        "format": "2.2",
+    }
+    assert result.manifest["case_inputs"]["file_count"] == 5
+    assert result.manifest["case_inputs"]["total_bytes"] > source.stat().st_size
+    assert len(result.manifest["case_inputs"]["tree_sha256"]) == 64
     assert result.manifest["poly_mesh"]["tree_sha256"] == hash_tree(
         case / "constant" / "polyMesh"
     ).sha256
@@ -191,7 +203,7 @@ def test_command_failure_leaves_no_promoted_mesh_or_completed_manifest(
     tmp_path: Path, failed_stage: str
 ) -> None:
     case = make_case(tmp_path)
-    source = write_source_msh(tmp_path / "source.msh")
+    source = write_source_msh(case / "source.msh")
 
     def run(argv, **kwargs):
         if argv[0] == "gmshToFoam":
@@ -210,7 +222,7 @@ def test_command_failure_leaves_no_promoted_mesh_or_completed_manifest(
 
 def test_semantic_check_mesh_failure_cannot_promote(tmp_path: Path) -> None:
     case = make_case(tmp_path)
-    source = write_source_msh(tmp_path / "source.msh")
+    source = write_source_msh(case / "source.msh")
 
     def run(argv, **kwargs):
         if argv[0] == "gmshToFoam":
@@ -232,7 +244,7 @@ def test_semantic_check_mesh_failure_cannot_promote(tmp_path: Path) -> None:
 
 def test_symlink_in_converted_tree_is_rejected(tmp_path: Path) -> None:
     case = make_case(tmp_path)
-    source = write_source_msh(tmp_path / "source.msh")
+    source = write_source_msh(case / "source.msh")
 
     with pytest.raises(GmshBridgeError, match="symlink"):
         prepare_gmsh_poly_mesh(
@@ -249,7 +261,7 @@ def test_failure_after_promotion_leaves_orphan_that_retry_refuses(
     tmp_path: Path, monkeypatch
 ) -> None:
     case = make_case(tmp_path)
-    source = write_source_msh(tmp_path / "source.msh")
+    source = write_source_msh(case / "source.msh")
     from digitalmodel.solvers.openfoam import gmsh_bridge
 
     def fail_manifest(*_args, **_kwargs) -> None:
@@ -299,3 +311,28 @@ def test_source_input_failures_happen_before_commands(
         )
 
     assert calls == []
+
+
+def test_source_mutation_after_staging_is_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    case = make_case(tmp_path)
+    source = write_source_msh(case / "source.msh")
+    from digitalmodel.solvers.openfoam import gmsh_bridge
+
+    populate = gmsh_bridge._populate_stage
+
+    def mutate_after_copy(*args, **kwargs):
+        captured = populate(*args, **kwargs)
+        source.write_bytes(source.read_bytes() + b"\n")
+        return captured
+
+    monkeypatch.setattr(gmsh_bridge, "_populate_stage", mutate_after_copy)
+
+    with pytest.raises(GmshBridgeError, match="source MSH mutated"):
+        prepare_gmsh_poly_mesh(
+            case,
+            source,
+            toolchain=TOOLCHAIN,
+            command_runner=successful_runner([]),
+        )
