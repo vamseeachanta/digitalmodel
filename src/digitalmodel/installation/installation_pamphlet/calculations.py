@@ -95,6 +95,24 @@ DEFAULT_OPERATIONS = ["transit", "dp_station_keeping", "heavy_lift"]
 DEFAULT_TP_GRID_S = [6.0, 8.0, 10.0, 12.0, 14.0, 16.0]
 
 # ----------------------------------------------------------------------------
+# Roll-damping sensitivity band (#1538 follow-up). BokaLift 2 diffraction was run
+# at two external roll-damping (B44) levels: zeta = 5% critical -> roll RAO peak
+# 23.5 deg/m; zeta = 10% (bilge keels / appendages) -> roll peak 19.2 deg/m,
+# heave 7.17. Roll is strongly damping-controlled at resonance, so the operation
+# envelopes (limiting Hs vs Tp) are honestly presented as an UNCERTAINTY BAND
+# across the zeta = 5-10% range rather than a single value.
+# ----------------------------------------------------------------------------
+DAMPING_BAND_NOTE = (
+    "Roll-damping sensitivity band: operation envelopes span the zeta = 5-10% "
+    "critical roll-damping range (BokaLift 2 external_damping B44: zeta = 5% -> "
+    "roll RAO peak 23.5 deg/m; zeta = 10% -> 19.2 deg/m, heave 7.17). Roll is "
+    "strongly damping-controlled at resonance, so the limiting Hs at each Tp is "
+    "presented as a range rather than a single value: the lower bound uses the "
+    "low-damping (zeta = 5%) RAO, the upper bound the high-damping (zeta = 10%, "
+    "bilge-keel / appendage) RAO."
+)
+
+# ----------------------------------------------------------------------------
 # Splash-zone (lowering through the wave zone) constants — DNV-RP-H103 (2011)
 # Sec 4 "Lifting through wave zone". Seawater density and g are fixed; the
 # lowering speed and snap/slack-sling margin are documented screening values.
@@ -376,6 +394,64 @@ def compute_envelopes(
     return env_out
 
 
+def compute_envelope_band(
+    rao_basis: str,
+    operations: list[str],
+    tp_grid_s: list[float],
+    rao_artifact_low: str | Path | None,
+    rao_artifact_high: str | Path | None,
+) -> dict[str, Any]:
+    """Roll-damping sensitivity BAND of the operation envelopes (#1538).
+
+    Given a LOW-damping (larger roll response, e.g. zeta = 5% critical) and a
+    HIGH-damping (smaller roll response, e.g. zeta = 10% with bilge keels /
+    appendages) vessel RAO artifact, compute the envelopes for each and zip them
+    into an uncertainty band. Roll is strongly damping-controlled at resonance,
+    so the limiting Hs vs Tp is honestly a range across the zeta = 5-10% bound
+    rather than a single value.
+
+    Returns an ordered dict keyed by operation, each value being::
+
+        {"alpha", "hs_by_tp_low", "hs_by_tp_high", "gov_by_tp_low", "gov_by_tp_high"}
+
+    ``hs_by_tp_low`` / ``hs_by_tp_high`` are the LOWER / UPPER Hs bound at each Tp
+    (``min`` / ``max`` of the two damping cases), so the band is always ORDERED
+    (``low <= high``) by construction. Physically the lower bound is the
+    low-damping (more onerous) case and the upper bound the high-damping case.
+    ``gov_by_tp_*`` carry the governing DOF of the respective bound.
+
+    This is purely additive — it composes :func:`compute_envelopes` twice and
+    leaves that function's signature and callers untouched. Deterministic.
+    """
+    low = compute_envelopes(rao_basis, operations, tp_grid_s, rao_artifact=rao_artifact_low)
+    high = compute_envelopes(rao_basis, operations, tp_grid_s, rao_artifact=rao_artifact_high)
+    band: dict[str, Any] = {}
+    for op in operations:
+        lo, hi = low[op], high[op]
+        hs_low: dict[str, float] = {}
+        hs_high: dict[str, float] = {}
+        gov_low: dict[str, str] = {}
+        gov_high: dict[str, str] = {}
+        for key, a in lo["hs_by_tp"].items():
+            b = hi["hs_by_tp"][key]
+            # order the band by Hs so hs_by_tp_low <= hs_by_tp_high always holds;
+            # track which damping case supplied each bound for the governing DOF.
+            if a <= b:
+                hs_low[key], hs_high[key] = a, b
+                gov_low[key], gov_high[key] = lo["gov_by_tp"][key], hi["gov_by_tp"][key]
+            else:
+                hs_low[key], hs_high[key] = b, a
+                gov_low[key], gov_high[key] = hi["gov_by_tp"][key], lo["gov_by_tp"][key]
+        band[op] = {
+            "alpha": lo["alpha"],
+            "hs_by_tp_low": hs_low,
+            "hs_by_tp_high": hs_high,
+            "gov_by_tp_low": gov_low,
+            "gov_by_tp_high": gov_high,
+        }
+    return band
+
+
 # ---------------------------------------------------------------- splash-zone envelope
 def compute_splashzone_envelope(
     structure: dict[str, Any],
@@ -592,6 +668,7 @@ def build_provenance(
     structure_catalog_used: bool = False,
     splashzone_computed: bool = False,
     rao_from_artifact: bool = False,
+    damping_band: bool = False,
 ) -> dict[str, Any]:
     """Run-state provenance manifest (T1..T8). Pure.
 
@@ -612,6 +689,11 @@ def build_provenance(
     ``"vessel"`` basis is only marked ``actual`` (OrcaWave diffraction) when a REAL
     vessel RAO artifact was actually ingested. With no artifact synced it stays on
     the ship-shaped proxy and carries the "RAO artifact not yet synced" note.
+
+    When ``damping_band`` is True the manifest carries a ``damping_note``
+    (:data:`DAMPING_BAND_NOTE`) recording that the operation envelopes are a
+    zeta = 5-10% roll-damping sensitivity band (roll is damping-controlled at
+    resonance). The T-task list is unchanged (the note is additive).
     """
     runs = list(completed_runs or [])
     prov = _effective_provenance(rao_basis, rao_from_artifact)
@@ -685,7 +767,7 @@ def build_provenance(
             )
         ),
     ]
-    return {
+    manifest: dict[str, Any] = {
         "vessel": vessel_name,
         "rao_basis": rao_basis,
         "rao_provenance": prov,
@@ -693,6 +775,9 @@ def build_provenance(
         "n_completed_runs": len(runs),
         "tasks": tasks,
     }
+    if damping_band:
+        manifest["damping_note"] = DAMPING_BAND_NOTE
+    return manifest
 
 
 # ---------------------------------------------------------------- assembly
