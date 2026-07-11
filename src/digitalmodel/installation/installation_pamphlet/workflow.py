@@ -208,6 +208,18 @@ def scan_completed_runs(results_dir: str | Path) -> list[dict[str, Any]]:
                 or audit.get("rao_artifact")
                 or summary.get("rao_artifact")
             )
+            if not rao_artifact:
+                # Convention fallback (#1538): a completed diffraction solve
+                # returns ``diffraction_results.json`` (the RAO authority, dm
+                # #1537) into its results bundle. Derive the artifact path from
+                # the returned-files list so the "vessel" basis ingests the real
+                # vessel RAO without deckhand needing to add an explicit ref.
+                # ``returned_files`` are relative to the queue root; ``base`` is
+                # ``<queue>/results``, so ``base.parent`` is the queue root.
+                for rf in summary.get("returned_files") or []:
+                    if str(rf).endswith("diffraction_results.json"):
+                        rao_artifact = str(base.parent / rf)
+                        break
             out.append(
                 {
                     "run_id": r.get("run_id"),
