@@ -1,0 +1,122 @@
+# ABOUTME: Demo offshore field for the full layout model (#1509, epic #1507).
+# ABOUTME: Synthetic bathymetry (negative elevation) + subsea asset taxonomy demo.
+#
+# Synthetic demo field. Coordinates are a local Cartesian grid in metres
+# (easting/northing from an arbitrary field datum). Elevation is signed
+# relative to the sea surface: NEGATIVE values are water depth (bathymetry).
+# The synthetic surface stands in for a real bathymetry grid (e.g. GEBCO /
+# NOAA); real-source ingestion is the worldenergydata data-foundation epic's
+# deliverable (worldenergydata#929), not this model's.
+
+field:
+  name: Demo Offshore Field
+  coordinate_note: local Cartesian metres from field datum; z negative below sea surface
+
+surface:
+  kind: synthetic          # synthetic | csv_grid
+  x_min_m: 0.0
+  x_max_m: 8000.0
+  y_min_m: 0.0
+  y_max_m: 8000.0
+  nx: 81
+  ny: 81
+  base_elevation_m: -1450.0   # nominal water depth 1450 m
+  amplitude_m: 60.0
+  x_wavelength_m: 6000.0
+  y_wavelength_m: 5000.0
+
+assets:
+  - id: FPSO-1
+    kind: vessel
+    subtype: fpso
+    name: Demo FPSO
+    x_m: 4000.0
+    y_m: 4000.0
+    z_m: 0.0                 # floats at the sea surface (explicit override)
+  - id: MAN-1
+    kind: manifold
+    subtype: 4-slot cluster manifold
+    name: Drill-centre manifold
+    x_m: 2500.0
+    y_m: 2500.0
+  - id: W-1
+    kind: well
+    name: Demo subsea well 1
+    x_m: 2000.0
+    y_m: 2000.0
+    rate_m3_per_day: 950.0   # gross liquid rate (demo value)
+  - id: W-2
+    kind: well
+    name: Demo subsea well 2
+    x_m: 2900.0
+    y_m: 1900.0
+    rate_m3_per_day: 820.0
+  - id: W-3
+    kind: well
+    name: Demo subsea well 3
+    x_m: 1900.0
+    y_m: 3000.0
+    rate_m3_per_day: 780.0
+  - id: XT-1                 # trees are co-located with their wells
+    kind: tree
+    subtype: vertical
+    x_m: 2000.0
+    y_m: 2000.0
+  - id: XT-2
+    kind: tree
+    subtype: vertical
+    x_m: 2900.0
+    y_m: 1900.0
+  - id: XT-3
+    kind: tree
+    subtype: vertical
+    x_m: 1900.0
+    y_m: 3000.0
+  - id: EXP-1
+    kind: host
+    subtype: export tie-in
+    name: Export pipeline tie-in
+    x_m: 7500.0
+    y_m: 4000.0
+
+connections:
+  - id: JMP-1
+    kind: jumper
+    from: XT-1
+    to: MAN-1
+    inner_diameter_m: 0.1524   # 6-inch nominal bore (demo)
+    roughness_m: 4.5e-05       # commercial steel absolute roughness (Moody chart)
+  - id: JMP-2
+    kind: jumper
+    from: XT-2
+    to: MAN-1
+    inner_diameter_m: 0.1524
+    roughness_m: 4.5e-05
+  - id: JMP-3
+    kind: jumper
+    from: XT-3
+    to: MAN-1
+    inner_diameter_m: 0.1524
+    roughness_m: 4.5e-05
+  - id: FL-1                   # production flowline, routed via a waypoint
+    kind: flowline
+    from: MAN-1
+    to: FPSO-1
+    inner_diameter_m: 0.254    # 10-inch nominal bore (demo)
+    roughness_m: 4.5e-05
+    waypoints:
+      - x_m: 3200.0
+        y_m: 3600.0
+  - id: UMB-1                  # controls/chemicals umbilical (no bore hydraulics)
+    kind: umbilical
+    from: FPSO-1
+    to: MAN-1
+  - id: PL-1                   # export pipeline
+    kind: pipeline
+    from: FPSO-1
+    to: EXP-1
+    inner_diameter_m: 0.4064   # 16-inch nominal bore (demo)
+    roughness_m: 4.5e-05
+
+routing:
+  sample_spacing_m: 50.0       # surface sampling step along each routed leg
