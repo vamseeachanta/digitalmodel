@@ -74,8 +74,10 @@ PHASE_CONVENTION = (
     "roll x(t)=A*sin(omega*t) [deg]; conduit pulse Q(t)=Q_peak*sin(omega*t) is "
     "taken in phase with roll velocity (positive Q = source->dest inflow at the "
     "inlet patch). Over one half-cycle V_transfer=integral_0^{T/2} Q dt="
-    "Q_peak*T/pi, i.e. Q_peak=pi*f*V_transfer. Inlet U is set to the peak "
-    "conduit velocity Q_peak/A_conduit; outlet is pressure-driven."
+    "Q_peak*T/pi, i.e. Q_peak=pi*f*V_transfer. The inlet is specified as a "
+    "VOLUMETRIC flow rate (flowRateInletVelocity), area-independent, at the mean "
+    "half-cycle rate 2*f*V_transfer so the integral over T/2 equals V_transfer; "
+    "outlet is pressure-driven."
 )
 
 
@@ -250,6 +252,19 @@ def peak_flow_rate(v_transfer: float, roll_period_s: float) -> float:
     return math.pi * f * v_transfer
 
 
+def mean_flow_rate(v_transfer: float, roll_period_s: float) -> float:
+    """Mean half-cycle conduit flow rate 2 * f * V_transfer (m^3/s).
+
+    This is the constant volumetric rate that, held over one half-cycle
+    ``T/2``, transfers exactly ``V_transfer`` (``q_mean * T/2 = V_transfer``).
+    Unlike a face velocity, a volumetric flow rate is independent of the inlet
+    patch area, which is why the exchange inlet BC uses it.
+    """
+    if roll_period_s <= 0.0:
+        raise ValueError(f"roll_period_s must be positive, got {roll_period_s}")
+    return 2.0 * v_transfer / roll_period_s
+
+
 # ============================================================================
 # Mapper: SweepCase -> OpenFOAMCase
 # ============================================================================
@@ -308,9 +323,15 @@ def map_sweep_case_to_openfoam_case(
 
     v_transfer = transfer_volume(sweep_case, spec)
     q_peak = peak_flow_rate(v_transfer, sweep_case.roll_period_s)
-    v_peak = q_peak / spec.conduit.area  # peak conduit velocity for the inlet BC
+    q_mean = mean_flow_rate(v_transfer, sweep_case.roll_period_s)
+    # Diagnostic only: the peak conduit velocity if the conduit area were the
+    # inlet face. The inlet BC itself is specified as a VOLUMETRIC flow rate
+    # (area-independent) so the flux is correct regardless of the inlet patch
+    # area -- imposing q_peak/A_conduit as a face velocity over-fluxed the tank
+    # by the ratio of face area to conduit area (#1528 slice-7 defect fix).
+    v_peak = q_peak / spec.conduit.area
 
-    case.boundary_conditions = _exchange_boundary_conditions(v_peak)
+    case.boundary_conditions = _exchange_boundary_conditions(q_mean)
 
     case.metadata = {
         "case_id": sweep_case.case_id,
@@ -322,6 +343,8 @@ def map_sweep_case_to_openfoam_case(
         "roll_frequency_hz": float(sweep_case.roll_frequency_hz),
         "transfer_volume_m3": float(v_transfer),
         "q_peak_m3_s": float(q_peak),
+        "volumetric_flow_rate_m3_s": float(q_mean),
+        "mean_half_cycle_rate_m3_s": float(q_mean),
         "peak_conduit_velocity_m_s": float(v_peak),
         "phase_convention": PHASE_CONVENTION,
     }
@@ -334,16 +357,21 @@ def map_sweep_case_to_openfoam_case(
     return case
 
 
-def _exchange_boundary_conditions(peak_velocity: float) -> list[BoundaryCondition]:
+def _exchange_boundary_conditions(flow_rate: float) -> list[BoundaryCondition]:
     """Inlet/outlet boundary conditions for the conduit exchange (interFoam).
 
-    The inlet drives the peak conduit velocity (in phase with the roll velocity
-    per the recorded phase convention); the outlet is pressure-driven. Fields
-    are the standard interFoam set (U, p_rgh, alpha.water).
+    The inlet imposes the conduit VOLUMETRIC flow rate via
+    ``flowRateInletVelocity`` (OpenFOAM computes the face velocity as
+    ``Q / A_patch`` internally, so the flux is correct regardless of the inlet
+    patch area); the outlet is pressure-driven. Fields are the standard
+    interFoam set (U, p_rgh, alpha.water).
     """
-    inlet_u = f"uniform ({peak_velocity:.10g} 0 0)"
     return [
-        BoundaryCondition("inlet", BoundaryType.FIXED_VALUE, "U", value=inlet_u),
+        BoundaryCondition(
+            "inlet", BoundaryType.FLOW_RATE_INLET_VELOCITY, "U",
+            value="uniform (0 0 0)",
+            extra={"volumetricFlowRate": f"constant {flow_rate:.10g}"},
+        ),
         BoundaryCondition("inlet", BoundaryType.ZERO_GRADIENT, "p_rgh"),
         BoundaryCondition(
             "inlet", BoundaryType.INLET_OUTLET, "alpha.water",

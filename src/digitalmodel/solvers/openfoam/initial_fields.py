@@ -44,92 +44,92 @@ def _foam_header(foam_class: str, foam_object: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# boundaryField rendering (default patches, overridden by attached BCs)
+# ---------------------------------------------------------------------------
+
+
+def _render_patch_block(patch: str, entries) -> str:
+    lines = [f"    {patch}", "    {"]
+    for key, val in entries.items():
+        lines.append(f"        {key}    {val};")
+    lines.append("    }")
+    return "\n".join(lines)
+
+
+def _boundary_field(field: str, defaults, boundary_conditions=None) -> str:
+    """Render a ``boundaryField`` block for ``field``.
+
+    ``defaults`` maps patch name -> ordered dict of foam entries. Any attached
+    :class:`BoundaryCondition` whose ``field`` matches overrides (or adds) that
+    patch's block, so the case builder honours per-case boundary conditions
+    (e.g. a conduit ``flowRateInletVelocity`` inlet) instead of the hardcoded
+    defaults. When no BC targets ``field`` the defaults are emitted verbatim.
+    """
+    overrides = {}
+    for bc in (boundary_conditions or []):
+        if bc.field == field:
+            block = bc.to_foam_dict()[bc.patch_name]
+            overrides[bc.patch_name] = {k: str(v) for k, v in block.items()}
+    blocks = [
+        _render_patch_block(patch, overrides.get(patch, entries))
+        for patch, entries in defaults.items()
+    ]
+    for patch, entries in overrides.items():
+        if patch not in defaults:
+            blocks.append(_render_patch_block(patch, entries))
+    return "boundaryField\n{\n" + "\n".join(blocks) + "\n}\n"
+
+
+# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
 
-def write_velocity_field(zero_dir: Path) -> None:
-    """Write 0/U velocity initial and boundary conditions."""
-    content = _foam_header("volVectorField", "U")
-    content += """
-dimensions  [0 1 -1 0 0 0 0];
-
-internalField   uniform (0 0 0);
-
-boundaryField
-{
-    inlet
-    {
-        type    fixedValue;
-        value   uniform (1 0 0);
-    }
-    outlet
-    {
-        type    zeroGradient;
-    }
-    bottom
-    {
-        type    noSlip;
-    }
-    top
-    {
-        type    slip;
-    }
-    sides
-    {
-        type    symmetry;
-    }
+_U_DEFAULTS = {
+    "inlet": {"type": "fixedValue", "value": "uniform (1 0 0)"},
+    "outlet": {"type": "zeroGradient"},
+    "bottom": {"type": "noSlip"},
+    "top": {"type": "slip"},
+    "sides": {"type": "symmetry"},
 }
 
-"""
-    content += _FOOTER
+
+def write_velocity_field(zero_dir: Path, boundary_conditions=None) -> None:
+    """Write 0/U velocity initial and boundary conditions.
+
+    Attached ``boundary_conditions`` for field ``U`` override the defaults per
+    patch (e.g. a conduit ``flowRateInletVelocity`` inlet).
+    """
+    content = _foam_header("volVectorField", "U")
+    content += "\ndimensions  [0 1 -1 0 0 0 0];\n\ninternalField   uniform (0 0 0);\n\n"
+    content += _boundary_field("U", _U_DEFAULTS, boundary_conditions)
+    content += "\n" + _FOOTER
     (zero_dir / "U").write_text(content)
 
 
-def write_pressure_field(zero_dir: Path, is_multiphase: bool) -> None:
+def write_pressure_field(
+    zero_dir: Path, is_multiphase: bool, boundary_conditions=None
+) -> None:
     """Write 0/p or 0/p_rgh pressure initial and boundary conditions.
 
     For VOF (multiphase) simulations, OpenFOAM uses a modified pressure
     p_rgh = p - rho*g*h. The file is named accordingly so the solver
-    can find it.
+    can find it. Attached ``boundary_conditions`` for the pressure field
+    override the defaults per patch.
     """
     field_name = "p_rgh" if is_multiphase else "p"
     dims = "[1 -1 -2 0 0 0 0]"
-
+    defaults = {
+        "inlet": {"type": "zeroGradient"},
+        "outlet": {"type": "fixedValue", "value": "uniform 0"},
+        "bottom": {"type": "zeroGradient"},
+        "top": {"type": "totalPressure", "p0": "uniform 0"},
+        "sides": {"type": "symmetry"},
+    }
     content = _foam_header("volScalarField", field_name)
-    content += f"""
-dimensions  {dims};
-
-internalField   uniform 0;
-
-boundaryField
-{{
-    inlet
-    {{
-        type    zeroGradient;
-    }}
-    outlet
-    {{
-        type    fixedValue;
-        value   uniform 0;
-    }}
-    bottom
-    {{
-        type    zeroGradient;
-    }}
-    top
-    {{
-        type    totalPressure;
-        p0      uniform 0;
-    }}
-    sides
-    {{
-        type    symmetry;
-    }}
-}}
-
-"""
-    content += _FOOTER
+    content += f"\ndimensions  {dims};\n\ninternalField   uniform 0;\n\n"
+    content += _boundary_field(field_name, defaults, boundary_conditions)
+    content += "\n" + _FOOTER
     # Write to the correct filename for the solver
     (zero_dir / field_name).write_text(content)
 
@@ -155,43 +155,25 @@ def write_turbulence_fields(
         _write_epsilon_field(zero_dir)
 
 
-def write_alpha_water(zero_dir: Path) -> None:
-    """Write 0/alpha.water VOF phase fraction field."""
-    content = _foam_header("volScalarField", "alpha.water")
-    content += """
-dimensions  [0 0 0 0 0 0 0];
-
-internalField   uniform 0;
-
-boundaryField
-{
-    inlet
-    {
-        type    fixedValue;
-        value   uniform 0;
-    }
-    outlet
-    {
-        type    zeroGradient;
-    }
-    bottom
-    {
-        type    zeroGradient;
-    }
-    top
-    {
-        type    inletOutlet;
-        inletValue  uniform 0;
-        value       uniform 0;
-    }
-    sides
-    {
-        type    symmetry;
-    }
+_ALPHA_DEFAULTS = {
+    "inlet": {"type": "fixedValue", "value": "uniform 0"},
+    "outlet": {"type": "zeroGradient"},
+    "bottom": {"type": "zeroGradient"},
+    "top": {"type": "inletOutlet", "inletValue": "uniform 0", "value": "uniform 0"},
+    "sides": {"type": "symmetry"},
 }
 
-"""
-    content += _FOOTER
+
+def write_alpha_water(zero_dir: Path, boundary_conditions=None) -> None:
+    """Write 0/alpha.water VOF phase fraction field.
+
+    Attached ``boundary_conditions`` for ``alpha.water`` override the defaults
+    per patch (e.g. an ``inletOutlet`` inlet that admits water on inflow).
+    """
+    content = _foam_header("volScalarField", "alpha.water")
+    content += "\ndimensions  [0 0 0 0 0 0 0];\n\ninternalField   uniform 0;\n\n"
+    content += _boundary_field("alpha.water", _ALPHA_DEFAULTS, boundary_conditions)
+    content += "\n" + _FOOTER
     (zero_dir / "alpha.water").write_text(content)
 
 

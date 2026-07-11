@@ -412,8 +412,9 @@ mergePatchPairs
     def _write_zero(self, zero_dir: Path) -> None:
         """Write all initial field files in 0/."""
         is_mp = self._case.solver_config.is_multiphase
-        write_velocity_field(zero_dir)
-        write_pressure_field(zero_dir, is_multiphase=is_mp)
+        bcs = self._case.boundary_conditions
+        write_velocity_field(zero_dir, boundary_conditions=bcs)
+        write_pressure_field(zero_dir, is_multiphase=is_mp, boundary_conditions=bcs)
         write_turbulence_fields(zero_dir, self._case.turbulence_model)
         if is_mp:
-            write_alpha_water(zero_dir)
+            write_alpha_water(zero_dir, boundary_conditions=bcs)
