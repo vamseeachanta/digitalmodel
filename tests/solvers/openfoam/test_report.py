@@ -129,7 +129,10 @@ def make_manifest():
     return {
         "schema_version": "1.0.0",
         "study_name": "Partial-Fill Sloshing Screening",
-        "provenance": "/mnt/local-analysis/secret-client/run_2026/manifest.json",
+        # Deliberately dev/client-looking absolute path: this fixture verifies the
+        # report scrubs it to a basename (asserted below). Exempted from the
+        # no-abs-paths CI gate because the literal is the test's adversarial input.
+        "provenance": "/mnt/local-analysis/secret-client/run_2026/manifest.json",  # abs-path-allowed
         "cases": cases,
         "content_hash": "abc123def456",
     }
