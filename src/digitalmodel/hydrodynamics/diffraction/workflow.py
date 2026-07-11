@@ -143,9 +143,11 @@ class DiffractionWorkflow:
                 results_obj.to_dict(),
                 indent=2,
                 # numpy scalars/arrays from the extraction layer
-                default=lambda o: o.item()
-                if hasattr(o, "item")
-                else (o.tolist() if hasattr(o, "tolist") else str(o)),
+                default=lambda o: (
+                    o.item()
+                    if hasattr(o, "item")
+                    else (o.tolist() if hasattr(o, "tolist") else str(o))
+                ),
             )
         )
         return path

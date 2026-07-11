@@ -5,7 +5,6 @@ from unittest.mock import patch
 import pytest
 import yaml
 
-
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 REPO_ROOT = Path(__file__).resolve().parents[3]
 UNIT_BOX = REPO_ROOT / "examples" / "hydrodynamics" / "diffraction" / "unit_box_rao"
@@ -27,9 +26,7 @@ def _workflow_cfg(tmp_path: Path, solver: str) -> dict:
 
 
 def test_diffraction_workflow_generates_orcawave_input(tmp_path: Path) -> None:
-    from digitalmodel.hydrodynamics.diffraction.workflow import (
-        DiffractionWorkflow,
-    )
+    from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
 
     cfg = DiffractionWorkflow().router(_workflow_cfg(tmp_path, "orcawave"))
 
@@ -48,9 +45,7 @@ def test_diffraction_workflow_generates_orcawave_input(tmp_path: Path) -> None:
 
 
 def test_diffraction_workflow_generates_aqwa_deck(tmp_path: Path) -> None:
-    from digitalmodel.hydrodynamics.diffraction.workflow import (
-        DiffractionWorkflow,
-    )
+    from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
 
     cfg = DiffractionWorkflow().router(_workflow_cfg(tmp_path, "aqwa"))
 
