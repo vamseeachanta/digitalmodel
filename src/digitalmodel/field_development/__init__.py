@@ -13,6 +13,9 @@ Modules:
 - timeline:            Milestone-based schedule benchmark analytics — #2060
 - workflow:            End-to-end FDP screening orchestrator — #1858/#1848
 - onshore_layout:      Onshore tracer — YAML layout + terrain routing + screening — #1508
+- layout_model:        Generalized asset schema + waypoint routing + offshore surfaces — #1509
+- screening:           Cable/flowline sizing screens + screening report — #1511
+- visualization:       Generalized layout plots + typed 3D scene export — #1510
 """
 
 from .schematic_generator import generate_field_schematic, SOLVEIG_PHASE2_CONFIG
@@ -85,6 +88,35 @@ from .onshore_layout import (
     screen_layout,
     swamee_jain_friction_factor,
 )
+from .layout_model import (
+    FieldLayoutModel,
+    LayoutAsset,
+    RoutedConnection,
+    build_layout_model,
+    build_layout_model_from_file,
+    layout_model_to_config,
+    layout_summary,
+    load_layout_config,
+    normalize_layout_config,
+    route_connection,
+)
+from .screening import (
+    cable_ampacity_screening,
+    conductor_resistance_ohm_per_m,
+    erosional_velocity_api_rp_14e,
+    flowline_diameter_sweep,
+    load_screening_defaults,
+    screening_report,
+    size_cable,
+    sweep_layout_flowlines,
+    voltage_drop_three_phase_v,
+)
+from .visualization import (
+    export_layout_scene_json,
+    layout_scene_dict,
+    plot_field_layout,
+    render_layout_visualization,
+)
 
 __all__ = [
     # Schematics (WRK-192)
@@ -155,4 +187,30 @@ __all__ = [
     "load_field_config",
     "screen_layout",
     "swamee_jain_friction_factor",
+    # Generalized layout model (#1509)
+    "FieldLayoutModel",
+    "LayoutAsset",
+    "RoutedConnection",
+    "build_layout_model",
+    "build_layout_model_from_file",
+    "layout_model_to_config",
+    "layout_summary",
+    "load_layout_config",
+    "normalize_layout_config",
+    "route_connection",
+    # Screening layer (#1511)
+    "cable_ampacity_screening",
+    "conductor_resistance_ohm_per_m",
+    "erosional_velocity_api_rp_14e",
+    "flowline_diameter_sweep",
+    "load_screening_defaults",
+    "screening_report",
+    "size_cable",
+    "sweep_layout_flowlines",
+    "voltage_drop_three_phase_v",
+    # Visualization & scene export (#1510)
+    "export_layout_scene_json",
+    "layout_scene_dict",
+    "plot_field_layout",
+    "render_layout_visualization",
 ]
