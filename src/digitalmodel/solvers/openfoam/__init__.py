@@ -94,6 +94,20 @@ from .report import (
     render_aggregate_report,
     render_case_report,
 )
+from .case_coupling import (
+    CaseManifest,
+    CouplingSpec,
+    SyntheticCase,
+    VerificationResult,
+    build_case_manifest,
+    emit_synthetic_gravity_exchange_case,
+    map_sweep_case_to_openfoam_case,
+    peak_flow_rate,
+    synthetic_coupling_spec,
+    synthetic_sweep_case,
+    transfer_volume,
+    verify_coupling,
+)
 
 __all__ = [
     "BoundaryCondition",
@@ -166,4 +180,16 @@ __all__ = [
     "REQUIRED_SECTIONS",
     "render_aggregate_report",
     "render_case_report",
+    "CaseManifest",
+    "CouplingSpec",
+    "SyntheticCase",
+    "VerificationResult",
+    "build_case_manifest",
+    "emit_synthetic_gravity_exchange_case",
+    "map_sweep_case_to_openfoam_case",
+    "peak_flow_rate",
+    "synthetic_coupling_spec",
+    "synthetic_sweep_case",
+    "transfer_volume",
+    "verify_coupling",
 ]
