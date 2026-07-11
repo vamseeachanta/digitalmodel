@@ -323,14 +323,17 @@ def render_rolling_report(run_views, ledger, *, pinned=True) -> str:
 # ---------------------------------------------------------------------------
 # the full dry-run
 # ---------------------------------------------------------------------------
-def run_pilot(echo_dir: str | Path | None = None) -> dict:
-    """Execute the FULL publication pipeline against InMemoryHfPort + Ledger.
+def run_pilot(echo_dir: str | Path | None = None, hf_port=None) -> dict:
+    """Execute the FULL publication pipeline against a HfPort + Ledger.
 
-    Returns a summary dict; when ``echo_dir`` is given, writes the rolling report,
-    the publications.jsonl ledger, and each accepted results.json under it.
+    ``hf_port`` defaults to :class:`InMemoryHfPort` (dry-run, no network). Pass a
+    real ``HuggingFaceHubHfPort`` for a gated live publish. Returns a summary dict;
+    when ``echo_dir`` is given, writes the rolling report, the publications.jsonl
+    ledger, and each accepted results.json under it.
     """
     store = build_metric_store()
-    hf_port = hf_port_mod.InMemoryHfPort()
+    if hf_port is None:
+        hf_port = hf_port_mod.InMemoryHfPort()
     ledger = ledger_mod.Ledger(path=ledger_mod.PUBLICATIONS_LEDGER_PATH)
     gate = make_gate()
 
