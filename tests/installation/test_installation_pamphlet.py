@@ -337,6 +337,64 @@ def test_scan_missing_dir_returns_empty(tmp_path):
     assert scan_completed_runs(tmp_path / "nope") == []
 
 
+def test_scan_derives_rao_artifact_from_returned_files(tmp_path):
+    # #1538: with no explicit rao_artifact field, a diffraction run whose
+    # returned files include diffraction_results.json (dm #1537) yields a
+    # rao_artifact path derived by convention (queue-root-relative).
+    import json
+
+    queue = tmp_path / "queue"
+    rd = queue / "results"
+    (rd / "lr_v" / "results").mkdir(parents=True)
+    artifact_rel = "results/lr_v/results/diffraction_results.json"
+    (queue / artifact_rel).write_text("{}")
+    (rd / "lr_v.json").write_text(
+        json.dumps(
+            {
+                "run_id": "lr_v",
+                "state": "finished",
+                "returncode": 0,
+                "audit": {
+                    "workflow": "orcawave-diffraction-solve",
+                    "input_relpath": "cases/orcawave-diffraction-bokalift/input.yml",
+                },
+                "summary": {
+                    "returned_files": [
+                        "results/lr_v/results/Bokalift2_validation.json",
+                        artifact_rel,
+                    ]
+                },
+            }
+        )
+    )
+    runs = scan_completed_runs(rd)
+    assert len(runs) == 1
+    assert runs[0]["rao_artifact"] == str(rd.parent / artifact_rel)
+
+
+def test_scan_explicit_rao_artifact_takes_precedence(tmp_path):
+    # An explicit rao_artifact field wins over the returned-files convention.
+    import json
+
+    rd = tmp_path / "queue" / "results"
+    rd.mkdir(parents=True)
+    (rd / "lr_e.json").write_text(
+        json.dumps(
+            {
+                "run_id": "lr_e",
+                "state": "finished",
+                "returncode": 0,
+                "rao_artifact": "explicit/path/rao.json",
+                "summary": {
+                    "returned_files": ["results/lr_e/results/diffraction_results.json"]
+                },
+            }
+        )
+    )
+    runs = scan_completed_runs(rd)
+    assert runs[0]["rao_artifact"] == "explicit/path/rao.json"
+
+
 # ---------------------------------------------------------------- router (integration)
 def test_router_on_base_config_writes_artifacts(tmp_path):
     cfg = yaml.safe_load(BASE_CONFIG.read_text())
