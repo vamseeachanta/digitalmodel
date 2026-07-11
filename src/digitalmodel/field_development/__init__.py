@@ -16,6 +16,7 @@ Modules:
 - layout_model:        Generalized asset schema + waypoint routing + offshore surfaces — #1509
 - screening:           Cable/flowline sizing screens + screening report — #1511
 - visualization:       Generalized layout plots + typed 3D scene export — #1510
+- api:                 Representative API — layout / screen / visualize / analogs — #1512
 """
 
 from .schematic_generator import generate_field_schematic, SOLVEIG_PHASE2_CONFIG
@@ -117,6 +118,13 @@ from .visualization import (
     plot_field_layout,
     render_layout_visualization,
 )
+from .api import (
+    analogs,
+    deep_override,
+    layout,
+    screen,
+    visualize,
+)
 
 __all__ = [
     # Schematics (WRK-192)
@@ -213,4 +221,10 @@ __all__ = [
     "layout_scene_dict",
     "plot_field_layout",
     "render_layout_visualization",
+    # Representative API (#1512)
+    "analogs",
+    "deep_override",
+    "layout",
+    "screen",
+    "visualize",
 ]
