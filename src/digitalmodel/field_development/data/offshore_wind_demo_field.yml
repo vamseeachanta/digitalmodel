@@ -1,0 +1,146 @@
+# ABOUTME: Demo floating offshore wind farm for the layout model (#1513, epic #1507).
+# ABOUTME: Synthetic bathymetry + wind_turbine/offshore_substation assets + electrical cables.
+#
+# Synthetic demo field. Coordinates are a local Cartesian grid in metres
+# (easting/northing from an arbitrary field datum). Elevation is signed
+# relative to the sea surface: NEGATIVE values are water depth (bathymetry).
+# The synthetic surface stands in for a real bathymetry grid (e.g. GEBCO /
+# NOAA). ALL values below are generic demo values — no vendor, project, or
+# turbine model is referenced. Ratings/voltages follow common industry
+# conventions (multi-MW turbines, 66 kV inter-array collection, HV export),
+# not any specific development.
+
+field:
+  name: Demo Floating Wind Farm
+  coordinate_note: local Cartesian metres from field datum; z negative below sea surface
+
+surface:
+  kind: synthetic          # synthetic | csv_grid
+  x_min_m: 0.0
+  x_max_m: 9000.0
+  y_min_m: 0.0
+  y_max_m: 8000.0
+  nx: 91
+  ny: 81
+  base_elevation_m: -150.0    # nominal water depth 150 m (floating-wind range)
+  amplitude_m: 12.0
+  x_wavelength_m: 7000.0
+  y_wavelength_m: 5500.0
+
+assets:
+  # Two strings of three floating turbines each. Floating units get an
+  # explicit z_m: 0.0 (they float at the sea surface); a fixed-bottom
+  # variant would omit z_m so the base drapes onto the seabed.
+  - id: WTG-1
+    kind: wind_turbine
+    subtype: floating
+    name: Demo turbine 1
+    x_m: 1500.0
+    y_m: 2500.0
+    z_m: 0.0
+    rated_power_mw: 15.0     # generic multi-MW class (demo value)
+  - id: WTG-2
+    kind: wind_turbine
+    subtype: floating
+    name: Demo turbine 2
+    x_m: 3500.0
+    y_m: 2500.0
+    z_m: 0.0
+    rated_power_mw: 15.0
+  - id: WTG-3
+    kind: wind_turbine
+    subtype: floating
+    name: Demo turbine 3
+    x_m: 5500.0
+    y_m: 2500.0
+    z_m: 0.0
+    rated_power_mw: 15.0
+  - id: WTG-4
+    kind: wind_turbine
+    subtype: floating
+    name: Demo turbine 4
+    x_m: 1500.0
+    y_m: 5500.0
+    z_m: 0.0
+    rated_power_mw: 15.0
+  - id: WTG-5
+    kind: wind_turbine
+    subtype: floating
+    name: Demo turbine 5
+    x_m: 3500.0
+    y_m: 5500.0
+    z_m: 0.0
+    rated_power_mw: 15.0
+  - id: WTG-6
+    kind: wind_turbine
+    subtype: floating
+    name: Demo turbine 6
+    x_m: 5500.0
+    y_m: 5500.0
+    z_m: 0.0
+    rated_power_mw: 15.0
+  - id: OSS-1
+    kind: offshore_substation
+    subtype: floating
+    name: Demo offshore substation
+    x_m: 7000.0
+    y_m: 4000.0
+    z_m: 0.0
+  - id: SHORE-1                # export cable landfall / grid tie-in
+    kind: host
+    subtype: shore tie-in
+    name: Shore tie-in
+    x_m: 8800.0
+    y_m: 4000.0
+
+connections:
+  # Inter-array strings: turbine -> turbine -> substation, at collection voltage.
+  - id: AC-1
+    kind: array_cable
+    from: WTG-1
+    to: WTG-2
+    voltage_kv: 66.0           # common inter-array collection voltage
+    conductor_size_mm2: 300.0  # IEC 60228 cross-section (demo value)
+  - id: AC-2
+    kind: array_cable
+    from: WTG-2
+    to: WTG-3
+    voltage_kv: 66.0
+    conductor_size_mm2: 300.0
+  - id: AC-3
+    kind: array_cable
+    from: WTG-3
+    to: OSS-1
+    voltage_kv: 66.0
+    conductor_size_mm2: 400.0  # string trunk carries both upstream turbines
+  - id: AC-4
+    kind: array_cable
+    from: WTG-4
+    to: WTG-5
+    voltage_kv: 66.0
+    conductor_size_mm2: 300.0
+  - id: AC-5
+    kind: array_cable
+    from: WTG-5
+    to: WTG-6
+    voltage_kv: 66.0
+    conductor_size_mm2: 300.0
+  - id: AC-6
+    kind: array_cable
+    from: WTG-6
+    to: OSS-1
+    voltage_kv: 66.0
+    conductor_size_mm2: 400.0
+  # Export to shore at transmission voltage, routed via one waypoint.
+  - id: EXP-1
+    kind: export_cable
+    from: OSS-1
+    to: SHORE-1
+    voltage_kv: 220.0          # generic HV export level (demo value)
+    conductor_size_mm2: 800.0
+    waypoints:
+      - x_m: 8000.0
+        y_m: 4000.0
+
+routing:
+  sample_spacing_m: 50.0       # surface sampling step along each routed leg

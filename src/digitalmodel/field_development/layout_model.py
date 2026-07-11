@@ -11,8 +11,13 @@ field-layout model, generalizing the onshore tracer
 1. **Full asset schema (YAML-first)** — beyond the tracer's host/wells the
    schema covers the subsea/onshore taxonomy: ``host``, ``vessel``, ``well``,
    ``tree``, ``manifold`` assets connected by ``jumper``, ``flowline``,
-   ``pipeline``, ``umbilical`` links. ALL configuration is externalized to
-   YAML (see ``data/offshore_demo_field.yml``); nothing is hardcoded here.
+   ``pipeline``, ``umbilical`` links. The renewables extension (#1513,
+   workstream B3) adds ``wind_turbine`` / ``offshore_substation`` assets and
+   electrical ``array_cable`` / ``export_cable`` connections (``voltage_kv``,
+   optional ``conductor_size_mm2``), validated so cables only connect
+   electrical-capable assets. ALL configuration is externalized to YAML (see
+   ``data/offshore_demo_field.yml`` and ``data/offshore_wind_demo_field.yml``);
+   nothing is hardcoded here.
 2. **Offshore-ready surface** — the surface is the tracer's
    :class:`~digitalmodel.field_development.onshore_layout.TerrainGrid`
    (bilinear DEM queries). Elevation is signed relative to the field datum
@@ -60,19 +65,68 @@ import yaml
 from .onshore_layout import TerrainGrid, build_terrain
 
 # --- schema vocabulary -------------------------------------------------------
-#: Recognized asset kinds (surface-placed field infrastructure).
-ASSET_KINDS = frozenset({"host", "vessel", "well", "tree", "manifold"})
-#: Recognized connection kinds (routed links between assets).
-CONNECTION_KINDS = frozenset({"jumper", "flowline", "pipeline", "umbilical"})
+#: Recognized asset kinds (surface-placed field infrastructure). The renewables
+#: extension (#1513) adds ``wind_turbine`` (fixed-bottom or floating via
+#: ``subtype``; rated electrical output via ``rated_power_mw``) and
+#: ``offshore_substation`` (array-collection / export transformer platform).
+ASSET_KINDS = frozenset(
+    {
+        "host",
+        "vessel",
+        "well",
+        "tree",
+        "manifold",
+        "wind_turbine",
+        "offshore_substation",
+    }
+)
+#: Recognized connection kinds (routed links between assets). ``array_cable``
+#: (inter-array power collection) and ``export_cable`` (substation-to-shore/host
+#: transmission) are ELECTRICAL kinds (#1513): they carry ``voltage_kv`` and an
+#: optional ``conductor_size_mm2`` — the same conductor cross-section vocabulary
+#: (IEC 60228 sizes in mm^2) used by the cable screens in
+#: :mod:`digitalmodel.field_development.screening` (``size_cable``).
+CONNECTION_KINDS = frozenset(
+    {"jumper", "flowline", "pipeline", "umbilical", "array_cable", "export_cable"}
+)
+#: Electrical connection kinds: endpoints must be electrical-capable assets.
+ELECTRICAL_CONNECTION_KINDS = frozenset({"array_cable", "export_cable"})
+#: Asset kinds that can terminate an electrical connection. ``host`` is
+#: included so an export cable can land at a shore/host tie-in.
+ELECTRICAL_ASSET_KINDS = frozenset({"wind_turbine", "offshore_substation", "host"})
+#: Power-only asset kinds: no bore, so flow/controls connections (jumper,
+#: flowline, pipeline, umbilical) may NOT terminate here — power to/from these
+#: assets travels on electrical connections only.
+_POWER_ONLY_ASSET_KINDS = frozenset({"wind_turbine", "offshore_substation"})
 
 _REQUIRED_SECTIONS = ("field", "assets", "connections")
 _TRACER_SECTIONS = ("host", "wells", "flowlines")
 
 _ASSET_KNOWN_KEYS = frozenset(
-    {"id", "kind", "subtype", "name", "x_m", "y_m", "z_m", "rate_m3_per_day"}
+    {
+        "id",
+        "kind",
+        "subtype",
+        "name",
+        "x_m",
+        "y_m",
+        "z_m",
+        "rate_m3_per_day",
+        "rated_power_mw",
+    }
 )
 _CONNECTION_KNOWN_KEYS = frozenset(
-    {"id", "kind", "from", "to", "waypoints", "inner_diameter_m", "roughness_m"}
+    {
+        "id",
+        "kind",
+        "from",
+        "to",
+        "waypoints",
+        "inner_diameter_m",
+        "roughness_m",
+        "voltage_kv",
+        "conductor_size_mm2",
+    }
 )
 
 _DEFAULT_SAMPLE_SPACING_M = 25.0
@@ -101,6 +155,7 @@ class LayoutAsset:
     subtype: str = ""
     on_surface: bool = True
     rate_m3_per_day: Optional[float] = None
+    rated_power_mw: Optional[float] = None
     properties: dict[str, Any] = field(default_factory=dict)
 
 
@@ -124,6 +179,8 @@ class RoutedConnection:
     elevation_change_m: float = 0.0
     inner_diameter_m: Optional[float] = None
     roughness_m: Optional[float] = None
+    voltage_kv: Optional[float] = None
+    conductor_size_mm2: Optional[float] = None
     properties: dict[str, Any] = field(default_factory=dict)
 
 
@@ -227,8 +284,10 @@ def normalize_layout_config(
 
 
 def _validate_schema(config: dict[str, Any], source: str) -> None:
-    """Schema-level checks: kinds, unique ids, connectivity (no dangling refs)."""
-    asset_ids: set[str] = set()
+    """Schema-level checks: kinds, unique ids, connectivity (no dangling refs),
+    and electrical compatibility (cables only between electrical-capable assets;
+    flow/controls links never terminate at power-only assets)."""
+    kind_by_id: dict[str, str] = {}
     for spec in config["assets"]:
         asset_id = str(spec.get("id"))
         kind = spec.get("kind")
@@ -237,12 +296,18 @@ def _validate_schema(config: dict[str, Any], source: str) -> None:
                 f"{source}: asset {asset_id!r} has unknown kind {kind!r}; "
                 f"expected one of {sorted(ASSET_KINDS)}"
             )
-        if asset_id in asset_ids:
+        if asset_id in kind_by_id:
             raise ValueError(f"{source}: duplicate asset id {asset_id!r}")
-        asset_ids.add(asset_id)
+        kind_by_id[asset_id] = str(kind)
         for key in ("x_m", "y_m"):
             if key not in spec:
                 raise ValueError(f"{source}: asset {asset_id!r} missing {key!r}")
+        rated_power = spec.get("rated_power_mw")
+        if rated_power is not None and float(rated_power) <= 0.0:
+            raise ValueError(
+                f"{source}: asset {asset_id!r} rated_power_mw must be > 0 "
+                f"(got {rated_power})"
+            )
     connection_ids: set[str] = set()
     for spec in config["connections"]:
         conn_id = str(spec.get("id"))
@@ -257,11 +322,59 @@ def _validate_schema(config: dict[str, Any], source: str) -> None:
         connection_ids.add(conn_id)
         for end in ("from", "to"):
             ref = str(spec.get(end))
-            if ref not in asset_ids:
+            if ref not in kind_by_id:
                 raise ValueError(
                     f"{source}: connection {conn_id!r} references unknown "
                     f"asset {ref!r} (dangling {end!r} reference)"
                 )
+        _validate_electrical(spec, conn_id, str(kind), kind_by_id, source)
+
+
+def _validate_electrical(
+    spec: dict[str, Any],
+    conn_id: str,
+    kind: str,
+    kind_by_id: dict[str, str],
+    source: str,
+) -> None:
+    """Electrical-compatibility rules for one connection (#1513).
+
+    1. Electrical connections (``array_cable``, ``export_cable``) may only
+       connect electrical-capable assets (:data:`ELECTRICAL_ASSET_KINDS`).
+    2. Non-electrical connections (flow/controls) may never terminate at a
+       power-only asset (``wind_turbine``, ``offshore_substation``) — there is
+       no bore to connect to.
+    3. ``voltage_kv``, when given, must be positive (electrical kinds only).
+    """
+    electrical = kind in ELECTRICAL_CONNECTION_KINDS
+    for end in ("from", "to"):
+        ref = str(spec.get(end))
+        ref_kind = kind_by_id[ref]
+        if electrical and ref_kind not in ELECTRICAL_ASSET_KINDS:
+            raise ValueError(
+                f"{source}: {kind} connection {conn_id!r} may only connect "
+                f"electrical-capable assets ({sorted(ELECTRICAL_ASSET_KINDS)}); "
+                f"{end!r} asset {ref!r} is a {ref_kind!r}"
+            )
+        if not electrical and ref_kind in _POWER_ONLY_ASSET_KINDS:
+            raise ValueError(
+                f"{source}: {kind} connection {conn_id!r} cannot terminate at "
+                f"power-only asset {ref!r} ({ref_kind!r}); use an electrical "
+                f"connection ({sorted(ELECTRICAL_CONNECTION_KINDS)})"
+            )
+    voltage = spec.get("voltage_kv")
+    if voltage is not None:
+        if not electrical:
+            raise ValueError(
+                f"{source}: connection {conn_id!r} ({kind}) carries voltage_kv "
+                f"but is not an electrical kind "
+                f"({sorted(ELECTRICAL_CONNECTION_KINDS)})"
+            )
+        if float(voltage) <= 0.0:
+            raise ValueError(
+                f"{source}: connection {conn_id!r} voltage_kv must be > 0 "
+                f"(got {voltage})"
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -277,6 +390,7 @@ def _place_asset(spec: dict[str, Any], surface: TerrainGrid) -> LayoutAsset:
     else:
         z, on_surface = surface.elevation_at(x, y), True
     rate = spec.get("rate_m3_per_day")
+    rated_power = spec.get("rated_power_mw")
     extras = {k: v for k, v in spec.items() if k not in _ASSET_KNOWN_KEYS}
     return LayoutAsset(
         asset_id=str(spec["id"]),
@@ -288,6 +402,7 @@ def _place_asset(spec: dict[str, Any], surface: TerrainGrid) -> LayoutAsset:
         subtype=str(spec.get("subtype", "")),
         on_surface=on_surface,
         rate_m3_per_day=None if rate is None else float(rate),
+        rated_power_mw=None if rated_power is None else float(rated_power),
         properties=extras,
     )
 
@@ -360,6 +475,8 @@ def route_connection(
 
     diameter = spec.get("inner_diameter_m")
     roughness = spec.get("roughness_m")
+    voltage = spec.get("voltage_kv")
+    conductor = spec.get("conductor_size_mm2")
     extras = {k: v for k, v in spec.items() if k not in _CONNECTION_KNOWN_KEYS}
     return RoutedConnection(
         connection_id=str(spec["id"]),
@@ -373,6 +490,8 @@ def route_connection(
         elevation_change_m=float(path[-1, 2] - path[0, 2]),
         inner_diameter_m=None if diameter is None else float(diameter),
         roughness_m=None if roughness is None else float(roughness),
+        voltage_kv=None if voltage is None else float(voltage),
+        conductor_size_mm2=None if conductor is None else float(conductor),
         properties=extras,
     )
 
@@ -439,6 +558,8 @@ def layout_model_to_config(model: FieldLayoutModel) -> dict[str, Any]:
             spec["z_m"] = a.z_m
         if a.rate_m3_per_day is not None:
             spec["rate_m3_per_day"] = a.rate_m3_per_day
+        if a.rated_power_mw is not None:
+            spec["rated_power_mw"] = a.rated_power_mw
         spec.update(a.properties)
         assets.append(spec)
     connections = []
@@ -455,6 +576,10 @@ def layout_model_to_config(model: FieldLayoutModel) -> dict[str, Any]:
             cspec["inner_diameter_m"] = c.inner_diameter_m
         if c.roughness_m is not None:
             cspec["roughness_m"] = c.roughness_m
+        if c.voltage_kv is not None:
+            cspec["voltage_kv"] = c.voltage_kv
+        if c.conductor_size_mm2 is not None:
+            cspec["conductor_size_mm2"] = c.conductor_size_mm2
         cspec.update(c.properties)
         connections.append(cspec)
     return {

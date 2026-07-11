@@ -78,6 +78,8 @@ ASSET_STYLES: dict[str, tuple[str, str, float]] = {
     "well": ("o", "#222222", 8.0),  # circle, near-black
     "tree": ("^", "#2e6f40", 8.0),  # triangle, green
     "manifold": ("P", "#6b3fa0", 11.0),  # plus (filled), purple
+    "wind_turbine": ("*", "#0b7285", 14.0),  # star, teal (#1513)
+    "offshore_substation": ("h", "#8c6d1f", 12.0),  # hexagon, dark gold (#1513)
 }
 #: Line style per connection kind: (color, linestyle, linewidth_pt).
 CONNECTION_STYLES: dict[str, tuple[str, str, float]] = {
@@ -85,6 +87,8 @@ CONNECTION_STYLES: dict[str, tuple[str, str, float]] = {
     "flowline": ("#b2182b", "-", 2.2),  # firebrick, solid
     "pipeline": ("#67001f", "--", 2.6),  # dark maroon, dashed, thick
     "umbilical": ("#2166ac", "-.", 1.6),  # steel blue, dash-dot
+    "array_cable": ("#41ab5d", ":", 1.8),  # mid green, dotted (#1513)
+    "export_cable": ("#00441b", "--", 2.4),  # darkest green, dashed (#1513)
 }
 _WAYPOINT_STYLE = {"marker": "x", "color": "#444444", "s": 36.0}
 

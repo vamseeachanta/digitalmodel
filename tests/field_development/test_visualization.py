@@ -91,11 +91,19 @@ class TestSceneExport:
         assert scene["schema"] == SCENE_SCHEMA
         assert scene == layout_scene_dict(model)
 
-    def test_offshore_scene_carries_every_asset_kind(self):
+    def test_offshore_scene_carries_every_oil_and_gas_kind(self):
+        # The O&G demo covers the non-renewables taxonomy; the #1513 wind demo
+        # covers wind_turbine/offshore_substation + array/export cables —
+        # combined coverage of ASSET_KINDS/CONNECTION_KINDS is asserted in
+        # test_renewables_layout.py.
         model = build_layout_model_from_file(OFFSHORE_CONFIG)
         scene = layout_scene_dict(model)
-        assert {a["kind"] for a in scene["assets"]} == set(ASSET_KINDS)
-        assert {c["kind"] for c in scene["connections"]} == set(CONNECTION_KINDS)
+        asset_kinds = {a["kind"] for a in scene["assets"]}
+        connection_kinds = {c["kind"] for c in scene["connections"]}
+        assert asset_kinds == {"host", "vessel", "well", "tree", "manifold"}
+        assert connection_kinds == {"jumper", "flowline", "pipeline", "umbilical"}
+        assert asset_kinds <= set(ASSET_KINDS)
+        assert connection_kinds <= set(CONNECTION_KINDS)
 
     def test_offshore_scene_flags_subsea_and_onshore_does_not(self):
         offshore = layout_scene_dict(build_layout_model_from_file(OFFSHORE_CONFIG))
@@ -161,4 +169,9 @@ class TestRenderLayoutVisualization:
             "host": 1,
         }
         scene = json.loads(Path(result["scene_path"]).read_text(encoding="utf-8"))
-        assert {c["kind"] for c in scene["connections"]} == set(CONNECTION_KINDS)
+        assert {c["kind"] for c in scene["connections"]} == {
+            "jumper",
+            "flowline",
+            "pipeline",
+            "umbilical",
+        }
