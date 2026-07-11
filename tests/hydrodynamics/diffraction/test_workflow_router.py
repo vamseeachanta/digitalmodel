@@ -138,6 +138,52 @@ def test_run_orcawave_silent_dry_run_fallback_raises(tmp_path: Path) -> None:
             DiffractionWorkflow().router(_solve_cfg(tmp_path, dry_run=False))
 
 
+def test_run_orcawave_completed_exports_results_json(tmp_path: Path) -> None:
+    # A successful solve must serialize DiffractionResults.to_dict() into the
+    # output dir so the license-free side (postprocess, pamphlet rao_artifact,
+    # queue result-return) can consume it (#1537).
+    from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
+
+    out_dir = tmp_path / "results" / "out"
+    fake = _fake_result("completed")
+    fake.output_dir = str(out_dir)
+    fake.diffraction_results = SimpleNamespace(
+        to_dict=lambda: {"vessel_name": "UnitBoxRAO", "raos": {"frequencies": [0.5]}}
+    )
+
+    with patch(
+        "digitalmodel.hydrodynamics.diffraction.orcawave_runner.run_orcawave",
+        return_value=fake,
+    ):
+        cfg = DiffractionWorkflow().router(_solve_cfg(tmp_path, dry_run=False))
+
+    settings = cfg["diffraction"]
+    exported = Path(settings["outputs"]["diffraction_results_json"])
+    assert exported == out_dir / "diffraction_results.json"
+    import json
+
+    data = json.loads(exported.read_text())
+    assert data["vessel_name"] == "UnitBoxRAO"
+    assert data["raos"]["frequencies"] == [0.5]
+
+
+def test_run_orcawave_completed_without_results_object(tmp_path: Path) -> None:
+    # Runners that carry no diffraction_results (e.g. AQWA path today) must not
+    # break: no file, no settings key.
+    from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
+
+    fake = _fake_result("completed")
+    fake.output_dir = str(tmp_path / "results" / "out")
+
+    with patch(
+        "digitalmodel.hydrodynamics.diffraction.orcawave_runner.run_orcawave",
+        return_value=fake,
+    ):
+        cfg = DiffractionWorkflow().router(_solve_cfg(tmp_path, dry_run=False))
+
+    assert "diffraction_results_json" not in cfg["diffraction"]["outputs"]
+
+
 # --- operation: run_aqwa (issue #939) ---------------------------------------
 
 
