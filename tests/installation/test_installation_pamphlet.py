@@ -337,6 +337,64 @@ def test_scan_missing_dir_returns_empty(tmp_path):
     assert scan_completed_runs(tmp_path / "nope") == []
 
 
+def test_scan_derives_rao_artifact_from_returned_files(tmp_path):
+    # #1538: with no explicit rao_artifact field, a diffraction run whose
+    # returned files include diffraction_results.json (dm #1537) yields a
+    # rao_artifact path derived by convention (queue-root-relative).
+    import json
+
+    queue = tmp_path / "queue"
+    rd = queue / "results"
+    (rd / "lr_v" / "results").mkdir(parents=True)
+    artifact_rel = "results/lr_v/results/diffraction_results.json"
+    (queue / artifact_rel).write_text("{}")
+    (rd / "lr_v.json").write_text(
+        json.dumps(
+            {
+                "run_id": "lr_v",
+                "state": "finished",
+                "returncode": 0,
+                "audit": {
+                    "workflow": "orcawave-diffraction-solve",
+                    "input_relpath": "cases/orcawave-diffraction-bokalift/input.yml",
+                },
+                "summary": {
+                    "returned_files": [
+                        "results/lr_v/results/Bokalift2_validation.json",
+                        artifact_rel,
+                    ]
+                },
+            }
+        )
+    )
+    runs = scan_completed_runs(rd)
+    assert len(runs) == 1
+    assert runs[0]["rao_artifact"] == str(rd.parent / artifact_rel)
+
+
+def test_scan_explicit_rao_artifact_takes_precedence(tmp_path):
+    # An explicit rao_artifact field wins over the returned-files convention.
+    import json
+
+    rd = tmp_path / "queue" / "results"
+    rd.mkdir(parents=True)
+    (rd / "lr_e.json").write_text(
+        json.dumps(
+            {
+                "run_id": "lr_e",
+                "state": "finished",
+                "returncode": 0,
+                "rao_artifact": "explicit/path/rao.json",
+                "summary": {
+                    "returned_files": ["results/lr_e/results/diffraction_results.json"]
+                },
+            }
+        )
+    )
+    runs = scan_completed_runs(rd)
+    assert runs[0]["rao_artifact"] == "explicit/path/rao.json"
+
+
 # ---------------------------------------------------------------- router (integration)
 def test_router_on_base_config_writes_artifacts(tmp_path):
     cfg = yaml.safe_load(BASE_CONFIG.read_text())
@@ -594,3 +652,260 @@ def test_resolve_rao_artifact_precedence(tmp_path):
     assert calc.resolve_rao_artifact("drillship", [run], "/explicit.json") is None
     # vessel basis with nothing available -> None
     assert calc.resolve_rao_artifact("vessel", [BOKALIFT_RUN], None) is None
+
+
+# ---------------------------------------------------------------- roll-damping sensitivity band (#1538 follow-up)
+# BokaLift 2 was run at two external roll-damping (B44) levels: zeta = 5% critical
+# (roll RAO peak 23.5 deg/m) and zeta = 10% with bilge keels (roll peak 19.2 deg/m).
+# Roll is damping-controlled at resonance, so the operation envelopes are presented
+# as an uncertainty BAND. These tests use SYNTHETIC two-case fixtures (NOT the real
+# 5% artifact): the high-damping case has a SMALLER roll response, so it tolerates a
+# higher limiting Hs. Heave/pitch are kept small so ROLL governs the heavy-lift bound.
+LOW_DAMPING_ROLL = 2.4   # zeta=5% proxy: LARGER roll response (more onerous -> lower Hs)
+HIGH_DAMPING_ROLL = 1.2  # zeta=10% proxy: smaller roll response (bilge keels -> higher Hs)
+
+
+def _rao_set_roll(roll_deg_per_m):
+    """Synthetic fixture RAOSet parametrized by a flat roll magnitude (deg/m).
+
+    Heave/pitch are small so ROLL is the governing DOF of the heavy-lift envelope
+    (the damping-controlled axis) and the ONLY thing that differs between the
+    low- and high-damping bounds. Clearly NOT real vessel data."""
+    import numpy as np
+
+    from digitalmodel.hydrodynamics.diffraction.output_schemas import (
+        DOF,
+        FrequencyData,
+        HeadingData,
+        RAOComponent,
+        RAOSet,
+    )
+
+    periods = np.array([4.0, 6.0, 8.0, 10.0, 12.0, 16.0, 20.0])
+    freqs = 2.0 * np.pi / periods
+    heads = np.array([0.0, 90.0, 180.0])
+    nf, nh = len(freqs), len(heads)
+
+    def comp(dof, val, unit):
+        mag = np.full((nf, nh), float(val))
+        return RAOComponent(
+            dof=dof,
+            magnitude=mag,
+            phase=np.zeros((nf, nh)),
+            frequencies=FrequencyData(
+                values=freqs, periods=periods, count=nf,
+                min_freq=float(freqs.min()), max_freq=float(freqs.max()),
+            ),
+            headings=HeadingData(
+                values=heads, count=nh,
+                min_heading=float(heads.min()), max_heading=float(heads.max()),
+            ),
+            unit=unit,
+        )
+
+    return RAOSet(
+        vessel_name=f"SYNTHETIC roll={roll_deg_per_m} deg/m (not real data)",
+        analysis_tool="OrcaWave", water_depth=1500.0,
+        surge=comp(DOF.SURGE, 0.0, "m/m"), sway=comp(DOF.SWAY, 0.0, "m/m"),
+        heave=comp(DOF.HEAVE, 0.35, "m/m"),
+        roll=comp(DOF.ROLL, roll_deg_per_m, "deg/m"),
+        pitch=comp(DOF.PITCH, 0.5, "deg/m"), yaw=comp(DOF.YAW, 0.0, "deg/m"),
+        created_date="2026-01-01",
+    )
+
+
+def _write_two_case_artifacts(tmp_path):
+    lo_dir = tmp_path / "lo"
+    hi_dir = tmp_path / "hi"
+    lo_dir.mkdir()
+    hi_dir.mkdir()
+    low_path = _write_rao_artifact(lo_dir, _rao_set_roll(LOW_DAMPING_ROLL))
+    high_path = _write_rao_artifact(hi_dir, _rao_set_roll(HIGH_DAMPING_ROLL))
+    return low_path, high_path
+
+
+def test_compute_envelope_band_is_ordered_and_roll_damping_controlled(tmp_path):
+    low_path, high_path = _write_two_case_artifacts(tmp_path)
+    band = calc.compute_envelope_band(
+        "vessel", calc.DEFAULT_OPERATIONS, calc.DEFAULT_TP_GRID_S, low_path, high_path
+    )
+    # shape: every operation carries an ordered low/high band + governing DOFs
+    assert set(band) == set(calc.DEFAULT_OPERATIONS)
+    for op in calc.DEFAULT_OPERATIONS:
+        b = band[op]
+        assert set(b) == {
+            "alpha", "hs_by_tp_low", "hs_by_tp_high", "gov_by_tp_low", "gov_by_tp_high",
+        }
+        for k in b["hs_by_tp_low"]:
+            assert b["hs_by_tp_low"][k] <= b["hs_by_tp_high"][k]  # band ordered
+
+    # physical direction: high-damping (smaller roll) tolerates >= Hs, and the roll
+    # damping ACTUALLY moved the heavy-lift envelope (non-zero band width)
+    low_env = calc.compute_envelopes(
+        "vessel", calc.DEFAULT_OPERATIONS, calc.DEFAULT_TP_GRID_S, rao_artifact=low_path
+    )
+    high_env = calc.compute_envelopes(
+        "vessel", calc.DEFAULT_OPERATIONS, calc.DEFAULT_TP_GRID_S, rao_artifact=high_path
+    )
+    hl_lo = low_env["heavy_lift"]["hs_by_tp"]
+    hl_hi = high_env["heavy_lift"]["hs_by_tp"]
+    assert all(hl_hi[k] >= hl_lo[k] for k in hl_lo)
+    assert any(hl_hi[k] > hl_lo[k] for k in hl_lo)  # roll damping is the lever
+    # roll governs both heavy-lift bounds (the damping-controlled DOF)
+    assert set(band["heavy_lift"]["gov_by_tp_low"].values()) == {"roll"}
+    assert set(band["heavy_lift"]["gov_by_tp_high"].values()) == {"roll"}
+    # the band bounds are exactly min/max of the two single-damping envelopes
+    for k in hl_lo:
+        assert band["heavy_lift"]["hs_by_tp_low"][k] == pytest.approx(min(hl_lo[k], hl_hi[k]))
+        assert band["heavy_lift"]["hs_by_tp_high"][k] == pytest.approx(max(hl_lo[k], hl_hi[k]))
+
+
+def test_compute_envelopes_signature_unchanged_by_band(tmp_path):
+    """Backward-compat: compute_envelopes still returns the single-value shape."""
+    low_path, _ = _write_two_case_artifacts(tmp_path)
+    env = calc.compute_envelopes(
+        "vessel", calc.DEFAULT_OPERATIONS, calc.DEFAULT_TP_GRID_S, rao_artifact=low_path
+    )
+    for op in calc.DEFAULT_OPERATIONS:
+        assert set(env[op]) == {"alpha", "hs_by_tp", "gov_by_tp"}
+
+
+def test_build_provenance_records_damping_band():
+    base = calc.build_provenance([DRILLSHIP_RUN], "drillship")
+    assert "damping_note" not in base  # default: no band recorded
+    prov = calc.build_provenance([DRILLSHIP_RUN], "drillship", damping_band=True)
+    assert "damping-controlled" in prov["damping_note"]
+    assert "5" in prov["damping_note"] and "10" in prov["damping_note"]
+    # task list is unchanged (the note is purely additive)
+    assert [t["id"] for t in prov["tasks"]] == ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8"]
+
+
+def test_envelope_band_renders_section(vessel_info, lifts, tmp_path):
+    low_path, high_path = _write_two_case_artifacts(tmp_path)
+    band = calc.compute_envelope_band(
+        "vessel", calc.DEFAULT_OPERATIONS, calc.DEFAULT_TP_GRID_S, low_path, high_path
+    )
+    res = _assemble(vessel_info, lifts, "drillship", runs=[DRILLSHIP_RUN])
+    res["envelope_band"] = band
+    res["damping_note"] = calc.DAMPING_BAND_NOTE
+    html = render_pamphlet_html(res, "LBL")
+    assert "Roll-damping sensitivity band" in html
+    assert "damping-controlled at resonance" in html
+    assert "&ndash;" in html  # the "lo&ndash;hi" range cells
+
+    # ABSENT band -> section not rendered, and HTML is byte-identical to plain §3
+    res_plain = _assemble(vessel_info, lifts, "drillship", runs=[DRILLSHIP_RUN])
+    html_plain = render_pamphlet_html(res_plain, "LBL")
+    assert "Roll-damping sensitivity band" not in html_plain
+
+
+def test_assemble_result_wires_envelope_band(vessel_info, lifts, tmp_path):
+    """assemble_result WIRES the band when BOTH damping artifacts are supplied on
+    the "vessel" basis: the result carries an ordered envelope_band + damping_note,
+    provenance records the damping band, the single-case §3 envelopes are driven by
+    the LOW (more-onerous) bound, and the rendered §3 shows the band section."""
+    low_path, high_path = _write_two_case_artifacts(tmp_path)
+    res = calc.assemble_result(
+        vessel_info=vessel_info, lifts=lifts, radius_m=40.0, daf=1.30,
+        rao_basis="vessel", operations=calc.DEFAULT_OPERATIONS,
+        tp_grid_s=calc.DEFAULT_TP_GRID_S, hs_scatter_limits=HS_LIMITS,
+        completed_runs=[BOKALIFT_RUN],
+        rao_artifact_low=str(low_path), rao_artifact_high=str(high_path),
+    )
+
+    # the band is present, well-shaped and ORDERED (low <= high) at every Tp
+    band = res["envelope_band"]
+    assert set(band) == set(calc.DEFAULT_OPERATIONS)
+    for op in calc.DEFAULT_OPERATIONS:
+        b = band[op]
+        assert set(b) == {
+            "alpha", "hs_by_tp_low", "hs_by_tp_high", "gov_by_tp_low", "gov_by_tp_high",
+        }
+        for k in b["hs_by_tp_low"]:
+            assert b["hs_by_tp_low"][k] <= b["hs_by_tp_high"][k]
+    # it equals the standalone band builder (assemble_result just wires it)
+    assert band == calc.compute_envelope_band(
+        "vessel", calc.DEFAULT_OPERATIONS, calc.DEFAULT_TP_GRID_S, str(low_path), str(high_path)
+    )
+
+    # provenance + result carry the damping note
+    assert "damping-controlled" in res["provenance"]["damping_note"]
+    assert res["damping_note"] == calc.DAMPING_BAND_NOTE
+
+    # single-case §3 envelopes still render, driven by the LOW (more-onerous) bound;
+    # provenance is honestly "actual" (a real vessel RAO drove them)
+    assert res["envelopes"] == _envelopes_from_rao(_rao_set_roll(LOW_DAMPING_ROLL))
+    assert res["rao_provenance"] == "actual"
+    assert res["rao_from_artifact"] is True
+    assert res["rao_artifact"] == str(low_path)
+
+    # rendered §3 band section is present
+    html = render_pamphlet_html(res, "LBL")
+    assert "Roll-damping sensitivity band" in html
+    assert "damping-controlled at resonance" in html
+    assert "&ndash;" in html  # lo&ndash;hi range cells
+
+
+def test_assemble_result_without_band_is_backward_compatible(vessel_info, lifts, tmp_path):
+    """WITHOUT both damping artifacts, assemble_result is EXACTLY as before: no
+    envelope_band / damping_note keys, no provenance damping_note, unchanged HTML.
+    Both artifacts are REQUIRED; one alone or a non-vessel basis does not band."""
+    low_path, high_path = _write_two_case_artifacts(tmp_path)
+
+    # no band artifacts at all -> unchanged behavior
+    base = calc.assemble_result(
+        vessel_info=vessel_info, lifts=lifts, radius_m=40.0, daf=1.30,
+        rao_basis="vessel", operations=calc.DEFAULT_OPERATIONS,
+        tp_grid_s=calc.DEFAULT_TP_GRID_S, hs_scatter_limits=HS_LIMITS,
+        completed_runs=[BOKALIFT_RUN],
+    )
+    assert "envelope_band" not in base
+    assert "damping_note" not in base
+    assert "damping_note" not in base["provenance"]
+    html_base = render_pamphlet_html(base, "LBL")
+    assert "Roll-damping sensitivity band" not in html_base
+
+    # exactly as the pre-band call with the same inputs (byte-identical HTML)
+    prior = _assemble(vessel_info, lifts, "vessel", runs=[BOKALIFT_RUN])
+    assert render_pamphlet_html(prior, "LBL") == html_base
+
+    # only ONE artifact supplied -> band requires BOTH, so no band
+    one = calc.assemble_result(
+        vessel_info=vessel_info, lifts=lifts, radius_m=40.0, daf=1.30,
+        rao_basis="vessel", operations=calc.DEFAULT_OPERATIONS,
+        tp_grid_s=calc.DEFAULT_TP_GRID_S, hs_scatter_limits=HS_LIMITS,
+        completed_runs=[BOKALIFT_RUN], rao_artifact_low=str(low_path),
+    )
+    assert "envelope_band" not in one
+
+    # non-vessel basis with BOTH artifacts -> band does not apply
+    drill = calc.assemble_result(
+        vessel_info=vessel_info, lifts=lifts, radius_m=40.0, daf=1.30,
+        rao_basis="drillship", operations=calc.DEFAULT_OPERATIONS,
+        tp_grid_s=calc.DEFAULT_TP_GRID_S, hs_scatter_limits=HS_LIMITS,
+        completed_runs=[DRILLSHIP_RUN],
+        rao_artifact_low=str(low_path), rao_artifact_high=str(high_path),
+    )
+    assert "envelope_band" not in drill
+
+
+def test_router_wires_envelope_band_from_settings(vessel_info, lifts, tmp_path):
+    """The workflow router reads rao_artifact_low / rao_artifact_high from settings
+    (resolved like rao_artifact) and wires the §3 band end-to-end into the HTML."""
+    low_path, high_path = _write_two_case_artifacts(tmp_path)
+    out_dir = tmp_path / "out"
+    cfg = yaml.safe_load(BASE_CONFIG.read_text())
+    cfg["installation_pamphlet"]["output_dir"] = str(out_dir)
+    cfg["installation_pamphlet"]["rao_basis"] = "vessel"
+    cfg["installation_pamphlet"]["rao_artifact_low"] = str(low_path)
+    cfg["installation_pamphlet"]["rao_artifact_high"] = str(high_path)
+    cfg["_config_file_path"] = str(tmp_path / "case.yml")
+
+    out = router(cfg)
+
+    result = out["installation_pamphlet"]["result"]
+    assert "envelope_band" in result
+    assert result["damping_note"] == calc.DAMPING_BAND_NOTE
+    assert "damping-controlled" in result["provenance"]["damping_note"]
+    html = (out_dir / "case_pamphlet.html").read_text()
+    assert "Roll-damping sensitivity band" in html
