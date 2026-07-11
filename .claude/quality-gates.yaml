@@ -134,8 +134,8 @@ gates:
     order: 1
     description: "Domain tests for marine-ops-other"
     domain: "marine-ops-other"
-    test_roots: ["tests/marine_ops/artificial_lift/", "tests/marine_ops/installation/", "tests/marine_ops/marine_analysis/", "tests/marine_ops/reservoir/", "tests/marine_ops/__init__.py", "tests/production_engineering/", "tests/reservoir/", "tests/well/", "tests/test_fluids_integration.py", "tests/test_reservoir_framework.py"]
-    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/marine_ops/artificial_lift/ tests/marine_ops/installation/ tests/marine_ops/marine_analysis/ tests/marine_ops/reservoir/ tests/marine_ops/__init__.py tests/production_engineering/ tests/reservoir/ tests/well/ tests/test_fluids_integration.py tests/test_reservoir_framework.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    test_roots: ["tests/marine_ops/artificial_lift/", "tests/marine_ops/installation/", "tests/installation/", "tests/marine_ops/marine_analysis/", "tests/marine_ops/reservoir/", "tests/marine_ops/__init__.py", "tests/production_engineering/", "tests/reservoir/", "tests/well/", "tests/test_fluids_integration.py", "tests/test_reservoir_framework.py"]
+    command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/marine_ops/artificial_lift/ tests/marine_ops/installation/ tests/installation/ tests/marine_ops/marine_analysis/ tests/marine_ops/reservoir/ tests/marine_ops/__init__.py tests/production_engineering/ tests/reservoir/ tests/well/ tests/test_fluids_integration.py tests/test_reservoir_framework.py -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
     failure_action: "block"
     warning_action: "report"
 
