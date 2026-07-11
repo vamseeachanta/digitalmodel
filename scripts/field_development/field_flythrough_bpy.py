@@ -25,19 +25,23 @@ executed by Blender itself, headless:
 The scene JSON is schema ``digitalmodel.field_layout_scene/2``, produced by
 ``digitalmodel.field_development.visualization.export_layout_scene_json``
 (JSON so Blender's bundled Python needs no third-party packages). It types
-every asset (host/vessel/well/tree/manifold) and connection
-(jumper/flowline/pipeline/umbilical), so each kind gets its own geometry and
-material here. The onshore #1508 tracer scene (v1 schema) keeps its own
-script, ``onshore_flythrough_bpy.py``. Rendered videos are NOT committed to
-the repo (see .gitignore) — re-render locally with the command above.
+every asset (host/vessel/well/tree/manifold plus the #1513 renewables kinds
+wind_turbine/offshore_substation) and connection
+(jumper/flowline/pipeline/umbilical plus array_cable/export_cable), so each
+kind gets its own geometry and material here. The onshore #1508 tracer scene
+(v1 schema) keeps its own script, ``onshore_flythrough_bpy.py``. Rendered
+videos are NOT committed to the repo (see .gitignore) — re-render locally
+with the command above.
 
 Scene contents: surface mesh from the elevation grid (bathymetry = negative
 elevation), a translucent water plane at z = 0 for subsea scenes, per-kind
 asset geometry (pad cubes for hosts, hull boxes for vessels, cylinders for
-wells, slimmer/taller cylinders for trees, cones for manifolds), bevelled
-curves per connection kind, a sun lamp, and a camera orbiting the field
-centre with a slow descent. Camera clip range is scaled to the scene size —
-Blender's default clip_end (100 m) would cull a km-scale field entirely.
+wells, slimmer/taller cylinders for trees, cones for manifolds, schematic
+tower + hub + three-blade rotors for wind turbines, distinct topside boxes
+for offshore substations), bevelled curves per connection kind, a sun lamp,
+and a camera orbiting the field centre with a slow descent. Camera clip
+range is scaled to the scene size — Blender's default clip_end (100 m) would
+cull a km-scale field entirely.
 """
 
 from __future__ import annotations
@@ -62,6 +66,15 @@ TREE_RADIUS_M = 12.0
 TREE_HEIGHT_M = 110.0
 MANIFOLD_RADIUS_M = 45.0
 MANIFOLD_HEIGHT_M = 80.0
+# Wind turbine (#1513): schematic tower + hub + three flat blades.
+TURBINE_TOWER_RADIUS_M = 6.0
+TURBINE_TOWER_HEIGHT_M = 140.0
+TURBINE_HUB_RADIUS_M = 12.0
+TURBINE_BLADE_LENGTH_M = 100.0
+TURBINE_BLADE_CHORD_M = 14.0
+TURBINE_BLADE_THICKNESS_M = 3.0
+# Offshore substation (#1513): distinct wide topside box.
+SUBSTATION_DIMS_M = (110.0, 90.0, 55.0)  # length, width, height
 # Reference domain span for the base sizes; larger fields scale up (capped).
 REFERENCE_SPAN_M = 3000.0
 MAX_SIZE_SCALE = 4.0
@@ -73,18 +86,24 @@ ASSET_COLORS = {
     "well": (0.13, 0.13, 0.13, 1.0),  # near-black
     "tree": (0.18, 0.44, 0.25, 1.0),  # green
     "manifold": (0.42, 0.25, 0.63, 1.0),  # purple
+    "wind_turbine": (0.85, 0.87, 0.90, 1.0),  # off-white (#1513)
+    "offshore_substation": (0.55, 0.43, 0.12, 1.0),  # dark gold (#1513)
 }
 CONNECTION_COLORS = {
     "jumper": (0.88, 0.48, 0.22, 1.0),
     "flowline": (0.70, 0.09, 0.17, 1.0),
     "pipeline": (0.40, 0.00, 0.12, 1.0),
     "umbilical": (0.13, 0.40, 0.67, 1.0),
+    "array_cable": (0.25, 0.67, 0.36, 1.0),  # mid green (#1513)
+    "export_cable": (0.00, 0.27, 0.11, 1.0),  # darkest green (#1513)
 }
 CONNECTION_BEVEL_M = {
     "jumper": 6.0,
     "flowline": 8.0,
     "pipeline": 10.0,
     "umbilical": 5.0,
+    "array_cable": 5.0,
+    "export_cable": 7.0,
 }
 SURFACE_COLOR_ONSHORE = (0.35, 0.45, 0.25, 1.0)
 SURFACE_COLOR_SUBSEA = (0.45, 0.40, 0.30, 1.0)  # seabed sediment
@@ -190,6 +209,52 @@ def _asset_scene_z(asset: dict, z0: float) -> float:
     return _scene_z(asset["z_m"], z0)
 
 
+def _add_wind_turbine(asset: dict, x: float, y: float, z: float, scale: float) -> float:
+    """Schematic wind turbine (#1513): tower cylinder + hub sphere + 3 blades.
+
+    The rotor is a vertical plane (blades rotated 120 deg apart about the
+    field-y axis) — schematic per-kind geometry, not a vendor model. Returns
+    the turbine's top (scene z).
+    """
+    material = _material(f"mat_{asset['id']}", ASSET_COLORS["wind_turbine"])
+    tower_height = TURBINE_TOWER_HEIGHT_M * scale
+    blade_length = TURBINE_BLADE_LENGTH_M * scale
+    hub_z = z + tower_height
+
+    bpy.ops.mesh.primitive_cylinder_add(
+        radius=TURBINE_TOWER_RADIUS_M * scale,
+        depth=tower_height,
+        location=(x, y, z + tower_height / 2),
+    )
+    tower = bpy.context.active_object
+    tower.name = f"asset_{asset['id']}"
+    tower.data.materials.append(material)
+
+    bpy.ops.mesh.primitive_uv_sphere_add(
+        radius=TURBINE_HUB_RADIUS_M * scale, location=(x, y, hub_z), segments=12
+    )
+    hub = bpy.context.active_object
+    hub.name = f"asset_{asset['id']}_hub"
+    hub.data.materials.append(material)
+
+    for blade_index in range(3):
+        angle = math.radians(90.0 + 120.0 * blade_index)  # first blade points up
+        # Blade centre: half a blade-length from the hub, in the x-z rotor plane.
+        cx = x + 0.5 * blade_length * math.cos(angle)
+        cz = hub_z + 0.5 * blade_length * math.sin(angle)
+        bpy.ops.mesh.primitive_cube_add(size=1.0, location=(cx, y, cz))
+        blade = bpy.context.active_object
+        blade.name = f"asset_{asset['id']}_blade{blade_index + 1}"
+        blade.scale = (
+            blade_length,
+            TURBINE_BLADE_THICKNESS_M * scale,
+            TURBINE_BLADE_CHORD_M * scale,
+        )
+        blade.rotation_euler = (0.0, -angle, 0.0)  # long axis along the spoke
+        blade.data.materials.append(material)
+    return hub_z + blade_length
+
+
 def _add_assets(scene: dict, z0: float, scale: float) -> float:
     """Per-kind asset geometry; returns the highest asset top (scene z)."""
     z_top = 0.0
@@ -197,6 +262,9 @@ def _add_assets(scene: dict, z0: float, scale: float) -> float:
         x, y = asset["x_m"], asset["y_m"]
         z = _asset_scene_z(asset, z0)
         kind = asset["kind"]
+        if kind == "wind_turbine":
+            z_top = max(z_top, _add_wind_turbine(asset, x, y, z, scale))
+            continue
         if kind == "host":
             size = HOST_SIZE_M * scale
             bpy.ops.mesh.primitive_cube_add(size=size, location=(x, y, z + size / 2))
@@ -217,6 +285,11 @@ def _add_assets(scene: dict, z0: float, scale: float) -> float:
             bpy.ops.mesh.primitive_cone_add(
                 radius1=radius, depth=height, location=(x, y, z + height / 2)
             )
+            top = z + height
+        elif kind == "offshore_substation":
+            length, width, height = (d * scale for d in SUBSTATION_DIMS_M)
+            bpy.ops.mesh.primitive_cube_add(size=1.0, location=(x, y, z + height / 2))
+            bpy.context.active_object.scale = (length, width, height)
             top = z + height
         else:  # well
             radius, height = WELL_RADIUS_M * scale, WELL_HEIGHT_M * scale
