@@ -1,0 +1,58 @@
+# ABOUTME: Externalized publication config for the digitalmodel#1505 VIV pilot.
+# ABOUTME: Dataset target, curated-artifact allowlist, metric defs, report path.
+#
+# All publication constants live here (reviewable YAML), never hardcoded. The pilot
+# dry-run uses the InMemoryHfPort; the REAL HuggingFaceHubHfPort swap is a one-line
+# change gated on explicit owner go-ahead + a WRITE-scope HF token (never in CI).
+
+algorithm_id: digitalmodel/viv-parametric-screening
+semantic_version: "1.0.0"
+
+# The DEDICATED digitalmodel dataset -- NEVER a combined domain-run store.
+dataset:
+  repo_id: aceengineer/digitalmodel-runs
+  repo_type: dataset
+  private: false
+  # The real port is opt-in and execution-only; CI/dry-run uses InMemoryHfPort.
+  port: in_memory            # in_memory | huggingface_hub
+
+identity:
+  input_schema_version: viv-screening-input-1
+  output_schema_version: viv-screening-output-1
+  clean_git_commit: 9a458b51696c43dba8004c3053f2076a168d40b3
+  seed: 0
+  execution_parameters:
+    n_modes: 10
+    engine: embed
+
+# Only these curated labels project to the dataset; the full native results.json
+# schema is retained in the source repo, not published verbatim.
+curated_allowlist:
+  - primary_result
+
+metrics:
+  - metric_id: digitalmodel/viv-parametric-screening/a_d_ratio
+    unit_or_dimension: dimensionless
+    derivation: DNV-RP-C205 Figure 9-3 as f(reduced_velocity Vr, stability Ks)
+    directionality: higher_is_worse
+    quality: valid when a screening result is evaluated for the critical mode
+  - metric_id: digitalmodel/viv-parametric-screening/lock_in
+    unit_or_dimension: NA
+    derivation: "DNV-RP-C205 §9 reduced-velocity lock-in band"
+    directionality: none
+    quality: valid for any completed screening
+  - metric_id: digitalmodel/viv-parametric-screening/fatigue_proxy
+    unit_or_dimension: Hz (screening surrogate)
+    derivation: f_vs * (A/D)^3.0 (S-N-slope-flavoured surrogate exponent)
+    directionality: higher_is_worse
+    quality: SCREENING SURROGATE ONLY -- NOT a certified fatigue life
+
+report:
+  path: docs/reports/viv-parametric-screening/index.html
+  mandatory_sections: [inputs, outputs]
+
+# The append-only Publication ledger is a SOURCE-REPO artifact (authority plane),
+# the sole eligibility authority -- never an HF data-plane table.
+ledger:
+  path: publications.jsonl
+  plane: source_repo

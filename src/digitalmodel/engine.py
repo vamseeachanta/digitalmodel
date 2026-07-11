@@ -745,6 +745,15 @@ def engine(
         )
 
         cfg_base = BucklingParametricWorkflow().router(cfg_base)
+    elif basename == "viv_parametric_screening":
+        # digitalmodel#1505: synthetic DNV-RP-C205 VIV parametric screening pilot.
+        # NEW basename -- the legacy "viv_analysis" arm is untouched. Wraps the pure
+        # orcaflex/viv_screening.py; embed-aware, byte-stable (results.json + cases.csv).
+        from digitalmodel.orcaflex.viv_screening_workflow import (
+            VIVParametricScreeningWorkflow,
+        )
+
+        cfg_base = VIVParametricScreeningWorkflow().router(cfg_base)
     elif basename == "mooring_mbl":
         # workspace-hub#3285: DNV-OS-E301 mooring MBL pilot (#2685). NEW basename --
         # the reserved "mooring" arm (subsea/mooring_analysis/ redirect) is untouched.
