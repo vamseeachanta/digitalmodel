@@ -1,0 +1,55 @@
+# ABOUTME: Screening-layer defaults for field-development sizing sweeps (#1511).
+# ABOUTME: ALL correlation constants live here — nothing hardcoded in screening.py.
+#
+# Every value below is a SCREENING-TIER default with a cited source. Override
+# any of them per-study by passing a modified mapping to the screening
+# functions; the code never hardcodes these numbers.
+
+erosional:
+  # API RP 14E (5th ed., 1991), section 2.5a: Ve = C / sqrt(rho_m) with Ve in
+  # ft/s and rho_m in lb/ft3. C = 100 is the RP 14E value for continuous,
+  # non-corrosive service in solids-free systems; use lower C for corrosive or
+  # sandy service per the RP.
+  c_factor: 100.0
+
+conductors:
+  # DC resistivity at 20 degC and temperature coefficient per IEC 60228
+  # (Conductors of insulated cables) / standard tables, e.g. IEC 60287-1-1
+  # Table 1. rho in ohm-m, alpha in 1/K.
+  materials:
+    copper:
+      resistivity_20c_ohm_m: 1.7241e-8
+      temp_coefficient_per_k: 3.93e-3
+    aluminium:
+      resistivity_20c_ohm_m: 2.8264e-8
+      temp_coefficient_per_k: 4.03e-3
+  # IEC 60228 standard nominal conductor cross-sections (mm2).
+  standard_sizes_mm2:
+    [1.5, 2.5, 4.0, 6.0, 10.0, 16.0, 25.0, 35.0, 50.0, 70.0, 95.0,
+     120.0, 150.0, 185.0, 240.0, 300.0, 400.0, 500.0, 630.0, 800.0, 1000.0]
+
+cable_screening:
+  material: copper
+  # XLPE-insulated cable continuous conductor temperature limit (IEC 60502).
+  max_conductor_temp_c: 90.0
+  ambient_temp_c: 30.0
+  # LUMPED total thermal resistance conductor -> ambient (K.m/W), standing in
+  # for T1 + n(T2 + T3 + T4) of IEC 60287-1-1. Screening-tier single number;
+  # replace with the per-layer IEC 60287 build-up for a rated design.
+  thermal_resistance_k_m_per_w: 3.5
+  # Cable series reactance per metre (ohm/m). 1.0e-4 ohm/m (= 0.1 ohm/km) is
+  # the common textbook screening value for three-core MV cable; replace with
+  # vendor data for a rated design.
+  reactance_ohm_per_m: 1.0e-4
+  # Steady-state voltage-drop limit, percent of nominal (typical planning
+  # limit, cf. IEC 60364-5-52 Annex G guidance of 3-5 %).
+  voltage_drop_limit_pct: 5.0
+
+flowline_sweep:
+  # Candidate Nominal Pipe Sizes (inches) swept smallest-first. IDs come from
+  # the ASME B36.10M catalog in digitalmodel.materials.line_pipe.
+  candidate_nps: [2.0, 3.0, 4.0, 6.0, 8.0, 10.0, 12.0]
+  schedule: STD
+  # API 5L grade for the catalog lookup (affects the product reference only;
+  # the hydraulic screen uses geometry alone).
+  grade: B
