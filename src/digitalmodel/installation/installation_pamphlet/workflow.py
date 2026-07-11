@@ -52,6 +52,17 @@ def router(cfg: dict) -> dict:
     rao_artifact = (
         str(_config_path(cfg, rao_artifact_cfg)) if rao_artifact_cfg else None
     )
+    # Optional roll-damping sensitivity band (#1538): two vessel RAO artifacts
+    # (low- and high-damping). Resolved like the single artifact; when BOTH are
+    # set on the "vessel" basis, assemble_result renders the §3 band.
+    rao_artifact_low_cfg = settings.get("rao_artifact_low")
+    rao_artifact_low = (
+        str(_config_path(cfg, rao_artifact_low_cfg)) if rao_artifact_low_cfg else None
+    )
+    rao_artifact_high_cfg = settings.get("rao_artifact_high")
+    rao_artifact_high = (
+        str(_config_path(cfg, rao_artifact_high_cfg)) if rao_artifact_high_cfg else None
+    )
 
     result = calc.assemble_result(
         vessel_info=vessel_info,
@@ -64,6 +75,8 @@ def router(cfg: dict) -> dict:
         hs_scatter_limits=hs_scatter_limits,
         completed_runs=completed_runs,
         rao_artifact=rao_artifact,
+        rao_artifact_low=rao_artifact_low,
+        rao_artifact_high=rao_artifact_high,
     )
     html = render_pamphlet_html(result, generated_label)
 
