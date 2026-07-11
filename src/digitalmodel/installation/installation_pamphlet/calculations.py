@@ -792,6 +792,8 @@ def assemble_result(
     hs_scatter_limits: list[float],
     completed_runs: list[dict[str, Any]],
     rao_artifact: str | Path | None = None,
+    rao_artifact_low: str | Path | None = None,
+    rao_artifact_high: str | Path | None = None,
 ) -> dict[str, Any]:
     """Compose the full deterministic pamphlet ``result`` payload (pure).
 
@@ -800,12 +802,47 @@ def assemble_result(
     ``rao_artifact`` field), the operation envelopes are driven by the REAL
     ingested RAO and provenance is honestly marked ``actual``. Otherwise the
     vessel basis honestly falls back to the ship-shaped proxy.
+
+    Roll-damping sensitivity BAND (#1538). When ``rao_basis == "vessel"`` AND BOTH
+    ``rao_artifact_low`` (low-damping / larger roll / more onerous) and
+    ``rao_artifact_high`` (high-damping / smaller roll) are supplied, the result
+    additionally carries an ``envelope_band`` (from :func:`compute_envelope_band`)
+    plus a ``damping_note``, and the provenance manifest is built with
+    ``damping_band=True`` (so it too carries a ``damping_note``). This drives the
+    §3 roll-damping band section in the rendered pamphlet.
+
+    Single-vs-band behavior (least-surprising, documented): the single-case §3
+    envelopes / table always render. An explicit or completed-run-resolved single
+    ``rao_artifact`` wins as their driver (behavior unchanged from before the
+    band). Otherwise, when a band is active, the single case is driven by the
+    LOW-damping (``rao_artifact_low``, zeta = 5%, more onerous) bound so the
+    single-case table stays conservative and coincides with the band's lower edge;
+    provenance is then honestly ``actual`` (a real vessel RAO drove it). When
+    neither ``rao_artifact_low``/``rao_artifact_high`` is supplied, behavior is
+    EXACTLY as before: no ``envelope_band``/``damping_note`` keys, ``damping_band``
+    defaults false, and the single ``rao_artifact`` path is fully intact.
     """
     artifact_path = resolve_rao_artifact(rao_basis, completed_runs, rao_artifact)
-    rao_from_artifact = artifact_path is not None
+    band_active = bool(
+        rao_basis == "vessel" and rao_artifact_low and rao_artifact_high
+    )
+    # Single-case §3 driver: an explicit/resolved single artifact wins; else, when a
+    # band is configured, drive the single case from the LOW (more-onerous) bound so
+    # the single-case table is conservative and matches the band's lower edge.
+    single_artifact = artifact_path
+    if single_artifact is None and band_active:
+        single_artifact = str(rao_artifact_low)
+    rao_from_artifact = single_artifact is not None
     lift_rows = assess_lifts(vessel_info, lifts, radius_m, daf)
     envelopes = compute_envelopes(
-        rao_basis, operations, tp_grid_s, rao_artifact=artifact_path
+        rao_basis, operations, tp_grid_s, rao_artifact=single_artifact
+    )
+    envelope_band = (
+        compute_envelope_band(
+            rao_basis, operations, tp_grid_s, rao_artifact_low, rao_artifact_high
+        )
+        if band_active
+        else None
     )
     splashzone = compute_splashzone_set(
         lifts, tp_grid_s, heavy_lift_env=envelopes.get("heavy_lift")
@@ -821,8 +858,9 @@ def assemble_result(
         structure_catalog_used=structure_catalog_used,
         splashzone_computed=bool(splashzone),
         rao_from_artifact=rao_from_artifact,
+        damping_band=band_active,
     )
-    return {
+    result: dict[str, Any] = {
         "vessel": vessel_info,
         "lift_radius_m": float(radius_m),
         "daf": float(daf),
@@ -833,8 +871,12 @@ def assemble_result(
         "rao_basis": rao_basis,
         "rao_provenance": _effective_provenance(rao_basis, rao_from_artifact),
         "rao_from_artifact": rao_from_artifact,
-        "rao_artifact": str(artifact_path) if artifact_path else None,
+        "rao_artifact": str(single_artifact) if single_artifact else None,
         "envelope_proxy": _effective_label(rao_basis, rao_from_artifact),
         "op_table": op_table,
         "provenance": provenance,
     }
+    if band_active:
+        result["envelope_band"] = envelope_band
+        result["damping_note"] = DAMPING_BAND_NOTE
+    return result
