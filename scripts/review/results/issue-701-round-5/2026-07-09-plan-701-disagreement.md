@@ -1,0 +1,37 @@
+# Disagreement report — plan #701 (2026-07-09)
+
+## Verdicts
+
+| Provider | Verdict |
+|---|---|
+| claude | MINOR |
+| codex | MAJOR |
+| gemini | UNAVAILABLE (gemini CLI failed, rc=1: no non-interactive gemini auth configured (GEMINI_API_KEY/GOOGLE_API_KEY/~/.gemini/oauth_creds.json) ) |
+
+## Findings unique to each provider
+
+A finding is 'unique to X' if its text appears in X's artifact but not
+verbatim in any other provider's artifact.
+
+### claude
+
+- **The round-5 review sink already exists and contains only failed runs; two of three providers are environmentally broken.** Plan line 12 declares `scripts/review/results/issue-701-round-5/…` the "Current review targets" and §Files to Change says their "absence during provider execution is expected." Actual state: `2026-07-09-plan-701-claude.md` is 0 bytes (`.err`: workspace not trusted — "Ignoring 19 permissions.allow entries … Run Claude Code interactively here once and accept the trust dialog"), `…-codex.md` is 0 bytes (33 KB `.err` from a Codex v0.144.0 session that emitted no review), `…-gemini.md` is an UNAVAILABLE stub (no non-interactive Gemini auth). The Approval Gate's "two usable no-MAJOR plan reviews" is currently unsatisfiable on this host, and the plan neither mentions this state nor requires clearing the stale zero-byte files, which could later be mistaken for completed evidence.
+- **Step 4's disposable Windows environments never run the pytest suite that the restored Windows CI leg will run.** §Implementation Steps step 4 runs only "the existing CLI and package-import workflow commands" in the disposable 3.11/3.12 envs; the workflow-automation pytest suite (workflow line 45) is exercised only in the host's solver-synced Python 3.12 env (§Verification Commands line 384). So the exact job the plan re-enables — base `.[dev]` env pytest on windows-latest, including Python 3.11 — is never executed before CI restoration. Mitigating: the pre-#699 matrix ran this suite on Windows 3.11 successfully, so residual risk is low, but adding the pytest command to the disposable-env script is a one-line amendment that closes it.
+- **The drive-file-search evidence cites a path that does not exist in this repo.** §Embedded verification evidence invokes `scripts/data/drive-index-search/search.py` with a repo-relative path; `Test-Path` in digitalmodel returns False. The script lives at `D:\ws\workspace-hub\scripts\data\drive-index-search\search.py`. As quoted, the evidence command is not replayable from the repo the plan lives in and the citation is misleading about where it ran.
+- **The isolated RED command has an unstated dependency on a sibling `../assetutilities` checkout.** In the `--no-project --isolated` env, `tests/contracts/conftest.py:1-8` falls through to a module-level `import assetutilities`, which succeeds only because `tests/conftest.py:51-53` injects `../assetutilities/src` into `sys.path` when that sibling checkout exists. On any runner without it, all of `tests/contracts/` errors at collection and RED capture fails for the wrong reason. Step 1 and §Verification Commands do not state this precondition.
+- **Live-GitHub and cross-repo evidence is unverifiable in the execution environment.** The "Live GitHub state (connected GitHub app)" block (issue #701 OPEN/labels/comments; #699 MERGED) and the fetched-ref audit (`REMOTE_PYPROJECT_REFS_CHECKED=93` across "all eight ecosystem repositories") cannot be independently checked here: `gh` is not on PATH, and the audit ships summary numbers with no committed script or raw output. Local git does corroborate the #699 squash commit and its ubuntu-only change. Note also that step 8 (open PR) and the repo's CLAUDE.md gate (`gh issue list`) presuppose a working `gh` the current host lacks.
+- The plan was additionally checked for: wrong line-number citations (none — pyproject 10/42/55 and README 90 exact), false no-consumer claims (none — repo-wide grep matches only docs/lock/review artifacts), lock-edge misstatements (none), BaseLoader/string-matrix errors (none — plan already handles it), hidden hiredis dependents in the lock that would survive removal (none — redis 7.2.0 has no hiredis edge), and non-existent cited files (all exist except finding 3).
+
+### codex
+
+- **MAJOR — The CI isolation assertion can inspect the wrong interpreter.** Plan §Workflow contract line 296 requires only “a post-install step” containing the three `find_spec` assertions. The workflow creates `.venv` but never activates or adds it to `PATH`; its existing commands explicitly use `uv run --no-sync` for that reason (`.github/workflows/workflow-automation-tests.yml:35–61`). A raw `python -c` isolation step would inspect setup-python’s global interpreter and could falsely pass even when the unlocked editable install placed hiredis in `.venv`. Require the contract to enforce `uv run --no-sync python -c ...` or the explicit `.venv` interpreter.
+- **MAJOR — The owner-requested multi-session execution lacks the mandatory coordination contract.** Plan §Implementation Steps line 343 creates a multi-session branch but defines no claim key, acquire/release behavior, renewal, or handoff artifact. `D:\ws\workspace-hub\AGENTS.md:11` requires concurrent sessions to claim before work and write a handoff; `D:\ws\llm-wiki\coordination\AGENT_SESSION_PROTOCOL.md:37–44` specifies the handoff location and contents. A branch alone does not prevent two pickup sessions from editing the shared lock/workflow concurrently.
+- **MINOR — The cache rationale falsely calls Redis “opt-in” and overstates hiredis as unused.** Plan §Existing code and metadata lines 31–34 says direct Redis paths are “guarded/opt-in.” Both `src/digitalmodel/infrastructure/core/cache.py:27` and `src/digitalmodel/infrastructure/persistence/cache.py:27` default `enable_redis=True`, and construction invokes Redis initialization at lines 167–176. Redis-py also automatically selects hiredis when installed. The plan should describe this as removal of an indirectly consumed performance accelerator with no internal production constructor, and explicitly record the potential parser-performance tradeoff.
+- **MINOR — The recorded resource intelligence does not satisfy the mandatory retrieval contract.** Plan §Sources consulted line 75 cites only unspecified “engineering registries” and records neither prior-plan/intelligence-entry-point checks nor exact registry paths. `D:\ws\workspace-hub\docs\plans\README.md:43–67` and `:139–149` require issue-class-specific sources, exact paths, and concrete findings. Because the plan identifies `cat:engineering` at line 19, the applicable registry files must be named and their negative results recorded, even if deemed not applicable.
+- **MINOR — T2 complexity has no justification.** The plan supplies only the header value `Complexity: T2`; it has no Complexity section or rationale. `D:\ws\workspace-hub\docs\plans\README.md:169–182` requires a complexity classification with justification.
+- **MINOR — “Compiler-free” is not established by the specified checks.** Plan Acceptance Criteria lines 425–428 claims a compiler-free environment, while Verification lines 395–397 checks only Visual Studio/VC products and `cl.exe`. That establishes an MSVC-free environment, not absence of clang, GCC, Zig, or portable toolchains. Narrow the claim to “MSVC/VC-toolchain-free,” matching the observed build requirement, or add executable checks for the broader claim.
+
+### gemini
+
+(no findings unique to this provider)
+
