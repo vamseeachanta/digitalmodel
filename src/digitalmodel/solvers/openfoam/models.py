@@ -40,6 +40,7 @@ class BoundaryType(Enum):
     INLET_OUTLET = "inletOutlet"
     PRESSURE_INLET_OUTLET_VELOCITY = "pressureInletOutletVelocity"
     TOTAL_PRESSURE = "totalPressure"
+    FLOW_RATE_INLET_VELOCITY = "flowRateInletVelocity"
 
 
 class TurbulenceType(Enum):
