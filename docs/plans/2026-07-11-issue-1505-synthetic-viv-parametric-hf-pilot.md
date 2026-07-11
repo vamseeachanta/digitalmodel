@@ -1,6 +1,6 @@
 # Plan: digitalmodel #1505 — Public synthetic VIV parametric algorithm-run pilot to Hugging Face
 
-> **Status:** draft
+> **Status:** adversarial-reviewed (r1 BLOCK remediated; ready for user review)
 > **Complexity:** T3
 > **Date:** 2026-07-11
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/1505
@@ -133,50 +133,97 @@ scans clean (no client identifiers, no local absolute paths).
 
 ## Design
 
-### D1 — Wire the pure algorithm into the router (new `viv_screening` basename)
+### D1 — Wire the pure algorithm into a single dedicated, embed-aware router
 
-`viv_screening.py` is not routed. Add a thin, side-effect-clean adapter
-`src/digitalmodel/orcaflex/viv_screening_workflow.py::router(cfg)` and one
-`elif basename == "viv_screening":` arm in `engine.py` that:
-- reads synthetic `VIVScreeningInput` + `BeamProperties` fields from `cfg`,
-- calls `viv_screening(...)` and `estimate_response_amplitude(...)`,
+`viv_screening.py` is not routed. Add ONE thin, side-effect-clean adapter
+`src/digitalmodel/orcaflex/viv_screening_workflow.py` — the sole router for this
+pilot — modeled **exactly** on `structural/buckling_workflow.py::BucklingParametricWorkflow`
+(the byte-stable determinism-golden precedent), plus one `elif basename ==
+"viv_parametric_screening":` arm in `engine.py`. The router:
+- reads synthetic `VIVScreeningInput` + `BeamProperties` fields (D, V, span, etc.)
+  from `cfg`,
+- calls `viv_screening(...)` and `estimate_response_amplitude(Vr, D, Ks)`
+  (**note**: `estimate_response_amplitude`'s `outer_diameter` argument is unused in
+  the function body — A/D depends only on Vr and Ks — so do not rely on D affecting
+  the A/D output directly; D moves the result only through `VIVScreeningInput`'s
+  `check_reduced_velocity`/Re/St),
 - attaches a DNV-RP-C205 / DNV-RP-F105 `citations` sidecar (so
   `runner._standard_revisions_from_payload` lifts them into provenance),
-- writes native `results.json` (byte-stable: `meta.generated_at` omitted, floats
-  rounded exactly as the pydantic models already round) + a `cases.csv`.
+- resolves the output directory **exactly like `BucklingParametricWorkflow._result_dir(cfg)`**:
+  `Analysis.result_folder` if present else `cfg["_config_dir_path"]/"results"`, which
+  `runner.configure_embed` rebases onto the injected throwaway `root_folder`. This is
+  the load-bearing fix (see Adversarial Review Summary / M1): the router must be
+  embed/`root_folder`-aware so `run_workflow._run_once` writes only into the sandbox it
+  rmtrees, keeping the run side-effect-free and letting `extract_result(..., root=tmp)`
+  find the files for the golden. **It must NOT use `workflows/parametric_run.py`**,
+  whose `_resolve_output_path` hardcodes `REPO_ROOT/results/parametric_run/…` and is
+  NOT embed-aware.
+- writes native `results.json` via a `write_outputs(..., timestamp=None)`-style call
+  (byte-stable: `meta.generated_at` omitted, floats rounded exactly as the pydantic
+  models already round) + a `cases.csv`.
 
 Native engineering schema (Vr, f_n, Re, St, Ks, A/D, lock-in flags, screening_pass,
 critical_mode) is **retained in full** in `results.json`; only curated artifacts
 publish (D4).
 
-### D2 — New registered parametric workflow `viv-parametric-screening`
+### D2 — Single registered workflow `viv-parametric-screening`; variations are EXTERNAL runs
 
-A NEW workflow dir `examples/workflows/viv-parametric-screening/` +
-`examples/workflows/viv-screening/` base, registered in `workflows.yaml`
-(`schema_version 2`, `version: 1`, `status: stable`, `latest: true`,
-`runtime: offline`, `result.kind: files`). It uses the `parametric_run` harness (or
-a small explicit sweep matching the buckling-parametric byte-stability recipe) over
-**synthetic tubular members**, varying at least:
+ONE new workflow dir `examples/workflows/viv-parametric-screening/input.yml`
+(synthetic single-case base), registered in `workflows.yaml` (`schema_version 2`,
+`version: 1`, `status: stable`, `latest: true`, `runtime: offline`,
+`result.kind: files`) whose `basename: viv_parametric_screening` dispatches to the
+D1 dedicated router. **There is no second workflow and no `parametric_run` row** —
+the `parametric_run` harness is dropped entirely (it is not embed-aware, see M1).
+
+The "parametric" sweep is produced by **EXTERNAL** calls, exactly as the pseudocode
+shows: `run_workflow("viv-parametric-screening", params=variant)` once per variant,
+each supplying distinct synthetic `params` (D, V, span → distinct canonical inputs →
+distinct `run_id`). This is the single, unambiguous mechanism (no internal-factorial
+alternative). Each call runs one synthetic tubular member; a case's `params` vary:
 - **outer diameter** D (e.g. 0.2032, 0.273, 0.3556 m),
 - **current velocity** V (e.g. 0.6, 0.8, 1.0 m/s),
-- **modal / natural frequency** driver (via `BeamProperties.length` or
-  `effective_tension` so f_n moves, e.g. spans 40/60/80 m).
+- **modal / natural frequency** driver (via `BeamProperties.length`/`effective_tension`
+  so f_n moves, e.g. spans 40/60/80 m).
+
+**Pinned meaningful cases (≥3, chosen so equality is demonstrable, not accidental).**
+The full published grid is meaningful (15/27 cases enter cross-flow lock-in). The
+plan pins at least these three, spanning both the lock-in and the suppressed regime:
+- **C-lockin:** D=0.2032 m, V=1.0 m/s, span=60 m → Vr in [4,8], **A/D ≈ 0.97**
+  (non-zero, cross-flow lock-in; `lock_in=True`).
+- **C-mid:** D=0.273 m, V=0.8 m/s, span=60 m → intermediate Vr, non-zero A/D.
+- **C-suppressed:** D=0.3556 m, V=0.6 m/s, span=40 m → Vr outside [4,8],
+  **A/D = 0.0** (`estimate_response_amplitude` suppressed; `lock_in=False`).
+The exact-replay case (D3) re-runs **C-lockin** so a NON-ZERO-A/D result is what the
+equality digest compares — a degenerate all-zero comparison cannot pass by accident.
 
 Each case emits A/D amplitude ratio + cross-flow lock-in flag + a **fatigue-proxy
 metric** (e.g. cycle-rate·(A/D)^m surrogate, defined with units/derivation in the
-metrics module — an illustrative screening proxy, NOT a certified fatigue life). A
-SMALL explicit sweep keeps `results.json`/`cases.csv` compact + byte-stable for the
-golden (mirroring buckling-parametric's comment).
+metrics module — an illustrative screening proxy, NOT a certified fatigue life). The
+external-runs model keeps each `results.json`/`cases.csv` compact + byte-stable for
+the golden (mirroring buckling-parametric's `timestamp=None` recipe).
 
 ### D3 — Identity, ≥3 variations + exactly 1 exact replay
 
 - Build `algorithm_version_id` from the SHA-bound Algorithm Version (assetutilities
   `identity` #111) over `viv_screening.py` + descriptor.
 - Emit ≥3 distinct-parameter runs (distinct canonical inputs → distinct `run_id`s).
-- Emit **exactly one exact replay**: re-run one prior case from its published
-  canonical inputs; assert it **resolves to the SAME `run_id`** and passes
-  `output_equality` (via `output_contract.output_equality_digest`). **Any mismatch
-  BLOCKS publication** — the promotion state machine must not reach `accepted`.
+- Emit **exactly one exact replay**: re-run one prior case (the **C-lockin**,
+  non-zero-A/D case from D2) from its published canonical inputs; assert it
+  **resolves to the SAME `run_id`** and passes `output_equality` (via
+  `output_contract.output_equality_digest`). **Any mismatch BLOCKS publication** —
+  the promotion state machine must not reach `accepted`.
+- **run_id dependency (hard):** today's `runner.run_workflow` has NO `run_id`
+  concept — it stamps `workflow_id`/provenance/`determinism.result_hash` only.
+  Same-`run_id` (AC3) is provided entirely by wiring in assetutilities `identity`
+  #111 (`derive_run_identity`/`run_id`). That signature must be confirmed on `main`
+  before the AC3 tests can be written (see Sequencing pre-req and TDD RED gate).
+- **Equality artifact set excludes volatile provenance (m2):** `runner.run_workflow`
+  auto-stamps `provenance.data_as_of = utc_now_iso()` — a wall-clock value that
+  changes every run. The determinism golden already prunes it by name via
+  `GOLDEN_VOLATILE_KEYS`, but the `output_equality` / curated artifact set is
+  **explicitly limited to the timestamp-free `results.json` + `cases.csv`**;
+  `provenance` (and `data_as_of` in particular) is NOT part of the equality digest.
+  Exact-replay equality is asserted over that timestamp-free set only.
 
 ### D4 — Inputs / outputs / metrics / publication
 
@@ -210,28 +257,34 @@ golden (mirroring buckling-parametric's comment).
 ## Pseudocode
 
 ```text
-# D1 router (side-effect-clean; engine embed path owns tmp root + rmtree)
-def viv_screening_router(cfg):
-    vin  = VIVScreeningInput(**cfg["viv_screening"]["input"])
-    beam = BeamProperties(**cfg["viv_screening"]["beam"])
-    res  = viv_screening(vin, beam, n_modes=cfg["viv_screening"].get("n_modes", 10))
+# D1 router — SINGLE dedicated router, modeled on BucklingParametricWorkflow.
+# NOT parametric_run (that hardcodes REPO_ROOT/results/... and is not embed-aware).
+# basename == "viv_parametric_screening"; engine embed path owns tmp root + rmtree.
+def viv_parametric_screening_router(cfg):
+    vin  = VIVScreeningInput(**cfg["viv_parametric_screening"]["input"])
+    beam = BeamProperties(**cfg["viv_parametric_screening"]["beam"])
+    res  = viv_screening(vin, beam, n_modes=cfg["viv_parametric_screening"].get("n_modes", 10))
     crit = res.details[ (res.critical_mode or 1) - 1 ]
     a_d  = estimate_response_amplitude(crit["reduced_velocity"],
-                                       vin.outer_diameter, vin.stability_parameter)
+                                       vin.outer_diameter, vin.stability_parameter)  # D unused in body
     fatigue_proxy = crit["vortex_shedding_freq_Hz"] * (a_d ** M_EXP)   # screening surrogate
-    payload = {"kind":"in_memory","value":{
-        "a_d_ratio": a_d, "lock_in": not res.screening_pass,
+    payload = {"a_d_ratio": a_d, "lock_in": not res.screening_pass,
         "critical_mode": res.critical_mode, "critical_vr": res.critical_vr,
         "fatigue_proxy": round(fatigue_proxy, 6), "modes": res.details,
         "citations":[{"code_id":"DNV-RP-C205","publisher":"DNV","revision":"2019","section":"9"},
-                     {"code_id":"DNV-RP-F105","publisher":"DNV","revision":"2017","section":"4-5"}]}}
-    write results.json (meta.generated_at omitted) + cases.csv
+                     {"code_id":"DNV-RP-F105","publisher":"DNV","revision":"2017","section":"4-5"}]}
+    # embed-aware output dir, exactly like BucklingParametricWorkflow._result_dir(cfg):
+    out_dir = Path(cfg.get("Analysis",{}).get("result_folder")
+                   or (Path(cfg["_config_dir_path"]) / "results"))   # rebased to tmp root_folder
+    write out_dir/"results.json" (meta.generated_at omitted; timestamp=None) + out_dir/"cases.csv"
+    cfg["viv_parametric_screening"] = {"result_folder": str(out_dir), ...}
     return cfg
 
-# D3 sweep + exact replay
+# D3 variations (EXTERNAL single-case runs — the ONLY sweep mechanism) + exact replay
 runs = [ run_workflow("viv-parametric-screening", params=variant) for variant in VARIANTS ]  # >= 3
-replay = run_workflow("viv-parametric-screening", cfg=canonical_inputs_of(runs[0]))
-assert identity.run_id(replay) == identity.run_id(runs[0])            # same run_id
+replay = run_workflow("viv-parametric-screening", cfg=canonical_inputs_of(runs[0]))  # runs[0] = C-lockin
+assert identity.run_id(replay) == identity.run_id(runs[0])            # same run_id (needs #111 identity)
+# equality over timestamp-free results.json + cases.csv ONLY (provenance/data_as_of excluded):
 assert output_contract.output_equality(replay, runs[0])              # else BLOCK publication
 
 # D4 publish (execution-time; owner-gated; WRITE-scope token)
@@ -251,12 +304,11 @@ assert run_workflow(cfg=inputs).determinism["result_hash"] == accepted_result_ha
 
 | Action | Path | Reason |
 |---|---|---|
-| Create | `src/digitalmodel/orcaflex/viv_screening_workflow.py` | thin router adapter wrapping the pure `viv_screening.py` (native schema + DNV citations sidecar) |
-| Modify | `src/digitalmodel/engine.py` | add `elif basename == "viv_screening":` dispatch arm |
-| Create | `examples/workflows/viv-screening/input.yml` | synthetic single-case base input (all numbers synthetic; DNV citations only) |
-| Create | `examples/workflows/viv-parametric-screening/input.yml` | factorial sweep over D, V, span/f_n (≥3 meaningful variations) |
+| Create | `src/digitalmodel/orcaflex/viv_screening_workflow.py` | SINGLE dedicated, embed-aware router wrapping the pure `viv_screening.py`, modeled exactly on `structural/buckling_workflow.py` (output dir from `Analysis.result_folder`/`_config_dir_path`; `timestamp=None`; native schema + DNV citations sidecar). Does NOT use `workflows/parametric_run.py` |
+| Modify | `src/digitalmodel/engine.py` | add `elif basename == "viv_parametric_screening":` dispatch arm (the sole VIV-screening route) |
+| Create | `examples/workflows/viv-parametric-screening/input.yml` | synthetic single-case base input (`basename: viv_parametric_screening`; all numbers synthetic; DNV citations only). Variations are external `run_workflow(..., params=variant)` calls — no factorial/parametric_run block |
 | Create | `examples/workflows/viv-parametric-screening/README.md` | run instructions (match cathodic-protection README shape) |
-| Modify | `docs/registry/workflows.yaml` | register `viv-screening` + `viv-parametric-screening` (schema_version 2 rows; result.kind: files) |
+| Modify | `docs/registry/workflows.yaml` | register ONLY `viv-parametric-screening` (schema_version 2 row; `basename: viv_parametric_screening`; `result.kind: files`). No `parametric_run`-backed row |
 | Create | `config/publication/viv-parametric-screening.yml` (`publication.yml`) | dataset target `aceengineer/digitalmodel-runs`, curated-artifact allowlist, metric defs, report path — all config externalized to YAML |
 | Create | `tests/workflow_api/goldens/viv_parametric_screening.json` | committed determinism golden (result_hash + per-file sha256) |
 | Create | `tests/workflow_api/test_run_workflow_viv_screening.py` | envelope + reference-golden + exact-replay-equality tests |
@@ -277,8 +329,9 @@ Every acceptance criterion maps to a failing-first test.
 |---|---|---|---|
 | `test_algorithm_is_public_synthetic` | no admission assertion | inputs carry only synthetic numbers + DNV citations; `inputs` admission passes | AC1 |
 | `test_dirty_input_fails_admission` | none | an input with a licensed/pointer-only/absolute-path field is REJECTED by admission (BLOCKS) | AC1, AC10 |
-| `test_at_least_three_variations_plus_one_replay` | workflow absent | ≥3 distinct-input runs + exactly 1 exact replay emitted | AC2 |
-| `test_exact_replay_same_run_id_and_equality` | none | replay resolves to SAME `run_id` and passes `output_equality` | AC3 |
+| `test_at_least_three_variations_plus_one_replay` | workflow absent | ≥3 distinct-input runs (the pinned C-lockin **A/D≈0.97**, C-mid non-zero, C-suppressed **A/D=0.0**) + exactly 1 exact replay of C-lockin emitted; assert C-lockin `lock_in=True`/non-zero A/D and C-suppressed `lock_in=False`/A/D==0.0 so runs are meaningfully comparable, not accidentally equal | AC2 |
+| `test_exact_replay_same_run_id_and_equality` | none | replay of the non-zero-A/D C-lockin case resolves to SAME `run_id` (via `identity` #111 `derive_run_identity`) and passes `output_equality` over the timestamp-free set | AC3 |
+| `test_provenance_data_as_of_excluded_from_equality_digest` | none | `provenance`/`data_as_of` (volatile `utc_now_iso()`) is NOT in the `output_equality`/curated digest; two runs of identical inputs at different wall-clock times still pass exact-replay equality (digest limited to timestamp-free `results.json` + `cases.csv`) | AC3, AC5 |
 | `test_equality_mismatch_blocks_publication` | none | a perturbed replay fails equality → promotion never reaches `accepted` | AC3 |
 | `test_inputs_complete_canonical_hashed_schema_valid_replayable` | none | inputs module validates all five properties | AC4 |
 | `test_outputs_retain_native_schema_only_curated_publish` | none | `results.json` full schema retained; only curated allowlist projects | AC5 |
@@ -291,6 +344,23 @@ Every acceptance criterion maps to a failing-first test.
 
 Tests are written first; each RED row is captured failing against the current
 checkout before the workflow/router/publication code lands.
+
+**HARD RED-phase pre-requisite (was a residual risk; now blocking).** Before ANY
+test that references the assetutilities surface is written, confirm the following
+public signatures on assetutilities `main` (not merely "cited by PR"): `identity`
+#111 `run_id` / `derive_run_identity`; `output_contract` #114
+`output_equality_digest`; `publication` #116 `build_projection` and `HfPort`. In
+particular, today's `digitalmodel.workflow_api.runner.run_workflow` has **no
+`run_id` concept** — exact-replay-same-`run_id` (AC3) depends entirely on wiring in
+`identity` #111, so `test_exact_replay_same_run_id_and_equality` cannot be authored
+until that signature is verified. If any signature differs, adjust D3/D4 and the
+tests before RED capture. Notes on partial coverage: AC1's "reject candidates with
+unresolved redistribution rights" half is satisfied at the resource-intelligence
+(document) layer, not by a runtime test (see `test_dirty_input_fails_admission`,
+which covers only the input-admission half); and AC7's real immutable-revision check
+runs at owner-gated **execution** with a live `HfPort`, not in CI (CI mocks the
+port), so `test_dataset_projection_publishes_immutable_revision` proves only the
+projection/promotion path, not the actual HF revision.
 
 ---
 
@@ -330,7 +400,11 @@ Plan-specific gates:
    above) with ≥2 usable no-MAJOR provider reviews, then explicit user approval;
    move #1505 to `status:plan-approved` and record `.planning/plan-approved/1505.md`.
    The implementing agent must not self-approve.
-3. **TDD:** capture all RED tests first; then D1→D5.
+3. **TDD:** **HARD pre-requisite before writing any test** — confirm the
+   assetutilities #111–#116 public signatures (`identity.run_id`/`derive_run_identity`,
+   `output_contract.output_equality_digest`, `publication.build_projection`, `HfPort`)
+   on assetutilities `main`; `run_workflow` has no `run_id` today, so AC3 depends on
+   `identity` #111 being wired. Only then capture all RED tests; then D1→D5.
 4. **Execution PUBLISHES a public dataset to `aceengineer/*` on Hugging Face
    (outward-facing).** This is a distinct, higher bar than an internal merge:
    - It requires **explicit owner go-ahead at run time** (separate from plan
@@ -346,15 +420,46 @@ Plan-specific gates:
 
 ## Adversarial Review Summary
 
-_Placeholder — populated after round-1 fanout exits._
-
 | Provider | Verdict | Notes |
 |---|---|---|
-| Claude | PENDING | — |
+| Claude (r1) | BLOCK — remediated | 1 MAJOR (M1) + 3 MINOR (m1–m3); all remediated in this revision — see row below |
 | Codex | PENDING | invoke directly from repo with concise local-plan path prompt |
 | Gemini | PENDING | availability is not approval |
 
-**Overall:** PENDING; implementation blocked until ≥2 usable no-MAJOR reviews + user approval.
+**r1 (Claude) — BLOCK, now remediated:**
+- **M1 (MAJOR):** the plan routed the sweep through `workflows/parametric_run.py`,
+  whose `router` resolves outputs to a hardcoded `REPO_ROOT/results/parametric_run/…`
+  (NOT embed/`root_folder`-aware). That writes into the real repo tree instead of the
+  throwaway sandbox `run_workflow._run_once` creates + rmtrees — breaking the
+  side-effect-free premise and leaving `extract_result(..., root=tmp)` with no files
+  → empty/degenerate golden. The cited byte-stable precedent `buckling-parametric`
+  does NOT use `parametric_run`; it uses its own `BucklingParametricWorkflow.router`
+  whose `_result_dir(cfg)` = `Analysis.result_folder`/`cfg["_config_dir_path"]/"results"`,
+  which `configure_embed` rebases onto the injected `root_folder`. The plan was also
+  internally contradictory (D2 internal-factorial via parametric_run vs. an external
+  loop of single-case `run_workflow` calls in the pseudocode). **Remediation:**
+  committed to a SINGLE dedicated, embed-aware router modeled exactly on
+  `BucklingParametricWorkflow` (`timestamp=None`, `result.kind: files`, byte-stable),
+  dropped `parametric_run` and the second workflow, and made the ≥3 variations
+  EXTERNAL `run_workflow("viv-parametric-screening", params=variant)` calls (D1, D2,
+  Pseudocode, Files-to-Change).
+- **m1 (MINOR):** pinned specific published cases spanning both regimes — C-lockin
+  (D=0.2032 m, V=1.0 m/s, span=60 m → A/D≈0.97) and a suppressed A/D=0.0 case — and
+  replay the non-zero case so equality is demonstrable, not accidental (D2, D3, TDD).
+- **m2 (MINOR):** `run_workflow` auto-stamps `provenance.data_as_of = utc_now_iso()`;
+  the `output_equality`/curated digest is now explicitly limited to the timestamp-free
+  `results.json` + `cases.csv`, with a TDD assertion that provenance/`data_as_of` is
+  excluded and exact-replay equality still holds (D3, TDD).
+- **m3 (MINOR):** confirming assetutilities #111–#116 public signatures on `main` is
+  now a HARD RED-phase pre-requisite (not a residual risk); noted that `run_workflow`
+  has no `run_id` today so AC3 depends on wiring in `identity` #111 (TDD, Sequencing,
+  Risks).
+- Notes (n1–n3): AC1's rights-rejection half is doc-satisfied (no runtime test);
+  AC7's real immutable-revision check is owner-gated execution-only (HfPort mocked in
+  CI); `estimate_response_amplitude`'s `outer_diameter` is unused in the body.
+
+**Overall:** BLOCK remediated; still requires ≥1 further usable no-MAJOR provider
+review (Codex/Gemini) + explicit user approval before implementation.
 
 ---
 
@@ -364,17 +469,28 @@ _Placeholder — populated after round-1 fanout exits._
   `orcaflex/viv_screening.py` is public-safe and analytical, but the engine's only
   VIV arm routes `viv_analysis` → the heavier legacy `subsea.viv_analysis.VIVAnalysis`
   which may pull optional/plotting deps and touch example trees. The pilot MUST add a
-  new clean `viv_screening` router arm and NOT reuse the existing `viv-parametric`
-  (which sweeps the legacy base). If the new arm accidentally imports the legacy
-  path, byte-stability and admission both break.
-- **[admission risk] `estimate_response_amplitude` returns 0.0 outside 4≤Vr≤8.**
-  Variants must be chosen so at least some cases enter lock-in (non-zero A/D),
-  otherwise the sweep is trivially all-zero and not a "meaningful" variation. Pick D,
-  V, span so Vr spans both suppressed and lock-in regimes.
-- **[dependency risk] assetutilities #111–#116 are cited by PR, not content-verified
-  here** (assetutilities is not in this checkout). If any module's public surface
-  differs from the issue's description (esp. `output_equality_digest` and `HfPort`
-  signatures), D3/D4 pseudocode needs adjustment. Verify imports before writing tests.
+  new clean `viv_parametric_screening` router arm and NOT reuse the existing
+  `viv-parametric` (which sweeps the legacy base). If the new arm accidentally
+  imports the legacy path, byte-stability and admission both break. The router also
+  must NOT use `workflows/parametric_run.py` (see M1 / Adversarial Review Summary):
+  its `_resolve_output_path` hardcodes `REPO_ROOT/results/parametric_run/…` and is
+  not embed-aware, which would write into the real repo tree, break the sandbox
+  premise, and leave `extract_result(..., root=tmp)` with no files → degenerate golden.
+- **[admission risk — RESOLVED by pinned cases] `estimate_response_amplitude`
+  returns 0.0 outside 4≤Vr≤8.** Addressed in D2 by pinning specific published cases
+  that span both regimes: C-lockin (D=0.2032 m, V=1.0 m/s, span=60 m → A/D≈0.97,
+  non-zero) and C-suppressed (A/D=0.0), with the exact replay run against the
+  non-zero C-lockin case so equality is demonstrable, not accidental. Note
+  `estimate_response_amplitude`'s `outer_diameter` argument is **unused in the
+  function body** (A/D is a function of Vr and Ks only) — do not rely on D affecting
+  A/D directly.
+- **[dependency — now a HARD RED-phase pre-requisite, not a residual risk]**
+  assetutilities #111–#116 public signatures (`identity.run_id`/`derive_run_identity`,
+  `output_contract.output_equality_digest`, `publication.build_projection`, `HfPort`)
+  MUST be confirmed on assetutilities `main` **before** any test referencing them is
+  written — see the TDD "HARD RED-phase pre-requisite" block. `run_workflow` today has
+  no `run_id` concept, so AC3 same-`run_id` depends on wiring in `identity` #111. If a
+  signature differs, adjust D3/D4 and the tests before RED capture.
 - **[byte-stability risk] Golden must be machine-stable.** Follow the
   buckling-parametric recipe exactly: omit `meta.generated_at`, keep the sweep SMALL,
   rely on the pydantic models' existing rounding. Any unrounded float or timestamp
