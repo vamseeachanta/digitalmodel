@@ -111,7 +111,46 @@ class DiffractionWorkflow:
                 f"{label} solver unavailable: run fell back to dry-run "
                 f"(no {label} executable/license found). Run on a licensed host."
             )
+        if status == "completed":
+            exported = self._export_results_json(result, settings)
+            if exported is not None:
+                settings["outputs"]["diffraction_results_json"] = str(exported)
         return cfg
+
+    @staticmethod
+    def _export_results_json(result: Any, settings: dict[str, Any]) -> Path | None:
+        """Serialize ``DiffractionResults`` into the solve output directory.
+
+        ``diffraction_results.json`` is the bundle authority consumed by the
+        license-free side (``postprocess.load_results_bundle``,
+        ``DiffractionResults.from_dict``) and, being a small JSON in the
+        results tree, is picked up by the licensed-run queue's result-return
+        mechanism — so RAOs leave the licensed host without extra
+        infrastructure (#1537 / deckhand#545).
+        """
+        results_obj = getattr(result, "diffraction_results", None)
+        if results_obj is None:
+            return None
+        import json
+
+        out_dir = Path(
+            str(getattr(result, "output_dir", None) or settings["output_directory"])
+        )
+        out_dir.mkdir(parents=True, exist_ok=True)
+        path = out_dir / "diffraction_results.json"
+        path.write_text(
+            json.dumps(
+                results_obj.to_dict(),
+                indent=2,
+                # numpy scalars/arrays from the extraction layer
+                default=lambda o: (
+                    o.item()
+                    if hasattr(o, "item")
+                    else (o.tolist() if hasattr(o, "tolist") else str(o))
+                ),
+            )
+        )
+        return path
 
     @staticmethod
     def _resolve_spec_path(cfg: dict[str, Any], settings: dict[str, Any]) -> Path:

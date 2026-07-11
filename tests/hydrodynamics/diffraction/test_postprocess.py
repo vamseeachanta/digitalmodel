@@ -100,6 +100,52 @@ def test_postprocess_run_produces_exports_validation_and_index(
     assert "exports" in index
 
 
+def test_postprocess_run_emits_standardized_html_report(
+    tmp_path: Path, mock_diffraction_results
+):
+    # #1537: the license-free postprocess emits the same standardized report
+    # the benchmark path uses, self-contained (inline plotly, no CDN), and the
+    # index references it.
+    bundle = tmp_path / "bundle"
+    bundle.mkdir()
+    (bundle / "diffraction_results.json").write_text(
+        json.dumps(mock_diffraction_results.to_dict())
+    )
+    out = tmp_path / "postproc"
+
+    result = postprocess_diffraction_run(bundle, out, make_plots=False)
+
+    assert result.report is not None, "expected an HTML report (plotly present)"
+    expected = out / f"{mock_diffraction_results.vessel_name}_diffraction_report.html"
+    assert result.report == expected
+    assert result.report.is_file()
+    html = result.report.read_text()
+    assert mock_diffraction_results.vessel_name in html
+    # Self-contained: inline plotly, never a CDN <script src>.
+    assert "cdn.plot.ly" not in html
+    index = json.loads((out / "index.json").read_text())
+    assert index["report"] == result.report.name
+
+
+def test_postprocess_report_date_is_deterministic_from_bundle(
+    tmp_path: Path, mock_diffraction_results
+):
+    # The report label comes from the bundle's own date, never datetime.now,
+    # so repeated renders of the same bundle carry the same date (#1019 SSOT).
+    mock_diffraction_results.analysis_date = "2026-07-11 00:00:00"
+    bundle = tmp_path / "bundle"
+    bundle.mkdir()
+    (bundle / "diffraction_results.json").write_text(
+        json.dumps(mock_diffraction_results.to_dict())
+    )
+    out = tmp_path / "postproc"
+
+    result = postprocess_diffraction_run(bundle, out, make_plots=False)
+
+    assert result.report is not None
+    assert "2026-07-11 00:00:00" in result.report.read_text()
+
+
 def test_postprocess_run_no_heavy_files_emitted(
     tmp_path: Path, mock_diffraction_results
 ):

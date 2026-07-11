@@ -46,6 +46,7 @@ class PostprocResult:
     exports: Dict[str, Path] = field(default_factory=dict)
     plots: List[Path] = field(default_factory=list)
     validation_report: Path | None = None
+    report: Path | None = None
     index: Path | None = None
 
 
@@ -99,7 +100,12 @@ def postprocess_diffraction_run(
     # 3) RAO plots (optional dep; skipped cleanly if matplotlib is absent).
     plots = _plot_raos(results, out) if make_plots else []
 
-    # 4) Index manifest.
+    # 4) Standardized self-contained HTML report (the same generator the
+    #    benchmark path uses; a view over the bundle, never a copy). Optional
+    #    like the plots — a missing plotly/report dep never fails postprocess.
+    report_path = _build_html_report(results, out, report)
+
+    # 5) Index manifest.
     index = {
         "vessel": results.vessel_name,
         "analysis_tool": results.analysis_tool,
@@ -108,6 +114,7 @@ def postprocess_diffraction_run(
         "validation_report": validation_path.name,
         "exports": {k: Path(v).name for k, v in exports.items()},
         "plots": [p.name for p in plots],
+        "report": report_path.name if report_path is not None else None,
     }
     index_path = out / "index.json"
     index_path.write_text(json.dumps(index, indent=2, default=str))
@@ -119,8 +126,69 @@ def postprocess_diffraction_run(
         exports={k: Path(v) for k, v in exports.items()},
         plots=plots,
         validation_report=validation_path,
+        report=report_path,
         index=index_path,
     )
+
+
+def _build_html_report(
+    results: DiffractionResults, out: Path, validation_report: Dict[str, Any]
+) -> Path | None:
+    """Render the standardized diffraction HTML report from the bundle.
+
+    Reuses ``generate_diffraction_report`` (the benchmark path's generator) so a
+    single-solver run gets the same report shape. Self-contained
+    (``include_plotlyjs`` inline) and deterministic: ``report_date`` is taken
+    from the results' own analysis/created date, never ``datetime.now``.
+
+    Returns the path, or ``None`` if the optional report/plotly dependencies are
+    absent or anything fails — the report is a convenience, not a contract
+    (same policy as the RAO plots).
+    """
+    try:
+        from digitalmodel.hydrodynamics.diffraction.report_generator import (
+            build_report_data_from_solver_results,
+            compute_natural_periods,
+            compute_stability,
+            generate_diffraction_report,
+        )
+
+        if build_report_data_from_solver_results is None:
+            return None
+
+        report_data = build_report_data_from_solver_results(
+            {results.analysis_tool: results}, vessel_name=results.vessel_name
+        )
+        # Deterministic label from the bundle itself.
+        report_data.report_date = results.analysis_date or results.created_date or ""
+
+        # Enrich with stability + natural periods when hydrostatics travelled
+        # in the bundle (Optional on DiffractionResults). Clean field mapping;
+        # skipped silently when absent.
+        if results.hydrostatics is not None:
+            report_data.hydrostatics = results.hydrostatics
+            stability = compute_stability(results.hydrostatics)
+            report_data.gm_transverse = stability.get("gm_transverse")
+            report_data.gm_longitudinal = stability.get("gm_longitudinal")
+            report_data.bm_transverse = stability.get("bm_transverse")
+            report_data.bm_longitudinal = stability.get("bm_longitudinal")
+            report_data.kb = stability.get("kb")
+            if report_data.added_mass_diagonal:
+                report_data.natural_periods = compute_natural_periods(
+                    results.hydrostatics,
+                    report_data.added_mass_diagonal,
+                    report_data.frequencies_rad_s,
+                )
+
+        report_path = out / f"{results.vessel_name}_diffraction_report.html"
+        return generate_diffraction_report(
+            report_data,
+            report_path,
+            include_plotlyjs=True,
+            validation_report=validation_report,
+        )
+    except Exception:  # noqa: BLE001 - report is optional, never fatal
+        return None
 
 
 def _plot_raos(results: DiffractionResults, out: Path) -> List[Path]:
