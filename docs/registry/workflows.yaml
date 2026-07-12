@@ -1254,6 +1254,20 @@ workflows:
     runtime: offline
     result:
       kind: files                       # results.json {meta,lookup,index,index_status,curves} + cases.csv
+  - id: viv-parametric-screening        # digitalmodel#1505; NEW basename `viv_parametric_screening` (legacy `viv_analysis`/`parametric_run` untouched)
+    basename: viv_parametric_screening
+    title: DNV-RP-C205 synthetic VIV parametric screening (A/D, lock-in, fatigue-proxy; results.json + cases.csv)
+    input: examples/workflows/viv-parametric-screening/input.yml
+    outputs:
+      # results/input.yml (save_cfg dump) is intentionally NOT listed: the run_workflow
+      # envelope excludes it (basenames == {results.json, cases.csv}); the registry
+      # outputs mirror the published envelope.
+      - examples/workflows/viv-parametric-screening/results/results.json  # write_viv_outputs (meta.generated_at omitted -> byte-stable)
+      - examples/workflows/viv-parametric-screening/results/cases.csv     # write_viv_outputs per-mode table
+    test: tests/workflow_api/test_run_workflow_viv_screening.py::test_viv_reference_golden_bare_in_repo_id
+    runtime: offline
+    result:
+      kind: files                       # results.json {meta,screening,input,beam,modes,citations} + cases.csv
   - id: mooring-design-mbl              # NEW basename `mooring_mbl` -- reserved `mooring` arm untouched
     basename: mooring_mbl
     title: DNV-OS-E301 mooring MBL safety-factor check (calc-citation pilot #2685)

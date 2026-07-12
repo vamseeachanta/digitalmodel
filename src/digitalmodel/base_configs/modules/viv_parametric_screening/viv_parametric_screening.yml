@@ -1,0 +1,23 @@
+# Base config for the viv-parametric-screening engine module (digitalmodel#1505).
+# The generic engine base-config merge (durable-workflows registry path) loads this;
+# the example input.yml overlays it. The pilot's own runs use the run_workflow path +
+# the dedicated viv_screening_workflow router and do NOT depend on this file.
+# SYNTHETIC defaults (no client/geometry data); overridden per case.
+basename: viv_parametric_screening
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+viv_parametric_screening:
+  n_modes: 10
+  input:
+    outer_diameter: 0.2032
+    current_speed: 1.0
+  beam:
+    length: 60.0
+    outer_diameter: 0.2032
+    inner_diameter: 0.15
+    mass_per_length: 60.0

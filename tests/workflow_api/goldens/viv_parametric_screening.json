@@ -1,0 +1,19 @@
+{
+  "result": {
+    "kind": "files",
+    "outputs": [
+      {
+        "basename": "cases.csv",
+        "sha256": "854c4f74bd9d39e8e29fb3a8dcffebb96272b7fdc84cdfe9c6ffc86a2c953ec9",
+        "size": 672
+      },
+      {
+        "basename": "results.json",
+        "sha256": "b35fd210c3711b257fc017ddf67f36ca19f01b1b69c9ed0de0223b9ad477f1f8",
+        "size": 4220
+      }
+    ]
+  },
+  "result_hash": "c873de745c2332f8a0a7267e15db4768557913cc87098d7759247d773469c3d7",
+  "standard_revisions": []
+}
