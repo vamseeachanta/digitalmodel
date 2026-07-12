@@ -8,8 +8,13 @@
 #     OpenFOAM build + solve path (the same code the `basename: openfoam`
 #     engine route uses, landed via #1161).
 #   mpi: ONE large case across ranks — decomposePar -force (scotch) ->
-#     mpirun -np <workers> <solver> -parallel -> reconstructPar -> processor*
-#     dirs pruned. Set exactly one case for mpi mode.
+#     mpirun -np <workers> <solver> -parallel -> reconstructPar. processor*
+#     dirs are pruned only after a SUCCESSFUL reconstruction; with
+#     run_batch.reconstruct: false the decomposed fields are the deliverable
+#     and are preserved. Set exactly one case for mpi mode, and SIZE IT to
+#     finish well inside one dispatch wall-clock window — a fresh retry
+#     restarts from t=0 unless run_batch.resume: true picks up an existing
+#     processor* decomposition and restarts the solver from latestTime.
 #
 # Case generation reuses parametric_run's variants schema
 # (factorial/range/csv/yaml_matrix + dotted-path mapping).
@@ -29,14 +34,18 @@ openfoam_run_batch:
     mesh_utility: blockMesh
     to_vtk: false
   # Explicit case list: each case names its dir and overrides base settings via
-  # a dotted path (mapping identity here). For a parametric sweep instead, drop
-  # `cases:` and add a `variants:` block (parametric_run's factorial/range/csv/
-  # yaml_matrix schema) — see tests for a yaml_matrix example.
+  # mapping's dotted paths. Knob names must not collide with reserved manifest
+  # columns (index/name/status/solver/...) — hence solver_app mapped onto the
+  # solver setting. For a parametric sweep instead, drop `cases:` and add a
+  # `variants:` block (parametric_run's factorial/range/csv/yaml_matrix
+  # schema) — see tests for a yaml_matrix example.
   cases:
     - name: current_simpleFoam
-      solver: simpleFoam
+      solver_app: simpleFoam
     - name: current_pimpleFoam
-      solver: pimpleFoam
+      solver_app: pimpleFoam
+  mapping:
+    solver_app: solver
   run_batch:
     mode: pool
     workers: 2

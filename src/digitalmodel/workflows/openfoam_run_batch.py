@@ -10,8 +10,20 @@ in one of two ways (``run_batch.mode``):
   ``basename: openfoam`` engine route uses (landed via #1161).
 * ``mpi``: ONE large case spread across ranks —
   ``decomposePar -force`` (scotch) -> ``mpirun -np <workers> <solver> -parallel``
-  -> optional ``reconstructPar`` -> ``processor*`` dirs ALWAYS pruned (mirrors
-  ``scripts/cfd/run_sloshing_3d_benchmark.py``).
+  -> optional ``reconstructPar`` (mirrors
+  ``scripts/cfd/run_sloshing_3d_benchmark.py``). ``processor*`` dirs are
+  pruned only after a SUCCESSFUL reconstruction; with ``reconstruct: false``
+  the decomposed fields ARE the deliverable and are preserved in the work dir.
+
+WALL-CLOCK SIZING (mpi mode): a fresh mpi attempt restarts the solve from
+``startTime`` — size the case (end time, mesh, rank count) to finish well
+inside one dispatch wall-clock window, or a killed-and-retried run will redo
+the same physics from t=0 on every attempt. ``run_batch.resume: true``
+mitigates this: when a previous attempt's ``processor*`` decomposition already
+exists, the retry skips meshing/decomposition and restarts the solver from
+``latestTime`` instead of t=0 (requires the case's ``writeInterval`` to land
+intermediate time dirs). The batch summary records ``timeout_seconds`` so the
+dispatch side can compare its cap against the expected wall time.
 
 Case generation reuses parametric_run's helpers (``_load_cases`` /
 ``_set_dotted``) so the factorial/range/csv/yaml_matrix schema and dotted-path
@@ -19,10 +31,13 @@ mapping behave identically to orcaflex_run_batch (#1554).
 
 Idempotent/resumable: each case writes a ``_result.json`` checkpoint under its
 work dir; a re-run skips a case whose checkpoint is ``completed`` (a retry after
-a queue timeout safely re-enqueues the same input). Small conclusions
-(``results/cases.csv`` + ``results/batch_summary.json``) land under ``results/``
-for the licensed-run queue's return allowlist; heavy case trees (meshes, fields,
-VTK, ``processor*``) stay in the work dir and never reach ``results/``.
+a queue timeout safely re-enqueues the same input). A failed, truncated or
+missing checkpoint is retried — from a CLEAN rebuilt case dir (unless mpi
+``resume`` picks up an existing decomposition), never on top of a dirty tree
+of stale timestep dirs and logs. Small conclusions (``results/cases.csv`` +
+``results/batch_summary.json``) land under ``results/`` for the licensed-run
+queue's return allowlist; heavy case trees (meshes, fields, VTK,
+``processor*``) stay in the work dir and never reach ``results/``.
 """
 
 from __future__ import annotations
@@ -30,6 +45,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import re
 import shutil
 import subprocess
 import time
@@ -56,6 +72,24 @@ CHECKPOINT_FILENAME = "_result.json"
 # the ONLY suffixes allowed under it; heavy case trees stay in the work dir.
 _RESULTS_ALLOWED_SUFFIXES = {".csv", ".json"}
 VALID_MODES = ("pool", "mpi")
+DEFAULT_TIMEOUT_SECONDS = 43200
+# Manifest columns owned by the workflow. A case knob with one of these names
+# would be silently clobbered by the reserved value in the manifest row, so
+# knob names colliding with them are rejected up front (rename the knob and
+# route it onto the settings path via mapping:, e.g. solver_app: solver).
+_RESERVED_ROW_KEYS = frozenset(
+    {
+        "index",
+        "name",
+        "status",
+        "solver",
+        "mock",
+        "error",
+        "case_dir",
+        "wall_seconds",
+        "mpi_plan",
+    }
+)
 
 SOLVER_ERROR_MESSAGE = (
     "OpenFOAM solver / utilities are not on PATH on this host. "
@@ -86,16 +120,25 @@ def router(cfg: dict) -> dict:
     mesh_utility = base.get("mesh_utility", DEFAULT_MESH_UTILITY)
     solver = base.get("solver")
 
+    reconstruct = bool(run_settings.get("reconstruct", True))
+    timeout_seconds = int(
+        run_settings.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS)
+    )
+
     # Fail-closed once, up front: a real run on a solver-less host must never
     # silently downgrade to a build-only dry run (the licensed-run lane would
     # record a false finish). Per-case failures below (divergence, bad mesh)
-    # are isolated; a missing toolchain is not.
-    if not mock and not _solver_ready(mode, mesh_utility, solver):
+    # are isolated; a missing toolchain is not. The check covers EVERY utility
+    # the plan will invoke — including reconstructPar when mode: mpi ends with
+    # a reconstruction — so hours of solve can't fail at the final stage.
+    if not mock and not _solver_ready(mode, mesh_utility, solver, reconstruct):
         raise RuntimeError(SOLVER_ERROR_MESSAGE)
 
     variants = settings.get("variants") or {}
     cases = _resolve_case_matrix(settings.get("cases"), variants, cfg_dir)
-    mapping = variants.get("mapping") or {}
+    # An explicit cases: list is mutually exclusive with variants:, so accept
+    # a top-level mapping: for renaming its knobs onto dotted settings paths.
+    mapping = settings.get("mapping") or variants.get("mapping") or {}
 
     results_dir = _resolve_dir(
         run_settings.get("output_dir", DEFAULT_OUTPUT_DIR), cfg_dir
@@ -126,6 +169,7 @@ def router(cfg: dict) -> dict:
         mode=mode,
         workers=workers,
         mock=mock,
+        timeout_seconds=timeout_seconds,
         started_at=started_at,
         finished_at=finished_at,
     )
@@ -194,6 +238,14 @@ def _render_cases(
         # A "name" field names the case dir; every other field is a swept knob
         # injected into the per-case OpenFOAM settings via a dotted path.
         params = {k: v for k, v in case.items() if k != "name"}
+        collisions = _RESERVED_ROW_KEYS.intersection(params)
+        if collisions:
+            raise ValueError(
+                "openfoam_run_batch: case parameter name(s) "
+                f"{sorted(collisions)} collide with reserved manifest "
+                "columns; rename the knob and route it onto the settings "
+                "path via mapping: (e.g. solver_app: solver)"
+            )
         for name, value in params.items():
             _set_dotted(case_settings, mapping.get(name, name), value)
         case_name = case.get("name") or f"{base_name}_{index:03d}"
@@ -248,6 +300,10 @@ def _run_case_pool(
 
     start = time.monotonic()
     try:
+        # A retry (absent/failed/corrupt checkpoint) must never rebuild on top
+        # of a dirty tree — stale timestep dirs/logs would mix inconsistent
+        # artifacts into the new solve.
+        _clean_case_dir(item["work_dir"])
         case_dir = _build_case(item)
         if mock:
             # Mock leaf: the real (license-free) builder authored the case tree,
@@ -305,7 +361,8 @@ def _run_case_mpi(
     mock: bool,
     command_runner: Callable[..., int] | None = None,
 ) -> dict[str, Any]:
-    checkpoint = _load_checkpoint(item["work_dir"])
+    work_dir = item["work_dir"]
+    checkpoint = _load_checkpoint(work_dir)
     if checkpoint is not None:
         return checkpoint
 
@@ -315,20 +372,37 @@ def _run_case_mpi(
     if not solver:
         row = _row(item, status="failed",
                    error="mode: mpi requires base.solver to be set")
-        _write_checkpoint(item["work_dir"], row)
+        _write_checkpoint(work_dir, row)
         return row
     reconstruct = bool(run_settings.get("reconstruct", True))
-    timeout = int(run_settings.get("timeout_seconds", 43200))
+    timeout = int(run_settings.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS))
+    # Resume (run_batch.resume: true): a previous killed attempt left its
+    # decomposed state behind -> restart the solver from latestTime instead of
+    # redoing mesh/decompose/solve from t=0 (retry-livelock mitigation for
+    # cases near the dispatch wall-clock cap).
+    resuming = (
+        not mock
+        and bool(run_settings.get("resume", False))
+        and _has_processor_dirs(work_dir)
+    )
 
     start = time.monotonic()
     try:
-        case_dir = _build_case(item)
+        if resuming:
+            case_dir = work_dir
+            _set_start_from_latest_time(case_dir)
+        else:
+            # Fresh attempt: never rebuild on top of a dirty tree (stale
+            # timestep dirs/logs from a killed run mix inconsistent artifacts).
+            _clean_case_dir(work_dir)
+            case_dir = _build_case(item)
         plan = mpi_command_plan(
             solver=solver,
             workers=workers,
             mesh_utility=settings.get("mesh_utility", DEFAULT_MESH_UTILITY),
             run_set_fields=bool(settings.get("run_set_fields", False)),
             reconstruct=reconstruct,
+            resume=resuming,
         )
         if mock:
             # Explicit mock: record the exact command plan without executing.
@@ -336,16 +410,20 @@ def _run_case_mpi(
                        solver=solver, mock=True)
             row["mpi_plan"] = [" ".join(argv) for argv in plan]
         else:
-            _write_decompose_par_dict(case_dir, workers)
+            if not resuming:
+                _write_decompose_par_dict(case_dir, workers)
             row = _execute_mpi_plan(item, case_dir, plan, solver, run, timeout)
+            # processor* holds the ONLY copy of the solved fields until
+            # reconstructPar merges them back: prune ONLY after a successful
+            # reconstruction. With reconstruct: false the decomposed fields
+            # ARE the deliverable and stay in the work dir; on failure they
+            # are kept for diagnosis and a possible resume.
+            if reconstruct and row["status"] == "completed":
+                _prune_processor_dirs(case_dir)
     except Exception as exc:  # noqa: BLE001 - checkpoint the failure
         row = _row(item, status="failed", error=str(exc))
-    finally:
-        # ALWAYS prune processor* dirs — decomposed sub-meshes are heavy and
-        # must never leak into results/ or bloat the work dir (benchmark rule).
-        _prune_processor_dirs(item["work_dir"])
     row["wall_seconds"] = round(time.monotonic() - start, 3)
-    _write_checkpoint(item["work_dir"], row)
+    _write_checkpoint(work_dir, row)
     return row
 
 
@@ -377,14 +455,19 @@ def mpi_command_plan(
     mesh_utility: str = DEFAULT_MESH_UTILITY,
     run_set_fields: bool = False,
     reconstruct: bool = True,
+    resume: bool = False,
 ) -> list[list[str]]:
     """Ordered utility argv for an MPI solve: mesh -> decompose -> solve ->
     (reconstruct). decomposePar ALWAYS precedes mpirun; the solver runs
-    ``-parallel`` under ``mpirun -np <workers>`` (mirrors the 3D benchmark)."""
-    plan: list[list[str]] = [[mesh_utility]]
-    if run_set_fields:
-        plan.append(["setFields"])
-    plan.append(["decomposePar", "-force"])
+    ``-parallel`` under ``mpirun -np <workers>`` (mirrors the 3D benchmark).
+    A resume skips the mesh/decompose stages entirely — the previous attempt's
+    decomposition is reused and the solver restarts from latestTime."""
+    plan: list[list[str]] = []
+    if not resume:
+        plan.append([mesh_utility])
+        if run_set_fields:
+            plan.append(["setFields"])
+        plan.append(["decomposePar", "-force"])
     plan.append(
         ["mpirun", "-np", str(workers), "--oversubscribe", solver, "-parallel"]
     )
@@ -415,14 +498,20 @@ def _build_case(item: dict[str, Any]) -> Path:
     return Path(build_cfg["openfoam"]["case_dir"])
 
 
-def _solver_ready(mode: str, mesh_utility: str, solver: str | None) -> bool:
-    """The CFD ready-gate: the utilities this run will invoke are on PATH.
-    Mirrors OpenFOAMRunner._openfoam_available / 'openfoam doctor'."""
+def _solver_ready(
+    mode: str, mesh_utility: str, solver: str | None, reconstruct: bool = True
+) -> bool:
+    """The CFD ready-gate: EVERY utility this run will invoke is on PATH —
+    including reconstructPar when the mpi plan ends with a reconstruction
+    (otherwise hours of solve would fail at the very last stage). Mirrors
+    OpenFOAMRunner._openfoam_available / 'openfoam doctor'."""
     required = [mesh_utility]
     if solver:
         required.append(solver)
     if mode == "mpi":
         required += ["decomposePar", "mpirun"]
+        if reconstruct:
+            required.append("reconstructPar")
     return all(shutil.which(exe) is not None for exe in required)
 
 
@@ -468,6 +557,31 @@ def _prune_processor_dirs(case_dir: Path) -> None:
         shutil.rmtree(proc_dir, ignore_errors=True)
 
 
+def _has_processor_dirs(case_dir: Path) -> bool:
+    return case_dir.is_dir() and any(case_dir.glob("processor*"))
+
+
+def _clean_case_dir(case_dir: Path) -> None:
+    """Remove a stale case tree before a fresh rebuild (retry hygiene)."""
+    if case_dir.is_dir():
+        shutil.rmtree(case_dir, ignore_errors=True)
+
+
+def _set_start_from_latest_time(case_dir: Path) -> None:
+    """Patch system/controlDict to ``startFrom latestTime`` so a resumed MPI
+    solve continues from the last written time dir instead of t=0."""
+    control = case_dir / "system" / "controlDict"
+    if not control.is_file():
+        raise RuntimeError(
+            f"resume requested but no system/controlDict in {case_dir}"
+        )
+    text = control.read_text()
+    patched = re.sub(r"startFrom\s+\w+\s*;", "startFrom       latestTime;", text)
+    if patched == text and "startFrom" not in text:
+        patched = text + "\nstartFrom       latestTime;\n"
+    control.write_text(patched)
+
+
 def _load_checkpoint(work_dir: Path) -> dict[str, Any] | None:
     checkpoint = work_dir / CHECKPOINT_FILENAME
     if not checkpoint.is_file():
@@ -476,14 +590,23 @@ def _load_checkpoint(work_dir: Path) -> dict[str, Any] | None:
         row = json.loads(checkpoint.read_text())
     except (OSError, json.JSONDecodeError):
         return None
-    # Only a completed case is idempotently skipped; a failed checkpoint is
-    # re-run so a transient failure can be retried by re-enqueuing the input.
+    if not isinstance(row, dict):
+        return None
+    # Only a completed case is idempotently skipped; a failed (or truncated /
+    # corrupt) checkpoint is re-run so a transient failure can be retried by
+    # re-enqueuing the same input.
     return row if row.get("status") == "completed" else None
 
 
 def _write_checkpoint(work_dir: Path, row: dict[str, Any]) -> None:
+    # Atomic: a kill mid-write must leave either the old checkpoint or the new
+    # one, never a truncated file (a corrupt checkpoint reads as "no
+    # checkpoint" and the case is retried).
     work_dir.mkdir(parents=True, exist_ok=True)
-    (work_dir / CHECKPOINT_FILENAME).write_text(json.dumps(row, indent=2) + "\n")
+    target = work_dir / CHECKPOINT_FILENAME
+    tmp = work_dir / f"{CHECKPOINT_FILENAME}.tmp"
+    tmp.write_text(json.dumps(row, indent=2) + "\n")
+    os.replace(tmp, target)
 
 
 def _row(
@@ -519,6 +642,7 @@ def _write_summary(
     mode: str,
     workers: int,
     mock: bool,
+    timeout_seconds: int,
     started_at: datetime,
     finished_at: datetime,
 ) -> dict:
@@ -532,6 +656,9 @@ def _write_summary(
         "workers": workers,
         "host_cpu_count": os.cpu_count(),
         "mock": mock,
+        # The per-stage wall cap — dispatch lanes compare their own wall-clock
+        # window against this when sizing mpi cases (see module docstring).
+        "timeout_seconds": timeout_seconds,
         "started_at_utc": started_at.isoformat(),
         "finished_at_utc": finished_at.isoformat(),
     }

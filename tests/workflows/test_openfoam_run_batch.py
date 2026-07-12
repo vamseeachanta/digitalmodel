@@ -43,6 +43,8 @@ def test_example_input_runs_mock_batch(tmp_path):
     assert len(rows) == 2
     assert rows["status"].tolist() == ["completed", "completed"]
     assert rows["name"].tolist() == ["current_simpleFoam", "current_pimpleFoam"]
+    # The swept knob column AND the reserved actual-solver column both land.
+    assert sorted(rows["solver_app"].tolist()) == ["pimpleFoam", "simpleFoam"]
     assert sorted(rows["solver"].tolist()) == ["pimpleFoam", "simpleFoam"]
     assert bool(rows["mock"].all())
 
@@ -54,11 +56,14 @@ def test_example_input_runs_mock_batch(tmp_path):
     assert summary["workers"] == 2
     assert summary["mock"] is True
     assert summary["host_cpu_count"] == os.cpu_count()
+    assert summary["timeout_seconds"] == 43200
 
     # The license-free builder authored a real case tree per case, under the
     # work dir (never under results/).
     for name in ("current_simpleFoam", "current_pimpleFoam"):
         assert (tmp_path / "batch_runs" / name / "system" / "controlDict").is_file()
+    # Atomic checkpoint writes leave no temp files behind.
+    assert not list((tmp_path / "batch_runs").rglob("*.tmp"))
 
     outputs = result["openfoam_run_batch"]["outputs"]
     assert outputs["manifest"] == str(manifest)
@@ -74,8 +79,8 @@ def test_case_matrix_is_deterministic(tmp_path):
     base = {"case_type": "current_loading", "solver": "simpleFoam"}
     variants = {
         "source": "yaml_matrix",
-        "list": [{"solver": "simpleFoam"}, {"solver": "pimpleFoam"}],
-        "mapping": {"solver": "solver"},
+        "list": [{"solver_app": "simpleFoam"}, {"solver_app": "pimpleFoam"}],
+        "mapping": {"solver_app": "solver"},
     }
 
     first = ofb._render_cases(
@@ -99,10 +104,11 @@ def test_variants_yaml_matrix_runs_through_router(tmp_path):
     cfg = _example_cfg(tmp_path)
     settings = cfg["openfoam_run_batch"]
     settings.pop("cases")
+    settings.pop("mapping")
     settings["variants"] = {
         "source": "yaml_matrix",
-        "list": [{"solver": "simpleFoam"}, {"solver": "interFoam"}],
-        "mapping": {"solver": "solver"},
+        "list": [{"solver_app": "simpleFoam"}, {"solver_app": "interFoam"}],
+        "mapping": {"solver_app": "solver"},
     }
 
     ofb.router(cfg)
@@ -272,3 +278,136 @@ def test_mpi_mode_rejects_multi_case_matrix(tmp_path):
     cfg["openfoam_run_batch"]["run_batch"]["mode"] = "mpi"  # 2-case matrix
     with pytest.raises(ValueError, match="exactly ONE case"):
         ofb.router(cfg)
+
+
+def test_mpi_reconstruct_false_preserves_processor_dirs(tmp_path):
+    # With reconstruct: false the decomposed fields under processor* are the
+    # ONLY copy of the solved output — pruning them would destroy the result.
+    base = {"case_type": "current_loading", "solver": "interFoam"}
+    item = ofb._render_cases(base, [{}], {}, tmp_path / "work")[0]
+
+    recorded = []
+
+    def fake_runner(argv, cwd, log, timeout):
+        recorded.append(argv)
+        if argv[0] == "decomposePar":
+            (Path(cwd) / "processor0").mkdir(parents=True, exist_ok=True)
+        return 0
+
+    row = ofb._run_case_mpi(
+        item, {"reconstruct": False}, workers=4, mock=False,
+        command_runner=fake_runner,
+    )
+
+    assert row["status"] == "completed"
+    names = [argv[0] for argv in recorded]
+    assert "reconstructPar" not in names
+    assert (tmp_path / "work" / item["name"] / "processor0").is_dir()
+
+
+def test_mpi_stage_failure_fails_case_and_is_retried(tmp_path):
+    # A non-zero stage exit must mark the case failed (no false "completed"
+    # checkpoint), preserve processor* for diagnosis, and a re-run must RETRY
+    # (only a completed checkpoint is skipped).
+    base = {"case_type": "current_loading", "solver": "interFoam"}
+    item = ofb._render_cases(base, [{}], {}, tmp_path / "work")[0]
+    case_dir = tmp_path / "work" / item["name"]
+
+    def failing_runner(argv, cwd, log, timeout):
+        if argv[0] == "decomposePar":
+            (Path(cwd) / "processor0").mkdir(parents=True, exist_ok=True)
+        return 1 if argv[0] == "mpirun" else 0
+
+    row = ofb._run_case_mpi(
+        item, {}, workers=2, mock=False, command_runner=failing_runner
+    )
+    assert row["status"] == "failed"
+    assert "mpirun" in row["error"]
+    checkpoint = json.loads((case_dir / "_result.json").read_text())
+    assert checkpoint["status"] == "failed"
+    # Decomposed state is kept on failure (diagnosis / potential resume).
+    assert (case_dir / "processor0").is_dir()
+
+    # Retry with a healthy runner: the failed checkpoint does NOT short-circuit.
+    row2 = ofb._run_case_mpi(
+        item, {}, workers=2, mock=False,
+        command_runner=lambda argv, cwd, log, timeout: 0,
+    )
+    assert row2["status"] == "completed"
+
+
+def test_mpi_resume_restarts_from_latest_time(tmp_path):
+    # resume: true + an existing processor* decomposition -> skip mesh and
+    # decompose stages, patch controlDict to latestTime, never rebuild.
+    base = {"case_type": "current_loading", "solver": "interFoam"}
+    item = ofb._render_cases(base, [{}], {}, tmp_path / "work")[0]
+    case_dir = tmp_path / "work" / item["name"]
+    (case_dir / "system").mkdir(parents=True)
+    (case_dir / "system" / "controlDict").write_text(
+        "application     interFoam;\nstartFrom       startTime;\n"
+    )
+    (case_dir / "processor0").mkdir()
+
+    recorded = []
+
+    def fake_runner(argv, cwd, log, timeout):
+        recorded.append(argv)
+        return 0
+
+    with patch.object(
+        ofb, "_build_case",
+        side_effect=AssertionError("resume must not rebuild the case"),
+    ):
+        row = ofb._run_case_mpi(
+            item, {"resume": True, "reconstruct": True}, workers=4, mock=False,
+            command_runner=fake_runner,
+        )
+
+    assert row["status"] == "completed"
+    assert [argv[0] for argv in recorded] == ["mpirun", "reconstructPar"]
+    assert "latestTime" in (case_dir / "system" / "controlDict").read_text()
+    assert ofb.mpi_command_plan("interFoam", 4, resume=True)[0][0] == "mpirun"
+
+
+def test_failed_pool_checkpoint_is_retried(tmp_path):
+    cfg = _example_cfg(tmp_path)
+    case0 = tmp_path / "batch_runs" / "current_simpleFoam"
+    case0.mkdir(parents=True)
+    (case0 / "_result.json").write_text(
+        json.dumps({"index": 0, "name": "current_simpleFoam",
+                    "status": "failed", "error": "killed"})
+    )
+
+    ofb.router(cfg)
+
+    rows = pd.read_csv(tmp_path / "results" / "cases.csv")
+    row0 = rows[rows["name"] == "current_simpleFoam"].iloc[0]
+    assert row0["status"] == "completed"  # retried, not skipped as failed
+
+
+def test_corrupt_checkpoint_is_treated_as_absent(tmp_path):
+    work = tmp_path / "case"
+    work.mkdir()
+    (work / "_result.json").write_text('{"status": "compl')  # truncated
+    assert ofb._load_checkpoint(work) is None
+    (work / "_result.json").write_text("[]")  # valid JSON, wrong shape
+    assert ofb._load_checkpoint(work) is None
+
+
+def test_solver_ready_requires_reconstructpar_for_mpi(monkeypatch):
+    present = {"blockMesh", "interFoam", "decomposePar", "mpirun"}
+    monkeypatch.setattr(
+        ofb.shutil, "which",
+        lambda exe: "/usr/bin/stub" if exe in present else None,
+    )
+    assert not ofb._solver_ready("mpi", "blockMesh", "interFoam", True)
+    assert ofb._solver_ready("mpi", "blockMesh", "interFoam", False)
+    assert ofb._solver_ready("pool", "blockMesh", "interFoam", True)
+
+
+def test_reserved_case_knob_name_raises(tmp_path):
+    base = {"case_type": "current_loading"}
+    with pytest.raises(ValueError, match="reserved manifest"):
+        ofb._render_cases(base, [{"status": "x"}], {}, tmp_path / "w")
+    with pytest.raises(ValueError, match="reserved manifest"):
+        ofb._render_cases(base, [{"solver": "interFoam"}], {}, tmp_path / "w")
