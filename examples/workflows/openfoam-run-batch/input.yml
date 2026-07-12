@@ -1,0 +1,49 @@
+# OpenFOAM CFD BATCH — REQUIRES-SOLVER workflow (issue #1560).
+#
+# One input.yml -> a deterministic case matrix that saturates a dedicated CFD
+# node. Two modes (run_batch.mode):
+#   pool (default): N single-rank cases run CONCURRENTLY through a bounded
+#     thread pool sized to ~90% of host cores (run_batch.workers overrides;
+#     owner resource policy dm#1553). Each case reuses the fail-closed
+#     OpenFOAM build + solve path (the same code the `basename: openfoam`
+#     engine route uses, landed via #1161).
+#   mpi: ONE large case across ranks — decomposePar -force (scotch) ->
+#     mpirun -np <workers> <solver> -parallel -> reconstructPar -> processor*
+#     dirs pruned. Set exactly one case for mpi mode.
+#
+# Case generation reuses parametric_run's variants schema
+# (factorial/range/csv/yaml_matrix + dotted-path mapping).
+#
+# This example is a tiny 2-case current-loading sweep in MOCK mode so it runs
+# solver-free (CI): the license-free builder authors each case tree but no
+# solver runs. On a solver-capable host set run_batch.mock: false to mesh +
+# solve for real. Small conclusions land under results/ (cases.csv +
+# batch_summary.json) for the licensed-run queue's return allowlist; heavy
+# case trees stay under batch_runs/ and processor* dirs are pruned.
+basename: openfoam_run_batch
+
+openfoam_run_batch:
+  base:
+    case_type: current_loading
+    solver: simpleFoam
+    mesh_utility: blockMesh
+    to_vtk: false
+  # Explicit case list: each case names its dir and overrides base settings via
+  # a dotted path (mapping identity here). For a parametric sweep instead, drop
+  # `cases:` and add a `variants:` block (parametric_run's factorial/range/csv/
+  # yaml_matrix schema) — see tests for a yaml_matrix example.
+  cases:
+    - name: current_simpleFoam
+      solver: simpleFoam
+    - name: current_pimpleFoam
+      solver: pimpleFoam
+  run_batch:
+    mode: pool
+    workers: 2
+    mock: true
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

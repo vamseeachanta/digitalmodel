@@ -413,6 +413,12 @@ def engine(
         )
 
         cfg_base = orcaflex_run_batch(cfg_base)
+    elif basename == "openfoam_run_batch":
+        from digitalmodel.workflows.openfoam_run_batch import (
+            router as openfoam_run_batch,
+        )
+
+        cfg_base = openfoam_run_batch(cfg_base)
     elif basename == "parametric_query":
         from digitalmodel.parametric.query import router as parametric_query
 
