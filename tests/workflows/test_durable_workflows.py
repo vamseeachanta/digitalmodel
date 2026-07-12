@@ -1568,6 +1568,15 @@ def test_workflow_registry(workflow, monkeypatch):
         assert citations[0]["publisher"] == "DNV"
     elif workflow["id"] in FIELD_DEV_PRODUCTION_WORKFLOWS:
         assert_field_dev_production_workflow(workflow["id"], cfg)
+    elif workflow["id"] == "viv-parametric-screening":
+        # Synthetic DNV-RP-C205 VIV screening base case (#1505): D=0.2032 m, V=1.0 m/s,
+        # span=60 m -> cross-flow lock-in at mode 2, A/D ~= 0.98.
+        res = cfg["viv_parametric_screening"]
+        assert res["standard"].startswith("DNV-RP-C205")
+        assert res["lock_in"] is True and res["screening_pass"] is False
+        assert res["critical_mode"] == 2
+        assert res["a_d_ratio"] == pytest.approx(0.9789, abs=1e-3)
+        assert res["fatigue_proxy"] > 0.0
     else:
         raise AssertionError(f"Missing workflow assertion for {workflow['id']}")
 
