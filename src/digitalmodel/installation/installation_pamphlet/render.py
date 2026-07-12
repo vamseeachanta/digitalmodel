@@ -455,44 +455,6 @@ def render_pamphlet_html(result: dict[str, Any], generated_label: str | None = N
         else "Computed from the vessel-specific OrcaWave RAO solve."
     )
 
-    BAND = d.get("envelope_band") or {}
-
-    def band_block():
-        """Roll-damping sensitivity band (#1538). Additive: renders only when the
-        result carries an ``envelope_band``; absent -> "" (HTML byte-unchanged)."""
-        if not BAND:
-            return ""
-        labels = {
-            "transit": "Transit / sail-away",
-            "dp_station_keeping": "DP station-keeping",
-            "heavy_lift": "Heavy lift (splash zone)",
-        }
-
-        def cell(b, t):
-            lo = b["hs_by_tp_low"][str(float(t))]
-            hi = b["hs_by_tp_high"][str(float(t))]
-            return f"<td>{lo:.2f}&ndash;{hi:.2f}</td>"
-
-        rows = "".join(
-            f"<tr><td class='l'>{labels.get(op, op)} <small>&alpha;={b['alpha']}</small></td>"
-            + "".join(cell(b, t) for t in TP)
-            + "</tr>"
-            for op, b in BAND.items()
-        )
-        note = d.get("damping_note") or (
-            "Roll-damping sensitivity band across the zeta = 5-10% critical range; "
-            "roll is damping-controlled at resonance."
-        )
-        return (
-            "<h3 class='oph' style='margin-top:18px'>Roll-damping sensitivity band "
-            "(&zeta;=5&ndash;10% critical)</h3>"
-            '<div class="sub">Limiting Hs shown as a range: lower bound = low-damping '
-            "(&zeta;=5%) roll RAO, upper bound = high-damping (&zeta;=10%, "
-            "bilge-keel / appendage) roll RAO. Roll is damping-controlled at resonance.</div>"
-            f'<table><tr><th class="l">Operation</th>{ehead}</tr>{rows}</table>'
-            f'<div class="note">{note}</div>'
-        )
-
     script = _live_monitor_script(d["envelopes"], TP, DPCLASS)
 
     html = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
@@ -616,7 +578,7 @@ Governing limits are <b>seakeeping</b> and <b>station-keeping</b> (&sect;5–6),
 <p class="sub" style="margin-top:8px">Header row = Tp (s).</p></div>
 </div>
 <div class="note"><b>Envelope basis:</b> {d['envelope_proxy']}. {envelope_note_tail}</div>
-{band_block()}
+
 {splashzone_block()}
 
 <h2>4 &nbsp;Lift Items (reference catalogs)</h2>
