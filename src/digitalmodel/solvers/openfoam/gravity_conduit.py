@@ -34,7 +34,7 @@ incompressible fluid -- is conserved to machine precision by construction.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Callable, List, Optional
 
 from loguru import logger
@@ -145,6 +145,14 @@ class ConduitGeometry:
         diameter: Conduit hydraulic diameter D (m, optional, > 0).
         invert_elevation: Absolute elevation of the conduit connection (m). Flow
             requires the higher of the two liquid surfaces to sit above this.
+        effective_length: Effective inertial column length L_eff (m, optional,
+            > 0). When given, the conduit carries fluid momentum and the flow is
+            integrated as a U-tube oscillator (see
+            :func:`simulate_inertial_exchange`); when ``None`` the flow is
+            quasi-static (the L_eff -> 0 limit used by
+            :func:`simulate_gravity_exchange`). A shorter L_eff (e.g. direct
+            bottom tubes vs a long bottom-strip conduit) raises the tuning
+            frequency without changing the model form.
     """
 
     area: float
@@ -154,10 +162,16 @@ class ConduitGeometry:
     length: Optional[float] = None
     diameter: Optional[float] = None
     invert_elevation: float = 0.0
+    effective_length: Optional[float] = None
 
     def __post_init__(self) -> None:
         if self.area <= 0.0:
             raise ValueError(f"area must be positive, got {self.area}")
+        if self.effective_length is not None and self.effective_length <= 0.0:
+            raise ValueError(
+                f"effective_length must be positive when given, got "
+                f"{self.effective_length}"
+            )
         if not 0.0 < self.discharge_coefficient <= 1.0:
             raise ValueError(
                 f"discharge_coefficient must be in (0, 1], got "
@@ -195,6 +209,11 @@ class ConduitGeometry:
     def effective_discharge_coefficient(self) -> float:
         """Loss-adjusted discharge coefficient ``Cd / sqrt(1 + K_total)``."""
         return self.discharge_coefficient / math.sqrt(1.0 + self.total_loss_coefficient)
+
+    @property
+    def has_inertia(self) -> bool:
+        """True if an ``effective_length`` was supplied (inertial U-tube model)."""
+        return self.effective_length is not None
 
 
 def signed_hydrostatic_head(source: TankState, dest: TankState) -> float:
@@ -354,8 +373,8 @@ def simulate_gravity_exchange(
     v_total = source.volume + dest.volume
 
     # Source volume bounds that keep BOTH tanks physical (0 <= V <= capacity).
-    vs_min = max(0.0, v_total - dest.capacity)   # dest would overflow below this
-    vs_max = min(source.capacity, v_total)       # source would overflow above this
+    vs_min = max(0.0, v_total - dest.capacity)  # dest would overflow below this
+    vs_max = min(source.capacity, v_total)  # source would overflow above this
 
     def head_of(vs: float, t: float) -> float:
         z_source = floor_s + vs / area_s
@@ -407,7 +426,7 @@ def simulate_gravity_exchange(
             vs_new = vs_max
 
         t1 = t0 + h_dt
-        q = (vs - vs_new) / h_dt            # exact conduit flow implied by the step
+        q = (vs - vs_new) / h_dt  # exact conduit flow implied by the step
         vs = vs_new
         new_head = head_of(vs, t1)
 
@@ -459,8 +478,7 @@ def simulate_gravity_exchange(
     reversed_flow = _has_sign_change(q_hist)
     transferred_volume = vs_hist[0] - vs_hist[-1]
     mass_residual = max(
-        abs(density * (vs + vd) - density * v_total)
-        for vs, vd in zip(vs_hist, vd_hist)
+        abs(density * (vs + vd) - density * v_total) for vs, vd in zip(vs_hist, vd_hist)
     )
 
     return GravityExchangeResult(
@@ -489,3 +507,243 @@ def _has_sign_change(values: List[float]) -> bool:
         if seen_positive and seen_negative:
             return True
     return False
+
+
+# ============================================================================
+# Conduit fluid inertia -- the U-tube oscillator (#1549 / #1528)
+# ============================================================================
+
+
+def utube_natural_frequency(
+    conduit: ConduitGeometry, tank_plan_area: float, *, g: float = G_STANDARD
+) -> float:
+    """Undamped natural angular frequency (rad/s) of the twin-tank U-tube.
+
+    For two equal prismatic tanks of plan area ``tank_plan_area`` (A_t) joined by
+    a conduit of area ``A_c`` and effective inertial length ``L_eff``, the lossless
+    liquid column obeys ``d2V/dt2 = -(2 g A_c / (L_eff A_t)) V``, so
+
+        omega_tau = sqrt(2 g A_c / (L_eff A_t)).
+
+    Roll damping peaks when ``omega_tau`` is tuned to the roll frequency (the
+    Frahm principle, confirmed by the twin-tank CFD). A shorter ``L_eff`` -- e.g.
+    direct bottom tubes instead of a long bottom-strip conduit -- raises the
+    tuning frequency without changing the model form.
+
+    Raises:
+        ValueError: If ``conduit.effective_length`` is None (no inertial length)
+            or ``tank_plan_area`` is non-positive.
+    """
+    if conduit.effective_length is None:
+        raise ValueError(
+            "conduit.effective_length is required to compute the U-tube natural "
+            "frequency; set it to enable the inertial model"
+        )
+    if tank_plan_area <= 0.0:
+        raise ValueError(f"tank_plan_area must be positive, got {tank_plan_area}")
+    return math.sqrt(
+        2.0 * g * conduit.area / (conduit.effective_length * tank_plan_area)
+    )
+
+
+def simulate_inertial_exchange(
+    source: TankState,
+    dest: TankState,
+    conduit: ConduitGeometry,
+    *,
+    duration: float,
+    dt: float,
+    density: float = 1025.0,
+    g: float = G_STANDARD,
+    external_head: Optional[Callable[[float], float]] = None,
+    initial_flow: float = 0.0,
+    equilibrium_tol: float = 1e-9,
+    reject_dryout: bool = False,
+    reject_overflow: bool = False,
+) -> GravityExchangeResult:
+    """Integrate gravity exchange **with conduit fluid inertia** (U-tube model).
+
+    Unlike the quasi-static :func:`simulate_gravity_exchange`, the conduit flow
+    ``Q`` carries momentum: the liquid column of length ``L_eff`` accelerates
+    under the net of the driving head and the loss head. Two states -- the source
+    volume and the flow rate ``Q`` -- are advanced together by RK4::
+
+        dV_source/dt = -Q
+        dQ/dt        = (g A_c / L_eff) * (H_drive - sign(Q) Q^2 / (2 g Cd_eff^2 A_c^2))
+
+    where ``H_drive`` is the signed hydrostatic head (plus any ``external_head``)
+    when the conduit is submerged, and 0 otherwise. At steady state ``dQ/dt = 0``
+    recovers the orifice law ``Q = Cd_eff A sqrt(2 g |H|)``; as ``L_eff -> 0`` the
+    flow tracks that law instantaneously, reproducing the quasi-static model. For
+    a large ``L_eff`` the system oscillates at :func:`utube_natural_frequency` and
+    resonates when the forcing is tuned to it.
+
+    Volume (and mass, for one incompressible fluid) is conserved to machine
+    precision because the destination volume is derived as ``V_total - V_source``.
+
+    Args:
+        source: Initial source tank state.
+        dest: Initial destination tank state.
+        conduit: Conduit geometry; ``effective_length`` **must** be set.
+        duration: Total simulated time (s, > 0).
+        dt: Fixed time step (s, > 0).
+        density: Fluid density (kg/m^3) for the mass residual.
+        g: Gravitational acceleration (m/s^2).
+        external_head: Optional ``t -> head offset (m)`` (e.g. a roll-induced
+            tilt) added to the geometric head; drives forced/resonant response.
+        initial_flow: Initial conduit flow rate ``Q`` (m^3/s), source -> dest.
+        equilibrium_tol: With no external head, the run stops once both the flow
+            and the head fall below this (fully damped).
+        reject_dryout: Raise if a tank would drain below empty.
+        reject_overflow: Raise if a tank would fill past capacity.
+
+    Returns:
+        A :class:`GravityExchangeResult` with synchronized histories and summary;
+        ``flow_rate`` is the momentum-carrying conduit flow ``Q``.
+
+    Raises:
+        ValueError: If ``conduit.effective_length`` is None, for non-physical
+            ``duration``/``dt``, or on a dry-out/overflow event with the matching
+            reject flag set.
+    """
+    if conduit.effective_length is None:
+        raise ValueError(
+            "simulate_inertial_exchange requires conduit.effective_length; use "
+            "simulate_gravity_exchange for the quasi-static (zero-inertia) model"
+        )
+    if duration <= 0.0:
+        raise ValueError(f"duration must be positive, got {duration}")
+    if dt <= 0.0:
+        raise ValueError(f"dt must be positive, got {dt}")
+
+    ext = external_head if external_head is not None else (lambda _t: 0.0)
+
+    area_s = source.plan_area
+    area_d = dest.plan_area
+    floor_s = source.floor_elevation
+    floor_d = dest.floor_elevation
+    v_total = source.volume + dest.volume
+    vs_min = max(0.0, v_total - dest.capacity)
+    vs_max = min(source.capacity, v_total)
+
+    cd_eff = conduit.effective_discharge_coefficient
+    area_c = conduit.area
+    inv_inertia = g * area_c / conduit.effective_length
+    loss_den = (
+        2.0 * g * cd_eff * cd_eff * area_c * area_c
+    )  # H_loss = sign(Q) Q^2 / loss_den
+
+    def head_of(vs: float, t: float) -> float:
+        z_source = floor_s + vs / area_s
+        z_dest = floor_d + (v_total - vs) / area_d
+        return (z_source - z_dest) + ext(t)
+
+    def submerged(vs: float) -> bool:
+        z_source = floor_s + vs / area_s
+        z_dest = floor_d + (v_total - vs) / area_d
+        return max(z_source, z_dest) > conduit.invert_elevation
+
+    def derivs(vs: float, q: float, t: float):
+        h_drive = head_of(vs, t) if submerged(vs) else 0.0
+        dq = inv_inertia * (h_drive - math.copysign(q * q, q) / loss_den)
+        return -q, dq
+
+    times: List[float] = [0.0]
+    vs_hist: List[float] = [source.volume]
+    vd_hist: List[float] = [dest.volume]
+    head_hist: List[float] = [head_of(source.volume, 0.0)]
+    q_hist: List[float] = [initial_flow]
+
+    vs = source.volume
+    q = initial_flow
+    n_steps = int(math.ceil(duration / dt))
+    termination = "duration"
+    any_flow = q != 0.0
+
+    for step in range(1, n_steps + 1):
+        t0 = (step - 1) * dt
+        h_dt = min(dt, duration - t0)
+        if h_dt <= 0.0:
+            break
+
+        # Classic RK4 on the coupled (vs, q) state.
+        dvs1, dq1 = derivs(vs, q, t0)
+        dvs2, dq2 = derivs(
+            vs + 0.5 * h_dt * dvs1, q + 0.5 * h_dt * dq1, t0 + 0.5 * h_dt
+        )
+        dvs3, dq3 = derivs(
+            vs + 0.5 * h_dt * dvs2, q + 0.5 * h_dt * dq2, t0 + 0.5 * h_dt
+        )
+        dvs4, dq4 = derivs(vs + h_dt * dvs3, q + h_dt * dq3, t0 + h_dt)
+        vs_new = vs + (h_dt / 6.0) * (dvs1 + 2.0 * dvs2 + 2.0 * dvs3 + dvs4)
+        q_new = q + (h_dt / 6.0) * (dq1 + 2.0 * dq2 + 2.0 * dq3 + dq4)
+
+        clamp_event: Optional[str] = None
+        if vs_new < vs_min:
+            clamp_event = "dest_overflow" if vs_min > 0.0 else "source_dry"
+            vs_new = vs_min
+            q_new = 0.0  # hitting a hard limit arrests the column
+        elif vs_new > vs_max:
+            clamp_event = "source_overflow" if vs_max < v_total else "dest_dry"
+            vs_new = vs_max
+            q_new = 0.0
+
+        t1 = t0 + h_dt
+        vs = vs_new
+        q = q_new
+        times.append(t1)
+        vs_hist.append(vs)
+        vd_hist.append(v_total - vs)
+        head_hist.append(head_of(vs, t1))
+        q_hist.append(q)
+        if q != 0.0:
+            any_flow = True
+
+        if clamp_event is not None:
+            if clamp_event.endswith("overflow") and reject_overflow:
+                raise ValueError(
+                    f"inertial exchange would cause {clamp_event.replace('_', ' ')} "
+                    f"at t={t1:.4g}s; requested transfer exceeds available free volume"
+                )
+            if clamp_event.endswith("dry") and reject_dryout:
+                raise ValueError(
+                    f"inertial exchange would cause {clamp_event.replace('_', ' ')} "
+                    f"at t={t1:.4g}s; requested transfer exceeds available liquid"
+                )
+            termination = clamp_event
+            logger.warning(
+                "Inertial exchange clamped at t={:.4g}s ({}); flow stopped to keep "
+                "tank volumes physical.",
+                t1,
+                clamp_event,
+            )
+            break
+
+        # Fully-damped equilibrium: only when nothing external keeps forcing it,
+        # and both the flow and the head have vanished.
+        if external_head is None and any_flow:
+            if abs(q) <= equilibrium_tol and abs(head_hist[-1]) <= equilibrium_tol:
+                termination = "equilibrium"
+                break
+
+    if not any_flow:
+        termination = "no_flow"
+
+    reversed_flow = _has_sign_change(q_hist)
+    transferred_volume = vs_hist[0] - vs_hist[-1]
+    mass_residual = max(
+        abs(density * (a + b) - density * v_total) for a, b in zip(vs_hist, vd_hist)
+    )
+
+    return GravityExchangeResult(
+        time=times,
+        source_volume=vs_hist,
+        dest_volume=vd_hist,
+        head=head_hist,
+        flow_rate=q_hist,
+        transferred_volume=transferred_volume,
+        mass_residual=mass_residual,
+        reversed_flow=reversed_flow,
+        termination=termination,
+        density=density,
+    )
