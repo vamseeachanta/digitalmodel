@@ -79,6 +79,17 @@ class DiffractionWorkflow:
         output_dir = self._resolve_output_dir(cfg, settings)
         requested_dry_run = bool(settings.get("dry_run", False))
 
+        solver_kwargs: dict[str, Any] = {}
+        if operation == "run_orcawave":
+            # dm#1555: one OrcaWave solve may use ~90% of host cores as
+            # OrcFxAPI threads (owner resource policy, dm#1553). An explicit
+            # diffraction.thread_count wins; None lets the runner resolve the
+            # host-aware default. AQWA keeps its own core handling (#546).
+            raw_threads = settings.get("thread_count")
+            solver_kwargs["thread_count"] = (
+                int(raw_threads) if raw_threads is not None else None
+            )
+
         spec = DiffractionSpec.from_yaml(spec_path)
         result = run_solve(
             spec,
@@ -86,9 +97,13 @@ class DiffractionWorkflow:
             dry_run=requested_dry_run,
             timeout_seconds=int(settings.get("timeout_seconds", 7200)),
             spec_path=spec_path,
+            **solver_kwargs,
         )
 
         status = str(getattr(result.status, "value", result.status)).lower()
+        effective_threads = getattr(result, "thread_count", None)
+        if effective_threads is not None:
+            settings["thread_count_effective"] = int(effective_threads)
         settings["spec_path"] = str(spec_path)
         settings["output_directory"] = str(getattr(result, "output_dir", output_dir))
         settings["run_status"] = status

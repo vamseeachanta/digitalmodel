@@ -13,6 +13,9 @@ diffraction:
   operation: run_orcawave
   spec: spec.yml
   output_directory: results
+  # thread_count: 57   # OrcFxAPI solve threads (dm#1555). Unset -> ~90% of host
+  #                    # cores (64-core ace-win-1 -> 57); tiny canary cases don't
+  #                    # need it. Lower explicitly on memory-constrained hosts (#714).
 
 default:
   log_level: INFO

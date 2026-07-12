@@ -772,3 +772,49 @@ class TestOrcaWaveStrictMode:
         assert result.validation_verdict == "FAIL"
         assert result.status == RunStatus.COMPLETED
         assert result.return_code == 0
+
+
+# --- host-aware thread-count resolution (dm#1555) ----------------------------
+
+
+def test_default_thread_count_is_90_percent_of_cores_floored() -> None:
+    from digitalmodel.hydrodynamics.diffraction import orcawave_runner as runner
+
+    assert runner.default_thread_count(64) == 57
+    assert runner.default_thread_count(4) == 3
+    assert runner.default_thread_count(1) == 1  # never below 1
+
+
+def test_resolve_thread_count_explicit_wins_and_none_uses_host_default(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from digitalmodel.hydrodynamics.diffraction import orcawave_runner as runner
+
+    monkeypatch.setattr(runner.os, "cpu_count", lambda: 64)
+    assert runner.resolve_thread_count(None) == 57
+    assert runner.resolve_thread_count(8) == 8
+
+
+def test_run_orcawave_dry_run_resolves_thread_count_into_config(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from digitalmodel.hydrodynamics.diffraction import orcawave_runner as runner
+
+    monkeypatch.setattr(runner.os, "cpu_count", lambda: 64)
+    captured: dict = {}
+
+    class _FakeRunner:
+        def __init__(self, config):
+            captured["thread_count"] = config.thread_count
+
+        def run(self, spec, spec_path=None, assumption_ledger=None):
+            from types import SimpleNamespace
+
+            return SimpleNamespace(status="dry_run")
+
+    monkeypatch.setattr(runner, "OrcaWaveRunner", _FakeRunner)
+    spec = MagicMock()
+    runner.run_orcawave(spec, output_dir=tmp_path, dry_run=True)
+    assert captured["thread_count"] == 57
+    runner.run_orcawave(spec, output_dir=tmp_path, dry_run=True, thread_count=8)
+    assert captured["thread_count"] == 8

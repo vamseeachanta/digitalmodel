@@ -232,3 +232,63 @@ def test_run_aqwa_silent_dry_run_fallback_raises(tmp_path: Path) -> None:
             DiffractionWorkflow().router(
                 _solve_cfg(tmp_path, dry_run=False, operation="run_aqwa")
             )
+
+
+# --- diffraction.thread_count forwarding (dm#1555) ---------------------------
+
+
+def _solve_cfg_with_threads(tmp_path: Path, thread_count: int | None) -> dict:
+    cfg = _solve_cfg(tmp_path, dry_run=False)
+    if thread_count is not None:
+        cfg["diffraction"]["thread_count"] = thread_count
+    return cfg
+
+
+def test_run_orcawave_forwards_explicit_thread_count(tmp_path: Path) -> None:
+    from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
+
+    with patch(
+        "digitalmodel.hydrodynamics.diffraction.orcawave_runner.run_orcawave",
+        return_value=_fake_result("completed"),
+    ) as run_solve:
+        DiffractionWorkflow().router(_solve_cfg_with_threads(tmp_path, 8))
+    assert run_solve.call_args.kwargs["thread_count"] == 8
+
+
+def test_run_orcawave_unset_thread_count_forwards_none(tmp_path: Path) -> None:
+    # None lets run_orcawave resolve the host-aware ~90%-of-cores default.
+    from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
+
+    with patch(
+        "digitalmodel.hydrodynamics.diffraction.orcawave_runner.run_orcawave",
+        return_value=_fake_result("completed"),
+    ) as run_solve:
+        DiffractionWorkflow().router(_solve_cfg_with_threads(tmp_path, None))
+    assert run_solve.call_args.kwargs["thread_count"] is None
+
+
+def test_run_orcawave_records_effective_thread_count(tmp_path: Path) -> None:
+    from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
+
+    result = _fake_result("completed")
+    result.thread_count = 57
+    with patch(
+        "digitalmodel.hydrodynamics.diffraction.orcawave_runner.run_orcawave",
+        return_value=result,
+    ):
+        cfg = DiffractionWorkflow().router(_solve_cfg_with_threads(tmp_path, None))
+    assert cfg["diffraction"]["thread_count_effective"] == 57
+
+
+def test_run_aqwa_does_not_receive_thread_count(tmp_path: Path) -> None:
+    # AQWA keeps its own core handling (#546); the kwarg is OrcaWave-only.
+    from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
+
+    with patch(
+        "digitalmodel.hydrodynamics.diffraction.aqwa_runner.run_aqwa",
+        return_value=_fake_aqwa_result("COMPLETED"),
+    ) as run_solve:
+        DiffractionWorkflow().router(
+            _solve_cfg(tmp_path, dry_run=False, operation="run_aqwa")
+        )
+    assert "thread_count" not in run_solve.call_args.kwargs
