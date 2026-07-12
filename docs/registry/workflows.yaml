@@ -433,6 +433,15 @@ workflows:
       - examples/workflows/orcaflex-strength-post/results/strength_loadcase_summary.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[orcaflex-strength-post]
     runtime: requires-license
+  - id: orcaflex-run-batch
+    basename: orcaflex_run_batch
+    title: OrcaFlex dynamic time-domain batch — N sims in parallel sized to ~90% of host cores — needs OrcaFlex license
+    input: examples/workflows/orcaflex-run-batch/input.yml
+    outputs:
+      - examples/workflows/orcaflex-run-batch/results/cases.csv
+      - examples/workflows/orcaflex-run-batch/results/batch_summary.json
+    test: tests/workflows/test_orcaflex_run_batch.py::test_example_input_runs_mock_batch
+    runtime: requires-license
   - id: stress-strain-parametric
     basename: parametric_run
     title: Ramberg-Osgood material grade sweep for offshore pipeline steels
