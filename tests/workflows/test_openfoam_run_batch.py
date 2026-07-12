@@ -411,3 +411,35 @@ def test_reserved_case_knob_name_raises(tmp_path):
         ofb._render_cases(base, [{"status": "x"}], {}, tmp_path / "w")
     with pytest.raises(ValueError, match="reserved manifest"):
         ofb._render_cases(base, [{"solver": "interFoam"}], {}, tmp_path / "w")
+
+
+# --------------------------------------------------------------------------- #
+#  REAL engine configure path (base-config module must be packaged)           #
+# --------------------------------------------------------------------------- #
+def test_engine_configure_path_runs_example_end_to_end(tmp_path, monkeypatch):
+    """The canonical ``python -m digitalmodel <input.yml>`` path: engine()
+    with the REAL ApplicationManager.configure, which loads the packaged
+    base_configs/modules/openfoam_run_batch/openfoam_run_batch.yml and
+    deep-merges it under the user input.
+
+    Guards the integration gap the initial #1560 PR shipped: workflow +
+    engine route existed but no base-config module yml, so configure raised
+    FileNotFoundError on the real host before ever reaching the router —
+    invisible to the router-level tests above, which bypass configure."""
+    from digitalmodel.engine import engine
+
+    (tmp_path / "input.yml").write_text((EXAMPLE_DIR / "input.yml").read_text())
+    monkeypatch.chdir(tmp_path)
+
+    result = engine(inputfile=str(tmp_path / "input.yml"))
+
+    settings = result["openfoam_run_batch"]
+    rows = pd.read_csv(settings["outputs"]["manifest"])
+    assert rows["status"].tolist() == ["completed", "completed"]
+    assert sorted(rows["solver"].tolist()) == ["pimpleFoam", "simpleFoam"]
+    summary = json.loads(Path(settings["outputs"]["summary"]).read_text())
+    assert summary["mock"] is True
+    assert summary["total_cases"] == 2
+    # Base-config defaults merged in without clobbering the user's input.
+    assert summary["mode"] == "pool"
+    assert summary["workers"] == 2

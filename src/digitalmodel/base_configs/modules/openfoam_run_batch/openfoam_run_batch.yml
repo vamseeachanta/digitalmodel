@@ -1,0 +1,39 @@
+# Engine base config for the openfoam_run_batch workflow (issue #1560).
+#
+# Loaded by assetutilities ApplicationManager.configure (pkgutil from the
+# installed package: base_configs/modules/<basename>/<basename>.yml) and
+# deep-merged UNDER the user's input.yml (update_deep_dictionary — user
+# values always win). Without this file the canonical
+# `python -m digitalmodel <input.yml>` invocation dies in configure with
+# FileNotFoundError before ever reaching the workflow router.
+#
+# Keep the defaults minimal and identical to the code defaults in
+# src/digitalmodel/workflows/openfoam_run_batch.py so merge order can never
+# change behaviour.
+basename: openfoam_run_batch
+
+openfoam_run_batch:
+  base:
+    case_type: null        # required from the user's input.yml
+    solver: null           # else read from the case's controlDict
+    mesh_utility: blockMesh
+    to_vtk: false
+  cases: []                # explicit case list (mutually exclusive w/ variants)
+  variants: {}             # parametric_run sweep schema
+  mapping: {}              # knob name -> dotted settings path
+  run_batch:
+    mode: pool             # pool | mpi
+    workers: null          # null -> floor(0.9 x host cores), min 1 (dm#1553)
+    mock: false
+    reconstruct: true      # mpi only: reconstructPar then prune processor*
+    resume: false          # mpi only: restart solver from latestTime if
+                           # a previous attempt's processor* dirs exist
+    timeout_seconds: 43200
+    output_dir: results
+    work_dir: batch_runs
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
