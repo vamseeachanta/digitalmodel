@@ -4,96 +4,7 @@ Provides case setup, mesh generation, solver configuration, post-processing,
 and parametric study tooling.
 """
 
-from .models import (
-    BoundaryCondition,
-    BoundaryType,
-    CaseType,
-    DomainConfig,
-    OpenFOAMCase,
-    SolverConfig,
-    TurbulenceModel,
-    TurbulenceType,
-)
 from .case_builder import OpenFOAMCaseBuilder
-from .domain_builder import DomainBuilder
-from .motion import (
-    MotionType,
-    PrescribedMotion,
-    render_dynamic_mesh_dict,
-    render_dynamic_mesh_dict_body,
-    write_dynamic_mesh_dict,
-)
-from .runner import (
-    OpenFOAMRunConfig,
-    OpenFOAMRunner,
-    OpenFOAMRunResult,
-    OpenFOAMRunStatus,
-    StageResult,
-)
-from .spectral_analysis import (
-    SloshingFrequencyResult,
-    SpectralPeak,
-    SpectrumResult,
-    compute_fft_spectrum,
-    compute_welch_spectrum,
-    extract_natural_frequency,
-    prismatic_tank_natural_frequency,
-    sloshing_natural_frequency,
-)
-from .sloshing_coupling import (
-    CouplingStrengthReport,
-    FillDampingResult,
-    MomentCoefficients,
-    SloshingCase,
-    SloshingCouplingModel,
-    TuningReport,
-)
-from .pressure_taps import (
-    PressureTap,
-    PressureTapStatistics,
-    b1546_default_taps,
-    compute_tap_statistics,
-    point_tap_names,
-    read_tap_statistics,
-    render_patch_probes_entry,
-    render_pressure_tap_functions,
-    render_probes_entry,
-    render_surface_entry,
-)
-from .gravity_conduit import (
-    ConduitGeometry,
-    G_STANDARD,
-    GravityExchangeResult,
-    TankState,
-    check_transfer_feasibility,
-    conduit_flow_rate,
-    signed_hydrostatic_head,
-    simulate_gravity_exchange,
-)
-from .sloshing_sweep import (
-    NaturalPeriodResult,
-    SweepCase,
-    SweepConfig,
-    SweepManifest,
-    first_sloshing_natural_period,
-    generate_sweep,
-    period_ratio,
-)
-from .time_history import (
-    ExtractionConfig,
-    RawCFDOutputs,
-    SynchronizedTimeHistory,
-    TimeSeriesChannel,
-    ValidationFlags,
-    extract_time_history,
-    phase_lag_deg,
-    validate_synchronized_time,
-)
-from .report import (
-    REQUIRED_SECTIONS,
-    render_aggregate_report,
-    render_case_report,
-)
 from .case_coupling import (
     CaseManifest,
     CouplingSpec,
@@ -107,6 +18,97 @@ from .case_coupling import (
     synthetic_sweep_case,
     transfer_volume,
     verify_coupling,
+)
+from .domain_builder import DomainBuilder
+from .gravity_conduit import (
+    G_STANDARD,
+    ConduitGeometry,
+    GravityExchangeResult,
+    TankState,
+    check_transfer_feasibility,
+    conduit_flow_rate,
+    signed_hydrostatic_head,
+    simulate_gravity_exchange,
+    simulate_inertial_exchange,
+    utube_natural_frequency,
+)
+from .models import (
+    BoundaryCondition,
+    BoundaryType,
+    CaseType,
+    DomainConfig,
+    OpenFOAMCase,
+    SolverConfig,
+    TurbulenceModel,
+    TurbulenceType,
+)
+from .motion import (
+    MotionType,
+    PrescribedMotion,
+    render_dynamic_mesh_dict,
+    render_dynamic_mesh_dict_body,
+    write_dynamic_mesh_dict,
+)
+from .pressure_taps import (
+    PressureTap,
+    PressureTapStatistics,
+    b1546_default_taps,
+    compute_tap_statistics,
+    point_tap_names,
+    read_tap_statistics,
+    render_patch_probes_entry,
+    render_pressure_tap_functions,
+    render_probes_entry,
+    render_surface_entry,
+)
+from .report import (
+    REQUIRED_SECTIONS,
+    render_aggregate_report,
+    render_case_report,
+)
+from .runner import (
+    OpenFOAMRunConfig,
+    OpenFOAMRunner,
+    OpenFOAMRunResult,
+    OpenFOAMRunStatus,
+    StageResult,
+)
+from .sloshing_coupling import (
+    CouplingStrengthReport,
+    FillDampingResult,
+    MomentCoefficients,
+    SloshingCase,
+    SloshingCouplingModel,
+    TuningReport,
+)
+from .sloshing_sweep import (
+    NaturalPeriodResult,
+    SweepCase,
+    SweepConfig,
+    SweepManifest,
+    first_sloshing_natural_period,
+    generate_sweep,
+    period_ratio,
+)
+from .spectral_analysis import (
+    SloshingFrequencyResult,
+    SpectralPeak,
+    SpectrumResult,
+    compute_fft_spectrum,
+    compute_welch_spectrum,
+    extract_natural_frequency,
+    prismatic_tank_natural_frequency,
+    sloshing_natural_frequency,
+)
+from .time_history import (
+    ExtractionConfig,
+    RawCFDOutputs,
+    SynchronizedTimeHistory,
+    TimeSeriesChannel,
+    ValidationFlags,
+    extract_time_history,
+    phase_lag_deg,
+    validate_synchronized_time,
 )
 
 __all__ = [
@@ -162,6 +164,8 @@ __all__ = [
     "conduit_flow_rate",
     "signed_hydrostatic_head",
     "simulate_gravity_exchange",
+    "simulate_inertial_exchange",
+    "utube_natural_frequency",
     "NaturalPeriodResult",
     "SweepCase",
     "SweepConfig",
