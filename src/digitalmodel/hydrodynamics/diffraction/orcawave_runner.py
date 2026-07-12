@@ -156,7 +156,12 @@ class RunConfig(BaseModel):
     thread_count: int = Field(
         default=4,
         gt=0,
-        description="Number of threads for OrcFxAPI diffraction calculation.",
+        description=(
+            "Number of threads for OrcFxAPI diffraction calculation. Direct "
+            "RunConfig users get a conservative 4; the run_orcawave entry "
+            "point (the licensed-run dispatch path) resolves an unset value "
+            "to ~90% of host cores instead (dm#1555)."
+        ),
     )
     validate_outputs: bool = Field(
         default=True,
@@ -235,6 +240,25 @@ class RunResult:
     orcf_api_version: str | None = None
     thread_count: int | None = None
     assumption_ledger: "AssumptionLedger | None" = None
+
+
+# Owner resource policy (dm#1553/#1555): one OrcaWave solve may use ~90% of the
+# host's cores as OrcFxAPI threads (64-core ace-win-1 -> 57). Mirrors
+# WORKER_CORE_FRACTION in workflows/orcaflex_run_batch.py.
+THREAD_CORE_FRACTION = 0.9
+
+
+def default_thread_count(cpu_count: int | None = None) -> int:
+    """~90% of host cores, floored, never below 1 (dm#1555)."""
+    cores = cpu_count if cpu_count is not None else (os.cpu_count() or 1)
+    return max(1, int(THREAD_CORE_FRACTION * cores))
+
+
+def resolve_thread_count(explicit: int | None) -> int:
+    """Explicit input.yml value wins; unset resolves to the host-aware default."""
+    if explicit is None:
+        return default_thread_count()
+    return int(explicit)
 
 
 # ---------------------------------------------------------------------------
@@ -970,6 +994,7 @@ def run_orcawave(
     timeout_seconds: int = 7200,
     spec_path: Path | str | None = None,
     assumption_ledger: "AssumptionLedger | None" = None,
+    thread_count: int | None = None,
 ) -> RunResult:
     """Run an OrcaWave diffraction analysis from a DiffractionSpec.
 
@@ -984,6 +1009,9 @@ def run_orcawave(
                    mesh paths). Optional.
         assumption_ledger: Optional provenance ledger (e.g. from
             ``resolver.resolve``) carried onto the result for reporting.
+        thread_count: OrcFxAPI solve threads (API path only). None resolves
+            to ~90% of host cores (dm#1555); the effective value is echoed
+            on ``RunResult.thread_count``.
 
     Returns:
         RunResult with status, paths, and logs.
@@ -992,6 +1020,7 @@ def run_orcawave(
         output_dir=Path(output_dir),
         dry_run=dry_run,
         timeout_seconds=timeout_seconds,
+        thread_count=resolve_thread_count(thread_count),
     )
     runner = OrcaWaveRunner(config)
     return runner.run(

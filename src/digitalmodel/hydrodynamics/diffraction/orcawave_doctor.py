@@ -154,7 +154,9 @@ def run_doctor(
         guidance += f", {mem} GB RAM"
     guidance += (
         ". Moderate thread counts are safer: very high thread counts have "
-        "produced out-of-memory failures on large cases (see #714)."
+        "produced out-of-memory failures on large cases (see #714). Solves "
+        "dispatched via run_orcawave default to ~90% of cores (dm#1555); set "
+        "diffraction.thread_count explicitly to cap memory-constrained hosts."
     )
     checks.append(DoctorCheck("Threads/memory", "PASS", guidance))
 
