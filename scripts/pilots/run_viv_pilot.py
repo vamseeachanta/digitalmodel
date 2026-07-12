@@ -5,15 +5,16 @@
 
 Usage::
 
-    uv run --python 3.11 --with huggingface_hub python scripts/pilots/run_viv_pilot.py [ECHO_DIR]
+    uv run --python 3.11 --with huggingface_hub python scripts/pilots/run_viv_pilot.py [ECHO_DIR] [--emit-report]
 
 Publishes NOTHING to Hugging Face. Drives >=3 synthetic ``viv-parametric-screening``
 variations + 1 exact replay through the assetutilities publication promotion machine
 against an in-memory port + a source-repo ledger, writes the rolling HTML report + the
-publications.jsonl ledger under ECHO_DIR (default: a temp dir) AND refreshes the
-committed report at ``docs/reports/viv-parametric-screening/index.html``, then prints a
-summary and exits 0. The real ``HuggingFaceHubHfPort`` swap is a one-line change left
-for a gated live run.
+publications.jsonl ledger under ECHO_DIR (default: a temp dir), then prints a summary
+and exits 0. By default a dry-run mutates NOTHING tracked; pass ``--emit-report`` to
+also refresh the committed report at
+``docs/reports/viv-parametric-screening/index.html``. The real ``HuggingFaceHubHfPort``
+swap is a one-line change left for a gated live run.
 """
 
 from __future__ import annotations
@@ -31,12 +32,17 @@ COMMITTED_REPORT = REPO_ROOT / "docs" / "reports" / "viv-parametric-screening" /
 
 
 def main(argv: list[str]) -> int:
-    echo_dir = Path(argv[1]) if len(argv) > 1 else Path(tempfile.mkdtemp(prefix="viv_pilot_"))
+    args = argv[1:]
+    emit_report = "--emit-report" in args
+    positional = [a for a in args if not a.startswith("--")]
+    echo_dir = Path(positional[0]) if positional else Path(tempfile.mkdtemp(prefix="viv_pilot_"))
     summary = viv_pilot.run_pilot(echo_dir=echo_dir)
 
-    # Refresh the committed rolling report (deterministic HTML).
-    COMMITTED_REPORT.parent.mkdir(parents=True, exist_ok=True)
-    COMMITTED_REPORT.write_text(summary["report_html"], encoding="utf-8")
+    # A plain dry-run must NOT mutate the tracked report; only --emit-report refreshes
+    # the committed rolling report (deterministic HTML).
+    if emit_report:
+        COMMITTED_REPORT.parent.mkdir(parents=True, exist_ok=True)
+        COMMITTED_REPORT.write_text(summary["report_html"], encoding="utf-8")
 
     ok = (
         summary["replay_same_run_id"]
@@ -60,7 +66,10 @@ def main(argv: list[str]) -> int:
     print(f"  already published      : {summary['replay_already_published']} (identity dedup)")
     print(f"echo dir     : {echo_dir}")
     print(f"report path  : {summary['report_path']}")
-    print(f"committed report refreshed: {COMMITTED_REPORT}")
+    if emit_report:
+        print(f"committed report refreshed: {COMMITTED_REPORT}")
+    else:
+        print("committed report: UNCHANGED (pass --emit-report to refresh the tracked file)")
     print("publications.jsonl ledger (sole eligibility authority):")
     for line in summary["ledger_jsonl"].splitlines():
         print(f"  {line}")

@@ -18,12 +18,30 @@ partially published — the promotion ledger only accepts after verification).
 """
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import viv_pilot  # noqa: E402
 from assetutilities.workflow_api.publication import hf_port as hp  # noqa: E402
+
+# Defensive scrub for provider error text before it is printed: redact anything
+# token-shaped or absolute-path/URL-shaped, and hard-limit the length. The token is
+# already env-backed (never read here), but never echo raw provider text verbatim.
+_SCRUB = [
+    (re.compile(r"(?:hf_|ghp_|gho_|github_pat_)[A-Za-z0-9_]{8,}"), "<redacted-token>"),
+    (re.compile(r"[A-Za-z0-9_.\-]*(?:token|authorization|bearer)[=: ]+\S+", re.I),
+     "<redacted-credential>"),
+    (re.compile(r"(?<![\w.])(?:/(?:home|mnt|Users|root|etc|var|tmp|srv|opt)/|~/)\S*"),
+     "<redacted-path>"),
+]
+
+
+def _scrub(text: str, limit: int = 400) -> str:
+    for pattern, repl in _SCRUB:
+        text = pattern.sub(repl, text)
+    return text[:limit]
 
 
 def main() -> int:
@@ -34,7 +52,7 @@ def main() -> int:
     except Exception as e:  # pragma: no cover - live path
         msg = str(e)
         print("LIVE PUBLISH FAILED:", type(e).__name__)
-        print("detail:", msg[:400])
+        print("detail:", _scrub(msg))
         low = msg.lower()
         if any(k in low for k in ("401", "403", "unauthorized", "forbidden",
                                   "permission", "write", "authentication", "token")):

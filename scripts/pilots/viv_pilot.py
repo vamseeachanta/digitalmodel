@@ -25,6 +25,7 @@ literal ``hf_``/``ghp_`` token in this source.
 from __future__ import annotations
 
 import hashlib
+import subprocess
 from pathlib import Path
 
 from assetutilities.workflow_api import (
@@ -49,6 +50,7 @@ from digitalmodel.orcaflex.viv_screening import (
     estimate_response_amplitude,
     viv_screening,
 )
+from digitalmodel.orcaflex import viv_screening_workflow as _viv_wf
 from digitalmodel.orcaflex.viv_screening_workflow import (
     CITATIONS,
     M_EXP,
@@ -60,47 +62,116 @@ from digitalmodel.orcaflex.viv_screening_workflow import (
 # ---------------------------------------------------------------------------
 ALGORITHM_ID = "digitalmodel/viv-parametric-screening"
 SEMANTIC_VERSION = "1.0.0"
-# The checkout SHA the pilot builds against (a VERIFIED clean, known 40-hex commit).
-CLEAN_GIT_COMMIT = "9a458b51696c43dba8004c3053f2076a168d40b3"
 INPUT_SCHEMA_VERSION = "viv-screening-input-1"
 OUTPUT_SCHEMA_VERSION = "viv-screening-output-1"
 # A deterministic environment digest (declared env pin; stable across machines).
 ENVIRONMENT_DIGEST = hashlib.sha256(
     b"python3.11+digitalmodel+assetutilities+DNV-RP-C205-2019+DNV-RP-F105-2017"
 ).hexdigest()
-# Explicit run-control knobs (fail-closed against implicit defaults). n_modes is a
-# run-control knob here, NOT a parameter_set input, so there is no double-count.
-EXECUTION_PARAMETERS = {"n_modes": 10, "engine": "embed"}
 SEED = 0
 
 DATASET_REPO = "aceengineer/digitalmodel-runs"
+
+# n_modes is the SINGLE source of truth for the modal-sweep run-control knob. It is a
+# run-control knob, NOT a parameter_set input, so there is no double-count. The example
+# input.yml + the externalized publication YAML are asserted equal to it in the tests.
 N_MODES = 10
+# Explicit run-control knobs (fail-closed against implicit defaults), derived from
+# N_MODES so the knob is defined exactly once.
+EXECUTION_PARAMETERS = {"n_modes": N_MODES, "engine": "embed"}
 
 # ---------------------------------------------------------------------------
-# the >=3 pinned synthetic cases (span lock-in and suppression) + the replay
+# clean-checkout identity (MAJOR-1): resolved at RUN TIME, never hardcoded.
+#
+# The algorithm identity MUST bind the commit that actually CONTAINS the algorithm
+# module. A hardcoded SHA is doubly wrong: (1) the old pin was the pilot's grandparent
+# commit, at which viv_screening_workflow.py does not exist, so algorithm_version_id /
+# run_id bound a tree with NO algorithm; (2) a frozen literal keeps the same identity
+# across future algorithm edits -> silent identity collisions. Instead we resolve HEAD
+# of the digitalmodel repo that hosts the algorithm module and FAIL CLOSED unless the
+# algorithm-relevant paths are clean AND the module is present at that commit.
+# ---------------------------------------------------------------------------
+_REPO_ROOT = Path(_viv_wf.__file__).resolve().parents[3]
+_ALGORITHM_MODULE_REL = "src/digitalmodel/orcaflex/viv_screening_workflow.py"
+_PILOT_REL = "scripts/pilots/viv_pilot.py"
+
+
+def _git(*args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["git", "-C", str(_REPO_ROOT), *args],
+        check=True, capture_output=True, text=True,
+    )
+
+
+def resolve_clean_git_commit() -> str:
+    """Resolve the digitalmodel checkout SHA the algorithm identity binds to.
+
+    Fails closed (raises) unless the algorithm-relevant paths are clean at HEAD AND the
+    algorithm module actually exists at that commit -- so ``algorithm_version_id`` /
+    ``run_id`` can never bind a tree that lacks the algorithm (the old grandparent-SHA
+    bug) nor a dirty working copy.
+    """
+    sha = _git("rev-parse", "HEAD").stdout.strip()
+    if len(sha) != 40 or any(c not in "0123456789abcdef" for c in sha):
+        raise RuntimeError(f"unexpected git HEAD sha: {sha!r}")
+    dirty = _git(
+        "status", "--porcelain", "--", _ALGORITHM_MODULE_REL, _PILOT_REL
+    ).stdout.strip()
+    if dirty:
+        raise RuntimeError(
+            "refusing to mint identity against a dirty tree; commit the "
+            f"algorithm-relevant paths first:\n{dirty}"
+        )
+    # the module MUST be present at the resolved commit (grandparent-SHA collision guard).
+    try:
+        _git("cat-file", "-e", f"{sha}:{_ALGORITHM_MODULE_REL}")
+    except subprocess.CalledProcessError as exc:
+        raise RuntimeError(
+            f"algorithm module absent at resolved commit {sha}: {_ALGORITHM_MODULE_REL}"
+        ) from exc
+    return sha
+
+
+# The checkout SHA the pilot's algorithm binds to, resolved (not hardcoded) at import.
+CLEAN_GIT_COMMIT = resolve_clean_git_commit()
+
+# ---------------------------------------------------------------------------
+# the >=3 pinned synthetic cases (span the screening regimes) + the replay.
+#
+# The published set genuinely spans the primary screening outcome so lock_in is NOT
+# constant across the cases:
+#   * C-lockin   -> cross-flow lock-in (screening FAILS, non-zero A/D),
+#   * C-mid      -> cross-flow lock-in (screening FAILS, smaller non-zero A/D),
+#   * C-nolockin -> NO lock-in (screening PASSES, A/D == 0.0).
 # ---------------------------------------------------------------------------
 CASES = {
-    # C-lockin: cross-flow lock-in, A/D ~= 0.98 (the exact-replay case).
+    # C-lockin: cross-flow lock-in at mode 2 (Vr~=6.26), A/D ~= 0.98 (the exact-replay
+    # case). screening_pass=False, lock_in=True.
     "C-lockin": {
         "input": {"outer_diameter": 0.2032, "current_speed": 1.0},
         "beam": {"length": 60.0, "outer_diameter": 0.2032,
                  "inner_diameter": 0.15, "mass_per_length": 60.0},
     },
-    # C-mid: intermediate cross-flow response, A/D ~= 0.31 (non-zero).
+    # C-mid: cross-flow lock-in at mode 2 (Vr~=4.34), intermediate A/D ~= 0.31 (non-zero).
+    # screening_pass=False, lock_in=True.
     "C-mid": {
         "input": {"outer_diameter": 0.273, "current_speed": 0.8},
         "beam": {"length": 75.0, "outer_diameter": 0.273,
                  "inner_diameter": 0.20, "mass_per_length": 110.0},
     },
-    # C-suppressed: Vr outside [4,8] -> A/D = 0.0 (suppressed).
-    "C-suppressed": {
-        "input": {"outer_diameter": 0.3556, "current_speed": 0.6},
-        "beam": {"length": 40.0, "outer_diameter": 0.3556,
+    # C-nolockin: a GENUINE no-lock-in regime. Even the fundamental mode's reduced
+    # velocity (Vr ~= 0.685) sits BELOW the in-line onset (Vr>=1), so NO mode enters
+    # either lock-in band -> screening_pass=True, critical_mode=None, lock_in=False,
+    # A/D=0.0. This is true suppression-by-low-Vr, NOT the old mislabelled in-line
+    # lock-in case (which had mode-1 Vr~=2.1 inside the in-line band [1, 3.5]).
+    "C-nolockin": {
+        "input": {"outer_diameter": 0.3556, "current_speed": 0.5},
+        "beam": {"length": 25.0, "outer_diameter": 0.3556,
                  "inner_diameter": 0.28, "mass_per_length": 150.0},
     },
 }
 # The variations published to the dataset (order fixes the deterministic report).
-PUBLISHED_ORDER = ["C-lockin", "C-mid", "C-suppressed"]
+PUBLISHED_ORDER = ["C-lockin", "C-mid", "C-nolockin"]
 REPLAY_OF = "C-lockin"
 
 

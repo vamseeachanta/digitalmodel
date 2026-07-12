@@ -19,7 +19,10 @@ dataset:
 identity:
   input_schema_version: viv-screening-input-1
   output_schema_version: viv-screening-output-1
-  clean_git_commit: 9a458b51696c43dba8004c3053f2076a168d40b3
+  # clean_git_commit is RESOLVED AT RUN TIME (git rev-parse HEAD of the digitalmodel
+  # repo hosting the algorithm module), never hardcoded -- a literal SHA can bind a
+  # tree that lacks the algorithm and cannot track future algorithm edits. See
+  # viv_pilot.resolve_clean_git_commit().
   seed: 0
   execution_parameters:
     n_modes: 10
