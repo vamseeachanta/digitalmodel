@@ -407,6 +407,12 @@ def engine(
         from digitalmodel.workflows.parametric_run import router as parametric_run
 
         cfg_base = parametric_run(cfg_base)
+    elif basename == "orcaflex_run_batch":
+        from digitalmodel.workflows.orcaflex_run_batch import (
+            router as orcaflex_run_batch,
+        )
+
+        cfg_base = orcaflex_run_batch(cfg_base)
     elif basename == "parametric_query":
         from digitalmodel.parametric.query import router as parametric_query
 
