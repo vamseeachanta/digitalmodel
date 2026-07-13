@@ -134,6 +134,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/reporting/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#reporting
+  - module: report_pack
+    entry_point: src/digitalmodel/report_pack/
+    maturity: development
+    owner_wiki: docs/domains/reporting/
+    key_tests: [tests/report_pack/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#report_pack
   - module: nde
     entry_point: src/digitalmodel/nde/
     maturity: development
