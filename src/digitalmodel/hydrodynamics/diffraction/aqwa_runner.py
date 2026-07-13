@@ -186,9 +186,8 @@ class AQWARunResult:
 # Standard ANSYS install paths (Windows only)
 # ---------------------------------------------------------------------------
 
-_STANDARD_PATHS: list[str] = []
-if platform.system() == "Windows":
-    _STANDARD_PATHS = [
+WINDOWS_AQWA_CANDIDATES: tuple[str, ...] = (
+        r"C:\Program Files\ANSYS Inc\v261\aqwa\bin\winx64\Aqwa.exe",
         r"C:\Program Files\ANSYS Inc\v252\aqwa\bin\winx64\Aqwa.exe",
         r"C:\Program Files\ANSYS Inc\v251\aqwa\bin\winx64\Aqwa.exe",
         r"C:\Program Files\ANSYS Inc\v241\aqwa\bin\winx64\Aqwa.exe",
@@ -196,7 +195,10 @@ if platform.system() == "Windows":
         r"C:\Program Files\ANSYS Inc\v231\aqwa\bin\winx64\Aqwa.exe",
         r"C:\Program Files\ANSYS Inc\v222\aqwa\bin\winx64\Aqwa.exe",
         r"C:\Program Files\ANSYS Inc\v181\aqwa\bin\winx64\Aqwa.exe",
-    ]
+)
+_STANDARD_PATHS: list[str] = (
+    list(WINDOWS_AQWA_CANDIDATES) if platform.system() == "Windows" else []
+)
 
 
 # ---------------------------------------------------------------------------

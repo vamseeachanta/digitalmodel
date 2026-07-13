@@ -290,13 +290,15 @@ class AQWABackend:
         mesh_path = self._resolve_mesh_path(mesh_file)
         if not mesh_path.exists():
             return None
-
-        try:
-            mesh = self._parse_gdf(mesh_path)
-            self._mesh_cache[mesh_file] = mesh
-            return mesh
-        except Exception:
+        # This backend currently parses WAMIT GDF only. Other declared mesh
+        # formats retain the existing warning-only fallback until a dedicated
+        # parser is implemented; malformed existing GDF files fail closed.
+        if mesh_path.suffix.lower() != ".gdf":
             return None
+
+        mesh = self._parse_gdf(mesh_path)
+        self._mesh_cache[mesh_file] = mesh
+        return mesh
 
     def _parse_gdf(self, file_path: Path) -> ParsedMesh:
         """Parse a WAMIT GDF mesh file.
@@ -329,49 +331,81 @@ class AQWABackend:
             line_idx += 1
 
         # Read ULEN/GRAV and symmetry lines.
+        if line_idx + 2 >= len(lines):
+            raise ValueError(f"{file_path}: incomplete GDF header")
         line_idx += 2
 
         # Read number of panels (NPAN).
-        npan = 0
-        if line_idx < len(lines):
-            try:
-                npan = int(lines[line_idx].split()[0])
-            except (ValueError, IndexError):
-                pass
-            line_idx += 1
+        try:
+            npan = int(lines[line_idx].split()[0])
+        except (ValueError, IndexError) as exc:
+            raise ValueError(f"{file_path}: invalid panel count") from exc
+        if npan <= 0:
+            raise ValueError(
+                f"{file_path}: panel count must be greater than zero; got {npan}"
+            )
+        line_idx += 1
 
         # Read panel vertices (4 vertices per panel)
         vertices: list[tuple[float, float, float]] = []
         panels: list[list[int]] = []
         vertex_map: dict[tuple[float, float, float], int] = {}
 
-        for _ in range(npan):
+        for panel_number in range(1, npan + 1):
             panel_vertices: list[int] = []
-            for _ in range(4):
+            for vertex_slot in range(1, 5):
                 if line_idx >= len(lines):
-                    break
+                    raise ValueError(
+                        f"{file_path}: panel {panel_number}, vertex {vertex_slot}: "
+                        "missing coordinate record"
+                    )
                 line = lines[line_idx].strip()
-                if not line:
-                    line_idx += 1
-                    continue
                 parts = line.split()
-                if len(parts) >= 3:
-                    try:
-                        vertex = (
-                            float(parts[0]),
-                            float(parts[1]),
-                            float(parts[2]),
-                        )
-                        if vertex not in vertex_map:
-                            vertex_map[vertex] = len(vertices)
-                            vertices.append(vertex)
-                        panel_vertices.append(vertex_map[vertex])
-                    except ValueError:
-                        pass
+                if len(parts) < 3:
+                    raise ValueError(
+                        f"{file_path}: panel {panel_number}, vertex {vertex_slot}: "
+                        "expected three coordinates"
+                    )
+                try:
+                    vertex = (
+                        float(parts[0]),
+                        float(parts[1]),
+                        float(parts[2]),
+                    )
+                except ValueError as exc:
+                    raise ValueError(
+                        f"{file_path}: panel {panel_number}, vertex {vertex_slot}: "
+                        "coordinates must be numeric"
+                    ) from exc
+                if not all(np.isfinite(value) for value in vertex):
+                    raise ValueError(
+                        f"{file_path}: panel {panel_number}, vertex {vertex_slot}: "
+                        "coordinates must be finite"
+                    )
+                if vertex not in vertex_map:
+                    vertex_map[vertex] = len(vertices)
+                    vertices.append(vertex)
+                panel_vertices.append(vertex_map[vertex])
                 line_idx += 1
 
-            if len(panel_vertices) == 4:
-                panels.append(panel_vertices)
+            unique_count = len(set(panel_vertices))
+            repeated_positions = [
+                index
+                for index, node in enumerate(panel_vertices)
+                if panel_vertices.count(node) == 2
+            ]
+            is_triangle = unique_count == 3 and repeated_positions in (
+                [0, 1],
+                [1, 2],
+                [2, 3],
+                [0, 3],
+            )
+            if unique_count != 4 and not is_triangle:
+                raise ValueError(
+                    f"{file_path}: panel {panel_number}: expected four unique "
+                    "vertices or a triangle with a cyclic-adjacent repeated vertex"
+                )
+            panels.append(panel_vertices)
 
         return ParsedMesh(
             vertices=np.array(vertices, dtype=np.float64),
@@ -485,7 +519,7 @@ class AQWABackend:
         """Build Deck 2: element connectivity cards.
 
         Parses mesh files referenced in the spec and emits panel
-        (element) connectivity in AQWA QPPL format (Workbench-compatible).
+        (element) connectivity in AQWA TPPL/QPPL format.
         """
         cards: list[str] = []
         cards.extend(_deck_banner(2))
@@ -522,20 +556,43 @@ class AQWABackend:
             cards.append(f"* Group ID    {group_id} is body named {vessel_name}")
 
             if mesh is not None:
-                # Emit element connectivity in QPPL DIFF format
-                # DIFF keyword marks elements as diffracting (required for panel method)
-                # Format: "     1QPPL DIFF   15(1)(    1)(    2)(    3)(    4)"
+                # DIFF marks elements as diffracting. GDF triangles contain
+                # three unique vertices in four slots and must be emitted as
+                # three-node TPPL; true quadrilaterals use four-node QPPL.
                 for elem_idx, panel in enumerate(mesh.panels, start=1):
                     # Panel contains 0-based indices, convert to 1-based
-                    n1 = panel[0] + 1
-                    n2 = panel[1] + 1
-                    n3 = panel[2] + 1
-                    n4 = panel[3] + 1
-                    cards.append(
-                        f"     {struct_idx}QPPL DIFF   {group_id}({struct_idx})"
-                        f"({n1:>5d})({n2:>5d})({n3:>5d})({n4:>5d})"
-                        f"  Aqwa Elem No: {elem_idx:>4d}"
+                    nodes = [int(node) + 1 for node in panel]
+                    ordered_unique = list(dict.fromkeys(nodes))
+                    repeated_positions = [
+                        index
+                        for index, node in enumerate(nodes)
+                        if nodes.count(node) == 2
+                    ]
+                    is_triangle = len(ordered_unique) == 3 and repeated_positions in (
+                        [0, 1],
+                        [1, 2],
+                        [2, 3],
+                        [0, 3],
                     )
+                    if len(ordered_unique) == 4:
+                        n1, n2, n3, n4 = ordered_unique
+                        card = (
+                            f"     {struct_idx}QPPL DIFF   {group_id}({struct_idx})"
+                            f"({n1:>5d})({n2:>5d})({n3:>5d})({n4:>5d})"
+                        )
+                    elif is_triangle:
+                        n1, n2, n3 = ordered_unique
+                        card = (
+                            f"     {struct_idx}TPPL DIFF   {group_id}({struct_idx})"
+                            f"({n1:>5d})({n2:>5d})({n3:>5d})"
+                        )
+                    else:
+                        raise ValueError(
+                            f"Invalid panel {elem_idx} on structure {struct_idx}: "
+                            "expected four unique nodes or a triangle with a "
+                            "cyclic-adjacent repeated node"
+                        )
+                    cards.append(f"{card}  Aqwa Elem No: {elem_idx:>4d}")
             else:
                 cards.append(f"* WARNING: Mesh file '{mesh_file}' could not be loaded")
 
@@ -778,9 +835,17 @@ class AQWABackend:
         # Frequencies: convert rad/s -> Hz for AQWA HRTZ cards
         freqs_rad = spec.frequencies.to_frequencies_rad_s()
         freqs_hz = [rad_per_s_to_hz(w) for w in freqs_rad]
+        if any(not np.isfinite(value) or value <= 0 for value in freqs_hz):
+            raise ValueError("AQWA frequencies must be finite and greater than zero")
+        if len(freqs_hz) != len(set(freqs_hz)):
+            raise ValueError("AQWA frequencies must be unique")
+        freqs_hz.sort()
+        freq_strings = [f"{freq_hz:g}" for freq_hz in freqs_hz]
+        if len(freq_strings) != len(set(freq_strings)):
+            raise ValueError("AQWA frequencies must be unique after HRTZ formatting")
 
-        for i, freq_hz in enumerate(freqs_hz, start=1):
-            freq_str = f"{freq_hz:>10g}"
+        for i, freq_value in enumerate(freq_strings, start=1):
+            freq_str = f"{freq_value:>10s}"
             cards.append(f"{_WS:>5s}1HRTZ{i:>5d}{i:>5d}{freq_str}")
 
         # Headings — AQWA requires -180 to +180 range for no-symmetry bodies
