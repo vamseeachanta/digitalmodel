@@ -278,6 +278,12 @@ modules:
     owner_wiki: docs/domains/fatigue/fatg-legacy-spectral-fatigue.md
     key_tests: [tests/fatigue/test_fatg.py, tests/fatigue/test_fatg_workflow.py]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#fatg_spectral_fatigue
+  - module: passing_ship_forces
+    entry_point: src/digitalmodel/passing_ship_forces/
+    maturity: development
+    owner_wiki: docs/domains/hydrodynamics/wang-passing-ship-forces.md
+    key_tests: [tests/hydrodynamics/test_wang_passing_ship.py, tests/hydrodynamics/test_passing_ship_forces_workflow.py]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#passing_ship_forces
   - module: installation
     entry_point: src/digitalmodel/installation/
     maturity: beta

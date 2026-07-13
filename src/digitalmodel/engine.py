@@ -482,6 +482,12 @@ def engine(
         )
 
         cfg_base = passing_ship(cfg_base)
+    elif basename == "passing_ship_forces":
+        from digitalmodel.passing_ship_forces.workflow import (
+            router as passing_ship_forces,
+        )
+
+        cfg_base = passing_ship_forces(cfg_base)
     elif basename == "von_mises":
         from digitalmodel.structural.fe.von_mises_workflow import router as von_mises
 
