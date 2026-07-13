@@ -56,6 +56,9 @@ def _write_box_mesh(path: Path) -> Path:
         "\n".join(
             [
                 "# box mesh",
+                "1.0 9.80665",
+                "0 0",
+                "2",
                 "0 0 -2",
                 "10 0 -2",
                 "10 4 -2",

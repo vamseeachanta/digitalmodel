@@ -114,6 +114,7 @@ gmsh DAT helper:
 | Modify | `src/digitalmodel/hydrodynamics/diffraction/gmsh_mesh_builder.py` | Make the second AQWA DAT exporter use valid TPPL syntax and correct its documentation |
 | Modify | `tests/hydrodynamics/diffraction/test_input_schemas.py` | Prove invalid period/frequency values fail instead of disappearing during conversion |
 | Modify | `src/digitalmodel/hydrodynamics/diffraction/input_schemas.py` | Preserve frequency-source cardinality by rejecting invalid values before conversion |
+| Modify | `tests/hydrodynamics/diffraction/test_resolver.py` | Replace a headerless `.gdf` fixture exposed by strict parsing with a valid two-panel GDF |
 
 ## TDD Test List
 
@@ -142,6 +143,7 @@ gmsh DAT helper:
 | `test_dat_panel_triangle_uses_tppl_and_quad_uses_qppl` | The gmsh DAT helper follows the same valid card contract |
 | `test_dat_four_slot_triangle_uses_ordered_unique_tppl` (parameterized) | The gmsh DAT helper accepts all repeated-slot triangle representations |
 | `test_dat_panel_rejects_invalid_shapes` | The gmsh DAT helper fails closed on degenerate connectivity |
+| `test_ledger_travels_through_run_entrypoints` | Resolver integration continues to generate decks from a format-valid synthetic GDF fixture |
 
 ## Acceptance Criteria
 
@@ -165,6 +167,8 @@ Original review second-pass verdict: **APPROVE**. All prior MAJOR findings are r
 Implementation cross-review verdict: **MAJOR**. Repository GDF fixtures showed that valid WAMIT triangles repeat a node in multiple slots, not only the final slot; the reviewer also found that distinct full-precision frequencies could collide under AQWA's six-significant-digit HRTZ formatting. The implementation contract and tests now accept the corpus-valid cyclic-repeat forms in first-occurrence order, reject degenerate panels, and reject serialized frequency collisions.
 
 Implementation follow-up verdict: **MAJOR**. Accepting every exactly-three-unique four-slot sequence also admitted alternating repeats such as `[A, B, A, C]`. The contract now requires the repeated positions to be cyclic-adjacent—including the wraparound 1/4 pair used by valid WAMIT fixtures—and explicitly rejects the two alternating forms in the parser and exporters.
+
+CI regression review found one related stale fixture: `test_resolver.py` wrote eight bare coordinate records to a `.gdf` path without a GDF header. Strict parsing correctly rejected it, so the fixture now declares two valid panels. The other CI contract failures cite unrelated dynmoor force names and a `report_pack` routing mismatch outside this PR.
 
 ## Risks and Open Questions
 
