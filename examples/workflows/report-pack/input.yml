@@ -1,0 +1,130 @@
+# Standard marine engineering report pack — synthetic end-to-end example.
+#
+# Renders a complete report pack (md + self-contained html + optional pdf +
+# citations sidecar + report-layer provenance manifest) for a synthetic
+# spectral-fatigue screening. The results table columns match the
+# fatg_spectral_fatigue workflow's per-sea-state damage output; all document
+# metadata is placeholder-only (B0000 / Example Client).
+#
+# Run: python -m digitalmodel examples/workflows/report-pack/input.yml
+
+basename: report_pack
+
+report_pack:
+  document:
+    number: B0000-RPT-001-00
+    revision: "00"
+    title: Example Structure Legacy Spectral Fatigue Screening
+    project: B0000
+    client: Example Client
+    date: "2026-07-12"
+    prepared_by: Author Placeholder
+    checked_by: Checker Placeholder
+    approved_by: Approver Placeholder
+    revision_history:
+      - rev: "00"
+        date: "2026-07-12"
+        description: Issued for internal review
+        prepared: AP
+        checked: CP
+        approved: XP
+
+  sections:
+    - title: Introduction and Scope
+      content: |
+        This report presents a screening-level spectral fatigue assessment of a
+        representative welded structural detail using the legacy FATG
+        closed-form narrow-band method. The assessment covers one stress RAO
+        and a three-block wave scatter table with directional spreading.
+
+        Excluded from scope: local FE hot-spot analysis, wide-band correction
+        factors, corrosion allowance effects, and any class compliance
+        conclusion.
+    - title: References and Traceability
+      content: |
+        - Analysis workflow: `digitalmodel.fatg_spectral_fatigue` (legacy FATG
+          closed-form spectral fatigue port).
+        - Report generator: `digitalmodel.report_pack` standard report-pack
+          workflow.
+        - Cited standards are listed in the References cited section and the
+          machine-readable citations sidecar emitted with this pack.
+    - title: Design Data and Basis
+      content: |
+        - Design life: 20 years, design fatigue factor (DFF) 1.0.
+        - S-N basis: legacy F curve (psi units), member type chord.
+        - Stress RAO: 18-point frequency grid, 0.2 to 1.9 rad/s.
+        - Wave environment: three-block scatter (Hs 3.0/8.0/15.0, Tz
+          5.0/7.0/9.5 s, occurrence 0.55/0.35/0.10) with 0/45/90-degree
+          spreading fractions per block.
+    - title: Methodology and Assumptions
+      content: |
+        The legacy FATG chain is applied per sea state:
+
+        ```text
+        S_sig = significant stress response (trapezoid over RAO x Bretschneider)
+        damage/year = three-block Rayleigh discretisation x occurrence x spreading
+        life = 1 / annual_damage; margin = life / (design_life x DFF)
+        ```
+
+        - Narrow-band closed form; no wide-band correction is applied.
+        - One-slope S-N curve; no thickness correction.
+        - Spreading matrix is the fixed legacy 0/45/90-degree formulation.
+    - title: Results
+      content: |
+        Per-sea-state damage and the screening summary are tabulated below.
+        Case coverage: 3 sea states, 1 stress RAO, 1 S-N basis (3 requested
+        engineering rows, 0 extra rows).
+    - title: Conclusions and Limitations
+      content: |
+        The screening margin exceeds unity for the representative detail, so
+        the detail passes this screening basis.
+
+        - This is a screening-level narrow-band estimate, not a validated
+          detail-specific fatigue life.
+        - Results apply to the stated RAO and scatter only.
+        - No class compliance conclusion is drawn.
+
+  results:
+    tables:
+      - title: Per-sea-state damage (fatg_spectral_fatigue output columns)
+        csv: data/fatigue_screening_results.csv
+      - title: Screening summary
+        csv: data/fatigue_screening_summary.csv
+
+  appendices:
+    - letter: A
+      title: Reference Documents
+      content: |
+        Source documents and standards backing the analysis basis (see also
+        the References cited section).
+    - letter: B
+      title: Calculation Records
+      files:
+        - data/fatigue_screening_results.csv
+        - data/fatigue_screening_summary.csv
+
+  citations:
+    - code_id: DNV-RP-C203
+      publisher: DNV
+      revision: "2019 edition"
+      section: Fatigue design of offshore steel structures, S-N curves
+      wiki_path: wikis/marine-engineering/wiki/standards/dnv-rp-c203.md
+      note: Generic S-N methodology context; legacy F curve constants govern here.
+
+  manifest:
+    issue: https://github.com/vamseeachanta/digitalmodel/issues/0
+    project: B0000
+    artifact_class: example-report-pack-output
+    privacy_classification: public-example
+    publishability_decision: public repository example; placeholder metadata only
+    input_source_ids:
+      - EXAMPLE-FATG-SCREENING-RESULTS
+    source_artifacts:
+      results_csv: examples/workflows/report-pack/data/fatigue_screening_results.csv
+      summary_csv: examples/workflows/report-pack/data/fatigue_screening_summary.csv
+    raw_output_path: digitalmodel:examples/workflows/report-pack/data
+    final_output_path: digitalmodel:examples/workflows/report-pack/results
+    compute_environment: not-recorded
+
+  pdf: auto
+  output_dir: results

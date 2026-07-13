@@ -134,6 +134,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/reporting/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#reporting
+  - module: report_pack
+    entry_point: src/digitalmodel/report_pack/
+    maturity: development
+    owner_wiki: docs/domains/reporting/
+    key_tests: [tests/report_pack/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#report_pack
   - module: nde
     entry_point: src/digitalmodel/nde/
     maturity: development
@@ -266,6 +272,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/compare_tool/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#compare_tool
+  - module: fatg_spectral_fatigue
+    entry_point: src/digitalmodel/fatg_spectral_fatigue/
+    maturity: development
+    owner_wiki: docs/domains/fatigue/fatg-legacy-spectral-fatigue.md
+    key_tests: [tests/fatigue/test_fatg.py, tests/fatigue/test_fatg_workflow.py]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#fatg_spectral_fatigue
   - module: passing_ship_forces
     entry_point: src/digitalmodel/passing_ship_forces/
     maturity: development
