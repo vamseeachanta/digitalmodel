@@ -335,6 +335,12 @@ def engine(
         )
 
         cfg_base = rao_spectral_fatigue(cfg_base)
+    elif basename == "fatg_spectral_fatigue":
+        from digitalmodel.fatg_spectral_fatigue.workflow import (
+            router as fatg_spectral_fatigue,
+        )
+
+        cfg_base = fatg_spectral_fatigue(cfg_base)
     elif basename == "vessel_seakeeping":
         from digitalmodel.vessel_seakeeping.workflow import (
             router as vessel_seakeeping,
