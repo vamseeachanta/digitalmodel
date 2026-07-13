@@ -266,6 +266,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/compare_tool/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#compare_tool
+  - module: fatg_spectral_fatigue
+    entry_point: src/digitalmodel/fatg_spectral_fatigue/
+    maturity: development
+    owner_wiki: docs/domains/fatigue/fatg-legacy-spectral-fatigue.md
+    key_tests: [tests/fatigue/test_fatg.py, tests/fatigue/test_fatg_workflow.py]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#fatg_spectral_fatigue
   - module: installation
     entry_point: src/digitalmodel/installation/
     maturity: beta

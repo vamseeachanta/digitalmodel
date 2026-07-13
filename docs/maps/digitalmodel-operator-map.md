@@ -62,6 +62,7 @@ of duplicating its detailed issue history.
 | `materials` | `src/digitalmodel/materials/` | `tests/materials/` | `docs/domains/README.md` | Material grades and line-pipe property data | NumPy, pandas |
 | `workflow_api` | `src/digitalmodel/workflow_api/` | `tests/workflow_api/` | `docs/domains/README.md` | Workflow runner, provenance and golden-output API | repo workflow conventions |
 | `compare_tool` | `src/digitalmodel/compare_tool/` | `tests/compare_tool/` | `docs/domains/README.md` | Result/model comparison utilities across runs and tools | pandas, NumPy |
+| `fatg_spectral_fatigue` | `src/digitalmodel/fatg_spectral_fatigue/` | `tests/fatigue/test_fatg.py` | `docs/domains/fatigue/fatg-legacy-spectral-fatigue.md` | Legacy FATG closed-form spectral fatigue (RAO x Bretschneider x scatter x S-N Miner) | fatigue standards |
 | `installation` | `src/digitalmodel/installation/` | `tests/` | `docs/domains/installation/` | Offshore installation analysis, lift/lay operability, weather windows | marine engineering standards |
 | `lifting_lug` | `src/digitalmodel/lifting_lug/` | `tests/` | `docs/domains/README.md` | Lifting-lug/padeye sizing and closed-form structural checks | structural standards |
 | `mooring_fatigue` | `src/digitalmodel/mooring_fatigue/` | `tests/` | `docs/domains/README.md` | Mooring-line fatigue analysis and parametric atlases | fatigue standards, NumPy |
