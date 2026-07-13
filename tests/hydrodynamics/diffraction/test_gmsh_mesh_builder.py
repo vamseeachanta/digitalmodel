@@ -244,8 +244,8 @@ class TestDatExport:
         assert "DIFF" in line
         assert "10" in line and "20" in line
 
-    def test_dat_panel_triangle_repeats_node(self):
-        """_panel_to_dat_line repeats node 2 for triangles."""
+    def test_dat_panel_triangle_uses_tppl(self):
+        """_panel_to_dat_line emits a three-node TPPL for triangles."""
         from digitalmodel.hydrodynamics.diffraction.gmsh_mesh_builder import (
             _panel_to_dat_line,
         )
@@ -253,8 +253,20 @@ class TestDatExport:
         line = _panel_to_dat_line(
             panel_id=1, node_ids=(10, 20, 30)
         )
-        # Should have node 30 twice for AQWA tri-as-quad
-        assert line.count("30") >= 2
+        assert line.startswith("TPPL DIFF")
+        assert line.split()[-3:] == ["10", "20", "30"]
+
+    @pytest.mark.parametrize(
+        "node_ids",
+        [(1, 2), (1, 2, 3, 3), (1, 2, 3, 1), (1, 2, 3, 4, 5)],
+    )
+    def test_dat_panel_rejects_invalid_shapes(self, node_ids):
+        from digitalmodel.hydrodynamics.diffraction.gmsh_mesh_builder import (
+            _panel_to_dat_line,
+        )
+
+        with pytest.raises(ValueError):
+            _panel_to_dat_line(panel_id=1, node_ids=node_ids)
 
 
 # ---------------------------------------------------------------------------
@@ -344,7 +356,7 @@ class TestGmshMeshBuilderWorkflow:
         assert dat_path.exists()
         content = dat_path.read_text()
         assert "NODE" in content
-        assert "QPPL" in content
+        assert "TPPL" in content or "QPPL" in content
 
     def test_build_box_barge_msh(self, tmp_path):
         """GmshMeshBuilder.build() generates MSH v2.2 for box_barge."""

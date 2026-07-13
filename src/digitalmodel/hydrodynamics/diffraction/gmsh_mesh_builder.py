@@ -122,10 +122,10 @@ def _node_to_dat_line(node_id: int, xyz: tuple) -> str:
 
 
 def _panel_to_dat_line(panel_id: int, node_ids: tuple) -> str:
-    """Format an AQWA QPPL DIFF panel record.
+    """Format an AQWA TPPL/ QPPL DIFF panel record.
 
-    AQWA uses QPPL DIFF cards with four node IDs. Triangles repeat
-    the third node in the fourth position.
+    AQWA uses TPPL DIFF cards for triangles and QPPL DIFF cards for
+    quadrilaterals. Repeated-node quadrilaterals are invalid.
 
     Args:
         panel_id: 1-based panel identifier (unused in DAT format
@@ -137,10 +137,15 @@ def _panel_to_dat_line(panel_id: int, node_ids: tuple) -> str:
     """
     if len(node_ids) == 3:
         n1, n2, n3 = node_ids
-        n4 = n3
-    else:
+        if len({n1, n2, n3}) != 3:
+            raise ValueError("AQWA triangle nodes must be unique")
+        return f"TPPL DIFF  {n1:6d}  {n2:6d}  {n3:6d}"
+    if len(node_ids) == 4:
         n1, n2, n3, n4 = node_ids
-    return f"QPPL DIFF  {n1:6d}  {n2:6d}  {n3:6d}  {n4:6d}"
+        if len({n1, n2, n3, n4}) != 4:
+            raise ValueError("AQWA quadrilateral nodes must be unique")
+        return f"QPPL DIFF  {n1:6d}  {n2:6d}  {n3:6d}  {n4:6d}"
+    raise ValueError("AQWA panels require exactly three or four node IDs")
 
 
 # ---------------------------------------------------------------------------
@@ -489,8 +494,7 @@ class GmshMeshBuilder:
         """Write mesh to AQWA .DAT format.
 
         Nodes are written as 1-based NODE records followed by
-        QPPL DIFF panel records. Triangular panels repeat the third
-        node in the fourth position as required by AQWA.
+        TPPL DIFF triangle and QPPL DIFF quadrilateral panel records.
 
         Args:
             nodes: (N, 3) array of node coordinates.

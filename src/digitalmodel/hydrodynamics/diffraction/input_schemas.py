@@ -382,9 +382,16 @@ class FrequencySpec(BaseModel):
                     np.logspace(np.log10(r.start), np.log10(r.end), r.count)
                 )
 
+        invalid = [value for value in raw if not np.isfinite(value) or value <= 0]
+        if invalid:
+            raise ValueError(
+                "Frequency/period values must be finite and greater than zero; "
+                f"received {invalid!r}"
+            )
+
         if self.input_type == FrequencyInputType.PERIOD:
-            return [2.0 * np.pi / t for t in raw if t > 0]
-        return raw
+            return [2.0 * np.pi / t for t in raw]
+        return list(raw)
 
     def to_periods_s(self) -> list[float]:
         """Convert to periods in seconds regardless of input type."""

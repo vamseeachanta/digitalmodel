@@ -1,6 +1,6 @@
 # Plan for #1571: Fix AQWA GDF triangles, frequency ordering, and v261 discovery
 
-> **Status:** adversarial-reviewed — user approval checkpoint pending
+> **Status:** plan-approved — approved by user 2026-07-13
 > **Complexity:** T2
 > **Date:** 2026-07-13
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/1571

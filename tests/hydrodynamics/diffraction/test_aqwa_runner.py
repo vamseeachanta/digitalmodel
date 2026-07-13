@@ -470,6 +470,55 @@ class TestAQWARunnerDetectExecutable:
         detected = runner._detect_executable()
         assert detected == exe
 
+    def test_explicit_path_wins_over_env_and_standard_candidates(self, tmp_path):
+        explicit = tmp_path / "explicit-aqwa.exe"
+        env_exe = tmp_path / "env-aqwa.exe"
+        standard = tmp_path / "standard-aqwa.exe"
+        for path in (explicit, env_exe, standard):
+            path.touch()
+        runner = AQWARunner(AQWARunConfig(executable_path=explicit))
+        with patch.dict("os.environ", {"AQWA_PATH": str(env_exe)}, clear=True), patch(
+            "digitalmodel.hydrodynamics.diffraction.aqwa_runner._STANDARD_PATHS",
+            [str(standard)],
+        ):
+            assert runner._detect_executable() == explicit
+
+    def test_env_path_wins_over_standard_candidates(self, tmp_path):
+        env_exe = tmp_path / "env-aqwa.exe"
+        standard = tmp_path / "standard-aqwa.exe"
+        env_exe.touch()
+        standard.touch()
+        runner = AQWARunner(AQWARunConfig())
+        with patch.dict("os.environ", {"AQWA_PATH": str(env_exe)}, clear=True), patch(
+            "digitalmodel.hydrodynamics.diffraction.aqwa_runner._STANDARD_PATHS",
+            [str(standard)],
+        ):
+            assert runner._detect_executable() == env_exe
+
+    def test_windows_candidates_put_v261_before_v252(self):
+        from digitalmodel.hydrodynamics.diffraction.aqwa_runner import (
+            WINDOWS_AQWA_CANDIDATES,
+        )
+
+        versions = [path.split("ANSYS Inc\\", 1)[1].split("\\", 1)[0]
+                    for path in WINDOWS_AQWA_CANDIDATES]
+        assert "v261" in versions
+        assert versions.index("v261") < versions.index("v252")
+
+    def test_v261_wins_over_older_existing_standard_candidates(self, tmp_path):
+        v261 = tmp_path / "v261" / "Aqwa.exe"
+        v252 = tmp_path / "v252" / "Aqwa.exe"
+        v261.parent.mkdir()
+        v252.parent.mkdir()
+        v261.touch()
+        v252.touch()
+        runner = AQWARunner(AQWARunConfig())
+        with patch.dict("os.environ", {}, clear=True), patch(
+            "digitalmodel.hydrodynamics.diffraction.aqwa_runner._STANDARD_PATHS",
+            [str(v261), str(v252)],
+        ):
+            assert runner._detect_executable() == v261
+
     def test_env_variable_fallback(self):
         config = AQWARunConfig()
         runner = AQWARunner(config)
@@ -481,7 +530,9 @@ class TestAQWARunnerDetectExecutable:
     def test_shutil_which_fallback(self):
         config = AQWARunConfig()
         runner = AQWARunner(config)
-        with patch.dict("os.environ", {}, clear=True):
+        with patch.dict("os.environ", {}, clear=True), patch(
+            "digitalmodel.hydrodynamics.diffraction.aqwa_runner._STANDARD_PATHS", []
+        ):
             with patch("shutil.which", return_value="/usr/local/bin/aqwa"):
                 detected = runner._detect_executable()
                 assert detected == Path("/usr/local/bin/aqwa")
@@ -489,7 +540,9 @@ class TestAQWARunnerDetectExecutable:
     def test_returns_none_when_not_found(self):
         config = AQWARunConfig()
         runner = AQWARunner(config)
-        with patch.dict("os.environ", {}, clear=True):
+        with patch.dict("os.environ", {}, clear=True), patch(
+            "digitalmodel.hydrodynamics.diffraction.aqwa_runner._STANDARD_PATHS", []
+        ):
             with patch("shutil.which", return_value=None):
                 detected = runner._detect_executable()
                 assert detected is None

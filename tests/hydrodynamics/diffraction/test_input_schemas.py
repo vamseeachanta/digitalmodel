@@ -195,6 +195,25 @@ class TestFrequencySpec:
                 range={"start": 0.1, "end": 1.0, "count": 10}
             )
 
+    @pytest.mark.parametrize(
+        ("input_type", "values"),
+        [
+            ("period", [10.0, 0.0]),
+            ("period", [10.0, -1.0]),
+            ("period", [10.0, math.inf]),
+            ("frequency", [1.0, 0.0]),
+            ("frequency", [1.0, math.nan]),
+        ],
+    )
+    def test_conversion_rejects_nonpositive_or_nonfinite_values(
+        self, input_type, values
+    ):
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import FrequencySpec
+
+        freq = FrequencySpec(input_type=input_type, values=values)
+        with pytest.raises(ValueError):
+            freq.to_frequencies_rad_s()
+
 
 class TestWaveHeadingSpec:
     """Test wave heading specification handling."""
