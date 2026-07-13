@@ -258,7 +258,27 @@ class TestDatExport:
 
     @pytest.mark.parametrize(
         "node_ids",
-        [(1, 2), (1, 2, 3, 3), (1, 2, 3, 1), (1, 2, 3, 4, 5)],
+        [(10, 10, 20, 30), (10, 20, 20, 30), (10, 20, 30, 30), (10, 20, 30, 10)],
+    )
+    def test_dat_four_slot_triangle_uses_ordered_unique_tppl(self, node_ids):
+        from digitalmodel.hydrodynamics.diffraction.gmsh_mesh_builder import (
+            _panel_to_dat_line,
+        )
+
+        line = _panel_to_dat_line(panel_id=1, node_ids=node_ids)
+        assert line.startswith("TPPL DIFF")
+        assert line.split()[-3:] == ["10", "20", "30"]
+
+    @pytest.mark.parametrize(
+        "node_ids",
+        [
+            (1, 2),
+            (1, 1, 2, 2),
+            (1, 2, 2, 2),
+            (1, 2, 1, 3),
+            (1, 2, 3, 2),
+            (1, 2, 3, 4, 5),
+        ],
     )
     def test_dat_panel_rejects_invalid_shapes(self, node_ids):
         from digitalmodel.hydrodynamics.diffraction.gmsh_mesh_builder import (

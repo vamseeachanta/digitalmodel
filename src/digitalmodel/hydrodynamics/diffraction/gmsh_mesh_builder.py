@@ -125,7 +125,7 @@ def _panel_to_dat_line(panel_id: int, node_ids: tuple) -> str:
     """Format an AQWA TPPL/ QPPL DIFF panel record.
 
     AQWA uses TPPL DIFF cards for triangles and QPPL DIFF cards for
-    quadrilaterals. Repeated-node quadrilaterals are invalid.
+    quadrilaterals. Four-slot triangles may repeat any one node.
 
     Args:
         panel_id: 1-based panel identifier (unused in DAT format
@@ -141,10 +141,28 @@ def _panel_to_dat_line(panel_id: int, node_ids: tuple) -> str:
             raise ValueError("AQWA triangle nodes must be unique")
         return f"TPPL DIFF  {n1:6d}  {n2:6d}  {n3:6d}"
     if len(node_ids) == 4:
-        n1, n2, n3, n4 = node_ids
-        if len({n1, n2, n3, n4}) != 4:
-            raise ValueError("AQWA quadrilateral nodes must be unique")
-        return f"QPPL DIFF  {n1:6d}  {n2:6d}  {n3:6d}  {n4:6d}"
+        ordered_unique = tuple(dict.fromkeys(node_ids))
+        repeated_positions = [
+            index
+            for index, node in enumerate(node_ids)
+            if node_ids.count(node) == 2
+        ]
+        is_triangle = len(ordered_unique) == 3 and repeated_positions in (
+            [0, 1],
+            [1, 2],
+            [2, 3],
+            [0, 3],
+        )
+        if is_triangle:
+            n1, n2, n3 = ordered_unique
+            return f"TPPL DIFF  {n1:6d}  {n2:6d}  {n3:6d}"
+        if len(ordered_unique) == 4:
+            n1, n2, n3, n4 = ordered_unique
+            return f"QPPL DIFF  {n1:6d}  {n2:6d}  {n3:6d}  {n4:6d}"
+        raise ValueError(
+            "AQWA four-slot panels require four unique nodes or a triangle "
+            "with a cyclic-adjacent repeated node"
+        )
     raise ValueError("AQWA panels require exactly three or four node IDs")
 
 

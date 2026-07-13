@@ -287,6 +287,19 @@ class TestFrequencyMapping:
         with pytest.raises(ValueError):
             AQWABackend().build_deck6(spec)
 
+    def test_deck6_rejects_frequencies_that_collide_after_formatting(self):
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
+
+        spec = _load_ship_spec().model_copy(
+            update={
+                "frequencies": FrequencySpec(
+                    input_type="frequency", values=[1.0, 1.0000001]
+                )
+            }
+        )
+        with pytest.raises(ValueError, match="after HRTZ formatting"):
+            AQWABackend().build_deck6(spec)
+
     def test_period_frequencies_are_sorted_with_exact_values_and_indices(self):
         from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 
@@ -582,7 +595,18 @@ class TestGDFPanelValidation:
             encoding="utf-8",
         )
 
-    def test_deck2_emits_tppl_for_canonical_triangle_and_qppl_for_quad(self):
+    @pytest.mark.parametrize(
+        ("panel", "expected_nodes"),
+        [
+            ([0, 0, 1, 2], [1, 2, 3]),
+            ([0, 1, 1, 2], [1, 2, 3]),
+            ([0, 1, 2, 2], [1, 2, 3]),
+            ([0, 1, 2, 0], [1, 2, 3]),
+        ],
+    )
+    def test_deck2_emits_tppl_for_any_cyclic_repeat_triangle(
+        self, panel, expected_nodes
+    ):
         from digitalmodel.hydrodynamics.diffraction.aqwa_backend import (
             AQWABackend,
             ParsedMesh,
@@ -595,21 +619,47 @@ class TestGDFPanelValidation:
             vertices=np.array(
                 [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0]], dtype=float
             ),
-            panels=np.array([[0, 1, 2, 2], [0, 1, 3, 2]], dtype=np.int32),
+            panels=np.array([panel], dtype=np.int32),
             name="synthetic",
         )
         cards = backend.build_deck2(spec)
         panel_cards = [line for line in cards if "PPL DIFF" in line]
         assert "TPPL DIFF" in panel_cards[0]
         assert panel_cards[0].count("(") == 4  # group + exactly three nodes
-        assert "QPPL DIFF" in panel_cards[1]
-        assert panel_cards[1].count("(") == 5  # group + exactly four nodes
+        for node in expected_nodes:
+            assert f"({node:>5d})" in panel_cards[0]
+
+    def test_deck2_emits_qppl_for_four_unique_nodes(self):
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import (
+            AQWABackend,
+            ParsedMesh,
+        )
+
+        spec = _load_ship_spec()
+        mesh_file = spec.get_bodies()[0].vessel.geometry.mesh_file
+        backend = AQWABackend()
+        backend._mesh_cache[mesh_file] = ParsedMesh(
+            vertices=np.eye(4, 3),
+            panels=np.array([[0, 1, 3, 2]], dtype=np.int32),
+            name="synthetic",
+        )
+        panel_card = next(
+            line for line in backend.build_deck2(spec) if "PPL DIFF" in line
+        )
+        assert "QPPL DIFF" in panel_card
+        assert panel_card.count("(") == 5  # group + exactly four nodes
 
     @pytest.mark.parametrize(
         "panel",
-        [[0, 1, 2, 0], [0, 0, 1, 2], [0, 1, 1, 2], [0, 1, 1, 1]],
+        [
+            [0, 0, 1, 1],
+            [0, 1, 1, 1],
+            [0, 0, 0, 0],
+            [0, 1, 0, 2],
+            [0, 1, 2, 1],
+        ],
     )
-    def test_deck2_rejects_noncanonical_duplicate_panels(self, panel):
+    def test_deck2_rejects_panels_with_fewer_than_three_unique_nodes(self, panel):
         from digitalmodel.hydrodynamics.diffraction.aqwa_backend import (
             AQWABackend,
             ParsedMesh,
@@ -650,6 +700,33 @@ class TestGDFPanelValidation:
         self._write_gdf(path, "1", ["0 0 0", "1 0 0", "bad 1 0", "0 0 0"])
         with pytest.raises(ValueError, match=r"bad\.gdf.*panel 1.*vertex 3"):
             AQWABackend()._load_mesh(str(path))
+
+    def test_parse_gdf_accepts_triangle_with_repeat_in_any_slot(self, tmp_path):
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
+
+        path = tmp_path / "triangle.gdf"
+        self._write_gdf(
+            path,
+            "1",
+            ["0 0 0", "0 0 0", "1 0 0", "0 1 0"],
+        )
+        mesh = AQWABackend()._parse_gdf(path)
+        assert mesh.panels.tolist() == [[0, 0, 1, 2]]
+
+    @pytest.mark.parametrize(
+        "vertices",
+        [
+            ["0 0 0", "1 0 0", "0 0 0", "0 1 0"],
+            ["0 0 0", "1 0 0", "0 1 0", "1 0 0"],
+        ],
+    )
+    def test_parse_gdf_rejects_nonadjacent_repeated_vertex(self, tmp_path, vertices):
+        from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
+
+        path = tmp_path / "collapsed.gdf"
+        self._write_gdf(path, "1", vertices)
+        with pytest.raises(ValueError, match="cyclic-adjacent"):
+            AQWABackend()._parse_gdf(path)
 
     def test_deck3_mass_cards(self):
         """Deck 3 generates MATE and mass line cards."""

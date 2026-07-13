@@ -389,15 +389,21 @@ class AQWABackend:
                 line_idx += 1
 
             unique_count = len(set(panel_vertices))
-            is_triangle = (
-                unique_count == 3
-                and panel_vertices[2] == panel_vertices[3]
-                and len(set(panel_vertices[:3])) == 3
+            repeated_positions = [
+                index
+                for index, node in enumerate(panel_vertices)
+                if panel_vertices.count(node) == 2
+            ]
+            is_triangle = unique_count == 3 and repeated_positions in (
+                [0, 1],
+                [1, 2],
+                [2, 3],
+                [0, 3],
             )
             if unique_count != 4 and not is_triangle:
                 raise ValueError(
                     f"{file_path}: panel {panel_number}: expected four unique "
-                    "vertices or canonical triangle [n1, n2, n3, n3]"
+                    "vertices or a triangle with a cyclic-adjacent repeated vertex"
                 )
             panels.append(panel_vertices)
 
@@ -550,22 +556,32 @@ class AQWABackend:
             cards.append(f"* Group ID    {group_id} is body named {vessel_name}")
 
             if mesh is not None:
-                # DIFF marks elements as diffracting. GDF triangles repeat
-                # vertex 3 in slot 4 and must be emitted as three-node TPPL;
-                # true quadrilaterals use four-node QPPL.
+                # DIFF marks elements as diffracting. GDF triangles contain
+                # three unique vertices in four slots and must be emitted as
+                # three-node TPPL; true quadrilaterals use four-node QPPL.
                 for elem_idx, panel in enumerate(mesh.panels, start=1):
                     # Panel contains 0-based indices, convert to 1-based
-                    n1 = panel[0] + 1
-                    n2 = panel[1] + 1
-                    n3 = panel[2] + 1
-                    n4 = panel[3] + 1
-                    unique_count = len({n1, n2, n3, n4})
-                    if unique_count == 4:
+                    nodes = [int(node) + 1 for node in panel]
+                    ordered_unique = list(dict.fromkeys(nodes))
+                    repeated_positions = [
+                        index
+                        for index, node in enumerate(nodes)
+                        if nodes.count(node) == 2
+                    ]
+                    is_triangle = len(ordered_unique) == 3 and repeated_positions in (
+                        [0, 1],
+                        [1, 2],
+                        [2, 3],
+                        [0, 3],
+                    )
+                    if len(ordered_unique) == 4:
+                        n1, n2, n3, n4 = ordered_unique
                         card = (
                             f"     {struct_idx}QPPL DIFF   {group_id}({struct_idx})"
                             f"({n1:>5d})({n2:>5d})({n3:>5d})({n4:>5d})"
                         )
-                    elif unique_count == 3 and n3 == n4 and len({n1, n2, n3}) == 3:
+                    elif is_triangle:
+                        n1, n2, n3 = ordered_unique
                         card = (
                             f"     {struct_idx}TPPL DIFF   {group_id}({struct_idx})"
                             f"({n1:>5d})({n2:>5d})({n3:>5d})"
@@ -573,8 +589,8 @@ class AQWABackend:
                     else:
                         raise ValueError(
                             f"Invalid panel {elem_idx} on structure {struct_idx}: "
-                            "expected four unique nodes or canonical triangle "
-                            "[n1, n2, n3, n3]"
+                            "expected four unique nodes or a triangle with a "
+                            "cyclic-adjacent repeated node"
                         )
                     cards.append(f"{card}  Aqwa Elem No: {elem_idx:>4d}")
             else:
@@ -824,9 +840,12 @@ class AQWABackend:
         if len(freqs_hz) != len(set(freqs_hz)):
             raise ValueError("AQWA frequencies must be unique")
         freqs_hz.sort()
+        freq_strings = [f"{freq_hz:g}" for freq_hz in freqs_hz]
+        if len(freq_strings) != len(set(freq_strings)):
+            raise ValueError("AQWA frequencies must be unique after HRTZ formatting")
 
-        for i, freq_hz in enumerate(freqs_hz, start=1):
-            freq_str = f"{freq_hz:>10g}"
+        for i, freq_value in enumerate(freq_strings, start=1):
+            freq_str = f"{freq_value:>10s}"
             cards.append(f"{_WS:>5s}1HRTZ{i:>5d}{i:>5d}{freq_str}")
 
         # Headings — AQWA requires -180 to +180 range for no-symmetry bodies

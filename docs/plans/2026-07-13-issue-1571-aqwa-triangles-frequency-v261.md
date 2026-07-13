@@ -61,8 +61,8 @@ AQWA deck generation that emits valid triangle/quad cards, ascending frequencies
 ```text
 for each parsed four-slot GDF panel:
     unique_nodes = preserve_order(panel node IDs)
-    if panel shape is exactly [n1, n2, n3, n3] with n1/n2/n3 distinct:
-        emit TPPL DIFF with the first three node IDs
+    if exactly 3 unique nodes and the repeated slots are cyclic-adjacent:
+        emit TPPL DIFF with the ordered unique node IDs
     elif exactly 4 unique nodes:
         emit QPPL DIFF with four node IDs
     else:
@@ -72,7 +72,8 @@ while parsing GDF:
     require a valid positive declared panel count
     require exactly four valid coordinate records per declared panel
     require parsed panel count == declared panel count
-    require each panel is a canonical triangle or four-unique-node quad
+    require each panel has four unique nodes or three unique nodes with
+        a cyclic-adjacent repeat (slots 1/2, 2/3, 3/4, or 1/4)
     raise a descriptive mesh-format error containing mesh path,
         1-based panel number, and vertex slot on any violation
 
@@ -85,6 +86,8 @@ conversion must preserve source cardinality; FrequencySpec raises on
     nonfinite or nonpositive period/frequency inputs instead of filtering
 reject nonfinite, nonpositive, or duplicate converted values
 frequencies_hz = sorted(frequencies_hz)
+format frequencies exactly as HRTZ will serialize them
+reject values that collide after HRTZ formatting
 emit indexed HRTZ cards in ascending numeric order
 
 unconditional WINDOWS_AQWA_CANDIDATES = [v261, v252, existing descending versions]
@@ -93,8 +96,10 @@ AQWA_PATH remains checked before standard paths
 
 gmsh DAT helper:
     emit TPPL DIFF for three-node input
+    emit ordered-unique TPPL DIFF for four-slot input with 3 unique nodes
+        and a cyclic-adjacent repeated node
     emit QPPL DIFF for four-unique-node input
-    reject all other cardinality/duplicate patterns
+    reject all other cardinality/unique-node patterns
 ```
 
 ## Files to Change
@@ -114,18 +119,20 @@ gmsh DAT helper:
 
 | Test | Verification |
 |---|---|
-| `test_deck2_emits_tppl_for_repeated_fourth_gdf_vertex` | A synthetic triangular GDF panel produces one three-node `TPPL DIFF` card |
+| `test_deck2_emits_tppl_for_any_cyclic_repeat_triangle` (parameterized) | Every valid repeated-slot representation produces one ordered three-node `TPPL DIFF` card |
 | `test_deck2_preserves_qppl_for_four_unique_vertices` | A true quad remains a four-node `QPPL DIFF` card |
 | `test_parse_gdf_rejects_truncated_declared_panel` | Missing coordinate records fail closed instead of silently dropping a panel |
 | `test_parse_gdf_rejects_non_numeric_panel_coordinate` | An existing malformed file raises a descriptive format error |
 | `test_parse_gdf_rejects_invalid_declared_panel_count` (parameterized) | Non-integer, zero, and negative NPAN values fail closed |
 | `test_load_mesh_propagates_malformed_existing_file` | Parser errors are not converted into warning-only missing meshes |
 | `test_load_mesh_missing_path_retains_missing_behavior` | A genuinely absent path still returns `None` for the existing caller contract |
-| `test_deck2_rejects_noncanonical_three_unique_duplicates` (parameterized) | Fourth-repeats-first, adjacent duplicates, and fewer than three unique nodes fail closed |
+| `test_deck2_rejects_panels_with_fewer_than_three_unique_nodes` (parameterized) | Degenerate panels with fewer than three unique nodes fail closed |
+| `test_parse_gdf_rejects_nonadjacent_repeated_vertex` (parameterized) | Alternating repeats that would collapse or cross panel connectivity fail closed |
 | `test_deck2_tppl_and_qppl_have_exact_node_field_counts` | TPPL has three node fields, QPPL has four, and no repeated-node QPPL is emitted |
 | `test_deck6_sorts_period_derived_frequencies_with_exact_values_and_indices` | Exact Hz conversions are ascending and HRTZ indices are sequential |
 | `test_deck6_sorts_unsorted_explicit_frequencies_and_reindexes` | Explicit unsorted inputs receive deterministic solver order and indices |
 | `test_deck6_rejects_invalid_or_duplicate_converted_frequencies` (parameterized) | Duplicate, nonfinite, zero, and negative solver frequencies fail closed |
+| `test_deck6_rejects_frequencies_that_collide_after_formatting` | Distinct numeric values cannot serialize to duplicate HRTZ cards |
 | `test_frequency_conversion_rejects_nonpositive_or_nonfinite_source_values` (parameterized) | Period/frequency conversion never silently drops requested values |
 | `test_windows_candidates_put_v261_before_v252` | Candidate ordering is deterministic on every test platform |
 | `test_detect_executable_checks_v261_standard_path` | Selective existence mocking discovers v261 with environment state explicitly cleared |
@@ -133,7 +140,8 @@ gmsh DAT helper:
 | `test_aqwa_path_env_wins_over_standard_candidates` | Agent environment wins when v261 and older installs also exist |
 | `test_v261_wins_over_older_existing_standard_candidates` | Standard discovery selects the newest installed supported version |
 | `test_dat_panel_triangle_uses_tppl_and_quad_uses_qppl` | The gmsh DAT helper follows the same valid card contract |
-| `test_dat_panel_rejects_invalid_duplicate_shapes` | The gmsh DAT helper fails closed on noncanonical connectivity |
+| `test_dat_four_slot_triangle_uses_ordered_unique_tppl` (parameterized) | The gmsh DAT helper accepts all repeated-slot triangle representations |
+| `test_dat_panel_rejects_invalid_shapes` | The gmsh DAT helper fails closed on degenerate connectivity |
 
 ## Acceptance Criteria
 
@@ -154,9 +162,13 @@ Independent test-design review verdict: **APPROVE**, with one implementation cau
 
 Original review second-pass verdict: **APPROVE**. All prior MAJOR findings are resolved; no new blocking or minor defect was found.
 
+Implementation cross-review verdict: **MAJOR**. Repository GDF fixtures showed that valid WAMIT triangles repeat a node in multiple slots, not only the final slot; the reviewer also found that distinct full-precision frequencies could collide under AQWA's six-significant-digit HRTZ formatting. The implementation contract and tests now accept the corpus-valid cyclic-repeat forms in first-occurrence order, reject degenerate panels, and reject serialized frequency collisions.
+
+Implementation follow-up verdict: **MAJOR**. Accepting every exactly-three-unique four-slot sequence also admitted alternating repeats such as `[A, B, A, C]`. The contract now requires the repeated positions to be cyclic-adjacent—including the wraparound 1/4 pair used by valid WAMIT fixtures—and explicitly rejects the two alternating forms in the parser and exporters.
+
 ## Risks and Open Questions
 
-- GDF permits triangles by repeated coordinates; detection must be based on parsed node identity without reordering valid quadrilaterals. Only the conventional repeated third/fourth slot is accepted as a triangle; other duplicate patterns fail closed.
+- GDF permits triangles by repeating a coordinate in cyclic-adjacent slots of a four-slot panel; detection is based on parsed node identity, preserves first-occurrence cyclic order, rejects alternating repeats, and does not reorder four-unique-node quadrilaterals.
 - Sorting frequencies changes output indexing but is required by AQWA; downstream extraction must use the emitted solver order.
 - Frequency sorting changes solver indices; extraction and result ordering must follow the emitted sequence, so exact-value/index tests are required.
 
