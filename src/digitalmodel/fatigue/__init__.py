@@ -47,6 +47,10 @@ from .spectral_fatigue import (
     wirsching_light_damage, dirlik_damage, benasciutti_tovo_damage,
     SpectralMoments, SpectralFatigueResult,
 )
+from .fatg import (
+    fatg_significant_stress_range, fatg_sea_state_damage, fatg_annual_damage,
+    FatgSeaState, FatgResult, FATG_SN_CURVES,
+)
 from .weld_classification import (
     classify_weld_detail, list_dnv_detail_categories,
     WeldDetail, ClassificationResult,
@@ -136,6 +140,13 @@ __all__ = [
     "benasciutti_tovo_damage",
     "SpectralMoments",
     "SpectralFatigueResult",
+    # fatg (legacy closed-form spectral fatigue)
+    "fatg_significant_stress_range",
+    "fatg_sea_state_damage",
+    "fatg_annual_damage",
+    "FatgSeaState",
+    "FatgResult",
+    "FATG_SN_CURVES",
     # weld_classification
     "classify_weld_detail",
     "list_dnv_detail_categories",

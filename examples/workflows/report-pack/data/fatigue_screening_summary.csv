@@ -1,0 +1,2 @@
+method,member_type,sn_curve,sn_slope,annual_damage,fatigue_life_years,required_life_years,margin,screening_status
+fatg_closed_form_narrow_band,chord,F,3.0,1.683e-2,59.4,20.0,2.97,pass

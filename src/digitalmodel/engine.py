@@ -329,12 +329,25 @@ def engine(
         )
 
         cfg_base = spectral_fatigue(cfg_base)
+    elif basename == "report_pack":
+        # Standard marine engineering report pack: md + self-contained html +
+        # optional pdf (fail-soft renderer chain) + citations sidecar +
+        # report-layer provenance manifest. NEW basename; no existing arm touched.
+        from digitalmodel.report_pack.workflow import router as report_pack
+
+        cfg_base = report_pack(cfg_base)
     elif basename == "rao_spectral_fatigue":
         from digitalmodel.rao_spectral_fatigue.workflow import (
             router as rao_spectral_fatigue,
         )
 
         cfg_base = rao_spectral_fatigue(cfg_base)
+    elif basename == "fatg_spectral_fatigue":
+        from digitalmodel.fatg_spectral_fatigue.workflow import (
+            router as fatg_spectral_fatigue,
+        )
+
+        cfg_base = fatg_spectral_fatigue(cfg_base)
     elif basename == "vessel_seakeeping":
         from digitalmodel.vessel_seakeeping.workflow import (
             router as vessel_seakeeping,
@@ -469,6 +482,12 @@ def engine(
         )
 
         cfg_base = passing_ship(cfg_base)
+    elif basename == "passing_ship_forces":
+        from digitalmodel.passing_ship_forces.workflow import (
+            router as passing_ship_forces,
+        )
+
+        cfg_base = passing_ship_forces(cfg_base)
     elif basename == "von_mises":
         from digitalmodel.structural.fe.von_mises_workflow import router as von_mises
 

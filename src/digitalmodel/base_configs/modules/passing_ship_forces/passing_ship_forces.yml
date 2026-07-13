@@ -1,0 +1,11 @@
+basename: passing_ship_forces
+
+# Wang (1975) passing-ship forces on a moored vessel (legacy VBA/MathCAD
+# port). Vessel/scenario inputs are supplied by the user configuration;
+# see docs/domains/hydrodynamics/wang-passing-ship-forces.md.
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
