@@ -110,6 +110,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/hydrostatics/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#hydrostatics
+  - module: dynmoor_mooring
+    entry_point: src/digitalmodel/dynmoor_mooring/
+    maturity: development
+    owner_wiki: docs/domains/mooring/dynmoor-legacy-mooring.md
+    key_tests: [tests/subsea/mooring_analysis/test_dynmoor.py, tests/subsea/mooring_analysis/test_dynmoor_workflow.py]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#dynmoor_mooring
   - module: mooring_resilience
     entry_point: src/digitalmodel/mooring_resilience/
     maturity: beta

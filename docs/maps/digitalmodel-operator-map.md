@@ -62,6 +62,7 @@ of duplicating its detailed issue history.
 | `materials` | `src/digitalmodel/materials/` | `tests/materials/` | `docs/domains/README.md` | Material grades and line-pipe property data | NumPy, pandas |
 | `workflow_api` | `src/digitalmodel/workflow_api/` | `tests/workflow_api/` | `docs/domains/README.md` | Workflow runner, provenance and golden-output API | repo workflow conventions |
 | `compare_tool` | `src/digitalmodel/compare_tool/` | `tests/compare_tool/` | `docs/domains/README.md` | Result/model comparison utilities across runs and tools | pandas, NumPy |
+| `dynmoor_mooring` | `src/digitalmodel/dynmoor_mooring/` | `tests/subsea/mooring_analysis/test_dynmoor.py` | `docs/domains/mooring/dynmoor-legacy-mooring.md` | Legacy DYNMOOR static mooring (catenary tables, pretension, restoring forces) + passing-ship forces | mooring engineering |
 | `installation` | `src/digitalmodel/installation/` | `tests/` | `docs/domains/installation/` | Offshore installation analysis, lift/lay operability, weather windows | marine engineering standards |
 | `lifting_lug` | `src/digitalmodel/lifting_lug/` | `tests/` | `docs/domains/README.md` | Lifting-lug/padeye sizing and closed-form structural checks | structural standards |
 | `mooring_fatigue` | `src/digitalmodel/mooring_fatigue/` | `tests/` | `docs/domains/README.md` | Mooring-line fatigue analysis and parametric atlases | fatigue standards, NumPy |

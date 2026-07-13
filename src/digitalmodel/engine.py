@@ -492,6 +492,12 @@ def engine(
         pb = PlateBuckling()
         cfg_base = pb.router(cfg_base)
 
+    elif basename == "dynmoor_mooring":
+        from digitalmodel.dynmoor_mooring.workflow import (
+            router as dynmoor_mooring,
+        )
+
+        cfg_base = dynmoor_mooring(cfg_base)
     elif basename == "mooring":
         logger.info("Mooring analysis routed to mooring_analysis module")
         from digitalmodel.subsea.mooring_analysis.cli import cli as mooring_cli
