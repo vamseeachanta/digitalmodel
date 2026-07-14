@@ -14,7 +14,10 @@ import math
 import pytest
 
 from digitalmodel.alt_fuel_ship_sizing import (
+    FUEL_PRESETS,
     FuelProperties,
+    PortLeg,
+    SeaLeg,
     TankParameters,
     ThrustMatrix,
     WindRoseBin,
@@ -23,17 +26,27 @@ from digitalmodel.alt_fuel_ship_sizing import (
     electrical_power_kw,
     endurance_hours,
     fuel_mass_flow_kg_per_h,
+    fuel_preset,
     gross_tonnage,
     interpolate_thrust,
     run_trade_study,
     shaft_power_at_speed,
     size_fuel_chain,
+    size_fuel_chain_voyage,
     tonnage,
     wind_assist_saving,
 )
 from digitalmodel.alt_fuel_ship_sizing.constants import (
+    AMBIENT_TEMPERATURE_K,
     KNOT_MPS,
     LH2_DENSITY_KG_PER_M3,
+    METHANOL_DENSITY_KG_PER_M3,
+    METHANOL_HEAT_OF_VAPORIZATION_KJ_PER_KG,
+    METHANOL_LOWER_HEATING_VALUE_MJ_PER_KG,
+    NH3_HEAT_OF_VAPORIZATION_KJ_PER_KG,
+    NH3_LIQUID_DENSITY_KG_PER_M3,
+    NH3_LOWER_HEATING_VALUE_MJ_PER_KG,
+    NH3_NBP_K,
 )
 from digitalmodel.alt_fuel_ship_sizing.trade_study import TradeStudyInputs
 from digitalmodel.alt_fuel_ship_sizing.trade_study import (
@@ -200,6 +213,231 @@ class TestFuelChain:
             TankParameters(insulation_heat_flux_w_per_m2=1.5, bog_handling="flare")
         with pytest.raises(ValueError):
             TankParameters()  # neither heat flux nor U-value
+
+
+def _voyage(legs, **overrides):
+    kwargs = dict(
+        shaft_power_kw=4750.0,
+        hotel_load_kw=500.0,
+        eta_electric_drivetrain=0.95,
+        eta_fuel_cell_lhv=0.50,
+        tank=TANK,
+        fuel=ROUND_FUEL,
+        fuel_margin_fraction=0.10,
+    )
+    kwargs.update(overrides)
+    return size_fuel_chain_voyage(legs, **kwargs)
+
+
+class TestVoyageProfile:
+    ROUND_TRIP = [
+        SeaLeg(distance_nm=2000.0, speed_kn=12.0),
+        PortLeg(dwell_h=720.0),
+        SeaLeg(distance_nm=2000.0, speed_kn=12.0),
+    ]
+
+    def test_single_sea_leg_reproduces_single_passage(self):
+        """One sea leg == the single-passage API (backward compatibility):
+        121000 kg, 1856.34 m3 gross (hand-verified in TestFuelChain)."""
+        voyage = _voyage([SeaLeg(distance_nm=4000.0, speed_kn=12.0)])
+        single = _bulker_chain()
+        assert voyage.required_fuel_mass_kg == pytest.approx(
+            single.required_fuel_mass_kg, rel=1e-12
+        )
+        assert voyage.gross_tank_volume_m3 == pytest.approx(
+            single.gross_tank_volume_m3, rel=1e-12
+        )
+        assert voyage.sea_hours == pytest.approx(single.endurance_hours, rel=1e-12)
+        assert voyage.port_dwell_h == 0.0
+        assert voyage.total_distance_nm == pytest.approx(4000.0)
+        assert len(voyage.legs) == 1
+        assert voyage.legs[0].leg_type == "sea"
+
+    def test_port_dwell_drives_tank_size(self):
+        """The same 4000 nm route split around a 30-day port dwell needs a
+        bigger tank than the dwell-free route: the dwell generates BOG at
+        the converged tank's ~318 kg/day with zero burn to absorb it, so
+        ~9619 kg is added to the 121000 kg sea requirement (fixed point:
+        required = 130618.7 kg, gross 2003.91 m3 > 1856.34 m3).
+        """
+        no_dwell = _voyage(
+            [
+                SeaLeg(distance_nm=2000.0, speed_kn=12.0),
+                SeaLeg(distance_nm=2000.0, speed_kn=12.0),
+            ]
+        )
+        with_dwell = _voyage(self.ROUND_TRIP)
+
+        assert no_dwell.required_fuel_mass_kg == pytest.approx(121000.0, rel=1e-9)
+        assert no_dwell.gross_tank_volume_m3 == pytest.approx(1856.341, rel=1e-6)
+        assert with_dwell.required_fuel_mass_kg == pytest.approx(
+            130618.687, rel=1e-6
+        )
+        assert with_dwell.gross_tank_volume_m3 == pytest.approx(2003.907, rel=1e-6)
+        assert (
+            with_dwell.gross_tank_volume_m3 > no_dwell.gross_tank_volume_m3
+        )
+        # Fixed point closed: requirement == burned fuel (with margin) + lost BOG.
+        assert with_dwell.required_fuel_mass_kg == pytest.approx(
+            with_dwell.voyage_fuel_kg + with_dwell.bog_lost_kg, abs=1e-5
+        )
+        # All the lost BOG is the port dwell's, at the converged tank's rate.
+        assert with_dwell.bog_lost_kg == pytest.approx(
+            with_dwell.boil_off.bog_kg_per_day * 720.0 / 24.0, rel=1e-12
+        )
+
+    def test_per_leg_accounting(self):
+        """Sea legs: 330 kg/h x 166.667 h = 55000 kg burned each, BOG
+        consumed (fed to the fuel cell). Port leg: zero burn, all BOG lost."""
+        voyage = _voyage(self.ROUND_TRIP)
+        sea_a, port, sea_b = voyage.legs
+        assert [leg.leg_type for leg in voyage.legs] == ["sea", "port", "sea"]
+        assert sea_a.fuel_burned_kg == pytest.approx(55000.0, rel=1e-12)
+        assert sea_b.fuel_burned_kg == pytest.approx(55000.0, rel=1e-12)
+        assert sea_a.duration_h == pytest.approx(2000.0 / 12.0, rel=1e-12)
+        assert sea_a.bog_lost_kg == 0.0
+        assert sea_a.bog_consumed_kg == pytest.approx(
+            voyage.boil_off.bog_kg_per_day * sea_a.duration_h / 24.0, rel=1e-12
+        )
+        assert port.fuel_burned_kg == 0.0
+        assert port.duration_h == pytest.approx(720.0)
+        assert port.bog_consumed_kg == 0.0
+        assert port.bog_lost_kg == pytest.approx(port.bog_generated_kg, rel=1e-12)
+        # Voyage totals roll up from the legs.
+        assert voyage.voyage_fuel_kg == pytest.approx(
+            (sea_a.fuel_burned_kg + sea_b.fuel_burned_kg) * 1.10, rel=1e-12
+        )
+        assert voyage.total_voyage_hours == pytest.approx(
+            sea_a.duration_h + 720.0 + sea_b.duration_h, rel=1e-12
+        )
+
+    def test_lost_handling_vents_all_legs(self):
+        lost_tank = TankParameters(
+            ullage_fraction=0.08,
+            length_to_diameter=5.0,
+            insulation_heat_flux_w_per_m2=1.5,
+            bog_handling="lost",
+        )
+        voyage = _voyage(self.ROUND_TRIP, tank=lost_tank)
+        assert all(
+            leg.bog_lost_kg == pytest.approx(leg.bog_generated_kg, rel=1e-12)
+            for leg in voyage.legs
+        )
+        assert voyage.bog_lost_kg == pytest.approx(
+            voyage.boil_off.bog_kg_per_day
+            * voyage.total_voyage_hours
+            / 24.0,
+            rel=1e-12,
+        )
+        assert voyage.required_fuel_mass_kg == pytest.approx(
+            voyage.voyage_fuel_kg + voyage.bog_lost_kg, abs=1e-5
+        )
+
+    def test_leg_shaft_power_override(self):
+        """A leg-level shaft power (half the voyage-level 4750 kW) burns
+        less on that leg: P_elec = 2375/0.95 + 500 = 3000 kW -> 180 kg/h."""
+        voyage = _voyage(
+            [
+                SeaLeg(distance_nm=1200.0, speed_kn=12.0),
+                SeaLeg(distance_nm=1200.0, speed_kn=12.0, shaft_power_kw=2375.0),
+            ]
+        )
+        full, half = voyage.legs
+        assert full.fuel_burned_kg == pytest.approx(330.0 * 100.0, rel=1e-12)
+        assert half.fuel_burned_kg == pytest.approx(180.0 * 100.0, rel=1e-12)
+
+    def test_bog_exceeds_consumption_flagged_per_sea_leg(self):
+        """Poor insulation makes generation exceed the slow leg's draw; the
+        warning names the offending sea leg (port legs are never flagged)."""
+        poor_tank = TankParameters(
+            ullage_fraction=0.08,
+            length_to_diameter=5.0,
+            insulation_heat_flux_w_per_m2=150.0,
+            bog_handling="consumed",
+        )
+        voyage = _voyage(
+            [
+                SeaLeg(distance_nm=100.0, speed_kn=12.0, shaft_power_kw=95.0),
+                PortLeg(dwell_h=24.0),
+            ],
+            tank=poor_tank,
+            hotel_load_kw=0.0,
+            # The absurd heat flux makes lost port BOG a large fraction of
+            # the requirement; the fixed point still contracts (ratio ~2/3)
+            # but needs more than the default 50 passes to reach 1e-6 kg.
+            max_iterations=200,
+        )
+        assert voyage.legs[0].bog_exceeds_consumption
+        assert not voyage.legs[1].bog_exceeds_consumption
+        assert voyage.bog_exceeds_consumption
+        assert voyage.warnings and "sea leg(s) 0" in voyage.warnings[0]
+
+    def test_validation(self):
+        with pytest.raises(ValueError):
+            _voyage([])
+        with pytest.raises(ValueError):
+            _voyage([PortLeg(dwell_h=24.0)])  # no sea leg
+        with pytest.raises(ValueError):
+            SeaLeg(distance_nm=-1.0, speed_kn=12.0)
+        with pytest.raises(ValueError):
+            SeaLeg(distance_nm=100.0, speed_kn=0.0)
+        with pytest.raises(ValueError):
+            PortLeg(dwell_h=0.0)
+
+
+class TestFuelPresets:
+    def test_lh2_preset_is_the_default(self):
+        assert fuel_preset("lh2") == FuelProperties()
+        assert FUEL_PRESETS["lh2"] == FuelProperties()
+
+    def test_nh3_refrigerated_preset_cited_values(self):
+        nh3 = fuel_preset("nh3_refrigerated")
+        assert nh3.density_kg_per_m3 == NH3_LIQUID_DENSITY_KG_PER_M3 == 682.0
+        assert nh3.lhv_mj_per_kg == NH3_LOWER_HEATING_VALUE_MJ_PER_KG == 18.6
+        assert (
+            nh3.heat_of_vaporization_kj_per_kg
+            == NH3_HEAT_OF_VAPORIZATION_KJ_PER_KG
+            == 1370.0
+        )
+        assert nh3.storage_temperature_k == NH3_NBP_K == 239.82
+
+    def test_methanol_preset_cited_values(self):
+        meoh = fuel_preset("methanol")
+        assert meoh.density_kg_per_m3 == METHANOL_DENSITY_KG_PER_M3 == 791.4
+        assert meoh.lhv_mj_per_kg == METHANOL_LOWER_HEATING_VALUE_MJ_PER_KG == 19.9
+        assert (
+            meoh.heat_of_vaporization_kj_per_kg
+            == METHANOL_HEAT_OF_VAPORIZATION_KJ_PER_KG
+            == 1100.0
+        )
+        assert meoh.storage_temperature_k == AMBIENT_TEMPERATURE_K == 293.15
+
+    def test_unknown_preset_rejected(self):
+        with pytest.raises(ValueError, match="nh3_refrigerated"):
+            fuel_preset("nh3_pressurized")
+
+    def test_nh3_fuel_chain_mass_flow_hand_verified(self):
+        """Same 5500 kW electrical / 50 % plant on NH3: 11000 kW LHV x 3.6 /
+        18.6 MJ/kg = 2129.032 kg/h (vs 330 kg/h on round-number LH2)."""
+        result = _bulker_chain(fuel=fuel_preset("nh3_refrigerated"))
+        assert result.fuel_mass_flow_kg_per_h == pytest.approx(
+            11000.0 * 3.6 / 18.6, rel=1e-12
+        )
+        assert result.fuel_mass_flow_kg_per_h == pytest.approx(2129.0323, rel=1e-7)
+        # Denser fuel: net volume = required / 682 kg/m3.
+        assert result.net_tank_volume_m3 == pytest.approx(
+            result.required_fuel_mass_kg / 682.0, rel=1e-12
+        )
+
+    def test_methanol_u_value_tank_rejected_at_ambient(self):
+        """Methanol stores at ambient: a U-value tank characterisation sees
+        zero temperature difference and must raise (no boil-off regime)."""
+        u_tank = TankParameters(
+            u_value_w_per_m2_k=0.05,
+            ambient_temperature_k=AMBIENT_TEMPERATURE_K,
+        )
+        with pytest.raises(ValueError, match="ambient_temperature_k"):
+            _bulker_chain(tank=u_tank, fuel=fuel_preset("methanol"))
 
 
 class TestWindAssist:

@@ -19,8 +19,12 @@ Config schema (YAML basename ``alt_fuel_ship_sizing``)::
     basename: alt_fuel_ship_sizing
     alt_fuel_ship_sizing:
       route:
-        distance_nm: 4000.0
+        distance_nm: 4000.0            # single sea passage ...
         service_speed_kn: 12.0
+        # legs:                        # ... or an ordered voyage profile
+        #   - {type: sea, distance_nm: 2000.0, speed_kn: 12.0}
+        #   - {type: port, dwell_h: 240.0}
+        #   - {type: sea, distance_nm: 2000.0, speed_kn: 12.0}
       powering:
         shaft_power_kw: 5000.0        # at service speed, incl. margins (input lane)
         hotel_load_kw: 500.0
@@ -31,7 +35,8 @@ Config schema (YAML basename ``alt_fuel_ship_sizing``)::
         electric_drivetrain: 0.95
       fuel:                            # optional; defaults = published LH2 values
         margin_fraction: 0.10
-        # density_kg_per_m3: 70.85
+        # preset: lh2                  # lh2 | nh3_refrigerated | methanol (cited)
+        # density_kg_per_m3: 70.85     # explicit values override the preset
         # lhv_mj_per_kg: 119.96
         # heat_of_vaporization_kj_per_kg: 446.0
         # storage_temperature_k: 20.28
@@ -66,8 +71,18 @@ Config schema (YAML basename ``alt_fuel_ship_sizing``)::
         fuel_price_per_kg: 6.0
       output_dir: results
 
+Voyage profile semantics: when ``route.legs`` is given the design point is
+sized over the ordered profile (port dwell accrues BOG against inventory
+with zero burn, see :func:`~digitalmodel.alt_fuel_ship_sizing.lh2_fuel_chain.
+size_fuel_chain_voyage`); ``route.distance_nm`` is then optional (the total
+sea distance is derived from the legs). ``route.service_speed_kn`` remains
+required (wind-assist design point and trade-study reference). The trade
+study keeps sweeping the aggregate sea distance as a *single passage* (port
+dwell excluded) -- it is a speed-screening table, not a schedule model.
+
 Outputs (CSV, under ``output_dir``): ``<stem>_fuel_chain_summary.csv``;
-``<stem>_wind_assist_bins.csv`` when wind-assist is enabled;
+``<stem>_voyage_legs.csv`` when a voyage profile is given (per-leg BOG
+accounting); ``<stem>_wind_assist_bins.csv`` when wind-assist is enabled;
 ``<stem>_trade_study.csv`` when a trade study is requested (drops straight
 into ``report_pack`` ``results.tables``); ``<stem>_tonnage.csv`` when
 tonnage inputs are given. The enriched config carries the same results.
@@ -82,8 +97,15 @@ from typing import Any
 
 from digitalmodel.alt_fuel_ship_sizing.lh2_fuel_chain import (
     FuelProperties,
+    PortLeg,
+    SeaLeg,
     TankParameters,
+    VoyageLeg,
+    electrical_power_kw,
+    fuel_mass_flow_kg_per_h,
+    fuel_preset,
     size_fuel_chain,
+    size_fuel_chain_voyage,
 )
 from digitalmodel.alt_fuel_ship_sizing.tonnage import tonnage
 from digitalmodel.alt_fuel_ship_sizing.trade_study import (
@@ -107,8 +129,14 @@ def router(cfg: dict) -> dict:
         raise ValueError(f"{_LABEL} mapping is required")
 
     route = _mapping(settings, "route")
-    distance_nm = _positive(route, "distance_nm", "route.distance_nm")
     speed_kn = _positive(route, "service_speed_kn", "route.service_speed_kn")
+    legs = _voyage_legs(route)
+    if legs is None:
+        distance_nm = _positive(route, "distance_nm", "route.distance_nm")
+    else:
+        distance_nm = sum(
+            leg.distance_nm for leg in legs if isinstance(leg, SeaLeg)
+        )
 
     powering = _mapping(settings, "powering")
     shaft_power_kw = _positive(powering, "shaft_power_kw", "powering.shaft_power_kw")
@@ -147,17 +175,42 @@ def router(cfg: dict) -> dict:
         )
         effective_shaft_power = wind_result.effective_shaft_power_kw
 
-    chain = size_fuel_chain(
-        distance_nm=distance_nm,
-        speed_kn=speed_kn,
-        shaft_power_kw=effective_shaft_power,
-        hotel_load_kw=hotel_load_kw,
-        eta_electric_drivetrain=eta_el,
-        eta_fuel_cell_lhv=eta_fc,
-        tank=tank,
-        fuel=fuel,
-        fuel_margin_fraction=margin,
-    )
+    voyage = None
+    if legs is not None:
+        voyage = size_fuel_chain_voyage(
+            legs=legs,
+            shaft_power_kw=effective_shaft_power,
+            hotel_load_kw=hotel_load_kw,
+            eta_electric_drivetrain=eta_el,
+            eta_fuel_cell_lhv=eta_fc,
+            tank=tank,
+            fuel=fuel,
+            fuel_margin_fraction=margin,
+        )
+        sized = voyage
+        endurance = voyage.sea_hours
+        p_elec = electrical_power_kw(
+            effective_shaft_power, hotel_load_kw, eta_el
+        )
+        fuel_lhv_power = p_elec / eta_fc
+        mdot = fuel_mass_flow_kg_per_h(p_elec, eta_fc, fuel.lhv_mj_per_kg)
+    else:
+        chain = size_fuel_chain(
+            distance_nm=distance_nm,
+            speed_kn=speed_kn,
+            shaft_power_kw=effective_shaft_power,
+            hotel_load_kw=hotel_load_kw,
+            eta_electric_drivetrain=eta_el,
+            eta_fuel_cell_lhv=eta_fc,
+            tank=tank,
+            fuel=fuel,
+            fuel_margin_fraction=margin,
+        )
+        sized = chain
+        endurance = chain.endurance_hours
+        p_elec = chain.electrical_power_kw
+        fuel_lhv_power = chain.fuel_lhv_power_kw
+        mdot = chain.fuel_mass_flow_kg_per_h
 
     summary: dict[str, Any] = {
         "distance_nm": distance_nm,
@@ -169,32 +222,36 @@ def router(cfg: dict) -> dict:
         ),
         "wind_saving_fraction": wind_result.saving_fraction if wind_result else 0.0,
         "effective_shaft_power_kw": effective_shaft_power,
-        "endurance_hours": chain.endurance_hours,
-        "electrical_power_kw": chain.electrical_power_kw,
-        "fuel_lhv_power_kw": chain.fuel_lhv_power_kw,
-        "fuel_mass_flow_kg_per_h": chain.fuel_mass_flow_kg_per_h,
-        "voyage_fuel_kg": chain.voyage_fuel_kg,
-        "bog_lost_kg": chain.bog_lost_kg,
-        "required_fuel_mass_kg": chain.required_fuel_mass_kg,
-        "net_tank_volume_m3": chain.net_tank_volume_m3,
-        "gross_tank_volume_m3": chain.gross_tank_volume_m3,
-        "tank_diameter_m": chain.tank.diameter_m,
-        "tank_length_m": chain.tank.length_m,
-        "tank_surface_area_m2": chain.tank.surface_area_m2,
-        "tank_heat_leak_w": chain.boil_off.heat_leak_w,
-        "bog_kg_per_day": chain.boil_off.bog_kg_per_day,
-        "bog_rate_percent_per_day": chain.boil_off.bog_rate_percent_per_day,
-        "bog_handling": chain.bog_handling,
-        "bog_exceeds_consumption": chain.bog_exceeds_consumption,
+        "endurance_hours": endurance,
+        "electrical_power_kw": p_elec,
+        "fuel_lhv_power_kw": fuel_lhv_power,
+        "fuel_mass_flow_kg_per_h": mdot,
+        "voyage_fuel_kg": sized.voyage_fuel_kg,
+        "bog_lost_kg": sized.bog_lost_kg,
+        "required_fuel_mass_kg": sized.required_fuel_mass_kg,
+        "net_tank_volume_m3": sized.net_tank_volume_m3,
+        "gross_tank_volume_m3": sized.gross_tank_volume_m3,
+        "tank_diameter_m": sized.tank.diameter_m,
+        "tank_length_m": sized.tank.length_m,
+        "tank_surface_area_m2": sized.tank.surface_area_m2,
+        "tank_heat_leak_w": sized.boil_off.heat_leak_w,
+        "bog_kg_per_day": sized.boil_off.bog_kg_per_day,
+        "bog_rate_percent_per_day": sized.boil_off.bog_rate_percent_per_day,
+        "bog_handling": sized.bog_handling,
+        "bog_exceeds_consumption": sized.bog_exceeds_consumption,
     }
+    if voyage is not None:
+        summary["voyage_profile"] = True
+        summary["total_voyage_hours"] = voyage.total_voyage_hours
+        summary["port_dwell_h"] = voyage.port_dwell_h
     if fuel_price is not None:
-        summary["fuel_cost"] = fuel_price * chain.required_fuel_mass_kg
+        summary["fuel_cost"] = fuel_price * sized.required_fuel_mass_kg
 
     result: dict[str, Any] = {
         "method": "alt_fuel_lh2_concept_sizing",
         "posture": "concept-design screening (public math, uncalibrated)",
         "summary": summary,
-        "warnings": list(chain.warnings),
+        "warnings": list(sized.warnings),
     }
 
     csv_paths: dict[str, Path] = {}
@@ -202,6 +259,12 @@ def router(cfg: dict) -> dict:
         cfg, settings, "fuel_chain_summary.csv"
     )
     _write_csv(csv_paths["fuel_chain_summary_csv"], [summary])
+
+    if voyage is not None:
+        leg_rows = [asdict(item) for item in voyage.legs]
+        csv_paths["voyage_legs_csv"] = _output_path(cfg, settings, "voyage_legs.csv")
+        _write_csv(csv_paths["voyage_legs_csv"], leg_rows)
+        result["voyage_legs"] = leg_rows
 
     if wind_result is not None:
         bin_rows = [asdict(item) for item in wind_result.bins]
@@ -329,8 +392,44 @@ def _bool_list(source: dict[str, Any], name: str, label: str) -> list[bool]:
     return [bool(v) for v in value]
 
 
+def _voyage_legs(route: dict[str, Any]) -> list[VoyageLeg] | None:
+    raw = route.get("legs")
+    if raw is None:
+        return None
+    if not isinstance(raw, list) or not raw:
+        raise ValueError(f"{_LABEL} route.legs must be a non-empty list")
+    legs: list[VoyageLeg] = []
+    for i, item in enumerate(raw):
+        if not isinstance(item, dict):
+            raise ValueError(f"{_LABEL} route.legs[{i}] must be a mapping")
+        leg_type = str(item.get("type", "")).lower()
+        if leg_type == "sea":
+            power = item.get("shaft_power_kw")
+            legs.append(
+                SeaLeg(
+                    distance_nm=_positive(
+                        item, "distance_nm", f"route.legs[{i}].distance_nm"
+                    ),
+                    speed_kn=_positive(item, "speed_kn", f"route.legs[{i}].speed_kn"),
+                    shaft_power_kw=float(power) if power is not None else None,
+                )
+            )
+        elif leg_type == "port":
+            legs.append(
+                PortLeg(
+                    dwell_h=_positive(item, "dwell_h", f"route.legs[{i}].dwell_h")
+                )
+            )
+        else:
+            raise ValueError(
+                f"{_LABEL} route.legs[{i}].type must be 'sea' or 'port'"
+            )
+    return legs
+
+
 def _fuel_properties(fuel_settings: dict[str, Any]) -> FuelProperties:
-    defaults = FuelProperties()
+    preset = fuel_settings.get("preset")
+    defaults = fuel_preset(str(preset)) if preset is not None else FuelProperties()
     return FuelProperties(
         density_kg_per_m3=float(
             fuel_settings.get("density_kg_per_m3", defaults.density_kg_per_m3)
