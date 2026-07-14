@@ -42,7 +42,10 @@ class ExecutableSet:
 
     @classmethod
     def capture(cls, selected: Mapping[str, Path]) -> "ExecutableSet":
-        return cls({name: _observe(path) for name, path in selected.items()})
+        return cls({
+            name: _observe(Path(os.path.abspath(path)))
+            for name, path in selected.items()
+        })
 
     def validate(self, name: str) -> None:
         expected = self._witnesses.get(name)
@@ -56,10 +59,10 @@ class ExecutableSet:
             self.validate(name)
 
     @contextmanager
-    def launch(self, name: str) -> Iterator[None]:
+    def launch(self, name: str) -> Iterator[str]:
         self.validate(name)
         try:
-            yield
+            yield str(self._witnesses[name].path)
         finally:
             self.validate(name)
 
@@ -69,6 +72,21 @@ class ExecutableSet:
             self.validate(name)
         try:
             yield
+        finally:
+            for name in reversed(names):
+                self.validate(name)
+
+    @contextmanager
+    def launch_argv(self, argv: list[str]) -> Iterator[list[str]]:
+        names = [token for token in argv if token in self._witnesses]
+        for name in names:
+            self.validate(name)
+        bound = [
+            str(self._witnesses[token].path) if token in self._witnesses else token
+            for token in argv
+        ]
+        try:
+            yield bound
         finally:
             for name in reversed(names):
                 self.validate(name)

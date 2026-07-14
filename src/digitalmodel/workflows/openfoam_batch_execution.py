@@ -275,9 +275,10 @@ def execute_mpi_plan(
     row = _compat("_row", make_row)
     for argv in plan:
         witnesses = item.get("executables")
-        launch = _mpi_launch_guard(witnesses, argv[0], solver)
-        with launch:
-            rc = run(argv, case_dir, case_dir / f"log.{argv[0]}", timeout)
+        launch = _mpi_launch_guard(witnesses, argv, solver)
+        with launch as bound:
+            command = bound if isinstance(bound, list) else argv
+            rc = run(command, case_dir, case_dir / f"log.{argv[0]}", timeout)
         if rc != 0:
             return row(
                 item,
@@ -289,9 +290,12 @@ def execute_mpi_plan(
     return row(item, status="completed", case_dir=case_dir, solver=solver)
 
 
-def _mpi_launch_guard(witnesses, executable: str, solver: str):
+def _mpi_launch_guard(witnesses, argv: list[str], solver: str):
     if not witnesses:
         return nullcontext()
+    if hasattr(witnesses, "launch_argv"):
+        return witnesses.launch_argv(argv)
+    executable = argv[0]
     if executable == "mpirun" and hasattr(witnesses, "launch_many"):
         return witnesses.launch_many([executable, solver])
     return witnesses.launch(executable)

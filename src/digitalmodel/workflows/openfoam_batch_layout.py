@@ -25,6 +25,7 @@ from digitalmodel.workflows.openfoam_batch_descriptor_io import (
     write_new_at as _write_new_at,
     write_case_file as _write_case_file,
 )
+from digitalmodel.workflows.openfoam_batch_locking import retire_observed_lock
 from digitalmodel.workflows.openfoam_batch_legacy_layout import (  # noqa: F401
     DECOMPOSE_PAR_DICT,
     clean_case_dir,
@@ -63,13 +64,17 @@ def _open_namespace(root_fd: int, namespace: Path) -> int:
         raise
 
 
-def _owner_payload(identity: dict, root_stat: os.stat_result, token: str) -> dict:
+def _owner_payload(
+    identity: dict, root_stat: os.stat_result, locks_stat: os.stat_result, token: str
+) -> dict:
     return {
         "schema_version": OWNER_SCHEMA,
         "uid": os.getuid(),
         "identity": identity,
         "operator_root_device": root_stat.st_dev,
         "operator_root_inode": root_stat.st_ino,
+        "locks_device": locks_stat.st_dev,
+        "locks_inode": locks_stat.st_ino,
         "owner_token": token,
     }
 
@@ -82,6 +87,10 @@ def _before_lock_reclaim(_locks_fd: int, _name: str) -> None:
     """Test seam immediately before the source-inode recheck."""
 
 
+def _before_lock_move(_locks_fd: int, _name: str) -> None:
+    """Test seam immediately before the atomic source/sentinel exchange."""
+
+
 class WorkLayout:
     """Descriptor-retaining owned run layout for external execution."""
 
@@ -89,7 +98,7 @@ class WorkLayout:
         self.authority = authority
         self.identity = identity
         self.work_name = work_name
-        self.root_fd, self.namespace_fd, self.run_fd, self.work_fd = descriptors
+        self.root_fd, self.namespace_fd, self.run_fd, self.locks_fd, self.work_fd = descriptors
         self.root_path = authority.root
         self.namespace_path = authority.root / authority.namespace
         self.run_path = authority.root / authority.namespace / f"openfoam-run-{identity['identity_sha256']}"
@@ -98,6 +107,7 @@ class WorkLayout:
         self._root_stat = os.fstat(self.root_fd)
         self._namespace_stat = os.fstat(self.namespace_fd)
         self._run_stat = os.fstat(self.run_fd)
+        self._locks_stat = os.fstat(self.locks_fd)
         self._work_stat = os.fstat(self.work_fd)
         self._marker_stat = marker_stat
         self._held: dict[str, tuple[os.stat_result, dict]] = {}
@@ -133,9 +143,11 @@ class WorkLayout:
         stage_fd = os.open(staging, _DIRECTORY_FLAGS, dir_fd=namespace_fd)
         try:
             token = secrets.token_hex(32)
-            _write_new_at(stage_fd, OWNER_FILENAME, _owner_payload(identity, root_stat, token))
             os.mkdir(".locks", 0o700, dir_fd=stage_fd)
             os.mkdir(work_name, 0o700, dir_fd=stage_fd)
+            locks_stat = os.stat(".locks", dir_fd=stage_fd, follow_symlinks=False)
+            marker = _owner_payload(identity, root_stat, locks_stat, token)
+            _write_new_at(stage_fd, OWNER_FILENAME, marker)
             os.fsync(stage_fd)
             _rename_noreplace(staging, final, namespace_fd, namespace_fd)
         except OSError as error:
@@ -156,18 +168,29 @@ class WorkLayout:
         try:
             run_fd = os.open(name, _DIRECTORY_FLAGS, dir_fd=namespace_fd)
             marker, marker_stat = _read_json_at(run_fd, OWNER_FILENAME)
-            expected = _owner_payload(identity, os.fstat(root_fd), marker.get("owner_token", ""))
+            locks_fd = os.open(".locks", _DIRECTORY_FLAGS, dir_fd=run_fd)
+            expected = _owner_payload(
+                identity, os.fstat(root_fd), os.fstat(locks_fd),
+                marker.get("owner_token", ""),
+            )
             if marker != expected or len(marker.get("owner_token", "")) < 32:
                 raise ValueError("marker mismatch")
             work_fd = os.open(work_name, _DIRECTORY_FLAGS, dir_fd=run_fd)
         except (OSError, ValueError, json.JSONDecodeError) as error:
             if "run_fd" in locals():
                 os.close(run_fd)
+            if "locks_fd" in locals():
+                os.close(locks_fd)
             raise RuntimeError("preexisting path is not the expected owned run") from error
-        return cls(authority, identity, work_name, (root_fd, namespace_fd, run_fd, work_fd), marker, marker_stat)
+        descriptors = (root_fd, namespace_fd, run_fd, locks_fd, work_fd)
+        return cls(authority, identity, work_name, descriptors, marker, marker_stat)
 
     def close(self) -> None:
-        for name in ("work_fd", "run_fd", "namespace_fd", "root_fd"):
+        output = getattr(self, "output", None)
+        if output is not None:
+            output.close()
+            self.output = None
+        for name in ("work_fd", "locks_fd", "run_fd", "namespace_fd", "root_fd"):
             fd = getattr(self, name, None)
             if fd is not None:
                 os.close(fd)
@@ -185,14 +208,18 @@ class WorkLayout:
             namespace_stat = os.stat(self.namespace_path, follow_symlinks=False)
             run_stat = os.stat(self.run_path.name, dir_fd=self.namespace_fd, follow_symlinks=False)
             work_stat = os.stat(self.work_name, dir_fd=self.run_fd, follow_symlinks=False)
+            locks_stat = os.stat(".locks", dir_fd=self.run_fd, follow_symlinks=False)
             marker, marker_stat = _read_json_at(self.run_fd, OWNER_FILENAME)
         except (OSError, ValueError, json.JSONDecodeError) as error:
             raise RuntimeError("owned run validation failed") from error
-        expected = _owner_payload(self.identity, self._root_stat, self.owner_token)
+        expected = _owner_payload(
+            self.identity, self._root_stat, self._locks_stat, self.owner_token
+        )
         stable = _same_inode(root_stat, self._root_stat)
         stable &= _same_inode(namespace_stat, self._namespace_stat)
         stable &= _same_inode(run_stat, self._run_stat)
         stable &= _same_inode(work_stat, self._work_stat)
+        stable &= _same_inode(locks_stat, self._locks_stat)
         stable &= _same_inode(marker_stat, self._marker_stat)
         if not stable or marker != expected:
             raise RuntimeError("owned run validation failed")
@@ -281,16 +308,10 @@ class WorkLayout:
         current_record, current = _read_json_at(locks_fd, name)
         if not _same_inode(observed, current) or current_record != record:
             raise RuntimeError("lock reclaim source changed")
-        tombstone = _lock_tombstone_name(name)
-        try:
-            _rename_noreplace(name, tombstone, locks_fd, locks_fd)
-        except FileExistsError as error:
-            raise RuntimeError("lock reclaim tombstone collision") from error
-        moved = os.stat(tombstone, dir_fd=locks_fd, follow_symlinks=False)
-        if not _same_inode(observed, moved):
-            _rename_noreplace(tombstone, name, locks_fd, locks_fd)
-            raise RuntimeError("lock reclaim target was substituted")
-        os.unlink(tombstone, dir_fd=locks_fd)
+        retire_observed_lock(
+            locks_fd, name, _lock_tombstone_name(name), observed, record,
+            _before_lock_move,
+        )
 
     @contextlib.contextmanager
     def lock(self, key: str = "run", *, poll_interval=0.05, stale_after=120.0, now=time.time) -> Iterator[None]:
@@ -298,7 +319,7 @@ class WorkLayout:
         if key != "run":
             self.case_path(key)
         name = self._lock_name(key)
-        locks_fd = os.open(".locks", _DIRECTORY_FLAGS, dir_fd=self.run_fd)
+        locks_fd = os.dup(self.locks_fd)
         acquired_stat = None
         acquired_record = None
         try:
@@ -327,7 +348,7 @@ class WorkLayout:
         if not {"run", case}.issubset(self._held):
             raise RuntimeError("external checkpoint requires run and case locks")
         self.validate_owner()
-        locks_fd = os.open(".locks", _DIRECTORY_FLAGS, dir_fd=self.run_fd)
+        locks_fd = os.dup(self.locks_fd)
         try:
             for key in ("run", case):
                 expected_stat, expected_record = self._held[key]

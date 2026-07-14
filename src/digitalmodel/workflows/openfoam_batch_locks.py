@@ -2,15 +2,19 @@
 
 import math
 import os
+import re
 from pathlib import Path
 
 LOCK_SCHEMA = 1
+_BOOT_ID = re.compile(
+    r"[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\Z"
+)
 
 
 def boot_id() -> str:
     try:
         value = Path("/proc/sys/kernel/random/boot_id").read_text().strip()
-        return value or "unknown"
+        return value if _BOOT_ID.fullmatch(value) else "unknown"
     except OSError:
         return "unknown"
 
@@ -45,8 +49,7 @@ def valid_record(record: dict) -> bool:
         type(record.get("pid")) is int and record["pid"] > 0,
         isinstance(record.get("owner_token"), str) and bool(record["owner_token"]),
         isinstance(record.get("boot_id"), str)
-        and bool(record["boot_id"])
-        and record["boot_id"] != "unknown",
+        and bool(_BOOT_ID.fullmatch(record["boot_id"])),
         isinstance(record.get("process_start_token"), str) and bool(record["process_start_token"]),
         type(heartbeat) in {int, float} and math.isfinite(heartbeat),
     ))
@@ -59,6 +62,8 @@ def lock_reclaimable(
     if not valid_record(record) or record["owner_token"] != owner_token:
         return False
     if not math.isfinite(now) or now - record["heartbeat"] <= stale_after:
+        return False
+    if process_state == "unknown":
         return False
     prior_boot = current_boot_id != "unknown" and record["boot_id"] != current_boot_id
     return prior_boot or process_state in {"dead", "alive-mismatch"}

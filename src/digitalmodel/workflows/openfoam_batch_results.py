@@ -31,9 +31,18 @@ def load_external_checkpoint(
         return None
     if not isinstance(payload, dict) or not isinstance(payload.get("result_row"), dict):
         return None
-    exact_identity = isinstance(payload.get("identity"), dict) and (
-        canonical_json_bytes(payload["identity"]) == canonical_json_bytes(identity)
-    )
+    try:
+        exact_identity = isinstance(payload.get("identity"), dict) and (
+            canonical_json_bytes(payload["identity"])
+            == canonical_json_bytes(identity)
+        )
+        row_size = len(
+            json.dumps(
+                payload["result_row"], sort_keys=True, allow_nan=False
+            ).encode()
+        )
+    except (TypeError, ValueError, OverflowError):
+        return None
     expected = (
         type(payload.get("schema_version")) is int
         and payload["schema_version"] == 2
@@ -45,7 +54,6 @@ def load_external_checkpoint(
         and payload["result_row"].get("status") == "completed"
         and payload["result_row"].get("name") == case
     )
-    row_size = len(json.dumps(payload["result_row"], sort_keys=True).encode())
     return payload["result_row"] if expected and row_size <= max_row_bytes else None
 
 
@@ -131,8 +139,20 @@ def write_summary(
     finished_at: datetime,
 ) -> dict:
     """Write the bounded legacy JSON summary."""
+    summary = make_summary(
+        rows, mode, workers, mock, timeout_seconds, started_at, finished_at
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(summary, indent=2) + "\n")
+    return summary
+
+
+def make_summary(
+    rows, mode, workers, mock, timeout_seconds, started_at, finished_at
+) -> dict:
+    """Build the common batch summary without performing path I/O."""
     completed = sum(1 for row in rows if row["status"] == "completed")
-    summary = {
+    return {
         "workflow": "openfoam_run_batch",
         "mode": mode,
         "total_cases": len(rows),
@@ -145,6 +165,16 @@ def write_summary(
         "started_at_utc": started_at.isoformat(),
         "finished_at_utc": finished_at.isoformat(),
     }
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(summary, indent=2) + "\n")
+
+
+def write_external_results(
+    output, rows, mode, workers, mock, timeout_seconds, started_at, finished_at
+) -> dict:
+    """Publish both external rollups through the retained output descriptor."""
+    summary = make_summary(
+        rows, mode, workers, mock, timeout_seconds, started_at, finished_at
+    )
+    manifest = pd.DataFrame(rows).to_csv(index=False).encode()
+    output.write("cases.csv", manifest)
+    output.write("batch_summary.json", (json.dumps(summary, indent=2) + "\n").encode())
     return summary

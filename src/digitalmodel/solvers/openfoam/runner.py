@@ -346,9 +346,10 @@ class OpenFOAMRunner:
         start = time.monotonic()
         try:
             guard = self._executable_guard(name) if self._executable_guard else nullcontext()
-            with guard:
+            with guard as executable:
+                command = [executable or name, *argv[1:]]
                 proc = subprocess.run(  # noqa: S603 - fixed utility argv.
-                    argv,
+                    command,
                     cwd=str(case),
                     capture_output=True,
                     text=True,

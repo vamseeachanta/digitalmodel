@@ -31,10 +31,14 @@ from digitalmodel.workflows.openfoam_batch_execution import (
 )
 from digitalmodel.workflows.openfoam_batch_executables import ExecutableSet
 from digitalmodel.workflows.openfoam_batch_layout import WorkLayout
+from digitalmodel.workflows.openfoam_batch_output import OutputLayout
 
 
 class ExternalEvidenceError(ValueError, RuntimeError):
     """External evidence failure compatible with the prior fail-closed gate."""
+
+
+_DIR_FLAGS = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
 
 
 def _compat_builder() -> Callable:
@@ -60,7 +64,11 @@ def _external_output(value: object, cfg_dir: Path) -> str:
     if not isinstance(value, str):
         raise ValueError("external output_dir must be input-local")
     path = Path(value)
-    if path.is_absolute() or any(part in {"", ".", ".."} for part in path.parts):
+    if (
+        not path.parts
+        or path.is_absolute()
+        or any(part in {"", ".", ".."} for part in path.parts)
+    ):
         raise ValueError("external output_dir must be input-local")
     current = cfg_dir
     for part in path.parts:
@@ -109,7 +117,7 @@ def _selected_tools(
         resolved = shutil.which(name)
         if not resolved:
             raise ValueError(f"selected executable evidence is missing for {name}")
-        selected[name] = Path(resolved)
+        selected[name] = Path(os.path.abspath(resolved))
     return selected
 
 
@@ -132,6 +140,22 @@ def _distribution_evidence() -> tuple[Path, str, Path | None]:
     return package_root, distribution.version, root
 
 
+def _external_identity(request, settings, selected, workers):
+    package_root, version, distribution_root = _distribution_evidence()
+    return _compat_builder()(
+        config_path=request, package_root=package_root,
+        package_name="digitalmodel", package_version=version,
+        effective_config=settings,
+        referenced_inputs=_referenced_inputs(settings, request.parent),
+        selected_executables=selected,
+        visible_rank_count=os.cpu_count() or 1,
+        dispatcher_rank_limit=workers,
+        result_policy_version="result-policy-v1",
+        work_layout_version="work-layout-v1",
+        distribution_root=distribution_root,
+    )
+
+
 def prepare_external(
     cfg: dict,
     settings: dict,
@@ -142,36 +166,35 @@ def prepare_external(
     mapping: dict,
     workers: int,
     mock: bool,
+    output: str,
 ) -> tuple[WorkLayout, list[dict]]:
     """Build identity before atomically opening the owned external namespace."""
     if "run_identity" in run_settings:
         raise ValueError("caller-provided run identity is forbidden")
     request = _request_path(cfg)
     cfg_dir = request.parent
-    cfg_dir_identity = _directory_identity(cfg_dir)
+    output_parent_fd = os.open(cfg_dir, _DIR_FLAGS)
+    cfg_dir_identity = os.fstat(output_parent_fd)
     work_name = run_settings.get("work_dir", DEFAULT_WORK_DIR)
     provisional = render_cases(base, cases, mapping, Path("unused"))
-    package_root, version, distribution_root = _distribution_evidence()
     selected = _selected_tools(provisional, run_settings, mock)
     executables = ExecutableSet.capture(selected)
-    identity = _compat_builder()(
-        config_path=request,
-        package_root=package_root,
-        package_name="digitalmodel",
-        package_version=version,
-        effective_config=settings,
-        referenced_inputs=_referenced_inputs(settings, cfg_dir),
-        selected_executables=selected,
-        visible_rank_count=os.cpu_count() or 1,
-        dispatcher_rank_limit=workers,
-        result_policy_version="result-policy-v1",
-        work_layout_version="work-layout-v1",
-        distribution_root=distribution_root,
-    )
-    if _directory_identity(cfg_dir) != cfg_dir_identity:
-        raise ValueError("external output_dir parent changed during evidence collection")
-    executables.validate_all()
-    layout = WorkLayout.create(authority, identity, work_name)
+    try:
+        identity = _external_identity(request, settings, selected, workers)
+        if _directory_identity(cfg_dir) != (
+            cfg_dir_identity.st_dev, cfg_dir_identity.st_ino
+        ):
+            raise ValueError("external output_dir parent changed during evidence collection")
+        executables.validate_all()
+        layout = WorkLayout.create(authority, identity, work_name)
+        layout.output = OutputLayout.create(cfg_dir, output_parent_fd, output)
+        output_parent_fd = None
+    except Exception:
+        if output_parent_fd is not None:
+            os.close(output_parent_fd)
+        if "layout" in locals():
+            layout.close()
+        raise
     rendered = render_cases(base, cases, mapping, layout.work_path)
     for item in rendered:
         item.update(layout=layout, identity=identity, executables=executables)
@@ -211,9 +234,10 @@ def prepare_batch(cfg: dict) -> dict:
             run_settings.get("output_dir", DEFAULT_OUTPUT_DIR), cfg_dir
         )
         layout, rendered = prepare_external(
-            cfg, settings, run_settings, authority, base, cases, mapping, workers, mock
+            cfg, settings, run_settings, authority, base, cases, mapping,
+            workers, mock, output,
         )
-        results_dir = resolve_dir(output, cfg_dir)
+        results_dir = cfg_dir / output
     return {
         "settings": settings, "run_settings": run_settings, "mode": mode,
         "mock": mock, "workers": workers, "timeout": timeout,

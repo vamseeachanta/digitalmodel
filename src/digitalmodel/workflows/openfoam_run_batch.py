@@ -68,6 +68,7 @@ from digitalmodel.workflows.openfoam_batch_results import (  # noqa: F401
     load_checkpoint as _load_checkpoint_impl,
     make_row as _make_row_impl,
     write_checkpoint as _write_checkpoint_impl,
+    write_external_results as _write_external_results_impl,
     write_manifest as _write_manifest_impl,
     write_summary as _write_summary_impl,
 )
@@ -93,6 +94,7 @@ _write_checkpoint = _write_checkpoint_impl
 _row = _make_row_impl
 _write_manifest = _write_manifest_impl
 _write_summary = _write_summary_impl
+_write_external_results = _write_external_results_impl
 _prepare_batch = _prepare_batch_impl
 
 
@@ -123,17 +125,16 @@ def _finalize_batch(
 ) -> dict:
     manifest_path = batch["results_dir"] / "cases.csv"
     summary_path = batch["results_dir"] / "batch_summary.json"
-    _write_manifest(rows, manifest_path)
-    summary = _write_summary(
-        rows=rows,
-        path=summary_path,
-        mode=batch["mode"],
-        workers=batch["workers"],
-        mock=batch["mock"],
-        timeout_seconds=batch["timeout"],
-        started_at=started_at,
-        finished_at=finished_at,
-    )
+    summary_args = {
+        "rows": rows, "mode": batch["mode"], "workers": batch["workers"],
+        "mock": batch["mock"], "timeout_seconds": batch["timeout"],
+        "started_at": started_at, "finished_at": finished_at,
+    }
+    if batch["layout"]:
+        summary = _write_external_results(batch["layout"].output, **summary_args)
+    else:
+        _write_manifest(rows, manifest_path)
+        summary = _write_summary(path=summary_path, **summary_args)
     if summary["failed"]:
         logger.warning(
             "openfoam_run_batch: {} of {} cases failed; see {}",

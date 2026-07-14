@@ -10,14 +10,23 @@ from digitalmodel.workflows.openfoam_batch_config import canonical_json_bytes
 
 _DIRECTORY_FLAGS = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
 _RENAME_NOREPLACE = 1
+_RENAME_EXCHANGE = 2
 
 
 def rename_noreplace(source: str, target: str, source_fd: int, target_fd: int) -> None:
+    _renameat2(source, target, source_fd, target_fd, _RENAME_NOREPLACE)
+
+
+def rename_exchange(source: str, target: str, source_fd: int, target_fd: int) -> None:
+    _renameat2(source, target, source_fd, target_fd, _RENAME_EXCHANGE)
+
+
+def _renameat2(source: str, target: str, source_fd: int, target_fd: int, flags: int) -> None:
     libc = ctypes.CDLL(None, use_errno=True)
     renameat2 = getattr(libc, "renameat2", None)
     if renameat2 is None:
         raise RuntimeError("atomic no-replace rename is unavailable")
-    result = renameat2(source_fd, source.encode(), target_fd, target.encode(), _RENAME_NOREPLACE)
+    result = renameat2(source_fd, source.encode(), target_fd, target.encode(), flags)
     if result:
         error = ctypes.get_errno()
         raise OSError(error, os.strerror(error), target)
