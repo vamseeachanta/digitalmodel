@@ -14,7 +14,9 @@ Config schema (YAML basename ``foam_system_sizing``)::
 
     basename: foam_system_sizing
     foam_system_sizing:
-      criteria:                      # application-rate table, all cited
+      criteria_library:              # optional: select cited entries by key
+        - fss_deck_foam_largest_tank_section   # from the shipped library
+      criteria:                      # inline application-rate table, all cited
         deck_foam_monitor:
           application_rate_lpm_per_m2: 6.5
           discharge_time_min: 15.0
@@ -54,6 +56,13 @@ Config schema (YAML basename ``foam_system_sizing``)::
           - {node: HELIDECK, flow_lpm: 1950.0, required_pressure_bar: 7.0,
              elevation_m: 25.0}
       output_dir: results
+
+``criteria_library`` selects cited entries by key from the starter library
+shipped with the module (``foam_system/data/foam_criteria_library.yml``,
+see ``digitalmodel.foam_system.criteria_library``). Library keys and inline
+``criteria`` keys share one namespace; a collision is an error so a library
+value can never be silently overridden. At least one of ``criteria_library``
+/ ``criteria`` is required.
 
 Units: SI (m2, L/min, min, m, mm, bar).
 """
@@ -255,13 +264,44 @@ def router(cfg: dict) -> dict:
 
 def _criteria(settings: dict) -> dict[str, FoamCriterion]:
     table = settings.get("criteria")
+    library_keys = settings.get("criteria_library")
+    if table is None and library_keys is None:
+        raise ValueError(
+            "foam_system_sizing needs criteria (non-empty mapping of "
+            "criterion key -> {application_rate_lpm_per_m2, discharge_time_min, "
+            "citation}) and/or criteria_library (list of shipped library keys)"
+        )
+    criteria: dict[str, FoamCriterion] = {}
+    if library_keys is not None:
+        if not isinstance(library_keys, list) or not library_keys or not all(
+            isinstance(key, str) and key.strip() for key in library_keys
+        ):
+            raise ValueError(
+                "foam_system_sizing criteria_library must be a non-empty list "
+                "of library keys (see digitalmodel.foam_system.criteria_library)"
+            )
+        from digitalmodel.foam_system.criteria_library import get_criterion
+
+        for key in library_keys:
+            if key in criteria:
+                raise ValueError(
+                    f"foam_system_sizing criteria_library key '{key}' listed twice"
+                )
+            criteria[key] = get_criterion(key)
+    if table is None:
+        return criteria
     if not isinstance(table, dict) or not table:
         raise ValueError(
             "foam_system_sizing criteria must be a non-empty mapping of "
             "criterion key -> {application_rate_lpm_per_m2, discharge_time_min, citation}"
         )
-    criteria: dict[str, FoamCriterion] = {}
     for key, item in table.items():
+        if key in criteria:
+            raise ValueError(
+                f"foam_system_sizing criteria['{key}'] collides with the "
+                "criteria_library entry of the same key — rename the inline "
+                "criterion (library values are never silently overridden)"
+            )
         if not isinstance(item, dict):
             raise ValueError(f"foam_system_sizing criteria['{key}'] must be a mapping")
         criteria[key] = FoamCriterion(
@@ -419,8 +459,12 @@ def _write_csv(path: Path, rows: list[dict[str, Any]]) -> None:
     if not rows:
         raise ValueError("foam_system_sizing cannot write empty results")
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", newline="") as stream:
-        writer = csv.DictWriter(stream, fieldnames=list(rows[0].keys()))
+    # UTF-8 + LF so the CSVs are byte-identical across platforms (they are
+    # consumed by report_pack, which reads UTF-8, and checked in as fixtures).
+    with path.open("w", newline="", encoding="utf-8") as stream:
+        writer = csv.DictWriter(
+            stream, fieldnames=list(rows[0].keys()), lineterminator="\n"
+        )
         writer.writeheader()
         writer.writerows(rows)
 
