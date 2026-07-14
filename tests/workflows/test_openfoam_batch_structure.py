@@ -1,8 +1,8 @@
 """Structural contract for the OpenFOAM batch module decomposition."""
 
 import ast
-import inspect
 import json
+import subprocess
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -233,19 +233,14 @@ def test_execution_layout_and_result_surfaces_are_reexported():
 
 
 def test_split_modules_obey_file_and_function_limits():
-    modules = (
-        facade,
-        __import__("digitalmodel.workflows.openfoam_batch_config", fromlist=["*"]),
-        __import__(
-            "digitalmodel.workflows.openfoam_batch_identity_validation",
-            fromlist=["*"],
-        ),
-        __import__("digitalmodel.workflows.openfoam_batch_execution", fromlist=["*"]),
-        __import__("digitalmodel.workflows.openfoam_batch_layout", fromlist=["*"]),
-        __import__("digitalmodel.workflows.openfoam_batch_results", fromlist=["*"]),
-    )
-    for module in modules:
-        path = Path(inspect.getsourcefile(module))
+    repo = Path(__file__).resolve().parents[2]
+    changed = subprocess.run(
+        ["git", "diff", "--name-only", "b0c91ed4...HEAD"], cwd=repo,
+        check=True, capture_output=True, text=True,
+    ).stdout.splitlines()
+    paths = [repo / name for name in changed if name.endswith(".py")]
+    assert paths and all(path.is_file() for path in paths)
+    for path in paths:
         source = path.read_text()
         assert len(source.splitlines()) <= 400, path
         for node in ast.walk(ast.parse(source)):

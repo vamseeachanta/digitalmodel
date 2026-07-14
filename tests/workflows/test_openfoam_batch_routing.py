@@ -152,5 +152,8 @@ def test_external_route_uses_approved_builder_and_owned_layout(
         assert (run / "batch_runs" / case / "system" / "controlDict").is_file()
         assert not (Path(cfg["_config_dir_path"]) / "batch_runs" / case).exists()
     outputs = result["openfoam_run_batch"]["outputs"]
-    assert outputs["manifest"] == str(Path(cfg["_config_dir_path"]) / "results" / "cases.csv")
+    assert outputs == {
+        "manifest": "results/cases.csv",
+        "summary": "results/batch_summary.json",
+    }
     assert not list(root.rglob("cases.csv"))
