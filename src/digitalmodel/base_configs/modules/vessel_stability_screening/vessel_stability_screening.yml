@@ -1,0 +1,16 @@
+basename: vessel_stability_screening
+
+# Intact vessel stability SCREENING: hydrostatic-table loading condition
+# (displacement, KG with free-surface correction, trim via MTC/LCF), GZ
+# curve from a GZ table or KN cross-curves, IMO IS Code 2008 Part A intact
+# criteria + 46 CFR 170.170 weather criterion + optional lifting/crane-heel
+# load case (46 CFR 173.005-series style), and max-KG (KG-limit) screening.
+# Screening tier only — the PE-stamped stability booklet / class or USCG
+# submittal governs; criteria thresholds are cited config inputs. See
+# docs/domains/ship-design/vessel-stability-screening.md.
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
