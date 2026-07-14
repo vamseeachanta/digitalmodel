@@ -306,6 +306,14 @@ def engine(
     elif basename == "ship_design_aqwa":
         ship_design = ShipDesign()
         cfg_base = ship_design.router(cfg_base)
+    elif basename == "alt_fuel_ship_sizing":
+        # Alternative-fuel (LH2) concept sizing: fuel chain + BOG, wind-assist,
+        # trade study, ITC 69 tonnage. NEW basename; no existing arm touched.
+        from digitalmodel.alt_fuel_ship_sizing.workflow import (
+            router as alt_fuel_ship_sizing,
+        )
+
+        cfg_base = alt_fuel_ship_sizing(cfg_base)
     elif basename == "fatigue_analysis":
         fatigue_analysis = FatigueAnalysis()
         cfg_base = fatigue_analysis.router(cfg_base)

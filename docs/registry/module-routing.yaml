@@ -284,6 +284,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/compare_tool/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#compare_tool
+  - module: alt_fuel_ship_sizing
+    entry_point: src/digitalmodel/alt_fuel_ship_sizing/
+    maturity: development
+    owner_wiki: docs/domains/ship-design/alt-fuel-lh2-sizing.md
+    key_tests: [tests/naval_architecture/test_alt_fuel_ship_sizing.py, tests/naval_architecture/test_alt_fuel_ship_sizing_workflow.py]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#alt_fuel_ship_sizing
   - module: fatg_spectral_fatigue
     entry_point: src/digitalmodel/fatg_spectral_fatigue/
     maturity: development

@@ -1,0 +1,48 @@
+# ABOUTME: Synthetic ~40k DWT bulker-like alt-fuel sizing fixture: fully
+# ABOUTME: round-number public data, no client, vessel or project identifiers.
+# Expected values are hand-verified in tests/naval_architecture/
+# test_alt_fuel_ship_sizing.py (fuel chain: 330 kg/h, 121000 kg, 1856.34 m3).
+basename: alt_fuel_ship_sizing
+
+alt_fuel_ship_sizing:
+  route:
+    distance_nm: 4000.0
+    service_speed_kn: 12.0
+  powering:
+    shaft_power_kw: 4750.0      # input from the resistance/propulsion lane
+    hotel_load_kw: 500.0
+  efficiency:
+    fuel_cell_lhv: 0.50
+    electric_drivetrain: 0.95
+  fuel:
+    margin_fraction: 0.10
+    lhv_mj_per_kg: 120.0        # round-number override (published: 119.96)
+  tank:
+    ullage_fraction: 0.08
+    length_to_diameter: 5.0
+    insulation_heat_flux_w_per_m2: 1.5
+    bog_handling: consumed
+  wind_assist:
+    enabled: true
+    propulsive_efficiency: 0.70
+    thrust_matrix:
+      tws_mps: [5.0, 10.0]
+      twa_deg: [0.0, 90.0, 180.0]
+      thrust_kn:
+        - [0.0, 50.0, 20.0]
+        - [0.0, 100.0, 40.0]
+    wind_rose:
+      - {tws_mps: 10.0, twa_deg: 90.0, probability: 0.5}
+      - {tws_mps: 5.0, twa_deg: 180.0, probability: 0.25}
+      # remaining 0.25 probability: calm (no thrust)
+  trade_study:
+    speeds_kn: [10.0, 12.0, 14.0]
+    wind_assist: [false, true]
+  tonnage:
+    total_enclosed_volume_m3: 60000.0
+    cargo_volume_m3: 47000.0
+    moulded_draught_m: 10.0
+    moulded_depth_m: 15.0
+  economics:
+    fuel_price_per_kg: 6.0
+  output_dir: results
