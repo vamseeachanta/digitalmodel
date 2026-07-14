@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -177,3 +178,21 @@ def test_lock_heartbeat_refreshes_and_process_start_prevents_pid_reuse(tmp_path:
     }))
     with layout.lock("run", stale_seconds=1):
         assert lock.is_dir()
+
+
+@pytest.mark.parametrize("kind", ["directory", "file"])
+def test_nested_entry_substitution_inode_is_rejected(kind: str) -> None:
+    expected = SimpleNamespace(st_dev=1, st_ino=2)
+    replacement = SimpleNamespace(st_dev=1, st_ino=3)
+    assert not layout_module._same_inode(expected, replacement), kind
+
+
+def test_lock_release_never_uses_path_rmtree(tmp_path: Path, monkeypatch) -> None:
+    layout = WorkLayout.create(tmp_path, "ns", "f" * 64)
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("path-based rmtree used")
+
+    monkeypatch.setattr(layout_module.shutil, "rmtree", forbidden)
+    with layout.lock("run"):
+        pass
