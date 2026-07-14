@@ -184,3 +184,30 @@ def test_mpi_runner_honors_legacy_execute_plan_monkeypatch(monkeypatch, tmp_path
     )
     assert row["solver"] == "sentinel"
     execute.assert_called_once()
+
+
+def test_mpi_invalid_timeout_rejects_before_case_mutation(monkeypatch, tmp_path):
+    item = _mpi_item(tmp_path)
+    forbidden = {
+        name: Mock(side_effect=AssertionError(f"{name} must not run"))
+        for name in (
+            "_clean_case_dir",
+            "_build_case",
+            "_write_decompose_par_dict",
+            "_write_checkpoint",
+        )
+    }
+    for name, seam in forbidden.items():
+        monkeypatch.setattr(ofb, name, seam)
+
+    with pytest.raises(ValueError, match="invalid literal"):
+        ofb._run_case_mpi(
+            item,
+            {"timeout_seconds": "invalid"},
+            workers=2,
+            mock=False,
+            command_runner=lambda *_args: 0,
+        )
+
+    for seam in forbidden.values():
+        seam.assert_not_called()
