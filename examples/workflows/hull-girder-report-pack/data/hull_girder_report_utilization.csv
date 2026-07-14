@@ -1,0 +1,6 @@
+frame,x_m,total_hogging_t_m,total_sagging_t_m,bending_utilization,governing_bending,shear_utilization,status
+AP,0.0,0,0,0.000,hogging,0.000,pass
+Fr 25,25.0,-13988,-49013,0.327,sagging,0.400,pass
+Midship,50.0,-34880,-90921,0.364,sagging,0.068,pass
+Fr 75,75.0,-11522,-51551,0.344,sagging,0.408,pass
+FP,100.0,0,0,0.000,hogging,0.000,pass

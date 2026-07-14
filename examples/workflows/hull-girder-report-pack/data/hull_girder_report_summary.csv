@@ -1,0 +1,13 @@
+metric,value
+Displacement (t),10000
+Max still-water sagging BM (t·m),-62497
+Max still-water shear force (t),-2488
+S11 wave coefficient C,7.922
+S11 wave hogging BM amidships (t·m),27616
+S11 wave sagging BM amidships (t·m),-28424
+S11 applicability,within IACS UR S11 length range (90-500 m)
+Max still-water bending utilisation,0.500
+Max total (sw + wave) bending utilisation,0.364
+Max total (sw + wave) shear utilisation,0.408
+Max hull-girder SM utilisation (IACS 175/k),0.927
+Screening status,pass

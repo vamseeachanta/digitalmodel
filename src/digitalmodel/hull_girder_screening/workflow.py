@@ -38,7 +38,7 @@ Config schema (YAML basename ``hull_girder_screening``)::
         closure_correction: true      # optional (default true)
         closure_tolerance: 0.005      # optional; raw end-residual gate
       allowables:                     # optional; magnitudes, interpolated
-        shear_force:
+        shear_force:                  # still-water (harbour) allowables
           x_m: [0.0, 25.0, 50.0, 75.0, 100.0]
           positive_t: [800.0, 3000.0, 3000.0, 3000.0, 800.0]
           negative_t: [800.0, 3000.0, 3000.0, 3000.0, 800.0]  # optional
@@ -46,6 +46,18 @@ Config schema (YAML basename ``hull_girder_screening``)::
           x_m: [0.0, 50.0, 100.0]
           hogging_t_m: [20000.0, 80000.0, 20000.0]
           sagging_t_m: [20000.0, 70000.0, 20000.0]            # optional
+        total_shear_force:            # seagoing (sw + wave) allowables;
+          x_m: [0.0, 50.0, 100.0]     # requires the wave_loads block
+          positive_t: [2000.0, 5000.0, 2000.0]
+          negative_t: [2000.0, 5000.0, 2000.0]                # optional
+        total_bending_moment:
+          x_m: [0.0, 50.0, 100.0]
+          hogging_t_m: [40000.0, 160000.0, 40000.0]
+          sagging_t_m: [40000.0, 150000.0, 40000.0]           # optional
+      wave_loads:                     # optional; IACS UR S11 rule wave BM/SF
+        beam_m: 20.0                  # envelopes (screening; loading manual
+        block_coefficient: 0.9        # governs). Cb floored at 0.6 per S11.
+        # length_m: 100.0             # rule length L (default: hull length)
       frames:                         # optional reporting positions
         - {name: "Fr 20", x_m: 25.0}
       utilization_limit: 1.0          # optional
@@ -61,9 +73,16 @@ Config schema (YAML basename ``hull_girder_screening``)::
         # wave: {beam_m: 20.0, block_coefficient: 0.9}  # optional S11 combo
       output_dir: results
 
-Outputs: a station table CSV (x, weight/m, buoyancy/m, SF, BM), a frame
-utilisation CSV, and a one-row summary CSV — all report_pack-ready — plus the
-same content in the returned config under ``hull_girder_screening``.
+Outputs: a station table CSV (x, weight/m, buoyancy/m, SF, BM — plus the S11
+wave and total envelopes when ``wave_loads`` is set), a still-water frame
+utilisation CSV, a total (sw + wave) utilisation CSV when ``wave_loads`` is
+set, and a one-row summary CSV — all report_pack-ready — plus the same
+content in the returned config under ``hull_girder_screening``.
+
+Utilisation modes: the plain ``shear_force`` / ``bending_moment`` allowables
+are the still-water (harbour) limits and gate the still-water SF/BM alone;
+the ``total_*`` allowables are the seagoing permissible values from the
+approved loading manual and gate ``|still-water + S11 wave|`` per sign.
 
 Sign convention: x from the aft end; BM > 0 = hogging, BM < 0 = sagging.
 Units: t, t/m, t·m (kN·m in the summary via g = 9.81).
@@ -87,13 +106,16 @@ from digitalmodel.naval_architecture.hull_girder_screening import (
     HydroStation,
     PointWeight,
     SectionElement,
+    WaveLoads,
     build_weight_curve,
     buoyancy_box,
     buoyancy_direct,
     buoyancy_hydrostatics_table,
+    rule_wave_loads,
     section_modulus_screen,
     section_properties,
     still_water_sf_bm,
+    total_utilization_at_frames,
     utilization_at_frames,
 )
 
@@ -132,16 +154,39 @@ def router(cfg: dict) -> dict:
 
     allowable_sf = _allowable(settings, "shear_force", "positive_t", "negative_t")
     allowable_bm = _allowable(settings, "bending_moment", "hogging_t_m", "sagging_t_m")
+    allowable_sf_total = _allowable(
+        settings, "total_shear_force", "positive_t", "negative_t"
+    )
+    allowable_bm_total = _allowable(
+        settings, "total_bending_moment", "hogging_t_m", "sagging_t_m"
+    )
     frames = _frames(settings, allowable_sf, allowable_bm, length)
     limit = float(settings.get("utilization_limit", 1.0))
     utilization = utilization_at_frames(
         result, frames, allowable_sf, allowable_bm, utilization_limit=limit
     )
 
-    sm_screens, sm_properties = _section_modulus(settings, result)
+    wave = _wave_loads(settings, x, length)
+    if wave is None and (allowable_sf_total or allowable_bm_total):
+        raise ValueError(
+            "hull_girder_screening total allowables require the wave_loads "
+            "block (IACS UR S11 wave BM/SF inputs)"
+        )
+    total_utilization = (
+        total_utilization_at_frames(
+            result, wave, frames, allowable_sf_total, allowable_bm_total,
+            utilization_limit=limit,
+        )
+        if wave is not None
+        else []
+    )
 
-    status = _screening_status(result, utilization, sm_screens)
-    summary = _summary(result, utilization, sm_screens, status, limit)
+    sm_screens, sm_properties = _section_modulus(settings, result, wave)
+
+    status = _screening_status(result, utilization, total_utilization, sm_screens)
+    summary = _summary(
+        result, utilization, total_utilization, wave, sm_screens, status, limit
+    )
 
     stations_rows = [
         {
@@ -153,7 +198,25 @@ def router(cfg: dict) -> dict:
             result.shear_force_t, result.bending_moment_t_m,
         )
     ]
+    if wave is not None:
+        for row, wv_hog, wv_sag, wv_sf_pos, wv_sf_neg in zip(
+            stations_rows, wave.hogging_t_m, wave.sagging_t_m,
+            wave.shear_positive_t, wave.shear_negative_t,
+        ):
+            row.update(
+                {
+                    "wave_hogging_t_m": wv_hog,
+                    "wave_sagging_t_m": wv_sag,
+                    "wave_shear_positive_t": wv_sf_pos,
+                    "wave_shear_negative_t": wv_sf_neg,
+                    "total_hogging_t_m": row["bending_moment_t_m"] + wv_hog,
+                    "total_sagging_t_m": row["bending_moment_t_m"] + wv_sag,
+                    "total_shear_positive_t": row["shear_force_t"] + wv_sf_pos,
+                    "total_shear_negative_t": row["shear_force_t"] + wv_sf_neg,
+                }
+            )
     utilization_rows = [asdict(row) for row in utilization]
+    total_utilization_rows = [asdict(row) for row in total_utilization]
 
     stations_csv = _output_path(cfg, settings, "hull_girder_stations.csv")
     utilization_csv = _output_path(cfg, settings, "hull_girder_utilization.csv")
@@ -161,6 +224,12 @@ def router(cfg: dict) -> dict:
     _write_csv(stations_csv, stations_rows)
     _write_csv(utilization_csv, utilization_rows)
     _write_csv(summary_csv, [summary])
+    total_utilization_csv = None
+    if total_utilization_rows:
+        total_utilization_csv = _output_path(
+            cfg, settings, "hull_girder_total_utilization.csv"
+        )
+        _write_csv(total_utilization_csv, total_utilization_rows)
 
     cfg["hull_girder_screening"] = {
         "length_m": length,
@@ -169,6 +238,16 @@ def router(cfg: dict) -> dict:
         **summary,
         "stations": stations_rows,
         "utilization": utilization_rows,
+        "total_utilization": total_utilization_rows,
+        "wave_loads": None if wave is None else {
+            "length_m": wave.length_m,
+            "beam_m": wave.beam_m,
+            "block_coefficient": wave.block_coefficient,
+            "rule_block_coefficient": wave.rule_block_coefficient,
+            "wave_coefficient": wave.wave_coefficient,
+            "applicability_note": wave.applicability_note,
+            "code_reference": "IACS UR S11 (Rev.7, 2010) 2.2.1-2.2.2",
+        },
         "section_modulus": [
             {**asdict(screen), "check": asdict(screen.check)}
             for screen in sm_screens
@@ -176,6 +255,10 @@ def router(cfg: dict) -> dict:
         "section_properties": sm_properties,
         "stations_csv": _display_path(stations_csv),
         "utilization_csv": _display_path(utilization_csv),
+        "total_utilization_csv": (
+            None if total_utilization_csv is None
+            else _display_path(total_utilization_csv)
+        ),
         "summary_csv": _display_path(summary_csv),
         "governance": GOVERNANCE_NOTE,
     }
@@ -288,7 +371,25 @@ def _frames(
     return [(f"x={xi:g} m", float(xi)) for xi in positions]
 
 
-def _section_modulus(settings: dict, result) -> tuple[list, dict]:
+def _wave_loads(settings: dict, x, length: float) -> WaveLoads | None:
+    raw = settings.get("wave_loads")
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise ValueError("hull_girder_screening wave_loads must be a mapping")
+    beam = _positive_float(raw, "beam_m", "wave_loads.beam_m")
+    cb = _positive_float(raw, "block_coefficient", "wave_loads.block_coefficient")
+    rule_length = (
+        length
+        if raw.get("length_m") is None
+        else _positive_float(raw, "length_m", "wave_loads.length_m")
+    )
+    return rule_wave_loads(x, beam, cb, length_m=rule_length)
+
+
+def _section_modulus(
+    settings: dict, result, wave: WaveLoads | None = None
+) -> tuple[list, dict]:
     raw = settings.get("section_modulus")
     if raw is None:
         return [], {}
@@ -324,8 +425,17 @@ def _section_modulus(settings: dict, result) -> tuple[list, dict]:
         sm_deck = properties["sm_deck_m3"]
         sm_keel = properties["sm_keel_m3"]
         source = "scantlings"
+    # The SM screen's own wave block wins; otherwise reuse the S11 inputs
+    # from the top-level wave_loads block so they are supplied only once.
+    wave_cfg = raw.get("wave")
+    if wave_cfg is None and wave is not None:
+        wave_cfg = {
+            "length_m": wave.length_m,
+            "beam_m": wave.beam_m,
+            "block_coefficient": wave.block_coefficient,
+        }
     screens = section_modulus_screen(
-        result, sm_deck, sm_keel, yield_mpa, source, wave=raw.get("wave")
+        result, sm_deck, sm_keel, yield_mpa, source, wave=wave_cfg
     )
     return screens, properties
 
@@ -354,20 +464,41 @@ def _element(item: dict) -> SectionElement:
 # --------------------------------------------------------------------------- #
 # Status / summary
 # --------------------------------------------------------------------------- #
-def _screening_status(result, utilization, sm_screens) -> str:
+def _screening_status(result, utilization, total_utilization, sm_screens) -> str:
     if not result.closure_ok:
         return "fail"
     if any(row.status == "fail" for row in utilization):
+        return "fail"
+    if any(row.status == "fail" for row in total_utilization):
         return "fail"
     if any(not screen.check.passes for screen in sm_screens):
         return "fail"
     return "pass"
 
 
-def _summary(result, utilization, sm_screens, status, limit) -> dict[str, Any]:
+def _summary(
+    result, utilization, total_utilization, wave, sm_screens, status, limit
+) -> dict[str, Any]:
     sf_utils = [r.shear_utilization for r in utilization if r.shear_utilization is not None]
     bm_utils = [r.bending_utilization for r in utilization if r.bending_utilization is not None]
+    total_sf_utils = [
+        r.shear_utilization for r in total_utilization
+        if r.shear_utilization is not None
+    ]
+    total_bm_utils = [
+        r.bending_utilization for r in total_utilization
+        if r.bending_utilization is not None
+    ]
     sm_utils = [s.check.utilization for s in sm_screens]
+    wave_summary: dict[str, Any] = {}
+    if wave is not None:
+        wave_summary = {
+            "wave_coefficient": wave.wave_coefficient,
+            "rule_block_coefficient": wave.rule_block_coefficient,
+            "wave_hogging_amidships_t_m": max(wave.hogging_t_m),
+            "wave_sagging_amidships_t_m": min(wave.sagging_t_m),
+            "wave_applicability_note": wave.applicability_note,
+        }
     return {
         "method": "still_water_sf_bm_screening",
         "displacement_t": result.displacement_t,
@@ -384,8 +515,15 @@ def _summary(result, utilization, sm_screens, status, limit) -> dict[str, Any]:
         "closure_shear_fraction": result.closure_shear_fraction,
         "closure_moment_fraction": result.closure_moment_fraction,
         "closure_ok": result.closure_ok,
+        **wave_summary,
         "max_shear_utilization": max(sf_utils) if sf_utils else None,
         "max_bending_utilization": max(bm_utils) if bm_utils else None,
+        "max_total_shear_utilization": (
+            max(total_sf_utils) if total_sf_utils else None
+        ),
+        "max_total_bending_utilization": (
+            max(total_bm_utils) if total_bm_utils else None
+        ),
         "max_section_modulus_utilization": max(sm_utils) if sm_utils else None,
         "utilization_limit": limit,
         "screening_status": status,

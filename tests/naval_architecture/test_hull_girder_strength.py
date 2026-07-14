@@ -5,16 +5,21 @@ import math
 import pytest
 
 from digitalmodel.naval_architecture.hull_girder_strength import (
+    bending_distribution_factor,
     bending_stress_mpa,
     combined_bending_moment,
     compression_flange_ultimate_stress,
     hull_girder_ultimate_moment,
     material_factor_k,
     permissible_stress,
+    rule_block_coefficient,
     section_modulus_check,
+    shear_distribution_factor_f1,
+    shear_distribution_factor_f2,
     ultimate_strength_check,
     wave_bending_moment,
     wave_coefficient,
+    wave_shear_force,
 )
 
 
@@ -43,6 +48,85 @@ def test_wave_bending_moment_golden():
     # Sagging magnitude exceeds hogging (the (Cb+0.7) factor).
     assert abs(w.sagging_kn_m) > w.hogging_kn_m
     assert w.code_reference == "IACS UR S11 / S11A"
+
+
+# --- IACS UR S11 rule Cb floor ------------------------------------------------
+def test_rule_block_coefficient_floor():
+    # S11 2.2.1: Cb not to be taken less than 0.60 in the wave load formulae.
+    assert rule_block_coefficient(0.45) == 0.60
+    assert rule_block_coefficient(0.82) == 0.82
+    with pytest.raises(ValueError, match="positive"):
+        rule_block_coefficient(0.0)
+
+
+def test_wave_bending_moment_applies_cb_floor():
+    floored = wave_bending_moment(200.0, 32.0, 0.5)
+    at_floor = wave_bending_moment(200.0, 32.0, 0.6)
+    assert floored.hogging_kn_m == pytest.approx(at_floor.hogging_kn_m)
+    assert floored.sagging_kn_m == pytest.approx(at_floor.sagging_kn_m)
+
+
+# --- IACS UR S11 bending distribution factor M (Fig. 1) -----------------------
+@pytest.mark.parametrize(
+    "xi, m",
+    [
+        (0.0, 0.0),
+        (0.2, 0.5),      # linear 0 -> 1 over [0, 0.4L]
+        (0.4, 1.0),
+        (0.5, 1.0),      # plateau 0.4L - 0.65L
+        (0.65, 1.0),
+        (0.825, 0.5),    # linear 1 -> 0 over [0.65L, L]
+        (1.0, 0.0),
+    ],
+)
+def test_bending_distribution_factor(xi, m):
+    assert bending_distribution_factor(xi) == pytest.approx(m)
+
+
+def test_bending_distribution_factor_rejects_out_of_range():
+    with pytest.raises(ValueError, match="x_over_l"):
+        bending_distribution_factor(1.2)
+
+
+# --- IACS UR S11 wave shear force (Figs. 2-3) ---------------------------------
+def test_shear_distribution_factors_at_rule_knots():
+    cb = 0.8
+    aft_hump = 1.59 * cb / (cb + 0.7)    # F1, 0.2L-0.3L
+    fwd_hump = 1.73 * cb / (cb + 0.7)    # F2, 0.7L-0.85L
+    for xi in (0.2, 0.25, 0.3):
+        assert shear_distribution_factor_f1(xi, cb) == pytest.approx(aft_hump)
+        assert shear_distribution_factor_f2(xi, cb) == pytest.approx(0.92)
+    for xi in (0.4, 0.5, 0.6):
+        assert shear_distribution_factor_f1(xi, cb) == pytest.approx(0.7)
+        assert shear_distribution_factor_f2(xi, cb) == pytest.approx(0.7)
+    for xi in (0.7, 0.775, 0.85):
+        assert shear_distribution_factor_f1(xi, cb) == pytest.approx(1.0)
+        assert shear_distribution_factor_f2(xi, cb) == pytest.approx(fwd_hump)
+    for xi in (0.0, 1.0):
+        assert shear_distribution_factor_f1(xi, cb) == pytest.approx(0.0)
+        assert shear_distribution_factor_f2(xi, cb) == pytest.approx(0.0)
+    # linear between knots (midpoint of the 0.3L-0.4L ramp)
+    assert shear_distribution_factor_f1(0.35, cb) == pytest.approx(
+        0.5 * (aft_hump + 0.7)
+    )
+
+
+def test_wave_shear_force_golden():
+    # L=200 m, B=32 m, Cb=0.8: C=9.75; base = 0.30*C*L*B*(Cb+0.7) = 28 080 kN.
+    base = 0.30 * 9.75 * 200.0 * 32.0 * 1.5
+    assert math.isclose(base, 28_080.0, rel_tol=1e-12)
+    mid = wave_shear_force(200.0, 32.0, 0.8, x_over_l=0.5)
+    assert math.isclose(mid.positive_kn, 0.7 * base, rel_tol=1e-9)
+    assert math.isclose(mid.negative_kn, -0.7 * base, rel_tol=1e-9)
+    aft = wave_shear_force(200.0, 32.0, 0.8, x_over_l=0.25)
+    assert math.isclose(aft.positive_kn, (1.59 * 0.8 / 1.5) * base, rel_tol=1e-9)
+    assert math.isclose(aft.negative_kn, -0.92 * base, rel_tol=1e-9)
+    fwd = wave_shear_force(200.0, 32.0, 0.8, x_over_l=0.775)
+    assert math.isclose(fwd.positive_kn, base, rel_tol=1e-9)
+    assert math.isclose(fwd.negative_kn, -(1.73 * 0.8 / 1.5) * base, rel_tol=1e-9)
+    end = wave_shear_force(200.0, 32.0, 0.8, x_over_l=0.0)
+    assert end.positive_kn == 0.0 and end.negative_kn == 0.0
+    assert mid.code_reference == "IACS UR S11 / S11A"
 
 
 # --- combined still-water + wave envelope ------------------------------------

@@ -224,6 +224,144 @@ def test_router_section_modulus_scantlings(tmp_path):
     assert result["section_modulus"][0]["sm_source"] == "scantlings"
 
 
+def test_router_wave_loads_total_utilization(tmp_path):
+    """IACS UR S11 wave loads + total allowables: the total (sw + wave)
+    utilisation table, CSV and summary fields are emitted and gate status."""
+    cfg = router(
+        _cfg(
+            tmp_path,
+            wave_loads={"beam_m": 20.0, "block_coefficient": 0.9},
+            allowables={
+                "shear_force": {
+                    "x_m": [0.0, 25.0, 75.0, 100.0],
+                    "positive_t": [1000.0, 5000.0, 5000.0, 1000.0],
+                },
+                "bending_moment": {
+                    "x_m": [0.0, 50.0, 100.0],
+                    "hogging_t_m": [20000.0, 125000.0, 20000.0],
+                },
+                "total_shear_force": {
+                    "x_m": [0.0, 100.0],
+                    "positive_t": [8000.0, 8000.0],
+                },
+                "total_bending_moment": {
+                    "x_m": [0.0, 50.0, 100.0],
+                    "hogging_t_m": [50000.0, 250000.0, 50000.0],
+                },
+            },
+        )
+    )
+    result = cfg["hull_girder_screening"]
+    # C = 10.75 - 2^1.5 for L = 100 m (S11 wave coefficient, extrapolated range)
+    assert result["wave_loads"]["wave_coefficient"] == pytest.approx(
+        10.75 - 2.0**1.5, rel=1e-9
+    )
+    assert "IACS UR S11" in result["wave_loads"]["code_reference"]
+    rows = {row["frame"]: row for row in result["total_utilization"]}
+    mid = rows["Midship"]
+    # sagging governs: |sw sag + wave sag| vs the total sagging allowable
+    assert mid["governing_bending"] == "sagging"
+    assert mid["total_sagging_t_m"] == pytest.approx(
+        mid["sw_bending_t_m"] + mid["wave_sagging_t_m"], rel=1e-9
+    )
+    assert mid["bending_utilization"] == pytest.approx(
+        abs(mid["total_sagging_t_m"]) / 250000.0, rel=1e-6
+    )
+    assert cfg["screening_status"] == "pass"
+    assert result["max_total_bending_utilization"] == pytest.approx(
+        max(
+            r["bending_utilization"]
+            for r in result["total_utilization"]
+            if r["bending_utilization"] is not None
+        )
+    )
+    # stations CSV gains the wave/total envelope columns
+    stations_csv = (
+        tmp_path / "results" / "hull_girder_screening_hull_girder_stations.csv"
+    )
+    with stations_csv.open() as stream:
+        header = set(next(csv.reader(stream)))
+    assert {
+        "wave_hogging_t_m", "wave_sagging_t_m",
+        "wave_shear_positive_t", "wave_shear_negative_t",
+        "total_hogging_t_m", "total_sagging_t_m",
+        "total_shear_positive_t", "total_shear_negative_t",
+    } <= header
+    total_csv = (
+        tmp_path / "results"
+        / "hull_girder_screening_hull_girder_total_utilization.csv"
+    )
+    assert total_csv.exists()
+    assert result["total_utilization_csv"].endswith(
+        "hull_girder_total_utilization.csv"
+    )
+
+
+def test_router_total_allowable_exceedance_fails_status(tmp_path):
+    cfg = router(
+        _cfg(
+            tmp_path,
+            wave_loads={"beam_m": 20.0, "block_coefficient": 0.9},
+            allowables={
+                "total_bending_moment": {
+                    "x_m": [0.0, 100.0],
+                    "hogging_t_m": [80000.0, 80000.0],
+                    "sagging_t_m": [80000.0, 80000.0],
+                },
+            },
+            frames=[{"name": "Midship", "x_m": 50.0}],
+        )
+    )
+    result = cfg["hull_girder_screening"]
+    assert cfg["screening_status"] == "fail"
+    assert result["total_utilization"][0]["status"] == "fail"
+    # still-water screen alone has no allowables here -> no still-water gate
+    assert result["max_bending_utilization"] is None
+
+
+def test_router_total_allowables_require_wave_loads(tmp_path):
+    cfg = _cfg(
+        tmp_path,
+        allowables={
+            "total_bending_moment": {
+                "x_m": [0.0, 100.0],
+                "hogging_t_m": [80000.0, 80000.0],
+            },
+        },
+    )
+    with pytest.raises(ValueError, match="wave_loads"):
+        router(cfg)
+
+
+def test_router_section_modulus_reuses_wave_loads_inputs(tmp_path):
+    """section_modulus without its own wave block reuses the S11 inputs from
+    wave_loads, so the SM screen combines still-water + wave."""
+    cfg = router(
+        _cfg(
+            tmp_path,
+            wave_loads={"beam_m": 20.0, "block_coefficient": 0.9},
+            section_modulus={
+                "yield_mpa": 235.0,
+                "approved_sm": {"deck_m3": 5.0, "source": "loading manual"},
+            },
+        )
+    )
+    screens = cfg["hull_girder_screening"]["section_modulus"]
+    sag = [s for s in screens if s["condition"] == "sagging"][0]
+    assert sag["wave_kn_m"] < 0.0
+    assert abs(sag["moment_kn_m"]) > abs(sag["still_water_kn_m"])
+
+
+def test_router_without_wave_loads_keeps_legacy_outputs(tmp_path):
+    cfg = router(_cfg(tmp_path))
+    result = cfg["hull_girder_screening"]
+    assert result["wave_loads"] is None
+    assert result["total_utilization"] == []
+    assert result["total_utilization_csv"] is None
+    assert result["max_total_bending_utilization"] is None
+    assert "wave_hogging_t_m" not in result["stations"][0]
+
+
 def test_router_requires_weights(tmp_path):
     cfg = _cfg(tmp_path)
     del cfg["hull_girder_screening"]["weights"]

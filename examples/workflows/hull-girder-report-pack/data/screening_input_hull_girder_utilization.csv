@@ -1,0 +1,6 @@
+frame,x_m,shear_force_t,shear_allowable_t,shear_utilization,bending_moment_t_m,bending_allowable_t_m,bending_utilization,status
+AP,0.0,0.0,1000.0,0.0,0.0,20000.0,0.0,pass
+Fr 25,25.0,-2487.5,5000.0,0.4975,-31248.4375,72500.0,0.43101293103448274,pass
+Midship,50.0,0.0,5000.0,0.0,-62496.875,125000.0,0.499975,pass
+Fr 75,75.0,2487.5,5000.0,0.4975,-31248.4375,72500.0,0.43101293103448274,pass
+FP,100.0,0.0,1000.0,0.0,0.0,20000.0,0.0,pass

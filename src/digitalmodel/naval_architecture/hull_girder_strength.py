@@ -58,7 +58,15 @@ _KNM_PER_MPA_M3 = 1.0e3
 # Wave bending moment — IACS UR S11
 # ---------------------------------------------------------------------------
 def wave_coefficient(length_m: float) -> float:
-    """IACS UR S11 wave coefficient C for rule length ``length_m`` (m)."""
+    """IACS UR S11 wave coefficient C for rule length ``length_m`` (m).
+
+    Piecewise by length per UR S11 (Rev.7, 2010), 2.2.1:
+    ``C = 10.75 - ((300 - L)/100)^1.5`` for ``90 <= L <= 300`` m,
+    ``C = 10.75`` for ``300 < L <= 350`` m, and
+    ``C = 10.75 - ((L - 350)/150)^1.5`` for ``350 < L <= 500`` m.
+    Below 90 m the 90-300 m branch is extrapolated (outside the S11
+    applicability range; flagged in docs).
+    """
     L = length_m
     if L < 90.0:
         # Below the S11 range; extrapolate the 90-300 m branch (flagged in docs).
@@ -68,6 +76,36 @@ def wave_coefficient(length_m: float) -> float:
     if L <= 350.0:
         return 10.75
     return 10.75 - ((L - 350.0) / 150.0) ** 1.5
+
+
+#: IACS UR S11 (Rev.7, 2010) 2.2.1: Cb is not to be taken less than 0.60 in
+#: the wave load formulae.
+MIN_RULE_BLOCK_COEFFICIENT = 0.60
+
+
+def rule_block_coefficient(block_coefficient: float) -> float:
+    """Block coefficient floored at 0.60 per IACS UR S11 2.2.1."""
+    if block_coefficient <= 0.0:
+        raise ValueError("block_coefficient must be positive")
+    return max(block_coefficient, MIN_RULE_BLOCK_COEFFICIENT)
+
+
+def bending_distribution_factor(x_over_l: float) -> float:
+    """IACS UR S11 distribution factor M for the wave bending moment.
+
+    Per UR S11 (Rev.7, 2010) 2.2.1, Fig. 1: ``M = 0`` at the ends,
+    ``M = 1.0`` between ``0.4 L`` and ``0.65 L`` from the aft end, linear
+    between (``M = 2.5 x/L`` aft of ``0.4 L``; ``M = (1 - x/L)/0.35``
+    forward of ``0.65 L``). ``x_over_l`` runs 0 (aft end of L) to 1.
+    """
+    xi = x_over_l
+    if not (0.0 <= xi <= 1.0):
+        raise ValueError("x_over_l must lie in [0, 1]")
+    if xi < 0.4:
+        return xi / 0.4
+    if xi <= 0.65:
+        return 1.0
+    return (1.0 - xi) / 0.35
 
 
 @dataclass(frozen=True)
@@ -84,15 +122,101 @@ def wave_bending_moment(length_m: float, beam_m: float,
                         block_coefficient: float) -> WaveBendingMoment:
     """IACS UR S11 vertical wave bending moment amidships.
 
-    ``M_hog = +0.19 * C * L^2 * B * Cb``;
-    ``M_sag = -0.11 * C * L^2 * B * (Cb + 0.7)`` (kN·m).
+    Per UR S11 (Rev.7, 2010) 2.2.1 (amidships, distribution factor M = 1):
+    ``M_hog = +190 * C * L^2 * B * Cb * 1e-3`` (kN·m) and
+    ``M_sag = -110 * C * L^2 * B * (Cb + 0.7) * 1e-3`` (kN·m), with
+    ``Cb >= 0.6`` (rule floor, applied here). Values along the length follow
+    from :func:`bending_distribution_factor`.
     """
     c = wave_coefficient(length_m)
+    cb = rule_block_coefficient(block_coefficient)
     base = c * length_m ** 2 * beam_m
-    hog = 0.19 * base * block_coefficient
-    sag = -0.11 * base * (block_coefficient + 0.7)
+    hog = 0.19 * base * cb
+    sag = -0.11 * base * (cb + 0.7)
     return WaveBendingMoment(hogging_kn_m=hog, sagging_kn_m=sag,
                              wave_coefficient=c)
+
+
+# ---------------------------------------------------------------------------
+# Wave shear force — IACS UR S11
+# ---------------------------------------------------------------------------
+def shear_distribution_factor_f1(x_over_l: float,
+                                 block_coefficient: float) -> float:
+    """IACS UR S11 distribution factor F1 (positive wave shear force).
+
+    Per UR S11 (Rev.7, 2010) 2.2.2, Fig. 2 (x from the aft end of L):
+    0 at the ends; ``1.59 Cb / (Cb + 0.7)`` between ``0.2 L`` and ``0.3 L``;
+    0.7 between ``0.4 L`` and ``0.6 L``; 1.0 between ``0.7 L`` and
+    ``0.85 L``; linear between. ``Cb >= 0.6`` (rule floor, applied here).
+    """
+    cb = rule_block_coefficient(block_coefficient)
+    a = 1.59 * cb / (cb + 0.7)
+    return _piecewise_linear(
+        x_over_l,
+        ((0.0, 0.0), (0.2, a), (0.3, a), (0.4, 0.7), (0.6, 0.7),
+         (0.7, 1.0), (0.85, 1.0), (1.0, 0.0)),
+    )
+
+
+def shear_distribution_factor_f2(x_over_l: float,
+                                 block_coefficient: float) -> float:
+    """IACS UR S11 distribution factor F2 (negative wave shear force).
+
+    Per UR S11 (Rev.7, 2010) 2.2.2, Fig. 3 (x from the aft end of L):
+    0 at the ends; 0.92 between ``0.2 L`` and ``0.3 L``; 0.7 between
+    ``0.4 L`` and ``0.6 L``; ``1.73 Cb / (Cb + 0.7)`` between ``0.7 L`` and
+    ``0.85 L``; linear between. ``Cb >= 0.6`` (rule floor, applied here).
+    """
+    cb = rule_block_coefficient(block_coefficient)
+    b = 1.73 * cb / (cb + 0.7)
+    return _piecewise_linear(
+        x_over_l,
+        ((0.0, 0.0), (0.2, 0.92), (0.3, 0.92), (0.4, 0.7), (0.6, 0.7),
+         (0.7, b), (0.85, b), (1.0, 0.0)),
+    )
+
+
+def _piecewise_linear(x: float, knots: tuple[tuple[float, float], ...]) -> float:
+    if not (knots[0][0] <= x <= knots[-1][0]):
+        raise ValueError("x_over_l must lie in [0, 1]")
+    for (x0, y0), (x1, y1) in zip(knots, knots[1:]):
+        if x <= x1:
+            return y0 + (y1 - y0) * (x - x0) / (x1 - x0)
+    return knots[-1][1]  # pragma: no cover - unreachable by construction
+
+
+@dataclass(frozen=True)
+class WaveShearForce:
+    """IACS UR S11 vertical wave shear force at one section (kN)."""
+
+    positive_kn: float         # >= 0 (F1 applied)
+    negative_kn: float         # <= 0 (F2 applied)
+    f1: float
+    f2: float
+    wave_coefficient: float
+    code_reference: str = CODE_REFERENCE
+
+
+def wave_shear_force(length_m: float, beam_m: float, block_coefficient: float,
+                     x_over_l: float) -> WaveShearForce:
+    """IACS UR S11 vertical wave shear force at position ``x_over_l``.
+
+    Per UR S11 (Rev.7, 2010) 2.2.2:
+    ``F_wv(+) = +0.30 * F1 * C * L * B * (Cb + 0.7)`` (kN) and
+    ``F_wv(-) = -0.30 * F2 * C * L * B * (Cb + 0.7)`` (kN), with the
+    distribution factors of Figs. 2 and 3
+    (:func:`shear_distribution_factor_f1` / ``_f2``) and ``Cb >= 0.6``
+    (rule floor, applied here). ``x_over_l`` runs 0 (aft end of L) to 1.
+    """
+    c = wave_coefficient(length_m)
+    cb = rule_block_coefficient(block_coefficient)
+    base = 0.30 * c * length_m * beam_m * (cb + 0.7)
+    f1 = shear_distribution_factor_f1(x_over_l, cb)
+    f2 = shear_distribution_factor_f2(x_over_l, cb)
+    return WaveShearForce(
+        positive_kn=base * f1, negative_kn=-base * f2, f1=f1, f2=f2,
+        wave_coefficient=c,
+    )
 
 
 # ---------------------------------------------------------------------------
