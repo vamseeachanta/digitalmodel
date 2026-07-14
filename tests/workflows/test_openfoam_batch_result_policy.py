@@ -111,6 +111,12 @@ def test_extension_selection_rejects_unsafe_unknown_duplicate_or_inactive(
         "VTK",
         "0/U",
         "constant/p",
+        "U",
+        "p",
+        "points",
+        "faces",
+        "boundary",
+        "mesh",
         "case.foam",
     ],
 )
