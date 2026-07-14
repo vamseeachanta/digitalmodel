@@ -62,7 +62,7 @@ def test_external_redaction_is_recursive_root_aware_and_alias_complete():
     ):
         assert secret not in encoded
     for alias in ("stdout_tail", "std_out", "stderrTail", "tail", "argv"):
-        assert redacted[alias] == "[redacted]"
+        assert redacted[alias] == "<redacted>"
 
 
 @pytest.mark.parametrize(

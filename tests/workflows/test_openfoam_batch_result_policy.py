@@ -157,9 +157,9 @@ def test_external_row_redacts_root_path_command_error_stdout_and_stderr():
     assert str(root) not in encoded
     assert "private diagnostic" not in encoded
     for key in ("case_dir", "work_root", "input_path", "command", "stdout", "stderr"):
-        assert redacted[key] == "[redacted]"
-    assert redacted["error"] == "[redacted]"
-    assert redacted["notes"] == "inspect [redacted-path]"
+        assert redacted[key] == "<redacted>"
+    assert redacted["error"] == "<redacted>"
+    assert redacted["notes"] == "<redacted>"
 
 
 def test_external_make_row_is_redacted_but_legacy_row_is_byte_stable():
@@ -172,7 +172,7 @@ def test_external_make_row_is_redacted_but_legacy_row_is_byte_stable():
         external, status="failed", case_dir=root / "run/case-a",
         error=f"failure at {root}/run/case-a",
     )
-    assert redacted["case_dir"] == "[redacted]"
+    assert redacted["case_dir"] == "<redacted>"
     assert str(root) not in redacted["error"]
 
     legacy = {"index": 0, "name": "case-a", "case": {"wave": 2.0}}
