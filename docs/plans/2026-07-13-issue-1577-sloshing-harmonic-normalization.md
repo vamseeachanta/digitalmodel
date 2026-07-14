@@ -6,7 +6,7 @@
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/1577
 > **Client:** N/A
 > **Lane:** lane:codex
-> **Review artifacts:** `scripts/review/results/2026-07-13-plan-1577-{claude,codex,gemini}.md`
+> **Review artifacts:** `scripts/review/results/2026-07-13-plan-1577-r1-consolidated.md`
 
 ---
 
@@ -94,6 +94,8 @@ stiffness/damping, with deterministic diagnostics and fail-closed validity.
 drive_period_s > 0
 roll_amplitude > 0
 roll_amplitude_unit: rad | deg
+phase_origin_s: finite, with theta=theta0*sin(omega*(t-phase_origin_s))
+roll_angle_rad[] and roll_velocity_rad_s[]: finite histories
 moment_unit: N*m | kN*m
 settled_start_s >= first sample
 settled_cycles: integer >= 5
@@ -102,19 +104,25 @@ max_amplitude_drift_fraction: [0,0.20] (default 0.02)
 max_phase_drift_deg: [0,20] (default 2)
 ```
 
-The reducer will accept finite, equal-length arrays with strictly increasing
-seconds. The requested window will be `[start,start+cycles*T]`; it must be fully
-covered, include each cycle, and have no inter-sample gap above `T/20`. Samples
-outside the window will not affect any fit.
+The reducer will accept finite, equal-length time, moment, angle, and velocity
+arrays with strictly increasing seconds. Angle/velocity will be independently
+validated against the amplitude/phase identity within `1e-6` relative and
+`1e-9` absolute SI tolerances. The window `[start,start+cycles*T]` must be fully
+covered. Linear interpolation will create exact boundary samples. No native gap
+may exceed `T/min_samples_per_cycle`; outside samples cannot affect a fit.
 
-After converting moment to `N*m` and amplitude to radians, the fit will be:
+After SI conversion, trapezoidal quadrature weights on the irregular grid will
+drive one weighted least-squares fit:
 
 ```text
-M(t) = M0 + a*cos(omega*t) + b*sin(omega*t)
+M(t) = M0 - K44*theta(t) - B44*theta_dot(t)
 omega = 2*pi/T
-K44 = -b/theta0                 [N*m/rad]
-B44 = -a/(omega*theta0)         [N*m/(rad/s)]
 ```
+
+The design `[1,-theta,-theta_dot]` will be scale-normalized; rank must be 3 and
+its 2-norm condition number at most `1e8`. Raw cosine/sine terms will be derived
+from K44/B44 and the explicit phase origin. A simultaneous timestamp and phase-
+origin shift must therefore leave physical coefficients invariant.
 
 The result schema `sloshing-harmonic-reduction-v2` will retain `M0`, raw `a`,
 raw `b`, raw amplitude/phase, theta0, omega, window, sample/cycle counts, K44,
@@ -128,15 +136,29 @@ difference in degrees. Exceeding configured drift rejects rather than returning
 an accepted coefficient. NRMSE and harmonic ratio are diagnostics, not hidden
 filters; downstream policy may impose stricter bounds.
 
-A direct numerical work check will compute `integral(M*theta_dot dt)` over whole
-cycles. Positive dissipative `B44` must produce negative work by the reaction
-moment. A sign conflict between fitted B44 and work will reject.
+Diagnostics will use the same trapezoidal weights but independent equations:
 
-The old eight-field row will not silently change meaning. Sweep collection will
-emit a versioned v2 nested reduction record and explicit deprecated raw aliases
-only where an existing reader requires them. `in_phase_coeff`/`quad_coeff` will
-remain labeled raw moment amplitudes during one compatibility release; physical
-consumers must use `K44`/`B44`. Unknown schema/units will fail closed.
+```text
+NRMSE = sqrt(sum(w*r^2)/sum(w*(M-Mbar_w)^2))
+E2_5/E1 = sum(n=2..5, An^2) / max(A1^2, (1e-12 N*m)^2)
+work = trapezoid_integral(M_measured*theta_dot_measured, t)
+```
+
+Harmonics 1--5 plus a constant will be fitted simultaneously with the same
+rank/condition checks. Centered-moment RMS or A1 below `1e-12 N*m` makes phase/
+NRMSE undefined and rejects. Positive B44 requires negative measured work;
+negative B44 or positive work rejects even when regression is self-consistent.
+A mutation test will reverse the production damping sign while leaving the
+measured-work oracle unchanged.
+
+The old eight-field row will not silently change meaning. Inventory identifies
+only `validation/sloshing_sweep.py` CSV fields and
+`sloshing_coupling.SloshingCFDResult.from_dict` (plus focused tests) as readers
+of `in_phase_coeff`/`quad_coeff`. Schema v2 will retain those fields as explicit
+deprecated raw moment amplitudes for that reader only; physical consumers use
+K44/B44. #1578 will migrate coupling to the v2 envelope. Removal requires a
+separate approved major-schema issue after repository-wide `rg` proves zero
+readers; unknown schema/units fail closed.
 
 ## Files to Change
 
@@ -155,16 +177,22 @@ consumers must use `K44`/`B44`. Unknown schema/units will fail closed.
 | `test_pure_damping_normalizes_by_omega_theta0` | independently generated M yields exact B44 and near-zero K44 |
 | `test_pure_stiffness_normalizes_by_theta0` | exact K44 and near-zero B44 |
 | `test_mixed_signal_recovers_coefficients` | independent K/B signal recovers both plus raw a/b |
+| `test_time_and_phase_origin_shift_invariant` | shifting time and phase together leaves K/B identical |
+| `test_motion_history_mismatch_rejects` | angle/velocity must agree with amplitude/phase contract |
 | `test_energy_oracle_dissipative_negative_work` | numerical work sign agrees with positive B44 |
 | `test_wrong_sign_rejects` | energy/coefficient sign conflict fails |
 | `test_transient_samples_excluded` | large pre-window transient cannot affect result |
 | `test_requires_five_complete_cycles` | short/partial window fails |
 | `test_irregular_adequate_grid_passes` | nonuniform but bounded sampling fits correctly |
+| `test_clustered_grid_uses_trapezoid_weights` | clustered samples cannot bias a known oracle |
+| `test_missing_endpoint_is_interpolated` | whole-cycle boundaries use the frozen interpolation rule |
+| `test_rank_and_condition_fail_closed` | degenerate/ill-conditioned designs reject |
 | `test_gap_duplicate_reverse_nonfinite_fail` | ambiguous time grids fail closed |
 | `test_zero_amplitude_frequency_fail` | singular normalizations reject |
 | `test_cycle_amplitude_instability_fails` | adjacent drift above threshold rejects |
 | `test_wrapped_phase_instability_fails` | phase wrapping is handled; real drift rejects |
 | `test_harmonic_diagnostics` | injected 2nd-5th components produce expected energy ratio/NRMSE |
+| `test_near_zero_signal_rejects_undefined_phase` | numeric diagnostic floors are deterministic |
 | `test_units_convert_without_drift` | deg/rad and N*m/kN*m give identical SI coefficients |
 | `test_v2_schema_and_raw_aliases` | physical fields cannot be confused with deprecated raw amplitudes |
 | `test_no_identifier_fields` | request/result schema rejects arbitrary metadata/private labels |
@@ -185,16 +213,15 @@ consumers must use `K44`/`B44`. Unknown schema/units will fail closed.
 
 - [ ] #1574 is merged and its exact SHA is recorded before implementation.
 - [ ] RED evidence precedes each implementation slice.
-- [ ] `uv run --no-project pytest -q tests/solvers/openfoam/test_harmonic_reduction.py`
+- [ ] `PYTHONPATH=src uv run python -m pytest -q tests/solvers/openfoam/test_harmonic_reduction.py`
       passes every named oracle/edge case.
-- [ ] `uv run --no-project pytest -q tests/solvers/openfoam/validation/test_sloshing_sweep.py tests/solvers/openfoam/test_sloshing_coupling.py`
+- [ ] `PYTHONPATH=src uv run python -m pytest -q tests/solvers/openfoam/validation/test_sloshing_sweep.py tests/solvers/openfoam/test_sloshing_coupling.py`
       passes with an explicit v2 compatibility boundary.
-- [ ] `uv run --no-project ruff check` on changed Python paths and
-      `uv run --no-project python -m compileall -q src/digitalmodel/solvers/openfoam`
-      pass.
+- [ ] `uv run ruff check src/digitalmodel/solvers/openfoam/harmonic_reduction.py src/digitalmodel/solvers/openfoam/validation/sloshing_sweep.py tests/solvers/openfoam/test_harmonic_reduction.py tests/solvers/openfoam/validation/test_sloshing_sweep.py` passes.
+- [ ] `PYTHONPATH=src uv run python -m compileall -q src/digitalmodel/solvers/openfoam` passes.
 - [ ] New/modified files satisfy ≤400 lines/file and ≤50 lines/function.
-- [ ] Full `tests/solvers/openfoam/` regression passes.
-- [ ] Legal/no-private-identifier and `git diff --check` gates pass.
+- [ ] `PYTHONPATH=src uv run python -m pytest -q tests/solvers/openfoam` passes.
+- [ ] `WORKSPACE_HUB_ROOT=../workspace-hub "$WORKSPACE_HUB_ROOT/scripts/legal/legal-sanity-scan.sh" --repo=digitalmodel --diff-only` and `git diff --check` pass.
 - [ ] T2 code/artifact review has no MAJOR; issue receives a summary comment.
 - [ ] No client data, queue execution, self-merge, self-close, or public result
       promotion occurs.
@@ -203,12 +230,13 @@ consumers must use `K44`/`B44`. Unknown schema/units will fail closed.
 
 | Provider | Verdict | Findings |
 |---|---|---|
-| Claude | pending | exact pushed draft required |
-| Codex | pending | exact pushed draft required |
-| Gemini | pending | exact pushed draft required |
+| Claude | MAJOR | phase reference, independent sign oracle, diagnostics, compatibility, commands |
+| Codex | MAJOR | phase origin, exact readers, weighted equations, dependency block |
+| Gemini | MAJOR | configurable grid, floors/conditioning, sign policy, commands |
 
-**Overall:** draft; implementation requires adversarial review and explicit user
-approval. No agent may apply `status:plan-approved` or create its marker.
+**Overall:** r1 MAJOR findings are resolved in this r2 draft; r2 review and
+explicit user approval remain required. No agent may apply
+`status:plan-approved` or create its marker.
 
 ## Risks and Open Questions
 
