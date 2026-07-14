@@ -8,7 +8,6 @@ import json
 import os
 from pathlib import Path
 import secrets
-import stat
 import subprocess
 import threading
 import time
@@ -262,24 +261,12 @@ def _heartbeat_lock(path: Path, owner_token: str, stop: threading.Event,
 
 def _dispose_tombstone(run_dir: Path, tombstone: Path,
                        expected: os.stat_result) -> None:
-    if os.name == "nt":
-        # Windows lacks Python's descriptor-relative directory mutation APIs.
-        # Keep the atomically quarantined tree instead of risking path deletion.
-        return
-    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
-    run_fd = os.open(run_dir, flags)
-    try:
-        tree_fd = os.open(tombstone.name, flags, dir_fd=run_fd)
-        try:
-            actual = os.fstat(tree_fd)
-            if (actual.st_dev, actual.st_ino) != (expected.st_dev, expected.st_ino):
-                raise ValueError("tombstone changed before descriptor deletion")
-            _delete_contents_fd(tree_fd)
-        finally:
-            os.close(tree_fd)
-        os.rmdir(tombstone.name, dir_fd=run_fd)
-    finally:
-        os.close(run_fd)
+    actual = tombstone.stat(follow_symlinks=False)
+    if not _same_inode(actual, expected):
+        raise ValueError("tombstone changed before quarantine retention")
+    # Python exposes no portable primitive that atomically binds rmdir/unlink
+    # to an already-verified directory handle. Retain the random quarantine;
+    # any later name-based removal would reintroduce a replacement race.
 
 
 def _quarantine_and_dispose(path: Path, label: str) -> None:
@@ -297,40 +284,3 @@ def _quarantine_and_dispose(path: Path, label: str) -> None:
 def _same_inode(left: object, right: object) -> bool:
     return (getattr(left, "st_dev", None), getattr(left, "st_ino", None)) == (
         getattr(right, "st_dev", None), getattr(right, "st_ino", None))
-
-
-def _delete_contents_fd(directory_fd: int) -> None:
-    for name in os.listdir(directory_fd):
-        expected = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
-        quarantine = f".delete-{secrets.token_hex(16)}"
-        os.rename(name, quarantine, src_dir_fd=directory_fd, dst_dir_fd=directory_fd)
-        current = os.stat(quarantine, dir_fd=directory_fd, follow_symlinks=False)
-        if not _same_inode(expected, current):
-            continue
-        if stat.S_ISDIR(expected.st_mode):
-            child_fd = os.open(quarantine, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
-                               dir_fd=directory_fd)
-            try:
-                opened = os.fstat(child_fd)
-                if not _same_inode(expected, opened):
-                    continue
-                _delete_contents_fd(child_fd)
-            finally:
-                os.close(child_fd)
-            current = os.stat(quarantine, dir_fd=directory_fd, follow_symlinks=False)
-            if _same_inode(opened, current):
-                os.rmdir(quarantine, dir_fd=directory_fd)
-        elif not stat.S_ISLNK(expected.st_mode):
-            file_fd = os.open(quarantine, os.O_RDONLY | os.O_NOFOLLOW,
-                              dir_fd=directory_fd)
-            try:
-                opened = os.fstat(file_fd)
-            finally:
-                os.close(file_fd)
-            current = os.stat(quarantine, dir_fd=directory_fd, follow_symlinks=False)
-            if _same_inode(expected, opened) and _same_inode(opened, current):
-                os.unlink(quarantine, dir_fd=directory_fd)
-        else:
-            # A quarantined link is harmless; leave it rather than introduce a
-            # path-based unlink race into a destructive operation.
-            continue

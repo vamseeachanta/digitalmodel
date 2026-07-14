@@ -155,12 +155,17 @@ def test_tombstone_substitution_is_never_path_deleted(tmp_path: Path) -> None:
     os.replace(tombstone, original)
     tombstone.mkdir()
     (tombstone / "replacement.txt").write_text("keep")
-    if os.name == "nt":
+    with pytest.raises(ValueError, match="changed"):
         layout_module._dispose_tombstone(tmp_path, tombstone, expected)
-    else:
-        with pytest.raises(ValueError, match="changed"):
-            layout_module._dispose_tombstone(tmp_path, tombstone, expected)
     assert (tombstone / "replacement.txt").read_text() == "keep"
+
+
+def test_verified_tombstone_is_retained_without_final_name_delete(tmp_path: Path) -> None:
+    tombstone = tmp_path / "tombstone"
+    tombstone.mkdir()
+    (tombstone / "payload").write_text("retained")
+    layout_module._dispose_tombstone(tmp_path, tombstone, tombstone.stat())
+    assert (tombstone / "payload").read_text() == "retained"
 
 
 def test_lock_heartbeat_refreshes_and_process_start_prevents_pid_reuse(tmp_path: Path) -> None:
