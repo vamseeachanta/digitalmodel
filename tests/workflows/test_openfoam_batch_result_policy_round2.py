@@ -90,3 +90,58 @@ def test_registry_validates_every_inactive_record_field(monkeypatch, changes):
     )
     with pytest.raises(ValueError, match="result extension registry"):
         results.active_result_extensions()
+
+
+@pytest.mark.parametrize(
+    "basename, media_type",
+    [
+        ("artifact.txt", None),
+        ("artifact.JSON", None),
+        ("artifact.JSON", "application/json"),
+        ("artifact", None),
+    ],
+)
+def test_registry_requires_supported_lowercase_suffix_and_exact_media(
+    monkeypatch, basename, media_type
+):
+    record = results.RESULT_EXTENSION_REGISTRY["openfoam-artifact-index-v1"]
+    invalid = replace(record, basename=basename, media_type=media_type)
+    monkeypatch.setattr(
+        results,
+        "RESULT_EXTENSION_REGISTRY",
+        MappingProxyType({record.extension_id: invalid}),
+    )
+    with pytest.raises(ValueError, match="result extension registry"):
+        results.active_result_extensions()
+
+
+@pytest.mark.parametrize("basename", ["Cases.csv", "Batch_Summary.json"])
+def test_registry_rejects_casefold_collision_with_mandatory(monkeypatch, basename):
+    record = results.RESULT_EXTENSION_REGISTRY["openfoam-artifact-index-v1"]
+    media = "text/csv" if basename.endswith(".csv") else "application/json"
+    invalid = replace(record, basename=basename, media_type=media)
+    monkeypatch.setattr(
+        results,
+        "RESULT_EXTENSION_REGISTRY",
+        MappingProxyType({record.extension_id: invalid}),
+    )
+    with pytest.raises(ValueError, match="result extension registry"):
+        results.active_result_extensions()
+
+
+def test_registry_rejects_casefold_duplicate_basenames(monkeypatch):
+    first = results.RESULT_EXTENSION_REGISTRY["openfoam-artifact-index-v1"]
+    first = replace(first, basename="Artifact.json")
+    second = replace(
+        first,
+        extension_id="openfoam-secondary-index-v1",
+        schema_id="openfoam-secondary-index-v1",
+        basename="artifact.json",
+    )
+    monkeypatch.setattr(
+        results,
+        "RESULT_EXTENSION_REGISTRY",
+        MappingProxyType({first.extension_id: first, second.extension_id: second}),
+    )
+    with pytest.raises(ValueError, match="result extension registry"):
+        results.active_result_extensions()
