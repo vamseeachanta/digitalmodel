@@ -502,6 +502,12 @@ def engine(
         )
 
         cfg_base = hull_girder_screening(cfg_base)
+    elif basename == "vessel_stability_screening":
+        from digitalmodel.vessel_stability_screening.workflow import (
+            router as vessel_stability_screening,
+        )
+
+        cfg_base = vessel_stability_screening(cfg_base)
     elif basename == "von_mises":
         from digitalmodel.structural.fe.von_mises_workflow import router as von_mises
 
