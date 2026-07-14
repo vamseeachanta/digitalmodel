@@ -1,31 +1,41 @@
-# Vessel intact stability screening (criteria + KG limits)
+# Vessel stability screening (intact + damage criteria, KG limits)
 
 ## What this is
 
-`digitalmodel.naval_architecture.vessel_stability_screening` and the routed
-workflow basename `vessel_stability_screening` run a deterministic intact
+`digitalmodel.naval_architecture.vessel_stability_screening`,
+`digitalmodel.naval_architecture.damage_stability_screening` and the routed
+workflow basename `vessel_stability_screening` run a deterministic
 stability screen from config: a draft-indexed hydrostatic table, a loading
 condition with per-tank free-surface correction, a GZ curve from a GZ table
 or KN cross-curves, cited stability criteria (IMO IS Code 2008 Part A
 intact set, 46 CFR 170.170 weather criterion, 46 CFR 173.005-series style
-lifting/crane-heel criteria) and a max-KG (KG-limit) screen per criterion.
+lifting/crane-heel criteria), a max-KG (KG-limit) screen per criterion, and
+a `damage_cases` section (slice 2): flooded-compartment groups by the
+added-weight method or directly supplied damaged hydrostatics/KN, screened
+against cited survival criteria (46 CFR Part 174 per the applicable vessel
+class, IMO MODU Code 2009 damage criteria).
 
-This is the L1 slice of the stability/hydrostatics/T&S-booklet lane:
-hydrostatics come in as a *table* (from GHS, a curves-of-form sheet, or a
-published example) — geometry-based hydrostatics, damage stability and the
-T&S booklet report assembly are later slices.
+This is the L1+L2 slice pair of the stability/hydrostatics/T&S-booklet
+lane: hydrostatics come in as a *table* (from GHS, a curves-of-form sheet,
+or a published example) and damaged hydrostatics/KN come in per case (GHS
+supplies them per job) — geometry-based hydrostatics/flooding computation
+and the T&S booklet report assembly are later slices.
 
 ## Governance — screening tier only
 
 **This is a screening tool.** It ranks and gates intact loading conditions
-(e.g. across a T&S-booklet condition set or a lift plan) so attention goes
-to the governing cases. **The PE-stamped stability booklet / class or USCG
-submittal governs**; GHS remains the licensed cross-check. Criteria
-thresholds are *cited config inputs* (foam_system Citation pattern —
-standard/edition/clause mandatory): the IMO IS Code 2008 defaults are baked
-in with their citation and are overridable; the 46 CFR weather-criterion
-wind pressure and the lifting criteria must be supplied and cited by the
-user against the governing edition.
+and damage cases (e.g. across a T&S-booklet condition set, a lift plan or
+a damage-case matrix) so attention goes to the governing cases. **The
+PE-stamped stability booklet / damage-stability analysis / class or USCG
+submittal governs**; GHS remains the licensed cross-check and the source
+of damaged hydrostatics. Criteria thresholds are *cited config inputs*
+(foam_system Citation pattern — standard/edition/clause mandatory): the
+IMO IS Code 2008 defaults are baked in with their citation and are
+overridable; the 46 CFR weather-criterion wind pressure, the lifting
+criteria and **all damage survival criteria** must be supplied and cited
+by the user against the governing edition (damage rule values vary by
+vessel class — 46 CFR Part 174 subparts, MODU Code unit types — so none
+are baked in).
 
 ## Method
 
@@ -70,16 +80,51 @@ user against the governing edition.
    displacement → KG-limit table with the governing (lowest) criterion.
    Criteria that still pass at KG = KM are flagged `limited_by_km`;
    criteria failing even at KG = 0 report no limit.
+7. **Damage cases (slice 2).** Two input paths per case:
+   * **Added-weight** — flooded compartments (volume × permeability,
+     floodwater centroid VCG/LCG/TCG, floodwater FSM given directly or as
+     rectangular dimensions). Floodwater enters the loading condition as
+     weight items, so displacement, KG, LCG, trim and the fluid GM come
+     from the *intact* hydrostatic table at the flooded displacement (no
+     extrapolation). Static heel from
+     `tan(heel) = |Σ w·tcg| / (W′·GM′_fluid)` (None → fail when the
+     post-damage GM is not positive). *Free-communication note*: a
+     compartment open to the sea must supply its floodwater FSM
+     (`free_communication: true` enforces this); added-weight-plus-FSM is
+     a screening approximation of free communication — the rigorous
+     lost-buoyancy solution stays with the licensed tool.
+   * **Direct** — damaged-condition hydrostatics supplied per case
+     (displacement, damaged fluid GM, static heel, optionally trim and
+     the damaged fluid KG), the practical screening path: GHS supplies
+     these per job privately.
+
+   Either path may add a damaged GZ table or damaged KN cross-curve
+   (`GZ = KN − KG′_fluid·sin(phi)`). The heeling arm is the flooding
+   transverse moment (cosine arm) plus an optional constant wind arm from
+   `wind_heeling_moment_t_m`; the curve equilibrium (first up-crossing of
+   `GZ − HA`, bisected) supersedes the small-angle heel. Range of positive
+   stability runs from equilibrium to the vanishing angle, capped at the
+   least of the downflooding angle (per-case or vessel-level) and the
+   margin-line immersion angle. Cited survival criteria (**all
+   config-supplied — rule values vary by vessel class and edition**): max
+   static heel, min damaged GM, min margin to downflooding/margin line,
+   min range beyond equilibrium, min residual righting area, min
+   residual-to-heeling area ratio (typical sources: 46 CFR Part 174 per
+   the applicable class; IMO MODU Code 2009, Res. A.1023(26)). A
+   configured criterion whose input is missing raises; an indeterminate
+   value (no static equilibrium, negative GM, equilibrium beyond the
+   downflooding angle) fails.
 
 Units: SI marine practice — m, t, degrees, m·rad; MCT in t·m/cm.
 
 ## Outputs
 
 Loading-condition, equilibrium, GZ-curve (with heeling-arm columns when a
-lift is configured), criteria (with a citation column), KG-limit and
-one-row summary CSVs — all report_pack-ready — plus the same content in
-the returned config; `screening_status` is stamped pass/fail from the
-evaluated criteria.
+lift is configured), criteria (with a citation column), KG-limit,
+damage-case and damage-criteria (per case, cited) and one-row summary CSVs
+— all report_pack-ready — plus the same content in the returned config;
+`screening_status` is stamped pass/fail across the intact criteria and
+every damage case.
 
 ## Validation
 
@@ -107,10 +152,29 @@ only, no client-derived values:
   GM_fluid negative), out-of-range hydrostatics, uncited criteria
   rejected.
 
+`tests/naval_architecture/test_damage_stability_screening.py` (+ the
+damage workflow tests) extend the same fixture with a hand-verified
+flooding case:
+
+* Flooded wing compartment 500 m³ × 0.8 permeability = 410 t at
+  tcg 4.0 m, floodwater FSM 451 t·m → W′ = 8610 t, table draft
+  T′ = 4.2 m and KM′ = 10.1 m exactly, KG′_f = 4.8643 m, FSC′ = 0.10 m
+  exactly, GM′_f = 5.2358 m; W′·GM′_f = 45080 t·m exactly, so
+  tan(heel) = 1640/45080 → 2.0835°; trim 0.7141 m by the stern.
+* Damaged wall-sided KN curve: GZ(30°) = 3.2793 m; curve equilibrium
+  against the flooding-moment arm 2.0737°; with downflooding at 30°,
+  margin and range = 27.93° and residual area ≈ 0.692 m·rad (analytic
+  wall-sided integral recovered to ~0.4 %).
+* Edge cases: negative post-damage GM (heel indeterminate → fail),
+  equilibrium beyond the downflooding angle (negative margin, zero
+  range → fail), no static equilibrium under a capsizing arm,
+  vanishing-angle capping, uncited or unknown criteria rejected, GZ
+  thresholds without GZ data rejected.
+
 A GHS golden fixture (run file + output listing) is the planned
 cross-check once the extraction lane lands (llm-wiki-acma#227/#262);
-damage stability and T&S-booklet assembly via `report_pack` are the next
-slices (llm-wiki-acma#239).
+geometry-based flooding and T&S-booklet assembly via `report_pack` are
+later slices (llm-wiki-acma#239).
 
 ## Config
 

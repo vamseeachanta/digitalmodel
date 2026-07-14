@@ -390,7 +390,7 @@ modules:
     entry_point: src/digitalmodel/vessel_stability_screening/
     maturity: development
     owner_wiki: docs/domains/ship-design/vessel-stability-screening.md
-    key_tests: [tests/naval_architecture/test_vessel_stability_screening.py, tests/naval_architecture/test_vessel_stability_screening_workflow.py]
+    key_tests: [tests/naval_architecture/test_vessel_stability_screening.py, tests/naval_architecture/test_vessel_stability_screening_workflow.py, tests/naval_architecture/test_damage_stability_screening.py, tests/naval_architecture/test_vessel_stability_screening_damage_workflow.py]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#vessel_stability_screening
   - module: weather_window
     entry_point: src/digitalmodel/weather_window/
