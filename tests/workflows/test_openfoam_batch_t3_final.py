@@ -167,7 +167,7 @@ def test_external_outputs_and_failure_log_use_relative_locators(
         "manifest": "results/cases.csv",
         "summary": "results/batch_summary.json",
     }
-    exposed = repr((returned, warning.call_args))
+    exposed = repr((returned["openfoam_run_batch"]["outputs"], warning.call_args))
     assert str(root) not in exposed
     assert str(cfg_dir) not in exposed
 

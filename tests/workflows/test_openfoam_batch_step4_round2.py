@@ -126,7 +126,8 @@ def test_serial_argv0_is_the_witnessed_absolute_path(tmp_path, monkeypatch):
         OpenFOAMRunConfig(solver="simpleFoam", to_vtk=False),
         executable_guard=witnesses.launch,
     ).run(case)
-    assert launched == [[str(mesh)], [str(solver)]]
+    assert all(argv[0].startswith("/proc/self/fd/") for argv in launched)
+    assert str(mesh) not in repr(launched) and str(solver) not in repr(launched)
 
 
 def test_mpi_argv_uses_witnessed_mpirun_and_nested_solver(tmp_path):
@@ -144,7 +145,9 @@ def test_mpi_argv_uses_witnessed_mpirun_and_nested_solver(tmp_path):
         [["mpirun", "-np", "2", "interFoam", "-parallel"]],
         "interFoam", lambda argv, *_args: launched.append(argv) or 0, 10,
     )
-    assert launched == [[str(mpirun), "-np", "2", str(solver), "-parallel"]]
+    assert launched[0][0].startswith("/proc/self/fd/")
+    assert launched[0][3].startswith("/proc/self/fd/")
+    assert launched[0][1:3] == ["-np", "2"] and launched[0][-1] == "-parallel"
 
 
 def test_nonfinite_checkpoint_identity_is_treated_as_corrupt(tmp_path):
