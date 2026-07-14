@@ -1,12 +1,12 @@
 # Plan for #1577: Sloshing Harmonic Normalization
 
-> **Status:** draft
+> **Status:** draft — r2 MAJOR findings resolved inline in r3; user approval required
 > **Complexity:** T2
 > **Date:** 2026-07-13
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/1577
 > **Client:** N/A
 > **Lane:** lane:codex
-> **Review artifacts:** `scripts/review/results/2026-07-13-plan-1577-r1-consolidated.md`
+> **Review artifacts:** `scripts/review/results/2026-07-13-plan-1577-r{1,2}-consolidated.md`
 
 ---
 
@@ -119,10 +119,23 @@ M(t) = M0 - K44*theta(t) - B44*theta_dot(t)
 omega = 2*pi/T
 ```
 
-The design `[1,-theta,-theta_dot]` will be scale-normalized; rank must be 3 and
-its 2-norm condition number at most `1e8`. Raw cosine/sine terms will be derived
-from K44/B44 and the explicit phase origin. A simultaneous timestamp and phase-
-origin shift must therefore leave physical coefficients invariant.
+Trapezoid weights will be `w0=(t1-t0)/2`, `wN=(tN-tN-1)/2`, and
+`wi=(t[i+1]-t[i-1])/2`. Each design column will be divided by its weighted L2
+norm `sqrt(sum(w*x^2))`; a zero norm rejects. SVD rank uses
+`sigma > max(m,n)*machine_epsilon*sigma_max`; rank must be 3 and
+`sigma_max/sigma_min <= 1e8`.
+
+Raw terms use the fixed absolute-time basis `M=M0+a*cos(omega*t)+b*sin(omega*t)`.
+With `phi=omega*phase_origin_s`:
+
+```text
+a = K44*theta0*sin(phi) - B44*omega*theta0*cos(phi)
+b = -K44*theta0*cos(phi) - B44*omega*theta0*sin(phi)
+in_phase_coeff = -b   [N*m raw amplitude]
+quad_coeff = -a       [N*m raw amplitude]
+```
+
+A simultaneous timestamp/phase-origin shift leaves physical K/B invariant.
 
 The result schema `sloshing-harmonic-reduction-v2` will retain `M0`, raw `a`,
 raw `b`, raw amplitude/phase, theta0, omega, window, sample/cycle counts, K44,
@@ -130,11 +143,11 @@ B44, units, first-harmonic NRMSE, harmonics 2-5 energy ratio, per-cycle amplitud
 phase, maximum drift, and validity flags. Ordering and JSON serialization will
 be deterministic; no source or case identifier is accepted by this numeric API.
 
-Each cycle will be fitted independently. Drift will use maximum adjacent
-relative amplitude change (with a defined near-zero floor) and wrapped phase
-difference in degrees. Exceeding configured drift rejects rather than returning
-an accepted coefficient. NRMSE and harmonic ratio are diagnostics, not hidden
-filters; downstream policy may impose stricter bounds.
+Each cycle will be fitted independently. Adjacent amplitude drift is
+`abs(A[i+1]-A[i])/max(A[i+1],A[i],1e-12 N*m)`; phase drift is the absolute
+wrapped difference in degrees and is undefined/rejected when either amplitude
+is at the floor. Exceeding configured drift rejects. NRMSE and harmonic ratio
+are diagnostics, not hidden filters.
 
 Diagnostics will use the same trapezoidal weights but independent equations:
 
@@ -146,10 +159,14 @@ work = trapezoid_integral(M_measured*theta_dot_measured, t)
 
 Harmonics 1--5 plus a constant will be fitted simultaneously with the same
 rank/condition checks. Centered-moment RMS or A1 below `1e-12 N*m` makes phase/
-NRMSE undefined and rejects. Positive B44 requires negative measured work;
-negative B44 or positive work rejects even when regression is self-consistent.
-A mutation test will reverse the production damping sign while leaving the
-measured-work oracle unchanged.
+NRMSE undefined and rejects. Define
+`Bscale=max(abs(B44),abs(K44)/omega,1 N*m*s/rad)`,
+`Btol=1e-12*Bscale`, and
+`Wtol=1e-10*max(pi*settled_cycles*omega*theta0^2*Bscale,1e-12 J)`.
+`abs(B44)<=Btol` with `abs(work)<=Wtol` is accepted as zero damping; `B44>Btol`
+requires `work<-Wtol`; every other sign state rejects. Mutation tests will
+reverse the production damping sign and independently synthesize negative-B/
+positive-work cases while leaving the measured-work oracle unchanged.
 
 The old eight-field row will not silently change meaning. Inventory identifies
 only `validation/sloshing_sweep.py` CSV fields and
@@ -181,6 +198,8 @@ readers; unknown schema/units fail closed.
 | `test_motion_history_mismatch_rejects` | angle/velocity must agree with amplitude/phase contract |
 | `test_energy_oracle_dissipative_negative_work` | numerical work sign agrees with positive B44 |
 | `test_wrong_sign_rejects` | energy/coefficient sign conflict fails |
+| `test_pure_stiffness_irregular_grid_uses_zero_bands` | roundoff-scale B/work is accepted as zero |
+| `test_self_consistent_negative_damping_rejects` | negative B with positive measured work still rejects |
 | `test_transient_samples_excluded` | large pre-window transient cannot affect result |
 | `test_requires_five_complete_cycles` | short/partial window fails |
 | `test_irregular_adequate_grid_passes` | nonuniform but bounded sampling fits correctly |
@@ -221,7 +240,9 @@ readers; unknown schema/units fail closed.
 - [ ] `PYTHONPATH=src uv run python -m compileall -q src/digitalmodel/solvers/openfoam` passes.
 - [ ] New/modified files satisfy ≤400 lines/file and ≤50 lines/function.
 - [ ] `PYTHONPATH=src uv run python -m pytest -q tests/solvers/openfoam` passes.
-- [ ] `WORKSPACE_HUB_ROOT=../workspace-hub "$WORKSPACE_HUB_ROOT/scripts/legal/legal-sanity-scan.sh" --repo=digitalmodel --diff-only` and `git diff --check` pass.
+- [ ] With `WORKSPACE_HUB_ROOT` and `DIGITALMODEL_REL_FROM_HUB` set, the SHA-
+      verified legal command passes:
+      `EXPECTED_SHA="$(git rev-parse HEAD)" && test "$(git -C "$WORKSPACE_HUB_ROOT/$DIGITALMODEL_REL_FROM_HUB" rev-parse HEAD)" = "$EXPECTED_SHA" && (cd "$WORKSPACE_HUB_ROOT" && bash scripts/legal/legal-sanity-scan.sh --repo="$DIGITALMODEL_REL_FROM_HUB" --diff-only)`; `git diff --check` passes.
 - [ ] T2 code/artifact review has no MAJOR; issue receives a summary comment.
 - [ ] No client data, queue execution, self-merge, self-close, or public result
       promotion occurs.
@@ -234,9 +255,9 @@ readers; unknown schema/units fail closed.
 | Codex | MAJOR | phase origin, exact readers, weighted equations, dependency block |
 | Gemini | MAJOR | configurable grid, floors/conditioning, sign policy, commands |
 
-**Overall:** r1 MAJOR findings are resolved in this r2 draft; r2 review and
-explicit user approval remain required. No agent may apply
-`status:plan-approved` or create its marker.
+**Overall:** r1/r2 MAJOR findings are resolved inline in r3. Per the loop-break
+rule r3 is not redispatched; explicit user approval remains required. No agent
+may apply `status:plan-approved` or create its marker.
 
 ## Risks and Open Questions
 
