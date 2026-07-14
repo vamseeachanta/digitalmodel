@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+import shutil
 from types import SimpleNamespace
 
 import pytest
@@ -193,6 +194,6 @@ def test_lock_release_never_uses_path_rmtree(tmp_path: Path, monkeypatch) -> Non
     def forbidden(*args, **kwargs):
         raise AssertionError("path-based rmtree used")
 
-    monkeypatch.setattr(layout_module.shutil, "rmtree", forbidden)
+    monkeypatch.setattr(shutil, "rmtree", forbidden)
     with layout.lock("run"):
         pass

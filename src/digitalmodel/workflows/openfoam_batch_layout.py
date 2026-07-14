@@ -8,7 +8,6 @@ import json
 import os
 from pathlib import Path
 import secrets
-import shutil
 import stat
 import subprocess
 import threading
@@ -129,7 +128,8 @@ class WorkLayout:
         finally:
             stop.set()
             heartbeat.join(timeout=5)
-            shutil.rmtree(lock_dir, ignore_errors=True)
+            if lock_dir.exists():
+                _quarantine_and_dispose(lock_dir, "release")
 
 
 def _marker(identity: str, token: str, stat: os.stat_result) -> dict:
@@ -181,8 +181,12 @@ def _acquire_lock(path: Path, owner_token: str, stale_seconds: int) -> None:
         if meta.get("owner_token") != owner_token or age <= stale_seconds or live:
             raise RuntimeError(f"lock {path.name!r} is held")
         tombstone = path.with_name(f".stale-{path.name}-{secrets.token_hex(8)}")
+        before = path.stat(follow_symlinks=False)
         os.replace(path, tombstone)
-        shutil.rmtree(tombstone)
+        after = tombstone.stat(follow_symlinks=False)
+        if not _same_inode(before, after):
+            raise RuntimeError(f"lock {path.name!r} changed during stale reclaim")
+        _dispose_tombstone(path.parent, tombstone, before)
         path.mkdir()
     _atomic_json(path / "meta.json", {"schema": 1, "pid": os.getpid(),
                  "process_start": _process_start(os.getpid()),
@@ -278,16 +282,55 @@ def _dispose_tombstone(run_dir: Path, tombstone: Path,
         os.close(run_fd)
 
 
+def _quarantine_and_dispose(path: Path, label: str) -> None:
+    if path.is_symlink() or not path.is_dir():
+        raise ValueError(f"refusing to dispose substituted {label} directory")
+    before = path.stat(follow_symlinks=False)
+    tombstone = path.with_name(f".{label}-{path.name}-{secrets.token_hex(8)}")
+    os.replace(path, tombstone)
+    after = tombstone.stat(follow_symlinks=False)
+    if not _same_inode(before, after):
+        raise ValueError(f"{label} directory changed during quarantine")
+    _dispose_tombstone(path.parent, tombstone, before)
+
+
+def _same_inode(left: object, right: object) -> bool:
+    return (getattr(left, "st_dev", None), getattr(left, "st_ino", None)) == (
+        getattr(right, "st_dev", None), getattr(right, "st_ino", None))
+
+
 def _delete_contents_fd(directory_fd: int) -> None:
     for name in os.listdir(directory_fd):
-        info = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
-        if stat.S_ISDIR(info.st_mode):
-            child_fd = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+        expected = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+        quarantine = f".delete-{secrets.token_hex(16)}"
+        os.rename(name, quarantine, src_dir_fd=directory_fd, dst_dir_fd=directory_fd)
+        current = os.stat(quarantine, dir_fd=directory_fd, follow_symlinks=False)
+        if not _same_inode(expected, current):
+            continue
+        if stat.S_ISDIR(expected.st_mode):
+            child_fd = os.open(quarantine, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
                                dir_fd=directory_fd)
             try:
+                opened = os.fstat(child_fd)
+                if not _same_inode(expected, opened):
+                    continue
                 _delete_contents_fd(child_fd)
             finally:
                 os.close(child_fd)
-            os.rmdir(name, dir_fd=directory_fd)
+            current = os.stat(quarantine, dir_fd=directory_fd, follow_symlinks=False)
+            if _same_inode(opened, current):
+                os.rmdir(quarantine, dir_fd=directory_fd)
+        elif not stat.S_ISLNK(expected.st_mode):
+            file_fd = os.open(quarantine, os.O_RDONLY | os.O_NOFOLLOW,
+                              dir_fd=directory_fd)
+            try:
+                opened = os.fstat(file_fd)
+            finally:
+                os.close(file_fd)
+            current = os.stat(quarantine, dir_fd=directory_fd, follow_symlinks=False)
+            if _same_inode(expected, opened) and _same_inode(opened, current):
+                os.unlink(quarantine, dir_fd=directory_fd)
         else:
-            os.unlink(name, dir_fd=directory_fd)
+            # A quarantined link is harmless; leave it rather than introduce a
+            # path-based unlink race into a destructive operation.
+            continue
