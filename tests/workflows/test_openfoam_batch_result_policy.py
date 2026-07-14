@@ -159,7 +159,7 @@ def test_external_row_redacts_root_path_command_error_stdout_and_stderr():
     assert "private diagnostic" not in encoded
     for key in ("case_dir", "work_root", "input_path", "command", "stdout", "stderr"):
         assert redacted[key] == "[redacted]"
-    assert redacted["error"] == "failed under [redacted-path]"
+    assert redacted["error"] == "[redacted]"
     assert redacted["notes"] == "inspect [redacted-path]"
 
 
@@ -203,4 +203,4 @@ def test_command_failure_log_does_not_emit_absolute_command_or_error_path(
         external_root=root,
     ) == 1
     assert str(root) not in repr(error_log.call_args)
-    assert "simpleFoam" in repr(error_log.call_args)
+    assert "simpleFoam" not in repr(error_log.call_args)
