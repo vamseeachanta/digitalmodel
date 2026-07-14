@@ -10,10 +10,17 @@ import pytest
 import yaml
 
 from digitalmodel.workflows import openfoam_run_batch as facade
+from digitalmodel.workflows.openfoam_batch_config import canonical_json_bytes
 
 EXAMPLE_DIR = (
     Path(__file__).resolve().parents[2] / "examples/workflows/openfoam-run-batch"
 )
+
+
+def test_canonical_json_is_strict_sorted_ascii_and_lf_terminated():
+    assert canonical_json_bytes({"z": "µ", "a": 1}) == b'{"a":1,"z":"\\u00b5"}\n'
+    with pytest.raises(ValueError):
+        canonical_json_bytes({"bad": float("nan")})
 
 
 def _example_cfg(tmp_path: Path) -> dict:
@@ -90,6 +97,21 @@ def test_invalid_timeout_rejects_before_creating_directories(tmp_path):
         facade.router(cfg)
     assert not (tmp_path / "results").exists()
     assert not (tmp_path / "batch_runs").exists()
+
+
+def test_router_rejects_missing_hosted_root_before_any_directory(tmp_path, monkeypatch):
+    monkeypatch.setenv("DIGITALMODEL_EXECUTION_CONTEXT", "hosted-deckhand")
+    monkeypatch.delenv("DIGITALMODEL_WORK_ROOT", raising=False)
+    cfg = {
+        "_config_dir_path": str(tmp_path),
+        "openfoam_run_batch": {
+            "base": {"case_type": "current_loading"},
+            "run_batch": {"mock": True},
+        },
+    }
+    with pytest.raises(ValueError, match="DIGITALMODEL_WORK_ROOT"):
+        facade.router(cfg)
+    assert list(tmp_path.iterdir()) == []
 
 
 def test_resolve_workers_honors_legacy_default_workers_monkeypatch(monkeypatch):

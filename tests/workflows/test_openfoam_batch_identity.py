@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pytest
 
-from digitalmodel.workflows import openfoam_run_batch as ofb
 from digitalmodel.workflows.openfoam_batch_config import (
     build_run_identity,
     canonical_json_bytes,
@@ -70,12 +69,6 @@ def _identity(tmp_path: Path, **overrides) -> dict:
     return build_run_identity(**values)
 
 
-def test_canonical_json_is_strict_sorted_ascii_and_lf_terminated():
-    assert canonical_json_bytes({"z": "µ", "a": 1}) == b'{"a":1,"z":"\\u00b5"}\n'
-    with pytest.raises(ValueError):
-        canonical_json_bytes({"bad": float("nan")})
-
-
 @pytest.mark.parametrize("root_value", [None, "relative", "missing"])
 def test_hosted_root_is_operator_authority_and_rejects_invalid_before_side_effects(
     tmp_path, root_value
@@ -113,21 +106,6 @@ def test_hosted_environment_root_wins_and_yaml_cannot_choose_absolute_root(tmp_p
         resolve_execution_authority(
             {"work_root": str(tmp_path / "other")}, cfg_dir, env
         )
-
-
-def test_router_rejects_missing_hosted_root_before_any_directory(tmp_path, monkeypatch):
-    monkeypatch.setenv("DIGITALMODEL_EXECUTION_CONTEXT", "hosted-deckhand")
-    monkeypatch.delenv("DIGITALMODEL_WORK_ROOT", raising=False)
-    cfg = {
-        "_config_dir_path": str(tmp_path),
-        "openfoam_run_batch": {
-            "base": {"case_type": "current_loading"},
-            "run_batch": {"mock": True},
-        },
-    }
-    with pytest.raises(ValueError, match="DIGITALMODEL_WORK_ROOT"):
-        ofb.router(cfg)
-    assert list(tmp_path.iterdir()) == []
 
 
 @pytest.mark.parametrize(
@@ -235,6 +213,36 @@ def test_source_package_commit_changes_identity(tmp_path):
         work_layout_version="work-layout-v1",
     )
     assert changed["identity_sha256"] != identity["identity_sha256"]
+
+
+def test_source_identity_rechecks_cleanliness_after_read(tmp_path, monkeypatch):
+    repo, package, files = _git_repo(tmp_path)
+    original_read = Path.read_bytes
+    raced = False
+
+    def mutate_after_package_read(path):
+        nonlocal raced
+        data = original_read(path)
+        if path == package / "__init__.py" and not raced:
+            raced = True
+            files["request"].write_text("request: raced\n")
+        return data
+
+    monkeypatch.setattr(Path, "read_bytes", mutate_after_package_read)
+    with pytest.raises(ValueError, match="clean"):
+        build_run_identity(
+            config_path=files["request"],
+            package_root=package,
+            package_name="demo-pkg",
+            package_version="1.0",
+            effective_config={"mode": "pool"},
+            referenced_inputs={},
+            selected_executables={},
+            visible_rank_count=8,
+            dispatcher_rank_limit=4,
+            result_policy_version="result-policy-v1",
+            work_layout_version="work-layout-v1",
+        )
 
 
 def test_identity_changes_for_config_input_tool_host_policy_and_layout_mutations(
