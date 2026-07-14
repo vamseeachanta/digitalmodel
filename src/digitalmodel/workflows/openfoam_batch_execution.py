@@ -196,7 +196,8 @@ def run_case_mpi(
         else:
             run = command_runner or _compat("_run_command", run_command)
             timeout = int(run_settings.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS))
-            row = execute_mpi_plan(item, case_dir, plan, solver, run, timeout)
+            execute = _compat("_execute_mpi_plan", execute_mpi_plan)
+            row = execute(item, case_dir, plan, solver, run, timeout)
             if reconstruct and row["status"] == "completed":
                 _compat("_prune_processor_dirs", prune_processor_dirs)(case_dir)
     except Exception as exc:  # noqa: BLE001 - checkpoint the failure

@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import math
 import os
+import sys
 from copy import deepcopy
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from digitalmodel.workflows.parametric_run import _load_cases, _set_dotted
 
@@ -33,6 +34,12 @@ _RESERVED_ROW_KEYS = frozenset(
 )
 
 
+def _compat(name: str, fallback: Callable) -> Callable:
+    """Honor a legacy facade monkeypatch without importing it recursively."""
+    facade = sys.modules.get("digitalmodel.workflows.openfoam_run_batch")
+    return getattr(facade, name, fallback) if facade else fallback
+
+
 def default_workers(cpu_count: int | None = None) -> int:
     """Return the owner-policy worker count, floored and never below one."""
     cores = cpu_count if cpu_count is not None else (os.cpu_count() or 1)
@@ -43,7 +50,7 @@ def resolve_workers(run_settings: dict) -> int:
     """Resolve an explicit worker count or apply the owner default."""
     explicit = run_settings.get("workers")
     if explicit is None:
-        return default_workers()
+        return _compat("default_workers", default_workers)()
     workers = int(explicit)
     if workers < 1:
         raise ValueError(f"run_batch.workers must be >= 1, got {explicit}")
@@ -112,6 +119,6 @@ def resolve_path(path_value: str, cfg_dir: Path) -> Path:
 
 def resolve_dir(path_value: str, cfg_dir: Path) -> Path:
     """Resolve and create a legacy batch directory."""
-    resolved = resolve_path(path_value, cfg_dir)
+    resolved = _compat("_resolve_path", resolve_path)(path_value, cfg_dir)
     resolved.mkdir(parents=True, exist_ok=True)
     return resolved

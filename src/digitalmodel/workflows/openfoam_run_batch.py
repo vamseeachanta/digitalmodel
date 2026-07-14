@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-import os
-import shutil
+import os  # noqa: F401 - legacy public facade surface
+import shutil  # noqa: F401 - legacy public facade surface
 from datetime import datetime, timezone
 from pathlib import Path
 
 from loguru import logger
 
-from digitalmodel.workflows.openfoam_batch_config import (
+from digitalmodel.workflows.openfoam_batch_config import (  # noqa: F401
     DEFAULT_MESH_UTILITY,
     DEFAULT_MODE,
     DEFAULT_OUTPUT_DIR,
@@ -25,7 +25,7 @@ from digitalmodel.workflows.openfoam_batch_config import (
     resolve_path,
     resolve_workers,
 )
-from digitalmodel.workflows.openfoam_batch_execution import (
+from digitalmodel.workflows.openfoam_batch_execution import (  # noqa: F401
     SOLVER_ERROR_MESSAGE,
     build_case,
     execute_mpi_plan,
@@ -45,7 +45,7 @@ from digitalmodel.workflows.openfoam_batch_layout import (
     set_start_from_latest_time,
     write_decompose_par_dict,
 )
-from digitalmodel.workflows.openfoam_batch_results import (
+from digitalmodel.workflows.openfoam_batch_results import (  # noqa: F401
     CHECKPOINT_FILENAME,
     RESULTS_ALLOWED_SUFFIXES,
     load_checkpoint,
@@ -54,11 +54,6 @@ from digitalmodel.workflows.openfoam_batch_results import (
     write_manifest,
     write_summary,
 )
-
-__all__ = [
-    "CHECKPOINT_FILENAME", "WORKER_CORE_FRACTION", "_RESERVED_ROW_KEYS",
-    "default_workers", "mpi_command_plan", "os", "resolve_workers", "router", "shutil",
-]
 
 _RESULTS_ALLOWED_SUFFIXES = RESULTS_ALLOWED_SUFFIXES
 _DECOMPOSE_PAR_DICT = DECOMPOSE_PAR_DICT
@@ -108,6 +103,7 @@ def _prepare_batch(cfg: dict) -> dict:
     variants = settings.get("variants") or {}
     cases = _resolve_case_matrix(settings.get("cases"), variants, cfg_dir)
     mapping = settings.get("mapping") or variants.get("mapping") or {}
+    timeout = int(run_settings.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS))
     results_dir = _resolve_dir(
         run_settings.get("output_dir", DEFAULT_OUTPUT_DIR), cfg_dir
     )
@@ -120,9 +116,7 @@ def _prepare_batch(cfg: dict) -> dict:
         "mode": mode,
         "mock": mock,
         "workers": workers,
-        "timeout": int(
-            run_settings.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS)
-        ),
+        "timeout": timeout,
         "results_dir": results_dir,
         "rendered": _render_cases(base, cases, mapping, work_dir),
     }
