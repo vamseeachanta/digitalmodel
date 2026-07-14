@@ -1,4 +1,5 @@
 code_id,family_key,publisher,section,topic,wiki_path,registry_revision,note
+amjig-1997,amjig-1997,AMJIG,criteria,drilling riser integrity management criteria,wikis/engineering-standards/wiki/standards/amjig-1997.md,Rev 2 (2000),public identifier attested by AADE 2001; criteria values resolve wiki-side
 api-rp-16q,api-rp-16q,API,Sec.3.3,marine drilling riser design and operation,wikis/engineering-standards/wiki/standards/api-rp-16q.md,public-metadata-required-before-citation-use,wiki revision metadata pending; citation getters deferred to issue 1246
 api-std-2rd,api-std-2rd,API,Sec.5,dynamic riser design criteria,wikis/engineering-standards/wiki/standards/api-std-2rd.md,3e-2025,formerly API RP 2RD; API reclassified it as STD 2RD
 dnv-os-f201,dnv-os-f201,DNV,Sec.5,dynamic risers; design fatigue factors,wikis/engineering-standards/wiki/standards/dnv-os-f201.md,2010,value getter get_riser_dff

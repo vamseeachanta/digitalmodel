@@ -24,11 +24,16 @@ Failure modes (plan D3):
   (``pip install digitalmodel`` with no wiki): one-shot ``RuntimeWarning``,
   returns ``{}`` — mirroring ``mooring_resilience.screening``.
 """
+
 from __future__ import annotations
 
+import re
 import warnings
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Optional
+
+import yaml
 
 from digitalmodel.citations.schema import (
     Citation,
@@ -70,6 +75,16 @@ _API_STD_2RD_CITATION_TEMPLATE: Final = {
     "wiki_path": "wikis/engineering-standards/wiki/standards/api-std-2rd.md",
 }
 
+_AMJIG_CITATION_TEMPLATE: Final = {
+    "code_id": "amjig-1997",
+    "publisher": "AMJIG",
+    "revision": "Rev 2 (2000)",
+    "wiki_path": "wikis/engineering-standards/wiki/standards/amjig-1997.md",
+}
+
+_AMJIG_CRITERIA_BLOCK = "amjig_envelope_criteria_v1"
+_YAML_FENCE_RE = re.compile(r"```yaml\s*\n(.*?)\n```", re.DOTALL)
+
 #: Matches riser_fatigue/touchdown.py TouchdownFatigueInput.dff — the live
 #: riser literal these getters must stay in parity with (#1246 wires the calc).
 RISER_DFF_DEFAULT: Final[float] = 10.0
@@ -90,6 +105,15 @@ RISER_VON_MISES_DESIGN_FACTOR: Final[float] = 0.67
 #: mean 2.0 deg / max 4.0 deg operating envelope. Envelope criteria (#1281a).
 RISER_FLEXJOINT_ANGLE_MEAN_DEG: Final[float] = 2.0
 RISER_FLEXJOINT_ANGLE_MAX_DEG: Final[float] = 4.0
+
+
+@dataclass(frozen=True)
+class AmjigEnvelopeCriteria:
+    criteria_set: str
+    category: str
+    von_mises_design_factor: CitedValue
+    flexjoint_angle_mean_deg: CitedValue
+    flexjoint_angle_max_deg: CitedValue
 
 
 def get_riser_dff(
@@ -231,7 +255,9 @@ def get_flexjoint_angle_limit(
     if kind not in ("mean", "max"):
         raise ValueError(f"kind must be 'mean' or 'max', got {kind!r}")
     standard = (
-        RISER_FLEXJOINT_ANGLE_MEAN_DEG if kind == "mean" else RISER_FLEXJOINT_ANGLE_MAX_DEG
+        RISER_FLEXJOINT_ANGLE_MEAN_DEG
+        if kind == "mean"
+        else RISER_FLEXJOINT_ANGLE_MAX_DEG
     )
     value = standard
     note = f"Drilling operating flex-joint {kind} angle limit"
@@ -245,6 +271,89 @@ def get_flexjoint_angle_limit(
     )
     validate_citation(citation, repo_root=repo_root)
     return CitedValue(value=value, citation=citation, units="degrees")
+
+
+def _citation_page(citation: Citation, *, repo_root: Optional[Path]) -> Path:
+    if repo_root is None:
+        from digitalmodel.citations.resolver import resolve_wiki_path
+
+        return resolve_wiki_path(citation.wiki_path)
+    base = Path(repo_root)
+    for candidate in (
+        base / citation.wiki_path,
+        base / ("know" + "ledge") / citation.wiki_path,
+    ):
+        if candidate.is_file():
+            return candidate
+    return base / citation.wiki_path
+
+
+def _amjig_criteria_payload(citation: Citation, *, repo_root: Optional[Path]) -> dict:
+    path = _citation_page(citation, repo_root=repo_root)
+    text = path.read_text(encoding="utf-8")
+    for match in _YAML_FENCE_RE.finditer(text):
+        block = yaml.safe_load(match.group(1)) or {}
+        if _AMJIG_CRITERIA_BLOCK in block:
+            payload = block[_AMJIG_CRITERIA_BLOCK]
+            if isinstance(payload, dict):
+                return payload
+    raise CitationResolutionError(
+        code_id=citation.code_id,
+        wiki_path=citation.wiki_path,
+        reason=f"criteria_block_missing:{_AMJIG_CRITERIA_BLOCK}",
+    )
+
+
+def get_amjig_envelope_criteria(
+    mode: str,
+    *,
+    repo_root: Optional[Path] = None,
+) -> AmjigEnvelopeCriteria:
+    """AMJIG envelope criteria for one operating mode, resolved wiki-side.
+
+    The numeric ceilings are licensed AMJIG content, so this getter validates
+    the private page and reads the machine-readable block at calc time. No
+    AMJIG ceiling value is stored in this public repo.
+    """
+    mode_key = getattr(mode, "value", str(mode))
+    citation = Citation(
+        section="drilling-riser envelope criteria by operating category",
+        note=f"AMJIG criteria-set values for mode {mode_key}",
+        **_AMJIG_CITATION_TEMPLATE,
+    )
+    validate_citation(citation, repo_root=repo_root)
+    payload = _amjig_criteria_payload(citation, repo_root=repo_root)
+    by_mode = payload.get("criteria_by_mode")
+    if not isinstance(by_mode, dict) or mode_key not in by_mode:
+        raise CitationResolutionError(
+            code_id=citation.code_id,
+            wiki_path=citation.wiki_path,
+            reason=f"mode_missing:{mode_key}",
+        )
+    row = by_mode[mode_key]
+    if not isinstance(row, dict):
+        raise CitationResolutionError(
+            code_id=citation.code_id,
+            wiki_path=citation.wiki_path,
+            reason=f"mode_payload_invalid:{mode_key}",
+        )
+
+    def cited(field: str, units: str) -> CitedValue:
+        if field not in row:
+            raise CitationResolutionError(
+                code_id=citation.code_id,
+                wiki_path=citation.wiki_path,
+                reason=f"field_missing:{mode_key}:{field}",
+            )
+        return CitedValue(value=float(row[field]), citation=citation, units=units)
+
+    return AmjigEnvelopeCriteria(
+        criteria_set="16q-amjig",
+        category=str(row.get("category", mode_key)),
+        von_mises_design_factor=cited("von_mises_design_factor", "dimensionless"),
+        flexjoint_angle_mean_deg=cited("flexjoint_angle_mean_deg", "degrees"),
+        flexjoint_angle_max_deg=cited("flexjoint_angle_max_deg", "degrees"),
+    )
 
 
 _CITATION_WARNED = False

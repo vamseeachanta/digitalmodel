@@ -21,5 +21,5 @@ tables:
     sha256: baaa6cfd0ac5ca447a76d11cc29b0dffdc047c4df3134c2c52bb487e3d06df54
   standards_crosswalk:
     file: standards_crosswalk.csv
-    rows: 4
-    sha256: 5f0c5d7b58425e328c6f10be158eb23f09a378e06a22cc51cf908657918dc3eb
+    rows: 5
+    sha256: fa24b7c9c841ed442428dae20a38be211622c67e4ddee7a350b5ca91005102d4

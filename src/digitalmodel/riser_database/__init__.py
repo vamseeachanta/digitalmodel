@@ -4,7 +4,10 @@ flywheel (llm-wiki epic #799 exemplar, parent digitalmodel #1199).
 Public tables carry identifiers and references only; standards-derived values
 come through the citation getters (fail-closed against the private llm-wiki).
 """
+
 from digitalmodel.riser_database.getters import (
+    AmjigEnvelopeCriteria,
+    get_amjig_envelope_criteria,
     get_buoyancy_tension_factor,
     get_flexjoint_angle_limit,
     get_riser_dff,
@@ -15,17 +18,18 @@ from digitalmodel.riser_database.getters import (
 )
 from digitalmodel.riser_database.loader import (
     DEFAULT_DB_ROOT,
-    RigRiserInterfaceRow,
-    RiserStackupRow,
     MaterialSnScfDffRow,
+    RigRiserInterfaceRow,
     RiserConfigRow,
     RiserDatabase,
     RiserDatabaseError,
+    RiserStackupRow,
     StandardsCrosswalkRow,
 )
 
 __all__ = [
     "DEFAULT_DB_ROOT",
+    "AmjigEnvelopeCriteria",
     "MaterialSnScfDffRow",
     "RiserConfigRow",
     "RiserDatabase",
@@ -33,6 +37,7 @@ __all__ = [
     "RigRiserInterfaceRow",
     "RiserStackupRow",
     "StandardsCrosswalkRow",
+    "get_amjig_envelope_criteria",
     "get_buoyancy_tension_factor",
     "get_flexjoint_angle_limit",
     "get_riser_dff",

@@ -50,6 +50,14 @@ unit_conversions:
 # Identifiers + wiki_path ONLY — no clause text, no table values (plan D2/[R2-B4]).
 # registry_revision mirrors llm-wiki data/standards-registry.json verbatim.
 crosswalk_rows:
+  - code_id: amjig-1997
+    family_key: amjig-1997
+    publisher: AMJIG
+    section: "criteria"
+    topic: drilling riser integrity management criteria
+    wiki_path: wikis/engineering-standards/wiki/standards/amjig-1997.md
+    registry_revision: "Rev 2 (2000)"
+    note: public identifier attested by AADE 2001; criteria values resolve wiki-side
   - code_id: api-std-2rd
     family_key: api-std-2rd
     publisher: API

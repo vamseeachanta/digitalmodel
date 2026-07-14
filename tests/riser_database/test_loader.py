@@ -3,6 +3,7 @@
 Escalation contract mirrors ``Atlas.predict``: an unknown key raises with a
 reason — never a fuzzy match, never a silent default.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -61,7 +62,7 @@ def test_row_counts_pinned():
     db = RiserDatabase.load()
     # 5 examples/riser_input + 22 config/pipe riser files (explicit list in sources.yml)
     assert len(db.configs) == 27
-    assert len(db.crosswalk_rows) == 4
+    assert len(db.crosswalk_rows) == 5
     assert len(db.materials) >= 2
 
 
@@ -179,6 +180,6 @@ def test_iter_public_rows_covers_all_tables():
     tables = {table for table, _key, _flat in db.iter_public_rows()}
     assert tables == set(rdb_loader._TABLE_SPECS)
     n_rows = sum(1 for _ in db.iter_public_rows())
-    assert n_rows == len(db.configs) + len(db.crosswalk_rows) + len(
-        db.materials
-    ) + len(db.stackups) + len(db.rigs)
+    assert n_rows == len(db.configs) + len(db.crosswalk_rows) + len(db.materials) + len(
+        db.stackups
+    ) + len(db.rigs)
