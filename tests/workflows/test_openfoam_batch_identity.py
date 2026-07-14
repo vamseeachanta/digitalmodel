@@ -1,179 +1,295 @@
 """Legacy configuration, routing, and public-surface characterization."""
 
-import json
+import base64
+import csv
+import hashlib
+import subprocess
 from pathlib import Path
-from unittest.mock import Mock, patch
 
 import pytest
-import yaml
 
-from digitalmodel.workflows import openfoam_run_batch as ofb
-
-EXAMPLE_DIR = (
-    Path(__file__).resolve().parents[2]
-    / "examples"
-    / "workflows"
-    / "openfoam-run-batch"
+from digitalmodel.workflows.openfoam_batch_config import (
+    build_run_identity,
+    canonical_json_bytes,
+    resolve_execution_authority,
 )
 
 
-def _example_cfg(tmp_path: Path) -> dict:
-    cfg = yaml.safe_load((EXAMPLE_DIR / "input.yml").read_text())
-    cfg["_config_dir_path"] = str(tmp_path)
-    return cfg
-
-
-def test_case_matrix_is_deterministic(tmp_path):
-    base = {"case_type": "current_loading", "solver": "simpleFoam"}
-    variants = {
-        "source": "yaml_matrix",
-        "list": [{"solver_app": "simpleFoam"}, {"solver_app": "pimpleFoam"}],
-        "mapping": {"solver_app": "solver"},
+def _git_repo(tmp_path: Path) -> tuple[Path, Path, dict[str, Path]]:
+    repo = tmp_path / "repo"
+    package = repo / "src" / "demo_pkg"
+    package.mkdir(parents=True)
+    files = {
+        "request": repo / "request.yml",
+        "matrix": repo / "matrix.csv",
+        "case": repo / "case.yml",
     }
-    first = ofb._render_cases(
-        base,
-        ofb._resolve_case_matrix(None, variants, tmp_path),
-        variants["mapping"],
-        tmp_path / "w",
+    (package / "__init__.py").write_text("VALUE = 1\n")
+    for role, path in files.items():
+        path.write_text(f"{role}: one\n")
+    subprocess.run(["git", "init", "-q", repo], check=True)
+    subprocess.run(["git", "-C", repo, "add", "."], check=True)
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            repo,
+            "-c",
+            "user.name=Test",
+            "-c",
+            "user.email=test@example.invalid",
+            "commit",
+            "-qm",
+            "fixture",
+        ],
+        check=True,
     )
-    second = ofb._render_cases(
-        base,
-        ofb._resolve_case_matrix(None, variants, tmp_path),
-        variants["mapping"],
-        tmp_path / "w",
-    )
-    assert [item["name"] for item in first] == [item["name"] for item in second]
-    assert [item["case"] for item in first] == [item["case"] for item in second]
-    assert [item["settings"]["solver"] for item in first] == [
-        "simpleFoam",
-        "pimpleFoam",
-    ]
-    assert [item["name"] for item in first] == [
-        "current_loading_case_000",
-        "current_loading_case_001",
-    ]
+    return repo, package, files
 
 
-def test_explicit_cases_and_variants_are_mutually_exclusive(tmp_path):
-    with pytest.raises(ValueError, match="either cases"):
-        ofb._resolve_case_matrix([{"name": "a"}], {"source": "factorial"}, tmp_path)
-
-
-def test_workers_default_is_ninety_percent_of_cores(monkeypatch):
-    monkeypatch.setattr(ofb.os, "cpu_count", lambda: 64)
-    assert ofb.resolve_workers({}) == 57
-    assert ofb.resolve_workers({"workers": 4}) == 4
-
-
-def test_workers_default_never_below_one(monkeypatch):
-    monkeypatch.setattr(ofb.os, "cpu_count", lambda: 1)
-    assert ofb.resolve_workers({}) == 1
-
-
-def test_workers_default_applied_in_summary(tmp_path, monkeypatch):
-    monkeypatch.setattr(ofb.os, "cpu_count", lambda: 4)
-    cfg = _example_cfg(tmp_path)
-    del cfg["openfoam_run_batch"]["run_batch"]["workers"]
-    ofb.router(cfg)
-    summary = json.loads((tmp_path / "results" / "batch_summary.json").read_text())
-    assert summary["workers"] == 3
-
-
-def test_invalid_timeout_rejects_before_creating_directories(tmp_path):
-    cfg = {
-        "_config_dir_path": str(tmp_path),
-        "openfoam_run_batch": {
-            "base": {"case_type": "current_loading"},
-            "run_batch": {"mock": True, "timeout_seconds": "invalid"},
-        },
+def _identity(tmp_path: Path, **overrides) -> dict:
+    repo, package, files = _git_repo(tmp_path)
+    tool = repo / "bin" / "solver"
+    tool.parent.mkdir()
+    tool.write_bytes(b"solver-v1\n")
+    values = {
+        "config_path": files["request"],
+        "package_root": package,
+        "package_name": "demo-pkg",
+        "package_version": "1.0",
+        "referenced_inputs": {"matrix": files["matrix"], "case": files["case"]},
+        "selected_executables": {"solver": tool},
+        "visible_rank_count": 8,
+        "dispatcher_rank_limit": 4,
+        "result_policy_version": "result-policy-v1",
+        "work_layout_version": "work-layout-v1",
     }
-    with pytest.raises(ValueError, match="invalid literal"):
-        ofb.router(cfg)
-    assert not (tmp_path / "results").exists()
-    assert not (tmp_path / "batch_runs").exists()
+    values.update(overrides)
+    return build_run_identity(**values)
 
 
-def test_resolve_workers_honors_legacy_default_workers_monkeypatch(monkeypatch):
-    monkeypatch.setattr(ofb, "default_workers", lambda: 73)
-    assert ofb.resolve_workers({}) == 73
+def test_canonical_json_is_strict_sorted_ascii_and_lf_terminated():
+    assert canonical_json_bytes({"z": "µ", "a": 1}) == b'{"a":1,"z":"\\u00b5"}\n'
+    with pytest.raises(ValueError):
+        canonical_json_bytes({"bad": float("nan")})
 
 
-def test_resolve_dir_honors_legacy_resolve_path_monkeypatch(monkeypatch, tmp_path):
-    sentinel = tmp_path / "sentinel"
-    resolve_path = Mock(return_value=sentinel)
-    monkeypatch.setattr(ofb, "_resolve_path", resolve_path)
-    assert ofb._resolve_dir("ignored", tmp_path) == sentinel
-    resolve_path.assert_called_once_with("ignored", tmp_path)
+@pytest.mark.parametrize("root_value", [None, "relative", "missing"])
+def test_hosted_root_is_operator_authority_and_rejects_invalid_before_side_effects(
+    tmp_path, root_value
+):
+    cfg_dir = tmp_path / "cfg"
+    cfg_dir.mkdir()
+    root = tmp_path / "operator-root"
+    root.mkdir()
+    env = {"DIGITALMODEL_EXECUTION_CONTEXT": "hosted-deckhand"}
+    if root_value is not None:
+        env["DIGITALMODEL_WORK_ROOT"] = str(
+            root if root_value == "valid" else root_value
+        )
+    with pytest.raises(ValueError, match="DIGITALMODEL_WORK_ROOT"):
+        resolve_execution_authority({}, cfg_dir, env)
+    assert list(cfg_dir.iterdir()) == []
 
 
-def test_reserved_case_knob_name_raises(tmp_path):
-    base = {"case_type": "current_loading"}
-    with pytest.raises(ValueError, match="reserved manifest"):
-        ofb._render_cases(base, [{"status": "x"}], {}, tmp_path / "w")
-    with pytest.raises(ValueError, match="reserved manifest"):
-        ofb._render_cases(base, [{"solver": "interFoam"}], {}, tmp_path / "w")
+def test_hosted_environment_root_wins_and_yaml_cannot_choose_absolute_root(tmp_path):
+    cfg_dir = tmp_path / "cfg"
+    root = tmp_path / "operator-root"
+    cfg_dir.mkdir()
+    root.mkdir()
+    env = {
+        "DIGITALMODEL_EXECUTION_CONTEXT": "hosted-deckhand",
+        "DIGITALMODEL_WORK_ROOT": str(root),
+    }
+    authority = resolve_execution_authority(
+        {"work_root_namespace": "lane/green"}, cfg_dir, env
+    )
+    assert authority.context == "hosted-deckhand"
+    assert authority.root == root
+    assert authority.namespace == Path("lane/green")
+    with pytest.raises(ValueError, match="hosted YAML"):
+        resolve_execution_authority(
+            {"work_root": str(tmp_path / "other")}, cfg_dir, env
+        )
 
 
-def test_engine_resolves_basename_to_workflow():
-    from digitalmodel.engine import engine
-
-    cfg = {"basename": "openfoam_run_batch", "openfoam_run_batch": {}}
-    with patch("digitalmodel.engine.app_manager") as app_manager:
-        app_manager.save_cfg.return_value = None
-        with patch(
-            "digitalmodel.workflows.openfoam_run_batch.router", return_value=cfg
-        ) as router:
-            result = engine(cfg=cfg, config_flag=False)
-    router.assert_called_once()
-    assert result is not None
-
-
-def test_engine_configure_path_runs_example_end_to_end(tmp_path, monkeypatch):
-    from digitalmodel.engine import engine
-
-    input_path = tmp_path / "input.yml"
-    input_path.write_text((EXAMPLE_DIR / "input.yml").read_text())
-    monkeypatch.chdir(tmp_path)
-    result = engine(inputfile=str(input_path))
-    settings = result["openfoam_run_batch"]
-    summary = json.loads(Path(settings["outputs"]["summary"]).read_text())
-    assert summary["mock"] is True
-    assert summary["total_cases"] == 2
-    assert summary["mode"] == "pool"
-    assert summary["workers"] == 2
+@pytest.mark.parametrize(
+    "namespace", ["/abs", "../up", "a/./b", "a//b", "a\x00b", "a\nb"]
+)
+def test_namespace_rejects_nonportable_components(tmp_path, namespace):
+    root = tmp_path / "root"
+    root.mkdir()
+    env = {
+        "DIGITALMODEL_EXECUTION_CONTEXT": "hosted-deckhand",
+        "DIGITALMODEL_WORK_ROOT": str(root),
+    }
+    with pytest.raises(ValueError, match="namespace"):
+        resolve_execution_authority({"work_root_namespace": namespace}, tmp_path, env)
 
 
-def test_legacy_facade_keeps_implicit_public_export_surface():
-    assert not hasattr(ofb, "__all__")
-    assert {name for name in vars(ofb) if not name.startswith("_")} == {
-        "Any",
-        "CHECKPOINT_FILENAME",
-        "Callable",
-        "DEFAULT_MESH_UTILITY",
-        "DEFAULT_MODE",
-        "DEFAULT_OUTPUT_DIR",
-        "DEFAULT_TIMEOUT_SECONDS",
-        "DEFAULT_WORK_DIR",
-        "Path",
-        "SOLVER_ERROR_MESSAGE",
-        "ThreadPoolExecutor",
-        "VALID_MODES",
-        "WORKER_CORE_FRACTION",
-        "annotations",
-        "datetime",
-        "deepcopy",
-        "default_workers",
-        "json",
-        "logger",
-        "math",
-        "mpi_command_plan",
-        "os",
-        "pd",
-        "re",
-        "resolve_workers",
-        "router",
-        "shutil",
-        "subprocess",
-        "time",
-        "timezone",
+def test_trusted_local_requires_opt_in_and_rejects_git_or_symlink_roots(tmp_path):
+    repo, _, _ = _git_repo(tmp_path)
+    external = tmp_path / "external"
+    external.mkdir()
+    with pytest.raises(ValueError, match="explicit"):
+        resolve_execution_authority({"work_root": str(external)}, tmp_path, {})
+    with pytest.raises(ValueError, match="Git"):
+        resolve_execution_authority(
+            {"execution_context": "trusted-local", "work_root": str(repo)},
+            tmp_path,
+            {},
+        )
+    link = tmp_path / "link"
+    link.symlink_to(external, target_is_directory=True)
+    with pytest.raises(ValueError, match="symlink"):
+        resolve_execution_authority(
+            {"execution_context": "trusted-local", "work_root": str(link)},
+            tmp_path,
+            {},
+        )
+    authority = resolve_execution_authority(
+        {"execution_context": "trusted-local", "work_root": str(external)},
+        tmp_path,
+        {},
+    )
+    assert authority.root == external
+
+
+def test_source_identity_binds_exact_tracked_bytes_and_rejects_dirty_candidates(
+    tmp_path,
+):
+    identity = _identity(tmp_path)
+    assert identity["schema_version"] == 1
+    assert identity["identity_kind"] == "openfoam-run-v1"
+    assert len(identity["identity_sha256"]) == 64
+    assert all(
+        not Path(item["safe_relative_path"]).is_absolute()
+        for item in identity["referenced_inputs"]
+    )
+    repo = next(tmp_path.glob("repo"))
+    (repo / "src" / "demo_pkg" / "__init__.py").write_text("VALUE = 2\n")
+    with pytest.raises(ValueError, match="clean"):
+        build_run_identity(
+            config_path=repo / "request.yml",
+            package_root=repo / "src" / "demo_pkg",
+            package_name="demo-pkg",
+            package_version="1.0",
+            referenced_inputs={"matrix": repo / "matrix.csv"},
+            selected_executables={},
+            visible_rank_count=8,
+            dispatcher_rank_limit=4,
+            result_policy_version="result-policy-v1",
+            work_layout_version="work-layout-v1",
+        )
+
+
+def test_identity_changes_for_config_input_tool_host_policy_and_layout_mutations(
+    tmp_path,
+):
+    baseline = _identity(tmp_path / "base")
+    for name, overrides in {
+        "host": {"visible_rank_count": 7},
+        "ceiling": {"dispatcher_rank_limit": 3},
+        "policy": {"result_policy_version": "result-policy-v2"},
+        "layout": {"work_layout_version": "work-layout-v2"},
+    }.items():
+        assert (
+            _identity(tmp_path / name, **overrides)["identity_sha256"]
+            != baseline["identity_sha256"]
+        )
+    for role in ("request", "matrix", "case"):
+        scope = tmp_path / role
+        repo, package, files = _git_repo(scope)
+        tool = repo / "solver"
+        tool.write_bytes(b"tool")
+        files[role].write_text(f"{role}: changed\n")
+        subprocess.run(["git", "-C", repo, "add", files[role]], check=True)
+        subprocess.run(
+            [
+                "git",
+                "-C",
+                repo,
+                "-c",
+                "user.name=T",
+                "-c",
+                "user.email=t@x.invalid",
+                "commit",
+                "-qm",
+                "change",
+            ],
+            check=True,
+        )
+        changed = build_run_identity(
+            config_path=files["request"],
+            package_root=package,
+            package_name="demo-pkg",
+            package_version="1.0",
+            referenced_inputs={"matrix": files["matrix"], "case": files["case"]},
+            selected_executables={"solver": tool},
+            visible_rank_count=8,
+            dispatcher_rank_limit=4,
+            result_policy_version="result-policy-v1",
+            work_layout_version="work-layout-v1",
+        )
+        assert changed["identity_sha256"] != baseline["identity_sha256"]
+
+
+def _record_digest(data: bytes) -> str:
+    value = base64.urlsafe_b64encode(hashlib.sha256(data).digest()).rstrip(b"=")
+    return "sha256=" + value.decode()
+
+
+def test_wheel_record_verifies_actual_bytes_size_missing_and_unrecorded(tmp_path):
+    site = tmp_path / "site"
+    package = site / "demo_pkg"
+    dist = site / "demo_pkg-1.0.dist-info"
+    package.mkdir(parents=True)
+    dist.mkdir()
+    module = package / "__init__.py"
+    module.write_bytes(b"VALUE = 1\n")
+    record = dist / "RECORD"
+    with record.open("w", newline="") as stream:
+        csv.writer(stream).writerows(
+            [
+                [
+                    "demo_pkg/__init__.py",
+                    _record_digest(module.read_bytes()),
+                    str(module.stat().st_size),
+                ],
+                ["demo_pkg-1.0.dist-info/RECORD", "", ""],
+            ]
+        )
+    common = dict(
+        config_path=None,
+        package_root=package,
+        package_name="demo-pkg",
+        package_version="1.0",
+        referenced_inputs={},
+        selected_executables={},
+        visible_rank_count=8,
+        dispatcher_rank_limit=4,
+        result_policy_version="result-policy-v1",
+        work_layout_version="work-layout-v1",
+        distribution_root=site,
+    )
+    assert build_run_identity(**common)["source"]["tracked_tree_clean"] is None
+    module.write_bytes(b"VALUE = 2\n")
+    with pytest.raises(ValueError, match="RECORD"):
+        build_run_identity(**common)
+    module.unlink()
+    with pytest.raises(ValueError, match="missing"):
+        build_run_identity(**common)
+    (package / "extra.py").write_text("extra = 1\n")
+    with pytest.raises(ValueError, match="unrecorded"):
+        build_run_identity(**common)
+
+
+def test_identity_emits_only_basename_for_executable_and_no_absolute_paths(tmp_path):
+    identity = _identity(tmp_path)
+    assert identity["selected_executables"][0]["basename"] == "solver"
+    serialized = canonical_json_bytes(identity).decode()
+    assert str(tmp_path) not in serialized
+    assert identity["host_capabilities"] == {
+        "visible_rank_count": 8,
+        "dispatcher_rank_limit": 4,
     }
