@@ -166,3 +166,24 @@ def test_wheel_rejects_matching_record_membership_change(tmp_path, monkeypatch):
     monkeypatch.setattr(Path, "read_bytes", add_ambiguous_record)
     with pytest.raises(ValueError, match="distribution|membership"):
         build_run_identity(**args)
+
+
+def test_wheel_binds_record_selection_from_one_snapshot(tmp_path, monkeypatch):
+    args, _, _ = _wheel_args(tmp_path)
+    site = args["distribution_root"]
+    original_glob = Path.glob
+    selected = False
+
+    def add_ambiguity_after_selection(path, pattern):
+        nonlocal selected
+        matches = list(original_glob(path, pattern))
+        if path == site and pattern == "*.dist-info/RECORD" and not selected:
+            selected = True
+            other = site / "demo.pkg-1.0.dist-info"
+            other.mkdir()
+            (other / "RECORD").write_bytes(matches[0].read_bytes())
+        return iter(matches)
+
+    monkeypatch.setattr(Path, "glob", add_ambiguity_after_selection)
+    with pytest.raises(ValueError, match="distribution|membership"):
+        build_run_identity(**args)
