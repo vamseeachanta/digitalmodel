@@ -6,7 +6,7 @@
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/1574
 > **Client:** N/A
 > **Lane:** lane:codex
-> **Review artifacts:** `scripts/review/results/2026-07-13-plan-1574-{claude,codex,gemini}.md`
+> **Review artifacts:** `scripts/review/results/2026-07-13-plan-1574-r1-consolidated.md`
 
 ---
 
@@ -44,10 +44,17 @@
 
 ### Gap and reproduction
 
-Importing the reusable OpenFOAM package exposes a project-coded symbol through
-`__all__`. Static inspection therefore reproduces the privacy defect without
-running a solver or using private data. Current tests do not enforce a neutral
-public namespace, generated-artifact closure, or scanner self-coverage.
+The following value-withholding probe reproduces the public-namespace defect at
+`origin/main` without printing the coded symbol or using private data:
+
+```bash
+PYTHONPATH=src uv run python -c \
+  "import digitalmodel.solvers.openfoam as m; print(sum(n.endswith('_default_taps') for n in m.__all__))"
+# exact output: 1
+```
+
+Current tests do not enforce a neutral public namespace, generated-artifact
+closure, or scanner self-coverage.
 
 Distinct sources: issue #1574; package exports; pressure-tap module and tests;
 coupling and validation modules; CFD scripts; legal-scanning documentation;
@@ -60,7 +67,8 @@ workspace-hub #3522; packaging metadata; and documentation generators (9+).
 | Plan | `docs/plans/2026-07-13-issue-1574-sloshing-privacy-cleanup.md` |
 | Neutral tap API | `src/digitalmodel/solvers/openfoam/pressure_taps.py` |
 | Public exports | `src/digitalmodel/solvers/openfoam/__init__.py` |
-| Reusable sloshing code | `src/digitalmodel/solvers/openfoam/validation/`; `sloshing_coupling.py` |
+| Scope manifest | `scripts/legal/sloshing-public-surface-v1.json` |
+| Reusable sloshing code | `src/digitalmodel/solvers/openfoam/validation/`; `sloshing_coupling*.py` |
 | Scanner | `scripts/legal/check_sloshing_public_surface.py` |
 | Scanner tests | `tests/scripts/test_check_sloshing_public_surface.py` |
 | API/regression tests | `tests/solvers/openfoam/` |
@@ -91,22 +99,29 @@ committed. Release notes will describe only a privacy-driven removal and the
 neutral replacement API.
 
 The scanner will accept an explicit repository root, a versioned public scope
-manifest, and an authenticated rule snapshot supplied by the #3522 authority.
+manifest, and the authenticated CURRENT rule snapshot supplied by the approved
+#3522 Phase B authority. Phase A synthetic codecs/tests are insufficient for a
+production-clean assertion. The snapshot fields and verification CLI will be
+pinned to the exact merged Phase B contract rather than extended locally.
 It will:
 
-1. validate the snapshot schema, generation, authenticity, and expiry before
-   scanning; missing/invalid authority will return a distinct nonzero code;
-2. scan raw bytes and decoded text in the declared source/test/script/doc scope,
-   package export metadata, generated API artifacts, and the staged diff's path,
-   content, rename, and commit-message surfaces;
-3. normalize Unicode and case exactly as the authority contract specifies,
+1. validate snapshot schema, generation, CURRENT-slot authenticity, and
+   anti-rollback state; missing/invalid authority returns a distinct nonzero code;
+2. NUL-safely enumerate the complete raw tracked Git tree and require every path
+   and extension to be classified by the scope manifest; new/unclassified paths
+   fail rather than disappearing from coverage;
+3. expose separate byte-oriented entry points for `--git-tree <oid>`, `--staged`
+   (index blobs plus add/rename/delete paths), `--commit-message-file <path>`, and
+   `--metadata-json <path>`; CI pins base/head OIDs and scans both raw object sets;
+4. normalize Unicode and case exactly as the authority contract specifies,
    compare without logging sensitive rule values, and report only rule IDs,
-   paths, line numbers, and match classes;
-4. reject undecodable, oversized, symlink-escaping, or unenumerated generated
+   opaque path IDs, byte offsets, and match classes; the private workflow retains
+   any reversible path map and never publishes it;
+5. reject undecodable, oversized, symlink-escaping, or unenumerated generated
    artifacts rather than treating them as clean;
-5. support only per-line forensic sentinels in scanner-owned tests and only for
+6. support only per-line forensic sentinels in scanner-owned tests and only for
    synthetic rules; no sensitive production match may be allowlisted;
-6. scan its own implementation, tests, plan, and review artifacts so the check
+7. scan its own implementation, tests, plan, and review artifacts so the check
    cannot block itself or hide behind a blanket path exemption.
 
 Fork pull requests will run synthetic scanner tests without protected values.
@@ -119,13 +134,14 @@ external-state approval.
 
 | Action | Path | Reason |
 |---|---|---|
-| Modify | `pressure_taps.py` | replace coded helper/defaults with neutral engineering API |
-| Modify | OpenFOAM package exports | remove coded public namespace and export replacement |
-| Modify | coupling/validation/scripts as inventoried | neutralize labels, defaults, and prose |
-| Modify | focused OpenFOAM tests | synthetic fixtures and explicit removal/replacement checks |
-| Create | public-surface scanner | authenticated fail-closed enforcement adapter |
-| Create | scanner tests | hostile path/content/self-block/authority cases |
-| Regenerate | public API documentation | remove stale generated exposure |
+| Split/modify | `src/digitalmodel/solvers/openfoam/pressure_taps.py`; new `pressure_tap_models.py`; new `pressure_tap_analysis.py` | neutral API and reduce current 629-line module |
+| Split/modify | `src/digitalmodel/solvers/openfoam/sloshing_coupling.py`; new `sloshing_coupling_models.py` | neutralize reusable models and reduce current 682-line module before #1578 |
+| Modify | `src/digitalmodel/solvers/openfoam/__init__.py`; `validation/sloshing_2d.py`; `validation/sloshing_sweep.py` | remove coded exports/defaults/prose |
+| Modify | `scripts/capabilities/build_sloshing_explorer.py`; `scripts/cfd/run_sloshing_3d_benchmark.py`; `scripts/setup/provision-cfd-box.sh` | neutralize inventoried script surfaces |
+| Split/modify | `tests/solvers/openfoam/test_pressure_taps.py`; `test_sloshing_coupling.py`; new focused test modules | synthetic fixtures; reduce current 410-line coupling test |
+| Create | `scripts/legal/check_sloshing_public_surface.py`; `sloshing-public-surface-v1.json` | authenticated scanner and exhaustive classification |
+| Create | `tests/scripts/test_check_sloshing_public_surface.py` | hostile Git/filesystem/self-block/authority cases |
+| Regenerate | outputs named by `uv run python -m sphinx -W --keep-going docs docs/_build/html` | clean public API documentation |
 
 Every modified implementation file will remain at or below 400 lines and every
 function at or below 50 lines. Oversized touched modules will be split by
@@ -142,6 +158,8 @@ responsibility rather than grandfathered.
 | `test_match_reports_rule_id_not_value` | diagnostics cannot disclose the protected value |
 | `test_unicode_case_and_path_variants` | normalization catches hostile variants defined by authority |
 | `test_rename_delete_and_commit_metadata` | staged rename/deletion and commit-message surfaces are covered |
+| `test_unclassified_tracked_path_fails` | a new tracked path/extension cannot create an omission-based clean result |
+| `test_worktree_differs_from_staged_blob` | staged scan uses exact index blobs, not mutable working-tree bytes |
 | `test_symlink_binary_oversize_decode_fail_closed` | ambiguous filesystem/content cases cannot pass clean |
 | `test_generated_docs_manifest_complete` | expected generated surfaces are enumerated and scanned |
 | `test_scanner_scans_itself` | implementation, tests, plans, and reviews receive normal coverage |
@@ -152,8 +170,9 @@ responsibility rather than grandfathered.
 
 ## Implementation Sequence
 
-1. Wait for approved #3522 Phase A to merge; pin its exact authority/workflow SHA
-   and verify the protected environment/ruleset readback before using it.
+1. Use merged #3522 Phase A only for synthetic RED tests. Wait for separately
+   owner-approved Phase B migration/provision/CAS cutover; pin the exact workflow,
+   CURRENT generation, environment/ruleset, and required-check readbacks.
 2. Inventory all reachable public surfaces and store only neutral rule IDs,
    classifications, and file locations in the implementation evidence.
 3. Add RED package-export and neutral pressure-tap behavior tests; replace the
@@ -169,7 +188,8 @@ responsibility rather than grandfathered.
 
 ## Acceptance Criteria
 
-- [ ] #3522 Phase A is merged and its exact reusable-workflow/authority SHA is pinned.
+- [ ] #3522 Phase B is separately approved, merged, provisioned, CAS-promoted to
+      CURRENT, and its exact workflow/generation/environment/ruleset readbacks are pinned.
 - [ ] RED evidence precedes every implementation slice.
 - [ ] Inventory covers source, tests, scripts, exports, fixtures, docs, generated
       artifacts, paths/renames/deletions, and changed commit metadata.
@@ -180,10 +200,15 @@ responsibility rather than grandfathered.
 - [ ] Scanner-owned plans/tests/artifacts pass their own enforcement, with only
       exact-line synthetic forensic sentinels and no blanket file exemptions.
 - [ ] Fork CI cannot satisfy the protected production-clean merge requirement.
-- [ ] Focused and full `tests/solvers/openfoam/` suites pass.
-- [ ] Generated API docs and packaging/import smoke tests pass from a clean tree.
-- [ ] `scripts/legal/legal-sanity-scan.sh`, changed-path lint/compile checks, and
-      `git diff --check` pass.
+- [ ] `PYTHONPATH=src uv run python -m pytest tests/scripts/test_check_sloshing_public_surface.py tests/solvers/openfoam/test_pressure_taps.py tests/solvers/openfoam/test_sloshing_coupling.py tests/solvers/openfoam/validation -q` passes.
+- [ ] `PYTHONPATH=src uv run python -m pytest tests/solvers/openfoam -q` passes.
+- [ ] `uv run python -m sphinx -W --keep-going docs docs/_build/html` succeeds from
+      a clean tree and the generated-output manifest matches exactly.
+- [ ] `uv run ruff check scripts/legal/check_sloshing_public_surface.py src/digitalmodel/solvers/openfoam tests/scripts tests/solvers/openfoam` passes.
+- [ ] `PYTHONPATH=src uv run python -m compileall -q src/digitalmodel/solvers/openfoam scripts/legal/check_sloshing_public_surface.py` passes.
+- [ ] `uv run python scripts/legal/check_sloshing_public_surface.py --repo-root . --git-tree HEAD --authority "$PRIVATE_RULE_SNAPSHOT"` and the separately pinned
+      staged/message/metadata invocations pass in the protected workflow.
+- [ ] `WORKSPACE_HUB_ROOT=../workspace-hub "$WORKSPACE_HUB_ROOT/scripts/legal/legal-sanity-scan.sh" --repo=digitalmodel --diff-only` and `git diff --check` pass.
 - [ ] Modified files/functions satisfy 400/50-line limits.
 - [ ] T3 code/artifact review reaches no-MAJOR consensus and the issue receives
       an implementation summary comment.
@@ -194,17 +219,18 @@ responsibility rather than grandfathered.
 
 | Provider | Verdict | Findings |
 |---|---|---|
-| Claude | pending | exact pushed draft required |
-| Codex | pending | exact pushed draft required |
-| Gemini | pending | exact pushed draft required |
+| Claude | MAJOR | Phase-B gate, separate Git entry points, exhaustive scope, exact commands |
+| Codex | MAJOR | authority phase, opaque diagnostics, reproduction, executable inventory |
+| Gemini | MAJOR | authority contract, path redaction, oversized-module split |
 
-**Overall:** draft; implementation requires adversarial review and explicit user
-approval. No agent may apply `status:plan-approved` or create its marker.
+**Overall:** r1 MAJOR findings are resolved in this r2 draft; r2 adversarial
+review and explicit user approval remain required. No agent may apply
+`status:plan-approved` or create its marker.
 
 ## Risks and Open Questions
 
-- #3522 is a hard dependency: duplicating or weakening its authority would make
-  the public privacy assertion unverifiable.
+- #3522 Phase B is a hard dependency: Phase A can prove only synthetic mechanics;
+  duplicating or weakening the production authority would be unverifiable.
 - Removing an already-public sensitive symbol is intentionally breaking. Keeping
   an alias would preserve the defect; downstream callers must adopt the neutral
   API in the same approved change.
