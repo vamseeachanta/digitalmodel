@@ -148,6 +148,130 @@ def test_router_rejects_bad_inputs(tmp_path):
         router(cfg)
 
 
+def _legs_cfg(tmp_path, dwell_h=720.0):
+    """No-wind fixture with the route split into a voyage profile:
+    2000 nm at 12 kn -> port dwell -> 2000 nm at 12 kn."""
+    cfg = _no_wind_cfg(tmp_path)
+    cfg["alt_fuel_ship_sizing"]["route"] = {
+        "service_speed_kn": 12.0,
+        "legs": [
+            {"type": "sea", "distance_nm": 2000.0, "speed_kn": 12.0},
+            {"type": "port", "dwell_h": dwell_h},
+            {"type": "sea", "distance_nm": 2000.0, "speed_kn": 12.0},
+        ],
+    }
+    return cfg
+
+
+def test_voyage_profile_port_dwell_drives_tank_size(tmp_path):
+    """The legs route (30-day dwell) needs more fuel and tank than the
+    single-passage fixture (121000 kg / 1856.34 m3): hand-verified in the
+    library tests as 130618.7 kg / 2003.91 m3 (port BOG accrues with zero
+    burn). distance_nm is derived from the sea legs."""
+    result = router(_legs_cfg(tmp_path))["alt_fuel_ship_sizing"]
+    summary = result["summary"]
+    assert summary["voyage_profile"] is True
+    assert summary["distance_nm"] == pytest.approx(4000.0)
+    assert summary["endurance_hours"] == pytest.approx(4000.0 / 12.0, rel=1e-12)
+    assert summary["total_voyage_hours"] == pytest.approx(
+        4000.0 / 12.0 + 720.0, rel=1e-12
+    )
+    assert summary["port_dwell_h"] == pytest.approx(720.0)
+    assert summary["required_fuel_mass_kg"] == pytest.approx(130618.687, rel=1e-6)
+    assert summary["gross_tank_volume_m3"] == pytest.approx(2003.907, rel=1e-6)
+    assert summary["bog_lost_kg"] > 0.0
+
+    legs = result["voyage_legs"]
+    assert [leg["leg_type"] for leg in legs] == ["sea", "port", "sea"]
+    assert legs[1]["fuel_burned_kg"] == 0.0
+    assert legs[1]["bog_lost_kg"] == pytest.approx(summary["bog_lost_kg"], rel=1e-12)
+
+
+def test_voyage_profile_writes_legs_csv(tmp_path):
+    result = router(_legs_cfg(tmp_path))["alt_fuel_ship_sizing"]
+    assert "voyage_legs_csv" in result
+    path = tmp_path / "results" / f"{FIXTURE.stem}_voyage_legs.csv"
+    assert path.exists()
+    with path.open() as stream:
+        rows = list(csv.DictReader(stream))
+    assert len(rows) == 3
+    assert rows[1]["leg_type"] == "port"
+    assert float(rows[1]["bog_lost_kg"]) > 0.0
+
+
+def test_single_passage_route_unchanged_without_legs(tmp_path):
+    """Backward compatibility: no ``route.legs`` -> no voyage columns, no
+    legs CSV, and the original hand-verified numbers."""
+    result = router(_no_wind_cfg(tmp_path))["alt_fuel_ship_sizing"]
+    assert "voyage_legs" not in result
+    assert "voyage_profile" not in result["summary"]
+    assert not (tmp_path / "results" / f"{FIXTURE.stem}_voyage_legs.csv").exists()
+    assert result["summary"]["required_fuel_mass_kg"] == pytest.approx(
+        121000.0, rel=1e-9
+    )
+
+
+def test_voyage_profile_rejects_bad_legs(tmp_path):
+    cfg = _legs_cfg(tmp_path)
+    cfg["alt_fuel_ship_sizing"]["route"]["legs"][1] = {"type": "anchorage"}
+    with pytest.raises(ValueError, match="sea.*port|port.*sea"):
+        router(cfg)
+
+    cfg = _legs_cfg(tmp_path)
+    cfg["alt_fuel_ship_sizing"]["route"]["legs"] = [
+        {"type": "port", "dwell_h": 24.0}
+    ]
+    with pytest.raises(ValueError, match="sea leg"):
+        router(cfg)
+
+    cfg = _legs_cfg(tmp_path)
+    del cfg["alt_fuel_ship_sizing"]["route"]["legs"]
+    with pytest.raises(ValueError, match="distance_nm"):
+        router(cfg)  # no legs and no distance_nm
+
+
+def test_fuel_preset_nh3(tmp_path):
+    """fuel.preset nh3_refrigerated: 11000 kW LHV x 3.6 / 18.6 MJ/kg =
+    2129.03 kg/h; net volume uses the 682 kg/m3 refrigerated density."""
+    cfg = _no_wind_cfg(tmp_path)
+    cfg["alt_fuel_ship_sizing"]["fuel"] = {
+        "preset": "nh3_refrigerated",
+        "margin_fraction": 0.10,
+    }
+    summary = router(cfg)["alt_fuel_ship_sizing"]["summary"]
+    assert summary["fuel_mass_flow_kg_per_h"] == pytest.approx(
+        2129.0323, rel=1e-7
+    )
+    assert summary["net_tank_volume_m3"] == pytest.approx(
+        summary["required_fuel_mass_kg"] / 682.0, rel=1e-12
+    )
+
+
+def test_fuel_preset_with_explicit_override(tmp_path):
+    """Explicit values override the preset: methanol density kept, LHV
+    overridden to a round 20.0 MJ/kg."""
+    cfg = _no_wind_cfg(tmp_path)
+    cfg["alt_fuel_ship_sizing"]["fuel"] = {
+        "preset": "methanol",
+        "lhv_mj_per_kg": 20.0,
+        "margin_fraction": 0.10,
+    }
+    summary = router(cfg)["alt_fuel_ship_sizing"]["summary"]
+    assert summary["fuel_mass_flow_kg_per_h"] == pytest.approx(
+        11000.0 * 3.6 / 20.0, rel=1e-12
+    )
+    assert summary["net_tank_volume_m3"] == pytest.approx(
+        summary["required_fuel_mass_kg"] / 791.4, rel=1e-12
+    )
+
+
+def test_unknown_fuel_preset_rejected(tmp_path):
+    cfg = _no_wind_cfg(tmp_path)
+    cfg["alt_fuel_ship_sizing"]["fuel"] = {"preset": "lng"}
+    with pytest.raises(ValueError, match="unknown fuel preset"):
+        router(cfg)
+
+
 def test_engine_registers_basename():
     """The engine dispatch table includes basename alt_fuel_ship_sizing.
 
