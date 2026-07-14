@@ -517,6 +517,12 @@ def engine(
         )
 
         cfg_base = dynmoor_mooring(cfg_base)
+    elif basename == "foam_system_sizing":
+        from digitalmodel.foam_system.workflow import (
+            router as foam_system_sizing,
+        )
+
+        cfg_base = foam_system_sizing(cfg_base)
     elif basename == "mooring":
         logger.info("Mooring analysis routed to mooring_analysis module")
         from digitalmodel.subsea.mooring_analysis.cli import cli as mooring_cli

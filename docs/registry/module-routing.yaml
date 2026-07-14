@@ -116,6 +116,12 @@ modules:
     owner_wiki: docs/domains/mooring/dynmoor-legacy-mooring.md
     key_tests: [tests/subsea/mooring_analysis/test_dynmoor.py, tests/subsea/mooring_analysis/test_dynmoor_workflow.py]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#dynmoor_mooring
+  - module: foam_system
+    entry_point: src/digitalmodel/foam_system/
+    maturity: development
+    owner_wiki: docs/domains/fire_safety/foam-system-sizing.md
+    key_tests: [tests/fire_safety/test_foam_system_sizing.py]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#foam_system
   - module: mooring_resilience
     entry_point: src/digitalmodel/mooring_resilience/
     maturity: beta
