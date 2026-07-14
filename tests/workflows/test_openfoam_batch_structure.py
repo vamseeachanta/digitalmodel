@@ -236,6 +236,10 @@ def test_split_modules_obey_file_and_function_limits():
     modules = (
         facade,
         __import__("digitalmodel.workflows.openfoam_batch_config", fromlist=["*"]),
+        __import__(
+            "digitalmodel.workflows.openfoam_batch_identity_validation",
+            fromlist=["*"],
+        ),
         __import__("digitalmodel.workflows.openfoam_batch_execution", fromlist=["*"]),
         __import__("digitalmodel.workflows.openfoam_batch_layout", fromlist=["*"]),
         __import__("digitalmodel.workflows.openfoam_batch_results", fromlist=["*"]),
