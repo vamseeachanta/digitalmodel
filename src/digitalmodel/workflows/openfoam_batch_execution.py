@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import sys
 import time
+from contextlib import nullcontext
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 from pathlib import Path
@@ -26,8 +27,10 @@ from digitalmodel.workflows.openfoam_batch_layout import (
 )
 from digitalmodel.workflows.openfoam_batch_results import (
     load_checkpoint,
+    load_external_checkpoint,
     make_row,
     write_checkpoint,
+    write_external_checkpoint,
 )
 
 SOLVER_ERROR_MESSAGE = (
@@ -42,6 +45,38 @@ def _compat(name: str, fallback: Callable) -> Callable:
     """Honor legacy facade monkeypatch points without a circular import."""
     facade = sys.modules.get("digitalmodel.workflows.openfoam_run_batch")
     return getattr(facade, name, fallback) if facade else fallback
+
+
+def _case_lock(item: dict):
+    layout = item.get("layout")
+    return layout.lock(item["name"]) if layout else nullcontext()
+
+
+def _load_case_checkpoint(item: dict) -> dict | None:
+    if item.get("layout"):
+        return load_external_checkpoint(item["layout"], item["name"], item["identity"])
+    return _compat("_load_checkpoint", load_checkpoint)(item["work_dir"])
+
+
+def _write_case_checkpoint(item: dict, row: dict) -> None:
+    if item.get("layout"):
+        write_external_checkpoint(item["layout"], item["name"], item["identity"], row)
+    else:
+        _compat("_write_checkpoint", write_checkpoint)(item["work_dir"], row)
+
+
+def _clean_case(item: dict) -> None:
+    if item.get("layout"):
+        item["layout"].clean_case(item["name"])
+    else:
+        _compat("_clean_case_dir", clean_case_dir)(item["work_dir"])
+
+
+def _prune_case(item: dict) -> None:
+    if item.get("layout"):
+        item["layout"].prune_processors(item["name"])
+    else:
+        _compat("_prune_processor_dirs", prune_processor_dirs)(item["work_dir"])
 
 
 def run_pool(
@@ -73,12 +108,17 @@ def run_case_pool(
     item: dict[str, Any], run_settings: dict, mock: bool
 ) -> dict[str, Any]:
     """Execute one legacy pool case with checkpoint retry semantics."""
-    checkpoint = _compat("_load_checkpoint", load_checkpoint)(item["work_dir"])
+    with _case_lock(item):
+        return _run_case_pool_locked(item, run_settings, mock)
+
+
+def _run_case_pool_locked(item, run_settings, mock) -> dict[str, Any]:
+    checkpoint = _load_case_checkpoint(item)
     if checkpoint is not None:
         return checkpoint
     start = time.monotonic()
     try:
-        _compat("_clean_case_dir", clean_case_dir)(item["work_dir"])
+        _clean_case(item)
         case_dir = _compat("_build_case", build_case)(item)
         if mock:
             row = _compat("_row", make_row)(
@@ -95,7 +135,7 @@ def run_case_pool(
     except Exception as exc:  # noqa: BLE001 - per-case isolation
         row = _compat("_row", make_row)(item, status="failed", error=str(exc))
     row["wall_seconds"] = round(time.monotonic() - start, 3)
-    _compat("_write_checkpoint", write_checkpoint)(item["work_dir"], row)
+    _write_case_checkpoint(item, row)
     return row
 
 
@@ -146,7 +186,7 @@ def _prepare_mpi_case(
         case_dir = item["work_dir"]
         _compat("_set_start_from_latest_time", set_start_from_latest_time)(case_dir)
     else:
-        _compat("_clean_case_dir", clean_case_dir)(item["work_dir"])
+        _clean_case(item)
         case_dir = _compat("_build_case", build_case)(item)
     plan = _compat("mpi_command_plan", mpi_command_plan)(
         solver=solver,
@@ -171,8 +211,16 @@ def run_case_mpi(
     command_runner: Callable[..., int] | None = None,
 ) -> dict[str, Any]:
     """Execute one legacy MPI case with resume and reconstruction semantics."""
-    work_dir = item["work_dir"]
-    checkpoint = _compat("_load_checkpoint", load_checkpoint)(work_dir)
+    with _case_lock(item):
+        return _run_case_mpi_locked(
+            item, run_settings, workers, mock, command_runner
+        )
+
+
+def _run_case_mpi_locked(
+    item, run_settings, workers, mock, command_runner
+) -> dict[str, Any]:
+    checkpoint = _load_case_checkpoint(item)
     if checkpoint is not None:
         return checkpoint
     solver = item["settings"].get("solver")
@@ -181,7 +229,7 @@ def run_case_mpi(
         row = row_factory(
             item, status="failed", error="mode: mpi requires base.solver to be set"
         )
-        _compat("_write_checkpoint", write_checkpoint)(work_dir, row)
+        _write_case_checkpoint(item, row)
         return row
     timeout = int(run_settings.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS))
     start = time.monotonic()
@@ -199,11 +247,11 @@ def run_case_mpi(
             execute = _compat("_execute_mpi_plan", execute_mpi_plan)
             row = execute(item, case_dir, plan, solver, run, timeout)
             if reconstruct and row["status"] == "completed":
-                _compat("_prune_processor_dirs", prune_processor_dirs)(case_dir)
+                _prune_case(item)
     except Exception as exc:  # noqa: BLE001 - checkpoint the failure
         row = row_factory(item, status="failed", error=str(exc))
     row["wall_seconds"] = round(time.monotonic() - start, 3)
-    _compat("_write_checkpoint", write_checkpoint)(work_dir, row)
+    _write_case_checkpoint(item, row)
     return row
 
 

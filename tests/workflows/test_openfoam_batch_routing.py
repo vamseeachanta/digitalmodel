@@ -57,6 +57,18 @@ def test_external_route_rejects_yaml_identity_blob_before_mutation(tmp_path):
     assert list(root.iterdir()) == []
 
 
+def test_external_output_dir_cannot_escape_input_directory(tmp_path, monkeypatch):
+    cfg, root = _external_cfg(tmp_path)
+    cfg["openfoam_run_batch"]["run_batch"]["output_dir"] = str(
+        tmp_path / "escaped-results"
+    )
+    monkeypatch.setattr(ofb, "_build_run_identity", lambda **_evidence: IDENTITY)
+    with pytest.raises(ValueError, match="output_dir"):
+        ofb.router(cfg)
+    assert not (tmp_path / "escaped-results").exists()
+    assert list(root.iterdir()) == []
+
+
 def test_external_route_uses_approved_builder_and_owned_layout(
     tmp_path, monkeypatch
 ):

@@ -9,10 +9,11 @@ import re  # noqa: F401 - legacy public facade surface
 import shutil  # noqa: F401 - legacy public facade surface
 import subprocess  # noqa: F401 - legacy public facade surface
 import time  # noqa: F401 - legacy public facade surface
+import contextlib as _contextlib
 from concurrent.futures import ThreadPoolExecutor  # noqa: F401
 from copy import deepcopy  # noqa: F401 - legacy public facade surface
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path  # noqa: F401 - legacy public facade surface
 from typing import Any, Callable  # noqa: F401 - legacy public facade surface
 
 import pandas as pd  # noqa: F401 - legacy public facade surface
@@ -27,6 +28,7 @@ from digitalmodel.workflows.openfoam_batch_config import (  # noqa: F401
     VALID_MODES,
     WORKER_CORE_FRACTION,
     _RESERVED_ROW_KEYS,
+    build_run_identity as _build_run_identity,
     default_workers,
     render_cases as _render_cases_impl,
     resolve_execution_authority as _resolve_execution_authority_impl,
@@ -34,6 +36,9 @@ from digitalmodel.workflows.openfoam_batch_config import (  # noqa: F401
     resolve_dir as _resolve_dir_impl,
     resolve_path as _resolve_path_impl,
     resolve_workers,
+)
+from digitalmodel.workflows.openfoam_batch_routing import (
+    prepare_batch as _prepare_batch_impl,
 )
 from digitalmodel.workflows.openfoam_batch_execution import (  # noqa: F401
     SOLVER_ERROR_MESSAGE,
@@ -86,73 +91,24 @@ _write_checkpoint = _write_checkpoint_impl
 _row = _make_row_impl
 _write_manifest = _write_manifest_impl
 _write_summary = _write_summary_impl
-
-
-def _prepare_batch(cfg: dict) -> dict:
-    settings = cfg.get("openfoam_run_batch") or {}
-    cfg_dir = Path(cfg.get("_config_dir_path") or Path.cwd())
-    run_settings = settings.get("run_batch") or {}
-    authority = _resolve_execution_authority_impl(run_settings, cfg_dir)
-    if authority.context != "legacy":
-        raise RuntimeError("owned external layout is not active; execution denied")
-    mode = run_settings.get("mode", DEFAULT_MODE)
-    if mode not in VALID_MODES:
-        raise ValueError(
-            f"openfoam_run_batch run_batch.mode must be pool|mpi, got {mode}"
-        )
-    mock = bool(run_settings.get("mock", False))
-    workers = resolve_workers(run_settings)
-    base = settings.get("base") or {}
-    if not base.get("case_type"):
-        raise ValueError("openfoam_run_batch.base.case_type is required")
-    mesh_utility = base.get("mesh_utility", DEFAULT_MESH_UTILITY)
-    solver = base.get("solver")
-    reconstruct = bool(run_settings.get("reconstruct", True))
-    if not mock and not _solver_ready(mode, mesh_utility, solver, reconstruct):
-        raise RuntimeError(SOLVER_ERROR_MESSAGE)
-    variants = settings.get("variants") or {}
-    cases = _resolve_case_matrix(settings.get("cases"), variants, cfg_dir)
-    mapping = settings.get("mapping") or variants.get("mapping") or {}
-    timeout = int(run_settings.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS))
-    results_dir = _resolve_dir(
-        run_settings.get("output_dir", DEFAULT_OUTPUT_DIR), cfg_dir
-    )
-    work_dir = _resolve_dir(run_settings.get("work_dir", DEFAULT_WORK_DIR), cfg_dir)
-    return {
-        "settings": settings,
-        "run_settings": run_settings,
-        "mode": mode,
-        "mock": mock,
-        "workers": workers,
-        "timeout": timeout,
-        "authority": authority,
-        "results_dir": results_dir,
-        "rendered": _render_cases(base, cases, mapping, work_dir),
-    }
+_prepare_batch = _prepare_batch_impl
 
 
 def _execute_batch(batch: dict) -> tuple[list[dict], datetime, datetime]:
     started_at = datetime.now(timezone.utc)
     rendered = batch["rendered"]
-    if batch["mode"] == "mpi":
-        if len(rendered) != 1:
-            raise ValueError(
-                "openfoam_run_batch mode: mpi runs exactly ONE case across "
-                f"ranks; the matrix produced {len(rendered)} cases. Use "
-                "mode: pool for a multi-case sweep."
-            )
-        rows = [
-            _run_case_mpi(
-                rendered[0],
-                batch["run_settings"],
-                batch["workers"],
-                batch["mock"],
-            )
-        ]
-    else:
-        rows = _run_pool(
-            rendered, batch["run_settings"], batch["workers"], batch["mock"]
-        )
+    lock = batch["layout"].lock("run") if batch["layout"] else _contextlib.nullcontext()
+    with lock:
+        if batch["mode"] == "mpi":
+            if len(rendered) != 1:
+                raise ValueError(
+                    "openfoam_run_batch mode: mpi runs exactly ONE case across "
+                    f"ranks; the matrix produced {len(rendered)} cases. Use "
+                    "mode: pool for a multi-case sweep."
+                )
+            rows = [_run_case_mpi(rendered[0], batch["run_settings"], batch["workers"], batch["mock"])]
+        else:
+            rows = _run_pool(rendered, batch["run_settings"], batch["workers"], batch["mock"])
     return rows, started_at, datetime.now(timezone.utc)
 
 
@@ -194,7 +150,11 @@ def _finalize_batch(
 
 
 def router(cfg: dict) -> dict:
-    """Route a legacy request through the decomposed batch implementation."""
+    """Route a legacy or owned external request through the batch workflow."""
     batch = _prepare_batch(cfg)
-    rows, started_at, finished_at = _execute_batch(batch)
-    return _finalize_batch(cfg, batch, rows, started_at, finished_at)
+    try:
+        rows, started_at, finished_at = _execute_batch(batch)
+        return _finalize_batch(cfg, batch, rows, started_at, finished_at)
+    finally:
+        if batch["layout"]:
+            batch["layout"].close()

@@ -11,7 +11,53 @@ from typing import Any
 import pandas as pd
 
 CHECKPOINT_FILENAME = "_result.json"
+EXTERNAL_CHECKPOINT_FILENAME = ".digitalmodel-checkpoint-v2.json"
 RESULTS_ALLOWED_SUFFIXES = {".csv", ".json"}
+
+
+def load_external_checkpoint(
+    layout, case: str, identity: dict, max_row_bytes: int = 65536
+) -> dict[str, Any] | None:
+    """Read only an exact completed checkpoint while ownership locks hold."""
+    layout.require_locks(case)
+    data = layout.read_case_file(case, EXTERNAL_CHECKPOINT_FILENAME, 1024 * 1024)
+    if data is None:
+        return None
+    try:
+        payload = json.loads(data)
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    if not isinstance(payload, dict) or not isinstance(payload.get("result_row"), dict):
+        return None
+    expected = (
+        payload.get("schema_version") == 2
+        and payload.get("identity") == identity
+        and payload.get("owner_token") == layout.owner_token
+        and payload.get("case") == case
+        and payload.get("status") == "completed"
+        and payload["result_row"].get("status") == "completed"
+    )
+    row_size = len(json.dumps(payload["result_row"], sort_keys=True).encode())
+    return payload["result_row"] if expected and row_size <= max_row_bytes else None
+
+
+def write_external_checkpoint(
+    layout, case: str, identity: dict, row: dict[str, Any], max_row_bytes: int = 65536
+) -> None:
+    """Atomically persist a bounded checkpoint while ownership locks hold."""
+    layout.require_locks(case)
+    if len(json.dumps(row, sort_keys=True).encode()) > max_row_bytes:
+        raise ValueError("external checkpoint result row exceeds byte bound")
+    payload = {
+        "schema_version": 2,
+        "identity": identity,
+        "owner_token": layout.owner_token,
+        "case": case,
+        "status": row.get("status"),
+        "result_row": row,
+    }
+    data = (json.dumps(payload, indent=2) + "\n").encode()
+    layout.write_case_file(case, EXTERNAL_CHECKPOINT_FILENAME, data)
 
 
 def load_checkpoint(work_dir: Path) -> dict[str, Any] | None:
