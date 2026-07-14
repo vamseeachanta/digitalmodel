@@ -15,7 +15,7 @@ def test_hosted_root_is_environment_owned_and_output_remains_local(tmp_path: Pat
     root = tmp_path / "scratch"
     root.mkdir()
     paths = resolve_batch_paths(
-        {"work_root_namespace": "gpu-canary", "work_root": str(tmp_path / "forbidden")},
+        {"work_root_namespace": "gpu-canary"},
         cfg_dir,
         env={
             "DIGITALMODEL_EXECUTION_CONTEXT": "hosted-deckhand",
@@ -25,6 +25,12 @@ def test_hosted_root_is_environment_owned_and_output_remains_local(tmp_path: Pat
     assert paths.operator_root == root.resolve()
     assert paths.output_dir == cfg_dir / "results"
     assert paths.namespace == "gpu-canary"
+    with pytest.raises(ValueError, match="operator environment"):
+        resolve_batch_paths(
+            {"work_root_namespace": "gpu-canary", "work_root": str(root)}, cfg_dir,
+            env={"DIGITALMODEL_EXECUTION_CONTEXT": "hosted-deckhand",
+                 "DIGITALMODEL_WORK_ROOT": str(root)},
+        )
 
 
 @pytest.mark.parametrize("namespace", ["../escape", ".", "a//b", "a\\b", "x\x00y"])
@@ -77,4 +83,3 @@ def test_owned_layout_rejects_foreign_marker_and_cleans_only_case(tmp_path: Path
     layout.marker_path.write_text(json.dumps(marker))
     with pytest.raises(ValueError, match="owner marker"):
         WorkLayout.create(tmp_path, "ns", "a" * 64)
-

@@ -47,4 +47,3 @@ def test_identity_rejects_missing_or_symlinked_input(tmp_path: Path) -> None:
         assert "referenced input" in str(exc)
     else:
         raise AssertionError("missing input was accepted")
-

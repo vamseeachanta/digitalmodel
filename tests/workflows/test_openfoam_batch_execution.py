@@ -27,4 +27,3 @@ def test_checkpoint_contains_no_external_path(tmp_path: Path) -> None:
         row={"name": "case-1", "status": "completed", "case_dir": "<external-work>/case-1"},
     )
     assert str(tmp_path) not in str(checkpoint)
-

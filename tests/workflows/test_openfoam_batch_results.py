@@ -29,4 +29,3 @@ def test_result_policy_writes_only_fixed_bounded_files(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="extension"):
         write_results(rows, tmp_path, mode="pool", workers=1, mock=True,
                       timeout_seconds=10, extensions=["openfoam-artifact-index-v1"])
-
