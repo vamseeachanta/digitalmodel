@@ -6,7 +6,7 @@ from copy import deepcopy
 from datetime import datetime, timezone
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 import re
 from typing import Any
 
@@ -28,16 +28,19 @@ def row(item: dict[str, Any], *, status: str, case_dir: Path | None = None,
 def redact_rows(rows: list[dict[str, Any]], external_root: Path | None) -> list[dict[str, Any]]:
     if external_root is None:
         return deepcopy(rows)
-    root = str(Path(external_root).resolve())
+    raw_root = str(external_root)
+    windows_root = PureWindowsPath(raw_root)
+    root = (windows_root.as_posix() if windows_root.is_absolute()
+            else Path(raw_root).resolve().as_posix())
     redacted = deepcopy(rows)
     for item in redacted:
         case_dir = item.get("case_dir")
         if isinstance(case_dir, str) and case_dir:
-            item["case_dir"] = f"<external-work>/{Path(case_dir).name}"
+            basename = case_dir.replace("\\", "/").rstrip("/").rsplit("/", 1)[-1]
+            item["case_dir"] = f"<external-work>/{basename}"
         error = item.get("error")
         if isinstance(error, str):
-            normalized_root = root.replace("\\", "/")
-            item["error"] = re.sub(re.escape(normalized_root), "<external-work>",
+            item["error"] = re.sub(re.escape(root), "<external-work>",
                                    error.replace("\\", "/"), flags=re.IGNORECASE)
     return redacted
 
