@@ -11,7 +11,6 @@ import pytest
 
 from digitalmodel.workflows import openfoam_batch_execution as execution
 from digitalmodel.workflows import openfoam_batch_results as results
-from digitalmodel.workflows import openfoam_run_batch as facade
 
 
 class RecordingOutput:
