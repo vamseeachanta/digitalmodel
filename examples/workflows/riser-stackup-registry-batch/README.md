@@ -12,6 +12,9 @@ schedule + joint library run the #1458 schedule-assembly path instead
 assembled from the schedule, the 16Q minimum is computed at the heaviest
 documented mud weight, and the row reports the validation delta band against
 the wave-3 `16q-min-tension-endpoints` contract (llm-wiki#828).
+Rows with a shallow-water source workbook carrying a top-tension-to-rotate
+result are emitted as `runnable-source`; the runner does not recast those
+values as an API RP 16Q chain.
 
 ## Run
 
@@ -24,7 +27,8 @@ Prints the batch table and writes `results/registry_batch_16q.csv` with, per
 RSU: `rsu_id`, `water_depth_band`, `topology_class`, string dry/submerged
 weight and buoyancy uplift/net-lift (where the source decomposes them), the
 computed `Tmin_vert`, its unit, and `status` (`runnable` |
-`runnable-schedule` | `missing-inputs`) with a `fields_unknown` reason.
+`runnable-schedule` | `runnable-source` | `missing-inputs`) with a
+`fields_unknown` reason.
 
 ## Output is NOT committed (by design)
 
@@ -49,6 +53,9 @@ de-id/leak gate.
   bore + C&K + boost, 1.25 top-tension factor, pup/termination joints at the
   slick per-foot rate, ...) are documented in
   `digitalmodel.drilling_riser.schedule_assembly`.
+- `runnable-source` — no golden 16Q chain is claimed; the source page carries
+  a machine-readable top-tension result in another workbook dialect and the
+  batch reports that source-backed governing tension.
 - `fields_unknown: 16Q endpoint contract exists but the joint schedule is
   not text-extractable` — e.g. RSU-0038, whose per-class joint counts are
   raster-only in the source document.

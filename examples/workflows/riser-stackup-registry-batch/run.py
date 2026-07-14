@@ -13,8 +13,10 @@ the #1458 schedule-assembly path (``drilling_riser.schedule_assembly``):
 string weight assembled from the wiki schedule, 16Q minimum computed at the
 heaviest documented mud weight, and the reason column reports the delta
 band against the wave-3 ``16q-min-tension-endpoints`` contract
-(llm-wiki#828) — status ``runnable-schedule``. Remaining rows are
-``missing-inputs`` with a reason (``fields_unknown`` taxonomy).
+(llm-wiki#828) — status ``runnable-schedule``. Rows whose source workbook
+carries a shallow-water tension-to-rotate top-tension result are emitted as
+``runnable-source`` without recasting them as an API RP 16Q chain. Remaining
+rows are ``missing-inputs`` with a reason (``fields_unknown`` taxonomy).
 
 Run (in-context; the wiki clone is required for values)::
 
@@ -27,9 +29,11 @@ string weights are wiki-side VALUES (dm carries key names + engine only —
 the #1280 calc-contract discipline), so the output must not be committed to
 this public repo.
 """
+
 from __future__ import annotations
 
 import csv
+import math
 import os
 import sys
 from dataclasses import asdict, dataclass
@@ -55,6 +59,7 @@ HERE = Path(__file__).resolve().parent
 OUTPUT_CSV = HERE / "results" / "registry_batch_16q.csv"
 
 CALC = "16q-min-top-tension"
+SOURCE_TENSION_CALC = "shallow-water-tension-to-rotate"
 #: fields_unknown taxonomy (issue #1453 scope 3).
 REASON_WIKI_UNAVAILABLE = "llm-wiki clone unavailable (values live wiki-side)"
 REASON_RESULT_DIALECT_ONLY = (
@@ -63,11 +68,15 @@ REASON_RESULT_DIALECT_ONLY = (
 )
 REASON_NO_CONTRACT = "fields_unknown: no calc contract wiki-side"
 REASON_NO_TSRMIN = "fields_unknown: 16Q contract lacks a TSRmin / factored-weight input"
+REASON_SOURCE_SCHEMA = (
+    "fields_unknown: shallow-water tension-to-rotate contract schema incomplete"
+)
 REASON_ENDPOINTS_NO_SCHEDULE = (
     "fields_unknown: 16Q endpoint contract exists but the joint schedule is "
     "not text-extractable (raster-only counts)"
 )
 ENDPOINT_CALC = "16q-min-tension-endpoints"
+SOURCE_TENSION_TOLERANCE_KIPS = 0.01
 
 
 @dataclass(frozen=True)
@@ -80,7 +89,7 @@ class BatchRow:
     buoyancy_uplift: str
     tmin_vert: str
     units: str
-    status: str  # runnable | runnable-schedule | missing-inputs
+    status: str  # runnable | runnable-schedule | runnable-source | missing-inputs
     reason: str
 
 
@@ -145,6 +154,68 @@ def _schedule_row(stackup, wiki_root) -> Optional[BatchRow]:
     )
 
 
+def _source_tension_row(stackup, contract: dict) -> BatchRow:
+    """Source-backed top-tension result whose workbook is not a 16Q chain."""
+    base = dict(
+        rsu_id=stackup.rsu_id,
+        water_depth_band=stackup.water_depth_band,
+        topology_class=stackup.topology_class,
+        string_dry_weight="",
+        string_submerged_weight="",
+        buoyancy_uplift="",
+        tmin_vert="",
+        units="",
+    )
+    required = {
+        "units",
+        "governing_case",
+        "governing_tension_to_apply_kips",
+        "cases",
+    }
+    if required - set(contract) or contract["units"] != "kips":
+        return BatchRow(**base, status="missing-inputs", reason=REASON_SOURCE_SCHEMA)
+    cases = contract["cases"]
+    if not isinstance(cases, list) or not all(isinstance(case, dict) for case in cases):
+        return BatchRow(**base, status="missing-inputs", reason=REASON_SOURCE_SCHEMA)
+    case_required = {"case", "op_tension_to_apply_kips"}
+    if not all(case_required <= set(case) for case in cases):
+        return BatchRow(**base, status="missing-inputs", reason=REASON_SOURCE_SCHEMA)
+    if not all(isinstance(case["case"], str) and case["case"] for case in cases):
+        return BatchRow(**base, status="missing-inputs", reason=REASON_SOURCE_SCHEMA)
+    case_ids = [case["case"] for case in cases]
+    if len(set(case_ids)) != len(case_ids):
+        return BatchRow(**base, status="missing-inputs", reason=REASON_SOURCE_SCHEMA)
+    governing_case = contract["governing_case"]
+    if not isinstance(governing_case, str) or not governing_case:
+        return BatchRow(**base, status="missing-inputs", reason=REASON_SOURCE_SCHEMA)
+    selected_cases = [case for case in cases if case.get("case") == governing_case]
+    if len(selected_cases) != 1:
+        return BatchRow(**base, status="missing-inputs", reason=REASON_SOURCE_SCHEMA)
+    try:
+        governing_tension = float(contract["governing_tension_to_apply_kips"])
+        selected_tension = float(selected_cases[0]["op_tension_to_apply_kips"])
+    except (KeyError, TypeError, ValueError):
+        return BatchRow(**base, status="missing-inputs", reason=REASON_SOURCE_SCHEMA)
+    if not (math.isfinite(governing_tension) and math.isfinite(selected_tension)):
+        return BatchRow(**base, status="missing-inputs", reason=REASON_SOURCE_SCHEMA)
+    if governing_tension <= 0.0 or selected_tension <= 0.0:
+        return BatchRow(**base, status="missing-inputs", reason=REASON_SOURCE_SCHEMA)
+    if abs(governing_tension - selected_tension) > SOURCE_TENSION_TOLERANCE_KIPS:
+        return BatchRow(**base, status="missing-inputs", reason=REASON_SOURCE_SCHEMA)
+    base.update(
+        tmin_vert=_fmt(governing_tension),
+        units=contract["units"],
+    )
+    return BatchRow(
+        **base,
+        status="runnable-source",
+        reason=(
+            "source-backed shallow-water tension-to-rotate workbook "
+            "(not API RP 16Q chain)"
+        ),
+    )
+
+
 def _assemble_row(
     stackup, contract: Optional[dict], reason_no_contract: str
 ) -> BatchRow:
@@ -197,19 +268,31 @@ def run(output_csv: Path = OUTPUT_CSV) -> list[BatchRow]:
     else:
         contracts = load_calc_contracts(wiki_root)
         goldens = {c["rsu_id"]: c for c in contracts if c["calc"] == CALC}
+        source_tensions = {
+            c["rsu_id"]: c for c in contracts if c["calc"] == SOURCE_TENSION_CALC
+        }
         endpoint_ids = {c["rsu_id"] for c in contracts if c["calc"] == ENDPOINT_CALC}
         any_contract = contract_referenced_rsu_ids(wiki_root)
         rows = []
         for s in stackups:
             golden = goldens.get(s.rsu_id)
-            schedule = None if golden else _schedule_row(s, wiki_root)
+            source_tension = source_tensions.get(s.rsu_id)
+            schedule = None if golden or source_tension else _schedule_row(s, wiki_root)
             if s.rsu_id in endpoint_ids:
                 reason = REASON_ENDPOINTS_NO_SCHEDULE
             elif s.rsu_id in any_contract:
                 reason = REASON_RESULT_DIALECT_ONLY
             else:
                 reason = REASON_NO_CONTRACT
-            rows.append(schedule or _assemble_row(s, golden, reason))
+            if schedule:
+                row = schedule
+            elif golden:
+                row = _assemble_row(s, golden, reason)
+            elif source_tension:
+                row = _source_tension_row(s, source_tension)
+            else:
+                row = _assemble_row(s, None, reason)
+            rows.append(row)
 
     output_csv.parent.mkdir(parents=True, exist_ok=True)
     with output_csv.open("w", newline="") as handle:
@@ -224,7 +307,12 @@ def main() -> int:
     runnable = sum(1 for r in rows if r.status.startswith("runnable"))
     by_status = {
         status: sum(1 for r in rows if r.status == status)
-        for status in ("runnable", "runnable-schedule", "missing-inputs")
+        for status in (
+            "runnable",
+            "runnable-schedule",
+            "runnable-source",
+            "missing-inputs",
+        )
     }
     header = (
         "rsu_id",
@@ -257,7 +345,8 @@ def main() -> int:
     print(
         f"\n{runnable}/{len(rows)} as-planned drilling RSUs runnable "
         f"({by_status['runnable']} contract-chain + "
-        f"{by_status['runnable-schedule']} schedule-assembly; "
+        f"{by_status['runnable-schedule']} schedule-assembly + "
+        f"{by_status['runnable-source']} source-contract; "
         f"{by_status['missing-inputs']} missing-inputs); "
         f"CSV: {OUTPUT_CSV.relative_to(HERE)}"
     )
