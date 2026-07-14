@@ -57,6 +57,7 @@ def _identity(tmp_path: Path, **overrides) -> dict:
         "package_root": package,
         "package_name": "demo-pkg",
         "package_version": "1.0",
+        "effective_config": {"mode": "pool"},
         "referenced_inputs": {"matrix": files["matrix"], "case": files["case"]},
         "selected_executables": {"solver": tool},
         "visible_rank_count": 8,
@@ -174,6 +175,7 @@ def test_source_identity_binds_exact_tracked_bytes_and_rejects_dirty_candidates(
             package_root=repo / "src" / "demo_pkg",
             package_name="demo-pkg",
             package_version="1.0",
+            effective_config={"mode": "pool"},
             referenced_inputs={"matrix": repo / "matrix.csv"},
             selected_executables={},
             visible_rank_count=8,
@@ -181,6 +183,36 @@ def test_source_identity_binds_exact_tracked_bytes_and_rejects_dirty_candidates(
             result_policy_version="result-policy-v1",
             work_layout_version="work-layout-v1",
         )
+    subprocess.run(["git", "-C", repo, "add", "."], check=True)
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            repo,
+            "-c",
+            "user.name=T",
+            "-c",
+            "user.email=t@x.invalid",
+            "commit",
+            "-qm",
+            "package",
+        ],
+        check=True,
+    )
+    changed = build_run_identity(
+        config_path=repo / "request.yml",
+        package_root=repo / "src/demo_pkg",
+        package_name="demo-pkg",
+        package_version="1.0",
+        effective_config={"mode": "pool"},
+        referenced_inputs={"matrix": repo / "matrix.csv"},
+        selected_executables={},
+        visible_rank_count=8,
+        dispatcher_rank_limit=4,
+        result_policy_version="result-policy-v1",
+        work_layout_version="work-layout-v1",
+    )
+    assert changed["identity_sha256"] != identity["identity_sha256"]
 
 
 def test_identity_changes_for_config_input_tool_host_policy_and_layout_mutations(
@@ -192,6 +224,7 @@ def test_identity_changes_for_config_input_tool_host_policy_and_layout_mutations
         "ceiling": {"dispatcher_rank_limit": 3},
         "policy": {"result_policy_version": "result-policy-v2"},
         "layout": {"work_layout_version": "work-layout-v2"},
+        "config": {"effective_config": {"mode": "mpi"}},
     }.items():
         assert (
             _identity(tmp_path / name, **overrides)["identity_sha256"]
@@ -224,6 +257,7 @@ def test_identity_changes_for_config_input_tool_host_policy_and_layout_mutations
             package_root=package,
             package_name="demo-pkg",
             package_version="1.0",
+            effective_config={"mode": "pool"},
             referenced_inputs={"matrix": files["matrix"], "case": files["case"]},
             selected_executables={"solver": tool},
             visible_rank_count=8,
@@ -232,6 +266,39 @@ def test_identity_changes_for_config_input_tool_host_policy_and_layout_mutations
             work_layout_version="work-layout-v1",
         )
         assert changed["identity_sha256"] != baseline["identity_sha256"]
+
+
+def test_tool_bytes_change_identity_and_host_ceilings_are_validated(tmp_path):
+    repo, package, files = _git_repo(tmp_path)
+    tool = repo / "solver"
+    tool.write_bytes(b"v1")
+    values = dict(
+        config_path=files["request"],
+        package_root=package,
+        package_name="demo-pkg",
+        package_version="1.0",
+        effective_config={"mode": "pool"},
+        referenced_inputs={"case": files["case"]},
+        selected_executables={"solver": tool},
+        visible_rank_count=8,
+        dispatcher_rank_limit=4,
+        result_policy_version="result-policy-v1",
+        work_layout_version="work-layout-v1",
+    )
+    baseline = build_run_identity(**values)
+    tool.write_bytes(b"v2")
+    assert (
+        build_run_identity(**values)["identity_sha256"] != baseline["identity_sha256"]
+    )
+    for visible, limit in ((0, 1), (8, 0), (4, 5)):
+        with pytest.raises(ValueError, match="rank"):
+            build_run_identity(
+                **{
+                    **values,
+                    "visible_rank_count": visible,
+                    "dispatcher_rank_limit": limit,
+                }
+            )
 
 
 def _record_digest(data: bytes) -> str:
@@ -264,6 +331,7 @@ def test_wheel_record_verifies_actual_bytes_size_missing_and_unrecorded(tmp_path
         package_root=package,
         package_name="demo-pkg",
         package_version="1.0",
+        effective_config={"mode": "pool"},
         referenced_inputs={},
         selected_executables={},
         visible_rank_count=8,
