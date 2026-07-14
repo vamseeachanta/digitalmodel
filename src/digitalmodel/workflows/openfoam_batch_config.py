@@ -84,6 +84,11 @@ def _namespace(value: object, root: Path) -> Path:
     namespace = portable_namespace(value)
     if _contains_symlink(root / namespace):
         raise ValueError("work_root_namespace must not contain a symlink")
+    current = root
+    for part in namespace.parts:
+        current /= part
+        if current.exists() and (current / ".git").exists():
+            raise ValueError("work_root_namespace must remain outside every Git checkout")
     return namespace
 
 
@@ -319,10 +324,9 @@ def resolve_workers(run_settings: dict) -> int:
     explicit = run_settings.get("workers")
     if explicit is None:
         return _compat("default_workers", default_workers)()
-    workers = int(explicit)
-    if workers < 1:
+    if type(explicit) is not int or explicit < 1:
         raise ValueError(f"run_batch.workers must be >= 1, got {explicit}")
-    return workers
+    return explicit
 
 
 def resolve_case_matrix(

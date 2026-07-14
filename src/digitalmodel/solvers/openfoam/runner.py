@@ -348,8 +348,12 @@ class OpenFOAMRunner:
             guard = self._executable_guard(name) if self._executable_guard else nullcontext()
             with guard as executable:
                 command = [executable or name, *argv[1:]]
+                pass_fds = tuple(
+                    item.pass_fd for item in command if hasattr(item, "pass_fd")
+                )
                 proc = subprocess.run(  # noqa: S603 - fixed utility argv.
                     command,
+                    pass_fds=pass_fds,
                     cwd=str(case),
                     capture_output=True,
                     text=True,

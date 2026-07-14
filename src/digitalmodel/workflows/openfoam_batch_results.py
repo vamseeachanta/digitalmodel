@@ -176,8 +176,9 @@ def _sensitive_key(key: object) -> bool:
     return any(
         token in compact
         for token in (
-            "arg", "cmd", "command", "dir", "error", "log", "path", "plan",
-            "root", "stderr", "stdout", "stream", "tail",
+            "arg", "cmd", "command", "credential", "dir", "error", "exception",
+            "failure", "log", "path", "plan", "root", "secret", "stderr",
+            "stdout", "stream", "tail", "token",
         )
     )
 

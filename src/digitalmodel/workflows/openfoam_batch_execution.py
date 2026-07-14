@@ -298,7 +298,8 @@ def _mpi_launch_guard(witnesses, argv: list[str], solver: str):
     if not witnesses:
         return nullcontext()
     if hasattr(witnesses, "launch_argv"):
-        return witnesses.launch_argv(argv)
+        names = [argv[0], solver] if argv[0] == "mpirun" else [argv[0]]
+        return witnesses.launch_argv(argv, executable_names=names)
     executable = argv[0]
     if executable == "mpirun" and hasattr(witnesses, "launch_many"):
         return witnesses.launch_many([executable, solver])
@@ -344,7 +345,8 @@ def build_case(item: dict[str, Any]) -> Path:
 
 
 def solver_ready(
-    mode: str, mesh_utility: str, solver: str | None, reconstruct: bool = True
+    mode: str, mesh_utility: str, solver: str | None, reconstruct: bool = True,
+    run_set_fields: bool = False,
 ) -> bool:
     """Require every utility that the selected legacy plan will invoke."""
     required = [mesh_utility]
@@ -352,6 +354,8 @@ def solver_ready(
         required.append(solver)
     if mode == "mpi":
         required += ["decomposePar", "mpirun"]
+        if run_set_fields:
+            required.append("setFields")
         if reconstruct:
             required.append("reconstructPar")
     return all(shutil.which(executable) is not None for executable in required)
@@ -371,6 +375,9 @@ def run_command(
                 stderr=subprocess.STDOUT,
                 timeout=timeout,
                 check=False,
+                pass_fds=tuple(
+                    item.pass_fd for item in argv if hasattr(item, "pass_fd")
+                ),
             )
     except (OSError, subprocess.TimeoutExpired) as exc:
         command, error = argv[0], exc

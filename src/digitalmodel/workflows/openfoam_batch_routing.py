@@ -27,11 +27,13 @@ from digitalmodel.workflows.openfoam_batch_config import (
 )
 from digitalmodel.workflows.openfoam_batch_execution import (
     SOLVER_ERROR_MESSAGE,
+    mpi_command_plan,
     solver_ready,
 )
 from digitalmodel.workflows.openfoam_batch_executables import ExecutableSet
 from digitalmodel.workflows.openfoam_batch_layout import WorkLayout
 from digitalmodel.workflows.openfoam_batch_output import OutputLayout
+from digitalmodel.workflows.openfoam_batch_results import validate_result_policy_config
 
 
 class ExternalEvidenceError(ValueError, RuntimeError):
@@ -109,9 +111,15 @@ def _selected_tools(
             if settings.get("to_vtk", False):
                 names.add("foamToVTK")
     if run_settings.get("mode", "pool") == "mpi":
-        names.update({"decomposePar", "mpirun"})
-        if run_settings.get("reconstruct", True):
-            names.add("reconstructPar")
+        for item in rendered:
+            settings = item["settings"]
+            plan = mpi_command_plan(
+                settings["solver"], 1,
+                settings.get("mesh_utility", DEFAULT_MESH_UTILITY),
+                bool(settings.get("run_set_fields", False)),
+                bool(run_settings.get("reconstruct", True)),
+            )
+            names.update(argv[0] for argv in plan)
     selected = {}
     for name in sorted(item for item in names if item):
         resolved = shutil.which(name)
@@ -201,6 +209,16 @@ def prepare_external(
     return layout, rendered
 
 
+def _validate_external_batch(cfg, authority, workers, visible, mode, cases):
+    if authority.context == "legacy":
+        return
+    validate_result_policy_config(cfg)
+    if workers > visible:
+        raise ValueError("run_batch.workers exceeds visible rank count")
+    if mode == "mpi" and len(cases) != 1:
+        raise ValueError("openfoam_run_batch mode: mpi runs exactly ONE case")
+
+
 def prepare_batch(cfg: dict) -> dict:
     """Validate and prepare legacy or external execution without identity gaps."""
     settings = cfg.get("openfoam_run_batch") or {}
@@ -212,18 +230,24 @@ def prepare_batch(cfg: dict) -> dict:
         raise ValueError(f"openfoam_run_batch run_batch.mode must be pool|mpi, got {mode}")
     mock = bool(run_settings.get("mock", False))
     workers = resolve_workers(run_settings)
+    visible = os.cpu_count() or 1
     base = settings.get("base") or {}
     if not base.get("case_type"):
         raise ValueError("openfoam_run_batch.base.case_type is required")
     mesh = base.get("mesh_utility", DEFAULT_MESH_UTILITY)
     reconstruct = bool(run_settings.get("reconstruct", True))
-    if not mock and not solver_ready(mode, mesh, base.get("solver"), reconstruct):
+    if not mock and not solver_ready(
+        mode, mesh, base.get("solver"), reconstruct,
+        bool(base.get("run_set_fields", False)),
+    ):
         raise RuntimeError(SOLVER_ERROR_MESSAGE)
     variants = settings.get("variants") or {}
     cases = resolve_case_matrix(settings.get("cases"), variants, cfg_dir)
     mapping = settings.get("mapping") or variants.get("mapping") or {}
     timeout = int(run_settings.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS))
+    _validate_external_batch(cfg, authority, workers, visible, mode, cases)
     if authority.context == "legacy":
+        output = None
         results_dir = resolve_dir(
             run_settings.get("output_dir", DEFAULT_OUTPUT_DIR), cfg_dir
         )
@@ -242,5 +266,5 @@ def prepare_batch(cfg: dict) -> dict:
         "settings": settings, "run_settings": run_settings, "mode": mode,
         "mock": mock, "workers": workers, "timeout": timeout,
         "authority": authority, "results_dir": results_dir,
-        "layout": layout, "rendered": rendered,
+        "layout": layout, "rendered": rendered, "output": output,
     }

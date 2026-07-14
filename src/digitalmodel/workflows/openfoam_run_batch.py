@@ -142,18 +142,23 @@ def _finalize_batch(
         _write_manifest(rows, manifest_path)
         summary = _write_summary(path=summary_path, **summary_args)
     if summary["failed"]:
+        locator = (
+            f"{batch['output']}/cases.csv" if batch["layout"] else str(manifest_path)
+        )
         logger.warning(
             "openfoam_run_batch: {} of {} cases failed; see {}",
             summary["failed"],
             summary["total_cases"],
-            manifest_path,
+            locator,
         )
     settings = batch["settings"]
     settings["cases"] = rows
-    settings["outputs"] = {
-        "manifest": str(manifest_path),
-        "summary": str(summary_path),
-    }
+    settings["outputs"] = (
+        {"manifest": f"{batch['output']}/cases.csv",
+         "summary": f"{batch['output']}/batch_summary.json"}
+        if batch["layout"] else
+        {"manifest": str(manifest_path), "summary": str(summary_path)}
+    )
     cfg["openfoam_run_batch"] = settings
     return cfg
 
@@ -162,8 +167,6 @@ def router(cfg: dict) -> dict:
     """Route a legacy or owned external request through the batch workflow."""
     batch = _prepare_batch(cfg)
     try:
-        if batch["layout"]:
-            _validate_result_policy_config(cfg)
         rows, started_at, finished_at = _execute_batch(batch)
         return _finalize_batch(cfg, batch, rows, started_at, finished_at)
     finally:
