@@ -54,6 +54,8 @@ from digitalmodel.workflows.openfoam_batch_execution import (  # noqa: F401
 )
 from digitalmodel.workflows.openfoam_batch_layout import (  # noqa: F401
     DECOMPOSE_PAR_DICT as _DECOMPOSE_PAR_DICT,
+)
+from digitalmodel.workflows.openfoam_batch_legacy_layout import (  # noqa: F401
     clean_case_dir as _clean_case_dir_impl,
     has_processor_dirs as _has_processor_dirs_impl,
     prune_processor_dirs as _prune_processor_dirs_impl,

@@ -18,7 +18,7 @@ from digitalmodel.workflows.openfoam_batch_config import (
     DEFAULT_MESH_UTILITY,
     DEFAULT_TIMEOUT_SECONDS,
 )
-from digitalmodel.workflows.openfoam_batch_layout import (
+from digitalmodel.workflows.openfoam_batch_legacy_layout import (
     clean_case_dir,
     has_processor_dirs,
     prune_processor_dirs,
@@ -157,7 +157,9 @@ def solve_serial(
         to_vtk=bool(settings.get("to_vtk", False)),
         timeout_seconds=int(run_settings.get("timeout_seconds", 43200)),
     )
-    result = OpenFOAMRunner(run_cfg).run(case_dir)
+    witnesses = item.get("executables")
+    guard = witnesses.launch if witnesses else None
+    result = OpenFOAMRunner(run_cfg, executable_guard=guard).run(case_dir)
     status = str(getattr(result.status, "value", result.status)).lower()
     row = _compat("_row", make_row)
     if status == "completed":
@@ -177,14 +179,19 @@ def _prepare_mpi_case(
     settings = item["settings"]
     solver = settings["solver"]
     reconstruct = bool(run_settings.get("reconstruct", True))
-    resuming = (
-        not mock
-        and bool(run_settings.get("resume", False))
-        and _compat("_has_processor_dirs", has_processor_dirs)(item["work_dir"])
-    )
+    layout = item.get("layout")
+    resuming = not mock and bool(run_settings.get("resume", False))
+    if resuming:
+        resuming = (
+            layout.has_processor_dirs(item["name"])
+            if layout else _compat("_has_processor_dirs", has_processor_dirs)(item["work_dir"])
+        )
     if resuming:
         case_dir = item["work_dir"]
-        _compat("_set_start_from_latest_time", set_start_from_latest_time)(case_dir)
+        if layout:
+            layout.set_start_from_latest_time(item["name"])
+        else:
+            _compat("_set_start_from_latest_time", set_start_from_latest_time)(case_dir)
     else:
         _clean_case(item)
         case_dir = _compat("_build_case", build_case)(item)
@@ -197,9 +204,10 @@ def _prepare_mpi_case(
         resume=resuming,
     )
     if not mock and not resuming:
-        _compat("_write_decompose_par_dict", write_decompose_par_dict)(
-            case_dir, workers
-        )
+        if layout:
+            layout.write_decompose_par_dict(item["name"], workers)
+        else:
+            _compat("_write_decompose_par_dict", write_decompose_par_dict)(case_dir, workers)
     return case_dir, plan, solver, reconstruct
 
 
@@ -266,7 +274,10 @@ def execute_mpi_plan(
     """Execute the ordered MPI argv and return the first stage failure."""
     row = _compat("_row", make_row)
     for argv in plan:
-        rc = run(argv, case_dir, case_dir / f"log.{argv[0]}", timeout)
+        witnesses = item.get("executables")
+        launch = _mpi_launch_guard(witnesses, argv[0], solver)
+        with launch:
+            rc = run(argv, case_dir, case_dir / f"log.{argv[0]}", timeout)
         if rc != 0:
             return row(
                 item,
@@ -276,6 +287,14 @@ def execute_mpi_plan(
                 error=f"stage '{argv[0]}' returned non-zero exit code {rc}",
             )
     return row(item, status="completed", case_dir=case_dir, solver=solver)
+
+
+def _mpi_launch_guard(witnesses, executable: str, solver: str):
+    if not witnesses:
+        return nullcontext()
+    if executable == "mpirun" and hasattr(witnesses, "launch_many"):
+        return witnesses.launch_many([executable, solver])
+    return witnesses.launch(executable)
 
 
 def mpi_command_plan(

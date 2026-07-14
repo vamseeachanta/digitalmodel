@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from stat import S_ISDIR
 from typing import Callable
 
 from digitalmodel.workflows.openfoam_batch_config import (
@@ -28,6 +29,7 @@ from digitalmodel.workflows.openfoam_batch_execution import (
     SOLVER_ERROR_MESSAGE,
     solver_ready,
 )
+from digitalmodel.workflows.openfoam_batch_executables import ExecutableSet
 from digitalmodel.workflows.openfoam_batch_layout import WorkLayout
 
 
@@ -89,17 +91,33 @@ def _selected_tools(
         for item in rendered
     }
     names.update(item["settings"].get("solver") for item in rendered)
+    if run_settings.get("mode", "pool") == "pool":
+        for item in rendered:
+            settings = item["settings"]
+            if settings.get("run_snappy", False):
+                names.add("snappyHexMesh")
+            if settings.get("run_set_fields", False):
+                names.add("setFields")
+            if settings.get("to_vtk", False):
+                names.add("foamToVTK")
     if run_settings.get("mode", "pool") == "mpi":
         names.update({"decomposePar", "mpirun"})
         if run_settings.get("reconstruct", True):
             names.add("reconstructPar")
     selected = {}
-    for index, name in enumerate(sorted(item for item in names if item)):
+    for name in sorted(item for item in names if item):
         resolved = shutil.which(name)
         if not resolved:
             raise ValueError(f"selected executable evidence is missing for {name}")
-        selected[f"tool-{index}"] = Path(resolved)
+        selected[name] = Path(resolved)
     return selected
+
+
+def _directory_identity(path: Path) -> tuple[int, int]:
+    stat = path.stat(follow_symlinks=False)
+    if not S_ISDIR(stat.st_mode):
+        raise ValueError("external output_dir parent is invalid")
+    return stat.st_dev, stat.st_ino
 
 
 def _distribution_evidence() -> tuple[Path, str, Path | None]:
@@ -130,9 +148,12 @@ def prepare_external(
         raise ValueError("caller-provided run identity is forbidden")
     request = _request_path(cfg)
     cfg_dir = request.parent
+    cfg_dir_identity = _directory_identity(cfg_dir)
     work_name = run_settings.get("work_dir", DEFAULT_WORK_DIR)
     provisional = render_cases(base, cases, mapping, Path("unused"))
     package_root, version, distribution_root = _distribution_evidence()
+    selected = _selected_tools(provisional, run_settings, mock)
+    executables = ExecutableSet.capture(selected)
     identity = _compat_builder()(
         config_path=request,
         package_root=package_root,
@@ -140,17 +161,20 @@ def prepare_external(
         package_version=version,
         effective_config=settings,
         referenced_inputs=_referenced_inputs(settings, cfg_dir),
-        selected_executables=_selected_tools(provisional, run_settings, mock),
+        selected_executables=selected,
         visible_rank_count=os.cpu_count() or 1,
         dispatcher_rank_limit=workers,
         result_policy_version="result-policy-v1",
         work_layout_version="work-layout-v1",
         distribution_root=distribution_root,
     )
+    if _directory_identity(cfg_dir) != cfg_dir_identity:
+        raise ValueError("external output_dir parent changed during evidence collection")
+    executables.validate_all()
     layout = WorkLayout.create(authority, identity, work_name)
     rendered = render_cases(base, cases, mapping, layout.work_path)
     for item in rendered:
-        item.update(layout=layout, identity=identity)
+        item.update(layout=layout, identity=identity, executables=executables)
     return layout, rendered
 
 

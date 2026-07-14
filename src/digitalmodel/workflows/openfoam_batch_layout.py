@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import contextlib
-import ctypes
 import errno
 import hashlib
 import json
@@ -12,7 +11,6 @@ import re
 import secrets
 import time
 from pathlib import Path
-from stat import S_ISDIR
 from typing import Iterator
 
 from digitalmodel.workflows.openfoam_batch_config import (
@@ -20,61 +18,31 @@ from digitalmodel.workflows.openfoam_batch_config import (
     canonical_json_bytes,
 )
 from digitalmodel.workflows.openfoam_batch_descriptor_io import (
+    read_json_at as _read_json_at,
+    remove_tree_fd as _remove_tree_fd,
+    rename_noreplace as _rename_noreplace,
+    same_inode as _same_inode,
+    write_new_at as _write_new_at,
     write_case_file as _write_case_file,
 )
 from digitalmodel.workflows.openfoam_batch_legacy_layout import (  # noqa: F401
     DECOMPOSE_PAR_DICT,
     clean_case_dir,
-    has_processor_dirs,
     prune_processor_dirs,
-    set_start_from_latest_time,
-    write_decompose_par_dict,
 )
+from digitalmodel.workflows.openfoam_batch_locks import (  # noqa: F401
+    LOCK_SCHEMA,
+    boot_id as _boot_id,
+    lock_reclaimable,
+    process_start_token as _process_start_token,
+    process_state as _process_state,
+)
+from digitalmodel.workflows import openfoam_batch_mpi_layout as _mpi_layout
 
 OWNER_FILENAME = ".digitalmodel-run-owner.json"
-LOCK_SCHEMA = 1
 OWNER_SCHEMA = 1
 _DIRECTORY_FLAGS = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
 _CASE_PATTERN = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}\Z")
-_RENAME_NOREPLACE = 1
-def _rename_noreplace(source: str, target: str, source_fd: int, target_fd: int) -> None:
-    libc = ctypes.CDLL(None, use_errno=True)
-    renameat2 = getattr(libc, "renameat2", None)
-    if renameat2 is None:
-        raise RuntimeError("atomic no-replace rename is unavailable")
-    result = renameat2(source_fd, source.encode(), target_fd, target.encode(), _RENAME_NOREPLACE)
-    if result:
-        error = ctypes.get_errno()
-        raise OSError(error, os.strerror(error), target)
-
-
-def _same_inode(left: os.stat_result, right: os.stat_result) -> bool:
-    return (left.st_dev, left.st_ino) == (right.st_dev, right.st_ino)
-
-def _read_json_at(parent_fd: int, name: str) -> tuple[dict, os.stat_result]:
-    fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=parent_fd)
-    try:
-        stat = os.fstat(fd)
-        with os.fdopen(os.dup(fd), "rb") as stream:
-            value = json.load(stream)
-    finally:
-        os.close(fd)
-    if not isinstance(value, dict):
-        raise ValueError("record must be an object")
-    return value, stat
-
-
-def _write_new_at(parent_fd: int, name: str, payload: dict) -> os.stat_result:
-    fd = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=parent_fd)
-    try:
-        data = canonical_json_bytes(payload)
-        os.write(fd, data)
-        os.fsync(fd)
-        return os.fstat(fd)
-    finally:
-        os.close(fd)
-
-
 def _open_namespace(root_fd: int, namespace: Path) -> int:
     current = os.dup(root_fd)
     try:
@@ -106,60 +74,12 @@ def _owner_payload(identity: dict, root_stat: os.stat_result, token: str) -> dic
     }
 
 
-def _remove_tree_fd(directory_fd: int) -> None:
-    for name in os.listdir(directory_fd):
-        stat = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
-        if not S_ISDIR(stat.st_mode):
-            os.unlink(name, dir_fd=directory_fd)
-            continue
-        child = os.open(name, _DIRECTORY_FLAGS, dir_fd=directory_fd)
-        try:
-            _remove_tree_fd(child)
-        finally:
-            os.close(child)
-        os.rmdir(name, dir_fd=directory_fd)
-
-
 def _lock_tombstone_name(name: str) -> str:
     return f"{name}.reclaim-{secrets.token_hex(16)}"
-def _boot_id() -> str:
-    try:
-        return Path("/proc/sys/kernel/random/boot_id").read_text().strip()
-    except OSError:
-        return "unknown"
 
 
-def _process_start_token(pid: int | None = None) -> str:
-    process = os.getpid() if pid is None else pid
-    return Path(f"/proc/{process}/stat").read_text().split()[21]
-
-def _process_state(record: dict) -> str:
-    try:
-        actual = _process_start_token(int(record["pid"]))
-    except FileNotFoundError:
-        return "dead"
-    except (OSError, ValueError, KeyError, IndexError):
-        return "unknown"
-    return "alive-match" if actual == record.get("process_start_token") else "alive-mismatch"
-
-def lock_reclaimable(
-    record: dict,
-    *,
-    owner_token: str,
-    now: float,
-    current_boot_id: str,
-    process_state: str,
-    stale_after: float,
-) -> bool:
-    """Require owner, expiry, and proof of prior boot or dead/reused PID."""
-    if record.get("owner_token") != owner_token:
-        return False
-    heartbeat = record.get("heartbeat")
-    if not isinstance(heartbeat, (int, float)) or now - heartbeat <= stale_after:
-        return False
-    if record.get("boot_id") != current_boot_id:
-        return True
-    return process_state in {"dead", "alive-mismatch"}
+def _before_lock_reclaim(_locks_fd: int, _name: str) -> None:
+    """Test seam immediately before the source-inode recheck."""
 
 
 class WorkLayout:
@@ -178,8 +98,9 @@ class WorkLayout:
         self._root_stat = os.fstat(self.root_fd)
         self._namespace_stat = os.fstat(self.namespace_fd)
         self._run_stat = os.fstat(self.run_fd)
+        self._work_stat = os.fstat(self.work_fd)
         self._marker_stat = marker_stat
-        self._held: set[str] = set()
+        self._held: dict[str, tuple[os.stat_result, dict]] = {}
 
     @classmethod
     def create(cls, authority: ExecutionAuthority, identity: dict, work_name: str):
@@ -263,6 +184,7 @@ class WorkLayout:
             root_stat = os.stat(self.root_path, follow_symlinks=False)
             namespace_stat = os.stat(self.namespace_path, follow_symlinks=False)
             run_stat = os.stat(self.run_path.name, dir_fd=self.namespace_fd, follow_symlinks=False)
+            work_stat = os.stat(self.work_name, dir_fd=self.run_fd, follow_symlinks=False)
             marker, marker_stat = _read_json_at(self.run_fd, OWNER_FILENAME)
         except (OSError, ValueError, json.JSONDecodeError) as error:
             raise RuntimeError("owned run validation failed") from error
@@ -270,6 +192,7 @@ class WorkLayout:
         stable = _same_inode(root_stat, self._root_stat)
         stable &= _same_inode(namespace_stat, self._namespace_stat)
         stable &= _same_inode(run_stat, self._run_stat)
+        stable &= _same_inode(work_stat, self._work_stat)
         stable &= _same_inode(marker_stat, self._marker_stat)
         if not stable or marker != expected:
             raise RuntimeError("owned run validation failed")
@@ -318,6 +241,21 @@ class WorkLayout:
         finally:
             os.close(case_fd)
 
+    def has_processor_dirs(self, case: str) -> bool:
+        self.validate_owner()
+        self.case_path(case)
+        return _mpi_layout.has_processor_dirs(self.work_fd, case)
+
+    def set_start_from_latest_time(self, case: str) -> None:
+        self.validate_owner()
+        self.case_path(case)
+        _mpi_layout.set_start_from_latest_time(self.work_fd, case)
+
+    def write_decompose_par_dict(self, case: str, workers: int) -> None:
+        self.validate_owner()
+        self.case_path(case)
+        _mpi_layout.write_decompose_par_dict(self.work_fd, case, workers)
+
     def _lock_record(self, now: float) -> dict:
         return {
             "schema_version": LOCK_SCHEMA,
@@ -339,6 +277,10 @@ class WorkLayout:
         state = _process_state(record)
         if not lock_reclaimable(record, owner_token=self.owner_token, now=now, current_boot_id=_boot_id(), process_state=state, stale_after=stale_after):
             return
+        _before_lock_reclaim(locks_fd, name)
+        current_record, current = _read_json_at(locks_fd, name)
+        if not _same_inode(observed, current) or current_record != record:
+            raise RuntimeError("lock reclaim source changed")
         tombstone = _lock_tombstone_name(name)
         try:
             _rename_noreplace(name, tombstone, locks_fd, locks_fd)
@@ -358,21 +300,26 @@ class WorkLayout:
         name = self._lock_name(key)
         locks_fd = os.open(".locks", _DIRECTORY_FLAGS, dir_fd=self.run_fd)
         acquired_stat = None
+        acquired_record = None
         try:
             while acquired_stat is None:
                 moment = now()
                 try:
-                    acquired_stat = _write_new_at(locks_fd, name, self._lock_record(moment))
+                    acquired_record = self._lock_record(moment)
+                    acquired_stat = _write_new_at(locks_fd, name, acquired_record)
                 except FileExistsError:
                     self._try_reclaim(locks_fd, name, moment, stale_after)
                     time.sleep(poll_interval)
-            self._held.add(key)
+            self._held[key] = (acquired_stat, acquired_record)
             yield
         finally:
-            self._held.discard(key)
+            self._held.pop(key, None)
             if acquired_stat is not None:
-                current = os.stat(name, dir_fd=locks_fd, follow_symlinks=False)
-                if _same_inode(current, acquired_stat):
+                try:
+                    current = os.stat(name, dir_fd=locks_fd, follow_symlinks=False)
+                except FileNotFoundError:
+                    current = None
+                if current is not None and _same_inode(current, acquired_stat):
                     os.unlink(name, dir_fd=locks_fd)
             os.close(locks_fd)
 
@@ -380,14 +327,32 @@ class WorkLayout:
         if not {"run", case}.issubset(self._held):
             raise RuntimeError("external checkpoint requires run and case locks")
         self.validate_owner()
+        locks_fd = os.open(".locks", _DIRECTORY_FLAGS, dir_fd=self.run_fd)
+        try:
+            for key in ("run", case):
+                expected_stat, expected_record = self._held[key]
+                actual_record, actual_stat = _read_json_at(locks_fd, self._lock_name(key))
+                if not _same_inode(expected_stat, actual_stat):
+                    raise RuntimeError("external checkpoint locks were displaced")
+                if canonical_json_bytes(actual_record) != canonical_json_bytes(expected_record):
+                    raise RuntimeError("external checkpoint locks were replaced")
+        except (OSError, ValueError, json.JSONDecodeError) as error:
+            raise RuntimeError("external checkpoint locks are not current") from error
+        finally:
+            os.close(locks_fd)
 
     def read_case_file(self, case: str, name: str, limit: int) -> bytes | None:
         self.case_path(case)
+        case_fd = None
+        fd = None
         try:
             case_fd = os.open(case, _DIRECTORY_FLAGS, dir_fd=self.work_fd)
             fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=case_fd)
         except FileNotFoundError:
             return None
+        finally:
+            if fd is None and case_fd is not None:
+                os.close(case_fd)
         try:
             data = os.read(fd, limit + 1)
             return None if len(data) > limit else data

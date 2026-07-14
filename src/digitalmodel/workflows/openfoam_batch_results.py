@@ -10,6 +10,8 @@ from typing import Any
 
 import pandas as pd
 
+from digitalmodel.workflows.openfoam_batch_config import canonical_json_bytes
+
 CHECKPOINT_FILENAME = "_result.json"
 EXTERNAL_CHECKPOINT_FILENAME = ".digitalmodel-checkpoint-v2.json"
 RESULTS_ALLOWED_SUFFIXES = {".csv", ".json"}
@@ -29,13 +31,19 @@ def load_external_checkpoint(
         return None
     if not isinstance(payload, dict) or not isinstance(payload.get("result_row"), dict):
         return None
+    exact_identity = isinstance(payload.get("identity"), dict) and (
+        canonical_json_bytes(payload["identity"]) == canonical_json_bytes(identity)
+    )
     expected = (
-        payload.get("schema_version") == 2
-        and payload.get("identity") == identity
+        type(payload.get("schema_version")) is int
+        and payload["schema_version"] == 2
+        and exact_identity
         and payload.get("owner_token") == layout.owner_token
-        and payload.get("case") == case
+        and type(payload.get("case")) is str
+        and payload["case"] == case
         and payload.get("status") == "completed"
         and payload["result_row"].get("status") == "completed"
+        and payload["result_row"].get("name") == case
     )
     row_size = len(json.dumps(payload["result_row"], sort_keys=True).encode())
     return payload["result_row"] if expected and row_size <= max_row_bytes else None
