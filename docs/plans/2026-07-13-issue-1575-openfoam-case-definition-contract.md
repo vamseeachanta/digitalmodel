@@ -1,13 +1,13 @@
 # Plan for #1575: Preserve the OpenFOAM batch case-definition contract
 
-> **Status:** draft — r1 MAJOR findings resolved in this r2 draft; r2 review pending
+> **Status:** draft — r2 MAJOR findings resolved inline in r3; user approval required
 > **Complexity:** T3
 > **Date:** 2026-07-13
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/1575
 > **Client:** N/A
 > **Lane:** lane:codex
 > **Execution mode:** single-lane after dependency gates and user approval
-> **Review artifacts:** `scripts/review/results/2026-07-13-plan-1575-r1-consolidated.md`; r2 provider artifacts pending
+> **Review artifacts:** `scripts/review/results/2026-07-13-plan-1575-r{1,2}-consolidated.md`
 
 ---
 
@@ -47,9 +47,9 @@ The implementation chain will be **#1565 → #1575 → #1576**:
    SHA and prove it is an ancestor of the implementation branch. #1575 will not
    import or preserve the project-coded compatibility surface.
 3. **#1575** will land the authored-case schema and propagation contract.
-4. **#1576** will then consume #1575's typed `ExecutionConfig` and accepted-leaf
-   ledger for MPI/VTK planning. #1576 will continue to own future prebuilt-MPI
-   support and artifact publication; it will not add a prebuilt variant to v1.
+4. **#1576** will then consume #1575's typed `SelectedExecutionPlan` and
+   accepted-leaf ledger for MPI/VTK planning. It will not change the serial-only
+   prebuilt boundary or create a second execution/rank contract.
 
 If either upstream issue changes a named interface, this plan will be amended
 and re-reviewed before implementation. Parallel edits to the shared workflow,
@@ -60,8 +60,6 @@ configuration, or tests will not proceed.
 - Issues #1560, #662, #658, #659, #661, #1565, #1574, and #1576 define the
   current batch, attestation, motion, fill, function-object, layout, privacy,
   and downstream execution boundaries.
-- The required drive query reported no coverage gaps and no relevant reusable
-  document; irrelevant private legacy hits will remain unopened and unnamed.
 - No standard-derived constant, private geometry, project code, native result,
   host path, or client identifier will enter code, fixtures, review artifacts,
   commit text, or documentation.
@@ -91,35 +89,37 @@ configuration, or tests will not proceed.
 | Configuration/example | `src/digitalmodel/base_configs/modules/openfoam_run_batch/openfoam_run_batch.yml`; `examples/workflows/openfoam-run-batch/input.yml` |
 | Focused tests | `tests/solvers/openfoam/test_case_definition.py`; `test_workflow_router.py`; split batch tests named below |
 
-The canonical plan index lives in workspace-hub and will require a separately
-authorized control-plane change.
-
 ## Deliverable
 
-A closed authored-case v1 contract will carry every accepted semantic and
-execution leaf through batch normalization, typed construction, rendering, and
-runner planning, while legacy inputs retain their documented behavior and no
-prebuilt or unknown field can be silently ignored.
+A closed authored/prebuilt v1 contract will carry every accepted semantic and
+execution leaf through batch normalization, typed construction or attested
+staging, rendering, and runner planning, while legacy inputs retain documented
+behavior and no prebuilt or unknown field can be silently ignored.
 
 ## Case-Source Discriminated Union
 
 The type boundary will be explicit:
 
 ```text
-CaseSource = AuthoredCaseV1 | PrebuiltCaseV2
+CaseSource = AuthoredCaseV1 | PrebuiltCaseV1
 discriminator = case_definition.kind
 ```
 
-Version 1 will contain **only** `kind: authored`. `kind: prebuilt`, a
-`prebuilt_mesh` key at any level, a manifest path, case directory, URI, or
-arbitrary locator will fail as unsupported before filesystem mutation. No
-authored semantic leaf can therefore coexist with a prebuilt case and disappear.
+`kind: authored` will accept only the schema below. `kind: prebuilt` will accept
+only `schema_version: 1` and `prebuilt: {case_id: <portable component>}`. It will
+prohibit domain, motion, fill, time, function objects, mesh-generation controls,
+MPI, manifest paths, directories, URIs, hostnames, and arbitrary locators.
 
-A future `PrebuiltCaseV2` will require its own reviewed schema with a
-root-confined opaque Deckhand staging locator, canonical case-definition digest,
-case-local attestation binding, retention/authority rules, and MPI boundary.
-#1576 will own the prebuilt-MPI execution design. This issue will not accept
-filesystem paths, `file://` URIs, hostnames, mount roots, or reversible locators.
+`case_id` will resolve beneath the current input bundle's fixed
+`prebuilt_cases/` directory by descriptor-relative/no-follow traversal. The only
+manifest location is fixed at `constant/polyMesh.manifest.json`. The adapter will
+validate the existing #662 case-input/polyMesh attestation, copy the complete
+case by descriptors into a fresh #1565-owned run directory, then validate the
+same manifest and bytes again. Every source byte and manifest digest enters
+#1565 RunIdentity. Source and staged trees are immutable during the transaction;
+drift rejects. V1 prebuilt is serial/pool only and runs only solver/postprocess
+stages allowed by the attestation. Future prebuilt MPI requires a separate issue;
+#1576 explicitly rejects it.
 
 ## Canonical Authored v1 Schema
 
@@ -209,7 +209,7 @@ applicable shown leaves; only `phase_shift_s` will default under the rules below
 the #1574 neutral `PressureTap` values, `write_control`, and `write_interval`.
 Version 1 will allow only pressure taps and `write_control` values `timeStep`,
 `runTime`, or `adjustableRunTime`. `ParsedAuthoredCaseV1` will be the sole owner
-of `OpenFOAMCase`, `FunctionObjectsConfig`, and `ExecutionConfig`.
+of `OpenFOAMCase`, `FunctionObjectsConfig`, and `SelectedExecutionPlan`.
 
 `OpenFOAMCaseBuilder` will receive the complete typed function-object config and
 will pass both control leaves to the renderer. No parallel dict, model field,
@@ -260,9 +260,10 @@ base will accept exactly:
 case_type, name, solver, mesh_utility, run_snappy, run_set_fields, to_vtk
 ```
 
-`run_batch` will consume #1565's exact merged allowlist, including current
+`run_batch` will consume #1565's exact typed configuration and keys:
 `mode, workers, mock, reconstruct, resume, timeout_seconds, output_dir,
-work_dir` and its approved work-layout key. Canonical `execution.timeout_seconds`
+work_dir, execution_context, work_root, work_root_namespace`. It will not reparse
+or duplicate their validation. Canonical `execution.timeout_seconds`
 will be the sole per-utility timeout. Legacy `run_batch.timeout_seconds` will
 normalize to it; specifying both with different values will reject.
 
@@ -288,7 +289,7 @@ The parser will expose a frozen `accepted_leaf -> consumer` table. Tests will
 enumerate every canonical and legacy leaf and require exactly one consumer:
 
 ```text
-OpenFOAMCase | FunctionObjectsConfig | ExecutionConfig |
+OpenFOAMCase | FunctionObjectsConfig | SelectedExecutionPlan |
 WorkLayout/RunIdentity | batch matrix/dispatch | generic operation/output
 ```
 
@@ -316,14 +317,14 @@ inputs rather than merely checking that parsing succeeds.
 
 ## Pre-Edit Size Split
 
-Before feature behavior changes, RED characterization tests will freeze current
-behavior and these mechanical splits will land as their own commit:
+After rebasing on merged #1565, RED characterization tests will prove its
+`openfoam_batch_execution.py`, results, facade, and focused tests already satisfy
+400/50. #1575 will modify those modules rather than re-create them. The remaining
+builder split will land before feature behavior:
 
 | Current excess | Required split |
 |---|---|
-| `openfoam_run_batch.py` — 680 lines; `router` 87, `_run_case_mpi` 71 | move pool/MPI/runner orchestration to `openfoam_batch_execution.py` and checkpoint/publication helpers to `openfoam_batch_io.py`; split router into validate, prepare, execute, publish functions |
 | `case_builder.py` — 420 lines; `_write_block_mesh_dict` 81 | move deterministic block-mesh rendering to `block_mesh.py`; leave builder orchestration only |
-| `test_openfoam_run_batch.py` — 445 lines | move MPI/resume tests to `test_openfoam_run_batch_mpi.py` and schema/engine compatibility tests to `test_openfoam_run_batch_contract.py` |
 
 The split commit will change no rendered bytes, argv, rows, checkpoints, or
 exceptions. A syntax-tree test will enforce every touched Python file at no more
@@ -334,18 +335,17 @@ than 400 lines and every function at no more than 50 lines before feature edits.
 | Action | Path | Reason |
 |---|---|---|
 | Create | `case_definition.py`; `test_case_definition.py` | closed v1 models, normalization, leaf ledger, TDD |
-| Create | `openfoam_batch_execution.py`; `openfoam_batch_io.py`; split tests | mandatory behavior-preserving size split |
 | Create | `block_mesh.py` | mandatory builder split |
 | Modify | `models.py`; `case_builder.py`; `workflow.py` | typed authored construction and rendering |
-| Modify | `openfoam_run_batch.py` | adapter, mapped validation, layout/identity consumption |
+| Modify | #1565 facade/config/execution/results modules | adapter, typed selection, layout/identity consumption without duplicate modules |
 | Modify | packaged YAML and synthetic example | canonical contract plus legacy compatibility documentation |
 
 ## TDD and Acceptance
 
 - [ ] Dependency proof will record exact merged #1565/#1574 SHAs and ancestor
   checks before the first RED implementation commit.
-- [ ] RED tests will reject `kind: prebuilt`, paths/locators/manifests, mixed
-  forms, unknown keys, unmapped knobs, duplicate consumers, and unconsumed leaves.
+- [ ] RED tests will accept only the fixed input-bundle `PrebuiltCaseV1`, reject
+      caller paths/locators/MPI/mixed semantics, and prove attestation/copy/drift failures.
 - [ ] Source-neutral tests will prove exact domain, frame/motion units,
   `dynamicMeshDict`, `setFieldsDict`, time, tap control/interval, and runner plan.
 - [ ] Name/device/path/symlink tests will prove portable root confinement before
@@ -354,14 +354,16 @@ than 400 lines and every function at no more than 50 lines before feature edits.
   and RunIdentity and will reject every mismatch before mutation.
 - [ ] Legacy generic and batch examples will retain exact rendered bytes, argv,
   public rows, and checkpoint behavior after normalization.
-- [ ] The three named file splits will precede feature edits and preserve exact
-  characterization goldens.
-- [ ] `PYTHONPATH=src uv run python -m pytest tests/solvers/openfoam/test_case_definition.py tests/solvers/openfoam/test_workflow_router.py tests/solvers/openfoam/test_case_builder.py tests/workflows/test_openfoam_run_batch.py tests/workflows/test_openfoam_run_batch_mpi.py tests/workflows/test_openfoam_run_batch_contract.py -q` will pass.
+- [ ] The #1565 split will be consumed at its exact merged SHA; the builder split
+      will precede feature edits and preserve characterization goldens.
+- [ ] `PYTHONPATH=src uv run python -m pytest tests/solvers/openfoam/test_case_definition.py tests/solvers/openfoam/test_workflow_router.py tests/solvers/openfoam/test_case_builder.py tests/workflows/test_openfoam_run_batch.py tests/workflows/test_openfoam_batch_execution.py tests/workflows/test_openfoam_run_batch_contract.py -q` will pass.
 - [ ] `PYTHONPATH=src uv run python -m pytest tests/solvers/openfoam tests/workflows/test_openfoam_run_batch*.py -q` will pass.
-- [ ] `uv run ruff check src/digitalmodel/solvers/openfoam src/digitalmodel/workflows/openfoam_run_batch.py src/digitalmodel/workflows/openfoam_batch_execution.py src/digitalmodel/workflows/openfoam_batch_io.py tests/solvers/openfoam tests/workflows/test_openfoam_run_batch*.py` will pass.
-- [ ] `PYTHONPATH=src uv run python -m compileall -q src/digitalmodel/solvers/openfoam src/digitalmodel/workflows/openfoam_run_batch.py src/digitalmodel/workflows/openfoam_batch_execution.py src/digitalmodel/workflows/openfoam_batch_io.py` will pass.
+- [ ] `uv run ruff check src/digitalmodel/solvers/openfoam src/digitalmodel/workflows/openfoam_run_batch.py src/digitalmodel/workflows/openfoam_batch_execution.py src/digitalmodel/workflows/openfoam_batch_results.py tests/solvers/openfoam tests/workflows/test_openfoam*.py` will pass.
+- [ ] `PYTHONPATH=src uv run python -m compileall -q src/digitalmodel/solvers/openfoam src/digitalmodel/workflows/openfoam_run_batch.py src/digitalmodel/workflows/openfoam_batch_execution.py src/digitalmodel/workflows/openfoam_batch_results.py` will pass.
 - [ ] `PYTHONPATH=src uv run python -m pytest tests/architecture/test_touched_python_size_limits.py -q` will prove the literal 400/50 limits.
-- [ ] From this pinned worktree, `(cd ../../workspace-hub && bash scripts/legal/legal-sanity-scan.sh --repo=../agent-worktrees/dm-1575-plan --diff-only)` will pass.
+- [ ] With `WORKSPACE_HUB_ROOT` and `DIGITALMODEL_REL_FROM_HUB` set, the candidate
+      SHA check and legal scan will pass:
+      `EXPECTED_SHA="$(git rev-parse HEAD)" && test "$(git -C "$WORKSPACE_HUB_ROOT/$DIGITALMODEL_REL_FROM_HUB" rev-parse HEAD)" = "$EXPECTED_SHA" && (cd "$WORKSPACE_HUB_ROOT" && bash scripts/legal/legal-sanity-scan.sh --repo="$DIGITALMODEL_REL_FROM_HUB" --diff-only)`.
 - [ ] `git diff --check` and T3 code/artifact review will pass before closeout.
 - [ ] The issue will remain implementation-blocked until r2 has no MAJOR and the
   user explicitly approves; no agent will create approval state.
@@ -373,11 +375,11 @@ unsafe prebuilt ambiguity, incomplete allowlists/consumption, rank and path
 authority gaps, unresolved ownership, oversized touched code, missing dependency
 order, and non-executable validation commands.
 
-This r2 draft resolves those themes in the proposed design by making v1
-authored-only, closing both adapter schemas, assigning one owner per leaf,
-consuming upstream layout/privacy contracts in order, and freezing splits and
-commands. No r2 verdict exists yet;
-status will remain `draft` pending fresh adversarial review.
+R2 also reached three-provider MAJOR consensus. Its distinct findings required a
+safe serial prebuilt variant, exact #1565 config composition, one
+`SelectedExecutionPlan`, and modification rather than recreation of #1565 split
+modules. Those are resolved inline in r3 without redispatch under the loop-break
+rule. The plan remains draft pending explicit user approval.
 
 ## Risks and Open Questions
 
