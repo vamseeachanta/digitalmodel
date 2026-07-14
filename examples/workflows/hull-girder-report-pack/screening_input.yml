@@ -1,0 +1,57 @@
+# Hull-girder longitudinal strength screening — synthetic example feeding the
+# hull-girder report-pack demo (see input.yml in this folder).
+#
+# The loading condition is the public textbook box-barge fixture used by the
+# module's golden tests (PNA Vol. I / Hughes & Paik / Barrass & Derrett form):
+# L = 100 m, 10 000 t cargo block over the middle half, uniform box buoyancy
+# -> midship still-water sagging moment W*L/16 = 62 500 t·m. The IACS UR S11
+# rule wave BM/SF envelopes (wave_loads) are combined with the still-water
+# results and screened against total (seagoing) allowable curves. All values
+# are synthetic; allowable curves and approved SM are placeholder inputs.
+#
+# SCREENING TIER ONLY: the class-approved loading instrument governs any
+# compliance conclusion.
+#
+# Run: python -m digitalmodel examples/workflows/hull-girder-report-pack/screening_input.yml
+# (or regenerate the committed demo data with make_demo_data.py here)
+
+basename: hull_girder_screening
+
+hull_girder_screening:
+  length_m: 100.0
+  n_stations: 401
+  weights:
+    lightship:
+      - {name: cargo block, weight_t: 10000.0, x_start_m: 25.0, x_end_m: 75.0}
+  buoyancy:
+    method: box
+  wave_loads:                       # IACS UR S11 (Rev.7, 2010) 2.2.1-2.2.2
+    beam_m: 20.0
+    block_coefficient: 0.9
+  allowables:
+    shear_force:                    # still-water (harbour) allowables
+      x_m: [0.0, 25.0, 75.0, 100.0]
+      positive_t: [1000.0, 5000.0, 5000.0, 1000.0]
+    bending_moment:
+      x_m: [0.0, 50.0, 100.0]
+      hogging_t_m: [20000.0, 125000.0, 20000.0]
+    total_shear_force:              # seagoing (sw + wave) allowables
+      x_m: [0.0, 25.0, 75.0, 100.0]
+      positive_t: [2500.0, 8000.0, 8000.0, 2500.0]
+    total_bending_moment:
+      x_m: [0.0, 50.0, 100.0]
+      hogging_t_m: [50000.0, 250000.0, 50000.0]
+  frames:
+    - {name: "AP", x_m: 0.0}
+    - {name: "Fr 25", x_m: 25.0}
+    - {name: "Midship", x_m: 50.0}
+    - {name: "Fr 75", x_m: 75.0}
+    - {name: "FP", x_m: 100.0}
+  section_modulus:
+    yield_mpa: 235.0
+    approved_sm:
+      deck_m3: 5.5
+      keel_m3: 6.0
+      source: "example loading manual (placeholder)"
+  utilization_limit: 1.0
+  output_dir: data

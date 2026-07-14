@@ -306,7 +306,7 @@ modules:
     entry_point: src/digitalmodel/hull_girder_screening/
     maturity: development
     owner_wiki: docs/domains/ship-design/hull-girder-strength-screening.md
-    key_tests: [tests/naval_architecture/test_hull_girder_screening.py, tests/naval_architecture/test_hull_girder_screening_workflow.py]
+    key_tests: [tests/naval_architecture/test_hull_girder_screening.py, tests/naval_architecture/test_hull_girder_screening_workflow.py, tests/report_pack/test_hull_girder_report_pack_demo.py]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#hull_girder_screening
   - module: installation
     entry_point: src/digitalmodel/installation/
