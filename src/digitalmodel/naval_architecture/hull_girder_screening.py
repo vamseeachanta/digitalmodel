@@ -1,12 +1,15 @@
 # ABOUTME: Hull-girder longitudinal strength SCREENING — still-water SF/BM from a
-# ABOUTME: loading condition, utilisation vs allowable curves, section-modulus check.
+# ABOUTME: loading condition, utilisation vs allowables, S11 wave loads, SM check.
 """Hull-girder longitudinal strength screening (still-water SF/BM vs allowables).
 
 Given a loading condition (lightship distribution + tank/point weights) and a
 hull buoyancy description, this module builds the weight and buoyancy
 distributions along the hull, integrates the still-water shear force and
 bending moment, and reports utilisation against user-supplied allowable SF/BM
-curves interpolated at frame positions. An optional hull-girder
+curves interpolated at frame positions. The IACS UR S11 closed-form wave
+BM/SF envelopes (:func:`rule_wave_loads`) support a second utilisation mode:
+total ``|still-water + wave|`` against the *seagoing* (total) allowable
+curves (:func:`total_utilization_at_frames`). An optional hull-girder
 section-modulus check accepts either simple midship scantlings or a
 class-approved section modulus.
 
@@ -62,11 +65,16 @@ from dataclasses import dataclass, field
 import numpy as np
 
 # REUSE: IACS UR S11 permissible stress / section-modulus yield check and the
-# S11 wave bending moment already validated in this package.
+# S11 wave bending moment / shear force already validated in this package.
 from digitalmodel.naval_architecture.hull_girder_strength import (
     SectionModulusCheck,
+    bending_distribution_factor,
+    rule_block_coefficient,
     section_modulus_check,
+    shear_distribution_factor_f1,
+    shear_distribution_factor_f2,
     wave_bending_moment,
+    wave_coefficient,
 )
 
 G_M_S2 = 9.81  # m/s^2 (tonnes-force -> kN)
@@ -272,6 +280,65 @@ class FrameUtilization:
     bending_allowable_t_m: float | None
     bending_utilization: float | None
     status: str  # pass / fail / no-allowable
+
+
+@dataclass(frozen=True)
+class WaveLoads:
+    """IACS UR S11 rule wave SF/BM envelopes along the hull (t / t·m units).
+
+    Closed-form rule values (kN / kN·m per UR S11 Rev.7 2010, 2.2.1-2.2.2)
+    converted to tonnes-force / tonne-metres (``/ g``) so they combine
+    directly with the still-water curves. ``x`` runs from the aft end of the
+    rule length, matching the screening convention. Hogging / positive shear
+    are positive; sagging / negative shear are negative.
+    """
+
+    x_m: tuple[float, ...]
+    length_m: float
+    beam_m: float
+    block_coefficient: float        # as supplied
+    rule_block_coefficient: float   # floored at 0.6 per S11 2.2.1
+    wave_coefficient: float
+    hogging_t_m: tuple[float, ...]      # +Mwv(x), >= 0
+    sagging_t_m: tuple[float, ...]      # -Mwv(x), <= 0
+    shear_positive_t: tuple[float, ...]  # +Fwv(x), >= 0
+    shear_negative_t: tuple[float, ...]  # -Fwv(x), <= 0
+    applicability_note: str
+
+
+@dataclass(frozen=True)
+class TotalFrameUtilization:
+    """Total (still-water + S11 wave) SF/BM utilisation at one frame.
+
+    Combinations screened per sign: ``SF_sw + Fwv(+)`` / ``SF_sw + Fwv(-)``
+    and ``BM_sw + Mwv,hog`` / ``BM_sw + Mwv,sag``; each combined value is
+    checked against the *total* (seagoing) allowable curve for its sign and
+    the governing utilisation is reported.
+    """
+
+    frame: str
+    x_m: float
+    # shear (t)
+    sw_shear_t: float
+    wave_shear_positive_t: float
+    wave_shear_negative_t: float
+    total_shear_positive_t: float
+    total_shear_negative_t: float
+    shear_allowable_positive_t: float | None
+    shear_allowable_negative_t: float | None
+    shear_utilization: float | None
+    governing_shear: str            # positive / negative
+    # bending (t·m)
+    sw_bending_t_m: float
+    wave_hogging_t_m: float
+    wave_sagging_t_m: float
+    total_hogging_t_m: float
+    total_sagging_t_m: float
+    bending_allowable_hogging_t_m: float | None
+    bending_allowable_sagging_t_m: float | None
+    bending_utilization: float | None
+    governing_bending: str          # hogging / sagging
+    status: str                     # pass / fail / no-allowable
 
 
 @dataclass(frozen=True)
@@ -608,6 +675,198 @@ def utilization_at_frames(
                 shear_utilization=sf_util,
                 bending_moment_t_m=bm_f, bending_allowable_t_m=bm_allow,
                 bending_utilization=bm_util, status=status,
+            )
+        )
+    return rows
+
+
+# --------------------------------------------------------------------------- #
+# IACS UR S11 rule wave loads along the hull + total (sw + wave) utilisation
+# --------------------------------------------------------------------------- #
+def rule_wave_loads(
+    x: np.ndarray,
+    beam_m: float,
+    block_coefficient: float,
+    length_m: float | None = None,
+) -> WaveLoads:
+    """IACS UR S11 wave BM/SF envelopes sampled at the stations ``x``.
+
+    Wave bending moment (UR S11 Rev.7 2010, 2.2.1, distribution factor M of
+    Fig. 1): ``Mwv,hog(x) = +0.19 C L^2 B Cb M(x)``,
+    ``Mwv,sag(x) = -0.11 C L^2 B (Cb + 0.7) M(x)`` (kN·m). Wave shear force
+    (2.2.2, factors F1/F2 of Figs. 2-3):
+    ``Fwv(+)(x) = +0.30 F1(x) C L B (Cb + 0.7)``,
+    ``Fwv(-)(x) = -0.30 F2(x) C L B (Cb + 0.7)`` (kN). ``Cb >= 0.6`` (rule
+    floor). Values are converted to t / t·m for combination with the
+    still-water curves.
+
+    ``length_m`` defaults to the station span; supply the rule length L
+    explicitly when it differs from the integration grid. SCREENING NOTE:
+    these are the unrestricted-service rule envelopes; the class-approved
+    loading manual governs any compliance conclusion.
+    """
+    x = np.asarray(x, dtype=float)
+    span = float(x[-1] - x[0])
+    length = span if length_m is None else float(length_m)
+    if length <= 0.0 or beam_m <= 0.0:
+        raise ValueError("length_m and beam_m must be positive")
+    cb = rule_block_coefficient(block_coefficient)
+    c = wave_coefficient(length)
+    if length < 90.0:
+        note = (
+            f"L = {length:g} m is below the IACS UR S11 applicability range "
+            "(90-500 m); wave coefficient C extrapolated from the 90-300 m "
+            "branch — screening only"
+        )
+    elif length > 500.0:
+        note = (
+            f"L = {length:g} m is above the IACS UR S11 applicability range "
+            "(90-500 m) — screening only"
+        )
+    else:
+        note = "within IACS UR S11 length range (90-500 m)"
+
+    bm_hog_amid = 0.19 * c * length**2 * beam_m * cb                 # kN·m
+    bm_sag_amid = -0.11 * c * length**2 * beam_m * (cb + 0.7)        # kN·m
+    sf_base = 0.30 * c * length * beam_m * (cb + 0.7)                # kN
+
+    xi = np.clip((x - x[0]) / span, 0.0, 1.0)
+    m_factor = np.array([bending_distribution_factor(v) for v in xi])
+    f1 = np.array([shear_distribution_factor_f1(v, cb) for v in xi])
+    f2 = np.array([shear_distribution_factor_f2(v, cb) for v in xi])
+
+    return WaveLoads(
+        x_m=tuple(float(v) for v in x),
+        length_m=length,
+        beam_m=float(beam_m),
+        block_coefficient=float(block_coefficient),
+        rule_block_coefficient=cb,
+        wave_coefficient=c,
+        hogging_t_m=tuple(float(v) for v in bm_hog_amid * m_factor / G_M_S2),
+        sagging_t_m=tuple(float(v) for v in bm_sag_amid * m_factor / G_M_S2),
+        shear_positive_t=tuple(float(v) for v in sf_base * f1 / G_M_S2),
+        shear_negative_t=tuple(float(v) for v in -sf_base * f2 / G_M_S2),
+        applicability_note=note,
+    )
+
+
+def total_utilization_at_frames(
+    result: StillWaterResult,
+    wave: WaveLoads,
+    frames: list[tuple[str, float]],
+    allowable_sf_total: AllowableCurve | None = None,
+    allowable_bm_total: AllowableCurve | None = None,
+    utilization_limit: float = 1.0,
+) -> list[TotalFrameUtilization]:
+    """Total still-water + S11 wave utilisation vs *total* allowable curves.
+
+    The total allowable curves are the **seagoing** permissible SF/BM from
+    the approved loading manual (still-water permissible plus the rule wave
+    envelope, i.e. the combined limit the loadicator checks at sea); the
+    plain still-water allowables of :func:`utilization_at_frames` remain the
+    harbour/still-water screen. Both combinations per sign are screened —
+    ``sw + wave(+)`` and ``sw + wave(-)`` — and each combined value is
+    checked against the allowable table matching its own sign; the governing
+    utilisation is reported. SCREENING TIER ONLY: the class-approved loading
+    instrument governs compliance conclusions.
+    """
+    x = np.asarray(result.x_m)
+    if wave.x_m != result.x_m:
+        raise ValueError("wave loads must be sampled on the still-water grid")
+    sf = np.asarray(result.shear_force_t)
+    bm = np.asarray(result.bending_moment_t_m)
+    wv_hog = np.asarray(wave.hogging_t_m)
+    wv_sag = np.asarray(wave.sagging_t_m)
+    wv_sf_pos = np.asarray(wave.shear_positive_t)
+    wv_sf_neg = np.asarray(wave.shear_negative_t)
+
+    def _governing(
+        x_f: float,
+        combos: dict[str, float],
+        allowable: AllowableCurve | None,
+    ) -> tuple[float | None, str]:
+        """Governing utilisation over the sign combinations at ``x_f``."""
+        best: tuple[float, str] | None = None
+        for label, value in combos.items():
+            if allowable is None:
+                continue
+            limit = allowable.limit_for(x_f, value)
+            util = abs(value) / limit
+            if best is None or util > best[0]:
+                best = (util, label)
+        if best is None:
+            # no allowable: report the larger-magnitude combination
+            label = max(combos, key=lambda k: abs(combos[k]))
+            return None, label
+        return best
+
+    rows: list[TotalFrameUtilization] = []
+    for name, xf in frames:
+        if not (x[0] - 1e-9 <= xf <= x[-1] + 1e-9):
+            raise ValueError(f"frame {name!r} at x={xf} lies outside the hull")
+
+        sf_f = float(np.interp(xf, x, sf))
+        sf_wv_pos = float(np.interp(xf, x, wv_sf_pos))
+        sf_wv_neg = float(np.interp(xf, x, wv_sf_neg))
+        sf_tot_pos = sf_f + sf_wv_pos
+        sf_tot_neg = sf_f + sf_wv_neg
+        sf_util, sf_gov = _governing(
+            xf,
+            {"positive": sf_tot_pos, "negative": sf_tot_neg},
+            allowable_sf_total,
+        )
+
+        bm_f = float(np.interp(xf, x, bm))
+        bm_wv_hog = float(np.interp(xf, x, wv_hog))
+        bm_wv_sag = float(np.interp(xf, x, wv_sag))
+        bm_tot_hog = bm_f + bm_wv_hog
+        bm_tot_sag = bm_f + bm_wv_sag
+        bm_util, bm_gov = _governing(
+            xf,
+            {"hogging": bm_tot_hog, "sagging": bm_tot_sag},
+            allowable_bm_total,
+        )
+
+        utils = [u for u in (sf_util, bm_util) if u is not None]
+        if not utils:
+            status = "no-allowable"
+        else:
+            status = "pass" if max(utils) <= utilization_limit else "fail"
+
+        rows.append(
+            TotalFrameUtilization(
+                frame=name, x_m=float(xf),
+                sw_shear_t=sf_f,
+                wave_shear_positive_t=sf_wv_pos,
+                wave_shear_negative_t=sf_wv_neg,
+                total_shear_positive_t=sf_tot_pos,
+                total_shear_negative_t=sf_tot_neg,
+                shear_allowable_positive_t=(
+                    allowable_sf_total.limit_for(xf, +1.0)
+                    if allowable_sf_total else None
+                ),
+                shear_allowable_negative_t=(
+                    allowable_sf_total.limit_for(xf, -1.0)
+                    if allowable_sf_total else None
+                ),
+                shear_utilization=sf_util,
+                governing_shear=sf_gov,
+                sw_bending_t_m=bm_f,
+                wave_hogging_t_m=bm_wv_hog,
+                wave_sagging_t_m=bm_wv_sag,
+                total_hogging_t_m=bm_tot_hog,
+                total_sagging_t_m=bm_tot_sag,
+                bending_allowable_hogging_t_m=(
+                    allowable_bm_total.limit_for(xf, +1.0)
+                    if allowable_bm_total else None
+                ),
+                bending_allowable_sagging_t_m=(
+                    allowable_bm_total.limit_for(xf, -1.0)
+                    if allowable_bm_total else None
+                ),
+                bending_utilization=bm_util,
+                governing_bending=bm_gov,
+                status=status,
             )
         )
     return rows

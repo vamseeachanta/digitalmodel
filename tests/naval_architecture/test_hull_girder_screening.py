@@ -31,6 +31,7 @@ import numpy as np
 import pytest
 
 from digitalmodel.naval_architecture.hull_girder_screening import (
+    G_M_S2,
     AllowableCurve,
     DistributedWeight,
     HydroStation,
@@ -41,10 +42,12 @@ from digitalmodel.naval_architecture.hull_girder_screening import (
     buoyancy_direct,
     buoyancy_hydrostatics_table,
     condition_totals,
+    rule_wave_loads,
     section_modulus_screen,
     section_properties,
     solve_waterline,
     still_water_sf_bm,
+    total_utilization_at_frames,
     utilization_at_frames,
 )
 
@@ -256,6 +259,120 @@ def test_allowable_curve_validation():
         AllowableCurve(x_m=(0.0, 0.0), positive=(1.0, 1.0), negative=(1.0, 1.0))
     with pytest.raises(ValueError, match="positive magnitudes"):
         AllowableCurve(x_m=(0.0, 1.0), positive=(1.0, -1.0), negative=(1.0, 1.0))
+
+
+# --------------------------------------------------------------------------- #
+# IACS UR S11 rule wave loads + total (sw + wave) utilisation
+# --------------------------------------------------------------------------- #
+def test_rule_wave_loads_hand_calc():
+    """L=100 m, B=20 m, Cb=0.9: C = 10.75 - 2^1.5 = 7.92157...;
+    Mwv,hog(amidships) = 0.19*C*L^2*B*Cb kN·m, Mwv,sag = -0.11*C*L^2*B*(Cb+0.7);
+    Fwv base = 0.30*C*L*B*(Cb+0.7) kN; all /g for t / t·m.
+    """
+    x = np.linspace(0.0, L, N)
+    wave = rule_wave_loads(x, beam_m=20.0, block_coefficient=0.9)
+    c = 10.75 - 2.0**1.5
+    assert wave.wave_coefficient == pytest.approx(c, rel=1e-12)
+    assert wave.rule_block_coefficient == 0.9
+    hog_amid = 0.19 * c * L**2 * 20.0 * 0.9 / G_M_S2
+    sag_amid = -0.11 * c * L**2 * 20.0 * 1.6 / G_M_S2
+    i_mid = N // 2  # x = 50 m: distribution factor M = 1
+    assert wave.hogging_t_m[i_mid] == pytest.approx(hog_amid, rel=1e-9)
+    assert wave.sagging_t_m[i_mid] == pytest.approx(sag_amid, rel=1e-9)
+    # M ramps linearly: at x = 20 m (x/L = 0.2), M = 0.5
+    i_20 = int(np.argmin(np.abs(x - 20.0)))
+    assert wave.hogging_t_m[i_20] == pytest.approx(0.5 * hog_amid, rel=1e-9)
+    # ends close to zero
+    assert wave.hogging_t_m[0] == 0.0
+    assert wave.sagging_t_m[-1] == 0.0
+    # shear: base 0.30*C*L*B*(Cb+0.7); F1=F2=0.7 amidships
+    sf_base = 0.30 * c * L * 20.0 * 1.6 / G_M_S2
+    assert wave.shear_positive_t[i_mid] == pytest.approx(0.7 * sf_base, rel=1e-9)
+    assert wave.shear_negative_t[i_mid] == pytest.approx(-0.7 * sf_base, rel=1e-9)
+    # F1 forward hump = 1.0 at x/L = 0.775
+    i_fwd = int(np.argmin(np.abs(x - 77.5)))
+    assert wave.shear_positive_t[i_fwd] == pytest.approx(sf_base, rel=1e-9)
+    assert wave.shear_negative_t[i_fwd] == pytest.approx(
+        -1.73 * 0.9 / 1.6 * sf_base, rel=1e-9
+    )
+    assert "below the IACS UR S11" not in wave.applicability_note
+
+
+def test_rule_wave_loads_flags_short_hull_and_floors_cb():
+    x = np.linspace(0.0, 60.0, 61)
+    wave = rule_wave_loads(x, beam_m=12.0, block_coefficient=0.45)
+    assert wave.rule_block_coefficient == 0.6   # S11 2.2.1 floor
+    assert wave.block_coefficient == 0.45
+    assert "below the IACS UR S11 applicability range" in wave.applicability_note
+
+
+def test_total_utilization_combines_sw_and_wave():
+    """Box-barge sagging fixture + S11 wave: at midship the sagging total is
+    sw sag (-62 500 t·m) plus the wave sagging moment; hogging total is
+    sw + wave hog (still net sagging here). The sagging combination governs.
+    """
+    x, w, b = _sagging_case()
+    result = still_water_sf_bm(x, w, b)
+    wave = rule_wave_loads(x, beam_m=20.0, block_coefficient=0.9)
+    allow_bm = AllowableCurve(
+        x_m=(0.0, 50.0, 100.0),
+        positive=(50_000.0, 250_000.0, 50_000.0),
+        negative=(50_000.0, 250_000.0, 50_000.0),
+    )
+    allow_sf = AllowableCurve(
+        x_m=(0.0, 100.0), positive=(8_000.0, 8_000.0),
+        negative=(8_000.0, 8_000.0),
+    )
+    rows = total_utilization_at_frames(
+        result, wave, [("Midship", 50.0), ("Fr 25", 25.0)], allow_sf, allow_bm
+    )
+    mid = rows[0]
+    i_mid = int(np.argmin(np.abs(x - 50.0)))
+    assert mid.sw_bending_t_m == pytest.approx(-62_500.0, rel=1e-3)
+    assert mid.total_sagging_t_m == pytest.approx(
+        mid.sw_bending_t_m + wave.sagging_t_m[i_mid], rel=1e-9
+    )
+    assert mid.total_hogging_t_m == pytest.approx(
+        mid.sw_bending_t_m + wave.hogging_t_m[i_mid], rel=1e-9
+    )
+    assert mid.governing_bending == "sagging"
+    assert mid.bending_utilization == pytest.approx(
+        abs(mid.total_sagging_t_m) / 250_000.0, rel=1e-9
+    )
+    # shear: sw SF ~ 0 at midship, so the wave envelope governs both signs
+    assert mid.shear_utilization == pytest.approx(
+        max(abs(mid.total_shear_positive_t), abs(mid.total_shear_negative_t))
+        / 8_000.0,
+        rel=1e-6,
+    )
+    assert all(r.status == "pass" for r in rows)
+
+
+def test_total_utilization_flags_exceedance_and_no_allowable():
+    x, w, b = _sagging_case()
+    result = still_water_sf_bm(x, w, b)
+    wave = rule_wave_loads(x, beam_m=20.0, block_coefficient=0.9)
+    tight = AllowableCurve(
+        x_m=(0.0, 100.0), positive=(80_000.0, 80_000.0),
+        negative=(80_000.0, 80_000.0),
+    )
+    rows = total_utilization_at_frames(result, wave, [("Midship", 50.0)],
+                                       None, tight)
+    assert rows[0].status == "fail"
+    assert rows[0].bending_utilization > 1.0
+    assert rows[0].shear_utilization is None
+    assert rows[0].shear_allowable_positive_t is None
+
+    bare = total_utilization_at_frames(result, wave, [("Midship", 50.0)])
+    assert bare[0].status == "no-allowable"
+
+
+def test_total_utilization_rejects_mismatched_grid():
+    x, w, b = _sagging_case()
+    result = still_water_sf_bm(x, w, b)
+    wave = rule_wave_loads(np.linspace(0.0, L, 51), 20.0, 0.9)
+    with pytest.raises(ValueError, match="still-water grid"):
+        total_utilization_at_frames(result, wave, [("Midship", 50.0)])
 
 
 # --------------------------------------------------------------------------- #
