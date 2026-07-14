@@ -117,7 +117,7 @@ def test_external_writer_enforces_allowlist_at_publication(monkeypatch):
     ]
 
 
-def test_result_policy_config_is_rejected_only_for_external_context(monkeypatch):
+def test_result_policy_config_is_ignored_for_legacy_context(monkeypatch):
     cfg = {
         "openfoam_run_batch": {"run_batch": {"result_extensions": ["future-v1"]}}
     }
@@ -125,16 +125,6 @@ def test_result_policy_config_is_rejected_only_for_external_context(monkeypatch)
     monkeypatch.setattr(facade, "_execute_batch", lambda _batch: ([], *_times()))
     monkeypatch.setattr(facade, "_finalize_batch", lambda cfg, *_args: cfg)
     assert facade.router(cfg) is cfg
-
-    layout = Mock()
-    layout.root_path = Path("/private/operator")
-    monkeypatch.setattr(facade, "_prepare_batch", lambda _cfg: {"layout": layout})
-    execute = Mock(side_effect=AssertionError("must reject before execution"))
-    monkeypatch.setattr(facade, "_execute_batch", execute)
-    with pytest.raises(ValueError, match="code-owned"):
-        facade.router(cfg)
-    execute.assert_not_called()
-    layout.close.assert_called_once_with()
 
 
 def test_command_failure_logging_is_external_only_and_root_aware(

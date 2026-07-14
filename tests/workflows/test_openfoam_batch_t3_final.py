@@ -1,8 +1,6 @@
 """Final T3 regressions for issue #1565 integration boundaries."""
 
-import os
 import subprocess
-from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
