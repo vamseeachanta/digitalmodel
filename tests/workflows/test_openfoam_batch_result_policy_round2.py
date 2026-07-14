@@ -10,6 +10,17 @@ import pytest
 
 from digitalmodel.workflows import openfoam_batch_results as results
 
+EXPECTED_PROJECTED = {
+    "index": 1, "name": "case-a", "status": "completed",
+    "solver": "simpleFoam", "mock": True, "wall_seconds": 1.25,
+    "courant_number": 0.5, "solver_app": "simpleFoam",
+    "mpi_plan": "<redacted>", "args": "<redacted>",
+    "error_message": "<redacted>", "standard_error": "<redacted>",
+    "solver_log": "<redacted>", "mixed_percent": "<redacted>",
+    "mixed_unicode": "<redacted>", "partial_encoding": "<redacted>",
+    "double_encoding": "<redacted>", "ambiguous_encoding": "<redacted>",
+}
+
 
 def test_external_row_projection_drops_nested_and_redacts_all_diagnostic_aliases():
     root = Path("/private/operator/openfoam")
@@ -43,26 +54,7 @@ def test_external_row_projection_drops_nested_and_redacts_all_diagnostic_aliases
     projected = results.redact_external_row(row, root)
     encoded = json.dumps(projected, sort_keys=True)
 
-    assert projected == {
-        "index": 1,
-        "name": "case-a",
-        "status": "completed",
-        "solver": "simpleFoam",
-        "mock": True,
-        "wall_seconds": 1.25,
-        "courant_number": 0.5,
-        "solver_app": "simpleFoam",
-        "mpi_plan": "<redacted>",
-        "args": "<redacted>",
-        "error_message": "<redacted>",
-        "standard_error": "<redacted>",
-        "solver_log": "<redacted>",
-        "mixed_percent": "<redacted>",
-        "mixed_unicode": "<redacted>",
-        "partial_encoding": "<redacted>",
-        "double_encoding": "<redacted>",
-        "ambiguous_encoding": "<redacted>",
-    }
+    assert projected == EXPECTED_PROJECTED
     for secret in (
         str(root), "private", "--token=secret", mixed_percent, mixed_unicode,
         partial, double_encoded, ambiguous,
