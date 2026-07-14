@@ -181,13 +181,17 @@ class PumpDiagnostics:
             model_version="legacy",
         )
 
-    def generate_troubleshooting_report(self, results: AnalysisResults) -> str:
+    def generate_troubleshooting_report(
+        self,
+        results: AnalysisResults,
+        diag: DiagnosticResult | None = None,
+    ) -> str:
         """Generate a natural language troubleshooting report.
 
         Backward-compatible method. Now uses ML classifier internally
         for richer diagnostics.
         """
-        diag = self.classify_with_context(results)
+        diag = diag or self.classify_with_context(results)
         mode = diag.classification
         description = self.FAILURE_MODES.get(mode, "Unknown failure mode.")
 

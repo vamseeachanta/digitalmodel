@@ -1,15 +1,19 @@
 # ABOUTME: Main orchestrator for Dynacard analysis in digitalmodel.
 # ABOUTME: Integrates physics solvers, calculations, and diagnostics into unified workflow.
 
-from html import escape
 from pathlib import Path
-from typing import Optional, Literal
+from typing import Any, Literal
 
 from .models import DynacardAnalysisContext, AnalysisResults
 from .physics import DynacardPhysicsSolver
 from .finite_difference import FiniteDifferenceSolver
 from .diagnostics import PumpDiagnostics
 from .calculations import run_p1_calculations
+from .report_sections import (
+    _build_alarm_block,
+    _classification_verdict,
+    build_diagnostic_report_html,
+)
 
 
 class DynacardWorkflow:
@@ -39,6 +43,7 @@ class DynacardWorkflow:
         self.solver_method = solver_method
         self.solver = None
         self.diagnostics = PumpDiagnostics()
+        self._last_diagnostic_result = None
 
         if context:
             self._init_solver()
@@ -68,11 +73,32 @@ class DynacardWorkflow:
 
         # 2. Run Analysis
         results = self.run_full_analysis()
+        diag = self._last_diagnostic_result
+        if diag is None:
+            diag = self.diagnostics.classify_with_context(results)
+        verdict = _classification_verdict(diag.classification)
+        alarm_block = _build_alarm_block(self.ctx, diag.classification)
 
         # 3. Update cfg with results
+        cfg['screening_status'] = verdict['screening_status']
+        cfg['artificial_lift'] = {
+            'screening_status': verdict['screening_status'],
+            'classification': verdict['classification'],
+            'severity': verdict['severity'],
+            'setpoint_reference': alarm_block['reference'],
+            'alarm_note': alarm_block['note'],
+            'setpoints': alarm_block['setpoints'],
+            'alarms': alarm_block['alarms'],
+        }
         cfg['results'] = results.model_dump()
         if cfg.get('report', {}).get('html', False):
-            html_report = self._write_html_report(cfg, results)
+            html_report = self._write_html_report(
+                cfg,
+                results,
+                diag,
+                verdict,
+                alarm_block,
+            )
             cfg.setdefault('outputs', {})['html_report'] = str(html_report)
         return cfg
 
@@ -104,6 +130,9 @@ class DynacardWorkflow:
         self,
         cfg: dict,
         results: AnalysisResults,
+        diag: Any,
+        verdict: dict[str, str],
+        alarm_block: dict[str, Any],
     ) -> Path:
         """Write a standalone diagnostic report beside the saved cfg."""
         from .visualization.diagnostic_annotator import DiagnosticAnnotator
@@ -113,14 +142,13 @@ class DynacardWorkflow:
         file_base = self._result_file_base(cfg)
         report_path = result_folder / f'{file_base}_diagnostic_report.html'
 
-        diag = self.diagnostics.classify_with_context(results)
         svg = DiagnosticAnnotator().render(
             results.downhole_card,
             diag.classification,
             diag.confidence,
             diag.differential,
         )
-        html = self._html_document(results, svg)
+        html = build_diagnostic_report_html(cfg, results, svg, verdict, alarm_block)
         report_path.write_text(html)
         return report_path
 
@@ -140,42 +168,6 @@ class DynacardWorkflow:
         if cfg.get('_config_file_path'):
             return Path(str(cfg['_config_file_path'])).stem
         return 'input'
-
-    def _html_document(
-        self,
-        results: AnalysisResults,
-        svg: str,
-    ) -> str:
-        ctx = results.ctx
-        well_id = ctx.api14 if ctx else 'unknown'
-        return "\n".join([
-            "<!doctype html>",
-            "<html lang=\"en\">",
-            "<head>",
-            "  <meta charset=\"utf-8\">",
-            "  <title>Dynacard Diagnostic Report</title>",
-            "  <style>",
-            "    body { font-family: Arial, sans-serif; margin: 24px; }",
-            "    main { max-width: 960px; margin: 0 auto; }",
-            "    dl { display: grid; grid-template-columns: 180px 1fr; gap: 8px; }",
-            "    dt { font-weight: 700; }",
-            "  </style>",
-            "</head>",
-            "<body>",
-            "  <main>",
-            "    <h1>Dynacard Diagnostic Report</h1>",
-            f"    <p><strong>Well:</strong> {escape(well_id)}</p>",
-            "    <dl>",
-            f"      <dt>Diagnostic</dt><dd>{escape(results.diagnostic_message)}</dd>",
-            f"      <dt>Pump fillage</dt><dd>{results.pump_fillage:.6f}</dd>",
-            f"      <dt>Production</dt><dd>{results.inferred_production:.6f} bbl/day</dd>",
-            f"      <dt>Buckling detected</dt><dd>{results.buckling_detected}</dd>",
-            "    </dl>",
-            svg,
-            "  </main>",
-            "</body>",
-            "</html>",
-        ])
 
     def run_full_analysis(self) -> AnalysisResults:
         """
@@ -213,7 +205,9 @@ class DynacardWorkflow:
             results.inferred_production = p1_results['production'].theoretical_production
 
         # 4. AI Diagnostics: Troubleshooting
-        self.diagnostics.generate_troubleshooting_report(results)
+        diag = self.diagnostics.classify_with_context(results)
+        self.diagnostics.generate_troubleshooting_report(results, diag=diag)
+        self._last_diagnostic_result = diag
 
         return results
 
