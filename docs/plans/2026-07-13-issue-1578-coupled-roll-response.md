@@ -1,12 +1,12 @@
 # Plan for #1578: Coupled Roll Response from Sloshing Coefficients
 
-> **Status:** draft
+> **Status:** draft — r2 MAJOR findings resolved inline in r3; user approval required
 > **Complexity:** T2
 > **Date:** 2026-07-13
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/1578
 > **Client:** N/A
 > **Lane:** lane:codex
-> **Review artifacts:** `scripts/review/results/2026-07-13-plan-1578-r1-consolidated.md`
+> **Review artifacts:** `scripts/review/results/2026-07-13-plan-1578-r{1,2}-consolidated.md`
 
 ---
 
@@ -147,17 +147,25 @@ requires exact equality and cannot be extrapolated.
 
 Because K/B depend on roll amplitude, accepted coupled response must be self-
 consistent. After omega/fill interpolation, K(A) and B(A) are linear within each
-amplitude cell. The evaluator will form the exact quartic
-`A^2*|Zc(A)|^2-|F|^2=0`, enumerate all real roots in the allowed support/policy
-intervals, deduplicate shared endpoints at `1e-10` relative tolerance, and
-verify each root by direct residual `<=1e-9*max(A,1 rad)`. Exactly one root is
-required. Zero roots rejects as unsupported/non-convergent; multiple roots
-rejects as ambiguous. Clamp/extrapolation extends only the explicitly permitted
-axis segment and records per-axis distance. This avoids silently using forced-
-motion coefficients at a different response amplitude.
+amplitude cell. For each cell define
+`Aref=max(abs(Alo),abs(Ahi),1e-6 rad)` and `x=A/Aref`; construct the exact quartic
+`A^2*|Zc(A)|^2-|F|^2=0` in x and divide coefficients by their maximum absolute
+value before solving. A root is real when
+`abs(Im(x)) <= 1e-12 + 1e-10*abs(Re(x))`, must give `A>=0`, and must lie in the
+allowed interval within `1e-12 rad + 1e-9*max(abs(A),abs(bound))`. Shared roots
+are deduplicated with that same absolute+relative amplitude tolerance.
 
-An optional `require_reduction` policy will reject a negative reduction beyond
-a numerical tolerance. Otherwise amplification will be returned and prominently
+Every candidate will then be checked using the dimensionally explicit fixed-
+point residual
+`abs(A-abs(F/Zc(A))) <= 1e-10 rad + 1e-8*max(A,abs(F/Zc(A)))`, after the existing
+scale-aware impedance check. Exactly one verified root is required; zero rejects
+as unsupported/non-convergent and multiple roots reject as ambiguous. Clamp/
+extrapolation extends only explicitly permitted segments and records per-axis
+distance. This avoids using coefficients at a different response amplitude.
+
+An optional `require_reduction` policy will reject
+`reduction_percent < -1e-8 percentage points`. Values within that zero band are
+reported as zero within tolerance. Otherwise amplification will be prominently
 flagged; it will never be silently called anti-roll performance. Positive tank
 damping alone is not assumed to guarantee reduction at every frequency because
 tank stiffness may retune resonance.
@@ -196,6 +204,8 @@ identifier, private result, or project-coded default will enter public code.
 | `test_trilinear_corner_edge_interior_goldens` | interpolation has independent numeric oracles |
 | `test_single_self_consistent_amplitude_root` | quartic root gives response amplitude used for K/B |
 | `test_zero_and_multiple_amplitude_roots_reject` | unsupported or ambiguous nonlinear screening fails |
+| `test_near_zero_and_cell_boundary_root_dedup` | absolute+relative root tolerances are deterministic |
+| `test_quartic_candidate_uses_amplitude_residual` | polynomial scaling cannot replace physical residual verification |
 | `test_outside_support_rejects_by_default` | no warning-only clamp |
 | `test_explicit_clamp_and_extrapolation_flags` | non-nominal coordinates/distance are complete |
 | `test_per_axis_normalized_distance` | unlike units never share one scalar support distance |
@@ -229,7 +239,9 @@ identifier, private result, or project-coded default will enter public code.
 - [ ] `PYTHONPATH=src uv run python -m pytest -q tests/solvers/openfoam` passes.
 - [ ] `uv run ruff check src/digitalmodel/solvers/openfoam/roll_response.py src/digitalmodel/solvers/openfoam/sloshing_coefficients.py src/digitalmodel/solvers/openfoam/sloshing_interpolation.py tests/solvers/openfoam` passes.
 - [ ] `PYTHONPATH=src uv run python -m compileall -q src/digitalmodel/solvers/openfoam` passes; AST size tests enforce 400/50.
-- [ ] `WORKSPACE_HUB_ROOT=../workspace-hub "$WORKSPACE_HUB_ROOT/scripts/legal/legal-sanity-scan.sh" --repo=digitalmodel --diff-only` and `git diff --check` pass.
+- [ ] With `WORKSPACE_HUB_ROOT` and `DIGITALMODEL_REL_FROM_HUB` set, the SHA-
+      verified legal command passes:
+      `EXPECTED_SHA="$(git rev-parse HEAD)" && test "$(git -C "$WORKSPACE_HUB_ROOT/$DIGITALMODEL_REL_FROM_HUB" rev-parse HEAD)" = "$EXPECTED_SHA" && (cd "$WORKSPACE_HUB_ROOT" && bash scripts/legal/legal-sanity-scan.sh --repo="$DIGITALMODEL_REL_FROM_HUB" --diff-only)`; `git diff --check` passes.
 - [ ] Default out-of-support behavior rejects; every allowed non-nominal result
       exposes original/effective coordinates, distance, and policy.
 - [ ] Zero excitation, singular resonance, wrong-sign damping, amplification,
@@ -245,9 +257,9 @@ identifier, private result, or project-coded default will enter public code.
 | Codex | MAJOR | coefficient-set binding, fixed-point policy, closed interpolation topology |
 | Gemini | MAJOR | bypassable raw K/B request, dimensionless support distances, exact commands |
 
-**Overall:** r1 MAJOR findings are resolved in this r2 draft; r2 review and
-explicit user approval remain required. No agent may apply
-`status:plan-approved` or create its marker.
+**Overall:** r1/r2 MAJOR findings are resolved inline in r3. Per the loop-break
+rule r3 is not redispatched; explicit user approval remains required. No agent
+may apply `status:plan-approved` or create its marker.
 
 ## Risks and Open Questions
 
