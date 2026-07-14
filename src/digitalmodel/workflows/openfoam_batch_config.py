@@ -145,11 +145,15 @@ def _git_output(repo: Path, *args: str) -> str:
     return result.stdout.strip()
 
 
-def _source_package(package_root: Path, candidates: list[Path]) -> tuple[dict, Path]:
-    repo = Path(_git_output(package_root, "rev-parse", "--show-toplevel"))
+def _require_clean(repo: Path, candidates: list[Path]) -> None:
     relative = [str(path.resolve().relative_to(repo.resolve())) for path in candidates]
     if _git_output(repo, "status", "--porcelain=v1", "--", *relative):
         raise ValueError("source identity candidate paths must be clean")
+
+
+def _source_package(package_root: Path, candidates: list[Path]) -> tuple[dict, Path]:
+    repo = Path(_git_output(package_root, "rev-parse", "--show-toplevel"))
+    _require_clean(repo, candidates)
     package_rel = str(package_root.resolve().relative_to(repo.resolve()))
     tracked = _git_output(repo, "ls-files", "-z", "--", package_rel).split("\0")
     records = _actual_records(repo, [item for item in tracked if item], repo)
@@ -291,6 +295,8 @@ def build_run_identity(
         source, repo = _wheel_package(Path(package_root), Path(distribution_root)), None
     source.update(package_name=package_name, package_version=package_version)
     inputs = _input_records(config_path, referenced_inputs, repo)
+    if repo is not None:
+        _require_clean(repo, candidates + [Path(package_root)])
     identity = {
         "schema_version": 1,
         "identity_kind": "openfoam-run-v1",
@@ -310,19 +316,16 @@ def build_run_identity(
 
 
 def _compat(name: str, fallback: Callable) -> Callable:
-    """Honor a legacy facade monkeypatch without importing it recursively."""
     facade = sys.modules.get("digitalmodel.workflows.openfoam_run_batch")
     return getattr(facade, name, fallback) if facade else fallback
 
 
 def default_workers(cpu_count: int | None = None) -> int:
-    """Return the owner-policy worker count, floored and never below one."""
     cores = cpu_count if cpu_count is not None else (os.cpu_count() or 1)
     return max(1, math.floor(WORKER_CORE_FRACTION * cores))
 
 
 def resolve_workers(run_settings: dict) -> int:
-    """Resolve an explicit worker count or apply the owner default."""
     explicit = run_settings.get("workers")
     if explicit is None:
         return _compat("default_workers", default_workers)()
@@ -335,7 +338,6 @@ def resolve_workers(run_settings: dict) -> int:
 def resolve_case_matrix(
     explicit: list[dict] | None, variants: dict, cfg_dir: Path
 ) -> list[dict[str, Any]]:
-    """Resolve explicit or generated cases while preserving legacy order."""
     if explicit:
         if variants:
             raise ValueError(
@@ -353,7 +355,6 @@ def render_cases(
     mapping: dict[str, str],
     work_dir: Path,
 ) -> list[dict[str, Any]]:
-    """Render the deterministic per-case settings and work directories."""
     base_name = base.get("name") or f"{base['case_type']}_case"
     rendered: list[dict[str, Any]] = []
     for index, case in enumerate(cases):
