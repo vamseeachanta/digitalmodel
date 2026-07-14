@@ -9,7 +9,7 @@ import time
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 from .prebuilt_mesh import (
     PrebuiltExecution,
@@ -126,8 +126,10 @@ class OpenFOAMRunner:
     author any dict files — it only executes utilities inside the case.
     """
 
-    def __init__(self, config: Optional[OpenFOAMRunConfig] = None) -> None:
+    def __init__(self, config: Optional[OpenFOAMRunConfig] = None,
+                 executable_verifier: Optional[Callable[[str], Path]] = None) -> None:
         self._config = config or OpenFOAMRunConfig()
+        self._executable_verifier = executable_verifier
 
     # ------------------------------------------------------------------ #
     #  public API                                                         #
@@ -273,8 +275,13 @@ class OpenFOAMRunner:
         start: float,
     ) -> None:
         for status, argv in stages:
+            launch_argv = list(argv)
+            if self._executable_verifier is not None:
+                launch_argv[0] = str(self._executable_verifier(argv[0]))
             result.status = status
-            stage = self._run_stage(case, argv)
+            stage = self._run_stage(case, launch_argv)
+            if self._executable_verifier is not None:
+                self._executable_verifier(argv[0])
             result.stages.append(stage)
             if not stage.ok:
                 result.status = OpenFOAMRunStatus.FAILED
@@ -334,7 +341,7 @@ class OpenFOAMRunner:
         return shutil.which(executable) is not None
 
     def _run_stage(self, case: Path, argv: list[str]) -> StageResult:
-        name = argv[0]
+        name = Path(argv[0]).name
         log_file = case / f"log.{name}"
         stage = StageResult(name=name, log_file=log_file)
         start = time.monotonic()
