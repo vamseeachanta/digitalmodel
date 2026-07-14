@@ -138,7 +138,7 @@ def test_heavy_checkpoint_log_mesh_field_and_processor_names_are_excluded(
 def test_yaml_cannot_register_or_discover_result_extensions(value):
     cfg = {"openfoam_run_batch": {"run_batch": {"result_extensions": value}}}
     with pytest.raises(ValueError, match="code-owned"):
-        facade.router(cfg)
+        results.validate_result_policy_config(cfg)
 
 
 def test_external_row_redacts_root_path_command_error_stdout_and_stderr():
@@ -199,7 +199,8 @@ def test_command_failure_log_does_not_emit_absolute_command_or_error_path(
         Mock(side_effect=OSError(f"failed opening {root}/run/case-a")),
     )
     assert execution.run_command(
-        [str(root / "bin/simpleFoam")], tmp_path, tmp_path / "log", 3
+        [str(root / "bin/simpleFoam")], tmp_path, tmp_path / "log", 3,
+        external_root=root,
     ) == 1
     assert str(root) not in repr(error_log.call_args)
     assert "simpleFoam" in repr(error_log.call_args)
