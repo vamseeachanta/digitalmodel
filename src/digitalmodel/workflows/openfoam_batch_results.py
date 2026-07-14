@@ -10,8 +10,70 @@ from typing import Any
 
 import pandas as pd
 
+from digitalmodel.workflows.openfoam_batch_config import canonical_json_bytes
+
 CHECKPOINT_FILENAME = "_result.json"
+EXTERNAL_CHECKPOINT_FILENAME = ".digitalmodel-checkpoint-v2.json"
 RESULTS_ALLOWED_SUFFIXES = {".csv", ".json"}
+
+
+def load_external_checkpoint(
+    layout, case: str, identity: dict, max_row_bytes: int = 65536
+) -> dict[str, Any] | None:
+    """Read only an exact completed checkpoint while ownership locks hold."""
+    layout.require_locks(case)
+    data = layout.read_case_file(case, EXTERNAL_CHECKPOINT_FILENAME, 1024 * 1024)
+    if data is None:
+        return None
+    try:
+        payload = json.loads(data)
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return None
+    if not isinstance(payload, dict) or not isinstance(payload.get("result_row"), dict):
+        return None
+    try:
+        exact_identity = isinstance(payload.get("identity"), dict) and (
+            canonical_json_bytes(payload["identity"])
+            == canonical_json_bytes(identity)
+        )
+        row_size = len(
+            json.dumps(
+                payload["result_row"], sort_keys=True, allow_nan=False
+            ).encode()
+        )
+    except (TypeError, ValueError, OverflowError):
+        return None
+    expected = (
+        type(payload.get("schema_version")) is int
+        and payload["schema_version"] == 2
+        and exact_identity
+        and payload.get("owner_token") == layout.owner_token
+        and type(payload.get("case")) is str
+        and payload["case"] == case
+        and payload.get("status") == "completed"
+        and payload["result_row"].get("status") == "completed"
+        and payload["result_row"].get("name") == case
+    )
+    return payload["result_row"] if expected and row_size <= max_row_bytes else None
+
+
+def write_external_checkpoint(
+    layout, case: str, identity: dict, row: dict[str, Any], max_row_bytes: int = 65536
+) -> None:
+    """Atomically persist a bounded checkpoint while ownership locks hold."""
+    layout.require_locks(case)
+    if len(json.dumps(row, sort_keys=True).encode()) > max_row_bytes:
+        raise ValueError("external checkpoint result row exceeds byte bound")
+    payload = {
+        "schema_version": 2,
+        "identity": identity,
+        "owner_token": layout.owner_token,
+        "case": case,
+        "status": row.get("status"),
+        "result_row": row,
+    }
+    data = (json.dumps(payload, indent=2) + "\n").encode()
+    layout.write_case_file(case, EXTERNAL_CHECKPOINT_FILENAME, data)
 
 
 def load_checkpoint(work_dir: Path) -> dict[str, Any] | None:
@@ -77,8 +139,20 @@ def write_summary(
     finished_at: datetime,
 ) -> dict:
     """Write the bounded legacy JSON summary."""
+    summary = make_summary(
+        rows, mode, workers, mock, timeout_seconds, started_at, finished_at
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(summary, indent=2) + "\n")
+    return summary
+
+
+def make_summary(
+    rows, mode, workers, mock, timeout_seconds, started_at, finished_at
+) -> dict:
+    """Build the common batch summary without performing path I/O."""
     completed = sum(1 for row in rows if row["status"] == "completed")
-    summary = {
+    return {
         "workflow": "openfoam_run_batch",
         "mode": mode,
         "total_cases": len(rows),
@@ -91,6 +165,16 @@ def write_summary(
         "started_at_utc": started_at.isoformat(),
         "finished_at_utc": finished_at.isoformat(),
     }
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(summary, indent=2) + "\n")
+
+
+def write_external_results(
+    output, rows, mode, workers, mock, timeout_seconds, started_at, finished_at
+) -> dict:
+    """Publish both external rollups through the retained output descriptor."""
+    summary = make_summary(
+        rows, mode, workers, mock, timeout_seconds, started_at, finished_at
+    )
+    manifest = pd.DataFrame(rows).to_csv(index=False).encode()
+    output.write("cases.csv", manifest)
+    output.write("batch_summary.json", (json.dumps(summary, indent=2) + "\n").encode())
     return summary

@@ -6,10 +6,11 @@ from __future__ import annotations
 import shutil
 import subprocess
 import time
+from contextlib import nullcontext
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Callable, ContextManager, Optional
 
 from .prebuilt_mesh import (
     PrebuiltExecution,
@@ -126,8 +127,13 @@ class OpenFOAMRunner:
     author any dict files — it only executes utilities inside the case.
     """
 
-    def __init__(self, config: Optional[OpenFOAMRunConfig] = None) -> None:
+    def __init__(
+        self,
+        config: Optional[OpenFOAMRunConfig] = None,
+        executable_guard: Callable[[str], ContextManager[None]] | None = None,
+    ) -> None:
         self._config = config or OpenFOAMRunConfig()
+        self._executable_guard = executable_guard
 
     # ------------------------------------------------------------------ #
     #  public API                                                         #
@@ -339,14 +345,17 @@ class OpenFOAMRunner:
         stage = StageResult(name=name, log_file=log_file)
         start = time.monotonic()
         try:
-            proc = subprocess.run(  # noqa: S603 - argv is a fixed utility name.
-                argv,
-                cwd=str(case),
-                capture_output=True,
-                text=True,
-                timeout=self._config.timeout_seconds,
-                check=False,
-            )
+            guard = self._executable_guard(name) if self._executable_guard else nullcontext()
+            with guard as executable:
+                command = [executable or name, *argv[1:]]
+                proc = subprocess.run(  # noqa: S603 - fixed utility argv.
+                    command,
+                    cwd=str(case),
+                    capture_output=True,
+                    text=True,
+                    timeout=self._config.timeout_seconds,
+                    check=False,
+                )
         except (OSError, subprocess.TimeoutExpired) as exc:
             stage.duration_seconds = time.monotonic() - start
             stage.error_message = f"{name} invocation failed: {exc}"
