@@ -119,6 +119,7 @@ def test_stale_lock_requires_dead_process_proof(tmp_path: Path) -> None:
     with layout.lock("run"):
         meta_path = lock / "meta.json"
         meta = json.loads(meta_path.read_text())
+        assert meta["process_start"]
         meta["heartbeat_epoch"] = 0
         meta_path.write_text(json.dumps(meta))
         with pytest.raises(RuntimeError, match="held"):

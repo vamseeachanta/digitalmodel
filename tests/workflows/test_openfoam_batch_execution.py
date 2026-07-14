@@ -23,6 +23,7 @@ def test_checkpoint_v2_requires_identity_owner_case_and_completed() -> None:
     assert not checkpoint_matches({**checkpoint, "schema": 1}, "a" * 64, "token", "case-1")
     failed = {**checkpoint, "row": {"name": "case-1", "status": "failed"}}
     assert not checkpoint_matches(failed, "a" * 64, "token", "case-1")
+    assert checkpoint["run_identity"]["identity_sha256"] == "a" * 64
 
 
 def test_checkpoint_contains_no_external_path(tmp_path: Path) -> None:
@@ -48,3 +49,18 @@ def test_mpi_launch_revalidates_bound_executable(tmp_path: Path) -> None:
     with pytest.raises(RuntimeError, match="changed"):
         execute_mpi_plan(item, tmp_path, [["blockMesh"]], "solver", mutate, 10,
                          tool_bindings={"blockMesh": (tool, file_sha256(tool))})
+
+
+def test_mpi_executes_verified_absolute_path(tmp_path: Path) -> None:
+    tool = tmp_path / "blockMesh"
+    tool.write_bytes(b"approved")
+    item = {"index": 0, "name": "case", "case": {}}
+    launched = []
+
+    def capture(argv, cwd, log, timeout, expected_executable=None):
+        launched.append(argv)
+        return 0
+
+    execute_mpi_plan(item, tmp_path, [["blockMesh"]], "solver", capture, 10,
+                     tool_bindings={"blockMesh": (tool, file_sha256(tool))})
+    assert launched == [[str(tool)]]
