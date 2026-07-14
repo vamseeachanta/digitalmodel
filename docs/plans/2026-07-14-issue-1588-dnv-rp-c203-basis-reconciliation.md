@@ -92,7 +92,7 @@ After the source gate is resolved, the implementation will reconcile the reached
 | Create/modify | `src/digitalmodel/citations/` | Add a DNV C203 citation registry entry without licensed table reproduction |
 | Create/modify | `tests/fatigue/` and `tests/citations/` | Add independent anchors and fail-closed provenance tests before implementation |
 | Update | `examples/manufacturing/` | Regenerate only after behavior and provenance are accepted |
-| Coordinate separately | `llm-wiki` resolver pages and workspace registries | Resolve identity/frontmatter conflicts under their own issue/approval gates |
+| Coordinate separately | workspace-hub #3533/#3538 and llm-wiki #837/#839/#840 | Land public registry, citation, page/source identity, private authority evidence, and mechanically blocked resolver contracts under their own approvals |
 
 The exact file list will be narrowed after the qualified comparison. This draft will not authorize broad curve-library rewrites or silent changes to other fatigue workflows.
 
@@ -100,7 +100,7 @@ The exact file list will be narrowed after the qualified comparison. This draft 
 
 Tests will be written before implementation and will include:
 
-1. Citation resolution will fail closed for missing page, missing `doc_key`-governed target, wrong revision, wrong amendment identity, wrong publisher, wrong source sibling, or missing exact locator.
+1. Citation resolution will fail closed under the landed #3538/#839 contracts for missing page/source identity, blocked resolver, wrong revision/amendment, wrong publisher, wrong source sibling, or missing exact locator; this issue will not silently extend the generic citation contract.
 2. Independent source-backed class-F seawater-CP anchors will cover one stress above the accepted knee, one below it, and the knee equality boundary.
 3. A source-backed test will establish whether the second branch uses an explicit intercept or continuity at the accepted knee; a declared-but-unused constant will fail coverage.
 4. Thickness cases at 25, 40 and 60 mm will validate the accepted reference, exponent, boundary and applicability.
@@ -121,16 +121,20 @@ Tests will be written before implementation and will include:
 - [ ] Legal/security scan and T3 plan/code cross-review gates pass before closeout.
 - [ ] #1588, #818 and any downstream marketing issue remain open until their separate acceptance boundaries are satisfied.
 
-## Decisions required before plan review
+## Decisions required before implementation and resolver activation
 
 1. **Authorized DNV source:** identify a qualified reviewer with active access to edition 2024-10 and the 2025-10 amendment, or explicitly select a different project-governing edition with rationale.
 2. **Technical basis:** record the accepted seawater-CP knee, both branch definitions/intercepts, slopes, environmental applicability, thickness correction, Miner treatment and allowable-damage/DFF basis with exact locators.
 3. **BS claim:** decide whether BS 7608 will remain a scoped cross-reference requiring a qualified mapping, or be removed from this DNV implementation's compliance prose.
 4. **Migration policy:** decide whether a source-backed behavior change will invalidate and regenerate the existing synthetic example and downstream proof, or whether a versioned legacy mode is required.
 
-## Adversarial review
+## Adversarial review and dependency gates
 
-T3 plan review will run only after the four decisions above are recorded. Review prompts will be defect-seeking and will specifically challenge licensed-source authority, hidden standards constants, branch coverage, acceptance semantics, resolver ambiguity, transitive caller impact, and artifact migration. This issue will remain at `status:needs-plan`; neither `status:plan-review` nor `status:plan-approved` will be applied by the agent.
+T3 review may assess this plan's structure before the four qualified decisions are recorded; those missing decisions will remain explicit implementation blockers rather than creating a cycle with #837. Review prompts will be defect-seeking and will challenge licensed-source authority, hidden constants, branch coverage, acceptance semantics, resolver ambiguity, transitive impact, and migration.
+
+The dependency order will be: (A) #3533 publishes public-safe schema/pending records; (B) #839/#840/#3538 establish page/source, private-evidence, and citation contracts; (C) #837 Stage A installs mechanically blocked identities; (D) the qualified decisions above supply exact source and locators; (E) the private authority record and exactly one #837 resolver activate under separate approval; (F) #1588 calculation implementation begins. Resolver activation is therefore a pre-implementation gate, not a prerequisite for reviewing this plan.
+
+Any qualified-basis addition will amend this plan and receive fresh adversarial review before user approval or implementation. This issue will remain at `status:needs-plan` during the current review cycle; neither `status:plan-review` nor `status:plan-approved` will be self-applied.
 
 ## Risks and boundaries
 
