@@ -6,7 +6,7 @@
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/1578
 > **Client:** N/A
 > **Lane:** lane:codex
-> **Review artifacts:** `scripts/review/results/2026-07-13-plan-1578-{claude,codex,gemini}.md`
+> **Review artifacts:** `scripts/review/results/2026-07-13-plan-1578-r1-consolidated.md`
 
 ---
 
@@ -84,19 +84,28 @@ roll response, reduction, provenance, support flags, and fail-closed validity.
 
 ## Physics and Interface Contract
 
-`RollResponseRequest` will require finite SI fields:
+`CoefficientSampleV1` will bind one immutable #1577 v2 reduction payload hash to
+its verified K44/B44, omega, roll amplitude, declared fill fraction, and opaque
+condition ID. `CoefficientSetV1` will carry exact unit enums, sorted axes, every
+sample, a canonical-JSON SHA-256, and schema version. Its builder verifies that
+the payload omega/amplitude/K/B match the envelope and rejects copied, duplicate,
+or mismatched payloads. Fill is supplied by the source-neutral case-definition
+caller because #1577 intentionally has no case identifier; the builder binds it
+into the set digest. The response API accepts this set, never caller-supplied
+K/B or caller-supplied support bounds.
+
+`RollResponseRequest` will require finite typed quantities:
 
 ```text
-omega_rad_s > 0
-excitation_moment_nm >= 0
-vessel_inertia_kg_m2 > 0
-vessel_restoring_nm_per_rad > 0
-vessel_damping_nm_s_per_rad >= 0
-tank_stiffness_nm_per_rad: finite
-tank_damping_nm_s_per_rad >= 0
-condition_id, coefficient_set_id, amplitude_id: nonempty opaque IDs
-coefficient_omega_rad_s, coefficient_fill, coefficient_amplitude_rad
-support bounds and interpolation/extrapolation disposition
+omega: Quantity(value>0, unit=rad/s)
+fill_fraction: [0,1]
+excitation: ComplexQuantity(real,imag, unit=N*m)
+vessel_inertia: Quantity(value>0, unit=kg*m^2)
+vessel_restoring: Quantity(value>0, unit=N*m/rad)
+vessel_damping: Quantity(value>=0, unit=N*m*s/rad)
+coefficient_set: validated CoefficientSetV1
+support_policy: reject | clamp | linear-extrapolate
+max_extrapolation_fraction: [0,0.25], default 0
 ```
 
 No geometry, client, project, file path, or free-form source text belongs in the
@@ -107,8 +116,8 @@ The frozen complex impedances are:
 ```text
 Z0 = Cv - omega^2*I + i*omega*Bv
 Zc = (Cv+Kt) - omega^2*I + i*omega*(Bv+Bt)
-Theta0 = F/Z0
-Thetac = F/Zc
+Theta0 = Fcomplex/Z0
+Thetac = Fcomplex/Zc
 reduction_percent = 100*(1 - abs(Thetac)/abs(Theta0))
 ```
 
@@ -117,17 +126,35 @@ result `roll-response-v1` will contain complex real/imaginary impedance and
 response components, magnitude in rad/deg, phase, reduction, total stiffness/
 damping, opaque provenance, interpolation/extrapolation flags, and validity.
 
+Response phase will use `atan2` in the same global complex reference as the
+input excitation; the transfer phase is `arg(Theta)-arg(F)` when `F != 0`.
 Zero excitation will return zero baseline/coupled response and an explicit
 `reduction_percent=null` because a ratio is undefined. Nonzero excitation with
-near-zero impedance will reject as singular. Total restoring must remain
-positive and total damping nonnegative; NaN/Inf and wrong units reject.
+near-zero impedance will reject as singular when
+`abs(Z) <= 1e-12*max(abs(C),abs(omega^2*I),abs(omega*B),1 N*m/rad)`.
+Total restoring must remain positive and total damping nonnegative. Unknown or
+dimensionally wrong unit enums, NaN, and Inf reject before arithmetic.
 
-Coefficient support is three-dimensional: omega, fill, and roll amplitude.
-Default policy is `reject`. Explicit `clamp` or `linear-extrapolate` will require
-a caller flag, return the original/query/effective coordinates and distance from
-support, and mark the result non-nominal. Condition or amplitude reuse without
-an exact opaque binding will reject. #1577 schema/version and physical units are
-mandatory; deprecated raw moment aliases reject.
+Coefficient support will be a complete rectilinear Cartesian grid with strictly
+increasing unique omega/fill/amplitude axes, at least two points per varying
+axis, and exactly one sample per node. Missing/ragged/duplicate nodes reject.
+Trilinear interpolation order is amplitude, fill, then omega and has golden
+corner/edge/interior vectors. Default out-of-support policy is `reject`.
+Explicit clamp/extrapolation acts independently per axis and returns signed
+dimensionless distance `(query-nearest_bound)/(axis_max-axis_min)` for every
+axis, original/effective coordinates, and a non-nominal flag. A zero-span axis
+requires exact equality and cannot be extrapolated.
+
+Because K/B depend on roll amplitude, accepted coupled response must be self-
+consistent. After omega/fill interpolation, K(A) and B(A) are linear within each
+amplitude cell. The evaluator will form the exact quartic
+`A^2*|Zc(A)|^2-|F|^2=0`, enumerate all real roots in the allowed support/policy
+intervals, deduplicate shared endpoints at `1e-10` relative tolerance, and
+verify each root by direct residual `<=1e-9*max(A,1 rad)`. Exactly one root is
+required. Zero roots rejects as unsupported/non-convergent; multiple roots
+rejects as ambiguous. Clamp/extrapolation extends only the explicitly permitted
+axis segment and records per-axis distance. This avoids silently using forced-
+motion coefficients at a different response amplitude.
 
 An optional `require_reduction` policy will reject a negative reduction beyond
 a numerical tolerance. Otherwise amplification will be returned and prominently
@@ -164,9 +191,15 @@ identifier, private result, or project-coded default will enter public code.
 | `test_zero_excitation_has_null_reduction` | zero/zero ratio is not fabricated |
 | `test_condition_retuning` | each condition queries its own omega/fill/amplitude coefficients |
 | `test_provenance_mismatch_rejects` | wrong condition/amplitude/schema cannot reuse coefficients |
+| `test_coefficient_set_hash_binds_v2_payload` | copied/mismatched reduction envelope rejects |
+| `test_rectilinear_grid_rejects_missing_duplicate_ragged` | topology is closed before interpolation |
+| `test_trilinear_corner_edge_interior_goldens` | interpolation has independent numeric oracles |
+| `test_single_self_consistent_amplitude_root` | quartic root gives response amplitude used for K/B |
+| `test_zero_and_multiple_amplitude_roots_reject` | unsupported or ambiguous nonlinear screening fails |
 | `test_outside_support_rejects_by_default` | no warning-only clamp |
 | `test_explicit_clamp_and_extrapolation_flags` | non-nominal coordinates/distance are complete |
-| `test_units_and_dimensional_identity` | impedance terms all resolve to N*m/rad |
+| `test_per_axis_normalized_distance` | unlike units never share one scalar support distance |
+| `test_units_and_dimensional_identity` | typed quantities resolve to N*m/rad; wrong enums reject |
 | `test_phase_quadrants` | complex phase uses stable `atan2` convention |
 | `test_deterministic_result_schema` | ordering/serialization and opaque provenance are stable |
 | `test_raw_harmonic_alias_rejects` | #1577 deprecated amplitudes cannot masquerade as K/B |
@@ -190,12 +223,13 @@ identifier, private result, or project-coded default will enter public code.
 
 - [ ] #1574 and #1577 are merged; exact SHAs and v2 coefficient schema are pinned.
 - [ ] RED evidence precedes each implementation slice.
-- [ ] `uv run --no-project pytest -q tests/solvers/openfoam/test_roll_response.py`
+- [ ] `PYTHONPATH=src uv run python -m pytest -q tests/solvers/openfoam/test_roll_response.py`
       passes all analytical/validation cases.
-- [ ] Focused coefficient/interpolation/coupling regressions pass after split.
-- [ ] Full `tests/solvers/openfoam/` regression passes.
-- [ ] Ruff, compileall, ≤400 file/≤50 function, legal/privacy, and
-      `git diff --check` gates pass.
+- [ ] `PYTHONPATH=src uv run python -m pytest -q tests/solvers/openfoam/test_sloshing_coefficients.py tests/solvers/openfoam/test_sloshing_interpolation.py tests/solvers/openfoam/test_sloshing_coupling.py` passes.
+- [ ] `PYTHONPATH=src uv run python -m pytest -q tests/solvers/openfoam` passes.
+- [ ] `uv run ruff check src/digitalmodel/solvers/openfoam/roll_response.py src/digitalmodel/solvers/openfoam/sloshing_coefficients.py src/digitalmodel/solvers/openfoam/sloshing_interpolation.py tests/solvers/openfoam` passes.
+- [ ] `PYTHONPATH=src uv run python -m compileall -q src/digitalmodel/solvers/openfoam` passes; AST size tests enforce 400/50.
+- [ ] `WORKSPACE_HUB_ROOT=../workspace-hub "$WORKSPACE_HUB_ROOT/scripts/legal/legal-sanity-scan.sh" --repo=digitalmodel --diff-only` and `git diff --check` pass.
 - [ ] Default out-of-support behavior rejects; every allowed non-nominal result
       exposes original/effective coordinates, distance, and policy.
 - [ ] Zero excitation, singular resonance, wrong-sign damping, amplification,
@@ -207,12 +241,13 @@ identifier, private result, or project-coded default will enter public code.
 
 | Provider | Verdict | Findings |
 |---|---|---|
-| Claude | pending | exact pushed draft required |
-| Codex | pending | exact pushed draft required |
-| Gemini | pending | exact pushed draft required |
+| Claude | MAJOR | provenance envelope, amplitude consistency, grid, units, phase/tolerance |
+| Codex | MAJOR | coefficient-set binding, fixed-point policy, closed interpolation topology |
+| Gemini | MAJOR | bypassable raw K/B request, dimensionless support distances, exact commands |
 
-**Overall:** draft; implementation requires adversarial review and explicit user
-approval. No agent may apply `status:plan-approved` or create its marker.
+**Overall:** r1 MAJOR findings are resolved in this r2 draft; r2 review and
+explicit user approval remain required. No agent may apply
+`status:plan-approved` or create its marker.
 
 ## Risks and Open Questions
 
