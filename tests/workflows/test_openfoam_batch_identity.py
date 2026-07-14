@@ -199,6 +199,12 @@ def test_source_identity_binds_exact_tracked_bytes_and_rejects_dirty_candidates(
             result_policy_version="result-policy-v1",
             work_layout_version="work-layout-v1",
         )
+
+
+def test_source_package_commit_changes_identity(tmp_path):
+    identity = _identity(tmp_path)
+    repo = tmp_path / "repo"
+    (repo / "src/demo_pkg/__init__.py").write_text("VALUE = 2\n")
     subprocess.run(["git", "-C", repo, "add", "."], check=True)
     subprocess.run(
         [
@@ -246,6 +252,10 @@ def test_identity_changes_for_config_input_tool_host_policy_and_layout_mutations
             _identity(tmp_path / name, **overrides)["identity_sha256"]
             != baseline["identity_sha256"]
         )
+
+
+def test_identity_changes_for_each_referenced_input_mutation(tmp_path):
+    baseline = _identity(tmp_path / "base")
     for role in ("request", "matrix", "case"):
         scope = tmp_path / role
         repo, package, files = _git_repo(scope)

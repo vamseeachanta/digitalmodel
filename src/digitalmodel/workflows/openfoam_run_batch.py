@@ -29,6 +29,7 @@ from digitalmodel.workflows.openfoam_batch_config import (  # noqa: F401
     _RESERVED_ROW_KEYS,
     default_workers,
     render_cases as _render_cases_impl,
+    resolve_execution_authority as _resolve_execution_authority_impl,
     resolve_case_matrix as _resolve_case_matrix_impl,
     resolve_dir as _resolve_dir_impl,
     resolve_path as _resolve_path_impl,
@@ -92,6 +93,7 @@ def _prepare_batch(cfg: dict) -> dict:
     settings = cfg.get("openfoam_run_batch") or {}
     cfg_dir = Path(cfg.get("_config_dir_path") or Path.cwd())
     run_settings = settings.get("run_batch") or {}
+    authority = _resolve_execution_authority_impl(run_settings, cfg_dir)
     mode = run_settings.get("mode", DEFAULT_MODE)
     if mode not in VALID_MODES:
         raise ValueError(
@@ -114,9 +116,7 @@ def _prepare_batch(cfg: dict) -> dict:
     results_dir = _resolve_dir(
         run_settings.get("output_dir", DEFAULT_OUTPUT_DIR), cfg_dir
     )
-    work_dir = _resolve_dir(
-        run_settings.get("work_dir", DEFAULT_WORK_DIR), cfg_dir
-    )
+    work_dir = _resolve_dir(run_settings.get("work_dir", DEFAULT_WORK_DIR), cfg_dir)
     return {
         "settings": settings,
         "run_settings": run_settings,
@@ -124,6 +124,7 @@ def _prepare_batch(cfg: dict) -> dict:
         "mock": mock,
         "workers": workers,
         "timeout": timeout,
+        "authority": authority,
         "results_dir": results_dir,
         "rendered": _render_cases(base, cases, mapping, work_dir),
     }
