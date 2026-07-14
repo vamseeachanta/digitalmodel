@@ -69,6 +69,25 @@ def test_external_output_dir_cannot_escape_input_directory(tmp_path, monkeypatch
     assert list(root.iterdir()) == []
 
 
+def test_external_output_parent_swap_cannot_redirect_results(tmp_path, monkeypatch):
+    cfg, root = _external_cfg(tmp_path)
+    cfg_dir = Path(cfg["_config_dir_path"])
+    saved = tmp_path / "input-saved"
+    outside = tmp_path / "outside"
+    outside.mkdir()
+
+    def identity_builder(**_evidence):
+        cfg_dir.rename(saved)
+        cfg_dir.symlink_to(outside, target_is_directory=True)
+        return IDENTITY
+
+    monkeypatch.setattr(ofb, "_build_run_identity", identity_builder)
+    with pytest.raises(ValueError, match="output_dir"):
+        ofb.router(cfg)
+    assert not (outside / "results").exists()
+    assert list(root.iterdir()) == []
+
+
 def test_external_route_uses_approved_builder_and_owned_layout(
     tmp_path, monkeypatch
 ):
