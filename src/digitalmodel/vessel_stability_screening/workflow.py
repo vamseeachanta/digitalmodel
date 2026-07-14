@@ -1,12 +1,16 @@
-"""Durable workflow: intact vessel stability screening.
+"""Durable workflow: vessel stability screening (intact + damage).
 
 Wires :mod:`digitalmodel.naval_architecture.vessel_stability_screening`
+and :mod:`digitalmodel.naval_architecture.damage_stability_screening`
 into a registry workflow: hydrostatic-table lookup (draft-indexed, CSV or
 inline YAML) -> loading condition with per-tank free-surface correction ->
 draft/trim/GM equilibrium -> GZ curve from a GZ table or KN cross-curves ->
 IMO IS Code 2008 Part A intact criteria + 46 CFR 170.170 weather criterion
 -> optional lifting/crane-heel load case (46 CFR 173.005-series style) ->
-optional max-KG (KG-limit) screening.
+optional max-KG (KG-limit) screening -> optional damage-case screening
+(added-weight flooded-compartment groups or directly supplied damaged
+hydrostatics/KN, cited survival criteria — 46 CFR Part 174 per applicable
+class / IMO MODU Code 2009).
 
 SCREENING TIER ONLY: the PE-stamped stability booklet / class or USCG
 submittal governs. GHS remains the licensed cross-check; criteria
@@ -68,12 +72,49 @@ Config schema (YAML basename ``vessel_stability_screening``)::
       max_kg:                            # optional KG-limit screening
         enabled: true
         tolerance_m: 0.0001
+      damage_cases:                      # optional damage screening (slice 2)
+        water_density_t_m3: 1.025        # floodwater density (added weight)
+        criteria:                        # cited thresholds (46 CFR 174 per
+          max_equilibrium_heel_deg: 15.0 #   class / IMO MODU Code 2009 —
+          min_gm_m: 0.05                 #   ALL config-supplied + cited)
+          min_downflooding_margin_deg: 7.0
+          min_range_beyond_equilibrium_deg: 7.0   # needs damaged gz
+          min_residual_area_m_rad: 0.05            # needs damaged gz
+          # min_area_ratio: 1.0          # needs gz + heeling arm
+          citation: {standard: "IMO MODU Code 2009 (Res. A.1023(26))",
+                     edition: "2009", clause: "3.6"}
+        cases:
+          - name: side compartment       # added-weight path
+            compartments:
+              - {name: wing tank, volume_m3: 500.0, permeability: 0.8,
+                 vcg_m: 2.0, lcg_m: 30.0, tcg_m: 4.0, fsm_t_m: 451.0,
+                 free_communication: true}
+                 # or free_surface: {length_m, breadth_m}  (floodwater rho)
+            downflooding_angle_deg: 30.0 # per-case; else vessel-level value
+            margin_line_immersion_deg: 32.0          # optional
+            gz:                          # optional damaged GZ/KN at W'
+              heel_deg: [0, 5, 10, ...]
+              kn_m: [...]                # GZ = KN - KG'_fluid*sin(phi)
+              # or gz_m: [...]           # pre-computed damaged GZ
+            # wind_heeling_moment_t_m: 8000.0        # optional, needs gz
+            # criteria: {...}            # per-case override, cited
+          - name: ghs supplied case      # direct path (practical route:
+            condition:                   #   licensed tool per job)
+              displacement_t: 8610.0
+              gm_fluid_m: 5.2358
+              heel_deg: 2.08
+              trim_m: 0.714              # optional
+              kg_fluid_m: 4.8642         # required only with kn_m input
+            gz: {heel_deg: [...], gz_m: [...]}       # optional
+            downflooding_angle_deg: 30.0
       output_dir: results
 
 Outputs: loading-condition, equilibrium, GZ-curve, criteria (with citation
-column), optional lifting and KG-limit CSVs plus a one-row summary CSV —
-all report_pack-ready — and the same content in the returned config under
-``vessel_stability_screening``; ``screening_status`` is stamped pass/fail.
+column), optional lifting, KG-limit, damage-case and damage-criteria CSVs
+plus a one-row summary CSV — all report_pack-ready — and the same content
+in the returned config under ``vessel_stability_screening``;
+``screening_status`` is stamped pass/fail across the intact criteria and
+every damage case.
 
 Units: SI marine practice — m, t, deg, m*rad; MTC in t*m/cm; longitudinal
 positions from the aft perpendicular; trim positive by the stern.
@@ -86,7 +127,17 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
+from digitalmodel.naval_architecture.damage_stability_screening import (
+    DamageCaseResult,
+    DamageCriteria,
+    DirectDamageCondition,
+    FloodedCompartment,
+    added_weight_equilibrium,
+    damage_gz_analysis,
+    evaluate_damage_case,
+)
 from digitalmodel.naval_architecture.vessel_stability_screening import (
+    RHO_SEAWATER_T_M3,
     Citation,
     CraneHeelingCase,
     Equilibrium,
@@ -177,10 +228,15 @@ def router(cfg: dict) -> dict:
         )
         criteria_results.extend(lifting_result.criteria)
 
-    if not criteria_results:
+    damage_results, damage_case_rows = _damage_cases(
+        settings, condition, table, downflooding, lbp_m
+    )
+
+    if not criteria_results and not damage_results:
         raise ValueError(
             "vessel_stability_screening evaluated no criteria — supply gz "
-            "input and/or criteria.weather_cfr_170_170 and/or lifting"
+            "input and/or criteria.weather_cfr_170_170 and/or lifting "
+            "and/or damage_cases"
         )
 
     kg_limits, governing = _max_kg(
@@ -196,7 +252,12 @@ def router(cfg: dict) -> dict:
         deck_edge,
     )
 
-    status = "pass" if all(c.passed for c in criteria_results) else "fail"
+    status = (
+        "pass"
+        if all(c.passed for c in criteria_results)
+        and all(case.passed for case in damage_results)
+        else "fail"
+    )
 
     # -- rows / CSVs ---------------------------------------------------------
     condition_rows = _condition_rows(condition)
@@ -204,6 +265,11 @@ def router(cfg: dict) -> dict:
     criteria_rows = [_criterion_row(c) for c in criteria_results]
     gz_rows = _gz_rows(curve, lifting_case, condition.displacement_t)
     kg_rows = [asdict(limit) for limit in kg_limits]
+    damage_criteria_rows = [
+        {"case": case.case_name, **_criterion_row(c)}
+        for case in damage_results
+        for c in case.criteria
+    ]
 
     outputs: dict[str, str] = {}
     condition_csv = _output_path(cfg, settings, "loading_condition.csv")
@@ -212,9 +278,10 @@ def router(cfg: dict) -> dict:
     equilibrium_csv = _output_path(cfg, settings, "equilibrium.csv")
     _write_csv(equilibrium_csv, [equilibrium_row])
     outputs["equilibrium_csv"] = _display_path(equilibrium_csv)
-    criteria_csv = _output_path(cfg, settings, "criteria.csv")
-    _write_csv(criteria_csv, criteria_rows)
-    outputs["criteria_csv"] = _display_path(criteria_csv)
+    if criteria_rows:
+        criteria_csv = _output_path(cfg, settings, "criteria.csv")
+        _write_csv(criteria_csv, criteria_rows)
+        outputs["criteria_csv"] = _display_path(criteria_csv)
     if gz_rows:
         gz_csv = _output_path(cfg, settings, "gz_curve.csv")
         _write_csv(gz_csv, gz_rows)
@@ -223,9 +290,20 @@ def router(cfg: dict) -> dict:
         kg_csv = _output_path(cfg, settings, "kg_limits.csv")
         _write_csv(kg_csv, kg_rows)
         outputs["kg_limits_csv"] = _display_path(kg_csv)
+    if damage_case_rows:
+        damage_csv = _output_path(cfg, settings, "damage_cases.csv")
+        _write_csv(damage_csv, damage_case_rows)
+        outputs["damage_cases_csv"] = _display_path(damage_csv)
+        damage_criteria_csv = _output_path(cfg, settings, "damage_criteria.csv")
+        _write_csv(damage_criteria_csv, damage_criteria_rows)
+        outputs["damage_criteria_csv"] = _display_path(damage_criteria_csv)
 
     summary = {
-        "method": "vessel_stability_screening_intact_v1",
+        "method": (
+            "vessel_stability_screening_v2"
+            if damage_results
+            else "vessel_stability_screening_intact_v1"
+        ),
         "vessel": str(vessel.get("name", "unnamed")),
         "condition": condition.name,
         "displacement_t": condition.displacement_t,
@@ -239,6 +317,10 @@ def router(cfg: dict) -> dict:
         "gm_fluid_m": equilibrium.gm_fluid_m,
         "criteria_evaluated": len(criteria_results),
         "criteria_failed": sum(1 for c in criteria_results if not c.passed),
+        "damage_cases_evaluated": len(damage_results),
+        "damage_cases_failed": sum(
+            1 for case in damage_results if not case.passed
+        ),
         "lifting_equilibrium_heel_deg": (
             None if lifting_result is None else lifting_result.equilibrium_heel_deg
         ),
@@ -261,6 +343,8 @@ def router(cfg: dict) -> dict:
         "gz_curve_result": gz_rows,
         "lifting_result": None if lifting_result is None else _lifting_row(lifting_result),
         "kg_limits": kg_rows,
+        "damage_case_results": damage_case_rows,
+        "damage_criteria_results": damage_criteria_rows,
         **outputs,
         "governance": GOVERNANCE_NOTE,
     }
@@ -508,6 +592,276 @@ def _max_kg(
         tolerance_m=float(raw.get("tolerance_m", 1e-4)),
     )
     return limits, governing_kg_limit(limits)
+
+
+def _damage_cases(
+    settings: dict,
+    condition: LoadingCondition,
+    table: HydrostaticTable,
+    vessel_downflooding_deg: float | None,
+    lbp_m: float | None,
+) -> tuple[list[DamageCaseResult], list[dict[str, Any]]]:
+    """Parse and evaluate the ``damage_cases`` section.
+
+    Returns the evaluated :class:`DamageCaseResult` list and the
+    report-ready per-case summary rows.
+    """
+    raw = settings.get("damage_cases")
+    if raw is None:
+        return [], []
+    if not isinstance(raw, dict):
+        raise ValueError("vessel_stability_screening damage_cases must be a mapping")
+    cases_raw = raw.get("cases")
+    if not isinstance(cases_raw, list) or not cases_raw:
+        raise ValueError(
+            "vessel_stability_screening damage_cases.cases must be a "
+            "non-empty list"
+        )
+    shared_criteria = (
+        None
+        if raw.get("criteria") is None
+        else _damage_criteria(raw["criteria"], "damage_cases.criteria")
+    )
+    rho = float(raw.get("water_density_t_m3", RHO_SEAWATER_T_M3))
+
+    results: list[DamageCaseResult] = []
+    rows: list[dict[str, Any]] = []
+    for i, case_raw in enumerate(cases_raw):
+        label = f"damage_cases.cases[{i}]"
+        if not isinstance(case_raw, dict):
+            raise ValueError(f"vessel_stability_screening {label} must be a mapping")
+        name = str(case_raw.get("name", f"damage_case_{i + 1}"))
+        criteria = shared_criteria
+        if case_raw.get("criteria") is not None:
+            criteria = _damage_criteria(case_raw["criteria"], f"{label}.criteria")
+        if criteria is None:
+            raise ValueError(
+                f"vessel_stability_screening {label}: cited criteria are "
+                "required (damage_cases.criteria or a per-case criteria block)"
+            )
+
+        has_compartments = case_raw.get("compartments") is not None
+        has_condition = case_raw.get("condition") is not None
+        if has_compartments == has_condition:
+            raise ValueError(
+                f"vessel_stability_screening {label}: give exactly one of "
+                "compartments (added-weight) or condition (direct damaged "
+                "hydrostatics)"
+            )
+
+        limit_deg = _limit_angle(case_raw, vessel_downflooding_deg)
+        wind_moment = _opt_float(case_raw, "wind_heeling_moment_t_m")
+
+        extra: dict[str, Any]
+        if has_compartments:
+            compartments_raw = case_raw["compartments"]
+            if not isinstance(compartments_raw, list) or not compartments_raw:
+                raise ValueError(
+                    f"vessel_stability_screening {label}.compartments must "
+                    "be a non-empty list"
+                )
+            compartments = [
+                _compartment(item, f"{label}.compartments[{j}]", rho)
+                for j, item in enumerate(compartments_raw)
+            ]
+            damaged = added_weight_equilibrium(
+                condition, table, compartments, rho, lbp_m
+            )
+            method = "added_weight"
+            displacement = damaged.displacement_t
+            gm_fluid = damaged.gm_fluid_m
+            heel = damaged.heel_deg
+            kg_fluid: float | None = damaged.kg_fluid_m
+            moment = damaged.transverse_moment_t_m
+            extra = {
+                "draft_m": damaged.draft_m,
+                "trim_m": damaged.trim_m,
+                "floodwater_t": damaged.floodwater_t,
+                "kg_fluid_m": damaged.kg_fluid_m,
+            }
+        else:
+            direct = _direct_condition(case_raw["condition"], f"{label}.condition")
+            method = "direct"
+            displacement = direct.displacement_t
+            gm_fluid = direct.gm_fluid_m
+            heel = direct.heel_deg
+            kg_fluid = direct.kg_fluid_m
+            moment = 0.0
+            extra = {
+                "draft_m": direct.draft_m,
+                "trim_m": direct.trim_m,
+                "floodwater_t": None,
+                "kg_fluid_m": direct.kg_fluid_m,
+            }
+
+        curve = _damage_gz(case_raw.get("gz"), label, kg_fluid)
+        analysis = None
+        if curve is not None:
+            analysis = damage_gz_analysis(
+                curve,
+                displacement,
+                transverse_moment_t_m=moment,
+                wind_heeling_arm_m=(
+                    None if wind_moment is None else wind_moment / displacement
+                ),
+                limit_angle_deg=limit_deg,
+                static_heel_deg=heel,
+            )
+        elif wind_moment is not None:
+            raise ValueError(
+                f"vessel_stability_screening {label}: "
+                "wind_heeling_moment_t_m requires damaged gz input"
+            )
+
+        result = evaluate_damage_case(
+            name,
+            method,
+            displacement,
+            gm_fluid,
+            criteria,
+            heel,
+            limit_deg,
+            analysis,
+        )
+        results.append(result)
+        rows.append(
+            {
+                "case": result.case_name,
+                "method": result.method,
+                "displacement_t": result.displacement_t,
+                **extra,
+                "gm_fluid_m": result.gm_fluid_m,
+                "heel_deg": result.heel_deg,
+                "limit_angle_deg": result.limit_angle_deg,
+                "downflooding_margin_deg": result.downflooding_margin_deg,
+                "range_beyond_equilibrium_deg": (
+                    result.range_beyond_equilibrium_deg
+                ),
+                "residual_area_m_rad": result.residual_area_m_rad,
+                "area_ratio": result.area_ratio,
+                "status": "pass" if result.passed else "fail",
+            }
+        )
+    return results, rows
+
+
+_DAMAGE_THRESHOLDS = (
+    "max_equilibrium_heel_deg",
+    "min_gm_m",
+    "min_downflooding_margin_deg",
+    "min_range_beyond_equilibrium_deg",
+    "min_residual_area_m_rad",
+    "min_area_ratio",
+)
+
+
+def _damage_criteria(raw: Any, label: str) -> DamageCriteria:
+    if not isinstance(raw, dict):
+        raise ValueError(f"vessel_stability_screening {label} must be a mapping")
+    unknown = set(raw) - set(_DAMAGE_THRESHOLDS) - {"citation"}
+    if unknown:
+        raise ValueError(
+            f"vessel_stability_screening {label} unknown fields: {sorted(unknown)}"
+        )
+    citation = _citation(raw.get("citation"), label)
+    kwargs = {
+        name: float(raw[name])
+        for name in _DAMAGE_THRESHOLDS
+        if raw.get(name) is not None
+    }
+    try:
+        return DamageCriteria(citation=citation, **kwargs)
+    except ValueError as exc:
+        raise ValueError(f"vessel_stability_screening {label}: {exc}") from exc
+
+
+def _compartment(item: Any, label: str, rho: float) -> FloodedCompartment:
+    if not isinstance(item, dict):
+        raise ValueError(f"vessel_stability_screening {label} must be a mapping")
+    fsm = float(item.get("fsm_t_m", 0.0))
+    fs = item.get("free_surface")
+    if fs is not None:
+        if fsm:
+            raise ValueError(
+                f"vessel_stability_screening {label}: give fsm_t_m or "
+                "free_surface, not both"
+            )
+        fsm = rectangular_fsm_t_m(
+            length_m=_req_float(fs, "length_m", f"{label}.free_surface.length_m"),
+            breadth_m=_req_float(fs, "breadth_m", f"{label}.free_surface.breadth_m"),
+            density_t_m3=float(fs.get("density_t_m3", rho)),
+        )
+    try:
+        return FloodedCompartment(
+            name=str(item.get("name", "compartment")),
+            volume_m3=_req_float(item, "volume_m3", f"{label}.volume_m3"),
+            permeability=_req_float(item, "permeability", f"{label}.permeability"),
+            vcg_m=_req_float(item, "vcg_m", f"{label}.vcg_m"),
+            lcg_m=_req_float(item, "lcg_m", f"{label}.lcg_m"),
+            tcg_m=float(item.get("tcg_m", 0.0)),
+            fsm_t_m=fsm,
+            free_communication=bool(item.get("free_communication", False)),
+        )
+    except ValueError as exc:
+        raise ValueError(f"vessel_stability_screening {label}: {exc}") from exc
+
+
+def _direct_condition(raw: Any, label: str) -> DirectDamageCondition:
+    if not isinstance(raw, dict):
+        raise ValueError(f"vessel_stability_screening {label} must be a mapping")
+    try:
+        return DirectDamageCondition(
+            displacement_t=_req_float(
+                raw, "displacement_t", f"{label}.displacement_t"
+            ),
+            gm_fluid_m=_req_float(raw, "gm_fluid_m", f"{label}.gm_fluid_m"),
+            heel_deg=_opt_float(raw, "heel_deg"),
+            trim_m=_opt_float(raw, "trim_m"),
+            kg_fluid_m=_opt_float(raw, "kg_fluid_m"),
+            draft_m=_opt_float(raw, "draft_m"),
+        )
+    except ValueError as exc:
+        if " is required" in str(exc):
+            raise
+        raise ValueError(f"vessel_stability_screening {label}: {exc}") from exc
+
+
+def _damage_gz(raw: Any, label: str, kg_fluid_m: float | None) -> GZCurve | None:
+    if raw is None:
+        return None
+    if not isinstance(raw, dict):
+        raise ValueError(f"vessel_stability_screening {label}.gz must be a mapping")
+    heels = [float(v) for v in raw.get("heel_deg") or []]
+    if not heels:
+        raise ValueError(
+            f"vessel_stability_screening {label}.gz.heel_deg is required"
+        )
+    sources = [k for k in ("kn_m", "gz_m") if raw.get(k) is not None]
+    if len(sources) != 1:
+        raise ValueError(
+            f"vessel_stability_screening {label}.gz needs exactly one of "
+            "kn_m or gz_m"
+        )
+    if raw.get("gz_m") is not None:
+        gz = [float(v) for v in raw["gz_m"]]
+        return GZCurve(heel_deg=tuple(heels), gz_m=tuple(gz))
+    if kg_fluid_m is None:
+        raise ValueError(
+            f"vessel_stability_screening {label}.gz.kn_m requires the "
+            "damaged fluid KG (condition.kg_fluid_m for direct cases)"
+        )
+    return gz_from_kn(heels, [float(v) for v in raw["kn_m"]], kg_fluid_m)
+
+
+def _limit_angle(case_raw: dict, vessel_downflooding_deg: float | None) -> float | None:
+    """Least immersion-limit angle input for the case: per-case downflooding
+    (falls back to the vessel-level value) and margin-line immersion."""
+    downflooding = _opt_float(case_raw, "downflooding_angle_deg")
+    if downflooding is None:
+        downflooding = vessel_downflooding_deg
+    margin_line = _opt_float(case_raw, "margin_line_immersion_deg")
+    angles = [a for a in (downflooding, margin_line) if a is not None]
+    return min(angles) if angles else None
 
 
 def _citation(item: Any, label: str) -> Citation:
