@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
-from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any
-from urllib.parse import quote
+from urllib.parse import unquote
 
 import pandas as pd
 
@@ -26,13 +26,15 @@ MAX_CASES_CSV_BYTES = 2 * 1024 * 1024
 MAX_SUMMARY_BYTES = 65536
 MANDATORY_RESULT_BASENAMES = ("cases.csv", "batch_summary.json")
 _EXTENSION_ID = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*-v[1-9][0-9]*\Z")
+_PORTABLE_BASENAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}\Z")
+_RESULT_KEY = re.compile(r"[A-Za-z][A-Za-z0-9_.-]{0,63}\Z")
+_RESULT_STRING = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:+-]{0,127}\Z")
 _ABSOLUTE_PATH = re.compile(
     r"(?:[A-Za-z]:[\\/]|/)[^\s,;:'\"\]\[()]+"
 )
-_FULL_REDACTION_KEYS = {
-    "case_dir", "command", "cmd", "error", "input_path", "path", "root",
-    "stderr", "stdout", "work_dir", "work_root",
-}
+_ESCAPED_SEPARATOR = re.compile(r"\\u00(?:2[fF]|5[cC])")
+_ENCODING_FRAGMENT = re.compile(r"%[0-9A-Fa-f]{2}|\\u[0-9A-Fa-f]{4}|\\/")
+_REDACTED = "<redacted>"
 
 
 @dataclass(frozen=True)
@@ -59,18 +61,41 @@ RESULT_EXTENSION_REGISTRY = MappingProxyType({
 })
 
 
+def _validate_result_registry() -> tuple[ResultExtension, ...]:
+    records = tuple(RESULT_EXTENSION_REGISTRY.items())
+    basenames = [item.basename for _, item in records]
+    for key, item in records:
+        media = {".json": "application/json", ".csv": "text/csv"}.get(
+            Path(item.basename).suffix
+        )
+        valid = (
+            isinstance(item, ResultExtension)
+            and key == item.extension_id
+            and bool(_EXTENSION_ID.fullmatch(item.extension_id))
+            and bool(_PORTABLE_BASENAME.fullmatch(item.basename))
+            and ".." not in item.basename
+            and "/" not in item.basename
+            and "\\" not in item.basename
+            and item.basename not in MANDATORY_RESULT_BASENAMES
+            and item.schema_id == item.extension_id
+            and item.media_type == media
+            and type(item.max_bytes) is int
+            and item.max_bytes > 0
+            and item.policy_version == RESULT_POLICY_VERSION
+            and type(item.active) is bool
+        )
+        if not valid:
+            raise ValueError(
+                "result extension registry has invalid registered result basename "
+                "or metadata"
+            )
+    if len(basenames) != len(set(basenames)):
+        raise ValueError("result extension registry basename is duplicate")
+    return tuple(item for _, item in records)
+
+
 def active_result_extensions() -> tuple[ResultExtension, ...]:
-    active = tuple(item for item in RESULT_EXTENSION_REGISTRY.values() if item.active)
-    basenames = [item.basename for item in active]
-    invalid = [
-        name for name in basenames
-        if Path(name).name != name
-        or Path(name).suffix not in RESULTS_ALLOWED_SUFFIXES
-        or name in MANDATORY_RESULT_BASENAMES
-    ]
-    if invalid or len(basenames) != len(set(basenames)):
-        raise ValueError("registered result basename is unsafe or duplicate")
-    return active
+    return tuple(item for item in _validate_result_registry() if item.active)
 
 
 def allowed_result_basenames() -> frozenset[str]:
@@ -93,6 +118,7 @@ def _validate_extension_id(value: object) -> str:
 
 def select_result_extensions(requested: list[str]) -> tuple[ResultExtension, ...]:
     """Resolve only active code-owned extension IDs; none are active yet."""
+    _validate_result_registry()
     values = [_validate_extension_id(value) for value in requested]
     if len(values) != len(set(values)):
         raise ValueError("duplicate result extension")
@@ -118,56 +144,70 @@ def validate_result_policy_config(cfg: dict) -> None:
         raise ValueError("result extensions are code-owned, not YAML-configurable")
 
 
-def _root_aliases(root: Path | None) -> tuple[str, ...]:
-    if root is None:
-        return ()
-    plain = str(root)
-    percent = quote(plain, safe="")
-    return (
-        plain, percent, percent.replace("%2F", "%2f"),
-        plain.replace("/", r"\u002f"), plain.replace("/", r"\u002F"),
-        plain.replace("/", r"\/"),
-    )
+def _normalize_external_string(value: str) -> tuple[str, bool]:
+    current = value
+    for _ in range(3):
+        decoded = unquote(_ESCAPED_SEPARATOR.sub("/", current).replace(r"\/", "/"))
+        if decoded == current:
+            return current, bool(_ENCODING_FRAGMENT.search(current))
+        current = decoded
+    return current, bool(_ENCODING_FRAGMENT.search(current))
 
 
 def redact_text(value: object, root: Path | None = None) -> str:
-    text = _ABSOLUTE_PATH.sub("[redacted-path]", str(value))
-    for alias in sorted(_root_aliases(root), key=len, reverse=True):
-        text = text.replace(alias, "[redacted-path]")
-    return text
+    normalized, ambiguous = _normalize_external_string(str(value))
+    root_text = str(root) if root is not None else ""
+    root_fragment = root_text.lstrip("/\\")
+    unsafe = (
+        ambiguous
+        or bool(_ABSOLUTE_PATH.search(normalized))
+        or (root_text and root_text in normalized)
+        or (root_fragment and root_fragment in normalized)
+        or not _RESULT_STRING.fullmatch(normalized)
+    )
+    return _REDACTED if unsafe else normalized
 
 
 def _sensitive_key(key: object) -> bool:
-    normalized = str(key).lower()
-    compact = re.sub(r"[^a-z0-9]", "", normalized)
-    return normalized in _FULL_REDACTION_KEYS or any(
-        token in compact for token in ("command", "stderr", "stdout")
-    ) or compact in {"argv", "cmd", "error", "tail"} or compact.endswith(
-        ("path", "root")
+    compact = re.sub(r"[^a-z0-9]", "", str(key).lower())
+    return any(
+        token in compact
+        for token in (
+            "arg", "cmd", "command", "dir", "error", "log", "path", "plan",
+            "root", "stderr", "stdout", "stream", "tail",
+        )
     )
 
 
-def _redact_value(key: object, value: object, root: Path | None) -> object:
+def _project_value(key: str, value: object, root: Path | None) -> object:
     if _sensitive_key(key):
-        return "[redacted]"
-    if isinstance(value, Mapping):
-        return {
-            redact_text(name, root) if isinstance(name, (str, Path)) else name:
-            _redact_value(name, item, root)
-            for name, item in value.items()
-        }
-    if isinstance(value, (list, tuple, set, frozenset)):
-        values = sorted(value, key=repr) if isinstance(value, (set, frozenset)) else value
-        return [_redact_value(key, item, root) for item in values]
-    return redact_text(value, root) if isinstance(value, (str, Path)) else value
+        return _REDACTED
+    if value is None or type(value) is bool or type(value) is int:
+        return value
+    if type(value) is float:
+        return value if math.isfinite(value) else _REDACTED
+    if isinstance(value, str):
+        return redact_text(value, root)
+    return None
 
 
 def redact_external_row(row: dict[str, Any], root: Path | None = None) -> dict:
-    """Return a path- and stream-safe external result row."""
-    return _redact_value("", row, root)
+    """Project one external row onto bounded scalar engineering results."""
+    projected = {}
+    for key, value in row.items():
+        if not isinstance(key, str) or not _RESULT_KEY.fullmatch(key):
+            continue
+        result = _project_value(key, value, root)
+        if result is not None or value is None:
+            projected[key] = result
+    return projected
 
 
 def redact_external_rows(rows: list[dict], root: Path | None = None) -> list[dict]:
+    for row in rows:
+        raw = json.dumps(row, allow_nan=False, default=repr).encode()
+        if len(raw) > MAX_RESULT_ROW_BYTES:
+            raise ValueError("external result row exceeds byte bound")
     redacted = [redact_external_row(row, root) for row in rows]
     for row in redacted:
         encoded = json.dumps(row, sort_keys=True, allow_nan=False).encode()
