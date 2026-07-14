@@ -93,9 +93,12 @@ def test_invalid_timeout_rejects_before_creating_directories(tmp_path):
     assert not (tmp_path / "batch_runs").exists()
 
 
-def test_config_helpers_honor_legacy_facade_monkeypatches(monkeypatch, tmp_path):
+def test_resolve_workers_honors_legacy_default_workers_monkeypatch(monkeypatch):
     monkeypatch.setattr(ofb, "default_workers", lambda: 73)
     assert ofb.resolve_workers({}) == 73
+
+
+def test_resolve_dir_honors_legacy_resolve_path_monkeypatch(monkeypatch, tmp_path):
     sentinel = tmp_path / "sentinel"
     resolve_path = Mock(return_value=sentinel)
     monkeypatch.setattr(ofb, "_resolve_path", resolve_path)
