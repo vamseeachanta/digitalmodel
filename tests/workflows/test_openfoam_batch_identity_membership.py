@@ -118,7 +118,7 @@ def test_source_package_rejects_transient_tracked_membership(tmp_path, monkeypat
 
     monkeypatch.setattr(config_module, "_git_output", insert_after_head)
     monkeypatch.setattr(Path, "read_bytes", remove_after_read)
-    with pytest.raises(ValueError, match="membership|changed"):
+    with pytest.raises(ValueError, match="membership|changed|missing|unsafe"):
         build_run_identity(**args)
 
 

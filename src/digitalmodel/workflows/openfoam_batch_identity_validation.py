@@ -10,8 +10,9 @@ import json
 import os
 import re
 import stat
+from functools import partial
 from pathlib import Path
-from typing import Mapping, NamedTuple
+from typing import Callable, Mapping, NamedTuple
 
 _TOKEN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,127}", re.ASCII)
 _COMPONENT = re.compile(
@@ -71,6 +72,12 @@ class FileWitness(NamedTuple):
     content_sha256: str
 
 
+class MembershipWitness(NamedTuple):
+    expected: frozenset[str]
+    probe: Callable[[], frozenset[str]]
+    label: str
+
+
 def _regular_signature(path: Path, label: str) -> tuple[int, int, int, int, int]:
     try:
         info = path.lstat()
@@ -98,6 +105,13 @@ def revalidate_identity_files(witnesses: list[FileWitness]) -> None:
         _, current = read_identity_file(expected.path, "identity input")
         if current != expected:
             raise ValueError("identity input changed during identity construction")
+
+
+def revalidate_memberships(witnesses: list[MembershipWitness]) -> None:
+    """Reject package or provenance membership drift."""
+    for witness in witnesses:
+        if witness.probe() != witness.expected:
+            raise ValueError(f"{witness.label} membership changed")
 
 
 def lexical_relative_path(repo: Path, path: Path) -> str:
@@ -159,7 +173,7 @@ def _canonical(value: object) -> bytes:
     return (encoded + "\n").encode("ascii")
 
 
-def _matching_record(root: Path, name: str, version: str) -> Path:
+def _matching_record_names(root: Path, name: str, version: str) -> frozenset[str]:
     wanted = (normalized_distribution_name(name),
               normalized_distribution_version(version))
     matches = []
@@ -169,10 +183,23 @@ def _matching_record(root: Path, name: str, version: str) -> Path:
             found_name, found_version = stem.rsplit("-", 1)
             found = (normalized_distribution_name(found_name), found_version.lower())
             if found == wanted:
-                matches.append(record)
+                matches.append(record.relative_to(root).as_posix())
+    return frozenset(matches)
+
+
+def _matching_record(root: Path, name: str, version: str) -> Path:
+    matches = _matching_record_names(root, name, version)
     if len(matches) != 1:
         raise ValueError("matching wheel distribution is missing or ambiguous")
-    return matches[0]
+    return root / next(iter(matches))
+
+
+def _wheel_package_names(root: Path, site: Path) -> frozenset[str]:
+    return frozenset(
+        path.relative_to(site).as_posix()
+        for path in root.rglob("*")
+        if path.is_file() or path.is_symlink()
+    )
 
 
 def wheel_package(
@@ -181,17 +208,28 @@ def wheel_package(
     name: str,
     version: str,
     witnesses: list[FileWitness] | None = None,
+    memberships: list[MembershipWitness] | None = None,
 ) -> dict:
     """Verify matching wheel provenance from the exact RECORD and package bytes."""
     observed = [] if witnesses is None else witnesses
     first_observation = len(observed)
+    observed_memberships = [] if memberships is None else memberships
+    first_membership = len(observed_memberships)
     record = _matching_record(site, name, version)
+    record_names = _matching_record_names(site, name, version)
+    package_names = _wheel_package_names(root, site)
+    observed_memberships.extend([
+        MembershipWitness(record_names,
+                          partial(_matching_record_names, site, name, version),
+                          "wheel RECORD"),
+        MembershipWitness(package_names, partial(_wheel_package_names, root, site),
+                          "wheel package"),
+    ])
     record_bytes, record_witness = read_identity_file(record, "wheel RECORD")
     observed.append(record_witness)
     rows = {row[0]: row[1:] for row in csv.reader(
         io.StringIO(record_bytes.decode("utf-8"), newline="")) if row}
-    package_files = [path for path in root.rglob("*") if path.is_file()]
-    actual_names = {path.relative_to(site).as_posix() for path in package_files}
+    actual_names = set(package_names)
     recorded_names = {item for item in rows if item.startswith(root.name + "/")}
     if actual_names - recorded_names:
         raise ValueError("wheel package contains an unrecorded file")
@@ -209,5 +247,6 @@ def wheel_package(
                        "content_sha256": _sha256(data)})
     content = {"package_files": actual, "record_sha256": _sha256(record_bytes)}
     revalidate_identity_files(observed[first_observation:])
+    revalidate_memberships(observed_memberships[first_membership:])
     return {"git_commit_sha": None, "tracked_tree_clean": None,
             "content_sha256": _sha256(_canonical(content))}

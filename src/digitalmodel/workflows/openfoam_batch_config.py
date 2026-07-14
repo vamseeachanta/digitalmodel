@@ -9,18 +9,22 @@ import os
 import subprocess
 import sys
 from copy import deepcopy
+from functools import partial
 from pathlib import Path
 from typing import Any, Callable, Mapping, NamedTuple
 
 from digitalmodel.workflows.parametric_run import _load_cases, _set_dotted
 from digitalmodel.workflows.openfoam_batch_identity_validation import (
     FileWitness,
+    MembershipWitness,
     executable_records,
     input_records,
     lexical_relative_path,
     portable_namespace,
     portable_token,
     revalidate_identity_files,
+    revalidate_memberships,
+    read_identity_file,
     wheel_package,
 )
 
@@ -149,14 +153,25 @@ def _require_clean(repo: Path, candidates: list[Path]) -> None:
 
 
 def _source_package(
-    package_root: Path, candidates: list[Path]
+    package_root: Path,
+    candidates: list[Path],
+    witnesses: list[FileWitness],
+    memberships: list[MembershipWitness],
 ) -> tuple[dict, Path, str]:
     repo = Path(_git_output(package_root, "rev-parse", "--show-toplevel"))
     _require_clean(repo, candidates)
     head = _git_output(repo, "rev-parse", "HEAD")
-    package_rel = str(package_root.resolve().relative_to(repo.resolve()))
-    tracked = _git_output(repo, "ls-files", "-z", "--", package_rel).split("\0")
-    records = _actual_records(repo, [item for item in tracked if item], repo)
+    package_rel = lexical_relative_path(repo, package_root)
+    tracked = _tracked_package_names(repo, package_rel)
+    memberships.append(MembershipWitness(
+        tracked, partial(_tracked_package_names, repo, package_rel), "source package"
+    ))
+    try:
+        records = _actual_records(repo, tracked, repo, witnesses)
+    except ValueError as error:
+        if _git_output(repo, "rev-parse", "HEAD") != head:
+            raise ValueError("source identity HEAD changed during byte reads") from error
+        raise
     if not records:
         raise ValueError("source package must contain tracked files")
     if _git_output(repo, "rev-parse", "HEAD") != head:
@@ -169,13 +184,22 @@ def _source_package(
     return source, repo, head
 
 
-def _actual_records(base: Path, names: list[str], relative_to: Path) -> list[dict]:
+def _tracked_package_names(repo: Path, package_rel: str) -> frozenset[str]:
+    tracked = _git_output(repo, "ls-files", "-z", "--", package_rel).split("\0")
+    return frozenset(item for item in tracked if item)
+
+
+def _actual_records(
+    base: Path,
+    names: frozenset[str],
+    relative_to: Path,
+    witnesses: list[FileWitness],
+) -> list[dict]:
     records = []
     for name in sorted(names):
         path = base / name
-        if not path.is_file() or path.is_symlink():
-            raise ValueError(f"identity input is missing or unsafe: {name}")
-        data = path.read_bytes()
+        data, witness = read_identity_file(path, f"source package file {name}")
+        witnesses.append(witness)
         records.append(
             {
                 "safe_relative_path": path.relative_to(relative_to).as_posix(),
@@ -199,19 +223,24 @@ def _identity_inputs(
     referenced_inputs: Mapping[str, Path],
     selected_executables: Mapping[str, Path],
     distribution_root: Path | None,
-) -> tuple[dict, list[dict], list[dict], list[FileWitness]]:
+) -> tuple[
+    dict, list[dict], list[dict], list[FileWitness], list[MembershipWitness]
+]:
     candidates = [Path(path) for path in referenced_inputs.values()]
     witnesses: list[FileWitness] = []
+    memberships: list[MembershipWitness] = []
     if config_path is not None:
         candidates.append(Path(config_path))
     if distribution_root is None:
         source, repo, expected_head = _source_package(
-            Path(package_root), candidates + [Path(package_root)]
+            Path(package_root), candidates + [Path(package_root)],
+            witnesses, memberships,
         )
     else:
         source = wheel_package(
             Path(package_root), Path(distribution_root), package_name, package_version,
             witnesses,
+            memberships,
         )
         repo, expected_head = None, None
     inputs = input_records(config_path, referenced_inputs, repo, witnesses)
@@ -221,7 +250,7 @@ def _identity_inputs(
         if _git_output(repo, "rev-parse", "HEAD") != expected_head:
             raise ValueError("source identity HEAD changed during byte reads")
     source.update(package_name=package_name, package_version=package_version)
-    return source, inputs, executables, witnesses
+    return source, inputs, executables, witnesses, memberships
 
 
 def build_run_identity(
@@ -250,7 +279,7 @@ def build_run_identity(
         (result_policy_version, "result_policy_version"),
         (work_layout_version, "work_layout_version"),
     ))
-    source, inputs, executables, witnesses = _identity_inputs(
+    source, inputs, executables, witnesses, memberships = _identity_inputs(
         config_path, package_root, package_name, package_version,
         referenced_inputs, selected_executables, distribution_root,
     )
@@ -269,8 +298,10 @@ def build_run_identity(
         "work_layout_version": work_layout_version,
     }
     revalidate_identity_files(witnesses)
+    revalidate_memberships(memberships)
     identity["identity_sha256"] = _sha256(canonical_json_bytes(identity))
     revalidate_identity_files(witnesses)
+    revalidate_memberships(memberships)
     return identity
 
 
