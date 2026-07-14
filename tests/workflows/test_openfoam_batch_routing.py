@@ -7,6 +7,7 @@ import pytest
 import yaml
 
 from digitalmodel.workflows import openfoam_run_batch as ofb
+from digitalmodel.workflows import openfoam_batch_routing as routing
 
 EXAMPLE = (
     Path(__file__).resolve().parents[2]
@@ -86,6 +87,48 @@ def test_external_output_parent_swap_cannot_redirect_results(tmp_path, monkeypat
         ofb.router(cfg)
     assert not (outside / "results").exists()
     assert list(root.iterdir()) == []
+
+
+def test_output_parent_swap_during_layout_creation_cannot_redirect(tmp_path, monkeypatch):
+    cfg, _root = _external_cfg(tmp_path)
+    cfg_dir = Path(cfg["_config_dir_path"])
+    saved = tmp_path / "input-saved"
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    monkeypatch.setattr(ofb, "_build_run_identity", lambda **_evidence: IDENTITY)
+    original = routing.WorkLayout.create
+
+    def swap_after_create(*args, **kwargs):
+        layout = original(*args, **kwargs)
+        cfg_dir.rename(saved)
+        cfg_dir.symlink_to(outside, target_is_directory=True)
+        return layout
+
+    monkeypatch.setattr(routing.WorkLayout, "create", swap_after_create)
+    with pytest.raises(ValueError, match="output"):
+        ofb.router(cfg)
+    assert not (outside / "results" / "cases.csv").exists()
+
+
+def test_output_parent_swap_before_final_publication_cannot_redirect(tmp_path, monkeypatch):
+    cfg, _root = _external_cfg(tmp_path)
+    cfg_dir = Path(cfg["_config_dir_path"])
+    saved = tmp_path / "input-saved"
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    monkeypatch.setattr(ofb, "_build_run_identity", lambda **_evidence: IDENTITY)
+    original_pool = ofb._run_pool
+
+    def swap_before_results(*args, **kwargs):
+        rows = original_pool(*args, **kwargs)
+        cfg_dir.rename(saved)
+        cfg_dir.symlink_to(outside, target_is_directory=True)
+        return rows
+
+    monkeypatch.setattr(ofb, "_run_pool", swap_before_results)
+    with pytest.raises(ValueError, match="output"):
+        ofb.router(cfg)
+    assert not (outside / "results" / "cases.csv").exists()
 
 
 def test_external_route_uses_approved_builder_and_owned_layout(
