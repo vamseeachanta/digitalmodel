@@ -5,11 +5,13 @@ from __future__ import annotations
 import json
 import os
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from types import MappingProxyType
 from typing import Any
+from urllib.parse import quote
 
 import pandas as pd
 
@@ -22,12 +24,13 @@ RESULT_POLICY_VERSION = "result-policy-v1"
 MAX_RESULT_ROW_BYTES = 65536
 MAX_CASES_CSV_BYTES = 2 * 1024 * 1024
 MAX_SUMMARY_BYTES = 65536
+MANDATORY_RESULT_BASENAMES = ("cases.csv", "batch_summary.json")
 _EXTENSION_ID = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*-v[1-9][0-9]*\Z")
 _ABSOLUTE_PATH = re.compile(
     r"(?:[A-Za-z]:[\\/]|/)[^\s,;:'\"\]\[()]+"
 )
 _FULL_REDACTION_KEYS = {
-    "case_dir", "command", "cmd", "input_path", "path", "root",
+    "case_dir", "command", "cmd", "error", "input_path", "path", "root",
     "stderr", "stdout", "work_dir", "work_root",
 }
 
@@ -57,7 +60,23 @@ RESULT_EXTENSION_REGISTRY = MappingProxyType({
 
 
 def active_result_extensions() -> tuple[ResultExtension, ...]:
-    return tuple(item for item in RESULT_EXTENSION_REGISTRY.values() if item.active)
+    active = tuple(item for item in RESULT_EXTENSION_REGISTRY.values() if item.active)
+    basenames = [item.basename for item in active]
+    invalid = [
+        name for name in basenames
+        if Path(name).name != name
+        or Path(name).suffix not in RESULTS_ALLOWED_SUFFIXES
+        or name in MANDATORY_RESULT_BASENAMES
+    ]
+    if invalid or len(basenames) != len(set(basenames)):
+        raise ValueError("registered result basename is unsafe or duplicate")
+    return active
+
+
+def allowed_result_basenames() -> frozenset[str]:
+    return frozenset(MANDATORY_RESULT_BASENAMES) | frozenset(
+        item.basename for item in active_result_extensions()
+    )
 
 
 def _validate_extension_id(value: object) -> str:
@@ -87,26 +106,8 @@ def select_result_extensions(requested: list[str]) -> tuple[ResultExtension, ...
 
 
 def validate_result_basename(basename: str) -> str:
-    """Reject every path-like or heavy OpenFOAM result name."""
-    if not isinstance(basename, str) or not basename:
-        raise ValueError("result basename is not an allowed bounded artifact")
-    heavy_names = {
-        "U", "p", "T", "k", "omega", "epsilon", "nut", "phi",
-        "points", "faces", "owner", "neighbour", "boundary", "mesh",
-        "VTK", "polyMesh",
-    }
-    blocked = (
-        basename.startswith((".", "_result", "log.", "processor"))
-        or basename in heavy_names
-        or basename.startswith("alpha.")
-        or basename.endswith(".foam")
-    )
-    if (
-        Path(basename).name != basename
-        or "/" in basename
-        or "\\" in basename
-        or blocked
-    ):
+    """Accept only mandatory bounded artifacts or active registry records."""
+    if not isinstance(basename, str) or basename not in allowed_result_basenames():
         raise ValueError("result basename is not an allowed bounded artifact")
     return basename
 
@@ -117,24 +118,53 @@ def validate_result_policy_config(cfg: dict) -> None:
         raise ValueError("result extensions are code-owned, not YAML-configurable")
 
 
-def redact_text(value: object) -> str:
-    return _ABSOLUTE_PATH.sub("[redacted-path]", str(value))
+def _root_aliases(root: Path | None) -> tuple[str, ...]:
+    if root is None:
+        return ()
+    plain = str(root)
+    percent = quote(plain, safe="")
+    return (
+        plain, percent, percent.replace("%2F", "%2f"),
+        plain.replace("/", r"\u002f"), plain.replace("/", r"\u002F"),
+        plain.replace("/", r"\/"),
+    )
 
 
-def _redact_value(key: str, value: object) -> object:
-    normalized = key.lower()
-    if normalized in _FULL_REDACTION_KEYS or normalized.endswith(("_path", "_root")):
+def redact_text(value: object, root: Path | None = None) -> str:
+    text = _ABSOLUTE_PATH.sub("[redacted-path]", str(value))
+    for alias in sorted(_root_aliases(root), key=len, reverse=True):
+        text = text.replace(alias, "[redacted-path]")
+    return text
+
+
+def _sensitive_key(key: object) -> bool:
+    normalized = str(key).lower()
+    compact = re.sub(r"[^a-z0-9]", "", normalized)
+    return normalized in _FULL_REDACTION_KEYS or any(
+        token in compact for token in ("command", "stderr", "stdout")
+    ) or compact in {"argv", "cmd", "error", "tail"} or compact.endswith(
+        ("path", "root")
+    )
+
+
+def _redact_value(key: object, value: object, root: Path | None) -> object:
+    if _sensitive_key(key):
         return "[redacted]"
-    if isinstance(value, dict):
-        return {name: _redact_value(name, item) for name, item in value.items()}
-    if isinstance(value, list):
-        return [_redact_value(key, item) for item in value]
-    return redact_text(value) if isinstance(value, (str, Path)) else value
+    if isinstance(value, Mapping):
+        return {
+            redact_text(name, root) if isinstance(name, (str, Path)) else name:
+            _redact_value(name, item, root)
+            for name, item in value.items()
+        }
+    if isinstance(value, (list, tuple, set, frozenset)):
+        values = sorted(value, key=repr) if isinstance(value, (set, frozenset)) else value
+        return [_redact_value(key, item, root) for item in values]
+    return redact_text(value, root) if isinstance(value, (str, Path)) else value
 
 
-def redact_external_row(row: dict[str, Any], _root: Path | None = None) -> dict:
+def redact_external_row(row: dict[str, Any], root: Path | None = None) -> dict:
     """Return a path- and stream-safe external result row."""
-    return {key: _redact_value(key, value) for key, value in row.items()}
+    return _redact_value("", row, root)
 
 
 def redact_external_rows(rows: list[dict], root: Path | None = None) -> list[dict]:
@@ -302,6 +332,8 @@ def write_external_results(
     output, rows, mode, workers, mock, timeout_seconds, started_at, finished_at
 ) -> dict:
     """Publish both external rollups through the retained output descriptor."""
+    for basename in MANDATORY_RESULT_BASENAMES:
+        validate_result_basename(basename)
     rows = redact_external_rows(rows)
     summary = {
         **make_summary(

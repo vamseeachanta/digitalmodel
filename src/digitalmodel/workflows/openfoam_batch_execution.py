@@ -9,6 +9,7 @@ import time
 from contextlib import nullcontext
 from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
+from functools import partial
 from pathlib import Path
 from typing import Any, Callable
 
@@ -29,7 +30,7 @@ from digitalmodel.workflows.openfoam_batch_results import (
     load_checkpoint,
     load_external_checkpoint,
     make_row,
-    redact_text,
+    redact_external_row,
     write_checkpoint,
     write_external_checkpoint,
 )
@@ -253,6 +254,8 @@ def _run_case_mpi_locked(
             row["mpi_plan"] = [" ".join(argv) for argv in plan]
         else:
             run = command_runner or _compat("_run_command", run_command)
+            if command_runner is None and item.get("layout"):
+                run = partial(run, external_root=item["layout"].root_path)
             execute = _compat("_execute_mpi_plan", execute_mpi_plan)
             row = execute(item, case_dir, plan, solver, run, timeout)
             if reconstruct and row["status"] == "completed":
@@ -354,7 +357,10 @@ def solver_ready(
     return all(shutil.which(executable) is not None for executable in required)
 
 
-def run_command(argv: list[str], cwd: Path, log: Path, timeout: int) -> int:
+def run_command(
+    argv: list[str], cwd: Path, log: Path, timeout: int,
+    external_root: Path | None = None,
+) -> int:
     """Execute one fail-closed utility stage and persist its combined log."""
     try:
         with log.open("w") as stream:
@@ -367,10 +373,12 @@ def run_command(argv: list[str], cwd: Path, log: Path, timeout: int) -> int:
                 check=False,
             )
     except (OSError, subprocess.TimeoutExpired) as exc:
-        logger.error(
-            "openfoam_run_batch: {} invocation failed: {}",
-            Path(argv[0]).name,
-            redact_text(exc),
-        )
+        command, error = argv[0], exc
+        if external_root is not None:
+            redacted = redact_external_row(
+                {"argv": argv, "error": str(exc)}, external_root
+            )
+            command, error = redacted["argv"], redacted["error"]
+        logger.error("openfoam_run_batch: {} invocation failed: {}", command, error)
         return 1
     return process.returncode

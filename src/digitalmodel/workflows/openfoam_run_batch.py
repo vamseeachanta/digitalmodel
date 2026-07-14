@@ -160,9 +160,10 @@ def _finalize_batch(
 
 def router(cfg: dict) -> dict:
     """Route a legacy or owned external request through the batch workflow."""
-    _validate_result_policy_config(cfg)
     batch = _prepare_batch(cfg)
     try:
+        if batch["layout"]:
+            _validate_result_policy_config(cfg)
         rows, started_at, finished_at = _execute_batch(batch)
         return _finalize_batch(cfg, batch, rows, started_at, finished_at)
     finally:
