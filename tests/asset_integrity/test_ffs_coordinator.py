@@ -38,6 +38,12 @@ def _local_thin_grid():
     return g
 
 
+def _repair_grid():
+    g = np.full((6, 6), 0.50)
+    g[2, 3] = 0.12
+    return g
+
+
 # --- end-to-end chain ------------------------------------------------------
 def test_assess_returns_unified_result():
     res = assess_component(_pipe(), _healthy_grid())
@@ -78,7 +84,9 @@ def test_accepts_numpy_dataframe_and_csv(tmp_path):
     csv = tmp_path / "grid.csv"
     pd.DataFrame(arr).to_csv(csv, index=False, header=False)
     res_csv = assess_component(_pipe(), str(csv))
-    assert res_csv.t_measured_min_in == pytest.approx(res_np.t_measured_min_in, rel=1e-6)
+    assert res_csv.t_measured_min_in == pytest.approx(
+        res_np.t_measured_min_in, rel=1e-6
+    )
 
 
 def test_mm_units_converted():
@@ -101,14 +109,81 @@ def test_rerated_pressure_bounded():
 
 def test_to_dict_is_json_friendly():
     import json
+
     res = assess_component(_pipe(), _healthy_grid())
     d = res.to_dict()
     json.dumps(d)  # must not raise
     assert d["component_id"] == "LINE-001"
     assert d["passes"] is True
     assert isinstance(d["rsf"], float)
+    assert "repair_recommendation" not in d
+
+
+def test_repair_context_adds_recommendation_only_for_repair_verdict():
+    res = assess_component(
+        _pipe(),
+        _repair_grid(),
+        repair_context={
+            "active_leak": True,
+            "through_wall_now": True,
+            "defect_type": "external_metal_loss",
+            "service": "oil",
+            "pressure_psi": 1000.0,
+            "temperature_f": 120.0,
+            "repair_life_yr": 5.0,
+        },
+    )
+
+    payload = res.to_dict()
+    assert res.assessment_type == "LML"
+    assert payload["verdict"] == "REPAIR"
+    assert payload["repair_recommendation"]["candidate_classes"] == ["A"]
+    assert payload["repair_recommendation"]["reinspection_interval_yr"] == 2.5
+    assert payload["repair_recommendation"]["summary"] == (
+        "REPAIR \u2014 candidate repair class(es): A, "
+        "re-inspection interval 2.5 yr per repair-life design"
+    )
 
 
 def test_invalid_grid_type_raises():
     with pytest.raises(TypeError):
         assess_component(_pipe(), 42)
+
+
+def test_ffs_workflow_passes_repair_context_to_assess_component(monkeypatch):
+    from digitalmodel.asset_integrity.assessment.ffs_workflow import FFSWorkflow
+    import digitalmodel.asset_integrity.assessment.ffs_workflow as ffs_workflow
+
+    captured = {}
+
+    class Result:
+        def to_dict(self):
+            return {"component_id": "LINE-001", "verdict": "REPAIR"}
+
+    def _fake_assess(component, grid, **kwargs):
+        captured.update(kwargs)
+        return Result()
+
+    monkeypatch.setattr(ffs_workflow, "assess_component", _fake_assess)
+
+    cfg = {
+        "basename": "ffs",
+        "ffs_assessment": {
+            "component": {
+                "component_id": "LINE-001",
+                "design_code": "B31.8",
+                "nominal_od_in": 12.75,
+                "nominal_wt_in": 0.500,
+                "design_pressure_psi": 1000.0,
+                "smys_psi": 52_000.0,
+                "corrosion_rate_in_per_yr": 0.005,
+            },
+            "grid": [[0.48, 0.48], [0.48, 0.48]],
+            "repair_context": {"active_leak": True, "through_wall_now": True},
+        },
+    }
+
+    out = FFSWorkflow().router(cfg)
+
+    assert out["ffs"]["verdict"] == "REPAIR"
+    assert captured["repair_context"] == {"active_leak": True, "through_wall_now": True}

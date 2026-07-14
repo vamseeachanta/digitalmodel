@@ -10,6 +10,7 @@ The report includes:
   5. Remaining Life — simple linear projection.
   6. Methodology & References — API 579 clause references.
   7. Appendix — raw grid data table (first 20 rows × 10 cols).
+  Optional: composite repair recommendation for REPAIR verdicts.
 
 Plotly CDN is referenced for interactive charts (if Plotly heatmap data is
 supplied via the optional ``plotly_heatmap_json`` parameter).  The report
@@ -24,15 +25,15 @@ from __future__ import annotations
 import html
 import math
 from datetime import datetime
-from typing import Optional
+from typing import Any, Mapping, Optional
 
 import pandas as pd
 
 _VERDICT_COLORS = {
-    "ACCEPT": "#2e7d32",   # green
+    "ACCEPT": "#2e7d32",  # green
     "MONITOR": "#f57c00",  # amber
     "RE_RATE": "#e65100",  # deep orange
-    "REPAIR": "#c62828",   # red
+    "REPAIR": "#c62828",  # red
     "REPLACE": "#4a148c",  # purple
     "FAIL_LEVEL_1": "#c62828",
     "FAIL_LEVEL_2": "#c62828",
@@ -78,6 +79,7 @@ class FFSReport:
         corrosion_rate_in_per_yr: Optional[float] = None,
         plotly_heatmap_json: Optional[str] = None,
         sufficiency: Optional[object] = None,
+        repair_recommendation: Optional[Mapping[str, Any]] = None,
     ) -> str:
         """Render the full FFS assessment as a self-contained HTML string.
 
@@ -96,18 +98,28 @@ class FFSReport:
             corrosion_rate_in_per_yr: Future corrosion rate; optional metadata.
             plotly_heatmap_json: Pre-serialised Plotly figure JSON for
                 interactive heatmap embedding; omitted when None.
+            repair_recommendation: optional composite-repair screening payload
+                for REPAIR verdicts.
 
         Returns:
             Complete HTML document as a string.
         """
         today = assessment_date or datetime.utcnow().strftime("%Y-%m-%d")
-        nominal_id = nominal_id_in if nominal_id_in else nominal_od_in - 2.0 * nominal_wt_in
+        nominal_id = (
+            nominal_id_in if nominal_id_in else nominal_od_in - 2.0 * nominal_wt_in
+        )
 
         verdict = decision.get("verdict", "UNKNOWN")
         rsf = decision.get("rsf", float("nan"))
         rsf_a = decision.get("rsf_a", 0.9)
         remaining_life = decision.get("remaining_life_yr", float("nan"))
         criterion = decision.get("governing_criterion", "")
+        if verdict == "REPAIR" and repair_recommendation:
+            repair_summary = str(repair_recommendation.get("summary", "")).strip()
+            if repair_summary:
+                criterion = (
+                    f"{criterion}; {repair_summary}" if criterion else repair_summary
+                )
 
         # Derive t_mm from grid
         t_mm = float(grid_df.min(skipna=True).min())
@@ -118,13 +130,27 @@ class FFSReport:
         sections = [
             FFSReport._html_head(component_id, today),
             FFSReport._section_executive_summary(
-                component_id, today, verdict, verdict_color, criterion,
-                remaining_life, design_code, rsf, rsf_a,
+                component_id,
+                today,
+                verdict,
+                verdict_color,
+                criterion,
+                remaining_life,
+                design_code,
+                rsf,
+                rsf_a,
                 rerated_mawp_psi=decision.get("rerated_mawp_psi"),
             ),
             FFSReport._section_component_data(
-                component_id, today, nominal_od_in, nominal_id, nominal_wt_in,
-                design_pressure_psi, design_code, smys_psi, corrosion_rate_in_per_yr
+                component_id,
+                today,
+                nominal_od_in,
+                nominal_id,
+                nominal_wt_in,
+                design_pressure_psi,
+                design_code,
+                smys_psi,
+                corrosion_rate_in_per_yr,
             ),
             FFSReport._section_level1(t_mm, t_min_in, design_code),
             FFSReport._section_level2(rsf, rsf_a, t_am, t_mm, decision),
@@ -139,6 +165,11 @@ class FFSReport:
         if sufficiency is not None:
             # Field measurement-sufficiency guidance, prominent near the top.
             sections.insert(2, FFSReport._section_sufficiency(sufficiency))
+
+        if verdict == "REPAIR" and repair_recommendation is not None:
+            sections.insert(
+                2, FFSReport._section_repair_recommendation(repair_recommendation)
+            )
 
         if plotly_heatmap_json:
             # Insert after executive summary
@@ -158,15 +189,15 @@ class FFSReport:
         status = html.escape(str(getattr(result, "status", "UNKNOWN")))
         confidence = html.escape(str(getattr(result, "confidence", "")))
         colors = {
-            "SUFFICIENT": "#38a169", "TAKE_MORE": "#dd6b20", "ESCALATE": "#e53e3e",
+            "SUFFICIENT": "#38a169",
+            "TAKE_MORE": "#dd6b20",
+            "ESCALATE": "#e53e3e",
         }
         color = colors.get(status, _DEFAULT_COLOR)
         reasons = getattr(result, "reasons", []) or []
         actions = getattr(result, "actions", []) or []
 
-        reason_items = "".join(
-            f"<li>{html.escape(str(r))}</li>" for r in reasons
-        )
+        reason_items = "".join(f"<li>{html.escape(str(r))}</li>" for r in reasons)
         action_rows = ""
         for a in actions:
             act = html.escape(str(getattr(a, "action", "")))
@@ -181,7 +212,8 @@ class FFSReport:
         action_table = (
             "<table><thead><tr><th>Action</th><th>Where</th><th>Why</th></tr>"
             f"</thead><tbody>{action_rows}</tbody></table>"
-            if action_rows else "<p>No further field action required.</p>"
+            if action_rows
+            else "<p>No further field action required.</p>"
         )
 
         return (
@@ -194,6 +226,50 @@ class FFSReport:
             f"{action_table}\n"
             "<p><em>Field screening only — does not replace a detailed Level 2/3 "
             "assessment.</em></p>\n"
+            "</div>"
+        )
+
+    @staticmethod
+    def _section_repair_recommendation(recommendation: Mapping[str, Any]) -> str:
+        """Render composite-repair class screening for REPAIR verdict reports."""
+        candidates = recommendation.get("candidate_classes", []) or []
+        candidate_text = ", ".join(str(c) for c in candidates) or "none"
+        excluded = recommendation.get("excluded", {}) or {}
+        basis = recommendation.get("standards_basis", []) or []
+        interval = recommendation.get("reinspection_interval_yr")
+        interval_row = (
+            "<tr><td>Re-inspection interval</td>"
+            f"<td>{float(interval):.1f} yr</td></tr>\n"
+            if interval is not None
+            else ""
+        )
+        excluded_rows = "".join(
+            "<tr>"
+            f"<td>{html.escape(str(cls))}</td>"
+            f"<td>{html.escape(str(reason))}</td>"
+            "</tr>"
+            for cls, reason in excluded.items()
+        )
+        basis_items = "".join(f"<li>{html.escape(str(item))}</li>" for item in basis)
+        summary = html.escape(str(recommendation.get("summary", "")))
+        iso_type = html.escape(str(recommendation.get("iso_defect_type", "")))
+        return (
+            "<div class='section'>\n"
+            "<h2>Composite Repair Recommendation</h2>\n"
+            f"<p><strong>{summary}</strong></p>\n"
+            "<table>\n"
+            "<tr><th>Parameter</th><th>Value</th></tr>\n"
+            f"<tr><td>ISO 24817 defect type</td><td>{iso_type}</td></tr>\n"
+            f"<tr><td>Candidate repair class(es)</td><td>"
+            f"{html.escape(candidate_text)}</td></tr>\n"
+            f"{interval_row}"
+            "</table>\n"
+            "<h3>Excluded classes</h3>\n"
+            "<table><tr><th>Class</th><th>Reason</th></tr>"
+            f"{excluded_rows}</table>\n"
+            f"<h3>Basis</h3><ul>{basis_items}</ul>\n"
+            "<p class='disclaimer'>Screening only; quantitative laminate design, "
+            "installation procedure, and competent-person review remain required.</p>\n"
             "</div>"
         )
 
@@ -311,7 +387,9 @@ class FFSReport:
     def _section_level1(t_mm: float, t_min: float, code: str) -> str:
         margin = t_mm - t_min
         verdict = "ACCEPT" if t_mm >= t_min else "FAIL"
-        color = _VERDICT_COLORS.get("ACCEPT" if t_mm >= t_min else "REPAIR", _DEFAULT_COLOR)
+        color = _VERDICT_COLORS.get(
+            "ACCEPT" if t_mm >= t_min else "REPAIR", _DEFAULT_COLOR
+        )
         return (
             "<div class='section'>\n"
             "<h2>3. Level 1 Assessment (API 579 Part 4/5 §4.3 / §5.3)</h2>\n"
@@ -336,7 +414,9 @@ class FFSReport:
     ) -> str:
         rsf_str = f"{rsf:.4f}" if math.isfinite(rsf) else "N/A"
         verdict = "ACCEPT" if rsf >= rsf_a else "FAIL"
-        color = _VERDICT_COLORS.get("ACCEPT" if rsf >= rsf_a else "REPAIR", _DEFAULT_COLOR)
+        color = _VERDICT_COLORS.get(
+            "ACCEPT" if rsf >= rsf_a else "REPAIR", _DEFAULT_COLOR
+        )
         folias = decision.get("folias_factor", 1.0)
         l2_verdict = decision.get("verdict", "")
         return (
@@ -395,22 +475,44 @@ class FFSReport:
             (html.escape(design_code), "Current", "t_min calculation"),
         ]
         eq_rows = [
-            ("t_min B31.8", "t=P&#183;D/(2&#183;SMYS&#183;F&#183;E&#183;T)", "B31.8 §841.1.1"),
+            (
+                "t_min B31.8",
+                "t=P&#183;D/(2&#183;SMYS&#183;F&#183;E&#183;T)",
+                "B31.8 §841.1.1",
+            ),
             ("t_min B31.4", "t=P&#183;D/(2&#183;SMYS&#183;F&#183;E)", "B31.4 §403.2.1"),
-            ("t_min ASME VIII", "t=P&#183;R/(S&#183;E&#8722;0.6P)", "BPVC VIII UG-27(c)(1)"),
-            ("Folias M_t", "&#8730;(1+0.48&#955;&#178;), &#955;=1.285L_a/&#8730;(Dt_c)", "API 579 Tbl 4.4"),
+            (
+                "t_min ASME VIII",
+                "t=P&#183;R/(S&#183;E&#8722;0.6P)",
+                "BPVC VIII UG-27(c)(1)",
+            ),
+            (
+                "Folias M_t",
+                "&#8730;(1+0.48&#955;&#178;), &#955;=1.285L_a/&#8730;(Dt_c)",
+                "API 579 Tbl 4.4",
+            ),
             ("RSF LML", "R_t/(1&#8722;(1&#8722;R_t)/M_t)", "API 579 §5.4.2.2"),
         ]
-        std_table = ("<table><tr><th>Standard</th><th>Edition</th><th>Application</th></tr>"
-                     + "".join(f"<tr><td>{a}</td><td>{b}</td><td>{c}</td></tr>" for a, b, c in rows)
-                     + "</table>")
-        eq_table = ("<table><tr><th>Parameter</th><th>Equation</th><th>Reference</th></tr>"
-                    + "".join(f"<tr><td>{a}</td><td>{b}</td><td>{c}</td></tr>" for a, b, c in eq_rows)
-                    + "</table>")
-        limits = ("<ul><li>Calculations in US Customary units (inches, psi).</li>"
-                  "<li>Remaining life: linear extrapolation only.</li>"
-                  "<li>Part 6 pitting and Part 7 HIC out of scope.</li>"
-                  "<li>Results near limits require certified engineering review.</li></ul>")
+        std_table = (
+            "<table><tr><th>Standard</th><th>Edition</th><th>Application</th></tr>"
+            + "".join(
+                f"<tr><td>{a}</td><td>{b}</td><td>{c}</td></tr>" for a, b, c in rows
+            )
+            + "</table>"
+        )
+        eq_table = (
+            "<table><tr><th>Parameter</th><th>Equation</th><th>Reference</th></tr>"
+            + "".join(
+                f"<tr><td>{a}</td><td>{b}</td><td>{c}</td></tr>" for a, b, c in eq_rows
+            )
+            + "</table>"
+        )
+        limits = (
+            "<ul><li>Calculations in US Customary units (inches, psi).</li>"
+            "<li>Remaining life: linear extrapolation only.</li>"
+            "<li>Part 6 pitting and Part 7 HIC out of scope.</li>"
+            "<li>Results near limits require certified engineering review.</li></ul>"
+        )
         return (
             "<div class='section'>\n<h2>6. Methodology &amp; References</h2>\n"
             f"<h3>Standards</h3>{std_table}"
@@ -435,13 +537,22 @@ class FFSReport:
         display_df = grid_df.iloc[:20, :10].round(4)
         nr, nc = display_df.shape
         tr, tc = grid_df.shape
-        hdr = "<tr><th>Row\\Col</th>" + "".join(f"<th>{c}</th>" for c in display_df.columns) + "</tr>"
+        hdr = (
+            "<tr><th>Row\\Col</th>"
+            + "".join(f"<th>{c}</th>" for c in display_df.columns)
+            + "</tr>"
+        )
         rows = "".join(
-            f"<tr><td>{idx}</td>" + "".join(f"<td>{v:.4f}</td>" for v in row.values) + "</tr>"
+            f"<tr><td>{idx}</td>"
+            + "".join(f"<td>{v:.4f}</td>" for v in row.values)
+            + "</tr>"
             for idx, row in display_df.iterrows()
         )
-        note = (f"<p class='disclaimer'>Showing {nr} of {tr} rows, {nc} of {tc} cols.</p>"
-                if tr > nr or tc > nc else "")
+        note = (
+            f"<p class='disclaimer'>Showing {nr} of {tr} rows, {nc} of {tc} cols.</p>"
+            if tr > nr or tc > nc
+            else ""
+        )
         return (
             "<div class='section'>\n<h2>Appendix — Grid Data (inches)</h2>\n"
             f"<table>{hdr}{rows}</table>{note}\n</div>\n"
