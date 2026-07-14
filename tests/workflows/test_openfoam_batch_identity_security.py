@@ -98,6 +98,49 @@ def test_source_identity_rejects_clean_commit_during_byte_reads(tmp_path, monkey
         build_run_identity(**args)
 
 
+def test_dirty_tracked_input_symlink_is_checked_by_lexical_path(tmp_path):
+    args = _source_args(tmp_path)
+    request = args["config_path"]
+    request.unlink()
+    request.symlink_to(args["referenced_inputs"]["case"].name)
+
+    with pytest.raises(ValueError, match="clean"):
+        build_run_identity(**args)
+
+
+def test_input_symlink_retarget_after_read_is_rejected(tmp_path, monkeypatch):
+    args = _source_args(tmp_path)
+    repo = args["package_root"].parents[1]
+    request = args["config_path"]
+    first = repo / "first.yml"
+    second = repo / "second.yml"
+    first.write_bytes(b"value: first\n")
+    second.write_bytes(b"value: second\n")
+    request.unlink()
+    request.symlink_to(first.name)
+    subprocess.run(["git", "-C", repo, "add", "."], check=True)
+    subprocess.run(
+        ["git", "-C", repo, "-c", "user.name=T", "-c",
+         "user.email=t@x.invalid", "commit", "-qm", "symlink fixture"],
+        check=True,
+    )
+    original_read = Path.read_bytes
+    raced = False
+
+    def retarget_after_read(path):
+        nonlocal raced
+        data = original_read(path)
+        if path == request and not raced:
+            raced = True
+            request.unlink()
+            request.symlink_to(second.name)
+        return data
+
+    monkeypatch.setattr(Path, "read_bytes", retarget_after_read)
+    with pytest.raises(ValueError, match="unsafe|changed|clean"):
+        build_run_identity(**args)
+
+
 def test_top_level_request_role_cannot_be_shadowed(tmp_path):
     args = _source_args(tmp_path)
     args["referenced_inputs"]["request"] = args["referenced_inputs"]["case"]
@@ -146,9 +189,68 @@ def test_wheel_distribution_matches_declared_name_version_and_record_bytes(tmp_p
     assert build_run_identity(**args)["identity_sha256"] != baseline["identity_sha256"]
 
 
+def test_wheel_record_is_revalidated_after_package_reads(tmp_path, monkeypatch):
+    args, record = _wheel_args(tmp_path)
+    original_read = Path.read_bytes
+    raced = False
+
+    def mutate_record_after_read(path):
+        nonlocal raced
+        data = original_read(path)
+        if path == record and not raced:
+            raced = True
+            record.write_bytes(data + b"\n")
+        return data
+
+    monkeypatch.setattr(Path, "read_bytes", mutate_record_after_read)
+    with pytest.raises(ValueError, match="changed"):
+        build_run_identity(**args)
+
+
+def test_wheel_package_bytes_are_revalidated_after_all_reads(tmp_path, monkeypatch):
+    args, _ = _wheel_args(tmp_path)
+    module = args["package_root"] / "__init__.py"
+    original_read = Path.read_bytes
+    raced = False
+
+    def mutate_module_after_read(path):
+        nonlocal raced
+        data = original_read(path)
+        if path == module and not raced:
+            raced = True
+            module.write_bytes(b"VALUE = 2\n")
+        return data
+
+    monkeypatch.setattr(Path, "read_bytes", mutate_module_after_read)
+    with pytest.raises(ValueError, match="changed"):
+        build_run_identity(**args)
+
+
+def test_external_tool_is_revalidated_at_identity_boundary(tmp_path, monkeypatch):
+    args = _source_args(tmp_path)
+    tool = args["selected_executables"]["solver"]
+    original_read = Path.read_bytes
+    raced = False
+
+    def mutate_tool_after_read(path):
+        nonlocal raced
+        data = original_read(path)
+        if path == tool and not raced:
+            raced = True
+            tool.write_bytes(b"replacement solver\n")
+        return data
+
+    monkeypatch.setattr(Path, "read_bytes", mutate_tool_after_read)
+    with pytest.raises(ValueError, match="changed"):
+        build_run_identity(**args)
+
+
 @pytest.mark.parametrize(
     "namespace",
-    ["C:/abs", "a:b", "con", "CON.txt", "snowman-☃", "a" * 64, "a/" + "b" * 63],
+    [
+        "C:/abs", "a:b", "con", "CON.txt", "COM1", "LPT9.log", "abc.",
+        "abc ", "snowman-☃", "a" * 64, "a/" + "b" * 63,
+    ],
 )
 def test_namespace_uses_closed_portable_ascii_grammar(tmp_path, monkeypatch, namespace):
     root = tmp_path / "root"
