@@ -2,11 +2,20 @@
 
 from __future__ import annotations
 
+import json  # noqa: F401 - legacy public facade surface
+import math  # noqa: F401 - legacy public facade surface
 import os  # noqa: F401 - legacy public facade surface
+import re  # noqa: F401 - legacy public facade surface
 import shutil  # noqa: F401 - legacy public facade surface
+import subprocess  # noqa: F401 - legacy public facade surface
+import time  # noqa: F401 - legacy public facade surface
+from concurrent.futures import ThreadPoolExecutor  # noqa: F401
+from copy import deepcopy  # noqa: F401 - legacy public facade surface
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, Callable  # noqa: F401 - legacy public facade surface
 
+import pandas as pd  # noqa: F401 - legacy public facade surface
 from loguru import logger
 
 from digitalmodel.workflows.openfoam_batch_config import (  # noqa: F401
@@ -19,66 +28,64 @@ from digitalmodel.workflows.openfoam_batch_config import (  # noqa: F401
     WORKER_CORE_FRACTION,
     _RESERVED_ROW_KEYS,
     default_workers,
-    render_cases,
-    resolve_case_matrix,
-    resolve_dir,
-    resolve_path,
+    render_cases as _render_cases_impl,
+    resolve_case_matrix as _resolve_case_matrix_impl,
+    resolve_dir as _resolve_dir_impl,
+    resolve_path as _resolve_path_impl,
     resolve_workers,
 )
 from digitalmodel.workflows.openfoam_batch_execution import (  # noqa: F401
     SOLVER_ERROR_MESSAGE,
-    build_case,
-    execute_mpi_plan,
+    build_case as _build_case_impl,
+    execute_mpi_plan as _execute_mpi_plan_impl,
     mpi_command_plan,
-    run_case_mpi,
-    run_case_pool,
-    run_command,
-    run_pool,
-    solve_serial,
-    solver_ready,
+    run_case_mpi as _run_case_mpi_impl,
+    run_case_pool as _run_case_pool_impl,
+    run_command as _run_command_impl,
+    run_pool as _run_pool_impl,
+    solve_serial as _solve_serial_impl,
+    solver_ready as _solver_ready_impl,
 )
-from digitalmodel.workflows.openfoam_batch_layout import (
-    DECOMPOSE_PAR_DICT,
-    clean_case_dir,
-    has_processor_dirs,
-    prune_processor_dirs,
-    set_start_from_latest_time,
-    write_decompose_par_dict,
+from digitalmodel.workflows.openfoam_batch_layout import (  # noqa: F401
+    DECOMPOSE_PAR_DICT as _DECOMPOSE_PAR_DICT,
+    clean_case_dir as _clean_case_dir_impl,
+    has_processor_dirs as _has_processor_dirs_impl,
+    prune_processor_dirs as _prune_processor_dirs_impl,
+    set_start_from_latest_time as _set_start_from_latest_time_impl,
+    write_decompose_par_dict as _write_decompose_par_dict_impl,
 )
 from digitalmodel.workflows.openfoam_batch_results import (  # noqa: F401
     CHECKPOINT_FILENAME,
-    RESULTS_ALLOWED_SUFFIXES,
-    load_checkpoint,
-    make_row,
-    write_checkpoint,
-    write_manifest,
-    write_summary,
+    RESULTS_ALLOWED_SUFFIXES as _RESULTS_ALLOWED_SUFFIXES,
+    load_checkpoint as _load_checkpoint_impl,
+    make_row as _make_row_impl,
+    write_checkpoint as _write_checkpoint_impl,
+    write_manifest as _write_manifest_impl,
+    write_summary as _write_summary_impl,
 )
 
-_RESULTS_ALLOWED_SUFFIXES = RESULTS_ALLOWED_SUFFIXES
-_DECOMPOSE_PAR_DICT = DECOMPOSE_PAR_DICT
-_resolve_case_matrix = resolve_case_matrix
-_render_cases = render_cases
-_resolve_path = resolve_path
-_resolve_dir = resolve_dir
-_run_pool = run_pool
-_run_case_pool = run_case_pool
-_solve_serial = solve_serial
-_run_case_mpi = run_case_mpi
-_execute_mpi_plan = execute_mpi_plan
-_build_case = build_case
-_solver_ready = solver_ready
-_run_command = run_command
-_write_decompose_par_dict = write_decompose_par_dict
-_prune_processor_dirs = prune_processor_dirs
-_has_processor_dirs = has_processor_dirs
-_clean_case_dir = clean_case_dir
-_set_start_from_latest_time = set_start_from_latest_time
-_load_checkpoint = load_checkpoint
-_write_checkpoint = write_checkpoint
-_row = make_row
-_write_manifest = write_manifest
-_write_summary = write_summary
+_resolve_case_matrix = _resolve_case_matrix_impl
+_render_cases = _render_cases_impl
+_resolve_path = _resolve_path_impl
+_resolve_dir = _resolve_dir_impl
+_run_pool = _run_pool_impl
+_run_case_pool = _run_case_pool_impl
+_solve_serial = _solve_serial_impl
+_run_case_mpi = _run_case_mpi_impl
+_execute_mpi_plan = _execute_mpi_plan_impl
+_build_case = _build_case_impl
+_solver_ready = _solver_ready_impl
+_run_command = _run_command_impl
+_write_decompose_par_dict = _write_decompose_par_dict_impl
+_prune_processor_dirs = _prune_processor_dirs_impl
+_has_processor_dirs = _has_processor_dirs_impl
+_clean_case_dir = _clean_case_dir_impl
+_set_start_from_latest_time = _set_start_from_latest_time_impl
+_load_checkpoint = _load_checkpoint_impl
+_write_checkpoint = _write_checkpoint_impl
+_row = _make_row_impl
+_write_manifest = _write_manifest_impl
+_write_summary = _write_summary_impl
 
 
 def _prepare_batch(cfg: dict) -> dict:

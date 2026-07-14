@@ -183,6 +183,7 @@ def run_case_mpi(
         )
         _compat("_write_checkpoint", write_checkpoint)(work_dir, row)
         return row
+    timeout = int(run_settings.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS))
     start = time.monotonic()
     try:
         case_dir, plan, solver, reconstruct = _prepare_mpi_case(
@@ -195,7 +196,6 @@ def run_case_mpi(
             row["mpi_plan"] = [" ".join(argv) for argv in plan]
         else:
             run = command_runner or _compat("_run_command", run_command)
-            timeout = int(run_settings.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS))
             execute = _compat("_execute_mpi_plan", execute_mpi_plan)
             row = execute(item, case_dir, plan, solver, run, timeout)
             if reconstruct and row["status"] == "completed":
