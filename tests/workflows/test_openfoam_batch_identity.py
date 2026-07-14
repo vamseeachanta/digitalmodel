@@ -5,7 +5,10 @@ import subprocess
 
 import pytest
 
-from digitalmodel.workflows.openfoam_batch_identity import build_run_identity
+from digitalmodel.workflows.openfoam_batch_identity import (
+    build_run_identity,
+    verify_wheel_record,
+)
 
 
 def test_identity_is_stable_and_changes_with_input_tool_and_capacity(tmp_path: Path) -> None:
@@ -66,3 +69,24 @@ def test_dirty_git_package_source_is_rejected(tmp_path: Path) -> None:
         build_run_identity(effective_config={}, referenced_inputs=[], selected_executables=[],
                            visible_rank_count=1, dispatcher_rank_limit=1,
                            package_root=package)
+
+
+def test_wheel_record_verifies_actual_installed_bytes(tmp_path: Path) -> None:
+    import base64
+    import hashlib
+
+    package = tmp_path / "digitalmodel"
+    dist_info = tmp_path / "digitalmodel-1.0.dist-info"
+    package.mkdir()
+    dist_info.mkdir()
+    module = package / "module.py"
+    module.write_bytes(b"VALUE = 1\n")
+    encoded = base64.urlsafe_b64encode(hashlib.sha256(module.read_bytes()).digest()).rstrip(b"=").decode()
+    record = dist_info / "RECORD"
+    record.write_text(f"digitalmodel/module.py,sha256={encoded},{module.stat().st_size}\n"
+                      "digitalmodel-1.0.dist-info/RECORD,,\n")
+    verified = verify_wheel_record(package, record)
+    assert verified["content_sha256"]
+    module.write_bytes(b"VALUE = 2\n")
+    with pytest.raises(ValueError, match="RECORD"):
+        verify_wheel_record(package, record)
