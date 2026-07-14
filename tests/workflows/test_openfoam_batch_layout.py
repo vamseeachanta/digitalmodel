@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -83,3 +84,60 @@ def test_owned_layout_rejects_foreign_marker_and_cleans_only_case(tmp_path: Path
     layout.marker_path.write_text(json.dumps(marker))
     with pytest.raises(ValueError, match="owner marker"):
         WorkLayout.create(tmp_path, "ns", "a" * 64)
+
+
+def test_external_output_must_remain_beneath_input_scope(tmp_path: Path) -> None:
+    cfg_dir, root = tmp_path / "input", tmp_path / "scratch"
+    cfg_dir.mkdir()
+    root.mkdir()
+    env = {"DIGITALMODEL_EXECUTION_CONTEXT": "hosted-deckhand",
+           "DIGITALMODEL_WORK_ROOT": str(root)}
+    for output in (str(tmp_path / "outside"), "../outside"):
+        with pytest.raises(ValueError, match="input-local"):
+            resolve_batch_paths({"output_dir": output}, cfg_dir, env=env)
+
+
+def test_layout_rejects_namespace_and_run_symlinks(tmp_path: Path) -> None:
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    try:
+        (tmp_path / "linked").symlink_to(outside, target_is_directory=True)
+    except OSError:
+        pytest.skip("directory symlinks unavailable")
+    with pytest.raises(ValueError, match="symlink"):
+        WorkLayout.create(tmp_path, "linked/ns", "a" * 64)
+    namespace = tmp_path / "safe"
+    namespace.mkdir()
+    (namespace / f"openfoam-run-{'b' * 64}").symlink_to(outside, target_is_directory=True)
+    with pytest.raises(ValueError, match="symlink"):
+        WorkLayout.create(tmp_path, "safe", "b" * 64)
+
+
+def test_stale_lock_requires_dead_process_proof(tmp_path: Path) -> None:
+    layout = WorkLayout.create(tmp_path, "ns", "c" * 64)
+    lock = layout.run_dir / ".locks" / "run"
+    with layout.lock("run"):
+        meta_path = lock / "meta.json"
+        meta = json.loads(meta_path.read_text())
+        meta["heartbeat_epoch"] = 0
+        meta_path.write_text(json.dumps(meta))
+        with pytest.raises(RuntimeError, match="held"):
+            with layout.lock("run", stale_seconds=1):
+                pass
+    lock.mkdir()
+    (lock / "meta.json").write_text(json.dumps({
+        "schema": 1, "pid": 2 ** 30, "boot_id": meta["boot_id"],
+        "owner_token": layout.owner_token, "heartbeat_epoch": 0,
+    }))
+    with layout.lock("run", stale_seconds=1):
+        assert lock.is_dir()
+
+
+def test_root_inode_substitution_blocks_clean(tmp_path: Path) -> None:
+    layout = WorkLayout.create(tmp_path, "ns", "d" * 64)
+    layout.case_dir("case").mkdir()
+    moved = tmp_path.with_name(tmp_path.name + "-moved")
+    os.replace(tmp_path, moved)
+    tmp_path.mkdir()
+    with pytest.raises(ValueError, match="root"):
+        layout.clean_case("case")

@@ -29,3 +29,10 @@ def test_result_policy_writes_only_fixed_bounded_files(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="extension"):
         write_results(rows, tmp_path, mode="pool", workers=1, mock=True,
                       timeout_seconds=10, extensions=["openfoam-artifact-index-v1"])
+
+
+def test_redaction_covers_windows_case_and_separator_variants() -> None:
+    rows = [{"case_dir": r"C:\Scratch\Runs\case",
+             "error": r"failed at c:/scratch/runs/case"}]
+    safe = redact_rows(rows, Path(r"C:\Scratch\Runs"))[0]
+    assert "scratch" not in str(safe).lower()

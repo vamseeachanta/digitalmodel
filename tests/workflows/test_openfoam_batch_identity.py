@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+import subprocess
+
+import pytest
 
 from digitalmodel.workflows.openfoam_batch_identity import build_run_identity
 
@@ -47,3 +50,19 @@ def test_identity_rejects_missing_or_symlinked_input(tmp_path: Path) -> None:
         assert "referenced input" in str(exc)
     else:
         raise AssertionError("missing input was accepted")
+
+
+def test_dirty_git_package_source_is_rejected(tmp_path: Path) -> None:
+    package = tmp_path / "pkg"
+    package.mkdir()
+    source = package / "module.py"
+    source.write_text("VALUE = 1\n")
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    subprocess.run(["git", "-C", str(tmp_path), "add", "pkg/module.py"], check=True)
+    subprocess.run(["git", "-C", str(tmp_path), "-c", "user.name=Test",
+                    "-c", "user.email=test@example.invalid", "commit", "-qm", "init"], check=True)
+    source.write_text("VALUE = 2\n")
+    with pytest.raises(ValueError, match="dirty"):
+        build_run_identity(effective_config={}, referenced_inputs=[], selected_executables=[],
+                           visible_rank_count=1, dispatcher_rank_limit=1,
+                           package_root=package)
