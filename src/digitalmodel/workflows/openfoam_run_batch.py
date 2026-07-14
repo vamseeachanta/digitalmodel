@@ -67,6 +67,8 @@ from digitalmodel.workflows.openfoam_batch_results import (  # noqa: F401
     RESULTS_ALLOWED_SUFFIXES as _RESULTS_ALLOWED_SUFFIXES,
     load_checkpoint as _load_checkpoint_impl,
     make_row as _make_row_impl,
+    redact_external_rows as _redact_external_rows_impl,
+    validate_result_policy_config as _validate_result_policy_config_impl,
     write_checkpoint as _write_checkpoint_impl,
     write_external_results as _write_external_results_impl,
     write_manifest as _write_manifest_impl,
@@ -95,6 +97,8 @@ _row = _make_row_impl
 _write_manifest = _write_manifest_impl
 _write_summary = _write_summary_impl
 _write_external_results = _write_external_results_impl
+_redact_external_rows = _redact_external_rows_impl
+_validate_result_policy_config = _validate_result_policy_config_impl
 _prepare_batch = _prepare_batch_impl
 
 
@@ -125,6 +129,8 @@ def _finalize_batch(
 ) -> dict:
     manifest_path = batch["results_dir"] / "cases.csv"
     summary_path = batch["results_dir"] / "batch_summary.json"
+    if batch["layout"]:
+        rows = _redact_external_rows(rows, batch["layout"].root_path)
     summary_args = {
         "rows": rows, "mode": batch["mode"], "workers": batch["workers"],
         "mock": batch["mock"], "timeout_seconds": batch["timeout"],
@@ -154,6 +160,7 @@ def _finalize_batch(
 
 def router(cfg: dict) -> dict:
     """Route a legacy or owned external request through the batch workflow."""
+    _validate_result_policy_config(cfg)
     batch = _prepare_batch(cfg)
     try:
         rows, started_at, finished_at = _execute_batch(batch)

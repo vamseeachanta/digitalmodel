@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import json
 import os
+import re
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 
 import pandas as pd
@@ -15,6 +18,132 @@ from digitalmodel.workflows.openfoam_batch_config import canonical_json_bytes
 CHECKPOINT_FILENAME = "_result.json"
 EXTERNAL_CHECKPOINT_FILENAME = ".digitalmodel-checkpoint-v2.json"
 RESULTS_ALLOWED_SUFFIXES = {".csv", ".json"}
+RESULT_POLICY_VERSION = "result-policy-v1"
+MAX_RESULT_ROW_BYTES = 65536
+MAX_CASES_CSV_BYTES = 2 * 1024 * 1024
+MAX_SUMMARY_BYTES = 65536
+_EXTENSION_ID = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*-v[1-9][0-9]*\Z")
+_ABSOLUTE_PATH = re.compile(
+    r"(?:[A-Za-z]:[\\/]|/)[^\s,;:'\"\]\[()]+"
+)
+_FULL_REDACTION_KEYS = {
+    "case_dir", "command", "cmd", "input_path", "path", "root",
+    "stderr", "stdout", "work_dir", "work_root",
+}
+
+
+@dataclass(frozen=True)
+class ResultExtension:
+    extension_id: str
+    basename: str
+    schema_id: str
+    media_type: str
+    max_bytes: int
+    policy_version: str
+    active: bool
+
+
+RESULT_EXTENSION_REGISTRY = MappingProxyType({
+    "openfoam-artifact-index-v1": ResultExtension(
+        extension_id="openfoam-artifact-index-v1",
+        basename="artifact_index.json",
+        schema_id="openfoam-artifact-index-v1",
+        media_type="application/json",
+        max_bytes=1048576,
+        policy_version=RESULT_POLICY_VERSION,
+        active=False,
+    ),
+})
+
+
+def active_result_extensions() -> tuple[ResultExtension, ...]:
+    return tuple(item for item in RESULT_EXTENSION_REGISTRY.values() if item.active)
+
+
+def _validate_extension_id(value: object) -> str:
+    if not isinstance(value, str):
+        raise ValueError("result extension ID must be a string")
+    if any(character in value for character in "*?["):
+        raise ValueError("result extension glob discovery is forbidden")
+    if "/" in value or "\\" in value or ".." in value:
+        raise ValueError("result extension traversal is forbidden")
+    if not _EXTENSION_ID.fullmatch(value):
+        raise ValueError("unknown result extension")
+    return value
+
+
+def select_result_extensions(requested: list[str]) -> tuple[ResultExtension, ...]:
+    """Resolve only active code-owned extension IDs; none are active yet."""
+    values = [_validate_extension_id(value) for value in requested]
+    if len(values) != len(set(values)):
+        raise ValueError("duplicate result extension")
+    unknown = [value for value in values if value not in RESULT_EXTENSION_REGISTRY]
+    if unknown:
+        raise ValueError("unknown result extension")
+    selected = tuple(RESULT_EXTENSION_REGISTRY[value] for value in values)
+    if any(not item.active for item in selected):
+        raise ValueError("result extension inactive pending Deckhand #564 approval")
+    return selected
+
+
+def validate_result_basename(basename: str) -> str:
+    """Reject every path-like or heavy OpenFOAM result name."""
+    if not isinstance(basename, str) or not basename:
+        raise ValueError("result basename is not an allowed bounded artifact")
+    heavy_names = {
+        "U", "p", "T", "k", "omega", "epsilon", "nut", "phi",
+        "points", "faces", "owner", "neighbour", "boundary", "mesh",
+        "VTK", "polyMesh",
+    }
+    blocked = (
+        basename.startswith((".", "_result", "log.", "processor"))
+        or basename in heavy_names
+        or basename.startswith("alpha.")
+        or basename.endswith(".foam")
+    )
+    if (
+        Path(basename).name != basename
+        or "/" in basename
+        or "\\" in basename
+        or blocked
+    ):
+        raise ValueError("result basename is not an allowed bounded artifact")
+    return basename
+
+
+def validate_result_policy_config(cfg: dict) -> None:
+    run_settings = (cfg.get("openfoam_run_batch") or {}).get("run_batch") or {}
+    if "result_extensions" in run_settings:
+        raise ValueError("result extensions are code-owned, not YAML-configurable")
+
+
+def redact_text(value: object) -> str:
+    return _ABSOLUTE_PATH.sub("[redacted-path]", str(value))
+
+
+def _redact_value(key: str, value: object) -> object:
+    normalized = key.lower()
+    if normalized in _FULL_REDACTION_KEYS or normalized.endswith(("_path", "_root")):
+        return "[redacted]"
+    if isinstance(value, dict):
+        return {name: _redact_value(name, item) for name, item in value.items()}
+    if isinstance(value, list):
+        return [_redact_value(key, item) for item in value]
+    return redact_text(value) if isinstance(value, (str, Path)) else value
+
+
+def redact_external_row(row: dict[str, Any], _root: Path | None = None) -> dict:
+    """Return a path- and stream-safe external result row."""
+    return {key: _redact_value(key, value) for key, value in row.items()}
+
+
+def redact_external_rows(rows: list[dict], root: Path | None = None) -> list[dict]:
+    redacted = [redact_external_row(row, root) for row in rows]
+    for row in redacted:
+        encoded = json.dumps(row, sort_keys=True, allow_nan=False).encode()
+        if len(encoded) > MAX_RESULT_ROW_BYTES:
+            raise ValueError("external result row exceeds byte bound")
+    return redacted
 
 
 def load_external_checkpoint(
@@ -109,7 +238,7 @@ def make_row(
     mock: bool = False,
 ) -> dict[str, Any]:
     """Build one legacy manifest row without changing key order."""
-    return {
+    row = {
         "index": item["index"],
         "name": item["name"],
         **item["case"],
@@ -120,6 +249,8 @@ def make_row(
         "case_dir": str(case_dir) if case_dir else None,
         "wall_seconds": 0.0,
     }
+    layout = item.get("layout")
+    return redact_external_row(row, layout.root_path) if layout else row
 
 
 def write_manifest(rows: list[dict[str, Any]], path: Path) -> None:
@@ -171,10 +302,19 @@ def write_external_results(
     output, rows, mode, workers, mock, timeout_seconds, started_at, finished_at
 ) -> dict:
     """Publish both external rollups through the retained output descriptor."""
-    summary = make_summary(
-        rows, mode, workers, mock, timeout_seconds, started_at, finished_at
-    )
+    rows = redact_external_rows(rows)
+    summary = {
+        **make_summary(
+            rows, mode, workers, mock, timeout_seconds, started_at, finished_at
+        ),
+        "result_policy_version": RESULT_POLICY_VERSION,
+    }
     manifest = pd.DataFrame(rows).to_csv(index=False).encode()
+    summary_bytes = (json.dumps(summary, indent=2) + "\n").encode()
+    if len(manifest) > MAX_CASES_CSV_BYTES:
+        raise ValueError("cases.csv exceeds result-policy byte bound")
+    if len(summary_bytes) > MAX_SUMMARY_BYTES:
+        raise ValueError("batch_summary.json exceeds result-policy byte bound")
     output.write("cases.csv", manifest)
-    output.write("batch_summary.json", (json.dumps(summary, indent=2) + "\n").encode())
+    output.write("batch_summary.json", summary_bytes)
     return summary

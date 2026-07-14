@@ -29,6 +29,7 @@ from digitalmodel.workflows.openfoam_batch_results import (
     load_checkpoint,
     load_external_checkpoint,
     make_row,
+    redact_text,
     write_checkpoint,
     write_external_checkpoint,
 )
@@ -366,6 +367,10 @@ def run_command(argv: list[str], cwd: Path, log: Path, timeout: int) -> int:
                 check=False,
             )
     except (OSError, subprocess.TimeoutExpired) as exc:
-        logger.error("openfoam_run_batch: {} invocation failed: {}", argv[0], exc)
+        logger.error(
+            "openfoam_run_batch: {} invocation failed: {}",
+            Path(argv[0]).name,
+            redact_text(exc),
+        )
         return 1
     return process.returncode
