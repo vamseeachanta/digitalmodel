@@ -496,6 +496,12 @@ def engine(
         )
 
         cfg_base = passing_ship_forces(cfg_base)
+    elif basename == "hull_girder_screening":
+        from digitalmodel.hull_girder_screening.workflow import (
+            router as hull_girder_screening,
+        )
+
+        cfg_base = hull_girder_screening(cfg_base)
     elif basename == "von_mises":
         from digitalmodel.structural.fe.von_mises_workflow import router as von_mises
 

@@ -302,6 +302,12 @@ modules:
     owner_wiki: docs/domains/hydrodynamics/wang-passing-ship-forces.md
     key_tests: [tests/hydrodynamics/test_wang_passing_ship.py, tests/hydrodynamics/test_passing_ship_forces_workflow.py]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#passing_ship_forces
+  - module: hull_girder_screening
+    entry_point: src/digitalmodel/hull_girder_screening/
+    maturity: development
+    owner_wiki: docs/domains/ship-design/hull-girder-strength-screening.md
+    key_tests: [tests/naval_architecture/test_hull_girder_screening.py, tests/naval_architecture/test_hull_girder_screening_workflow.py]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#hull_girder_screening
   - module: installation
     entry_point: src/digitalmodel/installation/
     maturity: beta
