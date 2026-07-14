@@ -30,7 +30,7 @@ def _record(**changes):
     record = {
         "schema_version": 1,
         "owner_token": "owner",
-        "boot_id": "boot-a",
+        "boot_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
         "pid": 12,
         "process_start_token": "start-a",
         "heartbeat": 100.0,
@@ -42,13 +42,13 @@ def _record(**changes):
 @pytest.mark.parametrize(
     "changes,state,current_boot,reclaimable",
     [
-        ({"owner_token": "foreign"}, "dead", "boot-a", False),
-        ({"heartbeat": 195.0}, "dead", "boot-a", False),
-        ({}, "unknown", "boot-a", False),
-        ({}, "alive-match", "boot-a", False),
-        ({}, "dead", "boot-a", True),
-        ({}, "alive-mismatch", "boot-a", True),
-        ({}, "unknown", "boot-b", True),
+        ({"owner_token": "foreign"}, "dead", "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", False),
+        ({"heartbeat": 195.0}, "dead", "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", False),
+        ({}, "unknown", "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", False),
+        ({}, "alive-match", "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", False),
+        ({}, "dead", "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", True),
+        ({}, "alive-mismatch", "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", True),
+        ({}, "unknown", "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb", False),
     ],
 )
 def test_stale_reclaim_requires_owner_expiry_and_proven_death(

@@ -34,7 +34,7 @@ def _record(**changes):
     record = {
         "schema_version": 1,
         "owner_token": "owner",
-        "boot_id": "boot-a",
+        "boot_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
         "pid": 12,
         "process_start_token": "100",
         "heartbeat": 1.0,
@@ -60,7 +60,8 @@ def _record(**changes):
 def test_malformed_lock_records_never_reclaim(changes):
     assert not layout_module.lock_reclaimable(
         _record(**changes), owner_token="owner", now=1000.0,
-        current_boot_id="boot-b", process_state="unknown", stale_after=10.0,
+        current_boot_id="bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+        process_state="unknown", stale_after=10.0,
     )
 
 
