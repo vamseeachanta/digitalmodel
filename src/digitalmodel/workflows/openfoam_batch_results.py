@@ -63,7 +63,7 @@ RESULT_EXTENSION_REGISTRY = MappingProxyType({
 
 def _validate_result_registry() -> tuple[ResultExtension, ...]:
     records = tuple(RESULT_EXTENSION_REGISTRY.items())
-    basenames = [item.basename for _, item in records]
+    basenames = [item.basename.casefold() for _, item in records]
     for key, item in records:
         media = {".json": "application/json", ".csv": "text/csv"}.get(
             Path(item.basename).suffix
@@ -76,8 +76,11 @@ def _validate_result_registry() -> tuple[ResultExtension, ...]:
             and ".." not in item.basename
             and "/" not in item.basename
             and "\\" not in item.basename
-            and item.basename not in MANDATORY_RESULT_BASENAMES
+            and item.basename.casefold() not in {
+                name.casefold() for name in MANDATORY_RESULT_BASENAMES
+            }
             and item.schema_id == item.extension_id
+            and media is not None
             and item.media_type == media
             and type(item.max_bytes) is int
             and item.max_bytes > 0
