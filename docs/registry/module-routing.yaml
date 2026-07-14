@@ -416,6 +416,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/tug/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#tug
+  - module: uncertainty
+    entry_point: src/digitalmodel/uncertainty/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/uncertainty/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#uncertainty
   - module: workflow_api
     entry_point: src/digitalmodel/workflow_api/
     maturity: development
