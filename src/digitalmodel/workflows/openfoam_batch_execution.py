@@ -67,17 +67,19 @@ def write_checkpoint(work_dir: Path, row: dict[str, Any], *,
 
 def run_cases(rendered: list[dict[str, Any]], run_settings: dict, *, mode: str,
               workers: int, mock: bool, layout: WorkLayout | None = None,
-              builder: Callable[[dict[str, Any]], Path] | None = None) -> list[dict[str, Any]]:
+              builder: Callable[[dict[str, Any]], Path] | None = None,
+              tool_bindings: dict[str, tuple[Path, str]] | None = None) -> list[dict[str, Any]]:
     build = builder or build_case
     if mode == "mpi":
         if len(rendered) != 1:
             raise ValueError("openfoam_run_batch mode: mpi runs exactly ONE case")
         return [run_case_mpi(rendered[0], run_settings, workers, mock,
-                             layout=layout, builder=build)]
+                             layout=layout, builder=build, tool_bindings=tool_bindings)]
     rows: dict[int, dict[str, Any]] = {}
     with ThreadPoolExecutor(max_workers=min(workers, len(rendered))) as pool:
         futures = {pool.submit(run_case_pool, item, run_settings, mock,
-                               layout=layout, builder=build): item
+                               layout=layout, builder=build,
+                               tool_bindings=tool_bindings): item
                    for item in rendered}
         for future, item in futures.items():
             try:
@@ -89,7 +91,8 @@ def run_cases(rendered: list[dict[str, Any]], run_settings: dict, *, mode: str,
 
 def run_case_pool(item: dict[str, Any], run_settings: dict, mock: bool,
                   *, layout: WorkLayout | None = None,
-                  builder: Callable[[dict[str, Any]], Path] | None = None) -> dict[str, Any]:
+                  builder: Callable[[dict[str, Any]], Path] | None = None,
+                  tool_bindings: dict[str, tuple[Path, str]] | None = None) -> dict[str, Any]:
     build = builder or build_case
     with _case_lock(layout, item["name"]):
         checkpoint = _checkpoint(item, layout)
@@ -101,7 +104,7 @@ def run_case_pool(item: dict[str, Any], run_settings: dict, mock: bool,
             case_dir = build(item)
             result = (row(item, status="completed", case_dir=case_dir,
                           solver=item["settings"].get("solver"), mock=True)
-                      if mock else solve_serial(item, case_dir, run_settings))
+                      if mock else solve_serial(item, case_dir, run_settings, tool_bindings))
         except Exception as exc:  # noqa: BLE001
             result = row(item, status="failed", error=str(exc))
         result["wall_seconds"] = round(time.monotonic() - start, 3)
@@ -109,7 +112,8 @@ def run_case_pool(item: dict[str, Any], run_settings: dict, mock: bool,
 
 
 def solve_serial(item: dict[str, Any], case_dir: Path,
-                 run_settings: dict) -> dict[str, Any]:
+                 run_settings: dict,
+                 tool_bindings: dict[str, tuple[Path, str]] | None = None) -> dict[str, Any]:
     from digitalmodel.solvers.openfoam.runner import OpenFOAMRunConfig, OpenFOAMRunner
     settings = item["settings"]
     config = OpenFOAMRunConfig(
@@ -120,7 +124,11 @@ def solve_serial(item: dict[str, Any], case_dir: Path,
         to_vtk=bool(settings.get("to_vtk", False)),
         timeout_seconds=int(run_settings.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS)),
     )
-    result = OpenFOAMRunner(config).run(case_dir)
+    verifier = None
+    if tool_bindings:
+        def verifier(name: str) -> None:
+            _verify_executable(*tool_bindings[name])
+    result = OpenFOAMRunner(config, executable_verifier=verifier).run(case_dir)
     status = str(getattr(result.status, "value", result.status)).lower()
     if status == "completed":
         return row(item, status="completed", case_dir=case_dir, solver=result.solver)
@@ -131,20 +139,22 @@ def solve_serial(item: dict[str, Any], case_dir: Path,
 def run_case_mpi(item: dict[str, Any], run_settings: dict, workers: int,
                  mock: bool, command_runner: Callable[..., int] | None = None,
                  *, layout: WorkLayout | None = None,
-                 builder: Callable[[dict[str, Any]], Path] | None = None) -> dict[str, Any]:
+                 builder: Callable[[dict[str, Any]], Path] | None = None,
+                 tool_bindings: dict[str, tuple[Path, str]] | None = None) -> dict[str, Any]:
     build = builder or build_case
     with _case_lock(layout, item["name"]):
         checkpoint = _checkpoint(item, layout)
         if checkpoint is not None:
             return checkpoint
         return _run_case_mpi_unlocked(item, run_settings, workers, mock,
-                                      command_runner, layout, build)
+                                      command_runner, layout, build, tool_bindings)
 
 
 def _run_case_mpi_unlocked(item: dict[str, Any], run_settings: dict, workers: int,
                            mock: bool, command_runner: Callable[..., int] | None,
                            layout: WorkLayout | None,
-                           builder: Callable[[dict[str, Any]], Path]) -> dict[str, Any]:
+                           builder: Callable[[dict[str, Any]], Path],
+                           tool_bindings: dict[str, tuple[Path, str]] | None) -> dict[str, Any]:
     solver = item["settings"].get("solver")
     if not solver:
         return _save(item, row(item, status="failed", error="mode: mpi requires base.solver"), layout)
@@ -160,11 +170,16 @@ def _run_case_mpi_unlocked(item: dict[str, Any], run_settings: dict, workers: in
             result = row(item, status="completed", case_dir=case_dir, solver=solver, mock=True)
             result["mpi_plan"] = [" ".join(argv) for argv in plan]
         else:
+            for binding in (tool_bindings or {}).values():
+                _verify_executable(*binding)
             if not resume:
                 write_decompose_par_dict(case_dir, workers)
             result = execute_mpi_plan(item, case_dir, plan, solver,
                 command_runner or run_command,
-                int(run_settings.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS)))
+                int(run_settings.get("timeout_seconds", DEFAULT_TIMEOUT_SECONDS)),
+                tool_bindings=tool_bindings)
+            for binding in (tool_bindings or {}).values():
+                _verify_executable(*binding)
             if reconstruct and result["status"] == "completed":
                 _prune(item, layout)
     except Exception as exc:  # noqa: BLE001
@@ -174,9 +189,13 @@ def _run_case_mpi_unlocked(item: dict[str, Any], run_settings: dict, workers: in
 
 
 def execute_mpi_plan(item: dict[str, Any], case_dir: Path, plan: list[list[str]],
-                     solver: str, run: Callable[..., int], timeout: int) -> dict[str, Any]:
+                     solver: str, run: Callable[..., int], timeout: int,
+                     *, tool_bindings: dict[str, tuple[Path, str]] | None = None) -> dict[str, Any]:
     for argv in plan:
-        rc = run(argv, case_dir, case_dir / f"log.{argv[0]}", timeout)
+        binding = (tool_bindings or {}).get(argv[0])
+        rc = run(argv, case_dir, case_dir / f"log.{argv[0]}", timeout,
+                 expected_executable=binding) if binding else run(
+                     argv, case_dir, case_dir / f"log.{argv[0]}", timeout)
         if rc:
             return row(item, status="failed", case_dir=case_dir, solver=solver,
                        error=f"stage '{argv[0]}' returned non-zero exit code {rc}")

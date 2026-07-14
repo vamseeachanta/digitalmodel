@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import re
 from typing import Any
 
 import pandas as pd
@@ -35,7 +36,9 @@ def redact_rows(rows: list[dict[str, Any]], external_root: Path | None) -> list[
             item["case_dir"] = f"<external-work>/{Path(case_dir).name}"
         error = item.get("error")
         if isinstance(error, str):
-            item["error"] = error.replace(root, "<external-work>")
+            normalized_root = root.replace("\\", "/")
+            item["error"] = re.sub(re.escape(normalized_root), "<external-work>",
+                                   error.replace("\\", "/"), flags=re.IGNORECASE)
     return redacted
 
 

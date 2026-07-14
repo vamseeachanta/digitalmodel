@@ -105,6 +105,7 @@ def resolve_batch_paths(
             raise ValueError("hosted run_batch.work_root is forbidden; operator environment owns the root")
         root = environment.get("DIGITALMODEL_WORK_ROOT", "")
         operator_root = _validated_root(root, "DIGITALMODEL_WORK_ROOT")
+        output_dir = _input_local_output(run_settings, cfg_dir)
         return BatchPaths(HOSTED_CONTEXT, cfg_dir, output_dir, operator_root,
                           validate_namespace(run_settings.get("work_root_namespace")), None)
     context = run_settings.get("execution_context")
@@ -112,6 +113,7 @@ def resolve_batch_paths(
         operator_root = _validated_root(run_settings.get("work_root", ""), "run_batch.work_root")
         if _inside_git_checkout(operator_root):
             raise ValueError("run_batch.work_root must be outside every Git checkout")
+        output_dir = _input_local_output(run_settings, cfg_dir)
         return BatchPaths(TRUSTED_LOCAL_CONTEXT, cfg_dir, output_dir, operator_root,
                           validate_namespace(run_settings.get("work_root_namespace")), None)
     if context not in (None, ""):
@@ -123,6 +125,17 @@ def resolve_batch_paths(
 def _resolve(value: object, base: Path) -> Path:
     path = Path(str(value))
     return path if path.is_absolute() else base / path
+
+
+def _input_local_output(run_settings: dict, cfg_dir: Path) -> Path:
+    raw = Path(str(run_settings.get("output_dir", DEFAULT_OUTPUT_DIR)))
+    candidate = raw if raw.is_absolute() else cfg_dir / raw
+    resolved = candidate.resolve()
+    try:
+        resolved.relative_to(cfg_dir)
+    except ValueError as exc:
+        raise ValueError("external-mode output_dir must remain input-local") from exc
+    return resolved
 
 
 def _validated_root(value: object, label: str) -> Path:

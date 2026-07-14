@@ -32,15 +32,22 @@ class WorkLayout:
         root = Path(operator_root).resolve()
         if not root.is_dir() or root.is_symlink():
             raise ValueError("operator root must be a real precreated directory")
-        namespace_dir = root.joinpath(*namespace.split("/"))
-        namespace_dir.mkdir(parents=True, exist_ok=True)
+        namespace_dir = root
+        for component in namespace.split("/"):
+            namespace_dir = namespace_dir / component
+            try:
+                namespace_dir.mkdir()
+            except FileExistsError:
+                if namespace_dir.is_symlink() or not namespace_dir.is_dir():
+                    raise ValueError("external namespace contains symlink or non-directory")
         run_dir = namespace_dir / f"openfoam-run-{identity_sha256}"
         created = False
         try:
             run_dir.mkdir()
             created = True
         except FileExistsError:
-            pass
+            if run_dir.is_symlink() or not run_dir.is_dir():
+                raise ValueError("external run directory is a symlink or non-directory")
         marker = run_dir / MARKER
         stat = root.stat()
         if created:
@@ -60,6 +67,10 @@ class WorkLayout:
 
     def assert_owned(self) -> None:
         stat = self.operator_root.stat()
+        if stat.st_dev != self.root_device or stat.st_ino != self.root_inode:
+            raise ValueError("operator root identity changed")
+        if self.run_dir.is_symlink() or not self.run_dir.is_dir():
+            raise ValueError("external run directory changed")
         payload = _read_marker(self.marker_path)
         _validate_marker(payload, self.identity_sha256, stat, self.owner_token)
 
@@ -70,9 +81,12 @@ class WorkLayout:
             return
         if target.is_symlink() or not target.is_dir():
             raise ValueError("refusing to clean a non-directory or symlink case")
+        before = target.stat()
         tombstone = self.run_dir / f".delete-{case}-{secrets.token_hex(8)}"
         os.replace(target, tombstone)
-        if tombstone.is_symlink() or not tombstone.is_dir():
+        after = tombstone.stat(follow_symlinks=False)
+        if (tombstone.is_symlink() or not tombstone.is_dir()
+                or (after.st_dev, after.st_ino) != (before.st_dev, before.st_ino)):
             if not target.exists():
                 os.replace(tombstone, target)
             raise ValueError("case changed during clean")
@@ -84,7 +98,13 @@ class WorkLayout:
         for child in case_dir.glob("processor*") if case_dir.is_dir() else ():
             if child.is_symlink() or not child.is_dir():
                 raise ValueError("refusing to prune substituted processor path")
-            shutil.rmtree(child)
+            before = child.stat()
+            tombstone = self.run_dir / f".delete-{case}-{child.name}-{secrets.token_hex(8)}"
+            os.replace(child, tombstone)
+            after = tombstone.stat(follow_symlinks=False)
+            if (after.st_dev, after.st_ino) != (before.st_dev, before.st_ino):
+                raise ValueError("processor directory changed during prune")
+            shutil.rmtree(tombstone)
 
     @contextmanager
     def lock(self, name: str, stale_seconds: int = 3600) -> Iterator[None]:
@@ -141,11 +161,44 @@ def _acquire_lock(path: Path, owner_token: str, stale_seconds: int) -> None:
         except (OSError, json.JSONDecodeError):
             raise RuntimeError(f"lock {path.name!r} has unknown liveness")
         age = time.time() - float(meta.get("heartbeat_epoch", 0))
-        if meta.get("owner_token") != owner_token or age <= stale_seconds:
+        same_boot = meta.get("boot_id") == _boot_id()
+        live = same_boot and _process_alive(meta.get("pid"))
+        if meta.get("owner_token") != owner_token or age <= stale_seconds or live:
             raise RuntimeError(f"lock {path.name!r} is held")
         tombstone = path.with_name(f".stale-{path.name}-{secrets.token_hex(8)}")
         os.replace(path, tombstone)
         shutil.rmtree(tombstone)
         path.mkdir()
     _atomic_json(path / "meta.json", {"schema": 1, "pid": os.getpid(),
-                 "owner_token": owner_token, "heartbeat_epoch": time.time()})
+                 "boot_id": _boot_id(), "owner_token": owner_token,
+                 "heartbeat_epoch": time.time()})
+
+
+def _boot_id() -> str:
+    system_id = Path("/proc/sys/kernel/random/boot_id")
+    try:
+        return system_id.read_text().strip()
+    except OSError:
+        return f"boot-epoch-{int(time.time() - time.monotonic())}"
+
+
+def _process_alive(value: object) -> bool:
+    try:
+        pid = int(value)
+        if pid <= 0:
+            return False
+        if os.name == "nt":
+            import ctypes
+            kernel = ctypes.windll.kernel32
+            handle = kernel.OpenProcess(0x1000, False, pid)
+            if not handle:
+                return False
+            code = ctypes.c_ulong()
+            try:
+                return bool(kernel.GetExitCodeProcess(handle, ctypes.byref(code))) and code.value == 259
+            finally:
+                kernel.CloseHandle(handle)
+        os.kill(pid, 0)
+    except (TypeError, ValueError, OSError):
+        return False
+    return True

@@ -33,7 +33,7 @@ from digitalmodel.workflows.openfoam_batch_execution import (
     write_checkpoint as _write_checkpoint,
     write_decompose_par_dict as _write_decompose_par_dict,
 )
-from digitalmodel.workflows.openfoam_batch_identity import build_run_identity
+from digitalmodel.workflows.openfoam_batch_identity import build_run_identity, file_sha256
 from digitalmodel.workflows.openfoam_batch_layout import WorkLayout
 from digitalmodel.workflows.openfoam_batch_results import (
     redact_rows,
@@ -82,7 +82,8 @@ def router(cfg: dict) -> dict:
     settings, run_settings, base, cfg_dir = _settings(cfg)
     mode, mock, workers = _validate_run(run_settings, base)
     paths = resolve_batch_paths(run_settings, cfg_dir)
-    layout = _external_layout(cfg, settings, run_settings, base, paths, mode, workers, mock)
+    layout, tool_bindings = _external_layout(
+        cfg, settings, run_settings, base, paths, mode, workers, mock)
     work_dir = paths.legacy_work_dir if layout is None else layout.run_dir
     cases = _resolve_case_matrix(settings.get("cases"), settings.get("variants") or {}, cfg_dir)
     mapping = settings.get("mapping") or (settings.get("variants") or {}).get("mapping") or {}
@@ -94,7 +95,8 @@ def router(cfg: dict) -> dict:
     else:
         with layout.lock("run"):
             rows = run_cases(rendered, run_settings, mode=mode, workers=workers,
-                             mock=mock, layout=layout, builder=_build_case)
+                             mock=mock, layout=layout, builder=_build_case,
+                             tool_bindings=tool_bindings)
     safe_rows = redact_rows(rows, paths.operator_root)
     outputs = write_results(safe_rows, paths.output_dir, mode=mode, workers=workers,
                             mock=mock, timeout_seconds=int(run_settings.get(
@@ -128,10 +130,11 @@ def _validate_run(run_settings: dict, base: dict) -> tuple[str, bool, int]:
 
 
 def _external_layout(cfg: dict, settings: dict, run_settings: dict, base: dict,
-                     paths, mode: str, workers: int, mock: bool) -> WorkLayout | None:
+                     paths, mode: str, workers: int, mock: bool
+                     ) -> tuple[WorkLayout | None, dict[str, tuple[Path, str]]]:
     if not paths.external:
         paths.legacy_work_dir.mkdir(parents=True, exist_ok=True)
-        return None
+        return None, {}
     inputs = _referenced_inputs(cfg, settings, paths.cfg_dir)
     tools = [] if mock else _selected_tools(mode, base, run_settings)
     identity = build_run_identity(
@@ -140,7 +143,9 @@ def _external_layout(cfg: dict, settings: dict, run_settings: dict, base: dict,
         dispatcher_rank_limit=workers,
         package_root=Path(__file__).resolve().parents[1],
     )
-    return WorkLayout.create(paths.operator_root, paths.namespace, identity.identity_sha256)
+    bindings = {item[0]: (item[1], file_sha256(item[1])) for item in tools}
+    return (WorkLayout.create(paths.operator_root, paths.namespace, identity.identity_sha256),
+            bindings)
 
 
 def _referenced_inputs(cfg: dict, settings: dict, cfg_dir: Path) -> list[tuple[str, Path]]:
@@ -151,8 +156,12 @@ def _referenced_inputs(cfg: dict, settings: dict, cfg_dir: Path) -> list[tuple[s
     for role, value in _walk_strings(settings):
         path = Path(value)
         candidate = path if path.is_absolute() else cfg_dir / path
-        if candidate.is_file() and candidate.suffix.lower() in {".yml", ".yaml", ".csv"}:
+        if candidate.is_file():
             found.append((role, candidate))
+        elif candidate.is_dir() and not candidate.is_symlink():
+            for asset in candidate.rglob("*"):
+                if asset.is_file():
+                    found.append((f"{role}/{asset.relative_to(candidate).as_posix()}", asset))
     return list({(role, path.resolve()) for role, path in found})
 
 
@@ -173,6 +182,19 @@ def _selected_tools(mode: str, base: dict, run_settings: dict) -> list[tuple[str
         names += ["decomposePar", "mpirun"]
         if bool(run_settings.get("reconstruct", True)):
             names.append("reconstructPar")
+    else:
+        if base.get("run_snappy"):
+            names.append("snappyHexMesh")
+        if base.get("merge_meshes_source"):
+            names.append("mergeMeshes")
+        if base.get("run_topo_set"):
+            names.append("topoSet")
+        if base.get("subset_mesh_set") or base.get("subset_mesh_patch"):
+            names.append("subsetMesh")
+        if base.get("run_set_fields"):
+            names.append("setFields")
+        if base.get("to_vtk"):
+            names.append("foamToVTK")
     return [(name, Path(shutil.which(name) or "")) for name in names if name]
 
 
