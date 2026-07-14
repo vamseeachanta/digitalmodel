@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import json  # noqa: F401 - legacy public facade surface
+import json  # noqa: F401
 import math  # noqa: F401 - legacy public facade surface
 import os  # noqa: F401 - legacy public facade surface
 import re  # noqa: F401 - legacy public facade surface
@@ -64,7 +64,6 @@ from digitalmodel.workflows.openfoam_batch_results import (  # noqa: F401
     write_manifest as _write_manifest_impl,
     write_summary as _write_summary_impl,
 )
-
 _resolve_case_matrix = _resolve_case_matrix_impl
 _render_cases = _render_cases_impl
 _resolve_path = _resolve_path_impl
@@ -94,6 +93,8 @@ def _prepare_batch(cfg: dict) -> dict:
     cfg_dir = Path(cfg.get("_config_dir_path") or Path.cwd())
     run_settings = settings.get("run_batch") or {}
     authority = _resolve_execution_authority_impl(run_settings, cfg_dir)
+    if authority.context != "legacy":
+        raise RuntimeError("owned external layout is not active; execution denied")
     mode = run_settings.get("mode", DEFAULT_MODE)
     if mode not in VALID_MODES:
         raise ValueError(

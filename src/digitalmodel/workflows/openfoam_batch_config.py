@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import base64
-import csv
 import hashlib
 import json
 import math
@@ -15,6 +13,11 @@ from pathlib import Path
 from typing import Any, Callable, Mapping, NamedTuple
 
 from digitalmodel.workflows.parametric_run import _load_cases, _set_dotted
+from digitalmodel.workflows.openfoam_batch_identity_validation import (
+    portable_namespace,
+    portable_token,
+    wheel_package,
+)
 
 WORKER_CORE_FRACTION = 0.9
 DEFAULT_MODE = "pool"
@@ -69,18 +72,7 @@ def _validate_root(value: str | None, label: str) -> Path:
 
 
 def _namespace(value: object, root: Path) -> Path:
-    raw = "default" if value is None else str(value)
-    parts = raw.split("/")
-    invalid = (
-        not raw
-        or Path(raw).is_absolute()
-        or "\\" in raw
-        or any(part in {"", ".", ".."} for part in parts)
-        or any(ord(char) < 32 or ord(char) == 127 for char in raw)
-    )
-    if invalid:
-        raise ValueError("work_root_namespace must contain portable components")
-    namespace = Path(*parts)
+    namespace = portable_namespace(value)
     if _contains_symlink(root / namespace):
         raise ValueError("work_root_namespace must not contain a symlink")
     return namespace
@@ -151,20 +143,25 @@ def _require_clean(repo: Path, candidates: list[Path]) -> None:
         raise ValueError("source identity candidate paths must be clean")
 
 
-def _source_package(package_root: Path, candidates: list[Path]) -> tuple[dict, Path]:
+def _source_package(
+    package_root: Path, candidates: list[Path]
+) -> tuple[dict, Path, str]:
     repo = Path(_git_output(package_root, "rev-parse", "--show-toplevel"))
     _require_clean(repo, candidates)
+    head = _git_output(repo, "rev-parse", "HEAD")
     package_rel = str(package_root.resolve().relative_to(repo.resolve()))
     tracked = _git_output(repo, "ls-files", "-z", "--", package_rel).split("\0")
     records = _actual_records(repo, [item for item in tracked if item], repo)
     if not records:
         raise ValueError("source package must contain tracked files")
+    if _git_output(repo, "rev-parse", "HEAD") != head:
+        raise ValueError("source identity HEAD changed during byte reads")
     source = {
-        "git_commit_sha": _git_output(repo, "rev-parse", "HEAD"),
+        "git_commit_sha": head,
         "tracked_tree_clean": True,
         "content_sha256": _sha256(canonical_json_bytes(records)),
     }
-    return source, repo
+    return source, repo, head
 
 
 def _actual_records(base: Path, names: list[str], relative_to: Path) -> list[dict]:
@@ -184,56 +181,17 @@ def _actual_records(base: Path, names: list[str], relative_to: Path) -> list[dic
     return records
 
 
-def _record_hash(encoded: str) -> str:
-    algorithm, value = encoded.split("=", 1)
-    if algorithm != "sha256":
-        raise ValueError("wheel RECORD must use sha256")
-    padded = value + "=" * (-len(value) % 4)
-    return base64.urlsafe_b64decode(padded).hex()
-
-
-def _wheel_package(package_root: Path, distribution_root: Path) -> dict:
-    record_glob = f"{package_root.name.replace('-', '_')}-*.dist-info/RECORD"
-    records = list(distribution_root.glob(record_glob))
-    if len(records) != 1:
-        raise ValueError("wheel RECORD is missing or ambiguous")
-    with records[0].open(newline="") as stream:
-        rows = {row[0]: row[1:] for row in csv.reader(stream) if row}
-    package_files = [path for path in package_root.rglob("*") if path.is_file()]
-    actual_names = {
-        path.relative_to(distribution_root).as_posix() for path in package_files
-    }
-    recorded_names = {name for name in rows if name.startswith(package_root.name + "/")}
-    if actual_names - recorded_names:
-        raise ValueError("wheel package contains an unrecorded file")
-    if recorded_names - actual_names:
-        raise ValueError("wheel RECORD references a missing package file")
-    actual = _actual_records(
-        distribution_root, sorted(recorded_names), distribution_root
-    )
-    for item in actual:
-        digest, size = rows[item["safe_relative_path"]]
-        if (
-            not digest
-            or int(size) != item["size_bytes"]
-            or _record_hash(digest) != item["content_sha256"]
-        ):
-            raise ValueError("wheel RECORD does not match actual package bytes")
-    return {
-        "git_commit_sha": None,
-        "tracked_tree_clean": None,
-        "content_sha256": _sha256(canonical_json_bytes(actual)),
-    }
-
-
 def _input_records(
     config_path: Path | None, inputs: Mapping[str, Path], repo: Path | None
 ) -> list[dict]:
     entries = dict(inputs)
     if config_path is not None:
-        entries = {"request": config_path, **entries}
+        if "request" in entries:
+            raise ValueError("reserved input role request cannot be shadowed")
+        entries["request"] = config_path
     records = []
     for role, path in sorted(entries.items()):
+        portable_token(role, "referenced input role")
         data = Path(path).read_bytes()
         safe_path = (
             Path(path).name
@@ -254,9 +212,11 @@ def _input_records(
 def _executable_records(executables: Mapping[str, Path]) -> list[dict]:
     records = []
     for role, path in sorted(executables.items()):
+        portable_token(role, "selected executable role")
         candidate = Path(path)
         if not candidate.is_file() or candidate.is_symlink():
             raise ValueError(f"selected executable for {role} is missing or unsafe")
+        portable_token(candidate.name, "selected executable basename")
         records.append(
             {
                 "role": role,
@@ -265,6 +225,42 @@ def _executable_records(executables: Mapping[str, Path]) -> list[dict]:
             }
         )
     return records
+
+
+def _validate_identity_metadata(values: tuple[tuple[object, str], ...]) -> None:
+    for value, label in values:
+        portable_token(value, label)
+
+
+def _identity_inputs(
+    config_path: Path | None,
+    package_root: Path,
+    package_name: str,
+    package_version: str,
+    referenced_inputs: Mapping[str, Path],
+    selected_executables: Mapping[str, Path],
+    distribution_root: Path | None,
+) -> tuple[dict, list[dict], list[dict]]:
+    candidates = [Path(path) for path in referenced_inputs.values()]
+    if config_path is not None:
+        candidates.append(Path(config_path))
+    if distribution_root is None:
+        source, repo, expected_head = _source_package(
+            Path(package_root), candidates + [Path(package_root)]
+        )
+    else:
+        source = wheel_package(
+            Path(package_root), Path(distribution_root), package_name, package_version
+        )
+        repo, expected_head = None, None
+    inputs = _input_records(config_path, referenced_inputs, repo)
+    executables = _executable_records(selected_executables)
+    if repo is not None:
+        _require_clean(repo, candidates + [Path(package_root)])
+        if _git_output(repo, "rev-parse", "HEAD") != expected_head:
+            raise ValueError("source identity HEAD changed during byte reads")
+    source.update(package_name=package_name, package_version=package_version)
+    return source, inputs, executables
 
 
 def build_run_identity(
@@ -282,28 +278,28 @@ def build_run_identity(
     work_layout_version: str,
     distribution_root: Path | None = None,
 ) -> dict:
-    if visible_rank_count < 1 or not 1 <= dispatcher_rank_limit <= visible_rank_count:
+    ranks = (visible_rank_count, dispatcher_rank_limit)
+    if any(type(value) is not int or value < 1 for value in ranks):
+        raise ValueError("rank ceilings must be exact positive integers")
+    if dispatcher_rank_limit > visible_rank_count:
         raise ValueError("rank ceilings must be positive and dispatcher <= visible")
-    candidates = [Path(path) for path in referenced_inputs.values()]
-    if config_path is not None:
-        candidates.append(Path(config_path))
-    if distribution_root is None:
-        source, repo = _source_package(
-            Path(package_root), candidates + [Path(package_root)]
-        )
-    else:
-        source, repo = _wheel_package(Path(package_root), Path(distribution_root)), None
-    source.update(package_name=package_name, package_version=package_version)
-    inputs = _input_records(config_path, referenced_inputs, repo)
-    if repo is not None:
-        _require_clean(repo, candidates + [Path(package_root)])
+    _validate_identity_metadata((
+        (package_name, "package_name"),
+        (package_version, "package_version"),
+        (result_policy_version, "result_policy_version"),
+        (work_layout_version, "work_layout_version"),
+    ))
+    source, inputs, executables = _identity_inputs(
+        config_path, package_root, package_name, package_version,
+        referenced_inputs, selected_executables, distribution_root,
+    )
     identity = {
         "schema_version": 1,
         "identity_kind": "openfoam-run-v1",
         "source": source,
         "effective_config_sha256": _sha256(canonical_json_bytes(effective_config)),
         "referenced_inputs": inputs,
-        "selected_executables": _executable_records(selected_executables),
+        "selected_executables": executables,
         "host_capabilities": {
             "visible_rank_count": int(visible_rank_count),
             "dispatcher_rank_limit": int(dispatcher_rank_limit),
