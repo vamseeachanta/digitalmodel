@@ -174,3 +174,19 @@ def test_run_rename_or_marker_inode_substitution_rejects_before_mutation(tmp_pat
     assert (layout.run_path / "replacement").read_text() == "keep"
     layout.close()
 
+
+def test_owned_clean_and_prune_remove_only_selected_case_descendants(tmp_path):
+    with _create(tmp_path) as layout:
+        first = layout.case_path("case-a")
+        second = layout.case_path("case-b")
+        (first / "processor0" / "nested").mkdir(parents=True)
+        (first / "processor0" / "nested" / "field").write_text("old")
+        (first / "system").mkdir()
+        (second / "sentinel").mkdir(parents=True)
+        layout.prune_processors("case-a")
+        assert not (first / "processor0").exists()
+        assert (first / "system").is_dir()
+        assert (second / "sentinel").is_dir()
+        layout.clean_case("case-a")
+        assert not first.exists()
+        assert (second / "sentinel").is_dir()
