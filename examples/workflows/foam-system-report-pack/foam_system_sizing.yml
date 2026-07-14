@@ -1,0 +1,63 @@
+# Synthetic tanker deck-foam sizing fixture — foam_system_sizing -> report_pack
+# end-to-end demo (issue #1587). All values are round synthetic numbers; all
+# document metadata downstream is placeholder-only (B0000 / Example Client).
+#
+# The three protected areas are the three SOLAS FSS Code deck-foam rate bases
+# selected by key from the cited criteria library shipped with the module
+# (issue #1586); demand_policy max implements "the greatest of" the bases:
+#
+#   cargo deck area       3000 m2 x 0.6 L/min/m2 = 1800 L/min
+#   largest tank section   500 m2 x 6.0 L/min/m2 = 3000 L/min  <- governs
+#   largest monitor area   450 m2 x 3.0 L/min/m2 = 1350 L/min  (>= 1250 min)
+#
+# Concentrate at 3%, 20 min (inert-gas-fitted basis): 3000 x 20 x 0.03 = 1800 L.
+# Hydraulics: two-monitor tree, pump rated 3500 L/min @ 130 m.
+#
+# Run: python -m digitalmodel examples/workflows/foam-system-report-pack/foam_system_sizing.yml
+# Outputs (checked in, consumed by input.yml): data/foam_system_sizing_*.csv
+
+basename: foam_system_sizing
+
+foam_system_sizing:
+  criteria_library:
+    - fss_deck_foam_cargo_deck_area
+    - fss_deck_foam_largest_tank_section
+    - fss_deck_foam_largest_monitor_area
+
+  protected_areas:
+    - name: cargo deck area basis
+      area_m2: 3000.0
+      criterion: fss_deck_foam_cargo_deck_area
+    - name: largest tank sectional area basis
+      area_m2: 500.0
+      criterion: fss_deck_foam_largest_tank_section
+    - name: largest monitor protected area basis
+      area_m2: 450.0
+      criterion: fss_deck_foam_largest_monitor_area
+
+  demand_policy: max            # the greatest of the FSS rate bases governs
+
+  concentrate:
+    concentration_percent: 3.0
+    reserve_percent: 0.0        # FSS duration basis carried in the criteria
+
+  proportioner:
+    min_solution_flow_lpm: 500.0
+    max_solution_flow_lpm: 4000.0
+    max_concentrate_flow_lpm: 150.0
+    rated_concentration_percent: 3.0
+
+  hydraulics:
+    method: hazen_williams
+    hazen_williams_c: 120.0
+    density_kg_m3: 1000.0
+    pump: {node: PUMP, rated_flow_lpm: 3500.0, rated_head_m: 130.0, elevation_m: 0.0}
+    runs:
+      - {from: PUMP, to: J1, length_m: 120.0, diameter_mm: 200.0}
+      - {from: J1, to: MON_FWD, length_m: 60.0, diameter_mm: 150.0}
+      - {from: J1, to: MON_AFT, length_m: 40.0, diameter_mm: 150.0}
+    terminals:
+      - {node: MON_FWD, flow_lpm: 1500.0, required_pressure_bar: 8.0, elevation_m: 20.0}
+      - {node: MON_AFT, flow_lpm: 1500.0, required_pressure_bar: 8.0, elevation_m: 20.0}
+
+  output_dir: data

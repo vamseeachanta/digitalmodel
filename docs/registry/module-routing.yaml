@@ -120,7 +120,7 @@ modules:
     entry_point: src/digitalmodel/foam_system/
     maturity: development
     owner_wiki: docs/domains/fire_safety/foam-system-sizing.md
-    key_tests: [tests/fire_safety/test_foam_system_sizing.py]
+    key_tests: [tests/fire_safety/test_foam_system_sizing.py, tests/fire_safety/test_foam_criteria_library.py]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#foam_system
   - module: mooring_resilience
     entry_point: src/digitalmodel/mooring_resilience/

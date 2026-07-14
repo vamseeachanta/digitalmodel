@@ -81,6 +81,45 @@ criteria:
 The repo's Codes & Regs register (`docs/domains/codes-register.md`) is the
 place to keep the digested, edition-pinned values that feed this table.
 
+## Starter cited criteria library (#1586)
+
+Commonly used rates ship with the module as a YAML library
+(`src/digitalmodel/foam_system/data/foam_criteria_library.yml`) so users
+select entries by key instead of re-typing cited values per job:
+
+- **NFPA 11 (2021)** — fixed-roof tank surface application (flash-point
+  variants), open-top floating-roof top-of-seal (foam dam), hydrocarbon
+  spill (portable);
+- **SOLAS FSS Code** (Res. MSC.98(73) as amended, 2015 consolidated
+  edition) — the three fixed deck foam rate bases (cargo deck area 0.6,
+  largest tank section 6.0, largest monitor area 3.0 L/min/m2);
+- **IMO MODU Code (2009)** — helideck foam application.
+
+Every entry carries the mandatory Citation fields and an explicit edition.
+Entries flagged `verify_against_source: true` (all NFPA clause numbering
+and the MODU helideck basis) must be confirmed against the purchased /
+governing edition before use in a deliverable — the loader appends a
+`VERIFY AGAINST SOURCE` marker to the citation note so the flag follows
+the value into every output CSV.
+
+Selection API: `digitalmodel.foam_system.criteria_library`
+(`load_criteria_library`, `get_criterion`, `list_criteria`), or the
+workflow config key `criteria_library` (list of keys, merged with any
+inline `criteria`; key collisions are an error — library values are never
+silently overridden). Tests:
+`tests/fire_safety/test_foam_criteria_library.py`.
+
+## Report-pack demo (#1587)
+
+`examples/workflows/foam-system-report-pack/` wires a sizing run into the
+standard report pack end to end (same pattern as the fatg_spectral_fatigue
+demo): `foam_system_sizing.yml` (synthetic tanker deck-foam fixture using
+library keys) -> `data/foam_system_sizing_*.csv` -> `input.yml`
+(`report_pack`) -> md/html(/pdf) report with citations sidecar and
+report-layer provenance manifest. Tests:
+`tests/report_pack/test_foam_report_pack.py` (asserts the checked-in CSVs
+regenerate byte-identically and the pack renders and validates).
+
 ## Method
 
 - **Demand**: per area `Q = A x rate`. `demand_policy: max` treats the

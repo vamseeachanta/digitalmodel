@@ -1,0 +1,163 @@
+# foam_system_sizing -> report_pack end-to-end demo (issue #1587).
+#
+# Renders a complete standard report pack (md + self-contained html +
+# optional pdf + citations sidecar + report-layer provenance manifest) from
+# the synthetic tanker deck-foam screening produced by
+# foam_system_sizing.yml in this directory (same pattern as the
+# fatg_spectral_fatigue demo in examples/workflows/report-pack/). All
+# document metadata is placeholder-only (B0000 / Example Client).
+#
+# Regenerate the sizing CSVs first (checked in under data/):
+#   python -m digitalmodel examples/workflows/foam-system-report-pack/foam_system_sizing.yml
+# Then render the pack:
+#   python -m digitalmodel examples/workflows/foam-system-report-pack/input.yml
+
+basename: report_pack
+
+report_pack:
+  document:
+    number: B0000-RPT-002-00
+    revision: "00"
+    title: Example Tanker Deck Foam System Sizing Screening
+    project: B0000
+    client: Example Client
+    date: "2026-07-14"
+    prepared_by: Author Placeholder
+    checked_by: Checker Placeholder
+    approved_by: Approver Placeholder
+    revision_history:
+      - rev: "00"
+        date: "2026-07-14"
+        description: Issued for internal review
+        prepared: AP
+        checked: CP
+        approved: XP
+
+  sections:
+    - title: Introduction and Scope
+      content: |
+        This report presents a screening-level sizing check of a fixed deck
+        foam system for a representative synthetic tanker arrangement: foam
+        solution demand from the three SOLAS FSS Code deck-foam rate bases,
+        foam concentrate quantity, proportioner duty, and a Hazen-Williams
+        hydraulic screening of a two-monitor distribution tree.
+
+        Excluded from scope: detail hydraulic design (loops, balancing,
+        proportioner pressure losses), foam quality/expansion verification,
+        and any class compliance conclusion. Final designs are governed by
+        the authority having jurisdiction / classification society review.
+    - title: References and Traceability
+      content: |
+        - Sizing workflow: `digitalmodel.foam_system` (routed basename
+          `foam_system_sizing`), fixture `foam_system_sizing.yml` in this
+          directory.
+        - Application-rate criteria: selected by key from the cited criteria
+          library shipped with the module
+          (`digitalmodel.foam_system.criteria_library`); the citation string
+          for each rate is echoed in the demand table below.
+        - Report generator: `digitalmodel.report_pack` standard report-pack
+          workflow. Cited standards are listed in the References cited
+          section and the machine-readable citations sidecar.
+    - title: Design Data and Basis
+      content: |
+        - Cargo deck area basis: 3000 m2 at 0.6 L/min/m2 (FSS Code basis 1).
+        - Largest tank sectional area basis: 500 m2 at 6.0 L/min/m2 (basis 2).
+        - Largest monitor protected area basis: 450 m2 at 3.0 L/min/m2
+          (basis 3; monitor minimum 1250 L/min).
+        - Discharge duration: 20 min (inert-gas-fitted tanker basis).
+        - Concentrate: 3% proportioning, no reserve policy applied.
+        - Proportioner rated envelope: 500-4000 L/min solution, 150 L/min
+          concentrate, rated at 3%.
+        - Pump: 3500 L/min at 130 m head; two monitors at 1500 L/min each,
+          8.0 bar required at 20 m elevation.
+    - title: Methodology and Assumptions
+      content: |
+        The screening chain is applied per the `foam_system_sizing` module:
+
+        ```text
+        demand      = max over rate bases (area x cited application rate)
+        concentrate = governing solution volume x concentration (+ reserve)
+        hydraulics  = Hazen-Williams tree network; worst terminal sets
+                      required pump head; margins against rated pump
+        ```
+
+        - Foam solution treated hydraulically as water (density 1000 kg/m3).
+        - Tree network only (no loops); fittings via equivalent lengths.
+        - Every application rate carries a citation (standard, edition,
+          clause); rates flagged VERIFY AGAINST SOURCE in the library are
+          not used in this demo.
+    - title: Results
+      content: |
+        The governing rate basis is the largest tank sectional area
+        (500 m2 x 6.0 L/min/m2 = 3000 L/min). Concentrate quantity is
+        1800 L (3% x 60000 L solution); injection rate 90 L/min within the
+        proportioner envelope (75% utilization). The governing terminal is
+        the forward monitor at 104.4 m required pump head, leaving 25.6 m
+        (19.7%) head margin and 500 L/min flow margin on the rated pump.
+    - title: Conclusions and Limitations
+      content: |
+        The synthetic arrangement passes this screening basis: demand,
+        concentrate, proportioner duty and pump margins are all acceptable.
+
+        - This is a screening-level estimate, not a detail design.
+        - Results apply to the stated synthetic areas and network only.
+        - No class compliance conclusion is drawn; the FSS Code monitor
+          count/coverage rules are not checked by this calc.
+
+  results:
+    tables:
+      - title: Foam demand per rate basis (foam_system_sizing output, cited per row)
+        csv: data/foam_system_sizing_foam_demand.csv
+      - title: Hydraulic screening — pipe runs
+        csv: data/foam_system_sizing_foam_hydraulic_runs.csv
+      - title: Hydraulic screening — terminals
+        csv: data/foam_system_sizing_foam_hydraulic_terminals.csv
+
+  appendices:
+    - letter: A
+      title: Reference Documents
+      content: |
+        Source standards backing the application-rate criteria (see also the
+        References cited section and the citations sidecar). Rate values are
+        selected by key from the module's cited criteria library.
+    - letter: B
+      title: Calculation Records
+      files:
+        - data/foam_system_sizing_foam_demand.csv
+        - data/foam_system_sizing_foam_hydraulic_runs.csv
+        - data/foam_system_sizing_foam_hydraulic_terminals.csv
+
+  citations:
+    - code_id: IMO-FSS-CODE
+      publisher: IMO
+      revision: Res. MSC.98(73) as amended (2015 consolidated edition)
+      section: Ch. 14 — Fixed deck foam systems, para. 2.2.2 (rate bases)
+      wiki_path: wikis/marine-engineering/wiki/standards/imo-fss-code.md
+      note: Deck foam solution supply rate bases and duration used for the demand table.
+    - code_id: NFPA-11
+      publisher: NFPA
+      revision: 2021 edition
+      section: Low-expansion foam application rates (methodology context)
+      wiki_path: wikis/marine-engineering/wiki/standards/nfpa-11.md
+      note: General low-expansion foam sizing methodology context; FSS Code rates govern this demo.
+
+  manifest:
+    issue: https://github.com/vamseeachanta/digitalmodel/issues/1587
+    parent_issue: https://github.com/vamseeachanta/digitalmodel/issues/1583
+    project: B0000
+    artifact_class: example-report-pack-output
+    privacy_classification: public-example
+    publishability_decision: public repository example; placeholder metadata only
+    input_source_ids:
+      - EXAMPLE-FOAM-SYSTEM-SIZING-RESULTS
+    source_artifacts:
+      sizing_config: examples/workflows/foam-system-report-pack/foam_system_sizing.yml
+      demand_csv: examples/workflows/foam-system-report-pack/data/foam_system_sizing_foam_demand.csv
+      hydraulic_runs_csv: examples/workflows/foam-system-report-pack/data/foam_system_sizing_foam_hydraulic_runs.csv
+      hydraulic_terminals_csv: examples/workflows/foam-system-report-pack/data/foam_system_sizing_foam_hydraulic_terminals.csv
+    raw_output_path: digitalmodel:examples/workflows/foam-system-report-pack/data
+    final_output_path: digitalmodel:examples/workflows/foam-system-report-pack/results
+    compute_environment: not-recorded
+
+  pdf: auto
+  output_dir: results
