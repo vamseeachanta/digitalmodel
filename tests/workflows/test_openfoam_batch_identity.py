@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from digitalmodel.workflows import openfoam_run_batch as ofb
 from digitalmodel.workflows.openfoam_batch_config import (
     build_run_identity,
     canonical_json_bytes,
@@ -114,8 +115,23 @@ def test_hosted_environment_root_wins_and_yaml_cannot_choose_absolute_root(tmp_p
         )
 
 
+def test_router_rejects_missing_hosted_root_before_any_directory(tmp_path, monkeypatch):
+    monkeypatch.setenv("DIGITALMODEL_EXECUTION_CONTEXT", "hosted-deckhand")
+    monkeypatch.delenv("DIGITALMODEL_WORK_ROOT", raising=False)
+    cfg = {
+        "_config_dir_path": str(tmp_path),
+        "openfoam_run_batch": {
+            "base": {"case_type": "current_loading"},
+            "run_batch": {"mock": True},
+        },
+    }
+    with pytest.raises(ValueError, match="DIGITALMODEL_WORK_ROOT"):
+        ofb.router(cfg)
+    assert list(tmp_path.iterdir()) == []
+
+
 @pytest.mark.parametrize(
-    "namespace", ["/abs", "../up", "a/./b", "a//b", "a\x00b", "a\nb"]
+    "namespace", ["/abs", "../up", "a/./b", "a//b", "a\\b", "a\x00b", "a\nb"]
 )
 def test_namespace_rejects_nonportable_components(tmp_path, namespace):
     root = tmp_path / "root"
