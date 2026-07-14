@@ -2,16 +2,21 @@
 
 from __future__ import annotations
 
-import re
 import base64
 import csv
 import hashlib
 import io
 import json
+import os
+import re
+import stat
 from pathlib import Path
+from typing import Mapping, NamedTuple
 
 _TOKEN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,127}", re.ASCII)
-_COMPONENT = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,62}", re.ASCII)
+_COMPONENT = re.compile(
+    r"[A-Za-z0-9](?:[A-Za-z0-9._-]{0,61}[A-Za-z0-9])?", re.ASCII
+)
 _WINDOWS_RESERVED = frozenset(
     {"CON", "PRN", "AUX", "NUL"}
     | {f"COM{number}" for number in range(1, 10)}
@@ -60,6 +65,87 @@ def _sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+class FileWitness(NamedTuple):
+    path: Path
+    signature: tuple[int, int, int, int, int]
+    content_sha256: str
+
+
+def _regular_signature(path: Path, label: str) -> tuple[int, int, int, int, int]:
+    try:
+        info = path.lstat()
+    except OSError as error:
+        raise ValueError(f"{label} is missing or unsafe") from error
+    if not stat.S_ISREG(info.st_mode):
+        raise ValueError(f"{label} is missing or unsafe")
+    return (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+
+
+def read_identity_file(path: Path, label: str) -> tuple[bytes, FileWitness]:
+    """Read a regular lexical path and bind its inode and content."""
+    candidate = Path(path)
+    before = _regular_signature(candidate, label)
+    data = candidate.read_bytes()
+    after = _regular_signature(candidate, label)
+    if before != after or len(data) != after[2]:
+        raise ValueError(f"{label} changed during identity construction")
+    return data, FileWitness(candidate, after, _sha256(data))
+
+
+def revalidate_identity_files(witnesses: list[FileWitness]) -> None:
+    """Reopen every identity input and reject path, inode, or byte drift."""
+    for expected in witnesses:
+        _, current = read_identity_file(expected.path, "identity input")
+        if current != expected:
+            raise ValueError("identity input changed during identity construction")
+
+
+def lexical_relative_path(repo: Path, path: Path) -> str:
+    """Return a Git path without resolving away the candidate itself."""
+    candidate = Path(os.path.abspath(path))
+    try:
+        return candidate.relative_to(repo.resolve()).as_posix()
+    except ValueError as error:
+        raise ValueError("identity input must remain inside the source checkout") from error
+
+
+def input_records(
+    config_path: Path | None,
+    inputs: Mapping[str, Path],
+    repo: Path | None,
+    witnesses: list[FileWitness],
+) -> list[dict]:
+    entries = dict(inputs)
+    if config_path is not None:
+        if "request" in entries:
+            raise ValueError("reserved input role request cannot be shadowed")
+        entries["request"] = config_path
+    records = []
+    for role, path in sorted(entries.items()):
+        portable_token(role, "referenced input role")
+        data, witness = read_identity_file(Path(path), "referenced input")
+        witnesses.append(witness)
+        safe_path = Path(path).name if repo is None else lexical_relative_path(repo, path)
+        records.append({"role": role, "safe_relative_path": safe_path,
+                        "size_bytes": len(data), "content_sha256": _sha256(data)})
+    return records
+
+
+def executable_records(
+    executables: Mapping[str, Path], witnesses: list[FileWitness]
+) -> list[dict]:
+    records = []
+    for role, path in sorted(executables.items()):
+        portable_token(role, "selected executable role")
+        candidate = Path(path)
+        portable_token(candidate.name, "selected executable basename")
+        data, witness = read_identity_file(candidate, f"selected executable for {role}")
+        witnesses.append(witness)
+        records.append({"role": role, "basename": candidate.name,
+                        "content_sha256": _sha256(data)})
+    return records
+
+
 def _record_hash(encoded: str) -> str:
     algorithm, value = encoded.split("=", 1)
     if algorithm != "sha256":
@@ -89,10 +175,19 @@ def _matching_record(root: Path, name: str, version: str) -> Path:
     return matches[0]
 
 
-def wheel_package(root: Path, site: Path, name: str, version: str) -> dict:
+def wheel_package(
+    root: Path,
+    site: Path,
+    name: str,
+    version: str,
+    witnesses: list[FileWitness] | None = None,
+) -> dict:
     """Verify matching wheel provenance from the exact RECORD and package bytes."""
+    observed = [] if witnesses is None else witnesses
+    first_observation = len(observed)
     record = _matching_record(site, name, version)
-    record_bytes = record.read_bytes()
+    record_bytes, record_witness = read_identity_file(record, "wheel RECORD")
+    observed.append(record_witness)
     rows = {row[0]: row[1:] for row in csv.reader(
         io.StringIO(record_bytes.decode("utf-8"), newline="")) if row}
     package_files = [path for path in root.rglob("*") if path.is_file()]
@@ -105,14 +200,14 @@ def wheel_package(root: Path, site: Path, name: str, version: str) -> dict:
     actual = []
     for item in sorted(recorded_names):
         path = site / item
-        if not path.is_file() or path.is_symlink():
-            raise ValueError(f"identity input is missing or unsafe: {item}")
-        data = path.read_bytes()
+        data, witness = read_identity_file(path, f"wheel package file {item}")
+        observed.append(witness)
         digest, size = rows[item]
         if not digest or int(size) != len(data) or _record_hash(digest) != _sha256(data):
             raise ValueError("wheel RECORD does not match actual package bytes")
         actual.append({"safe_relative_path": item, "size_bytes": len(data),
                        "content_sha256": _sha256(data)})
     content = {"package_files": actual, "record_sha256": _sha256(record_bytes)}
+    revalidate_identity_files(observed[first_observation:])
     return {"git_commit_sha": None, "tracked_tree_clean": None,
             "content_sha256": _sha256(_canonical(content))}

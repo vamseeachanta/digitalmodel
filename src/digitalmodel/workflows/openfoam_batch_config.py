@@ -14,8 +14,13 @@ from typing import Any, Callable, Mapping, NamedTuple
 
 from digitalmodel.workflows.parametric_run import _load_cases, _set_dotted
 from digitalmodel.workflows.openfoam_batch_identity_validation import (
+    FileWitness,
+    executable_records,
+    input_records,
+    lexical_relative_path,
     portable_namespace,
     portable_token,
+    revalidate_identity_files,
     wheel_package,
 )
 
@@ -138,7 +143,7 @@ def _git_output(repo: Path, *args: str) -> str:
 
 
 def _require_clean(repo: Path, candidates: list[Path]) -> None:
-    relative = [str(path.resolve().relative_to(repo.resolve())) for path in candidates]
+    relative = [lexical_relative_path(repo, path) for path in candidates]
     if _git_output(repo, "status", "--porcelain=v1", "--", *relative):
         raise ValueError("source identity candidate paths must be clean")
 
@@ -181,52 +186,6 @@ def _actual_records(base: Path, names: list[str], relative_to: Path) -> list[dic
     return records
 
 
-def _input_records(
-    config_path: Path | None, inputs: Mapping[str, Path], repo: Path | None
-) -> list[dict]:
-    entries = dict(inputs)
-    if config_path is not None:
-        if "request" in entries:
-            raise ValueError("reserved input role request cannot be shadowed")
-        entries["request"] = config_path
-    records = []
-    for role, path in sorted(entries.items()):
-        portable_token(role, "referenced input role")
-        data = Path(path).read_bytes()
-        safe_path = (
-            Path(path).name
-            if repo is None
-            else Path(path).resolve().relative_to(repo.resolve()).as_posix()
-        )
-        records.append(
-            {
-                "role": role,
-                "safe_relative_path": safe_path,
-                "size_bytes": len(data),
-                "content_sha256": _sha256(data),
-            }
-        )
-    return records
-
-
-def _executable_records(executables: Mapping[str, Path]) -> list[dict]:
-    records = []
-    for role, path in sorted(executables.items()):
-        portable_token(role, "selected executable role")
-        candidate = Path(path)
-        if not candidate.is_file() or candidate.is_symlink():
-            raise ValueError(f"selected executable for {role} is missing or unsafe")
-        portable_token(candidate.name, "selected executable basename")
-        records.append(
-            {
-                "role": role,
-                "basename": candidate.name,
-                "content_sha256": _sha256(candidate.read_bytes()),
-            }
-        )
-    return records
-
-
 def _validate_identity_metadata(values: tuple[tuple[object, str], ...]) -> None:
     for value, label in values:
         portable_token(value, label)
@@ -240,8 +199,9 @@ def _identity_inputs(
     referenced_inputs: Mapping[str, Path],
     selected_executables: Mapping[str, Path],
     distribution_root: Path | None,
-) -> tuple[dict, list[dict], list[dict]]:
+) -> tuple[dict, list[dict], list[dict], list[FileWitness]]:
     candidates = [Path(path) for path in referenced_inputs.values()]
+    witnesses: list[FileWitness] = []
     if config_path is not None:
         candidates.append(Path(config_path))
     if distribution_root is None:
@@ -250,17 +210,18 @@ def _identity_inputs(
         )
     else:
         source = wheel_package(
-            Path(package_root), Path(distribution_root), package_name, package_version
+            Path(package_root), Path(distribution_root), package_name, package_version,
+            witnesses,
         )
         repo, expected_head = None, None
-    inputs = _input_records(config_path, referenced_inputs, repo)
-    executables = _executable_records(selected_executables)
+    inputs = input_records(config_path, referenced_inputs, repo, witnesses)
+    executables = executable_records(selected_executables, witnesses)
     if repo is not None:
         _require_clean(repo, candidates + [Path(package_root)])
         if _git_output(repo, "rev-parse", "HEAD") != expected_head:
             raise ValueError("source identity HEAD changed during byte reads")
     source.update(package_name=package_name, package_version=package_version)
-    return source, inputs, executables
+    return source, inputs, executables, witnesses
 
 
 def build_run_identity(
@@ -289,7 +250,7 @@ def build_run_identity(
         (result_policy_version, "result_policy_version"),
         (work_layout_version, "work_layout_version"),
     ))
-    source, inputs, executables = _identity_inputs(
+    source, inputs, executables, witnesses = _identity_inputs(
         config_path, package_root, package_name, package_version,
         referenced_inputs, selected_executables, distribution_root,
     )
@@ -307,7 +268,9 @@ def build_run_identity(
         "result_policy_version": result_policy_version,
         "work_layout_version": work_layout_version,
     }
+    revalidate_identity_files(witnesses)
     identity["identity_sha256"] = _sha256(canonical_json_bytes(identity))
+    revalidate_identity_files(witnesses)
     return identity
 
 
