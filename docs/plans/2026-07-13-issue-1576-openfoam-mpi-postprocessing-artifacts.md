@@ -1,13 +1,13 @@
 # Plan for #1576: OpenFOAM MPI post-processing and host-local artifact index
 
-> **Status:** draft — r1 MAJOR findings patched; r2 adversarial verification required
+> **Status:** draft — r2 MAJOR findings resolved inline in r3; user approval required
 > **Complexity:** T3
 > **Date:** 2026-07-13
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/1576
 > **Client:** N/A
 > **Lane:** lane:codex
 > **Execution mode:** single-lane after the exact merged #1565 and #1575 interfaces are pinned
-> **Review artifacts:** `scripts/review/results/2026-07-13-plan-1576-r1-consolidated.md`; r2 Claude/Codex/Gemini artifacts pending
+> **Review artifacts:** `scripts/review/results/2026-07-13-plan-1576-r{1,2}-consolidated.md`
 
 ---
 
@@ -28,48 +28,30 @@ Implementation order is strictly:
 
 ```text
 #1565 merged RunIdentity + external WorkLayout
-    -> #1575 merged ParsedCaseDefinition + selected ExecutionPlan
+    -> #1575 merged ParsedCaseDefinition + SelectedExecutionPlan
         -> #1576 MPI/post-processing + retained host-local artifact generation
 ```
 
 1. #1565 is a hard dependency. #1576 will record its exact merged commit and will consume its `RunIdentity` and `WorkLayout`; it will not redefine run/input/source/tool identity, work-root precedence, or checkpoint namespace.
-2. #1575 is a hard dependency. #1576 will record its exact merged commit and will consume its closed `ParsedCaseDefinition.execution_plan`; it will not infer required utilities from partial batch settings.
+2. #1575 is a hard dependency. #1576 will record its exact merged commit and will consume `ParsedCaseDefinition.selected_execution_plan`; it will not infer utilities from partial settings. PrebuiltCaseV1 remains serial/pool only and prebuilt MPI rejects before mutation.
 3. Deckhand [#564](https://github.com/vamseeachanta/deckhand/issues/564) owns transactional queue return, the exact maximum of 100 files and 2,000,000 bytes per file, terminal return error states, host-routing leases, authorization, retention, and cross-host locator retrieval. It is a downstream integration dependency, not permission for #1576 to modify Deckhand or host state.
 4. Until #564 is merged and separately integrated, #1576 will create only host-local generations and metadata. It will not claim queue retrieval, queue-transactional publication, lease-backed retention, or remote locator resolution.
 
 The draft commits for #1565 and #1575 are planning evidence only and will never satisfy these dependency gates. Implementation will stop unless both live issues are merged and their exact implementation SHAs/interfaces are recorded in this plan or an approved implementation handoff.
 
-### Prior plans, registries, and searches
+### Prior evidence
 
-- Issue #1560 and the current workflow establish pool/MPI execution and small-result compatibility.
-- `docs/plans/2026-06-29-cfd-environment-spec.md` places heavy solver output outside git.
-- `docs/plans/2026-07-10-issue-662-gmsh-openfoam-bridge.md` establishes generic OpenFOAM evidence and eight-rank validation.
-- `docs/plans/2026-05-15-issue-611-orcawave-result-contract.md` supplies a prior manifest/commit pattern, not an OpenFOAM artifact schema.
-- Issue #1540 owns a future public dataset manifest. The host-local index here will not impersonate it.
-- Standards/code registries and domain-wiki search contain no reusable host-local artifact-generation contract. No standards-derived constant applies.
-- The required Drive query `OpenFOAM MPI reconstruction foamToVTK artifact manifest` returned no relevant file. Stale-index warnings were not used as evidence.
+Issues #1560/#662 and the CFD environment spec establish pool/MPI, eight-rank,
+and external-heavy-output precedents. #1540 retains public dataset-manifest
+ownership. Registries, wiki, standards, and the required Drive query supplied no
+reusable artifact-generation contract; no standards-derived constant applies.
 
 ### Literal reproduction
 
-Reproduced against `origin/main` `2ff0f72c9c5ce9022bfca763a6bb24ae4fb768d4` at `2026-07-14T04:59:03Z`:
-
-```text
-$ git show 2ff0f72c9c5ce9022bfca763a6bb24ae4fb768d4:src/digitalmodel/workflows/openfoam_run_batch.py | sed -n '465,476p'
-    plan: list[list[str]] = []
-    if not resume:
-        plan.append([mesh_utility])
-        if run_set_fields:
-            plan.append(["setFields"])
-        plan.append(["decomposePar", "-force"])
-    plan.append(
-        ["mpirun", "-np", str(workers), "--oversubscribe", solver, "-parallel"]
-    )
-    if reconstruct:
-        plan.append(["reconstructPar"])
-    return plan
-```
-
-The literal selected plan has no `foamToVTK`, uses `--oversubscribe`, and cannot include case-selected mesh reconstruction. The issue claim is reproduced without a solver or private case.
+At base `2ff0f72c9c5ce9022bfca763a6bb24ae4fb768d4` on
+`2026-07-14T04:59:03Z`, lines 465--476 of `openfoam_run_batch.py` generated MPI
+argv with an oversubscription flag, no `foamToVTK`, and no case-selected mesh
+reconstruction. This license-free static probe reproduces the issue.
 
 ### Gaps
 
@@ -111,13 +93,20 @@ After #1565 and #1575 merge, OpenFOAM batch attempts will execute an exact bound
 Before cleaning, creating a generation, or invoking a utility, the workflow will:
 
 1. require the recorded exact merged #1565 and #1575 interface versions;
-2. validate #1565 `RunIdentity` against the canonical effective input, clean pinned source commit, source-tree digest, and selected tool identity;
+2. validate #1565 `RunIdentity` against effective input, the clean current
+   candidate source commit/tree/package digest, and selected tool identity; the
+   recorded #1565/#1575 interface SHAs must be ancestors of that candidate;
 3. consume #1565 `WorkLayout` and reject any generation root outside it or on a different device;
-4. consume #1575 `ParsedCaseDefinition.execution_plan` and reject unknown/dropped stages;
+4. consume #1575 `ParsedCaseDefinition.selected_execution_plan` and reject unknown/dropped stages;
 5. derive every required executable from the exact argv plan and resolve/hash every selected executable before mutation; and
 6. validate MPI ranks before constructing argv.
 
-For standalone execution, `dispatcher_rank_limit` will equal the process-visible CPU/rank count. For dispatcher execution, it will be mandatory authenticated execution-envelope data. `visible_rank_count` will use the process CPU-affinity count where supported and `os.cpu_count()` only as the explicit fallback. `workers` will be an integer from 1 through `min(visible_rank_count, dispatcher_rank_limit)`; booleans, zero, negatives, and over-limit requests will fail before filesystem mutation. No code path will add `--oversubscribe`.
+`run_batch.workers` from #1575 is the sole requested rank authority. In
+standalone mode its ceiling is process-visible affinity. In dispatcher mode an
+authenticated `dispatcher_rank_limit` is a host capability ceiling, not a
+second requested rank; it and `visible_rank_count` enter #1565 RunIdentity host-
+capability fields. Workers must be 1..min(ceilings); invalid/over-limit values
+reject before mutation. No code path adds `--oversubscribe`.
 
 ### Exact stage order
 
@@ -137,7 +126,10 @@ generation commit manifest
 current-generation pointer replacement
 ```
 
-Resume will begin at the MPI solver only after #1565 identity and #1575 execution-plan validation prove the generation resumable. It will retain the same selected reconstruction, VTK, prune, snapshot, and commit suffix. `to_vtk: true` with reconstruction disabled will fail before mutation. Serial/pool execution will keep its #1575 stage plan and will enter the same generation/snapshot suffix.
+MPI `resume: true` rejects before mutation in this version. A retry creates a
+fresh generation and reruns the complete selected plan; it never reopens a
+failed generation or assumes decomposition state. Existing serial/pool resume
+remains owned by #1565/#1575. `to_vtk: true` without reconstruction rejects.
 
 The real-host canary will use exactly eight ranks, will prove the dispatcher ceiling and visible affinity are both at least eight, and will assert argv contains `mpirun -np 8 <solver> -parallel` with no oversubscription flag.
 
@@ -155,7 +147,8 @@ Every attempt will operate entirely below the #1565 case root:
 
 ```text
 <case-root>/.generations/.<generation-id>.staging/
-  case/
+  working-case/
+  sealed/
   metadata/
   candidate_returns/
 <case-root>/.generations/<generation-id>/
@@ -164,9 +157,19 @@ Every attempt will operate entirely below the #1565 case root:
 
 `generation_id` will be an opaque lowercase SHA-256 over the #1565 run ID and an injected unique attempt nonce using the framed codec below. Tests will inject deterministic nonces. The staging directory, final generation directory, and pointer will be required to share `st_dev`; cross-device copy/replace fallback is forbidden.
 
-Mesh, solve, reconstruction, `foamToVTK`, processor pruning, retained snapshot, and candidate derivative generation will all occur inside the same staging generation. On success the workflow will fsync files/directories, write `metadata/generation.commit.json`, atomically rename the staging directory to its immutable final generation name, then atomically replace `current.json` as the sole completion point. The pointer will contain only schema version, run ID, generation ID, commit-manifest SHA-256, and state `completed`.
+Mesh, solve, reconstruction, `foamToVTK`, and prune occur in `working-case/`.
+With every producer terminated and #1565 run/case locks held, retained roots are
+descriptor-copied into a new `sealed/` tree with no-follow/exclusive creation,
+fsynced, made non-writable descriptor-relatively, then hashed from sealed file
+descriptors. A complete second scan runs after sealing and immediately before
+commit. The workflow then writes/fsyncs the commit manifest, atomically renames
+staging to its final generation, and replaces `current.json` as the sole
+completion point.
 
-A reader will resolve only the generation named by `current.json`, verify the commit-manifest hash, and verify the referenced artifact-index hash. Orphan staging, failed, or unpointed generations are never current. Cleanup/retention of those generations and cross-host access are not authorized by this issue.
+A reader will resolve only `current.json`, verify manifest/index hashes, reopen
+every selected sealed file no-follow, recompute its byte/tree digest, and compare
+the sealed generation device/inode identity. Byte drift rejects the read. Orphan,
+failed, or unpointed generations are never current.
 
 ## Immutable Snapshot and Hash Contract
 
@@ -185,9 +188,9 @@ The numeric-time parser will accept canonical decimal/scientific names represent
 
 ### Descriptor snapshot
 
-Snapshot traversal will open the generation root and descendants through directory descriptors using `O_DIRECTORY`, `O_NOFOLLOW`, and `dir_fd` operations. It will reject symlinks and non-regular/non-directory entries. Each file will be opened with `O_NOFOLLOW`, hashed from its descriptor, and compared before/after on `st_dev`, `st_ino`, mode, size, and `st_ctime_ns`. A second descriptor walk will compare the exact sorted path set and directory/file identities, detecting additions, removals, replacements, and renames. Root identity and source/tool identity will be revalidated immediately before the commit manifest is written.
+Snapshot traversal will open the sealed generation root and descendants through directory descriptors using `O_DIRECTORY`, `O_NOFOLLOW`, and `dir_fd` operations. It will reject symlinks and non-regular/non-directory entries. Each file will be opened with `O_NOFOLLOW`, hashed from its descriptor, and compared before/after on `st_dev`, `st_ino`, mode, size, and `st_ctime_ns`. A second descriptor walk will compare the exact sorted path set and identities, detecting additions, removals, replacements, and renames. Root and candidate source/tool identity will be revalidated before the commit manifest and again before pointer replacement.
 
-The selected executable descriptors will be re-opened and rechecked for basename, device, inode, size, ctime, and content SHA-256 after post-processing. The source checkout will be required to remain at the pinned #1565 commit with no tracked changes before execution and before commit. Any drift fails the generation.
+The selected executable descriptors will be re-opened and rechecked for basename, device, inode, size, ctime, and content SHA-256 after post-processing. The source checkout will remain clean at the candidate RunIdentity commit; recorded #1565/#1575 SHAs remain verified ancestors. Any drift fails.
 
 ### Length-framed codec
 
@@ -232,23 +235,18 @@ Deckhand #564 will define the authorized ledger/resolver/lease/retention and ful
 
 ## Enforcement Self-Coverage
 
-The literal reproduction and r1 forensic artifact necessarily quote the retired
-oversubscription token. Any enforcement added by this issue will inspect the
-runtime argv produced from `openfoam_batch_execution.py`, not raw documentation,
-review artifacts, or a repository-wide spelling grep. Tests will assert the
-constructed argv token set without creating a blanket file/path exemption.
-Likewise, heavy-artifact checks will validate enumerated candidate files and
-generated manifests rather than banning words such as `VTK` from their own
-plans/tests. The existing legal scanner will scan the plan, review, tests, and
-implementation normally; no whole-file exemption will be introduced.
+Argv enforcement will inspect constructed runtime tokens, and artifact checks
+will inspect enumerated outputs/manifests. Plans, reviews, and tests remain under
+normal legal scanning; no spelling ban or whole-file exemption is allowed.
 
 ## File Decomposition and Implementation Order
 
 The 680-line implementation and 445-line test module will be split before behavior changes:
 
 1. RED characterization tests will freeze current router, serial, MPI, checkpoint, and result behavior.
-2. Pure execution-plan/preflight/executor code will move to `openfoam_batch_execution.py` without behavior change.
-3. Execution tests will move to `test_openfoam_batch_execution.py`; remaining router tests will stay in `test_openfoam_run_batch.py`.
+2. The merged #1565 `openfoam_batch_execution.py` will be modified to consume
+   #1575 `SelectedExecutionPlan`; it will not be recreated or re-extracted.
+3. Its existing focused tests will be extended; router tests stay bounded.
 4. Both original files and every new/modified Python file will be at most 400 physical lines; every function/method will be at most 50 physical lines before feature work begins.
 5. Artifact codec/snapshot and generation commit behavior will then be added in focused modules.
 6. MPI VTK integration will be the final production slice.
@@ -257,13 +255,13 @@ The 680-line implementation and 445-line test module will be split before behavi
 
 | Action | Path | Reason |
 |---|---|---|
-| Create | `src/digitalmodel/workflows/openfoam_batch_execution.py` | extracted selected-plan, rank, preflight, and executor seam |
-| Create | `tests/workflows/test_openfoam_batch_execution.py` | extracted characterization plus new MPI tests |
+| Modify | `src/digitalmodel/workflows/openfoam_batch_execution.py` | selected plan, rank ceiling, preflight, MPI/VTK suffix |
+| Modify | `tests/workflows/test_openfoam_batch_execution.py` | characterization plus new MPI tests |
 | Create | `src/digitalmodel/solvers/openfoam/artifact_index.py` | framed codec, disjoint selections, descriptor snapshot, schema |
 | Create | `src/digitalmodel/solvers/openfoam/artifact_generation.py` | staging, diagnostic generation, commit manifest, current pointer |
 | Create | `tests/solvers/openfoam/test_artifact_index.py` | golden codec, mutation, selection, privacy tests |
 | Create | `tests/solvers/openfoam/test_artifact_generation.py` | crash, same-device, commit/pointer tests |
-| Modify | `src/digitalmodel/workflows/openfoam_run_batch.py` | thin integration consuming #1565/#1575 and extracted modules |
+| Modify | #1565 facade/config/execution/results modules | typed integration plus inactive result-policy registration |
 | Modify | `tests/workflows/test_openfoam_run_batch.py` | retain bounded router/compatibility tests below 400 lines |
 | Modify | `src/digitalmodel/solvers/openfoam/doctor.py` | expose exact selected-executable readiness |
 | Modify | `tests/solvers/openfoam/test_doctor.py` | selected/unselected utility tests |
@@ -277,7 +275,7 @@ The 680-line implementation and 445-line test module will be split before behavi
 - `test_workers_reject_bool_zero_negative_visible_and_dispatcher_overflow`
 - `test_eight_rank_canary_argv_has_no_oversubscribe`
 - `test_selected_plan_preflights_every_and_only_selected_executable`
-- `test_fresh_and_resume_vtk_stage_order`
+- `test_fresh_vtk_stage_order_and_mpi_resume_rejects_before_mutation`
 - `test_vtk_requires_reconstruction_before_mutation`
 - `test_nonzero_timeout_launch_and_fatal_marker_stop_suffix`
 - `test_failed_generation_retains_processors_and_is_never_current`
@@ -292,6 +290,7 @@ The 680-line implementation and 445-line test module will be split before behavi
 - `test_crash_before_pointer_never_changes_current_generation`
 - `test_pointer_commit_and_index_hash_chain`
 - `test_host_local_candidates_enforce_csv_json_100_and_2000000_boundaries`
+- `test_artifact_index_result_extension_is_reserved_inactive_until_564`
 - `test_no_queue_retrieval_lease_or_retention_claim_without_deckhand_contract`
 - `test_mock_emits_no_solved_artifact_claim`
 
@@ -357,7 +356,10 @@ Every test will use generic temporary trees, fake executable descriptors, inject
 - [ ] From the canonical workspace-hub checkout, the legal scan passes the implementation checkout recorded in the execution handoff:
 
   ```bash
-  bash scripts/legal/legal-sanity-scan.sh --repo=../digitalmodel --diff-only
+  test -n "$DIGITALMODEL_REL_FROM_HUB"
+  test -n "$EXPECTED_DIGITALMODEL_SHA"
+  test "$EXPECTED_DIGITALMODEL_SHA" = "$(git -C "$DIGITALMODEL_REL_FROM_HUB" rev-parse HEAD)"
+  bash scripts/legal/legal-sanity-scan.sh --repo="$DIGITALMODEL_REL_FROM_HUB" --diff-only
   ```
 
 - [ ] T3 r2 plan review has no MAJOR before user approval is requested; T3 code/artifact review has no MAJOR before close.
@@ -377,17 +379,18 @@ R1 reviewed exact SHA `b97aa4f42546c75781687dad67c0d420527accd5`. The consolidat
 | Round | Verdict | State |
 |---|---|---|
 | R1 Claude/Codex/Gemini consensus | MAJOR | findings consolidated in the r1 artifact |
-| R2 Claude/Codex/Gemini | PENDING | must verify this pushed revision; no resolution is self-asserted |
+| R2 Claude/Codex/Gemini | MAJOR | distinct findings resolved inline in r3 |
 
-**Overall:** revised draft for r2, not approval-ready. No label, approval marker, implementation, or issue comment is authorized by this revision.
+**Overall:** r1/r2 findings are resolved inline in r3; per the loop-break rule r3
+is not redispatched. Explicit user approval remains required; no approval marker
+or implementation is authorized.
 
 ## Risks and Open Questions
 
-- **Dependency drift:** #1565/#1575 draft APIs may change. #1576 will bind only their exact merged interfaces and will stop on mismatch.
-- **Filesystem semantics:** descriptor traversal and same-device rename require POSIX support on the CFD execution host. Unsupported platforms will fail preflight rather than weaken guarantees.
-- **Hashing cost:** complete SHA-256 is required for integrity; implementation will stream from descriptors and report timing without sampling.
-- **Retention:** host-local locators can expire when owner policy removes generations. #564 must define retention/lease semantics before any remote claim.
-- **Real-host authority:** the eight-rank canary and dispatcher envelope are external execution actions and require separately authorized dispatch after code review.
+- Exact merged dependency interfaces are mandatory; drift stops implementation.
+- Unsupported POSIX descriptor/same-device semantics fail rather than weaken.
+- Full hashing remains mandatory; #564 owns retention, while the real-host canary
+  and dispatcher envelope require separate post-code-review authorization.
 
 ## Complexity: T3
 
