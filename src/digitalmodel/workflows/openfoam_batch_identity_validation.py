@@ -187,13 +187,6 @@ def _matching_record_names(root: Path, name: str, version: str) -> frozenset[str
     return frozenset(matches)
 
 
-def _matching_record(root: Path, name: str, version: str) -> Path:
-    matches = _matching_record_names(root, name, version)
-    if len(matches) != 1:
-        raise ValueError("matching wheel distribution is missing or ambiguous")
-    return root / next(iter(matches))
-
-
 def _wheel_package_names(root: Path, site: Path) -> frozenset[str]:
     return frozenset(
         path.relative_to(site).as_posix()
@@ -215,8 +208,10 @@ def wheel_package(
     first_observation = len(observed)
     observed_memberships = [] if memberships is None else memberships
     first_membership = len(observed_memberships)
-    record = _matching_record(site, name, version)
     record_names = _matching_record_names(site, name, version)
+    if len(record_names) != 1:
+        raise ValueError("matching wheel distribution is missing or ambiguous")
+    record = site / next(iter(record_names))
     package_names = _wheel_package_names(root, site)
     observed_memberships.extend([
         MembershipWitness(record_names,
