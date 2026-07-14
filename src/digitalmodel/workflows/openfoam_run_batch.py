@@ -82,12 +82,13 @@ def router(cfg: dict) -> dict:
     settings, run_settings, base, cfg_dir = _settings(cfg)
     mode, mock, workers = _validate_run(run_settings, base)
     paths = resolve_batch_paths(run_settings, cfg_dir)
-    layout, tool_bindings = _external_layout(
+    layout, tool_bindings, input_bindings = _external_layout(
         cfg, settings, run_settings, base, paths, mode, workers, mock)
     work_dir = paths.legacy_work_dir if layout is None else layout.run_dir
     cases = _resolve_case_matrix(settings.get("cases"), settings.get("variants") or {}, cfg_dir)
     mapping = settings.get("mapping") or (settings.get("variants") or {}).get("mapping") or {}
     rendered = _render_cases(base, cases, mapping, work_dir)
+    _verify_file_bindings(input_bindings, "referenced input")
     started = datetime.now(timezone.utc)
     if layout is None:
         rows = run_cases(rendered, run_settings, mode=mode, workers=workers,
@@ -131,10 +132,13 @@ def _validate_run(run_settings: dict, base: dict) -> tuple[str, bool, int]:
 
 def _external_layout(cfg: dict, settings: dict, run_settings: dict, base: dict,
                      paths, mode: str, workers: int, mock: bool
-                     ) -> tuple[WorkLayout | None, dict[str, tuple[Path, str]]]:
+                     ) -> tuple[WorkLayout | None, dict[str, tuple[Path, str]],
+                                list[tuple[Path, str]]]:
     if not paths.external:
         paths.legacy_work_dir.mkdir(parents=True, exist_ok=True)
-        return None, {}
+        return None, {}, []
+    if not mock and not base.get("solver"):
+        raise ValueError("external real runs require base.solver for executable identity")
     inputs = _referenced_inputs(cfg, settings, paths.cfg_dir)
     tools = [] if mock else _selected_tools(mode, base, run_settings)
     identity = build_run_identity(
@@ -144,8 +148,16 @@ def _external_layout(cfg: dict, settings: dict, run_settings: dict, base: dict,
         package_root=Path(__file__).resolve().parents[1],
     )
     bindings = {item[0]: (item[1], file_sha256(item[1])) for item in tools}
-    return (WorkLayout.create(paths.operator_root, paths.namespace, identity.identity_sha256),
-            bindings)
+    input_bindings = [(item[1], file_sha256(item[1])) for item in inputs]
+    return (WorkLayout.create(paths.operator_root, paths.namespace, identity.identity_sha256,
+                              identity.as_dict()),
+            bindings, input_bindings)
+
+
+def _verify_file_bindings(bindings: list[tuple[Path, str]], label: str) -> None:
+    for path, expected in bindings:
+        if file_sha256(path) != expected:
+            raise RuntimeError(f"{label} {path.name!r} changed before execution")
 
 
 def _referenced_inputs(cfg: dict, settings: dict, cfg_dir: Path) -> list[tuple[str, Path]]:
@@ -180,6 +192,8 @@ def _selected_tools(mode: str, base: dict, run_settings: dict) -> list[tuple[str
     names = [base.get("mesh_utility", DEFAULT_MESH_UTILITY), base.get("solver")]
     if mode == "mpi":
         names += ["decomposePar", "mpirun"]
+        if base.get("run_set_fields"):
+            names.append("setFields")
         if bool(run_settings.get("reconstruct", True)):
             names.append("reconstructPar")
     else:

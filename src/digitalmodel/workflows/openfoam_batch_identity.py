@@ -116,10 +116,24 @@ def _file_record(role: str, path: Path, *, input_file: bool) -> dict[str, Any]:
     label = "referenced input" if input_file else "selected executable"
     if not path.is_file() or path.is_symlink():
         raise ValueError(f"{label} is missing or symlinked: {path.name}")
+    if input_file:
+        _assert_git_clean_path(path)
     record = {"role": str(role), "size_bytes": path.stat().st_size,
               "content_sha256": file_sha256(path)}
     record["safe_relative_path" if input_file else "basename"] = path.name
     return record
+
+
+def _assert_git_clean_path(path: Path) -> None:
+    probe = subprocess.run(["git", "-C", str(path.parent), "rev-parse", "--is-inside-work-tree"],
+                           capture_output=True, text=True)
+    if probe.returncode:
+        return
+    status = subprocess.run(
+        ["git", "-C", str(path.parent), "status", "--porcelain",
+         "--untracked-files=all", "--", path.name], capture_output=True, text=True)
+    if status.returncode or status.stdout.strip():
+        raise ValueError(f"referenced input is dirty: {path.name}")
 
 
 def _source_record(package_root: Path) -> dict[str, Any]:

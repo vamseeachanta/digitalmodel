@@ -90,3 +90,17 @@ def test_wheel_record_verifies_actual_installed_bytes(tmp_path: Path) -> None:
     module.write_bytes(b"VALUE = 2\n")
     with pytest.raises(ValueError, match="RECORD"):
         verify_wheel_record(package, record)
+
+
+def test_dirty_git_referenced_input_is_rejected(tmp_path: Path) -> None:
+    request = tmp_path / "request.yml"
+    request.write_text("a: 1\n")
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    subprocess.run(["git", "-C", str(tmp_path), "add", "request.yml"], check=True)
+    subprocess.run(["git", "-C", str(tmp_path), "-c", "user.name=Test",
+                    "-c", "user.email=test@example.invalid", "commit", "-qm", "init"], check=True)
+    request.write_text("a: 2\n")
+    with pytest.raises(ValueError, match="referenced input is dirty"):
+        build_run_identity(effective_config={}, referenced_inputs=[("request", request)],
+                           selected_executables=[], visible_rank_count=1,
+                           dispatcher_rank_limit=1, package_root=tmp_path / "not-a-package")

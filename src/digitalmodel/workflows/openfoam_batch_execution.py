@@ -26,22 +26,27 @@ DEFAULT_TIMEOUT_SECONDS = 43200
 
 
 def make_checkpoint(*, identity_sha256: str, owner_token: str, case: str,
-                    row: dict[str, Any]) -> dict[str, Any]:
-    return {"schema": 2, "identity_sha256": identity_sha256,
+                    row: dict[str, Any], run_identity: dict | None = None) -> dict[str, Any]:
+    identity = run_identity or {"identity_sha256": identity_sha256}
+    return {"schema": 2, "identity_sha256": identity_sha256, "run_identity": identity,
             "owner_token": owner_token, "case": case, "row": row}
 
 
 def checkpoint_matches(payload: object, identity_sha256: str,
-                       owner_token: str, case: str) -> bool:
+                       owner_token: str, case: str,
+                       run_identity: dict | None = None) -> bool:
     return (isinstance(payload, dict) and payload.get("schema") == 2
             and payload.get("identity_sha256") == identity_sha256
             and payload.get("owner_token") == owner_token
+            and payload.get("run_identity") == (run_identity or {
+                "identity_sha256": identity_sha256})
             and payload.get("case") == case and isinstance(payload.get("row"), dict)
             and payload["row"].get("status") == "completed")
 
 
 def load_checkpoint(work_dir: Path, *, identity_sha256: str | None = None,
-                    owner_token: str | None = None, case: str | None = None) -> dict[str, Any] | None:
+                    owner_token: str | None = None, case: str | None = None,
+                    run_identity: dict | None = None) -> dict[str, Any] | None:
     path = work_dir / CHECKPOINT_FILENAME
     try:
         payload = json.loads(path.read_text())
@@ -49,16 +54,18 @@ def load_checkpoint(work_dir: Path, *, identity_sha256: str | None = None,
         return None
     if identity_sha256 is None:  # legacy compatibility
         return payload if isinstance(payload, dict) and payload.get("status") == "completed" else None
-    return payload["row"] if checkpoint_matches(payload, identity_sha256, owner_token or "", case or "") else None
+    return payload["row"] if checkpoint_matches(
+        payload, identity_sha256, owner_token or "", case or "", run_identity) else None
 
 
 def write_checkpoint(work_dir: Path, row: dict[str, Any], *,
                      identity_sha256: str | None = None,
-                     owner_token: str | None = None, case: str | None = None) -> None:
+                     owner_token: str | None = None, case: str | None = None,
+                     run_identity: dict | None = None) -> None:
     work_dir.mkdir(parents=True, exist_ok=True)
     payload = row if identity_sha256 is None else make_checkpoint(
         identity_sha256=identity_sha256, owner_token=owner_token or "",
-        case=case or "", row=row)
+        case=case or "", row=row, run_identity=run_identity)
     target = work_dir / CHECKPOINT_FILENAME
     tmp = work_dir / f"{CHECKPOINT_FILENAME}.{os.getpid()}.tmp"
     tmp.write_text(json.dumps(payload, indent=2) + "\n")
@@ -126,8 +133,9 @@ def solve_serial(item: dict[str, Any], case_dir: Path,
     )
     verifier = None
     if tool_bindings:
-        def verifier(name: str) -> None:
+        def verifier(name: str) -> Path:
             _verify_executable(*tool_bindings[name])
+            return tool_bindings[name][0]
     result = OpenFOAMRunner(config, executable_verifier=verifier).run(case_dir)
     status = str(getattr(result.status, "value", result.status)).lower()
     if status == "completed":
@@ -193,9 +201,18 @@ def execute_mpi_plan(item: dict[str, Any], case_dir: Path, plan: list[list[str]]
                      *, tool_bindings: dict[str, tuple[Path, str]] | None = None) -> dict[str, Any]:
     for argv in plan:
         binding = (tool_bindings or {}).get(argv[0])
-        rc = run(argv, case_dir, case_dir / f"log.{argv[0]}", timeout,
+        launched = list(argv)
+        if binding:
+            launched[0] = str(binding[0])
+        indirect = (tool_bindings or {}).get(solver) if argv[0] == "mpirun" else None
+        if indirect:
+            _verify_executable(*indirect)
+            launched = [str(indirect[0]) if value == solver else value for value in launched]
+        rc = run(launched, case_dir, case_dir / f"log.{argv[0]}", timeout,
                  expected_executable=binding) if binding else run(
-                     argv, case_dir, case_dir / f"log.{argv[0]}", timeout)
+                     launched, case_dir, case_dir / f"log.{argv[0]}", timeout)
+        if indirect:
+            _verify_executable(*indirect)
         if rc:
             return row(item, status="failed", case_dir=case_dir, solver=solver,
                        error=f"stage '{argv[0]}' returned non-zero exit code {rc}")
@@ -227,7 +244,8 @@ def _checkpoint(item: dict[str, Any], layout: WorkLayout | None) -> dict[str, An
     if layout is None:
         return load_checkpoint(item["work_dir"])
     return load_checkpoint(item["work_dir"], identity_sha256=layout.identity_sha256,
-                           owner_token=layout.owner_token, case=item["name"])
+                           owner_token=layout.owner_token, case=item["name"],
+                           run_identity=layout.run_identity)
 
 
 def _save(item: dict[str, Any], result: dict[str, Any],
@@ -237,7 +255,8 @@ def _save(item: dict[str, Any], result: dict[str, Any],
         return result
     safe = redact_rows([result], layout.operator_root)[0]
     write_checkpoint(item["work_dir"], safe, identity_sha256=layout.identity_sha256,
-                     owner_token=layout.owner_token, case=item["name"])
+                     owner_token=layout.owner_token, case=item["name"],
+                     run_identity=layout.run_identity)
     return safe
 
 

@@ -9,6 +9,9 @@ import os
 from pathlib import Path
 import secrets
 import shutil
+import stat
+import subprocess
+import threading
 import time
 from typing import Iterator
 
@@ -26,9 +29,11 @@ class WorkLayout:
     owner_token: str
     root_device: int
     root_inode: int
+    run_identity: dict
 
     @classmethod
-    def create(cls, operator_root: Path, namespace: str, identity_sha256: str) -> "WorkLayout":
+    def create(cls, operator_root: Path, namespace: str, identity_sha256: str,
+               run_identity: dict | None = None) -> "WorkLayout":
         root = Path(operator_root).resolve()
         if not root.is_dir() or root.is_symlink():
             raise ValueError("operator root must be a real precreated directory")
@@ -58,7 +63,8 @@ class WorkLayout:
         payload = _read_marker(marker)
         _validate_marker(payload, identity_sha256, stat)
         return cls(root, namespace, identity_sha256, run_dir, marker,
-                   payload["owner_token"], stat.st_dev, stat.st_ino)
+                   payload["owner_token"], stat.st_dev, stat.st_ino,
+                   run_identity or {"identity_sha256": identity_sha256})
 
     def case_dir(self, case: str) -> Path:
         if not case or case in {".", ".."} or "/" in case or "\\" in case:
@@ -90,7 +96,7 @@ class WorkLayout:
             if not target.exists():
                 os.replace(tombstone, target)
             raise ValueError("case changed during clean")
-        shutil.rmtree(tombstone)
+        _dispose_tombstone(self.run_dir, tombstone, before)
 
     def prune_processors(self, case: str) -> None:
         self.assert_owned()
@@ -104,16 +110,25 @@ class WorkLayout:
             after = tombstone.stat(follow_symlinks=False)
             if (after.st_dev, after.st_ino) != (before.st_dev, before.st_ino):
                 raise ValueError("processor directory changed during prune")
-            shutil.rmtree(tombstone)
+            _dispose_tombstone(self.run_dir, tombstone, before)
 
     @contextmanager
     def lock(self, name: str, stale_seconds: int = 3600) -> Iterator[None]:
         lock_dir = self.run_dir / ".locks" / name
         self.assert_owned()
         _acquire_lock(lock_dir, self.owner_token, stale_seconds)
+        stop = threading.Event()
+        heartbeat = threading.Thread(
+            target=_heartbeat_lock,
+            args=(lock_dir, self.owner_token, stop, max(1.0, min(30.0, stale_seconds / 3))),
+            daemon=True,
+        )
+        heartbeat.start()
         try:
             yield
         finally:
+            stop.set()
+            heartbeat.join(timeout=5)
             shutil.rmtree(lock_dir, ignore_errors=True)
 
 
@@ -162,7 +177,7 @@ def _acquire_lock(path: Path, owner_token: str, stale_seconds: int) -> None:
             raise RuntimeError(f"lock {path.name!r} has unknown liveness")
         age = time.time() - float(meta.get("heartbeat_epoch", 0))
         same_boot = meta.get("boot_id") == _boot_id()
-        live = same_boot and _process_alive(meta.get("pid"))
+        live = same_boot and _process_matches(meta.get("pid"), meta.get("process_start"))
         if meta.get("owner_token") != owner_token or age <= stale_seconds or live:
             raise RuntimeError(f"lock {path.name!r} is held")
         tombstone = path.with_name(f".stale-{path.name}-{secrets.token_hex(8)}")
@@ -170,35 +185,109 @@ def _acquire_lock(path: Path, owner_token: str, stale_seconds: int) -> None:
         shutil.rmtree(tombstone)
         path.mkdir()
     _atomic_json(path / "meta.json", {"schema": 1, "pid": os.getpid(),
+                 "process_start": _process_start(os.getpid()),
                  "boot_id": _boot_id(), "owner_token": owner_token,
                  "heartbeat_epoch": time.time()})
 
 
+_CACHED_BOOT_ID: str | None = None
+
+
 def _boot_id() -> str:
+    global _CACHED_BOOT_ID
+    if _CACHED_BOOT_ID is not None:
+        return _CACHED_BOOT_ID
     system_id = Path("/proc/sys/kernel/random/boot_id")
     try:
-        return system_id.read_text().strip()
+        value = system_id.read_text().strip()
     except OSError:
-        return f"boot-epoch-{int(time.time() - time.monotonic())}"
+        command = ["powershell", "-NoProfile", "-NonInteractive", "-Command",
+                   "(Get-CimInstance Win32_OperatingSystem).LastBootUpTime.ToFileTimeUtc()"]
+        result = subprocess.run(command, capture_output=True, text=True, timeout=15)
+        if result.returncode or not result.stdout.strip().isdigit():
+            raise RuntimeError("cannot establish stable operating-system boot identity")
+        value = f"windows-filetime-{result.stdout.strip()}"
+    _CACHED_BOOT_ID = value
+    return value
 
 
-def _process_alive(value: object) -> bool:
+def _process_matches(value: object, expected_start: object) -> bool:
     try:
         pid = int(value)
-        if pid <= 0:
+        if pid <= 0 or not isinstance(expected_start, str) or not expected_start:
             return False
-        if os.name == "nt":
-            import ctypes
-            kernel = ctypes.windll.kernel32
-            handle = kernel.OpenProcess(0x1000, False, pid)
-            if not handle:
-                return False
-            code = ctypes.c_ulong()
-            try:
-                return bool(kernel.GetExitCodeProcess(handle, ctypes.byref(code))) and code.value == 259
-            finally:
-                kernel.CloseHandle(handle)
-        os.kill(pid, 0)
+        return _process_start(pid) == expected_start
     except (TypeError, ValueError, OSError):
         return False
-    return True
+
+
+def _process_start(pid: int) -> str:
+    if os.name != "nt":
+        fields = Path(f"/proc/{pid}/stat").read_text().split()
+        return f"proc-start-{fields[21]}"
+    import ctypes
+    kernel = ctypes.windll.kernel32
+    handle = kernel.OpenProcess(0x1000, False, pid)
+    if not handle:
+        raise OSError(f"process {pid} is unavailable")
+    created, exited, kernel_time, user_time = (ctypes.c_ulonglong() for _ in range(4))
+    try:
+        ok = kernel.GetProcessTimes(handle, *(ctypes.byref(value) for value in
+                                             (created, exited, kernel_time, user_time)))
+        if not ok:
+            raise OSError(f"process {pid} start time is unavailable")
+        return f"windows-filetime-{created.value}"
+    finally:
+        kernel.CloseHandle(handle)
+
+
+def _heartbeat_lock(path: Path, owner_token: str, stop: threading.Event,
+                    interval: float) -> None:
+    while not stop.wait(interval):
+        meta_path = path / "meta.json"
+        try:
+            meta = json.loads(meta_path.read_text())
+            if (meta.get("owner_token") != owner_token
+                    or not _process_matches(meta.get("pid"), meta.get("process_start"))):
+                return
+            meta["heartbeat_epoch"] = time.time()
+            _atomic_json(meta_path, meta)
+        except (OSError, ValueError, json.JSONDecodeError):
+            return
+
+
+def _dispose_tombstone(run_dir: Path, tombstone: Path,
+                       expected: os.stat_result) -> None:
+    if os.name == "nt":
+        # Windows lacks Python's descriptor-relative directory mutation APIs.
+        # Keep the atomically quarantined tree instead of risking path deletion.
+        return
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    run_fd = os.open(run_dir, flags)
+    try:
+        tree_fd = os.open(tombstone.name, flags, dir_fd=run_fd)
+        try:
+            actual = os.fstat(tree_fd)
+            if (actual.st_dev, actual.st_ino) != (expected.st_dev, expected.st_ino):
+                raise ValueError("tombstone changed before descriptor deletion")
+            _delete_contents_fd(tree_fd)
+        finally:
+            os.close(tree_fd)
+        os.rmdir(tombstone.name, dir_fd=run_fd)
+    finally:
+        os.close(run_fd)
+
+
+def _delete_contents_fd(directory_fd: int) -> None:
+    for name in os.listdir(directory_fd):
+        info = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+        if stat.S_ISDIR(info.st_mode):
+            child_fd = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                               dir_fd=directory_fd)
+            try:
+                _delete_contents_fd(child_fd)
+            finally:
+                os.close(child_fd)
+            os.rmdir(name, dir_fd=directory_fd)
+        else:
+            os.unlink(name, dir_fd=directory_fd)

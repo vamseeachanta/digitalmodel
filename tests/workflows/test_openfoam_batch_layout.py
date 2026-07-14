@@ -8,6 +8,7 @@ import pytest
 
 from digitalmodel.workflows.openfoam_batch_config import resolve_batch_paths
 from digitalmodel.workflows.openfoam_batch_layout import WorkLayout
+from digitalmodel.workflows import openfoam_batch_layout as layout_module
 
 
 def test_hosted_root_is_environment_owned_and_output_remains_local(tmp_path: Path) -> None:
@@ -142,3 +143,37 @@ def test_root_inode_substitution_blocks_clean(tmp_path: Path) -> None:
     tmp_path.mkdir()
     with pytest.raises(ValueError, match="root"):
         layout.clean_case("case")
+
+
+def test_tombstone_substitution_is_never_path_deleted(tmp_path: Path) -> None:
+    tombstone = tmp_path / "tombstone"
+    tombstone.mkdir()
+    expected = tombstone.stat()
+    original = tmp_path / "original"
+    os.replace(tombstone, original)
+    tombstone.mkdir()
+    (tombstone / "replacement.txt").write_text("keep")
+    if os.name == "nt":
+        layout_module._dispose_tombstone(tmp_path, tombstone, expected)
+    else:
+        with pytest.raises(ValueError, match="changed"):
+            layout_module._dispose_tombstone(tmp_path, tombstone, expected)
+    assert (tombstone / "replacement.txt").read_text() == "keep"
+
+
+def test_lock_heartbeat_refreshes_and_process_start_prevents_pid_reuse(tmp_path: Path) -> None:
+    import time
+
+    layout = WorkLayout.create(tmp_path, "ns", "e" * 64)
+    lock = layout.run_dir / ".locks" / "run"
+    with layout.lock("run", stale_seconds=1):
+        first = json.loads((lock / "meta.json").read_text())
+        time.sleep(1.2)
+        second = json.loads((lock / "meta.json").read_text())
+        assert second["heartbeat_epoch"] > first["heartbeat_epoch"]
+    lock.mkdir()
+    (lock / "meta.json").write_text(json.dumps({
+        **second, "heartbeat_epoch": 0, "process_start": "reused-pid-start",
+    }))
+    with layout.lock("run", stale_seconds=1):
+        assert lock.is_dir()
