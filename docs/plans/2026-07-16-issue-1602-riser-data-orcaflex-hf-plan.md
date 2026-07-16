@@ -8,7 +8,7 @@
 > **Lane:** lane:codex
 > **Design:** `docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html`
 > **Normative contract:** `docs/plans/issue-1602-riser-analysis-contract-v1.yaml`
-> **Review artifacts:** Round 1 under `scripts/review/results/issue-1602-round-1/`; approval review under `scripts/review/results/issue-1602-round-2/`
+> **Review artifacts:** Rounds 1–2 under `scripts/review/results/issue-1602-round-{1,2}/`; approval review under `scripts/review/results/issue-1602-round-3/`
 
 ---
 
@@ -25,7 +25,7 @@ source of truth. Existing and generated OrcaFlex files will be evidence or
 derived execution artifacts. Raw drilling/completion DAT or YAML files will not
 be published to Hugging Face.
 
-The machine-readable contract named in the header is normative for every child:
+The machine-readable contract bundle named in the header is normative for every child:
 it freezes coordinate semantics, orthogonal source governance, field lineage,
 canonical hash preimages, field disposition, model verification, authenticated
 execution, artifact transport requirements, required engineering outputs,
@@ -227,9 +227,11 @@ sources across four repositories and workspace-hub.
 
 ## Cross-Layer Contract
 
-`docs/plans/issue-1602-riser-analysis-contract-v1.yaml` is the normative,
-machine-readable contract. Reviewers and child plans will validate it as data,
-not rely on the summary below.
+`docs/plans/issue-1602-riser-analysis-contract-v1.yaml` is the bundle manifest.
+It delegates exact normalized fields/dispositions, release schemas, and protocol
+semantics to three referenced normative YAML files and validates them against a
+JSON meta-schema. Reviewers and children will validate the bundle as data, not
+rely on the summary below.
 
 ### Governance, lineage, and synthetic authorship
 
@@ -325,8 +327,9 @@ cases block release.
 
 ### Exact public release and website truth
 
-The target will have nine exact Parquet configs: `source_registry`,
-`field_lineage`, `riser_components`, `riser_configurations`, `analysis_cases`,
+The target will have twelve exact Parquet configs: `source_registry`,
+`transformations`, `citations`, `clean_room_reviews`, `field_lineage`,
+`riser_components`, `riser_configurations`, `analysis_cases`,
 `execution_attestations`, `strength_results`, `operability_results`, and
 `withheld_sources`. The contract freezes every column, physical type,
 nullability, key, enum, common release ID, and split.
@@ -358,9 +361,13 @@ alone is not completion.
 | Approved design | `docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html` |
 | This parent plan | `docs/plans/2026-07-16-issue-1602-riser-data-orcaflex-hf-plan.md` |
 | Normative cross-layer contract | `docs/plans/issue-1602-riser-analysis-contract-v1.yaml` |
+| Normalized SSOT schema/dispositions | `docs/plans/issue-1602-riser-normalized-schema-v1.yaml` |
+| Exact release schema | `docs/plans/issue-1602-riser-release-schema-v1.yaml` |
+| Identity/solver/HF/closeout protocol | `docs/plans/issue-1602-riser-protocol-v1.yaml` |
+| Contract structural meta-schema | `docs/plans/issue-1602-riser-contract-meta-schema-v1.json` |
 | Plan index | `docs/plans/README.md` |
 | Initial provider/fallback MAJOR review | `scripts/review/results/issue-1602-round-1/` |
-| Approval review | `scripts/review/results/issue-1602-round-2/` |
+| Approval review | `scripts/review/results/issue-1602-round-3/` |
 | Upstream CSV repair | worldenergydata #1046 |
 | Normalized source/case contract | digitalmodel #1603 |
 | Drilling workflow | digitalmodel #811 |
@@ -416,14 +423,14 @@ function execute_licensed(bundle, expected_identity):
     return signed typed result bundle or structured terminal failure
 
 function verify_results(case, execution, result_bundle):
-    verify all hashes and exact one-to-one joins
+    verify all hashes, foreign keys, stable row IDs, and contract cardinalities
     verify signer trust/revocation/freshness/canary and expected output matrix/counts
     run contract-defined independent engineering oracles and sample floor
     require Citation sidecars for standards-derived utilization/limits
     return verified results or quarantine record
 
 function build_public_release(verified_records):
-    select only RELEASE_APPROVED records and nine exact versioned configs
+    select only RELEASE_APPROVED records and twelve exact versioned configs
     reject forbidden extensions, paths, identities, source classes, and mocks
     decode/scan logical, staged Parquet, card, manifest, and downloaded remote rows
     validate schemas, joins, units, nulls, hashes, citations, licenses, and counts
@@ -465,7 +472,7 @@ current `main`, freeze exact APIs, and may revise paths before its own review.
 | #1604 | Create | `src/digitalmodel/riser_database/release.py` and `scripts/riser_database/publish_hf_release.py` | decoded allowlisted release, atomic exact-tree HF mutation, semantic verification |
 | #1604 | Create/modify | `tests/riser_database/test_release.py`, publisher tests, `docs/riser_database.md` | release TDD and dataset contract |
 | #1604 | Create | `scripts/riser_database/verify_program_closeout.py` | deterministic child/HF/website/completeness closeout evidence |
-| #75 | Modify | `config/capabilities.yaml` and website validation fixtures/tests | register only the verified live dataset |
+| #75 | Modify | `config/capabilities.yaml`, `scripts/render-capabilities.js`, `assets/js/capabilities-refresh.js`, online/offline validators and DOM tests | remove withheld columns in both render paths and register/deploy only verified data |
 
 Each code file will remain within the repository's 400-line limit; functions
 will remain within 50 lines. Child plans will split modules further when the
@@ -505,7 +512,7 @@ corresponding implementation.
 | signature/nonce/expiry/revocation/canary/lock failures | #568 | unauthenticated or stale host claims cannot pass |
 | typed result safe retrieval and Linux rehash | #568 | host-local paths/bytes cannot be trusted implicitly |
 | every result joins to case + attested execution | #1604 | orphan or mixed-revision rows cannot publish |
-| exact nine-config schema/key/null/enum/extension manifest | #1604 | implementation cannot choose a self-consistent but wrong release |
+| exact twelve-config schema/key/null/enum/extension manifest | #1604 | implementation cannot choose a self-consistent but wrong release |
 | decoded staged/remote Parquet + card/manifest leak corpus | #1604 | binary files, stale files, paths, identities, secrets, mocks, and license conflicts fail |
 | atomic delete/upload, parent race, and exact remote tree | #1604 | stale public files and concurrent commits cannot pass |
 | semantic is-valid/splits/rows and head-before/after | #1604 | viewer proof is bound to exact release/configs/counts/features/keys |
@@ -539,7 +546,7 @@ fake outputs will never satisfy release tests.
 5. **Run E3 and E2b.** #568 will transfer the exact bundle, authenticate the
    production solve, and return signed typed results. #138 will then complete
    licensed extraction/oracle validation; neither issue closes before E2b.
-6. **Build and publish R1.** #1604 will generate the exact nine-config release,
+6. **Build and publish R1.** #1604 will generate the exact twelve-config release,
    decode and scan it, pass
    unit/integration/legal/leak/citation checks, upload once, verify immutable HF
    bytes and exact tree, then verify head-bound datasets-server semantics.
@@ -588,7 +595,7 @@ develop against signed conformance fixtures but cannot publish before E2b/E3.
   capacity basis, units, revision, and `Citation` sidecars.
 - [ ] Independent engineering spot checks and physical plausibility gates pass;
   implementation formulas are not reused as their own oracle.
-- [ ] The public release contains only the nine exact versioned configs and
+- [ ] The public release contains only the twelve exact versioned configs and
   contract-defined columns/types/keys/nullability/enums;
   scalar fields; no raw DAT/YAML, private paths, client/project identifiers,
   secret-like values, licensed content, or mock results appear.
@@ -615,8 +622,15 @@ develop against signed conformance fixtures but cannot publish before E2b/E3.
 ```bash
 # Plan/design structure
 xmllint --html --noout docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html
-uv run python -c "import yaml; yaml.safe_load(open('docs/plans/issue-1602-riser-analysis-contract-v1.yaml'))"
-test "$(wc -l < docs/plans/issue-1602-riser-analysis-contract-v1.yaml)" -le 400
+uvx check-jsonschema \
+  --schemafile docs/plans/issue-1602-riser-contract-meta-schema-v1.json \
+  docs/plans/issue-1602-riser-normalized-schema-v1.yaml \
+  docs/plans/issue-1602-riser-release-schema-v1.yaml \
+  docs/plans/issue-1602-riser-protocol-v1.yaml
+for f in docs/plans/issue-1602-riser-*-v1.yaml \
+  docs/plans/issue-1602-riser-contract-meta-schema-v1.json; do
+  test "$(wc -l < "$f")" -le 400
+done
 ! rg -n 'TO''DO|TB''D|<re''po>|N''NN' \
   docs/plans/2026-07-16-issue-1602-riser-data-orcaflex-hf-plan.md
 
@@ -628,11 +642,16 @@ test -s scripts/review/results/issue-1602-round-1/2026-07-16-plan-1602-fallback-
 test -s scripts/review/results/issue-1602-round-2/2026-07-16-plan-1602-data.md
 test -s scripts/review/results/issue-1602-round-2/2026-07-16-plan-1602-solver.md
 test -s scripts/review/results/issue-1602-round-2/2026-07-16-plan-1602-release.md
+test -s scripts/review/results/issue-1602-round-3/2026-07-16-plan-1602-data.md
+test -s scripts/review/results/issue-1602-round-3/2026-07-16-plan-1602-solver.md
+test -s scripts/review/results/issue-1602-round-3/2026-07-16-plan-1602-release.md
 
-# Legal/diff gate before pushing the reviewed plan
+# Legal gates before and after committing the reviewed artifacts
 cd ../../workspace-hub
 bash scripts/legal/legal-sanity-scan.sh \
   --repo=../agent-worktrees/dm-1602-design --diff-only
+bash scripts/legal/legal-sanity-scan.sh \
+  --repo=../agent-worktrees/dm-1602-design
 ```
 
 ---
@@ -646,8 +665,11 @@ and release/security. Their findings produced the normative machine contract,
 scope reconciliation, authenticated execution, exact release schemas, HF race /
 stale-file defenses, and executable closeout gate in this revision.
 
-Round 2 is pending against this revised plan and contract. Any unresolved MAJOR
-will keep the plan in `draft` and trigger another revision/review namespace.
+Round 2 remained MAJOR because draft.2 still used descriptive schemas and
+self-referential hashes. Draft.3 splits the normative contract into complete
+normalized/disposition, exact release, and constructive protocol artifacts,
+adds a structural meta-schema, and addresses every round-2 blocker. Round 3 is
+pending. Any unresolved MAJOR will keep the plan in `draft`.
 
 | Provider | Verdict | Key findings |
 |---|---|---|
@@ -655,9 +677,12 @@ will keep the plan in `draft` and trigger another revision/review namespace.
 | Fallback data/provenance | MAJOR | lineage, governance dimensions, hash spec, trust, clean room, scope/schema/defaults |
 | Fallback solver/engineering | MAJOR | field disposition, semantic model load, coordinates, transport/signing, outputs/oracles, sequencing |
 | Fallback release/security | MAJOR | exact schemas/tree/head, semantic viewer checks, decoded leak gate, website/closeout truth |
-| Round 2 data | PENDING | — |
-| Round 2 solver | PENDING | — |
-| Round 2 release | PENDING | — |
+| Round 2 data | MAJOR | normalized fields/dispositions, decimal/hash construction, governance, clean room, enums/FKs/keys/citations/transforms |
+| Round 2 solver | MAJOR | identity cycles, coordinate vectors, signed bytes, archive limits, result cardinality, oracle applicability/sampling/family matrix |
+| Round 2 release | MAJOR | identity cycles, semantic schemas, website withholding, clean room, authoritative closeout, exact-revision validation |
+| Round 3 data | PENDING | — |
+| Round 3 solver | PENDING | — |
+| Round 3 release | PENDING | — |
 
 **Overall result:** PENDING
 
