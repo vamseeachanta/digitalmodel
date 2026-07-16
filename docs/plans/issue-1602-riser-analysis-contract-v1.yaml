@@ -1,5 +1,5 @@
 contract_id: digitalmodel-riser-analysis
-contract_version: 1.0.0-draft.4
+contract_version: 1.0.0-draft.5
 status: planning-contract
 authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
 
@@ -68,7 +68,8 @@ gates:
   source: [orthogonal_governance, source_hash, complete_lineage,
     provenance, legal, license, redistribution]
   synthetic: [signed_author_attestation, public_allowlist_hash,
-    distinct_signed_private_reviewer, method_and_corpus_hash, pass]
+    distinct_authorized_reviewer_principal, exact_author_claim_binding,
+    private_method_corpus_completeness_and_blinded_commitment, pass]
   model: [clean_stage, transitive_closure, zero_validator_errors,
     real_OrcFxAPI_load, object_graph, units, native_save]
   execution: [safe_artifact_transport, signed_host_attestation, fresh_canary,
@@ -105,4 +106,7 @@ planning_assertions:
   exact_release_config_count: 13
   public_sources_fail_closed: true
   result_composite_joins_declared: true
+  discriminated_component_variants_declared: true
+  stable_engineering_identity_excludes_attestations: true
+  typed_closeout_schema_declared: true
   website_withheld_columns_never_render: true

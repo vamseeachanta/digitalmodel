@@ -1,10 +1,10 @@
 schema_id: digitalmodel-riser-hf-release
-schema_version: 1.0.0-draft.4
+schema_version: 1.0.0-draft.5
 split: train
 additional_columns: reject
 row_common:
   release_id: {type: string, format: sha256, nullable: false}
-  schema_version: {type: string, const: 1.0.0-draft.4, nullable: false}
+  schema_version: {type: string, const: 1.0.0-draft.5, nullable: false}
 
 enums:
   source_canonicality: [canonical, duplicate]
@@ -15,7 +15,8 @@ enums:
   redistribution: [approved]
   release_status: [approved]
   transformation_kind: [identity, unit_conversion, composition, coordinate_transform, formula]
-  lineage_subject_kind: [component, configuration, analysis_case, criterion]
+  lineage_subject_kind: [component, connection, boundary_attachment,
+    configuration, analysis_case, criterion]
   riser_family: [drilling, completion_workover_synthetic]
   component_type: [riser_joint, buoyancy_joint, pup_joint, telescopic_joint,
     upper_flex_joint, lower_flex_joint, stress_joint, connector, tensioner,
@@ -29,9 +30,10 @@ enums:
   semantic_status: [verified_success, verified_failure]
   statistic: [minimum, maximum, mean, absolute_maximum]
   strength_quantity: [effective_tension_N, bend_moment_Nm, curvature_per_m,
-    combined_stress_Pa, utilization_ratio]
+    combined_stress_Pa, axial_force_N, shear_force_N, torsion_moment_Nm,
+    global_force_N_jcs, global_moment_Nm_jcs, utilization_ratio]
   location_kind: [top_connection, upper_flex_joint, lower_flex_joint,
-    lower_connection, stress_joint, connector, tree, lower_package,
+    lower_connection, stress_joint, connector, lmrp, bop, tree, lower_package,
     distributed_arc_length]
   criterion_kind: [strength, flex_joint_angle, tensioner_stroke,
     tensioner_force, minimum_tension, maximum_offset]
@@ -93,6 +95,7 @@ configs:
     primary_key: [criterion_id]
     columns:
       criterion_id: {type: string, nullable: false}
+      criterion_seed_sha256: {type: string, format: sha256, nullable: false}
       kind: {type: enum.criterion_kind, nullable: false}
       riser_family: {type: enum.riser_family, nullable: false}
       component_type: {type: enum.component_type, nullable: true}
@@ -114,6 +117,9 @@ configs:
       configuration_id: {type: string, nullable: false}
       author_signer_key_id: {type: string, nullable: false}
       reviewer_signer_key_id: {type: string, nullable: false}
+      author_principal_id: {type: string, nullable: false}
+      reviewer_principal_id: {type: string, nullable: false}
+      trust_registry_version: {type: string, nullable: false}
       allowlist_manifest_sha256: {type: string, format: sha256, nullable: false}
       method_id: {type: string, const: private_similarity_review_v1, nullable: false}
       private_evidence_id: {type: string, format: opaque_identifier, nullable: false}
@@ -149,28 +155,22 @@ configs:
   riser_components:
     primary_key: [component_instance_id]
     unique: [[configuration_id, sequence_from_top]]
-    conditional: [flex_joint_properties_complete_or_null,
-      tensioner_properties_complete_or_null, rigid_mass_inertia_complete_or_null]
+    conditional: [component_variant_requires_exactly_one_matching_properties_payload,
+      nonmatching_properties_payloads_must_be_null]
     columns:
       component_instance_id: {type: string, nullable: false}
       component_seed_sha256: {type: string, format: sha256, nullable: false}
       configuration_id: {type: string, nullable: false}
       component_type: {type: enum.component_type, nullable: false}
+      component_variant: {type: string, enum: [line_section, flex_joint,
+        telescopic_joint, tensioner, rigid_package, connector], nullable: false}
       sequence_from_top: {type: int32, minimum: 0, nullable: false}
-      length_m: {type: float64, exclusive_minimum: 0, nullable: false}
-      outer_diameter_m: {type: float64, exclusive_minimum: 0, nullable: false}
-      wall_thickness_m: {type: float64, exclusive_minimum: 0, nullable: false}
-      mass_per_length_kg_m: {type: float64, exclusive_minimum: 0, nullable: false}
-      displaced_diameter_m: {type: float64, exclusive_minimum: 0, nullable: false}
-      drag_coefficient: {type: float64, minimum: 0, nullable: false}
-      added_mass_coefficient: {type: float64, minimum: 0, nullable: false}
-      youngs_modulus_pa: {type: float64, exclusive_minimum: 0, nullable: false}
-      poissons_ratio: {type: float64, minimum: 0, exclusive_maximum: 0.5, nullable: false}
-      material_ref: {type: string, nullable: false}
-      flex_stiffness_curve_jcs: {type: string, nullable: true}
-      flex_angle_limit_deg: {type: float64, nullable: true}
-      tensioner_properties_jcs: {type: string, nullable: true}
-      rigid_mass_inertia_jcs: {type: string, nullable: true}
+      line_section_properties_jcs: {type: string, format: normalized_line_section_properties_v1, nullable: true}
+      flex_joint_properties_jcs: {type: string, format: normalized_flex_joint_properties_v1, nullable: true}
+      telescopic_joint_properties_jcs: {type: string, format: normalized_telescopic_joint_properties_v1, nullable: true}
+      tensioner_properties_jcs: {type: string, format: normalized_tensioner_properties_v1, nullable: true}
+      rigid_package_properties_jcs: {type: string, format: normalized_rigid_package_properties_v1, nullable: true}
+      connector_properties_jcs: {type: string, format: normalized_connector_properties_v1, nullable: true}
       criterion_ids_jcs: {type: string, nullable: false}
 
   riser_configurations:
@@ -186,13 +186,12 @@ configs:
       contents_density_kg_m3: {type: float64, minimum: 0, nullable: false}
       top_boundary_type: {type: enum.boundary_type, nullable: false}
       lower_boundary_type: {type: enum.boundary_type, nullable: false}
-      top_connection_enu_m_jcs: {type: string, nullable: false}
-      lower_connection_enu_m_jcs: {type: string, nullable: false}
       connection_graph_jcs: {type: string, nullable: false}
+      boundary_attachments_jcs: {type: string, nullable: false}
       vessel_reference_id: {type: string, nullable: false}
       vessel_motion_mode: {type: enum.vessel_motion_mode, nullable: false}
+      vessel_motion_jcs: {type: string, nullable: false}
       vessel_motion_source_id: {type: string, nullable: true}
-      vessel_motion_payload_sha256: {type: string, format: sha256, nullable: true}
       normalized_input_sha256: {type: string, format: sha256, nullable: false}
       lineage_set_sha256: {type: string, format: sha256, nullable: false}
       clean_room_review_id: {type: string, nullable: true}
@@ -213,14 +212,21 @@ configs:
       wave_model: {type: enum.wave_model, nullable: false}
       wave_height_m: {type: float64, minimum: 0, nullable: false}
       wave_period_s: {type: float64, exclusive_minimum: 0, nullable: false}
+      wave_period_basis: {type: string, enum: [regular_period,
+        spectral_peak_period, spectral_zero_crossing_period], nullable: false}
       wave_gamma: {type: float64, nullable: true}
       wave_direction_to_deg_true_north: {type: float64, minimum: 0, exclusive_maximum: 360, nullable: false}
+      wave_time_origin_s: {type: float64, nullable: false}
       wave_phase_seed: {type: int64, nullable: true}
       wave_component_count: {type: int32, nullable: true}
       current_profile_jcs: {type: string, nullable: false}
       top_tension_n: {type: float64, exclusive_minimum: 0, nullable: false}
       internal_pressure_pa: {type: float64, minimum: 0, nullable: false}
       external_pressure_model_id: {type: string, nullable: false}
+      external_pressure_model_jcs: {type: string, nullable: false}
+      seawater_density_kg_m3: {type: float64, exclusive_minimum: 0, nullable: false}
+      gravity_m_s2: {type: float64, exclusive_minimum: 0, nullable: false}
+      seabed_contact_model_jcs: {type: string, nullable: false}
       criterion_ids_jcs: {type: string, nullable: false}
       dynamics_time_step_s: {type: float64, nullable: true}
       dynamics_duration_s: {type: float64, nullable: true}
@@ -258,6 +264,9 @@ configs:
       canary_result_sha256: {type: string, format: sha256, nullable: false}
       canary_issued_at: {type: string, format: rfc3339_utc, nullable: false}
       canary_attestation_sha256: {type: string, format: sha256, nullable: false}
+      canary_claims_jcs: {type: string, nullable: false}
+      canary_signature_base64: {type: string, format: base64, nullable: false}
+      canary_verification_receipt_sha256: {type: string, format: sha256, nullable: false}
       solver_run_started_at: {type: string, format: rfc3339_utc, nullable: false}
       solver_run_ended_at: {type: string, format: rfc3339_utc, nullable: false}
       attestation_issued_at: {type: string, format: rfc3339_utc, nullable: false}
@@ -272,8 +281,12 @@ configs:
   strength_results:
     primary_key: [strength_result_id]
     unique: [[execution_id, object_id, requested_stage, statistic, quantity,
-      location_id, criterion_id]]
-    conditional: [utilization_requires_criterion_and_citation]
+      location_id, criterion_key]]
+    conditional: [criterion_key_is_none_when_both_criterion_and_citation_are_null,
+      criterion_key_equals_criterion_id_when_criterion_is_present,
+      utilization_or_limit_checked_requires_matching_criterion_and_citation,
+      scalar_quantities_require_value_si_and_forbid_value_jcs,
+      vector_quantities_require_value_jcs_and_forbid_value_si]
     columns:
       strength_result_id: {type: string, nullable: false}
       execution_id: {type: string, nullable: false}
@@ -285,9 +298,11 @@ configs:
       location_id: {type: string, nullable: false}
       location_kind: {type: enum.location_kind, nullable: false}
       arc_length_from_top_m: {type: float64, nullable: true}
-      value_si: {type: float64, nullable: false}
+      value_si: {type: float64, nullable: true}
+      value_jcs: {type: string, nullable: true}
       unit_si: {type: string, nullable: false}
       criterion_id: {type: string, nullable: true}
+      criterion_key: {type: string, nullable: false}
       citation_id: {type: string, nullable: true}
       result_payload_sha256: {type: string, format: sha256, nullable: false}
 
@@ -327,6 +342,7 @@ foreign_keys:
   - criteria.calculation_method_id -> transformations.transformation_id required many_to_one
   - field_lineage.source_id -> source_registry.source_id required many_to_one
   - field_lineage.transformation_id -> transformations.transformation_id required many_to_one
+  - riser_configurations.vessel_motion_source_id -> source_registry.source_id conditional many_to_one
   - riser_components.configuration_id -> riser_configurations.configuration_id required many_to_one
   - riser_configurations.clean_room_review_id -> clean_room_reviews.review_attestation_id conditional one_to_one
   - clean_room_reviews.configuration_id -> riser_configurations.configuration_id required one_to_one
@@ -346,5 +362,8 @@ cross_table_constraints:
   - execution_attestations.case_sha256_equals_analysis_cases.case_sha256_for_case_id
   - every_result.result_payload_sha256_equals_execution_attestations.result_payload_sha256
   - every_result.execution_id_has_semantic_status_verified_success
-  - every_result.criterion_id_and_citation_id_match_criteria_row
-  - every_clean_room_review.configuration_seed_sha256_equals_riser_configuration.configuration_seed_sha256
+  - criterion_bearing_result.criterion_id_citation_id_quantity_and_unit_match_criteria_row
+  - noncriterion_strength_result.criterion_id_and_citation_id_are_null_and_criterion_key_is_none
+  - every_clean_room_review.configuration_seed_sha256_and_configuration_id_equal_riser_configuration
+  - every_lineage.subject_seed_sha256_and_entity_id_match_the_subject_identity_map
+  - every_configuration.lineage_set_sha256_equals_canonical_released_subject_lineage_set

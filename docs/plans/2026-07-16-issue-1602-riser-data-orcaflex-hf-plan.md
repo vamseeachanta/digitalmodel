@@ -8,7 +8,7 @@
 > **Lane:** lane:codex
 > **Design:** `docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html`
 > **Normative contract:** `docs/plans/issue-1602-riser-analysis-contract-v1.yaml`
-> **Review artifacts:** Rounds 1–3 under `scripts/review/results/issue-1602-round-{1,2,3}/`; approval review under `scripts/review/results/issue-1602-round-4/`
+> **Review artifacts:** Rounds 1–4 under `scripts/review/results/issue-1602-round-{1,2,3,4}/`; approval review under `scripts/review/results/issue-1602-round-5/`
 
 ---
 
@@ -259,8 +259,10 @@ non-derivation.
 The contract uses NFC UTF-8 and RFC 8785 JCS, prohibits binary floats in logical
 identity preimages, and represents engineering numbers as normalized decimal
 strings. It specifies null/absence, set ordering, relative POSIX paths,
-case-fold/Unicode collision rejection, and explicit self-field/timestamp
-exclusions for each hash view.
+case-fold/Unicode collision rejection, and explicit self-field exclusions for
+each hash view. Engineering configuration identity will be finalized before
+time-bearing eligibility attestations; the attestations will sign both the
+stable seed and final configuration ID without changing either identity.
 
 ```text
 source_sha256 -> normalized_input_sha256 -> case_sha256
@@ -386,7 +388,8 @@ alone is not completion.
 | Plan index | `docs/plans/README.md` |
 | Initial provider/fallback MAJOR review | `scripts/review/results/issue-1602-round-1/` |
 | Round 3 blocking review | `scripts/review/results/issue-1602-round-3/` |
-| Approval review | `scripts/review/results/issue-1602-round-4/` |
+| Round 4 blocking review | `scripts/review/results/issue-1602-round-4/` |
+| Approval review | `scripts/review/results/issue-1602-round-5/` |
 | Upstream CSV repair | worldenergydata #1046 |
 | Normalized source/case contract | digitalmodel #1603 |
 | Drilling workflow | digitalmodel #811 |
@@ -654,7 +657,7 @@ root = Path("docs/plans")
 normalized = yaml.safe_load((root / "issue-1602-riser-normalized-schema-v1.yaml").read_text())
 release = yaml.safe_load((root / "issue-1602-riser-release-schema-v1.yaml").read_text())
 protocol = yaml.safe_load((root / "issue-1602-riser-protocol-v1.yaml").read_text())
-version = "1.0.0-draft.4"
+version = "1.0.0-draft.5"
 assert {normalized["schema_version"], release["schema_version"],
         release["row_common"]["schema_version"]["const"],
         protocol["protocol_version"]} == {version}
@@ -674,35 +677,60 @@ for config in release["configs"].values():
     for key in config["primary_key"]:
         field = config["columns"][key]
         assert field["nullable"] is False and field["type"] not in {"float32", "float64"}
-assert normalized["entities"]["component"]["fields"]["poissons_ratio"]["exclusive_maximum"] == 0.5
-assert release["configs"]["riser_components"]["columns"]["poissons_ratio"]["exclusive_maximum"] == 0.5
+refs = normalized["referential_integrity"]
+for entity_name, entity in normalized["entities"].items():
+    for field_name, field in entity["fields"].items():
+        if "ref." in field["type"]:
+            assert any(row.startswith(f"{entity_name}.{field_name} ->") for row in refs), (entity_name, field_name)
 order = protocol["identity_construction_order"]
 pos = lambda token: next(i for i, row in enumerate(order) if token in row)
-assert pos("criterion_id =") < pos("component_instance_id =")
+for subject in ("criterion", "component", "connection", "boundary_attachment"):
+    assert pos(f"{subject}_seed_sha256 =") < pos(f"{subject}_lineage_ids =")
 assert pos("configuration_seed_sha256 =") < pos("configuration_lineage_ids =")
-assert pos("configuration_seed_sha256 =") < pos("author_claim_sha256 =")
-assert pos("review_claim_sha256 =") < pos("normalized_input_sha256 =")
+assert pos("normalized_input_sha256 =") < pos("configuration_id =") < pos("author_claim_sha256 =") < pos("review_claim_sha256 =")
+assert pos("request_id =") < pos("bundle_sha256 =") < pos("model_sha256 =") < pos("execution_id =")
+assert all("without_id_release_id_or_result_payload_hash" in row for row in order if "result_id =" in row)
 clean = release["configs"]["clean_room_reviews"]["columns"]
 assert {"configuration_seed_sha256", "private_evidence_id",
         "blinded_evidence_commitment", "author_issued_at",
-        "reviewer_issued_at"} <= set(clean)
+        "reviewer_issued_at", "author_principal_id", "reviewer_principal_id",
+        "trust_registry_version", "author_claim_sha256"} <= set(clean)
 assert not {"private_corpus_sha256", "comparison_corpus_manifest_sha256"} & set(clean)
 joins = set(release["cross_table_constraints"])
 assert len(joins) >= 6 and any("semantic_status_verified_success" in x for x in joins)
+assert any("noncriterion_strength_result" in x for x in joins)
+assert any("quantity_and_unit" in x for x in joins)
+component_entities = {"line_section_properties", "flex_joint_properties",
+                      "telescopic_joint_properties", "tensioner_properties",
+                      "rigid_package_properties", "connector_properties"}
+assert component_entities <= set(normalized["entities"])
+component_fields = normalized["entities"]["component"]["fields"]
+assert "component_variant" in component_fields and "length_m" not in component_fields
+variant_map = protocol["family_output_matrix"]["component_variant_map"]
+assert set().union(*map(set, variant_map.values())) == set(normalized["enums"]["component_type"])
 case_columns = release["configs"]["analysis_cases"]["columns"]
 assert {"wave_model", "wave_gamma", "current_profile_jcs", "internal_pressure_pa",
-        "external_pressure_model_id", "criterion_ids_jcs", "dynamics_seed"} <= set(case_columns)
+        "external_pressure_model_jcs", "seawater_density_kg_m3", "gravity_m_s2",
+        "seabed_contact_model_jcs", "wave_period_basis", "wave_time_origin_s",
+        "criterion_ids_jcs", "dynamics_seed"} <= set(case_columns)
 config_columns = release["configs"]["riser_configurations"]["columns"]
-assert {"connection_graph_jcs", "vessel_motion_mode",
-        "vessel_motion_payload_sha256"} <= set(config_columns)
+assert {"connection_graph_jcs", "boundary_attachments_jcs",
+        "vessel_motion_mode", "vessel_motion_jcs"} <= set(config_columns)
 att = release["configs"]["execution_attestations"]["columns"]
 assert {"request_expires_at", "canary_issued_at", "canary_attestation_sha256",
-        "solver_run_started_at", "solver_run_ended_at"} <= set(att)
+        "canary_claims_jcs", "canary_signature_base64",
+        "canary_verification_receipt_sha256", "solver_run_started_at",
+        "solver_run_ended_at"} <= set(att)
 assert protocol["coordinate_adapter_ENU_TRUE_NORTH_1_0_0"]["current_mapping"]["reference_speed"]
 assert protocol["decoded_leak_scan"]["size_skip"] == "prohibited"
+assert "ruleset_sha256" in protocol["decoded_leak_scan"]["evidence"]
 assert protocol["model_and_bundle"]["model_dependency_resolver"]["method"].startswith("parse_")
 assert protocol["transport_zip_store_v1"]["general_purpose_bit_11_UTF8"] == "set"
-assert isinstance(protocol["closeout_evidence_manifest"]["repositories"], dict)
+closeout = protocol["closeout_evidence_manifest"]
+assert closeout["type"] == "object" and closeout["additionalProperties"] is False
+assert set(closeout["required"]) == set(closeout["properties"])
+assert protocol["solver_semantic_success"]["verification"]
+assert protocol["clean_room_attestation"]["trust_registry"]["independence"]
 print("issue-1602 planning semantic checks: PASS")
 PY
 for f in docs/plans/issue-1602-riser-*-v1.yaml \
@@ -726,6 +754,9 @@ test -s scripts/review/results/issue-1602-round-3/2026-07-16-plan-1602-release.m
 test -s scripts/review/results/issue-1602-round-4/2026-07-16-plan-1602-data.md
 test -s scripts/review/results/issue-1602-round-4/2026-07-16-plan-1602-solver.md
 test -s scripts/review/results/issue-1602-round-4/2026-07-16-plan-1602-release.md
+test -s scripts/review/results/issue-1602-round-5/2026-07-16-plan-1602-data.md
+test -s scripts/review/results/issue-1602-round-5/2026-07-16-plan-1602-solver.md
+test -s scripts/review/results/issue-1602-round-5/2026-07-16-plan-1602-release.md
 
 # Legal gates before and after committing the reviewed artifacts
 cd ../../workspace-hub
@@ -746,15 +777,19 @@ and release/security. Their findings produced the normative machine contract,
 scope reconciliation, authenticated execution, exact release schemas, HF race /
 stale-file defenses, and executable closeout gate in this revision.
 
-Round 2 remained MAJOR because draft.2 still used descriptive schemas and
-self-referential hashes. Draft.3 split the normative contract into normalized,
-release, and protocol artifacts but Round 3 found remaining identity cycles,
-under-specified physical inputs, unsafe public provenance fields, incomplete
-criteria/result joins, and incomplete execution/transport semantics. Draft.4
-will replace final-ID back-references with seed bindings, publish criteria and
-complete reproducible inputs, blind private clean-room evidence, define exact
-hash/current/archive rules, and add an executable semantic validation block.
-Round 4 is pending. Any unresolved MAJOR will keep the plan in `draft`.
+Round 3 found remaining identity cycles, under-specified physical inputs,
+unsafe public provenance fields, incomplete criteria/result joins, and
+incomplete execution/transport semantics. Draft.4 closed those first-order
+gaps, but Round 4 found physically invalid shared component fields, incomplete
+boundary/environment inputs, unstable attestation-dependent engineering IDs,
+missing subject-lineage bindings, incomplete canary/semantic-success proof,
+over-broad result rules, and descriptive closeout evidence. Draft.5 will use
+discriminated physical variants, explicit boundary and self-contained motion /
+pressure/environment inputs, stable engineering IDs, every-subject lineage,
+trusted author/reviewer roles, a provisional staging ID, typed canary and
+semantic-success rules, conditional criterion joins, ruleset-bound leak proof,
+and a machine-shaped closeout schema. Round 5 is pending. Any unresolved MAJOR
+will keep the plan in `draft`.
 
 | Provider | Verdict | Key findings |
 |---|---|---|
@@ -768,9 +803,12 @@ Round 4 is pending. Any unresolved MAJOR will keep the plan in `draft`.
 | Round 3 data | MAJOR | identity cycles; incomplete component/topology/vessel/case inputs; public source and clean-room leakage; missing criteria and semantic validation |
 | Round 3 solver | MAJOR | construction/hash ambiguity; veering-current mapping; incomplete locations/host claims; runtime dependency and ZIP semantics |
 | Round 3 release | MAJOR | signed-time and clean-room cycles; missing result composite joins; incomplete decoded leak scan and typed closeout evidence |
-| Round 4 data | PENDING | — |
-| Round 4 solver | PENDING | — |
-| Round 4 release | PENDING | — |
+| Round 4 data | MAJOR | criterion/subject lineage, unstable identity, reviewer principals, opaque motion/pressure, invalid component shape, compatibility, validator coverage |
+| Round 4 solver | MAJOR | discriminated physics/boundaries/environment, staging cycle, canary/semantic success, output applicability, oracle predicates |
+| Round 4 release | MAJOR | clean-room trust/method, chronology/canary, conditional criteria, lineage seeds, typed closeout, leak ruleset binding |
+| Round 5 data | PENDING | — |
+| Round 5 solver | PENDING | — |
+| Round 5 release | PENDING | — |
 
 **Overall result:** PENDING
 
