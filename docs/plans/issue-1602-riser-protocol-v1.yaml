@@ -1,5 +1,5 @@
 protocol_id: digitalmodel-riser-analysis-protocol
-protocol_version: 1.0.0-draft.3
+protocol_version: 1.0.0-draft.4
 normalized_schema: issue-1602-riser-normalized-schema-v1.yaml
 release_schema: issue-1602-riser-release-schema-v1.yaml
 
@@ -7,83 +7,103 @@ canonical_decimal_v1:
   input: unicode-decimal-string-no-exponent
   parse: arbitrary-precision-base10
   reject: [leading_plus, exponent, NaN, Infinity]
-  normalize:
-    - remove_leading_integer_zeroes_leaving_one_zero
-    - remove_all_trailing_fraction_zeroes
-    - remove_decimal_point_when_fraction_empty
-    - map_every_zero_representation_to_0
-    - retain_minus_only_when_value_less_than_zero
-  examples:
-    '0001.2300': '1.23'
-    '1.0': '1'
-    '1.00': '1'
-    '-0.0': '0'
-    '0.0100': '0.01'
+  normalize: [remove_leading_integer_zeroes_leaving_one_zero,
+    remove_all_trailing_fraction_zeroes, remove_decimal_point_when_fraction_empty,
+    map_every_zero_representation_to_0, retain_minus_only_when_value_less_than_zero]
+  examples: {'0001.2300': '1.23', '1.00': '1', '-0.0': '0', '0.0100': '0.01'}
   rounding: prohibited
-  quantization: source_precision_is_preserved_after_zero_normalization
 
 hash_framing_v1:
   function: SHA-256
-  bytes: domain_utf8 + 0x00 + uint64_be(payload_length) + payload
-  logical_payload: RFC-8785-JCS-after-NFC-and-canonical-decimal-normalization
-  collection_payload: JCS-object-with-explicit-table-name-and-sorted-record-array
-  file_manifest_payload: JCS-array-of-path-size-sha256-sorted-by-UTF8-path
+  domain_bytes: NFC_UTF8_of_exact_ASCII_domain_literal
+  digest_bytes: raw_32_byte_SHA256_output
+  digest_text: lowercase_64_character_hex_of_digest_bytes
+  framed_hash_bytes: SHA256(domain_bytes + 0x00 + uint64_be(payload_byte_length) + payload_bytes)
+  framed_hash_text: lowercase_hex(framed_hash_bytes)
+  hash_id: prefix + '_' + framed_hash_text(domain_literal, payload_bytes)
+  logical_payload_bytes: UTF8(RFC8785_JCS(NFC_strings_and_canonical_decimal_strings))
+  set_order: ascending_unsigned_lexicographic_UTF8_bytes_of_each_canonical_scalar_or_primary_key
+  ordered_array_order: preserved_exactly
+  table_order: ascending_unsigned_lexicographic_UTF8_config_name_then_primary_key_tuple
+  collection_payload: JCS_object_with_exact_table_name_primary_key_and_sorted_record_array
+  file_manifest_order: ascending_unsigned_lexicographic_UTF8_relative_POSIX_path
+  contract_version_tuple: [1.0.0-draft.4, ENU_TRUE_NORTH_1.0.0,
+    canonical_decimal_v1, hash_framing_v1, transport_zip_store_v1]
+  absent_vs_null: distinct_and_never_coerced
+  binary_float_in_logical_preimage: prohibited
 
 identity_construction_order:
-  - transformation_id = hash_id('trn', ACE_RISER_TRANSFORMATION_V1, transformation_without_id)
-  - citation_id = hash_id('cit', ACE_RISER_CITATION_V1, citation_without_id)
-  - source_id = hash_id('src', ACE_RISER_SOURCE_V1, source_without_id)
-  - lineage_id = hash_id('lin', ACE_RISER_LINEAGE_V1, lineage_without_id)
-  - component_instance_id = hash_id('cmp', ACE_RISER_COMPONENT_V1, component_without_id)
-  - author_attestation_id = hash_id('caa', ACE_RISER_CLEAN_AUTHOR_V1, signed_claims_without_id_signature_time)
-  - review_attestation_id = hash_id('car', ACE_RISER_CLEAN_REVIEW_V1, signed_claims_without_id_signature_time)
-  - normalized_input_sha256 = framed_hash(ACE_RISER_CONFIGURATION_V1, configuration_without_configuration_id_plus_sorted_complete_lineage_records_plus_clean_room_claim_hashes)
+  - transformation_id = hash_id('trn', 'ACE_RISER_TRANSFORMATION_V1', transformation_without_id)
+  - citation_id = hash_id('cit', 'ACE_RISER_CITATION_V1', citation_without_id)
+  - source_id = hash_id('src', 'ACE_RISER_SOURCE_V1', source_without_id)
+  - criterion_id = hash_id('crt', 'ACE_RISER_CRITERION_V1', criterion_without_id_with_resolved_citation_and_method)
+  - component_seed_sha256 = framed_hash_text('ACE_RISER_COMPONENT_SEED_V1', component_engineering_fields_without_ids_or_lineage)
+  - component_lineage_ids = hash_each_lineage_against_component_seed_sha256
+  - component_instance_id = hash_id('cmp', 'ACE_RISER_COMPONENT_V1', component_seed_plus_sorted_complete_lineage_ids_plus_resolved_criteria)
+  - connection_id = hash_id('con', 'ACE_RISER_CONNECTION_V1', connection_without_id_with_resolved_component_ids_and_criterion)
+  - configuration_seed_sha256 = framed_hash_text('ACE_RISER_CONFIGURATION_SEED_V1', configuration_engineering_core_with_component_and_connection_ids_without_lineage_attestations_or_final_id)
+  - configuration_lineage_ids = hash_each_lineage_against_configuration_seed_sha256
+  - author_claim_sha256 = framed_hash_text('ACE_RISER_CLEAN_AUTHOR_V1', signed_author_claims_including_configuration_seed_and_issued_at_without_id_or_signature)
+  - author_attestation_id = 'caa_' + author_claim_sha256
+  - review_claim_sha256 = framed_hash_text('ACE_RISER_CLEAN_REVIEW_V1', signed_review_claims_including_configuration_seed_blinded_evidence_and_issued_at_without_id_or_signature)
+  - review_attestation_id = 'car_' + review_claim_sha256
+  - lineage_set_sha256 = framed_hash_text('ACE_RISER_LINEAGE_SET_V1', sorted_complete_configuration_and_component_lineage_rows)
+  - public_evidence_envelope_sha256 = framed_hash_text('ACE_RISER_CLEAN_PUBLIC_ENVELOPE_V1', public_claim_hashes_key_ids_signatures_timestamps_method_verdict_reason_blinded_commitment)
+  - normalized_input_sha256 = framed_hash_text('ACE_RISER_CONFIGURATION_V1', configuration_seed_plus_lineage_set_sha256_plus_clean_room_claim_hashes_or_explicit_nulls)
   - configuration_id = 'cfg_' + normalized_input_sha256
-  - criterion_id = hash_id('crt', ACE_RISER_CRITERION_V1, criterion_without_id)
-  - case_sha256 = framed_hash(ACE_RISER_CASE_V1, analysis_case_without_case_id_plus_configuration_hash_plus_resolved_criteria)
+  - case_seed_sha256 = framed_hash_text('ACE_RISER_CASE_SEED_V1', complete_case_fields_without_case_id_or_case_lineage)
+  - case_lineage_ids = hash_each_lineage_against_case_seed_sha256
+  - case_sha256 = framed_hash_text('ACE_RISER_CASE_V1', case_seed_plus_configuration_id_resolved_criteria_and_sorted_case_lineage_ids)
   - case_id = 'case_' + case_sha256
-  - matrix_point_id = hash_id('mp', ACE_RISER_MATRIX_POINT_V1, case_id_plus_environment_loading_coordinates)
-  - bundle_sha256 = framed_hash(ACE_RISER_BUNDLE_V1, sorted_file_manifest_without_bundle_hash)
-  - model_sha256 = framed_hash(ACE_RISER_NATIVE_MODEL_V1, exact_solver_native_saved_model_bytes)
-  - execution_id = hash_id('exe', ACE_RISER_EXECUTION_REQUEST_V1, request_nonce_plus_case_bundle_model_code_workflow_hashes)
-  - strength_result_id = hash_id('str', ACE_RISER_STRENGTH_ROW_V1, strength_row_without_id_and_result_payload_hash)
-  - operability_result_id = hash_id('opr', ACE_RISER_OPERABILITY_ROW_V1, operability_row_without_id_and_result_payload_hash)
-  - result_payload_sha256 = framed_hash(ACE_RISER_RESULT_PAYLOAD_V1, strength_and_operability_tables_with_row_ids_without_result_payload_hash)
-  - attestation_sha256 = framed_hash(ACE_RISER_ATTESTATION_V1, complete_attestation_claims_without_attestation_hash_envelope_hash_signature)
-  - signature = Ed25519.sign(host_private_key, domain_bytes('ACE_RISER_SIGNED_EXECUTION_V1') + bytes(attestation_sha256))
-  - result_envelope_sha256 = framed_hash(ACE_RISER_RESULT_ENVELOPE_V1, attestation_sha256_plus_signature_bytes)
-  - release_id = framed_hash(ACE_RISER_LOGICAL_RELEASE_V1, sorted_tables_without_release_id_plus_contract_versions)
-  - materialize_release_id_into_every_row
-  - serialize_parquet_and_compute_file_hashes
-  - release_manifest_sha256 = framed_hash(ACE_RISER_RELEASE_MANIFEST_V1, release_id_plus_sorted_file_manifest_without_manifest_hash)
+  - matrix_point_id = hash_id('mp', 'ACE_RISER_MATRIX_POINT_V1', case_id_plus_environment_loading_coordinates)
+  - bundle_sha256 = framed_hash_text('ACE_RISER_BUNDLE_V1', sorted_model_input_file_manifest_without_bundle_hash)
+  - model_sha256 = framed_hash_text('ACE_RISER_NATIVE_MODEL_V1', exact_solver_native_saved_model_bytes)
+  - execution_id = hash_id('exe', 'ACE_RISER_EXECUTION_REQUEST_V1', signed_request_nonce_expiry_case_bundle_model_code_workflow_hashes)
+  - strength_result_id = hash_id('str', 'ACE_RISER_STRENGTH_ROW_V1', strength_row_without_id_or_result_payload_hash)
+  - operability_result_id = hash_id('opr', 'ACE_RISER_OPERABILITY_ROW_V1', operability_row_without_id_or_result_payload_hash)
+  - result_payload_sha256 = framed_hash_text('ACE_RISER_RESULT_PAYLOAD_V1', sorted_strength_and_operability_tables_with_row_ids_without_result_payload_hash)
+  - attestation_sha256 = framed_hash_text('ACE_RISER_ATTESTATION_V1', complete_signed_attestation_claims_without_attestation_envelope_or_signature)
+  - signature = Ed25519.sign(host_private_key, domain_bytes('ACE_RISER_SIGNED_EXECUTION_V1') + digest_bytes(attestation_sha256))
+  - result_envelope_sha256 = framed_hash_text('ACE_RISER_RESULT_ENVELOPE_V1', digest_bytes(attestation_sha256) + signature_bytes)
+  - release_id = framed_hash_text('ACE_RISER_LOGICAL_RELEASE_V1', sorted_tables_without_release_id_plus_contract_version_tuple)
+  - release_manifest_sha256 = framed_hash_text('ACE_RISER_RELEASE_MANIFEST_V1', release_id_plus_sorted_serialized_file_manifest_without_manifest_hash)
 
 cross_platform_golden_vectors:
   required_platforms: [linux_x86_64, windows_x86_64]
   fixture_contains: [every_entity, unicode_NFC_pair, decimal_equivalence_set,
-    null_and_absent_cases, sorted_sets, ordered_arrays, multi_file_bundle,
-    signature_test_key_public_only]
+    null_and_absent_cases, sorted_sets, ordered_arrays, veering_current,
+    zero_reference_current, multi_file_bundle, signature_test_key_public_only]
   assertions: [all_ids_equal, all_logical_hashes_equal, file_manifest_equal,
     every_nonexcluded_field_mutation_changes_owning_hash,
-    excluded_time_or_signature_mutation_does_not_change_parent_logical_id]
+    every_seed_to_final_binding_is_acyclic_and_equal]
 
 coordinate_adapter_ENU_TRUE_NORTH_1_0_0:
   canonical: {x: east, y: north, z: up, datum: mean_water_level,
     direction: clockwise_from_true_north_going_to}
-  orcaflex:
+  fixed_solver_fields:
     General.NorthDirection: 90
-    Environment.WaveTrains[].WaveDirection: canonical.wave_direction_to_deg_true_north
-    Environment.RefCurrentDirection: canonical.current_direction_to_deg_true_north
-    Vessel.InitialX: canonical.top_connection_offset_east_m
-    Vessel.InitialY: canonical.top_connection_offset_north_m
-    Vessel.InitialHeading: canonical.vessel_bow_to_deg_true_north
-    lower_connection_z: -canonical.water_depth_m
-    line_result_location: arc_length_from_top_connection_m
+    Vessel.InitialX: top_connection_offset_east_m
+    Vessel.InitialY: top_connection_offset_north_m
+    Vessel.InitialHeading: vessel_bow_to_deg_true_north
+    lower_connection_z: negative_water_depth_m
+  wave_mapping: Environment.WaveTrains[].WaveDirection = wave_direction_to_deg_true_north
+  current_mapping:
+    input_order: strictly_increasing_depth_with_first_depth_equal_0
+    reference_speed: first_profile_point.speed_m_s
+    reference_direction: first_profile_point.direction_to_deg_true_north
+    Environment.RefCurrentSpeed: reference_speed
+    Environment.RefCurrentDirection: reference_direction
+    Environment.CurrentDepth: each_profile_point.depth_below_mwl_m
+    Environment.CurrentFactor: each_profile_point.speed_m_s / reference_speed
+    Environment.CurrentRotation: wrap_half_open_minus180_180(each_direction - reference_direction)
+    wrap_definition: ((angle_deg + 180) modulo 360) - 180
+    zero_reference_rule: reference_speed_zero_requires_all_speeds_zero_then_all_factors_and_rotations_are_zero
   cardinal_vectors:
-    - {canonical_to: north_0, north_direction: 90, solver_direction: 0, vector_EN: [0, 1]}
-    - {canonical_to: east_90, north_direction: 90, solver_direction: 90, vector_EN: [1, 0]}
-    - {canonical_to: south_180, north_direction: 90, solver_direction: 180, vector_EN: [0, -1]}
-    - {canonical_to: west_270, north_direction: 90, solver_direction: 270, vector_EN: [-1, 0]}
-  proof: licensed_canary_exports_and_reloads_cardinal_models_before_adapter_promotion
+    - {canonical_to: north_0, solver_direction: 0, vector_EN: [0, 1]}
+    - {canonical_to: east_90, solver_direction: 90, vector_EN: [1, 0]}
+    - {canonical_to: south_180, solver_direction: 180, vector_EN: [0, -1]}
+    - {canonical_to: west_270, solver_direction: 270, vector_EN: [-1, 0]}
+  proof: licensed_canary_exports_reloads_cardinal_and_veering_models_before_adapter_promotion
 
 field_disposition_validation:
   universe: every_leaf_field_in_normalized_schema_entities
@@ -95,10 +115,17 @@ field_disposition_validation:
 
 model_and_bundle:
   stage: absent_new_directory_owned_by_execution_id
-  dependency_discovery: intercept_and_record_every_file_opened_by_generator_and_OrcFxAPI_load
-  manifest: every_opened_input_path-size-sha256-plus-role
-  reject: [unmanifested_open, manifested_unopened_extra, symlink, reparse_point,
-    absolute_path, dot_dot, duplicate, unicode_collision, casefold_collision]
+  model_dependency_resolver:
+    method: parse_generated_master_and_explicit_model_reference_fields_from_reviewed_allowlist
+    includes: [master_model, included_YAML_or_DAT, vessel_motion_payload,
+      referenced_tabular_curves, generated_support_files]
+    excludes: [OrcFxAPI_DLL, license_files, Python_runtime, OS_files, logs]
+  runtime_dependency_attestation:
+    method: allowlisted_version_and_binary_hash_inventory_outside_bundle
+    includes: [OrcFxAPI_module, solver_DLL, Python_executable, execution_agent]
+  reject: [unresolved_model_reference, unmanifested_model_input,
+    manifested_unreferenced_extra, symlink, reparse_point, absolute_path,
+    dot_dot, unicode_collision, casefold_collision]
   model_verified: [zero_post_validator_errors, OrcFxAPI_load_success,
     expected_object_type_count_connection_graph, SI_units_match,
     solver_native_save_success, native_model_hash_recorded]
@@ -108,94 +135,110 @@ transport_zip_store_v1:
   zip64: required_when_needed
   member_order: bytewise_UTF8_relative_POSIX_path
   member_timestamp: '1980-01-01T00:00:00'
-  member_mode: '0644'
-  directories: omitted
-  filename_encoding: UTF-8-NFC-with-language-flag
+  creator_system: UNIX_3
+  version_made_by: '3.0'
+  external_file_attributes: '0644 << 16'
+  filename_encoding: UTF-8-NFC
+  general_purpose_bit_11_UTF8: set
   extra_fields: none
   archive_comment: none
-  maximum_archive_bytes: 2147483648
-  maximum_uncompressed_bytes: 2147483648
-  maximum_member_bytes: 536870912
-  maximum_members: 10000
-  artifact_sha256: framed_hash(ACE_RISER_TRANSPORT_ARCHIVE_V1, exact_archive_bytes)
+  limits: {archive_bytes: 2147483648, uncompressed_bytes: 2147483648,
+    member_bytes: 536870912, members: 10000}
+  artifact_sha256: framed_hash_text('ACE_RISER_TRANSPORT_ARCHIVE_V1', exact_archive_bytes)
   retry_identity: execution_id_plus_artifact_sha256
-  linux_acceptance: [archive_hash_matches, safe_extract, extracted_bundle_manifest_matches,
+  acceptance: [archive_hash_matches, safe_extract, bundle_manifest_matches,
     every_extracted_file_hash_matches, signed_result_payload_hash_matches,
     signed_envelope_hash_matches]
 
 host_attestation:
-  signing_bytes: domain_bytes('ACE_RISER_SIGNED_EXECUTION_V1') + bytes(attestation_sha256)
-  request_freshness: request_received_before_request_expires_at
+  request_claims: [execution_id, request_nonce, request_issued_at,
+    request_expires_at, case_id, case_sha256, bundle_sha256, model_sha256,
+    workflow_version, agent_commit, digitalmodel_commit, adapter_version]
+  signed_result_claims: [all_request_claims, request_received_at,
+    solver_api_version, solver_dll_version, python_bitness,
+    runtime_dependency_manifest_sha256, license_session_id_sha256,
+    lock_acquired_at, lock_released_at, canary_case_sha256,
+    canary_result_sha256, canary_issued_at, canary_attestation_sha256,
+    solver_run_started_at, solver_run_ended_at, attestation_issued_at,
+    host_role, signer_key_id, semantic_status, result_payload_sha256]
+  signing_bytes: domain_bytes('ACE_RISER_SIGNED_EXECUTION_V1') + digest_bytes(attestation_sha256)
+  request_freshness: request_received_at_less_equal_request_expires_at
   canary_max_age_before_production_start_seconds: 86400
-  canary_same_claims: [host_private_key, workflow_version, agent_commit,
+  canary_same_claims: [signer_key_id, workflow_version, agent_commit,
     solver_api_version, solver_dll_version, python_bitness]
-  production_binding: [license_session_hash, lock_interval_covers_solver_run,
-    case_bundle_model_hashes, result_payload_hash, semantic_status]
-  archival_verification: signature_and_key_valid_at_issued_at_even_after_request_expiry
+  production_binding: [lock_interval_covers_solver_run,
+    canary_issued_at_precedes_solver_run_started_at, semantic_status_verified_success]
   key_registry: [key_id, public_key, machine_id_private, host_role_public,
     valid_from, revoked_at_nullable, revocation_reason_nullable]
 
 clean_room_attestation:
-  author_claim_hash: framed_hash(ACE_RISER_CLEAN_AUTHOR_V1, author_claims_without_id_time_signature)
-  author_signing_bytes: domain_bytes('ACE_RISER_SIGNED_CLEAN_AUTHOR_V1') + bytes(author_claim_hash)
-  reviewer_claim_hash: framed_hash(ACE_RISER_CLEAN_REVIEW_V1, reviewer_claims_without_id_time_signature)
-  reviewer_signing_bytes: domain_bytes('ACE_RISER_SIGNED_CLEAN_REVIEW_V1') + bytes(reviewer_claim_hash)
+  author_signed_claims: [configuration_seed_sha256, author_signer_id,
+    allowlist_manifest_sha256, environment_attestation_sha256, citation_ids,
+    engineering_rationale_sha256, declaration, issued_at]
+  reviewer_signed_claims: [configuration_seed_sha256, reviewer_signer_id,
+    author_signer_id, method_id, private_evidence_id,
+    blinded_evidence_commitment, verdict, reason_code, issued_at]
   signatures: Ed25519
-  trust_registry: publisher_clean_room_public_keys_with_roles_and_revocation
   author_reviewer_key_inequality: required
-  pass_requires: [both_signatures_valid, keys_valid_at_issued_at,
-    allowlist_hash_matches, method_is_private_similarity_review_v1,
-    comparison_corpus_manifest_hash_matches_private_evidence,
-    private_evidence_hash_matches, verdict_pass, reason_no_disclosure_signal]
-  configuration_binding: normalized_input_hash_includes_both_claim_hashes
-  public_envelope: both_key_ids_claim_hashes_signatures_method_corpus_hash_verdict_reason
+  pass_requires: [both_signatures_valid, keys_valid_at_each_signed_issued_at,
+    identical_configuration_seed, allowlist_hash_matches,
+    method_is_private_similarity_review_v1, verdict_pass,
+    reason_no_disclosure_signal]
+  public_envelope: [configuration_seed_sha256, both_key_ids,
+    both_claim_hashes, both_signatures, both_issued_at_values,
+    method_id, opaque_private_evidence_id, blinded_evidence_commitment,
+    verdict, reason_code]
+  public_forbidden: [private_corpus_path, private_corpus_sha256,
+    comparison_corpus_manifest_sha256, raw_similarity_findings]
+
+result_join_validation:
+  required_equalities:
+    - result.case_id = execution_attestation.case_id
+    - execution_attestation.case_sha256 = analysis_case.case_sha256
+    - result.result_payload_sha256 = execution_attestation.result_payload_sha256
+    - execution_attestation.semantic_status = verified_success
+    - result.criterion_id_and_citation_id = criteria.criterion_id_and_citation_id
+  enforcement: fail_before_release_serialization
 
 family_output_matrix:
-  common_present_structural_line_quantities: [effective_tension_N,
-    bend_moment_Nm, curvature_per_m, combined_stress_Pa]
+  common_quantities: [effective_tension_N, bend_moment_Nm,
+    curvature_per_m, combined_stress_Pa]
   utilization: required_only_when_qualified_capacity_criterion_exists
   drilling:
-    always_locations: [top_connection, upper_flex_joint, lower_flex_joint,
-      lower_connection]
-    when_present_locations: [stress_joint, connector]
+    always_locations: [top_connection, upper_flex_joint, lower_flex_joint, lower_connection]
+    when_present_locations: [stress_joint, connector, tree, lower_package]
     required_operability: [upper_flex_joint_angle, lower_flex_joint_angle,
-      tensioner_force, tensioner_stroke, minimum_effective_tension,
-      maximum_offset]
+      tensioner_force, tensioner_stroke, minimum_effective_tension, maximum_offset]
   completion_workover_synthetic:
     always_locations: [top_connection, lower_connection]
     when_present_locations: [upper_flex_joint, lower_flex_joint, stress_joint,
       connector, tree, lower_package]
     required_operability: [minimum_effective_tension, maximum_offset]
-    when_present_operability: [flex_joint_angle, tensioner_force, tensioner_stroke]
-  status_rules:
-    not_applicable: allowed_only_for_when_present_absent_component
-    not_modeled: release_blocking_for_always_or_present_component
-    missing_requested_case: release_blocking
+  status_rules: [not_modeled_blocks_requested_case,
+    missing_requested_case_blocks_release]
 
 engineering_oracles:
-  all_statics:
-    - {oracle: vector_static_equilibrium, applicability: all_completed_statics,
-       result: pass_fail_with_residual_and_child_approved_tolerance}
-    - {oracle: endpoint_and_water_depth_geometry, applicability: all_completed_cases,
-       result: pass_fail_with_residual_and_child_approved_tolerance}
-  conditional:
-    - {oracle: M_over_EI_curvature, applicability: homogeneous_linear_elastic_pipe_away_from_joint_contact_or_plasticity,
-       otherwise: not_applicable}
-    - {oracle: independent_stress_reconstruction, applicability: qualified_strength_section_with_pressure_basis,
-       otherwise: not_applicable}
-    - {oracle: zero_environment_symmetry, applicability: zero_offset_symmetric_geometry_boundaries_and_stiffness,
-       otherwise: not_applicable}
-    - {oracle: monotonic_controlled_sweep, applicability: child_reviewed_one_axis_range_without_contact_state_change_resonance_or_directional_cancellation,
-       otherwise: not_applicable}
-  dynamics: [time_step_convergence, duration_convergence, seed_repetition,
-    transient_discard_sensitivity]
+  all_statics: [vector_static_equilibrium, endpoint_and_water_depth_geometry]
+  conditional: [M_over_EI_curvature, independent_stress_reconstruction,
+    zero_environment_symmetry, monotonic_controlled_sweep]
+  dynamics: [time_step_convergence, duration_convergence,
+    seed_repetition, transient_discard_sensitivity]
   sample_selection:
     mandatory: [minimum_offset, maximum_offset, maximum_environment,
       every_limiting_criterion, every_failure_boundary_neighbor]
     fill_order: ascending_SHA256_case_id
     target_per_family: ceil_5_percent_successful_with_minimum_3
     fewer_than_target: sample_all
-    cherry_pick_override: prohibited
+
+decoded_leak_scan:
+  scope: [logical_rows_before_serialization, staged_parquet_decoded_by_schema,
+    README_and_release_manifest, downloaded_remote_parquet_decoded_by_schema]
+  checks: [secret_patterns, private_paths, client_identifiers,
+    source_allowlist, license_and_redistribution, forbidden_extensions,
+    clean_room_public_forbidden_fields, unexpected_columns]
+  size_skip: prohibited
+  parse_or_download_failure: release_blocking
+  evidence: per_surface_scanner_version_input_hash_row_count_and_zero_findings
 
 hf_publication:
   operation: one_atomic_create_commit_with_deletes_and_uploads
@@ -205,13 +248,9 @@ hf_publication:
   unexpected_remote_file: delete_in_same_commit_or_fail
   verify: [returned_commit_equals_head, exact_tree, every_size_and_hash,
     decoded_remote_parquet_equals_logical_release]
-  dataset_server:
-    before: head_equals_returned_commit
-    is_valid: true
-    configs: exact_release_schema_config_set
-    splits: exactly_train_per_config
-    rows: exact_manifest_counts_features_primary_keys_and_release_id
-    after: head_equals_returned_commit
+  dataset_server: [head_equals_returned_commit_before_and_after_polling,
+    is_valid_true, exact_13_configs, exactly_train_per_config,
+    exact_rows_features_primary_keys_and_release_id]
 
 website_withholding:
   owner_issue: https://github.com/vamseeachanta/aceengineer-website/issues/75
@@ -225,32 +264,42 @@ website_withholding:
     every_required_config_release_id_matches]
 
 closeout_evidence_manifest:
-  schema_version: 1.0.0
-  fields: [parent_issue_url, parent_plan_sha, contract_file_shas,
-    child_issue_urls, approval_comment_urls, approval_marker_paths,
-    reviewed_commit_shas, landed_commit_shas, remote_main_shas,
-    test_report_shas, legal_report_shas, code_review_artifact_shas,
-    completeness_report_sha, completeness_score, completeness_label,
-    hf_commit_sha, release_manifest_sha256, website_commit_sha,
-    deployment_id, public_route_url, clean_room_private_evidence_sha256,
-    scope_reduction_comment_url_nullable]
-  authoritative_retrieval:
-    github: fetch_live_issue_labels_comments_commits_and_remote_ancestry
-    approval: comment_author_is_repository_owner_and_names_exact_plan_sha
-    review: parse_verdict_and_reviewed_sha_require_no_MAJOR_and_nonempty_retrieval
-    reports: verify_repo_sha_command_exit_zero_timestamp_and_artifact_hash
-    completeness: recompute_score_and_require_owner_only_label
-    hf: fetch_head_tree_files_and_dataset_server_semantics
-    website: verify_deployment_exact_commit_and_public_route_release_id
-    clean_room: verify_both_signatures_distinct_roles_method_corpus_and_private_evidence_hash
-    scope_reduction: require_repository_owner_comment_naming_removed_acceptance_items
+  schema_version: 1.0.0-draft.4
+  repositories:
+    type: array_of_repo_evidence
+    required_per_repo: [repo_url, issue_urls, approval_comment_urls,
+      approval_marker_paths, reviewed_commit_shas, landed_commit_shas,
+      remote_main_sha, test_report_sha256, legal_report_sha256,
+      code_review_artifact_sha256]
+  release:
+    required: [hf_repo_id, hf_commit_sha, release_manifest_sha256,
+      exact_tree_evidence_sha256, dataset_server_evidence_sha256,
+      decoded_leak_scan_evidence_sha256]
+  clean_room:
+    required_per_synthetic_configuration: [configuration_id,
+      configuration_seed_sha256, author_claim_sha256, review_claim_sha256,
+      public_evidence_envelope_sha256, signature_verification_evidence_sha256]
+  website:
+    required: [website_commit_sha, deployment_id, public_route_url,
+      rendered_release_id, online_verification_evidence_sha256]
+  parent:
+    required: [parent_issue_url, parent_plan_sha, contract_file_shas,
+      completeness_report_sha256, completeness_score,
+      completeness_verified_label]
+  authoritative_retrieval: [live_GitHub_labels_comments_commits_and_ancestry,
+    recomputed_report_hashes, live_HF_head_tree_and_dataset_server,
+    deployed_website_exact_commit_and_rendered_release_id]
   input_claims: never_trusted_without_authoritative_retrieval
 
 contract_validation:
   meta_schema: issue-1602-riser-contract-meta-schema-v1.json
-  semantic_checks: [all_references_exist, all_enum_domains_closed,
-    every_primary_key_nonnullable_nonfloat, every_foreign_key_type_matches,
-    every_normalized_leaf_has_one_disposition, every_release_config_has_const_version,
+  semantic_validator_command: uv_run_python_inline_block_in_parent_plan
+  semantic_checks: [exact_version_equality, all_references_exist,
+    all_enum_domains_closed, every_primary_key_nonnullable_nonfloat,
+    every_foreign_key_type_matches, every_normalized_leaf_has_one_disposition,
+    every_release_config_has_const_version, exactly_13_release_configs,
     no_identity_preimage_contains_own_output, construction_order_acyclic,
-    all_required_configs_have_train_split, all_result_quantities_have_units,
-    every_criterion_has_citation]
+    seed_bindings_equal, public_source_rows_fail_closed,
+    criteria_public_and_joined, result_composite_joins_complete,
+    poisson_bounds_equal, veering_current_defined,
+    clean_room_public_forbidden_fields_absent]

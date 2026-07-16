@@ -8,7 +8,7 @@
 > **Lane:** lane:codex
 > **Design:** `docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html`
 > **Normative contract:** `docs/plans/issue-1602-riser-analysis-contract-v1.yaml`
-> **Review artifacts:** Rounds 1–2 under `scripts/review/results/issue-1602-round-{1,2}/`; approval review under `scripts/review/results/issue-1602-round-3/`
+> **Review artifacts:** Rounds 1–3 under `scripts/review/results/issue-1602-round-{1,2,3}/`; approval review under `scripts/review/results/issue-1602-round-4/`
 
 ---
 
@@ -240,14 +240,18 @@ derivation, confidentiality, redistribution, and release state. A record may be
 synthetic, canonical, public, and redistribution-approved simultaneously.
 Every normalized field will have one or more ordered lineage rows containing
 the exact source field/locator/hash, transformation/version, and input/output
-units. The ordered lineage set participates in normalized identity.
+units. A seed hash will bind lineage and clean-room claims without referring to
+the final entity ID; the ordered lineage set will then participate in the final
+normalized identity. This construction will be acyclic.
 
 Synthetic completion/workover cases will follow the contract's clean-room
 protocol: an authoring environment may access only a hashed public allowlist;
 the author records citations, engineering rationale, environment evidence, and
 a declaration; a different confidentiality reviewer performs a private
-similarity/disclosure review. Public evidence exposes only the review ID,
-roles, verdict, and reason code. Labels or unit fixtures alone cannot establish
+similarity/disclosure review. Public evidence will expose signed claim hashes,
+key IDs, signed timestamps, an opaque private-evidence ID, and a blinded HMAC
+commitment—but no private corpus path or corpus hash. Both claims will bind the
+same configuration seed. Labels or unit fixtures alone cannot establish
 non-derivation.
 
 ### Canonical identity and cross-repository compatibility
@@ -284,6 +288,15 @@ directions clockwise from true North and going-to, vessel heading by bow-to,
 offset at the top-connection reference, and arc length from the top connection.
 These definitions precede D1 hashing and receive rotation/end-role tests.
 
+The SSOT and public projection will carry the physical inputs needed to rebuild
+the case rather than generic pipe rows alone: hydrodynamic diameters and
+coefficients; flex-joint stiffness/limits; tensioner stiffness, force, stroke,
+and redundancy; rigid-package mass/inertia; connector capacities; explicit
+connection topology; vessel motion source/mode; wave spectrum/phase; veering
+current; pressure; criteria; and dynamics controls. The adapter will map a
+veering current to OrcaFlex reference speed/direction plus depth-wise factor and
+rotation, with a fail-closed all-zero rule when reference speed is zero.
+
 `MODEL_VERIFIED` will require an empty owned stage, complete transitive input
 closure, zero post-validator errors, real OrcFxAPI load, expected object/type /
 connection counts, unit-system proof, and a solver-native save. The transfer
@@ -301,9 +314,11 @@ size protections, and accepted idempotently by execution ID plus artifact hash.
 The licensed host will sign the production result envelope with an Ed25519 key
 held in the OS-protected secret store. A private verifier registry binds signer
 key/machine identity to the public host role and handles rotation/revocation.
-Nonce, expiry, workflow/agent/code versions, case/bundle/model hashes, API/DLL /
-bitness, license session, lock interval, canary identity, semantic completion,
-and result payload hash are signed. Self-asserted JSON and hashes are
+Nonce, request issuance/receipt/expiry, workflow/agent/code versions,
+case/bundle/model hashes, API/DLL/bitness and runtime-dependency manifest,
+license session, lock interval, canary identity/time/attestation, solver run
+start/end, attestation issuance, semantic completion, and result payload hash
+are signed. Self-asserted JSON and hashes are
 insufficient.
 
 ### Required analysis and independent oracles
@@ -327,8 +342,8 @@ cases block release.
 
 ### Exact public release and website truth
 
-The target will have twelve exact Parquet configs: `source_registry`,
-`transformations`, `citations`, `clean_room_reviews`, `field_lineage`,
+The target will have thirteen exact Parquet configs: `source_registry`,
+`transformations`, `citations`, `criteria`, `clean_room_reviews`, `field_lineage`,
 `riser_components`, `riser_configurations`, `analysis_cases`,
 `execution_attestations`, `strength_results`, `operability_results`, and
 `withheld_sources`. The contract freezes every column, physical type,
@@ -346,6 +361,9 @@ equal the release manifest. Head must equal the returned `hf_commit_sha` both
 before and after viewer polling. `/is-valid`, `/splits`, and `/rows` will be
 checked for true validity, the exact config/split/feature set, manifest row
 counts, representative primary keys, and the expected `release_id`.
+Every result row will be joined fail-closed to the same execution case, case
+hash, signed result-payload hash, `verified_success` semantic status, and public
+criterion/citation pair before serialization.
 
 Only aceengineer-website #75 owns website changes. Its online validator will
 fail closed; refresh, tests, production build, deployment for the exact commit,
@@ -367,7 +385,8 @@ alone is not completion.
 | Contract structural meta-schema | `docs/plans/issue-1602-riser-contract-meta-schema-v1.json` |
 | Plan index | `docs/plans/README.md` |
 | Initial provider/fallback MAJOR review | `scripts/review/results/issue-1602-round-1/` |
-| Approval review | `scripts/review/results/issue-1602-round-3/` |
+| Round 3 blocking review | `scripts/review/results/issue-1602-round-3/` |
+| Approval review | `scripts/review/results/issue-1602-round-4/` |
 | Upstream CSV repair | worldenergydata #1046 |
 | Normalized source/case contract | digitalmodel #1603 |
 | Drilling workflow | digitalmodel #811 |
@@ -430,7 +449,7 @@ function verify_results(case, execution, result_bundle):
     return verified results or quarantine record
 
 function build_public_release(verified_records):
-    select only RELEASE_APPROVED records and twelve exact versioned configs
+    select only RELEASE_APPROVED records and thirteen exact versioned configs
     reject forbidden extensions, paths, identities, source classes, and mocks
     decode/scan logical, staged Parquet, card, manifest, and downloaded remote rows
     validate schemas, joins, units, nulls, hashes, citations, licenses, and counts
@@ -512,7 +531,7 @@ corresponding implementation.
 | signature/nonce/expiry/revocation/canary/lock failures | #568 | unauthenticated or stale host claims cannot pass |
 | typed result safe retrieval and Linux rehash | #568 | host-local paths/bytes cannot be trusted implicitly |
 | every result joins to case + attested execution | #1604 | orphan or mixed-revision rows cannot publish |
-| exact twelve-config schema/key/null/enum/extension manifest | #1604 | implementation cannot choose a self-consistent but wrong release |
+| exact thirteen-config schema/key/null/enum/extension manifest | #1604 | implementation cannot choose a self-consistent but wrong release |
 | decoded staged/remote Parquet + card/manifest leak corpus | #1604 | binary files, stale files, paths, identities, secrets, mocks, and license conflicts fail |
 | atomic delete/upload, parent race, and exact remote tree | #1604 | stale public files and concurrent commits cannot pass |
 | semantic is-valid/splits/rows and head-before/after | #1604 | viewer proof is bound to exact release/configs/counts/features/keys |
@@ -546,7 +565,7 @@ fake outputs will never satisfy release tests.
 5. **Run E3 and E2b.** #568 will transfer the exact bundle, authenticate the
    production solve, and return signed typed results. #138 will then complete
    licensed extraction/oracle validation; neither issue closes before E2b.
-6. **Build and publish R1.** #1604 will generate the exact twelve-config release,
+6. **Build and publish R1.** #1604 will generate the exact thirteen-config release,
    decode and scan it, pass
    unit/integration/legal/leak/citation checks, upload once, verify immutable HF
    bytes and exact tree, then verify head-bound datasets-server semantics.
@@ -595,7 +614,7 @@ develop against signed conformance fixtures but cannot publish before E2b/E3.
   capacity basis, units, revision, and `Citation` sidecars.
 - [ ] Independent engineering spot checks and physical plausibility gates pass;
   implementation formulas are not reused as their own oracle.
-- [ ] The public release contains only the twelve exact versioned configs and
+- [ ] The public release contains only the thirteen exact versioned configs and
   contract-defined columns/types/keys/nullability/enums;
   scalar fields; no raw DAT/YAML, private paths, client/project identifiers,
   secret-like values, licensed content, or mock results appear.
@@ -627,6 +646,65 @@ uvx check-jsonschema \
   docs/plans/issue-1602-riser-normalized-schema-v1.yaml \
   docs/plans/issue-1602-riser-release-schema-v1.yaml \
   docs/plans/issue-1602-riser-protocol-v1.yaml
+uv run --no-project --with pyyaml python - <<'PY'
+from pathlib import Path
+import yaml
+
+root = Path("docs/plans")
+normalized = yaml.safe_load((root / "issue-1602-riser-normalized-schema-v1.yaml").read_text())
+release = yaml.safe_load((root / "issue-1602-riser-release-schema-v1.yaml").read_text())
+protocol = yaml.safe_load((root / "issue-1602-riser-protocol-v1.yaml").read_text())
+version = "1.0.0-draft.4"
+assert {normalized["schema_version"], release["schema_version"],
+        release["row_common"]["schema_version"]["const"],
+        protocol["protocol_version"]} == {version}
+expected = {"source_registry", "transformations", "citations", "criteria",
+            "clean_room_reviews", "field_lineage", "riser_components",
+            "riser_configurations", "analysis_cases", "execution_attestations",
+            "strength_results", "operability_results", "withheld_sources"}
+assert set(release["configs"]) == expected
+assert release["enums"]["source_confidentiality"] == ["public"]
+assert release["enums"]["redistribution"] == ["approved"]
+assert "criteria" in release["configs"]
+assert {"tree", "lower_package"} <= set(release["enums"]["location_kind"])
+for entity in normalized["entities"].values():
+    for field in entity["fields"].values():
+        assert "disposition" in field
+for config in release["configs"].values():
+    for key in config["primary_key"]:
+        field = config["columns"][key]
+        assert field["nullable"] is False and field["type"] not in {"float32", "float64"}
+assert normalized["entities"]["component"]["fields"]["poissons_ratio"]["exclusive_maximum"] == 0.5
+assert release["configs"]["riser_components"]["columns"]["poissons_ratio"]["exclusive_maximum"] == 0.5
+order = protocol["identity_construction_order"]
+pos = lambda token: next(i for i, row in enumerate(order) if token in row)
+assert pos("criterion_id =") < pos("component_instance_id =")
+assert pos("configuration_seed_sha256 =") < pos("configuration_lineage_ids =")
+assert pos("configuration_seed_sha256 =") < pos("author_claim_sha256 =")
+assert pos("review_claim_sha256 =") < pos("normalized_input_sha256 =")
+clean = release["configs"]["clean_room_reviews"]["columns"]
+assert {"configuration_seed_sha256", "private_evidence_id",
+        "blinded_evidence_commitment", "author_issued_at",
+        "reviewer_issued_at"} <= set(clean)
+assert not {"private_corpus_sha256", "comparison_corpus_manifest_sha256"} & set(clean)
+joins = set(release["cross_table_constraints"])
+assert len(joins) >= 6 and any("semantic_status_verified_success" in x for x in joins)
+case_columns = release["configs"]["analysis_cases"]["columns"]
+assert {"wave_model", "wave_gamma", "current_profile_jcs", "internal_pressure_pa",
+        "external_pressure_model_id", "criterion_ids_jcs", "dynamics_seed"} <= set(case_columns)
+config_columns = release["configs"]["riser_configurations"]["columns"]
+assert {"connection_graph_jcs", "vessel_motion_mode",
+        "vessel_motion_payload_sha256"} <= set(config_columns)
+att = release["configs"]["execution_attestations"]["columns"]
+assert {"request_expires_at", "canary_issued_at", "canary_attestation_sha256",
+        "solver_run_started_at", "solver_run_ended_at"} <= set(att)
+assert protocol["coordinate_adapter_ENU_TRUE_NORTH_1_0_0"]["current_mapping"]["reference_speed"]
+assert protocol["decoded_leak_scan"]["size_skip"] == "prohibited"
+assert protocol["model_and_bundle"]["model_dependency_resolver"]["method"].startswith("parse_")
+assert protocol["transport_zip_store_v1"]["general_purpose_bit_11_UTF8"] == "set"
+assert isinstance(protocol["closeout_evidence_manifest"]["repositories"], dict)
+print("issue-1602 planning semantic checks: PASS")
+PY
 for f in docs/plans/issue-1602-riser-*-v1.yaml \
   docs/plans/issue-1602-riser-contract-meta-schema-v1.json; do
   test "$(wc -l < "$f")" -le 400
@@ -645,6 +723,9 @@ test -s scripts/review/results/issue-1602-round-2/2026-07-16-plan-1602-release.m
 test -s scripts/review/results/issue-1602-round-3/2026-07-16-plan-1602-data.md
 test -s scripts/review/results/issue-1602-round-3/2026-07-16-plan-1602-solver.md
 test -s scripts/review/results/issue-1602-round-3/2026-07-16-plan-1602-release.md
+test -s scripts/review/results/issue-1602-round-4/2026-07-16-plan-1602-data.md
+test -s scripts/review/results/issue-1602-round-4/2026-07-16-plan-1602-solver.md
+test -s scripts/review/results/issue-1602-round-4/2026-07-16-plan-1602-release.md
 
 # Legal gates before and after committing the reviewed artifacts
 cd ../../workspace-hub
@@ -666,10 +747,14 @@ scope reconciliation, authenticated execution, exact release schemas, HF race /
 stale-file defenses, and executable closeout gate in this revision.
 
 Round 2 remained MAJOR because draft.2 still used descriptive schemas and
-self-referential hashes. Draft.3 splits the normative contract into complete
-normalized/disposition, exact release, and constructive protocol artifacts,
-adds a structural meta-schema, and addresses every round-2 blocker. Round 3 is
-pending. Any unresolved MAJOR will keep the plan in `draft`.
+self-referential hashes. Draft.3 split the normative contract into normalized,
+release, and protocol artifacts but Round 3 found remaining identity cycles,
+under-specified physical inputs, unsafe public provenance fields, incomplete
+criteria/result joins, and incomplete execution/transport semantics. Draft.4
+will replace final-ID back-references with seed bindings, publish criteria and
+complete reproducible inputs, blind private clean-room evidence, define exact
+hash/current/archive rules, and add an executable semantic validation block.
+Round 4 is pending. Any unresolved MAJOR will keep the plan in `draft`.
 
 | Provider | Verdict | Key findings |
 |---|---|---|
@@ -680,9 +765,12 @@ pending. Any unresolved MAJOR will keep the plan in `draft`.
 | Round 2 data | MAJOR | normalized fields/dispositions, decimal/hash construction, governance, clean room, enums/FKs/keys/citations/transforms |
 | Round 2 solver | MAJOR | identity cycles, coordinate vectors, signed bytes, archive limits, result cardinality, oracle applicability/sampling/family matrix |
 | Round 2 release | MAJOR | identity cycles, semantic schemas, website withholding, clean room, authoritative closeout, exact-revision validation |
-| Round 3 data | PENDING | — |
-| Round 3 solver | PENDING | — |
-| Round 3 release | PENDING | — |
+| Round 3 data | MAJOR | identity cycles; incomplete component/topology/vessel/case inputs; public source and clean-room leakage; missing criteria and semantic validation |
+| Round 3 solver | MAJOR | construction/hash ambiguity; veering-current mapping; incomplete locations/host claims; runtime dependency and ZIP semantics |
+| Round 3 release | MAJOR | signed-time and clean-room cycles; missing result composite joins; incomplete decoded leak scan and typed closeout evidence |
+| Round 4 data | PENDING | — |
+| Round 4 solver | PENDING | — |
+| Round 4 release | PENDING | — |
 
 **Overall result:** PENDING
 

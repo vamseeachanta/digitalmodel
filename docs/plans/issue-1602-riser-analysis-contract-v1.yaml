@@ -1,5 +1,5 @@
 contract_id: digitalmodel-riser-analysis
-contract_version: 1.0.0-draft.3
+contract_version: 1.0.0-draft.4
 status: planning-contract
 authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
 
@@ -53,6 +53,7 @@ release:
     - source_registry
     - transformations
     - citations
+    - criteria
     - clean_room_reviews
     - field_lineage
     - riser_components
@@ -89,8 +90,8 @@ validation_commands:
     docs/plans/issue-1602-riser-release-schema-v1.yaml
     docs/plans/issue-1602-riser-protocol-v1.yaml
   semantic: >-
-    Child implementation will TDD a validator that executes every semantic check
-    listed in protocol.contract_validation before any producer/consumer code.
+    The parent plan inline validator will execute planning-time semantic checks;
+    child implementation will TDD the production validator before producer code.
 
 planning_assertions:
   every_normative_file_under_400_lines: true
@@ -100,4 +101,8 @@ planning_assertions:
   all_normalized_fields_have_disposition: true
   identity_construction_order_acyclic: true
   self_hash_cycles_absent: true
+  seed_to_final_identity_bindings_declared: true
+  exact_release_config_count: 13
+  public_sources_fail_closed: true
+  result_composite_joins_declared: true
   website_withheld_columns_never_render: true
