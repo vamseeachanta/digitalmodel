@@ -1,0 +1,385 @@
+contract_id: digitalmodel-riser-analysis
+contract_version: 1.0.0-draft.2
+status: planning-contract
+authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
+
+canonical_encoding:
+  unicode: NFC
+  text_encoding: UTF-8
+  logical_serialization: RFC-8785-JCS
+  identity_numbers:
+    representation: normalized-decimal-string
+    regex: '^-?(0|[1-9][0-9]*)(\.[0-9]+)?$'
+    prohibited: [binary_float, exponent_notation, NaN, Infinity, negative_zero]
+  object_rules:
+    - schema_version is included in every identity preimage
+    - null is allowed only where the schema marks a field nullable
+    - absent and null are distinct and are never interchanged
+    - arrays preserve declared semantic order
+    - set-like collections are sorted by their declared primary key
+  file_rules:
+    path_format: relative-posix
+    reject: [absolute_path, dot_dot, symlink, reparse_point, duplicate_path,
+      unicode_normalization_collision, casefold_collision]
+    ordering: bytewise-UTF-8-path
+
+coordinate_contract:
+  global_frame: ENU_TRUE_NORTH
+  x_axis: east
+  y_axis: north
+  z_axis: up
+  vertical_datum: mean_water_level
+  seabed_z: -water_depth_m
+  direction_field: direction_to_deg_true_north
+  direction_definition: clockwise-from-true-north-going-to
+  vessel_heading_field: bow_to_deg_true_north
+  offset_fields: [top_connection_offset_east_m, top_connection_offset_north_m]
+  offset_origin: zero-environment-top-connection-reference
+  line_location: arc_length_from_top_connection_m
+  adapter_rule: map_by_connection_role_not_orcaflex_end_letter
+  required_tests: [zero_rotation, ninety_degree_rotation, rotational_invariance,
+    from_to_rejection, end_role_reversal]
+
+source_governance:
+  orthogonal_dimensions:
+    canonicality: [canonical, duplicate]
+    origin: [repository_file, public_reference, synthetic_seed]
+    derivation: [original, derived, synthetic]
+    confidentiality: [public, private, licensed]
+    redistribution: [approved, denied, undecided]
+    release_status: [withheld, quarantined, eligible, approved]
+  eligibility_rule: >-
+    canonicality=canonical AND confidentiality=public AND
+    redistribution=approved AND release_status=approved
+  field_lineage_required: true
+  lineage_components: [entity_type, entity_id, field_name, source_id,
+    source_field, source_locator, transformation_id, input_unit, output_unit,
+    source_sha256, ordinal]
+
+clean_room_synthetic_protocol:
+  author_environment:
+    inputs: public-allowlisted-source-bundle-only
+    forbidden_mounts: [private_riser_models, client_corpus, licensed_source_text]
+    evidence: [allowlist_manifest_sha256, environment_attestation,
+      author_declaration, public_input_citations, engineering_rationale]
+  independent_disclosure_review:
+    reviewer_role: confidentiality-reviewer
+    private_comparison: required
+    public_output: [verdict, reason_code, review_id, reviewer_role, timestamp]
+    forbidden_public_output: [private_values, private_paths, similarity_details]
+  promotion_rule: both-author-and-reviewer-attestations-required
+
+identity_views:
+  source_sha256:
+    preimage: exact-public-source-bytes
+  normalized_input_sha256:
+    preimage: solver-neutral-configuration-plus-complete-field-lineage
+  case_sha256:
+    preimage: configuration-hash-plus-environment-loading-criteria-frames-stages
+  bundle_sha256:
+    preimage: sorted-file-manifest-excluding-bundle_sha256-plus-all-file-bytes
+  model_sha256:
+    preimage: solver-native-saved-model-bytes-after-semantic-load
+  result_payload_sha256:
+    preimage: sorted-typed-result-rows-excluding-attestation-and-timestamps
+  attestation_sha256:
+    preimage: canonical-attestation-excluding-signature
+  result_envelope_sha256:
+    preimage: result-payload-hash-plus-attestation-hash
+  release_id:
+    preimage: contract-version-plus-exact-config-manifest-row-counts-file-hashes
+  required_golden_tests: [linux_windows_same_hash, every_field_mutation_changes_hash,
+    schema_version_changes_hash, added_file_changes_bundle, deleted_file_changes_bundle,
+    casefold_collision_rejected, self_hash_field_excluded, timestamp_excluded_only_where_declared]
+
+field_disposition:
+  categories: [direct_solver_map, transformed_solver_map, solver_metadata,
+    execution_control, result_only, publication_only, rejected]
+  rule: every-contract-field-has-exactly-one-category
+  missing_or_unknown: reject
+  implicit_engineering_defaults: prohibited
+  adapter_test: remove-each-required-field-and-require-failure
+
+model_verification:
+  clean_stage: new-empty-owned-directory
+  transitive_closure: [master, includes, parameters, templates, environment_files,
+    motion_files, spectrum_files, every_solver_opened_dependency]
+  required_gates: [zero_post_validator_errors, OrcFxAPI_load_success,
+    expected_object_counts, expected_types, expected_connections,
+    unit_system_match, solver_native_save_success]
+  stale_or_unlisted_file: reject
+
+licensed_execution_attestation:
+  signature_algorithm: Ed25519
+  private_key_location: OS-protected-host-secret-store
+  verifier_key_registry: private-workspace-registry
+  public_identity: signer_key_id-plus-host_role
+  private_identity: machine_id-plus-signer_key_id
+  required_claims: [execution_id, request_nonce, issued_at, expires_at,
+    workflow_version, agent_commit, digitalmodel_commit, adapter_version,
+    case_sha256, bundle_sha256, model_sha256, solver_api_version,
+    solver_dll_version, python_bitness, license_session_id, lock_acquired_at,
+    lock_released_at, canary_case_sha256, canary_expected_hash,
+    production_semantic_status, result_payload_sha256]
+  verification: [signature_valid, key_not_revoked, nonce_matches, within_expiry,
+    canary_matches, production_hashes_match, lock_covers_run]
+
+artifact_transport:
+  owner_issue: https://github.com/vamseeachanta/deckhand/issues/568
+  control_plane: metadata-queue-only
+  data_plane: access-controlled-content-addressed-store
+  backend_selection_gate: user-approved-child-plan-before-implementation
+  archive: deterministic-zip64
+  maximum_archive_bytes: 2147483648
+  upload: partial-name-then-atomic-promote
+  download: unique-private-stage-then-rehash
+  extraction: [reject_absolute, reject_dot_dot, reject_symlink,
+    reject_reparse_point, reject_duplicate, reject_casefold_collision,
+    enforce_uncompressed_size, enforce_file_count]
+  retry_identity: execution_id-plus-artifact_sha256
+  result_acceptance: linux-rehash-equals-signed-envelope
+
+criteria_policy:
+  direct_fail_closed_getters_only: true
+  prohibited_calculation_api: riser_citations
+  standards_families: [API-RP-17G, ISO-13628-7, ISO-13624-1, API-RP-16Q,
+    API-16R, API-STD-2RD, DNV-OS-F201, DNV-RP-C203, AMJIG]
+  fatigue_scope_v1: excluded
+  note: DFF-and-SCF-are-fatigue-inputs-not-strength-capacities
+  utilization_rule: no-capacity-or-citation-means-no-utilization-and-not-publishable-as-utilization
+
+required_output_matrix:
+  families: [drilling, completion_workover_synthetic]
+  baseline_stage: statics
+  required_strength_quantities: [effective_tension_N, bend_moment_Nm,
+    curvature_per_m, combined_stress_Pa]
+  conditionally_required_quantities: [utilization_ratio]
+  critical_locations: [top_connection, upper_flex_joint, lower_flex_joint,
+    lower_connection, declared_stress_joint, declared_connector]
+  operability_required: [top_connection_offset, wave_height, wave_period,
+    wave_direction, current_speed, current_direction, flex_joint_angle,
+    tensioner_force, tensioner_stroke, limiting_criterion, limiting_location,
+    operable]
+  not_modeled_behavior: case-ineligible-with-reason
+  dynamic_extrema: required-when-case-requests-dynamics
+  child_plan_must_freeze: [load_combinations, pressure_basis, corrosion_basis,
+    strength_equation, safety_factors, mean_or_max_criteria,
+    tensioner_redundancy, stroke_definition, critical_location_rules,
+    sweep_axes, sweep_rows, tolerances]
+
+independent_engineering_oracles:
+  required: [static_vertical_equilibrium, endpoint_geometry,
+    water_depth_geometry, moment_over_EI_curvature, independent_stress_reconstruction,
+    zero_environment_symmetry, coordinate_rotational_invariance,
+    monotonic_offset_trend, monotonic_environment_trend]
+  dynamics_when_used: [time_step_convergence, duration_convergence,
+    seed_policy, transient_discard]
+  sample_rule: max(3_cases_per_family,5_percent_of_successful_cases)
+  tolerance_authority: reviewed-child-plan
+  missing_requested_case: release-blocking
+
+release:
+  hf_repo_id: aceengineer/digitalmodel-riser-analysis
+  split: train
+  required_configs: [source_registry, field_lineage, riser_components,
+    riser_configurations, analysis_cases, execution_attestations,
+    strength_results, operability_results, withheld_sources]
+  row_common: [release_id, schema_version]
+  exact_remote_tree:
+    allowed_infrastructure_files: [.gitattributes, README.md, release_manifest.json]
+    data_pattern: data/{config}/train-00000-of-00001.parquet
+    operation: one-atomic-create-commit-with-upload-and-delete-operations
+    optimistic_concurrency: parent_commit_equals-observed_head
+    assertion: remote-tree-equals-manifest
+  viewer_binding:
+    head_equals_hf_commit_before_poll: true
+    head_equals_hf_commit_after_poll: true
+    every_sample_row_release_id_equals_expected: true
+  dataset_server_assertions: [is_valid_true, exact_config_set,
+    exact_split_train, exact_manifest_row_counts, exact_declared_features,
+    representative_primary_keys_and_release_id]
+
+configs:
+  source_registry:
+    primary_key: [release_id, source_id]
+    columns:
+      - release_id:string:required
+      - schema_version:string:required
+      - source_id:string:required
+      - canonical_source_id:string:nullable
+      - canonicality:enum:required
+      - origin:enum:required
+      - derivation:enum:required
+      - confidentiality:enum:required
+      - redistribution:enum:required
+      - release_status:enum:required
+      - source_sha256:string:nullable
+      - license_id:string:required
+      - provenance_record_id:string:required
+      - issue_url:string:required
+  field_lineage:
+    primary_key: [release_id, entity_type, entity_id, field_name, ordinal]
+    columns:
+      - release_id:string:required
+      - schema_version:string:required
+      - entity_type:enum:required
+      - entity_id:string:required
+      - field_name:string:required
+      - ordinal:int32:required
+      - source_id:string:required
+      - source_field:string:required
+      - source_locator:string:required
+      - transformation_id:string:required
+      - input_unit:string:nullable
+      - output_unit:string:required
+      - source_sha256:string:required
+      - lineage_sha256:string:required
+  riser_components:
+    primary_key: [release_id, configuration_id, component_instance_id]
+    columns:
+      - release_id:string:required
+      - schema_version:string:required
+      - configuration_id:string:required
+      - component_instance_id:string:required
+      - component_type:enum:required
+      - sequence_from_top:int32:required
+      - length_m:float64:required
+      - outer_diameter_m:float64:required
+      - wall_thickness_m:float64:required
+      - mass_per_length_kg_m:float64:nullable
+      - material_ref:string:required
+      - source_id:string:required
+  riser_configurations:
+    primary_key: [release_id, configuration_id]
+    columns:
+      - release_id:string:required
+      - schema_version:string:required
+      - configuration_id:string:required
+      - riser_family:enum:required
+      - synthetic:bool:required
+      - water_depth_m:float64:required
+      - contents_density_kg_m3:float64:required
+      - top_boundary_type:enum:required
+      - lower_boundary_type:enum:required
+      - normalized_input_sha256:string:required
+      - lineage_set_sha256:string:required
+      - clean_room_review_id:string:nullable
+  analysis_cases:
+    primary_key: [release_id, case_id]
+    columns:
+      - release_id:string:required
+      - schema_version:string:required
+      - case_id:string:required
+      - configuration_id:string:required
+      - case_sha256:string:required
+      - requested_stage:enum:required
+      - coordinate_contract_version:string:required
+      - top_connection_offset_east_m:float64:required
+      - top_connection_offset_north_m:float64:required
+      - wave_height_m:float64:required
+      - wave_period_s:float64:required
+      - wave_direction_to_deg_true_north:float64:required
+      - current_speed_m_s:float64:required
+      - current_direction_to_deg_true_north:float64:required
+      - top_tension_N:float64:required
+      - terminal_status:enum:required
+      - failure_reason_code:string:nullable
+  execution_attestations:
+    primary_key: [release_id, execution_id]
+    columns:
+      - release_id:string:required
+      - schema_version:string:required
+      - execution_id:string:required
+      - case_id:string:required
+      - case_sha256:string:required
+      - bundle_sha256:string:required
+      - model_sha256:string:required
+      - digitalmodel_commit:string:required
+      - workflow_version:string:required
+      - solver_api_version:string:required
+      - solver_dll_version:string:required
+      - host_role:string:required
+      - signer_key_id:string:required
+      - semantic_status:enum:required
+      - result_payload_sha256:string:required
+      - attestation_sha256:string:required
+      - result_envelope_sha256:string:required
+      - signature_base64:string:required
+  strength_results:
+    primary_key: [release_id, execution_id, object_id, requested_stage,
+      statistic, quantity, location_kind, arc_length_from_top_m, criterion_id]
+    columns:
+      - release_id:string:required
+      - schema_version:string:required
+      - execution_id:string:required
+      - case_id:string:required
+      - object_id:string:required
+      - requested_stage:enum:required
+      - statistic:enum:required
+      - quantity:enum:required
+      - location_kind:enum:required
+      - arc_length_from_top_m:float64:nullable
+      - value_si:float64:required
+      - unit_si:string:required
+      - criterion_id:string:nullable
+      - citation_id:string:nullable
+      - result_payload_sha256:string:required
+  operability_results:
+    primary_key: [release_id, execution_id, matrix_point_id]
+    columns:
+      - release_id:string:required
+      - schema_version:string:required
+      - execution_id:string:required
+      - case_id:string:required
+      - matrix_point_id:string:required
+      - flex_joint_angle_deg:float64:required
+      - tensioner_force_N:float64:required
+      - tensioner_stroke_m:float64:required
+      - tensioner_margin_m:float64:required
+      - limiting_criterion_id:string:required
+      - limiting_location_id:string:required
+      - utilization_or_margin:float64:required
+      - operable:bool:required
+      - result_payload_sha256:string:required
+  withheld_sources:
+    primary_key: [release_id, withheld_id]
+    columns:
+      - release_id:string:required
+      - schema_version:string:required
+      - withheld_id:string:required
+      - origin:enum:required
+      - confidentiality:enum:required
+      - reason_code:enum:required
+      - affected_surface:enum:required
+      - issue_url:string:required
+      - review_state:enum:required
+
+release_leak_scan:
+  staged_and_remote: true
+  inspect: [logical_records_before_serialization, decoded_parquet_after_staging,
+    README, release_manifest, exact_remote_tree, decoded_remote_parquet]
+  checks: [deny_list, secret_patterns, email, hostname, absolute_path,
+    client_identifier, project_identifier, forbidden_extension,
+    unapproved_source_id, license_compatibility]
+  max_file_size_skip: prohibited
+  binary_text_grep_as_only_gate: prohibited
+
+website_gate:
+  owner_issue: https://github.com/vamseeachanta/aceengineer-website/issues/75
+  required_configs: all-release-required-configs
+  online_failure_policy: fail-closed
+  required_evidence: [offline_validation, live_hf_validation, snapshot_refresh,
+    tests, production_build, deployment_for_exact_commit,
+    public_route_http_200, public_route_contains_release_id]
+
+parent_closeout:
+  verifier: scripts/riser_database/verify_program_closeout.py
+  required_inputs: [child_issue_urls, approval_marker_paths, reviewed_commit_shas,
+    landed_commit_shas, test_reports, legal_reports, code_review_artifacts,
+    completeness_report, hf_commit_sha, release_manifest_sha256,
+    website_commit_sha, public_route_url]
+  required_assertions: [all_children_closed_or_signed_scope_reduction,
+    all_approval_markers_present, all_review_artifacts_nonempty,
+    no_unresolved_major, completeness_threshold_met,
+    completeness_owner_label_present, hf_exact_tree_and_head,
+    dataset_server_semantics, website_deployment_and_route]
