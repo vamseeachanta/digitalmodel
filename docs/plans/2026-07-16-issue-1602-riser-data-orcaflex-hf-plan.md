@@ -1,6 +1,6 @@
 # Plan for #1602: Riser Data to OrcaFlex to Hugging Face Strength and Operability Program
 
-> **Status:** draft
+> **Status:** blocked-draft — parent/child contract-depth decision required
 > **Complexity:** T3
 > **Date:** 2026-07-16
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/1602
@@ -8,7 +8,7 @@
 > **Lane:** lane:codex
 > **Design:** `docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html`
 > **Normative contract:** `docs/plans/issue-1602-riser-analysis-contract-v1.yaml`
-> **Review artifacts:** Rounds 1–4 under `scripts/review/results/issue-1602-round-{1,2,3,4}/`; approval review under `scripts/review/results/issue-1602-round-5/`
+> **Review artifacts:** Rounds 1–5 under `scripts/review/results/issue-1602-round-{1,2,3,4,5}/`; all are blocking evidence
 
 ---
 
@@ -788,8 +788,10 @@ discriminated physical variants, explicit boundary and self-contained motion /
 pressure/environment inputs, stable engineering IDs, every-subject lineage,
 trusted author/reviewer roles, a provisional staging ID, typed canary and
 semantic-success rules, conditional criterion joins, ruleset-bound leak proof,
-and a machine-shaped closeout schema. Round 5 is pending. Any unresolved MAJOR
-will keep the plan in `draft`.
+and a machine-shaped closeout schema. Round 5 nevertheless returned unanimous
+MAJOR because the exact production schemas and receipts remain non-executable at
+parent-plan depth. The plan will remain blocked until the owner confirms the
+recommended parent/child contract boundary.
 
 | Provider | Verdict | Key findings |
 |---|---|---|
@@ -806,11 +808,19 @@ will keep the plan in `draft`.
 | Round 4 data | MAJOR | criterion/subject lineage, unstable identity, reviewer principals, opaque motion/pressure, invalid component shape, compatibility, validator coverage |
 | Round 4 solver | MAJOR | discriminated physics/boundaries/environment, staging cycle, canary/semantic success, output applicability, oracle predicates |
 | Round 4 release | MAJOR | clean-room trust/method, chronology/canary, conditional criteria, lineage seeds, typed closeout, leak ruleset binding |
-| Round 5 data | PENDING | — |
-| Round 5 solver | PENDING | — |
-| Round 5 release | PENDING | — |
+| Round 5 data | MAJOR | signed-claim reconstructability, profile/component identity, decimal fidelity, closed nested schemas, lineage subjects, operability formulas |
+| Round 5 solver | MAJOR | enforced variants, typed OrcaFlex payloads, geometry authority, request/canary proof, semantic evidence, output/oracle cardinality |
+| Round 5 release | MAJOR | invalid closeout pseudo-schema, canary/TTL binding, criterion/topology membership, clean-room closeout, exact HF manifest semantics |
 
-**Overall result:** PENDING
+**Overall result:** MAJOR — blocked pending owner decision on contract depth. Five
+unanimous MAJOR rounds show that freezing production-level nested schemas,
+cryptographic receipts, and validators in this cross-repository parent creates
+duplicated child design and non-executable prose. Recommended resolution: the
+parent will retain architecture, ownership, identity-chain interfaces, required
+promotion evidence, and fail-closed invariants; #1603, #568, #138, and #1604
+will each freeze and test their exact owned schemas/receipts under their own
+approval gates. This changes planning granularity, not the approved solver-neutral
+SSOT architecture.
 
 ---
 
