@@ -8,8 +8,8 @@
 > **Lane:** lane:codex
 > **Design:** `docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html`
 > **Parent interface contract:** `docs/plans/issue-1602-riser-analysis-contract-v1.yaml`
-> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6}/`
-> **Boundary-refactor review:** `scripts/review/results/issue-1602-round-7/`
+> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6,7}/`
+> **Boundary-refactor review:** `scripts/review/results/issue-1602-round-8/`
 
 ---
 
@@ -100,7 +100,7 @@ by their child issues, not a parent runtime regression.
 | Licensed execution | Deckhand #568 | request verification, canary/receipt schemas, signatures, transport, host policy | executor will not self-authorize; real solver receipt binds raw payload |
 | Public release | DM #1604 | Parquet configs, joins, leak rules, manifest, HF transaction, closeout verifier implementation | public-safe rows only; exact immutable release; no mock or unsigned results |
 | Website | Website #75 | capability schema, renderer changes, tests, deployment proof | verified HF release first; withheld values never render |
-| Parent closeout | DM #1602 | invoke landed verifier after every child and website complete | only parent will decide program completion |
+| Parent closeout | DM #1602 | invoke landed verifier after every #1602-scoped child milestone and website complete | only parent will decide program completion |
 
 No child will redefine another child's output. A consumer may tighten validation
 but will reject, not reinterpret, an unknown producer version.
@@ -108,7 +108,7 @@ but will reject, not reinterpret, an unknown producer version.
 ## Cross-Layer Interface Contract
 
 `docs/plans/issue-1602-riser-analysis-contract-v1.yaml` will be the sole
-normative parent interface. It will define six envelope boundaries:
+normative parent interface. It will define twelve envelope boundaries:
 
 1. `normalized_case` will bind public/safe provenance, configuration and case
    identities, units, confidentiality, redistribution, and eligibility.
@@ -121,26 +121,35 @@ normative parent interface. It will define six envelope boundaries:
 5. `execution_request` will be authorized and signed by #138 using #568's
    reviewed request schema; Deckhand will only verify and execute it.
 6. `execution_receipt` will be independently signed by Deckhand and will bind
-   the native model, solver identity, semantic status, and pre-existing raw
-   solver payload.
+   the immutable signed request, requester authorization, requested stages,
+   native model, solver identity, semantic status, and pre-existing raw solver
+   payload.
 7. `engineering_result` will be produced after receipt verification and will
    bind #138's complete derived result plus oracle and licensed-validation
    evidence without entering the raw-payload/receipt preimage.
-8. `public_release` will bind eligibility, clean-room, authenticated joins,
-   decoded leak rules/evidence, legal/license evidence, exact HF tree, and
-   remote semantics to one immutable release.
-9. `website_evidence` will bind the exact release envelope and HF commit to the
-   deployed website commit, route, and rendered release ID.
-10. #1604 will implement the typed closeout verifier, but `program_closeout`
-    will be invoked and produced by #1602 only after every child is complete.
+8. `logical_release` will bind eligibility, clean-room, authenticated joins,
+   result/criteria/oracle contracts, decoded leak evidence, and legal/license
+   evidence before publication.
+9. `HF_publication_receipt` will bind that logical release to the exact HF
+   repository commit, tree verification, and remote semantic verification.
+10. `website_evidence` will bind the logical release, HF publication receipt,
+    and exact HF commit to the deployed website commit, route, and rendered
+    release ID.
+11. #1604 will implement the typed closeout verifier, but `program_closeout`
+    will be invoked and produced by #1602 only after every #1602-scoped child
+    milestone is complete.
+12. The closeout envelope will bind the reviewed parent interface and verifier
+    versions to fresh HF and website retrieval evidence at invocation time.
 
 The parent identity order will be public source/commitment → normalized
-configuration → case → analysis request → bundle → native model → raw solver
-payload → signed execution receipt → engineering result → public release → HF
-commit. Each producer will freeze and test its complete owned schema before
-implementation. Each consumer will verify the shared envelope and exact
-approved producer version before processing. Unknown versions, mismatched IDs
-or hashes, absent evidence, and silent coercion will fail.
+configuration → case → analysis request → bundle → authorized execution request
+→ native model → raw solver payload → signed execution receipt → engineering
+result → logical release → HF commit → publication receipt → website evidence.
+Each producer will freeze and
+test its complete owned schema before implementation. Each consumer will verify
+the shared envelope and exact approved producer version before processing.
+Unknown versions, mismatched IDs or hashes, absent evidence, and silent coercion
+will fail.
 
 The v1 public release will retain thirteen required query surfaces:
 `source_registry`, `transformations`, `citations`, `criteria`,
@@ -203,9 +212,11 @@ for each inventoried source:
     repair or reject malformed public source rows
     normalize only eligible public or clean-room synthetic inputs
     emit versioned normalized_case envelope
-    generate deterministic_bundle envelope
 
 for each eligible requested case:
+    require the approved analysis_contract envelope
+    generate the family-owned analysis request
+    generate deterministic_bundle envelope bound to that request
     submit authorized bundle to licensed execution owner
     require real canary, semantic solver success, and signed receipt
     extract child-defined strength and operability results
@@ -264,7 +275,8 @@ remain mandatory before publication.
    signed receipt over the raw result payload.
 6. #138 will perform post-run licensed validation, completeness checks, and
    independent oracles before emitting the engineering result.
-7. #1604 will build, scan, publish, and remotely verify the release.
+7. #1604 will freeze and verify the logical release, publish it, then emit and
+   remotely verify the HF publication receipt.
 8. Website #75 will register and deploy the verified immutable release.
 9. #1604's landed closeout verifier will retrieve all evidence when invoked by
    #1602; the parent will close
@@ -311,10 +323,12 @@ start before its upstream interface and its own approval gate are complete.
   licenses, safe public source evidence, limitations, and issue-linked
   withholding reasons.
 - [ ] The website will deploy the exact reviewed commit, return HTTP 200, render
-  the expected release ID, bind the exact HF commit/release envelope, and omit
-  withheld names and values.
-- [ ] Every child will pass TDD, legal scan, artifact review, issue summary,
-  landed-ancestry verification, and completeness requirements.
+  the expected release ID, bind the logical release, exact HF commit, and HF
+  publication receipt, and omit withheld names and values.
+- [ ] Every #1602-scoped child milestone will pass TDD, legal scan, artifact
+  review, issue summary, landed-ancestry verification, and completeness
+  requirements; a broader child issue may remain open for explicitly later
+  scope such as fatigue.
 - [ ] Parent closeout will be computed from authoritative live evidence and will
   fail if any required evidence is missing or inconsistent.
 
@@ -328,19 +342,21 @@ import yaml
 p = Path("docs/plans/issue-1602-riser-analysis-contract-v1.yaml")
 c = yaml.safe_load(p.read_text())
 assert c["contract_id"] == "digitalmodel-riser-analysis-parent-interface"
-assert c["contract_version"] == "2.0.0-draft.2"
+assert c["contract_version"] == "2.0.0-draft.3"
 owners = c["owners"]
 required_owners = {"source_repair", "normalized_ssot", "drilling_workflow",
                    "analysis_semantics", "licensed_execution", "public_release",
                    "website", "parent_closeout"}
 assert set(owners) == required_owners
+assert set(c["planning_validation"]["required_owners"]) == required_owners
 envelopes = c["interface_envelopes"]
 required_envelopes = {"normalized_case", "analysis_contract",
     "drilling_analysis_request", "completion_workover_analysis_request",
     "deterministic_bundle", "execution_request", "execution_receipt",
-    "engineering_result", "public_release", "website_evidence",
-    "program_closeout"}
+    "engineering_result", "logical_release", "HF_publication_receipt",
+    "website_evidence", "program_closeout"}
 assert set(envelopes) == required_envelopes
+assert set(c["planning_validation"]["required_envelopes"]) == required_envelopes
 assert c["global_coordinate_contract"]["axes"] == "ENU_right_handed"
 assert len(c["public_dataset_surfaces"]["required_configs"]) == 13
 assert set(c["child_acceptance_obligations"]) == {
@@ -357,14 +373,31 @@ assert envelopes["execution_request"]["producer"] != envelopes["execution_receip
 normalized = set(envelopes["normalized_case"]["minimum_bindings"])
 assert {"configuration_id", "configuration_sha256",
         "public_source_sha256_or_safe_provenance_commitment_sha256"} <= normalized
-release = set(envelopes["public_release"]["minimum_bindings"])
+assert "public_release" in envelopes["normalized_case"]["consumers"]
+assert "public_release" in envelopes["analysis_contract"]["consumers"]
+release = set(envelopes["logical_release"]["minimum_bindings"])
 assert {"public_eligibility_evidence_sha256", "clean_room_evidence_set_sha256",
         "authenticated_join_evidence_sha256", "decoded_leak_evidence_sha256",
         "legal_license_evidence_sha256"} <= release
 website = set(envelopes["website_evidence"]["minimum_bindings"])
-assert {"release_envelope_sha256", "HF_commit_sha"} <= website
+assert {"logical_release_sha256", "HF_commit_sha",
+        "HF_publication_receipt_sha256", "website_evidence_sha256"} <= website
+for propagation in c["required_binding_propagation"]:
+    source, target = [part.strip() for part in propagation.split("->")]
+    source_envelope, source_field = source.split(".", 1)
+    target_envelope, target_field = target.split(".", 1)
+    assert source_field == target_field
+    assert source_field in envelopes[source_envelope]["minimum_bindings"]
+    assert target_field in envelopes[target_envelope]["minimum_bindings"]
 order = c["identity_chain"]["order"]
+assert order.index("deterministic_bundle") < order.index("execution_request") < order.index("native_model")
 assert order.index("raw_solver_payload") < order.index("execution_receipt") < order.index("engineering_result_payload")
+assert order.index("logical_release") < order.index("HF_commit") < order.index("HF_publication_receipt") < order.index("website_evidence")
+closeout = set(envelopes["program_closeout"]["minimum_bindings"])
+assert {"parent_interface_version", "parent_interface_sha256",
+        "closeout_verifier_version", "closeout_verifier_commit",
+        "closeout_invoked_at", "fresh_HF_retrieval_evidence_sha256",
+        "fresh_website_retrieval_evidence_sha256"} <= closeout
 edges = [tuple(part.strip() for part in edge.split("->"))
          for edge in c["milestone_DAG"]["edges"]]
 nodes = set(c["milestone_DAG"]["milestone_owners"])
@@ -391,7 +424,15 @@ xmllint --html --noout \
   docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html
 ! rg -n 'TO''DO|TB''D|<re''po>|N''NN' \
   docs/plans/2026-07-16-issue-1602-riser-data-orcaflex-hf-plan.md
-for f in scripts/review/results/issue-1602-round-6/*.md; do test -s "$f"; done
+for f in scripts/review/results/issue-1602-round-7/*.md; do test -s "$f"; done
+gh issue view 811 -R vamseeachanta/digitalmodel --json body --jq .body |
+  rg -F '#1603 exclusively owns the global coordinate transform.'
+gh issue view 568 -R vamseeachanta/deckhand --json body --jq .body |
+  rg -F 'emit only the execution-receipt bindings required by #1602.'
+gh issue view 1604 -R vamseeachanta/digitalmodel --json body --jq .body |
+  rg -F 'digitalmodel #1602 owns the parent cross-layer interface.'
+gh issue view 75 -R vamseeachanta/aceengineer-website --json body --jq .body |
+  rg -F '`HF_publication_receipt_sha256`'
 cd ../../workspace-hub
 bash scripts/legal/legal-sanity-scan.sh \
   --repo=../agent-worktrees/dm-1602-design --diff-only
@@ -410,13 +451,14 @@ contract-depth refactor on 2026-07-16.
 This revision will preserve every cross-layer safety outcome from those reviews
 while moving exact schema/receipt/validator design to its accountable child.
 Round 6 reviewed the new boundary and returned unanimous MAJOR on independent
-request authority, the #138/#568 lifecycle split, missing #811/completion
-request envelopes, identity ordering, release-security evidence bindings, and
-validator depth. Draft 2 will add an explicit acyclic milestone DAG, separate
-request/receipt producers, raw-payload-before-receipt ordering, family request
-owners, model/oracle bindings, security-rich release/closeout envelopes, and an
-executable DAG/authority/evidence validator. Round 7 will re-review only this
-interface boundary. Any MAJOR will keep the plan in draft.
+request authority, the #138/#568 lifecycle split, missing family request
+envelopes, identity ordering, release-security evidence bindings, and validator
+depth. Round 7 found the remaining interface joins: #1604 consumer edges,
+signed request propagation, result/criteria/oracle propagation, an acyclic
+logical-release/publication split, website/closeout receipt hashes, surface-
+specific row evidence, and #1602-scoped milestone closeout. Draft 3 will close
+those joins and Round 8 will re-review only this interface boundary. Any MAJOR
+will keep the plan in draft.
 
 | Review wave | Verdict | Disposition |
 |---|---|---|
@@ -426,9 +468,10 @@ interface boundary. Any MAJOR will keep the plan in draft.
 | Rounds 4–5 | MAJOR | parent over-specification and non-executable nested contracts identified |
 | Owner boundary decision | APPROVED | parent will own interfaces/gates; children will own exact executable contracts |
 | Round 6 boundary review | MAJOR | trust direction, #138/#568 cycle, missing request/model/oracle/security bindings, stale live source-hash criterion, shallow validator |
-| Round 7 boundary review | PENDING | — |
+| Round 7 boundary review | MAJOR | missing consumer edges and binding propagation; release/HF cycle; stale live ownership text; closeout freshness gaps |
+| Round 8 boundary review | PENDING | — |
 
-**Overall result:** PENDING ROUND 7
+**Overall result:** PENDING ROUND 8
 
 ## Risks and Open Questions
 
