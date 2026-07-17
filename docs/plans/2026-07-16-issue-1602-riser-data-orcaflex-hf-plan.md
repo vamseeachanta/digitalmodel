@@ -8,8 +8,8 @@
 > **Lane:** lane:codex
 > **Design:** `docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html`
 > **Parent interface contract:** `docs/plans/issue-1602-riser-analysis-contract-v1.yaml`
-> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6,7,8,9,10,11}/`
-> **Boundary-refactor review:** `scripts/review/results/issue-1602-round-12/`
+> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6,7,8,9,10,11,12}/`
+> **Boundary-refactor review:** `scripts/review/results/issue-1602-round-13/`
 
 ---
 
@@ -342,7 +342,7 @@ import yaml
 p = Path("docs/plans/issue-1602-riser-analysis-contract-v1.yaml")
 c = yaml.safe_load(p.read_text())
 assert c["contract_id"] == "digitalmodel-riser-analysis-parent-interface"
-assert c["contract_version"] == "2.0.0-draft.7"
+assert c["contract_version"] == "2.0.0-draft.8"
 owners = c["owners"]
 required_owners = {"source_repair", "normalized_ssot", "drilling_workflow",
                    "analysis_semantics", "licensed_execution", "public_release",
@@ -517,7 +517,15 @@ assert c["envelope_commitment_rules"] == {
         "commitment_field": "execution_receipt_sha256",
         "covers": "every_minimum_binding_except_commitment_field",
         "authentication": "host_signature_covers_commitment",
-        "canonical_preimage_owner": "licensed_execution"}}
+        "canonical_preimage_owner": "licensed_execution"},
+    "execution_request": {
+        "commitment_field": "execution_request_sha256",
+        "covers": "every_minimum_binding_except_excluded_self_referential_fields",
+        "excluded_self_referential_fields": ["execution_request_sha256",
+                                              "requester_signature_sha256"],
+        "authentication": "requester_signature_covers_commitment",
+        "canonical_preimage_owner": "licensed_execution",
+        "signature_producer": "analysis_semantics"}}
 assert c["closeout_observation_rules"] == {
     "fresh_HF_required_checks": ["head_equals_published_commit",
         "exact_tree_recomputed", "datasets_server_valid",
@@ -614,7 +622,7 @@ xmllint --html --noout \
   docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html
 ! rg -n 'TO''DO|TB''D|<re''po>|N''NN' \
   docs/plans/2026-07-16-issue-1602-riser-data-orcaflex-hf-plan.md
-for f in scripts/review/results/issue-1602-round-11/*.md; do test -s "$f"; done
+for f in scripts/review/results/issue-1602-round-12/*.md; do test -s "$f"; done
 gh issue view 811 -R vamseeachanta/digitalmodel --json body --jq .body |
   rg -F '#1603 exclusively owns the global coordinate transform.'
 gh issue view 568 -R vamseeachanta/deckhand --json body --jq .body |
@@ -668,8 +676,13 @@ enforced full legal-scan obligations. Round 11 found two remaining narrow gaps:
 the hard validator did not expand selected-request fields over every concrete
 route, and the authenticated execution receipt did not normatively commit every
 receipt binding. Draft 7 will close both while leaving exact receipt preimages
-and verification with Deckhand. Round 12 will re-review only this interface
-boundary. Any MAJOR will keep the plan in draft.
+and verification with Deckhand. Round 12 approved data and release but found the
+symmetric request-authorization gap: requester authentication did not
+normatively cover every request binding. Draft 8 will require the requester
+signature to authenticate a commitment over every non-self-referential request
+binding while leaving the exact preimage, signature format, and verifier with
+Deckhand. Round 13 will re-review only this interface boundary. Any MAJOR will
+keep the plan in draft.
 
 | Review wave | Verdict | Disposition |
 |---|---|---|
@@ -684,9 +697,10 @@ boundary. Any MAJOR will keep the plan in draft.
 | Round 9 boundary review | MAJOR | conditional family ambiguity, partial envelope commitments, unbound fresh retrieval, stale review check, failing unrelated full scan |
 | Round 10 boundary review | MAJOR | family routing starts after normalization; envelope commitment coverage unstated; fresh HF/site semantics incomplete; full-scan gate prose-only |
 | Round 11 boundary review | MAJOR | selected-request route fields under-validated; authenticated receipt coverage unstated |
-| Round 12 boundary review | PENDING | — |
+| Round 12 boundary review | MAJOR | data/release APPROVE; requester-authenticated request commitment coverage unstated |
+| Round 13 boundary review | PENDING | — |
 
-**Overall result:** PENDING ROUND 12
+**Overall result:** PENDING ROUND 13
 
 ## Risks and Open Questions
 
