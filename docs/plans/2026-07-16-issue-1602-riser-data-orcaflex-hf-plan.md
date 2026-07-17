@@ -8,8 +8,8 @@
 > **Lane:** lane:codex
 > **Design:** `docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html`
 > **Parent interface contract:** `docs/plans/issue-1602-riser-analysis-contract-v1.yaml`
-> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6,7,8,9}/`
-> **Boundary-refactor review:** `scripts/review/results/issue-1602-round-10/`
+> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6,7,8,9,10}/`
+> **Boundary-refactor review:** `scripts/review/results/issue-1602-round-11/`
 
 ---
 
@@ -342,7 +342,7 @@ import yaml
 p = Path("docs/plans/issue-1602-riser-analysis-contract-v1.yaml")
 c = yaml.safe_load(p.read_text())
 assert c["contract_id"] == "digitalmodel-riser-analysis-parent-interface"
-assert c["contract_version"] == "2.0.0-draft.5"
+assert c["contract_version"] == "2.0.0-draft.6"
 owners = c["owners"]
 required_owners = {"source_repair", "normalized_ssot", "drilling_workflow",
                    "analysis_semantics", "licensed_execution", "public_release",
@@ -369,7 +369,7 @@ assert set(c["source_of_truth"]["forbidden_public"]) == {
     "client_identifiers", "project_identifiers", "secrets",
     "private_source_hashes", "mock_solver_results"}
 assert set(c["child_acceptance_obligations"]) == {
-    "normalized_ssot", "drilling_workflow", "analysis_semantics",
+    "source_repair", "normalized_ssot", "drilling_workflow", "analysis_semantics",
     "licensed_execution", "public_release", "website"}
 for name, envelope in envelopes.items():
     assert envelope["producer"] in owners
@@ -394,14 +394,7 @@ assert {"logical_release_sha256", "HF_commit_sha",
 def expand_handoffs(rules):
     expanded = set()
     for rule in rules:
-        conditional = "from_any_of" in rule
-        sources = rule.get("from_any_of", [rule.get("from")])
-        if conditional:
-            assert rule["selection"] == "exactly_one_source_matching_discriminator"
-            discriminator = rule["discriminator_field"]
-            assert discriminator in envelopes[rule["to"]]["minimum_bindings"]
-            assert all(discriminator in envelopes[s]["minimum_bindings"]
-                       for s in sources)
+        sources = [rule["from"]]
         assert all(s in envelopes for s in sources)
         assert rule["to"] in envelopes
         pairs = [(field, field) for field in rule.get("fields", [])]
@@ -413,23 +406,31 @@ def expand_handoffs(rules):
                 expanded.add((source, source_field, rule["to"], target_field))
     return expanded
 
+family_routing = c["required_family_routing"]
+assert family_routing == {
+    "discriminator_field": "riser_family",
+    "allowed_routes": {
+        "drilling": "drilling_analysis_request",
+        "completion": "completion_workover_analysis_request",
+        "workover": "completion_workover_analysis_request"},
+    "selection": "exactly_one_route_per_normalized_case_and_bundle",
+    "handoffs": [
+        {"from": "normalized_case", "to": "selected_request",
+         "fields": ["riser_family", "case_id", "case_sha256"]},
+        {"from": "selected_request", "to": "deterministic_bundle",
+         "fields": ["riser_family", "analysis_request_id", "case_id",
+                    "case_sha256", "model_contract_sha256"]}]}
+for request_envelope in set(family_routing["allowed_routes"].values()):
+    assert "riser_family" in envelopes[request_envelope]["minimum_bindings"]
+assert "riser_family" in envelopes["normalized_case"]["minimum_bindings"]
+assert "riser_family" in envelopes["deterministic_bundle"]["minimum_bindings"]
+
 expected_handoffs = {
-    ("normalized_case", f, target, f)
-    for target in ("drilling_analysis_request",
-                   "completion_workover_analysis_request")
-    for f in ("riser_family", "case_id", "case_sha256")
-} | {
     ("analysis_contract", "model_contract_sha256", target,
      "model_contract_sha256")
     for target in ("drilling_analysis_request",
                    "completion_workover_analysis_request",
                    "deterministic_bundle")
-} | {
-    (source, f, "deterministic_bundle", f)
-    for source in ("drilling_analysis_request",
-                   "completion_workover_analysis_request")
-    for f in ("riser_family", "analysis_request_id", "case_id", "case_sha256",
-              "model_contract_sha256")
 } | {
     ("deterministic_bundle", f, "execution_request", f)
     for f in ("case_id", "case_sha256", "analysis_request_id",
@@ -472,20 +473,48 @@ expected_handoffs = {
      "fresh_HF_observed_repo_id"),
     ("HF_publication_receipt", "HF_commit_sha", "program_closeout",
      "fresh_HF_observed_commit_sha"),
+    ("HF_publication_receipt", "HF_commit_sha", "program_closeout",
+     "fresh_HF_observed_head_sha"),
     ("HF_publication_receipt", "logical_release_sha256", "program_closeout",
      "fresh_HF_observed_logical_release_sha256"),
     ("HF_publication_receipt", "HF_publication_receipt_sha256",
      "program_closeout", "fresh_HF_observed_publication_receipt_sha256"),
     ("website_evidence", "deployment_id", "program_closeout",
      "fresh_website_observed_deployment_id"),
+    ("website_evidence", "website_commit_sha", "program_closeout",
+     "fresh_website_observed_commit_sha"),
     ("website_evidence", "public_route", "program_closeout",
      "fresh_website_observed_route"),
     ("website_evidence", "rendered_release_id", "program_closeout",
      "fresh_website_observed_rendered_release_id"),
+    ("website_evidence", "logical_release_sha256", "program_closeout",
+     "fresh_website_observed_logical_release_sha256"),
+    ("website_evidence", "HF_commit_sha", "program_closeout",
+     "fresh_website_observed_HF_commit_sha"),
+    ("website_evidence", "HF_publication_receipt_sha256", "program_closeout",
+     "fresh_website_observed_HF_publication_receipt_sha256"),
     ("website_evidence", "website_evidence_sha256", "program_closeout",
      "fresh_website_observed_website_evidence_sha256"),
 }
 assert expand_handoffs(c["required_handoff_equalities"]) == expected_handoffs
+assert c["envelope_commitment_rules"] == {
+    "normalized_case": {
+        "commitment_field": "normalized_case_envelope_sha256",
+        "covers": "every_minimum_binding_except_commitment_field",
+        "canonical_preimage_owner": "normalized_ssot"},
+    "engineering_result": {
+        "commitment_field": "engineering_result_envelope_sha256",
+        "covers": "every_minimum_binding_except_commitment_field",
+        "canonical_preimage_owner": "analysis_semantics"}}
+assert c["closeout_observation_rules"] == {
+    "fresh_HF_required_checks": ["head_equals_published_commit",
+        "exact_tree_recomputed", "datasets_server_valid",
+        "configs_splits_features_rows_and_release_ID_reverified"],
+    "fresh_website_required_checks": [
+        "deployed_commit_equals_reviewed_commit", "HTTP_status_200",
+        "fetched_content_or_DOM_verified",
+        "rendered_logical_release_HF_commit_and_publication_receipt_match"],
+    "evidence_commitments_cover_every_observed_field_and_check_result": True}
 expected_derivations = {
     (("normalized_case.normalized_case_envelope_sha256[*]",),
      "logical_release.normalized_case_set_sha256",
@@ -496,15 +525,24 @@ expected_derivations = {
     (("program_closeout.fresh_HF_retrieved_at",
       "program_closeout.fresh_HF_observed_repo_id",
       "program_closeout.fresh_HF_observed_commit_sha",
+      "program_closeout.fresh_HF_observed_head_sha",
       "program_closeout.fresh_HF_observed_logical_release_sha256",
-      "program_closeout.fresh_HF_observed_publication_receipt_sha256"),
+      "program_closeout.fresh_HF_observed_publication_receipt_sha256",
+      "program_closeout.fresh_HF_exact_tree_evidence_sha256",
+      "program_closeout.fresh_HF_semantic_remote_evidence_sha256"),
      "program_closeout.fresh_HF_retrieval_evidence_sha256",
      "child_defined_fresh_authenticated_retrieval_commitment"),
     (("program_closeout.fresh_website_retrieved_at",
       "program_closeout.fresh_website_observed_deployment_id",
+      "program_closeout.fresh_website_observed_commit_sha",
+      "program_closeout.fresh_website_HTTP_status",
       "program_closeout.fresh_website_observed_route",
       "program_closeout.fresh_website_observed_rendered_release_id",
-      "program_closeout.fresh_website_observed_website_evidence_sha256"),
+      "program_closeout.fresh_website_observed_logical_release_sha256",
+      "program_closeout.fresh_website_observed_HF_commit_sha",
+      "program_closeout.fresh_website_observed_HF_publication_receipt_sha256",
+      "program_closeout.fresh_website_observed_website_evidence_sha256",
+      "program_closeout.fresh_website_content_evidence_sha256"),
      "program_closeout.fresh_website_retrieval_evidence_sha256",
      "child_defined_fresh_authenticated_retrieval_commitment"),
 }
@@ -534,6 +572,10 @@ assert {"parent_interface_version", "parent_interface_sha256",
         "fresh_website_retrieval_evidence_sha256"} <= closeout
 assert c["planning_validation"]["require_identity_chain_nodes_have_owner_or_envelope_binding"]
 assert c["planning_validation"]["require_security_evidence_in_release_and_closeout"]
+assert c["planning_validation"]["require_full_child_and_release_legal_scans"]
+assert all("full_applicable_repository_legal_scan" in obligations
+           for obligations in c["child_acceptance_obligations"].values())
+assert "full_release_tree_legal_scan" in c["child_acceptance_obligations"]["public_release"]
 edges = [tuple(part.strip() for part in edge.split("->"))
          for edge in c["milestone_DAG"]["edges"]]
 nodes = set(c["milestone_DAG"]["milestone_owners"])
@@ -560,7 +602,7 @@ xmllint --html --noout \
   docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html
 ! rg -n 'TO''DO|TB''D|<re''po>|N''NN' \
   docs/plans/2026-07-16-issue-1602-riser-data-orcaflex-hf-plan.md
-for f in scripts/review/results/issue-1602-round-9/*.md; do test -s "$f"; done
+for f in scripts/review/results/issue-1602-round-10/*.md; do test -s "$f"; done
 gh issue view 811 -R vamseeachanta/digitalmodel --json body --jq .body |
   rg -F '#1603 exclusively owns the global coordinate transform.'
 gh issue view 568 -R vamseeachanta/deckhand --json body --jq .body |
@@ -605,8 +647,13 @@ were not derived from the release/site identities, and the declared full legal
 scan included unrelated historical residue. Draft 5 will add exact-one family
 discrimination, complete-envelope set commitments, fresh retrieval derivations,
 exact security baselines, and a passing diff-scoped plan scan while retaining
-full applicable scans at implementation/release gates. Round 10 will re-review
-only this interface boundary. Any MAJOR will keep the plan in draft.
+full applicable scans at implementation/release gates. Round 10 found that
+exact-one family routing began too late, complete-envelope coverage was not an
+explicit invariant, and closeout did not freshly prove HF semantics or fetched
+website state. Draft 6 will add exhaustive case-to-request routing, complete-
+envelope commitment rules, live HF/site observation rules, and validator-
+enforced full legal-scan obligations. Round 11 will re-review only this
+interface boundary. Any MAJOR will keep the plan in draft.
 
 | Review wave | Verdict | Disposition |
 |---|---|---|
@@ -619,9 +666,10 @@ only this interface boundary. Any MAJOR will keep the plan in draft.
 | Round 7 boundary review | MAJOR | missing consumer edges and binding propagation; release/HF cycle; stale live ownership text; closeout freshness gaps |
 | Round 8 boundary review | MAJOR | incomplete lifecycle equality matrix, missing result-set commitment and rendered-release-ID binding, non-exhaustive validator |
 | Round 9 boundary review | MAJOR | conditional family ambiguity, partial envelope commitments, unbound fresh retrieval, stale review check, failing unrelated full scan |
-| Round 10 boundary review | PENDING | — |
+| Round 10 boundary review | MAJOR | family routing starts after normalization; envelope commitment coverage unstated; fresh HF/site semantics incomplete; full-scan gate prose-only |
+| Round 11 boundary review | PENDING | — |
 
-**Overall result:** PENDING ROUND 10
+**Overall result:** PENDING ROUND 11
 
 ## Risks and Open Questions
 
