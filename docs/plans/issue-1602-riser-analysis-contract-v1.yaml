@@ -1,5 +1,5 @@
 contract_id: digitalmodel-riser-analysis-parent-interface
-contract_version: 2.0.0-draft.10
+contract_version: 2.0.0-draft.11
 status: planning-interface
 authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
 approved_design: 2026-07-16-issue-1602-riser-hf-analysis-design.html
@@ -20,6 +20,7 @@ source_of_truth:
   derived_only: analysis_requests_bundles_native_models_and_solver_results
   public_projection: release_approved_inputs_results_and_provenance
   forbidden_public: [raw_DAT, raw_YML, raw_YAML, confidential_models,
+    native_solver_model_artifacts,
     licensed_text, machine_paths, user_identifiers, client_identifiers,
     project_identifiers, secrets, private_source_hashes, mock_solver_results]
 
@@ -35,7 +36,7 @@ solver_neutrality_contract:
   adapter_rule: versioned_target_adapter_projects_SSOT_without_back_write
   first_execution_target: OrcaFlex
   future_execution_targets: open_including_custom_FEA
-  target_gap_rule: fail_or_record_explicit_non_equivalence_never_guess
+  target_gap_rule: unsupported_or_non_equivalent_mapping_emits_terminal_adapter_failure_and_never_executes
   result_rule: every_result_maps_to_generic_quantity_location_and_criterion_contracts
   pivot_acceptance: new_solver_requires_adapter_and_target_validation_not_SSOT_reauthoring
 
@@ -119,7 +120,9 @@ interface_envelopes:
       analysis_request_id,
       model_contract_sha256, generic_parameter_contract_sha256,
       solver_target_id, solver_adapter_contract_sha256,
-      solver_projection_sha256, adapter_version, generator_commit,
+      solver_projection_sha256, target_semantic_coverage_status,
+      target_semantic_mapping_evidence_sha256,
+      target_gap_disposition_sha256, adapter_version, generator_commit,
       bundle_sha256, file_manifest_sha256]
   execution_request:
     schema_owner: licensed_execution
@@ -132,7 +135,9 @@ interface_envelopes:
       case_id, case_sha256, analysis_request_id, bundle_sha256,
       model_contract_sha256, generic_parameter_contract_sha256,
       solver_target_id, solver_adapter_contract_sha256,
-      solver_projection_sha256, requested_solver_stages_sha256]
+      solver_projection_sha256, target_semantic_coverage_status,
+      target_semantic_mapping_evidence_sha256,
+      target_gap_disposition_sha256, requested_solver_stages_sha256]
   execution_receipt:
     producer: licensed_execution
     consumers: [analysis_semantics, public_release]
@@ -142,7 +147,9 @@ interface_envelopes:
       case_id, case_sha256, analysis_request_id, bundle_sha256,
       model_contract_sha256, generic_parameter_contract_sha256,
       solver_target_id, solver_adapter_contract_sha256,
-      solver_projection_sha256, native_model_sha256, solver_identity_sha256,
+      solver_projection_sha256, target_semantic_coverage_status,
+      target_semantic_mapping_evidence_sha256,
+      target_gap_disposition_sha256, native_model_sha256, solver_identity_sha256,
       semantic_status, raw_solver_payload_sha256, host_signer_principal_id,
       execution_receipt_sha256]
   engineering_result:
@@ -152,6 +159,9 @@ interface_envelopes:
       criteria_contract_sha256, oracle_contract_sha256, case_id, case_sha256,
       generic_parameter_contract_sha256, solver_target_id,
       solver_adapter_contract_sha256, solver_projection_sha256,
+      target_semantic_coverage_status,
+      target_semantic_mapping_evidence_sha256,
+      target_gap_disposition_sha256,
       execution_receipt_sha256, raw_solver_payload_sha256,
       engineering_result_payload_sha256, quantity_unit_contract_sha256,
       criterion_citation_contract_sha256, completeness_status,
@@ -277,9 +287,12 @@ promotion_gates:
   normalized_to_bundle: [approved_schema, complete_mapping,
     generic_parameter_contract_bound, no_implicit_defaults,
     versioned_solver_adapter, no_adapter_back_write,
+    target_semantic_mapping_evidence_bound,
     deterministic_generation, bundle_hash_verified]
   bundle_to_execution: [independently_authorized_request, safe_transport,
     target_specific_runtime_preflight, target_specific_real_canary,
+    target_semantic_coverage_complete,
+    unsupported_or_non_equivalent_mapping_is_terminal,
     bundle_model_generic_parameter_adapter_and_projection_binding]
   execution_to_result: [approved_solver_target,
     target_specific_execution_evidence, requested_stages_complete,
@@ -307,6 +320,7 @@ global_invariants:
   - solver_specific_models_settings_and_defaults_are_derived_adapter_outputs_only
   - solver_adapter_never_back_writes_defaults_or_names_into_canonical_SSOT
   - adding_a_solver_target_requires_no_canonical_SSOT_schema_fork
+  - unsupported_or_non_equivalent_target_mapping_never_reaches_execution
   - v1_executes_OrcaFlex_but_parent_interfaces_remain_solver_agnostic
   - private_inputs_may_support_private_QA_but_never_seed_public_rows
   - every_eligible_family_has_baseline_statics_and_complete_requested_outputs
@@ -348,6 +362,7 @@ child_acceptance_obligations:
     full_applicable_repository_legal_scan]
   public_release: [exact_13_config_schemas,
     authenticated_cross_layer_joins, surface_specific_row_evidence_matrix,
+    reject_all_native_solver_model_artifacts_independent_of_format,
     ruleset_bound_decoded_leak_scan, atomic_exact_tree_HF_publication,
     head_bound_remote_semantics, full_applicable_repository_legal_scan,
     full_release_tree_legal_scan,
@@ -411,19 +426,26 @@ required_handoff_equalities:
     fields: [case_id, case_sha256, analysis_request_id, bundle_sha256,
        model_contract_sha256, generic_parameter_contract_sha256,
        solver_target_id, solver_adapter_contract_sha256,
-       solver_projection_sha256]}
+       solver_projection_sha256, target_semantic_coverage_status,
+       target_semantic_mapping_evidence_sha256,
+       target_gap_disposition_sha256]}
   - {from: execution_request, to: execution_receipt,
      fields: [execution_request_id, execution_request_sha256,
        requester_signature_sha256, authorization_evidence_sha256,
        requested_solver_stages_sha256, case_id, case_sha256,
        analysis_request_id, bundle_sha256, model_contract_sha256,
        generic_parameter_contract_sha256, solver_target_id,
-       solver_adapter_contract_sha256, solver_projection_sha256]}
+       solver_adapter_contract_sha256, solver_projection_sha256,
+       target_semantic_coverage_status,
+       target_semantic_mapping_evidence_sha256,
+       target_gap_disposition_sha256]}
   - {from: execution_receipt, to: engineering_result,
     fields: [case_id, case_sha256, execution_receipt_sha256,
        raw_solver_payload_sha256, generic_parameter_contract_sha256,
        solver_target_id, solver_adapter_contract_sha256,
-       solver_projection_sha256]}
+       solver_projection_sha256, target_semantic_coverage_status,
+       target_semantic_mapping_evidence_sha256,
+       target_gap_disposition_sha256]}
   - {from: analysis_contract, to: engineering_result,
      fields: [result_contract_version, result_contract_sha256,
        criteria_contract_sha256,

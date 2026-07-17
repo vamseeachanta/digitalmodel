@@ -53,7 +53,7 @@
   <section id="goal">
     <h2>1. Goal and boundaries</h2>
     <p>The program will establish one solver-neutral source of truth for drilling and completion/workover riser configurations. It will generate deterministic target-solver models for every eligible configuration and publish traceable normalized inputs and verified results to <code>aceengineer/digitalmodel-riser-analysis</code>. OrcaFlex will be the first licensed execution target; custom FEA and future solvers will use the same canonical cases through versioned adapters.</p>
-    <p>The first public release will include public-safe drilling inputs and explicitly synthetic completion reference cases. It will not publish raw OrcaFlex DAT/YAML files, private/client material, licensed standards content, embedded machine metadata, or results whose capacity basis lacks a valid citation.</p>
+    <p>The first public release will include public-safe drilling inputs and explicitly synthetic completion reference cases. It will not publish any native solver model artifact—OrcaFlex DAT/YAML, future FEA decks/databases, or other target-specific model files—private/client material, licensed standards content, embedded machine metadata, or results whose capacity basis lacks a valid citation.</p>
     <div class="callout warning"><strong>Non-substitution rule:</strong> a synthetic completion reference case will not be presented as a recovered field, vendor, client, or measured configuration. Confidential completion models will remain withheld until a separately approved promotion decision establishes redistribution and disclosure safety.</div>
   </section>
 
@@ -107,7 +107,7 @@
       <li><strong>Registry:</strong> will inventory each candidate once, record its canonical/duplicate relationship, and fail closed when ownership, license, or provenance is unknown.</li>
       <li><strong>Normalizer:</strong> will parse allowlisted fields, reject malformed row widths and non-finite values, convert declared units to SI, and retain source-field lineage.</li>
       <li><strong>Case compiler:</strong> will combine one normalized configuration with explicit loading/environment data without filling unknown engineering values by guesswork.</li>
-      <li><strong>Adapter interface:</strong> will project the immutable generic case into a target model and emit target ID, adapter-contract hash, projection hash, and deterministic manifest. It will fail on unsupported semantics and will never back-write solver names or defaults into the SSOT.</li>
+      <li><strong>Adapter interface:</strong> will project the immutable generic case into a target model and emit target ID, adapter-contract hash, projection hash, semantic-coverage status, mapping evidence, target-gap disposition, and deterministic manifest. Unsupported or non-equivalent mappings will emit a structured terminal adapter failure and will not reach execution. The adapter will never back-write solver names or defaults into the SSOT.</li>
       <li><strong>OrcaFlex v1 adapter and licensed runner:</strong> will execute statics and dynamics on an approved Windows host and will attest solver/DLL version and input/model hashes.</li>
       <li><strong>Future solver adapter:</strong> custom FEA or another solver will consume the same case and analysis intent, map results to the same generic quantity/location/criterion contracts, and satisfy the same request/receipt/result evidence boundaries.</li>
       <li><strong>Result extractor:</strong> will emit typed engineering outputs, failure records, and criterion identifiers; it will never replace failed runs with mock values.</li>
@@ -244,6 +244,8 @@
       <li>The normalized solver-neutral model is the single source of truth.</li>
       <li>Canonical parameters contain generic engineering state only; solver object names, files, hosts, licenses, and implicit defaults remain derived adapter concerns.</li>
       <li>A custom FEA or future solver can be added through a reviewed adapter without changing canonical case identity or forking the SSOT schema.</li>
+      <li>Unsupported or non-equivalent mappings terminate before execution with evidence; they cannot produce promoted solver results.</li>
+      <li>Native solver models are prohibited from the public dataset independent of file extension or solver target.</li>
       <li>Option 1 produces one public-safe HF projection and never uploads raw completion models.</li>
       <li>Drilling and synthetic completion cases remain explicitly distinguishable.</li>
       <li>Every published result is traceable through source, input, case, model, solver, result, and HF revision hashes.</li>

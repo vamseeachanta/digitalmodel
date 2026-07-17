@@ -8,8 +8,8 @@
 > **Lane:** lane:codex
 > **Design:** `docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html`
 > **Parent interface contract:** `docs/plans/issue-1602-riser-analysis-contract-v1.yaml`
-> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6,7,8,9,10,11,12,13,14}/`
-> **Solver-neutrality review:** `scripts/review/results/issue-1602-round-15/`
+> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}/`
+> **Solver-neutrality re-review:** `scripts/review/results/issue-1602-round-16/`
 
 ---
 
@@ -176,7 +176,9 @@ the immutable generic case to a deterministic solver projection and will bind
 `solver_target_id`, `solver_adapter_contract_sha256`, and
 `solver_projection_sha256` through execution and engineering-result evidence.
 Unsupported semantics will fail or be recorded as explicit non-equivalence;
-the adapter will never invent a default or back-write solver-specific state into
+that outcome will bind target-gap status and mapping evidence, emit a structured
+terminal adapter failure, and will never promote to execution or results. The
+adapter will never invent a default or back-write solver-specific state into
 the SSOT. OrcaFlex will be the v1 target. Adding custom FEA or another solver
 will require a reviewed adapter and target-validation plan, not an SSOT fork.
 
@@ -246,7 +248,9 @@ for each inventoried source:
 for each eligible requested case:
     require the approved analysis_contract envelope
     generate the family-owned analysis request
-    generate deterministic_bundle envelope bound to that request
+    evaluate target semantic coverage and bind mapping evidence
+    stop with terminal adapter failure on unsupported or non-equivalent mapping
+    generate deterministic_bundle envelope bound to that request and adapter
     submit authorized bundle to licensed execution owner
     require real canary, semantic solver success, and signed receipt
     extract child-defined strength and operability results
@@ -334,6 +338,9 @@ start before its upstream interface and its own approval gate are complete.
 - [ ] A custom FEA or future solver will be able to consume the same normalized
   case and analysis intent by adding a reviewed adapter, without changing
   canonical configuration/case identity or forking the SSOT schema.
+- [ ] Unsupported or non-equivalent target mappings will bind structured status
+  and mapping evidence, terminate before execution, and never produce promoted
+  solver results.
 - [ ] Raw completion/workover models and restricted metadata will never enter
   public artifacts.
 - [ ] Every public completion/workover input will carry approved clean-room
@@ -355,6 +362,9 @@ start before its upstream interface and its own approval gate are complete.
 - [ ] Publication will reject confidential values, host paths, client/project
   identifiers, restricted text, unsigned results, stale files, and unknown
   producer versions.
+- [ ] Publication will reject native solver model artifacts independent of
+  extension or target, including OrcaFlex DAT/YAML and future FEA input or
+  database formats.
 - [ ] The HF repository will match the approved exact release at the returned
   immutable commit and pass remote config/split/feature/row/release-ID checks.
 - [ ] The dataset card will document all configs, row counts, units, nulls,
@@ -380,7 +390,7 @@ import yaml
 p = Path("docs/plans/issue-1602-riser-analysis-contract-v1.yaml")
 c = yaml.safe_load(p.read_text())
 assert c["contract_id"] == "digitalmodel-riser-analysis-parent-interface"
-assert c["contract_version"] == "2.0.0-draft.10"
+assert c["contract_version"] == "2.0.0-draft.11"
 owners = c["owners"]
 required_owners = {"source_repair", "normalized_ssot", "drilling_workflow",
                    "analysis_semantics", "licensed_execution", "public_release",
@@ -403,6 +413,7 @@ assert set(c["public_dataset_surfaces"]["required_configs"]) == {
     "strength_results", "operability_results", "withheld_sources"}
 assert set(c["source_of_truth"]["forbidden_public"]) == {
     "raw_DAT", "raw_YML", "raw_YAML", "confidential_models",
+    "native_solver_model_artifacts",
     "licensed_text", "machine_paths", "user_identifiers",
     "client_identifiers", "project_identifiers", "secrets",
     "private_source_hashes", "mock_solver_results"}
@@ -420,12 +431,16 @@ assert c["solver_neutrality_contract"] == {
     "adapter_rule": "versioned_target_adapter_projects_SSOT_without_back_write",
     "first_execution_target": "OrcaFlex",
     "future_execution_targets": "open_including_custom_FEA",
-    "target_gap_rule": "fail_or_record_explicit_non_equivalence_never_guess",
+    "target_gap_rule": "unsupported_or_non_equivalent_mapping_emits_terminal_adapter_failure_and_never_executes",
     "result_rule": "every_result_maps_to_generic_quantity_location_and_criterion_contracts",
     "pivot_acceptance": "new_solver_requires_adapter_and_target_validation_not_SSOT_reauthoring"}
 assert set(c["child_acceptance_obligations"]) == {
     "source_repair", "normalized_ssot", "drilling_workflow", "analysis_semantics",
     "licensed_execution", "public_release", "website"}
+assert "reject_all_native_solver_model_artifacts_independent_of_format" in \
+    c["child_acceptance_obligations"]["public_release"]
+assert "unsupported_or_non_equivalent_target_mapping_never_reaches_execution" in \
+    c["global_invariants"]
 for name, envelope in envelopes.items():
     assert envelope["producer"] in owners
     assert envelope["minimum_bindings"]
@@ -442,6 +457,9 @@ assert set(envelopes["execution_request"]["minimum_bindings"]) == {
     "analysis_request_id", "bundle_sha256", "model_contract_sha256",
     "generic_parameter_contract_sha256", "solver_target_id",
     "solver_adapter_contract_sha256", "solver_projection_sha256",
+    "target_semantic_coverage_status",
+    "target_semantic_mapping_evidence_sha256",
+    "target_gap_disposition_sha256",
     "requested_solver_stages_sha256"}
 assert set(envelopes["execution_receipt"]["minimum_bindings"]) == {
     "receipt_schema_version", "execution_request_id",
@@ -450,7 +468,9 @@ assert set(envelopes["execution_receipt"]["minimum_bindings"]) == {
     "case_id", "case_sha256", "analysis_request_id", "bundle_sha256",
     "model_contract_sha256", "generic_parameter_contract_sha256",
     "solver_target_id", "solver_adapter_contract_sha256",
-    "solver_projection_sha256", "native_model_sha256",
+    "solver_projection_sha256", "target_semantic_coverage_status",
+    "target_semantic_mapping_evidence_sha256",
+    "target_gap_disposition_sha256", "native_model_sha256",
     "solver_identity_sha256", "semantic_status",
     "raw_solver_payload_sha256", "host_signer_principal_id",
     "execution_receipt_sha256"}
@@ -521,7 +541,10 @@ expected_handoffs = {
     for f in ("case_id", "case_sha256", "analysis_request_id",
               "bundle_sha256", "model_contract_sha256",
               "generic_parameter_contract_sha256", "solver_target_id",
-              "solver_adapter_contract_sha256", "solver_projection_sha256")
+              "solver_adapter_contract_sha256", "solver_projection_sha256",
+              "target_semantic_coverage_status",
+              "target_semantic_mapping_evidence_sha256",
+              "target_gap_disposition_sha256")
 } | {
     ("execution_request", f, "execution_receipt", f)
     for f in ("execution_request_id", "execution_request_sha256",
@@ -529,13 +552,18 @@ expected_handoffs = {
               "requested_solver_stages_sha256", "case_id", "case_sha256",
               "analysis_request_id", "bundle_sha256", "model_contract_sha256",
               "generic_parameter_contract_sha256", "solver_target_id",
-              "solver_adapter_contract_sha256", "solver_projection_sha256")
+              "solver_adapter_contract_sha256", "solver_projection_sha256",
+              "target_semantic_coverage_status",
+              "target_semantic_mapping_evidence_sha256",
+              "target_gap_disposition_sha256")
 } | {
     ("execution_receipt", f, "engineering_result", f)
     for f in ("case_id", "case_sha256", "execution_receipt_sha256",
               "raw_solver_payload_sha256", "generic_parameter_contract_sha256",
               "solver_target_id", "solver_adapter_contract_sha256",
-              "solver_projection_sha256")
+              "solver_projection_sha256", "target_semantic_coverage_status",
+              "target_semantic_mapping_evidence_sha256",
+              "target_gap_disposition_sha256")
 } | {
     ("analysis_contract", f, "engineering_result", f)
     for f in ("result_contract_version", "result_contract_sha256",
@@ -707,7 +735,7 @@ xmllint --html --noout \
   docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html
 ! rg -n 'TO''DO|TB''D|<re''po>|N''NN' \
   docs/plans/2026-07-16-issue-1602-riser-data-orcaflex-hf-plan.md
-for f in scripts/review/results/issue-1602-round-14/*.md; do test -s "$f"; done
+for f in scripts/review/results/issue-1602-round-15/*.md; do test -s "$f"; done
 gh issue view 811 -R vamseeachanta/digitalmodel --json body --jq .body |
   rg -F '#1603 exclusively owns the global coordinate transform.'
 gh issue view 568 -R vamseeachanta/deckhand --json body --jq .body |
@@ -724,6 +752,12 @@ gh issue view 138 -R vamseeachanta/digitalmodel --json body --jq .body |
   rg -F 'owns solver-neutral analysis intent'
 gh issue view 568 -R vamseeachanta/deckhand --json body --jq .body |
   rg -F 'Deckhand verifies the selected target and projection but does not own or mutate the solver-neutral SSOT.'
+gh issue view 1603 -R vamseeachanta/digitalmodel --json body --jq .body |
+  rg -F 'Unsupported or non-equivalent mappings emit a structured terminal adapter failure'
+gh issue view 1604 -R vamseeachanta/digitalmodel --json body --jq .body |
+  rg -F 'reject every native solver model artifact independent of extension or target'
+gh issue view 568 -R vamseeachanta/deckhand --json body --jq .body |
+  rg -F 'rejects any execution request whose target mapping is unsupported'
 cd ../../workspace-hub
 bash scripts/legal/legal-sanity-scan.sh \
   --repo=../agent-worktrees/dm-1602-design --diff-only
@@ -781,10 +815,13 @@ exact child schemas, preimages, formats, and fixtures will remain deferred.
 Round 14 re-reviewed only this interface boundary and returned unanimous
 APPROVE. On 2026-07-17 the owner directed a further revision: the canonical
 dataset will expose generic solver-neutral parameters and support OrcaFlex as
-the first of multiple replaceable solver adapters. Draft 10 will bind generic
-parameter, solver-target, adapter-contract, and deterministic-projection
-identities without moving target-specific state into the SSOT. Round 15 will
-review this revision before the plan can return to `plan-review`.
+the first of multiple replaceable solver adapters. Round 15 approved the generic
+SSOT but found that target-gap outcomes were not evidence-bound terminal states
+and the public ban named OrcaFlex formats rather than all native solver models.
+Draft 11 will propagate semantic-coverage/mapping/disposition evidence through
+the execution chain, stop unsupported or non-equivalent mappings before
+execution, and prohibit native solver models independent of format. Round 16
+will re-review this revision before the plan can return to `plan-review`.
 
 | Review wave | Verdict | Disposition |
 |---|---|---|
@@ -803,9 +840,10 @@ review this revision before the plan can return to `plan-review`.
 | Round 13 boundary review | MAJOR | data/solver APPROVE; request/receipt security minimum sets not pinned by validator |
 | Round 14 boundary review | APPROVE | unanimous data, solver, and release/security approval; no parent-boundary blockers |
 | Owner solver-neutrality revision | APPROVED DIRECTION | generic engineering SSOT; OrcaFlex v1 and future custom FEA through replaceable adapters |
-| Round 15 solver-neutrality review | PENDING | — |
+| Round 15 solver-neutrality review | MAJOR | data APPROVE; generic native-model public ban and terminal target-gap evidence missing |
+| Round 16 solver-neutrality review | PENDING | — |
 
-**Overall result:** PENDING ROUND 15
+**Overall result:** PENDING ROUND 16
 
 ## Risks and Open Questions
 
