@@ -1,5 +1,5 @@
 contract_id: digitalmodel-riser-analysis-parent-interface
-contract_version: 2.0.0-draft.4
+contract_version: 2.0.0-draft.5
 status: planning-interface
 authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
 approved_design: 2026-07-16-issue-1602-riser-hf-analysis-design.html
@@ -68,11 +68,12 @@ interface_envelopes:
   normalized_case:
     producer: normalized_ssot
     consumers: [drilling_workflow, analysis_semantics, public_release]
-    minimum_bindings: [schema_version, configuration_id,
+    minimum_bindings: [schema_version, riser_family, configuration_id,
       configuration_sha256, case_id, case_sha256, source_class,
       public_source_sha256_or_safe_provenance_commitment_sha256,
       confidentiality_status, redistribution_status, units_contract_sha256,
-      provenance_envelope_sha256, eligibility_status]
+      provenance_envelope_sha256, eligibility_status,
+      normalized_case_envelope_sha256]
   analysis_contract:
     producer: analysis_semantics
     consumers: [drilling_workflow, normalized_ssot, licensed_execution,
@@ -83,17 +84,20 @@ interface_envelopes:
   drilling_analysis_request:
     producer: drilling_workflow
     consumers: [normalized_ssot, analysis_semantics]
-    minimum_bindings: [request_contract_version, analysis_request_id,
+    minimum_bindings: [request_contract_version, riser_family,
+      analysis_request_id,
       request_matrix_sha256, case_id, case_sha256, model_contract_sha256]
   completion_workover_analysis_request:
     producer: analysis_semantics
     consumers: [normalized_ssot]
-    minimum_bindings: [request_contract_version, analysis_request_id,
+    minimum_bindings: [request_contract_version, riser_family,
+      analysis_request_id,
       request_matrix_sha256, case_id, case_sha256, model_contract_sha256]
   deterministic_bundle:
     producer: normalized_ssot
     consumers: [analysis_semantics, licensed_execution]
-    minimum_bindings: [case_id, case_sha256, analysis_request_id,
+    minimum_bindings: [riser_family, case_id, case_sha256,
+      analysis_request_id,
       model_contract_sha256, adapter_version, generator_commit,
       bundle_sha256, file_manifest_sha256]
   execution_request:
@@ -124,14 +128,15 @@ interface_envelopes:
       execution_receipt_sha256, raw_solver_payload_sha256,
       engineering_result_payload_sha256, quantity_unit_contract_sha256,
       criterion_citation_contract_sha256, completeness_status,
-      oracle_status, oracle_evidence_sha256, licensed_validation_evidence_sha256]
+      oracle_status, oracle_evidence_sha256, licensed_validation_evidence_sha256,
+      engineering_result_envelope_sha256]
   logical_release:
     producer: public_release
     consumers: [public_release, parent_closeout]
     minimum_bindings: [release_contract_version, release_id,
       logical_release_sha256, release_manifest_sha256,
       normalized_case_set_sha256, engineering_result_set_sha256,
-      result_contract_sha256,
+      result_contract_version, result_contract_sha256,
       criteria_contract_sha256, oracle_contract_sha256,
       public_eligibility_evidence_sha256,
       clean_room_evidence_set_sha256, authenticated_join_evidence_sha256,
@@ -162,7 +167,15 @@ interface_envelopes:
       landed_ancestry_set_sha256, test_legal_completeness_set_sha256,
       clean_room_revalidation_sha256, logical_release_sha256,
       HF_publication_receipt_sha256, website_evidence_sha256,
+      fresh_HF_retrieved_at, fresh_HF_observed_repo_id,
+      fresh_HF_observed_commit_sha,
+      fresh_HF_observed_logical_release_sha256,
+      fresh_HF_observed_publication_receipt_sha256,
       fresh_HF_retrieval_evidence_sha256,
+      fresh_website_retrieved_at, fresh_website_observed_deployment_id,
+      fresh_website_observed_route,
+      fresh_website_observed_rendered_release_id,
+      fresh_website_observed_website_evidence_sha256,
       fresh_website_retrieval_evidence_sha256,
       scope_reduction_approval_set_sha256,
       program_closeout_evidence_sha256]
@@ -312,16 +325,18 @@ planning_validation:
 
 required_handoff_equalities:
   - {from: normalized_case, to: drilling_analysis_request,
-     fields: [case_id, case_sha256]}
+     fields: [riser_family, case_id, case_sha256]}
   - {from: normalized_case, to: completion_workover_analysis_request,
-     fields: [case_id, case_sha256]}
+     fields: [riser_family, case_id, case_sha256]}
   - {from: analysis_contract, to: drilling_analysis_request,
      fields: [model_contract_sha256]}
   - {from: analysis_contract, to: completion_workover_analysis_request,
      fields: [model_contract_sha256]}
   - {from_any_of: [drilling_analysis_request,
        completion_workover_analysis_request], to: deterministic_bundle,
-     fields: [analysis_request_id, case_id, case_sha256,
+     discriminator_field: riser_family,
+     selection: exactly_one_source_matching_discriminator,
+     fields: [riser_family, analysis_request_id, case_id, case_sha256,
        model_contract_sha256]}
   - {from: analysis_contract, to: deterministic_bundle,
      fields: [model_contract_sha256]}
@@ -337,10 +352,12 @@ required_handoff_equalities:
      fields: [case_id, case_sha256, execution_receipt_sha256,
        raw_solver_payload_sha256]}
   - {from: analysis_contract, to: engineering_result,
-     fields: [result_contract_sha256, criteria_contract_sha256,
+     fields: [result_contract_version, result_contract_sha256,
+       criteria_contract_sha256,
        oracle_contract_sha256]}
   - {from: engineering_result, to: logical_release,
-     fields: [result_contract_sha256, criteria_contract_sha256,
+     fields: [result_contract_version, result_contract_sha256,
+       criteria_contract_sha256,
        oracle_contract_sha256]}
   - {from: logical_release, to: HF_publication_receipt,
      fields: [logical_release_sha256]}
@@ -352,15 +369,38 @@ required_handoff_equalities:
   - {from: HF_publication_receipt, to: website_evidence,
      fields: [HF_commit_sha, HF_publication_receipt_sha256]}
   - {from: HF_publication_receipt, to: program_closeout,
-     fields: [HF_publication_receipt_sha256]}
+     fields: [HF_publication_receipt_sha256],
+     field_map: {HF_repo_id: fresh_HF_observed_repo_id,
+       HF_commit_sha: fresh_HF_observed_commit_sha,
+       logical_release_sha256: fresh_HF_observed_logical_release_sha256,
+       HF_publication_receipt_sha256:
+         fresh_HF_observed_publication_receipt_sha256}}
   - {from: website_evidence, to: program_closeout,
-     fields: [website_evidence_sha256]}
+     fields: [website_evidence_sha256],
+     field_map: {deployment_id: fresh_website_observed_deployment_id,
+       public_route: fresh_website_observed_route,
+       rendered_release_id: fresh_website_observed_rendered_release_id,
+       website_evidence_sha256:
+         fresh_website_observed_website_evidence_sha256}}
 
 required_handoff_derivations:
-  - inputs: ["normalized_case.configuration_sha256[*]",
-      "normalized_case.case_sha256[*]"]
+  - inputs: "normalized_case.normalized_case_envelope_sha256[*]"
     output: logical_release.normalized_case_set_sha256
     mode: child_defined_canonical_exact_set_commitment
-  - inputs: "engineering_result.engineering_result_payload_sha256[*]"
+  - inputs: "engineering_result.engineering_result_envelope_sha256[*]"
     output: logical_release.engineering_result_set_sha256
     mode: child_defined_canonical_exact_set_commitment
+  - inputs: ["program_closeout.fresh_HF_retrieved_at",
+      "program_closeout.fresh_HF_observed_repo_id",
+      "program_closeout.fresh_HF_observed_commit_sha",
+      "program_closeout.fresh_HF_observed_logical_release_sha256",
+      "program_closeout.fresh_HF_observed_publication_receipt_sha256"]
+    output: program_closeout.fresh_HF_retrieval_evidence_sha256
+    mode: child_defined_fresh_authenticated_retrieval_commitment
+  - inputs: ["program_closeout.fresh_website_retrieved_at",
+      "program_closeout.fresh_website_observed_deployment_id",
+      "program_closeout.fresh_website_observed_route",
+      "program_closeout.fresh_website_observed_rendered_release_id",
+      "program_closeout.fresh_website_observed_website_evidence_sha256"]
+    output: program_closeout.fresh_website_retrieval_evidence_sha256
+    mode: child_defined_fresh_authenticated_retrieval_commitment

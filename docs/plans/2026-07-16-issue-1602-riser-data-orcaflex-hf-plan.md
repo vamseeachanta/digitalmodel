@@ -8,8 +8,8 @@
 > **Lane:** lane:codex
 > **Design:** `docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html`
 > **Parent interface contract:** `docs/plans/issue-1602-riser-analysis-contract-v1.yaml`
-> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6,7,8}/`
-> **Boundary-refactor review:** `scripts/review/results/issue-1602-round-9/`
+> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6,7,8,9}/`
+> **Boundary-refactor review:** `scripts/review/results/issue-1602-round-10/`
 
 ---
 
@@ -342,7 +342,7 @@ import yaml
 p = Path("docs/plans/issue-1602-riser-analysis-contract-v1.yaml")
 c = yaml.safe_load(p.read_text())
 assert c["contract_id"] == "digitalmodel-riser-analysis-parent-interface"
-assert c["contract_version"] == "2.0.0-draft.4"
+assert c["contract_version"] == "2.0.0-draft.5"
 owners = c["owners"]
 required_owners = {"source_repair", "normalized_ssot", "drilling_workflow",
                    "analysis_semantics", "licensed_execution", "public_release",
@@ -358,7 +358,16 @@ required_envelopes = {"normalized_case", "analysis_contract",
 assert set(envelopes) == required_envelopes
 assert set(c["planning_validation"]["required_envelopes"]) == required_envelopes
 assert c["global_coordinate_contract"]["axes"] == "ENU_right_handed"
-assert len(c["public_dataset_surfaces"]["required_configs"]) == 13
+assert set(c["public_dataset_surfaces"]["required_configs"]) == {
+    "source_registry", "transformations", "citations", "criteria",
+    "clean_room_reviews", "field_lineage", "riser_components",
+    "riser_configurations", "analysis_cases", "execution_attestations",
+    "strength_results", "operability_results", "withheld_sources"}
+assert set(c["source_of_truth"]["forbidden_public"]) == {
+    "raw_DAT", "raw_YML", "raw_YAML", "confidential_models",
+    "licensed_text", "machine_paths", "user_identifiers",
+    "client_identifiers", "project_identifiers", "secrets",
+    "private_source_hashes", "mock_solver_results"}
 assert set(c["child_acceptance_obligations"]) == {
     "normalized_ssot", "drilling_workflow", "analysis_semantics",
     "licensed_execution", "public_release", "website"}
@@ -385,7 +394,14 @@ assert {"logical_release_sha256", "HF_commit_sha",
 def expand_handoffs(rules):
     expanded = set()
     for rule in rules:
+        conditional = "from_any_of" in rule
         sources = rule.get("from_any_of", [rule.get("from")])
+        if conditional:
+            assert rule["selection"] == "exactly_one_source_matching_discriminator"
+            discriminator = rule["discriminator_field"]
+            assert discriminator in envelopes[rule["to"]]["minimum_bindings"]
+            assert all(discriminator in envelopes[s]["minimum_bindings"]
+                       for s in sources)
         assert all(s in envelopes for s in sources)
         assert rule["to"] in envelopes
         pairs = [(field, field) for field in rule.get("fields", [])]
@@ -401,7 +417,7 @@ expected_handoffs = {
     ("normalized_case", f, target, f)
     for target in ("drilling_analysis_request",
                    "completion_workover_analysis_request")
-    for f in ("case_id", "case_sha256")
+    for f in ("riser_family", "case_id", "case_sha256")
 } | {
     ("analysis_contract", "model_contract_sha256", target,
      "model_contract_sha256")
@@ -412,7 +428,7 @@ expected_handoffs = {
     (source, f, "deterministic_bundle", f)
     for source in ("drilling_analysis_request",
                    "completion_workover_analysis_request")
-    for f in ("analysis_request_id", "case_id", "case_sha256",
+    for f in ("riser_family", "analysis_request_id", "case_id", "case_sha256",
               "model_contract_sha256")
 } | {
     ("deterministic_bundle", f, "execution_request", f)
@@ -430,12 +446,12 @@ expected_handoffs = {
               "raw_solver_payload_sha256")
 } | {
     ("analysis_contract", f, "engineering_result", f)
-    for f in ("result_contract_sha256", "criteria_contract_sha256",
-              "oracle_contract_sha256")
+    for f in ("result_contract_version", "result_contract_sha256",
+              "criteria_contract_sha256", "oracle_contract_sha256")
 } | {
     ("engineering_result", f, "logical_release", f)
-    for f in ("result_contract_sha256", "criteria_contract_sha256",
-              "oracle_contract_sha256")
+    for f in ("result_contract_version", "result_contract_sha256",
+              "criteria_contract_sha256", "oracle_contract_sha256")
 } | {
     ("logical_release", "logical_release_sha256", target,
      "logical_release_sha256")
@@ -452,16 +468,45 @@ expected_handoffs = {
      "program_closeout", "HF_publication_receipt_sha256"),
     ("website_evidence", "website_evidence_sha256", "program_closeout",
      "website_evidence_sha256"),
+    ("HF_publication_receipt", "HF_repo_id", "program_closeout",
+     "fresh_HF_observed_repo_id"),
+    ("HF_publication_receipt", "HF_commit_sha", "program_closeout",
+     "fresh_HF_observed_commit_sha"),
+    ("HF_publication_receipt", "logical_release_sha256", "program_closeout",
+     "fresh_HF_observed_logical_release_sha256"),
+    ("HF_publication_receipt", "HF_publication_receipt_sha256",
+     "program_closeout", "fresh_HF_observed_publication_receipt_sha256"),
+    ("website_evidence", "deployment_id", "program_closeout",
+     "fresh_website_observed_deployment_id"),
+    ("website_evidence", "public_route", "program_closeout",
+     "fresh_website_observed_route"),
+    ("website_evidence", "rendered_release_id", "program_closeout",
+     "fresh_website_observed_rendered_release_id"),
+    ("website_evidence", "website_evidence_sha256", "program_closeout",
+     "fresh_website_observed_website_evidence_sha256"),
 }
 assert expand_handoffs(c["required_handoff_equalities"]) == expected_handoffs
 expected_derivations = {
-    (("normalized_case.configuration_sha256[*]",
-      "normalized_case.case_sha256[*]"),
+    (("normalized_case.normalized_case_envelope_sha256[*]",),
      "logical_release.normalized_case_set_sha256",
      "child_defined_canonical_exact_set_commitment"),
-    (("engineering_result.engineering_result_payload_sha256[*]",),
+    (("engineering_result.engineering_result_envelope_sha256[*]",),
      "logical_release.engineering_result_set_sha256",
      "child_defined_canonical_exact_set_commitment"),
+    (("program_closeout.fresh_HF_retrieved_at",
+      "program_closeout.fresh_HF_observed_repo_id",
+      "program_closeout.fresh_HF_observed_commit_sha",
+      "program_closeout.fresh_HF_observed_logical_release_sha256",
+      "program_closeout.fresh_HF_observed_publication_receipt_sha256"),
+     "program_closeout.fresh_HF_retrieval_evidence_sha256",
+     "child_defined_fresh_authenticated_retrieval_commitment"),
+    (("program_closeout.fresh_website_retrieved_at",
+      "program_closeout.fresh_website_observed_deployment_id",
+      "program_closeout.fresh_website_observed_route",
+      "program_closeout.fresh_website_observed_rendered_release_id",
+      "program_closeout.fresh_website_observed_website_evidence_sha256"),
+     "program_closeout.fresh_website_retrieval_evidence_sha256",
+     "child_defined_fresh_authenticated_retrieval_commitment"),
 }
 actual_derivations = {
     (tuple(d["inputs"] if isinstance(d["inputs"], list) else [d["inputs"]]),
@@ -515,7 +560,7 @@ xmllint --html --noout \
   docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html
 ! rg -n 'TO''DO|TB''D|<re''po>|N''NN' \
   docs/plans/2026-07-16-issue-1602-riser-data-orcaflex-hf-plan.md
-for f in scripts/review/results/issue-1602-round-7/*.md; do test -s "$f"; done
+for f in scripts/review/results/issue-1602-round-9/*.md; do test -s "$f"; done
 gh issue view 811 -R vamseeachanta/digitalmodel --json body --jq .body |
   rg -F '#1603 exclusively owns the global coordinate transform.'
 gh issue view 568 -R vamseeachanta/deckhand --json body --jq .body |
@@ -527,9 +572,13 @@ gh issue view 75 -R vamseeachanta/aceengineer-website --json body --jq .body |
 cd ../../workspace-hub
 bash scripts/legal/legal-sanity-scan.sh \
   --repo=../agent-worktrees/dm-1602-design --diff-only
-bash scripts/legal/legal-sanity-scan.sh \
-  --repo=../agent-worktrees/dm-1602-design
 ```
+
+The plan-stage scan will be diff-scoped because this branch changes only plan
+and review artifacts. Each implementation child and the final release gate will
+run the full applicable repository/release-tree legal scan; any historical
+finding will require a reviewed forensic allowlist or remediation before that
+child can promote.
 
 ## Adversarial Review Summary
 
@@ -549,10 +598,15 @@ signed request propagation, result/criteria/oracle propagation, an acyclic
 logical-release/publication split, website/closeout receipt hashes, surface-
 specific row evidence, and #1602-scoped milestone closeout. Round 8 found that
 the initial propagation list did not require equality for every repeated case,
-request, bundle, receipt, result, and rendered-release identity. Draft 4 will
-replace it with a complete handoff/derivation matrix and a hard validator
-baseline. Round 9 will re-review only this interface boundary. Any MAJOR will
-keep the plan in draft.
+request, bundle, receipt, result, and rendered-release identity. Round 9 found
+that the family-source rule incorrectly implied both request families, aggregate
+commitments did not cover complete promotion evidence, fresh retrieval hashes
+were not derived from the release/site identities, and the declared full legal
+scan included unrelated historical residue. Draft 5 will add exact-one family
+discrimination, complete-envelope set commitments, fresh retrieval derivations,
+exact security baselines, and a passing diff-scoped plan scan while retaining
+full applicable scans at implementation/release gates. Round 10 will re-review
+only this interface boundary. Any MAJOR will keep the plan in draft.
 
 | Review wave | Verdict | Disposition |
 |---|---|---|
@@ -564,9 +618,10 @@ keep the plan in draft.
 | Round 6 boundary review | MAJOR | trust direction, #138/#568 cycle, missing request/model/oracle/security bindings, stale live source-hash criterion, shallow validator |
 | Round 7 boundary review | MAJOR | missing consumer edges and binding propagation; release/HF cycle; stale live ownership text; closeout freshness gaps |
 | Round 8 boundary review | MAJOR | incomplete lifecycle equality matrix, missing result-set commitment and rendered-release-ID binding, non-exhaustive validator |
-| Round 9 boundary review | PENDING | — |
+| Round 9 boundary review | MAJOR | conditional family ambiguity, partial envelope commitments, unbound fresh retrieval, stale review check, failing unrelated full scan |
+| Round 10 boundary review | PENDING | — |
 
-**Overall result:** PENDING ROUND 9
+**Overall result:** PENDING ROUND 10
 
 ## Risks and Open Questions
 
