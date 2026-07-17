@@ -1,112 +1,206 @@
-contract_id: digitalmodel-riser-analysis
-contract_version: 1.0.0-draft.5
-status: planning-contract
+contract_id: digitalmodel-riser-analysis-parent-interface
+contract_version: 2.0.0-draft.1
+status: planning-interface
 authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
+approved_design: 2026-07-16-issue-1602-riser-hf-analysis-design.html
 
-normative_files:
-  meta_schema: issue-1602-riser-contract-meta-schema-v1.json
-  normalized_schema: issue-1602-riser-normalized-schema-v1.yaml
-  release_schema: issue-1602-riser-release-schema-v1.yaml
-  protocol: issue-1602-riser-protocol-v1.yaml
-
-authority_order:
-  - meta_schema validates artifact structure
-  - normalized_schema defines the solver-neutral SSOT and every field disposition
-  - release_schema defines exact public configs, enums, keys, constraints, and joins
-  - protocol defines canonical identity, transformations, trust, transport,
-    solver proof, engineering verification, publication, website, and closeout
-  - parent plan defines issue ownership, dependency order, and approval gates
-
-compatibility:
-  producer_rule: emit_exact_contract_version
-  consumer_rule: accept_exact_reviewed_contract_version_only
-  unknown_field_enum_or_version: reject
-  weakening_change: parent_plan_revision_review_and_user_approval
-  child_tightening_change: child_plan_review_and_user_approval
+authority:
+  parent_owns:
+    - solver-neutral SSOT architecture and public/private boundary
+    - cross-repository ownership and dependency order
+    - envelope identity chain and compatibility rules
+    - fail-closed promotion gates and program acceptance evidence
+  child_owns:
+    - exact nested schemas, fields, units, keys, and conformance fixtures
+    - exact hash preimages and executable semantic validators
+    - repository-specific code, tests, receipts, reports, and deployment evidence
+  conflict_rule: parent_invariants_win_child_details_win_within_owned_boundary
+  weakening_rule: parent_revision_adversarial_review_and_owner_approval
 
 source_of_truth:
-  canonical: solver-neutral-normalized-configuration-and-analysis-case
-  evidence_only: source-artifacts-and-legacy-OrcaFlex-models
-  derived_only: generated-OrcaFlex-bundle-and-native-model
-  publication: public-safe-release-projection-not-run-ledger
-  forbidden_public_inputs: [raw_DAT, raw_YML, raw_YAML, confidential_models,
+  canonical: solver_neutral_normalized_configuration_and_analysis_case
+  evidence_only: source_artifacts_and_legacy_OrcaFlex_models
+  derived_only: generated_OrcaFlex_bundle_native_model_and_solver_results
+  public_projection: release_approved_inputs_results_and_provenance
+  forbidden_public: [raw_DAT, raw_YML, raw_YAML, confidential_models,
     licensed_text, machine_paths, client_identifiers, mock_solver_results]
 
+owners:
+  source_repair:
+    issue: https://github.com/vamseeachanta/worldenergydata/issues/1046
+    outputs: [validated_canonical_source_rows, repair_or_rejection_evidence]
+  normalized_ssot:
+    issue: https://github.com/vamseeachanta/digitalmodel/issues/1603
+    outputs: [normalized_case_envelope, deterministic_bundle_envelope,
+      public_source_and_withheld_registers]
+  drilling_workflow:
+    issue: https://github.com/vamseeachanta/digitalmodel/issues/811
+    outputs: [drilling_stackup_and_operability_implementation]
+  analysis_semantics:
+    issue: https://github.com/vamseeachanta/digitalmodel/issues/138
+    outputs: [result_semantics, criteria, extraction, engineering_oracles]
+  licensed_execution:
+    issue: https://github.com/vamseeachanta/deckhand/issues/568
+    outputs: [execution_request_and_receipt, artifact_transport,
+      real_solver_attestation]
+  public_release:
+    issue: https://github.com/vamseeachanta/digitalmodel/issues/1604
+    outputs: [public_release, HF_commit, remote_verification,
+      parent_closeout_evidence]
+  website:
+    issue: https://github.com/vamseeachanta/aceengineer-website/issues/75
+    outputs: [registered_capability, deployed_route_verification]
+
+interface_envelopes:
+  normalized_case:
+    producer: normalized_ssot
+    consumers: [drilling_workflow, analysis_semantics, licensed_execution,
+      public_release]
+    minimum_bindings: [schema_id, schema_version, case_id, case_sha256,
+      source_class, confidentiality, redistribution, units_contract,
+      provenance_envelope_sha256, eligibility_status]
+  deterministic_bundle:
+    producer: normalized_ssot
+    consumers: [licensed_execution]
+    minimum_bindings: [case_id, case_sha256, adapter_version,
+      generator_commit, bundle_sha256, file_manifest_sha256]
+  execution_request_and_receipt:
+    producer: licensed_execution
+    consumers: [analysis_semantics, public_release]
+    minimum_bindings: [case_id, case_sha256, bundle_sha256, model_sha256,
+      workflow_version, solver_identity, request_identity, semantic_status,
+      result_payload_sha256, signer_identity, receipt_sha256]
+  engineering_result:
+    producer: analysis_semantics
+    consumers: [public_release]
+    minimum_bindings: [case_id, execution_receipt_sha256,
+      result_contract_version, quantity_and_unit_contract,
+      criterion_and_citation_contract, completeness_status,
+      result_payload_sha256]
+  public_release:
+    producer: public_release
+    consumers: [website, parent_closeout]
+    minimum_bindings: [release_contract_version, release_id,
+      release_manifest_sha256, HF_repo_id, HF_commit_sha,
+      exact_tree_evidence_sha256, semantic_remote_evidence_sha256]
+  website_evidence:
+    producer: website
+    consumers: [parent_closeout]
+    minimum_bindings: [website_commit_sha, deployment_id, public_route,
+      rendered_release_id, online_verification_sha256]
+
+compatibility:
+  producer: emit_owned_reviewed_schema_version_and_envelope_bindings
+  consumer: reject_unknown_or_unapproved_schema_version
+  cross_layer: verify_all_shared_IDs_and_hashes_before_processing
+  silent_field_drop_or_default: prohibited
+  child_schema_change: child_plan_review_and_owner_approval
+  interface_binding_change: parent_plan_review_and_owner_approval
+
+global_coordinate_contract:
+  axes: ENU_right_handed
+  vertical_datum: mean_water_level
+  direction: clockwise_from_true_north_going_to
+  vessel_heading: bow_to
+  offset_reference: top_connection
+  line_result_location: arc_length_from_top_connection
+  child_rule: exact_transform_and_conformance_vectors_owned_by_normalized_ssot
+
 identity_chain:
-  - source_sha256
-  - normalized_input_sha256
-  - case_sha256
-  - bundle_sha256
-  - model_sha256
-  - execution_id
-  - result_payload_sha256
-  - attestation_sha256
-  - result_envelope_sha256
-  - release_id
-  - release_manifest_sha256
-  - hf_commit_sha
+  order: [approved_public_source_or_safe_provenance_commitment,
+    normalized_configuration, analysis_case, bundle, native_model,
+    execution_receipt, result_payload, public_release, HF_commit]
+  rule: every_downstream_envelope_verifies_all_received_upstream_bindings
 
-release:
-  repo_id: aceengineer/digitalmodel-riser-analysis
-  split: train
-  required_configs:
-    - source_registry
-    - transformations
-    - citations
-    - criteria
-    - clean_room_reviews
-    - field_lineage
-    - riser_components
-    - riser_configurations
-    - analysis_cases
-    - execution_attestations
-    - strength_results
-    - operability_results
-    - withheld_sources
+public_dataset_surfaces:
+  required_configs: [source_registry, transformations, citations, criteria,
+    clean_room_reviews, field_lineage, riser_components,
+    riser_configurations, analysis_cases, execution_attestations,
+    strength_results, operability_results, withheld_sources]
+  child_owner: public_release
+  child_rule: exact_columns_types_keys_nullability_enums_and_joins_owned_by_public_release
 
-gates:
-  source: [orthogonal_governance, source_hash, complete_lineage,
-    provenance, legal, license, redistribution]
-  synthetic: [signed_author_attestation, public_allowlist_hash,
-    distinct_authorized_reviewer_principal, exact_author_claim_binding,
-    private_method_corpus_completeness_and_blinded_commitment, pass]
-  model: [clean_stage, transitive_closure, zero_validator_errors,
-    real_OrcFxAPI_load, object_graph, units, native_save]
-  execution: [safe_artifact_transport, signed_host_attestation, fresh_canary,
-    current_license, lock_covers_run, semantic_success]
-  engineering: [family_output_matrix, complete_case_cardinality,
-    applicable_independent_oracles, deterministic_sampling, citations]
-  release: [meta_schema_and_semantic_validation, decoded_leak_scan,
-    exact_remote_tree, optimistic_concurrency, head_bound_viewer_semantics]
-  website: [withheld_removed_in_both_renderers, fail_closed_online_validation,
-    refresh, tests, build, exact_commit_deploy, public_route_release_id]
-  closeout: [authoritative_live_retrieval, approvals, no_MAJOR_reviews,
-    landed_ancestry, tests, legal, completeness, HF, website, clean_room]
+dependency_order:
+  - source_repair_before_normalized_public_promotion
+  - normalized_ssot_before_model_generation_or_public_input_release
+  - analysis_semantics_before_result_acceptance
+  - normalized_bundle_and_analysis_semantics_before_licensed_execution
+  - verified_execution_and_results_before_public_release
+  - verified_HF_release_before_website_registration
+  - every_child_complete_before_parent_closeout
 
-validation_commands:
-  structural: >-
-    uvx check-jsonschema --schemafile
-    docs/plans/issue-1602-riser-contract-meta-schema-v1.json
-    docs/plans/issue-1602-riser-normalized-schema-v1.yaml
-    docs/plans/issue-1602-riser-release-schema-v1.yaml
-    docs/plans/issue-1602-riser-protocol-v1.yaml
-  semantic: >-
-    The parent plan inline validator will execute planning-time semantic checks;
-    child implementation will TDD the production validator before producer code.
+promotion_gates:
+  source_to_normalized: [source_classified, provenance_complete,
+    legal_and_license_approved, units_explicit, malformed_rows_rejected]
+  normalized_to_bundle: [exact_supported_schema, complete_field_mapping,
+    no_implicit_engineering_defaults, deterministic_generation,
+    bundle_hash_verified]
+  bundle_to_execution: [authorized_request, safe_transport,
+    licensed_host_preflight, real_canary, bundle_and_model_hash_binding]
+  execution_to_result: [real_OrcaFlex, requested_stages_complete,
+    semantic_success, signed_receipt, result_hash_verified,
+    engineering_checks_pass]
+  result_to_public: [public_sources_only, clean_room_synthetic_evidence,
+    joins_and_units_valid, criteria_and_citations_resolvable,
+    decoded_leak_and_legal_scans_pass]
+  public_to_website: [immutable_HF_commit_verified, exact_configs_verified,
+    release_id_verified, limitations_and_withholding_documented]
+  program_closeout: [child_approvals, no_MAJOR_artifact_reviews,
+    landed_remote_ancestry, tests, legal_scans, completeness_gate,
+    HF_and_website_live_evidence]
 
-planning_assertions:
-  every_normative_file_under_400_lines: true
-  every_release_primary_key_nonnullable_and_nonfloat: true
-  all_release_enum_domains_closed: true
-  all_release_joins_declared: true
-  all_normalized_fields_have_disposition: true
-  identity_construction_order_acyclic: true
-  self_hash_cycles_absent: true
-  seed_to_final_identity_bindings_declared: true
-  exact_release_config_count: 13
-  public_sources_fail_closed: true
-  result_composite_joins_declared: true
-  discriminated_component_variants_declared: true
-  stable_engineering_identity_excludes_attestations: true
-  typed_closeout_schema_declared: true
-  website_withheld_columns_never_render: true
+global_invariants:
+  - raw_completion_models_never_enter_public_artifacts
+  - public_completion_workover_inputs_are_clean_room_synthetic
+  - mock_or_reduced_order_results_never_claim_OrcaFlex_provenance
+  - private_inputs_may_support_private_QA_but_never_seed_public_rows
+  - every_published_result_resolves_to_one_public_case_and_verified_execution
+  - every_public_provenance_value_is_approved_for_disclosure_and_private_source_hashes_never_publish
+  - clean_room_release_requires_distinct_authorized_principals_and_private_confidentiality_review
+  - every_eligible_family_has_a_baseline_statics_case
+  - missing_requested_outputs_block_promotion
+  - fatigue_remains_outside_the_v1_public_release_and_may_continue_as_later_analysis_scope
+  - failures_and_withholding_are_explicit_and_never_silently_omitted
+  - standards_identifiers_and_citations_may_publish_but_licensed_text_may_not
+  - HF_publication_is_atomic_optimistic_and_exact_tree
+  - website_never_renders_withheld_columns_or_values
+
+child_acceptance_obligations:
+  normalized_ssot: [complete_hash_bound_field_lineage,
+    exhaustive_field_disposition, closed_physical_input_schemas,
+    collision_free_IDs, deterministic_hashes, no_implicit_defaults,
+    cross_platform_vectors, reconstructable_clean_room_evidence,
+    coordinate_and_current_conformance]
+  drilling_workflow: [complete_public_case_request_matrix,
+    private_corpus_validation_never_seeds_public_rows]
+  analysis_semantics: [typed_result_contract, quantity_location_stage_matrix,
+    criteria_citations_units_and_formulas, stable_result_IDs,
+    required_cardinality, independent_oracles, fatigue_excluded_from_v1]
+  licensed_execution: [authenticated_request, nonce_TTL_revocation,
+    real_canary, host_and_license_proof, safe_archive_transport,
+    signed_semantic_success_and_result_receipt]
+  public_release: [exact_13_config_schemas, authenticated_cross_layer_joins,
+    ruleset_bound_decoded_leak_scan, atomic_exact_tree_HF_publication,
+    head_bound_remote_semantics, executable_typed_parent_closeout]
+  website: [both_render_paths_remove_withheld_values,
+    fail_closed_online_validation, exact_commit_deployment_and_route_proof]
+
+parent_acceptance_evidence:
+  issue_tree: every_child_issue_url_and_final_state
+  approvals: owner_approval_bound_to_each_reviewed_child_plan
+  reviews: final_no_MAJOR_plan_and_artifact_review_paths_per_child
+  repositories: landed_commit_and_remote_main_ancestry_per_child
+  quality: test_legal_and_completeness_evidence_per_child
+  engineering: real_solver_and_independent_check_evidence
+  release: immutable_HF_commit_exact_tree_and_semantic_rows
+  website: exact_deployment_commit_HTTP_200_and_rendered_release_id
+
+planning_validation:
+  required_owner_keys: [source_repair, normalized_ssot, drilling_workflow,
+    analysis_semantics, licensed_execution, public_release, website]
+  required_envelopes: [normalized_case, deterministic_bundle,
+    execution_request_and_receipt, engineering_result, public_release,
+    website_evidence]
+  every_output_has_one_owner: true
+  every_consumer_dependency_has_upstream_producer: true
+  no_child_implementation_authorized_by_parent_alone: true
