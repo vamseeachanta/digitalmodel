@@ -8,8 +8,8 @@
 > **Lane:** lane:codex
 > **Design:** `docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html`
 > **Parent interface contract:** `docs/plans/issue-1602-riser-analysis-contract-v1.yaml`
-> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6,7}/`
-> **Boundary-refactor review:** `scripts/review/results/issue-1602-round-8/`
+> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6,7,8}/`
+> **Boundary-refactor review:** `scripts/review/results/issue-1602-round-9/`
 
 ---
 
@@ -342,7 +342,7 @@ import yaml
 p = Path("docs/plans/issue-1602-riser-analysis-contract-v1.yaml")
 c = yaml.safe_load(p.read_text())
 assert c["contract_id"] == "digitalmodel-riser-analysis-parent-interface"
-assert c["contract_version"] == "2.0.0-draft.3"
+assert c["contract_version"] == "2.0.0-draft.4"
 owners = c["owners"]
 required_owners = {"source_repair", "normalized_ssot", "drilling_workflow",
                    "analysis_semantics", "licensed_execution", "public_release",
@@ -382,14 +382,103 @@ assert {"public_eligibility_evidence_sha256", "clean_room_evidence_set_sha256",
 website = set(envelopes["website_evidence"]["minimum_bindings"])
 assert {"logical_release_sha256", "HF_commit_sha",
         "HF_publication_receipt_sha256", "website_evidence_sha256"} <= website
-for propagation in c["required_binding_propagation"]:
-    source, target = [part.strip() for part in propagation.split("->")]
-    source_envelope, source_field = source.split(".", 1)
-    target_envelope, target_field = target.split(".", 1)
-    assert source_field == target_field
-    assert source_field in envelopes[source_envelope]["minimum_bindings"]
-    assert target_field in envelopes[target_envelope]["minimum_bindings"]
+def expand_handoffs(rules):
+    expanded = set()
+    for rule in rules:
+        sources = rule.get("from_any_of", [rule.get("from")])
+        assert all(s in envelopes for s in sources)
+        assert rule["to"] in envelopes
+        pairs = [(field, field) for field in rule.get("fields", [])]
+        pairs += list(rule.get("field_map", {}).items())
+        for source in sources:
+            for source_field, target_field in pairs:
+                assert source_field in envelopes[source]["minimum_bindings"]
+                assert target_field in envelopes[rule["to"]]["minimum_bindings"]
+                expanded.add((source, source_field, rule["to"], target_field))
+    return expanded
+
+expected_handoffs = {
+    ("normalized_case", f, target, f)
+    for target in ("drilling_analysis_request",
+                   "completion_workover_analysis_request")
+    for f in ("case_id", "case_sha256")
+} | {
+    ("analysis_contract", "model_contract_sha256", target,
+     "model_contract_sha256")
+    for target in ("drilling_analysis_request",
+                   "completion_workover_analysis_request",
+                   "deterministic_bundle")
+} | {
+    (source, f, "deterministic_bundle", f)
+    for source in ("drilling_analysis_request",
+                   "completion_workover_analysis_request")
+    for f in ("analysis_request_id", "case_id", "case_sha256",
+              "model_contract_sha256")
+} | {
+    ("deterministic_bundle", f, "execution_request", f)
+    for f in ("case_id", "case_sha256", "analysis_request_id",
+              "bundle_sha256", "model_contract_sha256")
+} | {
+    ("execution_request", f, "execution_receipt", f)
+    for f in ("execution_request_id", "execution_request_sha256",
+              "requester_signature_sha256", "authorization_evidence_sha256",
+              "requested_solver_stages_sha256", "case_id", "case_sha256",
+              "analysis_request_id", "bundle_sha256", "model_contract_sha256")
+} | {
+    ("execution_receipt", f, "engineering_result", f)
+    for f in ("case_id", "case_sha256", "execution_receipt_sha256",
+              "raw_solver_payload_sha256")
+} | {
+    ("analysis_contract", f, "engineering_result", f)
+    for f in ("result_contract_sha256", "criteria_contract_sha256",
+              "oracle_contract_sha256")
+} | {
+    ("engineering_result", f, "logical_release", f)
+    for f in ("result_contract_sha256", "criteria_contract_sha256",
+              "oracle_contract_sha256")
+} | {
+    ("logical_release", "logical_release_sha256", target,
+     "logical_release_sha256")
+    for target in ("HF_publication_receipt", "website_evidence",
+                   "program_closeout")
+} | {
+    ("logical_release", "release_id", "website_evidence",
+     "rendered_release_id"),
+    ("HF_publication_receipt", "HF_commit_sha", "website_evidence",
+     "HF_commit_sha"),
+    ("HF_publication_receipt", "HF_publication_receipt_sha256",
+     "website_evidence", "HF_publication_receipt_sha256"),
+    ("HF_publication_receipt", "HF_publication_receipt_sha256",
+     "program_closeout", "HF_publication_receipt_sha256"),
+    ("website_evidence", "website_evidence_sha256", "program_closeout",
+     "website_evidence_sha256"),
+}
+assert expand_handoffs(c["required_handoff_equalities"]) == expected_handoffs
+expected_derivations = {
+    (("normalized_case.configuration_sha256[*]",
+      "normalized_case.case_sha256[*]"),
+     "logical_release.normalized_case_set_sha256",
+     "child_defined_canonical_exact_set_commitment"),
+    (("engineering_result.engineering_result_payload_sha256[*]",),
+     "logical_release.engineering_result_set_sha256",
+     "child_defined_canonical_exact_set_commitment"),
+}
+actual_derivations = {
+    (tuple(d["inputs"] if isinstance(d["inputs"], list) else [d["inputs"]]),
+     d["output"], d["mode"]) for d in c["required_handoff_derivations"]
+}
+assert actual_derivations == expected_derivations
+for inputs, output, _ in actual_derivations:
+    for reference in (*inputs, output):
+        envelope_name, field = reference.replace("[*]", "").split(".", 1)
+        assert field in envelopes[envelope_name]["minimum_bindings"]
 order = c["identity_chain"]["order"]
+assert order == ["approved_public_source_or_safe_provenance_commitment",
+    "normalized_configuration", "analysis_case", "analysis_request",
+    "deterministic_bundle", "execution_request", "native_model",
+    "raw_solver_payload", "execution_receipt", "engineering_result_payload",
+    "logical_release", "HF_commit", "HF_publication_receipt",
+    "website_evidence"]
 assert order.index("deterministic_bundle") < order.index("execution_request") < order.index("native_model")
 assert order.index("raw_solver_payload") < order.index("execution_receipt") < order.index("engineering_result_payload")
 assert order.index("logical_release") < order.index("HF_commit") < order.index("HF_publication_receipt") < order.index("website_evidence")
@@ -398,6 +487,8 @@ assert {"parent_interface_version", "parent_interface_sha256",
         "closeout_verifier_version", "closeout_verifier_commit",
         "closeout_invoked_at", "fresh_HF_retrieval_evidence_sha256",
         "fresh_website_retrieval_evidence_sha256"} <= closeout
+assert c["planning_validation"]["require_identity_chain_nodes_have_owner_or_envelope_binding"]
+assert c["planning_validation"]["require_security_evidence_in_release_and_closeout"]
 edges = [tuple(part.strip() for part in edge.split("->"))
          for edge in c["milestone_DAG"]["edges"]]
 nodes = set(c["milestone_DAG"]["milestone_owners"])
@@ -456,9 +547,12 @@ envelopes, identity ordering, release-security evidence bindings, and validator
 depth. Round 7 found the remaining interface joins: #1604 consumer edges,
 signed request propagation, result/criteria/oracle propagation, an acyclic
 logical-release/publication split, website/closeout receipt hashes, surface-
-specific row evidence, and #1602-scoped milestone closeout. Draft 3 will close
-those joins and Round 8 will re-review only this interface boundary. Any MAJOR
-will keep the plan in draft.
+specific row evidence, and #1602-scoped milestone closeout. Round 8 found that
+the initial propagation list did not require equality for every repeated case,
+request, bundle, receipt, result, and rendered-release identity. Draft 4 will
+replace it with a complete handoff/derivation matrix and a hard validator
+baseline. Round 9 will re-review only this interface boundary. Any MAJOR will
+keep the plan in draft.
 
 | Review wave | Verdict | Disposition |
 |---|---|---|
@@ -469,9 +563,10 @@ will keep the plan in draft.
 | Owner boundary decision | APPROVED | parent will own interfaces/gates; children will own exact executable contracts |
 | Round 6 boundary review | MAJOR | trust direction, #138/#568 cycle, missing request/model/oracle/security bindings, stale live source-hash criterion, shallow validator |
 | Round 7 boundary review | MAJOR | missing consumer edges and binding propagation; release/HF cycle; stale live ownership text; closeout freshness gaps |
-| Round 8 boundary review | PENDING | — |
+| Round 8 boundary review | MAJOR | incomplete lifecycle equality matrix, missing result-set commitment and rendered-release-ID binding, non-exhaustive validator |
+| Round 9 boundary review | PENDING | — |
 
-**Overall result:** PENDING ROUND 8
+**Overall result:** PENDING ROUND 9
 
 ## Risks and Open Questions
 

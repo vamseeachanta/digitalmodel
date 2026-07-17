@@ -1,5 +1,5 @@
 contract_id: digitalmodel-riser-analysis-parent-interface
-contract_version: 2.0.0-draft.3
+contract_version: 2.0.0-draft.4
 status: planning-interface
 authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
 approved_design: 2026-07-16-issue-1602-riser-hf-analysis-design.html
@@ -130,7 +130,8 @@ interface_envelopes:
     consumers: [public_release, parent_closeout]
     minimum_bindings: [release_contract_version, release_id,
       logical_release_sha256, release_manifest_sha256,
-      normalized_case_set_sha256, result_contract_sha256,
+      normalized_case_set_sha256, engineering_result_set_sha256,
+      result_contract_sha256,
       criteria_contract_sha256, oracle_contract_sha256,
       public_eligibility_evidence_sha256,
       clean_room_evidence_set_sha256, authenticated_join_evidence_sha256,
@@ -309,21 +310,57 @@ planning_validation:
   require_security_evidence_in_release_and_closeout: true
   no_child_implementation_authorized_by_parent_alone: true
 
-required_binding_propagation:
-  - execution_request.execution_request_sha256 -> execution_receipt.execution_request_sha256
-  - execution_request.requester_signature_sha256 -> execution_receipt.requester_signature_sha256
-  - execution_request.authorization_evidence_sha256 -> execution_receipt.authorization_evidence_sha256
-  - execution_request.requested_solver_stages_sha256 -> execution_receipt.requested_solver_stages_sha256
-  - analysis_contract.result_contract_sha256 -> engineering_result.result_contract_sha256
-  - analysis_contract.criteria_contract_sha256 -> engineering_result.criteria_contract_sha256
-  - analysis_contract.oracle_contract_sha256 -> engineering_result.oracle_contract_sha256
-  - engineering_result.result_contract_sha256 -> logical_release.result_contract_sha256
-  - engineering_result.criteria_contract_sha256 -> logical_release.criteria_contract_sha256
-  - engineering_result.oracle_contract_sha256 -> logical_release.oracle_contract_sha256
-  - logical_release.logical_release_sha256 -> HF_publication_receipt.logical_release_sha256
-  - logical_release.logical_release_sha256 -> website_evidence.logical_release_sha256
-  - logical_release.logical_release_sha256 -> program_closeout.logical_release_sha256
-  - HF_publication_receipt.HF_commit_sha -> website_evidence.HF_commit_sha
-  - HF_publication_receipt.HF_publication_receipt_sha256 -> website_evidence.HF_publication_receipt_sha256
-  - HF_publication_receipt.HF_publication_receipt_sha256 -> program_closeout.HF_publication_receipt_sha256
-  - website_evidence.website_evidence_sha256 -> program_closeout.website_evidence_sha256
+required_handoff_equalities:
+  - {from: normalized_case, to: drilling_analysis_request,
+     fields: [case_id, case_sha256]}
+  - {from: normalized_case, to: completion_workover_analysis_request,
+     fields: [case_id, case_sha256]}
+  - {from: analysis_contract, to: drilling_analysis_request,
+     fields: [model_contract_sha256]}
+  - {from: analysis_contract, to: completion_workover_analysis_request,
+     fields: [model_contract_sha256]}
+  - {from_any_of: [drilling_analysis_request,
+       completion_workover_analysis_request], to: deterministic_bundle,
+     fields: [analysis_request_id, case_id, case_sha256,
+       model_contract_sha256]}
+  - {from: analysis_contract, to: deterministic_bundle,
+     fields: [model_contract_sha256]}
+  - {from: deterministic_bundle, to: execution_request,
+     fields: [case_id, case_sha256, analysis_request_id, bundle_sha256,
+       model_contract_sha256]}
+  - {from: execution_request, to: execution_receipt,
+     fields: [execution_request_id, execution_request_sha256,
+       requester_signature_sha256, authorization_evidence_sha256,
+       requested_solver_stages_sha256, case_id, case_sha256,
+       analysis_request_id, bundle_sha256, model_contract_sha256]}
+  - {from: execution_receipt, to: engineering_result,
+     fields: [case_id, case_sha256, execution_receipt_sha256,
+       raw_solver_payload_sha256]}
+  - {from: analysis_contract, to: engineering_result,
+     fields: [result_contract_sha256, criteria_contract_sha256,
+       oracle_contract_sha256]}
+  - {from: engineering_result, to: logical_release,
+     fields: [result_contract_sha256, criteria_contract_sha256,
+       oracle_contract_sha256]}
+  - {from: logical_release, to: HF_publication_receipt,
+     fields: [logical_release_sha256]}
+  - {from: logical_release, to: website_evidence,
+     fields: [logical_release_sha256],
+     field_map: {release_id: rendered_release_id}}
+  - {from: logical_release, to: program_closeout,
+     fields: [logical_release_sha256]}
+  - {from: HF_publication_receipt, to: website_evidence,
+     fields: [HF_commit_sha, HF_publication_receipt_sha256]}
+  - {from: HF_publication_receipt, to: program_closeout,
+     fields: [HF_publication_receipt_sha256]}
+  - {from: website_evidence, to: program_closeout,
+     fields: [website_evidence_sha256]}
+
+required_handoff_derivations:
+  - inputs: ["normalized_case.configuration_sha256[*]",
+      "normalized_case.case_sha256[*]"]
+    output: logical_release.normalized_case_set_sha256
+    mode: child_defined_canonical_exact_set_commitment
+  - inputs: "engineering_result.engineering_result_payload_sha256[*]"
+    output: logical_release.engineering_result_set_sha256
+    mode: child_defined_canonical_exact_set_commitment
