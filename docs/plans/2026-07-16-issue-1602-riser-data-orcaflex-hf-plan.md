@@ -1,6 +1,6 @@
 # Plan for #1602: Solver-Neutral Riser Data, OrcaFlex v1, and Hugging Face
 
-> **Status:** draft — owner-directed solver-neutrality revision under review
+> **Status:** plan-approved — owner-approved solver-neutral SSOT; Round 16 unanimous APPROVE
 > **Complexity:** T3
 > **Date:** 2026-07-16
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/1602
@@ -9,7 +9,7 @@
 > **Design:** `docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html`
 > **Parent interface contract:** `docs/plans/issue-1602-riser-analysis-contract-v1.yaml`
 > **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}/`
-> **Solver-neutrality re-review:** `scripts/review/results/issue-1602-round-16/`
+> **No-MAJOR solver-neutrality review:** `scripts/review/results/issue-1602-round-16/`
 
 ---
 
@@ -735,7 +735,7 @@ xmllint --html --noout \
   docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html
 ! rg -n 'TO''DO|TB''D|<re''po>|N''NN' \
   docs/plans/2026-07-16-issue-1602-riser-data-orcaflex-hf-plan.md
-for f in scripts/review/results/issue-1602-round-15/*.md; do test -s "$f"; done
+for f in scripts/review/results/issue-1602-round-16/*.md; do test -s "$f"; done
 gh issue view 811 -R vamseeachanta/digitalmodel --json body --jq .body |
   rg -F '#1603 exclusively owns the global coordinate transform.'
 gh issue view 568 -R vamseeachanta/deckhand --json body --jq .body |
@@ -821,7 +821,9 @@ and the public ban named OrcaFlex formats rather than all native solver models.
 Draft 11 will propagate semantic-coverage/mapping/disposition evidence through
 the execution chain, stop unsupported or non-equivalent mappings before
 execution, and prohibit native solver models independent of format. Round 16
-will re-review this revision before the plan can return to `plan-review`.
+returned unanimous APPROVE. The owner explicitly directed GitHub approval of
+this solver-neutral revision; child implementation plans remain separately
+reviewed and owner-approved gates.
 
 | Review wave | Verdict | Disposition |
 |---|---|---|
@@ -841,9 +843,9 @@ will re-review this revision before the plan can return to `plan-review`.
 | Round 14 boundary review | APPROVE | unanimous data, solver, and release/security approval; no parent-boundary blockers |
 | Owner solver-neutrality revision | APPROVED DIRECTION | generic engineering SSOT; OrcaFlex v1 and future custom FEA through replaceable adapters |
 | Round 15 solver-neutrality review | MAJOR | data APPROVE; generic native-model public ban and terminal target-gap evidence missing |
-| Round 16 solver-neutrality review | PENDING | — |
+| Round 16 solver-neutrality review | APPROVE | unanimous data/SSOT, solver-adapter, and release/security approval |
 
-**Overall result:** PENDING ROUND 16
+**Overall result:** PLAN APPROVED BY OWNER — CHILD IMPLEMENTATION PLANS REMAIN SEPARATE GATES
 
 ## Risks and Open Questions
 
