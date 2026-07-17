@@ -8,8 +8,8 @@
 > **Lane:** lane:codex
 > **Design:** `docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html`
 > **Parent interface contract:** `docs/plans/issue-1602-riser-analysis-contract-v1.yaml`
-> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6,7,8,9,10,11,12}/`
-> **Boundary-refactor review:** `scripts/review/results/issue-1602-round-13/`
+> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6,7,8,9,10,11,12,13}/`
+> **Boundary-refactor review:** `scripts/review/results/issue-1602-round-14/`
 
 ---
 
@@ -342,7 +342,7 @@ import yaml
 p = Path("docs/plans/issue-1602-riser-analysis-contract-v1.yaml")
 c = yaml.safe_load(p.read_text())
 assert c["contract_id"] == "digitalmodel-riser-analysis-parent-interface"
-assert c["contract_version"] == "2.0.0-draft.8"
+assert c["contract_version"] == "2.0.0-draft.9"
 owners = c["owners"]
 required_owners = {"source_repair", "normalized_ssot", "drilling_workflow",
                    "analysis_semantics", "licensed_execution", "public_release",
@@ -379,6 +379,22 @@ for name, envelope in envelopes.items():
     for consumer in consumers:
         assert consumer in owners or consumer == "parent_closeout"
 assert envelopes["execution_request"]["producer"] != envelopes["execution_receipt"]["producer"]
+assert set(envelopes["execution_request"]["minimum_bindings"]) == {
+    "request_schema_version", "execution_request_id",
+    "execution_request_sha256", "requester_principal_id",
+    "requester_signature_sha256", "authorization_policy_version",
+    "authorization_evidence_sha256", "case_id", "case_sha256",
+    "analysis_request_id", "bundle_sha256", "model_contract_sha256",
+    "requested_solver_stages_sha256"}
+assert set(envelopes["execution_receipt"]["minimum_bindings"]) == {
+    "receipt_schema_version", "execution_request_id",
+    "execution_request_sha256", "requester_signature_sha256",
+    "authorization_evidence_sha256", "requested_solver_stages_sha256",
+    "case_id", "case_sha256", "analysis_request_id", "bundle_sha256",
+    "model_contract_sha256", "native_model_sha256",
+    "solver_identity_sha256", "semantic_status",
+    "raw_solver_payload_sha256", "host_signer_principal_id",
+    "execution_receipt_sha256"}
 normalized = set(envelopes["normalized_case"]["minimum_bindings"])
 assert {"configuration_id", "configuration_sha256",
         "public_source_sha256_or_safe_provenance_commitment_sha256"} <= normalized
@@ -622,7 +638,7 @@ xmllint --html --noout \
   docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html
 ! rg -n 'TO''DO|TB''D|<re''po>|N''NN' \
   docs/plans/2026-07-16-issue-1602-riser-data-orcaflex-hf-plan.md
-for f in scripts/review/results/issue-1602-round-12/*.md; do test -s "$f"; done
+for f in scripts/review/results/issue-1602-round-13/*.md; do test -s "$f"; done
 gh issue view 811 -R vamseeachanta/digitalmodel --json body --jq .body |
   rg -F '#1603 exclusively owns the global coordinate transform.'
 gh issue view 568 -R vamseeachanta/deckhand --json body --jq .body |
@@ -681,8 +697,12 @@ symmetric request-authorization gap: requester authentication did not
 normatively cover every request binding. Draft 8 will require the requester
 signature to authenticate a commitment over every non-self-referential request
 binding while leaving the exact preimage, signature format, and verifier with
-Deckhand. Round 13 will re-review only this interface boundary. Any MAJOR will
-keep the plan in draft.
+Deckhand. Round 13 approved data and solver but found that the validator did not
+pin the security-critical request/receipt minimum-binding sets before checking
+their commitments. Draft 9 will assert those exact parent-owned minimum sets;
+exact child schemas, preimages, formats, and fixtures will remain deferred.
+Round 14 will re-review only this interface boundary. Any MAJOR will keep the
+plan in draft.
 
 | Review wave | Verdict | Disposition |
 |---|---|---|
@@ -698,9 +718,10 @@ keep the plan in draft.
 | Round 10 boundary review | MAJOR | family routing starts after normalization; envelope commitment coverage unstated; fresh HF/site semantics incomplete; full-scan gate prose-only |
 | Round 11 boundary review | MAJOR | selected-request route fields under-validated; authenticated receipt coverage unstated |
 | Round 12 boundary review | MAJOR | data/release APPROVE; requester-authenticated request commitment coverage unstated |
-| Round 13 boundary review | PENDING | — |
+| Round 13 boundary review | MAJOR | data/solver APPROVE; request/receipt security minimum sets not pinned by validator |
+| Round 14 boundary review | PENDING | — |
 
-**Overall result:** PENDING ROUND 13
+**Overall result:** PENDING ROUND 14
 
 ## Risks and Open Questions
 

@@ -1,5 +1,5 @@
 contract_id: digitalmodel-riser-analysis-parent-interface
-contract_version: 2.0.0-draft.8
+contract_version: 2.0.0-draft.9
 status: planning-interface
 authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
 approved_design: 2026-07-16-issue-1602-riser-hf-analysis-design.html
