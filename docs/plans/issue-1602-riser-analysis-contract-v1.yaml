@@ -1,5 +1,5 @@
 contract_id: digitalmodel-riser-analysis-parent-interface
-contract_version: 2.0.0-draft.9
+contract_version: 2.0.0-draft.10
 status: planning-interface
 authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
 approved_design: 2026-07-16-issue-1602-riser-hf-analysis-design.html
@@ -22,6 +22,22 @@ source_of_truth:
   forbidden_public: [raw_DAT, raw_YML, raw_YAML, confidential_models,
     licensed_text, machine_paths, user_identifiers, client_identifiers,
     project_identifiers, secrets, private_source_hashes, mock_solver_results]
+
+solver_neutrality_contract:
+  canonical_parameter_groups: [topology_and_geometry,
+    materials_and_section_properties, contents_and_internal_fluids,
+    environment_and_metocean, loads, boundary_and_initial_conditions,
+    analysis_intent_and_stages, requested_quantities_and_locations,
+    acceptance_criteria, units_and_coordinate_frames]
+  forbidden_in_canonical_SSOT: [solver_object_names, solver_file_layout,
+    solver_license_settings, solver_host_settings, solver_implicit_defaults]
+  model_contract_semantics: solver_neutral_physics_analysis_intent_and_outputs
+  adapter_rule: versioned_target_adapter_projects_SSOT_without_back_write
+  first_execution_target: OrcaFlex
+  future_execution_targets: open_including_custom_FEA
+  target_gap_rule: fail_or_record_explicit_non_equivalence_never_guess
+  result_rule: every_result_maps_to_generic_quantity_location_and_criterion_contracts
+  pivot_acceptance: new_solver_requires_adapter_and_target_validation_not_SSOT_reauthoring
 
 owners:
   source_repair:
@@ -72,6 +88,7 @@ interface_envelopes:
       configuration_sha256, case_id, case_sha256, source_class,
       public_source_sha256_or_safe_provenance_commitment_sha256,
       confidentiality_status, redistribution_status, units_contract_sha256,
+      generic_parameter_contract_sha256,
       provenance_envelope_sha256, eligibility_status,
       normalized_case_envelope_sha256]
   analysis_contract:
@@ -86,19 +103,23 @@ interface_envelopes:
     consumers: [normalized_ssot, analysis_semantics]
     minimum_bindings: [request_contract_version, riser_family,
       analysis_request_id,
-      request_matrix_sha256, case_id, case_sha256, model_contract_sha256]
+      request_matrix_sha256, case_id, case_sha256, model_contract_sha256,
+      generic_parameter_contract_sha256]
   completion_workover_analysis_request:
     producer: analysis_semantics
     consumers: [normalized_ssot]
     minimum_bindings: [request_contract_version, riser_family,
       analysis_request_id,
-      request_matrix_sha256, case_id, case_sha256, model_contract_sha256]
+      request_matrix_sha256, case_id, case_sha256, model_contract_sha256,
+      generic_parameter_contract_sha256]
   deterministic_bundle:
     producer: normalized_ssot
     consumers: [analysis_semantics, licensed_execution]
     minimum_bindings: [riser_family, case_id, case_sha256,
       analysis_request_id,
-      model_contract_sha256, adapter_version, generator_commit,
+      model_contract_sha256, generic_parameter_contract_sha256,
+      solver_target_id, solver_adapter_contract_sha256,
+      solver_projection_sha256, adapter_version, generator_commit,
       bundle_sha256, file_manifest_sha256]
   execution_request:
     schema_owner: licensed_execution
@@ -109,7 +130,9 @@ interface_envelopes:
       requester_principal_id, requester_signature_sha256,
       authorization_policy_version, authorization_evidence_sha256,
       case_id, case_sha256, analysis_request_id, bundle_sha256,
-      model_contract_sha256, requested_solver_stages_sha256]
+      model_contract_sha256, generic_parameter_contract_sha256,
+      solver_target_id, solver_adapter_contract_sha256,
+      solver_projection_sha256, requested_solver_stages_sha256]
   execution_receipt:
     producer: licensed_execution
     consumers: [analysis_semantics, public_release]
@@ -117,7 +140,9 @@ interface_envelopes:
       execution_request_sha256, requester_signature_sha256,
       authorization_evidence_sha256, requested_solver_stages_sha256,
       case_id, case_sha256, analysis_request_id, bundle_sha256,
-      model_contract_sha256, native_model_sha256, solver_identity_sha256,
+      model_contract_sha256, generic_parameter_contract_sha256,
+      solver_target_id, solver_adapter_contract_sha256,
+      solver_projection_sha256, native_model_sha256, solver_identity_sha256,
       semantic_status, raw_solver_payload_sha256, host_signer_principal_id,
       execution_receipt_sha256]
   engineering_result:
@@ -125,6 +150,8 @@ interface_envelopes:
     consumers: [public_release]
     minimum_bindings: [result_contract_version, result_contract_sha256,
       criteria_contract_sha256, oracle_contract_sha256, case_id, case_sha256,
+      generic_parameter_contract_sha256, solver_target_id,
+      solver_adapter_contract_sha256, solver_projection_sha256,
       execution_receipt_sha256, raw_solver_payload_sha256,
       engineering_result_payload_sha256, quantity_unit_contract_sha256,
       criterion_citation_contract_sha256, completeness_status,
@@ -190,6 +217,7 @@ interface_envelopes:
 identity_chain:
   order: [approved_public_source_or_safe_provenance_commitment,
     normalized_configuration, analysis_case, analysis_request,
+    solver_target_and_adapter_contract, solver_projection,
     deterministic_bundle, execution_request, native_model, raw_solver_payload,
     execution_receipt, engineering_result_payload, logical_release, HF_commit,
     HF_publication_receipt, website_evidence]
@@ -202,8 +230,10 @@ milestone_DAG:
     - normalized_case_ready -> analysis_contract_ready
     - analysis_contract_ready -> drilling_requests_ready
     - analysis_contract_ready -> completion_workover_requests_ready
+    - analysis_contract_ready -> solver_adapter_contract_ready
     - drilling_requests_ready -> deterministic_bundles_ready
     - completion_workover_requests_ready -> deterministic_bundles_ready
+    - solver_adapter_contract_ready -> deterministic_bundles_ready
     - deterministic_bundles_ready -> execution_authorized
     - execution_authorized -> licensed_execution_complete
     - licensed_execution_complete -> licensed_engineering_validation_complete
@@ -217,6 +247,7 @@ milestone_DAG:
     analysis_contract_ready: analysis_semantics
     drilling_requests_ready: drilling_workflow
     completion_workover_requests_ready: analysis_semantics
+    solver_adapter_contract_ready: normalized_ssot
     deterministic_bundles_ready: normalized_ssot
     execution_authorized: analysis_semantics
     licensed_execution_complete: licensed_execution
@@ -244,10 +275,14 @@ promotion_gates:
   source_to_normalized: [source_classified, provenance_complete,
     legal_license_approved, units_explicit, malformed_rows_rejected]
   normalized_to_bundle: [approved_schema, complete_mapping,
-    no_implicit_defaults, deterministic_generation, bundle_hash_verified]
+    generic_parameter_contract_bound, no_implicit_defaults,
+    versioned_solver_adapter, no_adapter_back_write,
+    deterministic_generation, bundle_hash_verified]
   bundle_to_execution: [independently_authorized_request, safe_transport,
-    licensed_host_preflight, real_canary, bundle_and_model_contract_binding]
-  execution_to_result: [real_OrcaFlex, requested_stages_complete,
+    target_specific_runtime_preflight, target_specific_real_canary,
+    bundle_model_generic_parameter_adapter_and_projection_binding]
+  execution_to_result: [approved_solver_target,
+    target_specific_execution_evidence, requested_stages_complete,
     semantic_success, signed_receipt, raw_payload_hash_verified,
     engineering_completeness_and_oracles_pass]
   result_to_public: [public_sources_or_safe_commitments_only,
@@ -268,6 +303,11 @@ global_invariants:
   - clean_room_author_uses_public_only_allowlist_and_records_declaration_citations_rationale_and_environment_evidence
   - clean_room_review_uses_distinct_authorized_principal_and_private_confidentiality_evidence
   - mock_or_reduced_order_results_never_claim_OrcaFlex_provenance
+  - canonical_SSOT_contains_only_solver_neutral_engineering_parameters
+  - solver_specific_models_settings_and_defaults_are_derived_adapter_outputs_only
+  - solver_adapter_never_back_writes_defaults_or_names_into_canonical_SSOT
+  - adding_a_solver_target_requires_no_canonical_SSOT_schema_fork
+  - v1_executes_OrcaFlex_but_parent_interfaces_remain_solver_agnostic
   - private_inputs_may_support_private_QA_but_never_seed_public_rows
   - every_eligible_family_has_baseline_statics_and_complete_requested_outputs
   - fatigue_is_outside_v1_public_release_but_may_remain_later_analysis_scope
@@ -286,6 +326,9 @@ child_acceptance_obligations:
     closed_physical_inputs, collision_free_IDs, deterministic_hashes,
     no_implicit_defaults, cross_platform_vectors,
     reconstructable_clean_room_evidence, coordinate_current_conformance,
+    generic_solver_parameter_contract, solver_neutral_schema_vectors,
+    versioned_adapter_interface, OrcaFlex_adapter_as_first_target,
+    no_adapter_back_write_or_implicit_defaults,
     full_applicable_repository_legal_scan]
   drilling_workflow: [complete_drilling_request_matrix,
     normalized_role_mapping_without_duplicate_rotation,
@@ -295,7 +338,9 @@ child_acceptance_obligations:
     complete_completion_workover_request_matrix, independent_request_authorization,
     quantity_location_stage_matrix, criteria_citations_units_formulas,
     stable_result_IDs, required_cardinality, independent_oracles,
-    post_run_licensed_validation, fatigue_excluded_from_v1,
+    solver_neutral_quantity_location_stage_and_criteria_contracts,
+    target_specific_result_mapping, post_run_licensed_validation,
+    fatigue_excluded_from_v1,
     full_applicable_repository_legal_scan]
   licensed_execution: [request_schema_and_signature_verification,
     nonce_TTL_revocation, real_canary, host_license_proof,
@@ -349,10 +394,11 @@ required_family_routing:
   selection: exactly_one_route_per_normalized_case_and_bundle
   handoffs:
     - {from: normalized_case, to: selected_request,
-       fields: [riser_family, case_id, case_sha256]}
+       fields: [riser_family, case_id, case_sha256,
+         generic_parameter_contract_sha256]}
     - {from: selected_request, to: deterministic_bundle,
        fields: [riser_family, analysis_request_id, case_id, case_sha256,
-         model_contract_sha256]}
+         model_contract_sha256, generic_parameter_contract_sha256]}
 
 required_handoff_equalities:
   - {from: analysis_contract, to: drilling_analysis_request,
@@ -362,16 +408,22 @@ required_handoff_equalities:
   - {from: analysis_contract, to: deterministic_bundle,
      fields: [model_contract_sha256]}
   - {from: deterministic_bundle, to: execution_request,
-     fields: [case_id, case_sha256, analysis_request_id, bundle_sha256,
-       model_contract_sha256]}
+    fields: [case_id, case_sha256, analysis_request_id, bundle_sha256,
+       model_contract_sha256, generic_parameter_contract_sha256,
+       solver_target_id, solver_adapter_contract_sha256,
+       solver_projection_sha256]}
   - {from: execution_request, to: execution_receipt,
      fields: [execution_request_id, execution_request_sha256,
        requester_signature_sha256, authorization_evidence_sha256,
        requested_solver_stages_sha256, case_id, case_sha256,
-       analysis_request_id, bundle_sha256, model_contract_sha256]}
+       analysis_request_id, bundle_sha256, model_contract_sha256,
+       generic_parameter_contract_sha256, solver_target_id,
+       solver_adapter_contract_sha256, solver_projection_sha256]}
   - {from: execution_receipt, to: engineering_result,
-     fields: [case_id, case_sha256, execution_receipt_sha256,
-       raw_solver_payload_sha256]}
+    fields: [case_id, case_sha256, execution_receipt_sha256,
+       raw_solver_payload_sha256, generic_parameter_contract_sha256,
+       solver_target_id, solver_adapter_contract_sha256,
+       solver_projection_sha256]}
   - {from: analysis_contract, to: engineering_result,
      fields: [result_contract_version, result_contract_sha256,
        criteria_contract_sha256,

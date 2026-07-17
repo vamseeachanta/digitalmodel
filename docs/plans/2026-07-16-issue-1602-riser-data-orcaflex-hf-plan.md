@@ -1,6 +1,6 @@
-# Plan for #1602: Riser Data, OrcaFlex Analysis, and Hugging Face Program
+# Plan for #1602: Solver-Neutral Riser Data, OrcaFlex v1, and Hugging Face
 
-> **Status:** plan-review — Round 14 unanimous APPROVE; owner approval pending
+> **Status:** draft — owner-directed solver-neutrality revision under review
 > **Complexity:** T3
 > **Date:** 2026-07-16
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/1602
@@ -8,8 +8,8 @@
 > **Lane:** lane:codex
 > **Design:** `docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html`
 > **Parent interface contract:** `docs/plans/issue-1602-riser-analysis-contract-v1.yaml`
-> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6,7,8,9,10,11,12,13}/`
-> **No-MAJOR boundary review:** `scripts/review/results/issue-1602-round-14/`
+> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6,7,8,9,10,11,12,13,14}/`
+> **Solver-neutrality review:** `scripts/review/results/issue-1602-round-15/`
 
 ---
 
@@ -26,13 +26,21 @@ The approved architecture will remain unchanged:
 
 - The solver-neutral normalized configuration and analysis case will be the
   single source of truth.
+- The SSOT will express generic engineering physics, geometry, materials,
+  contents, environment/loads, boundary and initial conditions, analysis intent,
+  requested quantities/locations, criteria, units, and coordinate frames.
+- Solver object names, file layouts, host/license settings, and implicit solver
+  defaults will exist only in versioned target adapters and derived bundles.
 - Source DAT/YAML and legacy OrcaFlex models will be evidence only.
-- Generated OrcaFlex bundles, native models, and results will be derived
-  artifacts.
+- Generated solver bundles, native models, and results will be derived
+  artifacts. OrcaFlex will be the first execution target, not the data model.
 - Raw completion/workover models will not enter public artifacts.
 - Public completion/workover inputs will be independently authored clean-room
   synthetic cases.
 - Only verified real OrcaFlex results will be published as solver results.
+- A future custom FEA or other solver will consume the same canonical case and
+  generic analysis contract, then emit the same request, receipt, result, and
+  release evidence boundaries without reauthoring or forking the SSOT.
 - The global frame will remain right-handed ENU, +Z up from mean water level,
   with directions clockwise from true North and going-to, bow-to vessel heading,
   offsets at the top connection, and arc length from the top connection.
@@ -94,7 +102,7 @@ by their child issues, not a parent runtime regression.
 | Layer | Owner | Exact child-owned contract | Parent-retained invariant |
 |---|---|---|---|
 | Source repair | WED #1046 | CSV grammar, corrected rows, semantic anchors | malformed or ambiguous rows will not promote |
-| Normalized SSOT | DM #1603 | nested schemas, IDs, lineage, clean-room records, global coordinate adapter, bundle builder | solver-neutral SSOT; no silent drops/defaults; public/private boundary |
+| Normalized SSOT | DM #1603 | generic engineering schemas, IDs, lineage, clean-room records, global coordinates, target-adapter interface, OrcaFlex v1 bundle builder | solver-neutral SSOT; no solver names/defaults; no silent drops/back-write; public/private boundary |
 | Drilling workflow | DM #811 | drilling stackup/request matrix and normalized role mapping | approved drilling requests; no duplicate coordinate rotation |
 | Engineering analysis | DM #138 | pre-run model/result contracts, completion request matrix, request authorization, post-run results/oracles | acyclic pre-run readiness and post-run licensed validation |
 | Licensed execution | Deckhand #568 | request verification, canary/receipt schemas, signatures, transport, host policy | executor will not self-authorize; real solver receipt binds raw payload |
@@ -116,8 +124,9 @@ normative parent interface. It will define twelve envelope boundaries:
    oracle contracts before any licensed request.
 3. Separate drilling and completion/workover analysis-request envelopes will
    bind the approved case matrices to the model contract.
-4. `deterministic_bundle` will bind the case and analysis request to the model
-   contract, adapter/generator, bundle, and file manifest.
+4. `deterministic_bundle` will bind the case and analysis request to the generic
+   parameter/model contracts, solver target, versioned adapter, deterministic
+   solver projection, bundle, and file manifest.
 5. `execution_request` will be authorized and signed by #138 using #568's
    reviewed request schema; Deckhand will only verify and execute it.
 6. `execution_receipt` will be independently signed by Deckhand and will bind
@@ -142,14 +151,34 @@ normative parent interface. It will define twelve envelope boundaries:
     versions to fresh HF and website retrieval evidence at invocation time.
 
 The parent identity order will be public source/commitment → normalized
-configuration → case → analysis request → bundle → authorized execution request
-→ native model → raw solver payload → signed execution receipt → engineering
+configuration → case → generic analysis request → solver target/adapter contract
+→ deterministic solver projection → bundle → authorized execution request →
+native model → raw solver payload → signed execution receipt → engineering
 result → logical release → HF commit → publication receipt → website evidence.
 Each producer will freeze and
 test its complete owned schema before implementation. Each consumer will verify
 the shared envelope and exact approved producer version before processing.
 Unknown versions, mismatched IDs or hashes, absent evidence, and silent coercion
 will fail.
+
+## Solver Portability Contract
+
+The normalized configuration and analysis case will remain the only canonical
+engineering state. They will contain no OrcaFlex object names, custom-FEA
+element names, solver file structure, license/host settings, or implicit solver
+defaults. Exact child schemas will group generic parameters by topology and
+geometry, material/section behavior, contents, environment and loads, boundary
+and initial conditions, analysis intent/stages, requested quantities/locations,
+criteria, units, and coordinate frames.
+
+Each solver will enter through a versioned target adapter. An adapter will map
+the immutable generic case to a deterministic solver projection and will bind
+`solver_target_id`, `solver_adapter_contract_sha256`, and
+`solver_projection_sha256` through execution and engineering-result evidence.
+Unsupported semantics will fail or be recorded as explicit non-equivalence;
+the adapter will never invent a default or back-write solver-specific state into
+the SSOT. OrcaFlex will be the v1 target. Adding custom FEA or another solver
+will require a reviewed adapter and target-validation plan, not an SSOT fork.
 
 The v1 public release will retain thirteen required query surfaces:
 `source_registry`, `transformations`, `citations`, `criteria`,
@@ -191,8 +220,9 @@ The parent issue will deliver:
 - one reconciled dependency/ownership tree;
 - independently approved and completed child implementations;
 - provenance-safe normalized drilling and synthetic completion/workover cases;
-- real licensed OrcaFlex strength and operability results for every eligible
-  case requested by the approved child analysis matrix;
+- real licensed OrcaFlex v1 strength and operability results for every eligible
+  case requested by the approved child analysis matrix, with generic contracts
+  and evidence boundaries reusable by future solver targets;
 - one immutable, verified Hugging Face release;
 - one verified public website capability route; and
 - one executable closeout evidence report proving the entire chain.
@@ -269,8 +299,10 @@ remain mandatory before publication.
 2. #1046 and #1603 will define the usable source and normalized-case boundary.
 3. #138 will reach pre-run `analysis_contract_ready`; #811 and #138 will then
    produce the drilling and completion/workover request matrices.
-4. #1603 will generate bundles bound to those requests and #138's model
-   contract; #138 will independently authorize each execution request.
+4. #1603 will freeze the generic parameter and target-adapter contracts, then
+   generate deterministic OrcaFlex v1 projections/bundles bound to the generic
+   requests and #138 model contract; #138 will independently authorize each
+   execution request.
 5. #568 will verify the request, run the real licensed solver, and return a
    signed receipt over the raw result payload.
 6. #138 will perform post-run licensed validation, completeness checks, and
@@ -296,6 +328,12 @@ start before its upstream interface and its own approval gate are complete.
 - [ ] Malformed source rows will be repaired with semantic proof or rejected.
 - [ ] The solver-neutral normalized case will remain the SSOT; OrcaFlex files
   will remain evidence or derived artifacts.
+- [ ] Canonical parameters will remain generic and solver-independent; target
+  adapters will be versioned derived projections and will not back-write names,
+  settings, or defaults into the SSOT.
+- [ ] A custom FEA or future solver will be able to consume the same normalized
+  case and analysis intent by adding a reviewed adapter, without changing
+  canonical configuration/case identity or forking the SSOT schema.
 - [ ] Raw completion/workover models and restricted metadata will never enter
   public artifacts.
 - [ ] Every public completion/workover input will carry approved clean-room
@@ -342,7 +380,7 @@ import yaml
 p = Path("docs/plans/issue-1602-riser-analysis-contract-v1.yaml")
 c = yaml.safe_load(p.read_text())
 assert c["contract_id"] == "digitalmodel-riser-analysis-parent-interface"
-assert c["contract_version"] == "2.0.0-draft.9"
+assert c["contract_version"] == "2.0.0-draft.10"
 owners = c["owners"]
 required_owners = {"source_repair", "normalized_ssot", "drilling_workflow",
                    "analysis_semantics", "licensed_execution", "public_release",
@@ -368,6 +406,23 @@ assert set(c["source_of_truth"]["forbidden_public"]) == {
     "licensed_text", "machine_paths", "user_identifiers",
     "client_identifiers", "project_identifiers", "secrets",
     "private_source_hashes", "mock_solver_results"}
+assert c["solver_neutrality_contract"] == {
+    "canonical_parameter_groups": ["topology_and_geometry",
+        "materials_and_section_properties", "contents_and_internal_fluids",
+        "environment_and_metocean", "loads",
+        "boundary_and_initial_conditions", "analysis_intent_and_stages",
+        "requested_quantities_and_locations", "acceptance_criteria",
+        "units_and_coordinate_frames"],
+    "forbidden_in_canonical_SSOT": ["solver_object_names",
+        "solver_file_layout", "solver_license_settings",
+        "solver_host_settings", "solver_implicit_defaults"],
+    "model_contract_semantics": "solver_neutral_physics_analysis_intent_and_outputs",
+    "adapter_rule": "versioned_target_adapter_projects_SSOT_without_back_write",
+    "first_execution_target": "OrcaFlex",
+    "future_execution_targets": "open_including_custom_FEA",
+    "target_gap_rule": "fail_or_record_explicit_non_equivalence_never_guess",
+    "result_rule": "every_result_maps_to_generic_quantity_location_and_criterion_contracts",
+    "pivot_acceptance": "new_solver_requires_adapter_and_target_validation_not_SSOT_reauthoring"}
 assert set(c["child_acceptance_obligations"]) == {
     "source_repair", "normalized_ssot", "drilling_workflow", "analysis_semantics",
     "licensed_execution", "public_release", "website"}
@@ -385,19 +440,24 @@ assert set(envelopes["execution_request"]["minimum_bindings"]) == {
     "requester_signature_sha256", "authorization_policy_version",
     "authorization_evidence_sha256", "case_id", "case_sha256",
     "analysis_request_id", "bundle_sha256", "model_contract_sha256",
+    "generic_parameter_contract_sha256", "solver_target_id",
+    "solver_adapter_contract_sha256", "solver_projection_sha256",
     "requested_solver_stages_sha256"}
 assert set(envelopes["execution_receipt"]["minimum_bindings"]) == {
     "receipt_schema_version", "execution_request_id",
     "execution_request_sha256", "requester_signature_sha256",
     "authorization_evidence_sha256", "requested_solver_stages_sha256",
     "case_id", "case_sha256", "analysis_request_id", "bundle_sha256",
-    "model_contract_sha256", "native_model_sha256",
+    "model_contract_sha256", "generic_parameter_contract_sha256",
+    "solver_target_id", "solver_adapter_contract_sha256",
+    "solver_projection_sha256", "native_model_sha256",
     "solver_identity_sha256", "semantic_status",
     "raw_solver_payload_sha256", "host_signer_principal_id",
     "execution_receipt_sha256"}
 normalized = set(envelopes["normalized_case"]["minimum_bindings"])
 assert {"configuration_id", "configuration_sha256",
-        "public_source_sha256_or_safe_provenance_commitment_sha256"} <= normalized
+        "public_source_sha256_or_safe_provenance_commitment_sha256",
+        "generic_parameter_contract_sha256"} <= normalized
 assert "public_release" in envelopes["normalized_case"]["consumers"]
 assert "public_release" in envelopes["analysis_contract"]["consumers"]
 release = set(envelopes["logical_release"]["minimum_bindings"])
@@ -432,10 +492,12 @@ assert family_routing == {
     "selection": "exactly_one_route_per_normalized_case_and_bundle",
     "handoffs": [
         {"from": "normalized_case", "to": "selected_request",
-         "fields": ["riser_family", "case_id", "case_sha256"]},
+         "fields": ["riser_family", "case_id", "case_sha256",
+                    "generic_parameter_contract_sha256"]},
         {"from": "selected_request", "to": "deterministic_bundle",
          "fields": ["riser_family", "analysis_request_id", "case_id",
-                    "case_sha256", "model_contract_sha256"]}]}
+                    "case_sha256", "model_contract_sha256",
+                    "generic_parameter_contract_sha256"]}]}
 request_envelopes = set(family_routing["allowed_routes"].values())
 assert all(family_routing["allowed_routes"][family] in request_envelopes
            for family in ("drilling", "completion", "workover"))
@@ -457,17 +519,23 @@ expected_handoffs = {
 } | {
     ("deterministic_bundle", f, "execution_request", f)
     for f in ("case_id", "case_sha256", "analysis_request_id",
-              "bundle_sha256", "model_contract_sha256")
+              "bundle_sha256", "model_contract_sha256",
+              "generic_parameter_contract_sha256", "solver_target_id",
+              "solver_adapter_contract_sha256", "solver_projection_sha256")
 } | {
     ("execution_request", f, "execution_receipt", f)
     for f in ("execution_request_id", "execution_request_sha256",
               "requester_signature_sha256", "authorization_evidence_sha256",
               "requested_solver_stages_sha256", "case_id", "case_sha256",
-              "analysis_request_id", "bundle_sha256", "model_contract_sha256")
+              "analysis_request_id", "bundle_sha256", "model_contract_sha256",
+              "generic_parameter_contract_sha256", "solver_target_id",
+              "solver_adapter_contract_sha256", "solver_projection_sha256")
 } | {
     ("execution_receipt", f, "engineering_result", f)
     for f in ("case_id", "case_sha256", "execution_receipt_sha256",
-              "raw_solver_payload_sha256")
+              "raw_solver_payload_sha256", "generic_parameter_contract_sha256",
+              "solver_target_id", "solver_adapter_contract_sha256",
+              "solver_projection_sha256")
 } | {
     ("analysis_contract", f, "engineering_result", f)
     for f in ("result_contract_version", "result_contract_sha256",
@@ -594,6 +662,7 @@ for inputs, output, _ in actual_derivations:
 order = c["identity_chain"]["order"]
 assert order == ["approved_public_source_or_safe_provenance_commitment",
     "normalized_configuration", "analysis_case", "analysis_request",
+    "solver_target_and_adapter_contract", "solver_projection",
     "deterministic_bundle", "execution_request", "native_model",
     "raw_solver_payload", "execution_receipt", "engineering_result_payload",
     "logical_release", "HF_commit", "HF_publication_receipt",
@@ -647,6 +716,14 @@ gh issue view 1604 -R vamseeachanta/digitalmodel --json body --jq .body |
   rg -F 'digitalmodel #1602 owns the parent cross-layer interface.'
 gh issue view 75 -R vamseeachanta/aceengineer-website --json body --jq .body |
   rg -F '`HF_publication_receipt_sha256`'
+gh issue view 1602 -R vamseeachanta/digitalmodel --json body --jq .body |
+  rg -F 'Custom FEA or another solver must consume the same canonical case'
+gh issue view 1603 -R vamseeachanta/digitalmodel --json body --jq .body |
+  rg -F 'OrcaFlex/ProjectInputSpec is the first adapter target, not the SSOT.'
+gh issue view 138 -R vamseeachanta/digitalmodel --json body --jq .body |
+  rg -F 'owns solver-neutral analysis intent'
+gh issue view 568 -R vamseeachanta/deckhand --json body --jq .body |
+  rg -F 'Deckhand verifies the selected target and projection but does not own or mutate the solver-neutral SSOT.'
 cd ../../workspace-hub
 bash scripts/legal/legal-sanity-scan.sh \
   --repo=../agent-worktrees/dm-1602-design --diff-only
@@ -702,7 +779,12 @@ pin the security-critical request/receipt minimum-binding sets before checking
 their commitments. Draft 9 will assert those exact parent-owned minimum sets;
 exact child schemas, preimages, formats, and fixtures will remain deferred.
 Round 14 re-reviewed only this interface boundary and returned unanimous
-APPROVE. The plan will remain at `plan-review` until explicit owner approval.
+APPROVE. On 2026-07-17 the owner directed a further revision: the canonical
+dataset will expose generic solver-neutral parameters and support OrcaFlex as
+the first of multiple replaceable solver adapters. Draft 10 will bind generic
+parameter, solver-target, adapter-contract, and deterministic-projection
+identities without moving target-specific state into the SSOT. Round 15 will
+review this revision before the plan can return to `plan-review`.
 
 | Review wave | Verdict | Disposition |
 |---|---|---|
@@ -720,8 +802,10 @@ APPROVE. The plan will remain at `plan-review` until explicit owner approval.
 | Round 12 boundary review | MAJOR | data/release APPROVE; requester-authenticated request commitment coverage unstated |
 | Round 13 boundary review | MAJOR | data/solver APPROVE; request/receipt security minimum sets not pinned by validator |
 | Round 14 boundary review | APPROVE | unanimous data, solver, and release/security approval; no parent-boundary blockers |
+| Owner solver-neutrality revision | APPROVED DIRECTION | generic engineering SSOT; OrcaFlex v1 and future custom FEA through replaceable adapters |
+| Round 15 solver-neutrality review | PENDING | — |
 
-**Overall result:** APPROVE — AWAITING EXPLICIT OWNER PLAN APPROVAL
+**Overall result:** PENDING ROUND 15
 
 ## Risks and Open Questions
 
