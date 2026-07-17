@@ -1,5 +1,5 @@
 contract_id: digitalmodel-riser-analysis-parent-interface
-contract_version: 2.0.0-draft.6
+contract_version: 2.0.0-draft.7
 status: planning-interface
 authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
 approved_design: 2026-07-16-issue-1602-riser-hf-analysis-design.html
@@ -420,6 +420,11 @@ envelope_commitment_rules:
     commitment_field: engineering_result_envelope_sha256
     covers: every_minimum_binding_except_commitment_field
     canonical_preimage_owner: analysis_semantics
+  execution_receipt:
+    commitment_field: execution_receipt_sha256
+    covers: every_minimum_binding_except_commitment_field
+    authentication: host_signature_covers_commitment
+    canonical_preimage_owner: licensed_execution
 
 closeout_observation_rules:
   fresh_HF_required_checks: [head_equals_published_commit,

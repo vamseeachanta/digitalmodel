@@ -8,8 +8,8 @@
 > **Lane:** lane:codex
 > **Design:** `docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html`
 > **Parent interface contract:** `docs/plans/issue-1602-riser-analysis-contract-v1.yaml`
-> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6,7,8,9,10}/`
-> **Boundary-refactor review:** `scripts/review/results/issue-1602-round-11/`
+> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6,7,8,9,10,11}/`
+> **Boundary-refactor review:** `scripts/review/results/issue-1602-round-12/`
 
 ---
 
@@ -342,7 +342,7 @@ import yaml
 p = Path("docs/plans/issue-1602-riser-analysis-contract-v1.yaml")
 c = yaml.safe_load(p.read_text())
 assert c["contract_id"] == "digitalmodel-riser-analysis-parent-interface"
-assert c["contract_version"] == "2.0.0-draft.6"
+assert c["contract_version"] == "2.0.0-draft.7"
 owners = c["owners"]
 required_owners = {"source_repair", "normalized_ssot", "drilling_workflow",
                    "analysis_semantics", "licensed_execution", "public_release",
@@ -420,10 +420,17 @@ assert family_routing == {
         {"from": "selected_request", "to": "deterministic_bundle",
          "fields": ["riser_family", "analysis_request_id", "case_id",
                     "case_sha256", "model_contract_sha256"]}]}
-for request_envelope in set(family_routing["allowed_routes"].values()):
-    assert "riser_family" in envelopes[request_envelope]["minimum_bindings"]
-assert "riser_family" in envelopes["normalized_case"]["minimum_bindings"]
-assert "riser_family" in envelopes["deterministic_bundle"]["minimum_bindings"]
+request_envelopes = set(family_routing["allowed_routes"].values())
+assert all(family_routing["allowed_routes"][family] in request_envelopes
+           for family in ("drilling", "completion", "workover"))
+case_to_request_fields = set(family_routing["handoffs"][0]["fields"])
+request_to_bundle_fields = set(family_routing["handoffs"][1]["fields"])
+assert case_to_request_fields <= set(envelopes["normalized_case"]["minimum_bindings"])
+assert request_to_bundle_fields <= set(envelopes["deterministic_bundle"]["minimum_bindings"])
+for request_envelope in request_envelopes:
+    request_fields = set(envelopes[request_envelope]["minimum_bindings"])
+    assert case_to_request_fields <= request_fields
+    assert request_to_bundle_fields <= request_fields
 
 expected_handoffs = {
     ("analysis_contract", "model_contract_sha256", target,
@@ -505,7 +512,12 @@ assert c["envelope_commitment_rules"] == {
     "engineering_result": {
         "commitment_field": "engineering_result_envelope_sha256",
         "covers": "every_minimum_binding_except_commitment_field",
-        "canonical_preimage_owner": "analysis_semantics"}}
+        "canonical_preimage_owner": "analysis_semantics"},
+    "execution_receipt": {
+        "commitment_field": "execution_receipt_sha256",
+        "covers": "every_minimum_binding_except_commitment_field",
+        "authentication": "host_signature_covers_commitment",
+        "canonical_preimage_owner": "licensed_execution"}}
 assert c["closeout_observation_rules"] == {
     "fresh_HF_required_checks": ["head_equals_published_commit",
         "exact_tree_recomputed", "datasets_server_valid",
@@ -602,7 +614,7 @@ xmllint --html --noout \
   docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html
 ! rg -n 'TO''DO|TB''D|<re''po>|N''NN' \
   docs/plans/2026-07-16-issue-1602-riser-data-orcaflex-hf-plan.md
-for f in scripts/review/results/issue-1602-round-10/*.md; do test -s "$f"; done
+for f in scripts/review/results/issue-1602-round-11/*.md; do test -s "$f"; done
 gh issue view 811 -R vamseeachanta/digitalmodel --json body --jq .body |
   rg -F '#1603 exclusively owns the global coordinate transform.'
 gh issue view 568 -R vamseeachanta/deckhand --json body --jq .body |
@@ -652,8 +664,12 @@ exact-one family routing began too late, complete-envelope coverage was not an
 explicit invariant, and closeout did not freshly prove HF semantics or fetched
 website state. Draft 6 will add exhaustive case-to-request routing, complete-
 envelope commitment rules, live HF/site observation rules, and validator-
-enforced full legal-scan obligations. Round 11 will re-review only this
-interface boundary. Any MAJOR will keep the plan in draft.
+enforced full legal-scan obligations. Round 11 found two remaining narrow gaps:
+the hard validator did not expand selected-request fields over every concrete
+route, and the authenticated execution receipt did not normatively commit every
+receipt binding. Draft 7 will close both while leaving exact receipt preimages
+and verification with Deckhand. Round 12 will re-review only this interface
+boundary. Any MAJOR will keep the plan in draft.
 
 | Review wave | Verdict | Disposition |
 |---|---|---|
@@ -667,9 +683,10 @@ interface boundary. Any MAJOR will keep the plan in draft.
 | Round 8 boundary review | MAJOR | incomplete lifecycle equality matrix, missing result-set commitment and rendered-release-ID binding, non-exhaustive validator |
 | Round 9 boundary review | MAJOR | conditional family ambiguity, partial envelope commitments, unbound fresh retrieval, stale review check, failing unrelated full scan |
 | Round 10 boundary review | MAJOR | family routing starts after normalization; envelope commitment coverage unstated; fresh HF/site semantics incomplete; full-scan gate prose-only |
-| Round 11 boundary review | PENDING | — |
+| Round 11 boundary review | MAJOR | selected-request route fields under-validated; authenticated receipt coverage unstated |
+| Round 12 boundary review | PENDING | — |
 
-**Overall result:** PENDING ROUND 11
+**Overall result:** PENDING ROUND 12
 
 ## Risks and Open Questions
 
