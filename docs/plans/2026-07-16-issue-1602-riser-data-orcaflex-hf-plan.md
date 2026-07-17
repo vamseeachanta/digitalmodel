@@ -8,8 +8,8 @@
 > **Lane:** lane:codex
 > **Design:** `docs/plans/2026-07-16-issue-1602-riser-hf-analysis-design.html`
 > **Parent interface contract:** `docs/plans/issue-1602-riser-analysis-contract-v1.yaml`
-> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5}/`
-> **Boundary-refactor review:** `scripts/review/results/issue-1602-round-6/`
+> **Historical review evidence:** `scripts/review/results/issue-1602-round-{1,2,3,4,5,6}/`
+> **Boundary-refactor review:** `scripts/review/results/issue-1602-round-7/`
 
 ---
 
@@ -94,12 +94,13 @@ by their child issues, not a parent runtime regression.
 | Layer | Owner | Exact child-owned contract | Parent-retained invariant |
 |---|---|---|---|
 | Source repair | WED #1046 | CSV grammar, corrected rows, semantic anchors | malformed or ambiguous rows will not promote |
-| Normalized SSOT | DM #1603 | nested schemas, IDs, lineage, clean-room records, adapter, bundle manifest | solver-neutral SSOT; no silent drops/defaults; public/private boundary |
-| Drilling workflow | DM #811 | stackup inputs, CLI/output, tolerances | only approved public/synthetic cases may enter public path |
-| Engineering analysis | DM #138 | model objects, load cases, quantities, criteria, formulas, oracles, cardinality | outputs will be complete, cited, independently checked, and bound to a case |
-| Licensed execution | Deckhand #568 | request/canary/receipt schemas, signatures, transport, host policy | real licensed solver; immutable case/bundle/model/result binding; fail closed |
-| Public release | DM #1604 | Parquet configs, joins, leak rules, manifest, HF transaction, closeout schema | public-safe rows only; exact immutable release; no mock or unsigned results |
+| Normalized SSOT | DM #1603 | nested schemas, IDs, lineage, clean-room records, global coordinate adapter, bundle builder | solver-neutral SSOT; no silent drops/defaults; public/private boundary |
+| Drilling workflow | DM #811 | drilling stackup/request matrix and normalized role mapping | approved drilling requests; no duplicate coordinate rotation |
+| Engineering analysis | DM #138 | pre-run model/result contracts, completion request matrix, request authorization, post-run results/oracles | acyclic pre-run readiness and post-run licensed validation |
+| Licensed execution | Deckhand #568 | request verification, canary/receipt schemas, signatures, transport, host policy | executor will not self-authorize; real solver receipt binds raw payload |
+| Public release | DM #1604 | Parquet configs, joins, leak rules, manifest, HF transaction, closeout verifier implementation | public-safe rows only; exact immutable release; no mock or unsigned results |
 | Website | Website #75 | capability schema, renderer changes, tests, deployment proof | verified HF release first; withheld values never render |
+| Parent closeout | DM #1602 | invoke landed verifier after every child and website complete | only parent will decide program completion |
 
 No child will redefine another child's output. A consumer may tighten validation
 but will reject, not reinterpret, an unknown producer version.
@@ -109,22 +110,34 @@ but will reject, not reinterpret, an unknown producer version.
 `docs/plans/issue-1602-riser-analysis-contract-v1.yaml` will be the sole
 normative parent interface. It will define six envelope boundaries:
 
-1. `normalized_case` will bind schema/version, case ID/hash, source class,
-   confidentiality, redistribution, units, provenance, and eligibility.
-2. `deterministic_bundle` will bind the case, adapter/generator version, bundle
-   hash, and file-manifest hash.
-3. `execution_request_and_receipt` will bind case/bundle/model hashes, workflow
-   and solver identity, request identity, semantic status, result hash, signer,
-   and receipt hash.
-4. `engineering_result` will bind case, execution receipt, result-contract
-   version, quantity/unit and criterion/citation contracts, completeness, and
-   payload hash.
-5. `public_release` will bind release version/ID/manifest, HF repository and
-   immutable commit, exact-tree evidence, and remote semantic evidence.
-6. `website_evidence` will bind the website commit/deployment, public route,
-   rendered release ID, and online verification evidence.
+1. `normalized_case` will bind public/safe provenance, configuration and case
+   identities, units, confidentiality, redistribution, and eligibility.
+2. `analysis_contract` will bind #138's pre-run model, result, criteria, and
+   oracle contracts before any licensed request.
+3. Separate drilling and completion/workover analysis-request envelopes will
+   bind the approved case matrices to the model contract.
+4. `deterministic_bundle` will bind the case and analysis request to the model
+   contract, adapter/generator, bundle, and file manifest.
+5. `execution_request` will be authorized and signed by #138 using #568's
+   reviewed request schema; Deckhand will only verify and execute it.
+6. `execution_receipt` will be independently signed by Deckhand and will bind
+   the native model, solver identity, semantic status, and pre-existing raw
+   solver payload.
+7. `engineering_result` will be produced after receipt verification and will
+   bind #138's complete derived result plus oracle and licensed-validation
+   evidence without entering the raw-payload/receipt preimage.
+8. `public_release` will bind eligibility, clean-room, authenticated joins,
+   decoded leak rules/evidence, legal/license evidence, exact HF tree, and
+   remote semantics to one immutable release.
+9. `website_evidence` will bind the exact release envelope and HF commit to the
+   deployed website commit, route, and rendered release ID.
+10. #1604 will implement the typed closeout verifier, but `program_closeout`
+    will be invoked and produced by #1602 only after every child is complete.
 
-Each producer will freeze and test its complete owned schema before
+The parent identity order will be public source/commitment → normalized
+configuration → case → analysis request → bundle → native model → raw solver
+payload → signed execution receipt → engineering result → public release → HF
+commit. Each producer will freeze and test its complete owned schema before
 implementation. Each consumer will verify the shared envelope and exact
 approved producer version before processing. Unknown versions, mismatched IDs
 or hashes, absent evidence, and silent coercion will fail.
@@ -229,10 +242,10 @@ The parent will not guess paths or duplicate those plans.
 | normalized identity, schema rejection, lineage, privacy, no defaults | DM #1603 | deterministic SSOT and bundle |
 | drilling stackup and operability tolerances | DM #811 | approved workflow behavior |
 | quantity/criterion/location cardinality and independent oracles | DM #138 | traceable engineering results |
-| tamper/replay/license/canary/semantic/transport failures | Deckhand #568 | only verified real execution succeeds |
+| unauthorized requester plus tamper/replay/license/canary/semantic/transport failures | #138 and Deckhand #568 | requester and executor are independent; only verified real execution succeeds |
 | release joins, decoded leaks, concurrency, exact tree, remote semantics | DM #1604 | immutable public-safe HF release |
 | withheld rendering, online failure, build/deploy/route checks | Website #75 | truthful live capability |
-| missing approval/review/ancestry/test/legal/HF/website evidence | DM #1604 | parent closeout fails closed |
+| missing approval/review/ancestry/test/legal/HF/website evidence | #1604 implementation; #1602 invocation | parent closeout fails closed |
 
 Licensed tests will be isolated and explicitly tagged. Unit tests will not mock
 licensed success into a public result. The real licensed acceptance path will
@@ -243,13 +256,18 @@ remain mandatory before publication.
 1. The parent plan will pass fresh adversarial review and receive explicit owner
    approval.
 2. #1046 and #1603 will define the usable source and normalized-case boundary.
-3. #811 and #138 will define the approved drilling/completion analysis and
-   engineering-result contracts.
-4. #568 will define and prove authenticated licensed execution and return.
-5. Eligible cases will run through the real solver and engineering checks.
-6. #1604 will build, scan, publish, and remotely verify the release.
-7. Website #75 will register and deploy the verified immutable release.
-8. #1604's closeout verifier will retrieve all evidence; the parent will close
+3. #138 will reach pre-run `analysis_contract_ready`; #811 and #138 will then
+   produce the drilling and completion/workover request matrices.
+4. #1603 will generate bundles bound to those requests and #138's model
+   contract; #138 will independently authorize each execution request.
+5. #568 will verify the request, run the real licensed solver, and return a
+   signed receipt over the raw result payload.
+6. #138 will perform post-run licensed validation, completeness checks, and
+   independent oracles before emitting the engineering result.
+7. #1604 will build, scan, publish, and remotely verify the release.
+8. Website #75 will register and deploy the verified immutable release.
+9. #1604's landed closeout verifier will retrieve all evidence when invoked by
+   #1602; the parent will close
    only after the completeness gate and owner-only verification label pass.
 
 Parallel work may occur only where the dependency graph permits read-only
@@ -279,6 +297,9 @@ start before its upstream interface and its own approval gate are complete.
 - [ ] Every eligible riser family will include a baseline statics case, and any
   missing requested result will block promotion.
 - [ ] Mock or reduced-order output will never be labeled as OrcaFlex output.
+- [ ] The execution requester/authorizer and licensed executor will be distinct
+  principals; the raw solver payload will exist before the receipt that signs
+  it, and engineering validation will occur after receipt verification.
 - [ ] Strength and operability outputs will satisfy #138's approved result matrix,
   plausibility tests, and independent engineering checks.
 - [ ] Publication will reject confidential values, host paths, client/project
@@ -286,8 +307,12 @@ start before its upstream interface and its own approval gate are complete.
   producer versions.
 - [ ] The HF repository will match the approved exact release at the returned
   immutable commit and pass remote config/split/feature/row/release-ID checks.
+- [ ] The dataset card will document all configs, row counts, units, nulls,
+  licenses, safe public source evidence, limitations, and issue-linked
+  withholding reasons.
 - [ ] The website will deploy the exact reviewed commit, return HTTP 200, render
-  the expected release ID, and omit withheld names and values.
+  the expected release ID, bind the exact HF commit/release envelope, and omit
+  withheld names and values.
 - [ ] Every child will pass TDD, legal scan, artifact review, issue summary,
   landed-ancestry verification, and completeness requirements.
 - [ ] Parent closeout will be computed from authoritative live evidence and will
@@ -303,16 +328,18 @@ import yaml
 p = Path("docs/plans/issue-1602-riser-analysis-contract-v1.yaml")
 c = yaml.safe_load(p.read_text())
 assert c["contract_id"] == "digitalmodel-riser-analysis-parent-interface"
-assert c["contract_version"] == "2.0.0-draft.1"
+assert c["contract_version"] == "2.0.0-draft.2"
 owners = c["owners"]
 required_owners = {"source_repair", "normalized_ssot", "drilling_workflow",
-                   "analysis_semantics", "licensed_execution",
-                   "public_release", "website"}
+                   "analysis_semantics", "licensed_execution", "public_release",
+                   "website", "parent_closeout"}
 assert set(owners) == required_owners
 envelopes = c["interface_envelopes"]
-required_envelopes = {"normalized_case", "deterministic_bundle",
-    "execution_request_and_receipt", "engineering_result", "public_release",
-    "website_evidence"}
+required_envelopes = {"normalized_case", "analysis_contract",
+    "drilling_analysis_request", "completion_workover_analysis_request",
+    "deterministic_bundle", "execution_request", "execution_receipt",
+    "engineering_result", "public_release", "website_evidence",
+    "program_closeout"}
 assert set(envelopes) == required_envelopes
 assert c["global_coordinate_contract"]["axes"] == "ENU_right_handed"
 assert len(c["public_dataset_surfaces"]["required_configs"]) == 13
@@ -322,8 +349,39 @@ assert set(c["child_acceptance_obligations"]) == {
 for name, envelope in envelopes.items():
     assert envelope["producer"] in owners
     assert envelope["minimum_bindings"]
-    for consumer in envelope["consumers"]:
+    consumers = envelope.get("consumers", [envelope["consumer"]]
+                         if "consumer" in envelope else [])
+    for consumer in consumers:
         assert consumer in owners or consumer == "parent_closeout"
+assert envelopes["execution_request"]["producer"] != envelopes["execution_receipt"]["producer"]
+normalized = set(envelopes["normalized_case"]["minimum_bindings"])
+assert {"configuration_id", "configuration_sha256",
+        "public_source_sha256_or_safe_provenance_commitment_sha256"} <= normalized
+release = set(envelopes["public_release"]["minimum_bindings"])
+assert {"public_eligibility_evidence_sha256", "clean_room_evidence_set_sha256",
+        "authenticated_join_evidence_sha256", "decoded_leak_evidence_sha256",
+        "legal_license_evidence_sha256"} <= release
+website = set(envelopes["website_evidence"]["minimum_bindings"])
+assert {"release_envelope_sha256", "HF_commit_sha"} <= website
+order = c["identity_chain"]["order"]
+assert order.index("raw_solver_payload") < order.index("execution_receipt") < order.index("engineering_result_payload")
+edges = [tuple(part.strip() for part in edge.split("->"))
+         for edge in c["milestone_DAG"]["edges"]]
+nodes = set(c["milestone_DAG"]["milestone_owners"])
+assert all(a in nodes and b in nodes for a, b in edges)
+assert set(c["milestone_DAG"]["milestone_owners"].values()) <= set(owners)
+incoming = {node: 0 for node in nodes}
+outgoing = {node: [] for node in nodes}
+for a, b in edges:
+    outgoing[a].append(b); incoming[b] += 1
+queue = [node for node, degree in incoming.items() if degree == 0]
+visited = []
+while queue:
+    node = queue.pop(); visited.append(node)
+    for child in outgoing[node]:
+        incoming[child] -= 1
+        if incoming[child] == 0: queue.append(child)
+assert len(visited) == len(nodes)
 all_outputs = [item for owner in owners.values() for item in owner["outputs"]]
 assert len(all_outputs) == len(set(all_outputs))
 assert c["planning_validation"]["no_child_implementation_authorized_by_parent_alone"]
@@ -351,9 +409,14 @@ contract-depth refactor on 2026-07-16.
 
 This revision will preserve every cross-layer safety outcome from those reviews
 while moving exact schema/receipt/validator design to its accountable child.
-Round 6 will review the new boundary itself: ownership gaps, lost acceptance
-criteria, incompatible envelope bindings, dependency cycles, and fail-open
-promotion paths. Any MAJOR will keep the plan in draft.
+Round 6 reviewed the new boundary and returned unanimous MAJOR on independent
+request authority, the #138/#568 lifecycle split, missing #811/completion
+request envelopes, identity ordering, release-security evidence bindings, and
+validator depth. Draft 2 will add an explicit acyclic milestone DAG, separate
+request/receipt producers, raw-payload-before-receipt ordering, family request
+owners, model/oracle bindings, security-rich release/closeout envelopes, and an
+executable DAG/authority/evidence validator. Round 7 will re-review only this
+interface boundary. Any MAJOR will keep the plan in draft.
 
 | Review wave | Verdict | Disposition |
 |---|---|---|
@@ -362,9 +425,10 @@ promotion paths. Any MAJOR will keep the plan in draft.
 | Rounds 2–3 | MAJOR | identity, provenance, solver, release, and closeout defects identified |
 | Rounds 4–5 | MAJOR | parent over-specification and non-executable nested contracts identified |
 | Owner boundary decision | APPROVED | parent will own interfaces/gates; children will own exact executable contracts |
-| Round 6 boundary review | PENDING | — |
+| Round 6 boundary review | MAJOR | trust direction, #138/#568 cycle, missing request/model/oracle/security bindings, stale live source-hash criterion, shallow validator |
+| Round 7 boundary review | PENDING | — |
 
-**Overall result:** PENDING ROUND 6
+**Overall result:** PENDING ROUND 7
 
 ## Risks and Open Questions
 
