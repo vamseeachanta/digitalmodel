@@ -300,12 +300,15 @@ def generate_diffraction_spec(
         waterline_z=0.0,
     )
 
+    # Explicit mode: the OrcaWave backend emits BodyMass and the full
+    # BodyCentreOfMass only for mode='explicit' (free_floating drops mass and
+    # CoG x-y — solver derives mass from displaced volume), so explicit is
+    # required for the estimated/overridden mass and CoG to reach the solver.
     vessel_inertia = VesselInertia(
-        mode="free_floating",
+        mode="explicit",
         mass=mass,
         centre_of_gravity=cog,
         radii_of_gyration=radii,
-        cog_z=cog[2],
     )
 
     vessel_spec = VesselSpec(

@@ -67,12 +67,12 @@ class OrcaFlexModelGenerator:
 
         # Set default paths
         if components_dir is None:
-            self.components_dir = self.repo_root / "docs" / "modules" / "orcaflex" / "templates" / "components"
+            self.components_dir = self.repo_root / "docs" / "domains" / "orcaflex" / "templates" / "components"
         else:
             self.components_dir = Path(components_dir)
 
         if templates_dir is None:
-            self.templates_dir = self.repo_root / "docs" / "modules" / "orcaflex" / "templates"
+            self.templates_dir = self.repo_root / "docs" / "domains" / "orcaflex" / "templates"
         else:
             self.templates_dir = Path(templates_dir)
 
@@ -113,7 +113,8 @@ class OrcaFlexModelGenerator:
                 return components
 
         # Otherwise treat as directory and glob for CSV files
-        category_path = self.components_dir / category.replace("/", "\\")
+        # (pathlib handles "/" separators portably on all platforms)
+        category_path = self.components_dir / category
 
         if not category_path.exists():
             logger.warning(f"Category not found: {category}")
@@ -165,7 +166,8 @@ class OrcaFlexModelGenerator:
                 )
 
         # Otherwise treat as directory and search all CSV files
-        category_path = self.components_dir / category.replace("/", "\\")
+        # (pathlib handles "/" separators portably on all platforms)
+        category_path = self.components_dir / category
 
         if not category_path.exists():
             raise ComponentNotFoundError(f"Category not found: {category}")
@@ -192,7 +194,7 @@ class OrcaFlexModelGenerator:
         cache_key = f"{category}/{filename}"
 
         if cache_key not in self._component_cache:
-            csv_path = self.components_dir / category.replace("/", "\\") / f"{filename}.csv"
+            csv_path = self.components_dir / category / f"{filename}.csv"
 
             if not csv_path.exists():
                 raise FileNotFoundError(f"Component file not found: {csv_path}")
@@ -230,8 +232,8 @@ class OrcaFlexModelGenerator:
         else:
             config_dict = config
 
-        # Load template
-        template_path = self.templates_dir / template.replace("/", "\\")
+        # Load template (pathlib handles "/" separators portably on all platforms)
+        template_path = self.templates_dir / template
         template_file = template_path / "model_template.yml"
 
         if not template_file.exists():
@@ -422,7 +424,8 @@ class OrcaFlexModelGenerator:
             ... )
         """
         # Determine which CSV file to add to
-        category_path = self.components_dir / category.replace("/", "\\")
+        # (pathlib handles "/" separators portably on all platforms)
+        category_path = self.components_dir / category
 
         if not category_path.exists():
             raise ValueError(f"Category not found: {category}")

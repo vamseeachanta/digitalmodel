@@ -4,8 +4,8 @@
 record. This module loops the whole fleet (all ``particulars`` records across
 scopes, deduped) and:
 
-  - builds a deck per vessel (``decks/<vessel_id>/{hull.gdf, <name>.yml,
-    manifest.json}``) with a fleet ``index.json``;
+  - builds a deck per vessel (``decks/<vessel_id>/{hull.gdf, spec.yml,
+    <name>.yml, manifest.json}``) with a fleet ``index.json``;
   - emits an OrcaWave **batch config** (YAML) consumable by
     ``orcawave_batch_runner`` and dispatch-ready through the licensed-run lane.
 
@@ -115,6 +115,7 @@ def generate_fleet_decks(
             "vessel": d.vessel,
             "vessel_dir": d.deck_path.parent.name,
             "deck": d.deck_path.name,
+            "spec": d.spec_path.name,
             "form": d.form,
             "mesh_kind": d.mesh_kind,
             "n_panels": d.n_panels,
@@ -170,7 +171,10 @@ def emit_orcawave_batch_config(
         vessel_dir = deck.deck_path.parent
         jobs.append(
             {
-                "spec_path": str(deck.deck_path),
+                # The batch runner loads jobs via DiffractionSpec.from_yaml, so
+                # point it at the canonical spec.yml — NOT the OrcaWave-native
+                # deck .yml (which would fail schema validation at load time).
+                "spec_path": str(deck.spec_path),
                 "job_name": vessel_dir.name,
                 "output_dir": str(base_output_dir / vessel_dir.name),
                 "validate": validate,

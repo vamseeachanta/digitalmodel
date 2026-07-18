@@ -59,6 +59,7 @@ from digitalmodel.hydrodynamics.diffraction.diffraction_units import (
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
 from digitalmodel.hydrodynamics.diffraction.mesh_packaging import (
     copy_spec_meshes,
+    iter_mesh_references,
     package_spec_meshes,
 )
 from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
@@ -909,21 +910,27 @@ class OrcaWaveRunner:
     def _validate_mesh_references(
         self, spec: DiffractionSpec, output_dir: Path
     ) -> list[str]:
-        """Check that mesh files referenced in the spec exist in output_dir.
+        """Check that every mesh the spec references exists in output_dir.
+
+        Covers ALL mesh references — body meshes plus the damping lid,
+        control surface, and free-surface zone meshes — via the shared
+        :func:`mesh_packaging.iter_mesh_references` enumeration. Packaging
+        silently skips missing source files (existence is this pre-flight's
+        responsibility, #500), so restricting the check to body meshes let a
+        package ship with dangling auxiliary mesh references (#605).
 
         Returns a list of warning messages (empty if all OK).
         """
         warnings: list[str] = []
-        bodies = spec.get_bodies()
+        if not self._config.copy_mesh_files:
+            return warnings
 
-        for body in bodies:
-            mesh_name = Path(body.vessel.geometry.mesh_file).name
-            expected = output_dir / mesh_name
-
-            if self._config.copy_mesh_files and not expected.exists():
+        for reference in iter_mesh_references(spec):
+            mesh_name = Path(reference.mesh_file).name
+            if not (output_dir / mesh_name).exists():
                 warnings.append(
-                    f"Mesh file '{mesh_name}' for body "
-                    f"'{body.vessel.name}' not found in {output_dir}"
+                    f"{reference.label}: file '{mesh_name}' "
+                    f"not found in {output_dir}"
                 )
 
         return warnings

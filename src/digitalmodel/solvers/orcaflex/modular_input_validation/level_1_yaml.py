@@ -69,18 +69,18 @@ class Level1YAMLValidator:
             include_path = resolve_include_path(file_path, include_file)
 
             if not include_path.exists():
+                # Recorded ONLY in missing_includes (not duplicated into
+                # syntax_errors) so the issue is reported once.
                 missing_includes.append(include_file)
-                result.syntax_errors.append(f"Missing include file: {include_file}")
 
         result.total_modules = len(includefiles)
         result.missing_includes = missing_includes
         result.includes_resolved = len(missing_includes) == 0
 
-        # Determine overall status
+        # Determine overall status.  A missing include file is a guaranteed
+        # OrcaFlex load failure, so it is FAIL (not WARN).
         if result.yaml_valid and result.includes_resolved:
             result.status = ValidationStatus.PASS
-        elif result.yaml_valid:
-            result.status = ValidationStatus.WARN
         else:
             result.status = ValidationStatus.FAIL
 

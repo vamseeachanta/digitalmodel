@@ -493,6 +493,40 @@ class TestFragmentValidation:
         assert not result.valid
         assert any("ImplicitVariableMaxTimeStep" in i.message for i in result.errors)
 
+    def test_fragment_unknown_property_flagged(self, validator, tmp_yaml):
+        """Typo'd / invented fragment properties are flagged via whitelists.
+
+        Regression: VALID_FRAGMENT_TOP_LEVEL / KNOWN_GENERAL_PROPS /
+        KNOWN_ENVIRONMENT_PROPS were defined but never referenced, so a
+        fragment with 'StageDurations' (typo) or 'ImplicitTimeStep'
+        (invented) validated clean with zero issues.
+        """
+        path = tmp_yaml("""\
+            StageDurations:
+              - 8
+              - 16
+            ImplicitTimeStep: 0.1
+        """)
+        result = validator.validate_file(path)
+        assert result.format_detected == "fragment"
+        flagged = [i.property for i in result.warnings]
+        assert "StageDurations" in flagged
+        assert "ImplicitTimeStep" in flagged
+
+    def test_fragment_known_props_not_flagged(self, validator, tmp_yaml):
+        """Whitelisted General/Environment fragment props raise no issues."""
+        path = tmp_yaml("""\
+            StageDuration:
+              - 10
+              - 100
+            UnitsSystem: SI
+            WaterDepth: 300
+            RefCurrentSpeed: 0.5
+        """)
+        result = validator.validate_file(path)
+        assert result.valid
+        assert result.issues == []
+
 
 # -----------------------------------------------------------------------
 # ValidationResult properties

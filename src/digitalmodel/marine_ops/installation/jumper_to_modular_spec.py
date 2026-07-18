@@ -92,12 +92,21 @@ def build_line_types(
     pipe: BarePipeProperties | None = None,
     connector_weight_kg: float = 1678.5,
     connector_length_m: float = 1.3,
+    buoy=None,
+    strake=None,
 ) -> List[Dict[str, Any]]:
-    """Build the four generic line-type definitions for the jumper model."""
+    """Build the four generic line-type definitions for the jumper model.
+
+    ``buoy`` / ``strake`` accept the (possibly spec-overridden) module
+    properties from ``run_jumper_analysis`` results; ``None`` falls back to
+    the workbook defaults.
+    """
     if pipe is None:
         pipe = compute_bare_pipe()
-    buoy = compute_buoyancy()
-    strake = compute_strake()
+    if buoy is None:
+        buoy = compute_buoyancy()
+    if strake is None:
+        strake = compute_strake()
 
     def _homogeneous(name: str, coating_t: float, coating_rho: float,
                      cdn: float, drag_od: float) -> Dict[str, Any]:
@@ -324,6 +333,8 @@ def build_modular_spec(spec_path: str) -> Dict[str, Any]:
                 pipe,
                 connector_weight_kg=config.connector_weight_kg,
                 connector_length_m=config.connector_length_m,
+                buoy=results["buoyancy_module"],
+                strake=results["strake_module"],
             ),
             "lines": [
                 {

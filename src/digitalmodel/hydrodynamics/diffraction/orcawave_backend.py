@@ -55,6 +55,18 @@ _MESH_FORMAT_MAP: dict[str, str] = {
     "auto": "Auto",
 }
 
+# Control-surface mesh formats. Native OrcaWave pairs .gdf control surfaces
+# with 'Wamit gdf' (docs/domains/orcawave/examples/L03 Semi-sub multibody
+# analysis/L03 Semi-sub multibody analysis.yml, BodyControlSurfaceMeshFormat)
+# and WAMIT .csf files with 'Wamit csf' (L00_validation_wamit 2.7/2.8 golden
+# benchmarks).
+_CONTROL_SURFACE_FORMAT_MAP: dict[str, str] = {
+    "csf": "Wamit csf",
+    "gdf": "Wamit gdf",
+    "dat": "Wamit dat",
+    "stl": "STL",
+}
+
 _SYMMETRY_MAP: dict[str, str] = {
     "none": "None",
     "xz": "xz plane",
@@ -268,11 +280,34 @@ def _build_body_dict(
     if cs is not None and cs.mesh_file is not None:
         body["BodyControlSurfaceType"] = "Defined by mesh file"
         body["BodyControlSurfaceMeshFileName"] = Path(cs.mesh_file).name
-        cs_format = getattr(cs, "mesh_format", "csf")
-        body["BodyControlSurfaceMeshFormat"] = _MESH_FORMAT_MAP.get(
-            cs_format, "Wamit csf"
-        )
+        # Explicit format wins; otherwise infer from the file extension so a
+        # .gdf control surface is declared 'Wamit gdf', not 'Wamit csf'
+        # (formats have different layouts; see L03 Semi-sub native example).
+        cs_format = cs.mesh_format
+        if cs_format is None:
+            cs_format = Path(cs.mesh_file).suffix.lstrip(".")
+        cs_key = str(cs_format).lower()
+        if cs_key not in _CONTROL_SURFACE_FORMAT_MAP:
+            raise ValueError(
+                f"Unsupported control surface mesh format {cs_format!r} for "
+                f"body '{vessel.name}' (file {cs.mesh_file!r}). Supported: "
+                f"{sorted(_CONTROL_SURFACE_FORMAT_MAP)}"
+            )
+        body["BodyControlSurfaceMeshFormat"] = _CONTROL_SURFACE_FORMAT_MAP[
+            cs_key
+        ]
         body["BodyControlSurfaceMeshLengthUnits"] = geom.length_units
+    elif cs is not None:
+        # Auto-generated control surface (#324): keys per the native OrcaWave
+        # exemplar docs/domains/orcawave/L01_aqwa_benchmark/
+        # orcawave_001_ship_raos_rev2_matched.yml (BodyControlSurfaceType:
+        # Automatically generated, panel size / separation / include free
+        # surface). ControlSurfaceSpec validation guarantees panel_size and
+        # separation are present when mesh_file is absent.
+        body["BodyControlSurfaceType"] = "Automatically generated"
+        body["BodyControlSurfacePanelSize"] = cs.panel_size
+        body["BodyControlSurfaceSeparationFromBody"] = cs.separation
+        body["BodyControlSurfaceIncludeFreeSurface"] = "Yes"
 
     # OrcaFlex import settings
     body["BodyOrcaFlexImportSymmetry"] = (
@@ -405,9 +440,16 @@ def _build_general_section(spec: DiffractionSpec) -> dict[str, Any]:
 
     section: dict[str, Any] = {}
     solve_type_key = _effective_solve_type(spec)
-    section["SolveType"] = _SOLVE_TYPE_MAP.get(
-        solve_type_key, "Potential and source formulations"
-    )
+    if solve_type_key not in _SOLVE_TYPE_MAP:
+        # Fail loud: silently defaulting an unknown solve type to first-order
+        # 'Potential and source formulations' generated the wrong analysis
+        # with no warning (#324). The schema restricts solve_type to this
+        # vocabulary, so this only fires for bypassed validation.
+        raise ValueError(
+            f"Unknown solve_type {solve_type_key!r}; expected one of "
+            f"{sorted(_SOLVE_TYPE_MAP)}"
+        )
+    section["SolveType"] = _SOLVE_TYPE_MAP[solve_type_key]
     # "Potential formulation only" makes quadratic load and
     # OutputPanelVelocities dormant — only emit when source formulations active
     has_source = solve_type_key != "potential_only"
@@ -539,12 +581,38 @@ def _build_headings_section(spec: DiffractionSpec) -> dict[str, Any]:
 
 
 def _build_solver_section(spec: DiffractionSpec) -> dict[str, Any]:
-    """Build the solver settings section (subset of general for modularity)."""
-    solver = spec.solver_options
+    """Build the solver settings section (subset of general for modularity).
+
+    Note: no precision key is emitted. Native OrcaWave YAML (all files under
+    docs/domains/orcawave/examples and L00 'OrcaWave v11.0 files') has no
+    solver-precision key; the previously emitted lowercase 'SolverPrecision'
+    was an invented key the solver never read. Non-default precision is
+    rejected loudly in :func:`_check_supported_solver_options` instead.
+    """
+    del spec
     return {
         "LinearSolverMethod": "Direct LU",
-        "SolverPrecision": solver.precision.value,
     }
+
+
+def _check_supported_solver_options(spec: DiffractionSpec) -> None:
+    """Reject spec options the generated OrcaWave input cannot honor.
+
+    ``solver_options.precision`` has no corresponding key in native OrcaWave
+    YAML (none exists in the in-repo Orcina references), so a non-default
+    value would be silently ignored by the solver. Fail loud instead of
+    generating an input that silently ignores the user's setting (#324).
+    """
+    precision = spec.solver_options.precision
+    precision_value = getattr(precision, "value", str(precision))
+    if precision_value != "double":
+        raise ValueError(
+            f"solver_options.precision={precision_value!r} cannot be applied "
+            "to an OrcaWave input file: native OrcaWave YAML has no solver "
+            "precision key (see docs/domains/orcawave reference files). "
+            "Remove the setting (OrcaWave runs at its own default precision) "
+            "or use a solver that supports it."
+        )
 
 
 def _build_outputs_section(spec: DiffractionSpec) -> dict[str, Any]:
@@ -566,12 +634,13 @@ def _build_outputs_section(spec: DiffractionSpec) -> dict[str, Any]:
             for group in outputs.field_points
             for point in group.points
         ]
-        xs, ys, zs = zip(*all_points)
-        # Combined-key convention per benchmark_input_comparison.py (#501)
+        # Combined-key table: one [x, y, z] row per field point — the native
+        # OrcaWave convention (docs/domains/orcawave/reference/
+        # text-data-files.md, 'FieldPointX, FieldPointY, FieldPointZ' names
+        # three COLUMNS; each list entry is one point row, as in the native
+        # test01.yml). Emitting rows-per-axis transposed the table (#324).
         section["FieldPointX, FieldPointY, FieldPointZ"] = [
-            list(xs),
-            list(ys),
-            list(zs),
+            list(point) for point in all_points
         ]
     return section
 
@@ -689,6 +758,8 @@ class OrcaWaveBackend:
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
+        _check_supported_solver_options(spec)
+
         # Build the complete YAML document by merging all sections
         data: dict[str, Any] = {}
 
@@ -745,6 +816,8 @@ class OrcaWaveBackend:
         """
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
+
+        _check_supported_solver_options(spec)
 
         sections = [
             ("01_general.yml", _build_general_section(spec)),

@@ -22,7 +22,12 @@ class TestCsvRowToLineType:
     """Tests for csv_row_to_line_type function."""
 
     def test_standard_columns(self):
-        """Test with standard column naming convention."""
+        """Test with standard column naming convention.
+
+        Mass columns are kg/m in the CSVs and must be emitted in OrcaFlex SI
+        te/m (see curated docs/domains/orcaflex/library/line_types/
+        chain_84mm_r3.yml: MassPerUnitLength 0.088 te/m, EA 540000 kN).
+        """
         row = {
             "OD_m": "0.2731",
             "ID_m": "0.2461",
@@ -33,12 +38,16 @@ class TestCsvRowToLineType:
 
         assert result["OD"] == 0.2731
         assert result["ID"] == 0.2461
-        assert result["MassPerUnitLength"] == 80.5
-        assert result["EA"] == 785000
+        assert result["MassPerUnitLength"] == pytest.approx(0.0805)  # kg/m -> te/m
+        assert result["EA"] == 785000  # already kN
         assert result["CompressionIsLimited"] is True
 
     def test_risers_csv_columns(self):
-        """Test with risers.csv column naming convention (OD, ID, Mass)."""
+        """Test with risers.csv column naming convention (OD, ID, Mass).
+
+        risers.csv Mass is kg/m and EA/EI are N-based; output must be
+        te/m and kN-based (OrcaFlex SI, per curated chain_84mm_r3.yml).
+        """
         row = {
             "RiserID": "SCR_10inch_X65",
             "OD": "0.2731",
@@ -52,9 +61,9 @@ class TestCsvRowToLineType:
 
         assert result["OD"] == 0.2731
         assert result["ID"] == 0.2461
-        assert result["MassPerUnitLength"] == 80.5
-        assert result["EA"] == 785000000
-        assert result["EI"] == [1850000.0, None]
+        assert result["MassPerUnitLength"] == pytest.approx(0.0805)  # kg/m -> te/m
+        assert result["EA"] == pytest.approx(785000.0)  # N -> kN
+        assert result["EI"] == [pytest.approx(1850.0), None]  # N.m^2 -> kN.m^2
         assert result["PoissonRatio"] == 0.3
 
     def test_alternative_columns(self):
@@ -67,7 +76,7 @@ class TestCsvRowToLineType:
         result = csv_row_to_line_type(row)
 
         assert result["OD"] == 0.15
-        assert result["MassPerUnitLength"] == 25.4
+        assert result["MassPerUnitLength"] == pytest.approx(0.0254)  # kg/m -> te/m
 
     def test_optional_drag_coefficients(self):
         """Test optional Cd and Ca properties."""
@@ -97,6 +106,23 @@ class TestCsvRowToLineType:
 
         assert result["SeabedLateralFrictionCoefficient"] == 0.6
 
+    def test_blank_optional_cells_are_skipped(self):
+        """Blank Cd/Ca/SeabedFriction cells (csv.DictReader yields '') must
+        not crash and must be treated as absent."""
+        row = {
+            "OD": "0.1",
+            "Mass": "50",
+            "EA": "100000",
+            "Cd": "",
+            "Ca": "",
+            "SeabedFriction": "",
+        }
+        result = csv_row_to_line_type(row)
+
+        assert "Cd" not in result
+        assert "Ca" not in result
+        assert "SeabedLateralFrictionCoefficient" not in result
+
     def test_default_values(self):
         """Test default values when columns are missing."""
         row = {}
@@ -114,7 +140,12 @@ class TestCsvRowToBuoyType:
     """Tests for csv_row_to_buoy_type function."""
 
     def test_basic_buoy(self):
-        """Test basic buoy conversion."""
+        """Test basic buoy conversion.
+
+        OrcaFlex SI mass unit is te, matching the te-scale Mass of curated
+        docs/domains/orcaflex/library/buoy_types/calm_12m_100m.yml — Mass_te
+        must NOT be multiplied by 1000.
+        """
         row = {
             "BuoyID": "CALM_12m",
             "Diameter_m": "12.0",
@@ -125,9 +156,11 @@ class TestCsvRowToBuoyType:
 
         assert result["BuoyType"] == "Spar buoy"
         assert result["Connection"] == "Free"
-        assert result["Mass"] == 95000  # Converted from tonnes
+        assert result["Mass"] == 95  # te (OrcaFlex SI), not kg
         assert "MomentsOfInertia" in result
         assert len(result["MomentsOfInertia"]) == 3
+        # MomentsOfInertia in te.m^2: 95 * (3*6^2 + 4.5^2) / 12 = 1015.3
+        assert result["MomentsOfInertia"][0] == round(95 * (3 * 6**2 + 4.5**2) / 12)
 
     def test_buoy_with_drag_coefficients(self):
         """Test buoy with drag and added mass coefficients."""
@@ -142,7 +175,7 @@ class TestCsvRowToBuoyType:
         }
         result = csv_row_to_buoy_type(row)
 
-        assert result["Mass"] == 75000
+        assert result["Mass"] == 75  # kg converted to te (OrcaFlex SI)
         assert "Cylinders" in result
         cylinder = result["Cylinders"][0]
         assert cylinder["CylinderOuterDiameter"] == 10.0
@@ -232,6 +265,33 @@ SCR_12inch,12-inch SCR,0.3239,0.2909,115.8,1210000000,Large riser
         assert len(generated) == 2
         assert (tmp_path / "library" / "line_types" / "scr_10inch.yml").exists()
         assert (tmp_path / "library" / "line_types" / "scr_12inch.yml").exists()
+
+        # Generated files must use OrcaFlex SI units (te/m, kN) like the
+        # curated library components (chain_84mm_r3.yml convention)
+        data = yaml.safe_load(
+            (tmp_path / "library" / "line_types" / "scr_10inch.yml").read_text()
+        )
+        assert data["MassPerUnitLength"] == pytest.approx(0.0805)
+        assert data["EA"] == pytest.approx(785000.0)
+
+    def test_generate_from_csv_with_blank_optional_cells(self, tmp_path):
+        """A blank Cd/Ca cell in one row must not abort CSV generation."""
+        csv_content = """RiserID,OD,ID,Mass,EA,Cd,Ca
+SCR_A,0.2731,0.2461,80.5,785000000,1.2,1.0
+SCR_B,0.3239,0.2909,115.8,1210000000,,
+"""
+        csv_file = tmp_path / "test_blank.csv"
+        csv_file.write_text(csv_content)
+
+        generator = LibraryGenerator(str(tmp_path / "library"))
+        generated = generator.generate_from_csv(str(csv_file), "line_types")
+
+        assert len(generated) == 2
+        data_b = yaml.safe_load(
+            (tmp_path / "library" / "line_types" / "scr_b.yml").read_text()
+        )
+        assert "Cd" not in data_b
+        assert "Ca" not in data_b
 
     def test_name_column_detection_riser_id(self, tmp_path):
         """Test that RiserID is used for naming over generic ID."""

@@ -398,6 +398,14 @@ class TestValidateRaoCompleteness:
         issues = validate_rao_completeness(mock_rao_set)
         assert any("shape" in i.lower() and "HEAVE" in i for i in issues)
 
+    def test_missing_surge_reported_not_crash(self, mock_rao_set):
+        # Regression (review sweep): a missing surge component must be
+        # reported as an issue, not crash the min-frequency check with an
+        # AttributeError.
+        mock_rao_set.surge = None
+        issues = validate_rao_completeness(mock_rao_set)
+        assert any("Missing RAO component for SURGE" in i for i in issues)
+
 
 # ---------------------------------------------------------------------------
 # validate_matrix_set
@@ -435,6 +443,15 @@ class TestValidateMatrixSet:
         issues = validate_matrix_set(ms)
         assert any("doesn't match" in i for i in issues)
 
+    def test_more_matrices_than_frequencies_reported_not_crash(self):
+        # Regression (review sweep): with more matrices than frequencies
+        # the validator must report the count mismatch, not raise
+        # IndexError when indexing frequencies.values past its end.
+        ms = _matrix_set("added_mass")  # 3 matrices, 3 frequencies
+        ms.matrices = ms.matrices + [_hydro_matrix(2.5, "added_mass")]
+        issues = validate_matrix_set(ms)
+        assert any("Number of matrices" in i for i in issues)
+
 
 # ---------------------------------------------------------------------------
 # validate_diffraction_results
@@ -462,3 +479,32 @@ class TestValidateDiffractionResults:
         mock_diffraction_results.raos.water_depth = 999.0  # mismatch
         report = validate_diffraction_results(mock_diffraction_results)
         assert any("water depth" in i.lower() for i in report["consistency"])
+
+    def test_mismatched_grid_lengths_reported_not_crash(
+        self, mock_diffraction_results
+    ):
+        # Regression (review sweep): different-length RAO and added-mass
+        # frequency grids must be reported as a consistency issue, not
+        # crash np.allclose with a broadcast ValueError.
+        old = mock_diffraction_results.added_mass.frequencies.values
+        new_vals = np.append(old, [old[-1] + 0.5, old[-1] + 1.0])
+        mock_diffraction_results.added_mass.frequencies = _freq_data(
+            len(new_vals)
+        )
+        mock_diffraction_results.added_mass.frequencies.values = new_vals
+        report = validate_diffraction_results(mock_diffraction_results)
+        assert any(
+            "added mass frequencies don't match" in i
+            for i in report["consistency"]
+        )
+
+    def test_missing_surge_component_reported_not_crash(
+        self, mock_diffraction_results
+    ):
+        # Regression (review sweep): surge=None must not crash the
+        # frequency cross-check.
+        mock_diffraction_results.raos.surge = None
+        report = validate_diffraction_results(mock_diffraction_results)
+        assert any(
+            "surge" in i.lower() for i in report["consistency"]
+        )

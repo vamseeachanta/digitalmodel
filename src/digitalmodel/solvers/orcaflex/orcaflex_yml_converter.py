@@ -3,11 +3,13 @@
 import sys
 from pathlib import Path
 
+# Import guard: never terminate the host process at import time (matches
+# the convention of sibling orcaflex modules, e.g. orcaflex_utilities.py).
+# Availability is checked in convert_to_yml()/main() instead.
 try:
     import OrcFxAPI
 except ImportError:
-    print("ERROR: OrcFxAPI not available. Please install OrcaFlex Python API.")
-    sys.exit(1)
+    OrcFxAPI = None
 
 
 def convert_to_yml(input_path: str) -> bool:
@@ -19,8 +21,12 @@ def convert_to_yml(input_path: str) -> bool:
     Returns:
         True if successful, False otherwise
     """
+    if OrcFxAPI is None:
+        print("ERROR: OrcFxAPI not available. Please install OrcaFlex Python API.")
+        return False
+
     input_file = Path(input_path)
-    
+
     if not input_file.exists():
         print(f"ERROR: File not found: {input_path}")
         return False
@@ -44,6 +50,10 @@ def convert_to_yml(input_path: str) -> bool:
 
 def main():
     """Convert multiple OrcaFlex files to .yml format."""
+    if OrcFxAPI is None:
+        print("ERROR: OrcFxAPI not available. Please install OrcaFlex Python API.")
+        return 1
+
     if len(sys.argv) < 2:
         print("Usage: python orcaflex_yml_converter.py <file1> [file2] ...")
         sys.exit(1)

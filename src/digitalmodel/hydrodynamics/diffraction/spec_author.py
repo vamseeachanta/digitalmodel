@@ -280,7 +280,10 @@ def intent_to_resolver_inputs(
 
     Principal dimensions are only attached when the cross-field minimum the
     resolver requires is present (a length, plus beam and draft). Otherwise the
-    resolver falls back to ``hull_id`` / ``mesh_file`` and ledgers the rest.
+    resolver falls back to ``hull_id`` / ``mesh_file`` and ledgers the rest —
+    and any stated-but-unusable dimension facts are recorded on
+    ``intent.open_questions`` (mutated in place) so the audit trail never
+    silently drops a grounded value (#622 contract).
     """
     dimensions: Optional[PrincipalDimensions] = None
     has_length = intent.loa is not None or intent.length_bp is not None
@@ -293,10 +296,43 @@ def intent_to_resolver_inputs(
             displacement_t=intent.displacement_t,
             block_coefficient=intent.block_coefficient,
         )
+    else:
+        stated = {
+            "loa": intent.loa,
+            "length_bp": intent.length_bp,
+            "beam": intent.beam,
+            "draft": intent.draft,
+            "displacement_t": intent.displacement_t,
+            "block_coefficient": intent.block_coefficient,
+        }
+        dropped = {k: v for k, v in stated.items() if v is not None}
+        if dropped:
+            missing = [
+                name
+                for name in ("beam", "draft")
+                if stated[name] is None
+            ]
+            if not has_length:
+                missing.insert(0, "loa or length_bp")
+            note = (
+                "Stated principal-dimension facts could not be passed to the "
+                "resolver ("
+                + ", ".join(f"{k}={v}" for k, v in dropped.items())
+                + "): missing "
+                + ", ".join(missing)
+                + " prevents forming a complete dimension set, so the "
+                "resolver will derive dimensions/mass from the mesh or hull "
+                "reference instead. Confirm the derived values against these "
+                "stated figures."
+            )
+            if note not in intent.open_questions:
+                intent.open_questions.append(note)
 
     water_depth: float | str | None
     if intent.water_depth_infinite:
-        water_depth = "infinity"
+        # EnvironmentSpec's canonical deep-water token (input_schemas
+        # validate_water_depth accepts 'infinite' | 'inf' | 'deep').
+        water_depth = "infinite"
     else:
         water_depth = intent.water_depth
 

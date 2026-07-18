@@ -127,10 +127,16 @@ class GeometryQualityChecker:
         edge_count = {}
 
         for panel in panels:
+            indices = list(panel)
+            # Triangles are often stored as degenerate quads (last index
+            # repeated); drop the duplicate so no self-edge (v, v) is
+            # counted as an open edge.
+            if len(indices) == 4 and indices[3] == indices[2]:
+                indices = indices[:3]
             # Get edges from panel
-            n = len(panel)
+            n = len(indices)
             for i in range(n):
-                edge = tuple(sorted([panel[i], panel[(i+1) % n]]))
+                edge = tuple(sorted([indices[i], indices[(i+1) % n]]))
                 edge_count[edge] = edge_count.get(edge, 0) + 1
 
         # Find open edges

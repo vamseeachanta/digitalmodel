@@ -548,3 +548,115 @@ class TestCampaignE2E:
         gen = CampaignGenerator(cf)
         warnings = gen.validate()
         assert isinstance(warnings, list)
+
+
+class TestSpecOnlyYamlIsSafeLoadable:
+    """Regression: spec-only output must be yaml.safe_load-able (no python tags).
+
+    A python-mode model_dump leaves (str, Enum) fields (e.g. RollerType from
+    the equipment.rollers auto-conversion) as Enum members, which yaml.dump
+    serialises as '!!python/object/apply' tags that the yaml.safe_load used
+    by spec.yml consumers (cli.py, ModularModelGenerator) cannot read.
+    """
+
+    def _campaign_with_rollers(self) -> dict:
+        data = _make_campaign_data()
+        # equipment.py resolve_roller_compat auto-creates a RollerArrangement
+        # with the RollerType enum from legacy rollers.
+        data["base"]["equipment"]["rollers"] = {
+            "position": [10.0, 0.0, 5.0],
+            "supports": 4,
+        }
+        return data
+
+    def test_spec_yml_contains_no_python_tags(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+
+        cf = tmp_path / "campaign.yml"
+        cf.write_text(yaml.dump(self._campaign_with_rollers(), default_flow_style=False))
+        gen = CampaignGenerator(cf)
+        result = gen.generate(tmp_path / "out", spec_only=True)
+
+        assert not result.errors
+        assert result.run_count > 0
+        for run_dir in result.run_dirs:
+            text = (run_dir / "spec.yml").read_text()
+            assert "!!python" not in text
+
+    def test_spec_yml_roundtrips_through_safe_load(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignGenerator,
+        )
+        from digitalmodel.solvers.orcaflex.modular_generator.schema import (
+            ProjectInputSpec,
+        )
+
+        cf = tmp_path / "campaign.yml"
+        cf.write_text(yaml.dump(self._campaign_with_rollers(), default_flow_style=False))
+        gen = CampaignGenerator(cf)
+        result = gen.generate(tmp_path / "out", spec_only=True)
+
+        assert not result.errors
+        run_dir = result.run_dirs[0]
+        data = yaml.safe_load((run_dir / "spec.yml").read_text())
+        spec = ProjectInputSpec(**data)
+        assert spec.equipment.roller_arrangement is not None
+        assert spec.equipment.roller_arrangement.type.value == "v_roller"
+
+
+class TestOutputNamingFormatSpecs:
+    """Regression: templates with str.format specs must pass coverage check."""
+
+    def test_format_spec_in_template_is_accepted(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignSpec,
+        )
+
+        data = _make_campaign_data()
+        data["output_naming"] = "{base_name}_wd{water_depth:.0f}m_{environment}"
+        spec = CampaignSpec(**data)
+
+        names = [name for name, _ in spec.generate_run_specs()]
+        assert "test_pipe_wd10m_calm" in names
+
+    def test_alias_with_format_spec_is_accepted(self, tmp_path):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignSpec,
+        )
+
+        data = _make_campaign_data()
+        data["campaign"]["sweeps"] = [
+            {
+                "parameter": "environment.waves.trains.0.height",
+                "values": [1.0, 2.5],
+                "alias": "wave_h",
+            }
+        ]
+        data["output_naming"] = (
+            "{base_name}_wd{water_depth:.0f}m_{environment}_h{wave_h:.1f}"
+        )
+        spec = CampaignSpec(**data)
+        names = [name for name, _ in spec.generate_run_specs()]
+        assert "test_pipe_wd10m_calm_h1.0" in names
+
+    def test_missing_parameter_still_rejected(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignSpec,
+        )
+
+        data = _make_campaign_data()
+        data["output_naming"] = "{base_name}_{environment}"  # water_depth missing
+        with pytest.raises(ValueError, match="water_depth"):
+            CampaignSpec(**data)
+
+    def test_malformed_template_rejected(self):
+        from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+            CampaignSpec,
+        )
+
+        data = _make_campaign_data()
+        data["output_naming"] = "{base_name}_wd{water_depth}m_{environment}_{"
+        with pytest.raises(ValueError, match="format template"):
+            CampaignSpec(**data)

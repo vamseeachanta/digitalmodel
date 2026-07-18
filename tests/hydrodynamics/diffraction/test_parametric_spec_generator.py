@@ -206,11 +206,36 @@ class TestGenerateDiffractionSpec:
         spec = generate_diffraction_spec(profile, tmp_path)
         assert spec.vessel.type == "barge"
 
-    def test_inertia_mode_free_floating(self, tmp_path: Path):
-        """Inertia mode is set to free_floating."""
+    def test_inertia_mode_explicit(self, tmp_path: Path):
+        """Inertia mode is 'explicit' so the estimated mass and full CoG reach
+        the solver (previously pinned free_floating — under which the OrcaWave
+        backend drops BodyMass and CoG x-y entirely)."""
         profile = _make_barge_profile()
         spec = generate_diffraction_spec(profile, tmp_path)
-        assert spec.vessel.inertia.mode == "free_floating"
+        assert spec.vessel.inertia.mode == "explicit"
+
+    def test_mass_and_cog_reach_orcawave_deck(self, tmp_path: Path):
+        """mass_override and full cog_override must appear in the generated
+        OrcaWave body block (BodyMass in tonnes, BodyCentreOfMass verbatim) —
+        regression: free_floating mode silently dropped both."""
+        import yaml
+
+        from digitalmodel.hydrodynamics.diffraction.orcawave_backend import (
+            OrcaWaveBackend,
+        )
+
+        config = SpecGeneratorConfig(
+            mass_override=5.0e7,  # kg
+            cog_override=[10.0, 0.0, -3.0],
+            radii_override=[7.0, 25.0, 27.0],
+        )
+        profile = _make_barge_profile()
+        spec = generate_diffraction_spec(profile, tmp_path, config)
+        deck_path = OrcaWaveBackend().generate_single(spec, tmp_path)
+
+        body = yaml.safe_load(deck_path.read_text())["Bodies"][0]
+        assert body["BodyMass"] == pytest.approx(5.0e7 / 1000.0)  # kg -> t
+        assert body["BodyCentreOfMass"] == pytest.approx([10.0, 0.0, -3.0])
 
     def test_mass_populates_correctly(self, tmp_path: Path):
         """Mass is estimated from Cb * L * B * T * rho."""

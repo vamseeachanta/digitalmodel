@@ -353,6 +353,14 @@ class OrcaFlexYAMLValidator:
     # Fragment validation (modular files without section wrappers)
     # ------------------------------------------------------------------
 
+    # Combined whitelist of property names that may legitimately appear
+    # bare at the top level of a fragment: generic fragment keys plus known
+    # General-section and Environment-section properties (fragments included
+    # in a section context carry that section's bare properties).
+    _FRAGMENT_KNOWN_KEYS = (
+        VALID_FRAGMENT_TOP_LEVEL | KNOWN_GENERAL_PROPS | KNOWN_ENVIRONMENT_PROPS
+    )
+
     def _validate_fragment(self, data: dict, result: ValidationResult, filename: str) -> None:
         """Validate a fragment file (bare properties, not wrapped in a section)."""
         self._check_invalid_properties_recursive(data, result, filename)
@@ -369,6 +377,27 @@ class OrcaFlexYAMLValidator:
 
         # Check for common singular-key mistakes (same as flat format checks)
         self._check_singular_section_keys(data, result, filename)
+
+        # Flag property names not in the known-good whitelists — these are
+        # frequently typos (e.g. 'StageDurations' for 'StageDuration') or
+        # invented properties that OrcaFlex will reject at load time.
+        # WARNING (not ERROR) because the whitelists are not exhaustive.
+        for key in data:
+            if key in self._FRAGMENT_KNOWN_KEYS:
+                continue
+            if key in WAVE_TRAIN_ONLY_PROPERTIES or key in INVALID_PROPERTIES:
+                continue  # already reported above with a specific message
+            if key in ("Vessel", "LineType", "VesselType", "Line"):
+                continue  # singular-key mistakes reported above as errors
+            if key in VALID_TOP_LEVEL_SECTIONS:
+                continue
+            result.add(
+                Severity.WARNING,
+                f"Unknown fragment property '{key}' — not in the known "
+                f"OrcaFlex property whitelist (possible typo; OrcaFlex "
+                f"rejects unknown properties at load time)",
+                file=filename, prop=key,
+            )
 
     # ------------------------------------------------------------------
     # Section-specific validation
