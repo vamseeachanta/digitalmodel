@@ -18,7 +18,7 @@
 <body><main>
   <h1>#1602 implementation plan: solver-neutral riser, host, hydrodynamics, and HF</h1>
   <div class="meta">
-    <strong>Status:</strong> draft / <code>status:needs-plan</code><br>
+    <strong>Status:</strong> reviewed / <code>status:plan-review</code> / awaiting explicit user approval<br>
     <strong>Complexity:</strong> T3 &nbsp; <strong>Execution mode:</strong> parallel-readonly planning; parallel-worktree only after approval<br>
     <strong>Date:</strong> 2026-07-18 &nbsp; <strong>Client:</strong> N/A &nbsp; <strong>Lane:</strong> <code>lane:codex</code><br>
     <strong>Issue:</strong> <a href="https://github.com/vamseeachanta/digitalmodel/issues/1602">digitalmodel #1602</a><br>
@@ -152,8 +152,8 @@ fail closed on any ambiguity, out-of-domain case, proxy-as-actual claim, or hash
   </tbody></table>
 
   <h2>Adversarial review summary</h2>
-  <p><strong>Current verdict: PENDING.</strong> Earlier read-only reviewer findings will be persisted as revision-stamped artifacts with the final review wave. They have required: HTML rather than Markdown for the human-facing design; governance rollback to <code>needs-plan</code>; explicit vessel-motion propagation; analytical rigid-body transfer fixtures; a breaking <code>3.0.0-draft.1</code> interface; a dedicated public floater-source owner and source-record handoff; rejection of name-only identity; selected-backend diffraction conformance; no clamp/extrapolation; 17 public configs with exact long-form response projection; typed completion/workover applicability; release-set propagation through HF/website; and a separate non-blocking monitoring consumer graph.</p>
-  <p>The next review will use Claude, Codex, and Gemini-equivalent adversarial lanes where available. Any MAJOR verdict will keep the issue at <code>status:needs-plan</code>. Only a final no-MAJOR round will allow the plan to move to <code>status:plan-review</code> for explicit user approval.</p>
+  <p><strong>Current verdict: APPROVE — no MAJOR or MINOR findings.</strong> Claude Fable 5 and three independent Codex lanes verified immutable commit <code>4e7c4784</code>; Gemini was unavailable because interactive authentication was required. Revision-stamped evidence will reside under <code>scripts/review/results/issue-1602-host-motion-round-8/</code>. Earlier rounds forced deterministic composition, complete commitment and identity propagation, exact child ownership, collision-free long-form row identity, bidirectional release membership, and fail-closed promotion-gate merging.</p>
+  <p>This plan will move to <code>status:plan-review</code> for explicit user approval. It will not authorize implementation, create a <code>plan-approved</code> marker, or allow any child to bypass its own gate.</p>
 
   <p class="small">This plan will supersede <code>docs/plans/2026-07-16-issue-1602-riser-data-orcaflex-hf-plan.md</code> after the final no-MAJOR plan-review artifact is pushed.</p>
 </main></body></html>

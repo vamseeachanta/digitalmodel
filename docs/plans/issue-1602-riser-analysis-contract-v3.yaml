@@ -4,7 +4,7 @@ status: planning-interface
 authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
 review_candidate_plan:
   path: 2026-07-18-issue-1602-riser-host-diffraction-plan.html
-  sha256: 2b1f74e18eeac7c2b9c76ba46236b445474302a5414e98f641198448d967a26c
+  sha256: df2dd35a03463a31021847b81d244da1a4e9e6e82a0b968ed192adc9ae51e47d
 approved_architecture_design:
   path: ../superpowers/specs/2026-07-18-riser-host-diffraction-monitoring-design.html
   sha256: 05bf52bf3453477e8bb8734c74a73d1b560869e80dd86890006ab3e0e1d3c5d0
