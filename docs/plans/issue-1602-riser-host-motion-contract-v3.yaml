@@ -126,11 +126,11 @@ envelope_commitment_rules:
     covers: every_effective_minimum_binding_except_commitment_field
     canonical_preimage_owner: analysis_semantics
   drilling_analysis_request:
-    commitment_field: drilling_analysis_request_envelope_sha256
+    commitment_field: analysis_request_envelope_sha256
     covers: every_effective_minimum_binding_except_commitment_field
     canonical_preimage_owner: drilling_workflow
   completion_workover_analysis_request:
-    commitment_field: completion_workover_analysis_request_envelope_sha256
+    commitment_field: analysis_request_envelope_sha256
     covers: every_effective_minimum_binding_except_commitment_field
     canonical_preimage_owner: analysis_semantics
   deterministic_bundle:
@@ -191,6 +191,11 @@ normalized_host_response_union: &normalized_host_response_union
     completion: required_or_not_applicable, workover: required_or_not_applicable}
   exactly_one_branch: true
 
+analysis_lineage_fields:
+  contract: &analysis_contract_lineage [analysis_contract_envelope_sha256]
+  selected_request: &selected_request_lineage [analysis_contract_envelope_sha256,
+    analysis_request_envelope_sha256]
+
 existing_envelope_extensions:
   normalized_case:
     always_required_fields: [wave_case_sha256]
@@ -200,23 +205,27 @@ existing_envelope_extensions:
     fixed_applicability: required
     applicability_field_required: host_motion_applicability
     always_required_fields: [wave_case_sha256,
-      drilling_analysis_request_envelope_sha256]
+      analysis_contract_envelope_sha256, analysis_request_envelope_sha256]
     required_fields: *downstream_chain_fields
   completion_workover_analysis_request:
     always_required_fields: [wave_case_sha256,
-      completion_workover_analysis_request_envelope_sha256]
+      analysis_contract_envelope_sha256, analysis_request_envelope_sha256]
     discriminated_union: *host_motion_route_union
   deterministic_bundle:
     always_required_fields: [wave_case_sha256]
+    lineage_fields: *selected_request_lineage
     discriminated_union: *host_motion_route_union
   execution_request:
     always_required_fields: [wave_case_sha256]
+    lineage_fields: *selected_request_lineage
     discriminated_union: *host_motion_route_union
   execution_receipt:
     always_required_fields: [wave_case_sha256]
+    lineage_fields: *selected_request_lineage
     discriminated_union: *host_motion_route_union
   engineering_result:
     always_required_fields: [wave_case_sha256]
+    lineage_fields: *selected_request_lineage
     discriminated_union: *host_motion_route_union
   logical_release: [floating_host_identity_set_sha256,
     hydrodynamic_response_set_sha256, hydrodynamic_response_values_set_sha256,
@@ -279,6 +288,10 @@ milestone_DAG_extensions:
       normalized_case_has_reviewed_disposition_sha256
 
 required_handoff_equalities:
+  - {from: analysis_contract, to: drilling_analysis_request, fields: *analysis_contract_lineage}
+  - {from: analysis_contract, to: completion_workover_analysis_request, fields: *analysis_contract_lineage}
+  - {from: normalized_case, to: drilling_analysis_request, fields: [case_id, case_sha256, wave_case_sha256]}
+  - {from: normalized_case, to: completion_workover_analysis_request, fields: [case_id, case_sha256, wave_case_sha256]}
   - {from: public_floater_source_record, to: floating_host_identity,
      fields: [rig_source_id, rig_source_commitment_sha256,
        source_license_id, redistribution_status, public_eligibility_status,
@@ -322,14 +335,24 @@ required_handoff_equalities:
        vessel_motion_boundary_envelope_sha256]}
   - {from: drilling_analysis_request, to: deterministic_bundle,
      fields: *downstream_chain_fields}
+  - {from: drilling_analysis_request, to: deterministic_bundle,
+     fields: *selected_request_lineage}
   - {from: completion_workover_analysis_request, to: deterministic_bundle,
      fields_ref: route_union_handoff_expansion.selected_branch_by_discriminator}
+  - {from: completion_workover_analysis_request, to: deterministic_bundle,
+     fields: *selected_request_lineage}
   - {from: deterministic_bundle, to: execution_request,
      fields_ref: route_union_handoff_expansion.selected_branch_by_discriminator}
+  - {from: deterministic_bundle, to: execution_request,
+     fields: *selected_request_lineage}
   - {from: execution_request, to: execution_receipt,
      fields_ref: route_union_handoff_expansion.selected_branch_by_discriminator}
+  - {from: execution_request, to: execution_receipt,
+     fields: *selected_request_lineage}
   - {from: execution_receipt, to: engineering_result,
      fields_ref: route_union_handoff_expansion.selected_branch_by_discriminator}
+  - {from: execution_receipt, to: engineering_result,
+     fields: *selected_request_lineage}
   - {from: drilling_analysis_request, to: deterministic_bundle,
      fields: [wave_case_sha256]}
   - {from: completion_workover_analysis_request, to: deterministic_bundle,
@@ -374,24 +397,3 @@ route_union_handoff_expansion:
     not_applicable_ref: route_union_handoff_expansion.not_applicable_branch_equalities
   expansion_rule: selected_host_motion_route_union_branch_expands_by_discriminator
   propagation_rule: discriminator_and_selected_branch_equalities_remain_unchanged_through_result
-normalized_route_handoff_expansion:
-  always_equalities: [case_id, case_sha256, wave_case_sha256]
-  required_branch_equalities: [host_motion_applicability,
-    floating_host_id, loading_condition_id, hydrodynamic_response_id,
-    floating_host_identity_envelope_sha256,
-    hydrodynamic_response_envelope_sha256]
-  not_applicable_branch_equalities: [host_motion_applicability,
-    reviewed_disposition_sha256]
-  selected_branch_by_discriminator:
-    required_ref: normalized_route_handoff_expansion.required_branch_equalities
-    not_applicable_ref: normalized_route_handoff_expansion.not_applicable_branch_equalities
-  drilling_handoff:
-    from: normalized_case
-    to: drilling_analysis_request
-    fixed_applicability: required
-    fields_ref: normalized_route_handoff_expansion.required_branch_equalities
-  completion_workover_handoff:
-    from: normalized_case
-    to: completion_workover_analysis_request
-    fields_ref: normalized_route_handoff_expansion.selected_branch_by_discriminator
-  expansion_rule: selected_branch_expands_by_normalized_case_discriminator

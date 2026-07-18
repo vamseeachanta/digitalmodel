@@ -70,7 +70,7 @@
     <li><strong>HydrodynamicResponseEnvelope</strong> will bind the exact host/loading/mesh, diffraction target/adapter/projection/run evidence, ordered DOFs, frequency-heading grid, complex RAO and matrix payloads, units/conventions/frame/reference point, water properties, source, validation, usable domain, fidelity, and complete-envelope commitment.</li>
     <li><strong>VesselMotionBoundaryEnvelope</strong> will bind the case/wave, host and response commitments, complex RAO, top-connection frame/reference, rigid-body transform and independent analytical validation, phase/time basis, coupling intent, boundary payload, coverage/domain, unsupported disposition, and complete-envelope commitment.</li>
   </ol>
-  <p>Seven chain fields—four IDs and three envelope hashes—will propagate unchanged through drilling request → bundle → execution request → receipt → engineering result. The release will derive exact-set commitments for all three envelope classes.</p>
+  <p>Seven host-motion chain fields—four IDs and three envelope hashes—plus the analysis-contract and selected-request commitments will propagate unchanged through request → bundle → execution request → receipt → engineering result. Each released envelope set will equal, in both directions, the distinct approved envelope references used by released engineering results: no omitted reference and no orphan member will be allowed. Long-form response rows will exactly project and cover the released hydrodynamic-response set.</p>
 
   <h2>Dependency flow and routing</h2>
   <pre>public riser/rig sources
@@ -86,7 +86,7 @@
   <h2>Public Hugging Face surface</h2>
   <p>The release will contain exactly 17 configs:</p>
   <p><code>source_registry</code>, <code>transformations</code>, <code>citations</code>, <code>criteria</code>, <code>clean_room_reviews</code>, <code>field_lineage</code>, <code>riser_components</code>, <code>riser_configurations</code>, <code>analysis_cases</code>, <code>execution_attestations</code>, <code>strength_results</code>, <code>operability_results</code>, <code>withheld_sources</code>, <code>floating_hosts</code>, <code>hydrodynamic_responses</code>, <code>hydrodynamic_response_values</code>, and <code>vessel_motion_boundaries</code>.</p>
-  <p>Response metadata and validation/fidelity will occupy <code>hydrodynamic_responses</code>; viewer-compatible long-form RAO and matrix ordinates will occupy <code>hydrodynamic_response_values</code>. Nested response arrays, private values, client-derived rows, and native diffraction/riser solver artifacts will not enter the public dataset.</p>
+  <p>Response metadata and validation/fidelity will occupy <code>hydrodynamic_responses</code>; viewer-compatible long-form RAO and matrix ordinates will occupy <code>hydrodynamic_response_values</code>. Kind-specific deterministic keys will apply: RAO rows will carry frequency and heading with real/imaginary ordinates; added-mass and radiation-damping rows will carry frequency with real ordinates; restoring rows will carry only DOF indices with real ordinates. Inapplicable axes will be null, never sentinel values. Nested response arrays, private values, client-derived rows, and native diffraction/riser solver artifacts will not enter the public dataset.</p>
 
   <h2>Artifact map and files</h2>
   <table><thead><tr><th>Artifact</th><th>Path / owner</th><th>Purpose</th></tr></thead><tbody>
@@ -130,7 +130,7 @@ fail closed on any ambiguity, out-of-domain case, proxy-as-actual claim, or hash
   <h2>Acceptance criteria</h2>
   <ul>
     <li>The v3 manifest will verify every component hash and will compose without conflict, unowned nodes, cycles, silent field removal, or implicit defaults.</li>
-    <li>Each producer will own exactly one boundary and consumers will reference rather than redefine upstream commitments.</li>
+    <li>Each interface boundary will have exactly one producer and consumers will reference rather than redefine upstream commitments.</li>
     <li>The full physical and evidence identity chain will survive unchanged through engineering result and exact-set release commitments.</li>
     <li>Actual-vessel promotion will require exact host/loading, resolved diffraction blockers, explicit conventions/domain/fidelity, and independent analytical top-connection transfer validation.</li>
     <li>OrcaFlex will remain the first adapter target; another solver will consume the same SSOT and generic analysis/result contracts.</li>

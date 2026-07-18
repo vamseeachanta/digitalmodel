@@ -121,6 +121,9 @@ required_RED_fixtures:
     - normalized_not_applicable_route_carries_host_or_response_binding
     - normalized_to_request_applicability_flip
     - normalized_to_request_not_applicable_disposition_tampered
+    - normalized_not_applicable_wave_case_tampered_in_request
+    - analysis_contract_commitment_missing_or_tampered_in_request
+    - selected_request_commitment_missing_or_tampered_downstream
     - normalized_case_unknown_applicability_discriminator
     - correct_motion_chain_bound_to_wrong_analysis_case
     - wave_derived_boundary_case_differs_from_request_case
@@ -289,6 +292,24 @@ release_membership_contract:
     every_set_member_is_referenced_by_a_released_result,
     every_member_resolves_to_approved_producer_envelope,
     long_form_rows_exactly_cover_hydrodynamic_response_set]
+
+normalized_route_handoff_expansion:
+  required_branch_equalities: [host_motion_applicability,
+    floating_host_id, loading_condition_id, hydrodynamic_response_id,
+    floating_host_identity_envelope_sha256,
+    hydrodynamic_response_envelope_sha256]
+  not_applicable_branch_equalities: [host_motion_applicability,
+    reviewed_disposition_sha256]
+  selected_branch_by_discriminator:
+    required_ref: normalized_route_handoff_expansion.required_branch_equalities
+    not_applicable_ref: normalized_route_handoff_expansion.not_applicable_branch_equalities
+  drilling_handoff: {from: normalized_case, to: drilling_analysis_request,
+    fixed_applicability: required,
+    fields_ref: normalized_route_handoff_expansion.required_branch_equalities}
+  completion_workover_handoff: {from: normalized_case,
+    to: completion_workover_analysis_request,
+    fields_ref: normalized_route_handoff_expansion.selected_branch_by_discriminator}
+  expansion_rule: selected_branch_expands_by_normalized_case_discriminator
 
 promotion_gate_extensions:
   floater_source_to_host_identity: [public_source_commitment,
