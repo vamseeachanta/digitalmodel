@@ -385,7 +385,12 @@ def validate_parent_contract(manifest_path: Path, output_path: Path) -> dict[str
     paths.add(manifest)
     _reject_output(output_path, paths, identities)
     base, components = _load_components(root, payloads)
-    composed = _compose(root, base, components)
+    try:
+        composed = _compose(root, base, components)
+    except ContractValidationError:
+        raise
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ContractValidationError(f"invalid contract structure: {exc}") from exc
     validate_contract(root, base, components, composed)
     _reject_output(output_path, paths, identities)
     _atomic_emit(output_path, composed)

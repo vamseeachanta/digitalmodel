@@ -397,3 +397,4 @@ def validate_contract(
     validate_references(root, base, components, composed)
     exact.validate_exact_semantics(composed)
     exact.validate_host_extension_surface(host)
+    exact.validate_approved_fingerprints(root, base, host, assurance)

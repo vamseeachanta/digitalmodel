@@ -240,3 +240,67 @@ def test_assurance_cannot_introduce_overwrite_surface(tmp_path: Path) -> None:
     _mutate(manifest, ASSURANCE, change)
     with pytest.raises(ContractValidationError, match="assurance surface"):
         validate_parent_contract(manifest, output)
+
+
+def test_owner_amendment_cannot_replace_base_values(tmp_path: Path) -> None:
+    manifest, output = _bundle(tmp_path)
+
+    def change(host: dict[str, object]) -> None:
+        owner = host["owners"]["drilling_workflow"]
+        owner["issue"] = "https://github.com/invalid/owner/issues/1"
+        owner["outputs"] = []
+
+    _mutate(manifest, HOST, change)
+    with pytest.raises(ContractValidationError, match="semantic fingerprint"):
+        validate_parent_contract(manifest, output)
+
+
+def test_consumer_key_cannot_shadow_invalid_consumers(tmp_path: Path) -> None:
+    manifest, output = _bundle(tmp_path)
+
+    def change(host: dict[str, object]) -> None:
+        envelope = host["interface_envelopes"]["floating_host_identity"]
+        envelope["consumers"] = ["bogus_owner"]
+        envelope["consumer"] = envelope["producer"]
+
+    _mutate(manifest, HOST, change)
+    with pytest.raises(ContractValidationError):
+        validate_parent_contract(manifest, output)
+
+
+@pytest.mark.parametrize("surface", ["closeout", "dag", "commitment"])
+def test_declared_merge_surfaces_cannot_be_weakened(
+    tmp_path: Path, surface: str
+) -> None:
+    manifest, output = _bundle(tmp_path)
+
+    def change(value: dict[str, object]) -> None:
+        if surface == "closeout":
+            value["closeout_rules"] = []
+        elif surface == "dag":
+            value["milestone_DAG_extensions"][
+                "deterministic_bundle_readiness_guards"
+            ] = {}
+        else:
+            value["envelope_commitment_rules"]["normalized_case"] = {
+                "commitment_field": "weakened_sha256",
+                "covers": "every_minimum_binding_except_commitment_field",
+            }
+
+    component = ASSURANCE if surface == "closeout" else HOST
+    _mutate(manifest, component, change)
+    with pytest.raises(ContractValidationError):
+        validate_parent_contract(manifest, output)
+
+
+def test_unknown_child_extension_returns_typed_error(tmp_path: Path) -> None:
+    manifest, output = _bundle(tmp_path)
+
+    def change(assurance: dict[str, object]) -> None:
+        assurance["child_acceptance_extensions"]["https://invalid/issues/1"] = [
+            "unknown_obligation"
+        ]
+
+    _mutate(manifest, ASSURANCE, change)
+    with pytest.raises(ContractValidationError, match="invalid contract structure"):
+        validate_parent_contract(manifest, output)

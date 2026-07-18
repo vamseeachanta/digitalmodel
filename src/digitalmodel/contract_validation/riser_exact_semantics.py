@@ -147,6 +147,12 @@ ASSURANCE_KEYS = {
     "schema_version",
     "source_evidence_rules",
 }
+APPROVED_FINGERPRINTS = {
+    "root": "afa39fb15eb81503692ae3b5b8b90a619f9eae94addbb7cd1cf929c1eea90178",
+    "base": "cfb5c5d03b87c9de7a998323b8bd9a59dc4c3cc85b77189b3ab255f5c1ec83b4",
+    "host": "ec91bff38f6f15f16e2e1646fe096e8269911dea7faaa158656e472edb5e4927",
+    "assurance": "264ead67a60e820584ca882674d4296222357b9b021249e442ab1d1cb21bf176",
+}
 HOST_FIELDS = [
     "floating_host_id",
     "loading_condition_id",
@@ -185,6 +191,29 @@ def _union_contract(required_fields: list[str]) -> dict[str, Any]:
 def _record_hash(record: dict[str, Any]) -> str:
     data = json.dumps(record, sort_keys=True, separators=(",", ":")).encode()
     return hashlib.sha256(data).hexdigest()
+
+
+def validate_approved_fingerprints(
+    root: dict[str, Any],
+    base: dict[str, Any],
+    host: dict[str, Any],
+    assurance: dict[str, Any],
+) -> None:
+    """Bind all approved semantic surfaces independently of manifest hashes."""
+
+    observed = {
+        "root": _record_hash(root),
+        "base": _record_hash(base),
+        "host": _record_hash(host),
+        "assurance": _record_hash(assurance),
+    }
+    if observed != APPROVED_FINGERPRINTS:
+        changed = sorted(
+            key for key in observed if observed[key] != APPROVED_FINGERPRINTS[key]
+        )
+        raise ContractValidationError(
+            f"approved semantic fingerprint mismatch: {changed}"
+        )
 
 
 def validate_assurance_surface(assurance: dict[str, Any]) -> None:
