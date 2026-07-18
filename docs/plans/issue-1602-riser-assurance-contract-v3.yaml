@@ -43,6 +43,7 @@ planning_validation:
     commitment_rules_cover_every_effective_minimum_binding,
     every_effective_interface_envelope_has_exactly_one_commitment_rule,
     same_route_handoff_constraints_are_conjoined_without_field_loss,
+    promotion_gate_extensions_are_conjoined_without_gate_loss,
     every_child_issue_has_exactly_one_owner_crosswalk,
     effective_DAG_is_acyclic, every_DAG_node_has_owner,
     drilling_route_preserves_all_seven_chain_fields,
@@ -71,6 +72,7 @@ required_RED_fixtures:
     - legacy_envelope_without_commitment_rule
     - extended_binding_excluded_from_commitment_preimage
     - same_route_handoff_constraint_dropped_during_merge
+    - promotion_gate_extension_dropped_during_merge
     - child_issue_owner_crosswalk_missing_or_ambiguous
     - incorrect_public_config_count_or_name
   host_identity:

@@ -30,7 +30,7 @@ composition:
       retained_scope: host_hydrodynamics_motion_and_tracer_extensions
     - path: issue-1602-riser-assurance-contract-v3.yaml
       component_id: assurance_component
-      sha256: eff45de6c9a0c358e91d3e4a823c67388f2fe6c6dc62cf0bb8327962eaa08e65
+      sha256: 83b8bb2ebbdf9328e8ad40e94e1a3a50340845f73137ddf4b686294b28d13fce
       retained_scope: invariants_validation_fixtures_and_closeout_extensions
   load_order: [solver_neutral_base_v2, host_motion_component,
     assurance_component]
@@ -45,6 +45,7 @@ composition:
     required_handoff_equalities: append_full_constraints_deduplicate_exact_records_and_conjoin_same_route_requirements
     required_handoff_derivations: append_unique_by_output
     milestone_DAG_extensions: append_unique_edges_and_guards
+    promotion_gate_extensions: conjoin_same_named_gate_requirements_without_loss
     public_dataset_surface_extensions: union_configs_and_apply_projection_contract
     planning_validation: deep_union_lists_and_require_equal_scalars
     closeout_rules: append_strengthening_rules
@@ -108,6 +109,12 @@ effective_DAG:
   route_rule: drilling_requires_host_response_motion_chain
   completion_workover_rule: typed_required_or_not_applicable_disposition
   validation: acyclic_all_nodes_owned_and_all_blocking_paths_reach_parent_closeout
+
+effective_promotion_gates:
+  inherit_all_base_gates: true
+  extensions: issue-1602-riser-assurance-contract-v3.yaml#promotion_gate_extensions
+  same_named_gate_rule: conjoin_base_and_extension_requirements
+  validation: every_base_and_extension_requirement_is_present_after_composition
 
 effective_validation:
   base_planning_and_closeout_checks_retained: true
