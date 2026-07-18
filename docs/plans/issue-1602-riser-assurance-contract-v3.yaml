@@ -142,6 +142,7 @@ required_RED_fixtures:
     - long_form_value_row_omitted_duplicated_reordered_or_tampered
     - long_form_metadata_and_value_parent_mismatch
     - long_form_value_row_missing_response_envelope_hash
+    - same_response_id_and_indices_with_different_envelope_hashes_collide
     - matrix_row_uses_heading_or_imaginary_value
     - restoring_row_uses_frequency_or_heading_sentinel
     - HF_receipt_drops_v3_release_set_commitment
@@ -215,6 +216,7 @@ child_acceptance_extensions:
     - HF_receipt_website_and_closeout_preserve_all_v3_set_commitments
 
 child_issue_owner_crosswalk:
+  https://github.com/vamseeachanta/worldenergydata/issues/1046: source_repair
   https://github.com/vamseeachanta/worldenergydata/issues/1050: floating_host_source
   https://github.com/vamseeachanta/digitalmodel/issues/1618: floating_host_identity
   https://github.com/vamseeachanta/digitalmodel/issues/1619: hydrodynamic_response
@@ -225,6 +227,7 @@ child_issue_owner_crosswalk:
   https://github.com/vamseeachanta/deckhand/issues/568: licensed_execution
   https://github.com/vamseeachanta/digitalmodel/issues/1611: analysis_semantics
   https://github.com/vamseeachanta/digitalmodel/issues/1604: public_release
+  https://github.com/vamseeachanta/aceengineer-website/issues/75: website
 
 source_evidence_rules:
   drive_index_hits: private_source_evidence_only
@@ -257,13 +260,18 @@ public_dataset_surface_extensions:
     response_kind: [complex_RAO, added_mass, radiation_damping, restoring]
     required_row_fields: [hydrodynamic_response_envelope_sha256]
     kind_specific_keys:
-      complex_RAO: [hydrodynamic_response_id, response_kind, dof_row,
+      complex_RAO: [hydrodynamic_response_id,
+        hydrodynamic_response_envelope_sha256, response_kind, dof_row,
         frequency_index, heading_index]
-      added_mass: [hydrodynamic_response_id, response_kind, dof_row,
+      added_mass: [hydrodynamic_response_id,
+        hydrodynamic_response_envelope_sha256, response_kind, dof_row,
         dof_column, frequency_index]
-      radiation_damping: [hydrodynamic_response_id, response_kind, dof_row,
+      radiation_damping: [hydrodynamic_response_id,
+        hydrodynamic_response_envelope_sha256, response_kind, dof_row,
         dof_column, frequency_index]
-      restoring: [hydrodynamic_response_id, response_kind, dof_row, dof_column]
+      restoring: [hydrodynamic_response_id,
+        hydrodynamic_response_envelope_sha256, response_kind, dof_row,
+        dof_column]
     value_encoding:
       complex_RAO: explicit_SI_real_and_imaginary
       added_mass: explicit_SI_real

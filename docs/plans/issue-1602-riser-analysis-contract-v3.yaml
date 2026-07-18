@@ -30,7 +30,7 @@ composition:
       retained_scope: host_hydrodynamics_motion_and_tracer_extensions
     - path: issue-1602-riser-assurance-contract-v3.yaml
       component_id: assurance_component
-      sha256: 1e1fa9431a0738804b055c222f026c48ab207f705e54e3e9265a0e36d0494814
+      sha256: eff45de6c9a0c358e91d3e4a823c67388f2fe6c6dc62cf0bb8327962eaa08e65
       retained_scope: invariants_validation_fixtures_and_closeout_extensions
   load_order: [solver_neutral_base_v2, host_motion_component,
     assurance_component]
