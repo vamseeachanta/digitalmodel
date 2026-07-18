@@ -8,7 +8,8 @@
 <strong>Complexity:</strong> T3 &nbsp; <strong>Execution mode:</strong> parallel-readonly planning; parallel-worktree implementation only for disjoint test/adapter surfaces<br>
 <strong>Date:</strong> 2026-07-18 &nbsp; <strong>Client:</strong> N/A &nbsp; <strong>Lane:</strong> <code>lane:codex</code><br>
 <strong>Issue:</strong> <a href="https://github.com/vamseeachanta/digitalmodel/issues/1619">digitalmodel #1619</a><br>
-<strong>Depends on:</strong> <a href="https://github.com/vamseeachanta/digitalmodel/issues/1618">#1618</a>, <a href="https://github.com/vamseeachanta/digitalmodel/issues/1579">#1579</a>, <a href="https://github.com/vamseeachanta/digitalmodel/issues/1580">#1580</a>, <a href="https://github.com/vamseeachanta/digitalmodel/issues/1582">#1582</a>; conditional <a href="https://github.com/vamseeachanta/digitalmodel/issues/1581">#1581</a></div>
+<strong>Before any TDD:</strong> approved parent excitation amendment and landed <a href="https://github.com/vamseeachanta/digitalmodel/issues/1618">#1618</a> fixture<br>
+<strong>Before native adapter/run:</strong> executable Capytaine environment plus <a href="https://github.com/vamseeachanta/digitalmodel/issues/1579">#1579</a>, <a href="https://github.com/vamseeachanta/digitalmodel/issues/1580">#1580</a>, <a href="https://github.com/vamseeachanta/digitalmodel/issues/1582">#1582</a>; conditional <a href="https://github.com/vamseeachanta/digitalmodel/issues/1581">#1581</a></div>
 
 <h2>Goal and boundary</h2>
 <p>The implementation will consume a reviewed <code>FloatingHostIdentityEnvelope</code>, execute one public MODU diffraction tracer through Capytaine, and emit a solver-neutral <code>HydrodynamicResponseEnvelope</code>. Native Capytaine/OrcaWave/AQWA artifacts will remain evidence; the normalized complex response, matrices, conventions, domain, fidelity, validation, and commitments will be canonical.</p>
@@ -34,7 +35,6 @@
 <tr><td>Create</td><td><code>src/digitalmodel/hydrodynamics/hydrodynamic_response/projection.py</code></td><td>Backend-neutral projection protocol used by Capytaine and a second synthetic backend fixture.</td></tr>
 <tr><td>Create</td><td><code>src/digitalmodel/hydrodynamics/capytaine/response_adapter.py</code></td><td>Solver-owned pure projection from reviewed host + <code>DiffractionSpec</code> + Capytaine <code>BEMResult</code>/<code>RAOResult</code> + run evidence into the generic envelope.</td></tr>
 <tr><td>Create</td><td><code>src/digitalmodel/hydrodynamics/hydrodynamic_response/__init__.py</code></td><td>Export the generic response API without solver-specific imports.</td></tr>
-<tr><td>Modify narrowly</td><td><code>src/digitalmodel/hydrodynamics/capytaine/models.py</code></td><td>Expose only missing, explicit source metadata needed by the adapter; solver-specific models will not become SSOT.</td></tr>
 <tr><td>Create</td><td><code>tests/hydrodynamics/hydrodynamic_response/</code></td><td>Focused model, canonicalization, domain, fidelity, row-identity, lineage, leakage, and tamper tests.</td></tr>
 <tr><td>Create</td><td><code>tests/hydrodynamics/capytaine/test_response_adapter.py</code></td><td>Deterministic projection, repeated-run equivalence, ordered-DOF, units, matrix, excitation, and convention tests.</td></tr>
 <tr><td>Create</td><td><code>tests/fixtures/hydrodynamics/public_modu_tracer/</code></td><td>Public-safe mesh/spec/host/expected-envelope fixtures with explicit license and fidelity.</td></tr>
@@ -55,15 +55,16 @@ verify_hydrodynamic_response(envelope) -&gt; None
 response_value_rows(envelope) -&gt; tuple[HydrodynamicResponseValue, ...]
 </pre>
 <p>The ordered DOFs will be exactly surge, sway, heave, roll, pitch, yaw. The canonical time-harmonic convention will be <code>Re(X exp(-i omega t))</code>, with heading zero propagating along canonical +x; adapters will explicitly conjugate/rotate native results when required and record that transform. Complex ordinates will be canonical real/imaginary values; amplitude/phase will be a declared derived view. RAO and wave-excitation rows will carry frequency and heading; added-mass and radiation-damping rows will carry frequency only; restoring rows will carry DOF indices only. Inapplicable axes will be null, not sentinel values.</p>
-<p>Wave excitation (Froude-Krylov plus diffraction) will be part of the normalized response payload and will receive its own child commitment. Because the parent v3 minimum-binding list does not currently name that commitment, implementation will require an explicit parent-contract amendment and fresh owner approval or a reviewed decision that excitation remains execution evidence only. The child will not hide excitation inside a field named for matrices or RAOs.</p>
+<p>Wave excitation (Froude-Krylov plus diffraction) will be part of the normalized response payload and will receive its own commitment. The required parent revision will add that minimum binding; extend allowed response kinds, kind-specific row keys, payload projection, and release-set derivation; pass fresh adversarial review; and receive fresh user approval before any #1619 TDD. Excitation will not be hidden inside a field named for matrices, RAOs, or execution evidence, and it will not propagate into <code>VesselMotionBoundaryEnvelope</code>.</p>
+<p>The canonical incident-wave basis will be a 1 m wave amplitude (2 m wave height). Translational RAOs will use m/m amplitude, rotational RAOs rad/m amplitude, translational excitation N/m amplitude, and moment excitation N·m/m amplitude. The Capytaine adapter will prove its native unit-amplitude, +x heading, radians, and <code>exp(-i omega t)</code> conventions map by an identity phase transform plus an explicit reviewed heading/frame transform. Future backend adapters will own their own conversion proofs.</p>
 
 <h2>TDD implementation sequence</h2>
 <ol>
 <li><strong>RED — exact envelope.</strong> Tests will assert every v3 minimum binding, commitment coverage, six-DOF order, unique row keys, finite numeric values, and parent identity/hash equality. Expected initial run: module import failure.</li>
-<li><strong>Prerequisite fixture.</strong> TDD will begin only after #1618 lands its reviewed type and canonical public-safe conformance fixture; #1619 will import that fixture rather than inventing a divergent mock host model.</li>
+<li><strong>Prerequisites.</strong> TDD will begin only after the parent excitation revision is reviewed/approved and #1618 lands its reviewed type plus canonical public-safe conformance fixture; #1619 will import those contracts rather than inventing divergent mocks.</li>
 <li><strong>GREEN — generic immutable schema.</strong> The implementation will add typed response metadata/value rows, deterministic semantic canonicalization, and a verifier independent of Capytaine.</li>
 <li><strong>RED — adapter conformance.</strong> A synthetic analytic BEM/RAO fixture will prove frequency/period equivalence, heading conversion, complex preservation, translational versus rotational units, matrix axes, reference point, water properties, run configuration, adapter version, and source capture.</li>
-<li><strong>GREEN — Capytaine projection.</strong> A pure adapter will map explicit fields without guessing defaults or modifying the input host/spec. It will normalize Capytaine radians, +x heading zero, and <code>exp(-i omega t)</code> semantics into the declared canonical contract. A second run with the same execution fingerprint will produce byte-identical normalized evidence.</li>
+<li><strong>GREEN — Capytaine projection.</strong> After #1579/#1580/#1582 and the executable Capytaine environment land, a pure adapter will map explicit fields without guessing defaults or modifying the input host/spec. It will prove identity phase mapping and the explicit heading/frame transform. A second run with the same execution fingerprint will produce byte-identical normalized evidence.</li>
 <li><strong>RED/GREEN — domain and fidelity.</strong> Tests will reject unknown phase, unit, matrix origin, restoring composition/reference, frame, reference point, host/loading/mesh mismatch, frequency/heading outside domain, flat extrapolation, heading clamp, and proxy-as-actual promotion.</li>
 <li><strong>Tracer and independent validation.</strong> The public-safe tracer will execute or replay a pinned Capytaine result, compare against an independent public reference with declared tolerances, record unsupported features/domain, and emit either truthful benchmark/screening evidence or actual evidence only when every gate passes.</li>
 </ol>
@@ -75,9 +76,11 @@ response_value_rows(envelope) -&gt; tuple[HydrodynamicResponseValue, ...]
 <tr><td>Conventions</td><td>DOF order, units, coordinate frame, reference point, wave heading/sign, phase/time basis, and complex representation are explicit and non-contradictory.</td></tr>
 <tr><td>Matrices/rows</td><td>Added mass, damping, and restoring use correct axes/units/origins; long-form keys are collision-free and exactly cover payload ordinates.</td></tr>
 <tr><td>Excitation</td><td>Froude-Krylov, diffraction, and combined excitation vectors use frequency/heading/DOF axes, explicit SI units, canonical complex convention, and a non-overloaded commitment.</td></tr>
+<tr><td>Wave basis</td><td>Unit-amplitude normalization prevents wave-height/amplitude factor-of-two errors and distinguishes translational force from moment units.</td></tr>
 <tr><td>Domain</td><td>Interpolation is allowed only inside the declared usable domain; no flat frequency extrapolation or heading clamping occurs.</td></tr>
 <tr><td>Fidelity/public</td><td>Only <code>screening_proxy</code>, <code>benchmark</code>, or <code>actual</code> are accepted; proxy/benchmark cannot support actual-vessel or reduced-risk claims; private/native artifacts are excluded from public rows.</td></tr>
 <tr><td>Backend neutrality</td><td>A second synthetic backend will project into identical generic semantics without importing or executing Capytaine.</td></tr>
+<tr><td>Validation provenance</td><td>Missing tolerance provenance/Citation sidecar, reference revision mismatch, unsupported comparison domain, or copied unsupported generic thresholds fail closed.</td></tr>
 </tbody></table>
 
 <h2>Acceptance criteria and verification</h2>
@@ -85,7 +88,7 @@ response_value_rows(envelope) -&gt; tuple[HydrodynamicResponseValue, ...]
 <li>The normalized envelope will bind every parent v3 field and will remain backend-neutral; a future OrcaWave/AQWA adapter will target the same interface without downstream changes.</li>
 <li>The response and long-form values will be deterministic, lossless for approved complex/matrix payloads, and fail closed on convention or domain ambiguity.</li>
 <li><code>uv run pytest tests/hydrodynamics/hydrodynamic_response tests/hydrodynamics/capytaine/test_response_adapter.py tests/hydrodynamics/capytaine tests/validation/test_riser_parent_contract*.py -v</code> will pass.</li>
-<li>A pinned tracer replay and, where the environment supports Capytaine, a native run will match the declared independent reference/tolerances. Unavailable native execution will be recorded and will prohibit actual promotion.</li>
+<li>A non-skipped native pinned Capytaine run will be mandatory for issue closure and will emit an execution receipt, environment/solver fingerprint, normalized envelope, and independent validation evidence. Replay alone will not satisfy the execution milestone.</li>
 <li><code>scripts/legal/legal-sanity-scan.sh</code>, security checks, and leakage tests will pass.</li>
 <li>The issue will receive an implementation summary comment and T3 code/artifact cross-review before closure.</li>
 </ul>
@@ -99,6 +102,7 @@ response_value_rows(envelope) -&gt; tuple[HydrodynamicResponseValue, ...]
 
 <h2>Adversarial review</h2>
 <p>Claude, Codex, and Agy artifacts will be persisted under <code>scripts/review/results/issue-1619-plan-round-N/</code>. Review will attack solver-neutrality, units/conventions, row identity, deterministic claims, dependency leakage, and actual-vessel promotion. Any MAJOR will keep the plan in draft.</p>
-<p><strong>Round 1:</strong> Agy returned MAJOR; Claude and Codex were unavailable after 300-second timeouts. This revision will add excitation-force ownership and the parent-amendment gate, fix adapter placement, freeze the canonical time convention, constrain byte-equivalence to one execution fingerprint, and clarify exact float serialization. Focused round 2 review will be required.</p>
+<p><strong>Round 1:</strong> Agy returned MAJOR; Claude and Codex were unavailable after 300-second timeouts. The first revision added excitation ownership, canonical time convention, adapter placement, and execution-fingerprint determinism.</p>
+<p><strong>Round 2:</strong> Agy and the Codex subagent returned MAJOR; the architecture check confirmed a parent amendment is required. This revision will make that amendment a pre-TDD gate, extend every affected parent/release surface, require a native Capytaine run, freeze the unit-wave basis, remove <code>capytaine/models.py</code> ownership, and add tolerance/citation RED tests. The plan will remain blocked-draft until the parent revision is reviewed and explicitly approved.</p>
 <div class="gate"><strong>Authorization:</strong> after final no-MAJOR review and pushed evidence, the issue may move to <code>status:plan-review</code> for explicit user approval. No implementation or self-approval will occur during planning.</div>
 </main></body></html>

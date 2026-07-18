@@ -16,7 +16,7 @@
 
 <h2>Resource intelligence summary</h2>
 <ul>
-<li><code>src/digitalmodel/marine_ops/vessel_db/wed_adapter.py</code> currently adapts fleet CSV rows into name-oriented <code>Record</code> objects. It does not preserve the complete source commitment, loading evidence, ambiguity disposition, or public-eligibility commitment required by the parent v3 contract.</li>
+<li><code>src/digitalmodel/marine_ops/vessel_db/wed_adapter.py</code> adapts legacy fleet CSV rows into name-oriented <code>Record</code> objects and does not preserve this contract's complete commitments. #1618 will not consume that lossy adapter: WED #1050 will own and emit a separate typed <code>PublicFloaterSourceRecord</code> artifact/API, which this issue will consume directly.</li>
 <li><code>src/digitalmodel/marine_ops/vessel_db/loader.py</code> normalizes vessel particulars and aliases, while <code>mass_properties.py</code>, <code>gyradii.py</code>, and the hull-library catalog provide reusable evidence inputs. None is identity authority.</li>
 <li>The packaged WED drilling-rig CSV currently contains 2,268 rows, zero populated IMO values, 1,673 rows with LOA and beam, and 1,540 with LOA, beam, draft, and displacement. It contains no CoG or inertia columns. These rows cannot satisfy this envelope until #1050 supplies the required provenance and mass/loading evidence.</li>
 <li><code>Record.vessel_id()</code> and existing hull catalog keys are name/file-derived aliases. <code>mass_properties.from_record()</code> may estimate gyradii and default missing CoG coordinates; neither behavior may establish physical identity or actual/public eligibility.</li>
@@ -42,30 +42,34 @@
 
 <h2>Interfaces and deterministic contract</h2>
 <pre>resolve_floating_host_identity(
-    source_record: Mapping[str, object],
-    evidence: HostCatalogEvidence,
+    source_record: PublicFloaterSourceRecord,
+    resolution: ReviewedHostResolutionEvidence,
 ) -&gt; FloatingHostIdentityEnvelope
 
-load_host_catalog_evidence(
+verify_host_resolution_evidence(
     source_record: PublicFloaterSourceRecord,
+    resolution: ReviewedHostResolutionEvidence,
     panel_catalog: PanelCatalog,
     hull_catalog: HullCatalog,
-) -&gt; HostCatalogEvidence
+) -&gt; VerifiedHostResolution
 
-canonical_envelope_bytes(envelope_without_commitment) -&gt; bytes
+canonical_envelope_bytes(
+    envelope_without_commitment: FloatingHostIdentityPreimage,
+) -&gt; bytes
 verify_floating_host_identity(envelope) -&gt; None
 </pre>
-<p>The semantic commitment preimage will contain every parent minimum binding except <code>floating_host_identity_envelope_sha256</code>. YAML will first decode through a strict duplicate-key-safe loader into the exact typed child model; implicit timestamps, custom tags, booleans-as-numbers, NaN/infinity, and schema coercions will be rejected before canonical JSON-compatible values are formed. Engineering decimals will use declared decimal-string fields where exact lexical stability is required. Raw source-file byte hashes will remain separately validated evidence and will not make the semantic envelope fingerprint YAML-presentation-dependent. IDs will derive only from reviewed physical identity and loading evidence, never aliases or solver object names.</p>
-<p>The canonical host body axes will be right-handed SI: +x forward, +y port, +z upward. The origin will be an explicit physical datum with evidence and an explicit transform from each source/catalog frame; no implicit solver origin will be accepted. Existing catalog IDs will remain aliases. <code>load_host_catalog_evidence</code> will obtain candidate hull/loading artifacts from existing <code>PanelCatalog</code>/<code>HullCatalog</code> APIs and bind immutable geometry/content hashes without modifying those catalogs.</p>
+<p>The semantic commitment preimage will contain every parent minimum binding except <code>floating_host_identity_envelope_sha256</code>. YAML will first decode through a strict duplicate-key-safe loader into the exact typed child model; implicit timestamps, custom tags, booleans-as-numbers, NaN/infinity, and schema coercions will be rejected. The normalized tree will permit only NFC UTF-8 strings, booleans, null, arrays, mappings with string keys, and integers where the schema explicitly declares an integer; all engineering real values will be canonical decimal strings. RFC 8785 will then define key ordering, escaping, and UTF-8 JSON serialization. A frozen golden preimage/byte/hash vector will be independently reconstructed in tests. Raw source-file byte hashes will remain separate evidence and will not contaminate the semantic fingerprint.</p>
+<p>The canonical host body frame will be a local right-handed SI frame: +x forward, +y port, +z upward, with an explicit evidenced physical origin. A hash-bound rigid transform will map this local frame to the parent-owned global <code>ENU_right_handed</code> frame. Source/catalog-to-local and local-to-ENU transforms, signs, origins, and units will be independently tested; no implicit solver origin will be accepted.</p>
+<p><code>ReviewedHostResolutionEvidence</code> will name the exact source commitment, physical-vessel identifier/evidence, hull artifact ID and geometry hash, loading-condition ID/hash, and review commitment. <code>verify_host_resolution_evidence</code> will perform exact ID/hash lookups against existing catalogs. Automatic name, dimensional-similarity, generic <code>HULL_LIBRARY_REF</code>, or heuristic matching will be forbidden for promotion and may produce only a non-promotable disposition.</p>
 
 <h2>TDD implementation sequence</h2>
 <ol>
 <li><strong>RED — exact schema and commitments.</strong> Tests will require every v3 minimum binding, reject unknown/duplicate semantic fields, reject a source commitment mismatch, and prove that key order/YAML formatting cannot change the semantic envelope commitment. Command: <code>uv run pytest tests/marine_ops/vessel_db/test_host_identity.py -x -v</code>; expected initial result: failures because the module will not exist.</li>
 <li><strong>GREEN — minimal immutable models.</strong> The implementation will add typed immutable records, strict typed-to-canonical JSON-compatible normalization, explicit units/frame records, and exact commitment verification. The focused tests will then pass.</li>
 <li><strong>RED — identity resolution.</strong> Fixtures will cover matching IMO, reviewed fallback identity, name-only collision, conflicting IMO, alias-to-different-unit collision, zero/multiple candidate matches, and loading-condition mismatch.</li>
-<li><strong>GREEN — fail-closed crosswalk.</strong> Resolution will require exactly one physical unit and one loading condition; every rejection will return an explicit typed disposition without emitting an eligible envelope.</li>
+<li><strong>GREEN — fail-closed crosswalk.</strong> Resolution will require reviewed evidence for exactly one physical unit, one immutable hull artifact, and one loading condition; every rejection will return an explicit typed disposition without emitting an eligible envelope.</li>
 <li><strong>RED/GREEN — evidence completeness and public boundary.</strong> Tests will reject missing dimensions, displacement, CoG/inertia basis, source license, redistribution status, eligibility evidence, or private/client source class. Confidence will never override missing mandatory evidence.</li>
-<li><strong>Integration.</strong> The host-identity test will prove the accepted #1050 record commitment is preserved byte-for-byte through the resolver input, existing catalog evidence resolves through immutable hashes, and emitted binding names equal the parent v3 contract.</li>
+<li><strong>Integration.</strong> The host-identity test will prove the accepted #1050 record commitment is preserved byte-for-byte through the resolver input, reviewed catalog evidence resolves through exact immutable hashes, child YAML/model/CLI/preimage declarations are bidirectionally identical, and emitted binding names equal the parent v3 contract.</li>
 </ol>
 
 <h2>Required tests</h2>
@@ -76,6 +80,8 @@ verify_floating_host_identity(envelope) -&gt; None
 <tr><td>Lineage</td><td><code>rig_source_id</code> and <code>rig_source_commitment_sha256</code> equal the producer record; the complete-envelope commitment covers all effective bindings.</td></tr>
 <tr><td>Legal/public</td><td>Private/client input cannot emit a public-eligible envelope; source license, redistribution, confidence, and ambiguity dispositions remain explicit.</td></tr>
 <tr><td>Input security</td><td>Symlinks, path escape, oversized input, duplicate YAML keys, NaN/infinity, TOCTOU changes, and incomplete atomic output cleanup fail closed.</td></tr>
+<tr><td>Output security</td><td>Output symlink/hardlink aliases, input/output aliasing, destination escape, unauthorized overwrite, concurrent writers, failed fsync/rename, and temporary-file residue fail closed.</td></tr>
+<tr><td>Coordinates</td><td>Source/catalog to local-body and local-body to parent ENU transforms preserve axes, signs, origin, units, and hash commitments.</td></tr>
 </tbody></table>
 
 <h2>Acceptance criteria and verification</h2>
@@ -94,6 +100,7 @@ verify_floating_host_identity(envelope) -&gt; None
 
 <h2>Adversarial review</h2>
 <p>Claude, Codex, and Agy review artifacts will be persisted under <code>scripts/review/results/issue-1618-plan-round-N/</code>. Review prompts will assume defects, forbid praise/restatement, verify cited files and dependency states, and return APPROVE only after checking each correctness-critical claim. Any MAJOR will keep this plan in draft.</p>
-<p><strong>Round 1:</strong> Agy returned MAJOR; Claude and Codex were unavailable after 300-second timeouts. This revision will address the missing catalog-evidence provider, strict typed canonicalization boundary, explicit PR link, canonical axes/origin contract, and undeclared adapter-test ownership. Focused round 2 review will be required.</p>
+<p><strong>Round 1:</strong> Agy returned MAJOR; Claude and Codex were unavailable after 300-second timeouts. The revision removed the undeclared adapter-test work and added a first catalog/canonicalization/frame boundary.</p>
+<p><strong>Round 2:</strong> Agy and the Codex subagent returned MAJOR. This revision will replace underdetermined catalog discovery with exact reviewed resolution evidence, bind the local vessel frame to parent ENU, freeze RFC 8785 plus scalar normalization and a golden vector, require bidirectional contract/model/CLI equivalence, and complete output-security tests. Focused round 3 review will be required.</p>
 <div class="gate"><strong>Authorization:</strong> this document will not authorize implementation. After a final no-MAJOR review is pushed and evidenced on the issue, the issue may move to <code>status:plan-review</code> for explicit user approval.</div>
 </main></body></html>
