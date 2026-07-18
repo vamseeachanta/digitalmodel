@@ -1,0 +1,25 @@
+{
+  "schema_version": "plan-resource-intel-evidence/v1",
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/1602",
+  "executed_at": "2026-07-18T03:45:15-05:00",
+  "generated_at": "2026-07-18T08:45:32.509342+00:00",
+  "tool_repository": "https://github.com/vamseeachanta/workspace-hub",
+  "tool_commit": "3023230816c4162159a8a1e1f7d6f58065a38ed5",
+  "working_directory_contract": "workspace-hub_repository_root",
+  "command": "python3 scripts/data/drive-index-search/search.py 'vessel RAO diffraction' --domain marine --json --caller plan-resource-intel",
+  "query": "vessel RAO diffraction",
+  "domain": "marine",
+  "coverage_gaps": [],
+  "indexes": [
+    {"id": "ace_knowledge", "as_of": "2026-07-02", "days_stale": 16, "row_count": 1188891, "stale": true},
+    {"id": "dde_knowledge", "as_of": "2026-07-12T08:42:07.615342+00:00", "days_stale": 6, "row_count": 1346317, "stale": false},
+    {"id": "og_standards_inventory", "as_of": "2025-12-28", "days_stale": 202, "row_count": 1043616, "stale": true},
+    {"id": "master_document_index", "as_of": "2026-04-17", "days_stale": 92, "row_count": 627411, "stale": true}
+  ],
+  "returned_result_count": 20,
+  "deidentified_finding": "Historical project vessel-motion and RAO evidence exists in private engineering indexes and may support source comparison, but it cannot seed public rows.",
+  "source_class": "private_source_evidence_only",
+  "public_row_seed_eligibility": "forbidden",
+  "redactions": ["canonical_path", "raw_path", "project", "client", "vessel_name", "content_hash"],
+  "staleness_rule": "stale_indexes_do_not_establish_absence"
+}
