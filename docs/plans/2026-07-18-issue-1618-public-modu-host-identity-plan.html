@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>#1618 Plan — Public MODU Host Identity</title>
+<style>:root{--n:#0b3d5c;--t:#168c88;--i:#18313f;--m:#5f7480;--l:#d7e2e7;--w:#f3f8fa;--g:#eaf7f6;--y:#fff5d6}*{box-sizing:border-box}body{margin:0;background:var(--w);color:var(--i);font:16px/1.52 system-ui,sans-serif}main{max-width:1080px;margin:auto;background:white;padding:3rem 4rem}h1,h2,h3{color:var(--n)}h2{border-bottom:2px solid var(--t);padding-bottom:.3rem;margin-top:2rem}a{color:#076b83}code{background:#edf3f5;padding:.1rem .3rem}.meta,.gate{padding:1rem 1.2rem;border-left:5px solid var(--t);background:var(--g)}.gate{border-color:#d59a00;background:var(--y)}table{width:100%;border-collapse:collapse;font-size:.92rem}th,td{border:1px solid var(--l);padding:.5rem;vertical-align:top}th{background:#eaf2f5;text-align:left}pre{background:#102d3b;color:#eaf7f7;padding:1rem;overflow:auto}@media(max-width:760px){main{padding:1.4rem}table{display:block;overflow:auto}}</style>
+</head><body><main>
+<h1>#1618 implementation plan: bind one public MODU to one physical host</h1>
+<div class="meta"><strong>Status:</strong> draft; adversarial review pending<br>
+<strong>Complexity:</strong> T3 &nbsp; <strong>Execution mode:</strong> parallel-readonly planning; single-lane implementation<br>
+<strong>Date:</strong> 2026-07-18 &nbsp; <strong>Client:</strong> N/A &nbsp; <strong>Lane:</strong> <code>lane:codex</code><br>
+<strong>Issue:</strong> <a href="https://github.com/vamseeachanta/digitalmodel/issues/1618">digitalmodel #1618</a><br>
+<strong>Parent:</strong> <a href="https://github.com/vamseeachanta/digitalmodel/issues/1602">digitalmodel #1602</a></div>
+
+<h2>Goal and boundary</h2>
+<p>The implementation will consume exactly one provenance-complete public MODU source record from <a href="https://github.com/vamseeachanta/worldenergydata/issues/1050">worldenergydata #1050</a> and will emit a deterministic, solver-neutral <code>FloatingHostIdentityEnvelope</code> that resolves one physical vessel, hull geometry, and loading condition. It will reference the WED source and digitalmodel hull records; it will not create another fleet master, execute diffraction, or infer identity from a rig name.</p>
+<div class="gate"><strong>Execution gates:</strong> implementation will remain blocked until WED #1050 lands an accepted source contract, PR #1627 resolves its open fingerprint review defect and lands the parent validator, this plan receives no-MAJOR adversarial review, and the user explicitly applies <code>status:plan-approved</code>.</div>
+
+<h2>Resource intelligence summary</h2>
+<ul>
+<li><code>src/digitalmodel/marine_ops/vessel_db/wed_adapter.py</code> currently adapts fleet CSV rows into name-oriented <code>Record</code> objects. It does not preserve the complete source commitment, loading evidence, ambiguity disposition, or public-eligibility commitment required by the parent v3 contract.</li>
+<li><code>src/digitalmodel/marine_ops/vessel_db/loader.py</code> normalizes vessel particulars and aliases, while <code>mass_properties.py</code>, <code>gyradii.py</code>, and the hull-library catalog provide reusable evidence inputs. None is identity authority.</li>
+<li>The packaged WED drilling-rig CSV currently contains 2,268 rows, zero populated IMO values, 1,673 rows with LOA and beam, and 1,540 with LOA, beam, draft, and displacement. It contains no CoG or inertia columns. These rows cannot satisfy this envelope until #1050 supplies the required provenance and mass/loading evidence.</li>
+<li><code>Record.vessel_id()</code> and existing hull catalog keys are name/file-derived aliases. <code>mass_properties.from_record()</code> may estimate gyradii and default missing CoG coordinates; neither behavior may establish physical identity or actual/public eligibility.</li>
+<li><code>docs/plans/issue-1602-riser-host-motion-contract-v3.yaml</code> fixes the exact minimum bindings and producer boundary for <code>floating_host_identity</code>.</li>
+<li><a href="https://github.com/vamseeachanta/worldenergydata/issues/1050">WED #1050</a> is open at <code>status:needs-plan</code>; its output will therefore be a hard precondition, not a fabricated fixture promoted as public evidence.</li>
+<li>The drive-index query <code>public MODU drilling rig vessel hull identity loading condition IMO</code> ran on 2026-07-18 through all six configured indexes. It found historical/private drilling-rig and vessel references, but no result may seed a public host row. Several indexes were stale; absence claims will not be inferred from that search.</li>
+<li><strong>Standards:</strong> identity resolution is a provenance/data-contract task. No standards-derived calculation constant will be introduced; the calc citation contract is not triggered.</li>
+<li><strong>Wiki:</strong> no wiki content will be touched. <strong>Reproduction:</strong> N/A — this issue will add a new envelope rather than repair an alleged runtime regression.</li>
+</ul>
+
+<h2>Artifact and interface map</h2>
+<table><thead><tr><th>Action</th><th>Path</th><th>Responsibility</th></tr></thead><tbody>
+<tr><td>Create</td><td><code>docs/plans/issue-1618-floating-host-identity-contract-v1.yaml</code></td><td>Exact child schema and preimage declaration, constrained by the parent v3 bindings.</td></tr>
+<tr><td>Create</td><td><code>src/digitalmodel/marine_ops/vessel_db/host_identity.py</code></td><td>Immutable envelope models, canonical semantic bytes, commitment construction, and public-eligibility output.</td></tr>
+<tr><td>Create</td><td><code>src/digitalmodel/marine_ops/vessel_db/host_identity_rules.py</code></td><td>Physical-identity, hull/loading crosswalk, collision, completeness, and fail-closed disposition rules.</td></tr>
+<tr><td>Modify</td><td><code>src/digitalmodel/marine_ops/vessel_db/__init__.py</code></td><td>Export the reviewed envelope API without changing the WED source adapter or existing catalogs.</td></tr>
+<tr><td>Create</td><td><code>scripts/validation/validate_floating_host_identity.py</code></td><td>Bounded file validation and deterministic envelope/crosswalk emission.</td></tr>
+<tr><td>Create</td><td><code>tests/marine_ops/vessel_db/test_host_identity.py</code></td><td>TDD contract, collision, tamper, loading, eligibility, security, and deterministic-canonicalization tests.</td></tr>
+<tr><td>Create</td><td><code>tests/marine_ops/vessel_db/fixtures/host_identity/</code></td><td>Public-safe synthetic success/failure fixtures; no fixture will claim actual-vessel status unless #1050 supplies eligible evidence.</td></tr>
+<tr><td>Create after #1050</td><td><code>data/vessels/crosswalks/public_modu_host_identity_v1.yaml</code></td><td>Reviewed references and commitments only; it will not duplicate the WED or hull master records.</td></tr>
+<tr><td>Update</td><td><code>docs/plans/README.md</code></td><td>Track the issue plan and gate state.</td></tr>
+</tbody></table>
+
+<h2>Interfaces and deterministic contract</h2>
+<pre>resolve_floating_host_identity(
+    source_record: Mapping[str, object],
+    hull_candidates: Sequence[Mapping[str, object]],
+) -&gt; FloatingHostIdentityEnvelope
+
+canonical_envelope_bytes(envelope_without_commitment) -&gt; bytes
+verify_floating_host_identity(envelope) -&gt; None
+</pre>
+<p>The semantic commitment preimage will contain every parent minimum binding except <code>floating_host_identity_envelope_sha256</code>. Raw source-file byte hashes will remain separately validated evidence and will not make the semantic envelope fingerprint YAML-presentation-dependent. IDs will derive only from reviewed physical identity and loading evidence, never aliases or solver object names.</p>
+
+<h2>TDD implementation sequence</h2>
+<ol>
+<li><strong>RED — exact schema and commitments.</strong> Tests will require every v3 minimum binding, reject unknown/duplicate semantic fields, reject a source commitment mismatch, and prove that key order/YAML formatting cannot change the semantic envelope commitment. Command: <code>uv run pytest tests/marine_ops/vessel_db/test_host_identity.py -x -v</code>; expected initial result: failures because the module will not exist.</li>
+<li><strong>GREEN — minimal immutable models.</strong> The implementation will add typed immutable records, RFC-8785-style deterministic JSON-compatible normalization, explicit units/frame records, and exact commitment verification. The focused tests will then pass.</li>
+<li><strong>RED — identity resolution.</strong> Fixtures will cover matching IMO, reviewed fallback identity, name-only collision, conflicting IMO, alias-to-different-unit collision, zero/multiple candidate matches, and loading-condition mismatch.</li>
+<li><strong>GREEN — fail-closed crosswalk.</strong> Resolution will require exactly one physical unit and one loading condition; every rejection will return an explicit typed disposition without emitting an eligible envelope.</li>
+<li><strong>RED/GREEN — evidence completeness and public boundary.</strong> Tests will reject missing dimensions, displacement, CoG/inertia basis, source license, redistribution status, eligibility evidence, or private/client source class. Confidence will never override missing mandatory evidence.</li>
+<li><strong>Integration.</strong> A WED adapter test will prove the accepted #1050 record commitment is preserved byte-for-byte into the resolver input, and parent-contract tests will prove the emitted binding names equal the v3 contract.</li>
+</ol>
+
+<h2>Required tests</h2>
+<table><thead><tr><th>Test family</th><th>Proof</th></tr></thead><tbody>
+<tr><td>Canonicalization</td><td>Stable bytes/hash across mapping order and presentation changes; semantic mutation changes the hash; raw evidence hash remains independently checked.</td></tr>
+<tr><td>Identity</td><td>Exactly one physical unit resolves; name-only, conflicting IMO, alias collision, missing fallback evidence, and multiple candidates fail closed.</td></tr>
+<tr><td>Loading and mass</td><td>Hull geometry, loading ID/hash, displacement, CoG, inertia origin/basis, particulars, units, and coordinate contract are complete and mutually consistent.</td></tr>
+<tr><td>Lineage</td><td><code>rig_source_id</code> and <code>rig_source_commitment_sha256</code> equal the producer record; the complete-envelope commitment covers all effective bindings.</td></tr>
+<tr><td>Legal/public</td><td>Private/client input cannot emit a public-eligible envelope; source license, redistribution, confidence, and ambiguity dispositions remain explicit.</td></tr>
+<tr><td>Input security</td><td>Symlinks, path escape, oversized input, duplicate YAML keys, NaN/infinity, TOCTOU changes, and incomplete atomic output cleanup fail closed.</td></tr>
+</tbody></table>
+
+<h2>Acceptance criteria and verification</h2>
+<ul>
+<li>One accepted WED record will resolve to exactly one stable host, hull, and loading condition or will fail closed without an eligible output.</li>
+<li>The complete v3 minimum-binding set and semantic commitment rule will be machine-checked against the parent contract.</li>
+<li><code>uv run pytest tests/marine_ops/vessel_db/test_host_identity.py tests/marine_ops/vessel_db/test_wed_adapter.py tests/validation/test_riser_parent_contract*.py -v</code> will pass.</li>
+<li><code>scripts/legal/legal-sanity-scan.sh</code> and the repository security checks will pass; fixtures and logs will contain no client identifiers, private paths, or secrets.</li>
+<li>The implementation issue will receive a summary comment, T3 code/artifact cross-review, and completion evidence before closure.</li>
+</ul>
+
+<h2>Risks and review focus</h2>
+<ul><li><strong>Upstream drift:</strong> #1050 may land a field shape different from this plan. Implementation will consume its reviewed contract and will revise this plan if that changes the parent interface.</li>
+<li><strong>Identity false-positive:</strong> IMO reuse/data errors and aliases are not sufficient. Review will attack collision and fallback-evidence rules.</li>
+<li><strong>Fingerprint coupling:</strong> PR #1627 currently has an open review finding on raw hash fields contaminating semantic fingerprints. This plan will depend on the corrected parent primitive.</li></ul>
+
+<h2>Adversarial review</h2>
+<p>Claude, Codex, and Agy review artifacts will be persisted under <code>scripts/review/results/issue-1618-plan-round-N/</code>. Review prompts will assume defects, forbid praise/restatement, verify cited files and dependency states, and return APPROVE only after checking each correctness-critical claim. Any MAJOR will keep this plan in draft.</p>
+<div class="gate"><strong>Authorization:</strong> this document will not authorize implementation. After a final no-MAJOR review is pushed and evidenced on the issue, the issue may move to <code>status:plan-review</code> for explicit user approval.</div>
+</main></body></html>
