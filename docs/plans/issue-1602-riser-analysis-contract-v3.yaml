@@ -2,12 +2,13 @@ contract_id: digitalmodel-riser-analysis-parent-interface
 contract_version: 3.0.0-draft.1
 status: planning-interface
 authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
-approved_plan:
+review_candidate_plan:
   path: 2026-07-18-issue-1602-riser-host-diffraction-plan.html
-  sha256: ce586694d6fcd77d2063984e86fa34b82f687c4a9bc029817e3bf83fcb2703c5
-approved_design:
+  sha256: 93b7c6096217bfc826532eb47644d8b54d62a8ce1ebdb65a26efdd10518d64e9
+approved_architecture_design:
   path: ../superpowers/specs/2026-07-18-riser-host-diffraction-monitoring-design.html
   sha256: 05bf52bf3453477e8bb8734c74a73d1b560869e80dd86890006ab3e0e1d3c5d0
+  approval_scope: architecture_and_original_issue_decomposition_only
 resource_intelligence_evidence:
   path: evidence/issue-1602-drive-index-resource-intel-2026-07-18.json
   sha256: 03b2f22210d29dbaeff4d498840001134a1e63221eb99b39483f26b20f1a135c
@@ -18,14 +19,18 @@ composition:
     path: issue-1602-riser-analysis-contract-v1.yaml
     sha256: 7e86ae789ffbd329aa06d503fb0c419385132e8a533ce99a6de8a87b1696b1b0
     retained_scope: solver_neutral_SSOT_execution_release_and_closeout_contract
+    identity_mode: legacy_root_assigned
+    expected_in_file_contract_id: digitalmodel-riser-analysis-parent-interface
+    expected_in_file_contract_version: 2.0.0-draft.11
+    filename_version_label_is_non_authoritative: true
   components:
     - path: issue-1602-riser-host-motion-contract-v3.yaml
       component_id: host_motion_component
-      sha256: 81783b68c0cc232f993d0fd618df428744286637564ec2d2866669bed28c35c1
+      sha256: c28bfe79eaefb19dd2f3d3f2da6f6867976799cf3e9eeaf398cf9d635f56d573
       retained_scope: host_hydrodynamics_motion_and_tracer_extensions
     - path: issue-1602-riser-assurance-contract-v3.yaml
       component_id: assurance_component
-      sha256: 723dd67712a3b1dacb1c76df365af9431440902739cc477461ba52c97e64aba6
+      sha256: 3c06f6d81a3ab57ce93b586bc20e41aeb5a58139723e611136a548441fba30b2
       retained_scope: invariants_validation_fixtures_and_closeout_extensions
   load_order: [solver_neutral_base_v2, host_motion_component,
     assurance_component]
@@ -43,16 +48,18 @@ composition:
     public_dataset_surface_extensions: union_configs_and_apply_projection_contract
     planning_validation: deep_union_lists_and_require_equal_scalars
     closeout_rules: append_strengthening_rules
+    child_acceptance_obligations: replace_only_explicitly_removed_obligation_then_append_extensions
     non_blocking_consumer_graph: isolated_union_excluded_from_closeout
   duplicate_edge_rule: canonicalize_then_deduplicate_exact_duplicates
   removal_rule: no_base_owner_envelope_binding_gate_or_test_is_removed_unless_listed
-  explicit_removals: []
+  explicit_removals:
+    - child_acceptance_obligations.public_release.exact_13_config_schemas
   hash_mismatch_rule: fail_closed_before_plan_or_runtime_validation
 
 effective_authority:
   parent_owns: [SSOT_architecture, public_private_boundary,
-    cross_repository_DAG, envelope_identity_chain, promotion_gates,
-    program_acceptance_and_closeout]
+    global_coordinates, cross_repository_DAG, envelope_identity_chain,
+    promotion_gates, program_acceptance_and_closeout]
   child_owns: [exact_nested_schemas, field_and_unit_contracts,
     hash_preimages, executable_validators, conformance_fixtures,
     repository_code_tests_receipts_and_reports]
@@ -71,7 +78,7 @@ effective_interface_envelopes:
   inherit_all_base_envelopes: true
   add: [public_floater_source_record, floating_host_identity,
     hydrodynamic_response, vessel_motion_boundary]
-  extend: [normalized_case, drilling_analysis_request,
+  extend: [normalized_case, analysis_contract, drilling_analysis_request,
     completion_workover_analysis_request, deterministic_bundle,
     execution_request, execution_receipt, engineering_result,
     logical_release, HF_publication_receipt, website_evidence,

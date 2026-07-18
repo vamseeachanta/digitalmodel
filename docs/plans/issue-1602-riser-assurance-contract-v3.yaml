@@ -21,8 +21,8 @@ invariants:
   monitoring: non_blocking_consumer_of_immutable_release
 
 planning_validation:
-  required_owners: [floating_host_source, floating_host_identity,
-    hydrodynamic_response, normalized_ssot, drilling_workflow,
+  required_owners: [source_repair, floating_host_source,
+    floating_host_identity, hydrodynamic_response, normalized_ssot, drilling_workflow,
     analysis_semantics, licensed_execution, public_release, website,
     parent_closeout]
   required_added_envelopes: [public_floater_source_record,
@@ -41,11 +41,14 @@ planning_validation:
   assertions: [component_hashes_match_manifest, composed_YAML_parses,
     owner_keys_exact, envelope_producers_and_consumers_resolve,
     commitment_rules_cover_every_minimum_binding,
+    every_effective_interface_envelope_has_exactly_one_commitment_rule,
     effective_DAG_is_acyclic, every_DAG_node_has_owner,
     drilling_route_preserves_all_seven_chain_fields,
     completion_workover_and_downstream_envelopes_validate_discriminated_union,
     handoff_equalities_are_transitive,
     release_set_commitments_have_exact_set_derivations,
+    release_sets_equal_distinct_references_of_released_results,
+    long_form_kind_specific_keys_and_null_policy_are_deterministic,
     conditional_family_routing_is_typed,
     monitoring_absent_from_blocking_closeout_DAG,
     non_blocking_monitoring_consumer_graph_is_acyclic_and_bound_to_release,
@@ -63,6 +66,7 @@ required_RED_fixtures:
     - unresolved_owner_or_consumer
     - cyclic_effective_DAG
     - missing_commitment_rule
+    - legacy_envelope_without_commitment_rule
     - incorrect_public_config_count_or_name
   host_identity:
     - source_record_commitment_missing_or_tampered
@@ -106,6 +110,8 @@ required_RED_fixtures:
     - downstream_envelope_drops_chain_field
     - downstream_envelope_tampers_chain_hash
     - release_set_commitment_omits_member
+    - released_result_references_envelope_absent_from_release_set
+    - release_set_contains_orphan_envelope_not_used_by_result
     - completion_or_workover_omits_required_or_not_applicable_disposition
     - completion_or_workover_sets_both_union_branches
     - completion_or_workover_sets_neither_union_branch
@@ -127,6 +133,8 @@ required_RED_fixtures:
     - monitoring_state_inserted_into_parent_closeout_DAG
     - long_form_value_row_omitted_duplicated_reordered_or_tampered
     - long_form_metadata_and_value_parent_mismatch
+    - matrix_row_uses_heading_or_imaginary_value
+    - restoring_row_uses_frequency_or_heading_sentinel
     - HF_receipt_drops_v3_release_set_commitment
     - website_evidence_drops_v3_release_set_commitment
     - v3_set_hash_tampered_without_new_HF_site_or_closeout_commitment
@@ -224,12 +232,22 @@ public_dataset_surface_extensions:
   hydrodynamic_response_values_contract:
     canonical_projection_of: [complex_RAO_payload_sha256,
       hydrodynamic_matrix_payload_sha256]
-    primary_key: [hydrodynamic_response_id, response_kind, dof_row,
-      dof_column, frequency_index, heading_index]
     response_kind: [complex_RAO, added_mass, radiation_damping, restoring]
-    value_encoding: explicit_SI_real_and_imaginary_columns
-    canonical_order: [hydrodynamic_response_id, response_kind, dof_row,
-      dof_column, frequency_index, heading_index]
+    kind_specific_keys:
+      complex_RAO: [hydrodynamic_response_id, response_kind, dof_row,
+        frequency_index, heading_index]
+      added_mass: [hydrodynamic_response_id, response_kind, dof_row,
+        dof_column, frequency_index]
+      radiation_damping: [hydrodynamic_response_id, response_kind, dof_row,
+        dof_column, frequency_index]
+      restoring: [hydrodynamic_response_id, response_kind, dof_row, dof_column]
+    value_encoding:
+      complex_RAO: explicit_SI_real_and_imaginary
+      added_mass: explicit_SI_real
+      radiation_damping: explicit_SI_real
+      restoring: explicit_SI_real
+    inapplicable_index_policy: null_not_sentinel_and_excluded_from_kind_key
+    canonical_order: response_kind_then_kind_specific_key
     row_projection_contract_sha256: required
     exact_row_set_commitment: hydrodynamic_response_values_set_sha256
     metadata_value_join: hydrodynamic_response_id_and_envelope_sha256_exact
@@ -244,27 +262,55 @@ public_dataset_surface_extensions:
   native_diffraction_and_riser_solver_artifacts: forbidden
 
 required_handoff_derivations:
-  - {inputs: "floating_host_identity.floating_host_identity_envelope_sha256[*]",
+  - {inputs: "engineering_result.floating_host_identity_envelope_sha256[*]",
      output: logical_release.floating_host_identity_set_sha256,
-     member_filter: public_eligibility_status_equals_approved,
-     excluded_member_route: withheld_sources_with_disposition,
-     mode: child_defined_canonical_exact_set_commitment}
-  - {inputs: "hydrodynamic_response.hydrodynamic_response_envelope_sha256[*]",
+     member_filter: release_approved_result_and_approved_referenced_envelope,
+     mode: canonical_distinct_exact_referenced_member_set}
+  - {inputs: "engineering_result.hydrodynamic_response_envelope_sha256[*]",
      output: logical_release.hydrodynamic_response_set_sha256,
-     member_filter: public_eligibility_status_equals_approved,
-     excluded_member_route: withheld_sources_with_disposition,
-     mode: child_defined_canonical_exact_set_commitment}
+     member_filter: release_approved_result_and_approved_referenced_envelope,
+     mode: canonical_distinct_exact_referenced_member_set}
   - {inputs: "hydrodynamic_response_values.canonical_long_form_row[*]",
      output: logical_release.hydrodynamic_response_values_set_sha256,
-     member_filter: parent_hydrodynamic_response_is_release_approved,
+     member_filter: parent_envelope_is_in_hydrodynamic_response_set,
      exact_projection_of: [complex_RAO_payload_sha256,
        hydrodynamic_matrix_payload_sha256],
      mode: canonical_ordered_exact_row_set_commitment}
-  - {inputs: "vessel_motion_boundary.vessel_motion_boundary_envelope_sha256[*]",
+  - {inputs: "engineering_result.vessel_motion_boundary_envelope_sha256[*]",
      output: logical_release.vessel_motion_boundary_set_sha256,
-     member_filter: public_eligibility_status_equals_approved,
-     excluded_member_route: withheld_sources_with_disposition,
-     mode: child_defined_canonical_exact_set_commitment}
+     member_filter: release_approved_result_and_approved_referenced_envelope,
+     mode: canonical_distinct_exact_referenced_member_set}
+
+release_membership_contract:
+  member_universe: distinct_envelope_refs_of_release_approved_engineering_results
+  exact_sets: [floating_host_identity_set_sha256,
+    hydrodynamic_response_set_sha256, vessel_motion_boundary_set_sha256]
+  rules: [every_result_reference_is_a_set_member,
+    every_set_member_is_referenced_by_a_released_result,
+    every_member_resolves_to_approved_producer_envelope,
+    long_form_rows_exactly_cover_hydrodynamic_response_set]
+
+promotion_gate_extensions:
+  floater_source_to_host_identity: [public_source_commitment,
+    reviewed_IMO_or_fallback_evidence, collision_and_ambiguity_rejected,
+    loading_evidence_complete, dimensions_and_mass_properties_complete]
+  host_to_hydrodynamic_response: [exact_host_loading_mesh_binding,
+    issue_1579_1580_1582_dispositions_resolved,
+    issue_1581_resolved_when_interior_or_lid_surfaces_required,
+    conventions_explicit, deterministic_run_normalized,
+    selected_backend_origin_restoring_units_conformance_passed,
+    validation_and_fidelity_acceptable]
+  hydrodynamic_response_to_motion_boundary: [complex_RAO_present,
+    wave_case_bound, analytic_rigid_body_transfer_passed,
+    no_extrapolation_or_heading_clamp, coupling_intent_declared,
+    motion_domain_is_evidenced_subset_of_hydrodynamic_domain,
+    motion_boundary_domain_contains_case]
+  normalized_to_bundle: [all_three_envelope_commitments_exactly_equal]
+  bundle_to_execution: [boundary_coverage_contains_requested_case,
+    unsupported_or_out_of_domain_is_terminal]
+  execution_to_result: [receipt_and_result_preserve_all_three_commitments]
+  result_to_public: [fidelity_and_limitations_publishable,
+    screening_proxy_and_benchmark_never_support_actual_vessel_claim]
 
 non_blocking_consumer_graph:
   excluded_from_parent_closeout_reachability: true
