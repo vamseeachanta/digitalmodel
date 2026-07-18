@@ -1,0 +1,296 @@
+schema_version: digitalmodel-riser-assurance/v3
+contract_version: 3.0.0-draft.1
+component_id: assurance_component
+authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
+
+invariants:
+  canonical_SSOT: solver_neutral_normalized_configuration_and_analysis_case
+  solver_specific_state_in_SSOT: forbidden
+  target_adapter_back_write: forbidden
+  physical_host_identity: exact_reviewed_identity_not_name_only
+  loading_condition: explicit_and_hash_bound
+  allowed_fidelity_classes: [screening_proxy, benchmark, actual]
+  actual_vessel_claim: requires_actual_identity_loading_execution_and_validation
+  coordinate_phase_contract: explicit_frame_reference_point_units_heading_sign_phase_time
+  motion_transfer: analytical_rigid_body_oracle_required_before_riser_coupling
+  usable_domain: out_of_domain_never_clamped_or_flat_extrapolated
+  public_hydrodynamics: public_eligible_values_or_safe_commitments_only
+  private_RAO_values_in_public_release: forbidden
+  native_solver_artifacts_in_public_release: forbidden_for_every_solver_target
+  operating_envelope: sparse_cells_preserve_uncomputed_failed_unsupported_status
+  monitoring: non_blocking_consumer_of_immutable_release
+
+planning_validation:
+  required_owners: [floating_host_source, floating_host_identity,
+    hydrodynamic_response, normalized_ssot, drilling_workflow,
+    analysis_semantics, licensed_execution, public_release, website,
+    parent_closeout]
+  required_added_envelopes: [public_floater_source_record,
+    floating_host_identity, hydrodynamic_response, vessel_motion_boundary]
+  required_downstream_envelopes: [drilling_analysis_request,
+    completion_workover_analysis_request, deterministic_bundle,
+    execution_request, execution_receipt, engineering_result]
+  downstream_chain_field_count: 7
+  required_public_configs: [source_registry, transformations, citations,
+    criteria, clean_room_reviews, field_lineage, riser_components,
+    riser_configurations, analysis_cases, execution_attestations,
+    strength_results, operability_results, withheld_sources, floating_hosts,
+    hydrodynamic_responses, hydrodynamic_response_values,
+    vessel_motion_boundaries]
+  exact_public_config_count: 17
+  assertions: [component_hashes_match_manifest, composed_YAML_parses,
+    owner_keys_exact, envelope_producers_and_consumers_resolve,
+    commitment_rules_cover_every_minimum_binding,
+    effective_DAG_is_acyclic, every_DAG_node_has_owner,
+    drilling_route_preserves_all_seven_chain_fields,
+    completion_workover_and_downstream_envelopes_validate_discriminated_union,
+    handoff_equalities_are_transitive,
+    release_set_commitments_have_exact_set_derivations,
+    conditional_family_routing_is_typed,
+    monitoring_absent_from_blocking_closeout_DAG,
+    non_blocking_monitoring_consumer_graph_is_acyclic_and_bound_to_release,
+    every_DAG_guard_reference_resolves_to_milestone_or_declared_predicate,
+    every_fields_ref_resolves,
+    fidelity_class_enum_exactly_equals_claim_truth_table_keys,
+    public_config_set_is_exact]
+
+required_RED_fixtures:
+  composition:
+    - base_contract_hash_mismatch
+    - component_contract_hash_mismatch
+    - duplicate_or_conflicting_key_across_components
+    - unresolved_fields_ref
+    - unresolved_owner_or_consumer
+    - cyclic_effective_DAG
+    - missing_commitment_rule
+    - incorrect_public_config_count_or_name
+  host_identity:
+    - source_record_commitment_missing_or_tampered
+    - name_only_collision
+    - conflicting_IMO
+    - aliases_resolve_to_different_physical_units
+    - loading_condition_mismatch
+    - missing_dimensions_displacement_CoG_or_inertia_evidence
+    - private_source_attempts_to_seed_public_host
+  hydrodynamics:
+    - host_or_loading_hash_mismatch
+    - geometry_or_mesh_hash_mismatch
+    - unknown_matrix_units
+    - unresolved_inertia_origin
+    - unresolved_restoring_composition_or_reference
+    - phase_sign_heading_unit_frame_or_reference_contradiction
+    - unknown_phase_convention
+    - frequency_outside_usable_domain
+    - heading_outside_usable_domain
+    - interpolation_attempts_flat_extrapolation_or_heading_clamp
+    - motion_domain_not_evidenced_subset_of_hydrodynamic_domain
+    - wave_or_transform_case_outside_motion_boundary_domain
+    - RAO_grid_contains_case_but_phase_horizon_or_transform_coverage_does_not
+    - screening_proxy_or_benchmark_attempts_actual_vessel_claim
+    - unknown_or_legacy_proxy_or_screening_fidelity_class
+    - selected_backend_origin_restoring_or_unit_conformance_missing
+    - source_class_confidentiality_or_redistribution_missing
+    - mixed_public_eligibility_set_attempts_release
+    - ineligible_response_missing_withheld_disposition
+  motion_boundary:
+    - wave_case_not_bound
+    - translation_fixture_fails
+    - rotation_fixture_fails
+    - reference_point_transfer_fixture_fails
+    - top_connection_fixture_fails
+    - phase_time_basis_fixture_fails
+    - heading_or_sign_fixture_fails
+    - rotational_units_fixture_fails
+    - coverage_does_not_contain_requested_case
+  tracer:
+    - downstream_envelope_drops_chain_field
+    - downstream_envelope_tampers_chain_hash
+    - release_set_commitment_omits_member
+    - completion_or_workover_omits_required_or_not_applicable_disposition
+    - completion_or_workover_sets_both_union_branches
+    - completion_or_workover_sets_neither_union_branch
+    - not_applicable_route_carries_host_motion_chain_fields
+    - required_route_carries_reviewed_disposition
+    - normalized_required_route_missing_host_or_hydrodynamic_binding
+    - normalized_not_applicable_route_carries_host_or_response_binding
+    - normalized_to_request_applicability_flip
+    - normalized_to_request_not_applicable_disposition_tampered
+    - normalized_case_unknown_applicability_discriminator
+    - correct_motion_chain_bound_to_wrong_analysis_case
+    - wave_derived_boundary_case_differs_from_request_case
+    - unsupported_adapter_mapping_attempts_execution
+    - native_solver_file_attempts_publication
+  results:
+    - mock_or_unsigned_payload_attempts_solver_result_claim
+    - failed_engineering_oracle_attempts_promotion
+    - sparse_failed_unsupported_or_uncomputed_cell_attempts_operable_claim
+    - monitoring_state_inserted_into_parent_closeout_DAG
+    - long_form_value_row_omitted_duplicated_reordered_or_tampered
+    - long_form_metadata_and_value_parent_mismatch
+    - HF_receipt_drops_v3_release_set_commitment
+    - website_evidence_drops_v3_release_set_commitment
+    - v3_set_hash_tampered_without_new_HF_site_or_closeout_commitment
+    - monitoring_baseline_does_not_equal_immutable_release_and_envelope
+    - closeout_omits_any_added_source_or_engineering_envelope
+
+analytical_validation_contract:
+  required_fixture_classes: [pure_translation, pure_rotation,
+    combined_translation_rotation, nonzero_reference_point_offset,
+    top_connection_transfer, regular_wave_phase_time_reconstruction,
+    heading_sign_convention, rotational_unit_conversion]
+  oracle_independence: expected_values_analytically_derived_not_from_production_transform
+  tolerance_owner: analysis_semantics
+  promotion_rule: every_required_fixture_passes_before_boundary_is_eligible
+
+hydrodynamic_claim_truth_table:
+  screening_proxy:
+    actual_vessel_claim: forbidden
+    reduced_risk_claim: forbidden
+    permitted_claim: screening_only
+  benchmark:
+    actual_vessel_claim: forbidden
+    reduced_risk_claim: forbidden
+    permitted_claim: backend_validation_only
+  actual:
+    actual_vessel_claim: allowed_only_with_exact_host_loading_public_source_and_selected_backend_validation
+    reduced_risk_claim: forbidden_until_issue_1624_evidence
+    permitted_claim: validated_actual_response_with_declared_domain_and_limitations
+
+diffraction_blockers:
+  required_before_actual_response_promotion:
+    - https://github.com/vamseeachanta/digitalmodel/issues/1579
+    - https://github.com/vamseeachanta/digitalmodel/issues/1580
+    - https://github.com/vamseeachanta/digitalmodel/issues/1582
+  conditional:
+    https://github.com/vamseeachanta/digitalmodel/issues/1581: selected_geometry_requires_interior_or_lid_surfaces
+  existing_RAO_models: evidence_inputs_not_contract_authority
+  selected_backend_conformance_required: [inertia_origin,
+    restoring_composition_and_reference, matrix_units,
+    phase_sign_heading, frame_and_reference_point]
+  default_unknown_phase: non_promotable
+
+child_acceptance_extensions:
+  https://github.com/vamseeachanta/worldenergydata/issues/1050:
+    - public_floater_source_record_is_provenance_complete
+    - source_identity_loading_and_mass_property_ambiguities_fail_closed
+  https://github.com/vamseeachanta/digitalmodel/issues/1618:
+    - floating_host_identity_contract_and_reviewed_crosswalk
+    - no_name_only_canonical_identity
+  https://github.com/vamseeachanta/digitalmodel/issues/1619:
+    - hydrodynamic_response_contract_and_execution_evidence
+    - no_out_of_domain_clamp_or_extrapolation
+  https://github.com/vamseeachanta/digitalmodel/issues/1603:
+    - references_host_response_commitments_without_redefinition
+    - solver_neutral_SSOT_remains_authoritative
+  https://github.com/vamseeachanta/digitalmodel/issues/811:
+    - selects_and_preserves_exactly_one_reviewed_rig_host_pairing
+  https://github.com/vamseeachanta/digitalmodel/issues/138:
+    - owns_motion_boundary_and_analytical_transfer_oracle
+  https://github.com/vamseeachanta/digitalmodel/issues/1609:
+    - bundle_preserves_full_chain_and_transform_evidence
+  https://github.com/vamseeachanta/deckhand/issues/568:
+    - execution_preserves_chain_without_hydrodynamic_interpretation
+  https://github.com/vamseeachanta/digitalmodel/issues/1611:
+    - engineering_validation_verifies_exact_chain_and_oracle_evidence
+  https://github.com/vamseeachanta/digitalmodel/issues/1604:
+    - publishes_17_public_configs_and_exact_release_commitments
+    - long_form_values_are_exact_projection_of_approved_payloads
+    - HF_receipt_website_and_closeout_preserve_all_v3_set_commitments
+
+source_evidence_rules:
+  drive_index_hits: private_source_evidence_only
+  private_paths_in_tracked_artifacts: forbidden
+  private_or_client_data_seeding_public_rows: forbidden
+  public_source_capture: requires_URL_date_license_and_content_commitment
+  standards_derived_constants: citation_sidecar_required_and_fail_closed
+
+closeout_rules:
+  blockers: [all_scoped_child_plans_owner_approved,
+    all_scoped_child_artifacts_no_MAJOR_after_cross_review,
+    legal_and_security_scans_pass,
+    public_source_record_and_all_three_engineering_envelopes_verified,
+    signed_real_solver_receipts_verified, engineering_oracles_pass,
+    immutable_HF_release_and_17_configs_verified,
+    website_evidence_matches_release]
+  excluded_without_fresh_parent_revision: [operating_atlas_population,
+    real_time_monitoring_state, alarm_policy, risk_reduction_evidence]
+  no_child_implementation_authorized_by_parent_plan: true
+
+public_dataset_surface_extensions:
+  add_configs: [floating_hosts, hydrodynamic_responses,
+    hydrodynamic_response_values, vessel_motion_boundaries]
+  hydrodynamic_responses_shape: record_run_validation_and_fidelity_metadata
+  hydrodynamic_response_values_shape: long_form_RAO_and_matrix_ordinates
+  hydrodynamic_response_values_contract:
+    canonical_projection_of: [complex_RAO_payload_sha256,
+      hydrodynamic_matrix_payload_sha256]
+    primary_key: [hydrodynamic_response_id, response_kind, dof_row,
+      dof_column, frequency_index, heading_index]
+    response_kind: [complex_RAO, added_mass, radiation_damping, restoring]
+    value_encoding: explicit_SI_real_and_imaginary_columns
+    canonical_order: [hydrodynamic_response_id, response_kind, dof_row,
+      dof_column, frequency_index, heading_index]
+    row_projection_contract_sha256: required
+    exact_row_set_commitment: hydrodynamic_response_values_set_sha256
+    metadata_value_join: hydrodynamic_response_id_and_envelope_sha256_exact
+    disclosure_fields: [source_class, confidentiality_status,
+      source_capture_commitment_sha256, source_license_id,
+      redistribution_status, public_eligibility_status,
+      public_eligibility_evidence_sha256]
+    eligible_member_filter: public_eligibility_status_equals_approved
+    ineligible_member_route: withheld_sources_with_disposition
+  nested_array_in_single_Parquet_cell: forbidden
+  private_RAO_values: forbidden
+  native_diffraction_and_riser_solver_artifacts: forbidden
+
+required_handoff_derivations:
+  - {inputs: "floating_host_identity.floating_host_identity_envelope_sha256[*]",
+     output: logical_release.floating_host_identity_set_sha256,
+     member_filter: public_eligibility_status_equals_approved,
+     excluded_member_route: withheld_sources_with_disposition,
+     mode: child_defined_canonical_exact_set_commitment}
+  - {inputs: "hydrodynamic_response.hydrodynamic_response_envelope_sha256[*]",
+     output: logical_release.hydrodynamic_response_set_sha256,
+     member_filter: public_eligibility_status_equals_approved,
+     excluded_member_route: withheld_sources_with_disposition,
+     mode: child_defined_canonical_exact_set_commitment}
+  - {inputs: "hydrodynamic_response_values.canonical_long_form_row[*]",
+     output: logical_release.hydrodynamic_response_values_set_sha256,
+     member_filter: parent_hydrodynamic_response_is_release_approved,
+     exact_projection_of: [complex_RAO_payload_sha256,
+       hydrodynamic_matrix_payload_sha256],
+     mode: canonical_ordered_exact_row_set_commitment}
+  - {inputs: "vessel_motion_boundary.vessel_motion_boundary_envelope_sha256[*]",
+     output: logical_release.vessel_motion_boundary_set_sha256,
+     member_filter: public_eligibility_status_equals_approved,
+     excluded_member_route: withheld_sources_with_disposition,
+     mode: child_defined_canonical_exact_set_commitment}
+
+non_blocking_consumer_graph:
+  excluded_from_parent_closeout_reachability: true
+  edges:
+    - immutable_HF_publication_receipt -> release_bound_monitoring_baseline
+    - versioned_operating_envelope -> release_bound_monitoring_baseline
+    - release_bound_monitoring_baseline -> telemetry_identity_mapping
+    - telemetry_identity_mapping -> deterministic_monitoring_state
+    - deterministic_monitoring_state -> human_in_the_loop_advisory_policy
+    - human_in_the_loop_advisory_policy -> risk_reduction_evidence
+  required_baseline_equalities: [logical_release_sha256, HF_commit_sha,
+    HF_publication_receipt_sha256, floating_host_identity_set_sha256,
+    hydrodynamic_response_set_sha256,
+    hydrodynamic_response_values_set_sha256,
+    vessel_motion_boundary_set_sha256, operating_envelope_version,
+    operating_envelope_sha256]
+  consumer_owner: https://github.com/vamseeachanta/digitalmodel/issues/1620
+
+non_blocking_follow_on:
+  operating_atlas: [https://github.com/vamseeachanta/digitalmodel/issues/1469,
+    https://github.com/vamseeachanta/digitalmodel/issues/1612,
+    https://github.com/vamseeachanta/digitalmodel/issues/1613]
+  monitoring_program: [https://github.com/vamseeachanta/digitalmodel/issues/1617,
+    https://github.com/vamseeachanta/digitalmodel/issues/1620,
+    https://github.com/vamseeachanta/digitalmodel/issues/1621,
+    https://github.com/vamseeachanta/digitalmodel/issues/1622,
+    https://github.com/vamseeachanta/digitalmodel/issues/1623,
+    https://github.com/vamseeachanta/digitalmodel/issues/1624]
+  rule: absent_from_parent_closeout_DAG_without_fresh_revision_review_and_owner_approval

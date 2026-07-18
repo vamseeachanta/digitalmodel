@@ -1,6 +1,7 @@
 # Plan for #1602: Solver-Neutral Riser Data, OrcaFlex v1, and Hugging Face
 
-> **Status:** needs-plan — 2026-07-18 host/diffraction expansion supersedes prior implementation authorization
+> **Status:** superseded — retained as historical solver-neutral base planning evidence
+> **Superseded by:** `docs/plans/2026-07-18-issue-1602-riser-host-diffraction-plan.html`
 > **Complexity:** T3
 > **Date:** 2026-07-16
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/1602

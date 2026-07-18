@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>#1602 Plan — Solver-Neutral Riser, Host, Hydrodynamics, and HF</title>
+  <style>
+    :root{--navy:#0b3d5c;--teal:#168c88;--ink:#18313f;--muted:#5f7480;--line:#d7e2e7;--paper:#fff;--wash:#f3f8fa;--warn:#fff5d6}
+    *{box-sizing:border-box}body{margin:0;background:var(--wash);color:var(--ink);font:16px/1.55 system-ui,sans-serif}
+    main{max-width:1100px;margin:0 auto;background:var(--paper);padding:3rem 4rem;box-shadow:0 0 30px #1232}
+    h1,h2,h3{color:var(--navy);line-height:1.2}h1{font-size:2.25rem}h2{margin-top:2.2rem;border-bottom:2px solid var(--teal);padding-bottom:.35rem}
+    h3{margin-top:1.4rem}a{color:#076b83}code{background:#edf3f5;padding:.1rem .3rem;border-radius:3px}
+    pre{background:#102d3b;color:#eaf7f7;padding:1rem;overflow:auto;border-radius:6px}.meta,.gate{padding:1rem 1.2rem;border-left:5px solid var(--teal);background:#eaf7f6}
+    .gate{border-color:#d59a00;background:var(--warn)}table{width:100%;border-collapse:collapse;font-size:.93rem}th,td{border:1px solid var(--line);padding:.55rem;vertical-align:top}th{background:#eaf2f5;text-align:left}
+    li{margin:.3rem 0}.small{color:var(--muted);font-size:.9rem}@media(max-width:750px){main{padding:1.5rem}table{display:block;overflow:auto}}
+  </style>
+</head>
+<body><main>
+  <h1>#1602 implementation plan: solver-neutral riser, host, hydrodynamics, and HF</h1>
+  <div class="meta">
+    <strong>Status:</strong> draft / <code>status:needs-plan</code><br>
+    <strong>Complexity:</strong> T3 &nbsp; <strong>Execution mode:</strong> parallel-readonly planning; parallel-worktree only after approval<br>
+    <strong>Date:</strong> 2026-07-18 &nbsp; <strong>Client:</strong> N/A &nbsp; <strong>Lane:</strong> <code>lane:codex</code><br>
+    <strong>Issue:</strong> <a href="https://github.com/vamseeachanta/digitalmodel/issues/1602">digitalmodel #1602</a><br>
+    <strong>Design:</strong> <code>docs/superpowers/specs/2026-07-18-riser-host-diffraction-monitoring-design.html</code><br>
+    <strong>Contract:</strong> <code>docs/plans/issue-1602-riser-analysis-contract-v3.yaml</code> (<code>3.0.0-draft.1</code>)
+  </div>
+
+  <h2>Goal and authorization boundary</h2>
+  <p>The program will create a public, provenance-safe, solver-neutral riser single source of truth; bind a reviewed drilling rig to a physical floating host and loading condition; execute diffraction and normalize complex RAOs; transfer vessel motion analytically to the riser top connection; generate OrcaFlex v1 models through an adapter; publish verified strength and operability results to Hugging Face; and preserve a pivot path to custom FEA or another solver.</p>
+  <div class="gate"><strong>Hard gate:</strong> this revision will not authorize implementation. The parent plan and every child plan will require adversarial review and explicit user approval. Monitoring, alarm policy, and risk-reduction evidence will remain non-blocking consumers of the immutable release.</div>
+  <p>The canonical SSOT will contain generic topology, geometry, materials, section behavior, contents, environment, loads, boundary and initial conditions, analysis intent, requested quantities, acceptance criteria, units, and coordinate frames. Solver object names, file layouts, licenses, hosts, and implicit defaults will remain outside the SSOT. Target adapters will project without back-writing.</p>
+
+  <h2>Resource intelligence summary</h2>
+  <h3>Repository and issue evidence</h3>
+  <ul>
+    <li><a href="https://github.com/vamseeachanta/worldenergydata/issues/1046">WED #1046</a> will repair or reject the malformed public drilling-riser component CSV.</li>
+    <li><a href="https://github.com/vamseeachanta/worldenergydata/issues/1050">WED #1050</a>, a child of <a href="https://github.com/vamseeachanta/worldenergydata/issues/698">WED #698</a>, will produce one provenance-complete public MODU source record.</li>
+    <li><a href="https://github.com/vamseeachanta/digitalmodel/issues/1618">DM #1618</a> will resolve source identity to one physical vessel, hull, and loading condition; name-derived IDs will not qualify.</li>
+    <li><a href="https://github.com/vamseeachanta/digitalmodel/issues/1619">DM #1619</a> will own the normalized hydrodynamic response and diffraction execution evidence.</li>
+    <li>Current RAO and diffraction classes will serve as evidence inputs only because they do not bind the complete host/loading/frame/reference/convention/domain/fidelity commitment.</li>
+    <li>Current motion interpolation will not qualify for promotion where it clamps heading or flat-extrapolates frequency; out-of-domain cases will fail closed.</li>
+    <li><a href="https://github.com/vamseeachanta/digitalmodel/issues/1579">#1579</a>, <a href="https://github.com/vamseeachanta/digitalmodel/issues/1580">#1580</a>, and <a href="https://github.com/vamseeachanta/digitalmodel/issues/1582">#1582</a> will block actual-response promotion; <a href="https://github.com/vamseeachanta/digitalmodel/issues/1581">#1581</a> will apply when the selected geometry requires interior or lid surfaces.</li>
+    <li><a href="https://github.com/vamseeachanta/digitalmodel/issues/138">DM #138</a> will own riser-coupling semantics and the vessel-motion boundary. Existing motion reconstruction work will remain reusable machinery rather than contract authority.</li>
+    <li><a href="https://github.com/vamseeachanta/deckhand/issues/568">Deckhand #568</a> will execute deterministic bundles on the licensed Windows worker and preserve the full chain without interpreting hydrodynamics.</li>
+  </ul>
+  <h3>Drive-index evidence</h3>
+  <p>Resource intelligence ran at <code>2026-07-18T03:45:15-05:00</code> from the workspace-hub repository root at commit <code>3023230816c4162159a8a1e1f7d6f58065a38ed5</code> with <code>python3 scripts/data/drive-index-search/search.py 'vessel RAO diffraction' --domain marine --json --caller plan-resource-intel</code>. The response reported no coverage gaps and index states of: <code>ace_knowledge</code> as of 2026-07-02 (16 days stale), <code>dde_knowledge</code> as of 2026-07-12 (6 days), <code>og_standards_inventory</code> as of 2025-12-28 (202 days stale), and <code>master_document_index</code> as of 2026-04-17 (92 days stale). The de-identified finding is that historical project vessel-motion and RAO evidence exists on private drives and may support source comparison, but it will not seed public rows. Stale indexes do not establish absence. Durable redacted evidence: <code>docs/plans/evidence/issue-1602-drive-index-resource-intel-2026-07-18.json</code>, SHA-256 <code>03b2f22210d29dbaeff4d498840001134a1e63221eb99b39483f26b20f1a135c</code>.</p>
+  <p><strong>Reproduction proofs:</strong> N/A — the parent will govern a new cross-repository architecture rather than correct a parent runtime regression. Each runtime-owning child will reproduce its own defect or constraint.</p>
+
+  <h2>Effective ownership contract</h2>
+  <table><thead><tr><th>Producer</th><th>Issue</th><th>Will own</th><th>Will not own</th></tr></thead><tbody>
+    <tr><td>Floater source</td><td><a href="https://github.com/vamseeachanta/worldenergydata/issues/1050">WED #1050</a></td><td>Public MODU source record and commitments</td><td>Digitalmodel identity envelope</td></tr>
+    <tr><td>Host identity</td><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/1618">DM #1618</a></td><td>Physical vessel/hull/loading crosswalk and envelope</td><td>Diffraction or motion semantics</td></tr>
+    <tr><td>Hydrodynamic response</td><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/1619">DM #1619</a></td><td>Diffraction execution, complex RAO, matrices, validation, domain, fidelity</td><td>Riser coupling boundary</td></tr>
+    <tr><td>Normalized SSOT</td><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/1603">DM #1603</a></td><td>Generic riser/case schemas, lineage, adapter and deterministic bundle</td><td>Redefinition of producer-owned host/response commitments</td></tr>
+    <tr><td>Drilling workflow</td><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/811">DM #811</a></td><td>Exactly one reviewed rig/host selection and request matrix</td><td>Coordinate or hydrodynamic reinterpretation</td></tr>
+    <tr><td>Analysis semantics</td><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/138">DM #138</a></td><td>Motion boundary, analytical transfer oracle, engineering results</td><td>Licensed execution</td></tr>
+    <tr><td>Licensed execution</td><td><a href="https://github.com/vamseeachanta/deckhand/issues/568">Deckhand #568</a></td><td>Signed request, native run, raw payload, receipt</td><td>Self-authorization or hydrodynamic interpretation</td></tr>
+    <tr><td>Public release</td><td><a href="https://github.com/vamseeachanta/digitalmodel/issues/1604">DM #1604</a></td><td>17 configs, immutable HF release and remote verification</td><td>Private RAOs or native solver files</td></tr>
+  </tbody></table>
+
+  <h2>Source handoff and three engineering envelopes</h2>
+  <p>A producer-owned <strong>PublicFloaterSourceRecord</strong> will bind source URL commitment, capture date, license/redistribution, content hash, physical identity, loading/particulars/mass evidence, eligibility, ambiguity disposition, and the exact commitment consumed by the host identity.</p>
+  <ol>
+    <li><strong>FloatingHostIdentityEnvelope</strong> will bind the source commitment, physical vessel, hull geometry, loading condition, particulars, mass properties, aliases, identity evidence, units/frame, confidence, public eligibility, ambiguity disposition, and complete-envelope commitment.</li>
+    <li><strong>HydrodynamicResponseEnvelope</strong> will bind the exact host/loading/mesh, diffraction target/adapter/projection/run evidence, ordered DOFs, frequency-heading grid, complex RAO and matrix payloads, units/conventions/frame/reference point, water properties, source, validation, usable domain, fidelity, and complete-envelope commitment.</li>
+    <li><strong>VesselMotionBoundaryEnvelope</strong> will bind the case/wave, host and response commitments, complex RAO, top-connection frame/reference, rigid-body transform and independent analytical validation, phase/time basis, coupling intent, boundary payload, coverage/domain, unsupported disposition, and complete-envelope commitment.</li>
+  </ol>
+  <p>Seven chain fields—four IDs and three envelope hashes—will propagate unchanged through drilling request → bundle → execution request → receipt → engineering result. The release will derive exact-set commitments for all three envelope classes.</p>
+
+  <h2>Dependency flow and routing</h2>
+  <pre>public riser/rig sources
+  → floating host → physical vessel/hull → loading condition
+  → normalized riser configuration + analysis/wave case
+  → diffraction execution → complex RAO/hydrodynamic response
+  → analytically validated vessel-motion boundary at top connection
+  → generic analysis request → target adapter/projection → bundle
+  → signed request → native solver run → raw payload → receipt
+  → engineering result → immutable logical release → HF → website</pre>
+  <p>Drilling will require the complete host/response/motion chain. Completion and workover will declare the chain required or will carry a reviewed not-applicable disposition. Monitoring issues <a href="https://github.com/vamseeachanta/digitalmodel/issues/1617">#1617</a> and <a href="https://github.com/vamseeachanta/digitalmodel/issues/1620">#1620–#1624</a> will remain outside the blocking closeout DAG.</p>
+
+  <h2>Public Hugging Face surface</h2>
+  <p>The release will contain exactly 17 configs:</p>
+  <p><code>source_registry</code>, <code>transformations</code>, <code>citations</code>, <code>criteria</code>, <code>clean_room_reviews</code>, <code>field_lineage</code>, <code>riser_components</code>, <code>riser_configurations</code>, <code>analysis_cases</code>, <code>execution_attestations</code>, <code>strength_results</code>, <code>operability_results</code>, <code>withheld_sources</code>, <code>floating_hosts</code>, <code>hydrodynamic_responses</code>, <code>hydrodynamic_response_values</code>, and <code>vessel_motion_boundaries</code>.</p>
+  <p>Response metadata and validation/fidelity will occupy <code>hydrodynamic_responses</code>; viewer-compatible long-form RAO and matrix ordinates will occupy <code>hydrodynamic_response_values</code>. Nested response arrays, private values, client-derived rows, and native diffraction/riser solver artifacts will not enter the public dataset.</p>
+
+  <h2>Artifact map and files</h2>
+  <table><thead><tr><th>Artifact</th><th>Path / owner</th><th>Purpose</th></tr></thead><tbody>
+    <tr><td>Canonical plan</td><td><code>docs/plans/2026-07-18-issue-1602-riser-host-diffraction-plan.html</code></td><td>Approval surface and execution contract</td></tr>
+    <tr><td>Root manifest</td><td><code>docs/plans/issue-1602-riser-analysis-contract-v3.yaml</code></td><td>Hash-bound composition and effective interface</td></tr>
+    <tr><td>Host/motion component</td><td><code>docs/plans/issue-1602-riser-host-motion-contract-v3.yaml</code></td><td>Owners, envelopes, DAG, gates, propagation</td></tr>
+    <tr><td>Assurance component</td><td><code>docs/plans/issue-1602-riser-assurance-contract-v3.yaml</code></td><td>Invariants, RED fixtures, validation, closeout</td></tr>
+    <tr><td>Future validator</td><td><code>scripts/validation/validate_riser_parent_contract.py</code></td><td>Fail-closed composed-contract checks</td></tr>
+    <tr><td>Future tests</td><td><code>tests/validation/test_riser_parent_contract.py</code></td><td>RED/green conformance fixtures</td></tr>
+    <tr><td>Plan review</td><td><code>scripts/review/results/issue-1602-host-motion-round-N/</code></td><td>Revision-stamped adversarial evidence</td></tr>
+  </tbody></table>
+
+  <h2>Implementation sequence after approval</h2>
+  <ol>
+    <li><strong>Contract validator:</strong> tests will first fail for hash mismatch, YAML conflict, missing owner/envelope, cyclic DAG, dropped chain field, invalid route, incorrect config set, and monitoring in the closeout DAG. The minimal validator will then make those fixtures pass.</li>
+    <li><strong>Source and host identity:</strong> WED #1050 and DM #1618 will plan separately, write collision/loading/evidence RED fixtures, and produce one reviewed public host identity.</li>
+    <li><strong>Hydrodynamics:</strong> DM #1619 will plan separately, resolve required diffraction defects, write unit/convention/domain/fidelity RED fixtures, and produce an actual or explicitly typed proxy response.</li>
+    <li><strong>Motion and solver projection:</strong> DM #138, #1603, #811, #1609, and Deckhand #568 will plan separately, prove analytical rigid-body transfer, generate the OrcaFlex projection, and preserve the full chain through signed execution.</li>
+    <li><strong>Results and HF:</strong> DM #1611 and #1604 will plan separately, validate strength/operability, preserve sparse cell states, publish the 17-config immutable release, and verify datasets-server rows.</li>
+    <li><strong>Closeout and follow-on:</strong> the parent will invoke the landed verifier. Operating-atlas and monitoring children will consume the release only after their own gates.</li>
+  </ol>
+  <h3>Validator pseudocode</h3>
+  <pre>load root manifest
+verify design, base, and component sha256 values
+compose only declared extensions; reject silent replacement or removal
+assert exact owners, envelopes, commitment rules, propagation, and 17 configs
+topologically sort the effective DAG and validate conditional family routes
+run host, hydrodynamic, motion-transfer, tracer, release, and leakage fixtures
+fail closed on any ambiguity, out-of-domain case, proxy-as-actual claim, or hash drift</pre>
+
+  <h2>TDD test list</h2>
+  <ul>
+    <li>Composition: base/component hash mismatch, conflicting keys, missing ownership, cyclic DAG, and exact 17-config set.</li>
+    <li>Host: name-only collision, conflicting IMO, different physical units, loading mismatch, missing dimensions/displacement/CoG/inertia, and private-source leakage.</li>
+    <li>Hydrodynamics: host/loading/mesh mismatch; unknown matrix units, origin, restoring reference, phase, frame, sign, heading, or reference point; selected-backend conformance; out-of-domain clamp/extrapolation; proven motion-domain subset; exhaustive fidelity class and proxy-as-actual claim.</li>
+    <li>Motion: analytical translation, rotation, combined motion, nonzero reference offset, top connection, phase/time, heading/sign, and rotational-unit fixtures.</li>
+    <li>Tracer: all seven fields on the required branch, discriminator/disposition on the not-applicable branch, exact handoff expansion/equality, tamper rejection, and release exact-set derivations.</li>
+    <li>Results/release: unsigned/mock rejection, failed oracle rejection, sparse-cell status preservation, native-file rejection, private-value rejection, and monitoring exclusion from the blocking DAG.</li>
+  </ul>
+
+  <h2>Acceptance criteria</h2>
+  <ul>
+    <li>The v3 manifest will verify every component hash and will compose without conflict, unowned nodes, cycles, silent field removal, or implicit defaults.</li>
+    <li>Each producer will own exactly one boundary and consumers will reference rather than redefine upstream commitments.</li>
+    <li>The full physical and evidence identity chain will survive unchanged through engineering result and exact-set release commitments.</li>
+    <li>Actual-vessel promotion will require exact host/loading, resolved diffraction blockers, explicit conventions/domain/fidelity, and independent analytical top-connection transfer validation.</li>
+    <li>OrcaFlex will remain the first adapter target; another solver will consume the same SSOT and generic analysis/result contracts.</li>
+    <li>The immutable public release will contain exactly 17 configs and no private RAO values, client identifiers, machine paths, licensed text, or native solver artifacts.</li>
+    <li>Every scoped child will pass its plan gate, TDD, legal/security scan, adversarial artifact review, issue comment, and completeness gate before parent closeout.</li>
+    <li>Monitoring and later operating-envelope population will remain non-blocking until a fresh parent revision receives owner approval.</li>
+  </ul>
+
+  <h2>Risks and fail-closed responses</h2>
+  <table><thead><tr><th>Risk</th><th>Response</th></tr></thead><tbody>
+    <tr><td>Rig name resolves to the wrong hull or loading condition</td><td>Physical identity and loading evidence will be mandatory; ambiguity will block promotion.</td></tr>
+    <tr><td>Hydrodynamic conventions appear numerically plausible but conflict</td><td>Units, frame, reference, heading, sign, phase/time, and analytic transfer fixtures will all gate the boundary.</td></tr>
+    <tr><td>Interpolation hides unsupported conditions</td><td>Usable domain will be explicit; frequency extrapolation and heading clamp will be terminal.</td></tr>
+    <tr><td>Private historical RAOs leak into public data</td><td>They will remain private source evidence only; public values will require public eligibility.</td></tr>
+    <tr><td>Parallel children redefine interfaces</td><td>The hash-bound parent contract will win; interface changes will require fresh parent review and owner approval.</td></tr>
+    <tr><td>Monitoring scope delays the first useful release</td><td>Monitoring will consume the immutable release later and will remain outside the closeout DAG.</td></tr>
+  </tbody></table>
+
+  <h2>Adversarial review summary</h2>
+  <p><strong>Current verdict: PENDING.</strong> Earlier read-only reviewer findings will be persisted as revision-stamped artifacts with the final review wave. They have required: HTML rather than Markdown for the human-facing design; governance rollback to <code>needs-plan</code>; explicit vessel-motion propagation; analytical rigid-body transfer fixtures; a breaking <code>3.0.0-draft.1</code> interface; a dedicated public floater-source owner and source-record handoff; rejection of name-only identity; selected-backend diffraction conformance; no clamp/extrapolation; 17 public configs with exact long-form response projection; typed completion/workover applicability; release-set propagation through HF/website; and a separate non-blocking monitoring consumer graph.</p>
+  <p>The next review will use Claude, Codex, and Gemini-equivalent adversarial lanes where available. Any MAJOR verdict will keep the issue at <code>status:needs-plan</code>. Only a final no-MAJOR round will allow the plan to move to <code>status:plan-review</code> for explicit user approval.</p>
+
+  <p class="small">This plan will supersede <code>docs/plans/2026-07-16-issue-1602-riser-data-orcaflex-hf-plan.md</code> after the final no-MAJOR plan-review artifact is pushed.</p>
+</main></body></html>

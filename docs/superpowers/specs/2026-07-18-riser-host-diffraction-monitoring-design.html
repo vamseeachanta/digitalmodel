@@ -27,7 +27,7 @@
   <div class="meta">
     <strong>Decision date:</strong> 2026-07-18 ·
     <strong>Program:</strong> <a href="https://github.com/vamseeachanta/digitalmodel/issues/1602">digitalmodel #1602</a><br>
-    The issue decomposition is user-approved. The revised parent implementation plan still requires adversarial review and fresh approval.
+    The architecture and original seven-issue decomposition are user-approved. Adversarial review added one source-owner child; the revised eight-issue parent plan still requires fresh review and approval.
   </div>
 
   <h2>Objective</h2>
@@ -56,13 +56,17 @@
   <p>Every downstream bundle, request, receipt, engineering result, envelope, release, and monitoring state will preserve all three bindings.</p>
 
   <h2>Issue decomposition</h2>
-  <h3>Naval architecture and diffraction</h3>
+  <h3>Public source</h3>
   <ol>
-    <li><a href="https://github.com/vamseeachanta/digitalmodel/issues/1618">#1618</a> will bind one public drilling-rig record to one physical vessel/hull and loading condition.</li>
+    <li><a href="https://github.com/vamseeachanta/worldenergydata/issues/1050">worldenergydata #1050</a> will produce one provenance-complete public MODU physical-vessel and loading-condition source record.</li>
+  </ol>
+  <h3>Naval architecture and diffraction</h3>
+  <ol start="2">
+    <li><a href="https://github.com/vamseeachanta/digitalmodel/issues/1618">#1618</a> will consume the approved source record and bind it to one physical vessel/hull and loading condition.</li>
     <li><a href="https://github.com/vamseeachanta/digitalmodel/issues/1619">#1619</a> will run one reviewed diffraction backend and emit a normalized, provenance-safe MODU hydrodynamic/RAO record.</li>
   </ol>
   <h3>Monitoring</h3>
-  <ol start="3">
+  <ol start="4">
     <li><a href="https://github.com/vamseeachanta/digitalmodel/issues/1620">#1620</a> will bind one immutable HF release to one exact operating-envelope version.</li>
     <li><a href="https://github.com/vamseeachanta/digitalmodel/issues/1621">#1621</a> will map public-safe telemetry to canonical engineering identities.</li>
     <li><a href="https://github.com/vamseeachanta/digitalmodel/issues/1622">#1622</a> will prove deterministic replay/incremental state equivalence.</li>
@@ -97,5 +101,5 @@
   </ul>
 
   <h2>Approval boundary</h2>
-  <div class="gate">The user approved this architecture and seven-issue decomposition on 2026-07-18. That approval authorizes issue creation and planning only. Every issue starts at <code>status:needs-plan</code> and must pass planning, adversarial review, explicit user approval, TDD, artifact review, and closeout independently.</div>
+  <div class="gate">The user approved this architecture and the original seven-issue decomposition on 2026-07-18. Adversarial review required worldenergydata #1050 as a distinct source producer, making eight new issues. The approval authorizes issue creation and planning only. Every issue starts at <code>status:needs-plan</code> and must pass planning, adversarial review, explicit user approval, TDD, artifact review, and closeout independently.</div>
 </main></body></html>
