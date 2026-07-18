@@ -123,6 +123,30 @@ COVERS_BY_ENVELOPE = {
     "website_evidence": "every_effective_minimum_binding_except_commitment_field",
     "program_closeout": "every_effective_minimum_binding_except_commitment_field",
 }
+HOST_EXTENSION_HASH = "54dd8106b5d8dbd134889db80db5b84706f2ef08303268d6655d19ce96a82b14"
+ASSURANCE_KEYS = {
+    "analytical_validation_contract",
+    "authority_issue",
+    "child_acceptance_extensions",
+    "child_issue_owner_crosswalk",
+    "closeout_rules",
+    "component_id",
+    "contract_version",
+    "diffraction_blockers",
+    "hydrodynamic_claim_truth_table",
+    "invariants",
+    "non_blocking_consumer_graph",
+    "non_blocking_follow_on",
+    "normalized_route_handoff_expansion",
+    "planning_validation",
+    "promotion_gate_extensions",
+    "public_dataset_surface_extensions",
+    "release_membership_contract",
+    "required_RED_fixtures",
+    "required_handoff_derivations",
+    "schema_version",
+    "source_evidence_rules",
+}
 HOST_FIELDS = [
     "floating_host_id",
     "loading_condition_id",
@@ -161,6 +185,20 @@ def _union_contract(required_fields: list[str]) -> dict[str, Any]:
 def _record_hash(record: dict[str, Any]) -> str:
     data = json.dumps(record, sort_keys=True, separators=(",", ":")).encode()
     return hashlib.sha256(data).hexdigest()
+
+
+def validate_assurance_surface(assurance: dict[str, Any]) -> None:
+    """Reject undeclared assurance overwrite keys before composition checks."""
+
+    if set(assurance) != ASSURANCE_KEYS:
+        raise ContractValidationError("assurance surface keys are not exact")
+
+
+def validate_host_extension_surface(host: dict[str, Any]) -> None:
+    """Reject envelope-extension overwrite attempts after specific checks."""
+
+    if _record_hash(host["existing_envelope_extensions"]) != HOST_EXTENSION_HASH:
+        raise ContractValidationError("host envelope extensions are not exact")
 
 
 def _resolve(document: dict[str, Any], reference: str) -> Any:

@@ -216,3 +216,27 @@ def test_extra_reference_handoff_record_is_rejected(tmp_path: Path) -> None:
     _mutate(manifest, HOST, change)
     with pytest.raises(ContractValidationError, match="fields_ref routes"):
         validate_parent_contract(manifest, output)
+
+
+def test_envelope_extension_cannot_overwrite_producer(tmp_path: Path) -> None:
+    manifest, output = _bundle(tmp_path)
+
+    def change(host: dict[str, object]) -> None:
+        host["existing_envelope_extensions"]["normalized_case"][
+            "producer"
+        ] = "analysis_semantics"
+
+    _mutate(manifest, HOST, change)
+    with pytest.raises(ContractValidationError, match="envelope extensions"):
+        validate_parent_contract(manifest, output)
+
+
+def test_assurance_cannot_introduce_overwrite_surface(tmp_path: Path) -> None:
+    manifest, output = _bundle(tmp_path)
+
+    def change(assurance: dict[str, object]) -> None:
+        assurance["owners"] = {"drilling_workflow": {"role": "hijacked"}}
+
+    _mutate(manifest, ASSURANCE, change)
+    with pytest.raises(ContractValidationError, match="assurance surface"):
+        validate_parent_contract(manifest, output)

@@ -113,7 +113,11 @@ def _read_bound_files(
     paths: set[Path] = set()
     for declaration in _bound_declarations(root):
         path = resolve_bound_path(base_dir, declaration.get("path"))
+        if path in paths:
+            raise ContractValidationError(f"duplicate bound path: {path.name}")
         data, identity = _read_regular(path)
+        if identity in identities:
+            raise ContractValidationError(f"duplicate bound path identity: {path.name}")
         expected = declaration.get("sha256")
         if (
             not isinstance(expected, str)

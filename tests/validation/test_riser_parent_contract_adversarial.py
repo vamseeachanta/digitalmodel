@@ -343,3 +343,15 @@ def test_undeclared_extra_component_is_rejected(tmp_path: Path) -> None:
 
     with pytest.raises(ContractValidationError, match="component declaration"):
         validate_parent_contract(manifest, output)
+
+
+def test_duplicate_bound_path_is_rejected(tmp_path: Path) -> None:
+    manifest, output = _bundle(tmp_path)
+    root = _load(manifest)
+    base = root["composition"]["base"]
+    root["review_candidate_plan"]["path"] = base["path"]
+    root["review_candidate_plan"]["sha256"] = base["sha256"]
+    _save(manifest, root)
+
+    with pytest.raises(ContractValidationError, match="duplicate bound path"):
+        validate_parent_contract(manifest, output)

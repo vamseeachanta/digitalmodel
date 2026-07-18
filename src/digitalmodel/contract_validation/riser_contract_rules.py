@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import Any
 
 from .errors import ContractValidationError
-from .riser_exact_semantics import validate_exact_semantics
+from . import riser_exact_semantics as exact
 from .riser_reference_rules import validate_references
 
 EXPECTED_CONFIGS = [
@@ -381,6 +381,7 @@ def validate_contract(
 
     host = components["host_motion_component"]
     assurance = components["assurance_component"]
+    exact.validate_assurance_surface(assurance)
     _validate_manifest_constants(root)
     _validate_required_surface(root, composed, assurance)
     _validate_composition(root, base, host)
@@ -394,4 +395,5 @@ def validate_contract(
     _validate_derivations(base, assurance, composed)
     _validate_monitoring(assurance, composed)
     validate_references(root, base, components, composed)
-    validate_exact_semantics(composed)
+    exact.validate_exact_semantics(composed)
+    exact.validate_host_extension_surface(host)
