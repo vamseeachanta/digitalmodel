@@ -5,6 +5,7 @@ import logging
 from dataclasses import dataclass, field as dc_field
 from itertools import product
 from pathlib import Path
+from string import Formatter
 from typing import Any, Iterator
 
 import yaml
@@ -94,6 +95,30 @@ class ParameterSweep(BaseModel):
 def _slug(parameter: str) -> str:
     """Convert dotted path to slug for output_naming template (e.g., a.b.0.c → a-b-0-c)."""
     return parameter.replace(".", "-")
+
+
+def _template_field_names(template: str) -> set[str]:
+    """Extract root replacement-field names from a str.format template.
+
+    Parses with string.Formatter so templates using format specs
+    (e.g. ``{water_depth:.0f}``) or conversions (``{name!r}``) are
+    recognised — a literal ``'{param}' in template`` substring test would
+    wrongly reject them.  Attribute/index access (``{a.b}``, ``{a[0]}``)
+    reduces to the root name, matching str.format's kwarg lookup.
+
+    Raises:
+        ValueError: If the template is not a valid format string.
+    """
+    names: set[str] = set()
+    try:
+        for _, field_name, _, _ in Formatter().parse(template):
+            if field_name:
+                names.add(field_name.split(".")[0].split("[")[0])
+    except ValueError as exc:
+        raise ValueError(
+            f"output_naming is not a valid format template: '{template}' ({exc})"
+        ) from exc
+    return names
 
 
 def _resolve_combo_for_naming(
@@ -341,15 +366,16 @@ class CampaignSpec(BaseModel):
             varying.append("environment")
         if self.campaign.soils:
             varying.append("soil")
+        template_fields = _template_field_names(self.output_naming)
         for param in varying:
-            if f"{{{param}}}" not in self.output_naming:
+            if param not in template_fields:
                 raise ValueError(
                     f"Parameter '{param}' varies in campaign but is missing from "
                     f"output_naming template: '{self.output_naming}'"
                 )
         for sweep in self.campaign.sweeps:
             if sweep.alias:
-                if f"{{{sweep.alias}}}" not in self.output_naming:
+                if sweep.alias not in template_fields:
                     raise ValueError(
                         f"Sweep alias '{sweep.alias}' (parameter '{sweep.parameter}') "
                         f"is missing from output_naming template '{self.output_naming}'"
@@ -579,8 +605,13 @@ class CampaignGenerator:
             try:
                 if spec_only:
                     run_dir.mkdir(parents=True, exist_ok=True)
+                    # mode="json" serialises enums (RollerType, ChainGrade, ...)
+                    # to their plain values; a python-mode dump would emit
+                    # !!python/object/apply tags that the yaml.safe_load used
+                    # by spec.yml consumers (cli.py, ModularModelGenerator)
+                    # cannot read.
                     (run_dir / "spec.yml").write_text(
-                        yaml.dump(spec.model_dump(), default_flow_style=False)
+                        yaml.dump(spec.model_dump(mode="json"), default_flow_style=False)
                     )
                     manifest_runs.append({"name": name, "combo": combo})
                     logger.info("Generated spec: %s", name)

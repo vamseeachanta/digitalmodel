@@ -290,6 +290,188 @@ class TestDatExport:
 
 
 # ---------------------------------------------------------------------------
+# Writer round-trip tests against the repo's own mesh handlers
+# (no GMSH required — pure format logic)
+# ---------------------------------------------------------------------------
+
+
+def _sample_mesh() -> tuple:
+    """Small wetted mesh: one quad + one triangle sharing an edge, z=-1."""
+    nodes = np.array([
+        [0.0, 0.0, -1.0],
+        [1.0, 0.0, -1.0],
+        [1.0, 1.0, -1.0],
+        [0.0, 1.0, -1.0],
+        [2.0, 0.0, -1.0],
+    ])
+    panels = [[0, 1, 2, 3], [1, 4, 2]]
+    return nodes, panels
+
+
+class TestGdfRoundTrip:
+    """_write_gdf output must be readable by the repo's GDFHandler."""
+
+    def test_write_gdf_readable_by_gdf_handler(self, tmp_path):
+        """Regression: panels one-vertex-per-line + no blank line 5."""
+        from digitalmodel.hydrodynamics.bemrosetta.mesh import GDFHandler
+        from digitalmodel.hydrodynamics.diffraction.gmsh_mesh_builder import (
+            GmshMeshBuilder,
+        )
+
+        nodes, panels = _sample_mesh()
+        path = tmp_path / "sample.gdf"
+        GmshMeshBuilder()._write_gdf(nodes, panels, path)
+
+        mesh = GDFHandler().read(path)
+        assert mesh.n_panels == 2
+        assert mesh.n_vertices == 5
+        read_verts = {tuple(v) for v in np.round(mesh.vertices, 6)}
+        expected = {tuple(v) for v in np.round(nodes, 6)}
+        assert read_verts == expected
+
+    def test_write_gdf_layout(self, tmp_path):
+        """4 header lines, then exactly 4 vertex lines per panel."""
+        from digitalmodel.hydrodynamics.diffraction.gmsh_mesh_builder import (
+            GmshMeshBuilder,
+        )
+
+        nodes, panels = _sample_mesh()
+        path = tmp_path / "sample.gdf"
+        GmshMeshBuilder()._write_gdf(nodes, panels, path)
+
+        lines = path.read_text().splitlines()
+        assert len(lines) == 4 + 4 * len(panels)
+        assert lines[3].split() == ["2"]  # NPAN header line
+        # No blank line between header and first panel vertex
+        assert lines[4].strip() != ""
+        # Every panel line holds exactly one vertex (3 numbers)
+        for line in lines[4:]:
+            assert len(line.split()) == 3
+
+
+class TestDatRoundTrip:
+    """_write_dat output must be NEMOH-style, readable by DATHandler."""
+
+    def test_write_dat_readable_by_dat_handler(self, tmp_path):
+        """Regression: bare NODE/QPPL cards were unreadable by DATHandler."""
+        from digitalmodel.hydrodynamics.bemrosetta.mesh import DATHandler
+        from digitalmodel.hydrodynamics.diffraction.gmsh_mesh_builder import (
+            GmshMeshBuilder,
+        )
+
+        nodes, panels = _sample_mesh()
+        path = tmp_path / "sample.dat"
+        GmshMeshBuilder()._write_dat(nodes, panels, path)
+
+        mesh = DATHandler().read(path)
+        assert mesh.n_vertices == 5
+        assert mesh.n_panels == 2
+        np.testing.assert_allclose(mesh.vertices, nodes)
+        assert list(mesh.panels[0]) == [0, 1, 2, 3]
+        # Triangle written with last vertex repeated (NEMOH convention)
+        assert list(mesh.panels[1]) == [1, 4, 2, 2]
+
+    def test_write_dat_nemoh_layout(self, tmp_path):
+        """NVERT NPAN header, vertices, 1-based panels, 0 0 0 0 end."""
+        from digitalmodel.hydrodynamics.diffraction.gmsh_mesh_builder import (
+            GmshMeshBuilder,
+        )
+
+        nodes, panels = _sample_mesh()
+        path = tmp_path / "sample.dat"
+        GmshMeshBuilder()._write_dat(nodes, panels, path)
+
+        lines = path.read_text().splitlines()
+        assert lines[0].split() == ["5", "2"]
+        assert lines[-1].split() == ["0", "0", "0", "0"]
+        assert lines[1 + len(nodes)].split() == ["1", "2", "3", "4"]
+
+
+# ---------------------------------------------------------------------------
+# Wetted-surface extraction tests (fake gmsh — no GMSH required)
+# ---------------------------------------------------------------------------
+
+
+def _fake_gmsh_model(include_wetted_group: bool = True):
+    """Fake gmsh namespace: wetted quad (surface 1) + z=0 lid (surface 2).
+
+    Only surface 1 belongs to the 'wetted_surface' physical group,
+    mirroring _create_box_barge_geometry. getElements with no tag
+    returns BOTH surfaces' elements (gmsh meshes every surface).
+    """
+    import types
+
+    node_tags = np.arange(1, 9)
+    coords = np.array([
+        [-1.0, -1.0, -1.0], [1.0, -1.0, -1.0],
+        [1.0, 1.0, -1.0], [-1.0, 1.0, -1.0],     # wetted quad, z=-1
+        [-1.0, -1.0, 0.0], [1.0, -1.0, 0.0],
+        [1.0, 1.0, 0.0], [-1.0, 1.0, 0.0],       # lid quad, z=0
+    ]).ravel()
+    per_surface = {
+        1: ([3], [np.array([11])], [np.array([1, 2, 3, 4])]),
+        2: ([3], [np.array([12])], [np.array([5, 6, 7, 8])]),
+    }
+
+    def get_elements(dim=-1, tag=-1):
+        if tag != -1:
+            return per_surface[int(tag)]
+        return (
+            [3],
+            [np.array([11, 12])],
+            [np.array([1, 2, 3, 4, 5, 6, 7, 8])],
+        )
+
+    mesh_ns = types.SimpleNamespace(
+        getNodes=lambda: (node_tags, coords, None),
+        getElements=get_elements,
+        getElementProperties=lambda etype: (
+            "Quadrilateral 4", 2, 1, 4, None, None
+        ),
+    )
+    model_ns = types.SimpleNamespace(
+        mesh=mesh_ns,
+        getPhysicalGroups=lambda dim=-1: (
+            [(2, 1)] if include_wetted_group else []
+        ),
+        getPhysicalName=lambda dim, tag: "wetted_surface",
+        getEntitiesForPhysicalGroup=lambda dim, tag: np.array([1]),
+    )
+    return types.SimpleNamespace(model=model_ns)
+
+
+class TestWettedSurfaceExtraction:
+    """_extract_surface_data must exclude panels outside 'wetted_surface'."""
+
+    def test_extraction_excludes_waterplane_lid(self, monkeypatch):
+        """Regression: unfiltered getElements(dim=2) pulled lid panels."""
+        import digitalmodel.hydrodynamics.diffraction.gmsh_mesh_builder as mod
+
+        monkeypatch.setattr(
+            mod, "gmsh", _fake_gmsh_model(include_wetted_group=True),
+            raising=False,
+        )
+        nodes, panels = mod.GmshMeshBuilder()._extract_surface_data()
+
+        assert len(panels) == 1
+        assert nodes.shape == (4, 3)
+        # No z=0 waterplane lid nodes in the extracted wetted set
+        assert np.all(nodes[:, 2] < -1e-6)
+        assert panels[0] == [0, 1, 2, 3]
+
+    def test_extraction_fails_loud_without_wetted_group(self, monkeypatch):
+        """Missing 'wetted_surface' group raises instead of exporting all."""
+        import digitalmodel.hydrodynamics.diffraction.gmsh_mesh_builder as mod
+
+        monkeypatch.setattr(
+            mod, "gmsh", _fake_gmsh_model(include_wetted_group=False),
+            raising=False,
+        )
+        with pytest.raises(ValueError, match="wetted_surface"):
+            mod.GmshMeshBuilder()._extract_surface_data()
+
+
+# ---------------------------------------------------------------------------
 # MeshExportResult tests (no GMSH required)
 # ---------------------------------------------------------------------------
 
@@ -360,6 +542,18 @@ class TestGmshMeshBuilderWorkflow:
         # GDF must contain panel count and coordinate data
         assert "9.80665" in content
 
+        # GDF must be readable by the repo's own GDFHandler and must
+        # contain only wetted panels — no z=0 waterplane lid panels.
+        from digitalmodel.hydrodynamics.bemrosetta.mesh import GDFHandler
+
+        mesh = GDFHandler().read(gdf_path)
+        assert mesh.n_panels == result.n_panels
+        for panel in mesh.panels:
+            z = mesh.vertices[[i for i in panel if i >= 0], 2]
+            assert z.min() < -1e-6, (
+                f"lid panel at z=0 found in GDF export: {panel}"
+            )
+
     def test_build_box_barge_dat(self, tmp_path):
         """GmshMeshBuilder.build() generates valid DAT for box_barge."""
         from digitalmodel.hydrodynamics.diffraction.gmsh_mesh_builder import (
@@ -374,9 +568,15 @@ class TestGmshMeshBuilderWorkflow:
 
         dat_path = Path(result.output_files["dat"])
         assert dat_path.exists()
-        content = dat_path.read_text()
-        assert "NODE" in content
-        assert "TPPL" in content or "QPPL" in content
+        # NEMOH-style DAT (the repo's AQWA mesh-pipeline format) must be
+        # readable by the repo's own DATHandler. (This test previously
+        # pinned the buggy bare NODE/QPPL card output that no reader —
+        # in-repo or AQWA — could consume.)
+        from digitalmodel.hydrodynamics.bemrosetta.mesh import DATHandler
+
+        mesh = DATHandler().read(dat_path)
+        assert mesh.n_panels == result.n_panels
+        assert mesh.n_vertices == result.n_nodes
 
     def test_build_box_barge_msh(self, tmp_path):
         """GmshMeshBuilder.build() generates MSH v2.2 for box_barge."""

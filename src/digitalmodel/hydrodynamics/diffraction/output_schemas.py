@@ -499,8 +499,9 @@ def validate_rao_completeness(rao_set: RAOSet) -> List[str]:
         if np.any(np.isnan(component.phase)) or np.any(np.isinf(component.phase)):
             issues.append(f"{dof.name}: Phase contains NaN or Inf values")
 
-    # Check frequency range
-    if rao_set.surge.frequencies.min_freq <= 0:
+    # Check frequency range (surge may be None; the loop above already
+    # reported the missing component)
+    if rao_set.surge is not None and rao_set.surge.frequencies.min_freq <= 0:
         issues.append(f"Invalid minimum frequency: {rao_set.surge.frequencies.min_freq}")
 
     return issues
@@ -532,13 +533,16 @@ def validate_matrix_set(matrix_set: Union[AddedMassSet, DampingSet]) -> List[str
         if np.any(np.isnan(matrix.matrix)) or np.any(np.isinf(matrix.matrix)):
             issues.append(f"Matrix at frequency {matrix.frequency:.4f} contains NaN or Inf")
 
-        # Check frequency matches expected
-        expected_freq = matrix_set.frequencies.values[i]
-        if not np.isclose(matrix.frequency, expected_freq):
-            issues.append(
-                f"Matrix {i}: frequency {matrix.frequency:.4f} doesn't match "
-                f"expected {expected_freq:.4f}"
-            )
+        # Check frequency matches expected. Only where a corresponding
+        # frequency exists: a count mismatch is already reported above and
+        # must not crash the validator with an IndexError.
+        if i < len(matrix_set.frequencies.values):
+            expected_freq = matrix_set.frequencies.values[i]
+            if not np.isclose(matrix.frequency, expected_freq):
+                issues.append(
+                    f"Matrix {i}: frequency {matrix.frequency:.4f} doesn't match "
+                    f"expected {expected_freq:.4f}"
+                )
 
     return issues
 
@@ -557,16 +561,23 @@ def validate_diffraction_results(results: DiffractionResults) -> Dict[str, List[
         'consistency': []
     }
 
-    # Cross-check consistency between data sets
-    rao_freqs = results.raos.surge.frequencies.values
-    am_freqs = results.added_mass.frequencies.values
-    damp_freqs = results.damping.frequencies.values
+    # Cross-check consistency between data sets. Compare lengths first:
+    # np.allclose raises a broadcast ValueError on different-length grids,
+    # and a length mismatch IS the inconsistency being checked for.
+    if results.raos.surge is not None:
+        rao_freqs = results.raos.surge.frequencies.values
+        am_freqs = results.added_mass.frequencies.values
+        damp_freqs = results.damping.frequencies.values
 
-    if not np.allclose(rao_freqs, am_freqs):
-        validation_report['consistency'].append("RAO and added mass frequencies don't match")
+        if len(rao_freqs) != len(am_freqs) or not np.allclose(rao_freqs, am_freqs):
+            validation_report['consistency'].append("RAO and added mass frequencies don't match")
 
-    if not np.allclose(rao_freqs, damp_freqs):
-        validation_report['consistency'].append("RAO and damping frequencies don't match")
+        if len(rao_freqs) != len(damp_freqs) or not np.allclose(rao_freqs, damp_freqs):
+            validation_report['consistency'].append("RAO and damping frequencies don't match")
+    else:
+        validation_report['consistency'].append(
+            "Cannot cross-check frequency grids: surge RAO component is missing"
+        )
 
     # Check water depth consistency
     if results.raos.water_depth != results.water_depth:

@@ -184,8 +184,15 @@ class TestSingleToModularConverter:
         assert "Buoys" in buoys_data
         assert "3DBuoys" in buoys_data
 
-    def test_unknown_sections_go_to_general(self, tmp_path: Path):
-        """Sections not in SECTION_MAPPING are placed in 01_general.yml."""
+    def test_unknown_sections_quarantined_last(self, tmp_path: Path):
+        """Sections not in any mapping go to 99_unmapped.yml (included last).
+
+        Regression: they used to be dumped into 01_general.yml, which the
+        sorted master.yml includes FIRST — breaking OrcaFlex's sequential
+        object-declaration order for sections that reference other objects.
+        (This replaces the old test_unknown_sections_go_to_general, which
+        pinned the buggy behavior.)
+        """
         data = {
             "General": {"UnitsSystem": "SI"},
             "CustomSection": {"key": "value"},
@@ -196,10 +203,76 @@ class TestSingleToModularConverter:
 
         output = tmp_path / "output"
         converter = SingleToModularConverter(source, output)
-        converter.convert()
+        report = converter.convert()
 
         with open(output / "includes" / "01_general.yml") as f:
             general = yaml.safe_load(f)
-
         assert "General" in general
-        assert "CustomSection" in general
+        assert "CustomSection" not in general
+
+        with open(output / "includes" / "99_unmapped.yml") as f:
+            unmapped = yaml.safe_load(f)
+        assert unmapped == {"CustomSection": {"key": "value"}}
+
+        # Quarantined file is included last in master.yml
+        master_text = (output / "master.yml").read_text()
+        include_lines = [
+            ln for ln in master_text.splitlines() if "includefile" in ln
+        ]
+        assert include_lines[-1].endswith("includes/99_unmapped.yml")
+
+        # And the conversion warns about it
+        assert any("CustomSection" in w for w in report.warnings)
+
+    def test_real_sections_ordered_after_referenced_objects(
+        self, tmp_path: Path
+    ):
+        """BrowserGroups/FrictionCoefficients land AFTER line types/lines.
+
+        Regression: these valid real-model sections (see
+        yaml_validator.VALID_TOP_LEVEL_SECTIONS) were missing from
+        SECTION_MAPPING and fell into 01_general.yml, so OrcaFlex loaded
+        them before the Lines/LineTypes they reference.
+        """
+        data = {
+            "General": {"UnitsSystem": "SI"},
+            "LineTypes": [{"Name": "Chain", "OD": 0.084}],
+            "Lines": [{"Name": "Mooring1", "LineType": ["Chain"]}],
+            "BrowserGroups": [{"Name": "Moorings", "Contents": ["Mooring1"]}],
+            "FrictionCoefficients": {"SeabedFriction": 0.5},
+        }
+        source = tmp_path / "input.yml"
+        with open(source, "w") as f:
+            yaml.dump(data, f)
+
+        output = tmp_path / "output"
+        converter = SingleToModularConverter(source, output)
+        report = converter.convert()
+
+        # Neither section pollutes 01_general.yml
+        with open(output / "includes" / "01_general.yml") as f:
+            general = yaml.safe_load(f)
+        assert "BrowserGroups" not in general
+        assert "FrictionCoefficients" not in general
+
+        # FrictionCoefficients shares the legacy SolidFrictionCoefficients slot
+        with open(output / "includes" / "19_friction.yml") as f:
+            friction = yaml.safe_load(f)
+        assert "FrictionCoefficients" in friction
+
+        master_text = (output / "master.yml").read_text()
+        include_lines = [
+            ln for ln in master_text.splitlines() if "includefile" in ln
+        ]
+
+        def pos(fragment: str) -> int:
+            return next(
+                i for i, ln in enumerate(include_lines) if fragment in ln
+            )
+
+        assert pos("05_line_types.yml") < pos("19_friction.yml")
+        assert pos("07_lines.yml") < pos("19_friction.yml")
+        assert pos("07_lines.yml") < pos("22_browser_groups.yml")
+
+        # Known sections do not trigger the unknown-section warning
+        assert not any("BrowserGroups" in w for w in report.warnings)

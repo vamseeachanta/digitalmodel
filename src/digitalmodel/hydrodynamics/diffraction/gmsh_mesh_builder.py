@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
 ABOUTME: gmsh mesh builder integration — generates panel meshes from geometry
-specs and exports to GDF (OrcaWave/WAMIT), DAT (AQWA), and MSH v2.2
-(BEMRosetta/Nemoh) formats. Part of the WRK-140 solver pipeline integration.
+specs and exports to GDF (OrcaWave/WAMIT), DAT (NEMOH-style panel mesh, the
+repo's AQWA mesh-pipeline format), and MSH v2.2 (BEMRosetta/Nemoh) formats.
+Part of the WRK-140 solver pipeline integration.
 
 Usage::
 
@@ -80,30 +81,35 @@ def _build_gdf_header(n_panels: int, symmetry: bool = False) -> str:
 
 
 def _panel_to_gdf_line(verts: np.ndarray) -> str:
-    """Format a single GDF panel line.
+    """Format a single GDF panel record.
 
-    GDF expects 4 vertices per panel (triangles repeat vertex 2).
-    Each vertex is written as "  X  Y  Z".
+    GDF expects 4 vertices per panel (triangles repeat the last vertex),
+    written as ONE VERTEX PER LINE — the layout produced and consumed by
+    the repo's GDFHandler (bemrosetta/mesh/gdf_handler.py), which reads
+    the first 3 numbers of each line as one vertex.
 
     Args:
         verts: (3, 3) or (4, 3) array of vertex coordinates.
 
     Returns:
-        Single-line GDF panel record.
+        Four-line GDF panel record (one "X  Y  Z" vertex per line,
+        no trailing newline).
     """
     if len(verts) == 3:
         pts = [verts[0], verts[1], verts[2], verts[2]]
     else:
         pts = [verts[0], verts[1], verts[2], verts[3]]
 
-    parts = []
-    for p in pts:
-        parts.extend([f"{p[0]:.6f}", f"{p[1]:.6f}", f"{p[2]:.6f}"])
-    return "  " + "  ".join(parts)
+    lines = [f"  {p[0]:.6f}  {p[1]:.6f}  {p[2]:.6f}" for p in pts]
+    return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------
 # DAT export helpers
+#
+# NOTE: these card-formatting helpers target the AQWA deck card style and
+# are kept for API compatibility; the DAT export itself (_write_dat) emits
+# the NEMOH-style panel mesh consumed by DATHandler / the AQWA pipeline.
 # ---------------------------------------------------------------------------
 
 
@@ -459,30 +465,64 @@ class GmshMeshBuilder:
         gmsh.model.addPhysicalGroup(2, wetted, name="wetted_surface")
 
     def _extract_surface_data(self) -> tuple:
-        """Extract 2D surface mesh nodes and panels from gmsh.
+        """Extract wetted-surface mesh nodes and panels from gmsh.
+
+        Only elements on surfaces in the ``wetted_surface`` physical
+        group are extracted. gmsh's ``generate(2)`` meshes EVERY model
+        surface (physical groups only restrict ``gmsh.write``), so an
+        unfiltered ``getElements(dim=2)`` would also return the z=0
+        waterplane lid panels — a rigid lid on the free surface that
+        corrupts BEM results and disagrees with the MSH export.
 
         Returns:
-            (nodes, panels) tuple where nodes is (N, 3) float64 and
-            panels is a list of 3- or 4-element int arrays (0-based).
+            (nodes, panels) tuple where nodes is (N, 3) float64 of the
+            wetted-surface nodes only and panels is a list of 3- or
+            4-element int lists (0-based indices into nodes).
+
+        Raises:
+            ValueError: If no non-empty 'wetted_surface' physical group
+                exists in the current gmsh model.
         """
+        wetted_tags = None
+        for dim, gtag in gmsh.model.getPhysicalGroups(2):
+            if gmsh.model.getPhysicalName(dim, gtag) == "wetted_surface":
+                wetted_tags = gmsh.model.getEntitiesForPhysicalGroup(
+                    dim, gtag
+                )
+                break
+        if wetted_tags is None or len(wetted_tags) == 0:
+            raise ValueError(
+                "No 'wetted_surface' physical group found in gmsh model; "
+                "cannot extract wetted panels"
+            )
+
         node_tags, coords, _ = gmsh.model.mesh.getNodes()
-        nodes = coords.reshape(-1, 3).astype(np.float64)
-        tag_to_idx = {int(t): i for i, t in enumerate(node_tags)}
+        all_coords = coords.reshape(-1, 3).astype(np.float64)
+        tag_to_row = {int(t): i for i, t in enumerate(node_tags)}
 
-        panels = []
-        elem_types, elem_tags_list, node_tags_list = (
-            gmsh.model.mesh.getElements(dim=2)
-        )
+        raw_panels = []
+        for surf_tag in wetted_tags:
+            elem_types, elem_tags_list, node_tags_list = (
+                gmsh.model.mesh.getElements(2, int(surf_tag))
+            )
+            for etype, etags, enodes in zip(
+                elem_types, elem_tags_list, node_tags_list
+            ):
+                prop = gmsh.model.mesh.getElementProperties(etype)
+                n_per = prop[3]
+                for j in range(len(etags)):
+                    raw = enodes[j * n_per : (j + 1) * n_per]
+                    raw_panels.append([int(t) for t in raw])
 
-        for etype, etags, enodes in zip(
-            elem_types, elem_tags_list, node_tags_list
-        ):
-            prop = gmsh.model.mesh.getElementProperties(etype)
-            n_per = prop[3]
-            for j in range(len(etags)):
-                raw = enodes[j * n_per : (j + 1) * n_per]
-                panel = [tag_to_idx[int(t)] for t in raw]
-                panels.append(panel)
+        # Compact the node list to the wetted-surface nodes only, so
+        # exports do not carry unused waterplane nodes.
+        used_tags = sorted({t for panel in raw_panels for t in panel})
+        tag_to_idx = {t: i for i, t in enumerate(used_tags)}
+        nodes = np.array(
+            [all_coords[tag_to_row[t]] for t in used_tags],
+            dtype=np.float64,
+        ).reshape(-1, 3)
+        panels = [[tag_to_idx[t] for t in panel] for panel in raw_panels]
 
         return nodes, panels
 
@@ -500,7 +540,11 @@ class GmshMeshBuilder:
             panels: List of panel index arrays (0-based).
             output_path: Destination file path.
         """
-        lines = [_build_gdf_header(n_panels=len(panels), symmetry=False)]
+        # Strip the header's trailing newline so the "\n".join below does
+        # not introduce a blank line between the header and panel data
+        # (GDFHandler reads one vertex per line and a stray blank line
+        # desynchronises its 4-lines-per-panel loop).
+        lines = [_build_gdf_header(n_panels=len(panels), symmetry=False).rstrip("\n")]
         for panel in panels:
             verts = nodes[panel]
             lines.append(_panel_to_gdf_line(verts))
@@ -509,23 +553,38 @@ class GmshMeshBuilder:
     def _write_dat(
         self, nodes: np.ndarray, panels: list, output_path: Path
     ) -> None:
-        """Write mesh to AQWA .DAT format.
+        """Write mesh to NEMOH-style .DAT format (AQWA mesh pipeline).
 
-        Nodes are written as 1-based NODE records followed by
-        TPPL DIFF triangle and QPPL DIFF quadrilateral panel records.
+        The repo's mesh pipeline convention is "AQWA requires DAT format
+        (NEMOH-style panel mesh)" (see mesh_pipeline.py), read/written by
+        DATHandler (bemrosetta/mesh/dat_handler.py):
+
+            Line 1:  NVERT  NPAN
+            NVERT vertex lines:  X  Y  Z
+            NPAN panel lines: 1-based vertex indices, 4 per panel
+                (triangles repeat the last index)
+            Terminator:  0  0  0  0
 
         Args:
             nodes: (N, 3) array of node coordinates.
             panels: List of panel index arrays (0-based).
             output_path: Destination file path.
         """
-        lines: List[str] = []
-        for i, xyz in enumerate(nodes):
-            lines.append(_node_to_dat_line(i + 1, tuple(xyz)))
-        for i, panel in enumerate(panels):
-            # Convert 0-based indices to 1-based AQWA node IDs
-            node_ids = tuple(idx + 1 for idx in panel)
-            lines.append(_panel_to_dat_line(i + 1, node_ids))
+        lines: List[str] = [f"    {len(nodes)}     {len(panels)}"]
+        for xyz in nodes:
+            lines.append(
+                f"    {xyz[0]:.6f}     {xyz[1]:.6f}     {xyz[2]:.6f}"
+            )
+        for panel in panels:
+            # Convert 0-based indices to 1-based DAT vertex IDs;
+            # triangles repeat the last vertex to fill the 4th slot.
+            ids = [idx + 1 for idx in panel]
+            if len(ids) == 3:
+                ids.append(ids[-1])
+            lines.append(
+                f"    {ids[0]}    {ids[1]}    {ids[2]}    {ids[3]}"
+            )
+        lines.append("    0    0    0    0")
         output_path.write_text("\n".join(lines) + "\n")
 
     def _write_msh_v22(self, spec: GmshMeshSpec, output_path: Path) -> None:

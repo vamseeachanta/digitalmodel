@@ -24,7 +24,13 @@ import warnings
 from typing import Any, Literal, Optional
 
 import numpy as np
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -169,7 +175,7 @@ class VesselInertia(BaseModel):
       by the OrcaWave backend.
     """
 
-    mode: str = Field(
+    mode: Literal["explicit", "free_floating"] = Field(
         "explicit",
         description=(
             "Inertia specification mode: 'explicit' (mass and inertia "
@@ -494,7 +500,13 @@ class QTFOptions(BaseModel):
 class SolverOptions(BaseModel):
     """Solver-specific options."""
 
-    solve_type: str = Field(
+    solve_type: Literal[
+        "potential_only",
+        "potential_and_source",
+        "mean_drift",
+        "diagonal_qtf",
+        "full_qtf",
+    ] = Field(
         default="potential_and_source",
         description=(
             "OrcaWave solve type. Options: "
@@ -659,6 +671,22 @@ class SolverOptions(BaseModel):
             )
         return self
 
+    @model_serializer(mode="wrap")
+    def _serialize_preserving_legacy_qtf(self, handler: Any) -> dict[str, Any]:
+        """Keep legacy-flat QTF enablement in dumps (#623/#624).
+
+        ``qtf_calculation`` is ``Field(exclude=True)`` (dumping it alongside a
+        nested ``qtf`` would trip the mutual-exclusion guard on reload), but
+        when ONLY the legacy flat path enabled QTF there is no nested ``qtf``
+        to serialize — without re-adding the flag here, ``to_yaml`` would drop
+        QTF enablement entirely and a reloaded spec would run with QTF off.
+        The nested ``qtf`` model, when present, already round-trips on its own.
+        """
+        data = handler(self)
+        if self.qtf is None and self.qtf_calculation:
+            data["qtf_calculation"] = True
+        return data
+
     def resolved_qtf(self) -> QTFOptions:
         """Single source of truth for QTF settings (#501).
 
@@ -811,6 +839,14 @@ class ControlSurfaceSpec(BaseModel):
             "Path to control surface mesh file (when type='mesh')"
         ),
     )
+    mesh_format: Optional[str] = Field(
+        None,
+        description=(
+            "Control surface mesh format ('csf', 'gdf', 'dat', 'stl'). "
+            "None = auto-detect from the mesh_file extension. Native "
+            "OrcaWave pairs .gdf with 'Wamit gdf' and .csf with 'Wamit csf'."
+        ),
+    )
     panel_size: Optional[float] = Field(
         None,
         description="Panel size for auto-generated control surface",
@@ -819,6 +855,28 @@ class ControlSurfaceSpec(BaseModel):
         None,
         description="Separation distance from body surface",
     )
+
+    @model_validator(mode="after")
+    def check_control_surface_defined(self) -> "ControlSurfaceSpec":
+        """A control surface must be generatable: mesh file, or auto params.
+
+        Without this, an auto control surface missing panel_size/separation
+        (or type='mesh' without mesh_file) validated cleanly and was then
+        silently dropped from the generated body section while
+        QuadraticLoadControlSurface stayed enabled (#324).
+        """
+        if self.mesh_file is None:
+            if self.type == "mesh":
+                raise ValueError(
+                    "control_surface type='mesh' requires mesh_file"
+                )
+            if self.panel_size is None or self.separation is None:
+                raise ValueError(
+                    "Auto-generated control surface requires panel_size and "
+                    "separation (emitted as BodyControlSurfacePanelSize / "
+                    "BodyControlSurfaceSeparationFromBody)"
+                )
+        return self
 
 
 class MorisonElementSpec(BaseModel):

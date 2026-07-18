@@ -182,6 +182,20 @@ class TestCheckWatertightness:
         assert ok
         assert len(issues) == 0
 
+    def test_watertight_cube_as_degenerate_quads(self, checker, cube_mesh):
+        """Closed triangle mesh stored as [a, b, c, c] degenerate quads.
+
+        The storage GDFHandler and the packaging pipeline store triangles
+        as 4-slot panels with the last index repeated; the self-edge
+        (c, c) must not be counted as an open edge (regression for the
+        false 'not watertight' report).
+        """
+        nodes, tri_panels = cube_mesh
+        quad_panels = np.column_stack([tri_panels, tri_panels[:, -1]])
+        ok, issues = checker.check_watertightness(nodes, quad_panels)
+        assert ok, f"closed degenerate-quad cube reported issues: {issues}"
+        assert len(issues) == 0
+
     def test_open_mesh_not_watertight(self, checker, open_mesh):
         nodes, panels = open_mesh
         ok, issues = checker.check_watertightness(nodes, panels)

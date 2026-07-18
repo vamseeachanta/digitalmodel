@@ -18,42 +18,47 @@ from ..schema.mooring import (
 )
 from .base_router import BaseRouter
 
-# Studless chain properties per DNV-OS-E302 Table 2-2 (simplified).
+# Studless chain properties per DNV-OS-E302 (breaking load formula).
 # Key: ChainGrade, Value: dict with MBL coefficient and weight coefficient.
-# MBL (kN) = mbl_coeff * d^2   where d = diameter in mm
+# MBL (kN) = mbl_coeff * d^2 * (44 - 0.08*d)   where d = diameter in mm
+#   (DNV-OS-E302 grade coefficients: R3=0.0223, R3S=0.0249, R4=0.0274,
+#    R4S=0.0304, R5=0.0320; e.g. 76mm R3 -> 4884 kN)
 # Mass (te/m) = mass_coeff * d^2   where d = diameter in mm
-# EA (kN) = ea_coeff * d^2   where d = diameter in mm
+# EA (kN) = ea_coeff * d^2 * 100   where d = diameter in mm
+#   (equivalent to 0.854e8 * d^2 kN with d in m; matches curated library
+#    component docs/domains/orcaflex/library/line_types/chain_76mm_r4.yml
+#    EA = 490000 kN for 76mm)
 CHAIN_DATABASE: dict[str, dict[str, float]] = {
     "R3": {
-        "mbl_coeff": 0.0249,  # MBL = 0.0249 * d^2 (kN, d in mm)
+        "mbl_coeff": 0.0223,  # MBL = 0.0223 * d^2 * (44 - 0.08d) (kN, d in mm)
         "mass_coeff": 0.0219e-3,  # mass/m = 0.0219 * d^2 (kg/m, d in mm) -> te/m
-        "ea_coeff": 0.854,  # EA = 0.854 * d^2 * 1000 (kN, d in mm)
+        "ea_coeff": 0.854,  # EA = 0.854 * d^2 * 100 (kN, d in mm)
         "cd": 2.4,  # Normal drag coefficient for chain
         "ca": 1.0,  # Added mass coefficient
     },
     "R3S": {
-        "mbl_coeff": 0.0274,
+        "mbl_coeff": 0.0249,
         "mass_coeff": 0.0219e-3,
         "ea_coeff": 0.854,
         "cd": 2.4,
         "ca": 1.0,
     },
     "R4": {
-        "mbl_coeff": 0.0304,
+        "mbl_coeff": 0.0274,
         "mass_coeff": 0.0219e-3,
         "ea_coeff": 0.854,
         "cd": 2.4,
         "ca": 1.0,
     },
     "R4S": {
-        "mbl_coeff": 0.0330,
+        "mbl_coeff": 0.0304,
         "mass_coeff": 0.0219e-3,
         "ea_coeff": 0.854,
         "cd": 2.4,
         "ca": 1.0,
     },
     "R5": {
-        "mbl_coeff": 0.0358,
+        "mbl_coeff": 0.0320,
         "mass_coeff": 0.0219e-3,
         "ea_coeff": 0.854,
         "cd": 2.4,
@@ -61,18 +66,26 @@ CHAIN_DATABASE: dict[str, dict[str, float]] = {
     },
 }
 
-# Default wire rope properties (6-strand, fiber core)
+# Default wire rope properties (6x36 IWRC, as in the curated library
+# components docs/domains/orcaflex/library/line_types/wire_rope_*.yml).
+# EA (kN) = ea_coeff * d^2 * 100   where d = diameter in mm
+#   (equivalent to 0.78e8 * d^2 kN with d in m; matches wire_rope_64mm
+#    EA=320000, wire_rope_76mm EA=450000, wire_rope_84mm EA=550000)
 WIRE_ROPE_DEFAULTS: dict[str, float] = {
     "mass_coeff": 0.0340e-3,  # mass/m = 0.034 * d^2 (kg/m, d in mm) -> te/m
-    "ea_ratio": 0.45,  # EA/MBL ratio (typical for spiral strand)
+    "ea_coeff": 0.78,  # EA = 0.78 * d^2 * 100 (kN, d in mm)
     "cd": 1.2,
     "ca": 1.0,
 }
 
-# Default polyester rope properties
+# Default polyester rope properties (as in the curated library components
+# docs/domains/orcaflex/library/line_types/polyester_rope_*.yml).
+# EA (kN) = ea_coeff * d^2 * 100   where d = diameter in mm
+#   (equivalent to 0.07e8 * d^2 kN with d in m; matches polyester_rope_120mm
+#    EA=100000, polyester_rope_140mm EA=140000, polyester_rope_160mm EA=180000)
 POLYESTER_DEFAULTS: dict[str, float] = {
     "mass_coeff": 0.0080e-3,  # mass/m approx, d in mm -> te/m
-    "ea_ratio": 0.15,  # EA/MBL ratio (typical for polyester)
+    "ea_coeff": 0.07,  # EA = 0.07 * d^2 * 100 (kN, d in mm)
     "cd": 1.2,
     "ca": 1.0,
 }
@@ -151,9 +164,12 @@ class MooringRouter(BaseRouter):
         db = CHAIN_DATABASE[grade_key]
         d_mm = seg.diameter * 1000  # Convert m to mm
 
-        mbl = db["mbl_coeff"] * d_mm ** 2
+        # DNV-OS-E302 breaking load: MBL = c * d^2 * (44 - 0.08d) (kN, d in mm)
+        mbl = seg.breaking_load if seg.breaking_load else (
+            db["mbl_coeff"] * d_mm ** 2 * (44 - 0.08 * d_mm)
+        )
         mass = db["mass_coeff"] * d_mm ** 2
-        ea = seg.axial_stiffness if seg.axial_stiffness else db["ea_coeff"] * d_mm ** 2 * 1000
+        ea = seg.axial_stiffness if seg.axial_stiffness else db["ea_coeff"] * d_mm ** 2 * 100
 
         # Chain OD for hydrodynamics = 2 * bar diameter (studless convention)
         hydro_od = seg.diameter * 2
@@ -187,8 +203,10 @@ class MooringRouter(BaseRouter):
         d_mm = seg.diameter * 1000
         mbl = seg.breaking_load if seg.breaking_load else 0
         mass = WIRE_ROPE_DEFAULTS["mass_coeff"] * d_mm ** 2
+        # EA from diameter (0.78e8 * d^2 kN, d in m), not from MBL: an
+        # EA/MBL ratio of 0.45 would imply >200% elongation at break.
         ea = seg.axial_stiffness if seg.axial_stiffness else (
-            WIRE_ROPE_DEFAULTS["ea_ratio"] * mbl if mbl else 0
+            WIRE_ROPE_DEFAULTS["ea_coeff"] * d_mm ** 2 * 100
         )
 
         name = self._linetype_name(seg)
@@ -220,8 +238,9 @@ class MooringRouter(BaseRouter):
         d_mm = seg.diameter * 1000
         mbl = seg.breaking_load if seg.breaking_load else 0
         mass = POLYESTER_DEFAULTS["mass_coeff"] * d_mm ** 2
+        # EA from diameter (0.07e8 * d^2 kN, d in m), not from MBL.
         ea = seg.axial_stiffness if seg.axial_stiffness else (
-            POLYESTER_DEFAULTS["ea_ratio"] * mbl if mbl else 0
+            POLYESTER_DEFAULTS["ea_coeff"] * d_mm ** 2 * 100
         )
 
         name = self._linetype_name(seg)
@@ -284,15 +303,10 @@ class MooringRouter(BaseRouter):
             "StaticsStep1": "Catenary",
         }
 
-        if ml.pretension is not None:
-            # When pretensioned, Line End B connects to the winch
-            # (winch sits on the vessel, line connects to winch)
-            winch_name = f"Winch_{ml.name}"
-            properties["EndBConnection"] = winch_name
-            properties["EndBX"] = 0
-            properties["EndBY"] = 0
-            properties["EndBZ"] = 0
-        elif ml.fairlead.vessel:
+        # Lines cannot connect to winch objects in OrcaFlex; the fairlead
+        # connection stays on the vessel and the pretension winch (if any)
+        # spans vessel -> line End B (see _build_winch).
+        if ml.fairlead.vessel:
             properties["EndBConnection"] = ml.fairlead.vessel
 
         if ml.lay_azimuth is not None:
@@ -306,9 +320,11 @@ class MooringRouter(BaseRouter):
     def _build_winch(self, ml: MooringLine) -> dict[str, Any]:
         """Build a pretension winch for a mooring line.
 
-        OrcaFlex winch topology for mooring pretension:
-        - Winch sits on the vessel (Connection = vessel name)
-        - Line End B connects to the winch (set in _build_line)
+        OrcaFlex winch topology for mooring pretension (same list-form
+        connection as the proven S-lay tensioner in
+        ``builders/winch_builder.py``):
+        - Winch spans two connection points: the vessel (at the fairlead
+          position) and the mooring line at End B
         - Winch controls tension via "Specified tension" mode
 
         Args:
@@ -321,10 +337,9 @@ class MooringRouter(BaseRouter):
         return {
             "name": f"Winch_{ml.name}",
             "properties": {
-                "Connection": vessel,
-                "ConnectionX": ml.fairlead.position[0],
-                "ConnectionY": ml.fairlead.position[1],
-                "ConnectionZ": ml.fairlead.position[2],
+                "Connection": [vessel, ml.name],
+                "ConnectionPoint": [list(ml.fairlead.position), [0, 0, 0]],
+                "ConnectionzRelativeTo": [None, "End B"],
                 "WinchControl": "Specified tension",
                 "Tension": ml.pretension,
             },

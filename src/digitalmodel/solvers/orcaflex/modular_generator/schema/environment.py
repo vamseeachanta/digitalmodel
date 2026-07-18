@@ -77,7 +77,11 @@ class WaveTrain(BaseModel):
         height: Significant wave height Hs (m) or deterministic height.
         period: Wave period Tp (s) or zero-crossing period Tz.
         direction: Wave direction in degrees from North, going to.
-        phase: Wave phase in degrees.
+        phase: Wave phase in degrees. Must be 0 — non-zero phase is not
+            emitted by the EnvironmentBuilder (there is no phase →
+            WaveTimeOrigin mapping), so accepting it would silently drop it
+            from the generated model. Control train phasing via
+            ``environment.raw_properties['WaveTrains'][i]['WaveTimeOrigin']``.
         gamma: JONSWAP gamma parameter (default 3.3).
     """
 
@@ -88,7 +92,10 @@ class WaveTrain(BaseModel):
     direction: float = Field(
         default=0, description="Wave direction (deg from North)"
     )
-    phase: float = Field(default=0, ge=0, lt=360, description="Wave phase (deg)")
+    phase: float = Field(
+        default=0, ge=0, lt=360,
+        description="Wave phase (deg); must be 0 — see class docstring",
+    )
     gamma: float = Field(
         default=3.3, gt=1, le=7, description="JONSWAP gamma (typically 1-7)"
     )
@@ -100,6 +107,26 @@ class WaveTrain(BaseModel):
         if v is None:
             return 0
         return float(v) % 360
+
+    @model_validator(mode="after")
+    def _reject_unsupported_phase(self) -> "WaveTrain":
+        """Fail loud on non-zero phase instead of silently dropping it.
+
+        EnvironmentBuilder._build_wave_trains never reads ``phase`` — the
+        generated WaveTrains carry WaveTimeOrigin: 0 regardless — so a model
+        built from ``phase: 90`` would be byte-identical to ``phase: 0``.
+        Until a grounded phase → WaveTimeOrigin conversion is implemented,
+        reject the value rather than mislead users.
+        """
+        if self.phase != 0:
+            raise ValueError(
+                f"WaveTrain.phase={self.phase} is not supported: the environment "
+                "builder does not emit a phase property, so a non-zero phase "
+                "would be silently ignored in the generated model. Set phase to "
+                "0 and control wave-train phasing via "
+                "environment.raw_properties['WaveTrains'][i]['WaveTimeOrigin']."
+            )
+        return self
 
 
 class Waves(BaseModel):

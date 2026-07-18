@@ -192,7 +192,7 @@ class OrcaWaveBatchRunner:
         # Dry-run shortcut
         if job.dry_run or run_result.status == RunStatus.DRY_RUN:
             # Attempt extraction even on dry-run if results available
-            diff_results = self._extract_results(run_result, job)
+            diff_results, _ = self._extract_results(run_result, job)
             result = BatchJobResult(
                 job_name=job_name,
                 status="dry_run",
@@ -214,14 +214,31 @@ class OrcaWaveBatchRunner:
             )
 
         # Extract results
-        diff_results = self._extract_results(run_result, job)
-        status = "success" if diff_results is not None else "error"
+        diff_results, extraction_error = self._extract_results(run_result, job)
+        if diff_results is not None:
+            status = "success"
+            error_message = None
+        elif run_result.status == RunStatus.COMPLETED:
+            # The solver finished (e.g. subprocess path: rc==0, .owr written)
+            # but results cannot be re-extracted on this host (no .sim/.dat
+            # and no OrcFxAPI). That is NOT a job failure — reporting it as
+            # 'error' falsely failed every completed subprocess solve. Record
+            # the extraction limitation so postprocessing gaps are explained.
+            status = "success"
+            error_message = (
+                "Solver completed but results could not be extracted for "
+                f"postprocessing: {extraction_error or 'no extractable output'}"
+            )
+        else:
+            status = "error"
+            error_message = extraction_error
         result = BatchJobResult(
             job_name=job_name,
             status=status,
             run_result=run_result,
             diffraction_results=diff_results,
             execution_time=time.monotonic() - job_start,
+            error_message=error_message,
         )
 
         if diff_results is not None:
@@ -243,14 +260,23 @@ class OrcaWaveBatchRunner:
 
     def _extract_results(
         self, run_result: RunResult, job: BatchJobConfig
-    ) -> DiffractionResults | None:
+    ) -> tuple[DiffractionResults | None, str | None]:
+        """Return (results, error_message) for a run.
+
+        Results the runner already built (#625 API path populates
+        ``RunResult.diffraction_results``) are used directly — re-extracting
+        via :class:`ResultExtractor` both duplicated work and failed outright
+        on runs whose output is a .owr (no .sim/.dat model file).
+        """
+        if run_result.diffraction_results is not None:
+            return run_result.diffraction_results, None
         extractor = ResultExtractor(
             water_depth=job.water_depth_override,
         )
         extraction = extractor.extract(run_result)
         if extraction.success:
-            return extraction.results
-        return None
+            return extraction.results, None
+        return None, extraction.error_message
 
     def _postprocess(
         self,

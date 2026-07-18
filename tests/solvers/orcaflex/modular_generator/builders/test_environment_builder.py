@@ -199,6 +199,145 @@ class TestMultiWaveTrain:
 
 
 # ---------------------------------------------------------------------------
+# Waves — raw base layer fidelity
+# ---------------------------------------------------------------------------
+
+class TestRawWaveTrainFidelity:
+    def test_raw_trains_beyond_spec_count_pass_through(self):
+        """Raw trains beyond the spec's train count must not be dropped."""
+        swell_raw = {
+            "Name": "Swell",
+            "WaveType": "Airy",
+            "WaveHeight": 1.5,
+            "WavePeriod": 14.0,
+            "WaveDirection": 180,
+            "WaveOrigin": [0, 0],
+            "WaveTimeOrigin": 0,
+        }
+        env = _build(_make_env_spec(
+            waves={"type": "jonswap", "height": 3.0, "period": 8.0, "direction": 0},
+            raw_properties={"WaveTrains": [
+                {
+                    "Name": "WindSea",
+                    "WaveType": "JONSWAP",
+                    "WaveHs": 3.0,
+                    "WaveTz": 8.0,
+                    "WaveDirection": 0,
+                },
+                swell_raw,
+            ]},
+        ))
+        trains = env["WaveTrains"]
+        assert len(trains) == 2
+        assert trains[1] == swell_raw
+
+    def test_tp_specified_raw_train_keeps_tp_key(self):
+        """A Tp-only raw JONSWAP train (e.g. docs/domains/orcaflex/risers/
+        drilling/gom/app_vertical_riser_2500ft_WT1000_064pcf_Wave1_FE.yml)
+        must be re-emitted as WaveTp, not WaveTz (which would shift Tp)."""
+        env = _build(_make_env_spec(
+            waves={"type": "jonswap", "height": 3.0, "period": 10.0, "direction": 0},
+            raw_properties={"WaveTrains": [
+                {
+                    "Name": "Wave1",
+                    "WaveType": "JONSWAP",
+                    "WaveHs": 3.0,
+                    "WaveTp": 10.0,
+                    "WaveDirection": 0,
+                },
+            ]},
+        ))
+        train = env["WaveTrains"][0]
+        assert train["WaveTp"] == 10.0
+        assert "WaveTz" not in train
+
+    def test_tz_specified_raw_train_drops_stale_tp(self):
+        """When emitting WaveTz, any stale WaveTp from the raw base layer is
+        removed so the output never has contradictory period keys."""
+        env = _build(_make_env_spec(
+            waves={"type": "jonswap", "height": 3.0, "period": 8.0, "direction": 0},
+            raw_properties={"WaveTrains": [
+                {
+                    "Name": "Wave1",
+                    "WaveType": "JONSWAP",
+                    "WaveHs": 3.0,
+                    "WaveTz": 8.0,
+                    "WaveTp": 10.3,
+                    "WaveDirection": 0,
+                },
+            ]},
+        ))
+        train = env["WaveTrains"][0]
+        assert train["WaveTz"] == 8.0
+        assert "WaveTp" not in train
+
+    def test_raw_wave_gamma_preserved_when_spec_gamma_unset(self):
+        """Raw WaveGamma (e.g. 5.0, 'Fully specified') must not be clobbered
+        by the spec default 3.3 when the spec never set gamma."""
+        env = _build(_make_env_spec(
+            waves={"type": "jonswap", "height": 3.0, "period": 8.0, "direction": 0},
+            raw_properties={"WaveTrains": [
+                {
+                    "Name": "Wave1",
+                    "WaveType": "JONSWAP",
+                    "WaveJONSWAPParameters": "Fully specified",
+                    "WaveHs": 3.0,
+                    "WaveTz": 8.0,
+                    "WaveGamma": 5.0,
+                },
+            ]},
+        ))
+        assert env["WaveTrains"][0]["WaveGamma"] == 5.0
+
+    def test_explicit_spec_gamma_overrides_raw(self):
+        """An explicitly set spec gamma remains authoritative over raw."""
+        env = _build(_make_env_spec(
+            waves={
+                "type": "jonswap", "height": 3.0, "period": 8.0,
+                "direction": 0, "gamma": 2.5,
+            },
+            raw_properties={"WaveTrains": [
+                {
+                    "Name": "Wave1",
+                    "WaveType": "JONSWAP",
+                    "WaveJONSWAPParameters": "Fully specified",
+                    "WaveHs": 3.0,
+                    "WaveTz": 8.0,
+                    "WaveGamma": 5.0,
+                },
+            ]},
+        ))
+        assert env["WaveTrains"][0]["WaveGamma"] == 2.5
+
+    def test_default_gamma_emitted_without_raw_train(self):
+        """Hand-crafted specs (no raw base) still emit the default gamma."""
+        env = _build(_make_env_spec(
+            waves={"type": "jonswap", "height": 3.0, "period": 8.0, "direction": 0},
+        ))
+        assert env["WaveTrains"][0]["WaveGamma"] == 3.3
+
+    def test_dean_stream_raw_values_preserved(self):
+        """Raw Dean stream order/current-speed must round-trip, not be
+        overwritten with the hardcoded defaults (5 / None)."""
+        env = _build(_make_env_spec(
+            waves={"type": "dean_stream", "height": 5.0, "period": 10.0, "direction": 0},
+            raw_properties={"WaveTrains": [
+                {
+                    "Name": "Wave1",
+                    "WaveType": "Dean stream",
+                    "WaveHeight": 5.0,
+                    "WavePeriod": 10.0,
+                    "WaveStreamFunctionOrder": 9,
+                    "WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel": 1.5,
+                },
+            ]},
+        ))
+        train = env["WaveTrains"][0]
+        assert train["WaveStreamFunctionOrder"] == 9
+        assert train["WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel"] == 1.5
+
+
+# ---------------------------------------------------------------------------
 # Current profile
 # ---------------------------------------------------------------------------
 
@@ -260,6 +399,42 @@ class TestCurrentProfile:
         env = _build(_make_env_spec())
         profile = env["CurrentDepth, CurrentFactor, CurrentRotation"]
         assert len(profile) == 2
+
+    def test_raw_rotation_preserved(self):
+        """Non-zero CurrentRotation from the raw profile must round-trip
+        instead of being re-emitted as 0."""
+        env = _build(_make_env_spec(
+            current={
+                "speed": 1.0,
+                "direction": 0,
+                "profile": [[0, 1.0], [50, 0.8], [100, 0.3]],
+            },
+            raw_properties={
+                "CurrentDepth, CurrentFactor, CurrentRotation": [
+                    [0, 1.0, 0], [50, 0.8, 30], [100, 0.3, 45],
+                ],
+            },
+        ))
+        profile = env["CurrentDepth, CurrentFactor, CurrentRotation"]
+        assert profile == [[0, 1.0, 0], [50, 0.8, 30], [100, 0.3, 45]]
+
+    def test_raw_rotation_ignored_when_profile_mismatch(self):
+        """If the spec profile no longer matches the raw rows (user edited
+        the spec), rotation falls back to 0 rather than mispairing."""
+        env = _build(_make_env_spec(
+            current={
+                "speed": 1.0,
+                "direction": 0,
+                "profile": [[0, 1.0], [60, 0.5]],
+            },
+            raw_properties={
+                "CurrentDepth, CurrentFactor, CurrentRotation": [
+                    [0, 1.0, 0], [50, 0.8, 30],
+                ],
+            },
+        ))
+        profile = env["CurrentDepth, CurrentFactor, CurrentRotation"]
+        assert profile == [[0, 1.0, 0], [60, 0.5, 0]]
 
 
 # ---------------------------------------------------------------------------

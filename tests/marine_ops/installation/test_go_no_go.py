@@ -269,3 +269,50 @@ class TestIssue472Criteria:
         splash = self._criterion(decision, "Splash zone Hs")
         assert splash.value == 0.0
         assert splash.state == gng.CriterionState.PASS
+
+
+class TestPipePropertiesSensitivity:
+    """The bend-radius criteria must read the analysed pipe, not fallbacks.
+
+    Regression for the dead ``hasattr(pipe, "OD_m")`` branch:
+    BarePipeProperties exposes lowercase ``od_m``/``bend_radius_m``, so the
+    dataclass values previously never reached the criteria and a
+    non-compliant pipe (bend radius < 1.270 m) still PASSED at the
+    hardcoded fallback 1.27 m.
+    """
+
+    def _decision_for(self, pipe):
+        results = {
+            "pipe_properties": pipe,
+            "weight_check": {"grand_total_kg": 46032.0},
+        }
+        return gng.evaluate_go_no_go("pipe-sensitivity", results)
+
+    def _criterion(self, decision, name):
+        match = [c for c in decision.criteria if c.name == name]
+        assert len(match) == 1
+        return match[0]
+
+    def test_noncompliant_bend_radius_fails(self):
+        """40 in bend radius (1.016 m) < 1.270 m minimum -> FAIL, not a
+        false PASS at the 1.27 m fallback."""
+        pipe = jl.BarePipeProperties(bend_radius_inch=40.0)
+        decision = self._decision_for(pipe)
+        crit = self._criterion(decision, "Minimum bend radius compliance")
+        assert crit.value == pytest.approx(1.016, abs=1e-6)
+        assert crit.state == gng.CriterionState.FAIL
+        assert decision.overall_state == gng.DecisionState.NO_GO
+
+    def test_dataclass_od_reaches_r_over_od_criterion(self):
+        pipe = jl.BarePipeProperties(od_inch=12.75)
+        decision = self._decision_for(pipe)
+        crit = self._criterion(decision, "Minimum bend radius factor (R/OD)")
+        expected = pipe.bend_radius_m / pipe.od_m
+        assert crit.value == pytest.approx(expected, abs=1e-6)
+
+    def test_compliant_dataclass_pipe_passes(self):
+        pipe = jl.BarePipeProperties()  # 50 in radius = 1.27 m exactly
+        decision = self._decision_for(pipe)
+        crit = self._criterion(decision, "Minimum bend radius compliance")
+        assert crit.value == pytest.approx(1.27, abs=1e-6)
+        assert crit.state == gng.CriterionState.PASS

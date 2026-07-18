@@ -224,3 +224,91 @@ class TestModularToSingleConverter:
         converter = ModularToSingleConverter()
         with pytest.raises(ValueError, match="No source path"):
             converter.convert()
+
+    def test_dict_master_preserves_content_and_section_scope(
+        self, tmp_path: Path
+    ):
+        """Dict-format master keeps its own sections and scopes includes.
+
+        Regression: master content was dropped entirely (merged started
+        empty) and section-scoped include contents were merged at the TOP
+        level instead of inside their section.
+        """
+        modular_dir = tmp_path / "modular"
+        includes_dir = modular_dir / "includes"
+        includes_dir.mkdir(parents=True)
+
+        # Fragment with bare Environment properties (section context)
+        with open(includes_dir / "03_environment.yml", "w") as f:
+            yaml.dump({"WaterDepth": 100, "RefCurrentSpeed": 0.5}, f)
+
+        master = modular_dir / "master.yml"
+        master.write_text(
+            "General:\n"
+            "  StageDuration:\n"
+            "  - 8\n"
+            "  - 16\n"
+            "Environment:\n"
+            "  includefile: includes/03_environment.yml\n"
+        )
+
+        output = tmp_path / "output.yml"
+        converter = ModularToSingleConverter()
+        report = converter.convert(source=master, target=output)
+        assert report.success
+
+        with open(output) as f:
+            data = yaml.safe_load(f)
+
+        # Master's own General section is preserved
+        assert data["General"]["StageDuration"] == [8, 16]
+        # Include content lands INSIDE Environment, not at top level
+        assert data["Environment"]["WaterDepth"] == 100
+        assert data["Environment"]["RefCurrentSpeed"] == 0.5
+        assert "WaterDepth" not in data
+        assert "RefCurrentSpeed" not in data
+
+    def test_dict_master_section_include_wrapped_fragment(
+        self, tmp_path: Path
+    ):
+        """Section-scoped include tolerates an already-wrapped fragment."""
+        modular_dir = tmp_path / "modular"
+        includes_dir = modular_dir / "includes"
+        includes_dir.mkdir(parents=True)
+
+        with open(includes_dir / "03_environment.yml", "w") as f:
+            yaml.dump({"Environment": {"WaterDepth": 250}}, f)
+
+        master = modular_dir / "master.yml"
+        master.write_text(
+            "Environment:\n"
+            "  includefile: includes/03_environment.yml\n"
+        )
+
+        data = ModularToSingleConverter().merge_to_dict(master)
+        assert data == {"Environment": {"WaterDepth": 250}}
+
+    def test_dict_master_missing_section_include_warns(self, tmp_path: Path):
+        """Missing section-scoped include produces a warning."""
+        modular_dir = tmp_path / "modular"
+        modular_dir.mkdir()
+
+        master = modular_dir / "master.yml"
+        master.write_text(
+            "General:\n"
+            "  StageDuration: [8, 16]\n"
+            "Environment:\n"
+            "  includefile: includes/nonexistent.yml\n"
+        )
+
+        output = tmp_path / "output.yml"
+        report = ModularToSingleConverter().convert(
+            source=master, target=output
+        )
+        assert report.success
+        assert any("not found" in w for w in report.warnings)
+
+        with open(output) as f:
+            data = yaml.safe_load(f)
+        # Master content still preserved
+        assert data["General"]["StageDuration"] == [8, 16]

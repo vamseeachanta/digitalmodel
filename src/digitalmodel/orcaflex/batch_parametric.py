@@ -167,6 +167,11 @@ class CaseResult(BaseModel):
     notes: str = Field("", description="Additional notes")
 
 
+# Metrics where the WORST (critical) case is the smallest value, not the
+# largest — e.g. minimum seabed clearance (near-grounding governs).
+MINIMISE_METRICS = frozenset({"min_clearance_m"})
+
+
 class ParametricResultsSummary(BaseModel):
     """Summary of parametric study results.
 
@@ -201,20 +206,30 @@ class ParametricResultsSummary(BaseModel):
     def get_critical_case(self, metric: str = "max_tension_kN") -> Optional[CaseResult]:
         """Find the critical (worst) case for a given metric.
 
+        For response maxima (tension, bending moment, offset, utilisation)
+        the critical case has the highest value; for clearance-type metrics
+        (``min_clearance_m``) the critical case has the LOWEST value.
+
         Args:
-            metric: Metric name to maximise.
+            metric: Metric name to find the worst case for.
 
         Returns:
-            CaseResult with the highest value for the given metric.
+            CaseResult with the worst value for the given metric
+            (cases with no value for the metric are never selected).
         """
         completed = [r for r in self.results if r.status == "completed"]
         if not completed:
             return None
 
+        minimise = metric in MINIMISE_METRICS
+        missing_sentinel = float("inf") if minimise else float("-inf")
+
         def _get_val(r: CaseResult) -> float:
             v = getattr(r, metric, None)
-            return v if v is not None else float("-inf")
+            return v if v is not None else missing_sentinel
 
+        if minimise:
+            return min(completed, key=_get_val)
         return max(completed, key=_get_val)
 
     def summary_statistics(self) -> Dict[str, Dict[str, float]]:
