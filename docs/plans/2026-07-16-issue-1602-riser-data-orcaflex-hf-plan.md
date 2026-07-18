@@ -1,6 +1,6 @@
 # Plan for #1602: Solver-Neutral Riser Data, OrcaFlex v1, and Hugging Face
 
-> **Status:** plan-approved — owner-approved solver-neutral SSOT; Round 16 unanimous APPROVE
+> **Status:** needs-plan — 2026-07-18 host/diffraction expansion supersedes prior implementation authorization
 > **Complexity:** T3
 > **Date:** 2026-07-16
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/1602
@@ -15,6 +15,14 @@
 
 ## Authorization Boundary
 
+On 2026-07-18, the owner selected an expanded core tracer that will bind one
+public drilling rig to a physical host/loading condition, actual diffraction
+execution, a normalized hydrodynamic/RAO record, a vessel-motion boundary, and
+the OrcaFlex riser result. This plan and its v1 parent interface will be revised
+and adversarially reviewed before any implementation. The historical Round 16
+approval remains evidence for the prior solver-neutral design; it does not
+authorize the expanded interface or its children.
+
 This plan will govern the cross-repository architecture, ownership, dependency
 order, interface bindings, promotion gates, and final program evidence. It will
 not define repository-owned production schemas or authorize child
@@ -22,7 +30,7 @@ implementation. Every child issue will require its own resource intelligence,
 future-tense plan, adversarial review, explicit owner approval, TDD
 implementation, artifact review, and closeout.
 
-The approved architecture will remain unchanged:
+The revised architecture will preserve these approved invariants:
 
 - The solver-neutral normalized configuration and analysis case will be the
   single source of truth.
