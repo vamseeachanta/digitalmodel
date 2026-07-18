@@ -32,11 +32,11 @@
 <tr><td>Create</td><td><code>src/digitalmodel/hydrodynamics/hydrodynamic_response/canonical.py</code></td><td>Deterministic semantic bytes, commitments, stable row identity, and native-metadata exclusions.</td></tr>
 <tr><td>Create</td><td><code>src/digitalmodel/hydrodynamics/hydrodynamic_response/validation.py</code></td><td>Ordered DOF, lineage, unit/convention, matrix, domain, fidelity, and public-eligibility rules.</td></tr>
 <tr><td>Create</td><td><code>src/digitalmodel/hydrodynamics/hydrodynamic_response/projection.py</code></td><td>Backend-neutral projection protocol used by Capytaine and a second synthetic backend fixture.</td></tr>
-<tr><td>Create</td><td><code>src/digitalmodel/hydrodynamics/diffraction/capytaine_response_adapter.py</code></td><td>Pure projection from reviewed host + <code>DiffractionSpec</code> + Capytaine <code>BEMResult</code>/<code>RAOResult</code> + run evidence into the generic envelope.</td></tr>
+<tr><td>Create</td><td><code>src/digitalmodel/hydrodynamics/capytaine/response_adapter.py</code></td><td>Solver-owned pure projection from reviewed host + <code>DiffractionSpec</code> + Capytaine <code>BEMResult</code>/<code>RAOResult</code> + run evidence into the generic envelope.</td></tr>
 <tr><td>Create</td><td><code>src/digitalmodel/hydrodynamics/hydrodynamic_response/__init__.py</code></td><td>Export the generic response API without solver-specific imports.</td></tr>
 <tr><td>Modify narrowly</td><td><code>src/digitalmodel/hydrodynamics/capytaine/models.py</code></td><td>Expose only missing, explicit source metadata needed by the adapter; solver-specific models will not become SSOT.</td></tr>
 <tr><td>Create</td><td><code>tests/hydrodynamics/hydrodynamic_response/</code></td><td>Focused model, canonicalization, domain, fidelity, row-identity, lineage, leakage, and tamper tests.</td></tr>
-<tr><td>Create</td><td><code>tests/hydrodynamics/diffraction/test_capytaine_response_adapter.py</code></td><td>Deterministic projection, repeated-run equivalence, ordered-DOF, units, matrix, and convention tests.</td></tr>
+<tr><td>Create</td><td><code>tests/hydrodynamics/capytaine/test_response_adapter.py</code></td><td>Deterministic projection, repeated-run equivalence, ordered-DOF, units, matrix, excitation, and convention tests.</td></tr>
 <tr><td>Create</td><td><code>tests/fixtures/hydrodynamics/public_modu_tracer/</code></td><td>Public-safe mesh/spec/host/expected-envelope fixtures with explicit license and fidelity.</td></tr>
 <tr><td>Update</td><td><code>docs/plans/README.md</code></td><td>Track plan and gate state.</td></tr>
 </tbody></table>
@@ -54,14 +54,16 @@
 verify_hydrodynamic_response(envelope) -&gt; None
 response_value_rows(envelope) -&gt; tuple[HydrodynamicResponseValue, ...]
 </pre>
-<p>The ordered DOFs will be exactly surge, sway, heave, roll, pitch, yaw. Complex ordinates will be canonical real/imaginary values; amplitude/phase will be a declared derived view. RAO rows will carry frequency and heading; added-mass and radiation-damping rows will carry frequency only; restoring rows will carry DOF indices only. Inapplicable axes will be null, not sentinel values.</p>
+<p>The ordered DOFs will be exactly surge, sway, heave, roll, pitch, yaw. The canonical time-harmonic convention will be <code>Re(X exp(-i omega t))</code>, with heading zero propagating along canonical +x; adapters will explicitly conjugate/rotate native results when required and record that transform. Complex ordinates will be canonical real/imaginary values; amplitude/phase will be a declared derived view. RAO and wave-excitation rows will carry frequency and heading; added-mass and radiation-damping rows will carry frequency only; restoring rows will carry DOF indices only. Inapplicable axes will be null, not sentinel values.</p>
+<p>Wave excitation (Froude-Krylov plus diffraction) will be part of the normalized response payload and will receive its own child commitment. Because the parent v3 minimum-binding list does not currently name that commitment, implementation will require an explicit parent-contract amendment and fresh owner approval or a reviewed decision that excitation remains execution evidence only. The child will not hide excitation inside a field named for matrices or RAOs.</p>
 
 <h2>TDD implementation sequence</h2>
 <ol>
 <li><strong>RED — exact envelope.</strong> Tests will assert every v3 minimum binding, commitment coverage, six-DOF order, unique row keys, finite numeric values, and parent identity/hash equality. Expected initial run: module import failure.</li>
+<li><strong>Prerequisite fixture.</strong> TDD will begin only after #1618 lands its reviewed type and canonical public-safe conformance fixture; #1619 will import that fixture rather than inventing a divergent mock host model.</li>
 <li><strong>GREEN — generic immutable schema.</strong> The implementation will add typed response metadata/value rows, deterministic semantic canonicalization, and a verifier independent of Capytaine.</li>
 <li><strong>RED — adapter conformance.</strong> A synthetic analytic BEM/RAO fixture will prove frequency/period equivalence, heading conversion, complex preservation, translational versus rotational units, matrix axes, reference point, water properties, run configuration, adapter version, and source capture.</li>
-<li><strong>GREEN — Capytaine projection.</strong> A pure adapter will map explicit fields without guessing defaults or modifying the input host/spec. A second run with equivalent inputs will produce byte-identical normalized evidence.</li>
+<li><strong>GREEN — Capytaine projection.</strong> A pure adapter will map explicit fields without guessing defaults or modifying the input host/spec. It will normalize Capytaine radians, +x heading zero, and <code>exp(-i omega t)</code> semantics into the declared canonical contract. A second run with the same execution fingerprint will produce byte-identical normalized evidence.</li>
 <li><strong>RED/GREEN — domain and fidelity.</strong> Tests will reject unknown phase, unit, matrix origin, restoring composition/reference, frame, reference point, host/loading/mesh mismatch, frequency/heading outside domain, flat extrapolation, heading clamp, and proxy-as-actual promotion.</li>
 <li><strong>Tracer and independent validation.</strong> The public-safe tracer will execute or replay a pinned Capytaine result, compare against an independent public reference with declared tolerances, record unsupported features/domain, and emit either truthful benchmark/screening evidence or actual evidence only when every gate passes.</li>
 </ol>
@@ -72,6 +74,7 @@ response_value_rows(envelope) -&gt; tuple[HydrodynamicResponseValue, ...]
 <tr><td>Lineage</td><td>Host, hull, loading, particulars, mass, mesh, spec, adapter, execution, and source hashes remain exact and transitive.</td></tr>
 <tr><td>Conventions</td><td>DOF order, units, coordinate frame, reference point, wave heading/sign, phase/time basis, and complex representation are explicit and non-contradictory.</td></tr>
 <tr><td>Matrices/rows</td><td>Added mass, damping, and restoring use correct axes/units/origins; long-form keys are collision-free and exactly cover payload ordinates.</td></tr>
+<tr><td>Excitation</td><td>Froude-Krylov, diffraction, and combined excitation vectors use frequency/heading/DOF axes, explicit SI units, canonical complex convention, and a non-overloaded commitment.</td></tr>
 <tr><td>Domain</td><td>Interpolation is allowed only inside the declared usable domain; no flat frequency extrapolation or heading clamping occurs.</td></tr>
 <tr><td>Fidelity/public</td><td>Only <code>screening_proxy</code>, <code>benchmark</code>, or <code>actual</code> are accepted; proxy/benchmark cannot support actual-vessel or reduced-risk claims; private/native artifacts are excluded from public rows.</td></tr>
 <tr><td>Backend neutrality</td><td>A second synthetic backend will project into identical generic semantics without importing or executing Capytaine.</td></tr>
@@ -81,7 +84,7 @@ response_value_rows(envelope) -&gt; tuple[HydrodynamicResponseValue, ...]
 <ul>
 <li>The normalized envelope will bind every parent v3 field and will remain backend-neutral; a future OrcaWave/AQWA adapter will target the same interface without downstream changes.</li>
 <li>The response and long-form values will be deterministic, lossless for approved complex/matrix payloads, and fail closed on convention or domain ambiguity.</li>
-<li><code>uv run pytest tests/hydrodynamics/hydrodynamic_response tests/hydrodynamics/diffraction/test_capytaine_response_adapter.py tests/hydrodynamics/capytaine tests/validation/test_riser_parent_contract*.py -v</code> will pass.</li>
+<li><code>uv run pytest tests/hydrodynamics/hydrodynamic_response tests/hydrodynamics/capytaine/test_response_adapter.py tests/hydrodynamics/capytaine tests/validation/test_riser_parent_contract*.py -v</code> will pass.</li>
 <li>A pinned tracer replay and, where the environment supports Capytaine, a native run will match the declared independent reference/tolerances. Unavailable native execution will be recorded and will prohibit actual promotion.</li>
 <li><code>scripts/legal/legal-sanity-scan.sh</code>, security checks, and leakage tests will pass.</li>
 <li>The issue will receive an implementation summary comment and T3 code/artifact cross-review before closure.</li>
@@ -90,10 +93,12 @@ response_value_rows(envelope) -&gt; tuple[HydrodynamicResponseValue, ...]
 <h2>Risks and review focus</h2>
 <ul><li><strong>Blocker scope:</strong> inertia origin, restoring contract, and matrix units belong to #1579/#1580/#1582. #1619 will consume their outputs and will not duplicate them.</li>
 <li><strong>False determinism:</strong> native NetCDF ordering, floating serialization, library versions, and parallel solve order may differ. The normalized semantic projection—not native bytes—will define repeatability, while execution evidence will retain native hashes/version.</li>
+<li><strong>Numeric integrity:</strong> engineering values will not be rounded merely to force cross-machine hash equality. Finite IEEE-754 inputs will serialize through one exact shortest-round-trip representation with negative zero normalized; any numerical change will produce a new response commitment. Byte-equivalence will be required only for the same pinned execution fingerprint.</li>
 <li><strong>Validation overclaim:</strong> a semisub benchmark is not automatically the selected MODU. Fidelity and claim truth tables will remain exhaustive and fail closed.</li>
 <li><strong>Dependency on #1618:</strong> no response may be promoted without an exact reviewed host/loading envelope.</li></ul>
 
 <h2>Adversarial review</h2>
 <p>Claude, Codex, and Agy artifacts will be persisted under <code>scripts/review/results/issue-1619-plan-round-N/</code>. Review will attack solver-neutrality, units/conventions, row identity, deterministic claims, dependency leakage, and actual-vessel promotion. Any MAJOR will keep the plan in draft.</p>
+<p><strong>Round 1:</strong> Agy returned MAJOR; Claude and Codex were unavailable after 300-second timeouts. This revision will add excitation-force ownership and the parent-amendment gate, fix adapter placement, freeze the canonical time convention, constrain byte-equivalence to one execution fingerprint, and clarify exact float serialization. Focused round 2 review will be required.</p>
 <div class="gate"><strong>Authorization:</strong> after final no-MAJOR review and pushed evidence, the issue may move to <code>status:plan-review</code> for explicit user approval. No implementation or self-approval will occur during planning.</div>
 </main></body></html>
