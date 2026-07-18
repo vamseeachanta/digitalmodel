@@ -22,6 +22,25 @@ EXPECTED_LOAD_ORDER = [
 ]
 
 
+def _is_contained(path: Path, allowed: Path) -> bool:
+    try:
+        return os.path.commonpath((path, allowed)) == str(allowed)
+    except ValueError as exc:
+        raise ContractValidationError("declared path has incompatible root") from exc
+
+
+def fsync_directory(path: Path) -> None:
+    """Persist a directory entry where directory fsync is supported."""
+
+    if os.name == "nt":
+        return
+    descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
 def validate_manifest_declarations(root: dict[str, Any]) -> None:
     """Require the exact approved base, component set, paths, and load order."""
 
@@ -47,7 +66,7 @@ def resolve_bound_path(base_dir: Path, relative: object) -> Path:
         raise ContractValidationError("declared path must be relative")
     candidate = Path(os.path.abspath(base_dir / relative))
     allowed = Path(os.path.abspath(base_dir.parent))
-    if os.path.commonpath((candidate, allowed)) != str(allowed):
+    if not _is_contained(candidate, allowed):
         raise ContractValidationError(
             f"declared path escapes contract tree: {relative}"
         )
@@ -57,7 +76,7 @@ def resolve_bound_path(base_dir: Path, relative: object) -> Path:
         raise ContractValidationError(
             f"cannot resolve declared path: {relative}"
         ) from exc
-    if os.path.commonpath((resolved, allowed)) != str(allowed):
+    if not _is_contained(resolved, allowed):
         raise ContractValidationError(
             f"declared path escapes contract tree: {relative}"
         )

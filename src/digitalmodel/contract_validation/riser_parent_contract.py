@@ -16,7 +16,11 @@ from typing import Any
 import yaml  # type: ignore[import-untyped]
 
 from .errors import ContractValidationError
-from .riser_manifest_rules import resolve_bound_path, validate_manifest_declarations
+from .riser_manifest_rules import (
+    fsync_directory,
+    resolve_bound_path,
+    validate_manifest_declarations,
+)
 from .riser_contract_rules import validate_contract
 
 MAX_INPUT_BYTES = 16 * 1024 * 1024
@@ -30,6 +34,8 @@ def _construct_unique_mapping(loader: Any, node: Any, deep: bool = False) -> Any
     mapping: dict[Any, Any] = {}
     for key_node, value_node in node.value:
         key = loader.construct_object(key_node, deep=deep)
+        if not isinstance(key, str):
+            raise yaml.YAMLError("mapping key must be a string")
         if key in mapping:
             raise yaml.constructor.ConstructorError(
                 "while constructing mapping",
@@ -345,14 +351,14 @@ def _reject_output(
 
 
 def _atomic_emit(output: Path, composed: dict[str, Any]) -> None:
-    output.parent.mkdir(parents=True, exist_ok=True)
     descriptor = -1
     temporary: str | None = None
     try:
+        output.parent.mkdir(parents=True, exist_ok=True)
         descriptor, temporary = tempfile.mkstemp(
             prefix=f".{output.name}.", suffix=".tmp", dir=output.parent
         )
-        data = yaml.safe_dump(composed, sort_keys=False).encode()
+        data = yaml.safe_dump(composed, sort_keys=True).encode()
         with os.fdopen(descriptor, "wb") as stream:
             descriptor = -1
             stream.write(data)
@@ -360,11 +366,7 @@ def _atomic_emit(output: Path, composed: dict[str, Any]) -> None:
             os.fsync(stream.fileno())
         os.replace(temporary, output)
         temporary = None
-        directory = os.open(output.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
-        try:
-            os.fsync(directory)
-        finally:
-            os.close(directory)
+        fsync_directory(output.parent)
     except OSError as exc:
         raise ContractValidationError(f"cannot atomically emit output: {exc}") from exc
     finally:
@@ -387,11 +389,11 @@ def validate_parent_contract(manifest_path: Path, output_path: Path) -> dict[str
     base, components = _load_components(root, payloads)
     try:
         composed = _compose(root, base, components)
+        validate_contract(root, base, components, composed)
     except ContractValidationError:
         raise
     except (KeyError, TypeError, ValueError) as exc:
         raise ContractValidationError(f"invalid contract structure: {exc}") from exc
-    validate_contract(root, base, components, composed)
     _reject_output(output_path, paths, identities)
     _atomic_emit(output_path, composed)
     return composed

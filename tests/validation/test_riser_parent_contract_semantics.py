@@ -304,3 +304,26 @@ def test_unknown_child_extension_returns_typed_error(tmp_path: Path) -> None:
     _mutate(manifest, ASSURANCE, change)
     with pytest.raises(ContractValidationError, match="invalid contract structure"):
         validate_parent_contract(manifest, output)
+
+
+@pytest.mark.parametrize("target", ["dag_guard", "root_surface"])
+def test_validation_structure_errors_are_typed(tmp_path: Path, target: str) -> None:
+    manifest, output = _bundle(tmp_path)
+
+    def change(value: dict[str, object]) -> None:
+        if target == "dag_guard":
+            del value["milestone_DAG_extensions"][
+                "deterministic_bundle_readiness_guards"
+            ]
+        else:
+            del value["effective_public_dataset_surfaces"]
+
+    component = HOST if target == "dag_guard" else ROOT
+    if component == ROOT:
+        root = _load(manifest)
+        change(root)
+        _save(manifest, root)
+    else:
+        _mutate(manifest, component, change)
+    with pytest.raises(ContractValidationError, match="invalid contract structure"):
+        validate_parent_contract(manifest, output)

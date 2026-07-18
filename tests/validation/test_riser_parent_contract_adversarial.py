@@ -355,3 +355,30 @@ def test_duplicate_bound_path_is_rejected(tmp_path: Path) -> None:
 
     with pytest.raises(ContractValidationError, match="duplicate bound path"):
         validate_parent_contract(manifest, output)
+
+
+def test_root_key_order_does_not_change_emitted_bytes(tmp_path: Path) -> None:
+    manifest, first = _bundle(tmp_path)
+    validate_parent_contract(manifest, first)
+    root = _load(manifest)
+    authority = root["effective_authority"]
+    root["effective_authority"] = dict(reversed(list(authority.items())))
+    _save(manifest, root)
+    second = first.with_name("reordered.yaml")
+
+    validate_parent_contract(manifest, second)
+
+    assert first.read_bytes() == second.read_bytes()
+
+
+def test_non_string_yaml_mapping_key_is_rejected(tmp_path: Path) -> None:
+    manifest, output = _bundle(tmp_path)
+    assurance = manifest.parent / FILES[3]
+    assurance.write_text(
+        assurance.read_text(encoding="utf-8") + "\n1: invalid-key\n",
+        encoding="utf-8",
+    )
+    _refresh(manifest)
+
+    with pytest.raises(ContractValidationError, match="mapping key must be a string"):
+        validate_parent_contract(manifest, output)
