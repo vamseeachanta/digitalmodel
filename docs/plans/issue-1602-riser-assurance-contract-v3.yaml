@@ -40,8 +40,10 @@ planning_validation:
   exact_public_config_count: 17
   assertions: [component_hashes_match_manifest, composed_YAML_parses,
     owner_keys_exact, envelope_producers_and_consumers_resolve,
-    commitment_rules_cover_every_minimum_binding,
+    commitment_rules_cover_every_effective_minimum_binding,
     every_effective_interface_envelope_has_exactly_one_commitment_rule,
+    same_route_handoff_constraints_are_conjoined_without_field_loss,
+    every_child_issue_has_exactly_one_owner_crosswalk,
     effective_DAG_is_acyclic, every_DAG_node_has_owner,
     drilling_route_preserves_all_seven_chain_fields,
     completion_workover_and_downstream_envelopes_validate_discriminated_union,
@@ -67,6 +69,9 @@ required_RED_fixtures:
     - cyclic_effective_DAG
     - missing_commitment_rule
     - legacy_envelope_without_commitment_rule
+    - extended_binding_excluded_from_commitment_preimage
+    - same_route_handoff_constraint_dropped_during_merge
+    - child_issue_owner_crosswalk_missing_or_ambiguous
     - incorrect_public_config_count_or_name
   host_identity:
     - source_record_commitment_missing_or_tampered
@@ -136,6 +141,7 @@ required_RED_fixtures:
     - monitoring_state_inserted_into_parent_closeout_DAG
     - long_form_value_row_omitted_duplicated_reordered_or_tampered
     - long_form_metadata_and_value_parent_mismatch
+    - long_form_value_row_missing_response_envelope_hash
     - matrix_row_uses_heading_or_imaginary_value
     - restoring_row_uses_frequency_or_heading_sentinel
     - HF_receipt_drops_v3_release_set_commitment
@@ -208,12 +214,25 @@ child_acceptance_extensions:
     - long_form_values_are_exact_projection_of_approved_payloads
     - HF_receipt_website_and_closeout_preserve_all_v3_set_commitments
 
+child_issue_owner_crosswalk:
+  https://github.com/vamseeachanta/worldenergydata/issues/1050: floating_host_source
+  https://github.com/vamseeachanta/digitalmodel/issues/1618: floating_host_identity
+  https://github.com/vamseeachanta/digitalmodel/issues/1619: hydrodynamic_response
+  https://github.com/vamseeachanta/digitalmodel/issues/1603: normalized_ssot
+  https://github.com/vamseeachanta/digitalmodel/issues/811: drilling_workflow
+  https://github.com/vamseeachanta/digitalmodel/issues/138: analysis_semantics
+  https://github.com/vamseeachanta/digitalmodel/issues/1609: normalized_ssot
+  https://github.com/vamseeachanta/deckhand/issues/568: licensed_execution
+  https://github.com/vamseeachanta/digitalmodel/issues/1611: analysis_semantics
+  https://github.com/vamseeachanta/digitalmodel/issues/1604: public_release
+
 source_evidence_rules:
   drive_index_hits: private_source_evidence_only
   private_paths_in_tracked_artifacts: forbidden
   private_or_client_data_seeding_public_rows: forbidden
   public_source_capture: requires_URL_date_license_and_content_commitment
   standards_derived_constants: citation_sidecar_required_and_fail_closed
+  tracked_resource_intel_disposition: repo_relative_tool_commit_and_abstract_index_names_are_disclosure_safe_but_private_locations_results_and_identifiers_remain_redacted
 
 closeout_rules:
   blockers: [all_scoped_child_plans_owner_approved,
@@ -236,6 +255,7 @@ public_dataset_surface_extensions:
     canonical_projection_of: [complex_RAO_payload_sha256,
       hydrodynamic_matrix_payload_sha256]
     response_kind: [complex_RAO, added_mass, radiation_damping, restoring]
+    required_row_fields: [hydrodynamic_response_envelope_sha256]
     kind_specific_keys:
       complex_RAO: [hydrodynamic_response_id, response_kind, dof_row,
         frequency_index, heading_index]

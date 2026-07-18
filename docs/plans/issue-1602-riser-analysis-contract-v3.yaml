@@ -4,7 +4,7 @@ status: planning-interface
 authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
 review_candidate_plan:
   path: 2026-07-18-issue-1602-riser-host-diffraction-plan.html
-  sha256: 75f0292b2c588bfe6245e8d7248436f0bf59ac0ae7b58895b8560396e02eaf02
+  sha256: 2b1f74e18eeac7c2b9c76ba46236b445474302a5414e98f641198448d967a26c
 approved_architecture_design:
   path: ../superpowers/specs/2026-07-18-riser-host-diffraction-monitoring-design.html
   sha256: 05bf52bf3453477e8bb8734c74a73d1b560869e80dd86890006ab3e0e1d3c5d0
@@ -30,7 +30,7 @@ composition:
       retained_scope: host_hydrodynamics_motion_and_tracer_extensions
     - path: issue-1602-riser-assurance-contract-v3.yaml
       component_id: assurance_component
-      sha256: c96c6971e0a7d3be6fba72c95c686903aa7bec82f2765e122401dfbad9b9ec5e
+      sha256: 1e1fa9431a0738804b055c222f026c48ab207f705e54e3e9265a0e36d0494814
       retained_scope: invariants_validation_fixtures_and_closeout_extensions
   load_order: [solver_neutral_base_v2, host_motion_component,
     assurance_component]
@@ -41,14 +41,14 @@ composition:
     interface_envelopes: union_new_keys_only
     existing_envelope_extensions: extend_effective_minimum_bindings_or_discriminated_union
     identity_chain: replace_base_order_with_declared_v3_order
-    envelope_commitment_rules: union_new_keys_and_strengthen_existing_key
-    required_handoff_equalities: append_unique_by_from_to_and_condition
+    envelope_commitment_rules: union_new_keys_and_lift_all_coverage_to_effective_bindings
+    required_handoff_equalities: append_full_constraints_deduplicate_exact_records_and_conjoin_same_route_requirements
     required_handoff_derivations: append_unique_by_output
     milestone_DAG_extensions: append_unique_edges_and_guards
     public_dataset_surface_extensions: union_configs_and_apply_projection_contract
     planning_validation: deep_union_lists_and_require_equal_scalars
     closeout_rules: append_strengthening_rules
-    child_acceptance_obligations: replace_only_explicitly_removed_obligation_then_append_extensions
+    child_acceptance_obligations: normalize_role_and_issue_keys_through_crosswalk_then_replace_explicit_removal_and_append
     non_blocking_consumer_graph: isolated_union_excluded_from_closeout
   duplicate_edge_rule: canonicalize_then_deduplicate_exact_duplicates
   removal_rule: no_base_owner_envelope_binding_gate_or_test_is_removed_unless_listed
