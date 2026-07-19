@@ -18,7 +18,7 @@
 <body><main>
   <h1>#1602 implementation plan: solver-neutral riser, host, hydrodynamics, and HF</h1>
   <div class="meta">
-    <strong>Status:</strong> amendment draft / <code>status:needs-plan</code> / fresh adversarial review required<br>
+    <strong>Status:</strong> amendment reviewed / <code>status:plan-review</code> / awaiting fresh explicit user approval<br>
     <strong>Complexity:</strong> T3 &nbsp; <strong>Execution mode:</strong> parallel-readonly planning; parallel-worktree only after approval<br>
     <strong>Date:</strong> 2026-07-18 &nbsp; <strong>Client:</strong> N/A &nbsp; <strong>Lane:</strong> <code>lane:codex</code><br>
     <strong>Issue:</strong> <a href="https://github.com/vamseeachanta/digitalmodel/issues/1602">digitalmodel #1602</a><br>
@@ -157,8 +157,8 @@ fail closed on any ambiguity, out-of-domain case, proxy-as-actual claim, or hash
   </tbody></table>
 
   <h2>Adversarial review summary</h2>
-  <p><strong>Current verdict: round 3 split — release and solver APPROVE; semantics MAJOR, patched inline and awaiting focused final verification.</strong> Round 1 forced impedance/sign, frame/phase, availability, lineage, row-schema, validator-inventory, release-membership, and confidentiality corrections. Round 2 forced one released-row universe, complete derivation inputs, signed pressure integrals, complete shared payload commitments, exact-coordinate coherence, and per-kind null fields. At immutable commit <code>994fbcdb</code>, release and solver reviewers returned APPROVE while semantics found that payload contexts were not explicitly equal to the enclosing response and that approval prose overloaded <code>M</code>. Draft.2 now adds exact payload-to-envelope equality for every physical/run context commitment and uses <code>𝓜_exc</code> for excitation moment. The prior round-8 APPROVE evidence applies only to superseded draft.1.</p>
-  <p>This amendment is at <code>status:needs-plan</code>. The user's option selection authorizes drafting and review only. It does not authorize implementation, create an active <code>plan-approved</code> marker, approve the amended bytes, or allow any child to bypass its own gate.</p>
+  <p><strong>Current verdict: APPROVE — no MAJOR or MINOR findings.</strong> Rounds 1–3 forced impedance/sign, frame/phase, availability, payload/envelope lineage, physical row schema, validator inventory, one released-row universe, complete derivation inputs, signed pressure integrals, exact-coordinate coherence, per-kind nullability, and unambiguous notation. Three focused reviewers verified immutable commit <code>d51de536</code> in round 4 and returned APPROVE. Evidence resides under <code>scripts/review/results/issue-1602-excitation-round-1/</code> through <code>issue-1602-excitation-round-4/</code>. The prior round-8 APPROVE evidence applies only to superseded draft.1.</p>
+  <p>This amendment is at <code>status:plan-review</code> awaiting fresh explicit user approval. The user's option selection authorized drafting and review only. It does not authorize implementation, create an active <code>plan-approved</code> marker, approve the amended bytes, or allow any child to bypass its own gate.</p>
 
   <p class="small">This draft.2 amendment supersedes the approved draft.1 content for future execution only after fresh adversarial review and explicit user approval.</p>
 </main></body></html>

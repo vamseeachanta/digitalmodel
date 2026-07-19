@@ -1,10 +1,10 @@
 contract_id: digitalmodel-riser-analysis-parent-interface
 contract_version: 3.0.0-draft.2
-status: amendment-draft-pending-adversarial-review
+status: amendment-plan-review-pending-user-approval
 authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
 review_candidate_plan:
   path: 2026-07-18-issue-1602-riser-host-diffraction-plan.html
-  sha256: 3cc4ffd17dc4a188f417a56005a7bd4a04fc74df488edf36133b13dc4494d422
+  sha256: 5ca9c2cf8e09dbf60cf636d5ca96a76c8b5c29c92c7c0331391057b862a018dc
 approved_architecture_design:
   path: ../superpowers/specs/2026-07-18-riser-host-diffraction-monitoring-design.html
   sha256: 05bf52bf3453477e8bb8734c74a73d1b560869e80dd86890006ab3e0e1d3c5d0
