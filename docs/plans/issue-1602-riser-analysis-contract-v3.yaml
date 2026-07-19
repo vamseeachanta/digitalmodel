@@ -4,7 +4,7 @@ status: amendment-draft-pending-adversarial-review
 authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
 review_candidate_plan:
   path: 2026-07-18-issue-1602-riser-host-diffraction-plan.html
-  sha256: 2101b11fee39d59314ca694002267ab95f64efc1a9d6fb99aca46a4ee6cca90e
+  sha256: 0de58878628f9ec7306bb183ac540eb4248acd7f42780cd18ed9fb8357a69ad6
 approved_architecture_design:
   path: ../superpowers/specs/2026-07-18-riser-host-diffraction-monitoring-design.html
   sha256: 05bf52bf3453477e8bb8734c74a73d1b560869e80dd86890006ab3e0e1d3c5d0
@@ -26,11 +26,11 @@ composition:
   components:
     - path: issue-1602-riser-host-motion-contract-v3.yaml
       component_id: host_motion_component
-      sha256: 4a6bf2eedec06f982ef50f0d7da5809dc5abb7f96e08a007fa9a834f846d9a93
+      sha256: dfcbe51444b60f768a0cd97c3bdba9c71e0c1322b98d54cbadfe1a2042fa4a24
       retained_scope: host_hydrodynamics_motion_and_tracer_extensions
     - path: issue-1602-riser-assurance-contract-v3.yaml
       component_id: assurance_component
-      sha256: d0ec3283faed2c5a8487be6c0087ae0c0284212e2ef0472fe4a68ae1d61ee469
+      sha256: 9de317b7cf241b50cb2f4e487d8170053d0404459388cf93557d5f28061b521a
       retained_scope: invariants_validation_fixtures_and_closeout_extensions
   load_order: [solver_neutral_base_v2, host_motion_component,
     assurance_component]
