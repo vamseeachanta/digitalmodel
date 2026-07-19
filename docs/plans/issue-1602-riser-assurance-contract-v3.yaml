@@ -118,9 +118,12 @@ required_RED_fixtures:
     - excitation_component_sum_outside_citation_backed_tolerance
     - excitation_and_RAO_run_lineage_mismatch
     - excitation_RAO_or_matrix_payload_preimage_drops_shared_run_commitment
+    - payload_preimages_disagree_on_DOF_grid_basis_units_convention_or_reference
+    - dynamic_equilibrium_uses_interpolation_or_nonidentical_frequency_heading_coordinates
     - dynamic_equilibrium_Z_RAO_equals_excitation_fails
     - excitation_frequency_heading_DOF_or_complex_encoding_invalid
     - excitation_force_moment_units_or_reference_point_invalid
+    - excitation_pressure_normal_traction_or_moment_sign_invalid
     - source_class_confidentiality_or_redistribution_missing
     - mixed_public_eligibility_set_attempts_release
     - ineligible_response_missing_withheld_disposition
@@ -175,6 +178,7 @@ required_RED_fixtures:
     - excitation_component_enum_or_pairing_invalid
     - excitation_value_is_nonfinite_or_not_complex_real_imaginary
     - excitation_row_set_drift_not_reflected_in_release_commitments
+    - approved_but_unreleased_response_contributes_value_rows
     - private_excitation_value_attempts_publication
     - HF_receipt_drops_v3_release_set_commitment
     - website_evidence_drops_v3_release_set_commitment
@@ -248,7 +252,7 @@ child_acceptance_extensions:
     - engineering_validation_verifies_exact_chain_and_oracle_evidence
   https://github.com/vamseeachanta/digitalmodel/issues/1604:
     - publishes_17_public_configs_and_exact_release_commitments
-    - long_form_values_are_exact_projection_of_approved_payloads
+    - long_form_values_are_exact_projection_only_of_payloads_in_released_hydrodynamic_response_set
     - HF_receipt_website_and_closeout_preserve_all_v3_set_commitments
 
 child_issue_owner_crosswalk:
@@ -294,6 +298,8 @@ public_dataset_surface_extensions:
     canonical_projection_of: [wave_excitation_payload_sha256,
       complex_RAO_payload_sha256,
       hydrodynamic_matrix_payload_sha256]
+    canonical_projection_controlled_by: [wave_excitation_component_availability_sha256,
+      hydrodynamic_response_value_projection_contract_sha256]
     response_kind: [wave_excitation_total, wave_excitation_froude_krylov,
       wave_excitation_diffraction, complex_RAO, added_mass,
       radiation_damping, restoring]
@@ -350,8 +356,12 @@ public_dataset_surface_extensions:
         frequency_rad_s, ordinate_real, ordinate_unit]
       restoring: [dof_row, dof_column, ordinate_real, ordinate_unit]
     kind_specific_null_fields:
-      excitation_and_RAO: [dof_column]
-      added_mass_and_radiation_damping: [heading_index, heading_rad,
+      wave_excitation_total: [dof_column]
+      wave_excitation_froude_krylov: [dof_column]
+      wave_excitation_diffraction: [dof_column]
+      complex_RAO: [dof_column]
+      added_mass: [heading_index, heading_rad, ordinate_imaginary]
+      radiation_damping: [heading_index, heading_rad,
         ordinate_imaginary]
       restoring: [frequency_index, frequency_rad_s, heading_index,
         heading_rad, ordinate_imaginary]
@@ -394,10 +404,19 @@ public_dataset_surface_extensions:
       component_availability_commitment: wave_excitation_component_availability_sha256
       absent_decomposition_requires: hash_bound_reason_and_backend_capability_disposition
       component_reconciliation: total_equals_froude_krylov_plus_diffraction_within_citation_backed_tolerance
-      froude_krylov_definition: first_order_incident_wave_pressure_integral_over_bound_mean_wetted_body_surface
-      diffraction_definition: first_order_scattered_wave_pressure_integral_over_same_bound_mean_wetted_body_surface
+      surface_normal: body_outward_unit_normal_pointing_from_body_into_fluid
+      pressure_traction_on_body: minus_complex_pressure_times_body_outward_normal
+      translational_generalized_force: minus_surface_integral_of_complex_pressure_times_body_outward_normal_dS
+      rotational_generalized_moment: minus_surface_integral_of_r_minus_reference_cross_complex_pressure_times_body_outward_normal_dS
+      froude_krylov_definition: use_incident_wave_complex_pressure_in_the_canonical_force_and_moment_integrals_over_bound_mean_wetted_body_surface
+      diffraction_definition: use_scattered_wave_complex_pressure_in_the_same_canonical_integrals_over_same_bound_mean_wetted_body_surface
       component_exclusions: hydrostatic_restoring_radiation_mooring_mean_drift_and_QTF
-      shared_payload_lineage: each_excitation_RAO_and_matrix_preimage_contains_exact_diffraction_execution_evidence_and_run_configuration_hashes
+      shared_payload_preimage_equalities: [diffraction_execution_evidence_sha256,
+        diffraction_run_configuration_sha256, ordered_DOF_contract_sha256,
+        frequency_heading_grid_sha256, incident_wave_basis_sha256,
+        unit_contract_sha256, phase_sign_heading_convention_sha256,
+        coordinate_frame_reference_point_sha256]
+      coherence_coordinate_rule: excitation_RAO_and_matrix_frequency_DOF_heading_coordinates_are_exactly_equal_where_applicable_and_no_interpolation_is_allowed_in_the_oracle
       canonical_impedance: Z_of_omega_equals_minus_omega_squared_times_M_plus_A_of_omega_minus_i_omega_times_B_of_omega_plus_C
       impedance_terms: M_is_bound_rigid_body_mass_matrix_A_is_added_mass_B_is_radiation_damping_C_is_bound_hydrostatic_restoring
       impedance_exclusions: external_damping_mooring_and_other_restoring_forbidden_without_fresh_committed_extension
@@ -427,7 +446,9 @@ required_handoff_derivations:
      member_filter: parent_envelope_is_in_hydrodynamic_response_set,
      exact_projection_of: [wave_excitation_payload_sha256,
        complex_RAO_payload_sha256,
-       hydrodynamic_matrix_payload_sha256],
+       hydrodynamic_matrix_payload_sha256,
+       wave_excitation_component_availability_sha256,
+       hydrodynamic_response_value_projection_contract_sha256],
      mode: canonical_ordered_exact_row_set_commitment}
   - {inputs: "engineering_result.vessel_motion_boundary_envelope_sha256[*]",
      output: logical_release.vessel_motion_boundary_set_sha256,
@@ -437,7 +458,7 @@ required_handoff_derivations:
 release_membership_contract:
   member_universes:
     envelope_sets: distinct_envelope_refs_of_release_approved_engineering_results
-    hydrodynamic_response_values_set_sha256: canonical_rows_projected_from_each_approved_hydrodynamic_response_payload
+    hydrodynamic_response_values_set_sha256: canonical_rows_projected_only_from_envelopes_in_logical_release_hydrodynamic_response_set_sha256
   exact_sets: [floating_host_identity_set_sha256,
     hydrodynamic_response_set_sha256, hydrodynamic_response_values_set_sha256,
     vessel_motion_boundary_set_sha256]
@@ -446,8 +467,8 @@ release_membership_contract:
       every_set_member_is_referenced_by_a_released_result,
       every_member_resolves_to_approved_producer_envelope]
     hydrodynamic_response_values_set_sha256:
-      [every_row_resolves_to_an_approved_response_envelope,
-       every_approved_response_payload_is_exactly_projected,
+      [every_row_resolves_to_an_envelope_in_logical_release_hydrodynamic_response_set_sha256,
+       every_payload_of_each_envelope_in_logical_release_hydrodynamic_response_set_sha256_is_exactly_projected,
        no_omitted_duplicated_or_orphan_row]
 
 normalized_route_handoff_expansion:
