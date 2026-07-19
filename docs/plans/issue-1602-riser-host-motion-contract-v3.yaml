@@ -1,5 +1,5 @@
 schema_version: digitalmodel-riser-host-motion/v3
-contract_version: 3.0.0-draft.1
+contract_version: 3.0.0-draft.2
 component_id: host_motion_component
 authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
 design: ../superpowers/specs/2026-07-18-riser-host-diffraction-monitoring-design.html
@@ -71,7 +71,8 @@ interface_envelopes:
       diffraction_projection_sha256, diffraction_adapter_version,
       diffraction_run_configuration_sha256,
       diffraction_execution_evidence_sha256, ordered_DOF_contract_sha256,
-      frequency_heading_grid_sha256, complex_RAO_payload_sha256,
+      frequency_heading_grid_sha256, incident_wave_basis_sha256,
+      wave_excitation_payload_sha256, complex_RAO_payload_sha256,
       hydrodynamic_matrix_payload_sha256, unit_contract_sha256,
       phase_sign_heading_convention_sha256,
       coordinate_frame_reference_point_sha256, water_properties_sha256,
@@ -250,7 +251,7 @@ host_motion_binding:
 identity_chain:
   order: [approved_public_riser_and_rig_source_commitments, floating_host,
     physical_vessel_and_hull, loading_condition, normalized_configuration,
-    analysis_case_and_wave_case, hydrodynamic_response_and_complex_RAO,
+    analysis_case_and_wave_case, hydrodynamic_response_wave_excitation_and_complex_RAO,
     vessel_motion_boundary, analysis_request, target_adapter_and_projection,
     deterministic_bundle, execution_request, native_model, raw_payload,
     execution_receipt, engineering_result, logical_release,

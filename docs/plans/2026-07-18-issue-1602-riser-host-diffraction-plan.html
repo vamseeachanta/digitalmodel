@@ -18,17 +18,17 @@
 <body><main>
   <h1>#1602 implementation plan: solver-neutral riser, host, hydrodynamics, and HF</h1>
   <div class="meta">
-    <strong>Status:</strong> reviewed / <code>status:plan-review</code> / awaiting explicit user approval<br>
+    <strong>Status:</strong> amendment draft / <code>status:needs-plan</code> / fresh adversarial review required<br>
     <strong>Complexity:</strong> T3 &nbsp; <strong>Execution mode:</strong> parallel-readonly planning; parallel-worktree only after approval<br>
     <strong>Date:</strong> 2026-07-18 &nbsp; <strong>Client:</strong> N/A &nbsp; <strong>Lane:</strong> <code>lane:codex</code><br>
     <strong>Issue:</strong> <a href="https://github.com/vamseeachanta/digitalmodel/issues/1602">digitalmodel #1602</a><br>
     <strong>Design:</strong> <code>docs/superpowers/specs/2026-07-18-riser-host-diffraction-monitoring-design.html</code><br>
-    <strong>Contract:</strong> <code>docs/plans/issue-1602-riser-analysis-contract-v3.yaml</code> (<code>3.0.0-draft.1</code>)
+    <strong>Contract:</strong> <code>docs/plans/issue-1602-riser-analysis-contract-v3.yaml</code> (<code>3.0.0-draft.2</code>)
   </div>
 
   <h2>Goal and authorization boundary</h2>
   <p>The program will create a public, provenance-safe, solver-neutral riser single source of truth; bind a reviewed drilling rig to a physical floating host and loading condition; execute diffraction and normalize complex RAOs; transfer vessel motion analytically to the riser top connection; generate OrcaFlex v1 models through an adapter; publish verified strength and operability results to Hugging Face; and preserve a pivot path to custom FEA or another solver.</p>
-  <div class="gate"><strong>Hard gate:</strong> this revision will not authorize implementation. The parent plan and every child plan will require adversarial review and explicit user approval. Monitoring, alarm policy, and risk-reduction evidence will remain non-blocking consumers of the immutable release.</div>
+  <div class="gate"><strong>Hard gate:</strong> the user selected the solver-neutral excitation amendment direction, which authorizes this draft and its review but does not approve these amended bytes. This revision will require fresh T3 adversarial review and explicit user approval before implementation. The prior approval applies only to the superseded draft.1 content. Every child will retain its own gate. Monitoring, alarm policy, and risk-reduction evidence will remain non-blocking consumers of the immutable release.</div>
   <p>The canonical SSOT will contain generic topology, geometry, materials, section behavior, contents, environment, loads, boundary and initial conditions, analysis intent, requested quantities, acceptance criteria, units, and coordinate frames. Solver object names, file layouts, licenses, hosts, and implicit defaults will remain outside the SSOT. Target adapters will project without back-writing.</p>
 
   <h2>Resource intelligence summary</h2>
@@ -69,8 +69,8 @@
   <p>A producer-owned <strong>PublicFloaterSourceRecord</strong> will bind source URL commitment, capture date, license/redistribution, content hash, physical identity, loading/particulars/mass evidence, eligibility, ambiguity disposition, and the exact commitment consumed by the host identity.</p>
   <ol>
     <li><strong>FloatingHostIdentityEnvelope</strong> will bind the source commitment, physical vessel, hull geometry, loading condition, particulars, mass properties, aliases, identity evidence, units/frame, confidence, public eligibility, ambiguity disposition, and complete-envelope commitment.</li>
-    <li><strong>HydrodynamicResponseEnvelope</strong> will bind the exact host/loading/mesh, diffraction target/adapter/projection/run evidence, ordered DOFs, frequency-heading grid, complex RAO and matrix payloads, units/conventions/frame/reference point, water properties, source, validation, usable domain, fidelity, and complete-envelope commitment.</li>
-    <li><strong>VesselMotionBoundaryEnvelope</strong> will bind the case/wave, host and response commitments, complex RAO, top-connection frame/reference, rigid-body transform and independent analytical validation, phase/time basis, coupling intent, boundary payload, coverage/domain, unsupported disposition, and complete-envelope commitment.</li>
+    <li><strong>HydrodynamicResponseEnvelope</strong> will bind the exact host/loading/mesh, diffraction target/adapter/projection/run evidence, ordered DOFs, frequency-heading grid, incident-wave basis, first-order complex wave-excitation payload, complex RAO and matrix payloads, units/conventions/frame/reference point, water properties, source, validation, usable domain, fidelity, and complete-envelope commitment.</li>
+    <li><strong>VesselMotionBoundaryEnvelope</strong> will bind the case/wave, host and full response commitment, complex RAO, top-connection frame/reference, rigid-body transform and independent analytical validation, phase/time basis, coupling intent, boundary payload, coverage/domain, unsupported disposition, and complete-envelope commitment. It will carry no direct excitation or incident-wave-basis field; an excitation change will still invalidate it indirectly because its full response-envelope hash will change.</li>
   </ol>
   <p>Seven host-motion chain fields—four IDs and three envelope hashes—plus the analysis-contract and selected-request commitments will propagate unchanged through request → bundle → execution request → receipt → engineering result. Each released envelope set will equal, in both directions, the distinct approved envelope references used by released engineering results: no omitted reference and no orphan member will be allowed. Long-form response rows will exactly project and cover the released hydrodynamic-response set.</p>
 
@@ -78,7 +78,7 @@
   <pre>public riser/rig sources
   → floating host → physical vessel/hull → loading condition
   → normalized riser configuration + analysis/wave case
-  → diffraction execution → complex RAO/hydrodynamic response
+  → diffraction execution → canonical wave excitation + complex RAO/hydrodynamic response
   → analytically validated vessel-motion boundary at top connection
   → generic analysis request → target adapter/projection → bundle
   → signed request → native solver run → raw payload → receipt
@@ -88,7 +88,9 @@
   <h2>Public Hugging Face surface</h2>
   <p>The release will contain exactly 17 configs:</p>
   <p><code>source_registry</code>, <code>transformations</code>, <code>citations</code>, <code>criteria</code>, <code>clean_room_reviews</code>, <code>field_lineage</code>, <code>riser_components</code>, <code>riser_configurations</code>, <code>analysis_cases</code>, <code>execution_attestations</code>, <code>strength_results</code>, <code>operability_results</code>, <code>withheld_sources</code>, <code>floating_hosts</code>, <code>hydrodynamic_responses</code>, <code>hydrodynamic_response_values</code>, and <code>vessel_motion_boundaries</code>.</p>
-  <p>Response metadata and validation/fidelity will occupy <code>hydrodynamic_responses</code>; viewer-compatible long-form RAO and matrix ordinates will occupy <code>hydrodynamic_response_values</code>. Kind-specific deterministic keys will apply: RAO rows will carry frequency and heading with real/imaginary ordinates; added-mass and radiation-damping rows will carry frequency with real ordinates; restoring rows will carry only DOF indices with real ordinates. Inapplicable axes will be null, never sentinel values. Nested response arrays, private values, client-derived rows, and native diffraction/riser solver artifacts will not enter the public dataset.</p>
+  <p>Response metadata and validation/fidelity will occupy <code>hydrodynamic_responses</code>; viewer-compatible long-form excitation, RAO, and matrix ordinates will occupy <code>hydrodynamic_response_values</code>. Exact response kinds will be total, Froude-Krylov, and diffraction wave excitation; complex RAO; added mass; radiation damping; and restoring. Excitation and RAO rows will carry DOF, frequency, and heading with finite canonical real/imaginary ordinates. Matrix rows will retain their existing kind-specific axes. Inapplicable axes will be null, never sentinels.</p>
+  <p>The incident elevation will be <code>η(x,t)=Re(a exp(i k·x − i ωt))</code>, with <code>a=1 m</code> (2 m wave height), a positive crest at the bound reference point at <code>t=0</code>, heading in radians counterclockwise from +x on <code>[0,2π)</code>, and all response phasors using <code>Re(X exp(−i ωt))</code>. Loads will be external loads on the body in canonical positive DOFs, with moments about the bound coordinate-frame reference point. Translational/rotational RAOs will use m/m and rad/m; translational/moment excitation will use N/m and N·m/m without dimensional simplification. Only first-order linear excitation will qualify; mean drift and QTFs will be excluded.</p>
+  <p>Total excitation will be mandatory. Froude-Krylov and diffraction components will appear together or will both be absent with a committed disposition; when present, their complex sum will equal total within a citation-backed tolerance. Excitation and RAO will share exact run lineage and pass the citation-backed dynamic-equilibrium check <code>Z·RAO = excitation</code>. Nested response arrays, private hydrodynamic values, client-derived rows, and native diffraction/riser solver artifacts will not enter the public dataset.</p>
 
   <h2>Artifact map and files</h2>
   <table><thead><tr><th>Artifact</th><th>Path / owner</th><th>Purpose</th></tr></thead><tbody>
@@ -105,7 +107,7 @@
   <ol>
     <li><strong>Contract validator:</strong> tests will first fail for hash mismatch, YAML conflict, missing owner/envelope, cyclic DAG, dropped chain field, invalid route, incorrect config set, and monitoring in the closeout DAG. The minimal validator will then make those fixtures pass.</li>
     <li><strong>Source and host identity:</strong> WED #1050 and DM #1618 will plan separately, write collision/loading/evidence RED fixtures, and produce one reviewed public host identity.</li>
-    <li><strong>Hydrodynamics:</strong> DM #1619 will plan separately, resolve required diffraction defects, write unit/convention/domain/fidelity RED fixtures, and produce an actual or explicitly typed proxy response.</li>
+    <li><strong>Hydrodynamics:</strong> DM #1619 will plan separately, resolve required diffraction defects, write incident-wave/excitation/component/coherence/unit/convention/domain/fidelity RED fixtures, and produce an actual or explicitly typed proxy response.</li>
     <li><strong>Motion and solver projection:</strong> DM #138, #1603, #811, #1609, and Deckhand #568 will plan separately, prove analytical rigid-body transfer, generate the OrcaFlex projection, and preserve the full chain through signed execution.</li>
     <li><strong>Results and HF:</strong> DM #1611 and #1604 will plan separately, validate strength/operability, preserve sparse cell states, publish the 17-config immutable release, and verify datasets-server rows.</li>
     <li><strong>Closeout and follow-on:</strong> the parent will invoke the landed verifier. Operating-atlas and monitoring children will consume the release only after their own gates.</li>
@@ -123,8 +125,8 @@ fail closed on any ambiguity, out-of-domain case, proxy-as-actual claim, or hash
   <ul>
     <li>Composition: base/component hash mismatch, conflicting keys, missing ownership, cyclic DAG, and exact 17-config set.</li>
     <li>Host: name-only collision, conflicting IMO, different physical units, loading mismatch, missing dimensions/displacement/CoG/inertia, and private-source leakage.</li>
-    <li>Hydrodynamics: host/loading/mesh mismatch; unknown matrix units, origin, restoring reference, phase, frame, sign, heading, or reference point; selected-backend conformance; out-of-domain clamp/extrapolation; proven motion-domain subset; exhaustive fidelity class and proxy-as-actual claim.</li>
-    <li>Motion: analytical translation, rotation, combined motion, nonzero reference offset, top connection, phase/time, heading/sign, and rotational-unit fixtures.</li>
+    <li>Hydrodynamics: host/loading/mesh mismatch; missing/tampered excitation or incident-wave commitment; absent total; partial or inconsistent components; mixed run lineage; failed <code>Z·RAO = excitation</code>; unknown excitation/matrix units, origin, restoring reference, phase, frame, sign, heading, or load reference point; selected-backend conformance; out-of-domain clamp/extrapolation; proven motion-domain subset; exhaustive fidelity class and proxy-as-actual claim.</li>
+    <li>Motion: direct excitation-field rejection; indirect response-hash invalidation after excitation change; analytical translation, rotation, combined motion, nonzero reference offset, top connection, phase/time, heading/sign, and rotational-unit fixtures.</li>
     <li>Tracer: all seven fields on the required branch, discriminator/disposition on the not-applicable branch, exact handoff expansion/equality, tamper rejection, and release exact-set derivations.</li>
     <li>Results/release: unsigned/mock rejection, failed oracle rejection, sparse-cell status preservation, native-file rejection, private-value rejection, and monitoring exclusion from the blocking DAG.</li>
   </ul>
@@ -134,9 +136,9 @@ fail closed on any ambiguity, out-of-domain case, proxy-as-actual claim, or hash
     <li>The v3 manifest will verify every component hash and will compose without conflict, unowned nodes, cycles, silent field removal, or implicit defaults.</li>
     <li>Each interface boundary will have exactly one producer and consumers will reference rather than redefine upstream commitments.</li>
     <li>The full physical and evidence identity chain will survive unchanged through engineering result and exact-set release commitments.</li>
-    <li>Actual-vessel promotion will require exact host/loading, resolved diffraction blockers, explicit conventions/domain/fidelity, and independent analytical top-connection transfer validation.</li>
+    <li>Actual-vessel promotion will require exact host/loading, resolved diffraction blockers, a canonical first-order incident-wave/excitation commitment, same-run excitation/RAO coherence, explicit conventions/domain/fidelity, and independent analytical top-connection transfer validation.</li>
     <li>OrcaFlex will remain the first adapter target; another solver will consume the same SSOT and generic analysis/result contracts.</li>
-    <li>The immutable public release will contain exactly 17 configs and no private RAO values, client identifiers, machine paths, licensed text, or native solver artifacts.</li>
+    <li>The immutable public release will contain exactly 17 configs and no private hydrodynamic values, client identifiers, machine paths, licensed text, or native solver artifacts.</li>
     <li>Every scoped child will pass its plan gate, TDD, legal/security scan, adversarial artifact review, issue comment, and completeness gate before parent closeout.</li>
     <li>Monitoring and later operating-envelope population will remain non-blocking until a fresh parent revision receives owner approval.</li>
   </ul>
@@ -152,8 +154,8 @@ fail closed on any ambiguity, out-of-domain case, proxy-as-actual claim, or hash
   </tbody></table>
 
   <h2>Adversarial review summary</h2>
-  <p><strong>Current verdict: APPROVE — no MAJOR or MINOR findings.</strong> Claude Fable 5 and three independent Codex lanes verified immutable commit <code>4e7c4784</code>; Gemini was unavailable because interactive authentication was required. Revision-stamped evidence resides under <code>scripts/review/results/issue-1602-host-motion-round-8/</code>. Earlier rounds forced deterministic composition, complete commitment and identity propagation, exact child ownership, collision-free long-form row identity, bidirectional release membership, and fail-closed promotion-gate merging.</p>
-  <p>This plan is at <code>status:plan-review</code> awaiting explicit user approval. It does not authorize implementation, create a <code>plan-approved</code> marker, or allow any child to bypass its own gate.</p>
+  <p><strong>Current verdict: PENDING for the draft.2 excitation amendment.</strong> The prior round-8 APPROVE evidence under <code>scripts/review/results/issue-1602-host-motion-round-8/</code> applies only to superseded draft.1. Fresh T3 review will attack incident-wave semantics, canonical excitation projection, component and RAO coherence, strict boundary lineage, release derivation, and hash composition on one pushed immutable SHA.</p>
+  <p>This amendment is at <code>status:needs-plan</code>. The user's option selection authorizes drafting and review only. It does not authorize implementation, create an active <code>plan-approved</code> marker, approve the amended bytes, or allow any child to bypass its own gate.</p>
 
-  <p class="small">This plan supersedes <code>docs/plans/2026-07-16-issue-1602-riser-data-orcaflex-hf-plan.md</code>; the final no-MAJOR plan-review evidence is pushed.</p>
+  <p class="small">This draft.2 amendment supersedes the approved draft.1 content for future execution only after fresh adversarial review and explicit user approval.</p>
 </main></body></html>
