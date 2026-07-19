@@ -119,6 +119,7 @@ required_RED_fixtures:
     - excitation_and_RAO_run_lineage_mismatch
     - excitation_RAO_or_matrix_payload_preimage_drops_shared_run_commitment
     - payload_preimages_disagree_on_DOF_grid_basis_units_convention_or_reference
+    - payload_preimage_context_differs_from_enclosing_response_envelope
     - dynamic_equilibrium_uses_interpolation_or_nonidentical_frequency_heading_coordinates
     - dynamic_equilibrium_Z_RAO_equals_excitation_fails
     - excitation_frequency_heading_DOF_or_complex_encoding_invalid
@@ -416,6 +417,18 @@ public_dataset_surface_extensions:
         frequency_heading_grid_sha256, incident_wave_basis_sha256,
         unit_contract_sha256, phase_sign_heading_convention_sha256,
         coordinate_frame_reference_point_sha256]
+      payload_to_envelope_exact_equalities: [floating_host_id,
+        floating_host_identity_envelope_sha256, physical_vessel_id, hull_id,
+        hull_geometry_sha256, loading_condition_id, loading_condition_sha256,
+        host_particulars_sha256, mass_properties_sha256,
+        diffraction_spec_sha256, geometry_mesh_sha256,
+        diffraction_solver_target_id, diffraction_adapter_contract_sha256,
+        diffraction_projection_sha256, diffraction_adapter_version,
+        diffraction_run_configuration_sha256,
+        diffraction_execution_evidence_sha256, ordered_DOF_contract_sha256,
+        frequency_heading_grid_sha256, incident_wave_basis_sha256,
+        unit_contract_sha256, phase_sign_heading_convention_sha256,
+        coordinate_frame_reference_point_sha256, water_properties_sha256]
       coherence_coordinate_rule: excitation_RAO_and_matrix_frequency_DOF_heading_coordinates_are_exactly_equal_where_applicable_and_no_interpolation_is_allowed_in_the_oracle
       canonical_impedance: Z_of_omega_equals_minus_omega_squared_times_M_plus_A_of_omega_minus_i_omega_times_B_of_omega_plus_C
       impedance_terms: M_is_bound_rigid_body_mass_matrix_A_is_added_mass_B_is_radiation_damping_C_is_bound_hydrostatic_restoring
