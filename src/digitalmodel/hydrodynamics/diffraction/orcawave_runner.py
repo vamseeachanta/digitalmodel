@@ -55,6 +55,7 @@ from digitalmodel.hydrodynamics.diffraction.diffraction_units import (
     hz_to_rad_per_s,
     radians_to_degrees,
     rad_per_s_to_period_s,
+    tonnes_to_kg,
 )
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
 from digitalmodel.hydrodynamics.diffraction.mesh_packaging import (
@@ -736,8 +737,23 @@ class OrcaWaveRunner:
         )
 
         # Added mass / damping: (nfreq, 6, 6).
-        added_mass_raw = np.asarray(diffraction.addedMass, dtype=float)[sort_idx]
-        damping_raw = np.asarray(diffraction.damping, dtype=float)[sort_idx]
+        #
+        # OrcFxAPI reports these on a tonne basis - addedMass in te / te.m /
+        # te.m^2 and damping in te/s - while DiffractionResults is an SI/kg
+        # type (aqwa_converter, solver.orcawave_converter and
+        # wamit_reference_loader all populate it in kg). Convert here so this
+        # producer agrees with its siblings; previously the values were passed
+        # through unconverted under kg labels, making them 1000x low (#1550).
+        #
+        # The factor is uniform across all three coupling blocks: tonne->kg is
+        # a mass conversion and the length exponent is identical on both sides.
+        # kg/s and N.s/m are the same dimension, so damping takes it too.
+        added_mass_raw = tonnes_to_kg(
+            np.asarray(diffraction.addedMass, dtype=float)[sort_idx]
+        )
+        damping_raw = tonnes_to_kg(
+            np.asarray(diffraction.damping, dtype=float)[sort_idx]
+        )
         am_units = {"linear": "kg", "angular": "kg.m^2"}
         dp_units = {"linear": "N.s/m", "angular": "N.m.s/rad"}
 
