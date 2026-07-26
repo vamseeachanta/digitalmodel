@@ -13,6 +13,27 @@ benchmark in docs/domains/orcawave/L00_validation_wamit/2.1:
 
 The factor is uniform across all three coupling blocks because the tonne->kg
 conversion is a mass conversion; the length exponent is identical on both sides.
+
+Mutation record (#1550 W3)
+--------------------------
+#1447 closed on a units test that asserted the arithmetic of thirteen one-line
+`x * 1000` helpers, which cannot fail when a *call site* uses the wrong one.
+This module is therefore validated by mutating the call site instead. All three
+mutants are killed as of 2026-07-26:
+
+===================================================  ================
+mutant applied to `_build_results_from_object`        result
+===================================================  ================
+`tonnes_to_kg` -> `kg_to_tonnes` (inverted)           4 failed
+conversion removed entirely (the original #1550)      4 failed
+added mass converted, damping left native (partial)   1 failed
+===================================================  ================
+
+The third matters most: #1550's title names only added mass, so a fix scoped to
+its literal wording would leave damping 1000x low. That mutant must stay killed.
+
+If you weaken an assertion here, re-run the three mutants. A change that leaves
+all of them green has removed the only thing protecting this boundary.
 """
 from __future__ import annotations
 
