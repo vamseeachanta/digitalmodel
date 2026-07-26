@@ -144,7 +144,7 @@ class MultiSolverComparator:
     # ------------------------------------------------------------------
 
     def _validate_inputs(self) -> None:
-        """Ensure at least 2 solvers and all vessel names match."""
+        """Ensure at least 2 solvers, matching vessel names, and matching units."""
         if len(self._results) < 2:
             raise ValueError(
                 f"At least 2 solvers required, got {len(self._results)}"
@@ -154,6 +154,40 @@ class MultiSolverComparator:
             raise ValueError(
                 f"Vessel name mismatch across solvers: {vessel_names}"
             )
+        self._validate_matrix_units()
+
+    def _validate_matrix_units(self) -> None:
+        """Reject coefficient sets whose solvers disagree on units.
+
+        `_compare_matrix_set` differences raw `matrix[i, j]` entries across
+        solvers. If one solver reports added mass in kg and another in tonnes
+        the deviation statistics are wrong by 1000x with no other symptom, so
+        the mismatch has to fail here rather than propagate (#1550).
+        """
+        for matrix_attr in ("added_mass", "damping"):
+            units_by_solver: Dict[str, Dict[str, str]] = {}
+
+            for solver_name, results in self._results.items():
+                coefficient_set = getattr(results, matrix_attr, None)
+                matrices = getattr(coefficient_set, "matrices", None)
+                if not matrices:
+                    continue
+                units_by_solver[solver_name] = dict(matrices[0].units)
+
+            distinct = {
+                tuple(sorted(units.items())) for units in units_by_solver.values()
+            }
+            if len(distinct) > 1:
+                detail = ", ".join(
+                    f"{solver}={units}"
+                    for solver, units in sorted(units_by_solver.items())
+                )
+                raise ValueError(
+                    f"Unit mismatch across solvers for {matrix_attr}: {detail}. "
+                    "Normalise to a common unit before comparing - differencing "
+                    "them directly yields deviation statistics wrong by the "
+                    "ratio between the two units."
+                )
 
     # ------------------------------------------------------------------
     # Helpers
