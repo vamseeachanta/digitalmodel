@@ -460,6 +460,6 @@ class OrcaFlexExporter:
         if i < 3 and j < 3:
             return "N.s/m"
         elif (i < 3 and j >= 3) or (i >= 3 and j < 3):
-            return "N.s or N.m.s/rad"
+            return "N.s/rad"
         else:  # both rotational
             return "N.m.s/rad"

@@ -64,7 +64,9 @@ from digitalmodel.hydrodynamics.diffraction.mesh_packaging import (
 )
 from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
+    ADDED_MASS_UNITS,
     AddedMassSet,
+    DAMPING_UNITS,
     DampingSet,
     DiffractionResults,
     DOF,
@@ -754,8 +756,13 @@ class OrcaWaveRunner:
         damping_raw = tonnes_to_kg(
             np.asarray(diffraction.damping, dtype=float)[sort_idx]
         )
-        am_units = {"linear": "kg", "angular": "kg.m^2"}
-        dp_units = {"linear": "N.s/m", "angular": "N.m.s/rad"}
+        # A 6x6 matrix has THREE dimensionally distinct blocks, not two. The
+        # linear-angular coupling block (rows 0-2 x cols 3-5 and its mirror) is
+        # 18 of the 36 cells and carries its own dimension. Omitting it made
+        # polars_exporter's ``units.get(unit_key, "")`` fall through to an
+        # empty string for exactly half of every exported matrix (#1550 W4).
+        am_units = dict(ADDED_MASS_UNITS)
+        dp_units = dict(DAMPING_UNITS)
 
         added_mass_set = AddedMassSet(
             vessel_name=vessel_name,
