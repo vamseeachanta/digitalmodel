@@ -7,6 +7,34 @@ ABOUTME: Functions to extract report data from OrcFxAPI Diffraction objects
 Extracted from report_generator.py as part of WRK-591 God Object split.
 
 Imports from report_data_models and report_computations.
+
+Units contract (#1550)
+----------------------
+This module is OrcFxAPI-NATIVE. Values read from the Diffraction object are
+kept in the units Orcina reports them in and are NOT converted:
+
+    addedMass / infiniteFrequencyAddedMass   te, te.m, te.m^2
+    damping                                  te/s
+    loadRAOsDiffraction                      kN/m
+    hydrostaticResults inertiaMatrix         te.m^2 basis
+    hydrostaticResults restoringMatrix       kN/m basis
+    displacementRAOs                         m/m, rad/m (rotations -> deg/m)
+
+That differs deliberately from ``orcawave_runner._build_results_from_object``,
+which converts te -> kg because ``DiffractionResults`` is a shared SI type
+(``aqwa_converter``, ``solver.orcawave_converter`` and
+``wamit_reference_loader`` all populate it in kg). This module never
+constructs ``DiffractionResults``; it feeds the report dataclasses directly.
+
+Native is safe here ONLY while it stays internally consistent.
+``compute_natural_periods`` evaluates ``T_n = 2*pi*sqrt((M_ii + A_ii) / C_ii)``,
+summing hydrostatic inertia with added mass, so the two must share a basis; the
+ratio against C_ii then survives because te/kN carries the same factor as kg/N.
+
+If you introduce a mass conversion here you MUST convert the hydrostatic
+inertia and restoring matrices with it. A half-conversion is not a mislabel -
+it is a numerically wrong natural period with no other symptom. Enforced by
+``tests/hydrodynamics/diffraction/test_native_units_invariant.py``.
 """
 
 from __future__ import annotations
