@@ -39,7 +39,9 @@ from digitalmodel.hydrodynamics.diffraction.orcaflex_exporter import (
     OrcaFlexExporter,
 )
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
+    ADDED_MASS_UNITS,
     AddedMassSet,
+    DAMPING_UNITS,
     DampingSet,
     DiffractionResults,
     DOF,
@@ -147,7 +149,7 @@ def rao_data_to_diffraction_results(
                 matrix=coeffs.added_mass[i],
                 frequency=float(coeffs.frequencies[i]),
                 matrix_type="added_mass",
-                units={"linear": "kg", "angular": "kg.m^2"},
+                units=dict(ADDED_MASS_UNITS),
             )
             for i in range(len(coeffs.frequencies))
         ]
@@ -156,7 +158,7 @@ def rao_data_to_diffraction_results(
                 matrix=coeffs.damping[i],
                 frequency=float(coeffs.frequencies[i]),
                 matrix_type="damping",
-                units={"linear": "N.s/m", "angular": "N.m.s/rad"},
+                units=dict(DAMPING_UNITS),
             )
             for i in range(len(coeffs.frequencies))
         ]
@@ -190,7 +192,7 @@ def rao_data_to_diffraction_results(
                 matrix=np.zeros((6, 6)),
                 frequency=float(f),
                 matrix_type="added_mass",
-                units={"linear": "kg"},
+                units=dict(ADDED_MASS_UNITS),
             )
             for f in rao.frequencies
         ]
@@ -199,7 +201,7 @@ def rao_data_to_diffraction_results(
                 matrix=np.zeros((6, 6)),
                 frequency=float(f),
                 matrix_type="damping",
-                units={"linear": "N.s/m"},
+                units=dict(DAMPING_UNITS),
             )
             for f in rao.frequencies
         ]
