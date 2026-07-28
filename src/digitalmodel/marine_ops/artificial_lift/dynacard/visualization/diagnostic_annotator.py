@@ -189,8 +189,11 @@ class DiagnosticAnnotator:
         info_items = [
             ("Model:", "GradientBoosting v1.0"),
             ("Features:", "Bezerra Projections"),
-            ("Training:", "5,400 synthetic cards"),
-            ("Accuracy:", "89.4% cross-validated"),
+            ("Training:", "6,000 synthetic cards"),
+            # Synthetic-train / synthetic-test. Labelled "synth CV" rather than
+            # "cross-validated" so the panel cannot be read as field accuracy;
+            # the model has never been scored on a real card (#1864).
+            ("Accuracy:", "90.5% synth CV"),
         ]
         for i, (label, value) in enumerate(info_items):
             y = info_y + 16 + i * 14

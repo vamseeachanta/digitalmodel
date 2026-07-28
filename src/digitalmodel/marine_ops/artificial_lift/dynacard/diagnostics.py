@@ -111,8 +111,9 @@ class PumpDiagnostics:
             "Fluid bypassing through traveling or standing valves."
         ),
         # Retired in favour of PUMP_TAGGING_UP / PUMP_TAGGING_DOWN, which are
-        # opposite mechanisms with opposite repairs. Kept because the shipped
-        # classifier model predates the split and still predicts this label.
+        # opposite mechanisms with opposite repairs. The retrained 20-class
+        # model never predicts this label; it is kept so archived results and
+        # stored configs carrying the old name still resolve to a description.
         "PUMP_TAGGING": (
             "Mechanical contact between plunger and standing valve "
             "or top of pump."

@@ -725,8 +725,8 @@ ALL_GENERATORS: dict[str, Callable] = {
 }
 
 
-# Retired mode names, and what they now resolve to. The shipped classifier
-# model was trained before the split and still emits ``PUMP_TAGGING``, and
+# Retired mode names, and what they now resolve to. The classifier has been
+# retrained on the 20-mode set and no longer emits ``PUMP_TAGGING``, but
 # stored workflow configs still request it by that name.
 MODE_ALIASES: dict[str, str] = {
     "PUMP_TAGGING": "PUMP_TAGGING_UP",

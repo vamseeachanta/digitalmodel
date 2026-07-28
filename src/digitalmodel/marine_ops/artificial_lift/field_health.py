@@ -25,7 +25,10 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWork
 REPO_ROOT = Path(__file__).resolve().parents[4]
 FAILURE_CLASSIFICATIONS = {"GAS_LOCK", "ROD_PARTING", "STUCK_PUMP"}
 CRITICAL_CLASSIFICATIONS = {
-    "PUMP_TAGGING",  # retired label; the shipped model still emits it
+    # Retired label. The retrained 20-class model no longer emits it, but
+    # stored workflow configs and third-party callers still pass it in, and
+    # it must not fall through to the "unknown -> warning" branch.
+    "PUMP_TAGGING",
     "PUMP_TAGGING_UP",
     "PUMP_TAGGING_DOWN",
 }

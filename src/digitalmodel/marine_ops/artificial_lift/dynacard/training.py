@@ -2,11 +2,36 @@
 # ABOUTME: Generates synthetic data, trains GradientBoosting, exports model to JSON.
 
 """
-One-time training script for the dynacard classifier.
+Training script for the dynacard classifier.
 
 Usage:
     PYTHONPATH="src:../assetutilities/src" python3 -m \
         digitalmodel.marine_ops.artificial_lift.dynacard.training
+
+What ``cv_accuracy`` in the exported model means
+------------------------------------------------
+It is five-fold cross-validation on cards drawn from :mod:`card_generators`,
+scored against cards drawn from the *same* generators. It measures how
+separable this module's synthetic card shapes are from one another. It is
+**not** a validation against field data and must never be quoted as a field
+accuracy figure -- the classifier has still never been scored against a
+labelled real dynamometer card (issue #1864).
+
+The headline number also hides wide per-class variation. Five modes are close
+to unseparable under the current 16-feature Bezerra projection, because that
+feature normalizes both position and load to [0, 1] and so discards exactly
+the quantity that distinguishes them:
+
+* NORMAL / TUBING_MOVEMENT / PLUNGER_UNDERTRAVEL differ only in absolute
+  plunger stroke (80-120 in / 130-180 in / 30-55 in). Seed-matched NORMAL and
+  TUBING_MOVEMENT cards agree to within 0.25% of load range.
+* GAS_LOCK / STUCK_PUMP are both plain ellipses; only their noise-to-amplitude
+  ratio differs.
+
+Out-of-sample recall for NORMAL is about 0.44 and for TUBING_MOVEMENT about
+0.51 -- effectively a coin flip between the two. Retraining cannot fix this;
+separating them needs a scale-carrying feature (absolute stroke, absolute load
+span, or a stroke ratio against the surface unit).
 """
 
 import json
