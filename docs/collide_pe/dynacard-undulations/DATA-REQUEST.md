@@ -35,28 +35,31 @@ would be surprising.
 
 ## Tier 1 — blocking. Without these, no diagnosis is defensible.
 
-### 1. Rod string, as actually run
+### 1. Rod string, as actually run — ✅ ANSWERED
 
-Confirm the string is 4,200 ft of 3/4 in and **nothing else** — specifically
-whether there are sinker bars, weight bars, or a section of larger rod at the
-top.
+> "4200' of 3/4" steel rods" — Reed, Collide thread, 27 July 2026
 
-*Why it's first:* the measured minimum polished-rod load (9,274 lb) is
-**2,412 lb heavier than the entire rod string weighs in air** (6,863 lb). That
-is not possible mechanically. Friction acts upward on the downstroke, so it
-lowers polished-rod load and widens a card — it cannot lift the whole card.
-Only two explanations survive:
+Single-diameter, so the frequency taper factor `Fc = 1.000` and every timing
+result above stands as computed.
 
-1. The load cell has a zero or scale offset.
-2. The string is heavier than recorded.
+**This answer sharpens the next question rather than closing the matter.**
+The measured minimum polished-rod load (9,274 lb) is **2,412 lb heavier than
+the entire rod string weighs in air** (6,863 lb, being 4,200 ft × 1.634 lb/ft).
+That is not mechanically possible: friction acts upward on the downstroke, so
+it lowers polished-rod load and widens a card — it cannot lift the whole card.
+
+Two explanations were open. With the string confirmed as recorded, only one
+survives: **the load cell**.
+
+### 2. Load-cell make, model, and last calibration date — now the live question
+
+If the cell carries a zero or scale offset, the whole card shifts and the
+correction is arithmetic. Worth checking whether it was zeroed with the rods
+hanging rather than unloaded.
 
 Until this is settled, every absolute load number from this card is suspect.
-Load *differences* (and therefore the undulation analysis) remain sound.
-
-### 2. Load-cell make, model, and last calibration date
-
-Directly tests explanation (1) above. If the cell reads a fixed offset, the
-whole card shifts and the fix is arithmetic.
+Load *differences* — and therefore the undulation analysis above — remain
+sound, because a fixed offset cancels out of a difference.
 
 ### 3. Runtime — hours per day the unit actually pumped
 
@@ -181,3 +184,80 @@ question the thread actually ended on.
 
 With Tier 3: gearbox torque loading against the unit's rating, counterbalance
 condition, and power consumption.
+
+---
+
+## Beyond this well — building a calibration set
+
+*This section is general. Forward it to anyone it might suit.*
+
+### Where the work actually stands
+
+The physics is done. Surface-to-downhole card conversion reproduces reference
+cards to within about 1% (median 0.9% normalised RMSE, correlation 1.000
+across five validation wells), including deviated hole.
+
+The **diagnostic layer is not**. Pattern recognition is currently calibrated on
+synthetically generated cards, meaning it recognises shapes a computer drew
+rather than shapes a well made. On a real field card it returns answers that
+do not survive scrutiny — including a rod-parting call, at full confidence, on
+a well that produced 23 barrels the day before.
+
+That is a data problem, not an algorithm problem, and it is stated here rather
+than papered over.
+
+### What is actually valuable
+
+A dynamometer card on its own contributes almost nothing to calibration. What
+makes one valuable is **knowing how it turned out**. The outcome is the label,
+and without labels more cards teach a classifier nothing.
+
+In rough order of usefulness:
+
+| Value | What | Why |
+|---|---|---|
+| Highest | Card + what was found on the pull | The workover or pulling report is the important half |
+| Highest | Before/after pair on one well | Same string, known change — the cleanest possible signal |
+| High | Confirmed **healthy** cards | Harder to come by than sick ones, and the baseline everything is measured against |
+| Useful | Raw `.dyn` or timestamped CSV | Removes the timing uncertainty that screenshots carry |
+| Useful | Repeat cards over months | Shows what a condition looks like developing, not just arrived |
+
+Minimum context to make a card usable: rod string, pump size and setting
+depth, stroke, SPM, and roughly what the well makes.
+
+### The trade, plainly
+
+**You send data. We do the analysis and send it back** — your wells, worked
+properly, at no charge. That part starts immediately, not in three months.
+
+**This is an open source effort, not a product built toward a licence fee.**
+The code is already public. Check the arithmetic, hand it to your own
+engineer, or ignore us entirely and still use it. There is nothing to get
+locked into, and nothing that can be taken away later.
+
+**Early contributors are supported for life.** As stated — not an introductory
+rate that changes once the thing works. The people who contribute cards while
+the diagnostics are still rough are the reason it becomes trustworthy at all,
+and that earns permanent standing.
+
+**It does not stop at dynacards.** Rod string design, unit sizing, gas
+interference, production troubleshooting — anything across your operations.
+Better to be useful broadly than narrowly correct about one card.
+
+Alongside that:
+
+- A diagnostics package: surface card in, downhole card and a ranked list of
+  likely conditions out, with a **measured** accuracy figure behind it rather
+  than a marketing one
+- Your own wells run through it first
+- Well identifiers kept out of anything public — the existing validation set is
+  anonymised the same way
+
+Target is roughly three months from a workable set of labelled cards.
+
+### The honest caveat, kept in view
+
+Until a real-card accuracy number exists, any diagnosis from this system
+should be read as a hypothesis to check against the well, not a finding. The
+calculated downhole card and the geometric measurements are trustworthy today;
+the *labels* placed on them are not yet.
