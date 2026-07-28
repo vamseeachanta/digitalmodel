@@ -146,16 +146,98 @@ class TestIdealCardCalculator:
         result = calculator.generate()
 
         # Should have deviation metrics
+        assert result.load_deviation_rms is not None
         assert result.load_deviation_rms >= 0
-        assert result.position_deviation_rms >= 0
+        assert result.stroke_length_difference is not None
+        assert result.stroke_length_difference >= 0
 
-    def test_shape_similarity_between_0_and_1(self):
+    def test_stroke_length_difference_is_a_difference_not_an_rms(self):
+        """
+        Regression: the field formerly called ``position_deviation_rms`` was
+        never an RMS - it is |measured stroke - ideal stroke|. It is now named
+        for what it computes, and no RMS-named position field survives.
+        """
+        context = self._create_test_context()
+        context.surface_unit.stroke_length = 90.0
+        result = IdealCardCalculator(context).generate()
+
+        measured_pos = context.surface_card.position
+        expected = abs((max(measured_pos) - min(measured_pos)) - 90.0)
+        assert result.stroke_length_difference == pytest.approx(expected)
+        assert not hasattr(result, "position_deviation_rms")
+
+    def test_shape_similarity_in_valid_range(self):
         """Test that shape similarity is in valid range."""
         context = self._create_test_context()
         calculator = IdealCardCalculator(context)
         result = calculator.generate()
 
-        assert 0 <= result.shape_similarity <= 1.0
+        assert result.shape_similarity is not None
+        assert 0 < result.shape_similarity <= 1.0
+
+    def test_deviation_against_own_ideal_card_is_zero(self):
+        """
+        Regression for the scrambled-reference bug.
+
+        Deviation used to be measured with ``np.interp(..., period=stroke)``
+        against the ideal card's NON-MONOTONIC position array. numpy sorts the
+        abscissa when ``period`` is given, collapsing the closed loop into a
+        single-valued function, so even a measured card that IS the ideal card
+        reported a large deviation. Feeding the ideal surface card back in as
+        the measured card must now produce ~zero deviation and a perfect
+        shape match.
+        """
+        context = self._create_test_context()
+        ideal = IdealCardCalculator(context).generate()
+
+        context.surface_card = CardData(
+            position=list(ideal.ideal_surface_position),
+            load=list(ideal.ideal_surface_load),
+        )
+        result = IdealCardCalculator(context).generate()
+
+        load_scale = ideal.ideal_surface_peak_load - ideal.ideal_surface_min_load
+        assert result.load_deviation_rms is not None
+        assert result.load_deviation_rms < 0.01 * load_scale
+        assert result.shape_similarity == pytest.approx(1.0, abs=1e-9)
+
+    def test_surface_domain_scalars_exposed(self):
+        """
+        Surface-domain scalars must exist and must not be confused with the
+        pump-domain ones: the pump card carries fluid load only, the surface
+        card also carries the buoyant rod weight.
+        """
+        context = self._create_test_context()
+        result = IdealCardCalculator(context).generate()
+
+        # Pump domain: fluid load only, unloaded on the downstroke.
+        assert result.ideal_peak_load == pytest.approx(result.ideal_fluid_load, abs=1.0)
+        assert result.ideal_min_load == pytest.approx(0.0, abs=1e-9)
+
+        # Surface domain: rod weight is carried on both strokes.
+        assert result.ideal_surface_min_load > 0
+        assert result.ideal_surface_peak_load > result.ideal_peak_load
+        assert result.ideal_surface_peak_load == pytest.approx(
+            result.ideal_surface_min_load + result.ideal_fluid_load, abs=1.0
+        )
+        assert result.ideal_surface_card_area > 0
+
+    def test_generation_method_assigned_by_calculator(self):
+        """generation_method must be provenance, not an untouched model default."""
+        context = self._create_test_context()
+        calculator = IdealCardCalculator(context)
+        calculator.result.generation_method = "sentinel"
+        result = calculator.generate()
+
+        assert result.generation_method == "simplified"
+
+    def test_no_unassigned_damping_provenance_field(self):
+        """
+        ``damping_coefficient`` was a model default (0.1) that the calculator
+        never set and no damping model ever used. It must not exist.
+        """
+        result = IdealCardCalculator(self._create_test_context()).generate()
+        assert not hasattr(result, "damping_coefficient")
 
     def test_empty_surface_card_handles_gracefully(self):
         """Test handling when no measured card for comparison."""
@@ -250,12 +332,33 @@ class TestCalculateShapeSimilarity:
         similarity = calculate_shape_similarity(card1, card2)
         assert similarity < 0.9
 
-    def test_empty_cards_return_zero(self):
-        """Test that empty cards return zero similarity."""
+    def test_empty_cards_return_none(self):
+        """
+        Empty cards are not comparable. Unavailable must be None, never a
+        plausible-looking 0.0 (which used to be indistinguishable from a real
+        'completely dissimilar' score).
+        """
         card1 = CardData(position=[], load=[])
         card2 = CardData(position=[], load=[])
-        similarity = calculate_shape_similarity(card1, card2)
-        assert similarity == 0.0
+        assert calculate_shape_similarity(card1, card2) is None
+
+    def test_degenerate_card_returns_none(self):
+        """A card with too few samples cannot be split into branches."""
+        card1 = CardData(
+            position=[0, 50, 100, 50],
+            load=[5000, 8000, 12000, 7000],
+        )
+        degenerate = CardData(position=[0, 50, 100], load=[1, 2, 3])
+        assert calculate_shape_similarity(card1, degenerate) is None
+
+    def test_flat_load_card_returns_none(self):
+        """Zero load range gives no shape to compare."""
+        card1 = CardData(
+            position=[0, 50, 100, 50],
+            load=[5000, 8000, 12000, 7000],
+        )
+        flat = CardData(position=[0, 50, 100, 50], load=[1000, 1000, 1000, 1000])
+        assert calculate_shape_similarity(card1, flat) is None
 
     def test_different_length_cards(self):
         """Test similarity with different length cards."""
@@ -269,7 +372,8 @@ class TestCalculateShapeSimilarity:
         )
         similarity = calculate_shape_similarity(card1, card2)
         # Should handle different lengths
-        assert 0 <= similarity <= 1.0
+        assert similarity is not None
+        assert 0 < similarity <= 1.0
 
     def test_similarity_range(self):
         """Test that similarity is always in valid range."""
@@ -282,7 +386,79 @@ class TestCalculateShapeSimilarity:
             load=[1000, 2000, 3000, 1500],
         )
         similarity = calculate_shape_similarity(card1, card2)
-        assert 0 <= similarity <= 1.0
+        assert similarity is not None
+        assert 0 < similarity <= 1.0
+
+    def test_inverted_card_does_not_score_like_an_unrelated_card(self):
+        """
+        THE regression test for the clamped correlation.
+
+        ``max(0.0, r)`` mapped a perfectly inverted card (r = -1, a real
+        diagnostic signal) and an unrelated card (r ~ 0) to the SAME score of
+        0.0. A load-inverted card is roughly twice as far from the reference as
+        an unrelated one, so it must score strictly lower - and neither may be
+        confused with the 'not computable' answer.
+        """
+        base = CardData(
+            position=[0, 25, 50, 75, 100, 75, 50, 25],
+            load=[5000, 7000, 10000, 12000, 10000, 7000, 5000, 4000],
+        )
+        mean_load = sum(base.load) / len(base.load)
+        inverted = CardData(
+            position=list(base.position),
+            load=[2 * mean_load - v for v in base.load],
+        )
+        unrelated = CardData(
+            position=list(base.position),
+            load=[9000, 4000, 11000, 5000, 12000, 6000, 10000, 8000],
+        )
+
+        sim_self = calculate_shape_similarity(base, base)
+        sim_inverted = calculate_shape_similarity(base, inverted)
+        sim_unrelated = calculate_shape_similarity(base, unrelated)
+
+        assert sim_self == pytest.approx(1.0)
+        assert sim_inverted is not None and sim_unrelated is not None
+        # The defect: these two were both exactly 0.0.
+        assert sim_inverted != pytest.approx(sim_unrelated, abs=1e-3)
+        assert sim_inverted < sim_unrelated < sim_self
+
+    def test_similarity_is_position_aware_not_index_aligned(self):
+        """
+        The old metric correlated load arrays by index and used no position at
+        all, so re-indexing the SAME closed loop changed the score. Rotating
+        the starting sample of a card describes the identical loop and must
+        score 1.0.
+        """
+        base = CardData(
+            position=[0, 25, 50, 75, 100, 75, 50, 25],
+            load=[5000, 7000, 10000, 12000, 10000, 7000, 5000, 4000],
+        )
+        rotated = CardData(
+            position=base.position[3:] + base.position[:3],
+            load=base.load[3:] + base.load[:3],
+        )
+
+        assert calculate_shape_similarity(base, rotated) == pytest.approx(1.0)
+
+    def test_upstroke_downstroke_swap_is_penalised(self):
+        """
+        Traversing the same geometry backwards swaps which branch is the
+        upstroke - physically a different card - so it must score below 1.0
+        while still being computable.
+        """
+        base = CardData(
+            position=[0, 25, 50, 75, 100, 75, 50, 25],
+            load=[5000, 7000, 10000, 12000, 10000, 7000, 5000, 4000],
+        )
+        reversed_card = CardData(
+            position=list(reversed(base.position)),
+            load=list(reversed(base.load)),
+        )
+
+        similarity = calculate_shape_similarity(base, reversed_card)
+        assert similarity is not None
+        assert 0 < similarity < 1.0
 
 
 class TestCalculateIdealFluidLoad:
@@ -450,7 +626,21 @@ class TestIdealCardWithRealData:
         result = generate_ideal_card(well_7699227)
 
         # Should have valid similarity
-        assert 0 <= result.shape_similarity <= 1.0
+        assert result.shape_similarity is not None
+        assert 0 < result.shape_similarity <= 1.0
+
+    def test_surface_scalar_is_the_comparable_one_7699227(self, well_7699227):
+        """
+        Domain trap guard: the measured PPRL belongs to the SURFACE domain.
+        Comparing it against the pump-domain ``ideal_peak_load`` invites a
+        bogus multiple (~4x here); the surface-domain scalar is the right
+        reference and lands in the same ballpark as the measurement.
+        """
+        result = generate_ideal_card(well_7699227)
+        measured_pprl = max(well_7699227.surface_card.load)
+
+        assert result.ideal_surface_peak_load > result.ideal_peak_load
+        assert 0.5 < result.ideal_surface_peak_load / measured_pprl < 2.0
 
     def test_card_area_calculated_7699227(self, well_7699227):
         """Test card area is calculated with real data."""

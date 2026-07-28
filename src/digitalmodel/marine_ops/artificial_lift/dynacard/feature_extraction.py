@@ -102,8 +102,16 @@ class FeatureExtractor:
             features[0] = np.clip(results.fillage.fillage, 0.0, 1.0)
 
         # Feature 1: shape_similarity
+        #
+        # Similarity is None for a degenerate card that cannot be split into
+        # upstroke and downstroke branches. Leave the feature at zero in that
+        # case rather than clipping None, which raises. Note the zero here means
+        # "not computed"; it previously meant that too, but silently, because the
+        # metric returned a saturated 0.0 for cards it could not evaluate.
         if results.ideal_card is not None:
-            features[1] = np.clip(results.ideal_card.shape_similarity, 0.0, 1.0)
+            similarity = results.ideal_card.shape_similarity
+            if similarity is not None:
+                features[1] = np.clip(similarity, 0.0, 1.0)
 
         # Features 2-5: zone_area_fractions
         if results.card_geometry is not None and len(results.card_geometry.zone_area_fractions) == 4:

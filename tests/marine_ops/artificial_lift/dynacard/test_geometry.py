@@ -188,15 +188,201 @@ class TestCardGeometryCalculator:
     def test_zone_fractions_sum_to_one(self):
         """Test that zone fractions sum to 1.0."""
         context = self._create_test_context()
+        # A genuine diamond (the previous fixture's four points were collinear,
+        # so it enclosed no area at all).
         context.surface_card = CardData(
             position=[0, 50, 100, 50],
-            load=[5000, 10000, 15000, 10000],
+            load=[10000, 5000, 10000, 15000],
         )
         calculator = CardGeometryCalculator(context)
         result = calculator.calculate()
 
         fraction_sum = sum(result.zone_area_fractions)
         assert abs(fraction_sum - 1.0) < 0.001
+
+    # --- Regression tests for issue #1871 (geometry defects 1-3) -------------
+
+    def test_centroid_moves_when_card_shape_changes(self):
+        """A materially different card shape must give a DIFFERENT centroid.
+
+        Regression test for the vertex-mean centroid: an L-shaped card and a
+        rectangle sharing the same vertex set order-for-order in x/y means the
+        old np.mean() implementation returned an identical centroid for cards
+        with very different enclosed areas.
+        """
+        context = self._create_test_context()
+
+        # Full rectangle 0..100 x 0..10000, area = 1,000,000
+        full = CardData(
+            position=[0, 100, 100, 0],
+            load=[0, 0, 10000, 10000],
+        )
+        # L-shaped card with the top-right quadrant removed. Its vertices have
+        # exactly the same mean x and mean y as the rectangle above, but it
+        # encloses 25% less area, biased to the bottom-left.
+        l_shape = CardData(
+            position=[0, 100, 100, 50, 50, 0],
+            load=[0, 0, 5000, 5000, 10000, 10000],
+        )
+
+        calculator = CardGeometryCalculator(context)
+        full_result = calculator.calculate(surface_card=full)
+        full_centroid = (full_result.centroid_position, full_result.centroid_load)
+        full_area = full_result.area
+
+        calculator = CardGeometryCalculator(context)
+        l_result = calculator.calculate(surface_card=l_shape)
+        l_centroid = (l_result.centroid_position, l_result.centroid_load)
+
+        # The shapes really are materially different
+        assert abs(l_result.area - full_area * 0.75) < 1.0
+
+        # ... and the centroid must reflect that
+        assert full_centroid != l_centroid
+        assert l_result.centroid_position < full_result.centroid_position
+        assert l_result.centroid_load < full_result.centroid_load
+
+        # Known analytic value for the L: two rectangles,
+        #   A: 100 x 5000  centroid (50, 2500)
+        #   B:  50 x 5000  centroid (25, 7500)
+        # Cx = (500000*50 + 250000*25) / 750000 = 41.666...
+        # Cy = (500000*2500 + 250000*7500) / 750000 = 4166.666...
+        assert abs(l_result.centroid_position - 125.0 / 3.0) < 0.01
+        assert abs(l_result.centroid_load - 12500.0 / 3.0) < 0.1
+
+    def test_centroid_area_weighted_not_vertex_mean(self):
+        """Centroid must be area-weighted, not the mean of the vertices."""
+        context = self._create_test_context()
+        # Triangle (0,0), (100,0), (0,10000).
+        # Vertex mean:   (33.33, 3333.33)  <- what the old code returned
+        # Area centroid: (33.33, 3333.33)  ... identical for a triangle, so use
+        # a shape where they differ: a rectangle with a densely sampled top edge.
+        card = CardData(
+            position=[0, 100, 100, 75, 50, 25, 0],
+            load=[0, 0, 10000, 10000, 10000, 10000, 10000],
+        )
+        calculator = CardGeometryCalculator(context)
+        result = calculator.calculate(surface_card=card)
+
+        vertex_mean_load = sum(card.load) / len(card.load)
+        # Vertex mean is dragged up by the extra top-edge samples (~7142 lbs)
+        assert vertex_mean_load > 7000
+        # The true area centroid of the rectangle is at mid-height
+        assert abs(result.centroid_load - 5000.0) < 0.1
+        assert abs(result.centroid_position - 50.0) < 0.1
+
+    def test_centroid_invariant_to_resampling(self):
+        """Re-sampling the same card outline must not move the centroid."""
+        context = self._create_test_context()
+        n_coarse, n_fine = 24, 400
+
+        def ellipse(n):
+            angles = np.linspace(0, 2 * np.pi, n, endpoint=False)
+            return CardData(
+                position=(50 + 40 * np.cos(angles)).tolist(),
+                load=(10000 + 4000 * np.sin(angles)).tolist(),
+            )
+
+        coarse = CardGeometryCalculator(context).calculate(surface_card=ellipse(n_coarse))
+        fine = CardGeometryCalculator(context).calculate(surface_card=ellipse(n_fine))
+
+        assert abs(coarse.centroid_position - fine.centroid_position) < 0.5
+        assert abs(coarse.centroid_load - fine.centroid_load) < 50.0
+
+    def test_centroid_none_for_degenerate_card(self):
+        """A card enclosing no area has no centroid - must be None, not 0.0."""
+        context = self._create_test_context()
+        # Collinear points: y = 5000 + 100x
+        context.surface_card = CardData(
+            position=[0, 50, 100, 50],
+            load=[5000, 10000, 15000, 10000],
+        )
+        result = CardGeometryCalculator(context).calculate()
+
+        assert result.area == 0.0
+        assert result.centroid_position is None
+        assert result.centroid_load is None
+        # No enclosed area to distribute across quadrants either
+        assert result.zone_areas == []
+        assert result.zone_area_fractions == []
+
+    def test_zone_areas_are_areas_not_point_counts(self):
+        """Zone areas must be true sub-areas, independent of sampling density.
+
+        Regression test for the point-count implementation: over-sampling one
+        side of the card used to change the reported zone areas even though the
+        enclosed shape was unchanged.
+        """
+        context = self._create_test_context()
+
+        # A rectangle sampled evenly: each quadrant holds 25% of the area.
+        even = CardData(
+            position=[0, 100, 100, 0],
+            load=[0, 0, 10000, 10000],
+        )
+        # The SAME rectangle, but with the top edge sampled 5x more densely.
+        # Point counts shift heavily towards the top zones; areas do not.
+        dense_top = CardData(
+            position=[0, 100, 100, 80, 60, 40, 20, 0],
+            load=[0, 0, 10000, 10000, 10000, 10000, 10000, 10000],
+        )
+
+        even_result = CardGeometryCalculator(context).calculate(surface_card=even)
+        dense_result = CardGeometryCalculator(context).calculate(surface_card=dense_top)
+
+        assert abs(even_result.area - dense_result.area) < 1.0
+        for a, b in zip(even_result.zone_areas, dense_result.zone_areas):
+            assert abs(a - b) < 1.0
+        for frac in dense_result.zone_area_fractions:
+            assert abs(frac - 0.25) < 1e-6
+
+    def test_zone_areas_exact_for_offcentre_shape(self):
+        """Zone areas must match the analytic sub-areas of a known shape."""
+        context = self._create_test_context()
+        # L-shape: full 100x10000 rectangle minus the top-right 50x5000 corner.
+        # Midlines are at position 50 and load 5000, so:
+        #   bottom-left  = 50 x 5000 = 250,000
+        #   bottom-right = 50 x 5000 = 250,000
+        #   top-left     = 50 x 5000 = 250,000
+        #   top-right    = 0
+        card = CardData(
+            position=[0, 100, 100, 50, 50, 0],
+            load=[0, 0, 5000, 5000, 10000, 10000],
+        )
+        result = CardGeometryCalculator(context).calculate(surface_card=card)
+
+        expected = [250000.0, 250000.0, 250000.0, 0.0]
+        for actual, want in zip(result.zone_areas, expected):
+            assert abs(actual - want) < 1.0
+        assert abs(sum(result.zone_areas) - result.area) < 1.0
+
+    def test_normalized_perimeter_is_dimensionless_and_scale_free(self):
+        """normalized_perimeter must be 4.0 for any rectangle, any units."""
+        context = self._create_test_context()
+
+        squat = CardData(position=[0, 100, 100, 0], load=[0, 0, 100, 100])
+        tall = CardData(position=[0, 100, 100, 0], load=[0, 0, 10000, 10000])
+
+        squat_result = CardGeometryCalculator(context).calculate(surface_card=squat)
+        tall_result = CardGeometryCalculator(context).calculate(surface_card=tall)
+
+        assert abs(squat_result.normalized_perimeter - 4.0) < 1e-9
+        assert abs(tall_result.normalized_perimeter - 4.0) < 1e-9
+        # The deprecated mixed-unit perimeter is NOT scale free
+        assert squat_result.perimeter != tall_result.perimeter
+
+    def test_path_lengths_are_dimensionally_meaningful(self):
+        """position/load path lengths stay in their own units."""
+        context = self._create_test_context()
+        context.surface_card = CardData(
+            position=[0, 100, 100, 0],
+            load=[0, 0, 10000, 10000],
+        )
+        result = CardGeometryCalculator(context).calculate()
+
+        # Closed loop over a rectangle: twice the width, twice the height
+        assert abs(result.position_path_length - 200.0) < 1e-9
+        assert abs(result.load_path_length - 20000.0) < 1e-9
 
     def test_empty_card_raises_validation_error(self):
         """Test that empty card raises ValidationError."""
@@ -388,10 +574,14 @@ class TestCardGeometryAnalysisModel:
         assert analysis.perimeter == 0.0
         assert analysis.position_range == 0.0
         assert analysis.load_range == 0.0
-        assert analysis.centroid_position == 0.0
-        assert analysis.centroid_load == 0.0
+        # None (not 0.0) so a caller can tell "not computed" from "computed zero"
+        assert analysis.centroid_position is None
+        assert analysis.centroid_load is None
         assert analysis.zone_areas == []
         assert analysis.zone_area_fractions == []
+        assert analysis.position_path_length == 0.0
+        assert analysis.load_path_length == 0.0
+        assert analysis.normalized_perimeter == 0.0
 
     def test_analysis_with_values(self):
         """Test CardGeometryAnalysis with actual values."""

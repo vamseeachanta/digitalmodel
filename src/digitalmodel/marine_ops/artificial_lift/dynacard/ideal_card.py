@@ -15,6 +15,210 @@ from .constants import STEEL_DENSITY_LB_PER_FT3
 from .exceptions import DynacardException, ValidationError, invalid_value_error
 
 
+# Number of samples used when resampling a card branch onto a common
+# normalised-position grid for loop-aware comparison.
+BRANCH_RESAMPLE_POINTS = 64
+
+
+def _split_closed_loop_branches(
+    position: np.ndarray,
+    load: np.ndarray,
+) -> Optional[Tuple[Tuple[np.ndarray, np.ndarray], Tuple[np.ndarray, np.ndarray]]]:
+    """
+    Split a closed dynamometer loop into its upstroke and downstroke branches.
+
+    A dynamometer card is a closed loop: load is a *double-valued* function of
+    position (one value on the upstroke, another on the downstroke). Any
+    comparison that treats the whole loop as a single-valued function of
+    position is meaningless. Splitting at the position extremes yields two
+    branches that ARE single-valued in position and can be compared.
+
+    Args:
+        position: Position samples in traversal (time) order.
+        load: Load samples in traversal (time) order.
+
+    Returns:
+        ((up_position, up_load), (down_position, down_load)) where the first
+        branch is the traversal segment running from minimum to maximum
+        position, or None if the loop is degenerate (too few samples, or zero
+        position range).
+    """
+    pos = np.asarray(position, dtype=float)
+    ld = np.asarray(load, dtype=float)
+
+    if pos.size != ld.size or pos.size < 4:
+        return None
+
+    # Drop an explicit closing point (last sample duplicates the first).
+    if pos[0] == pos[-1] and ld[0] == ld[-1]:
+        pos = pos[:-1]
+        ld = ld[:-1]
+
+    n = pos.size
+    if n < 4:
+        return None
+
+    i_min = int(np.argmin(pos))
+    i_max = int(np.argmax(pos))
+    if pos[i_max] - pos[i_min] <= 0.0:
+        return None
+
+    idx = np.arange(n)
+    up_idx = np.roll(idx, -i_min)
+    up_len = (i_max - i_min) % n
+    if up_len < 1:
+        return None
+    up_idx = up_idx[: up_len + 1]
+
+    down_idx = np.roll(idx, -i_max)
+    down_len = (i_min - i_max) % n
+    if down_len < 1:
+        return None
+    down_idx = down_idx[: down_len + 1]
+
+    if up_idx.size < 2 or down_idx.size < 2:
+        return None
+
+    return (
+        (pos[up_idx], ld[up_idx]),
+        (pos[down_idx], ld[down_idx]),
+    )
+
+
+def _resample_branch(
+    branch_position: np.ndarray,
+    branch_load: np.ndarray,
+    grid: np.ndarray,
+    p_min: float,
+    p_span: float,
+) -> Optional[np.ndarray]:
+    """
+    Resample a single branch onto a normalised-position grid.
+
+    The branch is sorted by position (a branch is monotonic in position up to
+    measurement noise) and duplicate positions are averaged, so that
+    ``np.interp`` receives a strictly increasing abscissa.
+
+    Args:
+        branch_position: Positions along the branch.
+        branch_load: Loads along the branch.
+        grid: Normalised positions (0-1) to sample at.
+        p_min: Minimum position of the parent card.
+        p_span: Position range of the parent card.
+
+    Returns:
+        Loads sampled at ``grid``, or None if the branch is degenerate.
+    """
+    if p_span <= 0.0:
+        return None
+
+    x = (np.asarray(branch_position, dtype=float) - p_min) / p_span
+    y = np.asarray(branch_load, dtype=float)
+
+    order = np.argsort(x, kind="stable")
+    x = x[order]
+    y = y[order]
+
+    x_unique, inverse = np.unique(x, return_inverse=True)
+    if x_unique.size < 2:
+        return None
+    counts = np.bincount(inverse)
+    sums = np.bincount(inverse, weights=y)
+    y_unique = sums / counts
+
+    return np.interp(grid, x_unique, y_unique)
+
+
+def _branch_profiles(
+    position,
+    load,
+    num_samples: int = BRANCH_RESAMPLE_POINTS,
+) -> Optional[Tuple[np.ndarray, np.ndarray]]:
+    """
+    Reduce a closed card to (upstroke, downstroke) load profiles.
+
+    Both profiles are sampled on the same normalised-position grid (0 = bottom
+    of stroke, 1 = top of stroke), which makes the comparison position-aware
+    and independent of sample count, sample spacing and starting index.
+
+    Args:
+        position: Card positions in traversal order.
+        load: Card loads in traversal order.
+        num_samples: Number of grid samples per branch.
+
+    Returns:
+        (upstroke_loads, downstroke_loads) or None if the card is degenerate.
+    """
+    branches = _split_closed_loop_branches(np.asarray(position, dtype=float),
+                                           np.asarray(load, dtype=float))
+    if branches is None:
+        return None
+
+    (up_pos, up_load), (down_pos, down_load) = branches
+    all_pos = np.concatenate([up_pos, down_pos])
+    p_min = float(np.min(all_pos))
+    p_span = float(np.max(all_pos) - p_min)
+
+    grid = np.linspace(0.0, 1.0, num_samples)
+    up_profile = _resample_branch(up_pos, up_load, grid, p_min, p_span)
+    down_profile = _resample_branch(down_pos, down_load, grid, p_min, p_span)
+
+    if up_profile is None or down_profile is None:
+        return None
+
+    return up_profile, down_profile
+
+
+def _closed_loop_shape_similarity(
+    measured_position,
+    measured_load,
+    ideal_position,
+    ideal_load,
+) -> Optional[float]:
+    """
+    Position-aware, sign-preserving shape similarity between two closed cards.
+
+    Each card is split into its upstroke and downstroke branches, both branches
+    are resampled onto a common normalised-position grid, and the loads are
+    normalised (centred on the card mean, scaled by the card load range) so
+    that shape rather than magnitude is compared. The score is derived from the
+    RMS normalised distance ``d`` between the two cards as ``1 / (1 + d)``.
+
+    Properties (none of which the previous index-wise correlation had):
+      * 1.0 only for geometrically identical normalised loops, regardless of
+        sample count, sample spacing or starting index.
+      * Strictly monotonic in distance, so it never saturates: an inverted card
+        (loads reflected about the mean, distance ~2x the card amplitude)
+        always scores strictly LOWER than an unrelated card (distance ~1.4x),
+        which in turn scores lower than a matching card.
+      * Uses position, so a card whose branches are swapped is not scored as
+        identical.
+
+    Returns:
+        Similarity in (0, 1], or None when either card is degenerate (fewer
+        than four samples, zero position range or zero load range). None means
+        "not computable" - it is never reported as a number.
+    """
+    measured = _branch_profiles(measured_position, measured_load)
+    ideal = _branch_profiles(ideal_position, ideal_load)
+    if measured is None or ideal is None:
+        return None
+
+    normalised = []
+    for profiles in (measured, ideal):
+        stacked = np.concatenate(profiles)
+        scale = float(np.max(stacked) - np.min(stacked))
+        if scale <= 0.0:
+            return None
+        centre = float(np.mean(stacked))
+        normalised.append((stacked - centre) / scale)
+
+    diff = normalised[0] - normalised[1]
+    distance = float(np.sqrt(np.mean(diff ** 2)))
+
+    return float(1.0 / (1.0 + distance))
+
+
 class IdealCardCalculator(BaseCalculator[IdealCardAnalysis]):
     """
     Generates ideal/reference dynacard for comparison with measured cards.
@@ -78,6 +282,10 @@ class IdealCardCalculator(BaseCalculator[IdealCardAnalysis]):
 
         self.result.fillage_assumed = fillage
         self.result.num_time_points = num_points
+        # Provenance: this generator uses closed-form rectangular/ramped cards,
+        # not a wave-equation simulation. Assigned explicitly so the field is
+        # not merely a model default that happens to read as provenance.
+        self.result.generation_method = "simplified"
 
         # Calculate fluid load if not provided
         if fluid_load is None:
@@ -266,61 +474,98 @@ class IdealCardCalculator(BaseCalculator[IdealCardAnalysis]):
         self.result.ideal_surface_load = surface_loads
 
     def _calculate_card_metrics(self) -> None:
-        """Calculate metrics for the ideal card."""
-        if not self.result.ideal_pump_load:
-            return
+        """
+        Calculate scalar metrics for the ideal card.
 
-        pump_loads = np.array(self.result.ideal_pump_load)
-        pump_positions = np.array(self.result.ideal_pump_position)
+        Pump-domain and surface-domain scalars are reported separately and
+        named for their domain. They are NOT interchangeable: the pump card
+        carries fluid load only, while the surface card additionally carries
+        the buoyant rod weight, so pump peak load is far below the polished rod
+        peak load for the same well. Comparing a measured PPRL against
+        ``ideal_peak_load`` (a pump-domain number) produces a meaningless
+        multiple; compare it against ``ideal_surface_peak_load``.
+        """
+        if self.result.ideal_pump_load:
+            pump_loads = np.array(self.result.ideal_pump_load)
+            pump_positions = np.array(self.result.ideal_pump_position)
 
-        self.result.ideal_peak_load = float(np.max(pump_loads))
-        self.result.ideal_min_load = float(np.min(pump_loads))
+            self.result.ideal_peak_load = float(np.max(pump_loads))
+            self.result.ideal_min_load = float(np.min(pump_loads))
+            self.result.ideal_card_area = self._shoelace_area(pump_positions, pump_loads)
 
-        # Calculate card area using shoelace formula
-        n = len(pump_positions)
+        if self.result.ideal_surface_load:
+            surface_loads = np.array(self.result.ideal_surface_load)
+            surface_positions = np.array(self.result.ideal_surface_position)
+
+            self.result.ideal_surface_peak_load = float(np.max(surface_loads))
+            self.result.ideal_surface_min_load = float(np.min(surface_loads))
+            self.result.ideal_surface_card_area = self._shoelace_area(
+                surface_positions, surface_loads
+            )
+
+    @staticmethod
+    def _shoelace_area(positions: np.ndarray, loads: np.ndarray) -> float:
+        """Enclosed area of a closed card via the shoelace formula (in-lbs)."""
+        n = len(positions)
         area = 0.0
         for i in range(n - 1):
             j = (i + 1) % n
-            area += (pump_positions[j] - pump_positions[i]) * (pump_loads[j] + pump_loads[i])
-        self.result.ideal_card_area = float(abs(area * 0.5))
+            area += (positions[j] - positions[i]) * (loads[j] + loads[i])
+        return float(abs(area * 0.5))
 
     def _calculate_deviation_from_measured(self) -> None:
-        """Calculate deviation between ideal and measured cards."""
+        """
+        Calculate deviation between the ideal and measured surface cards.
+
+        Both cards are closed loops, so load is a double-valued function of
+        position. The comparison is therefore done branch by branch (upstroke
+        against upstroke, downstroke against downstroke) on a common
+        normalised-position grid. Deviation metrics are set to None whenever a
+        card is too degenerate to split, rather than being reported as a number
+        computed against an ill-defined reference.
+        """
+        self.result.load_deviation_rms = None
+        self.result.stroke_length_difference = None
+        self.result.shape_similarity = None
+
         if not self.ctx.surface_card or len(self.ctx.surface_card.position) == 0:
             self.result.warning_message = "No measured card available for comparison"
             return
 
-        measured_pos = np.array(self.ctx.surface_card.position)
-        measured_load = np.array(self.ctx.surface_card.load)
+        measured_pos = np.array(self.ctx.surface_card.position, dtype=float)
+        measured_load = np.array(self.ctx.surface_card.load, dtype=float)
 
-        # Normalize measured card to same number of points
-        ideal_pos = np.array(self.result.ideal_surface_position)
-        ideal_load = np.array(self.result.ideal_surface_load)
+        ideal_pos = np.array(self.result.ideal_surface_position, dtype=float)
+        ideal_load = np.array(self.result.ideal_surface_load, dtype=float)
 
-        # Interpolate ideal card to measured positions
-        ideal_load_interp = np.interp(
-            measured_pos,
-            ideal_pos,
-            ideal_load,
-            period=self.result.ideal_stroke_length,
+        # Stroke length difference (a single scalar difference, not an RMS).
+        measured_stroke = float(np.max(measured_pos) - np.min(measured_pos))
+        self.result.stroke_length_difference = float(
+            abs(measured_stroke - self.result.ideal_stroke_length)
         )
 
-        # Calculate RMS deviations
-        load_diff = measured_load - ideal_load_interp
-        self.result.load_deviation_rms = float(np.sqrt(np.mean(load_diff ** 2)))
+        measured_profiles = _branch_profiles(measured_pos, measured_load)
+        ideal_profiles = _branch_profiles(ideal_pos, ideal_load)
 
-        # Position deviation (stroke length comparison)
-        measured_stroke = float(np.max(measured_pos) - np.min(measured_pos))
-        ideal_stroke = self.result.ideal_stroke_length
-        self.result.position_deviation_rms = float(abs(measured_stroke - ideal_stroke))
+        if measured_profiles is None or ideal_profiles is None:
+            self.result.warning_message = (
+                "Measured or ideal card could not be split into upstroke/downstroke "
+                "branches; load deviation and shape similarity are not computable"
+            )
+            return
 
-        # Shape similarity (correlation coefficient)
-        if len(measured_load) > 2 and np.std(measured_load) > 0 and np.std(ideal_load_interp) > 0:
-            correlation = np.corrcoef(measured_load, ideal_load_interp)[0, 1]
-            # Convert to 0-1 similarity (handle negative correlation)
-            self.result.shape_similarity = float(max(0.0, correlation))
-        else:
-            self.result.shape_similarity = 0.0
+        # Loop-aware RMS load deviation, in lbs, over both branches.
+        diff = np.concatenate(
+            [
+                measured_profiles[0] - ideal_profiles[0],
+                measured_profiles[1] - ideal_profiles[1],
+            ]
+        )
+        self.result.load_deviation_rms = float(np.sqrt(np.mean(diff ** 2)))
+
+        self.result.shape_similarity = _closed_loop_shape_similarity(
+            measured_pos, measured_load, ideal_pos, ideal_load
+        )
 
 
 def generate_ideal_card(
@@ -369,37 +614,38 @@ def generate_ideal_card(
 def calculate_shape_similarity(
     measured_card: CardData,
     ideal_card: CardData,
-) -> float:
+) -> Optional[float]:
     """
-    Calculate shape similarity between measured and ideal cards.
+    Calculate shape similarity between two closed dynamometer cards.
 
-    Uses correlation coefficient to compare card shapes.
+    Both cards are compared as closed loops using position as well as load:
+    each is split into upstroke and downstroke branches, resampled onto a
+    common normalised-position grid, and compared after load normalisation.
+    See :func:`_closed_loop_shape_similarity` for the metric definition.
+
+    This deliberately does NOT use an index-wise correlation coefficient. That
+    metric ignored position entirely (so it depended on where the trace happened
+    to start) and was clamped at zero (so a load-inverted card - a real
+    diagnostic signal - scored identically to an unrelated card).
 
     Args:
         measured_card: Measured dynacard data.
         ideal_card: Ideal/reference dynacard data.
 
     Returns:
-        Similarity score 0-1 (1 = identical).
+        Similarity score in (0, 1] where 1.0 means geometrically identical
+        after normalisation, or None when either card is degenerate (fewer
+        than four samples, zero position range or zero load range).
     """
     if not measured_card.load or not ideal_card.load:
-        return 0.0
+        return None
 
-    measured_load = np.array(measured_card.load)
-    ideal_load = np.array(ideal_card.load)
-
-    # Interpolate to same length if needed
-    if len(measured_load) != len(ideal_load):
-        x_measured = np.linspace(0, 1, len(measured_load))
-        x_ideal = np.linspace(0, 1, len(ideal_load))
-        ideal_load = np.interp(x_measured, x_ideal, ideal_load)
-
-    # Calculate correlation
-    if np.std(measured_load) > 0 and np.std(ideal_load) > 0:
-        correlation = np.corrcoef(measured_load, ideal_load)[0, 1]
-        return float(max(0.0, correlation))
-
-    return 0.0
+    return _closed_loop_shape_similarity(
+        measured_card.position,
+        measured_card.load,
+        ideal_card.position,
+        ideal_card.load,
+    )
 
 
 def calculate_ideal_fluid_load(

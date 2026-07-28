@@ -44,6 +44,7 @@ from digitalmodel.reporting.calc_report import (
     VariableDef,
     WayForwardStage,
 )
+from digitalmodel.reporting.brief import Brief, BriefSection, Callout
 from digitalmodel.reporting.skeleton import (
     BlockSpec,
     Completeness,
@@ -86,4 +87,8 @@ __all__ = [
     "ValidationItem",
     "VariableDef",
     "WayForwardStage",
+    # client brief — short-form companion
+    "Brief",
+    "BriefSection",
+    "Callout",
 ]
