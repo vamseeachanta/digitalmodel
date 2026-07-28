@@ -238,6 +238,7 @@ digitalmodel = [
     "field_development/data/*.yml",
     "motion_forecast/*.yml",
     "usecase_registry/*.yaml",
+    "reporting/assets/*.html",
 ]
 
 [tool.black]
