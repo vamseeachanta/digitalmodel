@@ -80,10 +80,10 @@ MODE_LABELS: dict[str, str] = {
     "EXCESSIVE_VIBRATION": "Excessive Vibration",
 }
 
-# Retired mode names. The shipped classifier model predates the pump-tagging
-# split and still emits ``PUMP_TAGGING``, so anything rendering a *prediction*
-# has to be able to label it. Kept out of MODE_TIERS / MODE_LABELS so the
-# gallery renders each condition once.
+# Retired mode names. The retrained 20-class model no longer emits
+# ``PUMP_TAGGING``, but archived predictions and stored configs still carry
+# it, so anything rendering a *prediction* has to be able to label it. Kept
+# out of MODE_TIERS / MODE_LABELS so the gallery renders each condition once.
 RETIRED_MODE_LABELS: dict[str, str] = {
     "PUMP_TAGGING": "Pump Tagging",
 }

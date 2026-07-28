@@ -12,9 +12,10 @@ from .troubleshooting import guide_for
 
 FAIL_SEVERITIES = {"critical", "failure"}
 # Retired classifier labels, and the guide entry that now covers them. The
-# shipped model predates the pump-tagging split, so ``PUMP_TAGGING`` is still
-# a label a report has to be able to render -- and it has to keep rendering as
-# critical, not fall through to the "unknown, call it a warning" branch.
+# retrained 20-class model no longer emits ``PUMP_TAGGING``, but stored
+# results and configs written before the split still carry it, so a report
+# has to be able to render it -- and render it as critical, not fall through
+# to the "unknown, call it a warning" branch.
 TROUBLESHOOTING_ALIASES = {
     "VALVE_LEAK": "VALVE_LEAK_TV",
     "PUMP_TAGGING": "PUMP_TAGGING_UP",

@@ -352,22 +352,22 @@ SPECS: list[dict] = [
     dict(id="sec-artificial-lift", kind="section", title="Artificial lift — rod-pump diagnostics",
          std="Gibbs wave equation · Bezerra projections", path="capabilities/#artificial-lift",
          blurb="Sucker-rod-pump dynamometer-card (dynacard) diagnostics — surface-to-downhole "
-               "wave-equation solvers, an 18-mode failure-signature library plus a 336-card "
+               "wave-equation solvers, a 20-mode failure-signature library plus a 346-card "
                "example library, ML card classification with a CI drift-guard on every "
                "published diagnosis, recommended controller setpoints & alarms, and a "
                "field-wide health screen.",
-         figures=[("336", "example cards"), ("28", "guide entries"), ("2", "registered workflows")],
+         figures=[("346", "example cards"), ("28", "guide entries"), ("2", "registered workflows")],
          bullets=["Troubleshooting use cases: card signature → ML diagnosis → field response",
                   "Example-card library: synthetic-verified, measured field wells, digitized archive",
                   "POC setpoints & alarms recommended per well from its own card",
                   "Field-wide per-well health ranking with a fail-closed screening verdict"]),
     dict(id="dynacard-troubleshooting", kind="work", title="Dynacard troubleshooting explorer",
-         std="Gibbs wave equation · Bezerra projections · 18 failure modes",
+         std="Gibbs wave equation · Bezerra projections · 20 failure modes",
          path="artificial-lift/dynacard-troubleshooting.html",
-         blurb="Seven curated rod-pump troubleshooting cases, a 336-card example library behind "
+         blurb="Eight curated rod-pump troubleshooting cases, a 346-card example library behind "
                "phenomenon dropdowns (multiple cards per phenomenon), a 28-entry troubleshooting "
                "guide, and recommended controller setpoints & alarms computed per well.",
-         figures=[("336", "example cards"), ("28", "phenomena in guide"), ("7/7", "CI-verified diagnoses")],
+         figures=[("346", "example cards"), ("28", "phenomena in guide"), ("8/8", "CI-verified diagnoses")],
          bullets=["Example-card library: synthetic-verified, measured field wells, digitized archive",
                   "ML classification with confidence and top-3 differential",
                   "Two-tier load / span / card-area alarm recipes computed per well",
