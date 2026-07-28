@@ -34,6 +34,11 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("src/digitalmodel/orcaflex/", ("orcaflex",)),
     ("src/digitalmodel/visualization/agent_dashboard.py", ("workflows",)),
     ("src/digitalmodel/workflows/", ("workflows",)),
+    # The capabilities census SSOT and its builder live outside src/ and tests/,
+    # so without these two entries an edit to the census would trigger no shard
+    # at all -- the gap that let #1637 sit red for 15 days.
+    ("docs/capability-map/", ("capabilities",)),
+    ("scripts/capabilities/", ("capabilities",)),
     ("tests/benchmarks/test_cp_benchmarks.py", ("cathodic-protection",)),
     (
         "tests/marine_ops/marine_engineering/test_cathodic_protection_dnv.py",

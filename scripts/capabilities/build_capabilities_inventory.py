@@ -2,8 +2,8 @@
 """ABOUTME: Capabilities IA inventory builder (issue #1444) — census, clusters,
 ABOUTME: reference-index joins, recency, spec rendering, and --check freshness.
 
-Reads (never edits) docs/api/capabilities/index.html plus the machine
-source-of-truth files under docs/capability-map/, and emits:
+Reads (never edits) the machine source-of-truth files under
+docs/capability-map/, and emits:
 
   docs/capability-map/capabilities-inventory.json   (machine contract)
   docs/capability-map/capabilities-ia-spec-1444.md  (rendered spec; tables are
@@ -15,6 +15,14 @@ inventory drifted (CI freshness gate via the tests/DOMAINS.md capabilities row).
 Recency comes ONLY from capabilities-added.yml (explicit, PR-evidenced
 metadata): the repo's git history was truncated by the 2026-07 slim and
 sections live inside one HTML file, so no git-derived dating is valid.
+
+CENSUS SOURCE (#1637). The census was scraped from docs/api/capabilities/
+index.html until that page was intentionally reduced to a redirect stub on
+2026-07-13 (PR #1573, epic workspace-hub#3485/#3494 decision A). The census
+now reads the committed capabilities-sections.yml, which is tracked,
+reviewable, and cannot go stale from an unrelated website edit. The HTML
+census helpers below (parse_nav / parse_sections / census) are retained for a
+future live-surface monitoring job and are no longer on the inventory path.
 """
 
 from __future__ import annotations
@@ -32,7 +40,8 @@ HERE = Path(__file__).resolve()
 REPO_DEFAULT = HERE.parents[2]
 
 CAP_MAP = "docs/capability-map"
-INDEX_HTML = "docs/api/capabilities/index.html"
+SECTIONS_YML = f"{CAP_MAP}/capabilities-sections.yml"  # census source (#1637)
+INDEX_HTML = "docs/api/capabilities/index.html"  # redirect stub since PR #1573
 FROZEN_DIR = "capabilities/api"  # frozen work-item assets — excluded from discovery
 
 
@@ -41,7 +50,51 @@ class CensusError(RuntimeError):
 
 
 # ---------------------------------------------------------------------------
-# parsing
+# census — committed SSOT (#1637)
+# ---------------------------------------------------------------------------
+
+_ID_RE = re.compile(r"^[a-z0-9-]+$")
+
+
+def load_sections(repo: Path | str = REPO_DEFAULT) -> list[dict]:
+    """The section census, from the committed ``capabilities-sections.yml``.
+
+    Returns the same ``{id, title, hrefs}`` shape the HTML census used to
+    produce, so every downstream join is unchanged. Fails closed with an
+    actionable message — a malformed SSOT must never degrade to an empty
+    census, which is precisely how #1637 stayed invisible for 15 days.
+    """
+    path = Path(repo) / SECTIONS_YML
+    if not path.exists():
+        raise CensusError(f"census source missing: {SECTIONS_YML}")
+    doc = yaml.safe_load(path.read_text()) or {}
+    if not doc.get("schema_version"):
+        raise CensusError(f"{SECTIONS_YML}: no schema_version")
+    raw = doc.get("sections")
+    if not raw:
+        raise CensusError(f"{SECTIONS_YML}: no sections — census would be empty")
+
+    out, seen = [], set()
+    for i, entry in enumerate(raw):
+        sid = entry.get("id")
+        if not sid or not _ID_RE.match(str(sid)):
+            raise CensusError(f"{SECTIONS_YML}[{i}]: bad or missing id {sid!r}")
+        if sid in seen:
+            raise CensusError(f"duplicate section ids: {sid}")
+        seen.add(sid)
+        title = (entry.get("title") or "").strip()
+        if not title:
+            raise CensusError(f"{SECTIONS_YML}: section {sid} has no title")
+        links = entry.get("links") or []
+        if not isinstance(links, list):
+            raise CensusError(f"{SECTIONS_YML}: section {sid} links must be a list")
+        out.append({"id": sid, "title": title, "hrefs": [str(h) for h in links]})
+    return out
+
+
+# ---------------------------------------------------------------------------
+# HTML census helpers — retained for a future live-surface monitoring job.
+# NOT on the inventory path since #1637; see the module docstring.
 # ---------------------------------------------------------------------------
 
 _SECTION_RE = re.compile(r'<section[^>]*\bid="([a-z0-9-]+)"')
@@ -135,8 +188,7 @@ def load_added(repo: Path) -> dict:
 
 def build_inventory(repo: Path | str = REPO_DEFAULT) -> dict:
     repo = Path(repo)
-    html = (repo / INDEX_HTML).read_text()
-    sections = census(html)
+    sections = load_sections(repo)
     clusters_doc = load_clusters(repo)
     added_doc = load_added(repo)
 
@@ -201,7 +253,7 @@ def build_inventory(repo: Path | str = REPO_DEFAULT) -> dict:
 
     return {
         "schema_version": SCHEMA_VERSION,
-        "source": INDEX_HTML,
+        "source": SECTIONS_YML,
         "sections": inv_sections,
         "clusters": [
             {k: c[k] for k in ("key", "label", "value_statement", "sections")}
@@ -240,14 +292,16 @@ def render_spec(inv: dict) -> str:
     lines = [
         "# Capabilities page — information-architecture spec (issue #1444)",
         "",
-        "> GENERATED tables (source of truth: `capabilities-clusters.yml`, "
-        "`capabilities-added.yml`, the live page census). Regenerate with:",
+        "> GENERATED tables (source of truth: `capabilities-sections.yml`, "
+        "`capabilities-clusters.yml`, `capabilities-added.yml`). Regenerate "
+        "with:",
         "> `.venv/bin/python scripts/capabilities/build_capabilities_inventory.py`",
         "> Presentation is owned by the capabilities revamp lane (PR #1389 "
-        "coordination note) — this spec is its input; `index.html` is not "
-        "edited here.",
+        "coordination note) — this spec is its input. The rendered page moved "
+        "to aceengineer.com/capabilities (PR #1573); the census is committed "
+        "here, not scraped.",
         "",
-        f"Sections on the live page: **{len(inv['sections'])}** · clusters: "
+        f"Sections in the census: **{len(inv['sections'])}** · clusters: "
         f"**{len(inv['clusters'])}** · PDF coverage gaps: "
         f"**{len(inv['pdf_gaps'])}** · unlinked explorers: "
         f"**{len(inv['unlinked_explorers'])}**",

@@ -144,7 +144,7 @@
       "explorers": [],
       "id": "fatigue",
       "pdf": "docs/api/capabilities/pdf/sec-fatigue.pdf",
-      "title": "Fatigue &amp; fracture &mdash; S-N life and crack growth"
+      "title": "Fatigue & fracture — S-N life and crack growth"
     },
     {
       "added": "unknown",
@@ -154,7 +154,7 @@
       ],
       "id": "hydro",
       "pdf": "docs/api/capabilities/pdf/sec-hydro.pdf",
-      "title": "Hydrodynamics &amp; diffraction"
+      "title": "Hydrodynamics & diffraction"
     },
     {
       "added": {
@@ -177,7 +177,7 @@
       ],
       "id": "risers",
       "pdf": "docs/api/capabilities/pdf/sec-risers.pdf",
-      "title": "Risers &amp; pipelines"
+      "title": "Risers & pipelines"
     },
     {
       "added": {
@@ -190,7 +190,7 @@
       ],
       "id": "wall-thickness",
       "pdf": "docs/api/capabilities/pdf/sec-wall-thickness.pdf",
-      "title": "Wall thickness &mdash; sizing &amp; code checks"
+      "title": "Wall thickness — sizing & code checks"
     },
     {
       "added": "unknown",
@@ -211,7 +211,7 @@
       ],
       "id": "viv",
       "pdf": "docs/api/capabilities/pdf/sec-viv.pdf",
-      "title": "Vortex-induced vibration &mdash; screening, frequency &amp; fatigue"
+      "title": "Vortex-induced vibration — screening, frequency & fatigue"
     },
     {
       "added": "unknown",
@@ -240,7 +240,7 @@
       ],
       "id": "field-development",
       "pdf": "docs/api/capabilities/pdf/sec-field-development.pdf",
-      "title": "Field development &mdash; concept screening, cost &amp; economics"
+      "title": "Field development — concept screening, cost & economics"
     },
     {
       "added": "unknown",
@@ -250,7 +250,7 @@
       ],
       "id": "manoeuvring",
       "pdf": "docs/api/capabilities/pdf/sec-manoeuvring.pdf",
-      "title": "Manoeuvring &amp; station-keeping"
+      "title": "Manoeuvring & station-keeping"
     },
     {
       "added": {
@@ -263,7 +263,7 @@
       ],
       "id": "naval-architecture",
       "pdf": "docs/api/capabilities/pdf/sec-naval-architecture.pdf",
-      "title": "Naval architecture &mdash; stability, resistance &amp; hull strength"
+      "title": "Naval architecture — stability, resistance & hull strength"
     },
     {
       "added": {
@@ -276,7 +276,7 @@
       ],
       "id": "geotechnical",
       "pdf": "docs/api/capabilities/pdf/sec-geotechnical.pdf",
-      "title": "Geotechnical &mdash; pile, anchor &amp; foundation capacity"
+      "title": "Geotechnical — pile, anchor & foundation capacity"
     },
     {
       "added": "unknown",
@@ -284,7 +284,7 @@
       "explorers": [],
       "id": "artificial-lift",
       "pdf": "docs/api/capabilities/pdf/sec-artificial-lift.pdf",
-      "title": "Artificial lift &mdash; rod-pump diagnostics"
+      "title": "Artificial lift — rod-pump diagnostics"
     },
     {
       "added": {
@@ -297,7 +297,7 @@
       ],
       "id": "production-engineering",
       "pdf": "docs/api/capabilities/pdf/sec-production-engineering.pdf",
-      "title": "Production engineering &mdash; nodal analysis &amp; well deliverability"
+      "title": "Production engineering — nodal analysis & well deliverability"
     },
     {
       "added": "unknown",
@@ -307,7 +307,7 @@
       ],
       "id": "well",
       "pdf": "docs/api/capabilities/pdf/sec-well.pdf",
-      "title": "Well construction &mdash; casing &amp; tubulars"
+      "title": "Well construction — casing & tubulars"
     },
     {
       "added": {
@@ -320,7 +320,7 @@
       ],
       "id": "drilling-engineering",
       "pdf": "docs/api/capabilities/pdf/sec-drilling-engineering.pdf",
-      "title": "Drilling engineering &mdash; pore pressure, hydraulics &amp; well control"
+      "title": "Drilling engineering — pore pressure, hydraulics & well control"
     },
     {
       "added": {
@@ -344,7 +344,7 @@
       ],
       "id": "corrosion-production",
       "pdf": "docs/api/capabilities/pdf/sec-corrosion-production.pdf",
-      "title": "Corrosion &amp; production chemistry"
+      "title": "Corrosion & production chemistry"
     },
     {
       "added": "unknown",
@@ -355,6 +355,6 @@
       "title": "Validated against published references"
     }
   ],
-  "source": "docs/api/capabilities/index.html",
+  "source": "docs/capability-map/capabilities-sections.yml",
   "unlinked_explorers": []
 }

@@ -233,7 +233,11 @@ gates:
     enabled: true
     order: 1
     description: "Aggregator for all domain test gates"
-    depends_on: ["tests-asset-integrity", "tests-cathodic-protection", "tests-citations", "tests-contracts", "tests-field-development", "tests-hydrodynamics-diffraction", "tests-hydrodynamics-passing-ship", "tests-hydrodynamics-other", "tests-infrastructure-core", "tests-infrastructure-other", "tests-marine-engineering", "tests-marine-ops-other", "tests-naval-architecture", "tests-orcaflex", "tests-orcaflex-solver", "tests-solver-smoke", "tests-specialized", "tests-structural", "tests-subsea", "tests-workflows", "tests-misc"]
+    # tests-capabilities added #1637: it was the only domain gate absent from
+    # this list, so 8 tests failed every nightly for 15 days without ever
+    # surfacing in the aggregate. A gate outside the roll-up is invisible by
+    # construction -- if a domain is deliberately advisory, say so here.
+    depends_on: ["tests-asset-integrity", "tests-capabilities", "tests-cathodic-protection", "tests-citations", "tests-contracts", "tests-field-development", "tests-hydrodynamics-diffraction", "tests-hydrodynamics-passing-ship", "tests-hydrodynamics-other", "tests-infrastructure-core", "tests-infrastructure-other", "tests-marine-engineering", "tests-marine-ops-other", "tests-naval-architecture", "tests-orcaflex", "tests-orcaflex-solver", "tests-solver-smoke", "tests-specialized", "tests-structural", "tests-subsea", "tests-workflows", "tests-misc"]
     aggregate: true
     command: "uv run --no-sources --with-editable . python -c 'print(\"domain test gates complete\")'"
     failure_action: "block"

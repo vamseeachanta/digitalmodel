@@ -1,10 +1,10 @@
 # Capabilities page — information-architecture spec (issue #1444)
 
-> GENERATED tables (source of truth: `capabilities-clusters.yml`, `capabilities-added.yml`, the live page census). Regenerate with:
+> GENERATED tables (source of truth: `capabilities-sections.yml`, `capabilities-clusters.yml`, `capabilities-added.yml`). Regenerate with:
 > `.venv/bin/python scripts/capabilities/build_capabilities_inventory.py`
-> Presentation is owned by the capabilities revamp lane (PR #1389 coordination note) — this spec is its input; `index.html` is not edited here.
+> Presentation is owned by the capabilities revamp lane (PR #1389 coordination note) — this spec is its input. The rendered page moved to aceengineer.com/capabilities (PR #1573); the census is committed here, not scraped.
 
-Sections on the live page: **22** · clusters: **7** · PDF coverage gaps: **0** · unlinked explorers: **0**
+Sections in the census: **22** · clusters: **7** · PDF coverage gaps: **0** · unlinked explorers: **0**
 
 ## Cluster taxonomy
 
@@ -12,7 +12,7 @@ Sections on the live page: **22** · clusters: **7** · PDF coverage gaps: **0**
 *Strength, fatigue and remaining-life decisions for plates, panels and aging assets — field measurement to code verdict, with the validation table anchoring every engine to a published golden case.*
 
 - [`#structural`](../api/capabilities/index.html#structural) — Ship structural strength
-- [`#fatigue`](../api/capabilities/index.html#fatigue) — Fatigue &amp; fracture &mdash; S-N life and crack growth
+- [`#fatigue`](../api/capabilities/index.html#fatigue) — Fatigue & fracture — S-N life and crack growth
 - [`#ffs`](../api/capabilities/index.html#ffs) — Fitness-for-service
 - [`#cathodic`](../api/capabilities/index.html#cathodic) — Cathodic protection
 - [`#validation`](../api/capabilities/index.html#validation) — Validated against published references
@@ -20,37 +20,37 @@ Sections on the live page: **22** · clusters: **7** · PDF coverage gaps: **0**
 ### Pipelines & Risers (`pipelines-risers`)
 *Wall sizing, code checks and vortex-induced-vibration screening for flowlines, pipelines and riser systems across 10+ design codes.*
 
-- [`#risers`](../api/capabilities/index.html#risers) — Risers &amp; pipelines
-- [`#wall-thickness`](../api/capabilities/index.html#wall-thickness) — Wall thickness &mdash; sizing &amp; code checks
-- [`#viv`](../api/capabilities/index.html#viv) — Vortex-induced vibration &mdash; screening, frequency &amp; fatigue
+- [`#risers`](../api/capabilities/index.html#risers) — Risers & pipelines
+- [`#wall-thickness`](../api/capabilities/index.html#wall-thickness) — Wall thickness — sizing & code checks
+- [`#viv`](../api/capabilities/index.html#viv) — Vortex-induced vibration — screening, frequency & fatigue
 
 ### Moorings, Anchors & Subsea (`moorings-stationkeeping`)
 *Stationkeeping design and subsea hardware — mooring strength and fatigue, anchor holding capacity, and foundation geotechnics.*
 
 - [`#subsea`](../api/capabilities/index.html#subsea) — Subsea
-- [`#geotechnical`](../api/capabilities/index.html#geotechnical) — Geotechnical &mdash; pile, anchor &amp; foundation capacity
+- [`#geotechnical`](../api/capabilities/index.html#geotechnical) — Geotechnical — pile, anchor & foundation capacity
 
 ### Hydrodynamics & Naval Architecture (`hydro-naval`)
 *Vessel and floating-body behaviour — diffraction, seakeeping, CFD, manoeuvring and ship-form performance from hull lines to RAOs.*
 
-- [`#hydro`](../api/capabilities/index.html#hydro) — Hydrodynamics &amp; diffraction
+- [`#hydro`](../api/capabilities/index.html#hydro) — Hydrodynamics & diffraction
 - [`#cfd`](../api/capabilities/index.html#cfd) — Computational fluid dynamics (CFD)
-- [`#manoeuvring`](../api/capabilities/index.html#manoeuvring) — Manoeuvring &amp; station-keeping
-- [`#naval-architecture`](../api/capabilities/index.html#naval-architecture) — Naval architecture &mdash; stability, resistance &amp; hull strength
+- [`#manoeuvring`](../api/capabilities/index.html#manoeuvring) — Manoeuvring & station-keeping
+- [`#naval-architecture`](../api/capabilities/index.html#naval-architecture) — Naval architecture — stability, resistance & hull strength
 
 ### Wells, Drilling & Production (`wells-drilling-production`)
 *The well axis end-to-end — casing and drilling engineering, pore pressure, artificial lift, production chemistry and flow assurance.*
 
-- [`#well`](../api/capabilities/index.html#well) — Well construction &mdash; casing &amp; tubulars
-- [`#drilling-engineering`](../api/capabilities/index.html#drilling-engineering) — Drilling engineering &mdash; pore pressure, hydraulics &amp; well control
-- [`#artificial-lift`](../api/capabilities/index.html#artificial-lift) — Artificial lift &mdash; rod-pump diagnostics
-- [`#production-engineering`](../api/capabilities/index.html#production-engineering) — Production engineering &mdash; nodal analysis &amp; well deliverability
-- [`#corrosion-production`](../api/capabilities/index.html#corrosion-production) — Corrosion &amp; production chemistry
+- [`#well`](../api/capabilities/index.html#well) — Well construction — casing & tubulars
+- [`#drilling-engineering`](../api/capabilities/index.html#drilling-engineering) — Drilling engineering — pore pressure, hydraulics & well control
+- [`#artificial-lift`](../api/capabilities/index.html#artificial-lift) — Artificial lift — rod-pump diagnostics
+- [`#production-engineering`](../api/capabilities/index.html#production-engineering) — Production engineering — nodal analysis & well deliverability
+- [`#corrosion-production`](../api/capabilities/index.html#corrosion-production) — Corrosion & production chemistry
 
 ### Field Development & Economics (`field-dev-economics`)
 *Concept-to-cashflow screening — field development options, floating wind TOTEX/LCOE and NPV levers over real project structures.*
 
-- [`#field-development`](../api/capabilities/index.html#field-development) — Field development &mdash; concept screening, cost &amp; economics
+- [`#field-development`](../api/capabilities/index.html#field-development) — Field development — concept screening, cost & economics
 - [`#wind`](../api/capabilities/index.html#wind) — Floating wind
 
 ### Installation & Marine Operations (`installation-ops`)

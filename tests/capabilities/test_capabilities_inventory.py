@@ -16,23 +16,61 @@ spec = importlib.util.spec_from_file_location("capinv", SCRIPT)
 ci = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ci)
 
-INDEX = REPO / "docs" / "api" / "capabilities" / "index.html"
 CLUSTERS = REPO / "docs" / "capability-map" / "capabilities-clusters.yml"
 ADDED = REPO / "docs" / "capability-map" / "capabilities-added.yml"
+SECTIONS = REPO / "docs" / "capability-map" / "capabilities-sections.yml"
 
 
-# 1 — census bijection on the LIVE page: nav hrefs <-> section ids, 1:1
+# 1 — census integrity on the committed SSOT: unique ids, every id titled.
+#
+# This used to scrape docs/api/capabilities/index.html. That page became a
+# redirect stub on 2026-07-13 (PR #1573) and the census silently lost its
+# subject; the shard was red for 15 days (#1637). The census source is now a
+# committed file, so it can only break from a reviewable diff.
 
 
-def test_section_census_bijection_live_page():
-    sections = ci.parse_sections(INDEX.read_text())
+def test_section_census_integrity_from_ssot():
+    sections = ci.load_sections(REPO)
     ids = [s["id"] for s in sections]
-    assert len(ids) == len(set(ids))
-    nav = ci.parse_nav(INDEX.read_text())
-    assert set(nav) == set(ids)
-    assert len(nav) == len(ids)
+    assert ids, "census is empty"
+    assert len(ids) == len(set(ids)), "duplicate section ids"
     for s in sections:
-        assert s["title"]
+        assert s["title"], f"section {s['id']} has no title"
+        assert isinstance(s["hrefs"], list)
+
+
+# 1b — the census must FAIL CLOSED, never degrade to an empty result. This is
+# the specific failure mode that made #1637 invisible: a census that returns
+# nothing makes every downstream set-difference look like clean drift.
+
+
+@pytest.mark.parametrize(
+    ("doc", "match"),
+    [
+        ({"schema_version": "1.0", "sections": []}, "no sections"),
+        ({"sections": [{"id": "a", "title": "A"}]}, "schema_version"),
+        ({"schema_version": "1.0", "sections": [{"id": "a"}]}, "no title"),
+        ({"schema_version": "1.0", "sections": [{"title": "A"}]}, "bad or missing id"),
+        (
+            {
+                "schema_version": "1.0",
+                "sections": [{"id": "a", "title": "A"}, {"id": "a", "title": "A"}],
+            },
+            "duplicate",
+        ),
+    ],
+)
+def test_census_fails_closed_on_malformed_ssot(tmp_path, doc, match):
+    fake = tmp_path / "docs" / "capability-map"
+    fake.mkdir(parents=True)
+    (fake / "capabilities-sections.yml").write_text(yaml.safe_dump(doc))
+    with pytest.raises(ci.CensusError, match=match):
+        ci.load_sections(tmp_path)
+
+
+def test_census_fails_closed_when_source_missing(tmp_path):
+    with pytest.raises(ci.CensusError, match="census source missing"):
+        ci.load_sections(tmp_path)
 
 
 # 2 — parser failure fixtures fail closed with diagnostics
@@ -61,10 +99,10 @@ def test_cluster_mapping_total_disjoint_and_schema():
         assert c["key"] and c["label"] and c["value_statement"]
         assigned += c["sections"]
     assert len(assigned) == len(set(assigned)), "section in two clusters"
-    live = {s["id"] for s in ci.parse_sections(INDEX.read_text())}
-    assert set(assigned) == live, (
-        f"cluster map out of sync: missing={live - set(assigned)} "
-        f"stale={set(assigned) - live}"
+    census = {s["id"] for s in ci.load_sections(REPO)}
+    assert set(assigned) == census, (
+        f"cluster map out of sync: missing={census - set(assigned)} "
+        f"stale={set(assigned) - census}"
     )
 
 
@@ -195,8 +233,13 @@ def _norm(s: str) -> str:
 
 
 def _section_linked_files(section: dict) -> list:
-    """Repo files a live section links: GitHub blob/tree URLs into this repo
-    (dirs recursed) plus page-relative hrefs under docs/api/capabilities/."""
+    """Repo files a census section links: GitHub blob/tree URLs into this repo
+    (dirs recursed) plus page-relative hrefs under docs/api/capabilities/.
+
+    The links come from capabilities-sections.yml since #1637. Note this
+    guard was VACUOUS between 2026-07-13 and its repair: with the page
+    stubbed, `sections.get(anchor)` was always None and every standards claim
+    skipped its evidence check while the test still reported green."""
     out = []
     for href in section["hrefs"]:
         m = _GH_HREF_RE.match(href)
@@ -216,14 +259,14 @@ def _section_linked_files(section: dict) -> list:
 # 10 — ratchet (a): section-kind SPECS ids <-> live section anchors, 1:1
 
 
-def test_specs_section_ids_biject_live_sections():
+def test_specs_section_ids_biject_census_sections():
     exempt = _onepager_exempt()
-    live = {s["id"] for s in ci.parse_sections(INDEX.read_text())}
+    live = {s["id"] for s in ci.load_sections(REPO)}
     covered = set(ci.load_pdf_specs(REPO))  # anchors with a sec-* SPECS entry
     assert exempt <= live, f"stale onepager_exempt entries: {sorted(exempt - live)}"
     orphans = covered - live
     assert not orphans, (
-        f"sec-* SPECS entries with no live section: {sorted(orphans)}"
+        f"sec-* SPECS entries with no section in the census: {sorted(orphans)}"
     )
     missing = live - covered - exempt
     assert not missing, (
@@ -252,7 +295,7 @@ def test_every_section_pdf_committed():
 
 
 def test_specs_standards_grounded():
-    sections = {s["id"]: s for s in ci.parse_sections(INDEX.read_text())}
+    sections = {s["id"]: s for s in ci.load_sections(REPO)}
     script = REPO / "scripts" / "capabilities" / "build_onepagers.py"
     spec_ = importlib.util.spec_from_file_location("build_onepagers_g", script)
     bo = importlib.util.module_from_spec(spec_)
@@ -275,6 +318,7 @@ def test_specs_standards_grounded():
         return False
 
     ungrounded = []
+    checked = 0
     for entry in bo.SPECS:
         if entry.get("kind") != "section":
             continue
@@ -284,8 +328,15 @@ def test_specs_standards_grounded():
             continue  # covered by the bijection test
         files = _section_linked_files(section)
         for token in _STD_TOKEN_RE.findall(entry["std"]):
+            checked += 1
             if not evidence(token, files):
                 ungrounded.append((entry["id"], token))
+    # Liveness: an empty census, or sections with no links, would make this
+    # guard pass while checking nothing -- exactly how it hid for 15 days.
+    assert checked, (
+        "standards-grounding guard checked ZERO tokens -- the census or the "
+        "section links are empty; a green result here would be meaningless"
+    )
     assert not ungrounded, (
         f"standards named in `std` lines with zero grep evidence in the "
         f"section's linked files (overclaim per dm#1391): {ungrounded}"
