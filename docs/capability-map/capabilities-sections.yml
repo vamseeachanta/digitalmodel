@@ -10,7 +10,10 @@
 #
 # `id`     -- URL anchor. STABLE: external links cite these (see the
 #             anchor-stability contract in capabilities-ia-spec-1444.md).
-# `title`  -- human label used in the generated spec tables.
+# `title`  -- human label used in the generated spec tables. Plain text, NOT
+#             HTML: the entities the extraction inherited (&amp;, &mdash;)
+#             were an artefact of the markup this data used to live in, and
+#             are decoded here. test_titles_are_plain_text keeps them out.
 # `hrefs`  -- every link the section owns, page-relative to
 #             docs/api/capabilities/. These drive the explorer<->section
 #             join, `unlinked_explorers`, and the standards-grounding
@@ -50,7 +53,7 @@ sections:
       - "api/buckling-panel.html"
 
   - id: fatigue
-    title: "Fatigue &amp; fracture &mdash; S-N life and crack growth"
+    title: "Fatigue & fracture — S-N life and crack growth"
     hrefs:
       - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/sn_library.py"
       - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/scf_library.py"
@@ -59,7 +62,7 @@ sections:
       - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/crack_growth.py"
 
   - id: hydro
-    title: "Hydrodynamics &amp; diffraction"
+    title: "Hydrodynamics & diffraction"
     hrefs:
       - "pdf/sec-hydro.pdf"
       - "../hydro/rao-comparison/"
@@ -111,7 +114,7 @@ sections:
       - "../cfd/naca0012-airfoil-verification.html"
 
   - id: risers
-    title: "Risers &amp; pipelines"
+    title: "Risers & pipelines"
     hrefs:
       - "pdf/sec-risers.pdf"
       - "../orcaflex/riser-validation-report.html"
@@ -128,7 +131,7 @@ sections:
       - "api/drilling-riser-operability-monitor.html"
 
   - id: wall-thickness
-    title: "Wall thickness &mdash; sizing &amp; code checks"
+    title: "Wall thickness — sizing & code checks"
     hrefs:
       - "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/structural/analysis/wall_thickness_codes"
       - "../structural/wall-thickness-explorer.html"
@@ -146,7 +149,7 @@ sections:
       - "api/subsea-xsection.html"
 
   - id: viv
-    title: "Vortex-induced vibration &mdash; screening, frequency &amp; fatigue"
+    title: "Vortex-induced vibration — screening, frequency & fatigue"
     hrefs:
       - "../structural/viv-explorer.html"
       - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/subsea/viv_analysis/vortex_shedding.py"
@@ -179,7 +182,7 @@ sections:
       - "api/wind-economics.html"
 
   - id: field-development
-    title: "Field development &mdash; concept screening, cost &amp; economics"
+    title: "Field development — concept screening, cost & economics"
     hrefs:
       - "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/field_development"
       - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/field_development/capex_estimator.py"
@@ -187,7 +190,7 @@ sections:
       - "https://github.com/vamseeachanta/digitalmodel/tree/main/docs/domains/references/field_development/catalog"
 
   - id: manoeuvring
-    title: "Manoeuvring &amp; station-keeping"
+    title: "Manoeuvring & station-keeping"
     hrefs:
       - "pdf/sec-manoeuvring.pdf"
       - "../hydro/rudder-maneuvering-explorer.html"
@@ -204,7 +207,7 @@ sections:
       - "api/short-horizon-motion-forecast.html"
 
   - id: naval-architecture
-    title: "Naval architecture &mdash; stability, resistance &amp; hull strength"
+    title: "Naval architecture — stability, resistance & hull strength"
     hrefs:
       - "../structural/ship-resistance-explorer.html"
       - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/damage_stability.py"
@@ -212,7 +215,7 @@ sections:
       - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/floating_platform_stability.py"
 
   - id: geotechnical
-    title: "Geotechnical &mdash; pile, anchor &amp; foundation capacity"
+    title: "Geotechnical — pile, anchor & foundation capacity"
     hrefs:
       - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/geotechnical/piles.py"
       - "../structural/anchor-holding-explorer.html"
@@ -220,7 +223,7 @@ sections:
       - "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/geotechnical"
 
   - id: artificial-lift
-    title: "Artificial lift &mdash; rod-pump diagnostics"
+    title: "Artificial lift — rod-pump diagnostics"
     hrefs:
       - "pdf/sec-artificial-lift.pdf"
       - "../artificial-lift/dynacard-troubleshooting.html"
@@ -231,7 +234,7 @@ sections:
       - "api/dynacard-field-health.html"
 
   - id: production-engineering
-    title: "Production engineering &mdash; nodal analysis &amp; well deliverability"
+    title: "Production engineering — nodal analysis & well deliverability"
     hrefs:
       - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/production_engineering/nodal_solver.py"
       - "../structural/ipr-explorer.html"
@@ -239,7 +242,7 @@ sections:
       - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/production_engineering/reconciliation_workflow.py"
 
   - id: well
-    title: "Well construction &mdash; casing &amp; tubulars"
+    title: "Well construction — casing & tubulars"
     hrefs:
       - "pdf/sec-well.pdf"
       - "../well/casing-design-explorer.html"
@@ -247,7 +250,7 @@ sections:
       - "api/casing-design.html"
 
   - id: drilling-engineering
-    title: "Drilling engineering &mdash; pore pressure, hydraulics &amp; well control"
+    title: "Drilling engineering — pore pressure, hydraulics & well control"
     hrefs:
       - "../structural/pore-pressure-explorer.html"
       - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/swab-surge"
@@ -265,7 +268,7 @@ sections:
       - "https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/articles/dnv_rp_f106_coating_selection.md"
 
   - id: corrosion-production
-    title: "Corrosion &amp; production chemistry"
+    title: "Corrosion & production chemistry"
     hrefs:
       - "pdf/sec-corrosion-production.pdf"
       - "../corrosion/galvanic-compatibility-explorer.html"

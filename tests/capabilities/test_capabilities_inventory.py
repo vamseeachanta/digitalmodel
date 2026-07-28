@@ -2,6 +2,7 @@
 # ABOUTME: census schema, cluster totality, joins with gaps, freshness gate.
 
 import ast
+import html
 import importlib.util
 import json
 import re
@@ -32,6 +33,26 @@ def test_section_census_schema():
     for s in sections:
         assert s["title"]
         assert isinstance(s["hrefs"], list)
+
+
+# 1a — titles are data, not markup.
+#
+# The census was extracted from HTML, so titles arrived carrying &amp; and
+# &mdash;. Those entities are meaningless in YAML and leak into every consumer
+# that is not an HTML renderer — the generated spec tables, the one-pagers, any
+# future API. Decoded once in #1637; this keeps them from creeping back with
+# the next hand-added section.
+
+
+def test_titles_are_plain_text():
+    offenders = [
+        (s["id"], s["title"])
+        for s in ci.load_sections(REPO)
+        if html.unescape(s["title"]) != s["title"]
+    ]
+    assert not offenders, (
+        f"section titles must be plain text, not HTML entities: {offenders}"
+    )
 
 
 # 1b — the IA is declared in YAML, not scraped out of rendered markup.
