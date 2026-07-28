@@ -3,6 +3,7 @@
 
 import pytest
 import numpy as np
+from scipy.signal import savgol_filter
 from digitalmodel.marine_ops.artificial_lift.dynacard.models import CardData
 from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
     generate_normal_card,
@@ -24,8 +25,23 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
     generate_sand_abrasion_card,
     generate_excessive_vibration_card,
     generate_training_dataset,
+    surface_card_from_pump_card,
     ALL_GENERATORS,
 )
+from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings.adapter import (
+    solve_downhole_card,
+)
+from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings.solver import (
+    DEFAULT_SAVGOL_ORDER,
+    DEFAULT_SAVGOL_WINDOW,
+)
+from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
+    DynacardAnalysisContext,
+    PumpProperties,
+    RodSection,
+    SurfaceUnit,
+)
+from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWorkflow
 
 
 def _validate_card(card: CardData):
@@ -141,3 +157,124 @@ class TestTrainingDataset:
         for label in labels:
             assert isinstance(label, str)
             assert len(label) > 0
+
+
+def _demo_context() -> DynacardAnalysisContext:
+    """The well the shipped dynacard-diagnostics example is built on.
+
+    5,000 ft of 1 in rod on a 192 in stroke unit at 6 SPM. The stroke matters:
+    a generated pump card swinging tens of thousands of pounds costs well over
+    a hundred inches of differential rod stretch at this depth, so the
+    polished rod has to travel much further than the plunger does.
+    """
+    return DynacardAnalysisContext(
+        api14="SIM-ROUNDTRIP",
+        surface_card=CardData(position=[0.0, 1.0, 1.0, 0.0], load=[1.0, 2.0, 2.0, 1.0]),
+        rod_string=[RodSection(diameter=1.0, length=5000.0)],
+        pump=PumpProperties(diameter=1.75, depth=5000.0),
+        surface_unit=SurfaceUnit(stroke_length=192.0),
+        spm=6.0,
+    )
+
+
+class TestSurfaceCardForwardModel:
+    """The pump card must survive a trip up the rod string and back down.
+
+    Every generator here draws a DOWNHOLE card. Handing one to a
+    surface-to-downhole solver as if it were a surface card asks the solver to
+    remove a rod string that is not in the data -- a category error that was
+    only invisible while the configured solver left the load alone (#1857).
+
+    :func:`surface_card_from_pump_card` closes the loop by marching the rod
+    string upward, and this is the invariant the whole synthetic harness rests
+    on: forward-model a generated pump card to the surface, run the shipped
+    surface-to-downhole solver on the result, and get the pump card back.
+    """
+
+    @pytest.mark.parametrize("mode,gen_func", list(ALL_GENERATORS.items()))
+    def test_round_trip_recovers_the_generated_pump_card(self, mode, gen_func):
+        ctx = _demo_context()
+        pump_card = gen_func(seed=711)
+
+        surface_card = surface_card_from_pump_card(pump_card, ctx)
+        recovered = solve_downhole_card(
+            ctx.model_copy(update={"surface_card": surface_card}), n_nodes=200
+        )
+
+        original_position = np.array(pump_card.position)
+        recovered_position = np.array(recovered.position)
+        original_load = np.array(pump_card.load)
+        recovered_load = np.array(recovered.load)
+
+        # Position comes back exactly, up to one rigid shift of the datum.
+        # That shift is the static rod stretch: the surface card is zeroed at
+        # its lowest point, as an instrument records it, and the plunger sits
+        # that far below the polished rod. It is the same constant at every
+        # sample, which is what makes it a datum and not an error.
+        offset = np.mean(recovered_position - original_position)
+        assert offset < 0.0
+        np.testing.assert_allclose(
+            recovered_position - offset, original_position, atol=1.0e-6
+        )
+
+        load_range = original_load.max() - original_load.min()
+
+        # The load resembles the generator's card...
+        load_nrmse = np.sqrt(np.mean((recovered_load - original_load) ** 2)) / load_range
+        assert load_nrmse < 0.15
+        assert np.corrcoef(original_load, recovered_load)[0, 1] > 0.90
+
+        # ...and what separates the two is the solver's own Savitzky-Golay
+        # smoothing of the downhole load, nothing else. Smooth the generator's
+        # card the same way and the residual collapses by an order of
+        # magnitude, which is what pins the remaining difference on the
+        # smoothing rather than on the forward model.
+        smoothed = savgol_filter(
+            original_load, DEFAULT_SAVGOL_WINDOW, DEFAULT_SAVGOL_ORDER
+        )
+        smoothed[-1] = smoothed[0]
+        smoothed_nrmse = (
+            np.sqrt(np.mean((recovered_load - smoothed) ** 2)) / load_range
+        )
+        assert smoothed_nrmse < 0.02
+        assert smoothed_nrmse < load_nrmse / 2.0
+
+    def test_surface_card_is_not_the_pump_card(self):
+        """Guard against the harness feeding a pump card in as a surface card."""
+        ctx = _demo_context()
+        pump_card = generate_pump_tagging_card(seed=711)
+
+        surface_card = surface_card_from_pump_card(pump_card, ctx)
+
+        pump_position = np.array(pump_card.position)
+        surface_position = np.array(surface_card.position)
+        pump_load = np.array(pump_card.load)
+        surface_load = np.array(surface_card.load)
+
+        # The polished rod travels further than the plunger, by the rod
+        # stretch the load swing causes.
+        assert (surface_position.max() - surface_position.min()) > (
+            pump_position.max() - pump_position.min()
+        )
+        # And the surface load never falls to the pump's minimum: the rods'
+        # buoyant weight is carried at the surface and shed on the way down.
+        assert surface_load.min() > pump_load.min()
+
+    def test_workflow_round_trip_preserves_the_diagnosis(self):
+        """The label the harness asks for is the label the solver hands back."""
+        cfg = {
+            "synthetic_card": {"mode": "PUMP_TAGGING", "seed": 711},
+            "well": {
+                "api14": "SIM-PUMP-TAGGING-711",
+                "rod": {"diameter": 1.0, "length": 5000.0},
+                "pump": {"diameter": 1.75, "depth": 5000.0},
+                "surface_unit": {"stroke_length": 192.0},
+                "spm": 6.0,
+            },
+            "report": {"html": False},
+        }
+
+        result = DynacardWorkflow().router(cfg)
+
+        assert result["results"]["solver_method"] == "everitt_jennings"
+        assert result["artificial_lift"]["classification"] == "PUMP_TAGGING"
