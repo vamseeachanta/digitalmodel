@@ -13,11 +13,23 @@ from .exceptions import DynacardException
 
 
 # Cyclic Load Factor (F_CL) lookup table per API RP 11L
-# Based on motor design (Mark II vs Others) and NEMA motor code
+# Based on motor design (Mark II vs Others) and NEMA motor code.
+#
+# NEMA design codes classify ELECTRIC INDUCTION MOTORS. F_CL here is a function
+# of motor slip, which is undefined for an engine-driven prime mover (e.g. a
+# natural gas engine). This table must therefore only be consulted once the
+# driver is KNOWN to be an electric motor - see _resolve_prime_mover_type.
 F_CL_TABLE = {
     'Mark II': {'NEMA B': 1.517, 'NEMA D': 1.1},
     'Others': {'NEMA B': 1.897, 'NEMA D': 1.375}
 }
+
+# Recognised prime mover types
+PRIME_MOVER_ELECTRIC = 'electric'
+PRIME_MOVER_UNSPECIFIED = 'unspecified'
+_ELECTRIC_ALIASES = {'electric', 'electric_motor', 'induction', 'motor'}
+
+DEFAULT_RUNTIME_HOURS = 24.0
 
 # Conversion factors
 HP_TO_KW = 0.7457  # Horsepower to kilowatts
@@ -54,12 +66,32 @@ class PowerConsumptionCalculator(BaseCalculator[PowerConsumptionAnalysis]):
         # Calculate card area (work per stroke)
         card_area = self._calculate_card_area(self.ctx.surface_card)
 
-        # Determine motor design and NEMA code
-        motor_design = self._get_motor_design()
-        nema_code = self._get_nema_code()
+        warnings = []
 
-        # Get cyclic load factor
-        f_cl = self._get_cyclic_load_factor(motor_design, nema_code)
+        # Determine pumping unit class and prime mover type
+        motor_design = self._get_motor_design()
+        prime_mover_type = self._resolve_prime_mover_type()
+
+        # Cyclic load factor is an ELECTRIC-motor correction. Apply it only
+        # when the driver is known to be an electric motor; otherwise report
+        # the unfactored prime mover HP and say so.
+        if prime_mover_type == PRIME_MOVER_ELECTRIC:
+            nema_code = self._get_nema_code()
+            f_cl = self._get_cyclic_load_factor(motor_design, nema_code)
+            f_cl_applied = True
+        else:
+            nema_code = ''
+            f_cl = None
+            f_cl_applied = False
+            warnings.append(
+                f"Cyclic load factor NOT applied: prime mover type is "
+                f"'{prime_mover_type}'. NEMA design codes classify electric "
+                f"induction motors only; F_CL is undefined for a non-electric "
+                f"driver. Set motor.prime_mover_type='electric' (or give an "
+                f"explicit NEMA code in motor.model) to apply it. Reported "
+                f"prime_mover_horsepower is the efficiency-corrected polished "
+                f"rod HP with no cyclic load factor."
+            )
 
         # Calculate polished rod horsepower
         # P_PR = (card_area * SPM) / 33000
@@ -74,16 +106,23 @@ class PowerConsumptionCalculator(BaseCalculator[PowerConsumptionAnalysis]):
 
         # Calculate prime mover horsepower
         # P_PM = F_CL * P_PR / (efficiency_pm * efficiency_u)
+        factor = f_cl if f_cl_applied else 1.0
         if efficiency_pm * efficiency_u > 0:
-            p_pm = f_cl * p_pr / (efficiency_pm * efficiency_u)
+            p_pm = factor * p_pr / (efficiency_pm * efficiency_u)
         else:
-            p_pm = f_cl * p_pr / 0.765  # Default 85% * 90%
+            p_pm = factor * p_pr / 0.765  # Default 85% * 90%
 
         # Convert to kW
         p_kw = p_pm * HP_TO_KW
 
         # Calculate daily consumption
-        runtime = self.ctx.runtime
+        runtime, runtime_source = self._resolve_runtime()
+        if runtime_source == 'assumed_default_24h':
+            warnings.append(
+                f"Runtime was not supplied by the caller; daily_energy_consumption "
+                f"assumes {DEFAULT_RUNTIME_HOURS:g} h/day of pumping. Set "
+                f"context.runtime or well_test.runtime for a measured value."
+            )
         daily_kwh = p_kw * runtime
 
         # Populate results
@@ -93,18 +132,75 @@ class PowerConsumptionCalculator(BaseCalculator[PowerConsumptionAnalysis]):
         self.result.power_consumption_kw = round(p_kw, 3)
         self.result.daily_energy_consumption = round(daily_kwh, 2)
         self.result.motor_design = motor_design
+        self.result.prime_mover_type = prime_mover_type
         self.result.nema_code = nema_code
         self.result.cyclic_load_factor = f_cl
+        self.result.cyclic_load_factor_applied = f_cl_applied
+        self.result.runtime_hours = runtime
+        self.result.runtime_source = runtime_source
+        self.result.warnings = warnings
 
         return self.result
+
+    def _resolve_prime_mover_type(self) -> str:
+        """
+        Determine what actually drives the pumping unit.
+
+        The cyclic load factor table is only valid for electric induction
+        motors, so the driver has to be stated rather than assumed. It counts
+        as stated when either ``motor.prime_mover_type`` is set, or
+        ``motor.model`` carries an explicit NEMA designation (which is itself a
+        declaration that the driver is an electric motor).
+
+        Returns:
+            "electric", the caller-supplied type (e.g. "gas_engine"), or
+            "unspecified" when the driver is unknown.
+        """
+        motor = self.ctx.motor
+        if motor is None:
+            return PRIME_MOVER_UNSPECIFIED
+
+        declared = (motor.prime_mover_type or '').strip().lower()
+        if declared:
+            if declared in _ELECTRIC_ALIASES:
+                return PRIME_MOVER_ELECTRIC
+            return declared
+
+        if motor.model and 'NEMA' in motor.model.upper():
+            return PRIME_MOVER_ELECTRIC
+
+        return PRIME_MOVER_UNSPECIFIED
+
+    def _resolve_runtime(self) -> tuple:
+        """
+        Resolve daily pumping runtime and record where it came from.
+
+        ``DynacardAnalysisContext.runtime`` has a 24 h default, so a context
+        that never set it is indistinguishable from one that measured 24 h
+        unless the set-ness is checked. Pydantic's ``model_fields_set`` gives
+        exactly that.
+
+        Returns:
+            (runtime_hours, source) where source is "context", "well_test" or
+            "assumed_default_24h".
+        """
+        if 'runtime' in self.ctx.model_fields_set:
+            return float(self.ctx.runtime), 'context'
+
+        well_test = self.ctx.well_test
+        if well_test is not None and 'runtime' in well_test.model_fields_set:
+            return float(well_test.runtime), 'well_test'
+
+        return float(self.ctx.runtime), 'assumed_default_24h'
 
 
     def _calculate_card_area(self, card: CardData) -> float:
         """
         Calculate dynamometer card area using the shoelace formula.
 
-        The card area represents work per stroke in in-lbs (inch-pounds).
-        Converting to ft-lbs: area_in_lbs / 12
+        The raw shoelace area is in in-lbs (inches x pounds); this method
+        returns it converted to FT-LBS (divided by 12), which is what the
+        33,000 ft-lbs/min-per-HP constant in calculate() expects.
 
         Args:
             card: Surface card with position and load data
@@ -163,6 +259,11 @@ class PowerConsumptionCalculator(BaseCalculator[PowerConsumptionAnalysis]):
 
         NEMA B motors are general purpose.
         NEMA D motors are high-slip for pumping applications.
+
+        Only called once the prime mover is known to be an electric induction
+        motor (see _resolve_prime_mover_type), so falling back to NEMA B here
+        is a general-purpose-motor assumption, not an assumption that the
+        driver is electric at all.
 
         Returns:
             "NEMA B" or "NEMA D"
@@ -231,6 +332,7 @@ def calculate_power_consumption(
         return calculator.calculate()
     except DynacardException as e:
         calculator.result.motor_design = f"error: {e.message}"
+        calculator.result.warnings = [f"error: {e.message}"]
         return calculator.result
 
 

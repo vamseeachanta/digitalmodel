@@ -80,8 +80,22 @@ class CardGeometryCalculator(BaseCalculator[CardGeometryAnalysis]):
         # Calculate area using shoelace formula
         self.result.area = self._calculate_polygon_area(polygon)
 
-        # Calculate perimeter
+        # Path length in plotted card space. DEPRECATED: mixes inches and
+        # pounds under one sqrt, so it is not a physical length. Retained only
+        # because external consumers still read it; see the dimensionally
+        # meaningful replacements set immediately below.
         self.result.perimeter = self._calculate_polygon_perimeter(polygon)
+
+        # Dimensionally meaningful replacements for `perimeter`
+        self.result.position_path_length = float(
+            np.sum(np.abs(np.roll(position, -1) - position))
+        )
+        self.result.load_path_length = float(
+            np.sum(np.abs(np.roll(load, -1) - load))
+        )
+        self.result.normalized_perimeter = self._calculate_normalized_perimeter(
+            position, load
+        )
 
         # Calculate centroid
         cx, cy = self._calculate_centroid(polygon)
@@ -89,7 +103,7 @@ class CardGeometryCalculator(BaseCalculator[CardGeometryAnalysis]):
         self.result.centroid_load = cy
 
         # Calculate zoned areas (quadrant distribution)
-        self._calculate_zoned_areas(position, load)
+        self._calculate_zoned_areas(polygon)
 
         return self.result
 
@@ -121,11 +135,18 @@ class CardGeometryCalculator(BaseCalculator[CardGeometryAnalysis]):
         """
         Calculate polygon perimeter (sum of edge lengths).
 
+        .. deprecated::
+            The card polygon has inches on one axis and pounds on the other, so
+            ``sqrt(dx^2 + dy^2)`` adds inches to pounds and the result is NOT a
+            physical length. Use ``position_path_length`` / ``load_path_length``
+            (each dimensionally consistent) or ``normalized_perimeter``
+            (dimensionless) instead.
+
         Args:
             polygon: Nx2 array of (x, y) coordinates
 
         Returns:
-            Total perimeter length
+            Total edge-length sum in mixed (in, lb) card space
         """
         n = len(polygon)
         if n < 2:
@@ -142,36 +163,153 @@ class CardGeometryCalculator(BaseCalculator[CardGeometryAnalysis]):
 
         return float(np.sum(distances))
 
-    def _calculate_centroid(self, polygon: np.ndarray) -> Tuple[float, float]:
+    def _calculate_normalized_perimeter(
+        self,
+        position: np.ndarray,
+        load: np.ndarray,
+    ) -> float:
         """
-        Calculate polygon centroid (center of mass).
+        Perimeter of the card after each axis is scaled by its own range.
+
+        This is the dimensionless, scale-free shape-complexity measure that a
+        raw mixed-unit perimeter cannot provide. It equals 4.0 for any
+        rectangle (regardless of aspect ratio or units) and grows as the card
+        outline becomes longer relative to its bounding box.
+
+        Returns 0.0 if either axis is degenerate (zero range).
+        """
+        pos_range = float(np.max(position) - np.min(position))
+        load_range = float(np.max(load) - np.min(load))
+        if pos_range <= 0.0 or load_range <= 0.0:
+            return 0.0
+
+        x = position / pos_range
+        y = load / load_range
+        dx = np.roll(x, -1) - x
+        dy = np.roll(y, -1) - y
+        return float(np.sum(np.sqrt(dx ** 2 + dy ** 2)))
+
+    @staticmethod
+    def _signed_area(polygon: np.ndarray) -> float:
+        """Signed shoelace area (positive for counter-clockwise vertex order)."""
+        if len(polygon) < 3:
+            return 0.0
+        x = polygon[:, 0]
+        y = polygon[:, 1]
+        return 0.5 * float(np.sum(x * np.roll(y, -1) - np.roll(x, -1) * y))
+
+    def _calculate_centroid(
+        self,
+        polygon: np.ndarray,
+    ) -> Tuple[Optional[float], Optional[float]]:
+        """
+        Calculate the area-weighted polygon centroid (centre of area).
+
+        Uses the standard shoelace centroid formula::
+
+            A  = 1/2 * sum( x_i*y_j - x_j*y_i )
+            Cx = 1/(6A) * sum( (x_i + x_j) * (x_i*y_j - x_j*y_i) )
+            Cy = 1/(6A) * sum( (y_i + y_j) * (x_i*y_j - x_j*y_i) )
+
+        This depends on the enclosed shape, not on how the outline happens to
+        be sampled - unlike the mean of the vertices, which moves when a card
+        is re-sampled and does not move when the enclosed area changes.
 
         Args:
             polygon: Nx2 array of (x, y) coordinates
 
         Returns:
-            (cx, cy) centroid coordinates
+            (cx, cy) centroid coordinates, or (None, None) when the polygon
+            encloses no area (fewer than 3 points, or collinear/degenerate),
+            in which case the area centroid is undefined.
         """
         n = len(polygon)
         if n < 3:
-            return (0.0, 0.0)
+            return (None, None)
 
-        # Simple centroid (average of vertices)
-        cx = float(np.mean(polygon[:, 0]))
-        cy = float(np.mean(polygon[:, 1]))
+        x = polygon[:, 0]
+        y = polygon[:, 1]
+        x_next = np.roll(x, -1)
+        y_next = np.roll(y, -1)
+
+        cross = x * y_next - x_next * y
+        signed_area = 0.5 * float(np.sum(cross))
+
+        # Degenerate (zero-area) polygon: the area centroid does not exist.
+        # Scale the tolerance by the coordinate magnitudes so it is meaningful
+        # for both unit squares and 1e6-magnitude cards.
+        scale = float(np.max(np.abs(x)) + 1.0) * float(np.max(np.abs(y)) + 1.0)
+        if abs(signed_area) <= 1e-12 * scale:
+            return (None, None)
+
+        cx = float(np.sum((x + x_next) * cross) / (6.0 * signed_area))
+        cy = float(np.sum((y + y_next) * cross) / (6.0 * signed_area))
 
         return (cx, cy)
 
-    def _calculate_zoned_areas(
-        self,
-        position: np.ndarray,
-        load: np.ndarray,
-    ) -> None:
+    @staticmethod
+    def _clip_halfplane(
+        polygon: np.ndarray,
+        axis: int,
+        threshold: float,
+        keep_below: bool,
+    ) -> np.ndarray:
+        """
+        Sutherland-Hodgman clip of a polygon against an axis-aligned half-plane.
+
+        Args:
+            polygon: Nx2 array of (x, y) coordinates
+            axis: 0 to clip on x, 1 to clip on y
+            threshold: the half-plane boundary value
+            keep_below: True keeps coordinate <= threshold, False keeps >=
+
+        Returns:
+            Mx2 array of the clipped polygon (possibly empty).
+        """
+        n = len(polygon)
+        if n == 0:
+            return np.empty((0, 2), dtype=np.float64)
+
+        def inside(point: np.ndarray) -> bool:
+            return point[axis] <= threshold if keep_below else point[axis] >= threshold
+
+        def intersect(a: np.ndarray, b: np.ndarray) -> np.ndarray:
+            denom = b[axis] - a[axis]
+            if denom == 0.0:
+                return a.copy()
+            t = (threshold - a[axis]) / denom
+            return a + t * (b - a)
+
+        out: List[np.ndarray] = []
+        for i in range(n):
+            prev = polygon[i - 1]
+            curr = polygon[i]
+            prev_in = inside(prev)
+            curr_in = inside(curr)
+            if curr_in:
+                if not prev_in:
+                    out.append(intersect(prev, curr))
+                out.append(curr)
+            elif prev_in:
+                out.append(intersect(prev, curr))
+
+        if not out:
+            return np.empty((0, 2), dtype=np.float64)
+        return np.asarray(out, dtype=np.float64)
+
+    def _calculate_zoned_areas(self, polygon: np.ndarray) -> None:
         """
         Calculate zoned area distribution (quadrants).
 
-        Divides the card into 4 quadrants and calculates
-        the approximate area fraction in each zone.
+        Splits the card at the mid-point of each axis and computes the TRUE
+        enclosed sub-area of each quadrant by clipping the card polygon to that
+        quadrant (Sutherland-Hodgman) and taking the shoelace area of the
+        clipped piece. For a simple closed card the four sub-areas sum to the
+        total card area exactly.
+
+        (The previous implementation counted sample POINTS per quadrant and
+        multiplied by the total area, which reports sampling density rather
+        than area.)
 
         Zone layout:
             Zone 2 | Zone 3  (top)
@@ -179,41 +317,47 @@ class CardGeometryCalculator(BaseCalculator[CardGeometryAnalysis]):
             Zone 0 | Zone 1  (bottom)
             (left)  (right)
         """
-        # Find midpoints
-        pos_mid = (np.min(position) + np.max(position)) / 2.0
-        load_mid = (np.min(load) + np.max(load)) / 2.0
+        if len(polygon) < 3:
+            self.result.zone_areas = []
+            self.result.zone_area_fractions = []
+            return
 
-        # Count points in each quadrant
-        counts = [0, 0, 0, 0]
-        n = len(position)
+        position = polygon[:, 0]
+        load = polygon[:, 1]
+        pos_mid = float(np.min(position) + np.max(position)) / 2.0
+        load_mid = float(np.min(load) + np.max(load)) / 2.0
 
-        for i in range(n):
-            pos = position[i]
-            ld = load[i]
+        total_signed = self._signed_area(polygon)
+        if total_signed == 0.0:
+            # Degenerate card - no enclosed area to distribute.
+            self.result.zone_areas = []
+            self.result.zone_area_fractions = []
+            return
 
-            # Determine quadrant
-            if pos < pos_mid:
-                if ld < load_mid:
-                    counts[0] += 1  # bottom-left
-                else:
-                    counts[2] += 1  # top-left
-            else:
-                if ld < load_mid:
-                    counts[1] += 1  # bottom-right
-                else:
-                    counts[3] += 1  # top-right
+        # All clipped pieces inherit the parent's vertex orientation, so
+        # normalising by its sign makes every sub-area non-negative.
+        orientation = 1.0 if total_signed > 0.0 else -1.0
 
-        # Normalize to fractions
-        total = sum(counts)
-        if total > 0:
-            fractions = [c / total for c in counts]
+        # (keep_below_position, keep_below_load) per zone index
+        quadrants = [
+            (True, True),    # 0: bottom-left
+            (False, True),   # 1: bottom-right
+            (True, False),   # 2: top-left
+            (False, False),  # 3: top-right
+        ]
+
+        areas: List[float] = []
+        for pos_below, load_below in quadrants:
+            clipped = self._clip_halfplane(polygon, 0, pos_mid, pos_below)
+            clipped = self._clip_halfplane(clipped, 1, load_mid, load_below)
+            areas.append(max(0.0, orientation * self._signed_area(clipped)))
+
+        total = sum(areas)
+        self.result.zone_areas = areas
+        if total > 0.0:
+            self.result.zone_area_fractions = [a / total for a in areas]
         else:
-            fractions = [0.0, 0.0, 0.0, 0.0]
-
-        # Approximate zone areas using total area and fractions
-        total_area = self.result.area
-        self.result.zone_areas = [f * total_area for f in fractions]
-        self.result.zone_area_fractions = fractions
+            self.result.zone_area_fractions = [0.0, 0.0, 0.0, 0.0]
 
 
 def calculate_card_geometry(
@@ -283,12 +427,19 @@ def calculate_card_perimeter(
     """
     Calculate card perimeter directly from position and load arrays.
 
+    .. deprecated::
+        Position is in inches and load in pounds, so ``sqrt(dx^2 + dy^2)`` adds
+        inches to pounds: the result is NOT a physical length and must not be
+        interpreted as one. Use ``CardGeometryAnalysis.position_path_length`` /
+        ``load_path_length`` (dimensionally consistent) or
+        ``normalized_perimeter`` (dimensionless) instead.
+
     Args:
         position: Position array (inches)
         load: Load array (lbs)
 
     Returns:
-        Card perimeter length
+        Sum of edge lengths in mixed (in, lb) card space
     """
     if len(position) != len(load) or len(position) < 2:
         return 0.0

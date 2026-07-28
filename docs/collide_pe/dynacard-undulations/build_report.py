@@ -257,27 +257,92 @@ report = CalcReport(
             ],
             caption="Independent of every assumption in section 2."),
         ResultBlock(
-            heading="Load datum anomaly",
+            heading="Load datum anomaly &mdash; the card implies a heavier string",
             confidence=Confidence.ANALYTICAL,
             prose=("The minimum polished-rod load exceeds the weight of the entire rod "
                    "string hanging in air by 2,412 lb. This has no mechanical "
                    "explanation. On the downstroke friction acts upward, resisting the "
                    "descending rods, which lowers polished-rod load &mdash; friction "
-                   "widens a card, it cannot lift one."),
+                   "widens a card, it cannot lift one. Two explanations remain: a load "
+                   "cell reading high, or a string heavier than the 3/4 in reported. "
+                   "Testing each candidate rod size against both ends of the card "
+                   "separates them &mdash; a valid size must put the minimum load below "
+                   "the string's air weight, and the peak above static weight plus fluid "
+                   "load by a dynamic margin consistent with this well's speed."),
             groups=[
-                DesignDataGroup(caption="Comparison", rows=rows(
-                    ("MPRL measured", "9,274", "lb"),
-                    ("Rod weight in air", "6,863", "lb"),
-                    ("Buoyed rod weight", "6,116", "lb"),
-                    ("Unexplained excess", "2,412", "lb"))),
-                DesignDataGroup(caption="Candidate causes", rows=rows(
-                    ("Rod string heavier than recorded", "eliminated", ""),
-                    ("Load-cell zero or scale offset", "remaining candidate", ""),
+                DesignDataGroup(caption="Measured against candidate rod sizes", rows=rows(
+                    ("3/4 in &mdash; MPRL vs air weight", "+2,412 (impossible)", "lb"),
+                    ("3/4 in &mdash; PPRL vs static", "+3,480 (implausible)", "lb"),
+                    ("<strong>7/8 in &mdash; MPRL vs air weight</strong>", "<strong>&minus;67</strong>", "lb"),
+                    ("<strong>7/8 in &mdash; PPRL vs static</strong>", "<strong>+1,002</strong>", "lb"),
+                    ("1 in &mdash; PPRL vs static", "&minus;1,854 (impossible)", "lb"))),
+                DesignDataGroup(caption="Candidate causes &mdash; both live", rows=rows(
+                    ("String heavier than reported", "card is consistent with 7/8 in", ""),
+                    ("Load-cell zero or scale offset", "equally possible", ""),
                     ("Effect on load differences", "none &mdash; offset cancels", ""),
                     ("Effect on absolute loads", "not usable until resolved", ""))),
             ],
-            caption=("Recommend checking whether the cell was zeroed with the rods "
-                     "hanging rather than unloaded.")),
+            caption=("7/8 in is the only size where both ends of the card are physically "
+                     "consistent. At 6.4 SPM on a 4,200 ft string roughly 1,000 lb of "
+                     "dynamic load above static is expected, which 7/8 in gives; the "
+                     "3,480 lb that 3/4 in would require is far beyond what this speed "
+                     "produces. The operator reported 3/4 in, so this is not asserted as "
+                     "fact &mdash; recommend checking the rod tally or last workover "
+                     "ticket alongside the load-cell calibration, since strings can gain "
+                     "heavier top joints without reaching the paperwork.")),
+        ResultBlock(
+            heading="Ideal pump card &mdash; reference for the downhole comparison",
+            confidence=Confidence.ANALYTICAL,
+            prose=("The theoretical card a perfectly filled pump would produce at this "
+                   "setting. It is the reference the calculated downhole card will be "
+                   "measured against once Stage B data arrives."),
+            groups=[
+                DesignDataGroup(caption="Ideal pump card", rows=rows(
+                    ("Fluid load on plunger", "1,942", "lb"),
+                    ("Peak / minimum load", "1,942 / 0", "lb"),
+                    ("Card area", "79,630", "lb-in"),
+                    ("Basis stroke", "41 (surface)", "in"))),
+                DesignDataGroup(caption="Qualifications", rows=rows(
+                    ("Hand check vs 0.433&middot;SG&middot;D&middot;A<sub>p</sub>", "agrees to 0.002", "%"),
+                    ("Domain", "pump card, not surface", ""),
+                    ("Built on surface stroke", "overstates area ~22", "%"),
+                    ("Plunger stroke after stretch", "~33.3", "in"))),
+            ],
+            caption=("This is a <strong>pump-domain</strong> reference and must not be "
+                     "compared with the measured surface card area of 69,950 lb-in "
+                     "&mdash; they are different quantities, and their apparent closeness "
+                     "is coincidence. The ideal card is also built on the 41 in surface "
+                     "stroke rather than the ~33.3 in plunger stroke, overstating its "
+                     "area by roughly 22% on that basis alone. Shape-similarity and "
+                     "deviation metrics are omitted: they are computed against a "
+                     "non-monotonic reference and do not survive inspection.")),
+        ResultBlock(
+            heading="Power consumption",
+            confidence=Confidence.ANALYTICAL,
+            groups=[
+                DesignDataGroup(caption="Measured from the card", rows=rows(
+                    ("Work per stroke", "5,829", "ft-lb"),
+                    ("Polished-rod power", "1.131", "hp"),
+                    ("Prime-mover requirement", "2.803", "hp"),
+                    ("Electrical equivalent", "2.090", "kW"))),
+                DesignDataGroup(caption="Assumptions carried", rows=rows(
+                    ("Cyclic load factor", "1.897 (default)", ""),
+                    ("Prime-mover efficiency", "0.85 (default)", ""),
+                    ("Pumping-unit efficiency", "0.90 (default)", ""),
+                    ("Daily energy at 8 / 12 / 16 h", "16.7 / 25.1 / 33.4", "kWh"))),
+            ],
+            caption=("Work per stroke and polished-rod power are read from the card and "
+                     "are invariant to a constant load offset, so they survive the datum "
+                     "question above. The prime-mover figure is weaker: the 1.897 cyclic "
+                     "load factor is drawn from a NEMA B <em>electric motor</em> table and "
+                     "applied to an Arrow C-66 <em>natural gas engine</em>, for which NEMA "
+                     "slip is undefined; selecting NEMA D instead gives 2.03 hp, a 27% "
+                     "swing from a default. Against the C-66's 13 hp rating this is a "
+                     "cycle-average load factor near 22%, which indicates <strong>headroom "
+                     "to raise speed or stroke</strong> if the reservoir supports it "
+                     "&mdash; not a sizing error, since peak crank torque is what sizes a "
+                     "gas engine and cannot be evaluated without the unit geometry. Daily "
+                     "energy is quoted as a rate because runtime is unknown.")),
         ResultBlock(
             heading="Displacement and efficiency",
             confidence=Confidence.ANALYTICAL,
@@ -322,9 +387,40 @@ report = CalcReport(
                    "effect at &plusmn;4%."),
             confidence=Confidence.ANALYTICAL),
         ValidationItem(
+            claim="Work per stroke and polished-rod power",
+            basis=("Card area reproduced by two independent integration methods agreeing "
+                   "to 0.000%, and invariant to a constant load offset, so both survive "
+                   "the unresolved datum question."),
+            confidence=Confidence.VALIDATED),
+        ValidationItem(
+            claim="Ideal pump card &mdash; fluid load and card area",
+            basis=("Fluid load matches the closed-form 0.433&middot;SG&middot;D&middot;A"
+                   "<sub>p</sub> to 0.002%. Carries the assumed fluid SG, and is built on "
+                   "surface rather than plunger stroke. Pump-domain only."),
+            confidence=Confidence.ANALYTICAL),
+        ValidationItem(
+            claim="Prime-mover power requirement",
+            basis=("Cyclic load factor 1.897 comes from a NEMA B electric-motor table "
+                   "applied to a natural gas engine; efficiencies are library defaults. "
+                   "Selecting NEMA D instead moves the result 27%."),
+            confidence=Confidence.ANALYTICAL),
+        ValidationItem(
+            claim="Rod string size as run",
+            basis=("Operator reported 4,200 ft of 3/4 in. The card is consistent with "
+                   "7/8 in and inconsistent with 3/4 in at both ends. Requires the rod "
+                   "tally to resolve; not asserted either way."),
+            confidence=Confidence.PENDING),
+        ValidationItem(
             claim="Absolute polished-rod loads",
-            basis=("Suspended pending resolution of the 2,412 lb datum anomaly. Load "
+            basis=("Suspended pending resolution of the 2,412 lb datum anomaly, which "
+                   "may be a load-cell offset or a heavier string than reported. Load "
                    "differences remain usable."),
+            confidence=Confidence.PENDING),
+        ValidationItem(
+            claim="Card shape-similarity and deviation metrics",
+            basis=("Omitted from this report. Computed against a non-monotonic reference "
+                   "and sign-clamped, so an inverted card scores identically to an "
+                   "unrelated one."),
             confidence=Confidence.PENDING),
         ValidationItem(
             claim="Volumetric efficiency",
@@ -343,13 +439,15 @@ report = CalcReport(
         WayForwardStage(
             heading="Stage A &mdash; card integrity",
             required=rows(
+                ("Rod tally or last workover ticket", "outstanding &mdash; card implies 7/8 in", ""),
                 ("Load-cell make, model, calibration date", "outstanding", ""),
-                ("Runtime, hours per day", "outstanding", ""),
-                ("Rod string as run", "answered", "&#10003;")),
+                ("Was the cell zeroed with rods hanging?", "outstanding", ""),
+                ("Runtime, hours per day", "outstanding", "")),
             returns=rows(
                 ("Resolved load datum", "absolute loads usable", ""),
+                ("Confirmed rod string", "corrects every load-based result", ""),
                 ("Honest production check", "efficiency with runtime", ""),
-                ("Effort", "two questions", ""))),
+                ("Effort", "three questions", ""))),
         WayForwardStage(
             heading="Stage B &mdash; downhole card and diagnosis",
             required=rows(
