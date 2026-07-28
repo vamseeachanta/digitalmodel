@@ -37,7 +37,7 @@ a{color:var(--accent)}
     <div><b>Solver</b><span>interFoam (VOF)</span></div>
     <div><b>Motion</b><span>ESI solidBody forced roll</span></div>
     <div><b>Nat-freq error</b><span>0.29% / 0.002%</span></div>
-    <div><b>Best anti-roll fill</b><span>70% (mid-band)</span></div>
+    <div><b>Best anti-roll fill</b><span>70% raw damping &middot; 50% coupled</span></div>
   </div>
 </header>
 
@@ -97,8 +97,12 @@ t = 8.1 s on the 2D moving mesh and reproduces the characteristic violent shallo
     <tr><td>Dominant surface response</td><td class="num">≈ 1.21 Hz</td><td>≈ 2× drive (impact-per-cycle harmonic)</td></tr>
   </tbody>
 </table>
-<p class="sub">Quantitative pressure-trace matching needs the raw experimental dataset; this run
-corroborates stability and resonant run-up, not pressures.</p>
+<p class="sub">Quantitative pressure matching has since been completed against the published SPHERIC
+experimental statistics: the CFD first-impact peak at Sensor&nbsp;1 is <b>4,688&nbsp;Pa</b> vs the
+experimental <b>3,710&nbsp;&plusmn;&nbsp;732&nbsp;Pa</b> (100-run mean&nbsp;&plusmn;&nbsp;&sigma;,
+CoV&nbsp;&asymp;&nbsp;20%) &mdash; inside the 2&sigma; scatter band (2,246&ndash;5,174&nbsp;Pa),
+consistent with the known VOF tendency to over-predict impact peaks. Full traces and discussion:
+<a href="sloshing-cfd-study.html">the 2D CFD study &rarr;</a></p>
 
 <h2 id="roll-damper">Application — ballast tank as a passive roll damper</h2>
 <p>For each {fill × drive frequency} the tank roll-reaction moment <code>M(t)</code> is extracted from a
@@ -119,6 +123,13 @@ the mechanism the concept predicts. Higher fill (50–70%) gives the strongest d
 mid-band; the lowest drive frequency favours the shallow 25% case. This matches the literature's finding
 that ~50–70% fill is the most energetic sloshing regime. <span class="sub">(Drive periods here are
 representative; a specific vessel study substitutes its measured roll RAO.)</span></div>
+<div class="callout key"><b>Raw damping is not the design optimum.</b> This table ranks the <em>raw
+quadrature (damping) coefficient</em>, where 70% fill is strongest in the mid-band. The subsequent
+coupled tuned-liquid-damper analysis in <a href="sloshing-cfd-study.html">the 2D CFD study</a> shows
+that, once the tank is coupled to a vessel roll mode (Den&nbsp;Hartog model), the <b>50% fill gives the
+best vessel-level response</b> (&zeta;&nbsp;&asymp;&nbsp;0.18, closest to the tuning optimum) and the
+70% fill is <b>over-damped</b> — maximum raw damping and best coupled anti-roll performance are
+different questions.</div>
 
 <h2>What this gates &amp; how to run</h2>
 <p>This verifies the path from prescribed tank motion → partial-fill VOF → tank moment → reduced-order
