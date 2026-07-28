@@ -12,7 +12,7 @@ Sections declared: **22** · clusters: **7** · PDF coverage gaps: **0** · unli
 *Strength, fatigue and remaining-life decisions for plates, panels and aging assets — field measurement to code verdict, with the validation table anchoring every engine to a published golden case.*
 
 - [`#structural`](https://www.aceengineer.com/capabilities/#structural) — Ship structural strength
-- [`#fatigue`](https://www.aceengineer.com/capabilities/#fatigue) — Fatigue &amp; fracture &mdash; S-N life and crack growth
+- [`#fatigue`](https://www.aceengineer.com/capabilities/#fatigue) — Fatigue & fracture — S-N life and crack growth
 - [`#ffs`](https://www.aceengineer.com/capabilities/#ffs) — Fitness-for-service
 - [`#cathodic`](https://www.aceengineer.com/capabilities/#cathodic) — Cathodic protection
 - [`#validation`](https://www.aceengineer.com/capabilities/#validation) — Validated against published references
@@ -20,37 +20,37 @@ Sections declared: **22** · clusters: **7** · PDF coverage gaps: **0** · unli
 ### Pipelines & Risers (`pipelines-risers`)
 *Wall sizing, code checks and vortex-induced-vibration screening for flowlines, pipelines and riser systems across 10+ design codes.*
 
-- [`#risers`](https://www.aceengineer.com/capabilities/#risers) — Risers &amp; pipelines
-- [`#wall-thickness`](https://www.aceengineer.com/capabilities/#wall-thickness) — Wall thickness &mdash; sizing &amp; code checks
-- [`#viv`](https://www.aceengineer.com/capabilities/#viv) — Vortex-induced vibration &mdash; screening, frequency &amp; fatigue
+- [`#risers`](https://www.aceengineer.com/capabilities/#risers) — Risers & pipelines
+- [`#wall-thickness`](https://www.aceengineer.com/capabilities/#wall-thickness) — Wall thickness — sizing & code checks
+- [`#viv`](https://www.aceengineer.com/capabilities/#viv) — Vortex-induced vibration — screening, frequency & fatigue
 
 ### Moorings, Anchors & Subsea (`moorings-stationkeeping`)
 *Stationkeeping design and subsea hardware — mooring strength and fatigue, anchor holding capacity, and foundation geotechnics.*
 
 - [`#subsea`](https://www.aceengineer.com/capabilities/#subsea) — Subsea
-- [`#geotechnical`](https://www.aceengineer.com/capabilities/#geotechnical) — Geotechnical &mdash; pile, anchor &amp; foundation capacity
+- [`#geotechnical`](https://www.aceengineer.com/capabilities/#geotechnical) — Geotechnical — pile, anchor & foundation capacity
 
 ### Hydrodynamics & Naval Architecture (`hydro-naval`)
 *Vessel and floating-body behaviour — diffraction, seakeeping, CFD, manoeuvring and ship-form performance from hull lines to RAOs.*
 
-- [`#hydro`](https://www.aceengineer.com/capabilities/#hydro) — Hydrodynamics &amp; diffraction
+- [`#hydro`](https://www.aceengineer.com/capabilities/#hydro) — Hydrodynamics & diffraction
 - [`#cfd`](https://www.aceengineer.com/capabilities/#cfd) — Computational fluid dynamics (CFD)
-- [`#manoeuvring`](https://www.aceengineer.com/capabilities/#manoeuvring) — Manoeuvring &amp; station-keeping
-- [`#naval-architecture`](https://www.aceengineer.com/capabilities/#naval-architecture) — Naval architecture &mdash; stability, resistance &amp; hull strength
+- [`#manoeuvring`](https://www.aceengineer.com/capabilities/#manoeuvring) — Manoeuvring & station-keeping
+- [`#naval-architecture`](https://www.aceengineer.com/capabilities/#naval-architecture) — Naval architecture — stability, resistance & hull strength
 
 ### Wells, Drilling & Production (`wells-drilling-production`)
 *The well axis end-to-end — casing and drilling engineering, pore pressure, artificial lift, production chemistry and flow assurance.*
 
-- [`#well`](https://www.aceengineer.com/capabilities/#well) — Well construction &mdash; casing &amp; tubulars
-- [`#drilling-engineering`](https://www.aceengineer.com/capabilities/#drilling-engineering) — Drilling engineering &mdash; pore pressure, hydraulics &amp; well control
-- [`#artificial-lift`](https://www.aceengineer.com/capabilities/#artificial-lift) — Artificial lift &mdash; rod-pump diagnostics
-- [`#production-engineering`](https://www.aceengineer.com/capabilities/#production-engineering) — Production engineering &mdash; nodal analysis &amp; well deliverability
-- [`#corrosion-production`](https://www.aceengineer.com/capabilities/#corrosion-production) — Corrosion &amp; production chemistry
+- [`#well`](https://www.aceengineer.com/capabilities/#well) — Well construction — casing & tubulars
+- [`#drilling-engineering`](https://www.aceengineer.com/capabilities/#drilling-engineering) — Drilling engineering — pore pressure, hydraulics & well control
+- [`#artificial-lift`](https://www.aceengineer.com/capabilities/#artificial-lift) — Artificial lift — rod-pump diagnostics
+- [`#production-engineering`](https://www.aceengineer.com/capabilities/#production-engineering) — Production engineering — nodal analysis & well deliverability
+- [`#corrosion-production`](https://www.aceengineer.com/capabilities/#corrosion-production) — Corrosion & production chemistry
 
 ### Field Development & Economics (`field-dev-economics`)
 *Concept-to-cashflow screening — field development options, floating wind TOTEX/LCOE and NPV levers over real project structures.*
 
-- [`#field-development`](https://www.aceengineer.com/capabilities/#field-development) — Field development &mdash; concept screening, cost &amp; economics
+- [`#field-development`](https://www.aceengineer.com/capabilities/#field-development) — Field development — concept screening, cost & economics
 - [`#wind`](https://www.aceengineer.com/capabilities/#wind) — Floating wind
 
 ### Installation & Marine Operations (`installation-ops`)
