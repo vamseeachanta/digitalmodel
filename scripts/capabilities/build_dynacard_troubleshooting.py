@@ -422,16 +422,21 @@ def settings_section_html() -> str:
   </section>"""
 
 
+# Core brand tokens (--navy/--teal/--bg/--panel/--ink/--muted/--line) come from
+# ../_assets/brand.css and must NOT be redeclared here -- scripts/brand_guard.py
+# fails the docs build on a hard-coded core token. #1485 migrated the published
+# page onto brand.css but not this template, so every regeneration silently
+# reverted the migration until the guard caught it. Only page-local tokens
+# (--soft, --series-*, --st-*) belong in the :root block below.
 _PAGE = """<!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dynacard troubleshooting explorer — digitalmodel</title>
+<link rel="stylesheet" href="../_assets/brand.css">
 <style>
-  :root{--navy:#0B3D91;--teal:#0f8a7e;--bg:#eef3fa;--panel:#ffffff;--ink:#13233f;
-        --muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc;
-        --series-card:#2563C4;--series-ref:#0B8F80;
+  :root{--soft:#f4f8fc;--series-card:#2563C4;--series-ref:#0B8F80;
         --st-normal:#1f9d57;--st-warning:#b7791f;--st-critical:#c2410c;--st-failure:#b91c1c}
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);
