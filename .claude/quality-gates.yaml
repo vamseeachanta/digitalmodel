@@ -29,6 +29,11 @@ gates:
     domain: "capabilities"
     test_roots: ["tests/capabilities/"]
     command: "uv run --no-sources --with 'assetutilities @ git+https://github.com/vamseeachanta/assetutilities.git@main' --with-editable . python -m pytest tests/capabilities/ -rfE -p no:asyncio -p no:randomly -p no:sugar --no-header -q --tb=line"
+    # Added #1637: this was the ONLY gate of 27 with no failure_action, so its
+    # result carried no verdict even once it was inside the tests-all roll-up.
+    failure_action: "block"
+    warning_action: "report"
+
   tests-cathodic-protection:
     enabled: true
     order: 1

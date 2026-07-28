@@ -334,6 +334,7 @@ def test_specs_standards_grounded():
         return False
 
     ungrounded = []
+    checked = 0
     for entry in bo.SPECS:
         if entry.get("kind") != "section":
             continue
@@ -343,8 +344,20 @@ def test_specs_standards_grounded():
             continue  # covered by the bijection test
         files = _section_linked_files(section)
         for token in _STD_TOKEN_RE.findall(entry["std"]):
+            checked += 1
             if not evidence(token, files):
                 ungrounded.append((entry["id"], token))
+    # LIVENESS. The `section is None -> continue` above is safe only while SOME
+    # anchors resolve. Between #1573 and #1637 the census resolved NONE: every
+    # anchor missed, all 42 standards claims skipped their evidence check, and
+    # this test reported PASS for 15 days while verifying nothing. It was one of
+    # the 4 "passing" tests in a shard that was 8/12 red. Assert we checked
+    # something, so the vacuous case is loud instead of green.
+    assert checked, (
+        "standards-grounding guard checked ZERO tokens -- the census resolved no "
+        "anchors, or its sections declare no hrefs. A green result here would be "
+        "meaningless (dm#1637)"
+    )
     assert not ungrounded, (
         f"standards named in `std` lines with zero grep evidence in the "
         f"section's linked files (overclaim per dm#1391): {ungrounded}"
