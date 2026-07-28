@@ -240,6 +240,20 @@ def test_conductor_geometry_is_banded_generic():
 # 10. one-pager governance + registered --------------------------------------
 _SAFE_HOSTS = ("t.me/the_deckhand_bot", "api.deckhand", "vamseeachanta.github.io", "w3.org")
 _API = REPO / "docs" / "api" / "capabilities" / "api" / "drilling-riser-operability-monitor"
+#: Capability registration used to be a card on docs/api/capabilities/index.html.
+#: That page became a redirect stub on 2026-07-13 (PR #1573) and the census moved
+#: to this committed file (#1637) — registration is now asserted against it.
+_CENSUS = REPO / "docs" / "capability-map" / "capabilities-sections.yml"
+
+
+def _registering_sections(site_path: str) -> list[str]:
+    """Census section ids whose links reference ``site_path``."""
+    doc = yaml.safe_load(_CENSUS.read_text())
+    return [
+        s["id"]
+        for s in doc["sections"]
+        if any(site_path in link for link in (s.get("links") or []))
+    ]
 
 
 def _strip_safe(text: str) -> str:
@@ -255,8 +269,11 @@ def test_onepager_and_index_registered():
     assert not _structural_hits(_strip_safe(js.read_text()))
     env = json.loads(js.read_text())
     assert env["report_url"].startswith("https://vamseeachanta.github.io/"), env["report_url"]
-    index = (REPO / "docs" / "api" / "capabilities" / "index.html").read_text()
-    assert build.SITE_PATH in index, "no index card links the operability monitor"
+    assert _registering_sections(build.SITE_PATH), (
+        f"no capability section links the operability monitor "
+        f"({build.SITE_PATH}) — add it to the links of the owning section in "
+        f"{_CENSUS.relative_to(REPO)}"
+    )
 
 
 # 11. distinct ESCALATE channels (operability vs drift-off) ------------------

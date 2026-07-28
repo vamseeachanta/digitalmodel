@@ -12,6 +12,7 @@ import re
 from pathlib import Path
 
 import pytest
+import yaml
 
 from digitalmodel.drilling_riser import operability_atlas as oa
 from digitalmodel.drilling_riser.operability_screening import screen_operability
@@ -19,6 +20,20 @@ from tests.riser_database.test_leak_gate import STRUCTURAL_PATTERNS
 
 REPO = Path(__file__).resolve().parents[2]
 _ATLAS_ROOT = REPO / "atlases"
+#: Capability registration used to be a card on docs/api/capabilities/index.html.
+#: That page became a redirect stub on 2026-07-13 (PR #1573) and the census moved
+#: to this committed file (#1637) — registration is now asserted against it.
+_CENSUS = REPO / "docs" / "capability-map" / "capabilities-sections.yml"
+
+
+def _registering_sections(site_path: str) -> list[str]:
+    """Census section ids whose links reference ``site_path``."""
+    doc = yaml.safe_load(_CENSUS.read_text())
+    return [
+        s["id"]
+        for s in doc["sections"]
+        if any(site_path in link for link in (s.get("links") or []))
+    ]
 
 
 def _load_builder():
@@ -141,5 +156,8 @@ def test_escalate_is_honest_and_wired():
 # 7. artifacts exist + registered --------------------------------------------
 def test_artifacts_exist_and_registered():
     assert build._HTML.is_file() and build._JSON.is_file()
-    index = (REPO / "docs" / "api" / "capabilities" / "index.html").read_text()
-    assert build.SITE_PATH in index, "no index card links the operability explorer"
+    assert _registering_sections(build.SITE_PATH), (
+        f"no capability section links the operability explorer "
+        f"({build.SITE_PATH}) — add it to the links of the owning section in "
+        f"{_CENSUS.relative_to(REPO)}"
+    )
