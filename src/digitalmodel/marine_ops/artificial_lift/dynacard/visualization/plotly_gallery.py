@@ -1,12 +1,12 @@
-# ABOUTME: Optional interactive Plotly HTML gallery for all 18 dynacard failure modes.
+# ABOUTME: Optional interactive Plotly HTML gallery for all 20 dynacard failure modes.
 # ABOUTME: Generates a self-contained HTML file with 18 subplot cards.
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from ..card_generators import ALL_GENERATORS
-from .svg_primitives import MODE_LABELS, MODES_BY_TIER, TIER_INFO
+from ..card_generators import ALL_GENERATORS, get_generator
+from .svg_primitives import MODES_BY_TIER, TIER_INFO, mode_label
 
 
 def _check_plotly() -> None:
@@ -21,7 +21,7 @@ def _check_plotly() -> None:
 
 
 def generate_plotly_gallery(output_path: Path, seed: int = 42) -> Path:
-    """Generate an interactive HTML gallery with all 18 failure modes.
+    """Generate an interactive HTML gallery with all 20 failure modes.
 
     Each card is rendered as a subplot with hover tooltips showing
     position and load values. Cards are organized by tier.
@@ -48,7 +48,7 @@ def generate_plotly_gallery(output_path: Path, seed: int = 42) -> Path:
     rows = (n_modes + cols - 1) // cols
 
     # Create subplot titles
-    subplot_titles = [MODE_LABELS.get(m, m) for m in ordered_modes]
+    subplot_titles = [mode_label(m) for m in ordered_modes]
 
     fig = make_subplots(
         rows=rows,
@@ -76,7 +76,7 @@ def generate_plotly_gallery(output_path: Path, seed: int = 42) -> Path:
         tier = mode_tier_map[mode_name]
         color = tier_colors[tier]
 
-        gen = ALL_GENERATORS[mode_name]
+        gen = get_generator(mode_name)
         card = gen(seed=seed)
 
         fig.add_trace(
@@ -87,7 +87,7 @@ def generate_plotly_gallery(output_path: Path, seed: int = 42) -> Path:
                 line={"color": color, "width": 2},
                 fill="toself",
                 fillcolor=f"rgba({int(color[1:3], 16)},{int(color[3:5], 16)},{int(color[5:7], 16)},0.1)",
-                name=MODE_LABELS.get(mode_name, mode_name),
+                name=mode_label(mode_name),
                 showlegend=False,
                 hovertemplate="Position: %{x:.1f} in<br>Load: %{y:.0f} lbs<extra></extra>",
             ),

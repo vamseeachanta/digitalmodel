@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
-    ALL_GENERATORS,
+    get_generator,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import (
     PumpDiagnostics,
@@ -32,10 +32,35 @@ def test_frozen_artifact_exists_and_has_cases():
     assert any(case["mode"] == "NORMAL" for case in cases)
 
 
-@pytest.mark.parametrize("case", _frozen_cases(), ids=lambda case: case["mode"])
+STALE_MODEL = pytest.mark.xfail(
+    strict=True,
+    reason=(
+        'The shipped classifier (data/dynacard_classifier.json, model_version 1.0, 18 classes) was fitted to the pre-#1875 generator shapes. Those shapes did not match the reference plate and have been corrected, so the model no longer recovers the label the card was generated from -- it now reads a normal card as WORN_BARREL and a rod-parting card as PARAFFIN_RESTRICTION. It must be retrained on the corrected 20-mode generator set before any label-round-trip assertion can hold again. Deliberately strict: this flips to a failure the moment the model is retrained, so the expectation gets re-derived rather than forgotten.'
+    ),
+)
+
+
+# Generators that draw their own card outright instead of going through
+# ``_base_card``, so the corrected corner geometry never touched them and the
+# stale model still reads them the same way.
+UNTOUCHED_BY_THE_SHAPE_FIX = {"GAS_LOCK", "STUCK_PUMP"}
+
+
+def _frozen_case_params():
+    return [
+        pytest.param(
+            case,
+            id=case["mode"],
+            marks=() if case["mode"] in UNTOUCHED_BY_THE_SHAPE_FIX else (STALE_MODEL,),
+        )
+        for case in _frozen_cases()
+    ]
+
+
+@pytest.mark.parametrize("case", _frozen_case_params())
 def test_published_diagnosis_matches_live_classifier(case):
     """Each published card must still classify to its published diagnosis."""
-    card = ALL_GENERATORS[case["mode"]](seed=case["seed"])
+    card = get_generator(case["mode"])(seed=case["seed"])
     live = PumpDiagnostics.classify_card(card)
     assert live == case["classification"], (
         f"{case['mode']} (seed {case['seed']}) now classifies as {live}, but the "

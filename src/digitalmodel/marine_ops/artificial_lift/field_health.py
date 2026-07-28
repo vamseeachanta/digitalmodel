@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
-    ALL_GENERATORS,
+    get_generator,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
     CardData,
@@ -24,7 +24,11 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWork
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 FAILURE_CLASSIFICATIONS = {"GAS_LOCK", "ROD_PARTING", "STUCK_PUMP"}
-CRITICAL_CLASSIFICATIONS = {"PUMP_TAGGING"}
+CRITICAL_CLASSIFICATIONS = {
+    "PUMP_TAGGING",  # retired label; the shipped model still emits it
+    "PUMP_TAGGING_UP",
+    "PUMP_TAGGING_DOWN",
+}
 STATUS_RANK = {"normal": 0, "warning": 1, "critical": 2, "failure": 3}
 
 
@@ -115,7 +119,7 @@ def _surface_card(well_cfg: dict[str, Any]) -> tuple[CardData, bool]:
 
     mode = str(synthetic["mode"])
     try:
-        generator = ALL_GENERATORS[mode]
+        generator = get_generator(mode)
     except KeyError as exc:
         raise ValueError(f"Unsupported synthetic_card mode: {mode}") from exc
     return generator(seed=int(synthetic.get("seed", 0))), True

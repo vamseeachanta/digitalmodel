@@ -14,6 +14,7 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.visualization.svg_primitiv
     MODES_BY_TIER,
     TIER_INFO,
     CoordMapper,
+    mode_label,
     draw_card_axes,
     svg_footer,
     svg_header,
@@ -166,17 +167,17 @@ class TestColorScheme:
             assert "label" in info
             assert "color" in info
 
-    def test_all_18_modes_have_tiers(self):
-        assert len(MODE_TIERS) == 18
+    def test_all_20_modes_have_tiers(self):
+        assert len(MODE_TIERS) == 20
         for mode, tier in MODE_TIERS.items():
             assert tier in {1, 2, 3}
 
-    def test_all_18_modes_have_labels(self):
-        assert len(MODE_LABELS) == 18
+    def test_all_20_modes_have_labels(self):
+        assert len(MODE_LABELS) == 20
 
-    def test_modes_by_tier_sums_to_18(self):
+    def test_modes_by_tier_sums_to_20(self):
         total = sum(len(modes) for modes in MODES_BY_TIER.values())
-        assert total == 18
+        assert total == 20
 
     def test_mode_tiers_match_modes_by_tier(self):
         for tier_num, modes in MODES_BY_TIER.items():
@@ -205,19 +206,19 @@ class TestCardRenderer:
         assert "<polygon" in svg or "<polyline" in svg
 
     @pytest.mark.parametrize("mode_name", list(ALL_GENERATORS.keys()))
-    def test_render_all_18_modes_valid_svg(self, mode_name):
+    def test_render_all_modes_valid_svg(self, mode_name):
         card = generate_card(mode_name)
         renderer = CardRenderer()
         svg = renderer.render(card, mode_name)
         _assert_valid_svg(svg)
 
     @pytest.mark.parametrize("mode_name", list(ALL_GENERATORS.keys()))
-    def test_render_compact_all_18_modes(self, mode_name):
+    def test_render_compact_all_modes(self, mode_name):
         card = generate_card(mode_name)
         renderer = CardRenderer()
         frag = renderer.render_compact(card, mode_name)
         assert "<polygon" in frag or "<polyline" in frag
-        assert MODE_LABELS[mode_name] in frag
+        assert mode_label(mode_name) in frag
 
     def test_render_single_card_writes_file(self, tmp_path):
         out = tmp_path / "test_card.svg"
@@ -229,7 +230,7 @@ class TestCardRenderer:
     def test_render_all_individual_cards(self, tmp_path):
         out_dir = tmp_path / "cards"
         paths = render_all_individual_cards(out_dir)
-        assert len(paths) == 18
+        assert len(paths) == len(ALL_GENERATORS)
         for p in paths:
             assert p.exists()
             _assert_valid_svg(p.read_text())
@@ -245,14 +246,14 @@ class TestCardRenderer:
 
 
 class TestGalleryRenderer:
-    """Tests for the 18-card diagnostic gallery."""
+    """Tests for the diagnostic gallery."""
 
     def test_gallery_is_valid_svg(self):
         gallery = GalleryRenderer()
         svg = gallery.render()
         _assert_valid_svg(svg)
 
-    def test_gallery_contains_all_18_mode_labels(self):
+    def test_gallery_contains_all_mode_labels(self):
         gallery = GalleryRenderer()
         svg = gallery.render()
         for mode_name, label in MODE_LABELS.items():
@@ -266,12 +267,12 @@ class TestGalleryRenderer:
             # Label may be XML-escaped (e.g. & -> &amp;)
             assert escape(TIER_INFO[tier_num]["label"]) in svg
 
-    def test_gallery_has_18_card_traces(self):
+    def test_gallery_has_a_trace_per_mode(self):
         gallery = GalleryRenderer()
         svg = gallery.render()
         # Each card produces a polygon (closed polyline)
         polygon_count = svg.count("<polygon")
-        assert polygon_count >= 18
+        assert polygon_count >= len(ALL_GENERATORS)
 
     def test_generate_gallery_writes_file(self, tmp_path):
         out = tmp_path / "gallery.svg"
@@ -377,7 +378,7 @@ class TestDiagnosticAnnotator:
         annotator = DiagnosticAnnotator()
         svg = annotator.render(card, mode_name)
         _assert_valid_svg(svg)
-        assert MODE_LABELS[mode_name] in svg
+        assert mode_label(mode_name) in svg
 
     def test_generate_sample_diagnostic_writes_file(self, tmp_path):
         out = tmp_path / "diagnostic.svg"
@@ -408,4 +409,4 @@ class TestVisualizationPublicAPI:
             render_all_individual_cards,
         )
         assert len(COLORS) > 0
-        assert len(MODE_LABELS) == 18
+        assert len(MODE_LABELS) == 20

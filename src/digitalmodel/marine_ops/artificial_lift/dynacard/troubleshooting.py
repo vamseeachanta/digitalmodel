@@ -1,5 +1,5 @@
 # ABOUTME: Curated symptom/mechanism/field-response catalog for dynacard phenomena.
-# ABOUTME: Covers all 18 classifier modes plus archive labels and training-deck cases.
+# ABOUTME: Covers all 20 classifier modes plus archive labels and training-deck cases.
 """Troubleshooting guide for sucker-rod-pump dynamometer-card phenomena.
 
 This is a curated field-practice catalog distilled from rod-pump automation
@@ -10,8 +10,8 @@ the shape (mechanism) and an ordered list of concrete field responses.
 
 Coverage:
 
-* All 18 classifier modes from ``diagnostics.PumpDiagnostics.FAILURE_MODES``
-  (excluding the legacy ``VALVE_LEAK`` alias).
+* All 20 classifier modes from ``diagnostics.PumpDiagnostics.FAILURE_MODES``
+  (excluding the legacy ``VALVE_LEAK`` and ``PUMP_TAGGING`` aliases).
 * Field/archive labels used in historical card libraries: ``FULL_CARD``,
   ``INCOMPLETE_FILLAGE``, ``FILLAGE_COLLAPSE``, ``BUTTERFLY``, ``PUMPED_OFF``.
 * Additional training-deck phenomena: ``FLUMPING``, ``DEVIATED_WELL_FRICTION``,
@@ -19,9 +19,9 @@ Coverage:
 
 Severity mirrors the ``field_health`` conventions: ``NORMAL`` maps to
 ``normal``; ``GAS_LOCK``, ``ROD_PARTING``, and ``STUCK_PUMP`` map to
-``failure``; ``PUMP_TAGGING`` maps to ``critical``; every other classifier
-mode maps to ``warning``. Archive and training-deck labels are assigned the
-closest equivalent.
+``failure``; ``PUMP_TAGGING_UP`` and ``PUMP_TAGGING_DOWN`` map to
+``critical``; every other classifier mode maps to ``warning``. Archive and
+training-deck labels are assigned the closest equivalent.
 """
 
 from typing import Literal
@@ -140,27 +140,75 @@ TROUBLESHOOTING_GUIDE: dict[str, TroubleshootingEntry] = {
             "warning",
         ),
         _entry(
-            "PUMP_TAGGING",
-            "Pump tagging",
-            "The downhole card shows a sharp load spike at the bottom (or "
-            "top) of the stroke where the plunger contacts the pump. At the "
-            "wellsite a distinct metallic tap is heard or felt each stroke "
-            "and the polished rod load trace shows a repeating impact.",
-            "The pump is spaced too close, or rod stretch/overtravel lets "
-            "the plunger strike the standing valve or top of the pump, "
-            "producing a mechanical impact load every stroke.",
+            "PUMP_TAGGING_DOWN",
+            "Pump tagging down (striking the standing valve)",
+            "The downhole card shows a sharp load drop at the *bottom* of the "
+            "stroke, dipping below the downstroke load line where the plunger "
+            "lands on the standing valve. At the wellsite a distinct metallic "
+            "tap is heard or felt at the bottom of every stroke.",
+            "The pump is spaced too close at the bottom, or rod stretch and "
+            "overtravel let the plunger strike the standing valve, driving "
+            "the rods into compression once per stroke.",
             [
-                "Re-space the pump: raise the rod string at the wellhead so "
-                "the plunger clears the standing valve at bottom of stroke.",
+                "Re-space the pump UP: raise the rod string at the wellhead "
+                "so the plunger clears the standing valve at bottom of "
+                "stroke.",
                 "Check for changed operating conditions (fluid level, SPM, "
                 "rod overtravel) that increased downhole stroke since the "
                 "pump was last spaced.",
                 "Slow the unit temporarily if re-spacing must wait, to "
                 "reduce impact energy.",
-                "Inspect the pump and standing valve for impact damage once "
-                "pulled; repeated tagging cracks cages and seats.",
+                "Inspect the standing valve cage and seat for impact damage "
+                "once pulled; repeated tagging cracks both.",
             ],
             "critical",
+        ),
+        _entry(
+            "PUMP_TAGGING_UP",
+            "Pump tagging up (striking the top of the pump)",
+            "The downhole card shows a sharp load spike at the *top* of the "
+            "stroke, standing clear above the upstroke load line where the "
+            "plunger strikes the top of the barrel or the pull tube. At the "
+            "wellsite the tap is heard at the top of every stroke.",
+            "The pump is spaced too long at the top, or the downhole stroke "
+            "has grown, so the plunger runs into the top of the pump before "
+            "the upstroke ends.",
+            [
+                "Re-space the pump DOWN: lower the rod string at the "
+                "wellhead so the plunger stops short of the top of the pump. "
+                "This is the opposite correction to tagging down -- get the "
+                "direction wrong and the tagging gets worse.",
+                "Check whether SPM or fluid level changed and lengthened the "
+                "downhole stroke since the pump was last spaced.",
+                "Slow the unit temporarily if re-spacing must wait, to "
+                "reduce impact energy.",
+                "Inspect the pull tube, plunger nose, and barrel top for "
+                "impact damage once pulled.",
+            ],
+            "critical",
+        ),
+        _entry(
+            "PLUNGER_OUT_OF_BARREL",
+            "Plunger out of barrel",
+            "The downhole card loses its top-right corner entirely: load is "
+            "held to about mid-upstroke, then falls away and runs flat and "
+            "low to the top of the stroke. At the wellsite production is far "
+            "below what the stroke and speed should displace.",
+            "The pump is spaced so long that the plunger leaves the top of "
+            "the barrel part-way up the upstroke. The moment it clears, the "
+            "fluid column dumps back past it and the rods carry no fluid "
+            "load for the rest of the stroke.",
+            [
+                "Re-space the pump down so the plunger stays inside the "
+                "barrel through the whole upstroke.",
+                "Confirm the barrel length and plunger length on the pump "
+                "card against the spacing actually run.",
+                "Check for tubing movement or rod stretch changes that "
+                "lengthened the downhole stroke after spacing.",
+                "Inspect the plunger and barrel top for wear from repeated "
+                "re-entry once pulled.",
+            ],
+            "warning",
         ),
         _entry(
             "TUBING_MOVEMENT",

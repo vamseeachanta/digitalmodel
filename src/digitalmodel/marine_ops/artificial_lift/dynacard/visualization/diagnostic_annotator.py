@@ -5,11 +5,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..card_generators import ALL_GENERATORS
+from ..card_generators import ALL_GENERATORS, get_generator
 from ..models import CardData
 from .svg_primitives import (
     COLORS,
-    MODE_LABELS,
+    mode_label,
     MODE_TIERS,
     TIER_INFO,
     CoordMapper,
@@ -51,7 +51,7 @@ class DiagnosticAnnotator:
                 {"mode": "DELAYED_TV_CLOSURE", "probability": 0.018},
             ]
 
-        title = MODE_LABELS.get(mode_name, mode_name)
+        title = mode_label(mode_name)
         tier = MODE_TIERS.get(mode_name, 1)
         tier_color = TIER_INFO[tier]["color"]
 
@@ -162,7 +162,7 @@ class DiagnosticAnnotator:
             y = diff_y + 20 + i * 22
             mode = entry["mode"]
             prob = entry["probability"]
-            label = MODE_LABELS.get(mode, mode)
+            label = mode_label(mode)
 
             # Probability bar
             svg += svg_text(
@@ -210,7 +210,7 @@ def generate_sample_diagnostic(
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    gen = ALL_GENERATORS[mode_name]
+    gen = get_generator(mode_name)
     card = gen(seed=seed)
 
     annotator = DiagnosticAnnotator()

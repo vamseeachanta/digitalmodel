@@ -1,5 +1,5 @@
 # ABOUTME: AI-driven pump diagnostics for sucker rod pumps.
-# ABOUTME: ML-based classifier with 18 failure modes, fallback to legacy thresholds.
+# ABOUTME: ML-based classifier with 20 failure modes, fallback to legacy thresholds.
 
 import json
 from pathlib import Path
@@ -21,7 +21,7 @@ class PumpDiagnostics:
     """AI-driven troubleshooting engine for Sucker Rod Pumps.
 
     Uses a pre-trained GradientBoosting classifier on Bezerra vertical
-    projection features to classify card patterns into 18 pump failure modes.
+    projection features to classify card patterns into 20 pump failure modes.
     Falls back to legacy threshold-based rules if the model file is missing.
     """
 
@@ -36,9 +36,17 @@ class PumpDiagnostics:
             "Incomplete pump fillage. "
             "Pump speed may be too high for current inflow."
         ),
-        "PUMP_TAGGING": (
-            "Mechanical contact between plunger and standing valve "
-            "or top of pump."
+        "PUMP_TAGGING_UP": (
+            "Plunger striking the top of the pump at maximum stroke. "
+            "Space the pump down."
+        ),
+        "PUMP_TAGGING_DOWN": (
+            "Plunger striking the standing valve or bottom of the barrel at "
+            "minimum stroke. Space the pump up."
+        ),
+        "PLUNGER_OUT_OF_BARREL": (
+            "Plunger leaving the top of the barrel part-way up the upstroke, "
+            "dumping fluid load mid-stroke. Space the pump down."
         ),
         "TUBING_MOVEMENT": (
             "Unanchored tubing causing excessive stroke loss. "
@@ -98,9 +106,16 @@ class PumpDiagnostics:
             "Excessive vibration detected. High-frequency load oscillation "
             "suggests mechanical resonance or imbalance."
         ),
-        # Legacy alias (backward compat)
+        # Legacy aliases (backward compat)
         "VALVE_LEAK": (
             "Fluid bypassing through traveling or standing valves."
+        ),
+        # Retired in favour of PUMP_TAGGING_UP / PUMP_TAGGING_DOWN, which are
+        # opposite mechanisms with opposite repairs. Kept because the shipped
+        # classifier model predates the split and still predicts this label.
+        "PUMP_TAGGING": (
+            "Mechanical contact between plunger and standing valve "
+            "or top of pump."
         ),
     }
 
@@ -245,7 +260,9 @@ class PumpDiagnostics:
         load = np.array(downhole_card.load)
 
         if np.max(load) > PUMP_TAGGING_LOAD_THRESHOLD_LBS:
-            return "PUMP_TAGGING"
+            # A peak-load threshold can only see the *upward* tag; tagging
+            # down shows as a load minimum and this rule cannot detect it.
+            return "PUMP_TAGGING_UP"
 
         mid_point = len(pos) // 2
         downstroke_load = load[mid_point:]
