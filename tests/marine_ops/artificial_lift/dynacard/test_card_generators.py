@@ -221,14 +221,6 @@ def _demo_context() -> DynacardAnalysisContext:
     )
 
 
-STALE_MODEL = pytest.mark.xfail(
-    strict=True,
-    reason=(
-        'The shipped classifier (data/dynacard_classifier.json, model_version 1.0, 18 classes) was fitted to the pre-#1875 generator shapes. Those shapes did not match the reference plate and have been corrected, so the model no longer recovers the label the card was generated from -- it now reads a normal card as WORN_BARREL and a rod-parting card as PARAFFIN_RESTRICTION. It must be retrained on the corrected 20-mode generator set before any label-round-trip assertion can hold again. Deliberately strict: this flips to a failure the moment the model is retrained, so the expectation gets re-derived rather than forgotten.'
-    ),
-)
-
-
 class TestSurfaceCardForwardModel:
     """The pump card must survive a trip up the rod string and back down.
 
@@ -312,7 +304,6 @@ class TestSurfaceCardForwardModel:
         # buoyant weight is carried at the surface and shed on the way down.
         assert surface_load.min() > pump_load.min()
 
-    @STALE_MODEL
     def test_workflow_round_trip_preserves_the_diagnosis(self):
         """The label the harness asks for is the label the solver hands back."""
         cfg = {
@@ -330,4 +321,7 @@ class TestSurfaceCardForwardModel:
         result = DynacardWorkflow().router(cfg)
 
         assert result["results"]["solver_method"] == "everitt_jennings"
-        assert result["artificial_lift"]["classification"] == "PUMP_TAGGING"
+        # "PUMP_TAGGING" is the retired name the config asks for;
+        # ``resolve_mode`` maps it to PUMP_TAGGING_UP, which is what the
+        # retrained 20-class model returns for the recovered pump card.
+        assert result["artificial_lift"]["classification"] == "PUMP_TAGGING_UP"

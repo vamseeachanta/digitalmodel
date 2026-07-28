@@ -60,14 +60,6 @@ def create_gas_interference_card(num_points: int = 100) -> CardData:
     return CardData(position=position.tolist(), load=load.tolist())
 
 
-STALE_MODEL = pytest.mark.xfail(
-    strict=True,
-    reason=(
-        'The shipped classifier (data/dynacard_classifier.json, model_version 1.0, 18 classes) was fitted to the pre-#1875 generator shapes. Those shapes did not match the reference plate and have been corrected, so the model no longer recovers the label the card was generated from -- it now reads a normal card as WORN_BARREL and a rod-parting card as PARAFFIN_RESTRICTION. It must be retrained on the corrected 20-mode generator set before any label-round-trip assertion can hold again. Deliberately strict: this flips to a failure the moment the model is retrained, so the expectation gets re-derived rather than forgotten.'
-    ),
-)
-
-
 class TestPumpDiagnosticsFailureModes:
     """Tests for failure mode definitions."""
 
@@ -104,28 +96,29 @@ class TestPumpDiagnosticsFailureModes:
 class TestClassifyCard:
     """Tests for the classify_card static method using ML-trained generators."""
 
-    @STALE_MODEL
     def test_classifies_normal_operation(self):
         """Should classify normal cards as NORMAL."""
         card = generate_normal_card(seed=42)
         result = PumpDiagnostics.classify_card(card)
         assert result == "NORMAL"
 
-    @STALE_MODEL
     def test_classifies_pump_tagging(self):
-        """Should classify extreme loads as PUMP_TAGGING."""
+        """Should classify a tagging card as PUMP_TAGGING_UP.
+
+        ``generate_pump_tagging_card`` is the deprecated alias for the
+        tagging-*up* generator, and the retrained 20-class model has no merged
+        PUMP_TAGGING label left to return.
+        """
         card = generate_pump_tagging_card(seed=42)
         result = PumpDiagnostics.classify_card(card)
-        assert result == "PUMP_TAGGING"
+        assert result == "PUMP_TAGGING_UP"
 
-    @STALE_MODEL
     def test_classifies_fluid_pound(self):
         """Should classify sharp load drops as FLUID_POUND."""
         card = generate_fluid_pound_card(seed=42)
         result = PumpDiagnostics.classify_card(card)
         assert result == "FLUID_POUND"
 
-    @STALE_MODEL
     def test_classifies_gas_interference(self):
         """Should classify very low loads as GAS_INTERFERENCE."""
         card = generate_gas_interference_card(seed=42)
@@ -235,7 +228,6 @@ class TestGenerateTroubleshootingReport:
         assert isinstance(report, str)
         assert len(report) > 0
 
-    @STALE_MODEL
     def test_report_contains_classification(self):
         """Report should contain the failure mode classification."""
         diagnostics = PumpDiagnostics()
@@ -247,7 +239,6 @@ class TestGenerateTroubleshootingReport:
         assert "Classification:" in report
         assert "NORMAL" in report
 
-    @STALE_MODEL
     def test_report_contains_description(self):
         """Report should contain the failure mode description."""
         diagnostics = PumpDiagnostics()
@@ -296,7 +287,6 @@ class TestGenerateTroubleshootingReport:
 
         assert results.diagnostic_message == report
 
-    @STALE_MODEL
     def test_pump_tagging_report(self):
         """Should generate appropriate report for pump tagging."""
         diagnostics = PumpDiagnostics()
@@ -305,10 +295,13 @@ class TestGenerateTroubleshootingReport:
         results = AnalysisResults(downhole_card=card)
         report = diagnostics.generate_troubleshooting_report(results)
 
-        assert "PUMP_TAGGING" in report
-        assert "contact" in report.lower()
+        assert "PUMP_TAGGING_UP" in report
+        # The split descriptions name the mechanism and the repair instead of
+        # the old merged label's generic "mechanical contact": tagging up is
+        # the plunger striking the *top* of the pump, repaired by spacing down.
+        assert "striking" in report.lower()
+        assert "space the pump down" in report.lower()
 
-    @STALE_MODEL
     def test_fluid_pound_report(self):
         """Should generate appropriate report for fluid pound."""
         diagnostics = PumpDiagnostics()
@@ -320,7 +313,6 @@ class TestGenerateTroubleshootingReport:
         assert "FLUID_POUND" in report
         assert "fillage" in report.lower()
 
-    @STALE_MODEL
     def test_gas_interference_report(self):
         """Should generate appropriate report for gas interference."""
         diagnostics = PumpDiagnostics()
@@ -401,12 +393,11 @@ class TestClassifyWithContext:
 class TestDiagnosticsIntegration:
     """Integration tests for diagnostics module."""
 
-    @STALE_MODEL
     def test_classify_multiple_cards(self):
         """Should correctly classify various card types."""
         test_cases = [
             (generate_normal_card(seed=42), "NORMAL"),
-            (generate_pump_tagging_card(seed=42), "PUMP_TAGGING"),
+            (generate_pump_tagging_card(seed=42), "PUMP_TAGGING_UP"),
             (generate_fluid_pound_card(seed=42), "FLUID_POUND"),
             (generate_gas_interference_card(seed=42), "GAS_INTERFERENCE"),
         ]

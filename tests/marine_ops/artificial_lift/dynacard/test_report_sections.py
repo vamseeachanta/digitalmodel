@@ -79,15 +79,6 @@ def test_legacy_valve_leak_report_renders_troubleshooting_actions():
     assert "Confirm with a traveling valve test" in html
 
 
-STALE_MODEL = pytest.mark.xfail(
-    strict=True,
-    reason=(
-        'The shipped classifier (data/dynacard_classifier.json, model_version 1.0, 18 classes) was fitted to the pre-#1875 generator shapes. Those shapes did not match the reference plate and have been corrected, so the model no longer recovers the label the card was generated from -- it now reads a normal card as WORN_BARREL and a rod-parting card as PARAFFIN_RESTRICTION. It must be retrained on the corrected 20-mode generator set before any label-round-trip assertion can hold again. Deliberately strict: this flips to a failure the moment the model is retrained, so the expectation gets re-derived rather than forgotten.'
-    ),
-)
-
-
-@STALE_MODEL
 def test_router_reuses_one_diagnostic_classification(monkeypatch):
     calls = 0
     original = PumpDiagnostics.classify_with_context
@@ -122,7 +113,12 @@ def test_router_reuses_one_diagnostic_classification(monkeypatch):
     result = DynacardWorkflow().router(cfg)
 
     assert calls == 1
+    # The config names the retired mode PUMP_TAGGING; ``resolve_mode`` maps it
+    # to PUMP_TAGGING_UP, and the classifier retrained on the corrected 20-mode
+    # generator set has no PUMP_TAGGING label left to emit. The round trip is
+    # a real one -- pump card up the rod string, everitt_jennings back down --
+    # and PUMP_TAGGING_UP survives it at probability 1.000.
     assert result["results"]["diagnostic_message"].startswith(
-        "Classification: PUMP_TAGGING."
+        "Classification: PUMP_TAGGING_UP."
     )
-    assert result["artificial_lift"]["classification"] == "PUMP_TAGGING"
+    assert result["artificial_lift"]["classification"] == "PUMP_TAGGING_UP"
