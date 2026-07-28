@@ -20,24 +20,46 @@ class DynacardWorkflow:
     """
     Main orchestrator for Dynacard Analysis in digitalmodel.
 
-    Supports two physics solvers:
-        - 'gibbs': Frequency-domain Gibbs analytical method (faster, default)
-        - 'finite_difference': Time-domain finite difference (more detailed)
+    Supports three physics solvers:
+        - 'everitt_jennings': Space-marching finite difference (SPE 18189).
+          The default. Rebuilds downhole load from the strain field and
+          handles deviated wells.
+        - 'gibbs': Frequency-domain analytical method. Retained for
+          comparison only.
+        - 'finite_difference': Time-domain finite difference. Numerically
+          unstable — see below.
+
+    Measured against the stored reference downhole cards on all five fixture
+    wells (phase-aligned, since a card is a closed loop):
+
+        method              med nRMSE   med |stroke err|   med corr
+        everitt_jennings         0.9%              0.0%      1.000
+        gibbs                   17.3%              2.7%      0.966
+        finite_difference     diverges           diverges     0.022
+
+    'gibbs' does not transform the load at all — it returns an affine rescale
+    of the surface card (issue #1857) — so it cannot resolve pump condition.
+    'finite_difference' overflows to ~1e45 and beyond on three of five wells.
+    Neither should be used for diagnosis.
     """
 
     def __init__(
         self,
         context: DynacardAnalysisContext = None,
-        solver_method: Literal['gibbs', 'finite_difference'] = 'gibbs'
+        solver_method: Literal[
+            'everitt_jennings', 'gibbs', 'finite_difference'
+        ] = 'everitt_jennings'
     ):
         """Initialize the dynacard analyzer.
 
         Args:
             context: Complete well analysis context. Can be set later
                 before calling analysis methods.
-            solver_method: Physics solver to use — ``'gibbs'`` for
-                frequency-domain or ``'finite_difference'`` for
-                time-domain.
+            solver_method: Physics solver to use. Defaults to
+                ``'everitt_jennings'``, the only one that reproduces the
+                reference downhole cards. ``'gibbs'`` and
+                ``'finite_difference'`` are retained for comparison and
+                should not be used for diagnosis — see the class docstring.
         """
         self.ctx = context
         self.solver_method = solver_method
@@ -52,6 +74,11 @@ class DynacardWorkflow:
         """Initialize the appropriate physics solver."""
         if self.solver_method == 'finite_difference':
             self.solver = FiniteDifferenceSolver(self.ctx)
+        elif self.solver_method == 'everitt_jennings':
+            # Imported here to keep the scipy/numba-backed solver off the
+            # import path of callers that never select it.
+            from .everitt_jennings.adapter import EverittJenningsContextSolver
+            self.solver = EverittJenningsContextSolver(self.ctx)
         else:
             self.solver = DynacardPhysicsSolver(self.ctx)
 
@@ -180,7 +207,7 @@ class DynacardWorkflow:
             4. Diagnostics: AI-driven troubleshooting
         """
         # 1. Physics: Surface to Downhole conversion
-        if self.solver_method == 'finite_difference':
+        if self.solver_method in ('finite_difference', 'everitt_jennings'):
             results = self.solver.solve()
         else:
             results = self.solver.solve_wave_equation()
