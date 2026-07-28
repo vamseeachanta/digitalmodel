@@ -1,89 +1,89 @@
 # Capabilities page — information-architecture spec (issue #1444)
 
-> GENERATED tables (source of truth: `capabilities-clusters.yml`, `capabilities-added.yml`, the live page census). Regenerate with:
+> GENERATED tables (source of truth: `capabilities-sections.yml`, `capabilities-clusters.yml`, `capabilities-added.yml`). Regenerate with:
 > `.venv/bin/python scripts/capabilities/build_capabilities_inventory.py`
-> Presentation is owned by the capabilities revamp lane (PR #1389 coordination note) — this spec is its input; `index.html` is not edited here.
+> Presentation lives at [https://www.aceengineer.com/capabilities/](https://www.aceengineer.com/capabilities/) (C10, #1573) — this spec describes the IA, and does not edit the rendered surface.
 
-Sections on the live page: **22** · clusters: **7** · PDF coverage gaps: **0** · unlinked explorers: **0**
+Sections declared: **22** · clusters: **7** · PDF coverage gaps: **0** · unlinked explorers: **0**
 
 ## Cluster taxonomy
 
 ### Structures & Fitness-for-Service (`structures-ffs`)
 *Strength, fatigue and remaining-life decisions for plates, panels and aging assets — field measurement to code verdict, with the validation table anchoring every engine to a published golden case.*
 
-- [`#structural`](../api/capabilities/index.html#structural) — Ship structural strength
-- [`#fatigue`](../api/capabilities/index.html#fatigue) — Fatigue &amp; fracture &mdash; S-N life and crack growth
-- [`#ffs`](../api/capabilities/index.html#ffs) — Fitness-for-service
-- [`#cathodic`](../api/capabilities/index.html#cathodic) — Cathodic protection
-- [`#validation`](../api/capabilities/index.html#validation) — Validated against published references
+- [`#structural`](https://www.aceengineer.com/capabilities/#structural) — Ship structural strength
+- [`#fatigue`](https://www.aceengineer.com/capabilities/#fatigue) — Fatigue &amp; fracture &mdash; S-N life and crack growth
+- [`#ffs`](https://www.aceengineer.com/capabilities/#ffs) — Fitness-for-service
+- [`#cathodic`](https://www.aceengineer.com/capabilities/#cathodic) — Cathodic protection
+- [`#validation`](https://www.aceengineer.com/capabilities/#validation) — Validated against published references
 
 ### Pipelines & Risers (`pipelines-risers`)
 *Wall sizing, code checks and vortex-induced-vibration screening for flowlines, pipelines and riser systems across 10+ design codes.*
 
-- [`#risers`](../api/capabilities/index.html#risers) — Risers &amp; pipelines
-- [`#wall-thickness`](../api/capabilities/index.html#wall-thickness) — Wall thickness &mdash; sizing &amp; code checks
-- [`#viv`](../api/capabilities/index.html#viv) — Vortex-induced vibration &mdash; screening, frequency &amp; fatigue
+- [`#risers`](https://www.aceengineer.com/capabilities/#risers) — Risers &amp; pipelines
+- [`#wall-thickness`](https://www.aceengineer.com/capabilities/#wall-thickness) — Wall thickness &mdash; sizing &amp; code checks
+- [`#viv`](https://www.aceengineer.com/capabilities/#viv) — Vortex-induced vibration &mdash; screening, frequency &amp; fatigue
 
 ### Moorings, Anchors & Subsea (`moorings-stationkeeping`)
 *Stationkeeping design and subsea hardware — mooring strength and fatigue, anchor holding capacity, and foundation geotechnics.*
 
-- [`#subsea`](../api/capabilities/index.html#subsea) — Subsea
-- [`#geotechnical`](../api/capabilities/index.html#geotechnical) — Geotechnical &mdash; pile, anchor &amp; foundation capacity
+- [`#subsea`](https://www.aceengineer.com/capabilities/#subsea) — Subsea
+- [`#geotechnical`](https://www.aceengineer.com/capabilities/#geotechnical) — Geotechnical &mdash; pile, anchor &amp; foundation capacity
 
 ### Hydrodynamics & Naval Architecture (`hydro-naval`)
 *Vessel and floating-body behaviour — diffraction, seakeeping, CFD, manoeuvring and ship-form performance from hull lines to RAOs.*
 
-- [`#hydro`](../api/capabilities/index.html#hydro) — Hydrodynamics &amp; diffraction
-- [`#cfd`](../api/capabilities/index.html#cfd) — Computational fluid dynamics (CFD)
-- [`#manoeuvring`](../api/capabilities/index.html#manoeuvring) — Manoeuvring &amp; station-keeping
-- [`#naval-architecture`](../api/capabilities/index.html#naval-architecture) — Naval architecture &mdash; stability, resistance &amp; hull strength
+- [`#hydro`](https://www.aceengineer.com/capabilities/#hydro) — Hydrodynamics &amp; diffraction
+- [`#cfd`](https://www.aceengineer.com/capabilities/#cfd) — Computational fluid dynamics (CFD)
+- [`#manoeuvring`](https://www.aceengineer.com/capabilities/#manoeuvring) — Manoeuvring &amp; station-keeping
+- [`#naval-architecture`](https://www.aceengineer.com/capabilities/#naval-architecture) — Naval architecture &mdash; stability, resistance &amp; hull strength
 
 ### Wells, Drilling & Production (`wells-drilling-production`)
 *The well axis end-to-end — casing and drilling engineering, pore pressure, artificial lift, production chemistry and flow assurance.*
 
-- [`#well`](../api/capabilities/index.html#well) — Well construction &mdash; casing &amp; tubulars
-- [`#drilling-engineering`](../api/capabilities/index.html#drilling-engineering) — Drilling engineering &mdash; pore pressure, hydraulics &amp; well control
-- [`#artificial-lift`](../api/capabilities/index.html#artificial-lift) — Artificial lift &mdash; rod-pump diagnostics
-- [`#production-engineering`](../api/capabilities/index.html#production-engineering) — Production engineering &mdash; nodal analysis &amp; well deliverability
-- [`#corrosion-production`](../api/capabilities/index.html#corrosion-production) — Corrosion &amp; production chemistry
+- [`#well`](https://www.aceengineer.com/capabilities/#well) — Well construction &mdash; casing &amp; tubulars
+- [`#drilling-engineering`](https://www.aceengineer.com/capabilities/#drilling-engineering) — Drilling engineering &mdash; pore pressure, hydraulics &amp; well control
+- [`#artificial-lift`](https://www.aceengineer.com/capabilities/#artificial-lift) — Artificial lift &mdash; rod-pump diagnostics
+- [`#production-engineering`](https://www.aceengineer.com/capabilities/#production-engineering) — Production engineering &mdash; nodal analysis &amp; well deliverability
+- [`#corrosion-production`](https://www.aceengineer.com/capabilities/#corrosion-production) — Corrosion &amp; production chemistry
 
 ### Field Development & Economics (`field-dev-economics`)
 *Concept-to-cashflow screening — field development options, floating wind TOTEX/LCOE and NPV levers over real project structures.*
 
-- [`#field-development`](../api/capabilities/index.html#field-development) — Field development &mdash; concept screening, cost &amp; economics
-- [`#wind`](../api/capabilities/index.html#wind) — Floating wind
+- [`#field-development`](https://www.aceengineer.com/capabilities/#field-development) — Field development &mdash; concept screening, cost &amp; economics
+- [`#wind`](https://www.aceengineer.com/capabilities/#wind) — Floating wind
 
 ### Installation & Marine Operations (`installation-ops`)
 *Getting hardware to the seabed safely — installability screening, lifting/lowering dynamics and weather-windowed marine operations.*
 
-- [`#installation`](../api/capabilities/index.html#installation) — Installation
+- [`#installation`](https://www.aceengineer.com/capabilities/#installation) — Installation
 
 ## Reference index (citable front doors)
 
 | Section | Cluster | Live explorer(s) | 1-pager PDF | Added |
 |---|---|---|---|---|
-| [`#ffs`](../api/capabilities/index.html#ffs) | structures-ffs | `docs/api/ffs/riser-joint-acceptance-explorer.html` | `docs/api/capabilities/pdf/sec-ffs.pdf` | unknown |
-| [`#structural`](../api/capabilities/index.html#structural) | structures-ffs | *gap* | `docs/api/capabilities/pdf/sec-structural.pdf` | unknown |
-| [`#fatigue`](../api/capabilities/index.html#fatigue) | structures-ffs | *gap* | `docs/api/capabilities/pdf/sec-fatigue.pdf` | 2026-07-04 (#1396) |
-| [`#hydro`](../api/capabilities/index.html#hydro) | hydro-naval | `docs/api/hydro/ocimf-coefficient-explorer.html` | `docs/api/capabilities/pdf/sec-hydro.pdf` | unknown |
-| [`#cfd`](../api/capabilities/index.html#cfd) | hydro-naval | `docs/api/structural/sloshing-explorer.html` | `docs/api/capabilities/pdf/sec-cfd.pdf` | 2026-07-06 (#1442) |
-| [`#risers`](../api/capabilities/index.html#risers) | pipelines-risers | `docs/api/drilling/drilling-riser-operability-explorer.html` | `docs/api/capabilities/pdf/sec-risers.pdf` | unknown |
-| [`#wall-thickness`](../api/capabilities/index.html#wall-thickness) | pipelines-risers | `docs/api/structural/wall-thickness-explorer.html` | `docs/api/capabilities/pdf/sec-wall-thickness.pdf` | 2026-07-04 (#1389) |
-| [`#subsea`](../api/capabilities/index.html#subsea) | moorings-stationkeeping | *gap* | `docs/api/capabilities/pdf/sec-subsea.pdf` | unknown |
-| [`#viv`](../api/capabilities/index.html#viv) | pipelines-risers | `docs/api/structural/viv-explorer.html` | `docs/api/capabilities/pdf/sec-viv.pdf` | 2026-07-04 (#1396) |
-| [`#installation`](../api/capabilities/index.html#installation) | installation-ops | *gap* | `docs/api/capabilities/pdf/sec-installation.pdf` | unknown |
-| [`#wind`](../api/capabilities/index.html#wind) | field-dev-economics | *gap* | `docs/api/capabilities/pdf/sec-wind.pdf` | unknown |
-| [`#field-development`](../api/capabilities/index.html#field-development) | field-dev-economics | `docs/api/structural/field-economics-explorer.html` | `docs/api/capabilities/pdf/sec-field-development.pdf` | 2026-07-04 (#1396) |
-| [`#manoeuvring`](../api/capabilities/index.html#manoeuvring) | hydro-naval | `docs/api/hydro/rudder-maneuvering-explorer.html` | `docs/api/capabilities/pdf/sec-manoeuvring.pdf` | unknown |
-| [`#naval-architecture`](../api/capabilities/index.html#naval-architecture) | hydro-naval | `docs/api/structural/ship-resistance-explorer.html` | `docs/api/capabilities/pdf/sec-naval-architecture.pdf` | 2026-07-04 (#1394) |
-| [`#geotechnical`](../api/capabilities/index.html#geotechnical) | moorings-stationkeeping | `docs/api/structural/anchor-holding-explorer.html` | `docs/api/capabilities/pdf/sec-geotechnical.pdf` | 2026-07-04 (#1394) |
-| [`#artificial-lift`](../api/capabilities/index.html#artificial-lift) | wells-drilling-production | *gap* | `docs/api/capabilities/pdf/sec-artificial-lift.pdf` | unknown |
-| [`#production-engineering`](../api/capabilities/index.html#production-engineering) | wells-drilling-production | `docs/api/structural/ipr-explorer.html` | `docs/api/capabilities/pdf/sec-production-engineering.pdf` | 2026-07-04 (#1396) |
-| [`#well`](../api/capabilities/index.html#well) | wells-drilling-production | `docs/api/well/casing-design-explorer.html` | `docs/api/capabilities/pdf/sec-well.pdf` | unknown |
-| [`#drilling-engineering`](../api/capabilities/index.html#drilling-engineering) | wells-drilling-production | `docs/api/structural/pore-pressure-explorer.html` | `docs/api/capabilities/pdf/sec-drilling-engineering.pdf` | 2026-07-04 (#1396) |
-| [`#cathodic`](../api/capabilities/index.html#cathodic) | structures-ffs | `docs/api/structural/cathodic-protection-explorer.html` | `docs/api/capabilities/pdf/sec-cathodic.pdf` | 2026-07-04 (#1389) |
-| [`#corrosion-production`](../api/capabilities/index.html#corrosion-production) | wells-drilling-production | `docs/api/corrosion/galvanic-compatibility-explorer.html`<br>`docs/api/production/scale-si-explorer.html` | `docs/api/capabilities/pdf/sec-corrosion-production.pdf` | unknown |
-| [`#validation`](../api/capabilities/index.html#validation) | structures-ffs | *gap* | `docs/api/capabilities/pdf/sec-validation.pdf` | unknown |
+| [`#ffs`](https://www.aceengineer.com/capabilities/#ffs) | structures-ffs | `docs/api/ffs/riser-joint-acceptance-explorer.html` | `docs/api/capabilities/pdf/sec-ffs.pdf` | unknown |
+| [`#structural`](https://www.aceengineer.com/capabilities/#structural) | structures-ffs | *gap* | `docs/api/capabilities/pdf/sec-structural.pdf` | unknown |
+| [`#fatigue`](https://www.aceengineer.com/capabilities/#fatigue) | structures-ffs | *gap* | `docs/api/capabilities/pdf/sec-fatigue.pdf` | 2026-07-04 (#1396) |
+| [`#hydro`](https://www.aceengineer.com/capabilities/#hydro) | hydro-naval | `docs/api/hydro/ocimf-coefficient-explorer.html` | `docs/api/capabilities/pdf/sec-hydro.pdf` | unknown |
+| [`#cfd`](https://www.aceengineer.com/capabilities/#cfd) | hydro-naval | `docs/api/structural/sloshing-explorer.html` | `docs/api/capabilities/pdf/sec-cfd.pdf` | 2026-07-06 (#1442) |
+| [`#risers`](https://www.aceengineer.com/capabilities/#risers) | pipelines-risers | `docs/api/drilling/drilling-riser-operability-explorer.html` | `docs/api/capabilities/pdf/sec-risers.pdf` | unknown |
+| [`#wall-thickness`](https://www.aceengineer.com/capabilities/#wall-thickness) | pipelines-risers | `docs/api/structural/wall-thickness-explorer.html` | `docs/api/capabilities/pdf/sec-wall-thickness.pdf` | 2026-07-04 (#1389) |
+| [`#subsea`](https://www.aceengineer.com/capabilities/#subsea) | moorings-stationkeeping | *gap* | `docs/api/capabilities/pdf/sec-subsea.pdf` | unknown |
+| [`#viv`](https://www.aceengineer.com/capabilities/#viv) | pipelines-risers | `docs/api/structural/viv-explorer.html` | `docs/api/capabilities/pdf/sec-viv.pdf` | 2026-07-04 (#1396) |
+| [`#installation`](https://www.aceengineer.com/capabilities/#installation) | installation-ops | *gap* | `docs/api/capabilities/pdf/sec-installation.pdf` | unknown |
+| [`#wind`](https://www.aceengineer.com/capabilities/#wind) | field-dev-economics | *gap* | `docs/api/capabilities/pdf/sec-wind.pdf` | unknown |
+| [`#field-development`](https://www.aceengineer.com/capabilities/#field-development) | field-dev-economics | `docs/api/structural/field-economics-explorer.html` | `docs/api/capabilities/pdf/sec-field-development.pdf` | 2026-07-04 (#1396) |
+| [`#manoeuvring`](https://www.aceengineer.com/capabilities/#manoeuvring) | hydro-naval | `docs/api/hydro/rudder-maneuvering-explorer.html` | `docs/api/capabilities/pdf/sec-manoeuvring.pdf` | unknown |
+| [`#naval-architecture`](https://www.aceengineer.com/capabilities/#naval-architecture) | hydro-naval | `docs/api/structural/ship-resistance-explorer.html` | `docs/api/capabilities/pdf/sec-naval-architecture.pdf` | 2026-07-04 (#1394) |
+| [`#geotechnical`](https://www.aceengineer.com/capabilities/#geotechnical) | moorings-stationkeeping | `docs/api/structural/anchor-holding-explorer.html` | `docs/api/capabilities/pdf/sec-geotechnical.pdf` | 2026-07-04 (#1394) |
+| [`#artificial-lift`](https://www.aceengineer.com/capabilities/#artificial-lift) | wells-drilling-production | *gap* | `docs/api/capabilities/pdf/sec-artificial-lift.pdf` | unknown |
+| [`#production-engineering`](https://www.aceengineer.com/capabilities/#production-engineering) | wells-drilling-production | `docs/api/structural/ipr-explorer.html` | `docs/api/capabilities/pdf/sec-production-engineering.pdf` | 2026-07-04 (#1396) |
+| [`#well`](https://www.aceengineer.com/capabilities/#well) | wells-drilling-production | `docs/api/well/casing-design-explorer.html` | `docs/api/capabilities/pdf/sec-well.pdf` | unknown |
+| [`#drilling-engineering`](https://www.aceengineer.com/capabilities/#drilling-engineering) | wells-drilling-production | `docs/api/structural/pore-pressure-explorer.html` | `docs/api/capabilities/pdf/sec-drilling-engineering.pdf` | 2026-07-04 (#1396) |
+| [`#cathodic`](https://www.aceengineer.com/capabilities/#cathodic) | structures-ffs | `docs/api/structural/cathodic-protection-explorer.html` | `docs/api/capabilities/pdf/sec-cathodic.pdf` | 2026-07-04 (#1389) |
+| [`#corrosion-production`](https://www.aceengineer.com/capabilities/#corrosion-production) | wells-drilling-production | `docs/api/corrosion/galvanic-compatibility-explorer.html`<br>`docs/api/production/scale-si-explorer.html` | `docs/api/capabilities/pdf/sec-corrosion-production.pdf` | unknown |
+| [`#validation`](https://www.aceengineer.com/capabilities/#validation) | structures-ffs | *gap* | `docs/api/capabilities/pdf/sec-validation.pdf` | unknown |
 
 **PDF gap set (0):** 
 

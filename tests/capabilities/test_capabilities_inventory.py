@@ -1,6 +1,7 @@
 # ABOUTME: TDD suite for the capabilities IA inventory (issue #1444) — section
-# ABOUTME: census bijection, cluster totality, joins with gaps, freshness gate.
+# ABOUTME: census schema, cluster totality, joins with gaps, freshness gate.
 
+import ast
 import importlib.util
 import json
 import re
@@ -16,41 +17,78 @@ spec = importlib.util.spec_from_file_location("capinv", SCRIPT)
 ci = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ci)
 
-INDEX = REPO / "docs" / "api" / "capabilities" / "index.html"
+SECTIONS = REPO / "docs" / "capability-map" / "capabilities-sections.yml"
 CLUSTERS = REPO / "docs" / "capability-map" / "capabilities-clusters.yml"
 ADDED = REPO / "docs" / "capability-map" / "capabilities-added.yml"
 
 
-# 1 — census bijection on the LIVE page: nav hrefs <-> section ids, 1:1
+# 1 — the declared census: unique, titled, URL-safe anchors
 
 
-def test_section_census_bijection_live_page():
-    sections = ci.parse_sections(INDEX.read_text())
+def test_section_census_schema():
+    sections = ci.census(ci.load_sections(REPO))
     ids = [s["id"] for s in sections]
     assert len(ids) == len(set(ids))
-    nav = ci.parse_nav(INDEX.read_text())
-    assert set(nav) == set(ids)
-    assert len(nav) == len(ids)
     for s in sections:
         assert s["title"]
+        assert isinstance(s["hrefs"], list)
 
 
-# 2 — parser failure fixtures fail closed with diagnostics
+# 1b — the IA is declared in YAML, not scraped out of rendered markup.
+#
+# docs/api/capabilities/index.html was both the gallery and the schema until
+# #1573 (C10) redirected it to aceengineer.com — which silently deleted the
+# schema and broke every census (dm#1637). Nothing here may depend on that
+# page again, or the next presentation change re-breaks the same 8 tests.
 
 
-def test_parser_failure_fixtures():
-    dup = '<nav><a href="#a">A</a></nav><section id="a"></section><section id="a"></section>'
+def test_census_does_not_read_rendered_html():
+    # Structural, not textual: the docstring *explains* the page it no longer
+    # reads, so a substring search would flag its own rationale. Only string
+    # literals the code could open count — docstrings are excluded by skipping
+    # bare-expression strings.
+    tree = ast.parse(SCRIPT.read_text())
+    docstrings = {
+        id(n.value)
+        for n in ast.walk(tree)
+        if isinstance(n, ast.Expr) and isinstance(n.value, ast.Constant)
+    }
+    referenced = [
+        n.value
+        for n in ast.walk(tree)
+        if isinstance(n, ast.Constant)
+        and isinstance(n.value, str)
+        and id(n) not in docstrings
+        and "index.html" in n.value
+    ]
+    assert not referenced, (
+        f"the census must not read the rendered capabilities page: {referenced} "
+        "— the IA lives in capabilities-sections.yml (dm#1637)"
+    )
+    assert ci.build_inventory(REPO)["source"] == ci.SECTIONS_YML
+
+
+# 2 — census failure fixtures fail closed with diagnostics
+
+
+def test_census_failure_fixtures():
+    with pytest.raises(ci.CensusError, match="no sections"):
+        ci.census([])
+    dup = [
+        {"id": "a", "title": "A", "hrefs": []},
+        {"id": "a", "title": "A again", "hrefs": []},
+    ]
     with pytest.raises(ci.CensusError, match="duplicate"):
         ci.census(dup)
-    nav_only = '<nav><a href="#a">A</a><a href="#ghost">G</a></nav><section id="a"><h2>A</h2></section>'
-    with pytest.raises(ci.CensusError, match="ghost"):
-        ci.census(nav_only)
-    sec_only = '<nav><a href="#a">A</a></nav><section id="a"><h2>A</h2></section><section id="b"><h2>B</h2></section>'
-    with pytest.raises(ci.CensusError, match="b"):
-        ci.census(sec_only)
+    bad_anchor = [{"id": "Not An Anchor", "title": "A", "hrefs": []}]
+    with pytest.raises(ci.CensusError, match="kebab-case"):
+        ci.census(bad_anchor)
+    untitled = [{"id": "a", "title": "  ", "hrefs": []}]
+    with pytest.raises(ci.CensusError, match="no title"):
+        ci.census(untitled)
 
 
-# 3 — cluster map: schema, totality, disjointness vs the live census
+# 3 — cluster map: schema, totality, disjointness vs the declared census
 
 
 def test_cluster_mapping_total_disjoint_and_schema():
@@ -61,7 +99,7 @@ def test_cluster_mapping_total_disjoint_and_schema():
         assert c["key"] and c["label"] and c["value_statement"]
         assigned += c["sections"]
     assert len(assigned) == len(set(assigned)), "section in two clusters"
-    live = {s["id"] for s in ci.parse_sections(INDEX.read_text())}
+    live = {s["id"] for s in ci.load_sections(REPO)}
     assert set(assigned) == live, (
         f"cluster map out of sync: missing={live - set(assigned)} "
         f"stale={set(assigned) - live}"
@@ -218,7 +256,7 @@ def _section_linked_files(section: dict) -> list:
 
 def test_specs_section_ids_biject_live_sections():
     exempt = _onepager_exempt()
-    live = {s["id"] for s in ci.parse_sections(INDEX.read_text())}
+    live = {s["id"] for s in ci.load_sections(REPO)}
     covered = set(ci.load_pdf_specs(REPO))  # anchors with a sec-* SPECS entry
     assert exempt <= live, f"stale onepager_exempt entries: {sorted(exempt - live)}"
     orphans = covered - live
@@ -252,7 +290,7 @@ def test_every_section_pdf_committed():
 
 
 def test_specs_standards_grounded():
-    sections = {s["id"]: s for s in ci.parse_sections(INDEX.read_text())}
+    sections = {s["id"]: s for s in ci.load_sections(REPO)}
     script = REPO / "scripts" / "capabilities" / "build_onepagers.py"
     spec_ = importlib.util.spec_from_file_location("build_onepagers_g", script)
     bo = importlib.util.module_from_spec(spec_)

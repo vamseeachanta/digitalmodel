@@ -29,6 +29,15 @@ def _load_builder():
     return mod
 
 
+def _capability_hrefs() -> set:
+    """Site paths registered by the capability IA (dm#1637, dm#1639)."""
+    path = REPO / "scripts" / "capabilities" / "build_capabilities_inventory.py"
+    spec = importlib.util.spec_from_file_location("capinv_reg", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.registered_site_paths(REPO)
+
+
 build = _load_builder()
 
 
@@ -141,5 +150,6 @@ def test_escalate_is_honest_and_wired():
 # 7. artifacts exist + registered --------------------------------------------
 def test_artifacts_exist_and_registered():
     assert build._HTML.is_file() and build._JSON.is_file()
-    index = (REPO / "docs" / "api" / "capabilities" / "index.html").read_text()
-    assert build.SITE_PATH in index, "no index card links the operability explorer"
+    assert _capability_hrefs().issuperset({build.SITE_PATH}), (
+        "no capability section registers the operability explorer"
+    )

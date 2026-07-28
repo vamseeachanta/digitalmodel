@@ -37,6 +37,15 @@ REPO = Path(__file__).resolve().parents[2]
 _ATLAS_ROOT = REPO / "atlases"
 
 
+def _capability_hrefs() -> set:
+    """Site paths registered by the capability IA (dm#1637, dm#1639)."""
+    path = REPO / "scripts" / "capabilities" / "build_capabilities_inventory.py"
+    spec = importlib.util.spec_from_file_location("capinv_reg", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.registered_site_paths(REPO)
+
+
 def _load_builder():
     path = REPO / "scripts" / "drilling_riser" / "build_operability_monitor.py"
     spec = importlib.util.spec_from_file_location("build_operability_monitor", path)
@@ -255,8 +264,9 @@ def test_onepager_and_index_registered():
     assert not _structural_hits(_strip_safe(js.read_text()))
     env = json.loads(js.read_text())
     assert env["report_url"].startswith("https://vamseeachanta.github.io/"), env["report_url"]
-    index = (REPO / "docs" / "api" / "capabilities" / "index.html").read_text()
-    assert build.SITE_PATH in index, "no index card links the operability monitor"
+    assert _capability_hrefs().issuperset({build.SITE_PATH}), (
+        "no capability section registers the operability monitor"
+    )
 
 
 # 11. distinct ESCALATE channels (operability vs drift-off) ------------------

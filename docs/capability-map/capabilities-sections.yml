@@ -1,0 +1,281 @@
+# ABOUTME: Machine source of truth for the capability information
+# ABOUTME: architecture -- section ids, titles, and the links each owns.
+#
+# Extracted from docs/api/capabilities/index.html at 2ff0f72c^ (dm#1637).
+# That page was doing two jobs: rendering the gallery AND declaring the IA.
+# #1573 (C10 / workspace-hub#3485) correctly retired the rendering job by
+# redirecting to aceengineer.com/capabilities -- and took the declaration
+# with it, which is what broke the census. The data now lives here, where
+# a presentation decision cannot delete it.
+#
+# `id`     -- URL anchor. STABLE: external links cite these (see the
+#             anchor-stability contract in capabilities-ia-spec-1444.md).
+# `title`  -- human label used in the generated spec tables.
+# `hrefs`  -- every link the section owns, page-relative to
+#             docs/api/capabilities/. These drive the explorer<->section
+#             join, `unlinked_explorers`, and the standards-grounding
+#             ratchet, so pruning one silently drops real coverage.
+#
+# Adding a capability: append a section here, map it in
+# capabilities-clusters.yml, add its sec-* SPECS entry, then regenerate:
+#   .venv/bin/python scripts/capabilities/build_capabilities_inventory.py
+
+schema_version: "1.0"
+canonical_surface: "https://www.aceengineer.com/capabilities/"
+
+sections:
+  - id: ffs
+    title: "Fitness-for-service"
+    hrefs:
+      - "pdf/sec-ffs.pdf"
+      - "../ffs/ffs-showcase.html"
+      - "pdf/ffs-showcase.pdf"
+      - "api/ffs-showcase.html"
+      - "../ffs/ffs-field-dashboard.html"
+      - "pdf/ffs-field-dashboard.pdf"
+      - "api/ffs-field-dashboard.html"
+      - "../ffs/riser-joint-acceptance-explorer.html"
+      - "pdf/riser-joint-acceptance.pdf"
+      - "api/riser-joint-acceptance.html"
+
+  - id: structural
+    title: "Ship structural strength"
+    hrefs:
+      - "pdf/sec-structural.pdf"
+      - "../buckling/ship-plate-buckling.html"
+      - "pdf/buckling-plate.pdf"
+      - "api/buckling-plate.html"
+      - "../buckling/ship-panel-buckling.html"
+      - "pdf/buckling-panel.pdf"
+      - "api/buckling-panel.html"
+
+  - id: fatigue
+    title: "Fatigue &amp; fracture &mdash; S-N life and crack growth"
+    hrefs:
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/sn_library.py"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/scf_library.py"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/weld_fatigue_quickcheck.py"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/hotspot_stress.py"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/fatigue/crack_growth.py"
+
+  - id: hydro
+    title: "Hydrodynamics &amp; diffraction"
+    hrefs:
+      - "pdf/sec-hydro.pdf"
+      - "../hydro/rao-comparison/"
+      - "pdf/rao-comparison.pdf"
+      - "api/rao-comparison.html"
+      - "../hydro/unit-box-benchmark/benchmark_report.html"
+      - "pdf/unitbox-report.pdf"
+      - "api/unitbox-report.html"
+      - "../hydro/unit-box-benchmark/benchmark_amplitude.html"
+      - "pdf/unitbox-amplitude.pdf"
+      - "api/unitbox-amplitude.html"
+      - "../hydro/unit-box-benchmark/benchmark_phase.html"
+      - "pdf/unitbox-phase.pdf"
+      - "api/unitbox-phase.html"
+      - "../hydro/unit-box-benchmark/benchmark_combined.html"
+      - "pdf/unitbox-combined.pdf"
+      - "api/unitbox-combined.html"
+      - "../hydro/unit-box-benchmark/benchmark_heatmap.html"
+      - "pdf/unitbox-heatmap.pdf"
+      - "api/unitbox-heatmap.html"
+      - "../hydro/ocimf-coefficient-explorer.html"
+      - "pdf/ocimf.pdf"
+      - "api/ocimf.html"
+      - "../hydro/passing-ship-benchmark.html"
+      - "pdf/passing-ship.pdf"
+      - "api/passing-ship.html"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/aqwa-diffraction-deck-prep"
+      - "pdf/diffraction-deck-prep.pdf"
+      - "api/diffraction-deck-prep.html"
+
+  - id: cfd
+    title: "Computational fluid dynamics (CFD)"
+    hrefs:
+      - "../cfd/"
+      - "../cfd/tank-sloshing-verification.html"
+      - "../cfd/sloshing-cfd-study.html"
+      - "../cfd/cfd-runtime-estimator.html"
+      - "../cfd/wave-excited-body-verification.html"
+      - "../cfd/wave-excited-body-rao-verification.html"
+      - "../cfd/wave-excited-body-decay-verification.html"
+      - "../cfd/maccamy-fuchs-cylinder-verification.html"
+      - "../cfd/flat-plate-blasius-verification.html"
+      - "../cfd/cylinder-re100-verification.html"
+      - "../cfd/turbulent-flat-plate-verification.html"
+      - "../cfd/kleefsman-impact-verification.html"
+      - "../cfd/wave-tank-verification.html"
+      - "../cfd/floating-body-decay-verification.html"
+      - "../cfd/dam-break-verification.html"
+      - "../cfd/naca0012-airfoil-verification.html"
+
+  - id: risers
+    title: "Risers &amp; pipelines"
+    hrefs:
+      - "pdf/sec-risers.pdf"
+      - "../orcaflex/riser-validation-report.html"
+      - "pdf/riser-validation.pdf"
+      - "api/riser-validation.html"
+      - "../orcaflex/riser-mesh-sensitivity.html"
+      - "pdf/riser-mesh.pdf"
+      - "api/riser-mesh.html"
+      - "../drilling/drilling-riser-operability-explorer.html"
+      - "pdf/drilling-riser-operability.pdf"
+      - "api/drilling-riser-operability.html"
+      - "../drilling/operability-monitor.html"
+      - "pdf/drilling-riser-operability-monitor.pdf"
+      - "api/drilling-riser-operability-monitor.html"
+
+  - id: wall-thickness
+    title: "Wall thickness &mdash; sizing &amp; code checks"
+    hrefs:
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/structural/analysis/wall_thickness_codes"
+      - "../structural/wall-thickness-explorer.html"
+      - "pdf/wall-thickness-explorer.pdf"
+      - "api/wall-thickness-explorer.html"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/structural/wall_thickness_quickcheck"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/subsea/pipeline"
+
+  - id: subsea
+    title: "Subsea"
+    hrefs:
+      - "pdf/sec-subsea.pdf"
+      - "../subsea/offshore-cross-section-report.html"
+      - "pdf/subsea-xsection.pdf"
+      - "api/subsea-xsection.html"
+
+  - id: viv
+    title: "Vortex-induced vibration &mdash; screening, frequency &amp; fatigue"
+    hrefs:
+      - "../structural/viv-explorer.html"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/subsea/viv_analysis/vortex_shedding.py"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/subsea/viv_analysis/fatigue.py"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/viv-analysis"
+
+  - id: installation
+    title: "Installation"
+    hrefs:
+      - "pdf/sec-installation.pdf"
+      - "https://vamseeachanta.github.io/deckhand-sandbox/domains/floating-marine/deckhand-deliverables/2026/2026-06-28/installation-vessel-pamphlet-bokalift2/report.html"
+      - "pdf/installation-bokalift.pdf"
+      - "api/installation-bokalift.html"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/data/vessels"
+      - "pdf/vessel-suitability.pdf"
+      - "api/vessel-suitability.html"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/structural/offshore_container_utilization"
+      - "pdf/container-utilization.pdf"
+      - "api/container-utilization.html"
+
+  - id: wind
+    title: "Floating wind"
+    hrefs:
+      - "pdf/sec-wind.pdf"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/floating-wind-sizing"
+      - "pdf/wind-sizing.pdf"
+      - "api/wind-sizing.html"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/floating-wind-economics"
+      - "pdf/wind-economics.pdf"
+      - "api/wind-economics.html"
+
+  - id: field-development
+    title: "Field development &mdash; concept screening, cost &amp; economics"
+    hrefs:
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/field_development"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/field_development/capex_estimator.py"
+      - "../structural/field-economics-explorer.html"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/docs/domains/references/field_development/catalog"
+
+  - id: manoeuvring
+    title: "Manoeuvring &amp; station-keeping"
+    hrefs:
+      - "pdf/sec-manoeuvring.pdf"
+      - "../hydro/rudder-maneuvering-explorer.html"
+      - "pdf/rudder-explorer.pdf"
+      - "api/rudder-explorer.html"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/rudder_database.yml"
+      - "pdf/rudder-database.pdf"
+      - "api/rudder-database.html"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/marine_ops/mooring_resilience"
+      - "pdf/mooring-resilience.pdf"
+      - "api/mooring-resilience.html"
+      - "../hydro/short-horizon-motion-forecast.html"
+      - "pdf/short-horizon-motion-forecast.pdf"
+      - "api/short-horizon-motion-forecast.html"
+
+  - id: naval-architecture
+    title: "Naval architecture &mdash; stability, resistance &amp; hull strength"
+    hrefs:
+      - "../structural/ship-resistance-explorer.html"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/damage_stability.py"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/hull_girder_strength.py"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/floating_platform_stability.py"
+
+  - id: geotechnical
+    title: "Geotechnical &mdash; pile, anchor &amp; foundation capacity"
+    hrefs:
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/geotechnical/piles.py"
+      - "../structural/anchor-holding-explorer.html"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/geotechnical/mudmat.py"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/geotechnical"
+
+  - id: artificial-lift
+    title: "Artificial lift &mdash; rod-pump diagnostics"
+    hrefs:
+      - "pdf/sec-artificial-lift.pdf"
+      - "../artificial-lift/dynacard-troubleshooting.html"
+      - "pdf/dynacard-troubleshooting.pdf"
+      - "api/dynacard-troubleshooting.html"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/artificial-lift-field-health"
+      - "pdf/dynacard-field-health.pdf"
+      - "api/dynacard-field-health.html"
+
+  - id: production-engineering
+    title: "Production engineering &mdash; nodal analysis &amp; well deliverability"
+    hrefs:
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/production_engineering/nodal_solver.py"
+      - "../structural/ipr-explorer.html"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/production_engineering/esp_pump_hydraulics.py"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/production_engineering/reconciliation_workflow.py"
+
+  - id: well
+    title: "Well construction &mdash; casing &amp; tubulars"
+    hrefs:
+      - "pdf/sec-well.pdf"
+      - "../well/casing-design-explorer.html"
+      - "pdf/casing-design.pdf"
+      - "api/casing-design.html"
+
+  - id: drilling-engineering
+    title: "Drilling engineering &mdash; pore pressure, hydraulics &amp; well control"
+    hrefs:
+      - "../structural/pore-pressure-explorer.html"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/swab-surge"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/well/drilling"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/well/drilling/dysfunction_detector.py"
+
+  - id: cathodic
+    title: "Cathodic protection"
+    hrefs:
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/cathodic_protection"
+      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/cathodic-protection"
+      - "../structural/cathodic-protection-explorer.html"
+      - "pdf/cathodic-protection-explorer.pdf"
+      - "api/cathodic-protection-explorer.html"
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/articles/dnv_rp_f106_coating_selection.md"
+
+  - id: corrosion-production
+    title: "Corrosion &amp; production chemistry"
+    hrefs:
+      - "pdf/sec-corrosion-production.pdf"
+      - "../corrosion/galvanic-compatibility-explorer.html"
+      - "pdf/galvanic-explorer.pdf"
+      - "api/galvanic-explorer.html"
+      - "../production/scale-si-explorer.html"
+      - "pdf/scale-si-explorer.pdf"
+      - "api/scale-si-explorer.html"
+
+  - id: validation
+    title: "Validated against published references"
+    hrefs:
+      - "https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/codes-register.md"
