@@ -1,0 +1,184 @@
+# Full Matrix Sweep (issue #1863)
+#
+# `Quality Gates by Domain` dispatches only the shards a change touches, so an
+# untouched-but-broken shard reports nothing rather than red and `main` can show
+# green indefinitely. This workflow is the counterweight: it runs EVERY domain
+# shard, ignoring touched-domain detection entirely, on
+#
+#   * every push to `main`  -> main's green is earned, not assumed
+#   * a nightly cron        -> drift is caught within a day even without merges
+#   * manual dispatch       -> on-demand "what is the true state of the matrix?"
+#
+# Job names here are deliberately distinct from the PR-gating workflow's
+# (`sweep-tests-*` / `Full matrix sweep result` vs `tests-*` / `Domain test
+# aggregate`) so a diagnostic sweep failure is never confused with, and can
+# never be mistaken for, a required pull-request context.
+name: Full Matrix Sweep
+
+"on":
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  # Rapid merges to main supersede each other: the newest commit on main is the
+  # one whose sweep must complete. Nightly and dispatch share the group so a
+  # push does not race a cron run over the same tree.
+  group: full-matrix-sweep-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  full-matrix:
+    name: Build full shard matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      total: ${{ steps.matrix.outputs.total }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Build matrix
+        id: matrix
+        run: |
+          matrix=$(uv run --no-sources python scripts/ci/detect_touched_domains.py \
+            --mode full \
+            --domains-file tests/DOMAINS.md \
+            --output-format json-matrix)
+          total=$(uv run --no-sources python -c 'import json,sys; print(len(json.loads(sys.argv[1])["include"]))' "$matrix")
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          echo "total=$total" >> "$GITHUB_OUTPUT"
+          {
+            echo "## Full matrix sweep"
+            echo
+            echo "Dispatching all $total domain shards (no touched-domain gating)."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail if the matrix is empty
+        env:
+          TOTAL: ${{ steps.matrix.outputs.total }}
+        run: |
+          if [ "$TOTAL" -lt 1 ]; then
+            echo "Full matrix is empty; tests/DOMAINS.md parsed to zero domains."
+            exit 1
+          fi
+          echo "Full matrix contains $TOTAL shards."
+
+  sweep-tests:
+    name: sweep-tests-${{ matrix.domain }}
+    needs: full-matrix
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.full-matrix.outputs.matrix) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install Gmsh runtime libraries
+        if: matrix.domain == 'solver-smoke'
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq libglu1-mesa
+
+      - name: Create reports directory
+        run: mkdir -p reports
+
+      - name: Read domain gate command
+        id: gate
+        env:
+          GATE_NAME: tests-${{ matrix.domain }}
+        run: |
+          command=$(uv run --no-sources --with pyyaml python - <<'PY'
+          import os
+          import yaml
+
+          with open(".claude/quality-gates.yaml", encoding="utf-8") as handle:
+              gates = yaml.safe_load(handle)["gates"]
+          print(gates[os.environ["GATE_NAME"]]["command"])
+          PY
+          )
+          {
+            echo "command<<EOF"
+            echo "$command"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Run domain gate
+        run: ${{ steps.gate.outputs.command }}
+
+      - name: Upload domain artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-sweep-${{ matrix.domain }}
+          path: |
+            reports/
+            coverage.json
+          if-no-files-found: ignore
+          retention-days: 30
+
+  sweep-result:
+    name: Full matrix sweep result
+    needs: [full-matrix, sweep-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Summarize shard results
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TOTAL: ${{ needs.full-matrix.outputs.total }}
+        run: |
+          {
+            echo "## Full matrix sweep result"
+            echo
+            echo "Every shard in tests/DOMAINS.md was dispatched ($TOTAL total)."
+            echo
+            echo "| Shard | Result |"
+            echo "| --- | --- |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          # tee so the per-shard table is in the job log too, not only the
+          # rendered summary -- `gh run view` then shows the true matrix state.
+          gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs?per_page=100" \
+            --jq '.jobs[] | select(.name | startswith("sweep-tests-")) | "| \(.name) | \(.conclusion // .status) |"' \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Enforce full sweep result
+        env:
+          MATRIX_RESULT: ${{ needs.full-matrix.result }}
+          SWEEP_RESULT: ${{ needs.sweep-tests.result }}
+        run: |
+          if [ "$MATRIX_RESULT" != "success" ]; then
+            echo "Full matrix construction did not succeed: $MATRIX_RESULT"
+            exit 1
+          fi
+
+          if [ "$SWEEP_RESULT" != "success" ]; then
+            echo "At least one shard failed in the full sweep: $SWEEP_RESULT"
+            echo "See the per-shard table in this job's summary."
+            exit 1
+          fi
+
+          echo "All domain shards passed the full sweep."
