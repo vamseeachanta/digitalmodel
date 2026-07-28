@@ -355,6 +355,6 @@
       "title": "Validated against published references"
     }
   ],
-  "source": "docs/api/capabilities/index.html",
+  "source": "docs/capability-map/capabilities-sections.yml",
   "unlinked_explorers": []
 }
