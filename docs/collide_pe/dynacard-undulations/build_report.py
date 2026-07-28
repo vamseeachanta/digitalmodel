@@ -15,9 +15,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-sys.path.insert(0, "/mnt/local-analysis/digitalmodel/src")
-
-from digitalmodel.reporting import (  # noqa: E402
+from digitalmodel.reporting import (
     CalcReport, Confidence, DataRow, DesignDataGroup, Equation, KPI,
     MethodBlock, Objective, Reference, ResultBlock, ValidationItem,
     VariableDef, WayForwardStage,

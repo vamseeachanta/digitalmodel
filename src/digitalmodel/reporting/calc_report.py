@@ -355,7 +355,10 @@ CALC_REPORT_SKELETON = ReportSkeleton(
     ],
 )
 
-_DEFAULT_TEMPLATE = Path("/mnt/local-analysis/ace_calc_report_TEMPLATE.html")
+# The presentation layer is vendored into the package rather than referenced
+# from a developer path, so the standard is portable and a report renders
+# identically wherever digitalmodel is installed.
+_DEFAULT_TEMPLATE = Path(__file__).parent / "assets" / "calc_report_format.html"
 
 
 class CalcReport(ReportDataModel):
@@ -540,8 +543,10 @@ def _template_parts(template: Path) -> tuple:
 
     if not template.exists():
         raise FileNotFoundError(
-            f"house report template not found: {template}. It supplies the shared "
-            "CSS and scrollspy; without it reports would diverge visually."
+            f"house report format asset not found: {template}. It supplies the "
+            "shared CSS and scrollspy; without it reports would diverge visually. "
+            "If this is an installed package, the asset may be missing from "
+            "package data."
         )
     src = template.read_text(encoding="utf-8")
     style = re.search(r"<style>.*?</style>", src, re.S)
