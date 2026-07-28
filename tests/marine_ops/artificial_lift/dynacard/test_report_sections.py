@@ -105,7 +105,20 @@ def test_router_reuses_one_diagnostic_classification(monkeypatch):
         "report": {"html": False},
     }
 
-    result = DynacardWorkflow().router(cfg)
+    # Pinned to 'gibbs' deliberately. The synthetic card generators produce
+    # DOWNHOLE-shaped cards (they are named for pump conditions), and
+    # _apply_synthetic_card feeds them in as the *surface* card. The gibbs
+    # solver is an affine rescale (#1857), so the generated shape survives to
+    # the classifier intact and the label round-trips. A solver that genuinely
+    # transforms the card -- the everitt_jennings default -- correctly turns
+    # that synthetic downhole card into something else, and the label no
+    # longer round-trips.
+    #
+    # This test is about the router calling classification exactly once, not
+    # about solver physics, so it pins the passthrough to keep the label
+    # assertions meaningful. The underlying synthetic-card harness feeding a
+    # downhole shape in as a surface card is tracked separately.
+    result = DynacardWorkflow(solver_method="gibbs").router(cfg)
 
     assert calls == 1
     assert result["results"]["diagnostic_message"].startswith(
