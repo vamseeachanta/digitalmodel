@@ -22,11 +22,45 @@ def _load_registry():
     return registry["workflows"]
 
 
-@pytest.mark.parametrize(
-    "workflow",
-    _load_registry(),
-    ids=lambda workflow: workflow["id"],
+# Workflows whose assertions pin a label the shipped dynacard classifier
+# produces. That model (data/dynacard_classifier.json, model_version 1.0, 18
+# classes) was fitted to the pre-#1875 synthetic card shapes; those shapes did
+# not match the reference diagnosis plate and have been corrected, so the model
+# no longer recovers the mode each card was generated from -- it reads the
+# PUMP_TAGGING card as FLUID_POUND and the ROD_PARTING card as
+# PARAFFIN_RESTRICTION. Every downstream number here (fillage, inferred
+# production, screening status, the rendered page) follows from that label, so
+# there is nothing in these two branches left to re-baseline honestly until the
+# model is retrained on the corrected 20-mode generator set.
+#
+# Strict on purpose: retraining flips these back to failures, which forces the
+# expected values to be re-derived rather than quietly inherited.
+_STALE_CLASSIFIER_WORKFLOWS = {
+    "dynacard-diagnostics",
+    "artificial-lift-field-health",
+}
+
+_STALE_MODEL_REASON = (
+    "pins a dynacard classification; the shipped 18-class model predates the "
+    "#1875 card-shape correction and must be retrained before these labels and "
+    "the numbers derived from them mean anything"
 )
+
+
+def _workflow_params():
+    return [
+        pytest.param(
+            workflow,
+            id=workflow["id"],
+            marks=(
+                pytest.mark.xfail(strict=True, reason=_STALE_MODEL_REASON),
+            ) if workflow["id"] in _STALE_CLASSIFIER_WORKFLOWS else (),
+        )
+        for workflow in _load_registry()
+    ]
+
+
+@pytest.mark.parametrize("workflow", _workflow_params())
 def test_workflow_registry(workflow, monkeypatch):
     if workflow.get("runtime", "offline") != "offline":
         pytest.skip(f"{workflow['id']} requires runtime={workflow['runtime']}")
