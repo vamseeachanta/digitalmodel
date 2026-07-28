@@ -1,0 +1,598 @@
+#!/usr/bin/env python3
+"""Standard AceEngineer engineering calculation report.
+
+ABOUTME: The canonical section order and typed section content for every
+engineering calculation report, so analyses fill **structured slots** rather
+than hand-writing HTML and drifting apart.
+
+Builds on the skeleton-first machinery (#1021): this module supplies the house
+:data:`CALC_REPORT_SKELETON` plus typed content models for each section, so a
+calculation supplies *data* and the report renders itself.
+
+The house rules this encodes:
+
+1. **Fixed section order.** Objective, design data, analysis methodology,
+   results, validation status, way forward, references. Objective and design
+   data come first so a reviewer sees the basis before the numbers.
+2. **Formulas are shown, not hidden.** Every governing relation renders as a
+   numbered equation card with a variable-definition table under it, so the
+   arithmetic can be checked by hand. No MathJax — CSP blocks CDNs.
+3. **Provenance is colour.** Every headline claim carries a
+   :class:`Confidence` level: validated (teal), analytical with assumptions
+   carried (amber), or pending data (muted). A projection must never read as
+   proven. This is the honesty guardrail, and it is why
+   :class:`ResultBlock` requires a confidence rather than defaulting one.
+4. **Assumptions are declared, never silent.** Anything not supplied by the
+   client goes in the assumption ledger with its basis.
+
+Example::
+
+    report = CalcReport(
+        report_id="AE-AL-2026-001",
+        title="Rod-pump surface-card analysis",
+        discipline="Artificial Lift",
+        objective=Objective(purpose="...", scope=["..."]),
+        design_data=[DesignDataGroup(caption="Pumping unit", rows=[...])],
+        ...
+    )
+    report.write(Path("report.html"))
+"""
+
+from __future__ import annotations
+
+import html
+from enum import Enum
+from pathlib import Path
+from typing import List, Optional, Sequence
+
+from pydantic import Field
+
+from digitalmodel.reporting._base import ReportDataModel
+from digitalmodel.reporting.skeleton import BlockSpec, ReportSkeleton, SectionSpec
+
+
+class Confidence(str, Enum):
+    """How much weight a claim can carry. Rendered as colour.
+
+    The three levels are deliberately coarse. A finer scale invites splitting
+    hairs; what a reader needs to know is whether a number is measured,
+    inferred, or not yet available.
+    """
+
+    VALIDATED = "validated"    # teal — checked against reference or measured directly
+    ANALYTICAL = "analytical"  # amber — sound method, but carries an assumption
+    PENDING = "pending"        # muted — cannot be stated until data arrives
+
+    @property
+    def css_class(self) -> str:
+        return {"validated": "cfd", "analytical": "ro", "pending": "proj"}[self.value]
+
+    @property
+    def label(self) -> str:
+        return {
+            "validated": "Validated",
+            "analytical": "Analytical",
+            "pending": "Pending",
+        }[self.value]
+
+    @property
+    def status_class(self) -> str:
+        return {"validated": "ok", "analytical": "proj", "pending": "pend"}[self.value]
+
+    @property
+    def status_icon(self) -> str:
+        return {"validated": "&#10003;", "analytical": "&asymp;", "pending": "&#8230;"}[
+            self.value
+        ]
+
+
+def _esc(text: str) -> str:
+    """Escape text, but leave intentional entities and inline markup alone."""
+    return text if ("<" in text or "&" in text) else html.escape(text)
+
+
+# ---------------------------------------------------------------------------
+# Typed section content
+# ---------------------------------------------------------------------------
+class Objective(ReportDataModel):
+    """Why the calculation exists and what bounds it."""
+
+    purpose: str
+    scope: List[str] = Field(default_factory=list)
+    preliminary_note: str = ""
+
+    def render(self) -> str:
+        chips = "".join(f'<span class="chip">{_esc(s)}</span>' for s in self.scope)
+        note = (
+            f'<p class="prose">{_esc(self.preliminary_note)}</p>'
+            if self.preliminary_note
+            else ""
+        )
+        return (
+            '<div class="objective" style="margin-top:18px">'
+            '<span class="oh">Objective</span>'
+            f"<p>{_esc(self.purpose)}</p>"
+            f'<div class="scope">{chips}</div></div>{note}'
+        )
+
+
+class DataRow(ReportDataModel):
+    """One parameter: label, value, unit."""
+
+    label: str
+    value: str
+    unit: str = ""
+
+
+class DesignDataGroup(ReportDataModel):
+    """A captioned key-value table of inputs.
+
+    Design data is standardised as groups of labelled rows rather than free
+    prose, so two reports on the same discipline present their inputs the same
+    way and a reviewer knows where to look.
+    """
+
+    caption: str
+    rows: List[DataRow] = Field(default_factory=list)
+
+    def render(self) -> str:
+        body = "".join(
+            f"<tr><td>{_esc(r.label)}</td><td>{_esc(r.value)}"
+            + (f" <span class='un'>{_esc(r.unit)}</span>" if r.unit else "")
+            + "</td></tr>"
+            for r in self.rows
+        )
+        return (
+            f'<div class="kv"><div class="cap">{_esc(self.caption)}</div>'
+            f"<table><tbody>{body}</tbody></table></div>"
+        )
+
+
+class VariableDef(ReportDataModel):
+    """One symbol appearing in an equation."""
+
+    symbol: str
+    description: str
+    unit: str = ""
+
+
+class Equation(ReportDataModel):
+    """A numbered governing relation with its variable definitions.
+
+    ``markup`` is house equation markup, not LaTeX: fractions via
+    ``.frac > .n/.d``, roots via ``.rad > .rc``. MathJax is unavailable because
+    the report must render with no external fetch.
+    """
+
+    markup: str
+    variables: List[VariableDef] = Field(default_factory=list)
+    note: str = ""
+
+    def render(self, number: int) -> str:
+        defs = "".join(
+            f'<div class="d"><var>{v.symbol}</var><span>{_esc(v.description)}</span>'
+            f'<span class="u">{_esc(v.unit)}</span></div>'
+            for v in self.variables
+        )
+        note = f'<p class="prose">{_esc(self.note)}</p>' if self.note else ""
+        return (
+            f'<div class="eq"><div class="m">{self.markup}</div>'
+            f'<div class="eno">({number})</div></div>'
+            + (f'<div class="defs">{defs}</div>' if defs else "")
+            + note
+        )
+
+
+class MethodBlock(ReportDataModel):
+    """One methodology subsection: prose plus its governing relations."""
+
+    heading: str
+    prose: str = ""
+    equations: List[Equation] = Field(default_factory=list)
+    figure_svg: str = ""
+
+    def render(self, index: int, eq_start: int) -> tuple:
+        parts = [
+            f'<div class="l2" id="s3-{index}"><div class="l2head">'
+            f'<span class="n"></span><h3>{_esc(self.heading)}</h3></div>'
+        ]
+        if self.prose:
+            parts.append(f'<p class="prose">{_esc(self.prose)}</p>')
+        number = eq_start
+        for equation in self.equations:
+            parts.append(equation.render(number))
+            number += 1
+        if self.figure_svg:
+            parts.append(f'<div class="flow">{self.figure_svg}</div>')
+        parts.append("</div>")
+        return "".join(parts), number
+
+
+class ResultBlock(ReportDataModel):
+    """One result, with the confidence it carries.
+
+    ``confidence`` is required. A result whose standing is unstated is exactly
+    the failure mode the colour system exists to prevent.
+    """
+
+    heading: str
+    confidence: Confidence
+    groups: List[DesignDataGroup] = Field(default_factory=list)
+    prose: str = ""
+    caption: str = ""
+
+    def render(self, index: int) -> str:
+        parts = [
+            f'<div class="l2" id="s4-{index}"><div class="l2head">'
+            f'<span class="n"></span><h3>{_esc(self.heading)}</h3></div>'
+        ]
+        if self.prose:
+            parts.append(f'<p class="prose">{_esc(self.prose)}</p>')
+        if self.groups:
+            parts.append(
+                '<div class="datagrid">'
+                + "".join(g.render() for g in self.groups)
+                + "</div>"
+            )
+        if self.caption:
+            parts.append(
+                f'<div class="fig-cap"><span class="tag {self.confidence.css_class}">'
+                f"{self.confidence.label}</span><span>{_esc(self.caption)}</span></div>"
+            )
+        parts.append("</div>")
+        return "".join(parts)
+
+
+class ValidationItem(ReportDataModel):
+    """One entry on the provenance ladder."""
+
+    claim: str
+    basis: str
+    confidence: Confidence
+
+    def render(self) -> str:
+        return (
+            f'<div class="st {self.confidence.status_class}">'
+            f'<div class="icon">{self.confidence.status_icon}</div><div>'
+            f'<div class="lab">{_esc(self.claim)}</div>'
+            f'<div class="sub">{_esc(self.basis)}</div></div>'
+            f'<div class="pill">{self.confidence.label}</div></div>'
+        )
+
+
+class WayForwardStage(ReportDataModel):
+    """A staged next step: what is needed, and what it unlocks."""
+
+    heading: str
+    prose: str = ""
+    required: List[DataRow] = Field(default_factory=list)
+    returns: List[DataRow] = Field(default_factory=list)
+
+    def render(self, index: int) -> str:
+        parts = [
+            f'<div class="l2" id="s6-{index}"><div class="l2head">'
+            f'<span class="n"></span><h3>{_esc(self.heading)}</h3></div>'
+        ]
+        if self.prose:
+            parts.append(f'<p class="prose">{_esc(self.prose)}</p>')
+        if self.required or self.returns:
+            groups = []
+            if self.required:
+                groups.append(DesignDataGroup(caption="Required", rows=self.required))
+            if self.returns:
+                groups.append(DesignDataGroup(caption="Returns", rows=self.returns))
+            parts.append(
+                '<div class="datagrid">'
+                + "".join(g.render() for g in groups)
+                + "</div>"
+            )
+        parts.append("</div>")
+        return "".join(parts)
+
+
+class Reference(ReportDataModel):
+    """One cited standard, paper or data source."""
+
+    text: str
+
+
+class KPI(ReportDataModel):
+    """A headline number for the hero band."""
+
+    value: str
+    unit: str = ""
+    caption: str = ""
+    confidence: Optional[Confidence] = None
+
+    def render(self) -> str:
+        cls = {
+            Confidence.VALIDATED: " teal",
+            Confidence.ANALYTICAL: " amber",
+        }.get(self.confidence, "")
+        unit = f'<span class="u">{_esc(self.unit)}</span>' if self.unit else ""
+        return (
+            f'<div class="kpi{cls}"><div class="v num">{_esc(self.value)}{unit}</div>'
+            f'<div class="k">{_esc(self.caption)}</div></div>'
+        )
+
+
+# ---------------------------------------------------------------------------
+# The canonical house skeleton
+# ---------------------------------------------------------------------------
+CALC_REPORT_SKELETON = ReportSkeleton(
+    title="AceEngineer standard engineering calculation report",
+    sections=[
+        SectionSpec(key="s1", label="Objective", blocks=[
+            BlockSpec(key="objective", label="Purpose and scope",
+                      description="what the calculation answers and what bounds it"),
+        ]),
+        SectionSpec(key="s2", label="Design data", blocks=[
+            BlockSpec(key="design_data", label="Inputs",
+                      description="inputs, constants, geometry as keyed tables"),
+            BlockSpec(key="assumptions", label="Assumptions carried", required=False,
+                      description="anything not client-supplied, with its basis"),
+        ]),
+        SectionSpec(key="s3", label="Analysis methodology", blocks=[
+            BlockSpec(key="methodology", label="Governing relations",
+                      description="numbered equation cards with variable definitions"),
+        ]),
+        SectionSpec(key="s4", label="Results", blocks=[
+            BlockSpec(key="results", label="Detailed results",
+                      description="one subsection per result, each with a confidence"),
+        ]),
+        SectionSpec(key="s5", label="Validation status", blocks=[
+            BlockSpec(key="validation", label="Provenance ladder",
+                      description="honest standing of every headline claim"),
+        ]),
+        SectionSpec(key="s6", label="Way forward", blocks=[
+            BlockSpec(key="way_forward", label="Staged next steps",
+                      description="what each additional input unlocks"),
+        ]),
+        SectionSpec(key="s7", label="References & provenance", blocks=[
+            BlockSpec(key="references", label="References",
+                      description="standards, methods, data sources"),
+        ]),
+    ],
+)
+
+_DEFAULT_TEMPLATE = Path("/mnt/local-analysis/ace_calc_report_TEMPLATE.html")
+
+
+class CalcReport(ReportDataModel):
+    """A complete engineering calculation report in the house format."""
+
+    report_id: str
+    title: str
+    discipline: str
+    lede: str
+    revision: str = "A"
+    preliminary: bool = False
+
+    objective: Objective
+    design_data: List[DesignDataGroup] = Field(default_factory=list)
+    assumptions: List[DesignDataGroup] = Field(default_factory=list)
+    methodology: List[MethodBlock] = Field(default_factory=list)
+    results: List[ResultBlock] = Field(default_factory=list)
+    validation: List[ValidationItem] = Field(default_factory=list)
+    way_forward: List[WayForwardStage] = Field(default_factory=list)
+    references: List[Reference] = Field(default_factory=list)
+    kpis: List[KPI] = Field(default_factory=list)
+
+    def completeness(self):
+        """Which required house sections are still empty."""
+        content = {
+            "objective": "x" if self.objective else "",
+            "design_data": "x" if self.design_data else "",
+            "methodology": "x" if self.methodology else "",
+            "results": "x" if self.results else "",
+            "validation": "x" if self.validation else "",
+            "way_forward": "x" if self.way_forward else "",
+            "references": "x" if self.references else "",
+        }
+        skeleton = CALC_REPORT_SKELETON.model_copy(deep=True)
+        skeleton.require_provenance = False
+        return skeleton.completeness(content)
+
+    # -- rendering ----------------------------------------------------------
+
+    def _section(self, key: str, title: str, subtitle: str, body: str) -> str:
+        return (
+            f'<section id="{key}"><div class="l1head"><span class="secnum"></span>'
+            f"<h2>{title}</h2></div>"
+            f'<p class="l1sub">{_esc(subtitle)}</p>{body}'
+            f'<a class="backtop" href="#top">↑ contents</a></section>'
+        )
+
+    def _toc(self) -> str:
+        entries = [
+            ("s1", "Objective"),
+            ("s2", "Design data"),
+            ("s3", "Analysis methodology"),
+            ("s4", "Results" + (" &mdash; preliminary" if self.preliminary else "")),
+            ("s5", "Validation status"),
+            ("s6", "Way forward"),
+            ("s7", "References &amp; provenance"),
+        ]
+        items = "".join(f'<li><a href="#{k}">{v}</a></li>' for k, v in entries)
+        return (
+            '<nav class="toc" aria-label="Contents"><p class="tt">Contents</p>'
+            f"<ol>{items}</ol></nav>"
+        )
+
+    def render_html(self, template: Optional[Path] = None) -> str:
+        """Render the complete self-contained report."""
+        style, script = _template_parts(template or _DEFAULT_TEMPLATE)
+
+        s1 = self._section("s1", "Objective", "Purpose and scope of this calculation.",
+                           self.objective.render())
+
+        design = '<div class="datagrid">' + "".join(
+            g.render() for g in self.design_data) + "</div>"
+        if self.assumptions:
+            design += (
+                '<div class="l2" id="s2-2"><div class="l2head"><span class="n"></span>'
+                "<h3>Assumptions carried</h3></div>"
+                '<p class="prose">Each of the following was assumed, not measured. '
+                "Results depending on them are marked accordingly.</p>"
+                '<div class="datagrid">'
+                + "".join(g.render() for g in self.assumptions)
+                + "</div></div>"
+            )
+        s2 = self._section("s2", "Design data",
+                           "Inputs as supplied, and assumptions where a value was not.",
+                           design)
+
+        method_html, number = [], 1
+        for i, block in enumerate(self.methodology, start=1):
+            rendered, number = block.render(i, number)
+            method_html.append(rendered)
+        s3 = self._section(
+            "s3", "Analysis methodology",
+            "Governing relations, shown explicitly so a reviewer can check the "
+            "arithmetic by hand.",
+            "".join(method_html))
+
+        results_title = "Results" + (" &mdash; preliminary" if self.preliminary else "")
+        s4 = self._section(
+            "s4", results_title,
+            "Each result carries the confidence it can support.",
+            "".join(r.render(i) for i, r in enumerate(self.results, start=1)))
+
+        s5 = self._section(
+            "s5", "Validation status", "Honest provenance for every headline claim.",
+            '<div class="status">'
+            + "".join(v.render() for v in self.validation)
+            + "</div>")
+
+        s6 = self._section(
+            "s6", "Way forward",
+            "What each additional input unlocks, ordered by how much it changes "
+            "the answer.",
+            "".join(s.render(i) for i, s in enumerate(self.way_forward, start=1)))
+
+        refs = "".join(
+            f'<li><span class="rn">R{i}</span><span>{_esc(r.text)}</span></li>'
+            for i, r in enumerate(self.references, start=1))
+        s7 = self._section("s7", "References &amp; provenance",
+                           "Methods, data sources, traceability.",
+                           f'<ol class="refs">{refs}</ol>')
+
+        prelim = " &middot; Preliminary" if self.preliminary else ""
+        kpis = "".join(k.render() for k in self.kpis)
+
+        return f"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{html.escape(self.title)} &middot; {html.escape(self.report_id)}</title>
+{style}
+</head><body>
+<div class="doc" id="top">
+  <header class="masthead"><div class="wrap" style="max-width:1240px">
+    <div class="brand">Ace<b>Engineer</b> &middot; {html.escape(self.discipline)}</div>
+    <div class="mh-legend">
+      <span class="lg"><span class="sw" style="background:var(--cfd)"></span>Validated</span>
+      <span class="lg"><span class="sw" style="background:var(--ro)"></span>Analytical</span>
+      <span class="lg"><span class="sw" style="background:var(--proj)"></span>Pending</span>
+    </div>
+  </div></header>
+  <div class="hero"><div class="wrap" style="max-width:1240px">
+    <div class="kicker"><span class="dot"></span><span>Engineering Calculation Report
+      &middot; {html.escape(self.report_id)} &middot; Rev {html.escape(self.revision)}{prelim}</span></div>
+    <h1>{html.escape(self.title)}</h1>
+    <p class="lede">{self.lede}</p>
+    <div class="kpis">{kpis}</div>
+  </div></div>
+  <div class="shell">
+    {self._toc()}
+    <main class="main">{s1}{s2}{s3}{s4}{s5}{s6}{s7}</main>
+  </div>
+  <footer><div class="wrap" style="max-width:1240px">
+    <div class="foot-grid">
+      <div><h3>{html.escape(self.report_id)} &middot; Rev {html.escape(self.revision)}</h3>
+        <p>Prepared by AceEngineer {html.escape(self.discipline)}.</p></div>
+      <div><h3>Provenance</h3><ul>
+        <li><span class="num">Teal</span> &mdash; validated</li>
+        <li><span class="num">Amber</span> &mdash; analytical, assumptions carried</li>
+        <li><span class="num">Muted</span> &mdash; pending data</li></ul></div>
+    </div>
+    <div class="foot-bar"><span>AceEngineer &middot; {html.escape(self.discipline)}</span>
+      <span>Standard calculation report format &middot; Rev A</span></div>
+  </div></footer>
+</div>
+<div id="tip" role="status" aria-live="polite"></div>
+{script}
+</body></html>"""
+
+    def write(self, path: Path, template: Optional[Path] = None) -> Path:
+        """Render and write the report to disk."""
+        path = Path(path)
+        path.write_text(self.render_html(template), encoding="utf-8")
+        return path
+
+
+def _template_parts(template: Path) -> tuple:
+    """Lift the house <style> and <script> blocks from the format template.
+
+    Reusing them verbatim is what keeps every report visually identical; a
+    reimplementation would drift on the first edit.
+    """
+    import re
+
+    if not template.exists():
+        raise FileNotFoundError(
+            f"house report template not found: {template}. It supplies the shared "
+            "CSS and scrollspy; without it reports would diverge visually."
+        )
+    src = template.read_text(encoding="utf-8")
+    style = re.search(r"<style>.*?</style>", src, re.S)
+    script = re.search(r"<script>.*?</script>", src, re.S)
+    if not style or not script:
+        raise ValueError(f"{template} is missing its <style> or <script> block")
+    return style.group(0) + _PRINT_CSS, script.group(0)
+
+
+# The house template targets a 1240px screen. Printed to Letter/A4 the
+# two-column data grid overflows the right margin and silently truncates
+# values -- a client-facing report losing the right-hand column of its inputs.
+# Collapse to one column for print and let long tables break across pages.
+_PRINT_CSS = """
+<style>
+@media print {
+  @page { size: Letter; margin: 14mm 12mm; }
+  html, body { background: #fff !important; }
+  .doc, .wrap, .shell, .main { max-width: 100% !important; width: 100% !important;
+                               margin: 0 !important; padding-left: 0 !important;
+                               padding-right: 0 !important; }
+  .shell { display: block !important; }
+  .toc { display: none !important; }          /* anchors are dead on paper */
+  .backtop { display: none !important; }
+  .datagrid { display: block !important; }
+  .datagrid > .kv { width: 100% !important; margin: 0 0 10px 0 !important;
+                    break-inside: avoid; page-break-inside: avoid; }
+  .kv table { width: 100% !important; table-layout: fixed !important; }
+  .kv td { word-break: break-word !important; white-space: normal !important; }
+  .kpis { display: grid !important; grid-template-columns: 1fr 1fr !important; }
+  section { break-inside: auto; }
+  .l1head, .l2head { break-after: avoid; page-break-after: avoid; }
+  .eq, .defs, .st, .flow, .fig-cap { break-inside: avoid; page-break-inside: avoid; }
+  .hero { padding-bottom: 12px !important; }
+}
+</style>"""
+
+
+__all__ = [
+    "CALC_REPORT_SKELETON",
+    "CalcReport",
+    "Confidence",
+    "DataRow",
+    "DesignDataGroup",
+    "Equation",
+    "KPI",
+    "MethodBlock",
+    "Objective",
+    "Reference",
+    "ResultBlock",
+    "ValidationItem",
+    "VariableDef",
+    "WayForwardStage",
+]
