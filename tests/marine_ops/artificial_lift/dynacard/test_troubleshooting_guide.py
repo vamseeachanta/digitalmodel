@@ -14,7 +14,11 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.troubleshooting import (
 from digitalmodel.marine_ops.artificial_lift.field_health import _health_status
 
 VALID_SEVERITIES = {"normal", "warning", "critical", "failure"}
-LEGACY_ALIASES = {"VALVE_LEAK"}
+# Retired names the guide deliberately does not carry: VALVE_LEAK was always
+# an alias, and PUMP_TAGGING is now PUMP_TAGGING_UP / PUMP_TAGGING_DOWN --
+# opposite mechanisms with opposite repairs. Both are still in
+# FAILURE_MODES because the shipped classifier model can emit them.
+LEGACY_ALIASES = {"VALVE_LEAK", "PUMP_TAGGING"}
 
 ARCHIVE_LABELS = {
     "FULL_CARD",
@@ -39,7 +43,7 @@ def _classifier_modes() -> set[str]:
 def test_all_classifier_modes_covered():
     missing = _classifier_modes() - set(TROUBLESHOOTING_GUIDE)
     assert not missing, f"Classifier modes missing from guide: {sorted(missing)}"
-    assert len(_classifier_modes()) == 18
+    assert len(_classifier_modes()) == 20
 
 
 def test_archive_and_deck_phenomena_covered():

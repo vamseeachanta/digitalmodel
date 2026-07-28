@@ -147,11 +147,11 @@ class DynacardWorkflow:
         if 'synthetic_card' not in cfg or 'well_data' in cfg:
             return
 
-        from .card_generators import ALL_GENERATORS, surface_card_from_pump_card
+        from .card_generators import get_generator, surface_card_from_pump_card
 
         synthetic_cfg = cfg['synthetic_card']
         mode = synthetic_cfg['mode']
-        pump_card = ALL_GENERATORS[mode](seed=int(synthetic_cfg.get('seed', 0)))
+        pump_card = get_generator(mode)(seed=int(synthetic_cfg.get('seed', 0)))
         well_cfg = cfg.get('well', {})
         rod_cfg = well_cfg.get('rod', {})
         pump_cfg = well_cfg.get('pump', {})

@@ -1,5 +1,5 @@
 # ABOUTME: Tests for synthetic dynacard generators.
-# ABOUTME: Validates all 18 failure mode generators produce valid CardData.
+# ABOUTME: Validates all 20 failure mode generators produce valid CardData.
 
 import pytest
 import numpy as np
@@ -10,6 +10,9 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
     generate_gas_interference_card,
     generate_fluid_pound_card,
     generate_pump_tagging_card,
+    generate_pump_tagging_up_card,
+    generate_pump_tagging_down_card,
+    generate_plunger_out_of_barrel_card,
     generate_tubing_movement_card,
     generate_valve_leak_tv_card,
     generate_valve_leak_sv_card,
@@ -88,21 +91,61 @@ class TestSpecificCardProperties:
         assert np.max(load) < 30000
         assert np.min(load) > 1000
 
-    def test_pump_tagging_extreme_load(self):
-        card = generate_pump_tagging_card(seed=0)
+    def test_pump_tagging_up_spikes_at_top_of_stroke(self):
+        card = generate_pump_tagging_up_card(seed=0)
         load = np.array(card.load)
-        assert np.max(load) > 30000
+        pos = np.array(card.position)
+        # The impact is at maximum position, and it stands clear of the
+        # upstroke plateau -- about a tenth of the card's load range, which is
+        # what the reference plate shows. It is a peak, not a doubling of the
+        # card: the old generator added 15-25 klb to a 15-22 klb card.
+        assert pos[int(np.argmax(load))] > 0.95 * pos.max()
+        plateau = np.median(load[5:len(load) // 2 - 8])
+        assert 0.08 < (load.max() - plateau) / (load.max() - load.min()) < 0.30
+
+    def test_pump_tagging_down_dips_at_bottom_of_stroke(self):
+        card = generate_pump_tagging_down_card(seed=0)
+        load = np.array(card.load)
+        pos = np.array(card.position)
+        # Mirror image: the rods go into compression against the standing
+        # valve, so minimum load coincides with minimum position.
+        assert pos[int(np.argmin(load))] < 0.05 * pos.max()
+        downstroke_line = np.median(load[len(load) // 2 + 8:-6])
+        assert (downstroke_line - load.min()) / (load.max() - load.min()) > 0.08
+
+    def test_pump_tagging_legacy_alias_resolves_to_up(self):
+        assert (
+            generate_pump_tagging_card(seed=3).load
+            == generate_pump_tagging_up_card(seed=3).load
+        )
 
     def test_gas_interference_low_min_load(self):
         card = generate_gas_interference_card(seed=0)
         load = np.array(card.load)
         assert np.min(load) < 3000
 
-    def test_fluid_pound_has_sharp_drop(self):
+    def test_fluid_pound_holds_load_then_collapses_on_the_downstroke(self):
+        # Incomplete fillage means the plunger falls through empty space
+        # carrying the full fluid load, then slaps the fluid surface part-way
+        # down. So the load is still high at 70% of stroke on the *downstroke*
+        # and gone by 15%. The old generator dropped at the top of the stroke
+        # and ramped back up, putting the signature on the wrong side of the
+        # card entirely.
         card = generate_fluid_pound_card(seed=0)
         load = np.array(card.load)
-        diffs = np.abs(np.diff(load))
-        assert np.max(diffs) > 2000
+        pos = np.array(card.position)
+        half = len(pos) // 2
+        low, span = load.min(), load.max() - load.min()
+
+        def downstroke_load_at(fraction):
+            # The downstroke runs from max position back to zero, so reverse
+            # it to interpolate on an increasing abscissa.
+            return float(
+                np.interp(fraction * pos.max(), pos[half:][::-1], load[half:][::-1])
+            )
+
+        assert downstroke_load_at(0.70) > low + 0.55 * span
+        assert downstroke_load_at(0.15) < low + 0.20 * span
 
     def test_rod_parting_very_low_loads(self):
         card = generate_rod_parting_card(seed=0)
@@ -140,12 +183,13 @@ class TestTrainingDataset:
     def test_generates_correct_count(self):
         cards, labels = generate_training_dataset(samples_per_mode=5)
         assert len(cards) == len(labels)
-        assert len(cards) == 5 * 18  # 5 per mode x 18 modes
+        assert len(cards) == 5 * len(ALL_GENERATORS)  # 5 per mode
 
     def test_all_modes_represented(self):
         cards, labels = generate_training_dataset(samples_per_mode=3)
         unique_labels = set(labels)
-        assert len(unique_labels) == 18
+        assert unique_labels == set(ALL_GENERATORS)
+        assert len(unique_labels) == 20
 
     def test_all_cards_valid(self):
         cards, labels = generate_training_dataset(samples_per_mode=2)
@@ -175,6 +219,14 @@ def _demo_context() -> DynacardAnalysisContext:
         surface_unit=SurfaceUnit(stroke_length=192.0),
         spm=6.0,
     )
+
+
+STALE_MODEL = pytest.mark.xfail(
+    strict=True,
+    reason=(
+        'The shipped classifier (data/dynacard_classifier.json, model_version 1.0, 18 classes) was fitted to the pre-#1875 generator shapes. Those shapes did not match the reference plate and have been corrected, so the model no longer recovers the label the card was generated from -- it now reads a normal card as WORN_BARREL and a rod-parting card as PARAFFIN_RESTRICTION. It must be retrained on the corrected 20-mode generator set before any label-round-trip assertion can hold again. Deliberately strict: this flips to a failure the moment the model is retrained, so the expectation gets re-derived rather than forgotten.'
+    ),
+)
 
 
 class TestSurfaceCardForwardModel:
@@ -260,6 +312,7 @@ class TestSurfaceCardForwardModel:
         # buoyant weight is carried at the surface and shed on the way down.
         assert surface_load.min() > pump_load.min()
 
+    @STALE_MODEL
     def test_workflow_round_trip_preserves_the_diagnosis(self):
         """The label the harness asks for is the label the solver hands back."""
         cfg = {

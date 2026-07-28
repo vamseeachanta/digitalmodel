@@ -40,6 +40,7 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.calculations import (
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
     ALL_GENERATORS,
+    get_generator,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import (
     PumpDiagnostics,
@@ -147,17 +148,31 @@ USE_CASES: list[dict] = [
         ],
     ),
     dict(
-        mode="PUMP_TAGGING",
-        title="Pump tagging (spacing fault)",
+        mode="PUMP_TAGGING_UP",
+        title="Pump tagging up (spacing too long)",
         symptom=(
-            "Sharp load spike at the stroke end: the plunger strikes the "
-            "standing valve or the top of the pump. Audible metallic tag; "
-            "risk of valve, plunger and rod damage every stroke."
+            "Sharp load spike at the top of the stroke: the plunger strikes "
+            "the top of the barrel or the pull tube. Audible metallic tag; "
+            "risk of plunger and rod damage every stroke."
         ),
         actions=[
-            "Stop and re-space the plunger off bottom",
+            "Stop and re-space the plunger DOWN, away from the top of the pump",
             "Re-check spacing after the well reaches operating temperature",
             "Verify the surface stroke setting matches the pump design",
+        ],
+    ),
+    dict(
+        mode="PUMP_TAGGING_DOWN",
+        title="Pump tagging down (spacing too close)",
+        symptom=(
+            "Sharp load drop at the bottom of the stroke, below the "
+            "downstroke load line: the plunger lands on the standing valve "
+            "and drives the rods into compression once per stroke."
+        ),
+        actions=[
+            "Stop and re-space the plunger UP, off bottom",
+            "Re-check spacing after the well reaches operating temperature",
+            "Inspect the standing valve cage and seat for impact damage",
         ],
     ),
     dict(
@@ -263,7 +278,7 @@ def build_cases() -> list[dict]:
     cases = []
     for spec in USE_CASES:
         mode = spec["mode"]
-        card = ALL_GENERATORS[mode](seed=_SEED)
+        card = get_generator(mode)(seed=_SEED)
         ctx = _build_context(mode, card)
         results = AnalysisResults(ctx=ctx, downhole_card=card)
         diag = diagnostics.classify_with_context(results)

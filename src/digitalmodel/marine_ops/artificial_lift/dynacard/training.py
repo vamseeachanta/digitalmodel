@@ -15,7 +15,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .card_generators import generate_training_dataset
+from .card_generators import ALL_GENERATORS, generate_training_dataset
 from .feature_extraction import FeatureExtractor
 
 _MODEL_PATH = Path(__file__).parent / "data" / "dynacard_classifier.json"
@@ -119,7 +119,8 @@ def train_and_export(
     from sklearn.model_selection import cross_val_score
     from sklearn.preprocessing import LabelEncoder
 
-    print(f"Generating {samples_per_mode} samples per mode (18 modes)...")
+    print(f"Generating {samples_per_mode} samples per mode "
+          f"({len(ALL_GENERATORS)} modes)...")
     cards, labels = generate_training_dataset(samples_per_mode=samples_per_mode)
 
     print("Extracting features...")

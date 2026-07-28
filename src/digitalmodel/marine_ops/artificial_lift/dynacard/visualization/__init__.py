@@ -19,12 +19,22 @@ from .rod_pump_schematic import (
     RodPumpSchematicGenerator,
     generate_rod_pump_schematic,
 )
-from .svg_primitives import COLORS, MODE_LABELS, MODE_TIERS, MODES_BY_TIER, TIER_INFO
+from .svg_primitives import (
+    COLORS,
+    MODE_LABELS,
+    MODE_TIERS,
+    MODES_BY_TIER,
+    RETIRED_MODE_LABELS,
+    TIER_INFO,
+    mode_label,
+)
 
 __all__ = [
     # Primitives
     "COLORS",
     "MODE_LABELS",
+    "RETIRED_MODE_LABELS",
+    "mode_label",
     "MODE_TIERS",
     "MODES_BY_TIER",
     "TIER_INFO",

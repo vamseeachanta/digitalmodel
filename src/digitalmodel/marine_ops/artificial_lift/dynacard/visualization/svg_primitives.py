@@ -37,11 +37,13 @@ MODE_TIERS: dict[str, int] = {
     "NORMAL": 1,
     "GAS_INTERFERENCE": 1,
     "FLUID_POUND": 1,
-    "PUMP_TAGGING": 1,
+    "PUMP_TAGGING_UP": 1,
+    "PUMP_TAGGING_DOWN": 1,
     "TUBING_MOVEMENT": 1,
     "VALVE_LEAK_TV": 1,
     "VALVE_LEAK_SV": 1,
     "ROD_PARTING": 2,
+    "PLUNGER_OUT_OF_BARREL": 2,
     "STUCK_PUMP": 2,
     "WORN_BARREL": 2,
     "GAS_LOCK": 2,
@@ -59,11 +61,13 @@ MODE_LABELS: dict[str, str] = {
     "NORMAL": "Normal",
     "GAS_INTERFERENCE": "Gas Interference",
     "FLUID_POUND": "Fluid Pound",
-    "PUMP_TAGGING": "Pump Tagging",
+    "PUMP_TAGGING_UP": "Pump Tagging (Up)",
+    "PUMP_TAGGING_DOWN": "Pump Tagging (Down)",
     "TUBING_MOVEMENT": "Tubing Movement",
     "VALVE_LEAK_TV": "Traveling Valve Leak",
     "VALVE_LEAK_SV": "Standing Valve Leak",
     "ROD_PARTING": "Rod Parting",
+    "PLUNGER_OUT_OF_BARREL": "Plunger Out Of Barrel",
     "STUCK_PUMP": "Stuck Pump",
     "WORN_BARREL": "Worn Barrel",
     "GAS_LOCK": "Gas Lock",
@@ -76,15 +80,28 @@ MODE_LABELS: dict[str, str] = {
     "EXCESSIVE_VIBRATION": "Excessive Vibration",
 }
 
+# Retired mode names. The shipped classifier model predates the pump-tagging
+# split and still emits ``PUMP_TAGGING``, so anything rendering a *prediction*
+# has to be able to label it. Kept out of MODE_TIERS / MODE_LABELS so the
+# gallery renders each condition once.
+RETIRED_MODE_LABELS: dict[str, str] = {
+    "PUMP_TAGGING": "Pump Tagging",
+}
+
+
+def mode_label(mode: str) -> str:
+    """Human-readable label for a mode name, current or retired."""
+    return MODE_LABELS.get(mode) or RETIRED_MODE_LABELS.get(mode, mode)
+
 # Ordered list of modes by tier (for gallery layout)
 MODES_BY_TIER: dict[int, list[str]] = {
     1: [
         "NORMAL", "GAS_INTERFERENCE", "FLUID_POUND",
-        "PUMP_TAGGING", "TUBING_MOVEMENT", "VALVE_LEAK_TV",
-        "VALVE_LEAK_SV",
+        "PUMP_TAGGING_UP", "PUMP_TAGGING_DOWN", "TUBING_MOVEMENT",
+        "VALVE_LEAK_TV", "VALVE_LEAK_SV",
     ],
     2: [
-        "ROD_PARTING", "STUCK_PUMP", "WORN_BARREL",
+        "ROD_PARTING", "PLUNGER_OUT_OF_BARREL", "STUCK_PUMP", "WORN_BARREL",
         "GAS_LOCK", "DELAYED_TV_CLOSURE",
     ],
     3: [
@@ -343,6 +360,8 @@ __all__ = [
     "MODE_TIERS",
     "MODE_LABELS",
     "MODES_BY_TIER",
+    "RETIRED_MODE_LABELS",
+    "mode_label",
     "CoordMapper",
     "svg_header",
     "svg_footer",
