@@ -130,28 +130,47 @@ class DynacardWorkflow:
         return cfg
 
     def _apply_synthetic_card(self, cfg: dict) -> None:
-        """Build well_data from a pinned synthetic card generator."""
+        """Build well_data from a pinned synthetic card generator.
+
+        The generators produce DOWNHOLE cards -- they are named for pump
+        conditions and draw the shape those conditions make at the pump. So
+        the generated card is run *up* the rod string first, and it is the
+        resulting surface card that goes into ``well_data``. The
+        surface-to-downhole solver then has a real conversion to perform and
+        recovers the generated pump card, which is what the classifier is
+        trained on.
+
+        Handing the generated card straight to ``surface_card`` instead asks
+        the solver to strip a rod string that was never there. That only ever
+        looked right under a solver that left the load alone (#1857).
+        """
         if 'synthetic_card' not in cfg or 'well_data' in cfg:
             return
 
-        from .card_generators import ALL_GENERATORS
+        from .card_generators import ALL_GENERATORS, surface_card_from_pump_card
 
         synthetic_cfg = cfg['synthetic_card']
         mode = synthetic_cfg['mode']
-        card = ALL_GENERATORS[mode](seed=int(synthetic_cfg.get('seed', 0)))
+        pump_card = ALL_GENERATORS[mode](seed=int(synthetic_cfg.get('seed', 0)))
         well_cfg = cfg.get('well', {})
         rod_cfg = well_cfg.get('rod', {})
         pump_cfg = well_cfg.get('pump', {})
         surface_unit_cfg = well_cfg.get('surface_unit', {})
 
-        cfg['well_data'] = {
+        well_data = {
             'api14': well_cfg.get('api14', f'SIM-{mode}'),
-            'surface_card': card.model_dump(),
+            # Placeholder: replaced below by the forward-modelled surface card.
+            'surface_card': pump_card.model_dump(),
             'rod_string': [rod_cfg],
             'pump': pump_cfg,
             'surface_unit': surface_unit_cfg,
             'spm': well_cfg.get('spm', 10.0),
         }
+        synthetic_ctx = DynacardAnalysisContext(**well_data)
+        surface_card = surface_card_from_pump_card(pump_card, synthetic_ctx)
+        well_data['surface_card'] = surface_card.model_dump()
+
+        cfg['well_data'] = well_data
 
     def _write_html_report(
         self,
@@ -295,10 +314,15 @@ class DynacardWorkflow:
 
 def perform_well_troubleshooting(
     context_dict: dict,
-    solver_method: str = 'gibbs'
+    solver_method: str = 'everitt_jennings'
 ) -> AnalysisResults:
     """
     Utility function for CLI or API integration.
+
+    Defaults to the same solver :class:`DynacardWorkflow` does. It used to
+    default to ``'gibbs'``, which does not transform the load at all (#1857),
+    so every caller that took the default was diagnosing a rescaled surface
+    card and calling it a pump card.
     """
     ctx = DynacardAnalysisContext(**context_dict)
     workflow = DynacardWorkflow(ctx, solver_method=solver_method)
