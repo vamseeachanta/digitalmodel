@@ -13,7 +13,6 @@ from .models import (
     MotorProperties,
     WellTestData,
     InputParameters,
-    CalculationParameters,
 )
 
 

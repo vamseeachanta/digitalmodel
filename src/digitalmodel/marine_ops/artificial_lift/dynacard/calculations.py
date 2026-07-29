@@ -2,12 +2,12 @@
 # ABOUTME: Ported from Oxy.Cipher.DynaCard with Pydantic models.
 
 import numpy as np
-from typing import Optional, Tuple
+from typing import Tuple
 from .models import (
-    DynacardAnalysisContext, CardData, AnalysisResults,
+    DynacardAnalysisContext, CardData,
     FluidLoadAnalysis, CPIPAnalysis, PumpFillageAnalysis
 )
-from .corners import calculate_corners, get_corner_loads
+from .corners import calculate_corners
 from .production import calculate_theoretical_production
 
 
@@ -33,7 +33,6 @@ def calculate_fluid_load(
         FluidLoadAnalysis with upstroke, downstroke, and fluid load
     """
     load = np.array(downhole_card.load)
-    n = len(load)
 
     # Detect corners
     corners, _ = calculate_corners(downhole_card)
