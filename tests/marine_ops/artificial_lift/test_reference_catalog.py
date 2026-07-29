@@ -140,6 +140,17 @@ def test_packaged_manifest_counts_and_hashes_validate():
     assert catalog.manifest["outputs"]["rod_details.csv"]["units"]["modulus_psi"] == (
         "psi"
     )
+    assert catalog.manifest["outputs"]["rod_details.csv"]["units"][
+        "raw_sonic_velocity_kft_s"
+    ] == "thousand_ft_per_s"
+    assert catalog.manifest["outputs"]["rodpump_units.csv"]["units"][
+        "source_identifier"
+    ] == "text_or_identifier"
+    surface_source = catalog.manifest["sources"]["surface_unit_catalog"]
+    assert surface_source["source_rows"] == 3_593
+    assert surface_source["emitted_rows"] == 3_572
+    assert surface_source["lookup_eligible_rows"] == 3_572
+    assert surface_source["quarantined_rows"] == 21
     falsification = catalog.manifest["physics_validation"]["independent_falsification"]
     assert Decimal(falsification["computed_ft_s"]) == pytest.approx(
         Decimal("16299.0966"), abs=Decimal("0.001")

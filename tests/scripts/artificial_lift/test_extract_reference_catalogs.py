@@ -162,8 +162,15 @@ def test_extracts_allowlisted_columns_and_records_counts(tmp_path):
     assert "Continuous Rod,0.875,,," in coupling_text
     assert manifest["sources"]["tubing"]["availability"] == "unavailable"
     assert manifest["sources"]["rod_connection_lookup"]["source_rows"] == 2
+    assert manifest["sources"]["rod_connection_lookup"]["emitted_rows"] == 1
     assert manifest["sources"]["rod_connection_lookup"]["verified_rows"] == 1
     assert manifest["sources"]["rod_connection_lookup"]["quarantined_rows"] == 1
+    assert "catalog_velocity_relative_residual" in _csv_header(
+        output / "rod_details.csv"
+    )
+    assert "catalog_velocity_relative_residual" in _csv_header(
+        output / "rods_catalog.csv"
+    )
     assert not (output / "tubing.csv").exists()
     lookup_text = (output / "rod_connection_lookup.csv").read_text()
     assert "0.875,1.8125,verified" in lookup_text
@@ -242,9 +249,12 @@ def test_check_mode_detects_catalog_drift(tmp_path):
     [
         "well 30015410620000",
         "well 300-15-410620-00-00",
+        "well 42-123-45678-00-00",
         "rate 123 bopd",
         "host dynacard01.internal",
         "source /mnt/client/private",  # abs-path-allowed
+        "source /home/client/private",  # abs-path-allowed
+        r"source \\server\client\private",
     ],
 )
 def test_extractor_rejects_prohibited_free_text(tmp_path, description):
@@ -275,6 +285,21 @@ def test_extractor_rejects_conflicting_normalized_rods(tmp_path):
     assert "conflicting normalized key" in quarantined
     assert "0.601,2.22,30.5,16,140000" in quarantined
     assert "0.601,2.2,30.5,16,140000" in quarantined
+
+
+@pytest.mark.parametrize(
+    "extraction_date",
+    ["2026-7-29", "2026-07-29\n/mnt/client"],  # abs-path-allowed
+)
+def test_extractor_rejects_noncanonical_extraction_dates(
+    tmp_path, extraction_date
+):
+    extractor = _load_extractor()
+
+    with pytest.raises(ValueError, match="YYYY-MM-DD"):
+        extractor.extract_catalogs(
+            _source_tree(tmp_path), tmp_path / "v1", extraction_date
+        )
 
 
 def test_manifest_output_counts_and_hashes_match(tmp_path):

@@ -4,7 +4,8 @@ from collections import defaultdict
 from decimal import Decimal
 import re
 
-from ._reference_catalog_io import decimal_text, read_rows, text
+from ._reference_catalog_io import decimal_text, is_numeric, read_rows, text
+from ._reference_catalog_manifest import counts
 
 
 def rod_detail_rows(path):
@@ -37,6 +38,35 @@ def rod_detail_rows(path):
         "worksheet_rows": dimensions[0], "worksheet_columns": dimensions[1],
     }
     return emitted, quarantine, counts
+
+
+def rods_catalog_rows(path):
+    records, dimensions = read_rows(path, "Rods Catalog", first_row=3)
+    usable = [record for record in records if is_numeric(record[1]["."])]
+    rows = [_rods_catalog_row(row_number, row) for row_number, row in usable]
+    source_counts = {
+        **counts(len(rows), dimensions), "source_rows": len(records),
+        "rejected_rows": len(records) - len(rows),
+    }
+    return rows, dimensions, source_counts
+
+
+def _rods_catalog_row(row_number, row):
+    return {
+        "source_row": row_number, "catalog_id": decimal_text(row["."]),
+        "description": text(row["DESC"]),
+        "tensile_strength_psi": decimal_text(row["TENSILE"]),
+        "area_in2": decimal_text(row["AREA"]),
+        "modulus_mpsi": decimal_text(row["MOE"]),
+        "velocity_kft_s": decimal_text(row["VELOCITY"]),
+        "unit_weight_lbf_ft": decimal_text(row["DENSITY"]),
+        "catalog_velocity_relative_residual": _velocity_residual(
+            row["AREA"], row["DENSITY"],
+            Decimal(str(row["MOE"])) * Decimal("1000000"),
+            Decimal(str(row["VELOCITY"])) * Decimal("1000"),
+        ),
+        "elastorq_raw": decimal_text(row["ELASTORQ"]),
+    }
 
 
 def _parse_rod_label(value):
@@ -80,9 +110,18 @@ def _canonical_rod(grade, diameter, values):
         "weight_derived_velocity_ft_s": format(velocity, ".12f"),
         "tensile_strength_psi": tensile,
         "raw_sonic_velocity_kft_s": velocity_kft_s,
+        "catalog_velocity_relative_residual": _velocity_residual(
+            area, weight, modulus_psi, Decimal(velocity_kft_s) * 1000
+        ),
         "source_rows": ";".join(str(value[0]) for value in values),
         "raw_labels": ";".join(text(value[1]) for value in values),
     }
+
+
+def _velocity_residual(area, weight, modulus_psi, catalog_velocity):
+    density = Decimal(str(weight)) / (Decimal(str(area)) * Decimal("12"))
+    computed = (Decimal(modulus_psi) * Decimal("386.0886") / density).sqrt() / 12
+    return format(abs(computed - catalog_velocity) / catalog_velocity, ".12f")
 
 
 def _quarantine_row(source_row, record, reason):

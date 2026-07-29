@@ -20,11 +20,12 @@ sources:
     availability: available
     sha256: e5de3e25d318c53160ea5cb493e2c35814b27b991ce559b98b6c64320ca33d88
     source_rows: 3593
-    emitted_rows: 3593
+    emitted_rows: 3572
     duplicate_rows: 0
-    quarantined_rows: 0
+    quarantined_rows: 21
     worksheet_rows: 3594
     worksheet_columns: 34
+    lookup_eligible_rows: 3572
   rodpump_units:
     relative_workbook: data/Rodpump Pumping Unit (1).xlsx
     sheet: Sheet1
@@ -87,7 +88,7 @@ sources:
     availability: available
     sha256: 0505202beb43378bef4480a95dbe66d66dc52160940cbe487225a380b992d0ef
     source_rows: 3
-    emitted_rows: 3
+    emitted_rows: 2
     duplicate_rows: 0
     quarantined_rows: 1
     worksheet_rows: 8
@@ -101,7 +102,7 @@ sources:
     emitted_rows: 0
 outputs:
   rod_details.csv:
-    sha256: b7926fdbbf65bbff9c380a1c0103f5d7ddce34e88cd648b5087f49838a0a2c18
+    sha256: 11691b2867f49eec159ef2a96d3ff2454777914467846e7993196b0dae2bbde1
     row_count: 719
     columns:
     - grade
@@ -113,6 +114,7 @@ outputs:
     - weight_derived_velocity_ft_s
     - tensile_strength_psi
     - raw_sonic_velocity_kft_s
+    - catalog_velocity_relative_residual
     - source_rows
     - raw_labels
     units:
@@ -124,7 +126,8 @@ outputs:
       catalog_sonic_velocity_ft_s: ft/s
       weight_derived_velocity_ft_s: ft/s
       tensile_strength_psi: psi
-      raw_sonic_velocity_kft_s: text_or_identifier
+      raw_sonic_velocity_kft_s: thousand_ft_per_s
+      catalog_velocity_relative_residual: dimensionless
       source_rows: text_or_identifier
       raw_labels: text_or_identifier
   rod_details_quarantine.csv:
@@ -191,7 +194,7 @@ outputs:
     - air_balance_dimensional_h_raw
     units:
       source_catalog: text
-      source_identifier: unverified_source_unit
+      source_identifier: text_or_identifier
       source_row: worksheet_row
       manufacturer_key: text
       model_key: text
@@ -233,7 +236,7 @@ outputs:
     columns: *id001
     units:
       source_catalog: text
-      source_identifier: unverified_source_unit
+      source_identifier: text_or_identifier
       source_row: worksheet_row
       manufacturer_key: text
       model_key: text
@@ -270,7 +273,7 @@ outputs:
       air_balance_dimensional_f_raw: unverified_source_unit
       air_balance_dimensional_h_raw: unverified_source_unit
   rods_catalog.csv:
-    sha256: 17005f38d838fd41cb1d7e61aa8f54c34229ce139bf02afa0599074111dfe66c
+    sha256: 0aa28044d2a8c86a8120aea444d8ea0fcd9c772291fb8305dc168df623af193a
     row_count: 939
     columns:
     - source_row
@@ -281,6 +284,7 @@ outputs:
     - modulus_mpsi
     - velocity_kft_s
     - unit_weight_lbf_ft
+    - catalog_velocity_relative_residual
     - elastorq_raw
     units:
       source_row: worksheet_row
@@ -291,6 +295,7 @@ outputs:
       modulus_mpsi: million_psi
       velocity_kft_s: thousand_ft_per_s
       unit_weight_lbf_ft: lbf/ft
+      catalog_velocity_relative_residual: dimensionless
       elastorq_raw: text_or_identifier
   rod_guides.csv:
     sha256: da3ae5ed3543e0541c28d09bfdf314d3807945598d37c85e494a0a37308ee023
@@ -391,3 +396,5 @@ transformations:
 policy_deviations:
 - Real rod-detail normalized-key conflicts are preserved in quarantine and excluded
   from strict lookup instead of aborting all catalog output.
+- Surface-unit rows with blank manufacturer or model keys remain in the raw artifact
+  but are excluded from lookup-eligible row counts.

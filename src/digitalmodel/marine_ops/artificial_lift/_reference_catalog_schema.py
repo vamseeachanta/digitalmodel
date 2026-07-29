@@ -12,12 +12,15 @@ CONNECTION_BOOK = Path("data/2018/UniqueRodODData.xlsx")
 TUBING_BOOK = Path("REF/Tubing Stretch Table.xls")
 PROHIBITED_PATTERNS = (
     re.compile(
-        r"(?<!\d)(?:\d{14}|\d{3}-\d{2}-\d{6}-\d{2}(?:-\d{2})?)(?!\d)"
+        r"(?<!\d)(?:\d{14}|\d{3}-\d{2}-\d{6}-\d{2}(?:-\d{2})?"
+        r"|\d{2}-\d{3}-\d{5}-\d{2}-\d{2})(?!\d)"
     ),
     re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE),
     re.compile(r"\b\d+(?:\.\d+)?\s*(?:bopd|bwpd|mcfd|mcf/d|bbl/d)\b", re.I),
     re.compile(r"\b(?:[a-z0-9-]+\.)+(?:internal|local|corp)\b", re.I),
-    re.compile(r"(?:/mnt/|[A-Z]:\\)", re.I),  # abs-path-allowed
+    re.compile(  # abs-path-allowed
+        r"(?:/(?:mnt|home|tmp|Users)/|[A-Z]:\\|\\\\[^\\\s]+\\)", re.I
+    ),
     re.compile(r"\b(?:well|lease|cost[\s_-]*cent(?:er|re))[\s_-]*(?:name|id)\b", re.I),
 )
 SURFACE_FIELDS = [
@@ -82,7 +85,8 @@ OUTPUT_DEFINITIONS = {
         "grade", "diameter_in", "area_in2", "unit_weight_lbf_ft",
         "modulus_psi", "catalog_sonic_velocity_ft_s",
         "weight_derived_velocity_ft_s", "tensile_strength_psi",
-        "raw_sonic_velocity_kft_s", "source_rows", "raw_labels",
+        "raw_sonic_velocity_kft_s", "catalog_velocity_relative_residual",
+        "source_rows", "raw_labels",
     ],
     "rod_details_quarantine.csv": [
         "source_row", "raw_label", "raw_area", "raw_unit_weight",
@@ -91,7 +95,8 @@ OUTPUT_DEFINITIONS = {
     "rods_catalog.csv": [
         "source_row", "catalog_id", "description", "tensile_strength_psi",
         "area_in2", "modulus_mpsi", "velocity_kft_s",
-        "unit_weight_lbf_ft", "elastorq_raw",
+        "unit_weight_lbf_ft", "catalog_velocity_relative_residual",
+        "elastorq_raw",
     ],
     "rod_guides.csv": ["source_row", "manufacturer", "model_type", "material"],
     "couplings.csv": [
@@ -118,6 +123,7 @@ def unit_for_field(filename, field):
         "modulus_psi": "psi",
         "raw_modulus": "million_psi",
         "raw_sonic_velocity": "thousand_ft_per_s",
+        "raw_sonic_velocity_kft_s": "thousand_ft_per_s",
         "raw_tensile_strength": "psi",
         "modulus_mpsi": "million_psi",
         "velocity_kft_s": "thousand_ft_per_s",
@@ -126,6 +132,8 @@ def unit_for_field(filename, field):
         "unit_weight_lbf_ft": "lbf/ft",
         "raw_unit_weight": "lbf/ft",
         "friction_coefficient": "dimensionless",
+        "catalog_velocity_relative_residual": "dimensionless",
+        "source_identifier": "text_or_identifier",
     }
     if field in overrides:
         return overrides[field]
