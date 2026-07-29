@@ -1,3 +1,17 @@
+# Quality Gates by Domain
+#
+# This workflow is the FAST, touched-domain-gated lane: pull requests and pushes
+# dispatch only the shards their diff touches. That scoping is deliberate, but it
+# means a green result here says "the shards we ran passed", not "all shards
+# passed" (issue #1863). Two things keep that honest:
+#
+#   1. Every run reports its own scope -- how many shards ran, how many did not,
+#      and which -- in the "Detect touched test domains" and "Domain test
+#      aggregate" job summaries.
+#   2. `.github/workflows/full-matrix-sweep.yml` runs EVERY shard on every push
+#      to `main` and nightly, under its own distinct check names. The nightly
+#      cron formerly lived here; it moved there so that a full-sweep failure is
+#      never posted under the same check names as the gated pull-request lane.
 name: Quality Gates by Domain
 
 "on":
@@ -5,8 +19,6 @@ name: Quality Gates by Domain
     branches: [main, develop]
   push:
     branches: [main, develop]
-  schedule:
-    - cron: "17 7 * * *"
   workflow_dispatch:
 
 jobs:
@@ -16,6 +28,11 @@ jobs:
     outputs:
       matrix: ${{ steps.detect.outputs.matrix }}
       has-domains: ${{ steps.detect.outputs.has_domains }}
+      selected-count: ${{ steps.scope.outputs.selected-count }}
+      total-count: ${{ steps.scope.outputs.total-count }}
+      skipped-count: ${{ steps.scope.outputs.skipped-count }}
+      skipped-domains: ${{ steps.scope.outputs.skipped-domains }}
+      scope-line: ${{ steps.scope.outputs.scope-line }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -59,7 +76,8 @@ jobs:
               --domains-file tests/DOMAINS.md \
               --output-format json-matrix)
           else
-            # schedule (nightly cron) + workflow_dispatch run the full sweep.
+            # workflow_dispatch runs the full sweep on demand. The nightly cron
+            # now lives in full-matrix-sweep.yml.
             matrix=$(uv run --no-sources python scripts/ci/detect_touched_domains.py \
               --mode full \
               --domains-file tests/DOMAINS.md \
@@ -69,6 +87,24 @@ jobs:
           has_domains=$(uv run --no-sources python -c 'import json,sys; print("true" if json.loads(sys.argv[1])["include"] else "false")' "$matrix")
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
           echo "has_domains=$has_domains" >> "$GITHUB_OUTPUT"
+
+      - name: Report shard scope
+        id: scope
+        # Reporting only -- never gates. Everything new lives inside this step,
+        # behind continue-on-error, so scope reporting can never fail a PR or
+        # change which shards run. The second detector call (--mode full) is the
+        # denominator: the shards that exist, versus the ones dispatched above.
+        continue-on-error: true
+        env:
+          SELECTED_MATRIX: ${{ steps.detect.outputs.matrix }}
+          SCOPE_EVENT: ${{ github.event_name }}
+        run: |
+          FULL_MATRIX=$(uv run --no-sources python scripts/ci/detect_touched_domains.py \
+            --mode full \
+            --domains-file tests/DOMAINS.md \
+            --output-format json-matrix)
+          export FULL_MATRIX
+          uv run --no-sources python scripts/ci/report_shard_scope.py
 
   ci-harness-tests:
     name: CI harness and compliance tests
@@ -161,6 +197,46 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     steps:
+      - name: Report scope of this result
+        # States what this check actually covered, so a green aggregate cannot be
+        # read as "all shards passed" when only a subset was dispatched (#1863).
+        continue-on-error: true
+        env:
+          SCOPE_LINE: ${{ needs.detect-domains.outputs.scope-line }}
+          SELECTED_COUNT: ${{ needs.detect-domains.outputs.selected-count }}
+          TOTAL_COUNT: ${{ needs.detect-domains.outputs.total-count }}
+          SKIPPED_COUNT: ${{ needs.detect-domains.outputs.skipped-count }}
+          SKIPPED_DOMAINS: ${{ needs.detect-domains.outputs.skipped-domains }}
+        run: |
+          scope="${SCOPE_LINE:-Shard scope: unavailable (scope reporting did not run).}"
+          echo "$scope"
+          {
+            echo "## Scope of this result"
+            echo
+            echo "$scope"
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ -n "$SKIPPED_DOMAINS" ]; then
+            echo "Shards NOT run in this check: $SKIPPED_DOMAINS"
+            {
+              echo "A pass here means **${SELECTED_COUNT:-?} of ${TOTAL_COUNT:-?} shards**"
+              echo "passed. The other ${SKIPPED_COUNT:-?} were not executed by this run;"
+              echo "they run in full on every push to \`main\` and nightly via the"
+              echo "\`Full Matrix Sweep\` workflow."
+              echo
+              echo "Not run: \`${SKIPPED_DOMAINS}\`"
+            } >> "$GITHUB_STEP_SUMMARY"
+          elif [ -n "$TOTAL_COUNT" ]; then
+            echo "All ${TOTAL_COUNT} shards were dispatched in this run."
+            echo "All ${TOTAL_COUNT} shards were dispatched: a pass here covers the whole matrix." \
+              >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Shard scope could not be determined for this run."
+            echo "Shard scope could not be determined for this run; treat a pass as scoped." \
+              >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Enforce required domain result
         env:
           HAS_DOMAINS: ${{ needs.detect-domains.outputs.has-domains }}
