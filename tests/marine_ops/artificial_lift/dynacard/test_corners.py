@@ -9,6 +9,9 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.corners import (
     calculate_corners,
     get_corner_loads,
 )
+from digitalmodel.marine_ops.artificial_lift.dynacard.calculations import (
+    calculate_pump_fillage,
+)
 from digitalmodel.marine_ops.artificial_lift.dynacard.models import CardData
 
 
@@ -42,6 +45,28 @@ def _make_degenerate_card() -> CardData:
     return CardData(
         position=[0.0, 0.0, 0.0],
         load=[100.0, 100.0, 100.0],
+    )
+
+
+def _make_partial_fillage_card() -> CardData:
+    """Build a card whose downstroke load transfer finishes at 60% stroke."""
+    points = [
+        (0.0, 0.0),   # BL
+        (0.0, 10.0),  # TL
+        (25.0, 10.0),
+        (50.0, 10.0),
+        (75.0, 10.0),
+        (100.0, 10.0),  # TR
+        (90.0, 8.0),
+        (80.0, 4.0),
+        (70.0, 0.5),
+        (60.0, 0.0),  # BR: load transfer has finished
+        (40.0, 0.0),
+        (20.0, 0.0),
+    ]
+    return CardData(
+        position=[point[0] for point in points],
+        load=[point[1] for point in points],
     )
 
 
@@ -131,6 +156,30 @@ class TestCornerDetector:
         n = len(card.position)
         for idx in corners:
             assert 0 <= idx < n, f"Index {idx} out of range [0, {n - 1}]"
+
+    @pytest.mark.parametrize(
+        "transform",
+        [
+            lambda values: np.roll(values, 4).tolist(),
+            lambda values: list(reversed(np.roll(values, 4).tolist())),
+        ],
+        ids=["shifted-origin", "shifted-origin-reversed-direction"],
+    )
+    def test_partial_fillage_uses_phase_order_not_position_extrema(
+        self, transform
+    ):
+        """BR remains the end of load transfer regardless of card storage."""
+        card = _make_partial_fillage_card()
+        stored_card = CardData(
+            position=transform(card.position),
+            load=transform(card.load),
+        )
+
+        result = calculate_pump_fillage(stored_card)
+
+        # Gross stroke = 100 - 0 = 100; load transfer finishes at position 60.
+        assert result.net_stroke == pytest.approx(60.0)
+        assert result.fillage == pytest.approx(60.0)
 
 
 class TestCalculateCorners:

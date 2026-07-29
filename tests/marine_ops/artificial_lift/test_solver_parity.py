@@ -2,6 +2,10 @@ import json
 from pathlib import Path
 
 import numpy as np
+import pytest
+from digitalmodel.marine_ops.artificial_lift.dynacard.calculations import (
+    calculate_fluid_load,
+)
 from digitalmodel.marine_ops.artificial_lift.dynacard.comparison import (
     compare_cards,
 )
@@ -55,3 +59,40 @@ def test_solver_parity_with_vendor_downhole_cards():
     assert np.median(load_nrmse) < 0.95
     assert np.median(position_nrmse) < 0.2
     assert np.max(load_nrmse) < 2.20
+
+
+def test_corner_metrics_match_available_vendor_analyses():
+    """Corner-derived metrics remain close to the four usable vendor results."""
+    vendor_values = {
+        2: (88.37, 6127.0),
+        3: (97.52, 6557.0),
+        4: (97.92, 7682.0),
+        5: (95.40, 3965.0),
+    }
+    fillage_errors = []
+    fluid_load_errors_pct = []
+
+    for well_number, (vendor_fillage, vendor_fluid_load) in vendor_values.items():
+        context = load_from_json_file(
+            DATA_DIR / f"cleansed_well_{well_number:03d}.json"
+        )
+        results = DynacardWorkflow(context).run_full_analysis()
+        fluid_load = calculate_fluid_load(results.downhole_card).fluid_load
+        fillage_errors.append(results.pump_fillage - vendor_fillage)
+        fluid_load_errors_pct.append(
+            100.0 * (fluid_load - vendor_fluid_load) / vendor_fluid_load
+        )
+
+    # The lowest-fillage fixture is the regression that exposes the old bias.
+    # The two near-full wells retain their pre-fix accuracy instead of paying
+    # for the improvement on wells 002 and 005.
+    assert abs(fillage_errors[0]) < 3.0
+    assert abs(fillage_errors[1]) < 0.7
+    assert abs(fillage_errors[2]) < 1.0
+    assert abs(fillage_errors[3]) < 1.0
+    assert np.mean(np.abs(fillage_errors)) < 1.0
+    assert np.mean(np.abs(fluid_load_errors_pct)) < 6.0
+
+    # Honest coverage limit: these fixtures span 88.37-97.92% vendor fillage.
+    # No trustworthy severe fluid-pound card is available here, so this test
+    # does not establish accuracy near the unusable previous-project 54% card.
