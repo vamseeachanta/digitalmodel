@@ -107,7 +107,6 @@ dev = [
     "bumpver>=2023.1129,<2024.0",
     "ipython>=8.0.0,<9.0.0",
     "mutmut>=2.4.0,<3.0.0",
-    "memory-profiler==0.61.0",
 ]
 test = [
     # The full set CI needs (#1632). Domain gates run
@@ -146,6 +145,10 @@ test = [
     # hull_library/test_decimation_vtk.
     "meshio>=5.3.0,<6.0.0",
     "pyvista>=0.47.1,<1.0.0",
+    # imported by tests/infrastructure/performance/conftest.py -- a conftest
+    # import fails COLLECTION, so this is required to run tests, not just to
+    # profile them. It is tooling, but [dev] is not installed by the gates.
+    "memory-profiler==0.61.0",
 ]
 docs = [
     "sphinx>=6.0",
