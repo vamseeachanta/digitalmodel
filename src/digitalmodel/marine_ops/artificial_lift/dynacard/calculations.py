@@ -18,6 +18,8 @@ from .corners import calculate_corners, get_corner_loads
 def _cyclic_phase(load: np.ndarray, start: int, stop: int) -> np.ndarray:
     """Return load samples in forward traversal, excluding the stop corner."""
     count = (stop - start) % len(load)
+    if count == 0:
+        raise ValueError("fluid load requires distinct corner phases")
     indices = (start + np.arange(count)) % len(load)
     return load[indices]
 

@@ -889,7 +889,7 @@ def test_workflow_registry(workflow, monkeypatch):
         # rod-string round trip.
         #
         # NOTE this is the metric's reading, not the barrel's true fill. A
-        # tagging pump is mechanically full; 70.24% is the corner detector
+        # tagging pump is mechanically full; 67.27% is the corner detector
         # being fooled by a *late load transfer*, which is exactly what it
         # does to a real tagging card too. The old 99.589501 came from the
         # pre-#1878 generator, which released the load at the turnaround.

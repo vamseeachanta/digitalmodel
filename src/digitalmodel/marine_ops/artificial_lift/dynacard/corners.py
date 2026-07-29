@@ -132,8 +132,12 @@ class CornerDetector:
         Find the bottom right corner (traveling valve opening point).
         This is where the load drops sharply during downstroke.
         """
-        top_idx = int(np.argmax(self.position))
-        bottom_idx = int(np.argmin(self.position))
+        top_candidates = np.flatnonzero(self.position == np.max(self.position))
+        bottom_candidates = np.flatnonzero(self.position == np.min(self.position))
+        top_idx = int(top_candidates[np.argmax(self.load[top_candidates])])
+        bottom_idx = int(
+            bottom_candidates[np.argmin(self.load[bottom_candidates])]
+        )
         downstroke = self._cyclic_indices(top_idx, bottom_idx, include_stop=True)
         load_drop = np.diff(self.load[downstroke])
         if len(load_drop) == 0:
@@ -148,8 +152,14 @@ class CornerDetector:
         # subsided. Returning the largest-drop sample itself locates the middle
         # of the transfer and systematically overstates incomplete fillage.
         completion_rate = 0.25 * peak_drop
-        for offset in range(peak_drop_offset + 1, len(load_drop)):
-            if abs(min(float(load_drop[offset]), 0.0)) < completion_rate:
+        for offset in range(peak_drop_offset + 1, len(load_drop) - 1):
+            current_drop = float(load_drop[offset])
+            next_drop = float(load_drop[offset + 1])
+            current_rate = abs(min(current_drop, 0.0))
+            next_rate = abs(min(next_drop, 0.0))
+            if current_rate < completion_rate and next_rate < completion_rate:
+                if current_drop >= -np.finfo(np.float64).eps:
+                    return int(downstroke[offset])
                 return int(downstroke[offset + 1])
         return int(downstroke[peak_drop_offset + 1])
 
