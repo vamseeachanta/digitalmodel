@@ -380,3 +380,7 @@ output_610/
 # archives (reference client production-data paths); must stay uncommitted.
 scripts/capabilities/_*_stage.json
 scripts/capabilities/_*_manifest.json
+
+# Tidy publishing intermediates (scripts/hf/build_capability_datasets.py) — derived from
+# the committed sidecars, regenerated on demand, published to HF rather than committed.
+docs/api/_datasets/
