@@ -243,6 +243,20 @@ class TestBasicLoadScenarios:
         assert results['throughput_rps'] > 2, f"Low I/O throughput: {results['throughput_rps']:.1f} RPS"
 
 
+#: Absolute p95 ceiling for the sustained-load test, in seconds (#1936).
+#:
+#: Derivation: the observed mean is sub-millisecond (~0.1 ms), and p95 tracks it
+#: closely — the ratio assertion this replaced tripped at p95 > 5x mean, i.e.
+#: still under a millisecond. 0.05 s is ~500x the mean and ~50x any observed p95,
+#: so scheduling jitter cannot reach it while genuine degradation (which would be
+#: milliseconds to seconds) still trips it.
+#:
+#: An absolute bound is also the convention this file already uses successfully:
+#: test_concurrent_load asserts `p95 < 1.0` and does not flake. The ratio form was
+#: the outlier, and it failed under two different statistics.
+_SUSTAINED_P95_CEILING_S = 0.05
+
+
 class TestStressTestScenarios:
     """Stress testing scenarios to find breaking points."""
 
@@ -306,18 +320,33 @@ class TestStressTestScenarios:
         assert results['error_rate'] < 0.01, f"High error rate in sustained test: {results['error_rate']:.2%}"
         assert results['throughput_rps'] > 8, f"Low sustained throughput: {results['throughput_rps']:.1f} RPS"
 
-        # Check for performance degradation patterns.
-        # p95, not max (#1928). The mean here is ~0.1 ms, so max/mean exceeds 5 whenever a
-        # single sample catches an OS scheduling hiccup — the check then measures runner
-        # noise rather than the system under test, and it failed intermittently on CI with
-        # a different ratio every run. p95 describes the shape of the distribution instead
-        # of its worst single sample, and matches the convention test_concurrent_load
-        # above already uses.
+        # Check for performance degradation — ABSOLUTE bound, not a ratio (#1936).
+        #
+        # This assertion has now been tuned twice and failed both times. #1928 changed
+        # max -> p95 on the theory that one outlier was to blame. It kept failing: on
+        # `main`'s Full Matrix Sweep, and twice consecutively on PR #1935 with a diff
+        # that touches none of this.
+        #
+        # The statistic was never the problem, the SCALE is. That comment recorded the
+        # mean as ~0.1 ms. At that magnitude a single 1 ms OS scheduling hiccup is a 10x
+        # excursion, so ANY ratio-based bound measures the CI runner's jitter rather than
+        # the system under test. Tightening the numerator cannot fix a denominator that
+        # small — a third ratio would fail the same way.
+        #
+        # An absolute ceiling is stable under jitter while still catching the thing the
+        # test is for: real degradation here means milliseconds-to-seconds, orders of
+        # magnitude above a sub-millisecond mean, not a 5x wobble.
+        #
+        # This matters more since #1634 armed required_status_checks: `Domain test
+        # aggregate` is now a required context, so a test that measures runner noise
+        # blocks merges — and re-teaches the merge-past-red habit #1640 exists to end.
         stats = results['response_time_stats']
-        assert stats['p95'] < stats['mean'] * 5, (
-            f"Response times show high variance, possible performance degradation: "
-            f"p95 {stats['p95']:.6f}s vs mean {stats['mean']:.6f}s "
-            f"(max {stats['max']:.6f}s)"
+        assert stats['p95'] < _SUSTAINED_P95_CEILING_S, (
+            f"Sustained-load p95 response time {stats['p95']:.6f}s exceeds the "
+            f"{_SUSTAINED_P95_CEILING_S}s ceiling (mean {stats['mean']:.6f}s, "
+            f"max {stats['max']:.6f}s). This is an absolute bound chosen ~500x above the "
+            f"observed sub-millisecond mean, so it should only trip on real degradation. "
+            f"If it fires legitimately, investigate before raising it."
         )
 
 
