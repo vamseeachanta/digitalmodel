@@ -15,6 +15,9 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.data_loader import (
     parse_legacy_json,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWorkflow
+from digitalmodel.marine_ops.artificial_lift.reference_catalog import (
+    coupling_properties,
+)
 
 DATA_DIR = Path(__file__).with_name("test_data")
 REFERENCE_FILES = tuple(
@@ -51,6 +54,21 @@ def test_legacy_loader_preserves_survey_station_arrays():
 def test_legacy_loader_keeps_null_survey_absent():
     """A null legacy survey must retain the vertical-fallback contract."""
     assert parse_legacy_json({"surveyData": None}).survey is None
+
+
+def test_default_friction_comes_from_named_coupling_catalog_record():
+    """The default contact coefficient must be catalogued, never fitted."""
+    expected = coupling_properties(
+        "0.875",
+        manufacturer="Generic",
+        size="Full Size",
+        type="Spray Metal",
+    )
+    context = parse_legacy_json({})
+
+    assert context.calc_params.coulomb_friction_coefficient == float(
+        expected.friction_coefficient
+    )
 
 
 def test_solver_parity_with_vendor_downhole_cards():

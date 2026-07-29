@@ -92,6 +92,21 @@ class WellTestData(BaseModel):
     test_date: Optional[str] = None
 
 
+def _default_coulomb_friction_coefficient() -> float:
+    """Load the named, non-fitted coupling contact coefficient."""
+    from ..reference_catalog import coupling_properties
+
+    coupling = coupling_properties(
+        "0.875",
+        manufacturer="Generic",
+        size="Full Size",
+        type="Spray Metal",
+    )
+    if coupling.friction_coefficient is None:
+        raise ValueError("default coupling catalog record has no friction value")
+    return float(coupling.friction_coefficient)
+
+
 class SurveyData(BaseModel):
     """Well survey/trajectory data."""
     measured_depth: List[float] = []
@@ -122,7 +137,9 @@ class CalculationParameters(BaseModel):
     acceleration_due_to_gravity: float = GRAVITATIONAL_ACCELERATION_SI  # m/s^2 (SI) or 32.174 ft/s^2
     density_of_water: float = DENSITY_OF_WATER_SI_KG_PER_M3  # kg/m^3 or 62.4 lbs/ft^3
     density_of_steel: float = DENSITY_OF_STEEL_SI_KG_PER_M3  # kg/m^3 or 490 lbs/ft^3
-    coulomb_friction_coefficient: float = 0.0
+    coulomb_friction_coefficient: float = Field(
+        default_factory=_default_coulomb_friction_coefficient
+    )
     num_finite_difference_nodes: int = DEFAULT_FD_NUM_NODES
     remove_jump_value: bool = True
     use_si_units: bool = False  # False = oilfield units
