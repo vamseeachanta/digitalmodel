@@ -122,6 +122,30 @@ def test_kpis_report_displacement_and_every_production_correction_term():
     assert "19.498681" in html
 
 
+def test_kpis_report_refused_correction_without_blank_term_rows():
+    """A refused correction should name the gap, not render empty evidence."""
+    results = AnalysisResults(
+        inferred_production=33.3,
+        production=ProductionAnalysis(
+            theoretical_production=33.3,
+            correction_status="missing_inputs",
+            correction_missing_inputs=[
+                "plunger_barrel_clearance_in",
+                "fluid_viscosity_cp",
+            ],
+        ),
+    )
+
+    html = "\n".join(_kpi_section(results))
+
+    assert "Displacement (downhole)" in html
+    assert "Correction status" in html
+    assert "missing_inputs" in html
+    assert "plunger_barrel_clearance_in, fluid_viscosity_cp" in html
+    assert "Corrected production (stock tank)" not in html
+    assert "Patterson slippage (24h operation)" not in html
+
+
 def test_router_reuses_one_diagnostic_classification(monkeypatch):
     calls = 0
     original = PumpDiagnostics.classify_with_context

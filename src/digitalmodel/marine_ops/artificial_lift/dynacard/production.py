@@ -53,7 +53,7 @@ def patterson_slippage_bpd(
 
 
 def _runtime(ctx: DynacardAnalysisContext) -> tuple[float, str]:
-    """Return hours/day and its explicit source."""
+    """Prefer card-time runtime; ``ProductionAnalysis`` documents why."""
     if ctx.input_params is not None and ctx.input_params.runtime:
         return ctx.input_params.runtime, "card"
     if ctx.well_test is not None and ctx.well_test.runtime:
@@ -65,7 +65,7 @@ def _pump_efficiency(
     ctx: DynacardAnalysisContext,
     theoretical_production: float,
 ) -> float:
-    """Compare displacement with a well test when one is available."""
+    """Return actual fluid rate as a percentage of uncorrected displacement."""
     if ctx.well_test is None:
         return ctx.pump.efficiency * 100.0
     actual = ctx.well_test.oil_rate + ctx.well_test.water_rate
@@ -101,14 +101,12 @@ def _correction_inputs(
 def _input_gaps(inputs: dict) -> tuple[list[str], list[str]]:
     """Separate absent inputs from present but non-physical inputs."""
     physical_inputs = {
-        name: value for name, value in inputs.items()
-        if name != "runtime_fraction"
+        name: value for name, value in inputs.items() if name != "runtime_fraction"
     }
-    unavailable = [
-        name for name, value in physical_inputs.items() if value is None
-    ]
+    unavailable = [name for name, value in physical_inputs.items() if value is None]
     invalid = [
-        name for name, value in physical_inputs.items()
+        name
+        for name, value in physical_inputs.items()
         if value is not None and (not math.isfinite(value) or value <= 0.0)
     ]
     return unavailable, invalid
@@ -117,12 +115,12 @@ def _input_gaps(inputs: dict) -> tuple[list[str], list[str]]:
 def _slippage(ctx: DynacardAnalysisContext, inputs: dict) -> float:
     """Evaluate Patterson only after its independent inputs are valid."""
     return patterson_slippage_bpd(
-        ctx.pump.diameter,
+        inputs["plunger_diameter_in"],
         inputs["differential_pressure_psi"],
         inputs["plunger_barrel_clearance_in"],
         inputs["fluid_viscosity_cp"],
         inputs["plunger_length_in"],
-        ctx.spm,
+        inputs["strokes_per_minute"],
     )
 
 
@@ -141,9 +139,7 @@ def _production_correction(
         "runtime_adjusted_slippage_bpd": None,
         "slippage_corrected_downhole_production": None,
         "corrected_stock_tank_production": None,
-        "correction_status": (
-            "invalid_inputs" if invalid else "missing_inputs"
-        ),
+        "correction_status": ("invalid_inputs" if invalid else "missing_inputs"),
         "correction_missing_inputs": missing,
     }
     slippage_inputs = missing.copy()
@@ -154,25 +150,31 @@ def _production_correction(
     slippage = _slippage(ctx, inputs)
     adjusted_slippage = slippage * runtime_fraction
     if adjusted_slippage > theoretical_production:
-        terms.update({
-            "slippage_bpd": slippage,
-            "runtime_adjusted_slippage_bpd": adjusted_slippage,
-            "correction_status": "slippage_exceeds_displacement",
-        })
+        terms.update(
+            {
+                "slippage_bpd": slippage,
+                "runtime_adjusted_slippage_bpd": adjusted_slippage,
+                "correction_status": "slippage_exceeds_displacement",
+            }
+        )
         return {**inputs, **terms}
     corrected_downhole = theoretical_production - adjusted_slippage
-    terms.update({
-        "slippage_bpd": slippage,
-        "runtime_adjusted_slippage_bpd": adjusted_slippage,
-        "slippage_corrected_downhole_production": corrected_downhole,
-    })
+    terms.update(
+        {
+            "slippage_bpd": slippage,
+            "runtime_adjusted_slippage_bpd": adjusted_slippage,
+            "slippage_corrected_downhole_production": corrected_downhole,
+        }
+    )
     if "formation_volume_factor" not in missing:
-        terms.update({
-            "corrected_stock_tank_production": (
-                corrected_downhole / inputs["formation_volume_factor"]
-            ),
-            "correction_status": "calculated",
-        })
+        terms.update(
+            {
+                "corrected_stock_tank_production": (
+                    corrected_downhole / inputs["formation_volume_factor"]
+                ),
+                "correction_status": "calculated",
+            }
+        )
     return {**inputs, **terms}
 
 
@@ -188,9 +190,7 @@ def calculate_theoretical_production(
     runtime, runtime_source = _runtime(ctx)
     runtime_fraction = runtime / 24.0
     displacement = net * runtime_fraction
-    correction = _production_correction(
-        ctx, cpip, displacement, runtime_fraction
-    )
+    correction = _production_correction(ctx, cpip, displacement, runtime_fraction)
     return ProductionAnalysis(
         gross_displacement=float(gross),
         net_displacement=float(net),

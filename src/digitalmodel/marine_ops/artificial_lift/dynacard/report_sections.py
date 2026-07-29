@@ -152,9 +152,9 @@ def _dl_row(label: str, value: Any, suffix: str = "") -> str:
 def _report_header() -> list[str]:
     return [
         "<!doctype html>",
-        "<html lang=\"en\">",
+        '<html lang="en">',
         "<head>",
-        "  <meta charset=\"utf-8\">",
+        '  <meta charset="utf-8">',
         "  <title>Dynacard Diagnostic Report</title>",
         "  <style>",
         "    body { font-family: Arial, sans-serif; margin: 24px; color: #202124; }",
@@ -179,7 +179,7 @@ def _report_header() -> list[str]:
 def _verdict_section(verdict: dict[str, str]) -> list[str]:
     status = verdict["screening_status"]
     return [
-        f"    <section class=\"verdict {_esc(status)}\">",
+        f'    <section class="verdict {_esc(status)}">',
         "      <h2>Verdict</h2>",
         "      <dl>",
         _dl_row("screening_status", status),
@@ -206,20 +206,24 @@ def _input_section(
         _dl_row("Solver method", solver_method),
     ]
     if synthetic:
-        lines.extend([
-            _dl_row("Synthetic mode", synthetic.get("mode", "")),
-            _dl_row("Synthetic seed", synthetic.get("seed", "")),
-        ])
-    lines.extend([
-        _dl_row("Pump diameter", _fmt(ctx.pump.diameter, 3), " in"),
-        _dl_row("Pump depth", _fmt(ctx.pump.depth, 3), " ft"),
-        _dl_row("Stroke length", _fmt(ctx.surface_unit.stroke_length, 3), " in"),
-        _dl_row("Beam rating", _fmt(ctx.surface_unit.beam_rating, 0), " lb"),
-        "      </dl>",
-        "      <h3>Rod string</h3>",
-        "      <table>",
-        "        <tr><th>#</th><th>Diameter</th><th>Length</th><th>Count</th><th>Damping</th><th>Weight/ft</th></tr>",
-    ])
+        lines.extend(
+            [
+                _dl_row("Synthetic mode", synthetic.get("mode", "")),
+                _dl_row("Synthetic seed", synthetic.get("seed", "")),
+            ]
+        )
+    lines.extend(
+        [
+            _dl_row("Pump diameter", _fmt(ctx.pump.diameter, 3), " in"),
+            _dl_row("Pump depth", _fmt(ctx.pump.depth, 3), " ft"),
+            _dl_row("Stroke length", _fmt(ctx.surface_unit.stroke_length, 3), " in"),
+            _dl_row("Beam rating", _fmt(ctx.surface_unit.beam_rating, 0), " lb"),
+            "      </dl>",
+            "      <h3>Rod string</h3>",
+            "      <table>",
+            "        <tr><th>#</th><th>Diameter</th><th>Length</th><th>Count</th><th>Damping</th><th>Weight/ft</th></tr>",
+        ]
+    )
     for index, rod in enumerate(ctx.rod_string, start=1):
         lines.append(
             "        <tr>"
@@ -244,8 +248,7 @@ def _input_checks_section(
     if warnings:
         lines.append("      <ul>")
         lines.extend(
-            f"        <li class=\"warning\">{_esc(warning)}</li>"
-            for warning in warnings
+            f'        <li class="warning">{_esc(warning)}</li>' for warning in warnings
         )
         lines.append("      </ul>")
     else:
@@ -283,11 +286,17 @@ def _kpi_section(results: AnalysisResults) -> list[str]:
         "      </dl>",
         "    </section>",
     ]
+
+
 def _production_kpi_rows(production: Any) -> list[str]:
     if production is None:
         return []
     specs = [
-        ("Corrected production (stock tank)", "corrected_stock_tank_production", " bbl/day"),
+        (
+            "Corrected production (stock tank)",
+            "corrected_stock_tank_production",
+            " bbl/day",
+        ),
         ("Plunger diameter", "plunger_diameter_in", " in"),
         ("Strokes per minute", "strokes_per_minute", " SPM"),
         ("Runtime fraction", "runtime_fraction", ""),
@@ -309,17 +318,21 @@ def _production_kpi_rows(production: Any) -> list[str]:
         ),
     ]
     rows = [
-        _dl_row(label, _fmt(getattr(production, field), 6), unit)
+        _dl_row(label, _fmt(value, 6), unit)
         for label, field, unit in specs
+        if (value := getattr(production, field)) is not None
     ]
-    rows.extend([
-        _dl_row("Correction status", production.correction_status),
-        _dl_row(
-            "Correction missing inputs",
-            ", ".join(production.correction_missing_inputs),
-        ),
-    ])
+    rows.append(_dl_row("Correction status", production.correction_status))
+    if production.correction_missing_inputs:
+        rows.append(
+            _dl_row(
+                "Correction missing inputs",
+                ", ".join(production.correction_missing_inputs),
+            )
+        )
     return rows
+
+
 def _setpoints_section(alarm_block: dict[str, Any]) -> list[str]:
     setpoints = alarm_block["setpoints"]
     lines = [
@@ -334,7 +347,12 @@ def _setpoints_section(alarm_block: dict[str, Any]) -> list[str]:
             continue
         lines.append(f"        <tr><td>{_esc(key)}</td><td>{_esc(value)}</td></tr>")
     lines.extend(["      </table>", "      <h3>Tripped alarms</h3>"])
-    return [*lines, *_alarm_rows(alarm_block), *_setpoint_notes(setpoints), "    </section>"]
+    return [
+        *lines,
+        *_alarm_rows(alarm_block),
+        *_setpoint_notes(setpoints),
+        "    </section>",
+    ]
 
 
 def _alarm_rows(alarm_block: dict[str, Any]) -> list[str]:
