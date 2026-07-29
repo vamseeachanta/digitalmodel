@@ -137,7 +137,8 @@ class PumpDiagnostics:
         """
         model = PumpDiagnostics._load_model()
         if model is not None:
-            features = FeatureExtractor.extract_bezerra_projections(downhole_card)
+            features = FeatureExtractor.extract_classifier_vector(downhole_card)
+            _check_feature_count(features, model)
             features_norm = FeatureExtractor.normalize(features, model["scaling"])
             mode, _ = _predict_from_trees(features_norm, model)
             return mode
@@ -165,9 +166,10 @@ class PumpDiagnostics:
 
         model = self._load_model()
         if model is not None:
-            features = FeatureExtractor.extract_bezerra_projections(
+            features = FeatureExtractor.extract_classifier_vector(
                 results.downhole_card
             )
+            _check_feature_count(features, model)
             features_norm = FeatureExtractor.normalize(features, model["scaling"])
             mode, probabilities = _predict_from_trees(features_norm, model)
 
@@ -280,6 +282,26 @@ class PumpDiagnostics:
     def reset_model_cache(cls) -> None:
         """Clear cached model (useful for testing)."""
         cls._model = None
+
+
+def _check_feature_count(features: np.ndarray, model: dict) -> None:
+    """Fail loudly when the shipped model predates the current feature vector.
+
+    A stale model is the dangerous case, not a broken one: its ``scaling``
+    arrays are shorter than the vector, numpy broadcasts or raises deep inside
+    :meth:`FeatureExtractor.normalize`, and if it happens to line up the trees
+    split on features that are not the ones they were trained on -- producing
+    confident, wrong diagnoses with nothing to indicate anything went wrong.
+    Adding a feature (dm#1884) without retraining is exactly how that happens.
+    """
+    expected = len(model["scaling"]["min"])
+    if len(features) != expected:
+        raise ValueError(
+            f"dynacard model expects {expected} features but the extractor "
+            f"produced {len(features)} -- the shipped "
+            f"data/dynacard_classifier.json predates the current feature "
+            f"vector. Retrain with training.train_and_export()."
+        )
 
 
 def _predict_from_trees(

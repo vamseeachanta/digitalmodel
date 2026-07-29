@@ -590,15 +590,19 @@ __SETTINGS_SECTION__
     <code>troubleshooting</code>, <code>poc_settings</code>) and frozen by
     <code>scripts/capabilities/build_dynacard_troubleshooting.py</code>; CI re-runs every published
     diagnosis against the live classifier. ML classification operates on the pump (downhole) card
-    (GradientBoosting over 16 Bezerra projection features, 6,000 synthetic training cards across 20
-    failure modes, 90.5% five-fold CV). <b>That 90.5% is synthetic-train / synthetic-test</b>: it
-    measures how separable this module's own card generators are from each other, not agreement
-    with real dynamometer cards. The classifier has never been scored against a labelled real card
-    (issue #1864), so treat the confidence figures as internal separability, not field accuracy.
-    Three modes are known not to be separable at all under these features -- NORMAL,
-    TUBING_MOVEMENT and PLUNGER_UNDERTRAVEL differ only in absolute stroke length, which the
-    Bezerra projection normalizes away, which is why the healthy baseline below carries a low
-    confidence and a large differential. Digitized archive
+    (GradientBoosting over 19 features -- 16 Bezerra projections plus stroke length, load range and
+    card area -- 6,000 synthetic training cards across 20 failure modes, 99.4% five-fold CV).
+    <b>That 99.4% is synthetic-train / synthetic-test</b>: it measures how separable this module's
+    own card generators are from each other, not agreement with real dynamometer cards. The
+    classifier has never been scored against a labelled real card (issue #1864), so treat the
+    confidence figures as internal separability, not field accuracy.
+    <b>The figure is also partly definitional and is not a gain in diagnostic capability.</b>
+    NORMAL, TUBING_MOVEMENT and PLUNGER_UNDERTRAVEL were previously not separable at all, because
+    they differ only in absolute stroke length and the Bezerra projection normalizes that away.
+    They now separate -- but only because the generators draw stroke from ranges that never
+    overlap (30-55 in, 80-120 in, 130-180 in): a two-threshold rule on stroke alone scores 900/900
+    on unseen synthetic cards. Real wells have overlapping stroke ranges, so whether these modes
+    are separable on real cards is unknown and untested (#1864). Digitized archive
     cards are shape-only (normalized axes, marker positions) from a hand-labeled training archive;
     wells are anonymized throughout. Settings &amp; alarm recipes restate standard field practice in
     original wording, cross-checked between operator automation training (2016-2017), pump-off

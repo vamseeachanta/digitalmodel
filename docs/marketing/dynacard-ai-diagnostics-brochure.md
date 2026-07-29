@@ -74,15 +74,24 @@ Both solvers convert surface dynamometer cards to downhole pump cards using the 
 ### Machine Learning Diagnostics
 
 - **GradientBoosting classifier** trained on 6,000 synthetic dynamometer cards across 20 failure modes
-- **90.5% five-fold cross-validated accuracy on that synthetic set.** This number is
-  synthetic-train / synthetic-test: it measures how separable the module's own card
-  generators are from one another. **It is not a validation against field data, and it is
-  not a field accuracy figure.** The classifier has not yet been scored against a single
-  labelled real dynamometer card (tracked as issue #1864). Overall accuracy also hides
-  wide per-class variation -- three modes that differ only in absolute stroke length
-  (NORMAL, TUBING_MOVEMENT, PLUNGER_UNDERTRAVEL) are close to indistinguishable under the
-  current features, with NORMAL recall near 0.44 on unseen cards
-- **Bezerra vertical projection** feature extraction -- a literature-proven method demonstrated at 98.87% accuracy on 6,101 real-world cards *by its authors, on their data; that result is not a claim about this implementation*
+- **99.4% five-fold cross-validated accuracy on that synthetic set** (99.6% on unseen
+  generator seeds). This number is synthetic-train / synthetic-test: it measures how
+  separable the module's own card generators are from one another. **It is not a
+  validation against field data, and it is not a field accuracy figure.** The classifier
+  has not yet been scored against a single labelled real dynamometer card (tracked as
+  issue #1864)
+- **The rise from the previous 90.5% is partly definitional, not a gain in diagnostic
+  capability.** Three modes (NORMAL, TUBING_MOVEMENT, PLUNGER_UNDERTRAVEL) differ only in
+  absolute stroke length and were previously not separable at all. Three
+  absolute-magnitude features were added, and those modes now score 1.00 -- but the
+  generators draw stroke from ranges that never overlap (30--55 in, 80--120 in,
+  130--180 in), so a hand-written two-threshold rule on stroke alone already scores
+  900/900 on unseen synthetic cards. Real wells have overlapping stroke ranges. Whether
+  these modes separate on real cards is unknown and untested
+- **Bezerra vertical projection** feature extraction, plus three absolute-scale features
+  (stroke length, load range, card area) -- the projection method is literature-proven,
+  demonstrated at 98.87% accuracy on 6,101 real-world cards *by its authors, on their
+  data; that result is not a claim about this implementation*
 - Every classification includes a **confidence score (0--100%)** and **differential diagnosis** listing the top 3 alternative conditions
 
 ### Seven-Phase Engineering Analysis
@@ -239,8 +248,8 @@ JSON-based model with structured Pydantic outputs. Every diagnostic result can b
 | **Physics Solvers** | Gibbs (frequency-domain), Finite Difference (time-domain) |
 | **ML Algorithm** | GradientBoosting classifier |
 | **Training Data** | 6,000 synthetic dynamometer cards (300 per mode) |
-| **Cross-Validated Accuracy** | 90.5% -- synthetic-train / synthetic-test only; not validated against field cards (#1864) |
-| **Feature Extraction** | Bezerra vertical projection method |
+| **Cross-Validated Accuracy** | 99.4% -- synthetic-train / synthetic-test only; not validated against field cards (#1864). Partly definitional: generator stroke ranges do not overlap |
+| **Feature Extraction** | Bezerra vertical projection (16) + absolute scale features (3) |
 | **Failure Modes** | 20 (3-tier classification) |
 | **Data Models** | 30+ Pydantic v2 validated schemas |
 | **Calculators** | 12 specialized (BaseCalculator pattern) |
