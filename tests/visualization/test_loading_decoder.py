@@ -1,7 +1,6 @@
 """
 Unit tests for LoadingDecoder and related classes.
 
-Uses importlib to work around the hyphenated 'orcaflex-dashboard' directory
 that blocks normal Python imports.
 """
 
@@ -13,14 +12,13 @@ import pandas as pd
 import pytest
 
 # ---------------------------------------------------------------------------
-# Dynamic module import (hyphenated directory in path)
 # ---------------------------------------------------------------------------
 _MOD_PATH = (
     Path(__file__).resolve().parents[2]
     / "src"
     / "digitalmodel"
     / "visualization"
-    / "orcaflex-dashboard"
+    / "orcaflex_dashboard"
     / "backend"
     / "app"
     / "services"

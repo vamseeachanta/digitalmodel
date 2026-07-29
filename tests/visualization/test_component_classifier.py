@@ -32,7 +32,6 @@ import pandas as pd
 import pytest
 
 # ---------------------------------------------------------------------------
-# Dynamic import: the parent directory "orcaflex-dashboard" contains a hyphen,
 # which blocks normal Python imports. Use spec_from_file_location instead.
 # ---------------------------------------------------------------------------
 _MOD_PATH = (
@@ -40,7 +39,7 @@ _MOD_PATH = (
     / "src"
     / "digitalmodel"
     / "visualization"
-    / "orcaflex-dashboard"
+    / "orcaflex_dashboard"
     / "backend"
     / "app"
     / "services"

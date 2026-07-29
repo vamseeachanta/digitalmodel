@@ -28,13 +28,12 @@ import numpy as np
 import pandas as pd
 import pytest
 
-# Import module from hyphenated directory path
 _mod_path = (
     pathlib.Path(__file__).resolve().parents[2]
     / "src"
     / "digitalmodel"
     / "visualization"
-    / "orcaflex-dashboard"
+    / "orcaflex_dashboard"
     / "backend"
     / "app"
     / "services"
@@ -697,6 +696,45 @@ class TestPerformGroupComparison:
         }
         result = service._perform_group_comparison(data, "m", 0.95, "parametric")
         assert result.effect_size == 0.0
+
+    def test_zero_total_variance_statistic_undefined(self, service):
+        """All groups identical -> statistic undefined, nothing significant."""
+        data = {
+            "a": np.array([5.0, 5.0, 5.0]),
+            "b": np.array([5.0, 5.0, 5.0]),
+            "c": np.array([5.0, 5.0, 5.0]),
+        }
+        result = service._perform_group_comparison(data, "m", 0.95, "parametric")
+        assert np.isnan(result.test_statistic)
+        assert np.isnan(result.p_value)
+        assert result.is_significant is False
+        assert result.post_hoc_results == []
+
+    def test_zero_total_variance_non_parametric(self, service):
+        """Kruskal-Wallis raises on identical input; must be handled too."""
+        data = {
+            "a": np.array([5.0, 5.0, 5.0]),
+            "b": np.array([5.0, 5.0, 5.0]),
+        }
+        result = service._perform_group_comparison(data, "m", 0.95, "auto")
+        assert np.isnan(result.p_value)
+        assert result.effect_size == 0.0
+
+    def test_constant_groups_with_different_means(self, service):
+        """Zero within-group variance but differing means -> F is infinite."""
+        import warnings
+        data = {
+            "a": np.array([5.0, 5.0, 5.0]),
+            "b": np.array([7.0, 7.0, 7.0]),
+        }
+        with warnings.catch_warnings():
+            # post-hoc t-tests still warn about precision loss on constant data
+            warnings.simplefilter("ignore", RuntimeWarning)
+            result = service._perform_group_comparison(data, "m", 0.95, "parametric")
+        assert np.isinf(result.test_statistic)
+        assert result.p_value == 0.0
+        assert result.is_significant
+        assert result.effect_size == 1.0
 
 
 # ===========================================================================
