@@ -352,11 +352,11 @@ small synthetic workbooks and will not depend on the off-repo source.
 - [ ] The unavailable tubing workbook will be reported honestly; no tubing
       catalog or wiring will be fabricated.
 - [ ] Focused tests will pass with
-      `PATH=/mnt/local-analysis/digitalmodel/.venv/bin:$PATH pytest tests/marine_ops/artificial_lift/test_reference_catalog.py tests/scripts/artificial_lift/test_extract_reference_catalogs.py -q`.
+      `PATH=.venv/bin:$PATH pytest tests/marine_ops/artificial_lift/test_reference_catalog.py tests/scripts/artificial_lift/test_extract_reference_catalogs.py -q`.
 - [ ] Exact regression tests will pass:
-      `PATH=/mnt/local-analysis/digitalmodel/.venv/bin:$PATH pytest tests/well/tubulars/test_casing.py tests/well/tubulars/test_sucker_rod.py -q`.
+      `PATH=.venv/bin:$PATH pytest tests/well/tubulars/test_casing.py tests/well/tubulars/test_sucker_rod.py -q`.
 - [ ] Regeneration will pass:
-      `tmp_dir="$(mktemp -d)"; trap 'rm -rf "$tmp_dir"' EXIT; /mnt/local-analysis/digitalmodel/.venv/bin/python scripts/artificial_lift/extract_reference_catalogs.py --source-root "$CATALOG_SOURCE_ROOT" --output-dir "$tmp_dir/v1" --extraction-date 2026-07-29; diff -ru src/digitalmodel/marine_ops/artificial_lift/reference_data/v1 "$tmp_dir/v1"`.
+      `tmp_dir="$(mktemp -d)"; trap 'rm -rf "$tmp_dir"' EXIT; .venv/bin/python scripts/artificial_lift/extract_reference_catalogs.py --source-root "$CATALOG_SOURCE_ROOT" --output-dir "$tmp_dir/v1" --extraction-date 2026-07-29; diff -ru src/digitalmodel/marine_ops/artificial_lift/reference_data/v1 "$tmp_dir/v1"`.
 - [ ] After staging the exact intended set, `git diff --quiet` and
       `test -z "$(git ls-files --others --exclude-standard)"` will prove no
       unstaged/untracked artifact can evade scanning; the cached file list will
@@ -364,7 +364,7 @@ small synthetic workbooks and will not depend on the off-repo source.
 - [ ] Legal/path gates will pass:
       `repo_rel="$(realpath --relative-to="$WORKSPACE_HUB_ROOT" "$(git rev-parse --show-toplevel)")"; (cd "$WORKSPACE_HUB_ROOT" && bash scripts/legal/legal-sanity-scan.sh --repo="$repo_rel" --diff-only); mapfile -t code_paths < <(git diff --cached --name-only --diff-filter=ACMR -- '*.py' '*.sh'); bash "$WORKSPACE_HUB_ROOT/scripts/enforcement/check-no-abs-paths.sh" "${code_paths[@]}"`.
 - [ ] Wheel packaging will pass:
-      `wheel_tmp="$(mktemp -d)"; trap 'rm -rf "$wheel_tmp"' EXIT; /mnt/local-analysis/digitalmodel/.venv/bin/python -m pip wheel . --no-build-isolation --no-deps -w "$wheel_tmp/wheels"; /mnt/local-analysis/digitalmodel/.venv/bin/python -m pip install --no-deps --target "$wheel_tmp/site" "$wheel_tmp"/wheels/*.whl; (cd "$wheel_tmp" && PYTHONPATH="$wheel_tmp/site" /mnt/local-analysis/digitalmodel/.venv/bin/python -c 'from digitalmodel.marine_ops.artificial_lift.reference_catalog import load_catalog; load_catalog()')`.
+      `wheel_tmp="$(mktemp -d)"; trap 'rm -rf "$wheel_tmp"' EXIT; .venv/bin/python -m pip wheel . --no-build-isolation --no-deps -w "$wheel_tmp/wheels"; .venv/bin/python -m pip install --no-deps --target "$wheel_tmp/site" "$wheel_tmp"/wheels/*.whl; (cd "$wheel_tmp" && PYTHONPATH="$wheel_tmp/site" .venv/bin/python -c 'from digitalmodel.marine_ops.artificial_lift.reference_catalog import load_catalog; load_catalog()')`.
 - [ ] Adversarial code/artifact review will complete before issue closeout.
 - [ ] The implementing agent will post a summary comment on issue #1898, but
       will not push, open a PR, or close the issue unless separately authorized.
