@@ -289,13 +289,27 @@ def calculate_theoretical_production(
     fillage_fraction = fillage_analysis.fillage / 100.0
     net_displacement = gross_displacement * fillage_fraction
 
-    # Get runtime (hours)
-    if ctx.well_test is not None:
-        runtime = ctx.well_test.runtime
-    elif ctx.input_params is not None:
+    # Runtime (hours) -- prefer the value recorded WITH the card.
+    #
+    # This priority used to be reversed, and it was the largest single error
+    # term measured against public production records (dm#1899). A well test's
+    # runtime can predate the card by months: one well used 9.12 h from a
+    # January test for an April card whose own runtime was 5.28 h, which alone
+    # inflated production by ~68%. Correcting the order took that card from
+    # +65.5% to -4.2% against the state's filed volumes.
+    #
+    # A well that cycles but is assumed to run 24 h is overstated by exactly
+    # its duty factor. That assumption is reported on the result rather than
+    # made silently -- see ProductionAnalysis.runtime_source.
+    if ctx.input_params is not None and ctx.input_params.runtime:
         runtime = ctx.input_params.runtime
+        runtime_source = "card"
+    elif ctx.well_test is not None and ctx.well_test.runtime:
+        runtime = ctx.well_test.runtime
+        runtime_source = "well_test"
     else:
-        runtime = 24.0  # Assume 24 hours
+        runtime = 24.0
+        runtime_source = "assumed_24h"
 
     # Theoretical production (BPD) adjusted for runtime
     runtime_fraction = runtime / 24.0
@@ -312,7 +326,9 @@ def calculate_theoretical_production(
         gross_displacement=float(gross_displacement),
         net_displacement=float(net_displacement),
         theoretical_production=float(theoretical_production),
-        pump_efficiency=float(pump_efficiency)
+        pump_efficiency=float(pump_efficiency),
+        runtime_hours=float(runtime),
+        runtime_source=runtime_source,
     )
 
 
