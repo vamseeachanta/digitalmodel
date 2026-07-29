@@ -356,5 +356,7 @@
     }
   ],
   "source": "docs/capability-map/capabilities-sections.yml",
-  "unlinked_explorers": []
+  "unlinked_explorers": [
+    "docs/api/structural/wall-thickness-3d-explorer.html"
+  ]
 }
