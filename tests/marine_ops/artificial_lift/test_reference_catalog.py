@@ -7,6 +7,7 @@ from digitalmodel.marine_ops.artificial_lift.reference_catalog import (
     AmbiguousCatalogKeyError,
     coupling_properties,
     find_couplings,
+    find_surface_units,
     load_catalog,
     rod_properties,
     surface_unit_geometry,
@@ -51,6 +52,8 @@ def test_rod_sonic_velocity_matches_independent_physics():
         ("97", "inf"),
         ("97", "0.8751"),
         ("97-0.875", "0.875"),
+        ("97 - .875", "0.875"),
+        ("97 - 1", "0.875"),
     ],
 )
 def test_rod_lookup_rejects_malformed_keys(grade, diameter):
@@ -109,6 +112,20 @@ def test_surface_unit_lookup_returns_source_qualified_raw_geometry():
     assert unit.dimensional_p_raw == Decimal("60")
 
 
+def test_surface_search_skips_rows_with_blank_model_keys():
+    assert find_surface_units(
+        "B", "not a catalog model", source_catalog="surface_unit_catalog"
+    ) == ()
+
+
+def test_surface_unit_cross_source_ambiguity_raises():
+    matches = find_surface_units("A", "A-C-114-133-54")
+
+    assert len(matches) == 2
+    with pytest.raises(AmbiguousCatalogKeyError):
+        surface_unit_geometry("A", "A-C-114-133-54")
+
+
 def test_packaged_manifest_counts_and_hashes_validate():
     catalog = load_catalog()
 
@@ -116,3 +133,24 @@ def test_packaged_manifest_counts_and_hashes_validate():
     assert len(catalog.rods) > 700
     assert len(catalog.couplings) == 116
     assert len(catalog.surface_units) == 7_173
+    assert catalog.manifest["schema_version"] == "1.0"
+    assert catalog.manifest["sources"]["rod_details"]["relative_workbook"] == (
+        "REF/Rod Detail Table.xlsx"
+    )
+    assert catalog.manifest["outputs"]["rod_details.csv"]["units"]["modulus_psi"] == (
+        "psi"
+    )
+    falsification = catalog.manifest["physics_validation"]["independent_falsification"]
+    assert Decimal(falsification["computed_ft_s"]) == pytest.approx(
+        Decimal("16299.0966"), abs=Decimal("0.001")
+    )
+    assert Decimal(falsification["relative_difference"]) < Decimal("0.01")
+
+
+def test_catalog_manifest_is_deeply_immutable():
+    catalog = load_catalog()
+
+    with pytest.raises(TypeError):
+        catalog.manifest["outputs"]["rod_details.csv"]["row_count"] = 0
+    with pytest.raises(TypeError):
+        catalog.manifest["transformations"][0] = "tampered"

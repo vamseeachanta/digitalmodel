@@ -126,7 +126,12 @@ def _source_tree(tmp_path, description="A-C-16-50-30"):
         root / "data/2018/UniqueRodODData.xlsx",
         {
             "Rod ODs": [["Rod OD", "Rod Connection Size"], [0.875, None]],
-            "Look-up": [[None, "Rod OD", "Coupling OD"], [None, "7/8", "1+13/16"]],
+            "Look-up": [
+                [None, None, None],
+                [None, "Rod OD", "Coupling OD"],
+                [None, "7/8", "1+13/16"],
+                [None, 1.5, "1+5/8"],
+            ],
         },
     )
     return root
@@ -156,7 +161,13 @@ def test_extracts_allowlisted_columns_and_records_counts(tmp_path):
     coupling_text = (output / "couplings.csv").read_text()
     assert "Continuous Rod,0.875,,," in coupling_text
     assert manifest["sources"]["tubing"]["availability"] == "unavailable"
+    assert manifest["sources"]["rod_connection_lookup"]["source_rows"] == 2
+    assert manifest["sources"]["rod_connection_lookup"]["verified_rows"] == 1
+    assert manifest["sources"]["rod_connection_lookup"]["quarantined_rows"] == 1
     assert not (output / "tubing.csv").exists()
+    lookup_text = (output / "rod_connection_lookup.csv").read_text()
+    assert "0.875,1.8125,verified" in lookup_text
+    assert "1.5,1.625,quarantined" in lookup_text
 
 
 def test_extractor_is_byte_deterministic(tmp_path):
@@ -205,9 +216,40 @@ def test_cli_loads_helpers_from_its_own_worktree(tmp_path):
     assert (output / "manifest.yml").is_file()
 
 
-def test_extractor_rejects_prohibited_free_text(tmp_path):
+def test_check_mode_detects_catalog_drift(tmp_path):
+    source = _source_tree(tmp_path)
+    output = tmp_path / "v1"
+    base_command = [
+        sys.executable,
+        str(SCRIPT),
+        "--source-root",
+        str(source),
+        "--output-dir",
+        str(output),
+        "--extraction-date",
+        "2026-07-29",
+    ]
+    environment = {"PATH": os.environ["PATH"]}
+    assert subprocess.run(base_command, env=environment).returncode == 0
+    assert subprocess.run(base_command + ["--check"], env=environment).returncode == 0
+    (output / "rod_guides.csv").write_text("drift", encoding="utf-8")
+
+    assert subprocess.run(base_command + ["--check"], env=environment).returncode != 0
+
+
+@pytest.mark.parametrize(
+    "description",
+    [
+        "well 30015410620000",
+        "well 300-15-410620-00-00",
+        "rate 123 bopd",
+        "host dynacard01.internal",
+        "source /mnt/client/private",  # abs-path-allowed
+    ],
+)
+def test_extractor_rejects_prohibited_free_text(tmp_path, description):
     extractor = _load_extractor()
-    source = _source_tree(tmp_path, description="well 30015410620000")
+    source = _source_tree(tmp_path, description=description)
 
     with pytest.raises(ValueError, match="prohibited"):
         extractor.extract_catalogs(source, tmp_path / "v1", "2026-07-29")

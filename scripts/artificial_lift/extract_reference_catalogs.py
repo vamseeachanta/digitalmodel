@@ -4,18 +4,13 @@
 from __future__ import annotations
 
 import argparse
-from collections import defaultdict
-from datetime import date
 from decimal import Decimal
 import os
 from pathlib import Path
-import re
 import shutil
 import sys
 import tempfile
-
 import yaml
-
 WORKTREE_SRC = Path(__file__).resolve().parents[2] / "src"
 if str(WORKTREE_SRC) not in sys.path:
     sys.path.insert(0, str(WORKTREE_SRC))
@@ -23,6 +18,7 @@ if str(WORKTREE_SRC) not in sys.path:
 from digitalmodel.marine_ops.artificial_lift._reference_catalog_io import (  # noqa: E402
     decimal_text as _decimal_text,
     is_numeric as _is_numeric,
+    output_lock,
     read_rows as _read_rows,
     scan_safe as _scan_safe,
     sha256_file,
@@ -41,89 +37,13 @@ from digitalmodel.marine_ops.artificial_lift._reference_catalog_schema import ( 
     SURFACE_FIELDS,
     SURFACE_MAP,
     TUBING_BOOK,
+    unit_for_field,
 )
-
-
-def _parse_rod_label(value) -> tuple[str, str] | None:
-    label = _text(value).strip('"')
-    match = re.fullmatch(r"(.*?)\s*-\s*(\d+(?:\.\d+)?)", label)
-    if not match:
-        return None
-    grade = re.sub(r"\s+", " ", match.group(1)).strip().upper()
-    diameter = _decimal_text(match.group(2))
-    if not grade or Decimal(diameter).as_tuple().exponent < -3:
-        return None
-    return grade, diameter
-
-
-def _rod_detail_rows(path: Path):
-    records, dimensions = _read_rows(path, "Sheet1")
-    groups = defaultdict(list)
-    quarantine = []
-    for source_row, record in records:
-        key = _parse_rod_label(record["Rod Grade"])
-        values = tuple(
-            _decimal_text(record[name])
-            for name in (
-                "Rod Area", "Unit Weight", "Modulus of Elast",
-                "Spd of Sound", "Tensil Strength",
-            )
-        )
-        if key is None:
-            quarantine.append(_quarantine_row(source_row, record, "non-keyable label"))
-        else:
-            groups[key].append((source_row, record["Rod Grade"], values))
-    emitted, duplicates = [], 0
-    for (grade, diameter), values in sorted(groups.items()):
-        distinct = {value[2] for value in values}
-        if len(distinct) != 1:
-            for row, label, properties in values:
-                record = {
-                    "Rod Grade": label,
-                    "Rod Area": properties[0],
-                    "Unit Weight": properties[1],
-                    "Modulus of Elast": properties[2],
-                    "Spd of Sound": properties[3],
-                    "Tensil Strength": properties[4],
-                }
-                quarantine.append(
-                    _quarantine_row(row, record, "conflicting normalized key")
-                )
-            continue
-        area, weight, modulus_mpsi, velocity_kft_s, tensile = values[0][2]
-        modulus_psi = Decimal(modulus_mpsi) * Decimal("1000000")
-        density = Decimal(weight) / (Decimal(area) * Decimal("12"))
-        velocity = (modulus_psi * Decimal("386.0886") / density).sqrt() / 12
-        emitted.append({
-            "grade": grade, "diameter_in": diameter, "area_in2": area,
-            "unit_weight_lbf_ft": weight, "modulus_psi": _decimal_text(modulus_psi),
-            "catalog_sonic_velocity_ft_s": _decimal_text(Decimal(velocity_kft_s) * 1000),
-            "weight_derived_velocity_ft_s": format(velocity, ".12f"),
-            "tensile_strength_psi": tensile,
-            "raw_sonic_velocity_kft_s": velocity_kft_s,
-            "source_rows": ";".join(str(value[0]) for value in values),
-            "raw_labels": ";".join(_text(value[1]) for value in values),
-        })
-        duplicates += len(values) - 1
-    counts = {
-        "source_rows": len(records), "emitted_rows": len(emitted),
-        "duplicate_rows": duplicates, "quarantined_rows": len(quarantine),
-        "worksheet_rows": dimensions[0], "worksheet_columns": dimensions[1],
-    }
-    return emitted, quarantine, counts
-
-
-def _quarantine_row(source_row: int, record: dict, reason: str) -> dict:
-    return {
-        "source_row": source_row,
-        "raw_label": _text(record.get("Rod Grade")),
-        "raw_area": _decimal_text(record.get("Rod Area")),
-        "raw_unit_weight": _decimal_text(record.get("Unit Weight")),
-        "raw_modulus": _decimal_text(record.get("Modulus of Elast")),
-        "raw_sonic_velocity": _decimal_text(record.get("Spd of Sound")),
-        "raw_tensile_strength": _decimal_text(record.get("Tensil Strength")),
-        "reason": reason,
-    }
+from digitalmodel.marine_ops.artificial_lift._reference_catalog_transform import (  # noqa: E402
+    connection_lookup_rows as _connection_lookup_rows,
+    connection_rows as _connection_rows,
+    rod_detail_rows as _rod_detail_rows,
+)
 
 
 def _surface_rows(path: Path, sheet: str, catalog: str, mapping: dict):
@@ -164,6 +84,13 @@ def _simple_catalogs(root: Path):
     guides, guide_dims = _guide_rows(catalog_path)
     couplings, coupling_dims = _coupling_rows(coupling_path)
     connections, connection_dims = _connection_rows(connection_path)
+    lookup, lookup_dims = _connection_lookup_rows(connection_path, couplings)
+    connection_quarantine = sum(
+        row["disposition"] == "quarantined" for row in connections
+    )
+    lookup_quarantine = sum(
+        row["disposition"] == "quarantined" for row in lookup
+    )
     return {
         "rods_catalog": (
             rods, rod_dims, catalog_path, "Rods Catalog",
@@ -183,7 +110,18 @@ def _simple_catalogs(root: Path):
         ),
         "rod_connections": (
             connections, connection_dims, connection_path, "Rod ODs",
-            _counts(len(connections), connection_dims),
+            {
+                **_counts(len(connections), connection_dims),
+                "quarantined_rows": connection_quarantine,
+            },
+        ),
+        "rod_connection_lookup": (
+            lookup, lookup_dims, connection_path, "Look-up",
+            {
+                **_counts(len(lookup), lookup_dims),
+                "verified_rows": len(lookup) - lookup_quarantine,
+                "quarantined_rows": lookup_quarantine,
+            },
         ),
     }
 
@@ -224,18 +162,6 @@ def _coupling_rows(path: Path):
     return rows, dimensions
 
 
-def _connection_rows(path: Path):
-    records, dimensions = _read_rows(path, "Rod ODs")
-    rows = [{
-        "source_row": source_row, "raw_rod_od": _text(record["Rod OD"]),
-        "rod_od_in": _decimal_text(record["Rod OD"]),
-        "raw_connection_size": _text(record["Rod Connection Size"]),
-        "connection_size_in": "",
-        "disposition": "quarantined" if record["Rod Connection Size"] else "unmapped",
-    } for source_row, record in records]
-    return rows, dimensions
-
-
 def extract_catalogs(source_root, output_dir, extraction_date):
     root, output = Path(source_root), Path(output_dir)
     if output.exists():
@@ -265,28 +191,55 @@ def extract_catalogs(source_root, output_dir, extraction_date):
             stage, extraction_date, rows_by_file, rod_counts, simple,
             rod_path, surface_path, surface_dims, pump_path, pump_dims, root,
         )
-        os.replace(stage, output)
+        _validate_stage(stage, manifest)
+        with output_lock(output):
+            if output.exists():
+                raise FileExistsError(f"catalog version already exists: {output}")
+            os.rename(stage, output)
     except Exception:
         shutil.rmtree(stage, ignore_errors=True)
         raise
     return manifest
 
 
+def check_catalogs(source_root, output_dir, extraction_date):
+    output = Path(output_dir)
+    if not output.is_dir():
+        raise FileNotFoundError(output)
+    temporary = Path(tempfile.mkdtemp(prefix=".catalog-check-", dir=output.parent))
+    generated = temporary / output.name
+    try:
+        manifest = extract_catalogs(source_root, generated, extraction_date)
+        expected = {
+            path.name: path.read_bytes() for path in output.iterdir() if path.is_file()
+        }
+        actual = {
+            path.name: path.read_bytes() for path in generated.iterdir() if path.is_file()
+        }
+        if expected != actual:
+            raise ValueError("packaged catalog differs from deterministic extraction")
+        return manifest
+    finally:
+        shutil.rmtree(temporary, ignore_errors=True)
+
+
 def _emit_tree(stage, extraction_date, rows_by_file, rod_counts, simple,
                rod_path, surface_path, surface_dims, pump_path, pump_dims, root):
     sources = {
-        "rod_details": _source_meta(rod_path, "Sheet1", rod_counts),
+        "rod_details": _source_meta(rod_path, "Sheet1", rod_counts, root),
         "surface_unit_catalog": _source_meta(
             surface_path, "Surface Unit Catalog",
             _counts(len(rows_by_file["surface_unit_catalog.csv"]), surface_dims),
+            root,
         ),
         "rodpump_units": _source_meta(
             pump_path, "Sheet1",
             _counts(len(rows_by_file["rodpump_units.csv"]), pump_dims),
+            root,
         ),
     }
     for name, (rows, dims, path, sheet, counts) in simple.items():
-        sources[name] = _source_meta(path, sheet, counts)
+        sources[name] = _source_meta(path, sheet, counts, root)
     tubing = root / TUBING_BOOK
     sources["tubing"] = {
         "relative_workbook": str(TUBING_BOOK), "sheet": "Tubing Stretch Table",
@@ -304,12 +257,22 @@ def _emit_tree(stage, extraction_date, rows_by_file, rod_counts, simple,
         outputs[filename] = {
             "sha256": sha256_file(stage / filename), "row_count": len(rows),
             "columns": fields[filename],
+            "units": {
+                field: unit_for_field(filename, field) for field in fields[filename]
+            },
         }
     manifest = {
         "schema_version": "1.0", "catalog_version": "v1",
         "provenance": "previous project reference",
         "extraction_date": extraction_date, "sources": sources,
         "outputs": outputs,
+        "physics_validation": {
+            "rod_details": _physics_summary(rows_by_file["rod_details.csv"]),
+            "rods_catalog": _physics_summary(rows_by_file["rods_catalog.csv"]),
+            "independent_falsification": _independent_falsification(
+                rows_by_file["rod_details.csv"]
+            ),
+        },
         "transformations": [
             "NFKC text normalization and outer whitespace stripping",
             "rod-guide manufacturer/model fill-down",
@@ -317,6 +280,10 @@ def _emit_tree(stage, extraction_date, rows_by_file, rod_counts, simple,
             "conflicting or non-keyable rod detail rows quarantined",
             "surface units retained as unverified_source_unit raw values",
             "operational and audit columns excluded by allowlist",
+        ],
+        "policy_deviations": [
+            "Real rod-detail normalized-key conflicts are preserved in quarantine "
+            "and excluded from strict lookup instead of aborting all catalog output."
         ],
     }
     (stage / "manifest.yml").write_text(
@@ -334,10 +301,76 @@ def _counts(row_count, dimensions):
     }
 
 
-def _source_meta(path, sheet, counts):
+def _validate_stage(stage, manifest):
+    for filename, metadata in manifest["outputs"].items():
+        path = stage / filename
+        if sha256_file(path) != metadata["sha256"]:
+            raise ValueError(f"staged digest mismatch: {filename}")
+        data_lines = [
+            line for line in path.read_text(encoding="utf-8").splitlines()
+            if line and not line.startswith("#")
+        ]
+        if len(data_lines) - 1 != metadata["row_count"]:
+            raise ValueError(f"staged row-count mismatch: {filename}")
+        if data_lines[0].split(",") != metadata["columns"]:
+            raise ValueError(f"staged schema mismatch: {filename}")
+
+
+def _source_meta(path, sheet, counts, root):
     return {
-        "relative_workbook": str(path.name), "sheet": sheet,
+        "relative_workbook": str(path.resolve().relative_to(root.resolve())),
+        "sheet": sheet,
         "availability": "available", "sha256": sha256_file(path), **counts,
+    }
+
+
+def _physics_summary(rows):
+    residuals = []
+    for row in rows:
+        try:
+            area = Decimal(row["area_in2"])
+            weight = Decimal(row["unit_weight_lbf_ft"])
+            modulus = Decimal(row.get("modulus_psi") or row["modulus_mpsi"])
+            velocity = Decimal(
+                row.get("catalog_sonic_velocity_ft_s") or row["velocity_kft_s"]
+            )
+            if "modulus_mpsi" in row:
+                modulus *= Decimal("1000000")
+                velocity *= Decimal("1000")
+            density = weight / (area * 12)
+            computed = (modulus * Decimal("386.0886") / density).sqrt() / 12
+            residuals.append(abs(computed - velocity) / velocity)
+        except (ArithmeticError, KeyError):
+            continue
+    if not residuals:
+        return {
+            "complete_rows": 0,
+            "minimum_relative_residual": None,
+            "maximum_relative_residual": None,
+            "mean_relative_residual": None,
+        }
+    return {
+        "complete_rows": len(residuals),
+        "minimum_relative_residual": format(min(residuals), ".12f"),
+        "maximum_relative_residual": format(max(residuals), ".12f"),
+        "mean_relative_residual": format(
+            sum(residuals) / len(residuals), ".12f"
+        ),
+    }
+
+
+def _independent_falsification(rows):
+    row = next((item for item in rows if item["grade"] == "97"
+                and item["diameter_in"] == "0.875"), None)
+    if row is None:
+        return {"availability": "unavailable"}
+    computed = Decimal(row["weight_derived_velocity_ft_s"])
+    target = Decimal("16300")
+    return {
+        "grade": "97", "diameter_in": "0.875",
+        "target_ft_s": format(target, "f"),
+        "computed_ft_s": format(computed, ".12f"),
+        "relative_difference": format(abs(computed - target) / target, ".12f"),
     }
 
 
@@ -347,9 +380,11 @@ def main(argv=None):
     parser.add_argument("--output-dir", type=Path, default=Path(
         "src/digitalmodel/marine_ops/artificial_lift/reference_data/v1"
     ))
-    parser.add_argument("--extraction-date", default=date.today().isoformat())
+    parser.add_argument("--extraction-date", required=True)
+    parser.add_argument("--check", action="store_true")
     args = parser.parse_args(argv)
-    manifest = extract_catalogs(args.source_root, args.output_dir, args.extraction_date)
+    operation = check_catalogs if args.check else extract_catalogs
+    manifest = operation(args.source_root, args.output_dir, args.extraction_date)
     for name, source in manifest["sources"].items():
         print(
             f"{name}: source={source.get('source_rows', 0)} "

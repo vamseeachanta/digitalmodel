@@ -11,8 +11,14 @@ RODPUMP_BOOK = Path("data/Rodpump Pumping Unit (1).xlsx")
 CONNECTION_BOOK = Path("data/2018/UniqueRodODData.xlsx")
 TUBING_BOOK = Path("REF/Tubing Stretch Table.xls")
 PROHIBITED_PATTERNS = (
-    re.compile(r"(?<!\d)\d{14}(?!\d)"),
+    re.compile(
+        r"(?<!\d)(?:\d{14}|\d{3}-\d{2}-\d{6}-\d{2}(?:-\d{2})?)(?!\d)"
+    ),
     re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE),
+    re.compile(r"\b\d+(?:\.\d+)?\s*(?:bopd|bwpd|mcfd|mcf/d|bbl/d)\b", re.I),
+    re.compile(r"\b(?:[a-z0-9-]+\.)+(?:internal|local|corp)\b", re.I),
+    re.compile(r"(?:/mnt/|[A-Z]:\\)", re.I),  # abs-path-allowed
+    re.compile(r"\b(?:well|lease|cost[\s_-]*cent(?:er|re))[\s_-]*(?:name|id)\b", re.I),
 )
 SURFACE_FIELDS = [
     "source_catalog", "source_identifier", "source_row", "manufacturer_key",
@@ -97,6 +103,40 @@ OUTPUT_DEFINITIONS = {
         "source_row", "raw_rod_od", "rod_od_in", "raw_connection_size",
         "connection_size_in", "disposition",
     ],
+    "rod_connection_lookup.csv": [
+        "source_row", "raw_rod_od", "raw_coupling_od", "rod_od_in",
+        "coupling_od_in", "disposition", "reason",
+    ],
     "surface_unit_catalog.csv": SURFACE_FIELDS,
     "rodpump_units.csv": SURFACE_FIELDS,
 }
+
+
+def unit_for_field(filename, field):
+    overrides = {
+        "source_row": "worksheet_row",
+        "modulus_psi": "psi",
+        "raw_modulus": "million_psi",
+        "raw_sonic_velocity": "thousand_ft_per_s",
+        "raw_tensile_strength": "psi",
+        "modulus_mpsi": "million_psi",
+        "velocity_kft_s": "thousand_ft_per_s",
+        "catalog_sonic_velocity_ft_s": "ft/s",
+        "weight_derived_velocity_ft_s": "ft/s",
+        "unit_weight_lbf_ft": "lbf/ft",
+        "raw_unit_weight": "lbf/ft",
+        "friction_coefficient": "dimensionless",
+    }
+    if field in overrides:
+        return overrides[field]
+    if filename in {"surface_unit_catalog.csv", "rodpump_units.csv"}:
+        return "text" if field in {
+            "source_catalog", "manufacturer_key", "model_key", "geometry_code"
+        } else "unverified_source_unit"
+    if field.endswith("_in2") or field == "raw_area":
+        return "in^2"
+    if field.endswith("_in"):
+        return "in"
+    if field.endswith("_psi"):
+        return "psi"
+    return "text_or_identifier"

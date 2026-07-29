@@ -1,9 +1,11 @@
 """I/O primitives shared by the one-shot reference-catalog extractor."""
 
 import csv
+from contextlib import contextmanager
 from decimal import Decimal, InvalidOperation
 import hashlib
 from pathlib import Path
+import os
 import unicodedata
 
 from openpyxl import load_workbook
@@ -55,14 +57,21 @@ def is_numeric(value) -> bool:
     return bool(parsed)
 
 
-def read_rows(path: Path, sheet_name: str, first_row: int = 2):
+def read_rows(
+    path: Path, sheet_name: str, first_row=2, header_row=1, stop_at_blank=False
+):
     workbook = load_workbook(path, read_only=True, data_only=True)
     worksheet = workbook[sheet_name]
     rows = worksheet.iter_rows(values_only=True)
-    headers = [text(value) for value in next(rows)]
+    headers = []
+    for _ in range(header_row):
+        headers = [text(value) for value in next(rows)]
     records = []
-    for source_row, values in enumerate(rows, 2):
-        if source_row < first_row or not any(value is not None for value in values):
+    for source_row, values in enumerate(rows, header_row + 1):
+        has_value = any(value is not None for value in values)
+        if stop_at_blank and source_row >= first_row and not has_value:
+            break
+        if source_row < first_row or not has_value:
             continue
         records.append((source_row, dict(zip(headers, values))))
     dimensions = (worksheet.max_row, worksheet.max_column)
@@ -87,3 +96,13 @@ def write_csv(path: Path, fields: list[str], rows: list[dict], metadata: dict):
         writer.writeheader()
         writer.writerows(rows)
 
+
+@contextmanager
+def output_lock(output: Path):
+    lock = output.with_name(f".{output.name}.lock")
+    descriptor = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+    try:
+        yield
+    finally:
+        os.close(descriptor)
+        lock.unlink(missing_ok=True)

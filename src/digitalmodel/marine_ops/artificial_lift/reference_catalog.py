@@ -15,6 +15,8 @@ import unicodedata
 
 import yaml
 
+from ._reference_catalog_schema import OUTPUT_DEFINITIONS, unit_for_field
+
 
 class AmbiguousCatalogKeyError(LookupError):
     """Raised when a catalog query does not identify exactly one record."""
@@ -127,8 +129,8 @@ class ReferenceCatalog:
         return tuple(
             row
             for row in self.surface_units
-            if _required_text_key(row.manufacturer_key) == manufacturer_key
-            and _required_text_key(row.model_key) == model_key
+            if _row_text_key(row.manufacturer_key) == manufacturer_key
+            and _row_text_key(row.model_key) == model_key
             and (source is None or row.source_catalog == source)
         )
 
@@ -157,9 +159,15 @@ def _optional_text_key(value) -> str | None:
     return None if value is None else _required_text_key(value)
 
 
+def _row_text_key(value) -> str:
+    if not isinstance(value, str):
+        return ""
+    return " ".join(unicodedata.normalize("NFKC", value).split()).casefold()
+
+
 def _grade_key(value) -> str:
     key = _required_text_key(value).upper()
-    if re.search(r"-\s*\d+\.\d+$", key):
+    if re.fullmatch(r"\d+\s*-\s*(?:\d+(?:\.\d*)?|\.\d+)", key):
         raise ValueError("grade and diameter must be supplied separately")
     return re.sub(r"\s*-\s*", " - ", key)
 
@@ -188,6 +196,16 @@ def _source_catalog_key(value) -> str | None:
     return key
 
 
+def _deep_freeze(value):
+    if isinstance(value, dict):
+        return MappingProxyType({
+            key: _deep_freeze(item) for key, item in value.items()
+        })
+    if isinstance(value, list):
+        return tuple(_deep_freeze(item) for item in value)
+    return value
+
+
 def _decimal(value: str) -> Decimal:
     return Decimal(value)
 
@@ -205,7 +223,18 @@ def _read_csv(resource) -> list[dict[str, str]]:
     return list(csv.DictReader(lines))
 
 
+def _csv_header(resource) -> list[str]:
+    lines = (
+        line
+        for line in resource.read_text(encoding="utf-8").splitlines()
+        if not line.startswith("#")
+    )
+    return next(csv.reader(lines))
+
+
 def _verify_outputs(root, manifest) -> None:
+    if set(manifest["outputs"]) != set(OUTPUT_DEFINITIONS):
+        raise ValueError("catalog output set does not match schema")
     for filename, metadata in manifest["outputs"].items():
         resource = root.joinpath(filename)
         content = resource.read_bytes()
@@ -215,6 +244,16 @@ def _verify_outputs(root, manifest) -> None:
         rows = _read_csv(resource)
         if len(rows) != metadata["row_count"]:
             raise ValueError(f"catalog row-count mismatch: {filename}")
+        expected_columns = OUTPUT_DEFINITIONS[filename]
+        if metadata["columns"] != expected_columns:
+            raise ValueError(f"catalog declared schema mismatch: {filename}")
+        if _csv_header(resource) != expected_columns:
+            raise ValueError(f"catalog CSV schema mismatch: {filename}")
+        expected_units = {
+            field: unit_for_field(filename, field) for field in expected_columns
+        }
+        if metadata["units"] != expected_units:
+            raise ValueError(f"catalog units mismatch: {filename}")
 
 
 def _load_rods(root) -> tuple[RodProperties, ...]:
@@ -286,6 +325,10 @@ def load_catalog(version: str = "v1") -> ReferenceCatalog:
     package = "digitalmodel.marine_ops.artificial_lift.reference_data"
     root = resources.files(package).joinpath(version)
     manifest = yaml.safe_load(root.joinpath("manifest.yml").read_text(encoding="utf-8"))
+    if manifest.get("schema_version") != "1.0":
+        raise ValueError("unsupported catalog schema version")
+    if manifest.get("catalog_version") != version:
+        raise ValueError("catalog version mismatch")
     _verify_outputs(root, manifest)
     rods = _load_rods(root)
     rod_index = MappingProxyType({
@@ -296,7 +339,7 @@ def load_catalog(version: str = "v1") -> ReferenceCatalog:
         rods=rods,
         couplings=_load_couplings(root),
         surface_units=_load_surfaces(root),
-        manifest=MappingProxyType(manifest),
+        manifest=_deep_freeze(manifest),
         _rod_index=rod_index,
     )
 
