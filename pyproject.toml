@@ -80,6 +80,14 @@ dependencies = [
     "urllib3>=2.0.0,<3.0.0",
     "validators==0.22.0",
     "webcolors>=1.13,<2.0",
+    # NOT imported anywhere -- xarray resolves the engine by NAME:
+    # xr.open_dataset(..., engine="h5netcdf") in
+    # data_systems/data_procurement/common/stream_handler.py:112  (#1924)
+    "h5netcdf>=1.3.0,<2.0.0",
+    # NOT imported anywhere -- pandas needs PyTables for HDF5:
+    # pd.read_hdf(...) in
+    # signal_processing/signal_analysis/orcaflex/reader.py:248  (#1924)
+    "tables>=3.9.0,<4.0.0",
     # NOT imported anywhere -- pandas resolves it by NAME:
     # pd.ExcelWriter(..., engine="xlsxwriter"). See DYNAMIC_RUNTIME in
     # tests/contracts/test_runtime_dependencies.py (#1632).
@@ -142,6 +150,12 @@ test = [
     "pypdf2>=3.0.0,<4.0.0",
     "xlsxwriter>=3.1.0,<4.0.0",
     "websockets>=15.0.1,<16.0.0",
+    # imported at module level by tests/workflows/orcawave/test_end_to_end.py,
+    # which used to `subprocess.run([sys.executable, "-m", "pip", "install", ...])`
+    # for it at COLLECTION time. Declared here so a test module never installs
+    # anything again (#1923). The other four names that call wanted --
+    # websockets, pytest, pytest-asyncio, pytest-cov -- were already declared.
+    "aiohttp>=3.9.0,<4.0.0",
     "pygmt>=0.13.0,<1.0.0",
     # Shipped code imports these lazily (hence the [mesh] extra, not runtime) but
     # tests/ imports them at MODULE level, so collection fails without them:

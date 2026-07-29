@@ -4,7 +4,7 @@
 > `.venv/bin/python scripts/capabilities/build_capabilities_inventory.py`
 > Presentation lives at [https://www.aceengineer.com/capabilities/](https://www.aceengineer.com/capabilities/) (C10, #1573) — this spec describes the IA, and does not edit the rendered surface.
 
-Sections declared: **22** · clusters: **7** · PDF coverage gaps: **0** · unlinked explorers: **0**
+Sections declared: **22** · clusters: **7** · PDF coverage gaps: **0** · unlinked explorers: **1**
 
 ## Cluster taxonomy
 
@@ -87,7 +87,7 @@ Sections declared: **22** · clusters: **7** · PDF coverage gaps: **0** · unli
 
 **PDF gap set (0):** 
 
-**Unlinked explorers:** none
+**Unlinked explorers:** `docs/api/structural/wall-thickness-3d-explorer.html`
 
 ## Recently added (strip content model)
 
