@@ -15,6 +15,13 @@ from .corners import calculate_corners, get_corner_loads
 # FLUID LOAD CALCULATION
 # =============================================================================
 
+def _cyclic_phase(load: np.ndarray, start: int, stop: int) -> np.ndarray:
+    """Return load samples in forward traversal, excluding the stop corner."""
+    count = (stop - start) % len(load)
+    indices = (start + np.arange(count)) % len(load)
+    return load[indices]
+
+
 def calculate_fluid_load(
     downhole_card: CardData,
     method: str = 'avg'
@@ -37,16 +44,10 @@ def calculate_fluid_load(
     position, load, _ = canonicalize_card_direction(
         position, load, clockwise=True
     )
-    n = len(load)
 
     # Detect corners
     canonical_card = CardData(position=position.tolist(), load=load.tolist())
     corners, _ = calculate_corners(canonical_card)
-
-    def phase_loads(start: int, stop: int) -> np.ndarray:
-        count = (stop - start) % n
-        indices = (start + np.arange(count)) % n
-        return load[indices]
 
     if method == '2pt':
         # Use corner loads directly
@@ -54,12 +55,12 @@ def calculate_fluid_load(
         downstroke_load = load[corners[0]]  # Bottom left
     elif method == 'avg':
         # Average loads in each region
-        upstroke_load = np.mean(phase_loads(corners[1], corners[2]))
-        downstroke_load = np.mean(phase_loads(corners[3], corners[0]))
+        upstroke_load = np.mean(_cyclic_phase(load, corners[1], corners[2]))
+        downstroke_load = np.mean(_cyclic_phase(load, corners[3], corners[0]))
     elif method == 'med':
         # Median loads in each region
-        upstroke_load = np.median(phase_loads(corners[1], corners[2]))
-        downstroke_load = np.median(phase_loads(corners[3], corners[0]))
+        upstroke_load = np.median(_cyclic_phase(load, corners[1], corners[2]))
+        downstroke_load = np.median(_cyclic_phase(load, corners[3], corners[0]))
     else:
         raise ValueError(f"Unknown method: {method}")
 
