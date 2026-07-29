@@ -46,11 +46,25 @@ def _signed_area(position: np.ndarray, load: np.ndarray) -> float:
     )
 
 
+def canonicalize_card_direction(
+    position: np.ndarray,
+    load: np.ndarray,
+    *,
+    clockwise: bool = False,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Return card arrays and source indices in one signed-area direction."""
+    source_indices = np.arange(len(position))
+    area = _signed_area(position, load)
+    reverse = area > 0.0 if clockwise else area < 0.0
+    if reverse:
+        return position[::-1], load[::-1], source_indices[::-1]
+    return position, load, source_indices
+
+
 def _canonical_direction(
     position: np.ndarray, load: np.ndarray
 ) -> tuple[np.ndarray, np.ndarray]:
-    if _signed_area(position, load) < 0.0:
-        return position[::-1], load[::-1]
+    position, load, _ = canonicalize_card_direction(position, load)
     return position, load
 
 
