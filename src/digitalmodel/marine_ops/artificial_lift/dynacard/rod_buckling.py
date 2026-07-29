@@ -105,6 +105,7 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
         loads = self._normalise_load_datum(
             loads,
             load_datum=load_datum,
+            has_downhole_card=downhole_card is not None,
             vendor_downstroke_load=vendor_downstroke_load,
             vendor_upstroke_load=vendor_upstroke_load,
             vendor_fluid_load=vendor_fluid_load,
@@ -150,6 +151,7 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
         loads: np.ndarray,
         *,
         load_datum: LoadDatum,
+        has_downhole_card: bool,
         vendor_downstroke_load: Optional[float],
         vendor_upstroke_load: Optional[float],
         vendor_fluid_load: Optional[float],
@@ -164,6 +166,33 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
                 details={"value": load_datum},
             )
 
+        downstroke = self._validated_vendor_offset(
+            vendor_downstroke_load,
+            vendor_upstroke_load,
+            vendor_fluid_load,
+        )
+        if not has_downhole_card:
+            raise ValidationError(
+                "Vendor datum correction requires the corresponding "
+                "vendor downhole card",
+                field="downhole_card",
+            )
+        with np.errstate(over="ignore", invalid="ignore"):
+            normalised = loads - downstroke
+        if not np.all(np.isfinite(normalised)):
+            raise ValidationError(
+                "Datum-corrected load data must contain finite values",
+                field="load_data",
+            )
+        return normalised
+
+    def _validated_vendor_offset(
+        self,
+        vendor_downstroke_load: Optional[float],
+        vendor_upstroke_load: Optional[float],
+        vendor_fluid_load: Optional[float],
+    ) -> float:
+        """Validate vendor metadata and return its downstroke datum."""
         metadata = {
             "downstroke": vendor_downstroke_load,
             "upstroke": vendor_upstroke_load,
@@ -193,8 +222,9 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
                 details={"fluid_load": float(fluid_load)},
             )
         verified_fluid_load = upstroke - downstroke
-        scale = max(abs(fluid_load), 1.0)
-        relative_error = abs(verified_fluid_load - fluid_load) / scale
+        relative_error = (
+            abs(verified_fluid_load - fluid_load) / abs(fluid_load)
+        )
         if relative_error > self.VENDOR_FLUID_LOAD_REL_TOL:
             raise ValidationError(
                 "Vendor load metadata is inconsistent: upstroke minus "
@@ -203,7 +233,7 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
                 details={"relative_error": relative_error},
             )
 
-        return loads - downstroke
+        return float(downstroke)
 
     def _estimate_downhole_loads(self) -> np.ndarray:
         """
@@ -351,6 +381,11 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
         if profile is None:
             if inclination_deg is None:
                 return None
+            if not 0.0 <= inclination_deg <= 180.0:
+                raise ValidationError(
+                    "Inclination must be between 0 and 180 degrees",
+                    field="inclination_deg",
+                )
             return np.asarray([inclination_deg], dtype=float)
         if len(profile) < 2:
             raise ValidationError(
@@ -365,6 +400,11 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
                 field="inclination_profile",
             )
         depths = points[:, 0]
+        if np.any((points[:, 1] < 0.0) | (points[:, 1] > 180.0)):
+            raise ValidationError(
+                "Inclinations must be between 0 and 180 degrees",
+                field="inclination_profile",
+            )
         if np.any(np.diff(depths) <= 0.0):
             raise ValidationError(
                 "inclination_profile depths must be strictly increasing",
@@ -387,11 +427,6 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
             points[:, 1],
         )
         inclinations = np.concatenate(([endpoints[0]], inside, [endpoints[1]]))
-        if np.any((inclinations < 0.0) | (inclinations > 180.0)):
-            raise ValidationError(
-                "inclinations must be between 0 and 180 degrees",
-                field="inclination_profile",
-            )
         return inclinations
 
     def _calculate_buckling_tendency(self, loads: np.ndarray) -> np.ndarray:
@@ -625,6 +660,31 @@ def calculate_critical_buckling_load(
     """
     if inclination_deg is None or tubing_id is None:
         return (None, None)
+
+    scalar_inputs = {
+        "rod_diameter": rod_diameter,
+        "modulus": modulus,
+        "weight_per_foot": weight_per_foot,
+        "fluid_density": fluid_density,
+        "inclination_deg": inclination_deg,
+        "tubing_id": tubing_id,
+    }
+    non_finite = [
+        name
+        for name, value in scalar_inputs.items()
+        if not np.isfinite(value)
+    ]
+    if non_finite:
+        raise ValidationError(
+            "Critical-load inputs must contain finite values",
+            field=non_finite[0],
+            details={"non_finite": non_finite},
+        )
+    if not 0.0 <= inclination_deg <= 180.0:
+        raise ValidationError(
+            "Inclination must be between 0 and 180 degrees",
+            field="inclination_deg",
+        )
 
     # Calculate rod properties
     r = rod_diameter / 2.0

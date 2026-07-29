@@ -98,6 +98,44 @@ class TestRodBucklingCalculator:
                 load_datum="net_pump_load",
             )
 
+    def test_vendor_datum_rejects_sub_pound_relative_mismatch(self):
+        """The 1% consistency tolerance remains relative below one pound."""
+        context = self._create_test_context()
+
+        with pytest.raises(ValidationError, match="inconsistent"):
+            RodBucklingCalculator(context).calculate(
+                load_datum="vendor_analysis",
+                vendor_downstroke_load=0.0,
+                vendor_upstroke_load=-0.001,
+                vendor_fluid_load=0.001,
+            )
+
+    def test_vendor_correction_overflow_is_rejected(self):
+        """Finite inputs that overflow during datum correction remain invalid."""
+        context = self._create_test_context()
+        card = CardData(position=[0, 1], load=[1e308, 0.0])
+
+        with pytest.raises(ValidationError, match="finite"):
+            RodBucklingCalculator(context).calculate(
+                downhole_card=card,
+                load_datum="vendor_analysis",
+                vendor_downstroke_load=-1e308,
+                vendor_upstroke_load=0.0,
+                vendor_fluid_load=1e308,
+            )
+
+    def test_vendor_datum_requires_vendor_downhole_card(self):
+        """A vendor-card offset cannot be applied to estimated surface loads."""
+        context = self._create_test_context()
+
+        with pytest.raises(ValidationError, match="downhole card"):
+            RodBucklingCalculator(context).calculate(
+                load_datum="vendor_analysis",
+                vendor_downstroke_load=-100.0,
+                vendor_upstroke_load=900.0,
+                vendor_fluid_load=1000.0,
+            )
+
     @pytest.mark.parametrize(
         ("inclination_deg", "tubing_id"),
         [(math.nan, TUBING_ID_IN), (30.0, math.inf)],
@@ -114,6 +152,21 @@ class TestRodBucklingCalculator:
             RodBucklingCalculator(context).calculate(
                 inclination_deg=inclination_deg,
                 tubing_id=tubing_id,
+                load_datum="net_pump_load",
+            )
+
+    @pytest.mark.parametrize("inclination_deg", [-1.0, 181.0])
+    def test_scalar_inclination_outside_physical_range_is_rejected(
+        self,
+        inclination_deg,
+    ):
+        """Scalar inclination obeys the same physical range as a profile."""
+        context = self._create_test_context()
+
+        with pytest.raises(ValidationError, match="between 0 and 180"):
+            RodBucklingCalculator(context).calculate(
+                inclination_deg=inclination_deg,
+                tubing_id=TUBING_ID_IN,
                 load_datum="net_pump_load",
             )
 
@@ -705,6 +758,39 @@ class TestCalculateCriticalBucklingLoad:
         assert calculate_critical_buckling_load(
             rod_diameter=2.5, inclination_deg=30.0, tubing_id=TUBING_ID_IN
         ) == (None, None)
+
+    @pytest.mark.parametrize(
+        ("field", "value"),
+        [
+            ("rod_diameter", math.nan),
+            ("modulus", math.inf),
+            ("weight_per_foot", math.nan),
+            ("fluid_density", math.inf),
+            ("inclination_deg", math.nan),
+            ("tubing_id", math.inf),
+        ],
+    )
+    def test_non_finite_inputs_are_rejected(self, field, value):
+        """The public helper must not return NaN critical loads."""
+        inputs = {
+            "rod_diameter": 0.875,
+            "inclination_deg": DEVIATED_INCLINATION_DEG,
+            "tubing_id": TUBING_ID_IN,
+        }
+        inputs[field] = value
+
+        with pytest.raises(ValidationError, match="finite"):
+            calculate_critical_buckling_load(**inputs)
+
+    @pytest.mark.parametrize("inclination_deg", [-1.0, 181.0])
+    def test_out_of_range_inclination_is_rejected(self, inclination_deg):
+        """The public helper rejects non-physical inclination angles."""
+        with pytest.raises(ValidationError, match="between 0 and 180"):
+            calculate_critical_buckling_load(
+                rod_diameter=0.875,
+                inclination_deg=inclination_deg,
+                tubing_id=TUBING_ID_IN,
+            )
 
     def test_positive_critical_loads(self):
         """Test that critical loads are positive."""
