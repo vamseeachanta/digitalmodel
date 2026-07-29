@@ -247,6 +247,11 @@ warn_unused_configs = true
 disallow_untyped_defs = true
 
 [tool.pytest.ini_options]
+# NOTE (#1923): this table is SHADOWED -- pytest.ini exists at the repo root and
+# wins outright (`pytest` reports `configfile: pytest.ini`), so nothing here is in
+# effect. pytest.ini is the live config: markers, addopts, norecursedirs and
+# `asyncio_mode` must be edited there. Kept only as the fallback if pytest.ini is
+# ever deleted; do not add `-p no:asyncio` to either file.
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 addopts = [

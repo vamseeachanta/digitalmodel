@@ -23,14 +23,8 @@ collect_ignore = [
     str(_tests_dir / "workflows/orcawave/test_end_to_end.py"),
     str(_tests_dir / "workflows/orcawave/test_integration.py"),
     str(_tests_dir / "workflows/standalone/markitdown/test_converter.py"),
-    # Requires pytest-asyncio plugin (disabled due to hypothesis conflict)
-    str(_tests_dir / "test_workflow_checkpoints.py"),
-    # Data file dependencies not in git — hull profiles and chain database
-    str(_tests_dir / "marine_ops/marine_engineering/test_component_database.py"),
+    # Data file dependencies not in git — hull profiles (WRK-110 undelivered, #1923)
     str(_tests_dir / "hydrodynamics/hull_library/test_hull_library_expansion.py"),
-    # CP tests fail intermittently with random ordering (shared state issue)
-    str(_tests_dir / "specialized/cathodic_protection/test_abs_ship_variants_wrk271.py"),
-    str(_tests_dir / "specialized/cathodic_protection/test_cathodic_protection_b401.py"),
 ]
 
 # Add src/ to Python path
