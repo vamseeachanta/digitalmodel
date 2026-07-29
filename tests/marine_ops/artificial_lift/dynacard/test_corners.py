@@ -10,6 +10,7 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.corners import (
     get_corner_loads,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.calculations import (
+    calculate_fluid_load,
     calculate_pump_fillage,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.models import CardData
@@ -61,6 +62,26 @@ def _make_partial_fillage_card() -> CardData:
         (80.0, 4.0),
         (70.0, 0.5),
         (60.0, 0.0),  # BR: load transfer has finished
+        (40.0, 0.0),
+        (20.0, 0.0),
+    ]
+    return CardData(
+        position=[point[0] for point in points],
+        load=[point[1] for point in points],
+    )
+
+
+def _make_multistage_transfer_card() -> CardData:
+    """Build a partial card with a brief lull inside its downstroke drop."""
+    points = [
+        (0.0, 0.0),
+        (0.0, 10.0),
+        (50.0, 10.0),
+        (100.0, 10.0),
+        (90.0, 6.0),
+        (80.0, 5.5),  # brief lull; load transfer is not complete
+        (70.0, 2.5),
+        (60.0, 0.0),  # BR
         (40.0, 0.0),
         (20.0, 0.0),
     ]
@@ -178,6 +199,31 @@ class TestCornerDetector:
         result = calculate_pump_fillage(stored_card)
 
         # Gross stroke = 100 - 0 = 100; load transfer finishes at position 60.
+        assert result.net_stroke == pytest.approx(60.0)
+        assert result.fillage == pytest.approx(60.0)
+        assert calculate_fluid_load(stored_card).fluid_load == pytest.approx(10.0)
+
+    def test_full_card_stays_full_at_every_origin_and_direction(self):
+        """A flat lower branch starts at BR, not one sample after it."""
+        card = _make_rectangular_card()
+
+        for reverse in (False, True):
+            for shift in range(len(card.position)):
+                position = np.roll(card.position, shift)
+                load = np.roll(card.load, shift)
+                if reverse:
+                    position = position[::-1]
+                    load = load[::-1]
+                stored_card = CardData(position=position, load=load)
+
+                assert calculate_pump_fillage(stored_card).fillage == pytest.approx(
+                    100.0
+                )
+
+    def test_br_requires_sustained_end_of_load_transfer(self):
+        """A one-sample lull does not terminate a multi-stage load drop."""
+        result = calculate_pump_fillage(_make_multistage_transfer_card())
+
         assert result.net_stroke == pytest.approx(60.0)
         assert result.fillage == pytest.approx(60.0)
 
