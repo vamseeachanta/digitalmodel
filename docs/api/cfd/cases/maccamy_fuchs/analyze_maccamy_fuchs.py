@@ -2,7 +2,7 @@
 """Analyze the solved MacCamy-Fuchs cylinder case (#1171) → results.json.
 
 Usage:
-    uv run python analyze_maccamy_fuchs.py <case_root> <out_dir>
+    .venv/bin/python docs/api/cfd/cases/maccamy_fuchs/analyze_maccamy_fuchs.py <case_root> <out_dir>
 
 ``case_root`` contains the solved OpenFOAM case (fields + the ``forces``
 function-object output). Thin driver mirroring
