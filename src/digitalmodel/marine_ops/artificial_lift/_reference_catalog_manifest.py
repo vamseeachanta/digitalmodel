@@ -42,7 +42,8 @@ def _build_sources(rows_by_file, rod_counts, simple, rod_path, surface_path,
         ),
         "rodpump_units": source_meta(
             pump_path, "Sheet1",
-            counts(len(rows_by_file["rodpump_units.csv"]), pump_dims), root,
+            _surface_counts(rows_by_file["rodpump_units.csv"], pump_dims),
+            root,
         ),
     }
     for name, (_, _, path, sheet, source_counts) in simple.items():

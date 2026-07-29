@@ -10,6 +10,7 @@ COUPLING_BOOK = Path("REF/Rod Coupling/nexus_catalog_couplings.xlsx")
 RODPUMP_BOOK = Path("data/Rodpump Pumping Unit (1).xlsx")
 CONNECTION_BOOK = Path("data/2018/UniqueRodODData.xlsx")
 TUBING_BOOK = Path("REF/Tubing Stretch Table.xls")
+SAFE_SURFACE_MODEL_TEXTS = {"No Unit on Well"}
 PROHIBITED_PATTERNS = (
     re.compile(
         r"(?<!\d)(?:\d{14}|\d{3}-\d{2}-\d{6}-\d{2}(?:-\d{2})?"
@@ -124,6 +125,10 @@ OUTPUT_DEFINITIONS = {
     "surface_unit_catalog.csv": SURFACE_FIELDS,
     "rodpump_units.csv": SURFACE_FIELDS,
 }
+
+
+def is_safe_surface_model(value):
+    return value in SAFE_SURFACE_MODEL_TEXTS
 
 
 def unit_for_field(filename, field):

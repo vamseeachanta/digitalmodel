@@ -136,21 +136,29 @@ def _quarantine_row(source_row, record, reason):
     }
 
 
-def connection_rows(path):
+def connection_rows(path, couplings):
     records, dimensions = read_rows(path, "Rod ODs")
     rows = [
-        _connection_row(source_row, record) for source_row, record in records
+        _connection_row(source_row, record, couplings)
+        for source_row, record in records
     ]
     return rows, dimensions
 
 
-def _connection_row(source_row, record):
+def _connection_row(source_row, record, couplings):
     raw_connection = text(record["Rod Connection Size"])
     disposition, parsed = "unmapped", ""
     if raw_connection:
         try:
-            parsed = _fraction_decimal(raw_connection)
-            disposition = "parsed"
+            rod_od = decimal_text(record["Rod OD"])
+            candidate = _fraction_decimal(raw_connection)
+            matched = any(
+                row["rod_diameter_in"] == rod_od
+                and row["coupling_diameter_in"] == candidate
+                for row in couplings
+            )
+            parsed = candidate if matched else ""
+            disposition = "verified" if matched else "quarantined"
         except (ArithmeticError, ValueError):
             disposition = "quarantined"
     return {

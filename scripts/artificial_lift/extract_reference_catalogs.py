@@ -38,6 +38,7 @@ from digitalmodel.marine_ops.artificial_lift._reference_catalog_schema import ( 
     RODPUMP_MAP,
     SURFACE_FIELDS,
     SURFACE_MAP,
+    is_safe_surface_model as _is_safe_surface_model,
 )
 from digitalmodel.marine_ops.artificial_lift._reference_catalog_transform import (  # noqa: E402
     connection_lookup_rows as _connection_lookup_rows,
@@ -65,6 +66,10 @@ def _surface_rows(path: Path, sheet: str, catalog: str, mapping: dict):
                 if (
                     field != "geometry_code"
                     and _contains_prohibited(row[field])
+                    and not (
+                        field == "model_key"
+                        and _is_safe_surface_model(row[field])
+                    )
                 ):
                     row[field] = ""
                     redacted_keys.append(field.removesuffix("_key"))
@@ -97,7 +102,7 @@ def _simple_catalogs(root: Path):
     rods, rod_dims, rod_counts = _rods_catalog_rows(catalog_path)
     guides, guide_dims = _guide_rows(catalog_path)
     couplings, coupling_dims = _coupling_rows(coupling_path)
-    connections, connection_dims = _connection_rows(connection_path)
+    connections, connection_dims = _connection_rows(connection_path, couplings)
     lookup, lookup_dims = _connection_lookup_rows(connection_path, couplings)
     connection_quarantine = sum(
         row["disposition"] == "quarantined" for row in connections

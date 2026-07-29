@@ -20,14 +20,14 @@ sources:
     availability: available
     sha256: e5de3e25d318c53160ea5cb493e2c35814b27b991ce559b98b6c64320ca33d88
     source_rows: 3593
-    emitted_rows: 3571
+    emitted_rows: 3572
     duplicate_rows: 0
-    quarantined_rows: 22
+    quarantined_rows: 21
     worksheet_rows: 3594
     worksheet_columns: 34
-    lookup_eligible_rows: 3571
+    lookup_eligible_rows: 3572
     blank_key_rows: 21
-    redacted_key_rows: 1
+    redacted_key_rows: 0
   rodpump_units:
     relative_workbook: data/Rodpump Pumping Unit (1).xlsx
     sheet: Sheet1
@@ -39,6 +39,9 @@ sources:
     quarantined_rows: 0
     worksheet_rows: 3581
     worksheet_columns: 40
+    lookup_eligible_rows: 3580
+    blank_key_rows: 0
+    redacted_key_rows: 0
   rods_catalog:
     relative_workbook: data/2018/Sucker Rod Pump Database 02_23_18.xlsx
     sheet: Rods Catalog
@@ -154,7 +157,7 @@ outputs:
       raw_tensile_strength: psi
       reason: text_or_identifier
   surface_unit_catalog.csv:
-    sha256: d112d15354c57660f96c4996dbf29787242f4733ba6759edd04c13f63baf2d8c
+    sha256: 71868960772261bc530120c66312d65d7018f2639c4122cd9c3b7d6cf88a1ac8
     row_count: 3593
     columns: &id001
     - source_catalog

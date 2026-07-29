@@ -120,6 +120,7 @@ def _source_tree(tmp_path, description="A-C-16-50-30"):
                     "DimensionalP",
                 ],
                 [1, "A-C-16-50-30", "A", "C", 16, 50, 30, 45, 45, 45, 61, 60],
+                [2, None, "B", "C", 16, 50, 30, 45, 45, 45, 61, 60],
             ]
         },
     )
@@ -129,6 +130,7 @@ def _source_tree(tmp_path, description="A-C-16-50-30"):
             "Rod ODs": [
                 ["Rod OD", "Rod Connection Size"],
                 [0.875, None],
+                [0.875, "1+13/16"],
                 [1, "1+1/16"],
                 [1.25, "invalid"],
             ],
@@ -171,16 +173,21 @@ def test_extracts_allowlisted_columns_and_records_counts(tmp_path):
     assert manifest["sources"]["rod_connection_lookup"]["emitted_rows"] == 1
     assert manifest["sources"]["rod_connection_lookup"]["verified_rows"] == 1
     assert manifest["sources"]["rod_connection_lookup"]["quarantined_rows"] == 1
-    assert manifest["sources"]["rod_connections"]["source_rows"] == 3
+    assert manifest["sources"]["rod_connections"]["source_rows"] == 4
     assert manifest["sources"]["rod_connections"]["emitted_rows"] == 2
-    assert manifest["sources"]["rod_connections"]["quarantined_rows"] == 1
+    assert manifest["sources"]["rod_connections"]["quarantined_rows"] == 2
     connections_text = (output / "rod_connections.csv").read_text()
-    assert "1+1/16,1.0625,parsed" in connections_text
+    assert "1+13/16,1.8125,verified" in connections_text
+    assert "1+1/16,,quarantined" in connections_text
     assert "invalid,,quarantined" in connections_text
     surface_source = manifest["sources"]["surface_unit_catalog"]
     assert surface_source["source_rows"] == 2
     assert surface_source["lookup_eligible_rows"] == 1
     assert surface_source["quarantined_rows"] == 1
+    pump_source = manifest["sources"]["rodpump_units"]
+    assert pump_source["source_rows"] == 2
+    assert pump_source["lookup_eligible_rows"] == 1
+    assert pump_source["quarantined_rows"] == 1
     surface_text = (output / "surface_unit_catalog.csv").read_text()
     assert ",lookup_eligible," in surface_text
     assert ",lookup_excluded,blank model key" in surface_text
@@ -294,6 +301,21 @@ def test_extractor_redacts_prohibited_surface_keys(tmp_path, description):
     assert description not in output_text
     assert "lookup_excluded,prohibited model key removed" in output_text
     assert manifest["sources"]["surface_unit_catalog"]["quarantined_rows"] == 2
+
+
+def test_extractor_preserves_safe_generic_well_sentinel(tmp_path):
+    extractor = _load_extractor()
+    source = _source_tree(tmp_path, description="No Unit on Well")
+    output = tmp_path / "v1"
+
+    extractor.extract_catalogs(source, output, "2026-07-29")
+
+    output_text = (output / "surface_unit_catalog.csv").read_text()
+    sentinel_line = next(
+        line for line in output_text.splitlines() if "No Unit on Well" in line
+    )
+    assert "lookup_eligible" in sentinel_line
+    assert "lookup_excluded" not in sentinel_line
 
 
 def test_extractor_rejects_conflicting_normalized_rods(tmp_path):

@@ -10,7 +10,7 @@ import unicodedata
 
 from openpyxl import load_workbook
 
-from ._reference_catalog_schema import PROHIBITED_PATTERNS
+from ._reference_catalog_schema import PROHIBITED_PATTERNS, is_safe_surface_model
 
 
 def sha256_file(path: Path) -> str:
@@ -81,8 +81,10 @@ def read_rows(
 
 def scan_safe(rows: list[dict], catalog_name: str) -> None:
     for row in rows:
-        for value in row.values():
+        for field, value in row.items():
             if not isinstance(value, str):
+                continue
+            if field == "model_key" and is_safe_surface_model(value):
                 continue
             if contains_prohibited(value):
                 raise ValueError(f"prohibited content in {catalog_name}")
