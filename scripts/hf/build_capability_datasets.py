@@ -82,6 +82,14 @@ def cathodic_protection_rows() -> list[dict]:
     return out
 
 
+def wall_thickness_3d_rows() -> list[dict]:
+    """The (t, T, M) study from build_wall_thickness_3d.py — already tidy, so this only
+    reads it. 354,609 rows: 191 MB as JSON, ~1 MB as parquet, which is why the JSON is
+    gitignored and only the published dataset is durable (#1915)."""
+    doc = _load("structural/wall-thickness-3d.json")
+    return doc["rows"]
+
+
 def galvanic_rows() -> list[dict]:
     """environments[env] holds 16x16 matrices indexed by the `metals` list. Unpivot to one
     row per (environment, metal pair) — 16 x 16 x 3 = 768 rows."""
@@ -120,6 +128,7 @@ def galvanic_rows() -> list[dict]:
 DATASETS = {
     "digitalmodel-integrity": {
         "wall_thickness": wall_thickness_rows,
+        "wall_thickness_tension_moment": wall_thickness_3d_rows,
     },
     "digitalmodel-corrosion": {
         "cathodic_protection": cathodic_protection_rows,
