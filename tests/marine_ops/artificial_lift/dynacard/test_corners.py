@@ -304,9 +304,18 @@ class TestCornerDetector:
     )
     def test_br_is_invariant_to_collinear_taper_sampling(self, position, load):
         """Subdividing the same transfer taper cannot move its endpoint."""
-        result = calculate_pump_fillage(CardData(position=position, load=load))
+        for reverse in (False, True):
+            for shift in range(len(position)):
+                stored_position = np.roll(position, shift)
+                stored_load = np.roll(load, shift)
+                if reverse:
+                    stored_position = stored_position[::-1]
+                    stored_load = stored_load[::-1]
+                result = calculate_pump_fillage(
+                    CardData(position=stored_position, load=stored_load)
+                )
 
-        assert result.fillage == pytest.approx(60.0)
+                assert result.fillage == pytest.approx(60.0)
 
     @pytest.mark.parametrize(
         ("position", "load", "expected_fillage"),
@@ -333,9 +342,18 @@ class TestCornerDetector:
         self, position, load, expected_fillage
     ):
         """BR starts the terminal lower branch, even when that branch slopes."""
-        result = calculate_pump_fillage(CardData(position=position, load=load))
+        for reverse in (False, True):
+            for shift in range(len(position)):
+                stored_position = np.roll(position, shift)
+                stored_load = np.roll(load, shift)
+                if reverse:
+                    stored_position = stored_position[::-1]
+                    stored_load = stored_load[::-1]
+                result = calculate_pump_fillage(
+                    CardData(position=stored_position, load=stored_load)
+                )
 
-        assert result.fillage == pytest.approx(expected_fillage)
+                assert result.fillage == pytest.approx(expected_fillage)
 
 
 class TestCalculateCorners:
