@@ -145,6 +145,49 @@ def test_stroke_ratio_matches_reference(well):
     assert card.stroke / surface_stroke == pytest.approx(expected_ratio, rel=0.01)
 
 
+def test_gravity_enabled_solver_keeps_vertical_weight_at_boundary(well):
+    """Deviation gravity must retain the explicit vertical load datum."""
+    card = solve(well)
+
+    np.testing.assert_allclose(
+        card.simulation.boundary,
+        well["load"] - card.simulation.buoyant_weight,
+    )
+
+
+def test_vertical_gravity_matches_buoyant_boundary_datum():
+    """Both gravity branches must use the same submerged rod-weight datum."""
+    diameter_for_one_square_metre = np.sqrt(4.0 / np.pi)
+    rods = RodString(
+        diameters=np.array([diameter_for_one_square_metre]),
+        lengths=np.array([10.0]),
+        densities=np.array([1_000.0]),
+        moduli=np.array([1.0e6]),
+    )
+    inputs = {
+        "position": np.zeros(8),
+        "load": np.full(8, 100_000.0),
+        "rods": rods,
+        "strokes_per_minute": 10.0,
+        "pump_diameter": 0.5,
+        "tubing_id": 2.0,
+        "fluid_density": 500.0,
+        "survey": Survey.vertical(10.0),
+        "damping": np.zeros(2),
+    }
+    distributed = EverittJenningsSolver(
+        n_nodes=101, include_gravity=True, smooth_window=0
+    ).solve(**inputs)
+    boundary = EverittJenningsSolver(
+        n_nodes=101, include_gravity=False, smooth_window=0
+    ).solve(**inputs)
+
+    # One grid cell carries (1,000 - 500) kg/m * 9.80665 m/s2 * 0.1 m
+    # = 490.3325 N. The two finite-difference boundary representations may
+    # differ by that terminal cell, but never by the 49,033.25 N fluid uplift.
+    np.testing.assert_allclose(distributed.load, boundary.load, atol=490.3325)
+
+
 def test_solution_is_node_converged(well):
     """Doubling the spatial resolution must not move the answer materially."""
     coarse = solve(well, n_nodes=100)
@@ -239,6 +282,7 @@ def test_curvature_friction_uses_axial_force_per_unit_length():
         1.0,
         0.5,
         0.2,
+        zeros,
         zeros,
         0.0,
         zeros,
