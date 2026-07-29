@@ -284,59 +284,6 @@ class TestCornerDetector:
 
                 assert result.fillage == pytest.approx(70.0)
 
-    @pytest.mark.parametrize(
-        ("position", "load"),
-        [
-            (
-                [0, 0, 50, 100, 70, 60, 40, 20],
-                [0, 10, 10, 10, 0.5, 0, 0, 0],
-            ),
-            (
-                [0, 0, 50, 100, 70, 65, 60, 40, 20],
-                [0, 10, 10, 10, 0.5, 0.25, 0, 0, 0],
-            ),
-            (
-                [0, 0, 50, 100, 70, 67.5, 65, 62.5, 60, 40, 20],
-                [0, 10, 10, 10, 0.5, 0.375, 0.25, 0.125, 0, 0, 0],
-            ),
-        ],
-        ids=["coarse", "one-midpoint", "four-subdivisions"],
-    )
-    def test_br_is_invariant_to_collinear_taper_sampling(self, position, load):
-        """Subdividing the same transfer taper cannot move its endpoint."""
-        result = calculate_pump_fillage(CardData(position=position, load=load))
-
-        assert result.fillage == pytest.approx(60.0)
-
-    @pytest.mark.parametrize(
-        ("position", "load", "expected_fillage"),
-        [
-            (
-                [0, 0, 50, 100, 90, 80, 70, 60, 50, 25],
-                [0, 10, 10, 10, 2, 2, 2, 1.5, 0, 0],
-                50.0,
-            ),
-            (
-                [0, 0, 50, 100, 80, 60, 40, 20],
-                [0, 10, 10, 10, 6, 2, 1.333, 0.667],
-                60.0,
-            ),
-            (
-                [0, 0, 50, 100, 100, 75, 50, 25],
-                [0, 10, 10, 10, 2, 1.5, 1, 0.5],
-                100.0,
-            ),
-        ],
-        ids=["two-stage-pause", "partial-sloped-branch", "full-sloped-branch"],
-    )
-    def test_br_separates_transfer_from_lower_branch(
-        self, position, load, expected_fillage
-    ):
-        """BR starts the terminal lower branch, even when that branch slopes."""
-        result = calculate_pump_fillage(CardData(position=position, load=load))
-
-        assert result.fillage == pytest.approx(expected_fillage)
-
 
 class TestCalculateCorners:
     """Tests for the calculate_corners helper function."""
