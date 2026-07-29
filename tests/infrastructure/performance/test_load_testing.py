@@ -306,10 +306,19 @@ class TestStressTestScenarios:
         assert results['error_rate'] < 0.01, f"High error rate in sustained test: {results['error_rate']:.2%}"
         assert results['throughput_rps'] > 8, f"Low sustained throughput: {results['throughput_rps']:.1f} RPS"
 
-        # Check for performance degradation patterns
-        # Response times should be consistent
-        assert results['response_time_stats']['max'] < results['response_time_stats']['mean'] * 5, \
-               "Response times show high variance, possible performance degradation"
+        # Check for performance degradation patterns.
+        # p95, not max (#1928). The mean here is ~0.1 ms, so max/mean exceeds 5 whenever a
+        # single sample catches an OS scheduling hiccup — the check then measures runner
+        # noise rather than the system under test, and it failed intermittently on CI with
+        # a different ratio every run. p95 describes the shape of the distribution instead
+        # of its worst single sample, and matches the convention test_concurrent_load
+        # above already uses.
+        stats = results['response_time_stats']
+        assert stats['p95'] < stats['mean'] * 5, (
+            f"Response times show high variance, possible performance degradation: "
+            f"p95 {stats['p95']:.6f}s vs mean {stats['mean']:.6f}s "
+            f"(max {stats['max']:.6f}s)"
+        )
 
 
 class TestChaosEngineeringScenarios:
