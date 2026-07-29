@@ -89,12 +89,28 @@ DYNAMIC_RUNTIME: dict[str, str] = {
 #: the two above, both of which broke clean installs. A list of invisible
 #: dependencies curated from memory is a sample, not a set.
 #:
-#: The durable fix is a scan that DERIVES candidates from the known
-#: string-addressing patterns rather than trusting an author to recall them:
-#: engine= / backend= / driver= / dialect= / format= keyword arguments, the
-#: pandas read_*/to_* family (hdf, parquet, excel, sql), matplotlib backends,
-#: and importlib.metadata entry-point lookups. Until that exists, treat this
-#: dict as incomplete rather than authoritative.
+#: The derived scan that closes that gap now exists:
+#: ``tests/contracts/test_string_addressed_dependencies.py``. It walks the AST of
+#: every shipped module for four documented families of string-addressing --
+#: engine=/backend=/driver=/dialect=/writer= selector keywords, the pandas and
+#: xarray read_*/to_* family (hdf, parquet, excel, sql, html, netcdf), database
+#: URL dialects, and matplotlib backends -- resolves each to a distribution
+#: through an explicit mapping table, and FAILS on an unrecognised selector value
+#: rather than skipping it. That is the check that catches a NEW offender.
+#:
+#: The two files are deliberately redundant and guard opposite directions:
+#:
+#:   * this dict stops a dynamic dependency being deleted as "unused" (the #1906
+#:     xlsxwriter regression),
+#:   * the derived scan stops one being forgotten in the first place (the #1924
+#:     h5netcdf / PyTables regressions).
+#:
+#: ``test_dynamic_runtime_is_a_subset_of_what_this_scan_derives`` ties them
+#: together: every entry here must be visible to that scan, so this dict can no
+#: longer drift ahead of the derivation. The 2026-07-29 sweep found no further
+#: undeclared runtime dependency of this class -- see that file's
+#: ``KNOWN_STRING_ADDRESSED`` for the four it found that live in extras or in
+#: legacy corners tracked by #1900.
 
 #: FROZEN 2026-07-29 (#1632). Module-level imports in shipped code that resolve to
 #: nothing installable. Two kinds, both pre-existing and both out of scope for the
