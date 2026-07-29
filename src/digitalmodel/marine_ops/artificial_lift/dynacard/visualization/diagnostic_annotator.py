@@ -188,12 +188,16 @@ class DiagnosticAnnotator:
         svg += svg_rect(panel_x, info_y, panel_width, 70, COLORS["grid"], fill="#fafafa", rx=4)
         info_items = [
             ("Model:", "GradientBoosting v1.0"),
-            ("Features:", "Bezerra Projections"),
+            ("Features:", "Bezerra x16 + scale x3"),
             ("Training:", "6,000 synthetic cards"),
             # Synthetic-train / synthetic-test. Labelled "synth CV" rather than
             # "cross-validated" so the panel cannot be read as field accuracy;
-            # the model has never been scored on a real card (#1864).
-            ("Accuracy:", "90.5% synth CV"),
+            # the model has never been scored on a real card (#1864). The rise
+            # from 90.5% is also partly definitional -- the three scale features
+            # separate modes whose generators use non-overlapping stroke ranges
+            # (dm#1884) -- so this is an upper bound on synthetic separability,
+            # not evidence about field cards.
+            ("Accuracy:", "99.4% synth CV"),
         ]
         for i, (label, value) in enumerate(info_items):
             y = info_y + 16 + i * 14

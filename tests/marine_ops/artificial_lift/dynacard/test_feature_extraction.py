@@ -203,3 +203,106 @@ def _make_mock_analysis_results(card: CardData):
         ),
         rod_buckling=RodBucklingAnalysis(sinusoidal_buckling_detected=False),
     )
+
+
+class TestScaleFeatures:
+    """Absolute-magnitude features (dm#1884).
+
+    NORMAL, TUBING_MOVEMENT and PLUNGER_UNDERTRAVEL differ only in stroke
+    length. Under the Bezerra projections alone they are not merely similar,
+    they are the *same vector* -- so the classifier could never separate them
+    and no amount of retraining would have helped.
+    """
+
+    def test_projections_are_blind_to_stroke(self):
+        """The defect itself: identical cards at different strokes project the same.
+
+        This is the reason scale features exist. If this ever starts failing,
+        the projections gained scale sensitivity and the extra features may be
+        redundant -- do not just delete the assertion.
+        """
+        short = _make_rectangular_card(stroke=45.0)   # PLUNGER_UNDERTRAVEL band
+        normal = _make_rectangular_card(stroke=100.0)  # NORMAL band
+        long_ = _make_rectangular_card(stroke=155.0)   # TUBING_MOVEMENT band
+
+        p_short = FeatureExtractor.extract_bezerra_projections(short)
+        p_normal = FeatureExtractor.extract_bezerra_projections(normal)
+        p_long = FeatureExtractor.extract_bezerra_projections(long_)
+
+        np.testing.assert_allclose(p_short, p_normal, atol=1e-12)
+        np.testing.assert_allclose(p_normal, p_long, atol=1e-12)
+
+    def test_classifier_vector_separates_by_stroke(self):
+        """The fix: the same three cards are distinguishable end to end."""
+        vectors = [
+            FeatureExtractor.extract_classifier_vector(
+                _make_rectangular_card(stroke=s)
+            )
+            for s in (45.0, 100.0, 155.0)
+        ]
+        for a, b in ((0, 1), (1, 2), (0, 2)):
+            assert not np.allclose(vectors[a], vectors[b]), (
+                "classifier vector must distinguish cards that differ only in "
+                "stroke length"
+            )
+
+    def test_scale_features_are_physical(self):
+        """Values are the card's own units, not normalised."""
+        card = _make_rectangular_card(
+            stroke=120.0, high_load=15000.0, low_load=5000.0
+        )
+        stroke, load_range, area = FeatureExtractor.extract_scale_features(card)
+
+        assert stroke == pytest.approx(120.0)
+        assert load_range == pytest.approx(10000.0)
+        # Exact, not approximate. _make_rectangular_card emits 50 points along
+        # the upstroke at 15000 lb via linspace(0, 120, 50) and 50 along the
+        # downstroke at 5000 lb via linspace(120, 0, 50). linspace *includes*
+        # both endpoints, so the traced loop hits (0, 15000), (120, 15000),
+        # (120, 5000), (0, 5000) exactly -- there is no corner clipping, and
+        # the intermediate samples are collinear so they add no area. The
+        # shoelace sum is therefore the plain rectangle:
+        #   width 120 in x height (15000 - 5000) = 10000 lb = 1.2e6 in-lb.
+        # (The earlier "corners are clipped by one sample step" reasoning was
+        # wrong; it assumed linspace excluded the endpoint. The measured value
+        # is 1200000.0000000002 -- the exact answer plus float rounding, which
+        # is why this needs approx rather than a strict <= bound.)
+        assert area == pytest.approx(1.2e6)
+
+    def test_degenerate_card_returns_zeros(self):
+        """Too few points to enclose anything -- zeros, not a crash."""
+        card = CardData(position=[0.0, 1.0], load=[100.0, 200.0])
+        np.testing.assert_array_equal(
+            FeatureExtractor.extract_scale_features(card), np.zeros(3)
+        )
+
+    def test_vector_length_and_names_agree(self):
+        """Names and values must stay in lockstep -- they document the model."""
+        card = _make_sinusoidal_card()
+        vector = FeatureExtractor.extract_classifier_vector(card)
+        names = FeatureExtractor.classifier_feature_names()
+
+        assert len(vector) == 19
+        assert len(names) == len(vector)
+        assert names[-3:] == ["stroke_length", "load_range", "card_area"]
+
+    def test_shipped_model_matches_the_extractor(self):
+        """A model trained on a different vector must never be scored silently.
+
+        The dangerous case is not a crash -- it is a stale model whose trees
+        split on features that are not the ones they learned, producing
+        confident wrong diagnoses (dm#1884).
+        """
+        from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import (
+            PumpDiagnostics,
+        )
+
+        model = PumpDiagnostics._load_model()
+        if model is None:
+            pytest.skip("no shipped model to check")
+        card = _make_sinusoidal_card()
+        expected = len(FeatureExtractor.extract_classifier_vector(card))
+        assert len(model["scaling"]["min"]) == expected, (
+            "shipped dynacard_classifier.json predates the current feature "
+            "vector -- retrain with training.train_and_export()"
+        )

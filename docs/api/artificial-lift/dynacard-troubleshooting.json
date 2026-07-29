@@ -29,19 +29,19 @@
         "Trend fillage and peak/minimum load for early drift detection"
       ],
       "classification": "NORMAL",
-      "confidence": 0.4615,
+      "confidence": 1.0,
       "differential": [
         {
           "mode": "NORMAL",
-          "probability": 0.4615
+          "probability": 1.0
         },
         {
-          "mode": "PLUNGER_UNDERTRAVEL",
-          "probability": 0.3987
+          "mode": "PARAFFIN_RESTRICTION",
+          "probability": 0.0
         },
         {
-          "mode": "TUBING_MOVEMENT",
-          "probability": 0.1392
+          "mode": "SAND_ABRASION",
+          "probability": 0.0
         }
       ],
       "model_version": "1.0",
@@ -73,11 +73,11 @@
           "probability": 1.0
         },
         {
-          "mode": "PLUNGER_UNDERTRAVEL",
+          "mode": "NORMAL",
           "probability": 0.0
         },
         {
-          "mode": "NORMAL",
+          "mode": "BENT_BARREL",
           "probability": 0.0
         }
       ],
@@ -110,11 +110,11 @@
           "probability": 1.0
         },
         {
-          "mode": "NORMAL",
+          "mode": "PARAFFIN_RESTRICTION",
           "probability": 0.0
         },
         {
-          "mode": "TUBING_MOVEMENT",
+          "mode": "BENT_BARREL",
           "probability": 0.0
         }
       ],
@@ -147,11 +147,11 @@
           "probability": 1.0
         },
         {
-          "mode": "PLUNGER_UNDERTRAVEL",
+          "mode": "NORMAL",
           "probability": 0.0
         },
         {
-          "mode": "TUBING_MOVEMENT",
+          "mode": "DELAYED_TV_CLOSURE",
           "probability": 0.0
         }
       ],
@@ -184,11 +184,11 @@
           "probability": 1.0
         },
         {
-          "mode": "NORMAL",
+          "mode": "VALVE_LEAK_SV",
           "probability": 0.0
         },
         {
-          "mode": "TUBING_MOVEMENT",
+          "mode": "SAND_ABRASION",
           "probability": 0.0
         }
       ],
@@ -225,7 +225,7 @@
           "probability": 0.0
         },
         {
-          "mode": "TUBING_MOVEMENT",
+          "mode": "NORMAL",
           "probability": 0.0
         }
       ],
@@ -262,7 +262,7 @@
           "probability": 0.0
         },
         {
-          "mode": "NORMAL",
+          "mode": "SAND_ABRASION",
           "probability": 0.0
         }
       ],
@@ -288,19 +288,19 @@
         "Consider a variable slippage or gas-lock-resistant pump design"
       ],
       "classification": "GAS_LOCK",
-      "confidence": 0.998,
+      "confidence": 1.0,
       "differential": [
         {
           "mode": "GAS_LOCK",
-          "probability": 0.998
+          "probability": 1.0
         },
         {
-          "mode": "STUCK_PUMP",
-          "probability": 0.001
+          "mode": "SAND_ABRASION",
+          "probability": 0.0
         },
         {
-          "mode": "NORMAL",
-          "probability": 0.0005
+          "mode": "EXCESSIVE_VIBRATION",
+          "probability": 0.0
         }
       ],
       "model_version": "1.0",

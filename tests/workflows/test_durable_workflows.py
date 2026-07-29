@@ -25,10 +25,17 @@ def _load_registry():
 
 # The two dynacard branches below were strict-xfailed while the shipped
 # classifier was the 18-class model fitted to the pre-#1875 card shapes. The
-# model has since been retrained on the corrected 20-mode generator set
-# (model_version 1.0, n_classes 20, CV accuracy 0.9048 synthetic-on-synthetic),
-# so the xfails are gone and every expected value below has been re-derived
-# from the retrained pipeline rather than inherited.
+# model has since been retrained on the corrected 20-mode generator set, and
+# then retrained again on the 19-feature vector added by dm#1884 (16 Bezerra
+# projections + stroke length, load range, card area; model_version 1.0,
+# n_classes 20, CV accuracy 0.9942 synthetic-on-synthetic). The xfails are
+# gone and every expected value below has been re-derived from the retrained
+# pipeline rather than inherited.
+#
+# That 0.9942 is synthetic-train / synthetic-test and is partly definitional:
+# the three added features separate modes whose generators draw stroke from
+# non-overlapping ranges. It says nothing about real cards (#1864). The
+# assertions below therefore pin only what the pipeline demonstrably computes.
 #
 # What the retrain did NOT fix, and what the assertions therefore still avoid
 # pinning, is documented inline in each branch.
@@ -939,25 +946,30 @@ def test_workflow_registry(workflow, monkeypatch):
         # CRITICAL_CLASSIFICATIONS, hence "critical".
         assert statuses["SIM-FIELD-PUMP-TAGGING-711"] == "critical"
 
-        # The ROD_PARTING well is deliberately NOT pinned, and its status is a
-        # KNOWN WRONG ANSWER that this test refuses to bless.
+        # The ROD_PARTING well is still deliberately NOT pinned -- but the
+        # reason has changed, and the old reason is no longer true.
         #
-        # The retrained classifier reads the *raw* ROD_PARTING pump card back
-        # as ROD_PARTING at probability 1.000. But this workflow forward-models
-        # the generated pump card up 5,000 ft of 1 in rod and solves it back
-        # down, and the recovered card classifies as BENT_BARREL -- which is
-        # not in FAILURE_CLASSIFICATIONS, so a parted rod string is reported as
-        # "warning" instead of "failure". Both cards are near-zero-area,
-        # low-load shapes; the solver's smoothing is enough to move the card
-        # across the ROD_PARTING/BENT_BARREL boundary (out-of-sample the two
-        # trade 25 samples in 600).
+        # Under the 16-feature model this well round-tripped to BENT_BARREL,
+        # which is not in FAILURE_CLASSIFICATIONS, so a parted rod string was
+        # reported as "warning" instead of "failure" -- a safety-relevant
+        # misdiagnosis this test refused to bless. With the 19-feature model
+        # (dm#1884) the well now recovers ROD_PARTING at probability 1.000 and
+        # reports "failure". Measured, not assumed.
         #
-        # Pinning "warning" would assert a safety-relevant misdiagnosis as
-        # expected behaviour. Pinning "failure" would fail. So the well's
-        # status is asserted only to be a legal value, and the real defect is
-        # left visible rather than encoded. This is a classifier-fidelity
-        # problem (#1864 -- never scored against a labelled real card), not a
-        # workflow-plumbing one.
+        # It stays unpinned because that correct answer is arrived at for a
+        # suspect reason. What separates ROD_PARTING now is the added
+        # ``load_range`` feature, and ROD_PARTING's generator draws load range
+        # 181-772 lbf while 14 other modes never drop below 5,452 lbf -- the
+        # ranges are disjoint by construction, so the classifier is keying on a
+        # generator parameter, not on a card property a real parted rod string
+        # would necessarily show. Pinning "failure" would encode that accident
+        # as a guarantee, and it would break the moment the generator ranges
+        # are corrected (see the physics note in training.py about
+        # TUBING_MOVEMENT's stroke range being backwards for a downhole card).
+        #
+        # So the assertion stays a legality check. Whether a real parted rod
+        # string is diagnosed correctly is still unknown -- the classifier has
+        # never been scored against a labelled real card (#1864).
         assert statuses["SIM-FIELD-ROD-PARTING-711"] in STATUS_RANK
 
         # worst_wells is the export's own responsibility: worst first. Assert

@@ -350,7 +350,7 @@ SPECS: list[dict] = [
                               "6-DOF vessel & structure-interface motion via AQWA / OrcaFlex RAOs",
                               "Rolling GO / CAUTION / NO-GO with lead-time to first breach"]),
     dict(id="sec-artificial-lift", kind="section", title="Artificial lift — rod-pump diagnostics",
-         std="Gibbs wave equation · Bezerra projections", path="capabilities/#artificial-lift",
+         std="Gibbs wave equation · Bezerra projections + scale features", path="capabilities/#artificial-lift",
          blurb="Sucker-rod-pump dynamometer-card (dynacard) diagnostics — surface-to-downhole "
                "wave-equation solvers, a 20-mode failure-signature library plus a 346-card "
                "example library, ML card classification with a CI drift-guard on every "
@@ -362,7 +362,7 @@ SPECS: list[dict] = [
                   "POC setpoints & alarms recommended per well from its own card",
                   "Field-wide per-well health ranking with a fail-closed screening verdict"]),
     dict(id="dynacard-troubleshooting", kind="work", title="Dynacard troubleshooting explorer",
-         std="Gibbs wave equation · Bezerra projections · 20 failure modes",
+         std="Gibbs wave equation · Bezerra projections + scale features · 20 failure modes",
          path="artificial-lift/dynacard-troubleshooting.html",
          blurb="Eight curated rod-pump troubleshooting cases, a 346-card example library behind "
                "phenomenon dropdowns (multiple cards per phenomenon), a 28-entry troubleshooting "
