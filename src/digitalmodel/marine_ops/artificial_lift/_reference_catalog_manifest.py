@@ -96,6 +96,7 @@ def _manifest_document(extraction_date, sources, outputs, rows_by_file):
             "exact typed rod duplicate collapse with source-row lineage",
             "conflicting or non-keyable rod detail rows quarantined",
             "surface units retained as unverified_source_unit raw values",
+            "prohibited surface manufacturer/model text redacted and lookup-excluded",
             "operational and audit columns excluded by allowlist",
         ],
         "policy_deviations": [
@@ -119,11 +120,19 @@ def _surface_counts(rows, dimensions):
     lookup_eligible = sum(
         bool(row["manufacturer_key"] and row["model_key"]) for row in rows
     )
+    blank_key_rows = sum(
+        row["lookup_exclusion_reason"].startswith("blank ") for row in rows
+    )
+    redacted_key_rows = sum(
+        row["lookup_exclusion_reason"].startswith("prohibited ") for row in rows
+    )
     return {
         **counts(lookup_eligible, dimensions),
         "source_rows": len(rows),
         "lookup_eligible_rows": lookup_eligible,
         "quarantined_rows": len(rows) - lookup_eligible,
+        "blank_key_rows": blank_key_rows,
+        "redacted_key_rows": redacted_key_rows,
     }
 
 

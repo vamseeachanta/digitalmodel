@@ -138,14 +138,28 @@ def _quarantine_row(source_row, record, reason):
 
 def connection_rows(path):
     records, dimensions = read_rows(path, "Rod ODs")
-    rows = [{
+    rows = [
+        _connection_row(source_row, record) for source_row, record in records
+    ]
+    return rows, dimensions
+
+
+def _connection_row(source_row, record):
+    raw_connection = text(record["Rod Connection Size"])
+    disposition, parsed = "unmapped", ""
+    if raw_connection:
+        try:
+            parsed = _fraction_decimal(raw_connection)
+            disposition = "parsed"
+        except (ArithmeticError, ValueError):
+            disposition = "quarantined"
+    return {
         "source_row": source_row, "raw_rod_od": text(record["Rod OD"]),
         "rod_od_in": decimal_text(record["Rod OD"]),
-        "raw_connection_size": text(record["Rod Connection Size"]),
-        "connection_size_in": "",
-        "disposition": "quarantined" if record["Rod Connection Size"] else "unmapped",
-    } for source_row, record in records]
-    return rows, dimensions
+        "raw_connection_size": raw_connection,
+        "connection_size_in": parsed,
+        "disposition": disposition,
+    }
 
 
 def connection_lookup_rows(path, couplings):

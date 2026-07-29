@@ -84,8 +84,12 @@ def scan_safe(rows: list[dict], catalog_name: str) -> None:
         for value in row.values():
             if not isinstance(value, str):
                 continue
-            if any(pattern.search(value) for pattern in PROHIBITED_PATTERNS):
+            if contains_prohibited(value):
                 raise ValueError(f"prohibited content in {catalog_name}")
+
+
+def contains_prohibited(value: str) -> bool:
+    return any(pattern.search(value) for pattern in PROHIBITED_PATTERNS)
 
 
 def write_csv(path: Path, fields: list[str], rows: list[dict], metadata: dict):

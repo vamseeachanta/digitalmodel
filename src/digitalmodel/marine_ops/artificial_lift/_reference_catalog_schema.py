@@ -13,15 +13,23 @@ TUBING_BOOK = Path("REF/Tubing Stretch Table.xls")
 PROHIBITED_PATTERNS = (
     re.compile(
         r"(?<!\d)(?:\d{14}|\d{3}-\d{2}-\d{6}-\d{2}(?:-\d{2})?"
-        r"|\d{2}-\d{3}-\d{5}-\d{2}-\d{2})(?!\d)"
+        r"|\d{2}-\d{3}-\d{5}(?:-\d{2}(?:-\d{2})?)?)(?!\d)"
     ),
     re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE),
-    re.compile(r"\b\d+(?:\.\d+)?\s*(?:bopd|bwpd|mcfd|mcf/d|bbl/d)\b", re.I),
-    re.compile(r"\b(?:[a-z0-9-]+\.)+(?:internal|local|corp)\b", re.I),
-    re.compile(  # abs-path-allowed
-        r"(?:/(?:mnt|home|tmp|Users)/|[A-Z]:\\|\\\\[^\\\s]+\\)", re.I
+    re.compile(
+        r"\b\d+(?:\.\d+)?\s*(?:[mk]?bopd|bwpd|mcfd|mcf/d|bbls?/d"
+        r"|barrels?/day)\b", re.I
     ),
-    re.compile(r"\b(?:well|lease|cost[\s_-]*cent(?:er|re))[\s_-]*(?:name|id)\b", re.I),
+    re.compile(
+        r"\b[a-z0-9-]+\.(?:[a-z0-9-]+\.)*"
+        r"(?:internal|intranet|lan|local|private|corp)\b", re.I
+    ),
+    re.compile(  # abs-path-allowed
+        r"(?:^|[\s\"'])/(?:[A-Za-z0-9._-]+/)+|[A-Z]:\\|\\\\[^\\\s]+\\",
+        re.I,
+    ),
+    re.compile(r"\bwell\b", re.I),
+    re.compile(r"\b(?:lease|cost[\s_-]*cent(?:er|re))[\s_-]*(?:name|id)\b", re.I),
 )
 SURFACE_FIELDS = [
     "source_catalog", "source_identifier", "source_row", "manufacturer_key",
@@ -34,6 +42,7 @@ SURFACE_FIELDS = [
     "counterbalance_effect_raw", "air_balance_raw",
     "air_balance_dimensional_d_raw", "air_balance_dimensional_f_raw",
     "air_balance_dimensional_h_raw",
+    "lookup_disposition", "lookup_exclusion_reason",
 ]
 SURFACE_MAP = {
     "manufacturer_key": "P.Unit Manf.",
@@ -134,6 +143,8 @@ def unit_for_field(filename, field):
         "friction_coefficient": "dimensionless",
         "catalog_velocity_relative_residual": "dimensionless",
         "source_identifier": "text_or_identifier",
+        "lookup_disposition": "text_or_identifier",
+        "lookup_exclusion_reason": "text_or_identifier",
     }
     if field in overrides:
         return overrides[field]

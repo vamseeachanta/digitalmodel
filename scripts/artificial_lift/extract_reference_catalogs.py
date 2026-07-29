@@ -15,6 +15,7 @@ if str(WORKTREE_SRC) not in sys.path:
     sys.path.insert(0, str(WORKTREE_SRC))
 
 from digitalmodel.marine_ops.artificial_lift._reference_catalog_io import (  # noqa: E402
+    contains_prohibited as _contains_prohibited,
     decimal_text as _decimal_text,
     output_lock,
     read_rows as _read_rows,
@@ -51,16 +52,42 @@ def _surface_rows(path: Path, sheet: str, catalog: str, mapping: dict):
     rows = []
     for source_row, record in records:
         row = {"source_catalog": catalog, "source_row": source_row}
+        redacted_keys = []
         for field in SURFACE_FIELDS:
-            if field in {"source_catalog", "source_row"}:
+            if field in {
+                "source_catalog", "source_row", "lookup_disposition",
+                "lookup_exclusion_reason",
+            }:
                 continue
             value = record.get(mapping.get(field, ""))
             if field in {"manufacturer_key", "model_key", "geometry_code"}:
                 row[field] = _text(value)
+                if (
+                    field != "geometry_code"
+                    and _contains_prohibited(row[field])
+                ):
+                    row[field] = ""
+                    redacted_keys.append(field.removesuffix("_key"))
             else:
                 row[field] = _decimal_text(value)
+        eligible = bool(row["manufacturer_key"] and row["model_key"])
+        row["lookup_disposition"] = (
+            "lookup_eligible" if eligible else "lookup_excluded"
+        )
+        row["lookup_exclusion_reason"] = (
+            f"prohibited {' and '.join(redacted_keys)} key removed"
+            if redacted_keys else _lookup_exclusion_reason(row)
+        )
         rows.append(row)
     return rows, dimensions
+
+
+def _lookup_exclusion_reason(row):
+    missing = [
+        name for name in ("manufacturer", "model")
+        if not row[f"{name}_key"]
+    ]
+    return f"blank {' and '.join(missing)} key" if missing else ""
 
 
 def _simple_catalogs(root: Path):
@@ -95,6 +122,7 @@ def _simple_catalogs(root: Path):
             connections, connection_dims, connection_path, "Rod ODs",
             {
                 **_counts(len(connections), connection_dims),
+                "emitted_rows": len(connections) - connection_quarantine,
                 "quarantined_rows": connection_quarantine,
             },
         ),

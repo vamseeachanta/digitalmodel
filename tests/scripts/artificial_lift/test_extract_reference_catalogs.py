@@ -57,6 +57,7 @@ def _source_tree(tmp_path, description="A-C-16-50-30"):
                     'Dimen. "P"',
                 ],
                 ["A", "C", 16, 50, 30, description, 45, 45, 45, 61, 60],
+                ["B", "C", 16, 50, 30, None, 45, 45, 45, 61, 60],
             ],
             "Rods Catalog": [
                 [".", "DESC", "TENSILE", "AREA", "MOE", "VELOCITY", "DENSITY", "ELASTORQ"],
@@ -125,7 +126,12 @@ def _source_tree(tmp_path, description="A-C-16-50-30"):
     _save_book(
         root / "data/2018/UniqueRodODData.xlsx",
         {
-            "Rod ODs": [["Rod OD", "Rod Connection Size"], [0.875, None]],
+            "Rod ODs": [
+                ["Rod OD", "Rod Connection Size"],
+                [0.875, None],
+                [1, "1+1/16"],
+                [1.25, "invalid"],
+            ],
             "Look-up": [
                 [None, None, None],
                 [None, "Rod OD", "Coupling OD"],
@@ -165,6 +171,19 @@ def test_extracts_allowlisted_columns_and_records_counts(tmp_path):
     assert manifest["sources"]["rod_connection_lookup"]["emitted_rows"] == 1
     assert manifest["sources"]["rod_connection_lookup"]["verified_rows"] == 1
     assert manifest["sources"]["rod_connection_lookup"]["quarantined_rows"] == 1
+    assert manifest["sources"]["rod_connections"]["source_rows"] == 3
+    assert manifest["sources"]["rod_connections"]["emitted_rows"] == 2
+    assert manifest["sources"]["rod_connections"]["quarantined_rows"] == 1
+    connections_text = (output / "rod_connections.csv").read_text()
+    assert "1+1/16,1.0625,parsed" in connections_text
+    assert "invalid,,quarantined" in connections_text
+    surface_source = manifest["sources"]["surface_unit_catalog"]
+    assert surface_source["source_rows"] == 2
+    assert surface_source["lookup_eligible_rows"] == 1
+    assert surface_source["quarantined_rows"] == 1
+    surface_text = (output / "surface_unit_catalog.csv").read_text()
+    assert ",lookup_eligible," in surface_text
+    assert ",lookup_excluded,blank model key" in surface_text
     assert "catalog_velocity_relative_residual" in _csv_header(
         output / "rod_details.csv"
     )
@@ -248,21 +267,33 @@ def test_check_mode_detects_catalog_drift(tmp_path):
     "description",
     [
         "well 30015410620000",
+        "well 42-123-45678",
+        "Smith Well",
         "well 300-15-410620-00-00",
         "well 42-123-45678-00-00",
         "rate 123 bopd",
+        "rate 2 MBOPD",
+        "rate 100 barrels/day",
         "host dynacard01.internal",
+        "host db01.intranet",
         "source /mnt/client/private",  # abs-path-allowed
         "source /home/client/private",  # abs-path-allowed
+        "source /opt/client/private",  # abs-path-allowed
+        "source /srv/client/private",  # abs-path-allowed
         r"source \\server\client\private",
     ],
 )
-def test_extractor_rejects_prohibited_free_text(tmp_path, description):
+def test_extractor_redacts_prohibited_surface_keys(tmp_path, description):
     extractor = _load_extractor()
     source = _source_tree(tmp_path, description=description)
+    output = tmp_path / "v1"
 
-    with pytest.raises(ValueError, match="prohibited"):
-        extractor.extract_catalogs(source, tmp_path / "v1", "2026-07-29")
+    manifest = extractor.extract_catalogs(source, output, "2026-07-29")
+
+    output_text = (output / "surface_unit_catalog.csv").read_text()
+    assert description not in output_text
+    assert "lookup_excluded,prohibited model key removed" in output_text
+    assert manifest["sources"]["surface_unit_catalog"]["quarantined_rows"] == 2
 
 
 def test_extractor_rejects_conflicting_normalized_rods(tmp_path):

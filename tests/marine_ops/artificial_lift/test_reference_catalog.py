@@ -148,9 +148,15 @@ def test_packaged_manifest_counts_and_hashes_validate():
     ] == "text_or_identifier"
     surface_source = catalog.manifest["sources"]["surface_unit_catalog"]
     assert surface_source["source_rows"] == 3_593
-    assert surface_source["emitted_rows"] == 3_572
-    assert surface_source["lookup_eligible_rows"] == 3_572
-    assert surface_source["quarantined_rows"] == 21
+    assert surface_source["emitted_rows"] == 3_571
+    assert surface_source["lookup_eligible_rows"] == 3_571
+    assert surface_source["quarantined_rows"] == 22
+    assert surface_source["blank_key_rows"] == 21
+    assert surface_source["redacted_key_rows"] == 1
+    assert sum(
+        unit.lookup_disposition == "lookup_excluded"
+        for unit in catalog.surface_units
+    ) == 22
     falsification = catalog.manifest["physics_validation"]["independent_falsification"]
     assert Decimal(falsification["computed_ft_s"]) == pytest.approx(
         Decimal("16299.0966"), abs=Decimal("0.001")

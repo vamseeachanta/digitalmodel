@@ -88,6 +88,8 @@ class SurfaceUnitGeometry:
     air_balance_dimensional_d_raw: Decimal | None
     air_balance_dimensional_f_raw: Decimal | None
     air_balance_dimensional_h_raw: Decimal | None
+    lookup_disposition: str
+    lookup_exclusion_reason: str
 
 
 @dataclass(frozen=True)
