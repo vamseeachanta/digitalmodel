@@ -147,11 +147,14 @@ def test_calibrated_area_exponent_fit_is_materially_better_than_linear():
     changes its dimensions, so the fair comparison is the published result from
     refitting the full 35-case dataset at each exponent.
     """
-    assert CALIBRATED_AREA_EXPONENT_RMS_PERCENT == pytest.approx(8.6)
-    assert LINEAR_AREA_EXPONENT_RMS_PERCENT == pytest.approx(36.5)
+    assert u.DEFAULT_AREA_EXPONENT == pytest.approx(2.138)
+    assert u.DEFAULT_LOSS_COEFFICIENT == pytest.approx(2.3894)
+    assert u.DEFAULT_EFFECTIVE_CONDUIT_LENGTH == pytest.approx(5.2004)
+    assert u.CALIBRATED_AREA_EXPONENT_RMS_PERCENT == pytest.approx(8.6)
+    assert u.LINEAR_AREA_EXPONENT_RMS_PERCENT == pytest.approx(36.5)
     assert (
-        LINEAR_AREA_EXPONENT_RMS_PERCENT
-        > 4.0 * CALIBRATED_AREA_EXPONENT_RMS_PERCENT
+        u.LINEAR_AREA_EXPONENT_RMS_PERCENT
+        > 4.0 * u.CALIBRATED_AREA_EXPONENT_RMS_PERCENT
     )
 
 
