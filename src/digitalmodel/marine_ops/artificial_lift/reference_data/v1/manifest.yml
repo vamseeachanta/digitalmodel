@@ -1,0 +1,208 @@
+schema_version: '1.0'
+catalog_version: v1
+provenance: previous project reference
+extraction_date: '2026-07-29'
+sources:
+  rod_details:
+    relative_workbook: Rod Detail Table.xlsx
+    sheet: Sheet1
+    availability: available
+    sha256: baa795d6a30599c1a6311bcfc3e8b4572261755bf52bfb211a7ecc0b1efef538
+    source_rows: 942
+    emitted_rows: 719
+    duplicate_rows: 54
+    quarantined_rows: 169
+    worksheet_rows: 943
+    worksheet_columns: 6
+  surface_unit_catalog:
+    relative_workbook: Sucker Rod Pump Database 02_23_18.xlsx
+    sheet: Surface Unit Catalog
+    availability: available
+    sha256: e5de3e25d318c53160ea5cb493e2c35814b27b991ce559b98b6c64320ca33d88
+    source_rows: 3593
+    emitted_rows: 3593
+    duplicate_rows: 0
+    quarantined_rows: 0
+    worksheet_rows: 3594
+    worksheet_columns: 34
+  rodpump_units:
+    relative_workbook: Rodpump Pumping Unit (1).xlsx
+    sheet: Sheet1
+    availability: available
+    sha256: c0ce1f8ca93d9ad29e17e3e6b3b552ffa2e7baa7a73f1b9e4c2035c3b5371f68
+    source_rows: 3580
+    emitted_rows: 3580
+    duplicate_rows: 0
+    quarantined_rows: 0
+    worksheet_rows: 3581
+    worksheet_columns: 40
+  rods_catalog:
+    relative_workbook: Sucker Rod Pump Database 02_23_18.xlsx
+    sheet: Rods Catalog
+    availability: available
+    sha256: e5de3e25d318c53160ea5cb493e2c35814b27b991ce559b98b6c64320ca33d88
+    source_rows: 940
+    emitted_rows: 939
+    duplicate_rows: 0
+    quarantined_rows: 0
+    worksheet_rows: 942
+    worksheet_columns: 8
+    rejected_rows: 1
+  rod_guides:
+    relative_workbook: Sucker Rod Pump Database 02_23_18.xlsx
+    sheet: Rods Guide Catalog
+    availability: available
+    sha256: e5de3e25d318c53160ea5cb493e2c35814b27b991ce559b98b6c64320ca33d88
+    source_rows: 112
+    emitted_rows: 112
+    duplicate_rows: 0
+    quarantined_rows: 0
+    worksheet_rows: 113
+    worksheet_columns: 3
+  couplings:
+    relative_workbook: nexus_catalog_couplings.xlsx
+    sheet: Sheet1
+    availability: available
+    sha256: 230324344bb3ce27be23dd4d81a10521d990b0fe87fa98cdb65e3613751f3fb6
+    source_rows: 116
+    emitted_rows: 116
+    duplicate_rows: 0
+    quarantined_rows: 0
+    worksheet_rows: 117
+    worksheet_columns: 8
+  rod_connections:
+    relative_workbook: UniqueRodODData.xlsx
+    sheet: Rod ODs
+    availability: available
+    sha256: 0505202beb43378bef4480a95dbe66d66dc52160940cbe487225a380b992d0ef
+    source_rows: 33
+    emitted_rows: 33
+    duplicate_rows: 0
+    quarantined_rows: 0
+    worksheet_rows: 34
+    worksheet_columns: 2
+  tubing:
+    relative_workbook: REF/Tubing Stretch Table.xls
+    sheet: Tubing Stretch Table
+    availability: unavailable
+    source_rows: 0
+    emitted_rows: 0
+outputs:
+  rod_details.csv:
+    sha256: b7926fdbbf65bbff9c380a1c0103f5d7ddce34e88cd648b5087f49838a0a2c18
+    row_count: 719
+    columns:
+    - grade
+    - diameter_in
+    - area_in2
+    - unit_weight_lbf_ft
+    - modulus_psi
+    - catalog_sonic_velocity_ft_s
+    - weight_derived_velocity_ft_s
+    - tensile_strength_psi
+    - raw_sonic_velocity_kft_s
+    - source_rows
+    - raw_labels
+  rod_details_quarantine.csv:
+    sha256: 648a127624e7c9f41f5876ec833868837c1efad508001b2f68323d85a6fa2135
+    row_count: 169
+    columns:
+    - source_row
+    - raw_label
+    - reason
+  surface_unit_catalog.csv:
+    sha256: 2ae2980ed1729a4d74844b8bd9497f21201648488dd8079ffef8d8ce6d3ed279
+    row_count: 3593
+    columns: &id001
+    - source_catalog
+    - source_identifier
+    - source_row
+    - manufacturer_key
+    - model_key
+    - geometry_code
+    - gearbox_rating_raw
+    - beam_rating_raw
+    - max_stroke_length_raw
+    - dimensional_a_raw
+    - dimensional_c_raw
+    - dimensional_i_raw
+    - dimensional_k_raw
+    - dimensional_p_raw
+    - stroke_length_pin_1_raw
+    - stroke_length_pin_2_raw
+    - stroke_length_pin_3_raw
+    - stroke_length_pin_4_raw
+    - stroke_length_pin_5_raw
+    - stroke_length_pin_6_raw
+    - stroke_length_pin_7_raw
+    - stroke_length_pin_8_raw
+    - radius_pin_1_raw
+    - radius_pin_2_raw
+    - radius_pin_3_raw
+    - radius_pin_4_raw
+    - radius_pin_5_raw
+    - radius_pin_6_raw
+    - radius_pin_7_raw
+    - radius_pin_8_raw
+    - structural_imbalance_raw
+    - phase_angle_raw
+    - counterbalance_effect_raw
+    - air_balance_raw
+    - air_balance_dimensional_d_raw
+    - air_balance_dimensional_f_raw
+    - air_balance_dimensional_h_raw
+  rodpump_units.csv:
+    sha256: 1d948e02ec97e269a0864d9117724a327f66e29d4a21f2b02706d74be0bd67d2
+    row_count: 3580
+    columns: *id001
+  rods_catalog.csv:
+    sha256: 17005f38d838fd41cb1d7e61aa8f54c34229ce139bf02afa0599074111dfe66c
+    row_count: 939
+    columns:
+    - source_row
+    - catalog_id
+    - description
+    - tensile_strength_psi
+    - area_in2
+    - modulus_mpsi
+    - velocity_kft_s
+    - unit_weight_lbf_ft
+    - elastorq_raw
+  rod_guides.csv:
+    sha256: da3ae5ed3543e0541c28d09bfdf314d3807945598d37c85e494a0a37308ee023
+    row_count: 112
+    columns:
+    - source_row
+    - manufacturer
+    - model_type
+    - material
+  couplings.csv:
+    sha256: 4852b9dd1fdf3d374b3bf46af2d290c1e983cdf70a7b51ba86c557a42bc867f5
+    row_count: 116
+    columns:
+    - source_row
+    - rod_diameter_in
+    - manufacturer
+    - size
+    - coupling_type
+    - coupling_diameter_in
+    - coupling_length_in
+    - tensile_strength_psi
+    - friction_coefficient
+  rod_connections.csv:
+    sha256: b9201b0b8e3b5222908e25a6c867a7b0a5e35c47890322ff84a3340fb61355bd
+    row_count: 33
+    columns:
+    - source_row
+    - raw_rod_od
+    - rod_od_in
+    - raw_connection_size
+    - connection_size_in
+    - disposition
+transformations:
+- NFKC text normalization and outer whitespace stripping
+- rod-guide manufacturer/model fill-down
+- exact typed rod duplicate collapse with source-row lineage
+- conflicting or non-keyable rod detail rows quarantined
+- surface units retained as unverified_source_unit raw values
+- operational and audit columns excluded by allowlist
