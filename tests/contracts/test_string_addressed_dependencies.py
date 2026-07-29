@@ -30,9 +30,10 @@ The four families (each with its own mapping table below):
   (2) IMPLICIT-PLUGIN CALLS -- functions that need a third-party backend even
       with no selector argument at all: ``pd.read_hdf`` needs PyTables, and says
       so nowhere in its call. Table: ``IMPLICIT_PLUGIN_DIST``.
-  (3) DATABASE URLS -- ``"postgresql+psycopg2://..."``. The dialect names the
-      DBAPI driver, which is a separate distribution SQLAlchemy will not install.
-      Table: ``DBAPI_DIST``.
+  (3) DATABASE URLS -- ``"postgresql+psycopg2://..."`` and the ``URL.create(
+      "postgresql+psycopg2", ...)`` spelling that carries no ``://`` at all. The
+      dialect names the DBAPI driver, a separate distribution SQLAlchemy will not
+      install for you. Table: ``DBAPI_DIST``.
   (4) MATPLOTLIB BACKENDS -- ``matplotlib.use("Agg")``. Table: ``MPL_BACKEND_DIST``.
 
 The mapping table is the fragile part, and it is deliberately the *only* fragile
@@ -290,6 +291,16 @@ NON_DATABASE_SCHEMES = frozenset({
 #: ``dialect://`` or ``dialect+driver://`` at the head of a string literal.
 _URL_RE = re.compile(r"(?<![\w.\-/])([a-zA-Z][a-zA-Z0-9_]*)(?:\+([a-zA-Z][a-zA-Z0-9_]*))?://")
 
+#: SQLAlchemy's *other* spelling: ``URL.create("postgresql+psycopg2", username=...)``.
+#: The drivername is a bare literal with no ``://``, so ``_URL_RE`` cannot see it --
+#: and this repo uses that form at ``asset_integrity/common/database.py:158`` and
+#: ``:192`` precisely because it escapes credentials safely. Missing it would have
+#: made this contract look complete while blind to the safest-written call sites.
+URL_CREATE_CALLS = frozenset({"URL.create", "sqlalchemy.engine.URL.create"})
+
+#: ``dialect`` or ``dialect+driver`` as a whole string (the URL.create argument).
+_DRIVERNAME_RE = re.compile(r"^([a-zA-Z][a-zA-Z0-9_]*)(?:\+([a-zA-Z][a-zA-Z0-9_]*))?$")
+
 
 # --------------------------------------------------------------------------- #
 # Family (4): matplotlib backends
@@ -337,7 +348,8 @@ KNOWN_STRING_ADDRESSED: dict[str, str] = {
         "infrastructure/persistence/database_manager.py:189, "
         "infrastructure/core/database_legacy.py:158+182, "
         "infrastructure/persistence/database_legacy.py:158+182, "
-        "asset_integrity/common/database.py:159+193, infrastructure/utils/database.py:212+246. "
+        "infrastructure/utils/database.py:219+243, plus the URL.create('postgresql+psycopg2') "
+        "spelling at asset_integrity/common/database.py:158+192. "
         "Same disposition as pyodbc: needs a [database] extra, not a runtime dep."
     ),
     "pymongo": (
@@ -447,6 +459,29 @@ def scan_tree(tree: ast.AST, where: str) -> tuple[list[Requirement], list[str]]:
                 reqs.append(Requirement(
                     f"{where}:{node.lineno}", f"{dotted}(...)", plugin.dists, plugin.why
                 ))
+
+            # (3b) SQLAlchemy URL.create("dialect+driver", ...)
+            if (dotted in URL_CREATE_CALLS or dotted.endswith(".URL.create")) and node.args:
+                first = node.args[0]
+                if isinstance(first, ast.Constant) and isinstance(first.value, str):
+                    match = _DRIVERNAME_RE.match(first.value)
+                    if match is None:
+                        unknown.append(
+                            f"{where}:{node.lineno} URL.create drivername {first.value!r}"
+                        )
+                    else:
+                        key = (
+                            match.group(1).lower(),
+                            match.group(2).lower() if match.group(2) else None,
+                        )
+                        if key not in DBAPI_DIST:
+                            unknown.append(
+                                f"{where}:{node.lineno} URL.create drivername "
+                                f"{first.value!r}"
+                            )
+                        else:
+                            need(node.lineno, f"URL.create({first.value!r})",
+                                 DBAPI_DIST[key], "SQLAlchemy drivername")
 
             # (4) matplotlib backends
             if (dotted in MPL_BACKEND_CALLS or attr == "switch_backend") and node.args:
@@ -666,6 +701,7 @@ def _derived(src: str) -> tuple[set[str], list[str]]:
         ("pd.read_excel(p)", "openpyxl"),
         ("create_engine('postgresql+psycopg2://u:p@h/db')", "psycopg2"),
         ("create_engine(f'mssql+pyodbc://{h}/{d}')", "pyodbc"),
+        ("create_engine(URL.create('postgresql+psycopg2', host=h))", "psycopg2"),
         ("matplotlib.use('Qt5Agg')", "pyqt5"),
         ("fig.write_image(p)", "kaleido"),
         ("anim.save(p, writer='pillow')", "pillow"),
@@ -705,6 +741,9 @@ def test_scanner_flags_an_unrecognised_selector_rather_than_passing():
     assert unknown and "module://" in unknown[0]
 
     _, unknown = _derived("create_engine('teradatasql+td://host/db')")
+    assert unknown and "teradatasql" in unknown[0]
+
+    _, unknown = _derived("URL.create('teradatasql+td', host=h)")
     assert unknown and "teradatasql" in unknown[0]
 
 
