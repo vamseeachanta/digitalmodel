@@ -11,6 +11,7 @@ from .models import (
     PumpProperties,
     SurfaceUnit,
     MotorProperties,
+    SurveyData,
     WellTestData,
     InputParameters,
     CalculationParameters,
@@ -155,6 +156,15 @@ def parse_legacy_json(data: Dict[str, Any]) -> DynacardAnalysisContext:
         mixed_sg = water_sg * water_cut + oil_sg * (1.0 - water_cut)
         fluid_density = mixed_sg * 62.4
 
+    survey_raw = data.get('surveyData')
+    survey = None
+    if survey_raw:
+        survey = SurveyData(
+            measured_depth=[station['MD'] for station in survey_raw],
+            inclination=[station['Inclination'] for station in survey_raw],
+            azimuth=[station['Azimuth'] for station in survey_raw],
+        )
+
     # Create context
     context = DynacardAnalysisContext(
         api14=api14,
@@ -167,6 +177,7 @@ def parse_legacy_json(data: Dict[str, Any]) -> DynacardAnalysisContext:
         fluid_density=fluid_density,
         runtime=runtime,
         well_test=well_test,
+        survey=survey,
         input_params=input_params,
     )
 

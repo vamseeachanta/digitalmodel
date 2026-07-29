@@ -12,6 +12,7 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.comparison import (
 from digitalmodel.marine_ops.artificial_lift.dynacard.data_loader import (
     get_expected_downhole_card,
     load_from_json_file,
+    parse_legacy_json,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWorkflow
 
@@ -28,6 +29,28 @@ def test_null_fixture_runtime_uses_loader_default():
 
     assert context.runtime == 24.0
     assert context.input_params.runtime == 24.0
+
+
+def test_legacy_loader_preserves_survey_station_arrays():
+    """Legacy survey stations must reach the analysis context unchanged."""
+    context = parse_legacy_json(
+        {
+            "surveyData": [
+                {"MD": 0.0, "Inclination": 1.25, "Azimuth": 2.5},
+                {"MD": 100.0, "Inclination": 3.75, "Azimuth": 5.0},
+            ]
+        }
+    )
+
+    assert context.survey is not None
+    assert context.survey.measured_depth == [0.0, 100.0]
+    assert context.survey.inclination == [1.25, 3.75]
+    assert context.survey.azimuth == [2.5, 5.0]
+
+
+def test_legacy_loader_keeps_null_survey_absent():
+    """A null legacy survey must retain the vertical-fallback contract."""
+    assert parse_legacy_json({"surveyData": None}).survey is None
 
 
 def test_solver_parity_with_vendor_downhole_cards():
