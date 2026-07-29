@@ -822,11 +822,12 @@ _TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 </body></html>"""
 
 
-_API_TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
+_API_TEMPLATE = """<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title} — API call</title>
+<link rel="stylesheet" href="../../_assets/brand.css">
 <style>
-  :root{{--navy:#0B3D91;--teal:#0f8a7e;--ink:#13233f;--muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc}}
+  :root{{--soft:#f4f8fc}}
   *{{box-sizing:border-box;margin:0;padding:0}}
   body{{font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#eef3fa;line-height:1.5}}
   .wrap{{max-width:1000px;margin:0 auto;padding:22px}}
