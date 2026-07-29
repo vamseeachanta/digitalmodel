@@ -55,27 +55,14 @@ class CornerDetector:
         """
         Use convex hull to find corner candidates.
         """
-        # Stack position and load as 2D points
         points = np.column_stack((self.position, self.load))
-
         try:
             hull = ConvexHull(points)
             hull_vertices = hull.vertices
         except Exception:
-            # Fallback to simple extrema detection
             return self._detect_via_extrema()
 
-        # Find the 4 most extreme points on the hull
-        # Sort hull vertices by position
         hull_pos = self.position[hull_vertices]
-        hull_load = self.load[hull_vertices]
-
-        # Find corners based on position and load extrema
-        # BL: minimum position, low load
-        # TL: minimum position, high load
-        # TR: maximum position, high load
-        # BR: maximum position, low load
-
         min_pos_mask = hull_pos <= np.percentile(hull_pos, 25)
         max_pos_mask = hull_pos >= np.percentile(hull_pos, 75)
 
