@@ -75,7 +75,26 @@ DYNAMIC_RUNTIME: dict[str, str] = {
     #   asset_integrity/common/data.py:454
     #   infrastructure/utils/data.py (same helper)
     "xlsxwriter": "pandas ExcelWriter engine, addressed by string not import",
+    # xr.open_dataset(..., engine="h5netcdf") at
+    #   data_systems/data_procurement/common/stream_handler.py:112
+    "h5netcdf": "xarray open_dataset engine, selected by string not import",
+    # pd.read_hdf(...) at
+    #   signal_processing/signal_analysis/orcaflex/reader.py:248
+    # pandas requires PyTables for HDF5; h5py is NOT a substitute.
+    "tables": "pandas HDF5 backend (PyTables), required implicitly by read_hdf",
 }
+
+#: NOTE (#1924): this dict is hand-maintained, and that is a known weakness.
+#: It held exactly ONE entry -- xlsxwriter -- until an independent review found
+#: the two above, both of which broke clean installs. A list of invisible
+#: dependencies curated from memory is a sample, not a set.
+#:
+#: The durable fix is a scan that DERIVES candidates from the known
+#: string-addressing patterns rather than trusting an author to recall them:
+#: engine= / backend= / driver= / dialect= / format= keyword arguments, the
+#: pandas read_*/to_* family (hdf, parquet, excel, sql), matplotlib backends,
+#: and importlib.metadata entry-point lookups. Until that exists, treat this
+#: dict as incomplete rather than authoritative.
 
 #: FROZEN 2026-07-29 (#1632). Module-level imports in shipped code that resolve to
 #: nothing installable. Two kinds, both pre-existing and both out of scope for the
