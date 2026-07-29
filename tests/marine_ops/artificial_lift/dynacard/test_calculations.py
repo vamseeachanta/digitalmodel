@@ -314,6 +314,15 @@ class TestTheoreticalProduction:
             416.545301771249
         )
         assert result.formation_volume_factor == pytest.approx(1.2)
+        assert result.plunger_diameter_in == pytest.approx(2.25)
+        assert result.strokes_per_minute == pytest.approx(10.0)
+        assert result.runtime_fraction == pytest.approx(1.0)
+        # Pre-FVF downhole rate:
+        # 590.141477135374 - 90.287115009875 = 499.854362125499 BPD.
+        assert result.slippage_corrected_downhole_production == pytest.approx(
+            499.854362125499
+        )
+        assert result.correction_status == "calculated"
         assert result.correction_missing_inputs == []
 
     def test_correction_refuses_and_names_every_missing_input(self):
@@ -332,6 +341,7 @@ class TestTheoreticalProduction:
             "plunger_length_in",
             "formation_volume_factor",
         ]
+        assert result.correction_status == "missing_inputs"
 
     def test_runtime_scales_displacement_and_slippage_but_not_reported_rate(self):
         """Slippage BPD stays traceable while its daily loss follows runtime."""
@@ -366,6 +376,110 @@ class TestTheoreticalProduction:
         assert result.theoretical_production == pytest.approx(
             590.141477135374 * 2.64 / 24
         )
+
+    def test_slippage_is_reported_when_only_fvf_is_missing(self):
+        """FVF gates stock-tank conversion, not the independent Patterson term."""
+        ctx = _create_test_context()
+        ctx.pump = PumpProperties(
+            diameter=2.25,
+            depth=5000.0,
+            plunger_barrel_clearance_in=0.009,
+            plunger_length_in=48.0,
+        )
+        ctx.spm = 10.0
+        ctx.input_params = InputParameters(
+            strokes_per_minute=10.0,
+            runtime=24.0,
+            fluid_viscosity_cp=1.0,
+        )
+        fillage = PumpFillageAnalysis(gross_stroke=100.0, fillage=100.0)
+        cpip = CPIPAnalysis(
+            pump_discharge_pressure=2385.0,
+            pump_intake_pressure=100.0,
+        )
+
+        result = calculate_theoretical_production(ctx, fillage, cpip)
+
+        assert result.slippage_bpd == pytest.approx(90.287115009875)
+        assert result.runtime_adjusted_slippage_bpd == pytest.approx(
+            90.287115009875
+        )
+        assert result.slippage_corrected_downhole_production == pytest.approx(
+            499.854362125499
+        )
+        assert result.corrected_stock_tank_production is None
+        assert result.correction_missing_inputs == ["formation_volume_factor"]
+        assert result.correction_status == "missing_inputs"
+
+    @pytest.mark.parametrize("bad_pressure", [np.nan, np.inf, -np.inf])
+    def test_non_finite_differential_pressure_refuses_correction(
+        self,
+        bad_pressure,
+    ):
+        """NaN and infinity must never escape as a fake corrected rate."""
+        ctx = _create_test_context()
+        ctx.pump = PumpProperties(
+            diameter=2.25,
+            depth=5000.0,
+            plunger_barrel_clearance_in=0.009,
+            plunger_length_in=48.0,
+        )
+        ctx.input_params = InputParameters(
+            strokes_per_minute=10.0,
+            fluid_viscosity_cp=1.0,
+            formation_volume_factor=1.2,
+        )
+        cpip = CPIPAnalysis(
+            pump_discharge_pressure=bad_pressure,
+            pump_intake_pressure=0.0,
+        )
+
+        result = calculate_theoretical_production(
+            ctx,
+            PumpFillageAnalysis(gross_stroke=100.0, fillage=100.0),
+            cpip,
+        )
+
+        assert result.corrected_stock_tank_production is None
+        assert result.slippage_bpd is None
+        assert "differential_pressure_psi" in result.correction_missing_inputs
+        assert result.correction_status == "invalid_inputs"
+
+    def test_slippage_exceeding_displacement_is_refused_not_clamped(self):
+        """An out-of-envelope correction must not masquerade as zero production."""
+        ctx = _create_test_context()
+        ctx.pump = PumpProperties(
+            diameter=2.25,
+            depth=5000.0,
+            plunger_barrel_clearance_in=0.009,
+            plunger_length_in=48.0,
+        )
+        ctx.spm = 10.0
+        ctx.input_params = InputParameters(
+            strokes_per_minute=10.0,
+            fluid_viscosity_cp=1.0,
+            formation_volume_factor=1.2,
+        )
+        cpip = CPIPAnalysis(
+            pump_discharge_pressure=2385.0,
+            pump_intake_pressure=100.0,
+        )
+
+        result = calculate_theoretical_production(
+            ctx,
+            PumpFillageAnalysis(gross_stroke=1.0, fillage=100.0),
+            cpip,
+        )
+
+        assert result.slippage_bpd == pytest.approx(90.287115009875)
+        assert result.slippage_corrected_downhole_production is None
+        assert result.corrected_stock_tank_production is None
+        assert result.correction_status == "slippage_exceeds_displacement"
+
+    def test_production_model_rejects_inconsistent_corrected_state(self):
+        """Callers cannot construct a corrected result with absent evidence."""
+        with pytest.raises(ValueError, match="corrected production requires"):
+            ProductionAnalysis(corrected_stock_tank_production=10.0)
 
     def test_production_with_defaults(self):
         """Without well_test, runtime defaults to 24h and efficiency to pump.efficiency * 100."""

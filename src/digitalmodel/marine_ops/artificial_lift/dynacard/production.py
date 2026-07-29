@@ -1,6 +1,7 @@
 # ABOUTME: Production corrections for rod-pump slippage and fluid shrinkage.
 # ABOUTME: Implements the house Patterson equation without assumed inputs.
 
+import math
 from typing import Optional
 
 import numpy as np
@@ -75,6 +76,56 @@ def _pump_efficiency(
     return actual / theoretical_production * 100.0
 
 
+def _correction_inputs(
+    ctx: DynacardAnalysisContext,
+    cpip: Optional[CPIPAnalysis],
+    runtime_fraction: float,
+) -> dict:
+    """Snapshot every physical input used by the production correction."""
+    params = ctx.input_params
+    differential = None
+    if cpip is not None:
+        differential = cpip.pump_discharge_pressure - cpip.pump_intake_pressure
+    return {
+        "plunger_diameter_in": ctx.pump.diameter,
+        "strokes_per_minute": ctx.spm,
+        "runtime_fraction": runtime_fraction,
+        "plunger_barrel_clearance_in": ctx.pump.plunger_barrel_clearance_in,
+        "fluid_viscosity_cp": params.fluid_viscosity_cp if params else None,
+        "differential_pressure_psi": differential,
+        "plunger_length_in": ctx.pump.plunger_length_in,
+        "formation_volume_factor": params.formation_volume_factor if params else None,
+    }
+
+
+def _input_gaps(inputs: dict) -> tuple[list[str], list[str]]:
+    """Separate absent inputs from present but non-physical inputs."""
+    physical_inputs = {
+        name: value for name, value in inputs.items()
+        if name != "runtime_fraction"
+    }
+    unavailable = [
+        name for name, value in physical_inputs.items() if value is None
+    ]
+    invalid = [
+        name for name, value in physical_inputs.items()
+        if value is not None and (not math.isfinite(value) or value <= 0.0)
+    ]
+    return unavailable, invalid
+
+
+def _slippage(ctx: DynacardAnalysisContext, inputs: dict) -> float:
+    """Evaluate Patterson only after its independent inputs are valid."""
+    return patterson_slippage_bpd(
+        ctx.pump.diameter,
+        inputs["differential_pressure_psi"],
+        inputs["plunger_barrel_clearance_in"],
+        inputs["fluid_viscosity_cp"],
+        inputs["plunger_length_in"],
+        ctx.spm,
+    )
+
+
 def _production_correction(
     ctx: DynacardAnalysisContext,
     cpip: Optional[CPIPAnalysis],
@@ -82,46 +133,46 @@ def _production_correction(
     runtime_fraction: float,
 ) -> dict:
     """Build every reported correction input and term, or name what is missing."""
-    params = ctx.input_params
-    differential = None
-    if cpip is not None:
-        differential = cpip.pump_discharge_pressure - cpip.pump_intake_pressure
-    inputs = {
-        "plunger_barrel_clearance_in": ctx.pump.plunger_barrel_clearance_in,
-        "fluid_viscosity_cp": params.fluid_viscosity_cp if params else None,
-        "differential_pressure_psi": differential,
-        "plunger_length_in": ctx.pump.plunger_length_in,
-        "formation_volume_factor": params.formation_volume_factor if params else None,
-    }
-    missing = [
-        name for name, value in inputs.items()
-        if value is None or value <= 0.0
-    ]
+    inputs = _correction_inputs(ctx, cpip, runtime_fraction)
+    unavailable, invalid = _input_gaps(inputs)
+    missing = unavailable + invalid
     terms = {
         "slippage_bpd": None,
         "runtime_adjusted_slippage_bpd": None,
+        "slippage_corrected_downhole_production": None,
         "corrected_stock_tank_production": None,
+        "correction_status": (
+            "invalid_inputs" if invalid else "missing_inputs"
+        ),
         "correction_missing_inputs": missing,
     }
-    if missing:
+    slippage_inputs = missing.copy()
+    if "formation_volume_factor" in slippage_inputs:
+        slippage_inputs.remove("formation_volume_factor")
+    if slippage_inputs:
         return {**inputs, **terms}
-    slippage = patterson_slippage_bpd(
-        ctx.pump.diameter,
-        differential,
-        inputs["plunger_barrel_clearance_in"],
-        inputs["fluid_viscosity_cp"],
-        inputs["plunger_length_in"],
-        ctx.spm,
-    )
+    slippage = _slippage(ctx, inputs)
     adjusted_slippage = slippage * runtime_fraction
-    corrected_downhole = max(theoretical_production - adjusted_slippage, 0.0)
+    if adjusted_slippage > theoretical_production:
+        terms.update({
+            "slippage_bpd": slippage,
+            "runtime_adjusted_slippage_bpd": adjusted_slippage,
+            "correction_status": "slippage_exceeds_displacement",
+        })
+        return {**inputs, **terms}
+    corrected_downhole = theoretical_production - adjusted_slippage
     terms.update({
         "slippage_bpd": slippage,
         "runtime_adjusted_slippage_bpd": adjusted_slippage,
-        "corrected_stock_tank_production": (
-            corrected_downhole / inputs["formation_volume_factor"]
-        ),
+        "slippage_corrected_downhole_production": corrected_downhole,
     })
+    if "formation_volume_factor" not in missing:
+        terms.update({
+            "corrected_stock_tank_production": (
+                corrected_downhole / inputs["formation_volume_factor"]
+            ),
+            "correction_status": "calculated",
+        })
     return {**inputs, **terms}
 
 

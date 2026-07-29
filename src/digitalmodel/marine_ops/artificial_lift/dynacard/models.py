@@ -2,7 +2,7 @@
 # ABOUTME: Includes surface card, rod string, pump, and analysis result structures.
 
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 import numpy as np
 from .constants import (
     STEEL_YOUNGS_MODULUS_PSI,
@@ -60,8 +60,12 @@ class PumpProperties(BaseModel):
     diameter: float  # inches
     depth: float  # feet (pump setting depth)
     efficiency: float = DEFAULT_PUMP_EFFICIENCY
-    plunger_barrel_clearance_in: Optional[float] = Field(default=None, gt=0.0)
-    plunger_length_in: Optional[float] = Field(default=None, gt=0.0)
+    plunger_barrel_clearance_in: Optional[float] = Field(
+        default=None, gt=0.0, allow_inf_nan=False
+    )
+    plunger_length_in: Optional[float] = Field(
+        default=None, gt=0.0, allow_inf_nan=False
+    )
 
 
 class SurfaceUnit(BaseModel):
@@ -140,8 +144,12 @@ class InputParameters(BaseModel):
     load_max_sp: Optional[float] = None
     load_min_sp: Optional[float] = None
     fluid_density: Optional[float] = None  # lbs/ft^3
-    fluid_viscosity_cp: Optional[float] = Field(default=None, gt=0.0)
-    formation_volume_factor: Optional[float] = Field(default=None, gt=0.0)
+    fluid_viscosity_cp: Optional[float] = Field(
+        default=None, gt=0.0, allow_inf_nan=False
+    )
+    formation_volume_factor: Optional[float] = Field(
+        default=None, gt=0.0, allow_inf_nan=False
+    )
     casing_pressure: Optional[float] = None  # psi
     # Load analysis parameters
     stroke_load_peak: Optional[float] = None  # actual peak load (lbs)
@@ -234,15 +242,49 @@ class ProductionAnalysis(BaseModel):
 
     # Patterson slippage inputs and terms are repeated on the result so the
     # correction is inspectable without reconstructing context.
+    plunger_diameter_in: Optional[float] = None
+    strokes_per_minute: Optional[float] = None
+    runtime_fraction: Optional[float] = None
     plunger_barrel_clearance_in: Optional[float] = None
     fluid_viscosity_cp: Optional[float] = None
     differential_pressure_psi: Optional[float] = None
     plunger_length_in: Optional[float] = None
     slippage_bpd: Optional[float] = None
     runtime_adjusted_slippage_bpd: Optional[float] = None
+    slippage_corrected_downhole_production: Optional[float] = None
     formation_volume_factor: Optional[float] = None
     corrected_stock_tank_production: Optional[float] = None
+    correction_status: str = "missing_inputs"
     correction_missing_inputs: List[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def corrected_production_has_supporting_terms(self):
+        """Reject a corrected figure whose reported evidence is inconsistent."""
+        if self.corrected_stock_tank_production is None:
+            return self
+        required = (
+            self.plunger_diameter_in,
+            self.strokes_per_minute,
+            self.runtime_fraction,
+            self.plunger_barrel_clearance_in,
+            self.fluid_viscosity_cp,
+            self.differential_pressure_psi,
+            self.plunger_length_in,
+            self.slippage_bpd,
+            self.runtime_adjusted_slippage_bpd,
+            self.slippage_corrected_downhole_production,
+            self.formation_volume_factor,
+        )
+        if (
+            self.correction_status != "calculated"
+            or self.correction_missing_inputs
+            or any(value is None or not np.isfinite(value) for value in required)
+        ):
+            raise ValueError(
+                "corrected production requires all finite reported terms, "
+                "calculated status, and no missing inputs"
+            )
+        return self
 
 
 class TorqueStatistics(BaseModel):

@@ -283,19 +283,25 @@ def _kpi_section(results: AnalysisResults) -> list[str]:
         "      </dl>",
         "    </section>",
     ]
-
-
 def _production_kpi_rows(production: Any) -> list[str]:
     if production is None:
         return []
     specs = [
         ("Corrected production (stock tank)", "corrected_stock_tank_production", " bbl/day"),
+        ("Plunger diameter", "plunger_diameter_in", " in"),
+        ("Strokes per minute", "strokes_per_minute", " SPM"),
+        ("Runtime fraction", "runtime_fraction", ""),
         ("Plunger-barrel clearance", "plunger_barrel_clearance_in", " in"),
         ("Fluid viscosity", "fluid_viscosity_cp", " cP"),
         ("Differential pressure", "differential_pressure_psi", " psi"),
         ("Plunger length", "plunger_length_in", " in"),
         ("Patterson slippage (24h operation)", "slippage_bpd", " bbl/day"),
         ("Runtime-adjusted slippage", "runtime_adjusted_slippage_bpd", " bbl/day"),
+        (
+            "Slippage-corrected downhole production",
+            "slippage_corrected_downhole_production",
+            " bbl/day",
+        ),
         (
             "Formation volume factor",
             "formation_volume_factor",
@@ -306,13 +312,14 @@ def _production_kpi_rows(production: Any) -> list[str]:
         _dl_row(label, _fmt(getattr(production, field), 6), unit)
         for label, field, unit in specs
     ]
-    rows.append(_dl_row(
-        "Correction missing inputs",
-        ", ".join(production.correction_missing_inputs),
-    ))
+    rows.extend([
+        _dl_row("Correction status", production.correction_status),
+        _dl_row(
+            "Correction missing inputs",
+            ", ".join(production.correction_missing_inputs),
+        ),
+    ])
     return rows
-
-
 def _setpoints_section(alarm_block: dict[str, Any]) -> list[str]:
     setpoints = alarm_block["setpoints"]
     lines = [

@@ -94,7 +94,12 @@ def test_kpis_report_displacement_and_every_production_correction_term():
             slippage_bpd=90.287115,
             runtime_adjusted_slippage_bpd=9.931583,
             formation_volume_factor=1.2,
+            plunger_diameter_in=2.25,
+            strokes_per_minute=10.0,
+            runtime_fraction=0.11,
+            slippage_corrected_downhole_production=23.398417,
             corrected_stock_tank_production=19.498681,
+            correction_status="calculated",
         ),
     )
 
@@ -109,6 +114,11 @@ def test_kpis_report_displacement_and_every_production_correction_term():
     assert "Patterson slippage (24h operation)" in html
     assert "Runtime-adjusted slippage" in html
     assert "Formation volume factor" in html
+    assert "Plunger diameter" in html
+    assert "Strokes per minute" in html
+    assert "Runtime fraction" in html
+    assert "Slippage-corrected downhole production" in html
+    assert "Correction status" in html
     assert "19.498681" in html
 
 
