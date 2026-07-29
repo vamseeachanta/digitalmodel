@@ -1,7 +1,7 @@
 # ABOUTME: Rod buckling analysis for sucker rod pump diagnostics.
 # ABOUTME: Detects sinusoidal and helical buckling based on axial load distribution.
 
-from typing import Optional, List, Tuple
+from typing import Literal, Optional, Sequence, Tuple
 import numpy as np
 
 from .models import (
@@ -12,6 +12,9 @@ from .models import (
 from .base import BaseCalculator
 from .constants import STEEL_DENSITY_LB_PER_FT3
 from .exceptions import DynacardException, ValidationError
+
+LoadDatum = Literal["net_pump_load", "vendor_analysis"]
+InclinationProfile = Sequence[Tuple[float, float]]
 
 
 class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
@@ -34,9 +37,8 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
     so no depth can be recovered from it (see _summarise_compression).
     """
 
-    # Physical constants
-    POISSON_RATIO = 0.30  # Steel Poisson's ratio
     STEEL_DENSITY = STEEL_DENSITY_LB_PER_FT3
+    VENDOR_FLUID_LOAD_REL_TOL = 0.01
 
     def _create_result(self) -> RodBucklingAnalysis:
         return RodBucklingAnalysis()
@@ -46,6 +48,12 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
         downhole_card: Optional[CardData] = None,
         inclination_deg: Optional[float] = None,
         tubing_id: Optional[float] = None,
+        *,
+        load_datum: LoadDatum,
+        inclination_profile: Optional[InclinationProfile] = None,
+        vendor_downstroke_load: Optional[float] = None,
+        vendor_upstroke_load: Optional[float] = None,
+        vendor_fluid_load: Optional[float] = None,
     ) -> RodBucklingAnalysis:
         """
         Perform rod buckling analysis.
@@ -61,6 +69,12 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
             tubing_id: Tubing inside diameter in inches, used with the rod
                           diameter to obtain the radial clearance the
                           Paslay-Dawson formula needs.
+            load_datum: Explicit convention for the supplied/estimated loads.
+            inclination_profile: ``(measured_depth_ft, inclination_deg)``
+                          points covering the bottom rod section.
+            vendor_downstroke_load: Vendor downstroke load datum, lb.
+            vendor_upstroke_load: Vendor upstroke load, lb.
+            vendor_fluid_load: Vendor fluid load (Fo), lb.
 
         Returns:
             RodBucklingAnalysis with buckling detection results.
@@ -81,6 +95,22 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
             # Estimate downhole loads from surface card
             loads = self._estimate_downhole_loads()
 
+        loads = np.asarray(loads, dtype=float)
+        if not np.all(np.isfinite(loads)):
+            raise ValidationError(
+                "Load data must contain finite values",
+                field="load_data",
+            )
+
+        loads = self._normalise_load_datum(
+            loads,
+            load_datum=load_datum,
+            has_downhole_card=downhole_card is not None,
+            vendor_downstroke_load=vendor_downstroke_load,
+            vendor_upstroke_load=vendor_upstroke_load,
+            vendor_fluid_load=vendor_fluid_load,
+        )
+
         if len(loads) == 0:
             raise ValidationError(
                 "No load data available for buckling analysis",
@@ -98,7 +128,11 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
             )
 
         # Calculate critical buckling loads
-        self._calculate_critical_loads(inclination_deg, tubing_id)
+        self._calculate_critical_loads(
+            inclination_deg,
+            tubing_id,
+            inclination_profile,
+        )
 
         # Calculate buckling tendency along the rod
         buckling_tendency = self._calculate_buckling_tendency(loads)
@@ -111,6 +145,95 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
         self._detect_buckling(buckling_tendency)
 
         return self.result
+
+    def _normalise_load_datum(
+        self,
+        loads: np.ndarray,
+        *,
+        load_datum: LoadDatum,
+        has_downhole_card: bool,
+        vendor_downstroke_load: Optional[float],
+        vendor_upstroke_load: Optional[float],
+        vendor_fluid_load: Optional[float],
+    ) -> np.ndarray:
+        """Return loads on the physical net-pump-load datum."""
+        if load_datum == "net_pump_load":
+            return loads
+        if load_datum != "vendor_analysis":
+            raise ValidationError(
+                "load_datum must be 'net_pump_load' or 'vendor_analysis'",
+                field="load_datum",
+                details={"value": load_datum},
+            )
+
+        downstroke = self._validated_vendor_offset(
+            vendor_downstroke_load,
+            vendor_upstroke_load,
+            vendor_fluid_load,
+        )
+        if not has_downhole_card:
+            raise ValidationError(
+                "Vendor datum correction requires the corresponding "
+                "vendor downhole card",
+                field="downhole_card",
+            )
+        with np.errstate(over="ignore", invalid="ignore"):
+            normalised = loads - downstroke
+        if not np.all(np.isfinite(normalised)):
+            raise ValidationError(
+                "Datum-corrected load data must contain finite values",
+                field="load_data",
+            )
+        return normalised
+
+    def _validated_vendor_offset(
+        self,
+        vendor_downstroke_load: Optional[float],
+        vendor_upstroke_load: Optional[float],
+        vendor_fluid_load: Optional[float],
+    ) -> float:
+        """Validate vendor metadata and return its downstroke datum."""
+        metadata = {
+            "downstroke": vendor_downstroke_load,
+            "upstroke": vendor_upstroke_load,
+            "fluid_load": vendor_fluid_load,
+        }
+        missing = [name for name, value in metadata.items() if value is None]
+        if missing:
+            raise ValidationError(
+                "Vendor datum correction requires downstroke, upstroke, "
+                f"and fluid-load metadata; missing: {', '.join(missing)}",
+                field="vendor_load_metadata",
+                details={"missing": missing},
+            )
+
+        values = np.asarray(list(metadata.values()), dtype=float)
+        if not np.all(np.isfinite(values)):
+            raise ValidationError(
+                "Vendor load metadata must contain finite values",
+                field="vendor_load_metadata",
+            )
+
+        downstroke, upstroke, fluid_load = values
+        if fluid_load <= 0.0:
+            raise ValidationError(
+                "Vendor fluid load (Fo) must be positive",
+                field="vendor_load_metadata",
+                details={"fluid_load": float(fluid_load)},
+            )
+        verified_fluid_load = upstroke - downstroke
+        relative_error = (
+            abs(verified_fluid_load - fluid_load) / abs(fluid_load)
+        )
+        if relative_error > self.VENDOR_FLUID_LOAD_REL_TOL:
+            raise ValidationError(
+                "Vendor load metadata is inconsistent: upstroke minus "
+                "downstroke does not agree with fluid load (Fo)",
+                field="vendor_load_metadata",
+                details={"relative_error": relative_error},
+            )
+
+        return float(downstroke)
 
     def _estimate_downhole_loads(self) -> np.ndarray:
         """
@@ -140,6 +263,7 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
         self,
         inclination_deg: Optional[float] = None,
         tubing_id: Optional[float] = None,
+        inclination_profile: Optional[InclinationProfile] = None,
     ) -> None:
         """
         Calculate Paslay-Dawson critical buckling loads for the rod string.
@@ -164,22 +288,40 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
         if len(self.ctx.rod_string) == 0:
             return
 
-        if inclination_deg is None or tubing_id is None:
+        scalar_inputs = {
+            "inclination_deg": inclination_deg,
+            "tubing_id": tubing_id,
+        }
+        non_finite = [
+            name
+            for name, value in scalar_inputs.items()
+            if value is not None and not np.isfinite(value)
+        ]
+        if non_finite:
+            raise ValidationError(
+                "Wellbore inputs must contain finite values",
+                field=non_finite[0],
+                details={"non_finite": non_finite},
+            )
+
+        inclinations = self._bottom_section_inclinations(
+            inclination_deg,
+            inclination_profile,
+        )
+        if inclinations is None or tubing_id is None:
             self.result.warning_message = (
                 "Critical buckling loads not computed: the Paslay-Dawson "
-                "formula requires hole inclination and rod/tubing radial "
-                "clearance (tubing ID), neither of which is available from "
-                "card data alone."
+                "formula requires bottom-section inclination and rod/tubing "
+                "radial clearance (tubing ID), which card data does not supply."
             )
             return
 
-        # Use the smallest (weakest) rod section for critical load calculation
-        min_diameter = min(s.diameter for s in self.ctx.rod_string)
-        section = next(s for s in self.ctx.rod_string if s.diameter == min_diameter)
+        # Compression occurs adjacent to the pump, in the bottom rod section.
+        section = self.ctx.rod_string[-1]
 
         # Rod geometry
-        d = min_diameter  # inches
-        I = np.pi * d ** 4 / 64.0  # in^4 (moment of inertia)
+        d = section.diameter  # inches
+        inertia = np.pi * d ** 4 / 64.0  # in^4
 
         # Material properties
         E = section.modulus_of_elasticity  # psi
@@ -191,7 +333,7 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
         # Radial clearance between rod body and tubing wall, inches
         r_c = (tubing_id - d) / 2.0
 
-        sin_alpha = float(np.sin(np.radians(inclination_deg)))
+        sin_alpha = float(np.min(np.sin(np.radians(inclinations))))
 
         if r_c <= 0.0:
             self.result.warning_message = (
@@ -215,7 +357,9 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
             )
             return
 
-        F_cr_sinusoidal = 2.0 * np.sqrt(E * I * W_b * sin_alpha / r_c)
+        F_cr_sinusoidal = 2.0 * np.sqrt(
+            E * inertia * W_b * sin_alpha / r_c
+        )
 
         # Helical buckling threshold = 2*sqrt(2) x sinusoidal (Chen-Lin-Cheatham)
         F_cr_helical = 2.0 * np.sqrt(2.0) * F_cr_sinusoidal
@@ -223,44 +367,77 @@ class RodBucklingCalculator(BaseCalculator[RodBucklingAnalysis]):
         self.result.sinusoidal_critical_load = float(F_cr_sinusoidal)
         self.result.helical_critical_load = float(F_cr_helical)
 
+    def _bottom_section_inclinations(
+        self,
+        inclination_deg: Optional[float],
+        profile: Optional[InclinationProfile],
+    ) -> Optional[np.ndarray]:
+        """Return inclinations sampled across the bottom rod's depth interval."""
+        if inclination_deg is not None and profile is not None:
+            raise ValidationError(
+                "Supply either inclination_deg or inclination_profile, not both",
+                field="inclination_profile",
+            )
+        if profile is None:
+            if inclination_deg is None:
+                return None
+            if not 0.0 <= inclination_deg <= 180.0:
+                raise ValidationError(
+                    "Inclination must be between 0 and 180 degrees",
+                    field="inclination_deg",
+                )
+            return np.asarray([inclination_deg], dtype=float)
+        if len(profile) < 2:
+            raise ValidationError(
+                "inclination_profile requires at least two depth points",
+                field="inclination_profile",
+            )
+
+        points = np.asarray(profile, dtype=float)
+        if points.ndim != 2 or points.shape[1] != 2 or not np.all(np.isfinite(points)):
+            raise ValidationError(
+                "inclination_profile must contain finite (depth, inclination) pairs",
+                field="inclination_profile",
+            )
+        depths = points[:, 0]
+        if np.any((points[:, 1] < 0.0) | (points[:, 1] > 180.0)):
+            raise ValidationError(
+                "Inclinations must be between 0 and 180 degrees",
+                field="inclination_profile",
+            )
+        if np.any(np.diff(depths) <= 0.0):
+            raise ValidationError(
+                "inclination_profile depths must be strictly increasing",
+                field="inclination_profile",
+            )
+
+        section_end = self.ctx.pump.depth
+        section_start = section_end - self.ctx.rod_string[-1].length
+        if depths[0] > section_start or depths[-1] < section_end:
+            raise ValidationError(
+                "inclination_profile must cover the bottom rod depth interval",
+                field="inclination_profile",
+                details={"section_start": section_start, "section_end": section_end},
+            )
+
+        inside = points[(depths > section_start) & (depths < section_end), 1]
+        endpoints = np.interp(
+            [section_start, section_end],
+            depths,
+            points[:, 1],
+        )
+        inclinations = np.concatenate(([endpoints[0]], inside, [endpoints[1]]))
+        return inclinations
+
     def _calculate_buckling_tendency(self, loads: np.ndarray) -> np.ndarray:
-        """
-        Calculate buckling tendency (effective axial load).
-
-        Buckling tendency includes the effect of internal pressure
-        and Poisson's ratio on the effective compressive load.
-
-        For a submerged rod:
-        F_eff = F_axial + 2 * ν * P * A
-
-        where:
-        - F_axial = actual axial load
-        - ν = Poisson's ratio
-        - P = hydrostatic pressure
-        - A = cross-sectional area
-        """
+        """Calculate effective axial load for a solid submerged rod."""
         if len(loads) == 0:
             return np.array([])
 
-        # Calculate average rod area
-        total_area_length = sum(
-            np.pi * (s.diameter / 2) ** 2 * s.length
-            for s in self.ctx.rod_string
-        )
-        rod_length = self.ctx.rod_length
-        avg_area = total_area_length / rod_length if rod_length > 0 else 0.0  # in^2
-
-        # Estimate hydrostatic pressure at pump depth
-        pump_depth = self.ctx.pump.depth  # feet
-        fluid_gradient = self.ctx.fluid_density / 144.0  # psi/ft
-        pressure_at_pump = fluid_gradient * pump_depth  # psi
-
-        # Buckling tendency correction
-        # This is an approximation for average conditions
-        pressure_correction = 2.0 * self.POISSON_RATIO * pressure_at_pump * avg_area
-
-        # Calculate buckling tendency
-        buckling_tendency = loads + pressure_correction
+        # A solid rod has no bore on which an internal-pressure ballooning term
+        # can act. The fully submerged external pressure is already represented
+        # through buoyant weight in the Paslay-Dawson threshold.
+        buckling_tendency = loads.copy()
 
         self.result.min_buckling_tendency = float(np.min(buckling_tendency))
         self.result.max_buckling_tendency = float(np.max(buckling_tendency))
@@ -342,6 +519,12 @@ def calculate_rod_buckling(
     raise_on_error: bool = False,
     inclination_deg: Optional[float] = None,
     tubing_id: Optional[float] = None,
+    *,
+    load_datum: LoadDatum,
+    inclination_profile: Optional[InclinationProfile] = None,
+    vendor_downstroke_load: Optional[float] = None,
+    vendor_upstroke_load: Optional[float] = None,
+    vendor_fluid_load: Optional[float] = None,
 ) -> RodBucklingAnalysis:
     """
     Convenience function to calculate rod buckling analysis.
@@ -354,6 +537,11 @@ def calculate_rod_buckling(
         inclination_deg: Hole inclination from vertical (degrees). Required,
                        with tubing_id, for the Paslay-Dawson critical loads.
         tubing_id: Tubing inside diameter (inches).
+        load_datum: ``net_pump_load`` or ``vendor_analysis``.
+        inclination_profile: Depth/inclination points covering the bottom rod.
+        vendor_downstroke_load: Vendor downstroke datum, lb.
+        vendor_upstroke_load: Vendor upstroke load, lb.
+        vendor_fluid_load: Vendor fluid load (Fo), lb.
 
     Returns:
         RodBucklingAnalysis with buckling detection results. Critical loads and
@@ -364,11 +552,28 @@ def calculate_rod_buckling(
         ValidationError: If raise_on_error=True and validation fails.
     """
     calculator = RodBucklingCalculator(context)
+    keyword_args = {
+        "load_datum": load_datum,
+        "inclination_profile": inclination_profile,
+        "vendor_downstroke_load": vendor_downstroke_load,
+        "vendor_upstroke_load": vendor_upstroke_load,
+        "vendor_fluid_load": vendor_fluid_load,
+    }
     if raise_on_error:
-        return calculator.calculate(downhole_card, inclination_deg, tubing_id)
+        return calculator.calculate(
+            downhole_card,
+            inclination_deg,
+            tubing_id,
+            **keyword_args,
+        )
 
     try:
-        return calculator.calculate(downhole_card, inclination_deg, tubing_id)
+        return calculator.calculate(
+            downhole_card,
+            inclination_deg,
+            tubing_id,
+            **keyword_args,
+        )
     except DynacardException as e:
         calculator.result.warning_message = e.message
         return calculator.result
@@ -456,9 +661,34 @@ def calculate_critical_buckling_load(
     if inclination_deg is None or tubing_id is None:
         return (None, None)
 
+    scalar_inputs = {
+        "rod_diameter": rod_diameter,
+        "modulus": modulus,
+        "weight_per_foot": weight_per_foot,
+        "fluid_density": fluid_density,
+        "inclination_deg": inclination_deg,
+        "tubing_id": tubing_id,
+    }
+    non_finite = [
+        name
+        for name, value in scalar_inputs.items()
+        if not np.isfinite(value)
+    ]
+    if non_finite:
+        raise ValidationError(
+            "Critical-load inputs must contain finite values",
+            field=non_finite[0],
+            details={"non_finite": non_finite},
+        )
+    if not 0.0 <= inclination_deg <= 180.0:
+        raise ValidationError(
+            "Inclination must be between 0 and 180 degrees",
+            field="inclination_deg",
+        )
+
     # Calculate rod properties
     r = rod_diameter / 2.0
-    I = np.pi * rod_diameter ** 4 / 64.0  # in^4
+    inertia = np.pi * rod_diameter ** 4 / 64.0  # in^4
 
     # Calculate weight if not provided
     if weight_per_foot == 0.0:
@@ -476,7 +706,9 @@ def calculate_critical_buckling_load(
     if W_b <= 0.0 or r_c <= 0.0 or sin_alpha <= 0.0:
         return (None, None)
 
-    F_cr_sinusoidal = 2.0 * np.sqrt(modulus * I * W_b * sin_alpha / r_c)
+    F_cr_sinusoidal = 2.0 * np.sqrt(
+        modulus * inertia * W_b * sin_alpha / r_c
+    )
     F_cr_helical = 2.0 * np.sqrt(2.0) * F_cr_sinusoidal
 
     return (float(F_cr_sinusoidal), float(F_cr_helical))
