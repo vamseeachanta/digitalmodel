@@ -49,11 +49,13 @@ def parse_legacy_json(data: Dict[str, Any]) -> DynacardAnalysisContext:
     # Extract input parameters
     input_params_raw = data.get('InputParameters', {})
     spm = input_params_raw.get('StrokesPerMinute', 6.0)
+    runtime_raw = input_params_raw.get('RunTime')
+    runtime = 24.0 if runtime_raw is None else runtime_raw
 
     input_params = InputParameters(
         strokes_per_minute=spm,
         tubing_pressure=input_params_raw.get('TubingPressure', 100.0),
-        runtime=input_params_raw.get('RunTime', 24.0),
+        runtime=runtime,
         load_max_sp=input_params_raw.get('LoadMaxSP'),
         load_min_sp=input_params_raw.get('LoadMinSP'),
         fluid_density=input_params_raw.get('FluidDensity'),
@@ -128,9 +130,6 @@ def parse_legacy_json(data: Dict[str, Any]) -> DynacardAnalysisContext:
         voltage=motor_raw.get('Voltage') or 0.0,
         manufacturer=motor_raw.get('Manufacturer') or '',
     )
-
-    # Get runtime from input parameters
-    runtime = input_params_raw.get('RunTime', 24.0)
 
     # Parse well test data
     well_test_raw = data.get('WellTestData', {})
