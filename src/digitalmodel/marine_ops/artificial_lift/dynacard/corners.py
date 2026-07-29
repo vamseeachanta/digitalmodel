@@ -142,10 +142,17 @@ class CornerDetector:
             self.load[downstroke] - np.min(self.load)
         ) / load_span
         knee_offset = int(np.argmax(retained_stroke - remaining_load))
+        branch_start = self._find_lower_branch_start(
+            retained_stroke, remaining_load
+        )
+        branch_stroke = retained_stroke[branch_start]
+        knee_stroke = retained_stroke[knee_offset]
+        if knee_stroke - 0.45 <= branch_stroke <= knee_stroke:
+            return int(downstroke[branch_start])
 
-        # A discretised taper can leave the knee one material load step before
-        # transfer finishes. Include that endpoint without chasing gradual
-        # lower-branch load variation.
+        # A noisy, curved lower branch can appear linear all the way through
+        # the bottom turnaround. In that case retain the geometric knee, while
+        # including one material endpoint of its discretised transfer taper.
         if knee_offset + 1 < len(downstroke):
             taper_drop = (
                 self.load[downstroke[knee_offset]]
@@ -154,6 +161,27 @@ class CornerDetector:
             if taper_drop > 0.01 * load_span:
                 knee_offset += 1
         return int(downstroke[knee_offset])
+
+    @staticmethod
+    def _find_lower_branch_start(
+        retained_stroke: np.ndarray, remaining_load: np.ndarray
+    ) -> int:
+        """Find the earliest point on the terminal, near-linear lower branch."""
+        branch_start = len(retained_stroke) - 2
+        tolerance = 0.005
+        for candidate in range(branch_start - 1, -1, -1):
+            stroke = retained_stroke[candidate:]
+            load = remaining_load[candidate:]
+            stroke_span = stroke[0] - stroke[-1]
+            if stroke_span <= np.finfo(np.float64).eps:
+                break
+            expected = load[-1] + (load[0] - load[-1]) * (
+                stroke - stroke[-1]
+            ) / stroke_span
+            if np.max(np.abs(load - expected)) > tolerance:
+                break
+            branch_start = candidate
+        return branch_start
 
     def _order_corners(self, corners: List[int]) -> List[int]:
         """
