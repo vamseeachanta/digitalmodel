@@ -91,6 +91,26 @@ def _make_multistage_transfer_card() -> CardData:
     )
 
 
+def _make_two_lull_transfer_card() -> CardData:
+    """Build a card with two quiet samples before load transfer resumes."""
+    points = [
+        (0.0, 0.0),
+        (0.0, 10.0),
+        (50.0, 10.0),
+        (100.0, 10.0),
+        (90.0, 6.0),
+        (80.0, 5.6),
+        (70.0, 5.2),
+        (60.0, 2.2),
+        (50.0, 0.0),  # BR
+        (25.0, 0.0),
+    ]
+    return CardData(
+        position=[point[0] for point in points],
+        load=[point[1] for point in points],
+    )
+
+
 class TestCornerDetector:
     """Tests for the CornerDetector class."""
 
@@ -226,6 +246,43 @@ class TestCornerDetector:
 
         assert result.net_stroke == pytest.approx(60.0)
         assert result.fillage == pytest.approx(60.0)
+
+    def test_br_is_independent_of_multiple_transfer_lulls(self):
+        """Quiet samples inside a drop do not become false BR corners."""
+        card = _make_two_lull_transfer_card()
+
+        for reverse in (False, True):
+            for shift in range(len(card.position)):
+                position = np.roll(card.position, shift)
+                load = np.roll(card.load, shift)
+                if reverse:
+                    position = position[::-1]
+                    load = load[::-1]
+                result = calculate_pump_fillage(
+                    CardData(position=position, load=load)
+                )
+
+                assert result.fillage == pytest.approx(50.0)
+
+    def test_closed_partial_card_is_origin_and_direction_invariant(self):
+        """A duplicated BL closure sample does not change the downstroke."""
+        card = CardData(
+            position=[0.0, 0.0, 50.0, 100.0, 90.0, 80.0, 70.0, 0.0],
+            load=[0.0, 10.0, 10.0, 10.0, 6.0, 2.0, 0.0, 0.0],
+        )
+
+        for reverse in (False, True):
+            for shift in range(len(card.position)):
+                position = np.roll(card.position, shift)
+                load = np.roll(card.load, shift)
+                if reverse:
+                    position = position[::-1]
+                    load = load[::-1]
+                result = calculate_pump_fillage(
+                    CardData(position=position, load=load)
+                )
+
+                assert result.fillage == pytest.approx(70.0)
 
 
 class TestCalculateCorners:

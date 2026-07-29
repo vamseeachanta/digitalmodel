@@ -100,12 +100,13 @@ class TestFluidLoad:
 
         assert result.upstroke_load > result.downstroke_load
 
-    def test_fluid_load_rejects_degenerate_corner_phases(self):
+    @pytest.mark.parametrize("method", ["avg", "med", "2pt"])
+    def test_fluid_load_rejects_degenerate_corner_phases(self, method):
         """Identical corner phases have no defined upstroke or downstroke."""
         card = CardData(position=[50.0] * 20, load=[100.0] * 20)
 
         with pytest.raises(ValueError, match="distinct corner phases"):
-            calculate_fluid_load(card)
+            calculate_fluid_load(card, method=method)
 
 
 # =============================================================================
