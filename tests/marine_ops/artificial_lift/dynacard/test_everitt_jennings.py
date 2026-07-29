@@ -216,3 +216,45 @@ def test_rod_string_rejects_mismatched_section_arrays():
             diameters=np.array([0.0222, 0.0190]),
             lengths=np.array([290.0]),
         )
+
+
+class TestEffectiveRodDensity:
+    """Rod density is derived from measured weight, not assumed bare steel.
+
+    The solver marches at c = sqrt(E/rho), so this is not a cosmetic input.
+    Assuming 490 lb/ft3 gave 14.01% median nRMSE against measured vendor
+    downhole cards; deriving from catalogued weight gave 0.74% (dm#1897).
+    """
+
+    def test_derived_from_weight_matches_catalogue_sonic_velocity(self):
+        """Independent check: the derived density must reproduce 16,300 ft/s.
+
+        Rod catalogues state a sonic velocity our derivation never sees, so
+        agreement is a genuine cross-check rather than a restatement. Bare
+        steel at 490 lb/ft3 gives 16,982 ft/s -- 4.2% off, and the reason the
+        old default was wrong.
+        """
+        from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings.adapter import (
+            _effective_density_lb_ft3,
+        )
+        from digitalmodel.marine_ops.artificial_lift.dynacard.models import RodSection
+
+        # 0.75 in rod, catalogued coupling-inclusive weight 1.63 lb/ft
+        section = RodSection(diameter=0.75, length=1000.0, weight_per_foot=1.63)
+        rho = _effective_density_lb_ft3(section)
+        assert rho == pytest.approx(531.3, abs=1.0)
+
+        E_lbf_ft2 = 30.5e6 * 144.0
+        c_ft_s = np.sqrt(E_lbf_ft2 * 32.174 / rho)
+        assert c_ft_s == pytest.approx(16_300.0, rel=0.005)
+
+    def test_falls_back_to_steel_without_a_measured_weight(self):
+        """No weight supplied is the only case where assuming steel is honest."""
+        from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings.adapter import (
+            _effective_density_lb_ft3,
+        )
+        from digitalmodel.marine_ops.artificial_lift.dynacard.models import RodSection
+
+        assert _effective_density_lb_ft3(
+            RodSection(diameter=0.75, length=1000.0)
+        ) == pytest.approx(490.0)
