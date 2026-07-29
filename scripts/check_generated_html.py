@@ -26,12 +26,14 @@ from pathlib import Path
 if __package__:
     from .generated_html_ownership import (
         DISCOVERY_FALSE_POSITIVES,
+        EXCLUDED_GENERATORS,
         MANUAL_PAGES,
         PAGE_EXCLUSIONS,
     )
 else:
     from generated_html_ownership import (
         DISCOVERY_FALSE_POSITIVES,
+        EXCLUDED_GENERATORS,
         MANUAL_PAGES,
         PAGE_EXCLUSIONS,
     )
@@ -168,22 +170,20 @@ module.main()
 def discover_candidate_generators(repo: Path) -> set[str]:
     """Defense-in-depth scan for likely unregistered builders."""
     found = set()
-    for path in (repo / "scripts").rglob("*.py"):
-        text = path.read_text(encoding="utf-8", errors="ignore").casefold()
-        # Do not couple discovery to one write API: generators use write_text,
-        # open, constructed suffixes, helpers, and library-specific exporters.
-        markers = ("docs", "api", "html")
-        if all(marker in text for marker in markers):
-            found.add(path.relative_to(repo).as_posix())
+    for root in (repo / "scripts", repo / "docs" / "api"):
+        for path in root.rglob("*.py"):
+            text = path.read_text(encoding="utf-8", errors="ignore").casefold()
+            # Avoid write API names: producers use helpers and exporters too.
+            if all(marker in text for marker in ("docs", "api", "html")):
+                found.add(path.relative_to(repo).as_posix())
     return found
 
 
 def docs_api_pages(repo: Path) -> set[str]:
     pages = set()
-    for path in (repo / "docs" / "api").rglob("*.html"):
-        relative = path.relative_to(repo)
-        if "_assets" not in relative.parts:
-            pages.add(relative.as_posix())
+    for path in (repo / "docs" / "api").rglob("*"):
+        if path.is_file() and path.suffix.casefold() == ".html":
+            pages.add(path.relative_to(repo).as_posix())
     return pages
 
 
@@ -199,8 +199,15 @@ def validate_page_census(repo: Path) -> list[str]:
         errors.append(f"unclassified docs/api HTML page(s): {', '.join(unclassified)}")
     if stale := sorted(set(MANUAL_PAGES) - pages):
         errors.append(f"stale manual-page classification(s): {', '.join(stale)}")
-    if overlap := sorted(set(PAGE_EXCLUSIONS) & set(MANUAL_PAGES)):
-        errors.append(f"page has conflicting classifications: {', '.join(overlap)}")
+    overlaps = (
+        (owned & set(PAGE_EXCLUSIONS))
+        | (owned & set(MANUAL_PAGES))
+        | (set(PAGE_EXCLUSIONS) & set(MANUAL_PAGES))
+    )
+    if overlaps:
+        errors.append(
+            f"page has conflicting classifications: {', '.join(sorted(overlaps))}"
+        )
     for path, reason in MANUAL_PAGES.items():
         if not reason.strip():
             errors.append(f"manual-page classification lacks a reason: {path}")
@@ -210,7 +217,7 @@ def validate_page_census(repo: Path) -> list[str]:
 def validate_registry(repo: Path) -> list[str]:
     registered = {entry.script for entry in GENERATORS}
     candidates = discover_candidate_generators(repo)
-    explained = set(DISCOVERY_FALSE_POSITIVES)
+    explained = set(DISCOVERY_FALSE_POSITIVES) | set(EXCLUDED_GENERATORS)
     errors = []
     if missing := sorted(candidates - registered - explained):
         errors.append(f"unregistered candidate generator(s): {', '.join(missing)}")
@@ -219,6 +226,9 @@ def validate_registry(repo: Path) -> list[str]:
     for path, reason in DISCOVERY_FALSE_POSITIVES.items():
         if not reason.strip():
             errors.append(f"discovery false-positive lacks a reason: {path}")
+    for path, reason in EXCLUDED_GENERATORS.items():
+        if not reason.strip():
+            errors.append(f"excluded generator lacks a reason: {path}")
     for path, reason in PAGE_EXCLUSIONS.items():
         if not (repo / path).is_file():
             errors.append(f"stale generated-page exclusion: {path}")
@@ -359,6 +369,7 @@ def check(repo: Path = REPO) -> int:
     print(
         f"generated HTML check OK — {pages} page(s) from "
         f"{len(GENERATORS)} generator(s); "
+        f"{len(EXCLUDED_GENERATORS)} excluded generator(s); "
         f"{len(PAGE_EXCLUSIONS)} explicit exclusion(s); "
         f"{len(MANUAL_PAGES)} manual page classification(s)"
     )

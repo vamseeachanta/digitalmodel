@@ -55,10 +55,80 @@ DISCOVERY_FALSE_POSITIVES = {
     "scripts/semantic_validate.py": (
         "writes caller-selected validation reports, not committed docs/api pages"
     ),
+    "docs/api/cfd/report_build/house.py": (
+        "shared HTML rendering helpers; it does not write a page"
+    ),
+}
+
+# Active generators which cannot run from repository-owned deterministic inputs.
+EXCLUDED_GENERATORS = {
+    "docs/api/cfd/report_build/build_dam_break.py": (
+        "requires a caller-supplied solved OpenFOAM case"
+    ),
+    "docs/api/cfd/report_build/build_decay_report.py": (
+        "requires a caller-supplied decay-results snapshot"
+    ),
+    "docs/api/cfd/report_build/build_floating_body.py": (
+        "requires caller-supplied solved case and results directories"
+    ),
+    "docs/api/cfd/report_build/build_kleefsman.py": (
+        "requires caller-supplied solved case and experimental-data paths"
+    ),
+    "docs/api/cfd/report_build/build_maccamy_fuchs.py": (
+        "requires a caller-supplied results snapshot"
+    ),
+    "docs/api/cfd/report_build/build_wave_excited_body.py": (
+        "requires caller-supplied solved case and results directories"
+    ),
+    "docs/api/cfd/report_build/build_wave_excited_body_rao.py": (
+        "requires a caller-supplied RAO sweep-results snapshot"
+    ),
+    "docs/api/cfd/report_build/build_wave_tank.py": (
+        "requires caller-supplied solved case and results directories"
+    ),
+    "docs/api/cfd/report_build/upgrade_reports.py": (
+        "requires four caller-supplied solved runs and is intentionally non-idempotent"
+    ),
 }
 
 # Generated-looking pages which cannot yet be reproduced deterministically.
 PAGE_EXCLUSIONS = {
+    "docs/api/cfd/cylinder-re100-verification.html": (
+        "upgrade_reports.py requires a caller-supplied solved cylinder run"
+    ),
+    "docs/api/cfd/dam-break-verification.html": (
+        "build_dam_break.py requires a caller-supplied solved OpenFOAM case"
+    ),
+    "docs/api/cfd/flat-plate-blasius-verification.html": (
+        "upgrade_reports.py requires a caller-supplied solved flat-plate run"
+    ),
+    "docs/api/cfd/floating-body-decay-verification.html": (
+        "build_floating_body.py requires caller-supplied solved case and results"
+    ),
+    "docs/api/cfd/kleefsman-impact-verification.html": (
+        "build_kleefsman.py requires caller-supplied solved case and experiment data"
+    ),
+    "docs/api/cfd/maccamy-fuchs-cylinder-verification.html": (
+        "build_maccamy_fuchs.py requires a caller-supplied results snapshot"
+    ),
+    "docs/api/cfd/naca0012-airfoil-verification.html": (
+        "upgrade_reports.py requires a caller-supplied solved airfoil run"
+    ),
+    "docs/api/cfd/turbulent-flat-plate-verification.html": (
+        "upgrade_reports.py requires a caller-supplied solved turbulent-plate run"
+    ),
+    "docs/api/cfd/wave-excited-body-decay-verification.html": (
+        "build_decay_report.py requires a caller-supplied decay-results snapshot"
+    ),
+    "docs/api/cfd/wave-excited-body-rao-verification.html": (
+        "build_wave_excited_body_rao.py requires a caller-supplied sweep snapshot"
+    ),
+    "docs/api/cfd/wave-excited-body-verification.html": (
+        "build_wave_excited_body.py requires caller-supplied solved case and results"
+    ),
+    "docs/api/cfd/wave-tank-verification.html": (
+        "build_wave_tank.py requires caller-supplied solved case and results"
+    ),
     "docs/api/hydro/ocimf-coefficient-explorer.html": (
         "producer uses an external absolute-path workbook and random Plotly div ids"
     ),
@@ -104,44 +174,8 @@ MANUAL_PAGES = {
     "docs/api/capabilities/index.html": (
         "hand-maintained capabilities portal"
     ),
-    "docs/api/cfd/cylinder-re100-verification.html": (
-        "committed verification report; no scripts producer found"
-    ),
-    "docs/api/cfd/dam-break-verification.html": (
-        "committed verification report; no scripts producer found"
-    ),
-    "docs/api/cfd/flat-plate-blasius-verification.html": (
-        "committed verification report; no scripts producer found"
-    ),
-    "docs/api/cfd/floating-body-decay-verification.html": (
-        "committed verification report; no scripts producer found"
-    ),
     "docs/api/cfd/index.html": "hand-maintained CFD verification index",
-    "docs/api/cfd/kleefsman-impact-verification.html": (
-        "committed verification report; no scripts producer found"
-    ),
-    "docs/api/cfd/maccamy-fuchs-cylinder-verification.html": (
-        "committed verification report; no scripts producer found"
-    ),
-    "docs/api/cfd/naca0012-airfoil-verification.html": (
-        "committed verification report; no scripts producer found"
-    ),
     "docs/api/cfd/tank-sloshing-verification.html": (
-        "committed verification report; no scripts producer found"
-    ),
-    "docs/api/cfd/turbulent-flat-plate-verification.html": (
-        "committed verification report; no scripts producer found"
-    ),
-    "docs/api/cfd/wave-excited-body-decay-verification.html": (
-        "committed verification report; no scripts producer found"
-    ),
-    "docs/api/cfd/wave-excited-body-rao-verification.html": (
-        "committed verification report; no scripts producer found"
-    ),
-    "docs/api/cfd/wave-excited-body-verification.html": (
-        "committed verification report; no scripts producer found"
-    ),
-    "docs/api/cfd/wave-tank-verification.html": (
         "committed verification report; no scripts producer found"
     ),
     "docs/api/ffs/build-wave-2026-07.html": (

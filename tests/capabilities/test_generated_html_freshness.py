@@ -57,14 +57,22 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     assert len(outputs) == 54
     assert checker.PAGE_EXCLUSIONS
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
-    assert len(checker.MANUAL_PAGES) == 23
+    assert len(checker.PAGE_EXCLUSIONS) == 22
+    assert len(checker.EXCLUDED_GENERATORS) == 9
+    assert len(checker.MANUAL_PAGES) == 11
 
 
 def test_page_census_rejects_unclassified_html(tmp_path: Path) -> None:
-    page = tmp_path / "docs" / "api" / "new-output.html"
-    page.parent.mkdir(parents=True)
-    page.write_text("<html></html>", encoding="utf-8")
+    pages = (
+        tmp_path / "docs" / "api" / "new-output.HTML",
+        tmp_path / "docs" / "api" / "_assets" / "new-output.html",
+    )
+    for page in pages:
+        page.parent.mkdir(parents=True, exist_ok=True)
+        page.write_text("<html></html>", encoding="utf-8")
 
     errors = checker.validate_page_census(tmp_path)
+    message = "\n".join(errors)
 
-    assert any("unclassified docs/api HTML" in error for error in errors)
+    assert "docs/api/new-output.HTML" in message
+    assert "docs/api/_assets/new-output.html" in message
