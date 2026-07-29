@@ -410,6 +410,19 @@ def initial_matrix(sim: Simulation, coeff: Coefficients) -> np.ndarray:
 
 
 @_njit(cache=True)
+def _normal_force_per_length(
+    rho_a, gravity, phi, d_phi, d_psi, axial_force
+):
+    """Return borehole normal load per measured length, N/m."""
+    gravity_normal = rho_a * gravity * np.sin(phi)
+    curvature_normal = axial_force * d_phi
+    azimuth_normal = axial_force * d_psi * np.sin(phi)
+    return np.sqrt(
+        (gravity_normal - curvature_normal) ** 2 + azimuth_normal ** 2
+    )
+
+
+@_njit(cache=True)
 def _march(u, n_x, n_t, dt, dx, lam, rho_a, g, c, e_mod, area, phi, d_phi, d_psi, muteg):
     """March the damped wave equation down the rod string.
 
@@ -435,14 +448,18 @@ def _march(u, n_x, n_t, dt, dx, lam, rho_a, g, c, e_mod, area, phi, d_phi, d_psi
 
             c1 = (rho_a_ij / ea_plus) * (dx / dt) ** 2
             c2 = (rho_a_c / ea_plus) * dx ** 2 / dt
-            c3 = (rho_a_ij / ea_plus) * lam * sign * dx
+            c3 = (lam * sign / ea_plus) * dx ** 2
             c4 = (rho_a_ij / ea_plus) * dx ** 2
 
-            # Normal force from gravity plus borehole curvature.
-            mg_sin = rho_a[i, j] * g * np.sin(phi[i, j])
-            s1 = mg_sin * dx - d_phi[i, j] * (u[i, j] - u[i - 1, j])
-            s2 = d_psi[i, j] * np.sin(phi[i, j]) * (u[i, j] - u[i - 1, j])
-            q_n = np.sqrt(s1 ** 2 + s2 ** 2)
+            axial_force = ea_minus * (u[i, j] - u[i - 1, j]) / dx
+            q_n = _normal_force_per_length(
+                rho_a_ij,
+                g,
+                phi[i, j],
+                d_phi[i, j],
+                d_psi[i, j],
+                axial_force,
+            )
 
             u[i + 1, j] = (
                 u[i, j]
@@ -464,13 +481,18 @@ def _march(u, n_x, n_t, dt, dx, lam, rho_a, g, c, e_mod, area, phi, d_phi, d_psi
 
         c1 = (rho_a_ij / ea_plus) * (dx / dt) ** 2
         c2 = (rho_a_c / ea_plus) * dx ** 2 / dt
-        c3 = (rho_a_ij / ea_plus) * lam * dx
+        c3 = (lam / ea_plus) * dx ** 2
         c4 = (rho_a_ij / ea_plus) * dx ** 2
 
-        mg_sin = rho_a[i, 0] * g * np.sin(phi[i, 0])
-        s1 = mg_sin * dx - d_phi[i, 0] * (u[i, 0] - u[i - 1, 0])
-        s2 = d_psi[i, 0] * np.sin(phi[i, 0]) * (u[i, 0] - u[i - 1, 0])
-        q_n = np.sqrt(s1 ** 2 + s2 ** 2)
+        axial_force = ea_minus * (u[i, 0] - u[i - 1, 0]) / dx
+        q_n = _normal_force_per_length(
+            rho_a_ij,
+            g,
+            phi[i, 0],
+            d_phi[i, 0],
+            d_psi[i, 0],
+            axial_force,
+        )
 
         u[i + 1, 0] = (
             u[i, 0]
