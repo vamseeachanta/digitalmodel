@@ -6,8 +6,6 @@
 <script defer src="https://cdn.plot.ly/plotly-3.6.0.min.js"
  onload="window.dispatchEvent(new Event('plotly-ready'))"></script>
 <style>
-:root{--burst:#0072b2;--collapse:#d55e00;--combined:#009e73;--propagation:#cc79a7;
---other1:#e69f00;--other2:#56b4e9;--other3:#6f4e9c;--other4:#8c564b}
 *{box-sizing:border-box}html,body{max-width:100%;overflow-x:hidden}
 body{padding:26px 20px 60px;max-width:1080px;margin:0 auto}
 h1{font-size:23px;color:var(--navy);letter-spacing:-.3px;margin:0}
@@ -84,9 +82,11 @@ Height in 3D: utilisation. Drag to orbit; scroll or pinch to zoom.</p>
 "use strict";
 const DATA=JSON.parse(document.getElementById("study-data").textContent),M=DATA.m;
 const COLORS=["#0072b2","#d55e00","#009e73","#cc79a7","#e69f00","#56b4e9","#6f4e9c","#8c564b","#666666"];
+const STYLES=getComputedStyle(document.documentElement);
+const INK=STYLES.getPropertyValue("--ink").trim(),SOFT=STYLES.getPropertyValue("--soft").trim();
 const code=document.getElementById("code"),wall=document.getElementById("wall");
 const canvas=document.getElementById("fallback"),plot=document.getElementById("plot");
-let plotMode="canvas",requestId=0,allow3d;
+let plotMode="canvas",allow3d,pendingPlot,plotting=false,renderToken=0;
 const label=s=>s.replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const slice=()=>DATA.s[code.value][+wall.value];
@@ -95,13 +95,19 @@ const matrices=()=>{const [u,g]=slice(),nu=M.t.length,nb=M.b.length,um=[],gm=[];
   const k=i*nb+j;um[j][i]=u[k]/M.q;gm[j][i]=g[k];}}return [um,gm];};
 function webgl(){try{const c=document.createElement("canvas");return !!(window.WebGLRenderingContext&&
  (c.getContext("webgl2")||c.getContext("webgl")));}catch(_error){return false;}}
+function majority(values){const count={};values.forEach(v=>count[v]=(count[v]||0)+1);
+ return +Object.keys(count).sort((a,b)=>count[b]-count[a])[0];}
+function cellCategories(gm){return gm.slice(0,-1).map((row,j)=>row.slice(0,-1).map((_,i)=>
+ majority([gm[j][i],gm[j][i+1],gm[j+1][i],gm[j+1][i+1]])));}
 function segments(um){const out=[],nu=M.t.length,nb=M.b.length,level=1;
  const point=(a,b)=>{const f=(level-a.u)/(b.u-a.u);return{x:a.x+f*(b.x-a.x),y:a.y+f*(b.y-a.y)};};
  for(let i=0;i<nu-1;i++)for(let j=0;j<nb-1;j++){const id=(x,y)=>({x,y,u:um[y][x]});
   for(const tri of [[id(i,j),id(i+1,j),id(i+1,j+1)],[id(i,j),id(i+1,j+1),id(i,j+1)]]){
-   const hits=[];for(const [a,b] of [[tri[0],tri[1]],[tri[1],tri[2]],[tri[2],tri[0]]])
-    if((a.u<level&&b.u>=level)||(b.u<level&&a.u>=level))hits.push(point(a,b));
-   if(hits.length>=2)out.push([hits[0],hits[1]]);}}return out;}
+   const hits=[];for(const [a,b] of [[tri[0],tri[1]],[tri[1],tri[2]],[tri[2],tri[0]]]){
+    if(a.u===level&&b.u===level)out.push([a,b]);else if(a.u===level)hits.push(a);
+    else if(b.u===level)hits.push(b);else if((a.u-level)*(b.u-level)<0)hits.push(point(a,b));}
+   const unique=hits.filter((p,k)=>hits.findIndex(q=>q.x===p.x&&q.y===p.y)===k);
+   if(unique.length>=2)out.push([unique[0],unique[1]]);}}return out;}
 function updateText(um,gm){const flat=um.flat(),active=new Set(gm.flat());
  const safe=100*flat.filter(v=>v<1).length/flat.length;
  document.getElementById("wall-value").textContent=M.w[+wall.value].toFixed(1)+" mm";
@@ -111,38 +117,38 @@ function updateText(um,gm){const flat=um.flat(),active=new Set(gm.flat());
  <i class="swatch" style="background:${COLORS[i%COLORS.length]}"></i>${esc(label(g))}</span>`).join("")+
  '<span class="legend-item"><i class="boundary"></i>Utilisation = 1.0</span>';
  canvas.setAttribute("aria-label",`${code.value}, ${M.w[+wall.value].toFixed(1)} mm: governing-check heatmap and utilisation 1.0 boundary`);}
-function nativePlot(um,gm){const box=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);
+function nativePlot(um,gm){const box=canvas.parentElement.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);
  canvas.width=Math.max(1,Math.round(box.width*dpr));canvas.height=Math.max(1,Math.round(box.height*dpr));
  const c=canvas.getContext("2d"),w=canvas.width,h=canvas.height,L=58*dpr,R=12*dpr,T=18*dpr,B=50*dpr;
- c.fillStyle="#f4f8fc";c.fillRect(0,0,w,h);const pw=w-L-R,ph=h-T-B,nu=M.t.length,nb=M.b.length;
- for(let i=0;i<nu-1;i++)for(let j=0;j<nb-1;j++){c.fillStyle=COLORS[gm[j][i]%COLORS.length];
+ c.fillStyle=SOFT;c.fillRect(0,0,w,h);const pw=w-L-R,ph=h-T-B,nu=M.t.length,nb=M.b.length,cells=cellCategories(gm);
+ for(let i=0;i<nu-1;i++)for(let j=0;j<nb-1;j++){c.fillStyle=COLORS[cells[j][i]%COLORS.length];
   c.fillRect(L+i*pw/(nu-1),T+(nb-2-j)*ph/(nb-1),pw/(nu-1)+1,ph/(nb-1)+1);}
- const segs=segments(um);for(const [colour,width] of [["#13233f",5],["#fff",2]]){c.strokeStyle=colour;
+ const segs=segments(um);for(const [colour,width] of [[INK,5],["#fff",2]]){c.strokeStyle=colour;
   c.lineWidth=width*dpr;c.beginPath();for(const [a,b] of segs){c.moveTo(L+a.x*pw/(nu-1),T+(nb-1-a.y)*ph/(nb-1));
    c.lineTo(L+b.x*pw/(nu-1),T+(nb-1-b.y)*ph/(nb-1));}c.stroke();}
- c.fillStyle="#13233f";c.font=`${11*dpr}px sans-serif`;c.textAlign="center";
+ c.fillStyle=INK;c.font=`${11*dpr}px sans-serif`;c.textAlign="center";
  c.fillText("Effective tension (MN)",L+pw/2,h-10*dpr);c.save();c.translate(14*dpr,T+ph/2);
  c.rotate(-Math.PI/2);c.fillText("Bending moment (kN·m)",0,0);c.restore();
  c.textAlign="left";c.fillText("0",L,h-31*dpr);c.textAlign="right";
  c.fillText((M.t[M.t.length-1]/1e6).toFixed(2),L+pw,h-31*dpr);}
 function discreteScale(){const n=DATA.g.length,scale=[];for(let i=0;i<n;i++){
  scale.push([i/n,COLORS[i%COLORS.length]],[(i+1)/n-1e-7,COLORS[i%COLORS.length]]);}return scale;}
-function traces2d(um,gm){const text=gm.map(row=>row.map(i=>label(DATA.g[i])));
- return[{type:"heatmap",x:M.t.map(v=>v/1e6),y:M.b.map(v=>v/1e3),z:gm.map(r=>r.map(v=>v+.5)),
-  customdata:um,text,zmin:0,zmax:DATA.g.length,colorscale:discreteScale(),showscale:false,
+function traces2d(um,gm){const cells=cellCategories(gm),text=cells.map(row=>row.map(i=>label(DATA.g[i])));
+ const x=M.t.slice(0,-1).map((v,i)=>(v+M.t[i+1])/2e6),y=M.b.slice(0,-1).map((v,i)=>(v+M.b[i+1])/2e3);
+ const util=cells.map((row,j)=>row.map((_,i)=>(um[j][i]+um[j][i+1]+um[j+1][i]+um[j+1][i+1])/4));
+ return[{type:"heatmap",x,y,z:cells.map(r=>r.map(v=>v+.5)),customdata:util,text,
+  zmin:0,zmax:DATA.g.length,colorscale:discreteScale(),showscale:false,zsmooth:false,
   hovertemplate:"T %{x:.2f} MN<br>M %{y:.1f} kN·m<br>u %{customdata:.3f}<br>%{text}<extra></extra>"},
  {type:"contour",x:M.t.map(v=>v/1e6),y:M.b.map(v=>v/1e3),z:um,showscale:false,
-  contours:{start:1,end:1,size:1,coloring:"none"},line:{color:"#13233f",width:7},hoverinfo:"skip"},
+  contours:{start:1,end:1,size:1,coloring:"none"},line:{color:INK,width:7},hoverinfo:"skip"},
  {type:"contour",x:M.t.map(v=>v/1e6),y:M.b.map(v=>v/1e3),z:um,showscale:false,
   contours:{start:1,end:1,size:1,coloring:"none"},line:{color:"#fff",width:3},hoverinfo:"skip"}];}
 function traces3d(um,gm){const x=[],y=[],z=[],nu=M.t.length,nb=M.b.length;
  for(let i=0;i<nu;i++)for(let j=0;j<nb;j++){x.push(M.t[i]/1e6);y.push(M.b[j]/1e3);z.push(um[j][i]);}
- const groups=DATA.g.map(()=>({i:[],j:[],k:[]})),pick=ids=>{const count={};
-  ids.forEach(id=>count[gm[id%nb][Math.floor(id/nb)]]=(count[gm[id%nb][Math.floor(id/nb)]]||0)+1);
-  return +Object.keys(count).sort((a,b)=>count[b]-count[a])[0];};
+ const groups=DATA.g.map(()=>({i:[],j:[],k:[]})),cells=cellCategories(gm);
  for(let i=0;i<nu-1;i++)for(let j=0;j<nb-1;j++){const a=i*nb+j,b=(i+1)*nb+j,c=b+1,d=a+1;
-  for(const tri of [[a,b,c],[a,c,d]]){const group=groups[pick(tri)];group.i.push(tri[0]);group.j.push(tri[1]);group.k.push(tri[2]);}}
- const traces=groups.map((g,i)=>({type:"mesh3d",x,y,z,i:g.i,j:g.j,k:g.k,name:label(DATA.g[i]),
+  for(const tri of [[a,b,c],[a,c,d]]){const group=groups[cells[j][i]];group.i.push(tri[0]);group.j.push(tri[1]);group.k.push(tri[2]);}}
+ const traces=groups.map((g,i)=>[g,i]).filter(([g])=>g.i.length).map(([g,i])=>({type:"mesh3d",x,y,z,i:g.i,j:g.j,k:g.k,name:label(DATA.g[i]),
   color:COLORS[i%COLORS.length],flatshading:true,opacity:.96,showlegend:false,
   hovertemplate:"T %{x:.2f} MN<br>M %{y:.1f} kN·m<br>u %{z:.3f}<br>"+label(DATA.g[i])+"<extra></extra>"}));
  const line={x:[],y:[],z:[]};for(const [a,b] of segments(um)){for(const p of [a,b]){
@@ -151,27 +157,34 @@ function traces3d(um,gm){const x=[],y=[],z=[],nu=M.t.length,nb=M.b.length;
  const planeX=[M.t[0]/1e6,M.t[M.t.length-1]/1e6,M.t[M.t.length-1]/1e6,M.t[0]/1e6];
  const planeY=[M.b[0]/1e3,M.b[0]/1e3,M.b[M.b.length-1]/1e3,M.b[M.b.length-1]/1e3];
  traces.push({type:"mesh3d",x:planeX,y:planeY,z:[1,1,1,1],i:[0,0],j:[1,2],k:[2,3],
-  color:"#13233f",opacity:.08,showlegend:false,hoverinfo:"skip"});
- for(const [colour,width] of [["#13233f",10],["#fff",5]])traces.push(
+  color:INK,opacity:.08,showlegend:false,hoverinfo:"skip"});
+ for(const [colour,width] of [[INK,10],["#fff",5]])traces.push(
   {type:"scatter3d",mode:"lines",...line,line:{color:colour,width},showlegend:false,hoverinfo:"skip"});
  return traces;}
 function layout(mode){const common={margin:{l:55,r:15,t:12,b:52},paper_bgcolor:"rgba(0,0,0,0)",
- plot_bgcolor:"#f4f8fc",font:{family:"-apple-system,Segoe UI,Roboto,Arial,sans-serif",color:"#13233f"},uirevision:"viewer"};
+ plot_bgcolor:SOFT,font:{family:"-apple-system,Segoe UI,Roboto,Arial,sans-serif",color:INK},uirevision:"viewer"};
  if(mode==="2d")return{...common,xaxis:{title:{text:"Effective tension (MN)"},automargin:true},
   yaxis:{title:{text:"Bending moment (kN·m)"},automargin:true},showlegend:false};
  return{...common,scene:{xaxis:{title:{text:"Effective tension (MN)"}},yaxis:{title:{text:"Bending moment (kN·m)"}},
   zaxis:{title:{text:"Utilisation"},rangemode:"tozero"},camera:{eye:{x:1.45,y:1.45,z:1.1}},aspectmode:"manual",
   aspectratio:{x:1.35,y:1,z:.85}},showlegend:false};}
-async function plotlyPlot(mode,um,gm){if(!window.Plotly)return;const id=++requestId;
+async function plotlyPlot(job){const {id,mode,um,gm}=job;
  try{const traces=mode==="3d"?traces3d(um,gm):traces2d(um,gm),fn=plot._fullLayout?"react":"newPlot";
   await Plotly[fn](plot,traces,layout(mode),{responsive:true,displaylogo:false,scrollZoom:true});
-  if(id!==requestId)return;plot.style.display="block";canvas.style.display="none";plotMode=mode;
+  if(id!==renderToken)return;plot.style.visibility="visible";canvas.style.display="none";plotMode=mode;
+  if(mode==="3d")plot.querySelectorAll("canvas").forEach(item=>{if(!item.dataset.wtFallback){
+   item.dataset.wtFallback="1";item.addEventListener("webglcontextlost",event=>{
+    event.preventDefault();allow3d=false;plot.style.visibility="hidden";canvas.style.display="block";render();},{once:true});}});
   document.getElementById("mode").textContent=mode==="3d"?"3D WebGL surface.":"2D fallback — WebGL is unavailable.";
- }catch(error){if(mode==="3d"){allow3d=false;plotMode="2d";await plotlyPlot("2d",um,gm);}else{
-  plot.style.display="none";canvas.style.display="block";
+ }catch(error){if(id!==renderToken)return;if(mode==="3d"){allow3d=false;await plotlyPlot({...job,mode:"2d"});}else{
+  plot.style.visibility="hidden";canvas.style.display="block";plotMode="canvas";
   document.getElementById("mode").textContent="2D canvas fallback — interactive library unavailable.";}}}
+function queuePlot(mode,um,gm){pendingPlot={id:++renderToken,mode,um,gm};if(!plotting)drainPlots();}
+async function drainPlots(){plotting=true;while(pendingPlot){const job=pendingPlot;pendingPlot=null;
+ await plotlyPlot(job);}plotting=false;}
 function render(){const [um,gm]=matrices();nativePlot(um,gm);updateText(um,gm);
- if(window.Plotly)plotlyPlot(allow3d?"3d":"2d",um,gm);}
+ plotMode="canvas";if(window.Plotly){plot.style.display="block";plot.style.visibility="hidden";canvas.style.display="block";
+  queuePlot(allow3d?"3d":"2d",um,gm);}}
 M.c.forEach(c=>code.add(new Option(c,c)));code.value=M.c.includes("DNV-ST-F101")?"DNV-ST-F101":M.c[0];
 allow3d=webgl();wall.max=M.w.length-1;let initial=M.w.indexOf(20);
 wall.value=initial<0?Math.floor(M.w.length/2):initial;

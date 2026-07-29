@@ -6,6 +6,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = (
@@ -105,6 +107,20 @@ def test_build_page_embeds_a_downsampled_slice_for_every_code():
         for slices in payload["s"].values()
         for values, _governing in slices
     )
+    first_values, first_governing = payload["s"]["DNV-ST-F101"][0]
+    assert first_values == [
+        5000,
+        8000,
+        11000,
+        8000,
+        11000,
+        14000,
+        11000,
+        14000,
+        17000,
+    ]
+    assert payload["g"] == ["burst", "collapse"]
+    assert first_governing == [1, 0, 1, 0, 1, 0, 1, 0, 1]
     assert payload["m"]["z"] == len(raw_payload.encode("utf-8"))
     assert payload["m"]["z"] < 400_000
 
@@ -126,3 +142,54 @@ def test_page_has_accessible_controls_and_an_automatic_2d_fallback():
     assert "plotly-latest" not in page
     assert "overflow-x:hidden" in page
     assert 'href="wall-thickness-3d.json"' in page
+
+
+def test_default_view_marks_the_dnv_acceptance_boundary():
+    renderer = _load_module()
+
+    page = renderer.build_page(_study())
+
+    assert 'M.c.includes("DNV-ST-F101")' in page
+    assert "M.w.indexOf(20)" in page
+    assert "z:[1,1,1,1]" in page
+    assert "Utilisation = 1.0" in page
+
+
+def test_fallback_stays_sized_and_plot_updates_are_serialised():
+    renderer = _load_module()
+
+    page = renderer.build_page(_study())
+
+    assert 'canvas.parentElement.getBoundingClientRect()' in page
+    assert "while(pendingPlot)" in page
+    assert 'plot.style.visibility="hidden"' in page
+    assert "a.u===level&&b.u===level" in page
+
+
+def test_build_page_rejects_an_embedded_payload_at_the_size_limit():
+    renderer = _load_module()
+    study = _study()
+    oversized_name = "governing_" + "x" * 400_000
+    for row in study["rows"]:
+        row["governing_check"] = oversized_name
+
+    with pytest.raises(ValueError, match="embedded JSON"):
+        renderer.build_page(study)
+
+
+def test_main_reads_the_full_study_path_and_writes_the_explorer(
+    tmp_path,
+    capsys,
+):
+    renderer = _load_module()
+    source = tmp_path / "wall-thickness-3d.json"
+    output = tmp_path / "wall-thickness-3d-explorer.html"
+    source.write_text(json.dumps(_study()), encoding="utf-8")
+    renderer._REPO = tmp_path
+    renderer._SOURCE = source
+    renderer._OUTPUT = output
+
+    renderer.main()
+
+    assert output.read_text(encoding="utf-8").startswith("<!DOCTYPE html>")
+    assert "embedded JSON bytes" in capsys.readouterr().out
