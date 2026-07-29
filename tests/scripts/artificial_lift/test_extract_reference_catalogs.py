@@ -1,6 +1,9 @@
 import csv
 import importlib.util
+import os
 from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 from openpyxl import Workbook
@@ -176,6 +179,32 @@ def test_extractor_is_byte_deterministic(tmp_path):
     }
 
 
+def test_cli_loads_helpers_from_its_own_worktree(tmp_path):
+    source = _source_tree(tmp_path)
+    output = tmp_path / "v1"
+    environment = {"PATH": os.environ["PATH"]}
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            "--source-root",
+            str(source),
+            "--output-dir",
+            str(output),
+            "--extraction-date",
+            "2026-07-29",
+        ],
+        cwd=tmp_path,
+        env=environment,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert (output / "manifest.yml").is_file()
+
+
 def test_extractor_rejects_prohibited_free_text(tmp_path):
     extractor = _load_extractor()
     source = _source_tree(tmp_path, description="well 30015410620000")
@@ -202,6 +231,8 @@ def test_extractor_rejects_conflicting_normalized_rods(tmp_path):
     assert manifest["sources"]["rod_details"]["emitted_rows"] == 0
     quarantined = (tmp_path / "v1" / "rod_details_quarantine.csv").read_text()
     assert "conflicting normalized key" in quarantined
+    assert "0.601,2.22,30.5,16,140000" in quarantined
+    assert "0.601,2.2,30.5,16,140000" in quarantined
 
 
 def test_manifest_output_counts_and_hashes_match(tmp_path):

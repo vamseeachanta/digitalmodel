@@ -11,11 +11,16 @@ import os
 from pathlib import Path
 import re
 import shutil
+import sys
 import tempfile
 
 import yaml
 
-from digitalmodel.marine_ops.artificial_lift._reference_catalog_io import (
+WORKTREE_SRC = Path(__file__).resolve().parents[2] / "src"
+if str(WORKTREE_SRC) not in sys.path:
+    sys.path.insert(0, str(WORKTREE_SRC))
+
+from digitalmodel.marine_ops.artificial_lift._reference_catalog_io import (  # noqa: E402
     decimal_text as _decimal_text,
     is_numeric as _is_numeric,
     read_rows as _read_rows,
@@ -25,7 +30,7 @@ from digitalmodel.marine_ops.artificial_lift._reference_catalog_io import (
     text as _text,
     write_csv as _write_csv,
 )
-from digitalmodel.marine_ops.artificial_lift._reference_catalog_schema import (
+from digitalmodel.marine_ops.artificial_lift._reference_catalog_schema import (  # noqa: E402
     CATALOG_BOOK,
     CONNECTION_BOOK,
     COUPLING_BOOK,
@@ -72,10 +77,18 @@ def _rod_detail_rows(path: Path):
     for (grade, diameter), values in sorted(groups.items()):
         distinct = {value[2] for value in values}
         if len(distinct) != 1:
-            quarantine.extend(
-                _quarantine_row(row, {"Rod Grade": label}, "conflicting normalized key")
-                for row, label, _ in values
-            )
+            for row, label, properties in values:
+                record = {
+                    "Rod Grade": label,
+                    "Rod Area": properties[0],
+                    "Unit Weight": properties[1],
+                    "Modulus of Elast": properties[2],
+                    "Spd of Sound": properties[3],
+                    "Tensil Strength": properties[4],
+                }
+                quarantine.append(
+                    _quarantine_row(row, record, "conflicting normalized key")
+                )
             continue
         area, weight, modulus_mpsi, velocity_kft_s, tensile = values[0][2]
         modulus_psi = Decimal(modulus_mpsi) * Decimal("1000000")
@@ -104,6 +117,11 @@ def _quarantine_row(source_row: int, record: dict, reason: str) -> dict:
     return {
         "source_row": source_row,
         "raw_label": _text(record.get("Rod Grade")),
+        "raw_area": _decimal_text(record.get("Rod Area")),
+        "raw_unit_weight": _decimal_text(record.get("Unit Weight")),
+        "raw_modulus": _decimal_text(record.get("Modulus of Elast")),
+        "raw_sonic_velocity": _decimal_text(record.get("Spd of Sound")),
+        "raw_tensile_strength": _decimal_text(record.get("Tensil Strength")),
         "reason": reason,
     }
 

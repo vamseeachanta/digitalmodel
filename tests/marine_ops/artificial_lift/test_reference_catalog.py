@@ -86,6 +86,13 @@ def test_coupling_filters_return_literal_catalog_dimensions():
     assert coupling.friction_coefficient == Decimal("0.2")
 
 
+def test_coupling_lookup_accepts_catalogued_five_place_diameter():
+    matches = find_couplings("1.15625", type="Continuous Rod")
+
+    assert len(matches) == 1
+    assert matches[0].coupling_diameter_in == Decimal("1.15625")
+
+
 def test_surface_unit_lookup_returns_source_qualified_raw_geometry():
     unit = surface_unit_geometry(
         "A",

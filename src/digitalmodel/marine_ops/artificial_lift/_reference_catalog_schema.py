@@ -78,7 +78,10 @@ OUTPUT_DEFINITIONS = {
         "weight_derived_velocity_ft_s", "tensile_strength_psi",
         "raw_sonic_velocity_kft_s", "source_rows", "raw_labels",
     ],
-    "rod_details_quarantine.csv": ["source_row", "raw_label", "reason"],
+    "rod_details_quarantine.csv": [
+        "source_row", "raw_label", "raw_area", "raw_unit_weight",
+        "raw_modulus", "raw_sonic_velocity", "raw_tensile_strength", "reason",
+    ],
     "rods_catalog.csv": [
         "source_row", "catalog_id", "description", "tensile_strength_psi",
         "area_in2", "modulus_mpsi", "velocity_kft_s",

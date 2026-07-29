@@ -104,11 +104,16 @@ outputs:
     - source_rows
     - raw_labels
   rod_details_quarantine.csv:
-    sha256: 648a127624e7c9f41f5876ec833868837c1efad508001b2f68323d85a6fa2135
+    sha256: f0c2c5a9355395a06e87a4b7d20c912d47500362fe38635a562d515a98a88d98
     row_count: 169
     columns:
     - source_row
     - raw_label
+    - raw_area
+    - raw_unit_weight
+    - raw_modulus
+    - raw_sonic_velocity
+    - raw_tensile_strength
     - reason
   surface_unit_catalog.csv:
     sha256: 2ae2980ed1729a4d74844b8bd9497f21201648488dd8079ffef8d8ce6d3ed279

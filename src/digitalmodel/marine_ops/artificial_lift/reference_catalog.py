@@ -8,7 +8,6 @@ from decimal import Decimal, InvalidOperation
 import hashlib
 from functools import lru_cache
 from importlib import resources
-import math
 import re
 from types import MappingProxyType
 from typing import Mapping
@@ -108,7 +107,7 @@ class ReferenceCatalog:
     def find_couplings(
         self, rod_diameter_in, manufacturer=None, size=None, type=None
     ) -> tuple[CouplingProperties, ...]:
-        diameter = _diameter_key(rod_diameter_in)
+        diameter = _diameter_key(rod_diameter_in, max_places=5)
         filters = tuple(
             _optional_text_key(value) for value in (manufacturer, size, type)
         )
@@ -165,7 +164,7 @@ def _grade_key(value) -> str:
     return re.sub(r"\s*-\s*", " - ", key)
 
 
-def _diameter_key(value) -> Decimal:
+def _diameter_key(value, max_places=3) -> Decimal:
     if isinstance(value, bool) or not isinstance(value, (str, int, float, Decimal)):
         raise TypeError("diameter must be a string or number")
     try:
@@ -174,8 +173,8 @@ def _diameter_key(value) -> Decimal:
         raise ValueError(f"invalid diameter: {value!r}") from exc
     if not number.is_finite() or number <= 0:
         raise ValueError("diameter must be finite and positive")
-    if number.as_tuple().exponent < -3:
-        raise ValueError("diameter supports at most three fractional digits")
+    if number.as_tuple().exponent < -max_places:
+        raise ValueError(f"diameter supports at most {max_places} fractional digits")
     return number.normalize()
 
 
@@ -346,4 +345,3 @@ def surface_unit_geometry(
             f"surface-unit key matched {len(matches)} catalog records"
         )
     return matches[0]
-
