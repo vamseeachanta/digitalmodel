@@ -39,6 +39,7 @@ from .calculations import (
     calculate_theoretical_production,
     run_p1_calculations,
 )
+from .production import patterson_slippage_bpd
 from .diagnostics import PumpDiagnostics
 from .feature_extraction import FeatureExtractor
 from .card_generators import ALL_GENERATORS as CARD_GENERATORS
@@ -159,6 +160,7 @@ __all__ = [
     "calculate_cpip",
     "calculate_theoretical_production",
     "run_p1_calculations",
+    "patterson_slippage_bpd",
     "DiagnosticResult",
     # Diagnostics
     "PumpDiagnostics",

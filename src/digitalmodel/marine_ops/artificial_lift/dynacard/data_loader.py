@@ -59,6 +59,8 @@ def parse_legacy_json(data: Dict[str, Any]) -> DynacardAnalysisContext:
         load_max_sp=input_params_raw.get('LoadMaxSP'),
         load_min_sp=input_params_raw.get('LoadMinSP'),
         fluid_density=input_params_raw.get('FluidDensity'),
+        fluid_viscosity_cp=input_params_raw.get('Viscosity'),
+        formation_volume_factor=input_params_raw.get('FormationVolumeFactor'),
     )
 
     # Extract surface card data
@@ -99,6 +101,8 @@ def parse_legacy_json(data: Dict[str, Any]) -> DynacardAnalysisContext:
     pump = PumpProperties(
         diameter=pump_raw.get('Diameter', 1.75),
         depth=pump_raw.get('Depth', 5000.0),
+        plunger_barrel_clearance_in=pump_raw.get('PlungerBarrelClearance'),
+        plunger_length_in=pump_raw.get('PlungerLength'),
     )
 
     # Parse surface unit

@@ -262,7 +262,11 @@ def _kpi_section(results: AnalysisResults) -> list[str]:
     rows = [
         _dl_row("Diagnostic", results.diagnostic_message),
         _dl_row("Pump fillage", _fmt(results.pump_fillage, 6)),
-        _dl_row("Production", _fmt(results.inferred_production, 6), " bbl/day"),
+        _dl_row(
+            "Displacement (downhole)",
+            _fmt(results.inferred_production, 6),
+            " bbl/day",
+        ),
         _dl_row("Buckling detected", results.buckling_detected),
         _dl_row("PPRL", _fmt(results.peak_polished_rod_load, 3), " lb"),
         _dl_row("MPRL", _fmt(results.minimum_polished_rod_load, 3), " lb"),
@@ -270,6 +274,54 @@ def _kpi_section(results: AnalysisResults) -> list[str]:
     ]
     if fluid_load is not None:
         rows.append(_dl_row("Fluid load", _fmt(fluid_load, 3), " lb"))
+    production = results.production
+    if production is not None:
+        rows.extend([
+            _dl_row(
+                "Corrected production (stock tank)",
+                _fmt(production.corrected_stock_tank_production, 6),
+                " bbl/day",
+            ),
+            _dl_row(
+                "Plunger-barrel clearance",
+                _fmt(production.plunger_barrel_clearance_in, 6),
+                " in",
+            ),
+            _dl_row(
+                "Fluid viscosity",
+                _fmt(production.fluid_viscosity_cp, 6),
+                " cP",
+            ),
+            _dl_row(
+                "Differential pressure",
+                _fmt(production.differential_pressure_psi, 6),
+                " psi",
+            ),
+            _dl_row(
+                "Plunger length",
+                _fmt(production.plunger_length_in, 6),
+                " in",
+            ),
+            _dl_row(
+                "Patterson slippage (24h operation)",
+                _fmt(production.slippage_bpd, 6),
+                " bbl/day",
+            ),
+            _dl_row(
+                "Runtime-adjusted slippage",
+                _fmt(production.runtime_adjusted_slippage_bpd, 6),
+                " bbl/day",
+            ),
+            _dl_row(
+                "Formation volume factor",
+                _fmt(production.formation_volume_factor, 6),
+                " reservoir bbl/stock-tank bbl",
+            ),
+            _dl_row(
+                "Correction missing inputs",
+                ", ".join(production.correction_missing_inputs),
+            ),
+        ])
     return [
         "    <section>",
         "      <h2>KPIs</h2>",

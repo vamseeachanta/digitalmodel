@@ -4,6 +4,7 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
     AnalysisResults,
     CardData,
     DynacardAnalysisContext,
+    ProductionAnalysis,
     PumpProperties,
     RodSection,
     SurfaceUnit,
@@ -18,6 +19,7 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.report_sections import (
     _build_alarm_block,
     _classification_verdict,
     build_diagnostic_report_html,
+    _kpi_section,
 )
 
 
@@ -77,6 +79,37 @@ def test_legacy_valve_leak_report_renders_troubleshooting_actions():
     assert "Symptom:" in html
     assert "Mechanism:" in html
     assert "Confirm with a traveling valve test" in html
+
+
+def test_kpis_report_displacement_and_every_production_correction_term():
+    """The report must not hide Patterson inputs or relabel displacement."""
+    results = AnalysisResults(
+        inferred_production=33.3,
+        production=ProductionAnalysis(
+            theoretical_production=33.3,
+            plunger_barrel_clearance_in=0.009,
+            fluid_viscosity_cp=1.0,
+            differential_pressure_psi=2285.0,
+            plunger_length_in=48.0,
+            slippage_bpd=90.287115,
+            runtime_adjusted_slippage_bpd=9.931583,
+            formation_volume_factor=1.2,
+            corrected_stock_tank_production=19.498681,
+        ),
+    )
+
+    html = "\n".join(_kpi_section(results))
+
+    assert "Displacement (downhole)" in html
+    assert "Corrected production (stock tank)" in html
+    assert "Plunger-barrel clearance" in html
+    assert "Fluid viscosity" in html
+    assert "Differential pressure" in html
+    assert "Plunger length" in html
+    assert "Patterson slippage (24h operation)" in html
+    assert "Runtime-adjusted slippage" in html
+    assert "Formation volume factor" in html
+    assert "19.498681" in html
 
 
 def test_router_reuses_one_diagnostic_classification(monkeypatch):
