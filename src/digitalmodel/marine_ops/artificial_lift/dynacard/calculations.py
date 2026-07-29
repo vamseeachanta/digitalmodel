@@ -5,10 +5,10 @@ import numpy as np
 from typing import Optional, Tuple
 from .models import (
     DynacardAnalysisContext, CardData, AnalysisResults,
-    FluidLoadAnalysis, CPIPAnalysis, PumpFillageAnalysis, ProductionAnalysis
+    FluidLoadAnalysis, CPIPAnalysis, PumpFillageAnalysis
 )
 from .corners import calculate_corners, get_corner_loads
-from .production import patterson_slippage_bpd
+from .production import calculate_theoretical_production
 
 
 # =============================================================================
@@ -245,139 +245,6 @@ def calculate_cpip(
         pump_discharge_pressure=float(pdp),
         fluid_density=float(fluid_density),
         tubing_gradient=float(tubing_gradient)
-    )
-
-
-# =============================================================================
-# THEORETICAL PRODUCTION
-# =============================================================================
-
-def calculate_theoretical_production(
-    ctx: DynacardAnalysisContext,
-    fillage_analysis: PumpFillageAnalysis,
-    cpip_analysis: Optional[CPIPAnalysis] = None,
-) -> ProductionAnalysis:
-    """
-    Calculate theoretical production from pump displacement.
-
-    Gross Displacement (BPD) = π/4 * D² * Stroke * SPM * 1440 / 9702
-    Net Displacement = Gross * Fillage
-    Theoretical Production = Net * Runtime / 24
-
-    Args:
-        ctx: Analysis context with pump and operating parameters
-        fillage_analysis: Pump fillage results
-
-    Returns:
-        ProductionAnalysis with gross, net displacement and production
-    """
-    # Pump diameter in inches
-    d_pump = ctx.pump.diameter
-
-    # Gross downhole stroke in inches
-    stroke = fillage_analysis.gross_stroke
-
-    # Strokes per minute
-    spm = ctx.spm
-
-    # Conversion factor: 1 barrel = 9702 cubic inches
-    # Minutes per day = 1440
-
-    # Gross pump displacement (BPD)
-    pump_area = np.pi * (d_pump ** 2) / 4.0
-    gross_displacement = pump_area * stroke * spm * 1440.0 / 9702.0
-
-    # Net displacement accounting for fillage
-    fillage_fraction = fillage_analysis.fillage / 100.0
-    net_displacement = gross_displacement * fillage_fraction
-
-    # Runtime (hours) -- prefer the value recorded WITH the card.
-    #
-    # This priority used to be reversed, and it was the largest single error
-    # term measured against public production records (dm#1899). A well test's
-    # runtime can predate the card by months: one well used 9.12 h from a
-    # January test for an April card whose own runtime was 5.28 h, which alone
-    # inflated production by ~68%. Correcting the order took that card from
-    # +65.5% to -4.2% against the state's filed volumes.
-    #
-    # A well that cycles but is assumed to run 24 h is overstated by exactly
-    # its duty factor. That assumption is reported on the result rather than
-    # made silently -- see ProductionAnalysis.runtime_source.
-    if ctx.input_params is not None and ctx.input_params.runtime:
-        runtime = ctx.input_params.runtime
-        runtime_source = "card"
-    elif ctx.well_test is not None and ctx.well_test.runtime:
-        runtime = ctx.well_test.runtime
-        runtime_source = "well_test"
-    else:
-        runtime = 24.0
-        runtime_source = "assumed_24h"
-
-    # Theoretical production (BPD) adjusted for runtime
-    runtime_fraction = runtime / 24.0
-    theoretical_production = net_displacement * runtime_fraction
-
-    clearance = ctx.pump.plunger_barrel_clearance_in
-    plunger_length = ctx.pump.plunger_length_in
-    viscosity = (
-        ctx.input_params.fluid_viscosity_cp if ctx.input_params else None
-    )
-    formation_volume_factor = (
-        ctx.input_params.formation_volume_factor if ctx.input_params else None
-    )
-    differential_pressure = None
-    if cpip_analysis is not None:
-        differential_pressure = (
-            cpip_analysis.pump_discharge_pressure
-            - cpip_analysis.pump_intake_pressure
-        )
-    correction_inputs = (
-        ("plunger_barrel_clearance_in", clearance),
-        ("fluid_viscosity_cp", viscosity),
-        ("differential_pressure_psi", differential_pressure),
-        ("plunger_length_in", plunger_length),
-        ("formation_volume_factor", formation_volume_factor),
-    )
-    missing_inputs = [
-        name for name, value in correction_inputs
-        if value is None or value <= 0.0
-    ]
-    slippage = None
-    runtime_adjusted_slippage = None
-    corrected_production = None
-    if not missing_inputs:
-        slippage = patterson_slippage_bpd(
-            d_pump, differential_pressure, clearance, viscosity, plunger_length, spm
-        )
-        runtime_adjusted_slippage = slippage * runtime_fraction
-        corrected_downhole = max(
-            theoretical_production - runtime_adjusted_slippage, 0.0
-        )
-        corrected_production = corrected_downhole / formation_volume_factor
-
-    # Pump efficiency (compare to well test if available)
-    if ctx.well_test is not None and ctx.well_test.oil_rate + ctx.well_test.water_rate > 0:
-        actual_production = ctx.well_test.oil_rate + ctx.well_test.water_rate
-        pump_efficiency = (actual_production / theoretical_production) * 100.0 if theoretical_production > 0 else 0.0
-    else:
-        pump_efficiency = ctx.pump.efficiency * 100.0
-
-    return ProductionAnalysis(
-        gross_displacement=float(gross_displacement),
-        net_displacement=float(net_displacement),
-        theoretical_production=float(theoretical_production),
-        pump_efficiency=float(pump_efficiency),
-        runtime_hours=float(runtime),
-        runtime_source=runtime_source,
-        plunger_barrel_clearance_in=clearance,
-        fluid_viscosity_cp=viscosity,
-        differential_pressure_psi=differential_pressure,
-        plunger_length_in=plunger_length,
-        slippage_bpd=slippage,
-        runtime_adjusted_slippage_bpd=runtime_adjusted_slippage,
-        formation_volume_factor=formation_volume_factor,
-        corrected_stock_tank_production=corrected_production,
-        correction_missing_inputs=missing_inputs,
     )
 
 

@@ -274,54 +274,7 @@ def _kpi_section(results: AnalysisResults) -> list[str]:
     ]
     if fluid_load is not None:
         rows.append(_dl_row("Fluid load", _fmt(fluid_load, 3), " lb"))
-    production = results.production
-    if production is not None:
-        rows.extend([
-            _dl_row(
-                "Corrected production (stock tank)",
-                _fmt(production.corrected_stock_tank_production, 6),
-                " bbl/day",
-            ),
-            _dl_row(
-                "Plunger-barrel clearance",
-                _fmt(production.plunger_barrel_clearance_in, 6),
-                " in",
-            ),
-            _dl_row(
-                "Fluid viscosity",
-                _fmt(production.fluid_viscosity_cp, 6),
-                " cP",
-            ),
-            _dl_row(
-                "Differential pressure",
-                _fmt(production.differential_pressure_psi, 6),
-                " psi",
-            ),
-            _dl_row(
-                "Plunger length",
-                _fmt(production.plunger_length_in, 6),
-                " in",
-            ),
-            _dl_row(
-                "Patterson slippage (24h operation)",
-                _fmt(production.slippage_bpd, 6),
-                " bbl/day",
-            ),
-            _dl_row(
-                "Runtime-adjusted slippage",
-                _fmt(production.runtime_adjusted_slippage_bpd, 6),
-                " bbl/day",
-            ),
-            _dl_row(
-                "Formation volume factor",
-                _fmt(production.formation_volume_factor, 6),
-                " reservoir bbl/stock-tank bbl",
-            ),
-            _dl_row(
-                "Correction missing inputs",
-                ", ".join(production.correction_missing_inputs),
-            ),
-        ])
+    rows.extend(_production_kpi_rows(results.production))
     return [
         "    <section>",
         "      <h2>KPIs</h2>",
@@ -330,6 +283,34 @@ def _kpi_section(results: AnalysisResults) -> list[str]:
         "      </dl>",
         "    </section>",
     ]
+
+
+def _production_kpi_rows(production: Any) -> list[str]:
+    if production is None:
+        return []
+    specs = [
+        ("Corrected production (stock tank)", "corrected_stock_tank_production", " bbl/day"),
+        ("Plunger-barrel clearance", "plunger_barrel_clearance_in", " in"),
+        ("Fluid viscosity", "fluid_viscosity_cp", " cP"),
+        ("Differential pressure", "differential_pressure_psi", " psi"),
+        ("Plunger length", "plunger_length_in", " in"),
+        ("Patterson slippage (24h operation)", "slippage_bpd", " bbl/day"),
+        ("Runtime-adjusted slippage", "runtime_adjusted_slippage_bpd", " bbl/day"),
+        (
+            "Formation volume factor",
+            "formation_volume_factor",
+            " reservoir bbl/stock-tank bbl",
+        ),
+    ]
+    rows = [
+        _dl_row(label, _fmt(getattr(production, field), 6), unit)
+        for label, field, unit in specs
+    ]
+    rows.append(_dl_row(
+        "Correction missing inputs",
+        ", ".join(production.correction_missing_inputs),
+    ))
+    return rows
 
 
 def _setpoints_section(alarm_block: dict[str, Any]) -> list[str]:
