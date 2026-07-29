@@ -47,7 +47,6 @@ def calculate_fluid_load(
         position, load, clockwise=True
     )
 
-    # Detect corners
     canonical_card = CardData(position=position.tolist(), load=load.tolist())
     corners, _ = calculate_corners(canonical_card)
     if len(set(corners)) < 4:
