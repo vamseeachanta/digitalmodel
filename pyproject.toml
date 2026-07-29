@@ -140,6 +140,12 @@ test = [
     "xlsxwriter>=3.1.0,<4.0.0",
     "websockets>=15.0.1,<16.0.0",
     "pygmt>=0.13.0,<1.0.0",
+    # Shipped code imports these lazily (hence the [mesh] extra, not runtime) but
+    # tests/ imports them at MODULE level, so collection fails without them:
+    # test_meshio_integration, test_pyvista_integration, hull_library/test_coarsen_mesh,
+    # hull_library/test_decimation_vtk.
+    "meshio>=5.3.0,<6.0.0",
+    "pyvista>=0.47.1,<1.0.0",
 ]
 docs = [
     "sphinx>=6.0",
