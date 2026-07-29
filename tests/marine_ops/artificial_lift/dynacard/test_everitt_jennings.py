@@ -25,6 +25,7 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings import (
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings.solver import (
     _march,
+    _normal_force_per_length,
 )
 
 FIXTURE = Path(__file__).parent / "testdata" / "7699227.json"
@@ -186,6 +187,10 @@ def test_vertical_gravity_matches_buoyant_boundary_datum():
     # = 490.3325 N. The two finite-difference boundary representations may
     # differ by that terminal cell, but never by the 49,033.25 N fluid uplift.
     np.testing.assert_allclose(distributed.load, boundary.load, atol=490.3325)
+    assert distributed.simulation.cumulative_buoyant[0] == pytest.approx(
+        distributed.simulation.buoyant_weight
+    )
+    assert distributed.simulation.cumulative_buoyant[-1] == pytest.approx(0.0)
 
 
 def test_solution_is_node_converged(well):
@@ -273,6 +278,7 @@ def test_curvature_friction_uses_axial_force_per_unit_length():
     elastic_modulus = np.full(shape, 1_000.0)
     area = np.ones(shape)
     zeros = np.zeros(shape)
+    buoyant_mass_per_length = np.ones(shape)
     inclination_gradient = np.full(shape, 3.0)
 
     solution, _, _ = _march(
@@ -283,8 +289,9 @@ def test_curvature_friction_uses_axial_force_per_unit_length():
         0.5,
         0.2,
         zeros,
-        zeros,
-        0.0,
+        buoyant_mass_per_length,
+        np.array([10.0, 5.0, 0.0]),
+        10.0,
         zeros,
         elastic_modulus,
         area,
@@ -294,10 +301,50 @@ def test_curvature_friction_uses_axial_force_per_unit_length():
         1.0,
     )
 
-    # F = EA * du/dx = 1,000 N * 0.01 m / 0.5 m = 20 N.
-    # N' = F * d_phi/ds = 20 N * 3 /m = 60 N/m.
-    # du_f = mu * N' * dx^2 / EA = 0.2 * 60 * 0.5^2 / 1,000 = 0.003 m.
-    assert solution[2, 1] == pytest.approx(0.02 + 0.003)
+    # Reduced F = EA * du/dx = 1,000 N * 0.01 m / 0.5 m = 20 N.
+    # Actual local F adds 1 kg/m * 10 m/s2 * 0.5 m below = 5 N.
+    # N' = 25 N * 3 /m = 75 N/m.
+    # du_f = mu * N' * dx^2 / EA = 0.2 * 75 * 0.5^2 / 1,000
+    # = 0.00375 m.
+    assert solution[2, 1] == pytest.approx(0.02 + 0.00375)
+
+
+def test_inclination_normal_load_adds_gravity_and_curvature():
+    """Gravity and curvature act in the same inclination-plane direction."""
+    normal_load = _normal_force_per_length(
+        1.0,
+        10.0,
+        np.pi / 2.0,
+        3.0,
+        0.0,
+        5.0,
+    )
+
+    # w_b*sin(phi) + F*dphi/ds = 1*10*1 + 5*3 = 25 N/m.
+    assert normal_load == pytest.approx(25.0)
+
+
+def test_wraparound_curvature_friction_opposes_motion():
+    """The periodic time boundary must use the same motion sign as its peers."""
+    n_x, n_t = 3, 4
+    displacement = np.zeros((n_x, n_t))
+    displacement[1] = np.array([0.02, 0.01, 0.01, 0.02])
+    shape = (n_x, n_t)
+    elastic_modulus = np.full(shape, 1_000.0)
+    area = np.ones(shape)
+    zeros = np.zeros(shape)
+    inclination_gradient = np.full(shape, 3.0)
+
+    solution, _, _ = _march(
+        displacement, n_x, n_t, 1.0, 0.5, 0.2, zeros, zeros,
+        np.zeros(n_x), 0.0, zeros, elastic_modulus, area, zeros,
+        inclination_gradient, zeros, 1.0,
+    )
+
+    # F = 1,000 N * 0.02 m / 0.5 m = 40 N; N' = 40 * 3 = 120 N/m.
+    # |du_f| = 0.2 * 120 * 0.5^2 / 1,000 = 0.006 m. Since u decreases
+    # from j=0 to j=1, friction subtracts that increment from the 0.04 m base.
+    assert solution[2, 0] == pytest.approx(0.04 - 0.006)
 
 
 class TestEffectiveRodDensity:

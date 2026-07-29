@@ -329,17 +329,19 @@ def build_simulation(
     sim.x = np.linspace(0.0, sim.rod_length, sim.n_x)
     sim.dx = sim.x[1] - sim.x[0]
 
-    # Distributed buoyant weight, accumulated from the pump upward.
-    d_volume = sim.dx * sim.areas
-    d_weight = sim.densities * d_volume
-    d_buoyant = (d_weight - d_volume * fluid_density) * gravity
-
+    # Exact buoyant weight remaining below every node. Integrating section
+    # overlap avoids counting a full terminal grid cell at the pump.
     cuts = _section_cuts(sim.taper_lengths)
-    per_node = np.full(sim.n_x, np.nan, dtype=np.float64)
+    sim.cumulative_buoyant = np.zeros(sim.n_x, dtype=np.float64)
     for i in range(len(cuts) - 1):
-        mask = (cuts[i] <= sim.x) & (sim.x <= cuts[i + 1])
-        per_node[mask] = d_buoyant[i]
-    sim.cumulative_buoyant = np.flip(np.cumsum(per_node), 0)
+        remaining_length = np.clip(
+            cuts[i + 1] - np.maximum(sim.x, cuts[i]),
+            0.0,
+            sim.taper_lengths[i],
+        )
+        sim.cumulative_buoyant += (
+            sim.buoyant_rho_a[i] * gravity * remaining_length
+        )
 
     # Index at which the stroke turns from down to up.
     sim.up_dn = int(np.mean(np.where(sim.u == np.min(sim.u))[0]))
@@ -422,14 +424,14 @@ def _normal_force_per_length(
     curvature_normal = axial_force * d_phi
     azimuth_normal = axial_force * d_psi * np.sin(phi)
     return np.sqrt(
-        (gravity_normal - curvature_normal) ** 2 + azimuth_normal ** 2
+        (gravity_normal + curvature_normal) ** 2 + azimuth_normal ** 2
     )
 
 
 @_njit(cache=True)
 def _march(
-    u, n_x, n_t, dt, dx, lam, rho_a, buoyant_rho_a, g, c, e_mod,
-    area, phi, d_phi, d_psi, muteg,
+    u, n_x, n_t, dt, dx, lam, rho_a, buoyant_rho_a,
+    remaining_buoyant, g, c, e_mod, area, phi, d_phi, d_psi, muteg,
 ):
     """March the damped wave equation down the rod string.
 
@@ -459,7 +461,10 @@ def _march(
             c3 = (lam * sign / ea_plus) * dx ** 2
             c4 = (buoyant_rho_a_ij / ea_plus) * dx ** 2
 
-            axial_force = ea_minus * (u[i, j] - u[i - 1, j]) / dx
+            reduced_axial_force = (
+                ea_minus * (u[i, j] - u[i - 1, j]) / dx
+            )
+            axial_force = reduced_axial_force + remaining_buoyant[i]
             q_n = _normal_force_per_length(
                 buoyant_rho_a_ij,
                 g,
@@ -490,10 +495,21 @@ def _march(
 
         c1 = (rho_a_ij / ea_plus) * (dx / dt) ** 2
         c2 = (rho_a_c / ea_plus) * dx ** 2 / dt
-        c3 = (lam / ea_plus) * dx ** 2
+        delta = u[i, 1] - u[i, 0]
+        if delta > 0:
+            sign = 1.0
+        elif delta < 0:
+            sign = -1.0
+        else:
+            sign = 0.0
+
+        c3 = (lam * sign / ea_plus) * dx ** 2
         c4 = (buoyant_rho_a_ij / ea_plus) * dx ** 2
 
-        axial_force = ea_minus * (u[i, 0] - u[i - 1, 0]) / dx
+        reduced_axial_force = (
+            ea_minus * (u[i, 0] - u[i - 1, 0]) / dx
+        )
+        axial_force = reduced_axial_force + remaining_buoyant[i]
         q_n = _normal_force_per_length(
             buoyant_rho_a_ij,
             g,
@@ -660,9 +676,9 @@ class EverittJenningsSolver:
         muteg = 1.0 if self.include_gravity else 0.0
         u, dh_position, dh_load = _march(
             u, sim.n_x, sim.n_t, sim.dt, sim.dx, sim.friction,
-            coeff.rho_a, coeff.buoyant_rho_a, sim.gravity, coeff.damping,
-            coeff.moduli, coeff.areas, coeff.phi, coeff.d_phi, coeff.d_psi,
-            muteg,
+            coeff.rho_a, coeff.buoyant_rho_a, sim.cumulative_buoyant,
+            sim.gravity, coeff.damping, coeff.moduli, coeff.areas, coeff.phi,
+            coeff.d_phi, coeff.d_psi, muteg,
         )
 
         if self.smooth_window and self.smooth_window > self.smooth_order:
