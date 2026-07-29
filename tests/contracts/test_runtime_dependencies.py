@@ -58,6 +58,25 @@ IMPORT_TO_DIST = {
     "mpl_toolkits": "matplotlib",  # namespace package shipped BY matplotlib
 }
 
+#: Runtime dependencies that shipped code needs but never `import`s -- so no AST
+#: scan can see them, and `test_no_runtime_dependency_is_unused` would call them
+#: unused. Each entry MUST cite the call site that needs it.
+#:
+#: This category exists because #1632 removed `xlsxwriter` on exactly that
+#: reasoning and broke Excel export: pandas resolves the writer by NAME, and a
+#: dependency expressed as a string is invisible to an import scan.
+#:
+#: Before adding an entry, prefer making the dependency explicit in code. Add
+#: here only when the library's own API is string-addressed (pandas engines,
+#: matplotlib backends, SQLAlchemy dialects, entry-point plugins).
+DYNAMIC_RUNTIME: dict[str, str] = {
+    # pd.ExcelWriter(..., engine="xlsxwriter") at:
+    #   asset_integrity/common/DataFrame_To_xlsx.py:12
+    #   asset_integrity/common/data.py:454
+    #   infrastructure/utils/data.py (same helper)
+    "xlsxwriter": "pandas ExcelWriter engine, addressed by string not import",
+}
+
 #: FROZEN 2026-07-29 (#1632). Module-level imports in shipped code that resolve to
 #: nothing installable. Two kinds, both pre-existing and both out of scope for the
 #: dependency un-merge -- enumerated here so they are visible debt rather than a
@@ -81,7 +100,8 @@ KNOWN_UNDECLARED: frozenset[str] = frozenset({
     "services", "xlsx-to-dataframe",
     # (b) real packages, legacy corners only
     "bokeh", "exchangelib", "flask-cors", "flask-flatpages", "flask-httpauth",
-    "flask-restful", "flask-wtf", "markitdown", "oyaml", "pandas-datareader",
+    "finvizfinance", "flask-restful", "flask-wtf", "markitdown", "oyaml",
+    "pandas-datareader",
     "pdfplumber", "pygame", "sec-edgar-downloader", "webdriver-manager",
     "wtforms", "yahoo-fin", "yfinance",
 })
@@ -115,7 +135,21 @@ def _import_names(node: ast.AST) -> set[str]:
 
 def hard_imports() -> set[str]:
     """Distributions imported at MODULE level, outside try/except and outside any
-    function or class body, by code that ships in the wheel."""
+    function or class body, by code that ships in the wheel.
+
+    Only ``tree.body`` is examined, and that is sufficient: a module-level
+    ``try: import x`` is an ``ast.Try`` node whose children are NOT direct
+    children of ``tree.body``, and a lazy import inside a function is inside an
+    ``ast.FunctionDef``. Both are therefore already excluded.
+
+    An earlier version also subtracted a ``guarded`` set collected by walking
+    every ``Try``/``FunctionDef`` in the file. That was worse than redundant: it
+    CANCELLED a genuine module-level offender whenever the same name was also
+    imported lazily somewhere else in the same file, producing false negatives.
+    It hid two real offenders, one of them live and under test
+    (``structural/pipe_capacity/common/PipeCapacity.py``, 1192 LOC, whose test
+    carries a ``sys.path`` hack to work around the broken import).
+    """
     out: set[str] = set()
     stdlib = set(sys.stdlib_module_names)
     for path in sorted(SRC.rglob("*.py")):
@@ -126,15 +160,10 @@ def hard_imports() -> set[str]:
             tree = ast.parse(path.read_text(encoding="utf-8", errors="ignore"))
         except SyntaxError:  # pragma: no cover - reported by its own guard
             continue
-        guarded: set[str] = set()
-        for node in ast.walk(tree):
-            if isinstance(node, (ast.Try, ast.FunctionDef, ast.AsyncFunctionDef)):
-                for sub in ast.walk(node):
-                    guarded |= _import_names(sub)
         top: set[str] = set()
         for node in tree.body:
             top |= _import_names(node)
-        for mod in top - guarded:
+        for mod in top:
             if mod in stdlib or mod in NOT_A_DEPENDENCY or mod.startswith("_"):
                 continue
             out.add(_dist(mod))
@@ -146,6 +175,33 @@ def declared_runtime() -> set[str]:
     return {_spec_name(s) for s in doc["project"]["dependencies"]}
 
 
+def test_dynamic_runtime_entries_are_declared_and_still_used():
+    """Every DYNAMIC_RUNTIME entry must be a real runtime dependency AND still be
+    referenced by name in shipped code.
+
+    Without the second half, this dict becomes a blanket exemption: an entry
+    whose call site was deleted would keep a dependency alive forever with the
+    contract asserting nothing. Matching on the string literal is the only check
+    available -- that is the whole point of the category.
+    """
+    runtime = declared_runtime()
+    for dist, reason in sorted(DYNAMIC_RUNTIME.items()):
+        assert dist in runtime, (
+            f"{dist} is listed in DYNAMIC_RUNTIME ({reason}) but is not a runtime "
+            "dependency -- either declare it or drop the entry (#1632)"
+        )
+        found = [
+            p.relative_to(SRC).as_posix()
+            for p in SRC.rglob("*.py")
+            if dist in p.read_text(encoding="utf-8", errors="ignore")
+        ]
+        assert found, (
+            f"{dist} is exempted as a dynamic runtime dependency ({reason}) but no "
+            "shipped module mentions it by name any more. Delete the DYNAMIC_RUNTIME "
+            "entry and the dependency together (#1632)."
+        )
+
+
 def test_no_runtime_dependency_is_unused():
     """Every runtime dependency is imported by shipped code.
 
@@ -153,7 +209,7 @@ def test_no_runtime_dependency_is_unused():
     ``[test]`` extra for anything the test runner needs, ``[dev]`` for tooling,
     ``[orcaflex-dashboard]`` for the vendored app.
     """
-    unused = sorted(declared_runtime() - hard_imports())
+    unused = sorted(declared_runtime() - hard_imports() - set(DYNAMIC_RUNTIME))
     assert not unused, (
         "runtime dependencies that no shipped module imports at module level "
         f"({len(unused)}): {unused}\n"
