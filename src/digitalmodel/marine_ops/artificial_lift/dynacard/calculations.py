@@ -7,12 +7,22 @@ from .models import (
     DynacardAnalysisContext, CardData, AnalysisResults,
     FluidLoadAnalysis, CPIPAnalysis, PumpFillageAnalysis, ProductionAnalysis
 )
+from .comparison import canonicalize_card_direction
 from .corners import calculate_corners, get_corner_loads
 
 
 # =============================================================================
 # FLUID LOAD CALCULATION
 # =============================================================================
+
+def _cyclic_phase(load: np.ndarray, start: int, stop: int) -> np.ndarray:
+    """Return load samples in forward traversal, excluding the stop corner."""
+    count = (stop - start) % len(load)
+    if count == 0:
+        raise ValueError("fluid load requires distinct corner phases")
+    indices = (start + np.arange(count)) % len(load)
+    return load[indices]
+
 
 def calculate_fluid_load(
     downhole_card: CardData,
@@ -31,12 +41,16 @@ def calculate_fluid_load(
     Returns:
         FluidLoadAnalysis with upstroke, downstroke, and fluid load
     """
-    load = np.array(downhole_card.load)
-    n = len(load)
+    position = np.asarray(downhole_card.position, dtype=np.float64)
+    load = np.asarray(downhole_card.load, dtype=np.float64)
+    position, load, _ = canonicalize_card_direction(
+        position, load, clockwise=True
+    )
 
-    # Detect corners
-    corners, _ = calculate_corners(downhole_card)
-    corners = sorted(corners)
+    canonical_card = CardData(position=position.tolist(), load=load.tolist())
+    corners, _ = calculate_corners(canonical_card)
+    if len(set(corners)) < 4:
+        raise ValueError("fluid load requires distinct corner phases")
 
     if method == '2pt':
         # Use corner loads directly
@@ -44,12 +58,12 @@ def calculate_fluid_load(
         downstroke_load = load[corners[0]]  # Bottom left
     elif method == 'avg':
         # Average loads in each region
-        upstroke_load = np.mean(load[corners[1]:corners[2]])
-        downstroke_load = np.mean(load[corners[3]:])
+        upstroke_load = np.mean(_cyclic_phase(load, corners[1], corners[2]))
+        downstroke_load = np.mean(_cyclic_phase(load, corners[3], corners[0]))
     elif method == 'med':
         # Median loads in each region
-        upstroke_load = np.median(load[corners[1]:corners[2]])
-        downstroke_load = np.median(load[corners[3]:])
+        upstroke_load = np.median(_cyclic_phase(load, corners[1], corners[2]))
+        downstroke_load = np.median(_cyclic_phase(load, corners[3], corners[0]))
     else:
         raise ValueError(f"Unknown method: {method}")
 

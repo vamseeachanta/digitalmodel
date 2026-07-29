@@ -882,25 +882,28 @@ def test_workflow_registry(workflow, monkeypatch):
         # fluid load *through* the top turnaround (the plunger is jammed
         # against the barrel top, so the load has nowhere to go) and releasing
         # it only once the plunger backs away. At seed 711 the generator's
-        # release point is position fraction 0.715101; the corner detector
-        # reads the resulting bottom-right corner at 70.24% of gross stroke.
-        # The 1.3% shortfall is the smoothstep transition width plus the
+        # release point is position fraction 0.715101. The phase-ordered corner
+        # detector follows that drop until the load-transfer rate subsides and
+        # reads the resulting bottom-right corner at 67.27% of gross stroke.
+        # The remaining offset includes the smoothstep transition width and the
         # rod-string round trip.
         #
         # NOTE this is the metric's reading, not the barrel's true fill. A
-        # tagging pump is mechanically full; 70.24% is the corner detector
+        # tagging pump is mechanically full; 67.27% is the corner detector
         # being fooled by a *late load transfer*, which is exactly what it
         # does to a real tagging card too. The old 99.589501 came from the
         # pre-#1878 generator, which released the load at the turnaround.
-        assert results["pump_fillage"] == pytest.approx(70.239167)
+        assert results["pump_fillage"] == pytest.approx(67.268253)
         # Displacement of a 1.75 in plunger over the recovered 117.34 in gross
         # downhole stroke at 6 SPM, times that fillage:
-        #   pi/4 * 1.75^2 * 117.34115335 * 6 * 1440 / 9702 = 251.344 bbl/d gross
-        #   251.344 * 0.70239167                           = 176.542 bbl/d net
+        #   pi/4 * 1.75^2 * 117.3411533513 * 6 * 1440 / 9702
+        #       = 251.344162726472 bbl/d gross
+        #   251.344162726472 * 0.6726825272107905
+        #       = 169.074826582523 bbl/d net
         # The recovered gross stroke matches the generator's own drawn stroke
         # (117.34 in) to 7 significant figures, so the forward model and the
         # everitt_jennings inverse agree on the plunger travel.
-        assert results["inferred_production"] == pytest.approx(176.542047)
+        assert results["inferred_production"] == pytest.approx(169.074827)
         # PUMP_TAGGING_UP is in field_health.CRITICAL_CLASSIFICATIONS, and a
         # critical classification fails the screen.
         assert cfg["screening_status"] == "fail"
