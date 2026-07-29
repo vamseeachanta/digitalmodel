@@ -854,7 +854,8 @@
       {
         "title": "Combined sway + roll (Effective Gravity Angle) excitation case to test whether resonance and wall run-up shift versus roll-only forcing",
         "rationale": "Carette (2023) shows the true driving parameter combines lateral acceleration and roll angle; our roll-only CFD is a partial/conservative drive, so an EGA case checks whether the tuned-damper resonance and run-up change under realistic combined motion.",
-        "priority": "medium"
+        "priority": "medium",
+        "status": "done"
       },
       {
         "title": "Tank-width / 3D sensitivity study (Delorme Part 2 span sweep; near-square plan-form 3D check for swirl)",
@@ -864,7 +865,8 @@
       {
         "title": "Damping/baffle-screen sweep to reproduce the classic low-damping two-peak detuning split (frequency ratios ~0.84 and ~1.05) and show it merging as damping rises",
         "rationale": "Moaleji & Greig (2007) report adverse resonance peaks straddling the 1:1 tuning point at low damping; reproducing this split and its suppression is a strong validation target for our forced sweep and demonstrates the damping-limited, bounded amplification of the tuned device.",
-        "priority": "low"
+        "priority": "low",
+        "status": "done"
       },
       {
         "title": "Impact/roof-pressure time histories vs amplitude near T1 at partial/low fill, with compressible-air (and later hydroelastic/3D) treatment",
