@@ -9,7 +9,9 @@ def test_discovery_includes_non_write_text_generator(tmp_path: Path) -> None:
     script = tmp_path / "scripts" / "build_page.py"
     script.parent.mkdir()
     script.write_text(
-        'output = "docs/api/example.html"\n'
+        'from pathlib import Path\n'
+        'FORMAT = "HTML"\n'
+        'output = Path("docs") / "api" / f"example.{FORMAT.lower()}"\n'
         'with open(output, "w", encoding="utf-8") as stream:\n'
         '    stream.write("<html></html>")\n',
         encoding="utf-8",
@@ -50,7 +52,19 @@ def test_shadow_copies_inputs_instead_of_linking_live_checkout(
 def test_registry_has_reasoned_complete_ownership() -> None:
     outputs = checker.all_registered_outputs(checker.REPO)
 
+    assert checker.validate_registry(checker.REPO) == []
     assert len(checker.GENERATORS) == 19
     assert len(outputs) == 54
     assert checker.PAGE_EXCLUSIONS
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
+    assert len(checker.MANUAL_PAGES) == 23
+
+
+def test_page_census_rejects_unclassified_html(tmp_path: Path) -> None:
+    page = tmp_path / "docs" / "api" / "new-output.html"
+    page.parent.mkdir(parents=True)
+    page.write_text("<html></html>", encoding="utf-8")
+
+    errors = checker.validate_page_census(tmp_path)
+
+    assert any("unclassified docs/api HTML" in error for error in errors)

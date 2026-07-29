@@ -23,6 +23,19 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 
+if __package__:
+    from .generated_html_ownership import (
+        DISCOVERY_FALSE_POSITIVES,
+        MANUAL_PAGES,
+        PAGE_EXCLUSIONS,
+    )
+else:
+    from generated_html_ownership import (
+        DISCOVERY_FALSE_POSITIVES,
+        MANUAL_PAGES,
+        PAGE_EXCLUSIONS,
+    )
+
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -118,67 +131,6 @@ GENERATORS = (
     ),
 )
 
-# The discovery heuristic intentionally errs toward false positives. Each
-# non-generator needs a reason so a new real generator cannot disappear into a
-# silent skip.
-DISCOVERY_FALSE_POSITIVES = {
-    "scripts/benchmark/validate_owd_vs_spec.py": (
-        "writes validation reports outside docs/api; docs/api HTML is input only"
-    ),
-    "scripts/capabilities/build_capabilities_inventory.py": (
-        "writes JSON and Markdown; it only discovers existing docs/api HTML"
-    ),
-    "scripts/check_generated_html.py": (
-        "executes registered generators; it does not emit a docs/api HTML page"
-    ),
-    "scripts/brand_guard.py": (
-        "reads docs/api HTML to enforce brand tokens; it does not write pages"
-    ),
-    "scripts/debug_html_report.py": (
-        "debugs an existing docs/reports HTML file; it does not target docs/api"
-    ),
-    "scripts/python/digitalmodel/analysis/poisson.py": (
-        "mentions documentation and an API example but does not write HTML"
-    ),
-}
-
-# Generated-looking committed pages without an active, repository-owned
-# ``scripts/** -> docs/api/**`` route. Keeping them explicit prevents this check
-# from overstating its coverage. Each should be removed from this map when its
-# producer becomes deterministic and targets the committed page.
-PAGE_EXCLUSIONS = {
-    "docs/api/hydro/ocimf-coefficient-explorer.html": (
-        "producer uses an external absolute-path workbook and random Plotly div ids"
-    ),
-    "docs/api/hydro/unit-box-benchmark/benchmark_amplitude.html": (
-        "no active producer targets this committed copy; Plotly div id is random"
-    ),
-    "docs/api/hydro/unit-box-benchmark/benchmark_combined.html": (
-        "no active producer targets this committed copy; Plotly div id is random"
-    ),
-    "docs/api/hydro/unit-box-benchmark/benchmark_heatmap.html": (
-        "no active producer targets this committed copy; Plotly div id is random"
-    ),
-    "docs/api/hydro/unit-box-benchmark/benchmark_phase.html": (
-        "no active producer targets this committed copy; Plotly div id is random"
-    ),
-    "docs/api/hydro/unit-box-benchmark/benchmark_report.html": (
-        "no active producer targets this committed copy; output embeds a timestamp"
-    ),
-    "docs/api/hydro/rao-comparison/index.html": (
-        "producer targets another docs path and embeds datetime.now()"
-    ),
-    "docs/api/hydro/passing-ship-benchmark.html": (
-        "producer targets another docs path and embeds datetime.now()"
-    ),
-    "docs/api/orcaflex/riser-mesh-sensitivity.html": (
-        "licensed OrcFxAPI benchmark output embeds a timestamp"
-    ),
-    "docs/api/orcaflex/riser-validation-report.html": (
-        "licensed OrcFxAPI benchmark output embeds a timestamp"
-    ),
-}
-
 ONEPAGER_DRIVER = r"""
 import importlib.util
 import sys
@@ -214,16 +166,45 @@ module.main()
 
 
 def discover_candidate_generators(repo: Path) -> set[str]:
-    """Conservative source scan used to fail closed on unregistered builders."""
+    """Defense-in-depth scan for likely unregistered builders."""
     found = set()
     for path in (repo / "scripts").rglob("*.py"):
-        text = path.read_text(encoding="utf-8", errors="ignore")
+        text = path.read_text(encoding="utf-8", errors="ignore").casefold()
         # Do not couple discovery to one write API: generators use write_text,
-        # open, helpers, and library-specific exporters.
-        markers = ("docs", "api", ".html")
+        # open, constructed suffixes, helpers, and library-specific exporters.
+        markers = ("docs", "api", "html")
         if all(marker in text for marker in markers):
             found.add(path.relative_to(repo).as_posix())
     return found
+
+
+def docs_api_pages(repo: Path) -> set[str]:
+    pages = set()
+    for path in (repo / "docs" / "api").rglob("*.html"):
+        relative = path.relative_to(repo)
+        if "_assets" not in relative.parts:
+            pages.add(relative.as_posix())
+    return pages
+
+
+def validate_page_census(repo: Path) -> list[str]:
+    owned = {
+        path.relative_to(repo).as_posix()
+        for path in all_registered_outputs(repo)
+    }
+    pages = docs_api_pages(repo)
+    classified = owned | set(PAGE_EXCLUSIONS) | set(MANUAL_PAGES)
+    errors = []
+    if unclassified := sorted(pages - classified):
+        errors.append(f"unclassified docs/api HTML page(s): {', '.join(unclassified)}")
+    if stale := sorted(set(MANUAL_PAGES) - pages):
+        errors.append(f"stale manual-page classification(s): {', '.join(stale)}")
+    if overlap := sorted(set(PAGE_EXCLUSIONS) & set(MANUAL_PAGES)):
+        errors.append(f"page has conflicting classifications: {', '.join(overlap)}")
+    for path, reason in MANUAL_PAGES.items():
+        if not reason.strip():
+            errors.append(f"manual-page classification lacks a reason: {path}")
+    return errors
 
 
 def validate_registry(repo: Path) -> list[str]:
@@ -243,6 +224,7 @@ def validate_registry(repo: Path) -> list[str]:
             errors.append(f"stale generated-page exclusion: {path}")
         if not reason.strip():
             errors.append(f"generated-page exclusion lacks a reason: {path}")
+    errors.extend(validate_page_census(repo))
     return errors
 
 
@@ -377,7 +359,8 @@ def check(repo: Path = REPO) -> int:
     print(
         f"generated HTML check OK — {pages} page(s) from "
         f"{len(GENERATORS)} generator(s); "
-        f"{len(PAGE_EXCLUSIONS)} explicit exclusion(s)"
+        f"{len(PAGE_EXCLUSIONS)} explicit exclusion(s); "
+        f"{len(MANUAL_PAGES)} manual page classification(s)"
     )
     return 0
 
