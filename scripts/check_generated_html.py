@@ -1,9 +1,6 @@
 """Regenerate committed ``docs/api/**`` HTML in isolation and detect drift.
-
 Run from the repository root:
-
     .venv/bin/python scripts/check_generated_html.py --check
-
 Generators currently write to fixed repository paths, so this check builds a
 temporary shadow repository. It never rewrites the developer's working tree.
 Every discovered generator must be registered or carry an explicit reason for
@@ -22,7 +19,6 @@ import tempfile
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
-
 if __package__:
     from .generated_html_ownership import (
         DISCOVERY_FALSE_POSITIVES,

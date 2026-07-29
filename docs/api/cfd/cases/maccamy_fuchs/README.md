@@ -71,7 +71,7 @@ end-to-end solve is opt-in on a solver-capable host with
 
 ```bash
 # 1. build the case from the in-repo builder (solver host, OpenFOAM ESI v2312):
-uv run python -c "
+.venv/bin/python -c "
 from digitalmodel.solvers.openfoam.validation.maccamy_fuchs import (
     CylinderWaveLoadingConfig, build_maccamy_fuchs_case)
 build_maccamy_fuchs_case(CylinderWaveLoadingConfig(), '.')"
@@ -83,11 +83,11 @@ decomposePar && mpirun -np 10 interFoam -parallel && reconstructPar -newTimes
 
 # 3. analyze the solved case → results.json (incident split + force fit + gate):
 cd ../..
-uv run python docs/api/cfd/cases/maccamy_fuchs/analyze_maccamy_fuchs.py \
+.venv/bin/python docs/api/cfd/cases/maccamy_fuchs/analyze_maccamy_fuchs.py \
     validation_maccamy_fuchs ./results
 
 # 4. render the interactive report from results.json:
-uv run python docs/api/cfd/report_build/build_maccamy_fuchs.py \
+.venv/bin/python docs/api/cfd/report_build/build_maccamy_fuchs.py \
     ./results/results.json .
 # → docs/api/cfd/maccamy-fuchs-cylinder-verification.html
 ```

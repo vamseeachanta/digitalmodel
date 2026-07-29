@@ -2,7 +2,7 @@
 """Interactive MacCamy-Fuchs vertical-cylinder wave-loading report (issue #1171).
 
 Usage:
-    uv run python build_maccamy_fuchs.py <results.json> <worktree_root>
+    .venv/bin/python docs/api/cfd/report_build/build_maccamy_fuchs.py <results.json> <worktree_root>
 
 ``results.json`` is written by
 ``docs/api/cfd/cases/maccamy_fuchs/analyze_maccamy_fuchs.py`` (schema in that
