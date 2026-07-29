@@ -18,19 +18,32 @@ collect_ignore = [
     str(_tests_dir / "structural/fatigue_apps/test_load_scaling.py"),
     str(_tests_dir / "subsea/pipeline/test_on_bottom_stability.py"),
     str(_tests_dir / "test_plate_capacity.py"),
-    # Deleted orcaflex-dashboard service files
-    str(_tests_dir / "visualization/test_anomaly_detection.py"),
-    str(_tests_dir / "visualization/test_comparative_analysis.py"),
-    str(_tests_dir / "visualization/test_component_classifier.py"),
-    str(_tests_dir / "visualization/test_csv_parser.py"),
-    str(_tests_dir / "visualization/test_data_validator.py"),
-    str(_tests_dir / "visualization/test_loading_decoder.py"),
-    str(_tests_dir / "visualization/test_sensitivity_analysis.py"),
-    str(_tests_dir / "visualization/test_statistical_analysis.py"),
-    # Platform-specific or missing optional deps
+    # Reasons below were measured, not assumed (#1923). None of these four is
+    # blocked by a platform or a missing dependency any more:
+    #   - the eager `win32com` import that used to make the whole
+    #     digitalmodel.workflows.mcp_server.orcawave package unimportable off
+    #     Windows is now lazy, so these modules import fine on Linux;
+    #   - test_end_to_end.py no longer pip-installs at collection time; its
+    #     `aiohttp` need is declared in the [test] extra.
+    # What is left is stale-path rot, and each entry names its own.
+    #
+    # Collects and runs; 4 of 9 fail on @patch targets 'api.orcawave_com...' and
+    # 'core.mcp_server...' -- top-level module names that stopped existing when
+    # the tree moved under digitalmodel.workflows.mcp_server. The one genuinely
+    # Windows-only test (live COM connect) self-skips.
     str(_tests_dir / "workflows/orcawave/test_com_connection.py"),
+    # Collects; 3 of 11 fail importing `src.mcp.orcawave.*` inside test bodies.
+    # `src/mcp/` does not exist, and client/cli_client.py is gone entirely.
     str(_tests_dir / "workflows/orcawave/test_end_to_end.py"),
+    # Fails at import: `from src.mcp.orcawave.core.integrated_server import ...`
+    # -- same removed tree, but at module level so it kills collection.
     str(_tests_dir / "workflows/orcawave/test_integration.py"),
+    # `markitdown` is a real PyPI distribution that no extra installs. Until
+    # #1923 this entry hid a different bug: tests/workflows/standalone/ had no
+    # __init__.py, so the test package WAS `markitdown` and shadowed the real
+    # distribution. That is fixed; the honest blocker is the undeclared
+    # dependency, plus 3 tests patching 'markitdown.MarkItDown' rather than the
+    # name converter.py bound at import.
     str(_tests_dir / "workflows/standalone/markitdown/test_converter.py"),
     # Requires pytest-asyncio plugin (disabled due to hypothesis conflict)
     str(_tests_dir / "test_workflow_checkpoints.py"),

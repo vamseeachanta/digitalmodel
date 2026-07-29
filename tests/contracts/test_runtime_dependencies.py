@@ -12,17 +12,20 @@ entirely — so a clean ``pip install digitalmodel`` raised ImportError.
 The rule this file enforces, in one sentence: **a runtime dependency is a
 distribution that packaged code imports at module level without a guard.**
 
-Three things deliberately do NOT count, and each has its own home:
+Two things deliberately do NOT count, and each has its own home:
 
   * loaded-not-imported tooling (every pytest plugin) -> ``[test]`` extra. An
     AST scan cannot see these, which is exactly how they survived in the runtime
     list for so long.
   * executables (black, ruff, twine, sphinx)          -> ``[dev]`` extra
-  * the unpackaged orcaflex_dashboard app             -> ``[orcaflex-dashboard]``
 
-``visualization/orcaflex_dashboard/`` is excluded from the scan because it has no
-``__init__.py`` and setuptools drops it from the wheel — its imports cannot
-justify a runtime dependency of a package it is not part of.
+There used to be a third exemption and a matching ``UNPACKAGED`` skip list: the
+vendored ``visualization/orcaflex_dashboard/`` app had no ``__init__.py``, so
+setuptools dropped it from the wheel and its imports could not justify a runtime
+dependency. That tree was deleted in #1632 -- its nine importable analysis
+modules were extracted to ``solvers/orcaflex/results_analysis/``, which IS
+packaged and IS scanned like any other shipped code. Nothing under ``src/`` is
+exempt from the scan any more.
 """
 from __future__ import annotations
 
@@ -39,9 +42,6 @@ pytestmark = pytest.mark.contracts
 REPO = Path(__file__).resolve().parents[2]
 SRC = REPO / "src" / "digitalmodel"
 PYPROJECT = REPO / "pyproject.toml"
-
-#: Not shipped in the wheel (no __init__.py) — see module docstring.
-UNPACKAGED = ("visualization/orcaflex_dashboard",)
 
 #: import name -> distribution name, where they differ. Only entries the scan
 #: actually encounters need to be here; an unmapped name falls back to itself.
@@ -153,9 +153,6 @@ def hard_imports() -> set[str]:
     out: set[str] = set()
     stdlib = set(sys.stdlib_module_names)
     for path in sorted(SRC.rglob("*.py")):
-        rel = path.relative_to(SRC).as_posix()
-        if any(rel.startswith(p) for p in UNPACKAGED):
-            continue
         try:
             tree = ast.parse(path.read_text(encoding="utf-8", errors="ignore"))
         except SyntaxError:  # pragma: no cover - reported by its own guard
@@ -206,8 +203,7 @@ def test_no_runtime_dependency_is_unused():
     """Every runtime dependency is imported by shipped code.
 
     A failure here usually means a dependency belongs in an extra instead: the
-    ``[test]`` extra for anything the test runner needs, ``[dev]`` for tooling,
-    ``[orcaflex-dashboard]`` for the vendored app.
+    ``[test]`` extra for anything the test runner needs, ``[dev]`` for tooling.
     """
     unused = sorted(declared_runtime() - hard_imports() - set(DYNAMIC_RUNTIME))
     assert not unused, (
@@ -251,7 +247,9 @@ def test_known_undeclared_list_has_no_stale_entries():
 def test_dashboard_stack_is_not_a_runtime_dependency():
     """The specific regression #1632 describes, pinned by name.
 
-    These are an application-server and observability stack. If any reappears in
+    These are an application-server and observability stack. The app that needed
+    them, and the ``[orcaflex-dashboard]`` extra that held them, are both gone
+    (#1632) -- so nothing in this repo has any use for them. If any reappears in
     [project] dependencies, the requirements.txt paste has happened again.
     """
     poison = {
@@ -262,7 +260,8 @@ def test_dashboard_stack_is_not_a_runtime_dependency():
     found = sorted(poison & declared_runtime())
     assert not found, (
         f"application-server / observability packages back in the runtime list: "
-        f"{found} — these belong in the [orcaflex-dashboard] extra (#1632)"
+        f"{found} — nothing in this repo imports them; the app that did was "
+        "deleted in #1632"
     )
 
 
