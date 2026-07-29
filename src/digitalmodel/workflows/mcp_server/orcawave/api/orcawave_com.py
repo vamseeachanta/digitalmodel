@@ -5,6 +5,7 @@ Provides programmatic access to OrcaWave through COM interface
 """
 
 import asyncio
+import sys
 import time
 from typing import Dict, List, Optional, Any, Tuple
 from pathlib import Path
@@ -12,14 +13,67 @@ from enum import Enum
 import logging
 from dataclasses import dataclass
 
-import win32com.client
-import pythoncom
 import numpy as np
-from tenacity import retry, stop_after_attempt, wait_exponential
+from tenacity import (
+    retry,
+    retry_if_not_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 import structlog
+
+# The Windows COM bindings (pywin32) exist only on Windows. Importing them at
+# module level made the whole `digitalmodel.workflows.mcp_server.orcawave`
+# package unimportable on Linux/macOS -- including for consumers that never
+# touch COM (#1923). Import them lazily instead: the package imports cleanly
+# everywhere, and any attempt to actually drive OrcaWave off Windows fails
+# loudly in `_require_com()` with an actionable message.
+win32com = None  # type: ignore[assignment]  # set by _require_com()
+pythoncom = None  # type: ignore[assignment]  # set by _require_com()
 
 # Configure structured logging
 logger = structlog.get_logger()
+
+
+def com_available() -> bool:
+    """True if the Windows COM bindings can be imported on this machine."""
+    try:
+        _require_com()
+    except RuntimeError:
+        return False
+    return True
+
+
+def _require_com():
+    """Import pywin32 on first use and cache it in the module globals.
+
+    Returns:
+        tuple: ``(win32com.client, pythoncom)``
+
+    Raises:
+        RuntimeError: on any platform where pywin32 is unavailable -- i.e. every
+            non-Windows machine. OrcaWave is a Windows application driven over
+            COM; there is no cross-platform fallback to degrade to.
+    """
+    global win32com, pythoncom
+    if win32com is not None and pythoncom is not None:
+        return win32com, pythoncom
+    try:
+        # `global` above means these bind the MODULE-level names, so every
+        # existing `win32com.client.Dispatch(...)` / `pythoncom.CoInitialize()`
+        # call site keeps working unchanged once this has run.
+        import win32com.client  # noqa: F401
+        import pythoncom  # noqa: F401
+    except ImportError as exc:
+        win32com = None
+        pythoncom = None
+        raise RuntimeError(
+            "OrcaWave is driven through Windows COM, which requires pywin32 "
+            "(win32com/pythoncom) on a Windows host. Import failed on "
+            f"{sys.platform!r}: {exc}. Run OrcaWave automation on a licensed "
+            "Windows machine."
+        ) from exc
+    return win32com, pythoncom
 
 class AnalysisType(str, Enum):
     """OrcaWave analysis types"""
@@ -74,14 +128,25 @@ class OrcaWaveAPI:
         self._com_thread_id = None
         logger.info("orcawave_api_initialized")
     
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+    @retry(
+        # A missing COM stack is not a transient failure -- do not retry it, and
+        # do not let tenacity bury the message inside a RetryError (#1923).
+        retry=retry_if_not_exception_type(RuntimeError),
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+    )
     def connect(self) -> bool:
         """
         Connect to OrcaWave application via COM
-        
+
         Returns:
             bool: True if connection successful
+
+        Raises:
+            RuntimeError: if the Windows COM bindings are unavailable, i.e. on
+                any non-Windows host.
         """
+        _require_com()
         try:
             # Initialize COM for this thread
             pythoncom.CoInitialize()
