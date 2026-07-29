@@ -118,8 +118,10 @@ def flipbook(div_id: str, frames_b64: list, labels: list, fps: float = 8.0,
 
 def page(title: str, kicker: str, style: str, body: str) -> str:
     return f"""<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title}</title>
+<link rel="stylesheet" href="../_assets/brand.css">
+<!-- Core brand tokens belong in brand.css; do not restore them in this generator. -->
 {style}
 {PLOTLY_CDN}
 </head><body><div class="wrap">

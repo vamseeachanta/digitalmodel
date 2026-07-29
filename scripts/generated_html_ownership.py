@@ -74,9 +74,6 @@ EXCLUDED_GENERATORS = {
     "docs/api/cfd/report_build/build_kleefsman.py": (
         "requires caller-supplied solved case and experimental-data paths"
     ),
-    "docs/api/cfd/report_build/build_maccamy_fuchs.py": (
-        "requires a caller-supplied results snapshot"
-    ),
     "docs/api/cfd/report_build/build_wave_excited_body.py": (
         "requires caller-supplied solved case and results directories"
     ),
@@ -107,9 +104,6 @@ PAGE_EXCLUSIONS = {
     ),
     "docs/api/cfd/kleefsman-impact-verification.html": (
         "build_kleefsman.py requires caller-supplied solved case and experiment data"
-    ),
-    "docs/api/cfd/maccamy-fuchs-cylinder-verification.html": (
-        "build_maccamy_fuchs.py requires a caller-supplied results snapshot"
     ),
     "docs/api/cfd/naca0012-airfoil-verification.html": (
         "upgrade_reports.py requires a caller-supplied solved airfoil run"

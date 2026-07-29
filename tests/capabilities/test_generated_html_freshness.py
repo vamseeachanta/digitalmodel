@@ -53,12 +53,12 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     outputs = checker.all_registered_outputs(checker.REPO)
 
     assert checker.validate_registry(checker.REPO) == []
-    assert len(checker.GENERATORS) == 19
-    assert len(outputs) == 54
+    assert len(checker.GENERATORS) == 20
+    assert len(outputs) == 55
     assert checker.PAGE_EXCLUSIONS
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
-    assert len(checker.PAGE_EXCLUSIONS) == 22
-    assert len(checker.EXCLUDED_GENERATORS) == 9
+    assert len(checker.PAGE_EXCLUSIONS) == 21
+    assert len(checker.EXCLUDED_GENERATORS) == 8
     assert len(checker.MANUAL_PAGES) == 11
 
 

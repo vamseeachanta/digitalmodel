@@ -46,6 +46,7 @@ REPO = Path(__file__).resolve().parents[1]
 class Generator:
     script: str
     outputs: tuple[str, ...] = ()
+    arguments: tuple[str, ...] = ()
     output_glob: str | None = None
     onepagers: bool = False
     redirect_module_outputs: bool = False
@@ -112,6 +113,11 @@ GENERATORS = (
     Generator(
         "scripts/corrosion/build_galvanic_explorer.py",
         ("docs/api/corrosion/galvanic-compatibility-explorer.html",),
+    ),
+    Generator(
+        "docs/api/cfd/report_build/build_maccamy_fuchs.py",
+        ("docs/api/cfd/maccamy-fuchs-cylinder-verification.html",),
+        ("docs/api/cfd/cases/maccamy_fuchs/mf_results.json", "."),
     ),
     Generator(
         "scripts/drilling_riser/build_operability_explorer.py",
@@ -267,7 +273,11 @@ def clear_generated_html(shadow: Path, entry: Generator) -> None:
 
 def run_generator(shadow: Path, entry: Generator) -> str | None:
     script = shadow / entry.script
-    command = [sys.executable, str(script)]
+    command = [
+        sys.executable,
+        str(script),
+        *(str(shadow / argument) for argument in entry.arguments),
+    ]
     if entry.onepagers:
         command = [sys.executable, "-c", ONEPAGER_DRIVER, str(script)]
     elif entry.redirect_module_outputs:
