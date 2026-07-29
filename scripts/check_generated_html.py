@@ -131,6 +131,15 @@ DISCOVERY_FALSE_POSITIVES = {
     "scripts/check_generated_html.py": (
         "executes registered generators; it does not emit a docs/api HTML page"
     ),
+    "scripts/brand_guard.py": (
+        "reads docs/api HTML to enforce brand tokens; it does not write pages"
+    ),
+    "scripts/debug_html_report.py": (
+        "debugs an existing docs/reports HTML file; it does not target docs/api"
+    ),
+    "scripts/python/digitalmodel/analysis/poisson.py": (
+        "mentions documentation and an API example but does not write HTML"
+    ),
 }
 
 # Generated-looking committed pages without an active, repository-owned
@@ -209,7 +218,9 @@ def discover_candidate_generators(repo: Path) -> set[str]:
     found = set()
     for path in (repo / "scripts").rglob("*.py"):
         text = path.read_text(encoding="utf-8", errors="ignore")
-        markers = ("docs", "api", ".html", "write_text")
+        # Do not couple discovery to one write API: generators use write_text,
+        # open, helpers, and library-specific exporters.
+        markers = ("docs", "api", ".html")
         if all(marker in text for marker in markers):
             found.add(path.relative_to(repo).as_posix())
     return found
@@ -238,10 +249,17 @@ def validate_registry(repo: Path) -> list[str]:
 def prepare_shadow(repo: Path, shadow: Path) -> None:
     shutil.copytree(repo / "scripts", shadow / "scripts")
     shutil.copytree(repo / "docs" / "api", shadow / "docs" / "api")
-    for name in ("assets", "atlases", "data", "src", "tests"):
+    for name in ("assets", "atlases", "data", "src"):
         source = repo / name
         if source.exists():
-            (shadow / name).symlink_to(source, target_is_directory=True)
+            shutil.copytree(source, shadow / name)
+    for relative in (
+        "tests/asset_integrity/test_data/real_inspection",
+        "tests/drilling_riser/fixtures",
+    ):
+        source = repo / relative
+        if source.exists():
+            shutil.copytree(source, shadow / relative)
 
 
 def output_paths(root: Path, entry: Generator) -> set[Path]:
@@ -270,6 +288,7 @@ def run_generator(shadow: Path, entry: Generator) -> str | None:
         ]
     env = os.environ.copy()
     env["PYTHONPATH"] = str(shadow / "src")
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
     result = subprocess.run(
         command,
         cwd=shadow,

@@ -14,7 +14,7 @@ files under ``docs/api``):
     docs/api/capabilities/api/<id>.{html,json}  # one workflow-API call per work
 
 Run (stdlib only; needs google-chrome on PATH, override with CHROME=/path):
-    python3 scripts/capabilities/build_onepagers.py
+    .venv/bin/python scripts/capabilities/build_onepagers.py
 """
 
 from __future__ import annotations
@@ -860,7 +860,7 @@ _API_TEMPLATE = """<!doctype html><html lang="en" data-theme="light"><head><meta
   .how code{{background:#0e1726;color:#d6e2f5;padding:1px 6px;border-radius:5px;font-size:12px}}
 </style></head>
 <body><div class="wrap">
-  <div class="top">{logo}<div class="kind">Workflow-API · self-contained call</div></div>
+  <div class="top"><a class="brandmark" href="../" aria-label="Back to capabilities">{logo}</a><div class="kind">Workflow-API · self-contained call</div></div>
   <h1>{title}</h1><div class="std">{std}</div>
 
   <div class="bigpanel">

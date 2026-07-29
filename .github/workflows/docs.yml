@@ -9,6 +9,7 @@ on:
       - 'docs/api/**'
       - 'atlases/**'
       - 'assets/logo/digitalmodel_logo_compact.svg'
+      - 'tests/asset_integrity/test_data/**'
       - 'tests/drilling_riser/fixtures/**'
       - 'pyproject.toml'
       - 'uv.lock'
@@ -21,6 +22,7 @@ on:
       - 'docs/api/**'
       - 'atlases/**'
       - 'assets/logo/digitalmodel_logo_compact.svg'
+      - 'tests/asset_integrity/test_data/**'
       - 'tests/drilling_riser/fixtures/**'
       - 'pyproject.toml'
       - 'uv.lock'
@@ -46,7 +48,7 @@ jobs:
       - name: Install documentation dependencies
         env:
           UV_NO_SOURCES: "true"
-        run: uv sync --group docs
+        run: uv sync --locked --group docs
 
       - name: Brand token guard
         run: .venv/bin/python scripts/brand_guard.py
