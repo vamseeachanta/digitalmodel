@@ -60,6 +60,8 @@ class PumpProperties(BaseModel):
     diameter: float  # inches
     depth: float  # feet (pump setting depth)
     efficiency: float = DEFAULT_PUMP_EFFICIENCY
+    plunger_barrel_clearance_in: Optional[float] = Field(default=None, gt=0.0)
+    plunger_length_in: Optional[float] = Field(default=None, gt=0.0)
 
 
 class SurfaceUnit(BaseModel):
@@ -138,6 +140,8 @@ class InputParameters(BaseModel):
     load_max_sp: Optional[float] = None
     load_min_sp: Optional[float] = None
     fluid_density: Optional[float] = None  # lbs/ft^3
+    fluid_viscosity_cp: Optional[float] = Field(default=None, gt=0.0)
+    formation_volume_factor: Optional[float] = Field(default=None, gt=0.0)
     casing_pressure: Optional[float] = None  # psi
     # Load analysis parameters
     stroke_load_peak: Optional[float] = None  # actual peak load (lbs)
@@ -227,6 +231,18 @@ class ProductionAnalysis(BaseModel):
     #: well by exactly its duty factor.
     runtime_hours: float = 24.0
     runtime_source: str = "assumed_24h"
+
+    # Patterson slippage inputs and terms are repeated on the result so the
+    # correction is inspectable without reconstructing context.
+    plunger_barrel_clearance_in: Optional[float] = None
+    fluid_viscosity_cp: Optional[float] = None
+    differential_pressure_psi: Optional[float] = None
+    plunger_length_in: Optional[float] = None
+    slippage_bpd: Optional[float] = None
+    runtime_adjusted_slippage_bpd: Optional[float] = None
+    formation_volume_factor: Optional[float] = None
+    corrected_stock_tank_production: Optional[float] = None
+    correction_missing_inputs: List[str] = Field(default_factory=list)
 
 
 class TorqueStatistics(BaseModel):

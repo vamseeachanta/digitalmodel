@@ -8,6 +8,7 @@ from .models import (
     FluidLoadAnalysis, CPIPAnalysis, PumpFillageAnalysis, ProductionAnalysis
 )
 from .corners import calculate_corners, get_corner_loads
+from .production import patterson_slippage_bpd
 
 
 # =============================================================================
@@ -253,7 +254,8 @@ def calculate_cpip(
 
 def calculate_theoretical_production(
     ctx: DynacardAnalysisContext,
-    fillage_analysis: PumpFillageAnalysis
+    fillage_analysis: PumpFillageAnalysis,
+    cpip_analysis: Optional[CPIPAnalysis] = None,
 ) -> ProductionAnalysis:
     """
     Calculate theoretical production from pump displacement.
@@ -315,6 +317,44 @@ def calculate_theoretical_production(
     runtime_fraction = runtime / 24.0
     theoretical_production = net_displacement * runtime_fraction
 
+    clearance = ctx.pump.plunger_barrel_clearance_in
+    plunger_length = ctx.pump.plunger_length_in
+    viscosity = (
+        ctx.input_params.fluid_viscosity_cp if ctx.input_params else None
+    )
+    formation_volume_factor = (
+        ctx.input_params.formation_volume_factor if ctx.input_params else None
+    )
+    differential_pressure = None
+    if cpip_analysis is not None:
+        differential_pressure = (
+            cpip_analysis.pump_discharge_pressure
+            - cpip_analysis.pump_intake_pressure
+        )
+    correction_inputs = (
+        ("plunger_barrel_clearance_in", clearance),
+        ("fluid_viscosity_cp", viscosity),
+        ("differential_pressure_psi", differential_pressure),
+        ("plunger_length_in", plunger_length),
+        ("formation_volume_factor", formation_volume_factor),
+    )
+    missing_inputs = [
+        name for name, value in correction_inputs
+        if value is None or value <= 0.0
+    ]
+    slippage = None
+    runtime_adjusted_slippage = None
+    corrected_production = None
+    if not missing_inputs:
+        slippage = patterson_slippage_bpd(
+            d_pump, differential_pressure, clearance, viscosity, plunger_length, spm
+        )
+        runtime_adjusted_slippage = slippage * runtime_fraction
+        corrected_downhole = max(
+            theoretical_production - runtime_adjusted_slippage, 0.0
+        )
+        corrected_production = corrected_downhole / formation_volume_factor
+
     # Pump efficiency (compare to well test if available)
     if ctx.well_test is not None and ctx.well_test.oil_rate + ctx.well_test.water_rate > 0:
         actual_production = ctx.well_test.oil_rate + ctx.well_test.water_rate
@@ -329,6 +369,15 @@ def calculate_theoretical_production(
         pump_efficiency=float(pump_efficiency),
         runtime_hours=float(runtime),
         runtime_source=runtime_source,
+        plunger_barrel_clearance_in=clearance,
+        fluid_viscosity_cp=viscosity,
+        differential_pressure_psi=differential_pressure,
+        plunger_length_in=plunger_length,
+        slippage_bpd=slippage,
+        runtime_adjusted_slippage_bpd=runtime_adjusted_slippage,
+        formation_volume_factor=formation_volume_factor,
+        corrected_stock_tank_production=corrected_production,
+        correction_missing_inputs=missing_inputs,
     )
 
 
@@ -359,7 +408,7 @@ def run_p1_calculations(
     cpip = calculate_cpip(ctx, downhole_card)
 
     # Calculate theoretical production
-    production = calculate_theoretical_production(ctx, fillage)
+    production = calculate_theoretical_production(ctx, fillage, cpip)
 
     return {
         'fluid_load': fluid_load,

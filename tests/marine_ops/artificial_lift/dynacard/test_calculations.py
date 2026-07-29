@@ -276,6 +276,97 @@ class TestCPIP:
 class TestTheoreticalProduction:
     """Tests for calculate_theoretical_production function."""
 
+    def test_patterson_slippage_and_fvf_match_house_reference(self):
+        """Correction uses the Patterson coefficients and divides by Bo."""
+        ctx = _create_test_context()
+        ctx.pump = PumpProperties(
+            diameter=2.25,
+            depth=5000.0,
+            plunger_barrel_clearance_in=0.009,
+            plunger_length_in=48.0,
+        )
+        ctx.spm = 10.0
+        ctx.input_params = InputParameters(
+            strokes_per_minute=10.0,
+            runtime=24.0,
+            fluid_viscosity_cp=1.0,
+            formation_volume_factor=1.2,
+        )
+        fillage = PumpFillageAnalysis(gross_stroke=100.0, fillage=100.0)
+        cpip = CPIPAnalysis(
+            pump_discharge_pressure=2385.0,
+            pump_intake_pressure=100.0,
+        )
+
+        result = calculate_theoretical_production(ctx, fillage, cpip)
+
+        # House workbook B17:
+        # 452 * 2.25 * 2285 * 0.009^1.52 / (1 * 48) * (0.14 * 10 + 1)
+        # = 90.287115009875 BPD.
+        assert result.slippage_bpd == pytest.approx(90.287115009875)
+        assert result.runtime_adjusted_slippage_bpd == pytest.approx(
+            90.287115009875
+        )
+        # Gross displacement = pi/4 * 2.25^2 * 100 * 10 * 1440 / 9702
+        # = 590.141477135374 downhole BPD. Stock-tank production is
+        # (590.141477135374 - 90.287115009875) / 1.2 = 416.545301771249.
+        assert result.corrected_stock_tank_production == pytest.approx(
+            416.545301771249
+        )
+        assert result.formation_volume_factor == pytest.approx(1.2)
+        assert result.correction_missing_inputs == []
+
+    def test_correction_refuses_and_names_every_missing_input(self):
+        """No correction is reported when physical inputs are unavailable."""
+        ctx = _create_test_context()
+        fillage = PumpFillageAnalysis(gross_stroke=100.0, fillage=100.0)
+
+        result = calculate_theoretical_production(ctx, fillage)
+
+        assert result.corrected_stock_tank_production is None
+        assert result.slippage_bpd is None
+        assert result.correction_missing_inputs == [
+            "plunger_barrel_clearance_in",
+            "fluid_viscosity_cp",
+            "differential_pressure_psi",
+            "plunger_length_in",
+            "formation_volume_factor",
+        ]
+
+    def test_runtime_scales_displacement_and_slippage_but_not_reported_rate(self):
+        """Slippage BPD stays traceable while its daily loss follows runtime."""
+        ctx = _create_test_context()
+        ctx.pump = PumpProperties(
+            diameter=2.25,
+            depth=5000.0,
+            plunger_barrel_clearance_in=0.009,
+            plunger_length_in=48.0,
+        )
+        ctx.spm = 10.0
+        ctx.input_params = InputParameters(
+            strokes_per_minute=10.0,
+            runtime=2.64,
+            fluid_viscosity_cp=1.0,
+            formation_volume_factor=1.2,
+        )
+        fillage = PumpFillageAnalysis(gross_stroke=100.0, fillage=100.0)
+        cpip = CPIPAnalysis(
+            pump_discharge_pressure=2385.0,
+            pump_intake_pressure=100.0,
+        )
+
+        result = calculate_theoretical_production(ctx, fillage, cpip)
+
+        assert result.slippage_bpd == pytest.approx(90.287115009875)
+        # 90.287115009875 * 2.64 / 24 = 9.93158265108625 BPD.
+        assert result.runtime_adjusted_slippage_bpd == pytest.approx(
+            9.93158265108625
+        )
+        # Existing displacement is deliberately unchanged for compatibility.
+        assert result.theoretical_production == pytest.approx(
+            590.141477135374 * 2.64 / 24
+        )
+
     def test_production_with_defaults(self):
         """Without well_test, runtime defaults to 24h and efficiency to pump.efficiency * 100."""
         ctx = _create_test_context()
