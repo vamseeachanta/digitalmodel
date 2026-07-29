@@ -16,7 +16,7 @@
       "workflow": "drilling-riser-operability-query"
     }
   },
-  "invocation": "uv run python -m digitalmodel examples/workflows/drilling-riser-operability-query/input.yml",
+  "invocation": ".venv/bin/python -m digitalmodel examples/workflows/drilling-riser-operability-query/input.yml",
   "workflow": "digitalmodel:drilling-riser-operability-query",
   "outputs": [
     {
@@ -43,7 +43,7 @@
     },
     {
       "via": "cli",
-      "step": "uv run python -m digitalmodel examples/workflows/drilling-riser-operability-query/input.yml"
+      "step": ".venv/bin/python -m digitalmodel examples/workflows/drilling-riser-operability-query/input.yml"
     }
   ]
 }

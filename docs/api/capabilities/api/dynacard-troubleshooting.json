@@ -4,7 +4,7 @@
   "repo": "digitalmodel",
   "report_url": "https://vamseeachanta.github.io/digitalmodel/artificial-lift/dynacard-troubleshooting.html",
   "provenance": {
-    "basis": "Gibbs wave equation \u00b7 Bezerra projections \u00b7 18 failure modes",
+    "basis": "Gibbs wave equation \u00b7 Bezerra projections + scale features \u00b7 20 failure modes",
     "deterministic": true,
     "source": "validated digitalmodel solver"
   },
@@ -16,7 +16,7 @@
       "workflow": "dynacard-diagnostics"
     }
   },
-  "invocation": "uv run python -m digitalmodel examples/workflows/dynacard-diagnostics/input.yml",
+  "invocation": ".venv/bin/python -m digitalmodel examples/workflows/dynacard-diagnostics/input.yml",
   "workflow": "digitalmodel:dynacard-diagnostics",
   "outputs": [
     {
@@ -43,7 +43,7 @@
     },
     {
       "via": "cli",
-      "step": "uv run python -m digitalmodel examples/workflows/dynacard-diagnostics/input.yml"
+      "step": ".venv/bin/python -m digitalmodel examples/workflows/dynacard-diagnostics/input.yml"
     }
   ]
 }

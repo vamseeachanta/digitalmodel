@@ -32,7 +32,7 @@
   .how code{background:#0e1726;color:#d6e2f5;padding:1px 6px;border-radius:5px;font-size:12px}
 </style></head>
 <body><div class="wrap">
-  <div class="top"><a href="../" aria-label="Back to capabilities" style="display:contents"><svg width="690" height="210" viewBox="0 0 690 210" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <div class="top"><svg width="700" height="220" viewBox="0 0 700 220" fill="none" xmlns="http://www.w3.org/2000/svg">
   <g>
     <g transform="translate(20 10)">
       <path d="M0 10h130c58 0 100 42 100 100s-42 100-100 100H0z" fill="#0B3D91"/>
@@ -205,11 +205,11 @@
       <rect x="18" y="48" width="20" height="120" fill="#0B3D91"/>
       <path d="M16 52c0-6.6 5.4-12 12-12s12 5.4 12 12-5.4 12-12 12-12-5.4-12-12z" fill="#0B3D91"/>
     </g>
-    <g transform="translate(265 82)">
+    <g transform="translate(265 62)">
       <text x="0" y="56" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="60" font-weight="600" fill="#0B3D91" letter-spacing="0.5">Digital <tspan fill="#2BB2A6">Model</tspan></text>
     </g>
   </g>
-</svg></a><div class="kind">Workflow-API · self-contained call</div></div>
+</svg><div class="kind">Workflow-API · self-contained call</div></div>
   <h1>Drilling-riser operability envelope explorer</h1><div class="std">API-RP-16Q · API-STD-2RD</div>
 
   <div class="bigpanel">
@@ -219,7 +219,7 @@
       <button class="copy" onclick="navigator.clipboard&amp;&amp;navigator.clipboard.writeText(document.getElementById('prompt').innerText)">Copy</button>
       <a class="copy" href="https://t.me/the_deckhand_bot" style="text-decoration:none">Run on Deckhand &rarr;</a>
     </div>
-    <div class="how"><h2 style="margin-top:14px">How to run the API</h2><ol><li><b>Telegram.</b> Open @the_deckhand_bot and send: Screen my drilling-riser operability: governing utilisation across vessel offset and surface current per operating mode, against the API RP 16Q / API STD 2RD limits, and flag near-boundary points that need the exact analytical run.</li><li><b>HTTP.</b> POST /api/run with a scoped bearer token</li><li><b>CLI.</b> uv run python -m digitalmodel examples/workflows/drilling-riser-operability-query/input.yml</li></ol></div>
+    <div class="how"><h2 style="margin-top:14px">How to run the API</h2><ol><li><b>Telegram.</b> Open @the_deckhand_bot and send: Screen my drilling-riser operability: governing utilisation across vessel offset and surface current per operating mode, against the API RP 16Q / API STD 2RD limits, and flag near-boundary points that need the exact analytical run.</li><li><b>HTTP.</b> POST /api/run with a scoped bearer token</li><li><b>CLI.</b> .venv/bin/python -m digitalmodel examples/workflows/drilling-riser-operability-query/input.yml</li></ol></div>
   </div>
 
   <div class="row">
@@ -228,7 +228,7 @@
   -d '{&quot;repo&quot;: &quot;digitalmodel&quot;, &quot;workflow&quot;: &quot;drilling-riser-operability-query&quot;}'
 
 # or run locally (deterministic):
-# uv run python -m digitalmodel examples/workflows/drilling-riser-operability-query/input.yml</pre></div>
+# .venv/bin/python -m digitalmodel examples/workflows/drilling-riser-operability-query/input.yml</pre></div>
     <div class="panel"><h2>Response — ResultEnvelope</h2><pre>{
   &quot;schema&quot;: &quot;deckhand.workflow_api.ResultEnvelope/2&quot;,
   &quot;status&quot;: &quot;ok&quot;,
@@ -247,7 +247,7 @@
       &quot;workflow&quot;: &quot;drilling-riser-operability-query&quot;
     }
   },
-  &quot;invocation&quot;: &quot;uv run python -m digitalmodel examples/workflows/drilling-riser-operability-query/input.yml&quot;,
+  &quot;invocation&quot;: &quot;.venv/bin/python -m digitalmodel examples/workflows/drilling-riser-operability-query/input.yml&quot;,
   &quot;workflow&quot;: &quot;digitalmodel:drilling-riser-operability-query&quot;,
   &quot;outputs&quot;: [
     {
@@ -274,7 +274,7 @@
     },
     {
       &quot;via&quot;: &quot;cli&quot;,
-      &quot;step&quot;: &quot;uv run python -m digitalmodel examples/workflows/drilling-riser-operability-query/input.yml&quot;
+      &quot;step&quot;: &quot;.venv/bin/python -m digitalmodel examples/workflows/drilling-riser-operability-query/input.yml&quot;
     }
   ]
 }</pre>

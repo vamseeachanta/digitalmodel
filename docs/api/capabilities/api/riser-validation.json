@@ -16,7 +16,7 @@
       "workflow": "dnv-os-f201-riser"
     }
   },
-  "invocation": "uv run python -m digitalmodel examples/workflows/dnv-os-f201-riser/input.yml",
+  "invocation": ".venv/bin/python -m digitalmodel examples/workflows/dnv-os-f201-riser/input.yml",
   "workflow": "digitalmodel:dnv-os-f201-riser",
   "outputs": [
     {
@@ -43,7 +43,7 @@
     },
     {
       "via": "cli",
-      "step": "uv run python -m digitalmodel examples/workflows/dnv-os-f201-riser/input.yml"
+      "step": ".venv/bin/python -m digitalmodel examples/workflows/dnv-os-f201-riser/input.yml"
     }
   ]
 }

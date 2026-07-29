@@ -16,7 +16,7 @@
       "workflow": "aqwa-diffraction-deck-prep"
     }
   },
-  "invocation": "uv run python -m digitalmodel examples/workflows/aqwa-diffraction-deck-prep/input.yml",
+  "invocation": ".venv/bin/python -m digitalmodel examples/workflows/aqwa-diffraction-deck-prep/input.yml",
   "workflow": "digitalmodel:aqwa-diffraction-deck-prep",
   "outputs": [
     {
@@ -43,7 +43,7 @@
     },
     {
       "via": "cli",
-      "step": "uv run python -m digitalmodel examples/workflows/aqwa-diffraction-deck-prep/input.yml"
+      "step": ".venv/bin/python -m digitalmodel examples/workflows/aqwa-diffraction-deck-prep/input.yml"
     }
   ]
 }

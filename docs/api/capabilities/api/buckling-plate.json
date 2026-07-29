@@ -16,7 +16,7 @@
       "workflow": "elastic-buckling"
     }
   },
-  "invocation": "uv run python -m digitalmodel examples/workflows/elastic-buckling/input.yml",
+  "invocation": ".venv/bin/python -m digitalmodel examples/workflows/elastic-buckling/input.yml",
   "workflow": "digitalmodel:elastic-buckling",
   "outputs": [
     {
@@ -43,7 +43,7 @@
     },
     {
       "via": "cli",
-      "step": "uv run python -m digitalmodel examples/workflows/elastic-buckling/input.yml"
+      "step": ".venv/bin/python -m digitalmodel examples/workflows/elastic-buckling/input.yml"
     }
   ]
 }

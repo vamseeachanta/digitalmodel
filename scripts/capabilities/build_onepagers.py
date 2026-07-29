@@ -674,7 +674,7 @@ WORKFLOW_MAP: dict[str, str] = {
     "drilling-riser-operability": "drilling-riser-operability-query",
     "drilling-riser-operability-monitor": "drilling-riser-operability-query",
 }
-_API_INVOKE = "uv run python -m digitalmodel {input}"
+_API_INVOKE = ".venv/bin/python -m digitalmodel {input}"
 _BOT = "https://t.me/the_deckhand_bot"
 
 # A ready-to-send natural-language "starting prompt" per live work — paste it to
@@ -774,6 +774,8 @@ def _api_envelope(spec: dict) -> dict:
     return env
 
 
+# PDF-only template: Chrome renders this temporary self-contained HTML into a
+# committed PDF; it does not emit an HTML page under docs/api/.
 _TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 <style>
   @page{{size:A4;margin:0}}
@@ -822,11 +824,14 @@ _TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 </body></html>"""
 
 
-_API_TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
+# Core tokens come from ../../_assets/brand.css; keeping only page-local tokens
+# prevents regeneration from undoing the #1474/#1485/#1487 migration.
+_API_TEMPLATE = """<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title} — API call</title>
+<link rel="stylesheet" href="../../_assets/brand.css">
 <style>
-  :root{{--navy:#0B3D91;--teal:#0f8a7e;--ink:#13233f;--muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc}}
+  :root{{--soft:#f4f8fc}}
   *{{box-sizing:border-box;margin:0;padding:0}}
   body{{font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#eef3fa;line-height:1.5}}
   .wrap{{max-width:1000px;margin:0 auto;padding:22px}}

@@ -16,7 +16,7 @@
       "workflow": "artificial-lift-field-health"
     }
   },
-  "invocation": "uv run python -m digitalmodel examples/workflows/artificial-lift-field-health/input.yml",
+  "invocation": ".venv/bin/python -m digitalmodel examples/workflows/artificial-lift-field-health/input.yml",
   "workflow": "digitalmodel:artificial-lift-field-health",
   "outputs": [
     {
@@ -43,7 +43,7 @@
     },
     {
       "via": "cli",
-      "step": "uv run python -m digitalmodel examples/workflows/artificial-lift-field-health/input.yml"
+      "step": ".venv/bin/python -m digitalmodel examples/workflows/artificial-lift-field-health/input.yml"
     }
   ]
 }
