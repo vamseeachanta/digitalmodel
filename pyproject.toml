@@ -80,6 +80,10 @@ dependencies = [
     "urllib3>=2.0.0,<3.0.0",
     "validators==0.22.0",
     "webcolors>=1.13,<2.0",
+    # NOT imported anywhere -- pandas resolves it by NAME:
+    # pd.ExcelWriter(..., engine="xlsxwriter"). See DYNAMIC_RUNTIME in
+    # tests/contracts/test_runtime_dependencies.py (#1632).
+    "xlsxwriter>=3.1.0,<4.0.0",
     "xarray>=2023.1.0,<2026.0.0",
     "xlrd>=2.0.0,<3.0.0",
     "xmltodict>=0.13.0,<1.0.0",

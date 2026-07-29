@@ -1125,6 +1125,7 @@ dependencies = [
     { name = "webcolors" },
     { name = "xarray" },
     { name = "xlrd" },
+    { name = "xlsxwriter" },
     { name = "xmltodict" },
 ]
 
@@ -1374,6 +1375,7 @@ requires-dist = [
     { name = "websockets", marker = "extra == 'test'", specifier = ">=15.0.1,<16.0.0" },
     { name = "xarray", specifier = ">=2023.1.0,<2026.0.0" },
     { name = "xlrd", specifier = ">=2.0.0,<3.0.0" },
+    { name = "xlsxwriter", specifier = ">=3.1.0,<4.0.0" },
     { name = "xlsxwriter", marker = "extra == 'test'", specifier = ">=3.1.0,<4.0.0" },
     { name = "xmltodict", specifier = ">=0.13.0,<1.0.0" },
 ]
