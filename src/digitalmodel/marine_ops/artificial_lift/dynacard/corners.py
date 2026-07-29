@@ -126,29 +126,34 @@ class CornerDetector:
             bottom_candidates[np.argmin(self.load[bottom_candidates])]
         )
         downstroke = self._cyclic_indices(top_idx, bottom_idx, include_stop=True)
-        load_drop = np.diff(self.load[downstroke])
-        if len(load_drop) == 0:
+        position_span = float(np.ptp(self.position))
+        load_span = float(np.ptp(self.load))
+        if (
+            len(downstroke) < 2
+            or position_span <= np.finfo(np.float64).eps
+            or load_span <= np.finfo(np.float64).eps
+        ):
             return top_idx
 
-        peak_drop_offset = int(np.argmin(load_drop))
-        peak_drop = abs(float(load_drop[peak_drop_offset]))
-        if peak_drop <= np.finfo(np.float64).eps:
-            return int(downstroke[peak_drop_offset + 1])
+        retained_stroke = (
+            self.position[downstroke] - np.min(self.position)
+        ) / position_span
+        remaining_load = (
+            self.load[downstroke] - np.min(self.load)
+        ) / load_span
+        knee_offset = int(np.argmax(retained_stroke - remaining_load))
 
-        # BR is after the sharp drop, where load transfer has substantially
-        # subsided. Returning the largest-drop sample itself locates the middle
-        # of the transfer and systematically overstates incomplete fillage.
-        completion_rate = 0.25 * peak_drop
-        for offset in range(peak_drop_offset + 1, len(load_drop) - 1):
-            current_drop = float(load_drop[offset])
-            next_drop = float(load_drop[offset + 1])
-            current_rate = abs(min(current_drop, 0.0))
-            next_rate = abs(min(next_drop, 0.0))
-            if current_rate < completion_rate and next_rate < completion_rate:
-                if current_drop >= -np.finfo(np.float64).eps:
-                    return int(downstroke[offset])
-                return int(downstroke[offset + 1])
-        return int(downstroke[peak_drop_offset + 1])
+        # A discretised taper can leave the knee one material load step before
+        # transfer finishes. Include that endpoint without chasing gradual
+        # lower-branch load variation.
+        if knee_offset + 1 < len(downstroke):
+            taper_drop = (
+                self.load[downstroke[knee_offset]]
+                - self.load[downstroke[knee_offset + 1]]
+            )
+            if taper_drop > 0.01 * load_span:
+                knee_offset += 1
+        return int(downstroke[knee_offset])
 
     def _order_corners(self, corners: List[int]) -> List[int]:
         """
