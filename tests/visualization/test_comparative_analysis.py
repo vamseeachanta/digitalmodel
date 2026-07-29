@@ -28,13 +28,12 @@ import numpy as np
 import pandas as pd
 import pytest
 
-# Import module from hyphenated directory path
 _mod_path = (
     pathlib.Path(__file__).resolve().parents[2]
     / "src"
     / "digitalmodel"
     / "visualization"
-    / "orcaflex-dashboard"
+    / "orcaflex_dashboard"
     / "backend"
     / "app"
     / "services"

@@ -1,7 +1,6 @@
 """
 Tests for DataValidator service.
 
-The source module lives under a hyphenated directory (orcaflex-dashboard),
 which is not a valid Python identifier. We use importlib to load it directly
 from the file path instead of a dotted import.
 """
@@ -18,7 +17,6 @@ import pandas as pd
 import pytest
 
 # ---------------------------------------------------------------------------
-# Dynamic import — the directory "orcaflex-dashboard" contains a hyphen,
 # so a normal `from digitalmodel.visualization.orcaflex_dashboard...` import
 # is impossible.  We load the module from its absolute file path instead.
 # ---------------------------------------------------------------------------
@@ -27,7 +25,7 @@ _MODULE_PATH = (
     / "src"
     / "digitalmodel"
     / "visualization"
-    / "orcaflex-dashboard"
+    / "orcaflex_dashboard"
     / "backend"
     / "app"
     / "services"
