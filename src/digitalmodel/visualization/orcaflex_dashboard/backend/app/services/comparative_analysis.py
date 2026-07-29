@@ -434,22 +434,28 @@ class ComparativeAnalysisService:
     ) -> GroupComparisonResult:
         """Perform multi-group comparison"""
         groups = list(data.keys())
-        values = list(data.values())
-        
+        values = [np.asarray(group_data) for group_data in data.values()]
+
         # Choose appropriate test
         if test_type == "auto":
             # Simple heuristic: use Kruskal-Wallis for robustness
             use_parametric = False
         else:
             use_parametric = test_type == "parametric"
-        
-        if use_parametric:
+
+        # Constant input makes the usual test statistics undefined; resolve
+        # those cases analytically instead of letting scipy warn or raise.
+        degenerate = self._constant_input_statistic(values, use_parametric, metric)
+
+        if degenerate is not None:
+            stat, p_value = degenerate
+        elif use_parametric:
             # One-way ANOVA
             stat, p_value = stats.f_oneway(*values)
         else:
             # Kruskal-Wallis test
             stat, p_value = kruskal(*values)
-        
+
         is_significant = p_value < (1 - confidence_level)
         
         # Calculate effect size (eta-squared approximation)
@@ -474,7 +480,71 @@ class ComparativeAnalysisService:
             effect_size=effect_size,
             confidence_level=confidence_level
         )
-    
+
+    def _constant_input_statistic(
+        self,
+        values: List[np.ndarray],
+        use_parametric: bool,
+        metric: str
+    ) -> Optional[Tuple[float, float]]:
+        """
+        Resolve group-comparison statistics for constant (zero-variance) input.
+
+        The one-way ANOVA F ratio is MS_between / MS_within. When every group is
+        constant the within-group mean square is exactly zero, so the ratio is
+        either 0/0 or x/0 and ``scipy.stats.f_oneway`` cannot compute it: it
+        emits a ``ConstantInputWarning`` and substitutes nan/inf after the fact.
+        ``scipy.stats.kruskal`` is worse - it raises
+        ``ValueError("All numbers are identical in kruskal")`` when the pooled
+        sample has no variance, which is the default ("auto") code path here.
+
+        Rather than relying on those side effects, the degenerate cases are
+        decided here:
+
+        * Pooled variance is zero (every observation in every group is the same
+          value): there is no between-group and no within-group variation, the
+          statistic is genuinely undefined, and there is zero evidence of any
+          difference. Reported as ``(nan, nan)`` -> not significant.
+        * Every group is constant but the constants differ, parametric test:
+          within-group variance is zero while between-group variance is not, so
+          the F ratio diverges. Reported as ``(inf, 0.0)``, which is the same
+          convention ``f_oneway`` itself documents for this case.
+        * Every group is constant but the constants differ, non-parametric test:
+          Kruskal-Wallis is rank based and handles this perfectly well, so no
+          substitution is made.
+
+        Returns:
+            ``(test_statistic, p_value)`` for a degenerate case, or None when
+            the data is not degenerate and the normal test should be run.
+        """
+        if not values or any(group_data.size == 0 for group_data in values):
+            return None
+
+        all_groups_constant = all(
+            bool(np.all(group_data == group_data.flat[0])) for group_data in values
+        )
+        if not all_groups_constant:
+            return None
+
+        pooled = np.concatenate(values)
+        if bool(np.all(pooled == pooled.flat[0])):
+            self.logger.warning(
+                f"All groups for metric '{metric}' contain the identical constant "
+                f"value {pooled.flat[0]}; the group comparison statistic is "
+                "undefined (no between-group or within-group variance)"
+            )
+            return float('nan'), float('nan')
+
+        if use_parametric:
+            self.logger.warning(
+                f"Every group for metric '{metric}' is constant with differing "
+                "values; within-group variance is zero so the F statistic is "
+                "infinite"
+            )
+            return float('inf'), 0.0
+
+        return None
+
     def _calculate_descriptive_statistics(
         self,
         data: Dict[str, np.ndarray]
