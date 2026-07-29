@@ -18,11 +18,6 @@ collect_ignore = [
     str(_tests_dir / "structural/fatigue_apps/test_load_scaling.py"),
     str(_tests_dir / "subsea/pipeline/test_on_bottom_stability.py"),
     str(_tests_dir / "test_plate_capacity.py"),
-    # (#1632) The eight visualization/ dashboard suites were listed here as
-    # "Deleted orcaflex-dashboard service files". Nothing was deleted -- the
-    # directory was RENAMED orcaflex-dashboard -> orcaflex_dashboard and the
-    # tests' hardcoded paths were left stale. All eight services still exist in
-    # backend/app/services/. Paths repointed; entries removed.
     # Platform-specific or missing optional deps
     str(_tests_dir / "workflows/orcawave/test_com_connection.py"),
     str(_tests_dir / "workflows/orcawave/test_end_to_end.py"),
