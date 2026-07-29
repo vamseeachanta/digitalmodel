@@ -33,6 +33,7 @@ class Generator:
     outputs: tuple[str, ...] = ()
     output_glob: str | None = None
     onepagers: bool = False
+    redirect_module_outputs: bool = False
 
 
 GENERATORS = (
@@ -100,10 +101,12 @@ GENERATORS = (
     Generator(
         "scripts/drilling_riser/build_operability_explorer.py",
         ("docs/api/drilling/drilling-riser-operability-explorer.html",),
+        redirect_module_outputs=True,
     ),
     Generator(
         "scripts/drilling_riser/build_operability_monitor.py",
         ("docs/api/drilling/operability-monitor.html",),
+        redirect_module_outputs=True,
     ),
     Generator(
         "scripts/ffs/build_riser_joint_explorer.py",
@@ -181,6 +184,25 @@ sys.argv = [script]
 module.main()
 """
 
+REDIRECT_DRIVER = r"""
+import importlib.util
+import sys
+from pathlib import Path
+
+script, shadow = sys.argv[1], Path(sys.argv[2])
+spec = importlib.util.spec_from_file_location("generated_html_redirected", script)
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+module.REPO_ROOT = shadow
+if hasattr(module, "oa"):
+    module.oa.REPO_ROOT = shadow
+out_dir = shadow / "docs" / "api" / "drilling"
+module._OUT_DIR = out_dir
+module._HTML = out_dir / module._HTML.name
+module._JSON = out_dir / module._JSON.name
+module.main()
+"""
+
 
 def discover_candidate_generators(repo: Path) -> set[str]:
     """Conservative source scan used to fail closed on unregistered builders."""
@@ -238,6 +260,14 @@ def run_generator(shadow: Path, entry: Generator) -> str | None:
     command = [sys.executable, str(script)]
     if entry.onepagers:
         command = [sys.executable, "-c", ONEPAGER_DRIVER, str(script)]
+    elif entry.redirect_module_outputs:
+        command = [
+            sys.executable,
+            "-c",
+            REDIRECT_DRIVER,
+            str(script),
+            str(shadow),
+        ]
     env = os.environ.copy()
     env["PYTHONPATH"] = str(shadow / "src")
     result = subprocess.run(
@@ -251,7 +281,8 @@ def run_generator(shadow: Path, entry: Generator) -> str | None:
     if result.returncode:
         detail = result.stderr.strip() or result.stdout.strip()
         return f"{entry.script} failed ({result.returncode}): {detail}"
-    if not output_paths(shadow, entry):
+    produced = output_paths(shadow, entry)
+    if not produced or any(not path.is_file() for path in produced):
         return f"{entry.script} produced no registered HTML output"
     return None
 
