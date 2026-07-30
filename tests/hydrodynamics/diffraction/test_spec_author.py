@@ -126,6 +126,34 @@ def test_intent_without_beam_or_draft_omits_dimensions() -> None:
     assert inputs.dimensions is None
 
 
+def test_intent_dropped_stated_dimensions_recorded_as_open_question() -> None:
+    """Stated facts that cannot reach the resolver must not vanish silently.
+
+    Regression for the no-silent-drop contract (#622): loa + displacement_t
+    are grounded facts, but with beam missing no PrincipalDimensions can be
+    formed — the drop must surface on the intent's open questions.
+    """
+    intent = AuthoredIntent(
+        outcome=Outcome.SHIP_RAOS,
+        mesh_file="hull.gdf",
+        loa=200.0,
+        displacement_t=50000.0,
+    )
+    _, inputs = intent_to_resolver_inputs(intent)
+    assert inputs.dimensions is None
+    joined = "\n".join(intent.open_questions)
+    assert "loa=200.0" in joined
+    assert "displacement_t=50000.0" in joined
+    assert "beam" in joined and "draft" in joined
+
+
+def test_intent_without_any_stated_dimensions_adds_no_open_question() -> None:
+    intent = AuthoredIntent(outcome=Outcome.SHIP_RAOS, mesh_file="hull.gdf")
+    _, inputs = intent_to_resolver_inputs(intent)
+    assert inputs.dimensions is None
+    assert intent.open_questions == []
+
+
 def test_intent_infinite_water_depth_maps_to_string() -> None:
     intent = AuthoredIntent(
         outcome=Outcome.ADDED_MASS_DAMPING,
@@ -133,7 +161,26 @@ def test_intent_infinite_water_depth_maps_to_string() -> None:
         water_depth_infinite=True,
     )
     _, inputs = intent_to_resolver_inputs(intent)
-    assert inputs.water_depth == "infinity"
+    # Must be the canonical EnvironmentSpec token ('infinite'), not the
+    # rejected 'infinity' — regression for the deep-water crash in resolve().
+    assert inputs.water_depth == "infinite"
+
+
+def test_author_spec_deep_water_intent_resolves(tmp_path: Path) -> None:
+    """End-to-end: a deep-water intent must survive EnvironmentSpec validation.
+
+    Regression: intent_to_resolver_inputs mapped water_depth_infinite=True to
+    'infinity', which EnvironmentSpec rejects, so every deep-water authored
+    intent crashed inside resolve().
+    """
+    mesh = _write_box_mesh(tmp_path / "box.gdf")
+    intent = AuthoredIntent(
+        outcome=Outcome.SHIP_RAOS,
+        mesh_file=str(mesh),
+        water_depth_infinite=True,
+    )
+    result = author_spec(ProjectBundle(), "RAOs", author=StubAuthor(intent))
+    assert result.spec.environment.water_depth == "infinite"
 
 
 # --- author_spec end to end ------------------------------------------------

@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import math
 import re
+import warnings
 from pathlib import Path
 from typing import Any, Optional
 
@@ -164,10 +165,14 @@ class AQWAInputParser:
         """Extract metadata from deck 0 (JOB, TITLE)."""
         project = None
         for line in lines:
-            upper = line.upper().strip()
+            stripped = line.strip()
+            upper = stripped.upper()
             if upper.startswith("TITLE"):
-                # Title text comes after the TITLE keyword
-                title_text = line[len("TITLE"):].strip()
+                # Title text comes after the TITLE keyword. Slice the
+                # STRIPPED line: the match above is against the stripped
+                # line, so slicing the raw (possibly indented) line would
+                # cut into the keyword/title text.
+                title_text = stripped[len("TITLE"):].strip()
                 if title_text:
                     project = title_text
                 break
@@ -301,6 +306,25 @@ class AQWAInputParser:
         has_negative = any(h < 0 for h in raw_headings)
         if has_negative:
             heading_list = sorted(set(h for h in raw_headings if h >= 0))
+            # AQWABackend._expand_headings_for_aqwa unconditionally injects
+            # -180, 0 and 180 when it mirrors the heading range, and the
+            # DIRN cards carry no record of which headings the original
+            # spec contained.  The recovered set is AQWA-analysis
+            # equivalent (re-expansion yields the identical DIRN set), but
+            # 0 and 180 deg may not have been in the original spec.  Warn
+            # rather than guess: the ambiguity cannot be resolved from the
+            # .dat file alone.
+            if 0.0 in heading_list or 180.0 in heading_list:
+                warnings.warn(
+                    "AQWA DIRN cards contain a symmetric heading expansion; "
+                    "the recovered headings include 0/180 deg which the "
+                    "AQWA writer injects unconditionally and may not have "
+                    "been in the original spec. The recovered set is "
+                    "analysis-equivalent for AQWA but may be a superset of "
+                    "the original spec headings.",
+                    UserWarning,
+                    stacklevel=2,
+                )
         else:
             heading_list = sorted(set(raw_headings))
 
@@ -532,10 +556,20 @@ class OrcaWaveInputParser:
 
     def _parse_solver_options(self, data: dict[str, Any]) -> SolverOptions:
         """Extract solver options from OrcaWave YAML data."""
+        # SolveType carries the analysis intent (linear, mean drift,
+        # diagonal/full QTF).  It must be read explicitly: inferring QTF
+        # intent from QuadraticLoadPressureIntegration alone silently drops
+        # control-surface QTF solves (pressure integration = No).
+        solve_type = self._reverse_solve_type(
+            data.get("SolveType", "Potential and source formulations")
+        )
+
         qtf_pressure = data.get("QuadraticLoadPressureIntegration", False)
         # YAML 1.1 may parse Yes/No as True/False
-        qtf_enabled = qtf_pressure is True or (
-            isinstance(qtf_pressure, str) and qtf_pressure.lower() == "yes"
+        qtf_enabled = (
+            solve_type in ("diagonal_qtf", "full_qtf")
+            or qtf_pressure is True
+            or (isinstance(qtf_pressure, str) and qtf_pressure.lower() == "yes")
         )
 
         remove_irreg = False
@@ -548,6 +582,7 @@ class OrcaWaveInputParser:
                 break
 
         return SolverOptions(
+            solve_type=solve_type,
             remove_irregular_frequencies=remove_irreg,
             qtf_calculation=qtf_enabled,
         )
@@ -598,6 +633,9 @@ class OrcaWaveInputParser:
                 "mass": mass_kg,
                 "centre_of_gravity": [float(c) for c in cog],
                 "inertia_tensor": inertia_tensor,
+                "inertia_tensor_origin": self._reverse_tensor_origin(
+                    body_data.get("BodyInertiaTensorOriginType", "Body origin")
+                ),
             }
 
         inertia = VesselInertia(**inertia_kwargs)
@@ -761,6 +799,37 @@ class OrcaWaveInputParser:
             "auto": "auto",
         }
         return fmt_map.get(orcawave_fmt.lower(), "auto")
+
+    @staticmethod
+    def _reverse_tensor_origin(orcawave_origin: str) -> str:
+        """Map OrcaWave BodyInertiaTensorOriginType back to spec value.
+
+        Exact reverse of orcawave_backend._TENSOR_ORIGIN_MAP.
+        """
+        origin_map = {
+            "body origin": "body_origin",
+            "centre of mass": "centre_of_mass",
+        }
+        return origin_map.get(str(orcawave_origin).lower(), "body_origin")
+
+    @staticmethod
+    def _reverse_solve_type(orcawave_solve_type: str) -> str:
+        """Map OrcaWave SolveType string back to spec enum value.
+
+        Exact reverse of orcawave_backend._SOLVE_TYPE_MAP.
+        """
+        solve_map = {
+            "potential formulation only": "potential_only",
+            "potential and source formulations": "potential_and_source",
+            "potential and source + mean drift (momentum conservation)": (
+                "mean_drift"
+            ),
+            "potential and source + diagonal qtf": "diagonal_qtf",
+            "full qtf calculation": "full_qtf",
+        }
+        return solve_map.get(
+            str(orcawave_solve_type).lower(), "potential_and_source"
+        )
 
     @staticmethod
     def _reverse_symmetry(orcawave_sym: str) -> str:

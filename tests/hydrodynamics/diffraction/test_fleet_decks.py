@@ -9,6 +9,7 @@ import pytest
 import yaml
 
 from digitalmodel.hydrodynamics.diffraction import fleet_decks
+from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
 from digitalmodel.hydrodynamics.diffraction.orcawave_batch_runner import (
     OrcaWaveBatchConfig,
 )
@@ -85,6 +86,15 @@ def test_emit_batch_config_excludes_placeholder_and_parses(tmp_path: Path, fleet
     parsed = OrcaWaveBatchConfig.from_yaml(cfg_path)
     assert len(parsed.jobs) == 2
     assert str(parsed.execution_mode.value) == "parallel"
+
+    # Every job's spec_path must round-trip through DiffractionSpec.from_yaml —
+    # that is exactly how orcawave_batch_runner loads jobs. Pointing jobs at the
+    # OrcaWave-native deck .yml (top-level Units/Bodies keys) fails schema
+    # validation and errors 100% of jobs on the licensed-run lane.
+    for job in parsed.jobs:
+        spec = DiffractionSpec.from_yaml(job.spec_path)
+        assert spec.vessel.name  # canonical spec, loadable by the batch runner
+        assert spec.frequencies is not None and spec.wave_headings is not None
 
 
 def test_emit_batch_config_can_include_placeholder(tmp_path: Path, fleet):

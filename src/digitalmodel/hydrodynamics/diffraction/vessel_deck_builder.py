@@ -142,7 +142,8 @@ def parametric_hull_profile(
 class DeckResult:
     vessel: str
     form: str
-    deck_path: Path
+    deck_path: Path  # OrcaWave-native deck (.yml)
+    spec_path: Path  # canonical DiffractionSpec (spec.yml) — batch-runner input
     mesh_path: Optional[Path]
     mesh_kind: str  # "parametric" | "placeholder"
     n_panels: Optional[int]
@@ -178,11 +179,19 @@ def _inertia_for(record: Record, dims: dict) -> tuple[VesselInertia, str, list[s
             notes.append(
                 "VCG unknown (CoG z defaulted to keel datum) — set before running"
             )
+        # mass_properties.from_record cog_m datum: x=0 amidships (+fwd),
+        # y=0 centreline, z=0 keel. The parametric mesh/deck frame has x=0 at
+        # the aft perpendicular (mesh x spans 0..LOA) and z=0 at the waterline
+        # (mesh z spans -draft..0; see hull_library.mesh_generator), so convert
+        # before the backend emits BodyCentreOfMass verbatim.
+        loa = dims.get("loa") or dims.get("lbp") or 0.0
+        draft = dims.get("draft") or 0.0
+        cx, cy, cz = (float(c) for c in mp.cog_m)
         return (
             VesselInertia(
                 mode="explicit",
                 mass=mp.mass_te * 1000.0,  # tonnes -> kg
-                centre_of_gravity=[float(c) for c in mp.cog_m],
+                centre_of_gravity=[loa / 2.0 + cx, cy, cz - draft],
                 radii_of_gyration=[float(v) for v in rog],
             ),
             "explicit",
@@ -235,7 +244,9 @@ def build_deck(
     """Prepare one OrcaWave diffraction deck for a vessel record.
 
     Returns None if the record lacks the principal dimensions needed to build a
-    mesh/spec. Writes ``<out_dir>/<vessel_id>/{hull.gdf, <name>.yml, manifest.json}``.
+    mesh/spec. Writes ``<out_dir>/<vessel_id>/{hull.gdf, spec.yml, <name>.yml,
+    manifest.json}`` (``spec.yml`` = canonical DiffractionSpec, ``<name>.yml`` =
+    OrcaWave-native deck).
     """
     dims = record.canonical_dimensions()
     loa = dims.get("loa") or dims.get("lbp")
@@ -290,6 +301,10 @@ def build_deck(
         ),
         wave_headings=WaveHeadingSpec(values=headings or DEFAULT_HEADINGS),
     )
+    # Canonical spec on disk: this is what the batch runner / licensed-run lane
+    # consumes (DiffractionSpec.from_yaml); the OrcaWave-native deck alongside
+    # it is for direct opening in OrcaWave.
+    spec_path = spec.to_yaml(deck_dir / "spec.yml")
     deck_path = OrcaWaveBackend().generate_single(spec, deck_dir)
 
     manifest = {
@@ -309,6 +324,7 @@ def build_deck(
         "periods_s": periods or DEFAULT_PERIODS,
         "headings_deg": headings or DEFAULT_HEADINGS,
         "deck": deck_path.name,
+        "spec": spec_path.name,
         "notes": notes,
         "provenance": "parametric prep from vessel_db; run on a licensed OrcaWave/AQWA machine",
     }
@@ -318,6 +334,7 @@ def build_deck(
         vessel=record.name,
         form=form,
         deck_path=deck_path,
+        spec_path=spec_path,
         mesh_path=mesh_path,
         mesh_kind=mesh_kind,
         n_panels=n_panels,

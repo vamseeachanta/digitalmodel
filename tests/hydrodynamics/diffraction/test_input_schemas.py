@@ -277,3 +277,118 @@ class TestJsonSchema:
         assert "properties" in schema
         assert "environment" in schema["properties"]
         assert "frequencies" in schema["properties"]
+
+
+class TestVocabularyValidation:
+    """Free-string fields with documented vocabularies must reject typos.
+
+    Regression for the review sweep: 'mode' and 'solve_type' were plain str,
+    so e.g. mode='free-floating' or solve_type='mean-drift' validated cleanly
+    and silently generated the wrong model.
+    """
+
+    def _inertia_kwargs(self):
+        return {
+            "mass": 1000.0,
+            "centre_of_gravity": [0.0, 0.0, 0.0],
+            "radii_of_gyration": [1.0, 2.0, 3.0],
+        }
+
+    def test_inertia_mode_typo_rejected(self):
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import VesselInertia
+        with pytest.raises(Exception):  # ValidationError
+            VesselInertia(mode="free-floating", **self._inertia_kwargs())
+
+    def test_inertia_mode_valid_values_accepted(self):
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import VesselInertia
+        for mode in ("explicit", "free_floating"):
+            assert VesselInertia(mode=mode, **self._inertia_kwargs()).mode == mode
+
+    @pytest.mark.parametrize("bad", ["mean-drift", "meandrift", "full-qtf", ""])
+    def test_solve_type_typo_rejected(self, bad):
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import SolverOptions
+        with pytest.raises(Exception):  # ValidationError
+            SolverOptions(solve_type=bad)
+
+    @pytest.mark.parametrize(
+        "good",
+        [
+            "potential_only",
+            "potential_and_source",
+            "mean_drift",
+            "diagonal_qtf",
+            "full_qtf",
+        ],
+    )
+    def test_solve_type_valid_values_accepted(self, good):
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import SolverOptions
+        assert SolverOptions(solve_type=good).solve_type == good
+
+
+class TestLegacyQtfSerialization:
+    """Legacy-flat QTF enablement must survive dump/reload (#623/#624)."""
+
+    def test_flat_qtf_calculation_round_trips(self):
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import SolverOptions
+        options = SolverOptions(qtf_calculation=True)
+        assert options.resolved_qtf().enabled is True
+        dumped = options.model_dump(mode="json", exclude_none=True)
+        assert dumped.get("qtf_calculation") is True
+        reloaded = SolverOptions.model_validate(dumped)
+        assert reloaded.resolved_qtf().enabled is True
+
+    def test_qtf_disabled_not_serialized(self):
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import SolverOptions
+        dumped = SolverOptions().model_dump(mode="json", exclude_none=True)
+        assert "qtf_calculation" not in dumped
+
+    def test_nested_qtf_round_trips_without_flat_flag(self):
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import SolverOptions
+        options = SolverOptions(solve_type="full_qtf", qtf={"enabled": True})
+        dumped = options.model_dump(mode="json", exclude_none=True)
+        # Nested form carries the enablement itself; re-adding the flat flag
+        # would trip the mutual-exclusion guard on reload.
+        assert "qtf_calculation" not in dumped
+        reloaded = SolverOptions.model_validate(dumped)
+        assert reloaded.resolved_qtf().enabled is True
+
+    def test_spec_to_yaml_round_trip_keeps_qtf_enabled(self, tmp_path: Path):
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
+        spec = DiffractionSpec.from_yaml(FIXTURES_DIR / "spec_semisub.yml")
+        assert spec.solver_options.resolved_qtf().enabled is True
+        out = tmp_path / "roundtrip.yml"
+        spec.to_yaml(out)
+        reloaded = DiffractionSpec.from_yaml(out)
+        assert reloaded.solver_options.resolved_qtf().enabled is True
+
+
+class TestControlSurfaceSpecValidation:
+    """Control surfaces must be generatable (mesh file or auto parameters)."""
+
+    def test_mesh_type_requires_mesh_file(self):
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import (
+            ControlSurfaceSpec,
+        )
+        with pytest.raises(Exception):
+            ControlSurfaceSpec(type="mesh")
+
+    def test_auto_requires_panel_size_and_separation(self):
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import (
+            ControlSurfaceSpec,
+        )
+        with pytest.raises(Exception):
+            ControlSurfaceSpec(type="auto", panel_size=0.5)
+
+    def test_auto_with_parameters_valid(self):
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import (
+            ControlSurfaceSpec,
+        )
+        cs = ControlSurfaceSpec(type="auto", panel_size=0.5, separation=0.3)
+        assert cs.mesh_file is None
+
+    def test_mesh_with_file_valid_and_format_optional(self):
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import (
+            ControlSurfaceSpec,
+        )
+        cs = ControlSurfaceSpec(type="mesh", mesh_file="cs.gdf")
+        assert cs.mesh_format is None

@@ -3,9 +3,32 @@ ABOUTME: Level 3 physical consistency validation
 ABOUTME: Validates YAML parameters against CALM buoy reference data and project-specific values
 """
 
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Any
-from .models import Level3Result, ValidationStatus, PhysicalConsistencyCheck, Severity
+from .models import (
+    Level3Result,
+    ValidationStatus,
+    PhysicalConsistencyCheck as _BasePhysicalConsistencyCheck,
+    Severity,
+)
+
+
+@dataclass
+class PhysicalConsistencyCheck(_BasePhysicalConsistencyCheck):
+    """models.PhysicalConsistencyCheck plus the reporting fields consumed
+    by validator._collect_issues_from_level_3 and the markdown/console
+    reporters (message, expected_range, expected_value, reference_basis).
+
+    The base dataclass in models.py lacks these fields, so constructing a
+    check with them raised TypeError — previously undetected because the
+    old dot-path probes never matched a real model and no check was ever
+    built.
+    """
+    message: str = ""
+    expected_range: Optional[str] = None
+    expected_value: Optional[Any] = None
+    reference_basis: str = ""
 from .data_loader import CALMBuoyDataLoader, ParameterRange
 from .utils import (
     load_yaml_file,
@@ -17,6 +40,45 @@ from .utils import (
     extract_includefiles
 )
 from .config import ValidationConfig
+import re
+
+_PATH_INDEX_RE = re.compile(r'^(?P<name>[^\[\]]+)(?P<indices>(?:\[\d+\])*)$')
+
+
+def _extract_path(content: Any, path: str, default: Any = None) -> Any:
+    """Extract a value from nested YAML using dot notation with list indices.
+
+    Unlike utils.extract_parameter_from_yaml (dict-only key walk), this
+    supports list traversal, e.g. 'Environment.WaveTrains[0].WaveHs' or
+    '6DBuoys[0].Cylinders[0].CylinderOuterDiameter', which is how real
+    OrcaFlex models store these parameters (see
+    docs/domains/orcaflex/examples/modular/C06/.../includes/03_environment.yml
+    and 08_buoys.yml).
+    """
+    current = content
+    for part in path.split('.'):
+        m = _PATH_INDEX_RE.match(part)
+        if not m:
+            return default
+        name = m.group('name')
+        if not (isinstance(current, dict) and name in current):
+            return default
+        current = current[name]
+        for idx_str in re.findall(r'\[(\d+)\]', m.group('indices')):
+            idx = int(idx_str)
+            if not (isinstance(current, list) and idx < len(current)):
+                return default
+            current = current[idx]
+    return current
+
+
+def _extract_first(content: Any, paths: List[str], default: Any = None) -> Any:
+    """Return the first non-None value found among candidate paths."""
+    for path in paths:
+        value = _extract_path(content, path)
+        if value is not None:
+            return value
+    return default
 
 
 class Level3PhysicalValidator:
@@ -217,20 +279,27 @@ class Level3PhysicalValidator:
         """
         checks = []
 
-        # Common hull geometry parameters to check
+        # Common hull geometry parameters to check.  Real models store buoy
+        # data in the '6DBuoys' list (spar-buoy cylinders carry the outer
+        # diameter — see docs/domains/orcaflex/examples/modular/C06/
+        # 'C06 CALM buoy'/includes/08_buoys.yml); legacy flat 'Buoy.*' paths
+        # are kept as fallbacks for synthetic project files.
         hull_params = {
-            'buoy_diameter': 'Buoy.OuterDiameter',
-            'buoy_draft': 'Buoy.Draft',
-            'buoy_mass': 'Buoy.Mass',
-            'buoy_displacement': 'Buoy.Displacement'
+            'buoy_diameter': [
+                '6DBuoys[0].Cylinders[0].CylinderOuterDiameter',
+                'Buoy.OuterDiameter',
+            ],
+            'buoy_draft': ['Buoy.Draft'],
+            'buoy_mass': ['6DBuoys[0].Mass', 'Buoy.Mass'],
+            'buoy_displacement': ['Buoy.Displacement'],
         }
 
-        for param_name, yaml_path in hull_params.items():
+        for param_name, yaml_paths in hull_params.items():
             if param_name not in ranges:
                 continue
 
             param_range = ranges[param_name]
-            actual_value = extract_parameter_from_yaml(content, yaml_path)
+            actual_value = _extract_first(content, yaml_paths)
 
             if actual_value is None:
                 continue
@@ -295,22 +364,38 @@ class Level3PhysicalValidator:
         """
         checks = []
 
-        # Common metocean parameters
+        # Common metocean parameters.  In real OrcaFlex models Hs/Tp live
+        # inside the Environment.WaveTrains list (spectral trains use
+        # WaveHs/WaveTz — see modular_generator/builders/environment_builder.py
+        # and docs/domains/orcaflex/examples/modular/C06/.../03_environment.yml)
+        # and the surface current is 'RefCurrentSpeed' (see
+        # format_converter/section_mapping.py INPUT_PARAMETERS).  Legacy flat
+        # paths are kept as fallbacks for synthetic project files.
         metocean_params = {
-            'operating_hs': 'Environment.WaveHs',
-            'operating_tp': 'Environment.WaveTp',
-            'operating_wind_speed': 'Environment.WindSpeed',
-            'operating_surface_current': 'Environment.SurfaceCurrentSpeed'
+            'operating_hs': [
+                'Environment.WaveTrains[0].WaveHs',
+                'Environment.WaveHs',
+            ],
+            'operating_tp': [
+                'Environment.WaveTrains[0].WaveTp',
+                'Environment.WaveTrains[0].WaveTz',
+                'Environment.WaveTp',
+            ],
+            'operating_wind_speed': ['Environment.WindSpeed'],
+            'operating_surface_current': [
+                'Environment.RefCurrentSpeed',
+                'Environment.SurfaceCurrentSpeed',
+            ],
         }
 
-        for param_name, yaml_path in metocean_params.items():
+        for param_name, yaml_paths in metocean_params.items():
             # Check if we have range data for this parameter
             matching_ranges = [k for k in ranges.keys() if param_name in k.lower()]
 
             if not matching_ranges:
                 continue
 
-            actual_value = extract_parameter_from_yaml(content, yaml_path)
+            actual_value = _extract_first(content, yaml_paths)
 
             if actual_value is None:
                 continue
@@ -366,20 +451,24 @@ class Level3PhysicalValidator:
         """
         checks = []
 
-        # Common mooring parameters
+        # Common mooring parameters.  NOTE: OrcaFlex YAML line types do not
+        # carry MBL/safety-factor properties (see the curated components in
+        # docs/domains/orcaflex/library/line_types/, e.g. chain_84mm_r3.yml:
+        # MBL appears only as a comment), so these paths only match
+        # synthetic project files that embed them explicitly.
         mooring_params = {
-            'chain_mbl': 'Line.MBL',
-            'chain_safety_factor': 'Line.SafetyFactor',
-            'connector_capacity': 'Connector.Capacity'
+            'chain_mbl': ['Line.MBL'],
+            'chain_safety_factor': ['Line.SafetyFactor'],
+            'connector_capacity': ['Connector.Capacity'],
         }
 
-        for param_name, yaml_path in mooring_params.items():
+        for param_name, yaml_paths in mooring_params.items():
             matching_ranges = [k for k in ranges.keys() if any(word in k.lower() for word in param_name.split('_'))]
 
             if not matching_ranges:
                 continue
 
-            actual_value = extract_parameter_from_yaml(content, yaml_path)
+            actual_value = _extract_first(content, yaml_paths)
 
             if actual_value is None:
                 continue
@@ -469,9 +558,17 @@ class Level3PhysicalValidator:
         """
         checks = []
 
-        # Extract wave parameters
-        actual_hs = extract_parameter_from_yaml(content, 'Environment.WaveHs')
-        actual_tp = extract_parameter_from_yaml(content, 'Environment.WaveTp')
+        # Extract wave parameters (WaveTrains list first — real-model
+        # layout — then legacy flat paths)
+        actual_hs = _extract_first(content, [
+            'Environment.WaveTrains[0].WaveHs',
+            'Environment.WaveHs',
+        ])
+        actual_tp = _extract_first(content, [
+            'Environment.WaveTrains[0].WaveTp',
+            'Environment.WaveTrains[0].WaveTz',
+            'Environment.WaveTp',
+        ])
 
         if actual_hs is None or actual_tp is None:
             return checks

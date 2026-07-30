@@ -285,12 +285,16 @@ class ModularToSpecConverter:
             for key in ("type", "height", "period", "direction"):
                 waves.pop(key, None)
         elif len(trains) == 1:
-            # Single train: flat fields from EXTRACTION_MAP already cover it.
-            # Merge any fields the EXTRACTION_MAP missed (e.g. name, gamma).
+            # Single train: merge ALL extracted train fields into the flat
+            # waves dict.  EXTRACTION_MAP only reads WaveHeight/WavePeriod
+            # (regular waves) and copies WaveType raw, so spectral trains
+            # (WaveHs/WaveTz, e.g. JONSWAP — see modular_generator/builders/
+            # environment_builder.py which emits exactly those keys) would
+            # otherwise lose height/period and keep an un-reverse-mapped
+            # type.  The train dict built above is authoritative: it handles
+            # both key sets and reverse-maps the wave type.
             waves = spec.setdefault("environment", {}).setdefault("waves", {})
-            for key in ("name", "gamma"):
-                if key in trains[0] and key not in waves:
-                    waves[key] = trains[0][key]
+            waves.update(trains[0])
 
     @staticmethod
     def _set_nested(d: dict, path: str, value: Any) -> None:

@@ -258,10 +258,12 @@ class TestFieldPoints:
         }
         spec = DiffractionSpec.model_validate(data)
         rendered = _render(spec, tmp_path)
+        # One [x, y, z] row per point — the native OrcaWave convention
+        # (docs/domains/orcawave/reference/text-data-files.md; test01.yml).
+        # This test previously pinned the transposed rows-per-axis layout.
         assert rendered["FieldPointX, FieldPointY, FieldPointZ"] == [
-            [1.0, 4.0],
-            [2.0, 5.0],
-            [3.0, 6.0],
+            [1.0, 2.0, 3.0],
+            [4.0, 5.0, 6.0],
         ]
 
     def test_detect_field_points_inside_bodies_default_preserves_yes(

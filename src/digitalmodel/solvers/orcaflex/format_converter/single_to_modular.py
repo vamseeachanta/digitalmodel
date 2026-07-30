@@ -16,6 +16,33 @@ from ..yaml_utils import OrcaFlexDumper, orcaflex_dump, orcaflex_load
 from .protocols import ConversionReport
 from .section_mapping import INPUT_PARAMETERS, SECTION_MAPPING
 
+# Sections valid in real models (see yaml_validator.VALID_TOP_LEVEL_SECTIONS)
+# but absent from the legacy SECTION_MAPPING.  Filenames are numbered so that
+# the sorted include order in master.yml respects OrcaFlex's sequential
+# declaration order: type-like sections referenced by Lines/Shapes must be
+# declared before 07_lines.yml / 09_shapes.yml, while sections that REFERENCE
+# other objects (friction tables, attached buoys, code checks, browser
+# groups) must come after every object they reference.
+# 'FrictionCoefficients' is the modern key for the legacy
+# 'SolidFrictionCoefficients' alias (see modular_generator/extractor.py
+# SECTION_ALIASES) and therefore shares its 19_friction.yml slot.
+_EXTRA_SECTION_MAPPING: dict[str, str] = {
+    'ClumpTypes': '05a_attachment_types.yml',
+    'WingTypes': '05a_attachment_types.yml',
+    'LineContents': '05b_line_contents.yml',
+    'FlexJointTypes': '05c_flex_joint_types.yml',
+    'SolidTypes': '05d_solid_types.yml',
+    'FrictionCoefficients': '19_friction.yml',
+    'AttachedBuoys': '20_attached_buoys.yml',
+    'CodeChecks': '21_code_checks.yml',
+    'BrowserGroups': '22_browser_groups.yml',
+}
+
+# Truly unknown sections are quarantined in a file that sorts AFTER all
+# known include files, so they can never break declaration order by being
+# included before the objects they reference.
+_UNMAPPED_FILENAME = '99_unmapped.yml'
+
 
 class SingleToModularConverter:
     """Convert a single monolithic OrcaFlex YAML to modular format.
@@ -80,6 +107,16 @@ class SingleToModularConverter:
 
         # Group data by target filename
         file_groups = self._group_by_filename(data)
+
+        unknown_sections = [
+            key for key in data
+            if key not in SECTION_MAPPING and key not in _EXTRA_SECTION_MAPPING
+        ]
+        if unknown_sections:
+            warnings.append(
+                f"Unknown sections placed in {_UNMAPPED_FILENAME} "
+                f"(included last): {', '.join(unknown_sections)}"
+            )
 
         # Generate include files
         include_files: list[str] = []
@@ -163,9 +200,13 @@ class SingleToModularConverter:
         for key, value in data.items():
             if key in SECTION_MAPPING:
                 filename = SECTION_MAPPING[key]
+            elif key in _EXTRA_SECTION_MAPPING:
+                filename = _EXTRA_SECTION_MAPPING[key]
             else:
-                # Unknown sections go to general
-                filename = "01_general.yml"
+                # Unknown sections are quarantined LAST in the include
+                # order (never in 01_general.yml, which would be included
+                # before the objects they may reference).
+                filename = _UNMAPPED_FILENAME
 
             if filename not in file_groups:
                 file_groups[filename] = {}
