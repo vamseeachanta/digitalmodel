@@ -47,7 +47,7 @@ Production teams need a diagnostic system that is accurate, comprehensive, and d
         |
         v
   +---------------------+
-  |  ML Diagnostics      |  18 failure modes
+  |  ML Diagnostics      |  20 failure modes
   |  (GradientBoosting)  |  Confidence scores
   |                      |  Differential diagnosis
   +---------------------+
@@ -73,9 +73,25 @@ Both solvers convert surface dynamometer cards to downhole pump cards using the 
 
 ### Machine Learning Diagnostics
 
-- **GradientBoosting classifier** trained on 5,400 synthetic dynamometer cards
-- **89.4% cross-validated accuracy** across all 18 failure modes
-- **Bezerra vertical projection** feature extraction -- a literature-proven method demonstrated at 98.87% accuracy on 6,101 real-world cards
+- **GradientBoosting classifier** trained on 6,000 synthetic dynamometer cards across 20 failure modes
+- **99.4% five-fold cross-validated accuracy on that synthetic set** (99.6% on unseen
+  generator seeds). This number is synthetic-train / synthetic-test: it measures how
+  separable the module's own card generators are from one another. **It is not a
+  validation against field data, and it is not a field accuracy figure.** The classifier
+  has not yet been scored against a single labelled real dynamometer card (tracked as
+  issue #1864)
+- **The rise from the previous 90.5% is partly definitional, not a gain in diagnostic
+  capability.** Three modes (NORMAL, TUBING_MOVEMENT, PLUNGER_UNDERTRAVEL) differ only in
+  absolute stroke length and were previously not separable at all. Three
+  absolute-magnitude features were added, and those modes now score 1.00 -- but the
+  generators draw stroke from ranges that never overlap (30--55 in, 80--120 in,
+  130--180 in), so a hand-written two-threshold rule on stroke alone already scores
+  900/900 on unseen synthetic cards. Real wells have overlapping stroke ranges. Whether
+  these modes separate on real cards is unknown and untested
+- **Bezerra vertical projection** feature extraction, plus three absolute-scale features
+  (stroke length, load range, card area) -- the projection method is literature-proven,
+  demonstrated at 98.87% accuracy on 6,101 real-world cards *by its authors, on their
+  data; that result is not a claim about this implementation*
 - Every classification includes a **confidence score (0--100%)** and **differential diagnosis** listing the top 3 alternative conditions
 
 ### Seven-Phase Engineering Analysis
@@ -100,7 +116,7 @@ Both solvers convert surface dynamometer cards to downhole pump cards using the 
 
 ## Failure Mode Coverage
 
-DynaCard AI Diagnostics detects **18 distinct failure modes** organized into three tiers by severity and frequency:
+DynaCard AI Diagnostics detects **20 distinct failure modes** organized into three tiers by severity and frequency:
 
 ### Tier 1 -- Core Conditions
 
@@ -109,7 +125,9 @@ DynaCard AI Diagnostics detects **18 distinct failure modes** organized into thr
 | **Normal** | Healthy pump operation -- baseline reference |
 | **Gas Interference** | Free gas entering pump, reducing volumetric efficiency |
 | **Fluid Pound** | Incomplete pump fillage causing mechanical shock loading |
-| **Pump Tagging** | Plunger contacting pump barrel at stroke extremes |
+| **Pump Tagging Up** | Plunger striking the top of the barrel at maximum stroke -- space the pump down |
+| **Pump Tagging Down** | Plunger striking the standing valve at minimum stroke -- space the pump up |
+| **Plunger Out of Barrel** | Plunger leaving the top of the barrel mid-upstroke, dumping fluid load |
 | **Tubing Movement** | Unanchored tubing stretching under cyclic load |
 | **Traveling Valve Leak** | Traveling valve fails to seal -- fluid bypasses on upstroke |
 | **Standing Valve Leak** | Standing valve fails to seal -- fluid drains on downstroke |
@@ -139,9 +157,9 @@ DynaCard AI Diagnostics detects **18 distinct failure modes** organized into thr
 
 ## Diagnostic Card Gallery
 
-Each failure mode produces a distinctive dynamometer card shape. The ML classifier recognizes these geometric signatures automatically. All 18 failure modes across three diagnostic tiers:
+Each failure mode produces a distinctive dynamometer card shape. The ML classifier recognizes these geometric signatures automatically across three diagnostic tiers. The gallery below still shows the pre-split set of 18: `PUMP_TAGGING` has since been separated into `PUMP_TAGGING_UP` and `PUMP_TAGGING_DOWN` (opposite mechanisms, opposite repairs) and `PLUNGER_OUT_OF_BARREL` added, taking the classifier to 20 modes.
 
-![DynaCard AI — 18 Failure Mode Diagnostic Gallery](schematics/diagnostic_gallery.svg)
+![DynaCard AI — Failure Mode Diagnostic Gallery (18 of the current 20 modes)](schematics/diagnostic_gallery.svg)
 
 ---
 
@@ -182,7 +200,7 @@ A single API call returns the complete diagnostic result:
 
 | Capability | Threshold-Based Systems | DynaCard AI Diagnostics |
 |------------|------------------------|------------------------|
-| Failure modes detected | 4 | **18** |
+| Failure modes detected | 4 | **20** |
 | Confidence scoring | No | **Yes (0--100%)** |
 | Differential diagnosis | No | **Top 3 alternatives** |
 | Physics solvers | 1 (typically Gibbs only) | **2 (Gibbs + Finite Difference)** |
@@ -199,7 +217,7 @@ A single API call returns the complete diagnostic result:
 ## Business Benefits
 
 **Reduce Unplanned Downtime**
-Detect 18 failure modes instead of 4 -- catch emerging problems before they escalate to rod parts, stuck pumps, or lost production.
+Detect 20 failure modes instead of 4 -- catch emerging problems before they escalate to rod parts, stuck pumps, or lost production.
 
 **Prioritize Interventions with Confidence**
 Confidence scores (0--100%) and differential diagnosis let your team allocate workover crews and equipment to the wells that need attention most, reducing unnecessary truck rolls.
@@ -229,10 +247,10 @@ JSON-based model with structured Pydantic outputs. Every diagnostic result can b
 | **Source** | 21 modules, approximately 5,600 lines of code |
 | **Physics Solvers** | Gibbs (frequency-domain), Finite Difference (time-domain) |
 | **ML Algorithm** | GradientBoosting classifier |
-| **Training Data** | 5,400 synthetic dynamometer cards |
-| **Cross-Validated Accuracy** | 89.4% |
-| **Feature Extraction** | Bezerra vertical projection method |
-| **Failure Modes** | 18 (3-tier classification) |
+| **Training Data** | 6,000 synthetic dynamometer cards (300 per mode) |
+| **Cross-Validated Accuracy** | 99.4% -- synthetic-train / synthetic-test only; not validated against field cards (#1864). Partly definitional: generator stroke ranges do not overlap |
+| **Feature Extraction** | Bezerra vertical projection (16) + absolute scale features (3) |
+| **Failure Modes** | 20 (3-tier classification) |
 | **Data Models** | 30+ Pydantic v2 validated schemas |
 | **Calculators** | 12 specialized (BaseCalculator pattern) |
 | **Automated Tests** | 498 passing |
@@ -250,7 +268,7 @@ JSON-based model with structured Pydantic outputs. Every diagnostic result can b
 Provide surface dynamometer card data (position and load arrays), rod string configuration, pump properties, and surface unit geometry. The system validates all inputs through Pydantic models before processing.
 
 **Step 2: Analyze**
-The physics engine converts the surface card to a downhole pump card. Seven engineering calculation phases extract fluid load, torque profiles, lift capacity, card geometry, buckling status, ideal card comparison, and torque balance. The ML classifier then evaluates the downhole card against all 18 failure modes.
+The physics engine converts the surface card to a downhole pump card. Seven engineering calculation phases extract fluid load, torque profiles, lift capacity, card geometry, buckling status, ideal card comparison, and torque balance. The ML classifier then evaluates the downhole card against all 20 failure modes.
 
 **Step 3: Act**
 Receive a structured diagnostic report: primary classification with confidence score, differential diagnosis with the top three alternative conditions, and complete engineering calculations -- all in a single response object ready for dashboard integration, historian storage, or automated alerting.
@@ -262,7 +280,7 @@ Receive a structured diagnostic report: primary classification with confidence s
 | Role | Value |
 |------|-------|
 | **Production Engineers** | Faster, more accurate well diagnostics with quantified confidence |
-| **Optimization Teams** | Comprehensive analysis (18 modes) from a single tool -- no manual pattern matching |
+| **Optimization Teams** | Comprehensive analysis (20 modes) from a single tool -- no manual pattern matching |
 | **Field Supervisors** | Clear prioritization of which wells need intervention first |
 | **Artificial Lift Consultants** | Professional-grade analysis toolkit for client engagements |
 | **SCADA / Automation Teams** | Offline-capable module that integrates into existing control systems |
@@ -284,4 +302,4 @@ DynaCard AI Diagnostics is available for integration into your production monito
 
 ---
 
-<sub>DynaCard AI Diagnostics -- Physics-driven modeling. Machine-learning diagnostics. Field-proven accuracy. Deployed where you need it.</sub>
+<sub>DynaCard AI Diagnostics -- Physics-driven modeling. Machine-learning diagnostics. Deployed where you need it. Accuracy figures quoted here are cross-validation on synthetic cards; field validation is open work (#1864).</sub>

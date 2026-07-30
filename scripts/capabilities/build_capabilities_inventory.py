@@ -2,8 +2,8 @@
 """ABOUTME: Capabilities IA inventory builder (issue #1444) — census, clusters,
 ABOUTME: reference-index joins, recency, spec rendering, and --check freshness.
 
-Reads (never edits) docs/api/capabilities/index.html plus the machine
-source-of-truth files under docs/capability-map/, and emits:
+Reads (never edits) the machine source-of-truth files under
+docs/capability-map/, and emits:
 
   docs/capability-map/capabilities-inventory.json   (machine contract)
   docs/capability-map/capabilities-ia-spec-1444.md  (rendered spec; tables are
@@ -12,9 +12,16 @@ source-of-truth files under docs/capability-map/, and emits:
 ``--check`` regenerates in memory and exits non-zero if the committed
 inventory drifted (CI freshness gate via the tests/DOMAINS.md capabilities row).
 
+The census used to scrape docs/api/capabilities/index.html, which served double
+duty: it rendered the gallery AND declared the IA. #1573 (C10) retired the
+rendering job -- aceengineer.com/capabilities is now the single canonical
+surface -- and the declaration went with it, taking every id, title and href
+down with a page nobody meant to use as a schema (dm#1637). The IA now lives in
+capabilities-sections.yml, where a presentation decision cannot delete it.
+
 Recency comes ONLY from capabilities-added.yml (explicit, PR-evidenced
-metadata): the repo's git history was truncated by the 2026-07 slim and
-sections live inside one HTML file, so no git-derived dating is valid.
+metadata): the repo's git history was truncated by the 2026-07 slim, so no
+git-derived dating is valid.
 """
 
 from __future__ import annotations
@@ -32,7 +39,8 @@ HERE = Path(__file__).resolve()
 REPO_DEFAULT = HERE.parents[2]
 
 CAP_MAP = "docs/capability-map"
-INDEX_HTML = "docs/api/capabilities/index.html"
+SECTIONS_YML = "docs/capability-map/capabilities-sections.yml"
+CANONICAL_SURFACE = "https://www.aceengineer.com/capabilities/"
 FROZEN_DIR = "capabilities/api"  # frozen work-item assets — excluded from discovery
 
 
@@ -41,56 +49,49 @@ class CensusError(RuntimeError):
 
 
 # ---------------------------------------------------------------------------
-# parsing
+# census
 # ---------------------------------------------------------------------------
 
-_SECTION_RE = re.compile(r'<section[^>]*\bid="([a-z0-9-]+)"')
-_NAV_BLOCK_RE = re.compile(r"<nav>.*?</nav>", re.S)
-_NAV_HREF_RE = re.compile(r'href="#([a-z0-9-]+)"')
-_H2_RE = re.compile(r"<h2[^>]*>([^<]{1,120})<")
-_HREF_RE = re.compile(r'href="([^"#]+)"')
+#: Anchors are cited by external links, so the id vocabulary is a contract, not
+#: a naming preference. Reject anything that could not survive as a URL fragment.
+_ID_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 
-def parse_nav(html: str) -> list[str]:
-    m = _NAV_BLOCK_RE.search(html)
-    if not m:
-        raise CensusError("no <nav> block found")
-    return _NAV_HREF_RE.findall(m.group(0))
+def load_sections(repo: Path | str = REPO_DEFAULT) -> list[dict]:
+    """Raw section records from capabilities-sections.yml, unvalidated."""
+    doc = yaml.safe_load((Path(repo) / SECTIONS_YML).read_text())
+    return [
+        {
+            "id": s["id"],
+            "title": s.get("title", ""),
+            "hrefs": list(s.get("hrefs") or []),
+        }
+        for s in (doc.get("sections") or [])
+    ]
 
 
-def parse_sections(html: str) -> list[dict]:
-    """Section id, title (first h2), and the hrefs inside each section block."""
-    out = []
-    matches = list(_SECTION_RE.finditer(html))
-    for i, m in enumerate(matches):
-        start = m.start()
-        end = matches[i + 1].start() if i + 1 < len(matches) else len(html)
-        block = html[start:end]
-        h2 = _H2_RE.search(block)
-        out.append(
-            {
-                "id": m.group(1),
-                "title": (h2.group(1).strip() if h2 else ""),
-                "hrefs": _HREF_RE.findall(block),
-            }
-        )
-    return out
+def census(sections: list[dict]) -> list[dict]:
+    """Schema-checked census of the declared sections. Fail closed.
 
-
-def census(html: str) -> list[dict]:
-    """Bijection-checked census: nav <-> sections, no duplicates. Fail closed."""
-    sections = parse_sections(html)
+    Guards what the YAML cannot express on its own: unique, URL-safe anchors
+    and a non-empty title per section. The nav/section bijection the HTML
+    census enforced is gone because the nav was the *other* half of a
+    duplicated declaration -- one list cannot disagree with itself.
+    """
+    if not sections:
+        raise CensusError(f"no sections declared in {SECTIONS_YML}")
     ids = [s["id"] for s in sections]
     dupes = {i for i in ids if ids.count(i) > 1}
     if dupes:
         raise CensusError(f"duplicate section ids: {sorted(dupes)}")
-    nav = parse_nav(html)
-    ghosts = set(nav) - set(ids)
-    if ghosts:
-        raise CensusError(f"nav links to missing sections: {sorted(ghosts)}")
-    unlisted = set(ids) - set(nav)
-    if unlisted:
-        raise CensusError(f"sections absent from nav: {sorted(unlisted)}")
+    malformed = sorted(i for i in ids if not _ID_RE.match(str(i)))
+    if malformed:
+        raise CensusError(
+            f"section ids must be lowercase kebab-case URL anchors: {malformed}"
+        )
+    untitled = sorted(s["id"] for s in sections if not str(s["title"]).strip())
+    if untitled:
+        raise CensusError(f"sections with no title: {untitled}")
     return sections
 
 
@@ -108,6 +109,32 @@ def discover_explorers(repo: Path) -> list[str]:
         for p in root.rglob("*-explorer.html")
         if FROZEN_DIR not in str(p)
     )
+
+
+def registered_site_paths(repo: Path | str = REPO_DEFAULT) -> set[str]:
+    """Every page the IA registers, as a site path relative to ``docs/api/``.
+
+    Section hrefs are written page-relative to docs/api/capabilities/ (that is
+    where the gallery used to live, and the standards-grounding ratchet still
+    resolves them from there). Builders declare their page as ``SITE_PATH``
+    relative to docs/api/, so this is the join that answers "is this page
+    reachable from the capability IA at all?" — the question the operability
+    explorer and monitor registration tests ask (dm#1639).
+    """
+    repo = Path(repo)
+    base = (repo / "docs" / "api" / "capabilities").resolve()
+    api_root = (repo / "docs" / "api").resolve()
+    out: set[str] = set()
+    for section in load_sections(repo):
+        for href in section["hrefs"]:
+            if href.startswith(("http://", "https://", "mailto:")):
+                continue
+            target = (base / href).resolve()
+            try:
+                out.add(str(target.relative_to(api_root)))
+            except ValueError:
+                continue  # links outside docs/api/ are not site pages
+    return out
 
 
 def load_pdf_specs(repo: Path) -> dict[str, str]:
@@ -135,8 +162,7 @@ def load_added(repo: Path) -> dict:
 
 def build_inventory(repo: Path | str = REPO_DEFAULT) -> dict:
     repo = Path(repo)
-    html = (repo / INDEX_HTML).read_text()
-    sections = census(html)
+    sections = census(load_sections(repo))
     clusters_doc = load_clusters(repo)
     added_doc = load_added(repo)
 
@@ -201,7 +227,7 @@ def build_inventory(repo: Path | str = REPO_DEFAULT) -> dict:
 
     return {
         "schema_version": SCHEMA_VERSION,
-        "source": INDEX_HTML,
+        "source": SECTIONS_YML,
         "sections": inv_sections,
         "clusters": [
             {k: c[k] for k in ("key", "label", "value_statement", "sections")}
@@ -240,14 +266,15 @@ def render_spec(inv: dict) -> str:
     lines = [
         "# Capabilities page — information-architecture spec (issue #1444)",
         "",
-        "> GENERATED tables (source of truth: `capabilities-clusters.yml`, "
-        "`capabilities-added.yml`, the live page census). Regenerate with:",
+        "> GENERATED tables (source of truth: `capabilities-sections.yml`, "
+        "`capabilities-clusters.yml`, `capabilities-added.yml`). Regenerate "
+        "with:",
         "> `.venv/bin/python scripts/capabilities/build_capabilities_inventory.py`",
-        "> Presentation is owned by the capabilities revamp lane (PR #1389 "
-        "coordination note) — this spec is its input; `index.html` is not "
-        "edited here.",
+        "> Presentation lives at "
+        f"[{CANONICAL_SURFACE}]({CANONICAL_SURFACE}) (C10, #1573) — this spec "
+        "describes the IA, and does not edit the rendered surface.",
         "",
-        f"Sections on the live page: **{len(inv['sections'])}** · clusters: "
+        f"Sections declared: **{len(inv['sections'])}** · clusters: "
         f"**{len(inv['clusters'])}** · PDF coverage gaps: "
         f"**{len(inv['pdf_gaps'])}** · unlinked explorers: "
         f"**{len(inv['unlinked_explorers'])}**",
@@ -262,9 +289,7 @@ def render_spec(inv: dict) -> str:
         lines.append("")
         for sid in c["sections"]:
             s = by_id[sid]
-            lines.append(
-                f"- [`#{sid}`](../api/capabilities/index.html#{sid}) — {s['title']}"
-            )
+            lines.append(f"- [`#{sid}`]({CANONICAL_SURFACE}#{sid}) — {s['title']}")
         lines.append("")
     lines += [
         "## Reference index (citable front doors)",
@@ -280,7 +305,7 @@ def render_spec(inv: dict) -> str:
         else:
             added = "unknown"
         lines.append(
-            f"| [`#{s['id']}`](../api/capabilities/index.html#{s['id']}) "
+            f"| [`#{s['id']}`]({CANONICAL_SURFACE}#{s['id']}) "
             f"| {s['cluster']} | {exp} | {pdf} | {added} |"
         )
     lines += [

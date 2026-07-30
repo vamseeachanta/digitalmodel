@@ -42,6 +42,7 @@ from .calculations import (
 from .diagnostics import PumpDiagnostics
 from .feature_extraction import FeatureExtractor
 from .card_generators import ALL_GENERATORS as CARD_GENERATORS
+from .card_generators import MODE_ALIASES, get_generator, resolve_mode
 from .solver import DynacardWorkflow, perform_well_troubleshooting
 from .gear_box_loading import (
     GearBoxLoadingCalculator,
@@ -163,6 +164,9 @@ __all__ = [
     "PumpDiagnostics",
     "FeatureExtractor",
     "CARD_GENERATORS",
+    "MODE_ALIASES",
+    "get_generator",
+    "resolve_mode",
     # Workflow
     "DynacardWorkflow",
     "perform_well_troubleshooting",

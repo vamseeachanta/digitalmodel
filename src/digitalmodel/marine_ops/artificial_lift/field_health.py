@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
-    ALL_GENERATORS,
+    get_generator,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
     CardData,
@@ -24,7 +24,14 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWork
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
 FAILURE_CLASSIFICATIONS = {"GAS_LOCK", "ROD_PARTING", "STUCK_PUMP"}
-CRITICAL_CLASSIFICATIONS = {"PUMP_TAGGING"}
+CRITICAL_CLASSIFICATIONS = {
+    # Retired label. The retrained 20-class model no longer emits it, but
+    # stored workflow configs and third-party callers still pass it in, and
+    # it must not fall through to the "unknown -> warning" branch.
+    "PUMP_TAGGING",
+    "PUMP_TAGGING_UP",
+    "PUMP_TAGGING_DOWN",
+}
 STATUS_RANK = {"normal": 0, "warning": 1, "critical": 2, "failure": 3}
 
 
@@ -78,19 +85,36 @@ def load_and_map_well(
 ) -> DynacardAnalysisContext:
     """Map an inline field-health well definition to dynacard context."""
     well_cfg = _merge_well(defaults or {}, well)
-    return DynacardAnalysisContext(
+    card, is_synthetic = _surface_card(well_cfg)
+    ctx = DynacardAnalysisContext(
         api14=str(well_cfg["api14"]),
-        surface_card=_surface_card(well_cfg),
+        surface_card=card,
         rod_string=_rod_sections(well_cfg),
         pump=PumpProperties(**well_cfg["pump"]),
         surface_unit=SurfaceUnit(**well_cfg.get("surface_unit", {})),
         spm=float(well_cfg.get("spm", 10.0)),
     )
+    if is_synthetic:
+        # The generators emit DOWNHOLE cards -- they are named for pump
+        # conditions. Feeding one straight in as the surface card asks the
+        # surface-to-downhole solver to transform something already downhole.
+        # Forward-model it up the rod string first so the context holds a
+        # physically consistent surface card. See issue #1862.
+        from .dynacard.card_generators import surface_card_from_pump_card
+
+        ctx.surface_card = surface_card_from_pump_card(ctx.surface_card, ctx)
+    return ctx
 
 
-def _surface_card(well_cfg: dict[str, Any]) -> CardData:
+def _surface_card(well_cfg: dict[str, Any]) -> tuple[CardData, bool]:
+    """Return the well's card and whether it came from a synthetic generator.
+
+    A supplied ``surface_card`` is already a surface card. A generated one is a
+    *downhole* card and the caller must forward-model it before use, so the
+    flag is returned rather than inferred later.
+    """
     if "surface_card" in well_cfg:
-        return CardData(**well_cfg["surface_card"])
+        return CardData(**well_cfg["surface_card"]), False
 
     synthetic = well_cfg.get("synthetic_card")
     if not synthetic:
@@ -98,10 +122,10 @@ def _surface_card(well_cfg: dict[str, Any]) -> CardData:
 
     mode = str(synthetic["mode"])
     try:
-        generator = ALL_GENERATORS[mode]
+        generator = get_generator(mode)
     except KeyError as exc:
         raise ValueError(f"Unsupported synthetic_card mode: {mode}") from exc
-    return generator(seed=int(synthetic.get("seed", 0)))
+    return generator(seed=int(synthetic.get("seed", 0))), True
 
 
 def _rod_sections(well_cfg: dict[str, Any]) -> list[RodSection]:

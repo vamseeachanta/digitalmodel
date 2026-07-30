@@ -21,13 +21,20 @@ Solver quirks documented:
   - AQWA: panel mesh format (.dat) required; GDF not directly accepted
   - OrcaWave: accepts GDF directly; internally converts
   - BEMRosetta: accepts GDF natively; open-source panel code
+
+The artifacts under ``docs/benchmarks/unit_box/`` are a committed golden
+reference (see section 4). Tests never write there; regenerate them
+deliberately with::
+
+    uv run python tests/hydrodynamics/diffraction/test_unit_box_benchmark.py
 """
 from __future__ import annotations
 
+import hashlib
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Dict
+from typing import Any, Dict
 
 import numpy as np
 import pytest
@@ -331,6 +338,26 @@ def _build_unit_box_results(
     )
 
 
+def _build_unit_box_solver_set() -> Dict[str, DiffractionResults]:
+    """Deterministic three-solver result set for the Unit Box.
+
+    AQWA: reference (no bias)
+    OrcaWave: +0.5% bias (GDF conversion minor scaling)
+    BEMRosetta: +0.3% bias (open-source solver numerical precision)
+
+    All biases are < 1%, expecting FULL or MAJORITY consensus.
+
+    Shared by the ``unit_box_solver_results`` fixture and by ``_regenerate()``
+    so the committed golden artifacts and the tests are built from exactly the
+    same inputs.
+    """
+    return {
+        "AQWA": _build_unit_box_results("AQWA", solver_bias=0.0, seed=0),
+        "OrcaWave": _build_unit_box_results("OrcaWave", solver_bias=0.005, seed=1),
+        "BEMRosetta": _build_unit_box_results("BEMRosetta", solver_bias=0.003, seed=2),
+    }
+
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -338,19 +365,8 @@ def _build_unit_box_results(
 
 @pytest.fixture
 def unit_box_solver_results() -> Dict[str, DiffractionResults]:
-    """Three-solver DiffractionResults for Unit Box.
-
-    AQWA: reference (no bias)
-    OrcaWave: +0.5% bias (GDF conversion minor scaling)
-    BEMRosetta: +0.3% bias (open-source solver numerical precision)
-
-    All biases are < 1%, expecting FULL or MAJORITY consensus.
-    """
-    return {
-        "AQWA": _build_unit_box_results("AQWA", solver_bias=0.0, seed=0),
-        "OrcaWave": _build_unit_box_results("OrcaWave", solver_bias=0.005, seed=1),
-        "BEMRosetta": _build_unit_box_results("BEMRosetta", solver_bias=0.003, seed=2),
-    }
+    """Three-solver DiffractionResults for Unit Box."""
+    return _build_unit_box_solver_set()
 
 
 @pytest.fixture
@@ -664,38 +680,164 @@ class TestUnitBoxBenchmarkRunner:
 
 
 # ---------------------------------------------------------------------------
-# 4. Report output to docs/benchmarks/unit_box/
+# 4. Committed golden artifacts under docs/benchmarks/unit_box/
 # ---------------------------------------------------------------------------
+# ``docs/benchmarks/unit_box/`` holds committed benchmark evidence, not scratch
+# output.  Before #1635 the test below regenerated those seven tracked files
+# in place on every run, so any test session left the working tree dirty and
+# the per-file timestamp churn masked genuine coefficient drift.
+#
+# The benchmark is deterministic (seeded RNG, fixed grids); the only volatile
+# content is the embedded wall-clock timestamp.  So the committed artifacts are
+# treated as a read-only golden reference: the tests regenerate into
+# ``tmp_path`` and COMPARE, failing on drift.
+#
+# Regenerate the committed artifacts deliberately with::
+#
+#     uv run python tests/hydrodynamics/diffraction/test_unit_box_benchmark.py
 
 
 DOCS_BENCHMARK_DIR = (
-    Path(__file__).parent.parent.parent.parent
+    Path(__file__).resolve().parents[3]
     / "docs"
     / "benchmarks"
     / "unit_box"
 )
 
+#: Every artifact a Unit Box benchmark run emits into its output directory.
+DOCS_ARTIFACT_NAMES = (
+    "benchmark_amplitude.html",
+    "benchmark_combined.html",
+    "benchmark_heatmap.html",
+    "benchmark_phase.html",
+    "benchmark_report.html",
+    "benchmark_report.json",
+    "hydro_data.yml",
+)
 
-class TestUnitBoxBenchmarkReportOutput:
-    """Run the benchmark and write reports to docs/benchmarks/unit_box/."""
+#: JSON keys whose value is a wall-clock timestamp — excluded from comparison.
+VOLATILE_JSON_KEYS = frozenset({"comparison_date"})
 
-    def test_unit_box_benchmark_writes_json_to_docs(
-        self,
-        unit_box_solver_results: Dict[str, DiffractionResults],
-    ) -> None:
-        """Generate report artifacts in the canonical docs directory."""
-        DOCS_BENCHMARK_DIR.mkdir(parents=True, exist_ok=True)
-        config = BenchmarkConfig(
-            output_dir=DOCS_BENCHMARK_DIR,
-            tolerance=SOLVER_TOLERANCE,
-            report_title="Unit Box 3-Way Benchmark",
-            report_subtitle=(
-                "AQWA vs OrcaWave vs BEMRosetta — 1m^3 box, 500 kg, "
-                "depth 50 m, freq 0.1-2.0 rad/s"
-            ),
+#: Marker for the single volatile line of ``hydro_data.yml``.
+VOLATILE_YAML_MARKER = "generated:"
+
+REPORT_TITLE = "Unit Box 3-Way Benchmark"
+REPORT_SUBTITLE = (
+    "AQWA vs OrcaWave vs BEMRosetta — 1m^3 box, 500 kg, "
+    "depth 50 m, freq 0.1-2.0 rad/s"
+)
+
+REGENERATE_HINT = (
+    "If the change is intended, regenerate with: uv run python "
+    "tests/hydrodynamics/diffraction/test_unit_box_benchmark.py"
+)
+
+
+def _run_unit_box_benchmark(
+    output_dir: Path,
+    solver_results: Dict[str, DiffractionResults],
+) -> BenchmarkRunResult:
+    """Run the canonical Unit Box benchmark into ``output_dir``."""
+    config = BenchmarkConfig(
+        output_dir=output_dir,
+        tolerance=SOLVER_TOLERANCE,
+        report_title=REPORT_TITLE,
+        report_subtitle=REPORT_SUBTITLE,
+    )
+    return BenchmarkRunner(config).run_from_results(solver_results)
+
+
+def _dir_fingerprint(directory: Path) -> Dict[str, str]:
+    """Map file name -> sha256 for every file directly in ``directory``."""
+    if not directory.is_dir():
+        return {}
+    return {
+        path.name: hashlib.sha256(path.read_bytes()).hexdigest()
+        for path in sorted(directory.iterdir())
+        if path.is_file()
+    }
+
+
+def _assert_json_matches(actual: Any, expected: Any, path: str = "") -> None:
+    """Assert two JSON trees match, ignoring volatile keys.
+
+    Floats are compared with a tight relative tolerance so last-ULP platform
+    noise does not fail the build while any real coefficient drift does.
+    """
+    where = path or "<root>"
+    if isinstance(expected, dict):
+        assert isinstance(actual, dict), f"{where}: expected an object"
+        expected_keys = set(expected) - VOLATILE_JSON_KEYS
+        actual_keys = set(actual) - VOLATILE_JSON_KEYS
+        assert actual_keys == expected_keys, (
+            f"{where}: key set drifted from the committed report; "
+            f"missing={sorted(expected_keys - actual_keys)} "
+            f"unexpected={sorted(actual_keys - expected_keys)}. "
+            f"{REGENERATE_HINT}"
         )
-        runner = BenchmarkRunner(config)
-        result = runner.run_from_results(unit_box_solver_results)
+        for key in sorted(expected_keys):
+            _assert_json_matches(actual[key], expected[key], f"{path}/{key}")
+    elif isinstance(expected, list):
+        assert isinstance(actual, list), f"{where}: expected a list"
+        assert len(actual) == len(expected), (
+            f"{where}: length {len(actual)} != committed {len(expected)}. "
+            f"{REGENERATE_HINT}"
+        )
+        for index, (got, want) in enumerate(zip(actual, expected)):
+            _assert_json_matches(got, want, f"{path}[{index}]")
+    elif isinstance(expected, bool) or expected is None:
+        assert actual == expected, (
+            f"{where}: {actual!r} != committed {expected!r}. {REGENERATE_HINT}"
+        )
+    elif isinstance(expected, (int, float)):
+        assert actual == pytest.approx(expected, rel=1e-9, abs=1e-12), (
+            f"{where}: {actual!r} != committed {expected!r}. {REGENERATE_HINT}"
+        )
+    else:
+        assert actual == expected, (
+            f"{where}: {actual!r} != committed {expected!r}. {REGENERATE_HINT}"
+        )
+
+
+def _stable_yaml_lines(text: str) -> list:
+    """Drop the single timestamped line from a ``hydro_data.yml`` body."""
+    return [
+        line for line in text.splitlines()
+        if VOLATILE_YAML_MARKER not in line
+    ]
+
+
+@pytest.fixture(scope="module")
+def unit_box_docs_run(tmp_path_factory: pytest.TempPathFactory) -> Dict[str, Any]:
+    """Run the canonical Unit Box benchmark ONCE, into a temp directory.
+
+    Fingerprints ``docs/benchmarks/unit_box/`` immediately before the run so
+    the #1635 regression guard can prove the run touched nothing tracked.
+    Module-scoped so the golden checks below cost a single benchmark run, the
+    same as the pre-#1635 test did.
+    """
+    out_dir = tmp_path_factory.mktemp("unit_box_docs") / "unit_box"
+    docs_before = _dir_fingerprint(DOCS_BENCHMARK_DIR)
+    result = _run_unit_box_benchmark(out_dir, _build_unit_box_solver_set())
+    docs_after = _dir_fingerprint(DOCS_BENCHMARK_DIR)
+    return {
+        "out_dir": out_dir,
+        "result": result,
+        "docs_before": docs_before,
+        "docs_after": docs_after,
+    }
+
+
+class TestUnitBoxBenchmarkArtifacts:
+    """The Unit Box benchmark run is side-effect free and matches the golden."""
+
+    def test_unit_box_benchmark_writes_all_artifacts(
+        self,
+        unit_box_docs_run: Dict[str, Any],
+    ) -> None:
+        """A run emits the full artifact set into its configured output dir."""
+        result: BenchmarkRunResult = unit_box_docs_run["result"]
+        out_dir: Path = unit_box_docs_run["out_dir"]
 
         assert result.success is True, (
             f"Report output failed: {result.error_message}"
@@ -704,14 +846,134 @@ class TestUnitBoxBenchmarkReportOutput:
         assert result.report_json_path.exists()
         assert result.report_html_path is not None
         assert result.report_html_path.exists()
+        assert result.hydro_data_yaml_path is not None
+        assert result.hydro_data_yaml_path.exists()
+
+        produced = {p.name for p in out_dir.iterdir() if p.is_file()}
+        missing = sorted(set(DOCS_ARTIFACT_NAMES) - produced)
+        assert not missing, f"benchmark did not produce {missing}"
+
+    def test_unit_box_benchmark_does_not_modify_docs(
+        self,
+        unit_box_docs_run: Dict[str, Any],
+    ) -> None:
+        """Regression guard for #1635.
+
+        Running the benchmark must leave every tracked file under
+        ``docs/benchmarks/unit_box/`` byte-identical.
+        """
+        before: Dict[str, str] = unit_box_docs_run["docs_before"]
+        after: Dict[str, str] = unit_box_docs_run["docs_after"]
+        assert before, (
+            f"committed benchmark artifacts missing from {DOCS_BENCHMARK_DIR}"
+        )
+
+        changed = sorted(
+            name for name in set(before) | set(after)
+            if before.get(name) != after.get(name)
+        )
+        assert not changed, (
+            "running the benchmark modified tracked artifacts under "
+            f"{DOCS_BENCHMARK_DIR}: {changed}. Tests must write to tmp_path "
+            "only (#1635)."
+        )
 
     def test_unit_box_docs_json_is_valid(self) -> None:
-        """Verify the docs JSON is parseable after the benchmark run."""
+        """The committed JSON is parseable and structurally complete."""
         json_path = DOCS_BENCHMARK_DIR / "benchmark_report.json"
-        if not json_path.exists():
-            pytest.skip("benchmark_report.json not yet generated")
-        with open(json_path) as fh:
-            data = json.load(fh)
+        assert json_path.exists(), (
+            f"committed golden {json_path} is missing. {REGENERATE_HINT}"
+        )
+        data = json.loads(json_path.read_text(encoding="utf-8"))
         assert "vessel_name" in data
         assert "overall_consensus" in data
         assert "pairwise_results" in data
+
+    def test_unit_box_docs_json_matches_fresh_run(
+        self,
+        unit_box_docs_run: Dict[str, Any],
+    ) -> None:
+        """Committed JSON must still be reproducible — fail on drift."""
+        golden_path = DOCS_BENCHMARK_DIR / "benchmark_report.json"
+        assert golden_path.exists(), (
+            f"committed golden {golden_path} is missing. {REGENERATE_HINT}"
+        )
+        result: BenchmarkRunResult = unit_box_docs_run["result"]
+        assert result.success is True, (
+            f"Report output failed: {result.error_message}"
+        )
+
+        expected = json.loads(golden_path.read_text(encoding="utf-8"))
+        actual = json.loads(
+            result.report_json_path.read_text(encoding="utf-8"),
+        )
+
+        _assert_json_matches(actual, expected)
+
+    def test_unit_box_docs_hydro_data_matches_fresh_run(
+        self,
+        unit_box_docs_run: Dict[str, Any],
+    ) -> None:
+        """Committed hydro_data.yml must still be reproducible line for line.
+
+        This is the artifact that carries the raw added-mass / damping / RAO
+        numbers, so it is the one that would move if a units or coefficient
+        change reached the benchmark.
+        """
+        golden_path = DOCS_BENCHMARK_DIR / "hydro_data.yml"
+        assert golden_path.exists(), (
+            f"committed golden {golden_path} is missing. {REGENERATE_HINT}"
+        )
+        result: BenchmarkRunResult = unit_box_docs_run["result"]
+        assert result.success is True, (
+            f"Report output failed: {result.error_message}"
+        )
+
+        expected = _stable_yaml_lines(
+            golden_path.read_text(encoding="utf-8"),
+        )
+        actual = _stable_yaml_lines(
+            result.hydro_data_yaml_path.read_text(encoding="utf-8"),
+        )
+
+        assert len(actual) == len(expected), (
+            f"hydro_data.yml line count {len(actual)} != committed "
+            f"{len(expected)}. {REGENERATE_HINT}"
+        )
+        drifted = [
+            (i, got, want)
+            for i, (got, want) in enumerate(zip(actual, expected), start=1)
+            if got != want
+        ]
+        assert not drifted, (
+            f"hydro_data.yml drifted from the committed golden at "
+            f"{len(drifted)} line(s); first: line {drifted[0][0]} "
+            f"{drifted[0][1]!r} != {drifted[0][2]!r}. {REGENERATE_HINT}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Deliberate regeneration of the committed docs/benchmarks/unit_box/ artifacts
+# ---------------------------------------------------------------------------
+
+
+def _regenerate() -> None:
+    """Rewrite ``docs/benchmarks/unit_box/`` from the CURRENT implementation.
+
+    Opt-in only — never invoked by the test suite (#1635).
+    """
+    DOCS_BENCHMARK_DIR.mkdir(parents=True, exist_ok=True)
+    result = _run_unit_box_benchmark(
+        DOCS_BENCHMARK_DIR, _build_unit_box_solver_set(),
+    )
+    if not result.success:
+        raise SystemExit(
+            f"Unit Box benchmark regeneration failed: {result.error_message}"
+        )
+    for name in sorted(set(DOCS_ARTIFACT_NAMES)):
+        path = DOCS_BENCHMARK_DIR / name
+        print(f"wrote {path} ({path.stat().st_size} bytes)")
+
+
+if __name__ == "__main__":
+    _regenerate()

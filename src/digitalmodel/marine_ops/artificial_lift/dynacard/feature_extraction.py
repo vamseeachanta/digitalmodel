@@ -78,6 +78,73 @@ class FeatureExtractor:
         return np.concatenate([asc_features, desc_features])
 
     @staticmethod
+    def extract_scale_features(card: CardData) -> np.ndarray:
+        """Absolute-magnitude features the Bezerra projections cannot express.
+
+        ``extract_bezerra_projections`` normalises position *and* load to
+        [0, 1], which is what makes it robust to units and to well-to-well
+        amplitude differences -- and also what makes it blind to any mode
+        defined by absolute size. ``NORMAL`` (80-120 in), ``TUBING_MOVEMENT``
+        (130-180 in) and ``PLUNGER_UNDERTRAVEL`` (30-55 in) differ *only* in
+        stroke length, so under projections alone they are not merely hard to
+        tell apart, they are the same vector (dm#1884).
+
+        Returns (3,): stroke length, load range, and enclosed card area, all
+        in the card's own units. Trees split on raw magnitudes happily, and
+        :meth:`normalize` maps them onto the training range like every other
+        feature.
+        """
+        pos = np.asarray(card.position, dtype=np.float64)
+        load = np.asarray(card.load, dtype=np.float64)
+        if len(pos) < 3:
+            return np.zeros(3, dtype=np.float64)
+
+        stroke = float(np.max(pos) - np.min(pos))
+        load_range = float(np.max(load) - np.min(load))
+        # Shoelace over the closed loop -- work per stroke, in position*load
+        # units. CardGeometryCalculator computes the same quantity for
+        # reporting; it is inlined here so the classifier's feature path stays
+        # free of the full geometry pipeline for three scalars.
+        area = abs(
+            0.5
+            * float(
+                np.sum(pos * np.roll(load, -1) - np.roll(pos, -1) * load)
+            )
+        )
+        return np.array([stroke, load_range, area], dtype=np.float64)
+
+    @staticmethod
+    def extract_classifier_vector(
+        card: CardData,
+        n_bins: int = 8,
+    ) -> np.ndarray:
+        """The feature vector the shipped classifier is trained and scored on.
+
+        Training and inference must extract identically or the model is scored
+        on a different vector than it learned. They previously called
+        :meth:`extract_bezerra_projections` separately, so a change to one had
+        to be mirrored by hand in the other; routing both through here makes
+        that divergence impossible.
+
+        Returns (2 * n_bins + 3,) -- 19 at the default ``n_bins=8``.
+        """
+        return np.concatenate(
+            [
+                FeatureExtractor.extract_bezerra_projections(card, n_bins=n_bins),
+                FeatureExtractor.extract_scale_features(card),
+            ]
+        )
+
+    @staticmethod
+    def classifier_feature_names(n_bins: int = 8) -> list[str]:
+        """Names matching :meth:`extract_classifier_vector`, in order."""
+        return [f"bezerra_{i}" for i in range(2 * n_bins)] + [
+            "stroke_length",
+            "load_range",
+            "card_area",
+        ]
+
+    @staticmethod
     def extract_analysis_features(results: AnalysisResults) -> np.ndarray:
         """Extract features from existing analysis results.
 

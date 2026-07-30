@@ -1,9 +1,9 @@
 # ABOUTME: Unit tests for rod buckling analysis module.
 # ABOUTME: Validates buckling detection, neutral point, and critical load calculations.
 
+import json
 import math
 import pytest
-import numpy as np
 from pathlib import Path
 
 from digitalmodel.marine_ops.artificial_lift.dynacard.data_loader import (
@@ -28,6 +28,7 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.exceptions import Validati
 
 # Test data directory
 TEST_DATA_DIR = Path(__file__).parent / "testdata"
+REAL_CARD_DIR = Path(__file__).parents[1] / "test_data"
 
 # Wellbore inputs the Paslay-Dawson critical-load formula requires. They are
 # properties of the hole, not of the card, so they must be supplied explicitly.
@@ -49,8 +50,219 @@ class TestRodBucklingCalculator:
         """Test that calculate returns RodBucklingAnalysis."""
         context = self._create_test_context()
         calculator = RodBucklingCalculator(context)
-        result = calculator.calculate()
+        result = calculator.calculate(load_datum="net_pump_load")
         assert isinstance(result, RodBucklingAnalysis)
+
+    def test_load_datum_is_required_and_keyword_only(self):
+        """A card's zero convention must never be inferred."""
+        context = self._create_test_context()
+        calculator = RodBucklingCalculator(context)
+
+        with pytest.raises(TypeError):
+            calculator.calculate()
+        with pytest.raises(TypeError):
+            calculator.calculate(None, None, None, "net_pump_load")
+
+    def test_vendor_datum_requires_complete_consistent_metadata(self):
+        """Vendor-datum loads without a verified offset must be rejected."""
+        context = self._create_test_context()
+        calculator = RodBucklingCalculator(context)
+
+        with pytest.raises(ValidationError, match="downstroke"):
+            calculator.calculate(load_datum="vendor_analysis")
+
+        with pytest.raises(ValidationError, match="inconsistent"):
+            calculator.calculate(
+                load_datum="vendor_analysis",
+                vendor_downstroke_load=-100.0,
+                vendor_upstroke_load=900.0,
+                vendor_fluid_load=700.0,
+            )
+
+        with pytest.raises(ValidationError, match="positive"):
+            calculator.calculate(
+                load_datum="vendor_analysis",
+                vendor_downstroke_load=-100.0,
+                vendor_upstroke_load=-200.0,
+                vendor_fluid_load=-100.0,
+            )
+
+    def test_non_finite_loads_are_rejected(self):
+        """NaN loads must not fall through to a false not-buckled verdict."""
+        context = self._create_test_context()
+        card = CardData(position=[0, 1], load=[math.nan, 100.0])
+
+        with pytest.raises(ValidationError, match="finite"):
+            RodBucklingCalculator(context).calculate(
+                downhole_card=card,
+                load_datum="net_pump_load",
+            )
+
+    def test_vendor_datum_rejects_sub_pound_relative_mismatch(self):
+        """The 1% consistency tolerance remains relative below one pound."""
+        context = self._create_test_context()
+
+        with pytest.raises(ValidationError, match="inconsistent"):
+            RodBucklingCalculator(context).calculate(
+                load_datum="vendor_analysis",
+                vendor_downstroke_load=0.0,
+                vendor_upstroke_load=-0.001,
+                vendor_fluid_load=0.001,
+            )
+
+    def test_vendor_correction_overflow_is_rejected(self):
+        """Finite inputs that overflow during datum correction remain invalid."""
+        context = self._create_test_context()
+        card = CardData(position=[0, 1], load=[1e308, 0.0])
+
+        with pytest.raises(ValidationError, match="finite"):
+            RodBucklingCalculator(context).calculate(
+                downhole_card=card,
+                load_datum="vendor_analysis",
+                vendor_downstroke_load=-1e308,
+                vendor_upstroke_load=0.0,
+                vendor_fluid_load=1e308,
+            )
+
+    def test_vendor_datum_requires_vendor_downhole_card(self):
+        """A vendor-card offset cannot be applied to estimated surface loads."""
+        context = self._create_test_context()
+
+        with pytest.raises(ValidationError, match="downhole card"):
+            RodBucklingCalculator(context).calculate(
+                load_datum="vendor_analysis",
+                vendor_downstroke_load=-100.0,
+                vendor_upstroke_load=900.0,
+                vendor_fluid_load=1000.0,
+            )
+
+    @pytest.mark.parametrize(
+        ("inclination_deg", "tubing_id"),
+        [(math.nan, TUBING_ID_IN), (30.0, math.inf)],
+    )
+    def test_non_finite_scalar_wellbore_inputs_are_rejected(
+        self,
+        inclination_deg,
+        tubing_id,
+    ):
+        """NaN/Inf geometry must not create NaN thresholds and false verdicts."""
+        context = self._create_test_context()
+
+        with pytest.raises(ValidationError, match="finite"):
+            RodBucklingCalculator(context).calculate(
+                inclination_deg=inclination_deg,
+                tubing_id=tubing_id,
+                load_datum="net_pump_load",
+            )
+
+    @pytest.mark.parametrize("inclination_deg", [-1.0, 181.0])
+    def test_scalar_inclination_outside_physical_range_is_rejected(
+        self,
+        inclination_deg,
+    ):
+        """Scalar inclination obeys the same physical range as a profile."""
+        context = self._create_test_context()
+
+        with pytest.raises(ValidationError, match="between 0 and 180"):
+            RodBucklingCalculator(context).calculate(
+                inclination_deg=inclination_deg,
+                tubing_id=TUBING_ID_IN,
+                load_datum="net_pump_load",
+            )
+
+    def test_net_pump_load_has_no_solid_rod_pressure_shift(self):
+        """A solid submerged rod has no bore ballooning correction."""
+        context = self._create_test_context()
+        card = CardData(
+            position=[0, 1, 2],
+            load=[-700.0, 100.0, 3000.0],
+        )
+
+        result = RodBucklingCalculator(context).calculate(
+            downhole_card=card,
+            load_datum="net_pump_load",
+        )
+
+        assert result.min_buckling_tendency == -700.0
+        assert result.max_buckling_tendency == 3000.0
+        assert result.max_compressive_load == 700.0
+
+    def test_vendor_analysis_datum_zeros_the_downstroke_leg(self):
+        """The vendor downstroke load is the card's datum offset."""
+        context = self._create_test_context()
+        card = CardData(
+            position=[0, 1, 2],
+            load=[-1755.0, 2210.0, -1200.0],
+        )
+
+        result = RodBucklingCalculator(context).calculate(
+            downhole_card=card,
+            load_datum="vendor_analysis",
+            vendor_downstroke_load=-1755.0,
+            vendor_upstroke_load=2210.0,
+            vendor_fluid_load=3965.0,
+        )
+
+        assert result.min_buckling_tendency == 0.0
+        assert result.max_buckling_tendency == 3965.0
+
+    def test_bottom_section_controls_critical_load(self):
+        """A smaller rod above a bottom sinker bar must not set the threshold."""
+        context = self._create_test_context()
+        context.rod_string = [
+            RodSection(diameter=0.625, length=4000.0),
+            RodSection(diameter=1.5, length=1000.0),
+        ]
+
+        result = RodBucklingCalculator(context).calculate(
+            inclination_deg=DEVIATED_INCLINATION_DEG,
+            tubing_id=2.5,
+            load_datum="net_pump_load",
+        )
+
+        bottom = context.rod_string[-1]
+        diameter = bottom.diameter
+        inertia = math.pi * diameter ** 4 / 64.0
+        weight = bottom.weight_per_foot * (
+            1.0 - context.fluid_density / 490.0
+        ) / 12.0
+        clearance = (2.5 - diameter) / 2.0
+        expected = 2.0 * math.sqrt(
+            bottom.modulus_of_elasticity
+            * inertia
+            * weight
+            * math.sin(math.radians(DEVIATED_INCLINATION_DEG))
+            / clearance
+        )
+        assert result.sinusoidal_critical_load == pytest.approx(expected)
+
+    def test_bottom_section_is_evaluated_across_inclination_profile(self):
+        """The weakest point across a varying bottom taper sets the threshold."""
+        context = self._create_test_context()
+        context.pump.depth = 5500.0
+        profile = [(0.0, 10.0), (4500.0, 42.0), (5500.0, 77.0)]
+
+        result = RodBucklingCalculator(context).calculate(
+            tubing_id=TUBING_ID_IN,
+            load_datum="net_pump_load",
+            inclination_profile=profile,
+        )
+
+        bottom = context.rod_string[-1]
+        diameter = bottom.diameter
+        inertia = math.pi * diameter ** 4 / 64.0
+        weight = bottom.weight_per_foot * (
+            1.0 - context.fluid_density / 490.0
+        ) / 12.0
+        clearance = (TUBING_ID_IN - diameter) / 2.0
+        expected = 2.0 * math.sqrt(
+            bottom.modulus_of_elasticity
+            * inertia
+            * weight
+            * math.sin(math.radians(42.0))
+            / clearance
+        )
+        assert result.sinusoidal_critical_load == pytest.approx(expected)
 
     def test_critical_loads_calculated(self):
         """Test that critical buckling loads are calculated when inputs allow."""
@@ -59,6 +271,7 @@ class TestRodBucklingCalculator:
         result = calculator.calculate(
             inclination_deg=DEVIATED_INCLINATION_DEG,
             tubing_id=TUBING_ID_IN,
+            load_datum="net_pump_load",
         )
 
         # Should have positive critical loads
@@ -72,16 +285,24 @@ class TestRodBucklingCalculator:
         dimensionally lb*in^0.5 - not a force - and was reported unconditionally.
         """
         context = self._create_test_context()
-        result = RodBucklingCalculator(context).calculate()
+        result = RodBucklingCalculator(context).calculate(
+            load_datum="net_pump_load"
+        )
 
         assert result.sinusoidal_critical_load is None
         assert result.helical_critical_load is None
         assert "inclination" in result.warning_message.lower()
 
         # Missing either one alone is still not enough
-        only_inc = RodBucklingCalculator(context).calculate(inclination_deg=30.0)
+        only_inc = RodBucklingCalculator(context).calculate(
+            inclination_deg=30.0,
+            load_datum="net_pump_load",
+        )
         assert only_inc.sinusoidal_critical_load is None
-        only_id = RodBucklingCalculator(context).calculate(tubing_id=TUBING_ID_IN)
+        only_id = RodBucklingCalculator(context).calculate(
+            tubing_id=TUBING_ID_IN,
+            load_datum="net_pump_load",
+        )
         assert only_id.sinusoidal_critical_load is None
 
     def test_critical_load_is_a_force_in_pounds(self):
@@ -90,18 +311,19 @@ class TestRodBucklingCalculator:
         result = RodBucklingCalculator(context).calculate(
             inclination_deg=DEVIATED_INCLINATION_DEG,
             tubing_id=TUBING_ID_IN,
+            load_datum="net_pump_load",
         )
 
-        # Reproduce the formula independently for the weakest (0.625 in) section
+        # Reproduce the formula independently for the bottom (0.625 in) section
         d = 0.625
         section = next(s for s in context.rod_string if s.diameter == d)
-        I = math.pi * d ** 4 / 64.0
+        inertia = math.pi * d ** 4 / 64.0
         buoyancy = 1.0 - context.fluid_density / 490.0
         w = section.weight_per_foot * buoyancy / 12.0
         r_c = (TUBING_ID_IN - d) / 2.0
         expected = 2.0 * math.sqrt(
             section.modulus_of_elasticity
-            * I
+            * inertia
             * w
             * math.sin(math.radians(DEVIATED_INCLINATION_DEG))
             / r_c
@@ -113,10 +335,12 @@ class TestRodBucklingCalculator:
         shallow = RodBucklingCalculator(context).calculate(
             inclination_deg=math.degrees(math.asin(0.25)),
             tubing_id=TUBING_ID_IN,
+            load_datum="net_pump_load",
         )
         steeper = RodBucklingCalculator(context).calculate(
             inclination_deg=math.degrees(math.asin(0.50)),
             tubing_id=TUBING_ID_IN,
+            load_datum="net_pump_load",
         )
         ratio = steeper.sinusoidal_critical_load / shallow.sinusoidal_critical_load
         assert abs(ratio - math.sqrt(2.0)) < 1e-6
@@ -127,6 +351,7 @@ class TestRodBucklingCalculator:
         result = RodBucklingCalculator(context).calculate(
             inclination_deg=0.0,
             tubing_id=TUBING_ID_IN,
+            load_datum="net_pump_load",
         )
         assert result.sinusoidal_critical_load is None
         assert result.helical_critical_load is None
@@ -139,6 +364,7 @@ class TestRodBucklingCalculator:
         result = calculator.calculate(
             inclination_deg=DEVIATED_INCLINATION_DEG,
             tubing_id=TUBING_ID_IN,
+            load_datum="net_pump_load",
         )
 
         # Helical buckling requires higher load than sinusoidal
@@ -151,6 +377,7 @@ class TestRodBucklingCalculator:
         result = calculator.calculate(
             inclination_deg=DEVIATED_INCLINATION_DEG,
             tubing_id=TUBING_ID_IN,
+            load_datum="net_pump_load",
         )
 
         ratio = result.helical_critical_load / result.sinusoidal_critical_load
@@ -164,7 +391,9 @@ class TestRodBucklingCalculator:
         index onto a depth is a category error. These fields must be None.
         """
         context = self._create_test_context()
-        result = RodBucklingCalculator(context).calculate()
+        result = RodBucklingCalculator(context).calculate(
+            load_datum="net_pump_load"
+        )
 
         assert result.neutral_point_depth is None
         assert result.neutral_point_fraction is None
@@ -176,7 +405,10 @@ class TestRodBucklingCalculator:
             position=[0, 50, 100, 50],
             load=[-1000, 2000, 5000, 2000],
         )
-        result = RodBucklingCalculator(context).calculate(downhole_card=downhole_card)
+        result = RodBucklingCalculator(context).calculate(
+            downhole_card=downhole_card,
+            load_datum="net_pump_load",
+        )
         assert result.neutral_point_depth is None
         assert result.compression_length is None
 
@@ -184,14 +416,19 @@ class TestRodBucklingCalculator:
         """analysis_method must be assigned, not left at a default string."""
         context = self._create_test_context()
 
-        estimated = RodBucklingCalculator(context).calculate()
+        estimated = RodBucklingCalculator(context).calculate(
+            load_datum="net_pump_load"
+        )
         assert estimated.analysis_method == "surface_card_estimate"
 
         downhole_card = CardData(
             position=[0, 50, 100, 50],
             load=[1000, 2000, 3000, 2000],
         )
-        measured = RodBucklingCalculator(context).calculate(downhole_card=downhole_card)
+        measured = RodBucklingCalculator(context).calculate(
+            downhole_card=downhole_card,
+            load_datum="net_pump_load",
+        )
         assert measured.analysis_method == "downhole_card"
 
     def test_no_buckling_with_tensile_loads(self):
@@ -206,6 +443,7 @@ class TestRodBucklingCalculator:
         result = calculator.calculate(
             inclination_deg=DEVIATED_INCLINATION_DEG,
             tubing_id=TUBING_ID_IN,
+            load_datum="net_pump_load",
         )
 
         # With high tensile loads, no buckling expected
@@ -227,6 +465,7 @@ class TestRodBucklingCalculator:
             downhole_card=downhole_card,
             inclination_deg=DEVIATED_INCLINATION_DEG,
             tubing_id=TUBING_ID_IN,
+            load_datum="net_pump_load",
         )
 
         # Should detect buckling with significant compression
@@ -240,7 +479,10 @@ class TestRodBucklingCalculator:
             position=[0, 50, 100, 50],
             load=[-5000, 1000, 3000, 1000],  # Strong compression
         )
-        result = RodBucklingCalculator(context).calculate(downhole_card=downhole_card)
+        result = RodBucklingCalculator(context).calculate(
+            downhole_card=downhole_card,
+            load_datum="net_pump_load",
+        )
 
         assert result.sinusoidal_buckling_detected is None
         assert result.helical_buckling_detected is None
@@ -250,24 +492,21 @@ class TestRodBucklingCalculator:
     def test_buckling_verdict_follows_threshold_not_raw_load_rule(self):
         """A compression below the critical threshold must NOT trip buckling.
 
-        Regression test for the hard-coded ``min_load < -500`` rule, which
-        tested RAW loads while the threshold branch tested buckling TENDENCY,
-        so a tendency safely under the critical load still returned True.
+        The verdict compares the compressive pump load to the critical load,
+        not merely to zero.
         """
         context = self._create_test_context()
-        # Raw loads far below -500 lb, but the effective axial load (tendency)
-        # after the buoyancy/pressure correction stays modest.
         downhole_card = CardData(
             position=[0, 50, 100, 50],
-            load=[-700, 1000, 3000, 1000],
+            load=[-100, 1000, 3000, 1000],
         )
         result = RodBucklingCalculator(context).calculate(
             downhole_card=downhole_card,
             inclination_deg=DEVIATED_INCLINATION_DEG,
             tubing_id=TUBING_ID_IN,
+            load_datum="net_pump_load",
         )
 
-        assert min(downhole_card.load) < -500  # the old rule would have tripped
         assert result.max_compressive_load < result.sinusoidal_critical_load
         assert result.sinusoidal_buckling_detected is False
         assert result.helical_buckling_detected is False
@@ -278,6 +517,7 @@ class TestRodBucklingCalculator:
         result_ref = RodBucklingCalculator(context).calculate(
             inclination_deg=DEVIATED_INCLINATION_DEG,
             tubing_id=TUBING_ID_IN,
+            load_datum="net_pump_load",
         )
         critical = result_ref.sinusoidal_critical_load
 
@@ -290,6 +530,7 @@ class TestRodBucklingCalculator:
             downhole_card=downhole_card,
             inclination_deg=DEVIATED_INCLINATION_DEG,
             tubing_id=TUBING_ID_IN,
+            load_datum="net_pump_load",
         )
 
         assert result.max_compressive_load > critical
@@ -299,7 +540,7 @@ class TestRodBucklingCalculator:
         """Test that buckling tendency min/max are calculated."""
         context = self._create_test_context()
         calculator = RodBucklingCalculator(context)
-        result = calculator.calculate()
+        result = calculator.calculate(load_datum="net_pump_load")
 
         # Buckling tendency should be calculated
         assert result.min_buckling_tendency != 0 or result.max_buckling_tendency != 0
@@ -311,7 +552,7 @@ class TestRodBucklingCalculator:
         calculator = RodBucklingCalculator(context)
 
         with pytest.raises(ValidationError) as exc_info:
-            calculator.calculate()
+            calculator.calculate(load_datum="net_pump_load")
 
         assert "load" in exc_info.value.message.lower() or "data" in exc_info.value.message.lower()
 
@@ -322,7 +563,7 @@ class TestRodBucklingCalculator:
         calculator = RodBucklingCalculator(context)
 
         with pytest.raises(ValidationError) as exc_info:
-            calculator.calculate()
+            calculator.calculate(load_datum="net_pump_load")
 
         assert "rod" in exc_info.value.message.lower() or "length" in exc_info.value.message.lower()
 
@@ -332,7 +573,11 @@ class TestRodBucklingCalculator:
         context.surface_card = CardData(position=[], load=[])
 
         # Use convenience function with raise_on_error=False (default)
-        result = calculate_rod_buckling(context, raise_on_error=False)
+        result = calculate_rod_buckling(
+            context,
+            raise_on_error=False,
+            load_datum="net_pump_load",
+        )
 
         # Should return result with warning message set
         assert result.warning_message != ""
@@ -345,7 +590,10 @@ class TestRodBucklingCalculator:
             load=[2000, 3000, 4000, 5000, 4000, 3000, 2000, 1000],
         )
         calculator = RodBucklingCalculator(context)
-        result = calculator.calculate(downhole_card=custom_card)
+        result = calculator.calculate(
+            downhole_card=custom_card,
+            load_datum="net_pump_load",
+        )
 
         # Should complete analysis, recording that a downhole card was used
         assert result.analysis_method == "downhole_card"
@@ -377,7 +625,10 @@ class TestConvenienceFunction:
     def test_returns_rod_buckling_analysis(self):
         """Test that convenience function returns RodBucklingAnalysis."""
         context = self._create_test_context()
-        result = calculate_rod_buckling(context)
+        result = calculate_rod_buckling(
+            context,
+            load_datum="net_pump_load",
+        )
         assert isinstance(result, RodBucklingAnalysis)
 
     def test_with_downhole_card(self):
@@ -387,7 +638,11 @@ class TestConvenienceFunction:
             position=[0, 50, 100, 50],
             load=[1000, 2000, 3000, 2000],
         )
-        result = calculate_rod_buckling(context, downhole_card=downhole_card)
+        result = calculate_rod_buckling(
+            context,
+            downhole_card=downhole_card,
+            load_datum="net_pump_load",
+        )
         assert isinstance(result, RodBucklingAnalysis)
 
     def _create_test_context(self) -> DynacardAnalysisContext:
@@ -503,6 +758,39 @@ class TestCalculateCriticalBucklingLoad:
         assert calculate_critical_buckling_load(
             rod_diameter=2.5, inclination_deg=30.0, tubing_id=TUBING_ID_IN
         ) == (None, None)
+
+    @pytest.mark.parametrize(
+        ("field", "value"),
+        [
+            ("rod_diameter", math.nan),
+            ("modulus", math.inf),
+            ("weight_per_foot", math.nan),
+            ("fluid_density", math.inf),
+            ("inclination_deg", math.nan),
+            ("tubing_id", math.inf),
+        ],
+    )
+    def test_non_finite_inputs_are_rejected(self, field, value):
+        """The public helper must not return NaN critical loads."""
+        inputs = {
+            "rod_diameter": 0.875,
+            "inclination_deg": DEVIATED_INCLINATION_DEG,
+            "tubing_id": TUBING_ID_IN,
+        }
+        inputs[field] = value
+
+        with pytest.raises(ValidationError, match="finite"):
+            calculate_critical_buckling_load(**inputs)
+
+    @pytest.mark.parametrize("inclination_deg", [-1.0, 181.0])
+    def test_out_of_range_inclination_is_rejected(self, inclination_deg):
+        """The public helper rejects non-physical inclination angles."""
+        with pytest.raises(ValidationError, match="between 0 and 180"):
+            calculate_critical_buckling_load(
+                rod_diameter=0.875,
+                inclination_deg=inclination_deg,
+                tubing_id=TUBING_ID_IN,
+            )
 
     def test_positive_critical_loads(self):
         """Test that critical loads are positive."""
@@ -632,9 +920,65 @@ class TestRodBucklingWithRealData:
             return load_from_json_file(filepath)
         pytest.skip("Test data file 7699227.json not found")
 
+    def test_real_card_verdict_changes_between_load_datums(self):
+        """The cleansed well 005 card is safe only after datum correction."""
+        filepath = REAL_CARD_DIR / "cleansed_well_005.json"
+        raw = json.loads(filepath.read_text())
+        context = load_from_json_file(filepath)
+        downhole_raw = raw["downholeCard"]
+        downhole_card = CardData(
+            position=downhole_raw["Position"],
+            load=downhole_raw["Load"],
+        )
+        vendor = raw["downholeCardAnalysis"]
+        profile = [
+            (point["MD"], point["Inclination"])
+            for point in raw["surveyData"]
+        ]
+
+        uncorrected = calculate_rod_buckling(
+            context,
+            downhole_card=downhole_card,
+            tubing_id=TUBING_ID_IN,
+            load_datum="net_pump_load",
+            inclination_profile=profile,
+            raise_on_error=True,
+        )
+        corrected = calculate_rod_buckling(
+            context,
+            downhole_card=downhole_card,
+            tubing_id=TUBING_ID_IN,
+            load_datum="vendor_analysis",
+            inclination_profile=profile,
+            vendor_downstroke_load=float(vendor["Fluid Load Downstroke"]),
+            vendor_upstroke_load=float(vendor["Fluid Load Upstroke"]),
+            vendor_fluid_load=float(vendor["Fluid Load"]),
+            raise_on_error=True,
+        )
+
+        assert uncorrected.max_compressive_load == pytest.approx(2032.21176)
+        # Datum correction: -2032.21176 - (-1755) = -277.21176 lb.
+        assert corrected.max_compressive_load == pytest.approx(277.21176)
+        # Bottom 0.75-in section at the minimum 35.94-degree inclination:
+        # 2*sqrt(30.5e6*(pi*0.75^4/64)
+        #        *(1.634*(1-62.4025742248/490)/12)
+        #        *sin(35.94deg)/((2.441-0.75)/2))
+        # = 395.3498 lb.
+        assert corrected.sinusoidal_critical_load == pytest.approx(
+            395.3498,
+            abs=0.0001,
+        )
+        assert uncorrected.sinusoidal_buckling_detected is True
+        assert corrected.sinusoidal_buckling_detected is False
+        assert corrected.neutral_point_depth is None
+        assert corrected.compression_length is None
+
     def test_buckling_calculation_7699227(self, well_7699227):
         """Test buckling calculation with well 7699227 data."""
-        result = calculate_rod_buckling(well_7699227)
+        result = calculate_rod_buckling(
+            well_7699227,
+            load_datum="net_pump_load",
+        )
 
         # Should complete analysis
         assert result.analysis_method == "surface_card_estimate"
@@ -645,6 +989,7 @@ class TestRodBucklingWithRealData:
             well_7699227,
             inclination_deg=DEVIATED_INCLINATION_DEG,
             tubing_id=TUBING_ID_IN,
+            load_datum="net_pump_load",
         )
 
         assert result.sinusoidal_critical_load > 0
@@ -652,7 +997,10 @@ class TestRodBucklingWithRealData:
 
     def test_no_neutral_point_depth_from_real_card_7699227(self, well_7699227):
         """Real card data still cannot yield a neutral-point depth."""
-        result = calculate_rod_buckling(well_7699227)
+        result = calculate_rod_buckling(
+            well_7699227,
+            load_datum="net_pump_load",
+        )
 
         assert result.neutral_point_depth is None
         assert result.neutral_point_fraction is None
@@ -661,7 +1009,10 @@ class TestRodBucklingWithRealData:
 
     def test_buckling_tendency_calculated_7699227(self, well_7699227):
         """Test buckling tendency is calculated."""
-        result = calculate_rod_buckling(well_7699227)
+        result = calculate_rod_buckling(
+            well_7699227,
+            load_datum="net_pump_load",
+        )
 
         # Should have buckling tendency values
         assert (

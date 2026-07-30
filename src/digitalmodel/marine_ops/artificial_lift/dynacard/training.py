@@ -2,11 +2,65 @@
 # ABOUTME: Generates synthetic data, trains GradientBoosting, exports model to JSON.
 
 """
-One-time training script for the dynacard classifier.
+Training script for the dynacard classifier.
 
 Usage:
     PYTHONPATH="src:../assetutilities/src" python3 -m \
         digitalmodel.marine_ops.artificial_lift.dynacard.training
+
+What ``cv_accuracy`` in the exported model means
+------------------------------------------------
+It is five-fold cross-validation on cards drawn from :mod:`card_generators`,
+scored against cards drawn from the *same* generators. It measures how
+separable this module's synthetic card shapes are from one another. It is
+**not** a validation against field data and must never be quoted as a field
+accuracy figure -- the classifier has still never been scored against a
+labelled real dynamometer card (issue #1864).
+
+Why the number jumped from 0.9048 to 0.9942, and why that is not a capability gain
+----------------------------------------------------------------------------------
+The 16-feature Bezerra projection normalizes both position and load to [0, 1].
+That is what makes it unit- and amplitude-robust, and also what made five modes
+unseparable: NORMAL, TUBING_MOVEMENT and PLUNGER_UNDERTRAVEL differ *only* in
+absolute plunger stroke, so under projections alone they were not merely
+similar, they were the identical vector (dm#1884). Adding three
+absolute-magnitude features -- stroke length, load range, enclosed card area
+(see :meth:`FeatureExtractor.extract_scale_features`) -- took five-fold CV from
+0.9048 to 0.9942 and unseen-seed accuracy from 0.9130 to 0.9960. The five modes
+that were failing went from 0.437 / 0.507 / 0.897 / 0.770 / 0.850 (NORMAL,
+TUBING_MOVEMENT, PLUNGER_UNDERTRAVEL, GAS_LOCK, STUCK_PUMP) to 1.000 / 1.000 /
+1.000 / 0.987 / 1.000 on unseen seeds.
+
+**That gain is substantially definitional, not diagnostic.** The generators draw
+stroke from ranges that do not overlap anywhere:
+
+* PLUNGER_UNDERTRAVEL  30-55 in
+* NORMAL and 16 others 80-120 in
+* TUBING_MOVEMENT      130-180 in
+* STUCK_PUMP           2-10 in
+
+A hand-written two-threshold rule on stroke alone -- ``<67.5 in`` ->
+PLUNGER_UNDERTRAVEL, ``67.5-125 in`` -> NORMAL, ``>125 in`` -> TUBING_MOVEMENT
+-- scores 900/900 on unseen seeds for those three modes. GAS_LOCK and
+STUCK_PUMP separate the same way on ``load_range`` and ``stroke_length``.
+Measured across all 20 modes, 54/190 mode pairs have fully disjoint stroke
+ranges, 52/190 disjoint load ranges and 54/190 disjoint card areas. The
+classifier is reading a generator parameter, not a card property.
+
+Real wells do not partition this way: stroke length is set by the surface unit
+and the rod string, so a healthy well and a well with tubing movement can have
+identical plunger travel. Whether these modes separate on real cards is
+**unknown and untested** (issue #1864). Treat 0.9942 as an upper bound on
+synthetic separability and as no evidence at all about field performance.
+
+One physics note, deliberately not acted on here: TUBING_MOVEMENT's 130-180 in
+stroke looks backwards for a *downhole* card. Unanchored tubing stretches as
+fluid load transfers to it on the upstroke, and that stretch is lost motion --
+the plunger should travel *less* than the surface stroke, not more. The
+generator docstring ("elongated card, excessive position range") describes a
+surface-card appearance applied to a pump-card generator. Changing the range is
+a physics decision that would invalidate #1875's plate calibration and every
+pinned value downstream, so it is recorded rather than fixed.
 """
 
 import json
@@ -15,7 +69,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .card_generators import generate_training_dataset
+from .card_generators import ALL_GENERATORS, generate_training_dataset
 from .feature_extraction import FeatureExtractor
 
 _MODEL_PATH = Path(__file__).parent / "data" / "dynacard_classifier.json"
@@ -28,12 +82,13 @@ def _extract_features_for_dataset(
     """Extract Bezerra feature vectors for all cards.
 
     Returns:
-        (X, y, scaling) where X is (n_samples, 16), y is labels array,
+        (X, y, scaling) where X is (n_samples, n_features), y is labels array,
         and scaling is dict with 'min' and 'max' arrays.
     """
     X_list = []
     for card in cards:
-        features = FeatureExtractor.extract_bezerra_projections(card)
+        # Same entry point inference uses -- see extract_classifier_vector.
+        features = FeatureExtractor.extract_classifier_vector(card)
         X_list.append(features)
 
     X = np.array(X_list)
@@ -97,7 +152,7 @@ def _export_model_to_json(
         "training_metadata": {
             "n_features": int(estimators[0, 0].tree_.n_features),
             "cv_accuracy": float(cv_accuracy),
-            "feature_names": [f"bezerra_{i}" for i in range(16)],
+            "feature_names": FeatureExtractor.classifier_feature_names(),
         },
     }
 
@@ -119,7 +174,8 @@ def train_and_export(
     from sklearn.model_selection import cross_val_score
     from sklearn.preprocessing import LabelEncoder
 
-    print(f"Generating {samples_per_mode} samples per mode (18 modes)...")
+    print(f"Generating {samples_per_mode} samples per mode "
+          f"({len(ALL_GENERATORS)} modes)...")
     cards, labels = generate_training_dataset(samples_per_mode=samples_per_mode)
 
     print("Extracting features...")

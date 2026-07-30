@@ -215,6 +215,19 @@ class ProductionAnalysis(BaseModel):
     theoretical_production: float = 0.0  # BPD
     pump_efficiency: float = 0.0  # percent
 
+    #: Runtime used, and where it came from: ``"card"`` (recorded with the
+    #: card, preferred), ``"well_test"`` (may predate the card by months), or
+    #: ``"assumed_24h"``.
+    #:
+    #: Production scales linearly with this, so which source was used matters
+    #: as much as the value. A stale well-test runtime silently outranking the
+    #: card's own was the largest single error term measured against public
+    #: production records (dm#1899). The assumption is now reported rather
+    #: than inferred by the reader: ``"assumed_24h"`` overstates any cycling
+    #: well by exactly its duty factor.
+    runtime_hours: float = 24.0
+    runtime_source: str = "assumed_24h"
+
 
 class TorqueStatistics(BaseModel):
     """Min/max torque statistics in M-in-lbs (thousands of inch-pounds)."""
@@ -447,6 +460,18 @@ class AnalysisResults(BaseModel):
 
     # Legacy compatibility
     pump_fillage: float = 0.0
+
+    #: Theoretical pump displacement in BPD, NOT a production estimate.
+    #:
+    #: It is gross displacement x fillage x runtime/24 at 100% volumetric
+    #: efficiency: no slippage past the plunger, no valve leakage, and no
+    #: formation volume factor -- and card-derived barrels are downhole
+    #: barrels, while a sales or regulatory figure is stock-tank.
+    #:
+    #: Scored against public New Mexico OCD filings this reads +65% to +82%
+    #: high, on a well whose runtime was unambiguous, implying real volumetric
+    #: efficiency near 55% (dm#1899). The name is retained for compatibility
+    #: with the field-health CSV schema; read it as displacement.
     inferred_production: float = 0.0
     buckling_detected: bool = False
     diagnostic_message: str = "Analysis not yet performed"

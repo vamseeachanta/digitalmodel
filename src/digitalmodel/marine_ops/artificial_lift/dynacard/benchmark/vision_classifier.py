@@ -21,20 +21,23 @@ from ..models import CardData
 # Constants
 # ---------------------------------------------------------------------------
 
-# Exclude "VALVE_LEAK" — it is a legacy backward-compat alias, not a distinct mode.
-# Vision models are prompted with the 18 canonical mode names only.
+# Exclude the legacy backward-compat aliases -- they are not distinct modes.
+# ``PUMP_TAGGING`` joined ``VALVE_LEAK`` on that list when it was split into
+# ``PUMP_TAGGING_UP`` and ``PUMP_TAGGING_DOWN``.
+_LEGACY_ALIASES = {"VALVE_LEAK", "PUMP_TAGGING"}
 _VALID_MODES = sorted(
-    k for k in PumpDiagnostics.FAILURE_MODES.keys() if k != "VALVE_LEAK"
+    k for k in PumpDiagnostics.FAILURE_MODES.keys() if k not in _LEGACY_ALIASES
 )
 
 _SYSTEM_PROMPT = """You are an expert petroleum engineer analysing rod-pump dynamometer cards.
 You will be shown a synthetic pump card plotted as position (x-axis, inches) vs load
-(y-axis, lbs). Classify the card into exactly one of the following 18 failure modes:
+(y-axis, lbs). Classify the card into exactly one of the following 20 failure modes:
 
-NORMAL, GAS_INTERFERENCE, FLUID_POUND, PUMP_TAGGING, TUBING_MOVEMENT,
-VALVE_LEAK_TV, VALVE_LEAK_SV, ROD_PARTING, STUCK_PUMP, WORN_BARREL,
-GAS_LOCK, DELAYED_TV_CLOSURE, EXCESSIVE_FRICTION, PLUNGER_UNDERTRAVEL,
-PARAFFIN_RESTRICTION, BENT_BARREL, SAND_ABRASION, EXCESSIVE_VIBRATION.
+NORMAL, GAS_INTERFERENCE, FLUID_POUND, PUMP_TAGGING_UP, PUMP_TAGGING_DOWN,
+PLUNGER_OUT_OF_BARREL, TUBING_MOVEMENT, VALVE_LEAK_TV, VALVE_LEAK_SV,
+ROD_PARTING, STUCK_PUMP, WORN_BARREL, GAS_LOCK, DELAYED_TV_CLOSURE,
+EXCESSIVE_FRICTION, PLUNGER_UNDERTRAVEL, PARAFFIN_RESTRICTION, BENT_BARREL,
+SAND_ABRASION, EXCESSIVE_VIBRATION.
 
 Reply with a JSON object: {"prediction": "<MODE>", "confidence": <0.0-1.0>}
 No other text."""

@@ -7,12 +7,22 @@ from .models import (
     DynacardAnalysisContext, CardData, AnalysisResults,
     FluidLoadAnalysis, CPIPAnalysis, PumpFillageAnalysis, ProductionAnalysis
 )
+from .comparison import canonicalize_card_direction
 from .corners import calculate_corners, get_corner_loads
 
 
 # =============================================================================
 # FLUID LOAD CALCULATION
 # =============================================================================
+
+def _cyclic_phase(load: np.ndarray, start: int, stop: int) -> np.ndarray:
+    """Return load samples in forward traversal, excluding the stop corner."""
+    count = (stop - start) % len(load)
+    if count == 0:
+        raise ValueError("fluid load requires distinct corner phases")
+    indices = (start + np.arange(count)) % len(load)
+    return load[indices]
+
 
 def calculate_fluid_load(
     downhole_card: CardData,
@@ -31,12 +41,16 @@ def calculate_fluid_load(
     Returns:
         FluidLoadAnalysis with upstroke, downstroke, and fluid load
     """
-    load = np.array(downhole_card.load)
-    n = len(load)
+    position = np.asarray(downhole_card.position, dtype=np.float64)
+    load = np.asarray(downhole_card.load, dtype=np.float64)
+    position, load, _ = canonicalize_card_direction(
+        position, load, clockwise=True
+    )
 
-    # Detect corners
-    corners, _ = calculate_corners(downhole_card)
-    corners = sorted(corners)
+    canonical_card = CardData(position=position.tolist(), load=load.tolist())
+    corners, _ = calculate_corners(canonical_card)
+    if len(set(corners)) < 4:
+        raise ValueError("fluid load requires distinct corner phases")
 
     if method == '2pt':
         # Use corner loads directly
@@ -44,12 +58,12 @@ def calculate_fluid_load(
         downstroke_load = load[corners[0]]  # Bottom left
     elif method == 'avg':
         # Average loads in each region
-        upstroke_load = np.mean(load[corners[1]:corners[2]])
-        downstroke_load = np.mean(load[corners[3]:])
+        upstroke_load = np.mean(_cyclic_phase(load, corners[1], corners[2]))
+        downstroke_load = np.mean(_cyclic_phase(load, corners[3], corners[0]))
     elif method == 'med':
         # Median loads in each region
-        upstroke_load = np.median(load[corners[1]:corners[2]])
-        downstroke_load = np.median(load[corners[3]:])
+        upstroke_load = np.median(_cyclic_phase(load, corners[1], corners[2]))
+        downstroke_load = np.median(_cyclic_phase(load, corners[3], corners[0]))
     else:
         raise ValueError(f"Unknown method: {method}")
 
@@ -289,13 +303,27 @@ def calculate_theoretical_production(
     fillage_fraction = fillage_analysis.fillage / 100.0
     net_displacement = gross_displacement * fillage_fraction
 
-    # Get runtime (hours)
-    if ctx.well_test is not None:
-        runtime = ctx.well_test.runtime
-    elif ctx.input_params is not None:
+    # Runtime (hours) -- prefer the value recorded WITH the card.
+    #
+    # This priority used to be reversed, and it was the largest single error
+    # term measured against public production records (dm#1899). A well test's
+    # runtime can predate the card by months: one well used 9.12 h from a
+    # January test for an April card whose own runtime was 5.28 h, which alone
+    # inflated production by ~68%. Correcting the order took that card from
+    # +65.5% to -4.2% against the state's filed volumes.
+    #
+    # A well that cycles but is assumed to run 24 h is overstated by exactly
+    # its duty factor. That assumption is reported on the result rather than
+    # made silently -- see ProductionAnalysis.runtime_source.
+    if ctx.input_params is not None and ctx.input_params.runtime:
         runtime = ctx.input_params.runtime
+        runtime_source = "card"
+    elif ctx.well_test is not None and ctx.well_test.runtime:
+        runtime = ctx.well_test.runtime
+        runtime_source = "well_test"
     else:
-        runtime = 24.0  # Assume 24 hours
+        runtime = 24.0
+        runtime_source = "assumed_24h"
 
     # Theoretical production (BPD) adjusted for runtime
     runtime_fraction = runtime / 24.0
@@ -312,7 +340,9 @@ def calculate_theoretical_production(
         gross_displacement=float(gross_displacement),
         net_displacement=float(net_displacement),
         theoretical_production=float(theoretical_production),
-        pump_efficiency=float(pump_efficiency)
+        pump_efficiency=float(pump_efficiency),
+        runtime_hours=float(runtime),
+        runtime_source=runtime_source,
     )
 
 

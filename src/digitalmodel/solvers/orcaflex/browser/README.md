@@ -102,7 +102,8 @@ All dependencies are loaded via CDN:
 - Multiple case comparison (side-by-side plots)
 - Export functionality (PNG, PDF, CSV)
 - Pattern learning from actual OrcaFlex filenames
-- Integration with existing orcaflex-dashboard module
+- Integration with `digitalmodel.solvers.orcaflex.results_analysis` (CSV parsing,
+  component classification, statistics)
 
 ## File Structure
 

@@ -7,6 +7,7 @@ import pytest
 import yaml
 
 from digitalmodel.engine import engine
+from digitalmodel.marine_ops.artificial_lift.field_health import STATUS_RANK
 from tests.workflows.field_dev_production_assertions import (
     FIELD_DEV_PRODUCTION_WORKFLOWS,
     assert_field_dev_production_workflow,
@@ -22,11 +23,32 @@ def _load_registry():
     return registry["workflows"]
 
 
-@pytest.mark.parametrize(
-    "workflow",
-    _load_registry(),
-    ids=lambda workflow: workflow["id"],
-)
+# The two dynacard branches below were strict-xfailed while the shipped
+# classifier was the 18-class model fitted to the pre-#1875 card shapes. The
+# model has since been retrained on the corrected 20-mode generator set, and
+# then retrained again on the 19-feature vector added by dm#1884 (16 Bezerra
+# projections + stroke length, load range, card area; model_version 1.0,
+# n_classes 20, CV accuracy 0.9942 synthetic-on-synthetic). The xfails are
+# gone and every expected value below has been re-derived from the retrained
+# pipeline rather than inherited.
+#
+# That 0.9942 is synthetic-train / synthetic-test and is partly definitional:
+# the three added features separate modes whose generators draw stroke from
+# non-overlapping ranges. It says nothing about real cards (#1864). The
+# assertions below therefore pin only what the pipeline demonstrably computes.
+#
+# What the retrain did NOT fix, and what the assertions therefore still avoid
+# pinning, is documented inline in each branch.
+
+
+def _workflow_params():
+    return [
+        pytest.param(workflow, id=workflow["id"])
+        for workflow in _load_registry()
+    ]
+
+
+@pytest.mark.parametrize("workflow", _workflow_params())
 def test_workflow_registry(workflow, monkeypatch):
     if workflow.get("runtime", "offline") != "offline":
         pytest.skip(f"{workflow['id']} requires runtime={workflow['runtime']}")
@@ -837,12 +859,56 @@ def test_workflow_registry(workflow, monkeypatch):
         assert "could not be loaded" not in content
     elif workflow["id"] == "dynacard-diagnostics":
         results = cfg["results"]
-        assert results["diagnostic_message"].startswith("Classification: PUMP_TAGGING.")
-        assert results["pump_fillage"] == pytest.approx(75.909653)
-        assert results["inferred_production"] == pytest.approx(338.041470)
+        # The example must run on the real surface-to-downhole solver. The
+        # 'gibbs' passthrough would make these numbers meaningless (#1857).
+        assert results["solver_method"] == "everitt_jennings"
+        # ``synthetic_card.mode`` in the input is the retired name PUMP_TAGGING.
+        # ``resolve_mode`` maps it to PUMP_TAGGING_UP, one half of the split
+        # that #1878 made (tagging up = plunger hits the top of the barrel,
+        # space down; tagging down = plunger hits the standing valve, space
+        # up -- opposite repairs, so they are separate classes). The retrained
+        # classifier's 20 labels no longer contain the merged PUMP_TAGGING at
+        # all, and it recovers PUMP_TAGGING_UP from the solved pump card at
+        # 100.0% confidence.
+        assert results["diagnostic_message"].startswith(
+            "Classification: PUMP_TAGGING_UP."
+        )
+        # Fillage here is the P1 corner metric: net stroke / gross stroke,
+        # where the net stroke ends at the card's bottom-right corner -- the
+        # position at which the fluid load has finished transferring off the
+        # plunger on the downstroke.
+        #
+        # The corrected PUMP_TAGGING_UP generator draws the tag holding the
+        # fluid load *through* the top turnaround (the plunger is jammed
+        # against the barrel top, so the load has nowhere to go) and releasing
+        # it only once the plunger backs away. At seed 711 the generator's
+        # release point is position fraction 0.715101. The phase-ordered corner
+        # detector follows that drop until the load-transfer rate subsides and
+        # reads the resulting bottom-right corner at 67.27% of gross stroke.
+        # The remaining offset includes the smoothstep transition width and the
+        # rod-string round trip.
+        #
+        # NOTE this is the metric's reading, not the barrel's true fill. A
+        # tagging pump is mechanically full; 67.27% is the corner detector
+        # being fooled by a *late load transfer*, which is exactly what it
+        # does to a real tagging card too. The old 99.589501 came from the
+        # pre-#1878 generator, which released the load at the turnaround.
+        assert results["pump_fillage"] == pytest.approx(67.268253)
+        # Displacement of a 1.75 in plunger over the recovered 117.34 in gross
+        # downhole stroke at 6 SPM, times that fillage:
+        #   pi/4 * 1.75^2 * 117.3411533513 * 6 * 1440 / 9702
+        #       = 251.344162726472 bbl/d gross
+        #   251.344162726472 * 0.6726825272107905
+        #       = 169.074826582523 bbl/d net
+        # The recovered gross stroke matches the generator's own drawn stroke
+        # (117.34 in) to 7 significant figures, so the forward model and the
+        # everitt_jennings inverse agree on the plunger travel.
+        assert results["inferred_production"] == pytest.approx(169.074827)
+        # PUMP_TAGGING_UP is in field_health.CRITICAL_CLASSIFICATIONS, and a
+        # critical classification fails the screen.
         assert cfg["screening_status"] == "fail"
         assert cfg["artificial_lift"]["screening_status"] == "fail"
-        assert cfg["artificial_lift"]["classification"] == "PUMP_TAGGING"
+        assert cfg["artificial_lift"]["classification"] == "PUMP_TAGGING_UP"
         assert cfg["artificial_lift"]["severity"] == "critical"
         assert cfg["artificial_lift"]["setpoints"]["structure_rating_capped"] is False
 
@@ -869,24 +935,63 @@ def test_workflow_registry(workflow, monkeypatch):
         assert cfg["screening_status"] == "fail"
         assert summary["screening_status"] == "fail"
         assert summary["n_wells"] == 3
-        assert summary["field_status_counts"] == {
-            "warning": 1,
-            "critical": 1,
-            "failure": 1,
+        assert set(statuses) == {
+            "SIM-FIELD-RESTRICTION-711",
+            "SIM-FIELD-PUMP-TAGGING-711",
+            "SIM-FIELD-ROD-PARTING-711",
         }
-        assert statuses == {
-            "SIM-FIELD-RESTRICTION-711": "warning",
-            "SIM-FIELD-PUMP-TAGGING-711": "critical",
-            "SIM-FIELD-ROD-PARTING-711": "failure",
-        }
-        assert summary["worst_wells"][0]["api14"] == "SIM-FIELD-ROD-PARTING-711"
+        assert sum(summary["field_status_counts"].values()) == 3
+
+        # The PUMP_TAGGING well is pinned: its label survives the whole
+        # pipeline. Its config asks for the retired PUMP_TAGGING name, which
+        # resolves to PUMP_TAGGING_UP, and the retrained classifier recovers
+        # PUMP_TAGGING_UP from the solved pump card. PUMP_TAGGING_UP is in
+        # CRITICAL_CLASSIFICATIONS, hence "critical".
+        assert statuses["SIM-FIELD-PUMP-TAGGING-711"] == "critical"
+
+        # The ROD_PARTING well is still deliberately NOT pinned -- but the
+        # reason has changed, and the old reason is no longer true.
+        #
+        # Under the 16-feature model this well round-tripped to BENT_BARREL,
+        # which is not in FAILURE_CLASSIFICATIONS, so a parted rod string was
+        # reported as "warning" instead of "failure" -- a safety-relevant
+        # misdiagnosis this test refused to bless. With the 19-feature model
+        # (dm#1884) the well now recovers ROD_PARTING at probability 1.000 and
+        # reports "failure". Measured, not assumed.
+        #
+        # It stays unpinned because that correct answer is arrived at for a
+        # suspect reason. What separates ROD_PARTING now is the added
+        # ``load_range`` feature, and ROD_PARTING's generator draws load range
+        # 181-772 lbf while 14 other modes never drop below 5,452 lbf -- the
+        # ranges are disjoint by construction, so the classifier is keying on a
+        # generator parameter, not on a card property a real parted rod string
+        # would necessarily show. Pinning "failure" would encode that accident
+        # as a guarantee, and it would break the moment the generator ranges
+        # are corrected (see the physics note in training.py about
+        # TUBING_MOVEMENT's stroke range being backwards for a downhole card).
+        #
+        # So the assertion stays a legality check. Whether a real parted rod
+        # string is diagnosed correctly is still unknown -- the classifier has
+        # never been scored against a labelled real card (#1864).
+        assert statuses["SIM-FIELD-ROD-PARTING-711"] in STATUS_RANK
+
+        # worst_wells is the export's own responsibility: worst first. Assert
+        # the ordering property rather than which well happens to lead it,
+        # since that follows from the labels.
+        ranks = [STATUS_RANK[w["health_status"]] for w in summary["worst_wells"]]
+        assert ranks == sorted(ranks, reverse=True)
 
         wells_csv = Path(cfg["outputs"]["well_status_csv"])
         if not wells_csv.is_absolute():
             wells_csv = REPO_ROOT / wells_csv
         well_rows = pd.read_csv(wells_csv)
         assert len(well_rows) == 3
-        assert set(well_rows["health_status"]) == {"warning", "critical", "failure"}
+        # Status labels are not pinned here for the reason given above: the
+        # ROD_PARTING well's label is a known misdiagnosis. Assert the CSV
+        # agrees with the summary instead, which is the property this export
+        # is responsible for.
+        assert set(well_rows["health_status"]) <= set(STATUS_RANK)
+        assert dict(zip(well_rows["api14"], well_rows["health_status"])) == statuses
     elif workflow["id"] == "orcaflex-6dbuoy-dnvrph103":
         props = cfg["code_dnvrph103"]["properties"]
         translational = props["translational"]
