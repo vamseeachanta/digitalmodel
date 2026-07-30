@@ -100,8 +100,18 @@ class SurveyData(BaseModel):
 
 
 class MotorProperties(BaseModel):
-    """Rod pump motor specifications."""
+    """
+    Rod pump prime mover specifications.
+
+    ``prime_mover_type`` states what actually drives the unit. NEMA design
+    codes classify ELECTRIC INDUCTION MOTORS only; slip (and therefore the API
+    RP 11L cyclic load factor) is undefined for an engine-driven unit, so the
+    driver type must be known before an F_CL is applied. Leave it empty when
+    the driver is unknown - the power calculation will then decline to apply an
+    electric-motor factor rather than assume one.
+    """
     model: str = ""  # Motor model (e.g., "NEMA B", "NEMA D")
+    prime_mover_type: str = ""  # "electric" | "gas_engine" | "" (unknown)
     horsepower: float = 0.0  # Rated horsepower
     voltage: float = 0.0  # Operating voltage
     manufacturer: str = ""
@@ -205,6 +215,19 @@ class ProductionAnalysis(BaseModel):
     theoretical_production: float = 0.0  # BPD
     pump_efficiency: float = 0.0  # percent
 
+    #: Runtime used, and where it came from: ``"card"`` (recorded with the
+    #: card, preferred), ``"well_test"`` (may predate the card by months), or
+    #: ``"assumed_24h"``.
+    #:
+    #: Production scales linearly with this, so which source was used matters
+    #: as much as the value. A stale well-test runtime silently outranking the
+    #: card's own was the largest single error term measured against public
+    #: production records (dm#1899). The assumption is now reported rather
+    #: than inferred by the reader: ``"assumed_24h"`` overstates any cycling
+    #: well by exactly its duty factor.
+    runtime_hours: float = 24.0
+    runtime_source: str = "assumed_24h"
+
 
 class TorqueStatistics(BaseModel):
     """Min/max torque statistics in M-in-lbs (thousands of inch-pounds)."""
@@ -231,14 +254,26 @@ class GearBoxLoadingAnalysis(BaseModel):
 
 class PowerConsumptionAnalysis(BaseModel):
     """Results from power consumption analysis."""
-    card_area: float = 0.0  # in-lbs (work per stroke)
+    card_area: float = 0.0  # ft-lbs (work per stroke)
     polished_rod_horsepower: float = 0.0  # HP
     prime_mover_horsepower: float = 0.0  # HP
     power_consumption_kw: float = 0.0  # kW
     daily_energy_consumption: float = 0.0  # kWh
-    motor_design: str = "Others"  # "Mark II" or "Others"
-    nema_code: str = "NEMA B"  # "NEMA B" or "NEMA D"
-    cyclic_load_factor: float = 0.0  # F_CL
+    motor_design: str = "Others"  # "Mark II" or "Others" (pumping unit class)
+    # Prime mover provenance. "electric" | "gas_engine" | "unspecified" | ...
+    prime_mover_type: str = "unspecified"
+    nema_code: str = ""  # "NEMA B"/"NEMA D"; "" when the driver is not electric
+    # F_CL is None whenever it was NOT applied (non-electric or unknown driver).
+    # It is never 0.0 - a zero factor would read as a real, applied value.
+    cyclic_load_factor: Optional[float] = None  # F_CL
+    cyclic_load_factor_applied: bool = False
+    # Runtime provenance for daily_energy_consumption.
+    runtime_hours: float = 0.0  # hours/day actually used
+    runtime_source: str = ""  # "context" | "well_test" | "assumed_default_24h"
+    # Assumptions the caller must see before trusting the numbers above.
+    # NOT named `warning_message`: BaseCalculator._set_error dispatches on that
+    # name and would hijack this result's legacy error channel (motor_design).
+    warnings: List[str] = []
 
 
 class LiftCapacityAnalysis(BaseModel):
@@ -263,36 +298,67 @@ class LoadRatioAnalysis(BaseModel):
 class CardGeometryAnalysis(BaseModel):
     """Results from card geometry analysis."""
     area: float = 0.0  # in-lbs (position*load units)
-    perimeter: float = 0.0  # combined units
+    # DEPRECATED: mixes inches and pounds under one sqrt, so it is not a
+    # physical length and must not be interpreted as one. Use
+    # position_path_length / load_path_length (dimensionally meaningful) or
+    # normalized_perimeter (dimensionless shape complexity) instead.
+    perimeter: float = Field(
+        default=0.0,
+        deprecated=(
+            "perimeter mixes inches and pounds and is not a physical length; "
+            "use position_path_length, load_path_length or normalized_perimeter"
+        ),
+    )
+    # Dimensionally meaningful replacements for `perimeter`
+    position_path_length: float = 0.0  # inches - total polished-rod travel per cycle
+    load_path_length: float = 0.0  # lbs - total load excursion per cycle
+    # Dimensionless shape complexity: perimeter of the card after each axis is
+    # scaled by its own range. Equals 4.0 for any rectangle, larger for
+    # wigglier cards. Scale- and unit-free.
+    normalized_perimeter: float = 0.0
     position_range: float = 0.0  # inches (max - min position)
     load_range: float = 0.0  # lbs (max - min load)
-    centroid_position: float = 0.0  # inches
-    centroid_load: float = 0.0  # lbs
-    # Zoned area analysis (quadrant distribution)
+    # Area-weighted polygon centroid. None when the card encloses no area
+    # (degenerate/collinear points), where the centroid is undefined.
+    centroid_position: Optional[float] = None  # inches
+    centroid_load: Optional[float] = None  # lbs
+    # Zoned area analysis (quadrant distribution). True sub-areas of the card
+    # polygon clipped to each quadrant - empty when the card encloses no area.
     zone_areas: List[float] = []  # [bottom_left, bottom_right, top_left, top_right]
     zone_area_fractions: List[float] = []  # normalized to total area
 
 
 class RodBucklingAnalysis(BaseModel):
-    """Results from rod buckling analysis."""
-    # Buckling detection flags
-    sinusoidal_buckling_detected: bool = False
-    helical_buckling_detected: bool = False
-    # Neutral point (transition from tension to compression)
-    neutral_point_depth: float = 0.0  # feet from surface
-    neutral_point_fraction: float = 0.0  # fraction of rod string length
+    """Results from rod buckling analysis.
+
+    Every field defaults to None meaning "not computed". A populated value is
+    always a genuinely evaluated result; 0.0 means "evaluated and zero".
+    """
+    # Buckling detection flags. None when the critical-load thresholds could
+    # not be computed (see sinusoidal_critical_load), so no verdict is possible.
+    sinusoidal_buckling_detected: Optional[bool] = None
+    helical_buckling_detected: Optional[bool] = None
+    # Neutral point (transition from tension to compression).
+    # Always None from card-based analysis: a dynamometer card is indexed by
+    # stroke phase, not by measured depth, so no neutral-point DEPTH can be
+    # derived from it. Requires a depth-resolved axial load profile
+    # (wave-equation solution or downhole gauge survey).
+    neutral_point_depth: Optional[float] = None  # feet from surface
+    neutral_point_fraction: Optional[float] = None  # fraction of rod string length
     # Buckling severity metrics
-    max_compressive_load: float = 0.0  # lbs (most negative load)
-    compression_depth_start: float = 0.0  # feet where compression begins
-    compression_length: float = 0.0  # feet of rod in compression
-    # Critical buckling loads (calculated thresholds)
-    sinusoidal_critical_load: float = 0.0  # lbs - threshold for sinusoidal buckling
-    helical_critical_load: float = 0.0  # lbs - threshold for helical buckling
+    max_compressive_load: Optional[float] = None  # lbs (magnitude, >= 0)
+    # Depth-resolved quantities: None for the same reason as neutral_point_depth.
+    compression_depth_start: Optional[float] = None  # feet where compression begins
+    compression_length: Optional[float] = None  # feet of rod in compression
+    # Critical buckling loads (Paslay-Dawson). None unless hole inclination and
+    # rod/tubing radial clearance are supplied - the formula requires both.
+    sinusoidal_critical_load: Optional[float] = None  # lbs
+    helical_critical_load: Optional[float] = None  # lbs
     # Buckling tendency (effective axial load considering buoyancy)
-    min_buckling_tendency: float = 0.0  # lbs (most compressive)
-    max_buckling_tendency: float = 0.0  # lbs (most tensile)
-    # Analysis metadata
-    analysis_method: str = "simplified"  # "simplified" or "full_simulation"
+    min_buckling_tendency: Optional[float] = None  # lbs (most compressive)
+    max_buckling_tendency: Optional[float] = None  # lbs (most tensile)
+    # Analysis metadata - explicitly assigned by the calculator, never a default
+    analysis_method: Optional[str] = None
     warning_message: str = ""
 
 
@@ -324,19 +390,26 @@ class IdealCardAnalysis(BaseModel):
     # Ideal pump/downhole card
     ideal_pump_position: List[float] = []  # inches
     ideal_pump_load: List[float] = []  # lbs
-    # Card metrics for comparison
-    ideal_peak_load: float = 0.0  # lbs
-    ideal_min_load: float = 0.0  # lbs
+    # Card metrics - PUMP (downhole) domain. Fluid load only; no rod weight.
+    # NOT comparable to a measured polished-rod load: see the surface-domain
+    # scalars below for that.
+    ideal_peak_load: float = 0.0  # lbs (pump card peak)
+    ideal_min_load: float = 0.0  # lbs (pump card minimum)
+    ideal_card_area: float = 0.0  # in-lbs (pump card work per cycle)
+    # Card metrics - SURFACE (polished rod) domain. Buoyant rod weight + fluid
+    # load; this is what a measured PPRL/MPRL should be compared against.
+    ideal_surface_peak_load: float = 0.0  # lbs (polished rod peak)
+    ideal_surface_min_load: float = 0.0  # lbs (polished rod minimum)
+    ideal_surface_card_area: float = 0.0  # in-lbs (surface card work per cycle)
+    # Domain-independent
     ideal_stroke_length: float = 0.0  # inches
     ideal_fluid_load: float = 0.0  # lbs
-    ideal_card_area: float = 0.0  # in-lbs (work per cycle)
-    # Deviation from measured card
-    load_deviation_rms: float = 0.0  # lbs (RMS difference)
-    position_deviation_rms: float = 0.0  # inches (RMS difference)
-    shape_similarity: float = 0.0  # 0-1 (1 = identical)
+    # Deviation from measured card (surface domain). None = not computable.
+    load_deviation_rms: Optional[float] = None  # lbs (branch-wise RMS difference)
+    stroke_length_difference: Optional[float] = None  # inches (|measured - ideal| stroke)
+    shape_similarity: Optional[float] = None  # (0, 1] (1 = identical shape)
     # Simulation parameters
     fillage_assumed: float = 1.0  # 0-1 (pump fillage)
-    damping_coefficient: float = 0.1  # damping used
     num_time_points: int = 0  # number of simulation points
     # Analysis metadata
     generation_method: str = "simplified"  # "simplified" or "full_simulation"
@@ -387,6 +460,18 @@ class AnalysisResults(BaseModel):
 
     # Legacy compatibility
     pump_fillage: float = 0.0
+
+    #: Theoretical pump displacement in BPD, NOT a production estimate.
+    #:
+    #: It is gross displacement x fillage x runtime/24 at 100% volumetric
+    #: efficiency: no slippage past the plunger, no valve leakage, and no
+    #: formation volume factor -- and card-derived barrels are downhole
+    #: barrels, while a sales or regulatory figure is stock-tank.
+    #:
+    #: Scored against public New Mexico OCD filings this reads +65% to +82%
+    #: high, on a well whose runtime was unambiguous, implying real volumetric
+    #: efficiency near 55% (dm#1899). The name is retained for compatibility
+    #: with the field-health CSV schema; read it as displacement.
     inferred_production: float = 0.0
     buckling_detected: bool = False
     diagnostic_message: str = "Analysis not yet performed"

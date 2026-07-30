@@ -23,6 +23,7 @@ from digitalmodel.corrosion.galvanic_screening import (
 
 _REPO = Path(__file__).resolve().parents[2]
 _OUT = _REPO / "docs" / "api" / "corrosion" / "galvanic-compatibility-explorer.html"
+_OUT_JSON = _OUT.with_suffix(".json")
 
 #: pretty axis labels for the module's metal keys
 DISPLAY = {
@@ -222,6 +223,14 @@ def main() -> None:
     _OUT.parent.mkdir(parents=True, exist_ok=True)
     _OUT.write_text(html, encoding="utf-8")
     print(f"wrote {_OUT} ({_OUT.stat().st_size/1024:.1f} kB)")
+
+    # Sidecar JSON alongside the page — the machine-readable form of exactly the same
+    # `data`, so the page and any published dataset cannot drift (aceengineer-website#97).
+    # Matches the pattern already used by scripts/capabilities/build_*_explorer.py, and is
+    # what the HF publisher ingests: publishing stays a re-run of this generator rather
+    # than a one-off export scraped out of the HTML.
+    _OUT_JSON.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+    print(f"wrote {_OUT_JSON} ({_OUT_JSON.stat().st_size/1024:.1f} kB)")
 
 
 if __name__ == "__main__":

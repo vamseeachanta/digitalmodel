@@ -1,9 +1,9 @@
 # ABOUTME: Build the dynacard troubleshooting explorer (capabilities page).
-# ABOUTME: Use cases + 336-card example library browser + POC settings & alarms catalog.
+# ABOUTME: Use cases + 346-card example library browser + POC settings & alarms catalog.
 """Build the **dynacard troubleshooting explorer** — a self-contained,
 light-themed page published on the capabilities page under "Artificial lift":
 
-1. Seven curated troubleshooting use cases (card signature -> ML diagnosis ->
+1. Eight curated troubleshooting use cases (card signature -> ML diagnosis ->
    field response), generated deterministically from the module's synthetic
    card library and verified against the shipped classifier.
 2. An **example-card library browser**: every card in the module's
@@ -40,6 +40,7 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.calculations import (
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
     ALL_GENERATORS,
+    get_generator,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import (
     PumpDiagnostics,
@@ -147,17 +148,31 @@ USE_CASES: list[dict] = [
         ],
     ),
     dict(
-        mode="PUMP_TAGGING",
-        title="Pump tagging (spacing fault)",
+        mode="PUMP_TAGGING_UP",
+        title="Pump tagging up (spacing too long)",
         symptom=(
-            "Sharp load spike at the stroke end: the plunger strikes the "
-            "standing valve or the top of the pump. Audible metallic tag; "
-            "risk of valve, plunger and rod damage every stroke."
+            "Sharp load spike at the top of the stroke: the plunger strikes "
+            "the top of the barrel or the pull tube. Audible metallic tag; "
+            "risk of plunger and rod damage every stroke."
         ),
         actions=[
-            "Stop and re-space the plunger off bottom",
+            "Stop and re-space the plunger DOWN, away from the top of the pump",
             "Re-check spacing after the well reaches operating temperature",
             "Verify the surface stroke setting matches the pump design",
+        ],
+    ),
+    dict(
+        mode="PUMP_TAGGING_DOWN",
+        title="Pump tagging down (spacing too close)",
+        symptom=(
+            "Sharp load drop at the bottom of the stroke, below the "
+            "downstroke load line: the plunger lands on the standing valve "
+            "and drives the rods into compression once per stroke."
+        ),
+        actions=[
+            "Stop and re-space the plunger UP, off bottom",
+            "Re-check spacing after the well reaches operating temperature",
+            "Inspect the standing valve cage and seat for impact damage",
         ],
     ),
     dict(
@@ -263,7 +278,7 @@ def build_cases() -> list[dict]:
     cases = []
     for spec in USE_CASES:
         mode = spec["mode"]
-        card = ALL_GENERATORS[mode](seed=_SEED)
+        card = get_generator(mode)(seed=_SEED)
         ctx = _build_context(mode, card)
         results = AnalysisResults(ctx=ctx, downhole_card=card)
         diag = diagnostics.classify_with_context(results)
@@ -407,16 +422,21 @@ def settings_section_html() -> str:
   </section>"""
 
 
+# Core brand tokens (--navy/--teal/--bg/--panel/--ink/--muted/--line) come from
+# ../_assets/brand.css and must NOT be redeclared here -- scripts/brand_guard.py
+# fails the docs build on a hard-coded core token. #1485 migrated the published
+# page onto brand.css but not this template, so every regeneration silently
+# reverted the migration until the guard caught it. Only page-local tokens
+# (--soft, --series-*, --st-*) belong in the :root block below.
 _PAGE = """<!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dynacard troubleshooting explorer — digitalmodel</title>
+<link rel="stylesheet" href="../_assets/brand.css">
 <style>
-  :root{--navy:#0B3D91;--teal:#0f8a7e;--bg:#eef3fa;--panel:#ffffff;--ink:#13233f;
-        --muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc;
-        --series-card:#2563C4;--series-ref:#0B8F80;
+  :root{--soft:#f4f8fc;--series-card:#2563C4;--series-ref:#0B8F80;
         --st-normal:#1f9d57;--st-warning:#b7791f;--st-critical:#c2410c;--st-failure:#b91c1c}
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);
@@ -506,7 +526,7 @@ _PAGE = """<!DOCTYPE html>
 <main>
   <div class="crumb"><a href="../capabilities/">&larr; digitalmodel capabilities</a></div>
   <h1>Dynacard troubleshooting explorer</h1>
-  <p class="sub">Rod-pump dynamometer-card diagnostics in three layers: seven curated troubleshooting
+  <p class="sub">Rod-pump dynamometer-card diagnostics in three layers: eight curated troubleshooting
   cases (card signature &rarr; ML diagnosis &rarr; field response), an example-card library of
   __N_CARDS__ identified cards across __N_PHEN__ phenomena (synthetic-verified, measured field wells and a
   digitized field archive), and the controller settings &amp; alarms the module recommends from a
@@ -570,8 +590,19 @@ __SETTINGS_SECTION__
     <code>troubleshooting</code>, <code>poc_settings</code>) and frozen by
     <code>scripts/capabilities/build_dynacard_troubleshooting.py</code>; CI re-runs every published
     diagnosis against the live classifier. ML classification operates on the pump (downhole) card
-    (GradientBoosting over 16 Bezerra projection features, 5,400 synthetic training cards, 89.4%
-    five-fold CV on that synthetic set) and is only shown for oilfield-unit cards. Digitized archive
+    (GradientBoosting over 19 features -- 16 Bezerra projections plus stroke length, load range and
+    card area -- 6,000 synthetic training cards across 20 failure modes, 99.4% five-fold CV).
+    <b>That 99.4% is synthetic-train / synthetic-test</b>: it measures how separable this module's
+    own card generators are from each other, not agreement with real dynamometer cards. The
+    classifier has never been scored against a labelled real card (issue #1864), so treat the
+    confidence figures as internal separability, not field accuracy.
+    <b>The figure is also partly definitional and is not a gain in diagnostic capability.</b>
+    NORMAL, TUBING_MOVEMENT and PLUNGER_UNDERTRAVEL were previously not separable at all, because
+    they differ only in absolute stroke length and the Bezerra projection normalizes that away.
+    They now separate -- but only because the generators draw stroke from ranges that never
+    overlap (30-55 in, 80-120 in, 130-180 in): a two-threshold rule on stroke alone scores 900/900
+    on unseen synthetic cards. Real wells have overlapping stroke ranges, so whether these modes
+    are separable on real cards is unknown and untested (#1864). Digitized archive
     cards are shape-only (normalized axes, marker positions) from a hand-labeled training archive;
     wells are anonymized throughout. Settings &amp; alarm recipes restate standard field practice in
     original wording, cross-checked between operator automation training (2016-2017), pump-off

@@ -55,6 +55,12 @@ def _fit_zeta(pairs: List[tuple]) -> float:
 def main(argv: List[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Sloshing SDOF + tuning reduction (#1433)")
     ap.add_argument("--work-dir", type=Path, default=Path("/mnt/local-analysis/sloshing_cfd_work"))
+    ap.add_argument(
+        "--output",
+        type=Path,
+        default=_OUT,
+        help="output manifest path (default: docs/api/cfd/sloshing-sdof.json)",
+    )
     args = ap.parse_args(argv)
 
     forced = json.loads(_FORCED.read_text())
@@ -120,9 +126,13 @@ def main(argv: List[str] | None = None) -> int:
         "tuning_basis": {"relation": "omega1^2 = (pi*g/L)*tanh(pi*h/L)",
                          "g": G, "note": "Interactive tuning: for tank length L and target roll period T_roll, the tuning fill is where f1(fill)=1/T_roll."},
     }
-    _OUT.parent.mkdir(parents=True, exist_ok=True)
-    _OUT.write_text(json.dumps(manifest, indent=2) + "\n")
-    print(f"wrote {_OUT.relative_to(_REPO)} ({len(fills_out)} fills, {len(rows)} contract rows)")
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(manifest, indent=2) + "\n")
+    try:
+        output_label = args.output.relative_to(_REPO)
+    except ValueError:
+        output_label = args.output
+    print(f"wrote {output_label} ({len(fills_out)} fills, {len(rows)} contract rows)")
     for x in fills_out:
         print(f"  h/L={x['h_over_L']}: T1={x['natural_period_s']}s zeta={x['equivalent_damping_ratio_zeta']} "
               f"coeff={x['resonance_coefficients']}")

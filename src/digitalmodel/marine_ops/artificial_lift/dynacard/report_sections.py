@@ -11,7 +11,15 @@ from .troubleshooting import guide_for
 
 
 FAIL_SEVERITIES = {"critical", "failure"}
-TROUBLESHOOTING_ALIASES = {"VALVE_LEAK": "VALVE_LEAK_TV"}
+# Retired classifier labels, and the guide entry that now covers them. The
+# retrained 20-class model no longer emits ``PUMP_TAGGING``, but stored
+# results and configs written before the split still carry it, so a report
+# has to be able to render it -- and render it as critical, not fall through
+# to the "unknown, call it a warning" branch.
+TROUBLESHOOTING_ALIASES = {
+    "VALVE_LEAK": "VALVE_LEAK_TV",
+    "PUMP_TAGGING": "PUMP_TAGGING_UP",
+}
 
 
 def _classification_verdict(classification: str) -> dict[str, str]:

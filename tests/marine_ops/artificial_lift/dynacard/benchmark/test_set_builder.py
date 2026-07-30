@@ -25,7 +25,7 @@ def build_hold_out_test_set(
     samples_per_mode: int = 3,
     base_seed: int = _HOLDOUT_SEED_FLOOR,
 ) -> list[LabelledCard]:
-    """Generate a balanced hold-out test set across all 18 failure modes.
+    """Generate a balanced hold-out test set across all failure modes.
 
     Seeds used are [base_seed, base_seed + samples_per_mode) per mode to
     guarantee no overlap with training data, which uses seeds [0, N).
@@ -33,7 +33,7 @@ def build_hold_out_test_set(
     Args:
         samples_per_mode: Number of cards to generate per failure mode.
             Set to 3 for fast tests; use 3+ for actual evaluation.
-            With 18 modes * 3 samples = 54 cards (>= 50 acceptance criterion).
+            With 20 modes * 3 samples = 60 cards (>= 50 acceptance criterion).
         base_seed: Starting seed offset. Must be >= 1000 to clear training range.
 
     Returns:

@@ -5,11 +5,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ..card_generators import ALL_GENERATORS
+from ..card_generators import ALL_GENERATORS, get_generator
 from ..models import CardData
 from .svg_primitives import (
     COLORS,
-    MODE_LABELS,
+    mode_label,
     MODE_TIERS,
     TIER_INFO,
     CoordMapper,
@@ -51,7 +51,7 @@ class DiagnosticAnnotator:
                 {"mode": "DELAYED_TV_CLOSURE", "probability": 0.018},
             ]
 
-        title = MODE_LABELS.get(mode_name, mode_name)
+        title = mode_label(mode_name)
         tier = MODE_TIERS.get(mode_name, 1)
         tier_color = TIER_INFO[tier]["color"]
 
@@ -162,7 +162,7 @@ class DiagnosticAnnotator:
             y = diff_y + 20 + i * 22
             mode = entry["mode"]
             prob = entry["probability"]
-            label = MODE_LABELS.get(mode, mode)
+            label = mode_label(mode)
 
             # Probability bar
             svg += svg_text(
@@ -188,9 +188,16 @@ class DiagnosticAnnotator:
         svg += svg_rect(panel_x, info_y, panel_width, 70, COLORS["grid"], fill="#fafafa", rx=4)
         info_items = [
             ("Model:", "GradientBoosting v1.0"),
-            ("Features:", "Bezerra Projections"),
-            ("Training:", "5,400 synthetic cards"),
-            ("Accuracy:", "89.4% cross-validated"),
+            ("Features:", "Bezerra x16 + scale x3"),
+            ("Training:", "6,000 synthetic cards"),
+            # Synthetic-train / synthetic-test. Labelled "synth CV" rather than
+            # "cross-validated" so the panel cannot be read as field accuracy;
+            # the model has never been scored on a real card (#1864). The rise
+            # from 90.5% is also partly definitional -- the three scale features
+            # separate modes whose generators use non-overlapping stroke ranges
+            # (dm#1884) -- so this is an upper bound on synthetic separability,
+            # not evidence about field cards.
+            ("Accuracy:", "99.4% synth CV"),
         ]
         for i, (label, value) in enumerate(info_items):
             y = info_y + 16 + i * 14
@@ -210,7 +217,7 @@ def generate_sample_diagnostic(
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    gen = ALL_GENERATORS[mode_name]
+    gen = get_generator(mode_name)
     card = gen(seed=seed)
 
     annotator = DiagnosticAnnotator()

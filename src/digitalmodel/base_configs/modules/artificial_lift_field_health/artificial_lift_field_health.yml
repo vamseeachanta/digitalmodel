@@ -1,7 +1,10 @@
 basename: artificial_lift_field_health
 
 artificial_lift_field_health:
-  solver_method: gibbs
+  # Default solver. 'gibbs' does not transform load (#1857) and must not
+  # be used for diagnosis; synthetic cards are forward-modelled to the
+  # surface before solving (#1862).
+  solver_method: everitt_jennings
   output_dir: results
   worst_wells_limit: 5
   fail_health_states:

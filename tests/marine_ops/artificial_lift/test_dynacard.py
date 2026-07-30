@@ -83,11 +83,17 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.finite_difference import F
 
 
 def test_workflow_init_without_context():
-    """Init DynacardWorkflow with no context, verify solver is None."""
+    """Init DynacardWorkflow with no context, verify solver is None.
+
+    The default solver is 'everitt_jennings': it is the only one that
+    reproduces the reference downhole cards (0.9% median nRMSE across the
+    fixture wells, against 17.3% for gibbs and divergence for
+    finite_difference). See issue #1857.
+    """
     workflow = DynacardWorkflow()
     assert workflow.ctx is None
     assert workflow.solver is None
-    assert workflow.solver_method == 'gibbs'
+    assert workflow.solver_method == 'everitt_jennings'
 
 
 def test_workflow_init_with_finite_difference(sample_context):

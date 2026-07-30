@@ -1,15 +1,15 @@
 # ABOUTME: Renders a single dynamometer card as standalone SVG or embeddable fragment.
-# ABOUTME: Supports all 18 failure modes with auto-scaled axes.
+# ABOUTME: Supports all 20 failure modes with auto-scaled axes.
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from ..card_generators import ALL_GENERATORS
+from ..card_generators import ALL_GENERATORS, get_generator
 from ..models import CardData
 from .svg_primitives import (
     COLORS,
-    MODE_LABELS,
+    mode_label,
     MODE_TIERS,
     TIER_INFO,
     CoordMapper,
@@ -51,7 +51,7 @@ class CardRenderer:
         title: str | None = None,
     ) -> str:
         """Render a standalone SVG document for a single card."""
-        title = title or MODE_LABELS.get(mode_name, mode_name)
+        title = title or mode_label(mode_name)
         tier = MODE_TIERS.get(mode_name, 1)
         tier_color = TIER_INFO[tier]["color"]
 
@@ -106,7 +106,7 @@ class CardRenderer:
         Returns an SVG group (not a full document) sized to fit within
         the given cell dimensions.
         """
-        title = MODE_LABELS.get(mode_name, mode_name)
+        title = mode_label(mode_name)
         tier = MODE_TIERS.get(mode_name, 1)
         tier_color = TIER_INFO[tier]["color"]
 
@@ -160,9 +160,10 @@ class CardRenderer:
 
 def generate_card(mode_name: str, seed: int = 42) -> CardData:
     """Generate a synthetic card for the given failure mode."""
-    gen = ALL_GENERATORS.get(mode_name)
-    if gen is None:
-        raise ValueError(f"Unknown failure mode: {mode_name}")
+    try:
+        gen = get_generator(mode_name)
+    except KeyError:
+        raise ValueError(f"Unknown failure mode: {mode_name}") from None
     return gen(seed=seed)
 
 
@@ -178,7 +179,7 @@ def render_single_card(mode_name: str, output_path: Path, seed: int = 42) -> Pat
 
 
 def render_all_individual_cards(output_dir: Path, seed: int = 42) -> list[Path]:
-    """Generate and save individual SVGs for all 18 failure modes."""
+    """Generate and save individual SVGs for all 20 failure modes."""
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     renderer = CardRenderer()
