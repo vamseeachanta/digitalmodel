@@ -80,7 +80,7 @@ review → `status:plan-review` → explicit owner approval →
 Check parallel work and live GitHub state. Perform discovery-first against the
 current default branch and active worktrees. Then prepare the child plan for
 digitalmodel #1603 using the canonical template at
-`/mnt/local-analysis/workspace-hub/docs/plans/_template-issue-plan.md`. Its plan
+`${WORKSPACE_HUB_ROOT}/docs/plans/_template-issue-plan.md`. Its plan
 must expose the parent-DAG checkpoints below rather than pretending #1603 can
 produce bundles before #138/#811 contracts exist. Do not implement until the
 user approves that child plan. If prior work already satisfies part of the
@@ -340,12 +340,12 @@ telemetry ingestion, atlas generation, and dashboard reimplementation.
 
 - Use TDD: failing contract/unit tests before implementation.
 - Run focused tests, relevant integration tests, and the full required suite.
-  From `/mnt/local-analysis/workspace-hub`, run the full applicable child scan
+  From `${WORKSPACE_HUB_ROOT}`, run the full applicable child scan
   with a workspace-hub-relative repository path before child closeout; diff-only
   scans are insufficient for implementation. For this worktree, the form is:
 
   ```bash
-  cd /mnt/local-analysis/workspace-hub
+  cd "${WORKSPACE_HUB_ROOT:?set WORKSPACE_HUB_ROOT to the workspace-hub checkout}"
   bash scripts/legal/legal-sanity-scan.sh \
     --repo=../agent-worktrees/dm-1602-design
   ```
