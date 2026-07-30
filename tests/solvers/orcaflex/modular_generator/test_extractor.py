@@ -129,10 +129,99 @@ class TestExtractEnvironment:
         ext = MonolithicExtractor(yml)
         env = ext._extract_environment()
 
-        assert env["waves"]["type"] == "JONSWAP"
-        assert env["waves"]["height"] == 3.5
-        assert env["waves"]["period"] == 8.0
-        assert env["waves"]["direction"] == 180
+        # Extractor emits a trains list (multi-train support); the Waves
+        # schema exposes trains[0] via backward-compat properties.
+        train = env["waves"]["trains"][0]
+        assert train["type"] == "JONSWAP"
+        assert train["height"] == 3.5
+        assert train["period"] == 8.0
+        assert train["direction"] == 180
+
+    def test_extracts_all_wave_trains(self, tmp_path):
+        """Multi-train models (wind sea + swell) keep ALL trains (story 496)."""
+        yml = tmp_path / "test.yml"
+        yml.write_text(
+            "Environment:\n"
+            "  WaterDepth: 100\n"
+            "  WaveTrains:\n"
+            "    - Name: WindSea\n"
+            "      WaveType: JONSWAP\n"
+            "      WaveHs: 3.5\n"
+            "      WaveTz: 8.0\n"
+            "      WaveDirection: 180\n"
+            "    - Name: Swell\n"
+            "      WaveType: Airy\n"
+            "      WaveHeight: 1.5\n"
+            "      WavePeriod: 14.0\n"
+            "      WaveDirection: 90\n"
+        )
+        ext = MonolithicExtractor(yml)
+        env = ext._extract_environment()
+
+        trains = env["waves"]["trains"]
+        assert len(trains) == 2
+        assert trains[0]["name"] == "WindSea"
+        assert trains[0]["type"] == "JONSWAP"
+        assert trains[1]["name"] == "Swell"
+        assert trains[1]["type"] == "Airy"
+        assert trains[1]["height"] == 1.5
+        assert trains[1]["period"] == 14.0
+        assert trains[1]["direction"] == 90
+
+    def test_extracts_wave_gamma(self, tmp_path):
+        """WaveGamma is captured so it round-trips (was dropped -> 3.3)."""
+        yml = tmp_path / "test.yml"
+        yml.write_text(
+            "Environment:\n"
+            "  WaterDepth: 100\n"
+            "  WaveTrains:\n"
+            "    - WaveType: JONSWAP\n"
+            "      WaveJONSWAPParameters: Fully specified\n"
+            "      WaveHs: 3.0\n"
+            "      WaveTz: 8.0\n"
+            "      WaveGamma: 5.0\n"
+        )
+        ext = MonolithicExtractor(yml)
+        env = ext._extract_environment()
+
+        assert env["waves"]["trains"][0]["gamma"] == 5.0
+
+    def test_wave_gamma_outside_schema_range_left_to_raw_layer(self, tmp_path):
+        """WaveGamma: 1 (real exports, e.g. mudmat SUT_MM_SZ.yml) is outside
+        the typed schema range (gt=1) and must not be typed — it survives via
+        raw_properties instead of failing spec validation."""
+        yml = tmp_path / "test.yml"
+        yml.write_text(
+            "Environment:\n"
+            "  WaterDepth: 100\n"
+            "  WaveTrains:\n"
+            "    - WaveType: JONSWAP\n"
+            "      WaveHs: 3.0\n"
+            "      WaveTz: 8.0\n"
+            "      WaveGamma: 1\n"
+        )
+        ext = MonolithicExtractor(yml)
+        env = ext._extract_environment()
+
+        assert "gamma" not in env["waves"]["trains"][0]
+        assert env["raw_properties"]["WaveTrains"][0]["WaveGamma"] == 1
+
+    def test_zero_wave_height_not_treated_as_missing(self, tmp_path):
+        """WaveHs: 0 is a legitimate value; the old or-chain skipped it."""
+        yml = tmp_path / "test.yml"
+        yml.write_text(
+            "Environment:\n"
+            "  WaterDepth: 100\n"
+            "  WaveTrains:\n"
+            "    - WaveType: JONSWAP\n"
+            "      WaveHs: 0\n"
+            "      WaveHeight: 5.0\n"
+            "      WaveTz: 8.0\n"
+        )
+        ext = MonolithicExtractor(yml)
+        env = ext._extract_environment()
+
+        assert env["waves"]["trains"][0]["height"] == 0
 
     def test_no_waves_when_absent(self, tmp_path):
         yml = tmp_path / "test.yml"
@@ -296,6 +385,65 @@ class TestExtractGenericModel:
         # Typed fields not duplicated in properties
         assert "OD" not in lt["properties"]
         assert "Name" not in lt["properties"]
+
+    def test_stiffener_type_keys_stay_in_properties(self, tmp_path):
+        """Keys mapped by ORCAFLEX_TO_TYPED but absent from the section's
+        model class (StiffenerTypes has no OD/ID/EI/EA/mass typed fields)
+        must stay in the properties bag — typing them would be silently
+        dropped by Pydantic (extra='ignore') and lost from the model."""
+        yml = tmp_path / "test.yml"
+        yml.write_text(
+            "StiffenerTypes:\n"
+            "  - Name: BS1\n"
+            "    OD: 0.35\n"
+            "    ID: 0.2\n"
+            "    MassPerUnitLength: 0.1\n"
+            "    EI: 500\n"
+            "    EA: 100000\n"
+            "    Pen: 3\n"
+        )
+        ext = MonolithicExtractor(yml)
+        generic = ext._extract_generic_model()
+
+        st = generic["stiffener_types"][0]
+        assert st["name"] == "BS1"
+        for key, value in [
+            ("OD", 0.35), ("ID", 0.2), ("MassPerUnitLength", 0.1),
+            ("EI", 500), ("EA", 100000), ("Pen", 3),
+        ]:
+            assert st["properties"][key] == value
+
+        # Round-trip through the typed spec must preserve them too
+        spec = ProjectInputSpec(**{
+            "metadata": {
+                "name": "t", "description": "t", "structure": "generic",
+                "operation": "generic", "project": "t",
+            },
+            "environment": {
+                "water": {"depth": 100},
+                "seabed": {"stiffness": {"normal": 100, "shear": 100}},
+            },
+            "generic": generic,
+        })
+        props = spec.generic.stiffener_types[0].properties
+        assert props["OD"] == 0.35
+        assert props["EA"] == 100000
+
+    def test_flex_joint_connection_stays_in_properties(self, tmp_path):
+        """GenericFlexJoint defines no 'connection' field; Connection must
+        pass through the properties bag instead of being typed and dropped."""
+        yml = tmp_path / "test.yml"
+        yml.write_text(
+            "FlexJoints:\n"
+            "  - Name: FJ1\n"
+            "    Connection: Vessel1\n"
+        )
+        ext = MonolithicExtractor(yml)
+        generic = ext._extract_generic_model()
+
+        fj = generic["flex_joints"][0]
+        assert fj["name"] == "FJ1"
+        assert fj["properties"]["Connection"] == "Vessel1"
 
     def test_handles_variable_data_nested_structure(self, tmp_path):
         yml = tmp_path / "test.yml"

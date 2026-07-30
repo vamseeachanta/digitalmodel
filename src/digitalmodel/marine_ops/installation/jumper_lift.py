@@ -91,6 +91,14 @@ class JumperConfig:
     strake_lbs_per_joint: float = 0.63
     strake_wt_lbs_per_joint: float = 0.55
     strake_od_drag_m: float = 0.653
+    num_strakes: int = 2               # Weight Check!C25 = 2 * Strake!C8
+    # Number of joints per strake module (Strake!E8 = 36.12 + 0.63*3)
+    strake_joints_per_module: int = 3
+    # Clamp offset from the OCS connector face (spec.yml jumper block).
+    # Carried on the config so spec overrides are not silently dropped;
+    # clamp locations in compute_pipe_geometry still use the GA-sheet
+    # hardcoded offsets (GA!C37-C41) pending #480 GA verification.
+    clamp_ocs_offset_m: float = 1.3
 
     # Kit weights (as-built, from Weight Check sheet)
     kit1_wo_insul_kg: float = 7438.0
@@ -453,6 +461,26 @@ def compute_pipe_geometry(
     G_str = sections.G_inch - R                         # GA!C30
 
     straight_inch = [A_str, B_str, C_str, D_str, E_str, F_str, G_str]
+
+    # Fail loud on impossible geometry: a straight length goes negative when
+    # the raw section is shorter than its end-bend deductions (R for terminal
+    # sections A/G, 2R for interior sections). Silently emitting negative
+    # lengths would propagate into the OrcaFlex model (issue: negative
+    # Length rows are rejected at model load).
+    section_names = ["A", "B", "C", "D", "E", "F", "G"]
+    negative = [
+        f"{name}={val:.4f} in"
+        for name, val in zip(section_names, straight_inch)
+        if val < 0.0
+    ]
+    if negative:
+        raise ValueError(
+            "Negative straight length(s) after bend deduction "
+            f"(bend radius {R} in): {', '.join(negative)}. "
+            "Each interior section must be > 2*bend_radius and each "
+            "terminal section (A, G) > bend_radius."
+        )
+
     straight_m = [v * INCH_TO_M for v in straight_inch]
 
     # Bend arc (6 bends between 7 sections)  Source: GA!C19 = PI()*$C$14/2
@@ -703,6 +731,7 @@ def compute_crane_utilisation(crane: CraneConfig, lift_weight_te: float) -> floa
 def compute_orcaflex_sections(
     pipe_geom: Dict,
     pipe_props: BarePipeProperties,
+    config: JumperConfig | None = None,
 ) -> List[Dict]:
     """Build the OrcaFlex line-type section breakdown.
 
@@ -717,10 +746,21 @@ def compute_orcaflex_sections(
     Args:
         pipe_geom: output of compute_pipe_geometry.
         pipe_props: BarePipeProperties (for bend_radius_m and insulation_od_m).
+        config: JumperConfig supplying connector length, buoyancy-module
+            length and per-segment module counts. ``None`` uses JumperConfig
+            defaults, which equal the GA-sheet values (1.3 m connector,
+            1.016 m modules, 2/20/2 in C/D/E).
 
     Returns:
         List of dicts, each with keys: name, line_type, length_m.
+
+    Raises:
+        ValueError: if any computed section length is negative (the
+            configured buoyancy stack does not fit in its segment).
     """
+    if config is None:
+        config = JumperConfig()
+
     R_m = pipe_props.bend_radius_m   # = E14 in GA
     insul_od_m = pipe_props.insulation_od_m * INCH_TO_M if pipe_props.insulation_od_m > 1 else pipe_props.insulation_od_m
     # insulation_od_m is already in metres from BarePipeProperties
@@ -728,31 +768,35 @@ def compute_orcaflex_sections(
     sm = pipe_geom["straight_lengths_m"]
     bm = pipe_geom["bend_arc_m"]
 
-    # Connector length  Source: GA!D48
-    connector_length_m = 1.3
+    # Connector length  Source: GA!D48 (default 1.3 m = Bare pipe!C19)
+    connector_length_m = config.connector_length_m
+
+    buoy_module_m = config.buoyancy_length_m  # Bouyancy!C4 (default 1.016 m)
 
     # Section-D sub-breakdown  Source: GA!D61-D65
-    # D is split into: bare | buoy×10 | bare(1.168m) | buoy×10 | bare
-    buoy_10_length = 1.016 * 10      # 10 buoyancy modules  GA!D62, D64
+    # D is split into: bare | buoy group a | bare(1.168m) | buoy group b | bare
+    # GA sheet has 20 modules split 10+10; a configured count is split as
+    # evenly as possible (odd counts put the extra module in group a).
+    n_d = config.num_buoy_modules_in_d
+    d_buoy_a_length = buoy_module_m * ((n_d + 1) // 2)   # GA!D62
+    d_buoy_b_length = buoy_module_m * (n_d // 2)         # GA!D64
     d_bare_centre = 1.168             # GA!D63
-    d_bare_each = (sm[3] - buoy_10_length - d_bare_centre - buoy_10_length) / 2.0  # GA!D61
+    d_bare_each = (sm[3] - d_buoy_a_length - d_bare_centre - d_buoy_b_length) / 2.0  # GA!D61
 
     # Section C sub-breakdown  Source: GA!D53-D59
     c_bare_start = 2.311 - R_m                        # GA!D53 = 2.311 - E14
     c_strake_1 = 2.159                                 # GA!D54 (strake length)
     c_bare_mid = 5.652 - 2.311 - c_strake_1            # GA!D55
-    c_buoy = 1.016 * 2                                 # GA!D56 = 2 buoy modules
-    c_remaining = sm[2] - c_bare_start - c_strake_1 - c_bare_mid - c_buoy  # GA!D57 approx
+    c_buoy = buoy_module_m * config.num_buoy_modules_in_c  # GA!D56 (2 modules)
     c_strake_2 = 2.159                                 # GA!D58 = D54
     c_bare_end = 2.311 - R_m                           # GA!D59 = 2.311 - E14
 
-    # Recalculate c_remaining more precisely
-    # total C straight = 10.795 m, known sub-lengths:
-    # c_bare_start + c_strake_1 + c_bare_mid + c_buoy + c_remaining + c_strake_2 + c_bare_end = 10.795
+    # c_remaining closes the C straight:
+    # c_bare_start + c_strake_1 + c_bare_mid + c_buoy + c_remaining + c_strake_2 + c_bare_end = sm[2]
     c_remaining = sm[2] - c_bare_start - c_strake_1 - c_bare_mid - c_buoy - c_strake_2 - c_bare_end
 
     # Section E sub-breakdown  Source: GA!D67-D69
-    e_buoy = 1.016 * 2                                 # GA!D68
+    e_buoy = buoy_module_m * config.num_buoy_modules_in_e  # GA!D68 (2 modules)
     e_bare_end = 3.683 - R_m                           # GA!D69
     e_bare_start = sm[4] - e_buoy - e_bare_end         # GA!D67
 
@@ -771,9 +815,9 @@ def compute_orcaflex_sections(
         {"name": "C-bare-end", "line_type": "10.75\"Jumper_wCoat", "length_m": c_bare_end},
         {"name": "C-D bend", "line_type": "10.75\"Jumper_wCoat", "length_m": bm},
         {"name": "D-bare-1", "line_type": "10.75\"Jumper_wCoat", "length_m": d_bare_each},
-        {"name": "D-buoy-10a", "line_type": "10.75\"Jumper_wCoat_wBuoy", "length_m": buoy_10_length},
+        {"name": "D-buoy-10a", "line_type": "10.75\"Jumper_wCoat_wBuoy", "length_m": d_buoy_a_length},
         {"name": "D-bare-centre", "line_type": "10.75\"Jumper_wCoat", "length_m": d_bare_centre},
-        {"name": "D-buoy-10b", "line_type": "10.75\"Jumper_wCoat_wBuoy", "length_m": buoy_10_length},
+        {"name": "D-buoy-10b", "line_type": "10.75\"Jumper_wCoat_wBuoy", "length_m": d_buoy_b_length},
         {"name": "D-bare-2", "line_type": "10.75\"Jumper_wCoat", "length_m": d_bare_each},
         {"name": "D-E bend", "line_type": "10.75\"Jumper_wCoat", "length_m": bm},
         {"name": "E-bare-start", "line_type": "10.75\"Jumper_wCoat", "length_m": e_bare_start},
@@ -786,6 +830,23 @@ def compute_orcaflex_sections(
         {"name": "Connector-end", "line_type": "OCS 200-V", "length_m": connector_length_m},
     ]
 
+    # Fail loud instead of emitting negative Length rows (OrcaFlex rejects
+    # them at model load): the configured module stacks must fit within the
+    # available straight lengths.
+    negative = [
+        f"{sec['name']}={sec['length_m']:.4f} m"
+        for sec in sections
+        if sec["length_m"] < 0.0
+    ]
+    if negative:
+        raise ValueError(
+            "Negative OrcaFlex section length(s) — the configured buoyancy/"
+            f"strake stack does not fit its segment: {', '.join(negative)}. "
+            "Check segment lengths (seg_*_inch) against module counts "
+            "(num_buoy_modules_in_c/d/e) and module length "
+            f"({buoy_module_m} m)."
+        )
+
     return sections
 
 
@@ -793,6 +854,7 @@ def compute_weight_check(
     buoy: BuoyancyModuleProperties | None = None,
     strake: StrakeProperties | None = None,
     clamp: ClampProperties | None = None,
+    config: JumperConfig | None = None,
 ) -> Dict:
     """Compute total lift weight from insulated kit weights, buoyancy modules,
     strakes, and clamps.
@@ -807,6 +869,16 @@ def compute_weight_check(
         Strakes: 2 × strake dry weight            (Weight Check!C25)
         Clamps: 5 × 260 kg                        (Weight Check!C26)
 
+    Args:
+        buoy, strake, clamp: component properties (defaults = workbook).
+        config: when given, kit weights come from ``config.kit*_wi_insul_kg``,
+            the buoyancy-module count is the sum of the configured placement
+            (num_buoy_modules_in_c/d/e — the modules actually on the generated
+            OrcaFlex model; note the workbook Weight Check!C24 uses 22 while
+            the GA/Bouyancy sheets carry 2+20+2 = 24), and the strake count is
+            ``config.num_strakes``. When ``None``, the workbook Weight Check
+            values are reproduced verbatim.
+
     Returns:
         dict with kit_weights, total_buoy_kg, total_strake_kg,
               total_clamp_kg, grand_total_kg.
@@ -818,20 +890,35 @@ def compute_weight_check(
     if clamp is None:
         clamp = ClampProperties()
 
-    # Insulated kit weights  Source: Weight Check!C20-C23
-    kit_weights_kg = {
-        "KIT1": 8682.0,
-        "KIT2": 8309.0,
-        "KIT3": 6134.0,
-        "KIT4": 8730.0,
-    }
+    if config is not None:
+        # Insulated kit weights from the (possibly spec-overridden) config
+        kit_weights_kg = {
+            "KIT1": config.kit1_wi_insul_kg,
+            "KIT2": config.kit2_wi_insul_kg,
+            "KIT3": config.kit3_wi_insul_kg,
+            "KIT4": config.kit4_wi_insul_kg,
+        }
+        # Modules actually placed on the jumper (matches the OrcaFlex model)
+        num_buoy_modules = (
+            config.num_buoy_modules_in_c
+            + config.num_buoy_modules_in_d
+            + config.num_buoy_modules_in_e
+        )
+        num_strake_modules = config.num_strakes
+    else:
+        # Insulated kit weights  Source: Weight Check!C20-C23
+        kit_weights_kg = {
+            "KIT1": 8682.0,
+            "KIT2": 8309.0,
+            "KIT3": 6134.0,
+            "KIT4": 8730.0,
+        }
+        # Source: Weight Check!C24 = 22 * Bouyancy!C8
+        num_buoy_modules = 22
+        # Source: Weight Check!C25 = 2 * Strake!C8
+        num_strake_modules = 2
 
-    # Source: Weight Check!C24 = 22 * Bouyancy!C8
-    num_buoy_modules = 22
     total_buoy_kg = num_buoy_modules * buoy.dry_weight_kg
-
-    # Source: Weight Check!C25 = 2 * Strake!C8
-    num_strake_modules = 2
     total_strake_kg = num_strake_modules * strake.dry_weight_kg
 
     # Source: Weight Check!C26 = 260 * 5
@@ -847,6 +934,8 @@ def compute_weight_check(
 
     return {
         "kit_weights_kg": kit_weights_kg,
+        "num_buoy_modules": num_buoy_modules,
+        "num_strake_modules": num_strake_modules,
         "total_buoy_kg": total_buoy_kg,
         "total_strake_kg": total_strake_kg,
         "total_clamp_kg": total_clamp_kg,
@@ -1004,6 +1093,7 @@ def compute_connector_buoy_totals(
 def generate_orcaflex_line_sections_yaml(
     pipe_geom: Dict | None = None,
     pipe_props: BarePipeProperties | None = None,
+    config: JumperConfig | None = None,
 ) -> str:
     """Convert OrcaFlex section breakdown to YAML format.
 
@@ -1013,6 +1103,8 @@ def generate_orcaflex_line_sections_yaml(
     Args:
         pipe_geom: output of compute_pipe_geometry (or None for defaults).
         pipe_props: BarePipeProperties (or None for defaults).
+        config: JumperConfig for connector length / module placement
+            (or None for GA-sheet defaults).
 
     Returns:
         YAML string defining all line sections.
@@ -1023,7 +1115,7 @@ def generate_orcaflex_line_sections_yaml(
         sections_input = PipeSectionLengths()
         pipe_geom = compute_pipe_geometry(sections_input, pipe_props.bend_radius_inch)
 
-    sections = compute_orcaflex_sections(pipe_geom, pipe_props)
+    sections = compute_orcaflex_sections(pipe_geom, pipe_props, config)
 
     yaml_lines = ["line_sections:"]
     for sec in sections:
@@ -1119,12 +1211,45 @@ def run_jumper_analysis(config: JumperConfig | None = None) -> Dict:
     if config is None:
         config = KNOWN_JUMPER_CONFIGS["ballymore_mf_plet"]
 
-    # Pipe properties (stage 2: compute)
-    pipe = compute_bare_pipe()
-    buoy = compute_buoyancy()
-    strake = compute_strake()
-    clamp = ClampProperties()
-    connector = ConnectorProperties()
+    # Pipe properties (stage 2: compute) — built FROM the config so that
+    # spec.yml overrides (pipe_od_inch, pipe_bend_radius_inch, buoyancy_*,
+    # strake_*, clamp_*) actually reach the generated model and weight check.
+    pipe = compute_bare_pipe(BarePipeProperties(
+        od_inch=config.pipe_od_inch,
+        wall_thickness_inch=config.pipe_wt_inch,
+        bend_radius_inch=config.pipe_bend_radius_inch,
+        insulation_od_inch=config.pipe_insul_od_inch,
+        insulation_density_lb_ft3=config.pipe_insul_density_lb_ft3,
+    ))
+    buoy = compute_buoyancy(BuoyancyModuleProperties(
+        length_m=config.buoyancy_length_m,
+        od_drag_m=config.buoyancy_od_drag_m,
+        od_contact_m=config.buoyancy_od_drag_m,
+        dry_weight_lbs=config.buoyancy_dry_lbs,
+        wet_weight_lbs=config.buoyancy_wet_lbs,
+    ))
+    # Strake totals: Strake!E8 = base + per_joint * n_joints (default 3),
+    # Strake!E9 likewise for wet weight.
+    n_joints = config.strake_joints_per_module
+    strake = compute_strake(StrakeProperties(
+        length_m=config.strake_length_m,
+        od_drag_m=config.strake_od_drag_m,
+        od_contact_m=config.strake_od_drag_m,
+        dry_weight_lbs_total=(
+            config.strake_dry_lbs_base + config.strake_lbs_per_joint * n_joints
+        ),
+        wet_weight_lbs_total=(
+            config.strake_wet_lbs_base + config.strake_wt_lbs_per_joint * n_joints
+        ),
+    ))
+    clamp = ClampProperties(
+        wll_te=config.clamp_wll_te,
+        weight_kg=config.clamp_weight_kg,
+    )
+    connector = ConnectorProperties(
+        weight_in_air_kg=config.connector_weight_kg,
+        length_m=config.connector_length_m,
+    )
 
     # Pipe geometry using config segment lengths
     sections = PipeSectionLengths(
@@ -1139,11 +1264,11 @@ def run_jumper_analysis(config: JumperConfig | None = None) -> Dict:
     pipe_geom = compute_pipe_geometry(sections, pipe.bend_radius_inch)
 
     # OrcaFlex sections (stage 3)
-    orcaflex = compute_orcaflex_sections(pipe_geom, pipe)
-    orcaflex_yaml = generate_orcaflex_line_sections_yaml(pipe_geom, pipe)
+    orcaflex = compute_orcaflex_sections(pipe_geom, pipe, config)
+    orcaflex_yaml = generate_orcaflex_line_sections_yaml(pipe_geom, pipe, config)
 
     # Weight tally and crane
-    weight_check = compute_weight_check(buoy, strake, clamp)
+    weight_check = compute_weight_check(buoy, strake, clamp, config)
     weight_uninsulated = compute_weight_check_uninsulated()
     cog_uninsulated = compute_cog_uninsulated()
     cog_insulated = compute_cog_insulated()

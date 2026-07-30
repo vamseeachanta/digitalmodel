@@ -73,19 +73,8 @@ class ModularToSingleConverter:
         if not include_paths:
             warnings.append("No includefile directives found in master.yml")
 
-        # Load and merge all includes
-        merged: dict[str, Any] = {}
-        for inc_path_str in include_paths:
-            inc_path = self._resolve_include_path(master, inc_path_str)
-            if not inc_path.exists():
-                warnings.append(f"Include file not found: {inc_path_str}")
-                continue
-
-            with open(inc_path) as f:
-                inc_data = yaml.safe_load(f)
-
-            if inc_data and isinstance(inc_data, dict):
-                merged = self._deep_merge(merged, inc_data)
+        # Merge master content and all includes
+        merged = self._merge_master(master, master_data, warnings)
 
         # Write output with preserved header
         header = "\n".join(header_lines) if header_lines else None
@@ -113,21 +102,83 @@ class ModularToSingleConverter:
             Merged dictionary of all include contents.
         """
         master_data, _ = orcaflex_load(master_path)
-        include_paths = self._extract_includefiles(master_data)
+        return self._merge_master(master_path, master_data, [])
 
+    def _merge_master(
+        self, master: Path, master_data: Any, warnings: list[str]
+    ) -> dict[str, Any]:
+        """Merge master content and all includefile contents into one dict.
+
+        Handles both master formats:
+        - list format (canonical master.yml): ``- includefile: path`` items;
+          each include's (section-wrapped) content is deep-merged at the
+          top level.
+        - dict format: the master's own sections are preserved.  An
+          ``includefile`` directive inside a section pulls the include's
+          content into THAT section (OrcaFlex interprets section-scoped
+          includes in the section's context), while a top-level
+          ``includefile`` key merges at the top level.
+        """
         merged: dict[str, Any] = {}
-        for inc_path_str in include_paths:
-            inc_path = self._resolve_include_path(master_path, inc_path_str)
-            if not inc_path.exists():
-                continue
 
-            with open(inc_path) as f:
-                inc_data = yaml.safe_load(f)
-
-            if inc_data and isinstance(inc_data, dict):
-                merged = self._deep_merge(merged, inc_data)
+        if isinstance(master_data, list):
+            for item in master_data:
+                if not isinstance(item, dict):
+                    continue
+                if isinstance(item.get("includefile"), str):
+                    inc_data = self._load_include(
+                        master, item["includefile"], warnings
+                    )
+                    if inc_data is not None:
+                        merged = self._deep_merge(merged, inc_data)
+                else:
+                    # Hybrid list item carrying inline sections
+                    merged = self._deep_merge(merged, item)
+        elif isinstance(master_data, dict):
+            for key, value in master_data.items():
+                if key == "includefile" and isinstance(value, str):
+                    inc_data = self._load_include(master, value, warnings)
+                    if inc_data is not None:
+                        merged = self._deep_merge(merged, inc_data)
+                elif isinstance(value, dict) and isinstance(
+                    value.get("includefile"), str
+                ):
+                    # Section-scoped include: content belongs INSIDE this
+                    # section, not at the top level.
+                    section = {
+                        k: v for k, v in value.items() if k != "includefile"
+                    }
+                    inc_data = self._load_include(
+                        master, value["includefile"], warnings
+                    )
+                    if inc_data is not None:
+                        # Tolerate already-wrapped fragments ({Section: {...}})
+                        if set(inc_data.keys()) == {key} and isinstance(
+                            inc_data[key], dict
+                        ):
+                            inc_data = inc_data[key]
+                        section = self._deep_merge(section, inc_data)
+                    merged = self._deep_merge(merged, {key: section})
+                else:
+                    merged = self._deep_merge(merged, {key: value})
 
         return merged
+
+    def _load_include(
+        self, master: Path, inc_path_str: str, warnings: list[str]
+    ) -> dict[str, Any] | None:
+        """Load an include file, recording a warning if it is missing."""
+        inc_path = self._resolve_include_path(master, inc_path_str)
+        if not inc_path.exists():
+            warnings.append(f"Include file not found: {inc_path_str}")
+            return None
+
+        with open(inc_path) as f:
+            inc_data = yaml.safe_load(f)
+
+        if inc_data and isinstance(inc_data, dict):
+            return inc_data
+        return None
 
     @staticmethod
     def _extract_includefiles(data: Any) -> list[str]:

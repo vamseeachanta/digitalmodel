@@ -30,11 +30,24 @@ class TestWaveTrain:
         assert wt.gamma == pytest.approx(3.3)
 
     def test_custom_values(self):
+        # NOTE: previously passed phase=45, pinning the buggy silent-drop
+        # behavior — no builder emits phase, so non-zero values are now
+        # rejected (see test_nonzero_phase_rejected).
         wt = WaveTrain(name="Swell", type="jonswap", height=5.0, period=12.0,
-                       direction=180, phase=45, gamma=2.5)
+                       direction=180, gamma=2.5)
         assert wt.name == "Swell"
         assert wt.type == "jonswap"
         assert wt.height == 5.0
+
+    def test_nonzero_phase_rejected(self):
+        """Non-zero phase must fail loud: EnvironmentBuilder never reads it,
+        so accepting it would generate a model identical to phase=0."""
+        with pytest.raises(ValueError, match="phase.*not supported"):
+            WaveTrain(name="Swell", type="airy", height=2.0, period=10, phase=90)
+
+    def test_zero_phase_accepted(self):
+        wt = WaveTrain(phase=0)
+        assert wt.phase == 0
 
 
 # ------------------------------------------------------------------ #
@@ -54,13 +67,17 @@ class TestWavesBackwardCompat:
         assert w.trains[0].direction == 270
 
     def test_property_delegation(self):
-        """Properties type/height/period/direction/phase/gamma delegate to trains[0]."""
-        w = Waves(type="airy", height=2.0, period=6, direction=90, phase=30, gamma=2.0)
+        """Properties type/height/period/direction/phase/gamma delegate to trains[0].
+
+        Previously passed phase=30 (pinning the silent-drop bug); non-zero
+        phase is now rejected at validation, so only phase=0 is exercised.
+        """
+        w = Waves(type="airy", height=2.0, period=6, direction=90, gamma=2.0)
         assert w.type == "airy"
         assert w.height == 2.0
         assert w.period == 6
         assert w.direction == 90
-        assert w.phase == 30
+        assert w.phase == 0
         assert w.gamma == pytest.approx(2.0)
 
     def test_default_waves(self):

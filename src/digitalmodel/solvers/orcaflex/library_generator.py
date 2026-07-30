@@ -24,6 +24,18 @@ from digitalmodel.solvers.orcaflex.yaml_utils import OrcaFlexDumper
 OrcaFlexLibraryDumper = OrcaFlexDumper
 
 
+def _cell(row: Dict[str, Any], key: str) -> Optional[str]:
+    """Return the row value for key, treating missing keys and blank cells as None.
+
+    csv.DictReader yields '' for blank cells, so key-presence checks are not
+    enough — a blank optional cell must behave like an absent column.
+    """
+    value = row.get(key)
+    if value is None or value == "":
+        return None
+    return value
+
+
 def csv_row_to_line_type(row: Dict[str, Any]) -> Dict[str, Any]:
     """
     Convert a CSV row to line type properties.
@@ -32,6 +44,12 @@ def csv_row_to_line_type(row: Dict[str, Any]) -> Dict[str, Any]:
     - OD_m, ID_m, MassPerUnitLength_kg_m (standard)
     - OD, ID, Mass (risers.csv format)
     - Diameter_m, Mass_kg_per_m (alternative)
+
+    Output units follow the OrcaFlex SI units system (m, te, kN) used by the
+    curated library components (see docs/domains/orcaflex/library/line_types/
+    chain_84mm_r3.yml: MassPerUnitLength in te/m, EA in kN, EI in kN.m^2).
+    CSV mass columns are kg/m and bare EA/EI columns are N-based, so they are
+    converted; EA_kN / EI_kNm2 columns are already in OrcaFlex units.
 
     Args:
         row: Dictionary with CSV column values
@@ -46,17 +64,31 @@ def csv_row_to_line_type(row: Dict[str, Any]) -> Dict[str, Any]:
     # Note: "ID" in risers.csv is inner diameter, not identifier
     id_val = float(row.get("ID_m", row.get("ID", 0)) if row.get("ID_m") or row.get("ID") else 0)
 
-    # Handle different column naming conventions for mass
-    mass = float(row.get("MassPerUnitLength_kg_m", row.get("Mass_kg_per_m", row.get("Mass", 0.1))))
+    # Handle different column naming conventions for mass.
+    # All mass columns are kg/m; OrcaFlex SI expects te/m, so convert.
+    mass_raw = (
+        _cell(row, "MassPerUnitLength_kg_m")
+        or _cell(row, "Mass_kg_per_m")
+        or _cell(row, "Mass")
+    )
+    if mass_raw is not None:
+        mass = float(mass_raw) / 1000.0  # kg/m -> te/m
+    else:
+        mass = 0.1  # default, te/m
 
-    # Handle EA (axial stiffness) - may be in kN or N
-    ea_raw = row.get("EA_kN", row.get("EA", 100000))
-    ea = float(ea_raw)
+    # Handle EA (axial stiffness): EA_kN is already kN; bare EA is in N -> kN
+    if _cell(row, "EA_kN") is not None:
+        ea = float(row["EA_kN"])
+    elif _cell(row, "EA") is not None:
+        ea = float(row["EA"]) / 1000.0  # N -> kN
+    else:
+        ea = 100000  # default, kN
 
-    # Handle EI (bending stiffness) if provided
-    ei_raw = row.get("EI_kNm2", row.get("EI"))
-    if ei_raw:
-        ei = [float(ei_raw), None]
+    # Handle EI (bending stiffness): EI_kNm2 is already kN.m^2; bare EI is N.m^2
+    if _cell(row, "EI_kNm2") is not None:
+        ei = [float(row["EI_kNm2"]), None]
+    elif _cell(row, "EI") is not None:
+        ei = [float(row["EI"]) / 1000.0, None]  # N.m^2 -> kN.m^2
     else:
         ei = [0, None]
 
@@ -74,12 +106,12 @@ def csv_row_to_line_type(row: Dict[str, Any]) -> Dict[str, Any]:
         "PoissonRatio": poisson,
     }
 
-    # Optional properties
-    if "Cd" in row:
+    # Optional properties (blank cells are treated as absent, not converted)
+    if _cell(row, "Cd") is not None:
         props["Cd"] = [float(row["Cd"]), None, 0.4]
-    if "Ca" in row:
+    if _cell(row, "Ca") is not None:
         props["Ca"] = [float(row["Ca"]), None, 0.07]
-    if "SeabedFriction" in row:
+    if _cell(row, "SeabedFriction") is not None:
         props["SeabedLateralFrictionCoefficient"] = float(row["SeabedFriction"])
 
     return props
@@ -89,22 +121,30 @@ def csv_row_to_buoy_type(row: Dict[str, Any]) -> Dict[str, Any]:
     """
     Convert a CSV row to 6D buoy type properties.
 
+    Output units follow the OrcaFlex SI units system (m, te, kN): buoy Mass is
+    in te and MomentsOfInertia in te.m^2, matching the curated library
+    components (see docs/domains/orcaflex/library/buoy_types/calm_12m_100m.yml,
+    which uses te-scale Mass) and the SI UnitsSystem declared by the consuming
+    templates (e.g. mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml).
+
     Args:
         row: Dictionary with CSV column values
 
     Returns:
         Dictionary of OrcaFlex 6D buoy properties (no section header)
     """
-    # Handle mass in tonnes (te) or kg
-    if "Mass_te" in row:
-        mass = float(row["Mass_te"]) * 1000  # Convert tonnes to kg
+    # Handle mass in tonnes (te) or kg; OrcaFlex SI mass unit is te
+    if _cell(row, "Mass_te") is not None:
+        mass = float(row["Mass_te"])
+    elif _cell(row, "Mass_kg") is not None:
+        mass = float(row["Mass_kg"]) / 1000.0  # kg -> te
     else:
-        mass = float(row.get("Mass_kg", 95000))
+        mass = 95.0  # default, te
 
     diameter = float(row.get("Diameter_m", 12.0))
     height = float(row.get("Height_m", 4.5))
 
-    # Estimate moments of inertia for cylinder
+    # Estimate moments of inertia for cylinder (te.m^2, since mass is in te)
     radius = diameter / 2
     ixx = iyy = mass * (3 * radius**2 + height**2) / 12
     izz = mass * radius**2 / 2

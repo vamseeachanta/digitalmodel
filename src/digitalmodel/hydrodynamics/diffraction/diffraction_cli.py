@@ -243,9 +243,11 @@ def run_orcawave(args):
 
     # Handle list vessels command
     if args.list_vessels:
-        vessel_configs = Path("src/digitalmodel/modules/orcawave/diffraction/configs/vessels")
-        if vessel_configs.exists():
-            vessels = [f.stem for f in vessel_configs.glob("*.yml")]
+        # Resolve vessel configs relative to the installed package (the
+        # orchestrator's own configs/vessels dir), not a stale CWD-relative
+        # src/... path that no longer exists.
+        vessels = OrcaWaveOrchestrator.list_available_vessels()
+        if vessels:
             print("\nAvailable Vessels:")
             for v in vessels:
                 print(f"  - {v}")
