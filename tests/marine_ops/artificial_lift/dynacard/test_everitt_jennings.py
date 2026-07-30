@@ -23,6 +23,9 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings import (
 from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings import (
     units as U,
 )
+from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings.solver import (
+    _march,
+)
 
 FIXTURE = Path(__file__).parent / "testdata" / "7699227.json"
 
@@ -216,6 +219,41 @@ def test_rod_string_rejects_mismatched_section_arrays():
             diameters=np.array([0.0222, 0.0190]),
             lengths=np.array([290.0]),
         )
+
+
+def test_curvature_friction_uses_axial_force_per_unit_length():
+    """The curvature term must be a force/length before PDE integration."""
+    n_x, n_t = 3, 4
+    displacement = np.zeros((n_x, n_t))
+    displacement[1] = np.array([0.01, 0.01, 0.02, 0.01])
+    shape = (n_x, n_t)
+    elastic_modulus = np.full(shape, 1_000.0)
+    area = np.ones(shape)
+    zeros = np.zeros(shape)
+    inclination_gradient = np.full(shape, 3.0)
+
+    solution, _, _ = _march(
+        displacement,
+        n_x,
+        n_t,
+        1.0,
+        0.5,
+        0.2,
+        zeros,
+        0.0,
+        zeros,
+        elastic_modulus,
+        area,
+        zeros,
+        inclination_gradient,
+        zeros,
+        1.0,
+    )
+
+    # F = EA * du/dx = 1,000 N * 0.01 m / 0.5 m = 20 N.
+    # N' = F * d_phi/ds = 20 N * 3 /m = 60 N/m.
+    # du_f = mu * N' * dx^2 / EA = 0.2 * 60 * 0.5^2 / 1,000 = 0.003 m.
+    assert solution[2, 1] == pytest.approx(0.02 + 0.003)
 
 
 class TestEffectiveRodDensity:
