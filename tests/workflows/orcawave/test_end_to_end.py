@@ -8,7 +8,6 @@ import unittest
 import asyncio
 import json
 import time
-import subprocess
 import sys
 import os
 from pathlib import Path
@@ -19,14 +18,13 @@ import socket
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
-try:
-    import websockets
-    import aiohttp
-except ImportError:
-    print("Installing test dependencies...")
-    subprocess.run([sys.executable, "-m", "pip", "install", "websockets", "aiohttp", "pytest", "pytest-asyncio", "pytest-cov"])
-    import websockets
-    import aiohttp
+# Test dependencies are DECLARED, never installed from inside a test module.
+# This file used to run `subprocess.run([sys.executable, "-m", "pip", "install", ...])`
+# at import time, i.e. during pytest collection (#1923). `websockets` is a runtime
+# dependency of the package; `aiohttp` is declared in the [test] extra, which CI
+# installs via `--with-editable '.[test]'`.
+import aiohttp
+import websockets
 
 
 class TestEndToEnd(unittest.TestCase):

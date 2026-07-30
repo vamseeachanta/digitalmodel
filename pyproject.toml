@@ -21,8 +21,8 @@ classifiers = [
 dependencies = [
     # RUNTIME ONLY (#1632). Every entry below is imported at MODULE level, without
     # a try/except or lazy guard, by code that ships in the wheel. Anything used
-    # only by tests, scripts, tooling or the (unpackaged) orcaflex_dashboard lives
-    # in [project.optional-dependencies] or [dependency-groups] instead.
+    # only by tests, scripts or tooling lives in [project.optional-dependencies]
+    # or [dependency-groups] instead.
     #
     # This list was previously produced by machine-pasting the vendored dashboard's
     # backend/requirements.txt into it, which is why `pip install digitalmodel`
@@ -80,6 +80,14 @@ dependencies = [
     "urllib3>=2.0.0,<3.0.0",
     "validators==0.22.0",
     "webcolors>=1.13,<2.0",
+    # NOT imported anywhere -- xarray resolves the engine by NAME:
+    # xr.open_dataset(..., engine="h5netcdf") in
+    # data_systems/data_procurement/common/stream_handler.py:112  (#1924)
+    "h5netcdf>=1.3.0,<2.0.0",
+    # NOT imported anywhere -- pandas needs PyTables for HDF5:
+    # pd.read_hdf(...) in
+    # signal_processing/signal_analysis/orcaflex/reader.py:248  (#1924)
+    "tables>=3.9.0,<4.0.0",
     # NOT imported anywhere -- pandas resolves it by NAME:
     # pd.ExcelWriter(..., engine="xlsxwriter"). See DYNAMIC_RUNTIME in
     # tests/contracts/test_runtime_dependencies.py (#1632).
@@ -142,6 +150,12 @@ test = [
     "pypdf2>=3.0.0,<4.0.0",
     "xlsxwriter>=3.1.0,<4.0.0",
     "websockets>=15.0.1,<16.0.0",
+    # imported at module level by tests/workflows/orcawave/test_end_to_end.py,
+    # which used to `subprocess.run([sys.executable, "-m", "pip", "install", ...])`
+    # for it at COLLECTION time. Declared here so a test module never installs
+    # anything again (#1923). The other four names that call wanted --
+    # websockets, pytest, pytest-asyncio, pytest-cov -- were already declared.
+    "aiohttp>=3.9.0,<4.0.0",
     "pygmt>=0.13.0,<1.0.0",
     # Shipped code imports these lazily (hence the [mesh] extra, not runtime) but
     # tests/ imports them at MODULE level, so collection fails without them:
@@ -178,28 +192,6 @@ mesh = ["meshio>=5.3.0,<6.0.0", "pyvista>=0.47.1,<1.0.0"]
 cfd = ["gmsh==4.15.1"]
 viz = ["dash>=3.1.0,<4.0.0", "kaleido>=0.2.0,<1.0.0"]
 web = ["fastapi>=0.100.0,<1.0.0", "uvicorn>=0.25.0,<1.0.0", "sqlalchemy>=2.0.0,<3.0.0"]
-# The vendored src/digitalmodel/visualization/orcaflex_dashboard/ app. It has no
-# __init__.py, so setuptools drops it from the wheel and NONE of this is needed to
-# use digitalmodel -- which is exactly why it must not sit in [project]
-# dependencies. Its real deps were never declared (#1632); they are declared here
-# so the app is installable if someone revives it. Fate of the tree itself: #1632.
-orcaflex-dashboard = [
-    "fastapi>=0.100.0,<1.0.0",
-    "uvicorn>=0.25.0,<1.0.0",
-    "sqlalchemy>=2.0.0,<3.0.0",
-    "alembic==1.12.1",
-    "asyncpg>=0.29.0,<1.0.0",
-    "aiosqlite==0.19.0",
-    "redis>=5.0.0,<7.0.0",
-    "celery==5.3.4",
-    "passlib[bcrypt]==1.7.4",
-    "pyjwt==2.10.1",
-    "python-multipart>=0.0.6",
-    "python-jose[cryptography]>=3.3.0",
-    "prometheus-client==0.19.0",
-    "slowapi==0.1.9",
-    "gunicorn==21.2.0",
-]
 async = ["aiofiles>=23.0.0,<25.0.0", "asyncpg>=0.29.0,<1.0.0"]
 markitdown = ["markitdown>=0.0.1,<0.1.0"]
 
@@ -269,6 +261,11 @@ warn_unused_configs = true
 disallow_untyped_defs = true
 
 [tool.pytest.ini_options]
+# NOTE (#1923): this table is SHADOWED -- pytest.ini exists at the repo root and
+# wins outright (`pytest` reports `configfile: pytest.ini`), so nothing here is in
+# effect. pytest.ini is the live config: markers, addopts, norecursedirs and
+# `asyncio_mode` must be edited there. Kept only as the fallback if pytest.ini is
+# ever deleted; do not add `-p no:asyncio` to either file.
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 addopts = [
