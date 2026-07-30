@@ -1,9 +1,25 @@
 basename: artificial_lift
 
+# No solver_method here: this example runs on the default 'everitt_jennings'
+# solver, the only one that genuinely converts a surface card to a downhole
+# card (see issue #1857 for what the other two do).
+#
+# The synthetic generators produce DOWNHOLE cards -- they are named for pump
+# conditions. The workflow therefore runs the generated PUMP_TAGGING pump card
+# UP the rod string first and feeds the resulting polished-rod card in as the
+# surface card. The solver then does real work converting it back, and the
+# classifier sees the pump card it was trained on.
+
 synthetic_card:
   mode: PUMP_TAGGING
   seed: 711
 
+# Well sized so the synthesised surface card is one this unit could actually
+# produce. The generated pump card swings ~38,000 lb over a 117 in plunger
+# stroke; through 5,000 ft of 1 in rod that costs ~73 in of differential rod
+# stretch, so the polished rod travels ~190 in. That is a 192 in stroke unit,
+# and a 192 in unit runs near 6 SPM to stay inside the 1,440 in/min
+# polished-rod-velocity limit the POC setpoint module applies.
 well:
   api14: SIM-PUMP-TAGGING-711
   rod:
@@ -15,9 +31,9 @@ well:
   surface_unit:
     manufacturer: Sim
     unit_type: Test
-    stroke_length: 144.0
+    stroke_length: 192.0
     gear_box_rating: 640000.0
-  spm: 10.0
+  spm: 6.0
 
 report:
   html: true

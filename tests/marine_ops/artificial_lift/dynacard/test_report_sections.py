@@ -99,16 +99,26 @@ def test_router_reuses_one_diagnostic_classification(monkeypatch):
             "api14": "SIM-PUMP-TAGGING-711",
             "rod": {"diameter": 1.0, "length": 5000.0},
             "pump": {"diameter": 1.75, "depth": 5000.0},
-            "surface_unit": {"stroke_length": 144.0},
-            "spm": 10.0,
+            "surface_unit": {"stroke_length": 192.0},
+            "spm": 6.0,
         },
         "report": {"html": False},
     }
 
+    # Default solver. The synthetic harness forward-models the generated
+    # PUMP_TAGGING pump card up the rod string, so what goes in as the surface
+    # card is a polished-rod card and the everitt_jennings solver recovers the
+    # pump card from it -- the label round-trips through a real conversion
+    # rather than through a passthrough.
     result = DynacardWorkflow().router(cfg)
 
     assert calls == 1
+    # The config names the retired mode PUMP_TAGGING; ``resolve_mode`` maps it
+    # to PUMP_TAGGING_UP, and the classifier retrained on the corrected 20-mode
+    # generator set has no PUMP_TAGGING label left to emit. The round trip is
+    # a real one -- pump card up the rod string, everitt_jennings back down --
+    # and PUMP_TAGGING_UP survives it at probability 1.000.
     assert result["results"]["diagnostic_message"].startswith(
-        "Classification: PUMP_TAGGING."
+        "Classification: PUMP_TAGGING_UP."
     )
-    assert result["artificial_lift"]["classification"] == "PUMP_TAGGING"
+    assert result["artificial_lift"]["classification"] == "PUMP_TAGGING_UP"

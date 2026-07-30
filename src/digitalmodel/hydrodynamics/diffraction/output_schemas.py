@@ -37,6 +37,7 @@ class Unit(Enum):
 
     # Damping units
     DAMPING_LINEAR = "N.s/m"          # Linear damping
+    DAMPING_COUPLING = "N.s/rad"      # Linear-angular coupling
     DAMPING_ANGULAR = "N.m.s/rad"     # Angular damping
 
     # Force units
@@ -47,6 +48,33 @@ class Unit(Enum):
     FREQUENCY = "rad/s"
     PERIOD = "s"
     HEADING = "deg"
+
+
+# Canonical ``HydrodynamicMatrix.units`` payloads (#1550 W4).
+#
+# A 6x6 coefficient matrix has THREE dimensionally distinct blocks, and every
+# consumer must be able to name all three. The keys below are the ones
+# ``polars_exporter._build_matrix_records`` derives from (i, j):
+#
+#     "linear"    rows 0-2 x cols 0-2    9 cells
+#     "coupling"  rows 0-2 x cols 3-5   18 cells  (and its mirror)
+#     "angular"   rows 3-5 x cols 3-5    9 cells
+#
+# Producers previously disagreed - some emitted {"linear", "angular"}, some
+# {"coupling"} alone, some {"linear-linear", ...} - so the exporter's
+# ``units.get(key, "")`` fell through to an empty string for whole blocks.
+# Import these instead of writing a dict literal.
+ADDED_MASS_UNITS: Dict[str, str] = {
+    "linear": Unit.ADDED_MASS_LINEAR.value,        # kg
+    "coupling": Unit.ADDED_MASS_ANGULAR.value,     # kg.m
+    "angular": Unit.ADDED_MASS_ROTATIONAL.value,   # kg.m^2
+}
+
+DAMPING_UNITS: Dict[str, str] = {
+    "linear": Unit.DAMPING_LINEAR.value,           # N.s/m
+    "coupling": Unit.DAMPING_COUPLING.value,       # N.s/rad
+    "angular": Unit.DAMPING_ANGULAR.value,         # N.m.s/rad
+}
 
 
 @dataclass

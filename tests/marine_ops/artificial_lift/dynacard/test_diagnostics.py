@@ -69,8 +69,12 @@ class TestPumpDiagnosticsFailureModes:
             "NORMAL",
             "GAS_INTERFERENCE",
             "FLUID_POUND",
-            "PUMP_TAGGING",
+            "PUMP_TAGGING_UP",
+            "PUMP_TAGGING_DOWN",
+            "PLUNGER_OUT_OF_BARREL",
             "TUBING_MOVEMENT",
+            # Retired names still carried for the shipped classifier model.
+            "PUMP_TAGGING",
             "VALVE_LEAK",
         ]
 
@@ -79,8 +83,8 @@ class TestPumpDiagnosticsFailureModes:
             assert len(PumpDiagnostics.FAILURE_MODES[mode]) > 0
 
     def test_expanded_failure_modes_defined(self):
-        """All 18 failure modes plus legacy alias should be defined."""
-        assert len(PumpDiagnostics.FAILURE_MODES) == 19  # 18 + VALVE_LEAK alias
+        """All 20 failure modes plus the two retired aliases."""
+        assert len(PumpDiagnostics.FAILURE_MODES) == 22  # 20 + VALVE_LEAK + PUMP_TAGGING
 
     def test_failure_mode_descriptions_not_empty(self):
         """Each failure mode should have a non-empty description."""
@@ -99,10 +103,15 @@ class TestClassifyCard:
         assert result == "NORMAL"
 
     def test_classifies_pump_tagging(self):
-        """Should classify extreme loads as PUMP_TAGGING."""
+        """Should classify a tagging card as PUMP_TAGGING_UP.
+
+        ``generate_pump_tagging_card`` is the deprecated alias for the
+        tagging-*up* generator, and the retrained 20-class model has no merged
+        PUMP_TAGGING label left to return.
+        """
         card = generate_pump_tagging_card(seed=42)
         result = PumpDiagnostics.classify_card(card)
-        assert result == "PUMP_TAGGING"
+        assert result == "PUMP_TAGGING_UP"
 
     def test_classifies_fluid_pound(self):
         """Should classify sharp load drops as FLUID_POUND."""
@@ -150,20 +159,25 @@ class TestClassifyCardLegacy:
         assert result == "NORMAL"
 
     def test_legacy_classifies_pump_tagging(self):
-        """Legacy classifier should detect pump tagging."""
+        """Legacy classifier should detect pump tagging -- upward only.
+
+        The legacy rule is a peak-load threshold, so it can only see the
+        plunger striking the *top* of the pump. Tagging down shows as a load
+        minimum below the downstroke line and this rule is blind to it.
+        """
         result = PumpDiagnostics._classify_legacy(create_pump_tagging_card())
-        assert result == "PUMP_TAGGING"
+        assert result == "PUMP_TAGGING_UP"
 
     def test_legacy_pump_tagging_threshold(self):
         """Legacy pump tagging detection should use the defined threshold."""
         card = create_normal_card()
         card.load[50] = PUMP_TAGGING_LOAD_THRESHOLD_LBS - 1
         result = PumpDiagnostics._classify_legacy(card)
-        assert result != "PUMP_TAGGING"
+        assert result != "PUMP_TAGGING_UP"
 
         card.load[50] = PUMP_TAGGING_LOAD_THRESHOLD_LBS + 1
         result = PumpDiagnostics._classify_legacy(card)
-        assert result == "PUMP_TAGGING"
+        assert result == "PUMP_TAGGING_UP"
 
     def test_legacy_classifies_fluid_pound(self):
         """Legacy classifier should detect fluid pound."""
@@ -197,7 +211,7 @@ class TestClassifyCardLegacy:
         mid = len(card.load) // 2
         card.load[mid + 10] = card.load[mid + 9] - 10000
         result = PumpDiagnostics._classify_legacy(card)
-        assert result == "PUMP_TAGGING"
+        assert result == "PUMP_TAGGING_UP"
 
 
 class TestGenerateTroubleshootingReport:
@@ -281,8 +295,12 @@ class TestGenerateTroubleshootingReport:
         results = AnalysisResults(downhole_card=card)
         report = diagnostics.generate_troubleshooting_report(results)
 
-        assert "PUMP_TAGGING" in report
-        assert "contact" in report.lower()
+        assert "PUMP_TAGGING_UP" in report
+        # The split descriptions name the mechanism and the repair instead of
+        # the old merged label's generic "mechanical contact": tagging up is
+        # the plunger striking the *top* of the pump, repaired by spacing down.
+        assert "striking" in report.lower()
+        assert "space the pump down" in report.lower()
 
     def test_fluid_pound_report(self):
         """Should generate appropriate report for fluid pound."""
@@ -379,7 +397,7 @@ class TestDiagnosticsIntegration:
         """Should correctly classify various card types."""
         test_cases = [
             (generate_normal_card(seed=42), "NORMAL"),
-            (generate_pump_tagging_card(seed=42), "PUMP_TAGGING"),
+            (generate_pump_tagging_card(seed=42), "PUMP_TAGGING_UP"),
             (generate_fluid_pound_card(seed=42), "FLUID_POUND"),
             (generate_gas_interference_card(seed=42), "GAS_INTERFERENCE"),
         ]

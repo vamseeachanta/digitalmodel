@@ -13,10 +13,14 @@ This file enforces the convention documented in ``docs/UNITS.md`` in three layer
 
   (a) NAMING-CONVENTION AST SCAN -- every new bare-float force-class parameter or
       dataclass/pydantic field in the four scanned packages must carry a unit
-      suffix. Real legacy offenders are FROZEN in ``LEGACY_ALLOWLIST`` (a scan
-      snapshot, ``# frozen 2026-07-06, do not extend``); the scan fails only on a
-      NEW unsuffixed force name. An inline ``ast.parse`` self-test proves the
-      scanner flags a fresh unsuffixed param.
+      suffix, drawn from three named classes: ``SI``, ``IMPERIAL`` (legacy-binary
+      interop, e.g. ``dynmoor.py``'s ``_kips``/``_kip_ft``/``_lb``) and an explicit
+      ``DIMENSIONLESS`` marker (``_percent``/``_ratio``/``_factor``) for quantities
+      to which no force unit applies -- see #1638. Real legacy offenders are FROZEN
+      in ``LEGACY_ALLOWLIST`` (a scan snapshot, ``# frozen 2026-07-06, do not
+      extend``); the scan fails only on a NEW unsuffixed force name. Inline
+      ``ast.parse`` self-tests prove the scanner flags a fresh unsuffixed param and
+      accepts one representative name per class.
 
   (b) BOUNDARY CONVERSION CHECKS -- five real kN<->N seams, each with a
       hand-calculated expectation and a documented x1000/div-1000
@@ -68,10 +72,48 @@ FORCE_NAME_RE = re.compile(
     r"(tension|force|thrust|moment|mbl|pretension|capacity|load)", re.IGNORECASE
 )
 
-#: Accepted force/moment/pressure unit suffixes. Case-insensitive so legacy
-#: spellings ``_kN``, ``_kNm``, ``_MPa`` are honoured alongside ``_kn``/``_knm``/
-#: ``_mpa``. Anchored to the END of the name.
-UNIT_SUFFIX_RE = re.compile(r"_(n|kn|nm|knm|pa|mpa|kpa)$", re.IGNORECASE)
+#: Accepted suffix vocabulary, in three DELIBERATE classes (#1638). Kept as
+#: separate named groups so a reviewer can see which unit system a suffix belongs
+#: to, and so ``DIMENSIONLESS`` is legible as a considered category rather than an
+#: escape hatch. All matching is case-insensitive (legacy spellings ``_kN``,
+#: ``_kNm``, ``_MPa`` are honoured) and anchored to the END of the name.
+
+#: SI force / moment / pressure.
+SI_SUFFIXES = ("n", "kn", "nm", "knm", "pa", "mpa", "kpa")
+
+#: Imperial force / moment / stress. ``dynmoor.py`` reads a legacy imperial binary
+#: format and names its fields after the source units (``kips``, ``kip-ft``,
+#: ``lb``); renaming them to SI would make the module LESS faithful to what it
+#: parses. Order within the tuple does not matter -- the trailing ``$`` anchor
+#: forces backtracking, so ``_lb_ft`` matches ``lb_ft`` and not the shorter ``lb``.
+IMPERIAL_SUFFIXES = (
+    "lb", "lbs", "lbf", "kip", "kips", "ksi", "psi",
+    "kip_ft", "kipft", "lb_ft", "lbft", "ft_lb", "ftlb", "lbf_ft", "ftlbf",
+)
+
+#: Explicitly dimensionless quantities. A force-class name carrying one of these
+#: declares that NO force unit applies -- e.g. ``pretension_percent`` is a
+#: percentage of break strength, not a load. This class is intentionally narrow:
+#: it names the dimensionless-ness, which is the same discipline the unit
+#: suffixes enforce, rather than permitting a bare unqualified name.
+DIMENSIONLESS_SUFFIXES = ("percent", "pct", "ratio", "frac", "fraction", "factor")
+
+UNIT_SUFFIX_RE = re.compile(
+    "_(?:"
+    "(?P<si>" + "|".join(SI_SUFFIXES) + ")"
+    "|(?P<imperial>" + "|".join(IMPERIAL_SUFFIXES) + ")"
+    "|(?P<dimensionless>" + "|".join(DIMENSIONLESS_SUFFIXES) + ")"
+    ")$",
+    re.IGNORECASE,
+)
+
+#: Human-readable form of the accepted vocabulary, used in the failure message so
+#: the fix a developer is told to make matches what the scanner actually accepts.
+_ACCEPTED_SUFFIXES_MSG = (
+    "SI: " + "/".join("_" + s for s in SI_SUFFIXES) + " | "
+    "imperial: " + "/".join("_" + s for s in IMPERIAL_SUFFIXES) + " | "
+    "dimensionless: " + "/".join("_" + s for s in DIMENSIONLESS_SUFFIXES)
+)
 
 #: Annotations that count as a bare-float context.
 _FLOAT_ANNOTATIONS = {
@@ -157,9 +199,14 @@ def scan_offenders(src_root: Path = _SRC_ROOT) -> set[tuple[str, str]]:
 
 
 # --- Frozen snapshot of the REAL legacy offenders (TDD step 1). --------------- #
-# frozen 2026-07-06, do not extend. New code MUST carry a unit suffix
-# (_n/_kn/_nm/_knm/_pa/_mpa/_kpa) on bare-float force/tension/thrust/moment/mbl/
-# pretension/capacity/load names -- fix the name, never append here.
+# frozen 2026-07-06, do not extend. New code MUST carry a unit suffix from the
+# accepted vocabulary above (SI, imperial, or an explicit dimensionless marker) on
+# bare-float force/tension/thrust/moment/mbl/pretension/capacity/load names --
+# fix the name, never append here.
+#
+# This list only ever SHRINKS: ``test_allowlist_has_no_stale_entries`` fails if an
+# entry stops being an offender. Widening the suffix vocabulary therefore requires
+# deleting the entries it newly legitimises, in the same change (#1638).
 LEGACY_ALLOWLIST: frozenset[tuple[str, str]] = frozenset(
     {
         # kN/kN.m legacy force seams (kN-ness in comments/docstrings only):
@@ -202,8 +249,10 @@ LEGACY_ALLOWLIST: frozenset[tuple[str, str]] = frozenset(
         ("digitalmodel/drilling_riser/section.py", "moment_of_inertia"),
         ("digitalmodel/drilling_riser/section.py", "polar_moment"),
         ("digitalmodel/motion_forecast/top_tension.py", "payload_mass"),
-        ("digitalmodel/orcaflex/installation_analysis.py", "skew_load_factor"),
-        ("digitalmodel/orcaflex/mooring_design.py", "mean_load_factor"),
+        # NOTE: ``skew_load_factor`` (installation_analysis.py) and
+        # ``mean_load_factor`` (mooring_design.py) were removed here in #1638 --
+        # ``_factor`` is now a recognised DIMENSIONLESS suffix, so they are no
+        # longer offenders and would fail test_allowlist_has_no_stale_entries.
         ("digitalmodel/orcaflex/riser_config.py", "tensioner_offset"),
         ("digitalmodel/orcaflex/riser_input_schema.py", "tensioner_offset"),
         ("digitalmodel/orcaflex/synthetic_rope_design.py", "dynamic_tension_range_pct_mbl"),
@@ -243,14 +292,77 @@ def test_scanner_flags_unsuffixed_dataclass_field():
     assert ("<self-test>", "holding_capacity_kn") not in hits
 
 
+#: One representative accepted name per class, pinned so a future edit to the
+#: suffix vocabulary cannot silently drop a whole unit system (#1638).
+ACCEPTED_BY_CLASS: dict[str, tuple[str, ...]] = {
+    "si": ("top_tension_n", "holding_capacity_kn", "yaw_moment_knm", "contact_load_mpa"),
+    "imperial": (
+        "frontal_force_100kt_kips",   # dynmoor SUM1  -- kilopound-force
+        "pretension_lb",              # dynmoor PT    -- pound-force
+        "horizontal_tension_lb",      # dynmoor HORTN
+        "yaw_moment_100kt_kip_ft",    # dynmoor SUM5  -- kip-feet
+        "bending_moment_ftlb",
+        "sling_moment_lb_ft",         # pins the lb / lb_ft backtracking case
+    ),
+    "dimensionless": (
+        "pretension_percent",         # dynmoor TI -- percent of BRKM
+        "mean_load_factor",
+        "utilisation_load_ratio",
+    ),
+}
+
+
+@pytest.mark.parametrize(
+    ("unit_class", "name"),
+    [(c, n) for c, names in ACCEPTED_BY_CLASS.items() for n in names],
+)
+def test_suffix_vocabulary_accepts_each_unit_class(unit_class: str, name: str):
+    """Every recognised suffix class MUST be accepted, and MUST report itself as
+    the class it belongs to -- so a vocabulary edit that deletes or mis-files a
+    unit system fails here rather than turning a shard red weeks later."""
+    m = UNIT_SUFFIX_RE.search(name)
+    assert m is not None, f"{name!r} should be accepted by the {unit_class} class"
+    assert m.lastgroup == unit_class, (
+        f"{name!r} matched as {m.lastgroup!r}, expected {unit_class!r}"
+    )
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "frontal_force_100kt_kips",
+        "pretension_lb",
+        "yaw_moment_100kt_kip_ft",
+        "pretension_percent",
+    ],
+)
+def test_scanner_accepts_imperial_and_dimensionless_names(name: str):
+    """End-to-end through the scanner (not just the regex): the real ``dynmoor.py``
+    spellings must not be flagged. These are legacy-binary interop names whose
+    imperial units mirror the source format -- renaming them would make the module
+    less faithful to what it parses (#1638)."""
+    src = f"from dataclasses import dataclass\n@dataclass\nclass C:\n    {name}: float\n"
+    assert _scan_tree(ast.parse(src), "<self-test>") == set()
+
+
+@pytest.mark.parametrize(
+    "name", ["mooring_tension", "wind_force", "yaw_moment", "holding_capacity"]
+)
+def test_widened_vocabulary_still_rejects_bare_names(name: str):
+    """The widening in #1638 must not become an escape hatch: a force-class name
+    with NO unit declaration at all is still an offender."""
+    src = f"def f({name}: float) -> float:\n    return {name}\n"
+    assert ("<self-test>", name) in _scan_tree(ast.parse(src), "<self-test>")
+
+
 def test_no_new_unsuffixed_force_names():
     """Every force-class bare-float name in the scanned packages either carries a
     unit suffix or is a FROZEN legacy offender. A NEW unsuffixed name fails here."""
     offenders = scan_offenders()
     new = sorted(offenders - LEGACY_ALLOWLIST)
     assert not new, (
-        "New unsuffixed force-class name(s) -- add a unit suffix "
-        "(_n/_kn/_nm/_knm/_pa/_mpa/_kpa), do NOT extend LEGACY_ALLOWLIST:\n"
+        "New unsuffixed force-class name(s) -- add a unit suffix, do NOT extend "
+        "LEGACY_ALLOWLIST.\nAccepted: " + _ACCEPTED_SUFFIXES_MSG + "\n"
         + "\n".join(f"  {f}::{n}" for f, n in new)
     )
 

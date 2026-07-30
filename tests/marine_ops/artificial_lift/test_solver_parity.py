@@ -1,92 +1,98 @@
-import os
 import json
 from pathlib import Path
-import pytest
+
 import numpy as np
-from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
-    DynacardAnalysisContext, CardData, RodSection, PumpProperties, SurfaceUnit
+import pytest
+from digitalmodel.marine_ops.artificial_lift.dynacard.calculations import (
+    calculate_fluid_load,
+)
+from digitalmodel.marine_ops.artificial_lift.dynacard.comparison import (
+    compare_cards,
+)
+from digitalmodel.marine_ops.artificial_lift.dynacard.data_loader import (
+    get_expected_downhole_card,
+    load_from_json_file,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWorkflow
 
-# Reference data from legacy system
-REFERENCE_FILE = "/mnt/github/workspace-hub/client_projects/energy_firm_data_analytics/dynacard/Code/Oxy.Cipher.DynaCard/tests/testdata/11708328.json"
-
-
-def _reference_file_available() -> bool:
-    """Check if the reference file exists."""
-    return Path(REFERENCE_FILE).exists()
-
-
-def load_reference_data():
-    with open(REFERENCE_FILE, 'r') as f:
-        data = json.load(f)
-    
-    # Legacy Downhole Card (The "Gold Standard")
-    ref_dh_pos = data['downholeCard']['Position']
-    ref_dh_load = data['downholeCard']['Load']
-    
-    # Equipment and Surface Card for our new solver
-    rods = [RodSection(diameter=r['Diameter'], length=r['TotalLength'], 
-                       modulus_of_elasticity=r['ModulusOfElasticity']) 
-            for r in data['equipmentData']['Rods']]
-    
-    ctx = DynacardAnalysisContext(
-        api14=data['CardDetails']['Api14'],
-        surface_card=CardData(position=data['cardData']['Position'], load=data['cardData']['Load']),
-        rod_string=rods,
-        pump=PumpProperties(diameter=data['equipmentData']['Pump']['Diameter'], 
-                            depth=data['equipmentData']['Pump']['Depth']),
-        surface_unit=SurfaceUnit(manufacturer="Ref", unit_type="C", 
-                                 stroke_length=data['InputParameters']['StrokePerMinute4LiftCapacity'], 
-                                 gear_box_rating=0),
-        spm=data['InputParameters']['StrokesPerMinute']
-    )
-    
-    return ctx, ref_dh_pos, ref_dh_load
-
-@pytest.mark.skipif(
-    not _reference_file_available(),
-    reason=f"Reference file not available: {REFERENCE_FILE}"
+DATA_DIR = Path(__file__).with_name("test_data")
+REFERENCE_FILES = tuple(
+    DATA_DIR / f"cleansed_well_{well_number:03d}.json"
+    for well_number in range(1, 6)
 )
-def test_solver_parity_with_legacy_gold_standard():
-    """
-    Test-Driven Update: Compare new solver results with legacy outputs.
-    Ensures mathematical accuracy within defined acceptance criteria.
-    """
-    ctx, ref_pos, ref_load = load_reference_data()
-    
-    # 1. Run New Solver
-    workflow = DynacardWorkflow(ctx)
-    results = workflow.run_full_analysis()
-    
-    new_pos = np.array(results.downhole_card.position)
-    new_load = np.array(results.downhole_card.load)
-    ref_pos = np.array(ref_pos)
-    ref_load = np.array(ref_load)
-    
-    # 2. Compare Metrics
-    # A. Stroke Length (Peak-to-Peak)
-    new_stroke = np.max(new_pos) - np.min(new_pos)
-    ref_stroke = np.max(ref_pos) - np.min(ref_pos)
-    stroke_diff_pct = abs(new_stroke - ref_stroke) / ref_stroke * 100
-    
-    # B. Peak Load
-    new_peak = np.max(new_load)
-    ref_peak = np.max(ref_load)
-    peak_diff_pct = abs(new_peak - ref_peak) / ref_peak * 100
-    
-    # C. Normalized RMS Error (Shape similarity)
-    # Ensure arrays are same length for comparison
-    min_len = min(len(new_load), len(ref_load))
-    rms_error = np.sqrt(np.mean((new_load[:min_len] - ref_load[:min_len])**2))
-    nrmse = (rms_error / (np.max(ref_load) - np.min(ref_load))) * 100
 
-    # 3. Acceptance Assertions
-    print(f"\n--- Parity Results for Well {ctx.api14} ---")
-    print(f"Stroke Difference: {stroke_diff_pct:.2f}% (Limit: 2%)")
-    print(f"Peak Load Difference: {peak_diff_pct:.2f}% (Limit: 10%)")
-    print(f"Shape NRMSE: {nrmse:.2f}% (Limit: 20%)")
-    
-    assert stroke_diff_pct < 2.0, f"Stroke difference too high: {stroke_diff_pct:.2f}%"
-    assert peak_diff_pct < 10.0, f"Peak load difference too high: {peak_diff_pct:.2f}%"
-    assert nrmse < 20.0, f"Card shape error too high: {nrmse:.2f}%"
+
+def test_null_fixture_runtime_uses_loader_default():
+    """A nullable optional runtime must not make a required fixture unloadable."""
+    context = load_from_json_file(DATA_DIR / "cleansed_well_004.json")
+
+    assert context.runtime == 24.0
+    assert context.input_params.runtime == 24.0
+
+
+def test_solver_parity_with_vendor_downhole_cards():
+    """Hold the default solver to its published real-card accuracy."""
+    comparisons = []
+    for reference_file in REFERENCE_FILES:
+        # These are required repository fixtures. Opening them directly makes a
+        # missing fixture fail instead of turning the only parity check into a skip.
+        with reference_file.open() as stream:
+            raw_data = json.load(stream)
+        context = load_from_json_file(reference_file)
+        expected = get_expected_downhole_card(raw_data)
+        assert expected is not None
+
+        results = DynacardWorkflow(context).run_full_analysis()
+        comparisons.append(compare_cards(results.downhole_card, expected))
+
+    load_nrmse = np.array(
+        [comparison.load_nrmse_pct for comparison in comparisons]
+    )
+    position_nrmse = np.array(
+        [comparison.position_nrmse_pct for comparison in comparisons]
+    )
+
+    # The class docstring reports median load nRMSE to one decimal place.
+    # Its 0.9% claim therefore permits values below 0.9 + 0.05 = 0.95%.
+    # The other bounds reproduce the issue's published 0.16% median position
+    # and 2.15% worst load results, rounded upward by 0.05 percentage point.
+    assert np.median(load_nrmse) < 0.95
+    assert np.median(position_nrmse) < 0.2
+    assert np.max(load_nrmse) < 2.20
+
+
+def test_corner_metrics_match_available_vendor_analyses():
+    """Corner-derived metrics remain close to the four usable vendor results."""
+    vendor_values = {
+        2: (88.37, 6127.0),
+        3: (97.52, 6557.0),
+        4: (97.92, 7682.0),
+        5: (95.40, 3965.0),
+    }
+    fillage_errors = []
+    fluid_load_errors_pct = []
+
+    for well_number, (vendor_fillage, vendor_fluid_load) in vendor_values.items():
+        context = load_from_json_file(
+            DATA_DIR / f"cleansed_well_{well_number:03d}.json"
+        )
+        results = DynacardWorkflow(context).run_full_analysis()
+        fluid_load = calculate_fluid_load(results.downhole_card).fluid_load
+        fillage_errors.append(results.pump_fillage - vendor_fillage)
+        fluid_load_errors_pct.append(
+            100.0 * (fluid_load - vendor_fluid_load) / vendor_fluid_load
+        )
+
+    # The lowest-fillage fixture is the regression that exposes the old bias.
+    # The two near-full wells retain their pre-fix accuracy instead of paying
+    # for the improvement on wells 002 and 005.
+    assert abs(fillage_errors[0]) < 3.0
+    assert abs(fillage_errors[1]) < 0.7
+    assert abs(fillage_errors[2]) < 1.0
+    assert abs(fillage_errors[3]) < 1.0
+    assert np.mean(np.abs(fillage_errors)) < 1.0
+    assert np.mean(np.abs(fluid_load_errors_pct)) < 6.0
+
+    # Honest coverage limit: these fixtures span 88.37-97.92% vendor fillage.
+    # No trustworthy severe fluid-pound card is available here, so this test
+    # does not establish accuracy near the unusable previous-project 54% card.

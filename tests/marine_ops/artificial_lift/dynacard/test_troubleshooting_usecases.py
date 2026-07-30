@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
-    ALL_GENERATORS,
+    get_generator,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import (
     PumpDiagnostics,
@@ -32,10 +32,19 @@ def test_frozen_artifact_exists_and_has_cases():
     assert any(case["mode"] == "NORMAL" for case in cases)
 
 
-@pytest.mark.parametrize("case", _frozen_cases(), ids=lambda case: case["mode"])
+# The page and the classifier were both rebuilt on the corrected 20-mode
+# generator set, so every case round-trips again and none of these are xfailed.
+def _frozen_case_params():
+    return [
+        pytest.param(case, id=case["mode"])
+        for case in _frozen_cases()
+    ]
+
+
+@pytest.mark.parametrize("case", _frozen_case_params())
 def test_published_diagnosis_matches_live_classifier(case):
     """Each published card must still classify to its published diagnosis."""
-    card = ALL_GENERATORS[case["mode"]](seed=case["seed"])
+    card = get_generator(case["mode"])(seed=case["seed"])
     live = PumpDiagnostics.classify_card(card)
     assert live == case["classification"], (
         f"{case['mode']} (seed {case['seed']}) now classifies as {live}, but the "

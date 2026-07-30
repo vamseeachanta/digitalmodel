@@ -70,10 +70,22 @@ class TestEvaluateAlarms:
         sp, normal = self._setpoints()
         assert evaluate_alarms(normal, sp) == []
 
-    def test_pump_tagging_trips_high_load_shutdown(self):
+    def test_pump_tagging_trips_high_load(self):
+        """A tag raises high load; whether it *shuts down* depends on severity.
+
+        This asserted shutdown while the tagging generator added a 15-25 klb
+        spike to a 15-22 klb card -- roughly three times the impact the
+        reference plate shows. At plate scale the spike is a tenth of the
+        card's load range above the plateau, which lands between the 1.1x PPRL
+        alarm and the 1.2x PPRL shutdown: across seeds it trips shutdown about
+        half the time and alarm the rest. The event itself is the invariant;
+        its severity is a property of how hard the pump is tagging.
+        """
         sp, _ = self._setpoints()
-        events = evaluate_alarms(ALL_GENERATORS["PUMP_TAGGING"](seed=711), sp)
-        assert any(e.name == "high_load" and e.severity == "shutdown" for e in events)
+        card = ALL_GENERATORS["PUMP_TAGGING_UP"](seed=711)
+        events = evaluate_alarms(card, sp)
+        assert any(e.name == "high_load" for e in events)
+        assert max(card.load) > sp.high_load_alarm_lbs
 
     def test_rod_parting_trips_low_load_and_span(self):
         sp, normal = self._setpoints()

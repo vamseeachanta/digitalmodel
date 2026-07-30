@@ -98,7 +98,12 @@ def _patch_wall_probe(case_dir: Path) -> None:
         cd.write_text(txt.replace(center, wall))
 
 
-def _build(work_dir: Path, spec: Dict[str, Any]) -> Path:
+def _build(
+    work_dir: Path,
+    spec: Dict[str, Any],
+    roll_amplitude_deg: float = ROLL_DEG,
+) -> Path:
+    spec = {**spec, "roll_amplitude_deg": roll_amplitude_deg}
     if spec["kind"] == "free-decay":
         cfg = SloshingFreeDecayConfig(
             breadth=BREADTH, tank_height=TANK_HEIGHT, fill_level=spec["hl"],
@@ -108,7 +113,7 @@ def _build(work_dir: Path, spec: Dict[str, Any]) -> Path:
     else:
         cfg = SloshingForcedRollConfig(
             breadth=BREADTH, tank_height=TANK_HEIGHT, fill_depth=spec["hl"] * BREADTH,
-            roll_amplitude_deg=ROLL_DEG, roll_period=spec["drive_period"],
+            roll_amplitude_deg=roll_amplitude_deg, roll_period=spec["drive_period"],
             cells_per_breadth=FORCED_CPB, n_cycles=N_CYCLES, name=spec["name"],
         )
         case = build_forced_roll_case(cfg, work_dir, with_moment=True)
@@ -126,11 +131,16 @@ def _runup_amplitude(elev: List[float]) -> float:
 
 def _run_one(case_dir: Path) -> Dict[str, Any]:
     spec = json.loads((case_dir / "_spec.json").read_text())
+    roll_amplitude_deg = spec.get("roll_amplitude_deg", ROLL_DEG)
     # Idempotent: skip a case already solved (so a parallel fan-out is re-runnable).
     done = case_dir / "_result.json"
     if done.exists():
         prev = json.loads(done.read_text())
-        if prev.get("status") == "completed":
+        prev_amplitude = prev.get("roll_amplitude_deg", ROLL_DEG)
+        if (
+            prev.get("status") == "completed"
+            and prev_amplitude == roll_amplitude_deg
+        ):
             return prev
     runner = OpenFOAMRunner(OpenFOAMRunConfig(run_set_fields=True, to_vtk=False))
     res = runner.run(case_dir)
@@ -158,7 +168,7 @@ def _run_one(case_dir: Path) -> Dict[str, Any]:
                 mt, mz = parse_roll_moment(case_dir)
                 red = reduce_roll_moment(mt, mz, spec["drive_period"],
                                          fill_level=fill_depth / TANK_HEIGHT,
-                                         roll_amplitude_deg=ROLL_DEG)
+                                         roll_amplitude_deg=roll_amplitude_deg)
                 row.update(quad_coeff=round(red["quad_coeff"], 5),
                            moment_amplitude_nm=round(red["moment_amplitude"], 5))
             except (FileNotFoundError, RuntimeError, ValueError):
@@ -169,12 +179,23 @@ def _run_one(case_dir: Path) -> Dict[str, Any]:
     return row
 
 
-def _collect(work_dir: Path) -> Dict[str, Any]:
+def _collect(
+    work_dir: Path,
+    roll_amplitude_deg: float = ROLL_DEG,
+) -> Dict[str, Any]:
     results: List[Dict[str, Any]] = []
     for spec in _specs():
         rp = work_dir / spec["name"] / "_result.json"
         if rp.exists():
-            results.append(json.loads(rp.read_text()))
+            result = json.loads(rp.read_text())
+            if result.get("kind") == "forced":
+                result_amplitude = result.get("roll_amplitude_deg", ROLL_DEG)
+                if result_amplitude != roll_amplitude_deg:
+                    raise ValueError(
+                        f"{rp} has roll amplitude {result_amplitude}°, "
+                        f"not requested {roll_amplitude_deg}°"
+                    )
+            results.append(result)
     fills: List[Dict[str, Any]] = []
     for hl in FILLS:
         fd = next((r for r in results if r["kind"] == "free-decay" and r["hl"] == hl), {})
@@ -204,7 +225,8 @@ def _collect(work_dir: Path) -> Dict[str, Any]:
     manifest = {
         "meta": {"generated_by": "scripts/cfd/run_sloshing_response_sweep.py",
                  "solver": "interFoam (VOF), OpenFOAM ESI v2312",
-                 "epic": "#1429", "issue": "#1433", "g": G, "roll_amplitude_deg": ROLL_DEG},
+                 "epic": "#1429", "issue": "#1433", "g": G,
+                 "roll_amplitude_deg": roll_amplitude_deg},
         "tank": {"shape": "rectangular", "breadth_m": BREADTH, "tank_height_m": TANK_HEIGHT,
                  "freedecay_cells_per_breadth": FREEDECAY_CPB,
                  "forced_cells_per_breadth": FORCED_CPB, "n_cycles": N_CYCLES},
@@ -220,6 +242,12 @@ def main(argv: List[str] | None = None) -> int:
     ap.add_argument("command", choices=("generate", "run-one", "collect", "all"))
     ap.add_argument("--work-dir", type=Path, default=Path("/mnt/local-analysis/sloshing_cfd_work"))
     ap.add_argument("--case-dir", type=Path, help="case directory for run-one")
+    ap.add_argument(
+        "--roll-amplitude-deg",
+        type=float,
+        default=ROLL_DEG,
+        help=f"forced-roll amplitude in degrees (default: {ROLL_DEG})",
+    )
     args = ap.parse_args(argv)
 
     if args.command == "run-one":
@@ -232,22 +260,25 @@ def main(argv: List[str] | None = None) -> int:
     args.work_dir.mkdir(parents=True, exist_ok=True)
     if args.command == "generate":
         specs = _specs()
-        dirs = [_build(args.work_dir, s) for s in specs]
+        dirs = [
+            _build(args.work_dir, s, args.roll_amplitude_deg)
+            for s in specs
+        ]
         (args.work_dir / "response_plan.json").write_text(
             json.dumps({"n": len(dirs), "cases": [{"name": s["name"], "kind": s["kind"],
                         "dir": str(args.work_dir / s["name"])} for s in specs]}, indent=2) + "\n")
         print(f"generated {len(dirs)} cases under {args.work_dir}")
         return 0
     if args.command == "collect":
-        m = _collect(args.work_dir)
+        m = _collect(args.work_dir, args.roll_amplitude_deg)
         print(f"wrote {_MANIFEST.relative_to(_REPO)} ({len(m['fills'])} fills)")
         return 0
     # all (serial)
     for s in _specs():
-        case = _build(args.work_dir, s)
+        case = _build(args.work_dir, s, args.roll_amplitude_deg)
         r = _run_one(case)
         print(f"[{s['name']}] {r['status']}")
-    m = _collect(args.work_dir)
+    m = _collect(args.work_dir, args.roll_amplitude_deg)
     print(f"wrote {_MANIFEST.relative_to(_REPO)}")
     return 0
 

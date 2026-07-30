@@ -28,6 +28,23 @@ from digitalmodel.reporting.provenance import (
     assumption_ledger_block,
     provenance_block,
 )
+from digitalmodel.reporting.calc_report import (
+    CALC_REPORT_SKELETON,
+    CalcReport,
+    Confidence,
+    DataRow,
+    DesignDataGroup,
+    Equation,
+    KPI,
+    MethodBlock,
+    Objective,
+    Reference,
+    ResultBlock,
+    ValidationItem,
+    VariableDef,
+    WayForwardStage,
+)
+from digitalmodel.reporting.brief import Brief, BriefSection, Callout
 from digitalmodel.reporting.skeleton import (
     BlockSpec,
     Completeness,
@@ -55,4 +72,23 @@ __all__ = [
     "SectionSpec",
     "BlockSpec",
     "Completeness",
+    # standard calculation report — house section order + typed content
+    "CALC_REPORT_SKELETON",
+    "CalcReport",
+    "Confidence",
+    "DataRow",
+    "DesignDataGroup",
+    "Equation",
+    "KPI",
+    "MethodBlock",
+    "Objective",
+    "Reference",
+    "ResultBlock",
+    "ValidationItem",
+    "VariableDef",
+    "WayForwardStage",
+    # client brief — short-form companion
+    "Brief",
+    "BriefSection",
+    "Callout",
 ]

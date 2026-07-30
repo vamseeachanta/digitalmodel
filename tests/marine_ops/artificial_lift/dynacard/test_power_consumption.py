@@ -24,6 +24,7 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
     MotorProperties,
     CalculationParameters,
     PowerConsumptionAnalysis,
+    WellTestData,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.exceptions import ValidationError
 
@@ -124,14 +125,122 @@ class TestPowerConsumptionCalculator:
 
         assert result.nema_code == "NEMA D"
 
-    def test_nema_code_default(self):
-        """Test default NEMA code when motor model not specified."""
+    def test_unspecified_driver_does_not_get_a_nema_code(self):
+        """
+        Updated from ``test_nema_code_default``, which asserted the defect:
+        an empty motor model used to silently resolve to "NEMA B" and apply
+        an electric-motor F_CL of 1.897. With no stated driver there is no
+        NEMA code and no cyclic load factor.
+        """
         context = self._create_test_context()
         context.motor = MotorProperties(model="")
-        calculator = PowerConsumptionCalculator(context)
-        result = calculator.calculate()
+        result = PowerConsumptionCalculator(context).calculate()
 
+        assert result.prime_mover_type == "unspecified"
+        assert result.nema_code == ""
+        assert result.cyclic_load_factor is None
+        assert result.cyclic_load_factor_applied is False
+        assert any("cyclic load factor not applied" in w.lower() for w in result.warnings)
+
+    def test_gas_engine_prime_mover_gets_no_nema_factor(self):
+        """
+        A natural gas engine (the reference well's Arrow C-66) has no NEMA
+        slip. F_CL must not be applied, and the reported prime mover HP must
+        be the plain efficiency-corrected polished rod HP.
+        """
+        context = self._create_test_context()
+        context.motor = MotorProperties(model="Arrow C-66", prime_mover_type="gas_engine")
+        result = PowerConsumptionCalculator(context).calculate()
+
+        assert result.prime_mover_type == "gas_engine"
+        assert result.cyclic_load_factor is None
+        assert result.cyclic_load_factor_applied is False
+        assert any("gas_engine" in w for w in result.warnings)
+
+        efficiency = (
+            context.calc_params.efficiency_prime_mover
+            * context.calc_params.efficiency_pumping_unit
+        )
+        expected = result.polished_rod_horsepower / efficiency
+        assert result.prime_mover_horsepower == pytest.approx(expected, rel=1e-3)
+
+    def test_electric_driver_applies_cyclic_load_factor(self):
+        """An explicitly electric driver still gets the API RP 11L factor."""
+        context = self._create_test_context()
+        context.motor = MotorProperties(model="", prime_mover_type="electric")
+        result = PowerConsumptionCalculator(context).calculate()
+
+        assert result.prime_mover_type == "electric"
         assert result.nema_code == "NEMA B"
+        assert result.cyclic_load_factor == F_CL_TABLE["Others"]["NEMA B"]
+        assert result.cyclic_load_factor_applied is True
+        assert result.warnings == []
+
+    def test_driver_type_changes_prime_mover_hp(self):
+        """
+        The defect was that a 27%-plus swing in prime mover HP was driven
+        entirely by an unstated default. The swing must now require the caller
+        to actually state a different driver.
+        """
+        electric = self._create_test_context()
+        electric.motor = MotorProperties(model="NEMA B")
+        hp_electric = PowerConsumptionCalculator(electric).calculate().prime_mover_horsepower
+
+        gas = self._create_test_context()
+        gas.motor = MotorProperties(model="Arrow C-66", prime_mover_type="gas_engine")
+        hp_gas = PowerConsumptionCalculator(gas).calculate().prime_mover_horsepower
+
+        assert hp_electric == pytest.approx(hp_gas * F_CL_TABLE["Others"]["NEMA B"], rel=1e-3)
+
+    def test_runtime_source_reported_when_supplied(self):
+        """An explicitly supplied runtime is reported as caller-supplied."""
+        context = self._create_test_context()
+        result = PowerConsumptionCalculator(context).calculate()
+
+        assert result.runtime_source == "context"
+        assert result.runtime_hours == 24.0
+        assert not any("runtime" in w.lower() for w in result.warnings)
+
+    def test_defaulted_runtime_is_surfaced(self):
+        """
+        ``runtime`` defaults to 24 h. A context that never set it used to be
+        indistinguishable from one that measured 24 h, and daily energy was
+        reported as fact. The assumption must now be visible.
+        """
+        context = self._create_test_context_without_runtime()
+        result = PowerConsumptionCalculator(context).calculate()
+
+        assert result.runtime_source == "assumed_default_24h"
+        assert result.runtime_hours == 24.0
+        assert any("runtime" in w.lower() for w in result.warnings)
+
+    def test_well_test_runtime_is_consulted(self):
+        """WellTestData.runtime is used when the context runtime is unset."""
+        context = self._create_test_context_without_runtime()
+        context.well_test = WellTestData(runtime=9.12)
+        result = PowerConsumptionCalculator(context).calculate()
+
+        assert result.runtime_source == "well_test"
+        assert result.runtime_hours == pytest.approx(9.12)
+        assert result.daily_energy_consumption == pytest.approx(
+            result.power_consumption_kw * 9.12, rel=1e-3
+        )
+
+    def test_card_area_is_reported_in_ft_lbs(self):
+        """
+        models.py documented ``card_area`` as in-lbs while the calculator
+        divides the shoelace area by 12 and returns ft-lbs. The number is
+        correct; the units label was not.
+        """
+        context = self._create_test_context()
+        context.surface_card = CardData(
+            position=[0, 100, 100, 0],
+            load=[5000, 5000, 15000, 15000],
+        )
+        result = PowerConsumptionCalculator(context).calculate()
+
+        # 100 in x 10,000 lbs = 1,000,000 in-lbs = 83,333.33 ft-lbs
+        assert result.card_area == pytest.approx(1_000_000 / 12.0, abs=1.0)
 
     def test_efficiency_factors_applied(self):
         """Test that efficiency factors affect power calculation."""
@@ -214,6 +323,21 @@ class TestPowerConsumptionCalculator:
             runtime=24.0,
             fluid_density=62.4,
             calc_params=calc_params,
+        )
+
+    def _create_test_context_without_runtime(self) -> DynacardAnalysisContext:
+        """Same context but with runtime left unset (so it falls back)."""
+        context = self._create_test_context()
+        return DynacardAnalysisContext(
+            api14=context.api14,
+            surface_card=context.surface_card,
+            rod_string=context.rod_string,
+            pump=context.pump,
+            surface_unit=context.surface_unit,
+            motor=context.motor,
+            spm=context.spm,
+            fluid_density=context.fluid_density,
+            calc_params=context.calc_params,
         )
 
 
@@ -330,8 +454,14 @@ class TestPowerConsumptionAnalysisModel:
         assert analysis.power_consumption_kw == 0.0
         assert analysis.daily_energy_consumption == 0.0
         assert analysis.motor_design == "Others"
-        assert analysis.nema_code == "NEMA B"
-        assert analysis.cyclic_load_factor == 0.0
+        # Updated: the old defaults ("NEMA B", 0.0) read as determined values
+        # on a result that has determined nothing. F_CL is never legitimately
+        # 0.0, so "not applied" is None.
+        assert analysis.nema_code == ""
+        assert analysis.cyclic_load_factor is None
+        assert analysis.cyclic_load_factor_applied is False
+        assert analysis.prime_mover_type == "unspecified"
+        assert analysis.runtime_source == ""
 
     def test_analysis_with_values(self):
         """Test PowerConsumptionAnalysis with actual values."""

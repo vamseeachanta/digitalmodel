@@ -20,24 +20,46 @@ class DynacardWorkflow:
     """
     Main orchestrator for Dynacard Analysis in digitalmodel.
 
-    Supports two physics solvers:
-        - 'gibbs': Frequency-domain Gibbs analytical method (faster, default)
-        - 'finite_difference': Time-domain finite difference (more detailed)
+    Supports three physics solvers:
+        - 'everitt_jennings': Space-marching finite difference (SPE 18189).
+          The default. Rebuilds downhole load from the strain field and
+          handles deviated wells.
+        - 'gibbs': Frequency-domain analytical method. Retained for
+          comparison only.
+        - 'finite_difference': Time-domain finite difference. Numerically
+          unstable — see below.
+
+    Measured against the stored reference downhole cards on all five fixture
+    wells (phase-aligned, since a card is a closed loop):
+
+        method              med nRMSE   med |stroke err|   med corr
+        everitt_jennings         0.9%              0.0%      1.000
+        gibbs                   17.3%              2.7%      0.966
+        finite_difference     diverges           diverges     0.022
+
+    'gibbs' does not transform the load at all — it returns an affine rescale
+    of the surface card (issue #1857) — so it cannot resolve pump condition.
+    'finite_difference' overflows to ~1e45 and beyond on three of five wells.
+    Neither should be used for diagnosis.
     """
 
     def __init__(
         self,
         context: DynacardAnalysisContext = None,
-        solver_method: Literal['gibbs', 'finite_difference'] = 'gibbs'
+        solver_method: Literal[
+            'everitt_jennings', 'gibbs', 'finite_difference'
+        ] = 'everitt_jennings'
     ):
         """Initialize the dynacard analyzer.
 
         Args:
             context: Complete well analysis context. Can be set later
                 before calling analysis methods.
-            solver_method: Physics solver to use — ``'gibbs'`` for
-                frequency-domain or ``'finite_difference'`` for
-                time-domain.
+            solver_method: Physics solver to use. Defaults to
+                ``'everitt_jennings'``, the only one that reproduces the
+                reference downhole cards. ``'gibbs'`` and
+                ``'finite_difference'`` are retained for comparison and
+                should not be used for diagnosis — see the class docstring.
         """
         self.ctx = context
         self.solver_method = solver_method
@@ -52,6 +74,11 @@ class DynacardWorkflow:
         """Initialize the appropriate physics solver."""
         if self.solver_method == 'finite_difference':
             self.solver = FiniteDifferenceSolver(self.ctx)
+        elif self.solver_method == 'everitt_jennings':
+            # Imported here to keep the scipy/numba-backed solver off the
+            # import path of callers that never select it.
+            from .everitt_jennings.adapter import EverittJenningsContextSolver
+            self.solver = EverittJenningsContextSolver(self.ctx)
         else:
             self.solver = DynacardPhysicsSolver(self.ctx)
 
@@ -103,28 +130,47 @@ class DynacardWorkflow:
         return cfg
 
     def _apply_synthetic_card(self, cfg: dict) -> None:
-        """Build well_data from a pinned synthetic card generator."""
+        """Build well_data from a pinned synthetic card generator.
+
+        The generators produce DOWNHOLE cards -- they are named for pump
+        conditions and draw the shape those conditions make at the pump. So
+        the generated card is run *up* the rod string first, and it is the
+        resulting surface card that goes into ``well_data``. The
+        surface-to-downhole solver then has a real conversion to perform and
+        recovers the generated pump card, which is what the classifier is
+        trained on.
+
+        Handing the generated card straight to ``surface_card`` instead asks
+        the solver to strip a rod string that was never there. That only ever
+        looked right under a solver that left the load alone (#1857).
+        """
         if 'synthetic_card' not in cfg or 'well_data' in cfg:
             return
 
-        from .card_generators import ALL_GENERATORS
+        from .card_generators import get_generator, surface_card_from_pump_card
 
         synthetic_cfg = cfg['synthetic_card']
         mode = synthetic_cfg['mode']
-        card = ALL_GENERATORS[mode](seed=int(synthetic_cfg.get('seed', 0)))
+        pump_card = get_generator(mode)(seed=int(synthetic_cfg.get('seed', 0)))
         well_cfg = cfg.get('well', {})
         rod_cfg = well_cfg.get('rod', {})
         pump_cfg = well_cfg.get('pump', {})
         surface_unit_cfg = well_cfg.get('surface_unit', {})
 
-        cfg['well_data'] = {
+        well_data = {
             'api14': well_cfg.get('api14', f'SIM-{mode}'),
-            'surface_card': card.model_dump(),
+            # Placeholder: replaced below by the forward-modelled surface card.
+            'surface_card': pump_card.model_dump(),
             'rod_string': [rod_cfg],
             'pump': pump_cfg,
             'surface_unit': surface_unit_cfg,
             'spm': well_cfg.get('spm', 10.0),
         }
+        synthetic_ctx = DynacardAnalysisContext(**well_data)
+        surface_card = surface_card_from_pump_card(pump_card, synthetic_ctx)
+        well_data['surface_card'] = surface_card.model_dump()
+
+        cfg['well_data'] = well_data
 
     def _write_html_report(
         self,
@@ -180,7 +226,7 @@ class DynacardWorkflow:
             4. Diagnostics: AI-driven troubleshooting
         """
         # 1. Physics: Surface to Downhole conversion
-        if self.solver_method == 'finite_difference':
+        if self.solver_method in ('finite_difference', 'everitt_jennings'):
             results = self.solver.solve()
         else:
             results = self.solver.solve_wave_equation()
@@ -268,10 +314,15 @@ class DynacardWorkflow:
 
 def perform_well_troubleshooting(
     context_dict: dict,
-    solver_method: str = 'gibbs'
+    solver_method: str = 'everitt_jennings'
 ) -> AnalysisResults:
     """
     Utility function for CLI or API integration.
+
+    Defaults to the same solver :class:`DynacardWorkflow` does. It used to
+    default to ``'gibbs'``, which does not transform the load at all (#1857),
+    so every caller that took the default was diagnosing a rescaled surface
+    card and calling it a pump card.
     """
     ctx = DynacardAnalysisContext(**context_dict)
     workflow = DynacardWorkflow(ctx, solver_method=solver_method)

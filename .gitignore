@@ -380,3 +380,11 @@ output_610/
 # archives (reference client production-data paths); must stay uncommitted.
 scripts/capabilities/_*_stage.json
 scripts/capabilities/_*_manifest.json
+
+# Tidy publishing intermediates (scripts/hf/build_capability_datasets.py) — derived from
+# the committed sidecars, regenerated on demand, published to HF rather than committed.
+docs/api/_datasets/
+
+# 3D tension-moment study: 191 MB of JSON that compresses to ~1 MB as parquet.
+# Regenerated on demand and published to Hugging Face; never committed. (#1915)
+docs/api/structural/wall-thickness-3d.json

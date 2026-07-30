@@ -9,6 +9,10 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.corners import (
     calculate_corners,
     get_corner_loads,
 )
+from digitalmodel.marine_ops.artificial_lift.dynacard.calculations import (
+    calculate_fluid_load,
+    calculate_pump_fillage,
+)
 from digitalmodel.marine_ops.artificial_lift.dynacard.models import CardData
 
 
@@ -42,6 +46,68 @@ def _make_degenerate_card() -> CardData:
     return CardData(
         position=[0.0, 0.0, 0.0],
         load=[100.0, 100.0, 100.0],
+    )
+
+
+def _make_partial_fillage_card() -> CardData:
+    """Build a card whose downstroke load transfer finishes at 60% stroke."""
+    points = [
+        (0.0, 0.0),   # BL
+        (0.0, 10.0),  # TL
+        (25.0, 10.0),
+        (50.0, 10.0),
+        (75.0, 10.0),
+        (100.0, 10.0),  # TR
+        (90.0, 8.0),
+        (80.0, 4.0),
+        (70.0, 0.5),
+        (60.0, 0.0),  # BR: load transfer has finished
+        (40.0, 0.0),
+        (20.0, 0.0),
+    ]
+    return CardData(
+        position=[point[0] for point in points],
+        load=[point[1] for point in points],
+    )
+
+
+def _make_multistage_transfer_card() -> CardData:
+    """Build a partial card with a brief lull inside its downstroke drop."""
+    points = [
+        (0.0, 0.0),
+        (0.0, 10.0),
+        (50.0, 10.0),
+        (100.0, 10.0),
+        (90.0, 6.0),
+        (80.0, 5.5),  # brief lull; load transfer is not complete
+        (70.0, 2.5),
+        (60.0, 0.0),  # BR
+        (40.0, 0.0),
+        (20.0, 0.0),
+    ]
+    return CardData(
+        position=[point[0] for point in points],
+        load=[point[1] for point in points],
+    )
+
+
+def _make_two_lull_transfer_card() -> CardData:
+    """Build a card with two quiet samples before load transfer resumes."""
+    points = [
+        (0.0, 0.0),
+        (0.0, 10.0),
+        (50.0, 10.0),
+        (100.0, 10.0),
+        (90.0, 6.0),
+        (80.0, 5.6),
+        (70.0, 5.2),
+        (60.0, 2.2),
+        (50.0, 0.0),  # BR
+        (25.0, 0.0),
+    ]
+    return CardData(
+        position=[point[0] for point in points],
+        load=[point[1] for point in points],
     )
 
 
@@ -131,6 +197,92 @@ class TestCornerDetector:
         n = len(card.position)
         for idx in corners:
             assert 0 <= idx < n, f"Index {idx} out of range [0, {n - 1}]"
+
+    @pytest.mark.parametrize(
+        "transform",
+        [
+            lambda values: np.roll(values, 4).tolist(),
+            lambda values: list(reversed(np.roll(values, 4).tolist())),
+        ],
+        ids=["shifted-origin", "shifted-origin-reversed-direction"],
+    )
+    def test_partial_fillage_uses_phase_order_not_position_extrema(
+        self, transform
+    ):
+        """BR remains the end of load transfer regardless of card storage."""
+        card = _make_partial_fillage_card()
+        stored_card = CardData(
+            position=transform(card.position),
+            load=transform(card.load),
+        )
+
+        result = calculate_pump_fillage(stored_card)
+
+        # Gross stroke = 100 - 0 = 100; load transfer finishes at position 60.
+        assert result.net_stroke == pytest.approx(60.0)
+        assert result.fillage == pytest.approx(60.0)
+        assert calculate_fluid_load(stored_card).fluid_load == pytest.approx(10.0)
+
+    def test_full_card_stays_full_at_every_origin_and_direction(self):
+        """A flat lower branch starts at BR, not one sample after it."""
+        card = _make_rectangular_card()
+
+        for reverse in (False, True):
+            for shift in range(len(card.position)):
+                position = np.roll(card.position, shift)
+                load = np.roll(card.load, shift)
+                if reverse:
+                    position = position[::-1]
+                    load = load[::-1]
+                stored_card = CardData(position=position, load=load)
+
+                assert calculate_pump_fillage(stored_card).fillage == pytest.approx(
+                    100.0
+                )
+
+    def test_br_requires_sustained_end_of_load_transfer(self):
+        """A one-sample lull does not terminate a multi-stage load drop."""
+        result = calculate_pump_fillage(_make_multistage_transfer_card())
+
+        assert result.net_stroke == pytest.approx(60.0)
+        assert result.fillage == pytest.approx(60.0)
+
+    def test_br_is_independent_of_multiple_transfer_lulls(self):
+        """Quiet samples inside a drop do not become false BR corners."""
+        card = _make_two_lull_transfer_card()
+
+        for reverse in (False, True):
+            for shift in range(len(card.position)):
+                position = np.roll(card.position, shift)
+                load = np.roll(card.load, shift)
+                if reverse:
+                    position = position[::-1]
+                    load = load[::-1]
+                result = calculate_pump_fillage(
+                    CardData(position=position, load=load)
+                )
+
+                assert result.fillage == pytest.approx(50.0)
+
+    def test_closed_partial_card_is_origin_and_direction_invariant(self):
+        """A duplicated BL closure sample does not change the downstroke."""
+        card = CardData(
+            position=[0.0, 0.0, 50.0, 100.0, 90.0, 80.0, 70.0, 0.0],
+            load=[0.0, 10.0, 10.0, 10.0, 6.0, 2.0, 0.0, 0.0],
+        )
+
+        for reverse in (False, True):
+            for shift in range(len(card.position)):
+                position = np.roll(card.position, shift)
+                load = np.roll(card.load, shift)
+                if reverse:
+                    position = position[::-1]
+                    load = load[::-1]
+                result = calculate_pump_fillage(
+                    CardData(position=position, load=load)
+                )
+
+                assert result.fillage == pytest.approx(70.0)
 
 
 class TestCalculateCorners:

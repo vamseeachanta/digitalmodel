@@ -29,27 +29,27 @@
         "Trend fillage and peak/minimum load for early drift detection"
       ],
       "classification": "NORMAL",
-      "confidence": 0.5852,
+      "confidence": 1.0,
       "differential": [
         {
           "mode": "NORMAL",
-          "probability": 0.5852
+          "probability": 1.0
         },
         {
-          "mode": "TUBING_MOVEMENT",
-          "probability": 0.41
+          "mode": "PARAFFIN_RESTRICTION",
+          "probability": 0.0
         },
         {
-          "mode": "PLUNGER_UNDERTRAVEL",
-          "probability": 0.0037
+          "mode": "SAND_ABRASION",
+          "probability": 0.0
         }
       ],
       "model_version": "1.0",
       "metrics": {
-        "fluid_load_lbs": 10428.0,
-        "peak_load_lbs": 15923.0,
-        "min_load_lbs": 4171.0,
-        "card_area_inlb": 1201756.0,
+        "fluid_load_lbs": 1241.0,
+        "peak_load_lbs": 15679.0,
+        "min_load_lbs": 4225.0,
+        "card_area_inlb": 1130246.0,
         "area_vs_healthy_pct": 100.0
       },
       "n_points": 100
@@ -73,21 +73,21 @@
           "probability": 1.0
         },
         {
-          "mode": "PLUNGER_UNDERTRAVEL",
+          "mode": "NORMAL",
           "probability": 0.0
         },
         {
-          "mode": "NORMAL",
+          "mode": "BENT_BARREL",
           "probability": 0.0
         }
       ],
       "model_version": "1.0",
       "metrics": {
-        "fluid_load_lbs": 11097.0,
-        "peak_load_lbs": 13749.0,
-        "min_load_lbs": -1157.0,
-        "card_area_inlb": 1573042.0,
-        "area_vs_healthy_pct": 130.9
+        "fluid_load_lbs": 5911.0,
+        "peak_load_lbs": 13411.0,
+        "min_load_lbs": 830.0,
+        "card_area_inlb": 835155.0,
+        "area_vs_healthy_pct": 73.9
       },
       "n_points": 100
     },
@@ -114,17 +114,17 @@
           "probability": 0.0
         },
         {
-          "mode": "NORMAL",
+          "mode": "BENT_BARREL",
           "probability": 0.0
         }
       ],
       "model_version": "1.0",
       "metrics": {
-        "fluid_load_lbs": 12753.0,
-        "peak_load_lbs": 15653.0,
-        "min_load_lbs": -2770.0,
-        "card_area_inlb": 1592573.0,
-        "area_vs_healthy_pct": 132.5
+        "fluid_load_lbs": 4193.0,
+        "peak_load_lbs": 15291.0,
+        "min_load_lbs": 4679.0,
+        "card_area_inlb": 463079.0,
+        "area_vs_healthy_pct": 41.0
       },
       "n_points": 100
     },
@@ -151,54 +151,91 @@
           "probability": 0.0
         },
         {
-          "mode": "TUBING_MOVEMENT",
+          "mode": "DELAYED_TV_CLOSURE",
           "probability": 0.0
         }
       ],
       "model_version": "1.0",
       "metrics": {
-        "fluid_load_lbs": 4595.0,
-        "peak_load_lbs": 15298.0,
-        "min_load_lbs": 4421.0,
-        "card_area_inlb": 915402.0,
-        "area_vs_healthy_pct": 76.2
+        "fluid_load_lbs": 4207.0,
+        "peak_load_lbs": 15334.0,
+        "min_load_lbs": 4572.0,
+        "card_area_inlb": 1048606.0,
+        "area_vs_healthy_pct": 92.8
       },
       "n_points": 100
     },
     {
-      "mode": "PUMP_TAGGING",
+      "mode": "PUMP_TAGGING_UP",
       "seed": 711,
-      "title": "Pump tagging (spacing fault)",
+      "title": "Pump tagging up (spacing too long)",
       "severity": "critical",
-      "symptom": "Sharp load spike at the stroke end: the plunger strikes the standing valve or the top of the pump. Audible metallic tag; risk of valve, plunger and rod damage every stroke.",
+      "symptom": "Sharp load spike at the top of the stroke: the plunger strikes the top of the barrel or the pull tube. Audible metallic tag; risk of plunger and rod damage every stroke.",
       "actions": [
-        "Stop and re-space the plunger off bottom",
+        "Stop and re-space the plunger DOWN, away from the top of the pump",
         "Re-check spacing after the well reaches operating temperature",
         "Verify the surface stroke setting matches the pump design"
       ],
-      "classification": "PUMP_TAGGING",
+      "classification": "PUMP_TAGGING_UP",
       "confidence": 1.0,
       "differential": [
         {
-          "mode": "PUMP_TAGGING",
+          "mode": "PUMP_TAGGING_UP",
           "probability": 1.0
         },
         {
-          "mode": "VALVE_LEAK_TV",
+          "mode": "VALVE_LEAK_SV",
           "probability": 0.0
         },
         {
-          "mode": "TUBING_MOVEMENT",
+          "mode": "SAND_ABRASION",
           "probability": 0.0
         }
       ],
       "model_version": "1.0",
       "metrics": {
-        "fluid_load_lbs": 32265.0,
-        "peak_load_lbs": 42701.0,
-        "min_load_lbs": 4249.0,
-        "card_area_inlb": 1619821.0,
-        "area_vs_healthy_pct": 134.8
+        "fluid_load_lbs": 5277.0,
+        "peak_load_lbs": 18798.0,
+        "min_load_lbs": 4522.0,
+        "card_area_inlb": 1136223.0,
+        "area_vs_healthy_pct": 100.5
+      },
+      "n_points": 100
+    },
+    {
+      "mode": "PUMP_TAGGING_DOWN",
+      "seed": 711,
+      "title": "Pump tagging down (spacing too close)",
+      "severity": "critical",
+      "symptom": "Sharp load drop at the bottom of the stroke, below the downstroke load line: the plunger lands on the standing valve and drives the rods into compression once per stroke.",
+      "actions": [
+        "Stop and re-space the plunger UP, off bottom",
+        "Re-check spacing after the well reaches operating temperature",
+        "Inspect the standing valve cage and seat for impact damage"
+      ],
+      "classification": "PUMP_TAGGING_DOWN",
+      "confidence": 1.0,
+      "differential": [
+        {
+          "mode": "PUMP_TAGGING_DOWN",
+          "probability": 1.0
+        },
+        {
+          "mode": "BENT_BARREL",
+          "probability": 0.0
+        },
+        {
+          "mode": "NORMAL",
+          "probability": 0.0
+        }
+      ],
+      "model_version": "1.0",
+      "metrics": {
+        "fluid_load_lbs": 10419.0,
+        "peak_load_lbs": 16884.0,
+        "min_load_lbs": 3057.0,
+        "card_area_inlb": 1237473.0,
+        "area_vs_healthy_pct": 109.5
       },
       "n_points": 100
     },
@@ -221,21 +258,21 @@
           "probability": 1.0
         },
         {
-          "mode": "SAND_ABRASION",
+          "mode": "BENT_BARREL",
           "probability": 0.0
         },
         {
-          "mode": "EXCESSIVE_VIBRATION",
+          "mode": "SAND_ABRASION",
           "probability": 0.0
         }
       ],
       "model_version": "1.0",
       "metrics": {
-        "fluid_load_lbs": 276.0,
-        "peak_load_lbs": 2542.0,
-        "min_load_lbs": 696.0,
-        "card_area_inlb": 5288.0,
-        "area_vs_healthy_pct": 0.4
+        "fluid_load_lbs": 235.0,
+        "peak_load_lbs": 1823.0,
+        "min_load_lbs": 1398.0,
+        "card_area_inlb": 27013.0,
+        "area_vs_healthy_pct": 2.4
       },
       "n_points": 100
     },
@@ -251,19 +288,19 @@
         "Consider a variable slippage or gas-lock-resistant pump design"
       ],
       "classification": "GAS_LOCK",
-      "confidence": 0.9977,
+      "confidence": 1.0,
       "differential": [
         {
           "mode": "GAS_LOCK",
-          "probability": 0.9977
+          "probability": 1.0
         },
         {
-          "mode": "STUCK_PUMP",
-          "probability": 0.0013
+          "mode": "SAND_ABRASION",
+          "probability": 0.0
         },
         {
-          "mode": "TUBING_MOVEMENT",
-          "probability": 0.0005
+          "mode": "EXCESSIVE_VIBRATION",
+          "probability": 0.0
         }
       ],
       "model_version": "1.0",
@@ -272,13 +309,13 @@
         "peak_load_lbs": 2629.0,
         "min_load_lbs": 580.0,
         "card_area_inlb": 153452.0,
-        "area_vs_healthy_pct": 12.8
+        "area_vs_healthy_pct": 13.6
       },
       "n_points": 100
     }
   ],
   "library_summary": {
-    "n_cards": 336,
+    "n_cards": 346,
     "phenomena": [
       "BENT_BARREL",
       "BUTTERFLY",
@@ -293,9 +330,11 @@
       "INCOMPLETE_FILLAGE",
       "NORMAL",
       "PARAFFIN_RESTRICTION",
+      "PLUNGER_OUT_OF_BARREL",
       "PLUNGER_UNDERTRAVEL",
       "PUMPED_OFF",
-      "PUMP_TAGGING",
+      "PUMP_TAGGING_DOWN",
+      "PUMP_TAGGING_UP",
       "ROD_PARTING",
       "SAND_ABRASION",
       "STUCK_PUMP",
