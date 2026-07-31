@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Solver-Neutral Riser Data to Solver Adapters to Hugging Face — Design</title>
+  <style>
+    :root { color-scheme: light; --ink:#13232f; --muted:#5c6b73; --navy:#0b3d5c; --teal:#148c86; --ice:#eef6f7; --line:#cbd8dc; --warn:#8a4b08; }
+    body { margin:0; font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif; color:var(--ink); background:#f7fafb; }
+    main { max-width:1080px; margin:auto; padding:40px 28px 72px; background:white; }
+    h1,h2,h3 { color:var(--navy); line-height:1.2; }
+    h1 { margin-top:0; font-size:2.35rem; }
+    h2 { margin-top:2.2rem; padding-bottom:.35rem; border-bottom:2px solid var(--ice); }
+    h3 { margin-top:1.5rem; }
+    a { color:var(--teal); }
+    code { background:var(--ice); padding:.12rem .3rem; border-radius:4px; }
+    table { width:100%; border-collapse:collapse; margin:1rem 0; font-size:.94rem; }
+    th,td { border:1px solid var(--line); padding:.55rem .65rem; vertical-align:top; }
+    th { background:var(--ice); text-align:left; }
+    .meta,.callout { padding:1rem 1.2rem; background:var(--ice); border-left:5px solid var(--teal); }
+    .warning { border-left-color:var(--warn); background:#fff7ed; }
+    .flow { font-family:ui-monospace,SFMono-Regular,Consolas,monospace; white-space:pre-wrap; padding:1rem; background:#102b3b; color:#e8f6f7; border-radius:6px; }
+    .status { display:inline-block; padding:.2rem .55rem; border-radius:999px; background:#d9f4ee; color:#155e58; font-weight:700; }
+    nav ul { columns:2; }
+    @media (max-width:720px) { nav ul { columns:1; } main { padding:24px 18px 48px; } }
+  </style>
+</head>
+<body>
+<main>
+  <p class="status">Owner-selected architecture: Option 1 — public-safe projection</p>
+  <h1>Solver-Neutral Riser Data → Solver Adapters → Hugging Face</h1>
+  <p class="meta"><strong>Issue:</strong> digitalmodel #1602 · <strong>Design date:</strong> 2026-07-16 · <strong>Complexity:</strong> T3 · <strong>Lane:</strong> Codex execution with independent cross-provider review · <strong>Gate:</strong> design review precedes issue-plan drafting; implementation remains blocked until the later plan-approval gate.</p>
+
+  <nav aria-label="Table of contents">
+    <h2>Contents</h2>
+    <ul>
+      <li><a href="#goal">Goal and boundaries</a></li>
+      <li><a href="#authority">Authority model</a></li>
+      <li><a href="#inventory">Verified inventory</a></li>
+      <li><a href="#architecture">Architecture and flow</a></li>
+      <li><a href="#dataset">HF dataset contract</a></li>
+      <li><a href="#eligibility">Eligibility and release gates</a></li>
+      <li><a href="#analysis">OrcaFlex analysis contract</a></li>
+      <li><a href="#identity">Identity and reproducibility</a></li>
+      <li><a href="#privacy">Privacy, licensing, and security</a></li>
+      <li><a href="#errors">Failure handling</a></li>
+      <li><a href="#verification">Verification strategy</a></li>
+      <li><a href="#delivery">Delivery slices</a></li>
+      <li><a href="#acceptance">Design acceptance</a></li>
+    </ul>
+  </nav>
+
+  <section id="goal">
+    <h2>1. Goal and boundaries</h2>
+    <p>The program will establish one solver-neutral source of truth for drilling and completion/workover riser configurations. It will generate deterministic target-solver models for every eligible configuration and publish traceable normalized inputs and verified results to <code>aceengineer/digitalmodel-riser-analysis</code>. OrcaFlex will be the first licensed execution target; custom FEA and future solvers will use the same canonical cases through versioned adapters.</p>
+    <p>The first public release will include public-safe drilling inputs and explicitly synthetic completion reference cases. It will not publish any native solver model artifact—OrcaFlex DAT/YAML, future FEA decks/databases, or other target-specific model files—private/client material, licensed standards content, embedded machine metadata, or results whose capacity basis lacks a valid citation.</p>
+    <div class="callout warning"><strong>Non-substitution rule:</strong> a synthetic completion reference case will not be presented as a recovered field, vendor, client, or measured configuration. Confidential completion models will remain withheld until a separately approved promotion decision establishes redistribution and disclosure safety.</div>
+  </section>
+
+  <section id="authority">
+    <h2>2. Authority model and terminology</h2>
+    <table>
+      <thead><tr><th>Artifact</th><th>Role</th><th>Authority</th></tr></thead>
+      <tbody>
+        <tr><td>Source artifact</td><td>Repository CSV/YAML/DAT or documented synthetic seed used as evidence.</td><td>Evidence only; never automatically authoritative.</td></tr>
+        <tr><td>Source registry</td><td>Classification, ownership, hashes, license/provenance status, release state, and withholding reason.</td><td>Authority for whether a source may enter normalization.</td></tr>
+        <tr><td>Normalized riser configuration</td><td>Solver-neutral topology, geometry, materials, section behavior, contents, boundary conditions, and configuration relationships in SI units.</td><td><strong>Single source of truth.</strong></td></tr>
+        <tr><td>Analysis case</td><td>Normalized configuration plus environment/loads, initial conditions, acceptance basis, requested stages, quantities, and result locations.</td><td>Solver-neutral authority for any target-solver request.</td></tr>
+        <tr><td>Generated solver model</td><td>Deterministic target-specific projection of one analysis case through a versioned adapter.</td><td>Derived execution artifact; replaceable from the normalized case.</td></tr>
+        <tr><td>Solver result</td><td>Extracted statics/dynamics values tied to immutable case, model, solver, and result hashes.</td><td>Authoritative only after solver and QA gates pass.</td></tr>
+        <tr><td>HF projection</td><td>Release-approved normalized inputs, results, and visible withholding records.</td><td>Public query surface, not a raw-file archive or run ledger.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="inventory">
+    <h2>3. Verified inventory and initial classification</h2>
+    <table>
+      <thead><tr><th>Candidate</th><th>Observed state</th><th>Initial route</th></tr></thead>
+      <tbody>
+        <tr><td><code>worldenergydata/.../curated/drilling_riser_components.csv</code></td><td>36 rows, 31 declared columns; 32 rows have only 29–30 fields. Original numeric/manufacturer lineage is incomplete.</td><td>Quarantine until row alignment, provenance, unit, and plausibility checks pass.</td></tr>
+        <tr><td><code>digitalmodel/tests/drilling_riser/fixtures/drilling_riser_components.csv</code></td><td>Byte-identical CI fixture.</td><td>Duplicate; never ingested as a second source.</td></tr>
+        <tr><td>Riser database/config catalog from #1245</td><td>Solver-neutral public-route catalog and source manifest were prepared on the prior workstream.</td><td>Reuse only after confirming the landed commit on remote main and revalidating hashes.</td></tr>
+        <tr><td><code>examples/riser_input/*.yml</code> and public pipe configurations</td><td>Small solver-neutral or pipe-design seeds with mixed scope.</td><td>Eligible after source registry and schema validation.</td></tr>
+        <tr><td><code>docs/domains/orcaflex/risers/drilling/</code></td><td>Large OrcaFlex model family with unknown embedded metadata/licensing.</td><td>Local evidence only; raw files excluded from HF.</td></tr>
+        <tr><td><code>docs/domains/orcaflex/risers/completion/</code></td><td>Completion models contain machine, user, absolute path, date, and project-code metadata; redistribution basis is unclear.</td><td>Withheld. No public row will be reverse-engineered from these files under Option 1.</td></tr>
+        <tr><td>Synthetic completion reference cases</td><td>Not yet defined.</td><td>Publisher-owned synthetic inputs, clearly labeled and eligible only after engineering review.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="architecture">
+    <h2>4. Architecture and data flow</h2>
+    <div class="flow">source discovery
+  → source registry and classification
+  → strict normalization into solver-neutral SI schema
+  → engineering and release eligibility gates
+  → analysis-case compiler
+  → versioned target-solver adapter
+  → deterministic target-specific projection
+  → target-specific execution and attestation
+  → typed result extraction and plausibility review
+  → public-safe Parquet tables + dataset card
+  → immutable HF revision and datasets-server verification</div>
+    <h3>Component boundaries</h3>
+    <ol>
+      <li><strong>Registry:</strong> will inventory each candidate once, record its canonical/duplicate relationship, and fail closed when ownership, license, or provenance is unknown.</li>
+      <li><strong>Normalizer:</strong> will parse allowlisted fields, reject malformed row widths and non-finite values, convert declared units to SI, and retain source-field lineage.</li>
+      <li><strong>Case compiler:</strong> will combine one normalized configuration with explicit loading/environment data without filling unknown engineering values by guesswork.</li>
+      <li><strong>Adapter interface:</strong> will project the immutable generic case into a target model and emit target ID, adapter-contract hash, projection hash, semantic-coverage status, mapping evidence, target-gap disposition, and deterministic manifest. Unsupported or non-equivalent mappings will emit a structured terminal adapter failure and will not reach execution. The adapter will never back-write solver names or defaults into the SSOT.</li>
+      <li><strong>OrcaFlex v1 adapter and licensed runner:</strong> will execute statics and dynamics on an approved Windows host and will attest solver/DLL version and input/model hashes.</li>
+      <li><strong>Future solver adapter:</strong> custom FEA or another solver will consume the same case and analysis intent, map results to the same generic quantity/location/criterion contracts, and satisfy the same request/receipt/result evidence boundaries.</li>
+      <li><strong>Result extractor:</strong> will emit typed engineering outputs, failure records, and criterion identifiers; it will never replace failed runs with mock values.</li>
+      <li><strong>Publisher:</strong> will select release-approved rows, generate Parquet plus the dataset card, upload separately from <code>digitalmodel-runs</code>, and verify the immutable remote revision.</li>
+    </ol>
+    <h3>Solver abstraction decision</h3>
+    <table>
+      <thead><tr><th>Approach</th><th>Trade-off</th><th>Decision</th></tr></thead>
+      <tbody>
+        <tr><td>Generic canonical SSOT plus versioned target adapters</td><td>Requires explicit mappings and target-gap evidence, but preserves one engineering identity and makes solver replacement testable.</td><td><strong>Selected.</strong></td></tr>
+        <tr><td>Generic core with solver-specific fields inside canonical cases</td><td>Convenient for the first solver, but target defaults and object models contaminate identity and create schema forks.</td><td>Rejected.</td></tr>
+        <tr><td>Independent canonical model per solver</td><td>Allows target freedom, but duplicates engineering state and makes cross-solver provenance and reconciliation ambiguous.</td><td>Rejected.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="dataset">
+    <h2>5. Hugging Face dataset contract</h2>
+    <p>The target will be one public multi-config dataset: <code>aceengineer/digitalmodel-riser-analysis</code>. Each config will be a separate Parquet table with stable IDs and scalar viewer-compatible fields.</p>
+    <table>
+      <thead><tr><th>Config</th><th>Purpose</th><th>Minimum identity/provenance fields</th></tr></thead>
+      <tbody>
+        <tr><td><code>source_registry</code></td><td>Public source and synthetic-seed inventory.</td><td>source_id, source_class, canonical_source_id, source_sha256, license_class, release_status, schema_version</td></tr>
+        <tr><td><code>riser_components</code></td><td>Release-approved component properties in SI units.</td><td>component_id, source_id, type, geometry/material fields, unit-system marker, source-row locator</td></tr>
+        <tr><td><code>riser_configurations</code></td><td>Solver-neutral drilling and synthetic completion assemblies.</td><td>configuration_id, riser_family, component references, water-depth/design fields, normalized_input_sha256</td></tr>
+        <tr><td><code>analysis_cases</code></td><td>One row per generic requested case and target-solver terminal state.</td><td>case_id, configuration_id, generic_parameter_contract_sha256, solver_target_id, solver_adapter_contract_sha256, solver_projection_sha256, terminal_status</td></tr>
+        <tr><td><code>strength_results</code></td><td>Critical-location strength response and utilization.</td><td>case_id, location_id, effective_tension, bend_moment, stress/utilization fields, criterion_id, units, result_sha256</td></tr>
+        <tr><td><code>operability_results</code></td><td>Limits and operability envelopes.</td><td>case_id, heading/period/current/offset coordinates, limiting_sea_state, limiting_criterion, flex-joint angle, tensioner stroke/margin, operable flag</td></tr>
+        <tr><td><code>withheld_sources</code></td><td>Visible record of excluded sources/fields/cases without leaking restricted content.</td><td>withheld_id, source_class, reason_code, affected_surface, issue_url, review_state</td></tr>
+      </tbody>
+    </table>
+    <p>The dataset card will declare row counts, schemas, units, null semantics, license, source hashes, synthetic-case labeling, solver limitations, withheld fields/sources, and the exact code revision that generated each publication.</p>
+  </section>
+
+  <section id="eligibility">
+    <h2>6. Eligibility and release gates</h2>
+    <p>A configuration will be solver-eligible only when its schema, units, component relationships, boundary conditions, environment, and analysis requirements are complete. It will be publication-eligible only after the independent provenance, confidentiality, legal, engineering-plausibility, solver, and result-QA gates pass.</p>
+    <ol>
+      <li><strong>Discover:</strong> record source without assuming eligibility.</li>
+      <li><strong>Classify:</strong> canonical, duplicate, public, synthetic, private, licensed, or derived.</li>
+      <li><strong>Normalize:</strong> strict parsing, unit conversion, lineage, and immutable hash.</li>
+      <li><strong>Validate:</strong> schema, physical bounds, relational integrity, citations, and leak scan.</li>
+      <li><strong>Compile:</strong> create an immutable analysis case and deterministic OrcaFlex projection.</li>
+      <li><strong>Solve:</strong> execute only with a real licensed solver; preserve failures.</li>
+      <li><strong>Review:</strong> apply non-tautological spot checks and domain plausibility limits.</li>
+      <li><strong>Publish:</strong> select only release-approved rows and verify remote rendering.</li>
+    </ol>
+  </section>
+
+  <section id="analysis">
+    <h2>7. OrcaFlex strength and operability contract</h2>
+    <p>Each eligible configuration will receive at least a baseline statics case and a configuration-driven operability case set. The detailed sweep axes and values will be frozen in the issue plan from traceable public/synthetic inputs rather than embedded as unexplained defaults.</p>
+    <h3>Strength outputs</h3>
+    <ul>
+      <li>Effective tension, bend moment, curvature, and stress response at declared critical locations.</li>
+      <li>Upper/lower flex-joint response, tensioner force/stroke, and component-specific response where modeled.</li>
+      <li>Utilization only when the capacity equation, material basis, safety/design factor, units, revision, and Citation sidecar are complete.</li>
+    </ul>
+    <h3>Operability outputs</h3>
+    <ul>
+      <li>Vessel offset, wave heading/period/height, current profile, contents density, and top-tension coordinates used by the case.</li>
+      <li>Limiting sea state or offset, limiting criterion/location, flex-joint angle, tensioner stroke/margin, and operable/non-operable classification.</li>
+      <li>Operability fraction only when a publishable metocean scatter basis is available; otherwise the result will remain an envelope, not a fabricated probability.</li>
+    </ul>
+    <div class="callout"><strong>Solver truth rule:</strong> dry-run, generated-model, unit-test, reduced-order, and mock outputs will carry distinct terminal types and will never be published as licensed OrcaFlex results.</div>
+  </section>
+
+  <section id="identity">
+    <h2>8. Identity, determinism, and reproducibility</h2>
+    <p>The chain will preserve <code>source_sha256 → normalized_input_sha256 → generic_parameter_contract_sha256 → case_sha256 → solver_target_id/adapter/projection hashes → native model/result hashes → HF commit SHA</code>. Stable IDs will be content-derived or deterministically assigned from canonical IDs. Every published result will join back to exactly one analysis case and normalized configuration.</p>
+    <p>The solver manifest will record the digitalmodel commit, adapter/schema version, OrcaFlex/DLL version, host role (not hostname/user), requested stages, timestamps, terminal status, warnings, and artifact hashes. Machine-specific absolute paths and credentials will never enter the manifest.</p>
+  </section>
+
+  <section id="privacy">
+    <h2>9. Privacy, licensing, and security</h2>
+    <ul>
+      <li>Allowlist-based field extraction will replace broad serialization of source models.</li>
+      <li>Legal and leak gates will reject usernames, hostnames, emails, absolute paths, project/client identifiers, secrets, restricted deny-list tokens, and unapproved URLs.</li>
+      <li>Standards citations will identify code/revision/section without reproducing licensed tables or prose.</li>
+      <li>Vendor/model names from the malformed drilling CSV will remain quarantined until original lineage and redistribution basis are resolved.</li>
+      <li>Completion reference cases will be publisher-owned synthetic configurations and will not be calibrated by copying values from withheld models.</li>
+      <li>HF authentication will remain environment/token-file backed. Tokens will never be printed, committed, or included in run evidence.</li>
+    </ul>
+  </section>
+
+  <section id="errors">
+    <h2>10. Failure handling and observability</h2>
+    <table>
+      <thead><tr><th>Failure</th><th>Required behavior</th></tr></thead>
+      <tbody>
+        <tr><td>Malformed source row or ambiguous units</td><td>Reject with source/row locator and reason; never shift fields or infer units silently.</td></tr>
+        <tr><td>Missing provenance/license decision</td><td>Route to <code>withheld_sources</code>; exclude data values.</td></tr>
+        <tr><td>Incomplete engineering case</td><td>Mark not solver-eligible; list missing requirements.</td></tr>
+        <tr><td>Model generation mismatch</td><td>Fail before solver dispatch; retain deterministic diff/evidence.</td></tr>
+        <tr><td>License unavailable or solver failure</td><td>Record terminal failure and diagnostic class; emit no result rows.</td></tr>
+        <tr><td>Implausible or unverified result</td><td>Quarantine the result, file/link an issue, and expose withholding without publishing the value.</td></tr>
+        <tr><td>HF upload/indexing failure</td><td>Keep local release immutable, verify repo files/revision, poll datasets-server, and avoid duplicate blind retries.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="verification">
+    <h2>11. Verification strategy</h2>
+    <p>Implementation will use TDD. Tests will be written and observed failing before production changes. Verification will include:</p>
+    <ul>
+      <li>CSV row-width and strict-schema rejection tests, including the currently malformed 36-row drilling source.</li>
+      <li>Canonical-vs-duplicate detection and source-hash tests.</li>
+      <li>Unit conversion, physical-bound, relationship, and stable-ID/hash tests.</li>
+      <li>Confidentiality/leak fixtures covering source headers and embedded OrcaFlex metadata.</li>
+      <li>Normalized-case → generated-model mapping and deterministic regeneration tests.</li>
+      <li>Licensed-worker integration tests proving OrcFxAPI version, statics/dynamics execution, typed result extraction, and failure capture.</li>
+      <li>Independent engineering spot checks that do not reuse the implementation formula as the oracle.</li>
+      <li>Dataset-card/config/schema/row-count/hash validation and publisher dry-run tests.</li>
+      <li>Post-upload HfApi file/revision checks plus datasets-server validity and row queries for every config.</li>
+      <li>Mandatory legal scan and adversarial code/artifact cross-review before issue close.</li>
+    </ul>
+  </section>
+
+  <section id="delivery">
+    <h2>12. Delivery slices and issue boundaries</h2>
+    <ol>
+      <li><strong>Data repair and source contract:</strong> repair or explicitly quarantine the malformed worldenergydata CSV; land the source registry and normalized-schema contract.</li>
+      <li><strong>Public-safe configuration set:</strong> assemble drilling configurations and independently authored synthetic completion reference cases.</li>
+      <li><strong>Case compiler and adapter interface:</strong> freeze generic cases and deterministic solver projections; implement OrcaFlex as the first target without coupling the SSOT to it.</li>
+      <li><strong>Licensed execution and extraction:</strong> run all eligible configurations and produce verified strength/operability tables.</li>
+      <li><strong>HF publication:</strong> build Parquet/card, upload, verify immutable revision and datasets-server rows, and trigger any registered rebuild only through approved secrets.</li>
+    </ol>
+    <p>Issue #1602 will own the cross-layer vocabulary, schemas, promotion gates, and completion audit. Cross-repo data repair and implementation slices will receive their own issues/plans where they modify independently governed repositories. Existing issue #138 will be reconciled rather than duplicated for OrcaFlex analysis scope.</p>
+  </section>
+
+  <section id="acceptance">
+    <h2>13. Design acceptance</h2>
+    <ul>
+      <li>The normalized solver-neutral model is the single source of truth.</li>
+      <li>Canonical parameters contain generic engineering state only; solver object names, files, hosts, licenses, and implicit defaults remain derived adapter concerns.</li>
+      <li>A custom FEA or future solver can be added through a reviewed adapter without changing canonical case identity or forking the SSOT schema.</li>
+      <li>Unsupported or non-equivalent mappings terminate before execution with evidence; they cannot produce promoted solver results.</li>
+      <li>Native solver models are prohibited from the public dataset independent of file extension or solver target.</li>
+      <li>Option 1 produces one public-safe HF projection and never uploads raw completion models.</li>
+      <li>Drilling and synthetic completion cases remain explicitly distinguishable.</li>
+      <li>Every published result is traceable through source, input, case, model, solver, result, and HF revision hashes.</li>
+      <li>Failed, mock, withheld, or unverified cases cannot masquerade as licensed solver results.</li>
+      <li>Strength utilization and standards-derived constants cannot publish without Citation sidecars.</li>
+      <li>All eligible configurations receive the agreed strength and operability analysis; ineligible sources remain visibly withheld with reasons.</li>
+    </ul>
+    <p><strong>Next gate:</strong> the owner will review this written specification. After approval, the implementation-planning skill will convert it into the issue-scoped plan, which will then undergo T3 adversarial review before a separate user plan-approval gate.</p>
+  </section>
+</main>
+</body>
+</html>

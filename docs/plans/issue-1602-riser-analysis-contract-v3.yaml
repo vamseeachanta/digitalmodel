@@ -1,0 +1,133 @@
+contract_id: digitalmodel-riser-analysis-parent-interface
+contract_version: 3.0.0-draft.1
+status: planning-interface
+authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
+review_candidate_plan:
+  path: 2026-07-18-issue-1602-riser-host-diffraction-plan.html
+  sha256: 2e5c98dbce7833fe79be527e6f3db4dc1a0d27f301a12c45b316500b66b738b5
+approved_architecture_design:
+  path: ../superpowers/specs/2026-07-18-riser-host-diffraction-monitoring-design.html
+  sha256: 05bf52bf3453477e8bb8734c74a73d1b560869e80dd86890006ab3e0e1d3c5d0
+  approval_scope: architecture_and_original_issue_decomposition_only
+resource_intelligence_evidence:
+  path: evidence/issue-1602-drive-index-resource-intel-2026-07-18.json
+  sha256: 03b2f22210d29dbaeff4d498840001134a1e63221eb99b39483f26b20f1a135c
+
+composition:
+  base:
+    component_id: solver_neutral_base_v2
+    path: issue-1602-riser-analysis-contract-v1.yaml
+    sha256: 7e86ae789ffbd329aa06d503fb0c419385132e8a533ce99a6de8a87b1696b1b0
+    retained_scope: solver_neutral_SSOT_execution_release_and_closeout_contract
+    identity_mode: legacy_root_assigned
+    expected_in_file_contract_id: digitalmodel-riser-analysis-parent-interface
+    expected_in_file_contract_version: 2.0.0-draft.11
+    filename_version_label_is_non_authoritative: true
+  components:
+    - path: issue-1602-riser-host-motion-contract-v3.yaml
+      component_id: host_motion_component
+      sha256: 1395039047aa440de25a3f6c52433b23b5f8f1146c25f590efd8f2e449652a14
+      retained_scope: host_hydrodynamics_motion_and_tracer_extensions
+    - path: issue-1602-riser-assurance-contract-v3.yaml
+      component_id: assurance_component
+      sha256: 83b8bb2ebbdf9328e8ad40e94e1a3a50340845f73137ddf4b686294b28d13fce
+      retained_scope: invariants_validation_fixtures_and_closeout_extensions
+  load_order: [solver_neutral_base_v2, host_motion_component,
+    assurance_component]
+  conflict_rule: later_component_may_strengthen_or_extend_but_never_weaken_base
+  duplicate_key_rule: explicit_merge_directive_required_otherwise_fail_closed
+  merge_directives:
+    owners: merge_by_owner_key_and_append_strengthening_amendment
+    interface_envelopes: union_new_keys_only
+    existing_envelope_extensions: extend_effective_minimum_bindings_or_discriminated_union
+    identity_chain: replace_base_order_with_declared_v3_order
+    envelope_commitment_rules: union_new_keys_and_lift_all_coverage_to_effective_bindings
+    required_handoff_equalities: append_full_constraints_deduplicate_exact_records_and_conjoin_same_route_requirements
+    required_handoff_derivations: append_unique_by_output
+    milestone_DAG_extensions: append_unique_edges_and_guards
+    promotion_gate_extensions: conjoin_same_named_gate_requirements_without_loss
+    public_dataset_surface_extensions: union_configs_and_apply_projection_contract
+    planning_validation: deep_union_lists_and_require_equal_scalars
+    closeout_rules: append_strengthening_rules
+    child_acceptance_obligations: normalize_role_and_issue_keys_through_crosswalk_then_replace_explicit_removal_and_append
+    non_blocking_consumer_graph: isolated_union_excluded_from_closeout
+  duplicate_edge_rule: canonicalize_then_deduplicate_exact_duplicates
+  removal_rule: no_base_owner_envelope_binding_gate_or_test_is_removed_unless_listed
+  explicit_removals:
+    - child_acceptance_obligations.public_release.exact_13_config_schemas
+  hash_mismatch_rule: fail_closed_before_plan_or_runtime_validation
+
+effective_authority:
+  parent_owns: [SSOT_architecture, public_private_boundary,
+    global_coordinates, cross_repository_DAG, envelope_identity_chain,
+    promotion_gates, program_acceptance_and_closeout]
+  child_owns: [exact_nested_schemas, field_and_unit_contracts,
+    hash_preimages, executable_validators, conformance_fixtures,
+    repository_code_tests_receipts_and_reports]
+  weakening_rule: fresh_parent_revision_adversarial_review_and_owner_approval
+  implementation_authorization: absent_until_user_approval_and_child_gate
+
+effective_owners:
+  inherit_all_base_owners: true
+  add: [floating_host_source, floating_host_identity,
+    hydrodynamic_response]
+  amend: [normalized_ssot, drilling_workflow, analysis_semantics,
+    licensed_execution, public_release]
+  exact_definitions: issue-1602-riser-host-motion-contract-v3.yaml#owners
+
+effective_interface_envelopes:
+  inherit_all_base_envelopes: true
+  add: [public_floater_source_record, floating_host_identity,
+    hydrodynamic_response, vessel_motion_boundary]
+  extend: [normalized_case, analysis_contract, drilling_analysis_request,
+    completion_workover_analysis_request, deterministic_bundle,
+    execution_request, execution_receipt, engineering_result,
+    logical_release, HF_publication_receipt, website_evidence,
+    program_closeout]
+  exact_definitions: issue-1602-riser-host-motion-contract-v3.yaml
+
+effective_public_dataset_surfaces:
+  inherit_base_configs: true
+  add: [floating_hosts, hydrodynamic_responses,
+    hydrodynamic_response_values, vessel_motion_boundaries]
+  exact_required_configs: [source_registry, transformations, citations,
+    criteria, clean_room_reviews, field_lineage, riser_components,
+    riser_configurations, analysis_cases, execution_attestations,
+    strength_results, operability_results, withheld_sources, floating_hosts,
+    hydrodynamic_responses, hydrodynamic_response_values,
+    vessel_motion_boundaries]
+  exact_config_count: 17
+  monitoring_configs_in_parent_release: forbidden
+
+effective_DAG:
+  base_edges_retained: true
+  extensions: issue-1602-riser-host-motion-contract-v3.yaml#milestone_DAG_extensions
+  monitoring_edges: forbidden
+  non_blocking_consumer_graph:
+    source: issue-1602-riser-assurance-contract-v3.yaml#non_blocking_consumer_graph
+    excluded_from_parent_closeout_reachability: true
+  route_rule: drilling_requires_host_response_motion_chain
+  completion_workover_rule: typed_required_or_not_applicable_disposition
+  validation: acyclic_all_nodes_owned_and_all_blocking_paths_reach_parent_closeout
+
+effective_promotion_gates:
+  inherit_all_base_gates: true
+  extensions: issue-1602-riser-assurance-contract-v3.yaml#promotion_gate_extensions
+  same_named_gate_rule: conjoin_base_and_extension_requirements
+  validation: every_base_and_extension_requirement_is_present_after_composition
+
+effective_validation:
+  base_planning_and_closeout_checks_retained: true
+  extensions: issue-1602-riser-assurance-contract-v3.yaml
+  blocker_rule: any_failed_assertion_or_RED_fixture_prevents_promotion
+  composed_contract_output: build/riser-parent-contract-v3.composed.yaml
+  independent_comparison_surface: all_effective_sections_in_this_manifest
+  comparison_rule: emitted_composed_contract_must_equal_independent_effective_declaration
+
+supersession:
+  supersedes_version: 2.0.0-draft.11
+  reason: breaking_host_hydrodynamic_motion_identity_and_release_surface_revision
+  historical_base_path_retained: issue-1602-riser-analysis-contract-v1.yaml
+  historical_approval_carries_forward: false
+  fresh_adversarial_review_required: true
+  fresh_user_approval_required: true

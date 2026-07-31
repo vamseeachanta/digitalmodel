@@ -1,0 +1,549 @@
+contract_id: digitalmodel-riser-analysis-parent-interface
+contract_version: 2.0.0-draft.11
+status: planning-interface
+authority_issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
+approved_design: 2026-07-16-issue-1602-riser-hf-analysis-design.html
+
+authority:
+  parent_owns: [SSOT_architecture, public_private_boundary, global_coordinates,
+    cross_repository_DAG, envelope_identity_chain, promotion_gates,
+    program_acceptance_and_closeout]
+  child_owns: [exact_nested_schemas, field_and_unit_contracts,
+    hash_preimages, executable_validators, conformance_fixtures,
+    repository_code_tests_receipts_and_reports]
+  conflict_rule: parent_invariants_win_child_details_win_within_owned_boundary
+  weakening_rule: parent_revision_adversarial_review_and_owner_approval
+
+source_of_truth:
+  canonical: solver_neutral_normalized_configuration_and_analysis_case
+  evidence_only: source_artifacts_and_legacy_OrcaFlex_models
+  derived_only: analysis_requests_bundles_native_models_and_solver_results
+  public_projection: release_approved_inputs_results_and_provenance
+  forbidden_public: [raw_DAT, raw_YML, raw_YAML, confidential_models,
+    native_solver_model_artifacts,
+    licensed_text, machine_paths, user_identifiers, client_identifiers,
+    project_identifiers, secrets, private_source_hashes, mock_solver_results]
+
+solver_neutrality_contract:
+  canonical_parameter_groups: [topology_and_geometry,
+    materials_and_section_properties, contents_and_internal_fluids,
+    environment_and_metocean, loads, boundary_and_initial_conditions,
+    analysis_intent_and_stages, requested_quantities_and_locations,
+    acceptance_criteria, units_and_coordinate_frames]
+  forbidden_in_canonical_SSOT: [solver_object_names, solver_file_layout,
+    solver_license_settings, solver_host_settings, solver_implicit_defaults]
+  model_contract_semantics: solver_neutral_physics_analysis_intent_and_outputs
+  adapter_rule: versioned_target_adapter_projects_SSOT_without_back_write
+  first_execution_target: OrcaFlex
+  future_execution_targets: open_including_custom_FEA
+  target_gap_rule: unsupported_or_non_equivalent_mapping_emits_terminal_adapter_failure_and_never_executes
+  result_rule: every_result_maps_to_generic_quantity_location_and_criterion_contracts
+  pivot_acceptance: new_solver_requires_adapter_and_target_validation_not_SSOT_reauthoring
+
+owners:
+  source_repair:
+    issue: https://github.com/vamseeachanta/worldenergydata/issues/1046
+    outputs: [validated_source_rows]
+  normalized_ssot:
+    issue: https://github.com/vamseeachanta/digitalmodel/issues/1603
+    outputs: [normalized_case_contract, coordinate_adapter,
+      deterministic_bundle_builder, public_and_withheld_source_registers]
+  drilling_workflow:
+    issue: https://github.com/vamseeachanta/digitalmodel/issues/811
+    outputs: [drilling_request_matrix]
+  analysis_semantics:
+    issue: https://github.com/vamseeachanta/digitalmodel/issues/138
+    outputs: [analysis_contract, completion_workover_request_matrix,
+      execution_authorizer, engineering_validator, engineering_results]
+  licensed_execution:
+    issue: https://github.com/vamseeachanta/deckhand/issues/568
+    outputs: [execution_request_schema_and_verifier, artifact_transport,
+      host_execution_agent, signed_execution_receipt]
+  public_release:
+    issue: https://github.com/vamseeachanta/digitalmodel/issues/1604
+    outputs: [logical_public_release, HF_publication_receipt, HF_verifier,
+      closeout_verifier_implementation]
+  website:
+    issue: https://github.com/vamseeachanta/aceengineer-website/issues/75
+    outputs: [website_promotion_evidence]
+  parent_closeout:
+    issue: https://github.com/vamseeachanta/digitalmodel/issues/1602
+    outputs: [program_closeout_evidence]
+
+global_coordinate_contract:
+  axes: ENU_right_handed
+  vertical_datum: mean_water_level
+  direction: clockwise_from_true_north_going_to
+  vessel_heading: bow_to
+  offset_reference: top_connection
+  line_result_location: arc_length_from_top_connection
+  exact_transform_owner: normalized_ssot
+  drilling_role_mapping_owner: drilling_workflow
+  rule: drilling_role_mapping_outputs_normalized_fields_and_never_reapplies_global_rotation
+
+interface_envelopes:
+  normalized_case:
+    producer: normalized_ssot
+    consumers: [drilling_workflow, analysis_semantics, public_release]
+    minimum_bindings: [schema_version, riser_family, configuration_id,
+      configuration_sha256, case_id, case_sha256, source_class,
+      public_source_sha256_or_safe_provenance_commitment_sha256,
+      confidentiality_status, redistribution_status, units_contract_sha256,
+      generic_parameter_contract_sha256,
+      provenance_envelope_sha256, eligibility_status,
+      normalized_case_envelope_sha256]
+  analysis_contract:
+    producer: analysis_semantics
+    consumers: [drilling_workflow, normalized_ssot, licensed_execution,
+      public_release]
+    minimum_bindings: [model_contract_version, model_contract_sha256,
+      result_contract_version, result_contract_sha256,
+      criteria_contract_sha256, oracle_contract_sha256]
+  drilling_analysis_request:
+    producer: drilling_workflow
+    consumers: [normalized_ssot, analysis_semantics]
+    minimum_bindings: [request_contract_version, riser_family,
+      analysis_request_id,
+      request_matrix_sha256, case_id, case_sha256, model_contract_sha256,
+      generic_parameter_contract_sha256]
+  completion_workover_analysis_request:
+    producer: analysis_semantics
+    consumers: [normalized_ssot]
+    minimum_bindings: [request_contract_version, riser_family,
+      analysis_request_id,
+      request_matrix_sha256, case_id, case_sha256, model_contract_sha256,
+      generic_parameter_contract_sha256]
+  deterministic_bundle:
+    producer: normalized_ssot
+    consumers: [analysis_semantics, licensed_execution]
+    minimum_bindings: [riser_family, case_id, case_sha256,
+      analysis_request_id,
+      model_contract_sha256, generic_parameter_contract_sha256,
+      solver_target_id, solver_adapter_contract_sha256,
+      solver_projection_sha256, target_semantic_coverage_status,
+      target_semantic_mapping_evidence_sha256,
+      target_gap_disposition_sha256, adapter_version, generator_commit,
+      bundle_sha256, file_manifest_sha256]
+  execution_request:
+    schema_owner: licensed_execution
+    producer: analysis_semantics
+    consumer: licensed_execution
+    minimum_bindings: [request_schema_version, execution_request_id,
+      execution_request_sha256,
+      requester_principal_id, requester_signature_sha256,
+      authorization_policy_version, authorization_evidence_sha256,
+      case_id, case_sha256, analysis_request_id, bundle_sha256,
+      model_contract_sha256, generic_parameter_contract_sha256,
+      solver_target_id, solver_adapter_contract_sha256,
+      solver_projection_sha256, target_semantic_coverage_status,
+      target_semantic_mapping_evidence_sha256,
+      target_gap_disposition_sha256, requested_solver_stages_sha256]
+  execution_receipt:
+    producer: licensed_execution
+    consumers: [analysis_semantics, public_release]
+    minimum_bindings: [receipt_schema_version, execution_request_id,
+      execution_request_sha256, requester_signature_sha256,
+      authorization_evidence_sha256, requested_solver_stages_sha256,
+      case_id, case_sha256, analysis_request_id, bundle_sha256,
+      model_contract_sha256, generic_parameter_contract_sha256,
+      solver_target_id, solver_adapter_contract_sha256,
+      solver_projection_sha256, target_semantic_coverage_status,
+      target_semantic_mapping_evidence_sha256,
+      target_gap_disposition_sha256, native_model_sha256, solver_identity_sha256,
+      semantic_status, raw_solver_payload_sha256, host_signer_principal_id,
+      execution_receipt_sha256]
+  engineering_result:
+    producer: analysis_semantics
+    consumers: [public_release]
+    minimum_bindings: [result_contract_version, result_contract_sha256,
+      criteria_contract_sha256, oracle_contract_sha256, case_id, case_sha256,
+      generic_parameter_contract_sha256, solver_target_id,
+      solver_adapter_contract_sha256, solver_projection_sha256,
+      target_semantic_coverage_status,
+      target_semantic_mapping_evidence_sha256,
+      target_gap_disposition_sha256,
+      execution_receipt_sha256, raw_solver_payload_sha256,
+      engineering_result_payload_sha256, quantity_unit_contract_sha256,
+      criterion_citation_contract_sha256, completeness_status,
+      oracle_status, oracle_evidence_sha256, licensed_validation_evidence_sha256,
+      engineering_result_envelope_sha256]
+  logical_release:
+    producer: public_release
+    consumers: [public_release, parent_closeout]
+    minimum_bindings: [release_contract_version, release_id,
+      logical_release_sha256, release_manifest_sha256,
+      normalized_case_set_sha256, engineering_result_set_sha256,
+      result_contract_version, result_contract_sha256,
+      criteria_contract_sha256, oracle_contract_sha256,
+      public_eligibility_evidence_sha256,
+      clean_room_evidence_set_sha256, authenticated_join_evidence_sha256,
+      decoded_leak_ruleset_sha256, decoded_leak_evidence_sha256,
+      legal_license_evidence_sha256]
+  HF_publication_receipt:
+    producer: public_release
+    consumers: [website, parent_closeout]
+    minimum_bindings: [publication_receipt_version,
+      logical_release_sha256, HF_repo_id, HF_commit_sha,
+      exact_tree_evidence_sha256, semantic_remote_evidence_sha256,
+      HF_publication_receipt_sha256]
+  website_evidence:
+    producer: website
+    consumers: [parent_closeout]
+    minimum_bindings: [website_commit_sha, deployment_id, public_route,
+      logical_release_sha256, HF_commit_sha, HF_publication_receipt_sha256,
+      rendered_release_id, online_verification_sha256,
+      website_evidence_sha256]
+  program_closeout:
+    implementation_owner: public_release
+    producer: parent_closeout
+    minimum_bindings: [closeout_schema_version, parent_plan_sha,
+      parent_interface_version, parent_interface_sha256,
+      closeout_verifier_version, closeout_verifier_commit,
+      closeout_invoked_at,
+      child_approval_set_sha256, no_MAJOR_review_set_sha256,
+      landed_ancestry_set_sha256, test_legal_completeness_set_sha256,
+      clean_room_revalidation_sha256, logical_release_sha256,
+      HF_publication_receipt_sha256, website_evidence_sha256,
+      fresh_HF_retrieved_at, fresh_HF_observed_repo_id,
+      fresh_HF_observed_commit_sha, fresh_HF_observed_head_sha,
+      fresh_HF_observed_logical_release_sha256,
+      fresh_HF_observed_publication_receipt_sha256,
+      fresh_HF_exact_tree_evidence_sha256,
+      fresh_HF_semantic_remote_evidence_sha256,
+      fresh_HF_retrieval_evidence_sha256,
+      fresh_website_retrieved_at, fresh_website_observed_deployment_id,
+      fresh_website_observed_commit_sha, fresh_website_HTTP_status,
+      fresh_website_observed_route,
+      fresh_website_observed_rendered_release_id,
+      fresh_website_observed_logical_release_sha256,
+      fresh_website_observed_HF_commit_sha,
+      fresh_website_observed_HF_publication_receipt_sha256,
+      fresh_website_observed_website_evidence_sha256,
+      fresh_website_content_evidence_sha256,
+      fresh_website_retrieval_evidence_sha256,
+      scope_reduction_approval_set_sha256,
+      program_closeout_evidence_sha256]
+
+identity_chain:
+  order: [approved_public_source_or_safe_provenance_commitment,
+    normalized_configuration, analysis_case, analysis_request,
+    solver_target_and_adapter_contract, solver_projection,
+    deterministic_bundle, execution_request, native_model, raw_solver_payload,
+    execution_receipt, engineering_result_payload, logical_release, HF_commit,
+    HF_publication_receipt, website_evidence]
+  acyclic_rule: receipt_signs_preexisting_raw_payload_and_engineering_result_is_derived_only_after_receipt_verification
+  downstream_rule: every_consumer_verifies_all_received_upstream_bindings
+
+milestone_DAG:
+  edges:
+    - source_ready -> normalized_case_ready
+    - normalized_case_ready -> analysis_contract_ready
+    - analysis_contract_ready -> drilling_requests_ready
+    - analysis_contract_ready -> completion_workover_requests_ready
+    - analysis_contract_ready -> solver_adapter_contract_ready
+    - drilling_requests_ready -> deterministic_bundles_ready
+    - completion_workover_requests_ready -> deterministic_bundles_ready
+    - solver_adapter_contract_ready -> deterministic_bundles_ready
+    - deterministic_bundles_ready -> execution_authorized
+    - execution_authorized -> licensed_execution_complete
+    - licensed_execution_complete -> licensed_engineering_validation_complete
+    - licensed_engineering_validation_complete -> logical_release_ready
+    - logical_release_ready -> HF_publication_verified
+    - HF_publication_verified -> website_complete
+    - website_complete -> parent_closeout_complete
+  milestone_owners:
+    source_ready: source_repair
+    normalized_case_ready: normalized_ssot
+    analysis_contract_ready: analysis_semantics
+    drilling_requests_ready: drilling_workflow
+    completion_workover_requests_ready: analysis_semantics
+    solver_adapter_contract_ready: normalized_ssot
+    deterministic_bundles_ready: normalized_ssot
+    execution_authorized: analysis_semantics
+    licensed_execution_complete: licensed_execution
+    licensed_engineering_validation_complete: analysis_semantics
+    logical_release_ready: public_release
+    HF_publication_verified: public_release
+    website_complete: website
+    parent_closeout_complete: parent_closeout
+
+compatibility:
+  producer: emit_owned_reviewed_schema_version_and_envelope_hashes
+  consumer: reject_unknown_or_unapproved_schema_version
+  silent_field_drop_or_default: prohibited
+  child_schema_change: child_review_and_owner_approval
+  interface_change: parent_review_and_owner_approval
+
+public_dataset_surfaces:
+  required_configs: [source_registry, transformations, citations, criteria,
+    clean_room_reviews, field_lineage, riser_components,
+    riser_configurations, analysis_cases, execution_attestations,
+    strength_results, operability_results, withheld_sources]
+  exact_schema_owner: public_release
+
+promotion_gates:
+  source_to_normalized: [source_classified, provenance_complete,
+    legal_license_approved, units_explicit, malformed_rows_rejected]
+  normalized_to_bundle: [approved_schema, complete_mapping,
+    generic_parameter_contract_bound, no_implicit_defaults,
+    versioned_solver_adapter, no_adapter_back_write,
+    target_semantic_mapping_evidence_bound,
+    deterministic_generation, bundle_hash_verified]
+  bundle_to_execution: [independently_authorized_request, safe_transport,
+    target_specific_runtime_preflight, target_specific_real_canary,
+    target_semantic_coverage_complete,
+    unsupported_or_non_equivalent_mapping_is_terminal,
+    bundle_model_generic_parameter_adapter_and_projection_binding]
+  execution_to_result: [approved_solver_target,
+    target_specific_execution_evidence, requested_stages_complete,
+    semantic_success, signed_receipt, raw_payload_hash_verified,
+    engineering_completeness_and_oracles_pass]
+  result_to_public: [public_sources_or_safe_commitments_only,
+    clean_room_synthetic_evidence, authenticated_case_execution_result_criterion_joins,
+    surface_scoped_row_evidence,
+    decoded_leak_and_legal_license_evidence]
+  public_to_website: [immutable_HF_commit_verified,
+    exact_configs_rows_and_release_ID_verified, full_dataset_card_verified,
+    limitations_and_withholding_documented]
+  program_closeout: [child_approvals, no_MAJOR_artifact_reviews,
+    landed_remote_ancestry, tests_legal_completeness, clean_room_revalidation,
+    HF_and_website_live_evidence, owner_approved_scope_reductions_only]
+
+global_invariants:
+  - stable_engineering_identity_excludes_time_bearing_eligibility_attestations
+  - raw_completion_models_never_enter_public_artifacts
+  - public_completion_inputs_are_clean_room_synthetic
+  - clean_room_author_uses_public_only_allowlist_and_records_declaration_citations_rationale_and_environment_evidence
+  - clean_room_review_uses_distinct_authorized_principal_and_private_confidentiality_evidence
+  - mock_or_reduced_order_results_never_claim_OrcaFlex_provenance
+  - canonical_SSOT_contains_only_solver_neutral_engineering_parameters
+  - solver_specific_models_settings_and_defaults_are_derived_adapter_outputs_only
+  - solver_adapter_never_back_writes_defaults_or_names_into_canonical_SSOT
+  - adding_a_solver_target_requires_no_canonical_SSOT_schema_fork
+  - unsupported_or_non_equivalent_target_mapping_never_reaches_execution
+  - v1_executes_OrcaFlex_but_parent_interfaces_remain_solver_agnostic
+  - private_inputs_may_support_private_QA_but_never_seed_public_rows
+  - every_eligible_family_has_baseline_statics_and_complete_requested_outputs
+  - fatigue_is_outside_v1_public_release_but_may_remain_later_analysis_scope
+  - analysis_input_and_result_rows_have_schema_version_units_case_ID_and_calculation_or_solver_provenance
+  - registry_and_evidence_rows_have_schema_version_applicable_provenance_and_resolvable_linkage
+  - every_public_provenance_value_is_approved_for_disclosure
+  - standards_identifiers_and_citations_may_publish_but_licensed_text_may_not
+  - HF_publication_is_atomic_optimistic_and_exact_tree
+  - website_never_renders_withheld_columns_or_values
+
+child_acceptance_obligations:
+  source_repair: [CSV_grammar_and_semantic_anchor_proof,
+    malformed_or_ambiguous_rows_repaired_or_rejected,
+    full_applicable_repository_legal_scan]
+  normalized_ssot: [complete_hash_bound_lineage, exhaustive_field_disposition,
+    closed_physical_inputs, collision_free_IDs, deterministic_hashes,
+    no_implicit_defaults, cross_platform_vectors,
+    reconstructable_clean_room_evidence, coordinate_current_conformance,
+    generic_solver_parameter_contract, solver_neutral_schema_vectors,
+    versioned_adapter_interface, OrcaFlex_adapter_as_first_target,
+    no_adapter_back_write_or_implicit_defaults,
+    full_applicable_repository_legal_scan]
+  drilling_workflow: [complete_drilling_request_matrix,
+    normalized_role_mapping_without_duplicate_rotation,
+    private_corpus_never_seeds_public_rows,
+    full_applicable_repository_legal_scan]
+  analysis_semantics: [pre_run_model_and_result_contracts,
+    complete_completion_workover_request_matrix, independent_request_authorization,
+    quantity_location_stage_matrix, criteria_citations_units_formulas,
+    stable_result_IDs, required_cardinality, independent_oracles,
+    solver_neutral_quantity_location_stage_and_criteria_contracts,
+    target_specific_result_mapping, post_run_licensed_validation,
+    fatigue_excluded_from_v1,
+    full_applicable_repository_legal_scan]
+  licensed_execution: [request_schema_and_signature_verification,
+    nonce_TTL_revocation, real_canary, host_license_proof,
+    safe_transport, signed_semantic_success_and_raw_result_receipt,
+    full_applicable_repository_legal_scan]
+  public_release: [exact_13_config_schemas,
+    authenticated_cross_layer_joins, surface_specific_row_evidence_matrix,
+    reject_all_native_solver_model_artifacts_independent_of_format,
+    ruleset_bound_decoded_leak_scan, atomic_exact_tree_HF_publication,
+    head_bound_remote_semantics, full_applicable_repository_legal_scan,
+    full_release_tree_legal_scan,
+    dataset_card_configs_rows_units_nulls_licenses_sources_limitations_and_issue_linked_withholding,
+    executable_typed_parent_closeout_verifier]
+  website: [both_render_paths_remove_withheld_values,
+    fail_closed_online_validation, exact_release_and_HF_commit_binding,
+    exact_commit_deployment_and_route_proof,
+    full_applicable_repository_legal_scan]
+
+parent_acceptance_evidence:
+  issue_tree: every_child_issue_URL_and_1602_scoped_milestone_state
+  approvals: owner_approval_bound_to_each_reviewed_child_plan
+  reviews: final_no_MAJOR_plan_and_artifact_reviews_per_child
+  repositories: landed_commit_and_remote_main_ancestry_per_child
+  quality: test_legal_and_completeness_evidence_per_child
+  engineering: signed_execution_receipts_and_oracle_evidence
+  release: logical_release_eligibility_join_leak_legal_HF_tree_and_semantic_evidence
+  website: exact_logical_release_HF_receipt_commit_deployment_and_route_evidence
+  closeout: parent_invoked_verifier_result_and_owner_approved_scope_reductions
+
+planning_validation:
+  required_owners: [source_repair, normalized_ssot, drilling_workflow,
+    analysis_semantics, licensed_execution, public_release, website,
+    parent_closeout]
+  required_envelopes: [normalized_case, analysis_contract,
+    drilling_analysis_request, completion_workover_analysis_request,
+    deterministic_bundle, execution_request, execution_receipt,
+    engineering_result, logical_release, HF_publication_receipt,
+    website_evidence, program_closeout]
+  require_DAG_acyclic: true
+  require_execution_request_producer_differs_from_receipt_producer: true
+  require_identity_chain_nodes_have_owner_or_envelope_binding: true
+  require_security_evidence_in_release_and_closeout: true
+  require_full_child_and_release_legal_scans: true
+  no_child_implementation_authorized_by_parent_alone: true
+
+required_family_routing:
+  discriminator_field: riser_family
+  allowed_routes:
+    drilling: drilling_analysis_request
+    completion: completion_workover_analysis_request
+    workover: completion_workover_analysis_request
+  selection: exactly_one_route_per_normalized_case_and_bundle
+  handoffs:
+    - {from: normalized_case, to: selected_request,
+       fields: [riser_family, case_id, case_sha256,
+         generic_parameter_contract_sha256]}
+    - {from: selected_request, to: deterministic_bundle,
+       fields: [riser_family, analysis_request_id, case_id, case_sha256,
+         model_contract_sha256, generic_parameter_contract_sha256]}
+
+required_handoff_equalities:
+  - {from: analysis_contract, to: drilling_analysis_request,
+     fields: [model_contract_sha256]}
+  - {from: analysis_contract, to: completion_workover_analysis_request,
+     fields: [model_contract_sha256]}
+  - {from: analysis_contract, to: deterministic_bundle,
+     fields: [model_contract_sha256]}
+  - {from: deterministic_bundle, to: execution_request,
+    fields: [case_id, case_sha256, analysis_request_id, bundle_sha256,
+       model_contract_sha256, generic_parameter_contract_sha256,
+       solver_target_id, solver_adapter_contract_sha256,
+       solver_projection_sha256, target_semantic_coverage_status,
+       target_semantic_mapping_evidence_sha256,
+       target_gap_disposition_sha256]}
+  - {from: execution_request, to: execution_receipt,
+     fields: [execution_request_id, execution_request_sha256,
+       requester_signature_sha256, authorization_evidence_sha256,
+       requested_solver_stages_sha256, case_id, case_sha256,
+       analysis_request_id, bundle_sha256, model_contract_sha256,
+       generic_parameter_contract_sha256, solver_target_id,
+       solver_adapter_contract_sha256, solver_projection_sha256,
+       target_semantic_coverage_status,
+       target_semantic_mapping_evidence_sha256,
+       target_gap_disposition_sha256]}
+  - {from: execution_receipt, to: engineering_result,
+    fields: [case_id, case_sha256, execution_receipt_sha256,
+       raw_solver_payload_sha256, generic_parameter_contract_sha256,
+       solver_target_id, solver_adapter_contract_sha256,
+       solver_projection_sha256, target_semantic_coverage_status,
+       target_semantic_mapping_evidence_sha256,
+       target_gap_disposition_sha256]}
+  - {from: analysis_contract, to: engineering_result,
+     fields: [result_contract_version, result_contract_sha256,
+       criteria_contract_sha256,
+       oracle_contract_sha256]}
+  - {from: engineering_result, to: logical_release,
+     fields: [result_contract_version, result_contract_sha256,
+       criteria_contract_sha256,
+       oracle_contract_sha256]}
+  - {from: logical_release, to: HF_publication_receipt,
+     fields: [logical_release_sha256]}
+  - {from: logical_release, to: website_evidence,
+     fields: [logical_release_sha256],
+     field_map: {release_id: rendered_release_id}}
+  - {from: logical_release, to: program_closeout,
+     fields: [logical_release_sha256]}
+  - {from: HF_publication_receipt, to: website_evidence,
+     fields: [HF_commit_sha, HF_publication_receipt_sha256]}
+  - {from: HF_publication_receipt, to: program_closeout,
+     fields: [HF_publication_receipt_sha256],
+     field_map: {HF_repo_id: fresh_HF_observed_repo_id,
+       HF_commit_sha: fresh_HF_observed_commit_sha,
+       logical_release_sha256: fresh_HF_observed_logical_release_sha256,
+       HF_publication_receipt_sha256:
+         fresh_HF_observed_publication_receipt_sha256}}
+  - {from: HF_publication_receipt, to: program_closeout,
+     field_map: {HF_commit_sha: fresh_HF_observed_head_sha}}
+  - {from: website_evidence, to: program_closeout,
+     fields: [website_evidence_sha256],
+     field_map: {deployment_id: fresh_website_observed_deployment_id,
+       website_commit_sha: fresh_website_observed_commit_sha,
+       public_route: fresh_website_observed_route,
+       rendered_release_id: fresh_website_observed_rendered_release_id,
+       logical_release_sha256: fresh_website_observed_logical_release_sha256,
+       HF_commit_sha: fresh_website_observed_HF_commit_sha,
+       HF_publication_receipt_sha256:
+         fresh_website_observed_HF_publication_receipt_sha256,
+       website_evidence_sha256:
+         fresh_website_observed_website_evidence_sha256}}
+
+envelope_commitment_rules:
+  normalized_case:
+    commitment_field: normalized_case_envelope_sha256
+    covers: every_minimum_binding_except_commitment_field
+    canonical_preimage_owner: normalized_ssot
+  engineering_result:
+    commitment_field: engineering_result_envelope_sha256
+    covers: every_minimum_binding_except_commitment_field
+    canonical_preimage_owner: analysis_semantics
+  execution_receipt:
+    commitment_field: execution_receipt_sha256
+    covers: every_minimum_binding_except_commitment_field
+    authentication: host_signature_covers_commitment
+    canonical_preimage_owner: licensed_execution
+  execution_request:
+    commitment_field: execution_request_sha256
+    covers: every_minimum_binding_except_excluded_self_referential_fields
+    excluded_self_referential_fields: [execution_request_sha256,
+      requester_signature_sha256]
+    authentication: requester_signature_covers_commitment
+    canonical_preimage_owner: licensed_execution
+    signature_producer: analysis_semantics
+
+closeout_observation_rules:
+  fresh_HF_required_checks: [head_equals_published_commit,
+    exact_tree_recomputed, datasets_server_valid,
+    configs_splits_features_rows_and_release_ID_reverified]
+  fresh_website_required_checks: [deployed_commit_equals_reviewed_commit,
+    HTTP_status_200, fetched_content_or_DOM_verified,
+    rendered_logical_release_HF_commit_and_publication_receipt_match]
+  evidence_commitments_cover_every_observed_field_and_check_result: true
+
+required_handoff_derivations:
+  - inputs: "normalized_case.normalized_case_envelope_sha256[*]"
+    output: logical_release.normalized_case_set_sha256
+    mode: child_defined_canonical_exact_set_commitment
+  - inputs: "engineering_result.engineering_result_envelope_sha256[*]"
+    output: logical_release.engineering_result_set_sha256
+    mode: child_defined_canonical_exact_set_commitment
+  - inputs: ["program_closeout.fresh_HF_retrieved_at",
+      "program_closeout.fresh_HF_observed_repo_id",
+      "program_closeout.fresh_HF_observed_commit_sha",
+      "program_closeout.fresh_HF_observed_head_sha",
+      "program_closeout.fresh_HF_observed_logical_release_sha256",
+      "program_closeout.fresh_HF_observed_publication_receipt_sha256",
+      "program_closeout.fresh_HF_exact_tree_evidence_sha256",
+      "program_closeout.fresh_HF_semantic_remote_evidence_sha256"]
+    output: program_closeout.fresh_HF_retrieval_evidence_sha256
+    mode: child_defined_fresh_authenticated_retrieval_commitment
+  - inputs: ["program_closeout.fresh_website_retrieved_at",
+      "program_closeout.fresh_website_observed_deployment_id",
+      "program_closeout.fresh_website_observed_commit_sha",
+      "program_closeout.fresh_website_HTTP_status",
+      "program_closeout.fresh_website_observed_route",
+      "program_closeout.fresh_website_observed_rendered_release_id",
+      "program_closeout.fresh_website_observed_logical_release_sha256",
+      "program_closeout.fresh_website_observed_HF_commit_sha",
+      "program_closeout.fresh_website_observed_HF_publication_receipt_sha256",
+      "program_closeout.fresh_website_observed_website_evidence_sha256",
+      "program_closeout.fresh_website_content_evidence_sha256"]
+    output: program_closeout.fresh_website_retrieval_evidence_sha256
+    mode: child_defined_fresh_authenticated_retrieval_commitment
