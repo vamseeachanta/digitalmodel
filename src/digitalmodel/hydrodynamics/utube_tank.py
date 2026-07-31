@@ -4,8 +4,24 @@
 
 The model is calibrated for conduit form loss and rigid-column inertia.  Its
 moment correlation has 4.3 percent RMS error for forcing periods of 20 seconds
-and longer.  Below about 16 seconds it degrades as the legs' own longitudinal
-(6.25 s) and transverse (2.79 s) sloshing modes begin to participate.
+and longer.  Below about 16 seconds it degrades, and the CAUSE IS NOT ESTABLISHED.
+
+An earlier note here attributed the degradation to the legs' own longitudinal
+(6.25 s) sloshing mode.  That explanation is withdrawn: roll about the
+longitudinal axis tilts the free surface ACROSS the leg width, so the
+roll-coupled mode is the 2.79 s transverse one, while the 6.25 s longitudinal
+mode is orthogonal to spatially uniform roll forcing.  The coupled mode is far
+too remote to account for the error -- at a 10 s forcing period its undamped
+magnification is 1.084 against the 1.72 the residual requires.  The 6.25 s mode
+gives 1.641, which is close enough in magnitude to have looked explanatory, and
+is why the wrong mechanism was plausible.
+
+Testing the properly coupled modal correction moves the all-case RMS from
+16.74 % to 16.68 %; one fitted modal damping ratio reaches 13.88 % only at the
+non-credible overdamped value zeta = 1.548.  The residual also carries a strong
+roll-amplitude dependence that no period-only mechanism explains.  The band is
+therefore empirical, and should not be widened on the strength of a mechanism
+that does not hold.
 
 The effective conduit length must be anchored to a measured *natural* period,
 never to the amplitude peak of a forced sweep.  The peak is loss-controlled and
