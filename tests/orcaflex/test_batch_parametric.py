@@ -115,6 +115,31 @@ class TestParametricResults:
         assert critical is not None
         assert critical.case_id == "c002"
 
+    def test_critical_case_min_clearance_selects_lowest(self):
+        """min_clearance_m is worst when SMALLEST: the near-grounding case
+        (0.4 m) is critical, not the safest (8.0 m) case."""
+        summary = ParametricResultsSummary(
+            results=[
+                CaseResult(case_id="c001", min_clearance_m=0.4, status="completed"),
+                CaseResult(case_id="c002", min_clearance_m=8.0, status="completed"),
+            ],
+        )
+        critical = summary.get_critical_case("min_clearance_m")
+        assert critical is not None
+        assert critical.case_id == "c001"
+
+    def test_critical_case_min_clearance_ignores_missing_values(self):
+        """A case without the metric must never be picked as critical."""
+        summary = ParametricResultsSummary(
+            results=[
+                CaseResult(case_id="c001", status="completed"),  # no clearance
+                CaseResult(case_id="c002", min_clearance_m=3.0, status="completed"),
+            ],
+        )
+        critical = summary.get_critical_case("min_clearance_m")
+        assert critical is not None
+        assert critical.case_id == "c002"
+
     def test_summary_statistics(self):
         """Summary stats should include min, max, mean, std."""
         summary = ParametricResultsSummary(

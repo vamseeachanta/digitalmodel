@@ -703,3 +703,109 @@ class TestOrcaWaveBackendModularMode:
             with open(yml_file) as f:
                 data = yaml.safe_load(f)
             assert data is not None, f"Empty YAML: {yml_file.name}"
+
+
+# ---------------------------------------------------------------------------
+# Tests: control surface emission (review sweep)
+# ---------------------------------------------------------------------------
+
+
+class TestControlSurfaceEmission:
+    """Control surface format/auto emission per the native Orcina examples."""
+
+    def _spec_with_cs(self, cs: dict) -> DiffractionSpec:
+        import copy
+
+        data = yaml.safe_load(
+            (FIXTURES_DIR / "spec_ship_raos.yml").read_text()
+        )
+        data = copy.deepcopy(data)
+        data["vessel"]["control_surface"] = cs
+        return DiffractionSpec.model_validate(data)
+
+    def _body(self, spec: DiffractionSpec, tmp_path: Path) -> dict:
+        from digitalmodel.hydrodynamics.diffraction.orcawave_backend import (
+            OrcaWaveBackend,
+        )
+
+        path = OrcaWaveBackend().generate_single(spec, tmp_path)
+        return _load_orcawave_yml(path)["Bodies"][0]
+
+    def test_gdf_control_surface_emits_wamit_gdf(self, tmp_path: Path):
+        """Native OrcaWave pairs .gdf control surfaces with 'Wamit gdf'
+        (L03 Semi-sub multibody analysis.yml) — never 'Wamit csf'."""
+        spec = self._spec_with_cs({"type": "mesh", "mesh_file": "cs.gdf"})
+        body = self._body(spec, tmp_path)
+        assert body["BodyControlSurfaceMeshFormat"] == "Wamit gdf"
+
+    def test_csf_control_surface_emits_wamit_csf(self, tmp_path: Path):
+        spec = self._spec_with_cs({"type": "mesh", "mesh_file": "cs.csf"})
+        body = self._body(spec, tmp_path)
+        assert body["BodyControlSurfaceMeshFormat"] == "Wamit csf"
+
+    def test_explicit_mesh_format_wins_over_extension(self, tmp_path: Path):
+        spec = self._spec_with_cs(
+            {"type": "mesh", "mesh_file": "cs.dat", "mesh_format": "dat"}
+        )
+        body = self._body(spec, tmp_path)
+        assert body["BodyControlSurfaceMeshFormat"] == "Wamit dat"
+
+    def test_unknown_control_surface_format_fails_loud(self, tmp_path: Path):
+        spec = self._spec_with_cs({"type": "mesh", "mesh_file": "cs.xyz"})
+        with pytest.raises(ValueError, match="control surface mesh format"):
+            self._body(spec, tmp_path)
+
+    def test_auto_control_surface_emitted_on_body(self, tmp_path: Path):
+        """Auto control surfaces must be emitted with the native keys
+        (BodyControlSurfaceType 'Automatically generated' with panel size and
+        separation, per L01 orcawave_001_ship_raos_rev2_matched.yml) instead
+        of being silently dropped while QuadraticLoadControlSurface stays on.
+        """
+        spec = self._spec_with_cs(
+            {"type": "auto", "panel_size": 0.5, "separation": 0.3}
+        )
+        path_dict = None
+        from digitalmodel.hydrodynamics.diffraction.orcawave_backend import (
+            OrcaWaveBackend,
+        )
+
+        path = OrcaWaveBackend().generate_single(spec, tmp_path)
+        path_dict = _load_orcawave_yml(path)
+        body = path_dict["Bodies"][0]
+        assert body["BodyControlSurfaceType"] == "Automatically generated"
+        assert body["BodyControlSurfacePanelSize"] == 0.5
+        assert body["BodyControlSurfaceSeparationFromBody"] == 0.3
+        assert body["BodyControlSurfaceIncludeFreeSurface"] is True  # "Yes"
+        # Enabling the quadratic load control surface is now consistent with
+        # a control surface actually defined on the body.
+        assert path_dict["QuadraticLoadControlSurface"] is True
+
+
+# ---------------------------------------------------------------------------
+# Tests: unsupported solver options fail loud (review sweep)
+# ---------------------------------------------------------------------------
+
+
+class TestUnsupportedSolverOptions:
+    def test_single_precision_rejected(self, tmp_path: Path):
+        """Native OrcaWave YAML has no solver-precision key, so a non-default
+        precision would be silently ignored — the backend must refuse."""
+        from digitalmodel.hydrodynamics.diffraction.orcawave_backend import (
+            OrcaWaveBackend,
+        )
+
+        spec = _ship_spec()
+        spec.solver_options.precision = "single"
+        with pytest.raises(ValueError, match="precision"):
+            OrcaWaveBackend().generate_single(spec, tmp_path)
+        with pytest.raises(ValueError, match="precision"):
+            OrcaWaveBackend().generate_modular(spec, tmp_path)
+
+    def test_default_precision_accepted_and_not_emitted(self, tmp_path: Path):
+        from digitalmodel.hydrodynamics.diffraction.orcawave_backend import (
+            OrcaWaveBackend,
+        )
+
+        spec = _ship_spec()
+        path = OrcaWaveBackend().generate_single(spec, tmp_path)
+        assert "SolverPrecision" not in path.read_text()

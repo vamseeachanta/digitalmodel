@@ -818,3 +818,56 @@ def test_run_orcawave_dry_run_resolves_thread_count_into_config(
     assert captured["thread_count"] == 57
     runner.run_orcawave(spec, output_dir=tmp_path, dry_run=True, thread_count=8)
     assert captured["thread_count"] == 8
+
+
+# ---------------------------------------------------------------------------
+# Pre-flight covers auxiliary meshes (#500/#605 review sweep)
+# ---------------------------------------------------------------------------
+
+
+class TestAuxiliaryMeshPreflight:
+    """_validate_mesh_references must cover damping-lid / control-surface /
+    free-surface-zone meshes, not just body meshes: packaging silently skips
+    missing source files, so the pre-flight is the only guard against
+    shipping a package with dangling auxiliary references."""
+
+    def test_missing_damping_lid_mesh_warns(self, ship_raos_spec_path, tmp_path):
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import (
+            DampingLidSpec,
+        )
+
+        spec = _load_spec(ship_raos_spec_path)
+        spec.damping_lid = DampingLidSpec(
+            mesh_file="lid_missing.gdf", damping_factor=0.05
+        )
+        config = RunConfig(output_dir=tmp_path, dry_run=True, copy_mesh_files=True)
+        runner = OrcaWaveRunner(config)
+        result = runner.prepare(spec, spec_path=ship_raos_spec_path)
+        assert result.error_message is not None
+        assert "Damping lid mesh" in result.error_message
+        assert "lid_missing.gdf" in result.error_message
+
+    def test_missing_control_surface_mesh_warns(
+        self, ship_raos_spec_path, tmp_path
+    ):
+        from digitalmodel.hydrodynamics.diffraction.input_schemas import (
+            ControlSurfaceSpec,
+        )
+
+        spec = _load_spec(ship_raos_spec_path)
+        spec.vessel.control_surface = ControlSurfaceSpec(
+            type="mesh", mesh_file="cs_missing.gdf"
+        )
+        config = RunConfig(output_dir=tmp_path, dry_run=True, copy_mesh_files=True)
+        runner = OrcaWaveRunner(config)
+        result = runner.prepare(spec, spec_path=ship_raos_spec_path)
+        assert result.error_message is not None
+        assert "control surface mesh" in result.error_message
+        assert "cs_missing.gdf" in result.error_message
+
+    def test_all_meshes_present_no_warning(self, ship_raos_spec_path, tmp_path):
+        spec = _load_spec(ship_raos_spec_path)
+        config = RunConfig(output_dir=tmp_path, dry_run=True, copy_mesh_files=True)
+        runner = OrcaWaveRunner(config)
+        result = runner.prepare(spec, spec_path=ship_raos_spec_path)
+        assert result.error_message is None

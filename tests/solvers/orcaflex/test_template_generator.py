@@ -27,7 +27,7 @@ def mock_orcfxapi():
 
 
 # Base path for templates
-TEMPLATES_DIR = Path(__file__).parent.parent.parent.parent / "docs" / "modules" / "orcaflex" / "templates"
+TEMPLATES_DIR = Path(__file__).parent.parent.parent.parent / "docs" / "domains" / "orcaflex" / "templates"
 
 
 @pytest.fixture
@@ -118,6 +118,32 @@ def sample_case_template(temp_output_dir, sample_base_template, sample_variation
     readme.write_text("# Test Hybrid Template\n")
 
     return case_file
+
+
+class TestDefaultTemplatesDir:
+    """Regression tests for the module-level default templates directory."""
+
+    def test_default_templates_dir_exists(self):
+        """DEFAULT_TEMPLATES_DIR must point at the real in-repo templates
+        location (docs/domains/orcaflex/templates), not the stale
+        docs/modules path."""
+        from digitalmodel.solvers.orcaflex.template_generator import DEFAULT_TEMPLATES_DIR
+
+        assert DEFAULT_TEMPLATES_DIR.exists(), (
+            f"DEFAULT_TEMPLATES_DIR does not exist: {DEFAULT_TEMPLATES_DIR}"
+        )
+        assert DEFAULT_TEMPLATES_DIR.resolve() == TEMPLATES_DIR.resolve()
+
+    def test_default_manager_discovers_templates(self):
+        """TemplateManager() with no args must discover the in-repo hybrid
+        templates (e.g. calm_buoy_hybrid)."""
+        from digitalmodel.solvers.orcaflex.template_generator import TemplateManager
+
+        manager = TemplateManager()
+        templates = manager.discover_templates()
+
+        assert len(templates) > 0
+        assert 'calm_buoy_hybrid' in manager.list_templates()
 
 
 class TestTemplateManager:
@@ -255,6 +281,66 @@ class TestTemplateGenerator:
 
         assert 'BaseFile' in content
         assert 'IncludeFile' in content
+
+    def test_reference_paths_resolve_from_arbitrary_output_dir(
+            self, temp_output_dir, sample_base_template, sample_variation):
+        """BaseFile/IncludeFile references must resolve from the output file's
+        directory even when the output is NOT inside the template's cases/
+        folder (regression: fallback used to emit a fixed '../base/...')."""
+        from digitalmodel.solvers.orcaflex.template_generator import TemplateGenerator
+
+        # Output far away from the template tree
+        output_file = temp_output_dir / "runs" / "nested" / "model.yml"
+
+        generator = TemplateGenerator()
+        result = generator.generate(
+            base_file=sample_base_template,
+            variation_file=sample_variation,
+            output_file=output_file,
+            as_reference=True
+        )
+
+        assert result['success'] is True
+
+        with open(output_file) as f:
+            content = yaml.safe_load(f)
+
+        # The emitted relative paths must actually resolve to the input files
+        base_resolved = (output_file.parent / content['BaseFile']).resolve()
+        variation_resolved = (output_file.parent / content['IncludeFile']).resolve()
+
+        assert base_resolved == sample_base_template.resolve(), (
+            f"BaseFile reference dangles: {content['BaseFile']}"
+        )
+        assert variation_resolved == sample_variation.resolve(), (
+            f"IncludeFile reference dangles: {content['IncludeFile']}"
+        )
+
+    def test_reference_paths_in_cases_dir_stay_relative(
+            self, temp_output_dir, sample_base_template, sample_variation):
+        """The conventional cases/ layout still gets clean '../base/...' style
+        relative references."""
+        from digitalmodel.solvers.orcaflex.template_generator import TemplateGenerator
+
+        cases_dir = temp_output_dir / "templates" / "test_hybrid" / "cases"
+        cases_dir.mkdir(parents=True, exist_ok=True)
+        output_file = cases_dir / "case_generated.yml"
+
+        generator = TemplateGenerator()
+        result = generator.generate(
+            base_file=sample_base_template,
+            variation_file=sample_variation,
+            output_file=output_file,
+            as_reference=True
+        )
+
+        assert result['success'] is True
+
+        with open(output_file) as f:
+            content = yaml.safe_load(f)
+
+        assert content['BaseFile'] == '../base/test_base.yml'
+        assert content['IncludeFile'] == '../variations/deep_water.yml'
 
 
 class TestModelValidator:

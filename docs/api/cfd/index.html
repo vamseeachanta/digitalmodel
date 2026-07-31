@@ -47,13 +47,14 @@ verified against <b>real OpenFOAM v2312</b> (not mocked) &middot; epic&nbsp;#116
 <p style="margin-top:14px"><span class="badge">9 / 9 known-answer cases &mdash; laminar, turbulent, lift, free surface, waves, floating body, green-water impact + wave-body interaction</span>
 <span class="badge">+ wave loading on a vertical cylinder vs MacCamy&ndash;Fuchs diffraction (#1171)</span>
 <span class="badge" style="background:#bc4c00">+ heave-RAO frequency-response spot-check vs potential flow (#1324)</span>
+<span class="badge">+ 2D tank sloshing vs analytical modes &amp; SPHERIC forced roll (#1429)</span>
 <span class="badge" style="background:#0b6e99">INTERACTIVE &mdash; live charts, animations, VIV screening calculator</span></p>
 </header>
 
 <div class="meta">
 <div><b>Solver</b><span>OpenFOAM ESI v2312</span></div>
-<div><b>Regimes covered</b><span>Steady BL &middot; Bluff body &middot; Turbulent RANS &middot; Airfoil lift &middot; Free-surface VOF &middot; Waves &middot; 6-DOF floating body &middot; Wave-body (overset)</span></div>
-<div><b>Cases verified</b><span class="good">10 known-answer + RAO spot-check</span></div>
+<div><b>Regimes covered</b><span>Steady BL &middot; Bluff body &middot; Turbulent RANS &middot; Airfoil lift &middot; Free-surface VOF &middot; Waves &middot; 6-DOF floating body &middot; Wave-body (overset) &middot; Forced-roll sloshing</span></div>
+<div><b>Cases verified</b><span class="good">11 known-answer + RAO spot-check</span></div>
 <div><b>Flat plate C<sub>f</sub></b><span class="good">4.6% mean vs Blasius</span></div>
 <div><b>Cylinder C<sub>d</sub></b><span class="good">&minus;0.5% vs Williamson</span></div>
 <div><b>License host</b><span>Linux, license-free</span></div>
@@ -202,6 +203,16 @@ reports.</p>
 <td class="good">within 15%</td>
 <td><a href="maccamy-fuchs-cylinder-verification.html">View report &rarr;</a></td>
 </tr>
+<tr>
+<td>Tank sloshing (2D forced roll)<br><span class="sub">#1429 / #1433</span></td>
+<td>Marine free-surface sloshing (moving mesh)</td>
+<td>interFoam (VOF) + solidBody roll</td>
+<td>First-mode frequency + impact pressure</td>
+<td>&le;0.30% across 4 fills;<br>SPHERIC Sensor&nbsp;1 peak 4,688&nbsp;Pa</td>
+<td>&omega;&sup2; = (&pi;g/L)&middot;tanh(&pi;h/L);<br>Delorme/SPHERIC exp. 3,710&nbsp;&plusmn;&nbsp;732&nbsp;Pa</td>
+<td class="good">&le;0.30% freq;<br>pressure within 2&sigma;</td>
+<td><a href="sloshing-cfd-study.html">View study &rarr;</a><br><a href="tank-sloshing-verification.html">Verification &rarr;</a></td>
+</tr>
 </tbody>
 </table>
 <p class="sub">Flat plate also verifies that velocity profiles collapse onto f'(&eta;) with
@@ -306,8 +317,10 @@ case <b>#1168</b> (turbulent flat plate, k-&omega; SST), and the first lift-gene
 <b>#1174</b> (NACA0012 airfoil, Spalart-Allmaras), and the first free-surface case <b>#1165</b>
 (dam break, interFoam VOF), the wave-generation gate <b>#1170</b> (StokesII numerical wave tank),
 the first moving-body case <b>#1169</b> (floating-body heave decay, sixDoFRigidBodyMotion) and the
-first wave-body interaction case <b>#1302</b> (wave-excited floating body, overset) &mdash;
-<b>now done</b>. Remaining work:</p>
+first wave-body interaction case <b>#1302</b> (wave-excited floating body, overset), and the
+ballast-tank sloshing campaign <b>#1429</b>/<b>#1433</b> (free decay across fills, forced-roll resonance,
+amplitude backbone, SPHERIC pressure validation &mdash; see <a href="sloshing-cfd-study.html">the 2D CFD
+study</a>) &mdash; <b>now done</b>. Remaining work:</p>
 <ul>
 <li>Marine loading backlog: wave force on a cylinder <b>#1171</b>, hull resistance <b>#1173</b>;
 aero (<b>#1175&ndash;#1177</b>).</li>

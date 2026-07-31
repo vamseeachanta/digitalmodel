@@ -195,6 +195,13 @@ def create_config_from_args(args: argparse.Namespace) -> ValidationConfig:
     elif args.level_3_only:
         skip_levels.extend([1, 2])
 
+    # --no-orcaflex must actually skip Level 2 (the only consumer of the
+    # OrcaFlex API): the validator gates levels solely via skip_levels
+    # (config.should_run_level), so without this a licensed machine would
+    # still run LoadData/CalculateStatics despite the flag.
+    if args.no_orcaflex:
+        skip_levels.append(2)
+
     # Remove duplicates
     skip_levels = list(set(skip_levels))
 

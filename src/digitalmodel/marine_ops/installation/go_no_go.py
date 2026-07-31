@@ -150,13 +150,16 @@ def evaluate_go_no_go(
 
     total_weight_te = total_weight_kg / 1000.0
 
-    # Pipe properties
-    if hasattr(pipe, "OD_m"):
-        pipe_od_m = pipe.OD_m
-        bend_radius_m = pipe.bend_radius_m
-    elif isinstance(pipe, dict):
-        pipe_od_m = pipe.get("od_m", 0.27305)
+    # Pipe properties (BarePipeProperties dataclass exposes lowercase od_m /
+    # bend_radius_m — checking uppercase "OD_m" here previously made the
+    # dataclass branch dead and the bend-radius criteria insensitive to the
+    # actual analysed pipe).
+    if isinstance(pipe, dict):
+        pipe_od_m = pipe.get("od_m", pipe.get("OD_m", 0.27305))
         bend_radius_m = pipe.get("bend_radius_m", 1.27)
+    elif hasattr(pipe, "od_m") and hasattr(pipe, "bend_radius_m"):
+        pipe_od_m = pipe.od_m
+        bend_radius_m = pipe.bend_radius_m
     else:
         pipe_od_m = 0.27305
         bend_radius_m = 1.27

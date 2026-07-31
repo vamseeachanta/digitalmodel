@@ -229,7 +229,7 @@ class EnvironmentBuilder(BaseBuilder):
             environment["RefCurrentSpeed"] = env.current.speed
             environment["RefCurrentDirection"] = env.current.direction
             environment["CurrentDepth, CurrentFactor, CurrentRotation"] = (
-                self._build_current_profile(env.current.profile)
+                self._build_current_profile(env.current.profile, raw)
             )
 
         # Wind — WindSpeed is dormant for some wind types (e.g. Full field)
@@ -275,8 +275,14 @@ class EnvironmentBuilder(BaseBuilder):
             wave_type = WAVE_TYPE_MAP.get(train.type, train.type)
 
             # Use raw train as base layer if available for this index
-            if raw_trains and i < len(raw_trains):
-                wave_train = dict(raw_trains[i])
+            raw_train = (
+                raw_trains[i]
+                if raw_trains and i < len(raw_trains)
+                and isinstance(raw_trains[i], dict)
+                else None
+            )
+            if raw_train is not None:
+                wave_train = dict(raw_train)
             else:
                 wave_train = {
                     "Name": train.name,
@@ -294,32 +300,73 @@ class EnvironmentBuilder(BaseBuilder):
                 wave_train["WavePeriod"] = train.period
             elif wave_type in _SPECTRAL_WAVE_TYPES:
                 wave_train["WaveHs"] = train.height
-                wave_train["WaveTz"] = train.period
+                # Emit the period under the same key the raw export used.
+                # A Tp-only export (e.g. docs/domains/orcaflex/risers/
+                # drilling/gom/app_vertical_riser_2500ft_WT1000_064pcf_
+                # Wave1_FE.yml uses WaveTp with no WaveTz) must not be
+                # re-emitted as WaveTz — OrcaFlex applies the last period
+                # key set, which would shift the peak period (~28% for
+                # JONSWAP with gamma 3.3).
+                if (
+                    raw_train is not None
+                    and "WaveTp" in raw_train
+                    and "WaveTz" not in raw_train
+                ):
+                    wave_train["WaveTp"] = train.period
+                else:
+                    wave_train["WaveTz"] = train.period
+                    # Drop any stale WaveTp from the raw base layer so the
+                    # output never carries contradictory period keys.
+                    wave_train.pop("WaveTp", None)
                 if wave_type in ("JONSWAP", "jonswap"):
                     # WaveGamma is dormant when WaveJONSWAPParameters is "Automatic"
                     jonswap_params = wave_train.get("WaveJONSWAPParameters", "")
                     if jonswap_params != "Automatic":
-                        wave_train["WaveGamma"] = train.gamma
+                        # Only overlay gamma when the spec set it explicitly;
+                        # otherwise keep the raw train's WaveGamma (the spec
+                        # default 3.3 must not clobber e.g. WaveGamma: 1.5 in
+                        # docs/domains/orcaflex/structures/mudmat/
+                        # SUT_MM_DZ_30deg.yml).
+                        explicitly_set = getattr(train, "model_fields_set", set())
+                        if "gamma" in explicitly_set or "WaveGamma" not in wave_train:
+                            wave_train["WaveGamma"] = train.gamma
             # For other wave types (User defined, User specified components,
             # No waves, etc.), omit height/period — OrcaFlex uses type-specific
             # parameters that pass through via generic properties.
 
-            # Add wave-type specific parameters
+            # Add wave-type specific defaults, preserving any values already
+            # present from the raw base layer (e.g. a Dean stream train with
+            # WaveStreamFunctionOrder: 9 must round-trip unchanged).
             if train.type == "dean_stream" or wave_type == "Dean stream":
-                wave_train["WaveStreamFunctionOrder"] = 5
-                wave_train["WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel"] = None
+                wave_train.setdefault("WaveStreamFunctionOrder", 5)
+                wave_train.setdefault(
+                    "WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel", None
+                )
 
             result.append(wave_train)
+
+        # Pass through any raw trains beyond the spec's train count verbatim
+        # so extra trains (e.g. a swell train the typed spec did not capture)
+        # are never silently dropped from the regenerated model.
+        for j in range(len(waves.trains), len(raw_trains)):
+            extra = raw_trains[j]
+            if isinstance(extra, dict):
+                result.append(dict(extra))
 
         return result
 
     def _build_current_profile(
-        self, profile: list[list[float]]
+        self,
+        profile: list[list[float]],
+        raw: dict[str, Any] | None = None,
     ) -> list[list[float | int]]:
         """Build current profile in OrcaFlex format.
 
-        Converts [[depth, factor], ...] to [[depth, factor, rotation], ...]
-        where rotation is always 0 (no rotation from reference direction).
+        Converts [[depth, factor], ...] to [[depth, factor, rotation], ...].
+        The typed spec profile carries no rotation column, so the rotation is
+        recovered from the raw ``CurrentDepth, CurrentFactor, CurrentRotation``
+        rows (matched by index on depth and factor) when available; otherwise
+        it defaults to 0.
 
         OrcFxAPI requires NumberOfCurrentLevels >= 2. When only one level is
         provided, a second level is added at the seabed depth with the same
@@ -327,11 +374,32 @@ class EnvironmentBuilder(BaseBuilder):
 
         Args:
             profile: Current profile as [[depth, factor], ...]
+            raw: Raw environment properties dict (optional), used to recover
+                the rotation column dropped by the typed spec.
 
         Returns:
             Profile in OrcaFlex format [[depth, factor, rotation], ...]
         """
-        result = [[p[0], p[1], 0] for p in profile]
+        raw_profile = (raw or {}).get(
+            "CurrentDepth, CurrentFactor, CurrentRotation"
+        )
+        if not isinstance(raw_profile, list):
+            raw_profile = []
+
+        result: list[list[float | int]] = []
+        for i, p in enumerate(profile):
+            rotation: float | int = 0
+            if i < len(raw_profile):
+                row = raw_profile[i]
+                if (
+                    isinstance(row, list)
+                    and len(row) >= 3
+                    and row[2] is not None
+                    and float(row[0]) == float(p[0])
+                    and float(row[1]) == float(p[1])
+                ):
+                    rotation = row[2]
+            result.append([p[0], p[1], rotation])
         if len(result) < 2:
             seabed_depth = self.spec.environment.water.depth
             last_factor = result[0][1] if result else 1.0

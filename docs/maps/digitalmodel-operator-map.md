@@ -58,6 +58,7 @@ of duplicating its detailed issue history.
 | `base_configs` | `src/digitalmodel/base_configs/` | `tests/` | `docs/domains/README.md` | Shared base configuration scaffolding for module configs | PyYAML |
 | `code_checks` | `src/digitalmodel/code_checks/` | `tests/code_checks/` | `docs/domains/README.md` | Engineering code-check helpers and standards verification | engineering standards |
 | `common` | `src/digitalmodel/common/` | `tests/common/` | `docs/domains/README.md` | Shared assumption-ledger and spec-authoring helpers | PyYAML |
+| `contract_validation` | `src/digitalmodel/contract_validation/` | `tests/contracts/` | `docs/plans/2026-07-16-issue-1602-riser-data-orcaflex-hf-plan.md` | Solver-neutral engineering contract validation | PyYAML |
 | `corrosion` | `src/digitalmodel/corrosion/` | `tests/corrosion/` | `docs/domains/README.md` | Galvanic (dissimilar-metal) compatibility screening, MIL-STD-889 anodic index | NumPy, pandas |
 | `materials` | `src/digitalmodel/materials/` | `tests/materials/` | `docs/domains/README.md` | Material grades and line-pipe property data | NumPy, pandas |
 | `workflow_api` | `src/digitalmodel/workflow_api/` | `tests/workflow_api/` | `docs/domains/README.md` | Workflow runner, provenance and golden-output API | repo workflow conventions |

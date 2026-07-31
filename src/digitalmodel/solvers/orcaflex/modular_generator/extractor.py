@@ -25,6 +25,7 @@ import yaml
 
 from .schema.generic import (
     FIELD_TO_SECTION,
+    SECTION_REGISTRY,
     SINGLETON_SECTIONS,
     TYPED_FIELD_MAP,
 )
@@ -253,31 +254,65 @@ class MonolithicExtractor:
         }
 
     def _extract_waves(self, env: dict[str, Any]) -> dict[str, Any] | None:
-        """Extract wave parameters from the first wave train, if present."""
+        """Extract wave parameters from ALL wave trains, if present.
+
+        Each raw wave train is mapped into a typed train dict so multi-train
+        models (e.g. wind sea + swell) round-trip with the same number of
+        trains.  Missing-key checks use explicit ``is None`` tests so that
+        legitimate zero values (e.g. ``WaveHs: 0``) are preserved.
+        """
         wave_trains = env.get("WaveTrains")
-        if not wave_trains:
+        if not wave_trains or not isinstance(wave_trains, list):
             return None
 
-        wt = wave_trains[0]
-        result: dict[str, Any] = {}
+        trains: list[dict[str, Any]] = []
+        for wt in wave_trains:
+            if not isinstance(wt, dict):
+                continue
+            trains.append(self._extract_wave_train(wt))
+
+        return {"trains": trains} if trains else None
+
+    @staticmethod
+    def _extract_wave_train(wt: dict[str, Any]) -> dict[str, Any]:
+        """Map a single raw OrcaFlex wave train dict to typed train fields."""
+        train: dict[str, Any] = {}
+
+        name = wt.get("Name")
+        if name is not None:
+            train["name"] = name
 
         wave_type = wt.get("WaveType")
         if wave_type is not None:
-            result["type"] = wave_type
+            train["type"] = wave_type
 
-        height = wt.get("WaveHs") or wt.get("WaveHeight")
+        height = wt.get("WaveHs")
+        if height is None:
+            height = wt.get("WaveHeight")
         if height is not None:
-            result["height"] = height
+            train["height"] = height
 
-        period = wt.get("WaveTz") or wt.get("WaveTp") or wt.get("WavePeriod")
+        period = wt.get("WaveTz")
+        if period is None:
+            period = wt.get("WaveTp")
+        if period is None:
+            period = wt.get("WavePeriod")
         if period is not None:
-            result["period"] = period
+            train["period"] = period
 
         direction = wt.get("WaveDirection")
         if direction is not None:
-            result["direction"] = direction
+            train["direction"] = direction
 
-        return result if result else None
+        # Only capture gamma when it fits the typed schema range (1 < g <= 7).
+        # Real exports can carry values outside it (e.g. WaveGamma: 1 in
+        # docs/domains/orcaflex/structures/mudmat/SUT_MM_SZ.yml); those are
+        # preserved via the raw_properties base layer instead.
+        gamma = wt.get("WaveGamma")
+        if isinstance(gamma, (int, float)) and 1 < gamma <= 7:
+            train["gamma"] = gamma
+
+        return train
 
     def _extract_current(self, env: dict[str, Any]) -> dict[str, Any] | None:
         """Extract current parameters from the Environment section.
@@ -410,16 +445,37 @@ class MonolithicExtractor:
         if not isinstance(items, list):
             return []
 
-        return [self._extract_object(item) for item in items if isinstance(item, dict)]
+        # Only map keys into typed fields that the section's model class
+        # actually defines.  Mapping a key (e.g. StiffenerTypes' OD) into a
+        # typed field the class lacks would be silently discarded by Pydantic
+        # (extra='ignore') and lost from the regenerated model.
+        model_cls = SECTION_REGISTRY.get(section_key, (None, True))[0]
+        allowed_fields: set[str] | None = (
+            set(model_cls.model_fields) if model_cls is not None else None
+        )
 
-    def _extract_object(self, raw: dict[str, Any]) -> dict[str, Any]:
+        return [
+            self._extract_object(item, allowed_fields)
+            for item in items
+            if isinstance(item, dict)
+        ]
+
+    def _extract_object(
+        self,
+        raw: dict[str, Any],
+        allowed_fields: set[str] | None = None,
+    ) -> dict[str, Any]:
         """Convert a raw OrcaFlex object dict into a spec-compatible dict.
 
         Splits keys into typed fields (via ``ORCAFLEX_TO_TYPED``) and
-        remaining properties that go into the ``properties`` bag.
+        remaining properties that go into the ``properties`` bag.  Keys whose
+        typed field is not defined on the target model class stay in the
+        ``properties`` bag so they pass through verbatim.
 
         Args:
             raw: A single OrcaFlex object dict from the YAML.
+            allowed_fields: Typed field names defined on the target model
+                class.  ``None`` allows all mapped fields (legacy behavior).
 
         Returns:
             Dict with typed field keys and a ``properties`` dict.
@@ -429,7 +485,9 @@ class MonolithicExtractor:
 
         for key, value in raw.items():
             typed_field = ORCAFLEX_TO_TYPED.get(key)
-            if typed_field is not None:
+            if typed_field is not None and (
+                allowed_fields is None or typed_field in allowed_fields
+            ):
                 typed[typed_field] = value
             else:
                 properties[key] = value

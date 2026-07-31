@@ -145,8 +145,21 @@ _SKIP_GENERAL_KEYS: set[str] = {
     "TemperatureUnits",
     # Variable time-step max — only settable when ImplicitUseVariableTimeStep
     # is True; dormant otherwise, causing "Change not allowed" errors.
+    # NOT skipped when general_properties re-enables variable time stepping
+    # (see build()) — stripping it then would silently revert the model to
+    # OrcaFlex's default max step and change dynamics results.
     "ImplicitVariableMaxTimeStep",
 }
+
+# VariableData row-table key by (lower-cased) data_type.  Grounded in the
+# golden monolithic examples (docs/domains/orcaflex/examples/yml): every
+# row-table category uses "IndependentValue, DependentValue" except
+# coatings/linings which uses layer columns (e.g. "A05 Catenary with
+# semisub.yml" VariableData.Coatingsorlinings).
+_VARIABLE_DATA_ROW_KEYS: dict[str, str] = {
+    "coatingsorlinings": "LayerThickness, LayerMaterialDensity",
+}
+_DEFAULT_VARIABLE_DATA_ROW_KEY = "IndependentValue, DependentValue"
 
 # Object-level properties to strip from ALL object types during
 # ``_merge_object()``.  These are mode-dependent dormant properties that
@@ -236,11 +249,32 @@ class GenericModelBuilder(BaseBuilder):
         # Merge general_properties into "General", filtering out dormant
         # view/display properties that cause "Change not allowed" errors.
         if generic.general_properties:
+            skip_keys = _SKIP_GENERAL_KEYS
+            if generic.general_properties.get("ImplicitUseVariableTimeStep") is True:
+                # Variable time stepping is re-enabled in this same General
+                # section, so ImplicitVariableMaxTimeStep is settable (not
+                # dormant) and must be preserved — stripping it would run the
+                # model with OrcaFlex's default max step instead of the
+                # source model's value.
+                skip_keys = _SKIP_GENERAL_KEYS - {"ImplicitVariableMaxTimeStep"}
             filtered = {
                 k: v
                 for k, v in generic.general_properties.items()
-                if k not in _SKIP_GENERAL_KEYS
+                if k not in skip_keys
             }
+            # OrcaFlex applies YAML sequentially: the mode switch must precede
+            # its dependent property for the latter to be settable.
+            if (
+                "ImplicitVariableMaxTimeStep" in filtered
+                and "ImplicitUseVariableTimeStep" in filtered
+            ):
+                max_step = filtered.pop("ImplicitVariableMaxTimeStep")
+                reordered: dict[str, Any] = {}
+                for k, v in filtered.items():
+                    reordered[k] = v
+                    if k == "ImplicitUseVariableTimeStep":
+                        reordered["ImplicitVariableMaxTimeStep"] = max_step
+                filtered = reordered
             if filtered:
                 result["General"] = filtered
 
@@ -273,6 +307,13 @@ class GenericModelBuilder(BaseBuilder):
         category names (e.g. "Dragcoefficient", "Linetypediameter") and
         values are lists of named entries.
 
+        Hand-authored ``entries`` (data rows) are emitted under the
+        category's row-table key (``IndependentValue, DependentValue`` for
+        most data types, layer columns for coatings/linings — see
+        ``_VARIABLE_DATA_ROW_KEYS``).  Extractor round-trips instead carry
+        the rows inside ``properties`` under the native key; on conflict the
+        typed ``entries`` field wins (mirroring ``_merge_object``).
+
         Args:
             sources: Flat list of GenericVariableData with data_type fields.
 
@@ -284,6 +325,18 @@ class GenericModelBuilder(BaseBuilder):
             category = src.data_type or "Unknown"
             entry: dict[str, Any] = dict(src.properties)
             entry["Name"] = src.name
+            if src.entries is not None:
+                row_key = _VARIABLE_DATA_ROW_KEYS.get(
+                    (src.data_type or "").lower(), _DEFAULT_VARIABLE_DATA_ROW_KEY
+                )
+                if row_key in entry:
+                    logger.warning(
+                        "Variable data rows for '%s' set in both 'entries' and "
+                        "properties['%s']; 'entries' takes precedence",
+                        src.name,
+                        row_key,
+                    )
+                entry[row_key] = list(src.entries)
             categories.setdefault(category, []).append(entry)
         return categories
 
