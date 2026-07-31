@@ -410,6 +410,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/common/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#common
+  - module: contract_validation
+    entry_point: src/digitalmodel/contract_validation/
+    maturity: development
+    owner_wiki: docs/plans/2026-07-16-issue-1602-riser-data-orcaflex-hf-plan.md
+    key_tests: [tests/contracts/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#contract_validation
   - module: materials
     entry_point: src/digitalmodel/materials/
     maturity: development
