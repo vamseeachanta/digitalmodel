@@ -1,0 +1,11 @@
+## Verdict
+UNAVAILABLE (codex CLI failed, rc=124: Reading additional input from stdin... )
+
+## Retrieval
+(none — invocation failed before the provider could return a usable review)
+
+## Findings
+(none)
+
+## Blockers
+(none — this provider contributed no signal to the review)

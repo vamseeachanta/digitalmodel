@@ -433,3 +433,152 @@ class TestContextRegistration:
         assert ctx.line_type_names == []
         assert ctx.vessel_names == []
         assert ctx.line_names == []
+
+
+# ---------------------------------------------------------------------------
+# Regression: ImplicitVariableMaxTimeStep preservation (review finding)
+# ---------------------------------------------------------------------------
+
+
+class TestImplicitVariableMaxTimeStep:
+    """ImplicitVariableMaxTimeStep must survive when variable stepping is on.
+
+    When general_properties re-enables ImplicitUseVariableTimeStep, the max
+    time step is settable (not dormant); stripping it would silently run the
+    regenerated model with OrcaFlex's default max step (see
+    orcaflex_utilities.py which reads/writes ImplicitVariableMaxTimeStep).
+    """
+
+    def test_max_step_kept_when_variable_stepping_enabled(self):
+        model = GenericModel(
+            general_properties={
+                "StaticsMethod": "Full statics",
+                "ImplicitUseVariableTimeStep": True,
+                "ImplicitVariableMaxTimeStep": 0.5,
+            }
+        )
+        builder, _ = _make_builder(model)
+        result = builder.build()
+
+        general = result["General"]
+        assert general["ImplicitUseVariableTimeStep"] is True
+        assert general["ImplicitVariableMaxTimeStep"] == 0.5
+
+    def test_use_flag_precedes_max_step(self):
+        """OrcaFlex loads YAML sequentially: the mode switch must come first."""
+        model = GenericModel(
+            general_properties={
+                "ImplicitVariableMaxTimeStep": 0.5,
+                "ImplicitUseVariableTimeStep": True,
+            }
+        )
+        builder, _ = _make_builder(model)
+        general = builder.build()["General"]
+        keys = list(general)
+        assert keys.index("ImplicitUseVariableTimeStep") < keys.index(
+            "ImplicitVariableMaxTimeStep"
+        )
+
+    def test_max_step_stripped_when_variable_stepping_disabled(self):
+        """Dormant when ImplicitUseVariableTimeStep is False/absent."""
+        model = GenericModel(
+            general_properties={
+                "ImplicitUseVariableTimeStep": False,
+                "ImplicitVariableMaxTimeStep": 0.5,
+            }
+        )
+        builder, _ = _make_builder(model)
+        general = builder.build()["General"]
+        assert "ImplicitVariableMaxTimeStep" not in general
+
+        model = GenericModel(
+            general_properties={"ImplicitVariableMaxTimeStep": 0.5}
+        )
+        builder, _ = _make_builder(model)
+        result = builder.build()
+        assert "ImplicitVariableMaxTimeStep" not in result.get("General", {})
+
+
+# ---------------------------------------------------------------------------
+# Regression: VariableData entries emission (review finding)
+# ---------------------------------------------------------------------------
+
+
+class TestVariableDataEntriesEmitted:
+    """Hand-authored GenericVariableData.entries must reach the output.
+
+    Row-table key grounded in docs/domains/orcaflex/examples/yml golden
+    models: 'IndependentValue, DependentValue' for most data types (e.g.
+    A01 Lazy wave riser VariableData.Dragcoefficient), layer columns for
+    Coatingsorlinings (A05 Catenary with semisub).
+    """
+
+    def test_entries_emitted_under_pair_table_key(self):
+        model = GenericModel(
+            variable_data_sources=[
+                GenericVariableData(
+                    name="Drag1",
+                    data_type="Dragcoefficient",
+                    entries=[[0, 1.2], [10, 1.0]],
+                )
+            ]
+        )
+        builder, _ = _make_builder(model)
+        result = builder.build()
+
+        vds = result["VariableData"]["Dragcoefficient"][0]
+        assert vds["Name"] == "Drag1"
+        assert vds["IndependentValue, DependentValue"] == [[0, 1.2], [10, 1.0]]
+
+    def test_coatings_entries_use_layer_key(self):
+        model = GenericModel(
+            variable_data_sources=[
+                GenericVariableData(
+                    name="Coating1",
+                    data_type="Coatingsorlinings",
+                    entries=[[0.05, 2.5]],
+                )
+            ]
+        )
+        builder, _ = _make_builder(model)
+        result = builder.build()
+
+        vds = result["VariableData"]["Coatingsorlinings"][0]
+        assert vds["LayerThickness, LayerMaterialDensity"] == [[0.05, 2.5]]
+
+    def test_entries_take_precedence_over_properties_rows(self):
+        """Round-trip specs carry rows in properties; typed entries win."""
+        model = GenericModel(
+            variable_data_sources=[
+                GenericVariableData(
+                    name="Drag1",
+                    data_type="Dragcoefficient",
+                    entries=[[0, 1.2]],
+                    properties={
+                        "IndependentValue, DependentValue": [[0, 9.9]],
+                        "Interpolation": "Linear",
+                    },
+                )
+            ]
+        )
+        builder, _ = _make_builder(model)
+        vds = builder.build()["VariableData"]["Dragcoefficient"][0]
+        assert vds["IndependentValue, DependentValue"] == [[0, 1.2]]
+        assert vds["Interpolation"] == "Linear"
+
+    def test_no_entries_keeps_properties_passthrough(self):
+        """Extractor round-trip (entries=None) is unchanged."""
+        model = GenericModel(
+            variable_data_sources=[
+                GenericVariableData(
+                    name="Drag1",
+                    data_type="Dragcoefficient",
+                    properties={
+                        "IndependentValue, DependentValue": [[0, 1.1]],
+                    },
+                )
+            ]
+        )
+        builder, _ = _make_builder(model)
+        vds = builder.build()["VariableData"]["Dragcoefficient"][0]
+        assert vds["IndependentValue, DependentValue"] == [[0, 1.1]]

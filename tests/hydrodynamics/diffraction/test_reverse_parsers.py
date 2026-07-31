@@ -54,6 +54,48 @@ def _generate_orcawave_yml(spec: DiffractionSpec, tmp_path: Path) -> Path:
     return backend.generate_single(spec, tmp_path)
 
 
+def _minimal_orcawave_data(**overrides) -> dict:
+    """Build a minimal hand-written OrcaWave YAML data dict for parser tests."""
+    data = {
+        "WaterDepth": 100.0,
+        "WaterDensity": 1.025,
+        "WavesReferredToBy": "period (s)",
+        "PeriodOrFrequency": [8.0, 10.0, 12.0],
+        "WaveHeading": [0.0, 45.0, 90.0],
+        "Bodies": [
+            {
+                "BodyName": "TestBody",
+                "BodyMeshFileName": "mesh.gdf",
+                "BodyMeshFormat": "Wamit gdf",
+                "BodyMeshSymmetry": "None",
+                "BodyInertiaSpecifiedBy": "Matrix (for a general body)",
+                "BodyMass": 84387.3,
+                "BodyCentreOfMass": [0.0, 0.0, -1.5],
+                (
+                    "BodyInertiaTensorRx, "
+                    "BodyInertiaTensorRy, "
+                    "BodyInertiaTensorRz"
+                ): [
+                    [18987142.5, 0.0, 0.0],
+                    [0.0, 210968250.0, 0.0],
+                    [0.0, 0.0, 210968250.0],
+                ],
+                "BodyInertiaTensorOriginType": "Body origin",
+            }
+        ],
+    }
+    data.update(overrides)
+    return data
+
+
+def _write_orcawave_yml(tmp_path: Path, data: dict) -> Path:
+    """Write an OrcaWave data dict to a .yml file."""
+    path = tmp_path / "orcawave_input.yml"
+    with open(path, "w") as f:
+        yaml.safe_dump(data, f)
+    return path
+
+
 # ---------------------------------------------------------------------------
 # AQWA Input Parser tests
 # ---------------------------------------------------------------------------
@@ -302,6 +344,69 @@ class TestAQWAInputParserMetadata:
 
         assert result.metadata.project is not None
         assert "test_ship_raos" in result.metadata.project
+
+
+class TestAQWAInputParserIndentedTitle:
+    """Regression: TITLE slicing must use the stripped line (review sweep)."""
+
+    def test_indented_title_not_corrupted(self, tmp_path: Path):
+        """An indented TITLE card must not corrupt the project name."""
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
+            AQWAInputParser,
+        )
+
+        dat_path = tmp_path / "indented_title.dat"
+        dat_path.write_text(
+            "* DECK 0\n"
+            " JOB AQWA LINE\n"
+            "   TITLE My Ship\n"
+            "* DECK 5\n"
+            "      DPTH  100.0\n"
+        )
+
+        parser = AQWAInputParser()
+        result = parser.parse(dat_path)
+
+        assert result.metadata.project == "My Ship"
+        assert result.vessel.name == "My Ship"
+
+
+class TestAQWAInputParserInjectedHeadings:
+    """Regression: AQWA writer injects 0/180 headings the spec never had.
+
+    The DIRN cards carry no record of the original spec subset, so the
+    parser cannot drop the injected values without guessing; it must at
+    least warn instead of silently returning a superset (review sweep).
+    """
+
+    def test_subset_spec_recovery_warns_about_injected_headings(
+        self, tmp_path: Path
+    ):
+        """Roundtrip of a [45, 90] spec warns that 0/180 were injected."""
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
+            AQWAInputParser,
+        )
+
+        spec = _load_ship_spec()
+        spec_data = spec.model_dump(mode="json", exclude_none=True)
+        spec_data["wave_headings"]["values"] = [45.0, 90.0]
+        subset_spec = DiffractionSpec.model_validate(spec_data)
+
+        dat_path = _generate_aqwa_dat(subset_spec, tmp_path)
+
+        parser = AQWAInputParser()
+        with pytest.warns(UserWarning, match="symmetric heading expansion"):
+            parsed = parser.parse(dat_path)
+
+        # Known limitation (root cause: AQWABackend._expand_headings_for_aqwa
+        # unconditionally injects -180/0/180): the recovered set is the
+        # AQWA-analysis-equivalent superset, not the original subset.
+        assert parsed.wave_headings.to_heading_list() == [
+            0.0,
+            45.0,
+            90.0,
+            180.0,
+        ]
 
 
 class TestAQWAInputParserRoundTrip:
@@ -601,6 +706,170 @@ class TestOrcaWaveInputParserInertia:
 
         assert ixx == pytest.approx(expected_ixx, rel=1e-2)
         assert iyy == pytest.approx(expected_iyy, rel=1e-2)
+
+
+class TestOrcaWaveInputParserSolveType:
+    """Regression: SolveType must be read explicitly (review sweep).
+
+    QTF intent was previously inferred only from
+    QuadraticLoadPressureIntegration, silently dropping control-surface
+    QTF solves and downgrading full-QTF solves to linear ones.
+    """
+
+    @pytest.mark.parametrize(
+        ("orcawave_solve_type", "expected"),
+        [
+            ("Potential formulation only", "potential_only"),
+            ("Potential and source formulations", "potential_and_source"),
+            (
+                "Potential and source + mean drift (momentum conservation)",
+                "mean_drift",
+            ),
+            ("Potential and source + diagonal QTF", "diagonal_qtf"),
+            ("Full QTF calculation", "full_qtf"),
+        ],
+    )
+    def test_solve_type_mapping(
+        self, tmp_path: Path, orcawave_solve_type: str, expected: str
+    ):
+        """Each OrcaWave SolveType maps to its spec solve_type value."""
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
+            OrcaWaveInputParser,
+        )
+
+        data = _minimal_orcawave_data(SolveType=orcawave_solve_type)
+        yml_path = _write_orcawave_yml(tmp_path, data)
+
+        result = OrcaWaveInputParser().parse(yml_path)
+
+        assert result.solver_options.solve_type == expected
+
+    def test_solve_type_defaults_when_absent(self, tmp_path: Path):
+        """Missing SolveType falls back to the schema default."""
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
+            OrcaWaveInputParser,
+        )
+
+        data = _minimal_orcawave_data()
+        assert "SolveType" not in data
+        yml_path = _write_orcawave_yml(tmp_path, data)
+
+        result = OrcaWaveInputParser().parse(yml_path)
+
+        assert result.solver_options.solve_type == "potential_and_source"
+
+    def test_full_qtf_with_control_surface_method_not_dropped(
+        self, tmp_path: Path
+    ):
+        """Full QTF via control surface (pressure integration No) survives."""
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
+            OrcaWaveInputParser,
+        )
+
+        data = _minimal_orcawave_data(
+            SolveType="Full QTF calculation",
+            QuadraticLoadPressureIntegration="No",
+            QuadraticLoadControlSurface="Yes",
+        )
+        yml_path = _write_orcawave_yml(tmp_path, data)
+
+        result = OrcaWaveInputParser().parse(yml_path)
+
+        assert result.solver_options.solve_type == "full_qtf"
+        assert result.solver_options.qtf_calculation is True
+
+    def test_full_qtf_roundtrip_regenerates_full_qtf(self, tmp_path: Path):
+        """OrcaWave yml -> spec -> OrcaWave yml keeps SolveType Full QTF."""
+        from digitalmodel.hydrodynamics.diffraction.orcawave_backend import (
+            OrcaWaveBackend,
+        )
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
+            OrcaWaveInputParser,
+        )
+
+        data = _minimal_orcawave_data(
+            SolveType="Full QTF calculation",
+            QuadraticLoadPressureIntegration="No",
+            QuadraticLoadControlSurface="Yes",
+        )
+        yml_path = _write_orcawave_yml(tmp_path, data)
+
+        spec = OrcaWaveInputParser().parse(yml_path)
+
+        out_dir = tmp_path / "regen"
+        out_dir.mkdir()
+        regen_path = OrcaWaveBackend().generate_single(spec, out_dir)
+
+        with open(regen_path) as f:
+            regen = yaml.safe_load(f)
+
+        assert regen["SolveType"] == "Full QTF calculation"
+
+
+class TestOrcaWaveInputParserInertiaOrigin:
+    """Regression: BodyInertiaTensorOriginType must be parsed (review sweep).
+
+    Dropping it silently reinterprets a centre-of-mass tensor as being
+    about the body origin, losing the parallel-axis term m*z^2 on
+    regeneration.
+    """
+
+    def test_centre_of_mass_origin_parsed(self, tmp_path: Path):
+        """'Centre of mass' origin is preserved on the parsed spec."""
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
+            OrcaWaveInputParser,
+        )
+
+        data = _minimal_orcawave_data()
+        data["Bodies"][0]["BodyInertiaTensorOriginType"] = "Centre of mass"
+        yml_path = _write_orcawave_yml(tmp_path, data)
+
+        result = OrcaWaveInputParser().parse(yml_path)
+
+        assert result.vessel.inertia.inertia_tensor_origin == "centre_of_mass"
+
+    def test_body_origin_parsed(self, tmp_path: Path):
+        """'Body origin' maps to the spec value 'body_origin'."""
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
+            OrcaWaveInputParser,
+        )
+
+        data = _minimal_orcawave_data()
+        data["Bodies"][0]["BodyInertiaTensorOriginType"] = "Body origin"
+        yml_path = _write_orcawave_yml(tmp_path, data)
+
+        result = OrcaWaveInputParser().parse(yml_path)
+
+        assert result.vessel.inertia.inertia_tensor_origin == "body_origin"
+
+    def test_centre_of_mass_roundtrip_regenerates_centre_of_mass(
+        self, tmp_path: Path
+    ):
+        """yml -> spec -> yml keeps BodyInertiaTensorOriginType unchanged."""
+        from digitalmodel.hydrodynamics.diffraction.orcawave_backend import (
+            OrcaWaveBackend,
+        )
+        from digitalmodel.hydrodynamics.diffraction.reverse_parsers import (
+            OrcaWaveInputParser,
+        )
+
+        data = _minimal_orcawave_data()
+        data["Bodies"][0]["BodyInertiaTensorOriginType"] = "Centre of mass"
+        yml_path = _write_orcawave_yml(tmp_path, data)
+
+        spec = OrcaWaveInputParser().parse(yml_path)
+
+        out_dir = tmp_path / "regen"
+        out_dir.mkdir()
+        regen_path = OrcaWaveBackend().generate_single(spec, out_dir)
+
+        with open(regen_path) as f:
+            regen = yaml.safe_load(f)
+
+        assert (
+            regen["Bodies"][0]["BodyInertiaTensorOriginType"]
+            == "Centre of mass"
+        )
 
 
 class TestOrcaWaveInputParserRoundTrip:

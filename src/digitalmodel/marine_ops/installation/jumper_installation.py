@@ -56,7 +56,8 @@ class PipelineConfig:
         run_orcaflex: Whether to run OrcaFlex solver (requires installation).
         generate_report: Whether to generate HTML/PDF reports.
         run_go_no_go: Whether to evaluate Go/No-Go decision criteria.
-        go_no_go_criteria: Custom criteria overrides (optional).
+        go_no_go_criteria: Custom criteria overrides (optional); forwarded
+            as run_pipeline(..., go_no_go_criteria=...).
     """
     spec_path: str
     output_dir: str = "./output"
@@ -124,22 +125,33 @@ def load_spec(spec_path: str) -> Dict:
 
 def parse_jumper_config(spec: Dict) -> JumperConfig:
     """Convert spec.yml jumper section to JumperConfig.
-    
+
     Args:
         spec: Parsed spec.yml data.
-    
+
     Returns:
         JumperConfig with values from spec, falling back to KNOWN_JUMPER_CONFIGS.
+
+    Raises:
+        ValueError: if the jumper block carries keys that are not JumperConfig
+            fields — a silently-dropped override would make the spec a no-op.
     """
     jumper_data = spec.get("jumper", {})
     config_name = jumper_data.get("config_name", "ballymore_mf_plet")
-    
+
     base = KNOWN_JUMPER_CONFIGS.get(config_name, JumperConfig())
-    overrides = {
-        k: v for k, v in jumper_data.items() 
-        if k != "config_name" and hasattr(base, k)
-    }
-    
+    unknown = sorted(
+        k for k in jumper_data
+        if k != "config_name" and not hasattr(base, k)
+    )
+    if unknown:
+        raise ValueError(
+            f"Unknown jumper spec key(s) {unknown}: not JumperConfig fields, "
+            "the override would be silently ignored. Fix the spec or add the "
+            "field to JumperConfig."
+        )
+    overrides = {k: v for k, v in jumper_data.items() if k != "config_name"}
+
     from dataclasses import replace
     return replace(base, **overrides)
 
@@ -169,9 +181,33 @@ def stage_2_calculate(spec: Dict) -> Dict:
     return run_jumper_analysis(config)
 
 
-def stage_3_go_no_go(jumper_name: str, results: Dict, custom_criteria: Optional[Dict] = None) -> GoNoGoDecision:
+def extract_metocean_conditions(spec: Dict) -> Dict:
+    """Extract Go/No-Go operational conditions from the spec's metocean block.
+
+    Maps ``environment.metocean.wave.significant`` (m) onto the ``hs_m`` key
+    consumed by :func:`evaluate_go_no_go` for the DNV-ST-N001 splash-zone Hs
+    criterion. Specs without a metocean block (e.g. ballymore_plet_plem,
+    pending workbook data) return an empty dict, keeping the benign default.
+
+    Args:
+        spec: Parsed spec.yml data.
+
+    Returns:
+        Conditions dict (possibly empty) for evaluate_go_no_go(conditions=...).
+    """
+    metocean = (spec.get("environment") or {}).get("metocean") or {}
+    wave = metocean.get("wave") or {}
+    conditions: Dict[str, float] = {}
+    if wave.get("significant") is not None:
+        conditions["hs_m"] = float(wave["significant"])
+    return conditions
+
+
+def stage_3_go_no_go(jumper_name: str, results: Dict,
+                     custom_criteria: Optional[Dict] = None,
+                     conditions: Optional[Dict] = None) -> GoNoGoDecision:
     """Stage 3: Evaluate Go/No-Go decision criteria.
-    
+
     Implements 12 DNV-compliant criteria including:
     - Crane SWL utilisation (SZ + DZ)
     - Dynamic capacity utilisation
@@ -182,17 +218,23 @@ def stage_3_go_no_go(jumper_name: str, results: Dict, custom_criteria: Optional[
     - Vessel deck payload
     - Total lift weight
     - Spreader bar adequacy
-    
+
     Args:
         jumper_name: Name of jumper for report.
         results: Output from stage_2_calculate().
-        custom_criteria: Optional custom criterion overrides.
-    
+        custom_criteria: Optional custom criterion limit overrides (splatted
+            into evaluate_go_no_go keyword limits).
+        conditions: Optional operational/metocean conditions (e.g.
+            ``{"hs_m": 4.0}``) for the splash-zone Hs criterion; see
+            extract_metocean_conditions().
+
     Returns:
         GoNoGoDecision with all criteria evaluated.
     """
     criteria_kwargs = custom_criteria or {}
-    return evaluate_go_no_go(jumper_name, results, **criteria_kwargs)
+    return evaluate_go_no_go(
+        jumper_name, results, conditions=conditions, **criteria_kwargs
+    )
 
 
 def stage_4_generate_yaml(results: Dict) -> str:
@@ -288,10 +330,11 @@ def stage_5_write_outputs(output_dir: str, output: PipelineOutput) -> List[str]:
     return output_files
 
 
-def run_pipeline(spec_path: str, output_dir: str = "./output", 
+def run_pipeline(spec_path: str, output_dir: str = "./output",
                  run_orcaflex: bool = False,
                  generate_report: bool = True,
-                 run_go_no_go: bool = True) -> PipelineOutput:
+                 run_go_no_go: bool = True,
+                 go_no_go_criteria: Optional[Dict[str, float]] = None) -> PipelineOutput:
     """Execute the full jumper installation analysis pipeline.
     
     Pipeline stages:
@@ -309,7 +352,10 @@ def run_pipeline(spec_path: str, output_dir: str = "./output",
         run_orcaflex: Whether to run OrcaFlex solver.
         generate_report: Whether to generate reports.
         run_go_no_go: Whether to evaluate Go/No-Go decision.
-    
+        go_no_go_criteria: Optional criterion limit overrides forwarded to
+            evaluate_go_no_go (this is the consumer of
+            PipelineConfig.go_no_go_criteria).
+
     Returns:
         PipelineOutput with all results and output file paths.
     """
@@ -325,10 +371,16 @@ def run_pipeline(spec_path: str, output_dir: str = "./output",
     results = stage_2_calculate(spec)
     output.jumper_analysis = results
     
-    # Stage 3: Go/No-Go Decision
+    # Stage 3: Go/No-Go Decision — evaluated at the spec's own metocean
+    # conditions (splash-zone Hs), not the benign default.
     if run_go_no_go:
         print(f"[Pipeline] Stage 3/5: Evaluating Go/No-Go decision")
-        output.go_no_go = stage_3_go_no_go(config_name, results)
+        conditions = extract_metocean_conditions(spec)
+        output.go_no_go = stage_3_go_no_go(
+            config_name, results,
+            custom_criteria=go_no_go_criteria,
+            conditions=conditions,
+        )
         print(print_decision(output.go_no_go))
     else:
         print(f"[Pipeline] Stage 3/5: Skipped (run_go_no_go=False)")

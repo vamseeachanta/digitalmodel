@@ -17,6 +17,7 @@ Example:
 """
 
 import argparse
+import os
 import sys
 import yaml
 import logging
@@ -35,7 +36,7 @@ logger = logging.getLogger(__name__)
 # Default templates directory (relative to this module)
 DEFAULT_TEMPLATES_DIR = (
     Path(__file__).parent.parent.parent.parent.parent
-    / "docs" / "modules" / "orcaflex" / "templates"
+    / "docs" / "domains" / "orcaflex" / "templates"
 )
 
 
@@ -397,13 +398,19 @@ class TemplateGenerator:
         try:
             base_relative = base_file.relative_to(output_file.parent)
         except ValueError:
-            # If not relative, use relative from a common ancestor
-            base_relative = Path('..') / base_file.relative_to(base_file.parent.parent)
+            # Not inside the output directory: compute the actual relative
+            # path from the output directory (os.path.relpath handles '..'
+            # traversal, which Path.relative_to does not).
+            base_relative = Path(os.path.relpath(
+                base_file.resolve(), output_file.parent.resolve()
+            ))
 
         try:
             variation_relative = variation_file.relative_to(output_file.parent)
         except ValueError:
-            variation_relative = Path('..') / variation_file.relative_to(variation_file.parent.parent)
+            variation_relative = Path(os.path.relpath(
+                variation_file.resolve(), output_file.parent.resolve()
+            ))
 
         return {
             'BaseFile': str(base_relative).replace('\\', '/'),

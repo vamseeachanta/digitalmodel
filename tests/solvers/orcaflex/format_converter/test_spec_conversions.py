@@ -258,6 +258,57 @@ class TestModularToSpecConverter:
         assert spec["environment"]["waves"]["period"] == 7
         assert spec["environment"]["waves"]["direction"] == 180
 
+    def test_extract_single_spectral_train_keeps_hs_tz(self, tmp_path: Path):
+        """Single spectral (JONSWAP) train preserves WaveHs/WaveTz.
+
+        Regression: the single-train branch only merged name/gamma while
+        EXTRACTION_MAP reads only WaveHeight/WavePeriod, so a JONSWAP train
+        (which stores WaveHs/WaveTz — see modular_generator/builders/
+        environment_builder.py) lost its height/period and kept the raw
+        un-reverse-mapped WaveType, regenerating a flat-sea model via
+        spec2modular's schema defaults.
+        """
+        modular = tmp_path / "modular"
+        includes = modular / "includes"
+        includes.mkdir(parents=True)
+
+        env_data = {
+            "Environment": {
+                "WaterDepth": 100,
+                "WaveTrains": [
+                    {
+                        "Name": "Wave1",
+                        "WaveType": "JONSWAP",
+                        "WaveHs": 3.0,
+                        "WaveTz": 8.0,
+                        "WaveDirection": 180,
+                        "WaveGamma": 2.0,
+                    }
+                ],
+            }
+        }
+        with open(includes / "03_environment.yml", "w") as f:
+            yaml.dump(env_data, f)
+
+        master = modular / "master.yml"
+        master.write_text("- includefile: includes/03_environment.yml\n")
+
+        output = tmp_path / "spec.yml"
+        report = ModularToSpecConverter().convert(source=master, target=output)
+        assert report.success
+
+        with open(output) as f:
+            spec = yaml.safe_load(f)
+
+        waves = spec["environment"]["waves"]
+        assert waves["height"] == 3.0
+        assert waves["period"] == 8.0
+        assert waves["direction"] == 180
+        assert waves["gamma"] == 2.0
+        assert waves["name"] == "Wave1"
+        # WaveType is reverse-mapped to the spec key, not copied raw
+        assert waves["type"] == "jonswap"
+
     def test_no_source_raises(self):
         """ValueError when no source provided."""
         converter = ModularToSpecConverter()
