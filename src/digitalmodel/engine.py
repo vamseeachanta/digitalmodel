@@ -831,6 +831,13 @@ def engine(
         from digitalmodel.solvers.openfoam.workflow import OpenFOAMWorkflow
 
         cfg_base = OpenFOAMWorkflow().router(cfg_base)
+    elif basename == "solver_smoke_test":
+        # End-to-end OrcaFlex/AQWA licence-checkout probe, so a licensed host can
+        # be asked "can you actually solve right now?" through the same lane
+        # command as a real run. NEW basename; the solver arms are untouched.
+        from digitalmodel.solvers.smoke.workflow import SolverSmokeTestWorkflow
+
+        cfg_base = SolverSmokeTestWorkflow().router(cfg_base)
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 
