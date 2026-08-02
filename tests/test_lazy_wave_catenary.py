@@ -28,8 +28,11 @@ class TestLazyWaveSolver:
             sag_bend_elevation=150.0,  # m
             weight_without_buoyancy=1000.0,  # N/m (bare riser)
             weight_with_buoyancy=-500.0,  # N/m (with buoyancy, negative)
-            vertical_distance=500.0,  # m
-            hangoff_bend_radius=2000.0  # m
+            vertical_distance=500.0,  # m (hang-off down to seabed)
+            # hangoff_bend_radius omitted: derived from the hang-off span
+            # (500 - 150 = 350 m) and the departure angle. Earlier revisions of
+            # this fixture supplied 2000 m against a derived 122 m and the solver
+            # used both at once (issue #1949, defect 3).
         )
 
     @pytest.fixture
@@ -39,9 +42,12 @@ class TestLazyWaveSolver:
 
     def test_hangoff_section_calculation(self, solver, typical_config):
         """Test hang-off section matches legacy catenaryEquation with angle."""
-        # Expected values from legacy formula (lines 51-63)
+        # Expected values from legacy formula (lines 51-63).
+        # The legacy driver set the hang-off section's vertical span to
+        # (VerticalDistance - SagBendElevationAboveSeabed), not to the depth below
+        # MSL (issue #1949, defect 2).
         q = typical_config.hangoff_angle
-        d = typical_config.hangoff_below_msl
+        d = typical_config.vertical_distance - typical_config.sag_bend_elevation
 
         angle_rad = math.radians(90 - q)
         tanq = math.tan(angle_rad)
@@ -244,8 +250,7 @@ class TestLazyWaveSolver:
             sag_bend_elevation=120.0,
             weight_without_buoyancy=800.0,
             weight_with_buoyancy=-400.0,  # Negative = buoyancy
-            vertical_distance=400.0,
-            hangoff_bend_radius=1500.0
+            vertical_distance=400.0
         )
 
         results = solver.solve(config)
@@ -268,8 +273,7 @@ class TestLazyWaveSolver:
             sag_bend_elevation=150.0,
             weight_without_buoyancy=500.0,
             weight_with_buoyancy=-1000.0,  # High buoyancy
-            vertical_distance=500.0,
-            hangoff_bend_radius=2000.0
+            vertical_distance=500.0
         )
 
         results = solver.solve(config_high_buoy)
@@ -289,8 +293,7 @@ class TestLazyWaveSolver:
             sag_bend_elevation=140.0,  # m
             weight_without_buoyancy=900.0,  # N/m
             weight_with_buoyancy=-450.0,  # N/m
-            vertical_distance=450.0,  # m
-            hangoff_bend_radius=1800.0  # m
+            vertical_distance=450.0,  # m (hang-off down to seabed)
         )
 
         results = solver.solve(config)
@@ -302,9 +305,18 @@ class TestLazyWaveSolver:
         assert results.hog_to_buoyancy_end is not None
         assert results.buoyancy_to_touchdown is not None
 
-        # Verify forces are reasonable
-        assert 1000000 < results.horizontal_force < 3000000  # Typical range for risers
+        # Verify forces follow the force balance rather than a hardcoded band.
+        # The previous `1000000 < Fh < 3000000` band was only satisfied because the
+        # solver used an unbound 1800 m bend radius; against the radius actually
+        # derived from this geometry it is off by an order of magnitude, so the
+        # band tested the defect, not the physics (issue #1949, defect 3).
+        expected_fh = config.hangoff_bend_radius * config.weight_without_buoyancy
+        assert math.isclose(results.horizontal_force, expected_fh, rel_tol=1e-12)
+        assert results.horizontal_force > 0
         assert results.vertical_force > results.horizontal_force  # Should have vertical component
+
+        # Verify the configuration reaches the seabed.
+        assert abs(results.vertical_closure_error) < 1e-9
 
         # Verify geometry is physically consistent
         total_from_segments = sum(seg.arc_length for seg in results.segments)
@@ -330,8 +342,7 @@ class TestLazyWaveEdgeCases:
             sag_bend_elevation=100.0,
             weight_without_buoyancy=1000.0,
             weight_with_buoyancy=-500.0,
-            vertical_distance=400.0,
-            hangoff_bend_radius=2500.0
+            vertical_distance=400.0
         )
 
         results = solver.solve(config)
@@ -347,8 +358,7 @@ class TestLazyWaveEdgeCases:
             sag_bend_elevation=180.0,
             weight_without_buoyancy=1200.0,
             weight_with_buoyancy=-600.0,
-            vertical_distance=600.0,
-            hangoff_bend_radius=1500.0
+            vertical_distance=600.0
         )
 
         results = solver.solve(config)
@@ -364,8 +374,7 @@ class TestLazyWaveEdgeCases:
             sag_bend_elevation=200.0,  # Very close to hog
             weight_without_buoyancy=1000.0,
             weight_with_buoyancy=-500.0,
-            vertical_distance=500.0,
-            hangoff_bend_radius=2000.0
+            vertical_distance=500.0
         )
 
         results = solver.solve(config)

@@ -36,11 +36,17 @@ class TestLegacyComparison:
         return {
             'HangOff': {
                 'q': 15.0,  # degrees
-                'd': 50.0,  # m below MSL
+                # Vertical span from the hang-off point down to the sag bend.
+                # The original driver set this to
+                # (VerticalDistance - SagBendElevationAboveSeabed) = 500 - 150,
+                # NOT to the hang-off depth below MSL (issue #1949, defect 2).
+                'd': 350.0,
                 'F': None,
                 'X': None,
                 'w': 1000.0
             },
+            'VerticalDistance': 500.0,
+            'HangoffBelowMeanSeaLevel': 50.0,
             'HogBendAboveSeabed': 300.0,
             'SagBendElevationAboveSeabed': 150.0,
             'WeightPerUnitLengthWithOutBuoyancy': 1000.0,
@@ -52,13 +58,12 @@ class TestLegacyComparison:
         """Create modern configuration."""
         return LazyWaveConfiguration(
             hangoff_angle=15.0,
-            hangoff_below_msl=50.0,
+            hangoff_below_msl=50.0,  # datum only
             hog_bend_above_seabed=300.0,
             sag_bend_elevation=150.0,
             weight_without_buoyancy=1000.0,
             weight_with_buoyancy=-500.0,
             vertical_distance=500.0,
-            hangoff_bend_radius=2000.0  # Will be calculated from legacy
         )
 
     def test_hangoff_section_matches_legacy(self, legacy_data):
@@ -66,16 +71,17 @@ class TestLegacyComparison:
         # Run legacy
         legacy_result = catenaryEquation(legacy_data['HangOff'])
 
-        # Create modern config with same bend radius
+        # The modern config derives its own bend radius from (span, angle); it is
+        # NOT handed the legacy value. Agreement is therefore a real equivalence
+        # result rather than a tautology (issue #1949, defect 3).
         modern_config = LazyWaveConfiguration(
             hangoff_angle=legacy_data['HangOff']['q'],
-            hangoff_below_msl=legacy_data['HangOff']['d'],
+            hangoff_below_msl=50.0,  # datum only; the span comes from vertical_distance
             hog_bend_above_seabed=300.0,
             sag_bend_elevation=150.0,
             weight_without_buoyancy=1000.0,
             weight_with_buoyancy=-500.0,
             vertical_distance=500.0,
-            hangoff_bend_radius=legacy_result['BendRadius']
         )
 
         solver = LazyWaveSolver()
@@ -98,13 +104,12 @@ class TestLegacyComparison:
         # Run modern
         modern_config = LazyWaveConfiguration(
             hangoff_angle=legacy_data['HangOff']['q'],
-            hangoff_below_msl=legacy_data['HangOff']['d'],
+            hangoff_below_msl=50.0,  # datum only; the span comes from vertical_distance
             hog_bend_above_seabed=legacy_data['HogBendAboveSeabed'],
             sag_bend_elevation=legacy_data['SagBendElevationAboveSeabed'],
             weight_without_buoyancy=legacy_data['WeightPerUnitLengthWithOutBuoyancy'],
             weight_with_buoyancy=legacy_data['WeightPerUnitLengthWithBuoyancy'],
             vertical_distance=500.0,
-            hangoff_bend_radius=legacy_hangoff['BendRadius']
         )
 
         solver = LazyWaveSolver()
@@ -188,13 +193,12 @@ class TestLegacyComparison:
         # Run modern
         modern_config = LazyWaveConfiguration(
             hangoff_angle=legacy_data['HangOff']['q'],
-            hangoff_below_msl=legacy_data['HangOff']['d'],
+            hangoff_below_msl=50.0,  # datum only; the span comes from vertical_distance
             hog_bend_above_seabed=legacy_data['HogBendAboveSeabed'],
             sag_bend_elevation=legacy_data['SagBendElevationAboveSeabed'],
             weight_without_buoyancy=legacy_data['WeightPerUnitLengthWithOutBuoyancy'],
             weight_with_buoyancy=legacy_data['WeightPerUnitLengthWithBuoyancy'],
             vertical_distance=500.0,
-            hangoff_bend_radius=legacy_hangoff['BendRadius']
         )
 
         solver = LazyWaveSolver()
@@ -270,13 +274,12 @@ class TestLegacyComparison:
         # Run modern and convert to legacy format
         modern_config = LazyWaveConfiguration(
             hangoff_angle=legacy_data['HangOff']['q'],
-            hangoff_below_msl=legacy_data['HangOff']['d'],
+            hangoff_below_msl=50.0,  # datum only; the span comes from vertical_distance
             hog_bend_above_seabed=legacy_data['HogBendAboveSeabed'],
             sag_bend_elevation=legacy_data['SagBendElevationAboveSeabed'],
             weight_without_buoyancy=legacy_data['WeightPerUnitLengthWithOutBuoyancy'],
             weight_with_buoyancy=legacy_data['WeightPerUnitLengthWithBuoyancy'],
             vertical_distance=500.0,
-            hangoff_bend_radius=legacy_hangoff['BendRadius']
         )
 
         solver = LazyWaveSolver()
@@ -288,8 +291,16 @@ class TestLegacyComparison:
             'HangOff', 'SagToBuoyancy', 'BuoyancyToHog', 'HogToBuoyancy',
             'BuoyancyToTouchDown', 'Summary', 'WeightPerUnitLengthWithOutBuoyancy',
             'WeightPerUnitLengthWithBuoyancy', 'HogBendAboveSeabed',
-            'SagBendElevationAboveSeabed'
+            'SagBendElevationAboveSeabed',
+            # Carried so a legacy-format consumer can place the configuration
+            # against the seabed and the waterline (issue #1949, defect 2).
+            'VerticalDistance', 'HangoffBelowMeanSeaLevel'
         }
+
+        # The legacy HangOff['d'] is the hang-off -> sag bend span.
+        assert math.isclose(
+            modern_dict['HangOff']['d'], legacy_data['HangOff']['d'], rel_tol=1e-12
+        )
 
         # Verify values match
         assert modern_dict['HangOff']['q'] == legacy_data['HangOff']['q']

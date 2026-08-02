@@ -21,16 +21,21 @@ def main():
     """Run lazy-wave catenary analysis example."""
 
     # Define lazy-wave configuration
-    # This represents a typical deep-water riser with buoyancy modules
+    # This represents a typical deep-water riser with buoyancy modules.
+    #
+    # hangoff_bend_radius is deliberately omitted: it is derived from the hang-off
+    # vertical span (vertical_distance - sag_bend_elevation = 350 m) and the
+    # departure angle, and is not a free parameter. Supplying an inconsistent value
+    # is rejected -- earlier revisions of this example passed 2000 m against a
+    # derived 122 m, which silently inflated the horizontal force (issue #1949).
     config = LazyWaveConfiguration(
-        hangoff_angle=15.0,              # Departure angle from vessel [degrees]
-        hangoff_below_msl=50.0,          # Hang-off depth [m]
+        hangoff_angle=15.0,              # Departure angle from vertical [degrees]
+        hangoff_below_msl=50.0,          # Hang-off below MSL [m] (reporting datum)
         hog_bend_above_seabed=300.0,     # Hog bend elevation [m]
         sag_bend_elevation=150.0,        # Sag bend elevation [m]
-        weight_without_buoyancy=1000.0,  # Bare riser weight [N/m]
+        weight_without_buoyancy=1000.0,  # Bare riser weight [N/m] (positive)
         weight_with_buoyancy=-500.0,     # With buoyancy modules [N/m] (negative)
-        vertical_distance=500.0,         # Total vertical span [m]
-        hangoff_bend_radius=2000.0       # Initial bend radius [m]
+        vertical_distance=500.0,         # Hang-off down to seabed [m]
     )
 
     print("="*60)
@@ -38,12 +43,14 @@ def main():
     print("="*60)
     print("\nConfiguration:")
     print(f"  Hang-off angle: {config.hangoff_angle}°")
-    print(f"  Hang-off depth: {config.hangoff_below_msl} m")
+    print(f"  Hang-off below MSL: {config.hangoff_below_msl} m (datum only)")
+    print(f"  Hang-off to seabed: {config.vertical_distance} m")
     print(f"  Hog bend elevation: {config.hog_bend_above_seabed} m")
     print(f"  Sag bend elevation: {config.sag_bend_elevation} m")
     print(f"  Bare riser weight: {config.weight_without_buoyancy} N/m")
     print(f"  With buoyancy: {config.weight_with_buoyancy} N/m")
-    print(f"  Bend radius: {config.hangoff_bend_radius} m")
+    print(f"  Hang-off span: {config.hangoff_vertical_span} m (derived)")
+    print(f"  Bend radius: {config.hangoff_bend_radius:.3f} m (derived)")
 
     # Solve lazy-wave catenary
     solver = LazyWaveSolver()
@@ -63,6 +70,7 @@ def main():
     print("\nOverall Geometry:")
     print(f"  Total arc length:        {results.total_arc_length:,.1f} m")
     print(f"  Total horizontal dist:   {results.total_horizontal_distance:,.1f} m")
+    print(f"  Water-depth closure err: {results.vertical_closure_error:.3e} m")
 
     # Segment breakdown
     print("\nSegment Breakdown:")
