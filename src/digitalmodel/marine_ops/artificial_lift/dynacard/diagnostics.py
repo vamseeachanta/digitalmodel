@@ -8,8 +8,12 @@ import numpy as np
 
 from .models import CardData, AnalysisResults, DiagnosticResult
 from .feature_extraction import FeatureExtractor
+# PUMP_TAGGING_LOAD_THRESHOLD_LBS is deliberately not imported. It was the
+# peak-load test in _classify_legacy, which could not tell tagging up from
+# tagging down and did not in fact detect either (see _classify_legacy). The
+# constant is left defined in constants.py for anyone who wants a barrel-rating
+# exceedance check, but it no longer backs a failure-mode claim here.
 from .constants import (
-    PUMP_TAGGING_LOAD_THRESHOLD_LBS,
     FLUID_POUND_LOAD_DIFF_THRESHOLD_LBS,
     GAS_INTERFERENCE_MIN_LOAD_THRESHOLD_LBS,
 )
@@ -22,7 +26,10 @@ class PumpDiagnostics:
 
     Uses a pre-trained GradientBoosting classifier on Bezerra vertical
     projection features to classify card patterns into 20 pump failure modes.
-    Falls back to legacy threshold-based rules if the model file is missing.
+    Falls back to legacy threshold-based rules if the model file is missing --
+    a narrower fallback that reports only NORMAL, FLUID_POUND and
+    GAS_INTERFERENCE and abstains from anything needing card morphology,
+    notably the two tagging directions. See :meth:`_classify_legacy`.
     """
 
     FAILURE_MODES = {
@@ -258,14 +265,57 @@ class PumpDiagnostics:
 
     @staticmethod
     def _classify_legacy(downhole_card: CardData) -> str:
-        """Legacy threshold-based classification (fallback)."""
+        """Legacy threshold-based classification (fallback).
+
+        Fires only when :meth:`_load_model` returns ``None`` -- the shipped
+        ``data/dynacard_classifier.json`` is missing or unparseable. That is a
+        degraded install, not a normal operating mode, and it is the worst
+        possible moment to guess.
+
+        **This classifier does not diagnose pump tagging, in either
+        direction.** Tagging up and tagging down are opposite mechanisms with
+        opposite repairs -- space the pump down versus space it up -- so a
+        one-sided answer is not a partial answer, it is a 50% chance of the
+        inverse field action. Distinguishing them needs card *morphology*
+        (which end of the stroke the impact sits at, and whether load spikes
+        above the upstroke plateau or dips below the downstroke line), which
+        is what the trained model reads and what a peak/trough threshold
+        cannot. Abstaining leaves the operator to look at the card; guessing
+        sends a crew to re-space a pump the wrong way.
+
+        The rule this replaced compared peak load against
+        ``PUMP_TAGGING_LOAD_THRESHOLD_LBS`` (38,000 lb) and returned
+        ``PUMP_TAGGING_UP``. Two independent problems, both measurable against
+        this package's own generators:
+
+        1. It could never return ``PUMP_TAGGING_DOWN``. A down-tag is a load
+           *minimum*; a maximum-load test is structurally blind to it.
+        2. It did not detect tagging up either. Every card
+           ``generate_pump_tagging_up_card`` produces peaks at 16-21 klb, so
+           the 38 klb rule never fired on a real up-tagging card. What it
+           actually fired on was absolute load above a barrel rating -- a
+           magnitude excursion that carries no information about which end of
+           the pump is being struck, and that a genuinely tagging-down card on
+           a deep well trips just as readily.
+
+        So the branch was not "tagging detection missing its down half"; it
+        detected a different quantity and mislabelled it. Making it two-sided
+        would mean writing a second, uncalibrated morphology classifier and
+        shipping it under the fallback -- a fabricated capability, and exactly
+        the defect class dm#1952 objects to.
+
+        Returning the retired direction-neutral ``PUMP_TAGGING`` is not an
+        available escape either: ``card_generators.MODE_ALIASES`` and
+        ``report_sections.TROUBLESHOOTING_ALIASES`` both resolve it back to
+        ``PUMP_TAGGING_UP``, so the report would still print "space the pump
+        down".
+
+        Returns:
+            One of ``NORMAL``, ``FLUID_POUND``, ``GAS_INTERFERENCE`` -- the
+            findings a threshold rule can honestly support.
+        """
         pos = np.array(downhole_card.position)
         load = np.array(downhole_card.load)
-
-        if np.max(load) > PUMP_TAGGING_LOAD_THRESHOLD_LBS:
-            # A peak-load threshold can only see the *upward* tag; tagging
-            # down shows as a load minimum and this rule cannot detect it.
-            return "PUMP_TAGGING_UP"
 
         mid_point = len(pos) // 2
         downstroke_load = load[mid_point:]
