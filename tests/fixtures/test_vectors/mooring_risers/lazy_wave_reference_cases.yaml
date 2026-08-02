@@ -1,0 +1,154 @@
+source_type: historical_solver_run
+source_description: >-
+  De-identified parameter -> result pairs from a historical result set produced by the
+  ancestor of this repo's lazy-wave solver. Only numeric engineering parameters and the
+  geometry/force results they produced are reproduced here; no project, client or file
+  identifiers are carried across. Used to pin the water-depth closure identity and the
+  hang-off bend-radius binding that the ported solver had lost (issue #1949).
+extracted_date: "2026-08-02"
+legal_scan_passed: true
+category: "mooring_risers"
+subcategory: "lazy_wave_reference_cases"
+
+# The parameter space spanned below matches the historical sweep: buoyancy factor
+# (net buoyant weight), sag/hog bend elevations, and hang-off declination angle.
+#
+# Two invariants hold across all 64 historical runs and are asserted by the tests:
+#   1. hangoff_d == vertical_distance - sag_bend_elevation   (closure by construction)
+#   2. hangoff_bend_radius is DERIVED from (hangoff_d, hangoff_angle), never supplied
+#      independently, and is reused verbatim for the sag and touchdown segments.
+#
+# Every historical run had weight_with_buoyancy < 0 (net buoyant). The insufficient-
+# buoyancy regime was never exercised by the original, so its abs() handling of that
+# case is untested legacy behaviour, not validated behaviour.
+
+invariants:
+  hangoff_span: "d_hangoff = vertical_distance - sag_bend_elevation"
+  hangoff_bend_radius: "R = d_hangoff * cos(90-q) / (1 - cos(90-q))"
+  vertical_closure: "d1 - d2 - d3 + d4 + d5 == vertical_distance (exactly, by construction)"
+
+cases:
+  - id: A
+    description: "Baseline: net buoyant weight equal and opposite to bare weight, 8 deg declination"
+    inputs:
+      hangoff_angle: 8.0
+      hangoff_below_msl: 0.0
+      vertical_distance: 4000.0
+      sag_bend_elevation: 1200.0
+      hog_bend_above_seabed: 1500.0
+      weight_without_buoyancy: 2456.695439714344
+      weight_with_buoyancy: -2456.695439714344
+    expected:
+      hangoff_d: 2800.0
+      hangoff_bend_radius: 452.68646126508355
+      hangoff_S: 3221.0315402188266
+      hangoff_X: 1204.2845667664897
+      sag_to_buoyancy_d: 150.0
+      sag_to_buoyancy_S: 397.87678793757874
+      sag_to_buoyancy_X: 359.03406247548156
+      buoyancy_to_hog_R: 452.68646126508355
+      buoyancy_to_hog_d: 150.0
+      buoyancy_to_hog_S: 397.87678793757874
+      hog_to_buoyancy_d: 750.0
+      hog_to_buoyancy_S: 1114.2395128057635
+      buoyancy_to_touchdown_d: 750.0
+      buoyancy_to_touchdown_S: 1114.2395128057635
+      total_S: 6245.264141705511
+      total_X: 3400.6427273504437
+      Fh: 1112112.7650103548
+      Fv: 9025206.261042016
+
+  - id: B
+    description: "Higher buoyancy factor; hog bend radius contracts as |w_b| grows"
+    inputs:
+      hangoff_angle: 8.0
+      hangoff_below_msl: 0.0
+      vertical_distance: 4000.0
+      sag_bend_elevation: 1200.0
+      hog_bend_above_seabed: 1500.0
+      weight_without_buoyancy: 2456.695439714344
+      weight_with_buoyancy: -3685.0431595715163
+    expected:
+      hangoff_d: 2800.0
+      hangoff_bend_radius: 452.68646126508355
+      hangoff_S: 3221.0315402188266
+      hangoff_X: 1204.2845667664897
+      sag_to_buoyancy_d: 180.00000000000003
+      sag_to_buoyancy_S: 442.0035362476529
+      sag_to_buoyancy_X: 391.3871813183194
+      buoyancy_to_hog_R: 301.79097417672233
+      buoyancy_to_hog_d: 120.0
+      buoyancy_to_hog_S: 294.66902416510186
+      hog_to_buoyancy_d: 600.0
+      hog_to_buoyancy_S: 849.7936037721552
+      buoyancy_to_touchdown_d: 900.0
+      buoyancy_to_touchdown_S: 1274.6904056582327
+      total_S: 6082.188110061969
+      total_X: 3183.376409945153
+      Fh: 1112112.7650103548
+      Fv: 9025206.261042016
+
+  - id: C
+    description: "Shallower sag/hog elevations with the highest buoyancy factor in the sweep"
+    inputs:
+      hangoff_angle: 8.0
+      hangoff_below_msl: 0.0
+      vertical_distance: 4000.0
+      sag_bend_elevation: 500.0
+      hog_bend_above_seabed: 800.0
+      weight_without_buoyancy: 2456.695439714344
+      weight_with_buoyancy: -6141.73859928586
+    expected:
+      hangoff_d: 3500.0
+      hangoff_bend_radius: 565.8580765813543
+      hangoff_S: 4026.2894252735327
+      hangoff_X: 1505.3557084581118
+      sag_to_buoyancy_d: 214.28571428571428
+      sag_to_buoyancy_S: 537.055836572037
+      sag_to_buoyancy_X: 478.1047885167005
+      buoyancy_to_hog_R: 226.34323063254175
+      buoyancy_to_hog_d: 85.71428571428572
+      buoyancy_to_hog_S: 214.82233462881487
+      hog_to_buoyancy_d: 228.57142857142858
+      hog_to_buoyancy_S: 394.60877981297944
+      buoyancy_to_touchdown_d: 571.4285714285714
+      buoyancy_to_touchdown_S: 986.5219495324485
+      total_S: 6159.298325819812
+      total_X: 3222.4860545848674
+      Fh: 1390140.9562629433
+      Fv: 11281507.826302517
+
+  - id: D
+    description: "Steeper declination angle; isolates the (depth, angle) -> bend radius binding"
+    inputs:
+      hangoff_angle: 14.0
+      hangoff_below_msl: 0.0
+      vertical_distance: 4000.0
+      sag_bend_elevation: 1200.0
+      hog_bend_above_seabed: 1500.0
+      weight_without_buoyancy: 2456.695439714344
+      weight_with_buoyancy: -2456.695439714344
+    expected:
+      hangoff_d: 2800.0
+      hangoff_bend_radius: 893.5508145495153
+      hangoff_S: 3583.83657014062
+      hangoff_X: 1874.0655656430379
+      sag_to_buoyancy_d: 150.0
+      sag_to_buoyancy_S: 539.0410414475456
+      sag_to_buoyancy_X: 510.76793603601595
+      buoyancy_to_hog_R: 893.5508145495154
+      buoyancy_to_hog_d: 150.0
+      buoyancy_to_hog_S: 539.0410414475457
+      hog_to_buoyancy_d: 750.0
+      hog_to_buoyancy_S: 1379.4296726634066
+      buoyancy_to_touchdown_d: 750.0
+      buoyancy_to_touchdown_S: 1379.4296726634063
+      total_S: 7420.777998362524
+      total_X: 5073.712567597819
+      Fh: 2195182.211256832
+      Fv: 10999577.169802789
+
+assumptions:
+  - "Hang-off point is the datum for vertical_distance; the seabed lies vertical_distance below it."
+  - "hangoff_below_msl positions the hang-off relative to mean sea level for reporting and plotting only; it is not a catenary span."
+  - "weight_with_buoyancy is the net effective weight over the buoyed length and is negative (net upward) for every physically realisable lazy-wave configuration."

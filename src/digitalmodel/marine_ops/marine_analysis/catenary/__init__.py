@@ -33,8 +33,10 @@ except ImportError:
 from .lazy_wave import (
     LazyWaveSolver,
     LazyWaveConfiguration,
+    LazyWaveConfigurationError,
     LazyWaveResults,
-    LazyWaveSegment
+    LazyWaveSegment,
+    derive_hangoff_bend_radius
 )
 
 # Import legacy compatibility adapter
@@ -53,8 +55,10 @@ __all__ = [
     # Lazy-Wave API
     'LazyWaveSolver',
     'LazyWaveConfiguration',
+    'LazyWaveConfigurationError',
     'LazyWaveResults',
     'LazyWaveSegment',
+    'derive_hangoff_bend_radius',
     # Legacy API (deprecated)
     'catenaryEquation',
     'catenaryForces',
