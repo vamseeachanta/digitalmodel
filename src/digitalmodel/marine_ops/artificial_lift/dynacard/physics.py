@@ -1,5 +1,7 @@
 import numpy as np
 from scipy.signal import savgol_filter
+from .calculations import calculate_pump_fillage
+from .exceptions import PhysicsError
 from .models import DynacardAnalysisContext, CardData, AnalysisResults
 from .constants import (
     FEET_TO_INCHES,
@@ -13,7 +15,6 @@ from .constants import (
     LOAD_ATTENUATION_FACTOR,
     STROKE_SCALING_FACTOR,
     BUCKLING_DETECTION_LOAD_THRESHOLD_LBS,
-    DEFAULT_PUMP_FILLAGE,
 )
 
 class DynacardPhysicsSolver:
@@ -124,10 +125,33 @@ class DynacardPhysicsSolver:
         return self.results.buckling_detected
 
     def calculate_fillage(self):
-        """Calculate pump fillage (simplified default).
+        """Calculate pump fillage from the solved downhole card.
+
+        Delegates to :func:`calculations.calculate_pump_fillage`, which
+        derives fillage from the net and gross plunger travel of the downhole
+        card. This is the same computation ``DynacardAnalyzer.run_full_analysis``
+        runs, so ``results.pump_fillage`` carries one meaning and one scale
+        regardless of which entry point produced it.
 
         Returns:
-            The pump fillage value as a float (default constant).
+            Pump fillage as a percentage of gross stroke (0-100).
+
+        Raises:
+            PhysicsError: If :meth:`solve_wave_equation` has not been run, so
+                there is no downhole card to measure. This method previously
+                assigned ``DEFAULT_PUMP_FILLAGE`` and returned it without
+                examining the card, reporting the same fillage for every well
+                -- and on a 0-1 scale, against the 0-100 percentage the
+                analyzer pipeline writes into the same field (issue #1952 D1).
         """
-        self.results.pump_fillage = DEFAULT_PUMP_FILLAGE
+        if not self.results.downhole_card:
+            raise PhysicsError(
+                "Pump fillage requires a downhole card; "
+                "call solve_wave_equation() first.",
+                solver="gibbs",
+            )
+
+        self.results.pump_fillage = calculate_pump_fillage(
+            self.results.downhole_card
+        ).fillage
         return self.results.pump_fillage

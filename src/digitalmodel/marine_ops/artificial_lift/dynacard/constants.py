@@ -174,9 +174,15 @@ sinusoidal or helical buckling in the rod string.
 
 DEFAULT_PUMP_FILLAGE = 0.85
 """
-Default pump fillage (volumetric efficiency) as decimal.
+Assumed pump fillage (volumetric efficiency) as a decimal *fraction*.
 85% is typical for wells operating within normal parameters.
 Range: 0.0 (empty) to 1.0 (full stroke).
+
+This is a planning assumption for cases with no card, not a measurement.
+Never substitute it for a computed fillage: use
+``calculations.calculate_pump_fillage`` on a downhole card instead. Note also
+that ``AnalysisResults.pump_fillage`` is a *percentage* (0-100), so this value
+is not on that scale (issue #1952 D1).
 """
 
 
@@ -250,5 +256,52 @@ Typical range: 50-200.
 BEZERRA_N_BINS = 8
 """Number of position bins per half-cycle for Bezerra vertical projections."""
 
-N_FAILURE_MODES = 18
-"""Total number of diagnostic failure modes in the ML classifier."""
+RETIRED_FAILURE_MODE_ALIASES = frozenset({"VALVE_LEAK", "PUMP_TAGGING"})
+"""Failure-mode keys retained only for backward compatibility.
+
+``PumpDiagnostics.FAILURE_MODES`` keeps these so archived results and stored
+configs carrying an old label still resolve to a description. The trained
+classifier never predicts them -- each was split into a pair of modes with
+opposite repairs (``VALVE_LEAK_TV``/``VALVE_LEAK_SV``,
+``PUMP_TAGGING_UP``/``PUMP_TAGGING_DOWN``) -- so they are not diagnostic modes
+and are excluded from :data:`N_FAILURE_MODES`.
+"""
+
+
+# ``N_FAILURE_MODES`` is derived from ``PumpDiagnostics.FAILURE_MODES`` rather
+# than restated here: it was hardcoded to 18 against 20 predictable modes, and
+# a second copy of a number is a second thing to forget (issue #1952 D2).
+# ``diagnostics`` imports this module, so the derivation is deferred to first
+# attribute access via PEP 562 and memoised into the module globals; that keeps
+# the dependency one-directional at import time whatever order modules load in.
+def _derive_n_failure_modes() -> int:
+    """Count the failure modes the classifier can actually predict."""
+    from .diagnostics import PumpDiagnostics
+
+    return len(
+        set(PumpDiagnostics.FAILURE_MODES) - RETIRED_FAILURE_MODE_ALIASES
+    )
+
+
+_LAZY_CONSTANTS = {"N_FAILURE_MODES": _derive_n_failure_modes}
+
+
+def __getattr__(name: str):
+    """Resolve lazily-derived module constants (PEP 562).
+
+    N_FAILURE_MODES: total number of diagnostic failure modes in the ML
+    classifier, excluding :data:`RETIRED_FAILURE_MODE_ALIASES`.
+    """
+    derive = _LAZY_CONSTANTS.get(name)
+    if derive is None:
+        raise AttributeError(
+            f"module {__name__!r} has no attribute {name!r}"
+        )
+    value = derive()
+    globals()[name] = value  # memoise; __getattr__ is not consulted again
+    return value
+
+
+def __dir__() -> list:
+    """Keep lazily-derived constants discoverable via ``dir()``."""
+    return sorted(set(globals()) | set(_LAZY_CONSTANTS))

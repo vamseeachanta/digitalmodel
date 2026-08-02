@@ -11,10 +11,14 @@ from digitalmodel.marine_ops.artificial_lift.dynacard import (
     PumpProperties,
     SurfaceUnit,
 )
+from digitalmodel.marine_ops.artificial_lift.dynacard.calculations import (
+    calculate_pump_fillage,
+)
 from digitalmodel.marine_ops.artificial_lift.dynacard.constants import (
     DEFAULT_PUMP_FILLAGE,
     BUCKLING_DETECTION_LOAD_THRESHOLD_LBS,
 )
+from digitalmodel.marine_ops.artificial_lift.dynacard.exceptions import PhysicsError
 
 
 def create_test_context(
@@ -225,25 +229,78 @@ class TestDetectBuckling:
 
 
 class TestCalculateFillage:
-    """Tests for the calculate_fillage method."""
+    """Tests for the calculate_fillage method.
 
-    def test_returns_default_fillage(self):
-        """Should return the default fillage value."""
+    Issue #1952 D1: this method used to assign ``DEFAULT_PUMP_FILLAGE`` and
+    return it without ever looking at the card, so every well reported the
+    same fillage -- and on a 0-1 scale, while ``DynacardAnalyzer``'s pipeline
+    writes a 0-100 percentage into the very same ``results.pump_fillage``
+    field. It must run the real computation on the solved downhole card.
+    """
+
+    def test_delegates_to_the_real_fillage_calculation(self):
+        """Should return exactly what calculations.calculate_pump_fillage gives."""
         ctx = create_test_context()
         solver = DynacardPhysicsSolver(ctx)
+        results = solver.solve_wave_equation()
+
+        expected = calculate_pump_fillage(results.downhole_card).fillage
+
+        assert solver.calculate_fillage() == pytest.approx(expected)
+
+    def test_does_not_return_the_default_constant(self):
+        """Should not hand back the fabricated placeholder value."""
+        ctx = create_test_context()
+        solver = DynacardPhysicsSolver(ctx)
+        solver.solve_wave_equation()
+
+        assert solver.calculate_fillage() != pytest.approx(DEFAULT_PUMP_FILLAGE)
+
+    def test_fillage_depends_on_the_card(self):
+        """Different cards must produce different fillage values."""
+        fillages = []
+        for kwargs in (
+            {},
+            {"peak_load": 20000.0, "min_load": 2000.0},
+            {"stroke_length": 64.0, "rod_length": 3000.0},
+        ):
+            solver = DynacardPhysicsSolver(create_test_context(**kwargs))
+            solver.solve_wave_equation()
+            fillages.append(solver.calculate_fillage())
+
+        assert len(set(fillages)) == len(fillages), (
+            f"fillage must vary with the card, got {fillages}"
+        )
+
+    def test_reports_percentage_scale(self):
+        """Should use the 0-100 percentage scale of results.pump_fillage."""
+        ctx = create_test_context()
+        solver = DynacardPhysicsSolver(ctx)
+        solver.solve_wave_equation()
 
         fillage = solver.calculate_fillage()
 
-        assert fillage == DEFAULT_PUMP_FILLAGE
+        assert 1.0 < fillage <= 100.0
 
     def test_sets_fillage_in_results(self):
-        """Should set fillage in results."""
+        """Should set the computed fillage in results."""
+        ctx = create_test_context()
+        solver = DynacardPhysicsSolver(ctx)
+        results = solver.solve_wave_equation()
+
+        returned = solver.calculate_fillage()
+        expected = calculate_pump_fillage(results.downhole_card).fillage
+
+        assert solver.results.pump_fillage == pytest.approx(expected)
+        assert solver.results.pump_fillage == pytest.approx(returned)
+
+    def test_raises_when_wave_equation_not_solved(self):
+        """Should refuse to invent a number when there is no downhole card."""
         ctx = create_test_context()
         solver = DynacardPhysicsSolver(ctx)
 
-        solver.calculate_fillage()
-
-        assert solver.results.pump_fillage == DEFAULT_PUMP_FILLAGE
+        with pytest.raises(PhysicsError):
+            solver.calculate_fillage()
 
 
 class TestPhysicsWithRealWorldValues:
