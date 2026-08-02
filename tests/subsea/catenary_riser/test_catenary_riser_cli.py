@@ -178,10 +178,12 @@ class TestLazyWaveCommand:
             '--buoy-start', '300',
         ])
 
-        assert result.exit_code == 0
-        assert 'Lazy Wave Riser Analysis' in result.output
-        assert 'Sag Bend Depth' in result.output
-        assert 'Hog Bend Depth' in result.output
+        # QUARANTINED: the lazy-wave analyzer returned hardcoded geometry invariant to
+        # buoyancy configuration. The command must now fail cleanly with the explanation
+        # rather than print invented numbers or raise a traceback.
+        assert result.exit_code != 0
+        assert 'quarantined' in result.output.lower()
+        assert 'LazyWaveSolver' in result.output
 
     def test_lazy_wave_output_file(self, runner, temp_output_file):
         """Test lazy wave with JSON output"""
@@ -195,13 +197,15 @@ class TestLazyWaveCommand:
             '--output', temp_output_file,
         ])
 
-        assert result.exit_code == 0
+        # QUARANTINED: must fail before writing anything. Persisting fabricated geometry
+        # to a JSON file is the worst outcome of the three — it outlives the session and
+        # carries no indication that the numbers were invented.
+        assert result.exit_code != 0
+        assert 'quarantined' in result.output.lower()
 
         with open(temp_output_file, 'r') as f:
-            data = json.load(f)
-
-        assert 'sag_bend_depth_m' in data
-        assert 'arch_height_m' in data
+            contents = f.read().strip()
+        assert contents == '', 'no output file should be written when the analysis refuses'
 
 
 # ============================================================================

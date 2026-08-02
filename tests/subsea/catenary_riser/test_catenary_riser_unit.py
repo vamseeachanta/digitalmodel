@@ -345,13 +345,13 @@ class TestLazyWave:
             buoyancy_modules=[buoy_module],
         )
 
-        analyzer = LazyWaveAnalyzer()
-        result = analyzer.analyze(config)
-
-        assert result.sag_bend_depth > 0
-        assert result.hog_bend_depth > 0
-        assert result.arch_height > 0
-        assert result.sag_bend_depth > result.hog_bend_depth
+        # QUARANTINED. This previously asserted sag_bend_depth > hog_bend_depth, which
+        # was true by construction: the implementation returned 0.35 * water_depth and
+        # 0.20 * water_depth as literals. The assertion held for any positive depth and
+        # would have passed with the physics deleted -- which, in effect, it was.
+        # Full contract: tests/subsea/catenary_riser/test_lazy_wave_quarantine.py
+        with pytest.raises(NotImplementedError):
+            LazyWaveAnalyzer().analyze(config)
 
     def test_weight_profile(self, basic_riser):
         """Test weight profile with buoyancy"""
@@ -390,10 +390,11 @@ class TestLazyWave:
             buoyancy_modules=[buoy_module],
         )
 
-        analyzer = LazyWaveAnalyzer()
-        result = analyzer.analyze(config)
-
-        assert 0 <= result.buoyancy_utilization <= 1.0
+        # QUARANTINED. This previously asserted 0 <= buoyancy_utilization <= 1.0, which
+        # was guaranteed by a min(1.0, ...) in the implementation -- a tautology, not a
+        # property of any lazy-wave physics.
+        with pytest.raises(NotImplementedError):
+            LazyWaveAnalyzer().analyze(config)
 
 
 # ============================================================================
