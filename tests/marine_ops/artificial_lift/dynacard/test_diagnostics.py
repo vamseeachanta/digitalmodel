@@ -12,15 +12,35 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.models import DiagnosticRe
 from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
     generate_normal_card,
     generate_pump_tagging_card,
+    generate_pump_tagging_up_card,
+    generate_pump_tagging_down_card,
     generate_fluid_pound_card,
     generate_gas_interference_card,
+    resolve_mode,
     ALL_GENERATORS,
+)
+from digitalmodel.marine_ops.artificial_lift.dynacard.report_sections import (
+    _guide_key,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.constants import (
     PUMP_TAGGING_LOAD_THRESHOLD_LBS,
     FLUID_POUND_LOAD_DIFF_THRESHOLD_LBS,
     GAS_INTERFERENCE_MIN_LOAD_THRESHOLD_LBS,
 )
+
+# Every name that carries, or resolves to, a tagging *direction*. A direction
+# is a repair instruction: up means space the pump down, down means space it
+# up. The retired merged name is in here because both alias tables in the
+# package map it straight onto PUMP_TAGGING_UP, so returning it is not an
+# abstention -- it is the same one-sided guess with an extra hop.
+TAGGING_DIRECTION_NAMES = {
+    "PUMP_TAGGING_UP",
+    "PUMP_TAGGING_DOWN",
+    "PUMP_TAGGING",
+}
+
+# What a peak/trough threshold rule can honestly support.
+LEGACY_REACHABLE_MODES = {"NORMAL", "FLUID_POUND", "GAS_INTERFERENCE"}
 
 
 # --- Legacy card helpers (kept for backward compat tests) ---
@@ -33,12 +53,38 @@ def create_normal_card(num_points: int = 100) -> CardData:
     return CardData(position=position.tolist(), load=load.tolist())
 
 
-def create_pump_tagging_card(num_points: int = 100) -> CardData:
-    """Create a card with pump tagging (extreme loads)."""
+def create_over_threshold_load_card(num_points: int = 100) -> CardData:
+    """Create a card whose peak load clears PUMP_TAGGING_LOAD_THRESHOLD_LBS.
+
+    Deliberately not named a "tagging" card. Its shape is an ordinary sinusoid
+    -- no impact spike at either end of the stroke -- and all that is unusual
+    about it is that 40 klb of absolute load is above the barrel rating the
+    threshold constant cites. That is a load-magnitude excursion, not tagging
+    morphology, and the two must not be conflated: this card is exactly what
+    the old legacy rule reported as PUMP_TAGGING_UP.
+    """
     t = np.linspace(0, 2 * np.pi, num_points)
     position = 50 * (1 - np.cos(t))
     load = 30000 + 10000 * np.sin(t)
     return CardData(position=position.tolist(), load=load.tolist())
+
+
+def deep_well_tagging_card(down: bool, seed: int = 0) -> CardData:
+    """A real generated tagging card lifted onto a deep well's load scale.
+
+    The generators draw tagging *shape* on a 14-19 klb card, which never
+    reaches the 38 klb threshold. Adding a constant offset is precisely what a
+    heavier rod string does -- buoyant rod weight rides under the whole card
+    and shifts it up without touching its shape -- so this is still the
+    generator's tagging morphology, now on a well deep enough for the legacy
+    peak-load rule to see it. It is the only way a genuine tagging-*down* card
+    ever reaches that rule.
+    """
+    gen = generate_pump_tagging_down_card if down else generate_pump_tagging_up_card
+    card = gen(seed=seed)
+    load = np.array(card.load)
+    load = load + (PUMP_TAGGING_LOAD_THRESHOLD_LBS + 2_000 - load.max())
+    return CardData(position=list(card.position), load=load.tolist())
 
 
 def create_fluid_pound_card(num_points: int = 100) -> CardData:
@@ -158,26 +204,97 @@ class TestClassifyCardLegacy:
         result = PumpDiagnostics._classify_legacy(create_normal_card())
         assert result == "NORMAL"
 
-    def test_legacy_classifies_pump_tagging(self):
-        """Legacy classifier should detect pump tagging -- upward only.
+    def test_legacy_does_not_name_a_tagging_direction_for_a_tagging_down_card(self):
+        """The inversion case: a tagging-DOWN card must not be called tagging UP.
 
-        The legacy rule is a peak-load threshold, so it can only see the
-        plunger striking the *top* of the pump. Tagging down shows as a load
-        minimum below the downstroke line and this rule is blind to it.
+        This is the harm in dm#1952 D3 stated as an assertion. The card is the
+        generator's tagging-down morphology on a deep well, so the correct
+        repair is *space the pump up*; PUMP_TAGGING_UP prints "space the pump
+        down", which is the exact opposite intervention.
         """
-        result = PumpDiagnostics._classify_legacy(create_pump_tagging_card())
-        assert result == "PUMP_TAGGING_UP"
+        card = deep_well_tagging_card(down=True, seed=0)
+        result = PumpDiagnostics._classify_legacy(card)
+        assert result not in TAGGING_DIRECTION_NAMES, (
+            f"legacy fallback named a tagging direction ({result}) for a "
+            f"tagging-down card; that inverts the field repair"
+        )
 
-    def test_legacy_pump_tagging_threshold(self):
-        """Legacy pump tagging detection should use the defined threshold."""
+    def test_legacy_never_names_a_tagging_direction(self):
+        """The fallback must abstain from tagging on every card, not guess one.
+
+        A peak-load threshold cannot see a load *minimum*, so it can never
+        reach PUMP_TAGGING_DOWN -- which makes any tagging answer it does give
+        one-sided by construction. The honest output set for a threshold rule
+        is the three modes a threshold can actually support.
+        """
+        cards = [("over_threshold_sinusoid", create_over_threshold_load_card())]
+        for seed in (0, 1, 2):
+            cards.append((f"deep_well_tagging_down[{seed}]",
+                          deep_well_tagging_card(down=True, seed=seed)))
+            cards.append((f"deep_well_tagging_up[{seed}]",
+                          deep_well_tagging_card(down=False, seed=seed)))
+            for name, gen in ALL_GENERATORS.items():
+                cards.append((f"{name}[{seed}]", gen(seed=seed)))
+
+        for name, card in cards:
+            result = PumpDiagnostics._classify_legacy(card)
+            assert result in LEGACY_REACHABLE_MODES, (
+                f"{name}: legacy fallback returned {result!r}, which is "
+                f"outside what a threshold rule can support"
+            )
+
+    def test_legacy_output_survives_alias_resolution_without_gaining_direction(self):
+        """Abstention must survive the alias tables, not be undone by them.
+
+        Returning the retired merged name PUMP_TAGGING looks like a
+        direction-neutral answer, but ``card_generators.MODE_ALIASES`` and
+        ``report_sections.TROUBLESHOOTING_ALIASES`` both map it onto
+        PUMP_TAGGING_UP -- so the report would print "space the pump down"
+        anyway. Anything the fallback emits has to be direction-free after
+        both tables have had their turn.
+        """
+        cards = [
+            create_over_threshold_load_card(),
+            deep_well_tagging_card(down=True, seed=0),
+            deep_well_tagging_card(down=False, seed=0),
+        ]
+        for card in cards:
+            raw = PumpDiagnostics._classify_legacy(card)
+            for resolver in (resolve_mode, _guide_key):
+                assert resolver(raw) not in TAGGING_DIRECTION_NAMES, (
+                    f"{raw!r} resolves to {resolver(raw)!r} via "
+                    f"{resolver.__name__}, reinstating a repair direction"
+                )
+
+    def test_crossing_the_peak_load_threshold_names_no_tagging_mode(self):
+        """Peak load above the barrel rating is a magnitude fact, not a mode.
+
+        Replaces the old threshold test, which asserted that crossing
+        PUMP_TAGGING_LOAD_THRESHOLD_LBS *is* tagging up. A single sample
+        spiked above a barrel rating on an otherwise ordinary sinusoid says
+        nothing about which end of the pump is being struck.
+        """
         card = create_normal_card()
         card.load[50] = PUMP_TAGGING_LOAD_THRESHOLD_LBS - 1
-        result = PumpDiagnostics._classify_legacy(card)
-        assert result != "PUMP_TAGGING_UP"
+        assert PumpDiagnostics._classify_legacy(card) not in TAGGING_DIRECTION_NAMES
 
         card.load[50] = PUMP_TAGGING_LOAD_THRESHOLD_LBS + 1
-        result = PumpDiagnostics._classify_legacy(card)
-        assert result == "PUMP_TAGGING_UP"
+        assert PumpDiagnostics._classify_legacy(card) not in TAGGING_DIRECTION_NAMES
+
+    def test_ml_path_still_classifies_both_tagging_directions(self):
+        """Tagging stays classifiable -- by the calibrated path, which has both.
+
+        The fallback abstaining is only defensible because the trained model
+        resolves the direction, and does so for both mechanisms. If this ever
+        goes red, abstention has become a real capability loss rather than an
+        honest one.
+        """
+        PumpDiagnostics.reset_model_cache()
+        assert PumpDiagnostics._load_model() is not None
+        up = PumpDiagnostics.classify_card(generate_pump_tagging_up_card(seed=0))
+        down = PumpDiagnostics.classify_card(generate_pump_tagging_down_card(seed=0))
+        assert up == "PUMP_TAGGING_UP"
+        assert down == "PUMP_TAGGING_DOWN"
 
     def test_legacy_classifies_fluid_pound(self):
         """Legacy classifier should detect fluid pound."""
@@ -205,13 +322,20 @@ class TestClassifyCardLegacy:
         result = PumpDiagnostics._classify_legacy(card)
         assert result == "GAS_INTERFERENCE"
 
-    def test_legacy_priority_pump_tagging_over_fluid_pound(self):
-        """Pump tagging should be detected before fluid pound in legacy mode."""
-        card = create_pump_tagging_card()
+    def test_legacy_high_load_does_not_pre_empt_fluid_pound(self):
+        """A sharp downstroke drop is still reported when loads are high.
+
+        The old rule short-circuited on peak load, so this card was called
+        PUMP_TAGGING_UP and the fluid-pound signature -- which a threshold
+        rule *can* legitimately see -- was thrown away. With the unreachable
+        tagging branch gone, the finding the fallback can actually support is
+        the one it reports.
+        """
+        card = create_over_threshold_load_card()
         mid = len(card.load) // 2
         card.load[mid + 10] = card.load[mid + 9] - 10000
         result = PumpDiagnostics._classify_legacy(card)
-        assert result == "PUMP_TAGGING_UP"
+        assert result == "FLUID_POUND"
 
 
 class TestGenerateTroubleshootingReport:
