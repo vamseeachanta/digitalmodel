@@ -214,9 +214,15 @@ def lazy_wave_analysis(diameter, thickness, length, water_depth, offset, materia
             buoyancy_modules=[buoy_module],
         )
 
-        # Analyze
+        # Analyze. The analyzer is quarantined — it never solved a lazy-wave catenary and
+        # returned hardcoded geometry that was invariant to buoyancy configuration. Fail
+        # with its explanation rather than an unhandled traceback, so the operator learns
+        # why and where to go instead.
         analyzer = LazyWaveAnalyzer()
-        result = analyzer.analyze(config)
+        try:
+            result = analyzer.analyze(config)
+        except NotImplementedError as exc:
+            raise click.ClickException(str(exc)) from exc
 
         # Output
         click.echo("\n=== Lazy Wave Riser Analysis ===\n")

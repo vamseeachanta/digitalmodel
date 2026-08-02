@@ -52,7 +52,30 @@ class LazyWaveAnalyzer:
 
         Returns:
             LazyWaveResult with geometry and forces
+
+        Raises:
+            NotImplementedError: always. See the quarantine note below.
         """
+        raise NotImplementedError(
+            "LazyWaveAnalyzer.analyze() is quarantined: it never solved a lazy-wave "
+            "catenary. It returned hardcoded fractions of water depth (sag = 0.35 x "
+            "depth, hog = 0.20 x depth), hardcoded tension ratios (0.4 / 0.6 of baseline "
+            "top tension) and hardcoded bend angles (45 deg / 30 deg). The buoyancy "
+            "weight was computed and never read, so buoyancy configuration had NO effect "
+            "on the result -- three wildly different buoyancy configurations produced "
+            "bit-identical output.\n\n"
+            "Use digitalmodel.marine_ops.marine_analysis.catenary.LazyWaveSolver, which "
+            "implements the 5-segment closed-form construction and is differentially "
+            "tested against the legacy solver.\n\n"
+            "Quarantined rather than deleted so that callers fail loudly with this "
+            "explanation instead of silently receiving invented geometry. See "
+            "tests/subsea/catenary_riser/test_lazy_wave_quarantine.py."
+        )
+
+        # ------------------------------------------------------------------
+        # UNREACHABLE — retained only as the record of what was being returned.
+        # Do not revive. Reimplement against LazyWaveSolver instead.
+        # ------------------------------------------------------------------
         riser = config.riser
 
         # Get effective weight profile
