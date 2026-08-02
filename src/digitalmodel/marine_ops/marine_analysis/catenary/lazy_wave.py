@@ -67,7 +67,7 @@ Legacy implementation: catenaryMethods.py sagHogEquation (lines 93-153)
                       catenaryMethods.py lazyWaveCatenaryEquation (lines 156-194)
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional, List, Dict, Any
 import math
 
