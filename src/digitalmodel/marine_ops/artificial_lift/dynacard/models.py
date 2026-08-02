@@ -477,7 +477,9 @@ class AnalysisResults(BaseModel):
     diagnostic_message: str = "Analysis not yet performed"
 
     # Solver metadata
-    solver_method: str = "gibbs"  # "gibbs" or "finite_difference"
+    # Reporting metadata only -- always overwritten by the solver that ran
+    # (solver.py:235). One of "everitt_jennings", "gibbs", "finite_difference".
+    solver_method: str = "gibbs"
 
     class Config:
         """Pydantic configuration for AnalysisResults."""
