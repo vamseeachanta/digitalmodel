@@ -70,7 +70,12 @@ def run_field_troubleshooter(settings: dict[str, Any]) -> list[dict[str, Any]]:
         raise ValueError("artificial_lift_field_health requires at least one well")
 
     defaults = settings.get("well_defaults") or {}
-    solver_method = str(settings.get("solver_method", "gibbs"))
+    # Must match DynacardWorkflow's own default. 'gibbs' does not transform
+    # load at all (dm#1857) and must not be used for diagnosis; the shipped
+    # base config already sets everitt_jennings, so this fallback only reaches
+    # callers that build settings by hand -- which is precisely who would not
+    # know to override it.
+    solver_method = str(settings.get("solver_method", "everitt_jennings"))
     rows = []
     for well in wells:
         ctx = load_and_map_well(well, defaults)
