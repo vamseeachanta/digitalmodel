@@ -46,6 +46,8 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
       - name: Detect matrix
         id: detect
@@ -121,6 +123,8 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
       - name: Run harness tests
         run: |
@@ -149,6 +153,8 @@ jobs:
 
       - name: Install uv
         uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
       - name: Install Gmsh runtime libraries
         if: matrix.domain == 'solver-smoke'
