@@ -1,156 +1,179 @@
-# Plan for #1633: OrcaWave-vs-AQWA — make the ship benchmark verdict derived and defensible
+# Plan for #1633: OrcaWave-vs-AQWA — establish an abscissa contract and a defensible ship verdict
 
-> **Status:** draft
+> **Status:** draft (r2 — redrafted after r1 MAJOR)
 > **Complexity:** T3
 > **Date:** 2026-08-03
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/1633
 > **Client:** N/A
-> **Lane:** lane:codex  <!-- matches the issue's existing lane: label -->
-> **Review artifacts:** scripts/review/results/2026-08-03-plan-1633-claude.md | ...-codex.md | ...-agy.md
+> **Lane:** lane:codex
+> **Review artifacts:** `scripts/review/results/2026-08-03-plan-1633-claude.md` (r1: **MAJOR**, 17 findings, 6 blockers) | codex r1 UNAVAILABLE (rc=124 timeout) | agy r1 UNAVAILABLE (auth timeout)
 
 ---
 
-## Scope note (read first)
+## What changed since r1
 
-#1633 lists six resolution directions. This plan will deliver a **defensible
-OrcaWave-vs-AQWA verdict for the L01 ship case** and the comparator correctness
-required to reach one. Two of the six directions will be **deferred to follow-on
-issues**, named explicitly in *Deferred scope* below, because they require
-acquiring external data rather than fixing logic.
+The r1 review returned **MAJOR** and its blocker 1 was correct: the plan's
+causal story could not explain the artifact it was chartered to fix. Investigating
+that objection surfaced a defect that neither the issue, the r1 plan, nor the r1
+review had named — **there is no abscissa contract between solvers**. This
+redraft leads with it.
 
-Item 3 of #1633 ("fix unit normalisation before re-running") is **already
-closed** — see *Correction to the issue record*. It will not be re-done here.
+r1 proposed promoting `CORR_MIN` and setting it from measurement. This redraft
+does **not** do that, because the correlations are computed without an abscissa
+contract and are therefore inputs of unknown validity. A threshold fitted to them
+would be fitted to noise. Thresholds are set in Phase 3, after the contract exists
+and the numbers have been re-measured.
 
 ---
 
 ## Resource Intelligence Summary
 
+### The abscissa defect (new — the lead finding)
+
+The two solvers tabulate on **different grids running in opposite directions**,
+and nothing in the comparator reconciles them.
+
+| | grid | direction | points |
+|---|---|---|---|
+| AQWA `001_SHIP_RAOS_REV2.LIS` | 22.00, 19.00, 17.00, 15.42, 8.79, 6.15, 4.73, 3.84, 3.23, 2.79 s | period **descending** (⇒ freq ascending) | **10** |
+| OrcaWave `orcawave_001_ship_raos_rev2.yml` | 2, 3, 4, 5, 6, 7, 7.5, 8, 8.5, 9, 9.5, 10, 11, 13, 15, 16, 17, 19, 20, 22 s | period **ascending** (⇒ OrcFxAPI freq descending) | **20** |
+
+Only three abscissa values coincide (22, 19, 17 s).
+
+`multi_solver_comparator.py:264-268` passes `rao_a.frequencies.values` to
+`_calculate_deviation_stats` as **metadata only**; the arithmetic at line 209 is
+`errors = values2 - values1` — raw elementwise subtraction. There is no equality
+check on the two frequency arrays, no interpolation, and no ordering
+normalisation anywhere in the module.
+
+Downstream of that, the defect is **script-dependent**, which is why it has
+survived:
+
+- `scripts/benchmark/run_3way_benchmark.py:433-436` handles it **correctly** —
+  `sort_idx = np.argsort(frequencies)` is applied to *both* `frequencies` and
+  `raw_raos`, under the comment *"Sort by ascending frequency (OrcFxAPI returns
+  descending)"*. The codebase already knows the ordering fact.
+- `docs/domains/orcawave/L01_aqwa_benchmark/run_proper_comparison.py:149` handles
+  it **wrongly** — `np.interp(aqwa_freq, ow_freq, ow_mag_heading)` where
+  `ow_freq` (line 74, derived from `diffraction.frequencies`) is descending.
+  `np.interp` requires an increasing `xp`, does not validate it, and returns
+  wrong values silently.
+
+Demonstrated on the real grids with identical physics on both sides:
+
+```
+ow_freq increasing?   False
+aqwa_freq increasing? True
+
+  period     AQWA  as-coded  corrected
+   22.00   0.9828    0.0039     0.9828
+   19.00   0.9695    0.9828     0.9695
+    8.79   0.5931    0.9828     0.5932
+    2.79   0.0146    0.9828     0.0171
+
+correlation as-coded  : -0.3961
+correlation corrected : +1.0000
+```
+
+**Claim discipline:** this proves the mechanism is present and destructive — a
+perfect correlation becomes −0.40. It does **not** prove it accounts for the
+recorded −0.8551; that figure depends on the real RAO curves. Attribution is a
+Phase 0 deliverable, not an assumption of this plan.
+
+### Provenance is unknown (why Phase 0 exists)
+
+`benchmark_report.json` (vessel `Ship_001_RAOs`, 2026-02-05 05:36:21) has the
+shape of `MultiSolverComparator.generate_report()`. But its co-located inputs —
+`benchmark_results/aqwa/` and `benchmark_results/orcawave/` — contain
+`unit_box_clean.gdf`, `UnitBox_Benchmark.yml`, `WRK-031_3WAY_BENCHMARK.LIS`
+(307 bytes): **unit-box artifacts, not ship**. The sibling
+`benchmark_summary.json` (same directory, 2026-02-05T20:21) targets
+`unit_box_spec.yml`. A later unit-box run overwrote the directory around the ship
+report.
+
+Consequently **we do not know which script produced the artifact this issue is
+about**, and the two candidate scripts differ precisely on the defect in
+question. Choosing a fix before resolving this would be guessing.
+
 ### Existing repo code
 
 - Found: `src/digitalmodel/hydrodynamics/diffraction/multi_solver_comparator.py`
-  (737 lines on `origin/main`) — owns `compare_raos()`, `compute_consensus()`,
-  `_calculate_deviation_stats()`. This is where all four verdict defects live.
+  (737 lines) — no abscissa contract (above); absolute agreement threshold
+  (126/135/469-471); solver-count-blind ladder (483-490); `allclose → 1.0`
+  shortcut (217-218); a **deliberate** near-zero-magnitude override returning
+  `correlation=1.0` (275-288); an **independent linear** `max_phase_diff` path
+  (297, 316).
 - Found: `tests/hydrodynamics/diffraction/test_multi_solver_comparator.py` —
-  30 tests, but the consensus tests either use *identical* solvers (both gates
-  pass trivially) or assert membership in a three-outcome set. **No existing
-  test can fail on any of the defects below.**
+  **22** tests (`grep -c "def test_"`). Consensus cases use identical solvers or
+  assert membership in a 3-of-4 outcome set, so none can fail on the defects above.
 - Found: `tests/hydrodynamics/diffraction/test_multi_solver_units_guard.py` —
-  landed with PR #1636 for #1550; covers translational te↔kg only.
-- Found: `docs/domains/orcawave/L01_aqwa_benchmark/001_SHIP_RAOS_REV2.LIS` —
-  3,391,338 bytes, Aqwa Workbench 2022 R2, 15 added-mass blocks, no input-data
-  error. **A real external oracle for a ship already exists on disk.**
-- Gap: no rotational-RAO unit handling anywhere in the comparator — a grep for
-  `57.29|np.degrees|np.radians|deg2rad|rad2deg` against the module returns zero.
-- Gap: nothing derives `validation_config.yaml` `status:` from a benchmark
-  report; the field is hand-authored.
+  established guard convention is `pytest.raises(ValueError, match="[Uu]nit")`.
+- Found (ship inputs, named per r1 blocker 5):
+  `docs/domains/orcawave/L01_aqwa_benchmark/orcawave_001_ship_raos_rev2.xlsx`
+  (2,340,355 B) and `orcawave_001_ship_raos_rev2.yml` (4,127 B, OrcaWave 11.6b);
+  AQWA side `001_SHIP_RAOS_REV2.LIS` (3,391,338 B, Aqwa Workbench 2022 R2).
+- Gap: no rotational-RAO unit handling in the comparator (grep for
+  `57.29|np.degrees|np.radians|deg2rad|rad2deg` → zero matches).
 
 ### Standards
 
-Not applicable — this issue concerns solver-comparison methodology, not a
-standards-derived constant. No `Citation` sidecar is required per
-`.claude/rules/calc-citation-contract.md` (the values compared are
-solver-produced, not standard-derived).
+Not applicable — solver-comparison methodology, no standards-derived constant.
+No `Citation` sidecar required per `.claude/rules/calc-citation-contract.md`.
 
 ### LLM Wiki pages consulted
 
-No relevant wiki pages — the defects are code-local. No wiki update will be
-required, so `.claude/rules/wiki-sibling-routing.md` does not bind this plan.
+No relevant wiki pages; defects are code-local. `Client: N/A`, so
+`.claude/rules/wiki-sibling-routing.md` does not bind.
 
 ### Documents consulted
 
-- Issue #1633 body — the original finding (12 reports name one solver twice;
-  L01 `NO_CONSENSUS` recorded as `status: pass`).
-- Issue #1550 closing comment (PR #1636, merged 2026-07-26 as `4d465406`) —
-  establishes on the record that the te/kg defect **cannot** explain the heave
-  result, because `compute_consensus` derives from `np.corrcoef`, which is
-  invariant under uniform scale.
-- Issue #1631 — `bug(licensed-lane): runs report returncode 0 / finished despite
-  validator Overall Status: FAIL`, `priority:critical`, `status:needs-plan`.
-  Gates Phase 3 of this plan.
+- Issue #1633 body — the original finding.
+- Issue #1550 closing comment (PR #1636, `4d465406`) — records that `np.corrcoef`
+  is scale-invariant, so the te/kg defect cannot explain the heave result.
+- Issue #1631 — licensed lane reports rc 0 on validator FAIL; `priority:critical`.
+- `scripts/review/results/2026-08-03-plan-1633-claude.md` — r1 MAJOR, 17 findings.
 - `.claude/rules/licensed-solver-dispatch.md` (workspace-hub, branch
-  `docs/licensed-solver-dispatch-rule`, **unmerged**) — measured dispatch
-  contract for the licensed hosts; Phase 3 depends on it.
-- `docs/domains/orcawave/L00_validation_wamit/validation_config.yaml` — 12 cases
-  carrying hand-authored `status: pass` with `wamit_version: "v7.3"`.
+  `docs/licensed-solver-dispatch-rule`, unmerged) — Scheduled-Task dispatch
+  contract. **Note:** this file does *not* contain the `ace-win-2` default or any
+  heartbeat date (r1 finding 16 was correct); those come from
+  `deckhand/config/deckhand/policy.yml` and
+  `deckhand-licensed-runs-queue/queue/heartbeat/ace-win-2.json` respectively.
+- `docs/domains/orcawave/L01_aqwa_benchmark/INTERPOLATION_COMPARISON_SUMMARY.md`
+  (2026-01-05) — an **earlier** comparison that used *load* RAOs against AQWA
+  *displacement* RAOs, giving ratios to 6.2×10⁷. Superseded:
+  `run_proper_comparison.py:76` switched to `motion_raos`. Recorded so a future
+  reader does not re-derive it as a live defect.
 
 ### Gaps identified
 
-- No relative-tolerance agreement criterion exists — the criterion is absolute.
-- No valid consensus ladder exists for a 2-solver comparison.
-- No guard exists against empty/degenerate arrays reporting perfect correlation.
-- No circular-statistics phase comparison exists.
-- No declared unit for rotational RAOs, and therefore no deg/rad guard.
+- No abscissa contract between solvers (the lead defect).
+- No provenance record tying a benchmark report to the script that produced it.
+- No relative agreement criterion; no solver-count-aware ladder; no
+  degenerate-array guard; no circular phase statistic; no rotational unit guard.
 - No test asserts any solver-produced value against an external reference.
 
 ### Evidence (embedded verification)
 
 **Issue statuses** (verified 2026-08-03 via `gh issue view`):
-
-- `#1633` — OPEN — bug(validation): OrcaWave benchmark suite compares OrcaWave to itself; the one AQWA cross-check is NO_CONSENSUS but marked status: pass
-- `#1550` — CLOSED/COMPLETED (2026-07-26T23:49:39Z) — Added-mass/damping units inconsistency in DiffractionResults
-- `#1631` — OPEN — bug(licensed-lane): runs report returncode 0 / finished despite validator Overall Status: FAIL
-- `#1640` — OPEN — INITIATIVE: Trustworthy OrcaFlex results
-- `#1825` — OPEN — [Epic] Diffraction results agree across solvers — one strict contract, three-way benchmarks
+`#1633` OPEN · `#1550` CLOSED/COMPLETED 2026-07-26 · `#1631` OPEN · `#1640` OPEN · `#1825` OPEN.
 
 **File existence** (`ls -la`, 2026-08-03):
+- EXISTS: `multi_solver_comparator.py` (737 lines), `001_SHIP_RAOS_REV2.LIS`
+  (3,391,338 B), `orcawave_001_ship_raos_rev2.xlsx` (2,340,355 B),
+  `orcawave_001_ship_raos_rev2.yml` (4,127 B),
+  `scripts/benchmark/run_3way_benchmark.py`, `scripts/benchmark/validate_owd_vs_spec.py`
+- MISSING (new — this plan creates): `benchmark_abscissa.py`,
+  `test_abscissa_contract.py`, `test_consensus_criteria.py`,
+  `test_l01_ship_external_oracle.py`
 
-- EXISTS: `src/digitalmodel/hydrodynamics/diffraction/multi_solver_comparator.py` (737 lines)
-- EXISTS: `docs/domains/orcawave/L01_aqwa_benchmark/001_SHIP_RAOS_REV2.LIS` (3,391,338 bytes)
-- EXISTS: `docs/domains/orcawave/L01_aqwa_benchmark/aqwa_001_ship_raos_rev2.dat` (848,971 bytes)
-- EXISTS: `tests/hydrodynamics/diffraction/test_multi_solver_comparator.py`
-- MISSING (new — this plan creates): `tests/hydrodynamics/diffraction/test_consensus_criteria.py`
-- MISSING (new — this plan creates): `tests/hydrodynamics/diffraction/test_l01_ship_external_oracle.py`
+**Corrections carried from r1** (findings 6, 8, 16 — all verified):
+- `test_multi_solver_comparator.py` has **22** tests, not 30.
+- `L00_validation_wamit/validation_config.yaml` is **11 `pass` + 1 `blocked`**
+  (case 2.2, line 51), and only **4** `reference_data.yaml` files exist across
+  12 cases — 8 cases have no reference file at all.
+- The `ace-win-2` / heartbeat claims are re-attributed above.
 
-**Line excerpts** (`sed -n` against `git show origin/main:...multi_solver_comparator.py`):
-
-D1 — the docstring promises *relative*, the code applies *absolute*:
-
-```
-126:        tolerance: Relative tolerance for agreement assessment (default 5%).
-135:        tolerance: float = 0.05,
-...
-467:                # Agreement requires high correlation AND low rms
-468:                # rms threshold is based on tolerance (default 0.05)
-469:                pair_agrees[pk] = (
-470:                    corr > 0.99 and rms < self.tolerance
-471:                )
-```
-
-D2 — the ladder needs two agreeing pairs, but two solvers yield exactly one:
-
-```
-483:            if all(pair_agrees.values()):
-484:                level = "FULL"
-485:            elif len(high_pairs) >= 2:
-486:                level = "MAJORITY"
-487:            elif len(high_pairs) >= 1:
-488:                level = "SPLIT"
-489:            else:
-490:                level = "NO_CONSENSUS"
-```
-
-D3 — absent data reports as perfect agreement:
-
-```
-215:        flat1 = values1.flatten()
-216:        flat2 = values2.flatten()
-217:        if np.allclose(flat1, flat2):
-218:            correlation = 1.0
-219:        else:
-220:            correlation = float(np.corrcoef(flat1, flat2)[0, 1])
-```
-
-**Gap proofs:**
-
-- `git grep -c "57.29\|np.degrees\|np.radians\|deg2rad\|rad2deg" origin/main -- src/digitalmodel/hydrodynamics/diffraction/multi_solver_comparator.py` → no match → confirms no rotational-unit handling exists.
-
-**Reproduction proofs** (verify-against-repo-state):
-
-The issue alleges a wrong *recorded verdict*, not a runtime crash, so the
-reproduction is the committed artifact itself.
-
-From `docs/domains/orcawave/L01_aqwa_benchmark/benchmark_results/benchmark_report.json`
-(vessel `Ship_001_RAOs`, solvers `["AQWA", "OrcaWave"]`, dated 2026-02-05 05:36:21):
+**Reproduction proof** — the recorded L01 table (`benchmark_report.json`):
 
 | DOF | mag corr | mag rms | phase corr | max Δphase |
 |---|---|---|---|---|
@@ -161,51 +184,41 @@ From `docs/domains/orcawave/L01_aqwa_benchmark/benchmark_results/benchmark_repor
 | pitch | 0.968 | **26.153** | −0.060 | 355.7° |
 | yaw | 0.967 | 8.504 | 0.392 | 179.8° |
 
-All 36 `added_mass_correlations` and all 36 `damping_correlations` in that same
-file are **exactly `1.0`** — impossible for two BEM solvers on different meshes,
-and explained by D3.
+All 36 `added_mass_correlations` and 36 `damping_correlations` are exactly `1.0`.
 
-Four of six DOF exceed 0.95 magnitude correlation and every one is recorded
-`NO_CONSENSUS` with `agreement_pairs: []`, which is D1 and D2 acting together.
+- Reproduced at: 2026-08-03. Failure mode matches the issue's *claim* (verdict
+  untrustworthy) but **not its stated mechanism**; see *Correction to the issue record*.
 
-- Reproduced at: 2026-08-03
-- Failure mode observed matches issue claim: **PARTIALLY** — the recorded verdict
-  is indeed untrustworthy, but the mechanism is the comparator's criteria, not
-  (as #1633 item 4 proposes) a unit defect. The plan addresses the actual
-  mechanism. See *Correction to the issue record*.
+**Dispatch precondition — verified live 2026-08-03**, `ace-win-1`, via
+`dispatch-run.ps1 -Action submit` (Scheduled-Task path):
 
-<!-- Distinct sources consulted: 9 (issue body, #1550, #1631, comparator source,
-     comparator tests, L01 report JSON, L01 summary JSON, L00 validation_config,
-     licensed-solver-dispatch rule). Minimum 3 required. -->
+```
+state: finished   exit_code: 0   stderr_bytes: 0
+stdout: LICENCE_OK dll=11.6c
+        DIFFRACTION_OK Diffraction
+```
+
+Repo root on that host is `D:\ws` (not `D:\workspace-hub`, a stale container);
+workspace-hub there is on `main` at `7701d4e78`. Job and probe cleaned up.
+
+<!-- Distinct sources: 12. Minimum 3 required. -->
 
 ---
 
 ## Correction to the issue record
 
-Two claims in #1633 will not survive contact with the current tree, and the plan
-must not inherit them:
+1. **#1633 item 3** ("fix unit normalisation before re-running", blocked on #1550)
+   is **done and did not move the verdict** — `np.corrcoef` is scale-invariant.
+2. **`NO_CONSENSUS` on a 2-solver run carries no information.** With two solvers
+   there is one pair, so `MAJORITY` (needs ≥2) is unreachable and `SPLIT` (needs
+   ≥1) is identical to `FULL`. The ladder collapses.
+3. **r1's proposed remedy is also declined.** Blocker 1 correctly showed the
+   binding gate is `CORR_MIN = 0.99` (max observed correlation 0.981), but
+   promoting `CORR_MIN` and fitting it to these numbers fits it to values computed
+   without an abscissa contract. Order matters: contract → re-measure → threshold.
 
-1. **#1633 item 3 says to fix unit normalisation "before re-running any
-   cross-solver benchmark", blocked on #1550.** #1550 closed 2026-07-26 and its
-   closing comment states the correction directly: `compute_consensus` derives
-   from `compare_raos()` and the metric is `np.corrcoef`, which is invariant
-   under uniform scale, so the te/kg defect *cannot* produce the −0.855 heave
-   correlation. That work is done and it did not move the verdict.
-
-2. **#1633 treats `NO_CONSENSUS` as the finding.** With two solvers there is
-   exactly one pair, so `MAJORITY` (needs ≥2) and `SPLIT` (needs ≥1, which is
-   already `FULL`) are both unreachable. The ladder collapses to FULL-or-
-   NO_CONSENSUS, and given D1's absolute threshold, `FULL` is unreachable for
-   any dimensional DOF. **`NO_CONSENSUS` on a 2-solver run carries no
-   information about the solvers.** The informative content is per-DOF.
-
-A separate observation, recorded here because it belongs to #1631 rather than
-this plan: `benchmark_summary.json` in the same L01 directory describes a
-*different* run (it targets `unit_box_spec.yml`, ran 3 solvers in 6.09 s) whose
-AQWA leg failed —
-`"AQWA LIS: **** INPUT DATA ERROR :LINE 42 END IN DECK HEADER ELM1 MISSING."` —
-while the top level records `"success": true`. That is a live instance of #1631
-and will be cited there, not fixed here.
+Belonging to #1631, not this plan: `benchmark_summary.json` records
+`"AQWA": {"status": "failed", … ELM1 MISSING}` under a top-level `"success": true`.
 
 ---
 
@@ -214,61 +227,72 @@ and will be cited there, not fixed here.
 | Artifact | Path |
 |---|---|
 | This plan | `docs/plans/2026-08-03-issue-1633-ship-benchmark-verdict.md` |
-| Implementation — comparator | `src/digitalmodel/hydrodynamics/diffraction/multi_solver_comparator.py` |
-| Implementation — status derivation | `src/digitalmodel/hydrodynamics/diffraction/benchmark_verdict.py` (new) |
-| Tests — consensus criteria | `tests/hydrodynamics/diffraction/test_consensus_criteria.py` (new) |
-| Tests — external oracle | `tests/hydrodynamics/diffraction/test_l01_ship_external_oracle.py` (new) |
-| Tests — existing, to extend | `tests/hydrodynamics/diffraction/test_multi_solver_comparator.py` |
-| Re-derived L01 verdict | `docs/domains/orcawave/L01_aqwa_benchmark/benchmark_results/benchmark_report.json` |
+| Impl — abscissa contract | `src/digitalmodel/hydrodynamics/diffraction/benchmark_abscissa.py` (new) |
+| Impl — comparator | `src/digitalmodel/hydrodynamics/diffraction/multi_solver_comparator.py` |
+| Impl — verdict derivation | `src/digitalmodel/hydrodynamics/diffraction/benchmark_verdict.py` (new) |
+| Tests — abscissa | `tests/hydrodynamics/diffraction/test_abscissa_contract.py` (new) |
+| Tests — criteria | `tests/hydrodynamics/diffraction/test_consensus_criteria.py` (new) |
+| Tests — oracle | `tests/hydrodynamics/diffraction/test_l01_ship_external_oracle.py` (new) |
+| Tests — existing | `tests/hydrodynamics/diffraction/test_multi_solver_comparator.py` |
+| Regenerated report | `docs/domains/orcawave/L01_aqwa_benchmark/benchmark_results/benchmark_report.json` |
+| Provenance record | `docs/domains/orcawave/L01_aqwa_benchmark/benchmark_results/provenance.json` (new) |
 | Human-facing report | `docs/reports/2026-08-03-issue-1633-ship-benchmark.html` |
-| Plan review — Claude | `scripts/review/results/2026-08-03-plan-1633-claude.md` |
-| Plan review — Codex | `scripts/review/results/2026-08-03-plan-1633-codex.md` |
-| Plan review — Agy | `scripts/review/results/2026-08-03-plan-1633-agy.md` |
+| Plan review r2 | `scripts/review/results/2026-08-03-plan-1633-{claude,codex,agy}-r2.md` |
 
 ---
 
 ## Deliverable
 
-A `benchmark_verdict` module plus a corrected `multi_solver_comparator` that
-together produce a **derived, dimensionally sound OrcaWave-vs-AQWA verdict for
-the L01 ship case**, asserted in CI against the existing AQWA `.LIS` external
-oracle, with the hand-authored `status:` field replaced by a computed one.
+An **abscissa contract** that refuses to compare two solvers until their RAOs sit
+on a common, ascending, verified-overlapping grid — plus the re-derived L01 ship
+verdict computed under it, asserted against the AQWA `.LIS` external oracle, with
+agreement thresholds set from the re-measured data and a recorded provenance
+linking every report to the script that produced it.
 
 ---
 
 ## Pseudocode
 
 ```
-function pair_agrees(comparison, tolerance):
-    # D1 — relative, not absolute
-    scale = max(rms_magnitude(reference_series), FLOOR)   # FLOOR guards near-zero DOF
-    normalised_rms = comparison.rms_error / scale
-    return comparison.correlation > CORR_MIN and normalised_rms < tolerance
+function align_to_common_abscissa(rao_a, freq_a, rao_b, freq_b):
+    # D0 — the contract. Refuse, never guess.
+    assert_strictly_increasing(freq_a)          # raise, do not silently sort
+    assert_strictly_increasing(freq_b)
+    lo, hi = max(min(freq_a), min(freq_b)), min(max(freq_a), max(freq_b))
+    if (hi - lo) / (max(hi, ...) ) < MIN_OVERLAP_FRACTION:
+        raise AbscissaOverlapError(freq_a, freq_b)   # 3-of-20 overlap must fail loudly
+    grid = union_within(freq_a, freq_b, lo, hi)
+    return interp_on(grid, freq_a, rao_a), interp_on(grid, freq_b, rao_b), grid
+
+function load_solver_result(source):
+    freqs, raos = read(source)
+    order = argsort(freqs)                       # sort BOTH, as run_3way_benchmark does
+    return freqs[order], raos[order, ...]
+
+function pair_agrees(comparison, tolerance, corr_min):
+    scale = max(rms(series_a), rms(series_b), FLOOR_FOR_DOF[dof])   # symmetric, per-DOF
+    return comparison.correlation > corr_min and comparison.rms_error / scale < tolerance
 
 function classify_consensus(pairs, n_solvers):
-    # D2 — ladder must be valid for the actual solver count
-    if n_solvers < 3:
-        return FULL if all pairs agree else DISAGREE      # no MAJORITY/SPLIT rung exists
-    else:
-        ... existing 3-solver ladder ...
+    if n_solvers < 3: return FULL if all(pairs) else DISAGREE
+    else:             ... existing 3-solver ladder ...
 
-function deviation_stats(values_a, values_b):
-    # D3 — absent data must not read as agreement
-    if either series is empty or has zero variance:
-        return stats with correlation = None, quality = INSUFFICIENT_DATA
-    if allclose(values_a, values_b):
-        return stats with correlation = 1.0, quality = IDENTICAL   # flagged, not silent
-    return stats with correlation = corrcoef(...), quality = COMPARED
+function deviation_stats(a, b):
+    if empty(a) or empty(b):        return quality = INSUFFICIENT_DATA
+    if zero_variance(a) and zero_variance(b):
+        if peak_magnitude < NULL_RESPONSE_EPS:   return quality = NULL_RESPONSE   # preserves 275-288
+        else:                                     return quality = INSUFFICIENT_DATA
+    if allclose(a, b):              return quality = IDENTICAL, correlation = 1.0
+    return quality = COMPARED, correlation = corrcoef(a, b)
 
-function phase_deviation(phase_a_deg, phase_b_deg):
-    # D4 — circular, not linear
-    delta = wrap_to_180(phase_a_deg - phase_b_deg)
-    return circular_mean(delta), circular_rms(delta)
+function phase_stats(pa, pb):                     # D4 — both paths
+    d = wrap_to_180(pb - pa)
+    return circular_mean(d), circular_rms(d), max(abs(d))   # replaces line 316 too
 
-function derive_status(benchmark_report):
-    # D5 of #1633 item 5 — status is computed, never hand-authored
-    if any DOF quality is INSUFFICIENT_DATA:  return "incomplete"
-    if overall consensus is DISAGREE:          return "fail"
+function derive_status(report):
+    if any dof.quality == INSUFFICIENT_DATA:  return "incomplete"
+    if any dof.quality == IDENTICAL:          return "suspect"   # never "pass"
+    if consensus == DISAGREE:                 return "fail"
     return "pass"
 ```
 
@@ -278,13 +302,16 @@ function derive_status(benchmark_report):
 
 | Action | Path | Reason |
 |---|---|---|
-| Modify | `src/digitalmodel/hydrodynamics/diffraction/multi_solver_comparator.py` | D1–D4: relative tolerance, solver-count-aware ladder, degenerate-array guard, circular phase |
-| Create | `src/digitalmodel/hydrodynamics/diffraction/benchmark_verdict.py` | derive `status:` from the report instead of hand-authoring it |
-| Create | `tests/hydrodynamics/diffraction/test_consensus_criteria.py` | TDD for D1–D4 |
-| Create | `tests/hydrodynamics/diffraction/test_l01_ship_external_oracle.py` | first external-oracle assertion (#1633 item 6) |
-| Modify | `tests/hydrodynamics/diffraction/test_multi_solver_comparator.py` | tighten `test_consensus_majority_with_outlier` (currently accepts any of three outcomes) |
-| Modify | `docs/domains/orcawave/L01_aqwa_benchmark/**/benchmark_report.json` | regenerated with corrected criteria |
-| Rename | `scripts/benchmark/validate_owd_vs_spec.py` label strings | #1633 item 1 — call it an input-fidelity check, not validation |
+| Create | `src/.../diffraction/benchmark_abscissa.py` | D0 contract: ordering, overlap, common-grid resampling |
+| Modify | `src/.../diffraction/multi_solver_comparator.py` | consume the contract; D1 relative tolerance; D2 ladder; D3 quality flags preserving 275-288; D4 circular phase at **both** 293 and 316 |
+| Create | `src/.../diffraction/benchmark_verdict.py` | derived status incl. the `suspect` rung |
+| Fix | `docs/domains/orcawave/L01_aqwa_benchmark/run_proper_comparison.py:149` | sort `xp` ascending before `np.interp`, or delete the script if superseded (Phase 0 decides) |
+| Create | `tests/.../test_abscissa_contract.py` | TDD for D0 |
+| Create | `tests/.../test_consensus_criteria.py` | TDD for D1–D4 |
+| Create | `tests/.../test_l01_ship_external_oracle.py` | external-oracle assertion |
+| Modify | `tests/.../test_multi_solver_comparator.py` | rewrite `test_consensus_majority_with_outlier`; re-baseline the other 21 (r1 finding 10) |
+| Create | `docs/domains/orcawave/L01_aqwa_benchmark/benchmark_results/provenance.json` | Phase 0 output |
+| Modify | `docs/domains/orcawave/L01_aqwa_benchmark/benchmark_results/benchmark_report.json` | the one regenerated file, named explicitly (r1 finding 17 — no globs) |
 | Update | `docs/plans/README.md` | index this plan |
 
 ---
@@ -293,125 +320,141 @@ function derive_status(benchmark_report):
 
 | Test name | What it verifies | Expected input | Expected output |
 |---|---|---|---|
-| `test_agreement_tolerance_is_relative` | D1 — a 1% disagreement on a pitch-scale series agrees | two series ~30 deg/m differing 1% | `agrees == True` (today: False, rms 0.3 > 0.05) |
-| `test_absolute_rms_does_not_gate_dimensional_dof` | D1 — threshold scales with magnitude | series ~30 vs series ~0.3, both 1% apart | both agree |
-| `test_near_zero_dof_uses_floor_not_ratio` | D1 — no divide-by-zero blowup | reference series ≈ 0 | finite result, no `ZeroDivisionError` |
-| `test_two_solver_ladder_has_no_majority_rung` | D2 — 2 solvers cannot return MAJORITY/SPLIT | 2 disagreeing solvers | level in `{FULL, DISAGREE}`, never MAJORITY |
-| `test_two_solver_agreeing_pair_returns_full` | D2 — the reachable positive outcome works | 2 agreeing solvers | `FULL` |
-| `test_three_solver_ladder_unchanged` | D2 — no regression for the 3-solver path | 3 solvers, 2 agreeing | `MAJORITY` |
-| `test_empty_arrays_report_insufficient_data` | D3 — absent data is not agreement | two empty arrays | `quality == INSUFFICIENT_DATA`, `correlation is None` |
-| `test_zero_variance_arrays_report_insufficient_data` | D3 — constant series has undefined correlation | two all-zero arrays | `INSUFFICIENT_DATA`, **not** `1.0` |
-| `test_identical_arrays_flagged_as_identical` | D3 — genuine identity is labelled, not silent | two equal non-constant arrays | `quality == IDENTICAL` |
-| `test_phase_wrap_360_and_0_are_close` | D4 — circular comparison | 359° vs 1° | Δ = 2°, not 358° |
-| `test_phase_rms_is_circular` | D4 — RMS over wrapped residuals | phases straddling 0° | finite, < 180° |
-| `test_rotational_rao_unit_mismatch_raises` | D5 — deg/rad guard | pitch in deg/m vs rad/m | raises `UnitMismatchError` |
-| `test_l01_ship_heave_matches_aqwa_lis` | external oracle | parsed `001_SHIP_RAOS_REV2.LIS` heave | OrcaWave within stated tolerance, or an explicit recorded disagreement |
-| `test_status_is_derived_not_authored` | #1633 item 5 | report with `DISAGREE` | derived status `fail`; a hand-authored `pass` is overridden |
-| `test_status_incomplete_when_any_dof_lacks_data` | #1633 item 5 | report with one `INSUFFICIENT_DATA` DOF | `incomplete` |
+| `test_descending_abscissa_raises` | D0 — descending `xp` is refused, not sorted silently | OrcaWave freqs from ascending periods | raises `ValueError` matching `"increasing"` |
+| `test_np_interp_descending_xp_is_wrong` | D0 — pins the mechanism as a regression | the 10/20-point real grids | as-coded corr ≈ −0.40; corrected ≈ +1.00 |
+| `test_insufficient_overlap_raises` | D0 — 3-of-20 shared points must fail loudly | AQWA 10-pt vs OrcaWave 20-pt grids | raises `AbscissaOverlapError` |
+| `test_common_grid_is_ascending_and_within_both` | D0 — resampled grid is valid | the two real grids | strictly increasing, no extrapolation |
+| `test_loader_sorts_freqs_and_raos_together` | D0 — the `run_3way_benchmark` invariant, now enforced | descending freqs + RAOs | both reordered by one index |
+| `test_agreement_tolerance_is_relative` | D1 | two ~30 deg/m series 1% apart | `agrees is True` |
+| `test_agreement_scale_is_symmetric` | D1 — no order dependence (r1 finding 14) | swap A and B | identical verdict |
+| `test_two_solver_ladder_has_no_majority_rung` | D2 | 2 disagreeing solvers | level in `{FULL, DISAGREE}` |
+| `test_three_solver_ladder_unchanged` | D2 — no regression | 3 solvers, 2 agreeing | `MAJORITY` |
+| `test_empty_arrays_report_insufficient_data` | D3 | two empty arrays | `INSUFFICIENT_DATA`, `correlation is None` |
+| `test_null_response_dof_is_not_insufficient` | D3 — preserves 275-288 (r1 blocker 3) | `peak_mag < 1e-10` | `NULL_RESPONSE`; status still reachable as `pass` |
+| `test_identical_arrays_never_yield_pass` | D3/D4 — closes `IDENTICAL → FULL → pass` (r1 blocker 4) | two equal arrays | `quality=IDENTICAL`, derived status `suspect` |
+| `test_phase_wrap_360_and_0_are_close` | D4 | 359° vs 1° | Δ = 2° |
+| `test_max_phase_diff_is_circular` | D4 — covers line 316 (r1 finding 13) | phases straddling 0° | ≤ 180° |
+| `test_rotational_rao_unit_mismatch_raises` | D5 | pitch deg/m vs rad/m | raises `ValueError` matching `"[Uu]nit"` (repo convention, r1 finding 11) |
+| `test_l01_ship_heave_matches_aqwa_lis` | external oracle — **single falsifiable assertion** (r1 blocker 2) | aligned ship heave, both solvers | `corr > 0.95` **and** `rel_rms < 0.10`; no disjunction |
+| `test_aqwa_lis_parser_matches_hand_checked_block` | the oracle's own oracle (r1 finding 15) | `.LIS` line 33311, heave 0.9224 @ 22 s | parser returns 0.9224 ± 1e-4 |
+| `test_status_is_derived_not_authored` | derived status | report with `DISAGREE` | `fail`; hand-authored `pass` overridden |
 
 ---
 
 ## Phasing
 
-**Phase 1 — comparator correctness (no licence, dev-primary).** D1–D4 plus the
-tightened existing tests. Independent of any solver run.
+**Phase 0 — provenance and attribution (no licence).** Determine which script
+produced `benchmark_report.json`; determine empirically whether the 72 identical
+matrix entries are same-input or zero-filled (r1 blocker 4); attribute the
+−0.8551 to the abscissa defect or record what else contributes. Emits
+`provenance.json`. **Gate: no fix is chosen before this phase reports.**
 
-**Phase 2 — re-derive the ship verdict (no licence, dev-primary).** Re-parse the
-existing `001_SHIP_RAOS_REV2.LIS` and the existing OrcaWave results, run the
-corrected comparator, measure D5 (the deg/rad hypothesis), and record the actual
-per-DOF verdict. This phase produces the deliverable the issue asks for and
-consumes **no licensed seat**.
+**Phase 1 — the abscissa contract (no licence).** D0, then D1–D5, then re-baseline
+the 22 existing tests.
+
+**Phase 2 — re-derive the ship verdict (no licence).** Inputs, named: AQWA
+`001_SHIP_RAOS_REV2.LIS`; OrcaWave `orcawave_001_ship_raos_rev2.xlsx` (reader
+selected in Phase 0 — `.xlsx` via `hull_library/rao_extractor.py`, or re-export
+from the `.yml` if Phase 3 runs). Produces the regenerated report and the
+measured correlations from which thresholds are set.
 
 **Phase 3 — licensed re-run (GATED, `ace-win-1`).** Only if a genuine
-disagreement survives Phase 2. Two hard preconditions:
+disagreement survives Phase 2.
 
-- **#1631 must be fixed first.** A lane that reports `returncode 0` on a
-  validator FAIL cannot be trusted to tell us whether the re-run succeeded.
-  Dispatching into it would produce another artifact of unknown validity.
-- **Dispatch must use the Scheduled-Task path**, per
-  `.claude/rules/licensed-solver-dispatch.md`: `dispatch-run.ps1 -Action submit`,
-  never direct SSH (an SSH public-key logon token cannot complete a FlexNet
-  checkout — measured `FlexNet Error 21`). Requests must pin
-  `host: "ace-win-1"`, because the deckhand default `licensed_host` is
-  `ace-win-2`, whose heartbeat last polled 2026-07-13.
+- **Dispatch path: VERIFIED 2026-08-03** — `dispatch-run.ps1 -Action submit`
+  returned `LICENCE_OK dll=11.6c` / `DIFFRACTION_OK` at rc 0. Use
+  `D:\ws\workspace-hub\scripts\windows\dispatch-run.ps1`; never direct SSH.
+- **#1631 must be fixed first** — a lane reporting rc 0 on validator FAIL cannot
+  confirm the re-run succeeded.
+- Pin `host: "ace-win-1"`; the deckhand default is `ace-win-2`
+  (`config/deckhand/policy.yml`), whose heartbeat last polled 2026-07-13
+  (`queue/heartbeat/ace-win-2.json`).
+- One floating Orcina seat fleet-wide; AQWA runs on a separate lane and does not
+  contend.
 
 ---
 
 ## Acceptance Criteria
 
+- [ ] Phase 0 `provenance.json` names the producing script for the committed report, and states whether the 72 identical entries are same-input or zero-filled
 - [ ] All new tests pass: `uv run pytest tests/hydrodynamics/diffraction/ -v`
-- [ ] No regression: full suite matches or exceeds the 2121-passed baseline recorded in #1550's closing comment
-- [ ] Every `added_mass`/`damping` correlation of exactly `1.0` in a regenerated report is accompanied by an explicit `IDENTICAL` or `INSUFFICIENT_DATA` quality flag — no bare `1.0`
-- [ ] The regenerated L01 report states a per-DOF verdict, and no DOF whose quality is `INSUFFICIENT_DATA` contributes to a `pass`
-- [ ] At least one test asserts an OrcaWave-produced value against the AQWA `.LIS` external oracle (closes #1633 item 6)
-- [ ] `validation_config.yaml` `status:` is computed; a hand-authored `pass` on a `DISAGREE` report fails the suite (closes #1633 item 5)
-- [ ] The `.owd`-vs-`spec.yml` comparison is labelled an input-fidelity check wherever it is reported (closes #1633 item 1)
-- [ ] The deg/rad hypothesis for pitch/yaw is either confirmed with a measured scale factor or explicitly refuted in the report
-- [ ] No physical hostname appears anywhere in the diff — routing is by logical alias (`ace-win-1`) only
+- [ ] No regression, measured as **both** counts: pass count ≥ 2121 **and** failure count ≤ 12 (the pre-existing `test_cli_integration.py` set) — r1 finding 9
+- [ ] Comparing two solvers on non-overlapping or non-increasing grids **raises**; no code path silently sorts or truncates
+- [ ] `test_np_interp_descending_xp_is_wrong` pins the mechanism so it cannot regress
+- [ ] The regenerated L01 report states a per-DOF verdict with an explicit quality flag per DOF; no bare `1.0` and no `IDENTICAL` reaching `pass`
+- [ ] A null-response DOF (`peak_mag < 1e-10`) does **not** force `incomplete`
+- [ ] `CORR_MIN` and `tolerance` are set from Phase 2's measured values, with the chosen numbers and their justification recorded in the report
+- [ ] The AQWA `.LIS` parser is validated against a hand-checked block before being used as an oracle
+- [ ] The `.owd`-vs-`spec.yml` comparison is relabelled an input-fidelity check (#1633 item 1)
+- [ ] No physical hostname in the diff — logical alias `ace-win-1` only
 - [ ] `scripts/legal/legal-sanity-scan.sh` passes
-- [ ] Review artifacts posted to `scripts/review/results/`
+- [ ] r2 review artifacts posted for all three providers, or a documented UNAVAILABLE per provider
 
 ---
 
 ## Deferred scope
 
-Named explicitly so the deferral is a decision, not an omission:
-
-- **#1633 item 2 — populate or remove `L00_validation_wamit/`.** All 12 cases
-  carry hand-authored `status: pass` while their `reference_data.yaml` files are
-  `status: template` with no arrays. Resolving this requires *acquiring WAMIT
-  reference data*, which is an external-data problem, not a logic fix. Will file
-  as a follow-on under epic #1825.
-- **L02 barge / L03 spar / L04 re-derivation.** The corrected comparator will
-  apply to them unchanged, but each needs its own oracle check. This plan proves
-  the method on the ship (L01), which is what was asked for.
-- **#1631 itself.** Gates Phase 3; planned separately, `priority:critical`.
-- **Merging `.claude/rules/licensed-solver-dispatch.md`** (workspace-hub). Phase 3
-  depends on it being canonical rather than sitting on an unmerged branch.
+- **#1633 item 2 and all of `L00_validation_wamit/`.** Requires acquiring WAMIT
+  reference data. Note the tree is worse than #1633 states: 11 `pass` + 1
+  `blocked`, and only 4 of 12 cases have a `reference_data.yaml` at all.
+  **The `validation_config.yaml` acceptance criterion from r1 is withdrawn** —
+  r1 finding 7 correctly showed it forced the deferred work. Status derivation in
+  this plan is scoped to L01's own report. Follow-on under epic #1825.
+- **L02 / L03 / L04.** The contract applies unchanged; each needs its own oracle.
+- **#1631.** Gates Phase 3; planned separately.
+- **Merging `.claude/rules/licensed-solver-dispatch.md`** (workspace-hub).
 
 ---
 
 ## Adversarial Review Summary
 
-<!-- To be filled after review fan-out. Not to be posted to GitHub until populated. -->
+**r1 (2026-08-03):** Claude **MAJOR** (17 findings, 6 blockers); Codex UNAVAILABLE
+(rc=124, skills-scan traversal limit); Agy UNAVAILABLE (auth timeout). Effective
+coverage 1 of 3 — below T3 requirement.
 
-| Provider | Verdict | Key findings |
+Disposition of r1 blockers in this redraft:
+
+| # | r1 blocker | Disposition |
 |---|---|---|
-| Claude | pending | |
-| Codex | pending | |
-| Agy | pending | |
+| 1 | causal attribution falsified; `CORR_MIN` is binding | **Accepted, remedy declined.** Root cause is the abscissa contract; thresholds set in Phase 2 from re-measured data. Deliverable restated. |
+| 2 | oracle test unfalsifiable | **Fixed** — single assertion, `corr > 0.95 and rel_rms < 0.10`. |
+| 3 | D3 breaks the 275-288 null-response path | **Fixed** — `NULL_RESPONSE` quality + dedicated test. |
+| 4 | 72 identical entries undiagnosed; `IDENTICAL → pass` | **Fixed** — Phase 0 diagnoses; `IDENTICAL` derives `suspect`. |
+| 5 | Phase 2 input unnamed | **Fixed** — `.xlsx`/`.yml` named with reader selection in Phase 0. |
+| 7 | L00 deferred yet required | **Fixed** — criterion withdrawn; L00 deferred wholesale. |
 
-**Overall result:** pending
+Findings 6, 8, 16 corrected in place. 9, 10, 13, 14, 17 folded into criteria and
+the test list. 11 adopted (`ValueError`/`[Uu]nit`). 12 resolved (D-numbering now
+D0–D5, one defect each).
+
+**r2 result:** pending.
 
 ---
 
 ## Risks and Open Questions
 
-- **Risk — the heave result may be real.** If −0.855 survives Phases 1 and 2,
-  the ship models genuinely disagree and the investigation moves to mesh, draft,
-  or heading-convention differences between the `.dat` and the `.yml`. The plan
-  must not assume the defects explain everything; the acceptance criteria
-  require recording the surviving disagreement rather than suppressing it.
-- **Risk — changing the criteria will change historical verdicts.** Regenerating
-  reports will alter committed artifacts. Every regenerated file will be
-  committed in its own commit, separate from the logic change, so the before/
-  after is reviewable.
-- **Risk — `CORR_MIN = 0.99` may still be too strict** for two different BEM
-  codes on different meshes even after the RMS fix. Phase 2 will report the
-  achieved correlations so the threshold is set from measurement, not taste.
-- **Risk — the AQWA `.LIS` parser is itself unverified.** `aqwa_lis_parser.py`
-  applies no unit normalisation (noted in #1633). Phase 2 must validate the
-  parser against a hand-checked block of the `.LIS` before trusting it as an
-  oracle, or the "external oracle" is just another untested path.
-- **Open:** should a surviving genuine disagreement block the epic #1825
-  three-way contract, or be recorded as a known-difference with a documented
-  tolerance? Flagging for the approval decision.
+- **Risk — the disagreement may be real.** The mechanism proof gives −0.40 on
+  synthetic data, not −0.8551. If alignment does not close the gap, the models
+  genuinely differ (mesh, draft, heading convention) and that is the finding.
+  Phase 0 must attribute rather than assume.
+- **Risk — `.xlsx` may not carry what is needed.** If the workbook lacks phase or
+  full headings, Phase 2 depends on Phase 3 re-export, and the "no licence
+  needed" property of Phase 2 is lost. Phase 0 resolves this.
+- **Risk — the AQWA `.LIS` parser is unverified** and applies no unit
+  normalisation. Now carries its own test rather than a prose "must".
+- **Risk — regenerating reports rewrites committed artifacts.** Exactly one file
+  is named; it lands in its own commit.
+- **Open:** if a genuine disagreement survives, does it block epic #1825's
+  three-way contract or land as a documented known-difference? Flagged for approval.
+- **Open:** should `run_proper_comparison.py` be fixed or deleted? It is an ad-hoc
+  docs-tree script superseded by `run_3way_benchmark.py`. Phase 0 decides;
+  leaving a script with a known-silent-wrong `np.interp` in the tree is its own hazard.
 
 ---
 
 ## Complexity: T3
 
-**T3** — spans the comparator, a new verdict module, two new test modules,
-regenerated committed artifacts, and a gated licensed re-run on another host;
-and it invalidates recorded verdicts across a validation tree. Per AGENTS.md
-this requires **3-provider adversarial review** (Claude + Codex + Agy).
+Spans a new contract module, a new verdict module, three new test modules, a
+re-baseline of 22 existing tests, regenerated artifacts, and a gated licensed
+re-run. Requires 3-provider adversarial review; r1 achieved 1 of 3, so **r2 must
+restore coverage** before this plan goes to approval.
