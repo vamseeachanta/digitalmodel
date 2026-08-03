@@ -259,7 +259,7 @@ rather than calling `float()` (`multi_solver_comparator.py:677-684`).
 | Modify | `src/.../diffraction/multi_solver_comparator.py` | consume contract; relative tolerance; 2-solver ladder; quality flags preserving 275-288; circular phase at 297 **and** 316; `None`-safe export at 677-684 |
 | Create | `src/.../diffraction/benchmark_verdict.py` | `derive_status` incl. `suspect` and `incomplete` |
 | Modify | `src/.../diffraction/output_schemas.py` | matrix `source` provenance field (D6) |
-| Fix | `docs/domains/orcawave/L01_aqwa_benchmark/run_proper_comparison.py:149` | sort `xp` ascending, or delete the script as superseded |
+| Fix | `docs/domains/orcawave/L01_aqwa_benchmark/run_proper_comparison.py:149` | **(owner decision 2026-08-03: fix, do not delete)** route through the D1 loader so `xp` is ascending; add a regression test pinning the corrected orientation |
 | Fix | `scripts/run_benchmark_ship_raos.py:176-196` | placeholder matrices must declare `source="placeholder"`, not masquerade as data |
 | Create | `tests/.../test_abscissa_contract.py` | D1–D5 |
 | Create | `tests/.../test_verdict_provenance.py` | D6 |
@@ -305,6 +305,32 @@ are removed or rewritten here.
 **Not included, deliberately:** no test asserting NumPy's own `np.interp`
 behaviour (r2-testdesign 4 — passes before and after any fix), and no ship-oracle
 test (moved to #714, where matched inputs make it meaningful).
+
+---
+
+## Execution environment (owner decision 2026-08-03)
+
+Implementation runs on **`ace-win-1`** over **plain SSH**, not the Scheduled-Task
+path. This is the documented correct channel for this work: the licensed-solver
+dispatch rule (workspace-hub, `.claude/rules/licensed-solver-dispatch.md`) states
+*"Do NOT apply when: the work is pure Python/CPU with no licensed solver — plain
+SSH is fine and simpler."* #1633 touches no solver, so it exercises exactly the
+channel that FlexNet work cannot use, and is a clean test of it.
+
+Environment verified 2026-08-03 on that host:
+
+| check | result |
+|---|---|
+| repo | `/d/ws/digitalmodel` on `main` |
+| interpreter | `/d/ws/digitalmodel/.venv/Scripts/python.exe` |
+| deps | numpy 1.26.4 · scipy 1.15.3 · pytest 8.4.2 |
+| sibling `assetutilities` | present at `/d/ws/assetutilities` |
+| collection | `test_multi_solver_comparator.py` → **22 tests in 0.65 s** |
+
+The last two matter: r2's local review could not collect this suite at all
+(absent `../assetutilities`, no SciPy). The target host does not have that
+problem, which makes it a *better* environment for this work than the control
+host — and independently confirms the 22-test count on a third machine.
 
 ---
 
@@ -376,10 +402,10 @@ these gates would have stopped the L01 artifact — was false.
 
 ## Risks and Open Questions
 
-- **Risk — `MIN_SAMPLES`, `MIN_COVERAGE`, `MAX_GAP` have no independent justification yet.** They are the gate that would have caught L01. Setting them from L01 is exactly the circular calibration r2 rejected. Proposal: derive `MIN_SAMPLES` from the sampling needed to resolve a resonant peak (a hydrodynamic argument, not a data-fitting one) and state that argument in the config's `justification`. Flagged for approval.
+- **RESOLVED (owner, 2026-08-03) — threshold justification.** `MIN_SAMPLES` is derived from the sampling needed to resolve a resonant peak: a hydrodynamic argument, independent of any L01 observation. The half-power (−3 dB) bandwidth of a lightly-damped response peak is `Δω ≈ 2ζω_n`; resolving that band requires a minimum number of points across it, from which `MAX_GAP ≤ ζω_n` follows for the lowest expected damping ratio, and `MIN_SAMPLES` follows from the band count across the analysis range. The chosen numbers and this derivation go in the config's `justification` field. **No threshold in this PR may be derived from L01 data** — that constraint stays in the acceptance criteria.
 - **Risk — `test_complex_interp_across_branch_cut` encodes an assumption** that linear interpolation of the complex transfer function is the right physics near a response zero. It is standard practice and better than independent phase interpolation, but it is not exact. Recorded rather than hidden.
 - **Risk — `output_schemas.py` provenance is a schema change** that may ripple into the four producers touched by PR #1636. Blast radius must be enumerated before implementation.
-- **Open:** delete `run_proper_comparison.py` or fix it? It is a superseded ad-hoc docs-tree script carrying a silent-wrong `np.interp`. Deleting removes a hazard; fixing preserves history. Recommend delete, with the abscissa test in the suite as the durable record.
+- **RESOLVED (owner, 2026-08-03):** `run_proper_comparison.py` is **fixed, not deleted**. It routes through the D1 loader and carries a regression test pinning the corrected orientation.
 
 ---
 
