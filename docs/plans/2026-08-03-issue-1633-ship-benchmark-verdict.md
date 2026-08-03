@@ -1,6 +1,6 @@
 # Plan for #1633: comparison-code correctness — make a wrong comparison impossible to record as a verdict
 
-> **Status:** draft (r3 — rescoped after r1 MAJOR + r2 MAJOR×3)
+> **Status:** plan-review (r3 patched; awaiting owner approval — never self-approved)
 > **Complexity:** T2 (reduced from T3 — the licensed run and the ship verdict moved to #714)
 > **Date:** 2026-08-03
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/1633
@@ -156,6 +156,31 @@ from the same observations being judged. Withdrawn. Thresholds live in a config
 object with a documented justification field; this plan does not choose numeric
 values for the ship — that belongs to #714 with matched inputs.
 
+**D8 — Do NOT rename `NO_CONSENSUS` (r3).** An earlier draft of this plan
+introduced `DISAGREE` as the 2-solver negative outcome. Withdrawn: `NO_CONSENSUS`
+has **14 occurrences across 6 files**, including two colour maps keyed on the
+literal string (`benchmark_dof_sections.py:176`, `benchmark_runner.py:599`) which
+would silently lose their entry, and `test_unit_box_benchmark.py:537-549`. The
+defect was never the *name* — it was that the value was unreachable-to-escape and
+uninformative. Fixing the ladder (D-ladder below) fixes that. Renaming buys
+nothing and breaks four consumers.
+
+**D9 — `Optional[float]` correlation has a wider blast radius than the exporter (r3).**
+Making `correlation` nullable breaks more than `float()` at `677-684`:
+`compute_consensus` assigns `pair_corrs[pk] = corr` (`:465`) and then computes
+`float(np.mean(list(pair_corrs.values())))` (`:480`), which raises `TypeError` on
+a `None`. Every consumer of `.correlation` must be enumerated and made
+`None`-safe, and `mean_pairwise_correlation` needs a defined representation when
+one or more pairs are unavailable (proposal: exclude unavailable pairs from the
+mean; if none remain, emit `null` rather than `nan`).
+
+**D10 — Sampling adequacy is checked on the compared arrays, unconditionally (r3).**
+`MIN_SAMPLES` must not sit only on the resampling branch. `run_benchmark_ship_raos.py`
+reduced both solvers to 3 points *upstream* and handed the comparator two arrays
+already on the same 3-point grid — which satisfies an ordering-and-overlap check
+trivially. The gate only catches L01 if it fires on the arrays actually compared,
+whatever path produced them.
+
 ---
 
 ## Pseudocode
@@ -177,9 +202,22 @@ function abscissa_contract(a, b, cfg):
     coverage = (hi - lo) / (min(a.span, b.span))
     if coverage < cfg.MIN_COVERAGE:                 raise AbscissaOverlapError(coverage)
     grid = coarser_of(a, b).freqs restricted to [lo, hi]      # D3
-    if len(grid) < cfg.MIN_SAMPLES:                 return InsufficientSampling(len(grid))
     if max_gap(source_points_in(lo, hi)) > cfg.MAX_GAP: raise AbscissaGapError(...)
     return grid
+
+# D10: sampling adequacy is checked on the arrays ACTUALLY COMPARED, on every
+# path -- including when both solvers already share a grid and no resampling
+# happens. That identical-grid case is exactly the L01 shape: the 3-point
+# reduction happened upstream in run_benchmark_ship_raos.py, so a gate living
+# only on the resample branch would not have caught it.
+function check_sampling(compared_grid, cfg):
+    if len(compared_grid) < cfg.MIN_SAMPLES:
+        return InsufficientSampling(len(compared_grid))    # no correlation is emitted
+
+# D9: unavailable pairs are excluded, not coerced
+function mean_pairwise_correlation(pair_corrs):
+    available = [c for c in pair_corrs.values() if c is not None]
+    return float(np.mean(available)) if available else None
 
 function resample(rao, freqs, grid):                # D4 — complex, no extrapolation
     z = rao.magnitude * exp(1j * radians(rao.phase))
@@ -227,6 +265,8 @@ rather than calling `float()` (`multi_solver_comparator.py:677-684`).
 | Create | `tests/.../test_verdict_provenance.py` | D6 |
 | Create | `tests/.../fixtures/abscissa_l01_grids.json` | committed deterministic fixture (r2-evidence 4) |
 | Modify | `tests/.../test_multi_solver_comparator.py` | rewrite `test_consensus_majority_with_outlier:296-313`; expect `test_init_default_tolerance:66-84` to change if tolerance semantics change |
+| Modify | `tests/.../test_unit_box_benchmark.py` | **(r3)** `:537-549` asserts `overall_consensus in (...)` and `!= "NO_CONSENSUS"` under `tolerance=SOLVER_TOLERANCE` for 1% solver variation — directly exposed to the D1 absolute→relative change. Was missing from r2's blast-radius assessment. |
+| Audit | `src/.../diffraction/benchmark_dof_sections.py:176`, `benchmark_runner.py:599` | **(r3)** colour maps keyed on consensus-level string literals; verify no new level leaks in (D8 keeps `NO_CONSENSUS`, so this should be a no-op — confirm, don't assume) |
 | Create | `docs/reports/2026-08-03-issue-1633-comparison-hardening.html` | declared artifact, now with a creation step (r2-evidence 11) |
 | Update | `docs/plans/README.md` | index |
 
@@ -255,8 +295,11 @@ are removed or rewritten here.
 | `test_null_response_dof_still_permits_pass` | `peak_mag < NULL_EPS` | `NULL_RESPONSE`; overall status may be `pass` | preserves `275-288`; guards against over-correction |
 | `test_empty_arrays_export_null_not_crash` | empty arrays → full `export_report_json` | JSON contains `"correlation": null`; no `TypeError` | `float(None)` raises at `677-684` |
 | `test_max_phase_diff_is_circular_and_nonzero` | phases straddling `0°` with a real 30° offset | `max_phase_diff == 30.0 ± 0.5` | today line 316 gives ~330; **pins a value, not `≤180`** |
-| `test_two_solver_disagreement_is_not_full` | 2 solvers, corr 0.5 | `DISAGREE` exactly | today `NO_CONSENSUS`; pins one outcome, no set membership |
+| `test_two_solver_disagreement_is_no_consensus` | 2 solvers, corr 0.5 | `NO_CONSENSUS` exactly | characterization — **green today**, included only to pin the value against the D8 rename temptation; marked as such, not counted toward red-state proof |
 | `test_two_solver_agreement_is_full` | 2 solvers, corr 0.999, rel_rms 0.001 | `FULL` exactly | absolute tolerance blocks it |
+| `test_unavailable_pair_excluded_from_mean_correlation` | 2 pairs, one `correlation=None` | `mean_pairwise_correlation` equals the surviving pair's value; no `TypeError` | **(r3)** `np.mean` over a list containing `None` raises at `:480` |
+| `test_all_pairs_unavailable_yields_null_mean` | every pair unavailable | `mean_pairwise_correlation is None`; JSON emits `null`, not `NaN` | **(r3)** no representation exists today |
+| `test_sampling_gate_fires_on_identical_grids` | both solvers on the **same** 3-point grid | `INSUFFICIENT_SAMPLING` | **(r3)** this is the actual L01 shape — upstream reduction, no resampling needed, so a resample-only gate would miss it |
 | `test_relative_tolerance_admits_one_percent_on_pitch_scale` | two ~30 deg/m series 1% apart | `agrees is True` | `rms 0.3 > 0.05` absolute |
 
 **Not included, deliberately:** no test asserting NumPy's own `np.interp`
@@ -302,13 +345,32 @@ test (moved to #714, where matched inputs make it meaningful).
 | r2 | Codex — test-design lens | **MAJOR** — 8 findings |
 | r2 | Codex — evidence lens | **MAJOR** — 12 findings |
 | r2 | Agy | UNAVAILABLE; owner elected to proceed |
+| r3 | Claude — inline, main session | **MINOR** — 4 findings, all patched into this draft |
 
 r2 was run from the digitalmodel worktree (56 skill files) to avoid the r1 timeout.
 **Three codex lenses are one provider, not three** — lens diversity is not
 cross-provider consensus, and a systematic codex blind spot would hit all three.
 Recorded as a known limitation of this plan's review coverage.
 
-**r3 result:** pending.
+**r3 was applied inline as patches, not dispatched**, per the loop-break rule:
+when r1 and r2 surface materially different defects, a third dispatched round
+tends to generate a new defect surface rather than converge. r3 findings, all
+verified against `origin/main` and folded in above:
+
+1. The `DISAGREE` rename would have broken 14 references across 6 files including
+   two string-keyed colour maps → **D8**, rename withdrawn.
+2. `Optional[float]` correlation breaks `np.mean` at `:480`, not just the
+   exporter at `:677-684` → **D9** plus two new tests.
+3. `test_unit_box_benchmark.py:537-549` is exposed to the D1 tolerance change and
+   was absent from Files to Change → added.
+4. The sampling gate sat only on the resample path, so it **would not have caught
+   L01** (whose 3-point reduction happened upstream, leaving both solvers on one
+   shared grid) → **D10** plus `test_sampling_gate_fires_on_identical_grids`.
+
+Finding 4 is the significant one: without it this plan's central claim — that
+these gates would have stopped the L01 artifact — was false.
+
+**Verdict: ready for owner review.** No blockers outstanding.
 
 ---
 
