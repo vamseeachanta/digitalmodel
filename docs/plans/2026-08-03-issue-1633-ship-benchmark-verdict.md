@@ -261,6 +261,8 @@ rather than calling `float()` (`multi_solver_comparator.py:677-684`).
 | Modify | `src/.../diffraction/output_schemas.py` | matrix `source` provenance field (D6) |
 | Fix | `docs/domains/orcawave/L01_aqwa_benchmark/run_proper_comparison.py:149` | **(owner decision 2026-08-03: fix, do not delete)** route through the D1 loader so `xp` is ascending; add a regression test pinning the corrected orientation |
 | Fix | `scripts/run_benchmark_ship_raos.py:176-196` | placeholder matrices must declare `source="placeholder"`, not masquerade as data |
+| Fix | `scripts/benchmark/validate_owd_vs_spec.py:39-40` | **(blocker, found on-host 2026-08-03)** import-time `sys.stdout/stderr` rebinding closes the real streams and prevents the suite from completing — use `reconfigure()` under `__main__`. Without this the node-ID baseline is unobtainable |
+| Create | `tests/.../test_no_import_time_stream_rebinding.py` | regression: importing `validate_owd_vs_spec` must leave `sys.stdout`/`sys.stderr` identity unchanged |
 | Create | `tests/.../test_abscissa_contract.py` | D1–D5 |
 | Create | `tests/.../test_verdict_provenance.py` | D6 |
 | Create | `tests/.../fixtures/abscissa_l01_grids.json` | committed deterministic fixture (r2-evidence 4) |
@@ -332,12 +334,66 @@ The last two matter: r2's local review could not collect this suite at all
 problem, which makes it a *better* environment for this work than the control
 host — and independently confirms the 22-test count on a third machine.
 
+### Two operational constraints found while verifying (2026-08-03)
+
+**1. The suite cannot currently complete on this host — root-caused, and the fix
+is in scope.** Running the diffraction directory dies with:
+
+```
+ValueError: I/O operation on closed file.
+lost sys.stderr
+```
+
+immediately after `tests/hydrodynamics/diffraction/test_validate_owd_vs_spec_semantics.py`.
+The test file is innocent; the cause is an **import-time side effect** in the
+code under test, `scripts/benchmark/validate_owd_vs_spec.py:39-40`:
+
+```python
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
+```
+
+This rebinds the standard streams at module scope. When the new wrappers are
+garbage-collected they close the underlying buffers, destroying pytest's real
+streams for the rest of the session. It is a Windows UTF-8 workaround that is
+unsafe as an import-time side effect, which is why it surfaces on the Windows
+host and not on the Linux control host.
+
+**Fix (added to scope):** replace the rebinding with in-place reconfiguration,
+which mutates the existing objects and closes nothing:
+
+```python
+sys.stdout.reconfigure(encoding="utf-8")
+sys.stderr.reconfigure(encoding="utf-8")
+```
+
+and guard it so it only runs under `__main__` rather than on import.
+
+This is **pre-existing** and unrelated to the comparison defects, but it is a
+hard blocker for this plan's central verification method — a node-ID baseline
+cannot be diffed against a suite that cannot finish. It also lands in a file
+this issue already touches for item 1 (relabelling the `.owd`-vs-`spec.yml`
+comparison). `--capture=no` is a partial mitigation (the comparator file alone
+gives **22 passed in 0.97 s**) but does not survive the whole directory, so the
+source fix is required rather than optional.
+
+**2. Do not build in the host's shared `main` checkout.** `D:/ws/digitalmodel`
+is on `main`, clean, 0 ahead but **7 behind** `origin/main`, and the host carries
+three other worktrees including `codex/issue-1565-implementation` — parallel work
+by another agent. Implementation uses a **dedicated worktree off `origin/main`**,
+matching the host's existing convention (`D:/ws/_worktrees/digitalmodel-1633`),
+and leaves the shared checkout untouched.
+
+Consequence for the acceptance criteria: the node-ID baseline must be captured
+**inside that worktree, at the commit the work branches from** — not in the
+shared checkout, whose 7-commit lag would silently invalidate the comparison.
+
 ---
 
 ## Acceptance Criteria
 
 - [ ] **Every test above fails on `origin/main` and passes after.** Verified by running the new test files against a clean `origin/main` worktree and recording the failure list in the PR body. A test that is green before the change is removed or rewritten.
-- [ ] Full suite: `uv run pytest tests/ -q` — compared against a **baseline captured on `origin/main` in the same environment**, node-ID by node-ID. No new failure node IDs. (r2-testdesign 8: raw counts are meaningless against 20,241 tests.)
+- [ ] Full suite: `.venv/Scripts/python.exe -m pytest tests/ -q --no-header -p no:cacheprovider --capture=no` — compared against a **baseline captured in the same worktree, at the branch point**, node-ID by node-ID. No new failure node IDs. (r2-testdesign 8: raw counts are meaningless against 20,241 tests. `--capture=no` per the operational constraint above — without it the run dies in capture teardown and reads as a failure.)
 - [ ] A comparison over 3 sampling points returns `INSUFFICIENT_SAMPLING` and no correlation
 - [ ] Matrices with `source != "solver"` cannot produce `pass`
 - [ ] The real L01 grids are **accepted** and interpolated; disjoint and low-coverage grids raise
