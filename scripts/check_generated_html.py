@@ -46,6 +46,11 @@ class Generator:
     output_glob: str | None = None
     onepagers: bool = False
     redirect_module_outputs: bool = False
+    # Scripts producing a gitignored intermediate this generator reads. They run
+    # first, in order, inside the shadow tree. A page whose input is not
+    # committed is still reproducible as long as that input is itself generated
+    # deterministically from the repository.
+    prerequisites: tuple[str, ...] = ()
 
 
 GENERATORS = (
@@ -105,6 +110,7 @@ GENERATORS = (
     Generator(
         "scripts/capabilities/build_wall_thickness_3d_page.py",
         ("docs/api/structural/wall-thickness-3d-explorer.html",),
+        prerequisites=("scripts/capabilities/build_wall_thickness_3d.py",),
     ),
     Generator(
         "scripts/capabilities/build_wall_thickness_explorer.py",
@@ -271,7 +277,29 @@ def clear_generated_html(shadow: Path, entry: Generator) -> None:
         path.unlink()
 
 
+def run_script(shadow: Path, command: list[str]) -> subprocess.CompletedProcess[str]:
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(shadow / "src")
+    env["PYTHONDONTWRITEBYTECODE"] = "1"
+    return subprocess.run(
+        command,
+        cwd=shadow,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=600,
+    )
+
+
 def run_generator(shadow: Path, entry: Generator) -> str | None:
+    for prerequisite in entry.prerequisites:
+        result = run_script(shadow, [sys.executable, str(shadow / prerequisite)])
+        if result.returncode:
+            detail = result.stderr.strip() or result.stdout.strip()
+            return (
+                f"{entry.script} prerequisite {prerequisite} failed "
+                f"({result.returncode}): {detail}"
+            )
     script = shadow / entry.script
     command = [
         sys.executable,
@@ -288,17 +316,7 @@ def run_generator(shadow: Path, entry: Generator) -> str | None:
             str(script),
             str(shadow),
         ]
-    env = os.environ.copy()
-    env["PYTHONPATH"] = str(shadow / "src")
-    env["PYTHONDONTWRITEBYTECODE"] = "1"
-    result = subprocess.run(
-        command,
-        cwd=shadow,
-        env=env,
-        capture_output=True,
-        text=True,
-        timeout=180,
-    )
+    result = run_script(shadow, command)
     if result.returncode:
         detail = result.stderr.strip() or result.stdout.strip()
         return f"{entry.script} failed ({result.returncode}): {detail}"
