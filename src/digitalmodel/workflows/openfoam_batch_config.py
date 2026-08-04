@@ -53,6 +53,29 @@ def resolve_workers(run_settings: dict) -> int:
     return workers
 
 
+def validate_workers(requested: object, *, visible_rank_count: int,
+                     dispatcher_rank_limit: int | None = None) -> int:
+    """Return the validated rank count, or reject before any mutation.
+
+    A dispatcher limit is a host capability ceiling, never a second request.
+    The bool check precedes the int check because ``int(True)`` is 1, so a
+    boolean would otherwise be accepted silently as a one-rank run.
+    """
+    if isinstance(requested, bool):
+        raise TypeError(f"run_batch.workers must be an integer, got {requested!r}")
+    if not isinstance(requested, int):
+        raise ValueError(f"run_batch.workers must be an integer, got {requested!r}")
+    if requested < 1:
+        raise ValueError(f"run_batch.workers must be >= 1, got {requested}")
+    ceiling = visible_rank_count
+    if dispatcher_rank_limit is not None:
+        ceiling = min(ceiling, dispatcher_rank_limit)
+    if requested > ceiling:
+        raise ValueError(
+            f"run_batch.workers {requested} exceeds the available rank ceiling {ceiling}")
+    return requested
+
+
 def resolve_case_matrix(explicit: list[dict] | None, variants: dict,
                         cfg_dir: Path) -> list[dict]:
     if explicit:

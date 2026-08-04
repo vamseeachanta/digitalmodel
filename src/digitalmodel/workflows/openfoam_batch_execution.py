@@ -15,7 +15,7 @@ from typing import Any, Callable
 
 from loguru import logger
 
-from digitalmodel.workflows.openfoam_batch_config import base_view
+from digitalmodel.workflows.openfoam_batch_config import base_view, validate_workers
 from digitalmodel.workflows.openfoam_batch_identity import file_sha256
 from digitalmodel.workflows.openfoam_batch_layout import WorkLayout
 from digitalmodel.workflows.openfoam_batch_results import redact_rows, row
@@ -24,6 +24,12 @@ from digitalmodel.workflows.openfoam_batch_results import redact_rows, row
 CHECKPOINT_FILENAME = "_result.json"
 DEFAULT_MESH_UTILITY = "blockMesh"
 DEFAULT_TIMEOUT_SECONDS = 43200
+# Mirrors runner._ERROR_MARKERS in the rendered log spelling, so the MPI path
+# applies the fail-closed policy the serial runner already applies.
+FOAM_FATAL_MARKERS = (
+    "--> FOAM FATAL ERROR",
+    "--> FOAM FATAL IO ERROR",
+)
 
 
 def make_checkpoint(*, identity_sha256: str, owner_token: str, case: str,
@@ -177,7 +183,9 @@ def _run_case_mpi_unlocked(item: dict[str, Any], run_settings: dict, workers: in
         view = base_view(item["settings"])
         plan = mpi_command_plan(solver, workers,
             view.get("mesh_utility", DEFAULT_MESH_UTILITY),
-            bool(view.get("run_set_fields", False)), reconstruct, resume)
+            bool(view.get("run_set_fields", False)), reconstruct, resume,
+            to_vtk=bool(view.get("to_vtk", False)),
+            reconstruct_mesh=bool(run_settings.get("reconstruct_mesh", False)))
         if mock:
             result = row(item, status="completed", case_dir=case_dir, solver=solver, mock=True)
             result["mpi_plan"] = [" ".join(argv) for argv in plan]
@@ -212,15 +220,33 @@ def execute_mpi_plan(item: dict[str, Any], case_dir: Path, plan: list[list[str]]
         if indirect:
             _verify_executable(*indirect)
             launched = [str(indirect[0]) if value == solver else value for value in launched]
-        rc = run(launched, case_dir, case_dir / f"log.{argv[0]}", timeout,
+        log_path = case_dir / f"log.{argv[0]}"
+        rc = run(launched, case_dir, log_path, timeout,
                  expected_executable=binding) if binding else run(
-                     launched, case_dir, case_dir / f"log.{argv[0]}", timeout)
+                     launched, case_dir, log_path, timeout)
         if indirect:
             _verify_executable(*indirect)
         if rc:
             return row(item, status="failed", case_dir=case_dir, solver=solver,
                        error=f"stage '{argv[0]}' returned non-zero exit code {rc}")
+        marker = _fatal_marker(log_path)
+        if marker:
+            return row(item, status="failed", case_dir=case_dir, solver=solver,
+                       error=f"stage '{argv[0]}' logged {marker} at exit code 0")
     return row(item, status="completed", case_dir=case_dir, solver=solver)
+
+
+def _fatal_marker(log_path: Path) -> str | None:
+    """Return the fatal marker in a stage log, if any.
+
+    Utilities can exit 0 having already written a fatal error, so the return
+    code alone is not evidence a stage succeeded.
+    """
+    try:
+        text = log_path.read_text(errors="replace")
+    except OSError:
+        return None
+    return next((marker for marker in FOAM_FATAL_MARKERS if marker in text), None)
 
 
 def build_case(item: dict[str, Any]) -> Path:
@@ -290,16 +316,28 @@ def _case_lock(layout: WorkLayout | None, case: str):
 
 def mpi_command_plan(solver: str, workers: int, mesh_utility: str = DEFAULT_MESH_UTILITY,
                      run_set_fields: bool = False, reconstruct: bool = True,
-                     resume: bool = False) -> list[list[str]]:
+                     resume: bool = False, *, to_vtk: bool = False,
+                     reconstruct_mesh: bool = False) -> list[list[str]]:
+    """Build the exact ordered MPI stage plan.
+
+    ``foamToVTK`` reads the reconstructed case, so a VTK request without
+    reconstruction is rejected here, before the case is touched.
+    """
+    if to_vtk and not reconstruct:
+        raise ValueError("to_vtk requires reconstruction: set run_batch.reconstruct true")
     plan: list[list[str]] = []
     if not resume:
         plan.append([mesh_utility])
         if run_set_fields:
             plan.append(["setFields"])
         plan.append(["decomposePar", "-force"])
-    plan.append(["mpirun", "-np", str(workers), "--oversubscribe", solver, "-parallel"])
+    plan.append(["mpirun", "-np", str(workers), solver, "-parallel"])
     if reconstruct:
+        if reconstruct_mesh:
+            plan.append(["reconstructParMesh", "-latestTime"])
         plan.append(["reconstructPar"])
+    if to_vtk:
+        plan.append(["foamToVTK"])
     return plan
 
 

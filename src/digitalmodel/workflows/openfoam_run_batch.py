@@ -63,6 +63,7 @@ __all__ = [
     "_write_decompose_par_dict",
     "default_workers",
     "mpi_command_plan",
+    "required_utilities",
     "resolve_workers",
     "router",
 ]
@@ -128,8 +129,12 @@ def _validate_run(run_settings: dict, base: dict) -> tuple[str, bool, int]:
         raise ValueError(f"openfoam_run_batch run_batch.mode must be pool|mpi, got {mode}")
     mock, workers = bool(run_settings.get("mock", False)), resolve_workers(run_settings)
     view = base_view(base)
-    if not mock and not _solver_ready(mode, view.get("mesh_utility", DEFAULT_MESH_UTILITY),
-                                      view.get("solver"), bool(run_settings.get("reconstruct", True))):
+    if not mock and not _solver_ready(
+            mode, view.get("mesh_utility", DEFAULT_MESH_UTILITY), view.get("solver"),
+            bool(run_settings.get("reconstruct", True)),
+            run_set_fields=bool(view.get("run_set_fields", False)),
+            to_vtk=bool(view.get("to_vtk", False)),
+            reconstruct_mesh=bool(run_settings.get("reconstruct_mesh", False))):
         raise RuntimeError(SOLVER_ERROR_MESSAGE)
     return mode, mock, workers
 
@@ -192,13 +197,22 @@ def _walk_strings(value: Any, prefix: str = "config"):
         yield prefix, value
 
 
-def _selected_tools(mode: str, base: dict, run_settings: dict) -> list[tuple[str, Path]]:
+def required_utilities(mode: str, base: dict, run_settings: dict) -> list[str]:
+    """Every utility the selected case path will actually invoke, in order.
+
+    The readiness probe and the executable-binding set are both derived from
+    this one list. They previously enumerated the utilities independently and
+    had already drifted apart on setFields, so a run could bind a utility it
+    never checked for, or check for one it never bound.
+    """
     names = [base.get("mesh_utility", DEFAULT_MESH_UTILITY), base.get("solver")]
     if mode == "mpi":
         names += ["decomposePar", "mpirun"]
         if base.get("run_set_fields"):
             names.append("setFields")
         if bool(run_settings.get("reconstruct", True)):
+            if bool(run_settings.get("reconstruct_mesh", False)):
+                names.append("reconstructParMesh")
             names.append("reconstructPar")
     else:
         if base.get("run_snappy"):
@@ -211,16 +225,23 @@ def _selected_tools(mode: str, base: dict, run_settings: dict) -> list[tuple[str
             names.append("subsetMesh")
         if base.get("run_set_fields"):
             names.append("setFields")
-        if base.get("to_vtk"):
-            names.append("foamToVTK")
-    return [(name, Path(shutil.which(name) or "")) for name in names if name]
+    if base.get("to_vtk"):
+        names.append("foamToVTK")
+    return [name for name in names if name]
+
+
+def _selected_tools(mode: str, base: dict, run_settings: dict) -> list[tuple[str, Path]]:
+    return [(name, Path(shutil.which(name) or ""))
+            for name in required_utilities(mode, base, run_settings)]
 
 
 def _solver_ready(mode: str, mesh_utility: str, solver: str | None,
-                  reconstruct: bool = True) -> bool:
-    required = [mesh_utility] + ([solver] if solver else [])
-    if mode == "mpi":
-        required += ["decomposePar", "mpirun"] + (["reconstructPar"] if reconstruct else [])
+                  reconstruct: bool = True, *, run_set_fields: bool = False,
+                  to_vtk: bool = False, reconstruct_mesh: bool = False) -> bool:
+    view = {"mesh_utility": mesh_utility, "solver": solver,
+            "run_set_fields": run_set_fields, "to_vtk": to_vtk}
+    required = required_utilities(
+        mode, view, {"reconstruct": reconstruct, "reconstruct_mesh": reconstruct_mesh})
     return all(shutil.which(name) is not None for name in required)
 
 
