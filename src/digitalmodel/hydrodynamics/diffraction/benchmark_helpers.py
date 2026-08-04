@@ -5,13 +5,19 @@ benchmark_plotter.py and its extracted sub-modules.
 Extracted from benchmark_plotter.py as part of WRK-592 God Object split.
 
 No imports from other benchmark_* modules — this is the leaf dependency.
+REFUSAL_QUALITIES is imported from multi_solver_comparator (not a benchmark_*
+module, and it does not import this one) rather than copied, because a second
+copy of that set is how a refusal quality silently stops reading as one.
 """
 from __future__ import annotations
 
 import html
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Mapping, Optional, Tuple
 
+from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import (
+    REFUSAL_QUALITIES,
+)
 from digitalmodel.hydrodynamics.diffraction.output_schemas import DOF
 
 DOF_ORDER = [DOF.SURGE, DOF.SWAY, DOF.HEAVE, DOF.ROLL, DOF.PITCH, DOF.YAW]
@@ -27,16 +33,123 @@ def optional_round(value: Optional[float], digits: int) -> Optional[float]:
     return None if value is None else round(float(value), digits)
 
 
+# Two different facts wear the same word "unavailable" in a report:
+#   - nothing was there to compare (a symmetric body has no off-diagonal
+#     coupling, a response is below the null floor), and
+#   - something was there and the comparison could not be made.
+# Only the second is a refusal. Rendering them identically is what let 168 of
+# 216 uncompared coefficient cells pass for ordinary blanks (#1633).
+_ABSENCE_STRUCTURAL = (
+    "absence-structural",
+    "color:#7f8c8d;font-style:italic;",
+    "Nothing to compare",
+    "Not compared",
+)
+_ABSENCE_REFUSAL = (
+    "absence-refusal",
+    "color:#c0392b;font-weight:600;",
+    "Comparison refused",
+    "Unavailable",
+)
+
+
+def is_refusal_quality(quality: Optional[str]) -> bool:
+    """Return True when an absent value means "could not compare".
+
+    An unknown quality is treated as a refusal: an absence with no recorded
+    provenance has not been shown to be benign.
+    """
+    return quality is None or quality in REFUSAL_QUALITIES
+
+
+def format_absence(detail: Optional[str], refused: bool) -> str:
+    """Render a missing value, distinguishing absence from refusal."""
+    css_class, style, title, lead = (
+        _ABSENCE_REFUSAL if refused else _ABSENCE_STRUCTURAL
+    )
+    suffix = f" ({detail})" if detail else ""
+    return (
+        f'<span class="{css_class}" style="{style}" title="{title}">'
+        f"{lead}{suffix}</span>"
+    )
+
+
+def format_quality_distribution(counts: Mapping[str, int]) -> str:
+    """Render a per-cell quality distribution for a group of cells.
+
+    The group reads as a refusal when any single quality in it is one, so a
+    handful of refused cells is never hidden behind a majority of structurally
+    absent ones.
+    """
+    refused = any(is_refusal_quality(quality) for quality in counts)
+    detail = ", ".join(
+        f"{quality}: {count}" for quality, count in sorted(counts.items())
+    )
+    return format_absence(detail or None, refused)
+
+
 def format_optional_correlation(
     value: Optional[float],
     quality: Optional[str] = None,
     digits: int = 4,
 ) -> str:
-    """Format correlation or display explicit refusal provenance."""
+    """Format a correlation, or render the provenance of its absence.
+
+    Present values render as a bare number. Absent values render as HTML
+    markup that separates a structural absence from a refusal; every caller
+    of this function builds HTML.
+    """
     if value is not None:
         return f"{value:.{digits}f}"
-    suffix = f" ({quality})" if quality else ""
-    return f"Unavailable{suffix}"
+    return format_absence(quality, is_refusal_quality(quality))
+
+
+def coefficient_coverage(
+    qualities: Mapping[Tuple[int, int], str],
+    correlations: Mapping[Tuple[int, int], Optional[float]],
+) -> Dict[str, Any]:
+    """Report how much of a coefficient matrix carries a real comparison.
+
+    A cell counts as compared when it produced a correlation. That is the
+    ground truth of "did this cell yield evidence", read off the data rather
+    than declared by a list of qualities that would then have to be kept in
+    step with the taxonomy: IDENTICAL cells were compared and found bit-equal,
+    while NOT_APPLICABLE, ABSENT_DIAGONAL and the refusals yielded nothing.
+
+    Deliberately threshold-free. Whether a given coverage is acceptable is a
+    human call; the failure case of an entirely zeroed matrix is already
+    caught by the ABSENT_DIAGONAL refusal (#1633).
+    """
+    counts: Dict[str, int] = {}
+    uncompared: Dict[str, int] = {}
+    compared_cells = 0
+    for cell, quality in qualities.items():
+        counts[quality] = counts.get(quality, 0) + 1
+        if correlations.get(cell) is None:
+            uncompared[quality] = uncompared.get(quality, 0) + 1
+        else:
+            compared_cells += 1
+    return {
+        "compared_cells": compared_cells,
+        "total_cells": len(qualities),
+        "quality_counts": dict(sorted(counts.items())),
+        "uncompared_quality_counts": dict(sorted(uncompared.items())),
+    }
+
+
+def format_coverage_summary(coverage: Mapping[str, Any]) -> str:
+    """Render a coverage record as one plain-text sentence fragment."""
+    compared = coverage["compared_cells"]
+    total = coverage["total_cells"]
+    remainder = coverage["uncompared_quality_counts"]
+    summary = f"{compared} of {total} cells compared"
+    if remainder:
+        detail = ", ".join(
+            f"{quality}: {count}"
+            for quality, count in sorted(remainder.items())
+        )
+        summary += f" ({detail})"
+    return summary
 
 _AMPLITUDE_UNITS: Dict[DOF, str] = {
     DOF.SURGE: "m/m",

@@ -22,7 +22,10 @@ from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
     DOF_ORDER,
     _AMPLITUDE_UNITS,
     _is_phase_at_negligible_amplitude,
+    coefficient_coverage,
+    format_coverage_summary,
     generate_dof_observations,
+    is_refusal_quality,
 )
 from digitalmodel.hydrodynamics.diffraction.benchmark_rao_plots import (
     add_solver_traces,
@@ -114,8 +117,17 @@ def plot_pairwise_correlation_heatmap(
 def render_6x6_matrix(
     corr_dict: dict,
     labels: List[str],
+    quality_dict: Optional[dict] = None,
 ) -> str:
-    """Render a 6x6 correlation matrix as an HTML table."""
+    """Render a 6x6 correlation matrix as an HTML table.
+
+    When ``quality_dict`` is supplied, a cell with no correlation is labelled
+    with why: a structurally absent coupling reads differently from a
+    comparison that was refused. Both used to render as a bare dash, which is
+    how 168 of 216 uncompared cells passed for ordinary blanks (#1633).
+    Callers with no quality information (coupling heatmaps) keep the dash.
+    """
+    quality_dict = quality_dict or {}
     rows: List[str] = ['<table class="solver-table" '
                        'style="width:auto;max-width:600px;">']
     rows.append("<tr><th></th>")
@@ -129,7 +141,23 @@ def render_6x6_matrix(
         for j in range(1, 7):
             val = corr_dict.get((i, j), corr_dict.get(f"{i},{j}", None))
             if val is None:
-                rows.append("<td>-</td>")
+                quality = quality_dict.get(
+                    (i, j), quality_dict.get(f"{i},{j}", None),
+                )
+                if quality is None:
+                    rows.append("<td>-</td>")
+                elif is_refusal_quality(quality):
+                    rows.append(
+                        f'<td class="cell-refused" style="background:#fdebd0;'
+                        f'color:#c0392b;font-weight:600;text-align:center;" '
+                        f'title="{html_mod.escape(quality)}">refused</td>'
+                    )
+                else:
+                    rows.append(
+                        f'<td class="cell-absent" style="color:#95a5a6;'
+                        f'font-style:italic;text-align:center;" '
+                        f'title="{html_mod.escape(quality)}">n/a</td>'
+                    )
                 continue
             if val >= 0.999:
                 bg = "#d5f5e3"
@@ -158,7 +186,9 @@ def build_hydro_coefficients_html(
         "<h2>Hydrodynamic Coefficients</h2>"
         "<p>Pairwise correlation of frequency-dependent added-mass "
         "and radiation-damping matrices (6&times;6 DOF). Values "
-        "near 1.000 indicate identical coefficients.</p>",
+        "near 1.000 indicate identical coefficients. Cells marked "
+        "<em>n/a</em> had nothing to compare; cells marked "
+        "<em>refused</em> had something and could not be compared.</p>",
     ]
 
     for pair_key, pair_result in report.pairwise_results.items():
@@ -166,15 +196,34 @@ def build_hydro_coefficients_html(
             f'<h3 style="font-size:0.95em;color:#555;">'
             f"{html_mod.escape(pair_key)}</h3>"
         )
-        for matrix_name, corr_dict in [
-            ("Added Mass", pair_result.added_mass_correlations),
-            ("Radiation Damping", pair_result.damping_correlations),
+        for matrix_name, corr_dict, quality_dict in [
+            (
+                "Added Mass",
+                pair_result.added_mass_correlations,
+                pair_result.added_mass_quality,
+            ),
+            (
+                "Radiation Damping",
+                pair_result.damping_correlations,
+                pair_result.damping_quality,
+            ),
         ]:
             parts.append(
                 f'<h4 style="margin:0.8em 0 0.3em;">{matrix_name} '
                 f"Correlation</h4>"
             )
-            parts.append(render_6x6_matrix(corr_dict, dof_labels))
+            if quality_dict:
+                coverage = format_coverage_summary(
+                    coefficient_coverage(quality_dict, corr_dict),
+                )
+                parts.append(
+                    f'<p class="matrix-coverage" '
+                    f'style="font-size:0.85em;color:#555;margin:0 0 0.4em;">'
+                    f"Coverage: {html_mod.escape(coverage)}</p>"
+                )
+            parts.append(
+                render_6x6_matrix(corr_dict, dof_labels, quality_dict)
+            )
 
     return "\n".join(parts)
 

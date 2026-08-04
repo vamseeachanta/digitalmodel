@@ -35,7 +35,10 @@ from digitalmodel.hydrodynamics.diffraction.benchmark_plotter import (
     BenchmarkPlotter,
 )
 from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+    coefficient_coverage,
+    format_coverage_summary,
     format_optional_correlation,
+    format_quality_distribution,
     optional_float,
     optional_round,
 )
@@ -523,11 +526,21 @@ class BenchmarkRunner:
                     f"{k[0]},{k[1]}": v
                     for k, v in pr.added_mass_quality.items()
                 },
+                # How much of each matrix carried a real comparison. Without
+                # this, a matrix that is 78% uncompared is indistinguishable
+                # from a fully compared one in the machine-readable record
+                # (#1633).
+                "added_mass_coverage": coefficient_coverage(
+                    pr.added_mass_quality, pr.added_mass_correlations,
+                ),
                 "damping_correlations": damp_corrs,
                 "damping_quality": {
                     f"{k[0]},{k[1]}": v
                     for k, v in pr.damping_quality.items()
                 },
+                "damping_coverage": coefficient_coverage(
+                    pr.damping_quality, pr.damping_correlations,
+                ),
                 "hydrostatic_comparison": hc_dict,
             }
 
@@ -846,24 +859,30 @@ class BenchmarkRunner:
         )
 
         # --- 3. Hydrodynamic coefficient summary -------------------------
-        def _matrix_summary(
-            corrs: Dict,
-        ) -> tuple:
-            """Return (min_diag, min_offdiag, min_overall) from 6x6 corrs."""
-            diag_vals = []
-            offdiag_vals = []
-            for (i, j), v in corrs.items():
-                if v is None or not np.isfinite(v):
-                    continue
-                if i == j:
-                    diag_vals.append(v)
-                else:
-                    offdiag_vals.append(v)
-            min_diag = min(diag_vals) if diag_vals else None
-            min_offdiag = min(offdiag_vals) if offdiag_vals else None
-            all_vals = diag_vals + offdiag_vals
-            min_all = min(all_vals) if all_vals else None
-            return min_diag, min_offdiag, min_all
+        def _partition_cells(corrs: Dict) -> Dict[str, list]:
+            """Split 6x6 cell keys into the three summary columns.
+
+            Each column must be summarised over its own cells only. Before
+            #1633 the minima were partitioned here but the quality
+            distribution was not, so the Min Diagonal column printed counts
+            spanning all 36 cells rather than its own 6.
+            """
+            diagonal = [key for key in corrs if key[0] == key[1]]
+            off_diagonal = [key for key in corrs if key[0] != key[1]]
+            return {
+                "diagonal": diagonal,
+                "off_diagonal": off_diagonal,
+                "all": diagonal + off_diagonal,
+            }
+
+        def _min_over(corrs: Dict, keys: list) -> Optional[float]:
+            """Minimum correlation over the given cells, or None if none."""
+            values = [
+                corrs[key]
+                for key in keys
+                if corrs[key] is not None and np.isfinite(corrs[key])
+            ]
+            return min(values) if values else None
 
         hydro_rows = []
         for label, corrs in [
@@ -872,40 +891,44 @@ class BenchmarkRunner:
         ]:
             if not corrs:
                 continue
-            min_d, min_od, min_a = _matrix_summary(corrs)
 
             qualities = (
                 pw.added_mass_quality
                 if label == "Added Mass"
                 else pw.damping_quality
             )
+            partitions = _partition_cells(corrs)
 
-            def _fmt(v: Optional[float]) -> str:
-                if v is None:
-                    counts = {
-                        quality: list(qualities.values()).count(quality)
-                        for quality in sorted(set(qualities.values()))
-                    }
+            def _fmt(keys: list) -> str:
+                value = _min_over(corrs, keys)
+                if value is None:
+                    counts: Dict[str, int] = {}
+                    for key in keys:
+                        quality = qualities.get(key)
+                        if quality is None:
+                            continue
+                        counts[quality] = counts.get(quality, 0) + 1
                     if len(counts) == 1:
                         return format_optional_correlation(
                             None, next(iter(counts)),
                         )
-                    distribution = ", ".join(
-                        f"{quality}: {count}"
-                        for quality, count in counts.items()
-                    )
-                    return f"Unavailable ({distribution})"
-                c = _color(v)
+                    return format_quality_distribution(counts)
+                c = _color(value)
                 return (
                     f"<span style='color:{c};font-weight:600;'>"
-                    f"{v:.4f}</span>"
+                    f"{value:.4f}</span>"
                 )
 
+            coverage_text = format_coverage_summary(
+                coefficient_coverage(qualities, corrs),
+            )
             hydro_rows.append(
                 f"<tr><td>{label}</td>"
-                f"<td>{_fmt(min_d)}</td>"
-                f"<td>{_fmt(min_od)}</td>"
-                f"<td>{_fmt(min_a)}</td></tr>"
+                f"<td>{_fmt(partitions['diagonal'])}</td>"
+                f"<td>{_fmt(partitions['off_diagonal'])}</td>"
+                f"<td>{_fmt(partitions['all'])}</td>"
+                f'<td class="matrix-coverage" style="color:#555;">'
+                f"{coverage_text}</td></tr>"
             )
 
         hydro_html = ""
@@ -913,13 +936,18 @@ class BenchmarkRunner:
             hydro_html = (
                 '<h3 style="margin-top:1em;">'
                 "Hydrodynamic Coefficients</h3>"
-                '<table style="width:100%;max-width:700px;">'
+                '<table style="width:100%;max-width:900px;">'
                 "<thead><tr>"
                 "<th>Matrix</th><th>Min Diagonal r</th>"
                 "<th>Min Off-Diag r</th><th>Min Overall r</th>"
+                "<th>Coverage</th>"
                 "</tr></thead>"
                 f"<tbody>{''.join(hydro_rows)}</tbody></table>"
                 '<p style="font-size:0.85em;color:#777;">'
+                "Each r column is summarised over its own cells only. "
+                "Coverage counts the cells that carried a real comparison; "
+                "the rest are named so an uncompared matrix cannot pass for "
+                "a compared one. "
                 'See <a href="#hydro-coefficients">'
                 "full 6&times;6 heatmaps</a> below.</p>"
             )

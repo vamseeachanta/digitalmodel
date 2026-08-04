@@ -485,11 +485,19 @@ class TestCoefficientVisibility:
                     "INSUFFICIENT_DATA": 6,
                     "NOT_APPLICABLE": 30,
                 },
+                "uncompared_quality_counts": {
+                    "INSUFFICIENT_DATA": 6,
+                    "NOT_APPLICABLE": 30,
+                },
             },
             "damping_coverage": {
                 "compared_cells": 0,
                 "total_cells": 36,
                 "quality_counts": {
+                    "INSUFFICIENT_DATA": 6,
+                    "NOT_APPLICABLE": 30,
+                },
+                "uncompared_quality_counts": {
                     "INSUFFICIENT_DATA": 6,
                     "NOT_APPLICABLE": 30,
                 },
