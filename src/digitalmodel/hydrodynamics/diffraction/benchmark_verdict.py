@@ -7,6 +7,8 @@ import math
 from numbers import Real
 from typing import Iterable, Literal, Optional
 
+import numpy as np
+
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     HydrodynamicMatrix,
 )
@@ -73,7 +75,7 @@ def derive_status(
 def _as_correlations(
     value: Optional[float] | Iterable[Optional[float]],
 ) -> tuple[Optional[float], ...]:
-    if value is None or isinstance(value, Real):
+    if value is None or np.isscalar(value):
         return (value,)
     return tuple(value)
 
@@ -110,7 +112,10 @@ def _invalid_correlation_reason(
     correlations: tuple[Optional[float], ...],
 ) -> Optional[str]:
     numeric = [item for item in correlations if item is not None]
-    if any(not isinstance(item, Real) for item in numeric):
+    if any(
+        isinstance(item, (bool, np.bool_)) or not isinstance(item, Real)
+        for item in numeric
+    ):
         return "correlation must be numeric"
     if any(not math.isfinite(float(item)) for item in numeric):
         return "correlation must be finite"
