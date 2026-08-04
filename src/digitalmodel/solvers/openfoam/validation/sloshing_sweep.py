@@ -348,3 +348,11 @@ def _write_manifest(
     for row in rows:
         lines.append(",".join(f"{row[k]:.10g}" for k in CONTRACT_FIELDS))
     (parent / "sweep_manifest.csv").write_text("\n".join(lines) + "\n")
+
+
+if __name__ == "__main__":  # pragma: no cover - CLI dispatch
+    # The command-line surface moved to sloshing_sweep_cli, but this module
+    # remains the documented entry point, so running it keeps working.
+    from .sloshing_sweep_cli import main
+
+    raise SystemExit(main())
