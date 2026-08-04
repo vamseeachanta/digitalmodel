@@ -229,5 +229,3 @@ class SloshingForcedRollConfig:
             MotionType.SURGE, amplitude=self.sway_amplitude_m,
             period=self.drive_period, phase_shift_s=self.sway_phase_shift_s)
         return [("roll", roll), ("sway", sway)]
-
-

@@ -337,5 +337,3 @@ def cosine_mode_setfields_body(config: SloshingFreeDecayConfig) -> str:
         lines.append("    }")
     lines.append(");")
     return "\n".join(lines) + "\n"
-
-

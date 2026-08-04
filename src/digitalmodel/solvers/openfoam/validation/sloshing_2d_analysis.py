@@ -209,5 +209,3 @@ def analyze_free_decay(
         "fill_depth": config.fill_depth,
         "breadth": config.breadth,
     }
-
-
