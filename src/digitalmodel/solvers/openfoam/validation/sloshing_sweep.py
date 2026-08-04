@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-ABOUTME: Fill / drive-frequency sweep harness (#641) for the ACMA B1546
-ballast-tank sloshing study. Runs the matrix {fill x drive frequency} of 2D
+ABOUTME: Fill / drive-frequency sweep harness (#641) for ballast-tank
+sloshing studies. Runs the matrix {fill x drive frequency} of 2D
 forced-roll interFoam cases (built on the #658 motion engine + #659 partial
 fill + the #639 validated 2D case) and, per case, extracts the tank
 roll-reaction moment and reduces it to a first-harmonic amplitude/phase and an
@@ -174,7 +174,7 @@ class SloshingSweepConfig:
     plus **two target periods**. The defaults here are PLACEHOLDERS derived from
     the tank first-mode period so the harness is runnable end-to-end now; the
     orchestrator overrides ``drive_periods`` with the finalised vessel roll
-    natural period + two excitation targets once the B1546 geometry lands. The
+    natural period + two excitation targets once the tank geometry lands. The
     contract field names are what dm#643 depends on — not these placeholder
     numbers.
 
@@ -200,7 +200,7 @@ class SloshingSweepConfig:
     cells_per_breadth: int = 90
     n_cycles: float = 6.0
     moment_write_interval: int = 1
-    study_name: str = "b1546_sloshing_sweep"
+    study_name: str = "ballast_tank_sloshing_sweep"
 
     def default_drive_periods(self) -> Tuple[float, float, float]:
         """Placeholder drive periods = [T1, 0.85*T1, 1.15*T1] for the mid fill.
@@ -445,7 +445,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     parser = argparse.ArgumentParser(
         prog="sloshing_sweep",
-        description="ACMA B1546 fill / frequency sloshing sweep (#641).",
+        description="Ballast-tank fill / frequency sloshing sweep (#641).",
     )
     parser.add_argument(
         "command", choices=("generate", "run", "collect"),

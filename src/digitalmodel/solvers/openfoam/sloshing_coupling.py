@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-ABOUTME: Reduced-order sloshing -> vessel-roll coupling model for B1546. Ingests
+ABOUTME: Reduced-order sloshing -> vessel-roll coupling model for ballast-tank
+studies. Ingests
 the dm#641 forced-roll CFD sweep (per {fill x drive frequency} first-harmonic
 moment coefficients) and returns the ballast-tank sloshing roll-moment as
 frequency-dependent added roll inertia + added roll damping, plus a time-domain
@@ -38,7 +39,7 @@ roll amplitude; they are interpolated in ``omega`` (linear, per fill) and across
 fill level (linear). Out-of-range ``omega`` is clamped to the swept band with a
 warning.
 
-Reference: digitalmodel #643 (reduced-order sloshing->roll coupling, ACMA B1546).
+Reference: digitalmodel #643 (reduced-order sloshing->roll coupling).
 """
 
 from __future__ import annotations

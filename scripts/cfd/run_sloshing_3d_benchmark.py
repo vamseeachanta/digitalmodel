@@ -41,7 +41,7 @@ _REPO = Path(__file__).resolve().parents[2]
 _MANIFEST = _REPO / "docs" / "api" / "cfd" / "sloshing-3d-benchmark.json"
 
 # Near-square plan-form (breadth x length) so the planar mode can go 3D (swirl);
-# height gives freeboard. Methodology geometry — NOT the real B1546 tank.
+# height gives freeboard. Methodology geometry — NOT a real ballast tank.
 BREADTH = 0.9          # x
 HEIGHT = 0.9           # y
 LENGTH = 0.9           # z (span / longitudinal)
@@ -142,7 +142,7 @@ def collect(cpb: int, end_time: float, rows: List[Dict[str, Any]],
                  "hostname": host, "cores": os.cpu_count(),
                  "epic": "#1429", "issue": "#1433",
                  "purpose": "MPI strong-scaling of a representative 3D forced-roll sloshing case to size the 3D L-tank run (this box vs a heavier node)",
-                 "geometry": "methodology near-square plan-form (NOT the real B1546 tank; real B_db/D_db from #640)",
+                 "geometry": "methodology near-square plan-form (NOT a real ballast tank; real breadth/depth from #640)",
                  "note": "Timed stage = solver only (blockMesh/setFields/decomposePar are untimed setup). s_per_step normalises out any adaptive-dt step-count drift across ranks.",
                  "decomposition": "scotch", "timing": "solver wall-clock / timesteps"},
         "case": {"breadth_m": BREADTH, "height_m": HEIGHT, "length_m": LENGTH,

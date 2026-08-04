@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-ABOUTME: Tests for the reduced-order sloshing->roll coupling model (#643, ACMA
-B1546). Covers the dm#641 manifest loader (JSON/CSV/dict), omega+fill
+ABOUTME: Tests for the reduced-order sloshing->roll coupling model (#643).
+Covers the dm#641 manifest loader (JSON/CSV/dict), omega+fill
 interpolation (exact at swept points, bounded between), added-inertia/damping
 extraction from in_phase/quad coeffs, the time-domain moment feed
 (amplitude/phase for a synthetic single-frequency roll), the anti-roll

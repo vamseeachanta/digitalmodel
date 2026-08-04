@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-ABOUTME: First validated 2D rectangular-tank sloshing case (#639) for the ACMA
-B1546 ballast-tank tuned-liquid-damper study. Assembles a 2D interFoam VOF tank
+ABOUTME: First validated 2D rectangular-tank sloshing case (#639) for
+ballast-tank tuned-liquid-damper studies. Assembles a 2D interFoam VOF tank
 from the existing case stack (blockMesh + setFields partial fill (#659) +
 optional prescribed forced roll from the motion engine (#658)) and validates the
 measured first-mode sloshing frequency against the analytical prismatic-tank
