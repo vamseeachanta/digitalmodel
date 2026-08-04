@@ -11,10 +11,85 @@ from .models import (
     PumpProperties,
     SurfaceUnit,
     MotorProperties,
+    SurveyData,
     WellTestData,
     InputParameters,
     CalculationParameters,
 )
+
+
+def _finite(value: Any) -> Optional[float]:
+    """Return ``value`` as a finite float, or None if it is unusable."""
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    if number != number or number in (float("inf"), float("-inf")):
+        return None
+    return number
+
+
+def parse_survey(survey_raw: Any) -> Optional[SurveyData]:
+    """Build the wellbore trajectory from legacy ``surveyData`` stations.
+
+    Measured depth and inclination place a station on the rod string; a
+    station missing either cannot be used and is dropped rather than guessed
+    at. Azimuth only enters the solver through its gradient, so an unknown
+    azimuth holds the last known value: that contributes no turn instead of
+    inventing one.
+
+    Returns None -- leaving the caller on its documented vertical fallback --
+    when the record carries no survey, when fewer than two stations survive,
+    or when measured depth does not strictly increase. A repeated depth makes
+    the inclination gradient divide by zero, so a non-monotonic record is not
+    trustworthy enough to partially salvage.
+
+    Args:
+        survey_raw: The raw ``surveyData`` value, normally a list of station
+            dictionaries. None, a non-list, or an empty list all abstain.
+
+    Returns:
+        A :class:`SurveyData`, or None when no usable trajectory exists.
+    """
+    if not isinstance(survey_raw, list) or not survey_raw:
+        return None
+
+    measured_depth = []
+    inclination = []
+    azimuth = []
+    last_azimuth = 0.0
+
+    for station in survey_raw:
+        if not isinstance(station, dict):
+            continue
+        depth = _finite(station.get('MD'))
+        angle = _finite(station.get('Inclination'))
+        if depth is None or angle is None:
+            continue
+        heading = _finite(station.get('Azimuth'))
+        if heading is None:
+            heading = last_azimuth
+        last_azimuth = heading
+
+        measured_depth.append(depth)
+        inclination.append(angle)
+        azimuth.append(heading)
+
+    if len(measured_depth) < 2:
+        return None
+    if any(
+        measured_depth[i] >= measured_depth[i + 1]
+        for i in range(len(measured_depth) - 1)
+    ):
+        return None
+
+    return SurveyData(
+        measured_depth=measured_depth,
+        inclination=inclination,
+        azimuth=azimuth,
+    )
 
 
 def load_from_json_file(filepath: Union[str, Path]) -> DynacardAnalysisContext:
@@ -155,6 +230,10 @@ def parse_legacy_json(data: Dict[str, Any]) -> DynacardAnalysisContext:
         mixed_sg = water_sg * water_cut + oil_sg * (1.0 - water_cut)
         fluid_density = mixed_sg * 62.4
 
+    # Wellbore trajectory. Absent in many records, in which case the solver
+    # keeps its documented vertical fallback.
+    survey = parse_survey(data.get('surveyData'))
+
     # Create context
     context = DynacardAnalysisContext(
         api14=api14,
@@ -167,6 +246,7 @@ def parse_legacy_json(data: Dict[str, Any]) -> DynacardAnalysisContext:
         fluid_density=fluid_density,
         runtime=runtime,
         well_test=well_test,
+        survey=survey,
         input_params=input_params,
     )
 
