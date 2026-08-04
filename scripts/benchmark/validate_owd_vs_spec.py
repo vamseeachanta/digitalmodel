@@ -17,7 +17,6 @@ Usage:
 from __future__ import annotations
 
 import argparse
-import io
 import math
 import sys
 import time
@@ -34,10 +33,29 @@ from digitalmodel.hydrodynamics.diffraction.diffraction_units import (
     radians_to_degrees,
 )
 
-# Fix Windows console encoding
-if sys.platform == "win32":
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
+def _configure_windows_console_encoding() -> None:
+    """Force UTF-8 on the Windows console, in place.
+
+    Deliberately NOT executed at import time, and deliberately not a rebinding.
+
+    The previous form assigned a fresh ``io.TextIOWrapper`` over
+    ``sys.stdout.buffer`` at module scope. That wrapper closes the underlying
+    buffer when it is garbage-collected, which destroys the real stream for the
+    remainder of the process. Under pytest the whole session then dies in
+    capture teardown with ``ValueError: I/O operation on closed file`` /
+    ``lost sys.stderr`` -- and because the diffraction tests load this module in
+    every test case, the damage compounded (digitalmodel#1633).
+
+    ``reconfigure`` mutates the existing stream object and closes nothing. The
+    ``getattr`` guard keeps this safe when stdout has been replaced by something
+    without the method, such as a pytest capture object.
+    """
+    if sys.platform != "win32":
+        return
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(encoding="utf-8")
 
 
 REPO_ROOT = Path(__file__).parent.parent.parent
@@ -2587,4 +2605,5 @@ def main():
 
 
 if __name__ == "__main__":
+    _configure_windows_console_encoding()
     main()
