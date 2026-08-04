@@ -57,6 +57,11 @@ class DeviationStatistics:
         # refuse the report, because a symmetric body has genuinely zero
         # off-diagonal couplings (#1633).
         "NOT_APPLICABLE",
+        # A diagonal term that is zero on both legs. Distinct from
+        # NOT_APPLICABLE: a symmetric body lacks off-diagonal couplings, but
+        # every body has added mass and damping in every DOF, so a zero
+        # diagonal is missing data and REFUSES (#1633).
+        "ABSENT_DIAGONAL",
         "INSUFFICIENT_DATA",
         "INSUFFICIENT_SAMPLING",
         "UNTRUSTED_SOURCE",

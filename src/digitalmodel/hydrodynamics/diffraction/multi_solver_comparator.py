@@ -43,6 +43,11 @@ REFUSAL_QUALITIES = {
     "INSUFFICIENT_SAMPLING",
     "UNTRUSTED_SOURCE",
     "INVALID_ABSCISSA",
+    # A zero DIAGONAL term is missing data, not physics: every real body has
+    # non-zero added mass and damping in all six DOFs. NOT_APPLICABLE stays out
+    # of this set because a symmetric body genuinely lacks off-diagonal
+    # couplings; a zero diagonal has no such reading (#1633).
+    "ABSENT_DIAGONAL",
 }
 
 
@@ -761,6 +766,12 @@ class MultiSolverComparator:
                         if trusted_sources
                         else self._untrusted_source_stats(vals_a.shape)
                     )
+                    if i == j and stats.quality == "NOT_APPLICABLE":
+                        # Off-diagonal absence is symmetry; diagonal absence is
+                        # missing data. Every DOF resists acceleration, so a
+                        # zero diagonal means the extraction failed and the
+                        # comparison must refuse rather than read as agreement.
+                        stats = replace(stats, quality="ABSENT_DIAGONAL")
                     # 1-based indexing
                     pair_stats[(i + 1, j + 1)] = stats
 

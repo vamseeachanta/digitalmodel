@@ -132,6 +132,71 @@ class TestStructurallyAbsentCouplings:
         assert stats.quality == "INSUFFICIENT_DATA"
 
 
+class TestAbsentDiagonalRefuses:
+    """A zero diagonal is missing data, not physics.
+
+    NOT_APPLICABLE is correct for an off-diagonal coupling that a symmetric
+    body genuinely lacks. It is NOT correct for a diagonal term: every real
+    body has non-zero added mass and damping in all six DOFs, because every
+    DOF resists acceleration. So a zero diagonal means the extraction failed.
+
+    Without this rule an extraction returning np.zeros((6,6)) for every
+    frequency on BOTH solvers reported overall_consensus FULL,
+    comparison_status DECIDED, refusal_reasons [], and EXCELLENT on all three
+    pairs — with all 216 cells silently NOT_APPLICABLE. Measured, not
+    hypothesised (#1633).
+    """
+
+    @staticmethod
+    def _zeroed_unit_box():
+        script = pytest.importorskip(
+            "tests.hydrodynamics.diffraction.test_unit_box_benchmark",
+        )
+        solvers = script._build_unit_box_solver_set()
+        for res in solvers.values():
+            for cset in (res.added_mass, res.damping):
+                for m in cset.matrices:
+                    m.matrix = np.zeros((6, 6))
+        return script, solvers
+
+    def test_all_zero_matrices_refuse(self) -> None:
+        _script, solvers = self._zeroed_unit_box()
+
+        comparator = MultiSolverComparator(solvers)
+        am = comparator.compare_added_mass()
+
+        diagonal_qualities = {
+            stats.quality
+            for pair in am.values()
+            for (i, j), stats in pair.items()
+            if i == j
+        }
+
+        assert diagonal_qualities == {"ABSENT_DIAGONAL"}
+
+    def test_absent_diagonal_is_a_refusal_quality(self) -> None:
+        from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import (
+            REFUSAL_QUALITIES,
+        )
+
+        assert "ABSENT_DIAGONAL" in REFUSAL_QUALITIES
+
+    def test_healthy_unit_box_has_no_absent_diagonal(self) -> None:
+        """The real fixture must NOT trip the rule — its diagonals are real."""
+        script = pytest.importorskip(
+            "tests.hydrodynamics.diffraction.test_unit_box_benchmark",
+        )
+        comparator = MultiSolverComparator(script._build_unit_box_solver_set())
+
+        qualities = {
+            stats.quality
+            for pair in comparator.compare_added_mass().values()
+            for stats in pair.values()
+        }
+
+        assert "ABSENT_DIAGONAL" not in qualities
+
+
 class TestHydrostaticConstantStiffness:
     """compare_hydrostatics carries the same short-circuit ordering."""
 
