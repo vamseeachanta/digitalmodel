@@ -7,6 +7,7 @@
 > **Client:** N/A
 > **Lane:** lane:codex
 > **Review artifacts:** `docs/plans/evidence/2026-08-03-plan-1633-r1-claude.md` (MAJOR) · `...-r2-codex-{physics,testdesign,evidence}.md` (MAJOR ×3) · agy UNAVAILABLE both rounds (auth timeout); owner elected to proceed without a third provider
+> **Amended:** 2026-08-04 (owner) — **D11**, which splits overlap from sampling density and revises D2, one TDD row, and one acceptance criterion accordingly
 
 ---
 
@@ -125,9 +126,16 @@ All three r2 lenses flagged this. AQWA spans 0.285599–2.252038 rad/s; OrcaWave
 spans 0.285599–3.141593 rad/s; the AQWA interval is **wholly inside** OrcaWave's
 (100% of the smaller domain, 68.853% of the union). Three coincident knots is not
 three-point overlap — it is different sampling, which is exactly what
-interpolation is for. The contract accepts this case and interpolates. It rejects
-on: interval coverage below `MIN_COVERAGE`, fewer than `MIN_SAMPLES` source points
-inside the shared interval, or a source gap wider than `MAX_GAP`.
+interpolation is for. **On the overlap axis the contract accepts this case.** It
+rejects on that axis only when the shared interval is empty (disjoint) or when
+interval coverage falls below `MIN_COVERAGE`.
+
+Overlap is not the whole contract. Sampling *density* is a separate axis, judged
+independently (D5 for the point count, D11 for the gap bound), and a pair of
+grids that passes overlap may still be refused there. Interpolation follows only
+when **both** axes pass; the contract rejects on interval coverage below
+`MIN_COVERAGE`, fewer than `MIN_SAMPLES` source points inside the shared
+interval, or a source gap wider than `MAX_RELATIVE_GAP`.
 
 **D3 — Evaluation grid is declared, not a union.**
 r2-physics finding 3: a union grid weights the verdict toward the denser solver
@@ -181,6 +189,52 @@ already on the same 3-point grid — which satisfies an ordering-and-overlap che
 trivially. The gate only catches L01 if it fires on the arrays actually compared,
 whatever path produced them.
 
+**D11 — Overlap and density are separate axes; L01 passes the first and is
+refused on the second (owner, 2026-08-04).**
+An earlier draft of this plan asserted a single outcome for the real L01 grids —
+"accepted and interpolated" — and D2 above still needed reconciling with D5 and
+D7. The owner resolves it here: **the two axes are judged independently, and L01
+falls on opposite sides of them.**
+
+*Overlap — accepted.* AQWA's frequency range sits wholly inside OrcaWave's, so
+coverage of the narrower domain is 1.0, comfortably above `MIN_COVERAGE`. That
+axis raises nothing, and a test asserts it on its own
+(`test_l01_grids_have_adequate_interval_overlap`).
+
+*Density — refused.* The worst relative gap in the AQWA grid is 0.757, on the
+interval 0.407 → 0.715 rad/s — 15.4 s to 8.8 s in period, straight across a
+ship's heave/pitch resonance band. Eight of AQWA's nine intervals exceed the
+bound; eight of OrcaWave's nineteen do. The contract raises `AbscissaGapError`
+(`test_l01_grids_are_refused_for_inadequate_sampling`).
+
+*Why the bound stands.* `MAX_RELATIVE_GAP = 2 · DAMPING_RATIO /
+INTERVALS_ACROSS_HALF_POWER_BAND = 2 · 0.10 / 2 = 0.10` follows from resonance
+half-power bandwidth alone, with no benchmark observation as an input — exactly
+the derivation D7 and the Risks section require. L01 misses it by 7.5×.
+
+*Rejected alternative — relax the bound so L01 is admitted.* Withdrawn, and the
+reason is structural rather than a matter of taste: **any bound loose enough to
+admit L01 must be at least 0.757, and 0.757 *is* the L01 data.** Setting it there
+re-introduces precisely the circular calibration D7 forbids. This is not
+hypothetical — commit `f35a420d` retracted a first attempt that shipped
+`max_gap = 1.1 rad/s` under a justification quoting "ω_n = 11 rad/s", a 0.571 s
+natural period, which is not a vessel; 1.1 sat just above 1.0472, the largest gap
+in the L01 OrcaWave grid. That attempt passed all fifteen of its tests, RED
+preceded GREEN, and the regression diff was clean. **Every process signal read
+green because the test asserted the fitted constant.** A relaxed bound would
+reproduce that failure mode with better manners.
+
+*Why refusing is the right outcome.* The Deliverable of this plan is a comparison
+layer that refuses to produce a verdict when its inputs cannot support one. A
+band neither solver sampled cannot support one. Refusing L01 is that Deliverable
+operating as specified, not a regression against it.
+
+*Consequence for [#714](https://github.com/vamseeachanta/digitalmodel/issues/714).*
+The L01 re-run needs a frequency list chosen from the vessel's natural periods
+rather than inherited from the legacy model. That constraint belongs to #714,
+which owns the matched-model run; this plan neither sets nor relaxes a threshold
+to accommodate it.
+
 ---
 
 ## Pseudocode
@@ -202,7 +256,10 @@ function abscissa_contract(a, b, cfg):
     coverage = (hi - lo) / (min(a.span, b.span))
     if coverage < cfg.MIN_COVERAGE:                 raise AbscissaOverlapError(coverage)
     grid = coarser_of(a, b).freqs restricted to [lo, hi]      # D3
-    if max_gap(source_points_in(lo, hi)) > cfg.MAX_GAP: raise AbscissaGapError(...)
+    # D11: the gap bound is RELATIVE (d(w)/w), so one dimensionless threshold
+    # serves every frequency scale and cannot be fitted to one dataset.
+    if max_relative_gap(source_points_in(lo, hi)) > cfg.MAX_RELATIVE_GAP:
+        raise AbscissaGapError(...)   # separate axis from coverage above
     return grid
 
 # D10: sampling adequacy is checked on the arrays ACTUALLY COMPARED, on every
@@ -284,7 +341,8 @@ are removed or rewritten here.
 |---|---|---|---|
 | `test_descending_freqs_raise` | freqs `[3.14 … 0.29]` descending | raises `AbscissaOrderError` | no such check exists |
 | `test_loader_reorders_raos_with_freqs` | descending freqs + RAOs whose values encode their index | `raos[0]` corresponds to `min(freq)`; **value identity checked, not just sortedness** | loader does not exist; catches the permutation hole r2 flagged |
-| `test_l01_grids_are_accepted_not_rejected` | committed fixture (AQWA 10-pt, OrcaWave 20-pt) | returns a grid; does **not** raise | reverses r2's wrong rejection; no contract exists |
+| `test_l01_grids_have_adequate_interval_overlap` | committed fixture (AQWA 10-pt, OrcaWave 20-pt) | coverage of the narrower domain `== 1.0 ≥ MIN_COVERAGE`; the **overlap** axis does not raise | **(D11)** reverses r2's wrong rejection *on overlap*; no contract exists |
+| `test_l01_grids_are_refused_for_inadequate_sampling` | the same committed fixture | raises `AbscissaGapError`, message naming relative gap `0.7567` on `[0.407000, 0.715000] rad/s` | **(D11)** the **density** axis, judged separately; no gap bound exists today. These two rows replace the single `test_l01_grids_are_accepted_not_rejected` row, which asserted one outcome for two axes |
 | `test_disjoint_grids_raise` | `[0.1,0.2]` vs `[5.0,6.0]` | raises `AbscissaOverlapError("disjoint")` | no check |
 | `test_coverage_below_min_raises` | 20% interval coverage, `MIN_COVERAGE=0.5` | raises with the coverage value in the message | no check |
 | `test_three_samples_is_insufficient` | 3 points, `MIN_SAMPLES=5` | `INSUFFICIENT_SAMPLING`; correlation is `None` | **this is the L01 defect**; today it returns a correlation |
@@ -396,7 +454,7 @@ shared checkout, whose 7-commit lag would silently invalidate the comparison.
 - [ ] Full suite: `.venv/Scripts/python.exe -m pytest tests/ -q --no-header -p no:cacheprovider --capture=no` — compared against a **baseline captured in the same worktree, at the branch point**, node-ID by node-ID. No new failure node IDs. (r2-testdesign 8: raw counts are meaningless against 20,241 tests. `--capture=no` per the operational constraint above — without it the run dies in capture teardown and reads as a failure.)
 - [ ] A comparison over 3 sampling points returns `INSUFFICIENT_SAMPLING` and no correlation
 - [ ] Matrices with `source != "solver"` cannot produce `pass`
-- [ ] The real L01 grids are **accepted** and interpolated; disjoint and low-coverage grids raise
+- [ ] **(amended — D11, owner 2026-08-04)** The real L01 grids are **accepted on interval overlap** — coverage of the narrower domain is `1.0 ≥ MIN_COVERAGE` and that axis raises nothing — and **refused on sampling density**, raising `AbscissaGapError` for a worst relative gap of `0.757` on `[0.407, 0.715] rad/s` against `MAX_RELATIVE_GAP = 0.10`. The two axes are asserted by two separate tests and neither substitutes for the other. Disjoint and low-coverage grids raise. **No threshold is relaxed to admit L01** — any bound that would admit it is at or above 0.757, which is the L01 data itself (see D7)
 - [ ] Interpolation is complex-valued; the branch-cut test pins `180.0 ± 0.5`
 - [ ] `export_report_json` emits `null` for unavailable correlations
 - [ ] `run_proper_comparison.py:149` is fixed or the script is deleted
@@ -409,7 +467,7 @@ shared checkout, whose 7-commit lag would silently invalidate the comparison.
 
 ## Out of scope
 
-- **The ship verdict, the matched-model run, and the 180-case investigation** — [#714](https://github.com/vamseeachanta/digitalmodel/issues/714), updated 2026-08-03 with the model-mismatch finding. Needs the licensed seat; dispatch path verified working.
+- **The ship verdict, the matched-model run, and the 180-case investigation** — [#714](https://github.com/vamseeachanta/digitalmodel/issues/714), updated 2026-08-03 with the model-mismatch finding and 2026-08-04 with the sampling-density refusal (D11). The re-run's frequency list must be chosen from the vessel's natural periods rather than inherited from the legacy model. Needs the licensed seat; dispatch path verified working.
 - **#1631** — gates any licensed re-run; planned separately.
 - **`L00_validation_wamit/`** and #1633 item 2 — needs WAMIT reference data. Tree state: 11 `pass` + 1 `blocked` (case **2.4**), only 4 of 12 cases have a `reference_data.yaml`.
 - **L02 / L03 / L04** — the contract applies unchanged; each needs its own oracle.
@@ -458,7 +516,7 @@ these gates would have stopped the L01 artifact — was false.
 
 ## Risks and Open Questions
 
-- **RESOLVED (owner, 2026-08-03) — threshold justification.** `MIN_SAMPLES` is derived from the sampling needed to resolve a resonant peak: a hydrodynamic argument, independent of any L01 observation. The half-power (−3 dB) bandwidth of a lightly-damped response peak is `Δω ≈ 2ζω_n`; resolving that band requires a minimum number of points across it, from which `MAX_GAP ≤ ζω_n` follows for the lowest expected damping ratio, and `MIN_SAMPLES` follows from the band count across the analysis range. The chosen numbers and this derivation go in the config's `justification` field. **No threshold in this PR may be derived from L01 data** — that constraint stays in the acceptance criteria.
+- **RESOLVED (owner, 2026-08-03) — threshold justification.** `MIN_SAMPLES` is derived from the sampling needed to resolve a resonant peak: a hydrodynamic argument, independent of any L01 observation. The half-power (−3 dB) bandwidth of a lightly-damped response peak is `Δω ≈ 2ζω_n`; resolving that band requires a minimum number of points across it, from which `MAX_GAP ≤ ζω_n` follows for the lowest expected damping ratio, and `MIN_SAMPLES` follows from the band count across the analysis range. The chosen numbers and this derivation go in the config's `justification` field. **No threshold in this PR may be derived from L01 data** — that constraint stays in the acceptance criteria. (D11 restates this bound in its scale-free *relative* form, `MAX_RELATIVE_GAP = 2ζ/N`, so that one dimensionless number serves every frequency scale; the derivation is unchanged.)
 - **Risk — `test_complex_interp_across_branch_cut` encodes an assumption** that linear interpolation of the complex transfer function is the right physics near a response zero. It is standard practice and better than independent phase interpolation, but it is not exact. Recorded rather than hidden.
 - **Risk — `output_schemas.py` provenance is a schema change** that may ripple into the four producers touched by PR #1636. Blast radius must be enumerated before implementation.
 - **RESOLVED (owner, 2026-08-03):** `run_proper_comparison.py` is **fixed, not deleted**. It routes through the D1 loader and carries a regression test pinning the corrected orientation.
