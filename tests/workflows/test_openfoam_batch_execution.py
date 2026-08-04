@@ -64,3 +64,37 @@ def test_mpi_executes_verified_absolute_path(tmp_path: Path) -> None:
     execute_mpi_plan(item, tmp_path, [["blockMesh"]], "solver", capture, 10,
                      tool_bindings={"blockMesh": (tool, file_sha256(tool))})
     assert launched == [[str(tool)]]
+
+
+# --------------------------------------------------------------------------- #
+#  fatal-marker propagation (issue 1576)                                      #
+# --------------------------------------------------------------------------- #
+# OpenFOAM utilities can exit 0 and still have written a fatal error to their
+# log. The MPI path previously trusted the return code alone, so a solve that
+# died at start-up was recorded as completed.
+def _stage_row(tmp_path: Path, log_text: str) -> dict:
+    item = {"index": 0, "name": "case", "case": {}}
+
+    def runner(argv, cwd, log, timeout, expected_executable=None):
+        Path(log).write_text(log_text)
+        return 0
+
+    return execute_mpi_plan(item, tmp_path, [["blockMesh"]], "solver", runner, 10)
+
+
+def test_fatal_error_in_log_fails_the_stage_despite_zero_exit(tmp_path: Path) -> None:
+    result = _stage_row(tmp_path, "start\n--> FOAM FATAL ERROR\nend\n")
+
+    assert result["status"] == "failed"
+    assert "blockMesh" in result["error"]
+
+
+def test_fatal_io_error_in_log_fails_the_stage_despite_zero_exit(tmp_path: Path) -> None:
+    result = _stage_row(tmp_path, "start\n--> FOAM FATAL IO ERROR\nend\n")
+
+    assert result["status"] == "failed"
+    assert "blockMesh" in result["error"]
+
+
+def test_clean_log_with_zero_exit_completes(tmp_path: Path) -> None:
+    assert _stage_row(tmp_path, "End\nFinalising parallel run\n")["status"] == "completed"
