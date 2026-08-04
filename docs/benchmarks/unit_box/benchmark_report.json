@@ -5,7 +5,7 @@
     "BEMRosetta",
     "OrcaWave"
   ],
-  "comparison_date": "2026-08-04 05:45:57",
+  "comparison_date": "2026-08-04 06:25:38",
   "overall_consensus": "FULL",
   "comparison_status": "DECIDED",
   "refusal_reasons": [],
@@ -171,6 +171,17 @@
         "6,5": "NOT_APPLICABLE",
         "6,6": "COMPARED"
       },
+      "added_mass_coverage": {
+        "compared_cells": 10,
+        "total_cells": 36,
+        "quality_counts": {
+          "COMPARED": 10,
+          "NOT_APPLICABLE": 26
+        },
+        "uncompared_quality_counts": {
+          "NOT_APPLICABLE": 26
+        }
+      },
       "damping_correlations": {
         "1,1": 0.9999563157547339,
         "1,2": null,
@@ -246,6 +257,17 @@
         "6,4": "NOT_APPLICABLE",
         "6,5": "NOT_APPLICABLE",
         "6,6": "COMPARED"
+      },
+      "damping_coverage": {
+        "compared_cells": 6,
+        "total_cells": 36,
+        "quality_counts": {
+          "COMPARED": 6,
+          "NOT_APPLICABLE": 30
+        },
+        "uncompared_quality_counts": {
+          "NOT_APPLICABLE": 30
+        }
       },
       "hydrostatic_comparison": null
     },
@@ -393,6 +415,17 @@
         "6,5": "NOT_APPLICABLE",
         "6,6": "COMPARED"
       },
+      "added_mass_coverage": {
+        "compared_cells": 10,
+        "total_cells": 36,
+        "quality_counts": {
+          "COMPARED": 10,
+          "NOT_APPLICABLE": 26
+        },
+        "uncompared_quality_counts": {
+          "NOT_APPLICABLE": 26
+        }
+      },
       "damping_correlations": {
         "1,1": 0.999898491271693,
         "1,2": null,
@@ -468,6 +501,17 @@
         "6,4": "NOT_APPLICABLE",
         "6,5": "NOT_APPLICABLE",
         "6,6": "COMPARED"
+      },
+      "damping_coverage": {
+        "compared_cells": 6,
+        "total_cells": 36,
+        "quality_counts": {
+          "COMPARED": 6,
+          "NOT_APPLICABLE": 30
+        },
+        "uncompared_quality_counts": {
+          "NOT_APPLICABLE": 30
+        }
       },
       "hydrostatic_comparison": null
     },
@@ -615,6 +659,17 @@
         "6,5": "NOT_APPLICABLE",
         "6,6": "COMPARED"
       },
+      "added_mass_coverage": {
+        "compared_cells": 10,
+        "total_cells": 36,
+        "quality_counts": {
+          "COMPARED": 10,
+          "NOT_APPLICABLE": 26
+        },
+        "uncompared_quality_counts": {
+          "NOT_APPLICABLE": 26
+        }
+      },
       "damping_correlations": {
         "1,1": 0.999927328333723,
         "1,2": null,
@@ -690,6 +745,17 @@
         "6,4": "NOT_APPLICABLE",
         "6,5": "NOT_APPLICABLE",
         "6,6": "COMPARED"
+      },
+      "damping_coverage": {
+        "compared_cells": 6,
+        "total_cells": 36,
+        "quality_counts": {
+          "COMPARED": 6,
+          "NOT_APPLICABLE": 30
+        },
+        "uncompared_quality_counts": {
+          "NOT_APPLICABLE": 30
+        }
       },
       "hydrostatic_comparison": null
     }
