@@ -295,11 +295,24 @@ def test_sampling_gate_fires_on_identical_three_point_grids():
     assert result == api.InsufficientSampling(sample_count=3, correlation=None)
 
 
-def test_identical_sufficient_grid_is_not_resampled():
+def test_identical_adequate_grids_pass_values_through_unchanged():
+    """Identical grids must round-trip values exactly, wrapping included.
+
+    Phase 270 deg is chosen deliberately: a complex round-trip through
+    ``angle()`` returns it as -90 deg, which is the same direction but not the
+    same number. Asserting 270.0 therefore pins that an identical grid is
+    passed through rather than re-derived -- an earlier version of this test
+    asserted only ``phase[0] == 270.0`` on an all-270 array, which any
+    implementation satisfies, including one that resamples.
+
+    The grid is spaced to satisfy the relative-gap bound (0.05 <= 0.10); a
+    previous fixture of [1,2,3,4,5] had adequate COUNT but relative gaps to
+    1.0, so it was refused for spacing and never reached this assertion.
+    """
     api = _api()
-    frequencies = np.arange(1.0, 6.0)
-    magnitude = np.ones(5)
-    phase = np.full(5, 270.0)
+    frequencies = np.linspace(1.0, 1.3, 7)
+    magnitude = np.linspace(2.0, 3.5, 7)
+    phase = np.full(7, 270.0)
 
     result = api.align_responses(
         frequencies,
@@ -310,4 +323,6 @@ def test_identical_sufficient_grid_is_not_resampled():
         phase.copy(),
     )
 
-    assert result.first.phase_degrees[0] == 270.0
+    np.testing.assert_array_equal(result.frequencies, frequencies)
+    np.testing.assert_array_equal(result.first.magnitude, magnitude)
+    np.testing.assert_array_equal(result.first.phase_degrees, phase)
