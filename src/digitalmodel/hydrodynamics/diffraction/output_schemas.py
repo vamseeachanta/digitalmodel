@@ -9,7 +9,7 @@ Compatible with OrcaFlex import requirements.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Union
+from typing import Dict, List, Literal, Optional, Union
 import numpy as np
 from enum import Enum
 
@@ -226,7 +226,7 @@ class HydrodynamicMatrix:
     frequency: float                # Frequency at which computed (rad/s)
     matrix_type: str                # "added_mass" or "damping"
     units: Dict[str, str]           # Units for each coupling type
-    source: str = "unknown"        # "solver", "placeholder", or "unknown"
+    source: Literal["solver", "placeholder", "unknown"] = "unknown"
 
     def __post_init__(self):
         """Validate matrix dimensions"""

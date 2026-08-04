@@ -495,6 +495,7 @@ def _extract_from_owr(
                     frequency=float(freq),
                     matrix_type="added_mass",
                     units={"coupling": "kg"},
+                    source="solver",
                 )
             )
 
@@ -518,6 +519,7 @@ def _extract_from_owr(
                     frequency=float(freq),
                     matrix_type="damping",
                     units={"coupling": "N.s/m"},
+                    source="solver",
                 )
             )
 
@@ -688,6 +690,7 @@ def _extract_from_aqwa_lis(
                     frequency=float(f),
                     matrix_type="added_mass",
                     units={"coupling": "kg"},
+                    source="placeholder",
                 )
                 for f in frequencies
             ]
@@ -730,6 +733,7 @@ def _extract_from_aqwa_lis(
                     frequency=float(f),
                     matrix_type="damping",
                     units={"coupling": "N.s/m"},
+                    source="placeholder",
                 )
                 for f in frequencies
             ]
@@ -1000,6 +1004,7 @@ def _parse_aqwa_matrix_section(
                     frequency=freq_val,
                     matrix_type=matrix_type,
                     units=units,
+                    source="solver",
                 )
             )
             freq_values.append(freq_val)
@@ -1262,6 +1267,14 @@ def _interpolate_matrix_set(
         # Frequency count mismatch — cannot interpolate
         return matrix_set
 
+    source_values = {matrix.source for matrix in matrix_set.matrices}
+    if source_values == {"solver"}:
+        interpolated_source = "solver"
+    elif "placeholder" in source_values:
+        interpolated_source = "placeholder"
+    else:
+        interpolated_source = "unknown"
+
     new_matrices = []
     for fi, tf in enumerate(target_freqs):
         new_mat = np.zeros((6, 6))
@@ -1280,6 +1293,7 @@ def _interpolate_matrix_set(
                 frequency=float(tf),
                 matrix_type=matrix_set.matrices[0].matrix_type,
                 units=matrix_set.matrices[0].units,
+                source=interpolated_source,
             )
         )
 
