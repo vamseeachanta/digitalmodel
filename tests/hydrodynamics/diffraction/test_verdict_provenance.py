@@ -104,6 +104,20 @@ def test_solver_sourced_adequately_sampled_comparison_yields_pass():
     )
 
 
+def test_solver_sourced_null_response_still_permits_pass():
+    verdict = _derive_status(
+        matrices=[_matrix(0.0, "solver"), _matrix(0.0, "solver")],
+        correlation=1.0,
+        quality="NULL_RESPONSE",
+        consensus="FULL",
+    )
+
+    assert (verdict.status, verdict.reason) == (
+        "pass",
+        "solver-sourced comparison has usable statistics and FULL consensus",
+    )
+
+
 def test_default_unknown_provenance_cannot_yield_pass():
     matrix = HydrodynamicMatrix(
         matrix=np.eye(6),
