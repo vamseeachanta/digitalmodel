@@ -201,7 +201,7 @@ class TestCompareRAOs:
         aqwa = _clone_results(mock_diffraction_results)
         ow = _clone_results(mock_diffraction_results)
         aqwa_grid = np.linspace(1.0, 1.4, 9)
-        ow_grid = np.linspace(1.02, 1.42, 9)
+        ow_grid = np.linspace(0.98, 1.42, 9)
         for results, grid in ((aqwa, aqwa_grid), (ow, ow_grid)):
             for dof in DOF:
                 component = getattr(results.raos, dof.name.lower())

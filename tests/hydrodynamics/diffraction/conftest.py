@@ -8,6 +8,10 @@ import numpy as np
 import pytest
 import yaml
 
+from digitalmodel.hydrodynamics.diffraction.benchmark_abscissa import (
+    MAX_RELATIVE_GAP,
+)
+
 from digitalmodel.hydrodynamics.diffraction.orcawave_runner import RunConfig
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     AddedMassSet,
@@ -24,9 +28,13 @@ from digitalmodel.hydrodynamics.diffraction.output_schemas import (
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 SOLVER_FIXTURES_DIR = Path(__file__).parent.parent.parent / "fixtures" / "solver"
 
-N_FREQ = 10
+MIN_FREQUENCY = 0.05
+MAX_FREQUENCY = 2.0
+N_FREQ = int(
+    np.ceil(np.log(MAX_FREQUENCY / MIN_FREQUENCY) / np.log1p(MAX_RELATIVE_GAP))
+) + 1
 N_HEAD = 5
-FREQUENCIES = np.linspace(0.05, 2.0, N_FREQ)
+FREQUENCIES = np.geomspace(MIN_FREQUENCY, MAX_FREQUENCY, N_FREQ)
 HEADINGS = np.array([0.0, 45.0, 90.0, 135.0, 180.0])
 
 
@@ -42,14 +50,7 @@ def _make_freq_data() -> FrequencyData:
 
 def _make_comparison_freq_data() -> FrequencyData:
     """Frequency grid that satisfies the fail-closed comparison contract."""
-    values = np.geomspace(1.0, 2.0, N_FREQ)
-    return FrequencyData(
-        values=values,
-        periods=2.0 * np.pi / values,
-        count=N_FREQ,
-        min_freq=float(values[0]),
-        max_freq=float(values[-1]),
-    )
+    return _make_freq_data()
 
 
 def _make_heading_data() -> HeadingData:
@@ -108,6 +109,7 @@ def _make_matrix_set(matrix_type: str) -> AddedMassSet | DampingSet:
                 frequency=float(FREQUENCIES[i]),
                 matrix_type=matrix_type,
                 units={"linear": "kg", "angular": "kg.m^2"},
+                source="solver",
             )
         )
     cls = AddedMassSet if matrix_type == "added_mass" else DampingSet

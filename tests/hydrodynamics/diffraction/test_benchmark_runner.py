@@ -64,12 +64,12 @@ class TestBenchmarkConfig:
         assert SolverType.ORCAWAVE in config.solvers
         assert SolverType.BEMROSETTA in config.solvers
 
-    def test_config_default_tolerance(self) -> None:
+    def test_config_has_no_unjustified_default_tolerance(self) -> None:
         # Act
         config = BenchmarkConfig()
 
         # Assert
-        assert config.tolerance == pytest.approx(0.05)
+        assert config.tolerance is None
 
     def test_config_default_output_dir(self) -> None:
         # Act
@@ -81,15 +81,40 @@ class TestBenchmarkConfig:
     def test_config_custom_values(self) -> None:
         # Act
         config = BenchmarkConfig(
-            tolerance=0.10,
+            solver_relative_uncertainty=0.05,
+            response_absolute_resolution=2e-9,
+            minimum_explained_variance=0.9604,
+            comparison_justification="Synthetic test uncertainty budget.",
             output_dir=Path("/tmp/custom_output"),
             headings=[0.0, 90.0, 180.0],
         )
 
         # Assert
-        assert config.tolerance == pytest.approx(0.10)
+        assert config.solver_relative_uncertainty == pytest.approx(0.05)
         assert config.output_dir == Path("/tmp/custom_output")
         assert config.headings == [0.0, 90.0, 180.0]
+
+    def test_runner_derives_policy_from_named_uncertainty_inputs(self) -> None:
+        config = BenchmarkConfig(
+            solver_relative_uncertainty=0.025,
+            response_absolute_resolution=5e-11,
+            minimum_explained_variance=0.9801,
+            comparison_justification="Synthetic test uncertainty budget.",
+        )
+
+        policy = BenchmarkRunner(config)._build_comparison_policy()
+
+        assert (
+            policy.relative_rms_tolerance,
+            policy.absolute_rms_floor,
+            policy.correlation_minimum,
+            policy.justification,
+        ) == (
+            0.05,
+            1e-10,
+            0.99,
+            "Synthetic test uncertainty budget.",
+        )
 
 
 # ---------------------------------------------------------------------------

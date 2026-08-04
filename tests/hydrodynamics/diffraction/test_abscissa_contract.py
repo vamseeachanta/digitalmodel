@@ -281,6 +281,7 @@ def test_evaluation_grid_is_coarser_solver_restricted_to_shared_interval():
     api = _api()
     config = api.AbscissaConfig(
         max_relative_gap=2.0,
+        min_coverage=0.5,
         justification="Synthetic evaluation-grid policy.",
     )
 
@@ -297,6 +298,7 @@ def test_evaluation_grid_never_extrapolates_past_shared_interval():
     api = _api()
     config = api.AbscissaConfig(
         max_relative_gap=2.0,
+        min_coverage=0.5,
         justification="Synthetic no-extrapolation policy.",
     )
 

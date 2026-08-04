@@ -371,8 +371,12 @@ class TestCompareRAOs:
     def test_large_unequal_null_responses_do_not_bypass_magnitude_gate(
         self, two_identical_results: Dict[str, DiffractionResults],
     ) -> None:
-        two_identical_results["SolverA"].raos.heave.magnitude.fill(2e-11)
-        two_identical_results["SolverB"].raos.heave.magnitude.fill(8e-11)
+        magnitude_a = two_identical_results["SolverA"].raos.heave.magnitude
+        noise = np.linspace(1e-11, 3e-11, magnitude_a.size).reshape(
+            magnitude_a.shape
+        )
+        magnitude_a[:] = noise
+        two_identical_results["SolverB"].raos.heave.magnitude[:] = noise + 6e-11
         comparator = MultiSolverComparator(
             two_identical_results,
             policy=_comparison_policy(),
