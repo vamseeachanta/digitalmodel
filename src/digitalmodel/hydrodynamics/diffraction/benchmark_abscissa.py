@@ -6,14 +6,34 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 
+DAMPING_RATIO = 0.10
+"""Lowest damping ratio the sampling bound must remain valid for.
+
+Representative of vessel heave/pitch with viscous and radiation damping. Roll
+can be lighter (0.03-0.05); a comparison targeting roll should pass a stricter
+config rather than relax this default.
+"""
+
+INTERVALS_ACROSS_HALF_POWER_BAND = 2
+"""Minimum sample intervals required across a resonance's half-power band."""
+
+MAX_RELATIVE_GAP = (
+    2.0 * DAMPING_RATIO / INTERVALS_ACROSS_HALF_POWER_BAND
+)  # 0.10, dimensionless
+
 DEFAULT_JUSTIFICATION = (
-    "Physics-derived, not fitted to benchmark data: for the lowest expected "
-    "damping ratio zeta=0.10 and limiting natural frequency omega_n=11 rad/s, "
-    "the half-power bandwidth is approximately 2*zeta*omega_n=2.2 rad/s. "
-    "Using two intervals across that bandwidth gives MAX_GAP <= "
-    "zeta*omega_n=1.1 rad/s; MIN_SAMPLES=5 retains the peak and two samples "
-    "on each flank, and MIN_COVERAGE=0.5 requires half the narrower source "
-    "domain to be shared."
+    "Derived from resonance resolution, with no input from any benchmark "
+    "dataset. A resonance at omega_n with damping ratio zeta has a half-power "
+    "bandwidth of about 2*zeta*omega_n. Resolving it needs at least N sample "
+    "intervals across that band, i.e. d(omega) <= 2*zeta*omega_n/N. Near "
+    "resonance omega ~ omega_n, so the bound is SCALE-FREE when expressed "
+    "relatively: d(omega)/omega <= 2*zeta/N. For zeta=0.10 and N=2 that gives "
+    "MAX_RELATIVE_GAP=0.10. Stating it relatively is what makes one threshold "
+    "valid across the whole frequency range: an absolute rad/s bound is either "
+    "too loose near the low-frequency resonances that matter for vessel "
+    "motions, or needlessly strict in the high-frequency tail. "
+    "MIN_SAMPLES=5 retains a peak plus two samples on each flank, and "
+    "MIN_COVERAGE=0.5 requires half the narrower source domain to be shared."
 )
 
 
@@ -35,7 +55,7 @@ class AbscissaConfig:
 
     min_samples: int = 5
     min_coverage: float = 0.5
-    max_gap: float = 1.1
+    max_relative_gap: float = MAX_RELATIVE_GAP
     justification: str = DEFAULT_JUSTIFICATION
 
 
@@ -113,8 +133,8 @@ def build_evaluation_grid(
             f"{active_config.min_coverage:.6f}"
         )
 
-    _check_source_gap(first_array, lower, upper, "first", active_config.max_gap)
-    _check_source_gap(second_array, lower, upper, "second", active_config.max_gap)
+    _check_source_gap(first_array, lower, upper, "first", active_config.max_relative_gap)
+    _check_source_gap(second_array, lower, upper, "second", active_config.max_relative_gap)
     first_grid = first_array[(first_array >= lower) & (first_array <= upper)]
     second_grid = second_array[(second_array >= lower) & (second_array <= upper)]
     return (
@@ -227,6 +247,11 @@ def _validated_abscissa(values: ArrayLike, label: str) -> NDArray[np.float64]:
         raise AbscissaOrderError(f"{label} abscissa must be strictly increasing")
     if np.any(np.diff(array) <= 0.0):
         raise AbscissaOrderError(f"{label} abscissa must be strictly increasing")
+    if array[0] <= 0.0:
+        # A relative gap is d(omega)/omega, undefined at omega = 0. Zero or
+        # negative frequency is also meaningless for a diffraction sweep, so
+        # reject it here rather than let it become a divide-by-zero later.
+        raise AbscissaOrderError(f"{label} abscissa must be strictly positive")
     return array
 
 
@@ -237,11 +262,29 @@ def _check_source_gap(
     label: str,
     maximum: float,
 ) -> None:
-    gaps = np.diff(frequencies)
-    intersects_shared = (frequencies[:-1] < upper) & (frequencies[1:] > lower)
-    shared_gaps = gaps[intersects_shared]
-    largest = float(np.max(shared_gaps)) if shared_gaps.size else 0.0
+    """Reject a source whose sampling cannot resolve a resonance.
+
+    The bound is RELATIVE -- ``d(omega)/omega`` -- because the resolution
+    requirement scales with frequency (see ``DEFAULT_JUSTIFICATION``). An
+    absolute rad/s bound cannot serve both ends of a diffraction sweep: it is
+    either too loose at the low-frequency resonances that dominate vessel
+    motions, or needlessly strict in the high-frequency tail.
+
+    The offending interval is named in the message, because "which band is
+    undersampled" is the actionable part for whoever set up the run.
+    """
+    starts = frequencies[:-1]
+    relative_gaps = np.diff(frequencies) / starts
+    intersects_shared = (starts < upper) & (frequencies[1:] > lower)
+    if not np.any(intersects_shared):
+        return
+
+    candidates = np.flatnonzero(intersects_shared)
+    worst = candidates[int(np.argmax(relative_gaps[candidates]))]
+    largest = float(relative_gaps[worst])
     if largest > maximum:
         raise AbscissaGapError(
-            f"{label} source gap {largest:.6f} exceeds maximum {maximum:.6f}"
+            f"{label} source relative gap {largest:.6f} over "
+            f"[{starts[worst]:.6f}, {frequencies[worst + 1]:.6f}] rad/s "
+            f"exceeds maximum {maximum:.6f}"
         )

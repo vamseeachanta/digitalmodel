@@ -60,23 +60,40 @@ def test_loader_reorders_raos_with_frequencies():
     )
 
 
-def test_default_config_declares_resonant_peak_resolution_basis():
+def test_default_relative_gap_follows_from_damping_and_interval_count():
+    """The bound must be *computed* from its inputs, not a literal.
+
+    A previous revision hard-coded ``max_gap=1.1`` rad/s with a physics-shaped
+    justification quoting ``omega_n=11 rad/s`` -- a 0.57 s natural period, which
+    is not a vessel. 1.1 happened to sit just above the largest gap in the L01
+    OrcaWave grid (1.0472 rad/s), i.e. the threshold had been fitted to the data
+    it was meant to judge. Asserting the arithmetic makes that unrepeatable:
+    changing the constant now requires changing zeta or N, which are named,
+    physical, and reviewable.
+    """
     api = _api()
 
-    assert api.AbscissaConfig() == api.AbscissaConfig(
-        min_samples=5,
-        min_coverage=0.5,
-        max_gap=1.1,
-        justification=(
-            "Physics-derived, not fitted to benchmark data: for the lowest expected "
-            "damping ratio zeta=0.10 and limiting natural frequency omega_n=11 rad/s, "
-            "the half-power bandwidth is approximately 2*zeta*omega_n=2.2 rad/s. "
-            "Using two intervals across that bandwidth gives MAX_GAP <= "
-            "zeta*omega_n=1.1 rad/s; MIN_SAMPLES=5 retains the peak and two samples "
-            "on each flank, and MIN_COVERAGE=0.5 requires half the narrower source "
-            "domain to be shared."
-        ),
+    assert api.MAX_RELATIVE_GAP == pytest.approx(
+        2.0 * api.DAMPING_RATIO / api.INTERVALS_ACROSS_HALF_POWER_BAND
     )
+    assert api.AbscissaConfig().max_relative_gap == pytest.approx(0.10)
+    assert api.DAMPING_RATIO == pytest.approx(0.10)
+    assert api.INTERVALS_ACROSS_HALF_POWER_BAND == 2
+
+
+def test_relative_gap_bound_is_dimensionless_and_scale_free():
+    """The same config must accept a decade-shifted copy of an adequate grid.
+
+    This is the property an absolute rad/s bound cannot have, and the reason
+    option 3 was chosen over a scalar threshold.
+    """
+    api = _api()
+    fine = np.linspace(1.0, 1.5, 12)
+
+    grid_low = api.build_evaluation_grid(fine, fine.copy())
+    grid_high = api.build_evaluation_grid(fine * 10.0, fine.copy() * 10.0)
+
+    np.testing.assert_allclose(grid_high, grid_low * 10.0)
 
 
 def test_descending_frequencies_raise():
@@ -99,34 +116,60 @@ def test_duplicate_frequencies_raise():
         api.build_evaluation_grid(np.array([1.0, 2.0]), np.array([1.0, 1.0, 2.0]))
 
 
-def test_l01_grids_use_the_aqwa_evaluation_points():
+def test_l01_grids_have_adequate_interval_overlap():
+    """Interval coverage is fine -- AQWA's range sits wholly inside OrcaWave's.
+
+    Kept separate from sampling density so the two failure modes stay
+    distinguishable. Coincident-node count is NOT overlap; an earlier draft of
+    the plan wrongly proposed rejecting these grids because only three abscissa
+    values coincide.
+    """
+    api = _api()
+    lower = max(AQWA_L01_FREQUENCIES[0], ORCAWAVE_L01_FREQUENCIES[0])
+    upper = min(AQWA_L01_FREQUENCIES[-1], ORCAWAVE_L01_FREQUENCIES[-1])
+    smaller_span = min(
+        np.ptp(AQWA_L01_FREQUENCIES), np.ptp(ORCAWAVE_L01_FREQUENCIES)
+    )
+
+    assert (upper - lower) / smaller_span >= api.AbscissaConfig().min_coverage
+
+
+def test_l01_grids_are_refused_for_inadequate_sampling():
+    """The real L01 grids cannot resolve a resonance, and must be refused.
+
+    AQWA jumps 0.407 -> 0.715 rad/s, a relative gap of 0.757 -- in period terms
+    15.4 s to 8.8 s, straight across the heave/pitch resonance band of a ship.
+    Eight of its nine intervals exceed the bound. OrcaWave fails eight of
+    nineteen, worst 0.500 at 2.094 rad/s.
+
+    Refusing is the contract working as designed: a benchmark cannot report
+    agreement on a band neither solver sampled. This is a finding about the L01
+    run, not a defect here -- see digitalmodel#714, which owns re-running the
+    ship case on an adequate grid.
+    """
     api = _api()
 
-    grid = api.build_evaluation_grid(AQWA_L01_FREQUENCIES, ORCAWAVE_L01_FREQUENCIES)
+    with pytest.raises(api.AbscissaGapError, match=r"^first source relative gap 0\.757"):
+        api.build_evaluation_grid(AQWA_L01_FREQUENCIES, ORCAWAVE_L01_FREQUENCIES)
 
-    np.testing.assert_array_equal(grid, AQWA_L01_FREQUENCIES)
 
-
-def test_l01_grids_are_interpolated_on_the_aqwa_grid():
+def test_adequately_sampled_grids_are_interpolated_onto_the_coarser_grid():
+    """The positive path: dense-enough grids align without complaint."""
     api = _api()
-    aqwa_phase = np.zeros(AQWA_L01_FREQUENCIES.size)
-    orcawave_phase = np.zeros(ORCAWAVE_L01_FREQUENCIES.size)
+    coarse = np.linspace(1.0, 1.4, 9)
+    dense = np.linspace(1.0, 1.4, 17)
 
     aligned = api.align_responses(
-        AQWA_L01_FREQUENCIES,
-        AQWA_L01_FREQUENCIES,
-        aqwa_phase,
-        ORCAWAVE_L01_FREQUENCIES,
-        ORCAWAVE_L01_FREQUENCIES,
-        orcawave_phase,
+        coarse,
+        coarse,
+        np.zeros(coarse.size),
+        dense,
+        dense,
+        np.zeros(dense.size),
     )
 
-    np.testing.assert_allclose(
-        aligned.second.magnitude,
-        AQWA_L01_FREQUENCIES,
-        rtol=0.0,
-        atol=1e-12,
-    )
+    np.testing.assert_allclose(aligned.frequencies, coarse)
+    np.testing.assert_allclose(aligned.second.magnitude, coarse, rtol=0.0, atol=1e-12)
 
 
 def test_disjoint_grids_raise():
@@ -141,7 +184,7 @@ def test_disjoint_grids_raise():
 
 def test_coverage_below_minimum_raises_with_exact_coverage():
     api = _api()
-    config = api.AbscissaConfig(min_coverage=0.5, max_gap=20.0)
+    config = api.AbscissaConfig(min_coverage=0.5, max_relative_gap=20.0)
 
     with pytest.raises(
         api.AbscissaOverlapError,
@@ -152,24 +195,43 @@ def test_coverage_below_minimum_raises_with_exact_coverage():
         api.build_evaluation_grid(np.array([0.0, 10.0]), np.array([8.0, 18.0]), config)
 
 
-def test_source_gap_above_maximum_raises_with_exact_gap():
+def test_source_gap_above_maximum_names_the_offending_interval():
+    """The message must identify WHICH band is undersampled.
+
+    "some gap was too big" is not actionable; the run owner needs to know where
+    to add frequencies. 1.0 -> 2.0 rad/s is a relative gap of exactly 1.0.
+    """
     api = _api()
-    config = api.AbscissaConfig(min_coverage=0.5, max_gap=1.0)
+    config = api.AbscissaConfig(min_coverage=0.5, max_relative_gap=0.5)
 
     with pytest.raises(
         api.AbscissaGapError,
-        match=(f"^{re.escape('first source gap 1.500000 exceeds maximum 1.000000')}$"),
+        match=re.escape(
+            "first source relative gap 1.000000 over [1.000000, 2.000000] rad/s "
+            "exceeds maximum 0.500000"
+        ),
     ):
         api.build_evaluation_grid(
-            np.array([0.0, 0.5, 2.0]),
-            np.array([0.0, 1.0, 2.0]),
+            np.array([1.0, 2.0, 2.5]),
+            np.array([1.0, 1.2, 1.5, 1.8, 2.2, 2.5]),
             config,
         )
 
 
+def test_non_positive_frequency_is_rejected():
+    """A relative gap is undefined at omega = 0, so reject it at the door."""
+    api = _api()
+
+    with pytest.raises(
+        api.AbscissaOrderError,
+        match=f"^{re.escape('first abscissa must be strictly positive')}$",
+    ):
+        api.build_evaluation_grid(np.array([0.0, 1.0, 2.0]), np.array([1.0, 2.0]))
+
+
 def test_evaluation_grid_is_coarser_solver_restricted_to_shared_interval():
     api = _api()
-    config = api.AbscissaConfig(max_gap=2.0)
+    config = api.AbscissaConfig(max_relative_gap=2.0)
 
     grid = api.build_evaluation_grid(
         np.array([0.0, 1.0, 2.0]),
@@ -182,7 +244,7 @@ def test_evaluation_grid_is_coarser_solver_restricted_to_shared_interval():
 
 def test_evaluation_grid_never_extrapolates_past_shared_interval():
     api = _api()
-    config = api.AbscissaConfig(max_gap=2.0)
+    config = api.AbscissaConfig(max_relative_gap=2.0)
 
     grid = api.build_evaluation_grid(
         np.array([0.0, 1.0, 2.0]),
