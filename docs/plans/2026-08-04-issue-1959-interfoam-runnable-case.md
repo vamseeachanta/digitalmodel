@@ -375,7 +375,7 @@ timeout. Parallel decomposition remains [#1576](https://github.com/vamseeachanta
 - [ ] A `simpleFoam` case still emits `p` and contains no `cAlpha` — the fix does not leak VOF entries into single-phase cases.
 - [ ] `sloshing_3d_case_sha256.json` is regenerated, and the commit body states which files' hashes changed and why.
 - [ ] **No numeric value introduced by this PR is taken from `patch_case.sh` or from any case directory on `gpu-claw`.** Each traces to the v2312 tutorial or to an existing declared case input (D7).
-- [ ] The legal sanity scan passes on the branch. **Note the invocation:** `scripts/legal/legal-sanity-scan.sh` **does not exist in this repository** — verified 2026-08-04. It lives in `workspace-hub` (and in `worldenergydata`, `llm-wiki`, and others, but not here). The executable form from a digitalmodel worktree is `LEGAL_SCAN_REPO_ROOTS=<parent-of-worktree> bash /mnt/ace/ws/workspace-hub/scripts/legal/legal-sanity-scan.sh --repo=<worktree-dirname> --diff-only`, which returns `PASS` rc=0 on this plan's own branch. A criterion naming the in-repo path would be unsatisfiable.
+- [ ] **No legal-scan criterion is stated, and its absence is deliberate.** `scripts/legal/legal-sanity-scan.sh` does not exist in this repository (verified 2026-08-04; it lives in `workspace-hub`, `worldenergydata`, `llm-wiki` and others, but not here). Both invocations of workspace-hub's copy are unusable for a digitalmodel worktree: the `--repo=<name>` form is **fail-open** under OPEN workspace-hub issue [#3804](https://github.com/vamseeachanta/workspace-hub/issues/3804) — it resolves an empty scan path, scans nothing and exits 0 — and the root form scans workspace-hub rather than this repo. An earlier revision of this plan cited the `--repo=` form as returning `PASS`; **that PASS was the fail-open**, and citing it would have been evidence of nothing. This work touches solver dictionaries and carries no client-identifier surface, so no substitute gate is proposed here; [#1965](https://github.com/vamseeachanta/digitalmodel/issues/1965)'s plan carries the repo-local detector for work that does.
 - [ ] r1 review artifact recorded.
 
 ---
@@ -395,7 +395,7 @@ timeout. Parallel decomposition remains [#1576](https://github.com/vamseeachanta
 
 | Round | Provider | Verdict |
 |---|---|---|
-| r1 | Claude — inline, main session | **MAJOR** — 6 findings, all folded in below |
+| r1 | Claude — inline, main session | **MAJOR** — 6 findings, all folded in below (finding 6 amended after a later measurement) |
 
 r1 findings against this plan's own earlier draft:
 
@@ -421,12 +421,21 @@ r1 findings against this plan's own earlier draft:
    failure mode this whole issue is about, reproduced inside its own fix. → the
    sha256-manifest-before-and-after acceptance criterion.
 
-6. **The legal-scan criterion named a path that does not exist in this repo.**
-   The draft wrote `scripts/legal/legal-sanity-scan.sh --diff-only`, copied from
-   habit. `ls` says it is absent from digitalmodel; it lives in `workspace-hub`.
-   → the criterion now carries the cross-repo invocation that actually returns
-   `PASS`. This is the same defect class as the Sphinx-build criterion filed in
-   another plan today: a criterion that reads plausible and cannot be run.
+6. **The legal-scan criterion named a path that does not exist in this repo, and
+   its replacement was worse.** The draft wrote
+   `scripts/legal/legal-sanity-scan.sh --diff-only`, copied from habit; `ls` says
+   it is absent from digitalmodel. The first correction substituted workspace-hub's
+   copy via `--repo=` and recorded that it returned `PASS`. **That PASS was a
+   fail-open** — workspace-hub issue [#3804](https://github.com/vamseeachanta/workspace-hub/issues/3804) (OPEN) documents that the
+   per-repo form resolves an empty scan path, scans nothing and exits 0; it was
+   independently observed returning `PASS` over a worktree containing a known
+   live leak while planning [#1965](https://github.com/vamseeachanta/digitalmodel/issues/1965). The criterion is now **withdrawn entirely**,
+   with the reason recorded so it is not restored.
+
+   Two distinct defect classes, one after the other: first a criterion that
+   **cannot be run** (the same shape as the Sphinx-build criterion filed in
+   another plan today), then a criterion that **runs and proves nothing**. The
+   second is more dangerous, because it produces a green tick.
 
 One earlier draft criterion was **withdrawn** as not executable: "the case runs to
 completion under `mpirun -np 8`". A full VOF run is minutes-to-hours, is not a
