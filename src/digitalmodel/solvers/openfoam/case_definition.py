@@ -266,7 +266,12 @@ def _case_type(value: Any) -> CaseType:
     try:
         return CaseType(name)
     except ValueError as error:
-        raise ValidationError(f"unsupported case_type {name!r}") from error
+        # Wording preserved from the pre-#1575 router; callers and tests match
+        # on it.
+        valid = ", ".join(item.value for item in CaseType)
+        raise ValidationError(
+            f"Unknown openfoam.case_type {name!r}. Valid: {valid}"
+        ) from error
 
 
 def _parse_authored(value: Any, execution: SelectedExecutionPlan) -> ParsedAuthoredCaseV1:
@@ -348,7 +353,10 @@ def _parse_canonical(root: Mapping[str, Any]) -> ParsedAuthoredCaseV1:
 
 
 def _parse_legacy(root: Mapping[str, Any]) -> ParsedAuthoredCaseV1:
-    check_keys(root, allowed=_LEGACY_KEYS, required={"case_type"}, path="root")
+    check_keys(root, allowed=_LEGACY_KEYS, path="root")
+    if "case_type" not in root:
+        # Wording preserved from the pre-#1575 router.
+        raise ValidationError("openfoam.case_type is required")
     case_type = _case_type(root["case_type"])
     # The legacy generic form has always defaulted the case name from the case
     # type; normalisation must not turn that into a required key.
