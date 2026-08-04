@@ -338,3 +338,75 @@ def test_batch_legacy_base_still_renders_unmapped_knobs(tmp_path: Path) -> None:
         {"solver_app": "solver"}, tmp_path,
     )
     assert rendered[0]["settings"]["solver"] == "pimpleFoam"
+
+
+# --------------------------------------------------------------------------- #
+#  the batch router accepts a canonical base end to end                        #
+# --------------------------------------------------------------------------- #
+
+
+def _canonical_batch_cfg(tmp_path: Path) -> Dict[str, Any]:
+    return {
+        "basename": "openfoam_run_batch",
+        "_config_dir_path": str(tmp_path),
+        "openfoam_run_batch": {
+            "base": copy.deepcopy(
+                {k: v for k, v in CANONICAL_SETTINGS.items() if k != "operation"}
+            ),
+            "cases": [{"name": "case_a", "end_time": 3.0},
+                      {"name": "case_b", "end_time": 4.0}],
+            "mapping": {"end_time": "case_definition.authored.time.end_time_s"},
+            "run_batch": {"mode": "pool", "workers": 2, "mock": True},
+        },
+    }
+
+
+def test_batch_router_runs_a_canonical_base_in_mock_mode(tmp_path: Path) -> None:
+    from digitalmodel.workflows import openfoam_run_batch as ofb
+
+    result = ofb.router(_canonical_batch_cfg(tmp_path))
+    statuses = [row["status"] for row in result["openfoam_run_batch"]["cases"]]
+    assert statuses == ["completed", "completed"]
+
+
+def test_batch_router_swept_leaf_reaches_each_rendered_case(tmp_path: Path) -> None:
+    from digitalmodel.workflows import openfoam_run_batch as ofb
+
+    ofb.router(_canonical_batch_cfg(tmp_path))
+    case_b = tmp_path / "batch_runs" / "case_b"
+    assert _control_dict(case_b)["endTime"] == "4.0"
+
+
+def test_batch_router_carries_motion_into_each_rendered_case(tmp_path: Path) -> None:
+    from digitalmodel.workflows import openfoam_run_batch as ofb
+
+    ofb.router(_canonical_batch_cfg(tmp_path))
+    assert (tmp_path / "batch_runs" / "case_a" / "constant" / "dynamicMeshDict").is_file()
+
+
+def test_canonical_base_mpi_plan_uses_the_authored_solver(tmp_path: Path) -> None:
+    # The mpi plan is recorded even in mock mode, so it is the observable proof
+    # that a canonical base reaches the dispatch layer rather than falling back
+    # to flat-key defaults.
+    from digitalmodel.workflows import openfoam_run_batch as ofb
+
+    cfg = _canonical_batch_cfg(tmp_path)
+    cfg["openfoam_run_batch"]["cases"] = [{"name": "case_a", "end_time": 3.0}]
+    cfg["openfoam_run_batch"]["run_batch"] = {
+        "mode": "mpi", "workers": 2, "mock": True,
+    }
+    result = ofb.router(cfg)
+    plan = result["openfoam_run_batch"]["cases"][0]["mpi_plan"]
+    assert "mpirun -np 2 --oversubscribe interFoam -parallel" in plan
+
+
+def test_canonical_base_mpi_plan_includes_set_fields(tmp_path: Path) -> None:
+    from digitalmodel.workflows import openfoam_run_batch as ofb
+
+    cfg = _canonical_batch_cfg(tmp_path)
+    cfg["openfoam_run_batch"]["cases"] = [{"name": "case_a", "end_time": 3.0}]
+    cfg["openfoam_run_batch"]["run_batch"] = {
+        "mode": "mpi", "workers": 2, "mock": True,
+    }
+    result = ofb.router(cfg)
+    assert "setFields" in result["openfoam_run_batch"]["cases"][0]["mpi_plan"]

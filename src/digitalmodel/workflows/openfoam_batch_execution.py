@@ -15,6 +15,7 @@ from typing import Any, Callable
 
 from loguru import logger
 
+from digitalmodel.workflows.openfoam_batch_config import base_view
 from digitalmodel.workflows.openfoam_batch_identity import file_sha256
 from digitalmodel.workflows.openfoam_batch_layout import WorkLayout
 from digitalmodel.workflows.openfoam_batch_results import redact_rows, row
@@ -122,7 +123,9 @@ def solve_serial(item: dict[str, Any], case_dir: Path,
                  run_settings: dict,
                  tool_bindings: dict[str, tuple[Path, str]] | None = None) -> dict[str, Any]:
     from digitalmodel.solvers.openfoam.runner import OpenFOAMRunConfig, OpenFOAMRunner
-    settings = item["settings"]
+    # base_view reduces a canonical case_definition/execution mapping to the
+    # same flat keys a legacy one already uses, so both dispatch identically.
+    settings = base_view(item["settings"])
     config = OpenFOAMRunConfig(
         solver=settings.get("solver"),
         mesh_utility=settings.get("mesh_utility", DEFAULT_MESH_UTILITY),
@@ -163,7 +166,7 @@ def _run_case_mpi_unlocked(item: dict[str, Any], run_settings: dict, workers: in
                            layout: WorkLayout | None,
                            builder: Callable[[dict[str, Any]], Path],
                            tool_bindings: dict[str, tuple[Path, str]] | None) -> dict[str, Any]:
-    solver = item["settings"].get("solver")
+    solver = base_view(item["settings"]).get("solver")
     if not solver:
         return _save(item, row(item, status="failed", error="mode: mpi requires base.solver"), layout)
     reconstruct = bool(run_settings.get("reconstruct", True))
@@ -171,9 +174,10 @@ def _run_case_mpi_unlocked(item: dict[str, Any], run_settings: dict, workers: in
     start = time.monotonic()
     try:
         case_dir = _prepare_mpi_case(item, resume, layout, builder)
+        view = base_view(item["settings"])
         plan = mpi_command_plan(solver, workers,
-            item["settings"].get("mesh_utility", DEFAULT_MESH_UTILITY),
-            bool(item["settings"].get("run_set_fields", False)), reconstruct, resume)
+            view.get("mesh_utility", DEFAULT_MESH_UTILITY),
+            bool(view.get("run_set_fields", False)), reconstruct, resume)
         if mock:
             result = row(item, status="completed", case_dir=case_dir, solver=solver, mock=True)
             result["mpi_plan"] = [" ".join(argv) for argv in plan]

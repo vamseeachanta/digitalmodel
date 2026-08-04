@@ -11,30 +11,14 @@ from .models import DomainConfig
 __all__ = ["render_block_mesh_dict_body"]
 
 
-def render_block_mesh_dict_body(domain: DomainConfig) -> str:
-    """Render the ``system/blockMeshDict`` body for ``domain``.
-
-    The returned string excludes the FoamFile header and the trailing rule; the
-    caller composes those, matching the ``render_*_dict_body`` convention used
-    by :mod:`.motion` and :mod:`.partial_fill`.
-
-    The emitted block uses the domain's own extents and cell counts, so a
-    caller-requested domain reaches the mesh rather than a builder default.
-    """
-    verts = domain.block_mesh_vertices()
-    nx, ny, nz = domain.cell_counts()
-
-    vert_lines = "\n    ".join(
-        f"( {v[0]:>10.4f}  {v[1]:>10.4f}  {v[2]:>10.4f} )"
-        for v in verts
-    )
-
-    return f"""
+# The single hex block and its six boundary patches are fixed; only the vertex
+# coordinates and the cell counts vary with the requested domain.
+_BLOCK_MESH_TEMPLATE = """
 convertToMeters 1;
 
 vertices
 (
-    {vert_lines}
+    {vertices}
 );
 
 blocks
@@ -96,3 +80,21 @@ mergePatchPairs
 );
 
 """
+
+
+def render_block_mesh_dict_body(domain: DomainConfig) -> str:
+    """Render the ``system/blockMeshDict`` body for ``domain``.
+
+    The returned string excludes the FoamFile header and the trailing rule; the
+    caller composes those, matching the ``render_*_dict_body`` convention used
+    by :mod:`.motion` and :mod:`.partial_fill`.
+
+    The emitted block uses the domain's own extents and cell counts, so a
+    caller-requested domain reaches the mesh rather than a builder default.
+    """
+    nx, ny, nz = domain.cell_counts()
+    vertices = "\n    ".join(
+        f"( {v[0]:>10.4f}  {v[1]:>10.4f}  {v[2]:>10.4f} )"
+        for v in domain.block_mesh_vertices()
+    )
+    return _BLOCK_MESH_TEMPLATE.format(vertices=vertices, nx=nx, ny=ny, nz=nz)
