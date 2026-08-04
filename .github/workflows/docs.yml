@@ -3,15 +3,32 @@ name: Build API Docs
 on:
   push:
     branches: [main]
+    # The generated-HTML freshness check regenerates docs/api/** from the
+    # generators, so it has to fire when a generator or a generator input
+    # changes -- not only when a page does (#1888).
     paths:
       - 'src/**'
+      - 'scripts/**'
       - 'docs/api/**'
+      - 'assets/logo/**'
+      - 'atlases/**'
+      - 'data/**'
+      - 'tests/asset_integrity/test_data/**'
+      - 'tests/drilling_riser/fixtures/**'
       - 'mkdocs.yml'
+      - '.github/workflows/docs.yml'
   pull_request:
     paths:
       - 'src/**'
+      - 'scripts/**'
       - 'docs/api/**'
+      - 'assets/logo/**'
+      - 'atlases/**'
+      - 'data/**'
+      - 'tests/asset_integrity/test_data/**'
+      - 'tests/drilling_riser/fixtures/**'
       - 'mkdocs.yml'
+      - '.github/workflows/docs.yml'
   workflow_dispatch:
 
 jobs:
@@ -33,6 +50,18 @@ jobs:
 
       - name: Brand token guard
         run: python scripts/brand_guard.py
+
+      # Runs inside the project environment, not the bare interpreter: the
+      # generators import numpy, scipy, pandas, matplotlib, pydantic and yaml
+      # transitively through src/digitalmodel, all of which are already declared
+      # in [project] dependencies. Taking the set from there rather than listing
+      # packages here is what stops this step drifting from what the generators
+      # actually need. Same --group docs as the build step below, so one
+      # environment is resolved and reused.
+      - name: Generated HTML freshness
+        env:
+          UV_NO_SOURCES: "true"
+        run: uv run --group docs python scripts/check_generated_html.py --check
 
       - name: Build docs
         env:

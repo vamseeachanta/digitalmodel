@@ -966,8 +966,9 @@ def _references_section(research):
     return '<h2>References</h2><ul class="refs">' + "".join(merged) + "</ul>"
 
 
+# Core tokens come from ../_assets/brand.css. Do not redeclare them here:
+# regeneration must preserve the #1474/#1485/#1487 migration.
 _CSS = """
-:root{--ink:#1a2332;--mut:#5a6b7b;--line:#dde3ea;--accent:#0b6e99;--good:#1a7a3f;--red:#c0392b;--bg:#f7f9fb;}
 *{box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:var(--ink);line-height:1.6;margin:0;background:var(--bg);}
 .wrap{max-width:940px;margin:0 auto;padding:0 24px 80px;background:#fff;box-shadow:0 0 40px rgba(0,0,0,.04);}
 header{border-bottom:3px solid var(--accent);padding:38px 0 22px;margin-bottom:8px}
@@ -1115,9 +1116,10 @@ coefficients. Engines and validated cases ship in <code>digitalmodel</code>
 <footer>Built by <code>scripts/capabilities/build_sloshing_cfd_showcase.py</code> from the committed CFD
 manifests. Part of the digitalmodel OpenFOAM verification suite — computed on real OpenFOAM ESI v2312, not mocked.</footer>
 """
-    doc = ("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\">"
+    doc = ("<!DOCTYPE html><html lang=\"en\" data-theme=\"light\"><head><meta charset=\"utf-8\">"
            "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
            "<title>Ballast-tank sloshing — the 2D CFD study — digitalmodel</title>"
+           "\n<link rel=\"stylesheet\" href=\"../_assets/brand.css\">"
            f"<style>{_CSS}</style></head><body><div class=\"wrap\">{body}</div></body></html>")
     _OUT.parent.mkdir(parents=True, exist_ok=True)
     _OUT.write_text(doc, encoding="utf-8")

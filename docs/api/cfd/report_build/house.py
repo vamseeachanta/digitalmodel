@@ -117,9 +117,13 @@ def flipbook(div_id: str, frames_b64: list, labels: list, fps: float = 8.0,
 
 
 def page(title: str, kicker: str, style: str, body: str) -> str:
+    # The core brand tokens live in docs/api/_assets/brand.css and are inherited
+    # through the link below. Callers pass page-local tokens only; restoring the
+    # core ones here is what made regeneration revert the brand (#1888).
     return f"""<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="en" data-theme="light"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title}</title>
+<link rel="stylesheet" href="../_assets/brand.css">
 {style}
 {PLOTLY_CDN}
 </head><body><div class="wrap">
