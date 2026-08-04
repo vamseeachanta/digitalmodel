@@ -58,6 +58,7 @@ class PairwiseRAOComparison:
     peak_magnitude: float = 0.0
     max_phase_diff_x: float = 0.0  # frequency (rad/s) where max phase diff occurs
     max_phase_diff_heading_idx: int = 0  # heading index where max phase diff occurs
+    relative_rms_error: Optional[float] = None
 
 
 @dataclass
@@ -260,6 +261,20 @@ class MultiSolverComparator:
         """Return all unique solver pairs in alphabetical order."""
         return list(combinations(self.solver_names, 2))
 
+    @staticmethod
+    def _symmetric_relative_rms(
+        values1: np.ndarray,
+        values2: np.ndarray,
+    ) -> float:
+        """Normalize RMS error by the symmetric RMS response scale."""
+        rms_error = float(np.sqrt(np.mean((values2 - values1) ** 2)))
+        scale = float(
+            np.sqrt((np.mean(values1 ** 2) + np.mean(values2 ** 2)) / 2.0)
+        )
+        if scale == 0.0:
+            return 0.0 if rms_error == 0.0 else float("inf")
+        return rms_error / scale
+
     # ------------------------------------------------------------------
     # RAO comparison
     # ------------------------------------------------------------------
@@ -346,6 +361,10 @@ class MultiSolverComparator:
                     peak_magnitude=peak_mag,
                     max_phase_diff_x=freq_at_max_pd,
                     max_phase_diff_heading_idx=int(max_pd_idx[1]),
+                    relative_rms_error=self._symmetric_relative_rms(
+                        rao_a.magnitude,
+                        rao_b.magnitude,
+                    ),
                 )
 
             result[key] = pair_comparisons
@@ -489,13 +508,15 @@ class MultiSolverComparator:
                 pk = self._pair_key(solver_a, solver_b)
                 comp = rao_comparisons[pk][dof_name]
                 corr = comp.magnitude_stats.correlation
-                rms = comp.magnitude_stats.rms_error
+                relative_rms = comp.relative_rms_error
                 pair_corrs[pk] = corr
 
-                # Agreement requires high correlation AND low rms
-                # rms threshold is based on tolerance (default 0.05)
+                # Agreement requires high correlation AND low relative RMS.
                 pair_agrees[pk] = (
-                    corr > 0.99 and rms < self.tolerance
+                    corr is not None
+                    and relative_rms is not None
+                    and corr > 0.99
+                    and relative_rms < self.tolerance
                 )
 
             high_pairs = [
@@ -508,7 +529,9 @@ class MultiSolverComparator:
             mean_corr = float(np.mean(list(pair_corrs.values())))
 
             # Determine consensus level
-            if all(pair_agrees.values()):
+            if len(pairs) == 1:
+                level = "FULL" if high_pairs else "NO_CONSENSUS"
+            elif all(pair_agrees.values()):
                 level = "FULL"
             elif len(high_pairs) >= 2:
                 level = "MAJORITY"

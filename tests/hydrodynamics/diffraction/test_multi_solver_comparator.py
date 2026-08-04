@@ -329,6 +329,26 @@ class TestConsensus:
                 f"got {consensus[dof_key].consensus_level}"
             )
 
+    def test_relative_tolerance_is_symmetric_for_one_percent_scale(
+        self, two_identical_results: Dict[str, DiffractionResults],
+    ) -> None:
+        baseline = np.linspace(20.0, 40.0, 50).reshape(10, 5)
+        scaled = baseline * 1.01
+        two_identical_results["SolverA"].raos.pitch.magnitude = baseline
+        two_identical_results["SolverB"].raos.pitch.magnitude = scaled
+
+        forward = MultiSolverComparator(two_identical_results).compute_consensus()
+        reverse_results = {
+            "SolverA": two_identical_results["SolverB"],
+            "SolverB": two_identical_results["SolverA"],
+        }
+        reverse = MultiSolverComparator(reverse_results).compute_consensus()
+
+        assert (
+            forward["PITCH"].consensus_level,
+            reverse["PITCH"].consensus_level,
+        ) == ("FULL", "FULL")
+
     def test_consensus_majority_with_outlier(
         self, three_solver_results: Dict[str, DiffractionResults],
     ) -> None:
