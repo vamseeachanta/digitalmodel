@@ -1,9 +1,12 @@
 """Tests for BenchmarkRunner (end-to-end benchmark orchestration)."""
 from __future__ import annotations
 
+import importlib.util
+import json
 from pathlib import Path
 from typing import Dict
 
+import numpy as np
 import pytest
 
 from digitalmodel.hydrodynamics.diffraction.benchmark_runner import (
@@ -15,7 +18,32 @@ from digitalmodel.hydrodynamics.diffraction.benchmark_runner import (
 )
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     DiffractionResults,
+    DOF,
 )
+
+
+def _load_ship_benchmark_script():
+    script_path = Path("scripts/run_benchmark_ship_raos.py").resolve()
+    spec = importlib.util.spec_from_file_location("run_benchmark_ship_raos", script_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"could not load {script_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _synthetic_ship_rao_data() -> dict:
+    frequencies = np.geomspace(1.0, 2.0, 10)
+    return {
+        0.0: {
+            dof: {
+                "freq": frequencies.tolist(),
+                "amp": (frequencies * dof.value).tolist(),
+                "phase": np.zeros(frequencies.size).tolist(),
+            }
+            for dof in DOF
+        }
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -159,6 +187,79 @@ class TestRunFromResults:
         assert result.success is True
         assert result.report is not None
         assert result.plot_paths == []
+
+    def test_unavailable_matrix_correlation_is_recorded_not_crashed(
+        self,
+        two_identical_results: Dict[str, DiffractionResults],
+        tmp_path: Path,
+    ) -> None:
+        for solver_name, scale in (("SolverA", 1000.0), ("SolverB", 100.0)):
+            results = two_identical_results[solver_name]
+            for coefficient_set in (results.added_mass, results.damping):
+                for matrix in coefficient_set.matrices:
+                    matrix.matrix = np.eye(6) * scale
+                    matrix.source = "solver"
+
+        result = BenchmarkRunner(
+            BenchmarkConfig(output_dir=tmp_path, dry_run=True),
+        ).run_from_results(two_identical_results)
+
+        actual = None
+        if result.report_json_path and result.report_html_path:
+            data = json.loads(result.report_json_path.read_text(encoding="utf-8"))
+            pair = data["pairwise_results"]["SolverA-vs-SolverB"]
+            actual = {
+                "status": data["comparison_status"],
+                "overall": data["overall_consensus"],
+                "correlation": pair["added_mass_correlations"]["1,1"],
+                "quality": pair["added_mass_quality"]["1,1"],
+                "visible": "Unavailable (INSUFFICIENT_DATA)" in (
+                    result.report_html_path.read_text(encoding="utf-8")
+                ),
+            }
+
+        assert actual == {
+            "status": "REFUSED",
+            "overall": None,
+            "correlation": None,
+            "quality": "INSUFFICIENT_DATA",
+            "visible": True,
+        }
+
+    def test_ship_placeholder_matrices_refuse_end_to_end_artifact(
+        self, tmp_path: Path,
+    ) -> None:
+        script = _load_ship_benchmark_script()
+        first = script.create_diffraction_results(
+            _synthetic_ship_rao_data(), "SyntheticShip", "AQWA",
+        )
+        second = script.create_diffraction_results(
+            _synthetic_ship_rao_data(), "SyntheticShip", "OrcaWave",
+        )
+
+        result = BenchmarkRunner(
+            BenchmarkConfig(output_dir=tmp_path, dry_run=True),
+        ).run_from_results({"AQWA": first, "OrcaWave": second})
+
+        actual = None
+        if result.report_json_path:
+            data = json.loads(result.report_json_path.read_text(encoding="utf-8"))
+            pair = data["pairwise_results"]["AQWA-vs-OrcaWave"]
+            actual = {
+                "matrix_source": first.added_mass.matrices[0].source,
+                "status": data["comparison_status"],
+                "overall": data["overall_consensus"],
+                "quality": pair["added_mass_quality"]["1,1"],
+                "correlation": pair["added_mass_correlations"]["1,1"],
+            }
+
+        assert actual == {
+            "matrix_source": "placeholder",
+            "status": "REFUSED",
+            "overall": None,
+            "quality": "UNTRUSTED_SOURCE",
+            "correlation": None,
+        }
 
 
 # ---------------------------------------------------------------------------

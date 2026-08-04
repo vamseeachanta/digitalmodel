@@ -81,6 +81,40 @@ def test_default_relative_gap_follows_from_damping_and_interval_count():
     assert api.INTERVALS_ACROSS_HALF_POWER_BAND == 2
 
 
+def test_default_minimum_sample_count_is_computed_from_peak_shape():
+    api = _api()
+
+    assert api.AbscissaConfig().min_samples == (
+        api.PEAK_SAMPLE_COUNT
+        + 2 * api.SAMPLES_PER_RESONANCE_FLANK
+    )
+
+
+def test_default_overlap_has_no_underived_fractional_threshold():
+    api = _api()
+
+    assert api.AbscissaConfig().min_coverage is None
+
+
+def test_default_overlap_requires_one_complete_source_domain():
+    api = _api()
+    first = np.linspace(1.0, 2.0, 11)
+    second = np.linspace(1.2, 2.2, 11)
+
+    with pytest.raises(
+        api.AbscissaOverlapError,
+        match="shared interval must contain one complete source domain",
+    ):
+        api.build_evaluation_grid(first, second)
+
+
+def test_custom_thresholds_require_custom_justification():
+    api = _api()
+
+    with pytest.raises(ValueError, match="custom thresholds require custom justification"):
+        api.AbscissaConfig(min_samples=11)
+
+
 def test_relative_gap_bound_is_dimensionless_and_scale_free():
     """The same config must accept a decade-shifted copy of an adequate grid.
 
@@ -131,7 +165,13 @@ def test_l01_grids_have_adequate_interval_overlap():
         np.ptp(AQWA_L01_FREQUENCIES), np.ptp(ORCAWAVE_L01_FREQUENCIES)
     )
 
-    assert (upper - lower) / smaller_span >= api.AbscissaConfig().min_coverage
+    assert (lower, upper, smaller_span) == pytest.approx(
+        (
+            AQWA_L01_FREQUENCIES[0],
+            AQWA_L01_FREQUENCIES[-1],
+            np.ptp(AQWA_L01_FREQUENCIES),
+        )
+    )
 
 
 def test_l01_grids_are_refused_for_inadequate_sampling():
@@ -184,7 +224,11 @@ def test_disjoint_grids_raise():
 
 def test_coverage_below_minimum_raises_with_exact_coverage():
     api = _api()
-    config = api.AbscissaConfig(min_coverage=0.5, max_relative_gap=20.0)
+    config = api.AbscissaConfig(
+        min_coverage=0.5,
+        max_relative_gap=20.0,
+        justification="Synthetic partial-overlap error-message policy.",
+    )
 
     with pytest.raises(
         api.AbscissaOverlapError,
@@ -202,7 +246,11 @@ def test_source_gap_above_maximum_names_the_offending_interval():
     to add frequencies. 1.0 -> 2.0 rad/s is a relative gap of exactly 1.0.
     """
     api = _api()
-    config = api.AbscissaConfig(min_coverage=0.5, max_relative_gap=0.5)
+    config = api.AbscissaConfig(
+        min_coverage=0.5,
+        max_relative_gap=0.5,
+        justification="Synthetic gap error-message policy.",
+    )
 
     with pytest.raises(
         api.AbscissaGapError,
@@ -231,7 +279,10 @@ def test_non_positive_frequency_is_rejected():
 
 def test_evaluation_grid_is_coarser_solver_restricted_to_shared_interval():
     api = _api()
-    config = api.AbscissaConfig(max_relative_gap=2.0)
+    config = api.AbscissaConfig(
+        max_relative_gap=2.0,
+        justification="Synthetic evaluation-grid policy.",
+    )
 
     grid = api.build_evaluation_grid(
         np.array([1.0, 2.0, 3.0]),
@@ -244,7 +295,10 @@ def test_evaluation_grid_is_coarser_solver_restricted_to_shared_interval():
 
 def test_evaluation_grid_never_extrapolates_past_shared_interval():
     api = _api()
-    config = api.AbscissaConfig(max_relative_gap=2.0)
+    config = api.AbscissaConfig(
+        max_relative_gap=2.0,
+        justification="Synthetic no-extrapolation policy.",
+    )
 
     grid = api.build_evaluation_grid(
         np.array([1.0, 2.0, 3.0]),

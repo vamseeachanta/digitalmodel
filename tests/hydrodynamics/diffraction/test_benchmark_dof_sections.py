@@ -358,6 +358,25 @@ class TestBuildDofReportSections:
         assert "stats-table" in html
         assert "Magnitude correlation" in html
 
+    def test_unavailable_correlation_renders_quality_not_zero(
+        self, two_identical_results,
+    ):
+        report = _make_benchmark_report(two_identical_results)
+        pair = next(iter(report.pairwise_results.values()))
+        pair.rao_comparisons["heave"].magnitude_stats.correlation = None
+        pair.rao_comparisons["heave"].magnitude_stats.quality = "INSUFFICIENT_DATA"
+        names = sorted(two_identical_results.keys())
+
+        html = build_dof_report_sections(
+            report,
+            two_identical_results,
+            names,
+            x_axis="frequency",
+            heading_x_axis=False,
+        )
+
+        assert "Unavailable (INSUFFICIENT_DATA)" in html
+
     def test_contains_plotly_divs(self, two_identical_results):
         """Each DOF should have an embedded Plotly div."""
         report = _make_benchmark_report(two_identical_results)

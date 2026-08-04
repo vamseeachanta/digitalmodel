@@ -24,6 +24,19 @@ from digitalmodel.hydrodynamics.diffraction.output_schemas import (
 )
 
 
+def _comparison_policy():
+    from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import (
+        ComparisonPolicy,
+    )
+
+    return ComparisonPolicy.from_uncertainties(
+        solver_relative_uncertainty=0.025,
+        response_absolute_resolution=5e-11,
+        minimum_explained_variance=0.9801,
+        justification="Synthetic comparator fixture uncertainty budget.",
+    )
+
+
 # ---------------------------------------------------------------------------
 # 1. Initialization validation
 # ---------------------------------------------------------------------------
@@ -62,30 +75,52 @@ class TestInitialization:
         self, three_solver_results: Dict[str, DiffractionResults],
     ) -> None:
         # Act
-        comparator = MultiSolverComparator(three_solver_results)
+        comparator = MultiSolverComparator(
+            three_solver_results,
+            policy=_comparison_policy(),
+        )
 
         # Assert - names should be alphabetically sorted
         assert comparator.solver_names == sorted(three_solver_results.keys())
 
-    def test_init_default_tolerance(
+    def test_solver_fixture_uses_one_frequency_grid(
         self, two_identical_results: Dict[str, DiffractionResults],
     ) -> None:
-        # Act
+        results = two_identical_results["SolverA"]
+
+        assert np.array_equal(
+            results.raos.heave.frequencies.values,
+            results.added_mass.frequencies.values,
+        ) is True
+
+    def test_init_has_no_unjustified_default_tolerance(
+        self, two_identical_results: Dict[str, DiffractionResults],
+    ) -> None:
         comparator = MultiSolverComparator(two_identical_results)
 
-        # Assert
-        assert comparator.tolerance == pytest.approx(0.05)
+        assert comparator.tolerance is None
 
-    def test_init_custom_tolerance(
+    def test_init_rejects_tolerance_without_justification(
         self, two_identical_results: Dict[str, DiffractionResults],
     ) -> None:
-        # Act
+        with pytest.raises(ValueError, match="justification"):
+            MultiSolverComparator(two_identical_results, tolerance=0.10)
+
+    def test_init_records_tolerance_semantics_and_justification(
+        self, two_identical_results: Dict[str, DiffractionResults],
+    ) -> None:
         comparator = MultiSolverComparator(
-            two_identical_results, tolerance=0.10,
+            two_identical_results,
+            policy=_comparison_policy(),
         )
 
-        # Assert
-        assert comparator.tolerance == pytest.approx(0.10)
+        assert (
+            comparator.tolerance_semantics,
+            comparator.tolerance_justification,
+        ) == (
+            "symmetric_relative_rms_with_absolute_floor",
+            "Synthetic comparator fixture uncertainty budget.",
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -163,7 +198,10 @@ class TestCompareRAOs:
         self, two_identical_results: Dict[str, DiffractionResults],
     ) -> None:
         # Arrange
-        comparator = MultiSolverComparator(two_identical_results)
+        comparator = MultiSolverComparator(
+            two_identical_results,
+            policy=_comparison_policy(),
+        )
 
         # Act
         rao_comparisons = comparator.compare_raos()
@@ -300,9 +338,14 @@ class TestCompareRAOs:
     def test_null_response_dof_still_permits_full_consensus(
         self, two_identical_results: Dict[str, DiffractionResults],
     ) -> None:
-        for results in two_identical_results.values():
-            results.raos.heave.magnitude.fill(0.0)
-        comparator = MultiSolverComparator(two_identical_results)
+        shape = two_identical_results["SolverA"].raos.heave.magnitude.shape
+        noise = np.linspace(1e-12, 3e-12, np.prod(shape)).reshape(shape)
+        two_identical_results["SolverA"].raos.heave.magnitude = noise
+        two_identical_results["SolverB"].raos.heave.magnitude = noise * 3.0
+        comparator = MultiSolverComparator(
+            two_identical_results,
+            policy=_comparison_policy(),
+        )
 
         comparison = comparator.compare_raos()["SolverA-vs-SolverB"]["heave"]
         consensus = comparator.compute_consensus()["HEAVE"]
@@ -312,16 +355,41 @@ class TestCompareRAOs:
             consensus.consensus_level,
         ) == ("NULL_RESPONSE", "FULL")
 
-    def test_unequal_null_responses_still_permit_full_consensus(
+    def test_null_response_relative_rms_uses_absolute_floor(
+        self, two_identical_results: Dict[str, DiffractionResults],
+    ) -> None:
+        comparator = MultiSolverComparator(two_identical_results)
+
+        relative_rms = comparator._symmetric_relative_rms(
+            np.array([1e-12, 2e-12]),
+            np.array([3e-12, 6e-12]),
+            absolute_floor=1e-10,
+        )
+
+        assert relative_rms == pytest.approx(np.sqrt(10.0) / 100.0)
+
+    def test_large_unequal_null_responses_do_not_bypass_magnitude_gate(
         self, two_identical_results: Dict[str, DiffractionResults],
     ) -> None:
         two_identical_results["SolverA"].raos.heave.magnitude.fill(2e-11)
         two_identical_results["SolverB"].raos.heave.magnitude.fill(8e-11)
-        comparator = MultiSolverComparator(two_identical_results)
+        comparator = MultiSolverComparator(
+            two_identical_results,
+            policy=_comparison_policy(),
+        )
 
         consensus = comparator.compute_consensus()["HEAVE"]
 
-        assert consensus.consensus_level == "FULL"
+        assert consensus.consensus_level == "NO_CONSENSUS"
+
+    def test_nearby_small_values_are_not_identical(self) -> None:
+        stats = MultiSolverComparator._calculate_deviation_stats(
+            np.array([1e-9, 2e-9, 3e-9]),
+            np.array([5e-9, 6e-9, 7e-9]),
+            np.array([1.0, 1.1, 1.2]),
+        )
+
+        assert stats.quality == "COMPARED"
 
     def test_distinct_constant_values_have_insufficient_data_quality(self) -> None:
         stats = MultiSolverComparator._calculate_deviation_stats(
@@ -354,7 +422,10 @@ class TestMatrixComparison:
         self, three_solver_results: Dict[str, DiffractionResults],
     ) -> None:
         # Arrange
-        comparator = MultiSolverComparator(three_solver_results)
+        comparator = MultiSolverComparator(
+            three_solver_results,
+            policy=_comparison_policy(),
+        )
 
         # Act
         am_comparisons = comparator.compare_added_mass()
@@ -405,7 +476,10 @@ class TestConsensus:
         self, two_identical_results: Dict[str, DiffractionResults],
     ) -> None:
         # Arrange
-        comparator = MultiSolverComparator(two_identical_results)
+        comparator = MultiSolverComparator(
+            two_identical_results,
+            policy=_comparison_policy(),
+        )
 
         # Act
         consensus = comparator.compute_consensus()
@@ -428,12 +502,18 @@ class TestConsensus:
         two_identical_results["SolverA"].raos.pitch.magnitude = baseline
         two_identical_results["SolverB"].raos.pitch.magnitude = scaled
 
-        forward = MultiSolverComparator(two_identical_results).compute_consensus()
+        forward = MultiSolverComparator(
+            two_identical_results,
+            policy=_comparison_policy(),
+        ).compute_consensus()
         reverse_results = {
             "SolverA": two_identical_results["SolverB"],
             "SolverB": two_identical_results["SolverA"],
         }
-        reverse = MultiSolverComparator(reverse_results).compute_consensus()
+        reverse = MultiSolverComparator(
+            reverse_results,
+            policy=_comparison_policy(),
+        ).compute_consensus()
 
         assert (
             forward["PITCH"].consensus_level,
@@ -444,25 +524,26 @@ class TestConsensus:
         self, three_solver_results: Dict[str, DiffractionResults],
     ) -> None:
         # Arrange - BEMRosetta has heave_bias=0.15
-        comparator = MultiSolverComparator(three_solver_results)
+        comparator = MultiSolverComparator(
+            three_solver_results,
+            policy=_comparison_policy(),
+        )
 
         # Act
         consensus = comparator.compute_consensus()
 
-        # Assert - heave should show MAJORITY (or lower) due to bias
+        # Assert - one agreeing pair and two disagreeing pairs is a split.
         heave_consensus = consensus["HEAVE"]
-        assert heave_consensus.consensus_level in (
-            "MAJORITY", "SPLIT", "NO_CONSENSUS",
-        ), (
-            f"Expected non-FULL consensus for HEAVE, "
-            f"got {heave_consensus.consensus_level}"
-        )
+        assert heave_consensus.consensus_level == "SPLIT"
 
     def test_consensus_returns_all_dofs(
         self, three_solver_results: Dict[str, DiffractionResults],
     ) -> None:
         # Arrange
-        comparator = MultiSolverComparator(three_solver_results)
+        comparator = MultiSolverComparator(
+            three_solver_results,
+            policy=_comparison_policy(),
+        )
 
         # Act
         consensus = comparator.compute_consensus()
@@ -475,15 +556,15 @@ class TestConsensus:
         self, three_solver_results: Dict[str, DiffractionResults],
     ) -> None:
         # Arrange
-        comparator = MultiSolverComparator(three_solver_results)
+        comparator = MultiSolverComparator(
+            three_solver_results,
+            policy=_comparison_policy(),
+        )
 
         # Act
         consensus = comparator.compute_consensus()
 
-        # Assert - if heave has an outlier, it should be BEMRosetta
-        heave_consensus = consensus["HEAVE"]
-        if heave_consensus.outlier_solver is not None:
-            assert heave_consensus.outlier_solver == "BEMRosetta"
+        assert consensus["HEAVE"].outlier_solver is None
 
     def test_all_unavailable_pairs_have_null_mean(
         self, two_identical_results: Dict[str, DiffractionResults],
@@ -498,7 +579,12 @@ class TestConsensus:
 
         consensus = comparator.compute_consensus()
 
-        assert consensus["HEAVE"].mean_pairwise_correlation is None
+        assert (
+            consensus["HEAVE"].comparison_status,
+            consensus["HEAVE"].refusal_reason,
+            consensus["HEAVE"].consensus_level,
+            consensus["HEAVE"].mean_pairwise_correlation,
+        ) == ("REFUSED", "INSUFFICIENT_SAMPLING", None, None)
 
     def test_unavailable_pairs_are_excluded_from_mean(
         self, three_solver_results: Dict[str, DiffractionResults],
@@ -518,6 +604,26 @@ class TestConsensus:
             available.magnitude_stats.correlation,
         )
 
+    def test_one_unavailable_pair_refuses_three_solver_consensus(
+        self, three_solver_results: Dict[str, DiffractionResults],
+    ) -> None:
+        sparse = three_solver_results["OrcaWave"]
+        for dof in DOF:
+            component = getattr(sparse.raos, dof.name.lower())
+            component.frequencies.values = np.array([1.0, 1.05, 1.1])
+            component.magnitude = component.magnitude[:3]
+            component.phase = component.phase[:3]
+
+        consensus = MultiSolverComparator(
+            three_solver_results,
+            policy=_comparison_policy(),
+        ).compute_consensus()
+
+        assert (
+            consensus["HEAVE"].comparison_status,
+            consensus["HEAVE"].consensus_level,
+        ) == ("REFUSED", None)
+
 
 # ---------------------------------------------------------------------------
 # 5. Report generation
@@ -531,7 +637,10 @@ class TestReportGeneration:
         self, three_solver_results: Dict[str, DiffractionResults],
     ) -> None:
         # Arrange
-        comparator = MultiSolverComparator(three_solver_results)
+        comparator = MultiSolverComparator(
+            three_solver_results,
+            policy=_comparison_policy(),
+        )
 
         # Act
         report = comparator.generate_report()
@@ -541,9 +650,7 @@ class TestReportGeneration:
         assert report.vessel_name == "TestVessel"
         assert len(report.solver_names) == 3
         assert report.comparison_date  # non-empty string
-        assert report.overall_consensus in (
-            "FULL", "MAJORITY", "SPLIT", "NO_CONSENSUS",
-        )
+        assert report.overall_consensus == "MAJORITY"
         assert isinstance(report.pairwise_results, dict)
         assert isinstance(report.consensus_by_dof, dict)
         assert isinstance(report.notes, list)
@@ -614,6 +721,28 @@ class TestReportGeneration:
         data = json.loads(output_file.read_text(encoding="utf-8"))
         pair = data["pairwise_results"]["SolverA-vs-SolverB"]
         assert pair["rao_comparisons"]["heave"]["magnitude_correlation"] is None
+
+    def test_sampling_refusal_propagates_to_json_verdict(
+        self,
+        two_identical_results: Dict[str, DiffractionResults],
+        tmp_path: Path,
+    ) -> None:
+        for results in two_identical_results.values():
+            for dof in DOF:
+                component = getattr(results.raos, dof.name.lower())
+                component.frequencies.values = np.array([1.0, 1.05, 1.1])
+                component.magnitude = component.magnitude[:3]
+                component.phase = component.phase[:3]
+        output_file = tmp_path / "sampling_refusal.json"
+
+        MultiSolverComparator(two_identical_results).export_report_json(output_file)
+
+        data = json.loads(output_file.read_text(encoding="utf-8"))
+        assert (
+            data["comparison_status"],
+            data["overall_consensus"],
+            data["consensus_by_dof"]["HEAVE"]["refusal_reason"],
+        ) == ("REFUSED", None, "INSUFFICIENT_SAMPLING")
 
     def test_unavailable_matrix_correlation_exports_json_null(
         self,

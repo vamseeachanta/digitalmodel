@@ -221,6 +221,17 @@ class TestPlotPairwiseCorrelationHeatmap:
         result = plot_pairwise_correlation_heatmap(report, tmp_path)
         assert result.exists()
 
+    def test_unavailable_pairwise_correlation_remains_absent(self, tmp_path):
+        report = _make_benchmark_report()
+        pair = next(iter(report.pairwise_results.values()))
+        for comparison in pair.rao_comparisons.values():
+            comparison.magnitude_stats.correlation = None
+            comparison.magnitude_stats.quality = "INSUFFICIENT_DATA"
+
+        result = plot_pairwise_correlation_heatmap(report, tmp_path)
+
+        assert result.exists() is True
+
 
 # ---------------------------------------------------------------------------
 # Tests: build_hydro_coefficients_html

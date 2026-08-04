@@ -115,6 +115,19 @@ class TestDeviationStatistics:
 
         assert stats.quality == "IDENTICAL"
 
+    def test_nearby_arrays_are_compared_not_identical(self, mock_diffraction_results):
+        aqwa = _clone_results(mock_diffraction_results)
+        ow = _clone_results(mock_diffraction_results)
+        comp = DiffractionComparator(aqwa, ow)
+
+        stats = comp._calculate_deviation_stats(
+            np.array([1e-9, 2e-9, 3e-9]),
+            np.array([5e-9, 6e-9, 7e-9]),
+            np.array([1.0, 1.1, 1.2]),
+        )
+
+        assert stats.quality == "COMPARED"
+
     def test_known_offset(self, mock_diffraction_results):
         aqwa = _clone_results(mock_diffraction_results)
         ow = _clone_results(mock_diffraction_results)
@@ -181,6 +194,24 @@ class TestCompareRAOs:
 
         heave_comp = result["heave"]
         assert heave_comp.statistics.mean_error == pytest.approx(0.1, abs=0.01)
+
+    def test_equal_shape_offset_grids_align_before_comparison(
+        self, mock_diffraction_results,
+    ):
+        aqwa = _clone_results(mock_diffraction_results)
+        ow = _clone_results(mock_diffraction_results)
+        aqwa_grid = np.linspace(1.0, 1.4, 9)
+        ow_grid = np.linspace(1.02, 1.42, 9)
+        for results, grid in ((aqwa, aqwa_grid), (ow, ow_grid)):
+            for dof in DOF:
+                component = getattr(results.raos, dof.name.lower())
+                component.frequencies.values = grid
+                component.magnitude = np.repeat(grid[:, None], 5, axis=1)
+                component.phase = np.zeros_like(component.magnitude)
+
+        comparison = DiffractionComparator(aqwa, ow).compare_raos()["heave"]
+
+        assert comparison.statistics.rms_error == 0.0
 
     def test_phase_wrapping(self, mock_diffraction_results):
         aqwa = _clone_results(mock_diffraction_results)
