@@ -47,7 +47,13 @@ _DRIVER = textwrap.dedent(
     import importlib.util
     import pathlib
     import sys
+    import sysconfig
 
+    # Cache the real host configuration before simulating the target guard.
+    # Otherwise scipy asks a Linux interpreter for a nonexistent Windows
+    # sysconfig module and the probe fails before importing the target script.
+    sysconfig.get_config_vars()
+    import digitalmodel.hydrodynamics.diffraction.diffraction_units
     # Force the win32-guarded branch regardless of the host platform.
     sys.platform = "win32"
 

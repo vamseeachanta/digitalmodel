@@ -164,8 +164,8 @@ class TestBuildInputComparisonHtml:
         results = {n: _make_solver_results(n) for n in names}
         meta = _make_solver_metadata(names)
         html = build_input_comparison_html(names, results, meta)
-        # Should contain frequency range with count
-        assert "(10)" in html  # 10 frequencies from conftest
+        expected_count = results["SolverA"].raos.surge.frequencies.count
+        assert f"({expected_count})" in html
 
     def test_heading_range_rendered(self):
         names = ["SolverA"]
