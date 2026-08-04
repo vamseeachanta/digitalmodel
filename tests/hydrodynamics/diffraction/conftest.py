@@ -40,6 +40,18 @@ def _make_freq_data() -> FrequencyData:
     )
 
 
+def _make_comparison_freq_data() -> FrequencyData:
+    """Frequency grid that satisfies the fail-closed comparison contract."""
+    values = np.geomspace(1.0, 2.0, N_FREQ)
+    return FrequencyData(
+        values=values,
+        periods=2.0 * np.pi / values,
+        count=N_FREQ,
+        min_freq=float(values[0]),
+        max_freq=float(values[-1]),
+    )
+
+
 def _make_heading_data() -> HeadingData:
     return HeadingData(
         values=HEADINGS.copy(),
@@ -371,7 +383,7 @@ def _make_solver_results(
             dof=dof,
             magnitude=mag,
             phase=phase,
-            frequencies=_make_freq_data(),
+            frequencies=_make_comparison_freq_data(),
             headings=_make_heading_data(),
             unit="",
         )

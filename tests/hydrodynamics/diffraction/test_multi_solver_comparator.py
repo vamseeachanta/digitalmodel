@@ -24,23 +24,6 @@ from digitalmodel.hydrodynamics.diffraction.output_schemas import (
 )
 
 
-@pytest.fixture(autouse=True)
-def adequate_comparator_abscissae(request: pytest.FixtureRequest) -> None:
-    """Keep generic RAO shapes while satisfying the comparator contract."""
-    for fixture_name in ("two_identical_results", "three_solver_results"):
-        if fixture_name not in request.fixturenames:
-            continue
-        solver_results = request.getfixturevalue(fixture_name)
-        for results in solver_results.values():
-            for dof in DOF:
-                component = getattr(results.raos, dof.name.lower())
-                component.frequencies.values = np.geomspace(
-                    1.0,
-                    2.0,
-                    component.magnitude.shape[0],
-                )
-
-
 # ---------------------------------------------------------------------------
 # 1. Initialization validation
 # ---------------------------------------------------------------------------
