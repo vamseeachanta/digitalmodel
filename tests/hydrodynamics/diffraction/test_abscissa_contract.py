@@ -149,7 +149,7 @@ def test_l01_grids_are_refused_for_inadequate_sampling():
     """
     api = _api()
 
-    with pytest.raises(api.AbscissaGapError, match=r"^first source relative gap 0\.757"):
+    with pytest.raises(api.AbscissaGapError, match=r"^first source relative gap 0\.7567.* \[0\.407000, 0\.715000\] rad/s"):
         api.build_evaluation_grid(AQWA_L01_FREQUENCIES, ORCAWAVE_L01_FREQUENCIES)
 
 
@@ -192,7 +192,7 @@ def test_coverage_below_minimum_raises_with_exact_coverage():
             f"^{re.escape('shared-interval coverage 0.200000 is below minimum 0.500000')}$"
         ),
     ):
-        api.build_evaluation_grid(np.array([0.0, 10.0]), np.array([8.0, 18.0]), config)
+        api.build_evaluation_grid(np.array([1.0, 11.0]), np.array([9.0, 19.0]), config)
 
 
 def test_source_gap_above_maximum_names_the_offending_interval():
@@ -234,12 +234,12 @@ def test_evaluation_grid_is_coarser_solver_restricted_to_shared_interval():
     config = api.AbscissaConfig(max_relative_gap=2.0)
 
     grid = api.build_evaluation_grid(
-        np.array([0.0, 1.0, 2.0]),
-        np.array([0.5, 1.0, 1.5, 2.0, 2.5]),
+        np.array([1.0, 2.0, 3.0]),
+        np.array([1.5, 2.0, 2.5, 3.0, 3.5]),
         config,
     )
 
-    np.testing.assert_array_equal(grid, np.array([1.0, 2.0]))
+    np.testing.assert_array_equal(grid, np.array([2.0, 3.0]))
 
 
 def test_evaluation_grid_never_extrapolates_past_shared_interval():
@@ -247,22 +247,22 @@ def test_evaluation_grid_never_extrapolates_past_shared_interval():
     config = api.AbscissaConfig(max_relative_gap=2.0)
 
     grid = api.build_evaluation_grid(
-        np.array([0.0, 1.0, 2.0]),
-        np.array([0.5, 1.0, 1.5, 2.5]),
+        np.array([1.0, 2.0, 3.0]),
+        np.array([1.5, 2.0, 2.5, 3.5]),
         config,
     )
 
-    assert (grid[0], grid[-1]) == (1.0, 2.0)
+    assert (grid[0], grid[-1]) == (2.0, 3.0)
 
 
 def test_complex_interpolation_preserves_branch_cut_phase():
     api = _api()
 
     interpolated = api.interpolate_complex_response(
-        np.array([0.0, 2.0]),
+        np.array([1.0, 3.0]),
         np.array([1.0, 1.0]),
         np.array([179.0, -179.0]),
-        np.array([1.0]),
+        np.array([2.0]),
     )
 
     assert interpolated.phase_degrees[0] == pytest.approx(180.0, abs=0.5)
@@ -297,7 +297,7 @@ def test_sampling_gate_fires_on_identical_three_point_grids():
 
 def test_identical_sufficient_grid_is_not_resampled():
     api = _api()
-    frequencies = np.arange(5.0)
+    frequencies = np.arange(1.0, 6.0)
     magnitude = np.ones(5)
     phase = np.full(5, 270.0)
 

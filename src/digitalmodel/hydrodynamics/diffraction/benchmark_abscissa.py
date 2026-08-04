@@ -201,10 +201,24 @@ def align_responses(
     second_phase_degrees: ArrayLike,
     config: AbscissaConfig | None = None,
 ) -> AlignmentResult:
-    """Align two responses and always apply sampling adequacy afterward."""
+    """Align two responses, refusing before and after grid construction.
+
+    Sampling adequacy is checked BEFORE the grid is built as well as after.
+    Ordering matters: the evaluation grid can never be longer than the shorter
+    source, so a source that is already too short cannot yield an adequate
+    comparison no matter how the grid is derived. Checking count first also
+    produces the more actionable refusal -- "3 samples, need 5" tells the run
+    owner what to change, whereas the gap error that a sparse 3-point array
+    would otherwise trigger first sends them to inspect spacing instead.
+    """
     active_config = config or AbscissaConfig()
     first_abscissa = _validated_abscissa(first_frequencies, "first")
     second_abscissa = _validated_abscissa(second_frequencies, "second")
+    source_sampling = assess_sampling(
+        first_abscissa, second_abscissa, active_config
+    )
+    if source_sampling is not None:
+        return source_sampling
     grid = build_evaluation_grid(first_abscissa, second_abscissa, active_config)
     first_response = _response_on_grid(
         first_abscissa, first_magnitude, first_phase_degrees, grid
