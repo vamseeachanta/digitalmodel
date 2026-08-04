@@ -184,6 +184,7 @@ def create_diffraction_results(
                 frequency=float(freq),
                 matrix_type="added_mass",
                 units={"linear": "kg", "angular": "kg.m^2"},
+                source="placeholder",
             )
         )
         matrices_damp.append(
@@ -192,6 +193,7 @@ def create_diffraction_results(
                 frequency=float(freq),
                 matrix_type="damping",
                 units={"linear": "N.s/m", "angular": "N.m.s/rad"},
+                source="placeholder",
             )
         )
 
@@ -344,7 +346,6 @@ def main():
 
     config = BenchmarkConfig(
         output_dir=output_dir,
-        tolerance=0.05,
         x_axis="period",
         reference_solver="AQWA",
     )

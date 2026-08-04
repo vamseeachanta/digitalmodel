@@ -23,6 +23,12 @@ from dataclasses import dataclass, field
 from datetime import datetime
 import json
 
+from digitalmodel.hydrodynamics.diffraction.benchmark_abscissa import (
+    AlignedResponses,
+    InsufficientSampling,
+    align_responses,
+)
+
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     DiffractionResults,
     DOF
@@ -45,6 +51,7 @@ class DeviationStatistics:
         "NULL_RESPONSE",
         "INSUFFICIENT_DATA",
         "INSUFFICIENT_SAMPLING",
+        "UNTRUSTED_SOURCE",
     ] = "COMPARED"
 
 
@@ -166,9 +173,6 @@ class DiffractionComparator:
         elif np.ptp(flat1) == 0.0 or np.ptp(flat2) == 0.0:
             correlation = None
             quality = "INSUFFICIENT_DATA"
-        elif np.allclose(flat1, flat2):
-            correlation = 1.0
-            quality = "IDENTICAL"
         else:
             correlation = float(np.corrcoef(flat1, flat2)[0, 1])
             quality = "COMPARED"
@@ -203,20 +207,51 @@ class DiffractionComparator:
             if aqwa_rao is None or orcawave_rao is None:
                 continue
 
-            # Ensure same dimensions
-            if aqwa_rao.magnitude.shape != orcawave_rao.magnitude.shape:
-                print(f"Warning: Shape mismatch for {dof.name} RAOs - skipping")
+            alignment = align_responses(
+                aqwa_rao.frequencies.values,
+                aqwa_rao.magnitude,
+                aqwa_rao.phase,
+                orcawave_rao.frequencies.values,
+                orcawave_rao.magnitude,
+                orcawave_rao.phase,
+            )
+            if isinstance(alignment, InsufficientSampling):
+                stats = DeviationStatistics(
+                    mean_error=0.0,
+                    max_error=0.0,
+                    rms_error=0.0,
+                    mean_abs_error=0.0,
+                    correlation=None,
+                    frequencies=np.array([], dtype=float),
+                    errors=np.zeros_like(aqwa_rao.magnitude),
+                    quality="INSUFFICIENT_SAMPLING",
+                )
+                comparisons[dof_name] = RAOComparison(
+                    dof=dof,
+                    statistics=stats,
+                    magnitude_diff=np.zeros_like(aqwa_rao.magnitude),
+                    phase_diff=np.zeros_like(aqwa_rao.phase),
+                    max_magnitude_diff_location=(0, 0),
+                    max_phase_diff_location=(0, 0),
+                )
                 continue
+            if not isinstance(alignment, AlignedResponses):
+                raise TypeError("unexpected abscissa alignment result")
+
+            aqwa_magnitude = alignment.first.magnitude
+            orcawave_magnitude = alignment.second.magnitude
+            aqwa_phase = alignment.first.phase_degrees
+            orcawave_phase = alignment.second.phase_degrees
 
             # Magnitude comparison
-            mag_diff = orcawave_rao.magnitude - aqwa_rao.magnitude
+            mag_diff = orcawave_magnitude - aqwa_magnitude
             max_mag_loc = np.unravel_index(
                 np.argmax(np.abs(mag_diff)),
                 mag_diff.shape
             )
 
             # Phase comparison (handle wrap-around)
-            phase_diff = orcawave_rao.phase - aqwa_rao.phase
+            phase_diff = orcawave_phase - aqwa_phase
             # Wrap to [-180, 180]
             phase_diff = np.mod(phase_diff + 180, 360) - 180
             max_phase_loc = np.unravel_index(
@@ -226,9 +261,9 @@ class DiffractionComparator:
 
             # Statistics for magnitude
             stats = self._calculate_deviation_stats(
-                aqwa_rao.magnitude,
-                orcawave_rao.magnitude,
-                aqwa_rao.frequencies.values
+                aqwa_magnitude,
+                orcawave_magnitude,
+                alignment.frequencies,
             )
 
             comparison = RAOComparison(

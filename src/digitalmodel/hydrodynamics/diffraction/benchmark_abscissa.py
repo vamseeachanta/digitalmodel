@@ -17,6 +17,14 @@ config rather than relax this default.
 INTERVALS_ACROSS_HALF_POWER_BAND = 2
 """Minimum sample intervals required across a resonance's half-power band."""
 
+PEAK_SAMPLE_COUNT = 1
+"""One sample is required at the resolved response peak."""
+
+SAMPLES_PER_RESONANCE_FLANK = INTERVALS_ACROSS_HALF_POWER_BAND
+"""Samples retained on each side of a resolved response peak."""
+
+MIN_SAMPLES = PEAK_SAMPLE_COUNT + 2 * SAMPLES_PER_RESONANCE_FLANK
+
 MAX_RELATIVE_GAP = (
     2.0 * DAMPING_RATIO / INTERVALS_ACROSS_HALF_POWER_BAND
 )  # 0.10, dimensionless
@@ -32,8 +40,9 @@ DEFAULT_JUSTIFICATION = (
     "valid across the whole frequency range: an absolute rad/s bound is either "
     "too loose near the low-frequency resonances that matter for vessel "
     "motions, or needlessly strict in the high-frequency tail. "
-    "MIN_SAMPLES=5 retains a peak plus two samples on each flank, and "
-    "MIN_COVERAGE=0.5 requires half the narrower source domain to be shared."
+    "MIN_SAMPLES is computed as one peak sample plus N samples on each flank. "
+    "The default overlap rule requires one complete source domain; it uses no "
+    "fractional coverage threshold."
 )
 
 
@@ -53,10 +62,19 @@ class AbscissaGapError(ValueError):
 class AbscissaConfig:
     """Physics-based thresholds for an abscissa comparison."""
 
-    min_samples: int = 5
-    min_coverage: float = 0.5
+    min_samples: int = MIN_SAMPLES
+    min_coverage: float | None = None
     max_relative_gap: float = MAX_RELATIVE_GAP
     justification: str = DEFAULT_JUSTIFICATION
+
+    def __post_init__(self) -> None:
+        custom_threshold = (
+            self.min_samples != MIN_SAMPLES
+            or self.min_coverage is not None
+            or self.max_relative_gap != MAX_RELATIVE_GAP
+        )
+        if custom_threshold and self.justification == DEFAULT_JUSTIFICATION:
+            raise ValueError("custom thresholds require custom justification")
 
 
 @dataclass(frozen=True)
@@ -127,7 +145,20 @@ def build_evaluation_grid(
 
     smaller_span = min(np.ptp(first_array), np.ptp(second_array))
     coverage = (upper - lower) / smaller_span
-    if coverage < active_config.min_coverage:
+    if active_config.min_coverage is None:
+        first_contains_second = (
+            first_array[0] <= second_array[0]
+            and first_array[-1] >= second_array[-1]
+        )
+        second_contains_first = (
+            second_array[0] <= first_array[0]
+            and second_array[-1] >= first_array[-1]
+        )
+        if not (first_contains_second or second_contains_first):
+            raise AbscissaOverlapError(
+                "shared interval must contain one complete source domain"
+            )
+    elif coverage < active_config.min_coverage:
         raise AbscissaOverlapError(
             f"shared-interval coverage {coverage:.6f} is below minimum "
             f"{active_config.min_coverage:.6f}"
