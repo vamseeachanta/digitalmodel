@@ -8,7 +8,7 @@ configuration. Does not require OpenFOAM to be installed.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from loguru import logger
 
@@ -18,7 +18,8 @@ from .initial_fields import (
     write_turbulence_fields,
     write_velocity_field,
 )
-from .models import OpenFOAMCase, TurbulenceType
+from .block_mesh import render_block_mesh_dict_body
+from .models import OpenFOAMCase
 from .motion import render_dynamic_mesh_dict_body
 from .partial_fill import (
     partial_fill_box,
@@ -94,10 +95,12 @@ class OpenFOAMCaseBuilder:
         case: OpenFOAMCase,
         pressure_taps: Optional[List[PressureTap]] = None,
         *,
+        tap_write_control: str = "timeStep",
         tap_write_interval: int = 1,
     ) -> None:
         self._case = case
         self._pressure_taps: List[PressureTap] = list(pressure_taps or [])
+        self._tap_write_control = tap_write_control
         self._tap_write_interval = tap_write_interval
 
     def build(self, parent_dir: Path) -> Path:
@@ -185,6 +188,7 @@ class OpenFOAMCaseBuilder:
         if self._pressure_taps:
             block = render_pressure_tap_functions(
                 self._pressure_taps,
+                write_control=self._tap_write_control,
                 write_interval=self._tap_write_interval,
             )
             lines.append("\n" + block)
@@ -258,83 +262,8 @@ snGradSchemes
 
     def _write_block_mesh_dict(self, system_dir: Path) -> None:
         """Write system/blockMeshDict from DomainConfig."""
-        dc = self._case.domain
-        verts = dc.block_mesh_vertices()
-        nx, ny, nz = dc.cell_counts()
-
-        vert_lines = "\n    ".join(
-            f"( {v[0]:>10.4f}  {v[1]:>10.4f}  {v[2]:>10.4f} )"
-            for v in verts
-        )
-
         content = _foam_header("dictionary", "blockMeshDict")
-        content += f"""
-convertToMeters 1;
-
-vertices
-(
-    {vert_lines}
-);
-
-blocks
-(
-    hex (0 1 2 3 4 5 6 7) ({nx} {ny} {nz}) simpleGrading (1 1 1)
-);
-
-edges
-(
-);
-
-boundary
-(
-    inlet
-    {{
-        type patch;
-        faces
-        (
-            (0 4 7 3)
-        );
-    }}
-    outlet
-    {{
-        type patch;
-        faces
-        (
-            (1 2 6 5)
-        );
-    }}
-    bottom
-    {{
-        type wall;
-        faces
-        (
-            (0 1 2 3)
-        );
-    }}
-    top
-    {{
-        type patch;
-        faces
-        (
-            (4 5 6 7)
-        );
-    }}
-    sides
-    {{
-        type symmetry;
-        faces
-        (
-            (0 1 5 4)
-            (3 7 6 2)
-        );
-    }}
-);
-
-mergePatchPairs
-(
-);
-
-"""
+        content += render_block_mesh_dict_body(self._case.domain)
         content += _FOOTER
         (system_dir / "blockMeshDict").write_text(content)
 

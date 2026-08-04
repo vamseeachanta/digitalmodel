@@ -18,6 +18,7 @@ HOSTED_CONTEXT = "hosted-deckhand"
 TRUSTED_LOCAL_CONTEXT = "trusted-local"
 DEFAULT_OUTPUT_DIR = "results"
 DEFAULT_WORK_DIR = "batch_runs"
+DEFAULT_MESH_UTILITY = "blockMesh"
 _COMPONENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 RESERVED_ROW_KEYS = frozenset({"index", "name", "status", "solver", "mock",
                                "error", "case_dir", "wall_seconds", "mpi_plan"})
@@ -61,9 +62,89 @@ def resolve_case_matrix(explicit: list[dict] | None, variants: dict,
     return _load_cases(variants, cfg_dir) if variants else [{}]
 
 
+def _canonical(base: dict) -> bool:
+    return "case_definition" in base or "execution" in base
+
+
+def base_view(base: dict) -> dict:
+    """Return the solver/utility view of either base form.
+
+    The batch router picks executables and checks solver readiness from a flat
+    set of keys. A canonical base carries the same facts under
+    ``case_definition.authored`` and ``execution``, so both forms are reduced
+    here rather than teaching every call site about the schema.
+    """
+    if not _canonical(base):
+        return base
+    authored = (base.get("case_definition") or {}).get("authored") or {}
+    execution = base.get("execution") or {}
+    return {
+        "case_type": authored.get("case_type"),
+        "solver": authored.get("solver"),
+        "mesh_utility": execution.get("mesh_utility", DEFAULT_MESH_UTILITY),
+        "run_snappy": execution.get("run_snappy", False),
+        "run_set_fields": execution.get("run_set_fields", False),
+        "to_vtk": execution.get("to_vtk", False),
+    }
+
+
+def _base_name(base: dict) -> str:
+    """Default case-name stem for either base form."""
+    if _canonical(base):
+        authored = (base.get("case_definition") or {}).get("authored") or {}
+        stem = authored.get("name") or authored.get("case_type")
+        if not stem:
+            raise ValueError(
+                "openfoam_run_batch.base.case_definition.authored requires "
+                "case_type"
+            )
+        return str(stem)
+    if not base.get("case_type"):
+        raise ValueError("openfoam_run_batch.base.case_type is required")
+    return str(base.get("name") or f"{base['case_type']}_case")
+
+
+def _validate_mapping_target(target: str) -> None:
+    """Refuse a knob target that is not a single accepted mutable leaf.
+
+    Mapping onto a container, the schema discriminator, or a path the schema
+    does not accept would either be silently ignored downstream or corrupt the
+    case-source union, so both are rejected before any case is rendered.
+    """
+    from digitalmodel.solvers.openfoam.case_definition import (
+        ACCEPTED_LEAF_CONSUMERS,
+    )
+
+    if target in ACCEPTED_LEAF_CONSUMERS:
+        return
+    prefixes = {
+        parent
+        for leaf in ACCEPTED_LEAF_CONSUMERS
+        for parent in _ancestors(leaf)
+    }
+    if target in prefixes:
+        raise ValueError(
+            f"openfoam_run_batch mapping target {target!r} names a container, "
+            "not a single accepted leaf"
+        )
+    raise ValueError(
+        f"openfoam_run_batch mapping target {target!r} is not an accepted "
+        "case-definition leaf"
+    )
+
+
+def _ancestors(dotted: str) -> list[str]:
+    parts = dotted.split(".")
+    return [".".join(parts[:index]) for index in range(1, len(parts))]
+
+
 def render_cases(base: dict, cases: list[dict], mapping: dict[str, str],
                  work_dir: Path) -> list[dict]:
-    base_name = base.get("name") or f"{base['case_type']}_case"
+    base_name = _base_name(base)
+    canonical = _canonical(base)
+    if canonical:
+        for target in mapping.values():
+            _validate_mapping_target(target)
     rendered = []
     for index, case in enumerate(cases):
         settings = deepcopy(base)
@@ -75,9 +156,17 @@ def render_cases(base: dict, cases: list[dict], mapping: dict[str, str],
                 f"{sorted(collisions)}"
             )
         for name, value in params.items():
-            _set_dotted(settings, mapping.get(name, name), value)
+            target = mapping.get(name, name)
+            if canonical and name not in mapping:
+                _validate_mapping_target(target)
+            _set_dotted(settings, target, value)
         name = case.get("name") or f"{base_name}_{index:03d}"
-        settings["name"] = name
+        if canonical:
+            # The canonical schema owns the case name; a root-level "name"
+            # would be refused as an unknown key by the generic adapter.
+            settings["case_definition"]["authored"]["name"] = name
+        else:
+            settings["name"] = name
         rendered.append({"index": index, "name": name, "case": params,
                          "settings": settings, "work_dir": work_dir / name})
     return rendered

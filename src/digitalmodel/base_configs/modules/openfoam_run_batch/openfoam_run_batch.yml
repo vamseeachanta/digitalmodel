@@ -13,11 +13,17 @@
 basename: openfoam_run_batch
 
 openfoam_run_batch:
-  base:
-    case_type: null        # required from the user's input.yml
-    solver: null           # else read from the case's controlDict
-    mesh_utility: blockMesh
-    to_vtk: false
+  # `base` intentionally defaults to EMPTY (#1575). It is deep-merged UNDER the
+  # user's input, so any semantic key defaulted here would be injected into a
+  # canonical `case_definition:` request and rejected as a legacy/canonical mix.
+  # The two forms of base are:
+  #   legacy   — flat keys (case_type, solver, mesh_utility, run_snappy,
+  #              to_vtk, run_set_fields). Defaults are supplied by
+  #              normalisation, not here: mesh_utility blockMesh, to_vtk false.
+  #   canonical — case_definition (schema_version/kind/authored) + execution.
+  #              See examples/workflows/openfoam-run-batch/input.yml.
+  # Exactly one form per input; mixing them is refused.
+  base: {}
   cases: []                # explicit case list (mutually exclusive w/ variants)
   variants: {}             # parametric_run sweep schema
   mapping: {}              # knob name -> dotted settings path
