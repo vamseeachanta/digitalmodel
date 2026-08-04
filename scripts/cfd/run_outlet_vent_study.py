@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Build and run the #1528 static outlet/vent placement study.
 
 The control retains the full-height pressure outlet.  The candidate closes that
