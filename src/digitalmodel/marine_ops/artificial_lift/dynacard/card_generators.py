@@ -928,7 +928,6 @@ def surface_card_from_pump_card(
             damping=damping,
             friction_coefficient=ctx.calc_params.coulomb_friction_coefficient,
             n_nodes=n_nodes,
-            include_gravity=False,
         )
         # ``sim.up_dn`` is the turnaround of ``guess_position``, so on every
         # pass but the first this is the turnaround of the card the previous

@@ -240,6 +240,8 @@ def test_curvature_friction_uses_axial_force_per_unit_length():
         0.5,
         0.2,
         zeros,
+        zeros,  # buoyant line density; weightless here, so gravity drops out
+        np.zeros(n_x),  # buoyant weight remaining below each node
         0.0,
         zeros,
         elastic_modulus,
