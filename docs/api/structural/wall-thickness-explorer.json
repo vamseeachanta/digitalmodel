@@ -1854,7 +1854,8 @@
         "safe": false,
         "checks": {
           "burst": 0.5601,
-          "collapse": 2.5453
+          "collapse": 2.5453,
+          "combined": 0.0
         }
       },
       {
@@ -1864,7 +1865,8 @@
         "safe": false,
         "checks": {
           "burst": 0.5263,
-          "collapse": 2.1474
+          "collapse": 2.1474,
+          "combined": 0.0
         }
       },
       {
@@ -1874,7 +1876,8 @@
         "safe": false,
         "checks": {
           "burst": 0.4963,
-          "collapse": 1.8342
+          "collapse": 1.8342,
+          "combined": 0.0
         }
       },
       {
@@ -1884,7 +1887,8 @@
         "safe": false,
         "checks": {
           "burst": 0.4694,
-          "collapse": 1.5844
+          "collapse": 1.5844,
+          "combined": 0.0
         }
       },
       {
@@ -1894,7 +1898,8 @@
         "safe": false,
         "checks": {
           "burst": 0.4452,
-          "collapse": 1.383
+          "collapse": 1.383,
+          "combined": 0.0
         }
       },
       {
@@ -1904,7 +1909,8 @@
         "safe": false,
         "checks": {
           "burst": 0.4233,
-          "collapse": 1.2189
+          "collapse": 1.2189,
+          "combined": 0.0
         }
       },
       {
@@ -1914,7 +1920,8 @@
         "safe": false,
         "checks": {
           "burst": 0.4034,
-          "collapse": 1.0839
+          "collapse": 1.0839,
+          "combined": 0.0
         }
       },
       {
@@ -1924,7 +1931,8 @@
         "safe": true,
         "checks": {
           "burst": 0.3853,
-          "collapse": 0.9718
+          "collapse": 0.9718,
+          "combined": 0.0
         }
       },
       {
@@ -1934,7 +1942,8 @@
         "safe": true,
         "checks": {
           "burst": 0.3686,
-          "collapse": 0.8781
+          "collapse": 0.8781,
+          "combined": 0.0
         }
       },
       {
@@ -1944,7 +1953,8 @@
         "safe": true,
         "checks": {
           "burst": 0.3533,
-          "collapse": 0.7991
+          "collapse": 0.7991,
+          "combined": 0.0
         }
       },
       {
@@ -1954,7 +1964,8 @@
         "safe": true,
         "checks": {
           "burst": 0.3391,
-          "collapse": 0.732
+          "collapse": 0.732,
+          "combined": 0.0
         }
       },
       {
@@ -1964,7 +1975,8 @@
         "safe": true,
         "checks": {
           "burst": 0.326,
-          "collapse": 0.6747
+          "collapse": 0.6747,
+          "combined": 0.0
         }
       },
       {
@@ -1974,7 +1986,8 @@
         "safe": true,
         "checks": {
           "burst": 0.3139,
-          "collapse": 0.6253
+          "collapse": 0.6253,
+          "combined": 0.0
         }
       },
       {
@@ -1984,7 +1997,8 @@
         "safe": true,
         "checks": {
           "burst": 0.3025,
-          "collapse": 0.5826
+          "collapse": 0.5826,
+          "combined": 0.0
         }
       },
       {
@@ -1994,7 +2008,8 @@
         "safe": true,
         "checks": {
           "burst": 0.292,
-          "collapse": 0.5453
+          "collapse": 0.5453,
+          "combined": 0.0
         }
       },
       {
@@ -2004,7 +2019,8 @@
         "safe": true,
         "checks": {
           "burst": 0.2821,
-          "collapse": 0.5127
+          "collapse": 0.5127,
+          "combined": 0.0
         }
       },
       {
@@ -2014,7 +2030,8 @@
         "safe": true,
         "checks": {
           "burst": 0.2728,
-          "collapse": 0.4839
+          "collapse": 0.4839,
+          "combined": 0.0
         }
       },
       {
@@ -2024,7 +2041,8 @@
         "safe": true,
         "checks": {
           "burst": 0.2641,
-          "collapse": 0.4584
+          "collapse": 0.4584,
+          "combined": 0.0
         }
       },
       {
@@ -2034,7 +2052,8 @@
         "safe": true,
         "checks": {
           "burst": 0.2559,
-          "collapse": 0.4357
+          "collapse": 0.4357,
+          "combined": 0.0
         }
       },
       {
@@ -2044,7 +2063,8 @@
         "safe": true,
         "checks": {
           "burst": 0.2481,
-          "collapse": 0.4153
+          "collapse": 0.4153,
+          "combined": 0.0
         }
       },
       {
@@ -2054,7 +2074,8 @@
         "safe": true,
         "checks": {
           "burst": 0.2408,
-          "collapse": 0.397
+          "collapse": 0.397,
+          "combined": 0.0
         }
       },
       {
@@ -2064,7 +2085,8 @@
         "safe": true,
         "checks": {
           "burst": 0.2339,
-          "collapse": 0.3804
+          "collapse": 0.3804,
+          "combined": 0.0
         }
       },
       {
@@ -2074,7 +2096,8 @@
         "safe": true,
         "checks": {
           "burst": 0.2274,
-          "collapse": 0.3654
+          "collapse": 0.3654,
+          "combined": 0.0
         }
       },
       {
@@ -2084,7 +2107,8 @@
         "safe": true,
         "checks": {
           "burst": 0.2212,
-          "collapse": 0.3516
+          "collapse": 0.3516,
+          "combined": 0.0
         }
       },
       {
@@ -2094,7 +2118,8 @@
         "safe": true,
         "checks": {
           "burst": 0.2153,
-          "collapse": 0.3391
+          "collapse": 0.3391,
+          "combined": 0.0
         }
       },
       {
@@ -2104,7 +2129,8 @@
         "safe": true,
         "checks": {
           "burst": 0.2097,
-          "collapse": 0.3275
+          "collapse": 0.3275,
+          "combined": 0.0
         }
       },
       {
@@ -2114,7 +2140,8 @@
         "safe": true,
         "checks": {
           "burst": 0.2043,
-          "collapse": 0.3168
+          "collapse": 0.3168,
+          "combined": 0.0
         }
       },
       {
@@ -2124,7 +2151,8 @@
         "safe": true,
         "checks": {
           "burst": 0.1992,
-          "collapse": 0.3069
+          "collapse": 0.3069,
+          "combined": 0.0
         }
       },
       {
@@ -2134,7 +2162,8 @@
         "safe": true,
         "checks": {
           "burst": 0.1944,
-          "collapse": 0.2978
+          "collapse": 0.2978,
+          "combined": 0.0
         }
       },
       {
@@ -2144,7 +2173,8 @@
         "safe": true,
         "checks": {
           "burst": 0.1897,
-          "collapse": 0.2892
+          "collapse": 0.2892,
+          "combined": 0.0
         }
       },
       {
@@ -2154,7 +2184,8 @@
         "safe": true,
         "checks": {
           "burst": 0.1853,
-          "collapse": 0.2812
+          "collapse": 0.2812,
+          "combined": 0.0
         }
       },
       {
@@ -2164,7 +2195,8 @@
         "safe": true,
         "checks": {
           "burst": 0.181,
-          "collapse": 0.2737
+          "collapse": 0.2737,
+          "combined": 0.0
         }
       },
       {
@@ -2174,7 +2206,8 @@
         "safe": true,
         "checks": {
           "burst": 0.1769,
-          "collapse": 0.2667
+          "collapse": 0.2667,
+          "combined": 0.0
         }
       },
       {
@@ -2184,7 +2217,8 @@
         "safe": true,
         "checks": {
           "burst": 0.173,
-          "collapse": 0.2601
+          "collapse": 0.2601,
+          "combined": 0.0
         }
       },
       {
@@ -2194,7 +2228,8 @@
         "safe": true,
         "checks": {
           "burst": 0.1692,
-          "collapse": 0.2538
+          "collapse": 0.2538,
+          "combined": 0.0
         }
       },
       {
@@ -2204,7 +2239,8 @@
         "safe": true,
         "checks": {
           "burst": 0.1656,
-          "collapse": 0.2479
+          "collapse": 0.2479,
+          "combined": 0.0
         }
       },
       {
@@ -2214,7 +2250,8 @@
         "safe": true,
         "checks": {
           "burst": 0.1622,
-          "collapse": 0.2423
+          "collapse": 0.2423,
+          "combined": 0.0
         }
       },
       {
@@ -2224,7 +2261,8 @@
         "safe": true,
         "checks": {
           "burst": 0.1588,
-          "collapse": 0.237
+          "collapse": 0.237,
+          "combined": 0.0
         }
       },
       {
@@ -2234,7 +2272,8 @@
         "safe": true,
         "checks": {
           "burst": 0.1556,
-          "collapse": 0.2319
+          "collapse": 0.2319,
+          "combined": 0.0
         }
       },
       {
@@ -2244,7 +2283,8 @@
         "safe": true,
         "checks": {
           "burst": 0.1525,
-          "collapse": 0.2271
+          "collapse": 0.2271,
+          "combined": 0.0
         }
       },
       {
@@ -2254,7 +2294,8 @@
         "safe": true,
         "checks": {
           "burst": 0.1495,
-          "collapse": 0.2225
+          "collapse": 0.2225,
+          "combined": 0.0
         }
       }
     ],

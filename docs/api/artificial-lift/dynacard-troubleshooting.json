@@ -46,7 +46,7 @@
       ],
       "model_version": "1.0",
       "metrics": {
-        "fluid_load_lbs": 1241.0,
+        "fluid_load_lbs": 9660.0,
         "peak_load_lbs": 15679.0,
         "min_load_lbs": 4225.0,
         "card_area_inlb": 1130246.0,
@@ -83,7 +83,7 @@
       ],
       "model_version": "1.0",
       "metrics": {
-        "fluid_load_lbs": 5911.0,
+        "fluid_load_lbs": 11350.0,
         "peak_load_lbs": 13411.0,
         "min_load_lbs": 830.0,
         "card_area_inlb": 835155.0,
@@ -120,7 +120,7 @@
       ],
       "model_version": "1.0",
       "metrics": {
-        "fluid_load_lbs": 4193.0,
+        "fluid_load_lbs": 8726.0,
         "peak_load_lbs": 15291.0,
         "min_load_lbs": 4679.0,
         "card_area_inlb": 463079.0,
@@ -157,7 +157,7 @@
       ],
       "model_version": "1.0",
       "metrics": {
-        "fluid_load_lbs": 4207.0,
+        "fluid_load_lbs": 9116.0,
         "peak_load_lbs": 15334.0,
         "min_load_lbs": 4572.0,
         "card_area_inlb": 1048606.0,
@@ -194,7 +194,7 @@
       ],
       "model_version": "1.0",
       "metrics": {
-        "fluid_load_lbs": 5277.0,
+        "fluid_load_lbs": 11137.0,
         "peak_load_lbs": 18798.0,
         "min_load_lbs": 4522.0,
         "card_area_inlb": 1136223.0,
@@ -231,7 +231,7 @@
       ],
       "model_version": "1.0",
       "metrics": {
-        "fluid_load_lbs": 10419.0,
+        "fluid_load_lbs": 11244.0,
         "peak_load_lbs": 16884.0,
         "min_load_lbs": 3057.0,
         "card_area_inlb": 1237473.0,
@@ -268,7 +268,7 @@
       ],
       "model_version": "1.0",
       "metrics": {
-        "fluid_load_lbs": 235.0,
+        "fluid_load_lbs": 271.0,
         "peak_load_lbs": 1823.0,
         "min_load_lbs": 1398.0,
         "card_area_inlb": 27013.0,
@@ -305,7 +305,7 @@
       ],
       "model_version": "1.0",
       "metrics": {
-        "fluid_load_lbs": 184.0,
+        "fluid_load_lbs": 1479.0,
         "peak_load_lbs": 2629.0,
         "min_load_lbs": 580.0,
         "card_area_inlb": 153452.0,
