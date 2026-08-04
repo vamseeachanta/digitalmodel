@@ -9,11 +9,33 @@ No imports from other benchmark_* modules — this is the leaf dependency.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from digitalmodel.hydrodynamics.diffraction.output_schemas import DOF
 
 DOF_ORDER = [DOF.SURGE, DOF.SWAY, DOF.HEAVE, DOF.ROLL, DOF.PITCH, DOF.YAW]
+
+
+def optional_float(value: Optional[float]) -> Optional[float]:
+    """Return a JSON-safe float without fabricating a missing measurement."""
+    return None if value is None else float(value)
+
+
+def optional_round(value: Optional[float], digits: int) -> Optional[float]:
+    """Round a present measurement and preserve absence as ``None``."""
+    return None if value is None else round(float(value), digits)
+
+
+def format_optional_correlation(
+    value: Optional[float],
+    quality: Optional[str] = None,
+    digits: int = 4,
+) -> str:
+    """Format correlation or display explicit refusal provenance."""
+    if value is not None:
+        return f"{value:.{digits}f}"
+    suffix = f" ({quality})" if quality else ""
+    return f"Unavailable{suffix}"
 
 _AMPLITUDE_UNITS: Dict[DOF, str] = {
     DOF.SURGE: "m/m",

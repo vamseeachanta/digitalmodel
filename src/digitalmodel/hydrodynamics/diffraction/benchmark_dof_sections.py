@@ -19,6 +19,7 @@ from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
     _AMPLITUDE_UNITS,
     _is_phase_at_negligible_amplitude,
     generate_dof_observations,
+    format_optional_correlation,
 )
 from digitalmodel.hydrodynamics.diffraction.benchmark_rao_plots import (
     add_solver_traces,
@@ -169,7 +170,7 @@ def build_dof_report_sections(
 
         cm = report.consensus_by_dof.get(dof_upper)
         consensus_level = cm.consensus_level if cm else "UNKNOWN"
-        mean_corr = cm.mean_pairwise_correlation if cm else 0.0
+        mean_corr = cm.mean_pairwise_correlation if cm else None
         consensus_color = {
             "FULL": "#27ae60",
             "MAJORITY": "#f39c12",
@@ -177,9 +178,9 @@ def build_dof_report_sections(
         }.get(consensus_level, "#999")
 
         rao_comp = pair_data.get(dof_name)
-        mag_corr = rao_comp.magnitude_stats.correlation if rao_comp else 0
+        mag_corr = rao_comp.magnitude_stats.correlation if rao_comp else None
         mag_rms = rao_comp.magnitude_stats.rms_error if rao_comp else 0
-        phase_corr = rao_comp.phase_stats.correlation if rao_comp else 0
+        phase_corr = rao_comp.phase_stats.correlation if rao_comp else None
         max_mag_diff = rao_comp.max_magnitude_diff if rao_comp else 0
         max_phase_diff = rao_comp.max_phase_diff if rao_comp else 0
         mag_at_max_pd = (
@@ -274,13 +275,24 @@ def build_dof_report_sections(
             )
 
         pd_heading_visible = max_pd_hi in sig_indices
-        obs = generate_dof_observations(
-            dof_cap, consensus_level, mag_corr, phase_corr,
-            max_mag_diff, max_phase_diff, _AMPLITUDE_UNITS[dof],
-            magnitude_at_max_phase_diff=mag_at_max_pd,
-            peak_magnitude=peak_mag,
-            phase_diff_at_visible_heading=pd_heading_visible,
+        magnitude_quality = (
+            rao_comp.magnitude_stats.quality if rao_comp else None
         )
+        phase_quality = rao_comp.phase_stats.quality if rao_comp else None
+        if mag_corr is None or phase_corr is None:
+            obs = (
+                "Comparison unavailable: "
+                f"magnitude {format_optional_correlation(mag_corr, magnitude_quality)}, "
+                f"phase {format_optional_correlation(phase_corr, phase_quality)}."
+            )
+        else:
+            obs = generate_dof_observations(
+                dof_cap, consensus_level, mag_corr, phase_corr,
+                max_mag_diff, max_phase_diff, _AMPLITUDE_UNITS[dof],
+                magnitude_at_max_phase_diff=mag_at_max_pd,
+                peak_magnitude=peak_mag,
+                phase_diff_at_visible_heading=pd_heading_visible,
+            )
 
         parts.append(f"""
 <div class="dof-section" id="dof-{dof_name}">
@@ -292,8 +304,8 @@ def build_dof_report_sections(
       </div>
       <table class="stats-table">
         <tr><th>Metric</th><th>Value</th></tr>
-        <tr><td>Magnitude correlation</td><td>{mag_corr:.4f}</td></tr>
-        <tr><td>Phase correlation</td><td>{phase_corr:.4f}</td></tr>
+        <tr><td>Magnitude correlation</td><td>{format_optional_correlation(mag_corr, magnitude_quality)}</td></tr>
+        <tr><td>Phase correlation</td><td>{format_optional_correlation(phase_corr, phase_quality)}</td></tr>
         <tr><td>Magnitude RMS error</td><td>{mag_rms:.4f}</td></tr>
         <tr><td>Max amplitude diff</td>
             <td>{max_mag_diff:.4f} {_AMPLITUDE_UNITS[dof]}</td></tr>

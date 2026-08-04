@@ -67,7 +67,9 @@ def plot_pairwise_correlation_heatmap(
 ) -> Path:
     """Heatmap of mean pairwise magnitude correlation across all DOFs."""
     n = len(report.solver_names)
-    matrix = np.ones((n, n), dtype=float)
+    matrix = np.full((n, n), None, dtype=object)
+    for index in range(n):
+        matrix[index, index] = 1.0
 
     name_to_idx = {
         name: idx for idx, name in enumerate(report.solver_names)
@@ -77,8 +79,9 @@ def plot_pairwise_correlation_heatmap(
         rao_comps = pw_result.rao_comparisons
         corrs = [
             c.magnitude_stats.correlation for c in rao_comps.values()
+            if c.magnitude_stats.correlation is not None
         ]
-        mean_corr = float(np.mean(corrs))
+        mean_corr = float(np.mean(corrs)) if corrs else None
         i = name_to_idx[pw_result.solver_a]
         j = name_to_idx[pw_result.solver_b]
         matrix[i, j] = mean_corr
@@ -86,14 +89,17 @@ def plot_pairwise_correlation_heatmap(
 
     fig = go.Figure(
         data=go.Heatmap(
-            z=matrix,
+            z=matrix.tolist(),
             x=report.solver_names,
             y=report.solver_names,
             colorscale="RdYlGn",
             zmin=0.0,
             zmax=1.0,
-            text=np.round(matrix, 3),
-            texttemplate="%{text:.3f}",
+            text=[
+                ["Unavailable" if value is None else f"{value:.3f}" for value in row]
+                for row in matrix
+            ],
+            texttemplate="%{text}",
         )
     )
     apply_layout(fig, "Pairwise Solver Correlation")
