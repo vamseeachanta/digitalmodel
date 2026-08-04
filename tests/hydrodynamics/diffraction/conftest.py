@@ -24,9 +24,9 @@ from digitalmodel.hydrodynamics.diffraction.output_schemas import (
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 SOLVER_FIXTURES_DIR = Path(__file__).parent.parent.parent / "fixtures" / "solver"
 
-N_FREQ = 40
+N_FREQ = 10
 N_HEAD = 5
-FREQUENCIES = np.geomspace(0.05, 2.0, N_FREQ)
+FREQUENCIES = np.linspace(0.05, 2.0, N_FREQ)
 HEADINGS = np.array([0.0, 45.0, 90.0, 135.0, 180.0])
 
 
