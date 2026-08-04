@@ -1,6 +1,6 @@
 metadata:
   vessel_name: UnitBox
-  generated: '2026-08-04T00:59:50'
+  generated: '2026-08-04T01:59:43'
   solver_names:
   - AQWA
   - BEMRosetta
@@ -14595,42 +14595,58 @@ solvers:
         - 1.975514
 comparison:
   overall_consensus: MAJORITY
+  comparison_status: DECIDED
+  refusal_reasons: []
   AQWA-vs-BEMRosetta:
     overall_agreement: POOR
+    comparison_status: DECIDED
+    refusal_reason: null
     rao_correlations:
       surge:
         magnitude_r: 0.9999993
+        magnitude_quality: COMPARED
         phase_r: 0.91927411
+        phase_quality: COMPARED
         magnitude_rms: 0.00303045
         max_magnitude_diff: 0.00740369
         max_phase_diff_deg: 61.5285
       sway:
         magnitude_r: 0.99999934
+        magnitude_quality: COMPARED
         phase_r: 0.88058814
+        phase_quality: COMPARED
         magnitude_rms: 0.00255772
         max_magnitude_diff: 0.00754955
         max_phase_diff_deg: 54.0833
       heave:
         magnitude_r: 0.9999872
+        magnitude_quality: COMPARED
         phase_r: 0.99960979
+        phase_quality: COMPARED
         magnitude_rms: 0.00281194
         max_magnitude_diff: 0.00484131
         max_phase_diff_deg: 3.8342
       roll:
         magnitude_r: 0.99999998
+        magnitude_quality: COMPARED
         phase_r: 0.90806628
+        phase_quality: COMPARED
         magnitude_rms: 0.01818903
         max_magnitude_diff: 0.06021399
         max_phase_diff_deg: 57.4671
       pitch:
         magnitude_r: 0.99999998
+        magnitude_quality: COMPARED
         phase_r: 0.90592518
+        phase_quality: COMPARED
         magnitude_rms: 0.02216497
         max_magnitude_diff: 0.06180615
         max_phase_diff_deg: 55.32
       yaw:
         magnitude_r: -0.01501332
+        magnitude_quality: COMPARED
         phase_r: 0.90408644
+        phase_quality: COMPARED
         magnitude_rms: 0.00052455
         max_magnitude_diff: 0.00109782
         max_phase_diff_deg: 54.1665
@@ -14671,6 +14687,43 @@ comparison:
       6,4: 0.23312507
       6,5: 0.08205201
       6,6: 0.17166805
+    added_mass_quality:
+      1,1: COMPARED
+      1,2: COMPARED
+      1,3: COMPARED
+      1,4: COMPARED
+      1,5: COMPARED
+      1,6: COMPARED
+      2,1: COMPARED
+      2,2: COMPARED
+      2,3: COMPARED
+      2,4: COMPARED
+      2,5: COMPARED
+      2,6: COMPARED
+      3,1: COMPARED
+      3,2: COMPARED
+      3,3: COMPARED
+      3,4: COMPARED
+      3,5: COMPARED
+      3,6: COMPARED
+      4,1: COMPARED
+      4,2: COMPARED
+      4,3: COMPARED
+      4,4: COMPARED
+      4,5: COMPARED
+      4,6: COMPARED
+      5,1: COMPARED
+      5,2: COMPARED
+      5,3: COMPARED
+      5,4: COMPARED
+      5,5: COMPARED
+      5,6: COMPARED
+      6,1: COMPARED
+      6,2: COMPARED
+      6,3: COMPARED
+      6,4: COMPARED
+      6,5: COMPARED
+      6,6: COMPARED
     damping_correlations:
       1,1: 0.99997915
       1,2: 0.13117593
@@ -14708,42 +14761,93 @@ comparison:
       6,4: -0.15679301
       6,5: -0.11273914
       6,6: 0.94403175
+    damping_quality:
+      1,1: COMPARED
+      1,2: COMPARED
+      1,3: COMPARED
+      1,4: COMPARED
+      1,5: COMPARED
+      1,6: COMPARED
+      2,1: COMPARED
+      2,2: COMPARED
+      2,3: COMPARED
+      2,4: COMPARED
+      2,5: COMPARED
+      2,6: COMPARED
+      3,1: COMPARED
+      3,2: COMPARED
+      3,3: COMPARED
+      3,4: COMPARED
+      3,5: COMPARED
+      3,6: COMPARED
+      4,1: COMPARED
+      4,2: COMPARED
+      4,3: COMPARED
+      4,4: COMPARED
+      4,5: COMPARED
+      4,6: COMPARED
+      5,1: COMPARED
+      5,2: COMPARED
+      5,3: COMPARED
+      5,4: COMPARED
+      5,5: COMPARED
+      5,6: COMPARED
+      6,1: COMPARED
+      6,2: COMPARED
+      6,3: COMPARED
+      6,4: COMPARED
+      6,5: COMPARED
+      6,6: COMPARED
   AQWA-vs-OrcaWave:
     overall_agreement: POOR
+    comparison_status: DECIDED
+    refusal_reason: null
     rao_correlations:
       surge:
         magnitude_r: 0.99999922
+        magnitude_quality: COMPARED
         phase_r: 0.91242805
+        phase_quality: COMPARED
         magnitude_rms: 0.00491516
         max_magnitude_diff: 0.01141224
         max_phase_diff_deg: 46.6901
       sway:
         magnitude_r: 0.99999923
+        magnitude_quality: COMPARED
         phase_r: 0.9054615
+        phase_quality: COMPARED
         magnitude_rms: 0.00409705
         max_magnitude_diff: 0.01113131
         max_phase_diff_deg: 61.3222
       heave:
         magnitude_r: 0.99998986
+        magnitude_quality: COMPARED
         phase_r: 0.99958412
+        phase_quality: COMPARED
         magnitude_rms: 0.00463068
         max_magnitude_diff: 0.00731579
         max_phase_diff_deg: 3.898
       roll:
         magnitude_r: 0.99999998
+        magnitude_quality: COMPARED
         phase_r: 0.91729816
+        phase_quality: COMPARED
         magnitude_rms: 0.03023262
         max_magnitude_diff: 0.10019326
         max_phase_diff_deg: 55.6855
       pitch:
         magnitude_r: 0.99999998
+        magnitude_quality: COMPARED
         phase_r: 0.93617793
+        phase_quality: COMPARED
         magnitude_rms: 0.03692022
         max_magnitude_diff: 0.10146724
         max_phase_diff_deg: 44.2751
       yaw:
         magnitude_r: 0.16194253
+        magnitude_quality: COMPARED
         phase_r: 0.93110696
+        phase_quality: COMPARED
         magnitude_rms: 0.00048171
         max_magnitude_diff: 0.0010915
         max_phase_diff_deg: 55.0991
@@ -14784,6 +14888,43 @@ comparison:
       6,4: 0.09650221
       6,5: -0.09793039
       6,6: 0.02824402
+    added_mass_quality:
+      1,1: COMPARED
+      1,2: COMPARED
+      1,3: COMPARED
+      1,4: COMPARED
+      1,5: COMPARED
+      1,6: COMPARED
+      2,1: COMPARED
+      2,2: COMPARED
+      2,3: COMPARED
+      2,4: COMPARED
+      2,5: COMPARED
+      2,6: COMPARED
+      3,1: COMPARED
+      3,2: COMPARED
+      3,3: COMPARED
+      3,4: COMPARED
+      3,5: COMPARED
+      3,6: COMPARED
+      4,1: COMPARED
+      4,2: COMPARED
+      4,3: COMPARED
+      4,4: COMPARED
+      4,5: COMPARED
+      4,6: COMPARED
+      5,1: COMPARED
+      5,2: COMPARED
+      5,3: COMPARED
+      5,4: COMPARED
+      5,5: COMPARED
+      5,6: COMPARED
+      6,1: COMPARED
+      6,2: COMPARED
+      6,3: COMPARED
+      6,4: COMPARED
+      6,5: COMPARED
+      6,6: COMPARED
     damping_correlations:
       1,1: 0.99998781
       1,2: -0.0559958
@@ -14821,42 +14962,93 @@ comparison:
       6,4: 0.08898618
       6,5: -0.14799332
       6,6: 0.95307326
+    damping_quality:
+      1,1: COMPARED
+      1,2: COMPARED
+      1,3: COMPARED
+      1,4: COMPARED
+      1,5: COMPARED
+      1,6: COMPARED
+      2,1: COMPARED
+      2,2: COMPARED
+      2,3: COMPARED
+      2,4: COMPARED
+      2,5: COMPARED
+      2,6: COMPARED
+      3,1: COMPARED
+      3,2: COMPARED
+      3,3: COMPARED
+      3,4: COMPARED
+      3,5: COMPARED
+      3,6: COMPARED
+      4,1: COMPARED
+      4,2: COMPARED
+      4,3: COMPARED
+      4,4: COMPARED
+      4,5: COMPARED
+      4,6: COMPARED
+      5,1: COMPARED
+      5,2: COMPARED
+      5,3: COMPARED
+      5,4: COMPARED
+      5,5: COMPARED
+      5,6: COMPARED
+      6,1: COMPARED
+      6,2: COMPARED
+      6,3: COMPARED
+      6,4: COMPARED
+      6,5: COMPARED
+      6,6: COMPARED
   BEMRosetta-vs-OrcaWave:
     overall_agreement: POOR
+    comparison_status: DECIDED
+    refusal_reason: null
     rao_correlations:
       surge:
         magnitude_r: 0.99999923
+        magnitude_quality: COMPARED
         phase_r: 0.9054615
+        phase_quality: COMPARED
         magnitude_rms: 0.00208035
         max_magnitude_diff: 0.00452789
         max_phase_diff_deg: 61.3222
       sway:
         magnitude_r: 0.99999936
+        magnitude_quality: COMPARED
         phase_r: 0.90653207
+        phase_quality: COMPARED
         magnitude_rms: 0.00174017
         max_magnitude_diff: 0.00517595
         max_phase_diff_deg: 47.6556
       heave:
         magnitude_r: 0.99998747
+        magnitude_quality: COMPARED
         phase_r: 0.99954259
+        phase_quality: COMPARED
         magnitude_rms: 0.00205796
         max_magnitude_diff: 0.00425688
         max_phase_diff_deg: 3.717
       roll:
         magnitude_r: 0.99999999
+        magnitude_quality: COMPARED
         phase_r: 0.93617793
+        phase_quality: COMPARED
         magnitude_rms: 0.01207497
         max_magnitude_diff: 0.04003063
         max_phase_diff_deg: 44.2751
       pitch:
         magnitude_r: 0.99999998
+        magnitude_quality: COMPARED
         phase_r: 0.93110696
+        phase_quality: COMPARED
         magnitude_rms: 0.01478021
         max_magnitude_diff: 0.04121437
         max_phase_diff_deg: 55.0991
       yaw:
         magnitude_r: -0.07237014
+        magnitude_quality: COMPARED
         phase_r: 0.87583243
+        phase_quality: COMPARED
         magnitude_rms: 0.00051887
         max_magnitude_diff: 0.00109782
         max_phase_diff_deg: 58.1568
@@ -14897,6 +15089,43 @@ comparison:
       6,4: 0.20135134
       6,5: -0.0733127
       6,6: 0.24972698
+    added_mass_quality:
+      1,1: COMPARED
+      1,2: COMPARED
+      1,3: COMPARED
+      1,4: COMPARED
+      1,5: COMPARED
+      1,6: COMPARED
+      2,1: COMPARED
+      2,2: COMPARED
+      2,3: COMPARED
+      2,4: COMPARED
+      2,5: COMPARED
+      2,6: COMPARED
+      3,1: COMPARED
+      3,2: COMPARED
+      3,3: COMPARED
+      3,4: COMPARED
+      3,5: COMPARED
+      3,6: COMPARED
+      4,1: COMPARED
+      4,2: COMPARED
+      4,3: COMPARED
+      4,4: COMPARED
+      4,5: COMPARED
+      4,6: COMPARED
+      5,1: COMPARED
+      5,2: COMPARED
+      5,3: COMPARED
+      5,4: COMPARED
+      5,5: COMPARED
+      5,6: COMPARED
+      6,1: COMPARED
+      6,2: COMPARED
+      6,3: COMPARED
+      6,4: COMPARED
+      6,5: COMPARED
+      6,6: COMPARED
     damping_correlations:
       1,1: 0.99998407
       1,2: 0.08553118
@@ -14934,22 +15163,71 @@ comparison:
       6,4: 0.01230674
       6,5: 0.07447392
       6,6: 0.96173188
+    damping_quality:
+      1,1: COMPARED
+      1,2: COMPARED
+      1,3: COMPARED
+      1,4: COMPARED
+      1,5: COMPARED
+      1,6: COMPARED
+      2,1: COMPARED
+      2,2: COMPARED
+      2,3: COMPARED
+      2,4: COMPARED
+      2,5: COMPARED
+      2,6: COMPARED
+      3,1: COMPARED
+      3,2: COMPARED
+      3,3: COMPARED
+      3,4: COMPARED
+      3,5: COMPARED
+      3,6: COMPARED
+      4,1: COMPARED
+      4,2: COMPARED
+      4,3: COMPARED
+      4,4: COMPARED
+      4,5: COMPARED
+      4,6: COMPARED
+      5,1: COMPARED
+      5,2: COMPARED
+      5,3: COMPARED
+      5,4: COMPARED
+      5,5: COMPARED
+      5,6: COMPARED
+      6,1: COMPARED
+      6,2: COMPARED
+      6,3: COMPARED
+      6,4: COMPARED
+      6,5: COMPARED
+      6,6: COMPARED
   consensus_by_dof:
     SURGE:
       level: FULL
+      comparison_status: DECIDED
+      refusal_reason: null
       mean_correlation: 0.99999925
     SWAY:
       level: FULL
+      comparison_status: DECIDED
+      refusal_reason: null
       mean_correlation: 0.99999931
     HEAVE:
       level: FULL
+      comparison_status: DECIDED
+      refusal_reason: null
       mean_correlation: 0.99998818
     ROLL:
       level: FULL
+      comparison_status: DECIDED
+      refusal_reason: null
       mean_correlation: 0.99999998
     PITCH:
       level: FULL
+      comparison_status: DECIDED
+      refusal_reason: null
       mean_correlation: 0.99999998
     YAW:
       level: NO_CONSENSUS
+      comparison_status: DECIDED
+      refusal_reason: null
       mean_correlation: 0.02485302
