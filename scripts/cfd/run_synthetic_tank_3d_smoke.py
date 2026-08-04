@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import math
 import os
 import re
@@ -36,7 +37,11 @@ from digitalmodel.solvers.openfoam.smoke import (
     plan_smoke,
     write_reduced_evidence,
 )
-from digitalmodel.solvers.openfoam.smoke_evidence import capture_pre_run_artifacts
+from digitalmodel.solvers.openfoam.smoke_evidence import (
+    EvidenceValidationError,
+    capture_pre_run_artifacts,
+    cross_check_bridge_manifest,
+)
 from digitalmodel.solvers.openfoam.validation.sloshing_3d import (
     Sloshing3DConfig,
     write_sloshing_case,
@@ -141,6 +146,11 @@ def _execute_attested_smoke(
             execution_class=execution_class,
             dispatcher=dispatcher,
         )
+        # Prove the artifact that actually landed on disk embeds the attested
+        # manifest. Checking the in-memory payload would not catch a bundle
+        # that was serialized wrong or written from a different manifest.
+        written = json.loads(Path(evidence).read_text(encoding="utf-8"))
+        cross_check_bridge_manifest(written, bridge.manifest)
         return result
     finally:
         execution.release()
@@ -376,7 +386,14 @@ def main(argv: list[str] | None = None) -> int:
             execution_class=args.execution_class,
             projected_load_per_core=projected_load,
         )
-    except (GmshBridgeError, OSError, PrebuiltMeshError, SmokeError, ValueError) as exc:
+    except (
+        EvidenceValidationError,
+        GmshBridgeError,
+        OSError,
+        PrebuiltMeshError,
+        SmokeError,
+        ValueError,
+    ) as exc:
         print(f"synthetic smoke failed: {exc}")
         return 1
     print(f"synthetic smoke completed: ranks={ranks} evidence={args.evidence}")

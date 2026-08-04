@@ -38,6 +38,15 @@ _CONTRACT_FIELDS = {
     "patches", "wall_patches", "atmosphere_patch", "fluid_zone", "cells",
     "faces", "internal_faces",
 }
+# Top-level entries a cleanly attested case may contain. The bridge runs
+# gmshToFoam/changeDictionary/checkMesh in a temp stage directory and promotes
+# only constant/polyMesh plus its manifest, so it leaves no residue behind.
+# Anything else at the top level is stale state from an earlier run: a numeric
+# time directory, processorN, log.*, VTK/, postProcessing/, or a stray file.
+# This is a TOP-LEVEL fence only -- the manifest and the mesh live under
+# constant/, whose own dictionaries are legitimate inputs and are not touched.
+# input.yml is allowlisted, not required; it may legitimately be absent.
+_ALLOWED_TOP_LEVEL = frozenset({"0", "system", "constant", "source.msh", "input.yml"})
 
 
 class PrebuiltMeshError(RuntimeError):
@@ -78,11 +87,13 @@ def prepare_prebuilt_execution(
     try:
         payload = _load_manifest(case, manifest)
         _reject_links(case)
+        _reject_residue(case)
         _validate_bound_case(case, payload)
         snapshot = Path(tempfile.mkdtemp(prefix=f".{case.name}.run-", dir=case.parent))
         shutil.copytree(case, snapshot, dirs_exist_ok=True, symlinks=False)
         snapshot.chmod(0o700)
         _reject_links(snapshot)
+        _reject_residue(snapshot)
         _validate_bound_case(snapshot, payload)
         _validate_bound_case(case, payload)
         protected_sha256 = _hash_protected_inputs(snapshot)
@@ -282,6 +293,21 @@ def _reject_links(root: Path) -> None:
         if candidate.is_symlink():
             raise PrebuiltMeshError(
                 f"symlink is forbidden in prebuilt case: {candidate.relative_to(root)}"
+            )
+
+
+def _reject_residue(root: Path) -> None:
+    """Fence the case to the attested top-level allowlist.
+
+    Stale residue is a live false-pass vector, not just untidiness: the motion
+    proof reads the highest-numbered time directory, so a leftover 0.5/polyMesh
+    copied into the private snapshot can be mistaken for the reconstructed mesh
+    and certify motion that never happened.
+    """
+    for entry in sorted(root.iterdir()):
+        if entry.name not in _ALLOWED_TOP_LEVEL:
+            raise PrebuiltMeshError(
+                f"unattested residue in prebuilt case: {entry.name}"
             )
 
 
