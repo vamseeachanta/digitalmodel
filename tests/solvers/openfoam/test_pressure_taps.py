@@ -18,10 +18,10 @@ from digitalmodel.solvers.openfoam.post_processing import OpenFOAMPostProcessor
 from digitalmodel.solvers.openfoam.pressure_taps import (
     PressureTap,
     PressureTapStatistics,
-    b1546_default_taps,
     compute_tap_statistics,
     point_tap_names,
     read_tap_statistics,
+    rectangular_tank_wall_taps,
     render_patch_probes_entry,
     render_pressure_tap_functions,
     render_probes_entry,
@@ -175,41 +175,6 @@ class TestRenderFunctionsBlock:
 
 
 # ============================================================================
-# B1546 default taps
-# ============================================================================
-
-
-class TestB1546DefaultTaps:
-    """The named B1546 interest points."""
-
-    def test_named_families_present(self):
-        taps = b1546_default_taps(10.0, 4.0, 3.0, n_floor=2, n_side=2)
-        names = {t.name for t in taps}
-        assert "tank_top_centreline" in names
-        assert "floor_long_1" in names and "floor_long_2" in names
-        assert "side_shell_port_1" in names
-        assert "side_shell_stbd_2" in names
-
-    def test_all_taps_are_points_within_the_tank(self):
-        L, W, H = 10.0, 4.0, 3.0
-        taps = b1546_default_taps(L, W, H)
-        for tap in taps:
-            assert tap.kind == "point"
-            x, y, z = tap.location
-            assert 0.0 <= x <= L
-            assert 0.0 <= y <= W
-            assert 0.0 <= z <= H
-
-    def test_multiphase_fields_by_default(self):
-        taps = b1546_default_taps(10.0, 4.0, 3.0)
-        assert taps[0].fields == ("p", "p_rgh")
-
-    def test_bad_dimensions_raise(self):
-        with pytest.raises(ValueError):
-            b1546_default_taps(0.0, 4.0, 3.0)
-
-
-# ============================================================================
 # Case-builder integration (optional + additive)
 # ============================================================================
 
@@ -228,7 +193,9 @@ class TestCaseBuilderIntegration:
         assert "probes" not in control
 
     def test_case_with_taps_emits_functions(self, tmp_path):
-        taps = b1546_default_taps(10.0, 4.0, 3.0)
+        taps = rectangular_tank_wall_taps(
+            tank_length_m=10.0, tank_width_m=4.0, tap_elevations_m=(0.5, 1.5)
+        )
         builder = OpenFOAMCaseBuilder(
             self._sloshing_case("with_taps"), pressure_taps=taps
         )
@@ -236,7 +203,7 @@ class TestCaseBuilderIntegration:
         control = (case_dir / "system" / "controlDict").read_text()
         assert "functions" in control
         assert "type            probes;" in control
-        assert "// tank_top_centreline" in control
+        assert "// wall_1" in control
         # Base controlDict entries still present (additive, not replacing).
         assert "application" in control
         assert "endTime" in control
@@ -245,7 +212,9 @@ class TestCaseBuilderIntegration:
         base = OpenFOAMCaseBuilder(self._sloshing_case("case")).build(
             tmp_path / "a"
         )
-        taps = b1546_default_taps(10.0, 4.0, 3.0)
+        taps = rectangular_tank_wall_taps(
+            tank_length_m=10.0, tank_width_m=4.0, tap_elevations_m=(0.5, 1.5)
+        )
         withtaps = OpenFOAMCaseBuilder(
             self._sloshing_case("case"), pressure_taps=taps
         ).build(tmp_path / "b")
