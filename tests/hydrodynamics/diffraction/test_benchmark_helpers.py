@@ -540,24 +540,58 @@ class TestCoefficientCoverage:
     No threshold is applied here on purpose: the function reports what was
     compared and lets a human judge it. The failure case of a whole matrix
     being zeroed is already caught by the ABSENT_DIAGONAL refusal.
+
+    A cell counts as compared when it produced a correlation. That is the
+    ground truth of "did this cell yield evidence", read off the data rather
+    than declared by a hand-picked list of qualities.
     """
 
-    def test_coverage_counts_compared_cells_against_the_total(self):
+    def test_coverage_counts_cells_that_produced_a_correlation(self):
         from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
             coefficient_coverage,
         )
 
         qualities = {}
+        correlations = {}
         for i in range(1, 7):
             for j in range(1, 7):
+                on_diagonal = i == j
                 qualities[(i, j)] = (
-                    "COMPARED" if i == j else "NOT_APPLICABLE"
+                    "COMPARED" if on_diagonal else "NOT_APPLICABLE"
                 )
+                correlations[(i, j)] = 0.99 if on_diagonal else None
 
-        assert coefficient_coverage(qualities) == {
+        assert coefficient_coverage(qualities, correlations) == {
             "compared_cells": 6,
             "total_cells": 36,
             "quality_counts": {"COMPARED": 6, "NOT_APPLICABLE": 30},
+            "uncompared_quality_counts": {"NOT_APPLICABLE": 30},
+        }
+
+    def test_identical_cells_were_compared_and_must_count_as_such(self):
+        """IDENTICAL means the comparison ran and found bit-equal legs.
+
+        Counting only the literal COMPARED quality reported "0 of 36 cells
+        compared" for a matrix every cell of which had been compared --
+        precisely the class of confidently wrong statement #1633 exists to
+        remove.
+        """
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            coefficient_coverage,
+        )
+
+        qualities = {
+            (i, j): "IDENTICAL" for i in range(1, 7) for j in range(1, 7)
+        }
+        correlations = {
+            (i, j): 1.0 for i in range(1, 7) for j in range(1, 7)
+        }
+
+        assert coefficient_coverage(qualities, correlations) == {
+            "compared_cells": 36,
+            "total_cells": 36,
+            "quality_counts": {"IDENTICAL": 36},
+            "uncompared_quality_counts": {},
         }
 
     def test_coverage_of_an_empty_matrix_is_zero_of_zero(self):
@@ -565,10 +599,11 @@ class TestCoefficientCoverage:
             coefficient_coverage,
         )
 
-        assert coefficient_coverage({}) == {
+        assert coefficient_coverage({}, {}) == {
             "compared_cells": 0,
             "total_cells": 0,
             "quality_counts": {},
+            "uncompared_quality_counts": {},
         }
 
     def test_coverage_summary_names_the_uncompared_remainder(self):
@@ -580,6 +615,7 @@ class TestCoefficientCoverage:
             "compared_cells": 10,
             "total_cells": 36,
             "quality_counts": {"COMPARED": 10, "NOT_APPLICABLE": 26},
+            "uncompared_quality_counts": {"NOT_APPLICABLE": 26},
         })
 
         assert summary == "10 of 36 cells compared (NOT_APPLICABLE: 26)"
@@ -594,7 +630,8 @@ class TestCoefficientCoverage:
         summary = format_coverage_summary({
             "compared_cells": 36,
             "total_cells": 36,
-            "quality_counts": {"COMPARED": 36},
+            "quality_counts": {"IDENTICAL": 36},
+            "uncompared_quality_counts": {},
         })
 
         assert summary == "36 of 36 cells compared"

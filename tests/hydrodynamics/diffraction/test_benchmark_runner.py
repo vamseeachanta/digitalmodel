@@ -496,17 +496,36 @@ class TestCoefficientVisibility:
             },
         }
 
-    def test_html_states_coverage_for_every_matrix_of_every_pair(
+    def test_html_states_coverage_for_every_matrix_it_renders(
         self,
         three_solver_results: Dict[str, DiffractionResults],
         tmp_path: Path,
     ) -> None:
-        """Three pairs times two matrices = six coverage statements, in the
-        6x6 section, plus six more in the per-pair summary tables."""
+        """Three pairs times two matrices in the 6x6 section = six, plus two
+        for the executive summary, which by existing design summarises only
+        the first pair."""
         result = BenchmarkRunner(
             BenchmarkConfig(output_dir=tmp_path, dry_run=True),
         ).run_from_results(three_solver_results)
 
         html = result.report_html_path.read_text(encoding="utf-8")
 
-        assert html.count("cells compared") == 12
+        assert html.count("cells compared") == 8
+
+    def test_a_fully_compared_matrix_is_not_reported_as_uncompared(
+        self,
+        three_solver_results: Dict[str, DiffractionResults],
+        tmp_path: Path,
+    ) -> None:
+        """Every cell of this fixture is IDENTICAL -- compared, and equal.
+
+        Counting only the literal COMPARED quality made the report say
+        "0 of 36 cells compared" about a matrix that had been fully compared.
+        """
+        result = BenchmarkRunner(
+            BenchmarkConfig(output_dir=tmp_path, dry_run=True),
+        ).run_from_results(three_solver_results)
+
+        html = result.report_html_path.read_text(encoding="utf-8")
+
+        assert html.count("36 of 36 cells compared") == 8
