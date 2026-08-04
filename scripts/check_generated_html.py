@@ -1,6 +1,13 @@
 """Regenerate committed ``docs/api/**`` HTML in isolation and detect drift.
-Run from the repository root (stdlib only -- any Python 3.11+ works):
-    python scripts/check_generated_html.py --check
+Run from the repository root, inside the project environment:
+    uv run python scripts/check_generated_html.py --check
+
+The checker itself is stdlib-only, but the generators it drives are not: they
+reach numpy, scipy, pandas, matplotlib, pydantic and yaml through
+src/digitalmodel. A bare interpreter that happens to have those installed
+system-wide makes that indistinguishable from having no dependencies at all --
+run it in the project environment so a missing package fails here rather than
+in CI.
 Generators currently write to fixed repository paths, so this check builds a
 temporary shadow repository. It never rewrites the developer's working tree.
 Every discovered generator must be registered or carry an explicit reason for
