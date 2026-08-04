@@ -427,6 +427,26 @@ class MultiSolverComparator:
                 )
             )
         )
+        # Zero variance on BOTH legs first — the same ordering the magnitude
+        # and hydrostatic paths use. A real RAO's phase varies with frequency,
+        # so phase that is constant across the whole grid on both legs carries
+        # no information: "both solvers computed the same phase" cannot be
+        # distinguished from "neither solver computed a phase". Without this,
+        # an extraction that leaves phase as zeros on both legs yields
+        # IDENTICAL / correlation 1.0 / max_phase_diff 0.0, and IDENTICAL is
+        # not a refusal quality, so nothing objects (#1633).
+        if np.ptp(values1) == 0.0 and np.ptp(values2) == 0.0:
+            return DeviationStatistics(
+                mean_error=circular_mean,
+                max_error=float(np.max(np.abs(errors))),
+                rms_error=float(np.sqrt(np.mean(errors ** 2))),
+                mean_abs_error=float(np.mean(np.abs(errors))),
+                correlation=None,
+                frequencies=frequencies,
+                errors=errors,
+                quality="INSUFFICIENT_DATA",
+            )
+
         identical = bool(np.array_equal(errors, np.zeros_like(errors)))
         return DeviationStatistics(
             mean_error=circular_mean,

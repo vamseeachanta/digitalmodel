@@ -169,6 +169,25 @@ def _unit_box_pitch_rao(frequencies: np.ndarray) -> np.ndarray:
     return np.clip(magnitude, 0.0, 20.0)
 
 
+# RNG stream identity
+# ---------------------------------------------------------------------------
+# Every stream is keyed by the FULL tuple (solver seed, DOF, kind) as a seed
+# SEQUENCE. Summing the components — the previous `seed + dof.value` — aliases:
+# with solver seeds 0/1/2 and DOF values 1-6, AQWA-SWAY drew the same stream as
+# OrcaWave-SURGE, and five of the six sums collided three ways, so the 18
+# pair x DOF results were driven by only 8 distinct draws (#1633).
+_KIND_MAGNITUDE = 0
+_KIND_BASE_PHASE = 1
+_KIND_SOLVER_PHASE = 2
+_KIND_ADDED_MASS = 3
+_KIND_DAMPING = 4
+
+
+def _magnitude_rng(seed: int, dof: DOF) -> np.random.Generator:
+    """RNG for a solver's RAO magnitude perturbation in one DOF."""
+    return np.random.default_rng([seed, dof.value, _KIND_MAGNITUDE])
+
+
 def _unit_box_rao_component(
     dof: DOF,
     frequencies: np.ndarray,
@@ -183,7 +202,7 @@ def _unit_box_rao_component(
     """
     freq_data = _make_unit_box_freq_data()
     head_data = _make_unit_box_heading_data()
-    rng = np.random.default_rng(seed=seed + dof.value)
+    rng = _magnitude_rng(seed, dof)
 
     if dof == DOF.HEAVE:
         base_mag_1d = _unit_box_heave_rao(frequencies)
@@ -218,23 +237,31 @@ def _unit_box_rao_component(
         phase_1d = -np.degrees(np.arctan2(2 * 0.05 * frequencies / omega_n,
                                            1 - (frequencies / omega_n) ** 2))
     else:
-        phase_rng = np.random.default_rng([dof.value, 1])
+        phase_rng = np.random.default_rng([dof.value, _KIND_BASE_PHASE])
         phase_1d = phase_rng.uniform(-30.0, 30.0, size=len(frequencies))
 
     phase = np.outer(phase_1d, np.ones(N_HEAD))
 
-    # Per-solver phase variation, derived from the SAME declared relative
-    # uncertainty rather than an independent invented bound. A complex response
-    # perturbed by relative magnitude u carries a perpendicular component of the
-    # same relative size, which rotates the phasor by arctan(u) ~ u radians for
-    # small u. At u = 0.01 that is 0.573 deg.
+    # Per-solver phase variation, scaled from the SAME declared relative
+    # uncertainty rather than an independent invented bound.
+    #
+    # SOLVER_RELATIVE_UNCERTAINTY is treated here as a PER-COMPONENT bound: the
+    # radial (magnitude) and tangential (phase) perturbations are each bounded
+    # by u independently. A tangential perturbation of relative size u rotates
+    # the phasor by arctan(u) ~ u radians for small u, so the phase bound is
+    # degrees(u) = 0.573 deg at u = 0.01. Applying u to both components means
+    # the TOTAL complex perturbation reaches u*sqrt(2), not u — stated plainly
+    # because an earlier version of this comment claimed a single-u total,
+    # which is not what the code does. Nothing gates on phase (the policy
+    # justification declares it diagnostic-only), so the per-component reading
+    # is the honest description rather than a derivation of a bound.
     #
     # Without this the solver seed never reaches the phase: every solver
     # produced a bit-identical phase array, all 18 max_phase_diff entries were
     # exactly 0.0, and an inverted phase convention would have reported perfect
     # agreement (#1633).
     phase_perturbation_deg = np.degrees(SOLVER_RELATIVE_UNCERTAINTY)
-    solver_phase_rng = np.random.default_rng([seed, dof.value, 2])
+    solver_phase_rng = np.random.default_rng([seed, dof.value, _KIND_SOLVER_PHASE])
     phase = phase + solver_phase_rng.uniform(
         -phase_perturbation_deg, phase_perturbation_deg, size=phase.shape,
     )
@@ -258,7 +285,7 @@ def _unit_box_added_mass(
     For a 1x1x1 box at the waterline, diagonal added mass components are
     approximately proportional to displaced water mass (~500 kg for this geometry).
     """
-    rng = np.random.default_rng(seed=seed + 10)
+    rng = np.random.default_rng([seed, _KIND_ADDED_MASS])
     freq_data = _make_unit_box_freq_data()
     # Approximate diagonal: surge/sway added mass ~ 50% of displaced mass
     # heave added mass ~ 20% (flat bottom), roll/pitch ~ 10% * L^2
@@ -307,7 +334,7 @@ def _unit_box_damping(
     seed: int = 0,
 ) -> DampingSet:
     """Build frequency-dependent radiation damping matrices for the Unit Box."""
-    rng = np.random.default_rng(seed=seed + 20)
+    rng = np.random.default_rng([seed, _KIND_DAMPING])
     freq_data = _make_unit_box_freq_data()
     # Radiation damping is proportional to freq^2 at low frequencies
     diag_base = np.array([50.0, 50.0, 30.0, 5.0, 5.0, 1.0])

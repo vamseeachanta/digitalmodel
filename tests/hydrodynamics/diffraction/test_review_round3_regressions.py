@@ -197,6 +197,86 @@ class TestAbsentDiagonalRefuses:
         assert "ABSENT_DIAGONAL" not in qualities
 
 
+class TestPhaseComparatorRefusesConstantPhase:
+    """The FOURTH array_equal short-circuit — the one the first pass missed.
+
+    edc1cb90 reordered zero-variance ahead of np.array_equal and its body
+    claimed 'all three sites'. There are four: _calculate_phase_deviation_stats
+    has its own copy, and IDENTICAL is not in REFUSAL_QUALITIES.
+
+    Failure scenario: a parser populates magnitude correctly but leaves phase
+    as zeros on both legs — the same class of defect as the np.eye(6)*1000
+    placeholder that opened #1633. Magnitude is above the null floor, so the
+    NULL_RESPONSE override does not fire; the phase errors are identically
+    zero; quality becomes IDENTICAL with correlation 1.0 and
+    max_phase_diff 0.0; nothing refuses, and the DOF is decided on magnitude
+    alone.
+
+    A real RAO's phase varies with frequency. Phase that is CONSTANT across
+    the whole grid on both legs therefore carries no information: 'both
+    solvers computed the same phase' is indistinguishable from 'neither solver
+    computed a phase'.
+    """
+
+    def test_constant_phase_on_both_legs_refuses(self) -> None:
+        stats = MultiSolverComparator._calculate_phase_deviation_stats(
+            ZEROS, ZEROS.copy(), FREQS,
+        )
+
+        assert stats.correlation is None
+        assert stats.quality == "INSUFFICIENT_DATA"
+
+    def test_varying_identical_phase_still_reports_identical(self) -> None:
+        """Genuinely varying, genuinely equal phase is still IDENTICAL."""
+        varying = np.array([[10.0, 20.0], [30.0, 40.0]])
+
+        stats = MultiSolverComparator._calculate_phase_deviation_stats(
+            varying, varying.copy(), np.array([0.5, 1.0]),
+        )
+
+        assert stats.correlation == 1.0
+        assert stats.quality == "IDENTICAL"
+
+    def test_differing_phase_is_compared(self) -> None:
+        a = np.array([[10.0, 20.0], [30.0, 40.0]])
+        b = a + 5.0
+
+        stats = MultiSolverComparator._calculate_phase_deviation_stats(
+            a, b, np.array([0.5, 1.0]),
+        )
+
+        assert stats.quality == "COMPARED"
+        assert stats.max_error == pytest.approx(5.0)
+
+
+class TestSeedStreamsDoNotAlias:
+    """edc1cb90 claimed 'seeds are now sequences so streams cannot alias'.
+
+    That was true for phase only. Magnitude kept `seed + dof.value`, which
+    collides across (solver, dof): with solver seeds 0/1/2 and DOF values 1-6,
+    AQWA-SWAY draws the same stream as OrcaWave-SURGE, and five of the six
+    sums collide three ways.
+    """
+
+    def test_every_solver_dof_stream_is_distinct(self) -> None:
+        script = pytest.importorskip(
+            "tests.hydrodynamics.diffraction.test_unit_box_benchmark",
+        )
+        from digitalmodel.hydrodynamics.diffraction.output_schemas import DOF
+
+        draws = {}
+        for solver_seed in (0, 1, 2):
+            for dof in DOF:
+                rng = script._magnitude_rng(solver_seed, dof)
+                key = float(rng.uniform(-1.0, 1.0))
+                assert key not in draws, (
+                    f"({solver_seed}, {dof.name}) aliases {draws.get(key)}"
+                )
+                draws[key] = (solver_seed, dof.name)
+
+        assert len(draws) == 18
+
+
 class TestHydrostaticConstantStiffness:
     """compare_hydrostatics carries the same short-circuit ordering."""
 
