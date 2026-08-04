@@ -102,6 +102,19 @@ class TestDeviationStatistics:
         assert stats.rms_error == pytest.approx(0.0)
         assert stats.correlation == pytest.approx(1.0)
 
+    def test_identical_arrays_have_identical_quality(self, mock_diffraction_results):
+        aqwa = _clone_results(mock_diffraction_results)
+        ow = _clone_results(mock_diffraction_results)
+        comp = DiffractionComparator(aqwa, ow)
+
+        stats = comp._calculate_deviation_stats(
+            np.array([1.0, 2.0, 3.0]),
+            np.array([1.0, 2.0, 3.0]),
+            np.array([0.1, 0.2, 0.3]),
+        )
+
+        assert stats.quality == "IDENTICAL"
+
     def test_known_offset(self, mock_diffraction_results):
         aqwa = _clone_results(mock_diffraction_results)
         ow = _clone_results(mock_diffraction_results)

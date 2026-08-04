@@ -27,6 +27,11 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
+from digitalmodel.hydrodynamics.diffraction.benchmark_abscissa import (
+    AlignedResponses,
+    InsufficientSampling,
+    align_responses,
+)
 from digitalmodel.hydrodynamics.diffraction.comparison_framework import (
     DeviationStatistics,
 )
@@ -98,7 +103,7 @@ class ConsensusMetrics:
     agreement_pairs: List[Tuple[str, str]]
     outlier_solver: Optional[str] = None
     consensus_level: str = "UNKNOWN"
-    mean_pairwise_correlation: float = 0.0
+    mean_pairwise_correlation: Optional[float] = None
 
 
 @dataclass
@@ -207,6 +212,18 @@ class MultiSolverComparator:
         frequencies: np.ndarray,
     ) -> DeviationStatistics:
         """Replicate deviation statistics from comparison_framework."""
+        if values1.size == 0 or values2.size == 0:
+            return DeviationStatistics(
+                mean_error=0.0,
+                max_error=0.0,
+                rms_error=0.0,
+                mean_abs_error=0.0,
+                correlation=None,
+                frequencies=frequencies,
+                errors=np.array([], dtype=float),
+                quality="INSUFFICIENT_DATA",
+            )
+
         errors = values2 - values1
         mean_error = float(np.mean(errors))
         max_error = float(np.max(np.abs(errors)))
@@ -218,6 +235,9 @@ class MultiSolverComparator:
         if np.allclose(flat1, flat2):
             correlation = 1.0
             quality = "IDENTICAL"
+        elif np.ptp(flat1) == 0.0 or np.ptp(flat2) == 0.0:
+            correlation = None
+            quality = "INSUFFICIENT_DATA"
         else:
             correlation = float(np.corrcoef(flat1, flat2)[0, 1])
             quality = "COMPARED"
@@ -275,6 +295,23 @@ class MultiSolverComparator:
             return 0.0 if rms_error == 0.0 else float("inf")
         return rms_error / scale
 
+    @staticmethod
+    def _insufficient_sampling_stats(
+        shape: Tuple[int, ...],
+    ) -> DeviationStatistics:
+        """Represent a sampling refusal without fabricating a correlation."""
+        errors = np.zeros(shape, dtype=float)
+        return DeviationStatistics(
+            mean_error=0.0,
+            max_error=0.0,
+            rms_error=0.0,
+            mean_abs_error=0.0,
+            correlation=None,
+            frequencies=np.array([], dtype=float),
+            errors=errors,
+            quality="INSUFFICIENT_SAMPLING",
+        )
+
     # ------------------------------------------------------------------
     # RAO comparison
     # ------------------------------------------------------------------
@@ -303,40 +340,74 @@ class MultiSolverComparator:
                 rao_a: RAOComponent = getattr(res_a.raos, dof_name)
                 rao_b: RAOComponent = getattr(res_b.raos, dof_name)
 
-                mag_stats = self._calculate_deviation_stats(
-                    rao_a.magnitude,
-                    rao_b.magnitude,
+                alignment = align_responses(
                     rao_a.frequencies.values,
+                    rao_a.magnitude,
+                    rao_a.phase,
+                    rao_b.frequencies.values,
+                    rao_b.magnitude,
+                    rao_b.phase,
+                )
+                if isinstance(alignment, InsufficientSampling):
+                    unavailable = self._insufficient_sampling_stats(
+                        rao_a.magnitude.shape,
+                    )
+                    pair_comparisons[dof_name] = PairwiseRAOComparison(
+                        dof=dof,
+                        solver_a=solver_a,
+                        solver_b=solver_b,
+                        magnitude_stats=unavailable,
+                        phase_stats=self._insufficient_sampling_stats(
+                            rao_a.phase.shape,
+                        ),
+                        max_magnitude_diff=0.0,
+                        max_phase_diff=0.0,
+                        relative_rms_error=None,
+                    )
+                    continue
+
+                if not isinstance(alignment, AlignedResponses):
+                    raise TypeError("unexpected abscissa alignment result")
+                frequencies = alignment.frequencies
+                magnitude_a = alignment.first.magnitude
+                magnitude_b = alignment.second.magnitude
+                phase_a = alignment.first.phase_degrees
+                phase_b = alignment.second.phase_degrees
+
+                mag_stats = self._calculate_deviation_stats(
+                    magnitude_a,
+                    magnitude_b,
+                    frequencies,
                 )
 
                 # Compute peak magnitude first to decide if phase
                 # correlation is physically meaningful.
-                avg_mag = 0.5 * (rao_a.magnitude + rao_b.magnitude)
+                avg_mag = 0.5 * (magnitude_a + magnitude_b)
                 peak_mag = float(np.max(avg_mag))
 
                 if peak_mag < 1e-10:
                     # Near-zero magnitude: phase is undefined
                     # (atan2(0,0) noise).  Override with perfect
                     # agreement instead of computing noise correlation.
-                    zeros = np.zeros_like(rao_a.phase)
+                    zeros = np.zeros_like(phase_a)
                     phase_stats = DeviationStatistics(
                         mean_error=0.0,
                         max_error=0.0,
                         rms_error=0.0,
                         mean_abs_error=0.0,
                         correlation=1.0,
-                        frequencies=rao_a.frequencies.values,
+                        frequencies=frequencies,
                         errors=zeros,
                         quality="NULL_RESPONSE",
                     )
                 else:
                     phase_stats = self._calculate_phase_deviation_stats(
-                        rao_a.phase,
-                        rao_b.phase,
-                        rao_a.frequencies.values,
+                        phase_a,
+                        phase_b,
+                        frequencies,
                     )
 
-                mag_diff = np.abs(rao_b.magnitude - rao_a.magnitude)
+                mag_diff = np.abs(magnitude_b - magnitude_a)
                 phase_diff = np.abs(phase_stats.errors)
 
                 # Find where max phase diff occurs and what the
@@ -346,7 +417,7 @@ class MultiSolverComparator:
                 )
                 mag_at_max_pd = float(avg_mag[max_pd_idx])
                 freq_at_max_pd = float(
-                    rao_a.frequencies.values[max_pd_idx[0]],
+                    frequencies[max_pd_idx[0]],
                 )
 
                 pair_comparisons[dof_name] = PairwiseRAOComparison(
@@ -362,8 +433,8 @@ class MultiSolverComparator:
                     max_phase_diff_x=freq_at_max_pd,
                     max_phase_diff_heading_idx=int(max_pd_idx[1]),
                     relative_rms_error=self._symmetric_relative_rms(
-                        rao_a.magnitude,
-                        rao_b.magnitude,
+                        magnitude_a,
+                        magnitude_b,
                     ),
                 )
 
@@ -502,7 +573,7 @@ class MultiSolverComparator:
 
             # For each pair, check both correlation AND rms_error
             pair_agrees: Dict[str, bool] = {}
-            pair_corrs: Dict[str, float] = {}
+            pair_corrs: Dict[str, Optional[float]] = {}
 
             for solver_a, solver_b in pairs:
                 pk = self._pair_key(solver_a, solver_b)
@@ -526,7 +597,12 @@ class MultiSolverComparator:
                 pk for pk, agrees in pair_agrees.items() if not agrees
             ]
 
-            mean_corr = float(np.mean(list(pair_corrs.values())))
+            available_corrs = [
+                corr for corr in pair_corrs.values() if corr is not None
+            ]
+            mean_corr = (
+                float(np.mean(available_corrs)) if available_corrs else None
+            )
 
             # Determine consensus level
             if len(pairs) == 1:
@@ -589,7 +665,10 @@ class MultiSolverComparator:
         corrs = [
             c.magnitude_stats.correlation
             for c in rao_comps.values()
+            if c.magnitude_stats.correlation is not None
         ]
+        if not corrs:
+            return "POOR"
         min_corr = min(corrs)
         mean_corr = float(np.mean(corrs))
 
@@ -725,15 +804,21 @@ class MultiSolverComparator:
             rao_dict = {}
             for dof_name, comp in pr.rao_comparisons.items():
                 rao_dict[dof_name] = {
-                    "magnitude_correlation": float(
-                        comp.magnitude_stats.correlation,
+                    "magnitude_correlation": (
+                        float(comp.magnitude_stats.correlation)
+                        if comp.magnitude_stats.correlation is not None
+                        else None
                     ),
+                    "magnitude_quality": comp.magnitude_stats.quality,
                     "magnitude_rms_error": float(
                         comp.magnitude_stats.rms_error,
                     ),
-                    "phase_correlation": float(
-                        comp.phase_stats.correlation,
+                    "phase_correlation": (
+                        float(comp.phase_stats.correlation)
+                        if comp.phase_stats.correlation is not None
+                        else None
                     ),
+                    "phase_quality": comp.phase_stats.quality,
                     "max_magnitude_diff": float(comp.max_magnitude_diff),
                     "max_phase_diff": float(comp.max_phase_diff),
                 }
@@ -777,8 +862,10 @@ class MultiSolverComparator:
         for dof_key, cm in consensus.items():
             out[dof_key] = {
                 "consensus_level": cm.consensus_level,
-                "mean_pairwise_correlation": float(
-                    cm.mean_pairwise_correlation,
+                "mean_pairwise_correlation": (
+                    float(cm.mean_pairwise_correlation)
+                    if cm.mean_pairwise_correlation is not None
+                    else None
                 ),
                 "outlier_solver": cm.outlier_solver,
                 "agreement_pairs": [

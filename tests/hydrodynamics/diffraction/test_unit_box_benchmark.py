@@ -71,10 +71,10 @@ UNIT_BOX_COG = (0.0, 0.0, -0.25)
 UNIT_BOX_SIDE_M = 1.0
 WATER_DENSITY = 1025.0
 
-# Frequency grid: 0.1 to 2.0 rad/s — 20 steps
-N_FREQ = 20
+# Frequency grid: 0.1 to 2.0 rad/s, dense enough for the abscissa contract.
+N_FREQ = 40
 N_HEAD = 4
-FREQUENCIES = np.linspace(0.1, 2.0, N_FREQ)
+FREQUENCIES = np.geomspace(0.1, 2.0, N_FREQ)
 HEADINGS = np.array([0.0, 90.0, 180.0, 270.0])
 
 # Solver tolerance: < 1% relative difference constitutes agreement
