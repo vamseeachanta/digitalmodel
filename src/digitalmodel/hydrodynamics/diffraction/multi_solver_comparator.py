@@ -232,6 +232,30 @@ class MultiSolverComparator:
             quality=quality,
         )
 
+    @staticmethod
+    def _calculate_phase_deviation_stats(
+        values1: np.ndarray,
+        values2: np.ndarray,
+        frequencies: np.ndarray,
+    ) -> DeviationStatistics:
+        """Calculate phase differences on the shortest circular arc."""
+        errors = (values2 - values1 + 180.0) % 360.0 - 180.0
+        identical = bool(np.allclose(errors, 0.0))
+        return DeviationStatistics(
+            mean_error=float(np.mean(errors)),
+            max_error=float(np.max(np.abs(errors))),
+            rms_error=float(np.sqrt(np.mean(errors ** 2))),
+            mean_abs_error=float(np.mean(np.abs(errors))),
+            correlation=(
+                1.0
+                if identical
+                else float(np.mean(np.cos(np.deg2rad(errors))))
+            ),
+            frequencies=frequencies,
+            errors=errors,
+            quality="IDENTICAL" if identical else "COMPARED",
+        )
+
     def _all_pairs(self) -> List[Tuple[str, str]]:
         """Return all unique solver pairs in alphabetical order."""
         return list(combinations(self.solver_names, 2))
@@ -291,14 +315,14 @@ class MultiSolverComparator:
                         quality="NULL_RESPONSE",
                     )
                 else:
-                    phase_stats = self._calculate_deviation_stats(
+                    phase_stats = self._calculate_phase_deviation_stats(
                         rao_a.phase,
                         rao_b.phase,
                         rao_a.frequencies.values,
                     )
 
                 mag_diff = np.abs(rao_b.magnitude - rao_a.magnitude)
-                phase_diff = np.abs(rao_b.phase - rao_a.phase)
+                phase_diff = np.abs(phase_stats.errors)
 
                 # Find where max phase diff occurs and what the
                 # amplitude is there (average of both solvers).

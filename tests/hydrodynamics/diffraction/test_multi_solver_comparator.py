@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from typing import Dict
 
+import numpy as np
 import pytest
 
 from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import (
@@ -182,6 +183,32 @@ class TestCompareRAOs:
         comparison = comparator.compare_raos()["SolverA-vs-SolverB"]["heave"]
 
         assert comparison.magnitude_stats.quality == "IDENTICAL"
+
+    def test_phase_rms_wraps_across_branch_cut(
+        self, two_identical_results: Dict[str, DiffractionResults],
+    ) -> None:
+        phase_a = np.linspace(170.0, 179.0, 50).reshape(10, 5)
+        phase_b = (phase_a + 2.0 + 180.0) % 360.0 - 180.0
+        two_identical_results["SolverA"].raos.heave.phase = phase_a
+        two_identical_results["SolverB"].raos.heave.phase = phase_b
+        comparator = MultiSolverComparator(two_identical_results)
+
+        comparison = comparator.compare_raos()["SolverA-vs-SolverB"]["heave"]
+
+        assert comparison.phase_stats.rms_error == pytest.approx(2.0)
+
+    def test_max_phase_diff_wraps_across_branch_cut(
+        self, two_identical_results: Dict[str, DiffractionResults],
+    ) -> None:
+        phase_a = np.linspace(170.0, 179.0, 50).reshape(10, 5)
+        phase_b = (phase_a + 2.0 + 180.0) % 360.0 - 180.0
+        two_identical_results["SolverA"].raos.heave.phase = phase_a
+        two_identical_results["SolverB"].raos.heave.phase = phase_b
+        comparator = MultiSolverComparator(two_identical_results)
+
+        comparison = comparator.compare_raos()["SolverA-vs-SolverB"]["heave"]
+
+        assert comparison.max_phase_diff == pytest.approx(2.0)
 
     def test_compare_raos_zero_magnitude_phase_correlation_is_perfect(
         self, two_identical_results: Dict[str, DiffractionResults],
