@@ -225,8 +225,18 @@ def _validate_bridge(record: Any, artifacts: Mapping) -> None:
     _digest(inputs["tree_sha256"], "bridge inputs digest")
     for name in ("file_count", "total_bytes"):
         _integer(inputs[name], f"bridge inputs {name}", minimum=1)
-    if mesh["path"] != "constant/polyMesh" or mesh["tree_sha256"] != artifacts["poly_mesh"]["tree_sha256"]:
-        raise EvidenceValidationError("bridge mesh digest does not match artifacts")
+    # Bind the WHOLE duplicated tree record, not just the digest: file_count and
+    # total_bytes are carried twice and an unbound copy is a mutation that the
+    # validator would wave through.
+    mesh_artifact = artifacts["poly_mesh"]
+    mesh_matches = mesh["path"] == "constant/polyMesh" and all(
+        mesh[name] == mesh_artifact[name]
+        for name in ("tree_sha256", "file_count", "total_bytes")
+    )
+    if not mesh_matches:
+        raise EvidenceValidationError(
+            "bridge mesh digest, file count, or size does not match artifacts"
+        )
     _validate_bridge_contract(bridge["contract"])
     _validate_bridge_commands(bridge["commands"])
     toolchain = _exact(
@@ -298,6 +308,37 @@ def validate_evidence(payload: Any) -> dict[str, Any]:
     _validate_stages(item["stages"], dispatcher["ranks"])
     _validate_provenance_chains(item)
     return payload
+
+
+def cross_check_bridge_manifest(
+    evidence_payload: Any, manifest_payload: Any
+) -> None:
+    """Fail closed unless the durable bundle faithfully embeds the manifest.
+
+    The bundle's bridge section and the standalone prebuilt manifest carry the
+    same attestation twice. Validating the bundle alone cannot detect a bundle
+    that was written from a different (or edited) manifest, so compare them
+    field by field. The manifest root fields are exactly the shape of the
+    bridge section; timing, execution_class, dispatcher, motion, and provenance
+    exist only in the evidence and are deliberately out of scope here.
+    """
+    validate_evidence(evidence_payload)
+    if not isinstance(manifest_payload, Mapping):
+        raise EvidenceValidationError("prebuilt manifest must be a mapping")
+    bridge = evidence_payload["bridge"]
+    for field in sorted(set(bridge) | set(manifest_payload)):
+        if field not in manifest_payload:
+            raise EvidenceValidationError(
+                f"prebuilt manifest is missing {field}"
+            )
+        if field not in bridge:
+            raise EvidenceValidationError(
+                f"durable bundle is missing {field}"
+            )
+        if bridge[field] != manifest_payload[field]:
+            raise EvidenceValidationError(
+                f"durable bundle diverges from prebuilt manifest at {field}"
+            )
 
 
 def build_evidence_payload(
@@ -385,10 +426,20 @@ def capture_pre_run_artifacts(repo_root: Path, case: Path) -> dict[str, Any]:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("evidence", type=Path)
+    parser.add_argument(
+        "--manifest",
+        type=Path,
+        help="standalone prebuilt manifest to cross-check the bundle against",
+    )
     args = parser.parse_args(argv)
     try:
         payload = json.loads(args.evidence.read_text(encoding="utf-8"))
         validate_evidence(payload)
+        if args.manifest is not None:
+            manifest_payload = json.loads(
+                args.manifest.read_text(encoding="utf-8")
+            )
+            cross_check_bridge_manifest(payload, manifest_payload)
     except (OSError, json.JSONDecodeError, EvidenceValidationError) as exc:
         print(f"invalid smoke evidence: {exc}", file=sys.stderr)
         return 1

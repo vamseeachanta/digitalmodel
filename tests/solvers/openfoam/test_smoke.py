@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import math
 import json
 import subprocess
@@ -363,6 +364,79 @@ def test_evidence_binds_bridge_source_size_to_artifact(tmp_path: Path) -> None:
     payload = json.loads(_write_valid_evidence(tmp_path).read_text(encoding="utf-8"))
 
     assert payload["bridge"]["source_msh"]["size"] == payload["artifacts"]["source_msh"]["size"]
+
+
+@pytest.mark.parametrize("field", ["file_count", "total_bytes"])
+def test_bridge_poly_mesh_size_or_count_mutation_is_rejected(
+    tmp_path: Path, field: str
+) -> None:
+    from digitalmodel.solvers.openfoam.smoke_evidence import (
+        EvidenceValidationError,
+        validate_evidence,
+    )
+
+    payload = json.loads(_write_valid_evidence(tmp_path).read_text(encoding="utf-8"))
+    payload["bridge"]["poly_mesh"][field] += 1
+
+    with pytest.raises(EvidenceValidationError, match="artifacts"):
+        validate_evidence(payload)
+
+
+@pytest.mark.parametrize(
+    ("path", "new_value", "section"),
+    [
+        ("case_inputs.total_bytes", 201, "case_inputs"),
+        ("contract.cells", 11, "contract"),
+        ("source_msh.sha256", "f" * 64, "source_msh"),
+        ("commands.0.return_code", 1, "commands"),
+    ],
+)
+def test_cross_check_rejects_manifest_divergence(
+    tmp_path: Path, path: str, new_value: object, section: str
+) -> None:
+    from digitalmodel.solvers.openfoam.smoke_evidence import (
+        EvidenceValidationError,
+        cross_check_bridge_manifest,
+    )
+
+    payload = json.loads(_write_valid_evidence(tmp_path).read_text(encoding="utf-8"))
+    manifest = copy.deepcopy(payload["bridge"])
+    cross_check_bridge_manifest(payload, manifest)
+
+    target = manifest
+    parts = path.split(".")
+    for part in parts[:-1]:
+        target = target[int(part)] if isinstance(target, list) else target[part]
+    # Guard the oracle: if the sentinel ever equals the fixture value the
+    # mutation is a no-op and the rejection assertion below becomes vacuous.
+    assert target[parts[-1]] != new_value
+    target[parts[-1]] = new_value
+
+    with pytest.raises(EvidenceValidationError, match=section):
+        cross_check_bridge_manifest(payload, manifest)
+
+
+def test_committed_durable_bundle_validates() -> None:
+    from digitalmodel.solvers.openfoam.smoke_evidence import (
+        EvidenceValidationError,
+        validate_evidence,
+    )
+
+    evidence_path = (
+        Path(__file__).resolve().parents[3]
+        / "docs"
+        / "api"
+        / "cfd"
+        / "synthetic-l-tank-smoke.json"
+    )
+    assert evidence_path.is_file() is True
+    loaded = json.loads(evidence_path.read_text(encoding="utf-8"))
+    assert validate_evidence(loaded) is loaded
+
+    mutated = copy.deepcopy(loaded)
+    mutated["bridge"]["poly_mesh"]["total_bytes"] += 1
+    with pytest.raises(EvidenceValidationError):
+        validate_evidence(mutated)
 
 
 def test_evidence_validator_rejects_unknown_and_missing_records(tmp_path: Path) -> None:

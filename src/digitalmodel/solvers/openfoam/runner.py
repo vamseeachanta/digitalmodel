@@ -28,7 +28,14 @@ _ERROR_MARKERS = (
     "FOAM FATAL IO ERROR",
 )
 # Divergence markers — present in solver logs when the solution blows up.
-_DIVERGENCE_MARKERS = ("bounding", "Maximum number of iterations exceeded")
+# Kept in lockstep with smoke.py:_DIVERGENCE_MARKERS — one fail-closed
+# divergence policy, mirrored on the attested-runner path. Lowercase because
+# _detect_error matches case-insensitively, exactly as smoke.py does.
+_DIVERGENCE_MARKERS = (
+    "divergence",
+    "maximum number of iterations exceeded",
+    "bounding",
+)
 
 
 class OpenFOAMRunStatus(str, Enum):
@@ -359,25 +366,32 @@ class OpenFOAMRunner:
             stage.error_message = f"{name} invocation failed: {exc}"
             return stage
 
-        # OpenFOAM utilities write their banner+progress to stdout; persist it.
+        # OpenFOAM utilities write their banner+progress to stdout, but a FOAM
+        # FATAL can land on stderr at rc=0. Persist and inspect BOTH, or the
+        # stage log is not the whole record and the verdict is not honest.
+        combined = (proc.stdout or "") + (proc.stderr or "")
         try:
-            log_file.write_text(proc.stdout or "")
+            log_file.write_text(combined)
         except OSError:
             stage.log_file = None
 
         stage.return_code = proc.returncode
         stage.duration_seconds = time.monotonic() - start
-        stage.error_message = self._detect_error(name, proc.returncode, proc.stdout)
+        stage.error_message = self._detect_error(name, proc.returncode, combined)
         return stage
 
     @staticmethod
     def _detect_error(
-        name: str, return_code: int, stdout: Optional[str]
+        name: str, return_code: int, output: Optional[str]
     ) -> Optional[str]:
         if return_code != 0:
             return f"{name} returned non-zero exit code {return_code}"
-        text = stdout or ""
+        lowered = (output or "").lower()
+        # Fatal markers before divergence markers, mirroring smoke.py's order.
         for marker in _ERROR_MARKERS:
-            if marker in text:
+            if marker.lower() in lowered:
+                return f"{name} log contains '{marker}'"
+        for marker in _DIVERGENCE_MARKERS:
+            if marker in lowered:
                 return f"{name} log contains '{marker}'"
         return None
