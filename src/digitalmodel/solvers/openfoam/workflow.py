@@ -9,19 +9,53 @@ to :class:`OpenFOAMCaseBuilder` (case authoring, license-free) and
 It mirrors the ANSYS/OrcaWave/AQWA router contract so the same fixed
 ``uv run python -m digitalmodel <input>`` lane command can drive a CFD solve.
 
-Input contract::
+Input contract. Two forms are accepted and must not be mixed (#1575).
+
+Canonical — carries the full case definition, validated fail-closed::
+
+    basename: openfoam
+    openfoam:
+      operation: run_openfoam     # build_case | run_openfoam (default)
+      output_directory: out       # relative to Analysis.result_folder
+      case_definition:
+        schema_version: 1
+        kind: authored            # "prebuilt" is reserved and refused in v1
+        authored:
+          case_type: sloshing
+          name: my_case
+          solver: interFoam
+          domain: {...}           # SI metres, right-handed, z up
+          motion: {...}           # optional prescribed single-DOF forcing
+          fill: {...}             # optional VOF partial fill
+          time: {...}             # start/end/step/write controls
+          function_objects: {...} # optional pressure taps + write controls
+      execution:
+        mesh_utility: blockMesh
+        run_snappy: false
+        run_set_fields: false
+        to_vtk: false
+        timeout_seconds: 43200
+        dry_run: false
+
+Legacy — the pre-#1575 flat form, still supported and normalised onto the
+schema above. It cannot express domain, motion, fill, time or function
+objects; those keys are refused here rather than silently dropped::
 
     basename: openfoam            # (or "cfd")
     openfoam:
       operation: run_openfoam     # build_case | run_openfoam (default)
       case_type: current_loading  # any CaseType value
-      name: my_case               # case directory name
+      name: my_case               # optional; defaults to <case_type>_case
       output_directory: out       # relative to Analysis.result_folder
-      solver: simpleFoam          # optional override; else read from controlDict
+      solver: simpleFoam          # optional override; else the case-type default
       mesh_utility: blockMesh
       run_snappy: false
       to_vtk: true
       dry_run: false
+
+Unknown keys are rejected by name in both forms. Before #1575 they were
+accepted and dropped, so a request carrying a full case definition rendered a
+default static case and still reported success.
 
 Fail-closed: if a real solve was requested but no OpenFOAM is on PATH, the
 runner reports DRY_RUN and this router raises, so the licensed-run lane can
