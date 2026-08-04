@@ -174,6 +174,15 @@ class TestCompareRAOs:
                     0.0, abs=1e-6,
                 )
 
+    def test_identical_input_has_identical_quality(
+        self, two_identical_results: Dict[str, DiffractionResults],
+    ) -> None:
+        comparator = MultiSolverComparator(two_identical_results)
+
+        comparison = comparator.compare_raos()["SolverA-vs-SolverB"]["heave"]
+
+        assert comparison.magnitude_stats.quality == "IDENTICAL"
+
     def test_compare_raos_zero_magnitude_phase_correlation_is_perfect(
         self, two_identical_results: Dict[str, DiffractionResults],
     ) -> None:

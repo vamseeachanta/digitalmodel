@@ -216,8 +216,10 @@ class MultiSolverComparator:
         flat2 = values2.flatten()
         if np.allclose(flat1, flat2):
             correlation = 1.0
+            quality = "IDENTICAL"
         else:
             correlation = float(np.corrcoef(flat1, flat2)[0, 1])
+            quality = "COMPARED"
 
         return DeviationStatistics(
             mean_error=mean_error,
@@ -227,6 +229,7 @@ class MultiSolverComparator:
             correlation=correlation,
             frequencies=frequencies,
             errors=errors,
+            quality=quality,
         )
 
     def _all_pairs(self) -> List[Tuple[str, str]]:
@@ -285,6 +288,7 @@ class MultiSolverComparator:
                         correlation=1.0,
                         frequencies=rao_a.frequencies.values,
                         errors=zeros,
+                        quality="NULL_RESPONSE",
                     )
                 else:
                     phase_stats = self._calculate_deviation_stats(

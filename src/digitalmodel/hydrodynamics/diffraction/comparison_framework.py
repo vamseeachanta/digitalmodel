@@ -18,7 +18,7 @@ Status: Benchmark comparison tools
 
 import numpy as np
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Literal, Tuple, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
 import json
@@ -36,9 +36,16 @@ class DeviationStatistics:
     max_error: float
     rms_error: float
     mean_abs_error: float
-    correlation: float
+    correlation: Optional[float]
     frequencies: np.ndarray
     errors: np.ndarray
+    quality: Literal[
+        "COMPARED",
+        "IDENTICAL",
+        "NULL_RESPONSE",
+        "INSUFFICIENT_DATA",
+        "INSUFFICIENT_SAMPLING",
+    ] = "COMPARED"
 
 
 @dataclass
