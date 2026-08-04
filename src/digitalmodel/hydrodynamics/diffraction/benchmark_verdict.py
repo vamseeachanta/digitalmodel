@@ -34,8 +34,8 @@ def derive_status(
     """Derive status from provenance, statistic quality, and consensus.
 
     ``pass`` is deliberately allow-listed: it requires solver provenance,
-    usable non-identical statistics, and full consensus. A caller cannot
-    override the result with a hand-authored status.
+    usable non-identical statistics, and a supported complete consensus level.
+    A caller cannot override the result with a hand-authored status.
     """
     matrix_list = tuple(matrices)
     correlations = _as_correlations(correlation)
