@@ -12,7 +12,7 @@ Client-facing capability page. Three tiers, all engine-driven:
    natural period(s) and a small lookup table.
 3. RESONANCE SCREEN — the marine case: drag fill level for an LNG-scale tank and
    watch the sloshing period sweep the vessel roll-period band (the coupling
-   external diffraction misses — the ACMA B1546 ballast-tank-as-tuned-tank study).
+   external diffraction misses — the ballast-tank-as-tuned-tank study).
 
 Plus a worldwide-relationship reference basis and the CFD tie-in.
 
@@ -536,7 +536,7 @@ roll &mdash; the coupling external diffraction (AQWA/OrcaWave) does not capture.
     <b>Where CFD takes over.</b> Analytical periods and the class-simplified screen above close most of a scope.
     Violent / high-fill / impact cases &mdash; and the coupled roll response of partially filled ballast tanks used as
     tuned/anti-roll tanks &mdash; are resolved with VOF free-surface CFD (OpenFOAM), feeding a reduced response back into
-    the vessel roll time-domain model. This is the tiering behind the ACMA / Noble ballast-tank sloshing study.
+    the vessel roll time-domain model. This is the tiering behind the ballast-tank sloshing study.
     The <b style="color:#c0392b">red rings</b> on the master curve above are the first rung of that ladder: measured 2D
     interFoam points that pin the rectangular curve to real free-surface CFD (see the
     <a href="../cfd/tank-sloshing-verification.html">CFD verification page</a>).
