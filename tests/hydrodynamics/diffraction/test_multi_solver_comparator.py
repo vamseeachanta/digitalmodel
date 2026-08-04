@@ -602,3 +602,20 @@ class TestReportGeneration:
         data = json.loads(output_file.read_text(encoding="utf-8"))
         pair = data["pairwise_results"]["SolverA-vs-SolverB"]
         assert pair["rao_comparisons"]["heave"]["magnitude_correlation"] is None
+
+    def test_unavailable_matrix_correlation_exports_json_null(
+        self,
+        two_identical_results: Dict[str, DiffractionResults],
+        tmp_path: Path,
+    ) -> None:
+        solver_b = two_identical_results["SolverB"]
+        for coefficient_set in (solver_b.added_mass, solver_b.damping):
+            for matrix in coefficient_set.matrices:
+                matrix.matrix.fill(1.0)
+        output_file = tmp_path / "unavailable_matrix.json"
+
+        MultiSolverComparator(two_identical_results).export_report_json(output_file)
+
+        data = json.loads(output_file.read_text(encoding="utf-8"))
+        pair = data["pairwise_results"]["SolverA-vs-SolverB"]
+        assert pair["added_mass_correlations"]["1,1"] is None

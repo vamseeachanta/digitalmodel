@@ -88,8 +88,8 @@ class PairwiseResult:
     solver_a: str
     solver_b: str
     rao_comparisons: Dict[str, PairwiseRAOComparison]
-    added_mass_correlations: Dict[Tuple[int, int], float]
-    damping_correlations: Dict[Tuple[int, int], float]
+    added_mass_correlations: Dict[Tuple[int, int], Optional[float]]
+    damping_correlations: Dict[Tuple[int, int], Optional[float]]
     overall_agreement: str  # EXCELLENT, GOOD, FAIR, POOR
     hydrostatic_comparison: Optional[HydrostaticComparison] = None
 
@@ -823,11 +823,11 @@ class MultiSolverComparator:
                     "max_phase_diff": float(comp.max_phase_diff),
                 }
             am_corrs = {
-                f"{k[0]},{k[1]}": float(v)
+                f"{k[0]},{k[1]}": float(v) if v is not None else None
                 for k, v in pr.added_mass_correlations.items()
             }
             damp_corrs = {
-                f"{k[0]},{k[1]}": float(v)
+                f"{k[0]},{k[1]}": float(v) if v is not None else None
                 for k, v in pr.damping_correlations.items()
             }
             hc_dict = None
