@@ -19,13 +19,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, Optional, Sequence, Tuple
 
 import numpy as np
 from numpy.typing import NDArray
 
 from .post_processing import OpenFOAMPostProcessor
-from .pressure_tap_models import PressureTap
 from .results_models import ProbeTimeSeries
 from .spectral_analysis import compute_fft_spectrum
 

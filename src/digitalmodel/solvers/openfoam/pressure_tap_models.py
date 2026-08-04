@@ -9,7 +9,7 @@ depend on the model without depending on each other.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Optional, Tuple
 
 # Fields written for a multiphase (interFoam) sloshing tap: dynamic pressure p

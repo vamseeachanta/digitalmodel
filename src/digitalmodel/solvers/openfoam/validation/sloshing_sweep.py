@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-ABOUTME: Fill / drive-frequency sweep harness (#641) for ballast-tank
-sloshing studies. Runs the matrix {fill x drive frequency} of 2D
-forced-roll interFoam cases (built on the #658 motion engine + #659 partial
+ABOUTME: Fill / drive-frequency sweep harness (#641) for ballast-tank sloshing
+studies. Runs the matrix {fill x drive frequency} of 2D forced-roll interFoam
+cases (built on the #658 motion engine + #659 partial
 fill + the #639 validated 2D case) and, per case, extracts the tank
 roll-reaction moment and reduces it to a first-harmonic amplitude/phase and an
 in-phase (added-inertia / stiffness-like) and quadrature (damping-like)
@@ -56,13 +56,13 @@ Reference: digitalmodel #641 (fill / frequency sweep harness), building on #639
 from __future__ import annotations
 
 import json
-import math
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from ..models import CaseType
 from ..parametric import ParametricStudy, StudyParameter
+from .sloshing_sweep_reduction import reduce_roll_moment
 from .sloshing_2d import (
     ROLL_MOMENT_FO_NAME,
     SloshingForcedRollConfig,
@@ -89,75 +89,6 @@ PERIOD_PARAM = "period"
 
 # ---------------------------------------------------------------------------
 # Per-case moment reduction (the real new physics) -> the contract row
-# ---------------------------------------------------------------------------
-
-
-def reduce_roll_moment(
-    times: Sequence[float],
-    moment: Sequence[float],
-    drive_period: float,
-    *,
-    fill_level: float,
-    roll_amplitude_deg: float,
-) -> Dict[str, float]:
-    """First-harmonic reduction of a roll-reaction moment history -> contract row.
-
-    Fits ``M(t) ~ M0 + Mc cos(wt) + Ms sin(wt)`` at the drive frequency
-    ``w = 2*pi/drive_period`` by least squares (handles the non-uniform sampling
-    of an adaptive-timestep solver), then decomposes per the module sign
-    convention. Returns exactly the dm#643 contract fields.
-
-    Args:
-        times: Sample times (s), need not be uniform.
-        moment: Roll-reaction moment about z at each time (N.m).
-        drive_period: Imposed roll period (s); ``w = 2*pi/drive_period``.
-        fill_level: Fill fraction for this case (carried into the row).
-        roll_amplitude_deg: Imposed roll amplitude (deg; carried into the row).
-
-    Returns:
-        Dict with the eight contract fields.
-
-    Raises:
-        ValueError: If ``drive_period <= 0`` or fewer than 4 matching samples.
-    """
-    import numpy as np
-
-    if drive_period <= 0.0:
-        raise ValueError(f"drive_period must be > 0, got {drive_period}")
-    t = np.asarray(times, dtype=float)
-    m = np.asarray(moment, dtype=float)
-    if t.size < 4 or t.size != m.size:
-        raise ValueError("need >= 4 matching (time, moment) samples")
-
-    omega = 2.0 * math.pi / drive_period
-    basis = np.column_stack(
-        [np.ones_like(t), np.cos(omega * t), np.sin(omega * t)]
-    )
-    coef, *_ = np.linalg.lstsq(basis, m, rcond=None)
-    _m0, mc, ms = (float(c) for c in coef)
-
-    amplitude = math.hypot(mc, ms)
-    # Phase of M relative to theta (theta ~ sin(wt)):
-    #   M1 sin(wt + phi) = M1 cos(phi) sin(wt) + M1 sin(phi) cos(wt)
-    #   => Ms = M1 cos(phi), Mc = M1 sin(phi) => phi = atan2(Mc, Ms).
-    phase = math.atan2(mc, ms)
-
-    return {
-        "fill_level": float(fill_level),
-        "drive_period": float(drive_period),
-        "drive_freq_hz": float(1.0 / drive_period),
-        "roll_amplitude_deg": float(roll_amplitude_deg),
-        "moment_amplitude": amplitude,
-        "moment_phase_rad": phase,
-        # component in phase with -theta(t) ~ -sin(wt) -> coefficient of (-sin) is -Ms
-        "in_phase_coeff": -ms,
-        # component in phase with -theta_dot(t) ~ -cos(wt) -> coefficient of (-cos) is -Mc
-        "quad_coeff": -mc,
-    }
-
-
-# ---------------------------------------------------------------------------
-# Sweep configuration
 # ---------------------------------------------------------------------------
 
 
@@ -417,69 +348,3 @@ def _write_manifest(
     for row in rows:
         lines.append(",".join(f"{row[k]:.10g}" for k in CONTRACT_FIELDS))
     (parent / "sweep_manifest.csv").write_text("\n".join(lines) + "\n")
-
-
-# ---------------------------------------------------------------------------
-# CLI: generate | run | collect
-# ---------------------------------------------------------------------------
-
-
-def _run_all_cases(parent: Path, config: SloshingSweepConfig) -> None:
-    """Run every generated case (blockMesh -> setFields -> interFoam) in place."""
-    from ..runner import OpenFOAMRunConfig, OpenFOAMRunner
-
-    runner = OpenFOAMRunner(
-        OpenFOAMRunConfig(run_set_fields=True, to_vtk=False)
-    )
-    sweep = SloshingSweep(config)
-    for cfg in sweep.case_configs():
-        case_dir = parent / cfg.name
-        result = runner.run(case_dir)
-        print(f"[{cfg.name}] {result.status.value}"
-              + (f" ({result.error_message})" if result.error_message else ""))
-
-
-def main(argv: Optional[Sequence[str]] = None) -> int:
-    """CLI entry point: ``generate`` | ``run`` | ``collect``."""
-    import argparse
-
-    parser = argparse.ArgumentParser(
-        prog="sloshing_sweep",
-        description="Ballast-tank fill / frequency sloshing sweep (#641).",
-    )
-    parser.add_argument(
-        "command", choices=("generate", "run", "collect"),
-        help="generate case dirs, run the solver on each, or collect the manifest",
-    )
-    parser.add_argument(
-        "--parent", type=Path, required=True,
-        help="parent directory for the sweep case tree",
-    )
-    args = parser.parse_args(argv)
-
-    config = SloshingSweepConfig()
-    sweep = SloshingSweep(config)
-
-    if args.command == "generate":
-        dirs = sweep.generate(args.parent)
-        print(f"Generated {len(dirs)} cases under {args.parent}")
-        print("Launch the full sweep with:")
-        print("  " + sweep.launch_command(args.parent))
-        return 0
-
-    if args.command == "run":
-        _run_all_cases(args.parent, config)
-        rows = sweep.collect(args.parent)
-        print(f"Collected {len(rows)} contract rows -> "
-              f"{args.parent / 'sweep_manifest.json'}")
-        return 0
-
-    # collect
-    rows = sweep.collect(args.parent)
-    print(f"Collected {len(rows)} contract rows -> "
-          f"{args.parent / 'sweep_manifest.json'}")
-    return 0
-
-
-if __name__ == "__main__":  # pragma: no cover - CLI dispatch
-    raise SystemExit(main())

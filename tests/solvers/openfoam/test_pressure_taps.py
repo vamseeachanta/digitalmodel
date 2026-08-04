@@ -6,7 +6,6 @@ rendering for point / patch-point / surface taps, case-builder integration
 synthetic probe file. None of these tests require an OpenFOAM installation.
 """
 
-import textwrap
 from pathlib import Path
 
 import numpy as np

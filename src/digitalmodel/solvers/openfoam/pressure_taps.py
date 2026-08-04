@@ -21,7 +21,7 @@ keep working.
 from __future__ import annotations
 
 import math
-from typing import List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from .pressure_tap_analysis import (
     PressureTapStatistics,
