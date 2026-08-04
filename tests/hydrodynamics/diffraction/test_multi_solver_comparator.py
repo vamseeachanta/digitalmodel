@@ -334,10 +334,16 @@ class TestCompareRAOs:
                 f"Zero-magnitude heave phase correlation for {pair_key} "
                 f"should be 1.0, got {heave_comp.phase_stats.correlation}"
             )
-            # Magnitude correlation should also be 1.0 (both zero)
-            assert heave_comp.magnitude_stats.correlation == pytest.approx(
-                1.0, abs=1e-6,
-            )
+            # Magnitude carries NO variance when the response is null, so its
+            # correlation is undefined and must be reported as absent rather
+            # than fabricated as 1.0. This assertion previously rode on the
+            # np.array_equal short-circuit; that short-circuit is what assigned
+            # 168 of 216 committed matrix correlations an exact 1.0, which is
+            # the artifact signature #1633 was filed about. Agreement for a
+            # null DOF now comes from the absolute RMS floor in
+            # _rao_comparison_agrees, not from a manufactured correlation.
+            assert heave_comp.magnitude_stats.correlation is None
+            assert heave_comp.magnitude_stats.quality == "NULL_RESPONSE"
 
     def test_null_response_dof_still_permits_full_consensus(
         self, two_identical_results: Dict[str, DiffractionResults],

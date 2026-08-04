@@ -19,7 +19,7 @@ Status: Multi-solver benchmark comparison
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from itertools import combinations
 from pathlib import Path
@@ -355,12 +355,17 @@ class MultiSolverComparator:
 
         flat1 = values1.flatten()
         flat2 = values2.flatten()
-        if np.array_equal(flat1, flat2):
-            correlation = 1.0
-            quality = "IDENTICAL"
-        elif np.ptp(flat1) == 0.0 or np.ptp(flat2) == 0.0:
+        # Zero variance is checked FIRST. Pearson r is undefined for a constant
+        # vector whether or not the two vectors are equal to each other, so
+        # equality must not be allowed to claim r = 1.0 on that input. Ordering
+        # these the other way assigned 168 of 216 committed matrix correlations
+        # an exact 1.0 -- the artifact signature #1633 was filed about.
+        if np.ptp(flat1) == 0.0 or np.ptp(flat2) == 0.0:
             correlation = None
             quality = "INSUFFICIENT_DATA"
+        elif np.array_equal(flat1, flat2):
+            correlation = 1.0
+            quality = "IDENTICAL"
         else:
             correlation = float(np.corrcoef(flat1, flat2)[0, 1])
             quality = "COMPARED"
@@ -636,6 +641,16 @@ class MultiSolverComparator:
                 if peak_mag == 0.0 or (
                     null_limit is not None and peak_mag < null_limit
                 ):
+                    # A null response carries no variance, so its magnitude
+                    # correlation is undefined too. Tag it explicitly rather
+                    # than letting an equality short-circuit fabricate r = 1.0
+                    # — that is what produced 168 exact-1.0 matrix correlations
+                    # in the committed evidence (#1633). The verdict layer
+                    # accepts NULL_RESPONSE without a correlation.
+                    mag_stats = replace(
+                        mag_stats, correlation=None, quality="NULL_RESPONSE",
+                    )
+
                     # Near-zero magnitude: phase is undefined
                     # (atan2(0,0) noise).  Override with perfect
                     # agreement instead of computing noise correlation.
@@ -785,15 +800,18 @@ class MultiSolverComparator:
             # Correlation for stiffness matrix (flat)
             flat_a = h_a.stiffness_matrix.flatten()
             flat_b = h_b.stiffness_matrix.flatten()
-            if np.array_equal(flat_a, flat_b):
-                corr = 1.0
-            elif (
+            # Undefined-correlation cases first, equality second — a constant
+            # stiffness matrix has no correlation to report even when both
+            # solvers produce the same constant (#1633).
+            if (
                 not np.all(np.isfinite(flat_a))
                 or not np.all(np.isfinite(flat_b))
                 or np.ptp(flat_a) == 0.0
                 or np.ptp(flat_b) == 0.0
             ):
                 corr = None
+            elif np.array_equal(flat_a, flat_b):
+                corr = 1.0
             else:
                 with np.errstate(invalid='ignore'):
                     c = np.corrcoef(flat_a, flat_b)[0, 1]

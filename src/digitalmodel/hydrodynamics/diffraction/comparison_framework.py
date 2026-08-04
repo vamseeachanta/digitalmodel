@@ -172,12 +172,15 @@ class DiffractionComparator:
 
         flat1 = values1.flatten()
         flat2 = values2.flatten()
-        if np.array_equal(flat1, flat2):
-            correlation = 1.0
-            quality = "IDENTICAL"
-        elif np.ptp(flat1) == 0.0 or np.ptp(flat2) == 0.0:
+        # Zero variance first: r is undefined for a constant vector regardless
+        # of whether the two vectors are equal. See multi_solver_comparator for
+        # the measured consequence of the opposite ordering (#1633).
+        if np.ptp(flat1) == 0.0 or np.ptp(flat2) == 0.0:
             correlation = None
             quality = "INSUFFICIENT_DATA"
+        elif np.array_equal(flat1, flat2):
+            correlation = 1.0
+            quality = "IDENTICAL"
         else:
             correlation = float(np.corrcoef(flat1, flat2)[0, 1])
             quality = "COMPARED"

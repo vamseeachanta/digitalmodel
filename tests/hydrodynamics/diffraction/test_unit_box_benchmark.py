@@ -218,10 +218,26 @@ def _unit_box_rao_component(
         phase_1d = -np.degrees(np.arctan2(2 * 0.05 * frequencies / omega_n,
                                            1 - (frequencies / omega_n) ** 2))
     else:
-        phase_rng = np.random.default_rng(seed=dof.value)
+        phase_rng = np.random.default_rng([dof.value, 1])
         phase_1d = phase_rng.uniform(-30.0, 30.0, size=len(frequencies))
 
     phase = np.outer(phase_1d, np.ones(N_HEAD))
+
+    # Per-solver phase variation, derived from the SAME declared relative
+    # uncertainty rather than an independent invented bound. A complex response
+    # perturbed by relative magnitude u carries a perpendicular component of the
+    # same relative size, which rotates the phasor by arctan(u) ~ u radians for
+    # small u. At u = 0.01 that is 0.573 deg.
+    #
+    # Without this the solver seed never reaches the phase: every solver
+    # produced a bit-identical phase array, all 18 max_phase_diff entries were
+    # exactly 0.0, and an inverted phase convention would have reported perfect
+    # agreement (#1633).
+    phase_perturbation_deg = np.degrees(SOLVER_RELATIVE_UNCERTAINTY)
+    solver_phase_rng = np.random.default_rng([seed, dof.value, 2])
+    phase = phase + solver_phase_rng.uniform(
+        -phase_perturbation_deg, phase_perturbation_deg, size=phase.shape,
+    )
 
     return RAOComponent(
         dof=dof,

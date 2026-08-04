@@ -26,6 +26,9 @@ from digitalmodel.hydrodynamics.diffraction.comparison_framework import (
 from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import (
     MultiSolverComparator,
 )
+from digitalmodel.hydrodynamics.diffraction.output_schemas import (
+    HydrostaticResults,
+)
 
 
 ZEROS = np.zeros((4, 3))
@@ -44,8 +47,10 @@ class TestConstantVectorsHaveNoCorrelation:
         assert stats.quality == "INSUFFICIENT_DATA"
 
     def test_comparison_framework_zero_vs_zero_is_insufficient(self) -> None:
+        # The method takes `self` but never uses it, so an unbound call with
+        # None is safe and avoids constructing a full comparator.
         stats = DiffractionComparator._calculate_deviation_stats(
-            ZEROS, ZEROS.copy(), FREQS,
+            None, ZEROS, ZEROS.copy(), FREQS,
         )
 
         assert stats.correlation is None
@@ -80,8 +85,16 @@ class TestHydrostaticConstantStiffness:
     def test_identical_zero_stiffness_yields_no_correlation(
         self, two_identical_results,
     ) -> None:
-        for res in two_identical_results.values():
-            res.hydrostatics.stiffness_matrix = np.zeros((6, 6))
+        for name, res in two_identical_results.items():
+            res.hydrostatics = HydrostaticResults(
+                vessel_name=res.vessel_name,
+                displacement_volume=1.0,
+                mass=1025.0,
+                centre_of_gravity=[0.0, 0.0, -0.25],
+                centre_of_buoyancy=[0.0, 0.0, -0.5],
+                waterplane_area=1.0,
+                stiffness_matrix=np.zeros((6, 6)),
+            )
 
         comparator = MultiSolverComparator(two_identical_results)
         comparisons = comparator.compare_hydrostatics()
