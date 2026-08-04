@@ -47,6 +47,7 @@ from digitalmodel.hydrodynamics.diffraction.benchmark_runner import (
 )
 from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import (
     BenchmarkReport,
+    ComparisonPolicy,
     MultiSolverComparator,
 )
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
@@ -77,8 +78,29 @@ N_HEAD = 4
 FREQUENCIES = np.geomspace(0.1, 2.0, N_FREQ)
 HEADINGS = np.array([0.0, 90.0, 180.0, 270.0])
 
-# Solver tolerance: < 1% relative difference constitutes agreement
-SOLVER_TOLERANCE = 0.01
+# The synthetic builders deliberately impose at most this per-solver variation.
+SOLVER_RELATIVE_UNCERTAINTY = 0.01
+RESPONSE_ABSOLUTE_RESOLUTION = np.finfo(np.float64).eps
+MINIMUM_EXPLAINED_VARIANCE = (1.0 - SOLVER_RELATIVE_UNCERTAINTY) ** 2
+COMPARISON_JUSTIFICATION = (
+    "Unit Box synthetic builders bound each solver variation to one percent; "
+    "absolute resolution is float64 machine resolution."
+)
+UNIT_BOX_POLICY_INPUTS = {
+    "solver_relative_uncertainty": SOLVER_RELATIVE_UNCERTAINTY,
+    "response_absolute_resolution": RESPONSE_ABSOLUTE_RESOLUTION,
+    "minimum_explained_variance": MINIMUM_EXPLAINED_VARIANCE,
+    "comparison_justification": COMPARISON_JUSTIFICATION,
+}
+
+
+def _unit_box_policy() -> ComparisonPolicy:
+    return ComparisonPolicy.from_uncertainties(
+        solver_relative_uncertainty=SOLVER_RELATIVE_UNCERTAINTY,
+        response_absolute_resolution=RESPONSE_ABSOLUTE_RESOLUTION,
+        minimum_explained_variance=MINIMUM_EXPLAINED_VARIANCE,
+        justification=COMPARISON_JUSTIFICATION,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -240,6 +262,7 @@ def _unit_box_added_mass(
                 matrix=m,
                 frequency=float(freq),
                 matrix_type="added_mass",
+                source="solver",
                 units={"linear": "kg", "angular": "kg.m^2"},
             )
         )
@@ -278,6 +301,7 @@ def _unit_box_damping(
                 matrix=m,
                 frequency=float(freq),
                 matrix_type="damping",
+                source="solver",
                 units={"linear": "N.s/m", "angular": "N.m.s/rad"},
             )
         )
@@ -480,7 +504,7 @@ class TestUnitBoxMultiSolverComparator:
         unit_box_solver_results: Dict[str, DiffractionResults],
     ) -> None:
         comparator = MultiSolverComparator(
-            unit_box_solver_results, tolerance=SOLVER_TOLERANCE,
+            unit_box_solver_results, policy=_unit_box_policy(),
         )
         assert sorted(comparator.solver_names) == ["AQWA", "BEMRosetta", "OrcaWave"]
 
@@ -489,7 +513,7 @@ class TestUnitBoxMultiSolverComparator:
         unit_box_solver_results: Dict[str, DiffractionResults],
     ) -> None:
         comparator = MultiSolverComparator(
-            unit_box_solver_results, tolerance=SOLVER_TOLERANCE,
+            unit_box_solver_results, policy=_unit_box_policy(),
         )
         rao_comps = comparator.compare_raos()
         assert len(rao_comps) == 3  # C(3,2) = 3 pairs
@@ -500,7 +524,7 @@ class TestUnitBoxMultiSolverComparator:
     ) -> None:
         """Heave RAO correlation should be very high (>0.99) for all pairs."""
         comparator = MultiSolverComparator(
-            unit_box_solver_results, tolerance=SOLVER_TOLERANCE,
+            unit_box_solver_results, policy=_unit_box_policy(),
         )
         rao_comps = comparator.compare_raos()
         for pair_key, pair_data in rao_comps.items():
@@ -509,33 +533,29 @@ class TestUnitBoxMultiSolverComparator:
                 f"{pair_key}: heave correlation {heave_corr:.4f} < 0.99"
             )
 
-    def test_unit_box_consensus_full_or_majority(
+    def test_unit_box_heave_consensus_is_full(
         self,
         unit_box_solver_results: Dict[str, DiffractionResults],
     ) -> None:
         """Unit Box is simple geometry: expect FULL or MAJORITY consensus."""
         comparator = MultiSolverComparator(
-            unit_box_solver_results, tolerance=SOLVER_TOLERANCE,
+            unit_box_solver_results, policy=_unit_box_policy(),
         )
         consensus = comparator.compute_consensus()
         heave_level = consensus["HEAVE"].consensus_level
-        assert heave_level in ("FULL", "MAJORITY"), (
-            f"Heave consensus {heave_level} expected FULL or MAJORITY"
-        )
+        assert heave_level == "FULL"
 
     def test_unit_box_report_generation(
         self,
         unit_box_solver_results: Dict[str, DiffractionResults],
     ) -> None:
         comparator = MultiSolverComparator(
-            unit_box_solver_results, tolerance=SOLVER_TOLERANCE,
+            unit_box_solver_results, policy=_unit_box_policy(),
         )
         report = comparator.generate_report()
         assert report.vessel_name == UNIT_BOX_NAME
         assert len(report.solver_names) == 3
-        assert report.overall_consensus in (
-            "FULL", "MAJORITY", "SPLIT", "NO_CONSENSUS",
-        )
+        assert report.overall_consensus == "MAJORITY"
 
     def test_unit_box_overall_consensus_not_no_consensus(
         self,
@@ -543,12 +563,10 @@ class TestUnitBoxMultiSolverComparator:
     ) -> None:
         """For 1% solver variation, overall should not be NO_CONSENSUS."""
         comparator = MultiSolverComparator(
-            unit_box_solver_results, tolerance=SOLVER_TOLERANCE,
+            unit_box_solver_results, policy=_unit_box_policy(),
         )
         report = comparator.generate_report()
-        assert report.overall_consensus != "NO_CONSENSUS", (
-            f"Unit Box consensus is NO_CONSENSUS; solver biases are < 1%"
-        )
+        assert report.overall_consensus == "MAJORITY"
 
 
 # ---------------------------------------------------------------------------
@@ -566,7 +584,7 @@ class TestUnitBoxBenchmarkRunner:
     ) -> None:
         config = BenchmarkConfig(
             output_dir=unit_box_output_dir,
-            tolerance=SOLVER_TOLERANCE,
+            **UNIT_BOX_POLICY_INPUTS,
         )
         runner = BenchmarkRunner(config)
         result = runner.run_from_results(unit_box_solver_results)
@@ -580,7 +598,9 @@ class TestUnitBoxBenchmarkRunner:
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
     ) -> None:
-        config = BenchmarkConfig(output_dir=unit_box_output_dir)
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
         runner = BenchmarkRunner(config)
         result = runner.run_from_results(unit_box_solver_results)
 
@@ -592,7 +612,9 @@ class TestUnitBoxBenchmarkRunner:
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
     ) -> None:
-        config = BenchmarkConfig(output_dir=unit_box_output_dir)
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
         runner = BenchmarkRunner(config)
         result = runner.run_from_results(unit_box_solver_results)
 
@@ -604,7 +626,9 @@ class TestUnitBoxBenchmarkRunner:
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
     ) -> None:
-        config = BenchmarkConfig(output_dir=unit_box_output_dir)
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
         runner = BenchmarkRunner(config)
         result = runner.run_from_results(unit_box_solver_results)
 
@@ -615,7 +639,9 @@ class TestUnitBoxBenchmarkRunner:
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
     ) -> None:
-        config = BenchmarkConfig(output_dir=unit_box_output_dir)
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
         runner = BenchmarkRunner(config)
         result = runner.run_from_results(unit_box_solver_results)
 
@@ -628,7 +654,9 @@ class TestUnitBoxBenchmarkRunner:
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
     ) -> None:
-        config = BenchmarkConfig(output_dir=unit_box_output_dir)
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
         runner = BenchmarkRunner(config)
         result = runner.run_from_results(unit_box_solver_results)
 
@@ -641,15 +669,15 @@ class TestUnitBoxBenchmarkRunner:
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
     ) -> None:
-        config = BenchmarkConfig(output_dir=unit_box_output_dir)
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
         runner = BenchmarkRunner(config)
         result = runner.run_from_results(unit_box_solver_results)
 
         with open(result.report_json_path) as fh:
             data = json.load(fh)
-        assert data["overall_consensus"] in (
-            "FULL", "MAJORITY", "SPLIT", "NO_CONSENSUS",
-        )
+        assert data["overall_consensus"] == "MAJORITY"
 
     def test_benchmark_runner_dry_run_skips_plots(
         self,
@@ -658,6 +686,7 @@ class TestUnitBoxBenchmarkRunner:
     ) -> None:
         config = BenchmarkConfig(
             output_dir=unit_box_output_dir, dry_run=True,
+            **UNIT_BOX_POLICY_INPUTS,
         )
         runner = BenchmarkRunner(config)
         result = runner.run_from_results(unit_box_solver_results)
@@ -670,7 +699,9 @@ class TestUnitBoxBenchmarkRunner:
         unit_box_solver_results: Dict[str, DiffractionResults],
         unit_box_output_dir: Path,
     ) -> None:
-        config = BenchmarkConfig(output_dir=unit_box_output_dir)
+        config = BenchmarkConfig(
+            output_dir=unit_box_output_dir, **UNIT_BOX_POLICY_INPUTS,
+        )
         runner = BenchmarkRunner(config)
         result = runner.run_from_results(unit_box_solver_results)
 
@@ -740,7 +771,7 @@ def _run_unit_box_benchmark(
     """Run the canonical Unit Box benchmark into ``output_dir``."""
     config = BenchmarkConfig(
         output_dir=output_dir,
-        tolerance=SOLVER_TOLERANCE,
+        **UNIT_BOX_POLICY_INPUTS,
         report_title=REPORT_TITLE,
         report_subtitle=REPORT_SUBTITLE,
     )
