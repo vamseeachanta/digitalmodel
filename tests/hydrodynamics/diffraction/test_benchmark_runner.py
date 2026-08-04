@@ -304,7 +304,10 @@ class TestRunBenchmarkConvenience:
         result = run_benchmark(
             solver_results=three_solver_results,
             output_dir=tmp_path,
-            tolerance=0.05,
+            solver_relative_uncertainty=0.025,
+            response_absolute_resolution=5e-11,
+            minimum_explained_variance=0.9801,
+            comparison_justification="Synthetic test uncertainty budget.",
         )
 
         # Assert
