@@ -222,6 +222,20 @@ def test_out_of_range_correlation_is_incomplete():
     )
 
 
+def test_boolean_correlation_is_incomplete():
+    verdict = _derive_status(
+        matrices=[_matrix(1000.0, "solver"), _matrix(100.0, "solver")],
+        correlation=True,
+        quality="COMPARED",
+        consensus="FULL",
+    )
+
+    assert (verdict.status, verdict.reason) == (
+        "incomplete",
+        "comparison refused: correlation must be numeric",
+    )
+
+
 def test_single_matrix_input_cannot_yield_pass():
     verdict = _derive_status(
         matrices=[_matrix(1000.0, "solver")],
