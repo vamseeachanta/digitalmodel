@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 
 import numpy as np
+import pytest
 
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     AddedMassSet,
@@ -234,6 +235,30 @@ def test_boolean_correlation_is_incomplete():
         "incomplete",
         "comparison refused: correlation must be numeric",
     )
+
+
+@pytest.mark.parametrize(
+    ("consensus", "expected_reason"),
+    [
+        (
+            "MAJORITY",
+            "solver-sourced comparison has usable statistics and MAJORITY consensus",
+        ),
+        (
+            "SPLIT",
+            "solver-sourced comparison has usable statistics and SPLIT consensus",
+        ),
+    ],
+)
+def test_supported_positive_consensus_yields_pass(consensus, expected_reason):
+    verdict = _derive_status(
+        matrices=[_matrix(1000.0, "solver"), _matrix(100.0, "solver")],
+        correlation=0.995,
+        quality="COMPARED",
+        consensus=consensus,
+    )
+
+    assert (verdict.status, verdict.reason) == ("pass", expected_reason)
 
 
 def test_single_matrix_input_cannot_yield_pass():
