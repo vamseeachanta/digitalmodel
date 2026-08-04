@@ -325,6 +325,7 @@ def _extract_from_diffraction(
                     frequency=float(freq),
                     matrix_type="added_mass",
                     units={"coupling": "kg"},
+                    source="solver",
                 )
             )
 
@@ -353,6 +354,7 @@ def _extract_from_diffraction(
                     frequency=float(freq),
                     matrix_type="damping",
                     units={"coupling": "N.s/m"},
+                    source="solver",
                 )
             )
 

@@ -31,7 +31,7 @@ import argparse
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 
@@ -70,6 +70,7 @@ def rao_data_to_diffraction_results(
     water_depth: float = 100.0,
     analysis_tool: str = "OrcaWave",
     source_file: str | None = None,
+    matrix_source: Literal["solver", "placeholder", "unknown"] = "unknown",
 ) -> DiffractionResults:
     """Convert RAOData + HydroCoefficients to the unified DiffractionResults schema.
 
@@ -88,6 +89,9 @@ def rao_data_to_diffraction_results(
         Source solver name (default "OrcaWave").
     source_file : str, optional
         Path to the source xlsx file for metadata.
+    matrix_source : str
+        Provenance supplied by the reader of ``coeffs``. The converter never
+        upgrades the default ``unknown`` provenance on its own.
 
     Returns
     -------
@@ -150,6 +154,7 @@ def rao_data_to_diffraction_results(
                 frequency=float(coeffs.frequencies[i]),
                 matrix_type="added_mass",
                 units=dict(ADDED_MASS_UNITS),
+                source=matrix_source,
             )
             for i in range(len(coeffs.frequencies))
         ]
@@ -159,6 +164,7 @@ def rao_data_to_diffraction_results(
                 frequency=float(coeffs.frequencies[i]),
                 matrix_type="damping",
                 units=dict(DAMPING_UNITS),
+                source=matrix_source,
             )
             for i in range(len(coeffs.frequencies))
         ]
@@ -193,6 +199,7 @@ def rao_data_to_diffraction_results(
                 frequency=float(f),
                 matrix_type="added_mass",
                 units=dict(ADDED_MASS_UNITS),
+                source="placeholder",
             )
             for f in rao.frequencies
         ]
@@ -202,6 +209,7 @@ def rao_data_to_diffraction_results(
                 frequency=float(f),
                 matrix_type="damping",
                 units=dict(DAMPING_UNITS),
+                source="placeholder",
             )
             for f in rao.frequencies
         ]
@@ -286,6 +294,7 @@ def convert_orcawave_xlsx_to_orcaflex(
         coeffs=coeffs,
         water_depth=water_depth,
         source_file=str(xlsx_path),
+        matrix_source="solver",
     )
 
     # Step 3: Export to OrcaFlex formats
