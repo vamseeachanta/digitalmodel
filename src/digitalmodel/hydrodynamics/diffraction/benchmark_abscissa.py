@@ -117,7 +117,9 @@ def build_evaluation_grid(
     _check_source_gap(second_array, lower, upper, "second", active_config.max_gap)
     first_grid = first_array[(first_array >= lower) & (first_array <= upper)]
     second_grid = second_array[(second_array >= lower) & (second_array <= upper)]
-    return first_grid.copy() if first_grid.size <= second_grid.size else second_grid.copy()
+    return (
+        first_grid.copy() if first_grid.size <= second_grid.size else second_grid.copy()
+    )
 
 
 def interpolate_complex_response(
@@ -131,8 +133,13 @@ def interpolate_complex_response(
     target = np.asarray(evaluation_grid, dtype=float)
     magnitude_array = np.asarray(magnitude, dtype=float)
     phase_array = np.asarray(phase_degrees, dtype=float)
-    if magnitude_array.shape != phase_array.shape or magnitude_array.shape[0] != source.size:
-        raise ValueError("magnitude and phase must share the frequency leading dimension")
+    if (
+        magnitude_array.shape != phase_array.shape
+        or magnitude_array.shape[0] != source.size
+    ):
+        raise ValueError(
+            "magnitude and phase must share the frequency leading dimension"
+        )
     if target.ndim != 1 or np.any(target < source[0]) or np.any(target > source[-1]):
         raise ValueError("evaluation grid must remain inside the source abscissa")
 
@@ -185,7 +192,9 @@ def align_responses(
     second_response = _response_on_grid(
         second_abscissa, second_magnitude, second_phase_degrees, grid
     )
-    sampling = assess_sampling(first_response.magnitude, second_response.magnitude, active_config)
+    sampling = assess_sampling(
+        first_response.magnitude, second_response.magnitude, active_config
+    )
     if sampling is not None:
         return sampling
     return AlignedResponses(grid, first_response, second_response)
@@ -202,8 +211,13 @@ def _response_on_grid(
 
     magnitude_array = np.asarray(magnitude, dtype=float)
     phase_array = np.asarray(phase_degrees, dtype=float)
-    if magnitude_array.shape != phase_array.shape or magnitude_array.shape[0] != grid.size:
-        raise ValueError("magnitude and phase must share the frequency leading dimension")
+    if (
+        magnitude_array.shape != phase_array.shape
+        or magnitude_array.shape[0] != grid.size
+    ):
+        raise ValueError(
+            "magnitude and phase must share the frequency leading dimension"
+        )
     return ComplexResponse(magnitude_array.copy(), phase_array.copy())
 
 

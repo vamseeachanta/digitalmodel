@@ -158,9 +158,7 @@ def test_source_gap_above_maximum_raises_with_exact_gap():
 
     with pytest.raises(
         api.AbscissaGapError,
-        match=(
-            f"^{re.escape('first source gap 1.500000 exceeds maximum 1.000000')}$"
-        ),
+        match=(f"^{re.escape('first source gap 1.500000 exceeds maximum 1.000000')}$"),
     ):
         api.build_evaluation_grid(
             np.array([0.0, 0.5, 2.0]),
