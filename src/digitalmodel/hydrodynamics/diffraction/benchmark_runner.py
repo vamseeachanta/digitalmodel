@@ -53,6 +53,36 @@ from digitalmodel.hydrodynamics.diffraction.output_schemas import (
 
 
 # ---------------------------------------------------------------------------
+# Serialisation
+# ---------------------------------------------------------------------------
+
+
+class PinnedNullDumper(yaml.Dumper):
+    """YAML dumper that always writes None as ``null``, never ``~``.
+
+    Both spellings are the same value, so nothing about the data depends on
+    which one is emitted -- but ``hydro_data.yml`` is committed evidence and
+    its golden test compares LINES, so an ambient style difference reads as
+    177 lines of drift.
+
+    That is not hypothetical: the #1633 closeout on acma-hou-rds02 failed
+    exactly this way, on a file where no hydrodynamic number had moved. The
+    committed evidence uses ``null``, so pinning to ``null`` keeps it valid
+    and makes the round-trip reproducible on any host.
+
+    Pinned rather than relaxing the golden test to parsed-YAML equality:
+    byte-identity also catches formatting drift, which is worth keeping.
+    """
+
+
+def _represent_none_as_null(dumper: yaml.Dumper, _data: None) -> yaml.Node:
+    return dumper.represent_scalar("tag:yaml.org,2002:null", "null")
+
+
+PinnedNullDumper.add_representer(type(None), _represent_none_as_null)
+
+
+# ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
 
@@ -456,6 +486,7 @@ class BenchmarkRunner:
             yaml.dump(
                 doc,
                 fh,
+                Dumper=PinnedNullDumper,
                 default_flow_style=False,
                 sort_keys=False,
                 allow_unicode=True,
