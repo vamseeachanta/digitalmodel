@@ -52,6 +52,11 @@ class DeviationStatistics:
         "COMPARED",
         "IDENTICAL",
         "NULL_RESPONSE",
+        # Structurally absent coupling — zero on both legs. Distinct from
+        # INSUFFICIENT_DATA: it never claims agreement, but it also does not
+        # refuse the report, because a symmetric body has genuinely zero
+        # off-diagonal couplings (#1633).
+        "NOT_APPLICABLE",
         "INSUFFICIENT_DATA",
         "INSUFFICIENT_SAMPLING",
         "UNTRUSTED_SOURCE",
@@ -175,7 +180,12 @@ class DiffractionComparator:
         # Zero variance first: r is undefined for a constant vector regardless
         # of whether the two vectors are equal. See multi_solver_comparator for
         # the measured consequence of the opposite ordering (#1633).
-        if np.ptp(flat1) == 0.0 or np.ptp(flat2) == 0.0:
+        if not np.any(flat1) and not np.any(flat2):
+            # Structurally absent coupling, zero on both legs — an empty cell,
+            # not a failed comparison. See multi_solver_comparator (#1633).
+            correlation = None
+            quality = "NOT_APPLICABLE"
+        elif np.ptp(flat1) == 0.0 or np.ptp(flat2) == 0.0:
             correlation = None
             quality = "INSUFFICIENT_DATA"
         elif np.array_equal(flat1, flat2):

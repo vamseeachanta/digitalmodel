@@ -239,8 +239,16 @@ class TestRunFromResults:
                 "overall": data["overall_consensus"],
                 "correlation": pair["added_mass_correlations"]["1,1"],
                 "quality": pair["added_mass_quality"]["1,1"],
+                # The 30 off-diagonal cells are zero on BOTH legs — a
+                # structurally absent coupling, now reported as NOT_APPLICABLE
+                # rather than claiming IDENTICAL agreement. The 6 diagonal
+                # cells are constant across frequency and differ between the
+                # solvers (1000 vs 100), so they stay INSUFFICIENT_DATA and the
+                # report still REFUSES — which is the point of #1633.
+                # Qualities are listed alphabetically by the distribution
+                # builder, so INSUFFICIENT_DATA precedes NOT_APPLICABLE.
                 "visible": (
-                    "Unavailable (IDENTICAL: 30, INSUFFICIENT_DATA: 6)"
+                    "Unavailable (INSUFFICIENT_DATA: 6, NOT_APPLICABLE: 30)"
                 ) in (
                     result.report_html_path.read_text(encoding="utf-8")
                 ),

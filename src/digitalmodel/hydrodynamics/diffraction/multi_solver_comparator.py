@@ -360,7 +360,14 @@ class MultiSolverComparator:
         # equality must not be allowed to claim r = 1.0 on that input. Ordering
         # these the other way assigned 168 of 216 committed matrix correlations
         # an exact 1.0 -- the artifact signature #1633 was filed about.
-        if np.ptp(flat1) == 0.0 or np.ptp(flat2) == 0.0:
+        if not np.any(flat1) and not np.any(flat2):
+            # Structurally absent coupling — zero on BOTH legs. A 6x6 added
+            # mass matrix legitimately has zero off-diagonals for a symmetric
+            # body, so this is an empty cell rather than a failed comparison.
+            # It claims no agreement and does not trigger a report refusal.
+            correlation = None
+            quality = "NOT_APPLICABLE"
+        elif np.ptp(flat1) == 0.0 or np.ptp(flat2) == 0.0:
             correlation = None
             quality = "INSUFFICIENT_DATA"
         elif np.array_equal(flat1, flat2):

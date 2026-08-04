@@ -38,13 +38,19 @@ FREQS = np.linspace(0.2, 2.0, 4)
 class TestConstantVectorsHaveNoCorrelation:
     """A constant vector has undefined correlation, equal or not."""
 
-    def test_multi_solver_zero_vs_zero_is_insufficient_not_identical(self) -> None:
+    def test_multi_solver_zero_vs_zero_is_not_identical(self) -> None:
+        """The core defect: this must never report correlation 1.0.
+
+        Whether it is NOT_APPLICABLE (structurally absent) or
+        INSUFFICIENT_DATA is refined in TestStructurallyAbsentCouplings; what
+        matters here is that no correlation is fabricated.
+        """
         stats = MultiSolverComparator._calculate_deviation_stats(
             ZEROS, ZEROS.copy(), FREQS,
         )
 
         assert stats.correlation is None
-        assert stats.quality == "INSUFFICIENT_DATA"
+        assert stats.quality != "IDENTICAL"
 
     def test_comparison_framework_zero_vs_zero_is_insufficient(self) -> None:
         # The method takes `self` but never uses it, so an unbound call with
@@ -54,7 +60,7 @@ class TestConstantVectorsHaveNoCorrelation:
         )
 
         assert stats.correlation is None
-        assert stats.quality == "INSUFFICIENT_DATA"
+        assert stats.quality == "NOT_APPLICABLE"
 
     def test_identical_nonconstant_vectors_still_report_identical(self) -> None:
         """The IDENTICAL branch must survive for genuinely varying input."""
@@ -76,6 +82,53 @@ class TestConstantVectorsHaveNoCorrelation:
         )
 
         assert stats.correlation is None
+        assert stats.quality == "INSUFFICIENT_DATA"
+
+
+class TestStructurallyAbsentCouplings:
+    """A coupling that is zero on BOTH legs is an empty cell, not a failure.
+
+    A 6x6 added-mass matrix legitimately has zero off-diagonal couplings for a
+    symmetric body. Classifying those as INSUFFICIENT_DATA and refusing the
+    whole report would make every symmetric vessel refuse forever — the mirror
+    image of the original defect. Owner decision, 2026-08-04: exclude them from
+    the refusal trigger and from the verdict, without ever claiming agreement.
+    """
+
+    def test_both_legs_zero_is_not_applicable(self) -> None:
+        stats = MultiSolverComparator._calculate_deviation_stats(
+            ZEROS, ZEROS.copy(), FREQS,
+        )
+
+        assert stats.correlation is None
+        assert stats.quality == "NOT_APPLICABLE"
+
+    def test_not_applicable_does_not_trigger_refusal(self) -> None:
+        from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import (
+            REFUSAL_QUALITIES,
+        )
+
+        assert "NOT_APPLICABLE" not in REFUSAL_QUALITIES
+
+    def test_one_sided_coupling_still_refuses(self) -> None:
+        """Zero on one leg but signal on the other is a REAL disagreement."""
+        signal = np.array([[0.0, 1.0], [2.0, 3.0]])
+
+        stats = MultiSolverComparator._calculate_deviation_stats(
+            ZEROS[:2, :2], signal, np.array([0.5, 1.0]),
+        )
+
+        assert stats.correlation is None
+        assert stats.quality == "INSUFFICIENT_DATA"
+
+    def test_both_legs_constant_nonzero_still_refuses(self) -> None:
+        """A constant non-zero coupling has no variance and is not 'absent'."""
+        constant = np.full((3, 2), 7.0)
+
+        stats = MultiSolverComparator._calculate_deviation_stats(
+            constant, constant.copy(), np.array([0.5, 1.0, 1.5]),
+        )
+
         assert stats.quality == "INSUFFICIENT_DATA"
 
 
