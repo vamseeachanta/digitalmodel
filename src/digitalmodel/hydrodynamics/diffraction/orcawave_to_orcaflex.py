@@ -294,7 +294,6 @@ def convert_orcawave_xlsx_to_orcaflex(
         coeffs=coeffs,
         water_depth=water_depth,
         source_file=str(xlsx_path),
-        matrix_source="solver",
     )
 
     # Step 3: Export to OrcaFlex formats

@@ -1267,6 +1267,14 @@ def _interpolate_matrix_set(
         # Frequency count mismatch — cannot interpolate
         return matrix_set
 
+    source_values = {matrix.source for matrix in matrix_set.matrices}
+    if source_values == {"solver"}:
+        interpolated_source = "solver"
+    elif "placeholder" in source_values:
+        interpolated_source = "placeholder"
+    else:
+        interpolated_source = "unknown"
+
     new_matrices = []
     for fi, tf in enumerate(target_freqs):
         new_mat = np.zeros((6, 6))
@@ -1285,7 +1293,7 @@ def _interpolate_matrix_set(
                 frequency=float(tf),
                 matrix_type=matrix_set.matrices[0].matrix_type,
                 units=matrix_set.matrices[0].units,
-                source=matrix_set.matrices[0].source,
+                source=interpolated_source,
             )
         )
 
