@@ -73,6 +73,10 @@ _LEGACY_KEYS = {
 }
 _CANONICAL_ROOT_KEYS = {"operation", "output_directory", "case_definition", "execution"}
 _WRITE_CONTROLS = {"timeStep", "runTime", "adjustableRunTime"}
+# The builder's own defaults; an empty tap list may carry only these, because
+# any other value would have nothing to render it onto.
+_DEFAULT_WRITE_CONTROL = "timeStep"
+_DEFAULT_WRITE_INTERVAL = 1
 
 
 def _ledger() -> dict[str, str]:
@@ -227,11 +231,22 @@ def _parse_function_objects(value: Any) -> FunctionObjectsConfig:
     taps_value = data["pressure_taps"]
     if isinstance(taps_value, (str, bytes)) or not isinstance(taps_value, (list, tuple)):
         raise ValidationError("function_objects.pressure_taps must be a sequence")
-    return FunctionObjectsConfig(
-        tuple(_parse_tap(tap, index) for index, tap in enumerate(taps_value)),
-        control,
-        require_int(data["write_interval"], "function_objects.write_interval", positive=True),
+    interval = require_int(
+        data["write_interval"], "function_objects.write_interval", positive=True
     )
+    taps = tuple(_parse_tap(tap, index) for index, tap in enumerate(taps_value))
+    if not taps:
+        # Nothing would carry these values into the emitted functions block, so
+        # accepting a non-default pair would silently drop it.
+        if control != _DEFAULT_WRITE_CONTROL:
+            raise ValidationError(
+                "function_objects.write_control is unconsumed with no pressure_taps"
+            )
+        if interval != _DEFAULT_WRITE_INTERVAL:
+            raise ValidationError(
+                "function_objects.write_interval is unconsumed with no pressure_taps"
+            )
+    return FunctionObjectsConfig(taps, control, interval)
 
 
 def _parse_tap(value: Any, index: int) -> PressureTap:
@@ -333,10 +348,12 @@ def _parse_canonical(root: Mapping[str, Any]) -> ParsedAuthoredCaseV1:
 
 
 def _parse_legacy(root: Mapping[str, Any]) -> ParsedAuthoredCaseV1:
-    check_keys(root, allowed=_LEGACY_KEYS, required={"case_type", "name"}, path="root")
-    case = OpenFOAMCase.for_case_type(
-        _case_type(root["case_type"]), validate_case_name(root["name"], "name")
-    )
+    check_keys(root, allowed=_LEGACY_KEYS, required={"case_type"}, path="root")
+    case_type = _case_type(root["case_type"])
+    # The legacy generic form has always defaulted the case name from the case
+    # type; normalisation must not turn that into a required key.
+    name = root.get("name") or f"{case_type.value}_case"
+    case = OpenFOAMCase.for_case_type(case_type, validate_case_name(name, "name"))
     if "solver" in root:
         case.solver_config.solver_name = require_string(root["solver"], "solver")
     plan = SelectedExecutionPlan(

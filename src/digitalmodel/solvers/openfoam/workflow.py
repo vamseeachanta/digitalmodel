@@ -46,61 +46,75 @@ class OpenFOAMWorkflow:
                 f"Supported operations: {', '.join(_SUPPORTED_OPERATIONS)}"
             )
 
-        case_dir = self._build_case(cfg, settings)
+        case_dir, parsed = self._build_case(cfg, settings)
         settings["case_dir"] = str(case_dir)
 
         if operation == "build_case":
             settings["run_status"] = "built"
             return cfg
 
-        return self._run_openfoam(cfg, settings, case_dir)
+        return self._run_openfoam(cfg, settings, case_dir, parsed)
 
     # ------------------------------------------------------------------ #
     #  build (license-free) — delegate to OpenFOAMCaseBuilder            #
     # ------------------------------------------------------------------ #
-    def _build_case(self, cfg: dict[str, Any], settings: dict[str, Any]) -> Path:
+    def _build_case(
+        self, cfg: dict[str, Any], settings: dict[str, Any]
+    ) -> tuple[Path, Any]:
         # Lazy import: keep the engine import graph light.
         from .case_builder import OpenFOAMCaseBuilder
-        from .models import CaseType, OpenFOAMCase
+        from .case_definition import parse_case_request
 
-        case_type_raw = settings.get("case_type")
-        if case_type_raw is None:
-            raise ValueError("openfoam.case_type is required")
-        try:
-            case_type = CaseType(case_type_raw)
-        except ValueError as exc:
-            valid = ", ".join(ct.value for ct in CaseType)
-            raise ValueError(
-                f"Unknown openfoam.case_type {case_type_raw!r}. Valid: {valid}"
-            ) from exc
-
-        name = settings.get("name") or f"{case_type.value}_case"
-        case = OpenFOAMCase.for_case_type(case_type, name)
-
-        # Optional solver override (otherwise the case-type default is used).
-        solver_override = settings.get("solver")
-        if solver_override:
-            case.solver_config.solver_name = solver_override
+        # The whole request is validated as one closed contract (#1575). Every
+        # accepted semantic leaf is carried onto the typed case here; anything
+        # unknown is refused rather than silently dropped, which is what let a
+        # mock batch pass while rendering a default static case.
+        parsed = parse_case_request(self._case_request(settings))
 
         parent_dir = self._resolve_output_dir(cfg, settings)
         parent_dir.mkdir(parents=True, exist_ok=True)
-        return OpenFOAMCaseBuilder(case).build(parent_dir)
+        case_dir = OpenFOAMCaseBuilder(
+            parsed.case,
+            list(parsed.function_objects.pressure_taps),
+            tap_write_control=parsed.function_objects.write_control,
+            tap_write_interval=parsed.function_objects.write_interval,
+        ).build(parent_dir)
+        return case_dir, parsed
+
+    @staticmethod
+    def _case_request(settings: dict[str, Any]) -> dict[str, Any]:
+        """Strip adapter-owned keys the schema does not describe.
+
+        ``case_dir`` and the run-report keys are written back onto ``settings``
+        by this router, so a second pass over the same mapping must not see
+        them as unknown input.
+        """
+        adapter_owned = {"case_dir", "run_status", "outputs"}
+        return {
+            key: value
+            for key, value in settings.items()
+            if key not in adapter_owned
+        }
 
     # ------------------------------------------------------------------ #
     #  run (fail-closed) — delegate to OpenFOAMRunner                    #
     # ------------------------------------------------------------------ #
     def _run_openfoam(
-        self, cfg: dict[str, Any], settings: dict[str, Any], case_dir: Path
+        self, cfg: dict[str, Any], settings: dict[str, Any], case_dir: Path,
+        parsed: Any,
     ) -> dict[str, Any]:
         from .runner import OpenFOAMRunConfig, OpenFOAMRunner
 
-        requested_dry_run = bool(settings.get("dry_run", False))
+        # The runner is driven from the validated execution plan, so a canonical
+        # request and a normalised legacy one select the same run identically.
+        plan = parsed.execution
+        requested_dry_run = plan.dry_run
         run_cfg = OpenFOAMRunConfig(
-            solver=settings.get("solver"),
-            mesh_utility=settings.get("mesh_utility", "blockMesh"),
-            run_snappy=bool(settings.get("run_snappy", False)),
-            to_vtk=bool(settings.get("to_vtk", True)),
-            timeout_seconds=int(settings.get("timeout_seconds", 7200)),
+            solver=parsed.case.solver_config.solver_name,
+            mesh_utility=plan.mesh_utility,
+            run_snappy=plan.run_snappy,
+            to_vtk=plan.to_vtk,
+            timeout_seconds=plan.timeout_seconds,
             dry_run=requested_dry_run,
         )
         result = OpenFOAMRunner(run_cfg).run(case_dir)
