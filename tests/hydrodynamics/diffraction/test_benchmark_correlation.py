@@ -393,3 +393,97 @@ class TestBuildRawRaoDataHtml:
         # Should have 0deg and 90deg columns
         assert "0&deg;" in html or "0°" in html
         assert "90&deg;" in html or "90°" in html
+
+
+# ---------------------------------------------------------------------------
+# Tests: coefficient-matrix visibility (#1633)
+# ---------------------------------------------------------------------------
+
+
+def _cell_facts(html: str, marker: str) -> dict:
+    """Return the class and text of the first cell carrying ``marker``."""
+    import re
+
+    match = re.search(
+        rf'<td class="({re.escape(marker)})"[^>]*>(.*?)</td>',
+        html,
+        re.DOTALL,
+    )
+    if match is None:
+        return {"class": None, "text": None}
+    return {"class": match.group(1), "text": match.group(2).strip()}
+
+
+class TestSixBySixMatrixDistinguishesAbsenceFromRefusal:
+    """An empty cell and a refused cell both rendered as a bare dash.
+
+    168 of the 216 shipped coefficient cells were NOT_APPLICABLE and every
+    one of them looked exactly like a cell whose comparison had failed
+    (#1633).
+    """
+
+    def test_structurally_absent_cell_is_marked_not_refused(self):
+        labels = ["Surge", "Sway", "Heave", "Roll", "Pitch", "Yaw"]
+        corr = {(i, j): None for i in range(1, 7) for j in range(1, 7)}
+        qualities = {
+            (i, j): ("INSUFFICIENT_DATA" if i == j else "NOT_APPLICABLE")
+            for i in range(1, 7)
+            for j in range(1, 7)
+        }
+
+        html = render_6x6_matrix(corr, labels, qualities)
+
+        assert _cell_facts(html, "cell-absent") == {
+            "class": "cell-absent",
+            "text": "n/a",
+        }
+
+    def test_refused_cell_is_marked_refused(self):
+        labels = ["Surge", "Sway", "Heave", "Roll", "Pitch", "Yaw"]
+        corr = {(i, j): None for i in range(1, 7) for j in range(1, 7)}
+        qualities = {
+            (i, j): ("INSUFFICIENT_DATA" if i == j else "NOT_APPLICABLE")
+            for i in range(1, 7)
+            for j in range(1, 7)
+        }
+
+        html = render_6x6_matrix(corr, labels, qualities)
+
+        assert _cell_facts(html, "cell-refused") == {
+            "class": "cell-refused",
+            "text": "refused",
+        }
+
+    def test_without_quality_information_cells_still_render_a_dash(self):
+        """build_coupling_heatmap_html passes no qualities -- unchanged."""
+        labels = ["Surge", "Sway", "Heave", "Roll", "Pitch", "Yaw"]
+
+        html = render_6x6_matrix({}, labels)
+
+        assert html.count("<td>-</td>") == 36
+
+
+class TestHydroCoefficientsHtmlStatesCoverage:
+    """Coverage must reach the reader next to the matrix it describes."""
+
+    def test_each_matrix_carries_its_own_coverage_statement(self):
+        report = _make_benchmark_report()
+        pair = next(iter(report.pairwise_results.values()))
+        pair.added_mass_correlations = {
+            (i, j): (0.99 if i == j else None)
+            for i in range(1, 7)
+            for j in range(1, 7)
+        }
+        pair.added_mass_quality = {
+            (i, j): ("COMPARED" if i == j else "NOT_APPLICABLE")
+            for i in range(1, 7)
+            for j in range(1, 7)
+        }
+        pair.damping_correlations = dict(pair.added_mass_correlations)
+        pair.damping_quality = dict(pair.added_mass_quality)
+
+        html = build_hydro_coefficients_html(report)
+
+        assert html.count(
+            "Coverage: 6 of 36 cells compared (NOT_APPLICABLE: 30)"
+        ) == 2

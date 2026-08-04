@@ -381,3 +381,132 @@ class TestBenchmarkExecutiveSemanticSummary:
         assert "solver_mode_significant" in html
         assert "representation_normalization_only" in html
         assert "output_only" in html
+
+
+# ---------------------------------------------------------------------------
+# 5. Coefficient visibility: distribution partitioning and coverage (#1633)
+# ---------------------------------------------------------------------------
+
+
+def _hydro_row_cells(html: str, matrix_label: str) -> tuple:
+    """Return the plain-text cells of one Hydrodynamic Coefficients row."""
+    import html as html_mod
+    import re
+
+    row = re.search(
+        rf"<tr><td>{re.escape(matrix_label)}</td>(.*?)</tr>",
+        html,
+        re.DOTALL,
+    )
+    if row is None:
+        return ()
+    cells = re.findall(r"<td[^>]*>(.*?)</td>", row.group(1), re.DOTALL)
+    return tuple(
+        html_mod.unescape(re.sub(r"<[^>]+>", "", cell)).strip()
+        for cell in cells
+    )
+
+
+def _diagonal_only_matrices(
+    results: Dict[str, DiffractionResults],
+) -> Dict[str, DiffractionResults]:
+    """Give each solver a distinct constant diagonal and zero off-diagonal.
+
+    Diagonal cells differ between the solvers and never vary with frequency,
+    so they refuse with INSUFFICIENT_DATA. Off-diagonal cells are zero on both
+    legs, so they are NOT_APPLICABLE. That produces a matrix whose diagonal
+    and off-diagonal partitions have completely different quality
+    distributions -- exactly the case the shared 36-cell distribution
+    misreported.
+    """
+    for solver_name, scale in (("SolverA", 1000.0), ("SolverB", 100.0)):
+        for coefficient_set in (
+            results[solver_name].added_mass,
+            results[solver_name].damping,
+        ):
+            for matrix in coefficient_set.matrices:
+                matrix.matrix = np.eye(6) * scale
+                matrix.source = "solver"
+    return results
+
+
+class TestCoefficientVisibility:
+    """The printed numbers must describe the column that labels them."""
+
+    def test_each_column_distribution_describes_only_its_own_cells(
+        self,
+        two_identical_results: Dict[str, DiffractionResults],
+        tmp_path: Path,
+    ) -> None:
+        """Min Diagonal counted all 36 cells, not its own 6 (#1633).
+
+        The diagonal partition is 6 INSUFFICIENT_DATA cells and the
+        off-diagonal partition is 30 NOT_APPLICABLE cells. Only the overall
+        column may legitimately show both.
+        """
+        result = BenchmarkRunner(
+            BenchmarkConfig(output_dir=tmp_path, dry_run=True),
+        ).run_from_results(_diagonal_only_matrices(two_identical_results))
+
+        html = result.report_html_path.read_text(encoding="utf-8")
+
+        assert _hydro_row_cells(html, "Added Mass") == (
+            "Unavailable (INSUFFICIENT_DATA)",
+            "Not compared (NOT_APPLICABLE)",
+            "Unavailable (INSUFFICIENT_DATA: 6, NOT_APPLICABLE: 30)",
+            "0 of 36 cells compared "
+            "(INSUFFICIENT_DATA: 6, NOT_APPLICABLE: 30)",
+        )
+
+    def test_json_records_coverage_per_matrix_per_pair(
+        self,
+        two_identical_results: Dict[str, DiffractionResults],
+        tmp_path: Path,
+    ) -> None:
+        """78% of the shipped coefficient evidence was uncompared and
+        invisible; coverage must be machine-readable (#1633)."""
+        result = BenchmarkRunner(
+            BenchmarkConfig(output_dir=tmp_path, dry_run=True),
+        ).run_from_results(_diagonal_only_matrices(two_identical_results))
+
+        data = json.loads(
+            result.report_json_path.read_text(encoding="utf-8"),
+        )
+        pair = data["pairwise_results"]["SolverA-vs-SolverB"]
+
+        assert {
+            "added_mass_coverage": pair.get("added_mass_coverage"),
+            "damping_coverage": pair.get("damping_coverage"),
+        } == {
+            "added_mass_coverage": {
+                "compared_cells": 0,
+                "total_cells": 36,
+                "quality_counts": {
+                    "INSUFFICIENT_DATA": 6,
+                    "NOT_APPLICABLE": 30,
+                },
+            },
+            "damping_coverage": {
+                "compared_cells": 0,
+                "total_cells": 36,
+                "quality_counts": {
+                    "INSUFFICIENT_DATA": 6,
+                    "NOT_APPLICABLE": 30,
+                },
+            },
+        }
+
+    def test_html_states_coverage_for_every_matrix_of_every_pair(
+        self,
+        three_solver_results: Dict[str, DiffractionResults],
+        tmp_path: Path,
+    ) -> None:
+        """Three pairs times two matrices = six coverage statements, in the
+        6x6 section, plus six more in the per-pair summary tables."""
+        result = BenchmarkRunner(
+            BenchmarkConfig(output_dir=tmp_path, dry_run=True),
+        ).run_from_results(three_solver_results)
+
+        html = result.report_html_path.read_text(encoding="utf-8")
+
+        assert html.count("cells compared") == 12

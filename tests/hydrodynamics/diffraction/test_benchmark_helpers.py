@@ -414,3 +414,187 @@ class TestGenerateDofObservations:
         )
         assert "<p>" in result
         assert "</p>" in result
+
+
+# ---------------------------------------------------------------------------
+# Absence rendering: "nothing to compare" must not look like "could not
+# compare" (#1633 defect 3)
+# ---------------------------------------------------------------------------
+
+
+def _absence_facts(rendered: str) -> dict:
+    """Reduce rendered absence markup to the facts a reader would take away."""
+    import re
+
+    match = re.fullmatch(r'<span class="([^"]+)"[^>]*>(.*)</span>', rendered)
+    if match is None:
+        return {"class": None, "text": rendered}
+    return {"class": match.group(1), "text": match.group(2)}
+
+
+class TestAbsenceIsClassified:
+    """A structurally absent cell and a refused cell are different facts.
+
+    Before #1633 both rendered as ``Unavailable (QUALITY)`` with identical
+    weight, so a reader could not tell "there was nothing to compare" from
+    "there was something and we could not compare it".
+    """
+
+    def test_structurally_absent_cell_is_not_labelled_unavailable(self):
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            format_optional_correlation,
+        )
+
+        actual = _absence_facts(
+            format_optional_correlation(None, "NOT_APPLICABLE"),
+        )
+
+        assert actual == {
+            "class": "absence-structural",
+            "text": "Not compared (NOT_APPLICABLE)",
+        }
+
+    def test_refused_cell_keeps_the_unavailable_label(self):
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            format_optional_correlation,
+        )
+
+        actual = _absence_facts(
+            format_optional_correlation(None, "INSUFFICIENT_DATA"),
+        )
+
+        assert actual == {
+            "class": "absence-refusal",
+            "text": "Unavailable (INSUFFICIENT_DATA)",
+        }
+
+    def test_absent_diagonal_is_a_refusal_not_a_structural_absence(self):
+        """ABSENT_DIAGONAL is in REFUSAL_QUALITIES, so it must read as one."""
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            format_optional_correlation,
+        )
+
+        actual = _absence_facts(
+            format_optional_correlation(None, "ABSENT_DIAGONAL"),
+        )
+
+        assert actual == {
+            "class": "absence-refusal",
+            "text": "Unavailable (ABSENT_DIAGONAL)",
+        }
+
+    def test_unknown_quality_defaults_to_the_refusal_reading(self):
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            format_optional_correlation,
+        )
+
+        actual = _absence_facts(format_optional_correlation(None))
+
+        assert actual == {
+            "class": "absence-refusal",
+            "text": "Unavailable",
+        }
+
+    def test_mixed_distribution_containing_a_refusal_reads_as_refusal(self):
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            format_quality_distribution,
+        )
+
+        actual = _absence_facts(
+            format_quality_distribution(
+                {"NOT_APPLICABLE": 30, "INSUFFICIENT_DATA": 6},
+            ),
+        )
+
+        assert actual == {
+            "class": "absence-refusal",
+            "text": "Unavailable (INSUFFICIENT_DATA: 6, NOT_APPLICABLE: 30)",
+        }
+
+    def test_distribution_without_a_refusal_reads_as_structural(self):
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            format_quality_distribution,
+        )
+
+        actual = _absence_facts(
+            format_quality_distribution(
+                {"NOT_APPLICABLE": 30, "NULL_RESPONSE": 6},
+            ),
+        )
+
+        assert actual == {
+            "class": "absence-structural",
+            "text": "Not compared (NOT_APPLICABLE: 30, NULL_RESPONSE: 6)",
+        }
+
+
+# ---------------------------------------------------------------------------
+# Coefficient coverage: how much of the matrix was actually compared
+# (#1633 defect 2)
+# ---------------------------------------------------------------------------
+
+
+class TestCoefficientCoverage:
+    """Coverage is a first-class, machine-readable fact.
+
+    No threshold is applied here on purpose: the function reports what was
+    compared and lets a human judge it. The failure case of a whole matrix
+    being zeroed is already caught by the ABSENT_DIAGONAL refusal.
+    """
+
+    def test_coverage_counts_compared_cells_against_the_total(self):
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            coefficient_coverage,
+        )
+
+        qualities = {}
+        for i in range(1, 7):
+            for j in range(1, 7):
+                qualities[(i, j)] = (
+                    "COMPARED" if i == j else "NOT_APPLICABLE"
+                )
+
+        assert coefficient_coverage(qualities) == {
+            "compared_cells": 6,
+            "total_cells": 36,
+            "quality_counts": {"COMPARED": 6, "NOT_APPLICABLE": 30},
+        }
+
+    def test_coverage_of_an_empty_matrix_is_zero_of_zero(self):
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            coefficient_coverage,
+        )
+
+        assert coefficient_coverage({}) == {
+            "compared_cells": 0,
+            "total_cells": 0,
+            "quality_counts": {},
+        }
+
+    def test_coverage_summary_names_the_uncompared_remainder(self):
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            format_coverage_summary,
+        )
+
+        summary = format_coverage_summary({
+            "compared_cells": 10,
+            "total_cells": 36,
+            "quality_counts": {"COMPARED": 10, "NOT_APPLICABLE": 26},
+        })
+
+        assert summary == "10 of 36 cells compared (NOT_APPLICABLE: 26)"
+
+    def test_coverage_summary_of_a_fully_compared_matrix_has_no_remainder(
+        self,
+    ):
+        from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+            format_coverage_summary,
+        )
+
+        summary = format_coverage_summary({
+            "compared_cells": 36,
+            "total_cells": 36,
+            "quality_counts": {"COMPARED": 36},
+        })
+
+        assert summary == "36 of 36 cells compared"
