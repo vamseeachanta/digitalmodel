@@ -132,7 +132,12 @@ class DiffractionComparator:
         Returns:
             Deviation statistics
         """
-        if values1.size == 0 or values2.size == 0:
+        if (
+            values1.size == 0
+            or values2.size == 0
+            or not np.all(np.isfinite(values1))
+            or not np.all(np.isfinite(values2))
+        ):
             return DeviationStatistics(
                 mean_error=0.0,
                 max_error=0.0,
@@ -155,12 +160,15 @@ class DiffractionComparator:
 
         flat1 = values1.flatten()
         flat2 = values2.flatten()
-        if np.allclose(flat1, flat2):
+        if np.array_equal(flat1, flat2):
             correlation = 1.0
             quality = "IDENTICAL"
         elif np.ptp(flat1) == 0.0 or np.ptp(flat2) == 0.0:
             correlation = None
             quality = "INSUFFICIENT_DATA"
+        elif np.allclose(flat1, flat2):
+            correlation = 1.0
+            quality = "IDENTICAL"
         else:
             correlation = float(np.corrcoef(flat1, flat2)[0, 1])
             quality = "COMPARED"

@@ -312,6 +312,26 @@ class TestCompareRAOs:
             consensus.consensus_level,
         ) == ("NULL_RESPONSE", "FULL")
 
+    def test_unequal_null_responses_still_permit_full_consensus(
+        self, two_identical_results: Dict[str, DiffractionResults],
+    ) -> None:
+        two_identical_results["SolverA"].raos.heave.magnitude.fill(2e-11)
+        two_identical_results["SolverB"].raos.heave.magnitude.fill(8e-11)
+        comparator = MultiSolverComparator(two_identical_results)
+
+        consensus = comparator.compute_consensus()["HEAVE"]
+
+        assert consensus.consensus_level == "FULL"
+
+    def test_distinct_constant_values_have_insufficient_data_quality(self) -> None:
+        stats = MultiSolverComparator._calculate_deviation_stats(
+            np.full(3, 100.0),
+            np.full(3, 100.00001),
+            np.array([1.0, 2.0, 3.0]),
+        )
+
+        assert (stats.quality, stats.correlation) == ("INSUFFICIENT_DATA", None)
+
     def test_empty_values_have_insufficient_data_quality(self) -> None:
         stats = MultiSolverComparator._calculate_deviation_stats(
             np.array([]),
@@ -611,3 +631,20 @@ class TestReportGeneration:
         data = json.loads(output_file.read_text(encoding="utf-8"))
         pair = data["pairwise_results"]["SolverA-vs-SolverB"]
         assert pair["added_mass_correlations"]["1,1"] is None
+
+    def test_nonfinite_response_exports_null_without_nan(
+        self,
+        two_identical_results: Dict[str, DiffractionResults],
+        tmp_path: Path,
+    ) -> None:
+        two_identical_results["SolverB"].raos.heave.magnitude[0, 0] = np.nan
+        output_file = tmp_path / "nonfinite.json"
+
+        MultiSolverComparator(two_identical_results).export_report_json(output_file)
+
+        data = json.loads(
+            output_file.read_text(encoding="utf-8"),
+            parse_constant=lambda value: pytest.fail(f"non-finite JSON: {value}"),
+        )
+        pair = data["pairwise_results"]["SolverA-vs-SolverB"]
+        assert pair["rao_comparisons"]["heave"]["magnitude_correlation"] is None

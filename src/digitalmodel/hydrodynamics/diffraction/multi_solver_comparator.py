@@ -212,7 +212,12 @@ class MultiSolverComparator:
         frequencies: np.ndarray,
     ) -> DeviationStatistics:
         """Replicate deviation statistics from comparison_framework."""
-        if values1.size == 0 or values2.size == 0:
+        if (
+            values1.size == 0
+            or values2.size == 0
+            or not np.all(np.isfinite(values1))
+            or not np.all(np.isfinite(values2))
+        ):
             return DeviationStatistics(
                 mean_error=0.0,
                 max_error=0.0,
@@ -232,12 +237,15 @@ class MultiSolverComparator:
 
         flat1 = values1.flatten()
         flat2 = values2.flatten()
-        if np.allclose(flat1, flat2):
+        if np.array_equal(flat1, flat2):
             correlation = 1.0
             quality = "IDENTICAL"
         elif np.ptp(flat1) == 0.0 or np.ptp(flat2) == 0.0:
             correlation = None
             quality = "INSUFFICIENT_DATA"
+        elif np.allclose(flat1, flat2):
+            correlation = 1.0
+            quality = "IDENTICAL"
         else:
             correlation = float(np.corrcoef(flat1, flat2)[0, 1])
             quality = "COMPARED"
@@ -260,6 +268,23 @@ class MultiSolverComparator:
         frequencies: np.ndarray,
     ) -> DeviationStatistics:
         """Calculate phase differences on the shortest circular arc."""
+        if (
+            values1.size == 0
+            or values2.size == 0
+            or not np.all(np.isfinite(values1))
+            or not np.all(np.isfinite(values2))
+        ):
+            return DeviationStatistics(
+                mean_error=0.0,
+                max_error=0.0,
+                rms_error=0.0,
+                mean_abs_error=0.0,
+                correlation=None,
+                frequencies=frequencies,
+                errors=np.array([], dtype=float),
+                quality="INSUFFICIENT_DATA",
+            )
+
         errors = (values2 - values1 + 180.0) % 360.0 - 180.0
         error_radians = np.deg2rad(errors)
         circular_mean = float(
@@ -319,6 +344,23 @@ class MultiSolverComparator:
             frequencies=np.array([], dtype=float),
             errors=errors,
             quality="INSUFFICIENT_SAMPLING",
+        )
+
+    @staticmethod
+    def _insufficient_data_stats(
+        shape: Tuple[int, ...],
+    ) -> DeviationStatistics:
+        """Represent invalid response values without propagating NaN."""
+        errors = np.zeros(shape, dtype=float)
+        return DeviationStatistics(
+            mean_error=0.0,
+            max_error=0.0,
+            rms_error=0.0,
+            mean_abs_error=0.0,
+            correlation=None,
+            frequencies=np.array([], dtype=float),
+            errors=errors,
+            quality="INSUFFICIENT_DATA",
         )
 
     # ------------------------------------------------------------------
@@ -382,6 +424,24 @@ class MultiSolverComparator:
                 magnitude_b = alignment.second.magnitude
                 phase_a = alignment.first.phase_degrees
                 phase_b = alignment.second.phase_degrees
+
+                if not all(
+                    np.all(np.isfinite(values))
+                    for values in (magnitude_a, magnitude_b, phase_a, phase_b)
+                ):
+                    pair_comparisons[dof_name] = PairwiseRAOComparison(
+                        dof=dof,
+                        solver_a=solver_a,
+                        solver_b=solver_b,
+                        magnitude_stats=self._insufficient_data_stats(
+                            magnitude_a.shape,
+                        ),
+                        phase_stats=self._insufficient_data_stats(phase_a.shape),
+                        max_magnitude_diff=0.0,
+                        max_phase_diff=0.0,
+                        relative_rms_error=None,
+                    )
+                    continue
 
                 mag_stats = self._calculate_deviation_stats(
                     magnitude_a,
@@ -593,10 +653,13 @@ class MultiSolverComparator:
 
                 # Agreement requires high correlation AND low relative RMS.
                 pair_agrees[pk] = (
-                    corr is not None
-                    and relative_rms is not None
-                    and corr > 0.99
-                    and relative_rms < self.tolerance
+                    comp.phase_stats.quality == "NULL_RESPONSE"
+                    or (
+                        corr is not None
+                        and relative_rms is not None
+                        and corr > 0.99
+                        and relative_rms < self.tolerance
+                    )
                 )
 
             high_pairs = [
@@ -790,7 +853,13 @@ class MultiSolverComparator:
 
         output_file.parent.mkdir(parents=True, exist_ok=True)
         with open(output_file, "w", encoding="utf-8") as fh:
-            json.dump(data, fh, indent=2, default=self._json_default)
+            json.dump(
+                data,
+                fh,
+                indent=2,
+                default=self._json_default,
+                allow_nan=False,
+            )
 
     @staticmethod
     def _json_default(obj: object) -> object:
