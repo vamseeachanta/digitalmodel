@@ -45,6 +45,7 @@ SCRIPTS = [
 _DRIVER = textwrap.dedent(
     """
     import importlib.util
+    import pathlib
     import sys
 
     # Force the win32-guarded branch regardless of the host platform.
@@ -58,9 +59,13 @@ _DRIVER = textwrap.dedent(
 
     after = (id(sys.stdout), id(sys.stderr))
 
-    # Write via the ORIGINAL stream object: if the module rebound and the old
-    # buffer was closed, using sys.stdout here could mask the failure.
-    sys.__stdout__.write("SAME" if before == after else "REBOUND")
+    # The verdict goes to a FILE, not to stdout. The very defect under test
+    # closes the stdout buffer when the rebound wrapper is collected at exit,
+    # which swallows anything written to the stream -- so reporting through
+    # stdout would lose the evidence and look like a probe crash instead.
+    pathlib.Path(sys.argv[2]).write_text(
+        "SAME" if before == after else "REBOUND", encoding="utf-8"
+    )
     """
 )
 
@@ -71,6 +76,7 @@ def test_import_does_not_rebind_std_streams(script: Path, tmp_path: Path) -> Non
 
     driver = tmp_path / "probe.py"
     driver.write_text(_DRIVER, encoding="utf-8")
+    verdict_file = tmp_path / "verdict.txt"
 
     env = os.environ.copy()
     env["PYTHONPATH"] = os.pathsep.join(
@@ -78,7 +84,7 @@ def test_import_does_not_rebind_std_streams(script: Path, tmp_path: Path) -> Non
     ).rstrip(os.pathsep)
 
     result = subprocess.run(
-        [sys.executable, str(driver), str(script)],
+        [sys.executable, str(driver), str(script), str(verdict_file)],
         capture_output=True,
         text=True,
         timeout=120,
@@ -90,10 +96,16 @@ def test_import_does_not_rebind_std_streams(script: Path, tmp_path: Path) -> Non
         f"probe failed (rc={result.returncode})\n"
         f"stdout: {result.stdout!r}\nstderr: {result.stderr!r}"
     )
-    assert "REBOUND" not in result.stdout, (
-        f"{script.name} rebinds sys.stdout/sys.stderr at import time. "
-        "Use sys.stdout.reconfigure(encoding='utf-8') instead of assigning a "
-        "new TextIOWrapper -- rebinding closes the underlying buffer when the "
-        "wrapper is collected and destroys the stream for the whole process."
+    assert verdict_file.exists(), (
+        f"probe wrote no verdict file; rc={result.returncode} "
+        f"stderr={result.stderr!r}"
     )
-    assert "SAME" in result.stdout, f"probe produced no verdict: {result.stdout!r}"
+
+    verdict = verdict_file.read_text(encoding="utf-8").strip()
+    assert verdict == "SAME", (
+        f"{script.name} rebinds sys.stdout/sys.stderr at import time "
+        f"(verdict={verdict!r}). Use sys.stdout.reconfigure(encoding='utf-8') "
+        "instead of assigning a new TextIOWrapper -- rebinding closes the "
+        "underlying buffer when the wrapper is collected, destroying the "
+        "stream for the whole process."
+    )
