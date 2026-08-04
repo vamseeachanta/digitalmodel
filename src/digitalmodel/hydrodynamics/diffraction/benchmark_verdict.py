@@ -13,6 +13,8 @@ from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     HydrodynamicMatrix,
 )
 
+PASS_CONSENSUS_LEVELS = frozenset({"FULL", "MAJORITY", "SPLIT"})
+
 
 @dataclass(frozen=True)
 class BenchmarkVerdict:
@@ -60,11 +62,10 @@ def derive_status(
         return BenchmarkVerdict("suspect", "comparison inputs are identical")
     if consensus == "NO_CONSENSUS":
         return BenchmarkVerdict("fail", "comparison consensus is NO_CONSENSUS")
-    usable_qualities = {"COMPARED", "NULL_RESPONSE"}
-    if all(item in usable_qualities for item in qualities) and consensus == "FULL":
+    if _can_pass(qualities, consensus):
         return BenchmarkVerdict(
             "pass",
-            "solver-sourced comparison has usable statistics and FULL consensus",
+            f"solver-sourced comparison has usable statistics and {consensus} consensus",
         )
     return BenchmarkVerdict(
         "incomplete",
@@ -82,6 +83,14 @@ def _as_correlations(
 
 def _as_qualities(value: str | Iterable[str]) -> tuple[str, ...]:
     return (value,) if isinstance(value, str) else tuple(value)
+
+
+def _can_pass(qualities: tuple[str, ...], consensus: str) -> bool:
+    usable_qualities = {"COMPARED", "NULL_RESPONSE"}
+    return (
+        all(item in usable_qualities for item in qualities)
+        and consensus in PASS_CONSENSUS_LEVELS
+    )
 
 
 def _evidence_refusal(
