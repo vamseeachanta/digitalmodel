@@ -261,16 +261,25 @@ class MultiSolverComparator:
     ) -> DeviationStatistics:
         """Calculate phase differences on the shortest circular arc."""
         errors = (values2 - values1 + 180.0) % 360.0 - 180.0
+        error_radians = np.deg2rad(errors)
+        circular_mean = float(
+            np.rad2deg(
+                np.arctan2(
+                    np.mean(np.sin(error_radians)),
+                    np.mean(np.cos(error_radians)),
+                )
+            )
+        )
         identical = bool(np.allclose(errors, 0.0))
         return DeviationStatistics(
-            mean_error=float(np.mean(errors)),
+            mean_error=circular_mean,
             max_error=float(np.max(np.abs(errors))),
             rms_error=float(np.sqrt(np.mean(errors ** 2))),
             mean_abs_error=float(np.mean(np.abs(errors))),
             correlation=(
                 1.0
                 if identical
-                else float(np.mean(np.cos(np.deg2rad(errors))))
+                else float(np.mean(np.cos(error_radians)))
             ),
             frequencies=frequencies,
             errors=errors,

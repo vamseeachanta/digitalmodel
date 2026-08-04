@@ -215,6 +215,15 @@ class TestCompareRAOs:
 
         assert comparison.max_phase_diff == pytest.approx(2.0)
 
+    def test_phase_mean_is_circular_across_branch_cut(self) -> None:
+        stats = MultiSolverComparator._calculate_phase_deviation_stats(
+            np.zeros(2),
+            np.array([179.0, -179.0]),
+            np.array([1.0, 2.0]),
+        )
+
+        assert abs(stats.mean_error) == pytest.approx(180.0)
+
     def test_identical_three_point_grid_refuses_correlation(
         self, two_identical_results: Dict[str, DiffractionResults],
     ) -> None:
