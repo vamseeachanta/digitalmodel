@@ -10,6 +10,7 @@ from typing import Any
 
 from digitalmodel.workflows.openfoam_batch_config import (
     RESERVED_ROW_KEYS as _RESERVED_ROW_KEYS,
+    base_view,
     default_workers,
     render_cases as _render_cases,
     resolve_batch_paths,
@@ -113,7 +114,9 @@ def _settings(cfg: dict) -> tuple[dict, dict, dict, Path]:
     settings = cfg.get("openfoam_run_batch") or {}
     run_settings = settings.get("run_batch") or {}
     base = settings.get("base") or {}
-    if not base.get("case_type"):
+    # Either base form must name a case type: the legacy flat key, or the
+    # canonical case_definition.authored leaf.
+    if not base_view(base).get("case_type"):
         raise ValueError("openfoam_run_batch.base.case_type is required")
     cfg_dir = Path(cfg.get("_config_dir_path") or Path.cwd())
     return settings, run_settings, base, cfg_dir
@@ -124,8 +127,9 @@ def _validate_run(run_settings: dict, base: dict) -> tuple[str, bool, int]:
     if mode not in VALID_MODES:
         raise ValueError(f"openfoam_run_batch run_batch.mode must be pool|mpi, got {mode}")
     mock, workers = bool(run_settings.get("mock", False)), resolve_workers(run_settings)
-    if not mock and not _solver_ready(mode, base.get("mesh_utility", DEFAULT_MESH_UTILITY),
-                                      base.get("solver"), bool(run_settings.get("reconstruct", True))):
+    view = base_view(base)
+    if not mock and not _solver_ready(mode, view.get("mesh_utility", DEFAULT_MESH_UTILITY),
+                                      view.get("solver"), bool(run_settings.get("reconstruct", True))):
         raise RuntimeError(SOLVER_ERROR_MESSAGE)
     return mode, mock, workers
 
@@ -137,10 +141,10 @@ def _external_layout(cfg: dict, settings: dict, run_settings: dict, base: dict,
     if not paths.external:
         paths.legacy_work_dir.mkdir(parents=True, exist_ok=True)
         return None, {}, []
-    if not mock and not base.get("solver"):
+    if not mock and not base_view(base).get("solver"):
         raise ValueError("external real runs require base.solver for executable identity")
     inputs = _referenced_inputs(cfg, settings, paths.cfg_dir)
-    tools = [] if mock else _selected_tools(mode, base, run_settings)
+    tools = [] if mock else _selected_tools(mode, base_view(base), run_settings)
     identity = build_run_identity(
         effective_config=settings, referenced_inputs=inputs,
         selected_executables=tools, visible_rank_count=os.cpu_count() or 1,

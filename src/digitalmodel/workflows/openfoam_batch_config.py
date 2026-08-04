@@ -18,6 +18,7 @@ HOSTED_CONTEXT = "hosted-deckhand"
 TRUSTED_LOCAL_CONTEXT = "trusted-local"
 DEFAULT_OUTPUT_DIR = "results"
 DEFAULT_WORK_DIR = "batch_runs"
+DEFAULT_MESH_UTILITY = "blockMesh"
 _COMPONENT = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
 RESERVED_ROW_KEYS = frozenset({"index", "name", "status", "solver", "mock",
                                "error", "case_dir", "wall_seconds", "mpi_plan"})
@@ -63,6 +64,28 @@ def resolve_case_matrix(explicit: list[dict] | None, variants: dict,
 
 def _canonical(base: dict) -> bool:
     return "case_definition" in base or "execution" in base
+
+
+def base_view(base: dict) -> dict:
+    """Return the solver/utility view of either base form.
+
+    The batch router picks executables and checks solver readiness from a flat
+    set of keys. A canonical base carries the same facts under
+    ``case_definition.authored`` and ``execution``, so both forms are reduced
+    here rather than teaching every call site about the schema.
+    """
+    if not _canonical(base):
+        return base
+    authored = (base.get("case_definition") or {}).get("authored") or {}
+    execution = base.get("execution") or {}
+    return {
+        "case_type": authored.get("case_type"),
+        "solver": authored.get("solver"),
+        "mesh_utility": execution.get("mesh_utility", DEFAULT_MESH_UTILITY),
+        "run_snappy": execution.get("run_snappy", False),
+        "run_set_fields": execution.get("run_set_fields", False),
+        "to_vtk": execution.get("to_vtk", False),
+    }
 
 
 def _base_name(base: dict) -> str:
