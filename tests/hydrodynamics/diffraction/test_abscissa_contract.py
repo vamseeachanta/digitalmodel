@@ -233,3 +233,21 @@ def test_sampling_gate_fires_on_identical_three_point_grids():
     )
 
     assert result == api.InsufficientSampling(sample_count=3, correlation=None)
+
+
+def test_identical_sufficient_grid_is_not_resampled():
+    api = _api()
+    frequencies = np.arange(5.0)
+    magnitude = np.ones(5)
+    phase = np.full(5, 270.0)
+
+    result = api.align_responses(
+        frequencies,
+        magnitude,
+        phase,
+        frequencies.copy(),
+        magnitude.copy(),
+        phase.copy(),
+    )
+
+    assert result.first.phase_degrees[0] == 270.0
