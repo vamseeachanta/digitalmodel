@@ -33,6 +33,7 @@ MAX_FUNCTION_LINES = 50
 # globbed so that adding a module to the package is a deliberate decision to
 # bring it under this limit.
 GOVERNED_MODULES = (
+    "src/digitalmodel/solvers/openfoam/artifact_index.py",
     "src/digitalmodel/solvers/openfoam/pressure_taps.py",
     "src/digitalmodel/solvers/openfoam/pressure_tap_models.py",
     "src/digitalmodel/solvers/openfoam/pressure_tap_analysis.py",
