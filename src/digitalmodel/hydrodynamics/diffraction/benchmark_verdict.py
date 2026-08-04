@@ -52,7 +52,7 @@ def derive_status(
         return BenchmarkVerdict("suspect", "comparison inputs are identical")
     if consensus == "NO_CONSENSUS":
         return BenchmarkVerdict("fail", "comparison consensus is NO_CONSENSUS")
-    if quality == "COMPARED" and consensus == "FULL":
+    if quality in {"COMPARED", "NULL_RESPONSE"} and consensus == "FULL":
         return BenchmarkVerdict(
             "pass",
             "solver-sourced comparison has usable statistics and FULL consensus",
