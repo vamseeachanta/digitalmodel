@@ -382,3 +382,34 @@ def test_identical_adequate_grids_pass_values_through_unchanged():
     np.testing.assert_array_equal(result.frequencies, frequencies)
     np.testing.assert_array_equal(result.first.magnitude, magnitude)
     np.testing.assert_array_equal(result.first.phase_degrees, phase)
+
+
+def test_ordering_is_required_before_np_interp():
+    """Pin why order_solver_data must precede np.interp.
+
+    ``np.interp`` documents that ``xp`` must be increasing and does not check
+    it: given a descending ``xp`` it returns silently wrong values rather than
+    raising. ``run_proper_comparison.py`` interpolated raw solver frequencies
+    for this reason (#1633). That script needs a licensed OrcFxAPI to import,
+    so this is the durable record of the hazard and of the fix.
+    """
+    api = _api()
+    descending = np.array([3.0, 2.0, 1.0])
+    magnitudes = np.array([30.0, 20.0, 10.0])
+    query = np.array([1.5, 2.5])
+
+    # The fix: sort frequencies and magnitudes together first. 1.5 sits
+    # midway between 1.0 and 2.0, so the correct magnitude is 15.0; 2.5
+    # likewise gives 25.0.
+    ordered = api.order_solver_data(descending, magnitudes)
+    corrected = np.interp(query, ordered.frequencies, ordered.raos)
+    np.testing.assert_allclose(corrected, np.array([15.0, 25.0]))
+
+    # The defect: interpolating against the descending abscissa directly
+    # returns silently wrong values and raises nothing. Measured on numpy
+    # 2.4.2 this collapses to [10.0, 10.0] -- both queries clamped, position
+    # ignored entirely. The exact wrong values are an artifact of numpy's
+    # binary search and are not worth pinning across versions; that they are
+    # wrong at all is the property under test.
+    wrong = np.interp(query, descending, magnitudes)
+    assert not np.allclose(wrong, corrected)

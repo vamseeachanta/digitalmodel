@@ -21,6 +21,9 @@ sys.path.insert(0, orcaflex_api_path)
 from digitalmodel.diffraction.aqwa_lis_parser import AQWALISParser
 from digitalmodel.diffraction.aqwa_converter import AQWAConverter
 from digitalmodel.diffraction.output_schemas import DiffractionResults, DOF
+from digitalmodel.hydrodynamics.diffraction.benchmark_abscissa import (
+    order_solver_data,
+)
 from loguru import logger
 
 try:
@@ -145,8 +148,18 @@ class HeadingByHeadingComparator:
                 ow_peak_original = np.max(ow_mag_heading)
                 ow_peak_original_idx = np.argmax(ow_mag_heading)
 
-                # Interpolate OrcaWave to AQWA frequencies
-                ow_mag_interp = np.interp(aqwa_freq, ow_freq, ow_mag_heading)
+                # Interpolate OrcaWave to AQWA frequencies.
+                # np.interp REQUIRES an increasing xp and gives no warning when
+                # it is not -- it silently returns garbage. ow_freq comes
+                # straight from the solver via `ow_freq_hz * 2*pi` and is never
+                # checked or sorted, so this call is unguarded regardless of
+                # what any particular run happens to supply. order_solver_data
+                # sorts the frequencies and their magnitudes together and is a
+                # no-op when the input is already ascending. (#1633)
+                ordered_ow = order_solver_data(ow_freq, ow_mag_heading)
+                ow_mag_interp = np.interp(
+                    aqwa_freq, ordered_ow.frequencies, ordered_ow.raos
+                )
 
                 # Calculate errors - use absolute tolerance for small values
                 abs_errors = np.abs(ow_mag_interp - aqwa_rao_heading)
