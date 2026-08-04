@@ -8,9 +8,6 @@ from typing import Dict
 import numpy as np
 import pytest
 
-from digitalmodel.hydrodynamics.diffraction.benchmark_abscissa import (
-    AbscissaOverlapError,
-)
 from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import (
     BenchmarkReport,
     ConsensusMetrics,
@@ -280,7 +277,7 @@ class TestCompareRAOs:
             comparison.magnitude_stats.correlation,
         ) == ("INSUFFICIENT_SAMPLING", None)
 
-    def test_disjoint_solver_grids_raise_overlap_error(
+    def test_disjoint_solver_grids_are_refused_without_exception(
         self, two_identical_results: Dict[str, DiffractionResults],
     ) -> None:
         for dof in DOF:
@@ -291,8 +288,15 @@ class TestCompareRAOs:
             component.frequencies.values = component.frequencies.values + 10.0
         comparator = MultiSolverComparator(two_identical_results)
 
-        with pytest.raises(AbscissaOverlapError, match="abscissae are disjoint"):
-            comparator.compare_raos()
+        comparison = comparator.compare_raos()["SolverA-vs-SolverB"]["surge"]
+
+        assert (
+            comparison.magnitude_stats.quality,
+            comparison.refusal_reason,
+        ) == (
+            "INVALID_ABSCISSA",
+            "AbscissaOverlapError: abscissae are disjoint",
+        )
 
     def test_compare_raos_zero_magnitude_phase_correlation_is_perfect(
         self, two_identical_results: Dict[str, DiffractionResults],
@@ -339,9 +343,14 @@ class TestCompareRAOs:
         self, two_identical_results: Dict[str, DiffractionResults],
     ) -> None:
         shape = two_identical_results["SolverA"].raos.heave.magnitude.shape
-        noise = np.linspace(1e-12, 3e-12, np.prod(shape)).reshape(shape)
-        two_identical_results["SolverA"].raos.heave.magnitude = noise
-        two_identical_results["SolverB"].raos.heave.magnitude = noise * 3.0
+        first_rng = np.random.default_rng(11)
+        second_rng = np.random.default_rng(29)
+        two_identical_results["SolverA"].raos.heave.magnitude = (
+            first_rng.uniform(1e-12, 4e-11, size=shape)
+        )
+        two_identical_results["SolverB"].raos.heave.magnitude = (
+            second_rng.uniform(5e-11, 9e-11, size=shape)
+        )
         comparator = MultiSolverComparator(
             two_identical_results,
             policy=_comparison_policy(),
@@ -371,12 +380,15 @@ class TestCompareRAOs:
     def test_large_unequal_null_responses_do_not_bypass_magnitude_gate(
         self, two_identical_results: Dict[str, DiffractionResults],
     ) -> None:
-        magnitude_a = two_identical_results["SolverA"].raos.heave.magnitude
-        noise = np.linspace(1e-11, 3e-11, magnitude_a.size).reshape(
-            magnitude_a.shape
+        shape = two_identical_results["SolverA"].raos.heave.magnitude.shape
+        first_rng = np.random.default_rng(11)
+        second_rng = np.random.default_rng(29)
+        two_identical_results["SolverA"].raos.heave.magnitude = (
+            first_rng.uniform(2e-10, 3e-10, size=shape)
         )
-        magnitude_a[:] = noise
-        two_identical_results["SolverB"].raos.heave.magnitude[:] = noise + 6e-11
+        two_identical_results["SolverB"].raos.heave.magnitude = (
+            second_rng.uniform(2e-10, 3e-10, size=shape)
+        )
         comparator = MultiSolverComparator(
             two_identical_results,
             policy=_comparison_policy(),

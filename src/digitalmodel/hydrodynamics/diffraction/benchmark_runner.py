@@ -188,7 +188,7 @@ class BenchmarkRunner:
 
             result.success = True
 
-        except Exception as exc:
+        except OSError as exc:
             result.error_message = str(exc)
             result.success = False
 
@@ -485,6 +485,7 @@ class BenchmarkRunner:
                     "phase_quality": comp.phase_stats.quality,
                     "max_magnitude_diff": float(comp.max_magnitude_diff),
                     "max_phase_diff": float(comp.max_phase_diff),
+                    "refusal_reason": comp.refusal_reason,
                 }
 
             am_corrs = {
@@ -505,7 +506,7 @@ class BenchmarkRunner:
                     "cog_diff": [float(v) for v in hc.cog_diff],
                     "cob_diff": [float(v) for v in hc.cob_diff],
                     "waterplane_area_diff": float(hc.waterplane_area_diff),
-                    "stiffness_matrix_correlation": float(
+                    "stiffness_matrix_correlation": optional_float(
                         hc.stiffness_matrix_correlation,
                     ),
                 }
@@ -881,8 +882,19 @@ class BenchmarkRunner:
 
             def _fmt(v: Optional[float]) -> str:
                 if v is None:
-                    quality = next(iter(qualities.values()), None)
-                    return format_optional_correlation(None, quality)
+                    counts = {
+                        quality: list(qualities.values()).count(quality)
+                        for quality in sorted(set(qualities.values()))
+                    }
+                    if len(counts) == 1:
+                        return format_optional_correlation(
+                            None, next(iter(counts)),
+                        )
+                    distribution = ", ".join(
+                        f"{quality}: {count}"
+                        for quality, count in counts.items()
+                    )
+                    return f"Unavailable ({distribution})"
                 c = _color(v)
                 return (
                     f"<span style='color:{c};font-weight:600;'>"

@@ -83,8 +83,12 @@ SOLVER_RELATIVE_UNCERTAINTY = 0.01
 RESPONSE_ABSOLUTE_RESOLUTION = np.finfo(np.float64).eps
 MINIMUM_EXPLAINED_VARIANCE = (1.0 - SOLVER_RELATIVE_UNCERTAINTY) ** 2
 COMPARISON_JUSTIFICATION = (
-    "Unit Box synthetic builders bound each solver variation to one percent; "
-    "absolute resolution is float64 machine resolution."
+    "Unit Box synthetic builders bound every nonzero solver sample to one "
+    "percent by multiplicative construction. The pairwise relative-RMS budget "
+    "is twice that bound because each of two solvers contributes at most one "
+    "percent. Phase is reported as diagnostic-only because no physical phase "
+    "acceptance threshold has been derived. Absolute response resolution and "
+    "the correlation criterion remain provisional and are not physical claims."
 )
 UNIT_BOX_POLICY_INPUTS = {
     "solver_relative_uncertainty": SOLVER_RELATIVE_UNCERTAINTY,
@@ -168,7 +172,6 @@ def _unit_box_pitch_rao(frequencies: np.ndarray) -> np.ndarray:
 def _unit_box_rao_component(
     dof: DOF,
     frequencies: np.ndarray,
-    solver_bias: float = 0.0,
     seed: int = 0,
 ) -> RAOComponent:
     """Build a RAOComponent for the Unit Box with controlled solver variation.
@@ -176,8 +179,6 @@ def _unit_box_rao_component(
     Args:
         dof: Degree of freedom.
         frequencies: Frequency array (rad/s).
-        solver_bias: Small bias factor (e.g. 0.005 = 0.5% offset) simulating
-            inter-solver variation below the 1% tolerance threshold.
         seed: RNG seed for repeatable phase noise.
     """
     freq_data = _make_unit_box_freq_data()
@@ -202,10 +203,14 @@ def _unit_box_rao_component(
 
     magnitude = np.outer(base_mag_1d, heading_factors)
 
-    # Apply solver bias (< 1%) and tiny random noise (< 0.1%)
-    noise = rng.uniform(-0.001, 0.001, size=magnitude.shape)
-    magnitude = magnitude * (1.0 + solver_bias) + noise
-    magnitude = np.clip(magnitude, 0.0, None)
+    # Per-sample multiplicative variation makes the declared relative bound
+    # true at every scale, including the near-zero yaw response.
+    perturbation = rng.uniform(
+        -SOLVER_RELATIVE_UNCERTAINTY,
+        SOLVER_RELATIVE_UNCERTAINTY,
+        size=magnitude.shape,
+    )
+    magnitude = magnitude * (1.0 + perturbation)
 
     # Phase: physically, heave leads wave by ~90 deg near resonance
     if dof == DOF.HEAVE:
@@ -213,11 +218,10 @@ def _unit_box_rao_component(
         phase_1d = -np.degrees(np.arctan2(2 * 0.05 * frequencies / omega_n,
                                            1 - (frequencies / omega_n) ** 2))
     else:
-        phase_1d = rng.uniform(-30.0, 30.0, size=len(frequencies))
+        phase_rng = np.random.default_rng(seed=dof.value)
+        phase_1d = phase_rng.uniform(-30.0, 30.0, size=len(frequencies))
 
     phase = np.outer(phase_1d, np.ones(N_HEAD))
-    phase_noise = rng.uniform(-2.0, 2.0, size=phase.shape)
-    phase = phase + phase_noise
 
     return RAOComponent(
         dof=dof,
@@ -231,7 +235,6 @@ def _unit_box_rao_component(
 
 def _unit_box_added_mass(
     frequencies: np.ndarray,
-    solver_bias: float = 0.0,
     seed: int = 0,
 ) -> AddedMassSet:
     """Build frequency-dependent added mass matrices for the Unit Box.
@@ -251,12 +254,18 @@ def _unit_box_added_mass(
         for k in range(6):
             # Frequency-dependent: slightly higher at low freq
             freq_factor = 1.0 + 0.1 * np.exp(-freq)
-            m[k, k] = diag_approx[k] * freq_factor * (1.0 + solver_bias)
+            m[k, k] = diag_approx[k] * freq_factor
         # Add small off-diagonal coupling
-        m[0, 4] = m[4, 0] = 5.0 * (1.0 + solver_bias)
-        m[1, 3] = m[3, 1] = 5.0 * (1.0 + solver_bias)
-        noise = rng.uniform(-0.5, 0.5, size=(6, 6))
-        m = m + noise
+        m[0, 4] = m[4, 0] = 5.0
+        m[1, 3] = m[3, 1] = 5.0
+        upper = rng.uniform(
+            -SOLVER_RELATIVE_UNCERTAINTY,
+            SOLVER_RELATIVE_UNCERTAINTY,
+            size=(6, 6),
+        )
+        perturbation = np.triu(upper)
+        perturbation = perturbation + np.triu(perturbation, 1).T
+        m = m * (1.0 + perturbation)
         matrices.append(
             HydrodynamicMatrix(
                 matrix=m,
@@ -279,7 +288,6 @@ def _unit_box_added_mass(
 
 def _unit_box_damping(
     frequencies: np.ndarray,
-    solver_bias: float = 0.0,
     seed: int = 0,
 ) -> DampingSet:
     """Build frequency-dependent radiation damping matrices for the Unit Box."""
@@ -292,10 +300,15 @@ def _unit_box_damping(
     for i, freq in enumerate(frequencies):
         m = np.zeros((6, 6))
         for k in range(6):
-            m[k, k] = diag_base[k] * (freq / 1.0) * (1.0 + solver_bias)
-        noise = rng.uniform(-0.2, 0.2, size=(6, 6))
-        m = m + noise
-        m = np.clip(m, 0.0, None)  # damping must be non-negative
+            m[k, k] = diag_base[k] * (freq / 1.0)
+        upper = rng.uniform(
+            -SOLVER_RELATIVE_UNCERTAINTY,
+            SOLVER_RELATIVE_UNCERTAINTY,
+            size=(6, 6),
+        )
+        perturbation = np.triu(upper)
+        perturbation = perturbation + np.triu(perturbation, 1).T
+        m = m * (1.0 + perturbation)
         matrices.append(
             HydrodynamicMatrix(
                 matrix=m,
@@ -318,15 +331,12 @@ def _unit_box_damping(
 
 def _build_unit_box_results(
     solver_name: str,
-    solver_bias: float = 0.0,
     seed: int = 0,
 ) -> DiffractionResults:
     """Build DiffractionResults for the Unit Box hull.
 
     Args:
         solver_name: Solver identifier (AQWA, OrcaWave, BEMRosetta).
-        solver_bias: Small multiplicative bias (< 0.01) simulating inter-solver
-            numerical differences for the simple box geometry.
         seed: RNG seed for repeatable results.
 
     Returns:
@@ -336,7 +346,7 @@ def _build_unit_box_results(
     components: Dict = {}
     for dof in DOF:
         components[dof.name.lower()] = _unit_box_rao_component(
-            dof, FREQUENCIES, solver_bias=solver_bias, seed=seed,
+            dof, FREQUENCIES, seed=seed,
         )
 
     rao_set = RAOSet(
@@ -353,8 +363,8 @@ def _build_unit_box_results(
         analysis_tool=solver_name,
         water_depth=UNIT_BOX_WATER_DEPTH_M,
         raos=rao_set,
-        added_mass=_unit_box_added_mass(FREQUENCIES, solver_bias=solver_bias, seed=seed),
-        damping=_unit_box_damping(FREQUENCIES, solver_bias=solver_bias, seed=seed),
+        added_mass=_unit_box_added_mass(FREQUENCIES, seed=seed),
+        damping=_unit_box_damping(FREQUENCIES, seed=seed),
         created_date=now,
         source_files=[f"unit_box_{solver_name.lower()}.gdf"],
         phase_convention="iso_lead",
@@ -365,20 +375,17 @@ def _build_unit_box_results(
 def _build_unit_box_solver_set() -> Dict[str, DiffractionResults]:
     """Deterministic three-solver result set for the Unit Box.
 
-    AQWA: reference (no bias)
-    OrcaWave: +0.5% bias (GDF conversion minor scaling)
-    BEMRosetta: +0.3% bias (open-source solver numerical precision)
-
-    All biases are < 1%, expecting FULL or MAJORITY consensus.
+    Each solver uses a distinct deterministic seed for bounded per-sample
+    multiplicative variation. No solver-specific bias is assumed.
 
     Shared by the ``unit_box_solver_results`` fixture and by ``_regenerate()``
     so the committed golden artifacts and the tests are built from exactly the
     same inputs.
     """
     return {
-        "AQWA": _build_unit_box_results("AQWA", solver_bias=0.0, seed=0),
-        "OrcaWave": _build_unit_box_results("OrcaWave", solver_bias=0.005, seed=1),
-        "BEMRosetta": _build_unit_box_results("BEMRosetta", solver_bias=0.003, seed=2),
+        "AQWA": _build_unit_box_results("AQWA", seed=0),
+        "OrcaWave": _build_unit_box_results("OrcaWave", seed=1),
+        "BEMRosetta": _build_unit_box_results("BEMRosetta", seed=2),
     }
 
 
@@ -555,7 +562,7 @@ class TestUnitBoxMultiSolverComparator:
         report = comparator.generate_report()
         assert report.vessel_name == UNIT_BOX_NAME
         assert len(report.solver_names) == 3
-        assert report.overall_consensus == "MAJORITY"
+        assert report.overall_consensus == "FULL"
 
     def test_unit_box_overall_consensus_not_no_consensus(
         self,
@@ -566,7 +573,7 @@ class TestUnitBoxMultiSolverComparator:
             unit_box_solver_results, policy=_unit_box_policy(),
         )
         report = comparator.generate_report()
-        assert report.overall_consensus == "MAJORITY"
+        assert report.overall_consensus == "FULL"
 
 
 # ---------------------------------------------------------------------------
@@ -677,7 +684,7 @@ class TestUnitBoxBenchmarkRunner:
 
         with open(result.report_json_path) as fh:
             data = json.load(fh)
-        assert data["overall_consensus"] == "MAJORITY"
+        assert data["overall_consensus"] == "FULL"
 
     def test_benchmark_runner_dry_run_skips_plots(
         self,

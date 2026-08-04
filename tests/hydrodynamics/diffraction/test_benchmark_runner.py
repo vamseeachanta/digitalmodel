@@ -91,6 +91,8 @@ class TestBenchmarkConfig:
 
         # Assert
         assert config.solver_relative_uncertainty == pytest.approx(0.05)
+        assert config.response_absolute_resolution == pytest.approx(2e-9)
+        assert config.minimum_explained_variance == pytest.approx(0.9604)
         assert config.output_dir == Path("/tmp/custom_output")
         assert config.headings == [0.0, 90.0, 180.0]
 
@@ -104,17 +106,16 @@ class TestBenchmarkConfig:
 
         policy = BenchmarkRunner(config)._build_comparison_policy()
 
-        assert (
-            policy.relative_rms_tolerance,
-            policy.absolute_rms_floor,
-            policy.correlation_minimum,
-            policy.justification,
-        ) == (
-            0.05,
-            1e-10,
-            0.99,
-            "Synthetic test uncertainty budget.",
+        assert policy.relative_rms_tolerance == pytest.approx(
+            2.0 * config.solver_relative_uncertainty,
         )
+        assert policy.absolute_rms_floor == pytest.approx(
+            2.0 * config.response_absolute_resolution,
+        )
+        assert policy.correlation_minimum == pytest.approx(
+            np.sqrt(config.minimum_explained_variance),
+        )
+        assert policy.justification == "Synthetic test uncertainty budget."
 
 
 # ---------------------------------------------------------------------------
@@ -238,7 +239,9 @@ class TestRunFromResults:
                 "overall": data["overall_consensus"],
                 "correlation": pair["added_mass_correlations"]["1,1"],
                 "quality": pair["added_mass_quality"]["1,1"],
-                "visible": "Unavailable (INSUFFICIENT_DATA)" in (
+                "visible": (
+                    "Unavailable (IDENTICAL: 30, INSUFFICIENT_DATA: 6)"
+                ) in (
                     result.report_html_path.read_text(encoding="utf-8")
                 ),
             }

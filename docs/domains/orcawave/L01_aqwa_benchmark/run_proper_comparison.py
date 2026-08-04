@@ -21,6 +21,9 @@ sys.path.insert(0, orcaflex_api_path)
 from digitalmodel.diffraction.aqwa_lis_parser import AQWALISParser
 from digitalmodel.diffraction.aqwa_converter import AQWAConverter
 from digitalmodel.diffraction.output_schemas import DiffractionResults, DOF
+from digitalmodel.hydrodynamics.diffraction.benchmark_abscissa import (
+    order_solver_data,
+)
 from loguru import logger
 
 try:
@@ -75,6 +78,9 @@ class HeadingByHeadingComparator:
         ow_periods = self.orcawave['periods']
         ow_headings = self.orcawave['headings']
         ow_raos = self.orcawave['motion_raos']  # Using MOTION RAOs now!
+        ordered = order_solver_data(ow_freq, np.moveaxis(ow_raos, 1, 0))
+        ow_freq = ordered.frequencies
+        ow_raos = np.moveaxis(ordered.raos, 0, 1)
 
         # Find COMMON headings only (within 1 degree tolerance)
         # AQWA: -180, -135, -90, -45, 0, 45, 90, 135, 180

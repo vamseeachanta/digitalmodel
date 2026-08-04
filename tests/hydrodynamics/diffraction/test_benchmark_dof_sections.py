@@ -325,6 +325,26 @@ class TestBuildDofReportSections:
         assert isinstance(html, str)
         assert len(html) > 0
 
+    def test_refused_dof_renders_refusal_without_no_consensus(
+        self, two_identical_results,
+    ):
+        report = _make_benchmark_report(two_identical_results)
+        names = sorted(two_identical_results.keys())
+
+        html = build_dof_report_sections(
+            report,
+            two_identical_results,
+            names,
+            x_axis="frequency",
+            heading_x_axis=False,
+        )
+
+        assert (
+            ">REFUSED<" in html.replace("\n", "").replace(" ", ""),
+            "Comparison was refused" in html,
+            "no consensus" in html,
+        ) == (True, True, False)
+
     def test_contains_all_six_dofs(self, two_identical_results):
         """HTML must include sections for all 6 DOFs."""
         report = _make_benchmark_report(two_identical_results)

@@ -169,12 +169,15 @@ def build_dof_report_sections(
         ]
 
         cm = report.consensus_by_dof.get(dof_upper)
-        consensus_level = cm.consensus_level if cm else "UNKNOWN"
-        mean_corr = cm.mean_pairwise_correlation if cm else None
+        consensus_level = (
+            (cm.consensus_level or cm.comparison_status)
+            if cm else "UNKNOWN"
+        )
         consensus_color = {
             "FULL": "#27ae60",
             "MAJORITY": "#f39c12",
             "NO_CONSENSUS": "#e74c3c",
+            "REFUSED": "#7f8c8d",
         }.get(consensus_level, "#999")
 
         rao_comp = pair_data.get(dof_name)
@@ -279,7 +282,13 @@ def build_dof_report_sections(
             rao_comp.magnitude_stats.quality if rao_comp else None
         )
         phase_quality = rao_comp.phase_stats.quality if rao_comp else None
-        if mag_corr is None or phase_corr is None:
+        if consensus_level == "REFUSED":
+            obs = generate_dof_observations(
+                dof_cap, consensus_level, mag_corr or 0.0, phase_corr or 0.0,
+                max_mag_diff, max_phase_diff, _AMPLITUDE_UNITS[dof],
+                refusal_reason=cm.refusal_reason if cm else None,
+            )
+        elif mag_corr is None or phase_corr is None:
             obs = (
                 "Comparison unavailable: "
                 f"magnitude {format_optional_correlation(mag_corr, magnitude_quality)}, "

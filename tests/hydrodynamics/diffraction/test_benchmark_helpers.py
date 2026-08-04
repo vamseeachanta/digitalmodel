@@ -256,6 +256,24 @@ class TestGenerateDofObservations:
         assert "no consensus" in html
         assert "review recommended" in html
 
+    def test_refused_comparison_is_not_described_as_no_consensus(self):
+        html = generate_dof_observations(
+            dof_name="Heave",
+            consensus="REFUSED",
+            mag_corr=0.999,
+            phase_corr=0.999,
+            max_mag_diff=0.001,
+            max_phase_diff=1.0,
+            unit="m/m",
+            refusal_reason="UNCONFIGURED_POLICY",
+        )
+
+        assert (
+            "Comparison was refused" in html,
+            "UNCONFIGURED_POLICY" in html,
+            "no consensus" in html,
+        ) == (True, True, False)
+
     def test_virtually_identical_amplitude(self):
         html = generate_dof_observations(
             dof_name="Heave",

@@ -29,6 +29,9 @@ import numpy as np
 
 from digitalmodel.hydrodynamics.diffraction.benchmark_abscissa import (
     AbscissaConfig,
+    AbscissaGapError,
+    AbscissaOrderError,
+    AbscissaOverlapError,
     AlignedResponses,
     InsufficientSampling,
     align_responses,
@@ -39,6 +42,7 @@ REFUSAL_QUALITIES = {
     "INSUFFICIENT_DATA",
     "INSUFFICIENT_SAMPLING",
     "UNTRUSTED_SOURCE",
+    "INVALID_ABSCISSA",
 }
 
 
@@ -83,7 +87,7 @@ class ComparisonPolicy:
 
     @property
     def relative_rms_tolerance(self) -> float:
-        """Worst-case pair uncertainty from two solver contributions."""
+        """Worst-case pair budget: each of two solvers contributes at most u."""
         return 2.0 * self.solver_relative_uncertainty
 
     @property
@@ -110,6 +114,7 @@ class ComparisonPolicy:
             "absolute_rms_floor": self.absolute_rms_floor,
             "null_response_magnitude": self.null_response_magnitude,
             "correlation_minimum": self.correlation_minimum,
+            "phase_verdict_role": "diagnostic_only",
             "justification": self.justification,
             "abscissa": {
                 "minimum_samples": self.abscissa_config.min_samples,
@@ -152,6 +157,7 @@ class PairwiseRAOComparison:
     max_phase_diff_x: float = 0.0  # frequency (rad/s) where max phase diff occurs
     max_phase_diff_heading_idx: int = 0  # heading index where max phase diff occurs
     relative_rms_error: Optional[float] = None
+    refusal_reason: Optional[str] = None
 
 
 @dataclass
@@ -166,7 +172,7 @@ class HydrostaticComparison:
     cob_diff: List[float]             # [dx, dy, dz]
     waterplane_area_diff: float
     stiffness_matrix_diff: np.ndarray  # 6x6 matrix of absolute differences
-    stiffness_matrix_correlation: float
+    stiffness_matrix_correlation: Optional[float]
 
 
 @dataclass
@@ -489,6 +495,20 @@ class MultiSolverComparator:
             quality="UNTRUSTED_SOURCE",
         )
 
+    @staticmethod
+    def _invalid_abscissa_stats(shape: Tuple[int, ...]) -> DeviationStatistics:
+        """Represent an invalid comparison axis without losing the refusal."""
+        return DeviationStatistics(
+            mean_error=0.0,
+            max_error=0.0,
+            rms_error=0.0,
+            mean_abs_error=0.0,
+            correlation=None,
+            frequencies=np.array([], dtype=float),
+            errors=np.zeros(shape, dtype=float),
+            quality="INVALID_ABSCISSA",
+        )
+
     # ------------------------------------------------------------------
     # RAO comparison
     # ------------------------------------------------------------------
@@ -517,19 +537,42 @@ class MultiSolverComparator:
                 rao_a: RAOComponent = getattr(res_a.raos, dof_name)
                 rao_b: RAOComponent = getattr(res_b.raos, dof_name)
 
-                alignment = align_responses(
-                    rao_a.frequencies.values,
-                    rao_a.magnitude,
-                    rao_a.phase,
-                    rao_b.frequencies.values,
-                    rao_b.magnitude,
-                    rao_b.phase,
-                    config=(
-                        self.policy.abscissa_config
-                        if self.policy is not None
-                        else None
-                    ),
-                )
+                try:
+                    alignment = align_responses(
+                        rao_a.frequencies.values,
+                        rao_a.magnitude,
+                        rao_a.phase,
+                        rao_b.frequencies.values,
+                        rao_b.magnitude,
+                        rao_b.phase,
+                        config=(
+                            self.policy.abscissa_config
+                            if self.policy is not None
+                            else None
+                        ),
+                    )
+                except (
+                    AbscissaOrderError,
+                    AbscissaOverlapError,
+                    AbscissaGapError,
+                ) as exc:
+                    unavailable = self._invalid_abscissa_stats(
+                        rao_a.magnitude.shape,
+                    )
+                    pair_comparisons[dof_name] = PairwiseRAOComparison(
+                        dof=dof,
+                        solver_a=solver_a,
+                        solver_b=solver_b,
+                        magnitude_stats=unavailable,
+                        phase_stats=self._invalid_abscissa_stats(
+                            rao_a.phase.shape,
+                        ),
+                        max_magnitude_diff=0.0,
+                        max_phase_diff=0.0,
+                        relative_rms_error=None,
+                        refusal_reason=f"{type(exc).__name__}: {exc}",
+                    )
+                    continue
                 if isinstance(alignment, InsufficientSampling):
                     unavailable = self._insufficient_sampling_stats(
                         rao_a.magnitude.shape,
@@ -742,12 +785,19 @@ class MultiSolverComparator:
             # Correlation for stiffness matrix (flat)
             flat_a = h_a.stiffness_matrix.flatten()
             flat_b = h_b.stiffness_matrix.flatten()
-            if np.allclose(flat_a, flat_b):
+            if np.array_equal(flat_a, flat_b):
                 corr = 1.0
+            elif (
+                not np.all(np.isfinite(flat_a))
+                or not np.all(np.isfinite(flat_b))
+                or np.ptp(flat_a) == 0.0
+                or np.ptp(flat_b) == 0.0
+            ):
+                corr = None
             else:
                 with np.errstate(invalid='ignore'):
                     c = np.corrcoef(flat_a, flat_b)[0, 1]
-                    corr = float(c) if not np.isnan(c) else 1.0
+                    corr = float(c) if not np.isnan(c) else None
 
             result[key] = HydrostaticComparison(
                 solver_a=solver_a,
@@ -813,18 +863,13 @@ class MultiSolverComparator:
                     None,
                 )
                 if refusal_quality is not None:
-                    refused_pairs[pk] = refusal_quality
+                    refused_pairs[pk] = comp.refusal_reason or refusal_quality
                     pair_agrees[pk] = False
                 elif self.policy is None:
                     refused_pairs[pk] = "UNCONFIGURED_POLICY"
                     pair_agrees[pk] = False
                 else:
-                    pair_agrees[pk] = (
-                        corr is not None
-                        and relative_rms is not None
-                        and corr > self.policy.correlation_minimum
-                        and relative_rms < self.policy.relative_rms_tolerance
-                    )
+                    pair_agrees[pk] = self._rao_comparison_agrees(comp)
 
             high_pairs = [
                 pk for pk, agrees in pair_agrees.items() if agrees
@@ -909,15 +954,31 @@ class MultiSolverComparator:
         if self.policy is None:
             return None
         agrees = all(
-            comparison.magnitude_stats.correlation is not None
-            and comparison.relative_rms_error is not None
-            and comparison.magnitude_stats.correlation
-            > self.policy.correlation_minimum
-            and comparison.relative_rms_error
-            < self.policy.relative_rms_tolerance
+            self._rao_comparison_agrees(comparison)
             for comparison in rao_comps.values()
         )
         return "EXCELLENT" if agrees else "POOR"
+
+    def _rao_comparison_agrees(
+        self,
+        comparison: PairwiseRAOComparison,
+    ) -> bool:
+        """Apply the absolute null floor or the active-response criteria."""
+        if self.policy is None:
+            return False
+        if comparison.phase_stats.quality == "NULL_RESPONSE":
+            return (
+                comparison.magnitude_stats.rms_error
+                <= self.policy.absolute_rms_floor
+            )
+        return (
+            comparison.magnitude_stats.correlation is not None
+            and comparison.magnitude_stats.correlation
+            > self.policy.correlation_minimum
+            and comparison.relative_rms_error is not None
+            and comparison.relative_rms_error
+            < self.policy.relative_rms_tolerance
+        )
 
     def generate_report(self) -> BenchmarkReport:
         """Build a complete BenchmarkReport."""
@@ -952,7 +1013,7 @@ class MultiSolverComparator:
                 if quality in REFUSAL_QUALITIES
             }
             refusal_reasons.update(
-                quality
+                comparison.refusal_reason or quality
                 for comparison in rao_comparisons[pk].values()
                 for quality in (
                     comparison.magnitude_stats.quality,
@@ -1000,6 +1061,15 @@ class MultiSolverComparator:
             result.refusal_reason
             for result in pairwise_results.values()
             if result.refusal_reason is not None
+        )
+        report_refusals.update(
+            quality
+            for result in pairwise_results.values()
+            for quality in (
+                *result.added_mass_quality.values(),
+                *result.damping_quality.values(),
+            )
+            if quality in REFUSAL_QUALITIES
         )
         if report_refusals:
             overall = None
@@ -1128,6 +1198,7 @@ class MultiSolverComparator:
                     "phase_quality": comp.phase_stats.quality,
                     "max_magnitude_diff": float(comp.max_magnitude_diff),
                     "max_phase_diff": float(comp.max_phase_diff),
+                    "refusal_reason": comp.refusal_reason,
                 }
             am_corrs = {
                 f"{k[0]},{k[1]}": float(v) if v is not None else None
@@ -1154,7 +1225,11 @@ class MultiSolverComparator:
                     "cog_diff": [float(v) for v in hc.cog_diff],
                     "cob_diff": [float(v) for v in hc.cob_diff],
                     "waterplane_area_diff": float(hc.waterplane_area_diff),
-                    "stiffness_matrix_correlation": float(hc.stiffness_matrix_correlation),
+                    "stiffness_matrix_correlation": (
+                        float(hc.stiffness_matrix_correlation)
+                        if hc.stiffness_matrix_correlation is not None
+                        else None
+                    ),
                 }
 
             out[pk] = {

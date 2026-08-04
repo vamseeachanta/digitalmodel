@@ -8,6 +8,7 @@ No imports from other benchmark_* modules — this is the leaf dependency.
 """
 from __future__ import annotations
 
+import html
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -139,6 +140,7 @@ def generate_dof_observations(
     magnitude_at_max_phase_diff: float = 0.0,
     peak_magnitude: float = 0.0,
     phase_diff_at_visible_heading: bool = True,
+    refusal_reason: Optional[str] = None,
 ) -> str:
     """Generate human-readable observation text for a DOF.
 
@@ -159,6 +161,16 @@ def generate_dof_observations(
             f"<p>Solvers show <strong>majority agreement</strong> on "
             f"{dof_name}; minor outlier detected.</p>"
         )
+    elif consensus == "REFUSED":
+        reason = (
+            f" Reason: {html.escape(refusal_reason)}."
+            if refusal_reason else ""
+        )
+        lines.append(
+            f"<p><strong>Comparison was refused</strong> for {dof_name}; "
+            f"no verdict was produced.{reason}</p>"
+        )
+        return "\n".join(lines)
     else:
         lines.append(
             f"<p>Solvers show <strong>no consensus</strong> on "

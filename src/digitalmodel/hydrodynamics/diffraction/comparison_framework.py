@@ -24,6 +24,9 @@ from datetime import datetime
 import json
 
 from digitalmodel.hydrodynamics.diffraction.benchmark_abscissa import (
+    AbscissaGapError,
+    AbscissaOrderError,
+    AbscissaOverlapError,
     AlignedResponses,
     InsufficientSampling,
     align_responses,
@@ -52,6 +55,7 @@ class DeviationStatistics:
         "INSUFFICIENT_DATA",
         "INSUFFICIENT_SAMPLING",
         "UNTRUSTED_SOURCE",
+        "INVALID_ABSCISSA",
     ] = "COMPARED"
 
 
@@ -64,6 +68,7 @@ class RAOComparison:
     phase_diff: np.ndarray
     max_magnitude_diff_location: Tuple[int, int]  # (freq_idx, heading_idx)
     max_phase_diff_location: Tuple[int, int]
+    refusal_reason: Optional[str] = None
 
 
 @dataclass
@@ -207,14 +212,40 @@ class DiffractionComparator:
             if aqwa_rao is None or orcawave_rao is None:
                 continue
 
-            alignment = align_responses(
-                aqwa_rao.frequencies.values,
-                aqwa_rao.magnitude,
-                aqwa_rao.phase,
-                orcawave_rao.frequencies.values,
-                orcawave_rao.magnitude,
-                orcawave_rao.phase,
-            )
+            try:
+                alignment = align_responses(
+                    aqwa_rao.frequencies.values,
+                    aqwa_rao.magnitude,
+                    aqwa_rao.phase,
+                    orcawave_rao.frequencies.values,
+                    orcawave_rao.magnitude,
+                    orcawave_rao.phase,
+                )
+            except (
+                AbscissaOrderError,
+                AbscissaOverlapError,
+                AbscissaGapError,
+            ) as exc:
+                stats = DeviationStatistics(
+                    mean_error=0.0,
+                    max_error=0.0,
+                    rms_error=0.0,
+                    mean_abs_error=0.0,
+                    correlation=None,
+                    frequencies=np.array([], dtype=float),
+                    errors=np.zeros_like(aqwa_rao.magnitude),
+                    quality="INVALID_ABSCISSA",
+                )
+                comparisons[dof_name] = RAOComparison(
+                    dof=dof,
+                    statistics=stats,
+                    magnitude_diff=np.zeros_like(aqwa_rao.magnitude),
+                    phase_diff=np.zeros_like(aqwa_rao.phase),
+                    max_magnitude_diff_location=(0, 0),
+                    max_phase_diff_location=(0, 0),
+                    refusal_reason=f"{type(exc).__name__}: {exc}",
+                )
+                continue
             if isinstance(alignment, InsufficientSampling):
                 stats = DeviationStatistics(
                     mean_error=0.0,

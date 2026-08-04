@@ -322,11 +322,16 @@ def main() -> int:
     rao_comps = pair.get("rao_comparisons", {})
     print("\n  Phase correlations:")
     for dof, data in rao_comps.items():
-        phase_corr = data.get("phase_correlation", 0)
-        mag_corr = data.get("magnitude_correlation", 0)
-        status = "OK" if phase_corr > 0 else "NEGATIVE"
-        print(f"    {dof:6s}: phase_corr={phase_corr:+.4f}  "
-              f"mag_corr={mag_corr:.4f}  [{status}]")
+        phase_corr = data.get("phase_correlation")
+        mag_corr = data.get("magnitude_correlation")
+        status = (
+            "UNAVAILABLE" if phase_corr is None
+            else "OK" if phase_corr > 0 else "NEGATIVE"
+        )
+        phase_text = "Unavailable" if phase_corr is None else f"{phase_corr:+.4f}"
+        mag_text = "Unavailable" if mag_corr is None else f"{mag_corr:.4f}"
+        print(f"    {dof:6s}: phase_corr={phase_text}  "
+              f"mag_corr={mag_text}  [{status}]")
 
     print(f"\n  Report HTML: {result.report_html_path}")
     print(f"  Report JSON: {result.report_json_path}")

@@ -1932,7 +1932,7 @@ def _build_results_from_config() -> dict:
                         dof_upper = dof.upper()
                         corr = (
                             consensus.get(dof_upper, {})
-                            .get("mean_pairwise_correlation", 1.0)
+                            .get("mean_pairwise_correlation")
                         )
                         dof_rao = pw_raos.get(dof, {})
                         max_diff = dof_rao.get("max_magnitude_diff", 0.0)
@@ -1953,7 +1953,7 @@ def _build_results_from_config() -> dict:
                         dof_upper = dof.upper()
                         corr = (
                             consensus.get(dof_upper, {})
-                            .get("mean_pairwise_correlation", 1.0)
+                            .get("mean_pairwise_correlation")
                         )
                         dof_rao = pw_raos.get(dof, {})
                         max_diff = dof_rao.get("max_magnitude_diff", 0.0)
@@ -2207,15 +2207,19 @@ def _generate_master_html(results: dict, output_dir: Path) -> Path:
                     max_diff = s["max_abs_diff"]
                     ph_corr = s.get("phase_correlation", float("nan"))
                     ph_diff = s.get("max_phase_diff", 0.0)
-                    tip_parts = [f"Mag r: {corr:.8f}" if isinstance(corr, float) else f"Mag r: {corr}"]
+                    tip_parts = [f"Mag r: {corr:.8f}" if isinstance(corr, float) else "Mag r: Unavailable"]
                     if isinstance(ph_corr, float) and not math.isnan(ph_corr):
                         tip_parts.append(f"Phase r: {ph_corr:.8f}")
                     tip_parts.append(f"Max |diff|: {max_diff:.2e}")
                     tip_parts.append(f"Max phase diff: {ph_diff:.2f}°")
-                    if max_diff < 1e-6:
+                    if corr is not None and max_diff < 1e-6:
                         tip_parts[0] += " [identical — Δ<1e-6]"
                     tooltip = "&#10;".join(tip_parts)
-                    if max_diff < 1e-6:
+                    if corr is None:
+                        dof_cells.append(
+                            f'<td style="text-align:center;color:#9ca3af" title="{tooltip}">Unavailable</td>'
+                        )
+                    elif max_diff < 1e-6:
                         # Trivially identical results: show correlation in green,
                         # not "0.0" which is ambiguous and looks like zero correlation.
                         corr_display = f"{corr:.6f}" if isinstance(corr, float) else "1.000000"
@@ -2267,6 +2271,12 @@ def _generate_master_html(results: dict, output_dir: Path) -> Path:
                 mn_str = f"{mean_v:.6f}"
                 return f'<span style="color:{_corr_color(min_v)}">{m_str}</span> / <span style="color:{_corr_color(mean_v)};font-size:0.85em">{mn_str}</span>'
 
+            def _fmt_val(v: float) -> str:
+                """Format a correlation value as colored HTML."""
+                if not isinstance(v, (int, float)) or math.isnan(v):
+                    return '<span style="color:#9ca3af">N/A</span>'
+                return f'<span style="color:{_corr_color(v)}">{v:.6f}</span>'
+
             # Hydrostatic column
             h = summary.get("hydro")
             if h:
@@ -2282,8 +2292,11 @@ def _generate_master_html(results: dict, output_dir: Path) -> Path:
                 awp_d = _get(h, "waterplane_area_diff", 0.0)
                 mass_d = _get(h, "mass_diff", 0.0)
 
+                h_corr_text = (
+                    "Unavailable" if h_corr is None else f"{h_corr:.8f}"
+                )
                 h_tip_parts = [
-                    f"Stiffness r: {h_corr:.8f}",
+                    f"Stiffness r: {h_corr_text}",
                     f"CoG diff: ({', '.join([f'{v:.4f}' for v in cog_d])}) m",
                     f"CoB diff: ({', '.join([f'{v:.4f}' for v in cob_d])}) m",
                     f"Awp diff: {awp_d:.4f} m2",
@@ -2293,12 +2306,6 @@ def _generate_master_html(results: dict, output_dir: Path) -> Path:
             else:
                 h_cell = '<td style="text-align:center;color:#9ca3af">-</td>'
             
-            def _fmt_val(v: float) -> str:
-                """Format a correlation value as colored HTML (no <td> wrapper)."""
-                if not isinstance(v, (int, float)) or math.isnan(v):
-                    return '<span style="color:#9ca3af">N/A</span>'
-                return f'<span style="color:{_corr_color(v)}">{v:.6f}</span>'
-
             def _fmt_td(v: float) -> str:
                 """Format a correlation value as a full <td> element."""
                 return f'<td style="text-align:center">{_fmt_val(v)}</td>'

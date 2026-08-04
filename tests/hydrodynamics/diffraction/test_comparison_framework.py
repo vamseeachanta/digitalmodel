@@ -227,6 +227,27 @@ class TestCompareRAOs:
         max_phase = np.max(np.abs(surge_comp.phase_diff))
         assert max_phase < 30, f"Expected wrapped phase diff near 20, got {max_phase}"
 
+    def test_invalid_abscissa_is_returned_as_unavailable(
+        self, mock_diffraction_results,
+    ):
+        aqwa = _clone_results(mock_diffraction_results)
+        ow = _clone_results(mock_diffraction_results)
+        aqwa.raos.surge.frequencies.values = np.array([3.0, 2.0, 1.0])
+        aqwa.raos.surge.magnitude = aqwa.raos.surge.magnitude[:3]
+        aqwa.raos.surge.phase = aqwa.raos.surge.phase[:3]
+
+        comparison = DiffractionComparator(aqwa, ow).compare_raos()["surge"]
+
+        assert (
+            comparison.statistics.quality,
+            comparison.statistics.correlation,
+            comparison.refusal_reason,
+        ) == (
+            "INVALID_ABSCISSA",
+            None,
+            "AbscissaOrderError: first abscissa must be strictly increasing",
+        )
+
 
 # ---------------------------------------------------------------------------
 # Tests: compare_added_mass

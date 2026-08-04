@@ -311,9 +311,11 @@ def _extract_correlations_from_json(
     correlations: dict[str, DofCorrelation] = {}
     for dof in DOFS:
         vals = rao_comps.get(dof, {})
+        magnitude = vals.get("magnitude_correlation")
+        phase = vals.get("phase_correlation")
         correlations[dof] = DofCorrelation(
-            magnitude=vals.get("magnitude_correlation", float("nan")),
-            phase=vals.get("phase_correlation", float("nan")),
+            magnitude=float("nan") if magnitude is None else magnitude,
+            phase=float("nan") if phase is None else phase,
         )
     return correlations
 
@@ -337,9 +339,11 @@ def _extract_correlations_from_runner(
     correlations: dict[str, DofCorrelation] = {}
     for dof in DOFS:
         vals = rao_comps.get(dof, {})
+        magnitude = vals.get("magnitude_correlation")
+        phase = vals.get("phase_correlation")
         correlations[dof] = DofCorrelation(
-            magnitude=vals.get("magnitude_correlation", float("nan")),
-            phase=vals.get("phase_correlation", float("nan")),
+            magnitude=float("nan") if magnitude is None else magnitude,
+            phase=float("nan") if phase is None else phase,
         )
     return correlations
 
@@ -820,7 +824,7 @@ def _fmt_delta(val: float) -> str:
 
 def _isnan(val: float) -> bool:
     """Check for NaN (works without numpy)."""
-    return val != val
+    return val is None or val != val
 
 
 # ---------------------------------------------------------------------------

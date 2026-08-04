@@ -221,16 +221,31 @@ class TestPlotPairwiseCorrelationHeatmap:
         result = plot_pairwise_correlation_heatmap(report, tmp_path)
         assert result.exists()
 
-    def test_unavailable_pairwise_correlation_remains_absent(self, tmp_path):
+    def test_unavailable_pairwise_correlation_remains_absent(
+        self, tmp_path, monkeypatch,
+    ):
         report = _make_benchmark_report()
         pair = next(iter(report.pairwise_results.values()))
         for comparison in pair.rao_comparisons.values():
             comparison.magnitude_stats.correlation = None
             comparison.magnitude_stats.quality = "INSUFFICIENT_DATA"
 
-        result = plot_pairwise_correlation_heatmap(report, tmp_path)
+        captured = {}
 
-        assert result.exists() is True
+        def capture_figure(figure, _name, output_dir):
+            captured["figure"] = figure
+            path = output_dir / "benchmark_heatmap.html"
+            path.write_text("captured", encoding="utf-8")
+            return path
+
+        monkeypatch.setattr(
+            "digitalmodel.hydrodynamics.diffraction.benchmark_correlation.save_figure",
+            capture_figure,
+        )
+
+        plot_pairwise_correlation_heatmap(report, tmp_path)
+
+        assert captured["figure"].data[0].z[0][1] is None
 
 
 # ---------------------------------------------------------------------------

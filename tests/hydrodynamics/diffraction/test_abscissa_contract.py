@@ -159,19 +159,18 @@ def test_l01_grids_have_adequate_interval_overlap():
     values coincide.
     """
     api = _api()
-    lower = max(AQWA_L01_FREQUENCIES[0], ORCAWAVE_L01_FREQUENCIES[0])
-    upper = min(AQWA_L01_FREQUENCIES[-1], ORCAWAVE_L01_FREQUENCIES[-1])
-    smaller_span = min(
-        np.ptp(AQWA_L01_FREQUENCIES), np.ptp(ORCAWAVE_L01_FREQUENCIES)
+    config = api.AbscissaConfig(
+        max_relative_gap=1.0,
+        justification="Test isolates interval overlap from sampling density.",
     )
 
-    assert (lower, upper, smaller_span) == pytest.approx(
-        (
-            AQWA_L01_FREQUENCIES[0],
-            AQWA_L01_FREQUENCIES[-1],
-            np.ptp(AQWA_L01_FREQUENCIES),
-        )
+    grid = api.build_evaluation_grid(
+        AQWA_L01_FREQUENCIES,
+        ORCAWAVE_L01_FREQUENCIES,
+        config,
     )
+
+    np.testing.assert_array_equal(grid, AQWA_L01_FREQUENCIES)
 
 
 def test_l01_grids_are_refused_for_inadequate_sampling():
@@ -264,6 +263,20 @@ def test_source_gap_above_maximum_names_the_offending_interval():
             np.array([1.0, 1.2, 1.5, 1.8, 2.2, 2.5]),
             config,
         )
+
+
+def test_literal_eleven_percent_grid_rejects_default_ten_percent_bound():
+    api = _api()
+    frequencies = np.array([1.0, 1.11, 1.221, 1.3431, 1.47741])
+
+    with pytest.raises(
+        api.AbscissaGapError,
+        match=(
+            r"^first source relative gap 0\.110000 over "
+            r"\[1\.000000, 1\.110000\] rad/s exceeds maximum 0\.100000$"
+        ),
+    ):
+        api.build_evaluation_grid(frequencies, frequencies.copy())
 
 
 def test_non_positive_frequency_is_rejected():
