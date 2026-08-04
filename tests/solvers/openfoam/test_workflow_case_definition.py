@@ -397,7 +397,9 @@ def test_canonical_base_mpi_plan_uses_the_authored_solver(tmp_path: Path) -> Non
     }
     result = ofb.router(cfg)
     plan = result["openfoam_run_batch"]["cases"][0]["mpi_plan"]
-    assert "mpirun -np 2 --oversubscribe interFoam -parallel" in plan
+    # dm#1576 removed the oversubscription flag from every generated argv; the
+    # authored solver and the requested rank count are what this pins.
+    assert "mpirun -np 2 interFoam -parallel" in plan
 
 
 def test_canonical_base_mpi_plan_includes_set_fields(tmp_path: Path) -> None:
