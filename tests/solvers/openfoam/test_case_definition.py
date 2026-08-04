@@ -638,8 +638,17 @@ def test_every_canonical_authored_leaf_appears_in_the_ledger() -> None:
 
 
 def test_ledger_has_no_leaf_the_schema_does_not_accept() -> None:
-    request = _authored_request()
-    accepted = set(_accepted_paths(request))
+    # Enumerated over both motion families, because a rotational request cannot
+    # carry phase_shift_s and a translational one cannot carry origin_m. The
+    # union is exactly the set of leaves some valid request can carry, so a
+    # ledger entry naming anything else still fails here.
+    translational = _authored_with(
+        "motion",
+        {"type": "sway", "amplitude": 0.1, "amplitude_unit": "m",
+         "period_s": 1.5, "phase_shift_s": 0.25},
+    )
+    accepted = set(_accepted_paths(_authored_request()))
+    accepted |= set(_accepted_paths(translational))
     assert set(ACCEPTED_LEAF_CONSUMERS) - accepted == set()
 
 

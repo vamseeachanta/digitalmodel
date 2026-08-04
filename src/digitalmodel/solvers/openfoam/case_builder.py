@@ -8,7 +8,7 @@ configuration. Does not require OpenFOAM to be installed.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from loguru import logger
 
@@ -19,7 +19,7 @@ from .initial_fields import (
     write_velocity_field,
 )
 from .block_mesh import render_block_mesh_dict_body
-from .models import OpenFOAMCase, TurbulenceType
+from .models import OpenFOAMCase
 from .motion import render_dynamic_mesh_dict_body
 from .partial_fill import (
     partial_fill_box,
@@ -95,10 +95,12 @@ class OpenFOAMCaseBuilder:
         case: OpenFOAMCase,
         pressure_taps: Optional[List[PressureTap]] = None,
         *,
+        tap_write_control: str = "timeStep",
         tap_write_interval: int = 1,
     ) -> None:
         self._case = case
         self._pressure_taps: List[PressureTap] = list(pressure_taps or [])
+        self._tap_write_control = tap_write_control
         self._tap_write_interval = tap_write_interval
 
     def build(self, parent_dir: Path) -> Path:
@@ -186,6 +188,7 @@ class OpenFOAMCaseBuilder:
         if self._pressure_taps:
             block = render_pressure_tap_functions(
                 self._pressure_taps,
+                write_control=self._tap_write_control,
                 write_interval=self._tap_write_interval,
             )
             lines.append("\n" + block)
