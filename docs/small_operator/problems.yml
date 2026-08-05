@@ -441,18 +441,25 @@ problems:
         - "Identifies and has manual correction for weird/non-legible numbers"
         - "Output to Excel"
       tags: [field service, software, upstream]
-    why_this_is_the_best_item_on_the_list: >
-      A named operator wrote the spec himself, attached a price, and made it a public
-      race. Offline handwriting capture on iOS is a solved problem (on-device Vision
-      text recognition). Smallest, most concrete, highest-signal item in the catalogue.
-    open_questions:
-      - "Is the bounty still open? The post date was not captured — check before offering."
-      - "Did someone already claim it? Read the comments before promising anything."
-    our_position: >
-      Build it rather than bid on it, and let him decide afterwards whether it was
-      worth anything. $500 is not the point; a working artefact in the hands of an
-      operator who publicly asked for it is.
-    caution: "Do NOT claim the bounty in outreach before confirming it is unclaimed."
+    status: declined
+    decision_2026_08_05: >
+      DECLINED. Not the shape of work we take.
+    reasoning: >
+      A custom iPhone app is a one-off build with an indefinite maintenance tail —
+      iOS releases, camera APIs, handwriting models, and a support burden of exactly
+      one user. Our business is repeatable, sustainable engineering: the same physics
+      applied to the next operator's cards at near-zero marginal cost. A bespoke app
+      is the opposite shape, and taking it would train the relationship toward
+      custom software instead of engineering.
+    tempting_because: >
+      Recorded so the reasoning is not re-litigated: a named operator wrote the spec
+      himself, attached a price, and made it a public race. It is genuinely the
+      smallest and most concrete item in the catalogue. That is exactly why it needed
+      a decision rather than drift.
+    removed_from:
+      - "docs/small_operator/dynacard-matrix.html (panel deleted 2026-08-05)"
+      - "docs/small_operator/outreach/nudge-emails.md (offer removed; do-not-mention note added)"
+    if_he_raises_it: "Say plainly it is not the kind of work we take, and point him at someone who builds apps."
 
   # --- E. Capital & finance -------------------------------------------------
 

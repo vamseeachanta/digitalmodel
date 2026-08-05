@@ -64,13 +64,16 @@ this as a DM as-is (the body works either way).
 *179 words. Every bullet is an offer; the closing paragraph is the only thing that isn't,
 and it is what makes the offers credible.*
 
-### 1b — Optional, separate email
-Send **only after** checking the comments on "Tally app needed" — confirm the bounty is unclaimed.
+### Not offering: the tally app
 
-> **Subject:** Tally app — still open?
->
-> Is the $500 tally app still open? Offline scan to Excel with manual correction for bad
-> digits. I'd rather build it than bid on it — you decide afterwards if it was worth anything.
+Dropped deliberately, 2026-08-05. The $500 bounty is a **custom mobile app** — a one-off
+build with an indefinite maintenance tail (iOS releases, camera APIs, handwriting models,
+a support burden of one). Our business is repeatable, sustainable engineering: the same
+physics applied to the next operator's cards at near-zero marginal cost. A bespoke app is
+the opposite shape, and taking it would train the relationship in the wrong direction.
+
+Do not mention it in outreach. If Reed raises it, the honest answer is that it is not the
+kind of work we take, and that we would rather point him at somebody who builds apps.
 
 ---
 
@@ -126,7 +129,7 @@ Personalise line one with something they actually posted. **No quote, no send.**
 
 - [ ] Reed — get an email address, or send the body as a DM
 - [ ] Reed — approve the email
-- [ ] Reed — check "Tally app needed" comments before sending 1b
+- [x] Tally app — declined; custom-app maintenance overhead, not repeatable engineering
 - [ ] Neal — approve the email
 - [ ] PDFs attached, not private artifact links
 - [ ] We can turn a card file round quickly if two people say yes at once

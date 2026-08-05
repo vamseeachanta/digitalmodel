@@ -18,6 +18,7 @@ problems**, sourced from the same community.
 | `examples/pumpoff_diagnosis.py` | Runnable worked example. Prints its own analysis limit. |
 | `build_pdfs.py` | Renders the HTML to client-ready PDFs. |
 | `pdf/` | Build output. Regenerate rather than hand-edit. |
+| `_wordmark.svg` | The AceEngineer wordmark, inlined into both documents. |
 | `outreach/` | Draft nudge emails. **Nothing here has been sent.** |
 
 ## Building the client PDFs
@@ -48,6 +49,23 @@ Three things the build script exists to handle, none of which are optional:
 Headless Chrome on macOS writes the PDF and then **fails to exit**, so the script
 treats the timeout as expected and judges success by the file on disk, not the
 exit code. Don't "fix" that by raising the timeout.
+
+## Branding
+
+Both documents carry the canonical AceEngineer wordmark, taken from
+`aceengineer-website/assets/img/logo.svg` and inlined as `_wordmark.svg` with its
+two fills rewired to CSS custom properties, so the mark inverts with the theme the
+way `logo-inverse.svg` does on the site. The document palette follows it: navy
+`#0B3D91` for headings, teal `#2BB2A6` for rules and markers, cool neutrals under
+both. Amber is now reserved for semantic warnings only.
+
+**A discrepancy to be aware of:** `aceengineer-website/brand/BRAND.md` states the
+logo uses a "plum/copper family" and explicitly *not* navy/teal. The committed
+`logo.svg` is navy/teal, `tests/js/brand-assets.test.js` asserts navy/teal, and the
+wordmark commit (`510aa2e`) is newer than BRAND.md (`47694fc`). We followed the
+asset and the test. **BRAND.md appears stale and should be corrected upstream** —
+if it turns out BRAND.md is right and the asset is wrong, these two documents
+inherit the error and need re-paletting.
 
 ## The routing pattern (inherited from `collide_pe`)
 
