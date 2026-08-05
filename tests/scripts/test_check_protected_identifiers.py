@@ -29,9 +29,16 @@ MANIFEST = REPO_ROOT / "scripts" / "legal" / "protected-surface-v1.json"
 # Synthetic rule values. Deliberately shaped like the real classes -- an
 # alphanumeric code that can be followed by an underscore, and a two-name
 # co-occurrence class -- without being any real identifier.
-SYNTH_A = "zq7731"
-SYNTH_B1 = "orgalpha"
-SYNTH_B2 = "projbeta"
+#
+# The three lines below carry an exact-line sentinel. They are the only lines in
+# this repository holding a literal rule value, and a synthetic-rule scan of the
+# tracked tree finds them without it -- which it did, in CI, before these were
+# added. That is the self-coverage property working, not a nuisance: the sentinel
+# is per-line and there is no file-level form, so nothing here is exempt beyond
+# these exact three lines.
+SYNTH_A = "zq7731"  # protected-identifier-synthetic
+SYNTH_B1 = "orgalpha"  # protected-identifier-synthetic
+SYNTH_B2 = "projbeta"  # protected-identifier-synthetic
 
 EXIT_CLEAN = 0
 EXIT_FINDINGS = 1
@@ -468,6 +475,7 @@ def test_scanner_scans_its_own_implementation_and_tests(tmp_path: Path) -> None:
         "scripts/legal/protected_surface_ownership.py",
         "scripts/legal/protected-surface-v1.json",
         "scripts/legal/public_surface_snapshot.py",
+        "scripts/legal/synthetic_rules.py",
         "scripts/legal/verify_public_surface.sh",
         "tests/scripts/test_check_protected_identifiers.py",
         "tests/scripts/test_public_surface_snapshot.py",

@@ -190,17 +190,12 @@ jobs:
       - name: Synthetic-rule scan of the tracked tree
         run: |
           RULES="${RUNNER_TEMP}/synthetic-rules.json"
-          # Written outside the repository on purpose: the scanner enumerates its
-          # own tree, so committing any rule value would make it fail on itself.
-          cat > "$RULES" <<'JSON'
-          {
-            "authority": "synthetic",
-            "rules": {
-              "PID-A1": {"class": "A", "values": ["zq7731"]},
-              "PID-B1": {"class": "B", "values": ["orgalpha", "projbeta"]}
-            }
-          }
-          JSON
+          # Generated outside the repository. The values live in a Python module
+          # whose value lines carry an exact-line sentinel; a JSON heredoc here
+          # could not carry one, and the scanner enumerates its own tree, so those
+          # lines would have been findings against themselves. They were, before
+          # this changed.
+          python3 scripts/legal/synthetic_rules.py > "$RULES"
           python3 scripts/legal/check_protected_identifiers.py \
             --manifest scripts/legal/protected-surface-v1.json \
             --rules "$RULES" --root . --print-enumeration --enumerate-only \
