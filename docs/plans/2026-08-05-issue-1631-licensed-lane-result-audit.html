@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Licensed-lane result audit — issue #1631</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #1a1d21; --muted: #5b6470; --rule: #dfe3e8;
+    --fail: #b3261e; --warn: #8a6100; --none: #4a5158; --accent: #10456b;
+    --panel: #f6f8fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171a; --fg: #e8ecef; --muted: #9aa4b0; --rule: #2b3138;
+      --fail: #ff8a80; --warn: #f0c060; --none: #9aa4b0; --accent: #7db8e8;
+      --panel: #1b1f24;
+    }
+  }
+  body { background: var(--bg); color: var(--fg); margin: 0;
+         font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 60rem; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+  h1 { font-size: 1.65rem; line-height: 1.25; margin: 0 0 .35rem; }
+  h2 { font-size: 1.15rem; margin: 2.25rem 0 .6rem; padding-top: 1rem;
+       border-top: 1px solid var(--rule); }
+  .sub { color: var(--muted); margin: 0 0 1.5rem; }
+  .panel { background: var(--panel); border: 1px solid var(--rule);
+           border-radius: 8px; padding: .9rem 1.1rem; margin: 1rem 0; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: .92rem; min-width: 44rem; }
+  th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--rule);
+           vertical-align: top; }
+  th { font-weight: 600; color: var(--muted); font-size: .82rem;
+       text-transform: uppercase; letter-spacing: .03em; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .88em; }
+  .v-fail { color: var(--fail); font-weight: 700; }
+  .v-warn { color: var(--warn); font-weight: 600; }
+  .v-none { color: var(--none); }
+  .absent { color: var(--fail); font-weight: 600; }
+  a { color: var(--accent); }
+  ul { padding-left: 1.2rem; }
+  li { margin: .3rem 0; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Licensed-lane result audit</h1>
+<p class="sub">
+  Issue <a href="https://github.com/vamseeachanta/digitalmodel/issues/1631">#1631</a> ·
+  measured 2026-08-05 against <code>vamseeachanta/deckhand-licensed-runs-queue</code>
+  @ <code>3ae4e8ca</code>, read-only · digitalmodel <code>origin/main</code> @ <code>0fdeea67</code>
+</p>
+
+<div class="panel">
+  <strong>None of the twelve runs below was gated.</strong> Every one recorded
+  <code>state: finished</code> and <code>returncode: 0</code>. Two carried a validator
+  verdict of <code>FAIL</code>; five carried <code>WARNING</code>; none carried
+  <code>PASS</code>. Three returned no artifacts at all and were still indistinguishable,
+  at the result level, from a run that produced everything.
+</div>
+
+<h2>The twelve results</h2>
+
+<div class="scroll">
+<table>
+  <thead>
+    <tr>
+      <th>Run ID</th><th>Workflow</th><th>Requested</th>
+      <th>Validator verdict</th><th><code>returned_files</code></th><th>Result state</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td><code>lr_acma_ff132001b7ad</code></td><td>orcaflex-strength-post</td><td>2026-06-20</td>
+        <td class="v-none">no validator file</td><td class="absent">absent</td><td>finished / 0</td></tr>
+    <tr><td><code>lr_acma_8de9c018adbd</code></td><td>orcawave-diffraction-solve</td><td>2026-06-21</td>
+        <td class="v-none">no validator file</td><td class="absent">absent</td><td>finished / 0</td></tr>
+    <tr><td><code>lr_acma_cd6fe46df9a4</code></td><td>aqwa-diffraction-solve</td><td>2026-07-10</td>
+        <td class="v-none">no validator file</td><td class="absent">absent</td><td>finished / 0</td></tr>
+    <tr><td><code>lr_acma_38e54930f973</code></td><td>orcawave-diffraction-solve</td><td>2026-07-10</td>
+        <td class="v-none">no validator file</td><td>present</td><td>finished / 0</td></tr>
+    <tr><td><code>lr_acma_3bd7c32b74db</code></td><td>orcawave-diffraction-solve</td><td>2026-07-10</td>
+        <td class="v-warn">WARNING</td><td>present</td><td>finished / 0</td></tr>
+    <tr><td><code>lr_acma_59bf094e4182</code></td><td>orcawave-diffraction-solve</td><td>2026-07-10</td>
+        <td class="v-warn">WARNING</td><td>present</td><td>finished / 0</td></tr>
+    <tr><td><code>lr_acma_2a4a51f24387</code></td><td>orcawave-diffraction-solve</td><td>2026-07-13</td>
+        <td class="v-fail">FAIL</td><td>present</td><td>finished / 0</td></tr>
+    <tr><td><code>lr_acma_36fb1ffbc5e0</code></td><td>orcawave-diffraction-solve</td><td>2026-07-13</td>
+        <td class="v-fail">FAIL</td><td>present</td><td>finished / 0</td></tr>
+    <tr><td><code>lr_acma_eba456319261</code></td><td>openfoam-run-batch</td><td>2026-07-13</td>
+        <td class="v-none">no validator file</td><td>present</td><td>finished / 0</td></tr>
+    <tr><td><code>lr_acma_bb24945c4b8b</code></td><td>aqwa-diffraction-solve</td><td>2026-07-13</td>
+        <td class="v-warn">WARNING</td><td>present</td><td>finished / 0</td></tr>
+    <tr><td><code>lr_acma_c3b4e7d55c83</code></td><td>aqwa-diffraction-solve</td><td>2026-07-17</td>
+        <td class="v-warn">WARNING</td><td>present</td><td>finished / 0</td></tr>
+    <tr><td><code>lr_acma_ac735070ce14</code></td><td>aqwa-diffraction-solve</td><td>2026-07-18</td>
+        <td class="v-warn">WARNING</td><td>present</td><td>finished / 0</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>What the evidence refutes</h2>
+
+<p>
+  The issue as filed named three OrcaFlex mock mechanisms as the cause. The workflow
+  column above settles it: ten of the twelve runs are diffraction solves, one is
+  OpenFOAM, and the single OrcaFlex workflow — <code>orcaflex-strength-post</code> —
+  routes through <em>none</em> of the three modules named. There is no <code>.sim</code>
+  file and no <code>Mock simulation for</code> artifact anywhere in the queue. The two
+  <code>FAIL</code> runs were real licensed OrcaWave solves on a Windows host that
+  produced physically invalid output.
+</p>
+<p>
+  A fix confined to those three files would have shipped green and turned zero of the
+  twelve red.
+</p>
+
+<h2>What actually failed</h2>
+
+<p>
+  <code>src/digitalmodel/__main__.py:main()</code> ended with a bare <code>engine()</code>
+  whose return value was discarded, with no <code>sys.exit</code> on the engine-contract
+  path. <code>python -m digitalmodel &lt;input.yml&gt;</code> therefore exited 0 regardless
+  of what the engine concluded, on any host, licensed or not. Deckhand consumes that
+  command through a thin <code>subprocess.run</code> wrapper, so that exit status was the
+  entire success signal.
+</p>
+<p>
+  Separately, <code>RunResult.validation_verdict</code> was already computed, already typed
+  against the closed five-value contract, and already attached to the result object — and
+  was read by nobody. The router recorded <code>result.status</code> and dropped the verdict.
+</p>
+
+<h2>Three runs returned nothing and still passed</h2>
+
+<p>
+  <code>lr_acma_ff132001b7ad</code>, <code>lr_acma_8de9c018adbd</code> and
+  <code>lr_acma_cd6fe46df9a4</code> have no <code>returned_files</code> key at all. The
+  issue and the plan named only the first. A completed run that produced nothing now
+  refuses, so all three would report non-zero today.
+</p>
+
+<h2>Disposition</h2>
+
+<ul>
+  <li><strong>No file in the queue repository was modified by this work.</strong> It was
+      read-only throughout. This report is the durable record, and it lives in the
+      repository that caused the defect.</li>
+  <li><strong>The results are not deleted.</strong> They are the only evidence of the
+      defect.</li>
+  <li><strong>Annotation or quarantine of the twelve result files</strong> belongs to a
+      follow-on issue against <code>deckhand-licensed-runs-queue</code>.</li>
+  <li><strong>Re-running the twelve is not proposed here.</strong> It consumes the single
+      OrcaWave/AQWA seat, and the two <code>FAIL</code> cases are <em>expected</em> to
+      refuse, which produces no information this audit does not already record. Recommended
+      only after the owner rules on the underlying physics.</li>
+</ul>
+
+<h2>Why WARNING still passes</h2>
+
+<p>
+  Five of the seven validated runs are <code>WARNING</code>. A gate that refused
+  <code>WARNING</code> as well as <code>FAIL</code> would have refused five of seven, read
+  as rigorous, and made the lane unusable within a day. The boundary is not chosen from
+  this distribution: it is the pre-existing vocabulary of
+  <code>output_validator._determine_overall_status</code>, specified under #611/#625 long
+  before any of these runs existed, and it is reused here unchanged.
+</p>
+<p>
+  That boundary has a known weakness, inherited knowingly rather than silently: it returns
+  <code>FAIL</code> only when an issue string contains <code>negative</code> or
+  <code>missing</code>. Under that rule, "added-mass matrix not symmetric at all 33
+  frequencies" scores as <code>WARNING</code>. Tightening it is a defensible stricter
+  choice, and it is the owner's call in its own issue with its own evidence — retuning it
+  here would be fitting a constant to the data being judged.
+</p>
+
+</main>
+</body>
+</html>
