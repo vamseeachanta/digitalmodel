@@ -1,0 +1,456 @@
+<title>Dynacard review matrix — AceEngineer</title>
+<style>
+  :root {
+    --paper:#ffffff; --ground:#f2f0ec; --ink:#1b1917; --ink-soft:#55504a;
+    --ink-faint:#8a837a; --rule:#ddd8d0; --accent:#b47512; --accent-ink:#7a4d06;
+    --ok:#2f6b3a; --warn:#8a5a1f; --stop:#9c3327; --panel:#faf8f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:#16151a; --ground:#100f13; --ink:#ece8e1; --ink-soft:#a8a199;
+      --ink-faint:#736d65; --rule:#2e2c31; --accent:#e0a430; --accent-ink:#f0c266;
+      --ok:#6fc27e; --warn:#d9a95e; --stop:#e0756a; --panel:#1c1b21;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#16151a; --ground:#100f13; --ink:#ece8e1; --ink-soft:#a8a199;
+    --ink-faint:#736d65; --rule:#2e2c31; --accent:#e0a430; --accent-ink:#f0c266;
+    --ok:#6fc27e; --warn:#d9a95e; --stop:#e0756a; --panel:#1c1b21;
+  }
+  :root[data-theme="light"] {
+    --paper:#ffffff; --ground:#f2f0ec; --ink:#1b1917; --ink-soft:#55504a;
+    --ink-faint:#8a837a; --rule:#ddd8d0; --accent:#b47512; --accent-ink:#7a4d06;
+    --ok:#2f6b3a; --warn:#8a5a1f; --stop:#9c3327; --panel:#faf8f5;
+  }
+
+  html { background: var(--ground); }
+  body {
+    background: var(--ground); color: var(--ink); margin: 0;
+    font-family: Charter, "Bitstream Charter", "Iowan Old Style", Georgia, serif;
+    font-size: 16px; line-height: 1.55; -webkit-font-smoothing: antialiased;
+  }
+  .sheet {
+    max-width: 1180px; margin: 0 auto; background: var(--paper);
+    border-left: 1px solid var(--rule); border-right: 1px solid var(--rule);
+    padding: 0 clamp(18px,4vw,52px) 72px;
+    display: flex; flex-direction: column; gap: 40px;
+  }
+  .mono {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .sans { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+
+  header { padding-top: 38px; display: flex; flex-direction: column; gap: 16px; }
+  .rule-top { height: 5px; background: var(--accent); margin: 0 clamp(-18px,-4vw,-52px); }
+  .firm {
+    display: flex; justify-content: space-between; align-items: baseline;
+    flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--rule); padding-bottom: 12px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint);
+  }
+  .firm .name { color: var(--ink); font-weight: 700; letter-spacing: .18em; }
+  h1 {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 800; letter-spacing: -.02em; text-wrap: balance;
+    font-size: clamp(27px,4.4vw,40px); line-height: 1.08; margin: 6px 0 0;
+  }
+  .standfirst { font-size: 18px; color: var(--ink-soft); max-width: 66ch; margin: 0; }
+  p { margin: 0; }
+
+  /* ---- matrix ---- */
+  .scroller { overflow-x: auto; }
+  table.matrix { border-collapse: collapse; width: 100%; min-width: 940px; }
+  table.matrix th {
+    text-align: left; vertical-align: bottom; padding: 0 16px 9px 0;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--accent-ink); border-bottom: 2px solid var(--accent);
+  }
+  table.matrix td {
+    vertical-align: top; padding: 20px 16px 20px 0;
+    border-bottom: 1px solid var(--rule); font-size: 15px;
+  }
+  table.matrix td:last-child, table.matrix th:last-child { padding-right: 0; }
+  col.c-case  { width: 19%; }
+  col.c-input { width: 24%; }
+  col.c-meth  { width: 19%; }
+  col.c-diag  { width: 21%; }
+  col.c-fwd   { width: 17%; }
+
+  .case-title {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 700; font-size: 16px; line-height: 1.25; margin-bottom: 6px;
+    text-wrap: balance;
+  }
+  .case-meta {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 10.5px; letter-spacing: .06em; color: var(--ink-faint);
+    text-transform: uppercase;
+  }
+  ul { margin: 0; padding-left: 17px; display: flex; flex-direction: column; gap: 5px; }
+  li::marker { color: var(--accent); }
+  .kv { display: flex; flex-direction: column; gap: 3px; }
+  .kv span { display: block; }
+  .kv b { font-weight: 600; }
+
+  .tag {
+    display: inline-block; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+    border: 1px solid currentColor; border-radius: 2px; padding: 1px 5px;
+    margin-bottom: 7px;
+  }
+  .t-ok   { color: var(--ok); }
+  .t-warn { color: var(--warn); }
+  .t-stop { color: var(--stop); }
+  .t-hyp  { color: var(--accent-ink); }
+
+  .said {
+    border-left: 3px solid var(--rule); padding-left: 11px; color: var(--ink-soft);
+    font-style: italic; font-size: 14px;
+  }
+
+  /* ---- callout ---- */
+  .panel {
+    background: var(--panel); border: 1px solid var(--rule);
+    border-top: 3px solid var(--stop); padding: 22px clamp(16px,3vw,28px);
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .panel.neutral { border-top-color: var(--accent); }
+  .panel h2 {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 20px; font-weight: 700; margin: 0; letter-spacing: -.01em;
+  }
+  h2.sec {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 13px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--accent-ink); margin: 0 0 14px; padding-bottom: 8px;
+    border-bottom: 2px solid var(--accent);
+  }
+  section { display: flex; flex-direction: column; }
+
+  table.plain { border-collapse: collapse; width: 100%; min-width: 420px; font-size: 15px; }
+  table.plain th, table.plain td {
+    text-align: left; padding: 9px 14px 9px 0; border-bottom: 1px solid var(--rule);
+  }
+  table.plain th {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 11px;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); font-weight: 700;
+  }
+  td.num {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .bad { color: var(--stop); font-weight: 600; }
+
+  footer {
+    border-top: 1px solid var(--rule); padding-top: 18px;
+    display: flex; flex-direction: column; gap: 7px;
+    color: var(--ink-faint); font-size: 13.5px;
+  }
+
+  @media (max-width: 900px) {
+    table.matrix, table.matrix thead, table.matrix tbody,
+    table.matrix tr, table.matrix td { display: block; width: 100%; }
+    table.matrix { min-width: 0; }
+    table.matrix thead { display: none; }
+    table.matrix tr {
+      border-bottom: 2px solid var(--accent); padding: 20px 0; display: flex;
+      flex-direction: column; gap: 14px;
+    }
+    table.matrix td { border: 0; padding: 0; }
+    table.matrix td[data-col]::before {
+      content: attr(data-col); display: block; margin-bottom: 5px;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 10px; font-weight: 700; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--accent-ink);
+    }
+  }
+</style>
+
+<div class="sheet">
+
+  <header>
+    <div class="rule-top"></div>
+    <div class="firm">
+      <span class="name">AceEngineer</span>
+      <span>Dynacard review matrix · 5 August 2026</span>
+    </div>
+    <h1>Every card you've posted, what we did with it, and what we still owe you.</h1>
+    <p class="standfirst">
+      Four questions across two threads. For each one: the data actually available,
+      the method applied to it, what came out, and the next step. Working through
+      your pump-off cards turned up a defect in our own fillage calculation — it is
+      documented at the end, along with the fix and what it now reads instead.
+    </p>
+  </header>
+
+  <section>
+    <div class="scroller">
+      <table class="matrix">
+        <colgroup>
+          <col class="c-case" /><col class="c-input" /><col class="c-meth" />
+          <col class="c-diag" /><col class="c-fwd" />
+        </colgroup>
+        <thead>
+          <tr>
+            <th scope="col">Case</th>
+            <th scope="col">Input data</th>
+            <th scope="col">Methodology</th>
+            <th scope="col">Diagnosis</th>
+            <th scope="col">Way forward</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <tr>
+            <td data-col="Case">
+              <div class="case-title">Undulation on the top end of the card</div>
+              <div class="case-meta">"Dynamometer Discussions" · Jul 2026</div>
+              <p class="said" style="margin-top:9px">"Why is there so much undulation on the top end of the card? Break it down for me!"</p>
+            </td>
+            <td data-col="Input data">
+              <div class="kv">
+                <span><b>41"</b> stroke at surface</span>
+                <span><b>4,300 ft</b> pump depth</span>
+                <span><b>6.4</b> SPM</span>
+                <span><b>1¼"</b> top hold-down insert pump</span>
+                <span><b>4,200 ft</b> of ¾" steel rods</span>
+                <span><b>C-66</b> prime mover</span>
+                <span>23 BOPD, no water</span>
+                <span>25 psi casing · Baird valve 150 psi</span>
+                <span style="color:var(--ink-faint)">Card supplied as an image, not a data file</span>
+              </div>
+            </td>
+            <td data-col="Methodology">
+              <ul>
+                <li>Card digitized from the posted image, with a stated error budget</li>
+                <li>Everitt–Jennings surface-to-downhole conversion (SPE 18189)</li>
+                <li>Fillage from plunger stroke, not surface stroke</li>
+              </ul>
+            </td>
+            <td data-col="Diagnosis">
+              <span class="tag t-stop">Superseded — we got two things wrong</span>
+              <ul>
+                <li>We quoted a gearbox rating derived from "C-66". You called it the <em>prime mover</em>. It is an engine designation and carries no gearbox rating — that was ours to get right and we didn't.</li>
+                <li>Fillage was computed off surface stroke instead of plunger stroke.</li>
+                <li>Walter Phillips also corrected section 3b on the peaks.</li>
+              </ul>
+            </td>
+            <td data-col="Way forward">
+              <ul>
+                <li>Re-issue corrected, against the raw file rather than a digitized image</li>
+                <li>Still blocked on a real gearbox rating before any torque or counterbalance work</li>
+                <li>Undulation candidates to test explicitly: rod-string harmonics vs. a pound echo</li>
+              </ul>
+            </td>
+          </tr>
+
+          <tr>
+            <td data-col="Case">
+              <div class="case-title">Pump-off progression across five minutes</div>
+              <div class="case-meta">"Pump cards — what happened?!" · Aug 2026</div>
+              <p class="said" style="margin-top:9px">"What happened to my pump card over the course of this 5 minutes?! And what things might I do to fix it?"</p>
+            </td>
+            <td data-col="Input data">
+              <div class="kv">
+                <span>Card sequence, 5-minute window, downhole view</span>
+                <span>Position <b>0–38 in</b>, load <b>−600 to +1,800 lb</b></span>
+                <span>"<b>Not on a controller yet</b>"</span>
+                <span>Clutch kick-out prepared by Amplified, not yet installed</span>
+                <span style="color:var(--ink-faint)">Screen photographs, not an export</span>
+              </div>
+            </td>
+            <td data-col="Methodology">
+              <ul>
+                <li>Pump card forward-modelled <em>up</em> the rod string to a surface card, then solved back down — so the solver performs a real conversion instead of stripping a rod string that was never there</li>
+                <li>Fillage recovered per stroke</li>
+                <li>Transfer point swept full → pumped off to trace the progression</li>
+              </ul>
+            </td>
+            <td data-col="Diagnosis">
+              <span class="tag t-ok">Reproduced end to end</span>
+              <p>Full barrel to near-empty across the five minutes, matching what Andrew Aday read off it. Fillage now tracks monotonically down the whole pounding range, 88% to 12%, with no reversal. Getting there exposed a defect in our own corner detection — panel below — which is fixed.</p>
+            </td>
+            <td data-col="Way forward">
+              <ul>
+                <li>Send the raw file and we return your fillage stroke by stroke</li>
+                <li>Send one <em>full-pump</em> card too — a full pump reads 88% on this scale, not 100%, so a "shut down at 75%" rule means something different here than it sounds. That calibration has to come first.</li>
+                <li>Then a setpoint, with the barrels it costs stated separately</li>
+              </ul>
+            </td>
+          </tr>
+
+          <tr>
+            <td data-col="Case">
+              <div class="case-title">Noise in the bottom-left corner</div>
+              <div class="case-meta">"Pump cards — what happened?!" · Aug 2026</div>
+              <p class="said" style="margin-top:9px">"Could the noise in this corner be from gas in the pump decompressing…? There isn't really any noise here when the pump is full!"</p>
+            </td>
+            <td data-col="Input data">
+              <div class="kv">
+                <span>Derived downhole card, lower-left segment</span>
+                <span class="bad">Unknown: is the dyno accelerometer-based?</span>
+                <span style="color:var(--ink-faint)">Walter asked this in-thread and it went unanswered — it decides the whole question</span>
+              </div>
+            </td>
+            <td data-col="Methodology">
+              <ul>
+                <li>Separate numerical artefact from physical signal before interpreting</li>
+                <li>Position is double-integrated from acceleration, so error accumulates within a stroke</li>
+                <li>The lower-left sits immediately after the stroke-to-stroke discontinuity, before the wave equation settles</li>
+              </ul>
+            </td>
+            <td data-col="Diagnosis">
+              <span class="tag t-hyp">Not answerable from this data</span>
+              <ul>
+                <li>Walter Phillips: don't over-read that corner; reprocess first. Gas expansion is visible at the <strong>top</strong> left, not the bottom left.</li>
+                <li>Andrew Aday: some gas interference in the slope near fluid/plunger contact, possibly a tag present only when the pump isn't full.</li>
+                <li>Our position: the corner is where the derived card is least trustworthy, so it is the worst place to hang a diagnosis.</li>
+              </ul>
+            </td>
+            <td data-col="Way forward">
+              <ul>
+                <li>Confirm the dyno type — one answer, and it settles this</li>
+                <li>We produce a trust-band card: which segments carry enough numerical confidence to diagnose on, marked directly on the card</li>
+              </ul>
+            </td>
+          </tr>
+
+          <tr>
+            <td data-col="Case">
+              <div class="case-title">Repeated tubing splits — and whether they're the same problem</div>
+              <div class="case-meta">"Tubing Wear — Rod pump"</div>
+              <p class="said" style="margin-top:9px">"Regular holes in tubing, typically splits. Never on the same joint. No scale or corrosion issues… does J55 wear faster than L or N80?"</p>
+            </td>
+            <td data-col="Input data">
+              <div class="kv">
+                <span>Repeated splits, <b>never the same joint</b></span>
+                <span>No scale, no corrosion</span>
+                <span>Options under consideration: tubing rotators, lined tubing, better rod guides, optimising pump-off</span>
+                <span class="bad">Missing: depths of the failures</span>
+              </div>
+            </td>
+            <td data-col="Methodology">
+              <ul>
+                <li>Rod-tubing side load from card-derived loads</li>
+                <li>Buckling / neutral-point check on the lower rods through the downstroke</li>
+                <li>Correlate split depths against the computed neutral point</li>
+              </ul>
+            </td>
+            <td data-col="Diagnosis">
+              <span class="tag t-hyp">Hypothesis — stated as one, not a finding</span>
+              <p>Fluid pound drives the lower rods into compression on the downstroke; compression buckles them; buckled rods bear on tubing. "Never the same joint" fits a neutral point that <em>moves</em> with fillage, rather than a fixed defect. If that holds, <strong>your tubing wear and your pump-off are one problem</strong>, and the pump-off fix is also the tubing fix.</p>
+              <p style="margin-top:8px">On J55 vs L80/N80: harder grades resist abrasive wear somewhat better, and J55 is the softest of the three — so directionally yes. But grade is second-order here. Side load is what's eating the tubing, and no grade survives a buckled rod indefinitely.</p>
+            </td>
+            <td data-col="Way forward">
+              <ul>
+                <li>Send the depths of the last several splits — that one list tests the hypothesis cheaply</li>
+                <li>If it holds: fix pump-off first, then rod guides. Rotators and lined tubing treat the symptom.</li>
+                <li>If it fails: we say so, and look at side load from wellbore deviation instead</li>
+              </ul>
+            </td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="panel">
+      <h2>A defect your cards found in our tooling — and the fix</h2>
+      <p>
+        Preparing this review, we swept a pump-off progression through our solver.
+        Fillage fell cleanly as the barrel emptied and then, past a point, jumped to
+        <strong>99.6%</strong> and stayed pinned there no matter how badly the pump
+        was pounding. A pump that fills less cannot report filling more.
+      </p>
+      <div class="scroller">
+        <table class="plain">
+          <thead>
+            <tr><th>Pump condition</th><th>Was</th><th>Now</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>full pump (anchor)</td><td class="num">88.1%</td><td class="num">88.1%</td></tr>
+            <tr><td>pounding, mild</td><td class="num">64.2%</td><td class="num">64.2%</td></tr>
+            <tr><td>pounding, moderate</td><td class="num">38.9%</td><td class="num">38.9%</td></tr>
+            <tr><td>pounding, severe</td><td class="num">18.8%</td><td class="num">18.8%</td></tr>
+            <tr><td>pounding, worse still</td><td class="num bad">99.6%</td><td class="num">16.4%</td></tr>
+            <tr><td>pounding, worst</td><td class="num bad">99.6%</td><td class="num">11.9%</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <strong>Cause.</strong> The bottom-right corner of the card marks where the
+        travelling valve opens, and it sets net stroke. Our detector was picking a
+        corner at the <em>top</em> of the downstroke, where no fluid load had
+        transferred at all — so net stroke collapsed onto gross stroke and the
+        arithmetic returned "full".
+      </p>
+      <p>
+        <strong>Fix.</strong> A bottom-right corner is now rejected unless at least
+        35% of the downstroke's load drop has actually occurred there. On the four
+        vendor-analysed reference wells the correct corner realises 0.675 to 0.866,
+        and the failure realises 0.000 — so the guard cannot fire on a card we have
+        evidence for. Those four wells still agree with the vendor analyses to within
+        0.85% fillage, unchanged.
+      </p>
+      <p>
+        <strong>Why it mattered to you specifically.</strong> You wrote that these
+        wells "don't pump off slowly — when they go for it, they go." Severe, fast
+        pump-off is precisely the regime where this failed, and it failed <em>toward
+        healthy</em>: a controller setpoint driven off that number would have sat
+        reading 99.6% while the pump slammed. It is the reason we would not quote you
+        a setpoint last week, and the reason we can now.
+      </p>
+      <p style="color:var(--ink-faint);font-size:14px">
+        Found and fixed 5 Aug 2026. It had survived our existing tests because the
+        assertions in place only checked fillage was between 0 and 100, which 99.6%
+        satisfies. There is now a regression test that sweeps the pump from full to
+        pounded and fails if the reported fillage ever rises.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="panel neutral">
+      <h2>Also noted: the tally app</h2>
+      <p>
+        You offered $500 for an iPhone app that scans a handwritten tally sheet to
+        Excel — camera capture, works offline, manual correction for illegible
+        digits. That's a well-specified brief, and offline handwriting capture on
+        a phone is now a solved problem.
+      </p>
+      <p>
+        We'd rather build it than bid on it. If it's still open, say so and we'll
+        put a working build in front of you — you can decide afterwards whether it
+        was worth anything.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="sec">What we need from you</h2>
+    <ul style="max-width:70ch">
+      <li><strong>Raw card files</strong> from both threads — any export format beats a photo of the screen.</li>
+      <li><strong>One full-pump card</strong> from the same well, so the fillage scale can be calibrated before any threshold is set.</li>
+      <li><strong>The gearbox make, model and rating.</strong> The C-66 is the prime mover, so we still have nothing to check torque or counterbalance against.</li>
+      <li><strong>Is the pump-off well the same well</strong> as the 41" / 4,300 ft / 6.4 SPM one? Both mention a C-66, but that doesn't make them the same well and we're not going to assume it.</li>
+      <li><strong>Rod string is 4,200 ft, pump is at 4,300 ft</strong> — what's the missing 100 ft?</li>
+      <li><strong>Is the dyno accelerometer-based?</strong></li>
+      <li><strong>Depths of the last several tubing splits.</strong></li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Achanta AceEngineer Inc., DBA AceEngineer · vamsee.achanta@aceengineer.com</p>
+    <p>
+      Quotes are from the operator's own public posts. Solver: Everitt–Jennings
+      space-marching finite difference (SPE 18189). Figures in the defect panel are
+      from a reconstruction using the stated well parameters — they demonstrate the
+      failure mode, they are not measurements of this well.
+    </p>
+  </footer>
+
+</div>

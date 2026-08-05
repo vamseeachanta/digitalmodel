@@ -1,0 +1,667 @@
+<title>Seven problems every small operator has — AceEngineer</title>
+<style>
+  :root {
+    --paper:      #ffffff;
+    --ground:     #f2f0ec;
+    --ink:        #1b1917;
+    --ink-soft:   #55504a;
+    --ink-faint:  #8a837a;
+    --rule:       #ddd8d0;
+    --accent:     #b47512;
+    --accent-ink: #7a4d06;
+    --verified:   #2f6b3a;
+    --ask:        #8a5a1f;
+    --panel:      #faf8f5;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:      #16151a;
+      --ground:     #100f13;
+      --ink:        #ece8e1;
+      --ink-soft:   #a8a199;
+      --ink-faint:  #736d65;
+      --rule:       #2e2c31;
+      --accent:     #e0a430;
+      --accent-ink: #f0c266;
+      --verified:   #6fc27e;
+      --ask:        #d9a95e;
+      --panel:      #1c1b21;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:      #16151a;
+    --ground:     #100f13;
+    --ink:        #ece8e1;
+    --ink-soft:   #a8a199;
+    --ink-faint:  #736d65;
+    --rule:       #2e2c31;
+    --accent:     #e0a430;
+    --accent-ink: #f0c266;
+    --verified:   #6fc27e;
+    --ask:        #d9a95e;
+    --panel:      #1c1b21;
+  }
+  :root[data-theme="light"] {
+    --paper:      #ffffff;
+    --ground:     #f2f0ec;
+    --ink:        #1b1917;
+    --ink-soft:   #55504a;
+    --ink-faint:  #8a837a;
+    --rule:       #ddd8d0;
+    --accent:     #b47512;
+    --accent-ink: #7a4d06;
+    --verified:   #2f6b3a;
+    --ask:        #8a5a1f;
+    --panel:      #faf8f5;
+  }
+
+  html { background: var(--ground); }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: Charter, "Bitstream Charter", "Iowan Old Style", Georgia, serif;
+    font-size: 17px;
+    line-height: 1.6;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+  .sheet {
+    max-width: 860px;
+    margin: 0 auto;
+    background: var(--paper);
+    border-left: 1px solid var(--rule);
+    border-right: 1px solid var(--rule);
+    padding: 0 clamp(20px, 5vw, 64px) 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 44px;
+  }
+
+  .stencil {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .label {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ---------- masthead ---------- */
+  header {
+    padding-top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .rule-top {
+    height: 5px;
+    background: var(--accent);
+    margin: 0 clamp(-20px, -5vw, -64px);
+  }
+  .firm {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 14px;
+  }
+  .firm .name {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 14px;
+  }
+  h1 {
+    font-size: clamp(30px, 5.4vw, 46px);
+    line-height: 1.06;
+    margin: 8px 0 0;
+  }
+  .standfirst {
+    font-size: 19px;
+    color: var(--ink-soft);
+    max-width: 60ch;
+    margin: 0;
+  }
+  .standfirst strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- generic section ---------- */
+  section { display: flex; flex-direction: column; gap: 18px; }
+  h2 {
+    font-size: 13px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    margin: 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--accent);
+  }
+  p { margin: 0; max-width: 68ch; }
+  .lede { font-size: 18px; }
+
+  /* ---------- problem entries ---------- */
+  .entries { display: flex; flex-direction: column; gap: 0; }
+  .entry {
+    display: grid;
+    grid-template-columns: 128px 1fr;
+    gap: 0 28px;
+    padding: 26px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .entry:first-child { border-top: 1px solid var(--rule); }
+  .entry-key { display: flex; flex-direction: column; gap: 6px; }
+  .entry-key .id {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    color: var(--accent-ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .entry-key .cat {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .entry-body { display: flex; flex-direction: column; gap: 12px; }
+  .entry h3 {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+  blockquote {
+    margin: 0;
+    padding: 10px 0 10px 16px;
+    border-left: 3px solid var(--accent);
+    color: var(--ink-soft);
+    font-style: italic;
+    max-width: 62ch;
+  }
+  blockquote cite {
+    display: block;
+    margin-top: 6px;
+    font-style: normal;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+  }
+  .answer { display: flex; flex-direction: column; gap: 4px; }
+  .answer .head {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ---------- proposal panel ---------- */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--accent);
+    padding: 24px clamp(18px, 3vw, 30px);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .flag {
+    display: inline-block;
+    align-self: flex-start;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ask);
+    border: 1px solid var(--ask);
+    border-radius: 2px;
+    padding: 2px 7px;
+  }
+  .panel h3 {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 7px; max-width: 66ch; }
+  li::marker { color: var(--accent); }
+
+  /* ---------- honesty table ---------- */
+  .scroller { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; min-width: 480px; }
+  th, td { text-align: left; padding: 11px 14px 11px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 700;
+  }
+  td.yes { color: var(--verified); font-weight: 600; }
+  td.no  { color: var(--ink-faint); }
+  td.warn { color: var(--ask); font-weight: 600; }
+  td.num {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 14px;
+  }
+  .fineprint { font-size: 14px; color: var(--ink-faint); max-width: 64ch; }
+
+  /* ---------- start ---------- */
+  .steps { display: flex; flex-direction: column; gap: 14px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 0 16px; align-items: start; }
+  .step .n {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    color: var(--paper);
+    background: var(--accent);
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: var(--ink-faint);
+    font-size: 14px;
+  }
+  footer a { color: var(--accent-ink); }
+
+  @media (max-width: 600px) {
+    .entry { grid-template-columns: 1fr; gap: 10px; }
+    .entry-key { flex-direction: row; gap: 12px; align-items: baseline; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    a { transition: color .15s ease; }
+  }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+
+<div class="sheet">
+
+  <header>
+    <div class="rule-top"></div>
+    <div class="firm">
+      <span class="name">AceEngineer</span>
+      <span class="label">Field note · August 2026</span>
+    </div>
+    <h1 class="stencil">Seven problems every small operator has, and what an engineer can actually do about each one.</h1>
+    <p class="standfirst">
+      This list did not come from a market study. It came from reading what operators
+      running shallow, marginal, conventional wells wrote about their own fields this
+      summer — the cards they pulled, the bearings they lost, the parts they could not
+      find. <strong>Every problem below is quoted, not imagined.</strong>
+    </p>
+  </header>
+
+  <section>
+    <h2>Where this came from</h2>
+    <p class="lede">
+      We work rod-lift and production engineering as software: physics that runs on
+      your own well data, not a dashboard subscription. Last month one of our analyses
+      was posted publicly and corrected within hours by a rod-lift specialist who
+      teaches a dyno class. He was right. We fixed it, and we changed how we work —
+      nothing goes out now without the evidence attached to it.
+    </p>
+    <p>
+      So this is a field note, not a pitch deck. Where we can do something, it says so
+      plainly. Where we cannot, it says that too.
+    </p>
+  </section>
+
+  <section>
+    <h2>What we heard</h2>
+    <div class="entries">
+
+      <article class="entry">
+        <div class="entry-key">
+          <span class="id">SO-LIFT-001</span>
+          <span class="cat">Artificial lift</span>
+        </div>
+        <div class="entry-body">
+          <h3>The well pumps off in five minutes and there is no controller on it</h3>
+          <blockquote>
+            "What happened to my pump card over the course of this 5 minutes?"
+            <cite>Gulf Coast operator, on a unit with no pump-off controller</cite>
+          </blockquote>
+          <div class="answer">
+            <span class="head">The gap</span>
+            <p>
+              Good advice came back fast: slow the unit, or set a shutdown below
+              65–75% fillage. Both assume a controller the well does not have — and
+              neither is tuned to <em>this</em> well. The setpoint that is right for
+              your pump, your rod string and your inflow is a calculation, not a
+              rule of thumb.
+            </p>
+          </div>
+          <div class="answer">
+            <span class="head">What we do</span>
+            <p>
+              Run your card sequence through a full surface-to-downhole conversion,
+              extract fillage stroke by stroke, and return a specific shutdown
+              setpoint and slow-down schedule — with the production you give up and
+              the pump life you buy, stated separately so you can decide.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-key">
+          <span class="id">SO-LIFT-002</span>
+          <span class="cat">Artificial lift</span>
+        </div>
+        <div class="entry-body">
+          <h3>Is that noise on the card real, or is it the instrument?</h3>
+          <blockquote>
+            "Could the noise in this corner be from gas in the pump decompressing…
+            or a delay in valves closing? There isn't really any noise here when the
+            pump is full."
+            <cite>Operator, reading a derived downhole card</cite>
+          </blockquote>
+          <div class="answer">
+            <span class="head">The gap</span>
+            <p>
+              On an accelerometer-based dyno, position is integrated twice from
+              acceleration, so error accumulates across a stroke — and the corner
+              right after the stroke-to-stroke discontinuity is exactly where the
+              wave equation has not settled. Some of what looks like a pump tag is
+              arithmetic. Some of it is a pump tag.
+            </p>
+          </div>
+          <div class="answer">
+            <span class="head">What we do</span>
+            <p>
+              Put an error budget on the derived card and mark which segments carry
+              enough numerical confidence to diagnose on. You stop chasing artefacts
+              and you stop dismissing real signals.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-key">
+          <span class="id">SO-MAINT-002</span>
+          <span class="cat">Maintenance</span>
+        </div>
+        <div class="entry-body">
+          <h3>The low-volume wells get no attention until a neighbour calls</h3>
+          <blockquote>
+            "This low volume well is generally at the bottom of the attention list
+            due to its low IP rate, low accumulated recovery, and low production…
+            understanding each well as an individual takes time and time is on no
+            one's side."
+            <cite>Illinois Basin operator, ~150 wellbores</cite>
+          </blockquote>
+          <div class="answer">
+            <span class="head">The gap</span>
+            <p>
+              This is not an equipment problem. One person cannot hold 150 wells in
+              their head, so the marginal ones are invisible until they fail loudly.
+              What is missing is a ranking.
+            </p>
+          </div>
+          <div class="answer">
+            <span class="head">What we do</span>
+            <p>
+              Score every well in the field on health and fillage and return one
+              ordered list: <em>drive to these five today</em>. It is the single
+              highest-leverage thing on this page, and it needs no new hardware.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-key">
+          <span class="id">SO-MAINT-001</span>
+          <span class="cat">Maintenance</span>
+        </div>
+        <div class="entry-body">
+          <h3>The walking beam left and took the saddle bearing with it</h3>
+          <blockquote>
+            "The walking beam went for a walk about and took the saddle bearing with it."
+            <cite>Illinois Basin operator</cite>
+          </blockquote>
+          <div class="answer">
+            <span class="head">What we do</span>
+            <p>
+              Torque and gearbox loading checks against the unit's actual rating, so
+              you find out which of your units is running outside its envelope
+              before the structure tells you. We will ask for the gearbox
+              designation rather than infer it from the engine — we have made that
+              mistake in public once and do not intend to repeat it.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-key">
+          <span class="id">SO-SUPPLY-001</span>
+          <span class="cat">Supply chain</span>
+        </div>
+        <div class="entry-body">
+          <h3>One missing seat nipple idles a rig day</h3>
+          <blockquote>
+            "Guide wires, deadman, rods, tubing, rod subs, tubing subs, mud anchor,
+            insert pump, seat nipple, rod boxes, tubing collars, gas anchor, barrel —
+            'word salad.'"
+            <cite>Illinois Basin operator, describing a workover</cite>
+          </blockquote>
+          <div class="answer">
+            <span class="head">The gap</span>
+            <p>
+              That list is a bill of materials, and every operator in the basin holds
+              their own partial copy of it. Dead stock on one lease, a stopped job on
+              the next. See the proposal below.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-key">
+          <span class="id">SO-CAPITAL-001</span>
+          <span class="cat">Capital</span>
+        </div>
+        <div class="entry-body">
+          <h3>"Workovers will add 30 BOPD" — will they?</h3>
+          <blockquote>
+            "Buying out an existing mortgage held by the present contract operating
+            company. They are falling short and failing at their duty of maintaining
+            and increasing production."
+            <cite>Operator seeking growth capital against ~150 wellbores</cite>
+          </blockquote>
+          <div class="answer">
+            <span class="head">What we do</span>
+            <p>
+              We are not a capital provider and will not pretend to be one. What a
+              capital partner asks for is an independent technical opinion on the
+              uplift: which wellbores, how much, and what the error bars are. That is
+              inflow-performance and field-health work, and it is exactly what we do.
+              An uplift number with error bars attached raises money that a flat
+              claim does not.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-key">
+          <span class="id">SO-REG-003</span>
+          <span class="cat">Economics</span>
+        </div>
+        <div class="entry-body">
+          <h3>Keep it, work it over, shut it in, or plug it — well by well</h3>
+          <div class="answer">
+            <span class="head">The gap</span>
+            <p>
+              Marginal-well decisions get made on gut feel, or on one field-wide
+              cost-per-barrel number, because doing it well by well is tedious.
+              And almost every version of the sum leaves the plugging bill out —
+              which quietly biases every answer toward "keep producing".
+            </p>
+          </div>
+          <div class="answer">
+            <span class="head">The thing most models get backwards</span>
+            <p>
+              Plugging cost is not <em>avoided</em> by producing. It is
+              <em>deferred</em>. So a marginal well isn't competing against zero —
+              it's competing against paying the P&amp;A bill today, and deferral
+              has real value. That is why a well can lose money every month and
+              still be worth holding, and why "shut in" is sometimes the right
+              answer when both producing and plugging are wrong.
+            </p>
+          </div>
+          <div class="answer">
+            <span class="head">What you get back</span>
+            <p>
+              For each wellbore: month-one operating cash, the oil price at which
+              it breaks even, the month it stops paying for itself, and all four
+              courses of action priced on the same basis — every one of them
+              ending with the well plugged, so the comparison isn't rigged.
+            </p>
+          </div>
+          <div class="scroller">
+            <table>
+              <thead>
+                <tr><th>Well</th><th>Month 1 cash</th><th>Breakeven</th><th>Way forward</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>8 BOPD, 30 BWPD</td><td class="num">+$9,412</td><td class="num">$18.38/bbl</td><td class="yes">Keep</td></tr>
+                <tr><td>4 BOPD, 60 BWPD</td><td class="num">+$3,154</td><td class="num">$33.76/bbl</td><td class="yes">Keep — 127 months left</td></tr>
+                <tr><td>1.5 BOPD, 90 BWPD</td><td class="num">−$1,014</td><td class="num">$91.79/bbl</td><td class="warn">Shut in</td></tr>
+                <tr><td>0.6 BOPD, 120 BWPD</td><td class="num">−$2,953</td><td class="num">$260.03/bbl</td><td class="warn">Shut in</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="fineprint">
+            Illustrative cost deck — $65 oil, $45k plugging, 12.5% royalty,
+            $0.75/bbl water — not any real operator's numbers. Note the bottom two:
+            producing them destroys value, but shutting in still beats plugging by
+            roughly $16,000 each, purely from deferring the plugging bill. That
+            $16,000 is why so much of the country's stripper fleet is still standing.
+          </p>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="panel">
+      <span class="flag">Our proposal · not yet anyone's practice</span>
+      <h3 class="stencil">Pool the spares before you pool anything else</h3>
+      <p>
+        Nobody asked us for this — we are proposing it, and we would rather be told
+        it is wrong than have you assume other operators already agreed to it.
+      </p>
+      <ul>
+        <li><strong>One canonical BOM.</strong> A single rod-lift workover parts list with real sizes and grades, maintained as data, not as a text message.</li>
+        <li><strong>A basin-level map of who holds what.</strong> You do not need to buy a seat nipple that is sitting eleven miles away.</li>
+        <li><strong>Shared reorder points.</strong> The group carries one buffer instead of five partial ones — the same insurance for a fraction of the tied-up cash.</li>
+        <li><strong>Group price discovery.</strong> Individually you have no leverage on service pricing. Ten operators comparing the same line items do.</li>
+      </ul>
+      <p>
+        We would start it with the parts list and the map, because those are cheap
+        and provable. Everything after that is a conversation among operators, not
+        something an engineering firm should run.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>What we do and don't do</h2>
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>Ask</th><th>Us?</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Read my dynamometer cards and tell me what to change</td>
+            <td class="yes">Yes</td>
+            <td>Surface-to-downhole conversion, fillage, failure-mode diagnosis, setpoints</td>
+          </tr>
+          <tr>
+            <td>Rank my field so I know where to drive tomorrow</td>
+            <td class="yes">Yes</td>
+            <td>Field-health scoring across every well you send</td>
+          </tr>
+          <tr>
+            <td>Check whether my unit is overloaded</td>
+            <td class="yes">Yes</td>
+            <td>Torque balance and gearbox loading against the unit's rating</td>
+          </tr>
+          <tr>
+            <td>Independent technical review for a lender or partner</td>
+            <td class="yes">Yes</td>
+            <td>Inflow modelling and uplift estimates, with stated error bars</td>
+          </tr>
+          <tr>
+            <td>Tell me whether a well is worth keeping, working over, shutting in, or plugging</td>
+            <td class="yes">Yes</td>
+            <td>Well-by-well cash flow with the plugging bill carried in every case</td>
+          </tr>
+          <tr>
+            <td>Find me money</td>
+            <td class="no">No</td>
+            <td>We are engineers, not a placement agent</td>
+          </tr>
+          <tr>
+            <td>Tell me what my bonding obligation is, or how to satisfy it</td>
+            <td class="no">No</td>
+            <td>That is legal and regulatory advice. We model the cost; your counsel handles the obligation</td>
+          </tr>
+          <tr>
+            <td>Identify corrosion from a photograph</td>
+            <td class="no">Not alone</td>
+            <td>Photo ID is a judgement call — we bring the rate model behind it, not the verdict</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Starting costs you nothing but an export</h2>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><p>Send one well's card file — whatever your dyno or handheld exports. No install, no telemetry, no account.</p></div>
+      <div class="step"><span class="n">2</span><p>You get back the downhole card, fillage stroke by stroke, the diagnosis with a confidence figure, and the parts of the card we do <em>not</em> trust.</p></div>
+      <div class="step"><span class="n">3</span><p>If it is useful, send the field. If it is not, you have lost an email and we have learned something about your wells.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Achanta AceEngineer Inc., DBA AceEngineer · vamsee.achanta@aceengineer.com</p>
+    <p>
+      Quotes are from public discussions in an energy-industry community, reproduced
+      without attribution by name. Problem IDs refer to our internal catalogue so
+      that any claim on this page can be traced back to the post it came from.
+    </p>
+  </footer>
+
+</div>
