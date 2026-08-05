@@ -27,7 +27,7 @@ from .partial_fill import (
     snap_fill_to_cell_face,
 )
 from .pressure_taps import PressureTap, render_pressure_tap_functions
-from .solver_contracts import contract_for, render_div_schemes
+from .solver_contracts import contract_for, render_fv_schemes_body
 from .templates import (
     TRANSPORT_MULTIPHASE,
     TRANSPORT_SINGLE,
@@ -209,57 +209,19 @@ class OpenFOAMCaseBuilder:
     def _write_fv_schemes(self, system_dir: Path) -> None:
         """Write system/fvSchemes for the solver named in controlDict.
 
-        divSchemes is rendered from the per-solver contract (issue #1959).
-        Before that, the single-phase div(phi,U) and div((nuEff*dev(...)))
-        were emitted for every application under `default none`, so an
-        interFoam case hit a fatal IO error on the div keys its momentum and
-        alpha equations actually look up.
+        Rendered from the per-solver contract (issue #1959). Before that, the
+        single-phase div(phi,U) and div((nuEff*dev(...))) were emitted for
+        every application under `default none`, so an interFoam case hit a
+        fatal IO error on the div keys its momentum and alpha equations
+        actually look up, and its backward ddt scheme was rejected outright.
         """
         contract = contract_for(self._case.solver_config.solver_name)
-        time_scheme = contract.ddt_scheme
+        needs_wall_distance = (
+            self._case.turbulence_model.turbulence_type != TurbulenceType.LAMINAR
+        )
 
         content = _foam_header("dictionary", "fvSchemes")
-        content += f"""
-ddtSchemes
-{{
-    default {time_scheme};
-}}
-
-gradSchemes
-{{
-    default         Gauss linear;
-    grad(p)         Gauss linear;
-}}
-
-{render_div_schemes(contract)}
-
-laplacianSchemes
-{{
-    default Gauss linear corrected;
-}}
-
-interpolationSchemes
-{{
-    default linear;
-}}
-
-snGradSchemes
-{{
-    default corrected;
-}}
-
-"""
-        # A RAS/LES model such as kOmegaSST computes a wall distance and needs
-        # to be told how (issue #1959). meshWave is the method every interFoam
-        # tutorial in the pinned v2312 installation uses. A laminar case
-        # computes no wall distance, so it carries no block.
-        if self._case.turbulence_model.turbulence_type != TurbulenceType.LAMINAR:
-            content += """wallDist
-{
-    method          meshWave;
-}
-
-"""
+        content += render_fv_schemes_body(contract, needs_wall_distance)
         content += _FOOTER
         (system_dir / "fvSchemes").write_text(content)
 

@@ -185,3 +185,55 @@ def render_div_schemes(contract: SolverDictContract) -> str:
         lines.append(f"    {key:<{width}}{scheme};")
     lines.append("}")
     return "\n".join(lines)
+
+
+#: A RAS or LES model such as kOmegaSST computes a wall distance and must be
+#: told how. meshWave is the method every interFoam tutorial carrying the block
+#: uses in the pinned v2312 installation, and the most common choice across the
+#: whole tutorial corpus. A laminar case computes no wall distance and carries
+#: no block at all.
+WALL_DIST_BLOCK = """wallDist
+{
+    method          meshWave;
+}
+
+"""
+
+
+def render_fv_schemes_body(
+    contract: SolverDictContract, needs_wall_distance: bool
+) -> str:
+    """Render the whole fvSchemes body for ``contract``."""
+    body = f"""
+ddtSchemes
+{{
+    default {contract.ddt_scheme};
+}}
+
+gradSchemes
+{{
+    default         Gauss linear;
+    grad(p)         Gauss linear;
+}}
+
+{render_div_schemes(contract)}
+
+laplacianSchemes
+{{
+    default Gauss linear corrected;
+}}
+
+interpolationSchemes
+{{
+    default linear;
+}}
+
+snGradSchemes
+{{
+    default corrected;
+}}
+
+"""
+    if needs_wall_distance:
+        body += WALL_DIST_BLOCK
+    return body
