@@ -213,14 +213,19 @@ def _run_main_end_to_end(verdict: str) -> int:
         search + [env.get("PYTHONPATH", "")]
     ).rstrip(os.pathsep)
 
-    proc = subprocess.run(
-        [sys.executable, str(driver), verdict, str(out_dir), str(input_file)],
-        capture_output=True,
-        text=True,
-        env=env,
-        cwd=str(tmp_path),
-        timeout=300,
-    )
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(driver), verdict, str(out_dir), str(input_file)],
+            capture_output=True,
+            text=True,
+            env=env,
+            cwd=str(tmp_path),
+            timeout=300,
+        )
+    finally:
+        # tmp_path here is ours, not pytest's, so pytest will not reap it.
+        shutil.rmtree(tmp_path, ignore_errors=True)
+
     if proc.returncode == 99:
         raise AssertionError(
             "driver crashed instead of completing or refusing:\n"
