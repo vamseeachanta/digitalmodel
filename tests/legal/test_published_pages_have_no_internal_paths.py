@@ -57,6 +57,13 @@ REMEDIATED_PAGES = (
 # produced the issue. They are recorded rather than ignored: the counts are
 # exact, so any of these pages gaining a new absolute path fails the ratchet
 # test below, and any page not listed here must be clean.
+#
+# Known limit, stated rather than papered over: the ratchet compares counts, so
+# swapping one path for a different path inside a listed file would not trip it.
+# Recording the matched strings instead would place those locations in the
+# repository, which is the disclosure being removed. Counts are the weaker but
+# non-self-defeating choice; closing this properly belongs with the
+# authenticated scanner tracked by digitalmodel#1961.
 PRE_EXISTING_ABSOLUTE_PATHS = {
     "docs/domains/orcaflex/examples/model_library_report.html": 2,
     "docs/domains/orcawave/L00_validation_wamit/2.1/benchmark/benchmark_report.html": 10,
@@ -103,10 +110,23 @@ _WINDOWS_ABSOLUTE_PATH = re.compile(
 )
 
 
+# A UNC path names a file server and a share directly. It carries the same
+# disclosure as a mounted absolute path and shares none of its syntax, so it
+# needs its own pattern rather than a widened one.
+_UNC_SHARE_PATH = re.compile(
+    r"\\\\[A-Za-z0-9_.-]+\\[A-Za-z0-9_.-]+(?:\\[A-Za-z0-9_.-]+)*"
+)
+
+_PATTERNS = (_POSIX_ABSOLUTE_PATH, _WINDOWS_ABSOLUTE_PATH, _UNC_SHARE_PATH)
+
+
 def find_absolute_paths(text: str) -> list[str]:
     """Return every absolute-filesystem-path occurrence in ``text``, in order."""
-    found = [(m.start(), m.group(0)) for m in _POSIX_ABSOLUTE_PATH.finditer(text)]
-    found += [(m.start(), m.group(0)) for m in _WINDOWS_ABSOLUTE_PATH.finditer(text)]
+    found = [
+        (m.start(), m.group(0))
+        for pattern in _PATTERNS
+        for m in pattern.finditer(text)
+    ]
     return [value for _, value in sorted(found)]
 
 
@@ -153,6 +173,15 @@ def test_detector_catches_a_planted_absolute_path():
 def test_detector_catches_a_planted_windows_absolute_path():
     planted = r"<td>E:\build-area\project\run\input.yml</td>"
     assert find_absolute_paths(planted) == [r"E:\build-area\project\run\input.yml"]
+
+
+def test_detector_catches_a_planted_unc_share_path():
+    # A UNC path names a file server and a share directly, which is the same
+    # disclosure this issue is about, so the detector must cover it.
+    planted = r"<td>\\file-server\group-share\project\data.xlsx</td>"
+    assert find_absolute_paths(planted) == [
+        r"\\file-server\group-share\project\data.xlsx"
+    ]
 
 
 def test_detector_ignores_urls_with_path_segments():

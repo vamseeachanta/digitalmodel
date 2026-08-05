@@ -643,8 +643,14 @@ def sha256_of_tree(path) -> str:
     of where the directory is mounted.
     """
     root = Path(path)
+    files = [p for p in root.rglob("*") if p.is_file()]
+    # Sort on the relative POSIX name rather than on Path objects: Path
+    # ordering is platform-dependent, and the digest must not be.
+    files.sort(key=lambda p: p.relative_to(root).as_posix())
     rollup = hashlib.sha256()
-    for item in sorted(p for p in root.rglob("*") if p.is_file()):
+    for item in files:
+        # NUL terminates each field. It cannot occur in a filename, so the
+        # name/digest stream cannot be re-partitioned to collide.
         rollup.update(item.relative_to(root).as_posix().encode("utf-8"))
         rollup.update(b"\0")
         rollup.update(sha256_of_file(item).encode("ascii"))
