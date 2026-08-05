@@ -27,6 +27,49 @@ class SmokeError(RuntimeError):
     """Raised when the smoke cannot prove its required semantics."""
 
 
+class NotRunnable(RuntimeError):
+    """Raised when a solver log does not prove the case actually ran."""
+
+
+def assert_log_advanced(log: str) -> str:
+    """Return the last time reached, or raise if the run proved nothing.
+
+    Issue #1959. "No FATAL in the log" is a vacuous oracle: a solver that
+    prints ``Time = 0`` and exits cleanly emits no fatal marker at all, so a
+    naive marker check calls that a pass. Real progress therefore requires at
+    least two ``Time =`` values with the last strictly greater than the first.
+    """
+    lowered = log.lower()
+    for marker in _FATAL_MARKERS:
+        if marker in lowered:
+            raise NotRunnable(f"solver log contains {marker!r}")
+
+    times = _TIME.findall(log)
+    if len(times) < 2:
+        raise NotRunnable(
+            f"solver produced {len(times)} Time value(s); at least 2 are "
+            "needed to show it advanced"
+        )
+    if float(times[-1]) <= float(times[0]):
+        raise NotRunnable("solver started but advanced no timestep")
+    return times[-1]
+
+
+def sha256_manifest(case_dir: Path) -> dict[str, str]:
+    """Return {relative path: sha256} for every file under ``case_dir``.
+
+    Recorded immediately after ``build()`` and re-verified immediately before
+    the solver is invoked, this is what makes a solver-start claim evidence
+    about the builder rather than about a tree someone patched (issue #1959).
+    """
+    manifest: dict[str, str] = {}
+    for path in sorted(case_dir.rglob("*")):
+        if path.is_file():
+            digest = hashlib.sha256(path.read_bytes()).hexdigest()
+            manifest[path.relative_to(case_dir).as_posix()] = digest
+    return manifest
+
+
 @dataclass(frozen=True)
 class SmokePlan:
     ranks: int

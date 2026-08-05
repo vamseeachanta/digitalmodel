@@ -34,14 +34,91 @@ solvers
         tolerance       1e-08;
         relTol          0;
     }
-    "(k|omega|epsilon|alpha.water)"
+    "(k|omega|epsilon)"
     {
         solver          smoothSolver;
         smoother        symGaussSeidel;
         tolerance       1e-08;
         relTol          0.1;
     }
-    "(k|omega|epsilon|alpha.water)Final"
+    "(k|omega|epsilon)Final"
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-08;
+        relTol          0;
+    }
+}
+"""
+
+# VOF (interFoam) solvers block.
+#
+# Every literal here is taken from the OpenFOAM v2312 tutorial
+# $FOAM_TUTORIALS/multiphase/interFoam/laminar/damBreak/damBreak (issue #1959,
+# design decision D4). None of it comes from a hand-authored case directory on
+# the CFD node.
+#
+# Two deliberate departures from the tutorial text, both structural rather than
+# numeric:
+#   - p_rghFinal is written longhand instead of the tutorial's `$p_rgh;` macro,
+#     because this repository forbids macro shorthand in Final blocks
+#     (tests/solvers/openfoam/test_case_builder.py).
+#   - The "(k|omega|epsilon)" entries are retained from the pre-#1959 builder.
+#     The tutorial case is laminar and has none, but this builder defaults to
+#     kOmegaSST, so those fields are solved and need entries.
+FV_SOLUTION_SOLVERS_VOF = """
+solvers
+{
+    "alpha.water.*"
+    {
+        nAlphaCorr      2;
+        nAlphaSubCycles 1;
+        cAlpha          1;
+
+        MULESCorr       yes;
+        nLimiterIter    5;
+
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-08;
+        relTol          0;
+    }
+    "pcorr.*"
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-05;
+        relTol          0;
+    }
+    p_rgh
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-07;
+        relTol          0.05;
+    }
+    p_rghFinal
+    {
+        solver          PCG;
+        preconditioner  DIC;
+        tolerance       1e-07;
+        relTol          0;
+    }
+    U
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-06;
+        relTol          0;
+    }
+    "(k|omega|epsilon)"
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-08;
+        relTol          0.1;
+    }
+    "(k|omega|epsilon)Final"
     {
         solver          smoothSolver;
         smoother        symGaussSeidel;

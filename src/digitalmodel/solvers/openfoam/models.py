@@ -142,6 +142,12 @@ class SolverConfig:
         adjustable_time_step: Use adjustable Courant-based delta_t.
         max_co: Maximum Courant number (for adjustable stepping).
         is_multiphase: Whether this is a VOF (two-phase) simulation.
+        max_delta_t: Ceiling on the adaptive time step (s). Defaults to
+            ``delta_t`` -- the declared step is also the ceiling, so adaptive
+            stepping may shrink the step for stability but never grow it past
+            what the case asked for. Deriving the ceiling from an existing
+            declared input keeps this a case property rather than a tuned
+            constant (issue #1959, D7).
     """
 
     solver_name: str = "simpleFoam"
@@ -154,6 +160,11 @@ class SolverConfig:
     is_multiphase: bool = False
     purge_write: int = 0
     n_subdomains: int = 4
+    max_delta_t: Optional[float] = None
+
+    def __post_init__(self) -> None:
+        if self.max_delta_t is None:
+            self.max_delta_t = self.delta_t
 
     def to_control_dict(self) -> Dict[str, Any]:
         """Return controlDict field values."""
