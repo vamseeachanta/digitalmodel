@@ -16,6 +16,9 @@ from typing import Any, Callable
 from loguru import logger
 
 from digitalmodel.workflows.openfoam_batch_config import base_view, validate_workers
+from digitalmodel.workflows.openfoam_batch_decomposition import (
+    verify_resumable_decomposition,
+)
 from digitalmodel.workflows.openfoam_batch_identity import file_sha256
 from digitalmodel.workflows.openfoam_batch_layout import WorkLayout
 from digitalmodel.workflows.openfoam_batch_results import redact_rows, row
@@ -176,10 +179,14 @@ def _run_case_mpi_unlocked(item: dict[str, Any], run_settings: dict, workers: in
     if not solver:
         return _save(item, row(item, status="failed", error="mode: mpi requires base.solver"), layout)
     reconstruct = bool(run_settings.get("reconstruct", True))
-    resume = bool(run_settings.get("resume", False)) and _has_processors(item["work_dir"])
+    # The request alone decides the path. Previously this was ANDed with
+    # _has_processors, so "resume: true" with no processor* dirs silently fell
+    # through to _clean -> rmtree and reported the wipe as completed. The gate
+    # in _prepare_mpi_case owns that input now and refuses instead (#1968).
+    resume = bool(run_settings.get("resume", False))
     start = time.monotonic()
     try:
-        case_dir = _prepare_mpi_case(item, resume, layout, builder)
+        case_dir = _prepare_mpi_case(item, resume, workers, layout, builder, mock)
         view = base_view(item["settings"])
         plan = mpi_command_plan(solver, workers,
             view.get("mesh_utility", DEFAULT_MESH_UTILITY),
@@ -260,10 +267,18 @@ def build_case(item: dict[str, Any]) -> Path:
     return Path(config["openfoam"]["case_dir"])
 
 
-def _prepare_mpi_case(item: dict[str, Any], resume: bool,
+def _prepare_mpi_case(item: dict[str, Any], resume: bool, workers: int,
                       layout: WorkLayout | None,
-                      builder: Callable[[dict[str, Any]], Path]) -> Path:
+                      builder: Callable[[dict[str, Any]], Path],
+                      mock: bool = False) -> Path:
+    if resume and mock:
+        # A plan preview must not require a real on-disk decomposition, and
+        # must not mutate the case to produce one.
+        return item["work_dir"]
     if resume:
+        # Refuse BEFORE set_start_from_latest_time rewrites system/controlDict,
+        # so a rejected resume leaves the case byte-identical (#1968 D4).
+        verify_resumable_decomposition(item["work_dir"], workers)
         set_start_from_latest_time(item["work_dir"])
         return item["work_dir"]
     _clean(item, layout)
@@ -303,10 +318,6 @@ def _prune(item: dict[str, Any], layout: WorkLayout | None) -> None:
     else:
         for path in item["work_dir"].glob("processor*"):
             shutil.rmtree(path, ignore_errors=True)
-
-
-def _has_processors(case_dir: Path) -> bool:
-    return case_dir.is_dir() and any(case_dir.glob("processor*"))
 
 
 def _case_lock(layout: WorkLayout | None, case: str):
