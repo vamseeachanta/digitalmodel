@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Issue #1959 — solver-start evidence</title>
+<style>
+  :root { --fg:#16202b; --bg:#fff; --muted:#5b6b7c; --rule:#dde4ec;
+          --ok:#0f7b4f; --bad:#a8271b; --code-bg:#f5f7fa; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fg:#e6edf3; --bg:#0e1319; --muted:#9aa8b6; --rule:#28313c;
+            --ok:#4cc38a; --bad:#f2726b; --code-bg:#161c24; }
+  }
+  body { margin:0; padding:2rem 1.25rem 4rem; background:var(--bg); color:var(--fg);
+         font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+  main { max-width:60rem; margin:0 auto; }
+  h1 { font-size:1.9rem; line-height:1.2; margin:0 0 .3rem; }
+  h2 { font-size:1.25rem; margin:2.4rem 0 .6rem; padding-bottom:.3rem;
+       border-bottom:1px solid var(--rule); }
+  .sub { color:var(--muted); margin:0 0 2rem; }
+  table { border-collapse:collapse; width:100%; margin:1rem 0; font-size:.93rem; }
+  th,td { text-align:left; padding:.5rem .6rem; border-bottom:1px solid var(--rule);
+          vertical-align:top; }
+  th { font-weight:600; color:var(--muted); font-size:.82rem;
+       text-transform:uppercase; letter-spacing:.04em; }
+  code,pre { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+  code { background:var(--code-bg); padding:.12em .35em; border-radius:3px; font-size:.88em; }
+  pre { background:var(--code-bg); padding:.9rem 1rem; border-radius:6px;
+        overflow-x:auto; font-size:.83rem; line-height:1.5; }
+  .ok { color:var(--ok); font-weight:600; }
+  .bad { color:var(--bad); font-weight:600; }
+  .scroll { overflow-x:auto; }
+  .note { border-left:3px solid var(--rule); padding:.2rem 0 .2rem 1rem;
+          color:var(--muted); margin:1rem 0; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Issue #1959 — solver-start evidence</h1>
+<p class="sub">A freshly emitted, unpatched <code>interFoam</code> case starts and advances.
+Recorded 2026-08-04 on the CFD node.</p>
+
+<h2>Why this artifact exists</h2>
+
+<p>A dry-run <code>rc=0</code> proves rendering, not running. The regression tests in
+<code>test_solver_contracts.py</code> assert that the emitted dictionaries contain the keys
+<code>interFoam</code> needs, but the emitter renders from the same contract those
+expectations describe, so that layer proves consistency rather than correctness.
+The only oracle whose verdict does not depend on the author having guessed the
+requirement list correctly is the solver itself.</p>
+
+<p>This page records that run. It also records the negative control on
+<code>origin/main</code>, because a passing run means nothing unless the same
+procedure fails on the unfixed builder.</p>
+
+<h2>Execution environment</h2>
+
+<table>
+<tr><th>Item</th><th>Value</th></tr>
+<tr><td>Host</td><td><code>gpu-claw</code>, Ubuntu 24.04.4, 8 cores</td></tr>
+<tr><td>OpenFOAM</td><td>ESI <strong>v2312</strong>, <code>patch=260127</code>, at <code>/usr/lib/openfoam/openfoam2312</code></td></tr>
+<tr><td>Solver binary</td><td><code>platforms/linux64GccDPInt32Opt/bin/interFoam</code></td></tr>
+<tr><td>Execution</td><td>serial — the failure class is a rank-independent dictionary read</td></tr>
+<tr><td>Case</td><td><code>CaseType.SLOSHING</code>, half-full tank (<code>fill_level = 0.5</code>), 9 600 cells</td></tr>
+<tr><td>Run window</td><td><code>deltaT = 0.01</code>, <code>endTime = 0.1</code> — ten steps</td></tr>
+</table>
+
+<h2>Result</h2>
+
+<table>
+<tr><th>Builder</th><th>interFoam rc</th><th>Advancing <code>Time</code> lines</th><th>Verdict</th></tr>
+<tr>
+  <td><code>origin/main</code> @ <code>7b4119cc</code></td>
+  <td class="bad">1</td><td class="bad">0</td>
+  <td class="bad">FAIL — died before the time loop</td>
+</tr>
+<tr>
+  <td>this branch</td>
+  <td class="ok">0</td><td class="ok">10</td>
+  <td class="ok">PASS — advanced to <code>Time = 0.1</code></td>
+</tr>
+</table>
+
+<h3>Negative control — <code>origin/main</code></h3>
+<p>Same host, same OpenFOAM, same case type, same driver. Only the builder differs.
+This reproduces the failure exactly as reported on the issue.</p>
+<div class="scroll"><pre>--&gt; FOAM FATAL IO ERROR: (openfoam-2312 patch=260127)
+Entry 'cAlpha' not found in dictionary
+  ".../system/fvSolution/solvers/(k|omega|epsilon|alpha.water)"</pre></div>
+<p class="note">Full log: <code>docs/reports/issue-1959-solver-start/log.interFoam.mainline</code></p>
+
+<h3>This branch — two advancing timesteps and then some</h3>
+<p>Ten <code>Time =</code> values, strictly increasing, no fatal marker anywhere in the log.
+The acceptance bar was two; the run cleared it five times over and reached
+<code>End</code> normally.</p>
+<div class="scroll"><pre>Time = 0.01
+Time = 0.02
+Time = 0.03
+...
+Time = 0.09
+Time = 0.1
+
+MULES: Correcting alpha.water
+Phase-1 volume fraction = 0.50012  Min(alpha.water) = -8.68e-21  Max(alpha.water) = 1.00155
+smoothSolver:  Solving for Ux, Initial residual = 1.29849e-06, ...
+DICPCG:  Solving for p_rgh, Initial residual = 1.03788e-07, ...
+smoothSolver:  Solving for omega, Initial residual = 0.00169489, ...
+smoothSolver:  Solving for k, Initial residual = 0.149445, ...
+ExecutionTime = 0.84 s  ClockTime = 1 s
+
+End</pre></div>
+<p class="note">Full log: <code>docs/reports/issue-1959-solver-start/log.interFoam.fixed</code></p>
+
+<p>The run is genuinely two-phase: MULES is correcting <code>alpha.water</code> and the
+phase-1 volume fraction holds at 0.50012 for the half-full tank, so the alpha
+equation this issue is about was actually exercised rather than trivially
+skipped over an empty domain.</p>
+
+<h2>The tree that ran is the tree the builder emitted</h2>
+
+<p>A solver-start criterion is satisfiable by a <em>patched</em> tree — which is the
+exact failure mode this issue is about, and it would be embarrassing to
+reproduce it inside its own fix. A sha256 manifest was therefore recorded
+immediately after <code>build()</code>, re-verified immediately before
+<code>interFoam</code> was invoked, and re-verified again afterwards.</p>
+
+<table>
+<tr><th>File</th><th>sha256</th><th>emitted → preflight → after</th></tr>
+<tr><td><code>system/fvSolution</code></td>
+    <td><code>131c2c54…aaf5930</code></td><td class="ok">identical</td></tr>
+<tr><td><code>system/fvSchemes</code></td>
+    <td><code>7a462c51…0c5edf830</code></td><td class="ok">identical</td></tr>
+<tr><td><code>system/controlDict</code></td>
+    <td><code>2883f986…488e12db9</code></td><td class="ok">identical</td></tr>
+</table>
+
+<p>The only files that changed between emission and the end of the run were
+<code>constant/polyMesh/*</code>, created by <code>blockMesh</code>, and
+<code>0/alpha.water</code>, rewritten by <code>setFields</code>. Both are tool
+outputs produced by the documented pre-solve steps. No dictionary was touched by
+hand at any point.</p>
+
+<p class="note">Manifests: <code>manifest-emitted.json</code>,
+<code>manifest-preflight.json</code>, <code>manifest-after.json</code> in
+<code>docs/reports/issue-1959-solver-start/</code>.</p>
+
+<h2>What the oracle found that inspection did not</h2>
+
+<p>Three defects were identified by reading the dictionaries against the v2312
+tutorial. The solver then found three more, in sequence, each one only reachable
+once the previous was fixed. That progression is the argument for this artifact
+existing at all.</p>
+
+<table>
+<tr><th>#</th><th>Defect</th><th>Found by</th></tr>
+<tr><td>1</td><td><code>fvSolution</code>: <code>alpha.water</code> lumped into a turbulence
+    regex group, no MULES controls, no <code>cAlpha</code>; <code>p</code>/<code>pFinal</code>
+    emitted instead of <code>p_rgh</code>/<code>p_rghFinal</code>/<code>pcorr</code></td>
+    <td>inspection</td></tr>
+<tr><td>2</td><td><code>fvSchemes</code>: single-phase <code>div(phi,U)</code> and
+    <code>div((nuEff*dev(T(grad(U)))))</code> under <code>default none</code></td>
+    <td>inspection</td></tr>
+<tr><td>3</td><td><code>fvSchemes</code>: <code>div(phi,alpha.water)</code> emitted, but the
+    alpha equation looks up <code>div(phi,alpha)</code></td>
+    <td>inspection, against the tutorial</td></tr>
+<tr><td>4</td><td><code>fvSchemes</code>: no <code>wallDist</code> block, which kOmegaSST requires</td>
+    <td class="ok">solver start</td></tr>
+<tr><td>5</td><td><code>fvSchemes</code>: <code>ddtSchemes default backward</code>, which
+    interFoam's alpha equation rejects at run time</td>
+    <td class="ok">solver start</td></tr>
+<tr><td>6</td><td><code>fvSolution</code>: no <code>UFinal</code>, which PIMPLE looks up on its
+    final corrector</td>
+    <td class="ok">solver start</td></tr>
+</table>
+
+<p>Defects 4, 5 and 6 are invisible to any test that compares the emitted
+dictionary against a declared requirement list, because they were absent from
+the requirement list. Only running the solver surfaced them.</p>
+
+<h2>Value provenance</h2>
+
+<p>Every literal introduced traces to the pinned v2312 installation or to an input
+the case already declares. Nothing was taken from the node's hand-authored case
+directories, where a sweep found 139 <code>fvSolution</code> files in 18 distinct
+variants.</p>
+
+<table>
+<tr><th>Value</th><th>Derivation</th></tr>
+<tr><td><code>cAlpha 1</code>, <code>nAlphaCorr 2</code>, <code>nAlphaSubCycles 1</code>,
+        <code>MULESCorr yes</code>, <code>nLimiterIter 5</code>, <code>p_rgh</code> and
+        <code>pcorr</code> tolerances</td>
+    <td>v2312 <code>multiphase/interFoam/laminar/damBreak/damBreak</code></td></tr>
+<tr><td><code>div(rhoPhi,U)</code>, <code>div(phi,alpha)</code>, <code>div(phirb,alpha)</code>,
+        <code>div(((rho*nuEff)*dev2(T(grad(U)))))</code></td>
+    <td>same tutorial's <code>fvSchemes</code></td></tr>
+<tr><td><code>wallDist method meshWave</code></td>
+    <td>used by every interFoam tutorial carrying the block; 78 of 119 across the whole corpus</td></tr>
+<tr><td><code>ddtSchemes default Euler</code></td>
+    <td>41 of 43 interFoam tutorial <code>fvSchemes</code> files</td></tr>
+<tr><td><code>UFinal</code></td>
+    <td>mirrors <code>U</code> with <code>relTol 0</code> — the convention in the repository's
+        existing single-phase block and in the 11 interFoam tutorials declaring it</td></tr>
+<tr><td><code>maxAlphaCo</code></td>
+    <td>equal to the case's declared <code>maxCo</code></td></tr>
+<tr><td><code>maxDeltaT</code></td>
+    <td>equal to the case's declared <code>deltaT</code></td></tr>
+</table>
+
+<p class="note"><code>patch_case.sh</code> on the node uses <code>cAlpha 1.5</code> and
+<code>nAlphaSubCycles 3</code>. Neither value was adopted, and the successful historical
+run on that node used <code>cAlpha 1</code> — so the script is not the source of the
+working evidence and importing from it would have meant adopting a fitted
+constant of unknown provenance.</p>
+
+<h2>Reproducing this</h2>
+
+<div class="scroll"><pre>ssh undi@gpu-claw
+openfoam2312 -c "cd &lt;checkout&gt; &amp;&amp; python3 -m pytest \
+    tests/solvers/openfoam/test_case_runnable.py -v"</pre></div>
+
+<p>The Layer 2 test skips itself where <code>interFoam</code> is not installed, so CI
+will report it as skipped. A skip proves nothing, which is why this artifact is
+committed rather than relied upon as a green tick.</p>
+
+<p class="note">Two launcher traps on this node, recorded so the next run does not
+rediscover them: <code>set -u</code> kills any OpenFOAM launcher, because
+<code>etc/bashrc</code> dereferences <code>WM_PROJECT_DIR</code> before setting it; and
+sourcing <code>etc/bashrc</code> directly from a non-interactive script trips
+<code>pop_var_context: head of shell_variables not a function context</code>. Use the
+ESI-provided <code>openfoam2312 -c</code> wrapper instead.</p>
+
+</main>
+</body>
+</html>
