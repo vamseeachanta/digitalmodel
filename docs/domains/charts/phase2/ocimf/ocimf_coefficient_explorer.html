@@ -30,7 +30,7 @@ code { background: var(--soft); padding: 1px 5px; border-radius: 3px; font-size:
 <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
 </head><body>
 <h1>OCIMF MEG3/MEG4 Coefficient Explorer</h1>
-<p class='meta'>Interactive visualization of digitized Annex A wind and current coefficients for tankers and gas carriers — sourced from <code>/mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx</code>, covering OCIMF Mooring Equipment Guidelines Annex A Figures A5–A19. Generated 2026-05-20.</p>
+<p class='meta'>Interactive visualization of digitized Annex A wind and current coefficients for tankers and gas carriers — sourced from the digitized OCIMF coefficient workbook identified by digest in section 5, covering OCIMF Mooring Equipment Guidelines Annex A Figures A5–A19. Generated 2026-05-20.</p>
 <section class='toc'><h3 style='margin-top:0'>Contents</h3><ul>
 <li><a href='#overview'>1. Overview</a></li>
 <li><a href='#how-to-use'>2. How to use these coefficients</a></li>
@@ -191,14 +191,17 @@ code { background: var(--soft); padding: 1px 5px; border-radius: 3px; font-size:
 </section>
 <section>
 <h2 id="provenance">5. Data provenance and citation</h2>
+<p>Each source below is identified by its content digest (sha256) rather than by
+a storage location. The digest pins the exact artifact a coefficient was read
+from; locations are deployment detail and are not published.</p>
 <table class="spec">
-<tr><th>Artifact</th><th>Path</th><th>Role</th></tr>
-<tr><td>Full MEG3 (2008) PDF</td><td class="path">/mnt/ace/acma-codes/OCIMF/OCIMF - 2008 - Mooring Equipment Guidelines.pdf</td><td>Canonical published standard, 3rd edition</td></tr>
-<tr><td>Full MEG4 (2018) PDF</td><td class="path">/mnt/ace/acma-codes/OCIMF (MEG 4)/Mooring Equipment Guidelines - MEG4.pdf</td><td>Canonical published standard, 4th edition</td></tr>
-<tr><td><b>OCIMF Coef.xlsx (this explorer's data source)</b></td><td class="path">/mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx</td><td>Digitized Annex A coefficient lookup tables (Figures A5–A19)</td></tr>
-<tr><td>WebPlotDigitizer alt extraction (A5–A9 only)</td><td class="path">/mnt/ace/acma-codes/OCIMF 3rd ed/Digitizer/</td><td>Independent re-digitization for cross-validation</td></tr>
-<tr><td>Figure PDFs (15 files)</td><td class="path">/mnt/ace/acma-codes/OCIMF/Figures/</td><td>Per-figure extract PDFs</td></tr>
-<tr><td>Project-bundled MEG4 extracts</td><td class="path">/mnt/ace/acma-projects/B1522/ctr-7/_data/ocimf/</td><td>Project-specific bundle (Fig. A13–A21 + worked examples)</td></tr>
+<tr><th>Artifact</th><th>SHA-256</th><th>Role</th></tr>
+<tr><td>Full MEG3 (2008) PDF</td><td class="digest"><code>51de0e48fa14366a49d93b4e65e9289cdf2f45a13f359641035594cf73b3419a</code></td><td>Canonical published standard, 3rd edition</td></tr>
+<tr><td>Full MEG4 (2018) PDF</td><td class="digest"><code>b2627091310d45735b7c6048ec0554d5c77943a34be9dc2839aacb197f14416b</code></td><td>Canonical published standard, 4th edition</td></tr>
+<tr><td>Digitized coefficient workbook (this explorer&#x27;s data source)</td><td class="digest"><code>bb80d89d044cb49d59e0584c3d0575bf068f7cb249eeb630ac839733139ba272</code></td><td>Digitized Annex A coefficient lookup tables (Figures A5–A19)</td></tr>
+<tr><td>WebPlotDigitizer alt extraction (A5–A9 only)</td><td class="digest"><code>c47c3f8a1cdba45845ce7ba35cee013c285b3998191c7cc1cc9d22423228cb39</code></td><td>Independent re-digitization for cross-validation</td></tr>
+<tr><td>Figure PDFs (15 files)</td><td class="digest"><code>02c1c5f816a690187a93d1101549403547b3d7c87d5104dcbc19a72f3c89c3bb</code></td><td>Per-figure extract PDFs</td></tr>
+<tr><td>Project-bundled MEG4 extracts</td><td class="digest"><code>e717185f1dcfaf7db69ee8e3dcdc1e11d8e81fb20293cc4dd3ca2463e26647ee</code></td><td>Project-specific bundle (Fig. A13–A21 + worked examples)</td></tr>
 </table>
 <div class="callout">
 <p><b>Citation contract:</b> Per <code>.claude/rules/calc-citation-contract.md</code>, any digitalmodel calc module emitting a coefficient from this data must produce a <code>Citation</code> sidecar binding to <code>wiki/standards/ocimf-meg3.md</code> or <code>wiki/standards/ocimf-meg4.md</code>. Those wiki pages are tracked at <a href="https://github.com/vamseeachanta/workspace-hub/issues/2284">workspace-hub#2284</a>. Precedent: DNV-OS-E301 pilot at <code>digitalmodel/src/digitalmodel/orcaflex/mooring_design.py::check_mbl_with_safety_factor</code>.</p>
@@ -221,6 +224,6 @@ code { background: var(--soft); padding: 1px 5px; border-radius: 3px; font-size:
 <li><a href="https://github.com/vamseeachanta/digitalmodel/issues/563">digitalmodel#563</a> — OCIMF database performance (adapter scope)</li>
 <li><a href="https://github.com/vamseeachanta/workspace-hub/issues/2685">workspace-hub#2685</a> — DNV-OS-E301 citation pilot (precedent for OCIMF citation pattern)</li>
 </ul>
-<p class="meta">Generated 2026-05-20 from <code>/mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx</code> · explorer build script <code>/tmp/build_ocimf_explorer.py</code></p>
+<p class="meta">Generated 2026-05-20 from the digitized OCIMF coefficient workbook identified by digest in section 5 · explorer build script <code>scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py</code></p>
 </section>
 </body></html>

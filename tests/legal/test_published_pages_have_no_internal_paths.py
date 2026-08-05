@@ -28,8 +28,10 @@ and base64 image payloads, which was measured at 151 of the tree's HTML files.
 from __future__ import annotations
 
 import functools
+import html
 import importlib.util
 import re
+import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -127,9 +129,14 @@ def _violations_by_page() -> dict[str, int]:
     return counts
 
 
+@functools.lru_cache(maxsize=1)
 def _load_producer():
     spec = importlib.util.spec_from_file_location("_ocimf_producer", PRODUCER)
     module = importlib.util.module_from_spec(spec)
+    # The producer defines a dataclass; dataclasses resolves annotations via
+    # sys.modules[cls.__module__], so the module must be registered before it
+    # is executed.
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
 
@@ -221,9 +228,13 @@ def test_provenance_rows_retain_title_and_digest():
         for index, source in enumerate(module.PROVENANCE_SOURCES, start=1)
     }
     rendered = module.render_provenance_html(digests)
-    rows = re.findall(r"<tr><td>(.*?)</td><td[^>]*>([0-9a-f]{64})</td>", rendered)
+    rows = re.findall(
+        r'<tr><td>(.*?)</td><td class="digest"><code>([0-9a-f]{64})</code></td>',
+        rendered,
+    )
     assert rows == [
-        (source.title, digests[source.key]) for source in module.PROVENANCE_SOURCES
+        (html.escape(source.title), digests[source.key])
+        for source in module.PROVENANCE_SOURCES
     ]
 
 
