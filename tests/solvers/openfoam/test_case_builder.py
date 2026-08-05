@@ -5,6 +5,7 @@ structure creation, file generation, and OpenFOAM dict file content.
 """
 
 import pytest
+import re
 import tempfile
 from pathlib import Path
 
@@ -203,6 +204,80 @@ class TestControlDictContent:
         case_dir = builder.build(tmp_path)
         content = (case_dir / "system" / "controlDict").read_text()
         assert "500" in content
+
+
+class TestWallDistanceSchemes:
+    """A RAS model that needs a wall distance must be told how to compute it.
+
+    Found by the issue #1959 solver-start oracle, not by inspection: the case
+    read p_rgh, U and transportProperties, selected kOmegaSST, and only then
+    died on a missing wallDist method. meshWave is the method every interFoam
+    tutorial in the pinned v2312 installation uses.
+    """
+
+    def _fv_schemes(self, tmp_path, turbulence_type, name):
+        case = OpenFOAMCase.for_case_type(CaseType.SLOSHING, name=name)
+        case.turbulence_model = TurbulenceModel(turbulence_type=turbulence_type)
+        case_dir = OpenFOAMCaseBuilder(case).build(tmp_path)
+        return (case_dir / "system" / "fvSchemes").read_text()
+
+    def test_ras_case_declares_wall_dist(self, tmp_path):
+        """kOmegaSST needs a wallDist block in fvSchemes."""
+        content = self._fv_schemes(tmp_path, TurbulenceType.K_OMEGA_SST, "wd_ras")
+        assert "wallDist" in content
+
+    def test_ras_wall_dist_method_is_mesh_wave(self, tmp_path):
+        """The wall distance method is meshWave."""
+        content = self._fv_schemes(tmp_path, TurbulenceType.K_OMEGA_SST, "wd_method")
+        match = re.search(r"^\s*method\s+(\S+?);", content, re.MULTILINE)
+        assert match.group(1) == "meshWave"
+
+    def test_laminar_case_omits_wall_dist(self, tmp_path):
+        """A laminar case computes no wall distance and needs no block."""
+        content = self._fv_schemes(tmp_path, TurbulenceType.LAMINAR, "wd_laminar")
+        assert "wallDist" not in content
+
+
+class TestVofControlDictCourantBounds:
+    """A VOF run at fixed deltaT with no interface Courant bound is not
+    defensible as runnable (issue #1959, design decision D7)."""
+
+    def _control_dict(self, tmp_path, name):
+        case = OpenFOAMCase.for_case_type(CaseType.SLOSHING, name=name)
+        case_dir = OpenFOAMCaseBuilder(case).build(tmp_path)
+        return case, (case_dir / "system" / "controlDict").read_text()
+
+    def test_vof_case_adjusts_time_step(self, tmp_path):
+        """interFoam cases must run with adjustTimeStep yes."""
+        _, content = self._control_dict(tmp_path, "vof_adjust")
+        match = re.search(r"^adjustTimeStep\s+(\S+?);", content, re.MULTILINE)
+        assert match.group(1) == "yes"
+
+    def test_vof_case_declares_max_alpha_co(self, tmp_path):
+        """The interface Courant bound must be present."""
+        _, content = self._control_dict(tmp_path, "vof_alpha_co")
+        assert "maxAlphaCo" in content
+
+    def test_max_alpha_co_equals_max_co(self, tmp_path):
+        """maxAlphaCo is derived from the case's declared maxCo, not tuned."""
+        case, content = self._control_dict(tmp_path, "vof_alpha_co_value")
+        match = re.search(r"^maxAlphaCo\s+(\S+?);", content, re.MULTILINE)
+        assert float(match.group(1)) == case.solver_config.max_co
+
+    def test_max_delta_t_equals_delta_t(self, tmp_path):
+        """maxDeltaT defaults to the declared deltaT -- no new constant."""
+        case, content = self._control_dict(tmp_path, "vof_max_dt")
+        match = re.search(r"^maxDeltaT\s+(\S+?);", content, re.MULTILINE)
+        assert float(match.group(1)) == case.solver_config.delta_t
+
+    def test_single_phase_case_declares_no_max_alpha_co(self, tmp_path):
+        """simpleFoam cases must not carry an interface Courant bound."""
+        case = OpenFOAMCase.for_case_type(
+            CaseType.CURRENT_LOADING, name="single_phase_no_alpha_co"
+        )
+        case_dir = OpenFOAMCaseBuilder(case).build(tmp_path)
+        content = (case_dir / "system" / "controlDict").read_text()
+        assert "maxAlphaCo" not in content
 
 
 # ============================================================================

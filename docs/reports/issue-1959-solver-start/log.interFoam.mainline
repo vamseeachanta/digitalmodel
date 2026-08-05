@@ -1,0 +1,60 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2312                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _9a9aeb73-20260127 OPENFOAM=2312 patch=260127 version=2312
+Arch   : "LSB;label=32;scalar=64"
+Exec   : interFoam
+Date   : Aug 04 2026
+Time   : 21:49:52
+Host   : gpu-claw
+PID    : 2137182
+--> FOAM Warning : 
+    From Foam::fileName Foam::cwd_L()
+    in file POSIX.C at line 552
+    PWD is not the cwd() - reverting to physical description
+I/O    : uncollated
+--> FOAM Warning : 
+    From Foam::fileName Foam::cwd_L()
+    in file POSIX.C at line 552
+    PWD is not the cwd() - reverting to physical description
+Case   : /home/undi/dm1959/negrun/mainline_probe
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Create mesh for time = 0
+
+
+PIMPLE: no residual control data found. Calculations will employ 3 corrector loops
+
+Reading field p_rgh
+
+Reading field U
+
+Reading/calculating face flux field phi
+
+Reading transportProperties
+
+Selecting incompressible transport model Newtonian
+Selecting incompressible transport model Newtonian
+
+
+--> FOAM FATAL IO ERROR: (openfoam-2312 patch=260127)
+Entry 'cAlpha' not found in dictionary "/home/undi/dm1959/negrun/mainline_probe/system/fvSolution/solvers/(k|omega|epsilon|alpha.water)"
+
+
+file: system/fvSolution/solvers/(k|omega|epsilon|alpha.water) at line 49 to 52.
+
+    From bool Foam::dictionary::readEntry(const Foam::word&, T&, Foam::keyType::option, Foam::IOobjectOption::readOption) const [with T = double]
+    in file ./src/OpenFOAM/lnInclude/dictionaryTemplates.C at line 327.
+
+FOAM exiting
+
