@@ -26,6 +26,8 @@ from hashlib import sha256
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from digitalmodel.solvers.openfoam import artifact_index
 from digitalmodel.workflows import openfoam_batch_decomposition as decomposition
 from digitalmodel.workflows import openfoam_batch_execution as execution
@@ -132,6 +134,24 @@ def test_resume_refuses_non_contiguous_ranks(tmp_path):
     assert row["error"] == (
         "resume refused: processor directory set does not match workers 4: "
         "observed 3, required 4; missing processor2"
+    )
+
+
+def test_resume_refuses_a_non_positive_rank_count(tmp_path):
+    # workers=0 satisfies checks 1 and 2 vacuously -- an empty required set
+    # matches an empty observed set -- so the gate must reject it up front
+    # rather than fall through to indexing rank 0 of an empty list.
+    # resolve_workers already rejects workers < 1 on the router path; the gate
+    # is directly callable and must refuse in its own right rather than raise
+    # an IndexError that says nothing about the failed check.
+    item, case_dir = _case(tmp_path)
+    _write_subdomains(case_dir, 0)
+
+    with pytest.raises(decomposition.DecompositionMismatch) as caught:
+        decomposition.verify_resumable_decomposition(case_dir, 0)
+
+    assert str(caught.value) == (
+        "resume refused: workers must be >= 1 to reuse a decomposition, got 0"
     )
 
 

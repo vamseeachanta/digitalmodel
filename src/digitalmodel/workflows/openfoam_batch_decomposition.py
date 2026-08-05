@@ -62,7 +62,17 @@ def verify_resumable_decomposition(case_dir: Path, workers: int) -> str:
     Ordering matters: a rank-count mismatch explains a missing rank directory,
     so reporting the rank set first names the actual fault rather than a
     symptom of it.
+
+    ``workers`` is rejected below 1 before anything else, because checks 1 and
+    2 are both satisfied *vacuously* at zero -- an empty required set matches
+    an empty observed set -- and check 3 would then index rank 0 of an empty
+    list. ``resolve_workers`` already rejects that on the router path; this
+    gate is directly callable and refuses in its own right.
     """
+    if workers < 1:
+        _refuse(
+            f"workers must be >= 1 to reuse a decomposition, got {workers}"
+        )
     ranks = _verify_rank_set(case_dir, workers)
     _verify_subdomain_count(case_dir, workers)
     return _verify_common_latest_time(case_dir, ranks)
