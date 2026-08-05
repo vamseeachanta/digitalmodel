@@ -336,37 +336,13 @@ def test_mpi_stage_failure_fails_case_and_is_retried(tmp_path):
     assert row2["status"] == "completed"
 
 
-def test_mpi_resume_restarts_from_latest_time(tmp_path):
-    # resume: true + an existing processor* decomposition -> skip mesh and
-    # decompose stages, patch controlDict to latestTime, never rebuild.
-    base = {"case_type": "current_loading", "solver": "interFoam"}
-    item = ofb._render_cases(base, [{}], {}, tmp_path / "work")[0]
-    case_dir = tmp_path / "work" / item["name"]
-    (case_dir / "system").mkdir(parents=True)
-    (case_dir / "system" / "controlDict").write_text(
-        "application     interFoam;\nstartFrom       startTime;\n"
-    )
-    (case_dir / "processor0").mkdir()
-
-    recorded = []
-
-    def fake_runner(argv, cwd, log, timeout):
-        recorded.append(argv)
-        return 0
-
-    with patch.object(
-        ofb, "_build_case",
-        side_effect=AssertionError("resume must not rebuild the case"),
-    ):
-        row = ofb._run_case_mpi(
-            item, {"resume": True, "reconstruct": True}, workers=4, mock=False,
-            command_runner=fake_runner,
-        )
-
-    assert row["status"] == "completed"
-    assert [argv[0] for argv in recorded] == ["mpirun", "reconstructPar"]
-    assert "latestTime" in (case_dir / "system" / "controlDict").read_text()
-    assert ofb.mpi_command_plan("interFoam", 4, resume=True)[0][0] == "mpirun"
+# test_mpi_resume_restarts_from_latest_time lived here. It created exactly one
+# processor0 and then ran workers=4, so it asserted that a 4-rank resume from a
+# 1-rank decomposition completed. Replaced by #1968 with
+# tests/workflows/test_openfoam_mpi_resume.py, whose
+# test_resume_accepts_matching_decomposition carries its assertions and its
+# "resume must not rebuild the case" guard, and whose
+# test_refused_resume_does_not_rebuild_the_case carries the complement.
 
 
 def test_failed_pool_checkpoint_is_retried(tmp_path):
