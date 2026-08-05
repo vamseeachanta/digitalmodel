@@ -131,14 +131,38 @@ repos:
           - --comment-style
           - "#"
 
-  # Legal sanity scan (deny list — blocks client identifiers)
+  # Protected-surface census (#1961, Stage 1) — replaces a hook that pointed
+  # outside this repository.
+  #
+  # The previous hook ran ../scripts/legal/legal-sanity-scan.sh, which does not
+  # exist in this repository at any tracked path, and whose --repo= form is
+  # fail-open under an open upstream issue: it was observed printing a PASS
+  # result with exit 0 over a worktree that contained a live leak. A hook that
+  # cannot resolve its own entry point, and whose upstream passes regardless, is
+  # a gate in name only.
+  #
+  # What replaces it is deliberately narrower and honest about it: the
+  # authority-independent half. It cross-checks the scanner's census against an
+  # independent git enumeration, requires the census to be non-empty, requires
+  # every tracked path to be classified, and requires the scanner's own files to
+  # be inside the census. It does NOT match rule values, because no rule value is
+  # committed anywhere in this repository. It never skips and it never reports a
+  # pass it did not earn.
+  #
+  # The gitleaks hook above has the same unresolvable relative path
+  # (--config ../.gitleaks.toml). It is left alone here and recorded in
+  # docs/legal-scanning.md rather than changed silently in this pass.
   - repo: local
     hooks:
-      - id: legal-sanity-scan
-        name: Legal sanity scan (deny list)
-        language: script
-        entry: ../scripts/legal/legal-sanity-scan.sh
-        args: [--repo=digitalmodel]
+      # Invoked through an interpreter, as the no-windows-path-dirs hook below
+      # already is, so the file stays mode 100644 like every comparable script
+      # here. A language: script entry would need the executable bit, which this
+      # repository does not set on any of its guard scripts -- so the hook would
+      # have failed to start rather than failed a check.
+      - id: protected-surface-census
+        name: Protected-surface census (Stage 1, unauthenticated)
+        language: system
+        entry: bash scripts/legal/verify_public_surface.sh --enumeration
         pass_filenames: false
         stages: [pre-commit]
 
