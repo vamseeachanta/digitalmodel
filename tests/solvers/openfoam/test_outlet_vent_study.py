@@ -164,3 +164,33 @@ def test_verdict_requires_the_vent_to_hold_volume_better_than_the_baseline(study
     )
     assert verdict2["baseline_holds_volume"] is True
     assert verdict2["recommended_variant"] == study.VARIANT_BASELINE
+
+
+# ---------------------------------------------------------------------------
+# Tolerance provenance
+# ---------------------------------------------------------------------------
+#
+# The verdict must not be judged by a threshold invented for this study, and it
+# must not be a number typed on a command line at run time.  It is bound to the
+# tolerance the repo already applies to exactly these cases:
+# ``ExtractionConfig.mass_balance_rtol`` in
+# ``src/digitalmodel/solvers/openfoam/time_history.py``, which decides
+# ``mass_balance_ok`` for the extracted time histories.
+#
+# The expected value below is a hand-written literal, NOT read back from
+# ``ExtractionConfig``.  A test that computed its expectation from the same
+# constant the implementation reads could never fail.  Pinning the literal means
+# that if anyone retunes the repo's mass-balance tolerance, this test fails and
+# forces a deliberate decision about the #1528 verdict rather than silently
+# moving the goalposts under a published result.
+
+
+def test_default_tolerance_pct_is_the_repo_mass_balance_rtol_in_percent(study):
+    assert study.DEFAULT_TOLERANCE_PCT == 0.1
+
+
+def test_parser_defaults_the_tolerance_so_it_is_not_typed_at_run_time(study):
+    args = study.build_parser().parse_args(
+        ["--work-root", "/tmp/wr", "--output", "/tmp/out.json"]
+    )
+    assert args.tolerance_pct == 0.1
