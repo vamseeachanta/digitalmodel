@@ -124,7 +124,7 @@ PAGE_EXCLUSIONS = {
         "build_wave_tank.py requires caller-supplied solved case and results"
     ),
     "docs/api/hydro/ocimf-coefficient-explorer.html": (
-        "producer uses an external absolute-path workbook and random Plotly div ids"
+        "producer needs a caller-supplied workbook and emits random Plotly div ids"
     ),
     "docs/api/hydro/unit-box-benchmark/benchmark_amplitude.html": (
         "no active producer targets this committed copy; Plotly div id is random"

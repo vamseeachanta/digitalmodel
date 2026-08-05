@@ -83,10 +83,18 @@ def test_refactored_polar_signatures_match_fixture():
     import build_coefficient_explorer as bce
     importlib.reload(bce)  # in case it was imported earlier in the session
 
-    if not bce.XLSX.is_file():
-        pytest.skip(f"OCIMF workbook unavailable: {bce.XLSX}")
+    # The workbook location used to be a module constant holding an absolute
+    # path, which is the disclosure removed by digitalmodel#1965. It is now
+    # supplied by the caller, so this test takes it from the environment and
+    # skips when it is not configured -- exactly as it already skipped whenever
+    # the hardcoded location did not exist on the running machine.
+    workbook = os.environ.get("OCIMF_COEFFICIENT_WORKBOOK", "")
+    if not workbook or not pathlib.Path(workbook).is_file():
+        pytest.skip(
+            "OCIMF workbook unavailable; set OCIMF_COEFFICIENT_WORKBOOK to run"
+        )
 
-    rows = bce.load_all()
+    rows = bce.load_all(workbook)
     df = pd.DataFrame(rows)
 
     fixture = json.loads(TRACE_SIG_FIXTURE.read_text())
