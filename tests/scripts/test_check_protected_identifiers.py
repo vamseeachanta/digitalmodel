@@ -448,7 +448,8 @@ def test_finding_reports_rule_id_path_line_and_byte_offset(repo: Path, tmp_path:
 
 
 def test_scanner_scans_its_own_implementation_and_tests(tmp_path: Path) -> None:
-    """No self-block hole: the scanner, its tests and its plan are inside the census."""
+    """No self-block hole: the scanner, its manifest and its tests are in the census,
+    and each is classified with a kind that reads the bytes."""
     manifest_path = _write_manifest(tmp_path, _manifest_dict())
     proc = _run(
         "--manifest",
@@ -459,14 +460,19 @@ def test_scanner_scans_its_own_implementation_and_tests(tmp_path: Path) -> None:
         str(REPO_ROOT),
         "--json",
         "--print-enumeration",
+        "--enumerate-only",
     )
-    enumeration = set(json.loads(proc.stdout)["enumeration"])
-    expected = {
+    classification = json.loads(proc.stdout)["classification"]
+    own = [
         "scripts/legal/check_protected_identifiers.py",
+        "scripts/legal/protected_surface_ownership.py",
         "scripts/legal/protected-surface-v1.json",
+        "scripts/legal/public_surface_snapshot.py",
+        "scripts/legal/verify_public_surface.sh",
         "tests/scripts/test_check_protected_identifiers.py",
-    }
-    assert expected - enumeration == set()
+        "tests/scripts/test_public_surface_snapshot.py",
+    ]
+    assert [classification.get(p) for p in own] == ["scan_text"] * len(own)
 
 
 def test_exact_line_sentinel_is_honoured(repo: Path, tmp_path: Path) -> None:

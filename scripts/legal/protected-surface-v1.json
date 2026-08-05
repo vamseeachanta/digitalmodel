@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "_note": [
+    "Versioned scope manifest for the protected-identifier scanner (#1961, Stage 1).",
+    "This file declares rule IDENTIFIERS and their matcher contract. It carries no",
+    "rule VALUES: values are supplied at run time through --rules and are never",
+    "committed anywhere in this repository. The scanner enumerates its own tree, so",
+    "a value committed here would make the tool fail on itself by construction.",
+    "Without a rule-value file the scanner reports authority UNAUTHENTICATED and",
+    "asserts nothing about production cleanliness."
+  ],
+  "rules": {
+    "PID-A1": {
+      "class": "A",
+      "matcher": "substring_ci",
+      "description": "A single project-coded alphanumeric token.",
+      "why_substring_matching": [
+        "A word boundary needs a word-character transition and _ is a word character,",
+        "so a bounded matcher never fires on the token when it is immediately followed",
+        "by an underscore -- the shape a public package export takes. Measured against",
+        "the pinned oracle tree, bounding suppressed 1 content-addressed false positive",
+        "at the cost of 13 genuine occurrences out of 30, the public export among them."
+      ],
+      "value_source": [
+        "Not stored. Reconstructible by an authorised reader from the diff of the",
+        "commit pinned at oracle.fixed_by, which removed the identifier from this",
+        "repository. See docs/legal-scanning.md."
+      ]
+    },
+    "PID-B1": {
+      "class": "B",
+      "matcher": "co_occurrence_same_file",
+      "description": "Two names that are individually unremarkable and jointly identifying.",
+      "why_co_occurrence": [
+        "Name 1 alone occurs in 39 tracked files / 91 occurrences at the head this",
+        "manifest was written against, including public vessel-registry data, a public",
+        "stock-ticker dataset, and an operating-system release codename in a",
+        "provisioning script. A bare match on it is mostly non-violations.",
+        "No character or line window is used, because any window width would be a",
+        "constant fitted to the data it judges. Same-file co-occurrence is structural."
+      ],
+      "value_source": [
+        "Not stored. Supplied at run time by the same authority mechanism as PID-A1."
+      ]
+    }
+  },
+  "classifications": [
+    {
+      "id": "content-addressed-package-index-url",
+      "kind": "content_addressed",
+      "paths": ["uv.lock"],
+      "field_patterns": [
+        "https://files\\.pythonhosted\\.org/[^\"\\s]*",
+        "sha256[:=][ ]*\"?[0-9a-fA-F]{32,}\"?"
+      ],
+      "reason": "Resolver-pinned package-index URL path segments and sha256 digests are content-addressed: their bytes are chosen by a hash function, not by an author, so a coincidental match carries no information. Excluded by WHAT THE FIELD IS. The rest of the file is still scanned, and no boundary rule and no whole-file exemption is used to achieve this."
+    }
+  ],
+  "default_classification": "scan_text",
+  "limits": {
+    "max_file_bytes": 134217728,
+    "_reason": "Above the largest tracked blob (64528245 bytes at the head this manifest was written against). An artifact over the limit is an ERROR with a distinct exit code, never a skip."
+  },
+  "line_sentinel": "protected-identifier-synthetic",
+  "_sentinel_policy": "Exact-line only. A sentinel on any other line does not cover a finding, and there is no file-level form -- the schema cannot represent one.",
+  "oracle": {
+    "_what": "A leak population this scanner's author did not construct and did not choose. The commit below removed the identifiers; Git preserved the tree immediately before it. Every count is an exact equality against that immutable tree, never a threshold, and never derived from the tree being judged.",
+    "fixed_by": "5f437bfb62d023543b270419f859a4a685324b62",
+    "ref": "5f437bfb62d023543b270419f859a4a685324b62^",
+    "remeasure_command": "scripts/legal/verify_public_surface.sh --oracle",
+    "expected_class_a": {
+      "docs/api/cfd/sloshing-3d-benchmark.json": 1,
+      "scripts/capabilities/build_sloshing_explorer.py": 1,
+      "scripts/cfd/run_sloshing_3d_benchmark.py": 2,
+      "src/digitalmodel/solvers/openfoam/__init__.py": 2,
+      "src/digitalmodel/solvers/openfoam/pressure_taps.py": 6,
+      "src/digitalmodel/solvers/openfoam/sloshing_coupling.py": 2,
+      "src/digitalmodel/solvers/openfoam/validation/sloshing_2d.py": 1,
+      "src/digitalmodel/solvers/openfoam/validation/sloshing_sweep.py": 4,
+      "tests/solvers/openfoam/test_pressure_taps.py": 10,
+      "tests/solvers/openfoam/test_sloshing_coupling.py": 1
+    },
+    "expected_total_class_a": 30,
+    "expected_file_count": 10,
+    "must_report_zero_in": ["uv.lock"],
+    "_two_sided": "Any extra finding fails and any missing finding fails. A subset match is not a pass."
+  },
+  "generated_census": [
+    "docs/api/cfd/sloshing-3d-benchmark.json",
+    "docs/api/cfd/tank-sloshing-verification.html",
+    "docs/api/structural/sloshing-explorer.html",
+    "docs/benchmarks/unit_box/benchmark_amplitude.html"
+  ],
+  "_generated_census_note": [
+    "Digested by public_surface_snapshot.py so a hand-edit to a generated artifact",
+    "moves the snapshot. Deliberately NOT limited to docs/api/**: the last page found",
+    "leaking sat outside that census, and a second sat inside it but inside",
+    "PAGE_EXCLUSIONS, which the drift gate never regenerates. The scanner's own census",
+    "is the complete tracked tree, not this list."
+  ]
+}

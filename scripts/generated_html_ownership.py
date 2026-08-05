@@ -1,4 +1,28 @@
-"""Reasoned classifications used by the generated HTML freshness census."""
+"""Reasoned classifications used by the generated HTML freshness census.
+
+This census is scoped to ``docs/api/**`` and it is **no longer the only
+census** (#1961).
+
+Two holes were found in it by manual sweep rather than by any check. One
+leaking page sat inside ``docs/api/**`` but inside ``PAGE_EXCLUSIONS``, which
+means a producer exists but is not deterministically reproducible -- so the
+drift gate never regenerates it and no PR that hand-edits it fails. A second,
+near-duplicate page sat outside ``docs/api/**`` entirely and was therefore
+outside this census altogether.
+
+``scripts/legal/check_protected_identifiers.py`` covers the complete tracked
+tree returned by ``git ls-files``, with every path classified and an
+unanticipated path scanned rather than skipped, so a leak cannot survive by
+living somewhere this file does not look. A named subset of generated artifacts
+is additionally digested by ``scripts/legal/public_surface_snapshot.py``, so a
+hand-edit to one of them moves the public-surface snapshot even when nothing
+regenerates it; that subset is declared in
+``scripts/legal/protected-surface-v1.json`` under ``generated_census`` and is
+deliberately not limited to ``docs/api/**``.
+
+Nothing here changes what this census does. It records what it does *not* do,
+so the next reader does not mistake its scope for coverage.
+"""
 
 DISCOVERY_FALSE_POSITIVES = {
     "scripts/benchmark/compare_hydro_properties.py": (

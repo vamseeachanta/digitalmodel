@@ -132,3 +132,83 @@ jobs:
             } catch (error) {
               console.error('Failed to post comment:', error);
             }
+
+  # ------------------------------------------------------------------------ #
+  # Protected-surface scanner, Stage 1 (#1961).
+  #
+  # This job is deliberately NOT a required status check, and this repository
+  # defines none in any case. It runs with SYNTHETIC rule values and therefore
+  # asserts NOTHING about production cleanliness. A green here does not mean the
+  # public surface is guarded -- it means the scanner's census, its snapshot and
+  # its mutation sensitivity are intact. The authenticated production scan is
+  # Stage 2 and is blocked on external provisioning.
+  #
+  # It is not marked continue-on-error: non-required is not the same as
+  # non-failing. A gate that reports green while failing is the failure mode
+  # this whole issue exists to remove.
+  #
+  # It lives here rather than in docs.yml, which is path-filtered and would
+  # silently not fire on most changes.
+  # ------------------------------------------------------------------------ #
+  protected-surface-stage1:
+    name: Protected surface (Stage 1, UNAUTHENTICATED)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # snapshot base blobs must be reachable
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Announce the stage and what it does not prove
+        run: |
+          echo "=============================================================="
+          echo "  UNAUTHENTICATED"
+          echo "  Stage 1 of #1961. Synthetic rule values only."
+          echo "  This job asserts NOTHING about production-clean state."
+          echo "  It is not a required check. A green result here must never be"
+          echo "  read as 'the public surface is guarded'."
+          echo "=============================================================="
+
+      - name: D6a enumeration cross-check (independent git ls-files)
+        run: bash scripts/legal/verify_public_surface.sh --enumeration
+
+      - name: D5 public-surface snapshot diff and mutation proof
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          [ -z "$BASE" ] && BASE="${{ github.event.before }}"
+          if [ -z "$BASE" ] || ! git cat-file -e "${BASE}^{commit}" 2>/dev/null; then
+            BASE="$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)"
+          fi
+          bash scripts/legal/verify_public_surface.sh --snapshot "$BASE"
+
+      - name: Synthetic-rule scan of the tracked tree
+        run: |
+          RULES="${RUNNER_TEMP}/synthetic-rules.json"
+          # Written outside the repository on purpose: the scanner enumerates its
+          # own tree, so committing any rule value would make it fail on itself.
+          cat > "$RULES" <<'JSON'
+          {
+            "authority": "synthetic",
+            "rules": {
+              "PID-A1": {"class": "A", "values": ["zq7731"]},
+              "PID-B1": {"class": "B", "values": ["orgalpha", "projbeta"]}
+            }
+          }
+          JSON
+          python3 scripts/legal/check_protected_identifiers.py \
+            --manifest scripts/legal/protected-surface-v1.json \
+            --rules "$RULES" --root . --print-enumeration --enumerate-only \
+            | head -n 3
+          python3 scripts/legal/check_protected_identifiers.py \
+            --manifest scripts/legal/protected-surface-v1.json \
+            --rules "$RULES" --root .
+
+      - name: Restate the stage
+        if: always()
+        run: echo "UNAUTHENTICATED -- Stage 1 only. Stage 2 remains blocked."
