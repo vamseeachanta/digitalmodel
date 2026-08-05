@@ -106,10 +106,16 @@ Examples:
     setup_logging(args.verbose)
     logger = logging.getLogger(__name__)
     
-    # Check OrcaFlex availability
+    # #1631 (path D): this used to flip args.mock on for the user and then
+    # exit 0 on mock success, so an unlicensed host was indistinguishable from
+    # a licensed one at the shell. Refuse instead; --mock still works.
     if not args.mock and not ORCAFLEX_AVAILABLE:
-        logger.warning("OrcaFlex API not available. Running in mock mode.")
-        args.mock = True
+        logger.error(
+            "OrcaFlex API not available, so no .sim can be produced. Run on a "
+            "licensed OrcaFlex host, or pass --mock to simulate the run "
+            "explicitly."
+        )
+        sys.exit(1)
     
     # Validate arguments
     if not args.models and not args.all:

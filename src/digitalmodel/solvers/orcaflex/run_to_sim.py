@@ -19,6 +19,9 @@ try:
 except ImportError:
     ORCAFLEX_AVAILABLE = False
 
+from digitalmodel.solvers.orcaflex.core.exceptions import LicenseError
+from digitalmodel.solvers.orcaflex.core.mock_artifacts import write_mock_artifact
+
 logger = logging.getLogger(__name__)
 
 
@@ -32,8 +35,30 @@ class OrcaFlexModelRunner:
         Args:
             mock_mode: If True, simulate without OrcaFlex license
         """
+        # #1631: mock mode is opted into, never inferred. Without a license
+        # and without an explicit request, refuse at call time rather than
+        # report success for a solve that never happened. The raise is here
+        # rather than at import because solvers/orcaflex/__init__.py wraps
+        # every subimport in try/except ImportError and would degrade an
+        # import-time raise into a None export -- a worse failure mode.
+        if not mock_mode and not ORCAFLEX_AVAILABLE:
+            raise LicenseError(
+                "OrcFxAPI is not available, so no .sim can be produced. "
+                "Run on a licensed OrcaFlex host, or pass mock_mode=True to "
+                "simulate the run explicitly.",
+                error_code="NO_MODULE",
+            )
         self.mock_mode = mock_mode
         self.lock = Lock()
+
+    def describe_mode(self) -> str:
+        """How this runner should be described in logs.
+
+        run_batch used to log `Mode: REAL` for an auto-fallback mock run
+        because mock_mode was never mutated on that path -- the log actively
+        misreported the mode.
+        """
+        return "MOCK" if self.mock_mode else "REAL"
         
     def run_single_model(self, 
                         model_file: Path, 
@@ -71,11 +96,16 @@ class OrcaFlexModelRunner:
         start_time = time.time()
         
         try:
-            if self.mock_mode or not ORCAFLEX_AVAILABLE:
-                # Mock mode - simulate success
+            if self.mock_mode:
+                # #1631: this used to report sim_output for a file it never
+                # wrote, so a consumer saw a path pointing at nothing. Write a
+                # real, unmistakably-marked mock artifact and report THAT path.
                 logger.info(f"[MOCK] Processing: {model_path.name}")
-                time.sleep(0.1)  # Simulate processing time
-                logger.info(f"[MOCK] Would save to: {sim_file}")
+                mock_file = write_mock_artifact(
+                    sim_file, model_path.name, "static analysis"
+                )
+                logger.info(f"[MOCK] Wrote mock artifact: {mock_file}")
+                result['sim_output'] = str(mock_file)
                 result['success'] = True
                 result['mock'] = True
             else:
@@ -125,7 +155,7 @@ class OrcaFlexModelRunner:
         logger.info(f"Total models: {len(model_list)}")
         logger.info(f"Parallel threads: {max_workers}")
         logger.info(f"Output: {'Same directory as models' if output_dir is None else output_dir}")
-        logger.info(f"Mode: {'MOCK' if self.mock_mode else 'REAL'}")
+        logger.info(f"Mode: {self.describe_mode()}")
         logger.info("=" * 80)
         
         results = []

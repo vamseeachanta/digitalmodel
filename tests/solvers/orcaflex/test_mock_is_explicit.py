@@ -190,11 +190,14 @@ def test_mock_extract_results_does_not_return_random_numbers() -> None:
         wrapper.extract_results("Line1", "Effective Tension")
 
 
-def test_mock_save_model_does_not_create_a_bare_artifact_at_the_real_path(
+def test_mock_save_simulation_does_not_create_a_bare_artifact_at_the_real_path(
     tmp_path: Path,
 ) -> None:
-    """``:509-511`` does ``output_path.touch()``, leaving an empty ``.sim`` at
-    the path a real solve would have written."""
+    """``save_simulation`` did ``output_path.touch()``, leaving an empty
+    ``.sim`` at the path a real solve would have written.
+
+    Note the method is ``save_simulation``; the plan cited it as ``save_model``.
+    """
     from digitalmodel.solvers.orcaflex.core import model_interface
     from digitalmodel.solvers.orcaflex.core.model_interface import ModelState
 
@@ -203,7 +206,7 @@ def test_mock_save_model_does_not_create_a_bare_artifact_at_the_real_path(
     wrapper._state = ModelState.STATIC_COMPLETE
 
     real_path = tmp_path / "model.sim"
-    wrapper.save_model(real_path)
+    wrapper.save_simulation(real_path)
 
     assert real_path.exists() is False
 
@@ -238,7 +241,7 @@ def test_batch_processor_mock_artifact_is_written_under_a_mock_directory(
     model = tmp_path / "model.dat"
     model.write_text("dummy\n")
 
-    result = processor._process_single(model, tmp_path / "out")
+    result = processor._default_processor(model, tmp_path / "out")
 
     assert Path(result["sim_file"]).parent.name == "out_mock"
 
@@ -252,7 +255,7 @@ def test_batch_processor_mock_artifact_name_carries_the_mock_infix(
     model = tmp_path / "model.dat"
     model.write_text("dummy\n")
 
-    result = processor._process_single(model, tmp_path / "out")
+    result = processor._default_processor(model, tmp_path / "out")
 
     assert Path(result["sim_file"]).name == "model.mock.sim"
 
@@ -309,3 +312,17 @@ def test_import_of_orcaflex_package_still_succeeds_without_license() -> None:
     module = importlib.import_module("digitalmodel.solvers.orcaflex")
 
     assert module is not None
+
+
+def test_universal_runner_env_opt_in_still_yields_mock() -> None:
+    """D4: the seven uncollected run_*.py helper scripts construct the runner
+    with no arguments. They must keep working on an unlicensed host via the
+    documented switch -- not by inferring mock from a failed import, and not by
+    hardcoding mock_mode=True, which would reinstate the defect."""
+    from digitalmodel.solvers.orcaflex.universal import universal_runner
+
+    with patch.object(universal_runner, "_orcaflex_api_available", return_value=False):
+        with patch.dict("os.environ", {"ORCAFLEX_FORCE_MOCK": "1"}):
+            runner = universal_runner.UniversalOrcaFlexRunner()
+
+    assert runner.mock_mode is True

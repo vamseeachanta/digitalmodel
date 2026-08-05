@@ -15,6 +15,33 @@ from dataclasses import dataclass
 import yaml
 import time
 
+from digitalmodel.solvers.orcaflex.core.exceptions import LicenseError
+from digitalmodel.solvers.orcaflex.core.mock_artifacts import write_mock_artifact
+
+
+def _mock_mode_requested() -> bool:
+    """Whether an unlicensed run was explicitly opted into via the environment.
+
+    Same two switches core/model_interface.py:156-157 reads.
+    """
+    return any(
+        os.environ.get(name, "").lower() in ("1", "true", "yes")
+        for name in ("ORCAFLEX_FORCE_MOCK", "ORCAFLEX_SKIP_REAL")
+    )
+
+
+def _orcaflex_api_available() -> bool:
+    """Whether OrcFxAPI can be imported here.
+
+    Factored out so the refusal path is testable on any host: a test that only
+    passes because OrcFxAPI happens to be missing on the runner proves nothing.
+    """
+    try:
+        import OrcFxAPI  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
 # Setup logging
 logger = logging.getLogger(__name__)
 
@@ -75,7 +102,11 @@ class UniversalOrcaFlexRunner:
             analysis_type: Type of analysis ('static', 'dynamic', or 'both')
         """
         self.base_dir = Path(base_dir) if base_dir else Path.cwd()
-        self.mock_mode = mock_mode
+        # #1631 D4: honour the same explicit env opt-in core/model_interface.py
+        # already honours, so unlicensed development has one documented switch
+        # across the package. This is an EXPLICIT request, not an inference
+        # from a failed import -- the distinction is the whole point of D5.
+        self.mock_mode = mock_mode or _mock_mode_requested()
         self.max_workers = max_workers
         self.license_timeout = license_timeout
         self.verbose = verbose
@@ -109,16 +140,24 @@ class UniversalOrcaFlexRunner:
         logger.info(f"Analysis type: {self.analysis_type}")
     
     def _check_orcaflex_availability(self):
-        """Check if OrcaFlex API is available."""
+        """Check if OrcaFlex API is available.
+
+        #1631: this used to flip self.mock_mode to True on ImportError, behind
+        a caller who had explicitly passed mock_mode=False, and then report
+        success for models it never solved. Absence of a license with no
+        explicit opt-in is now a refusal.
+        """
         if not self.mock_mode:
-            try:
-                import OrcFxAPI
-                self.orcaflex_available = True
-                logger.info("OrcaFlex API available")
-            except ImportError:
-                self.orcaflex_available = False
-                logger.warning("OrcaFlex API not available - switching to mock mode")
-                self.mock_mode = True
+            self.orcaflex_available = _orcaflex_api_available()
+            if not self.orcaflex_available:
+                raise LicenseError(
+                    "OrcFxAPI is not available on this host, so no model can "
+                    "be solved. Run on a licensed OrcaFlex workstation, or "
+                    "construct the runner with mock_mode=True to simulate the "
+                    "batch explicitly.",
+                    error_code="NO_MODULE",
+                )
+            logger.info("OrcaFlex API available")
         else:
             self.orcaflex_available = False
             logger.info("Running in mock mode")
@@ -355,8 +394,13 @@ class UniversalOrcaFlexRunner:
                 else:  # both
                     time.sleep(0.3)
                 
-                sim_file = output_dir / f"{model_file.stem}.sim"
-                sim_file.write_text(f"Mock simulation for {model_file.name} (analysis: {analysis_type})")
+                # #1631 D6: a mock artifact must not sit at the real
+                # artifact path where a consumer globbing *.sim would find it.
+                sim_file = write_mock_artifact(
+                    output_dir / f"{model_file.stem}.sim",
+                    model_file.name,
+                    f"analysis: {analysis_type}",
+                )
                 result['sim_file'] = str(sim_file)
                 result['success'] = True
                 result['mock'] = True
