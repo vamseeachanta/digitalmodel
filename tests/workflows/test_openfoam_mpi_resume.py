@@ -61,6 +61,9 @@ def _write_ranks(case_dir: Path, ranks: dict[int, tuple[str, ...]]) -> None:
         (case_dir / f"processor{rank}").mkdir(parents=True)
         for name in times:
             (case_dir / f"processor{rank}" / name).mkdir()
+            # A time directory with no fields in it is not a restart point,
+            # so the ordinary fixture writes one.
+            (case_dir / f"processor{rank}" / name / "U").write_text("field\n")
 
 
 def _recorder() -> tuple[list, object]:
@@ -282,6 +285,106 @@ def test_resume_with_no_processor_directories_refuses_instead_of_rebuilding(tmp_
     )
     # The solved field the operator wanted to resume from still exists.
     assert (case_dir / "0.5" / "U").read_text() == "solved field\n"
+
+
+def test_resume_refuses_a_symlinked_control_dict(tmp_path):
+    # set_start_from_latest_time writes THROUGH a symlink, so an accepted
+    # resume whose system/controlDict points elsewhere rewrites a DIFFERENT
+    # case's controlDict and reports completed. Reading a shared dictionary is
+    # defensible; mutating a file outside the case under test is not.
+    item, case_dir = _case(tmp_path)
+    _write_subdomains(case_dir, 4)
+    _write_ranks(case_dir, {rank: ("0.5",) for rank in range(4)})
+    victim = tmp_path / "neighbour_case" / "system"
+    victim.mkdir(parents=True)
+    (victim / "controlDict").write_text(CONTROL_DICT)
+    before = sha256((victim / "controlDict").read_bytes()).hexdigest()
+    (case_dir / "system" / "controlDict").unlink()
+    (case_dir / "system" / "controlDict").symlink_to(victim / "controlDict")
+    recorded, runner = _recorder()
+
+    row = _resume(item, workers=4, runner=runner)
+
+    assert row["error"] == (
+        "resume refused: system/controlDict resolves outside the case, so "
+        "restarting would rewrite another case's controlDict"
+    )
+    assert sha256((victim / "controlDict").read_bytes()).hexdigest() == before
+    assert recorded == []
+
+
+def test_resume_refuses_a_rank_whose_time_directory_is_empty(tmp_path):
+    # An interrupted parallel write is exactly how a time directory ends up
+    # created but empty, and that is the resume scenario. There is nothing to
+    # restart from. Emptiness is decided by artifact_index.snapshot_tree, the
+    # same helper _candidate_has_files uses, not a second walker.
+    item, case_dir = _case(tmp_path)
+    _write_subdomains(case_dir, 4)
+    _write_ranks(case_dir, {rank: ("0.5",) for rank in range(4)})
+    (case_dir / "processor3" / "0.5" / "U").unlink()
+    recorded, runner = _recorder()
+
+    row = _resume(item, workers=4, runner=runner)
+
+    assert row["error"] == (
+        "resume refused: processor3/0.5 is empty, so there is nothing to "
+        "restart from"
+    )
+
+
+def test_resume_accepts_the_zero_orig_symlink_idiom(tmp_path):
+    # processorN/0 -> 0.orig is standard OpenFOAM. It must not refuse when a
+    # real later time exists: the symlink is not, and could not be, the
+    # maximum.
+    item, case_dir = _case(tmp_path)
+    _write_subdomains(case_dir, 2)
+    for rank in range(2):
+        rank_dir = case_dir / f"processor{rank}"
+        (rank_dir / "0.orig").mkdir(parents=True)
+        (rank_dir / "0.orig" / "U").write_text("initial\n")
+        (rank_dir / "0").symlink_to(rank_dir / "0.orig")
+        (rank_dir / "1.0").mkdir()
+        (rank_dir / "1.0" / "U").write_text("solved\n")
+    recorded, runner = _recorder()
+
+    row = _resume(item, workers=2, runner=runner)
+
+    assert row["status"] == "completed"
+
+
+def test_resume_reports_a_set_mismatch_for_a_stray_symlink(tmp_path):
+    # A stray processor_backup symlink beside an otherwise perfect set must
+    # not pre-empt the set-mismatch message, which is the more informative
+    # refusal.
+    item, case_dir = _case(tmp_path)
+    _write_subdomains(case_dir, 2)
+    _write_ranks(case_dir, {0: ("0.5",), 1: ("0.5",)})
+    (case_dir / "processor_backup").symlink_to(tmp_path)
+    recorded, runner = _recorder()
+
+    row = _resume(item, workers=2, runner=runner)
+
+    assert row["error"] == (
+        "resume refused: processor directory set does not match workers 2: "
+        "observed 3, required 2; unexpected processor_backup"
+    )
+
+
+def test_mock_resume_previews_the_plan_without_a_decomposition(tmp_path):
+    # A plan preview must not require a real on-disk decomposition, and must
+    # not mutate the case. Before the gate, mock + resume on a virgin case
+    # failed outright.
+    base = {"case_type": "current_loading", "solver": "interFoam"}
+    item = ofb._render_cases(base, [{}], {}, tmp_path / "work")[0]
+
+    row = ofb._run_case_mpi(
+        item, {"resume": True, "reconstruct": True}, workers=4, mock=True,
+        command_runner=None,
+    )
+
+    assert row["status"] == "completed"
+    assert row["mpi_plan"] == ["mpirun -np 4 interFoam -parallel",
+                               "reconstructPar"]
 
 
 def test_resume_refuses_a_missing_case_directory(tmp_path):

@@ -8,8 +8,10 @@ count the run was about to request, so a 4-rank run would happily restart from
 a 1-rank decomposition.
 
 ``verify_resumable_decomposition`` refuses instead, and refuses *before*
-``system/controlDict`` is touched, so a rejected resume leaves the case
-byte-identical and the operator can act on the message.
+``system/controlDict`` is touched, so a rejected resume leaves that file
+byte-identical and the operator can act on the message. It does not leave the
+whole case untouched: the caller records a failed checkpoint afterwards, which
+is the caller's business and not a mutation of the decomposition.
 
 Every value the gate compares is a named input (``workers``) or on-disk state
 (a directory listing, ``numberOfSubdomains``, a time directory name). There is
@@ -31,6 +33,11 @@ directory membership here is decided by ``lstat``. That matches the traversal
 discipline ``artifact_index`` already applies (``O_NOFOLLOW``,
 ``follow_symlinks=False``).
 
+Reading through a symlink is not the same as writing through one.
+``system/controlDict`` is rewritten by an accepted resume, so a symlink that
+escapes the case is refused: the solver reading a shared target does not
+license this process to rewrite a neighbouring case.
+
 ``system/decomposeParDict`` is read *through* a symlink on purpose. Sharing a
 dictionary between cases by symlink is ordinary OpenFOAM practice, and the
 solver will read the same target this gate does -- so following it is what
@@ -51,7 +58,10 @@ import re
 import stat
 from typing import NoReturn
 
-from digitalmodel.solvers.openfoam.artifact_index import is_numeric_time_name
+from digitalmodel.solvers.openfoam.artifact_index import (
+    is_numeric_time_name,
+    snapshot_tree,
+)
 
 __all__ = [
     "DecompositionMismatch",
@@ -112,7 +122,28 @@ def verify_resumable_decomposition(case_dir: Path, workers: int) -> str:
         )
     ranks = _verify_rank_set(case_dir, workers)
     _verify_subdomain_count(case_dir, workers)
+    _verify_control_dict_stays_in_case(case_dir)
     return _verify_common_latest_time(case_dir, ranks)
+
+
+def _verify_control_dict_stays_in_case(case_dir: Path) -> None:
+    """Refuse when restarting would rewrite a file outside this case.
+
+    ``set_start_from_latest_time`` writes *through* a symlink, so an accepted
+    resume whose ``system/controlDict`` points elsewhere silently rewrites a
+    neighbouring case -- a parameter sweep sharing ``system/`` is exactly
+    where that bites. Reading a shared dictionary through a symlink is
+    defensible because the solver reads the same target; mutating a file
+    outside the case under test is not.
+    """
+    control = case_dir / "system" / "controlDict"
+    if not control.is_symlink():
+        return
+    if not control.resolve().is_relative_to(case_dir.resolve()):
+        _refuse(
+            "system/controlDict resolves outside the case, so restarting "
+            "would rewrite another case's controlDict"
+        )
 
 
 def _verify_rank_set(case_dir: Path, workers: int) -> list[str]:
@@ -127,7 +158,8 @@ def _verify_rank_set(case_dir: Path, workers: int) -> list[str]:
     observed = [
         entry.name
         for entry in sorted(case_dir.iterdir(), key=lambda path: path.name)
-        if entry.name.startswith("processor") and _rank_dir_is_usable(entry)
+        if entry.name.startswith("processor")
+        and _rank_dir_is_usable(entry, required)
     ]
     missing = [name for name in required if name not in set(observed)]
     unexpected = [name for name in observed if name not in set(required)]
@@ -143,11 +175,21 @@ def _verify_rank_set(case_dir: Path, workers: int) -> list[str]:
     return required
 
 
-def _rank_dir_is_usable(entry: Path) -> bool:
+def _rank_dir_is_usable(entry: Path, required: list[str]) -> bool:
+    """Whether ``entry`` counts as one of this run's rank directories.
+
+    A symlink named like a rank this run needs is refused outright: four
+    names pointing at one directory is one rank of data. A symlink named
+    anything else -- ``processor_backup``, say -- is counted as observed
+    instead, so it surfaces through the set-mismatch message, which says more
+    than "that is a symlink" does.
+    """
     if entry.is_symlink():
-        _refuse(
-            f"{entry.name} is a symlink, not a real decomposition directory"
-        )
+        if entry.name in required:
+            _refuse(
+                f"{entry.name} is a symlink, not a real decomposition directory"
+            )
+        return True
     return _is_real_dir(entry)
 
 
@@ -196,23 +238,47 @@ def _verify_common_latest_time(case_dir: Path, ranks: list[str]) -> str:
 
 
 def _latest_time(rank_dir: Path) -> str:
-    times = []
+    times, linked = [], []
     for entry in sorted(rank_dir.iterdir(), key=lambda path: path.name):
         if not is_numeric_time_name(entry.name):
             continue
         if entry.is_symlink():
-            _refuse(
-                f"{rank_dir.name}/{entry.name} is a symlink, not a real time "
-                "directory"
-            )
-        if _is_real_dir(entry):
+            linked.append(entry.name)
+        elif _is_real_dir(entry):
             times.append(entry.name)
     if not times:
         _refuse(
             f"{rank_dir.name} holds no numeric time directory to restart from"
         )
     _verify_unambiguous_spellings(rank_dir, times)
-    return max(times, key=Decimal)
+    newest = max(times, key=Decimal)
+    _verify_no_linked_time_outranks(rank_dir, linked, newest)
+    if not snapshot_tree(rank_dir / newest):
+        # An interrupted parallel write is exactly how a time directory ends
+        # up created but empty, which is the resume scenario. Emptiness is
+        # decided by artifact_index, not by a second tree walker.
+        _refuse(
+            f"{rank_dir.name}/{newest} is empty, so there is nothing to "
+            "restart from"
+        )
+    return newest
+
+
+def _verify_no_linked_time_outranks(rank_dir: Path, linked: list[str],
+                                    newest: str) -> None:
+    """Refuse only a symlinked time that would have been the restart point.
+
+    ``processorN/0 -> 0.orig`` is a standard OpenFOAM idiom and must not
+    refuse a case that has a real later time. A symlink is only dangerous
+    here when it is the maximum, because that is the value the restart would
+    be taken from.
+    """
+    for name in linked:
+        if Decimal(name) >= Decimal(newest):
+            _refuse(
+                f"{rank_dir.name}/{name} is a symlink, not a real time "
+                "directory"
+            )
 
 
 def _verify_unambiguous_spellings(rank_dir: Path, times: list[str]) -> None:

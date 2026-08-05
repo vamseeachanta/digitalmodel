@@ -186,7 +186,7 @@ def _run_case_mpi_unlocked(item: dict[str, Any], run_settings: dict, workers: in
     resume = bool(run_settings.get("resume", False))
     start = time.monotonic()
     try:
-        case_dir = _prepare_mpi_case(item, resume, workers, layout, builder)
+        case_dir = _prepare_mpi_case(item, resume, workers, layout, builder, mock)
         view = base_view(item["settings"])
         plan = mpi_command_plan(solver, workers,
             view.get("mesh_utility", DEFAULT_MESH_UTILITY),
@@ -269,7 +269,12 @@ def build_case(item: dict[str, Any]) -> Path:
 
 def _prepare_mpi_case(item: dict[str, Any], resume: bool, workers: int,
                       layout: WorkLayout | None,
-                      builder: Callable[[dict[str, Any]], Path]) -> Path:
+                      builder: Callable[[dict[str, Any]], Path],
+                      mock: bool = False) -> Path:
+    if resume and mock:
+        # A plan preview must not require a real on-disk decomposition, and
+        # must not mutate the case to produce one.
+        return item["work_dir"]
     if resume:
         # Refuse BEFORE set_start_from_latest_time rewrites system/controlDict,
         # so a rejected resume leaves the case byte-identical (#1968 D4).
