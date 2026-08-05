@@ -179,7 +179,11 @@ def _run_case_mpi_unlocked(item: dict[str, Any], run_settings: dict, workers: in
     if not solver:
         return _save(item, row(item, status="failed", error="mode: mpi requires base.solver"), layout)
     reconstruct = bool(run_settings.get("reconstruct", True))
-    resume = bool(run_settings.get("resume", False)) and _has_processors(item["work_dir"])
+    # The request alone decides the path. Previously this was ANDed with
+    # _has_processors, so "resume: true" with no processor* dirs silently fell
+    # through to _clean -> rmtree and reported the wipe as completed. The gate
+    # in _prepare_mpi_case owns that input now and refuses instead (#1968).
+    resume = bool(run_settings.get("resume", False))
     start = time.monotonic()
     try:
         case_dir = _prepare_mpi_case(item, resume, workers, layout, builder)
@@ -309,10 +313,6 @@ def _prune(item: dict[str, Any], layout: WorkLayout | None) -> None:
     else:
         for path in item["work_dir"].glob("processor*"):
             shutil.rmtree(path, ignore_errors=True)
-
-
-def _has_processors(case_dir: Path) -> bool:
-    return case_dir.is_dir() and any(case_dir.glob("processor*"))
 
 
 def _case_lock(layout: WorkLayout | None, case: str):

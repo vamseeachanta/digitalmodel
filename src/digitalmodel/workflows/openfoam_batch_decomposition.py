@@ -19,6 +19,17 @@ Time directory names are validated by
 :func:`digitalmodel.solvers.openfoam.artifact_index.is_numeric_time_name`,
 re-exported here rather than reimplemented, so the repo keeps exactly one
 OpenFOAM time-name parser.
+
+**Symlinks are never followed.** ``Path.is_dir()`` follows them, so a rank
+symlinked to another rank -- or to an unrelated case -- would otherwise satisfy
+every check and let a 1-rank decomposition pass as an N-rank one. Directory
+membership is decided by ``lstat``, matching the traversal discipline
+``artifact_index`` already applies (``O_NOFOLLOW``,
+``follow_symlinks=False``).
+
+Refusal leaves ``system/controlDict`` byte-identical. It does not leave the
+whole case untouched: the caller records a failed checkpoint afterwards, which
+is the caller's business and not a mutation of the decomposition.
 """
 
 from __future__ import annotations
@@ -26,6 +37,8 @@ from __future__ import annotations
 from decimal import Decimal
 from pathlib import Path
 import re
+import stat
+from typing import NoReturn
 
 from digitalmodel.solvers.openfoam.artifact_index import is_numeric_time_name
 
@@ -35,7 +48,10 @@ __all__ = [
     "verify_resumable_decomposition",
 ]
 
-_NUMBER_OF_SUBDOMAINS = re.compile(r"\bnumberOfSubdomains\s+(\d+)\s*;")
+# [0-9] rather than \d: Python's \d matches Unicode decimal digits, so
+# "numberOfSubdomains ٤;" would parse as 4 from a file OpenFOAM cannot
+# read. Matches artifact_index._TIME_NAME, which spells it the same way.
+_NUMBER_OF_SUBDOMAINS = re.compile(r"\bnumberOfSubdomains\s+([0-9]+)\s*;")
 # OpenFOAM dictionaries take C++ comments. A stale "// numberOfSubdomains 4;"
 # above the live entry would otherwise be read as the live value, which
 # accepts a decomposition of the wrong size -- the exact hazard this module
@@ -47,8 +63,13 @@ class DecompositionMismatch(RuntimeError):
     """A resume was refused: the decomposition on disk does not match the run."""
 
 
-def _refuse(detail: str) -> None:
+def _refuse(detail: str) -> NoReturn:
     raise DecompositionMismatch(f"resume refused: {detail}")
+
+
+def _is_real_dir(entry: Path) -> bool:
+    """Whether ``entry`` is a directory, following no symlink to decide it."""
+    return stat.S_ISDIR(entry.lstat().st_mode)
 
 
 def verify_resumable_decomposition(case_dir: Path, workers: int) -> str:
@@ -84,11 +105,19 @@ def verify_resumable_decomposition(case_dir: Path, workers: int) -> str:
 
 
 def _verify_rank_set(case_dir: Path, workers: int) -> list[str]:
+    if not case_dir.is_dir():
+        _refuse(
+            "the case directory does not exist, so there is no decomposition "
+            "to reuse"
+        )
     required = [f"processor{index}" for index in range(workers)]
-    observed = sorted(
-        entry.name for entry in case_dir.iterdir()
-        if entry.is_dir() and entry.name.startswith("processor")
-    )
+    # Sorted, so which offending entry a refusal names is decided by the name
+    # and not by iterdir order, i.e. not by the filesystem.
+    observed = [
+        entry.name
+        for entry in sorted(case_dir.iterdir(), key=lambda path: path.name)
+        if entry.name.startswith("processor") and _rank_dir_is_usable(entry)
+    ]
     missing = [name for name in required if name not in set(observed)]
     unexpected = [name for name in observed if name not in set(required)]
     if missing or unexpected:
@@ -101,6 +130,14 @@ def _verify_rank_set(case_dir: Path, workers: int) -> list[str]:
             f"processor directory set does not match workers {workers}: {detail}"
         )
     return required
+
+
+def _rank_dir_is_usable(entry: Path) -> bool:
+    if entry.is_symlink():
+        _refuse(
+            f"{entry.name} is a symlink, not a real decomposition directory"
+        )
+    return _is_real_dir(entry)
 
 
 def _verify_subdomain_count(case_dir: Path, workers: int) -> None:
@@ -148,12 +185,38 @@ def _verify_common_latest_time(case_dir: Path, ranks: list[str]) -> str:
 
 
 def _latest_time(rank_dir: Path) -> str:
-    times = [
-        entry.name for entry in rank_dir.iterdir()
-        if entry.is_dir() and is_numeric_time_name(entry.name)
-    ]
+    times = []
+    for entry in sorted(rank_dir.iterdir(), key=lambda path: path.name):
+        if not is_numeric_time_name(entry.name):
+            continue
+        if entry.is_symlink():
+            _refuse(
+                f"{rank_dir.name}/{entry.name} is a symlink, not a real time "
+                "directory"
+            )
+        if _is_real_dir(entry):
+            times.append(entry.name)
     if not times:
         _refuse(
             f"{rank_dir.name} holds no numeric time directory to restart from"
         )
+    _verify_unambiguous_spellings(rank_dir, times)
     return max(times, key=Decimal)
+
+
+def _verify_unambiguous_spellings(rank_dir: Path, times: list[str]) -> None:
+    """Refuse a rank holding one instant under two names, e.g. 0.5 and 0.50.
+
+    ``max`` would break that tie by ``iterdir`` order, i.e. by filesystem.
+    ``artifact_index._time_roots`` treats the same condition as fatal; this
+    gate agrees rather than guessing which one OpenFOAM would restart from.
+    """
+    by_value: dict[Decimal, set[str]] = {}
+    for name in times:
+        by_value.setdefault(Decimal(name), set()).add(name)
+    for names in by_value.values():
+        if len(names) > 1:
+            _refuse(
+                f"{rank_dir.name} holds duplicate numeric time spellings: "
+                + ", ".join(sorted(names))
+            )

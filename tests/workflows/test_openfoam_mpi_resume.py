@@ -155,6 +155,145 @@ def test_resume_refuses_a_non_positive_rank_count(tmp_path):
     )
 
 
+def test_resume_refuses_a_rank_set_of_the_right_size_but_wrong_names(tmp_path):
+    # The COUNT matches (4 directories, workers=4) but the SET does not.
+    # Without this, a gate that only counts processor* directories satisfies
+    # every other test in this file while letting a 4-rank run resume into
+    # ranks {0, 1, 2, 4}.
+    item, case_dir = _case(tmp_path)
+    _write_subdomains(case_dir, 4)
+    _write_ranks(case_dir, {0: ("0.5",), 1: ("0.5",), 2: ("0.5",), 4: ("0.5",)})
+    recorded, runner = _recorder()
+
+    row = _resume(item, workers=4, runner=runner)
+
+    assert row["error"] == (
+        "resume refused: processor directory set does not match workers 4: "
+        "observed 4, required 4; missing processor3; unexpected processor4"
+    )
+    assert recorded == []
+
+
+def test_resume_refuses_ranks_beyond_workers(tmp_path):
+    # Extras with nothing missing: required is a strict subset of observed.
+    item, case_dir = _case(tmp_path)
+    _write_subdomains(case_dir, 2)
+    _write_ranks(case_dir, {0: ("0.5",), 1: ("0.5",), 2: ("0.5",)})
+    recorded, runner = _recorder()
+
+    row = _resume(item, workers=2, runner=runner)
+
+    assert row["error"] == (
+        "resume refused: processor directory set does not match workers 2: "
+        "observed 3, required 2; unexpected processor2"
+    )
+
+
+def test_resume_refuses_symlinked_rank_directories(tmp_path):
+    # Four names, but three are symlinks to the one real rank -- a 1-rank
+    # decomposition wearing a 4-rank costume. Path.is_dir() follows symlinks,
+    # so a naive check accepts this.
+    item, case_dir = _case(tmp_path)
+    _write_subdomains(case_dir, 4)
+    _write_ranks(case_dir, {0: ("0.5",)})
+    for rank in (1, 2, 3):
+        (case_dir / f"processor{rank}").symlink_to(case_dir / "processor0")
+    recorded, runner = _recorder()
+
+    row = _resume(item, workers=4, runner=runner)
+
+    assert row["error"] == (
+        "resume refused: processor1 is a symlink, not a real decomposition "
+        "directory"
+    )
+    assert recorded == []
+
+
+def test_resume_refuses_a_rank_symlinked_outside_the_case(tmp_path):
+    # The worst version: a rank pointing at an unrelated case, so the gate
+    # would report a "common latest time" read from outside this case.
+    item, case_dir = _case(tmp_path)
+    _write_subdomains(case_dir, 2)
+    _write_ranks(case_dir, {0: ("0.5",)})
+    elsewhere = tmp_path / "some_other_case"
+    (elsewhere / "0.9").mkdir(parents=True)
+    (case_dir / "processor1").symlink_to(elsewhere)
+    recorded, runner = _recorder()
+
+    row = _resume(item, workers=2, runner=runner)
+
+    assert row["error"] == (
+        "resume refused: processor1 is a symlink, not a real decomposition "
+        "directory"
+    )
+
+
+def test_resume_refuses_a_symlinked_time_directory(tmp_path):
+    # A rank whose newest time is a symlink to an older one would report a
+    # latest time it does not actually hold.
+    item, case_dir = _case(tmp_path)
+    _write_subdomains(case_dir, 2)
+    _write_ranks(case_dir, {0: ("0.5",), 1: ("0.4",)})
+    (case_dir / "processor1" / "0.5").symlink_to(case_dir / "processor1" / "0.4")
+    recorded, runner = _recorder()
+
+    row = _resume(item, workers=2, runner=runner)
+
+    assert row["error"] == (
+        "resume refused: processor1/0.5 is a symlink, not a real time directory"
+    )
+
+
+def test_resume_refuses_duplicate_time_spellings_within_a_rank(tmp_path):
+    # 0.5 and 0.50 are the same instant spelled two ways. Which one OpenFOAM
+    # restarts from is not verified here, and max() would break the tie by
+    # filesystem iteration order. artifact_index._time_roots treats this exact
+    # condition as fatal; this gate agrees rather than guessing.
+    item, case_dir = _case(tmp_path)
+    _write_subdomains(case_dir, 2)
+    _write_ranks(case_dir, {0: ("0.5", "0.50"), 1: ("0.5",)})
+    recorded, runner = _recorder()
+
+    row = _resume(item, workers=2, runner=runner)
+
+    assert row["error"] == (
+        "resume refused: processor0 holds duplicate numeric time spellings: "
+        "0.5, 0.50"
+    )
+
+
+def test_resume_with_no_processor_directories_refuses_instead_of_rebuilding(tmp_path):
+    # Previously "resume: true" with no processor* dirs short-circuited to
+    # resume=False, so _prepare_mpi_case took the _clean path and rmtree'd the
+    # case. An operator asking to resume got a full wipe reported as
+    # "completed". The gate must see this input, not be bypassed before it.
+    item, case_dir = _case(tmp_path)
+    _write_subdomains(case_dir, 4)
+    (case_dir / "0.5").mkdir()
+    (case_dir / "0.5" / "U").write_text("solved field\n")
+    recorded, runner = _recorder()
+
+    row = _resume(item, workers=4, runner=runner)
+
+    assert row["error"] == (
+        "resume refused: processor directory set does not match workers 4: "
+        "observed 0, required 4; missing processor0, processor1, processor2, "
+        "processor3"
+    )
+    # The solved field the operator wanted to resume from still exists.
+    assert (case_dir / "0.5" / "U").read_text() == "solved field\n"
+
+
+def test_resume_refuses_a_missing_case_directory(tmp_path):
+    with pytest.raises(decomposition.DecompositionMismatch) as caught:
+        decomposition.verify_resumable_decomposition(tmp_path / "absent", 4)
+
+    assert str(caught.value) == (
+        "resume refused: the case directory does not exist, so there is no "
+        "decomposition to reuse"
+    )
+
+
 # --------------------------------------------------------------------------- #
 #  check 2 -- decomposeParDict numberOfSubdomains must equal workers           #
 # --------------------------------------------------------------------------- #
@@ -221,6 +360,38 @@ def test_resume_ignores_a_block_commented_subdomain_count(tmp_path):
     assert row["error"] == (
         "resume refused: system/decomposeParDict declares numberOfSubdomains 8, "
         "required 4"
+    )
+
+
+def test_resume_refuses_a_dictionary_declaring_no_subdomain_count(tmp_path):
+    # A decomposeParDict that exists but takes its value from an #include.
+    item, case_dir = _case(tmp_path)
+    _ranks_and_dict(case_dir, "FoamFile { object decomposeParDict; }\n"
+                              "#include \"decomposeParDict.local\"\n")
+    recorded, runner = _recorder()
+
+    row = _resume(item, workers=4, runner=runner)
+
+    assert row["error"] == (
+        "resume refused: system/decomposeParDict declares no "
+        "numberOfSubdomains, so the decomposition cannot be shown to match "
+        "workers 4"
+    )
+
+
+def test_resume_refuses_unicode_digits_in_the_subdomain_count(tmp_path):
+    # Python's \d matches Unicode decimal digits, so "٤" would parse as 4.
+    # OpenFOAM would not read that file, so neither does this gate.
+    item, case_dir = _case(tmp_path)
+    _ranks_and_dict(case_dir, "numberOfSubdomains ٤;\n")
+    recorded, runner = _recorder()
+
+    row = _resume(item, workers=4, runner=runner)
+
+    assert row["error"] == (
+        "resume refused: system/decomposeParDict declares no "
+        "numberOfSubdomains, so the decomposition cannot be shown to match "
+        "workers 4"
     )
 
 
