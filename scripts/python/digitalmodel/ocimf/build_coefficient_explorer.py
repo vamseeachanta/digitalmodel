@@ -508,7 +508,7 @@ table.spec th { background: var(--soft); font-weight: 600; }
 .toc a { color: var(--accent); text-decoration: none; }
 .toc a:hover { text-decoration: underline; }
 code { background: var(--soft); padding: 1px 5px; border-radius: 3px; font-size: 13px; }
-.path { font-family: "Courier New", monospace; font-size: 12px; color: #555; word-break: break-all; }
+.digest { font-family: "Courier New", monospace; font-size: 12px; color: #555; word-break: break-all; }
 """
 
 USAGE_HTML = """
