@@ -72,7 +72,7 @@
 <h3>Which entries actually bite</h3>
 <table>
   <tr><th>entry</th><th>directory under <code>tests/</code></th><th>top-level target</th><th>disposition</th></tr>
-  <tr><td><code>scripts</code></td><td><code>tests/scripts/</code> — 177 tests</td><td><code>scripts/</code> — 30 collectible files</td><td>must be anchored</td></tr>
+  <tr><td><code>scripts</code></td><td><code>tests/scripts/</code> — 177 tests, and <code>tests/solvers/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/scripts/</code> — 0 tests (its <code>run_test.py</code> matches <code>*_test.py</code> but defines no test functions)</td><td><code>scripts/</code> — 30 collectible files</td><td>must be anchored</td></tr>
   <tr><td><code>docs</code></td><td><code>tests/docs/</code> — 41 tests</td><td><code>docs/</code> — 5 collectible files</td><td>must be anchored</td></tr>
   <tr><td><code>projects</code></td><td>none</td><td><strong>directory does not exist</strong></td><td>dead entry; will be deleted</td></tr>
   <tr><td><code>htmlcov</code>, <code>node_modules</code></td><td>none</td><td>generated dirs</td><td>inert; will be left alone</td></tr>
@@ -125,8 +125,13 @@ norecursedirs = .venv .git __pycache__ node_modules htmlcov
 
 <h2>TDD test list</h2>
 <p>All assertions will be on the <em>property</em>, never on a count that drifts as tests are added. A test pinning "21,854" would pass today and mislead within a week.</p>
+
+<div class="bad"><strong>Revised after adversarial round 1.</strong> The guard test as first drafted here was wrong in two independent ways, both found by implementing it rather than reasoning about it. (a) It asserted that <em>no</em> <code>norecursedirs</code> entry may prune <em>any</em> directory under <code>tests/</code> — but <code>__pycache__</code> is itself a bare basename and <code>tests/**/__pycache__</code> exists everywhere, so the test reported <strong>197 offenders even under the corrected config</strong>. (b) It was vacuously satisfiable: with the ini key absent, <code>getini("norecursedirs")</code> returns <code>[]</code>, the loop body never executes, and the test reports <code>1 passed</code> while checking nothing — measured, not hypothesised. The corrected property and its vacuity guards are below.</div>
+
+<p><strong>The property, stated correctly:</strong> no <em>separator-free</em> <code>norecursedirs</code> entry may prune a directory under <code>tests/</code> that contains at least one file matching <code>python_files</code>. Path-anchored entries are deliberate and are exempt; directories holding no collectible files are irrelevant. Measured against this property: <strong>3 offenders pre-fix</strong> (<code>tests/docs</code>, <code>tests/scripts</code>, and <code>tests/solvers/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/scripts</code>), <strong>0 post-fix</strong>.</p>
+
 <ul>
-  <li><code>test_no_norecursedirs_entry_prunes_a_tests_subdirectory</code> — for each entry in the live <code>norecursedirs</code>, assert <code>fnmatch_ex</code> is False for every directory under <code>tests/</code>. This is the guard; it fails today.</li>
+  <li><code>test_no_bare_norecursedirs_entry_prunes_a_collectible_tests_directory</code> — the guard. Fails today naming exactly those 3 directories; passes after Stage 2. It will carry three explicit vacuity guards, each asserted before the main assertion: the separator-free entry list is non-empty (currently 5 post-fix), the candidate directory set is non-empty (currently 190), and <code>fnmatch_ex</code> is demonstrably live via a known-positive control (<code>fnmatch_ex("scripts", tests/scripts)</code> is True). Without all three, the test can pass while checking nothing.</li>
   <li><code>test_top_level_scripts_is_not_collected</code> — assert the root <code>collect_ignore</code> names <code>scripts</code>, and that the directory exists and contains at least one file matching <code>python_files</code>. Guards against the exclusion being quietly dropped once it is no longer in <code>pytest.ini</code>.</li>
   <li><code>test_top_level_docs_is_not_collected</code> — same for <code>docs</code>.</li>
   <li><code>test_every_tests_subdirectory_is_reachable_by_recursive_collection</code> — enumerate directories under <code>tests/</code> holding at least one file matching <code>python_files</code>, and assert each contributes at least one node ID to a recursive collect. This is the property the issue actually cares about, stated independently of the mechanism that broke it.</li>
@@ -164,7 +169,19 @@ norecursedirs = .venv .git __pycache__ node_modules htmlcov
 </ul>
 
 <h2>Adversarial review summary</h2>
-<p>To be completed before the issue moves to <code>status:plan-review</code>. Tier: <strong>T2</strong> — multi-file and harness-touching, but a small and fully measured change. Reviewers will be asked specifically to attack: the claim that no portable <code>norecursedirs</code> anchor exists; the claim that CI introduces no double-run; the choice of a root <code>conftest.py</code> over renaming the two test directories; and whether the guard test can be satisfied vacuously.</p>
+<p>Tier: <strong>T2</strong> — multi-file and harness-touching, but a small and fully measured change. Reviewers were asked to attack: the claim that no portable <code>norecursedirs</code> anchor exists; the claim that CI introduces no double-run; the choice of a root <code>conftest.py</code> over renaming the two test directories; and whether the guard test can be satisfied vacuously.</p>
+
+<h3>Round 1 — Codex (gpt-5.5)</h3>
+<p>The session exceeded its time budget before emitting a verdict, but it had already built the plan's Stage 2 state and guard test in the measurement worktree and run them. Those artifacts were read, reproduced independently, and then discarded; the worktree was returned to a clean state at <code>70c9fcb0</code>.</p>
+<table>
+  <tr><th>severity</th><th>finding</th><th>disposition</th></tr>
+  <tr><td><strong>MAJOR</strong></td><td>The guard test as drafted fails under the corrected config — 197 offenders, because <code>__pycache__</code> is a bare basename and <code>tests/**/__pycache__</code> exists throughout. The stated property was simply false.</td><td><strong>Accepted and fixed.</strong> Property narrowed to separator-free entries pruning directories that hold collectible files. Re-measured: 3 offenders pre-fix, 0 post-fix.</td></tr>
+  <tr><td><strong>MAJOR</strong></td><td>The guard test is vacuously satisfiable: with the ini key absent, <code>getini("norecursedirs")</code> returns <code>[]</code> and the test reports <code>1 passed</code> having checked nothing.</td><td><strong>Accepted and fixed.</strong> Three explicit vacuity guards added to the test specification, including a known-positive control on the matcher itself.</td></tr>
+</table>
+<p>A third directory surfaced while re-measuring: <code>tests/solvers/orcaflex/.../fsts-l015-test-cases/scripts/</code> is also pruned by the bare <code>scripts</code> entry. It contributes zero tests, which is why it does not appear in the 218-test node-ID diff, and it is recorded here so the two measurements are not mistaken for a contradiction.</p>
+
+<h3>Round 2 — Claude</h3>
+<p>Dispatched in parallel with round 1; findings will be recorded here before this issue moves to <code>status:plan-review</code>.</p>
 
 </main>
 </body>
