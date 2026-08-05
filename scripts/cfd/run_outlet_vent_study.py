@@ -70,38 +70,50 @@ def outlet_vent_boundary_conditions(
     flow_rate: float, variant: str
 ) -> list[BoundaryCondition]:
     """Return exchange boundary conditions for one placement variant."""
-    baseline = _exchange_boundary_conditions(flow_rate)
+    inlet_conditions = [
+        bc for bc in _exchange_boundary_conditions(flow_rate)
+        if bc.patch_name == "inlet"
+    ]
+
     if variant == VARIANT_BASELINE:
-        return baseline
+        # FROZEN control: the full-height pressure outlet as the library emitted
+        # it BEFORE #1528 slice 7 settled the placement.
+        #
+        # Deliberately spelled out rather than read from
+        # _exchange_boundary_conditions.  That helper now emits the settled vent
+        # placement, so a control that tracked it would silently become a copy of
+        # the treatment and the study would compare the vent against itself while
+        # still passing every assertion.
+        return inlet_conditions + [
+            BoundaryCondition(
+                "outlet",
+                BoundaryType.PRESSURE_INLET_OUTLET_VELOCITY,
+                "U",
+                value="uniform (0 0 0)",
+            ),
+            BoundaryCondition(
+                "outlet",
+                BoundaryType.TOTAL_PRESSURE,
+                "p_rgh",
+                value="uniform 0",
+                extra={"p0": "uniform 0"},
+            ),
+            BoundaryCondition(
+                "outlet",
+                BoundaryType.INLET_OUTLET,
+                "alpha.water",
+                value="uniform 0",
+                extra={"inletValue": "uniform 0"},
+            ),
+        ]
+
     if variant != VARIANT_VENT_TOP:
         raise ValueError(f"unknown outlet/vent variant: {variant}")
 
-    inlet_conditions = [bc for bc in baseline if bc.patch_name == "inlet"]
-    return inlet_conditions + [
-        BoundaryCondition("outlet", BoundaryType.NO_SLIP, "U"),
-        BoundaryCondition("outlet", BoundaryType.ZERO_GRADIENT, "p_rgh"),
-        BoundaryCondition("outlet", BoundaryType.ZERO_GRADIENT, "alpha.water"),
-        BoundaryCondition(
-            "top",
-            BoundaryType.PRESSURE_INLET_OUTLET_VELOCITY,
-            "U",
-            value="uniform (0 0 0)",
-        ),
-        BoundaryCondition(
-            "top",
-            BoundaryType.TOTAL_PRESSURE,
-            "p_rgh",
-            value="uniform 0",
-            extra={"p0": "uniform 0"},
-        ),
-        BoundaryCondition(
-            "top",
-            BoundaryType.INLET_OUTLET,
-            "alpha.water",
-            value="uniform 0",
-            extra={"inletValue": "uniform 0"},
-        ),
-    ]
+    # The treatment IS the shipped library default, so re-running this study
+    # validates what the 144-case matrix will actually emit rather than a
+    # script-local copy of it.
+    return _exchange_boundary_conditions(flow_rate)
 
 
 def parse_vol_field_value(path: str | Path) -> list[tuple[float, float]]:

@@ -51,17 +51,33 @@ def _by_patch_field(bcs):
 # ---------------------------------------------------------------------------
 
 
-def test_baseline_variant_reproduces_current_full_height_pressure_outlet(study):
-    """V0 must reproduce main's coupled-exchange BCs exactly (the control)."""
-    from digitalmodel.solvers.openfoam.case_coupling import (
-        _exchange_boundary_conditions,
-    )
+def test_baseline_variant_is_the_frozen_full_height_pressure_outlet(study):
+    """V0 is the control: the full-height pressure outlet, frozen as a literal.
 
-    expected = _exchange_boundary_conditions(19.2)
+    This deliberately does NOT compare against
+    ``_exchange_boundary_conditions``.  That helper now emits the settled vent
+    placement, so a control defined by it would become a copy of the treatment
+    and this assertion would still pass while comparing the vent against itself.
+    """
     actual = study.outlet_vent_boundary_conditions(19.2, study.VARIANT_BASELINE)
 
     assert {(b.patch_name, b.field, b.bc_type) for b in actual} == {
-        (b.patch_name, b.field, b.bc_type) for b in expected
+        ("inlet", "U", BoundaryType.FLOW_RATE_INLET_VELOCITY),
+        ("inlet", "p_rgh", BoundaryType.ZERO_GRADIENT),
+        ("inlet", "alpha.water", BoundaryType.INLET_OUTLET),
+        ("outlet", "U", BoundaryType.PRESSURE_INLET_OUTLET_VELOCITY),
+        ("outlet", "p_rgh", BoundaryType.TOTAL_PRESSURE),
+        ("outlet", "alpha.water", BoundaryType.INLET_OUTLET),
+    }
+
+
+def test_the_control_and_the_treatment_are_not_the_same_configuration(study):
+    """Guards the degenerate study: a control equal to the treatment proves nothing."""
+    control = study.outlet_vent_boundary_conditions(19.2, study.VARIANT_BASELINE)
+    treatment = study.outlet_vent_boundary_conditions(19.2, study.VARIANT_VENT_TOP)
+
+    assert {(b.patch_name, b.field, b.bc_type) for b in control} != {
+        (b.patch_name, b.field, b.bc_type) for b in treatment
     }
 
 

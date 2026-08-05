@@ -363,8 +363,20 @@ def _exchange_boundary_conditions(flow_rate: float) -> list[BoundaryCondition]:
     The inlet imposes the conduit VOLUMETRIC flow rate via
     ``flowRateInletVelocity`` (OpenFOAM computes the face velocity as
     ``Q / A_patch`` internally, so the flux is correct regardless of the inlet
-    patch area); the outlet is pressure-driven. Fields are the standard
-    interFoam set (U, p_rgh, alpha.water).
+    patch area). Fields are the standard interFoam set (U, p_rgh, alpha.water).
+
+    The atmospheric opening is on ``top`` (z=max), NOT on ``outlet``
+    (#1528 slice 7). ``block_mesh`` emits ``outlet`` as the whole x=max face
+    ``(1 2 6 5)``, i.e. full height, so a pressure opening there sits below the
+    free surface and the tank bleeds under its own hydrostatic head. Measured on
+    the dedicated CFD node with interFoam v2312 over 1000 timesteps at zero
+    imposed flow, a static tank lost 81.16% of a 600 m^3 inventory in 10 s with
+    the pressure opening on ``outlet``, and held 600.000 m^3 exactly with it on
+    ``top``. See ``docs/reports/issue-1528-outlet-vent/``.
+
+    ``top`` lies above the free surface for any fill fraction below 1.0, so this
+    needs no mesh-topology change. ``outlet`` is closed to a no-slip wall; it
+    still carries a ``U`` condition, which ``verify_coupling`` requires.
     """
     return [
         BoundaryCondition(
@@ -377,16 +389,19 @@ def _exchange_boundary_conditions(flow_rate: float) -> list[BoundaryCondition]:
             "inlet", BoundaryType.INLET_OUTLET, "alpha.water",
             value="uniform 1", extra={"inletValue": "uniform 1"},
         ),
+        BoundaryCondition("outlet", BoundaryType.NO_SLIP, "U"),
+        BoundaryCondition("outlet", BoundaryType.ZERO_GRADIENT, "p_rgh"),
+        BoundaryCondition("outlet", BoundaryType.ZERO_GRADIENT, "alpha.water"),
         BoundaryCondition(
-            "outlet", BoundaryType.PRESSURE_INLET_OUTLET_VELOCITY, "U",
+            "top", BoundaryType.PRESSURE_INLET_OUTLET_VELOCITY, "U",
             value="uniform (0 0 0)",
         ),
         BoundaryCondition(
-            "outlet", BoundaryType.TOTAL_PRESSURE, "p_rgh",
+            "top", BoundaryType.TOTAL_PRESSURE, "p_rgh",
             value="uniform 0", extra={"p0": "uniform 0"},
         ),
         BoundaryCondition(
-            "outlet", BoundaryType.INLET_OUTLET, "alpha.water",
+            "top", BoundaryType.INLET_OUTLET, "alpha.water",
             value="uniform 0", extra={"inletValue": "uniform 0"},
         ),
     ]
