@@ -118,6 +118,37 @@ class TestInterFoamFvSolution:
 # ============================================================================
 
 
+class TestDdtSchemes:
+    """The time scheme must be one the solver's own equations accept.
+
+    Found by the issue #1959 solver-start oracle: interFoam's alpha equation
+    rejects anything but Euler and CrankNicolson at run time, so the builder's
+    backward scheme was a fatal error for every VOF case.
+    """
+
+    def _ddt_default(self, tmp_path, case_type, name):
+        case = OpenFOAMCase.for_case_type(case_type, name=name)
+        case_dir = OpenFOAMCaseBuilder(case).build(tmp_path)
+        content = (case_dir / "system" / "fvSchemes").read_text()
+        block = content[content.index("ddtSchemes") : content.index("gradSchemes")]
+        return re.search(r"default\s+(\S+?);", block).group(1)
+
+    def test_interfoam_uses_euler(self, tmp_path):
+        """interFoam's alpha equation supports only Euler or CrankNicolson."""
+        assert self._ddt_default(tmp_path, CaseType.SLOSHING, "ddt_vof") == "Euler"
+
+    def test_pimplefoam_keeps_backward(self, tmp_path):
+        """A single-phase transient case keeps the second-order scheme."""
+        assert self._ddt_default(tmp_path, CaseType.VIV, "ddt_pimple") == "backward"
+
+    def test_simplefoam_stays_steady_state(self, tmp_path):
+        """A steady case keeps steadyState."""
+        assert (
+            self._ddt_default(tmp_path, CaseType.CURRENT_LOADING, "ddt_simple")
+            == "steadyState"
+        )
+
+
 class TestInterFoamFvSchemes:
     """Under `default none` every div key interFoam looks up must be declared."""
 
