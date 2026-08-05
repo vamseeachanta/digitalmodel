@@ -395,6 +395,24 @@ def test_resume_refuses_unicode_digits_in_the_subdomain_count(tmp_path):
     )
 
 
+def test_resume_reads_a_symlinked_decompose_par_dict(tmp_path):
+    # Deliberate asymmetry with the rank-directory rule. Sharing a dictionary
+    # between cases by symlink is ordinary OpenFOAM practice and the solver
+    # will read the same target, so following it makes the check agree with
+    # the run it validates. A symlinked RANK is different: four names pointing
+    # at one directory is one rank of data, not four.
+    item, case_dir = _case(tmp_path)
+    _write_ranks(case_dir, {rank: ("0.5",) for rank in range(4)})
+    shared = tmp_path / "shared_decomposeParDict"
+    shared.write_text("numberOfSubdomains 4;\nmethod scotch;\n")
+    (case_dir / "system" / "decomposeParDict").symlink_to(shared)
+    recorded, runner = _recorder()
+
+    row = _resume(item, workers=4, runner=runner)
+
+    assert row["status"] == "completed"
+
+
 def test_resume_refuses_a_doubly_declared_subdomain_count(tmp_path):
     # Two live, conflicting declarations. Which one OpenFOAM honours is not
     # verified here and is not guessed: an ambiguous dictionary is refused.

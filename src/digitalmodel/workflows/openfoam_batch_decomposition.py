@@ -20,12 +20,23 @@ Time directory names are validated by
 re-exported here rather than reimplemented, so the repo keeps exactly one
 OpenFOAM time-name parser.
 
-**Symlinks are never followed.** ``Path.is_dir()`` follows them, so a rank
-symlinked to another rank -- or to an unrelated case -- would otherwise satisfy
-every check and let a 1-rank decomposition pass as an N-rank one. Directory
-membership is decided by ``lstat``, matching the traversal discipline
-``artifact_index`` already applies (``O_NOFOLLOW``,
+**Symlinked directories are never followed; a symlinked dictionary is.** The
+asymmetry is deliberate.
+
+``Path.is_dir()`` follows symlinks, so a rank symlinked to another rank -- or
+to an unrelated case -- would otherwise satisfy every check and let a 1-rank
+decomposition pass as an N-rank one. Four names pointing at one directory is
+one rank of data, and four ranks writing through them would corrupt it, so
+directory membership here is decided by ``lstat``. That matches the traversal
+discipline ``artifact_index`` already applies (``O_NOFOLLOW``,
 ``follow_symlinks=False``).
+
+``system/decomposeParDict`` is read *through* a symlink on purpose. Sharing a
+dictionary between cases by symlink is ordinary OpenFOAM practice, and the
+solver will read the same target this gate does -- so following it is what
+makes the check agree with the run it is validating. The rule is not "never
+follow a symlink"; it is "never let a symlink misrepresent the shape of the
+decomposition".
 
 Refusal leaves ``system/controlDict`` byte-identical. It does not leave the
 whole case untouched: the caller records a failed checkpoint afterwards, which
