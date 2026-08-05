@@ -76,8 +76,10 @@ PHASE_CONVENTION = (
     "inlet patch). Over one half-cycle V_transfer=integral_0^{T/2} Q dt="
     "Q_peak*T/pi, i.e. Q_peak=pi*f*V_transfer. The inlet is specified as a "
     "VOLUMETRIC flow rate (flowRateInletVelocity), area-independent, at the mean "
-    "half-cycle rate 2*f*V_transfer so the integral over T/2 equals V_transfer; "
-    "outlet is pressure-driven."
+    "half-cycle rate 2*f*V_transfer so the integral over T/2 equals V_transfer. "
+    "The outlet patch is a closed no-slip wall; the atmospheric opening is on "
+    "the top patch (z=max), above the quiescent free surface for any fill "
+    "fraction below 1.0 (#1528 slice 7)."
 )
 
 
@@ -521,9 +523,31 @@ def verify_coupling(
     for p in ("inlet", "outlet"):
         if "U" not in fields_by_patch[p]:
             raise ValueError(
-                f"boundary patch '{p}' has no velocity (U) condition; inlet and "
-                "outlet must both define U for the conduit exchange."
+                f"boundary patch '{p}' has no velocity (U) condition; the inlet "
+                "carries the conduit flux and the outlet is a closed no-slip "
+                "wall, so both must define U."
             )
+
+    # The outlet is closed (#1528 slice 7), so SOME patch must still be open to
+    # the atmosphere or the case is a fixed inlet flux driving a sealed
+    # incompressible box. The pre-slice-7 gate did not check this because the
+    # outlet was itself the opening; closing it made the check load-bearing.
+    has_pressure_opening = any(
+        bc.field == "p_rgh" and bc.bc_type is BoundaryType.TOTAL_PRESSURE
+        for bc in case.boundary_conditions
+    )
+    has_open_velocity = any(
+        bc.field == "U" and bc.bc_type is BoundaryType.PRESSURE_INLET_OUTLET_VELOCITY
+        for bc in case.boundary_conditions
+    )
+    if not (has_pressure_opening and has_open_velocity):
+        raise ValueError(
+            "no atmospheric opening: the coupled case needs a patch carrying "
+            "totalPressure on p_rgh and pressureInletOutletVelocity on U (the "
+            "'top' vent). Without it the imposed inlet flux drives a sealed "
+            "incompressible box."
+        )
+
     phase = meta.get("phase_convention")
     if not phase:
         raise ValueError(
@@ -531,6 +555,7 @@ def verify_coupling(
             "motion/flow phase convention must be recorded before a CFD run."
         )
     checks["boundary_conditions_present"] = True
+    checks["atmosphere_opening_present"] = True
     checks["phase_convention_recorded"] = True
 
     passed = all(checks.values())

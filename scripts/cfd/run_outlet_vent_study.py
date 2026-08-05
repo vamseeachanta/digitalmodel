@@ -30,13 +30,26 @@ from digitalmodel.solvers.openfoam.time_history import ExtractionConfig
 VARIANT_BASELINE = "baseline_full_height_outlet"
 VARIANT_VENT_TOP = "vent_top"
 
-# The volume-balance verdict is judged against the tolerance the repo already
-# applies to these cases, not against a threshold invented for this study and
-# not against a number typed on the command line.  ExtractionConfig.
-# mass_balance_rtol is the RELATIVE mass-balance tolerance time_history uses to
-# decide mass_balance_ok for the extracted histories; expressed in percent it is
-# this study's pass mark.  Overridable via --tolerance-pct for sensitivity work.
-DEFAULT_TOLERANCE_PCT = 100.0 * ExtractionConfig().mass_balance_rtol
+def default_tolerance_pct(config: ExtractionConfig | None = None) -> float:
+    """Percent form of the repo's relative mass-balance tolerance.
+
+    The volume-balance verdict is judged against the tolerance the repo already
+    applies to these cases, not against a threshold invented for this study and
+    not against a number typed on the command line.
+    ``ExtractionConfig.mass_balance_rtol`` is the RELATIVE mass-balance
+    tolerance ``time_history`` uses to decide ``mass_balance_ok`` for the
+    extracted histories; expressed in percent it is this study's pass mark.
+
+    Taking the config as a parameter is what makes the derivation testable. A
+    test that only asserts the shipped value equals 0.1 cannot distinguish this
+    from a hardcoded ``0.1``, because the derived value IS 0.1; driving it with
+    a different config can.
+    """
+    return 100.0 * (config or ExtractionConfig()).mass_balance_rtol
+
+
+# Overridable via --tolerance-pct for sensitivity work.
+DEFAULT_TOLERANCE_PCT = default_tolerance_pct()
 
 # This stable identifier is generated from the issue-specified physical sweep.
 REFERENCE_CASE_ID = "dm1528-filldrain-2a44db9cf998"
