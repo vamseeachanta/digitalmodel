@@ -18,6 +18,7 @@ from digitalmodel.solvers.openfoam.models import BoundaryType, CaseType, OpenFOA
 from digitalmodel.solvers.openfoam.motion import MotionType
 from digitalmodel.solvers.openfoam.sloshing_sweep import SweepCase
 from digitalmodel.solvers.openfoam.case_coupling import (
+    PHASE_CONVENTION,
     CaseManifest,
     CouplingSpec,
     SyntheticCase,
@@ -168,6 +169,13 @@ class TestMapper:
         )
         assert top_alpha.extra["inletValue"] == "uniform 0"
 
+    def test_recorded_phase_convention_does_not_claim_a_pressure_driven_outlet(self):
+        """The convention is shipped into every case manifest; it must not lie."""
+        assert "pressure-driven" not in PHASE_CONVENTION
+
+    def test_recorded_phase_convention_names_the_top_vent(self):
+        assert "top" in PHASE_CONVENTION
+
     def test_metadata_carries_case_id_capacity_and_phase_convention(self):
         sc = _sweep_case(conduit_capacity=0.08)
         case = map_sweep_case_to_openfoam_case(sc, _spec())
@@ -266,6 +274,30 @@ class TestGateFailures:
         case.boundary_conditions = []  # strip the inlet/outlet BCs
         with pytest.raises(ValueError, match="(?i)inlet|outlet|boundary"):
             verify_coupling(case, sc, spec)
+
+    def test_rejects_a_sealed_box_with_no_atmospheric_opening(self):
+        """Closing `outlet` made `top` load-bearing; the gate must guard it.
+
+        The pre-#1528-slice-7 gate only required an `outlet` patch defining U.
+        A no-slip wall satisfies that, so after the placement change a case
+        could lose its vent entirely and still pass: a fixed inlet flux driving
+        a sealed incompressible box. That is exactly the inconsistent-boundary
+        class this gate exists to reject.
+        """
+        spec = _spec()
+        sc = _sweep_case()
+        case = map_sweep_case_to_openfoam_case(sc, spec)
+        case.boundary_conditions = [
+            bc for bc in case.boundary_conditions if bc.patch_name != "top"
+        ]
+        with pytest.raises(ValueError, match="(?i)atmospher|opening|vent"):
+            verify_coupling(case, sc, spec)
+
+    def test_gate_records_the_atmosphere_opening_check(self):
+        spec = _spec()
+        sc = _sweep_case()
+        result = verify_coupling(map_sweep_case_to_openfoam_case(sc, spec), sc, spec)
+        assert result.checks["atmosphere_opening_present"] is True
 
     def test_rejects_non_conserving_plan_tampered_q_peak(self):
         spec = _spec()

@@ -202,7 +202,23 @@ def test_verdict_requires_the_vent_to_hold_volume_better_than_the_baseline(study
 
 
 def test_default_tolerance_pct_is_the_repo_mass_balance_rtol_in_percent(study):
+    """Drift alarm: pins the shipped value against a hand-written literal."""
     assert study.DEFAULT_TOLERANCE_PCT == 0.1
+
+
+def test_the_tolerance_is_computed_from_the_config_not_hardcoded(study):
+    """Provenance: feed a DIFFERENT config and the tolerance must follow it.
+
+    The pair of assertions above and below is deliberate. Pinning ``== 0.1``
+    alone does not test provenance: replacing the derivation with a bare literal
+    ``0.1`` keeps that assertion green, because the derived value happens to BE
+    0.1. Only driving the helper with a config whose rtol is not 1.0e-3 can tell
+    a real derivation from a magic number that coincides with it.
+    """
+    from digitalmodel.solvers.openfoam.time_history import ExtractionConfig
+
+    other = ExtractionConfig(mass_balance_rtol=2.5e-3)
+    assert study.default_tolerance_pct(other) == pytest.approx(0.25)
 
 
 def test_parser_defaults_the_tolerance_so_it_is_not_typed_at_run_time(study):
