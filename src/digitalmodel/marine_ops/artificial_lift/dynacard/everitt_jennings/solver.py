@@ -198,6 +198,7 @@ class Simulation:
     rod_length: float = 0.0
     areas: np.ndarray = field(default_factory=lambda: np.empty(0))
     rho_a: np.ndarray = field(default_factory=lambda: np.empty(0))
+    buoyant_rho_a: np.ndarray = field(default_factory=lambda: np.empty(0))
     moduli: np.ndarray = field(default_factory=lambda: np.empty(0))
     damping: np.ndarray = field(default_factory=lambda: np.empty(0))
     densities: np.ndarray = field(default_factory=lambda: np.empty(0))
@@ -228,6 +229,7 @@ class Coefficients:
     moduli: np.ndarray = field(default_factory=lambda: np.empty(0))
     areas: np.ndarray = field(default_factory=lambda: np.empty(0))
     rho_a: np.ndarray = field(default_factory=lambda: np.empty(0))
+    buoyant_rho_a: np.ndarray = field(default_factory=lambda: np.empty(0))
     damping: np.ndarray = field(default_factory=lambda: np.empty(0))
     phi: np.ndarray = field(default_factory=lambda: np.empty(0))
     d_phi: np.ndarray = field(default_factory=lambda: np.empty(0))
@@ -251,7 +253,6 @@ def build_simulation(
     friction_coefficient: float = 0.0,
     n_nodes: int = DEFAULT_NUM_NODES,
     gravity: float = GRAVITY_M_S2,
-    include_gravity: bool = True,
 ) -> Simulation:
     """Assemble the simulation grid from surface measurements and rod data.
 
@@ -269,8 +270,13 @@ def build_simulation(
         friction_coefficient: Coulomb friction coefficient for deviated wells.
         n_nodes: Number of spatial nodes down the string.
         gravity: Gravitational acceleration, m/s^2.
-        include_gravity: When False, gravity and friction terms are muted —
-            useful for isolating the elastic response.
+
+    Note:
+        There is deliberately no ``include_gravity`` argument here. The
+        boundary is now datum-invariant — the vertical buoyant weight is
+        always removed at the polished rod — so nothing this function builds
+        depends on whether the kernel's gravity terms are muted. Muting stays
+        where it is actually applied, on :class:`EverittJenningsSolver`.
 
     Returns:
         A populated :class:`Simulation`.
@@ -307,6 +313,7 @@ def build_simulation(
     sim.densities = rods.densities
     sim.moduli = rods.moduli
     sim.rho_a = rods.densities * rods.areas
+    sim.buoyant_rho_a = (rods.densities - fluid_density) * rods.areas
     sim.damping = (
         np.zeros(2 * sim.n_tap, dtype=np.float64)
         if damping is None
@@ -326,29 +333,31 @@ def build_simulation(
     sim.x = np.linspace(0.0, sim.rod_length, sim.n_x)
     sim.dx = sim.x[1] - sim.x[0]
 
-    # Distributed buoyant weight, accumulated from the pump upward.
-    d_volume = sim.dx * sim.areas
-    d_weight = sim.densities * d_volume
-    d_buoyant = (d_weight - d_volume * fluid_density) * gravity
-
+    # Exact buoyant weight remaining below every node. Integrating section
+    # overlap avoids counting a full terminal grid cell at the pump.
     cuts = _section_cuts(sim.taper_lengths)
-    per_node = np.full(sim.n_x, np.nan, dtype=np.float64)
+    sim.cumulative_buoyant = np.zeros(sim.n_x, dtype=np.float64)
     for i in range(len(cuts) - 1):
-        mask = (cuts[i] <= sim.x) & (sim.x <= cuts[i + 1])
-        per_node[mask] = d_buoyant[i]
-    sim.cumulative_buoyant = np.flip(np.cumsum(per_node), 0)
+        remaining_length = np.clip(
+            cuts[i + 1] - np.maximum(sim.x, cuts[i]),
+            0.0,
+            sim.taper_lengths[i],
+        )
+        sim.cumulative_buoyant += (
+            sim.buoyant_rho_a[i] * gravity * remaining_length
+        )
 
     # Index at which the stroke turns from down to up.
     sim.up_dn = int(np.mean(np.where(sim.u == np.min(sim.u))[0]))
 
     # Boundary forcing at the polished rod.
     #
-    # The static rod weight is accounted for in exactly one place, never two.
-    # When the gravity term is active in the marching kernel, the PDE carries
-    # it and the boundary takes the measured load as-is. When gravity is muted,
-    # the buoyant weight is instead pre-subtracted here. Getting this backwards
-    # double-counts the string weight and shifts the whole downhole card.
-    sim.boundary = sim.f if include_gravity else sim.f - sim.buoyant_weight
+    # The vertical buoyant rod weight is always removed here. When gravity is
+    # active the marching kernel carries only the deviation from that vertical
+    # datum, g * (cos(phi) - 1), plus normal contact. This keeps the datum
+    # invariant instead of moving the full string weight between the boundary
+    # and a grid-dependent distributed quadrature.
+    sim.boundary = sim.f - sim.buoyant_weight
     return sim
 
 
@@ -363,6 +372,7 @@ def build_coefficients(sim: Simulation, survey: Survey) -> Coefficients:
         ("moduli", sim.moduli),
         ("areas", sim.areas),
         ("rho_a", sim.rho_a),
+        ("buoyant_rho_a", sim.buoyant_rho_a),
     ):
         matrix = np.full((n_x, n_t), np.nan, dtype=np.float64)
         for i in range(len(cuts) - 1):
@@ -418,12 +428,15 @@ def _normal_force_per_length(
     curvature_normal = axial_force * d_phi
     azimuth_normal = axial_force * d_psi * np.sin(phi)
     return np.sqrt(
-        (gravity_normal - curvature_normal) ** 2 + azimuth_normal ** 2
+        (gravity_normal + curvature_normal) ** 2 + azimuth_normal ** 2
     )
 
 
 @_njit(cache=True)
-def _march(u, n_x, n_t, dt, dx, lam, rho_a, g, c, e_mod, area, phi, d_phi, d_psi, muteg):
+def _march(
+    u, n_x, n_t, dt, dx, lam, rho_a, buoyant_rho_a,
+    remaining_buoyant, g, c, e_mod, area, phi, d_phi, d_psi, muteg,
+):
     """March the damped wave equation down the rod string.
 
     Explicit in space: each new row ``i+1`` is built from rows ``i`` and
@@ -435,6 +448,7 @@ def _march(u, n_x, n_t, dt, dx, lam, rho_a, g, c, e_mod, area, phi, d_phi, d_psi
             ea_plus = (e_mod[i + 1, j] * area[i + 1, j] + e_mod[i, j] * area[i, j]) / 2.0
             ea_minus = (e_mod[i - 1, j] * area[i - 1, j] + e_mod[i, j] * area[i, j]) / 2.0
             rho_a_ij = rho_a[i, j]
+            buoyant_rho_a_ij = buoyant_rho_a[i, j]
             rho_a_c = rho_a[i, j] * c[i, j]
 
             # Direction of travel, for Coulomb friction.
@@ -449,11 +463,14 @@ def _march(u, n_x, n_t, dt, dx, lam, rho_a, g, c, e_mod, area, phi, d_phi, d_psi
             c1 = (rho_a_ij / ea_plus) * (dx / dt) ** 2
             c2 = (rho_a_c / ea_plus) * dx ** 2 / dt
             c3 = (lam * sign / ea_plus) * dx ** 2
-            c4 = (rho_a_ij / ea_plus) * dx ** 2
+            c4 = (buoyant_rho_a_ij / ea_plus) * dx ** 2
 
-            axial_force = ea_minus * (u[i, j] - u[i - 1, j]) / dx
+            reduced_axial_force = (
+                ea_minus * (u[i, j] - u[i - 1, j]) / dx
+            )
+            axial_force = reduced_axial_force + remaining_buoyant[i]
             q_n = _normal_force_per_length(
-                rho_a_ij,
+                buoyant_rho_a_ij,
                 g,
                 phi[i, j],
                 d_phi[i, j],
@@ -468,7 +485,7 @@ def _march(u, n_x, n_t, dt, dx, lam, rho_a, g, c, e_mod, area, phi, d_phi, d_psi
                 + c1 * (u[i, j + 1] - 2 * u[i, j] + u[i, j - 1])
                 + c2 * (u[i, j + 1] - u[i, j - 1]) / 2.0
                 + c3 * q_n * muteg
-                - c4 * g * np.cos(phi[i, j]) * muteg
+                - c4 * g * (np.cos(phi[i, j]) - 1.0) * muteg
             )
 
         # Wrap-around time step. Coefficients are re-evaluated at j = 0 rather
@@ -477,16 +494,28 @@ def _march(u, n_x, n_t, dt, dx, lam, rho_a, g, c, e_mod, area, phi, d_phi, d_psi
         ea_plus = (e_mod[i + 1, 0] * area[i + 1, 0] + e_mod[i, 0] * area[i, 0]) / 2.0
         ea_minus = (e_mod[i - 1, 0] * area[i - 1, 0] + e_mod[i, 0] * area[i, 0]) / 2.0
         rho_a_ij = rho_a[i, 0]
+        buoyant_rho_a_ij = buoyant_rho_a[i, 0]
         rho_a_c = rho_a[i, 0] * c[i, 0]
 
         c1 = (rho_a_ij / ea_plus) * (dx / dt) ** 2
         c2 = (rho_a_c / ea_plus) * dx ** 2 / dt
-        c3 = (lam / ea_plus) * dx ** 2
-        c4 = (rho_a_ij / ea_plus) * dx ** 2
+        delta = u[i, 1] - u[i, 0]
+        if delta > 0:
+            sign = 1.0
+        elif delta < 0:
+            sign = -1.0
+        else:
+            sign = 0.0
 
-        axial_force = ea_minus * (u[i, 0] - u[i - 1, 0]) / dx
+        c3 = (lam * sign / ea_plus) * dx ** 2
+        c4 = (buoyant_rho_a_ij / ea_plus) * dx ** 2
+
+        reduced_axial_force = (
+            ea_minus * (u[i, 0] - u[i - 1, 0]) / dx
+        )
+        axial_force = reduced_axial_force + remaining_buoyant[i]
         q_n = _normal_force_per_length(
-            rho_a_ij,
+            buoyant_rho_a_ij,
             g,
             phi[i, 0],
             d_phi[i, 0],
@@ -501,7 +530,7 @@ def _march(u, n_x, n_t, dt, dx, lam, rho_a, g, c, e_mod, area, phi, d_phi, d_psi
             + c1 * (u[i, 1] - 2 * u[i, 0] + u[i, n_t - 2])
             + c2 * (u[i, 1] - u[i, n_t - 2]) / 2.0
             + c3 * q_n * muteg
-            - c4 * g * np.cos(phi[i, 0]) * muteg
+            - c4 * g * (np.cos(phi[i, 0]) - 1.0) * muteg
         )
         u[i + 1, n_t - 1] = u[i + 1, 0]
 
@@ -560,11 +589,20 @@ class EverittJenningsSolver:
         viscosity: Produced-fluid dynamic viscosity in Pa-s, used to estimate
             damping when no explicit coefficients are supplied.
         friction_coefficient: Coulomb friction coefficient (deviated wells).
-        include_gravity: When True the marching kernel carries the gravity and
-            Coulomb-friction terms directly. When False (the default, matching
-            the reference implementation) those terms are muted and the static
-            buoyant weight is pre-subtracted at the surface boundary instead.
-            Either way the rod weight is counted exactly once.
+        include_gravity: When True the marching kernel carries the along-hole
+            weight deficit and the Coulomb-friction contact term. The vertical
+            buoyant weight is pre-subtracted at the surface boundary either
+            way, so the datum does not move and a vertical well is bit-for-bit
+            identical with this flag on or off.
+
+            It defaults to False, which for a vertical well is not an
+            approximation but the identical answer. On a deviated well it is
+            an abstention: as of dm#1894 enabling it moves the one deviated
+            reference well from 0.53% to 6.44% load nRMSE against its vendor
+            downhole card, and the available data cannot say whether the
+            solver got worse or the vendor's own pipeline was deviation-blind.
+            Do not flip this default until a reference computed from a survey
+            (or a measured downhole card, dm#1898) settles that question.
         smooth_window: Savitzky-Golay window for the downhole load. Space
             marching amplifies measurement noise, so some smoothing is
             required; set to 0 to disable.
@@ -643,7 +681,6 @@ class EverittJenningsSolver:
             damping=damping,
             friction_coefficient=self.friction_coefficient,
             n_nodes=self.n_nodes,
-            include_gravity=self.include_gravity,
         )
         coeff = build_coefficients(sim, survey)
         u = initial_matrix(sim, coeff)
@@ -651,8 +688,9 @@ class EverittJenningsSolver:
         muteg = 1.0 if self.include_gravity else 0.0
         u, dh_position, dh_load = _march(
             u, sim.n_x, sim.n_t, sim.dt, sim.dx, sim.friction,
-            coeff.rho_a, sim.gravity, coeff.damping, coeff.moduli,
-            coeff.areas, coeff.phi, coeff.d_phi, coeff.d_psi, muteg,
+            coeff.rho_a, coeff.buoyant_rho_a, sim.cumulative_buoyant,
+            sim.gravity, coeff.damping, coeff.moduli, coeff.areas, coeff.phi,
+            coeff.d_phi, coeff.d_psi, muteg,
         )
 
         if self.smooth_window and self.smooth_window > self.smooth_order:

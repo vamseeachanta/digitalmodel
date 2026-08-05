@@ -32,6 +32,7 @@ import sys
 from importlib import metadata
 from pathlib import Path
 
+from digitalmodel import run_contract
 from digitalmodel.engine import engine
 
 # Entry points that would re-enter this module rather than dispatch to a CLI.
@@ -76,7 +77,32 @@ def main():
         if entry_point is not None:
             sys.argv = sys.argv[1:]
             sys.exit(entry_point.load()())
-    engine()
+    # #1631: the engine contract had no failure exit path. engine() returns
+    # cfg_base and its value was discarded here, so this command exited 0
+    # whatever the run concluded -- on any host, licensed or not. Deckhand is a
+    # thin subprocess.run wrapper, so this status is the whole success signal.
+    cfg = engine()
+    verdict = run_contract.from_cfg(cfg)
+    if verdict is None:
+        # An un-migrated workflow declares no verdict and keeps exiting 0.
+        return 0
+    output_dir = verdict.output_dir or _fallback_output_dir(cfg)
+    if output_dir:
+        run_contract.write_run_verdict(verdict, output_dir)
+    sys.exit(run_contract.exit_status_for(verdict))
+
+
+def _fallback_output_dir(cfg) -> str | None:
+    """Where to drop the sidecar when the workflow named no output directory."""
+    if not isinstance(cfg, dict):
+        return None
+    analysis = cfg.get("Analysis")
+    if isinstance(analysis, dict):
+        for key in ("analysis_root_folder", "result_folder"):
+            value = analysis.get(key)
+            if value:
+                return str(value)
+    return None
 
 
 if __name__ == "__main__":

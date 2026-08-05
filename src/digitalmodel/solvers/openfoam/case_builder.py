@@ -8,7 +8,7 @@ configuration. Does not require OpenFOAM to be installed.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 from loguru import logger
 
@@ -18,6 +18,7 @@ from .initial_fields import (
     write_turbulence_fields,
     write_velocity_field,
 )
+from .block_mesh import render_block_mesh_dict_body
 from .models import OpenFOAMCase, TurbulenceType
 from .motion import render_dynamic_mesh_dict_body
 from .partial_fill import (
@@ -26,10 +27,8 @@ from .partial_fill import (
     snap_fill_to_cell_face,
 )
 from .pressure_taps import PressureTap, render_pressure_tap_functions
+from .solver_contracts import contract_for, render_fv_schemes_body
 from .templates import (
-    FV_SOLUTION_SOLVERS,
-    PIMPLE_BLOCK,
-    SIMPLE_BLOCK,
     TRANSPORT_MULTIPHASE,
     TRANSPORT_SINGLE,
 )
@@ -94,10 +93,12 @@ class OpenFOAMCaseBuilder:
         case: OpenFOAMCase,
         pressure_taps: Optional[List[PressureTap]] = None,
         *,
+        tap_write_control: str = "timeStep",
         tap_write_interval: int = 1,
     ) -> None:
         self._case = case
         self._pressure_taps: List[PressureTap] = list(pressure_taps or [])
+        self._tap_write_control = tap_write_control
         self._tap_write_interval = tap_write_interval
 
     def build(self, parent_dir: Path) -> Path:
@@ -168,7 +169,19 @@ class OpenFOAMCaseBuilder:
 
     def _write_control_dict(self, system_dir: Path) -> None:
         """Write system/controlDict."""
-        cd = self._case.solver_config.to_control_dict()
+        cfg = self._case.solver_config
+        cd = cfg.to_control_dict()
+
+        # A VOF run at fixed deltaT with no interface Courant bound is not
+        # defensible as runnable (issue #1959, D7). Both numbers are derived
+        # from inputs the case already declares -- maxAlphaCo from maxCo, and
+        # maxDeltaT from the declared deltaT -- so no new constant is
+        # introduced and nothing is tuned.
+        if contract_for(cfg.solver_name).needs_alpha_courant:
+            cd["adjustTimeStep"] = "yes"
+            cd["maxAlphaCo"] = cfg.max_co
+            cd["maxDeltaT"] = cfg.max_delta_t
+
         lines: List[str] = [_foam_header("dictionary", "controlDict")]
 
         for key, val in cd.items():
@@ -185,6 +198,7 @@ class OpenFOAMCaseBuilder:
         if self._pressure_taps:
             block = render_pressure_tap_functions(
                 self._pressure_taps,
+                write_control=self._tap_write_control,
                 write_interval=self._tap_write_interval,
             )
             lines.append("\n" + block)
@@ -193,148 +207,44 @@ class OpenFOAMCaseBuilder:
         (system_dir / "controlDict").write_text("\n".join(lines))
 
     def _write_fv_schemes(self, system_dir: Path) -> None:
-        """Write system/fvSchemes with sensible defaults."""
-        solver = self._case.solver_config.solver_name
-        is_transient = solver in ("interFoam", "pimpleFoam")
-        time_scheme = "backward" if is_transient else "steadyState"
+        """Write system/fvSchemes for the solver named in controlDict.
+
+        Rendered from the per-solver contract (issue #1959). Before that, the
+        single-phase div(phi,U) and div((nuEff*dev(...))) were emitted for
+        every application under `default none`, so an interFoam case hit a
+        fatal IO error on the div keys its momentum and alpha equations
+        actually look up, and its backward ddt scheme was rejected outright.
+        """
+        contract = contract_for(self._case.solver_config.solver_name)
+        needs_wall_distance = (
+            self._case.turbulence_model.turbulence_type != TurbulenceType.LAMINAR
+        )
 
         content = _foam_header("dictionary", "fvSchemes")
-        content += f"""
-ddtSchemes
-{{
-    default {time_scheme};
-}}
-
-gradSchemes
-{{
-    default         Gauss linear;
-    grad(p)         Gauss linear;
-}}
-
-divSchemes
-{{
-    default                         none;
-    div(phi,U)                      Gauss linearUpwind grad(U);
-    div(phi,k)                      Gauss upwind;
-    div(phi,omega)                  Gauss upwind;
-    div(phi,epsilon)                Gauss upwind;
-    div((nuEff*dev(T(grad(U)))))    Gauss linear;
-    div(phi,alpha.water)            Gauss vanLeer;
-    div(phirb,alpha.water)          Gauss interfaceCompression;
-}}
-
-laplacianSchemes
-{{
-    default Gauss linear corrected;
-}}
-
-interpolationSchemes
-{{
-    default linear;
-}}
-
-snGradSchemes
-{{
-    default corrected;
-}}
-
-"""
+        content += render_fv_schemes_body(contract, needs_wall_distance)
         content += _FOOTER
         (system_dir / "fvSchemes").write_text(content)
 
     def _write_fv_solution(self, system_dir: Path) -> None:
-        """Write system/fvSolution with solver tolerances."""
-        solver = self._case.solver_config.solver_name
-        is_transient = solver in ("interFoam", "pimpleFoam")
+        """Write system/fvSolution for the solver named in controlDict.
+
+        Rendered from the per-solver contract (issue #1959). Before that, one
+        solver-agnostic block was emitted for every application, so interFoam
+        cases were given a bare p solver and no MULES controls and died at
+        start-up with "Entry 'cAlpha' not found".
+        """
+        contract = contract_for(self._case.solver_config.solver_name)
 
         content = _foam_header("dictionary", "fvSolution")
-        content += FV_SOLUTION_SOLVERS
-        if is_transient:
-            content += PIMPLE_BLOCK
-        else:
-            content += SIMPLE_BLOCK
+        content += contract.solvers_block
+        content += contract.algorithm_block
         content += _FOOTER
         (system_dir / "fvSolution").write_text(content)
 
     def _write_block_mesh_dict(self, system_dir: Path) -> None:
         """Write system/blockMeshDict from DomainConfig."""
-        dc = self._case.domain
-        verts = dc.block_mesh_vertices()
-        nx, ny, nz = dc.cell_counts()
-
-        vert_lines = "\n    ".join(
-            f"( {v[0]:>10.4f}  {v[1]:>10.4f}  {v[2]:>10.4f} )"
-            for v in verts
-        )
-
         content = _foam_header("dictionary", "blockMeshDict")
-        content += f"""
-convertToMeters 1;
-
-vertices
-(
-    {vert_lines}
-);
-
-blocks
-(
-    hex (0 1 2 3 4 5 6 7) ({nx} {ny} {nz}) simpleGrading (1 1 1)
-);
-
-edges
-(
-);
-
-boundary
-(
-    inlet
-    {{
-        type patch;
-        faces
-        (
-            (0 4 7 3)
-        );
-    }}
-    outlet
-    {{
-        type patch;
-        faces
-        (
-            (1 2 6 5)
-        );
-    }}
-    bottom
-    {{
-        type wall;
-        faces
-        (
-            (0 1 2 3)
-        );
-    }}
-    top
-    {{
-        type patch;
-        faces
-        (
-            (4 5 6 7)
-        );
-    }}
-    sides
-    {{
-        type symmetry;
-        faces
-        (
-            (0 1 5 4)
-            (3 7 6 2)
-        );
-    }}
-);
-
-mergePatchPairs
-(
-);
-
-"""
+        content += render_block_mesh_dict_body(self._case.domain)
         content += _FOOTER
         (system_dir / "blockMeshDict").write_text(content)
 

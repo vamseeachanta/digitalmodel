@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import stat
 import subprocess
 import sys
@@ -186,7 +187,9 @@ def _provenance(commit: str) -> dict[str, object]:
     return {"clean": True, "commit": commit, "tracked_sources_sha256": "b" * 64}
 
 
-def _patch_pipeline_records(script, monkeypatch, events, evidence_calls) -> None:
+def _patch_pipeline_records(
+    script, monkeypatch, events, evidence_calls, cross_checks
+) -> None:
     def provenance(kind: str, commit: str) -> dict[str, object]:
         events.append(kind)
         return _provenance(commit)
@@ -204,10 +207,24 @@ def _patch_pipeline_records(script, monkeypatch, events, evidence_calls) -> None
         "_dependency_provenance",
         lambda: provenance("dependency", ASSETUTILITIES_COMMIT),
     )
+
+    def write_evidence(*args: object, **kwargs: object) -> None:
+        # The durable bundle must land on disk: the pipeline reloads it and
+        # cross-checks the persisted artifact, not the in-memory payload.
+        events.append("evidence")
+        evidence_calls.append(kwargs)
+        Path(args[0]).write_text(
+            json.dumps({"bridge": kwargs["bridge_manifest"]}), encoding="utf-8"
+        )
+
+    monkeypatch.setattr(script, "write_reduced_evidence", write_evidence)
+    # raising=False so the shared fixture still installs before the driver grows
+    # the cross-check import; only the new cross-check tests go red pre-fix.
     monkeypatch.setattr(
         script,
-        "write_reduced_evidence",
-        lambda *_a, **kwargs: events.append("evidence") or evidence_calls.append(kwargs),
+        "cross_check_bridge_manifest",
+        lambda payload, manifest: cross_checks.append((payload, manifest)),
+        raising=False,
     )
 
 
@@ -232,6 +249,7 @@ def patch_pipeline_fakes(
     )
     result = SimpleNamespace(status="completed")
     evidence_calls: list[dict] = []
+    cross_checks: list[tuple] = []
 
     def execute(*_args: object, **_kwargs: object) -> SimpleNamespace:
         events.append("execute")
@@ -246,13 +264,14 @@ def patch_pipeline_fakes(
     monkeypatch.setattr(
         script, "_execution_metrics", lambda *_a: {"actual_load1": 0.5, "actual_load_per_core": 0.125}
     )
-    _patch_pipeline_records(script, monkeypatch, events, evidence_calls)
+    _patch_pipeline_records(script, monkeypatch, events, evidence_calls, cross_checks)
     return SimpleNamespace(
         result=result,
         state=state,
         bridge=bridge,
         events=events,
         evidence_calls=evidence_calls,
+        cross_checks=cross_checks,
     )
 
 
@@ -293,6 +312,83 @@ def test_pipeline_rechecks_snapshot_and_passes_attestation_to_evidence(
         "pre_execution",
         "post_execution",
     }
+
+
+def test_pipeline_cross_checks_the_written_bundle_against_the_manifest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The durable artifact on disk must be proven to embed the attested manifest."""
+    script = load_script()
+    fakes = patch_pipeline_fakes(script, tmp_path, monkeypatch)
+
+    script.run_pipeline(
+        ranks=2,
+        selected_ranks=2,
+        visible_cpus=4,
+        work_dir=tmp_path,
+        input_yaml=tmp_path / "input.yml",
+        evidence=tmp_path / "evidence.json",
+        cpb=6,
+        end_time=0.30,
+        delta_t=0.001,
+        time_precision=8,
+        execution_class="shared-fallback",
+        projected_load_per_core=0.625,
+    )
+
+    assert fakes.cross_checks == [
+        ({"bridge": fakes.bridge.manifest}, fakes.bridge.manifest)
+    ]
+
+
+def test_pipeline_fails_closed_when_written_bundle_diverges_from_manifest(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    script = load_script()
+    fakes = patch_pipeline_fakes(script, tmp_path, monkeypatch)
+
+    def diverge(_payload: object, _manifest: object) -> None:
+        raise script.EvidenceValidationError(
+            "durable bundle diverges from prebuilt manifest at contract"
+        )
+
+    monkeypatch.setattr(script, "cross_check_bridge_manifest", diverge, raising=False)
+
+    with pytest.raises(script.EvidenceValidationError, match="diverges"):
+        script.run_pipeline(
+            ranks=2,
+            selected_ranks=2,
+            visible_cpus=4,
+            work_dir=tmp_path,
+            input_yaml=tmp_path / "input.yml",
+            evidence=tmp_path / "evidence.json",
+            cpb=6,
+            end_time=0.30,
+            delta_t=0.001,
+            time_precision=8,
+            execution_class="shared-fallback",
+            projected_load_per_core=0.625,
+        )
+
+    # The snapshot lock must still be released on the fail-closed path.
+    assert fakes.state["released"] == 1
+
+
+def test_main_maps_evidence_divergence_to_a_failing_exit_code(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    script = load_script()
+
+    def diverge(**_kwargs: object) -> None:
+        raise script.EvidenceValidationError(
+            "durable bundle diverges from prebuilt manifest at contract"
+        )
+
+    monkeypatch.setattr(script, "run_pipeline", diverge)
+    monkeypatch.setenv("CFD_DISPATCH_RANKS", "2")
+    monkeypatch.setenv("CFD_EXECUTION_CLASS", "test")
+
+    assert script.main(["--work-dir", str(tmp_path)]) == 1
 
 
 @pytest.mark.parametrize(

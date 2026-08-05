@@ -1,7 +1,13 @@
+# #1631 D5a: this module used to print and carry on, so every downstream
+# caller ran as if the API were present. The import stays soft -- an
+# import-time raise would be swallowed by solvers/orcaflex/__init__.py into a
+# None export -- but callers now refuse at CALL time via
+# require_orcaflex_or_raise() below.
 try:
     import OrcFxAPI
+    ORCAFLEX_API_AVAILABLE = True
 except Exception:
-    print("OrcaFlex license not available. Run on different computer")
+    ORCAFLEX_API_AVAILABLE = False
 # Standard library imports
 import glob
 from loguru import logger
@@ -29,6 +35,8 @@ from digitalmodel.solvers.orcaflex.orcaflex_model_utilities import (
     OrcaflexModelUtilities,
 )
 
+from digitalmodel.solvers.orcaflex.core.exceptions import LicenseError
+
 save_data = SaveData()
 de = DataExploration()
 colorama.init(strip=True, convert=False)
@@ -48,9 +56,46 @@ fm = FileManagement()
 omu = OrcaflexModelUtilities()
 
 
+def mock_mode_requested() -> bool:
+    """Whether an unlicensed run was explicitly opted into.
+
+    Mirrors the switches core/model_interface.py already honours, so there is
+    one way to ask for unlicensed operation across the package.
+    """
+    return any(
+        os.environ.get(name, "").lower() in ("1", "true", "yes")
+        for name in ("ORCAFLEX_FORCE_MOCK", "ORCAFLEX_SKIP_REAL")
+    )
+
+
 class OrcaflexUtilities:
     def __init__(self):
         pass
+
+    def require_orcaflex_or_raise(self, operation: str = "post-process") -> None:
+        """Refuse at call time when there is no license and no opt-in.
+
+        #1631 D5a. This is the surface behind lr_acma_ff132001b7ad, the queued
+        orcaflex-strength-post run that produced no artifacts and still
+        recorded returncode 0. It routes through none of the three modules the
+        issue names, so fixing only those would have left it exactly as
+        fail-open as before.
+        """
+        if self.is_orcaflex_available():
+            return
+        if mock_mode_requested():
+            logger.warning(
+                f"OrcaFlex unavailable; continuing {operation} because "
+                "ORCAFLEX_FORCE_MOCK/ORCAFLEX_SKIP_REAL was set."
+            )
+            return
+        raise LicenseError(
+            f"OrcaFlex license not available, so {operation} cannot run and "
+            "would otherwise report success having produced nothing. Run on a "
+            "licensed OrcaFlex host, or set ORCAFLEX_FORCE_MOCK=1 to proceed "
+            "explicitly without one.",
+            error_code="NO_LICENSE",
+        )
 
     def is_orcaflex_available(self):
         try:

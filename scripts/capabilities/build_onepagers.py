@@ -822,11 +822,16 @@ _TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
 </body></html>"""
 
 
-_API_TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
+# Web template. Core brand tokens (--navy/--teal/--ink/--muted/--line) come from
+# docs/api/_assets/brand.css through the link below and must NOT be redeclared
+# here: doing so is what made every regeneration revert the #1474/#1485/#1487
+# migration on these public pages (#1888). Page-local tokens only in :root.
+_API_TEMPLATE = """<!doctype html><html lang="en" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{title} — API call</title>
+<link rel="stylesheet" href="../../_assets/brand.css">
 <style>
-  :root{{--navy:#0B3D91;--teal:#0f8a7e;--ink:#13233f;--muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc}}
+  :root{{--soft:#f4f8fc}}
   *{{box-sizing:border-box;margin:0;padding:0}}
   body{{font-family:Arial,Helvetica,sans-serif;color:var(--ink);background:#eef3fa;line-height:1.5}}
   .wrap{{max-width:1000px;margin:0 auto;padding:22px}}
@@ -841,10 +846,7 @@ _API_TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
   .verb{{display:inline-block;font:700 11px ui-monospace,monospace;background:var(--teal);color:#fff;padding:2px 8px;border-radius:6px;margin-bottom:8px}}
   a.btn{{display:inline-block;margin-top:10px;font-size:12.5px;font-weight:700;color:#fff;
         background:linear-gradient(135deg,#0f8a7e,#0B3D91);padding:8px 14px;border-radius:9px;text-decoration:none}}
-  .reportwrap{{margin-top:16px;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}}
-  .reportwrap .bar{{font-size:12px;color:var(--muted);padding:9px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}}
-  iframe{{width:100%;height:560px;border:0;display:block;background:#fff}}
-  .note{{color:var(--muted);font-size:12.5px;margin-top:6px}}
+{reportcss}  .note{{color:var(--muted);font-size:12.5px;margin-top:6px}}
   a{{color:var(--navy)}}
   .bigpanel{{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-top:16px}}
   .bigpanel h2{{font-size:11.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px}}
@@ -853,9 +855,10 @@ _API_TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
   .copy{{font:700 12px Arial;color:#fff;background:linear-gradient(135deg,#0f8a7e,#0B3D91);border:0;border-radius:9px;padding:10px 13px;cursor:pointer;white-space:nowrap}}
   .how ol{{margin:8px 0 0 18px}} .how li{{font-size:13.5px;margin:7px 0;color:var(--ink)}}
   .how code{{background:#0e1726;color:#d6e2f5;padding:1px 6px;border-radius:5px;font-size:12px}}
+  .prompt .q,.how,.how li,.how code,.bigpanel{{overflow-wrap:anywhere}}
 </style></head>
 <body><div class="wrap">
-  <div class="top">{logo}<div class="kind">Workflow-API · self-contained call</div></div>
+  <div class="top"><a href="../" aria-label="Back to capabilities" style="display:contents">{logo}</a><div class="kind">Workflow-API · self-contained call</div></div>
   <h1>{title}</h1><div class="std">{std}</div>
 
   <div class="bigpanel">
@@ -874,11 +877,43 @@ _API_TEMPLATE = """<!doctype html><html lang="en"><head><meta charset="utf-8">
       <a class="btn" href="{id}.json" download>Download envelope JSON &darr;</a></div>
   </div>
   <p class="note">{note}</p>
-  <div class="reportwrap">
-    <div class="bar"><span>Comprehensive report (live output)</span><a href="{report_url}">open full report &rarr;</a></div>
-    <iframe src="{report_url}" loading="lazy" title="{title} report"></iframe>
-  </div>
-</div></body></html>"""
+{reportblock}
+</div></body></html>
+"""
+
+
+_REPORT_CSS = """  .reportwrap{margin-top:16px;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .reportwrap .bar{font-size:12px;color:var(--muted);padding:9px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+  iframe{width:100%;height:560px;border:0;display:block;background:#fff}
+"""
+
+
+def _report_block(report_url: str, title: str) -> tuple[str, str]:
+    """The 'Deterministic output' panel, and the CSS only it needs.
+
+    github.com serves x-frame-options: deny, so a report_url pointing there can
+    never render inside an iframe -- the panel was permanently blank on the eight
+    pages whose output is a repository path (#1892/#1933). Those get a visible
+    link instead, and the iframe CSS is left out rather than shipped dead.
+    """
+    if "://github.com/" in report_url:
+        noun = "file" if "/blob/" in report_url else "directory"
+        block = (
+            '  <div class="bigpanel">\n'
+            "    <h2>Deterministic output</h2>\n"
+            f'    <p class="note">The deterministic output is published as a repository {noun}.</p>\n'
+            f'    <a class="btn" href="{report_url}">Open repository {noun} &rarr;</a>\n'
+            "  </div>"
+        )
+        return "", block
+    block = (
+        '  <div class="reportwrap">\n'
+        '    <div class="bar"><span>Comprehensive report (live output)</span>'
+        f'<a href="{report_url}">open full report &rarr;</a></div>\n'
+        f'    <iframe src="{report_url}" loading="lazy" title="{title} report"></iframe>\n'
+        "  </div>"
+    )
+    return _REPORT_CSS, block
 
 
 def _render_api_html(spec: dict, env: dict) -> str:
@@ -898,11 +933,15 @@ def _render_api_html(spec: dict, env: dict) -> str:
     for step in env["how_to_run"]:
         label = {"telegram": "Telegram", "http": "HTTP", "cli": "CLI"}.get(step["via"], step["via"])
         howsteps += f"<li><b>{label}.</b> {html.escape(step['step'])}</li>"
+    reportcss, reportblock = _report_block(
+        html.escape(report_url), html.escape(spec["title"])
+    )
     return _API_TEMPLATE.format(
         logo=_LOGO, title=html.escape(spec["title"]), std=html.escape(spec["std"]),
         verb=verb, reqsnippet=reqsnippet,
         envelope=html.escape(_json.dumps(env, indent=2)),
-        id=spec["id"], note=html.escape(env["note"]), report_url=html.escape(report_url),
+        id=spec["id"], note=html.escape(env["note"]),
+        reportcss=reportcss, reportblock=reportblock,
         prompt=html.escape(env["prompt"]), bot=_BOT, howsteps=howsteps,
     )
 

@@ -13,6 +13,7 @@ from typing import List, Dict, Optional, Callable, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 import psutil
+from digitalmodel.solvers.orcaflex.core.mock_artifacts import write_mock_artifact
 from digitalmodel.solvers.orcaflex.file_size_optimizer import FileSizeOptimizer
 
 logger = logging.getLogger(__name__)
@@ -270,8 +271,11 @@ class BatchProcessor:
             if self.mock_mode:
                 # Simulate processing
                 time.sleep(0.1)
-                sim_file = output_directory / f"{model_path.stem}.sim"
-                sim_file.write_text(f"Mock simulation for {model_path.name}")
+                # #1631 D6: same forgery as universal_runner, in the batch
+                # path. Distinct directory, .mock infix, in-band marker.
+                sim_file = write_mock_artifact(
+                    output_directory / f"{model_path.stem}.sim", model_path.name
+                )
                 result['sim_file'] = str(sim_file)
                 result['success'] = True
             else:

@@ -12,7 +12,7 @@ Client-facing capability page. Three tiers, all engine-driven:
    natural period(s) and a small lookup table.
 3. RESONANCE SCREEN — the marine case: drag fill level for an LNG-scale tank and
    watch the sloshing period sweep the vessel roll-period band (the coupling
-   external diffraction misses — the ACMA B1546 ballast-tank-as-tuned-tank study).
+   external diffraction misses — the ballast-tank-as-tuned-tank study).
 
 Plus a worldwide-relationship reference basis and the CFD tie-in.
 
@@ -353,13 +353,15 @@ def build_study():
     }
 
 
+# Core tokens come from ../_assets/brand.css; keeping only page-local tokens
+# prevents regeneration from undoing the #1474/#1485/#1487 migration.
 _HTML = r"""<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8">
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tank sloshing — natural-period & resonance explorer — digitalmodel</title>
+<link rel="stylesheet" href="../_assets/brand.css">
 <style>
- :root{--navy:#0B3D91;--teal:#0f8a7e;--bg:#eef3fa;--panel:#fff;--ink:#13233f;
-       --muted:#5b6b86;--line:#dbe4f0;--soft:#f4f8fc;--ok:#1f9d57;--bad:#c0392b;--roll:#7c3aed;
+ :root{--soft:#f4f8fc;--ok:#1f9d57;--bad:#c0392b;--roll:#7c3aed;
        --c0:#0B3D91;--c1:#0f8a7e;--c2:#b8860b;--c3:#c0392b}
  *{box-sizing:border-box;margin:0;padding:0}
  body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);
@@ -534,7 +536,7 @@ roll &mdash; the coupling external diffraction (AQWA/OrcaWave) does not capture.
     <b>Where CFD takes over.</b> Analytical periods and the class-simplified screen above close most of a scope.
     Violent / high-fill / impact cases &mdash; and the coupled roll response of partially filled ballast tanks used as
     tuned/anti-roll tanks &mdash; are resolved with VOF free-surface CFD (OpenFOAM), feeding a reduced response back into
-    the vessel roll time-domain model. This is the tiering behind the ACMA / Noble ballast-tank sloshing study.
+    the vessel roll time-domain model. This is the tiering behind the ballast-tank sloshing study.
     The <b style="color:#c0392b">red rings</b> on the master curve above are the first rung of that ladder: measured 2D
     interFoam points that pin the rectangular curve to real free-surface CFD (see the
     <a href="../cfd/tank-sloshing-verification.html">CFD verification page</a>).

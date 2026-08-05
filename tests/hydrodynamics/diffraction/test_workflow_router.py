@@ -292,3 +292,93 @@ def test_run_aqwa_does_not_receive_thread_count(tmp_path: Path) -> None:
             _solve_cfg(tmp_path, dry_run=False, operation="run_aqwa")
         )
     assert "thread_count" not in run_solve.call_args.kwargs
+
+
+# --- verdict propagation (issue #1631) --------------------------------------
+#
+# RunResult.validation_verdict is already declared (orcawave_runner.py:239) and
+# already populated (:594) against the closed five-value contract in
+# validation_runner. The router reads result.status and never reads
+# result.validation_verdict. That single omission is the whole propagation gap:
+# the licensed lane recorded returncode 0 over two validator FAILs because the
+# verdict never left the runner.
+
+
+def _completed_result_with_verdict(verdict: str, out_dir: Path):
+    """A solve that really completed, carrying the given validator verdict.
+
+    Patching run_solve to return a *completed* result exercises the solver
+    success path and the verdict seam together, so the assertion cannot pass
+    vacuously on a host where OrcFxAPI happens to import.
+    """
+    from digitalmodel.hydrodynamics.diffraction.orcawave_runner import RunStatus
+
+    return SimpleNamespace(
+        status=RunStatus("completed"),
+        output_dir=str(out_dir),
+        input_file="UnitBoxRAO.yml",
+        modular_files=[],
+        mesh_files=[],
+        error_message=None,
+        validation_verdict=verdict,
+        validation_issues=[],
+        diffraction_results=SimpleNamespace(
+            to_dict=lambda: {"vessel_name": "UnitBoxRAO", "raos": {"frequencies": [0.5]}}
+        ),
+    )
+
+
+def test_router_records_fail_verdict_in_settings(tmp_path: Path) -> None:
+    from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
+
+    with patch(
+        "digitalmodel.hydrodynamics.diffraction.orcawave_runner.run_orcawave",
+        return_value=_completed_result_with_verdict("FAIL", tmp_path / "out"),
+    ):
+        cfg = DiffractionWorkflow().router(_solve_cfg(tmp_path, dry_run=False))
+
+    assert cfg["diffraction"]["validation_verdict"] == "FAIL"
+
+
+def test_router_records_pass_verdict_in_settings(tmp_path: Path) -> None:
+    from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
+
+    with patch(
+        "digitalmodel.hydrodynamics.diffraction.orcawave_runner.run_orcawave",
+        return_value=_completed_result_with_verdict("PASS", tmp_path / "out"),
+    ):
+        cfg = DiffractionWorkflow().router(_solve_cfg(tmp_path, dry_run=False))
+
+    assert cfg["diffraction"]["validation_verdict"] == "PASS"
+
+
+def test_router_records_solver_unavailable_on_this_host(tmp_path: Path) -> None:
+    # D9: provenance recorded positively, so a consumer distinguishes a licensed
+    # host from an unlicensed one without parsing logs. OrcFxAPI is a
+    # Windows-only wheel behind an optional extra, so False is the honest answer
+    # here.
+    from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
+
+    with patch(
+        "digitalmodel.hydrodynamics.diffraction.orcawave_runner.run_orcawave",
+        return_value=_completed_result_with_verdict("PASS", tmp_path / "out"),
+    ):
+        cfg = DiffractionWorkflow().router(_solve_cfg(tmp_path, dry_run=False))
+
+    assert cfg["diffraction"]["solver_available"] is False
+
+
+def test_router_records_aqwa_verdict_in_settings(tmp_path: Path) -> None:
+    # AQWA routes through the same code path; four of the twelve queued runs
+    # are AQWA solves.
+    from digitalmodel.hydrodynamics.diffraction.workflow import DiffractionWorkflow
+
+    with patch(
+        "digitalmodel.hydrodynamics.diffraction.aqwa_runner.run_aqwa",
+        return_value=_completed_result_with_verdict("FAIL", tmp_path / "out"),
+    ):
+        cfg = DiffractionWorkflow().router(
+            _solve_cfg(tmp_path, dry_run=False, operation="run_aqwa")
+        )
+
+    assert cfg["diffraction"]["validation_verdict"] == "FAIL"

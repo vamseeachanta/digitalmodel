@@ -26,6 +26,7 @@ from .exceptions import (
     TimeoutError
 )
 from .logging_config import LoggerMixin, OrcaFlexLogger
+from .mock_artifacts import write_mock_artifact
 from .configuration import OrcaFlexConfig, AnalysisType
 
 
@@ -157,10 +158,16 @@ class OrcaFlexModelWrapper(LoggerMixin):
         skip_real = os.environ.get('ORCAFLEX_SKIP_REAL', '').lower() in ('1', 'true', 'yes')
         
         # Determine mock usage with environment variable override
+        # #1631: mock mode must be asked for, never inferred from a failed
+        # import. This line used to fall back to mock whenever the OrcFxAPI
+        # availability flag was false, which forced mock exactly when the
+        # module was missing -- and so made the NO_MODULE LicenseError below
+        # provably dead code. The explicit opt-ins (this argument and the two
+        # env vars) all survive.
         if force_mock or skip_real:
             self.use_mock = True
         else:
-            self.use_mock = use_mock or not ORCFXAPI_AVAILABLE
+            self.use_mock = use_mock
         
         self.progress_callback = progress_callback
         
@@ -191,6 +198,11 @@ class OrcaFlexModelWrapper(LoggerMixin):
             del test_model
             self.log_info("OrcaFlex license check passed")
             
+        except LicenseError:
+            # #1631: a missing MODULE is not an unavailable license server.
+            # Rewriting NO_MODULE into NO_LICENSE below sent the reader to
+            # check a license server that was never the problem.
+            raise
         except Exception as e:
             if "license" in str(e).lower() or "OrcFxAPI" not in str(e):
                 raise LicenseError(
@@ -507,8 +519,16 @@ class OrcaFlexModelWrapper(LoggerMixin):
         
         with self._error_handler(f"saving to {output_path.name}"):
             if self.use_mock:
-                # Mock save
-                output_path.touch()
+                # #1631 D6: a mock artifact must not be mistakable for a real
+                # one. This used to touch() an EMPTY file at exactly the path a
+                # real solve would have written, giving a downstream consumer
+                # nothing to inspect. Three independent signals now: a distinct
+                # directory, a .mock infix, and an in-band body marker.
+                mock_path = write_mock_artifact(
+                    output_path, output_path.name, "digitalmodel mock mode"
+                )
+                self.log_info(f"Mock artifact written to {mock_path}")
+                return mock_path
             else:
                 # Determine save method based on extension
                 if output_path.suffix.lower() == '.sim':
@@ -568,9 +588,15 @@ class OrcaFlexModelWrapper(LoggerMixin):
         
         with self._error_handler(f"extracting {variable_name} from {object_name}"):
             if self.use_mock:
-                # Return mock data
-                import numpy as np
-                return np.random.randn(100)
+                # #1631: this used to `return np.random.randn(100)` -- random
+                # numbers presented as engineering results, indistinguishable
+                # from a real time history. Refusing is the only honest answer:
+                # a mock model has no results to extract.
+                raise ModelError(
+                    f"Cannot extract {variable_name!r} from {object_name!r} in "
+                    "mock mode: there are no results. Run on a licensed "
+                    "OrcaFlex host, or read a real .sim file."
+                )
             else:
                 obj = self._model[object_name]
                 if period is None:

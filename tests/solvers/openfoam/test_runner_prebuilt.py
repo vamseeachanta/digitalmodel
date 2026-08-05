@@ -225,6 +225,34 @@ def test_tampered_mesh_is_rejected_before_execution(
     assert calls == []
 
 
+@pytest.mark.parametrize(
+    "residue", ["0.5", "processor0", "VTK", "log.interFoam", "stray.txt"]
+)
+def test_stale_residue_in_prebuilt_case_is_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, residue: str
+) -> None:
+    case, manifest = _make_attested_case(tmp_path)
+    residue_path = case / residue
+    if residue in {"0.5", "processor0", "VTK"}:
+        residue_path.mkdir()
+    else:
+        residue_path.write_text("synthetic residue\n", encoding="utf-8")
+    if residue == "0.5":
+        # smoke._reconstructed_points_path selects the highest-numbered time for
+        # the rigid-rotation proof, so stale 0.5/polyMesh/points copied into the
+        # snapshot could be read as reconstructed mesh and produce a false motion PASS.
+        points = residue_path / "polyMesh" / "points"
+        points.parent.mkdir(parents=True)
+        points.write_text("synthetic stale points\n", encoding="utf-8")
+
+    calls = _patch_execution(monkeypatch)
+    result = _run(case, manifest)
+
+    assert result.status is OpenFOAMRunStatus.FAILED
+    assert "residue" in result.error_message.lower()
+    assert calls == []
+
+
 def test_manifest_contract_must_match_structural_mesh(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

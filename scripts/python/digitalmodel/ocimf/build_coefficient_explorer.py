@@ -1,20 +1,30 @@
 """Build interactive OCIMF coefficient explorer HTML.
 
-Reads /mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx and produces a single-file
-interactive HTML with Plotly charts + usage descriptions + parametric
-comparisons. Output: /mnt/local-analysis/digitalmodel/docs/domains/charts/
-phase2/ocimf/ocimf_coefficient_explorer.html
+Reads a digitized OCIMF coefficient workbook and produces a single-file
+interactive HTML with Plotly charts, usage descriptions and parametric
+comparisons.
+
+The workbook, the output file and the provenance sources are all supplied by
+the caller. This module deliberately holds no absolute filesystem paths and no
+path defaults: the generated page previously published its source locations,
+which disclosed an internal file share, a project code and an organization
+identifier (digitalmodel#1965). Because the published pages are registered as
+drift-gate page exclusions they are never regenerated automatically, so a
+hardcoded default here would silently reprint those paths on the next manual
+run.
 """
 from __future__ import annotations
+import argparse
+import hashlib
 import html
+import json
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Mapping
 import openpyxl
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.io as pio
-
-XLSX = Path("/mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx")
-OUT = Path("/mnt/local-analysis/digitalmodel/docs/domains/charts/phase2/ocimf/ocimf_coefficient_explorer.html")
 
 
 def _read_block(ws, col_start, col_end, header_row=2, data_start=3, data_end=None):
@@ -189,8 +199,8 @@ def parse_16a_19a(ws):
     return long
 
 
-def load_all():
-    wb = openpyxl.load_workbook(XLSX, data_only=True, read_only=False)
+def load_all(xlsx):
+    wb = openpyxl.load_workbook(xlsx, data_only=True, read_only=False)
     rows = []
     rows += parse_5a_9a(wb["Data 5a-9a"])
     rows += parse_10a_14a(wb["Data 10a-14a"])
@@ -498,7 +508,7 @@ table.spec th { background: var(--soft); font-weight: 600; }
 .toc a { color: var(--accent); text-decoration: none; }
 .toc a:hover { text-decoration: underline; }
 code { background: var(--soft); padding: 1px 5px; border-radius: 3px; font-size: 13px; }
-.path { font-family: "Courier New", monospace; font-size: 12px; color: #555; word-break: break-all; }
+.digest { font-family: "Courier New", monospace; font-size: 12px; color: #555; word-break: break-all; }
 """
 
 USAGE_HTML = """
@@ -563,18 +573,129 @@ USAGE_HTML = """
 </div>
 """
 
-PROVENANCE_HTML = """
+@dataclass(frozen=True)
+class ProvenanceSource:
+    """One row of the provenance table.
+
+    ``key`` names the source for the caller-supplied digest manifest. It is not
+    a path and is never rendered.
+    """
+
+    key: str
+    title: str
+    role: str
+
+
+# Each source is identified on the page by title and content digest, never by
+# location. A sha256 identifies the exact artifact more precisely than a path
+# does -- a path can be moved or overwritten -- while disclosing nothing about
+# where it lives or who holds it.
+PROVENANCE_SOURCES = (
+    ProvenanceSource(
+        "meg3-pdf",
+        "Full MEG3 (2008) PDF",
+        "Canonical published standard, 3rd edition",
+    ),
+    ProvenanceSource(
+        "meg4-pdf",
+        "Full MEG4 (2018) PDF",
+        "Canonical published standard, 4th edition",
+    ),
+    ProvenanceSource(
+        "coefficient-workbook",
+        "Digitized coefficient workbook (this explorer's data source)",
+        "Digitized Annex A coefficient lookup tables (Figures A5–A19)",
+    ),
+    ProvenanceSource(
+        "digitizer-extraction",
+        "WebPlotDigitizer alt extraction (A5–A9 only)",
+        "Independent re-digitization for cross-validation",
+    ),
+    ProvenanceSource(
+        "figure-pdfs",
+        "Figure PDFs (15 files)",
+        "Per-figure extract PDFs",
+    ),
+    ProvenanceSource(
+        "project-bundle",
+        "Project-bundled MEG4 extracts",
+        "Project-specific bundle (Fig. A13–A21 + worked examples)",
+    ),
+)
+
+DIGEST_UNAVAILABLE = "not recorded at build time"
+
+
+def sha256_of_file(path) -> str:
+    """Return the hex sha256 of a single file."""
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def sha256_of_tree(path) -> str:
+    """Return a hex sha256 over a directory's contents.
+
+    The rollup is taken over each contained file's repo-relative name and its
+    own digest, in sorted order, so the result is deterministic and independent
+    of where the directory is mounted.
+    """
+    root = Path(path)
+    files = [p for p in root.rglob("*") if p.is_file()]
+    # Sort on the relative POSIX name rather than on Path objects: Path
+    # ordering is platform-dependent, and the digest must not be.
+    files.sort(key=lambda p: p.relative_to(root).as_posix())
+    rollup = hashlib.sha256()
+    for item in files:
+        # NUL terminates each field. It cannot occur in a filename, so the
+        # name/digest stream cannot be re-partitioned to collide.
+        rollup.update(item.relative_to(root).as_posix().encode("utf-8"))
+        rollup.update(b"\0")
+        rollup.update(sha256_of_file(item).encode("ascii"))
+        rollup.update(b"\0")
+    return rollup.hexdigest()
+
+
+def digest_source(path) -> str:
+    """Digest a provenance source, whether it is one file or a directory."""
+    target = Path(path)
+    return sha256_of_tree(target) if target.is_dir() else sha256_of_file(target)
+
+
+def render_provenance_html(digests: Mapping[str, str]) -> str:
+    """Render the provenance table from caller-supplied content digests.
+
+    ``digests`` maps a source key to its hex sha256. A source with no entry
+    renders as unavailable rather than falling back to a location.
+    """
+    rows = []
+    for source in PROVENANCE_SOURCES:
+        digest = digests.get(source.key)
+        cell = (
+            f'<td class="digest"><code>{html.escape(digest)}</code></td>'
+            if digest
+            else f'<td class="digest">{DIGEST_UNAVAILABLE}</td>'
+        )
+        rows.append(
+            f"<tr><td>{html.escape(source.title)}</td>{cell}"
+            f"<td>{html.escape(source.role)}</td></tr>"
+        )
+    body = "\n".join(rows)
+    return f"""
 <h2 id="provenance">5. Data provenance and citation</h2>
+<p>Each source below is identified by its content digest (sha256) rather than by
+a storage location. The digest pins the exact artifact a coefficient was read
+from; locations are deployment detail and are not published.</p>
 <table class="spec">
-<tr><th>Artifact</th><th>Path</th><th>Role</th></tr>
-<tr><td>Full MEG3 (2008) PDF</td><td class="path">/mnt/ace/acma-codes/OCIMF/OCIMF - 2008 - Mooring Equipment Guidelines.pdf</td><td>Canonical published standard, 3rd edition</td></tr>
-<tr><td>Full MEG4 (2018) PDF</td><td class="path">/mnt/ace/acma-codes/OCIMF (MEG 4)/Mooring Equipment Guidelines - MEG4.pdf</td><td>Canonical published standard, 4th edition</td></tr>
-<tr><td><b>OCIMF Coef.xlsx (this explorer's data source)</b></td><td class="path">/mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx</td><td>Digitized Annex A coefficient lookup tables (Figures A5–A19)</td></tr>
-<tr><td>WebPlotDigitizer alt extraction (A5–A9 only)</td><td class="path">/mnt/ace/acma-codes/OCIMF 3rd ed/Digitizer/</td><td>Independent re-digitization for cross-validation</td></tr>
-<tr><td>Figure PDFs (15 files)</td><td class="path">/mnt/ace/acma-codes/OCIMF/Figures/</td><td>Per-figure extract PDFs</td></tr>
-<tr><td>Project-bundled MEG4 extracts</td><td class="path">/mnt/ace/acma-projects/B1522/ctr-7/_data/ocimf/</td><td>Project-specific bundle (Fig. A13–A21 + worked examples)</td></tr>
+<tr><th>Artifact</th><th>SHA-256</th><th>Role</th></tr>
+{body}
 </table>
-<div class="callout">
+{PROVENANCE_NOTES_HTML}"""
+
+
+PROVENANCE_NOTES_HTML = """<div class="callout">
 <p><b>Citation contract:</b> Per <code>.claude/rules/calc-citation-contract.md</code>, any digitalmodel calc module emitting a coefficient from this data must produce a <code>Citation</code> sidecar binding to <code>wiki/standards/ocimf-meg3.md</code> or <code>wiki/standards/ocimf-meg4.md</code>. Those wiki pages are tracked at <a href="https://github.com/vamseeachanta/workspace-hub/issues/2284">workspace-hub#2284</a>. Precedent: DNV-OS-E301 pilot at <code>digitalmodel/src/digitalmodel/orcaflex/mooring_design.py::check_mbl_with_safety_factor</code>.</p>
 </div>
 <div class="callout warn">
@@ -596,11 +717,12 @@ FOOTER_HTML = """
 <li><a href="https://github.com/vamseeachanta/digitalmodel/issues/563">digitalmodel#563</a> — OCIMF database performance (adapter scope)</li>
 <li><a href="https://github.com/vamseeachanta/workspace-hub/issues/2685">workspace-hub#2685</a> — DNV-OS-E301 citation pilot (precedent for OCIMF citation pattern)</li>
 </ul>
-<p class="meta">Generated 2026-05-20 from <code>/mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx</code> · explorer build script <code>/tmp/build_ocimf_explorer.py</code></p>
+<p class="meta">Generated 2026-05-20 from the digitized OCIMF coefficient workbook identified by digest in section 5 · explorer build script <code>scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py</code></p>
 """
 
 
-def render_html(figs_meta):
+def render_html(figs_meta, digests: Mapping[str, str] | None = None):
+    digests = {} if digests is None else digests
     parts = []
     parts.append("<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>")
     parts.append("<title>OCIMF MEG3/MEG4 Coefficient Explorer</title>")
@@ -611,7 +733,8 @@ def render_html(figs_meta):
     parts.append("<h1>OCIMF MEG3/MEG4 Coefficient Explorer</h1>")
     parts.append(
         "<p class='meta'>Interactive visualization of digitized Annex A wind and current coefficients "
-        "for tankers and gas carriers — sourced from <code>/mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx</code>, "
+        "for tankers and gas carriers — sourced from the digitized OCIMF coefficient workbook "
+        "identified by digest in section 5, "
         "covering OCIMF Mooring Equipment Guidelines Annex A Figures A5–A19. "
         "Generated 2026-05-20.</p>"
     )
@@ -669,16 +792,56 @@ def render_html(figs_meta):
     parts.append("</section>")
 
     # Section 5 + 6
-    parts.append(f"<section>{PROVENANCE_HTML}</section>")
+    parts.append(f"<section>{render_provenance_html(digests)}</section>")
     parts.append(f"<section>{FOOTER_HTML}</section>")
 
     parts.append("</body></html>")
     return "\n".join(parts)
 
 
-def main():
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument(
+        "--workbook",
+        required=True,
+        type=Path,
+        help="digitized OCIMF coefficient workbook to read (no default)",
+    )
+    parser.add_argument(
+        "--out",
+        required=True,
+        type=Path,
+        help="HTML file to write (no default)",
+    )
+    parser.add_argument(
+        "--provenance-manifest",
+        type=Path,
+        help=(
+            "optional JSON object mapping provenance source keys to the files "
+            "or directories to digest. Locations are read at build time and "
+            "never rendered; sources omitted here are shown as unavailable. "
+            "Keys: " + ", ".join(s.key for s in PROVENANCE_SOURCES)
+        ),
+    )
+    return parser.parse_args(argv)
+
+
+def build_digests(manifest_path) -> dict:
+    """Digest every source named in the caller-supplied manifest."""
+    if manifest_path is None:
+        return {}
+    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    known = {source.key for source in PROVENANCE_SOURCES}
+    unknown = sorted(set(manifest) - known)
+    if unknown:
+        raise SystemExit(f"unknown provenance source keys: {', '.join(unknown)}")
+    return {key: digest_source(location) for key, location in manifest.items()}
+
+
+def main(argv=None):
+    args = parse_args(argv)
     print("Loading workbook...")
-    df = load_all()
+    df = load_all(args.workbook)
     print(f"Total long-form rows: {len(df)}")
     print(f"Figures: {sorted(df.figure.unique())}")
     print(f"Coefficients: {sorted(df.coefficient.unique())}")
@@ -768,11 +931,12 @@ def main():
     ))
 
     print("Rendering HTML...")
-    html_out = render_html(figs_meta)
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(html_out, encoding="utf-8")
-    size_kb = OUT.stat().st_size / 1024
-    print(f"Wrote {OUT} ({size_kb:.1f} KB)")
+    digests = build_digests(args.provenance_manifest)
+    html_out = render_html(figs_meta, digests)
+    args.out.parent.mkdir(parents=True, exist_ok=True)
+    args.out.write_text(html_out, encoding="utf-8")
+    size_kb = args.out.stat().st_size / 1024
+    print(f"Wrote {args.out} ({size_kb:.1f} KB)")
 
 
 if __name__ == "__main__":

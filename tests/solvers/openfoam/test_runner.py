@@ -110,14 +110,16 @@ class TestFailClosed:
 # staged execution (subprocess mocked — no OpenFOAM needed)
 # ---------------------------------------------------------------------------
 class TestStagedExecution:
-    def _patch(self, monkeypatch, *, returncode=0, stdout="end\n"):
+    def _patch(self, monkeypatch, *, returncode=0, stdout="end\n", stderr: str = ""):
         monkeypatch.setattr(
             "digitalmodel.solvers.openfoam.runner.shutil.which",
             lambda name: f"/usr/bin/{name}",
         )
 
         def fake_run(argv, **kwargs):
-            return subprocess.CompletedProcess(argv, returncode, stdout=stdout, stderr="")
+            return subprocess.CompletedProcess(
+                argv, returncode, stdout=stdout, stderr=stderr
+            )
 
         monkeypatch.setattr(
             "digitalmodel.solvers.openfoam.runner.subprocess.run", fake_run
@@ -229,6 +231,63 @@ class TestStagedExecution:
         result = OpenFOAMRunner().run(case)
         assert result.status is OpenFOAMRunStatus.FAILED
         assert "FOAM FATAL ERROR" in result.stages[0].error_message
+
+    def test_divergence_marker_detected_despite_rc_zero(
+        self, tmp_path: Path, monkeypatch
+    ):
+        case = _make_case(tmp_path)
+        self._patch(
+            monkeypatch,
+            returncode=0,
+            stdout="Time = 0.2\ndivergence detected in matrix solve\n",
+        )
+        result = OpenFOAMRunner().run(case)
+        assert result.status is OpenFOAMRunStatus.FAILED
+        assert "divergence" in result.stages[0].error_message.lower()
+
+    def test_bounding_divergence_detected_despite_rc_zero(
+        self, tmp_path: Path, monkeypatch
+    ):
+        case = _make_case(tmp_path)
+        self._patch(
+            monkeypatch,
+            returncode=0,
+            stdout="Time = 0.1\nbounding alpha.water, min: -0.1 max: 1.1\n",
+        )
+        result = OpenFOAMRunner().run(case)
+        assert result.status is OpenFOAMRunStatus.FAILED
+        assert "bounding" in result.stages[0].error_message.lower()
+
+    def test_iteration_limit_divergence_detected_despite_rc_zero(
+        self, tmp_path: Path, monkeypatch
+    ):
+        case = _make_case(tmp_path)
+        self._patch(
+            monkeypatch,
+            returncode=0,
+            stdout="Maximum number of iterations exceeded\n",
+        )
+        result = OpenFOAMRunner().run(case)
+        assert result.status is OpenFOAMRunStatus.FAILED
+        assert (
+            "maximum number of iterations exceeded"
+            in result.stages[0].error_message.lower()
+        )
+
+    def test_fatal_on_stderr_detected_despite_rc_zero(
+        self, tmp_path: Path, monkeypatch
+    ):
+        case = _make_case(tmp_path)
+        self._patch(
+            monkeypatch,
+            returncode=0,
+            stdout="End\n",
+            stderr="--> FOAM FATAL ERROR\n",
+        )
+        result = OpenFOAMRunner().run(case)
+        assert result.status is OpenFOAMRunStatus.FAILED
+        assert "FOAM FATAL ERROR" in result.stages[0].error_message
+        assert "FOAM FATAL ERROR" in (case / "log.blockMesh").read_text()
 
     def test_benign_sigfpe_banner_is_not_an_error(self, tmp_path: Path, monkeypatch):
         """Regression: OpenFOAM prints the FPE-trapping banner on EVERY successful

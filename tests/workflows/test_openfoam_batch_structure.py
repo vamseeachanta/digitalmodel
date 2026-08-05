@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 FILES = [
     ROOT / "src/digitalmodel/workflows/openfoam_batch_config.py",
+    ROOT / "src/digitalmodel/workflows/openfoam_batch_decomposition.py",
     ROOT / "src/digitalmodel/workflows/openfoam_batch_identity.py",
     ROOT / "src/digitalmodel/workflows/openfoam_batch_layout.py",
     ROOT / "src/digitalmodel/workflows/openfoam_batch_execution.py",

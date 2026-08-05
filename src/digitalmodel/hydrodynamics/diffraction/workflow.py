@@ -16,6 +16,21 @@ _SOLVERS = {
 }
 
 
+def _solver_provenance(operation: str) -> tuple[bool, str | None]:
+    """Positively record whether this host could have solved (#1631, D9).
+
+    OrcaWave is a Python API; AQWA is an executable (aqwa_runner falls back to
+    shutil.which("aqwa")). Both answer the same one-field question, so a
+    consumer never has to read a log to tell a licensed host from an
+    unlicensed one.
+    """
+    from digitalmodel import run_contract
+
+    if operation == "run_aqwa":
+        return run_contract.executable_provenance("aqwa")
+    return run_contract.solver_provenance("OrcFxAPI")
+
+
 class DiffractionWorkflow:
     """Engine router for diffraction-domain workflows.
 
@@ -130,6 +145,18 @@ class DiffractionWorkflow:
             exported = self._export_results_json(result, settings)
             if exported is not None:
                 settings["outputs"]["diffraction_results_json"] = str(exported)
+        # #1631: RunResult.validation_verdict is already computed, already typed
+        # against the closed five-value contract, and already attached to the
+        # result -- and was read by nobody. That single omission is why twelve
+        # licensed runs drained with returncode 0 over two validator FAILs.
+        # Recording solver provenance alongside it lets a consumer tell a
+        # licensed host from an unlicensed one without parsing logs.
+        settings["validation_verdict"] = getattr(
+            result, "validation_verdict", "SKIPPED"
+        )
+        available, identity = _solver_provenance(operation)
+        settings["solver_available"] = available
+        settings["solver_identity"] = identity
         return cfg
 
     @staticmethod

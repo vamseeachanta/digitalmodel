@@ -169,10 +169,10 @@ class OrcaFlexPostProcess:
 
     def post_process_router(self, cfg):
 
-        orcaflex_license_flag = ou.is_orcaflex_available()
-        if not orcaflex_license_flag:
-            print("Orcaflex license not available.")
-            return cfg
+        # #1631 D5a: this used to print and return cfg unchanged, which the
+        # engine and the licensed lane both read as a successful run that
+        # simply produced nothing.
+        ou.require_orcaflex_or_raise("OrcaFlex post-processing")
 
         cfg = self.get_cfg_with_master_data(cfg)
 
