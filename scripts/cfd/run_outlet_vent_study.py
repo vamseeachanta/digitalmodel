@@ -25,9 +25,18 @@ from digitalmodel.solvers.openfoam.case_coupling import (
 from digitalmodel.solvers.openfoam.gravity_conduit import ConduitGeometry
 from digitalmodel.solvers.openfoam.models import BoundaryCondition, BoundaryType
 from digitalmodel.solvers.openfoam.sloshing_sweep import SweepConfig, generate_sweep
+from digitalmodel.solvers.openfoam.time_history import ExtractionConfig
 
 VARIANT_BASELINE = "baseline_full_height_outlet"
 VARIANT_VENT_TOP = "vent_top"
+
+# The volume-balance verdict is judged against the tolerance the repo already
+# applies to these cases, not against a threshold invented for this study and
+# not against a number typed on the command line.  ExtractionConfig.
+# mass_balance_rtol is the RELATIVE mass-balance tolerance time_history uses to
+# decide mass_balance_ok for the extracted histories; expressed in percent it is
+# this study's pass mark.  Overridable via --tolerance-pct for sensitivity work.
+DEFAULT_TOLERANCE_PCT = 100.0 * ExtractionConfig().mass_balance_rtol
 
 # This stable identifier is generated from the issue-specified physical sweep.
 REFERENCE_CASE_ID = "dm1528-filldrain-2a44db9cf998"
@@ -154,7 +163,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--ranks", type=int, default=8)
     parser.add_argument("--end-time", type=float, default=10.0)
     parser.add_argument("--flow-rate", type=float, default=0.0)
-    parser.add_argument("--tolerance-pct", required=True, type=float)
+    parser.add_argument(
+        "--tolerance-pct", type=float, default=DEFAULT_TOLERANCE_PCT
+    )
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument(
         "--variants",
