@@ -14,7 +14,7 @@ import pytest
 
 from digitalmodel.solvers.openfoam.case_builder import OpenFOAMCaseBuilder
 from digitalmodel.solvers.openfoam.gravity_conduit import ConduitGeometry
-from digitalmodel.solvers.openfoam.models import CaseType, OpenFOAMCase
+from digitalmodel.solvers.openfoam.models import BoundaryType, CaseType, OpenFOAMCase
 from digitalmodel.solvers.openfoam.motion import MotionType
 from digitalmodel.solvers.openfoam.sloshing_sweep import SweepCase
 from digitalmodel.solvers.openfoam.case_coupling import (
@@ -122,6 +122,51 @@ class TestMapper:
         patches = {bc.patch_name for bc in case.boundary_conditions}
         assert "inlet" in patches
         assert "outlet" in patches
+
+    # --- outlet/vent placement (#1528 slice 7) ------------------------------
+    #
+    # blockMesh emits `outlet` as the whole x=max face (1 2 6 5), full height,
+    # so a pressure opening there sits below the free surface and the tank
+    # drains under its own hydrostatic head.  Measured on gpu-claw with
+    # interFoam v2312, 12800 cells, 1000 timesteps, zero imposed flow: the
+    # full-height pressure outlet lost 81.16% of a 600 m3 inventory in 10 s,
+    # while venting through `top` held 600.000 m3 exactly.  Evidence:
+    # docs/reports/issue-1528-outlet-vent/.
+    #
+    # `top` is the z=max patch, above the free surface for any fill below 1.0,
+    # so no mesh-topology change is needed.
+
+    def test_outlet_carries_no_pressure_opening_below_the_free_surface(self):
+        case = map_sweep_case_to_openfoam_case(_sweep_case(), _spec())
+        outlet_p = next(
+            bc for bc in case.boundary_conditions
+            if bc.patch_name == "outlet" and bc.field == "p_rgh"
+        )
+        assert outlet_p.bc_type is BoundaryType.ZERO_GRADIENT
+
+    def test_outlet_velocity_is_closed_to_a_no_slip_wall(self):
+        case = map_sweep_case_to_openfoam_case(_sweep_case(), _spec())
+        outlet_u = next(
+            bc for bc in case.boundary_conditions
+            if bc.patch_name == "outlet" and bc.field == "U"
+        )
+        assert outlet_u.bc_type is BoundaryType.NO_SLIP
+
+    def test_atmosphere_opening_moves_to_the_top_patch(self):
+        case = map_sweep_case_to_openfoam_case(_sweep_case(), _spec())
+        top_p = next(
+            bc for bc in case.boundary_conditions
+            if bc.patch_name == "top" and bc.field == "p_rgh"
+        )
+        assert top_p.bc_type is BoundaryType.TOTAL_PRESSURE
+
+    def test_the_vent_draws_air_back_in_not_water(self):
+        case = map_sweep_case_to_openfoam_case(_sweep_case(), _spec())
+        top_alpha = next(
+            bc for bc in case.boundary_conditions
+            if bc.patch_name == "top" and bc.field == "alpha.water"
+        )
+        assert top_alpha.extra["inletValue"] == "uniform 0"
 
     def test_metadata_carries_case_id_capacity_and_phase_convention(self):
         sc = _sweep_case(conduit_capacity=0.08)
