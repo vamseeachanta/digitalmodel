@@ -103,6 +103,16 @@ class TestInterFoamFvSolution:
         content = _fv_solution(tmp_path, CaseType.SLOSHING)
         assert re.search(r"^\s{4}p$", content, re.MULTILINE) is None
 
+    def test_fvsolution_has_u_final(self, tmp_path):
+        """PIMPLE solves U on its final corrector and looks up UFinal.
+
+        The damBreak tutorial omits UFinal only because it sets
+        momentumPredictor no, so its U equation is never solved. This builder
+        leaves momentumPredictor at its default, so UFinal is required.
+        """
+        content = _fv_solution(tmp_path, CaseType.SLOSHING)
+        assert re.search(r"^\s{4}UFinal$", content, re.MULTILINE) is not None
+
     def test_fvsolution_has_pcorr(self, tmp_path):
         """The pcorr.* block is required by the interFoam start-up correction."""
         assert '"pcorr.*"' in _fv_solution(tmp_path, CaseType.SLOSHING)

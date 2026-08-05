@@ -111,6 +111,13 @@ solvers
         tolerance       1e-06;
         relTol          0;
     }
+    UFinal
+    {
+        solver          smoothSolver;
+        smoother        symGaussSeidel;
+        tolerance       1e-06;
+        relTol          0;
+    }
     "(k|omega|epsilon)"
     {
         solver          smoothSolver;

@@ -84,6 +84,9 @@ class SolverDictContract:
             ``default none`` so that any key the solver looks up and this
             table omits is a loud start-up failure rather than a silent
             fallback.
+        ddt_scheme: The ``ddtSchemes`` default. Not a free choice: interFoam's
+            alpha equation rejects anything but Euler and CrankNicolson at run
+            time, so this is a solver requirement rather than a preference.
         needs_alpha_courant: Whether controlDict must bound the interface
             Courant number -- true exactly for VOF solvers.
         reference: Provenance of the numeric literals.
@@ -94,6 +97,7 @@ class SolverDictContract:
     solvers_block: str
     fv_solution_keys: Tuple[str, ...]
     div_schemes: Tuple[Tuple[str, str], ...]
+    ddt_scheme: str
     needs_alpha_courant: bool
     reference: str
 
@@ -109,10 +113,15 @@ SOLVER_DICTS: Dict[str, SolverDictContract] = {
             "p_rgh",
             "p_rghFinal",
             "U",
+            "UFinal",
             '"(k|omega|epsilon)"',
             '"(k|omega|epsilon)Final"',
         ),
         div_schemes=_VOF_DIVS + _TURBULENCE_DIVS,
+        # interFoam's alpha equation rejects anything but Euler and
+        # CrankNicolson at run time (alphaEqn.H). Euler is what 41 of the 43
+        # fvSchemes in the v2312 interFoam tutorial tree use.
+        ddt_scheme="Euler",
         needs_alpha_courant=True,
         reference=VOF_REFERENCE,
     ),
@@ -129,6 +138,7 @@ SOLVER_DICTS: Dict[str, SolverDictContract] = {
             '"(k|omega|epsilon)Final"',
         ),
         div_schemes=_SINGLE_PHASE_DIVS + _TURBULENCE_DIVS,
+        ddt_scheme="backward",
         needs_alpha_courant=False,
         reference="unchanged from the pre-#1959 single-phase builder",
     ),
@@ -145,6 +155,7 @@ SOLVER_DICTS: Dict[str, SolverDictContract] = {
             '"(k|omega|epsilon)Final"',
         ),
         div_schemes=_SINGLE_PHASE_DIVS + _TURBULENCE_DIVS,
+        ddt_scheme="steadyState",
         needs_alpha_courant=False,
         reference="unchanged from the pre-#1959 single-phase builder",
     ),

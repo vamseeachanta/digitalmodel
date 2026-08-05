@@ -19,7 +19,7 @@ from .initial_fields import (
     write_velocity_field,
 )
 from .block_mesh import render_block_mesh_dict_body
-from .models import OpenFOAMCase
+from .models import OpenFOAMCase, TurbulenceType
 from .motion import render_dynamic_mesh_dict_body
 from .partial_fill import (
     partial_fill_box,
@@ -215,10 +215,8 @@ class OpenFOAMCaseBuilder:
         interFoam case hit a fatal IO error on the div keys its momentum and
         alpha equations actually look up.
         """
-        solver = self._case.solver_config.solver_name
-        contract = contract_for(solver)
-        is_transient = solver in ("interFoam", "pimpleFoam")
-        time_scheme = "backward" if is_transient else "steadyState"
+        contract = contract_for(self._case.solver_config.solver_name)
+        time_scheme = contract.ddt_scheme
 
         content = _foam_header("dictionary", "fvSchemes")
         content += f"""
@@ -249,6 +247,17 @@ snGradSchemes
 {{
     default corrected;
 }}
+
+"""
+        # A RAS/LES model such as kOmegaSST computes a wall distance and needs
+        # to be told how (issue #1959). meshWave is the method every interFoam
+        # tutorial in the pinned v2312 installation uses. A laminar case
+        # computes no wall distance, so it carries no block.
+        if self._case.turbulence_model.turbulence_type != TurbulenceType.LAMINAR:
+            content += """wallDist
+{
+    method          meshWave;
+}
 
 """
         content += _FOOTER
