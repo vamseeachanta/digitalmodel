@@ -154,11 +154,15 @@ repos:
   # docs/legal-scanning.md rather than changed silently in this pass.
   - repo: local
     hooks:
+      # Invoked through an interpreter, as the no-windows-path-dirs hook below
+      # already is, so the file stays mode 100644 like every comparable script
+      # here. A language: script entry would need the executable bit, which this
+      # repository does not set on any of its guard scripts -- so the hook would
+      # have failed to start rather than failed a check.
       - id: protected-surface-census
         name: Protected-surface census (Stage 1, unauthenticated)
-        language: script
-        entry: scripts/legal/verify_public_surface.sh
-        args: [--enumeration]
+        language: system
+        entry: bash scripts/legal/verify_public_surface.sh --enumeration
         pass_filenames: false
         stages: [pre-commit]
 
