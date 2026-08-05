@@ -49,14 +49,14 @@ REMEDIATED_PAGES = (
     "docs/domains/charts/phase2/ocimf/ocimf_coefficient_explorer.html",
 )
 
-# Pages that already carried absolute paths before #1965, with the exact
-# occurrence count measured at this branch point. These are a different defect
-# instance (Windows developer-workspace paths emitted by the OrcaWave and
-# OrcaFlex benchmark reporters), they are out of #1965's scope, and widening
-# this change to cover them would repeat the unreviewed scope-widening that
-# produced the issue. They are recorded rather than ignored: the counts are
-# exact, so any of these pages gaining a new absolute path fails the ratchet
-# test below, and any page not listed here must be clean.
+# Pages carrying absolute paths that are out of #1965's scope, each with the
+# exact occurrence count and a stated reason. Following the convention of
+# scripts/generated_html_ownership.py, no page is recorded without a reason.
+#
+# These are recorded rather than ignored. The counts are exact, so any listed
+# page gaining an occurrence fails the ratchet test below, and any page not
+# listed at all must be clean. Widening this change to remediate them would
+# repeat the unreviewed scope-widening that produced the issue.
 #
 # Known limit, stated rather than papered over: the ratchet compares counts, so
 # swapping one path for a different path inside a listed file would not trip it.
@@ -64,23 +64,33 @@ REMEDIATED_PAGES = (
 # repository, which is the disclosure being removed. Counts are the weaker but
 # non-self-defeating choice; closing this properly belongs with the
 # authenticated scanner tracked by digitalmodel#1961.
-PRE_EXISTING_ABSOLUTE_PATHS = {
-    "docs/domains/orcaflex/examples/model_library_report.html": 2,
-    "docs/domains/orcawave/L00_validation_wamit/2.1/benchmark/benchmark_report.html": 10,
-    "docs/domains/orcawave/L00_validation_wamit/2.2/benchmark/benchmark_report.html": 10,
-    "docs/domains/orcawave/L00_validation_wamit/2.3/benchmark/benchmark_report.html": 10,
-    "docs/domains/orcawave/L00_validation_wamit/2.5c/benchmark/benchmark_report.html": 10,
-    "docs/domains/orcawave/L00_validation_wamit/2.5f/benchmark/benchmark_report.html": 10,
-    "docs/domains/orcawave/L00_validation_wamit/2.6/benchmark/body_0/benchmark_report.html": 10,
-    "docs/domains/orcawave/L00_validation_wamit/2.6/benchmark/body_1/benchmark_report.html": 10,
-    "docs/domains/orcawave/L00_validation_wamit/2.7/benchmark/benchmark_report.html": 10,
-    "docs/domains/orcawave/L00_validation_wamit/2.8/benchmark/benchmark_report.html": 10,
-    "docs/domains/orcawave/L00_validation_wamit/2.9/benchmark/benchmark_report.html": 10,
-    "docs/domains/orcawave/L00_validation_wamit/3.1/benchmark/benchmark_report.html": 20,
-    "docs/domains/orcawave/L00_validation_wamit/3.2/benchmark/benchmark_report.html": 10,
-    "docs/domains/orcawave/L00_validation_wamit/3.3/benchmark/body_0/benchmark_report.html": 24,
-    "docs/domains/orcawave/L00_validation_wamit/3.3/benchmark/body_1/benchmark_report.html": 24,
+_ORCAWAVE = "Windows developer-workspace path emitted by the OrcaWave benchmark reporter"
+_ORCAFLEX = "Windows developer-workspace path emitted by the OrcaFlex model-library reporter"
+_OPENFOAM = (
+    "distribution-standard OpenFOAM install prefix, not a deployment-specific "
+    "location; discloses only that a public package is installed"
+)
+
+RECORDED_ABSOLUTE_PATHS = {
+    "docs/domains/orcaflex/examples/model_library_report.html": (2, _ORCAFLEX),
+    "docs/domains/orcawave/L00_validation_wamit/2.1/benchmark/benchmark_report.html": (10, _ORCAWAVE),
+    "docs/domains/orcawave/L00_validation_wamit/2.2/benchmark/benchmark_report.html": (10, _ORCAWAVE),
+    "docs/domains/orcawave/L00_validation_wamit/2.3/benchmark/benchmark_report.html": (10, _ORCAWAVE),
+    "docs/domains/orcawave/L00_validation_wamit/2.5c/benchmark/benchmark_report.html": (10, _ORCAWAVE),
+    "docs/domains/orcawave/L00_validation_wamit/2.5f/benchmark/benchmark_report.html": (10, _ORCAWAVE),
+    "docs/domains/orcawave/L00_validation_wamit/2.6/benchmark/body_0/benchmark_report.html": (10, _ORCAWAVE),
+    "docs/domains/orcawave/L00_validation_wamit/2.6/benchmark/body_1/benchmark_report.html": (10, _ORCAWAVE),
+    "docs/domains/orcawave/L00_validation_wamit/2.7/benchmark/benchmark_report.html": (10, _ORCAWAVE),
+    "docs/domains/orcawave/L00_validation_wamit/2.8/benchmark/benchmark_report.html": (10, _ORCAWAVE),
+    "docs/domains/orcawave/L00_validation_wamit/2.9/benchmark/benchmark_report.html": (10, _ORCAWAVE),
+    "docs/domains/orcawave/L00_validation_wamit/3.1/benchmark/benchmark_report.html": (20, _ORCAWAVE),
+    "docs/domains/orcawave/L00_validation_wamit/3.2/benchmark/benchmark_report.html": (10, _ORCAWAVE),
+    "docs/domains/orcawave/L00_validation_wamit/3.3/benchmark/body_0/benchmark_report.html": (24, _ORCAWAVE),
+    "docs/domains/orcawave/L00_validation_wamit/3.3/benchmark/body_1/benchmark_report.html": (24, _ORCAWAVE),
+    "docs/reports/2026-08-04-issue-1959-solver-start-evidence.html": (1, _OPENFOAM),
 }
+
+RECORDED_COUNTS = {page: count for page, (count, _) in RECORDED_ABSOLUTE_PATHS.items()}
 
 # Filesystem Hierarchy Standard top-level directories, plus the conventional
 # macOS and Windows user roots. This is an enumeration of an external standard,
@@ -220,7 +230,7 @@ def test_published_html_outside_the_recorded_baseline_has_no_absolute_paths():
     offenders = {
         page: count
         for page, count in _violations_by_page().items()
-        if page not in PRE_EXISTING_ABSOLUTE_PATHS
+        if page not in RECORDED_ABSOLUTE_PATHS
     }
     assert offenders == {}
 
@@ -229,9 +239,9 @@ def test_recorded_pre_existing_pages_do_not_gain_absolute_paths():
     recorded = {
         page: count
         for page, count in _violations_by_page().items()
-        if page in PRE_EXISTING_ABSOLUTE_PATHS
+        if page in RECORDED_ABSOLUTE_PATHS
     }
-    assert recorded == PRE_EXISTING_ABSOLUTE_PATHS
+    assert recorded == RECORDED_COUNTS
 
 
 # --------------------------------------------------------------------------
