@@ -348,6 +348,49 @@ def test_prebuilt_kind_is_rejected_in_v1() -> None:
         parse_case_request(request)
 
 
+def _prebuilt_request() -> Dict[str, Any]:
+    """A canonical request whose kind is the reserved ``prebuilt`` arm."""
+    request = _authored_request()
+    request["case_definition"] = {
+        "schema_version": 1,
+        "kind": "prebuilt",
+        "prebuilt": {"case_id": "some_case"},
+    }
+    return request
+
+
+def test_prebuilt_refusal_names_the_supported_entry_point() -> None:
+    """The refusal must point at the attested path that does work (#1969).
+
+    Prebuilt execution ships: ``OpenFOAMRunner.run(prebuilt_manifest=...)`` is
+    covered by fourteen tests in ``test_runner_prebuilt.py`` and runs in CI. A
+    schema refusal that names no alternative strands the YAML caller.
+    """
+    with pytest.raises(CaseDefinitionError) as excinfo:
+        parse_case_request(_prebuilt_request())
+    message = str(excinfo.value)
+    assert "OpenFOAMRunner" in message
+    assert "prebuilt_manifest" in message
+
+
+def test_prebuilt_refusal_does_not_claim_the_capability_is_absent() -> None:
+    """The phrase ``not available`` is the false half of the old message (#1969).
+
+    The limit is the schema's, not the product's. This assertion is negative on
+    purpose: it can only be satisfied by removing the untrue claim, never by
+    adding words around it.
+    """
+    with pytest.raises(CaseDefinitionError) as excinfo:
+        parse_case_request(_prebuilt_request())
+    assert "not available" not in str(excinfo.value)
+
+
+def test_authored_case_is_unaffected_by_the_message_change() -> None:
+    """Regression fence: the authored arm is untouched by the #1969 wording."""
+    parsed = parse_case_request(_authored_request())
+    assert parsed.case.name == "synthetic_sloshing"
+
+
 def test_schema_version_constant_is_one() -> None:
     assert SCHEMA_VERSION == 1
 

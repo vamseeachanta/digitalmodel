@@ -340,7 +340,7 @@ def _parse_canonical(root: Mapping[str, Any]) -> ParsedAuthoredCaseV1:
         raise ValidationError("unsupported case_definition.schema_version")
     kind = require_string(definition["kind"], "case_definition.kind")
     if kind == "prebuilt":
-        raise ValidationError("prebuilt cases are not available in schema v1")
+        raise ValidationError("prebuilt reserved in schema v1; use OpenFOAMRunner.run(prebuilt_manifest=...)")
     if kind != "authored":
         raise ValidationError(f"unsupported case_definition.kind {kind!r}")
     check_keys(
