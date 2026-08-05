@@ -16,6 +16,9 @@ from typing import Any, Callable
 from loguru import logger
 
 from digitalmodel.workflows.openfoam_batch_config import base_view, validate_workers
+from digitalmodel.workflows.openfoam_batch_decomposition import (
+    verify_resumable_decomposition,
+)
 from digitalmodel.workflows.openfoam_batch_identity import file_sha256
 from digitalmodel.workflows.openfoam_batch_layout import WorkLayout
 from digitalmodel.workflows.openfoam_batch_results import redact_rows, row
@@ -179,7 +182,7 @@ def _run_case_mpi_unlocked(item: dict[str, Any], run_settings: dict, workers: in
     resume = bool(run_settings.get("resume", False)) and _has_processors(item["work_dir"])
     start = time.monotonic()
     try:
-        case_dir = _prepare_mpi_case(item, resume, layout, builder)
+        case_dir = _prepare_mpi_case(item, resume, workers, layout, builder)
         view = base_view(item["settings"])
         plan = mpi_command_plan(solver, workers,
             view.get("mesh_utility", DEFAULT_MESH_UTILITY),
@@ -260,10 +263,13 @@ def build_case(item: dict[str, Any]) -> Path:
     return Path(config["openfoam"]["case_dir"])
 
 
-def _prepare_mpi_case(item: dict[str, Any], resume: bool,
+def _prepare_mpi_case(item: dict[str, Any], resume: bool, workers: int,
                       layout: WorkLayout | None,
                       builder: Callable[[dict[str, Any]], Path]) -> Path:
     if resume:
+        # Refuse BEFORE set_start_from_latest_time rewrites system/controlDict,
+        # so a rejected resume leaves the case byte-identical (#1968 D4).
+        verify_resumable_decomposition(item["work_dir"], workers)
         set_start_from_latest_time(item["work_dir"])
         return item["work_dir"]
     _clean(item, layout)

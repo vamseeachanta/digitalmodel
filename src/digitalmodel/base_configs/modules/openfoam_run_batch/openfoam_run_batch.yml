@@ -32,8 +32,12 @@ openfoam_run_batch:
     workers: null          # null -> floor(0.9 x host cores), min 1 (dm#1553)
     mock: false
     reconstruct: true      # mpi only: reconstructPar then prune processor*
-    resume: false          # mpi only: restart solver from latestTime if
-                           # a previous attempt's processor* dirs exist
+    resume: false          # mpi only: restart solver from latestTime if a
+                           # previous attempt's processor* dirs exist. Refused
+                           # before controlDict is touched unless processor0..
+                           # processor{workers-1} are all present, system/
+                           # decomposeParDict says numberOfSubdomains: workers,
+                           # and every rank's latest time agrees (dm#1968)
     timeout_seconds: 43200
     output_dir: results
     work_dir: batch_runs
