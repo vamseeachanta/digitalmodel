@@ -206,6 +206,38 @@ class TestControlDictContent:
         assert "500" in content
 
 
+class TestWallDistanceSchemes:
+    """A RAS model that needs a wall distance must be told how to compute it.
+
+    Found by the issue #1959 solver-start oracle, not by inspection: the case
+    read p_rgh, U and transportProperties, selected kOmegaSST, and only then
+    died on a missing wallDist method. meshWave is the method every interFoam
+    tutorial in the pinned v2312 installation uses.
+    """
+
+    def _fv_schemes(self, tmp_path, turbulence_type, name):
+        case = OpenFOAMCase.for_case_type(CaseType.SLOSHING, name=name)
+        case.turbulence_model = TurbulenceModel(turbulence_type=turbulence_type)
+        case_dir = OpenFOAMCaseBuilder(case).build(tmp_path)
+        return (case_dir / "system" / "fvSchemes").read_text()
+
+    def test_ras_case_declares_wall_dist(self, tmp_path):
+        """kOmegaSST needs a wallDist block in fvSchemes."""
+        content = self._fv_schemes(tmp_path, TurbulenceType.K_OMEGA_SST, "wd_ras")
+        assert "wallDist" in content
+
+    def test_ras_wall_dist_method_is_mesh_wave(self, tmp_path):
+        """The wall distance method is meshWave."""
+        content = self._fv_schemes(tmp_path, TurbulenceType.K_OMEGA_SST, "wd_method")
+        match = re.search(r"^\s*method\s+(\S+?);", content, re.MULTILINE)
+        assert match.group(1) == "meshWave"
+
+    def test_laminar_case_omits_wall_dist(self, tmp_path):
+        """A laminar case computes no wall distance and needs no block."""
+        content = self._fv_schemes(tmp_path, TurbulenceType.LAMINAR, "wd_laminar")
+        assert "wallDist" not in content
+
+
 class TestVofControlDictCourantBounds:
     """A VOF run at fixed deltaT with no interface Courant bound is not
     defensible as runnable (issue #1959, design decision D7)."""

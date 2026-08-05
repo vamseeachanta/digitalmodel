@@ -118,6 +118,9 @@ def test_emitted_case_starts_and_advances(tmp_path):
     about a tree someone touched.
     """
     case = OpenFOAMCase.for_case_type(CaseType.SLOSHING, name="runnable_probe")
+    # A half-full tank: the run must be genuinely two-phase, or it would not
+    # exercise the alpha equation this issue is about.
+    case.fill_level = 0.5
     case.solver_config.end_time = 10 * case.solver_config.delta_t
     case_dir = OpenFOAMCaseBuilder(case).build(tmp_path)
 
