@@ -345,3 +345,104 @@ class TestGetCornerLoads:
         assert result["tl_position"] == pytest.approx(position[corners[1]])
         assert result["tr_position"] == pytest.approx(position[corners[2]])
         assert result["br_position"] == pytest.approx(position[corners[3]])
+
+
+class TestBottomRightCornerUnderSeverePumpOff:
+    """Regression: the BR corner sets net stroke, so a mis-detection here is
+    reported as a *fillage* number — silently, and in the healthy direction.
+
+    Found 2026-08-05. ``_find_bottom_right_corner`` scored candidates with
+    ``retained_stroke - remaining_load``, where ``remaining_load`` was
+    normalised against the WHOLE CARD's load span. A card's peak load sits on
+    the upstroke near TL while the downstroke begins below it, so the top of the
+    downstroke already scored ~0.18 before any load had transferred — enough to
+    beat the genuine transfer knee once the pound became severe. Net stroke then
+    collapsed onto gross stroke and a fully pounded-off pump reported ~100%
+    fillage.
+
+    Why it mattered operationally: severe, fast pump-off is exactly the regime a
+    pump-off controller setpoint exists to catch, and the failure read "full".
+    """
+
+    @staticmethod
+    def _pound_card(transfer_fraction: float, n: int = 120) -> CardData:
+        """Downhole pump card with a controllable transfer point.
+
+        ``transfer_fraction`` is the fraction of the downstroke completed
+        *before* the load transfers. Higher means the plunger falls further
+        through gas or vapour before contacting fluid — a later transfer, at a
+        lower position, giving a shorter net stroke and poorer fillage.
+
+        Peak load is deliberately placed on the UPSTROKE, above where the
+        downstroke begins. That geometry is what triggered the defect.
+        """
+        peak, base = 15600.0, 6400.0
+        stroke = 110.0
+        quarter = n // 4
+        pos, load = [], []
+
+        for i in range(quarter):  # BL -> TL: load builds at minimum position
+            pos.append(0.0)
+            load.append(base + (peak - base) * i / quarter)
+        for i in range(quarter):  # TL -> TR: upstroke, load sags off the peak
+            pos.append(stroke * i / quarter)
+            load.append(peak - 1700.0 * i / quarter)
+        for i in range(quarter):  # TR -> BR: transfer partway down the stroke
+            frac = i / quarter
+            pos.append(stroke * (1.0 - frac))
+            load.append(peak - 1700.0 if frac < transfer_fraction else base)
+        for _ in range(n - 3 * quarter):  # BR -> BL along the bottom
+            pos.append(0.0)
+            load.append(base)
+        return CardData(position=pos, load=load)
+
+    # Later transfer must always mean less fillage, with no reversals.
+    SWEEP = (0.02, 0.10, 0.25, 0.45, 0.65, 0.85, 0.95)
+
+    def test_fillage_falls_monotonically_as_transfer_gets_later(self):
+        """A pump that fills less cannot report filling more."""
+        fillages = [
+            calculate_pump_fillage(self._pound_card(f)).fillage for f in self.SWEEP
+        ]
+        for (f_a, a), (f_b, b) in zip(
+            zip(self.SWEEP, fillages), zip(self.SWEEP[1:], fillages[1:])
+        ):
+            assert b <= a + 1e-6, (
+                f"fillage rose from {a:.1f}% to {b:.1f}% as transfer moved later "
+                f"({f_a} -> {f_b}); full sweep {fillages}"
+            )
+
+    def test_severe_pound_is_not_reported_as_a_full_pump(self):
+        """The exact defect: worst-case pound previously reported 100%."""
+        fillage = calculate_pump_fillage(self._pound_card(0.85)).fillage
+        assert fillage < 25.0, (
+            f"severely pounded pump reported {fillage:.1f}% fillage"
+        )
+
+    def test_full_pump_still_reads_high(self):
+        """Guard the other direction: the fix must not depress a good card."""
+        fillage = calculate_pump_fillage(self._pound_card(0.02)).fillage
+        assert fillage > 90.0, f"full pump reported only {fillage:.1f}%"
+
+    def test_br_corner_sits_after_the_load_transfer(self):
+        """BR marks where the travelling valve opens, so it must sit at low
+        load — not at the top of the downstroke where nothing has moved yet."""
+        card = self._pound_card(0.65)
+        corners, _ = calculate_corners(card)
+        loads = np.array(card.load)
+        br_load = loads[corners[3]]
+        assert br_load < loads.min() + 0.25 * np.ptp(loads), (
+            f"BR corner load {br_load:.0f} is too high to be post-transfer"
+        )
+
+    def test_flat_downstroke_does_not_divide_by_zero(self):
+        """A card that transfers no load anywhere has no knee; it must still
+        return a corner rather than raising."""
+        n = 80
+        card = CardData(
+            position=[float(i % 20) for i in range(n)],
+            load=[9000.0] * n,
+        )
+        corners, _ = calculate_corners(card)
+        assert len(corners) == 4
+        assert all(0 <= c < n for c in corners)

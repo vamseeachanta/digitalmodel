@@ -118,6 +118,25 @@ class CornerDetector:
         """
         Find the bottom right corner (traveling valve opening point).
         This is where the load drops sharply during downstroke.
+
+        The knee is scored as ``retained_stroke - transferred_load`` along the
+        downstroke: the corner is the point that still holds plunger travel but
+        has already shed its fluid load.
+
+        Load is normalised against the DOWNSTROKE's own load range, not the
+        whole card's. That distinction is load-bearing, not cosmetic. A card's
+        peak load generally sits on the upstroke near TL, while the downstroke
+        begins somewhat below it. Normalising against the whole card therefore
+        gives the first point of the downstroke a non-zero score before any load
+        has transferred at all — on a pounding card that head start was ~0.18,
+        enough to beat the genuine transfer knee once the pound became severe.
+        The detector then returned a point at the top of the downstroke, net
+        stroke collapsed onto gross stroke, and a fully pounded-off pump was
+        reported at ~100% fillage: wrong, silent, and in the healthy direction.
+
+        Normalising against the downstroke's own range makes the start of the
+        downstroke score exactly zero by construction, which is what "no load
+        has transferred yet" should score.
         """
         top_candidates = np.flatnonzero(self.position == np.max(self.position))
         bottom_candidates = np.flatnonzero(self.position == np.min(self.position))
@@ -138,10 +157,13 @@ class CornerDetector:
         retained_stroke = (
             self.position[downstroke] - np.min(self.position)
         ) / position_span
+
         remaining_load = (
             self.load[downstroke] - np.min(self.load)
         ) / load_span
         knee_offset = int(np.argmax(retained_stroke - remaining_load))
+
+        knee_offset = self._reject_untransferred_knee(downstroke, knee_offset)
 
         # A discretised taper can leave the knee one material load step before
         # transfer finishes. Include that endpoint without chasing gradual
@@ -154,6 +176,65 @@ class CornerDetector:
             if taper_drop > 0.01 * load_span:
                 knee_offset += 1
         return int(downstroke[knee_offset])
+
+    #: Fraction of the downstroke's available load drop that must have occurred
+    #: at the BR corner for it to be a plausible travelling-valve opening.
+    #:
+    #: Measured, not guessed. On the four vendor-analysed reference wells the
+    #: correct corner realises 0.675 / 0.814 / 0.863 / 0.866 of the drop, and on
+    #: well-formed synthetic cards 1.000. The failure mode this guards realises
+    #: 0.000 — the chosen point sits at the top of the downstroke where nothing
+    #: has transferred at all. 0.35 sits in the empty band between 0.000 and
+    #: 0.675, so the guard cannot fire on any card we have evidence for.
+    _MIN_TRANSFERRED_FRACTION = 0.35
+
+    def _reject_untransferred_knee(
+        self, downstroke: np.ndarray, knee_offset: int
+    ) -> int:
+        """Reject a BR corner at which no fluid load has actually transferred.
+
+        The primary knee metric scores ``retained_stroke - remaining_load`` with
+        load normalised over the whole card. That normalisation gives the top of
+        the downstroke a head start, because a card's peak load sits on the
+        upstroke near TL while the downstroke begins below it. On the reference
+        wells the head start is harmless — the genuine knee wins comfortably.
+        Under severe fluid pound it is not: the genuine knee's score falls until
+        the head start beats it, the detector returns a point at the top of the
+        downstroke, net stroke collapses onto gross stroke, and a fully
+        pounded-off pump is reported at ~100% fillage. Wrong, silent, and in the
+        healthy direction — the direction that would stop a pump-off controller
+        setpoint from ever tripping.
+
+        Rather than re-scale the metric (which disturbs the reference wells,
+        where the load minimum lies well past the transfer point because of rod
+        undershoot), this guard tests the *physics* of the chosen corner: BR is
+        where the travelling valve opens, so by definition most of the fluid
+        load must already be off the plunger there. If it is not, the search is
+        repeated over the part of the downstroke where the load genuinely has
+        transferred.
+        """
+        loads = self.load[downstroke]
+        start_load = float(loads[0])
+        floor_load = float(np.min(loads))
+        available_drop = start_load - floor_load
+        if available_drop <= np.finfo(np.float64).eps:
+            return knee_offset  # nothing transfers anywhere; nothing to reject
+
+        transferred = (start_load - loads) / available_drop
+        if transferred[knee_offset] >= self._MIN_TRANSFERRED_FRACTION:
+            return knee_offset  # the corner is physically plausible; keep it
+
+        eligible = np.flatnonzero(transferred >= self._MIN_TRANSFERRED_FRACTION)
+        if eligible.size == 0:
+            return knee_offset  # no better candidate exists; do not invent one
+
+        position_span = float(np.ptp(self.position))
+        load_span = float(np.ptp(self.load))
+        retained = (
+            self.position[downstroke[eligible]] - np.min(self.position)
+        ) / position_span
+        remaining = (self.load[downstroke[eligible]] - np.min(self.load)) / load_span
+        return int(eligible[int(np.argmax(retained - remaining))])
 
     def _order_corners(self, corners: List[int]) -> List[int]:
         """
