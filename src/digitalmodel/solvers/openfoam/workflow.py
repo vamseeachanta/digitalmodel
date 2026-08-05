@@ -19,7 +19,11 @@ Canonical — carries the full case definition, validated fail-closed::
       output_directory: out       # relative to Analysis.result_folder
       case_definition:
         schema_version: 1
-        kind: authored            # "prebuilt" is reserved and refused in v1
+        kind: authored            # "prebuilt" is reserved in schema v1 (#1969)
+        # Prebuilt meshes are NOT unsupported -- they are unreachable from this
+        # schema only. The attested path ships and runs in CI: call
+        # OpenFOAMRunner.run(case_dir, prebuilt_manifest=...) directly, which
+        # validates the manifest before any copy (prebuilt_mesh.py).
         authored:
           case_type: sloshing
           name: my_case
