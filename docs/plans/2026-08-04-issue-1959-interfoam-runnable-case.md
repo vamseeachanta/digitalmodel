@@ -1,5 +1,14 @@
 # Plan for #1959: make the emitted OpenFOAM case actually runnable by its selected solver
 
+> **Provenance.** Reproduced from the owner-approved revision
+> `9b7810523f4493d45ea7649b9010d2e0e2f8ea9c` on branch
+> `plan/1959-interfoam-runnable`. One divergence from that revision, confined to
+> the Execution environment section: two machine-specific absolute paths were
+> generalized so the file passes this repository's diff-scoped absolute-path
+> gate (`scripts/enforcement/check-no-abs-paths.sh`). No scope, design decision,
+> TDD row, or acceptance criterion is altered. The approved branch holds the
+> byte-exact original.
+
 > **Status:** plan-review (awaiting owner approval — never self-approved)
 > **Complexity:** T2
 > **Date:** 2026-08-04
@@ -343,11 +352,10 @@ pinning `patch_case.sh`'s values (D4).
 
 ## Execution environment
 
-Implementation runs in a dedicated worktree off `origin/main`
-(`/mnt/ace/ws/agent-worktrees/dm-1959-plan`). The shared checkout
-`/mnt/ace/ws/digitalmodel` is on `fix/3787-startup-tax` and is **not** used.
-Root `/` is at 100% (1.4 G free), so worktrees live on `/mnt/ace` — the
-`/tmp` scratchpad cannot hold another 2.8 G checkout.
+Implementation runs in a dedicated worktree off `origin/main`. The shared
+checkout is on an unrelated branch and is **not** used. The root filesystem is
+full, so worktrees live on the large data volume; the scratchpad cannot hold
+another 2.8 G checkout.
 
 Layer 2 runs on `gpu-claw`, verified 2026-08-04:
 
