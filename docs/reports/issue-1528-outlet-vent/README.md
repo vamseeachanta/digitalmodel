@@ -34,7 +34,15 @@ atmosphere opening to `top`.
 | Mesh | 40 x 8 x 40 = 12800 cells |
 | Solver | `interFoam`, 8 MPI ranks, `endTime` 10.0 s, 1000 timesteps |
 | Flow rate | 0.0 m3/s — static hold, so any volume change is boundary leakage |
+| **Roll motion** | **DISABLED** (`run_outlet_vent_study.py` sets `case.motion = None`) |
 | Tolerance | 0.1 % |
+
+**Read the roll row carefully.** This is a motionless, flowless hold. The
+reference sweep row `dm1528-filldrain-2a44db9cf998` is itself a *resonant* case
+(`period_ratio = 1.0`, `near_resonance = True`, `roll_period_s = 6.251`), and the
+study deliberately strips its motion so that the only thing that can move liquid
+is a boundary leak. That is the cleanest possible isolation of the defect, and it
+is also the limit of what this run establishes — see Limitations.
 
 The run was only possible because #1959 (`2b4b2567`, on `main`) made the emitted
 case `interFoam`-runnable. The previous attempt at `dbeb5cc5` died at solver
@@ -42,10 +50,28 @@ start-up with `Entry 'cAlpha' not found`.
 
 ## Measured result
 
-| Variant | Initial liquid volume | Final liquid volume | Drift | Holds volume |
+| Variant | First sample (t = 0.01 s) | Final (t = 10 s) | Drift vs first sample | Holds volume |
 |---|---|---|---|---|
 | `baseline_full_height_outlet` | 599.9037 m3 | 113.0211 m3 | **-81.160 %** | no |
 | `vent_top` | 600.0000 m3 | 600.0000 m3 | **0.000 %** | yes |
+
+The first column is the first *written* sample, not t=0. The `volFieldValue`
+function object writes on `writeControl timeStep`, so the earliest sample is
+t=0.01, by which point the baseline has already leaked 0.0963 m3. The true
+initial volume is 600.0000 m3 for both variants (same `setFieldsDict`,
+`fill_fraction` 0.5 of a 1200 m3 tank), so the baseline's drift measured from a
+true t=0 is **-81.163 %**, marginally worse than the reported figure. The metric
+in `volume_drift_percent` is structurally blind to first-timestep loss; it
+understates leakage and can never overstate it, so the verdict direction is
+safe. Tracked as a follow-on.
+
+Two further corroborations that this is a sustained leak rather than a transient
+or a reporting artefact:
+
+- The baseline volume series **decreases at every one of its 999 steps**. A
+  monotonic drain is what hydrostatic bleed predicts.
+- The vent series has **min = max = 600.0000** across all 1000 samples. It is not
+  merely equal at the endpoints.
 
 Verdict: **`vent_top`**. The baseline loses over four fifths of the tank
 inventory in ten seconds of a *static* hold with zero imposed flow. The vent
@@ -151,7 +177,62 @@ roots. The emitted `0/p_rgh` for the shipped default carries `zeroGradient` on
 
 Artefacts are under `confirmation-shipped-default/`.
 
+## Limitations — what this run does NOT establish
+
+An adversarial review of the branch returned REJECT and surfaced these. The
+cheap and clearly-correct findings were fixed on the branch; the rest are
+recorded here and filed, rather than being quietly dropped.
+
+**1. The A/B changes two factors, not one.** The control's `0/U` has
+`top: slip` (the builder default at `initial_fields.py:92`) while the treatment
+has `top: pressureInletOutletVelocity`. Both variants already had
+`top: totalPressure` on `p_rgh` from the builder default. So the two
+configurations differ in *both* outlet closure and vent unsealing. The decision
+of which configuration to ship is sound as a whole-configuration A/B, and the
+-81.16 % versus 0.000 % separation is not in doubt. But the mechanistic sentence
+"submerged cells carry a pressure opening, therefore the tank drains" is not
+isolated by this experiment. Isolating it needs a third variant with the outlet
+closed and `top` left at the `slip` default.
+
+**2. Roll motion was disabled, and the case is resonant.** The justification for
+placing the vent on `top` — that `top` is above the free surface for any fill
+below 1.0 — is a **hydrostatic** statement. Under resonant roll the surface runs
+up, and the vent's `alpha.water` is `inletOutlet`, which on outflow reverts to
+`zeroGradient` and will let **water** leave through the vent. The clean
+volume balance is therefore established for a static hold and is **not yet
+established for the condition the 144-case matrix will actually run**. The
+docstring in `case_coupling.py` now says "quiescent free surface" for this
+reason. This must be closed before the matrix is trusted.
+
+**3. With the outlet closed there is no drain path, and the shipped default
+over-fills inside its own default `endTime`.** `map_sweep_case_to_openfoam_case`
+passes a *constant* non-negative `q_mean` to `flowRateInletVelocity`. For the
+reference case `q_mean = 19.196 m3/s` against 600 m3 of headroom, so the tank is
+full at t ~ 31.3 s while the `CaseType.SLOSHING` default `end_time` is 50.0 s.
+Past that point liquid is expelled through the vent. The previous full-height
+pressure outlet relieved this; closing it removed the relief. This is a real gap
+in the coupled configuration, not in the placement decision, and it is the
+strongest argument that the matrix is not yet safe to launch.
+
+**4. Momentum and turbulence disagree on the closed outlet.** `U` there is now
+`noSlip`, a wall condition, but `k`, `omega` and `nut` remain `zeroGradient` /
+`calculated` rather than the wall functions the real wall (`bottom`) gets. It
+cannot be fixed by adding wall functions alone: OpenFOAM wall functions require a
+`wallFvPatch`, and `block_mesh.py` declares `outlet` as `type patch`. The claim
+that the remedy needs no mesh-topology change is true only if this inconsistency
+is accepted. It does not affect the volume balance measured here, but it
+mis-models near-wall friction on one sixth of the tank surface, which matters for
+the wall-shear and wall-force traces the issue asks for.
+
+**5. No test asserts the emitted `0/` files.** The tests stop at the
+`BoundaryCondition` list. The review verified manually that the builder does
+honour a `top` override and that the emitted `0/U`, `0/p_rgh` and
+`0/alpha.water` all carry it, so there is no live bug — but the regression guard
+is missing, and `tests/solvers/openfoam/test_conduit_inlet_flux.py` is prior art
+for exactly this check.
+
 ## Scope
 
 This settles placement only. The 144-case coupled matrix is the next checklist
-item and was deliberately not started.
+item and was deliberately not started. Limitations 2 and 3 above should be
+closed before it is.
