@@ -306,12 +306,15 @@ design does not depend on it).
 
 ## Execution environment
 
-Implementation runs in a dedicated worktree off `origin/main`
-(`/mnt/ace/ws/agent-worktrees/dm-1968-1970-plans`). The shared checkout
-`/mnt/ace/ws/digitalmodel` is on `fix/3787-startup-tax` and is **not** used.
-Root `/` is at 100% (1.2 G free), so worktrees live on `/mnt/ace`; the `/tmp`
-scratchpad cannot hold another checkout — an attempt on 2026-08-05 failed with
-`No space left on device` mid-checkout.
+Implementation runs in a dedicated agent worktree off `origin/main`. The shared
+checkout is on `fix/3787-startup-tax` and is **not** used. The root filesystem
+is effectively full, so worktrees live on the large data volume; the scratchpad
+under the system temp directory cannot hold another checkout — an attempt on
+2026-08-05 failed with `No space left on device` mid-checkout.
+
+(Machine-specific absolute paths are deliberately omitted here: they are
+developer paths and `scripts/enforcement/check-no-abs-paths.sh` rejects them.
+The concrete worktree locations are recorded in the issue thread instead.)
 
 Every test in this plan is a pure-filesystem fixture under `tmp_path` with an
 injected `command_runner`. No OpenFOAM binary is required, and none is available:
