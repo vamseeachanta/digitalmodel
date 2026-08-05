@@ -36,6 +36,11 @@ __all__ = [
 ]
 
 _NUMBER_OF_SUBDOMAINS = re.compile(r"\bnumberOfSubdomains\s+(\d+)\s*;")
+# OpenFOAM dictionaries take C++ comments. A stale "// numberOfSubdomains 4;"
+# above the live entry would otherwise be read as the live value, which
+# accepts a decomposition of the wrong size -- the exact hazard this module
+# exists to prevent.
+_COMMENT = re.compile(r"//[^\n]*|/\*.*?\*/", re.DOTALL)
 
 
 class DecompositionMismatch(RuntimeError):
@@ -105,13 +110,23 @@ def _verify_subdomain_count(case_dir: Path, workers: int) -> None:
             "system/decomposeParDict is missing, so the decomposition cannot "
             f"be shown to match workers {workers}"
         )
-    found = _NUMBER_OF_SUBDOMAINS.search(path.read_text(errors="replace"))
-    if found is None:
+    text = _COMMENT.sub(" ", path.read_text(errors="replace"))
+    declared = [int(value) for value in _NUMBER_OF_SUBDOMAINS.findall(text)]
+    if not declared:
         _refuse(
             "system/decomposeParDict declares no numberOfSubdomains, so the "
             f"decomposition cannot be shown to match workers {workers}"
         )
-    subdomains = int(found.group(1))
+    distinct = sorted(set(declared))
+    if len(distinct) > 1:
+        # Which declaration OpenFOAM honours is not verified here and is not
+        # guessed. An ambiguous dictionary is not evidence of anything.
+        _refuse(
+            "system/decomposeParDict declares numberOfSubdomains more than "
+            "once, with conflicting values "
+            + ", ".join(str(value) for value in distinct)
+        )
+    subdomains = distinct[0]
     if subdomains != workers:
         _refuse(
             f"system/decomposeParDict declares numberOfSubdomains {subdomains}, "

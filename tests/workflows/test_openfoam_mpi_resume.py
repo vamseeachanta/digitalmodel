@@ -187,6 +187,58 @@ def test_resume_refuses_missing_decompose_par_dict(tmp_path):
     )
 
 
+def _ranks_and_dict(case_dir: Path, dict_text: str) -> None:
+    (case_dir / "system" / "decomposeParDict").write_text(dict_text)
+    _write_ranks(case_dir, {rank: ("0.5",) for rank in range(4)})
+
+
+def test_resume_ignores_a_commented_out_subdomain_count(tmp_path):
+    # A stale "// numberOfSubdomains 4;" above the live "numberOfSubdomains 8;"
+    # must not satisfy the check. Reading the commented value accepts an
+    # 8-rank decomposition for a 4-rank run, which is exactly the hazard the
+    # gate exists to prevent.
+    item, case_dir = _case(tmp_path)
+    _ranks_and_dict(case_dir, "// numberOfSubdomains 4;\n"
+                              "numberOfSubdomains 8;\nmethod scotch;\n")
+    recorded, runner = _recorder()
+
+    row = _resume(item, workers=4, runner=runner)
+
+    assert row["error"] == (
+        "resume refused: system/decomposeParDict declares numberOfSubdomains 8, "
+        "required 4"
+    )
+
+
+def test_resume_ignores_a_block_commented_subdomain_count(tmp_path):
+    item, case_dir = _case(tmp_path)
+    _ranks_and_dict(case_dir, "/* numberOfSubdomains 4; */\n"
+                              "numberOfSubdomains 8;\n")
+    recorded, runner = _recorder()
+
+    row = _resume(item, workers=4, runner=runner)
+
+    assert row["error"] == (
+        "resume refused: system/decomposeParDict declares numberOfSubdomains 8, "
+        "required 4"
+    )
+
+
+def test_resume_refuses_a_doubly_declared_subdomain_count(tmp_path):
+    # Two live, conflicting declarations. Which one OpenFOAM honours is not
+    # verified here and is not guessed: an ambiguous dictionary is refused.
+    item, case_dir = _case(tmp_path)
+    _ranks_and_dict(case_dir, "numberOfSubdomains 4;\nnumberOfSubdomains 8;\n")
+    recorded, runner = _recorder()
+
+    row = _resume(item, workers=4, runner=runner)
+
+    assert row["error"] == (
+        "resume refused: system/decomposeParDict declares numberOfSubdomains "
+        "more than once, with conflicting values 4, 8"
+    )
+
+
 # --------------------------------------------------------------------------- #
 #  check 3 -- every rank has a time directory and all ranks agree on the max   #
 # --------------------------------------------------------------------------- #
