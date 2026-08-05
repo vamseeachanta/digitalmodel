@@ -1,0 +1,36 @@
+{
+  "study": "outlet_vent_placement",
+  "generated_at_utc": "2026-08-05T09:18:06.642232+00:00",
+  "openfoam_version": "v2312",
+  "ranks": 8,
+  "end_time_s": 10.0,
+  "flow_rate_m3_s": 0.0,
+  "tolerance_pct": 0.1,
+  "dry_run": false,
+  "variants": {
+    "baseline_full_height_outlet": {
+      "case_directory": "/home/undi/ws/cfd_work/vent3/run/baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet",
+      "drift_pct": -81.16012620025514,
+      "initial_volume_m3": 599.9037,
+      "final_volume_m3": 113.0211,
+      "cell_count": 12800,
+      "status": "completed"
+    },
+    "vent_top": {
+      "case_directory": "/home/undi/ws/cfd_work/vent3/run/vent_top/dm1528-filldrain-2a44db9cf998-vent_top",
+      "drift_pct": 0.0,
+      "initial_volume_m3": 600.0,
+      "final_volume_m3": 600.0,
+      "cell_count": 12800,
+      "status": "completed"
+    }
+  },
+  "verdict": {
+    "baseline_drift_pct": -81.16012620025514,
+    "vent_drift_pct": 0.0,
+    "tolerance_pct": 0.1,
+    "baseline_holds_volume": false,
+    "vent_holds_volume": true,
+    "recommended_variant": "vent_top"
+  }
+}

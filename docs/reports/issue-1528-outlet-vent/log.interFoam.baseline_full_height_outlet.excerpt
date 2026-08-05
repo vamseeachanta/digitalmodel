@@ -1,0 +1,316 @@
+### EXCERPT of log.interFoam for variant: baseline_full_height_outlet
+### Full log (4463305 bytes) retained on gpu-claw at
+### /home/undi/ws/cfd_work/vent2/run/baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet/log.interFoam
+### 'Time = ' lines: 1000   'FOAM FATAL' lines: 0
+
+===== HEAD: first 90 lines (banner, decomposition, solver start) =====
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+Authorization required, but no authorization protocol specified
+
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+Authorization required, but no authorization protocol specified
+
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2312                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _9a9aeb73-20260127 OPENFOAM=2312 patch=260127 version=2312
+Arch   : "LSB;label=32;scalar=64"
+Exec   : interFoam -parallel
+Date   : Aug 05 2026
+Time   : 05:02:31
+Host   : gpu-claw
+PID    : 2275830
+I/O    : uncollated
+Case   : /home/undi/ws/cfd_work/vent2/run/baseline_full_height_outlet/dm1528-filldrain-2a44db9cf998-baseline_full_height_outlet
+nProcs : 8
+Hosts  :
+(
+    (gpu-claw 8)
+)
+Pstream initialized with:
+    floatTransfer      : false
+    nProcsSimpleSum    : 0
+    nonBlockingExchange: 0 (tuning: 0)
+    exchange algorithm : 0
+    commsType          : nonBlocking
+    polling iterations : 0
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Create mesh for time = 0
+
+
+PIMPLE: no residual control data found. Calculations will employ 3 corrector loops
+
+Reading field p_rgh
+
+Reading field U
+
+Reading/calculating face flux field phi
+
+Reading transportProperties
+
+Selecting incompressible transport model Newtonian
+Selecting incompressible transport model Newtonian
+Selecting turbulence model type RAS
+Selecting RAS turbulence model kOmegaSST
+Selecting patchDistMethod meshWave
+RAS
+{
+    model           kOmegaSST;
+    turbulence      on;
+    printCoeffs     on;
+    alphaK1         0.85;
+    alphaK2         1;
+    alphaOmega1     0.5;
+    alphaOmega2     0.856;
+    gamma1          0.555556;
+    gamma2          0.44;
+    beta1           0.075;
+    beta2           0.0828;
+    betaStar        0.09;
+    a1              0.31;
+    b1              1;
+    c1              10;
+
+===== FIRST THREE ADVANCING TIMESTEPS =====
+Time = 0.01
+
+PIMPLE: iteration 1
+smoothSolver:  Solving for alpha.water, Initial residual = 0, Final residual = 0, No Iterations 0
+Phase-1 volume fraction = 0.5  Min(alpha.water) = 0  Max(alpha.water) = 1
+MULES: Correcting alpha.water
+MULES: Correcting alpha.water
+Phase-1 volume fraction = 0.5  Min(alpha.water) = 0  Max(alpha.water) = 1
+smoothSolver:  Solving for Ux, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for Uy, Initial residual = 0, Final residual = 0, No Iterations 0
+smoothSolver:  Solving for Uz, Initial residual = 1, Final residual = 1.4102e-08, No Iterations 2
+DICPCG:  Solving for p_rgh, Initial residual = 1, Final residual = 0.00266108, No Iterations 1
+DICPCG:  Solving for p_rgh, Initial residual = 0.00121559, Final residual = 5.38637e-05, No Iterations 19
+time step continuity errors : sum local = 0.000181398, global = -5.29326e-05, cumulative = -5.29326e-05
+DICPCG:  Solving for p_rgh, Initial residual = 6.19635e-05, Final residual = 2.62521e-06, No Iterations 19
+DICPCG:  Solving for p_rgh, Initial residual = 2.64403e-06, Final residual = 9.59618e-08, No Iterations 20
+time step continuity errors : sum local = 6.03457e-07, global = -1.22639e-07, cumulative = -5.30552e-05
+PIMPLE: iteration 2
+smoothSolver:  Solving for alpha.water, Initial residual = 8.38148e-05, Final residual = 1.22368e-11, No Iterations 2
+Phase-1 volume fraction = 0.499918  Min(alpha.water) = 0  Max(alpha.water) = 1
+MULES: Correcting alpha.water
+MULES: Correcting alpha.water
+Phase-1 volume fraction = 0.499918  Min(alpha.water) = 0  Max(alpha.water) = 1
+smoothSolver:  Solving for Ux, Initial residual = 0.00289964, Final residual = 1.10927e-08, No Iterations 2
+smoothSolver:  Solving for Uy, Initial residual = 0.0406897, Final residual = 6.39333e-10, No Iterations 2
+smoothSolver:  Solving for Uz, Initial residual = 0.00616965, Final residual = 7.14574e-09, No Iterations 2
+DICPCG:  Solving for p_rgh, Initial residual = 0.000783644, Final residual = 2.6708e-06, No Iterations 1
+DICPCG:  Solving for p_rgh, Initial residual = 2.67289e-06, Final residual = 1.31248e-07, No Iterations 7
+time step continuity errors : sum local = 8.22655e-07, global = -1.9519e-07, cumulative = -5.32504e-05
+DICPCG:  Solving for p_rgh, Initial residual = 2.4235e-06, Final residual = 1.03525e-07, No Iterations 2
+DICPCG:  Solving for p_rgh, Initial residual = 1.03525e-07, Final residual = 9.90431e-08, No Iterations 2
+time step continuity errors : sum local = 6.20713e-07, global = -1.34988e-07, cumulative = -5.33854e-05
+PIMPLE: iteration 3
+smoothSolver:  Solving for alpha.water, Initial residual = 5.46541e-06, Final residual = 1.3667e-13, No Iterations 2
+Phase-1 volume fraction = 0.49992  Min(alpha.water) = 0  Max(alpha.water) = 1
+MULES: Correcting alpha.water
+MULES: Correcting alpha.water
+Phase-1 volume fraction = 0.49992  Min(alpha.water) = 0  Max(alpha.water) = 1
+smoothSolver:  Solving for Ux, Initial residual = 9.69726e-05, Final residual = 3.65554e-10, No Iterations 2
+smoothSolver:  Solving for Uy, Initial residual = 0.0217129, Final residual = 2.77882e-09, No Iterations 2
+smoothSolver:  Solving for Uz, Initial residual = 0.000148529, Final residual = 4.51924e-07, No Iterations 1
+DICPCG:  Solving for p_rgh, Initial residual = 1.83756e-05, Final residual = 1.27572e-07, No Iterations 1
+DICPCG:  Solving for p_rgh, Initial residual = 1.2757e-07, Final residual = 6.37721e-08, No Iterations 1
+time step continuity errors : sum local = 3.997e-07, global = -1.50455e-07, cumulative = -5.35359e-05
+DICPCG:  Solving for p_rgh, Initial residual = 1.56035e-07, Final residual = 4.93591e-08, No Iterations 1
+DICPCG:  Solving for p_rgh, Initial residual = 4.93591e-08, Final residual = 4.93591e-08, No Iterations 0
+time step continuity errors : sum local = 3.09365e-07, global = -1.09165e-07, cumulative = -5.3645e-05
+smoothSolver:  Solving for omega, Initial residual = 0.0617279, Final residual = 3.0974e-09, No Iterations 2
+smoothSolver:  Solving for k, Initial residual = 1, Final residual = 1.13413e-09, No Iterations 3
+ExecutionTime = 0.08 s  ClockTime = 0 s
+
+volFieldValue liquidVolume write:
+    volIntegrate(region0) of alpha.water = 599.904
+
+Courant Number mean: 0.00134994 max: 0.0698843
+Interface Courant Number mean: 5.35897e-05 max: 0.0698843
+deltaT = 0.01
+Time = 0.02
+
+PIMPLE: iteration 1
+smoothSolver:  Solving for alpha.water, Initial residual = 8.03381e-05, Final residual = 1.21631e-11, No Iterations 2
+Phase-1 volume fraction = 0.499841  Min(alpha.water) = 0  Max(alpha.water) = 1
+MULES: Correcting alpha.water
+MULES: Correcting alpha.water
+Phase-1 volume fraction = 0.499841  Min(alpha.water) = 0  Max(alpha.water) = 1
+smoothSolver:  Solving for Ux, Initial residual = 0.339292, Final residual = 1.55076e-07, No Iterations 2
+smoothSolver:  Solving for Uy, Initial residual = 0.213679, Final residual = 7.69556e-09, No Iterations 2
+smoothSolver:  Solving for Uz, Initial residual = 0.290535, Final residual = 1.79415e-07, No Iterations 2
+DICPCG:  Solving for p_rgh, Initial residual = 0.000763363, Final residual = 5.89148e-06, No Iterations 1
+DICPCG:  Solving for p_rgh, Initial residual = 5.89534e-06, Final residual = 2.49048e-07, No Iterations 8
+time step continuity errors : sum local = 1.5589e-06, global = 4.76548e-07, cumulative = -5.31685e-05
+DICPCG:  Solving for p_rgh, Initial residual = 2.38286e-06, Final residual = 8.2065e-08, No Iterations 10
+DICPCG:  Solving for p_rgh, Initial residual = 8.20715e-08, Final residual = 8.20715e-08, No Iterations 0
+time step continuity errors : sum local = 5.13618e-07, global = 8.38821e-08, cumulative = -5.30846e-05
+PIMPLE: iteration 2
+smoothSolver:  Solving for alpha.water, Initial residual = 6.37e-05, Final residual = 1.18443e-10, No Iterations 2
+Phase-1 volume fraction = 0.499778  Min(alpha.water) = 0  Max(alpha.water) = 1
+MULES: Correcting alpha.water
+MULES: Correcting alpha.water
+Phase-1 volume fraction = 0.499778  Min(alpha.water) = 0  Max(alpha.water) = 1
+smoothSolver:  Solving for Ux, Initial residual = 0.00181823, Final residual = 1.29574e-08, No Iterations 2
+smoothSolver:  Solving for Uy, Initial residual = 0.0102388, Final residual = 1.4952e-08, No Iterations 2
+smoothSolver:  Solving for Uz, Initial residual = 0.00237497, Final residual = 1.70141e-08, No Iterations 2
+DICPCG:  Solving for p_rgh, Initial residual = 0.000597637, Final residual = 1.89994e-06, No Iterations 1
+DICPCG:  Solving for p_rgh, Initial residual = 1.90109e-06, Final residual = 8.4497e-08, No Iterations 8
+time step continuity errors : sum local = 5.27302e-07, global = -5.5381e-08, cumulative = -5.314e-05
+DICPCG:  Solving for p_rgh, Initial residual = 2.12243e-06, Final residual = 8.91535e-08, No Iterations 2
+DICPCG:  Solving for p_rgh, Initial residual = 8.91534e-08, Final residual = 8.91534e-08, No Iterations 0
+time step continuity errors : sum local = 5.56288e-07, global = -3.67142e-08, cumulative = -5.31767e-05
+PIMPLE: iteration 3
+smoothSolver:  Solving for alpha.water, Initial residual = 1.7046e-05, Final residual = 8.06809e-12, No Iterations 2
+Phase-1 volume fraction = 0.499779  Min(alpha.water) = 0  Max(alpha.water) = 1
+MULES: Correcting alpha.water
+MULES: Correcting alpha.water
+Phase-1 volume fraction = 0.499779  Min(alpha.water) = 0  Max(alpha.water) = 1
+smoothSolver:  Solving for Ux, Initial residual = 3.93441e-05, Final residual = 8.39428e-07, No Iterations 1
+smoothSolver:  Solving for Uy, Initial residual = 0.0109139, Final residual = 3.28806e-08, No Iterations 2
+smoothSolver:  Solving for Uz, Initial residual = 5.18283e-05, Final residual = 5.33577e-07, No Iterations 1
+DICPCG:  Solving for p_rgh, Initial residual = 1.17621e-05, Final residual = 8.46791e-08, No Iterations 1
+DICPCG:  Solving for p_rgh, Initial residual = 8.46781e-08, Final residual = 8.46781e-08, No Iterations 0
+time step continuity errors : sum local = 5.28394e-07, global = -4.58742e-08, cumulative = -5.32226e-05
+DICPCG:  Solving for p_rgh, Initial residual = 1.83278e-07, Final residual = 5.26909e-08, No Iterations 1
+DICPCG:  Solving for p_rgh, Initial residual = 5.26909e-08, Final residual = 5.26909e-08, No Iterations 0
+time step continuity errors : sum local = 3.28793e-07, global = -4.61427e-08, cumulative = -5.32687e-05
+smoothSolver:  Solving for omega, Initial residual = 0.0611979, Final residual = 9.36588e-09, No Iterations 2
+smoothSolver:  Solving for k, Initial residual = 0.717357, Final residual = 2.55989e-09, No Iterations 3
+ExecutionTime = 0.12 s  ClockTime = 0 s
+
+volFieldValue liquidVolume write:
+    volIntegrate(region0) of alpha.water = 599.735
+
+Courant Number mean: 0.00265458 max: 0.110905
+Interface Courant Number mean: 0.000126043 max: 0.110905
+deltaT = 0.01
+Time = 0.03
+
+PIMPLE: iteration 1
+smoothSolver:  Solving for alpha.water, Initial residual = 0.000140355, Final residual = 1.98608e-10, No Iterations 2
+Phase-1 volume fraction = 0.499642  Min(alpha.water) = 0  Max(alpha.water) = 1
+MULES: Correcting alpha.water
+MULES: Correcting alpha.water
+Phase-1 volume fraction = 0.499642  Min(alpha.water) = 0  Max(alpha.water) = 1
+smoothSolver:  Solving for Ux, Initial residual = 0.201287, Final residual = 1.5921e-07, No Iterations 2
+smoothSolver:  Solving for Uy, Initial residual = 0.305049, Final residual = 6.21106e-08, No Iterations 2
+smoothSolver:  Solving for Uz, Initial residual = 0.166196, Final residual = 1.78063e-07, No Iterations 2
+DICPCG:  Solving for p_rgh, Initial residual = 0.001316, Final residual = 5.83098e-06, No Iterations 1
+DICPCG:  Solving for p_rgh, Initial residual = 5.83832e-06, Final residual = 2.67416e-07, No Iterations 12
+time step continuity errors : sum local = 1.66468e-06, global = 2.67981e-07, cumulative = -5.30007e-05
+DICPCG:  Solving for p_rgh, Initial residual = 6.08949e-06, Final residual = 2.2598e-07, No Iterations 2
+DICPCG:  Solving for p_rgh, Initial residual = 2.25979e-07, Final residual = 9.65325e-08, No Iterations 6
+time step continuity errors : sum local = 6.00716e-07, global = 2.48666e-07, cumulative = -5.27521e-05
+PIMPLE: iteration 2
+smoothSolver:  Solving for alpha.water, Initial residual = 6.02294e-05, Final residual = 3.00412e-10, No Iterations 2
+Phase-1 volume fraction = 0.499583  Min(alpha.water) = 0  Max(alpha.water) = 1
+MULES: Correcting alpha.water
+MULES: Correcting alpha.water
+Phase-1 volume fraction = 0.499583  Min(alpha.water) = 0  Max(alpha.water) = 1
+smoothSolver:  Solving for Ux, Initial residual = 0.00160952, Final residual = 1.78295e-08, No Iterations 2
+smoothSolver:  Solving for Uy, Initial residual = 0.0101218, Final residual = 4.23951e-08, No Iterations 2
+smoothSolver:  Solving for Uz, Initial residual = 0.00158612, Final residual = 3.19461e-08, No Iterations 2
+DICPCG:  Solving for p_rgh, Initial residual = 0.00056026, Final residual = 1.80791e-06, No Iterations 1
+DICPCG:  Solving for p_rgh, Initial residual = 1.80894e-06, Final residual = 9.46308e-08, No Iterations 11
+time step continuity errors : sum local = 5.87349e-07, global = 5.4578e-08, cumulative = -5.26975e-05
+DICPCG:  Solving for p_rgh, Initial residual = 2.75738e-06, Final residual = 1.1139e-07, No Iterations 2
+DICPCG:  Solving for p_rgh, Initial residual = 1.1139e-07, Final residual = 8.29368e-08, No Iterations 2
+time step continuity errors : sum local = 5.1469e-07, global = 5.23599e-08, cumulative = -5.26451e-05
+PIMPLE: iteration 3
+smoothSolver:  Solving for alpha.water, Initial residual = 4.15281e-05, Final residual = 7.30106e-11, No Iterations 2
+Phase-1 volume fraction = 0.499584  Min(alpha.water) = 0  Max(alpha.water) = 1
+MULES: Correcting alpha.water
+MULES: Correcting alpha.water
+Phase-1 volume fraction = 0.499584  Min(alpha.water) = 0  Max(alpha.water) = 1
+smoothSolver:  Solving for Ux, Initial residual = 3.66411e-05, Final residual = 8.09974e-07, No Iterations 1
+smoothSolver:  Solving for Uy, Initial residual = 0.0133932, Final residual = 5.95136e-08, No Iterations 2
+smoothSolver:  Solving for Uz, Initial residual = 4.35086e-05, Final residual = 8.88459e-07, No Iterations 1
+DICPCG:  Solving for p_rgh, Initial residual = 1.09447e-05, Final residual = 9.61336e-08, No Iterations 1
+DICPCG:  Solving for p_rgh, Initial residual = 9.61326e-08, Final residual = 9.61326e-08, No Iterations 0
+time step continuity errors : sum local = 5.96618e-07, global = 6.00062e-08, cumulative = -5.25851e-05
+DICPCG:  Solving for p_rgh, Initial residual = 2.21497e-07, Final residual = 6.1862e-08, No Iterations 1
+DICPCG:  Solving for p_rgh, Initial residual = 6.1862e-08, Final residual = 6.1862e-08, No Iterations 0
+time step continuity errors : sum local = 3.83928e-07, global = 4.77964e-08, cumulative = -5.25373e-05
+smoothSolver:  Solving for omega, Initial residual = 0.0608022, Final residual = 1.81656e-10, No Iterations 3
+smoothSolver:  Solving for k, Initial residual = 0.478094, Final residual = 3.42363e-09, No Iterations 3
+ExecutionTime = 0.16 s  ClockTime = 0 s
+
+volFieldValue liquidVolume write:
+    volIntegrate(region0) of alpha.water = 599.501
+
+Courant Number mean: 0.00394175 max: 0.148269
+Interface Courant Number mean: 0.000197838 max: 0.148269
+deltaT = 0.01
+
+===== TAIL: last 45 lines (final timestep and clean End) =====
+DICPCG:  Solving for p_rgh, Initial residual = 4.84e-05, Final residual = 2.19223e-06, No Iterations 7
+time step continuity errors : sum local = 4.83962e-07, global = 3.08756e-08, cumulative = 0.00120674
+DICPCG:  Solving for p_rgh, Initial residual = 6.02475e-05, Final residual = 2.98307e-06, No Iterations 3
+DICPCG:  Solving for p_rgh, Initial residual = 2.98227e-06, Final residual = 8.69042e-08, No Iterations 26
+time step continuity errors : sum local = 1.91768e-08, global = 2.29385e-09, cumulative = 0.00120674
+PIMPLE: iteration 2
+smoothSolver:  Solving for alpha.water, Initial residual = 0.000476838, Final residual = 2.14104e-10, No Iterations 2
+Phase-1 volume fraction = 0.0941839  Min(alpha.water) = -5.52757e-15  Max(alpha.water) = 1
+MULES: Correcting alpha.water
+MULES: Correcting alpha.water
+Phase-1 volume fraction = 0.0941843  Min(alpha.water) = -5.52757e-15  Max(alpha.water) = 1
+smoothSolver:  Solving for Ux, Initial residual = 1.56898e-06, Final residual = 5.6653e-09, No Iterations 1
+smoothSolver:  Solving for Uy, Initial residual = 0.000564499, Final residual = 4.69273e-09, No Iterations 2
+smoothSolver:  Solving for Uz, Initial residual = 2.49856e-05, Final residual = 1.39572e-07, No Iterations 1
+DICPCG:  Solving for p_rgh, Initial residual = 1.59182e-05, Final residual = 6.1416e-07, No Iterations 2
+DICPCG:  Solving for p_rgh, Initial residual = 6.14154e-07, Final residual = 9.3539e-08, No Iterations 6
+time step continuity errors : sum local = 2.06416e-08, global = -4.14484e-10, cumulative = 0.00120674
+DICPCG:  Solving for p_rgh, Initial residual = 1.11367e-05, Final residual = 4.20932e-07, No Iterations 2
+DICPCG:  Solving for p_rgh, Initial residual = 4.20932e-07, Final residual = 8.69867e-08, No Iterations 4
+time step continuity errors : sum local = 1.91957e-08, global = -4.29246e-09, cumulative = 0.00120673
+PIMPLE: iteration 3
+smoothSolver:  Solving for alpha.water, Initial residual = 0.00047674, Final residual = 2.14086e-10, No Iterations 2
+Phase-1 volume fraction = 0.0941839  Min(alpha.water) = -5.52757e-15  Max(alpha.water) = 1
+MULES: Correcting alpha.water
+MULES: Correcting alpha.water
+Phase-1 volume fraction = 0.0941843  Min(alpha.water) = -5.52757e-15  Max(alpha.water) = 1
+smoothSolver:  Solving for Ux, Initial residual = 9.47706e-08, Final residual = 9.47706e-08, No Iterations 0
+smoothSolver:  Solving for Uy, Initial residual = 0.000167756, Final residual = 7.35237e-08, No Iterations 1
+smoothSolver:  Solving for Uz, Initial residual = 9.74662e-07, Final residual = 9.74662e-07, No Iterations 0
+DICPCG:  Solving for p_rgh, Initial residual = 1.1403e-05, Final residual = 4.34282e-07, No Iterations 2
+DICPCG:  Solving for p_rgh, Initial residual = 4.34283e-07, Final residual = 8.87938e-08, No Iterations 4
+time step continuity errors : sum local = 1.95945e-08, global = -3.16985e-09, cumulative = 0.00120673
+DICPCG:  Solving for p_rgh, Initial residual = 1.07187e-05, Final residual = 4.27749e-07, No Iterations 2
+DICPCG:  Solving for p_rgh, Initial residual = 4.27749e-07, Final residual = 8.31559e-08, No Iterations 4
+time step continuity errors : sum local = 1.83504e-08, global = -4.83303e-09, cumulative = 0.00120673
+smoothSolver:  Solving for omega, Initial residual = 0.000891892, Final residual = 6.4474e-09, No Iterations 2
+smoothSolver:  Solving for k, Initial residual = 0.000680943, Final residual = 1.78152e-10, No Iterations 3
+ExecutionTime = 41.74 s  ClockTime = 46 s
+
+volFieldValue liquidVolume write:
+    volIntegrate(region0) of alpha.water = 113.021
+
+End
+
+Finalising parallel run
