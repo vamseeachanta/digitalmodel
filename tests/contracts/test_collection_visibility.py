@@ -60,7 +60,9 @@ def _matches_python_files(name: str, patterns: list[str]) -> bool:
     return any(fnmatch_ex(pattern, Path(name)) for pattern in patterns)
 
 
-def _walk_tests_tree(tests_root: Path, patterns: list[str]) -> tuple[list[Path], list[Path]]:
+def _walk_tests_tree(
+    tests_root: Path, patterns: list[str]
+) -> tuple[list[Path], list[Path]]:
     """Return (every directory under tests/, those holding a collectible file).
 
     The walk is deliberately unfiltered -- it must see directories that pytest
@@ -202,7 +204,9 @@ def test_no_bare_norecursedirs_entry_prunes_a_collectible_tests_directory(
     )
 
 
-def test_top_level_scripts_is_not_collected(rootpath: Path) -> None:
+def test_top_level_scripts_is_not_collected(
+    pytestconfig: pytest.Config, rootpath: Path
+) -> None:
     """The root exclusion of scripts/ survives its move out of pytest.ini."""
     collect_ignore = _root_collect_ignore(rootpath)
     assert "scripts" in collect_ignore, (
@@ -212,7 +216,7 @@ def test_top_level_scripts_is_not_collected(rootpath: Path) -> None:
     )
     target = rootpath / "scripts"
     assert target.is_dir(), f"{target} does not exist; the exclusion is dead"
-    patterns = ["test_*.py", "*_test.py"]
+    patterns = list(pytestconfig.getini("python_files"))
     collectible = [
         p for p in target.rglob("*.py") if _matches_python_files(p.name, patterns)
     ]
@@ -222,7 +226,9 @@ def test_top_level_scripts_is_not_collected(rootpath: Path) -> None:
     )
 
 
-def test_top_level_docs_is_not_collected(rootpath: Path) -> None:
+def test_top_level_docs_is_not_collected(
+    pytestconfig: pytest.Config, rootpath: Path
+) -> None:
     """The root exclusion of docs/ survives its move out of pytest.ini."""
     collect_ignore = _root_collect_ignore(rootpath)
     assert "docs" in collect_ignore, (
@@ -232,7 +238,7 @@ def test_top_level_docs_is_not_collected(rootpath: Path) -> None:
     )
     target = rootpath / "docs"
     assert target.is_dir(), f"{target} does not exist; the exclusion is dead"
-    patterns = ["test_*.py", "*_test.py"]
+    patterns = list(pytestconfig.getini("python_files"))
     collectible = [
         p for p in target.rglob("*.py") if _matches_python_files(p.name, patterns)
     ]
