@@ -21,6 +21,13 @@ FULL_MATRIX_PATHS = {
     ".claude/quality-gates.yaml",
     "tests/DOMAINS.md",
     "tests/conftest.py",
+    # The repository-root conftest.py carries collect_ignore, which decides what
+    # a recursive collect can see at all. It belongs here for the same reason
+    # pytest.ini does: an edit to either can add or remove tests everywhere, so
+    # it must dispatch every shard. Omitting it would make the root exclusions
+    # LESS CI-sensitive after #1977 moved them out of pytest.ini -- someone
+    # adding "tests" to collect_ignore would otherwise dispatch nothing at all.
+    "conftest.py",
     "pytest.ini",
     PYPROJECT_PATH,
 }
