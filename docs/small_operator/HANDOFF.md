@@ -2,6 +2,11 @@
 
 Exit snapshot. Read the **Do not repeat** section before touching outreach.
 
+**Everything is pushed.** digitalmodel `feat/small-operator-program` (8 commits,
+rebased onto main), aceengineer-strategy `main`, aceengineer-website `main` and
+live. No dirty trees, nothing unpushed. Open the digitalmodel PR at
+`github.com/vamseeachanta/digitalmodel/pull/new/feat/small-operator-program`.
+
 ---
 
 ## What this program is
@@ -129,24 +134,43 @@ review, and only the correct one surfaced the 50%-fillage result.
    pending item and the right channel. Open question: post the SPM number and the
    wear-depth prediction only, or include the Goodman and casing analysis too
    (roughly doubles the length).
-2. **`feat/small-operator-program` is unpushed** and behind `origin/main`.
-3. **aceengineer-strategy is unpushed** and 4 behind.
-4. **Move `docs/small_operator/` into aceengineer-strategy?** Raised and not
+2. **Open the digitalmodel PR.** Branch is pushed and rebased; no PR yet.
+   `.pre-commit-config.yaml` exists but no hooks are installed locally, so
+   nothing ran on these commits — CI will be the first to lint them.
+3. **Move `docs/small_operator/` into aceengineer-strategy?** Raised and not
    resolved. `pipeline/reed-goodman-collide/HANDOFF.md` carries a standing policy:
    *"Client identities are kept in this private strategy repo … never in public
    repos"*. digitalmodel is PUBLIC and this directory names both operators. The
    user said public is fine; the policy still says otherwise. **Reconcile the two
    rather than leaving them contradicting each other.**
-5. **The dynacard matrix PDF names Reed** and must not go to anyone else.
+4. **The dynacard matrix PDF names Reed** and must not go to anyone else.
 
 ---
+
+## Second expensive lesson — read the repo's own rules first
+
+`aceengineer-strategy/.claude/CLAUDE.md` carries **hard gate 2: "No PII in
+commits — contact details, deal terms, pricing specifics stay out of git."**
+
+The do-not-contact commit was written with **two email addresses and a phone
+number in it**. Caught only because the repo's CLAUDE.md surfaced when the
+directory was touched again — after the file had already been written. Nothing
+had been pushed; it was soft-reset, redacted, and rebuilt.
+
+The convention was visible the whole time: the existing prospect record says
+*"Contact details are in the post itself (public on Collide)"* — deliberately not
+recording them. The repo also has a `pii-remediation/` directory, so this has
+happened before.
+
+**Rule:** a suppression list is not an exception to a PII gate. Identify people
+by **name and company**, then look the address up in Gmail at send time. And read
+`.claude/CLAUDE.md` in a repo *before* writing files into it, not after.
 
 ## Corrections to earlier claims in this program
 
 Recorded because they were asserted confidently and were wrong:
 
-- **"Reed has published no email address."** False. `Chief@warturkey.com`, given
-  by Collide DM 2026-07-03, with two existing email threads. Search Gmail before
+- **"Reed has published no email address."** False. He gave an address by Collide DM on 2026-07-03, with two existing email threads. Search Gmail before
   asserting contact history.
 - **`so-lift-004` "do not answer unless we can cite specific fields."** False.
   Already answered and sent — the Kansas low-BHP one-pager in

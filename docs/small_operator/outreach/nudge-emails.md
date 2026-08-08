@@ -1,142 +1,61 @@
-# Outreach — DRAFTS ONLY
+# Outreach — CLOSED
 
-**Nothing here has been sent.** Each needs Vamsee's explicit approval.
+**This file no longer holds sendable drafts. Do not restore them from git history.**
 
-**Rule for every draft in this file: lead with what we can do for them.** No origin story,
-no methodology, no history of our own mistakes beyond the one line that buys credibility.
-Operators read these between well visits. If it doesn't fit on a phone screen, cut it.
-Target 120 words. The attached PDF carries the detail — that is what the PDF is for.
-
----
-
-## Routing
-
-| | Reed Goodman | Neal Turluck |
-|---|---|---|
-| Company | Jaybird Resources, Cuero TX | S & S Oil and Gas, Illinois Basin |
-| **Email** | **Address needed** | `nealturluck@gmail.com` |
-| Basis | Public posts only; no address published | He published it himself |
-| Attach | `AceEngineer-dynacard-review-matrix.pdf` | `AceEngineer-small-operator-field-note.pdf` |
-| Never send | — | The matrix — it is Reed's data |
-
-Two constraints. **Reed has published no email address**, so his draft below needs one
-before it can be sent — ask in a one-line Collide DM, or send the same body as a DM.
-Guessing an address at Jaybird is not on. And **the matrix is Reed-only**: it quotes his
-posts and names his equipment.
-
-Artifact links are **private by default**; a recipient clicking one gets nothing.
-**Attach the PDF.**
+Superseded 2026-08-08. Live outreach state lives in the private strategy repo:
+`aceengineer-strategy/pipeline/` and `aceengineer-strategy/pipeline/DO-NOT-CONTACT.md`.
+Check both before contacting anyone.
 
 ---
 
-## 1 — Reed Goodman · Email
+## Why this file was emptied
 
-**To:** *address needed — none published.* Ask for it in a one-line Collide DM, or send
-this as a DM as-is (the body works either way).
-**Attach:** `AceEngineer-dynacard-review-matrix.pdf`
+**Neal Turluck replied "Please stop emailing me"** on 2026-08-05, after two
+unsolicited emails in seven days. This file previously held a ready-to-send
+draft addressed to him, along with his email address. Both are gone. A file
+containing a prepared email to someone who has opted out is a live hazard, not
+a record.
 
-> **Subject:** Three things I can do with your cards
->
-> Reed,
->
-> Went back through all your card posts. One page attached: what each card shows and what
-> I'd need to take it further.
->
-> Three things I can do, no charge:
->
-> - **The 5-minute pump-off.** Send the raw card file and you get fillage stroke by
->   stroke plus a shutdown setpoint, with the barrels it costs stated separately. Send a
->   full-pump card too — a full pump reads 88% on this scale, not 100%, so "shut down at
->   75%" means something different than it sounds. That calibration comes first.
-> - **The bottom-left noise.** Tell me whether the dyno is accelerometer-based and I'll
->   tell you whether you're looking at a real pump tag or at integration drift.
-> - **The tubing splits.** Send the depths of the last few. If they track fluid pound,
->   then fixing the pump-off fixes the tubing, and rotators are treating a symptom.
->
-> Two on our side. Your pump-off cards found a real bug in our fillage calculation — past
-> a certain severity it reported a pounded-off pump as full, which is exactly the regime
-> your wells live in. Fixed, with a test. And we got the gearbox wrong in July: you'd
-> written that the C-66 was the prime mover and we should have read that.
->
-> Vamsee Achanta
-> Achanta AceEngineer Inc.
+**Reed Goodman has received five emails and replied to none**, while posting on
+Collide most days and answering others in his own threads within hours. He is
+not opted out and remains a friendly contact — but the channel is Collide, not
+email, and a sixth email is not a courtesy.
 
-*179 words. Every bullet is an offer; the closing paragraph is the only thing that isn't,
-and it is what makes the offers credible.*
-
-### Not offering: the tally app
-
-Dropped deliberately, 2026-08-05. The $500 bounty is a **custom mobile app** — a one-off
-build with an indefinite maintenance tail (iOS releases, camera APIs, handwriting models,
-a support burden of one). Our business is repeatable, sustainable engineering: the same
-physics applied to the next operator's cards at near-zero marginal cost. A bespoke app is
-the opposite shape, and taking it would train the relationship in the wrong direction.
-
-Do not mention it in outreach. If Reed raises it, the honest answer is that it is not the
-kind of work we take, and that we would rather point him at somebody who builds apps.
+**No contact details appear in this repo.** digitalmodel is **public**.
+Addresses, phone numbers and deal terms belong in the private strategy repo, and
+even there they are kept out of git under its hard gate 2 — identify people by
+name and company, then look the address up in Gmail at send time.
 
 ---
 
-## 2 — Neal Turluck · Email
+## What was learned, kept because it is reusable
 
-**To:** `nealturluck@gmail.com` · **Attach:** `AceEngineer-small-operator-field-note.pdf`
+1. **If a follow-up is justified only by "we promised value", it must contain
+   the value and ask for nothing.** If the value is not built, the follow-up is
+   not due. The S&S follow-up went out with nothing in it because the Indiana
+   wellbore list we had promised was never built.
 
-> **Subject:** Which five of your 152 wells to drive to this week
->
-> Neal,
->
-> Nobody holds 152 wellbores in their head. That's the part I can help with.
->
-> Send whatever you already collect — cards, casing pressures, run times, a spreadsheet.
-> You get back one ordered list: which five wells to drive to this week, and why. First
-> pass free, nothing to install, no telemetry.
->
-> Second thing if it's useful: whether the workover programme really carries +30 BOPD,
-> run well by well with the plugging cost carried in. That's the number a lender asks for
-> and rarely gets.
->
-> To be clear — I'm not a capital source and I'm not brokering one.
->
-> Vamsee Achanta
-> Achanta AceEngineer Inc.
+2. **A no-ask draft stops being a no-ask draft if an ask is added on the way
+   out.** The draft opened "No reply needed"; the sent version closed with
+   "Please let me know your thoughts". That is what converted a gift into a
+   second unprompted ask.
 
-*Word count: 116. The pooled-spares proposal was cut — it is our idea, not his problem,
-and it belongs in a reply if he engages, not in a first contact.*
+3. **An opt-out is permanent and channel-wide.** No email, no DM, no apology
+   note — an apology is another unrequested email that asks the recipient to
+   absorb our discomfort.
+
+4. **Answer in public instead.** Every engagement this program produced came
+   from answering a technical question where the operator already was. That is
+   how Reed found us and how a rod-lift specialist came to read and correct our
+   work. Nobody has ever told us to stop doing that.
 
 ---
 
-## 3 — General template
+## The one artefact still safe to send
 
-Personalise line one with something they actually posted. **No quote, no send.**
-**Attach:** `AceEngineer-small-operator-field-note.pdf`
+`pdf/AceEngineer-small-operator-field-note.pdf` — anonymised, no operator named,
+suitable for anyone who asks. Live equivalent:
+`https://www.aceengineer.com/outreach/small-operator-brief.html`
 
-> **Subject:** One card, one answer
->
-> [Their own words, quoted.]
->
-> Send one well's dynamometer card file and you get back the downhole card, fillage
-> stroke by stroke, the diagnosis with a confidence number, and which parts of the card
-> aren't trustworthy enough to diagnose on.
->
-> No account, no telemetry, no charge for the first well.
->
-> Vamsee Achanta
-> Achanta AceEngineer Inc.
-
----
-
-## Approval checklist
-
-- [ ] Reed — get an email address, or send the body as a DM
-- [ ] Reed — approve the email
-- [x] Tally app — declined; custom-app maintenance overhead, not repeatable engineering
-- [ ] Neal — approve the email
-- [ ] PDFs attached, not private artifact links
-- [ ] We can turn a card file round quickly if two people say yes at once
-
-## Resolved
-
-The corner-detection defect is **fixed** (2026-08-05), so Reed's email now says "found and
-fixed" rather than "found". Sweep is monotonic 88.1% to 11.9%; the four vendor-analysed
-reference wells still agree to within 0.85 fillage points; 1132 tests pass. Nothing is
-being held for it.
+`pdf/AceEngineer-dynacard-review-matrix.pdf` quotes one named operator's posts
+and equipment. It goes to him or to nobody.
