@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>#1977 Plan — Root-Anchored Collection Exclusions</title>
+  <style>
+    :root{--navy:#0b3d5c;--teal:#168c88;--ink:#18313f;--muted:#5f7480;--line:#d7e2e7;--paper:#fff;--wash:#f3f8fa;--warn:#fff5d6;--bad:#fdecec;--good:#eefaf3}
+    *{box-sizing:border-box}body{margin:0;background:var(--wash);color:var(--ink);font:16px/1.55 system-ui,sans-serif}
+    main{max-width:1100px;margin:0 auto;background:var(--paper);padding:3rem 4rem;box-shadow:0 0 30px #1232}
+    h1,h2,h3{color:var(--navy);line-height:1.2}h1{font-size:2.25rem}h2{margin-top:2.2rem;border-bottom:2px solid var(--teal);padding-bottom:.35rem}
+    h3{margin-top:1.4rem}a{color:#076b83}code{background:#edf3f5;padding:.1rem .3rem;border-radius:3px;font-size:.92em}
+    pre{background:#0f2b38;color:#e8f2f5;padding:1rem 1.2rem;border-radius:6px;overflow-x:auto;font-size:.86rem;line-height:1.45}
+    table{border-collapse:collapse;width:100%;margin:1rem 0;font-size:.93rem;display:block;overflow-x:auto}
+    th,td{border:1px solid var(--line);padding:.5rem .7rem;text-align:left;vertical-align:top}
+    th{background:var(--wash);color:var(--navy)}
+    .meta{color:var(--muted);font-size:.9rem;margin-top:-.6rem}
+    .warn{background:var(--warn);border-left:4px solid #d9a400;padding:.85rem 1.1rem;margin:1.2rem 0;border-radius:0 4px 4px 0}
+    .bad{background:var(--bad);border-left:4px solid #c0392b;padding:.85rem 1.1rem;margin:1.2rem 0;border-radius:0 4px 4px 0}
+    .good{background:var(--good);border-left:4px solid #159a5f;padding:.85rem 1.1rem;margin:1.2rem 0;border-radius:0 4px 4px 0}
+    .num{font-variant-numeric:tabular-nums}
+    ul{margin:.5rem 0 .5rem 1.1rem}li{margin:.28rem 0}
+  </style>
+</head>
+<body>
+<main>
+
+<h1>#1977 implementation plan: root-anchored collection exclusions</h1>
+<p class="meta">Issue <a href="https://github.com/vamseeachanta/digitalmodel/issues/1977">#1977</a> &middot; branch <code>plan/1977-norecursedirs-bare-basenames</code> &middot; base <code>1dcc59c9</code> &middot; drafted 2026-08-05 &middot; status: awaiting user approval</p>
+
+<h2>Goal and authorization boundary</h2>
+<p>A recursive <code>pytest tests/</code> run will enter every directory under <code>tests/</code>, or it will fail loudly. Today it silently skips two of them and reports a clean sweep over ground it never covered.</p>
+<ul>
+  <li><strong>G1</strong> — Recursive collection will include <code>tests/scripts/</code> and <code>tests/docs/</code>.</li>
+  <li><strong>G2</strong> — The top-level <code>scripts/</code> and <code>docs/</code> directories will remain excluded, because they hold 35 collectible files that are not tests.</li>
+  <li><strong>G3</strong> — A guard test will fail if any future <code>norecursedirs</code> entry prunes a directory under <code>tests/</code>, so this defect cannot silently return.</li>
+  <li><strong>G4</strong> — Any test that newly surfaces red will be recorded as a pre-existing finding, never as a regression introduced by this change.</li>
+</ul>
+<p><strong>Boundary.</strong> This plan will change collection <em>visibility</em> only. It will not modify, repair, or delete any test under <code>tests/scripts/</code> or <code>tests/docs/</code>, and it will not attempt to make <code>pytest .</code> (whole-repo) work — that invocation is broken today for unrelated reasons recorded under Out of scope.</p>
+
+<h2>Resource intelligence summary</h2>
+<p>All figures below were measured on a clean detached checkout of <code>origin/main</code> at <code>1dcc59c9</code>, using the repo's own canonical invocation (<code>pyproject.toml:125</code>): <code>uv run --with-editable '.[test]' python -m pytest</code>, pytest 8.4.2. The repo <code>.venv</code> cannot run the suite — it holds 507 packages and no pytest — so no measurement used it.</p>
+
+<h3>The defect, measured</h3>
+<p><code>pytest.ini:4</code> lists three entries with no path separator: <code>docs</code>, <code>projects</code>, <code>scripts</code>. pytest matches a separator-free <code>norecursedirs</code> entry against a directory <em>basename at any depth</em>, so these prune <code>tests/docs/</code> and <code>tests/scripts/</code> as well as their evident top-level targets.</p>
+<table>
+  <tr><th>measurement</th><th class="num">value</th></tr>
+  <tr><td><code>pytest tests/ --collect-only</code>, config as-is</td><td class="num">21,636 node IDs</td></tr>
+  <tr><td>same, with the three bare basenames removed</td><td class="num">21,854 node IDs</td></tr>
+  <tr><td>node-ID diff — <strong>removed</strong></td><td class="num">0</td></tr>
+  <tr><td>node-ID diff — <strong>added</strong></td><td class="num">218</td></tr>
+  <tr><td>&nbsp;&nbsp;of which <code>tests/scripts/</code></td><td class="num">177</td></tr>
+  <tr><td>&nbsp;&nbsp;of which <code>tests/docs/</code></td><td class="num">41</td></tr>
+  <tr><td>&nbsp;&nbsp;of which anywhere else</td><td class="num">0</td></tr>
+  <tr><td>added tests passing when run (<code>tests/scripts/</code>)</td><td class="num">177 / 177, 32.5 s</td></tr>
+  <tr><td>added tests passing when run (<code>tests/docs/</code>)</td><td class="num">41 / 41, 0.6 s</td></tr>
+</table>
+<p>The diff is exact: the change adds precisely the two hidden directories and removes nothing. Counts alone would not have proved this — the node-ID diff does.</p>
+
+<h3>What the issue gets right, and what it gets wrong</h3>
+<p>Both of the issue's own measurements reproduce. Its severity claim does not.</p>
+<table>
+  <tr><th>issue claim</th><th>verdict</th><th>evidence</th></tr>
+  <tr><td>"invisible to every whole-tree pytest run"</td><td><strong>Correct</strong></td><td>node-ID diff above</td></tr>
+  <tr><td>"every node-ID baseline taken with a whole-tree collect silently excludes them"</td><td><strong>Correct — and this is the real cost</strong></td><td>several lanes captured such baselines during the week of 2026-08-03</td></tr>
+  <tr><td>"a regression in any of those would not appear in a whole-tree diff"</td><td><strong>Partially correct</strong></td><td><code>.claude/quality-gates.yaml:242</code> passes <code>tests/scripts/</code> as an explicit path argument, and CI run 30996427168 shows all ten files green — but the PR lane is touched-domain gated. A PR editing, say, <code>scripts/legal/check_protected_identifiers.py</code> maps to no domain and dispatches <strong>zero shards</strong>, while breaking <code>tests/scripts/test_check_protected_identifiers.py</code>. Only <code>test_detect_touched_domains.py</code> (1 of 10 files) is covered unconditionally, by <code>ci-harness-tests</code>. The gap closes post-merge via the nightly full-matrix sweep.</td></tr>
+  <tr><td>"new tests placed there are green forever"</td><td><strong>Partially correct</strong></td><td>same — caught by the sweep, escapable at the PR gate</td></tr>
+  <tr><td>"7 test files / 124 tests"</td><td><strong>Stale</strong></td><td>accurate at filing; <code>c3fed5a8</code> (#1961 Stage 1) landed two more files. Main now holds 10 files / 177 tests</td></tr>
+</table>
+<div class="warn"><strong>Severity is therefore lower than filed, and the defect is narrower.</strong> <code>norecursedirs</code> prunes only during recursion <em>below</em> the paths named on the command line; it never filters a directory passed as an explicit argument. Every CI workflow passes explicit paths, so CI has been running these 218 tests all along. What is broken is the <em>documented developer command</em>: <code>README.md:142</code>, <code>Makefile:23</code> and <code>AGENTS.md:4</code> all describe a whole-tree run that silently covers 218 fewer tests than CI does. Local baselines undercount; local and CI disagree about what "the test suite" means.</div>
+
+<h3>Which entries actually bite</h3>
+<table>
+  <tr><th>entry</th><th>directory under <code>tests/</code></th><th>top-level target</th><th>disposition</th></tr>
+  <tr><td><code>scripts</code></td><td><code>tests/scripts/</code> — 177 tests, and <code>tests/solvers/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/scripts/</code> — 0 tests (its <code>run_test.py</code> matches <code>*_test.py</code> but defines no test functions)</td><td><code>scripts/</code> — 30 collectible files</td><td>must be anchored</td></tr>
+  <tr><td><code>docs</code></td><td><code>tests/docs/</code> — 41 tests</td><td><code>docs/</code> — 5 collectible files</td><td>must be anchored</td></tr>
+  <tr><td><code>projects</code></td><td>none</td><td><strong>directory does not exist</strong></td><td>dead entry; will be deleted</td></tr>
+  <tr><td><code>htmlcov</code>, <code>node_modules</code></td><td>none</td><td>generated dirs</td><td>inert; will be left alone</td></tr>
+</table>
+<p>Deleting <code>scripts</code> and <code>docs</code> outright is not safe. Collecting the top-level <code>scripts/</code> directly yields 75 tests and 8 collection errors, so the exclusion is load-bearing for any invocation that names a path above <code>tests/</code>.</p>
+
+<h2>Why the issue's suggested fix will not work</h2>
+<p>The issue proposes to "anchor the exclusion to the repository-root <code>scripts/</code>". That is not expressible in <code>norecursedirs</code>. pytest's own matcher, <code>_pytest.pathlib.fnmatch_ex</code>, was called directly against the four candidate directories:</p>
+<table>
+  <tr><th>pattern</th><th>prunes <code>tests/scripts</code></th><th>prunes top-level <code>scripts</code></th><th>verdict</th></tr>
+  <tr><td><code>scripts</code> (current)</td><td>yes</td><td>yes</td><td>the defect</td></tr>
+  <tr><td><code>./scripts</code></td><td>no</td><td><strong>no</strong></td><td>looks anchored; silently equivalent to deleting the entry</td></tr>
+  <tr><td><code>*/scripts</code></td><td>yes</td><td>yes</td><td>identical to the bare form</td></tr>
+  <tr><td>absolute path</td><td>no</td><td>yes</td><td>correct, but not portable across machines or CI</td></tr>
+</table>
+<div class="bad"><strong>The most tempting fix is the most dangerous one.</strong> A reviewer skimming <code>./scripts</code> would read it as "anchored to root". It matches nothing at all: because the pattern contains a separator, pytest switches to full-path matching and prefixes <code>*/</code>, producing <code>*/./scripts</code>, which never matches a normalised path. Shipping it would leave the top-level <code>scripts/</code> collectible — 8 collection errors — while appearing to fix the issue. This plan will not use it.</div>
+
+<h2>Chosen mechanism</h2>
+<p>Root-only exclusions will move out of <code>norecursedirs</code> and into <code>collect_ignore</code> in a new repository-root <code>conftest.py</code>. <code>collect_ignore</code> entries resolve relative to the directory holding that conftest, which makes them root-anchored by construction rather than by pattern.</p>
+<pre># conftest.py (new, repository root)
+collect_ignore = ["scripts", "docs"]
+
+# pytest.ini:4 — bare basenames removed, path-anchored entries retained
+norecursedirs = .venv .git __pycache__ node_modules htmlcov
+                tests/data_systems/data_scraping
+                tests/marine_ops/artificial_lift/dynacard/benchmark
+                tests/workflows/integration</pre>
+<p>This combination was measured end-to-end on the clean checkout before this plan was written:</p>
+<div class="good"><code>pytest tests/</code> collects <strong>21,854</strong> node IDs — <code>tests/scripts/</code> = 177, <code>tests/docs/</code> = 41, exactly the intended delta. <code>pytest .</code> collects <strong>0</strong> from the top-level <code>scripts/</code> and <strong>0</strong> from <code>docs/</code>. The scratch <code>conftest.py</code> was then removed and the worktree returned to a clean state.</div>
+<p>A partial secondary benefit: <code>pyproject.toml:263</code> documents its <code>[tool.pytest.ini_options]</code> table as the fallback "if <code>pytest.ini</code> is ever deleted", but that table carries no <code>norecursedirs</code> key at all, so the fallback has never been equivalent. Moving the <em>root</em> exclusions into <code>conftest.py</code> makes those survive independently of which config file is live. The three remaining path-form entries in <code>pytest.ini</code> would still be lost, so this scopes the benefit to root exclusions only — it does not make deleting <code>pytest.ini</code> safe.</p>
+
+<div class="warn"><strong>A note on wording, because the same imprecision is what this plan criticises in the issue.</strong> The three retained entries such as <code>tests/workflows/integration</code> are <em>not</em> root-anchored. <code>fnmatch_ex</code> prefixes <code>*/</code> and fnmatch's <code>*</code> crosses path separators, so they are <strong>suffix-matched</strong> and would also prune <code>/anywhere/else/tests/workflows/integration</code>. The <code>pytest.ini</code> comment will say "path-form, suffix-matched" rather than "anchored", so the next reader is not misled the way <code>./scripts</code> would have misled them.</div>
+
+<h3>Alternatives considered and rejected</h3>
+<table>
+  <tr><th>alternative</th><th>why it will not be used</th></tr>
+  <tr><td><code>--ignore=scripts --ignore=docs</code> in <code>addopts</code></td><td><code>--ignore</code> takes a path relative to the invocation directory, not the rootdir, so it silently stops working whenever pytest is run from a subdirectory. It also cannot be overridden per-invocation without editing config.</td></tr>
+  <tr><td><code>collect_ignore_glob</code> in the root conftest</td><td>Equivalent in effect but strictly weaker here: glob patterns reintroduce exactly the matching ambiguity that caused this defect. <code>collect_ignore</code> takes literal relative paths, which is the property we want.</td></tr>
+  <tr><td>Rename <code>tests/scripts/</code> and <code>tests/docs/</code></td><td>Sidesteps the collision rather than fixing it, and a future <code>tests/&lt;any-bare-basename&gt;/</code> would recreate it. It also churns <code>.claude/quality-gates.yaml</code>, <code>tests/DOMAINS.md</code>, three workflows and <code>PATH_DOMAIN_OVERRIDES</code>, for no gain in the property being protected.</td></tr>
+  <tr><td>Delete the entries outright</td><td>Unsafe — measured. The top-level <code>scripts/</code> yields 75 tests and 8 collection errors, and collecting it also <strong>writes <code>phase_convention_test_results.txt</code> into the repository root</strong>, so collection there has filesystem side effects.</td></tr>
+</table>
+
+<h2>Artifact map and files</h2>
+<table>
+  <tr><th>path</th><th>change</th></tr>
+  <tr><td><code>conftest.py</code></td><td><strong>new</strong> — root-anchored <code>collect_ignore</code>, with a comment recording why <code>norecursedirs</code> cannot express this</td></tr>
+  <tr><td><code>pytest.ini</code></td><td>line 4 — remove <code>docs</code>, <code>projects</code>, <code>scripts</code>; retain the three path-form entries verbatim</td></tr>
+  <tr><td><code>tests/contracts/test_collection_visibility.py</code></td><td><strong>new</strong> — the guard test (G3)</td></tr>
+  <tr><td><code>scripts/ci/detect_touched_domains.py</code></td><td><strong>required</strong> — add <code>"conftest.py"</code> to <code>FULL_MATRIX_PATHS</code> (<code>:19-26</code>). See the CI-sensitivity risk below; without this the new file is a config surface that dispatches no CI at all.</td></tr>
+  <tr><td><code>.claude/quality-gates.yaml</code></td><td><strong>no change expected.</strong> <code>tests/docs/</code> is already owned by <code>tests-contracts</code> (<code>:77-78</code>, and <code>tests/DOMAINS.md:13</code>); <code>tests/scripts/</code> by <code>tests-workflows</code> (<code>:242</code>). Stage 4 is confirm-only.</td></tr>
+  <tr><td><code>README.md</code>, <code>Makefile</code>, <code>AGENTS.md</code></td><td>no change in this plan — see Out of scope</td></tr>
+</table>
+
+<h2>Implementation sequence after approval</h2>
+<ol>
+  <li><strong>Stage 1 — guard test, RED.</strong> Author <code>tests/contracts/test_collection_visibility.py</code> and commit it failing. It will assert, using <code>_pytest.pathlib.fnmatch_ex</code> against the live <code>norecursedirs</code> value, that no entry prunes any directory under <code>tests/</code>. On today's config it will fail naming <code>scripts</code> and <code>docs</code>. The RED commit will be pushed so the failure is on the record before the fix exists.</li>
+  <li><strong>Stage 2 — the fix, GREEN.</strong> Add the root <code>conftest.py</code>, edit <code>pytest.ini:4</code>. The guard test will pass. This commit will touch nothing else.</li>
+  <li><strong>Stage 3 — fallout, separate commit.</strong> Capture a node-ID diff against the Stage 1 baseline and run the 218 newly-visible tests. Measurement predicts zero failures. If CI disagrees, each failure will be recorded on the issue as a pre-existing finding with its own follow-on issue, and will not be repaired inside this branch.</li>
+  <li><strong>Stage 4 — gate ownership.</strong> Confirm <code>tests/docs/</code> resolves to exactly one gate. <code>tests/scripts/</code> already has one (<code>tests-workflows</code>, <code>.claude/quality-gates.yaml:242</code>) and will need no change.</li>
+</ol>
+<p>Stages 1 and 2 are the whole fix. Stages 3 and 4 exist so that the fix and its consequences never share a commit.</p>
+
+<h2>TDD test list</h2>
+<p>All assertions will be on the <em>property</em>, never on a count that drifts as tests are added. A test pinning "21,854" would pass today and mislead within a week.</p>
+
+<div class="bad"><strong>Revised after adversarial round 1.</strong> The guard test as first drafted here was wrong in two independent ways, both found by implementing it rather than reasoning about it. (a) It asserted that <em>no</em> <code>norecursedirs</code> entry may prune <em>any</em> directory under <code>tests/</code> — but <code>__pycache__</code> is itself a bare basename and <code>tests/**/__pycache__</code> exists everywhere, so the test reported <strong>197 offenders even under the corrected config</strong>. (b) It was vacuously satisfiable: with the ini key absent, <code>getini("norecursedirs")</code> returns <code>[]</code>, the loop body never executes, and the test reports <code>1 passed</code> while checking nothing — measured, not hypothesised. The corrected property and its vacuity guards are below.</div>
+
+<p><strong>The property, stated correctly:</strong> no <em>separator-free</em> <code>norecursedirs</code> entry may prune a directory under <code>tests/</code> that contains at least one file matching <code>python_files</code>. Path-anchored entries are deliberate and are exempt; directories holding no collectible files are irrelevant. Measured against this property: <strong>3 offenders pre-fix</strong> (<code>tests/docs</code>, <code>tests/scripts</code>, and <code>tests/solvers/orcaflex/mooring-tension-iteration/fsts-l015-test-cases/scripts</code>), <strong>0 post-fix</strong>.</p>
+
+<ul>
+  <li><code>test_no_bare_norecursedirs_entry_prunes_a_collectible_tests_directory</code> — the guard. Fails today naming exactly those 3 directories; passes after Stage 2. It will carry <strong>five</strong> explicit vacuity guards, each asserted before the main assertion:
+    <ul>
+      <li><code>pytestconfig.inipath.name == "pytest.ini"</code> — proves the live config was actually loaded. Round 2 measured that from outside the rootdir <code>getini</code> silently returns pytest's built-in default <code>['*.egg', '.*', '_darcs', …]</code>, which contains nothing capable of pruning under <code>tests/</code>, so <em>every</em> config-resolution failure would otherwise produce a confident green.</li>
+      <li>Sentinel entries <code>.venv</code> and <code>htmlcov</code> are present in the returned list — a second, independent check that the value is this repo's and not a default.</li>
+      <li>The separator-free entry list is non-empty (currently 5 post-fix).</li>
+      <li>The candidate directory set is non-empty (currently 190).</li>
+      <li>A known-positive control: <code>fnmatch_ex("scripts", tests/scripts)</code> is True, proving the matcher is live rather than silently returning False for everything.</li>
+    </ul>
+    The exemption list for path-form entries will be asserted <strong>fully consumed</strong> — every exemption must correspond to a directory it actually matches — so a stale exemption cannot mask a newly-introduced offender.</li>
+  <li><code>test_top_level_scripts_is_not_collected</code> — assert the root <code>collect_ignore</code> names <code>scripts</code>, and that the directory exists and contains at least one file matching <code>python_files</code>. Guards against the exclusion being quietly dropped once it is no longer in <code>pytest.ini</code>.</li>
+  <li><code>test_top_level_docs_is_not_collected</code> — same for <code>docs</code>.</li>
+  <li><code>test_every_tests_subdirectory_is_reachable_by_recursive_collection</code> — enumerate directories under <code>tests/</code> holding at least one file matching <code>python_files</code>, and assert each contributes at least one node ID to a recursive collect. This is the property the issue actually cares about, stated independently of the mechanism that broke it.</li>
+  <li><code>test_collect_ignore_entries_exist</code> — assert every root <code>collect_ignore</code> entry names a directory that exists, so a future rename cannot leave a silently dead exclusion the way <code>projects</code> did.</li>
+</ul>
+
+<h2>Acceptance criteria</h2>
+<ol>
+  <li>Node-ID diff between pre-change and post-change recursive collects shows <strong>0 removed</strong>, and <strong>every added node ID lies under <code>tests/scripts/</code> or <code>tests/docs/</code></strong>. Stated as a property, not as the literal 218 — that count grew from 124 to 218 between this issue being filed and this plan being written, and pinning it would make the criterion wrong within a week. Baseline captured from a separate clean worktree, not from the working tree.</li>
+  <li>The 218 newly-visible tests run, and every failure among them is filed as a pre-existing finding before merge.</li>
+  <li><code>pytest . --collect-only</code> yields zero node IDs under the top-level <code>scripts/</code> and <code>docs/</code>.</li>
+  <li>The guard test is demonstrably RED at the Stage 1 commit and GREEN at the Stage 2 commit, provable from CI history. <strong>This requires the pull request to be opened at Stage 1 and left red</strong>: <code>quality-gates-by-domain.yml:17-22</code> triggers only on <code>pull_request</code> and <code>push</code> to <code>main</code>/<code>develop</code>, so pushing the RED commit to the branch alone runs no workflow and produces no evidence.</li>
+  <li><code>Domain test aggregate</code> and <code>Run Quality Gates</code> both green, with zero failures across the whole rollup.</li>
+  <li>Every directory under <code>tests/</code> containing collectible files is owned by exactly one gate — no path gains a second owner and starts running twice.</li>
+  <li>A comment on #1977 records that node-ID baselines captured before this change undercounted by 218, so earlier comparisons can be re-read correctly rather than silently trusted.</li>
+</ol>
+
+<h2>Risks and fail-closed responses</h2>
+<table>
+  <tr><th>risk</th><th>response</th></tr>
+  <tr><td>A root <code>conftest.py</code> is loaded for every invocation and could perturb rootdir detection or shadow an existing conftest.</td><td>Measured before writing this plan: recursive and whole-repo collects both behaved exactly as intended. The file will contain <code>collect_ignore</code> and a comment, nothing executable.</td></tr>
+  <tr><td>The 218 tests pass in isolation but fail alongside the full suite — two files under <code>tests/scripts/</code> perform module-scope <code>sys.path.insert</code> of the top-level <code>scripts/</code> directory at collection time, mutating <code>sys.path</code> process-globally.</td><td>Confirmed latent, not active: the 95 injected modules were checked for collisions against stdlib and site-packages and shadow nothing today. Stage 3 will run the full recursive suite, not just the two directories, so an interaction failure surfaces before merge. If one appears, it becomes a follow-on issue and this branch stops at Stage 2.</td></tr>
+  <tr><td>Un-hiding causes tests to run twice in CI.</td><td>No CI workflow performs whole-tree collection; every one passes explicit paths, so no new duplication is introduced. Two pre-existing duplications already exist and are out of scope. Stage 4 verifies ownership regardless.</td></tr>
+  <tr><td>Someone later re-adds a bare basename to <code>norecursedirs</code>.</td><td>That is exactly what the guard test in Stage 1 exists to catch, and why it asserts on the property rather than on the current entry list.</td></tr>
+  <tr><td><strong>The mechanism moves collection control from a file that triggers the full CI matrix to one that triggers nothing.</strong> <code>scripts/ci/detect_touched_domains.py:19-26</code> lists <code>pytest.ini</code> and <code>tests/conftest.py</code> in <code>FULL_MATRIX_PATHS</code>, so editing <code>pytest.ini</code> today dispatches all 22 shards. A root <code>conftest.py</code> is in neither that set nor <code>DOMAIN_PATHS</code>, so after this plan lands, someone adding <code>"tests"</code> to <code>collect_ignore</code> — or deleting the file — would dispatch <strong>zero shards</strong>.</td><td><strong>Accepted as a real regression, not a benefit.</strong> Stage 2 will add <code>"conftest.py"</code> to <code>FULL_MATRIX_PATHS</code> in the same commit that creates the file, so the new config surface is at least as CI-sensitive as the one it replaces. Verified: the guard test lives in <code>tests/contracts/</code>, which alone would dispatch only the <code>contracts</code> shard.</td></tr>
+  <tr><td>The local environment cannot reproduce CI, so a "green locally" claim is not trustworthy.</td><td>All measurement used the canonical <code>uv run --with-editable '.[test]'</code> invocation, never the repo <code>.venv</code>. The environment gap is real and is filed separately rather than worked around silently.</td></tr>
+</table>
+
+<h2>Out of scope, with follow-ons to file</h2>
+<ul>
+  <li><strong>The contents of the 218 tests.</strong> Per the issue: this is about their visibility.</li>
+  <li><strong><code>pytest .</code> is broken independently.</strong> A whole-repo collect produces 9 collection errors from <code>.codex/skills/</code>, <code>.gemini/skills/</code>, <code>examples/demos/gtm/</code> and <code>tests/workflow_api/</code>. None involves <code>scripts/</code> or <code>docs/</code>. This plan will not fix them and will not claim to. <em>Note for anyone re-measuring:</em> the <code>.codex/</code> and <code>.gemini/</code> trees reach their test files through a symlink, so <code>find</code> reports 0 matches and <code>find -L</code> reports 14. A round-2 attempt to refute this figure did so with un-followed symlinks and was rejected on that basis.</li>
+  <li><strong>No documented path produces a runnable test environment.</strong> <code>README.md:142</code>, <code>Makefile:23</code> and <code>AGENTS.md:4</code> each describe a command that fails with <code>No module named pytest</code>; the working invocation appears only in a <code>pyproject.toml</code> comment and inside gate command strings. To be filed.</li>
+  <li><strong><code>tests/workflow_api/</code> collection errors from a drifted sibling.</strong> The local <code>assetutilities</code> checkout lacks the <code>artifact</code> export that two test modules import. Local-only drift; to be verified against CI and filed.</li>
+  <li><strong>Comment debt in <code>tests/conftest.py:11-20</code></strong> and three <code>importorskip</code> calls against a nonexistent <code>tests.cli.conftest</code> — both belong to <a href="https://github.com/vamseeachanta/digitalmodel/issues/1923">#1923</a>, whose residual scope is <code>collect_ignore</code> and <code>importorskip</code> and does not touch <code>norecursedirs</code>. The two issues are disjoint.</li>
+</ul>
+
+<h2>Adversarial review summary</h2>
+<p>Tier: <strong>T2</strong> — multi-file and harness-touching, but a small and fully measured change. Reviewers were asked to attack: the claim that no portable <code>norecursedirs</code> anchor exists; the claim that CI introduces no double-run; the choice of a root <code>conftest.py</code> over renaming the two test directories; and whether the guard test can be satisfied vacuously.</p>
+
+<h3>Round 1 — Codex (gpt-5.5)</h3>
+<p>The session exceeded its time budget before emitting a verdict, but it had already built the plan's Stage 2 state and guard test in the measurement worktree and run them. Those artifacts were read, reproduced independently, and then discarded; the worktree was returned to a clean state at <code>70c9fcb0</code>.</p>
+<table>
+  <tr><th>severity</th><th>finding</th><th>disposition</th></tr>
+  <tr><td><strong>MAJOR</strong></td><td>The guard test as drafted fails under the corrected config — 197 offenders, because <code>__pycache__</code> is a bare basename and <code>tests/**/__pycache__</code> exists throughout. The stated property was simply false.</td><td><strong>Accepted and fixed.</strong> Property narrowed to separator-free entries pruning directories that hold collectible files. Re-measured: 3 offenders pre-fix, 0 post-fix.</td></tr>
+  <tr><td><strong>MAJOR</strong></td><td>The guard test is vacuously satisfiable: with the ini key absent, <code>getini("norecursedirs")</code> returns <code>[]</code> and the test reports <code>1 passed</code> having checked nothing.</td><td><strong>Accepted and fixed.</strong> Three explicit vacuity guards added to the test specification, including a known-positive control on the matcher itself.</td></tr>
+</table>
+<p>A third directory surfaced while re-measuring: <code>tests/solvers/orcaflex/.../fsts-l015-test-cases/scripts/</code> is also pruned by the bare <code>scripts</code> entry. It contributes zero tests, which is why it does not appear in the 218-test node-ID diff, and it is recorded here so the two measurements are not mistaken for a contradiction.</p>
+
+<h3>Round 2 — Claude</h3>
+<p>Verdict <strong>MAJOR</strong>. It independently re-derived and <em>confirmed</em> five of the plan's load-bearing claims rather than taking them on trust: the no-portable-anchor premise (via a <strong>32-pattern</strong> sweep, against this plan's 4); the 0-removed / 218-added node-ID diff (stable under <code>pytest-randomly</code> and under <code>-n 4 --dist loadscope</code>); zero CI double-run across all 8 workflows and all 31 gates; that a root <code>conftest.py</code> does not perturb rootdir detection <em>and</em> does not block deliberate targeting of <code>scripts/</code>; and the severity correction against a real CI log.</p>
+<p>Its pattern sweep found one near-miss the plan should record: <code>*[!s]/scripts</code> prunes the top-level <code>scripts/</code> but not <code>tests/scripts/</code> — and works <em>only</em> because "tests" happens to end in <code>s</code> and this checkout directory does not. It would break in a checkout named, say, <code>.../models</code>. It is a coincidence, not an anchor, and will not be used.</p>
+<table>
+  <tr><th>severity</th><th>finding</th><th>disposition</th></tr>
+  <tr><td><strong>MAJOR</strong></td><td>Guard test RED after Stage 2 (197 offenders, <code>__pycache__</code>), independently reaching Codex's round-1 finding.</td><td><strong>Already fixed</strong> in round 1. Its stronger remedy — assert the exemption list is fully consumed, so a stale exemption cannot mask a new offender — is adopted.</td></tr>
+  <tr><td><strong>MAJOR</strong></td><td>Vacuity is worse than suspected: from outside the rootdir, <code>getini</code> returns <em>pytest's built-in default</em> (<code>['*.egg','.*','_darcs',…]</code>) with no error. That default contains nothing that could ever prune under <code>tests/</code>, so <strong>every</strong> config-resolution failure yields a confident green.</td><td><strong>Accepted.</strong> Vacuity guards extended: assert <code>pytestconfig.inipath.name == "pytest.ini"</code>, assert sentinel entries (<code>.venv</code>, <code>htmlcov</code>) are present in the returned list, and keep the known-positive control.</td></tr>
+  <tr><td><strong>MAJOR</strong></td><td>The new root <code>conftest.py</code> is absent from <code>FULL_MATRIX_PATHS</code>, so the mechanism reduces CI sensitivity.</td><td><strong>Accepted and verified independently.</strong> Added to the artifact map and the risk table; Stage 2 will fix it in the same commit.</td></tr>
+  <tr><td>MINOR</td><td>Severity correction too generous — the PR lane is touched-domain gated.</td><td><strong>Accepted.</strong> Restated as "Partially correct" with the escape path named.</td></tr>
+  <tr><td>MINOR</td><td><code>tests/docs/</code> is already owned; the artifact map overstated a <code>quality-gates.yaml</code> change.</td><td><strong>Accepted and verified.</strong> Marked no-change / confirm-only.</td></tr>
+  <tr><td>MINOR</td><td>Acceptance criterion 4 is unachievable without opening the PR at Stage 1.</td><td><strong>Accepted.</strong> Criterion now states the requirement explicitly.</td></tr>
+  <tr><td>MINOR</td><td>"Path-anchored" is imprecise — the retained entries are suffix-matched.</td><td><strong>Accepted.</strong> Wording corrected throughout; the <code>pytest.ini</code> comment will say so.</td></tr>
+  <tr><td>MINOR</td><td>Rejected alternatives were never presented, so reviewers had nothing to attack.</td><td><strong>Accepted.</strong> Section added.</td></tr>
+  <tr><td>MINOR</td><td>The "secondary benefit" claim is only partial.</td><td><strong>Accepted.</strong> Scoped to root exclusions only.</td></tr>
+  <tr><td>NIT</td><td>Acceptance criterion 1 pinned the literal 218, contradicting the plan's own rule against count assertions.</td><td><strong>Accepted.</strong> Restated as a property.</td></tr>
+  <tr><td>MINOR</td><td><em>Refuted.</em> Claimed the out-of-scope <code>pytest .</code> figure does not reproduce — 7 errors, not 9 — on the grounds that <code>.codex/</code> and <code>.gemini/</code> hold zero files matching <code>python_files</code>.</td><td><strong>Rejected.</strong> Those trees contain <strong>14</strong> such files, reachable only through a symlink: <code>find</code> without <code>-L</code> reports 0, <code>find -L</code> reports 14. The 9-error figure stands and is retained.</td></tr>
+</table>
+<p>Both reviewers reached the guard-test defect independently, from different directions, and neither reached it by reading the plan — each reached it by implementing the test and running it. The finding that mattered most (CI sensitivity) came from reading a file the plan never mentioned.</p>
+
+</main>
+</body>
+</html>
