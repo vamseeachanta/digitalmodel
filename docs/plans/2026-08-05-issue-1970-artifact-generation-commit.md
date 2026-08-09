@@ -305,10 +305,9 @@ structure (circular — manifests are asserted field-by-field against literals).
 
 ## Execution environment
 
-Implementation runs in a dedicated worktree off `origin/main`
-(`/mnt/ace/ws/agent-worktrees/dm-1968-1970-plans`). The shared checkout
-`/mnt/ace/ws/digitalmodel` is on `fix/3787-startup-tax` and is **not** used.
-Root `/` is at 100% (1.2 G free), so worktrees live on `/mnt/ace`.
+Implementation runs in a dedicated worktree off `origin/main`, never in the
+shared checkout, which sits on an unrelated feature branch. Worktrees live on
+the large data volume rather than the root filesystem, which is near capacity.
 
 Every test is a pure-filesystem fixture under `tmp_path` with injected faults and
 a faked `st_dev`. No OpenFOAM binary and no second filesystem is required, and
