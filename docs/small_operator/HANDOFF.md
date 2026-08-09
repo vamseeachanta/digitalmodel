@@ -191,8 +191,8 @@ checked.** Read `aceengineer-strategy/pipeline/` before starting outreach work.
   Use a 3.11 scratch venv (numpy scipy pydantic click scikit-learn pyyaml pandas
   matplotlib pytest) or `workspace-hub/.venv/bin/pytest` with `PYTHONPATH=src`.
   A failed `uv run` dirties `uv.lock` — revert it.
-- No node on the Mac. The website builds on **ace-linux-1** (node 24), repo at
-  `/mnt/ace/ws/aceengineer-website`.
+- No node on the Mac. The website builds on **ace-linux-1** (node 24), where the
+  aceengineer-website checkout lives under the shared analysis mount.
 - PDF build: `python docs/small_operator/build_pdfs.py`. Headless Chrome writes
   the PDF then fails to exit; the script treats the timeout as success and judges
   by the file on disk. Do not "fix" it by raising the timeout.
