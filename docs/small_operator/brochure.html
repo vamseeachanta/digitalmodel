@@ -1,0 +1,667 @@
+<title>Seven problems every small operator has — AceEngineer</title>
+<style>
+  :root {
+    --paper:#ffffff; --ground:#eef1f4; --ink:#14181d;
+    --ink-soft:#4a545e; --ink-faint:#7b858f; --rule:#d7dde3;
+    --accent:#2BB2A6; --accent-ink:#0B3D91; --panel:#f6f8fa;
+    --ok:#1f6f43; --verified:#1f6f43; --warn:#8a5a1f; --ask:#8a5a1f; --stop:#9c3327;
+    --wm-a:#0B3D91; --wm-b:#2BB2A6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+    --paper:#14171c; --ground:#0e1013; --ink:#e6eaef;
+    --ink-soft:#a0a9b4; --ink-faint:#6b7480; --rule:#262c33;
+    --accent:#35C6B8; --accent-ink:#8FBEF5; --panel:#1a1e24;
+    --ok:#5fc98a; --verified:#5fc98a; --warn:#d9a95e; --ask:#d9a95e; --stop:#e0756a;
+    --wm-a:#ffffff; --wm-b:#2BB2A6;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#14171c; --ground:#0e1013; --ink:#e6eaef;
+    --ink-soft:#a0a9b4; --ink-faint:#6b7480; --rule:#262c33;
+    --accent:#35C6B8; --accent-ink:#8FBEF5; --panel:#1a1e24;
+    --ok:#5fc98a; --verified:#5fc98a; --warn:#d9a95e; --ask:#d9a95e; --stop:#e0756a;
+    --wm-a:#ffffff; --wm-b:#2BB2A6;
+  }
+  :root[data-theme="light"] {
+    --paper:#ffffff; --ground:#eef1f4; --ink:#14181d;
+    --ink-soft:#4a545e; --ink-faint:#7b858f; --rule:#d7dde3;
+    --accent:#2BB2A6; --accent-ink:#0B3D91; --panel:#f6f8fa;
+    --ok:#1f6f43; --verified:#1f6f43; --warn:#8a5a1f; --ask:#8a5a1f; --stop:#9c3327;
+    --wm-a:#0B3D91; --wm-b:#2BB2A6;
+  }
+
+
+  /* ---- brand wordmark (aceengineer-website assets/img/logo.svg) ----
+     Paths are the canonical outlines; the two fills are driven by CSS so the
+     mark inverts with the theme the way logo-inverse.svg does on the site. */
+  .wordmark { height: 30px; width: auto; display: block; flex: 0 0 auto; }
+  .wordmark .wm-a { fill: var(--wm-a); }
+  .wordmark .wm-b { fill: var(--wm-b); }
+
+  html { background: var(--ground); }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: Charter, "Bitstream Charter", "Iowan Old Style", Georgia, serif;
+    font-size: 17px;
+    line-height: 1.6;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+  .sheet {
+    max-width: 860px;
+    margin: 0 auto;
+    background: var(--paper);
+    border-left: 1px solid var(--rule);
+    border-right: 1px solid var(--rule);
+    padding: 0 clamp(20px, 5vw, 64px) 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 44px;
+  }
+
+  .stencil {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  .label {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ---------- masthead ---------- */
+  header {
+    padding-top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .rule-top {
+    height: 5px;
+    background: var(--accent);
+    margin: 0 clamp(-20px, -5vw, -64px);
+  }
+  .firm {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 14px;
+  }
+  .firm .name {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 14px;
+  }
+  h1 {
+    font-size: clamp(30px, 5.4vw, 46px);
+    line-height: 1.06;
+    margin: 8px 0 0;
+  }
+  .standfirst {
+    font-size: 19px;
+    color: var(--ink-soft);
+    max-width: 60ch;
+    margin: 0;
+  }
+  .standfirst strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- generic section ---------- */
+  section { display: flex; flex-direction: column; gap: 18px; }
+  h2 {
+    font-size: 13px;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    margin: 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--accent);
+  }
+  p { margin: 0; max-width: 68ch; }
+  .lede { font-size: 18px; }
+
+  /* ---------- problem entries ---------- */
+  .entries { display: flex; flex-direction: column; gap: 0; }
+  .entry {
+    display: grid;
+    grid-template-columns: 128px 1fr;
+    gap: 0 28px;
+    padding: 26px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .entry:first-child { border-top: 1px solid var(--rule); }
+  .entry-key { display: flex; flex-direction: column; gap: 6px; }
+  .entry-key .id {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    color: var(--accent-ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .entry-key .cat {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .entry-body { display: flex; flex-direction: column; gap: 12px; }
+  .entry h3 {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+  blockquote {
+    margin: 0;
+    padding: 10px 0 10px 16px;
+    border-left: 3px solid var(--accent);
+    color: var(--ink-soft);
+    font-style: italic;
+    max-width: 62ch;
+  }
+  blockquote cite {
+    display: block;
+    margin-top: 6px;
+    font-style: normal;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+  }
+  .answer { display: flex; flex-direction: column; gap: 4px; }
+  .answer .head {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ---------- proposal panel ---------- */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--accent);
+    padding: 24px clamp(18px, 3vw, 30px);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .flag {
+    display: inline-block;
+    align-self: flex-start;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ask);
+    border: 1px solid var(--ask);
+    border-radius: 2px;
+    padding: 2px 7px;
+  }
+  .panel h3 {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 7px; max-width: 66ch; }
+  li::marker { color: var(--accent); }
+
+  /* ---------- honesty table ---------- */
+  .scroller { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; min-width: 480px; }
+  th, td { text-align: left; padding: 11px 14px 11px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  th {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 700;
+  }
+  td.yes { color: var(--verified); font-weight: 600; }
+  td.no  { color: var(--ink-faint); }
+  td.warn { color: var(--ask); font-weight: 600; }
+  td.num {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 14px;
+  }
+  .fineprint { font-size: 14px; color: var(--ink-faint); max-width: 64ch; }
+
+  /* ---------- start ---------- */
+  .steps { display: flex; flex-direction: column; gap: 14px; }
+  .step { display: grid; grid-template-columns: 34px 1fr; gap: 0 16px; align-items: start; }
+  .step .n {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    color: var(--paper);
+    background: var(--accent);
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: var(--ink-faint);
+    font-size: 14px;
+  }
+  footer a { color: var(--accent-ink); }
+
+  @media (max-width: 600px) {
+    .entry { grid-template-columns: 1fr; gap: 10px; }
+    .entry-key { flex-direction: row; gap: 12px; align-items: center; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    a { transition: color .15s ease; }
+  }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+
+<div class="sheet">
+
+  <header>
+    <div class="rule-top"></div>
+    <div class="firm">
+      <svg class="wordmark" xmlns="http://www.w3.org/2000/svg" viewBox="-29.09 -8.48 1473.44 264.45" role="img" aria-label="AceEngineer">
+<g class="wm-a">
+<path transform="translate(0.000,185) scale(0.214286,-0.214286)" d="M-5.068935616735313 0 309.6379796228051 700H438.025688272274L753.6032950357685 0H617.5690440060698L347.16377628441364 630.663884673748H399.1119661825276L128.70669846087145 0ZM140.36202037719488 162.05181010188596 175.11196618252762 264.1378712334706H552.8362237155864L588.4568610448732 162.05181010188596Z"/>
+<path transform="translate(160.500,185) scale(0.214286,-0.214286)" d="M326.58616952091916 -6.517233904183828Q243.03446780836765 -6.517233904183828 177.43534576197703 28.61207457186213Q111.83622371558639 63.74138304790809 74.6896813353566 125.62930847604596Q37.543138955126814 187.51723390418383 37.543138955126814 267.03446780836765Q37.543138955126814 347.4223932365055 74.6896813353566 408.81031866464343Q111.83622371558639 470.1982440927813 177.43534576197703 505.3275525688273Q243.03446780836765 540.4568610448732 326.58616952091916 540.4568610448732Q404.81888142206805 540.4568610448732 464.4998916106655 508.7758508562757Q524.180901799263 477.0948406676783 554.6636678950791 415.89659657489705L458.89659657489705 359.5001083893345Q434.9310643832647 397.5001083893345 400.4181118577932 415.80614567526555Q365.9051593323217 434.1121829611966 325.58616952091916 434.1121829611966Q279.6895729460221 434.1121829611966 242.95247127682637 413.8406134836332Q206.2153696076306 393.5690440060698 185.00845436809016 356.1379796228051Q163.80153912854973 318.7069152395404 163.80153912854973 267.03446780836765Q163.80153912854973 215.36202037719488 185.00845436809016 177.86630175590722Q206.2153696076306 140.37058313461955 242.95247127682637 120.09901365705615Q279.6895729460221 99.82744417949274 325.58616952091916 99.82744417949274Q365.9051593323217 99.82744417949274 400.4181118577932 117.69813570344678Q434.9310643832647 135.56882722740082 458.89659657489705 174.43951875135485L554.6636678950791 118.04303056579232Q524.180901799263 57.7154779969651 464.4998916106655 25.599122046390637Q404.81888142206805 -6.517233904183828 326.58616952091916 -6.517233904183828Z"/>
+<path transform="translate(285.000,185) scale(0.214286,-0.214286)" d="M332.844786473011 -6.517233904183828Q244.16377628441361 -6.517233904183828 177.5 28.741383047908087Q110.83622371558639 64 74.1896813353566 125.88792542813788Q37.543138955126814 187.77585085627575 37.543138955126814 267.03446780836765Q37.543138955126814 346.5517017125515 73.25433557337958 408.3749729026664Q108.96553219163235 470.1982440927813 171.62930847604596 505.3275525688273Q234.29308476045958 540.4568610448732 313.58616952091916 540.4568610448732Q391.974094949057 540.4568610448732 453.07321699544764 506.28013223498806Q514.1723390418383 472.10340342510295 549.142152612183 409.97409494905696Q584.1119661825277 347.844786473011 584.1119661825277 263.5517017125515Q584.1119661825277 255.9051593323217 583.5473119445046 245.75861695209193Q582.9826577064816 235.61207457186214 581.9826577064816 227.0948406676783H137.4739865597225V309.974094949057H515.9655321916323L466.6638846737481 283.58616952091916Q467.53457619770217 329.51723390418385 447.7630067201387 364.64226100151745Q427.99143724257533 399.76728809885105 393.6250270973336 419.66816605246044Q359.2586169520919 439.5690440060698 313.844786473011 439.5690440060698Q268.4309559939302 439.5690440060698 233.56454584868848 419.66816605246044Q198.69813570344678 399.76728809885105 179.4265662258834 364.2069152395404Q160.15499674831997 328.6465423802298 160.15499674831997 280.974094949057V260.9051593323217Q160.15499674831997 212.84478647301106 181.99122046390636 176.0904508996315Q203.82744417949272 139.3361153262519 243.7585085627574 118.99989161066551Q283.6895729460221 98.66366789507913 336.3620203771949 98.66366789507913Q381.32755256882723 98.66366789507913 417.1465423802298 113.01712551484934Q452.96553219163235 127.37058313461955 480.8362237155864 156.94818989811404L548.3361153262518 79.74138304790809Q511.81888142206805 37.61207457186213 457.2369932798613 15.54742033383915Q402.65510513765446 -6.517233904183828 332.844786473011 -6.517233904183828Z"/>
+</g>
+<g class="wm-b">
+<path transform="translate(418.286,185) scale(0.214286,-0.214286)" d="M94.43973553002385 0V700H605.103403425103V590.7846303923694H223.69813570344678V109.2153696076306H618.974094949057V0ZM213.79297637112506 302.2155863862996V408.65510513765446H562.3620203771949V302.2155863862996Z"/>
+<path transform="translate(561.858,185) scale(0.214286,-0.214286)" d="M82.21558638629959 0V533.9396271406894H201.43951875135485V389.61207457186214L180.20680685020594 433.87069152395406Q207.85334923043573 485.4223932365055 261.4826577064817 512.9396271406894Q315.1119661825276 540.4568610448732 384.72404075438976 540.4568610448732Q449.46542380229783 540.4568610448732 499.5947322783438 515.3922068068503Q549.7240407543898 490.32755256882723 578.7886949924127 438.50428137871234Q607.8533492304357 386.68101018859744 607.8533492304357 305.9051593323217V0H482.8535660091047V289.54313895512684Q482.8535660091047 360.5690440060698 449.61646433990893 395.5647626273575Q416.3793626707132 430.56048124864515 355.7758508562757 430.56048124864515Q311.87925428137873 430.56048124864515 278.012844136137 412.65960329503577Q244.14643399089528 394.7587253414264 225.68090179926293 359.4397355300238Q207.2153696076306 324.12074571862127 207.2153696076306 270.06037285931063V0Z"/>
+<path transform="translate(708.644,185) scale(0.214286,-0.214286)" d="M323.6465423802298 -200.51723390418383Q249.61207457186214 -200.51723390418383 179.48276609581617 -181.34050509429872Q109.35345761977021 -162.16377628441361 63.57760676349447 -124.68101018859744L119.55170171255148 -30.758725341426413Q155.03446780836765 -60.11218296119662 208.45257966616086 -77.65960329503577Q261.87069152395406 -95.20702362887491 317.1896813353566 -95.20702362887491Q405.4742033383915 -95.20702362887491 446.35784738781706 -54.82337957944938Q487.2414914372426 -14.439735530023846 487.2414914372426 66.68101018859744V162.3104270539779L497.2414914372426 282.68101018859744L493.0173422935183 403.92228484717106V533.9396271406894H612.2412746585736V81.13787123347063Q612.2412746585736 -63.93106438326468 538.1723390418383 -132.22414914372425Q464.10340342510295 -200.51723390418383 323.6465423802298 -200.51723390418383ZM308.3793626707132 23.905159332321702Q231.5431389551268 23.905159332321702 170.23710166919574 56.4051593323217Q108.93106438326468 88.9051593323217 73.23710166919575 147.03446780836765Q37.543138955126814 205.16377628441361 37.543138955126814 282.68101018859744Q37.543138955126814 360.1982440927813 73.23710166919575 418.32755256882723Q108.93106438326468 476.45686104487316 170.23710166919574 508.4568610448732Q231.5431389551268 540.4568610448732 308.3793626707132 540.4568610448732Q375.89659657489705 540.4568610448732 430.10351181443747 513.3275525688273Q484.3104270539779 486.1982440927813 516.7587253414264 429.00428137871234Q549.2070236288749 371.8103186646434 549.2070236288749 282.68101018859744Q549.2070236288749 193.55170171255148 516.7587253414264 136.35773899848255Q484.3104270539779 79.16377628441361 430.10351181443747 51.53446780836766Q375.89659657489705 23.905159332321702 308.3793626707132 23.905159332321702ZM326.58616952091916 130.2498374159983Q374.48276609581615 130.2498374159983 411.1552135269889 149.52140689356168Q447.8276609581617 168.79297637112506 468.5345761977021 203.1593865163668Q489.2414914372426 237.5257966616085 489.2414914372426 282.68101018859744Q489.2414914372426 327.96553219163235 468.5345761977021 362.26728809885105Q447.8276609581617 396.5690440060698 411.1552135269889 415.3406134836332Q374.48276609581615 434.1121829611966 326.58616952091916 434.1121829611966Q279.6895729460221 434.1121829611966 242.51712551484934 415.3406134836332Q205.34467808367657 396.5690440060698 184.57310860611315 362.26728809885105Q163.80153912854973 327.96553219163235 163.80153912854973 282.68101018859744Q163.80153912854973 237.5257966616085 184.57310860611315 203.1593865163668Q205.34467808367657 168.79297637112506 242.51712551484934 149.52140689356168Q279.6895729460221 130.2498374159983 326.58616952091916 130.2498374159983Z"/>
+<path transform="translate(857.358,185) scale(0.214286,-0.214286)" d="M82.21558638629959 0V533.9396271406894H207.2153696076306V0ZM144.7154779969651 622.3448948623455Q109.70691523954042 622.3448948623455 87.07332538478212 644.025905050943Q64.43973553002382 665.7069152395404 64.43973553002382 697.2930847604596Q64.43973553002382 728.8792542813787 87.07332538478212 750.5602644699761Q109.70691523954042 772.2412746585736 144.7154779969651 772.2412746585736Q179.72404075438976 772.2412746585736 202.35763060914806 751.689572946022Q224.99122046390636 731.1378712334706 224.99122046390636 699.5517017125514Q224.99122046390636 666.7069152395404 202.7929763711251 644.525905050943Q180.59473227834383 622.3448948623455 144.7154779969651 622.3448948623455Z"/>
+<path transform="translate(919.287,185) scale(0.214286,-0.214286)" d="M82.21558638629959 0V533.9396271406894H201.43951875135485V389.61207457186214L180.20680685020594 433.87069152395406Q207.85334923043573 485.4223932365055 261.4826577064817 512.9396271406894Q315.1119661825276 540.4568610448732 384.72404075438976 540.4568610448732Q449.46542380229783 540.4568610448732 499.5947322783438 515.3922068068503Q549.7240407543898 490.32755256882723 578.7886949924127 438.50428137871234Q607.8533492304357 386.68101018859744 607.8533492304357 305.9051593323217V0H482.8535660091047V289.54313895512684Q482.8535660091047 360.5690440060698 449.61646433990893 395.5647626273575Q416.3793626707132 430.56048124864515 355.7758508562757 430.56048124864515Q311.87925428137873 430.56048124864515 278.012844136137 412.65960329503577Q244.14643399089528 394.7587253414264 225.68090179926293 359.4397355300238Q207.2153696076306 324.12074571862127 207.2153696076306 270.06037285931063V0Z"/>
+<path transform="translate(1066.073,185) scale(0.214286,-0.214286)" d="M332.844786473011 -6.517233904183828Q244.16377628441361 -6.517233904183828 177.5 28.741383047908087Q110.83622371558639 64 74.1896813353566 125.88792542813788Q37.543138955126814 187.77585085627575 37.543138955126814 267.03446780836765Q37.543138955126814 346.5517017125515 73.25433557337958 408.3749729026664Q108.96553219163235 470.1982440927813 171.62930847604596 505.3275525688273Q234.29308476045958 540.4568610448732 313.58616952091916 540.4568610448732Q391.974094949057 540.4568610448732 453.07321699544764 506.28013223498806Q514.1723390418383 472.10340342510295 549.142152612183 409.97409494905696Q584.1119661825277 347.844786473011 584.1119661825277 263.5517017125515Q584.1119661825277 255.9051593323217 583.5473119445046 245.75861695209193Q582.9826577064816 235.61207457186214 581.9826577064816 227.0948406676783H137.4739865597225V309.974094949057H515.9655321916323L466.6638846737481 283.58616952091916Q467.53457619770217 329.51723390418385 447.7630067201387 364.64226100151745Q427.99143724257533 399.76728809885105 393.6250270973336 419.66816605246044Q359.2586169520919 439.5690440060698 313.844786473011 439.5690440060698Q268.4309559939302 439.5690440060698 233.56454584868848 419.66816605246044Q198.69813570344678 399.76728809885105 179.4265662258834 364.2069152395404Q160.15499674831997 328.6465423802298 160.15499674831997 280.974094949057V260.9051593323217Q160.15499674831997 212.84478647301106 181.99122046390636 176.0904508996315Q203.82744417949272 139.3361153262519 243.7585085627574 118.99989161066551Q283.6895729460221 98.66366789507913 336.3620203771949 98.66366789507913Q381.32755256882723 98.66366789507913 417.1465423802298 113.01712551484934Q452.96553219163235 127.37058313461955 480.8362237155864 156.94818989811404L548.3361153262518 79.74138304790809Q511.81888142206805 37.61207457186213 457.2369932798613 15.54742033383915Q402.65510513765446 -6.517233904183828 332.844786473011 -6.517233904183828Z"/>
+<path transform="translate(1199.359,185) scale(0.214286,-0.214286)" d="M332.844786473011 -6.517233904183828Q244.16377628441361 -6.517233904183828 177.5 28.741383047908087Q110.83622371558639 64 74.1896813353566 125.88792542813788Q37.543138955126814 187.77585085627575 37.543138955126814 267.03446780836765Q37.543138955126814 346.5517017125515 73.25433557337958 408.3749729026664Q108.96553219163235 470.1982440927813 171.62930847604596 505.3275525688273Q234.29308476045958 540.4568610448732 313.58616952091916 540.4568610448732Q391.974094949057 540.4568610448732 453.07321699544764 506.28013223498806Q514.1723390418383 472.10340342510295 549.142152612183 409.97409494905696Q584.1119661825277 347.844786473011 584.1119661825277 263.5517017125515Q584.1119661825277 255.9051593323217 583.5473119445046 245.75861695209193Q582.9826577064816 235.61207457186214 581.9826577064816 227.0948406676783H137.4739865597225V309.974094949057H515.9655321916323L466.6638846737481 283.58616952091916Q467.53457619770217 329.51723390418385 447.7630067201387 364.64226100151745Q427.99143724257533 399.76728809885105 393.6250270973336 419.66816605246044Q359.2586169520919 439.5690440060698 313.844786473011 439.5690440060698Q268.4309559939302 439.5690440060698 233.56454584868848 419.66816605246044Q198.69813570344678 399.76728809885105 179.4265662258834 364.2069152395404Q160.15499674831997 328.6465423802298 160.15499674831997 280.974094949057V260.9051593323217Q160.15499674831997 212.84478647301106 181.99122046390636 176.0904508996315Q203.82744417949272 139.3361153262519 243.7585085627574 118.99989161066551Q283.6895729460221 98.66366789507913 336.3620203771949 98.66366789507913Q381.32755256882723 98.66366789507913 417.1465423802298 113.01712551484934Q452.96553219163235 127.37058313461955 480.8362237155864 156.94818989811404L548.3361153262518 79.74138304790809Q511.81888142206805 37.61207457186213 457.2369932798613 15.54742033383915Q402.65510513765446 -6.517233904183828 332.844786473011 -6.517233904183828Z"/>
+<path transform="translate(1332.645,185) scale(0.214286,-0.214286)" d="M82.21558638629959 0V533.9396271406894H201.43951875135485V387.2241491437243L187.3361153262519 429.87069152395406Q210.59473227834383 484.2930847604596 262.54731194450466 512.3749729026664Q314.4998916106655 540.4568610448732 390.6292000867115 540.4568610448732V421.43117277259915Q382.5947322783438 422.56048124864515 375.88353566009107 423.1251354866681Q369.1723390418383 423.6897897246911 362.39648818556253 423.6897897246911Q291.37058313461955 423.6897897246911 249.29297637112506 382.3880338174723Q207.2153696076306 341.0862779102536 207.2153696076306 258.67244743117277V0Z"/>
+</g>
+</svg>
+      <span class="label">Field note · August 2026</span>
+    </div>
+    <h1 class="stencil">Seven problems every small operator has, and what an engineer can actually do about each one.</h1>
+    <p class="standfirst">
+      This list did not come from a market study. It came from reading what operators
+      running shallow, marginal, conventional wells wrote about their own fields this
+      summer — the cards they pulled, the bearings they lost, the parts they could not
+      find. <strong>Every problem below is quoted, not imagined.</strong>
+    </p>
+  </header>
+
+  <section>
+    <h2>Where this came from</h2>
+    <p class="lede">
+      We work rod-lift and production engineering as software: physics that runs on
+      your own well data, not a dashboard subscription. Last month one of our analyses
+      was posted publicly and corrected within hours by a rod-lift specialist who
+      teaches a dyno class. He was right. We fixed it, and we changed how we work —
+      nothing goes out now without the evidence attached to it.
+    </p>
+    <p>
+      So this is a field note, not a pitch deck. Where we can do something, it says so
+      plainly. Where we cannot, it says that too.
+    </p>
+  </section>
+
+  <section>
+    <h2>What we heard</h2>
+    <div class="entries">
+
+      <article class="entry">
+        <div class="entry-key">
+          <span class="id">SO-LIFT-001</span>
+          <span class="cat">Artificial lift</span>
+        </div>
+        <div class="entry-body">
+          <h3>The well pumps off in five minutes and there is no controller on it</h3>
+          <blockquote>
+            "What happened to my pump card over the course of this 5 minutes?"
+            <cite>Gulf Coast operator, on a unit with no pump-off controller</cite>
+          </blockquote>
+          <div class="answer">
+            <span class="head">The gap</span>
+            <p>
+              Good advice came back fast: slow the unit, or set a shutdown below
+              65–75% fillage. Both assume a controller the well does not have — and
+              neither is tuned to <em>this</em> well. The setpoint that is right for
+              your pump, your rod string and your inflow is a calculation, not a
+              rule of thumb.
+            </p>
+          </div>
+          <div class="answer">
+            <span class="head">What we do</span>
+            <p>
+              Run your card sequence through a full surface-to-downhole conversion,
+              extract fillage stroke by stroke, and return a specific shutdown
+              setpoint and slow-down schedule — with the production you give up and
+              the pump life you buy, stated separately so you can decide.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-key">
+          <span class="id">SO-LIFT-002</span>
+          <span class="cat">Artificial lift</span>
+        </div>
+        <div class="entry-body">
+          <h3>Is that noise on the card real, or is it the instrument?</h3>
+          <blockquote>
+            "Could the noise in this corner be from gas in the pump decompressing…
+            or a delay in valves closing? There isn't really any noise here when the
+            pump is full."
+            <cite>Operator, reading a derived downhole card</cite>
+          </blockquote>
+          <div class="answer">
+            <span class="head">The gap</span>
+            <p>
+              On an accelerometer-based dyno, position is integrated twice from
+              acceleration, so error accumulates across a stroke — and the corner
+              right after the stroke-to-stroke discontinuity is exactly where the
+              wave equation has not settled. Some of what looks like a pump tag is
+              arithmetic. Some of it is a pump tag.
+            </p>
+          </div>
+          <div class="answer">
+            <span class="head">What we do</span>
+            <p>
+              Put an error budget on the derived card and mark which segments carry
+              enough numerical confidence to diagnose on. You stop chasing artefacts
+              and you stop dismissing real signals.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-key">
+          <span class="id">SO-MAINT-002</span>
+          <span class="cat">Maintenance</span>
+        </div>
+        <div class="entry-body">
+          <h3>The low-volume wells get no attention until a neighbour calls</h3>
+          <blockquote>
+            "This low volume well is generally at the bottom of the attention list
+            due to its low IP rate, low accumulated recovery, and low production…
+            understanding each well as an individual takes time and time is on no
+            one's side."
+            <cite>Illinois Basin operator, ~150 wellbores</cite>
+          </blockquote>
+          <div class="answer">
+            <span class="head">The gap</span>
+            <p>
+              This is not an equipment problem. One person cannot hold 150 wells in
+              their head, so the marginal ones are invisible until they fail loudly.
+              What is missing is a ranking.
+            </p>
+          </div>
+          <div class="answer">
+            <span class="head">What we do</span>
+            <p>
+              Score every well in the field on health and fillage and return one
+              ordered list: <em>drive to these five today</em>. It is the single
+              highest-leverage thing on this page, and it needs no new hardware.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-key">
+          <span class="id">SO-MAINT-001</span>
+          <span class="cat">Maintenance</span>
+        </div>
+        <div class="entry-body">
+          <h3>The walking beam left and took the saddle bearing with it</h3>
+          <blockquote>
+            "The walking beam went for a walk about and took the saddle bearing with it."
+            <cite>Illinois Basin operator</cite>
+          </blockquote>
+          <div class="answer">
+            <span class="head">What we do</span>
+            <p>
+              Torque and gearbox loading checks against the unit's actual rating, so
+              you find out which of your units is running outside its envelope
+              before the structure tells you. We will ask for the gearbox
+              designation rather than infer it from the engine — we have made that
+              mistake in public once and do not intend to repeat it.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-key">
+          <span class="id">SO-SUPPLY-001</span>
+          <span class="cat">Supply chain</span>
+        </div>
+        <div class="entry-body">
+          <h3>One missing seat nipple idles a rig day</h3>
+          <blockquote>
+            "Guide wires, deadman, rods, tubing, rod subs, tubing subs, mud anchor,
+            insert pump, seat nipple, rod boxes, tubing collars, gas anchor, barrel —
+            'word salad.'"
+            <cite>Illinois Basin operator, describing a workover</cite>
+          </blockquote>
+          <div class="answer">
+            <span class="head">The gap</span>
+            <p>
+              That list is a bill of materials, and every operator in the basin holds
+              their own partial copy of it. Dead stock on one lease, a stopped job on
+              the next. See the proposal below.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-key">
+          <span class="id">SO-CAPITAL-001</span>
+          <span class="cat">Capital</span>
+        </div>
+        <div class="entry-body">
+          <h3>"Workovers will add 30 BOPD" — will they?</h3>
+          <blockquote>
+            "Buying out an existing mortgage held by the present contract operating
+            company. They are falling short and failing at their duty of maintaining
+            and increasing production."
+            <cite>Operator seeking growth capital against ~150 wellbores</cite>
+          </blockquote>
+          <div class="answer">
+            <span class="head">What we do</span>
+            <p>
+              We are not a capital provider and will not pretend to be one. What a
+              capital partner asks for is an independent technical opinion on the
+              uplift: which wellbores, how much, and what the error bars are. That is
+              inflow-performance and field-health work, and it is exactly what we do.
+              An uplift number with error bars attached raises money that a flat
+              claim does not.
+            </p>
+          </div>
+        </div>
+      </article>
+
+      <article class="entry">
+        <div class="entry-key">
+          <span class="id">SO-REG-003</span>
+          <span class="cat">Economics</span>
+        </div>
+        <div class="entry-body">
+          <h3>Keep it, work it over, shut it in, or plug it — well by well</h3>
+          <div class="answer">
+            <span class="head">The gap</span>
+            <p>
+              Marginal-well decisions get made on gut feel, or on one field-wide
+              cost-per-barrel number, because doing it well by well is tedious.
+              And almost every version of the sum leaves the plugging bill out —
+              which quietly biases every answer toward "keep producing".
+            </p>
+          </div>
+          <div class="answer">
+            <span class="head">The thing most models get backwards</span>
+            <p>
+              Plugging cost is not <em>avoided</em> by producing. It is
+              <em>deferred</em>. So a marginal well isn't competing against zero —
+              it's competing against paying the P&amp;A bill today, and deferral
+              has real value. That is why a well can lose money every month and
+              still be worth holding, and why "shut in" is sometimes the right
+              answer when both producing and plugging are wrong.
+            </p>
+          </div>
+          <div class="answer">
+            <span class="head">What you get back</span>
+            <p>
+              For each wellbore: month-one operating cash, the oil price at which
+              it breaks even, the month it stops paying for itself, and all four
+              courses of action priced on the same basis — every one of them
+              ending with the well plugged, so the comparison isn't rigged.
+            </p>
+          </div>
+          <div class="scroller">
+            <table>
+              <thead>
+                <tr><th>Well</th><th>Month 1 cash</th><th>Breakeven</th><th>Way forward</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>8 BOPD, 30 BWPD</td><td class="num">+$9,412</td><td class="num">$18.38/bbl</td><td class="yes">Keep</td></tr>
+                <tr><td>4 BOPD, 60 BWPD</td><td class="num">+$3,154</td><td class="num">$33.76/bbl</td><td class="yes">Keep — 127 months left</td></tr>
+                <tr><td>1.5 BOPD, 90 BWPD</td><td class="num">−$1,014</td><td class="num">$91.79/bbl</td><td class="warn">Shut in</td></tr>
+                <tr><td>0.6 BOPD, 120 BWPD</td><td class="num">−$2,953</td><td class="num">$260.03/bbl</td><td class="warn">Shut in</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="fineprint">
+            Illustrative cost deck — $65 oil, $45k plugging, 12.5% royalty,
+            $0.75/bbl water — not any real operator's numbers. Note the bottom two:
+            producing them destroys value, but shutting in still beats plugging by
+            roughly $16,000 each, purely from deferring the plugging bill. That
+            $16,000 is why so much of the country's stripper fleet is still standing.
+          </p>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="panel">
+      <span class="flag">Our proposal · not yet anyone's practice</span>
+      <h3 class="stencil">Pool the spares before you pool anything else</h3>
+      <p>
+        Nobody asked us for this — we are proposing it, and we would rather be told
+        it is wrong than have you assume other operators already agreed to it.
+      </p>
+      <ul>
+        <li><strong>One canonical BOM.</strong> A single rod-lift workover parts list with real sizes and grades, maintained as data, not as a text message.</li>
+        <li><strong>A basin-level map of who holds what.</strong> You do not need to buy a seat nipple that is sitting eleven miles away.</li>
+        <li><strong>Shared reorder points.</strong> The group carries one buffer instead of five partial ones — the same insurance for a fraction of the tied-up cash.</li>
+        <li><strong>Group price discovery.</strong> Individually you have no leverage on service pricing. Ten operators comparing the same line items do.</li>
+      </ul>
+      <p>
+        We would start it with the parts list and the map, because those are cheap
+        and provable. Everything after that is a conversation among operators, not
+        something an engineering firm should run.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>What we do and don't do</h2>
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>Ask</th><th>Us?</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Read my dynamometer cards and tell me what to change</td>
+            <td class="yes">Yes</td>
+            <td>Surface-to-downhole conversion, fillage, failure-mode diagnosis, setpoints</td>
+          </tr>
+          <tr>
+            <td>Rank my field so I know where to drive tomorrow</td>
+            <td class="yes">Yes</td>
+            <td>Field-health scoring across every well you send</td>
+          </tr>
+          <tr>
+            <td>Check whether my unit is overloaded</td>
+            <td class="yes">Yes</td>
+            <td>Torque balance and gearbox loading against the unit's rating</td>
+          </tr>
+          <tr>
+            <td>Independent technical review for a lender or partner</td>
+            <td class="yes">Yes</td>
+            <td>Inflow modelling and uplift estimates, with stated error bars</td>
+          </tr>
+          <tr>
+            <td>Tell me whether a well is worth keeping, working over, shutting in, or plugging</td>
+            <td class="yes">Yes</td>
+            <td>Well-by-well cash flow with the plugging bill carried in every case</td>
+          </tr>
+          <tr>
+            <td>Find me money</td>
+            <td class="no">No</td>
+            <td>We are engineers, not a placement agent</td>
+          </tr>
+          <tr>
+            <td>Tell me what my bonding obligation is, or how to satisfy it</td>
+            <td class="no">No</td>
+            <td>That is legal and regulatory advice. We model the cost; your counsel handles the obligation</td>
+          </tr>
+          <tr>
+            <td>Identify corrosion from a photograph</td>
+            <td class="no">Not alone</td>
+            <td>Photo ID is a judgement call — we bring the rate model behind it, not the verdict</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Starting costs you nothing but an export</h2>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><p>Send one well's card file — whatever your dyno or handheld exports. No install, no telemetry, no account.</p></div>
+      <div class="step"><span class="n">2</span><p>You get back the downhole card, fillage stroke by stroke, the diagnosis with a confidence figure, and the parts of the card we do <em>not</em> trust.</p></div>
+      <div class="step"><span class="n">3</span><p>If it is useful, send the field. If it is not, you have lost an email and we have learned something about your wells.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Achanta AceEngineer Inc., DBA AceEngineer · vamsee.achanta@aceengineer.com</p>
+    <p>
+      Quotes are from public discussions in an energy-industry community, reproduced
+      without attribution by name. Problem IDs refer to our internal catalogue so
+      that any claim on this page can be traced back to the post it came from.
+    </p>
+  </footer>
+
+</div>

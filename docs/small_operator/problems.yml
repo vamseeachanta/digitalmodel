@@ -1,0 +1,625 @@
+# Small-operator problem catalogue
+#
+# Source-of-truth list of problems that individual small / marginal operators
+# actually voiced, captured from Collide (app.collide.io) plus public research.
+# Companion to docs/collide_pe/ (that one solves the "PE Problem of the Day"
+# quiz series; this one solves *operators' real field problems*).
+#
+# Discipline carried over from docs/collide_pe/ and the 2026-07-27 peer-review
+# lesson: every named piece of equipment is quoted, never inferred; anything we
+# deduced is tagged `inference: true`; nothing goes into the brochure until the
+# `evidence` field points at something we actually read.
+
+meta:
+  captured: "2026-08-05"
+  sources:
+    - name: Collide — Energy Infrastructure Community
+      url: https://app.collide.io
+      note: login-gated SPA; read via browser tools, WebFetch returns 403
+    - name: public research
+      note: see `research_refs` at the bottom
+  categories: [lift, maintenance, supply_chain, data, capital, regulatory]
+  status_values: [open, analysed, published, answered]
+
+# ---------------------------------------------------------------------------
+# The operators
+# ---------------------------------------------------------------------------
+
+operators:
+  - handle: op-a
+    display: OP-A (OP-A)
+    company: a Gulf Coast operator
+    location: Gulf Coast
+    role: C-suite/VP/Owner, Engineering
+    profile: https://app.collide.io/profile/op-a
+    followers_at_capture: 34
+    note: >
+      Highly active, posts real field data (dynacards, corrosion, tubing wear)
+      and gets practitioner answers within hours. Already the counterparty in
+      the 2026-07-27 "Dynamometer Discussions" analysis.
+
+  - handle: op-b
+    display: OP-B
+    company: an Illinois Basin operator
+    location: Midwest (operations in Illinois Basin, Indiana)
+    role: President / C-suite, Operations
+    profile: https://app.collide.io/profile/op-b
+    followers_at_capture: 2
+    scale_quoted: "152 wellbores, >3,000 acres HBP, Posey & Vanderburgh counties, Indiana"
+    note: >
+      Textbook individual small operator: shallow conventional stripper wells,
+      hands-on maintenance, seeking growth capital, currently under a contract
+      operating company he says is underperforming.
+
+# ---------------------------------------------------------------------------
+# Problems
+# ---------------------------------------------------------------------------
+
+problems:
+
+  # --- A. Artificial lift & well performance -------------------------------
+
+  - id: so-lift-001
+    category: lift
+    status: open
+    title: "Pump-off progression over 5 minutes with no pump-off controller"
+    operator: op-a
+    evidence:
+      post: "Pump cards - dynamometer - what happened?!"
+      url: https://app.collide.io/posts/pump-cards-dynamometer-what-happened
+      posted: "2026-08-05"
+      engagement: {comments: 22, likes: 13}
+      operator_quotes:
+        - "What happened to my pump card over the course of this 5 minutes?!"
+        - "Not on a controller yet"
+        - "This is on a C66 and we are designing a clutch kick out... Actually a controls vendor already did everything On their end. Just waiting on me to go install it."
+        - "One of the fun things about these wells is they don't pump off slowly... when they go for it, they..."
+    community_answer_summary: >
+      an experienced pumper: full barrel -> near-empty barrel across the 5 min; rectangular
+      cards = full pump, "pot with a handle" cards = incomplete fillage; remedy is
+      slow the unit or set a controller shutdown below a fillage threshold, "usually
+      between 65 and 75%". another practitioner and another practitioner independently said
+      slow the unit / reduce runtime. another practitioner also read fluid pound on the downhole card.
+    what_is_still_unanswered:
+      - "What fillage setpoint and what slow-down schedule for THIS well, from its own cards?"
+      - "Does a clutch kick-out (mechanical) get the same result as a fillage-based POC, and where does it differ?"
+      - "What is the production loss vs. rod/pump life gained at each setpoint?"
+    our_capability:
+      module: src/digitalmodel/marine_ops/artificial_lift/dynacard/
+      functions:
+        - "solver.py — Everitt-Jennings surface->downhole card conversion (the only solver in the repo that genuinely does the conversion; see issue #1857)"
+        - "solver.py alarm/setpoint block — emits setpoints + reference"
+        - "models.py PumpFillageAnalysis — fillage percent, gross stroke"
+        - "diagnostics.py — failure-mode classification with confidence"
+        - "lift_capacity.py, power_consumption.py, torque_balance.py, gear_box_loading.py"
+      example: docs/small_operator/examples/pumpoff_diagnosis.py
+      deliverable: "Per-well fillage-setpoint study: card sequence in, recommended shutdown fillage + expected runtime/production delta out."
+    defect_found_and_FIXED_2026_08_05:
+      severity: "high — failed toward 'healthy', silently"
+      what: >
+        Reported pump fillage falls monotonically as the barrel empties (88% full-pump
+        anchor, then 64 -> 39 -> 19% through the pounding range) and then JUMPS to
+        99.590% and pins there for every more-severe condition.
+      root_cause: >
+        calculate_corners() (dynacard/corners.py) picks a bottom-right corner index on
+        the wrong branch of the card once pounding is severe. calculate_pump_fillage()
+        then computes net_stroke from that index, net collapses onto gross, and
+        fillage = ~100%.
+      reproducer: "docs/small_operator/examples/pumpoff_diagnosis.py — prints ANALYSIS LIMIT FOUND"
+      why_uncovered: >
+        The artificial_lift suite (997 tests, all passing) asserts only
+        `pump_fillage > 0` and `0 <= fillage <= 100`. 99.590 satisfies both. No test
+        pins monotonicity of fillage against pump-off severity.
+      operational_consequence: >
+        Severe fast pump-off is exactly the regime a POC setpoint exists to catch, and
+        exactly where this reads "full". OP-A stated his wells "don't pump off slowly...
+        when they go for it, they go". DO NOT SHIP A SETPOINT until this is fixed.
+      status: "FIXED 2026-08-05."
+      fix:
+        where: src/digitalmodel/marine_ops/artificial_lift/dynacard/corners.py
+        what: >
+          CornerDetector._reject_untransferred_knee(). A BR corner is rejected
+          unless at least 35% of the downstroke's available load drop has
+          occurred there, and the search is then repeated over the part of the
+          downstroke where load genuinely has transferred.
+        threshold_is_measured_not_guessed:
+          vendor_wells_realise: [0.675, 0.814, 0.863, 0.866]
+          well_formed_synthetic: 1.000
+          failure_mode_realises: 0.000
+          chosen: 0.35
+          note: "Sits in the empty band; cannot fire on any card we have evidence for."
+        tests: tests/marine_ops/artificial_lift/dynacard/test_corners.py::TestBottomRightCornerUnderSeverePumpOff
+        verification:
+          - "Sweep now monotonic: 88.1 -> 64.2 -> 38.9 -> 18.8 -> 16.4 -> 11.9 (was 18.8 -> 99.6 -> 99.6)"
+          - "Vendor agreement preserved: wells 2/3/4/5 within +0.13, +0.61, +0.85, -0.01 fillage points"
+          - "Full suite 1132 passed"
+      rejected_approach:
+        what: "Normalising remaining_load over the downstroke's own load span instead of the whole card's."
+        why_rejected: >
+          Cleaner in principle and it did fix the pounded case — but it broke
+          vendor well 4 by 17.5 fillage points. On real cards the load MINIMUM on
+          the downstroke sits well past the transfer point because of rod
+          undershoot (well 2: transfer at 94% position, minimum at 33%), so
+          normalising to it penalises the true corner. Recorded because it is the
+          obvious fix and someone will try it again.
+    notes:
+      - inference: true
+        text: >
+          "C66" is quoted verbatim from OP-A. Do NOT restate it as a gearbox
+          rating — the 2026-07-27 review established C-66 is an Arrow gas ENGINE
+          designation. Ask OP-A what the gearbox is before any torque work.
+
+  - id: so-lift-002
+    category: lift
+    status: open
+    title: "Noise in the bottom-left corner of the downhole card — real signal or processing artefact?"
+    operator: op-a
+    evidence:
+      post: "Pump cards - dynamometer - what happened?!"
+      url: https://app.collide.io/posts/pump-cards-dynamometer-what-happened
+      operator_quotes:
+        - "could the noise in this corner be from gas In The pump decompressing and giving a little lift? Or a delay in valves closing?"
+        - "There isn't really any noise here when the pump is full!"
+    community_answer_summary: >
+      a rod-lift specialist (a vendor site): if it is an accelerometer-based dyno, do not
+      over-read that corner — position is integrated twice from acceleration, so
+      per-stroke error accumulates and the derived pump card is especially prone to
+      that positional discontinuity; reprocess before concluding. Longer answer: could
+      be a pump tag, an echo from the pound, or a fluid-pound-induced pump tag. Later
+      correction: gas expansion IS visible, but at the TOP left, not the bottom left;
+      the bottom-left is noisy because it is right after the stroke-to-stroke
+      discontinuity, before the wave equation settles.
+      an experienced pumper: slope near fluid/plunger contact does suggest some gas interference,
+      and the shape may be a tag present only when the pump isn't full.
+    what_is_still_unanswered:
+      - "An objective test that separates accelerometer integration drift from a real pump tag, runnable on the operator's own card file."
+      - "Error budget on the derived downhole card — how much of that corner is numerically untrustworthy?"
+    our_capability:
+      module: src/digitalmodel/marine_ops/artificial_lift/dynacard/
+      functions:
+        - "feature_extraction.py, load_analysis.py — corner/segment features"
+        - "solver.py — wave-equation settling behaviour is explicit, so start-of-stroke transient can be flagged rather than interpreted"
+      prior_art: docs/collide_pe/dynacard-undulations/  # digitize.py + error budget precedent
+      deliverable: "Card-quality / trust-band report: which parts of a derived downhole card carry enough numerical confidence to diagnose on."
+    notes:
+      - inference: true
+        text: "We have not confirmed OP-A's dyno is accelerometer-based; the specialist asked and it was not answered in-thread. Ask before assuming."
+
+  - id: so-lift-003
+    category: lift
+    status: analysed
+    title: "Repeated tubing splits, never the same joint"
+    operator: op-a
+    evidence:
+      post: "Tubing Wear - Rod pump"
+      url: https://app.collide.io/posts/tubing-wear-rod-pump
+      read_on: "2026-08-05"
+      operator_quotes:
+        - "Regular holes in tubing, typically splits. Never on the same joint. No scale or corrosion issues."
+        - "Looking at tubing rotators, lined tubing, better rod guides, optimizing pump off etc etc."
+        - "Now the embarrassing question.. does J55 wear faster than L or N80??"
+    hypothesis:
+      claim: >
+        The tubing wear and the pump-off (so-lift-001) are one problem. Fluid pound
+        drives the lower rods into compression on the downstroke; compression
+        buckles them; buckled rods bear on tubing. "Never the same joint" fits a
+        neutral point that MOVES with fillage rather than a fixed defect.
+      status: "HYPOTHESIS — must be labelled as one in all outreach. Not yet tested."
+      cheap_test: "Ask for the depths of the last several splits and correlate against the computed neutral point."
+      if_false: "Look at side load from wellbore deviation instead."
+    j55_answer: >
+      Directionally yes — wear resistance tracks hardness and J55 is the softest of
+      the three. But grade is second-order: side load is the driver, and no grade
+      survives a buckled rod indefinitely. Do not give a wear-rate ratio; we have
+      no data to support a number.
+    our_capability:
+      module: src/digitalmodel/well/tubulars/sucker_rod.py
+      deliverable: "Side load + neutral-point calculation from card-derived loads, correlated against reported split depths."
+
+  - id: so-lift-004
+    category: lift
+    status: open
+    title: "Under-pressured gas/condensate wildcat — analogue hunt, not a lift problem"
+    operator: op-a
+    evidence:
+      post: "Under pressured/ Low BHP Gas Fields"
+      url: https://app.collide.io/posts/under-pressured-low-bhp-gas-fields
+      read_on: "2026-08-05"
+      operator_quotes:
+        - "Can anyone give me examples of Natural Gas/ Condensate Fields that have produced from very low virgin Bottom Hole Pressure?"
+        - "I'm looking at a wildcat field that has a massive petroleum system in place, but is lacking reservoir pressure. Lots of gas and condensate. No pressure."
+        - "Not even normally pressured, its actually under pressured. It has me scratching my head."
+    reclassified: >
+      Filed under `lift` from the title alone; on reading, it is not an artificial-lift
+      question at all. He is asking for FIELD ANALOGUES for an underpressured
+      gas-condensate wildcat — a basin-analysis / petroleum-systems question.
+    our_position: >
+      Honest answer: analogue selection is not a strength of ours and we should not
+      bluff it. Underpressure mechanisms (uplift and erosion, gas expansion during
+      exhumation, palaeo-pressure loss, thermal contraction) are well documented, but
+      naming specific producing analogues requires basin data we do not hold.
+      Better move: point at the mechanism list and say plainly that the analogue
+      search is someone else's expertise. Do not include this in the brochure.
+    status_note: "Do not answer this one unless we can cite specific fields with sources."
+
+  - id: so-lift-005
+    category: lift
+    status: analysed
+    title: "Undulation on the top end of the card (the original thread)"
+    operator: op-a
+    evidence:
+      post: "Dynamometer Discussions"
+      url: https://app.collide.io/posts/dynamometer-discussions
+      analysed_on: "2026-07-27"
+      re_read_on: "2026-08-05"
+      operator_question: "Why is there so much undulation on the top end of the card?"
+      well_data_stated_verbatim:
+        stroke_at_surface_in: 41
+        pump_depth_ft: 4300
+        spm: 6.4
+        prime_mover: "C-66"    # HIS WORD: "prime mover". An ENGINE. Not a gearbox.
+        pump: '1-1/4" top hold down insert pump'
+        rod_string: "4200' of 3/4\" steel rods"   # from his in-thread comment
+        production: "23 Bbls of oil yesterday. No water"
+        casing_psi: 25
+        baird_valve_psi: 150
+      corrections_received:
+        - "a rod-lift specialist on section 3b ('Those peaks should be equally...')"
+        - "OP-A supplied the rod string, which changed the conclusions"
+      our_two_errors:
+        - >
+          Quoted a gearbox rating derived from "C-66". OP-A's own post calls it the
+          PRIME MOVER — an engine designation carrying no gearbox rating. The
+          information needed to avoid this error was inside the post we were answering.
+        - "Fillage computed off surface stroke instead of plunger stroke."
+    still_owed: "A corrected re-issue, run against the raw card file rather than a digitized image."
+    still_blocked_on: "A real gearbox make/model/rating. Without it there is no torque or counterbalance work."
+    lesson: >
+      The C-66 error was avoidable by reading the operator's own words. Hence the
+      STATED / ASSUMED split in examples/pumpoff_diagnosis.py.
+
+  # --- B. Surface equipment failure & maintenance --------------------------
+
+  - id: so-maint-001
+    category: maintenance
+    status: open
+    title: "Walking beam and saddle bearing failure"
+    operator: op-b
+    evidence:
+      post: "The walking beam went for a walk about and took the saddle bearing with it."
+      posted: "~2026-08-01 (4 days before capture)"
+      url_hint: https://app.collide.io/profile/op-b
+    what_is_still_unanswered:
+      - "Was there a card or vibration precursor that would have caught it? On a well with no monitoring, what is the cheapest precursor?"
+      - "Saddle-bearing inspection interval that is defensible for a stripper well economics case."
+    our_capability:
+      module: src/digitalmodel/marine_ops/artificial_lift/dynacard/torque_balance.py, gear_box_loading.py
+      deliverable: "Structural-load screening for beam units: counterbalance/torque check that flags units running outside their rating."
+
+  - id: so-maint-002
+    category: maintenance
+    status: open
+    title: "Low-volume wells sit at the bottom of the attention list until they fail loudly"
+    operator: op-b
+    evidence:
+      post: "This is how a pumper loses their job."
+      engagement: {comments: 14, likes: 9}
+      operator_quotes:
+        - "Getting a phone call from a landowner and mineral owner describing what sounds like WWIII going on in their field is nothing anyone likes to deal with."
+        - "This low volume well is generally at the bottom of the attention list due to its low IP rate, low accumulated recovery, and low production."
+        - "...spending and understanding of each well as individual takes time and time is on no one's side. Rust, corrosion, pipe integrit[y]..."
+    the_real_problem: >
+      This is the workload-triage problem, not an equipment problem. One person
+      cannot individually reason about 152 wellbores, so the marginal wells get
+      no attention until a neighbour calls. Ranking is the product.
+    our_capability:
+      module: src/digitalmodel/marine_ops/artificial_lift/field_health.py
+      functions:
+        - "field_health.py — ranks wells by health_status then pump_fillage; emits a per-well row"
+      example: examples/workflows/artificial-lift-field-health/
+      artefact: examples/domains/artificial_lift/field_health_dashboard.html
+      deliverable: "Daily 'which 5 of my 152 wells do I drive to today' ranking — the single highest-leverage thing on this list."
+
+  - id: so-maint-003
+    category: maintenance
+    status: open
+    title: "Rust, corrosion and pipe integrity across an old shallow field"
+    operator: [op-b, op-a]
+    evidence:
+      posts:
+        - title: "This is how a pumper loses their job."
+          operator: op-b
+          note: "quoted under so-maint-002"
+        - title: "Who can name the corrosion?"
+          operator: op-a
+          note: "title captured from profile; body not yet read"
+    our_capability:
+      modules:
+        - src/digitalmodel/corrosion/galvanic_screening.py
+        - src/digitalmodel/production_chemistry/
+        - src/digitalmodel/asset_integrity/ (tests/asset_integrity/test_corroded_pipe.py)
+      caution: "Corrosion TYPE identification from a photo is a judgement call; our value is the screening/rate model behind it, not the photo ID."
+
+  - id: so-maint-004
+    category: maintenance
+    status: open
+    title: "Casing pressure as a free daily diagnostic"
+    operator: op-b
+    evidence:
+      post: "Casing pressure says a lot about a well and I checked the backside on this beast before doing a batc[h]..."
+      operator_quotes:
+        - "It always was faint, almost dead, never on a screaming vacuum, so I cracked the chemical pot a bit and lit it up. There was about a 4 inch flame.... pretty much zero casing pressure."
+        - "Reservoirs deplete but reserves remain."
+    the_opportunity: >
+      Casing pressure is the one measurement a small operator already takes for free
+      on every visit. Turning that into a trended, interpreted signal costs nothing
+      in hardware. Strong candidate for the cheapest possible "monitoring" offer.
+
+  # --- C. Supply chain & procurement (the pooling idea) --------------------
+
+  - id: so-supply-001
+    category: supply_chain
+    status: open
+    title: "Every small operator carries its own spares list, and nobody pools them"
+    operator: op-b
+    evidence:
+      post: 'Guide wires, deadman, rods, tubing, rod subs, tubing subs, mud anchor, insert pump, seat nipple, rod boxes, tubing collars, gas anchor, barrel, "word salad."'
+      posted: "~2026-08-04 (1 day before capture)"
+    the_real_problem: >
+      That post title IS the bill of materials for a rod-pump workover. Each
+      individual operator holds (or fails to hold) that inventory alone. A single
+      missing seat nipple or rod sub idles a rig day. Pooled spares across
+      neighbouring operators in one basin turns per-operator dead stock into a
+      shared buffer.
+    pooling_thesis:
+      - "Standardise the BOM: one canonical rod-pump workover parts list with sizes/grades."
+      - "Map who holds what within a basin (Illinois Basin, Gulf Coast, etc.)."
+      - "Shared reorder points, so the group holds one buffer instead of N partial ones."
+      - "Group price discovery — small operators individually have no leverage on service/vendor pricing."
+    status_note: >
+      Pooling is OUR proposal, not something an operator asked for. Label it as a
+      proposal in any outreach; do not present it as community consensus.
+      inference: true
+    our_capability:
+      note: >
+        This is not a physics problem — it is a catalogue + reorder-point problem.
+        Closest existing substrate: the artificial-lift reference catalogue
+        (src/digitalmodel/marine_ops/artificial_lift/reference_catalog.py,
+        _reference_catalog_schema.py) which already models equipment catalogues.
+      deliverable: "Canonical rod-lift workover BOM as a data file + a shared-inventory reorder model."
+
+  - id: so-supply-002
+    category: supply_chain
+    status: open
+    title: "Workover rig and service access for the smallest operators"
+    operator: null
+    evidence:
+      research: true
+      note: >
+        Not directly quoted on Collide yet. Derived from the LOE structure: major
+        workovers needing rig intervention are the lumpy cost, and small operators
+        queue behind larger ones for the same crews.
+      inference: true
+    status_note: "Needs a real operator quote before it goes in any brochure."
+
+  # --- D. Data, monitoring & software --------------------------------------
+
+  - id: so-data-001
+    category: data
+    status: open
+    title: "No pump-off controller / no SCADA on marginal wells"
+    operator: op-a
+    evidence:
+      quote: "Not on a controller yet"
+      url: https://app.collide.io/posts/pump-cards-dynamometer-what-happened
+    the_real_problem: >
+      The advice the community gives ("program your controller to shut down below
+      65-75% fillage") assumes hardware the marginal well does not have. The gap
+      between "we know what to do" and "the well has no controller" IS the small
+      operator's condition.
+    our_capability:
+      angle: >
+        Offline/periodic analysis of manually-pulled cards needs no telemetry
+        capex. The dynacard module is explicitly offline-capable.
+      deliverable: "Send us cards from a handheld survey; get back setpoints, diagnosis and a ranked action list. No installation required."
+
+  - id: so-data-002
+    category: data
+    status: analysed
+    title: "Tally app — a $500 bounty, already fully specified by the operator"
+    operator: op-a
+    evidence:
+      post: "Tally app needed"
+      url: https://app.collide.io/posts/tally-app-needed
+      read_on: "2026-08-05"
+      operator_quotes:
+        - "Manually entering tallies is really getting old!"
+        - "The first person to code me a working IPHONE app that can scan a handwritten tally sheet and export it into an excel format will get $500"
+      spec_stated_by_operator:
+        - "Works with iPhone camera as scanner"
+        - "Works offline"
+        - "Identifies and has manual correction for weird/non-legible numbers"
+        - "Output to Excel"
+      tags: [field service, software, upstream]
+    status: declined
+    decision_2026_08_05: >
+      DECLINED. Not the shape of work we take.
+    reasoning: >
+      A custom iPhone app is a one-off build with an indefinite maintenance tail —
+      iOS releases, camera APIs, handwriting models, and a support burden of exactly
+      one user. Our business is repeatable, sustainable engineering: the same physics
+      applied to the next operator's cards at near-zero marginal cost. A bespoke app
+      is the opposite shape, and taking it would train the relationship toward
+      custom software instead of engineering.
+    tempting_because: >
+      Recorded so the reasoning is not re-litigated: a named operator wrote the spec
+      himself, attached a price, and made it a public race. It is genuinely the
+      smallest and most concrete item in the catalogue. That is exactly why it needed
+      a decision rather than drift.
+    removed_from:
+      - "docs/small_operator/dynacard-matrix.html (panel deleted 2026-08-05)"
+      - "docs/small_operator/outreach/nudge-emails.md (offer removed; do-not-mention note added)"
+    if_he_raises_it: "Say plainly it is not the kind of work we take, and point him at someone who builds apps."
+
+  # --- E. Capital & finance -------------------------------------------------
+
+  - id: so-capital-001
+    category: capital
+    status: open
+    title: "Growth capital for a 152-wellbore Illinois Basin operator"
+    operator: op-b
+    evidence:
+      posts:
+        - title: "I'm trying to find an investor for an Illinois Basin operator"
+          posted: "~2026-07-30 (6 days before capture)"
+          engagement: {comments: 15, likes: 15}
+        - title: "Capital partner for an Illinois Basin operator"
+          posted: "2026-08-05"
+      operator_quotes:
+        - "I'm looking for $6M - $10M over 5 years and to split the margin of the net income of the company."
+        - "We are seeking $6,300,000 in growth capital"
+        - "Buying out an existing mortgage held by the present contract operating company. They are falling short and failing at their duty of maintaining and increasing production."
+        - "Workovers and compliance improvements to boost production by 30 BOPD"
+      phases_quoted:
+        - {phase: "Immediate stabilization", amount_usd: 1600000}
+        - {phase: "Growth mode", amount_usd: 2400000, target: "150-200 BOPD", revenue_claim: "$3,000,000/yr at $60/bbl"}
+        - {phase: "Full-scale expansion", amount_usd: 2300000, target: "200+ BOPD", revenue_claim: "$4,000,000/yr at $70/bbl"}
+    our_position: >
+      We are NOT a capital provider and must not present as one. What we can
+      credibly offer is the technical underwriting a capital partner asks for:
+      does "+30 BOPD from workovers" survive an independent look at the wells?
+      That is exactly a field-health + nodal screening job.
+    our_capability:
+      modules: [production_engineering/ipr_models.py, production_engineering/nodal_solver.py, marine_ops/artificial_lift/field_health.py, reservoir/volumetrics]
+      deliverable: "Independent production-uplift review: rank the 152 wellbores, size the realistic uplift, state the error bars."
+    caution: "Do not restate his BOPD or revenue figures as ours. They are his claims; our job would be to test them."
+
+  # --- F. Regulatory, bonding & P&A liability ------------------------------
+
+  - id: so-reg-001
+    category: regulatory
+    status: open
+    title: "Bonding requirement increases threaten operators at this scale"
+    operator: null
+    evidence:
+      research: true
+      findings:
+        - "BLM statewide bond moving from $25,000 to $500,000; compliance deadline extended from 2026-06-22 to 2027-06-27 [verify exact date before use]."
+        - "Decommissioning ~177,000 stripper wells in the Ohio River Valley estimated at $5-16 billion against under $40 million of total bonding coverage."
+        - "California average well retirement cost cited around $86,000 each."
+      refs: [orvi, blm-bonding, cfi-orphan]
+    status_note: >
+      Numbers are from secondary reporting, not primary sources. VERIFY EACH ONE
+      against the rule text / state agency before it appears in anything we send.
+      OP-B operates in Indiana, OP-A in Texas — neither is directly governed by
+      the federal statewide-bond rule unless they hold federal leases. Check first.
+    our_position: >
+      Out of our lane as advice. In our lane as the reason the technical work
+      matters: production per dollar of LOE is what keeps a well out of the
+      orphan pipeline.
+
+  - id: so-reg-003
+    category: regulatory
+    status: analysed
+    title: "Well-by-well economics for the marginal-well decision, with P&A liability carried"
+    operator: [op-b, op-a]
+    evidence:
+      derived_from: [so-reg-001, so-capital-001, so-maint-002]
+      note: >
+        Not a single quoted post — it is the question underneath the bonding
+        thread, the investor thread and the attention-list thread. An operator
+        with 152 wellbores facing a rising bonding regime needs to know, well by
+        well: keep, work over, shut in, or plug.
+    the_real_problem: >
+      Marginal-well decisions get made on gut feel or on a single field-wide
+      LOE-per-barrel number, because per-well economics is tedious. Meanwhile the
+      P&A liability is usually left out of the comparison entirely, which
+      systematically biases the answer toward "keep producing".
+    the_insight_that_makes_it_worth_doing: >
+      Plugging cost is NOT avoided by producing — it is DEFERRED. So a marginal
+      well is not competing against zero, it is competing against paying the P&A
+      bill today. Deferral has real time value. That is why wells that lose money
+      every month can still rationally stay online, and it is also why a well can
+      be worth shutting in rather than either producing OR plugging. Any model
+      that omits P&A from the "keep" branch gets this backwards.
+    our_capability:
+      module: src/digitalmodel/production_engineering/marginal_well_economics.py
+      status: "BUILT 2026-08-05 — 34/34 tests passing"
+      tests: tests/production_engineering/test_marginal_well_economics.py
+      functions:
+        - "evaluate_well() — scores KEEP / WORKOVER / SHUT_IN / PLUG_NOW on one comparable basis (every branch ends with the well plugged)"
+        - "economic_limit_month() — first month net operating cash goes negative"
+        - "price_breakeven() — benchmark oil price at which month-1 cash is zero"
+        - "monthly_rate() — Arps exponential/hyperbolic decline"
+      inputs_modelled:
+        - "fixed opex, variable opex per bbl oil, water disposal per bbl"
+        - "annual carry (bond premium, insurance, ad-valorem, reporting) — charged whether or not the well produces"
+        - "shut-in / idle-well holding cost"
+        - "plugging cost, and bond release as a separate optional inflow"
+        - "royalty, severance tax, working interest, price differential"
+        - "workover cost / uplift / success probability (probability scales the uplift, not the cost — a failed job still gets invoiced)"
+      worked_example_2026_08_05:
+        deck: "$65/bbl benchmark, $5 differential, 12.5% royalty, 4.6% severance, $900/mo fixed, $4/bbl oil, $0.75/bbl water, $1,800/yr carry, $45k plugging, 8%/yr decline, 10% discount"
+        results:
+          - {rate_bopd: 8.0, water_bwpd: 30, month1_cash_usd: 9412, breakeven_usd_bbl: 18.38, decision: KEEP}
+          - {rate_bopd: 4.0, water_bwpd: 60, month1_cash_usd: 3154, breakeven_usd_bbl: 33.76, econ_limit_months: 127, decision: KEEP}
+          - {rate_bopd: 1.5, water_bwpd: 90, month1_cash_usd: -1014, breakeven_usd_bbl: 91.79, decision: SHUT_IN}
+          - {rate_bopd: 0.6, water_bwpd: 120, month1_cash_usd: -2953, breakeven_usd_bbl: 260.03, decision: SHUT_IN}
+        reading: >
+          The two marginal wells need $92 and $260 oil to break even on operating
+          cash, so producing them destroys value — but shutting in still beats
+          plugging by about $16k each, purely from deferring the $45k P&A bill.
+          That $16k is the number that explains the entire US stripper-well fleet.
+        caveat: "Illustrative cost deck, NOT a real operator's numbers. Every input must be replaced with the operator's own before any decision."
+    defect_found_and_fixed:
+      what: >
+        First implementation reported KEEP for a well whose economic limit was
+        month 1 — i.e. a well with zero cash-positive months — because deferring
+        the P&A bill by a single month scores fractionally better than plugging
+        today. A discounting artefact presented as a recommendation.
+      fix: "KEEP is withdrawn as an option when no month is cash-positive; a warning says so. Regression test pins it."
+    honest_limits:
+      - "Screening economics. Not a reserve report, not tax advice, not legal advice."
+      - "Deterministic prices. Use price_breakeven() rather than guessing a price deck."
+      - "Bond refundability is a REGULATORY question — the module defaults bond_release to zero and warns if you set it."
+      - "Shut-in branch evaluates only the horizon endpoint. That is provably sufficient for a constant carry (the NPV is monotonic in plug date, so the optimum is at an endpoint) but NOT for a time-varying carry — e.g. a bonding regime that steps up in 2027."
+    follow_on:
+      - "Multi-well roll-up: run all 152 wellbores, rank by NPV-at-risk, and show the fleet-level plugging liability against the bond posted."
+      - "Step-change carry: model a bonding increase at a known future date, which breaks the endpoint shortcut above and needs a search over plug dates."
+
+  - id: so-reg-002
+    category: regulatory
+    status: open
+    title: "Contract-operator underperformance and regulatory compliance backlog"
+    operator: op-b
+    evidence:
+      quote: "Addressing regulatory issues and strengthening operational stability."
+      note: "From the investor post; the compliance backlog is stated as a use of funds."
+
+# ---------------------------------------------------------------------------
+# Research references (secondary — verify before citing publicly)
+# ---------------------------------------------------------------------------
+
+research_refs:
+  orvi:
+    title: "Stayin' Alive: The Last Days of Stripper Wells in the Ohio River Valley"
+    url: https://ohiorivervalleyinstitute.org/stayin-alive/
+  blm-bonding:
+    title: "New Plugging and Abandonment Bonding Requirements: What Operators Need to Know"
+    url: https://www.berisintl.com/new-plugging-and-abandonment-bonding-requirements-what-operators-need-to-know
+  cfi-orphan:
+    title: "What Are Orphan Wells?"
+    url: https://coloradofiscal.org/orphan-wells/
+  texas-tribune:
+    title: "Low-producing oil wells cause headaches for Texas landowners"
+    url: https://www.texastribune.org/2026/04/20/texas-oil-wells-low-producing-railroad-commission-pollution/
+  crudelife:
+    title: "Stripping the Last Drops: The Evolution, Challenges, and Future of Stripper Wells in the U.S."
+    url: https://www.thecrudelife.com/2025/08/26/stripping-the-last-drops-the-evolution-challenges-and-future-of-stripper-wells-in-the-u-s/
+  amplified:
+    title: "How to Increase Marginal Well Production Without Increasing Costs"
+    url: https://amplified.industries/resources/blogs/how-to-increase-production-without-increasing-costs
+    note: "a controls vendor is the vendor OP-A named for his clutch kick-out. Treat as an adjacent player, not a neutral source."
+  loe-primer:
+    title: "What is LOE (Lease Operating Expense) in oil and gas?"
+    url: https://www.kingdomexploration.com/?page=faq&slug=loe-lease-operating-expense
