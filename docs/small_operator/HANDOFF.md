@@ -1,6 +1,11 @@
-# HANDOFF — small-operator program (2026-08-05 → 08)
+# HANDOFF — small-operator program (2026-08-05 → 09)
 
 Exit snapshot. Read the **Do not repeat** section before touching outreach.
+
+**Status: PAUSED. Outreach stopped, nothing queued to send.**
+Start with [`GROUNDING.md`](GROUNDING.md) — it says what this program can and
+cannot currently defend, and why two published figures were withdrawn. Read it
+before writing any number down, and before contacting anyone.
 
 **Split completed 2026-08-09.** This directory is now the **generic, public
 half**: physics, reusable analysis, anonymised brochure. Operators appear as
