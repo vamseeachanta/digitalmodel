@@ -6,6 +6,23 @@
 What SPM would stop this well pounding? — from stated data alone
 ================================================================
 
+.. warning::
+
+   **SUPERSEDED IN PART, 2026-08-09. Do not quote the efficiency or the SPM
+   figure from this script.**
+
+   This module hand-rolls closed-form approximations that
+   ``dynacard.rod_pump`` (API RP 11L) already implements properly, and it was
+   missing the tubing-pressure term in the fluid load. Worse, it reports a
+   volumetric efficiency, which ``rod_pump.analyse()`` deliberately returns as
+   ``None`` because efficiency is undetermined without **runtime** and **Bo** —
+   surface barrels are not reservoir barrels, and a cycling unit's duty cycle
+   looks exactly like low fillage.
+
+   Kept as the worked derivation, because seeing the arithmetic is useful. For
+   any number that leaves this repo, use ``rod_pump.analyse()``. See
+   ``docs/small_operator/GROUNDING.md``.
+
 A community thread told the operator, correctly, that his well is pumping off
 and that the fix is to slow the unit or set a shutdown. Nobody gave him a
 **number**. This does, using only figures he posted publicly, so every step can

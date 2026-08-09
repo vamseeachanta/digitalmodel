@@ -112,11 +112,11 @@ what makes it postable — he can check it with a calculator.
 
 | Finding | Value |
 |---|---|
-| Elastic rod stretch | 7.4 in of a 41 in stroke never reaches the plunger |
-| Plunger stroke | 33.6 in, not 41 in |
-| Pump capacity at 6.4 SPM | 39.2 bbl/d full |
-| **Implied fillage** | **~59%** against 23 bbl/d reported |
-| **SPM to lift the same barrels full** | **~4.0** vs 6.4 today |
+| Elastic rod stretch | ~7.7 in of a 41 in stroke never reaches the plunger |
+| Plunger stroke | 33.3 in, not 41 in |
+| Pump displacement at 6.4 SPM | **38.8 bbl/d** (`rod_pump`, RP 11L). The 39.2 in the scripts omitted the tubing-pressure term. |
+| ~~Implied fillage ~59%~~ | **WITHDRAWN 2026-08-09** — undetermined without runtime and Bo; `rod_pump.analyse()` returns `None` for exactly this reason |
+| ~~SPM to lift the same barrels full ~4.0~~ | **WITHDRAWN** — rests on the efficiency figure above and on 23 bbl/d being inflow-limited, which needs a fluid-level shot |
 | Rod Goodman utilisation | 51% — string has margin, so tubing damage is side-load |
 | Compression zone at 59% fillage | ~500 ft → wear should cluster **below ~3,800 ft** |
 | Worst pound | **~50% fillage, not the emptiest barrel** — impact velocity peaks mid-stroke |
@@ -135,13 +135,24 @@ review, and only the correct one surfaced the 50%-fillage result.
 
 ---
 
+## Direction changed 2026-08-09 — no posts, ground first
+
+Outreach is **stopped**. Nothing is posted and nothing is emailed until the work
+is grounded in fundamentals, built out, and can lead with a result rather than an
+offer. The drafted Collide reply is **withdrawn, not queued** — it led with a
+number our own RP 11L module refuses to state.
+
+Read `GROUNDING.md` before resuming any of it. Short version: we hand-rolled
+physics next to a proper API RP 11L implementation in this same repo, omitted the
+tubing-pressure term, and published a volumetric efficiency that is undetermined
+without runtime and Bo. And every severe-pump-off claim rests on synthetic cards,
+because the only real validation data spans 88–98% fillage.
+
 ## Pending — needs a decision
 
-1. **Collide reply to OP-A's pump-off thread — drafted, NOT posted.** Full text
-   in the session; the analysis behind it is committed. This is the highest-value
-   pending item and the right channel. Open question: post the SPM number and the
-   wear-depth prediction only, or include the Goodman and casing analysis too
-   (roughly doubles the length).
+1. ~~Collide reply to OP-A's pump-off thread~~ — **withdrawn 2026-08-09.** Not
+   queued, not pending: the numbers it led with are not defensible yet. Rework
+   only after `GROUNDING.md` steps 1–4.
 2. **The public/private split is done** — see the top of this file. If a new
    artefact names anyone, it belongs in the private repo, not here.
 3. **The per-client card review names OP-A** and now lives only in the private repo. It goes to him or to nobody.
