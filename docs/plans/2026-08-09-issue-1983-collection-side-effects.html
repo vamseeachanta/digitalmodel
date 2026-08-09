@@ -26,117 +26,152 @@
 <main>
 
 <h1>#1983 implementation plan: 30 scripts wearing a test name</h1>
-<p class="meta">Issue <a href="https://github.com/vamseeachanta/digitalmodel/issues/1983">#1983</a> &middot; branch <code>plan/1983-collection-side-effects</code> &middot; base <code>2c4a556a</code> &middot; drafted 2026-08-09 &middot; status: awaiting user approval</p>
+<p class="meta">Issue <a href="https://github.com/vamseeachanta/digitalmodel/issues/1983">#1983</a> &middot; branch <code>plan/1983-collection-side-effects</code> &middot; base <code>2c4a556a</code> &middot; revision 2, after an adversarial REJECT &middot; status: awaiting user approval</p>
 
-<div class="bad"><strong>This plan opens by withdrawing the issue's headline, which I wrote.</strong> #1983 claims that <em>"collecting <code>scripts/</code> writes a file into the repository root"</em>. That does not reproduce on main. The write is real, but it is reachable only by importing or executing the module directly — never through pytest collection, because collection aborts earlier for an unrelated reason. The stray file that prompted the issue was almost certainly produced by a delegated session running the script directly, and I attributed it to collection without testing that attribution. The reproducible defects are set out below and are a different, sharper problem.</div>
+<div class="bad"><strong>Revision 2 withdraws revision 1's withdrawal.</strong> Revision 1 opened by claiming the issue's headline was wrong — that pytest collection never writes into the repository. That claim was itself wrong, and the adversarial round proved it in one command. Collection <em>does</em> write. The issue as filed stands. Revision 1 also asserted that none of the 30 files is a test; <strong>39 of them pass</strong>, some against production APIs. Both errors came from testing one path and generalising to all paths. The corrected evidence is below, and the recommendation has changed shape as a result.</div>
 
 <h2>Goal and authorization boundary</h2>
-<p>Thirty files under <code>scripts/</code> are named <code>test_*.py</code> or <code>*_test.py</code>. None of them is a test. They are analysis and smoke scripts wearing pytest's collection prefix, and because pytest collects by importing, pointing pytest at that directory executes them.</p>
+<p>Thirty files under <code>scripts/</code> are named <code>test_*.py</code> or <code>*_test.py</code>. Most are analysis and smoke scripts wearing pytest's collection prefix — but not all, which is the finding that reshaped this plan. Because pytest collects by importing, pointing it at these files executes them.</p>
 <ul>
-  <li><strong>G1</strong> — <code>pytest scripts/</code> will fail cleanly or not at all. It will never crash the runner.</li>
-  <li><strong>G2</strong> — files that are not tests will not carry a test name. This is the root cause; everything else is mitigation.</li>
-  <li><strong>G3</strong> — a guard will make the naming property enforceable, so the class cannot silently return.</li>
+  <li><strong>G1</strong> — collection will not mutate the working tree, anywhere, including paths that are gitignored.</li>
+  <li><strong>G2</strong> — files that are not tests will not carry a test name; files that <em>are</em> tests will live in <code>tests/</code>.</li>
+  <li><strong>G3</strong> — guards will make both properties enforceable, so neither can silently regress.</li>
   <li><strong>G4</strong> — the status of <code>examples/</code>, <code>.codex/</code> and <code>.gemini/</code> will be decided rather than left ambiguous.</li>
 </ul>
-<p><strong>Boundary.</strong> This plan will not rewrite what any script <em>does</em>, will not delete scripts, and will not attempt to convert any of them into real tests. It changes names, guards and collection status only.</p>
+<p><strong>Boundary.</strong> This plan will not rewrite what any script <em>does</em> and will not delete scripts. It changes names, locations, guards and collection status only.</p>
 
 <h2>Resource intelligence summary</h2>
-<p>Measured on a clean detached checkout of <code>origin/main</code> at <code>2c4a556a</code> using the repo's canonical invocation (<code>uv run --with-editable '.[test]' python -m pytest</code>, pytest 8.4.2).</p>
+<p>Measured on a clean detached checkout of <code>origin/main</code> at <code>2c4a556a</code>, pytest 8.4.2 via <code>uv run --with-editable '.[test]'</code>. Every figure below was re-derived after the adversarial round; the ones revision 1 got wrong are marked.</p>
 
-<h3>What actually reproduces</h3>
-<table>
-  <tr><th>#</th><th>observation</th><th>status</th></tr>
-  <tr><td>1</td><td><code>scripts/test_orcaflex_loading.py:18</code> calls <code>sys.exit(1)</code> at module scope. Importing it during collection raises <code>SystemExit</code>, which pytest does not treat as a collection error — it aborts the entire run with <code>INTERNALERROR&gt; mainloop: caught unexpected SystemExit!</code></td><td><strong>Reproduces deterministically.</strong> This is the real defect.</td></tr>
-  <tr><td>2</td><td><code>pytest scripts/</code> reports <strong>75 tests collected, 8 errors</strong>. None of the 75 is a test.</td><td>Reproduces.</td></tr>
-  <tr><td>3</td><td>Importing <code>scripts/test_phase_convention.py</code> writes <code>phase_convention_test_results.txt</code> into the repository root. The file has no functions and no <code>__main__</code> guard; line 8 mutates <code>sys.path</code> and line 66 opens and writes. Importing it <em>is</em> running it.</td><td>Reproduces <strong>on direct import only</strong>. Never via pytest — defect 1 aborts collection first.</td></tr>
-  <tr><td>4</td><td><code>pytest .</code> does not reach <code>scripts/</code> at all, and writes nothing.</td><td><strong>Already fixed</strong> by <a href="https://github.com/vamseeachanta/digitalmodel/issues/1977">#1977</a>'s root <code>collect_ignore</code>. Verified, not assumed.</td></tr>
-</table>
-<p>Four randomised collection runs were used to test whether the write was order-dependent — whether <code>pytest-randomly</code> could schedule the writing module before the exiting one. It was not written in any of the four.</p>
+<h3>Collection writes into the repository. Confirmed.</h3>
+<pre>$ pytest scripts/test_phase_convention.py --collect-only -q
+no tests collected in 2.38s
+$ ls phase_convention_test_results.txt
+phase_convention_test_results.txt</pre>
+<p>pytest reports <em>"no tests collected"</em> and leaves a file behind. <code>scripts/test_phase_convention.py</code> has no functions and no <code>__main__</code> guard: line 8 mutates <code>sys.path</code>, line 66 opens and writes. Importing it is running it, and collection imports.</p>
+<p>Revision 1 tested only <code>pytest scripts/</code> — the whole directory — which aborts early (below) and so never reaches this module. Concluding "never via pytest" from that single path was the error.</p>
 
-<h3>What the 30 files do at import</h3>
-<p>Classified by AST over module-scope statements, excluding imports, definitions and constants:</p>
+<h3>The abort is a local accident, not a property of the repo</h3>
+<p><code>scripts/test_orcaflex_loading.py:18</code> calls <code>sys.exit(1)</code> at module scope. pytest does not treat <code>SystemExit</code> as a collection error, so the whole run dies with <code>INTERNALERROR&gt; mainloop: caught unexpected SystemExit!</code>.</p>
+<div class="warn">That <code>sys.exit</code> sits inside an <code>except ImportError:</code> handler guarding <code>import OrcFxAPI</code>. <strong>On any licensed OrcaFlex host it never fires</strong> — collection completes and the directory-wide write reproduces exactly as the issue describes. The adversarial round demonstrated this with a stubbed <code>OrcFxAPI</code> on <code>PYTHONPATH</code>: 76 collected, 8 errors, no <code>INTERNALERROR</code>, file written. This box is unlicensed, which is the only reason revision 1 saw an abort. <strong>Fixing that one <code>sys.exit</code> in isolation would make the repo-root write reproduce everywhere.</strong></div>
+
+<h3>Some of these files are real tests</h3>
+<pre>$ pytest scripts/test_config_manual.py scripts/test_calm_data_loader.py -q
+9 passed in 1.97s</pre>
+<p>Revision 1 asserted "none of the 75 is a test". <strong>39 pass.</strong> Two files exercise shipped production APIs rather than themselves:</p>
 <table>
-  <tr><th>behaviour on import</th><th class="num">count</th><th>examples</th></tr>
-  <tr><td><strong>Writes a file</strong></td><td class="num">3</td><td><code>test_phase_convention.py</code>, <code>testing/test_complete_workflow.py</code>, <code>testing/test_converter_live.py</code></td></tr>
-  <tr><td>Runs work (calls into the codebase)</td><td class="num">11</td><td><code>analysis/test_viz.py</code>, <code>analysis/test_raos.py</code>, <code>analysis/onelab_test.py</code></td></tr>
-  <tr><td><code>sys.path</code> mutation only</td><td class="num">6</td><td><code>run_cp_test.py</code>, <code>solver_smoke_test.py</code></td></tr>
-  <tr><td>Clean</td><td class="num">10</td><td><code>doc_tools/*</code>, <code>tools/test_git_repo_analysis.py</code></td></tr>
+  <tr><th>file</th><th class="num">passing</th><th>imports under test</th></tr>
+  <tr><td><code>scripts/python/digitalmodel/doc_tools/test_migration_execution.py</code></td><td class="num">12</td><td>doc tooling</td></tr>
+  <tr><td><code>scripts/python/digitalmodel/doc_tools/test_migration_metadata.py</code></td><td class="num">9</td><td>doc tooling</td></tr>
+  <tr><td><code>scripts/test_config_manual.py</code></td><td class="num">7</td><td><code>digitalmodel.config</code> — <code>GlobalSettings</code>, <code>get_settings</code>, <code>override_settings</code></td></tr>
+  <tr><td><code>scripts/python/digitalmodel/doc_tools/test_structure_creation.py</code></td><td class="num">7</td><td>doc tooling</td></tr>
+  <tr><td><code>scripts/test_calm_data_loader.py</code></td><td class="num">2</td><td><code>digitalmodel.orcaflex.modular_input_validation.data_loader</code></td></tr>
+  <tr><td><code>scripts/python/digitalmodel/legacy/test_aqwa_heading_fix.py</code></td><td class="num">2</td><td>aqwa parser</td></tr>
 </table>
-<div class="warn"><strong>An earlier version of this measurement was wrong and is worth recording.</strong> Counting "module-scope statements that do something" produced a single figure of <strong>20 files executing at import</strong>, which weighed a harmless <code>sys.path.insert</code> exactly the same as a file write. That number would have justified a plan proposing twenty edits when three are urgent and six are inert. Classifying by <em>what</em> the code does rather than <em>how much</em> of it there is produced the split above. A count is not a measurement.</div>
+<p>Renaming these to a non-collecting prefix would <strong>delete 39 passing tests from the discoverable surface</strong>, two files' worth of them covering shipped API. They must move to <code>tests/</code>, not be renamed.</p>
+
+<h3>What the 30 do at import</h3>
+<table>
+  <tr><th>behaviour</th><th class="num">count</th><th>note</th></tr>
+  <tr><td>Writes to the <strong>repository root</strong></td><td class="num">1</td><td><code>test_phase_convention.py</code> → <code>phase_convention_test_results.txt</code></td></tr>
+  <tr><td>Writes to <strong>gitignored</strong> <code>temp_*/</code></td><td class="num">2</td><td><code>testing/test_complete_workflow.py</code>, <code>testing/test_converter_live.py</code> — corrected from revision 1, which placed all three in the root</td></tr>
+  <tr><td>Module-scope exit reachable at import</td><td class="num">3</td><td>see below</td></tr>
+  <tr><td>Runs work / <code>sys.path</code> only / clean</td><td class="num">11 / 6 / 10</td><td>unchanged</td></tr>
+</table>
+<p>The exit scan needed correcting twice. A grep for <code>sys.exit</code> misses bare <code>exit()</code>, and a scan of <code>tree.body</code> misses calls nested inside <code>try</code>/<code>if</code> at module scope — which is where all of them live. Descending properly:</p>
+<pre>scripts/test_orcaflex_loading.py            line 18        sys.exit(1)   inside except ImportError
+scripts/testing/test_complete_workflow.py   lines 37,59,108,…   exit(1)   inside except Exception
+scripts/testing/test_model_generator_basic.py lines 25,50,72,… exit(1)   inside except Exception</pre>
 
 <h3>Who references these files</h3>
-<p><strong>14 of 30</strong> are referenced from outside <code>scripts/</code>. Thirteen of those references are prose in <code>docs/</code> — implementation summaries and completion notes, largely historical. Exactly one is live code:</p>
-<pre>src/digitalmodel/solvers/smoke/workflow.py  ->  scripts/solver_smoke_test.py</pre>
-<p>The last commit touching any <code>scripts/test_*.py</code> is dated 2026-07-04. There is no <code>conftest.py</code>, <code>pytest.ini</code> or <code>tox.ini</code> anywhere under <code>scripts/</code>, so nothing there has ever been configured as a test tree.</p>
+<p><strong>17 of 30</strong> are referenced outside <code>scripts/</code> — revision 1 said 14 and classified them all as historical prose. At least five contain <em>copy-pasteable invocations</em>, which are a functional surface, not narration:</p>
+<pre>docs/domains/orcaflex/NEXT_STEPS.md:49,129,132,140,205,219
+    python scripts/test_orcaflex_loading.py &lt;file&gt;</pre>
+<p>No references were found in <code>.github/</code>, <code>.claude/</code>, <code>.codex/</code>, <code>.gemini/</code>, notebooks, shell scripts, or via <code>importlib</code>/<code>__import__</code>/<code>runpy</code>. That part of revision 1 held.</p>
+
+<div class="bad"><strong><code>scripts/solver_smoke_test.py</code> is live operator tooling and revision 1 got it badly wrong.</strong> It was reported as "last touched 2026-07-04" with "one live code reference to update". Both false. <code>git log</code> gives <strong>2026-07-31</strong>, <em>"Add end-to-end solver smoke test (OrcaFlex + AQWA licence probe)"</em>. Revision 1's history check globbed <code>scripts/test_*.py</code>, which never matches a <code>*_test.py</code> filename — so the single highest-blast-radius file was invisible to it.
+<br><br>
+There is also <strong>no live code reference to the script</strong>. The mention in <code>src/digitalmodel/solvers/smoke/workflow.py:4</code> is a docstring. Everything else named <code>solver_smoke_test</code> is a different thing entirely — a live engine dispatch key: <code>engine.py:834</code> <code>elif basename == "solver_smoke_test":</code>, the shipped base config <code>base_configs/modules/solver_smoke_test/solver_smoke_test.yml</code>, the report filename, and the CI matrix domain. <strong>None of those may be touched.</strong> A mechanical stem-rename across <code>src/</code> would break the licensed-run lane's dispatch.
+<br><br>
+The script itself documents unattended invocation over SSH from the deckhand licensed-run lane. Renaming it can break scheduled tasks on a machine this repo cannot see.</div>
 
 <h2>Options</h2>
 <table>
-  <tr><th>option</th><th>what it does</th><th>cost</th><th>residual risk</th></tr>
-  <tr><td><strong>A — rename all 30 out of the pytest namespace</strong> <em>(recommended)</em></td><td>Rename to a non-collecting prefix (e.g. <code>check_*.py</code>), preserving history with <code>git mv</code>. Add a guard asserting no file under <code>scripts/</code> matches <code>python_files</code>.</td><td>30 renames, 13 documentation references, 1 source reference.</td><td>None of this class. <a href="https://github.com/vamseeachanta/digitalmodel/issues/1977">#1977</a>'s <code>collect_ignore</code> becomes a convenience rather than a safety net.</td></tr>
-  <tr><td>B — add <code>__main__</code> guards to the 20 that execute</td><td>Wrap module-scope work in <code>if __name__ == "__main__":</code>.</td><td>20 files edited, more invasive per file than a rename.</td><td>They remain collectible. <code>pytest scripts/</code> still reports 75 non-tests, and a future script re-introduces the hazard.</td></tr>
-  <tr><td>C — fix only <code>test_orcaflex_loading.py</code></td><td>One line. Stops the <code>INTERNALERROR</code>.</td><td>Minimal.</td><td>Leaves the class entirely. The next module-scope <code>sys.exit</code> reproduces it.</td></tr>
-  <tr><td>D — do nothing, document only</td><td>Record that <code>pytest scripts/</code> is unsupported.</td><td>Zero.</td><td>A crash remains one command away, and the documentation is the only thing standing between a developer and it.</td></tr>
+  <tr><th>option</th><th>verdict</th></tr>
+  <tr><td><strong>C — fix only the one <code>sys.exit</code></strong></td><td><strong>Actively harmful in isolation.</strong> That exit is the only thing suppressing the directory-wide write on unlicensed boxes. Removing it makes the repo-root write reproduce everywhere. Revision 1 invited reviewers to argue for C on proportionality grounds; the measurement settles it against C.</td></tr>
+  <tr><td>B — <code>__main__</code> guards on the executing files</td><td>Leaves them collectible and leaves real tests stranded outside <code>tests/</code>.</td></tr>
+  <tr><td>D — document only</td><td>Leaves a repository-mutating command one keystroke away.</td></tr>
+  <tr><td><strong>A′ — triage, then relocate or rename</strong> <em>(recommended)</em></td><td>Run all 30. Real tests move to <code>tests/</code> under their <code>DOMAINS.md</code> domain; non-tests rename to <code>check_*</code>; <code>solver_smoke_test.py</code> is carved out pending a fleet sweep. Guards enforce both properties.</td></tr>
 </table>
-<p><strong>Recommendation: A.</strong> The mitigation already exists — <a href="https://github.com/vamseeachanta/digitalmodel/issues/1977">#1977</a> stopped <code>pytest .</code> from reaching these files — so what remains is the root cause itself, and it is cheap to remove. A rename is mechanical, reviewable as a single mostly-empty diff, and converts an ongoing hazard into a property a test can hold. B and C both leave a repository where naming a file <code>test_anything.py</code> under <code>scripts/</code> re-arms the problem silently.</p>
-<p><strong>Severity is low and the plan says so.</strong> No CI workflow runs <code>pytest scripts/</code>; no required check is affected; <code>pytest .</code> is already safe. This is worth doing because it is cheap and permanent, not because anything is on fire.</p>
-
-<h2>Artifact map and files</h2>
-<table>
-  <tr><th>path</th><th>change</th></tr>
-  <tr><td><code>scripts/**/test_*.py</code>, <code>scripts/**/*_test.py</code></td><td>30 renames via <code>git mv</code> to <code>check_*.py</code>, history preserved</td></tr>
-  <tr><td><code>src/digitalmodel/solvers/smoke/workflow.py</code></td><td>update the single live reference to <code>solver_smoke_test.py</code></td></tr>
-  <tr><td>13 files under <code>docs/</code></td><td>update prose references</td></tr>
-  <tr><td><code>tests/contracts/test_collection_visibility.py</code></td><td>extend with the naming guard (G3) — the module <a href="https://github.com/vamseeachanta/digitalmodel/issues/1977">#1977</a> created is the natural home</td></tr>
-  <tr><td><code>conftest.py</code></td><td><strong>no change.</strong> <code>collect_ignore</code> stays as defence in depth</td></tr>
-</table>
+<p><strong>Recommendation: A′.</strong> Plain A is not executable — it would delete 39 passing tests and rename live operator tooling. The triage stage is not a formality; it is the stage that discovers which files are which.</p>
+<p><strong><code>check_*</code> is the right prefix, for a better reason than revision 1 gave.</strong> It matches neither pattern in <code>python_files</code> under <em>either</em> pytest config table, and no other discovery mechanism runs over <code>scripts/</code>. More importantly it is already the established local convention: <code>scripts/check_generated_html.py</code>, <code>scripts/legal/check_protected_identifiers.py</code>, <code>scripts/python/digitalmodel/legacy/check_performance_regression.py</code>, <code>check_doc_coverage.py</code>.</p>
 
 <h2>Implementation sequence after approval</h2>
 <ol>
-  <li><strong>Stage 1 — guard, RED.</strong> Add <code>test_no_script_is_named_like_a_test</code> to <code>tests/contracts/test_collection_visibility.py</code>: no file under <code>scripts/</code> may match any pattern in the live <code>python_files</code> setting. Fails today naming 30 files. Commit RED and open the PR immediately, so the transition is in CI history — <code>quality-gates-by-domain.yml</code> triggers on <code>pull_request</code>, not on a branch push.</li>
-  <li><strong>Stage 2 — rename, GREEN.</strong> 30 <code>git mv</code> operations plus the single source reference. Guard goes green. Verify each renamed file still parses and that <code>git log --follow</code> traverses the rename.</li>
-  <li><strong>Stage 3 — documentation references, separate commit.</strong> The 13 prose references. Kept separate so the rename diff stays reviewable.</li>
-  <li><strong>Stage 4 — <code>examples/</code>, <code>.codex/</code>, <code>.gemini/</code> (G4).</strong> Decide and record. These contribute 7 of the 9 whole-repo collection errors and are currently neither collected nor excluded. Recommendation is to add them to the root <code>collect_ignore</code>, but the measurement comes first: confirm no real test lives under any of them. Note for whoever runs it — those trees reach their contents through a symlink, so <code>find</code> reports 0 matches and <code>find -L</code> reports 14.</li>
+  <li><strong>Stage 0 — triage, no code changes.</strong> Run each of the 30 individually and record: items collected, passed, failed, errored, and whether it imports from <code>src/digitalmodel/</code>. Produce a table committed to <code>docs/plans/evidence/</code> classifying every file as REAL TEST, SCRIPT, or BROKEN. This is the stage revision 1 lacked, and it is the one that prevents deleting tests.</li>
+  <li><strong>Stage 1 — guards, RED.</strong> Two guards in <code>tests/contracts/test_collection_visibility.py</code> (see below). Commit RED and open the PR immediately — <code>quality-gates-by-domain.yml</code> triggers on <code>pull_request</code>, not on a branch push.</li>
+  <li><strong>Stage 2 — relocate real tests.</strong> <code>git mv</code> every Stage 0 REAL TEST into <code>tests/&lt;domain&gt;/</code>, domain taken from <code>tests/DOMAINS.md</code>, and confirm each is picked up by exactly one gate.</li>
+  <li><strong>Stage 3 — rename the remainder to <code>check_*</code>.</strong> Excluding <code>solver_smoke_test.py</code>. Guards go green.</li>
+  <li><strong>Stage 4 — references, separate commit.</strong> The 17 references, with the five files carrying executable invocations verified by running the corrected command.</li>
+  <li><strong>Stage 5 — <code>solver_smoke_test.py</code>, gated.</strong> Do not rename until the deckhand queue repo and the licensed host's scheduled tasks have been swept. If the sweep cannot be completed, leave the file alone and record why — it ends in <code>_test</code> rather than beginning with <code>test_</code>, and a guard exemption with a comment is preferable to breaking an unattended lane.</li>
+  <li><strong>Stage 6 — <code>examples/</code>, <code>.codex/</code>, <code>.gemini/</code> (G4).</strong> Confirm no real test lives under them, then add to the root <code>collect_ignore</code>. Note: those trees reach their contents through a symlink, so <code>find</code> reports 0 and <code>find -L</code> reports 14.</li>
 </ol>
+<p><strong>All stages land in a single pull request.</strong> <code>scripts/**</code> maps to no CI domain — <code>detect_touched_domains.py</code> lists only <code>scripts/capabilities/</code> and <code>scripts/ci/detect_touched_domains.py</code> — so a rename-only PR would dispatch zero shards and go green having run nothing. Stage 1's guard lives in <code>tests/contracts/</code>, which does dispatch, and that is what keeps the PR honest.</p>
 
 <h2>TDD test list</h2>
-<p>Assertions are on properties, never counts. "30" will be wrong the moment a script is added or removed.</p>
 <ul>
-  <li><code>test_no_script_is_named_like_a_test</code> — for every file under <code>scripts/</code>, assert it matches no pattern in <code>pytestconfig.getini("python_files")</code>. Fails today naming 30 files.</li>
-  <li><code>test_no_module_scope_sys_exit_under_scripts</code> — AST assertion that no file under <code>scripts/</code> calls <code>sys.exit</code> at module scope. This is the defect that actually crashed the runner, and it is worth guarding independently of naming: a module-scope <code>sys.exit</code> raises <code>SystemExit</code>, which pytest does not catch as a collection error.</li>
-  <li>Both carry the vacuity guards established by <a href="https://github.com/vamseeachanta/digitalmodel/issues/1977">#1977</a>: assert <code>pytestconfig.inipath.name == "pytest.ini"</code>, assert the pattern list is non-empty, assert the candidate file set is non-empty, and include a known-positive control proving the matcher is live. Measured during #1977: with the ini key absent, <code>getini</code> silently returns pytest's built-in default and the test passes having checked nothing.</li>
+  <li><code>test_no_script_is_named_like_a_test</code> — no file under <code>scripts/</code> matches any pattern in the live <code>python_files</code>, except an explicit, commented exemption list. The exemption list must be asserted <strong>fully consumed</strong>, so a stale entry cannot mask a new offender.</li>
+  <li><code>test_no_module_scope_exit_under_scripts</code> — no <code>sys.exit</code>, bare <code>exit</code>, or <code>os._exit</code> call is reachable from module scope. <strong>Reachable</strong> means descending through <code>If</code>, <code>Try</code> (including handlers), <code>With</code>, <code>For</code> and <code>While</code> bodies, excluding only <code>if __name__ == "__main__"</code> blocks and function/class bodies. A shallow <code>tree.body</code> scan finds <strong>zero</strong> of the three real offenders, and a <code>sys.exit</code>-only matcher misses 17 bare <code>exit()</code> call sites. The guard must carry a known-positive control proving the descent works.</li>
+  <li>Both carry the vacuity guards <a href="https://github.com/vamseeachanta/digitalmodel/issues/1977">#1977</a> established: assert <code>pytestconfig.inipath.name == "pytest.ini"</code>, assert the pattern list is non-empty, assert the candidate file set is non-empty, and include a known-positive control.</li>
 </ul>
 
 <h2>Acceptance criteria</h2>
+<p>Revision 1 offered two criteria that could not fail. Both are replaced.</p>
 <ol>
-  <li><code>pytest scripts/ --collect-only</code> collects <strong>0</strong> items and exits <strong>without <code>INTERNALERROR</code></strong>.</li>
-  <li>Node-ID diff across the change: <strong>0 removed, 0 added</strong>. These files were never contributing tests, so a rename must move nothing. Baseline from a separate clean worktree.</li>
-  <li>The working tree is unmodified after a full collection — no <code>phase_convention_test_results.txt</code>, no other artifact. Asserted by <code>git status --porcelain</code> being empty after the run.</li>
-  <li>Both guards demonstrably RED at Stage 1 and GREEN at Stage 2, provable from CI history.</li>
-  <li><code>git log --follow</code> traverses every rename, so history is not severed.</li>
-  <li><code>Domain test aggregate</code> and <code>Run Quality Gates</code> green, zero failures across the rollup.</li>
-  <li>The single live reference in <code>src/digitalmodel/solvers/smoke/workflow.py</code> resolves after the rename — verified by executing that path, not by grep.</li>
+  <li><strong>Per-file, not whole-tree.</strong> For each of the 30, <code>pytest &lt;old-path&gt;</code> before and <code>pytest &lt;new-path&gt;</code> after must collect and pass the same items. <em>Replaces</em> revision 1's whole-tree node-ID diff, which was guaranteed to read "0 removed, 0 added" regardless — <code>collect_ignore</code> means no <code>scripts/</code> node IDs exist in the baseline, so it would have reported success even if the rename had buried 500 passing tests.</li>
+  <li><strong>Filesystem snapshot, not <code>git status</code>.</strong> Before and after a full collection, compare complete directory listings (or <code>find -newer</code> against a stamp file), excluding <code>.git/</code>. <em>Replaces</em> revision 1's <code>git status --porcelain</code> assertion, which is blind by construction: collection creates <code>temp_test_conversion/</code> and <code>temp_workflow_test/</code>, both matched by <code>.gitignore</code>, and the index stays clean while the tree is dirtied.</li>
+  <li><code>pytest scripts/</code> collects 0 items and exits without <code>INTERNALERROR</code> — verified <strong>both</strong> with and without <code>OrcFxAPI</code> importable, since the unlicensed path is what masked this defect.</li>
+  <li>Every file Stage 0 classified REAL TEST is collected by exactly one gate after relocation, verified through <code>parse_domains</code> rather than by reading YAML.</li>
+  <li>Both guards demonstrably RED at Stage 1 and GREEN after Stage 3, provable from CI history.</li>
+  <li><code>git log --follow</code> traverses every rename and relocation.</li>
+  <li><code>engine.py:834</code>'s <code>solver_smoke_test</code> dispatch still resolves, and <code>base_configs/modules/solver_smoke_test/</code> is untouched — asserted by running the engine path, not by grep.</li>
+  <li><code>Domain test aggregate</code> and <code>Run Quality Gates</code> green with zero failures, in a single PR carrying all stages.</li>
 </ol>
 
 <h2>Risks and fail-closed responses</h2>
 <table>
   <tr><th>risk</th><th>response</th></tr>
-  <tr><td>A rename breaks a reference nobody knew about — the reference search covered the repository, not the fleet or any operator's shell history.</td><td>Renames preserve history via <code>git mv</code>, so <code>git log --follow</code> and blame survive and the old path is recoverable. The one live code reference is verified by execution. Documentation references are prose and fail visibly, not silently.</td></tr>
-  <tr><td>The chosen prefix collides with a future convention or with another tool's discovery pattern.</td><td><code>check_*</code> matches no pattern in this repo's <code>python_files</code>, and no other discovery tool is configured over <code>scripts/</code> — verified: no <code>conftest.py</code>, <code>pytest.ini</code> or <code>tox.ini</code> exists anywhere under it.</td></tr>
-  <tr><td>Renaming 30 files at once produces a diff too large to review meaningfully.</td><td>A pure rename shows as 30 similarity-100% entries. The reviewable content is Stage 1's guard and Stage 2's single source-reference edit; the renames are mechanical and verified by the guard rather than by reading.</td></tr>
-  <tr><td>One of the 30 turns out to be a real test that someone runs deliberately.</td><td>Measured: <code>pytest scripts/</code> collects 75 items, of which zero are real tests — they are module-scope scripts, and 8 of the files cannot even be imported. If Stage 2 finds a genuine test, it moves to <code>tests/</code> rather than being renamed, and that becomes its own issue.</td></tr>
-  <tr><td>Scope creep into fixing what the scripts do.</td><td>Explicitly out of bounds. The three that write files keep writing files; they simply stop being importable by accident.</td></tr>
+  <tr><td>A rename breaks an invocation on a machine this repo cannot see — a scheduled task, a deckhand job, an operator's runbook.</td><td>This is the residual risk that cannot be closed from here, and it is why Stage 5 gates <code>solver_smoke_test.py</code> behind a fleet sweep rather than mitigating it with <code>git log --follow</code>, which does nothing for a scheduled task on another host. If the sweep is not possible, the file is exempted with a comment.</td></tr>
+  <tr><td>Stage 0 misclassifies a script as a test, or vice versa.</td><td>Classification is by measurement — does it collect items, do they pass, does it import from <code>src/</code> — not by reading. The table is committed as evidence so the judgement is reviewable rather than implicit.</td></tr>
+  <tr><td>The defect is masked on the box where the work is done.</td><td>Already happened once, and produced revision 1's central error. Criterion 3 requires verification along both the licensed and unlicensed paths.</td></tr>
+  <tr><td>A rename-only PR goes green having run nothing.</td><td>Single PR, with Stage 1's guard in <code>tests/contracts/</code> so a shard actually dispatches.</td></tr>
+  <tr><td>Scope creep into fixing what the scripts do.</td><td>Out of bounds. The three that write files keep writing files; they stop being importable by accident.</td></tr>
 </table>
 
 <h2>Out of scope</h2>
 <ul>
-  <li><strong>What any script does.</strong> Only names, guards and collection status change.</li>
-  <li><strong>Whether these scripts should exist.</strong> Fourteen are referenced from documentation and one from source; the rest were last touched 2026-07-04. Deleting abandoned scripts is a separate judgement.</li>
-  <li><strong>The two <code>tests/workflow_api/</code> collection errors</strong> — a drifted local <code>assetutilities</code> sibling missing an <code>artifact</code> export. Local-only drift pending confirmation against CI.</li>
-  <li><strong><a href="https://github.com/vamseeachanta/digitalmodel/issues/1985">#1985</a></strong>, the end-to-end reachability check, is adjacent but independent.</li>
+  <li><strong>What any script does</strong>, and <strong>whether these scripts should exist</strong>.</li>
+  <li><strong>The two <code>tests/workflow_api/</code> collection errors</strong> — drifted local <code>assetutilities</code> sibling; local-only pending confirmation against CI.</li>
+  <li><strong><a href="https://github.com/vamseeachanta/digitalmodel/issues/1985">#1985</a></strong>, the end-to-end reachability check — adjacent, independent.</li>
 </ul>
 
 <h2>Adversarial review summary</h2>
-<p>Tier: <strong>T2</strong> — many files, but a mechanical change with a measured blast radius. Reviewers will be asked to attack: whether <code>check_*</code> is genuinely non-colliding; whether any of the 30 is a real test; whether the reference search missed a consumer; whether the naming guard can pass vacuously; and whether option A is disproportionate given that <a href="https://github.com/vamseeachanta/digitalmodel/issues/1977">#1977</a> already removed the reachable harm — a reviewer arguing for option C should be taken seriously rather than answered.</p>
+<p>Tier <strong>T2</strong>. Round 1 (Claude) returned <strong>REJECT</strong> with 11 findings, of which 3 were blockers. Every finding below was independently re-measured before being accepted; none was taken on the reviewer's word.</p>
+<table>
+  <tr><th>severity</th><th>finding</th><th>disposition</th></tr>
+  <tr><td><strong>BLOCKER</strong></td><td>The plan's withdrawal of the issue headline is wrong — <code>pytest &lt;file&gt; --collect-only</code> writes into the repo root, and on a licensed host the directory-wide case reproduces as originally filed.</td><td><strong>Accepted; reproduced in one command.</strong> Withdrawal removed, issue's framing restored.</td></tr>
+  <tr><td><strong>BLOCKER</strong></td><td>"Zero of the 75 are real tests" is false — 39 pass, two files against shipped APIs. Renaming would delete them from the discoverable surface.</td><td><strong>Accepted; reproduced (9 passed).</strong> Stage 0 triage added; A became A′.</td></tr>
+  <tr><td><strong>BLOCKER</strong></td><td><code>solver_smoke_test</code> is a live engine dispatch key; there is no live code reference to the <em>script</em>, only a docstring. A mechanical stem-rename would break the licensed lane.</td><td><strong>Accepted; verified at <code>engine.py:834</code>.</strong> Carved out into gated Stage 5; AC7 rewritten to protect the dispatch key.</td></tr>
+  <tr><td>MAJOR</td><td><code>solver_smoke_test.py</code> last touched 2026-07-31, not 2026-07-04 — the history glob <code>scripts/test_*.py</code> never matched <code>*_test.py</code>.</td><td><strong>Accepted; my methodological error.</strong> Corrected.</td></tr>
+  <tr><td>MAJOR</td><td>Three files have module-scope exits, not one; two use bare <code>exit()</code>; all three are nested inside <code>try</code>, so the proposed guard would have caught none of them.</td><td><strong>Accepted; reproduced.</strong> Guard respecified with explicit descent rules.</td></tr>
+  <tr><td>MAJOR</td><td>AC3 is blind — collection writes into gitignored <code>temp_*/</code> and <code>git status</code> stays clean.</td><td><strong>Accepted.</strong> Replaced with a filesystem snapshot.</td></tr>
+  <tr><td>MAJOR</td><td>AC2 cannot fail — <code>collect_ignore</code> means the baseline has no <code>scripts/</code> node IDs at all.</td><td><strong>Accepted.</strong> Replaced with a per-file criterion.</td></tr>
+  <tr><td>MODERATE</td><td>The randomisation experiment was structurally incapable of a positive result: <code>pytest-randomly</code>'s only collection hook is <code>pytest_collection_modifyitems</code>, which runs after every module is already imported.</td><td><strong>Accepted.</strong> Claim deleted — a null experiment presented as a measurement, which is the exact error the plan's own warning box names.</td></tr>
+  <tr><td>MODERATE</td><td>17 files referenced externally, not 14, and five carry executable invocations rather than prose.</td><td><strong>Accepted.</strong> Count corrected; Stage 4 reclassified as functional.</td></tr>
+  <tr><td>MINOR</td><td><code>check_*</code> is safe, and the strong justification — four existing precedents under <code>scripts/</code> — went uncited.</td><td><strong>Accepted.</strong></td></tr>
+  <tr><td>MINOR</td><td><code>scripts/**</code> maps to no CI domain, so AC6 would be green having run nothing.</td><td><strong>Accepted.</strong> Single-PR requirement stated explicitly.</td></tr>
+</table>
+<p>Revision 1 explicitly invited reviewers to argue for option C on proportionality grounds and promised to act on it. The reviewer took that seriously and argued the opposite: C is the one option that makes things worse, because the <code>sys.exit</code> it removes is what currently suppresses the write on unlicensed machines. That is a better answer than the one the question expected.</p>
 
 </main>
 </body>
