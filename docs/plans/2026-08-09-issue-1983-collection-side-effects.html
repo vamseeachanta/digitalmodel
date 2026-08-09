@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>#1983 Plan — Scripts Named Like Tests</title>
+  <style>
+    :root{--navy:#0b3d5c;--teal:#168c88;--ink:#18313f;--muted:#5f7480;--line:#d7e2e7;--paper:#fff;--wash:#f3f8fa;--warn:#fff5d6;--bad:#fdecec;--good:#eefaf3}
+    *{box-sizing:border-box}body{margin:0;background:var(--wash);color:var(--ink);font:16px/1.55 system-ui,sans-serif}
+    main{max-width:1100px;margin:0 auto;background:var(--paper);padding:3rem 4rem;box-shadow:0 0 30px #1232}
+    h1,h2,h3{color:var(--navy);line-height:1.2}h1{font-size:2.25rem}h2{margin-top:2.2rem;border-bottom:2px solid var(--teal);padding-bottom:.35rem}
+    h3{margin-top:1.4rem}a{color:#076b83}code{background:#edf3f5;padding:.1rem .3rem;border-radius:3px;font-size:.92em}
+    pre{background:#0f2b38;color:#e8f2f5;padding:1rem 1.2rem;border-radius:6px;overflow-x:auto;font-size:.86rem;line-height:1.45}
+    table{border-collapse:collapse;width:100%;margin:1rem 0;font-size:.93rem;display:block;overflow-x:auto}
+    th,td{border:1px solid var(--line);padding:.5rem .7rem;text-align:left;vertical-align:top}
+    th{background:var(--wash);color:var(--navy)}
+    .meta{color:var(--muted);font-size:.9rem;margin-top:-.6rem}
+    .warn{background:var(--warn);border-left:4px solid #d9a400;padding:.85rem 1.1rem;margin:1.2rem 0;border-radius:0 4px 4px 0}
+    .bad{background:var(--bad);border-left:4px solid #c0392b;padding:.85rem 1.1rem;margin:1.2rem 0;border-radius:0 4px 4px 0}
+    .good{background:var(--good);border-left:4px solid #159a5f;padding:.85rem 1.1rem;margin:1.2rem 0;border-radius:0 4px 4px 0}
+    .num{font-variant-numeric:tabular-nums}
+    ul{margin:.5rem 0 .5rem 1.1rem}li{margin:.28rem 0}
+  </style>
+</head>
+<body>
+<main>
+
+<h1>#1983 implementation plan: 30 scripts wearing a test name</h1>
+<p class="meta">Issue <a href="https://github.com/vamseeachanta/digitalmodel/issues/1983">#1983</a> &middot; branch <code>plan/1983-collection-side-effects</code> &middot; base <code>2c4a556a</code> &middot; drafted 2026-08-09 &middot; status: awaiting user approval</p>
+
+<div class="bad"><strong>This plan opens by withdrawing the issue's headline, which I wrote.</strong> #1983 claims that <em>"collecting <code>scripts/</code> writes a file into the repository root"</em>. That does not reproduce on main. The write is real, but it is reachable only by importing or executing the module directly — never through pytest collection, because collection aborts earlier for an unrelated reason. The stray file that prompted the issue was almost certainly produced by a delegated session running the script directly, and I attributed it to collection without testing that attribution. The reproducible defects are set out below and are a different, sharper problem.</div>
+
+<h2>Goal and authorization boundary</h2>
+<p>Thirty files under <code>scripts/</code> are named <code>test_*.py</code> or <code>*_test.py</code>. None of them is a test. They are analysis and smoke scripts wearing pytest's collection prefix, and because pytest collects by importing, pointing pytest at that directory executes them.</p>
+<ul>
+  <li><strong>G1</strong> — <code>pytest scripts/</code> will fail cleanly or not at all. It will never crash the runner.</li>
+  <li><strong>G2</strong> — files that are not tests will not carry a test name. This is the root cause; everything else is mitigation.</li>
+  <li><strong>G3</strong> — a guard will make the naming property enforceable, so the class cannot silently return.</li>
+  <li><strong>G4</strong> — the status of <code>examples/</code>, <code>.codex/</code> and <code>.gemini/</code> will be decided rather than left ambiguous.</li>
+</ul>
+<p><strong>Boundary.</strong> This plan will not rewrite what any script <em>does</em>, will not delete scripts, and will not attempt to convert any of them into real tests. It changes names, guards and collection status only.</p>
+
+<h2>Resource intelligence summary</h2>
+<p>Measured on a clean detached checkout of <code>origin/main</code> at <code>2c4a556a</code> using the repo's canonical invocation (<code>uv run --with-editable '.[test]' python -m pytest</code>, pytest 8.4.2).</p>
+
+<h3>What actually reproduces</h3>
+<table>
+  <tr><th>#</th><th>observation</th><th>status</th></tr>
+  <tr><td>1</td><td><code>scripts/test_orcaflex_loading.py:18</code> calls <code>sys.exit(1)</code> at module scope. Importing it during collection raises <code>SystemExit</code>, which pytest does not treat as a collection error — it aborts the entire run with <code>INTERNALERROR&gt; mainloop: caught unexpected SystemExit!</code></td><td><strong>Reproduces deterministically.</strong> This is the real defect.</td></tr>
+  <tr><td>2</td><td><code>pytest scripts/</code> reports <strong>75 tests collected, 8 errors</strong>. None of the 75 is a test.</td><td>Reproduces.</td></tr>
+  <tr><td>3</td><td>Importing <code>scripts/test_phase_convention.py</code> writes <code>phase_convention_test_results.txt</code> into the repository root. The file has no functions and no <code>__main__</code> guard; line 8 mutates <code>sys.path</code> and line 66 opens and writes. Importing it <em>is</em> running it.</td><td>Reproduces <strong>on direct import only</strong>. Never via pytest — defect 1 aborts collection first.</td></tr>
+  <tr><td>4</td><td><code>pytest .</code> does not reach <code>scripts/</code> at all, and writes nothing.</td><td><strong>Already fixed</strong> by <a href="https://github.com/vamseeachanta/digitalmodel/issues/1977">#1977</a>'s root <code>collect_ignore</code>. Verified, not assumed.</td></tr>
+</table>
+<p>Four randomised collection runs were used to test whether the write was order-dependent — whether <code>pytest-randomly</code> could schedule the writing module before the exiting one. It was not written in any of the four.</p>
+
+<h3>What the 30 files do at import</h3>
+<p>Classified by AST over module-scope statements, excluding imports, definitions and constants:</p>
+<table>
+  <tr><th>behaviour on import</th><th class="num">count</th><th>examples</th></tr>
+  <tr><td><strong>Writes a file</strong></td><td class="num">3</td><td><code>test_phase_convention.py</code>, <code>testing/test_complete_workflow.py</code>, <code>testing/test_converter_live.py</code></td></tr>
+  <tr><td>Runs work (calls into the codebase)</td><td class="num">11</td><td><code>analysis/test_viz.py</code>, <code>analysis/test_raos.py</code>, <code>analysis/onelab_test.py</code></td></tr>
+  <tr><td><code>sys.path</code> mutation only</td><td class="num">6</td><td><code>run_cp_test.py</code>, <code>solver_smoke_test.py</code></td></tr>
+  <tr><td>Clean</td><td class="num">10</td><td><code>doc_tools/*</code>, <code>tools/test_git_repo_analysis.py</code></td></tr>
+</table>
+<div class="warn"><strong>An earlier version of this measurement was wrong and is worth recording.</strong> Counting "module-scope statements that do something" produced a single figure of <strong>20 files executing at import</strong>, which weighed a harmless <code>sys.path.insert</code> exactly the same as a file write. That number would have justified a plan proposing twenty edits when three are urgent and six are inert. Classifying by <em>what</em> the code does rather than <em>how much</em> of it there is produced the split above. A count is not a measurement.</div>
+
+<h3>Who references these files</h3>
+<p><strong>14 of 30</strong> are referenced from outside <code>scripts/</code>. Thirteen of those references are prose in <code>docs/</code> — implementation summaries and completion notes, largely historical. Exactly one is live code:</p>
+<pre>src/digitalmodel/solvers/smoke/workflow.py  ->  scripts/solver_smoke_test.py</pre>
+<p>The last commit touching any <code>scripts/test_*.py</code> is dated 2026-07-04. There is no <code>conftest.py</code>, <code>pytest.ini</code> or <code>tox.ini</code> anywhere under <code>scripts/</code>, so nothing there has ever been configured as a test tree.</p>
+
+<h2>Options</h2>
+<table>
+  <tr><th>option</th><th>what it does</th><th>cost</th><th>residual risk</th></tr>
+  <tr><td><strong>A — rename all 30 out of the pytest namespace</strong> <em>(recommended)</em></td><td>Rename to a non-collecting prefix (e.g. <code>check_*.py</code>), preserving history with <code>git mv</code>. Add a guard asserting no file under <code>scripts/</code> matches <code>python_files</code>.</td><td>30 renames, 13 documentation references, 1 source reference.</td><td>None of this class. <a href="https://github.com/vamseeachanta/digitalmodel/issues/1977">#1977</a>'s <code>collect_ignore</code> becomes a convenience rather than a safety net.</td></tr>
+  <tr><td>B — add <code>__main__</code> guards to the 20 that execute</td><td>Wrap module-scope work in <code>if __name__ == "__main__":</code>.</td><td>20 files edited, more invasive per file than a rename.</td><td>They remain collectible. <code>pytest scripts/</code> still reports 75 non-tests, and a future script re-introduces the hazard.</td></tr>
+  <tr><td>C — fix only <code>test_orcaflex_loading.py</code></td><td>One line. Stops the <code>INTERNALERROR</code>.</td><td>Minimal.</td><td>Leaves the class entirely. The next module-scope <code>sys.exit</code> reproduces it.</td></tr>
+  <tr><td>D — do nothing, document only</td><td>Record that <code>pytest scripts/</code> is unsupported.</td><td>Zero.</td><td>A crash remains one command away, and the documentation is the only thing standing between a developer and it.</td></tr>
+</table>
+<p><strong>Recommendation: A.</strong> The mitigation already exists — <a href="https://github.com/vamseeachanta/digitalmodel/issues/1977">#1977</a> stopped <code>pytest .</code> from reaching these files — so what remains is the root cause itself, and it is cheap to remove. A rename is mechanical, reviewable as a single mostly-empty diff, and converts an ongoing hazard into a property a test can hold. B and C both leave a repository where naming a file <code>test_anything.py</code> under <code>scripts/</code> re-arms the problem silently.</p>
+<p><strong>Severity is low and the plan says so.</strong> No CI workflow runs <code>pytest scripts/</code>; no required check is affected; <code>pytest .</code> is already safe. This is worth doing because it is cheap and permanent, not because anything is on fire.</p>
+
+<h2>Artifact map and files</h2>
+<table>
+  <tr><th>path</th><th>change</th></tr>
+  <tr><td><code>scripts/**/test_*.py</code>, <code>scripts/**/*_test.py</code></td><td>30 renames via <code>git mv</code> to <code>check_*.py</code>, history preserved</td></tr>
+  <tr><td><code>src/digitalmodel/solvers/smoke/workflow.py</code></td><td>update the single live reference to <code>solver_smoke_test.py</code></td></tr>
+  <tr><td>13 files under <code>docs/</code></td><td>update prose references</td></tr>
+  <tr><td><code>tests/contracts/test_collection_visibility.py</code></td><td>extend with the naming guard (G3) — the module <a href="https://github.com/vamseeachanta/digitalmodel/issues/1977">#1977</a> created is the natural home</td></tr>
+  <tr><td><code>conftest.py</code></td><td><strong>no change.</strong> <code>collect_ignore</code> stays as defence in depth</td></tr>
+</table>
+
+<h2>Implementation sequence after approval</h2>
+<ol>
+  <li><strong>Stage 1 — guard, RED.</strong> Add <code>test_no_script_is_named_like_a_test</code> to <code>tests/contracts/test_collection_visibility.py</code>: no file under <code>scripts/</code> may match any pattern in the live <code>python_files</code> setting. Fails today naming 30 files. Commit RED and open the PR immediately, so the transition is in CI history — <code>quality-gates-by-domain.yml</code> triggers on <code>pull_request</code>, not on a branch push.</li>
+  <li><strong>Stage 2 — rename, GREEN.</strong> 30 <code>git mv</code> operations plus the single source reference. Guard goes green. Verify each renamed file still parses and that <code>git log --follow</code> traverses the rename.</li>
+  <li><strong>Stage 3 — documentation references, separate commit.</strong> The 13 prose references. Kept separate so the rename diff stays reviewable.</li>
+  <li><strong>Stage 4 — <code>examples/</code>, <code>.codex/</code>, <code>.gemini/</code> (G4).</strong> Decide and record. These contribute 7 of the 9 whole-repo collection errors and are currently neither collected nor excluded. Recommendation is to add them to the root <code>collect_ignore</code>, but the measurement comes first: confirm no real test lives under any of them. Note for whoever runs it — those trees reach their contents through a symlink, so <code>find</code> reports 0 matches and <code>find -L</code> reports 14.</li>
+</ol>
+
+<h2>TDD test list</h2>
+<p>Assertions are on properties, never counts. "30" will be wrong the moment a script is added or removed.</p>
+<ul>
+  <li><code>test_no_script_is_named_like_a_test</code> — for every file under <code>scripts/</code>, assert it matches no pattern in <code>pytestconfig.getini("python_files")</code>. Fails today naming 30 files.</li>
+  <li><code>test_no_module_scope_sys_exit_under_scripts</code> — AST assertion that no file under <code>scripts/</code> calls <code>sys.exit</code> at module scope. This is the defect that actually crashed the runner, and it is worth guarding independently of naming: a module-scope <code>sys.exit</code> raises <code>SystemExit</code>, which pytest does not catch as a collection error.</li>
+  <li>Both carry the vacuity guards established by <a href="https://github.com/vamseeachanta/digitalmodel/issues/1977">#1977</a>: assert <code>pytestconfig.inipath.name == "pytest.ini"</code>, assert the pattern list is non-empty, assert the candidate file set is non-empty, and include a known-positive control proving the matcher is live. Measured during #1977: with the ini key absent, <code>getini</code> silently returns pytest's built-in default and the test passes having checked nothing.</li>
+</ul>
+
+<h2>Acceptance criteria</h2>
+<ol>
+  <li><code>pytest scripts/ --collect-only</code> collects <strong>0</strong> items and exits <strong>without <code>INTERNALERROR</code></strong>.</li>
+  <li>Node-ID diff across the change: <strong>0 removed, 0 added</strong>. These files were never contributing tests, so a rename must move nothing. Baseline from a separate clean worktree.</li>
+  <li>The working tree is unmodified after a full collection — no <code>phase_convention_test_results.txt</code>, no other artifact. Asserted by <code>git status --porcelain</code> being empty after the run.</li>
+  <li>Both guards demonstrably RED at Stage 1 and GREEN at Stage 2, provable from CI history.</li>
+  <li><code>git log --follow</code> traverses every rename, so history is not severed.</li>
+  <li><code>Domain test aggregate</code> and <code>Run Quality Gates</code> green, zero failures across the rollup.</li>
+  <li>The single live reference in <code>src/digitalmodel/solvers/smoke/workflow.py</code> resolves after the rename — verified by executing that path, not by grep.</li>
+</ol>
+
+<h2>Risks and fail-closed responses</h2>
+<table>
+  <tr><th>risk</th><th>response</th></tr>
+  <tr><td>A rename breaks a reference nobody knew about — the reference search covered the repository, not the fleet or any operator's shell history.</td><td>Renames preserve history via <code>git mv</code>, so <code>git log --follow</code> and blame survive and the old path is recoverable. The one live code reference is verified by execution. Documentation references are prose and fail visibly, not silently.</td></tr>
+  <tr><td>The chosen prefix collides with a future convention or with another tool's discovery pattern.</td><td><code>check_*</code> matches no pattern in this repo's <code>python_files</code>, and no other discovery tool is configured over <code>scripts/</code> — verified: no <code>conftest.py</code>, <code>pytest.ini</code> or <code>tox.ini</code> exists anywhere under it.</td></tr>
+  <tr><td>Renaming 30 files at once produces a diff too large to review meaningfully.</td><td>A pure rename shows as 30 similarity-100% entries. The reviewable content is Stage 1's guard and Stage 2's single source-reference edit; the renames are mechanical and verified by the guard rather than by reading.</td></tr>
+  <tr><td>One of the 30 turns out to be a real test that someone runs deliberately.</td><td>Measured: <code>pytest scripts/</code> collects 75 items, of which zero are real tests — they are module-scope scripts, and 8 of the files cannot even be imported. If Stage 2 finds a genuine test, it moves to <code>tests/</code> rather than being renamed, and that becomes its own issue.</td></tr>
+  <tr><td>Scope creep into fixing what the scripts do.</td><td>Explicitly out of bounds. The three that write files keep writing files; they simply stop being importable by accident.</td></tr>
+</table>
+
+<h2>Out of scope</h2>
+<ul>
+  <li><strong>What any script does.</strong> Only names, guards and collection status change.</li>
+  <li><strong>Whether these scripts should exist.</strong> Fourteen are referenced from documentation and one from source; the rest were last touched 2026-07-04. Deleting abandoned scripts is a separate judgement.</li>
+  <li><strong>The two <code>tests/workflow_api/</code> collection errors</strong> — a drifted local <code>assetutilities</code> sibling missing an <code>artifact</code> export. Local-only drift pending confirmation against CI.</li>
+  <li><strong><a href="https://github.com/vamseeachanta/digitalmodel/issues/1985">#1985</a></strong>, the end-to-end reachability check, is adjacent but independent.</li>
+</ul>
+
+<h2>Adversarial review summary</h2>
+<p>Tier: <strong>T2</strong> — many files, but a mechanical change with a measured blast radius. Reviewers will be asked to attack: whether <code>check_*</code> is genuinely non-colliding; whether any of the 30 is a real test; whether the reference search missed a consumer; whether the naming guard can pass vacuously; and whether option A is disproportionate given that <a href="https://github.com/vamseeachanta/digitalmodel/issues/1977">#1977</a> already removed the reachable harm — a reviewer arguing for option C should be taken seriously rather than answered.</p>
+
+</main>
+</body>
+</html>
