@@ -26,24 +26,24 @@ meta:
 # ---------------------------------------------------------------------------
 
 operators:
-  - handle: reed-goodman
-    display: Reed Goodman (cwbyreed)
-    company: Jaybird Resources
-    location: Cuero, TX
+  - handle: op-a
+    display: OP-A (OP-A)
+    company: a Gulf Coast operator
+    location: Gulf Coast
     role: C-suite/VP/Owner, Engineering
-    profile: https://app.collide.io/profile/reed-goodman
+    profile: https://app.collide.io/profile/op-a
     followers_at_capture: 34
     note: >
       Highly active, posts real field data (dynacards, corrosion, tubing wear)
       and gets practitioner answers within hours. Already the counterparty in
       the 2026-07-27 "Dynamometer Discussions" analysis.
 
-  - handle: neal-turluck
-    display: Neal Turluck
-    company: S & S Oil and Gas
-    location: Mount Pleasant, Michigan (operations in Illinois Basin, Indiana)
+  - handle: op-b
+    display: OP-B
+    company: an Illinois Basin operator
+    location: Midwest (operations in Illinois Basin, Indiana)
     role: President / C-suite, Operations
-    profile: https://app.collide.io/profile/neal-turluck
+    profile: https://app.collide.io/profile/op-b
     followers_at_capture: 2
     scale_quoted: "152 wellbores, >3,000 acres HBP, Posey & Vanderburgh counties, Indiana"
     note: >
@@ -63,7 +63,7 @@ problems:
     category: lift
     status: open
     title: "Pump-off progression over 5 minutes with no pump-off controller"
-    operator: reed-goodman
+    operator: op-a
     evidence:
       post: "Pump cards - dynamometer - what happened?!"
       url: https://app.collide.io/posts/pump-cards-dynamometer-what-happened
@@ -72,14 +72,14 @@ problems:
       operator_quotes:
         - "What happened to my pump card over the course of this 5 minutes?!"
         - "Not on a controller yet"
-        - "This is on a C66 and we are designing a clutch kick out... Actually Amplified already did everything On their end. Just waiting on me to go install it."
+        - "This is on a C66 and we are designing a clutch kick out... Actually a controls vendor already did everything On their end. Just waiting on me to go install it."
         - "One of the fun things about these wells is they don't pump off slowly... when they go for it, they..."
     community_answer_summary: >
-      Andrew Aday: full barrel -> near-empty barrel across the 5 min; rectangular
+      an experienced pumper: full barrel -> near-empty barrel across the 5 min; rectangular
       cards = full pump, "pot with a handle" cards = incomplete fillage; remedy is
       slow the unit or set a controller shutdown below a fillage threshold, "usually
-      between 65 and 75%". Chance Salinas and Yogashri Pradhan independently said
-      slow the unit / reduce runtime. Yogashri also read fluid pound on the downhole card.
+      between 65 and 75%". another practitioner and another practitioner independently said
+      slow the unit / reduce runtime. another practitioner also read fluid pound on the downhole card.
     what_is_still_unanswered:
       - "What fillage setpoint and what slow-down schedule for THIS well, from its own cards?"
       - "Does a clutch kick-out (mechanical) get the same result as a fillage-based POC, and where does it differ?"
@@ -112,7 +112,7 @@ problems:
         pins monotonicity of fillage against pump-off severity.
       operational_consequence: >
         Severe fast pump-off is exactly the regime a POC setpoint exists to catch, and
-        exactly where this reads "full". Reed stated his wells "don't pump off slowly...
+        exactly where this reads "full". OP-A stated his wells "don't pump off slowly...
         when they go for it, they go". DO NOT SHIP A SETPOINT until this is fixed.
       status: "FIXED 2026-08-05."
       fix:
@@ -145,15 +145,15 @@ problems:
     notes:
       - inference: true
         text: >
-          "C66" is quoted verbatim from Reed. Do NOT restate it as a gearbox
+          "C66" is quoted verbatim from OP-A. Do NOT restate it as a gearbox
           rating — the 2026-07-27 review established C-66 is an Arrow gas ENGINE
-          designation. Ask Reed what the gearbox is before any torque work.
+          designation. Ask OP-A what the gearbox is before any torque work.
 
   - id: so-lift-002
     category: lift
     status: open
     title: "Noise in the bottom-left corner of the downhole card — real signal or processing artefact?"
-    operator: reed-goodman
+    operator: op-a
     evidence:
       post: "Pump cards - dynamometer - what happened?!"
       url: https://app.collide.io/posts/pump-cards-dynamometer-what-happened
@@ -161,7 +161,7 @@ problems:
         - "could the noise in this corner be from gas In The pump decompressing and giving a little lift? Or a delay in valves closing?"
         - "There isn't really any noise here when the pump is full!"
     community_answer_summary: >
-      Walter Phillips (3dwellbore.com): if it is an accelerometer-based dyno, do not
+      a rod-lift specialist (a vendor site): if it is an accelerometer-based dyno, do not
       over-read that corner — position is integrated twice from acceleration, so
       per-stroke error accumulates and the derived pump card is especially prone to
       that positional discontinuity; reprocess before concluding. Longer answer: could
@@ -169,7 +169,7 @@ problems:
       correction: gas expansion IS visible, but at the TOP left, not the bottom left;
       the bottom-left is noisy because it is right after the stroke-to-stroke
       discontinuity, before the wave equation settles.
-      Andrew Aday: slope near fluid/plunger contact does suggest some gas interference,
+      an experienced pumper: slope near fluid/plunger contact does suggest some gas interference,
       and the shape may be a tag present only when the pump isn't full.
     what_is_still_unanswered:
       - "An objective test that separates accelerometer integration drift from a real pump tag, runnable on the operator's own card file."
@@ -183,13 +183,13 @@ problems:
       deliverable: "Card-quality / trust-band report: which parts of a derived downhole card carry enough numerical confidence to diagnose on."
     notes:
       - inference: true
-        text: "We have not confirmed Reed's dyno is accelerometer-based; Walter asked and it was not answered in-thread. Ask before assuming."
+        text: "We have not confirmed OP-A's dyno is accelerometer-based; the specialist asked and it was not answered in-thread. Ask before assuming."
 
   - id: so-lift-003
     category: lift
     status: analysed
     title: "Repeated tubing splits, never the same joint"
-    operator: reed-goodman
+    operator: op-a
     evidence:
       post: "Tubing Wear - Rod pump"
       url: https://app.collide.io/posts/tubing-wear-rod-pump
@@ -220,7 +220,7 @@ problems:
     category: lift
     status: open
     title: "Under-pressured gas/condensate wildcat — analogue hunt, not a lift problem"
-    operator: reed-goodman
+    operator: op-a
     evidence:
       post: "Under pressured/ Low BHP Gas Fields"
       url: https://app.collide.io/posts/under-pressured-low-bhp-gas-fields
@@ -246,7 +246,7 @@ problems:
     category: lift
     status: analysed
     title: "Undulation on the top end of the card (the original thread)"
-    operator: reed-goodman
+    operator: op-a
     evidence:
       post: "Dynamometer Discussions"
       url: https://app.collide.io/posts/dynamometer-discussions
@@ -264,11 +264,11 @@ problems:
         casing_psi: 25
         baird_valve_psi: 150
       corrections_received:
-        - "Walter Phillips on section 3b ('Those peaks should be equally...')"
-        - "Reed supplied the rod string, which changed the conclusions"
+        - "a rod-lift specialist on section 3b ('Those peaks should be equally...')"
+        - "OP-A supplied the rod string, which changed the conclusions"
       our_two_errors:
         - >
-          Quoted a gearbox rating derived from "C-66". Reed's own post calls it the
+          Quoted a gearbox rating derived from "C-66". OP-A's own post calls it the
           PRIME MOVER — an engine designation carrying no gearbox rating. The
           information needed to avoid this error was inside the post we were answering.
         - "Fillage computed off surface stroke instead of plunger stroke."
@@ -284,11 +284,11 @@ problems:
     category: maintenance
     status: open
     title: "Walking beam and saddle bearing failure"
-    operator: neal-turluck
+    operator: op-b
     evidence:
       post: "The walking beam went for a walk about and took the saddle bearing with it."
       posted: "~2026-08-01 (4 days before capture)"
-      url_hint: https://app.collide.io/profile/neal-turluck
+      url_hint: https://app.collide.io/profile/op-b
     what_is_still_unanswered:
       - "Was there a card or vibration precursor that would have caught it? On a well with no monitoring, what is the cheapest precursor?"
       - "Saddle-bearing inspection interval that is defensible for a stripper well economics case."
@@ -300,7 +300,7 @@ problems:
     category: maintenance
     status: open
     title: "Low-volume wells sit at the bottom of the attention list until they fail loudly"
-    operator: neal-turluck
+    operator: op-b
     evidence:
       post: "This is how a pumper loses their job."
       engagement: {comments: 14, likes: 9}
@@ -324,14 +324,14 @@ problems:
     category: maintenance
     status: open
     title: "Rust, corrosion and pipe integrity across an old shallow field"
-    operator: [neal-turluck, reed-goodman]
+    operator: [op-b, op-a]
     evidence:
       posts:
         - title: "This is how a pumper loses their job."
-          operator: neal-turluck
+          operator: op-b
           note: "quoted under so-maint-002"
         - title: "Who can name the corrosion?"
-          operator: reed-goodman
+          operator: op-a
           note: "title captured from profile; body not yet read"
     our_capability:
       modules:
@@ -344,7 +344,7 @@ problems:
     category: maintenance
     status: open
     title: "Casing pressure as a free daily diagnostic"
-    operator: neal-turluck
+    operator: op-b
     evidence:
       post: "Casing pressure says a lot about a well and I checked the backside on this beast before doing a batc[h]..."
       operator_quotes:
@@ -361,7 +361,7 @@ problems:
     category: supply_chain
     status: open
     title: "Every small operator carries its own spares list, and nobody pools them"
-    operator: neal-turluck
+    operator: op-b
     evidence:
       post: 'Guide wires, deadman, rods, tubing, rod subs, tubing subs, mud anchor, insert pump, seat nipple, rod boxes, tubing collars, gas anchor, barrel, "word salad."'
       posted: "~2026-08-04 (1 day before capture)"
@@ -408,7 +408,7 @@ problems:
     category: data
     status: open
     title: "No pump-off controller / no SCADA on marginal wells"
-    operator: reed-goodman
+    operator: op-a
     evidence:
       quote: "Not on a controller yet"
       url: https://app.collide.io/posts/pump-cards-dynamometer-what-happened
@@ -427,7 +427,7 @@ problems:
     category: data
     status: analysed
     title: "Tally app — a $500 bounty, already fully specified by the operator"
-    operator: reed-goodman
+    operator: op-a
     evidence:
       post: "Tally app needed"
       url: https://app.collide.io/posts/tally-app-needed
@@ -467,13 +467,13 @@ problems:
     category: capital
     status: open
     title: "Growth capital for a 152-wellbore Illinois Basin operator"
-    operator: neal-turluck
+    operator: op-b
     evidence:
       posts:
-        - title: "I'm trying to find an investor for S & S Oil and Gas"
+        - title: "I'm trying to find an investor for an Illinois Basin operator"
           posted: "~2026-07-30 (6 days before capture)"
           engagement: {comments: 15, likes: 15}
-        - title: "Capital partner for S & S Oil and Gas"
+        - title: "Capital partner for an Illinois Basin operator"
           posted: "2026-08-05"
       operator_quotes:
         - "I'm looking for $6M - $10M over 5 years and to split the margin of the net income of the company."
@@ -511,7 +511,7 @@ problems:
     status_note: >
       Numbers are from secondary reporting, not primary sources. VERIFY EACH ONE
       against the rule text / state agency before it appears in anything we send.
-      Neal operates in Indiana, Reed in Texas — neither is directly governed by
+      OP-B operates in Indiana, OP-A in Texas — neither is directly governed by
       the federal statewide-bond rule unless they hold federal leases. Check first.
     our_position: >
       Out of our lane as advice. In our lane as the reason the technical work
@@ -522,7 +522,7 @@ problems:
     category: regulatory
     status: analysed
     title: "Well-by-well economics for the marginal-well decision, with P&A liability carried"
-    operator: [neal-turluck, reed-goodman]
+    operator: [op-b, op-a]
     evidence:
       derived_from: [so-reg-001, so-capital-001, so-maint-002]
       note: >
@@ -591,7 +591,7 @@ problems:
     category: regulatory
     status: open
     title: "Contract-operator underperformance and regulatory compliance backlog"
-    operator: neal-turluck
+    operator: op-b
     evidence:
       quote: "Addressing regulatory issues and strengthening operational stability."
       note: "From the investor post; the compliance backlog is stated as a use of funds."
@@ -619,7 +619,7 @@ research_refs:
   amplified:
     title: "How to Increase Marginal Well Production Without Increasing Costs"
     url: https://amplified.industries/resources/blogs/how-to-increase-production-without-increasing-costs
-    note: "Amplified Industries is the vendor Reed named for his clutch kick-out. Treat as an adjacent player, not a neutral source."
+    note: "a controls vendor is the vendor OP-A named for his clutch kick-out. Treat as an adjacent player, not a neutral source."
   loe-primer:
     title: "What is LOE (Lease Operating Expense) in oil and gas?"
     url: https://www.kingdomexploration.com/?page=faq&slug=loe-lease-operating-expense

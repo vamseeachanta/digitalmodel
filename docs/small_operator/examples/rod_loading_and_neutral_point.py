@@ -168,7 +168,7 @@ def main() -> None:
         print(f"    peak polished rod load   {L['pprl']:8.0f} lb")
         print(f"    min  polished rod load   {L['mprl']:8.0f} lb")
         print(f"    max stress               {G['s_max']:8.0f} psi")
-        print(f"    Goodman allowable        {G['s_allow']:8.0f} psi")
+        print(f"    Goodman allowable     {G['s_allow']:8.0f} psi")
         print(f"    utilisation              {G['utilisation']*100:8.0f} %")
 
     g_now = goodman(SPM)

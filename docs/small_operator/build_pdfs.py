@@ -72,16 +72,6 @@ DOCUMENTS = [
         landscape=False,
         audience="Any small / marginal operator. Nothing in it is specific to one company.",
     ),
-    Document(
-        key="matrix",
-        source="dynacard-matrix.html",
-        output="AceEngineer-dynacard-review-matrix.pdf",
-        landscape=True,  # a four-column matrix does not survive portrait
-        audience=(
-            "ONE named operator — it quotes his posts and names his equipment. "
-            "Do not send this to anyone else."
-        ),
-    ),
 ]
 
 

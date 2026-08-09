@@ -8,6 +8,26 @@ Sibling of [`docs/collide_pe/`](../collide_pe/README.md). That program solves th
 "PE Problem of the Day" quiz series; **this one solves real operators' real field
 problems**, sourced from the same community.
 
+## Where things live — read this first
+
+This directory is the **generic, public half** of the program. It carries the
+physics, the reusable analysis, and an anonymised brochure that can go to any
+operator.
+
+**Client identities and client-specific deliverables live in the private
+`aceengineer-strategy` repo**, under `pipeline/small-operator-outreach/`. That
+is where the pseudonym key is, where the per-client card review lives, and where
+`DO-NOT-CONTACT.md` lives. Check that repo before contacting anyone.
+
+Operators appear here as stable pseudonyms — **OP-A**, **OP-B** — so the analysis
+stays traceable without naming anyone. Community members who commented are
+described by role. Nothing in this directory should ever name a person, a
+company, an address or a phone number: digitalmodel is a **public** repo.
+
+If you need to know who OP-A is, you need the private repo, and if you do not
+have access to the private repo you are not the person who should be contacting
+them.
+
 ## Layout
 
 | Path | What |
@@ -107,8 +127,8 @@ So, non-negotiably:
 | `capital` | 1 | we underwrite technically; we are not a capital provider |
 | `regulatory` | 3 | `so-reg-003` **built and tested**; the other two are context, not advice |
 
-Two named operators: **Reed Goodman** (Jaybird Resources, Cuero TX) and
-**Neal Turluck** (S & S Oil and Gas, Illinois Basin).
+Two named operators: **OP-A** (a Gulf Coast operator, Gulf Coast) and
+**OP-B** (an Illinois Basin operator, Illinois Basin).
 
 ## Shipped
 
@@ -136,7 +156,7 @@ withdrawn when nothing is profitable to produce; regression test pins it.
 1. Read the three posts captured by title only: `Tally app needed`,
    `Tubing Wear - Rod pump`, `Under pressured/ Low BHP Gas Fields`.
 2. Verify the bonding / plugging-cost figures against primary sources.
-3. Confirm whether Reed's dyno is accelerometer-based (Walter Phillips asked
+3. Confirm whether OP-A's dyno is accelerometer-based (a rod-lift specialist asked
    in-thread; it went unanswered) before any card-trust-band work.
-4. Ask Reed what the gearbox is on the C66 unit before any torque work.
+4. Ask OP-A what the gearbox is on the C66 unit before any torque work.
 5. Nothing gets posted to Collide or emailed without explicit approval.

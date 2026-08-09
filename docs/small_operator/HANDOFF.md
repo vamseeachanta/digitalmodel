@@ -2,10 +2,18 @@
 
 Exit snapshot. Read the **Do not repeat** section before touching outreach.
 
-**Everything is pushed.** digitalmodel `feat/small-operator-program` (8 commits,
-rebased onto main), aceengineer-strategy `main`, aceengineer-website `main` and
-live. No dirty trees, nothing unpushed. Open the digitalmodel PR at
-`github.com/vamseeachanta/digitalmodel/pull/new/feat/small-operator-program`.
+**Split completed 2026-08-09.** This directory is now the **generic, public
+half**: physics, reusable analysis, anonymised brochure. Operators appear as
+**OP-A** / **OP-B**; community members are described by role. Nothing here names
+a person, company, address or phone number.
+
+**Client identities and client-specific deliverables are in the private
+`aceengineer-strategy` repo**, `pipeline/small-operator-outreach/` — the
+pseudonym key, the per-client card review, and `DO-NOT-CONTACT.md`. Read that
+before contacting anyone.
+
+Merged to `main` by **squash**, deliberately: the branch's intermediate commits
+carried contact details, and squashing means they never reach `main` at all.
 
 ---
 
@@ -16,14 +24,14 @@ at a time, and route each solution into the ecosystem rather than answering it
 once. Sibling of `docs/collide_pe/`, which solves the PE-Problem-of-the-Day quiz
 series; this one solves operators' real field problems.
 
-Two named operators drove it, both from Collide: **Reed Goodman** (Jaybird
-Resources, Cuero TX) and **Neal Turluck** (S & S Oil and Gas, Illinois Basin).
+Two named operators drove it, both from Collide: **OP-A** (a Gulf Coast operator
+Resources, Gulf Coast) and **OP-B** (an Illinois Basin operator, Illinois Basin).
 
 ---
 
 ## Do not repeat — the expensive lesson
 
-**Neal Turluck replied "Please stop emailing me" on 2026-08-05.** Two unsolicited
+**OP-B replied "Please stop emailing me" on 2026-08-05.** Two unsolicited
 emails in seven days. He is on `aceengineer-strategy/pipeline/DO-NOT-CONTACT.md`
 permanently and channel-wide — no email, no Collide DM, no apology note.
 
@@ -42,7 +50,7 @@ value", it must *contain* the value and ask for nothing. If the value is not
 built, the follow-up is not due.
 
 **Channel finding, and it is the important one.** Email is not working for this
-segment. Reed has now had **five emails and replied to none**, while posting on
+segment. OP-A has now had **five emails and replied to none**, while posting on
 Collide most days and answering other people in his own threads within hours —
 and he gave us his address *by Collide DM* rather than by writing to us. The
 motion that has actually produced engagement every single time is **answering
@@ -129,21 +137,14 @@ review, and only the correct one surfaced the 50%-fillage result.
 
 ## Pending — needs a decision
 
-1. **Collide reply to Reed's pump-off thread — drafted, NOT posted.** Full text
+1. **Collide reply to OP-A's pump-off thread — drafted, NOT posted.** Full text
    in the session; the analysis behind it is committed. This is the highest-value
    pending item and the right channel. Open question: post the SPM number and the
    wear-depth prediction only, or include the Goodman and casing analysis too
    (roughly doubles the length).
-2. **Open the digitalmodel PR.** Branch is pushed and rebased; no PR yet.
-   `.pre-commit-config.yaml` exists but no hooks are installed locally, so
-   nothing ran on these commits — CI will be the first to lint them.
-3. **Move `docs/small_operator/` into aceengineer-strategy?** Raised and not
-   resolved. `pipeline/reed-goodman-collide/HANDOFF.md` carries a standing policy:
-   *"Client identities are kept in this private strategy repo … never in public
-   repos"*. digitalmodel is PUBLIC and this directory names both operators. The
-   user said public is fine; the policy still says otherwise. **Reconcile the two
-   rather than leaving them contradicting each other.**
-4. **The dynacard matrix PDF names Reed** and must not go to anyone else.
+2. **The public/private split is done** — see the top of this file. If a new
+   artefact names anyone, it belongs in the private repo, not here.
+3. **The per-client card review names OP-A** and now lives only in the private repo. It goes to him or to nobody.
 
 ---
 
@@ -170,12 +171,12 @@ by **name and company**, then look the address up in Gmail at send time. And rea
 
 Recorded because they were asserted confidently and were wrong:
 
-- **"Reed has published no email address."** False. He gave an address by Collide DM on 2026-07-03, with two existing email threads. Search Gmail before
+- **"OP-A has published no email address."** False. He gave an address by Collide DM on 2026-07-03, with two existing email threads. Search Gmail before
   asserting contact history.
 - **`so-lift-004` "do not answer unless we can cite specific fields."** False.
   Already answered and sent — the Kansas low-BHP one-pager in
-  `aceengineer-strategy/pipeline/reed-goodman-collide/`.
-- **Neal treated as a cold first contact.** He had been emailed 2026-07-29.
+  `aceengineer-strategy/pipeline/op-a-collide/`.
+- **OP-B treated as a cold first contact.** He had been emailed 2026-07-29.
 - **`problems.yml` did not parse** when first written. Validate YAML, do not
   assume.
 

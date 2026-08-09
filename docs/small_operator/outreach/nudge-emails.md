@@ -10,13 +10,13 @@ Check both before contacting anyone.
 
 ## Why this file was emptied
 
-**Neal Turluck replied "Please stop emailing me"** on 2026-08-05, after two
+**OP-B replied "Please stop emailing me"** on 2026-08-05, after two
 unsolicited emails in seven days. This file previously held a ready-to-send
 draft addressed to him, along with his email address. Both are gone. A file
 containing a prepared email to someone who has opted out is a live hazard, not
 a record.
 
-**Reed Goodman has received five emails and replied to none**, while posting on
+**OP-A has received five emails and replied to none**, while posting on
 Collide most days and answering others in his own threads within hours. He is
 not opted out and remains a friendly contact — but the channel is Collide, not
 email, and a sixth email is not a courtesy.
@@ -32,7 +32,7 @@ name and company, then look the address up in Gmail at send time.
 
 1. **If a follow-up is justified only by "we promised value", it must contain
    the value and ask for nothing.** If the value is not built, the follow-up is
-   not due. The S&S follow-up went out with nothing in it because the Indiana
+   not due. The OP-B follow-up went out with nothing in it because the Indiana
    wellbore list we had promised was never built.
 
 2. **A no-ask draft stops being a no-ask draft if an ask is added on the way
@@ -46,7 +46,7 @@ name and company, then look the address up in Gmail at send time.
 
 4. **Answer in public instead.** Every engagement this program produced came
    from answering a technical question where the operator already was. That is
-   how Reed found us and how a rod-lift specialist came to read and correct our
+   how OP-A found us and how a rod-lift specialist came to read and correct our
    work. Nobody has ever told us to stop doing that.
 
 ---
