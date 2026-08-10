@@ -46,7 +46,7 @@ Context: Lines trying to reference LineType before it's defined
 **Actions:**
 ```bash
 # Test LineTypes file individually
-python scripts/test_orcaflex_loading.py tests/output/test_cli_base/06_line_types.yml
+python scripts/check_orcaflex_loading.py tests/output/test_cli_base/06_line_types.yml
 ```
 
 **If it loads:** LineTypes is valid, problem is in Lines reference
@@ -126,10 +126,10 @@ python scripts/test_orcaflex_loading.py tests/output/test_cli_base/06_line_types
 ### Test Script Usage
 ```bash
 # Individual file
-python scripts/test_orcaflex_loading.py <file.yml>
+python scripts/check_orcaflex_loading.py <file.yml>
 
 # Master file (default)
-python scripts/test_orcaflex_loading.py
+python scripts/check_orcaflex_loading.py
 
 # With regeneration
 cd D:/workspace-hub/digitalmodel && \
@@ -137,7 +137,7 @@ uv run python -m digitalmodel.agents.orcaflex.cli generate base-files \
   --project test --output tests/output/test_cli_base \
   --vessel crowley650_atb --water-depth 39.0 --mooring-lines 8 && \
 cp tests/output/test_cli_base/test_base.yml tests/output/test_cli_base/test_calm_buoy_base.yml && \
-python scripts/test_orcaflex_loading.py
+python scripts/check_orcaflex_loading.py
 ```
 
 ## Success Criteria
@@ -202,7 +202,7 @@ python scripts/test_orcaflex_loading.py
 - `docs/domains/orcaflex/NEXT_STEPS.md` (this file)
 
 ### Test Scripts
-- `scripts/test_orcaflex_loading.py` - OrcaFlex validation script
+- `scripts/check_orcaflex_loading.py` - OrcaFlex validation script
 
 ### Generated Output
 - `tests/output/test_cli_base/` - All generated files for testing
@@ -216,7 +216,7 @@ uv run python -m digitalmodel.agents.orcaflex.cli generate base-files \
   --vessel crowley650_atb --water-depth 39.0 --mooring-lines 8
 
 # Test loading
-python scripts/test_orcaflex_loading.py [file.yml]
+python scripts/check_orcaflex_loading.py [file.yml]
 
 # View generated file
 cat tests/output/test_cli_base/<filename>

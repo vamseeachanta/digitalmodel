@@ -160,7 +160,7 @@ related: ["related-topic-1", "related-topic-2"]
 
 ### For Maintenance
 1. **Re-generation**: Run `navigation_generator.py` after structural changes
-2. **Validation**: Use `test_navigation_system.py` for quality assurance
+2. **Validation**: Use `scripts/python/digitalmodel/doc_tools/check_navigation_system.py` for quality assurance
 3. **Updates**: Monitor cross-reference map for broken links
 4. **Statistics**: README.md auto-updates with current file counts
 
@@ -168,7 +168,7 @@ related: ["related-topic-1", "related-topic-2"]
 
 ### Core Navigation System
 - `navigation_generator.py` - Main navigation generation logic
-- `test_navigation_system.py` - Comprehensive test suite
+- `scripts/python/digitalmodel/doc_tools/check_navigation_system.py` - Comprehensive test suite
 - `cross_reference_map.json` - Complete link analysis
 - `topic_relationships.json` - Topic connectivity mapping
 

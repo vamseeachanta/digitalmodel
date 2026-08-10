@@ -157,7 +157,7 @@ All ranges include proper reference basis:
 ## Test Script
 
 The verification was performed using:
-- **Script:** `scripts/test_calm_data_loader.py`
+- **Script:** `tests/orcaflex/test_calm_data_loader.py`
 - **Test Coverage:** 100% of public methods
 - **Result:** All tests passed
 

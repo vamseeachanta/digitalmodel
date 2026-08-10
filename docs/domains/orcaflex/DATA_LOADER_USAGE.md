@@ -328,7 +328,7 @@ Use the provided test script:
 
 ```bash
 cd D:/workspace-hub/digitalmodel
-python scripts/test_calm_data_loader.py
+pytest tests/orcaflex/test_calm_data_loader.py
 ```
 
 ## Troubleshooting
@@ -349,5 +349,5 @@ python scripts/test_calm_data_loader.py
 
 - Full verification report: `docs/domains/orcaflex/DATA_LOADER_VERIFICATION.md`
 - Test summary: `scripts/CALM_DATA_LOADER_TEST_SUMMARY.md`
-- Test script: `scripts/test_calm_data_loader.py`
+- Test script: `tests/orcaflex/test_calm_data_loader.py`
 - Source code: `src/digitalmodel/modules/orcaflex/modular_input_validation/data_loader.py`

@@ -95,7 +95,7 @@ if period_str and freq_str:
 
 ### Test 1: Logic Verification
 
-**File**: `scripts/test_aqwa_heading_fix.py`
+**File**: `scripts/python/digitalmodel/legacy/check_aqwa_heading_fix.py`
 
 Sample data test (4 periods × 2 headings):
 ```
@@ -152,7 +152,7 @@ Inherited headings: 52
    - `src/digitalmodel/modules/marine_analysis/parsers/aqwa_lis_parser.py` (lines 303, 332-363)
 
 2. **Test Scripts Created**
-   - `scripts/test_aqwa_heading_fix.py` - Logic verification
+   - `scripts/python/digitalmodel/legacy/check_aqwa_heading_fix.py` - Logic verification
    - `scripts/verify_parser_extraction.py` - Full parser test
    - `scripts/aqwa_data_helper.py` - Interactive debugging tool
    - `scripts/aqwa_data_template.csv` - CSV template for manual data entry

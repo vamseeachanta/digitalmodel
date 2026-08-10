@@ -124,7 +124,7 @@ Created comprehensive documentation:
 
 ### 6. Test Scripts
 
-1. **Basic Test** (`test_model_generator_basic.py`)
+1. **Basic Test** (`scripts/testing/check_model_generator_basic.py`)
    - 8 test cases
    - Component library validation
    - Model generation
@@ -286,7 +286,7 @@ results = OPP().process_single_file(sim)
 21. `.claude/skills/orcaflex-model-generator/SKILL.md` (~1100 lines)
 
 ### Testing (1 file)
-22. `test_model_generator_basic.py` (~250 lines)
+22. `scripts/testing/check_model_generator_basic.py` (~250 lines)
 
 ### Summary (1 file)
 23. `MODEL_GENERATOR_IMPLEMENTATION_SUMMARY.md` (this file)
