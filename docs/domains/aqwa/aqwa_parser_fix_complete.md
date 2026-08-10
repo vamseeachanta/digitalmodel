@@ -39,7 +39,7 @@ else:
 ## Validation Results
 
 ### Test 1: Logic Verification
-**Script**: `scripts/test_aqwa_heading_fix.py`
+**Script**: `scripts/python/digitalmodel/legacy/check_aqwa_heading_fix.py`
 
 ```
 [PASS] Extracted all 8 data points (4 periods x 2 headings)
@@ -111,7 +111,7 @@ Multiple structures validated
 2. `src/digitalmodel/modules/marine_analysis/validation/validate_catenary.py` (import fix)
 
 ### Created (Testing & Documentation)
-1. `scripts/test_aqwa_heading_fix.py` - Logic validation test
+1. `scripts/python/digitalmodel/legacy/check_aqwa_heading_fix.py` - Logic validation test
 2. `scripts/verify_parser_extraction.py` - Full parser test
 3. `scripts/direct_rao_plot.py` - Direct parsing & plot generation
 4. `scripts/aqwa_data_helper.py` - Interactive debugging tool

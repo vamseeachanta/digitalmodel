@@ -65,7 +65,7 @@ orcaflex-agent
 **Example Usage**:
 ```bash
 # Generate base files
-python scripts/test_orcaflex_agent_cli.py --verbose generate base-files \
+python scripts/check_orcaflex_agent_cli.py --verbose generate base-files \
   --project calm_buoy_baltic \
   --vessel crowley650_atb \
   --water-depth 39.0 \
@@ -73,7 +73,7 @@ python scripts/test_orcaflex_agent_cli.py --verbose generate base-files \
   --output ./output/base_files
 
 # Generate environmental files
-python scripts/test_orcaflex_agent_cli.py --verbose generate env-files \
+python scripts/check_orcaflex_agent_cli.py --verbose generate env-files \
   --return-periods 1,10,100 \
   --headings all \
   --conditions baltic_sea \
@@ -262,7 +262,7 @@ tests/
 └── test_orcaflex_agent.py                        (217 lines)
 
 scripts/
-└── test_orcaflex_agent_cli.py                    (15 lines)
+└── check_orcaflex_agent_cli.py                    (15 lines)
 ```
 
 **Total**: 232 lines of test code

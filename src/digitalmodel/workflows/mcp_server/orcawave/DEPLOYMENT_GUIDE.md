@@ -74,7 +74,7 @@ pip install pytesseract
 
 ### 4. Verify Installation
 ```bash
-python test_orcawave_integration.py
+python scripts/python/digitalmodel/orcawave/check_orcawave_integration.py
 ```
 
 ## Configuration

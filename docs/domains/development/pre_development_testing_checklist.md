@@ -10,7 +10,7 @@ Ensure rock-solid testing foundation before adding new features and fixes to pre
 ### ✅ **1.1 Test Stability Analysis**
 ```bash
 # Run stability analysis to identify flaky tests
-python test_stability_analysis.py
+python scripts/python/digitalmodel/tools/check_stability_analysis.py
 ```
 **Success Criteria:**
 - [ ] Zero flaky tests detected across 3 runs

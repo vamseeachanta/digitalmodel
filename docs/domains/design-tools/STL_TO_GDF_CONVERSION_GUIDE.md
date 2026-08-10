@@ -149,7 +149,7 @@ src/modules/orcawave/gdf_outputs/
 
 ### Conversion Script
 ```
-src/modules/orcawave/test_stl_to_gdf_converters.py
+scripts/python/digitalmodel/analysis/check_stl_to_gdf_converters.py
 ```
 
 ## Next Steps
