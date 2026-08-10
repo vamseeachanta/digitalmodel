@@ -25,10 +25,33 @@ Root-only exclusions now live in the repository-root ``conftest.py`` as
 conftest and are therefore root-anchored by construction.  The tests below also
 guard that mechanism, so the exclusion cannot be quietly dropped now that it no
 longer appears in ``pytest.ini``.
+
+Second property, added by #1983
+-------------------------------
+
+``collect_ignore`` protects recursive runs, but it is *not* consulted for a
+directory named explicitly on the command line -- ``pytest scripts/`` collects
+regardless.  Thirty files under ``scripts/`` were named ``test_*.py`` or
+``*_test.py``, and because pytest collects by importing, naming that path ran
+them: collection alone wrote ``phase_convention_test_results.txt`` into the
+repository root, created three ``temp_*/`` trees, and died with
+``INTERNALERROR> mainloop: caught unexpected SystemExit!``.
+
+    No file under ``scripts/`` may match ``python_files`` (except a commented,
+    fully-consumed exemption list), and nothing still collectible under
+    ``scripts/`` may reach an interpreter exit at module scope.
+
+The two halves compose.  The first keeps ``scripts/`` out of pytest's reach by
+name.  The second makes the *exemption mechanism* of the first safe: an exempt
+file is, by definition, still imported by pytest, so it must not be able to
+take the whole run down.  A module-scope exit in a file pytest never imports is
+harmless, which is why the second guard is scoped to collectible files only --
+22 non-collectible scripts under ``scripts/`` exit at module scope by design.
 """
 
 from __future__ import annotations
 
+import ast
 import importlib.util
 import os
 from pathlib import Path
@@ -260,4 +283,389 @@ def test_collect_ignore_entries_exist(rootpath: Path) -> None:
     assert not missing, (
         f"root conftest.py collect_ignore entries {missing} name paths that do "
         f"not exist under {rootpath}; delete or repoint them"
+    )
+
+
+# ---------------------------------------------------------------------------
+# #1983: scripts/ must not wear a test name, and whatever remains collectible
+# under scripts/ must not exit the interpreter at module scope.
+# ---------------------------------------------------------------------------
+
+# Files under scripts/ permitted to keep a name matching python_files.
+#
+# Every entry must (a) exist and (b) actually match python_files, both asserted
+# below -- a stale exemption is worse than no exemption, because it reads as
+# licence for an offender it does not cover.  ('projects' sat in norecursedirs
+# for years naming nothing at all; see #1977.)
+SCRIPT_TEST_NAME_EXEMPTIONS = (
+    # scripts/solver_smoke_test.py is live operator tooling, not a stray script.
+    # The deckhand licensed-run lane invokes it unattended over SSH; it was last
+    # touched 2026-07-31 ("Add end-to-end solver smoke test (OrcaFlex + AQWA
+    # licence probe)").  Renaming it can break a scheduled task on a licensed
+    # host this repository cannot see, and the fleet sweep that would clear that
+    # risk cannot be run from a worktree, so #1983 Stage 5 deferred the rename
+    # rather than mitigating it with `git log --follow`, which does nothing for
+    # a scheduled task on another machine.
+    #
+    # Note the name is ALSO a live engine dispatch key -- src/digitalmodel/
+    # engine.py:834 `elif basename == "solver_smoke_test":`, the shipped
+    # base_configs/modules/solver_smoke_test/, the solver_smoke_test.json report
+    # name, and the solver-smoke CI domain.  Those are a different thing from
+    # this script and must not be swept into any future rename of it.
+    #
+    # It is safe to leave collectible: it collects 0 items, and the guard below
+    # proves it reaches no module-scope exit.
+    "scripts/solver_smoke_test.py",
+)
+
+# Known-positive controls for the name matcher.  If `python_files` is ever read
+# back as something that does not match these, a "no offenders" result proves
+# nothing.  The negative control pins the other half of the fix: `check_*` is
+# only a safe prefix for as long as it matches no pattern in the live config.
+NAME_CONTROL_POSITIVE = ("test_control_probe.py", "control_probe_test.py")
+NAME_CONTROL_NEGATIVE = ("check_control_probe.py",)
+
+_EXIT_CALL_NAMES = frozenset({"exit", "quit", "sys.exit", "os._exit"})
+
+_SCOPE_BOUNDARIES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef, ast.Lambda)
+
+# Source used as the known-positive control for the module-scope exit scan.
+# Lines marked EXPECT-EXIT must be found; every other exit here must not be.
+# A shallow scan of `tree.body` finds NONE of the expected lines, which is
+# exactly how the first two drafts of this guard measured zero offenders
+# against a tree containing three (#1983).
+_EXIT_CONTROL_SOURCE = '''\
+import os
+import sys
+
+try:
+    import OrcFxAPI
+except ImportError:
+    sys.exit(1)  # EXPECT-EXIT nested in an except handler
+
+for _item in range(1):
+    while True:
+        with open(__file__) as _fh:
+            if _fh:
+                exit(2)  # EXPECT-EXIT bare exit nested five levels deep
+
+try:
+    pass
+finally:
+    os._exit(3)  # EXPECT-EXIT nested in a finally block
+
+try:
+    pass
+except Exception:
+    pass
+else:
+    quit(4)  # EXPECT-EXIT nested in a try/else
+
+if os.environ:
+    raise SystemExit(5)  # EXPECT-EXIT raise nested in an if
+
+
+def _helper():
+    sys.exit(6)  # must NOT be found: function body
+
+
+class _Klass:
+    os._exit(7)  # must NOT be found: class body
+
+
+_lam = lambda: exit(8)  # must NOT be found: lambda body
+
+if __name__ == "__main__":
+    sys.exit(9)  # must NOT be found: __main__ guard
+else:
+    os._exit(10)  # EXPECT-EXIT the else branch of a __main__ guard DOES run
+'''
+
+
+def _is_main_guard(node: ast.AST) -> bool:
+    """True for ``if __name__ == "__main__":`` (the only excluded If)."""
+    if not isinstance(node, ast.If):
+        return False
+    test = node.test
+    return (
+        isinstance(test, ast.Compare)
+        and isinstance(test.left, ast.Name)
+        and test.left.id == "__name__"
+        and len(test.ops) == 1
+        and isinstance(test.ops[0], ast.Eq)
+        and len(test.comparators) == 1
+        and isinstance(test.comparators[0], ast.Constant)
+        and test.comparators[0].value == "__main__"
+    )
+
+
+def _call_name(node: ast.Call) -> str | None:
+    func = node.func
+    if isinstance(func, ast.Name):
+        return func.id
+    if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name):
+        return f"{func.value.id}.{func.attr}"
+    return None
+
+
+def _collect_exits(node: ast.AST, found: list[tuple[int, str]]) -> None:
+    """Recursively collect exits reachable when ``node``'s module is imported.
+
+    Descent is by ``iter_child_nodes``, which reaches through ``If``, ``Try``
+    (body, handlers, orelse, finalbody), ``With``, ``For``, ``While`` and
+    ``Match`` bodies without needing each spelled out.  Three things are pruned:
+    function/class/lambda bodies (not run at import), and the *body* of a
+    ``__main__`` guard.  A ``__main__`` guard's ``orelse`` is NOT pruned -- it
+    runs on import, which is the whole point of the guard.
+    """
+    for child in ast.iter_child_nodes(node):
+        if isinstance(child, _SCOPE_BOUNDARIES):
+            # Decorators and argument defaults still evaluate at module scope
+            # even though the body does not.
+            for side in getattr(child, "decorator_list", []) or []:
+                _collect_exits_in_expression(side, found)
+            args = getattr(child, "args", None)
+            if isinstance(args, ast.arguments):
+                for default in [*args.defaults, *(args.kw_defaults or [])]:
+                    if default is not None:
+                        _collect_exits_in_expression(default, found)
+            for base in getattr(child, "bases", []) or []:
+                _collect_exits_in_expression(base, found)
+            continue
+
+        if _is_main_guard(child):
+            _collect_exits_in_expression(child.test, found)
+            for stmt in child.orelse:
+                _record_exit(stmt, found)
+                _collect_exits(stmt, found)
+            continue
+
+        _record_exit(child, found)
+        _collect_exits(child, found)
+
+
+def _collect_exits_in_expression(node: ast.AST, found: list[tuple[int, str]]) -> None:
+    _record_exit(node, found)
+    _collect_exits(node, found)
+
+
+def _record_exit(node: ast.AST, found: list[tuple[int, str]]) -> None:
+    if isinstance(node, ast.Call):
+        name = _call_name(node)
+        if name in _EXIT_CALL_NAMES:
+            found.append((node.lineno, name))
+    elif isinstance(node, ast.Raise):
+        exc = node.exc
+        target = exc.func if isinstance(exc, ast.Call) else exc
+        if isinstance(target, ast.Name) and target.id == "SystemExit":
+            found.append((node.lineno, "raise SystemExit"))
+
+
+def module_scope_exits(source: str) -> list[tuple[int, str]]:
+    """Exits reachable at import time, sorted by line."""
+    found: list[tuple[int, str]] = []
+    _collect_exits(ast.parse(source), found)
+    return sorted(set(found))
+
+
+def _shallow_body_exits(source: str) -> list[tuple[int, str]]:
+    """The naive scan: only top-level statements, no descent.  Control only."""
+    found: list[tuple[int, str]] = []
+    for stmt in ast.parse(source).body:
+        _record_exit(stmt, found)
+    return sorted(set(found))
+
+
+def _scripts_python_files(rootpath: Path) -> list[Path]:
+    scripts_root = rootpath / "scripts"
+    assert scripts_root.is_dir(), (
+        f"expected a scripts/ directory at {scripts_root}; both guards below "
+        "would have nothing to judge without it"
+    )
+    return sorted(p for p in scripts_root.rglob("*.py") if p.is_file())
+
+
+def _assert_live_python_files(pytestconfig: pytest.Config) -> list[str]:
+    """Return python_files, having proved it came from this repo's pytest.ini.
+
+    Measured during #1977: with the ini key absent, ``getini`` silently returns
+    pytest's own built-in default and every assertion downstream passes having
+    checked nothing.
+    """
+    inipath = pytestconfig.inipath
+    assert inipath is not None and inipath.name == "pytest.ini", (
+        "python_files was not read from this repository's pytest.ini "
+        f"(inipath={inipath!r}); getini() falls back to pytest's built-in "
+        "default without raising, so this test would pass while checking nothing"
+    )
+    patterns = list(pytestconfig.getini("python_files"))
+    assert patterns, "python_files is empty; no file could be judged collectible"
+
+    for name in NAME_CONTROL_POSITIVE:
+        assert _matches_python_files(name, patterns), (
+            f"control filename {name!r} does not match python_files={patterns!r}; "
+            "the matcher is not behaving as pytest's collection does, so a "
+            "'no offenders' result below would prove nothing"
+        )
+    for name in NAME_CONTROL_NEGATIVE:
+        assert not _matches_python_files(name, patterns), (
+            f"control filename {name!r} now MATCHES python_files={patterns!r}. "
+            "The check_* prefix is the whole basis of the #1983 rename; if it "
+            "has become collectible, 27 renamed scripts are collectible again."
+        )
+    return patterns
+
+
+def test_no_script_is_named_like_a_test(pytestconfig: pytest.Config, rootpath: Path):
+    """The #1983 G2 guard: nothing under scripts/ wears a collectible name.
+
+    RED before the rename, naming 30 files.  GREEN after, with a single
+    commented exemption.
+    """
+    patterns = _assert_live_python_files(pytestconfig)
+    candidates = _scripts_python_files(rootpath)
+
+    # --- vacuity guard: there is something to judge -----------------------
+    assert candidates, (
+        f"no .py file found under {rootpath / 'scripts'}; the assertion below "
+        "would iterate over nothing"
+    )
+
+    exemptions = set(SCRIPT_TEST_NAME_EXEMPTIONS)
+    offenders = []
+    consumed = set()
+    for path in candidates:
+        rel = path.relative_to(rootpath).as_posix()
+        if not _matches_python_files(path.name, patterns):
+            continue
+        if rel in exemptions:
+            consumed.add(rel)
+            continue
+        offenders.append(rel)
+
+    # --- exemptions must be fully consumed --------------------------------
+    unconsumed = sorted(exemptions - consumed)
+    assert not unconsumed, (
+        f"SCRIPT_TEST_NAME_EXEMPTIONS entries {unconsumed} do not correspond to "
+        "an existing file under scripts/ that actually matches "
+        f"{patterns!r}. Delete them: a stale exemption is invisible licence, "
+        "and it can mask a genuine offender that a later edit moves onto the "
+        "same path."
+    )
+
+    detail = "\n".join(f"  {path}" for path in offenders)
+    assert not offenders, (
+        f"{len(offenders)} file(s) under scripts/ match python_files "
+        f"{patterns!r}, so pointing pytest at them imports and therefore RUNS "
+        "them (#1983):\n"
+        f"{detail}\n"
+        f"(checked {len(candidates)} .py files; "
+        f"{len(consumed)} exemption(s) consumed). Fix: rename to check_*, "
+        "which matches no pattern in python_files and is already the local "
+        "convention (scripts/check_generated_html.py, "
+        "scripts/legal/check_protected_identifiers.py). If the file is a real "
+        "test, move it under tests/<domain>/ instead."
+    )
+
+
+def test_module_scope_exit_scan_descends(rootpath: Path):
+    """Known-positive control for the exit scan, run before the guard below.
+
+    This test is the reason the guard can be believed.  It pins three things:
+    the scan finds exits nested inside try/except/finally/else, if, for, while
+    and with; it does not find exits in function, class or lambda bodies or in
+    a __main__ guard; and it DOES find them in a __main__ guard's else branch.
+    It also demonstrates that the naive `tree.body` scan finds none of them.
+    """
+    expected = {
+        lineno
+        for lineno, line in enumerate(_EXIT_CONTROL_SOURCE.splitlines(), start=1)
+        if "EXPECT-EXIT" in line
+    }
+    assert len(expected) == 6, (
+        f"the control source should mark 6 reachable exits, marked {expected}; "
+        "the control has drifted from what it is asserting"
+    )
+
+    found = module_scope_exits(_EXIT_CONTROL_SOURCE)
+    found_lines = {lineno for lineno, _ in found}
+    assert found_lines == expected, (
+        f"module_scope_exits() found lines {sorted(found_lines)} on the control "
+        f"source but should have found {sorted(expected)}. "
+        f"Missing={sorted(expected - found_lines)} "
+        f"Spurious={sorted(found_lines - expected)}. The guard below cannot be "
+        "trusted while this disagrees."
+    )
+    assert {name for _, name in found} >= {"sys.exit", "exit", "os._exit"}, (
+        f"the control found only {sorted({n for _, n in found})}; a matcher that "
+        "recognises sys.exit but not bare exit() misses 17 of the 18 real call "
+        "sites under scripts/ (#1983)"
+    )
+
+    shallow = _shallow_body_exits(_EXIT_CONTROL_SOURCE)
+    assert not shallow, (
+        f"a shallow tree.body scan found {shallow} on the control source. It is "
+        "supposed to find NOTHING -- that is the point of the control, and the "
+        "reason two earlier drafts of this guard measured zero offenders "
+        "against a tree containing three."
+    )
+
+
+def test_no_module_scope_exit_under_scripts(
+    pytestconfig: pytest.Config, rootpath: Path
+):
+    """The #1983 G1 guard: nothing pytest still imports under scripts/ exits.
+
+    Scoped to collectible files.  An exit at module scope only matters if
+    something imports the module, and after the rename the only importer is
+    pytest.  RED before the rename, naming scripts/test_orcaflex_loading.py
+    (sys.exit inside except ImportError, which takes the entire run down with
+    INTERNALERROR), scripts/testing/test_complete_workflow.py and
+    scripts/testing/test_model_generator_basic.py (bare exit() inside
+    except Exception).  GREEN after.
+    """
+    patterns = _assert_live_python_files(pytestconfig)
+    collectible = [
+        path
+        for path in _scripts_python_files(rootpath)
+        if _matches_python_files(path.name, patterns)
+    ]
+
+    # --- vacuity guard: the scanned set is non-empty -----------------------
+    # It holds because SCRIPT_TEST_NAME_EXEMPTIONS keeps exactly one file
+    # collectible.  If that exemption is ever retired, nothing under scripts/ is
+    # importable by pytest and this guard has nothing left to protect -- delete
+    # it together with the exemption rather than leaving it silently vacuous.
+    assert collectible, (
+        f"no file under scripts/ matches python_files {patterns!r}, so this "
+        "guard is scanning nothing. That is the ideal end state, but a passing "
+        "vacuous test is not evidence: retire this test alongside the last "
+        "entry in SCRIPT_TEST_NAME_EXEMPTIONS."
+    )
+
+    offenders = []
+    for path in collectible:
+        source = path.read_text(encoding="utf-8", errors="replace")
+        try:
+            exits = module_scope_exits(source)
+        except SyntaxError as exc:  # pragma: no cover - defensive
+            pytest.fail(f"{path.relative_to(rootpath)} does not parse: {exc}")
+        if exits:
+            rel = path.relative_to(rootpath).as_posix()
+            shown = ", ".join(f"{name} at line {lineno}" for lineno, name in exits[:5])
+            more = f" (+{len(exits) - 5} more)" if len(exits) > 5 else ""
+            offenders.append(f"  {rel}: {shown}{more}")
+
+    detail = "\n".join(offenders)
+    assert not offenders, (
+        f"{len(offenders)} file(s) under scripts/ are collectible by pytest AND "
+        "reach an interpreter exit at module scope. pytest does not treat "
+        "SystemExit as a collection error, so importing one of these kills the "
+        "entire run with 'INTERNALERROR> mainloop: caught unexpected "
+        "SystemExit!' -- taking every other result with it (#1983):\n"
+        f"{detail}\n"
+        f"(scanned {len(collectible)} collectible file(s) of "
+        f"{len(_scripts_python_files(rootpath))} .py files under scripts/). "
+        "Fix: rename the file to check_* so pytest never imports it, or move "
+        "the exit under an `if __name__ == \"__main__\":` guard."
     )
