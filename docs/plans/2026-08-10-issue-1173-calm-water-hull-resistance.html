@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>#1173 Plan — Calm-Water Hull Resistance (interFoam Towing)</title>
+  <style>
+    :root{--navy:#0b3d5c;--teal:#168c88;--ink:#18313f;--muted:#5f7480;--line:#d7e2e7;--paper:#fff;--wash:#f3f8fa;--warn:#fff5d6;--bad:#fdecec;--good:#eefaf3}
+    *{box-sizing:border-box}body{margin:0;background:var(--wash);color:var(--ink);font:16px/1.55 system-ui,sans-serif}
+    main{max-width:1100px;margin:0 auto;background:var(--paper);padding:3rem 4rem;box-shadow:0 0 30px #1232}
+    h1,h2,h3{color:var(--navy);line-height:1.2}h1{font-size:2.25rem}h2{margin-top:2.2rem;border-bottom:2px solid var(--teal);padding-bottom:.35rem}
+    h3{margin-top:1.4rem}a{color:#076b83}code{background:#edf3f5;padding:.1rem .3rem;border-radius:3px;font-size:.92em}
+    pre{background:#0f2b38;color:#e8f2f5;padding:1rem 1.2rem;border-radius:6px;overflow-x:auto;font-size:.86rem;line-height:1.45}
+    table{border-collapse:collapse;width:100%;margin:1rem 0;font-size:.93rem;display:block;overflow-x:auto}
+    th,td{border:1px solid var(--line);padding:.5rem .7rem;text-align:left;vertical-align:top}
+    th{background:var(--wash);color:var(--navy)}
+    .meta{color:var(--muted);font-size:.9rem;margin-top:-.6rem}
+    .warn{background:var(--warn);border-left:4px solid #d9a400;padding:.85rem 1.1rem;margin:1.2rem 0;border-radius:0 4px 4px 0}
+    .bad{background:var(--bad);border-left:4px solid #c0392b;padding:.85rem 1.1rem;margin:1.2rem 0;border-radius:0 4px 4px 0}
+    .good{background:var(--good);border-left:4px solid #159a5f;padding:.85rem 1.1rem;margin:1.2rem 0;border-radius:0 4px 4px 0}
+    .num{font-variant-numeric:tabular-nums}
+    ul{margin:.5rem 0 .5rem 1.1rem}li{margin:.28rem 0}
+  </style>
+</head>
+<body>
+<main>
+
+<h1>#1173 implementation plan: calm-water hull resistance by interFoam towing</h1>
+<p class="meta">Issue <a href="https://github.com/vamseeachanta/digitalmodel/issues/1173">#1173</a> &middot; branch <code>plan/1173-calm-water-hull-resistance</code> &middot; base <code>2a6b521e</code> &middot; revision 1 &middot; status: awaiting user approval</p>
+
+<div class="bad"><strong>The framing this plan was commissioned under is wrong in one load-bearing respect, and correcting it changes the recommendation.</strong> The premise was that the repository has zero resistance capability, evidenced by a whole-tree grep returning nothing. That grep was <code>git grep -i 'resistance|holtrop|froude|wave.making|calm.water'</code> — no <code>-E</code>, so <code>|</code> is a literal character in a basic regular expression and the pattern searched for one long nonsense string. Re-run with <code>-E</code> it returns 30+ files, among them a <strong>complete Holtrop-Mennen implementation</strong> that has been in the tree since May. The empirical method the sequencing question was about is already written. What it lacks is a gate, and that changes what <a href="https://github.com/vamseeachanta/digitalmodel/issues/1682">#1682</a> costs and therefore how it sequences.</div>
+
+<h2>Goal and authorization boundary</h2>
+<p>Produce a calm-water ship-resistance capability: a hull towed at constant speed through a free surface by <code>interFoam</code>, with the total resistance coefficient <code>Ct</code> extracted from a <code>forces</code> function object on the hull patch and gated against published towing-tank data.</p>
+<ul>
+  <li><strong>G1</strong> — an emitted, runnable resistance case that reaches a converged force on the pinned OpenFOAM v2312 toolchain, not merely a structurally valid directory tree.</li>
+  <li><strong>G2</strong> — <code>Ct</code> at a stated Froude number within a stated tolerance of a stated published dataset, asserted in a test that can fail.</li>
+  <li><strong>G3</strong> — the wave-making <em>trend</em> across Froude number reproduced, so that a single lucky point cannot pass the gate.</li>
+  <li><strong>G4</strong> — an independent empirical cross-check, so a converged-but-wrong answer has a second chance to be caught.</li>
+  <li><strong>G5</strong> — the <code>CaseType</code> reuse-vs-new decision documented and defended (an explicit acceptance criterion of the issue).</li>
+</ul>
+<p><strong>Boundary.</strong> This plan does not touch seakeeping, added resistance in waves, self-propulsion, propeller or rudder modelling, or full-scale extrapolation to delivered power. The body is <strong>fixed</strong> — no free sinkage and trim in the primary deliverable (see Risks). It does not attempt to fix <a href="https://github.com/vamseeachanta/digitalmodel/issues/1192">#1192</a>'s flat-plate and cylinder cases, though it is shaped by why they failed.</p>
+
+<h2>Resource intelligence</h2>
+<p>Measured on <code>gpu-claw</code> by read-only SSH probe on 2026-08-10, and against <code>origin/main</code> at <code>2a6b521e</code>. No solver was started and nothing was written to the remote host.</p>
+
+<h3>The execution host is adequate and already provisioned</h3>
+<table>
+  <tr><th>property</th><th>measured</th></tr>
+  <tr><td>OpenFOAM</td><td><code>openfoam2312</code>, <code>api=2312</code>, <code>patch=260127</code> — matches the pin hardcoded at <code>scripts/setup/dispatch-cfd-run.py:18</code>. The June environment spec's <code>v2406</code> reference is stale; v2312 is the live pin.</td></tr>
+  <tr><td>Solvers present</td><td><code>interFoam</code>, <code>interIsoFoam</code>, <code>simpleFoam</code>, <code>potentialFoam</code>, <code>snappyHexMesh</code>, <code>blockMesh</code>, <code>topoSet</code>, <code>refineMesh</code>, <code>setFields</code>, <code>decomposePar</code>, <code>reconstructPar</code>, <code>checkMesh</code>, <code>foamToVTK</code>, <code>surfaceFeatureExtract</code> — all 14 probed, all present. <code>libforces.so</code> present.</td></tr>
+  <tr><td>Cores / RAM / disk</td><td>8 cores, 62 GB RAM, 95 GB free. MPI at <code>/usr/bin/mpirun</code>.</td></tr>
+  <tr><td>Not present</td><td>No digitalmodel checkout; no numpy/scipy in system python. Both are expected and handled — see <em>Environment provisioning</em>.</td></tr>
+</table>
+
+<div class="good"><strong>The decisive find: OpenFOAM v2312 ships a complete, maintained, calm-water ship-resistance case, and it is already decomposed for exactly eight cores.</strong>
+<code>$FOAM_TUTORIALS/multiphase/interFoam/RAS/DTCHull</code> is a towed Duisburg Test Case container ship: <code>snappyHexMesh</code> from an STL, <code>interFoam</code>, a <code>forces</code> function object on the <code>hull</code> patch, half-domain with a symmetry plane. Its <code>decomposeParDict</code> reads <code>numberOfSubdomains 8</code>. This plan is built on porting that case rather than authoring resistance physics from scratch, and that choice is the direct lesson of #1192.</div>
+
+<h3>The tutorial is pseudo-steady, which is the difference between feasible and not</h3>
+<pre>system/fvSchemes:   ddtSchemes { default localEuler; }        <-- LTS, not transient
+system/controlDict: endTime 4000; deltaT 1; writeInterval 100
+system/fvSolution:  maxCo 10; maxAlphaCo 5; maxDeltaT 1;
+                    nOuterCorrectors 1; nCorrectors 2;
+                    momentumPredictor no; MULESCorr yes;
+system/snappyHexMeshDict: maxGlobalCells 2000000; nCellsBetweenLevels 3;
+                    refinementSurfaces { hull { level (0 0); } }  addLayers true; nSurfaceLayers 3;
+system/decomposeParDict:  numberOfSubdomains 8; hierarchical; n (2 2 2);</pre>
+<p><code>localEuler</code> is local time stepping: each cell advances on its own pseudo-time towards a steady state. The run is <strong>4000 pseudo-iterations at interface Courant 5</strong>, not a transient integration Courant-limited to milliseconds. A naive transient estimate for this problem lands near 5&thinsp;600 real time steps at <code>Co&nbsp;=&nbsp;0.5</code>; LTS with <code>maxAlphaCo&nbsp;5</code> is roughly an order of magnitude cheaper for the same converged force. Every wall-clock figure below assumes LTS, and adopting LTS is a requirement of this plan, not an optimisation.</p>
+
+<h3>Both candidate hull geometries already exist on the host</h3>
+<table>
+  <tr><th>file (under <code>$FOAM_TUTORIALS/resources/geometry/</code>)</th><th class="num">facets</th><th>measured bounding box</th><th>reading</th></tr>
+  <tr><td><code>wigley.stl.gz</code></td><td class="num">12&thinsp;896</td><td>x 1.0000, y 0.1000, z &minus;0.0625&hellip;0.0400</td><td><strong>The standard Wigley.</strong> L/B = 10.0, B/T = 1.60, waterline at z = 0, 0.04 freeboard. Exactly the canonical parabolic form.</td></tr>
+  <tr><td><code>wigley-scaled-oriented.stl.gz</code></td><td class="num">12&thinsp;896</td><td>x 0.5000, y 0.1000, z &minus;0.0625&hellip;0.0400</td><td><strong>Trap — do not use.</strong> Scaled in x only, so L/B = 5.0. It is not a Wigley hull in the sense any published dataset means.</td></tr>
+  <tr><td><code>DTC-scaled.stl.gz</code></td><td class="num">116&thinsp;062</td><td>x 6.2756, y 0.8585, z 0&hellip;0.5723</td><td>DTC at 1/59.407. B = 0.8585 m is <span class="num">51.0/59.407</span> to five figures; the <code>blockMeshDict</code> free-surface band at z = 0.244 is the draft <span class="num">14.5/59.407 = 0.2441</span>. Internally consistent and verified.</td></tr>
+</table>
+<p>The tutorial's inlet is <code>Umean 1.668</code> m/s against DTC <span class="num">Lpp = 5.976</span> m, giving <span class="num">Fr = 0.218</span> — the DTC design Froude number. The case is not a toy; it is the benchmark condition.</p>
+
+<h3>In-repo prior art: a Wigley LTS run already happened, and its cost was recorded</h3>
+<p><code>docs/domains/openfoam/case_studies/wigleHull_LTS/wigleHull_LTS.md</code> is a troubleshooting log from a manual Wigley <code>interFoam</code> LTS run: <em>"Current runtime: 6 hours using 4 processors"</em>, solution written at iteration 5000, inlet <code>Umean 1.452</code>, outlet <code>outletPhaseMeanVelocity</code> — the same boundary condition family as the DTCHull tutorial, so this was almost certainly derived from it. <strong>24 core-hours is a measured anchor for a Wigley-class LTS resistance run</strong>, and it is the only in-repo wall-clock datapoint for this problem class. The directory also holds <code>wigley_hull_coefficients.ods</code> and <code>coeffs_convergence.png</code>. It contains no case files, no mesh and no geometry, and it carries hardcoded developer paths — it is a narrative, not a reproducible artifact, and it cannot be the basis of a gate.</p>
+
+<h3>The existing case builder cannot emit this case, and #1192 says why that matters</h3>
+<p><code>OpenFOAMCaseBuilder.build()</code> (<code>src/digitalmodel/solvers/openfoam/case_builder.py</code>) writes <code>controlDict</code>, <code>fvSchemes</code>, <code>fvSolution</code>, <code>blockMeshDict</code>, <code>decomposeParDict</code>, <code>setFieldsDict</code>, <code>transportProperties</code>, <code>turbulenceProperties</code>, <code>g</code>, <code>dynamicMeshDict</code> and the <code>0/</code> fields. It does <strong>not</strong> write <code>snappyHexMeshDict</code> or <code>surfaceFeatureExtractDict</code>, does not stage an STL into <code>constant/triSurface/</code>, has no hull <code>wall</code> patch in its hardcoded <code>inlet/outlet/bottom/top/sides</code> boundary block, has no function-object hook other than a pressure-tap-specific one, and <code>SolverConfig.to_control_dict()</code> emits no <code>maxAlphaCo</code> or <code>maxDeltaT</code>. <code>BoundaryType</code> lacks <code>slip</code>, <code>symmetryPlane</code> and <code>fixedFluxPressure</code>.</p>
+<div class="warn"><strong>#1192 is the cautionary precedent and it is still open.</strong> The Phase-2 foundational cases (#1167 flat plate, #1166 cylinder) were built by driving this generic builder with a custom <code>DomainConfig</code>. The mesh built; the solver <strong>diverged at iteration 1</strong>. The issue's own root-cause note is that the generic builder emits boundary patches that do not match the physics. A laminar flat plate is the simplest case in the family. A 3D two-phase VOF towed hull with a snapped body-fitted mesh is the hardest. <strong>Any plan that reaches #1173 through the generic builder is planning the same failure at ten times the cost.</strong></div>
+<p>The repository already contains the counter-pattern. Of the eleven registered validation cases, ten bypass the builder entirely and write <em>frozen, verified literal dictionary templates</em> with <code>@TOKEN@</code> substitution (<code>validation/flat_plate.py</code>, <code>dam_break.py</code>, <code>wave_tank.py</code>, <code>kleefsman.py</code>, <code>maccamy_fuchs.py</code>). Only <code>cylinder.py</code> goes through the builder, and its own docstring concedes the generated mesh is "a plain box without the cylinder body" — which is precisely the case #1192 reports as unrunnable. <strong>The literal-template flavour is the pattern that works, and it is what this plan adopts.</strong></p>
+<p><code>validation/cylinder.py:147</code> also records the standing decision on the enum: <em>"No new CaseType is introduced: the routing layer owns the enum, so we reuse <code>CaseType.VIV</code>."</em> That is directly relevant to G5.</p>
+
+<h3>Holtrop-Mennen exists. Its test cannot fail.</h3>
+<p><code>src/digitalmodel/naval_architecture/holtrop_mennen.py</code> (May 19) implements the full 1984 decomposition — <code>total_resistance</code> returning <code>RF&middot;(1+k1) + RAPP + RW + RB + RTR + RA</code>, with <code>form_factor_k1</code>, <code>wetted_surface_holtrop</code>, <code>wave_resistance</code>, <code>bulbous_bow_resistance</code>, <code>transom_resistance</code>, <code>correlation_allowance</code>, <code>effective_power</code> — backed by <code>holtrop_coefficients.py</code>, a <code>hull_resistance</code> workflow, and a worked example under <code>examples/workflows/hull-resistance/</code>. This is not a stub.</p>
+<p>The fixture <code>tests/fixtures/test_vectors/naval_architecture/holtrop_mennen.yaml</code> declares a real known answer:</p>
+<pre>- id: series60_cb060
+  outputs:
+    ct_approx: 0.00385
+    ct_tolerance_pct: 15.0      -> admissible band 0.003273 .. 0.004428</pre>
+<p>The test that is supposed to enforce it asserts something else entirely:</p>
+<pre>def test_series60_ct(self):
+    ct = self._compute_ct(121.92, 16.26, 6.50, 0.60, 0.977, 0.70, 0.614, -2.02, 0, 7.72, 6.50)
+    assert 0.002 &lt; ct &lt; 0.005, f"CT={ct:.5f}"</pre>
+<div class="bad"><strong>The band asserted is 0.003 wide; the band the fixture declares is 0.001155 wide — <span class="num">2.6&times;</span> looser.</strong> And <code>grep -n "yaml\|fixture\|ct_approx\|tolerance"</code> over the test file returns <strong>nothing</strong>: no test loads the fixture at all. It is dead data. Every other assertion in the module is the same shape — <code>assert rw &gt;= 0.0</code>, <code>assert 1.10 &lt; k1 &lt; 1.35</code>, <code>assert 2000.0 &lt; s &lt; 4000.0</code>. These are plausibility ranges, not known answers. <strong>Holtrop-Mennen is implemented and unvalidated</strong>, which is exactly what #1682's 2026-07-27 triage comment said in prose: <em>"part of the scope has landed, but a verifiable remainder is still outstanding."</em> The remainder is the gate.</div>
+
+<h3>Dispatch, work root and evidence conventions already exist</h3>
+<ul>
+  <li><code>scripts/setup/dispatch-cfd-run.py</code> — run from the orchestrating box, SSH-probes candidate hosts for cores and load, selects one, sources the v2312 <code>etc/bashrc</code>, and runs a remote command with <code>CFD_DISPATCH_HOST</code>/<code>CFD_DISPATCH_RANKS</code> exported. <code>--max-load-per-core</code> is fixed at 1.5, <code>--oversubscribe</code> is forbidden, and <code>--dry-run</code> with <code>--assume-probe</code> plans offline.</li>
+  <li>External work root (<a href="https://github.com/vamseeachanta/digitalmodel/issues/1565">#1565</a>, a T3 plan with two rounds of three-provider review) — heavy cases live outside every git checkout under an operator-private root, keyed by a RunIdentity SHA. Hosted mode forbids YAML from naming the root at all.</li>
+  <li>Result policy — only <code>cases.csv</code> and <code>batch_summary.json</code> come back input-local, with host paths redacted. Committed evidence lands in <code>docs/api/cfd/</code>; there are already nine <code>*-verification.html</code> reports there plus JSON manifests.</li>
+  <li><code>checkMesh</code> verdict rule: exit code zero is insufficient. Output must contain <code>Mesh OK</code> <em>and</em> zero <code>Failed N mesh checks</code>. This will bite on a snapped hull mesh and is an explicit stage gate below.</li>
+</ul>
+
+<h2>Does #1682 gate #1173?</h2>
+<p>The question was to argue this from #1173's own validation-gate requirement rather than from convenience. Doing so gives a split answer, and the split matters more than either half.</p>
+
+<h3>It does not gate the primary gate, for a physical reason</h3>
+<p>#1173's gate is against <strong>towing-tank data at model scale</strong>. Holtrop-Mennen predicts <strong>full-scale ship</strong> resistance: <code>holtrop_coefficients.py</code> hardcodes <code>RHO_SW = 1025.0</code> and <code>NU_SW = 1.1892e-6</code> (seawater), and <code>total_resistance</code> adds <code>RA</code>, a model-ship <em>correlation allowance</em> whose entire purpose is to absorb the full-scale extrapolation error that a model-scale computation does not have. Evaluating it at model Reynolds number in fresh water, with <code>CA</code> included, is a category error. So Holtrop-Mennen <strong>cannot be the reference the gate is measured against</strong>, and #1173's primary acceptance criterion is not blocked by #1682 in any form.</p>
+
+<h3>It does gate the defence against the failure mode this issue is most exposed to</h3>
+<p>The stated worry is real and this repository has closed issues over it: a converged CFD result carries no internal signal distinguishing right from wrong, and matching one number to one number cannot separate a correct solution from one with compensating errors. Two independent defences exist, and only one of them is cheap:</p>
+<ol>
+  <li><strong>Multi-point falsifiability</strong> — reproduce the shape of the <code>Ct(Fr)</code> curve, not one point. Costs one extra solver run per point. Specified below and it is the primary defence.</li>
+  <li><strong>An independent empirical estimate of the wave-making component.</strong> Holtrop-Mennen's <code>wave_resistance</code> returns <code>RW</code> alone, without <code>CA</code> and without the friction term. Under Froude similarity the wave-resistance <em>coefficient</em> is scale-independent, so <code>Cw</code> from Holtrop-Mennen is directly comparable to the residuary coefficient the CFD produces at model scale, with no full-scale extrapolation in between. That check costs milliseconds and the function already exists.</li>
+</ol>
+<p>But defence 2 is only worth having if <code>wave_resistance</code> is itself trustworthy, and today nothing in the test suite constrains it beyond <code>assert rw &gt;= 0.0</code>. <strong>Using an unvalidated empirical method to validate a CFD result does not add a check; it moves the unverified claim one level down and makes the stack look better-defended than it is.</strong> That is the same failure shape as the fixture that no test loads.</p>
+
+<div class="good"><strong>Position: #1682 and #1173 run in parallel, with a one-way dependency of #1173 on a narrow slice of #1682 — and the slice is small precisely because the recon premise was wrong.</strong> The slice is not "implement Holtrop-Mennen"; that is done. It is: make <code>test_holtrop_mennen.py</code> load its own fixture and enforce the declared <span class="num">15%</span> band, and add a KCS case to that fixture. Estimated half a day. It lands as Stage&nbsp;0 of this plan's sequence and is offered back to #1682 as its residual scope. If the owner prefers to keep that work wholly inside #1682, Stage&nbsp;0 becomes a hard blocker on Stage&nbsp;5 and nothing else in this plan moves.</div>
+
+<p><strong>The hull choice is entangled with this and pushes the same way.</strong> Holtrop-Mennen is a regression over conventional merchant hulls. KCS (Cb 0.6505, L/B 7.14, B/T 2.98, bulbous bow) sits inside that basis. A Wigley hull — wall-sided parabolic, L/B 10, B/T 1.6, no bulb, no transom, Cb near 0.44 — sits well outside it, and Holtrop-Mennen applied to a Wigley returns a number with no standing. <strong>Choosing Wigley does not merely weaken the cross-check; it removes it, and leaves multi-point falsifiability as the only defence.</strong>
+
+<h2>Hull choice</h2>
+<p>Three candidates, not two. The issue proposes Wigley or KCS; the recon adds DTC, which arrives with a working case attached.</p>
+
+<h3>The cost intuition in the brief does not survive contact with the numbers</h3>
+<p>The framing offered was "Wigley: cheap mesh, weak data; KCS: expensive mesh, excellent data." The second half holds. The first half does not, and it is worth being explicit about why, because it changes the decision.</p>
+<p>Cell count in a free-surface resistance case is set by <strong>resolution per wavelength and per wave height in the Kelvin field</strong>, and by the boundary-layer treatment on the hull. It is not set by how geometrically complicated the hull is. The fundamental transverse wavelength is <code>&lambda; = 2&pi;Fr&sup2;L</code>, so it scales with hull length exactly as the hull does — a shorter hull buys a proportionally shorter wave and no cells. Evidence on both sides:</p>
+<ul>
+  <li>A published <code>interFoam</code> Wigley study used <strong>~6M cells</strong> at y+ &asymp; 2 (wall-resolved).</li>
+  <li>A KCS study using a wall-function treatment (y+ 38&ndash;77) reached <strong>&plusmn;2.43% on Ct with 0.40M half-domain cells</strong>.</li>
+</ul>
+<p>The 15&times; spread is a modelling choice — wall-resolved versus wall-functions — not a hull property. <strong>Wigley is not meaningfully cheaper than KCS at equal turbulence treatment.</strong> The in-repo Wigley LTS run cost 24 core-hours, which is the same order as the DTC estimate below.</p>
+
+<h3>What the three actually cost and prove</h3>
+<table>
+  <tr><th></th><th>Wigley</th><th>DTC</th><th>KCS <em>(recommended)</em></th></tr>
+  <tr><td><strong>Geometry</strong></td><td>Ships with v2312, verified L/B 10, B/T 1.6. Free.</td><td>Ships with v2312, verified against 1/59.407. Free.</td><td><strong>IGES/STP only</strong> (<code>KCS_hull_SVA.zip</code>). No STL published. Needs a tessellation step that does not exist in-repo.</td></tr>
+  <tr><td><strong>Case setup</strong></td><td>Must be authored; in-repo prior art is a narrative with no files.</td><td><strong>Complete ESI-maintained tutorial</strong>, 8 subdomains, forces FO.</td><td>Must be authored — but as a re-parameterisation of the DTC case, which is the same topology.</td></tr>
+  <tr><td><strong>Reference data</strong></td><td>Exists but scattered. Targeted searching did not surface a single canonical machine-readable table with an uncertainty band; different sources report different Froude sets. <strong>No defensible single source.</strong></td><td>Moctar, Shigunov &amp; Zorn (2012), <em>Ship Technology Research</em> 59(3). <strong>Paywalled</strong> — the value cannot be verified from here, so it cannot back a gate.</td><td><strong>Tokyo 2015 workshop benchmark.</strong> Verified table in hand across six Froude numbers. Institutionally attributed (KRISO/NMRI).</td></tr>
+  <tr><td><strong>Holtrop-Mennen cross-check</strong></td><td><strong>Invalid</strong> — outside the regression basis.</td><td>Valid (post-Panamax container ship).</td><td><strong>Valid</strong> — squarely inside the basis.</td></tr>
+  <tr><td><strong>Est. wall-clock, 8 cores</strong></td><td>~3&ndash;6 h/Fr (from the 24 core-h anchor)</td><td>~8 h/Fr</td><td>~8&ndash;16 h/Fr</td></tr>
+</table>
+
+<p><strong>Recommendation: KCS at model scale 1/31.6, reached through the DTC tutorial.</strong> DTC is not a rival to KCS here — it is the <em>scaffold</em>. The two hulls are the same problem topology (single-screw post-Panamax container ship, bulbous bow, transom stern, half-domain with symmetry, design Froude number near 0.22&ndash;0.26). Stage&nbsp;1 reproduces the DTC tutorial verbatim to prove the harness and measure the real cost on this box; Stage&nbsp;4 swaps the STL and re-parameterises. Wigley is retained only as a cheap smoke-test geometry, never as the validation target — its reference data is the weakest of the three <em>and</em> it forfeits the empirical cross-check.</p>
+
+<h3>Cost estimate, and how it was derived</h3>
+<p>Two independent anchors, agreeing to within a factor of two.</p>
+<pre>Anchor A — in-repo measured (wigleHull_LTS.md)
+  6 h x 4 procs = 24 core-h, ~5000 LTS iterations, Wigley-class mesh
+  => ~2.5e-5 core-s per (cell x iteration) at an assumed ~0.7M cells
+
+Anchor B — DTC tutorial as shipped
+  2.0e6 cells (snappy cap) x 4000 LTS iterations x 2.5e-5 core-s
+  = 2.0e5 core-s = 55.6 core-h
+  on 8 cores at ~85% parallel efficiency  =>  ~8.2 h wall-clock
+
+KCS 1/31.6, half-domain, 2.0-2.5M cells, 4000-6000 iterations
+  =>  8-16 h wall-clock per Froude number on 8 cores
+  x 3 Froude numbers  =>  1-2 days of gpu-claw, plus meshing</pre>
+<p><strong>KCS is not impractical at 8 cores.</strong> The reason is LTS: a transient interFoam run of the same mesh would be roughly an order of magnitude worse and the honest answer would flip. This estimate is a plan input, not a result — Stage&nbsp;1 exists to replace it with a measurement, and the plan's schedule is allowed to change when it does.</p>
+<p>A caveat kept in view: the &plusmn;2.43%-on-0.40M-cells datapoint comes from a solver with adaptive grid refinement and quasi-static equilibrium. <code>interFoam</code> with a static <code>snappyHexMesh</code> has neither and will need more cells for the same accuracy. The 2.0&ndash;2.5M figure already carries that de-rating; it is not the 0.40M figure transplanted.</p>
+
+<h2>The validation gate, quantified</h2>
+<p>Verified reference data, KCS model scale 1/31.6 in fresh water, reproducing the Tokyo 2015 workshop EFD:</p>
+<table>
+  <tr><th>quantity</th><th class="num">value</th></tr>
+  <tr><td>Lpp / Lwl / B / T</td><td class="num">7.2786 / 7.358 / 1.019 / 0.342 m</td></tr>
+  <tr><td>Displacement &nabla; / wetted surface Sw / Cb</td><td class="num">1.649 m&sup3; / 9.553 m&sup2; / 0.650</td></tr>
+  <tr><td>Speed at Fr = 0.26</td><td class="num">2.196 m/s (4.27 kn)</td></tr>
+  <tr><td><strong>Ct (EFD) at Fr = 0.26</strong></td><td class="num"><strong>3.71 &times; 10<sup>&minus;3</sup></strong> &nbsp;(R<sub>T</sub> = 85.44 N)</td></tr>
+  <tr><td>Ct (EFD) at Fr = 0.195 / 0.227 / 0.282</td><td class="num">3.47 / 3.47 / 4.50 &times; 10<sup>&minus;3</sup></td></tr>
+</table>
+<p>Self-consistency check performed before adopting these: <code>85.44 / (0.5 &times; 995.5 &times; 9.553 &times; 2.196&sup2;) = 3.73e-3</code>, against the tabulated <code>3.71e-3</code>. The table is internally coherent, and the speed reproduces <code>Fr = 0.26</code> on <code>Lpp = 7.2786</code> to four figures. It is used here as a working figure with a provenance requirement attached (Stage&nbsp;0 below).</p>
+
+<h3>Why "within 10% of Ct" is not a gate</h3>
+<p>Total resistance at these Froude numbers is dominated by friction, which any RANS code gets approximately right because it is essentially reproducing the ITTC-57 line. The quantity this case exists to compute — wave-making — is the small remainder.</p>
+<pre>Fr = 0.26, Lpp = 7.2786 m, U = 2.196 m/s, fresh water nu ~ 1.1386e-6
+  Re   = 1.4046e7
+  Cf   = 0.075 / (log10(Re) - 2)^2 = 2.831e-3          (ITTC-57)
+  Ct   = 3.71e-3                                        (EFD)
+  Cr   = Ct - Cf = 0.879e-3        <-- 23.7% of Ct
+
+  +/-10% on Ct  =  +/-0.371e-3  =  +/- 42%  of Cr
+  +/- 5% on Ct  =  +/-0.186e-3  =  +/- 21%  of Cr
+  +/- 3% on Ct  =  +/-0.111e-3  =  +/- 13%  of Cr</pre>
+<div class="bad">At the issue's loose bound, the wave-making resistance could be wrong by <strong>42%</strong> and the gate would still read green. A solution that computed no free-surface deformation whatsoever and returned pure friction would come in about 24% low on Ct — failing a 10% gate, but only just, and any partial wave field closes that margin. <strong>A Ct-only tolerance at 10% does not constrain the physics the issue is about.</strong></div>
+
+<h3>The gate, as three criteria that can each fail independently</h3>
+<table>
+  <tr><th></th><th>criterion</th><th>rationale</th></tr>
+  <tr><td><strong>V1</strong></td><td><code>|Ct_CFD &minus; Ct_EFD| / Ct_EFD &le; 0.05</code> at Fr = 0.26, against the pinned KCS 1/31.6 reference.</td><td>The issue's <em>tighter</em> bound, not its looser one. Achievable — the reference CFD study reached 1.1% on a 0.75M-cell mesh — and it is the headline acceptance criterion.</td></tr>
+  <tr><td><strong>V2</strong></td><td><code>|Cr_CFD &minus; Cr_EFD| / Cr_EFD &le; 0.25</code>, where <code>Cr = Ct &minus; Cf_ITTC57(Re)</code> on both sides, at the same Fr.</td><td><strong>This is the gate with teeth.</strong> It is the criterion a pure-friction or badly-under-resolved free surface fails outright, and it is stated on the quantity the case exists to produce. 25% on a component that is 24% of the total is comparable in strictness to 6% on the total.</td></tr>
+  <tr><td><strong>V3</strong></td><td>Run Fr &isin; {0.227, 0.260, 0.282}. Require <code>Ct(0.282)/Ct(0.260) &ge; 1.10</code> and <code>Ct(0.260)/Ct(0.227) &ge; 1.03</code>, both directions matching EFD (which gives 1.213 and 1.069).</td><td><strong>Falsifiability.</strong> The EFD Ct curve has a minimum near Fr 0.20&ndash;0.23 and rises 21% into Fr 0.282. A single-point match can be a lucky cancellation; a solution that reproduces the <em>slope</em> across a hump is doing wave-making. This also discharges the issue's "trend with Fr captured (humps/hollows)" criterion with a number instead of a picture.</td></tr>
+</table>
+<p><strong>Cross-check (not a gate):</strong> report <code>Cw</code> from <code>holtrop_mennen.wave_resistance</code> alongside <code>Cr_CFD</code> and <code>Cr_EFD</code>. Disagreement is recorded and investigated, not failed on — Holtrop-Mennen's own accuracy on a single hull is not good enough to fail a CFD result, and saying otherwise would be inventing authority it does not have.</p>
+<p><strong>Kelvin half-angle</strong> (issue criterion 4) stays qualitative: a rendered free-surface elevation field with the 19.47&deg; wedge overlaid, in the verification report. It is a visual confirmation, is not asserted numerically, and is not counted as a gate.</p>
+<p><strong>Vacuity guards</strong>, per the pattern <a href="https://github.com/vamseeachanta/digitalmodel/issues/1977">#1977</a> established: each of V1&ndash;V3 asserts that the reference value it compares against is non-null and was loaded from the committed reference file rather than defaulted; and the test module carries a known-negative control — a deliberately wrong Ct that must fail V1 and V2 — so a gate that has silently stopped comparing is detectable.</p>
+
+<h2>Environment provisioning</h2>
+<p>The constraint is that <code>gpu-claw</code> has no checkout and no numpy, and that its link flaps, so nothing may depend on an SSH session surviving. The repository's existing machinery already answers this and no new transport is proposed.</p>
+<ol>
+  <li><strong>Case generation happens locally</strong>, on the orchestrating box, by the Python emitter. What crosses the network is a directory of OpenFOAM dictionaries plus one gzipped STL — kilobytes to a few megabytes. numpy on the remote is never needed for the solve; <code>interFoam</code> is a C++ binary.</li>
+  <li><strong>Dispatch via <code>scripts/setup/dispatch-cfd-run.py</code></strong>, which already SSH-probes for cores and load, refuses oversubscription, sources the pinned v2312 <code>etc/bashrc</code>, and exports <code>CFD_DISPATCH_RANKS</code>. Ranks are pinned to 8 to match the tutorial's <code>hierarchical (2 2 2)</code> decomposition.</li>
+  <li><strong>The solve is detached.</strong> The remote command is wrapped in <code>setsid nohup</code> with output to a log under the external work root, so the run owns no terminal and a dropped link cannot kill it. Progress is polled by short, idempotent, re-connectable SSH calls that tail the log and the <code>forces</code> output — never a held session. <em>This is the one piece the existing dispatch script does not do today</em> (it runs the remote command in the foreground of the SSH channel); adding the detach wrapper is in scope for Stage&nbsp;1 and is the only change to shared tooling this plan makes.</li>
+  <li><strong>Heavy output never returns.</strong> Field time directories, <code>processor*/</code> and VTK stay under the external work root per <a href="https://github.com/vamseeachanta/digitalmodel/issues/1565">#1565</a>. What comes back is the <code>forces</code> time history, the convergence log tail, a decimated free-surface slice for the figure, and the JSON manifest — with host paths redacted per the result policy.</li>
+  <li><strong>Committed evidence</strong> lands as <code>docs/api/cfd/kcs-calm-water-resistance-verification.html</code> plus a JSON manifest, matching the nine reports already there.</li>
+</ol>
+<p>Because the link is known to flap, Stage&nbsp;1's exit criterion includes surviving a deliberate disconnect: drop the SSH session mid-solve and confirm from a fresh connection that the run is still advancing.</p>
+
+<h2>Options considered</h2>
+<table>
+  <tr><th>option</th><th>verdict</th></tr>
+  <tr><td><strong>A — add <code>CaseType.RESISTANCE</code> and extend <code>OpenFOAMCaseBuilder</code></strong> (the issue's first suggestion)</td><td><strong>Rejected as the primary route.</strong> The enum edit itself is trivial — two dispatch sites in <code>models.py</code>, with the CLI and workflow router picking the member up automatically and no test asserting enum cardinality. The cost is not the enum; it is that the builder would need <code>snappyHexMeshDict</code> emission, STL staging, a hull wall patch, a function-object hook, three new <code>BoundaryType</code> members and LTS control entries — and would then be the same generic-builder route that produced #1192.</td></tr>
+  <tr><td><strong>B — reuse <code>WAVE_LOADING</code> with zero incident wave</strong> (the issue's fallback)</td><td><strong>Rejected.</strong> <code>WaveLoadingSetup</code> is a transient wave-structure interaction configuration. The distinguishing physics here is steady forward speed solved pseudo-steadily by LTS. Forcing it through a zero-amplitude wave case misrepresents what is being solved and inherits a transient <code>ddtScheme</code>, which is the assumption that makes the cost estimate flip to infeasible.</td></tr>
+  <tr><td><strong>C — new <code>validation/ship_resistance.py</code> with frozen literal templates ported from the DTCHull tutorial</strong> <em>(recommended)</em></td><td>Matches the pattern of ten of eleven existing validation cases, and the one dissenter is the case #1192 reports as unrunnable. Starts from a maintained, known-good case rather than from generic marine defaults. Requires no enum change, consistent with the standing decision recorded at <code>validation/cylinder.py:147</code>.</td></tr>
+</table>
+<p><strong>Recommendation: C</strong>, with the G5 decision recorded as <em>reuse, no new <code>CaseType</code></em> — and the reasoning written into the module docstring so the next reader does not relitigate it. If a later issue wires resistance into the YAML-driven engine route, <code>CaseType.RESISTANCE</code> becomes justified at that point; it is not justified by this issue's scope, because nothing in C routes through the enum.</p>
+
+<h2>Artifact map</h2>
+<table>
+  <tr><th>path</th><th>status</th><th>contents</th></tr>
+  <tr><td><code>src/digitalmodel/solvers/openfoam/validation/ship_resistance.py</code></td><td>new</td><td><code>ShipResistanceConfig</code>; frozen <code>@TOKEN@</code> templates ported from DTCHull; <code>build_ship_resistance_case()</code>; <code>resistance_function_object()</code>; <code>parse_hull_force()</code>; <code>total_resistance_coefficient()</code>; <code>residuary_coefficient()</code>; <code>_provenance()</code></td></tr>
+  <tr><td><code>src/digitalmodel/solvers/openfoam/validation/__init__.py</code></td><td>edit</td><td><code>SHIP_RESISTANCE_CASE = ValidationCase(...)</code>; add to <code>FOUNDATIONAL_CASES</code> and <code>__all__</code></td></tr>
+  <tr><td><code>src/digitalmodel/naval_architecture/hull_form.py</code></td><td>edit</td><td><code>wigley_offsets()</code> — the analytic parabolic form, for the smoke geometry and as a closed-form hydrostatics reference</td></tr>
+  <tr><td><code>tests/fixtures/test_vectors/marine/kcs_resistance_efd.yaml</code></td><td>new</td><td>KCS 1/31.6 particulars and the EFD <code>Ct(Fr)</code> table, with institution, scale, Reynolds number and citation per row</td></tr>
+  <tr><td><code>tests/solvers/openfoam/validation/test_ship_resistance.py</code></td><td>new</td><td>analytic + build tests (always run); V1&ndash;V3 solve-asserts gated on <code>solver_capable</code></td></tr>
+  <tr><td><code>tests/naval_architecture/test_holtrop_mennen.py</code></td><td>edit</td><td>Stage 0 — load the fixture, enforce its declared 15% band</td></tr>
+  <tr><td><code>scripts/setup/dispatch-cfd-run.py</code></td><td>edit</td><td>detached-run wrapper (<code>setsid nohup</code>) + a poll subcommand</td></tr>
+  <tr><td><code>docs/api/cfd/kcs-calm-water-resistance-verification.html</code> + <code>.json</code></td><td>new</td><td>committed evidence: Ct/Cr table vs EFD vs Holtrop-Mennen, convergence history, free-surface figure with Kelvin wedge, provenance manifest</td></tr>
+</table>
+
+<h2>Implementation sequence after approval</h2>
+<ol>
+  <li><strong>Stage 0 — make the empirical cross-check trustworthy (~0.5 d, no CFD).</strong> Load <code>holtrop_mennen.yaml</code> in its test and enforce <code>ct_approx &plusmn; ct_tolerance_pct</code>; add a KCS row. <strong>Pin the KCS EFD provenance</strong>: retrieve the Ct value from the Tokyo 2015 Case&nbsp;2.1 condition page or the workshop proceedings and record institution, model scale and Reynolds number in the fixture. The <span class="num">3.71e-3</span> figure in this plan is verified but second-hand; if the primary source disagrees, the primary source wins and V1&ndash;V3 are recomputed before any solving. Offered back to #1682 as its residual scope.</li>
+  <li><strong>Stage 1 — reproduce the DTCHull tutorial unmodified on gpu-claw.</strong> No repository code involved. Purpose: prove the toolchain end-to-end, <strong>measure real cell count and wall-clock</strong>, and validate the detached-run wrapper against a deliberate mid-solve disconnect. Exit criteria: <code>checkMesh</code> reports <code>Mesh OK</code> with zero failed checks; the <code>forces</code> history is flat over the last 500 LTS iterations; measured wall-clock recorded. <strong>This stage may invalidate the cost estimate, and the schedule is expected to change if it does.</strong></li>
+  <li><strong>Stage 2 — emitter, RED.</strong> Write <code>ship_resistance.py</code> to emit a byte-comparable equivalent of the Stage-1 case from <code>ShipResistanceConfig</code>. Tests assert the emitted dictionaries against the tutorial's, so "did the port drop something" is a test failure rather than a divergent solve three days later.</li>
+  <li><strong>Stage 3 — Wigley smoke.</strong> Re-target the emitter at the shipped <code>wigley.stl.gz</code> (the L/B=10 one). Small, fast, exercises re-parameterisation. No validation claim is made from it.</li>
+  <li><strong>Stage 4 — KCS geometry and mesh.</strong> Obtain <code>KCS_hull_SVA.zip</code>, tessellate IGES/STP to a watertight STL, scale to 1/31.6, verify against published particulars (Lwl, B, T, &nabla;, Sw, Cb) <em>before</em> meshing. Mesh, then <code>checkMesh</code> to the strict verdict rule. <strong>This is the stage most likely to slip</strong> — see Risks.</li>
+  <li><strong>Stage 5 — solve and gate.</strong> Three Froude numbers. Extract Ct and Cr; evaluate V1, V2, V3; compute the Holtrop-Mennen <code>Cw</code> cross-check. Mesh convergence on at least two refinement levels at Fr = 0.26, since a gate passed on one mesh is not evidence of a converged solution.</li>
+  <li><strong>Stage 6 — evidence and closeout.</strong> Verification HTML + JSON manifest into <code>docs/api/cfd/</code>, host paths redacted. Record the G5 decision. Comment on <a href="https://github.com/vamseeachanta/digitalmodel/issues/1173">#1173</a> and on <a href="https://github.com/vamseeachanta/digitalmodel/issues/1682">#1682</a> with what Stage 0 delivered.</li>
+</ol>
+
+<h2>TDD test list</h2>
+<ul>
+  <li><code>test_wigley_offsets_matches_analytic</code> — the generator reproduces <code>y = (B/2)(1&minus;(2x/L)&sup2;)(1&minus;(z/T)&sup2;)</code> at sampled points, and the closed-form wetted surface and displacement agree with numerical integration of the generated offsets.</li>
+  <li><code>test_emitted_case_matches_dtc_tutorial</code> — for the DTC configuration, every emitted dictionary is equivalent to the shipped tutorial's, normalising whitespace and comments. The tutorial path is read from <code>$FOAM_TUTORIALS</code>; <strong>the test skips loudly with a reason if unset, and asserts it did not silently pass.</strong></li>
+  <li><code>test_control_dict_uses_lts</code> — <code>ddtSchemes</code> is <code>localEuler</code> and <code>maxAlphaCo</code> is present. A regression to a transient scheme is a silent order-of-magnitude cost bomb, so it gets its own assertion.</li>
+  <li><code>test_forces_fo_on_hull_patch</code> — a <code>forces</code> entry exists, names the hull patch, and uses the interFoam density field (<code>rho rho</code>) rather than a constant <code>rhoInf</code>, per the note at <code>maccamy_fuchs.py</code>.</li>
+  <li><code>test_parse_hull_force_roundtrip</code> — against a committed sample of real <code>forces</code> output, including the half-domain doubling and the pressure/viscous split.</li>
+  <li><code>test_ct_from_force_is_dimensionally_correct</code> — <code>Ct = R/(&frac12;&rho;SU&sup2;)</code> reproduces the EFD row from its own tabulated force, S and U. This is the check that catches a factor-of-two from the symmetry plane.</li>
+  <li><code>test_residuary_uses_ittc57</code> — <code>Cr = Ct &minus; Cf</code> with <code>Cf</code> from the existing <code>naval_architecture.resistance.ittc_1957_cf</code>, at model Reynolds number in fresh water.</li>
+  <li><code>test_holtrop_fixture_is_enforced</code> <em>(Stage 0)</em> — the fixture is loaded, every <code>use_as_test</code> row is consumed, and each is asserted within its own declared tolerance. Asserts the row list is non-empty and fully consumed, so a stale or empty fixture cannot pass.</li>
+  <li><code>test_v1_ct_within_5pct</code>, <code>test_v2_cr_within_25pct</code>, <code>test_v3_froude_trend</code> — solve-asserts, gated on <code>solver_capable</code>, reading the committed run manifest.</li>
+  <li><code>test_gate_rejects_known_bad_value</code> — the known-negative control: a fabricated Ct 25% low must fail V1 and V2. Without this, a gate whose reference silently became <code>None</code> reads green.</li>
+</ul>
+
+<h2>Acceptance criteria</h2>
+<ol>
+  <li>A KCS calm-water resistance case is emitted from <code>ShipResistanceConfig</code> and runs to convergence via the existing runner on the pinned v2312 toolchain — <strong>solve-asserts PASS on a solver-capable host, not skip.</strong> (#1192's fourth criterion, adopted here because a skipped gate is the failure mode this repository keeps rediscovering.)</li>
+  <li><code>checkMesh</code> on the KCS mesh reports <code>Mesh OK</code> <em>and</em> zero failed checks — verified from output text, not exit code.</li>
+  <li><strong>V1</strong>: Ct within 5% of the pinned KCS EFD value at Fr = 0.26.</li>
+  <li><strong>V2</strong>: Cr within 25% of Cr_EFD at Fr = 0.26.</li>
+  <li><strong>V3</strong>: the Ct trend across Fr &isin; {0.227, 0.260, 0.282} reproduces both EFD ratios within tolerance.</li>
+  <li>Mesh convergence demonstrated across at least two refinement levels at Fr = 0.26, with V1 satisfied on the finer.</li>
+  <li>The known-negative control fails the gate, proving the gate is live.</li>
+  <li>Stage 0's Holtrop-Mennen fixture test is enforced and green, and the Holtrop <code>Cw</code> cross-check is reported alongside Cr in the verification artifact.</li>
+  <li>Free-surface elevation rendered with the Kelvin wedge overlaid, in the verification HTML.</li>
+  <li>Hull source, model scale, Froude number, Reynolds number, water properties, OpenFOAM build and citation recorded in the case provenance and the JSON manifest.</li>
+  <li>The G5 decision — reuse, no new <code>CaseType</code> — is documented in the module docstring with its reasoning.</li>
+  <li><code>scripts/enforcement/check-no-abs-paths.sh --added origin/main</code> and the workspace legal sanity scan both pass; no host path appears in any committed CSV, JSON, log tail or report.</li>
+</ol>
+
+<h2>Risks and fail-closed responses</h2>
+<table>
+  <tr><th>risk</th><th>response</th></tr>
+  <tr><td><strong>KCS geometry acquisition fails or the tessellation is not watertight.</strong> The workshop publishes IGES/STP, not STL. No IGES import path exists in the repository — <code>hull_library/exporter.py</code> writes WAMIT GDF, OrcaWave and SVG only, and the BEM panel meshes it produces are quad-based and orders of magnitude too coarse for snappyHexMesh. This is the top schedule risk.</td><td>Stage 4 is deliberately late, after the harness is proven, so a slip here costs geometry time and not the whole plan. Verification is against published particulars <em>before</em> meshing, so a bad tessellation is caught in minutes rather than after a 12-hour solve. Fallback if it proves intractable: deliver against DTC, and accept the weaker (paywalled) reference with the gate restated on V2 and V3 only — explicitly a degraded outcome, recorded as such, not quietly substituted.</td></tr>
+  <tr><td><strong>The cost estimate is wrong and KCS does not finish.</strong></td><td>Stage 1 measures it on the real box before any KCS work starts. If the measurement blows out, the response is to reduce scope to one Froude number plus the trend check at coarser resolution — not to loosen the tolerance, which would convert a real gate into a decorative one.</td></tr>
+  <tr><td><strong>The fixed-body assumption biases Ct.</strong> The reference EFD is for a model free to sink and trim; the reference CFD study solved for dynamic equilibrium in heave and pitch. A fixed body at Fr 0.26 typically under-predicts resistance.</td><td><strong>Named here rather than discovered at Stage 5.</strong> The issue specifies a fixed body and this plan honours that, but the bias is real and directional. Stage 5 reports the fixed-body result against the EFD sinkage and trim so the discrepancy is quantified rather than absorbed. If V1 fails on this bias alone, the honest resolution is a follow-on issue for free sinkage and trim — not widening the tolerance until the number fits.</td></tr>
+  <tr><td><strong>The gate passes for the wrong reason</strong> — compensating errors between an over-predicted friction and an under-predicted wave field.</td><td>This is what V2 and V3 are for, and it is why V1 alone was rejected. V2 isolates the residuary component; V3 requires the derivative with respect to Froude number to be right, which compensating constants do not deliver.</td></tr>
+  <tr><td><strong>The reference value is second-hand.</strong> The verified Ct table reproduces the workshop EFD but is not the workshop's own publication, and published KCS Ct values differ between model scales because Ct carries Reynolds-dependent friction.</td><td>Stage 0 pins the primary source before any gate is written, and the fixture records scale and Reynolds number per row so a value can never be compared across scales by accident. A KCS Ct quoted without its model scale is not a reference.</td></tr>
+  <tr><td><strong>gpu-claw's WireGuard link drops mid-run.</strong></td><td>Detached <code>setsid nohup</code> execution; progress polled by short reconnectable calls; Stage 1 proves survival against a deliberate disconnect before any long run is started.</td></tr>
+  <tr><td><strong>Scope creep into #1192.</strong></td><td>Out of bounds. This plan is shaped by #1192's lesson but fixes neither the flat plate nor the cylinder. If the port reveals a generic fix that would also unblock them, it is filed as a comment on #1192, not absorbed here.</td></tr>
+</table>
+
+<h2>Out of scope</h2>
+<ul>
+  <li><strong>Free sinkage and trim</strong>, self-propulsion, propeller and rudder — separate issues; the bias from omitting them is quantified, not fixed.</li>
+  <li><strong>Full-scale extrapolation</strong> to delivered power (ITTC-78). The deliverable stops at the model-scale coefficient.</li>
+  <li><strong>#1192's flat-plate and cylinder cases</strong>, and the broader question of whether <code>OpenFOAMCaseBuilder</code> should be repaired or retired.</li>
+  <li><strong>A general IGES/STEP import capability.</strong> Stage 4 needs one KCS hull tessellated once; building a reusable CAD import pipeline is <a href="https://github.com/vamseeachanta/digitalmodel/issues/1161">#1161</a> Phase 3 work.</li>
+  <li><strong>Added resistance in waves</strong> and seakeeping — #470 and the parametric hull work; note that <code>hydrodynamics/parametric_hull_analysis/forward_speed.py</code> is <em>seakeeping</em> (DNV-RP-C205 &sect;7.4 encounter-frequency corrections) and is not a foundation for any of this.</li>
+</ul>
+
+<h2>Adversarial review</h2>
+<p>Tier <strong>T2</strong> proposed — multi-file, new solver capability, remote execution, but a single well-bounded domain. Reviewers should be pointed at these specific claims, which are the ones most likely to be wrong:</p>
+<ul>
+  <li><strong>The cost estimate.</strong> It rests on a <code>2.5e-5</code> core-second per cell-iteration constant back-derived from a narrative markdown file whose mesh size is <em>not recorded</em> — the 0.7M cell figure is an assumption, not a measurement. If it is off by 3&times;, KCS at three Froude numbers stops fitting in a working week. Stage 1 is placed where it is because of this, but a reviewer should challenge whether Stage 1 is early enough.</li>
+  <li><strong>The V2 threshold.</strong> 25% on Cr was chosen to be roughly equivalent to 6% on Ct; it is a judgement, not a derivation, and no published uncertainty band for the EFD Cr was located to anchor it.</li>
+  <li><strong>The claim that Wigley forfeits the Holtrop-Mennen cross-check.</strong> This is argued from the method's regression basis, not from a citation stating an exclusion. If a reviewer can show Holtrop-Mennen is defensible on a Wigley form, the hull recommendation weakens considerably.</li>
+  <li><strong>The Stage 0 split.</strong> Carving half a day of #1682's scope into this plan may be the wrong call organisationally even if it is right technically. The alternative — Stage 0 as a hard blocker owned entirely by #1682 — is stated in the sequencing section and a reviewer may prefer it.</li>
+  <li><strong>The fixed-body bias.</strong> If it is large enough to consume the whole 5% V1 budget on its own, then V1 as written is not achievable and the plan should say so before approval rather than discover it at Stage 5.</li>
+</ul>
+<p>Reviewers should verify claims against the repository and the host rather than against this document; several figures here were re-derived after an initial reading proved wrong, and the premise correction at the top of this plan came from re-running a command that had been reported as authoritative.</p>
+
+</main>
+</body>
+</html>
