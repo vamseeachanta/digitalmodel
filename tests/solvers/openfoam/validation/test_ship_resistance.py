@@ -452,3 +452,271 @@ def test_richardson_estimate_reproduces_the_published_order() -> None:
     at_formal_order = richardson_error_estimate(0.029, math.sqrt(2.0), 2.0)
     assert at_formal_order == pytest.approx(0.029, abs=1e-4)
     assert at_published_order > 0.0141
+
+
+# --------------------------------------------------------------------------- #
+#  The emitter
+# --------------------------------------------------------------------------- #
+
+import os
+import re
+from pathlib import Path
+
+from digitalmodel.solvers.openfoam.validation.ship_resistance import (
+    DECLARED_DEVIATIONS,
+    DTC_HULL_BOUNDS,
+    DTC_WATERLINE_Z,
+    HullForce,
+    ShipResistanceConfig,
+    build_ship_resistance_case,
+    coefficients_from_force,
+    hull_placement,
+    parse_hull_force,
+    ship_resistance_templates_dir,
+    ship_resistance_tokens,
+    _provenance,
+)
+
+
+def _tutorial_dir():
+    root = os.environ.get("FOAM_TUTORIALS")
+    if not root:
+        return None
+    cand = Path(root) / "multiphase" / "interFoam" / "RAS" / "DTCHull"
+    return cand if cand.is_dir() else None
+
+
+@pytest.fixture(scope="module")
+def emitted(tmp_path_factory):
+    return build_ship_resistance_case(
+        ShipResistanceConfig(), tmp_path_factory.mktemp("case")
+    )
+
+
+def test_emitted_case_is_structurally_valid(emitted) -> None:
+    for sub in ("system", "constant", "0", "0.orig"):
+        assert (emitted / sub).is_dir(), f"missing {sub}/"
+    assert (emitted / "system" / "controlDict").is_file()
+    assert (emitted / "constant" / "triSurface").is_dir()
+
+
+def test_no_token_survives_emission(emitted) -> None:
+    """An unsubstituted @TOKEN@ is a dict OpenFOAM cannot parse, and it would
+    surface as a crash minutes into a multi-day pipeline."""
+    for path in emitted.rglob("*"):
+        if path.is_file():
+            leftover = re.findall(r"@[A-Z0-9]+@", path.read_text())
+            assert not leftover, f"{path.name} still holds {set(leftover)}"
+
+
+def test_hull_wall_function_is_smooth(emitted) -> None:
+    """The declared physics deviation. A 100 micron sand-grain roughness on a
+    towing-tank model is a physics error against this reference, and V2b is the
+    criterion that would otherwise silently absorb it."""
+    nut = (emitted / "0.orig" / "nut").read_text()
+    assert "nutkWallFunction" in nut
+    assert "nutkRoughWallFunction" not in nut
+    assert "Ks" not in nut, "a roughness height survived the port"
+    assert "Cs" not in nut
+
+
+def test_control_dict_uses_lts(emitted) -> None:
+    """A regression to a transient scheme is a silent order-of-magnitude cost
+    bomb on a run already measured in days."""
+    schemes = (emitted / "system" / "fvSchemes").read_text()
+    assert "localEuler" in schemes
+    solution = (emitted / "system" / "fvSolution").read_text()
+    assert "maxCo" in solution and "maxAlphaCo" in solution
+    assert re.search(r"maxCo\s+10\s*;", solution)
+    assert re.search(r"maxAlphaCo\s+5\s*;", solution)
+
+
+def test_iteration_budget_is_not_the_tutorial_default(emitted) -> None:
+    """The test that would have caught the schedule being wrong by ~10x."""
+    control = (emitted / "system" / "controlDict").read_text()
+    end = int(re.search(r"endTime\s+(\d+)\s*;", control).group(1))
+    assert end >= 20000, f"endTime {end} is below published practice"
+    assert end != 4000, "the tutorial default survived the port"
+
+
+def test_forces_fo_reports_pressure_and_viscous_separately(emitted) -> None:
+    """V2a and V2b are unenforceable without this."""
+    control = (emitted / "system" / "controlDict").read_text()
+    block = control[control.index("forces"):]
+    assert "type            forces" in block
+    assert "patches         (hull)" in block
+    assert re.search(r"\brho\s+rhoInf\s*;", block), (
+        "the density source must be stated explicitly; leaving it implicit in "
+        "a two-phase run is how a factor slips in unnoticed"
+    )
+    assert re.search(r"rhoInf\s+998\.8\s*;", block)
+
+
+def test_viscosity_and_speed_reproduce_the_referent_condition(emitted) -> None:
+    transport = (emitted / "constant" / "transportProperties").read_text()
+    nu = float(re.search(r"nu\s+([\d.eE+-]+)\s*;", transport).group(1))
+    assert nu == pytest.approx(1.14180e-6, rel=1e-4)
+    u = (emitted / "0.orig" / "U").read_text()
+    umean = float(re.search(r"Umean\s+([\d.]+)\s*;", u).group(1))
+    assert umean == pytest.approx(2.1962)
+    # and the flow still runs in -x, as the tutorial does
+    assert re.search(r"mUmean\s+-2\.1962\s*;", u)
+
+
+def test_domain_is_the_tutorial_scaled_to_this_hull() -> None:
+    """The domain is ported by uniform scaling, not re-authored, so every
+    refinement box keeps the position relative to the hull that the tutorial
+    gave it."""
+    config = ShipResistanceConfig()
+    tokens = ship_resistance_tokens(config)
+    s = config.hull_scale
+    assert float(tokens["X0"]) == pytest.approx(-26.0 * s, rel=1e-5)
+    assert float(tokens["X1"]) == pytest.approx(16.0 * s, rel=1e-5)
+    assert float(tokens["WATERLINE"]) == pytest.approx(DTC_WATERLINE_Z * s, rel=1e-5)
+
+
+def test_placed_hull_fits_inside_every_refinement_box() -> None:
+    """Checked in ARITHMETIC, before meshing. KCS and DTC have different
+    proportions, so a box fitted tightly to DTC could clip KCS - and the
+    symptom would be a quietly under-resolved bow, not an error."""
+    config = ShipResistanceConfig()
+    place = hull_placement(config)
+    tokens = ship_resistance_tokens(config)
+
+    # placed hull bounds, from the mirror + translate
+    tx, _ty, tz = place["translate"]
+    x_lo = -3.8292 + tx
+    x_hi = 3.8608 + tx
+    y_lo, y_hi = -config.beam / 2.0, config.beam / 2.0
+    z_lo = tz - config.draft
+    z_hi = tz + 0.1329
+
+    for i in (1, 6):
+        lo = [float(v) for v in tokens[f"B{i}LO"].split()]
+        hi = [float(v) for v in tokens[f"B{i}HI"].split()]
+        assert lo[0] <= x_lo and hi[0] >= x_hi, f"box {i} clips the hull in x"
+        assert lo[1] <= y_lo, f"box {i} clips the hull in y"
+        assert lo[2] <= z_lo and hi[2] >= z_hi, f"box {i} clips the hull in z"
+
+
+def test_hull_is_mirrored_so_the_bow_faces_the_flow() -> None:
+    """The operation that is easy to omit and expensive to get wrong.
+
+    The tutorial's inlet is at +x with an internal field of -Umean, so the flow
+    runs in -x and the bow faces +x. The workshop grid has X increasing
+    downstream, so its bow is at -x. A hull installed without the flip is towed
+    stern-first: it meshes cleanly, solves stably, and answers a different
+    question.
+    """
+    place = hull_placement(ShipResistanceConfig())
+    assert place["mirror_x"] is True
+
+
+def test_provenance_records_the_condition_tuple() -> None:
+    prov = _provenance(ShipResistanceConfig())
+    assert prov["body_condition"] == "fixed_even_keel"
+    assert prov["appendages"] == "none"
+    assert prov["wetted_surface_m2"] == pytest.approx(9.4379)
+    assert prov["reynolds"] == pytest.approx(1.4e7)
+    assert prov["froude"] == pytest.approx(0.26, abs=1e-3)
+    assert prov["declared_deviations"], "deviations must be declared, not implied"
+    assert "1/31.6" in prov["model_scale"]
+
+
+def test_declared_deviations_name_the_physics_ones() -> None:
+    for key in ("hull_wall_function", "nu", "umean", "endtime", "forces_rho"):
+        assert key in DECLARED_DEVIATIONS
+        assert len(DECLARED_DEVIATIONS[key]) > 20, "a reason, not a label"
+
+
+@pytest.mark.skipif(_tutorial_dir() is None, reason="FOAM_TUTORIALS unset")
+def test_emitted_case_matches_dtc_tutorial_modulo_declared_deviations(
+    emitted,
+) -> None:
+    """Both directions: every allowlisted file differs, nothing else does."""
+    tutorial = _tutorial_dir()
+    assert tutorial is not None, "guard did not skip; refusing to pass silently"
+
+    expected_to_differ = {
+        "system/blockMeshDict", "system/controlDict", "system/setFieldsDict",
+        "system/snappyHexMeshDict", "system/surfaceFeatureExtractDict",
+        "constant/hRef", "constant/transportProperties",
+        "0.orig/U", "0.orig/nut",
+    } | {f"system/topoSetDict.{i}" for i in range(1, 7)}
+
+    differed = set()
+    for src in tutorial.rglob("*"):
+        if not src.is_file():
+            continue
+        rel = src.relative_to(tutorial).as_posix()
+        mine = emitted / rel
+        if not mine.is_file():
+            continue
+        if src.read_text(errors="replace") != mine.read_text(errors="replace"):
+            differed.add(rel)
+
+    unexpected = differed - expected_to_differ
+    assert not unexpected, f"undeclared deviation(s): {sorted(unexpected)}"
+    missing = expected_to_differ - differed
+    assert not missing, f"declared deviation(s) did not happen: {sorted(missing)}"
+
+
+# --------------------------------------------------------------------------- #
+#  Force parsing
+# --------------------------------------------------------------------------- #
+
+_FORCE_SAMPLE = """# Force
+# CofR        : (2.929541e+00 0.000000e+00 2.000000e-01)
+#
+# Time \ttotal_x total_y total_z\tpressure_x pressure_y pressure_z\tviscous_x viscous_y viscous_z
+1  -1.000000e+01 0.0 0.0  -6.000000e+00 0.0 0.0  -4.000000e+00 0.0 0.0
+2  -2.000000e+01 0.0 0.0  -1.400000e+01 0.0 0.0  -6.000000e+00 0.0 0.0
+3  -3.000000e+01 0.0 0.0  -2.200000e+01 0.0 0.0  -8.000000e+00 0.0 0.0
+"""
+
+
+def test_parse_hull_force_roundtrip(tmp_path) -> None:
+    """Includes the half-domain doubling and the pressure/viscous split."""
+    f = tmp_path / "force.dat"
+    f.write_text(_FORCE_SAMPLE)
+    force = parse_hull_force(f, window=3, half_domain=True)
+    assert force.samples == 3
+    assert force.first_iteration == 1 and force.last_iteration == 3
+    # mean total = -20 -> magnitude 20 -> doubled 40
+    assert force.total == pytest.approx(40.0)
+    assert force.pressure == pytest.approx(28.0)
+    assert force.viscous == pytest.approx(12.0)
+    # the identity the whole decomposition gate rests on
+    assert force.pressure + force.viscous == pytest.approx(force.total)
+    assert force.scatter > 0
+
+
+def test_parse_hull_force_half_domain_doubling_is_explicit(tmp_path) -> None:
+    """A factor of two from the symmetry plane is the single easiest way to
+    produce a plausible, wrong Ct."""
+    f = tmp_path / "force.dat"
+    f.write_text(_FORCE_SAMPLE)
+    halved = parse_hull_force(f, window=3, half_domain=False)
+    doubled = parse_hull_force(f, window=3, half_domain=True)
+    assert doubled.total == pytest.approx(2.0 * halved.total)
+
+
+def test_hull_force_rejects_components_that_do_not_sum() -> None:
+    with pytest.raises(ValueError, match="do not sum"):
+        HullForce(
+            total=100.0, pressure=10.0, viscous=10.0, samples=1,
+            first_iteration=1, last_iteration=1, scatter=0.0,
+        )
+
+
+def test_coefficients_use_the_published_wetted_surface(tmp_path) -> None:
+    """The reduction divides by the workshop's S, not our mesh's area."""
+    f = tmp_path / "force.dat"
+    f.write_text(_FORCE_SAMPLE)
+    config = ShipResistanceConfig()
+    coeffs = coefficients_from_force(
+        parse_hull_force(f, window=3), config
+    )
+    expected = 40.0 / (0.5 * config.density * 9.4379 * config.velocity**2)
+    assert coeffs["ct"] == pytest.approx(expected)
+    assert coeffs["cp"] + coeffs["cv"] == pytest.approx(coeffs["ct"])

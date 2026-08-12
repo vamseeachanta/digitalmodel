@@ -243,6 +243,10 @@ digitalmodel = [
     "marine_ops/artificial_lift/reference_data/**/*.csv",
     "marine_ops/artificial_lift/reference_data/**/*.yml",
     "reporting/assets/*.html",
+    # Frozen OpenFOAM case templates ported verbatim from the shipped
+    # tutorials. These have no file extension by OpenFOAM convention
+    # (system/controlDict, 0.orig/U, ...), so they are listed by directory.
+    "solvers/openfoam/templates/**/*",
 ]
 
 [tool.black]

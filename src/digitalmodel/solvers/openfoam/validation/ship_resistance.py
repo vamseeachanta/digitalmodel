@@ -46,9 +46,10 @@ whose condition tuple is incomplete.
 from __future__ import annotations
 
 import math
+import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Sequence
 
 # --------------------------------------------------------------------------- #
 #  The gate thresholds. Mirrored in the fixture, which carries the derivation
@@ -428,3 +429,408 @@ def _reopened_v1_tolerance(delta_re: float) -> float:
     u_d, u_i = 1.00, 0.24
     floor = math.sqrt(u_d**2 + (delta_re * 100.0) ** 2 + u_i**2)
     return floor / 100.0 * (SHIP_RESISTANCE_CT_TOLERANCE / 0.0141)
+
+
+# --------------------------------------------------------------------------- #
+#  The emitter
+#
+#  The case is emitted from FROZEN literal @TOKEN@ templates ported verbatim
+#  from $FOAM_TUTORIALS/multiphase/interFoam/RAS/DTCHull. Every difference from
+#  the tutorial is DECLARED below and asserted in both directions by
+#  test_emitted_case_matches_dtc_tutorial_modulo_declared_deviations: every
+#  allowlisted deviation must be present, and no un-allowlisted deviation may
+#  exist. A hand-maintained diff drifts; an asserted one cannot.
+# --------------------------------------------------------------------------- #
+
+#: Geometry of the shipped DTC hull, measured from the tutorial's own STL on
+#: the execution host. The domain is ported by scaling it to the KCS hull, so
+#: these are the reference dimensions that scaling is relative to.
+DTC_HULL_BOUNDS = {
+    "x": (-0.113504, 6.16209),
+    "y": (-0.429253, 0.429252),
+    "z": (0.0, 0.572322),
+}
+#: The tutorial's free surface, and therefore the DTC model's draft, since its
+#: STL is positioned keel-at-zero.
+DTC_WATERLINE_Z = 0.244
+DTC_HULL_LOA = DTC_HULL_BOUNDS["x"][1] - DTC_HULL_BOUNDS["x"][0]
+
+#: The tutorial's own domain, in the same units.
+DTC_DOMAIN = {
+    "x": (-26.0, 16.0),
+    "y": (-19.0, 0.0),
+    "z_levels": (-16.0, -1.0, 0.185, 0.244, 0.3, 1.6, 4.0),
+    "divisions": {"nx": 42, "ny": 19, "nza": 50, "nzb": 4, "nzc": 40, "nzd": 20},
+    "location_in_mesh": (-0.7, 0.0, 0.0),
+    "boxes": (
+        ((-10.0, -6.0, -3.0), (10.0, 0.0, 3.0)),
+        ((-5.0, -3.0, -2.5), (9.0, 0.0, 2.0)),
+        ((-3.0, -1.5, -1.0), (8.0, 0.0, 1.5)),
+        ((-2.0, -1.0, -0.6), (7.0, 0.0, 1.0)),
+        ((-1.0, -0.6, -0.3), (6.5, 0.0, 0.8)),
+        ((-0.5, -0.55, -0.15), (6.25, 0.0, 0.65)),
+    ),
+}
+
+#: Every intended difference from the shipped tutorial, with the reason. The
+#: test asserts this list is exactly the set of differences - no more, no less.
+DECLARED_DEVIATIONS = {
+    "stl_name": "the hull is KCS, not DTC",
+    "umean": "the tow speed is the referent's 2.1962 m/s (Fr = 0.26)",
+    "nu": "viscosity chosen to reproduce the referent's Re = 1.4e7",
+    "rho": "water density stated consistently in transportProperties and the "
+           "forces function object",
+    "forces_rho": "the forces function object states its density source "
+                  "explicitly; leaving it implicit in a two-phase run is how a "
+                  "factor slips in unnoticed",
+    "hull_wall_function": "nutkRoughWallFunction with Ks = 100e-6 replaced by "
+                          "the smooth-wall nutkWallFunction; a 100 micron "
+                          "sand-grain roughness on a towing-tank model is a "
+                          "physics error against this reference, and V2b is "
+                          "the criterion that would otherwise absorb it",
+    "endtime": "25000 LTS iterations, not the tutorial's 4000; published "
+               "practice for this case is 20000-40000",
+    "write_interval": "fewer full writes over a run 6x longer, to bound disk",
+    "cofr": "centre of rotation moved to the KCS hull's own midship",
+    "waterline": "the free surface sits at the KCS draft above the keel",
+    "domain": "domain extents, block divisions, refinement boxes and "
+              "locationInMesh scaled to the KCS hull",
+    "mesh_density": "block divisions scaled to the target cell count",
+}
+
+
+@dataclass(frozen=True)
+class ShipResistanceConfig:
+    """Configuration for a calm-water towing case.
+
+    Defaults are the #1173 production case: KCS at 1/31.6, fixed even keel,
+    bare hull, at the referent's own condition.
+    """
+
+    name: str = "kcs_calm_water_resistance"
+    stl_name: str = "kcs.stl"
+
+    #: Hull particulars at model scale (m).
+    lpp: float = 7.2786
+    beam: float = 1.0190
+    draft: float = 0.3418
+    #: Bare-hull wetted surface at the design waterline (m^2). This is the
+    #: PUBLISHED value, and the reduction must use it: a coefficient is defined
+    #: by its normalisation, so comparing against the workshop's Ct requires
+    #: dividing by the workshop's S.
+    wetted_surface: float = 9.4379
+
+    #: Condition.
+    velocity: float = 2.1962
+    reynolds: float = 1.4e7
+    density: float = 998.8
+
+    #: Iterations. 25000 LTS steps, force mean over the final 4000.
+    end_time: int = 25000
+    averaging_window: int = 4000
+    write_interval: int = 2500
+
+    #: Mesh density multiplier on the tutorial's block divisions. 1.0
+    #: reproduces the tutorial's resolution scaled to this hull.
+    mesh_scale: float = 1.0
+
+    #: Parallel ranks. Eight is the measured efficiency ceiling on the
+    #: execution host; sixteen regresses.
+    ranks: int = 8
+
+    @property
+    def nu(self) -> float:
+        """Viscosity that reproduces the referent's Reynolds number."""
+        return kinematic_viscosity_for_reynolds(
+            self.velocity, self.lpp, self.reynolds
+        )
+
+    @property
+    def froude(self) -> float:
+        return froude_number(self.velocity, self.lpp)
+
+    @property
+    def hull_scale(self) -> float:
+        """Ratio of this hull's overall length to the DTC tutorial hull's.
+
+        The domain is ported by uniform scaling, which keeps every refinement
+        box in the same position relative to the hull as the tutorial put it -
+        a proven layout rather than a re-authored one.
+        """
+        return self.loa / DTC_HULL_LOA
+
+    #: Overall length of the generated hull surface (m). Set from the geometry.
+    loa: float = 7.6900
+
+
+def ship_resistance_templates_dir() -> Path:
+    """Directory of the frozen tutorial templates (installed package data)."""
+    here = Path(__file__).resolve()
+    cand = here.parent.parent / "templates" / "ship_resistance"
+    if not (cand / "system" / "controlDict").is_file():
+        raise FileNotFoundError(f"ship_resistance templates not found at {cand}")
+    return cand
+
+
+def _fmt(value: float) -> str:
+    return f"{value:.6g}"
+
+
+def _vec(v: Sequence[float]) -> str:
+    return " ".join(_fmt(c) for c in v)
+
+
+def ship_resistance_tokens(config: ShipResistanceConfig) -> Dict[str, str]:
+    """Every @TOKEN@ value, derived from the config.
+
+    The domain is the tutorial's, scaled by ``hull_scale`` and with its free
+    surface moved to this hull's draft. Nothing here is a fresh design: the
+    proportions, grading and refinement staging are the tutorial's, which is
+    the point of porting rather than authoring.
+    """
+    s = config.hull_scale
+    waterline = DTC_WATERLINE_Z * s
+    div = DTC_DOMAIN["divisions"]
+    m = config.mesh_scale
+
+    tokens: Dict[str, str] = {
+        "STL": config.stl_name,
+        "UMEAN": _fmt(config.velocity),
+        "NU": f"{config.nu:.6e}",
+        "RHO": _fmt(config.density),
+        "ENDTIME": str(config.end_time),
+        "WRITEINTERVAL": str(config.write_interval),
+        "WATERLINE": _fmt(waterline),
+        "X0": _fmt(DTC_DOMAIN["x"][0] * s),
+        "X1": _fmt(DTC_DOMAIN["x"][1] * s),
+        "Y0": _fmt(DTC_DOMAIN["y"][0] * s),
+        "NX": str(max(1, round(div["nx"] * m))),
+        "NY": str(max(1, round(div["ny"] * m))),
+        "NZA": str(max(1, round(div["nza"] * m))),
+        "NZB": str(max(1, round(div["nzb"] * m))),
+        "NZC": str(max(1, round(div["nzc"] * m))),
+        "NZD": str(max(1, round(div["nzd"] * m))),
+        "LOCATIONINMESH": _vec(
+            [c * s for c in DTC_DOMAIN["location_in_mesh"]]
+        ),
+        # Midship of the placed hull, at the free surface.
+        "COFR": _vec(
+            [
+                (DTC_HULL_BOUNDS["x"][0] + DTC_HULL_BOUNDS["x"][1]) / 2.0 * s,
+                0.0,
+                waterline,
+            ]
+        ),
+    }
+    for i, z in enumerate(DTC_DOMAIN["z_levels"]):
+        tokens[f"Z{i}"] = _fmt(z * s)
+    for i, (lo, hi) in enumerate(DTC_DOMAIN["boxes"], start=1):
+        tokens[f"B{i}LO"] = _vec([c * s for c in lo])
+        tokens[f"B{i}HI"] = _vec([c * s for c in hi])
+    return tokens
+
+
+def hull_placement(config: ShipResistanceConfig) -> Dict[str, Any]:
+    """How the generated hull must be transformed into the emitted domain.
+
+    Two operations, and the first is easy to miss with expensive consequences:
+
+    * MIRROR IN X. The tutorial's inlet is at +x and its internal field is
+      ``-Umean``, so the flow runs in the -x direction and the bow faces +x.
+      The workshop grid uses X increasing downstream, so its bow is at -x. A
+      hull installed without this flip is a hull towed stern-first, which
+      solves perfectly happily and answers the wrong question.
+    * TRANSLATE so the hull occupies the scaled tutorial hull's station, with
+      its own waterline on the domain's free surface.
+    """
+    s = config.hull_scale
+    waterline = DTC_WATERLINE_Z * s
+    # After mirroring, the bow (originally at -x) is at +x.
+    bow_target = DTC_HULL_BOUNDS["x"][1] * s
+    return {
+        "mirror_x": True,
+        "translate": (bow_target - config.loa / 2.0, 0.0, waterline),
+        "waterline_z": waterline,
+        "scale": s,
+    }
+
+
+def build_ship_resistance_case(
+    config: ShipResistanceConfig | None = None,
+    parent_dir: Path | str = ".",
+) -> Path:
+    """Emit the case directory from the frozen templates."""
+    config = config or ShipResistanceConfig()
+    tokens = ship_resistance_tokens(config)
+    templates = ship_resistance_templates_dir()
+
+    case = Path(parent_dir) / config.name
+    for src in sorted(templates.rglob("*")):
+        if not src.is_file():
+            continue
+        rel = src.relative_to(templates)
+        dst = case / rel
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        text = src.read_text()
+        for key, value in tokens.items():
+            text = text.replace(f"@{key}@", value)
+        leftover = re.findall(r"@[A-Z0-9]+@", text)
+        if leftover:
+            raise ValueError(
+                f"unsubstituted token(s) {sorted(set(leftover))} in {rel}"
+            )
+        dst.write_text(text)
+
+    # The runner and the tutorial both expect a 0/ directory to exist; the
+    # Allrun pipeline restores it from 0.orig after meshing, exactly as the
+    # tutorial does.
+    (case / "0").mkdir(exist_ok=True)
+    (case / "constant" / "triSurface").mkdir(parents=True, exist_ok=True)
+    return case
+
+
+def _provenance(config: ShipResistanceConfig) -> Dict[str, Any]:
+    """Everything a reader needs to know what was actually solved."""
+    referent = load_referent()
+    return {
+        "hull": "KCS (KRISO Container Ship)",
+        "geometry_source": "CFD Workshop Tokyo 2005 structured surface grid "
+                           "(1999 KRISO surface), condition-matched to the "
+                           "Gothenburg 2000 / Tokyo 2005 Case 1.1 referent",
+        "model_scale": "1/31.6",
+        "body_condition": referent.body_condition,
+        "appendages": referent.appendages,
+        "wetted_surface_m2": config.wetted_surface,
+        "froude": config.froude,
+        "reynolds": config.reynolds,
+        "velocity_used_for_nu": config.velocity,
+        "nu": config.nu,
+        "density": config.density,
+        "iterations": config.end_time,
+        "averaging_window": config.averaging_window,
+        "ranks": config.ranks,
+        "declared_deviations": dict(DECLARED_DEVIATIONS),
+        "reference": {
+            "ct": referent.ct,
+            "cf_ittc57": referent.cf,
+            "cr": referent.cr,
+            "row_id": referent.row_id,
+        },
+    }
+
+
+# --------------------------------------------------------------------------- #
+#  Reading the solved forces
+# --------------------------------------------------------------------------- #
+
+@dataclass(frozen=True)
+class HullForce:
+    """Mean hull force over an averaging window, split into its components.
+
+    All three are FULL-BODY forces. The solve is on a half domain cut at the
+    centreplane, so the function object reports half of each, and the doubling
+    happens exactly once - here - rather than being left to a caller who may
+    not know the domain was halved. Getting this wrong is a clean factor of two
+    in Ct, which is why the test suite asserts the reduction against a
+    published coefficient rather than only against itself.
+    """
+
+    total: float
+    pressure: float
+    viscous: float
+    samples: int
+    first_iteration: int
+    last_iteration: int
+    #: Standard deviation of the total over the window - the iterative scatter
+    #: the acceptance criteria require to be recorded alongside the mean.
+    scatter: float
+
+    def __post_init__(self) -> None:
+        residual = abs(self.total - (self.pressure + self.viscous))
+        if residual > 1e-6 * max(abs(self.total), 1.0):
+            raise ValueError(
+                f"force components do not sum to the total: "
+                f"{self.pressure} + {self.viscous} != {self.total}. "
+                f"Ct = Cp + Cv must hold identically or the decomposition "
+                f"gate is meaningless."
+            )
+
+
+def parse_hull_force(
+    force_dat: Path | str,
+    *,
+    window: int = 4000,
+    half_domain: bool = True,
+    drag_axis: int = 0,
+) -> HullForce:
+    """Mean drag over the final ``window`` iterations of a forces log.
+
+    The file is OpenFOAM's ``postProcessing/forces/<t>/force.dat``, whose
+    columns are ``Time, total_xyz, pressure_xyz, viscous_xyz``. The drag
+    component is taken as a magnitude: the tutorial tows in the -x direction,
+    so the raw number is negative, and a sign convention is not something the
+    gate should depend on.
+    """
+    rows: list[tuple[int, float, float, float]] = []
+    for raw in Path(force_dat).read_text().splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.replace("(", " ").replace(")", " ").split()
+        if len(parts) < 10:
+            continue
+        try:
+            it = int(float(parts[0]))
+            total = float(parts[1 + drag_axis])
+            press = float(parts[4 + drag_axis])
+            visc = float(parts[7 + drag_axis])
+        except ValueError:
+            continue
+        rows.append((it, total, press, visc))
+
+    if not rows:
+        raise ValueError(f"no force samples parsed from {force_dat}")
+    tail = rows[-window:] if window > 0 else rows
+    n = len(tail)
+    factor = 2.0 if half_domain else 1.0
+
+    mean_total = sum(r[1] for r in tail) / n
+    mean_press = sum(r[2] for r in tail) / n
+    mean_visc = sum(r[3] for r in tail) / n
+    var = sum((r[1] - mean_total) ** 2 for r in tail) / n
+
+    sign = -1.0 if mean_total < 0 else 1.0
+    return HullForce(
+        total=sign * mean_total * factor,
+        pressure=sign * mean_press * factor,
+        viscous=sign * mean_visc * factor,
+        samples=n,
+        first_iteration=tail[0][0],
+        last_iteration=tail[-1][0],
+        scatter=math.sqrt(var) * factor,
+    )
+
+
+def coefficients_from_force(
+    force: HullForce, config: ShipResistanceConfig
+) -> Dict[str, float]:
+    """Ct, Cp and Cv from a parsed force, on the PUBLISHED wetted surface.
+
+    The normalisation is the workshop's own S, not the area of our mesh. A
+    coefficient is defined by what it is divided by, so comparing against a
+    published Ct requires dividing by the published S - even though the
+    generated surface's own wetted area differs from it by +1.3%, which is
+    recorded as a bias direction in the geometry module rather than corrected
+    for here.
+    """
+    def c(value: float) -> float:
+        return resistance_coefficient(
+            value, config.density, config.wetted_surface, config.velocity
+        )
+
+    return {
+        "ct": c(force.total),
+        "cp": c(force.pressure),
+        "cv": c(force.viscous),
+        "scatter": c(force.scatter),
+    }

@@ -632,6 +632,39 @@ def build_kcs_surface(
     )
 
 
+def transform_surface(
+    tris: Sequence[Tuple[Vec3, Vec3, Vec3]],
+    *,
+    mirror_x: bool = False,
+    translate: Vec3 = (0.0, 0.0, 0.0),
+) -> List[Tuple[Vec3, Vec3, Vec3]]:
+    """Place a generated hull into a solver domain.
+
+    ``mirror_x`` is the operation that is easy to omit and expensive to get
+    wrong. The DTCHull tutorial's inlet is at +x with an internal field of
+    ``-Umean``, so its flow runs in the -x direction and its bow faces +x. The
+    workshop grid uses X increasing DOWNSTREAM, so its bow is at -x. A hull
+    installed without the flip is towed stern-first: it meshes cleanly, solves
+    stably, and answers a different question.
+
+    Mirroring reverses triangle winding, so the result is re-oriented rather
+    than assumed - the same repair the generator applies to the raw blocks.
+    """
+    out: List[Tuple[Vec3, Vec3, Vec3]] = []
+    sx = -1.0 if mirror_x else 1.0
+    for tri in tris:
+        moved = tuple(
+            (
+                p[0] * sx + translate[0],
+                p[1] + translate[1],
+                p[2] + translate[2],
+            )
+            for p in tri
+        )
+        out.append(moved)  # type: ignore[arg-type]
+    return orient_consistently(out) if mirror_x else out
+
+
 def _assert_planar(
     curve: Sequence[Vec3], *, axis: int, name: str, tol: float = 1e-9
 ) -> None:
