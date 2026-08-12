@@ -3,14 +3,21 @@
 **Date:** 2026-08-11
 **Branch:** `plan/1173-calm-water-hull-resistance`
 **Scope:** evidence only. This document does not revise the plan, does not change any gate, and does not
-propose an implementation. It pins — or fails to pin — the reference condition that #1173's V1 criterion
-would gate against, from primary sources.
+propose an implementation. It pins the reference condition that #1173's V1 criterion would gate against,
+from primary sources.
+
+> **Revision note.** The first version of this document (commit `a663802f`) concluded that the referent's
+> attitude could not be pinned, because Hino (2005) is print-only. That conclusion was **wrong, and is
+> withdrawn**. It rested on looking for the *printed proceedings* rather than for the *workshop's own
+> published case definition*, which is online and states the condition explicitly. §2, §3 and §5 are
+> rewritten; the recommendation moves from "4 %, attitude inferred" to "3 %, referent pinned". The
+> corrections in §4 survive, with §4.7 revised and §4.10 withdrawn. Superseded claims are marked.
 
 **Why it exists.** Two adversarial rounds rejected the plan for #1173, and both rejections trace to the same
 root: reference-condition provenance. Revision 1 gated a fixed body against the free-to-sink-and-trim value.
 Revision 2 corrected that, then re-scored Wu (2025)'s with-rudder grids against a bare-hull referent inside
 the table rebutting the finding. Reviewer r2 marked every Shen-derived number UNTESTED because that paper had
-never been retrieved. This document retrieves the papers.
+never been retrieved.
 
 **The rule this document applies.** A bare Ct is worthless. The referent is the tuple
 (attitude, appendage, S used for normalisation, nu/Re). A Ct quoted without its tuple cannot be gated against
@@ -20,103 +27,109 @@ at any tolerance.
 
 ## 0. Retrieval log — what was actually opened
 
-| Source | Retrieved? | How | Notes |
-|---|---|---|---|
-| Shen, Z.; Wan, D.; Carrica, P.M. (2015), *Ocean Engineering* 108:287–306 | **YES — full text** | PDF from the corresponding author's institutional page at Shanghai Jiao Tong University (`dcwan.sjtu.edu.cn/userfiles/22.pdf`), text-extracted with `pdftotext -layout` | Tables 3, 4, 5, 13, 14 and the §4.2 condition paragraph read directly. **First retrieval of this paper in the #1173 effort** — it closes r2's UNTESTED finding. |
-| Wu, P.-C. (2025), *Mathematics* 13(11):1788 | **YES — full text** | `mdpi-res.com` PDF path, text-extracted | §2.3, Table 1, Tables 4–6, Tables 10–11 read directly. The `mdpi.com` HTML path 403s to automated fetch; the `mdpi-res.com` path does not. |
-| **T2015 Case 2.1 instructions to participants** (`t2015.nmri.go.jp/Instructions_KCS/Case_2.1/Case_2-1.html`) | **YES — raw HTML, verified twice** | Direct fetch; independently re-fetched and tag-stripped rather than trusted from a delegated read | Organiser-published. Carries the normalisation statement, rho, nu, and the six-speed table. |
-| **T2015 Case 2.1 EFD data file** (`.../Case_2.1/vary_Fr_2-1.xls`) | **YES — decoded** | Downloaded and parsed with `xlrd` | Organiser-published binary. Gives the complete six-speed EFD series at full precision. Previously unopened by anyone in this effort. |
-| T2015 workshop results presentation, Jin Kim (KRISO), `Presentations/Day2-AM2-KCS-Resistance_SP-Kim.pdf` | **YES** | Direct fetch | Organiser-published. Slide 5 tabulates the EFD benchmark `D` at Fr 0.26. |
-| T2015 geometry and conditions (`t2015.nmri.go.jp/kcs_gc.html`) | **YES** | Direct fetch | Organiser-published Model 1 particulars and attitude key. |
-| NMRI archive, "Comparison Table for Unpropelled KCS Integral Variables" (`nmri.go.jp/archives/.../cfdws05/gothenburg2000/KCS/kcs_comparison_table.htm`) | **YES — raw HTML** | Direct fetch, tags stripped | Organiser-published. Carries the bare-hull normalisation note for the Gothenburg-2000-lineage EFD. |
-| **Hino, T. (ed.) (2005), *Proceedings of CFD Workshop Tokyo 2005*, NMRI** | **NO** | — | Print proceedings; no online full text located. **Every 3.55e-3 in this effort remains a transcription from Shen.** See §3, U1. |
-| Springer, *Numerical Ship Hydrodynamics: An Assessment of the Tokyo 2015 Workshop*, Ch. 3 (Kim, KRISO), `10.1007/978-3-030-47572-7_3` | **NO** | — | **Paywalled** (per-chapter purchase). Title, author and abstract only. Would be the authoritative EFD write-up. |
+Every workshop page below was fetched and tag-stripped **by me directly**, not accepted from a delegated
+reading. Two of the load-bearing pages were originally located by a delegated search; both were then
+re-fetched and verified independently before being relied on here.
 
-Nothing below is quoted from a secondary source and presented as primary. Where a number is second-hand, the
-card says so.
+| Source | Retrieved? | Notes |
+|---|---|---|
+| **CFD Workshop Tokyo 2005, Test Case 1.1 (KCS towed)** — `nmri.go.jp/archives/.../cfdws05/Detail/a1-1/index.html` | **YES** | **The decisive document.** This is the case Shen cites as "Hino, 2005". States attitude, appendage, Fr and Re. |
+| **CFD Workshop Tokyo 2005, test matrix** — `.../cfdws05/data.htm` | **YES** | Shows the Fixed/Free distinction is deliberate. |
+| **Tokyo 2005 EFD table** — `.../cfdws05/KCS/kcs_integral_variables_table.htm` | **YES** | Ct, S/L², U_D, and the bare-hull normalisation note. |
+| **Gothenburg 2000 KCS description** — `.../cfdws05/gothenburg2000/KCS/container.html` | **YES** | "bare hull and fixed model"; names the two test sites. |
+| **Gothenburg 2000 KCS geometry and conditions** — `.../gothenburg2000/KCS/kcs_g&c.htm` | **YES** | States Re, Lpp, **S_DWL**, V_m, and the fixed orientation. |
+| **Gothenburg 2000 EFD comparison table** — `.../gothenburg2000/KCS/kcs_comparison_table.htm` | **YES** | Ct, C_F0, C_R, S/L² and the "hull only (no rudder)" note. |
+| Shen, Wan & Carrica (2015), *Ocean Engineering* 108:287–306 | **YES — full text** | PDF from the corresponding author's SJTU page, `pdftotext -layout`. **First retrieval in this effort** — closes r2's UNTESTED finding. |
+| Wu, P.-C. (2025), *Mathematics* 13(11):1788 | **YES — full text** | `mdpi-res.com` PDF path (the `mdpi.com` HTML path 403s to automated fetch). |
+| **T2015 Case 2.1 instructions** — `t2015.nmri.go.jp/Instructions_KCS/Case_2.1/Case_2-1.html` | **YES** | Carries the with-rudder normalisation statement, rho, nu, six speeds. |
+| **T2015 Case 2.1 EFD data file** — `.../Case_2.1/vary_Fr_2-1.xls` | **YES — decoded** | Downloaded and parsed with `xlrd`. Previously unopened by anyone in this effort. |
+| T2015 geometry sheet; T2015 results presentation (Kim, KRISO) | **YES** | Model 1 particulars; slide-5 EFD benchmark. |
+| Hino, T. (ed.) (2005), *Proceedings of CFD Workshop Tokyo 2005*, printed volume | **NO** | Print-only. **No longer blocking** — the workshop's own case definition is online and is what the volume documents. |
+| Kim, Van & Kim (2001), *Exp. Fluids* 31:567–578 | **NO** | Closed access. The experimenters' own paper; see §3. |
+| Springer, T2015 assessment volume Ch. 3 (Kim, KRISO) | **NO** | Paywalled, and covers the T2015 lineage, not Tokyo 2005. |
+| 24th ITTC Resistance Committee report | located by delegated search; **not independently verified by me** | Reported to tabulate "1.1 KCS — Fixed". Cited below only as corroboration, explicitly flagged. |
 
 ---
 
 ## 1. The referent card
 
-Every candidate Ct that has appeared in the issue, the plan, or either review, with its tuple.
-
-| # | Ct | Attitude | Appendage | S used for normalisation | nu and Re | Primary source, table/page | Retrieved? | Confidence |
+| # | Ct | Attitude | Appendage | S used for normalisation | nu and Re | Primary source | Retrieved? | Confidence |
 |---|---|---|---|---|---|---|---|---|
-| **A** | **3.56e-3** | **NOT STATED** | **hull only, no rudder** (stated verbatim) | **S/Lpp² = 0.1781**, i.e. 9.4354 m², "static orientation without waves, i.e. S_DWL" (stated) | **not stated** | NMRI archive, Comparison Table for Unpropelled KCS Integral Variables (Gothenburg-2000 lineage, hosted under the Tokyo-2005 workshop archive) | **YES** | **S: high** (verbatim). **Attitude: none.** **Re: none.** |
-| **B** | **3.55e-3** | Shen's *own model* is "fixed at even-keel"; the **experiment's** attitude is **NOT STATED** | Shen's own case is "the bare hull KCS"; the **experiment's** appendage state is **NOT STATED** | **not stated for the EFD value.** Shen's own Table 3 lists AW = 9.4376 m² "Wetted area without rudder" | Shen states **Re = 1.4e7** for *his simulation*. No nu, no temperature, and no Re given for the experiment | Shen et al. (2015), Table 5 ("Experiment" column) and §4.2, p. 294 | **YES** (Shen). **NO** (Hino 2005, the actual origin) | **Value: high.** **Attitude and appendage: INFERRED, not stated.** |
-| **C** | **3.711e-3** | **free to heave and pitch** — attitude code `FR_Zθ`, defined by the organiser as "free to heave and pitch". Measured sinkage σ = −1.394e-2 m and trim τ = −0.169° at this speed | **with rudder** — stated three independent times in organiser documents | **S₀/Lpp² = 0.1803 with rudder**, i.e. 9.5531 m² — **stated verbatim** in the instructions to participants | **nu = 1.27e-6 m²/s, rho = 999.5 kg/m³, Re = 1.26e7** — all three stated verbatim | T2015 Case 2.1 instructions page; `vary_Fr_2-1.xls`; results presentation slide 5 | **YES — fully** | **HIGH on every field.** This is the only fully pinned tuple. |
-| **D** | **3.557e-3** | — | — | — | — | provenance **not established** by this retrieval | **NO** | **none — do not use** |
-| **E** | 3.711e-3 *as used by Wu for a **fixed** case* | Wu's run: **fixed even-keel** (stated) | Wu's KCS: **with rudder** (stated) | **not stated by Wu** | **Re = 1.46e7** (verbatim in the Table 5 caption) | Wu (2025), §2.3, §3.1, Table 5 | **YES** | high — and it forces correction §4.4 |
+| **A/B** | **3.56e-3** (Shen transcribes it as 3.55e-3) | **fixed, even keel — STATED** | **without rudder / bare hull — STATED** | **S_DWL = 9.4379 m², S/L² = 0.1781 — STATED**, "hull only (no rudder) … static orientation without waves" | **Re = 1.4e7 — STATED** (both G2000 and T2005). V_m = 2.1962 m/s stated ⇒ nu = 1.1418e-6. Water temperature not stated | CFD Workshop Tokyo 2005 Case 1.1; G2000 KCS description, geometry-and-conditions, and EFD table | **YES — all fields** | **HIGH on every field** |
+| **C** | **3.711e-3** | **free to heave and pitch** (`FR_Zθ`); measured σ = −1.394e-2 m, τ = −0.169° | **with rudder** | **S₀/Lpp² = 0.1803 with rudder** = 9.5531 m² — STATED verbatim | **nu = 1.27e-6, rho = 999.5, Re = 1.26e7** — all stated | T2015 Case 2.1 instructions; `vary_Fr_2-1.xls`; results presentation | **YES — all fields** | **HIGH on every field** |
+| **D** | 3.557e-3 | — | — | — | — | provenance **not established** | **NO** | **none — do not use** |
+| **E** | 3.711e-3 *as used by Wu for a fixed case* | Wu's run: fixed even-keel | Wu's KCS: **with rudder** | **not stated by Wu** | **Re = 1.46e7** (verbatim caption) | Wu (2025) §2.3, §3.1, Table 5 | **YES** | high — forces §4.4 |
 
-### 1.1 The load-bearing quotes
+### 1.1 The decisive quotes
 
-**T2015 Case 2.1, instructions to participants — verbatim** (row C). This is the single most consequential
-sentence for the wetted-surface question, and I re-fetched and tag-stripped the page myself rather than
-accept a delegated reading of it:
+**CFD Workshop Tokyo 2005, Test Case 1.1 — verbatim.** This is the case Shen et al. cite as "Hino, 2005",
+and it states the condition outright:
 
-> "Resistance coefficients are based on wetted surface area ( \(S_0/{L_{PP}}^2=0.1803\) ) **with rudder** for
-> static orientation in calm water."
+> "Test Case 1.1 — KCS
+> **Conditions**
+> Towing condition in still water
+> **Fixed(even keel)**
+> **Without rudder**
+> Froude number (Fn) 0.26 | Reynolds number (Rn) 1.4×10⁷"
 
-> "Comparison Error, \(E\%D=(D-S)/D \times 100\), where \(D\) is the EFD value, and \(S\) is the simulation
-> value."
+and, for the reference data:
 
-and, from the conditions block on the same page:
+> "Experimental results are available — Table (CFD Workshop 2000), U_D = 1.0 [%C_T]"
 
-> "Same with G2010 case2.2b" · "With rudder" · "Calm water condition" · \(FR_{Z\theta}\) ·
-> \(L_{PP} = 7.2786\) [m] · \(g = 9.81\) [m/s²] · \(\rho = 999.5\) [kg/m³] ·
-> \(\nu = 1.27 \times 10^{-6}\) [m²/s]
+Note the EFD pointer: **Tokyo 2005 did not run a new KCS resistance test.** It re-served the Gothenburg 2000
+(KRISO) table. That single line closes the "are 3.55e-3 and 3.56e-3 the same measurement" question.
 
-**T2015 Case 2.1 EFD data, `vary_Fr_2-1.xls`, sheet "KCS Case2.1_EFD data" — decoded verbatim** (row C).
-This file had not been opened by anyone in this effort; the delegated researcher could not decode it. It is
-the authoritative six-speed series:
+**Tokyo 2005 test matrix — verbatim.** The fixed/free distinction is deliberate, and KCS is only ever fixed:
 
-| Fr | CT×10³ | Sf×10² (m) | Sa×10² (m) | σ×10² (m) | τ° |
-|---|---|---|---|---|---|
-| 0.108 | 3.796 | −0.195 | 0.015 | −0.09 | −0.017 |
-| 0.152 | 3.641 | −0.613 | 0.063 | −0.275 | −0.053 |
-| 0.195 | 3.475 | −1.213 | 0.015 | −0.599 | −0.097 |
-| 0.227 | 3.467 | −1.75 | −0.138 | −0.944 | −0.127 |
-| **0.260** | **3.711** | −2.465 | −0.322 | **−1.394** | **−0.169** |
-| 0.282 | 4.501 | −2.71 | −0.695 | −1.702 | −0.159 |
+| Test case | Condition |
+|---|---|
+| KCS | **Towed (Fixed)** |
+| DTMB5415 | Towed (Fixed) |
+| DTMB5415 | **Towed (Free)** |
+| KVLCC2M | Towed (Fixed) |
+| KCS | Self propelled |
+| KVLCC2M | Obliquely towed |
 
-> "σ: mean sinkage  σ=(Sf+Sa)/2" · "τ°: trim  τ°=arctan((Sf−Sa)/Lm)*180/pi" ·
-> "a positive (+) sinkage value is defined upwards and a positive (+) trim value is defined bow up."
+The workshop ran a free-to-sink-and-trim variant — on DTMB 5415, not on KCS.
 
-The Fr = 0.260 row is corroborated independently by the workshop results presentation (Jin Kim, KRISO,
-"Report of the Results for KCS Resistance & Self-Propulsion (Case 2-1, 2-5, and 2-7)", 2015-12-03 at NMRI),
-slide 5, whose `EFD(KRISO)` benchmark row reads `D`: CT 3.711, sinkage σ×10² −1.394, trim τ −0.169.
+**Gothenburg 2000, KCS description — verbatim:**
 
-**Arithmetic proof that 3.711e-3 is normalised on the with-rudder area.** The measured total resistance at
-Fr 0.26 is 85.44 N. With the stated rho = 999.5 and U = 2.196:
-
-```
-85.44 / (0.5 x 999.5 x 9.5531 x 2.196^2)  =  3.7111e-3   <- matches the published EFD exactly
-85.44 / (0.5 x 999.5 x 9.4379 x 2.196^2)  =  3.7564e-3   <- does not
-```
-
-The coefficient is reproducible only on S₀ = 9.5531 m² (hull + rudder). This closes the question for row C
-by two independent routes: the organiser's own statement, and the force-to-coefficient arithmetic.
-
-**NMRI archive comparison table, notes — verbatim** (row A):
-
-> `*  EFD wetted surface area is for hull only (no rudder as per KRISO web site) and for static orientation without waves , i.e., S DWL`
+> "The KCS was conceived to provide data for both explication of flow physics and CFD validation for a modern
+> container ship with bulb bow and stern (i.e., ca. 1997). **The conditions include bare hull and fixed
+> model.** No full-scale ship exists."
 >
-> `&  EFD C R is defined as C R =C T -C F0`
+> "Korea Research Institute for Ships and Ocean Engineering performed towing-tank experiments to obtain
+> resistance and wave field. Ship Research Institute of Japan performed towing-tank experiments to obtain hull
+> surface pressure and velocity field downstream of propeller plane…"
 
-with the tabulated EFD row `S/L² = 0.1781*`, `C_T = 3.56x10⁻³`, `C_F0 = 2.83x10⁻³`, `C_R = 0.731x10⁻³`.
+**Gothenburg 2000, KCS geometry and conditions — verbatim:**
 
-**Shen et al. (2015), §4.2, p. 294 — verbatim** (row B):
+> "Re=1.4x10⁷, Fr=0.26
+> Model length between perpendiculars, L_pp = 7.2786 m
+> **Wetted Surface Area, S_DWL = 9.4379 m²**
+> Model speed, V_m = 2.1962 m/s
+> **Full-scale bare-hull geometry in fixed static orientation**"
+
+**Tokyo 2005 EFD table, "Data and Data Uncertainty for Unpropelled KCS Integral Variables" — verbatim:**
+
+> `S/L² = 0.1781*` · `C_T = 3.56x10⁻³` · `U_D % = 0.64`
+> "* EFD wetted surface area is for hull only (no rudder as per KRISO web site) and for static orientation
+> without waves, i.e., S_DWL"
+
+The Gothenburg 2000 copy of the same table adds `C_F0 = 2.83x10⁻³`, `C_R = 0.731x10⁻³`, and
+"& EFD C_R is defined as C_R = C_T − C_F0".
+
+**Shen et al. (2015), §4.2, p. 294 — verbatim:**
 
 > "The ship model is ﬁxed at even-keel condition with a service speed of 2.196 m/s, corresponding to Fr = 0.26
-> and Re = 1.4 × 10⁷. This was one of the benchmark cases in the CFD Workshops of Tokyo 2005 and Gothenburg
-> 2010, and high-quality data is available for comparison."
+> and Re = 1.4 × 10⁷."
 
-Read this sentence carefully: **it describes Shen's simulation**, not the towing-tank test. Shen nowhere
-states the attitude, appendage state, wetted surface or Reynolds number *of the experiment*. The plan's
-Blocker-1 disposition treats this sentence as establishing the experiment's condition. It does not.
+This sentence describes *Shen's simulation*. It happens to coincide with the experiment's condition — but
+that is because Shen matched the workshop case, not because the sentence documents the experiment. The plan's
+Blocker-1 disposition leaned on it as evidence of the experiment's condition; the workshop pages above are
+the actual evidence, and they say the same thing.
 
-**Shen et al. (2015), Table 5 — verbatim** (row B):
+**Shen et al. (2015), Table 5 — verbatim:**
 
 | | Experiment | Present Work | % Error | CFDShip-Iowa (DES) |
 |---|---|---|---|---|
@@ -125,412 +138,355 @@ Blocker-1 disposition treats this sentence as establishing the experiment's cond
 | C_F | 2.83 × 10⁻³ ᵇ | 2.82 × 10⁻³ | −0.530 | 2.84 × 10⁻³ |
 | W_n | 0.686 | 0.742 | 8.120 | 0.723 |
 
-> ᵃ Computed by C_P = C_T − C_F.
-> ᵇ By ITTC 1957 friction line C_F = 0.075/(log₁₀ Re − 2)².
+> ᵃ Computed by C_P = C_T − C_F.  ᵇ By ITTC 1957 friction line C_F = 0.075/(log₁₀ Re − 2)².
 
-**Those two footnotes are the most consequential thing retrieved from Shen.** See correction §4.2.
+**T2015 Case 2.1 — verbatim** (row C):
+
+> "Resistance coefficients are based on wetted surface area ( S₀/L_PP² = 0.1803 ) **with rudder** for static
+> orientation in calm water."
+>
+> "Same with G2010 case2.2b" · "With rudder" · \(FR_{Z\theta}\) · rho = 999.5 · nu = 1.27×10⁻⁶
+
+**T2015 Case 2.1 EFD data, decoded from `vary_Fr_2-1.xls`:**
+
+| Fr | CT×10³ | σ×10² (m) | τ° |
+|---|---|---|---|
+| 0.108 | 3.796 | −0.09 | −0.017 |
+| 0.152 | 3.641 | −0.275 | −0.053 |
+| 0.195 | 3.475 | −0.599 | −0.097 |
+| 0.227 | 3.467 | −0.944 | −0.127 |
+| **0.260** | **3.711** | **−1.394** | **−0.169** |
+| 0.282 | 4.501 | −1.702 | −0.159 |
 
 **Wu (2025) — verbatim** (row E):
 
 > §2.3: "Except for the KCS hull appended with a rudder, KVLCC2 and JBC were both in bare hull condition."
+> §3.1: "First, neglecting the ship vertical motion, i.e., the fixed ship attitude… all in the even-keel condition."
+> Table 5 caption: "…KCS (static mesh, **Re =1.46 × 10⁷**, Fr = 0.26)."
 
-> §3.1: "First, neglecting the ship vertical motion, i.e., the fixed ship attitude, the CFD resistance test
-> was simulated using static mesh. The three hull forms were all in the even-keel condition."
+### 1.2 Two lineages, cleanly separated
 
-> Table 5 caption: "Total resistance coefficient and V & V result for KCS (static mesh, **Re =1.46 × 10⁷**,
-> Fr = 0.26)."
+The apparently inconsistent literature is **two distinct campaigns**, each internally consistent:
 
-### 1.2 The two lineages, and why the wetted surfaces differ
+| | Gothenburg 2000 → Tokyo 2005 Case 1.1 | Gothenburg 2010 2.2b → T2015 Case 2.1 |
+|---|---|---|
+| Ct at Fr 0.26 | **3.56e-3** | **3.711e-3** |
+| Attitude | **fixed, even keel** | **free to heave and pitch** |
+| Appendage | **without rudder** | **with rudder** |
+| S / Lpp² | **0.1781** (S_DWL = 9.4379 m²) | **0.1803** (9.5531 m²) |
+| Re | **1.4e7** | **1.26e7** (nu = 1.27e-6, rho = 999.5) |
+| Speeds | single (2.1962 m/s) | six (0.915 … 2.379 m/s) |
+| Sinkage/trim published | **none** — consistent with a restrained model | yes, measured |
 
-The retrieval resolves what looked like one inconsistent literature into **two distinct benchmark datasets
-with two different, each internally consistent, normalisation conventions**:
+The T2015 page states the linkage itself: "Same with G2010 case2.2b".
 
-| Lineage | Ct | Attitude | Appendage | S/Lpp² | S | Water |
-|---|---|---|---|---|---|---|
-| Gothenburg 2000 → Tokyo 2005 (rows A, B) | 3.56e-3 / 3.55e-3 | **unknown** | **hull only, no rudder** | **0.1781** | 9.4354–9.4379 m² | unknown |
-| Gothenburg 2010 case 2.2b → Tokyo 2015 Case 2.1 (row C) | 3.711e-3 | **free to heave and pitch** | **with rudder** | **0.1803** | 9.5531 m² | nu 1.27e-6, rho 999.5, Re 1.26e7 |
-
-The T2015 instructions page states the linkage itself: "Same with G2010 case2.2b".
-
-The geometry arithmetic, from the organiser's own Model 1 particulars (hull 9.4379 m², rudder 0.1152 m²):
+**Internal consistency checks, all passing:**
 
 ```
-Lpp            = 7.2786 m          Lpp^2 = 52.9780 m^2
-hull only      = 9.4379 m^2   ->  S/Lpp^2 = 0.17815
-hull + rudder  = 9.5531 m^2   ->  S/Lpp^2 = 0.18032
-ratio          = 1.01221      ->  1.221 %
+S_DWL/Lpp^2      = 9.4379 / 52.9780 = 0.17815   vs stated 0.1781      OK
+Cf_ITTC57(1.4e7) = 2.8320e-3                    vs stated C_F0 2.83e-3 OK
+C_T - C_F0       = 3.56 - 2.83 = 0.730e-3       vs stated C_R 0.731e-3 OK
+nu = V_m*Lpp/Re  = 2.1962 x 7.2786 / 1.4e7 = 1.1418e-6
+Fr = V_m/sqrt(g*Lpp) = 0.25990                  vs stated 0.26        OK
 ```
 
-So **0.1781 is the bare hull and 0.1803 is hull + rudder**, and the 1.22 % figure the plan carries is
-arithmetically correct.
+The workshop reduced its EFD at exactly Re = 1.4e7 using the ITTC-57 line. So Re = 1.4e7 is not a loose
+round number attached to the data after the fact — it is the case's defining condition and the basis of its
+own data reduction.
 
-**This substantially resolves the plan's "single largest open item."** The plan feared that row B's 3.55e-3
-might secretly be normalised on the with-rudder area, which would move the bare-normalised referent to
-3.593e-3. The evidence says otherwise: the with-rudder convention belongs to the *other* lineage (G2010 /
-T2015), and the lineage that row B belongs to publishes its EFD against `S/L² = 0.1781` with an explicit
-"hull only (no rudder)" note. The residual risk is no longer "which S did they use" but the narrower "is
-Shen's 3.55e-3 the same measurement as the NMRI table's 3.56e-3" — see §3, U2.
+For row C, the with-rudder normalisation is confirmed a second way, arithmetically. The measured resistance
+at Fr 0.26 is 85.44 N:
+
+```
+85.44 / (0.5 x 999.5 x 9.5531 x 2.196^2)  =  3.7111e-3   <- matches the published EFD exactly
+85.44 / (0.5 x 999.5 x 9.4379 x 2.196^2)  =  3.7564e-3   <- does not
+```
 
 ### 1.3 A physical point neither review nor either plan revision made
 
-The 1.22 % is a **bookkeeping-consistency** hazard, not a physical resistance difference. If the rudder's drag
-per unit wetted area equalled the hull's mean, fitting the rudder would leave Ct *unchanged* — force and
-reference area scale together. The 1.22 % bites only in the mismatch case: a with-rudder force divided by a
-bare-hull area, or the reverse. It is therefore a **discrete either/or provenance error**, not a random
-uncertainty. This matters for the plan's budget — see correction §4.7.
+The 1.22 % bare-versus-appended difference is a **bookkeeping-consistency** hazard, not a physical resistance
+difference. If the rudder's drag per unit wetted area equalled the hull's mean, fitting the rudder would leave
+Ct unchanged — force and reference area scale together. It bites only in the mismatch case: a with-rudder
+force divided by a bare-hull area, or the reverse. Since both lineages are now shown to be internally
+consistent, **the hazard is fully discharged for the referent** and survives only as a rule for future rows.
 
 ---
 
 ## 2. Recommendation
 
-### 2.1 The tuple #1173 should gate against
+### 2.1 The tuple #1173 should gate against — all fields STATED
 
 ```
-Ct       = 3.55e-3        (Shen et al. 2015 Table 5, "Experiment" column,
-                           attributed there to NMRI EFD via Hino 2005)
-attitude = fixed, even keel                     [INFERRED - not stated by any retrieved source]
-appendage= bare hull, no rudder                 [STRONG - stated for the same lineage's 3.56e-3]
-S        = 9.4379 m^2  (S/Lpp^2 = 0.17815)      [STRONG - organiser geometry sheet, and the
-                                                 lineage's EFD is published on 0.1781]
-Re       = 1.4e7  =>  nu = 1.1422e-6 at U = 2.1970 m/s, Lpp = 7.2786 m
-                                                [Shen's SIMULATION condition, NOT the experiment's]
+Ct       = 3.56e-3                              [STATED - Tokyo 2005 / Gothenburg 2000 EFD table]
+attitude = fixed, even keel                     [STATED - T2005 Case 1.1; G2000 description]
+appendage= without rudder (bare hull)           [STATED - T2005 Case 1.1; G2000 description; EFD note]
+S        = 9.4379 m^2  (S_DWL, S/Lpp^2 = 0.1781)[STATED - G2000 geometry and conditions]
+Re       = 1.4e7                                [STATED - both workshops]
+V_m      = 2.1962 m/s, Lpp = 7.2786 m           [STATED - G2000 geometry and conditions]
+  => nu  = 1.1418e-6 m^2/s                      [derived from the three stated quantities]
+U_D      = 0.64 % (T2005 EFD table) or 1.0 % (T2005 Case 1.1 page) - the workshop states both; use 1.0 %
 ```
 
-**Recommend gating on this tuple, with the tolerance widened to 4 %, and with `attitude` and the water
-condition declared `provenance: inferred` in the fixture rather than asserted as pinned.**
+**The referent is pinned. No field is an inference.**
 
-Reasons:
+### 2.2 The referent value should be 3.56e-3, not 3.55e-3
 
-1. Its appendage state and normalisation are now corroborated by an organiser-published source — the NMRI
-   table's explicit "hull only (no rudder)" note at the bare-hull ratio 0.1781 (§1.2).
-2. Row C (3.711e-3) is now **positively excluded** for a fixed-body run: T2015 Case 2.1 is `FR_Zθ`, "free to
-   heave and pitch", with a *measured* sinkage of −13.94 mm and trim of −0.169° at Fr 0.26. Revision 2's
-   re-anchoring away from 3.711e-3 was correct, and this retrieval strengthens it decisively.
-3. Wu (2025) supplies independent physical support for the direction of the offset, from one paper and one
-   solver: his fixed even-keel KCS lands ~4.5 % below D = 3.711e-3, and releasing heave and pitch closes the
-   gap. Wu's own words: "all C_T is increased by the ship's vertical motions and becomes closer to D = 3.711".
-   A fixed body belongs below 3.711e-3, which is where 3.55e-3 sits.
+The plan gates on 3.55e-3, taken from Shen's Table 5. The workshop that produced the data publishes
+**3.56e-3**, in two identical tables, with a self-consistent reduction (`C_R = C_T − C_F0` gives 0.730 against
+the published 0.731). Shen's 3.55e-3 is a transcription rounding.
 
-### 2.2 But the tolerance should be 4 %, not 3 %
-
-The plan's 3 % comes from `RSS(U_S 1.22, U_D 1.00, U_SN 1.39, U_i 0.24) = 2.12 %`, rounded up. Two inputs do
-not survive retrieval:
-
-- **U_S must not be RSS'd.** It is a discrete either/or (§1.3), not a random term. And it is now mostly
-  *resolved* in favour of the bare hull (§1.2), so carrying 1.22 % as a random uncertainty is doubly wrong.
-- **A new and larger term is required.** "Re = 1.4e7" is a two-significant-figure round number and is *Shen's
-  simulation* condition. The experiment's water temperature is unknown — the T2015 lineage states nu
-  explicitly, the Tokyo-2005 lineage does not. Over a plausible band Re ∈ [1.35e7, 1.45e7], ITTC-57 Cf spans
-  2.8495e-3 to 2.8153e-3 — a **0.96 % of Ct** spread in the friction component alone, wholly unconstrained by
-  anything retrieved. Call it U_Re.
-
-Recomputed, treating U_S as a declared bias rather than a random term:
+The plan's own Stage-0 rule settles this: *"If the primary source disagrees with 3.55e-3, the primary source
+wins and V1/V2a/V2b are recomputed before any solving."* It disagrees, by 0.28 %. Recomputed:
 
 ```
-RSS(U_Re 0.96, U_D 1.00, U_SN 1.39, U_i 0.24)  =  1.98 %
-plus, if U2 (below) resolves against us, a one-sided systematic of +1.22 %
+V1  centre:  Ct_ref  = 3.56e-3
+V2a centre:  Cp_ref  = 3.56e-3 - Cf_ITTC57(1.4e7) = 0.7280e-3   (plan has 0.7180e-3)
+             - or the workshop's own published C_R = 0.731e-3
+V2b centre:  Cf_ITTC57(1.4e7) = 2.8320e-3                       (unchanged)
 ```
 
-**Recommended: V1 tolerance 4 %.** If Hino (2005) is retrieved and pins row B's attitude and water condition,
-2.5 % becomes defensible and the plan's own argument for tightening applies in full.
+### 2.3 Tolerance: 3 % is now properly founded
 
-### 2.3 What the fixture must record
+`U_S` (1.22 %) and the `U_Re` term proposed in this document's first version are **both resolved and both
+leave the budget** — S and Re are stated, not inferred. What remains:
 
-Each field needs a `provenance` marker of `stated` or `inferred`, not merely a value. Row B's `attitude` and
-water condition are **inferred**. A schema that requires the field but not its provenance lets the next reader
-mistake an inference for a retrieval — which is exactly the failure mode that produced two rejections.
+```
+RSS(U_D 1.00, U_SN 1.39, U_i 0.24)  =  1.73 %      (U_D = 1.0 %, the workshop's Case-1.1 figure)
+RSS(U_D 0.64, U_SN 1.39, U_i 0.24)  =  1.55 %      (U_D = 0.64 %, the workshop's EFD-table figure)
+```
 
-The fixture should additionally carry **row C as a complete, fully-pinned free-condition series** (the six
-(Fr, Ct, σ, τ) points in §1.1, with `attitude: free_heave_pitch`, `appendages: rudder`, `S: 9.5531`,
-`nu: 1.27e-6`, `rho: 999.5`). It costs nothing, it is the best-attested KCS data in existence, and it is what
-a future free-to-sink-and-trim V3 would gate against.
+**Recommend keeping V1 at 3 %.** It now rests on a pinned referent rather than on a fork carried as a
+systematic, and it leaves ~1.7× margin over the budget. The plan's own conditional — *"if a reviewer can pin
+Hino (2005), the tolerance derivation tightens to 2.5 %"* — is technically triggered, and 2.5 % is defensible.
+I do not recommend it: `U_SN = 1.39 %` is still borrowed from Wu's grid rather than measured on ours, and
+tightening a gate on a borrowed uncertainty buys nothing.
+
+**This document's first version recommended 4 %. That recommendation is withdrawn.**
+
+### 2.4 What the fixture should record
+
+- Row A/B as above, every field `provenance: stated` with its workshop citation.
+- **Row C as a complete free-condition series** — the six (Fr, Ct, σ, τ) points of §1.1, with
+  `attitude: free_heave_pitch`, `appendages: rudder`, `S: 9.5531`, `nu: 1.27e-6`, `rho: 999.5`. It costs
+  nothing and it is what a future free-to-sink-and-trim V3 would gate against.
+- The `provenance` marker per field should be kept even though every field is now `stated` — it is what stops
+  the next reader from re-introducing an inference silently.
 
 ---
 
 ## 3. What remains unresolved
 
-| # | Unresolved item | Why it matters | What would close it |
+Materially reduced from this document's first version. Nothing below blocks #1173.
+
+| # | Item | Impact | What would close it |
 |---|---|---|---|
-| **U1** | **The attitude of the experiment behind 3.55e-3 / 3.56e-3.** No retrieved source states whether the towing-tank model was restrained in heave and pitch or free to sink and trim. Shen's "fixed at even-keel" describes his own computation. | This is the *entire* subject of Blocker 1. #1173 proposes to gate a fixed body. If the EFD was free, revision 2 has re-anchored onto a second mismatched referent — a different one from revision 1's, but still mismatched. | Hino (2005) proceedings, KCS case description; or Kim, Van & Kim (2001) *Exp. Fluids* 31:567–578, the original KRISO experiment; or the Gothenburg 2000 workshop KCS case sheet. |
-| **U2** | **Whether row A (3.56e-3) and row B (3.55e-3) are the same measurement.** They differ by 0.28 %. Their residuaries differ more: row A publishes C_R = 0.731e-3; row B implies C_P = 0.718e-3, a 1.8 % gap. | If they are the same dataset, row A's explicit "hull only, no rudder" note transfers to row B and the wetted-surface fork closes completely. If not, row B's normalisation is still formally open. | Hino (2005); or a workshop document tabulating both. |
-| **U3** | **The experiment's water condition (nu, temperature, Re) for the Tokyo-2005 lineage.** Nothing retrieved states it. | Drives U_Re = 0.96 %, now the largest quantified term in the budget. | Hino (2005) condition sheet; the KRISO/SRI test report. |
-| **U4** | **Provenance of 3.557e-3.** It appears in the issue and in the literature; this retrieval did not establish where it comes from or what tuple it carries. | Until pinned it is a fourth unlabelled number in circulation. | A workshop or ITTC document tabulating it with its condition. |
-| **U5** | **Wu (2025) never states the reference area for his C_T.** Table 1 lists both 9.4379 (hull) and 0.1152 (rudder) for KCS, and §2.3 says the KCS is appended with a rudder. | The plan re-scores Wu's grids against a bare-hull referent. | Partly closed by inference: Wu computes `E%D` against D = 3.711e-3, which is defined by T2015 on the **with-rudder** area, so Wu must be using 9.5531 m² for the comparison to be meaningful. Treat as **strongly inferred, not stated**. |
-
-**The blocking item is U1, and it is blocked on a single document: Hino (2005).** These are printed workshop
-proceedings from the National Maritime Research Institute; no online full text was located. The Springer
-chapter that would be the modern authority (Ch. 3 of the Tokyo 2015 assessment volume, by Jin Kim of KRISO)
-is **paywalled** and covers the T2015 lineage in any case, not Tokyo 2005.
-
-Until someone obtains Hino (2005) — interlibrary loan, an NMRI request, or a co-author's reprint — **the
-attitude of the 3.55e-3 referent is an inference, not a fact**, and #1173's self-declared "most important test
-in the list" (`test_reference_row_is_fixed_even_keel_bare_hull`) would be asserting something no retrieved
-source states.
-
-That is the honest status. It does **not** mean #1173 cannot proceed. It means the fixture must record
-`attitude: fixed_even_keel` with `provenance: inferred`, the tolerance must carry the consequence, and Stage 0
-must be re-scoped from "pin the reference from the primary source" — which this exercise attempted and could
-not complete — to "obtain Hino (2005), or accept and declare the inference".
+| **U1** | **The experimenters' own report.** Every statement of the condition comes from the *workshop's case specification* (Gothenburg 2000 / Tokyo 2005 organisers) or the ITTC's record of it — not from KRISO's own write-up. Kim, Van & Kim (2001) *Exp. Fluids* 31:567–578 is closed access; the KRISO "Experiment Conditions and Present Status" document that the EFD note refers to ("as per KRISO web site") was never captured by the Wayback Machine. | **Low.** The workshop specification is the document the EFD was published under and is what every downstream user has validated against. Corroborated by the deliberate Fixed/Free split in the test matrix, and by the absence of any published KCS sinkage or trim datum. | Kim, Van & Kim (2001) via institutional access; or the KRISO description archive. |
+| **U2** | **Water temperature / exact nu.** Re = 1.4e7 and V_m = 2.1962 m/s are stated, so nu = 1.1418e-6 follows — but no source states the tank temperature, so whether Re = 1.4e7 is nominal-rounded or exact is unknown. | **Very low.** The workshop reduced its own EFD at Re = 1.4e7 using ITTC-57, so matching Re = 1.4e7 reproduces the reference reduction by construction. | Hino (2005) printed condition sheet; SRI/NMRI test report. |
+| **U3** | **U_D is stated twice, differently** — 0.64 % in the EFD table, 1.0 % on the Case 1.1 page. | **Low.** Using 1.0 % is the conservative choice and is what the plan already does. | Hino (2005). |
+| **U4** | **Provenance of 3.557e-3.** Not established. A third rounding of the same measurement is the likely explanation, but it is not demonstrated. | **Low**, now that the primary value 3.56e-3 is pinned — but the number should not be used. | A workshop or ITTC document tabulating it with its condition. |
+| **U5** | **Wu (2025) never states his reference area.** | **Low**, and it only affects how Wu's grids are re-scored, not the referent. Strongly inferable: Wu computes `E%D` against D = 3.711e-3, which T2015 defines on the with-rudder area, so Wu must be using 9.5531 m². | Correspondence with the author. |
 
 ---
 
 ## 4. Corrections forced by this retrieval
 
-Every item below contradicts something currently asserted in the plan (revision 1 or 2) or in a review.
+### 4.1 The referent value is 3.56e-3, not 3.55e-3
 
-### 4.1 Shen's Table 14 rows are transposed in the plan — and the conclusion drawn from them is backwards
+See §2.2. The plan's 3.55e-3 is Shen's rounding; the workshop publishes 3.56e-3 with a self-consistent
+reduction. 0.28 % — small, but it is the gate's centre, and the plan's own rule says the primary source wins.
+`Cp_ref` moves from 0.7180e-3 to 0.7280e-3, a **1.4 % shift in V2a's centre**, which matters more than the
+0.28 % on V1 because the residuary is a small difference of large numbers.
 
-**Plan asserts** (re-scored literature table, and again in the Blocker 4 disposition):
+### 4.2 Shen's Table 14 rows are transposed in the plan — and the conclusion drawn from them is backwards
 
-| plan's row | plan's Ct ×10³ | plan's error |
-|---|---|---|
-| Shen S3 coarse 1.68 M | 3.528 | +0.62 % |
-| Shen S2 medium 4.26 M | 3.526 | +0.68 % |
-| Shen S1 fine 10.58 M | 3.516 | +0.96 % |
+**Plan asserts:** Shen S3 coarse 1.68 M = 3.528 (+0.62 %); S2 medium 4.26 M = 3.526 (+0.68 %); S1 fine
+10.58 M = 3.516 (+0.96 %).
 
 **Shen Table 14 actually reads:**
 
-| Grid name | ID | Mesh size (M) | C_p (10⁻³) | C_v (10⁻³) | C_t (10⁻³) | Error (%) |
+| Grid | ID | Mesh (M) | C_p (10⁻³) | C_v (10⁻³) | C_t (10⁻³) | Error (%) |
 |---|---|---|---|---|---|---|
 | EFD | | | | | 3.55 | |
 | Fine | S1 | 10.58 | 0.6611 | 2.865 | **3.526** | −0.663 |
 | Medium | S2 | 4.26 | 0.6684 | 2.859 | **3.528** | −0.631 |
 | Coarse | S3 | 1.68 | 0.6988 | 2.817 | **3.516** | −0.959 |
 
-The plan's three Ct values are the right set of numbers **rotated by one grid level**. The magnitudes
-0.62/0.68/0.96 are individually correct; they are attached to the wrong grids.
+The plan's values are the right set **rotated by one grid level**. Consequence: the plan's Blocker-4
+disposition claims "against 3.55e-3 its error grows from 0.62% to 0.96% across 1.68→10.58 M". This is
+**backwards** — 0.959 % is the *coarse* grid; the fine grid is at 0.663 %. Shen's error *shrinks* with
+refinement. The plan manufactured a counterweight against its own correct rebuttal out of a row rotation.
 
-**Consequence, and it is not cosmetic.** The plan states, in the Blocker 4 disposition:
-
-> "Shen's Table 14 is a mild counterweight — against 3.55e-3 its error grows from 0.62% to 0.96% across
-> 1.68→10.58 M, and Shen's own V&V classes Ct convergence as oscillatory"
-
-This is **backwards**. The 0.959 % error belongs to the **coarse** 1.68 M grid; the fine 10.58 M grid sits at
-0.663 %. Shen's error *shrinks* with refinement, from 0.96 % to 0.66 %. The plan manufactured a counterweight
-against its own (correct) rebuttal of r1's Blocker 4 out of a row rotation. Corrected, Shen's data **supports**
-the rebuttal instead of qualifying it.
-
-Also corrected: the plan's "Shen: 1.68 → 10.58 M moves it 0.34 percentage points" — the actual move is
-3.516 → 3.526, i.e. **0.28 percentage points**.
+Also corrected: "1.68 → 10.58 M moves it 0.34 percentage points" — the actual move is 3.516 → 3.526, i.e.
+**0.28 points**.
 
 Shen's own classification, verbatim: "The total resistance coefﬁcients (C t ) presents oscillatory convergence
-with R G = −0.1667" and "The grid uncertainty of C t is only 0.1701%, suggesting that the grid density has
-limited effect on C t in the selected range of grid size."
+with R G = −0.1667"; "The grid uncertainty of C t is only 0.1701%".
 
-The plan's "Shen production run 1.675 M → 3.52e-3" is **correct** (Table 5 "Present Work", on the
-1,675,465-cell grid of Table 4), as is the Cp span quoted for V2a (Table 14 gives 0.6611/0.6684/0.6988;
-Table 5 gives 0.699 present work, 0.737 CFDShip-Iowa).
+Correct in the plan: "Shen production run 1.675 M → 3.52e-3", and the Cp span quoted for V2a.
 
-### 4.2 Shen's "Experiment" column contains exactly one measured resistance quantity — the plan's "independent corroboration" is circular
+### 4.3 Shen's "Experiment" column contains exactly one measured quantity — the plan's "independent corroboration" is circular
 
-Shen Table 5 footnotes, verbatim: `ᵃ Computed by C_P = C_T − C_F.` and `ᵇ By ITTC 1957 friction line
-C_F = 0.075/(log₁₀ Re − 2)².`
+Shen's footnotes make C_P and C_F **derived**: `C_P = C_T − C_F`, `C_F` by ITTC-57. The only measured
+resistance datum is C_T.
 
-So in the "Experiment" column, **C_P = 7.18e-4 and C_F = 2.83e-3 are derived, not measured**. The only
-measured resistance datum is C_T = 3.55e-3.
+**Plan asserts:** *"the value is corroborated independently — Shen's tabulated CP = 7.18e-4 reproduces
+3.55e-3 − Cf_ITTC57(1.4e7) to three significant figures … Two sources, one arithmetic identity."*
 
-**Plan asserts** (risk table, "The reference value is second-hand" row):
+**That corroboration does not exist.** C_P reproduces the difference because Shen defined it as the
+difference. The same circularity applies to the workshop's own `C_R = C_T − C_F0`, and to the plan's
+`Cr = Ct - Cf = 7.17955e-4 <-- Shen tabulates 7.18e-4. Exact to 3 s.f.`, which is a tautology presented as a
+verification.
 
-> "Mitigating: the value is corroborated independently — Shen's tabulated CP = 7.18e-4 reproduces 3.55e-3 −
-> Cf_ITTC57(1.4e7) to three significant figures, and Wu's independent fine-grid computation lands at
-> 3.527e-3. Two sources, one arithmetic identity."
+**Consequence for V2a.** There is **no published experimental KCS pressure or residuary coefficient** — the
+V2a reference is the gated EFD number minus a correlation line. V2a imports no independent measurement. The
+plan's synthetic-vector demonstration that V2a can fail while V1 passes remains **mathematically valid**, and
+V2a still catches compensating errors; what is false is the *provenance* claim that it is checked against
+published experimental data.
 
-**This corroboration does not exist.** C_P = 7.18e-4 reproduces 3.55e-3 − C_F because Shen *defined* it that
-way. The identity the plan checks is the identity Shen used to fill the cell. It carries zero information
-about whether 3.55e-3 is right. The same applies to the plan's derivation block:
+*(Genuine corroboration of the referent does now exist — the workshop's 3.56e-3 and Shen's 3.55e-3 are the
+same measurement, so they are not independent either. The referent rests on one KRISO measurement, well
+documented.)*
 
-> `Cr   = Ct - Cf = 7.17955e-4     <--  Shen tabulates 7.18e-4.  Exact to 3 s.f.`
+### 4.4 Wu's KCS is with-rudder and fixed even-keel — r2 was right, now sourced
 
-Presented as a verification, it is a tautology. (The arithmetic is right: 3.55e-3 − 2.8320e-3 = 0.71796e-3.)
-
-Note also that the *same* circularity appears in row A: the NMRI table's note `& EFD C_R is defined as
-C_R = C_T − C_F0` means its C_R = 0.731e-3 is likewise derived, not measured.
-
-**Consequence for V2a.** The plan sets `Cp_ref = 3.55e-3 − Cf_ITTC57(1.4e7) = 7.180e-4` and describes V2a as
-gating the computed pressure coefficient against a "reference residuary". There is **no published
-experimental KCS pressure or residuary coefficient** in Shen — the reference is the single gated EFD number
-minus a correlation line. V2a therefore imports no independent measurement; it re-uses V1's datum.
-
-To be precise about what this does and does not break: the plan's synthetic-vector demonstration that V2a can
-fail while V1 passes remains **mathematically valid**, because the tolerances differ and the Cp/Cv split is a
-genuine property of the solution. V2a still catches compensating errors, which is what it was built for. What
-is false is the *provenance* claim — that V2a is checked against published experimental data. It is checked
-against an algebraic construction, and the plan should say so.
-
-### 4.3 Wu's KCS is with-rudder and fixed even-keel — r2 was right, with the primary quotes now in hand
-
-Wu §2.3 and §3.1, quoted in §1.1 above, establish that Wu's static-mesh KCS is **fixed even keel, with
-rudder**. r2's finding stands and is now sourced. The plan's re-scored table treats Wu's grids as
+Wu §2.3 and §3.1 (quoted in §1.1) establish it. The plan's re-scored table treats Wu's grids as
 bare-hull-comparable; they are not.
 
-### 4.4 NEW — Wu's static KCS runs at Re = 1.46e7, not 1.4e7. Neither review nor either plan revision noticed.
-
-Wu Table 5 caption, verbatim: "...(static mesh, **Re =1.46 × 10⁷**, Fr = 0.26)". Wu's *dynamic* KCS case is a
-different Reynolds number again — Tables 10 and 11 read "Re = 1.26 × 10⁷, Fr = 0.260".
-
-The plan's re-scored table compares Wu's three grids to a Re = 1.4e7 referent with no friction adjustment. By
-ITTC-57:
+### 4.5 NEW — Wu's static KCS runs at Re = 1.46e7, not 1.4e7. Neither review nor either plan revision noticed.
 
 ```
 Cf(1.46e7) = 2.8121e-3      Cf(1.40e7) = 2.8320e-3      difference = 0.0199e-3 = 0.56 % of Ct
 ```
 
-Wu's Ct values are biased **low by ~0.56 %** relative to a 1.4e7 condition. Adjusting for Reynolds alone —
-still leaving the rudder and the normalisation uncorrected:
+Wu's Ct values are biased **low by ~0.56 %** relative to the referent's 1.4e7. So Wu's grids differ from the
+referent on **three** axes at once — rudder, Reynolds, and normalisation area. Re-scored against the pinned
+3.56e-3, with the Reynolds adjustment applied but the rudder and area still uncorrected:
 
-| Wu grid | as published (Re 1.46e7) | adjusted to Re 1.40e7 | plan's claimed error vs 3.55e-3 | error after Re adjustment |
+| Wu grid | published (Re 1.46e7) | Re-adjusted to 1.40e7 | plan's claimed error | error vs pinned 3.56e-3 |
 |---|---|---|---|---|
-| S3 coarse 0.208 M | 3.755 | 3.775 | −5.775 % | **−6.34 %** |
-| S2 medium 0.572 M | 3.555 | 3.575 | −0.141 % | **−0.70 %** |
-| S1 fine 1.640 M | 3.527 | 3.547 | +0.648 % | **+0.09 %** |
+| S3 coarse 0.208 M | 3.755 | 3.775 | −5.775 % | **+6.04 %** |
+| S2 medium 0.572 M | 3.555 | 3.575 | −0.141 % | **+0.42 %** |
+| S1 fine 1.640 M | 3.527 | 3.547 | +0.648 % | **−0.37 %** |
 
-The plan's headline — "the closest configurational analogue ... lands at 0.65 % on 1.64 M cells" — is not a
-like-for-like comparison. The sign convention in the plan's table matches Wu's own `E = (D − S_i)%D` and is
-internally consistent; the defect is an unadjusted condition mismatch in **three** separate dimensions
-(rudder, Reynolds, normalisation), not the arithmetic.
+**The plan's "six of seven published fixed-condition results land inside 1%" should be withdrawn.** It is the
+stated justification for tightening below revision 1's 5 %, and it mixes condition-matched with
+condition-mismatched grids. The honest statement is narrower and still supportive:
 
-The plan's broader claim that "six of the seven published fixed-condition results land inside 1%" of the
-corrected referent should be withdrawn or restated with the adjustments applied. It is doing real work in the
-plan — it is the stated justification for tightening the tolerance below revision 1's 5 % — and it does not
-survive as written.
+> The four **condition-matched** results in the literature — Shen's three grids plus his production run, all
+> bare-hull, fixed even-keel, at Re 1.4e7 — land at −0.90 %, −0.96 %, −1.12 % and −1.24 % against the pinned
+> 3.56e-3. All four sit inside 1.3 %, consistently low.
 
-### 4.5 NEW — Wu scores his *fixed* case against D = 3.711e-3, and his own text explains why that is still a free-condition datum
+That is a better argument for a 3 % gate than the withdrawn one, because every point in it is
+condition-matched.
 
-Wu's Table 5 (static mesh, fixed even keel) uses **D = 3.711** — the same D as his Tables 10/11 for the
-free-to-sink-and-trim case. Taken alone that could be read as evidence that 3.711e-3 is not attitude-specific,
-which would undercut Blocker 1. Wu's own text settles it the other way, verbatim:
+### 4.6 NEW — Wu scores his *fixed* case against D = 3.711e-3, and his own text explains why that is a free-condition datum
 
-> "With the correction, the |E%D| of C_T is clearly improved for all grids because all C_T is increased by the
-> ship's vertical motions and becomes closer to D = 3.711 (Table 5). For S1 in Tables 5 and 10, the
-> under-predicted C_T error is reduced to less than 1% from approximately 5%."
+Wu uses D = 3.711 for both his static and dynamic cases. His text settles the reading:
 
-Wu observes that his fixed case sits ~5 % below D and that releasing heave and pitch closes the gap. Combined
-with the organiser's `FR_Zθ` attitude code and the *measured* sinkage of −13.94 mm at Fr 0.26, Blocker 1's
-direction is confirmed from three independent angles: **3.711e-3 is a free-to-sink-and-trim datum, and a
-fixed body belongs below it.**
+> "…all C_T is increased by the ship's vertical motions and becomes closer to D = 3.711 (Table 5). For S1 in
+> Tables 5 and 10, the under-predicted C_T error is reduced to less than 1% from approximately 5%."
 
-**But the magnitude is over-attributed, in Wu's paper and in the plan.** Wu's static and dynamic runs are at
-different Reynolds numbers (1.46e7 vs 1.26e7). Of the 0.1668e-3 gap between Wu's static S1 (3.527) and dynamic
-S1 (3.69383):
+Combined with the `FR_Zθ` attitude code and the measured −13.94 mm sinkage, Blocker 1's direction is confirmed
+three independent ways. **But the magnitude is over-attributed.** Wu's static and dynamic runs are at
+different Reynolds numbers (1.46e7 vs 1.26e7). Of the 0.1668e-3 gap between his static S1 (3.527) and dynamic
+S1 (3.69383), `Cf(1.26e7) − Cf(1.46e7) = 0.0710e-3` — **42.6 %** — is pure friction. The attitude effect is
+~2.6 % of D, **not ~5 %**.
+
+### 4.7 NEW — the 4.54 % "condition offset" is one-third Reynolds, not all attitude
 
 ```
-Cf(1.26e7) - Cf(1.46e7) = 0.0710e-3   ->  42.6 % of the gap is pure ITTC-57 friction
-remainder                = 0.0958e-3   ->  ~2.6 % of D, attributable to attitude
+total gap (3.711e-3 @ Re 1.26e7  vs  3.55e-3 @ Re 1.4e7)  = 0.1610e-3 = +4.54 %
+pure ITTC-57 friction (Re 1.26e7 vs 1.40e7)               = 0.0510e-3 = +1.44 %  (31.7 % of the gap)
+residual: attitude + appendage + normalisation            = 0.1100e-3 = +3.10 %
 ```
 
-So the sinkage-and-trim effect on Ct is roughly **2.6 %, not 5 %**.
+The plan calls the mismatch "threefold, not twofold", so the structure is acknowledged — but the 1.44 %
+Reynolds share is never quantified and the whole 4.54 % is repeatedly described as though attitude drove it.
+The residual 3.10 % agrees with the ~2.6 % attitude effect measured independently in §4.6 plus a small
+appendage term — two independent estimates converging.
 
-### 4.6 NEW — the 4.54 % "condition offset" is one-third Reynolds, not all attitude
+### 4.8 REVISED — the plan's `U_S = 1.22 %` should be removed from the budget entirely
 
-The plan states revision 1 "was spending 4.54% of a ±5% budget on a condition offset" and frames it as the
-fixed-versus-free error. Decomposing the 3.711e-3 (Re 1.26e7) versus 3.55e-3 (Re 1.4e7) gap:
+*(This supersedes the first version of this document, which recommended carrying U_S as a declared one-sided
+bias.)* S is now **stated**: `S_DWL = 9.4379 m²`, `S/L² = 0.1781`, "hull only (no rudder)". There is no fork.
+U_S leaves the RSS. The `U_Re = 0.96 %` term proposed in this document's first version also leaves — Re is
+stated and is the basis of the workshop's own data reduction. Budget becomes
+`RSS(1.00, 1.39, 0.24) = 1.73 %`.
 
-```
-total gap                                        = 0.1610e-3  = +4.54 % of 3.55e-3
-pure ITTC-57 friction (Re 1.26e7 vs 1.40e7)      = 0.0510e-3  = +1.44 %   (31.7 % of the gap)
-residual: attitude + appendage + normalisation   = 0.1100e-3  = +3.10 %
-```
+The plan's flagged "single largest open item" — *"if the with-rudder normalisation turns out to be correct,
+the referent itself moves to 3.593e-3"* — is **resolved in the plan's favour and can be struck.**
 
-The plan does say the mismatch is "threefold, not twofold", so the *structure* is acknowledged — but the
-1.44 % Reynolds share is never quantified, and the whole 4.54 % is repeatedly described as though attitude
-drove it. Usefully, the residual 3.10 % is consistent with the ~2.6 % attitude effect measured independently
-in §4.5 plus a small appendage/normalisation term — two independent estimates that agree.
-
-### 4.7 The plan's uncertainty budget mixes a discrete bias into an RSS of random terms
-
-The plan builds `U_S = 1.22 % (UNRESOLVED)` into `RSS(U_S, U_D, U_SN, U_i) = 2.12 %`. Per §1.3, U_S is not a
-random uncertainty — it is a fork with two branches and exactly one is true. Root-sum-squaring it both
-understates the bad branch and pretends the good branch costs something. Per §1.2 it is now largely resolved
-in favour of the bare hull, so it should mostly leave the budget altogether. It should be carried as a
-declared one-sided bias, with the gate's centre stated for each branch:
+### 4.9 Minor — the plan's with-rudder wetted surface, 9.5527 m², matches nothing
 
 ```
-if row B is normalised on bare-hull S    ->  referent 3.550e-3   [strongly indicated]
-if row B is normalised on with-rudder S  ->  referent 3.593e-3   (= 3.55e-3 x 9.5531/9.4379)
+0.1803 x 52.9780 = 9.5519 m^2        9.4379 + 0.1152 = 9.5531 m^2   <- organiser's particulars
 ```
 
-And U_Re = 0.96 % (§2.2) belongs in the RSS and is currently absent entirely.
+A transcription slip; immaterial (0.01 %), but the fixture should carry 9.5531 m².
 
-### 4.8 Minor — the plan's with-rudder wetted surface, 9.5527 m², matches nothing
+### 4.10 Minor — Shen's wetted area is 9.4376 m², the workshop's is 9.4379 m²
 
-The plan writes "S0/Lpp² = 0.1803 ⇒ 9.5527 m² (with rudder)". Neither route gives that:
+Shen Table 3 lists `AW = 9.4376`. Use the workshop's **9.4379 m²**, which is the case specification.
 
-```
-0.1803 x 52.9780        = 9.5519 m^2
-9.4379 + 0.1152         = 9.5531 m^2   <- the organiser's own particulars
-```
+### 4.11 WITHDRAWN — this document's first version wrongly criticised the plan's viscosity note
 
-The plan's own text elsewhere gets 9.5531 right. 9.5527 appears to be a transcription slip. Immaterial to any
-gate (0.01 %), but the fixture should carry 9.5531 m² from the T2015 geometry sheet.
+The first version argued that the plan's *"nu set to reproduce Re = 1.4e7 … matching the reference condition
+exactly"* overstated the match, because Re = 1.4e7 was thought to be Shen's simulation condition rather than
+the experiment's. **That criticism is wrong and is withdrawn.** Re = 1.4e7 is stated by both workshops as the
+case condition, and the workshop reduced its own EFD at that Re. The plan's `nu = 1.1416e-6` reproduces it:
+the workshop's stated `V_m = 2.1962 m/s` gives `nu = 1.1418e-6`, a 0.02 % difference arising only from the
+plan's use of the rounded `U = 2.196 m/s`. The plan's wording is defensible; the fixture should record which
+U it used.
 
-### 4.9 Minor — Shen's own wetted area is 9.4376 m², not 9.4379 m²
-
-Shen Table 3 lists `Wetted area without rudder  AW (m²)  9.4376` (model scale; 9424 full scale). The T2015
-geometry sheet and Wu Table 1 both give 9.4379 m². The difference is 0.003 % and immaterial, but the fixture
-should cite one source rather than blend them. Recommend the T2015 value 9.4379 m², as organiser-published
-geometry.
-
-### 4.10 Minor — "matching the reference condition exactly" matches Shen, not the experiment
-
-The plan's implementation table sets `nu = 1.1416e-6` with the note "nu set to reproduce Re = 1.4e7 at
-U = 2.196 m/s, Lpp = 7.2786 m ⇒ nu = 1.1416e-6, **matching the reference condition exactly**". Per §1.1, the
-Re = 1.4e7 is Shen's simulation condition; no retrieved source gives the Tokyo-2005 experiment's water
-condition. The word "exactly" should be struck. (At U = 2.1970 m/s computed from Fr = 0.26 and Lpp = 7.2786,
-Re = 1.4e7 implies nu = 1.1422e-6; the plan's 1.1416e-6 corresponds to the rounded U = 2.196 m/s. Immaterial,
-but the fixture should record which U it used.)
-
-### 4.11 What survives unchanged — verified, not merely unchallenged
-
-A corrections list that only subtracts is as misleading as one that only adds.
+### 4.12 What survives unchanged — verified, not merely unchallenged
 
 - Revision 2's central move — abandoning 3.711e-3 as the referent for a fixed-body run — is **correct**, and
-  this retrieval strengthens it from three directions (§2.1, §4.5).
-- The plan's quotation of the T2015 normalisation statement is **verbatim-accurate**; it drops two qualifiers
-  ("for static orientation in calm water", and the separate at-rest instruction) but nothing material.
-- The 1.22 % wetted-surface figure is **arithmetically correct**, and the plan was right to refuse to assert
-  it resolved (§1.2).
-- The plan's rebuttal of r1's Blocker 4 is **correct**, and was in fact under-claimed (§4.1).
-- The plan's V3 withdrawal rationale is **confirmed at full precision**. The EFD ratios it cites reproduce
-  from the primary data file: Ct(0.282)/Ct(0.260) = 4.501/3.711 = **1.2129** (plan: 1.213) and
-  Ct(0.260)/Ct(0.227) = 3.711/3.467 = **1.0704** (plan: 1.069, from rounded inputs). And the series is indeed
-  free-to-sink-and-trim with a rudder, so the plan's reason for withdrawing V3 is sound.
-- `Cr = 3.55e-3 − Cf_ITTC57(1.4e7) = 0.71796e-3` is **arithmetically correct** (it is just not a
-  corroboration — §4.2).
-- The degenerate-case check "a solution computing no free-surface deformation returns Ct = 2.832e-3 ⇒
-  −20.2 %" is **correct**.
+  is now confirmed from the workshop's own case definitions.
+- **The plan's assumed tuple was right on every field it guessed** — fixed even keel, bare hull,
+  S = 9.4379 m², nu ≈ 1.1416e-6, Re = 1.4e7. What was missing was the evidence, not the values. Only the Ct
+  itself moves, by 0.28 % (§4.1).
+- The plan's quotation of the T2015 normalisation statement is **verbatim-accurate**.
+- The 1.22 % arithmetic is **correct**; the plan was right to refuse to assert it resolved on the evidence it
+  then had. It is now resolved.
+- The plan's rebuttal of r1's Blocker 4 is **correct**, and was under-claimed (§4.2).
+- The plan's V3 withdrawal rationale is **confirmed at full precision** from the primary data file:
+  Ct(0.282)/Ct(0.260) = 4.501/3.711 = **1.2129** (plan: 1.213); Ct(0.260)/Ct(0.227) = 3.711/3.467 =
+  **1.0704** (plan: 1.069). The series is indeed free-to-sink-and-trim with a rudder.
+- The degenerate-case check is **correct**, and slightly stronger against the pinned referent:
+  Ct = 2.832e-3 ⇒ **−20.45 %**.
 - Shen's production-run figures (1,675,465 cells; 24 processors; 6.9 h wall clock; Ct = 3.52e-3) are
-  **confirmed verbatim** from Tables 4 and 5 and the §4.2 text.
-- Wu's iteration counts and Table 14 timing data were **not re-checked**; they were outside this exercise's
-  scope, which was the referent tuple. They remain as the plan states them, unverified by this document.
+  **confirmed verbatim**.
+- Wu's iteration counts and Table 14 timing data were **not re-checked** — outside this exercise's scope.
 
 ---
 
 ## 5. Bottom line for the owner
 
-**The referent is 80 % pinned, and the missing 20 % is the part the gate depends on most.**
+**The referent is pinned, on every field, from the workshops that published the data.**
 
-Resolved from primary sources:
+```
+Ct = 3.56e-3 · fixed even keel · without rudder · S_DWL = 9.4379 m^2 (S/Lpp^2 = 0.1781)
+             · Re = 1.4e7 · V_m = 2.1962 m/s · Lpp = 7.2786 m  =>  nu = 1.1418e-6
+```
 
-- **The wetted-surface fork is essentially closed.** 0.1781 = bare hull, 0.1803 = hull + rudder, from the
-  organiser's geometry. The T2015 lineage states with-rudder normalisation verbatim and its 3.711e-3
-  reproduces arithmetically only on 9.5531 m². The Tokyo-2005/Gothenburg-2000 lineage publishes its EFD
-  explicitly on the bare hull. The plan's "single largest open item" is largely answered, and answered the way
-  the plan hoped.
-- **Row C is pinned on every field** — 3.711e-3, free to heave and pitch, with rudder, S = 9.5531 m²,
-  nu = 1.27e-6, rho = 999.5, Re = 1.26e7 — plus the complete six-speed series with measured sinkage and trim.
-- **Wu's tuple is pinned** — fixed even keel, with rudder, Re = 1.46e7 — and it is not the tuple the plan
-  assumed when re-scoring his grids.
+The document that unblocked this was not Hino's printed proceedings — it was the Tokyo 2005 workshop's own
+Case 1.1 page, which states "Towing condition in still water / Fixed(even keel) / Without rudder" at
+Fn 0.26 and Rn 1.4×10⁷, and points its reference data at the Gothenburg 2000 table. **This document's first
+version was wrong to report the referent unpinnable**; it searched for the printed volume instead of the
+workshop's published case specification.
 
-Not resolved:
+What this changes for #1173:
 
-- **The attitude and water condition of the 3.55e-3 referent itself.** Hino (2005) is print-only and was not
-  obtained; the Springer chapter that might substitute is paywalled and covers the wrong lineage. Shen's
-  "fixed at even-keel" sentence describes Shen's computation, not the towing tank.
+1. **V1's centre moves from 3.55e-3 to 3.56e-3**, and V2a's from 0.7180e-3 to 0.7280e-3 (a 1.4 % shift).
+2. **Tolerance stays at 3 %**, now founded on `RSS(U_D, U_SN, U_i) = 1.73 %` with no unresolved fork. The
+   first version's 4 % recommendation is withdrawn.
+3. **`U_S = 1.22 %` leaves the budget.** The plan's self-declared "single largest open item" is resolved, and
+   resolved the way the plan hoped.
+4. **The "six of seven inside 1 %" claim should be withdrawn** and replaced with the four condition-matched
+   Shen results at −0.90 % to −1.24 % — a narrower but genuinely like-for-like argument for the same gate.
+5. **Stage 0 is largely done by this document.** What remains is transcribing the tuple into the fixture with
+   citations, not retrieving anything.
+6. `test_reference_row_is_fixed_even_keel_bare_hull` now asserts something the primary source states. It was
+   the right test to call the most important one.
 
-**This does not block #1173.** The recommendation is: gate against the §2.1 tuple at **4 %** rather than 3 %,
-mark `attitude` and the water condition `provenance: inferred` in the fixture, re-scope Stage 0 from "pin the
-reference" to "obtain Hino (2005) or declare the inference", and withdraw the "six of seven land inside 1 %"
-claim (§4.4) that currently justifies the tighter tolerance.
-
-Spending ~19 days of compute against a referent whose attitude is a declared inference is defensible at 4 %.
-It is not defensible at 3 % with the inference described as pinned.
+Committing ~19 days of compute against this referent is defensible.
