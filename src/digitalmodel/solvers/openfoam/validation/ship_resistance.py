@@ -51,6 +51,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional, Sequence
 
+from digitalmodel.naval_architecture.kcs_geometry import (
+    KCS_GENERATED_WETTED_SURFACE as _KCS_GENERATED_WETTED_SURFACE,
+)
+
 # --------------------------------------------------------------------------- #
 #  The gate thresholds. Mirrored in the fixture, which carries the derivation
 #  of each one; these constants exist so a test can import them by name.
@@ -86,6 +90,16 @@ SHIP_RESISTANCE_DETECTION_FLOOR = 0.0091
 
 #: Standard gravity used for the Froude number.
 GRAVITY = 9.80665
+
+#: The area every gated coefficient is normalised on (m^2). STATED by the
+#: publishing workshop, hull only, static orientation, i.e. S_DWL. This is the
+#: area the experimenters reduced their own Ct with, and matching it is what
+#: makes the comparison like-for-like.
+KCS_PUBLISHED_WETTED_SURFACE = 9.4379
+
+#: The wetted area of the surface this repository GENERATES (m^2). Named here
+#: so the guard below can reject it explicitly; it is never a normalisation.
+KCS_GENERATED_WETTED_SURFACE = _KCS_GENERATED_WETTED_SURFACE
 
 _REQUIRED_CONDITION_FIELDS = (
     "body_condition",
@@ -816,13 +830,21 @@ def coefficients_from_force(
 ) -> Dict[str, float]:
     """Ct, Cp and Cv from a parsed force, on the PUBLISHED wetted surface.
 
-    The normalisation is the workshop's own S, not the area of our mesh. A
-    coefficient is defined by what it is divided by, so comparing against a
-    published Ct requires dividing by the published S - even though the
-    generated surface's own wetted area differs from it by +1.3%, which is
-    recorded as a bias direction in the geometry module rather than corrected
-    for here.
+    All three coefficients are normalised on the SAME published area. Cp and Cv
+    are not exempt from this: they are components of Ct, so normalising them on
+    a different area would break the Ct = Cp + Cv identity that V2a and V2b's
+    independence rests on.
+
+    The area is the workshop's, not our mesh's. A coefficient is defined by
+    what it is divided by, so comparing against a published Ct requires
+    dividing by the published S. The generated surface's own wetted area is
+    +1.3% larger; using it here would introduce a systematic -1.29% on Ct that
+    is pure bookkeeping and would spend a third of V1's budget before the
+    physics is considered. That difference is a disclosed diagnostic, reported
+    alongside the result, and is deliberately NOT corrected for.
     """
+    _assert_normalisation_area(config.wetted_surface)
+
     def c(value: float) -> float:
         return resistance_coefficient(
             value, config.density, config.wetted_surface, config.velocity
@@ -833,7 +855,30 @@ def coefficients_from_force(
         "cp": c(force.pressure),
         "cv": c(force.viscous),
         "scatter": c(force.scatter),
+        "reference_area": config.wetted_surface,
     }
+
+
+def _assert_normalisation_area(area: float) -> None:
+    """Refuse to score against the mesh-derived area.
+
+    The two areas differ by only 1.3%, which is small enough to look like a
+    rounding difference and large enough to move the verdict by a third of the
+    tolerance. Transposing them would not throw, would not look wrong in a log,
+    and would silently shift every coefficient in the same direction - so the
+    guard is explicit rather than left to the default value being correct.
+    """
+    if abs(area - KCS_GENERATED_WETTED_SURFACE) < 5e-3:
+        raise ValueError(
+            f"refusing to normalise on {area} m^2: that is the wetted area of "
+            f"the GENERATED surface, not the published reference area "
+            f"({KCS_PUBLISHED_WETTED_SURFACE} m^2). A resistance coefficient "
+            f"is defined by what it is divided by; scoring against the "
+            f"workshop's Ct requires the workshop's S. The generated area is a "
+            f"diagnostic and is reported separately."
+        )
+    if area <= 0:
+        raise ValueError(f"normalisation area must be positive, got {area}")
 
 
 # --------------------------------------------------------------------------- #
@@ -889,6 +934,51 @@ def evaluate_ship_resistance_run(
             "mesh_cells": mesh_cells,
         },
         "criteria": {"V1": v1, "V2a": v2a, "V2b": v2b},
+        "normalisation": {
+            "reference_area_m2": config.wetted_surface,
+            "reference_area_source": (
+                "PUBLISHED S_DWL, stated by the Gothenburg 2000 EFD table "
+                "(hull only, no rudder, static orientation). S/Lpp^2 = 0.1781."
+            ),
+            "gated_number_uses": "reference_area_m2",
+            "applies_to": ["ct", "cp", "cv"],
+            "generated_surface_area_m2": KCS_GENERATED_WETTED_SURFACE,
+            "generated_vs_reference": (
+                KCS_GENERATED_WETTED_SURFACE - config.wetted_surface
+            )
+            / config.wetted_surface,
+            "note": (
+                "THE VERDICT RESTS ON reference_area_m2. The generated "
+                "surface's own wetted area is reported as a diagnostic and is "
+                "NOT used to normalise anything. A coefficient is defined by "
+                "what it is divided by, so scoring against the workshop's Ct "
+                "requires the workshop's S; normalising on our own area "
+                "instead would put a systematic -1.29% on Ct that has nothing "
+                "to do with solver accuracy and would spend a third of V1's "
+                "budget on bookkeeping. All three of Ct, Cp and Cv use the "
+                "same area - normalising the components differently would "
+                "break the Ct = Cp + Cv identity V2a and V2b depend on."
+            ),
+            "diagnosis": (
+                "Same hull, different reduction. Displaced volume over the "
+                "SAME surface agrees with the published figure to 0.01%, so "
+                "the geometry is right and the disagreement is in how area was "
+                "computed. Volume is a third-moment integral and averages "
+                "local surface detail away; area accumulates it directly, so "
+                "station spacing, girth interpolation and transom/bulb "
+                "treatment move S while leaving displacement untouched. "
+                "Demonstrated rather than asserted: a girth integration over "
+                "the workshop's own 57-station offsets table returns 9.83 m^2, "
+                "+4.2% on the other side of the published value. Three "
+                "reductions of one hull spanning 4%, with the volume fixed."
+            ),
+            "bias_direction": (
+                "If the solved hull genuinely carries 1.3% more wetted area "
+                "than the towed model, friction is correspondingly higher and "
+                "Ct lands HIGH by roughly 1% - about a third of V1's budget - "
+                "before the solver contributes anything."
+            ),
+        },
         "detection_floor": {
             "ct_fraction": SHIP_RESISTANCE_DETECTION_FLOOR,
             "note": (

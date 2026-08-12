@@ -93,6 +93,29 @@ KCS_MODEL_PARTICULARS = {
 #: because the gate normalises by exactly this quantity.
 KCS_WETTED_SURFACE_DWL = 9.4379
 
+#: Wetted area below the design waterline of the surface THIS MODULE GENERATES
+#: (m^2), pinned by test. It is +1.303% above the published S_DWL above.
+#:
+#: This is a DIAGNOSTIC, never a normalisation. A resistance coefficient is
+#: defined by what it is divided by, so scoring against a published Ct requires
+#: the publisher's area; dividing by this one instead would put a systematic
+#: -1.29% on Ct that has nothing to do with solver accuracy and would spend a
+#: third of the validation budget before the physics is considered.
+#:
+#: WHY THE TWO DISAGREE, as a stated hypothesis rather than a bare anomaly:
+#: displaced volume computed over the SAME surface agrees with the published
+#: figure to 0.01%, so the surface is the right hull and the discrepancy is in
+#: how area was reduced, not in the geometry. Area and volume are not equally
+#: forgiving. Volume is a third-moment integral over the enclosed region and
+#: averages local surface detail away; area accumulates it directly, so any
+#: difference in station spacing, girth interpolation or transom/bulb treatment
+#: shows up in S while leaving displacement untouched. That area is
+#: method-sensitive here at the percent level is demonstrated, not assumed: a
+#: girth integration over the workshop's own 57-station offsets table returns
+#: 9.83 m^2, +4.2% the other side of the published value. Three reductions of
+#: one hull, spanning 4%, with the volume fixed throughout.
+KCS_GENERATED_WETTED_SURFACE = 9.5609
+
 #: Nondimensional Z of the grid's top row. ABOVE the design waterline (Z = 0),
 #: which is why the raw surface area is larger than the wetted area.
 KCS_TOP_WATERLINE_Z = 0.018261

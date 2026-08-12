@@ -866,3 +866,96 @@ def test_evaluate_run_escalates_a_near_miss_across_two_levels(tmp_path) -> None:
     assert not v3["passed"]
     assert v3["escalated"]
     assert v3["delta_re"] is not None
+
+
+# --------------------------------------------------------------------------- #
+#  Normalisation area — which S the verdict rests on (#1173)
+# --------------------------------------------------------------------------- #
+
+from digitalmodel.solvers.openfoam.validation.ship_resistance import (
+    KCS_GENERATED_WETTED_SURFACE,
+    KCS_PUBLISHED_WETTED_SURFACE,
+)
+
+
+def test_scoring_normalises_on_the_published_area(referent: Referent) -> None:
+    """The gate divides by the workshop's S, not our mesh's.
+
+    The referent Ct was reduced by the experimenters using THEIR area. A
+    coefficient is defined by what it is divided by, so like-for-like
+    comparison requires the same divisor.
+    """
+    assert ShipResistanceConfig().wetted_surface == KCS_PUBLISHED_WETTED_SURFACE
+    assert KCS_PUBLISHED_WETTED_SURFACE == pytest.approx(9.4379)
+    assert referent.wetted_surface == pytest.approx(KCS_PUBLISHED_WETTED_SURFACE)
+
+
+def test_scoring_refuses_the_mesh_derived_area(tmp_path) -> None:
+    """The guard that stops a silent 1.3% shift.
+
+    The two areas differ by only 1.3% — small enough to look like a rounding
+    difference, large enough to move the verdict by a third of V1's tolerance.
+    Transposing them would not throw, would not look wrong in a log, and would
+    shift every coefficient in the same direction. So it is refused explicitly
+    rather than left to the default being correct.
+    """
+    f = tmp_path / "force.dat"
+    f.write_text(_FORCE_SAMPLE)
+    bad = ShipResistanceConfig(wetted_surface=KCS_GENERATED_WETTED_SURFACE)
+    with pytest.raises(ValueError, match="GENERATED surface"):
+        coefficients_from_force(parse_hull_force(f, window=3), bad)
+
+
+def test_all_three_coefficients_share_one_normalisation_area(tmp_path) -> None:
+    """Cp and Cv are not exempt.
+
+    They are components of Ct, so normalising them on a different area would
+    break the Ct = Cp + Cv identity that V2a and V2b's independence rests on.
+    """
+    f = tmp_path / "force.dat"
+    f.write_text(_FORCE_SAMPLE)
+    config = ShipResistanceConfig()
+    coeffs = coefficients_from_force(parse_hull_force(f, window=3), config)
+    assert coeffs["reference_area"] == KCS_PUBLISHED_WETTED_SURFACE
+    assert coeffs["cp"] + coeffs["cv"] == pytest.approx(coeffs["ct"])
+    force = parse_hull_force(f, window=3)
+    q = 0.5 * config.density * KCS_PUBLISHED_WETTED_SURFACE * config.velocity**2
+    for key, raw in (("ct", force.total), ("cp", force.pressure),
+                     ("cv", force.viscous)):
+        assert coeffs[key] == pytest.approx(raw / q)
+
+
+def test_manifest_reports_both_areas_and_names_the_gated_one(tmp_path) -> None:
+    """A reader must be able to tell at a glance which area produced the
+    verdict. If the two are ever transposed the gate silently moves 1.3%."""
+    config = ShipResistanceConfig(averaging_window=200)
+    referent = load_referent()
+    f = _write_force_dat(
+        tmp_path / "force.dat",
+        ct=referent.ct, cp=referent.cr, cv=referent.cf, config=config,
+    )
+    manifest = evaluate_ship_resistance_run(f, config)
+    norm = manifest["normalisation"]
+
+    assert norm["reference_area_m2"] == KCS_PUBLISHED_WETTED_SURFACE
+    assert norm["gated_number_uses"] == "reference_area_m2"
+    assert set(norm["applies_to"]) == {"ct", "cp", "cv"}
+    # the measured area is present, and is NOT the one used
+    assert norm["generated_surface_area_m2"] == KCS_GENERATED_WETTED_SURFACE
+    assert norm["generated_surface_area_m2"] != norm["reference_area_m2"]
+    assert norm["generated_vs_reference"] == pytest.approx(0.01303, abs=5e-4)
+    # and the anomaly carries a hypothesis, not just a number
+    assert "0.01%" in norm["diagnosis"], "displacement agreement must be stated"
+    assert "9.83" in norm["diagnosis"], "the offsets cross-check must be stated"
+    assert norm["bias_direction"]
+
+
+def test_published_and_generated_areas_are_distinct_constants() -> None:
+    """Guard against the two collapsing into one value by a careless edit."""
+    assert KCS_PUBLISHED_WETTED_SURFACE != KCS_GENERATED_WETTED_SURFACE
+    deviation = (
+        KCS_GENERATED_WETTED_SURFACE - KCS_PUBLISHED_WETTED_SURFACE
+    ) / KCS_PUBLISHED_WETTED_SURFACE
+    assert 0.010 < deviation < 0.016, (
+        "the disclosed deviation moved; re-derive the bias argument"
+    )

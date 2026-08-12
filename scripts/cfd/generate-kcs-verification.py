@@ -145,6 +145,7 @@ def build_html(m: dict) -> str:
     prov = m["provenance"]
     meas = m["measurement"]
     crit = m["criteria"]
+    norm = m["normalisation"]
 
     rows = []
     for name in ("V1", "V2a", "V2b"):
@@ -197,7 +198,7 @@ def build_html(m: dict) -> str:
 Ct = {prov['reference']['ct']:.3e} ·
 {html.escape(prov['body_condition'])} ·
 appendages: {html.escape(prov['appendages'])} ·
-S = {prov['wetted_surface_m2']} m² ·
+S = {prov['wetted_surface_m2']} m² (published; the gate divides by this) ·
 Re = {prov['reynolds']:.2e} · Fr = {prov['froude']:.4f}.
 <span class="note">A total resistance coefficient quoted without its condition
 tuple cannot be gated against at any tolerance.</span>
@@ -228,6 +229,28 @@ and a rolled-up result would hide which.</p>
 <p class="note">Ct = Cp + Cv holds identically
 ({'verified' if m['identity_check']['holds'] else 'VIOLATED'}). Forces are
 full-body; the half-domain doubling is applied once, in the parser.</p>
+
+<h2>Normalisation — which area produced the verdict</h2>
+<div class="card">
+<p style="margin:0 0 .6rem">
+<b>The gated numbers are normalised on the published reference area,
+{norm['reference_area_m2']} m².</b> Ct, C<sub>p</sub> and C<sub>v</sub> all use
+it. The measured area of the generated surface is reported below as a
+diagnostic and normalises nothing.
+</p>
+<div class="wrap"><table>
+<tr><th>area</th><th>value</th><th>role</th></tr>
+<tr><td>published S<sub>DWL</sub> (reference)</td>
+    <td class="num">{norm['reference_area_m2']:.4f} m²</td>
+    <td><b>used for the verdict</b></td></tr>
+<tr><td>generated surface, measured</td>
+    <td class="num">{norm['generated_surface_area_m2']:.4f} m²</td>
+    <td>diagnostic only ({norm['generated_vs_reference']:+.2%})</td></tr>
+</table></div>
+<p class="note" style="margin:.6rem 0 0">{html.escape(norm['note'])}</p>
+<p class="note"><b>Why they differ.</b> {html.escape(norm['diagnosis'])}</p>
+<p class="note"><b>Bias direction.</b> {html.escape(norm['bias_direction'])}</p>
+</div>
 
 <h2>Limit of the method</h2>
 <div class="card"><p style="margin:0">
