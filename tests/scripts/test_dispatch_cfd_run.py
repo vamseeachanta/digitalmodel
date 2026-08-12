@@ -314,3 +314,88 @@ def test_dispatch_cli_rejects_nonfixed_load_threshold() -> None:
 
     with pytest.raises(SystemExit):
         dispatcher.build_parser().parse_args(["--max-load-per-core", "0"])
+
+
+# --------------------------------------------------------------------------- #
+#  --poll: the out-of-band budget enforcement point for detached runs (#1173)
+# --------------------------------------------------------------------------- #
+
+def test_poll_exit_code_contract(tmp_path, capsys) -> None:
+    """0 while healthy, 2 when the budget was exceeded and the group was killed.
+
+    The exit status is the operational contract: a cron entry on the execution
+    host acts on it without parsing output, which matters because the poller
+    has to work from a session that never saw the launch.
+    """
+    import os
+    import subprocess as sp
+    import sys as _sys
+    import time as _time
+
+    dispatcher = load_dispatcher()
+    case = tmp_path / "case"
+    case.mkdir()
+
+    proc = sp.Popen(
+        [_sys.executable, "-c", "import time\nprint('Time = 1', flush=True)\ntime.sleep(60)"],
+        cwd=str(case), stdout=(case / "log.solver").open("w"),
+        stderr=sp.STDOUT, stdin=sp.DEVNULL, start_new_session=True,
+    )
+    try:
+        # Healthy: generous budget.
+        (case / "detached_run.json").write_text(json.dumps({
+            "pid": proc.pid, "pgid": proc.pid, "argv": ["solver"],
+            "started_epoch": _time.time(), "wallclock_budget_hours": 10.0,
+            "log_file": "log.solver",
+        }))
+        assert dispatcher.poll_case(str(case)) == 0
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["running"] is True
+        assert payload["terminated"] is False
+
+        # Over budget: must terminate and report 2.
+        (case / "detached_run.json").write_text(json.dumps({
+            "pid": proc.pid, "pgid": proc.pid, "argv": ["solver"],
+            "started_epoch": _time.time() - 3600, "wallclock_budget_hours": 0.1,
+            "log_file": "log.solver",
+        }))
+        assert dispatcher.poll_case(str(case)) == 2
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["over_budget"] is True
+        assert payload["terminated"] is True
+        proc.wait(timeout=5)
+    finally:
+        try:
+            os.killpg(os.getpgid(proc.pid), 9)
+        except (ProcessLookupError, PermissionError):
+            pass
+
+
+def test_poll_can_report_without_terminating(tmp_path, capsys) -> None:
+    """--no-terminate is for observing a run you do not own."""
+    import os
+    import subprocess as sp
+    import sys as _sys
+    import time as _time
+
+    dispatcher = load_dispatcher()
+    case = tmp_path / "case"
+    case.mkdir()
+    proc = sp.Popen(
+        [_sys.executable, "-c", "import time; time.sleep(60)"],
+        cwd=str(case), stdout=sp.DEVNULL, stderr=sp.DEVNULL,
+        stdin=sp.DEVNULL, start_new_session=True,
+    )
+    try:
+        (case / "detached_run.json").write_text(json.dumps({
+            "pid": proc.pid, "pgid": proc.pid, "argv": ["solver"],
+            "started_epoch": _time.time() - 3600, "wallclock_budget_hours": 0.1,
+            "log_file": "log.solver",
+        }))
+        assert dispatcher.poll_case(str(case), terminate=False) == 0
+        payload = json.loads(capsys.readouterr().out)
+        assert payload["over_budget"] is True
+        assert payload["terminated"] is False
+        assert os.kill(proc.pid, 0) is None  # still alive
+    finally:
+        os.killpg(os.getpgid(proc.pid), 9)
