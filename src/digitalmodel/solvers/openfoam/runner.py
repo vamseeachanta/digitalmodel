@@ -484,7 +484,12 @@ class OpenFOAMRunner:
                 result.status = OpenFOAMRunStatus.RUNNING
                 result.duration_seconds = time.monotonic() - start
                 return
-            stage = self._run_stage(case, launch_argv)
+            # Divergence markers are solver vocabulary; see _detect_error.
+            stage = self._run_stage(
+                case,
+                launch_argv,
+                check_divergence=(status is OpenFOAMRunStatus.RUNNING),
+            )
             if self._executable_verifier is not None:
                 self._executable_verifier(argv[0])
             result.stages.append(stage)
@@ -624,7 +629,9 @@ class OpenFOAMRunner:
     def _openfoam_available(executable: str) -> bool:
         return shutil.which(executable) is not None
 
-    def _run_stage(self, case: Path, argv: list[str]) -> StageResult:
+    def _run_stage(
+        self, case: Path, argv: list[str], *, check_divergence: bool = True
+    ) -> StageResult:
         name = Path(argv[0]).name
         if name == "restore0Dir":
             return self._restore_0_dir(case)
@@ -656,20 +663,45 @@ class OpenFOAMRunner:
 
         stage.return_code = proc.returncode
         stage.duration_seconds = time.monotonic() - start
-        stage.error_message = self._detect_error(name, proc.returncode, combined)
+        stage.error_message = self._detect_error(
+            name, proc.returncode, combined, check_divergence=check_divergence
+        )
         return stage
 
     @staticmethod
     def _detect_error(
-        name: str, return_code: int, output: Optional[str]
+        name: str,
+        return_code: int,
+        output: Optional[str],
+        *,
+        check_divergence: bool = True,
     ) -> Optional[str]:
+        """Classify a stage's outcome from its return code and its log.
+
+        ``check_divergence`` MUST be False for anything that is not the solver.
+
+        The divergence markers are solver vocabulary. In a solver log
+        "bounding" means ``bounding k``, ``bounding omega``, ``bounding
+        alpha.water`` — the solution is being clipped, which is a real signal.
+        In a MESH utility log it means ``boundingBox:``, which every successful
+        blockMesh, snappyHexMesh and checkMesh prints.
+
+        Scanning mesh logs for it therefore reported every successful mesh as a
+        divergence failure. The defect was invisible because it cannot fire
+        where it is exercised: CI has no OpenFOAM, so every run short-circuits
+        to DRY_RUN before a stage executes, and the only hosts that would have
+        caught it are the ones nothing routinely runs the attested path on.
+        Absence of a toolchain read as absence of a problem.
+        """
         if return_code != 0:
             return f"{name} returned non-zero exit code {return_code}"
         lowered = (output or "").lower()
-        # Fatal markers before divergence markers, mirroring smoke.py's order.
+        # Fatal markers apply to every stage — a FOAM FATAL is a FOAM FATAL.
         for marker in _ERROR_MARKERS:
             if marker.lower() in lowered:
                 return f"{name} log contains '{marker}'"
+        if not check_divergence:
+            return None
         for marker in _DIVERGENCE_MARKERS:
             if marker in lowered:
                 return f"{name} log contains '{marker}'"

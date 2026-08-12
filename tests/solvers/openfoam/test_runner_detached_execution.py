@@ -344,3 +344,82 @@ def test_restore_0_dir_fails_closed_without_a_source(tmp_path) -> None:
     stage = OpenFOAMRunner(OpenFOAMRunConfig())._restore_0_dir(case)
     assert not stage.ok
     assert "no 0.orig/" in (stage.error_message or "")
+
+
+# --------------------------------------------------------------------------- #
+#  Divergence markers are SOLVER vocabulary (#1173)
+# --------------------------------------------------------------------------- #
+
+_REAL_BLOCKMESH_TAIL = """
+Creating block mesh topology
+  boundingBox: (-26 -19 -16) (16 0 4)
+Check topology
+    Basic statistics
+Writing polyMesh with 0 cellZones
+End
+"""
+
+_REAL_CHECKMESH_TAIL = """
+Mesh stats
+    points:           919139
+    cells:            845539
+Overall domain bounding box (-26 -19 -16) (16 0 4)
+Mesh OK.
+End
+"""
+
+_REAL_SOLVER_DIVERGENCE = """
+Time = 42
+smoothSolver:  Solving for omega, Initial residual = 1
+bounding omega, min: -1.2e+03 max: 5e+05 average: 12
+End
+"""
+
+
+def test_mesh_utilities_are_not_scanned_for_divergence_markers() -> None:
+    """A successful blockMesh prints 'boundingBox:'. A successful checkMesh
+    prints 'Overall domain bounding box'. Both contain the substring
+    'bounding', which is a DIVERGENCE marker.
+
+    Scanning mesh logs for it reported every successful mesh as a divergence
+    failure. The defect could not fire where it was exercised — CI has no
+    OpenFOAM, so every run short-circuits to DRY_RUN before a stage executes —
+    so absence of a toolchain read as absence of a problem.
+
+    These are real log excerpts from an actual DTCHull run.
+    """
+    for name, log in (
+        ("blockMesh", _REAL_BLOCKMESH_TAIL),
+        ("checkMesh", _REAL_CHECKMESH_TAIL),
+    ):
+        assert "bounding" in log.lower(), "excerpt no longer exercises the trap"
+        assert OpenFOAMRunner._detect_error(
+            name, 0, log, check_divergence=False
+        ) is None, f"{name} must not be failed by a bounding BOX"
+        # and the unscoped form still trips, proving the guard is load-bearing
+        assert OpenFOAMRunner._detect_error(
+            name, 0, log, check_divergence=True
+        ) is not None
+
+
+def test_solver_divergence_is_still_caught() -> None:
+    """The fix must not disarm the check where it means something. In a solver
+    log 'bounding' means the solution is being clipped."""
+    assert OpenFOAMRunner._detect_error(
+        "interFoam", 0, _REAL_SOLVER_DIVERGENCE, check_divergence=True
+    ) is not None
+
+
+def test_fatal_markers_apply_to_every_stage() -> None:
+    """A FOAM FATAL is a FOAM FATAL, mesh utility or not."""
+    fatal = "--> FOAM FATAL ERROR: cannot find file\n"
+    for name in ("blockMesh", "checkMesh", "interFoam"):
+        assert OpenFOAMRunner._detect_error(
+            name, 0, fatal, check_divergence=False
+        ) is not None
+
+
+def test_nonzero_exit_still_fails_regardless() -> None:
+    assert OpenFOAMRunner._detect_error(
+        "blockMesh", 1, "fine\n", check_divergence=False
+    ) is not None

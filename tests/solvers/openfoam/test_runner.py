@@ -109,6 +109,19 @@ class TestFailClosed:
 # ---------------------------------------------------------------------------
 # staged execution (subprocess mocked — no OpenFOAM needed)
 # ---------------------------------------------------------------------------
+
+def _failing_stage(result):
+    """The stage that actually failed.
+
+    These assertions used to read ``result.stages[0]`` -- the MESH stage --
+    which encoded a defect: divergence markers were being applied to mesh
+    utilities, where "bounding" means ``boundingBox:`` and every successful
+    blockMesh trips it. Divergence is solver vocabulary, so the failure now
+    lands on the solver stage, which is where it always belonged.
+    """
+    return next(s for s in result.stages if not s.ok)
+
+
 class TestStagedExecution:
     def _patch(self, monkeypatch, *, returncode=0, stdout="end\n", stderr: str = ""):
         monkeypatch.setattr(
@@ -243,7 +256,7 @@ class TestStagedExecution:
         )
         result = OpenFOAMRunner().run(case)
         assert result.status is OpenFOAMRunStatus.FAILED
-        assert "divergence" in result.stages[0].error_message.lower()
+        assert "divergence" in _failing_stage(result).error_message.lower()
 
     def test_bounding_divergence_detected_despite_rc_zero(
         self, tmp_path: Path, monkeypatch
@@ -256,7 +269,7 @@ class TestStagedExecution:
         )
         result = OpenFOAMRunner().run(case)
         assert result.status is OpenFOAMRunStatus.FAILED
-        assert "bounding" in result.stages[0].error_message.lower()
+        assert "bounding" in _failing_stage(result).error_message.lower()
 
     def test_iteration_limit_divergence_detected_despite_rc_zero(
         self, tmp_path: Path, monkeypatch
@@ -271,7 +284,7 @@ class TestStagedExecution:
         assert result.status is OpenFOAMRunStatus.FAILED
         assert (
             "maximum number of iterations exceeded"
-            in result.stages[0].error_message.lower()
+            in _failing_stage(result).error_message.lower()
         )
 
     def test_fatal_on_stderr_detected_despite_rc_zero(
