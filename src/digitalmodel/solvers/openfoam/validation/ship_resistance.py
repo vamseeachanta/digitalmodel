@@ -49,7 +49,7 @@ import math
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Sequence
+from typing import Any, Dict, Optional, Sequence
 
 # --------------------------------------------------------------------------- #
 #  The gate thresholds. Mirrored in the fixture, which carries the derivation
@@ -834,3 +834,110 @@ def coefficients_from_force(
         "cv": c(force.viscous),
         "scatter": c(force.scatter),
     }
+
+
+# --------------------------------------------------------------------------- #
+#  Scoring a completed run
+# --------------------------------------------------------------------------- #
+
+def evaluate_ship_resistance_run(
+    force_dat: Path | str,
+    config: ShipResistanceConfig | None = None,
+    *,
+    companion_force_dat: Path | str | None = None,
+    companion_config: ShipResistanceConfig | None = None,
+    mesh_cells: Optional[int] = None,
+    companion_mesh_cells: Optional[int] = None,
+) -> Dict[str, Any]:
+    """Score a solved run against V1, V2a, V2b and (if given a pair) V3.
+
+    Returns the manifest that goes into the verification artifact. Every
+    criterion reports its own verdict and its own numbers; there is no single
+    aggregate "passed" that could hide which one failed.
+
+    The detection floor is included in the output unconditionally, whether the
+    gates passed or not. It is a limit of the method — a compensating pair
+    whose net effect on Ct is below ~0.91% cannot be detected by construction —
+    and stating it only when convenient would make it a disclaimer rather than
+    a property.
+    """
+    config = config or ShipResistanceConfig()
+    referent = load_referent()
+
+    force = parse_hull_force(
+        force_dat, window=config.averaging_window, half_domain=True
+    )
+    coeffs = coefficients_from_force(force, config)
+
+    v1 = v1_total_resistance(coeffs["ct"], referent)
+    v2a = v2a_pressure_coefficient(coeffs["cp"], referent)
+    v2b = v2b_viscous_coefficient(coeffs["cv"], referent)
+
+    manifest: Dict[str, Any] = {
+        "provenance": _provenance(config),
+        "measurement": {
+            "ct": coeffs["ct"],
+            "cp": coeffs["cp"],
+            "cv": coeffs["cv"],
+            "force_total_N": force.total,
+            "force_pressure_N": force.pressure,
+            "force_viscous_N": force.viscous,
+            "averaging_window": force.samples,
+            "window_first_iteration": force.first_iteration,
+            "window_last_iteration": force.last_iteration,
+            "iterative_scatter_ct": coeffs["scatter"],
+            "mesh_cells": mesh_cells,
+        },
+        "criteria": {"V1": v1, "V2a": v2a, "V2b": v2b},
+        "detection_floor": {
+            "ct_fraction": SHIP_RESISTANCE_DETECTION_FLOOR,
+            "note": (
+                "A limit of the method, stated rather than discovered. Because "
+                "Ct = Cp + Cv holds identically, a compensating pair sitting on "
+                "both component boundaries lands inside V1 at +0.91%. The "
+                "decomposition gate cannot detect a compensating pair whose net "
+                "effect on Ct is below roughly that. This is a property of the "
+                "arithmetic, not of the mesh."
+            ),
+        },
+        "identity_check": {
+            "cp_plus_cv": coeffs["cp"] + coeffs["cv"],
+            "ct": coeffs["ct"],
+            "holds": abs(coeffs["cp"] + coeffs["cv"] - coeffs["ct"])
+            <= 1e-9 + 1e-6 * abs(coeffs["ct"]),
+        },
+    }
+
+    if companion_force_dat is not None:
+        companion_config = companion_config or config
+        companion_force = parse_hull_force(
+            companion_force_dat,
+            window=companion_config.averaging_window,
+            half_domain=True,
+        )
+        companion_coeffs = coefficients_from_force(
+            companion_force, companion_config
+        )
+        v3 = v3_mesh_consistency(coeffs["ct"], companion_coeffs["ct"])
+        v3["ct_coarse_cells"] = companion_mesh_cells
+        v3["ct_fine_cells"] = mesh_cells
+        if mesh_cells and companion_mesh_cells:
+            v3["cell_ratio"] = mesh_cells / companion_mesh_cells
+            v3["linear_refinement_ratio"] = (
+                mesh_cells / companion_mesh_cells
+            ) ** (1.0 / 3.0)
+        manifest["criteria"]["V3"] = v3
+        manifest["companion"] = {
+            "ct": companion_coeffs["ct"],
+            "cp": companion_coeffs["cp"],
+            "cv": companion_coeffs["cv"],
+            "mesh_cells": companion_mesh_cells,
+            "iterative_scatter_ct": companion_coeffs["scatter"],
+        }
+
+    manifest["summary"] = {
+        name: bool(verdict["passed"])
+        for name, verdict in manifest["criteria"].items()
+    }
+    manifest["all_passed"] = all(manifest["summary"].values())
+    return manifest

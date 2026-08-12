@@ -720,3 +720,149 @@ def test_coefficients_use_the_published_wetted_surface(tmp_path) -> None:
     expected = 40.0 / (0.5 * config.density * 9.4379 * config.velocity**2)
     assert coeffs["ct"] == pytest.approx(expected)
     assert coeffs["cp"] + coeffs["cv"] == pytest.approx(coeffs["ct"])
+
+
+# --------------------------------------------------------------------------- #
+#  Scoring a completed run end to end
+# --------------------------------------------------------------------------- #
+
+from digitalmodel.solvers.openfoam.validation.ship_resistance import (
+    evaluate_ship_resistance_run,
+)
+
+
+def _write_force_dat(path, *, ct, cp, cv, config, n=200):
+    """Synthesise a forces log that reduces to the requested coefficients.
+
+    Written half-domain and sign-negative, exactly as the solver reports it on
+    this case, so the parser's doubling and sign handling are exercised rather
+    than bypassed.
+    """
+    q = 0.5 * config.density * config.wetted_surface * config.velocity**2
+    lines = [
+        "# Force",
+        "# CofR : (0 0 0)",
+        "#",
+        "# Time \ttotal_x total_y total_z\tpressure_x pressure_y pressure_z"
+        "\tviscous_x viscous_y viscous_z",
+    ]
+    for i in range(1, n + 1):
+        lines.append(
+            f"{i} {-ct * q / 2:.9e} 0.0 0.0 "
+            f"{-cp * q / 2:.9e} 0.0 0.0 "
+            f"{-cv * q / 2:.9e} 0.0 0.0"
+        )
+    path.write_text("\n".join(lines) + "\n")
+    return path
+
+
+def test_evaluate_run_passes_on_a_result_matching_the_referent(tmp_path) -> None:
+    """A run reproducing the referent exactly must pass every criterion."""
+    config = ShipResistanceConfig(averaging_window=200)
+    referent = load_referent()
+    f = _write_force_dat(
+        tmp_path / "force.dat",
+        ct=referent.ct, cp=referent.cr, cv=referent.cf, config=config,
+    )
+    manifest = evaluate_ship_resistance_run(f, config, mesh_cells=1_500_000)
+
+    assert manifest["all_passed"]
+    assert manifest["summary"] == {"V1": True, "V2a": True, "V2b": True}
+    assert manifest["measurement"]["ct"] == pytest.approx(referent.ct, rel=1e-6)
+    assert manifest["identity_check"]["holds"], "Ct = Cp + Cv must hold"
+    # the limit of the method is reported whether or not the gates passed
+    assert manifest["detection_floor"]["ct_fraction"] == pytest.approx(0.0091)
+    assert manifest["provenance"]["body_condition"] == "fixed_even_keel"
+
+
+def test_evaluate_run_fails_v1_on_the_degenerate_solution(tmp_path) -> None:
+    """A solution developing no free surface returns pure friction and must be
+    rejected, by 6.8x. This is the known-negative control, run through the
+    whole pipeline rather than against the gate function alone."""
+    config = ShipResistanceConfig(averaging_window=200)
+    referent = load_referent()
+    f = _write_force_dat(
+        tmp_path / "force.dat",
+        ct=referent.cf, cp=0.0, cv=referent.cf, config=config,
+    )
+    manifest = evaluate_ship_resistance_run(f, config)
+    assert not manifest["all_passed"]
+    assert manifest["summary"]["V1"] is False
+    assert manifest["summary"]["V2a"] is False, "no wave field must fail V2a too"
+    assert manifest["summary"]["V2b"] is True, "friction alone is still friction"
+    assert manifest["criteria"]["V1"]["relative_error"] == pytest.approx(
+        -0.2045, abs=1e-3
+    )
+
+
+def test_evaluate_run_reports_each_criterion_separately(tmp_path) -> None:
+    """No aggregate verdict may hide WHICH criterion failed.
+
+    The compensating-error vector passes V1 and fails V2a; a single rolled-up
+    pass/fail would report it as a failure with no indication that the total
+    was right for the wrong reasons.
+    """
+    config = ShipResistanceConfig(averaging_window=200)
+    f = _write_force_dat(
+        tmp_path / "force.dat",
+        ct=3.560e-3, cp=0.615e-3, cv=2.945e-3, config=config,
+    )
+    manifest = evaluate_ship_resistance_run(f, config)
+    assert manifest["summary"]["V1"] is True
+    assert manifest["summary"]["V2a"] is False
+    assert manifest["summary"]["V2b"] is True
+    assert not manifest["all_passed"]
+
+
+def test_evaluate_run_scores_v3_across_two_levels(tmp_path) -> None:
+    config = ShipResistanceConfig(averaging_window=200)
+    referent = load_referent()
+    fine = _write_force_dat(
+        tmp_path / "fine.dat",
+        ct=referent.ct, cp=referent.cr, cv=referent.cf, config=config,
+    )
+    # Cp and Cv must SUM to Ct on every level; HullForce refuses otherwise,
+    # which is how this test's first draft was caught constructing an
+    # impossible run.
+    ct_coarse = referent.ct * 0.995
+    coarse = _write_force_dat(
+        tmp_path / "coarse.dat",
+        ct=ct_coarse, cp=ct_coarse - referent.cf, cv=referent.cf,
+        config=config,
+    )
+    manifest = evaluate_ship_resistance_run(
+        fine, config,
+        companion_force_dat=coarse, companion_config=config,
+        mesh_cells=1_500_000, companion_mesh_cells=530_000,
+    )
+    v3 = manifest["criteria"]["V3"]
+    assert v3["epsilon"] == pytest.approx(0.005, abs=1e-3)
+    assert v3["passed"]
+    assert not v3["escalated"]
+    assert v3["linear_refinement_ratio"] == pytest.approx(2 ** 0.5, rel=0.02), (
+        "the companion must be coarser by r_G = sqrt(2) in LINEAR mesh size"
+    )
+
+
+def test_evaluate_run_escalates_a_near_miss_across_two_levels(tmp_path) -> None:
+    """A 2% level-to-level difference must re-derive the budget, not pass."""
+    config = ShipResistanceConfig(averaging_window=200)
+    referent = load_referent()
+    fine = _write_force_dat(
+        tmp_path / "fine.dat",
+        ct=referent.ct, cp=referent.cr, cv=referent.cf, config=config,
+    )
+    ct_coarse = referent.ct * 0.98
+    coarse = _write_force_dat(
+        tmp_path / "coarse.dat",
+        ct=ct_coarse, cp=ct_coarse - referent.cf, cv=referent.cf,
+        config=config,
+    )
+    manifest = evaluate_ship_resistance_run(
+        fine, config, companion_force_dat=coarse, companion_config=config,
+    )
+    v3 = manifest["criteria"]["V3"]
+    assert v3["epsilon"] == pytest.approx(0.02, abs=2e-3)
+    assert not v3["passed"]
+    assert v3["escalated"]
+    assert v3["delta_re"] is not None
