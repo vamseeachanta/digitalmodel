@@ -315,3 +315,32 @@ def test_stage_plan_covers_dtchull_allrun() -> None:
     emitted = set(_emitted_stage_names(ranks=8))
     missing = commands - emitted
     assert not missing, f"stage plan does not cover the Allrun: {sorted(missing)}"
+
+
+def test_restore_0_dir_is_implemented_not_shelled_out(tmp_path) -> None:
+    """restore0Dir is a SHELL FUNCTION in the tutorials' RunFunctions, not an
+    executable. Handing it to subprocess would fail with ENOENT at the exact
+    point where the mesh is finished and the solve is about to start.
+
+    The step is not optional: snappyHexMesh consumes 0/ while meshing, so the
+    initial fields must come back from 0.orig/ before setFields runs.
+    """
+    case = _make_case(tmp_path)
+    (case / "0.orig").mkdir()
+    (case / "0.orig" / "U").write_text("initial U\n")
+    (case / "0.orig" / "alpha.water").write_text("initial alpha\n")
+    # snappyHexMesh has left 0/ in a state we must not keep
+    (case / "0" / "stale").write_text("meshing residue\n")
+
+    stage = OpenFOAMRunner(OpenFOAMRunConfig())._restore_0_dir(case)
+    assert stage.ok, stage.error_message
+    assert (case / "0" / "U").read_text() == "initial U\n"
+    assert (case / "0" / "alpha.water").is_file()
+    assert not (case / "0" / "stale").exists(), "meshing residue survived"
+
+
+def test_restore_0_dir_fails_closed_without_a_source(tmp_path) -> None:
+    case = _make_case(tmp_path)
+    stage = OpenFOAMRunner(OpenFOAMRunConfig())._restore_0_dir(case)
+    assert not stage.ok
+    assert "no 0.orig/" in (stage.error_message or "")

@@ -499,6 +499,40 @@ class OpenFOAMRunner:
         result.status = OpenFOAMRunStatus.COMPLETED
         result.duration_seconds = time.monotonic() - start
 
+    @staticmethod
+    def _restore_0_dir(case: Path) -> StageResult:
+        """Restore ``0/`` from ``0.orig/`` — implemented, not shelled out to.
+
+        ``restore0Dir`` is a SHELL FUNCTION defined in the tutorials'
+        ``RunFunctions``, not an executable on PATH. Emitting it as a stage
+        name and handing it to ``subprocess`` would fail with ENOENT at the
+        exact point in the pipeline where the mesh is finished and the solve is
+        about to start — after all the meshing work, before any of it is used.
+
+        The step itself is not optional: ``snappyHexMesh`` consumes ``0/``
+        while meshing, so the initial fields have to come back from
+        ``0.orig/`` before ``setFields`` runs.
+        """
+        stage = StageResult(name="restore0Dir")
+        start = time.monotonic()
+        source = case / "0.orig"
+        target = case / "0"
+        if not source.is_dir():
+            stage.return_code = 1
+            stage.error_message = f"restore0Dir: no 0.orig/ in {case}"
+            return stage
+        try:
+            if target.is_dir():
+                shutil.rmtree(target)
+            shutil.copytree(source, target)
+        except OSError as exc:
+            stage.return_code = 1
+            stage.error_message = f"restore0Dir failed: {exc}"
+            return stage
+        stage.return_code = 0
+        stage.duration_seconds = time.monotonic() - start
+        return stage
+
     def _launch_detached(self, case: Path, argv: list[str]) -> StageResult:
         """Start the solver in its own session and return immediately.
 
@@ -592,6 +626,8 @@ class OpenFOAMRunner:
 
     def _run_stage(self, case: Path, argv: list[str]) -> StageResult:
         name = Path(argv[0]).name
+        if name == "restore0Dir":
+            return self._restore_0_dir(case)
         log_file = case / f"log.{name}"
         stage = StageResult(name=name, log_file=log_file)
         start = time.monotonic()
