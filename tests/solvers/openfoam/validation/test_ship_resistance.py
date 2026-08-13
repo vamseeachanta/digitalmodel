@@ -470,6 +470,7 @@ from digitalmodel.solvers.openfoam.validation.ship_resistance import (
     ShipResistanceConfig,
     build_ship_resistance_case,
     coefficients_from_force,
+    emesh_name_for,
     hull_placement,
     parse_hull_force,
     ship_resistance_templates_dir,
@@ -959,3 +960,99 @@ def test_published_and_generated_areas_are_distinct_constants() -> None:
     assert 0.010 < deviation < 0.016, (
         "the disclosed deviation moved; re-derive the bias argument"
     )
+
+
+# --------------------------------------------------------------------------- #
+#  The emitted case must not ask for a file nothing will produce
+#
+#  snappyHexMesh reads its feature-edge files by name out of constant/triSurface
+#  and cannot know that a name was never going to be written. On the first
+#  production run it did blockMesh, surfaceFeatureExtract and six topoSet /
+#  refineMesh pairs before aborting, 62 s in, on a DTC-scaled.eMesh left behind
+#  by the tutorial the case is templated from. The extraction dict had been
+#  retargeted; the snappy dict had not.
+#
+#  These assert the PROPERTY - what snappy asks for is what the extraction
+#  produces - rather than the literal kcs.eMesh, which a second hardcoded
+#  string would satisfy just as happily as a derived one.
+# --------------------------------------------------------------------------- #
+
+def _requested_feature_files(case) -> list[str]:
+    """Every ``file`` named in snappyHexMeshDict's ``features`` list."""
+    text = (case / "system" / "snappyHexMeshDict").read_text()
+    block = re.search(r"\bfeatures\s*\((.*?)\)\s*;", text, re.S)
+    assert block, "snappyHexMeshDict has no features block to check"
+    return re.findall(r'\bfile\s+"([^"]+)"', block.group(1))
+
+
+def _extracted_surfaces(case) -> list[str]:
+    """Every surface surfaceFeatureExtractDict will run the extraction on."""
+    text = (case / "system" / "surfaceFeatureExtractDict").read_text()
+    body = text.split("* //", 1)[1]
+    return re.findall(r"^\s*(\S+\.stl)\s*$", body, re.M)
+
+
+def test_every_requested_feature_file_will_actually_be_produced(emitted) -> None:
+    """The test that would have caught the 62-second abort.
+
+    surfaceFeatureExtract names its output after its input, so the set of
+    .eMesh files it will write is fully determined by the .stl files it is
+    pointed at. Anything snappy asks for outside that set is a file that will
+    never exist.
+    """
+    produced = {emesh_name_for(stl) for stl in _extracted_surfaces(emitted)}
+    assert produced, "no surface is being extracted; the check would be vacuous"
+
+    requested = _requested_feature_files(emitted)
+    assert requested, "no feature file is requested; the check would be vacuous"
+
+    missing = [f for f in requested if f not in produced]
+    assert not missing, (
+        f"snappyHexMeshDict asks for {missing}, but surfaceFeatureExtract will "
+        f"only produce {sorted(produced)}. snappyHexMesh discovers this after "
+        f"meshing, not before."
+    )
+
+
+def test_the_extraction_target_is_the_case_hull_geometry(emitted) -> None:
+    """The other half: the surface being extracted is the one the case meshes.
+
+    Without this, both dicts could agree on a surface neither the geometry
+    block nor the case directory has.
+    """
+    config = ShipResistanceConfig()
+    extracted = _extracted_surfaces(emitted)
+    assert extracted == [config.stl_name]
+
+    snappy = (emitted / "system" / "snappyHexMeshDict").read_text()
+    start = re.search(r"^geometry\s*$", snappy, re.M)
+    assert start, "snappyHexMeshDict has no geometry block"
+    end = snappy.index("castellatedMeshControls", start.end())
+    geometry = snappy[start.end():end]
+    assert config.stl_name in geometry, (
+        "the extracted surface is not the one snappy meshes"
+    )
+
+
+def test_feature_file_follows_the_geometry_name_not_a_literal(
+    tmp_path,
+) -> None:
+    """Rename the hull and the feature file must follow it.
+
+    This is the assertion a second hardcoded 'kcs.eMesh' would fail. It is
+    deliberately run on a NON-default stl_name so that a literal cannot pass
+    by coincidence.
+    """
+    case = build_ship_resistance_case(
+        ShipResistanceConfig(name="renamed_hull", stl_name="someOtherHull.stl"),
+        tmp_path,
+    )
+    assert _requested_feature_files(case) == ["someOtherHull.eMesh"]
+    assert _extracted_surfaces(case) == ["someOtherHull.stl"]
+
+    # and no tutorial name survived anywhere in the emitted case
+    for path in sorted(case.rglob("*")):
+        if path.is_file():
+            assert "DTC" not in path.read_text(), (
+                f"a tutorial geometry reference survived in {path.name}"
+            )

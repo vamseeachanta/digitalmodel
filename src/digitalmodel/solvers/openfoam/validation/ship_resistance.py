@@ -594,6 +594,24 @@ def _vec(v: Sequence[float]) -> str:
     return " ".join(_fmt(c) for c in v)
 
 
+def emesh_name_for(stl_name: str) -> str:
+    """The feature-edge file ``surfaceFeatureExtract`` will write for an STL.
+
+    ``surfaceFeatureExtract`` names its output after the surface it was given:
+    ``kcs.stl`` yields ``kcs.eMesh``. snappyHexMesh then reads that name back
+    out of ``constant/triSurface``, so the two dictionaries have to agree.
+
+    They agree here, once, because both are computed from ``stl_name``. Writing
+    the extracted name as a second literal is what broke the first production
+    mesh: ``surfaceFeatureExtractDict`` had been retargeted to ``kcs.stl`` and
+    ``snappyHexMeshDict`` still asked for the tutorial's ``DTC-scaled.eMesh``,
+    which no longer existed. snappyHexMesh cannot know the file was never going
+    to be produced, so it ran blockMesh, the extraction and six topoSet /
+    refineMesh pairs first and only then aborted on the missing file.
+    """
+    return Path(stl_name).with_suffix(".eMesh").name
+
+
 def ship_resistance_tokens(config: ShipResistanceConfig) -> Dict[str, str]:
     """Every @TOKEN@ value, derived from the config.
 
@@ -609,6 +627,8 @@ def ship_resistance_tokens(config: ShipResistanceConfig) -> Dict[str, str]:
 
     tokens: Dict[str, str] = {
         "STL": config.stl_name,
+        # Derived, never stated: see emesh_name_for.
+        "EMESH": emesh_name_for(config.stl_name),
         "UMEAN": _fmt(config.velocity),
         "NU": f"{config.nu:.6e}",
         "RHO": _fmt(config.density),

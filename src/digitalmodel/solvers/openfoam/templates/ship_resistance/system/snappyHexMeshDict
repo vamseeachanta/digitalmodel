@@ -81,7 +81,7 @@ castellatedMeshControls
     features
     (
          {
-             file "DTC-scaled.eMesh";
+             file "@EMESH@";
              level 0;
          }
     );
