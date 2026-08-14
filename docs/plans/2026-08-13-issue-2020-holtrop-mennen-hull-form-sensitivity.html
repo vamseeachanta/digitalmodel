@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>#2020 Plan — Holtrop-Mennen Hull-Form Sensitivity</title>
+  <style>
+    :root{--navy:#0b3d5c;--teal:#168c88;--ink:#18313f;--muted:#5f7480;--line:#d7e2e7;--paper:#fff;--wash:#f3f8fa;--warn:#fff5d6;--bad:#fdecec;--good:#eefaf3}
+    *{box-sizing:border-box}body{margin:0;background:var(--wash);color:var(--ink);font:16px/1.55 system-ui,sans-serif}
+    main{max-width:1100px;margin:0 auto;background:var(--paper);padding:3rem 4rem;box-shadow:0 0 30px #1232}
+    h1,h2,h3{color:var(--navy);line-height:1.2}h1{font-size:2.25rem}h2{margin-top:2.2rem;border-bottom:2px solid var(--teal);padding-bottom:.35rem}
+    h3{margin-top:1.4rem}a{color:#076b83}code{background:#edf3f5;padding:.1rem .3rem;border-radius:3px;font-size:.92em}
+    pre{background:#0f2b38;color:#e8f2f5;padding:1rem 1.2rem;border-radius:6px;overflow-x:auto;font-size:.86rem;line-height:1.45}
+    table{border-collapse:collapse;width:100%;margin:1rem 0;font-size:.93rem;display:block;overflow-x:auto}
+    th,td{border:1px solid var(--line);padding:.5rem .7rem;text-align:left;vertical-align:top}
+    th{background:var(--wash);color:var(--navy)}
+    .meta{color:var(--muted);font-size:.9rem;margin-top:-.6rem}
+    .warn{background:var(--warn);border-left:4px solid #d9a400;padding:.85rem 1.1rem;margin:1.2rem 0;border-radius:0 4px 4px 0}
+    .bad{background:var(--bad);border-left:4px solid #c0392b;padding:.85rem 1.1rem;margin:1.2rem 0;border-radius:0 4px 4px 0}
+    .good{background:var(--good);border-left:4px solid #159a5f;padding:.85rem 1.1rem;margin:1.2rem 0;border-radius:0 4px 4px 0}
+    .num{font-variant-numeric:tabular-nums;text-align:right}
+    ul{margin:.5rem 0 .5rem 1.1rem}li{margin:.28rem 0}
+  </style>
+</head>
+<body>
+<main>
+
+<h1>#2020 implementation plan: make Holtrop-Mennen hull-form sensitivity provable</h1>
+<p class="meta">Issue <a href="https://github.com/vamseeachanta/digitalmodel/issues/2020">#2020</a> &middot; branch <code>plan/2020-holtrop-mennen-hull-form-sensitivity</code> &middot; base <code>2a6b521e</code> &middot; drafted 2026-08-13 &middot; status: awaiting adversarial review, then user approval</p>
+
+<h2>Goal and authorization boundary</h2>
+<p>Holtrop-Mennen will be pinned to an oracle that lives outside this repository, and the pin will be enforced by a test that runs. Today the module's only numeric checks are bands wide enough to admit almost any answer, and its declared test vectors are un-sourced numbers that no test reads.</p>
+<ul>
+  <li><strong>G1</strong> — The module's output will be validated against a <em>published</em> Holtrop-Mennen worked example with printed intermediate values, so that each coefficient function has its own oracle rather than only the total having one.</li>
+  <li><strong>G2</strong> — Every coefficient that departs from the published 1982/1984 definitions will be corrected, each behind a test that fails first.</li>
+  <li><strong>G3</strong> — <code>tests/fixtures/test_vectors/naval_architecture/holtrop_mennen.yaml</code> will be loaded by a parametrized test that asserts every row marked <code>use_as_test: true</code>, so that flag stops being decorative.</li>
+  <li><strong>G4</strong> — Every expected value in that fixture will carry a citation naming where it came from, or it will not remain in the fixture.</li>
+  <li><strong>G5</strong> — A hull-form sensitivity test will assert the <em>direction and ordering</em> of C<sub>T</sub> across hull forms, so a future regression that flattens hull dependence fails loudly even if every band still passes.</li>
+  <li><strong>G6</strong> — The published artifact <code>docs/api/structural/ship-resistance-explorer.html</code>, which is generated from this engine, will be regenerated so the public surface and the engine agree.</li>
+</ul>
+<p><strong>Boundary.</strong> This plan will change the resistance engine, its tests, its fixture and the artifact generated from it. It will not touch the CFD work in <a href="https://github.com/vamseeachanta/digitalmodel/issues/1173">#1173</a>, will not extend the method beyond the F<sub>n</sub> &lt; 0.4 regime it implements today, and will not add propulsion or wake-fraction estimation. It will not self-apply <code>status:plan-approved</code>.</p>
+
+<h2>Resource intelligence summary</h2>
+<p>All figures below were measured on a clean checkout of <code>origin/main</code> at <code>2a6b521e</code> — the same commit the issue reproduced against — by importing the module directly. The repo <code>.venv</code> holds no pytest, so no measurement used it; the canonical invocation is <code>uv run --with-editable '.[test]' python -m pytest</code>.</p>
+
+<h3>The diagnostic the issue asked for</h3>
+<p>The issue asked for <code>S</code>, <code>k1</code>, <code>R_F</code>, <code>R_W</code>, <code>R_A</code> and the remaining components side by side for both fixture hulls, on the grounds that the term failing to differentiate would name the defect. That table was produced before this plan was written. It is reproduced here in full, in both dimensional and coefficient form, because it settles the central question.</p>
+<table>
+  <tr><th>term</th><th class="num">series60_cb060</th><th class="num">tanker_cb080</th><th class="num">ratio T/S</th><th>discriminates?</th></tr>
+  <tr><td>F<sub>n</sub></td><td class="num">0.223264</td><td class="num">0.172179</td><td class="num">0.7712</td><td>yes</td></tr>
+  <tr><td>R<sub>n</sub></td><td class="num">7.91475e+08</td><td class="num">1.33081e+09</td><td class="num">1.6814</td><td>yes</td></tr>
+  <tr><td><code>S</code> (m&sup2;)</td><td class="num">2429.25</td><td class="num">9598.84</td><td class="num">3.9514</td><td>yes</td></tr>
+  <tr><td><code>LR</code> (m)</td><td class="num">40.8297</td><td class="num">37.9487</td><td class="num">0.9294</td><td>yes</td></tr>
+  <tr><td><code>c12</code></td><td class="num">0.479948</td><td class="num">0.479948</td><td class="num">1.0000</td><td><strong>no — see C-1</strong></td></tr>
+  <tr><td><code>1+k1</code></td><td class="num">1.10189</td><td class="num">1.27830</td><td class="num">1.1601</td><td>yes</td></tr>
+  <tr><td><code>iE</code> (deg)</td><td class="num">8.06708</td><td class="num">41.5647</td><td class="num">5.1524</td><td>yes</td></tr>
+  <tr><td><code>c1</code></td><td class="num">0.937802</td><td class="num">3.27325</td><td class="num">3.4903</td><td>yes</td></tr>
+  <tr><td><code>m1</code></td><td class="num">-2.00993</td><td class="num">-2.01043</td><td class="num">1.0002</td><td>coincidence, see below</td></tr>
+  <tr><td>L&sup3;/&nabla;</td><td class="num">234.404</td><td class="num">136.800</td><td class="num">0.5836</td><td>yes (both &lt; 512)</td></tr>
+  <tr><td>R<sub>F</sub> (N)</td><td class="num">116939</td><td class="num">433258</td><td class="num">3.7050</td><td>yes</td></tr>
+  <tr><td>R<sub>W</sub> (N)</td><td class="num">31284.5</td><td class="num">115729</td><td class="num">3.6992</td><td>yes</td></tr>
+  <tr><td>R<sub>A</sub> (N)</td><td class="num">35459.8</td><td class="num">103349</td><td class="num">2.9145</td><td>yes</td></tr>
+  <tr><td>R<sub>T</sub> (N)</td><td class="num">195598</td><td class="num">772911</td><td class="num">3.9515</td><td>yes</td></tr>
+  <tr><td>C<sub>F</sub></td><td class="num">1.57601e-03</td><td class="num">1.47774e-03</td><td class="num">0.9376</td><td>yes</td></tr>
+  <tr><td>C<sub>F</sub>(1+k1)</td><td class="num">1.73659e-03</td><td class="num">1.88900e-03</td><td class="num">1.0878</td><td>yes, <strong>upward</strong></td></tr>
+  <tr><td>C<sub>W</sub></td><td class="num">4.21628e-04</td><td class="num">3.94726e-04</td><td class="num">0.9362</td><td>yes, downward</td></tr>
+  <tr><td>C<sub>A</sub></td><td class="num">4.77900e-04</td><td class="num">3.52499e-04</td><td class="num">0.7376</td><td>yes, downward</td></tr>
+  <tr><td><strong>C<sub>T</sub></strong></td><td class="num">2.63612e-03</td><td class="num">2.63622e-03</td><td class="num"><strong>1.0000</strong></td><td>—</td></tr>
+  <tr><td>fixture <code>ct_approx</code></td><td class="num">3.85000e-03</td><td class="num">1.75000e-03</td><td class="num">0.4545</td><td>—</td></tr>
+</table>
+<p>Component shares: series60 is 65.9% C<sub>F</sub>(1+k1) / 16.0% C<sub>W</sub> / 18.1% C<sub>A</sub>; tanker is 71.7% / 15.0% / 13.4%.</p>
+
+<div class="bad"><strong>Finding 1 — the collapse hypothesis is refuted. Every term discriminates.</strong> <code>S</code> differs by a factor of 3.95, <code>iE</code> by 5.15, <code>c1</code> by 3.49, <code>1+k1</code> by 1.16. No term is form-insensitive. The near-identity in C<sub>T</sub> is a <em>three-way cancellation at these two specific operating points</em>: moving from the Series 60 to the tanker, C<sub>F</sub>(1+k1) rises 8.8% while C<sub>W</sub> falls 6.4% and C<sub>A</sub> falls 26.2%, and the component weights make the sum agree to 4 parts in 10<sup>5</sup>. The issue's candidate mechanism — "R<sub>T</sub> and S scale together so the ratio cancels" — is confirmed as an <em>observation</em> (R<sub>T</sub> ratio 3.9515 against S ratio 3.9514) but refuted as a <em>cause</em>: that equality is the restatement of C<sub>T</sub> equality, not its explanation. The two other candidate mechanisms are also refuted: no form-dependent term is computed-but-unapplied (all six components are applied, and all six discriminate), and there is no non-dimensionalisation error (C<sub>F</sub> was re-derived from ITTC-1957 independently at both Reynolds numbers and matches). The <code>m1</code> near-equality is a genuine second coincidence, unrelated to the first, and it does not propagate because <code>c1</code> differs by 3.49&times;.</div>
+
+<h3>Finding 2 — one fixture value is below the floor the method can produce</h3>
+<p>C<sub>T</sub> under Holtrop-Mennen is bounded below by C<sub>F</sub>(1+k1) + C<sub>A</sub>, because C<sub>W</sub>, R<sub>B</sub>, R<sub>TR</sub> and R<sub>APP</sub> are all non-negative. Evaluating that floor with the <em>corrected</em> <code>c12</code> (see C-1):</p>
+<table>
+  <tr><th>case</th><th class="num">bare C<sub>F</sub></th><th class="num">C<sub>F</sub>(1+k1)</th><th class="num">floor = C<sub>F</sub>(1+k1) + C<sub>A</sub></th><th class="num">fixture <code>ct_approx</code></th><th>verdict</th></tr>
+  <tr><td>series60_cb060</td><td class="num">1.5760e-03</td><td class="num">1.7594e-03</td><td class="num">2.2373e-03</td><td class="num">3.8500e-03</td><td>above floor — reachable in principle</td></tr>
+  <tr><td>tanker_cb080</td><td class="num">1.4777e-03</td><td class="num">1.9441e-03</td><td class="num"><strong>2.2966e-03</strong></td><td class="num"><strong>1.7500e-03</strong></td><td><strong>below floor — unreachable</strong></td></tr>
+</table>
+<div class="bad"><strong>The tanker's <code>ct_approx</code> = 0.00175 cannot be produced by Holtrop-Mennen for that hull at that speed, by any correction to this code.</strong> It sits 24% <em>below</em> the method's own floor of 2.2966e-3, and 18% below the bare ITTC-1957 C<sub>F</sub> multiplied by a form factor of 1.18 — the low end of the fixture's own declared form-factor band. Reaching 0.00175 would require C<sub>W</sub> &lt; 0, or (1+k1) &lt; 1.18 together with C<sub>A</sub> &lt; 0. The number is not a tolerance miss. It is outside the method's range.</div>
+
+<h3>Finding 3 — the other fixture value has a clean model-scale interpretation</h3>
+<p>Solving for the Reynolds number at which the module's own C<sub>W</sub> and (1+k1) would give C<sub>T</sub> = 0.00385 with C<sub>A</sub> = 0 — the model-scale convention, where no correlation allowance is applied — yields:</p>
+<table>
+  <tr><th>quantity</th><th class="num">value</th></tr>
+  <tr><td>required C<sub>F</sub></td><td class="num">3.0710e-03</td></tr>
+  <tr><td>implied R<sub>n</sub> (ITTC-1957 inverted)</td><td class="num">8.746e+06</td></tr>
+  <tr><td>implied geometric scale &lambda; (Froude-similar, R<sub>n</sub> &prop; &lambda;<sup>-3/2</sup>)</td><td class="num">20.2</td></tr>
+  <tr><td>implied model length</td><td class="num">6.05 m</td></tr>
+</table>
+<p>6.05 m is an unremarkable towing-tank model length for a 122 m ship. The Series 60 value is therefore consistent with a <em>model-scale</em> C<sub>T</sub> recorded against a <em>full-scale</em> input row. The same inversion applied to the tanker requires C<sub>F</sub> = 7.62e-04, which ITTC-1957 reaches only beyond R<sub>n</sub> ~ 10<sup>12</sup>; there is no physical scale, model or full, at which 0.00175 is that hull's C<sub>T</sub>.</p>
+<div class="warn"><strong>Read together, Findings 2 and 3 say the fixture is not a usable oracle.</strong> One row is plausibly a model-scale number mislabelled as full-scale; the other is outside the method's range at any scale. The fixture's provenance block names the two Holtrop papers as <code>source_type: journal_paper</code>, but neither paper tabulates these two hulls, and the repository contains no derivation for either number. The fixture is best explained as plausible-looking values authored alongside the module rather than extracted from a source — which is exactly the failure mode <code>use_as_test: true</code> was supposed to prevent, and could not, because nothing read the flag.</div>
+
+<h3>The third fixture row disagrees with the repository's own unit test</h3>
+<table>
+  <tr><th>source</th><th>declared band for the same hull (L=150, B=20, T=8, C<sub>P</sub>=0.663, lcb=&minus;1.5)</th><th>module today</th><th>module with C-1 fixed</th></tr>
+  <tr><td>fixture <code>form_factor_validation</code></td><td>[1.18, 1.25]</td><td class="num">1.1201 — <strong>fails</strong></td><td class="num">1.1362 — <strong>still fails</strong></td></tr>
+  <tr><td><code>tests/naval_architecture/test_holtrop_mennen.py</code></td><td>[1.10, 1.30]</td><td class="num">1.1201 — passes</td><td class="num">1.1362 — passes</td></tr>
+</table>
+<p>Two in-repo sources state incompatible expectations for one hull, and the looser one is the one that runs. Correcting the only <em>active</em> coefficient defect in the form-factor chain does not reconcile them. Either the fixture band is wrong, or a further defect exists in <code>form_factor_k1</code> that the published worked example will expose. Stage 1 exists to decide which, rather than to guess.</p>
+
+<h3>Where the issue's own framing needs correcting</h3>
+<table>
+  <tr><th>issue claim</th><th>verdict</th><th>evidence</th></tr>
+  <tr><td>Both fixture rows fail by &minus;31.5% / +50.6%</td><td><strong>Reproduces exactly</strong></td><td>2.636122e-03 and 2.636225e-03, matching to all printed digits</td></tr>
+  <tr><td><code>form_factor_validation</code> also fails at 1.1201</td><td><strong>Reproduces exactly</strong></td><td>as above</td></tr>
+  <tr><td>No test loads the fixture; the only two <code>ct_approx</code> references are its own declarations</td><td><strong>Correct</strong></td><td>whole-repo grep</td></tr>
+  <tr><td>"hull-form dependence has collapsed somewhere in the chain"</td><td><strong>Refuted</strong></td><td>Finding 1 — every component discriminates; the agreement is a cancellation, not a collapse</td></tr>
+  <tr><td>"the near-identity is the diagnostic"</td><td><strong>Correct instinct, wrong conclusion</strong></td><td>Producing the table was the right move and it did localise the problem — just not to a term. It localised it to the <em>fixture</em>.</td></tr>
+  <tr><td>the test file "asserts only loose bounds on individual components, never the total"</td><td><strong>Incorrect</strong></td><td><code>TestTotalResistance.test_series60_ct</code> asserts <code>0.002 &lt; ct &lt; 0.005</code> and <code>test_tanker_ct</code> asserts <code>0.001 &lt; ct &lt; 0.003</code>. The total <em>is</em> asserted. The bands are 2.5&times; and 3&times; wide and both admit 2.636e-3 — and, being overlapping, they also admit the two hulls having <em>identical</em> C<sub>T</sub>. The defect is band width and the absence of any cross-hull relation, not absence of an assertion. This matters because it changes the fix: adding a total-resistance assertion would not have caught this; only a sourced value or an ordering assertion would.</td></tr>
+  <tr><td>Consumers have taken powering numbers from this engine</td><td><strong>Correct, and wider than stated</strong></td><td><code>src/digitalmodel/naval_architecture/workflow_calculations.py</code> exposes it through a workflow, and <code>scripts/capabilities/build_ship_resistance_explorer.py</code> generates the committed public artifacts <code>docs/api/structural/ship-resistance-explorer.html</code> and <code>.json</code>. Both are on <code>origin/main</code> today.</td></tr>
+</table>
+
+<h2>Coefficient defect inventory</h2>
+<p>Each row below was compared against the published 1982/1984 definitions. Corroborating sources were consulted for C-1, C-2, C-3, C-4, C-5 and C-6; C-7 is recorded as suspected because the secondary source rendered the expression ambiguously and the primary paper will settle it in Stage 1. "Active" means the defect changes the fixture hulls' results today.</p>
+<table>
+  <tr><th>id</th><th>location</th><th>as implemented</th><th>published form</th><th>status</th><th>measured effect</th></tr>
+  <tr><td><strong>C-1</strong></td><td><code>holtrop_coefficients.py</code> &middot; <code>coeff_c12</code></td><td>returns <code>0.479948</code> when T/L &gt; 0.05</td><td><code>(T/L)**0.2228446</code> when T/L &gt; 0.05; the <code>0.479948</code> constant belongs to the T/L &lt; 0.02 branch only</td><td><strong>ACTIVE</strong> — every hull in the fixture and every hull in the published explorer has T/L &gt; 0.05</td><td><code>c12</code> understated by 8.4%&ndash;13.6%; (1+k1) 1.1019&rarr;1.1164 (series60), 1.2783&rarr;1.3156 (tanker); C<sub>T</sub> +0.9% / +2.1%</td></tr>
+  <tr><td><strong>C-2</strong></td><td><code>half_angle_of_entrance</code></td><td><code>(100.0 * cb / lwl) ** 0.16302</code></td><td><code>(100 * vol / lwl**3) ** 0.16302</code></td><td><strong>ACTIVE</strong> — and dimensionally wrong: C<sub>b</sub>/L carries units of 1/m, so the term is not scale-invariant</td><td><code>iE</code> 41.56&rarr;38.27 deg (tanker); C<sub>W</sub> &minus;8.7% (tanker), +0.7% (series60)</td></tr>
+  <tr><td><strong>C-3</strong></td><td><code>coeff_c15</code></td><td><code>-1.69385 + (l3_over_vol / 2.36) / 512.0</code> in the middle band</td><td><code>-1.69385 + (L / vol**(1/3) - 8.0) / 2.36</code></td><td>dormant — both fixture hulls have L&sup3;/&nabla; &lt; 512 and take the constant branch</td><td>none today; wrong for any hull in 512 &le; L&sup3;/&nabla; &le; 1727, which is the slender-hull range</td></tr>
+  <tr><td><strong>C-4</strong></td><td><code>coeff_c5</code></td><td><code>1 - 0.8*at/(beam*draft*cwp)</code></td><td><code>1 - 0.8*AT/(B*T*CM)</code> — midship, not waterplane</td><td>dormant — A<sub>T</sub> = 0 in every fixture row and every explorer hull</td><td>none today; wrong for any transom-stern hull</td></tr>
+  <tr><td><strong>C-5</strong></td><td><code>coeff_c3</code></td><td>denominator <code>beam*draft*(0.31*sqrt(abt) + tf)</code></td><td><code>B*T*(0.31*sqrt(ABT) + TF - hB)</code></td><td>dormant — A<sub>BT</sub> = 0 everywhere today</td><td>none today; wrong for any bulbous bow</td></tr>
+  <tr><td><strong>C-6</strong></td><td><code>correlation_allowance</code></td><td>third term omits the <code>c2</code> factor</td><td><code>+ 0.003*sqrt(L/7.5)*CB**4*c2*(0.04 - c4)</code></td><td>doubly dormant — <code>c2</code> = 1 when A<sub>BT</sub> = 0, and the whole term vanishes here because T/L &gt; 0.04 makes <code>(0.04 - c4)</code> zero</td><td>none today</td></tr>
+  <tr><td>C-7</td><td><code>bulbous_bow_resistance</code></td><td><code>fn_i = V / sqrt(G * depth)</code></td><td><em>suspected</em> <code>V / sqrt(g*depth + 0.15*V**2)</code></td><td>dormant; <strong>to be confirmed against the paper in Stage 1</strong>, not fixed on a secondary source</td><td>none today</td></tr>
+  <tr><td>C-8</td><td><code>wave_resistance</code></td><td>only the F<sub>n</sub> &lt; 0.4 branch (R<sub>W-A</sub>) is implemented; the docstring says so but nothing enforces it</td><td>the method defines R<sub>W-B</sub> for F<sub>n</sub> &gt; 0.55 and interpolates between</td><td>latent — the explorer sweeps 6&ndash;18 kn, reaching F<sub>n</sub> = 0.224 at most, so no shipped result is outside the valid band</td><td>none today; silently wrong above F<sub>n</sub> 0.4</td></tr>
+</table>
+
+<div class="warn"><strong>Correcting every active coefficient defect does not close the gap to the fixture.</strong> Measured end to end: with C-1 and C-2 both fixed, series60 moves from &minus;31.5% to &minus;30.9% and the tanker from +50.6% to +51.8%. The two effects are worth roughly 1&ndash;3% of C<sub>T</sub>, not 30&ndash;50%. Anyone who plans a fix by chasing the percentage errors will keep finding defects that do not explain them. This is the plan's central reason for putting the oracle before the fix.</div>
+
+<h3>C-2 is provable without any oracle</h3>
+<p>The half-angle-of-entrance defect does not need a worked example to establish, because it breaks a property the correct formula must have. <code>iE</code> is an angle: two geometrically similar hulls of different absolute size must return the same value. Scaling the tanker geometry and evaluating both forms:</p>
+<table>
+  <tr><th>geometric scale</th><th class="num">L (m)</th><th class="num"><code>iE</code> as implemented</th><th class="num"><code>iE</code> published form</th></tr>
+  <tr><td>&times;0.5</td><td class="num">102.5</td><td class="num">37.9255</td><td class="num">38.2722</td></tr>
+  <tr><td>&times;1.0</td><td class="num">205.0</td><td class="num">41.5647</td><td class="num">38.2722</td></tr>
+  <tr><td>&times;2.0</td><td class="num">410.0</td><td class="num">45.1173</td><td class="num">38.2722</td></tr>
+</table>
+<p>The published form is invariant to all printed digits across a 4:1 span. The implemented form drifts by 19% over the same span, because <code>100&middot;C<sub>b</sub>/L</code> has dimensions of 1/m where <code>100&middot;&nabla;/L&sup3;</code> is dimensionless. This is the strongest single result in the inventory: it needs no source, no fixture and no tolerance, and it is the basis for <code>test_half_angle_of_entrance_is_scale_invariant</code>.</p>
+
+<h2>Options considered</h2>
+<table>
+  <tr><th>option</th><th>disposition</th></tr>
+  <tr><td><strong>A. Oracle first, then coefficients, then re-source the fixture, then wire it</strong></td><td><strong>Recommended.</strong> Sequenced below. The only order in which the fixture becomes a real gate rather than a pin to an unverified number.</td></tr>
+  <tr><td>B. Wire the fixture first, as the issue proposes, and fix the code until it passes</td><td><strong>Rejected, and this is the most important rejection in the plan.</strong> The tanker target is measured to be 24% below the method's own floor. Wiring it produces a permanently red test at best; at worst it invites someone to "fix" the engine toward a number Holtrop-Mennen cannot produce, and the resulting code would be further from correct while looking validated. The issue is right that wiring the fixture is the change that stops recurrence — it is wrong that it can come first.</td></tr>
+  <tr><td>C. Fix the coefficient defects only and close</td><td>Rejected. Measured at 1&ndash;3% of C<sub>T</sub>. It would leave the fixture, the wide bands and the un-sourced numbers exactly as they are, and the issue would be reopened by the next person who runs the fixture.</td></tr>
+  <tr><td>D. Delete the fixture or set <code>use_as_test: false</code></td><td>Rejected. It removes the forcing function and leaves nothing behind that would catch the next regression. The fixture's values are wrong; the fixture's <em>existence</em> is the only thing about this that was right.</td></tr>
+  <tr><td>E. Replace the statistical method with a different one</td><td>Rejected as out of scope. The method is appropriate for screening; the implementation and its validation are what is defective.</td></tr>
+</table>
+
+<h2>Artifact map</h2>
+<table>
+  <tr><th>path</th><th>change</th></tr>
+  <tr><td><code>docs/plans/2026-08-13-issue-2020-holtrop-mennen-hull-form-sensitivity.html</code></td><td><strong>new</strong> — this plan</td></tr>
+  <tr><td><code>src/digitalmodel/naval_architecture/holtrop_coefficients.py</code></td><td>C-1, C-3, C-4, C-5 corrected; <code>half_angle_of_entrance</code> signature changed for C-2 (takes displacement volume in place of C<sub>b</sub>); each corrected function to carry a citation comment naming equation and source</td></tr>
+  <tr><td><code>src/digitalmodel/naval_architecture/holtrop_mennen.py</code></td><td>C-2 call site, C-6, C-7 (if Stage 1 confirms), C-8 range guard</td></tr>
+  <tr><td><code>tests/fixtures/test_vectors/naval_architecture/holtrop_mennen.yaml</code></td><td><strong>rewritten expected values.</strong> A published worked-example row will be added with its full intermediate values. The two synthetic rows will either gain a stated derivation and scale convention, or be replaced. A per-row <code>source</code> field will become mandatory. An explicit <code>scale: full</code> / <code>scale: model</code> key will be added, because its absence is what allowed Finding 3 to go unnoticed.</td></tr>
+  <tr><td><code>tests/naval_architecture/test_holtrop_mennen.py</code></td><td>fixture loader and parametrized vector test; sensitivity/ordering tests; component bands retained and tightened</td></tr>
+  <tr><td><code>docs/api/structural/ship-resistance-explorer.html</code>, <code>.json</code></td><td>regenerated from the corrected engine, in a commit separate from the fix</td></tr>
+  <tr><td><code>src/digitalmodel/naval_architecture/workflow_calculations.py</code></td><td><strong>no change expected</strong> — it calls <code>total_resistance</code> and <code>wetted_surface_holtrop</code> with unchanged signatures. To be confirmed, not assumed, at Stage 5.</td></tr>
+</table>
+
+<h2>Implementation sequence after approval</h2>
+<ol>
+  <li><strong>Stage 1 — obtain the external oracle. No code changes.</strong> The Holtrop &amp; Mennen 1982 paper prints a worked example that tabulates intermediate values for every coefficient, which is what makes it a per-function oracle rather than only an end-to-end one. That example will be transcribed into the fixture as a new row carrying its own citation. This stage also settles C-7 and the <code>form_factor_validation</code> disagreement against the paper rather than against a secondary source. <em>If the paper's worked example cannot be obtained,</em> the fallback is an independent third-party implementation with published results, cited as such and labelled as a weaker oracle — and that degradation will be recorded on the issue, not absorbed silently.</li>
+  <li><strong>Stage 2 — RED. Author the failing tests.</strong> The fixture loader, the worked-example test, and the sensitivity tests, committed failing and pushed so the red state is on the record before any fix exists. The pull request will be opened at this stage; pushing to the branch alone runs no workflow and produces no evidence.</li>
+  <li><strong>Stage 3 — GREEN. Correct the coefficients.</strong> One commit per defect, each referencing its equation. C-1 and C-2 first, since they are active; C-3 through C-6 next; C-7 only if Stage 1 confirmed it; C-8's guard last. After each, the worked-example test moves closer to green, and the per-coefficient intermediate values are checked individually — a total that matches while an intermediate does not indicates two compensating errors, which is precisely the failure mode this issue is about.</li>
+  <li><strong>Stage 4 — re-source the fixture.</strong> With the engine pinned to the published example, the two synthetic rows are dispositioned: given a derivation and an explicit scale convention if one can be established, or replaced with rows that have sources. Tolerances will be set from the method's own stated accuracy, not chosen to make the current code pass.</li>
+  <li><strong>Stage 5 — regenerate the published artifact,</strong> in its own commit, with the C<sub>T</sub> delta against the current published values recorded on the issue. Confirm <code>workflow_calculations.py</code> needs no change.</li>
+  <li><strong>Stage 6 — closeout.</strong> Comment on <a href="https://github.com/vamseeachanta/digitalmodel/issues/2020">#2020</a> with the before/after component table; comment on <a href="https://github.com/vamseeachanta/digitalmodel/issues/1173">#1173</a> stating whether the C<sub>W</sub> cross-check is now usable; disposition <a href="https://github.com/vamseeachanta/digitalmodel/issues/1682">#1682</a>.</li>
+</ol>
+<p>Stages 2 and 3 are the fix. Stage 1 exists because without it Stage 3 has nothing to aim at, and Stage 4 exists because the fixture cannot be both the target and the thing being corrected.</p>
+
+<h2>TDD test list</h2>
+<p>Assertions will be on <em>relations and sourced values</em>, never on a band wide enough to admit the defect being fixed. The existing bands are the cautionary example: <code>0.002 &lt; ct &lt; 0.005</code> and <code>0.001 &lt; ct &lt; 0.003</code> overlap, so they jointly permit two radically different hulls to return the same number — which is the reported defect, expressed as a passing test.</p>
+<ul>
+  <li><code>test_published_worked_example_total_resistance</code> — the module reproduces the paper's R<sub>TOTAL</sub> within its stated tolerance. The end-to-end pin.</li>
+  <li><code>test_published_worked_example_intermediates</code> — parametrized over every intermediate the paper prints (<code>1+k1</code>, <code>S</code>, <code>c1</code>&hellip;<code>c16</code>, <code>iE</code>, <code>m1</code>, <code>m4</code>, <code>&lambda;</code>, and each resistance component). This is the test that would have caught C-1 and C-2 on the day they were written, and the one that distinguishes a correct total from two compensating errors.</li>
+  <li><code>test_fixture_vectors</code> — parametrized over every row with <code>use_as_test: true</code>, asserting <code>ct_approx</code> within <code>ct_tolerance_pct</code>. <strong>With three vacuity guards</strong>, because a fixture-driven test that silently iterates nothing is the exact failure this issue is about: assert the YAML resolved and parsed; assert the collected parameter count is non-zero <em>and</em> equals the number of <code>use_as_test: true</code> rows in the file; and assert every row consumed carries a <code>source</code> field.</li>
+  <li><code>test_every_use_as_test_row_is_consumed</code> — a separate guard asserting that no row can be marked <code>use_as_test: true</code> and go unread, and that no row carries an expected-value key no test asserts. The current <code>k1_plus_1_min</code>/<code>k1_plus_1_max</code> pair is read by nothing and must not be able to return to that state.</li>
+  <li><code>test_fuller_hull_has_higher_form_factor</code> — (1+k1) strictly increases across a monotone C<sub>P</sub> sweep at fixed L/B/T. Fails on any regression that flattens form dependence.</li>
+  <li><code>test_ct_ordering_across_hull_forms</code> — <strong>the test this issue exists for.</strong> Across a set of hulls spanning C<sub>b</sub> and length, C<sub>T</sub> values must be separated by more than a stated minimum spread, and must order as expected. Today's engine returns two values agreeing to 4 parts in 10<sup>5</sup>; this test fails on that, and would have failed on it from the beginning.</li>
+  <li><code>test_ct_exceeds_method_floor</code> — for every fixture row, C<sub>T</sub> &ge; C<sub>F</sub>(1+k1) + C<sub>A</sub>. A cheap invariant, independent of any source, that would have rejected the tanker's <code>ct_approx</code> the moment it was written.</li>
+  <li><code>test_half_angle_of_entrance_is_scale_invariant</code> — geometrically similar hulls at different absolute sizes must return the same <code>iE</code>. Fails on C-2 today, and pins the dimensional property rather than one hull's number.</li>
+  <li><code>test_c12_matches_published_piecewise</code>, <code>test_c15_matches_published_piecewise</code> — each branch exercised, including the boundary values that today's code routes to the wrong branch.</li>
+  <li><code>test_wave_resistance_rejects_out_of_range_froude</code> — F<sub>n</sub> &gt; 0.4 raises rather than silently returning an extrapolated value (C-8).</li>
+  <li>Component bands from the existing file — retained, tightened where the oracle allows, and explicitly documented as necessary-not-sufficient.</li>
+</ul>
+
+<h2>Acceptance criteria</h2>
+<ol>
+  <li>The module reproduces a <em>published</em> worked example end to end, and each intermediate it prints, each within a stated tolerance — with the source cited in the fixture and in the test.</li>
+  <li>Every fixture row marked <code>use_as_test: true</code> is asserted by a collected test, proven by the collected parameter count equalling the row count. A row added to the fixture and marked <code>use_as_test: true</code> without a corresponding assertion causes a failure.</li>
+  <li>Every expected value in the fixture carries a <code>source</code> and an explicit scale convention. No un-sourced number remains.</li>
+  <li>C<sub>T</sub> across the hull-form set is separated by more than the stated minimum spread and orders correctly — stated as a relation, not as literal values, so it does not need rewriting when the numbers legitimately move.</li>
+  <li>Every defect C-1 through C-8 is either corrected behind a test that failed first, or explicitly recorded as not-a-defect with the paper's equation cited against it. C-7 must resolve to one of these two, not remain "suspected".</li>
+  <li>The published explorer artifact is regenerated, and the C<sub>T</sub> delta against the previously published values is recorded on the issue so anyone who consumed the old page can see what changed.</li>
+  <li>The full <code>tests/naval_architecture/</code> suite is green, and any newly-red test elsewhere is recorded as a pre-existing finding with its own issue rather than repaired in this branch.</li>
+  <li>A comment on <a href="https://github.com/vamseeachanta/digitalmodel/issues/1173">#1173</a> states plainly whether the C<sub>W</sub> cross-check is now usable, so that plan's recorded dependency decision can be revisited on evidence.</li>
+  <li><a href="https://github.com/vamseeachanta/digitalmodel/issues/1682">#1682</a> is dispositioned.</li>
+</ol>
+
+<h2>Risks and fail-closed responses</h2>
+<table>
+  <tr><th>risk</th><th>response</th></tr>
+  <tr><td><strong>The published worked example cannot be obtained.</strong> The whole plan is sequenced behind Stage 1.</td><td>Fail-closed: the fallback oracle (an independent implementation with published results) is named in Stage 1 and is explicitly weaker. If neither is obtainable, the plan stops after the coefficient corrections that are provable from the equations alone — C-1 through C-6 are each verifiable by reading the published formula, without needing a worked example — and the fixture rows are marked <code>use_as_test: false</code> with a comment stating why, rather than being wired to unverified numbers. That outcome would be recorded as a partial close, not a close.</td></tr>
+  <tr><td><strong>Correcting the coefficients moves published numbers.</strong> The explorer page is on <code>origin/main</code> and its resistance curves will change.</td><td>Expected and intended; C-1 alone raises the form factor of every hull on that page by 8&ndash;14%. Stage 5 regenerates it in a separate commit and the delta is published on the issue. The direction is a correction, not a regression, and the plan will say so with the equation cited.</td></tr>
+  <tr><td><strong>The fixture's synthetic rows turn out to be unrecoverable</strong> — no derivation can be reconstructed for either.</td><td>They are replaced rather than retained with invented provenance. A fixture with one sourced row is worth more than one with three unsourced rows, and Finding 2 is the proof.</td></tr>
+  <tr><td>The C-2 signature change ripples into callers.</td><td><code>half_angle_of_entrance</code> is called from exactly one place, <code>coeff_c1</code>, which already has L, B and T in scope and can compute the volume. A whole-repo grep will confirm before the change, not after.</td></tr>
+  <tr><td><strong>The new sensitivity test could be satisfied by a wide separation that is nonetheless wrong.</strong> Ordering and spread are necessary, not sufficient — the same trap as the existing bands, one level up.</td><td>Which is why it is never the only new assertion. The worked-example pin is the sufficient condition; the sensitivity test is the regression guard. Neither is proposed alone.</td></tr>
+  <tr><td>Compensating errors survive the fix — the total matches the oracle while two intermediates are individually wrong in opposite directions.</td><td>This is the reported defect's own signature, so it is guarded explicitly: <code>test_published_worked_example_intermediates</code> asserts each printed intermediate separately. A total-only pin would not close this issue.</td></tr>
+  <tr><td>Disk is at 96% and no worktree can be created; the working checkout was on an unrelated branch.</td><td>Measured in-place on a branch cut from <code>origin/main</code>; no worktree used. Implementation will work the same way. Note for whoever picks this up: an untracked <code>.worktrees/</code> tree exists in this checkout from earlier sessions and must be kept out of every commit — commits will use the pathspec form <code>git commit -m "..." -- &lt;paths&gt;</code>.</td></tr>
+</table>
+
+<h2>Out of scope, with follow-ons to file</h2>
+<ul>
+  <li><strong>The CFD work in <a href="https://github.com/vamseeachanta/digitalmodel/issues/1173">#1173</a>.</strong> Per the issue. This plan reports back to it; it does not touch it.</li>
+  <li><strong>Extending the method above F<sub>n</sub> 0.4</strong> (R<sub>W-B</sub> and the interpolation band). C-8 adds a guard that fails loudly; implementing the missing branch is a separate, larger piece of work. To be filed.</li>
+  <li><strong>Propulsion, wake fraction, thrust deduction and delivered power.</strong> The 1982 paper covers them; this module implements resistance only. Not a defect — a scope boundary that should be stated in the module docstring. To be filed.</li>
+  <li><strong>The other <code>use_as_test: true</code> fixtures under <code>tests/fixtures/test_vectors/</code>.</strong> This issue found one fixture whose flag was decorative. Whether the flag is honoured elsewhere in that tree is unknown and was not measured. <strong>This is the highest-value follow-on in the list</strong> — a single unread fixture is a bug, a directory of them is a systemic gap in how validation evidence is treated. To be filed regardless of what this plan finds.</li>
+  <li><strong>A repository-wide convention that every expected value in a test vector carries a source.</strong> Finding 2 shows what un-sourced values cost. Candidate for a rule rather than an issue.</li>
+</ul>
+
+<h2>Disposition of <a href="https://github.com/vamseeachanta/digitalmodel/issues/1682">#1682</a></h2>
+<p><strong>Recommendation: close as superseded by <a href="https://github.com/vamseeachanta/digitalmodel/issues/2020">#2020</a>, with a comment, at Stage 6 rather than now.</strong></p>
+<p>#1682 is an auto-created backfill stub whose entire body is "Auto-created by backfill-github-refs.sh". It has been reviewed twice. The 2026-06-10 triage recorded that it has no mission, scope or acceptance criteria and is "unverifiable — no acceptance criteria exist". The 2026-07-27 retirement sweep declined to close it, on the grounds that part of the scope has landed but "a verifiable remainder is still outstanding", and asked for a scope trim, noting the trim was an owner judgement it would not make automatically.</p>
+<p>#2020 is that remainder, stated with acceptance criteria. The module exists; what was missing was any evidence it was right. Closing #1682 as superseded resolves the scope trim the sweep asked for by delegation rather than by rewriting the stub, and it removes an issue that is <code>dispatch:ready</code> with <code>lane:codex</code> — meaning an agent could pick it up and re-implement a module that already exists while #2020 is mid-flight. That is a live collision risk, not a hypothetical one.</p>
+<p>Closing at Stage 6 rather than now keeps the link one-directional while the work is in progress, so the closure comment can state what actually landed instead of what was planned.</p>
+
+<h2>Adversarial review section</h2>
+<p><strong>Tier: T2</strong> — multi-file, engineering-numeric, and touching a published artifact, but a bounded change to one module and its tests. Two providers.</p>
+<p>Reviewers should attack, specifically:</p>
+<ul>
+  <li><strong>Finding 2, hardest.</strong> Is C<sub>T</sub> &ge; C<sub>F</sub>(1+k1) + C<sub>A</sub> actually a floor under Holtrop-Mennen, or is there a regime where C<sub>A</sub> goes negative and the argument collapses? This plan checked the obvious escape and found it closed: with the third term zero (as it is for both fixture hulls, since T/L &gt; 0.04), C<sub>A</sub> = 0.006(L+100)<sup>&minus;0.16</sup> &minus; 0.00205 crosses zero at <strong>L = 722 m</strong>, so C<sub>A</sub> is strictly positive for any real ship and for the 205 m tanker it is +3.52e-04. Reviewers should look for an escape this plan did not check &mdash; a C<sub>P</sub>/lcb combination driving (1+k1) below 1, or a negative-C<sub>A</sub> regime reachable through the third term. If the floor argument fails, the rejection of Option B fails with it and the plan's whole ordering is wrong.</li>
+  <li><strong>Finding 3.</strong> The model-scale inversion assumes C<sub>W</sub> and (1+k1) are scale-invariant and C<sub>A</sub> = 0 at model scale. Both are conventional, neither is stated in the fixture. Is &lambda; = 20.2 a real interpretation or numerology that would fit any target value?</li>
+  <li><strong>The refutation of the collapse hypothesis.</strong> Two operating points is a thin basis for calling a coincidence. A third and fourth hull would settle it — reviewers should demand that evidence rather than accept the two-point argument, or explain why two suffices.</li>
+  <li><strong>The claim that fixing C-1 and C-2 leaves the error at &minus;30.9% / +51.8%.</strong> Reviewers should re-derive independently. If a further active defect exists that this inventory missed, the plan's central sequencing argument weakens.</li>
+  <li><strong>C-7 specifically.</strong> It is recorded as suspected on an ambiguous secondary rendering. Flag it if any part of the plan treats it as established.</li>
+  <li><strong>Whether the new tests are vacuously satisfiable.</strong> The fixture loader is the obvious candidate — a parametrize over an empty list reports green. Three guards are specified; reviewers should try to defeat them.</li>
+  <li><strong>Blast radius.</strong> Whether any consumer beyond <code>workflow_calculations.py</code> and the explorer script exists, and whether any committed result elsewhere in the repository was produced by this engine.</li>
+</ul>
+<p><em>Rounds will be recorded here with severities and dispositions before this plan is submitted for approval.</em></p>
+
+<h2>Provenance of the measurements in this plan</h2>
+<p>Every number above was produced by importing the module from a clean checkout of <code>origin/main</code> at <code>2a6b521e</code> and evaluating the components directly, on 2026-08-13. The published coefficient definitions used for the C-1 through C-6 comparisons were corroborated against secondary sources during planning; Stage 1 replaces those with the primary paper before any of them is acted on. No number in this plan was taken from the existing fixture, and none was taken from memory.</p>
+
+</main>
+</body>
+</html>
