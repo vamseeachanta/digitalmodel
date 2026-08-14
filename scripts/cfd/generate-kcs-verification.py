@@ -85,6 +85,73 @@ def checkmesh_verdict(case_dir: Path) -> dict:
     }
 
 
+# v2312 functionObjects::yPlus prints one line per patch:
+#     patch hull y+ : min = 0.104438, max = 353.482, average = 45.1912
+# Anchored on "y+" so it cannot match the adjacent "writing field yPlus" line.
+_YPLUS_LINE = re.compile(
+    r"patch\s+(?P<patch>\S+)\s+y\+\s*:\s*"
+    r"min\s*=\s*(?P<min>[-+0-9.eE]+)\s*,\s*"
+    r"max\s*=\s*(?P<max>[-+0-9.eE]+)\s*,\s*"
+    r"average\s*=\s*(?P<avg>[-+0-9.eE]+)"
+)
+
+# Wall-function validity bands for the kOmegaSST RAS run this case uses.
+_BUFFER_LO, _BUFFER_HI = 5.0, 30.0
+
+
+def _yplus_band(value: float) -> str:
+    if value <= _BUFFER_LO:
+        return "viscous sublayer (wall-resolved)"
+    if value < _BUFFER_HI:
+        return "buffer layer (wall functions least reliable)"
+    return "log layer (wall-function regime)"
+
+
+def yplus_summary(case_dir: Path, patch: str = "hull") -> dict:
+    """Parse log.yPlus into a wall-resolution DIAGNOSTIC.
+
+    This gates nothing, deliberately. It was added after the running
+    coefficients had been seen, and a threshold chosen with the answer already
+    on screen is indistinguishable from one chosen to fit it — the same
+    reasoning that fixed the normalisation area before any result existed.
+    V1/V2a/V2b/V3 are untouched by anything in this function.
+
+    A missing or unparseable log reports unavailable. That is NOT the same as
+    a clean wall resolution and must never render as one.
+    """
+    log = case_dir / "log.yPlus"
+    if not log.is_file():
+        return {"available": False, "reason": "log.yPlus not present"}
+
+    patches = {
+        m.group("patch"): {
+            "min": float(m.group("min")),
+            "max": float(m.group("max")),
+            "average": float(m.group("avg")),
+        }
+        for m in _YPLUS_LINE.finditer(log.read_text(errors="replace"))
+    }
+    if not patches:
+        return {"available": False,
+                "reason": "log.yPlus present but no patch summary parsed"}
+
+    out = {"available": True, "patches": patches, "gates": False}
+    hull = patches.get(patch)
+    if hull is None:
+        out["reason"] = f"no summary for patch {patch!r}"
+        return out
+
+    out["hull"] = dict(hull)
+    out["hull"]["band_at_average"] = _yplus_band(hull["average"])
+    # The span matters more than the mean: a hull running from the sublayer to
+    # the log layer has part of its surface in the buffer band whatever the
+    # average reports.
+    out["hull"]["spans_buffer_layer"] = (
+        hull["min"] < _BUFFER_HI and hull["max"] > _BUFFER_LO
+    )
+    return out
+
+
 def build_manifest(production: Path, companion: Path | None) -> dict:
     config = ShipResistanceConfig()
     manifest = evaluate_ship_resistance_run(
@@ -99,6 +166,16 @@ def build_manifest(production: Path, companion: Path | None) -> dict:
     manifest["mesh_quality"] = {
         "production": checkmesh_verdict(production),
         "companion": checkmesh_verdict(companion) if companion else None,
+    }
+    manifest["wall_resolution"] = {
+        "production": yplus_summary(production),
+        "companion": yplus_summary(companion) if companion else None,
+        "gates": False,
+        "note": (
+            "Diagnostic only. No criterion is evaluated against y+; "
+            "V1/V2a/V2b/V3 are unchanged. Added after the running "
+            "coefficients were observed, so it reports rather than gates."
+        ),
     }
     manifest["issue"] = "#1173"
     return json.loads(redact(json.dumps(manifest)))
@@ -180,6 +257,29 @@ def build_html(m: dict) -> str:
         for k, v in prov["declared_deviations"].items()
     )
 
+    def _yplus_row(label: str, d: dict | None) -> str:
+        d = d or {"available": False, "reason": "level not run"}
+        if not d.get("available"):
+            return (f"<tr><td>{label}</td><td class='num'>not collected</td>"
+                    f"<td class='num'>—</td><td class='num'>—</td>"
+                    f"<td>{html.escape(str(d.get('reason', 'unavailable')))}</td></tr>")
+        h = d.get("hull")
+        if not h:
+            return (f"<tr><td>{label}</td><td class='num'>no hull patch</td>"
+                    f"<td class='num'>—</td><td class='num'>—</td>"
+                    f"<td>{html.escape(str(d.get('reason', '')))}</td></tr>")
+        return (f"<tr><td>{label}</td>"
+                f"<td class='num'>{h['min']:.3f}</td>"
+                f"<td class='num'>{h['average']:.2f}</td>"
+                f"<td class='num'>{h['max']:.1f}</td>"
+                f"<td>{html.escape(h['band_at_average'])}"
+                f"{' · spans buffer layer' if h['spans_buffer_layer'] else ''}"
+                "</td></tr>")
+
+    wr = m.get("wall_resolution") or {}
+    yplus_rows = (_yplus_row("production", wr.get("production"))
+                  + _yplus_row("companion", wr.get("companion")))
+
     mq = m.get("mesh_quality", {}).get("production") or {}
     mesh_line = (
         f"{meas.get('mesh_cells'):,} cells; checkMesh "
@@ -250,6 +350,24 @@ diagnostic and normalises nothing.
 <p class="note" style="margin:.6rem 0 0">{html.escape(norm['note'])}</p>
 <p class="note"><b>Why they differ.</b> {html.escape(norm['diagnosis'])}</p>
 <p class="note"><b>Bias direction.</b> {html.escape(norm['bias_direction'])}</p>
+</div>
+
+<h2>Wall resolution (diagnostic — gates nothing)</h2>
+<div class="card">
+<p style="margin:0 0 .6rem"><b>y+ on the hull patch, at the latest written
+time.</b> Added after the running coefficients were seen, so it is reported as
+evidence and evaluated against no threshold. Every verdict above comes from
+V1/V2a/V2b/V3 alone, exactly as they were fixed before any result existed.</p>
+<div class="wrap"><table>
+<tr><th>level</th><th>min</th><th>average</th><th>max</th><th>regime</th></tr>
+{yplus_rows}
+</table></div>
+<p class="note">This run uses kOmegaSST with standard wall functions, which
+assume the log layer (y+ &gt; ~30). The buffer layer (5 &lt; y+ &lt; 30) is
+where wall functions are least reliable, and a hull spanning that band has some
+of its surface in the unreliable regime whatever the mean reports. "Not
+collected" means the diagnostic was not run — it does not mean the wall
+resolution is clean.</p>
 </div>
 
 <h2>Limit of the method</h2>
