@@ -1056,3 +1056,57 @@ def test_feature_file_follows_the_geometry_name_not_a_literal(
             assert "DTC" not in path.read_text(), (
                 f"a tutorial geometry reference survived in {path.name}"
             )
+
+
+#: The skewness above which ``checkMesh`` reports a face as highly skew and
+#: fails the run. It applies to internal AND boundary faces alike - checkMesh
+#: does not keep a separate, looser bar for the boundary.
+CHECKMESH_SKEWNESS_THRESHOLD = 4.0
+
+
+def _mesh_quality(case, key: str) -> float:
+    text = (case / "system" / "meshQualityDict").read_text()
+    m = re.search(rf"^\s*{key}\s+([\d.eE+-]+)\s*;", text, re.M)
+    assert m, f"{key} not found in meshQualityDict"
+    return float(m.group(1))
+
+
+def test_generator_is_no_looser_than_the_gate_it_is_judged_by(emitted) -> None:
+    """snappyHexMesh must not be allowed to build what checkMesh will reject.
+
+    The tutorial ships maxBoundarySkewness 20 against a checkMesh threshold of
+    4, so the mesher could accept a boundary face the acceptance criterion was
+    guaranteed to fail - and did, once, on the coarse level only. A generator
+    permitted to exceed its own verifier is a gate that reports on luck.
+    """
+    for key in ("maxBoundarySkewness", "maxInternalSkewness"):
+        value = _mesh_quality(emitted, key)
+        assert value <= CHECKMESH_SKEWNESS_THRESHOLD, (
+            f"{key} is {value}, looser than the {CHECKMESH_SKEWNESS_THRESHOLD} "
+            f"checkMesh judges by; the mesher may build a face the gate fails"
+        )
+
+
+def test_both_levels_share_identical_mesh_quality_controls(tmp_path) -> None:
+    """V3 compares two levels, so only the refinement may differ between them.
+
+    A quality control tightened on one level and not the other would make the
+    two-level difference a measure of the generator settings rather than of
+    the discretisation - the same contamination as leaving the defect in, with
+    the symptom hidden instead of reported.
+    """
+    fine = build_ship_resistance_case(
+        ShipResistanceConfig(name="fine", mesh_scale=1.21), tmp_path
+    )
+    coarse = build_ship_resistance_case(
+        ShipResistanceConfig(name="coarse", mesh_scale=1.21 / 2**0.5), tmp_path
+    )
+    assert (fine / "system" / "meshQualityDict").read_text() == (
+        coarse / "system" / "meshQualityDict"
+    ).read_text()
+    # and the refinement levels themselves are untouched by any of this
+    for case in (fine, coarse):
+        snappy = (case / "system" / "snappyHexMeshDict").read_text()
+        assert re.search(r"level\s+\(0 0\)\s*;", snappy), (
+            "the surface refinement level moved; r_G = sqrt(2) no longer holds"
+        )

@@ -18,7 +18,22 @@ FoamFile
 maxNonOrtho 70;
 
 //- Max skewness allowed. Set to <0 to disable.
-maxBoundarySkewness 20;
+//
+//  DEVIATION FROM THE TUTORIAL: 20 -> 4, to match maxInternalSkewness and,
+//  more to the point, to match the threshold checkMesh actually judges by.
+//  checkMesh flags ANY face - internal or boundary - above 4.0, so the
+//  tutorial's 20 lets snappyHexMesh accept boundary faces its own verifier
+//  will then reject. The generator was permitted to build what the gate was
+//  guaranteed to fail.
+//
+//  This bit on the companion level and not on production: one boundary face
+//  at the deck edge on the forward shoulder, skewness 5.36, so "Failed 1 mesh
+//  checks" on the coarse mesh and "Mesh OK" on the fine one. That asymmetry is
+//  the reason this is a defect rather than a tolerance: the companion exists
+//  only to provide V3's second level, and a defect present on one level and
+//  absent on the other turns the two-level difference into a measure of the
+//  mesh rather than of the discretisation.
+maxBoundarySkewness 4;
 maxInternalSkewness 4;
 
 //- Max concaveness allowed. Is angle (in degrees) below which concavity

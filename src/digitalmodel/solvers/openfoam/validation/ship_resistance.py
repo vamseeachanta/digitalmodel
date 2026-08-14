@@ -510,6 +510,13 @@ DECLARED_DEVIATIONS = {
     "domain": "domain extents, block divisions, refinement boxes and "
               "locationInMesh scaled to the KCS hull",
     "mesh_density": "block divisions scaled to the target cell count",
+    "boundary_skewness": "maxBoundarySkewness tightened from the tutorial's 20 "
+                         "to 4, the threshold checkMesh actually judges by. At "
+                         "20 the mesher may accept a boundary face the gate is "
+                         "guaranteed to fail, which is what happened on the "
+                         "companion level and not on production - and a defect "
+                         "on one level only turns V3's two-level difference "
+                         "into a measure of the mesh, not the discretisation",
 }
 
 
