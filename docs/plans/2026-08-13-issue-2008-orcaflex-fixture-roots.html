@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>#2008 Plan — OrcaFlex Fixture Roots</title>
+  <style>
+    :root{--navy:#0b3d5c;--teal:#168c88;--ink:#18313f;--muted:#5f7480;--line:#d7e2e7;--paper:#fff;--wash:#f3f8fa;--warn:#fff5d6;--bad:#fdecec;--good:#eefaf3}
+    *{box-sizing:border-box}body{margin:0;background:var(--wash);color:var(--ink);font:16px/1.55 system-ui,sans-serif}
+    main{max-width:1100px;margin:0 auto;background:var(--paper);padding:3rem 4rem;box-shadow:0 0 30px #1232}
+    h1,h2,h3{color:var(--navy);line-height:1.2}h1{font-size:2.25rem}h2{margin-top:2.2rem;border-bottom:2px solid var(--teal);padding-bottom:.35rem}
+    h3{margin-top:1.4rem}a{color:#076b83}code{background:#edf3f5;padding:.1rem .3rem;border-radius:3px;font-size:.92em}
+    pre{background:#0f2b38;color:#e8f2f5;padding:1rem 1.2rem;border-radius:6px;overflow-x:auto;font-size:.86rem;line-height:1.45}
+    table{border-collapse:collapse;width:100%;margin:1rem 0;font-size:.93rem;display:block;overflow-x:auto}
+    th,td{border:1px solid var(--line);padding:.5rem .7rem;text-align:left;vertical-align:top}
+    th{background:var(--wash);color:var(--navy)}
+    .meta{color:var(--muted);font-size:.9rem;margin-top:-.6rem}
+    .warn{background:var(--warn);border-left:4px solid #d9a400;padding:.85rem 1.1rem;margin:1.2rem 0;border-radius:0 4px 4px 0}
+    .bad{background:var(--bad);border-left:4px solid #c0392b;padding:.85rem 1.1rem;margin:1.2rem 0;border-radius:0 4px 4px 0}
+    .good{background:var(--good);border-left:4px solid #159a5f;padding:.85rem 1.1rem;margin:1.2rem 0;border-radius:0 4px 4px 0}
+    .num{font-variant-numeric:tabular-nums}
+    ul{margin:.5rem 0 .5rem 1.1rem}li{margin:.28rem 0}
+  </style>
+</head>
+<body>
+<main>
+
+<h1>#2008 implementation plan: declared fixture roots must exist</h1>
+<p class="meta">Issue <a href="https://github.com/vamseeachanta/digitalmodel/issues/2008">#2008</a> &middot; branch <code>plan/2008-orcaflex-fixture-roots</code> &middot; base <code>2a6b521e</code> &middot; drafted 2026-08-13 &middot; status: awaiting user approval</p>
+
+<h2>Goal and authorization boundary</h2>
+<p>A test module that declares a filesystem root will find that root, or the suite will go red. Today four modules declare roots under a <code>docs/modules/</code> tree that has never existed in this repository's history, and every one of them degrades to something that reads as success.</p>
+<ul>
+  <li><strong>G1</strong> — Every data root declared by a test module under <code>tests/</code> will resolve to a path that exists, or the module will not declare it.</li>
+  <li><strong>G2</strong> — No test will report <code>skipped</code> because a <em>declared data root</em> is absent. Skips for an absent <em>capability</em> (no OrcaFlex licence, no <code>OrcFxAPI</code>) remain legitimate and are explicitly preserved.</li>
+  <li><strong>G3</strong> — A guard test will fail when a test module declares a root that does not resolve, so the next tree move cannot silently reopen this hole. The guard will key on the <em>property</em>, not on the literal string <code>docs/modules</code>.</li>
+  <li><strong>G4</strong> — The real, reproducible coverage of the format-converter suite will be recorded on <a href="https://github.com/vamseeachanta/digitalmodel/issues/280">#280</a> and <a href="https://github.com/vamseeachanta/digitalmodel/issues/518">#518</a>, whose acceptance evidence this defect invalidates.</li>
+</ul>
+<p><strong>Boundary.</strong> This plan repairs <em>path resolution and skip semantics</em>. It will not modify converter behaviour in <code>src/</code>, will not author new model data, and will not attempt to make any test pass that fails for a genuine reason once its data is found. Any test that newly surfaces red will be recorded as a pre-existing finding with its own follow-on issue, never repaired inside this branch. It will not set <code>status:plan-approved</code>.</p>
+
+<h2>Resource intelligence summary</h2>
+<p>All figures were measured against <code>origin/main</code> at <code>2a6b521e</code>, using the repo's canonical invocation — <code>uv run --with-editable '.[test]' python -m pytest</code> — with <code>-o addopts=""</code> to defeat the <code>-v</code> in <code>pytest.ini:45</code>, <code>--import-mode=importlib</code> retained, and <code>--continue-on-collection-errors</code>. The repo <code>.venv</code> holds no pytest and was not used. Every affected test file is byte-identical between the working checkout and <code>origin/main</code>, so measurement did not require a separate checkout.</p>
+
+<h3>The defect, measured</h3>
+<p><code>tests/solvers/orcaflex/format_converter/conftest.py:10-11</code> builds both data roots from a tree that is not in the repository:</p>
+<pre>EXAMPLES_DIR = DIGITALMODEL_ROOT / 'docs' / 'modules' / 'orcaflex' / 'examples'
+PIPELINE_DIR = DIGITALMODEL_ROOT / 'docs' / 'modules' / 'orcaflex' / 'pipeline'</pre>
+<p>Three fixtures — <code>a01_single_file</code>, <code>a01_modular_dir</code>, <code>spec_file</code> — call <code>pytest.skip</code> when the path is missing, and <code>a01_master_file</code> inherits the skip through <code>a01_modular_dir</code>.</p>
+<table>
+  <tr><th>measurement, <code>tests/solvers/orcaflex/format_converter/</code></th><th class="num">value</th></tr>
+  <tr><td>collected</td><td class="num">116</td></tr>
+  <tr><td>passed</td><td class="num">81</td></tr>
+  <tr><td><strong>skipped for a missing data root</strong></td><td class="num"><strong>35</strong></td></tr>
+  <tr><td>wall time</td><td class="num">1.94 s</td></tr>
+</table>
+<div class="warn"><strong>The issue says 34; the measured figure is 35.</strong> The discrepancy is not interesting in itself — it is the reason this plan states every criterion as a property. A count taken at filing time already drifted by one before the plan was written. No acceptance criterion below pins a number.</div>
+
+<h3>The repoint, measured before this plan was written</h3>
+<p>The two lines above were rewritten to <code>'docs' / 'domains' / 'orcaflex'</code>, the suite was re-run, and the edit was reverted atomically. Nothing else was changed.</p>
+<div class="good"><strong>116 passed, 0 skipped, 31.83 s.</strong> Every one of the 35 skipped tests passes once the root resolves, and the suite's wall time rises 16-fold — the tests were not merely silent, they were doing no work. The working tree was returned to a clean state and verified with <code>git status --porcelain -- tests/</code>.</div>
+<p>This settles the central question the issue leaves open. The data is present, tracked, and correct; the tests are correct; only the prefix is wrong. No fixture needs authoring and no test needs deleting for the format-converter suite.</p>
+
+<h3>Provenance: the path was never valid on this lineage</h3>
+<p>The issue frames this as tests "never updated after that move". The history does not support that framing, and the difference matters for what <a href="https://github.com/vamseeachanta/digitalmodel/issues/280">#280</a> is credited with.</p>
+<table>
+  <tr><th>question</th><th>evidence</th></tr>
+  <tr><td>Do any commits reachable from <code>origin/main</code> touch <code>docs/modules/</code>?</td><td><strong>Zero.</strong> <code>git log origin/main -- docs/modules</code> returns no commits.</td></tr>
+  <tr><td>When did <code>format_converter/conftest.py</code> enter this lineage?</td><td><code>19e8eae3</code>, 2026-07-04 — its only commit on <code>origin/main</code>.</td></tr>
+  <tr><td>What existed at that commit?</td><td><code>docs/domains/orcaflex</code> = <strong>4,123</strong> files. <code>docs/modules/orcaflex</code> = <strong>0</strong> files.</td></tr>
+  <tr><td>Did the fixture data ever exist under <code>docs/modules/</code> at all?</td><td>Yes — but only on the <em>pre-slimming</em> lineage, unreachable from <code>origin/main</code>. 203 paths under <code>docs/modules/orcaflex/examples</code> and 5 under <code>.../pipeline</code>, including <code>A01 Catenary riser.yml</code>. That lineage was replaced by <code>2c185d2d</code> (2026-03-24, "fresh repo after slimming — relocated heavy files").</td></tr>
+</table>
+<div class="bad"><strong>The conftest was committed already pointing at a path that did not exist in the repository at the moment it landed.</strong> This is not a tree move that outran its tests. The tests were carried across a history rewrite, and their data prefix was never rebased onto the surviving layout. Consequently the suite has been silently skipping <em>since the day it entered <code>main</code></em> — there is no window in this lineage during which the format-converter data tests ever ran.</div>
+
+<h3>Where each dead root actually points</h3>
+<p>Five distinct roots are declared across the affected modules. Four have an exact live equivalent under <code>docs/domains/</code>; one does not.</p>
+<table>
+  <tr><th>declared root (dead)</th><th>live equivalent on <code>origin/main</code></th><th class="num">files</th><th>disposition</th></tr>
+  <tr><td><code>docs/modules/orcaflex/examples</code></td><td><code>docs/domains/orcaflex/examples</code></td><td class="num">present</td><td>repoint — proven green</td></tr>
+  <tr><td><code>docs/modules/orcaflex/pipeline</code></td><td><code>docs/domains/orcaflex/pipeline</code></td><td class="num">present</td><td>repoint — proven green</td></tr>
+  <tr><td><code>docs/modules/orcaflex/templates</code></td><td><code>docs/domains/orcaflex/templates</code></td><td class="num">122</td><td>repoint</td></tr>
+  <tr><td><code>docs/modules/orcaflex/library</code></td><td><code>docs/domains/orcaflex/library</code></td><td class="num">737</td><td>repoint</td></tr>
+  <tr><td><code>docs/modules/orcaflex/input_file</code></td><td><strong>none — no path matching <code>orcaflex.*input_file</code> exists anywhere on <code>origin/main</code>, and it was never tracked on either lineage</strong></td><td class="num">0</td><td>genuinely gone — see options</td></tr>
+</table>
+<p>The two RAO <code>.LIS</code> files named by the marine_ops module also exist, at <code>docs/domains/aqwa/examples/03_dat/001_ship_raos/001_SHIP_RAOS.LIS</code> and <code>docs/domains/orcawave/L01_aqwa_benchmark/001_SHIP_RAOS_REV2.LIS</code> — but as shown below, repointing them would buy nothing.</p>
+
+<h3>What the issue gets right, and what it gets wrong</h3>
+<p>A <code>grep 'docs/modules'</code> does not find these references, because the path is built from separate string literals. Searching for the components instead returns a set that differs from the issue's in <em>both</em> directions: it misses three genuinely-dead modules and names two that are not defective at all.</p>
+<table>
+  <tr><th>module</th><th>issue says</th><th>measured</th><th>verdict</th></tr>
+  <tr><td><code>format_converter/conftest.py</code></td><td>dead, 34 skips</td><td>116 collected, 81 pass, 35 skip</td><td><strong>Correct</strong> (count drifted)</td></tr>
+  <tr><td><code>tests/solvers/orcaflex/test_model_generator.py</code></td><td>"repointed or removed"</td><td>10 passed. The string appears only at <code>:6</code> and <code>:123</code>, in a docstring reading <em>"…(not the stale docs/modules path)"</em></td><td><strong>False positive</strong></td></tr>
+  <tr><td><code>tests/solvers/orcaflex/test_template_generator.py</code></td><td>"repointed or removed"</td><td>21 passed. String appears only at <code>:129</code>, in a docstring</td><td><strong>False positive</strong></td></tr>
+  <tr><td><code>tests/marine_ops/.../test_rao_verification_all_routes.py</code></td><td>"repointed or removed"</td><td><strong>no tests ran.</strong> The module defines no <code>test_</code> function and no <code>Test</code> class — only <code>def main()</code> at <code>:381</code> and a <code>__main__</code> guard</td><td><strong>Real, but a different defect</strong></td></tr>
+  <tr><td><code>tests/scripts/test_extract_property_inventory.py</code></td><td>not listed</td><td>9 passed — <code>:107</code> guards with <code>if spec_dir.exists():</code> and the <code>else</code> branch asserts against <code>Path("/nonexistent")</code></td><td><strong>Missed by the issue</strong></td></tr>
+  <tr><td><code>tests/solvers/orcaflex/test_hybrid_templates.py</code></td><td>not listed</td><td>56 skipped — <code>TEMPLATES_DIR</code> at <code>:19</code> is dead; <code>rglob</code> over it returns empty</td><td><strong>Missed by the issue</strong></td></tr>
+  <tr><td><code>tests/solvers/orcaflex/test_load_orcaflex_files.py</code></td><td>not listed</td><td>8 skipped — <code>DOCS_BASE</code> at <code>:26</code> is dead; 4 skips cite "No OrcaFlex files found", 4 cite "No input_file … files found"</td><td><strong>Missed by the issue</strong></td></tr>
+</table>
+<div class="bad"><strong>Issue acceptance criterion 2 is actively harmful as written.</strong> It directs that the references in <code>test_model_generator.py</code> and <code>test_template_generator.py</code> be "repointed or removed". Those two references are prose in regression docstrings that correctly record <em>this very defect class</em> as already-fixed for those modules. Following AC 2 literally would delete accurate documentation of a real past regression, in files that have nothing wrong with them. This plan will not touch them.</div>
+
+<h3>Three degradation modes, not one</h3>
+<p>The issue treats this as a skip problem. It is three problems, ranked by how well each hides:</p>
+<table>
+  <tr><th>mode</th><th>where</th><th>how it reads</th></tr>
+  <tr><td><strong>Explicit skip</strong> — <code>pytest.skip</code> on a missing path</td><td><code>format_converter/conftest.py</code>, and <code>test_load_orcaflex_files.py</code></td><td>Visible in <code>-rs</code> output. The mildest form: a reader who looks sees it.</td></tr>
+  <tr><td><strong>Capability skip masking a path defect</strong> — the module is gated on <code>OrcFxAPI</code>, so the dead root never gets a chance to complain</td><td><code>test_hybrid_templates.py</code> (56 skips, all reported as "OrcFxAPI not available")</td><td>Worse. The skip reason is <em>true but irrelevant</em>. On a licensed machine the module would still collect zero templates, and the reported reason would give no hint why.</td></tr>
+  <tr><td><strong>Branch-swallowed pass</strong> — <code>if root.exists(): &lt;real assertions&gt; else: &lt;assert something else&gt;</code></td><td><code>test_extract_property_inventory.py:107</code></td><td>Worst. Reports <code>passed</code>. The <code>else</code> branch asserts <code>scan_spec_library(Path("/nonexistent"))</code> returns an empty dict — a true statement that has never once exercised the 737-file library the test names. A green tick for a test that has never run its own subject.</td></tr>
+</table>
+<p>G2 is written against all three. A guard that only forbids <code>pytest.skip</code> would leave the two worse modes untouched.</p>
+
+<h3>What this means for #280 and #518</h3>
+<p><a href="https://github.com/vamseeachanta/digitalmodel/issues/280">#280</a> is OPEN and carries both <code>status:blocked</code> and <code>status:plan-approved</code>. Its plan body asserts "<strong>All 102 tests pass</strong> using YAML-only operations", and its acceptance-criteria block repeats "102 tests passing (yaml_utils, format_detector, single↔modular, round-trip, spec conversions, CLI)" as a checked item. Its own worked example invokes <code>docs/modules/orcaflex/examples/raw/A01/A01 Catenary riser.yml</code> — the dead path, written into the acceptance evidence itself.</p>
+<div class="bad"><strong>#280's "102 tests passing" has never been reproducible from a clean checkout of this repository.</strong> The number was almost certainly true when measured, on the pre-slimming lineage where <code>docs/modules/orcaflex/examples</code> held 203 tracked paths. It has not been true on <code>origin/main</code> at any point: the tests entered this lineage on 2026-07-04 already pointing at nothing. The honest restatement is that the suite delivers <strong>81 of 116 reproducibly, with every real-model test among the missing 35</strong> — and that after this plan lands it delivers all 116.</div>
+<p><strong>Disposition for #280: no state change from this plan, but its evidence must be annotated.</strong> #280's <em>pending</em> scope is the licence-required work (OrcFxAPI load, binary round-trip, backward-compat wrapper), which is genuinely blocked on a licensed host and unaffected by this defect. What is wrong is the <em>completed</em> half's evidence line. This plan will post a comment on #280 correcting the record and will leave <code>status:blocked</code> in place. Rewriting another issue's acceptance block is outside this issue's authority; the comment plus a link to this plan is the durable artifact.</p>
+<p><a href="https://github.com/vamseeachanta/digitalmodel/issues/518">#518</a> requires "at least one representative model-library case is covered end-to-end", naming <code>a01_catenary_riser</code>. That is exactly <code>test_round_trip.py::test_roundtrip_real_a01</code>, which is in the skipped set. #518 is currently unsatisfiable for reasons unrelated to its own scope. After this plan, the criterion becomes assessable on its merits — it does not become automatically satisfied, and this plan will not claim it is.</p>
+
+<h2>Options for the skipped tests, ranked</h2>
+<p>The issue asks whether restoration is right. It is, for four of the five roots — but only because the data was measured to exist first. The recommendation would be different for <code>input_file</code>.</p>
+<table>
+  <tr><th>#</th><th>option</th><th>assessment</th></tr>
+  <tr><td><strong>1</strong></td><td><strong>Repoint to <code>docs/domains/</code>. RECOMMENDED for <code>examples</code>, <code>pipeline</code>, <code>templates</code>, <code>library</code>.</strong></td><td>The data is present, tracked, and identical in role. Measured end-to-end: the format-converter suite goes 81/116 to <strong>116/116</strong> from a two-line edit. Highest coverage return of any option, and the only one that restores real-model round-trip fidelity. Cost: two to four lines per module.</td></tr>
+  <tr><td>2</td><td>Author minimal synthetic fixtures</td><td><strong>Rejected.</strong> The suite already has synthetic fixtures — <code>sample_single_data</code> and <code>sample_spec_data</code> in the same conftest — and they are what the 81 currently-passing tests use. The distinctive value of the missing 35 is precisely that they exercise a <em>real</em> OrcaFlex model. Replacing them with hand-built dicts would preserve the count and discard the reason the tests exist. It would also be strictly more work than option 1.</td></tr>
+  <tr><td>3</td><td>Mark unsupported with a reason</td><td><strong>Rejected where data exists</strong> — declaring a test unsupported while its data sits tracked in the repo converts a fixable gap into a permanent one. <strong>Accepted for <code>input_file</code> only</strong>, where nothing exists to point at.</td></tr>
+  <tr><td>4</td><td>Delete the tests</td><td><strong>Rejected where data exists.</strong> Correct tests blocked only by a wrong prefix. <strong>Considered for the four <code>input_file</code> tests</strong>, and for the zero-test RAO module, where deletion removes no coverage because there is none.</td></tr>
+</table>
+
+<h3>Per-module disposition</h3>
+<table>
+  <tr><th>module</th><th>action</th><th>why</th></tr>
+  <tr><td><code>format_converter/conftest.py</code></td><td>Repoint both roots; convert the three data fixtures from <code>pytest.skip</code> to hard failure</td><td>Option 1. Measured 116/116.</td></tr>
+  <tr><td><code>test_extract_property_inventory.py:107</code></td><td>Repoint to <code>docs/domains/orcaflex/library</code>; <strong>delete the <code>else</code> branch</strong></td><td>Option 1. The <code>else</code> branch is the defect — it makes the test pass without testing its subject. With a resolving root the branch is unreachable, and leaving it in preserves the failure mode for the next move.</td></tr>
+  <tr><td><code>test_hybrid_templates.py:19</code></td><td>Repoint <code>TEMPLATES_DIR</code>; add the <code>solver</code> marker</td><td>Option 1. Tests remain skipped on this host for want of <code>OrcFxAPI</code> — a legitimate capability skip that G2 explicitly permits. Repointing makes the module meaningful on a licensed host and makes its parametrize IDs real. <code>pytest.ini</code> already defines a <code>solver</code> marker for exactly this.</td></tr>
+  <tr><td><code>test_load_orcaflex_files.py:26</code></td><td><strong>Split.</strong> Repoint <code>DOCS_BASE</code>, restoring the four <code>24in_pipeline</code> tests. For the four <code>INPUT_FILE_DIR</code> tests, apply option 3 with an explicit reason and file a follow-on</td><td>The only root with no live equivalent. Marking beats deleting here: the tests encode a real intent (good-file and error-file loading) that should be reinstated if the data is ever restored, and a marked test with a reason and an issue link is a better record than a deletion.</td></tr>
+  <tr><td><code>test_rao_verification_all_routes.py</code></td><td><strong>No repoint.</strong> File a follow-on</td><td>Repointing a module that collects zero tests buys zero coverage. Its real defect is that it is a script living under <code>tests/</code> with a <code>test_</code> name — the <a href="https://github.com/vamseeachanta/digitalmodel/issues/1983">#1983</a> class, which that issue fixed for <code>scripts/</code> but not for strays inside <code>tests/</code>. Converting it into real tests is a genuine piece of work with its own design questions, and folding it in here would blur this branch's evidence.</td></tr>
+  <tr><td><code>test_model_generator.py</code>, <code>test_template_generator.py</code></td><td><strong>No change</strong></td><td>Prose-only references in correct, passing files. See the callout above.</td></tr>
+</table>
+
+<h2>Chosen mechanism for the guard</h2>
+<p>Issue acceptance criterion 4 asks for "a guard that fails if any tracked test file references <code>docs/modules/</code>". That guard must not be built as specified.</p>
+<div class="bad"><strong>A string-matching guard would be red against correct code on the day it lands.</strong> <code>test_model_generator.py</code> and <code>test_template_generator.py</code> contain the literal <code>docs/modules</code> in docstrings that document the fix for this defect class. A grep-based guard fails on both, and the only ways to make it green are to delete accurate documentation or to add per-file exemptions — which are backdoors. It is also too narrow in the dimension that matters: it pins one dead string, so the next layout change (<code>docs/domains/</code> to anything else) reopens the hole with a guard still shining green.</div>
+<p>The guard will assert the property instead: <strong>every filesystem root a test module declares must resolve.</strong> It will be a contract test under <code>tests/contracts/</code>, matching the precedent set by <code>test_collection_visibility.py</code> (#1977/#1983), and it will work by <strong>AST inspection, not text search</strong>. Parsing with <code>ast</code> makes docstrings and comments invisible by construction — the false-positive problem disappears rather than being exempted away.</p>
+<pre># tests/contracts/test_declared_data_roots.py  (sketch, not final)
+#
+# For every module under tests/, walk module-level Assign nodes whose value is a
+# chain of BinOp(Div) over an anchor expression (Path(__file__).parents[N],
+# PROJECT_ROOT, DIGITALMODEL_ROOT, ...) with all-literal segments.  Resolve the
+# segments against the repo root.  Assert the path exists.
+#
+# Docstrings are not Assign nodes.  Comments are not in the AST at all.</pre>
+<p>Two complementary properties, both needed — the first stops a root being declared dead, the second stops a live root's absence being swallowed at runtime:</p>
+<ul>
+  <li><strong>P1 (static).</strong> No module-level path constant in a test module resolves to a nonexistent path.</li>
+  <li><strong>P2 (dynamic).</strong> No test in the format-converter suite reports <code>skipped</code> with a reason indicating missing data. Implemented by changing the three conftest fixtures from <code>pytest.skip</code> to a hard failure, and asserting the property in the contract test via a <code>-rs</code> parse or a <code>pytest.ini</code>-level check.</li>
+</ul>
+<p>Per the <code>test_collection_visibility.py</code> precedent, the guard carries explicit vacuity defences, because a scanner that finds nothing reports a confident green:</p>
+<ul>
+  <li>The set of discovered declared roots is asserted non-empty, with a floor well below the current population.</li>
+  <li>A <strong>known-positive control</strong>: the resolver is run against a synthesised dead path and asserted to report it, proving the checker is live rather than returning "fine" for everything.</li>
+  <li>A <strong>known-negative control</strong>: a path known to exist is asserted to pass, proving the resolver is not reporting everything as broken.</li>
+  <li>Any exemption list is asserted <strong>fully consumed</strong>, so a stale exemption cannot mask a new offender.</li>
+</ul>
+<div class="warn"><strong>Scope note the issue does not raise.</strong> The same component search finds <code>docs/modules</code> path construction in eleven files under <code>scripts/</code> and one YAML under <code>docs/domains/orcawave/</code>. A guard scoped to <code>tests/</code> — as AC 4 specifies — leaves all twelve dead. They are out of scope here (they are not tests and break no coverage claim), but the guard will be written so its root set is a parameter rather than a hardcoded <code>tests/</code>, and a follow-on will be filed to extend it.</div>
+
+<h2>Artifact map and files</h2>
+<table>
+  <tr><th>path</th><th>change</th></tr>
+  <tr><td><code>tests/contracts/test_declared_data_roots.py</code></td><td><strong>new</strong> — the guard (G3), P1 and P2</td></tr>
+  <tr><td><code>tests/solvers/orcaflex/format_converter/conftest.py</code></td><td><code>:10-11</code> repoint; three fixtures change <code>pytest.skip</code> to hard failure</td></tr>
+  <tr><td><code>tests/scripts/test_extract_property_inventory.py</code></td><td><code>:107</code> repoint; delete the <code>else</code> branch</td></tr>
+  <tr><td><code>tests/solvers/orcaflex/test_hybrid_templates.py</code></td><td><code>:19</code> repoint; add <code>solver</code> marker</td></tr>
+  <tr><td><code>tests/solvers/orcaflex/test_load_orcaflex_files.py</code></td><td><code>:26</code> repoint; <code>INPUT_FILE_DIR</code> tests marked unsupported with an issue link</td></tr>
+  <tr><td><code>tests/solvers/orcaflex/test_model_generator.py</code>, <code>test_template_generator.py</code></td><td><strong>no change</strong> — prose-only references, deliberately preserved</td></tr>
+  <tr><td><code>tests/marine_ops/.../test_rao_verification_all_routes.py</code></td><td><strong>no change</strong> — follow-on issue</td></tr>
+  <tr><td><code>.claude/quality-gates.yaml</code></td><td><strong>no change expected.</strong> <code>tests/contracts/</code> is owned by <code>:77</code>, <code>tests/solvers/orcaflex/</code> by <code>:187</code>, <code>tests/scripts/</code> by <code>:241</code>. Confirm-only.</td></tr>
+</table>
+
+<h2>Implementation sequence after approval</h2>
+<ol>
+  <li><strong>Stage 1 — guard test, RED.</strong> Author <code>tests/contracts/test_declared_data_roots.py</code> and commit it failing, naming the four dead roots. Open the pull request at this stage and leave it red: per the #1977 finding, the domain gate triggers on <code>pull_request</code>, so a push to the branch alone produces no CI evidence that the guard was ever able to fail.</li>
+  <li><strong>Stage 2 — repoints, GREEN.</strong> Apply the four repoints. The guard passes. No skip-semantics change in this commit, so the repoint's effect is isolated and measurable on its own.</li>
+  <li><strong>Stage 3 — skip semantics.</strong> Convert the three conftest fixtures to hard failure; delete the <code>else</code> branch in <code>test_extract_property_inventory.py</code>; mark the <code>INPUT_FILE_DIR</code> tests. Verified by temporarily pointing a root at a nonexistent path and confirming the suite goes <em>red</em>, not green-with-skips — then reverting.</li>
+  <li><strong>Stage 4 — record and file.</strong> Post the before/after evidence on #2008; post the correction on #280; file the follow-ons (RAO module, <code>input_file</code> data, <code>scripts/</code> guard extension).</li>
+</ol>
+<p>Stages 1–3 are the fix. Stage 4 exists so the evidence correction is not buried inside a code commit.</p>
+
+<h2>TDD test list</h2>
+<p>Every assertion is on a property. No test pins 116, 35, or 81 — the first two are already stale in the issue, and the third changes the moment a converter test is added.</p>
+<ul>
+  <li><code>test_every_declared_data_root_resolves</code> — P1. Fails at Stage 1 naming the four dead roots; passes from Stage 2. Carries the four vacuity defences above.</li>
+  <li><code>test_resolver_reports_a_synthesised_dead_root</code> — the known-positive control, asserted before the main assertion in the same module.</li>
+  <li><code>test_resolver_accepts_a_known_live_root</code> — the known-negative control.</li>
+  <li><code>test_no_format_converter_test_skips_for_missing_data</code> — P2. Runs the suite and asserts that no skip reason indicates absent data, while allowing capability skips. Must assert the run collected a non-trivial number of tests, or an empty run satisfies it vacuously.</li>
+  <li><code>test_capability_skips_are_still_permitted</code> — the counterweight. Asserts a licence-gated skip is <em>not</em> flagged, so a later tightening cannot force <code>OrcFxAPI</code>-dependent tests into red on unlicensed hosts. Without this, the obvious "no skips at all" over-correction looks correct and breaks every Linux run.</li>
+  <li><code>test_a01_round_trip_executes</code> — a named, property-shaped assertion that the real-model round-trip test <em>runs</em> rather than skips. This is the single test whose absence #518 cares about; it deserves a guard that names it, not a bulk count.</li>
+</ul>
+
+<h2>Acceptance criteria</h2>
+<ol>
+  <li><strong>No test module under <code>tests/</code> declares a data root that fails to resolve.</strong> Stated as a property, not as "the four known ones are fixed" — the guard must reject a fifth introduced tomorrow.</li>
+  <li><strong>No test skips because a declared data root is absent</strong>, in the format-converter suite or the three other affected modules. Capability skips (<code>OrcFxAPI</code>) are unaffected and are asserted to remain permitted.</li>
+  <li>The guard is demonstrably RED at the Stage 1 commit and GREEN at Stage 2, provable from CI history on the pull request.</li>
+  <li>A node-ID diff across Stages 1–3 shows <strong>zero tests removed</strong> from the format-converter suite, and every previously-skipped node ID now reports a real outcome. Any that report <em>failure</em> are filed as pre-existing findings before merge and are not repaired in this branch.</li>
+  <li><code>test_round_trip.py::test_roundtrip_real_a01</code> executes and reports a real outcome.</li>
+  <li>The <code>solver</code>-marked and unsupported-marked tests each carry a written reason, and every unsupported mark links a filed issue. No test is left marked with a bare reason string.</li>
+  <li>A comment on <a href="https://github.com/vamseeachanta/digitalmodel/issues/280">#280</a> records that its "102 tests passing" evidence was measured on a lineage whose data path does not exist on <code>origin/main</code>, states the reproducible figure before and after, and links this plan. <code>status:blocked</code> is left in place.</li>
+  <li>A comment on <a href="https://github.com/vamseeachanta/digitalmodel/issues/518">#518</a> records that its end-to-end criterion was unassessable and now is assessable — explicitly <em>not</em> that it is satisfied.</li>
+  <li>Both gate lanes green: <code>tests/solvers/orcaflex/</code> and <code>tests/contracts/</code>.</li>
+</ol>
+
+<h2>Risks and fail-closed responses</h2>
+<table>
+  <tr><th>risk</th><th>response</th></tr>
+  <tr><td><strong>Un-skipping 35 tests surfaces real failures.</strong> They have never run on this lineage, so their green status is unevidenced.</td><td>Measured before writing this plan: 116/116 pass under the repoint. The risk is largely retired. If CI disagrees with the local measurement, each failure is filed as a pre-existing finding and the branch stops at Stage 2.</td></tr>
+  <tr><td>The AST scanner misses a root built in a way it does not model — an f-string, a loop, a helper call.</td><td>Accepted and bounded. The scanner is a floor, not a proof; it is asserted against a non-empty discovered set and a known-positive control so it cannot silently degrade to matching nothing. A root it cannot parse is reported as <em>unanalysable</em> and listed, never silently passed.</td></tr>
+  <tr><td><strong>Over-correcting G2 into "no skips at all"</strong>, forcing licence-gated tests red on every unlicensed host — which is every Linux machine in this fleet.</td><td>This is the most likely way to get the fix wrong, which is why a dedicated test asserts capability skips remain permitted. The distinction guarded is <em>absent declared root</em> versus <em>absent capability</em>, and both directions are tested.</td></tr>
+  <tr><td>Hard-failing fixtures make the suite unrunnable for anyone whose checkout lacks the data (sparse checkout, LFS, a slimmed clone).</td><td>The relevant files are ordinary tracked content on <code>origin/main</code>, so a normal clone has them — verified. If a sparse-checkout lane later appears, the correct response is a documented capability marker for the data, not a reversion to silent skips.</td></tr>
+  <tr><td>Wall time rises 16-fold in the format-converter suite as the tests start doing work.</td><td>Expected and desired; 1.94 s to 31.83 s measured. Well inside the <code>tests/solvers/orcaflex/</code> gate budget. Flagged so the increase is not later mistaken for a performance regression.</td></tr>
+  <tr><td>The guard itself becomes the next silent-green surface if <code>tests/contracts/</code> is not dispatched by the touched-domain lane.</td><td><code>tests/contracts/</code> is owned at <code>.claude/quality-gates.yaml:77</code>. Confirmed at Stage 4, not assumed.</td></tr>
+  <tr><td>Local measurement is not CI. Two pre-existing collection errors under <code>tests/workflow_api/</code> come from a drifted local <code>assetutilities</code> sibling.</td><td>All measurement used the canonical <code>uv run --with-editable '.[test]'</code> invocation with <code>--continue-on-collection-errors</code>. Those errors are unrelated to this change and are recorded as out of scope, not worked around.</td></tr>
+</table>
+
+<h2>Out of scope, with follow-ons to file</h2>
+<ul>
+  <li><strong><code>test_rao_verification_all_routes.py</code> collects zero tests.</strong> A script with a <code>test_</code> name living under <code>tests/</code> — the <a href="https://github.com/vamseeachanta/digitalmodel/issues/1983">#1983</a> class, unfixed for strays inside <code>tests/</code>. All four of its data candidates are dead, including two under <code>specs/modules/</code> that also do not exist on <code>origin/main</code>. To be filed: convert to real tests or relocate out of <code>tests/</code>. A sweep for other zero-test modules under <code>tests/</code> belongs with it.</li>
+  <li><strong><code>docs/modules/orcaflex/input_file</code> has no live equivalent</strong> and was never tracked on either lineage. Four tests in <code>test_load_orcaflex_files.py</code> depend on it. To be filed: locate or reconstruct the good-file and error-file corpus, or retire the tests deliberately.</li>
+  <li><strong>Eleven files under <code>scripts/</code> and one YAML under <code>docs/domains/orcawave/</code> build dead <code>docs/modules/</code> paths.</strong> Not tests; they break no coverage claim, but they will fail at runtime. To be filed, with the guard extended to cover them.</li>
+  <li><strong>Rewriting #280's acceptance block.</strong> This plan comments; it does not edit another issue's stated criteria. If the owner wants the block corrected, that is a separate authorised action.</li>
+  <li><strong>#280's licence-required scope</strong> — OrcFxAPI load validation, binary round-trip fidelity, the backward-compat wrapper. Genuinely blocked on a licensed host and untouched by this defect.</li>
+  <li><strong>The <code>tests/workflow_api/</code> collection errors</strong> from a drifted local <code>assetutilities</code> sibling. Local-only drift, unrelated.</li>
+</ul>
+
+<h2>Adversarial review summary</h2>
+<p><strong>Status: not yet performed.</strong> This plan has had no cross-provider review; the issue still carries <code>status:needs-plan</code>, and the label should advance to <code>status:plan-review</code> only once review rounds are recorded here. Tier assessment: <strong>T2</strong> — multi-file, spanning three test suites and introducing a new contract-test harness, but not cross-repo and not systemic. Two providers required.</p>
+<p>Reviewers should attack, at minimum:</p>
+<ul>
+  <li>The AST-scanner design. What declaration shape defeats it? Is the "unanalysable" bucket honest, or does it become a silent exemption channel?</li>
+  <li>The G2 boundary between <em>absent root</em> and <em>absent capability</em>. Is it decidable from the information available at fixture time, or does it require the author to classify correctly — in which case it will be got wrong.</li>
+  <li>The claim that 116/116 pass under the repoint. It was measured once, locally, on a patched-then-reverted working tree. Re-measure independently.</li>
+  <li>The provenance argument. Does <code>git log origin/main -- docs/modules</code> returning zero commits actually support the conclusion drawn, given the <code>2c185d2d</code> history rewrite?</li>
+  <li>Whether the two "false positive" modules are truly prose-only, or whether a reviewer can find a live path construction in them that this analysis missed.</li>
+  <li>Whether marking the <code>input_file</code> tests unsupported is the right call versus deleting them, given that a marked test with no data is itself a form of standing green.</li>
+</ul>
+
+</main>
+</body>
+</html>
