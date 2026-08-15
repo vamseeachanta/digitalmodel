@@ -30,6 +30,19 @@ def source() -> str:
     return SCRIPT.read_text()
 
 
+@pytest.fixture(scope="module")
+def code(source: str) -> str:
+    """Executable lines only.
+
+    The comments in this script quote the exact failures they guard against,
+    so a naive substring search finds the prose and passes while the code
+    does the wrong thing. Asserting on comment-stripped source is the
+    difference between testing the guard and testing its documentation.
+    """
+    return "\n".join(ln for ln in source.splitlines()
+                     if not ln.lstrip().startswith("#"))
+
+
 @pytest.mark.skipif(shutil.which("bash") is None, reason="bash not available")
 def test_script_is_syntactically_valid():
     """A syntax error only surfaces after a 26 h solve finishes."""
@@ -91,6 +104,52 @@ def test_runs_both_levels_and_does_not_stop_at_the_first_failure(source: str):
     assert "exit 1" not in body.split("YPLUS COLLECTION COMPLETE")[0] \
         .replace('say "FATAL cannot source OpenFOAM"; exit 1', ""), \
         "only the OpenFOAM-source failure may exit early"
+
+
+def test_uses_the_solver_postprocess_form_not_bare_postprocess(code: str):
+    """Bare `postProcess -func yPlus` does not construct the turbulence model.
+
+    It writes a field of zeros and exits 0. This is not hypothetical — the
+    first version of this script did exactly that against the real solved
+    case, and reported "OK ... 1 patch summaries" over min=0 max=0 average=0.
+    OpenFOAM prints the remedy itself: use `<solver> -postProcess`.
+    """
+    # Every invocation must be the solver form. Counting is clearer than a
+    # lookbehind here, which reads the hyphen in "-postProcess" and lets the
+    # bare form through.
+    total = code.count("postProcess -func yPlus")
+    solver_form = code.count("interFoam -postProcess -func yPlus")
+    assert total > 0, "the collector no longer runs yPlus at all"
+    assert solver_form == total, (
+        f"{total - solver_form} bare postProcess invocation(s) remain; "
+        "the bare form produces a silently zero y+")
+
+
+def test_rejects_an_identically_zero_result(code: str):
+    """y+ = 0 on a wetted wall is physically impossible, so it is a failure.
+
+    A parsed line is not a measured line. The original guard counted
+    summaries and passed on a field of zeros.
+    """
+    assert "identically zero" in code
+    assert "min = 0" in code and "max = 0" in code
+
+
+def test_rejects_a_missing_turbulence_model(code: str):
+    """The exact warning OpenFOAM emits when y+ was not calculated."""
+    assert "Unable to find turbulence model" in code
+
+
+@pytest.mark.parametrize("failure", [
+    "Unable to find turbulence model",
+    "identically zero",
+])
+def test_every_null_result_path_continues_rather_than_reporting_ok(
+        code: str, failure: str):
+    """Each null-result branch must skip the OK line, not fall through to it."""
+    idx = code.index(failure)
+    tail = code[idx:idx + 300]
+    assert "continue" in tail, f"{failure!r} branch does not skip the OK report"
 
 
 def test_declares_that_it_gates_nothing(source: str):
