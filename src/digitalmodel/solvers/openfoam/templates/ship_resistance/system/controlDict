@@ -51,8 +51,14 @@ functions
         type            forces;
         libs            (forces);
         patches         (hull);
-        rho             rhoInf;
-        rhoInf          @RHO@;
+        // `rho rho` uses interFoam's variable-density VOF field, NOT a
+        // constant rhoInf. With `rho rhoInf` the ABOVE-WATER hull surface is
+        // integrated at water density: measured on KCS, 48.4% of the hull
+        // patch sits above the waterline and contributed 62.3% of the
+        // reported viscous force, putting Cv +141% over the ITTC-57 line.
+        // Switching to the density field took Cv to -8.9% and Ct from
+        // +113.8% to -5.7%. Same pattern already used in maccamy_fuchs.py.
+        rho             rho;
         log             on;
         writeControl    timeStep;
         writeInterval   1;

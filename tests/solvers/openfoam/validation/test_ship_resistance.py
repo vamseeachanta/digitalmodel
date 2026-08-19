@@ -546,11 +546,21 @@ def test_forces_fo_reports_pressure_and_viscous_separately(emitted) -> None:
     block = control[control.index("forces"):]
     assert "type            forces" in block
     assert "patches         (hull)" in block
-    assert re.search(r"\brho\s+rhoInf\s*;", block), (
-        "the density source must be stated explicitly; leaving it implicit in "
-        "a two-phase run is how a factor slips in unnoticed"
+    # The density source must be explicit -- but in a VOF run the explicit
+    # choice is the FIELD, not a constant. This assertion previously demanded
+    # `rho rhoInf; rhoInf 998.8;` and so pinned the defect it was written to
+    # prevent: measured on KCS, 48.4% of the hull patch sits ABOVE the
+    # waterline, and integrating it at water density supplied 62.3% of the
+    # reported viscous force (Cv +141.5% vs ITTC-57, Ct +113.8% vs
+    # experiment). With `rho rho` the same solution gives Cv -8.9% and
+    # Ct -5.7%, while pressure moves only -0.2%.
+    assert re.search(r"\brho\s+rho\s*;", block), (
+        "a two-phase run must integrate forces on the VOF density FIELD; a "
+        "constant rhoInf applies water density to the dry topsides"
     )
-    assert re.search(r"rhoInf\s+998\.8\s*;", block)
+    assert not re.search(r"^\s*rhoInf\s", block, re.M), (
+        "a stray rhoInf leaves the density source ambiguous"
+    )
 
 
 def test_viscosity_and_speed_reproduce_the_referent_condition(emitted) -> None:
