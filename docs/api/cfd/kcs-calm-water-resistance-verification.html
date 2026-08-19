@@ -1,0 +1,140 @@
+<title>KCS calm-water resistance — verification (#1173)</title>
+<style>
+:root { --bg:#fff; --fg:#16202c; --muted:#5b6b7d; --line:#dfe6ee;
+        --pass:#0f7b4f; --fail:#b3261e; --accent:#0b4f8a; --card:#f7f9fc; }
+@media (prefers-color-scheme: dark) { :root {
+  --bg:#0f1620; --fg:#e6edf5; --muted:#93a4b8; --line:#243244;
+  --pass:#4ade80; --fail:#ff6b6b; --accent:#7cc4ff; --card:#16202c; } }
+* { box-sizing:border-box; }
+body { margin:0; padding:2rem 1.25rem 4rem; background:var(--bg); color:var(--fg);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; }
+main { max-width:60rem; margin:0 auto; }
+h1 { font-size:1.75rem; margin:0 0 .25rem; letter-spacing:-.02em; }
+h2 { font-size:1.15rem; margin:2.5rem 0 .75rem; padding-bottom:.35rem;
+  border-bottom:1px solid var(--line); }
+.sub { color:var(--muted); margin:0 0 2rem; }
+table { border-collapse:collapse; width:100%; font-size:.92rem; }
+th,td { text-align:left; padding:.5rem .6rem; border-bottom:1px solid var(--line); }
+th { color:var(--muted); font-weight:600; }
+td.num { font-variant-numeric:tabular-nums; text-align:right; }
+.wrap { overflow-x:auto; }
+.pass { color:var(--pass); font-weight:600; }
+.fail { color:var(--fail); font-weight:600; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:8px;
+  padding:1rem 1.1rem; margin:1rem 0; }
+.note { color:var(--muted); font-size:.9rem; }
+code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.88em; }
+</style>
+<main>
+<h1>KCS calm-water hull resistance — verification</h1>
+<p class="sub">Issue #1173 · interFoam towing · generated 2026-08-19T16:27:33.198753+00:00</p>
+
+<div class="card">
+<b>The referent is a tuple, not a number.</b>
+Ct = 3.560e-03 ·
+fixed_even_keel ·
+appendages: none ·
+S = 9.4379 m² (published; the gate divides by this) ·
+Re = 1.40e+07 · Fr = 0.2599.
+<span class="note">A total resistance coefficient quoted without its condition
+tuple cannot be gated against at any tolerance.</span>
+</div>
+
+<h2>Criteria</h2>
+<div class="wrap"><table>
+<tr><th>criterion</th><th>quantity</th><th>computed</th><th>reference</th>
+<th>error</th><th>tolerance</th><th>verdict</th></tr>
+<tr><td><b>V1</b></td><td>ct</td><td class='num'>3.35899e-03</td><td class='num'>3.56000e-03</td><td class='num'>-5.65%</td><td class='num'>±3.0%</td><td><span class="fail">FAIL</span></td></tr><tr><td><b>V2a</b></td><td>cp</td><td class='num'>7.73240e-04</td><td class='num'>7.27955e-04</td><td class='num'>+6.22%</td><td class='num'>-15% / +6%</td><td><span class="fail">FAIL</span></td></tr><tr><td><b>V2b</b></td><td>cv</td><td class='num'>2.58575e-03</td><td class='num'>2.83204e-03</td><td class='num'>-8.70%</td><td class='num'>±5.0%</td><td><span class="fail">FAIL</span></td></tr><tr><td><b>V3</b></td><td>two-level Ct</td><td class='num'>3.35899e-03</td><td class='num'>3.54638e-03</td><td class='num'>5.58%</td><td class='num'>≤1.5%</td><td><span class="fail">FAIL</span></td></tr>
+</table></div>
+<p class="note">Each criterion reports its own verdict. There is deliberately
+no single aggregate: a compensating-error pair can pass V1 while failing V2a,
+and a rolled-up result would hide which.</p>
+
+<h2>Measurement</h2>
+<div class="wrap"><table>
+<tr><th>quantity</th><th>value</th></tr>
+<tr><td>Ct</td><td class="num">3.35899e-03</td></tr>
+<tr><td>Cp (pressure)</td><td class="num">7.73240e-04</td></tr>
+<tr><td>Cv (viscous)</td><td class="num">2.58575e-03</td></tr>
+<tr><td>total force (full body)</td><td class="num">76.3617 N</td></tr>
+<tr><td>averaging window</td><td class="num">2 iterations
+ (22,500–25,000)</td></tr>
+<tr><td>iterative scatter on Ct</td><td class="num">9.383e-07</td></tr>
+<tr><td>mesh</td><td class="num">1,539,965 cells; checkMesh PASS</td></tr>
+</table></div>
+<p class="note">Ct = Cp + Cv holds identically
+(verified). Forces are
+full-body; the half-domain doubling is applied once, in the parser.</p>
+
+<h2>Normalisation — which area produced the verdict</h2>
+<div class="card">
+<p style="margin:0 0 .6rem">
+<b>The gated numbers are normalised on the published reference area,
+9.4379 m².</b> Ct, C<sub>p</sub> and C<sub>v</sub> all use
+it. The measured area of the generated surface is reported below as a
+diagnostic and normalises nothing.
+</p>
+<div class="wrap"><table>
+<tr><th>area</th><th>value</th><th>role</th></tr>
+<tr><td>published S<sub>DWL</sub> (reference)</td>
+    <td class="num">9.4379 m²</td>
+    <td><b>used for the verdict</b></td></tr>
+<tr><td>generated surface, measured</td>
+    <td class="num">9.5609 m²</td>
+    <td>diagnostic only (+1.30%)</td></tr>
+</table></div>
+<p class="note" style="margin:.6rem 0 0">THE VERDICT RESTS ON reference_area_m2. The generated surface&#x27;s own wetted area is reported as a diagnostic and is NOT used to normalise anything. A coefficient is defined by what it is divided by, so scoring against the workshop&#x27;s Ct requires the workshop&#x27;s S; normalising on our own area instead would put a systematic -1.29% on Ct that has nothing to do with solver accuracy and would spend a third of V1&#x27;s budget on bookkeeping. All three of Ct, Cp and Cv use the same area - normalising the components differently would break the Ct = Cp + Cv identity V2a and V2b depend on.</p>
+<p class="note"><b>Why they differ.</b> Same hull, different reduction. Displaced volume over the SAME surface agrees with the published figure to 0.01%, so the geometry is right and the disagreement is in how area was computed. Volume is a third-moment integral and averages local surface detail away; area accumulates it directly, so station spacing, girth interpolation and transom/bulb treatment move S while leaving displacement untouched. Demonstrated rather than asserted: a girth integration over the workshop&#x27;s own 57-station offsets table returns 9.83 m^2, +4.2% on the other side of the published value. Three reductions of one hull spanning 4%, with the volume fixed.</p>
+<p class="note"><b>Bias direction.</b> If the solved hull genuinely carries 1.3% more wetted area than the towed model, friction is correspondingly higher and Ct lands HIGH by roughly 1% - about a third of V1&#x27;s budget - before the solver contributes anything.</p>
+</div>
+
+<h2>Wall resolution (diagnostic — gates nothing)</h2>
+<div class="card">
+<p style="margin:0 0 .6rem"><b>y+ on the hull patch, at the latest written
+time.</b> Added after the running coefficients were seen, so it is reported as
+evidence and evaluated against no threshold. Every verdict above comes from
+V1/V2a/V2b/V3 alone, exactly as they were fixed before any result existed.</p>
+<div class="wrap"><table>
+<tr><th>level</th><th>min</th><th>average</th><th>max</th><th>regime</th></tr>
+<tr><td>production</td><td class='num'>not collected</td><td class='num'>—</td><td class='num'>—</td><td>log.yPlus not present</td></tr><tr><td>companion</td><td class='num'>not collected</td><td class='num'>—</td><td class='num'>—</td><td>log.yPlus not present</td></tr>
+</table></div>
+<p class="note">This run uses kOmegaSST with standard wall functions, which
+assume the log layer (y+ &gt; ~30). The buffer layer (5 &lt; y+ &lt; 30) is
+where wall functions are least reliable, and a hull spanning that band has some
+of its surface in the unreliable regime whatever the mean reports. "Not
+collected" means the diagnostic was not run — it does not mean the wall
+resolution is clean.</p>
+</div>
+
+<h2>Limit of the method</h2>
+<div class="card"><p style="margin:0">
+The decomposition gate cannot detect a compensating pair whose net effect on Ct
+is below <b>0.91%</b>. Because Ct = Cp + Cv
+holds identically, a pair sitting on both component boundaries in compensating
+directions lands inside V1. This is a property of the arithmetic, not of the
+mesh, and it is stated here rather than discovered afterwards.
+</p></div>
+
+<h2>Declared deviations from the DTCHull tutorial</h2>
+<div class="wrap"><table>
+<tr><th>item</th><th>reason</th></tr>
+<tr><td><code>stl_name</code></td><td>the hull is KCS, not DTC</td></tr><tr><td><code>umean</code></td><td>the tow speed is the referent&#x27;s 2.1962 m/s (Fr = 0.26)</td></tr><tr><td><code>nu</code></td><td>viscosity chosen to reproduce the referent&#x27;s Re = 1.4e7</td></tr><tr><td><code>rho</code></td><td>water density stated consistently in transportProperties and the forces function object</td></tr><tr><td><code>forces_rho</code></td><td>the forces function object states its density source explicitly; leaving it implicit in a two-phase run is how a factor slips in unnoticed</td></tr><tr><td><code>hull_wall_function</code></td><td>nutkRoughWallFunction with Ks = 100e-6 replaced by the smooth-wall nutkWallFunction; a 100 micron sand-grain roughness on a towing-tank model is a physics error against this reference, and V2b is the criterion that would otherwise absorb it</td></tr><tr><td><code>endtime</code></td><td>25000 LTS iterations, not the tutorial&#x27;s 4000; published practice for this case is 20000-40000</td></tr><tr><td><code>write_interval</code></td><td>fewer full writes over a run 6x longer, to bound disk</td></tr><tr><td><code>cofr</code></td><td>centre of rotation moved to the KCS hull&#x27;s own midship</td></tr><tr><td><code>waterline</code></td><td>the free surface sits at the KCS draft above the keel</td></tr><tr><td><code>domain</code></td><td>domain extents, block divisions, refinement boxes and locationInMesh scaled to the KCS hull</td></tr><tr><td><code>mesh_density</code></td><td>block divisions scaled to the target cell count</td></tr><tr><td><code>boundary_skewness</code></td><td>maxBoundarySkewness tightened from the tutorial&#x27;s 20 to 4, the threshold checkMesh actually judges by. At 20 the mesher may accept a boundary face the gate is guaranteed to fail, which is what happened on the companion level and not on production - and a defect on one level only turns V3&#x27;s two-level difference into a measure of the mesh, not the discretisation</td></tr>
+</table></div>
+<p class="note">Asserted in both directions by the test suite: every declared
+deviation must be present, and no undeclared deviation may exist.</p>
+
+<h2>Provenance</h2>
+<div class="wrap"><table>
+<tr><th>field</th><th>value</th></tr>
+<tr><td>hull</td><td>KCS (KRISO Container Ship)</td></tr>
+<tr><td>geometry source</td><td>CFD Workshop Tokyo 2005 structured surface grid (1999 KRISO surface), condition-matched to the Gothenburg 2000 / Tokyo 2005 Case 1.1 referent</td></tr>
+<tr><td>model scale</td><td>1/31.6</td></tr>
+<tr><td>ν (from stated Re)</td><td class="num">1.141804e-06 m²/s</td></tr>
+<tr><td>U used to derive ν</td><td class="num">2.1962 m/s</td></tr>
+<tr><td>ρ</td><td class="num">998.8 kg/m³</td></tr>
+<tr><td>iterations</td><td class="num">25,000</td></tr>
+<tr><td>ranks</td><td class="num">8</td></tr>
+</table></div>
+<p class="note">Host paths are redacted; the execution host's directory layout
+is not part of the result.</p>
+</main>

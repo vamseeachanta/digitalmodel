@@ -178,3 +178,54 @@ def _minimal_manifest(prod, comp) -> dict:
             "iterations": 25000, "ranks": 8, "declared_deviations": {},
         },
     }
+
+
+# --------------------------------------------------------------------------- #
+#  force.dat selection (#1173, 2026-08-19)
+# --------------------------------------------------------------------------- #
+def _case_with(tmp_path, dirs):
+    """A case carrying one or more forces directories."""
+    for d in dirs:
+        p = tmp_path / "postProcessing" / d / "0"
+        p.mkdir(parents=True)
+        (p / "force.dat").write_text("# Force\n1 0 0 0 0 0 0 0 0 0\n")
+    return tmp_path
+
+
+def test_force_dat_defaults_to_the_plain_forces_directory(mod, tmp_path):
+    case = _case_with(tmp_path, ["forces"])
+    assert mod.find_force_dat(case).parts[-3] == "forces"
+
+
+def test_force_dat_override_is_honoured(mod, tmp_path):
+    """A case can carry TWO forces directories that disagree.
+
+    Runs before 2026-08-19 used `rho rhoInf`, integrating the above-water hull
+    at water density; re-running with `rho rho` writes a second directory. On
+    KCS the two differ by 62% on the viscous component, so which one is read
+    must be stated, not globbed.
+    """
+    case = _case_with(tmp_path, ["forces", "forcesRho"])
+    chosen = mod.find_force_dat(case, Path("postProcessing/forcesRho/0/force.dat"))
+    assert chosen.parts[-3] == "forcesRho"
+
+
+def test_force_dat_override_may_be_absolute(mod, tmp_path):
+    case = _case_with(tmp_path, ["forces", "forcesRho"])
+    target = case / "postProcessing" / "forcesRho" / "0" / "force.dat"
+    assert mod.find_force_dat(case, target) == target
+
+
+def test_a_missing_override_fails_loudly(mod, tmp_path):
+    """Silently falling back to the other directory would score the defect."""
+    case = _case_with(tmp_path, ["forces"])
+    with pytest.raises(FileNotFoundError):
+        mod.find_force_dat(case, Path("postProcessing/forcesRho/0/force.dat"))
+
+
+def test_case_relative_path_is_used_for_the_manifest(mod, tmp_path):
+    """Host layout is not evidence; the case-relative path is."""
+    case = _case_with(tmp_path, ["forcesRho"])
+    fd = case / "postProcessing" / "forcesRho" / "0" / "force.dat"
+    assert mod._relative_to_case(fd, case) == "postProcessing/forcesRho/0/force.dat"
+    assert mod._relative_to_case(fd, tmp_path / "elsewhere") == "force.dat"

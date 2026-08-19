@@ -1120,3 +1120,60 @@ def test_both_levels_share_identical_mesh_quality_controls(tmp_path) -> None:
         assert re.search(r"level\s+\(0 0\)\s*;", snappy), (
             "the surface refinement level moved; r_G = sqrt(2) no longer holds"
         )
+
+
+# --------------------------------------------------------------------------- #
+#  averaging window is an ITERATION span, not a row count (#1173, 2026-08-19)
+# --------------------------------------------------------------------------- #
+def _force_file(tmp_path, times, value=-80.0):
+    """A forces log at arbitrary write spacing."""
+    lines = ["# Time total_x total_y total_z pressure_x pressure_y pressure_z "
+             "viscous_x viscous_y viscous_z"]
+    for t in times:
+        v = 0.0 if t == 0 else value          # t=0 is the undeveloped field
+        lines.append(f"{t} {v} 0 0 {v/4} 0 0 {3*v/4} 0 0")
+    f = tmp_path / "force.dat"
+    f.write_text("\n".join(lines) + "\n")
+    return f
+
+
+def test_window_is_iterations_not_rows_at_coarse_write_interval(tmp_path):
+    """rows[-window:] silently averaged the start-up transient back in.
+
+    A function object re-run over WRITTEN FIELD times produces one row per
+    write interval, not one per iteration. With 11 rows at 2500 spacing,
+    rows[-4000:] takes all eleven -- including t=0, where the flow has not
+    developed -- and drags the mean down by ~8%.
+    """
+    from digitalmodel.solvers.openfoam.validation.ship_resistance import (
+        parse_hull_force,
+    )
+    times = list(range(0, 25001, 2500))
+    force = parse_hull_force(_force_file(tmp_path, times), window=4000,
+                             half_domain=False)
+    assert force.first_iteration >= 21000, (
+        "window must select by iteration span, not row count")
+    assert force.samples == 2, f"expected 22500 and 25000, got {force.samples}"
+    assert force.total == pytest.approx(80.0), (
+        "the t=0 row must not be inside a 4000-iteration window")
+
+
+def test_window_matches_row_slicing_when_every_step_was_written(tmp_path):
+    """The historical case: writeInterval 1, where the two are equivalent."""
+    from digitalmodel.solvers.openfoam.validation.ship_resistance import (
+        parse_hull_force,
+    )
+    times = list(range(1, 10001))
+    force = parse_hull_force(_force_file(tmp_path, times), window=4000,
+                             half_domain=False)
+    assert force.samples == 4000
+    assert force.first_iteration == 6001
+
+
+def test_a_window_wider_than_the_run_keeps_every_row(tmp_path):
+    from digitalmodel.solvers.openfoam.validation.ship_resistance import (
+        parse_hull_force,
+    )
+    force = parse_hull_force(_force_file(tmp_path, [100, 200, 300]),
+                             window=999999, half_domain=False)
+    assert force.samples == 3

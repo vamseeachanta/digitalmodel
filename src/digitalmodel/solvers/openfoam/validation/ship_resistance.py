@@ -804,7 +804,10 @@ def parse_hull_force(
     half_domain: bool = True,
     drag_axis: int = 0,
 ) -> HullForce:
-    """Mean drag over the final ``window`` iterations of a forces log.
+    """Mean drag over the final ``window`` ITERATIONS of a forces log.
+
+    ``window`` is an iteration span, not a row count -- the two coincide only
+    when the forces object wrote every timestep.
 
     The file is OpenFOAM's ``postProcessing/forces/<t>/force.dat``, whose
     columns are ``Time, total_xyz, pressure_xyz, viscous_xyz``. The drag
@@ -831,7 +834,17 @@ def parse_hull_force(
 
     if not rows:
         raise ValueError(f"no force samples parsed from {force_dat}")
-    tail = rows[-window:] if window > 0 else rows
+    # `window` is a count of ITERATIONS, not of rows. Selecting rows[-window:]
+    # is only equivalent when writeInterval == 1, which was true of the
+    # original forces output and NOT of a function object re-run over written
+    # field times (#1173, 2026-08-19: 11 rows at 2500-iteration spacing, where
+    # rows[-4000:] silently took all of them, averaging the start-up transient
+    # into the result and moving Ct by 8%).
+    if window > 0:
+        cutoff = rows[-1][0] - window
+        tail = [r for r in rows if r[0] > cutoff] or rows[-1:]
+    else:
+        tail = rows
     n = len(tail)
     factor = 2.0 if half_domain else 1.0
 

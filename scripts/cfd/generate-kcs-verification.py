@@ -49,11 +49,36 @@ def redact(text: str) -> str:
     return text
 
 
-def find_force_dat(case_dir: Path) -> Path:
+def find_force_dat(case_dir: Path, override: Path | None = None) -> Path:
+    """Locate the forces output, or take an explicit one.
+
+    The override exists because a case can carry MORE THAN ONE forces
+    directory, and they need not agree. Runs before 2026-08-19 configured
+    ``rho rhoInf; rhoInf 998.8;``, which integrates the above-water hull at
+    water density -- on KCS that inflated the viscous force by 62% and Ct by
+    114% (see the template comment and #1173). Re-running the function object
+    with ``rho rho`` writes a SECOND directory alongside the first.
+
+    Globbing would then silently pick one. Naming the file makes the evidence
+    say which data produced it.
+    """
+    if override is not None:
+        chosen = override if override.is_absolute() else case_dir / override
+        if not chosen.is_file():
+            raise FileNotFoundError(f"force.dat override not found: {chosen}")
+        return chosen
     candidates = sorted(case_dir.glob("postProcessing/forces/*/force.dat"))
     if not candidates:
         raise FileNotFoundError(f"no forces output under {case_dir.name}")
     return candidates[-1]
+
+
+def _relative_to_case(path: Path, case_dir: Path) -> str:
+    """Case-relative path for the manifest -- host layout is not evidence."""
+    try:
+        return str(path.relative_to(case_dir))
+    except ValueError:
+        return path.name
 
 
 def cell_count(case_dir: Path) -> int | None:
@@ -152,12 +177,16 @@ def yplus_summary(case_dir: Path, patch: str = "hull") -> dict:
     return out
 
 
-def build_manifest(production: Path, companion: Path | None) -> dict:
+def build_manifest(production: Path, companion: Path | None,
+                   production_force_dat: Path | None = None,
+                   companion_force_dat: Path | None = None) -> dict:
     config = ShipResistanceConfig()
+    prod_fd = find_force_dat(production, production_force_dat)
+    comp_fd = find_force_dat(companion, companion_force_dat) if companion else None
     manifest = evaluate_ship_resistance_run(
-        find_force_dat(production),
+        prod_fd,
         config,
-        companion_force_dat=find_force_dat(companion) if companion else None,
+        companion_force_dat=comp_fd,
         companion_config=config if companion else None,
         mesh_cells=cell_count(production),
         companion_mesh_cells=cell_count(companion) if companion else None,
@@ -175,6 +204,17 @@ def build_manifest(production: Path, companion: Path | None) -> dict:
             "Diagnostic only. No criterion is evaluated against y+; "
             "V1/V2a/V2b/V3 are unchanged. Added after the running "
             "coefficients were observed, so it reports rather than gates."
+        ),
+    }
+    # Which forces output produced this, stated rather than implied.
+    manifest["force_source"] = {
+        "production": _relative_to_case(prod_fd, production),
+        "companion": _relative_to_case(comp_fd, companion) if comp_fd else None,
+        "note": (
+            "A case may carry several forces directories. Runs before "
+            "2026-08-19 used `rho rhoInf`, which integrates the above-water "
+            "hull at water density; `rho rho` uses the VOF density field. "
+            "These do not agree -- on KCS by 62% on the viscous component."
         ),
     }
     manifest["issue"] = "#1173"
@@ -410,9 +450,15 @@ def main() -> int:
     ap.add_argument("--production", required=True, type=Path)
     ap.add_argument("--companion", type=Path, default=None)
     ap.add_argument("--out-dir", type=Path, default=OUT_DIR)
+    ap.add_argument("--production-force-dat", type=Path, default=None,
+                    help="explicit force.dat (absolute, or relative to the "
+                         "case) when a case carries more than one forces dir")
+    ap.add_argument("--companion-force-dat", type=Path, default=None)
     args = ap.parse_args()
 
-    manifest = build_manifest(args.production, args.companion)
+    manifest = build_manifest(args.production, args.companion,
+                              args.production_force_dat,
+                              args.companion_force_dat)
     args.out_dir.mkdir(parents=True, exist_ok=True)
 
     stem = "kcs-calm-water-resistance-verification"

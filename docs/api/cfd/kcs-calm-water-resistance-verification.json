@@ -1,0 +1,173 @@
+{
+  "provenance": {
+    "hull": "KCS (KRISO Container Ship)",
+    "geometry_source": "CFD Workshop Tokyo 2005 structured surface grid (1999 KRISO surface), condition-matched to the Gothenburg 2000 / Tokyo 2005 Case 1.1 referent",
+    "model_scale": "1/31.6",
+    "body_condition": "fixed_even_keel",
+    "appendages": "none",
+    "wetted_surface_m2": 9.4379,
+    "froude": 0.2599486838329898,
+    "reynolds": 14000000.0,
+    "velocity_used_for_nu": 2.1962,
+    "nu": 1.14180438e-06,
+    "density": 998.8,
+    "iterations": 25000,
+    "averaging_window": 4000,
+    "ranks": 8,
+    "declared_deviations": {
+      "stl_name": "the hull is KCS, not DTC",
+      "umean": "the tow speed is the referent's 2.1962 m/s (Fr = 0.26)",
+      "nu": "viscosity chosen to reproduce the referent's Re = 1.4e7",
+      "rho": "water density stated consistently in transportProperties and the forces function object",
+      "forces_rho": "the forces function object states its density source explicitly; leaving it implicit in a two-phase run is how a factor slips in unnoticed",
+      "hull_wall_function": "nutkRoughWallFunction with Ks = 100e-6 replaced by the smooth-wall nutkWallFunction; a 100 micron sand-grain roughness on a towing-tank model is a physics error against this reference, and V2b is the criterion that would otherwise absorb it",
+      "endtime": "25000 LTS iterations, not the tutorial's 4000; published practice for this case is 20000-40000",
+      "write_interval": "fewer full writes over a run 6x longer, to bound disk",
+      "cofr": "centre of rotation moved to the KCS hull's own midship",
+      "waterline": "the free surface sits at the KCS draft above the keel",
+      "domain": "domain extents, block divisions, refinement boxes and locationInMesh scaled to the KCS hull",
+      "mesh_density": "block divisions scaled to the target cell count",
+      "boundary_skewness": "maxBoundarySkewness tightened from the tutorial's 20 to 4, the threshold checkMesh actually judges by. At 20 the mesher may accept a boundary face the gate is guaranteed to fail, which is what happened on the companion level and not on production - and a defect on one level only turns V3's two-level difference into a measure of the mesh, not the discretisation"
+    },
+    "reference": {
+      "ct": 0.00356,
+      "cf_ittc57": 0.002832044602543756,
+      "cr": 0.0007279553974562439,
+      "row_id": "kcs_t2005_case_1_1_fixed_bare"
+    }
+  },
+  "measurement": {
+    "ct": 0.003358985082049366,
+    "cp": 0.0007732399386278345,
+    "cv": 0.0025857454073483772,
+    "force_total_N": 76.36173,
+    "force_pressure_N": 17.578505999999997,
+    "force_viscous_N": 58.78323,
+    "averaging_window": 2,
+    "window_first_iteration": 22500,
+    "window_last_iteration": 25000,
+    "iterative_scatter_ct": 9.382599346571835e-07,
+    "mesh_cells": 1539965
+  },
+  "criteria": {
+    "V1": {
+      "criterion": "V1",
+      "quantity": "ct",
+      "computed": 0.003358985082049366,
+      "reference": 0.00356,
+      "relative_error": -0.05646486459287464,
+      "tolerance": 0.03,
+      "passed": false
+    },
+    "V2a": {
+      "criterion": "V2a",
+      "quantity": "cp",
+      "computed": 0.0007732399386278345,
+      "reference": 0.0007279553974562439,
+      "relative_error": 0.062207851373631204,
+      "tolerance_low": -0.15,
+      "tolerance_high": 0.06,
+      "passed_low_bound": true,
+      "passed_high_bound": false,
+      "passed": false
+    },
+    "V2b": {
+      "criterion": "V2b",
+      "quantity": "cv",
+      "computed": 0.0025857454073483772,
+      "reference": 0.002832044602543756,
+      "relative_error": -0.08696868508855814,
+      "tolerance": 0.05,
+      "passed": false
+    },
+    "V3": {
+      "criterion": "V3",
+      "ct_fine": 0.003358985082049366,
+      "ct_coarse": 0.0035463766611602233,
+      "epsilon": 0.05578815461619343,
+      "threshold": 0.015,
+      "escalation_band": [
+        0.015,
+        0.03
+      ],
+      "escalated": false,
+      "delta_re": null,
+      "passed": false,
+      "ct_coarse_cells": 546978,
+      "ct_fine_cells": 1539965,
+      "cell_ratio": 2.815405738439206,
+      "linear_refinement_ratio": 1.4120399923734988
+    }
+  },
+  "normalisation": {
+    "reference_area_m2": 9.4379,
+    "reference_area_source": "PUBLISHED S_DWL, stated by the Gothenburg 2000 EFD table (hull only, no rudder, static orientation). S/Lpp^2 = 0.1781.",
+    "gated_number_uses": "reference_area_m2",
+    "applies_to": [
+      "ct",
+      "cp",
+      "cv"
+    ],
+    "generated_surface_area_m2": 9.5609,
+    "generated_vs_reference": 0.013032560209368538,
+    "note": "THE VERDICT RESTS ON reference_area_m2. The generated surface's own wetted area is reported as a diagnostic and is NOT used to normalise anything. A coefficient is defined by what it is divided by, so scoring against the workshop's Ct requires the workshop's S; normalising on our own area instead would put a systematic -1.29% on Ct that has nothing to do with solver accuracy and would spend a third of V1's budget on bookkeeping. All three of Ct, Cp and Cv use the same area - normalising the components differently would break the Ct = Cp + Cv identity V2a and V2b depend on.",
+    "diagnosis": "Same hull, different reduction. Displaced volume over the SAME surface agrees with the published figure to 0.01%, so the geometry is right and the disagreement is in how area was computed. Volume is a third-moment integral and averages local surface detail away; area accumulates it directly, so station spacing, girth interpolation and transom/bulb treatment move S while leaving displacement untouched. Demonstrated rather than asserted: a girth integration over the workshop's own 57-station offsets table returns 9.83 m^2, +4.2% on the other side of the published value. Three reductions of one hull spanning 4%, with the volume fixed.",
+    "bias_direction": "If the solved hull genuinely carries 1.3% more wetted area than the towed model, friction is correspondingly higher and Ct lands HIGH by roughly 1% - about a third of V1's budget - before the solver contributes anything."
+  },
+  "detection_floor": {
+    "ct_fraction": 0.0091,
+    "note": "A limit of the method, stated rather than discovered. Because Ct = Cp + Cv holds identically, a compensating pair sitting on both component boundaries lands inside V1 at +0.91%. The decomposition gate cannot detect a compensating pair whose net effect on Ct is below roughly that. This is a property of the arithmetic, not of the mesh."
+  },
+  "identity_check": {
+    "cp_plus_cv": 0.0033589853459762118,
+    "ct": 0.003358985082049366,
+    "holds": true
+  },
+  "companion": {
+    "ct": 0.0035463766611602233,
+    "cp": 0.0009383518691749712,
+    "cv": 0.0026080247919852517,
+    "mesh_cells": 546978,
+    "iterative_scatter_ct": 1.0649008325418015e-05
+  },
+  "summary": {
+    "V1": false,
+    "V2a": false,
+    "V2b": false,
+    "V3": false
+  },
+  "all_passed": false,
+  "generated_utc": "2026-08-19T16:27:33.198753+00:00",
+  "mesh_quality": {
+    "production": {
+      "available": true,
+      "mesh_ok": true,
+      "failed_checks": 0,
+      "passed": true
+    },
+    "companion": {
+      "available": true,
+      "mesh_ok": true,
+      "failed_checks": 0,
+      "passed": true
+    }
+  },
+  "wall_resolution": {
+    "production": {
+      "available": false,
+      "reason": "log.yPlus not present"
+    },
+    "companion": {
+      "available": false,
+      "reason": "log.yPlus not present"
+    },
+    "gates": false,
+    "note": "Diagnostic only. No criterion is evaluated against y+; V1/V2a/V2b/V3 are unchanged. Added after the running coefficients were observed, so it reports rather than gates."
+  },
+  "force_source": {
+    "production": "postProcessing/forcesRho/0/force.dat",
+    "companion": "postProcessing/forcesRho/0/force.dat",
+    "note": "A case may carry several forces directories. Runs before 2026-08-19 used `rho rhoInf`, which integrates the above-water hull at water density; `rho rho` uses the VOF density field. These do not agree -- on KCS by 62% on the viscous component."
+  },
+  "issue": "#1173"
+}
