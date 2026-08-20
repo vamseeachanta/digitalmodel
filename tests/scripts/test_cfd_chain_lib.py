@@ -79,3 +79,17 @@ def test_library_never_matches_on_command_line(banned: str):
     code = "\n".join(ln for ln in LIB.read_text().splitlines()
                      if not ln.lstrip().startswith("#"))
     assert banned not in code
+
+
+def test_case_directory_is_a_parameter_not_a_benchmark_name():
+    """The chain must not require a client hull to live under `kcs_cases`.
+
+    It did: the subdirectory was a literal, so the orchestration was shaped
+    around the benchmark it happened to be written for. The default is kept
+    for existing roots, but it has to be overridable or client work cannot
+    use the committed chain at all.
+    """
+    r = run('DM_CFD_ROOT=/tmp cfd_case_dir demo')
+    assert r.stdout.strip() == "/tmp/kcs_cases/demo", r.stdout
+    r = run('DM_CFD_ROOT=/tmp DM_CFD_CASES_DIR=cases cfd_case_dir demo')
+    assert r.stdout.strip() == "/tmp/cases/demo", r.stdout

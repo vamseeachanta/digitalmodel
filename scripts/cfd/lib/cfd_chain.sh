@@ -29,9 +29,13 @@ cfd_root() {
   printf '%s' "$DM_CFD_ROOT"
 }
 
+# The case subdirectory is a PARAMETER, not a literal. It defaulted to
+# `kcs_cases`, which silently made the chain KCS-shaped: a client hull had to
+# be filed under a benchmark's name to run at all. Default preserved so
+# existing roots keep working.
 cfd_case_dir() {
   [ -n "${1:-}" ] || cfd_die "cfd_case_dir: no case name"
-  printf '%s/kcs_cases/%s' "$(cfd_root)" "$1"
+  printf '%s/%s/%s' "$(cfd_root)" "${DM_CFD_CASES_DIR:-kcs_cases}" "$1"
 }
 
 # ---------------------------------------------------------------------------
