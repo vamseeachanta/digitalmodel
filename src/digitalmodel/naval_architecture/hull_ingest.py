@@ -69,6 +69,7 @@ __all__ = [
     "CAD_EXTRA",
     "DEFAULT_WELD_TOLERANCE_M",
     "MANIFEST_CONTRACT_KEYS",
+    "NO_MESH_REMEDIES",
     "PLAUSIBLE_LENGTH_M",
     "RHINO_UNIT_CODES",
     "UNIT_SCALE_TO_M",
@@ -124,6 +125,26 @@ PLAUSIBLE_LENGTH_M: Tuple[float, float] = (2.0, 500.0)
 #: a render mesh at ship scale (about 0.03 mm at 300 m) and far below any gap
 #: that represents a real hole in the surface.
 DEFAULT_WELD_TOLERANCE_M = 1e-4
+
+#: What to tell a caller whose ``.3dm`` carries no cached render meshes. Kept
+#: as a constant because it is the first wall most client files hit, and the
+#: list has to stay ordered by how little it costs the client: re-saving from
+#: Rhino or exporting an STL takes them two minutes and involves no
+#: approximation, whereas rebuilding the trimmed Breps in a CAD kernel is our
+#: approximation to defend. That ordering is the point, so it is not a docstring
+#: that can drift away from the code.
+NO_MESH_REMEDIES = (
+    "Fixes, in order of preference:\n"
+    "  1. In Rhino, shade the hull (so render meshes are built) and re-save, "
+    "with 'Save geometry only' OFF.\n"
+    "  2. Export the hull as STL/OBJ and ingest that instead.\n"
+    "  3. Check the layer filter: the hull may be on a layer this call "
+    "excluded.\n"
+    "  4. Pass tessellate_breps=True to rebuild the trimmed NURBS in the "
+    "OpenCASCADE kernel (needs the 'cad' extra). This is opt-in because it "
+    "approximates the surface and its trim fidelity has to be inspected, not "
+    "assumed."
+)
 
 #: The manifest keys another lane consumes to size its computational domain.
 #: Renaming any of these is a breaking change to that interface.
@@ -794,12 +815,30 @@ def _normalise_layer_filter(layers: Optional[Iterable[str]]) -> Optional[set]:
 
 
 def read_3dm_triangles(
-    path: Path | str, *, layers: Optional[Iterable[str]] = None
+    path: Path | str,
+    *,
+    layers: Optional[Iterable[str]] = None,
+    tessellate_breps: bool = False,
+    linear_deflection: Optional[float] = None,
 ) -> Rhino3dmGeometry:
     """Recover tessellated geometry and the declared unit system from a ``.3dm``.
 
     Only cached render meshes are used -- see the module docstring for why
     evaluating trimmed NURBS here would be worse than failing.
+
+    ``tessellate_breps`` opts in to the CAD-kernel fallback in
+    ``brep_tessellate``, which rebuilds the trimmed NURBS Breps in OpenCASCADE
+    and meshes them. It is OFF by default and never fires implicitly. Two
+    reasons, both about not lying to the caller:
+
+    1. It is a modelling decision, not a format detail. The caller is choosing
+       a chordal deflection and accepting a trim reconstruction, and the
+       resulting surface is an approximation whose fidelity has to be reported
+       (``BrepTessellation.fidelity``) rather than assumed.
+    2. It needs a dependency -- an OpenCASCADE binding -- that the render-mesh
+       path does not. Falling back silently would turn a clear "this file has
+       no meshes, here is how to fix it" into an intermittent import error
+       whose cause depends on the machine.
     """
     rhino3dm = _import_rhino3dm()
     source = Path(path)
@@ -844,19 +883,24 @@ def read_3dm_triangles(
         else:
             unmeshed += 1
 
+    if not triangles and tessellate_breps:
+        return _tessellate_breps_of(
+            source,
+            layers=layers,
+            declared=declared,
+            objects_total=total,
+            objects_without_mesh=unmeshed,
+            layers_available=[layer.Name for layer in model.Layers],
+            linear_deflection=linear_deflection,
+        )
+
     if not triangles:
         raise NoMeshGeometryError(
             f"{source.name} yielded no tessellated geometry "
             f"({total} objects examined, {unmeshed} with no cached mesh).\n"
             "rhino3dm is a file reader, not a geometry kernel: it cannot "
             "tessellate NURBS surfaces, it can only return render meshes that "
-            "Rhino already stored in the file.\n"
-            "Fixes, in order of preference:\n"
-            "  1. In Rhino, shade the hull (so render meshes are built) and "
-            "re-save, with 'Save geometry only' OFF.\n"
-            "  2. Export the hull as STL/OBJ and ingest that instead.\n"
-            "  3. Check the layer filter: the hull may be on a layer this call "
-            "excluded."
+            "Rhino already stored in the file.\n" + NO_MESH_REMEDIES
         )
 
     return Rhino3dmGeometry(
@@ -867,6 +911,61 @@ def read_3dm_triangles(
         objects_meshed=meshed,
         objects_without_mesh=unmeshed,
         layers_available=[layer.Name for layer in model.Layers],
+    )
+
+
+def _tessellate_breps_of(
+    source: Path,
+    *,
+    layers: Optional[Iterable[str]],
+    declared: Optional[str],
+    objects_total: int,
+    objects_without_mesh: int,
+    layers_available: List[str],
+    linear_deflection: Optional[float],
+) -> Rhino3dmGeometry:
+    """The opt-in CAD-kernel path, imported lazily.
+
+    Kept behind a function-level import so that ``hull_ingest`` still has
+    exactly one optional dependency from the point of view of anyone who never
+    asks for this, and so the kernel's several-hundred-megabyte import cost is
+    not paid by the render-mesh path.
+
+    The fidelity report is copied into the geometry's notes rather than
+    discarded: a Brep tessellation that quietly ignored its trims is the single
+    failure this whole route has to be defended against, and the evidence for
+    "it did not" belongs in the manifest the caller keeps.
+    """
+    from digitalmodel.naval_architecture import brep_tessellate  # noqa: PLC0415
+
+    result = brep_tessellate.tessellate_3dm(
+        source, layers=layers, linear_deflection=linear_deflection
+    )
+    fidelity = result.fidelity
+    if fidelity is not None and not fidelity.within_reference_box:
+        raise NotWatertightError(
+            f"the Brep tessellation of {source.name} reaches "
+            f"{fidelity.max_overshoot:g} file units OUTSIDE the Brep's own "
+            "bounding box, which means trim boundaries were not honoured and "
+            "the hull is the wrong size:\n" + fidelity.describe()
+        )
+    layer_triangles = {}
+    if result.layer_faces:
+        # Face counts, not triangle counts, are what the kernel path knows per
+        # layer; recorded under the same key so the manifest stays one shape.
+        share = len(result.triangles) / max(sum(result.layer_faces.values()), 1)
+        layer_triangles = {
+            name: int(round(faces * share))
+            for name, faces in result.layer_faces.items()
+        }
+    return Rhino3dmGeometry(
+        triangles=result.triangles,
+        declared_units=declared or result.declared_units,
+        layer_triangles=layer_triangles,
+        objects_total=objects_total,
+        objects_meshed=result.faces_converted,
+        objects_without_mesh=objects_without_mesh,
+        layers_available=layers_available or result.layers_available,
     )
 
 
@@ -1089,6 +1188,8 @@ def ingest_3dm(
     weld_tolerance: Optional[float] = None,
     force: bool = False,
     stl_name: str = "hull",
+    tessellate_breps: bool = False,
+    linear_deflection: Optional[float] = None,
 ) -> HullManifest:
     """Ingest a Rhino ``.3dm`` hull into a normalised STL plus its manifest.
 
@@ -1097,14 +1198,29 @@ def ingest_3dm(
     traced 2D drawings, and ingesting all of it produces a "hull" that is not
     one; the layer report on ``Rhino3dmGeometry`` is there to make choosing
     easy.
+
+    ``tessellate_breps`` opts in to the CAD-kernel fallback for files that
+    carry no cached render meshes. See :func:`read_3dm_triangles` for why it is
+    never automatic.
     """
-    geometry = read_3dm_triangles(path, layers=layers)
+    geometry = read_3dm_triangles(
+        path,
+        layers=layers,
+        tessellate_breps=tessellate_breps,
+        linear_deflection=linear_deflection,
+    )
     used = sorted(geometry.layer_triangles)
     notes = [
         f"read {len(geometry.triangles)} triangles from "
         f"{geometry.objects_meshed}/{geometry.objects_total} objects; "
         f"{geometry.objects_without_mesh} carried no cached render mesh",
     ]
+    if tessellate_breps:
+        notes.append(
+            "trimmed NURBS Breps were rebuilt in the OpenCASCADE kernel "
+            "(brep_tessellate); triangles are an approximation of the NURBS "
+            "surface, not the modeller's own tessellation"
+        )
     if geometry.declared_units is None:
         notes.append("the file did not declare a usable unit system")
     return ingest_triangles(
