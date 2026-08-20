@@ -98,6 +98,18 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+cad = [
+    # Optional CAD readers for client geometry ingestion (#2023).
+    #
+    # NOT a runtime dependency: the core package must import and run with this
+    # absent, so `naval_architecture.hull_ingest` imports rhino3dm lazily inside
+    # a function and raises a MissingCadDependencyError naming this extra.
+    #
+    # rhino3dm is a file reader, not a geometry kernel -- it returns the render
+    # meshes Rhino cached in the .3dm and cannot tessellate NURBS. That is a
+    # property of the format's ecosystem, not a version constraint to relax.
+    "rhino3dm>=8.0.0,<9.0.0",
+]
 gis-imagery = [
     # Optional Earth Engine support for the gis.imagery timelapse pipeline.
     # Not required: the pipeline falls back to public Planetary Computer STAC.
