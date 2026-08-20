@@ -388,3 +388,11 @@ docs/api/_datasets/
 # 3D tension-moment study: 191 MB of JSON that compresses to ~1 MB as parquet.
 # Regenerated on demand and published to Hugging Face; never committed. (#1915)
 docs/api/structural/wall-thickness-3d.json
+
+# scripts/cfd/lib holds the OpenFOAM solve-chain SHELL library, not Python
+# build output. The bare `lib/` above is packaging boilerplate and matches any
+# directory named lib at ANY depth -- it silently swallowed the files that fix
+# the "chain is not reproducible from a clean checkout" defect (#2023), so the
+# remediation was itself invisible to git. Negation must follow the pattern it
+# overrides, and the DIRECTORY must be re-included before git will descend.
+!scripts/cfd/lib/
