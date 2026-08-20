@@ -79,7 +79,7 @@ functions
     {
         type            forces;
         libs            (forces);
-        patches         (hull);
+        patches         (@FORCEPATCHES@);
 
         // Single-phase, uniform density: the constant IS the density.
         rho             rhoInf;
@@ -95,7 +95,7 @@ functions
     {
         type            forceCoeffs;
         libs            (forces);
-        patches         (hull);
+        patches         (@FORCEPATCHES@);
 
         rho             rhoInf;
         rhoInf          @RHOINF@;
@@ -116,6 +116,11 @@ functions
         writeControl    timeStep;
         writeInterval   1;
     }
+
+    // Per-patch breakdown, in NEWTONS. Empty for a single-surface case: the
+    // union block above already IS the hull's, and a duplicate function
+    // object would write the same force under a second name.
+    @PERPATCHFORCES@
 }
 
 

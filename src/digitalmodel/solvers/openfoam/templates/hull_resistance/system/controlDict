@@ -62,11 +62,17 @@ functions
     // rhoInf for the coefficient denominator. They are not interchangeable and
     // neither is redundant.
 
+    // PATCHES: the union of the hull and every appendage. Forces are
+    // integrated over all of them together, because the reported total
+    // resistance is the vessel's, not the bare hull's. The per-patch
+    // BREAKDOWN is the forces_<patch> block below, in newtons -- newtons sum,
+    // per-patch coefficients would not, because each would carry its own
+    // reference area and the three could not be added.
     forces
     {
         type            forces;
         libs            (forces);
-        patches         (hull);
+        patches         (@FORCEPATCHES@);
         rho             rho;
         log             on;
         writeControl    timeStep;
@@ -78,7 +84,7 @@ functions
     {
         type            forceCoeffs;
         libs            (forces);
-        patches         (hull);
+        patches         (@FORCEPATCHES@);
 
         // Force integral: the VOF density field.
         rho             rho;
@@ -90,6 +96,13 @@ functions
         // Aref is HALF the wetted surface: the domain is cut at the
         // centreplane, the patch integral reports half of every force, and
         // forceCoeffs has no way to double the numerator.
+        //
+        // With appendages it is half the EXTERNAL wetted area of the union,
+        // not half the sum of the per-region areas. The sum double-counts:
+        // the appendage surface inside the hull is not wetted and neither is
+        // the hull surface inside the appendage. Summing inflates Aref, and
+        // an inflated Aref deflates every coefficient by exactly its error in
+        // a case that converges perfectly.
         Aref            @AREF@;
 
         CofR            (@COFR@);
@@ -101,6 +114,11 @@ functions
         writeControl    timeStep;
         writeInterval   1;
     }
+
+    // Per-patch breakdown, in NEWTONS. Empty for a single-surface case: the
+    // union block above already IS the hull's, and a duplicate function
+    // object would write the same force under a second name.
+    @PERPATCHFORCES@
 }
 
 

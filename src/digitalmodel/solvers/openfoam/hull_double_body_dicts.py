@@ -19,7 +19,8 @@ from typing import TYPE_CHECKING, Any, Dict
 # coordinate written to different precision in the two cases is a difference
 # in the emitted mesh that no test comparing the two would attribute to
 # formatting.
-from .hull_case_dicts import _fmt, _vec
+from .hull_case_dicts import _fmt, _vec, surfaces_provenance
+from .hull_case_regions import region_tokens
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from .hull_domain import HullDomain
@@ -42,7 +43,15 @@ def double_body_tokens(derivation: "DoubleBodyDerivation") -> Dict[str, str]:
     tokens.update(_condition_tokens(derivation))
     tokens.update(_geometry_tokens(derivation))
     tokens.update(_mesh_tokens(derivation))
-    tokens.update(_force_tokens(derivation))
+    force = _force_tokens(derivation)
+    tokens.update(force)
+    # LAST, for the reason spelled out in ``hull_case_dicts``: the region
+    # blocks are the only token values built from another token's VALUE.
+    tokens.update(
+        region_tokens(
+            derivation.config.surface_regions, c_of_r=force["COFR"]
+        )
+    )
     return tokens
 
 
@@ -136,6 +145,7 @@ def double_body_case_provenance(
         "issue": "#2023",
         "hull": cfg.manifest.to_provenance(),
         "surface": {"stl": cfg.stl_name, "emesh": cfg.emesh_name},
+        "surfaces": surfaces_provenance(cfg),
         "condition": _condition_provenance(cfg),
         "free_surface": _free_surface_provenance(),
         "domain": _domain_provenance(derivation),

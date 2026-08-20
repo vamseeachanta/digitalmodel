@@ -12,11 +12,18 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Mapping, Sequence
 
+from .hull_case_regions import region_provenance, region_tokens
+
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from .hull_case import HullCaseConfig, HullCaseDerivation
     from .hull_domain import HullDomain
 
-__all__ = ["case_provenance", "hull_case_tokens", "render_case_tree"]
+__all__ = [
+    "case_provenance",
+    "hull_case_tokens",
+    "render_case_tree",
+    "surfaces_provenance",
+]
 
 
 def render_case_tree(
@@ -61,7 +68,18 @@ def hull_case_tokens(derivation: "HullCaseDerivation") -> Dict[str, str]:
     tokens.update(_condition_tokens(derivation))
     tokens.update(_geometry_tokens(derivation))
     tokens.update(_mesh_tokens(derivation))
-    tokens.update(_force_tokens(derivation))
+    force = _force_tokens(derivation)
+    tokens.update(force)
+    # LAST, and it must stay last. The region blocks are the only token values
+    # that quote another token's VALUE (the centre of rotation, in the
+    # per-patch forces objects). They take it already formatted, so nothing
+    # here depends on substitution order -- but a region block written to
+    # contain "@COFR@" would, and would only fail once someone reordered this.
+    tokens.update(
+        region_tokens(
+            derivation.config.surface_regions, c_of_r=force["COFR"]
+        )
+    )
     return tokens
 
 
@@ -149,6 +167,7 @@ def case_provenance(derivation: "HullCaseDerivation") -> Dict[str, Any]:
         "case_name": cfg.name,
         "hull": cfg.manifest.to_provenance(),
         "surface": {"stl": cfg.stl_name, "emesh": cfg.emesh_name},
+        "surfaces": surfaces_provenance(cfg),
         "condition": _condition_provenance(cfg),
         "domain": _domain_provenance(derivation.domain),
         "mesh": _mesh_provenance(derivation),
@@ -163,6 +182,27 @@ def case_provenance(derivation: "HullCaseDerivation") -> Dict[str, Any]:
             "end_time": cfg.end_time,
             "write_interval": cfg.write_interval,
         },
+    }
+
+
+def surfaces_provenance(cfg: "HullCaseConfig") -> Dict[str, Any]:
+    """What was meshed, and WHICH wetted area ``Aref`` was built from.
+
+    Shared with the double-body tree: the two cases are compared against each
+    other to extract a form factor, so a reader has to be able to see that
+    both normalised by the same area. Two copies of this could disagree.
+    """
+    return {
+        **region_provenance(cfg.surface_regions),
+        "aref_source": (
+            "regions.union.wetted_surface_external_m2"
+            if cfg.manifest.regions
+            else "wetted_surface_m2"
+        ),
+        "aref_wetted_surface_m2": cfg.manifest.reference_wetted_surface_m2,
+        "wetted_surface_upper_bound_m2": (
+            cfg.manifest.wetted_surface_upper_bound_m2
+        ),
     }
 
 

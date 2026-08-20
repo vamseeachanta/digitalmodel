@@ -29,7 +29,6 @@ from __future__ import annotations
 import dataclasses
 import json
 import math
-import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
@@ -75,12 +74,19 @@ from .hull_case_dicts import (
     hull_case_tokens,
     render_case_tree,
 )
+from .hull_case_regions import (
+    SurfaceRegion,
+    check_region_surfaces,
+    copy_region_surfaces,
+    hull_region,
+)
 from .hull_manifest import HullManifest, load_hull_manifest
 
 __all__ = [
     "GRAVITY",
     "HullCaseConfig",
     "HullCaseDerivation",
+    "SurfaceRegion",
     "build_hull_case",
     "derive_hull_case",
     "hull_case_templates_dir",
@@ -117,6 +123,12 @@ class HullCaseConfig:
     #: is how a case is matched to a benchmark condition rather than to a fluid.
     kinematic_viscosity: Optional[float] = None
     reynolds: Optional[float] = None
+
+    #: Extra closed surfaces meshed BESIDE the hull -- a rudder, a boss.
+    #: Separate regions, never merged into the hull soup: they interpenetrate
+    #: it, so a merged soup is non-manifold where they cross. snappyHexMesh
+    #: forms the union itself from per-surface inside/outside tests.
+    appendages: Tuple[SurfaceRegion, ...] = ()
 
     end_time: int = DEFAULT_END_TIME
     write_interval: int = DEFAULT_WRITE_INTERVAL
@@ -180,18 +192,25 @@ class HullCaseConfig:
         return self.velocity * self.manifest.lpp_m / self.nu
 
     @property
+    def surface_regions(self) -> Tuple[SurfaceRegion, ...]:
+        """Every surface the mesher meets, HULL FIRST.
+
+        The order is load-bearing twice over: the hull's patch name is what
+        the forces blocks and the report lane resolve, and the appendages are
+        declared after it so a reader of snappyHexMeshDict sees the same
+        ordering as the manifest.
+        """
+        return (hull_region(self.stl_path), *self.appendages)
+
+    @property
     def stl_name(self) -> str:
         return Path(self.stl_path).name
 
     @property
     def emesh_name(self) -> str:
-        """What ``surfaceFeatureExtract`` will write for this surface.
-
-        Derived, never stated a second time: snappyHexMesh reads this name back
-        out of ``constant/triSurface``, and a stale literal there aborts the
-        mesher only after blockMesh, the extraction and six topoSet/refineMesh
-        pairs have already run.
-        """
+        """Derived, never stated twice: snappyHexMesh reads this name back out
+        of ``constant/triSurface``, and a stale literal aborts the mesher only
+        after blockMesh and the extraction have already run."""
         return Path(self.stl_name).with_suffix(".eMesh").name
 
     def replace(self, **changes: Any) -> "HullCaseConfig":
@@ -345,18 +364,15 @@ def build_hull_case(
     tokens = hull_case_tokens(derivation)
     templates = hull_case_templates_dir()
 
-    stl_source = Path(config.stl_path)
-    if not stl_source.is_file():
-        raise FileNotFoundError(f"hull surface not found: {stl_source}")
+    regions = config.surface_regions
+    check_region_surfaces(regions)
 
     case = render_case_tree(templates, tokens, Path(parent_dir) / config.name)
 
     # The Allrun pipeline restores 0/ from 0.orig/ after meshing; both have to
     # exist for the runner's own structural check to pass.
     (case / "0").mkdir(exist_ok=True)
-    tri_surface = case / "constant" / "triSurface"
-    tri_surface.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(stl_source, tri_surface / config.stl_name)
+    copy_region_surfaces(regions, case / "constant" / "triSurface")
 
     (case / "case_provenance.json").write_text(
         json.dumps(case_provenance(derivation), indent=2, sort_keys=True) + "\n"

@@ -52,7 +52,7 @@ import json
 import math
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 from digitalmodel.naval_architecture.kcs_geometry import (
     check_surface,
@@ -77,6 +77,7 @@ __all__ = [
     "AmbiguousUnitsError",
     "HullIngestError",
     "HullManifest",
+    "HullTransform",
     "ImplausibleScaleError",
     "MissingCadDependencyError",
     "NoMeshGeometryError",
@@ -628,6 +629,56 @@ def _waterline_points(tris: Sequence[Tri], waterline_z: float) -> List[Vec3]:
 
 
 # --------------------------------------------------------------------------- #
+#  The placement, as a reusable object
+# --------------------------------------------------------------------------- #
+
+@dataclass(frozen=True)
+class HullTransform:
+    """The rigid placement this stage chose for the hull, made reusable.
+
+    Every inference the stage makes -- the unit scale, the forward direction,
+    the origin -- is a property of the MODEL, not of one layer in it. An
+    appendage on its own layer has to be placed by the hull's decision, because
+    inferring its own would scale a rudder by the rudder's longest dimension,
+    rotate it onto the rudder's principal axis and drop its own keel onto
+    z = 0: three individually reasonable inferences that jointly put the rudder
+    amidships, at the wrong size, pointing sideways. And it would all still
+    mesh.
+
+    ``offset`` is applied AFTER the rotation, and is the composition of both
+    translations the stage performs (centreplane onto y = 0 and keel onto
+    z = 0, then the aft perpendicular onto x = 0) -- they commute, so one
+    vector is exact rather than a summary.
+    """
+
+    scale_to_m: float
+    forward: str
+    offset: Vec3
+
+    def apply(self, triangles: Sequence[Tri]) -> List[Tri]:
+        """Scale, rotate onto ship axes, translate. No welding, no repair."""
+        tris = list(triangles)
+        if self.scale_to_m != 1.0:
+            tris = [
+                tuple(tuple(c * self.scale_to_m for c in p) for p in tri)
+                for tri in tris
+            ]  # type: ignore[misc]
+        tris = _rotate_to_ship_axes(tris, self.forward)
+        dx, dy, dz = self.offset
+        return [
+            tuple((p[0] + dx, p[1] + dy, p[2] + dz) for p in tri)
+            for tri in tris
+        ]  # type: ignore[misc]
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "scale_to_m": self.scale_to_m,
+            "forward_axis_in": self.forward,
+            "offset_m": list(self.offset),
+        }
+
+
+# --------------------------------------------------------------------------- #
 #  The manifest
 # --------------------------------------------------------------------------- #
 
@@ -679,6 +730,15 @@ class HullManifest:
     source_layers: List[str] = field(default_factory=list)
     notes: List[str] = field(default_factory=list)
 
+    #: Multi-region block, present only when appendages were ingested. It is
+    #: TOP LEVEL and not provenance because the case builder consumes it: it
+    #: names the STLs to place, and carries the union's external wetted area,
+    #: which is what ``Aref`` has to be built from.
+    regions: Optional[Dict[str, object]] = None
+    #: The placement, so a later ingest of another layer can be placed on the
+    #: same frame instead of inferring its own.
+    transform: Optional[Dict[str, object]] = None
+
     def to_dict(self) -> Dict[str, object]:
         contract: Dict[str, object] = {
             "source_file": self.source_file,
@@ -697,7 +757,10 @@ class HullManifest:
             "bbox_min_m": list(self.bbox_min_m),
             "bbox_max_m": list(self.bbox_max_m),
         }
+        if self.regions is not None:
+            contract["regions"] = self.regions
         contract["provenance"] = {
+            "transform": self.transform,
             "units_source": self.units_source,
             "units_note": self.units_note,
             "orientation_source": self.orientation_source,
@@ -1005,6 +1068,8 @@ def ingest_triangles(
     stl_name: str = "hull",
     source_layers: Optional[Sequence[str]] = None,
     notes: Optional[Sequence[str]] = None,
+    appendages: Optional[Mapping[str, Sequence[Tri]]] = None,
+    subdivision_depth: Optional[int] = None,
 ) -> HullManifest:
     """Normalise a triangle soup into an OpenFOAM-ready STL plus its manifest.
 
@@ -1029,6 +1094,15 @@ def ingest_triangles(
     opening. Leaving it False is what keeps ``displacement_m3`` and
     ``wetted_surface_m2`` describing the client's surface rather than this
     stage's repair of it.
+
+    ``appendages`` maps a region name to a triangle soup that is ALREADY a
+    closed body -- a rudder, a propeller boss -- and is emitted as its own STL
+    beside the hull's, placed by the hull's transform and gated on its own
+    closure. They are deliberately NOT merged: interpenetrating closed bodies
+    concatenated into one soup are non-manifold where they cross, and
+    snappyHexMesh forms the union itself from per-surface inside/outside tests.
+    See ``hull_regions``. Capping applies to the HULL only; an already-closed
+    appendage has no boundary loop to cap.
     """
     tris: List[Tri] = [tuple(tri) for tri in triangles]  # type: ignore[misc]
     if not tris:
@@ -1220,6 +1294,35 @@ def ingest_triangles(
     out.mkdir(parents=True, exist_ok=True)
     stl_path = write_stl(tris, out / f"{stl_name}.stl", name=stl_name)
 
+    # The placement, recorded exactly as applied. x_ap was measured after the
+    # y/z translation, but neither of those touches x, so the three shifts
+    # compose into one vector without approximation.
+    transform = HullTransform(
+        scale_to_m=unit_decision.scale_to_m,
+        forward=orientation.forward,
+        offset=(-x_ap, -centre_y, -keel_z),
+    )
+    regions_block = None
+    if appendages:
+        from digitalmodel.naval_architecture import (  # noqa: PLC0415
+            hull_regions,
+        )
+
+        regions_block = hull_regions.ingest_appendages(
+            appendages,
+            out_dir=out,
+            transform=transform,
+            hull_triangles=tris,
+            hull_name=stl_name,
+            hull_stl_file=stl_path.name,
+            hull_check=check,
+            waterline_z=waterline_z,
+            weld_tolerance=tolerance,
+            force=force,
+            subdivision_depth=subdivision_depth,
+        )
+        note_list.extend(regions_block["union"]["notes"])  # type: ignore[index]
+
     manifest = HullManifest(
         source_file=resolved_name,
         source_sha256=digest,
@@ -1267,6 +1370,8 @@ def ingest_triangles(
         stl_file=stl_path.name,
         source_layers=list(source_layers or []),
         notes=note_list,
+        regions=regions_block,
+        transform=transform.to_dict(),
     )
     manifest.write(out / f"{stl_name}_manifest.json")
     return manifest
@@ -1288,6 +1393,8 @@ def ingest_3dm(
     stl_name: str = "hull",
     tessellate_breps: bool = False,
     linear_deflection: Optional[float] = None,
+    appendage_layers: Optional[Mapping[str, Sequence[str]]] = None,
+    subdivision_depth: Optional[int] = None,
 ) -> HullManifest:
     """Ingest a Rhino ``.3dm`` hull into a normalised STL plus its manifest.
 
@@ -1303,7 +1410,22 @@ def ingest_3dm(
 
     ``cap_open_boundaries`` opts in to closing a hull surface that stops at
     deck level. See :func:`ingest_triangles` and ``hull_cap``.
+
+    ``appendage_layers`` maps a region name to the layers that make it up --
+    ``{"rudder": ["Rudder"], "boss": ["Boss"]}``. Each region is read in its
+    OWN pass rather than in one pass filtered afterwards, and that is a
+    correctness requirement, not an optimisation: the Brep route SEWS every
+    selected face into a single shell, so reading the hull and the rudder
+    together would try to sew two bodies that merely intersect into one, and
+    would either fail or produce a shell that is not either of them.
     """
+    appendage_triangles = _read_appendage_layers(
+        path,
+        layers=layers,
+        appendage_layers=appendage_layers,
+        tessellate_breps=tessellate_breps,
+        linear_deflection=linear_deflection,
+    )
     geometry = read_3dm_triangles(
         path,
         layers=layers,
@@ -1340,4 +1462,49 @@ def ingest_3dm(
         stl_name=stl_name,
         source_layers=used,
         notes=notes,
+        appendages=appendage_triangles,
+        subdivision_depth=subdivision_depth,
     )
+
+
+def _read_appendage_layers(
+    path: Path | str,
+    *,
+    layers: Optional[Iterable[str]],
+    appendage_layers: Optional[Mapping[str, Sequence[str]]],
+    tessellate_breps: bool,
+    linear_deflection: Optional[float],
+) -> Optional[Dict[str, List[Tri]]]:
+    """One read per appendage region, with the hull/appendage overlap refused.
+
+    A layer named in both places would be meshed twice, once as part of the
+    hull and once as a body sitting exactly on top of it. snappyHexMesh would
+    take the union of a thing with itself, which is the thing -- and the
+    wetted-area accounting would then report the duplicate as occluded and be
+    right about the area while being wrong about the model. Better to stop.
+    """
+    if not appendage_layers:
+        return None
+    hull_layers = _normalise_layer_filter(layers) or set()
+    out: Dict[str, List[Tri]] = {}
+    for region in sorted(appendage_layers):
+        wanted = _normalise_layer_filter(appendage_layers[region])
+        if not wanted:
+            raise HullIngestError(
+                f"appendage region {region!r} names no layers"
+            )
+        clash = sorted(wanted & hull_layers)
+        if clash:
+            raise HullIngestError(
+                f"layer(s) {clash} are claimed by BOTH the hull and the "
+                f"appendage region {region!r}; the same geometry would be "
+                "emitted twice, as the hull and as a body lying on it"
+            )
+        geometry = read_3dm_triangles(
+            path,
+            layers=appendage_layers[region],
+            tessellate_breps=tessellate_breps,
+            linear_deflection=linear_deflection,
+        )
+        out[region] = geometry.triangles
+    return out

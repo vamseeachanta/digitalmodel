@@ -350,7 +350,9 @@ class ForceReference:
             "a_ref_note": (
                 "half the wetted surface: the solve is cut at the centreplane "
                 "and reports half of every force, and forceCoeffs cannot "
-                "double the numerator"
+                "double the numerator. With appendages that wetted surface is "
+                "the union's EXTERNAL area (see case_provenance.surfaces), not "
+                "the sum of the regions', which double-counts"
             ),
         }
 
@@ -374,13 +376,17 @@ def derive_force_reference(
     ``CofR`` is midship at the free surface. The hull is translated so midship
     sits on x = 0, and the keel is the manifest's origin, so the free surface
     is at z = draft.
+
+    ``reference_wetted_surface_m2`` is the union's EXTERNAL area when the
+    manifest carries appendages: the naive sum double-counts interpenetration,
+    is an upper bound, and would deflate every coefficient by its own error.
     """
     if velocity <= 0:
         raise ValueError(f"velocity must be positive, got {velocity}")
     if density <= 0:
         raise ValueError(f"density must be positive, got {density}")
 
-    a_ref = manifest.wetted_surface_m2 / (2.0 if half_domain else 1.0)
+    a_ref = manifest.reference_wetted_surface_m2 / (2.0 if half_domain else 1.0)
     return ForceReference(
         mag_u_inf=velocity,
         l_ref=manifest.lpp_m,

@@ -42,6 +42,9 @@ GOVERNED_MODULES = (
     "src/digitalmodel/solvers/openfoam/hull_turbulence.py",
     "src/digitalmodel/solvers/openfoam/hull_case_physics.py",
     "src/digitalmodel/solvers/openfoam/hull_case_dicts.py",
+    # N-surface support: hull plus interpenetrating appendages (#2023). New
+    # surface, so nothing to grandfather.
+    "src/digitalmodel/solvers/openfoam/hull_case_regions.py",
     "src/digitalmodel/solvers/openfoam/hull_case.py",
     # The double-body (no free surface) variant of the same lane (#2023).
     # Same reasoning: new surface, nothing to grandfather.

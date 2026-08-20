@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Mapping, Sequence, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 __all__ = ["HullManifest", "HullManifestError", "load_hull_manifest"]
 
@@ -90,6 +90,60 @@ class HullManifest:
     bbox_min_m: Tuple[float, float, float]
     bbox_max_m: Tuple[float, float, float]
 
+    #: Multi-region block, present only when the ingestion lane emitted
+    #: appendages beside the hull. Optional by design: a hull-only manifest
+    #: predates this key and must keep loading unchanged.
+    regions: Optional[Mapping[str, Any]] = None
+
+    # -- regions ---------------------------------------------------------- #
+
+    @property
+    def appendage_regions(self) -> List[Mapping[str, Any]]:
+        """Every region that is not the hull, in manifest order."""
+        if not self.regions:
+            return []
+        return [
+            region
+            for region in self.regions.get("regions", [])
+            if region.get("role") != "hull"
+        ]
+
+    @property
+    def reference_wetted_surface_m2(self) -> float:
+        """The area ``Aref`` must be built from.
+
+        For a hull-only manifest this is ``wetted_surface_m2`` and nothing has
+        changed. For a multi-region manifest it is the union's EXTERNAL wetted
+        area, which is smaller than the sum of the parts: an appendage
+        interpenetrates the hull, so part of each is inside the other and
+        wetted by nothing. Summing would inflate Aref, and Aref is a
+        denominator -- every reported coefficient would come back low by
+        exactly that inflation, in a case that converged perfectly.
+        """
+        if not self.regions:
+            return self.wetted_surface_m2
+        union = self.regions.get("union", {})
+        external = union.get("wetted_surface_external_m2")
+        if external is None or float(external) <= 0.0:
+            raise HullManifestError(
+                "regions.union.wetted_surface_external_m2 is missing or "
+                "non-positive. It is the only honest reference area for a "
+                "multi-region hull; the naive sum of the per-region areas "
+                "double-counts the interpenetration and is an upper bound."
+            )
+        return float(external)
+
+    @property
+    def wetted_surface_upper_bound_m2(self) -> float:
+        """The naive sum, kept only so the two can be compared."""
+        if not self.regions:
+            return self.wetted_surface_m2
+        return float(
+            self.regions.get("union", {}).get(
+                "wetted_surface_naive_sum_m2", self.wetted_surface_m2
+            )
+        )
+
     # -- derived geometry ------------------------------------------------- #
 
     @property
@@ -130,8 +184,11 @@ class HullManifest:
         bbox_min = _vec3(data, "bbox_min_m")
         bbox_max = _vec3(data, "bbox_max_m")
         _check_bbox(data, bbox_min, bbox_max)
+        regions = data.get("regions")
+        _check_regions(regions)
 
         return cls(
+            regions=regions,
             source_file=str(data["source_file"]),
             source_sha256=str(data["source_sha256"]),
             units_in=str(data["units_in"]),
@@ -167,6 +224,7 @@ class HullManifest:
             "block_coefficient": self.block_coefficient,
             "n_triangles": self.n_triangles,
             "watertight": self.watertight,
+            "regions": self.regions,
         }
 
 
@@ -225,6 +283,41 @@ def _check_origin(data: Mapping[str, Any]) -> None:
             f"origin {data['origin']!r} is not {EXPECTED_ORIGIN!r}. The free "
             f"surface is placed at z = draft, which holds only keel-up."
         )
+
+
+def _check_regions(regions: Any) -> None:
+    """Every region individually closed, and the union area present.
+
+    The closure check is per REGION and not on the whole set, because that is
+    exactly the premise snappyHexMesh relies on: it tests each surface for
+    inside/outside separately and forms the union from the results. One open
+    appendage means the mesher keeps that appendage's interior as fluid, and
+    the case still meshes, still solves and still reports a force.
+    """
+    if regions is None:
+        return
+    if not isinstance(regions, Mapping):
+        raise HullManifestError(f"regions must be an object, got {regions!r}")
+    listed = regions.get("regions")
+    if not isinstance(listed, Sequence) or not listed:
+        raise HullManifestError("regions.regions must be a non-empty list")
+    for region in listed:
+        if not bool(region.get("watertight")):
+            name = region.get("name", "<unnamed>")
+            raise HullManifestError(
+                f"region {name!r} is not watertight. Regions are handed to "
+                "snappyHexMesh as separate closed surfaces and the union is "
+                "formed from per-surface inside/outside tests; on an open "
+                "surface that test keeps the interior."
+            )
+    if len(listed) != len({region.get("name") for region in listed}):
+        raise HullManifestError(
+            f"regions.regions carries duplicate names: "
+            f"{[r.get('name') for r in listed]}"
+        )
+    union = regions.get("union")
+    if not isinstance(union, Mapping):
+        raise HullManifestError("regions.union must be an object")
 
 
 def _check_watertight(data: Mapping[str, Any]) -> None:

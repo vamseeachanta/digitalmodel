@@ -28,16 +28,7 @@ addLayers       true;
 // - to 'snap' the mesh boundary to the surface
 geometry
 {
-    @STL@
-    {
-        type triSurfaceMesh;
-        name hull;
-
-        patchInfo
-        {
-            type wall;
-        }
-    }
+    @GEOMETRY@
 }
 
 
@@ -84,10 +75,7 @@ castellatedMeshControls
     // This is a featureEdgeMesh, read from constant/triSurface for now.
     features
     (
-         {
-             file "@EMESH@";
-             level 0;
-         }
+         @FEATURES@
     );
 
 
@@ -103,11 +91,7 @@ castellatedMeshControls
 
     refinementSurfaces
     {
-        hull
-        {
-            // Surface-wise min and max refinement level
-            level (0 0);
-        }
+        @REFINEMENTSURFACES@
     }
 
     resolveFeatureAngle 45;
@@ -185,11 +169,7 @@ addLayersControls
     // Per final patch (so not geometry!) the layer information
     layers
     {
-        hull
-        {
-            nSurfaceLayers 3;
-
-        }
+        @LAYERS@
     }
 
     // Expansion factor for layer mesh

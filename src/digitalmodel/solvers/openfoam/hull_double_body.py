@@ -45,13 +45,13 @@ and the reduction that consumes the solved run is
 from __future__ import annotations
 
 import json
-import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from .hull_case import HullCaseConfig
 from .hull_case_dicts import render_case_tree
+from .hull_case_regions import check_region_surfaces, copy_region_surfaces
 from .hull_case_physics import (
     Block,
     CellBudget,
@@ -254,9 +254,8 @@ def build_double_body_case(
 ) -> Path:
     """Emit a complete, solvable double-body case directory."""
     derivation = derive_double_body_case(config)
-    stl_source = Path(config.stl_path)
-    if not stl_source.is_file():
-        raise FileNotFoundError(f"hull surface not found: {stl_source}")
+    regions = config.surface_regions
+    check_region_surfaces(regions)
 
     case = render_case_tree(
         double_body_templates_dir(),
@@ -264,9 +263,7 @@ def build_double_body_case(
         Path(parent_dir) / config.name,
     )
     (case / "0").mkdir(exist_ok=True)
-    tri_surface = case / "constant" / "triSurface"
-    tri_surface.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(stl_source, tri_surface / config.stl_name)
+    copy_region_surfaces(regions, case / "constant" / "triSurface")
 
     (case / "case_provenance.json").write_text(
         json.dumps(double_body_case_provenance(derivation), indent=2, sort_keys=True)
