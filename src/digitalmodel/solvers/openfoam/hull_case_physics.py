@@ -54,10 +54,16 @@ __all__ = [
     "derive_force_reference",
     "derive_inlet_turbulence",
     "kcs_chain_config_path",
+    "vof_vertical_blocks",
     "wall_normal_first_cell_height",
 ]
 
 Vec3 = Tuple[float, float, float]
+
+#: One stacked blockMesh block: ``(z_lo, z_hi, layers)``. The estimate has to
+#: walk the stack rather than average it, because the blocks' cell heights
+#: differ by two orders of magnitude.
+Block = Tuple[float, float, int]
 
 
 
@@ -108,6 +114,26 @@ DEFAULT_CELL_SAFETY_FACTOR = 1.5
 LOCAL_CELL_HEADROOM = 2.0
 
 
+def vof_vertical_blocks(
+    domain: HullDomain, divisions: Mapping[str, int]
+) -> Tuple[Block, ...]:
+    """The six stacked blocks of the free-surface template's blockMeshDict.
+
+    Named rather than inlined because it is a property of ONE template tree,
+    not of the estimate. The double-body tree stacks two blocks between the
+    floor and the waterline and passes its own.
+    """
+    z, nz = domain.z_levels, divisions
+    return (
+        (z[0], z[1], nz["nza"]),
+        (z[1], z[2], nz["nza"]),
+        (z[2], z[3], nz["nzb"]),
+        (z[3], z[4], nz["nzb"]),
+        (z[4], z[5], nz["nzc"]),
+        (z[5], z[6], nz["nzd"]),
+    )
+
+
 def derive_cell_budget(
     domain: HullDomain,
     boxes: Sequence[Box],
@@ -116,6 +142,7 @@ def derive_cell_budget(
     *,
     safety_factor: float = DEFAULT_CELL_SAFETY_FACTOR,
     cap: Optional[int] = None,
+    blocks: Optional[Sequence[Block]] = None,
 ) -> CellBudget:
     """Size ``maxGlobalCells`` from the domain and the target cell size.
 
@@ -134,8 +161,11 @@ def derive_cell_budget(
     if safety_factor < 1.0:
         raise CellBudgetError(f"safety_factor must be >= 1, got {safety_factor}")
 
-    background = _background_cells(divisions)
-    estimated = _estimate_refined_cells(domain, boxes, divisions)
+    stack = tuple(
+        vof_vertical_blocks(domain, divisions) if blocks is None else blocks
+    )
+    background = _background_cells(divisions, stack)
+    estimated = _estimate_refined_cells(domain, boxes, divisions, stack)
 
     if cap is not None:
         if cap < estimated:
@@ -163,38 +193,28 @@ def derive_cell_budget(
     )
 
 
-def _background_cells(divisions: Mapping[str, int]) -> int:
-    """Exact blockMesh cell count: six stacked blocks sharing nx and ny."""
-    layers = (
-        2 * divisions["nza"]
-        + 2 * divisions["nzb"]
-        + divisions["nzc"]
-        + divisions["nzd"]
-    )
+def _background_cells(
+    divisions: Mapping[str, int], blocks: Sequence[Block]
+) -> int:
+    """Exact blockMesh cell count: stacked blocks sharing nx and ny."""
+    layers = sum(int(n) for _, _, n in blocks)
     return divisions["nx"] * divisions["ny"] * layers
 
 
 def _estimate_refined_cells(
-    domain: HullDomain, boxes: Sequence[Box], divisions: Mapping[str, int]
+    domain: HullDomain,
+    boxes: Sequence[Box],
+    divisions: Mapping[str, int],
+    blocks: Sequence[Block],
 ) -> int:
     """Cell count after the nested topoSet/refineMesh stages.
 
-    Walks the six blockMesh blocks because their vertical cell heights differ
-    by two orders of magnitude, so a single domain-average cell volume would be
+    Walks the blockMesh blocks because their vertical cell heights differ by
+    two orders of magnitude, so a single domain-average cell volume would be
     meaningless. Within a block the cells are uniform in x and y and treated as
     uniform in z (the grading redistributes them, it does not change how many
     there are), which makes the volume fraction the cell fraction.
     """
-    z = domain.z_levels
-    nz = divisions
-    blocks = (
-        (z[0], z[1], nz["nza"]),
-        (z[1], z[2], nz["nza"]),
-        (z[2], z[3], nz["nzb"]),
-        (z[3], z[4], nz["nzb"]),
-        (z[4], z[5], nz["nzc"]),
-        (z[5], z[6], nz["nzd"]),
-    )
     dx = domain.length / divisions["nx"]
     dy = domain.width / divisions["ny"]
 

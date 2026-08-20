@@ -1,0 +1,33 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2312                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      transportProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// ONE PHASE. There is no `phases` list and no second sub-dictionary here, and
+// that absence is the machine-readable statement that this is a single-phase
+// case -- it is what the forces-density guard tests read to decide whether
+// `rho rhoInf` is the right setting or the defect.
+//
+// There is no `rho` entry either, and there cannot be one: simpleFoam is
+// incompressible and solves the KINEMATIC equations, so it never asks for a
+// density. The density the coefficients are formed with lives in exactly one
+// place, `rhoInf` in system/controlDict, which is why that entry is required
+// here rather than forbidden.
+
+transportModel  Newtonian;
+
+nu              @NU@;
+
+
+// ************************************************************************* //

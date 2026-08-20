@@ -43,6 +43,11 @@ GOVERNED_MODULES = (
     "src/digitalmodel/solvers/openfoam/hull_case_physics.py",
     "src/digitalmodel/solvers/openfoam/hull_case_dicts.py",
     "src/digitalmodel/solvers/openfoam/hull_case.py",
+    # The double-body (no free surface) variant of the same lane (#2023).
+    # Same reasoning: new surface, nothing to grandfather.
+    "src/digitalmodel/solvers/openfoam/hull_double_body_domain.py",
+    "src/digitalmodel/solvers/openfoam/hull_double_body_dicts.py",
+    "src/digitalmodel/solvers/openfoam/hull_double_body.py",
     "src/digitalmodel/solvers/openfoam/pressure_taps.py",
     "src/digitalmodel/solvers/openfoam/pressure_tap_models.py",
     "src/digitalmodel/solvers/openfoam/pressure_tap_analysis.py",
@@ -65,6 +70,23 @@ GOVERNED_MODULES = (
 # structure. This issue changed only prose inside that template.
 EXEMPT_FROM_MODULE_LIMIT = (
     "scripts/capabilities/build_sloshing_explorer.py",
+)
+
+# NOT GOVERNED, stated so the omission is a decision and not an oversight.
+#
+# validation/double_body_form_factor.py (#2023) is a scoring manifest in the
+# shape of validation/referent_free_resistance.py, which it imports its band
+# and its vocabulary from and which is itself ungoverned at ~1000 lines, as is
+# validation/ship_resistance.py. A manifest of that kind is one dictionary a
+# reader has to see whole; splitting it to reach 400 would put half the
+# verdict in another file and leave the two free to disagree about what a
+# verdict means. If the resistance-validation surface is brought under the
+# limit, it should be brought under together rather than one new module at a
+# time.
+UNGOVERNED_BY_DECLARATION = (
+    "src/digitalmodel/solvers/openfoam/validation/double_body_form_factor.py",
+    "src/digitalmodel/solvers/openfoam/validation/referent_free_resistance.py",
+    "src/digitalmodel/solvers/openfoam/validation/ship_resistance.py",
 )
 
 
@@ -113,3 +135,11 @@ def test_functions_are_within_the_line_limit(relative):
 def test_exempt_module_still_exists(relative):
     """The exemption is only meaningful while the file it names exists."""
     assert (_REPO / relative).is_file()
+
+
+@pytest.mark.parametrize("relative", UNGOVERNED_BY_DECLARATION)
+def test_ungoverned_module_still_exists_and_is_not_also_governed(relative):
+    """A declaration that names a file which has moved says nothing, and a
+    file in both lists would make the declaration a silent contradiction."""
+    assert (_REPO / relative).is_file(), relative
+    assert relative not in GOVERNED_MODULES, relative

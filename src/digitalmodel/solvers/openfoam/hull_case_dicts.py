@@ -8,13 +8,43 @@ disagree with each other.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, Sequence
+import re
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Dict, Mapping, Sequence
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
     from .hull_case import HullCaseConfig, HullCaseDerivation
     from .hull_domain import HullDomain
 
-__all__ = ["case_provenance", "hull_case_tokens"]
+__all__ = ["case_provenance", "hull_case_tokens", "render_case_tree"]
+
+
+def render_case_tree(
+    templates: Path, tokens: Mapping[str, str], case: Path
+) -> Path:
+    """Copy a template tree into ``case``, substituting every ``@TOKEN@``.
+
+    ONE implementation for both case types. A leftover token is an error and
+    not a warning: OpenFOAM parses ``@NX@`` as a word, so an unsubstituted
+    count reaches blockMesh as a syntax error at best and, in a dictionary
+    entry that accepts a word, as a silently different case at worst.
+    """
+    for src in sorted(templates.rglob("*")):
+        if not src.is_file():
+            continue
+        rel = src.relative_to(templates)
+        text = src.read_text()
+        for key, value in tokens.items():
+            text = text.replace(f"@{key}@", value)
+        leftover = re.findall(r"@[A-Z0-9_]+@", text)
+        if leftover:
+            raise ValueError(
+                f"unsubstituted token(s) {sorted(set(leftover))} in {rel}"
+            )
+        dst = case / rel
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        dst.write_text(text)
+    return case
 
 
 def _fmt(value: float) -> str:

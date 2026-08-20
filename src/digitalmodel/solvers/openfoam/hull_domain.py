@@ -122,7 +122,10 @@ class HullDomain:
     x_inlet: float
     x_outlet: float
     y_side: float
-    z_levels: Tuple[float, float, float, float, float, float, float]
+    #: Level boundaries of the stacked blockMesh blocks, ascending. SEVEN for
+    #: the free-surface ladder ``build_hull_domain`` builds; the double-body
+    #: variant truncates the same domain at the waterline and carries three.
+    z_levels: Tuple[float, ...]
     waterline: float
     base_cell_size: float
     location_in_mesh: Vec3

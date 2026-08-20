@@ -29,7 +29,6 @@ from __future__ import annotations
 import dataclasses
 import json
 import math
-import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
@@ -71,7 +70,11 @@ from .hull_free_surface import (
     free_surface_divisions,
     free_surface_resolution,
 )
-from .hull_case_dicts import case_provenance, hull_case_tokens
+from .hull_case_dicts import (
+    case_provenance,
+    hull_case_tokens,
+    render_case_tree,
+)
 from .hull_manifest import HullManifest, load_hull_manifest
 
 __all__ = [
@@ -346,22 +349,7 @@ def build_hull_case(
     if not stl_source.is_file():
         raise FileNotFoundError(f"hull surface not found: {stl_source}")
 
-    case = Path(parent_dir) / config.name
-    for src in sorted(templates.rglob("*")):
-        if not src.is_file():
-            continue
-        rel = src.relative_to(templates)
-        text = src.read_text()
-        for key, value in tokens.items():
-            text = text.replace(f"@{key}@", value)
-        leftover = re.findall(r"@[A-Z0-9_]+@", text)
-        if leftover:
-            raise ValueError(
-                f"unsubstituted token(s) {sorted(set(leftover))} in {rel}"
-            )
-        dst = case / rel
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        dst.write_text(text)
+    case = render_case_tree(templates, tokens, Path(parent_dir) / config.name)
 
     # The Allrun pipeline restores 0/ from 0.orig/ after meshing; both have to
     # exist for the runner's own structural check to pass.

@@ -29,8 +29,12 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[3]
-SHIP = (ROOT / "src/digitalmodel/solvers/openfoam/templates"
-        / "ship_resistance/system/controlDict")
+TEMPLATES_DIR = ROOT / "src/digitalmodel/solvers/openfoam/templates"
+SHIP = TEMPLATES_DIR / "ship_resistance/system/controlDict"
+
+#: Every solver template in the tree. Enumerated once so the multiphase gate
+#: and its single-phase mirror below cannot drift apart in coverage.
+TEMPLATES = sorted(TEMPLATES_DIR.glob("*/system/controlDict"))
 
 
 @pytest.fixture(scope="module")
@@ -90,9 +94,52 @@ def test_maccamy_fuchs_still_uses_the_density_field():
     assert re.search(r"^\s*rho\s+rho\s*;", m.group(1), re.M)
 
 
-@pytest.mark.parametrize("template", sorted(
-    (ROOT / "src/digitalmodel/solvers/openfoam/templates").glob(
-        "*/system/controlDict")))
+def _drop_comments(text: str) -> str:
+    """Both comment forms. See ``_forces_block``: these templates DOCUMENT the
+    defect they guard against, so any search over raw text can match the
+    explanation and pass while the configuration does the wrong thing."""
+    text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+    return "\n".join(ln for ln in text.splitlines()
+                     if not ln.strip().startswith("//"))
+
+
+def phase_evidence(case: Path) -> dict:
+    """How many phases this case transports, read from the case itself.
+
+    A POSITIVE structural test, never a filename exemption. "hull_double_body
+    sounds single-phase" is a promise that every future template will be named
+    honestly, and the defect this file exists to prevent is precisely a case
+    whose configuration does not match what it looks like.
+
+    Two independent facts, from two different files:
+
+    * ``constant/transportProperties`` declares a ``phases (...)`` list. A VOF
+      transport model needs one entry per phase and cannot run without it.
+    * ``0.orig/`` carries an ``alpha.*`` phase-fraction field for the solver to
+      transport. With one phase there is nothing to transport and no such
+      field exists.
+
+    They must AGREE. A case where they disagree is NOT classified single-phase
+    and is not skipped: it is reported, because "skip" is the outcome a
+    half-converted case would otherwise be handed.
+    """
+    transport = case / "constant" / "transportProperties"
+    declared: list[str] = []
+    if transport.is_file():
+        m = re.search(r"^\s*phases\s*\((.*?)\)\s*;",
+                      _drop_comments(transport.read_text()), re.M | re.S)
+        declared = m.group(1).split() if m else []
+    alphas = sorted(p.name for p in (case / "0.orig").glob("alpha.*"))
+    return {
+        "case": case.name,
+        "phase_list": declared,
+        "alpha_fields": alphas,
+        "multiphase": bool(declared) or bool(alphas),
+        "consistent": bool(declared) == bool(alphas),
+    }
+
+
+@pytest.mark.parametrize("template", TEMPLATES)
 def test_no_vof_template_integrates_forces_at_constant_density(template):
     """Sweep every solver template, not just the one that was wrong.
 
@@ -102,10 +149,43 @@ def test_no_vof_template_integrates_forces_at_constant_density(template):
     text = template.read_text()
     if "forces" not in text:
         pytest.skip(f"{template.parent.parent.name} configures no forces")
+    evidence = phase_evidence(template.parent.parent)
+    assert evidence["consistent"], (
+        f"{evidence['case']} declares phases {evidence['phase_list']} but "
+        f"carries alpha fields {evidence['alpha_fields']}: the two disagree, "
+        f"so the density source cannot be judged either way")
+    if not evidence["multiphase"]:
+        pytest.skip(f"{evidence['case']} is single-phase: {evidence}")
     body = _forces_block(text)
-    if not re.search(r"alpha|interFoam|VOF", text, re.I) and \
-       not (template.parent.parent / "0.orig" / "alpha.water").exists():
-        pytest.skip(f"{template.parent.parent.name} is single-phase")
     assert not re.search(r"^\s*rho\s+rhoInf\s*;", body, re.M), (
         f"{template.parent.parent.name} integrates forces at constant density "
         "in a VOF case")
+
+
+@pytest.mark.parametrize("template", TEMPLATES)
+def test_single_phase_template_names_the_constant_density_explicitly(template):
+    """The mirror image, and it is not decoration.
+
+    A skip records that a case was not judged. This asserts what the SAME
+    structural evidence requires of the other branch: a single-phase
+    incompressible case has no density field in the registry, so `rho rho`
+    would abort at run time and `rho rhoInf` with an explicit constant is the
+    only correct setting. Without this, the inversion is enforced in one
+    direction and merely tolerated in the other -- and a single-phase template
+    that quietly copied `rho rho` from its VOF sibling would sail through as a
+    skip.
+    """
+    text = template.read_text()
+    if "forces" not in text:
+        pytest.skip(f"{template.parent.parent.name} configures no forces")
+    evidence = phase_evidence(template.parent.parent)
+    if evidence["multiphase"]:
+        pytest.skip(f"{evidence['case']} transports {evidence['phase_list']}")
+    body = _forces_block(text)
+    assert re.search(r"^\s*rho\s+rhoInf\s*;", body, re.M), (
+        f"{evidence['case']} is single-phase and must name the constant "
+        "density: there is no rho field for `rho rho` to resolve")
+    assert re.search(r"^\s*rhoInf\s+\S+\s*;", body, re.M), (
+        f"{evidence['case']} says `rho rhoInf` without supplying rhoInf")
+    assert not re.search(r"^\s*rho\s+rho\s*;", body, re.M), (
+        f"{evidence['case']} names a VOF density field it does not have")

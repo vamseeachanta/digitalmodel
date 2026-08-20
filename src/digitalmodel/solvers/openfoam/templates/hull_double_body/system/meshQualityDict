@@ -1,0 +1,102 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2312                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      meshQualityDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+//- Maximum non-orthogonality allowed. Set to 180 to disable.
+maxNonOrtho 70;
+
+//- Max skewness allowed. Set to <0 to disable.
+//
+//  DEVIATION FROM THE TUTORIAL: 20 -> 4, to match maxInternalSkewness and,
+//  more to the point, to match the threshold checkMesh actually judges by.
+//  checkMesh flags ANY face - internal or boundary - above 4.0, so the
+//  tutorial's 20 lets snappyHexMesh accept boundary faces its own verifier
+//  will then reject. The generator was permitted to build what the gate was
+//  guaranteed to fail.
+//
+//  This bit on the companion level and not on production: one boundary face
+//  at the deck edge on the forward shoulder, skewness 5.36, so "Failed 1 mesh
+//  checks" on the coarse mesh and "Mesh OK" on the fine one. That asymmetry is
+//  the reason this is a defect rather than a tolerance: the companion exists
+//  only to provide V3's second level, and a defect present on one level and
+//  absent on the other turns the two-level difference into a measure of the
+//  mesh rather than of the discretisation.
+maxBoundarySkewness 4;
+maxInternalSkewness 4;
+
+//- Max concaveness allowed. Is angle (in degrees) below which concavity
+//  is allowed. 0 is straight face, <0 would be convex face.
+//  Set to 180 to disable.
+maxConcave 80;
+
+//- Minimum pyramid volume. Is absolute volume of cell pyramid.
+//  Set to a sensible fraction of the smallest cell volume expected.
+//  Set to very negative number (e.g. -1E30) to disable.
+minVol 1e-13;
+
+//- Minimum quality of the tet formed by the face-centre
+//  and variable base point minimum decomposition triangles and
+//  the cell centre.  Set to very negative number (e.g. -1E30) to
+//  disable.
+//     <0 = inside out tet,
+//      0 = flat tet
+//      1 = regular tet
+minTetQuality 1e-30;
+
+//- Minimum face area. Set to <0 to disable.
+minArea -1;
+
+//- Minimum face twist. Set to <-1 to disable. dot product of face normal
+//  and face centre triangles normal
+minTwist 0.05;
+
+//- Minimum normalised cell determinant
+//  1 = hex, <= 0 = folded or flattened illegal cell
+minDeterminant 0.001;
+
+//- minFaceWeight (0 -> 0.5)
+minFaceWeight 0.05;
+
+//- minVolRatio (0 -> 1)
+minVolRatio 0.01;
+
+//must be >0 for Fluent compatibility
+minTriangleTwist -1;
+
+//- If >0 : preserve single cells with all points on the surface if the
+//  resulting volume after snapping (by approximation) is larger than
+//  minVolCollapseRatio times old volume (i.e. not collapsed to flat cell).
+//  If <0 : delete always.
+//minVolCollapseRatio 0.5;
+
+
+// Advanced
+
+//- Number of error distribution iterations
+nSmoothScale 4;
+//- Amount to scale back displacement at error points
+errorReduction 0.75;
+
+
+// Optional : some meshing phases allow usage of relaxed rules.
+// See e.g. addLayersControls::nRelaxedIter.
+relaxed
+{
+    //- Maximum non-orthogonality allowed. Set to 180 to disable.
+    maxNonOrtho 75;
+}
+
+
+// ************************************************************************* //

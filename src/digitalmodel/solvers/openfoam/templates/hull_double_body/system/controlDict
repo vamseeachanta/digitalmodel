@@ -1,0 +1,122 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2312                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// A DOUBLE-BODY run: the free surface is replaced by a symmetry plane at the
+// waterline, the domain holds water only, and gravity is absent. There is no
+// wave system, so what the hull reports is viscous resistance alone. That is
+// the whole point -- it is what the form factor is extracted from.
+//
+// simpleFoam, not interFoam: one phase, steady, incompressible. `endTime` is
+// therefore an ITERATION count, not a physical time.
+
+application     simpleFoam;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         @ENDTIME@;
+
+deltaT          1;
+
+writeControl    timeStep;
+
+writeInterval   @WRITEINTERVAL@;
+
+purgeWrite      0;
+
+writeFormat     binary;
+
+writePrecision  6;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable yes;
+
+functions
+{
+    // THE DENSITY SOURCE, AND WHY IT IS THE INVERSE OF THE VOF CASE.
+    //
+    // In the free-surface (interFoam) sibling of this template the force
+    // integral MUST name the variable-density field, `rho rho`. A constant
+    // there integrates the ABOVE-WATER hull surface at water density; measured
+    // on a benchmark container hull, 48.4% of the hull patch sat above the
+    // waterline and supplied 62.3% of the reported viscous force, putting the
+    // total resistance coefficient +113.79% out.
+    //
+    // Here the same setting would be a defect in the other direction, and
+    // in fact a fatal one. This case is single-phase and incompressible:
+    // simpleFoam solves the KINEMATIC equations, there is no density field in
+    // the registry to point `rho rho` at, and there is no dry hull surface to
+    // over-count -- the mesh stops at the waterline. Density enters exactly
+    // once, as the constant that converts the kinematic force integral into
+    // Newtons and forms the coefficient denominator.
+    //
+    // So `rho rhoInf` is CORRECT here and `rho rho` is wrong here, and the
+    // reverse holds one directory over. The distinguishing fact is the number
+    // of phases the case transports, not the name of the template.
+
+    forces
+    {
+        type            forces;
+        libs            (forces);
+        patches         (hull);
+
+        // Single-phase, uniform density: the constant IS the density.
+        rho             rhoInf;
+        rhoInf          @RHOINF@;
+
+        log             on;
+        writeControl    timeStep;
+        writeInterval   1;
+        CofR            (@COFR@);
+    }
+
+    forceCoeffs
+    {
+        type            forceCoeffs;
+        libs            (forces);
+        patches         (hull);
+
+        rho             rhoInf;
+        rhoInf          @RHOINF@;
+
+        magUInf         @MAGUINF@;
+        lRef            @LREF@;
+        // Aref is HALF the wetted surface: the domain is cut at the
+        // centreplane, the patch integral reports half of every force, and
+        // forceCoeffs has no way to double the numerator.
+        Aref            @AREF@;
+
+        CofR            (@COFR@);
+        dragDir         (@DRAGDIR@);
+        liftDir         (@LIFTDIR@);
+        pitchAxis       (@PITCHAXIS@);
+
+        log             on;
+        writeControl    timeStep;
+        writeInterval   1;
+    }
+}
+
+
+// ************************************************************************* //
