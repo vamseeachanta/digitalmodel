@@ -77,7 +77,17 @@ cfd_load_openfoam() {
 # sees itself and waits forever. That produced a 13.5 h zombie on this fleet,
 # and `pkill -f` with the same pattern killed the operator's own session.
 cfd_solver_running() { pgrep -x "${1:-interFoam}" >/dev/null 2>&1; }
-cfd_solver_ranks()   { pgrep -xc "${1:-interFoam}" 2>/dev/null || echo 0; }
+# `pgrep -xc` prints "0" AND exits 1 when nothing matches, so the obvious
+# `pgrep -xc ... || echo 0` appends a SECOND line and the function returns
+# "0\n0". `[ "$n" -lt 1 ]` then dies with "integer expression expected", and
+# inside an `if` that error reads as FALSE -- i.e. a launcher reports "solver
+# running" over a dead solve. Exactly the class of defect this port exists to
+# remove, caught in this library by the supervision lane.
+cfd_solver_ranks() {
+  local n
+  n="$(pgrep -xc "${1:-interFoam}" 2>/dev/null)" || true
+  printf '%s' "${n:-0}"
+}
 
 # ---------------------------------------------------------------------------
 # Cell count from checkMesh output. Returns empty (not 0) when unknown, so a
