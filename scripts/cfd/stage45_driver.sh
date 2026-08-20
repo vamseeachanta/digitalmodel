@@ -85,7 +85,17 @@ _saved_flags="$-"
 set +u
 # shellcheck disable=SC1090,SC1091
 . "${WM_PROJECT_DIR}/bin/tools/RunFunctions"
-case "$_saved_flags" in *u*) set -u ;; esac
+# NOT restored, deliberately. The save/restore protected the SOURCING, but
+# RunFunctions' functions dereference unset variables when CALLED too --
+# runApplication dies on `appRun: unbound variable` at its first use. So the
+# whole remainder of this script runs without -u once RunFunctions is loaded.
+#
+# This was a live defect: the port added `set -uo pipefail` as hardening, and
+# that hardening broke every mesh and solve invocation. The original host
+# script had no -u, which is why it worked and this did not. Nothing caught it
+# because the guard tests assert on this file's TEXT; a script that cannot run
+# still reads correctly. Only executing it finds this class of fault.
+case "$_saved_flags" in *u*) : ;; esac
 
 # ---------------------------------------------------------------------------
 # hierarchical decomposition requires numberOfSubdomains == the rank count we
