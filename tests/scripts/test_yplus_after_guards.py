@@ -51,11 +51,54 @@ def test_script_is_syntactically_valid():
     assert r.returncode == 0, r.stderr
 
 
-def test_waits_for_the_solver_before_taking_the_cores(source: str):
-    """postProcess wants all 8 ranks, which interFoam holds while running."""
-    assert "pgrep -f \"solve_chain.sh\"" in source
-    assert re.search(r"while\s+pgrep.*solve_chain", source), \
-        "must wait on the chain, not sleep a fixed interval"
+def test_waits_for_the_solver_before_taking_the_cores(code: str):
+    """postProcess wants every rank, which interFoam holds while running.
+
+    This used to assert the literal string `pgrep -f "solve_chain.sh"`, which
+    pinned a NAME rather than a PROPERTY: the suite stayed green while the
+    orchestrator it named had never existed in the repo at all. It also
+    mandated the one construct every other script in this directory is
+    forbidden to use.
+    """
+    assert re.search(r"while\s+\[\s+!\s+-f\s+\"\$CHAIN_MARKER\"", code), \
+        "must wait on the chain's terminal marker, not sleep a fixed interval"
+
+
+def test_never_waits_on_a_process_name(code: str):
+    """`pgrep -f` matches the command line CARRYING the pattern.
+
+    So a collector launched over ssh with the chain's name in its own argv
+    matches itself and waits forever. That self-match produced a 13.5 h zombie
+    on this fleet, and `pkill -f` with the same pattern killed the operator's
+    own session.
+    """
+    for banned in ("pgrep -f", "pkill -f"):
+        assert banned not in code, f"{banned} self-matches its own invocation"
+
+
+def test_distinguishes_how_the_chain_ended(code: str):
+    """Process absence conflates completion, failure, budget kill and death.
+
+    The chain writes a marker on both outcomes, so the collector can record
+    which one happened instead of treating silence as success.
+    """
+    assert "CHAIN_VERDICT" in code
+
+
+def test_mpirun_closes_stdin(code: str):
+    """mpirun reads and closes stdin.
+
+    An mpirun inside a piped script swallows the remainder of the script; the
+    lines after it silently never run while the wrapper still reports success.
+    """
+    # Join line continuations first: the invocation is wrapped across two
+    # lines, so a per-line regex sees only the head and misses the redirect
+    # that is genuinely there -- a false failure is as bad as a false pass.
+    joined = re.sub(r"\\\s*\n\s*", " ", code)
+    runs = re.findall(r"mpirun[^\n]*", joined)
+    assert runs, "guard would pass vacuously if no mpirun were present"
+    for r in runs:
+        assert "/dev/null" in r, f"mpirun without stdin redirect: {r}"
 
 
 def test_never_writes_to_the_live_case_configuration(source: str):
@@ -92,18 +135,24 @@ def test_a_zero_exit_with_no_parsed_summary_is_not_treated_as_success(
     assert "WARN" in source
 
 
-def test_runs_both_levels_and_does_not_stop_at_the_first_failure(source: str):
+def test_runs_every_registered_level_and_does_not_stop_at_the_first_failure(
+        code: str):
     """The companion is what separates grid error from modelling error.
 
     Losing it because production failed would discard the more diagnostic of
     the two.
+
+    This previously asserted the literal `for case in kcs_production
+    kcs_companion`. That pinned a NAME: it broke when the list moved into the
+    registry although nothing was wrong, and it would have kept passing had
+    the list silently shrunk to a single level.
     """
-    assert "for case in kcs_production kcs_companion" in source
-    body = source[source.index("for case in"):]
+    assert re.search(r"for case in \$\(cfd_cases\)", code), \
+        "the level list must come from the registry, not be hard-coded"
+    body = code[code.index("for case in"):]
     assert "continue" in body, "a failed level must not abort the loop"
-    assert "exit 1" not in body.split("YPLUS COLLECTION COMPLETE")[0] \
-        .replace('say "FATAL cannot source OpenFOAM"; exit 1', ""), \
-        "only the OpenFOAM-source failure may exit early"
+    assert "exit 1" not in body.split("YPLUS COLLECTION COMPLETE")[0], \
+        "a failed level must not exit the collector"
 
 
 def test_uses_the_solver_postprocess_form_not_bare_postprocess(code: str):

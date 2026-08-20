@@ -14,25 +14,44 @@
 # coefficients were seen. A criterion invented after looking at the answer is
 # not a criterion. y+ is reported as evidence; V1/V2a/V2b/V3 stand unchanged.
 
-ROOT="$HOME/cfd/dm1173"
+# shellcheck source=lib/cfd_chain.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_chain.sh"
+
+ROOT="$(cfd_root)"
 LOG="$ROOT/yplus.log"
+CFD_LOG="$LOG"
+CFD_MARKER="${CFD_MARKER:-$ROOT/yplus_after.marker}"
+export CFD_LOG CFD_MARKER
 say() { echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) $*" >> "$LOG"; }
 
 say "yPlus collector armed; waiting for the solve chain to stop"
 
-# Wait for the chain to finish, however it finishes. Four exits are possible:
-# completion, solver failure, budget kill, or the chain process dying. All of
-# them stop solve_chain.sh, so waiting on the process covers every case.
-while pgrep -f "solve_chain.sh" >/dev/null 2>&1; do
+# Wait for the chain's TERMINAL MARKER, not for its process name.
+#
+# This previously polled `pgrep -f "solve_chain.sh"`, which is wrong twice
+# over. `-f` matches any command line CONTAINING the string -- including the
+# ssh invocation that launches this collector -- so the wait can self-match
+# and never end; that exact pattern produced a 13.5 h zombie elsewhere on this
+# fleet. And process absence conflates completion, solver failure, budget kill
+# and process death, so the collector could not tell a finished solve from a
+# dead one.
+#
+# solve_chain.sh now writes a marker on BOTH outcomes under an EXIT trap, so
+# the outcome is knowable rather than merely "it stopped".
+CHAIN_MARKER="${DM_CFD_CHAIN_MARKER:-$ROOT/solve_chain.marker}"
+while [ ! -f "$CHAIN_MARKER" ]; do
   sleep 300
 done
-say "solve chain no longer running"
+CHAIN_VERDICT="$(head -1 "$CHAIN_MARKER")"
+say "solve chain terminal marker: $CHAIN_VERDICT"
 tail -5 "$ROOT/solve_chain.log" >> "$LOG" 2>/dev/null
 
-# shellcheck disable=SC1091
-source /usr/lib/openfoam/openfoam2312/etc/bashrc || { say "FATAL cannot source OpenFOAM"; exit 1; }
+cfd_load_openfoam
 
-for case in kcs_production kcs_companion; do
+# Case list from the registry rather than two hard-coded names. Absent cases
+# are already skipped below, so a registry with more levels than this host
+# built is harmless.
+for case in $(cfd_cases); do
   CASE="$ROOT/kcs_cases/$case"
   if [ ! -d "$CASE" ]; then
     say "SKIP $case -- case directory absent"
@@ -54,8 +73,12 @@ for case in kcs_production kcs_companion; do
   #    calculated. Please try to use the solver option -postProcess"
   # The first version of this script used the bare form and reported OK
   # against min=0 max=0 average=0.
-  ( cd "$CASE" && mpirun -np 8 interFoam -postProcess -func yPlus -parallel \
-      -latestTime > "$CASE/log.yPlus" 2>&1 )
+  # Ranks from the registry, not a hard-coded 8. `< /dev/null` because mpirun
+  # reads and closes stdin -- without it, an mpirun inside a piped script
+  # swallows the remainder of the script and the rest silently never runs.
+  ranks="$(cfd_case_get "$case" ranks)"
+  ( cd "$CASE" && mpirun -np "$ranks" interFoam -postProcess -func yPlus -parallel \
+      -latestTime > "$CASE/log.yPlus" 2>&1 < /dev/null )
   rc=$?
   if [ $rc -ne 0 ]; then
     say "FAIL $case yPlus rc=$rc (see log.yPlus)"
@@ -90,3 +113,4 @@ for case in kcs_production kcs_companion; do
 done
 
 say "YPLUS COLLECTION COMPLETE"
+cfd_marker_ok "yplus collected after chain verdict: $CHAIN_VERDICT"
