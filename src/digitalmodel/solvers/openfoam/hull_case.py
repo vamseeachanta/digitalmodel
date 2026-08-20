@@ -75,10 +75,8 @@ from .hull_case_dicts import (
     render_case_tree,
 )
 from .hull_case_regions import (
-    SurfaceRegion,
-    check_region_surfaces,
-    copy_region_surfaces,
-    hull_region,
+    SurfaceRegion, assert_regions_agree, check_region_surfaces,
+    copy_region_surfaces, hull_region,
 )
 from .hull_manifest import HullManifest, load_hull_manifest
 
@@ -171,6 +169,7 @@ class HullCaseConfig:
             raise ValueError(f"ranks must be >= 1, got {self.ranks}")
         if self.end_time < 1:
             raise ValueError(f"end_time must be >= 1, got {self.end_time}")
+        assert_regions_agree(self.manifest, self.appendages)
 
     @property
     def nu(self) -> float:

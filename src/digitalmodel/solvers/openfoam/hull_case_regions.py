@@ -324,3 +324,31 @@ def region_provenance(regions: Sequence[SurfaceRegion]) -> Dict[str, Any]:
             "as per-patch coefficients, which do not."
         ),
     }
+
+
+def assert_regions_agree(manifest, appendages) -> None:
+    """Refuse an appendage-inclusive Aref on a hull-only mesh.
+
+    The two facts arrive by different routes: Aref comes from the MANIFEST's
+    reference wetted surface, which counts every region, while the geometry
+    comes from the case config's ``appendages``. Nothing connects them, so
+    supplying one without the other builds cleanly, meshes cleanly, and
+    divides every coefficient by an area covering surfaces the mesher never
+    met -- a silent 1.4% error on the hull this was found on.
+    """
+    declared = {r.get("name") for r in manifest.appendage_regions}
+    declared.discard("hull")
+    supplied = {r.name for r in appendages}
+    if declared and not supplied:
+        raise ValueError(
+            f"the manifest declares appendage regions {sorted(declared)} and its "
+            f"reference wetted surface counts them, but no appendages were "
+            f"supplied to the case: Aref would include surfaces the mesh never "
+            f"sees. Pass appendages=..., or build from a hull-only manifest."
+        )
+    missing = declared - supplied
+    if missing:
+        raise ValueError(
+            f"appendage regions {sorted(missing)} are declared in the manifest "
+            f"but not supplied to the case"
+        )

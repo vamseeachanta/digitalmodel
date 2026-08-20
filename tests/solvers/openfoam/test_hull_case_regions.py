@@ -416,3 +416,52 @@ def _brace_block(text: str, key: str) -> str:
             if depth == 0:
                 return text[start : i + 1]
     raise AssertionError(f"unbalanced braces after {key!r}")
+
+
+def _with_regions(md: Dict[str, Any]) -> Dict[str, Any]:
+    """A manifest that DECLARES a rudder, so its reference area counts one."""
+    out = dict(md)
+    out["regions"] = {
+        "regions": [
+            {"name": "hull", "n_triangles": 12, "watertight": True},
+            {"name": "rudder", "n_triangles": 12, "watertight": True},
+        ],
+        "union": {
+            "external_wetted_surface_m2": 130.0,
+            "wetted_surface_naive_sum_m2": 132.0,
+            "undecided_m2": 0.0,
+        },
+    }
+    return out
+
+
+def test_appendage_inclusive_aref_on_a_hull_only_mesh_is_refused(
+        tmp_path: Path, manifest_dict: Dict[str, Any]):
+    """Aref reads the MANIFEST; the geometry reads the CONFIG.
+
+    Nothing connects them, so supplying one without the other builds cleanly,
+    meshes cleanly, and divides every coefficient by an area covering surfaces
+    the mesher never met. On the real hull that is a silent 1.4% error. The
+    combination is never correct, so it is refused at construction.
+    """
+    with pytest.raises(ValueError, match="mesh never sees"):
+        HullCaseConfig(
+            manifest=HullManifest.from_dict(_with_regions(manifest_dict)),
+            stl_path=write_stl(tmp_path / "synthetic_hull.stl", "hull"),
+            velocity=VELOCITY,
+            ranks=RANKS,
+        )
+
+
+def test_supplying_the_declared_appendage_is_accepted(
+        tmp_path: Path, manifest_dict: Dict[str, Any]):
+    """The guard must not fire on the correct case -- otherwise it is not a
+    guard, it is a ban on appendages."""
+    HullCaseConfig(
+        manifest=HullManifest.from_dict(_with_regions(manifest_dict)),
+        stl_path=write_stl(tmp_path / "synthetic_hull.stl", "hull"),
+        velocity=VELOCITY,
+        ranks=RANKS,
+        appendages=(SurfaceRegion(
+            name="rudder", stl_path=write_stl(tmp_path / "rudder.stl", "rudder")),),
+    )
