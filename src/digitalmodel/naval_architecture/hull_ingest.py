@@ -670,6 +670,11 @@ class HullManifest:
     degenerate_removed: int = 0
     weld_tolerance_m: float = 0.0
     forced: bool = False
+    capped: bool = False
+    cap_triangles_added: int = 0
+    cap_area_m2: float = 0.0
+    cap_below_waterline: bool = False
+    cap_loops: List[Dict[str, object]] = field(default_factory=list)
     stl_file: str = ""
     source_layers: List[str] = field(default_factory=list)
     notes: List[str] = field(default_factory=list)
@@ -706,6 +711,15 @@ class HullManifest:
             "degenerate_removed": self.degenerate_removed,
             "weld_tolerance_m": self.weld_tolerance_m,
             "forced": self.forced,
+            # Capping is recorded in full, not as a single boolean. A hull that
+            # was silently closed for you is a hull whose reported displacement
+            # you cannot audit: the reader needs to see WHERE the lids went and
+            # how much surface they added before trusting the numbers above.
+            "capped": self.capped,
+            "cap_triangles_added": self.cap_triangles_added,
+            "cap_area_m2": self.cap_area_m2,
+            "cap_below_waterline": self.cap_below_waterline,
+            "cap_loops": [dict(loop) for loop in self.cap_loops],
             "stl_file": self.stl_file,
             "source_layers": list(self.source_layers),
             "notes": list(self.notes),
@@ -986,6 +1000,8 @@ def ingest_triangles(
     draft_m: Optional[float] = None,
     weld_tolerance: Optional[float] = None,
     force: bool = False,
+    cap_open_boundaries: bool = False,
+    cap_below_waterline: bool = False,
     stl_name: str = "hull",
     source_layers: Optional[Sequence[str]] = None,
     notes: Optional[Sequence[str]] = None,
@@ -996,9 +1012,23 @@ def ingest_triangles(
     reader is testable without ``rhino3dm`` and without a client file.
 
     Order matters and is deliberate: scale to metres, weld, rotate onto ship
-    axes, drop degenerates, gate on closure, orient, translate onto the origin,
-    then measure. Measuring before the gate would put numbers derived from a
-    leaky surface into a manifest another lane treats as authoritative.
+    axes, drop degenerates, CAP if asked, gate on closure, orient, translate
+    onto the origin, then measure. Measuring before the gate would put numbers
+    derived from a leaky surface into a manifest another lane treats as
+    authoritative.
+
+    ``cap_open_boundaries`` opts in to closing the surface's open boundary
+    loops with lids (see ``hull_cap``). Like ``tessellate_breps`` it is OFF by
+    default and never fires implicitly, and for the same reason: it is a
+    modelling decision the caller has to own. It is an ADDITIONAL route to
+    watertightness, not a relaxation of the gate -- a hull that is still open
+    after capping is refused exactly as before, and a boundary that is torn
+    rather than merely open is refused instead of being closed.
+
+    ``cap_below_waterline`` forwards the capper's opt-in for a submerged
+    opening. Leaving it False is what keeps ``displacement_m3`` and
+    ``wetted_surface_m2`` describing the client's surface rather than this
+    stage's repair of it.
     """
     tris: List[Tri] = [tuple(tri) for tri in triangles]  # type: ignore[misc]
     if not tris:
@@ -1052,6 +1082,56 @@ def ingest_triangles(
     if not tris:
         raise HullIngestError("every triangle was degenerate after welding")
 
+    # --- capping the open boundaries, opt-in ------------------------------- #
+    #
+    # Placed HERE, between degenerate removal and the closure gate, for two
+    # reasons. Degenerates have to be gone first because a zero-area triangle
+    # is invisible to the edge counter and would make a real boundary look
+    # torn; and the gate has to run afterwards, on the capped surface, so that
+    # capping is checked by exactly the same test as everything else rather
+    # than trusted.
+    cap_result = None
+    cap_datum = 0.0
+    if cap_open_boundaries:
+        # Imported inside the function to keep the module graph acyclic:
+        # ``hull_cap`` derives its errors from this module's error family, the
+        # same arrangement ``brep_tessellate`` uses.
+        from digitalmodel.naval_architecture import hull_cap  # noqa: PLC0415
+
+        if draft_m is None:
+            raise HullIngestError(
+                "capping needs a draft. Without draft_m this stage places the "
+                "waterline at the top of the hull and treats it as fully "
+                "submerged, so every boundary loop would be at or below the "
+                "water and no cap could be shown to leave the displacement "
+                "alone. Pass draft_m=, or ingest with force=True instead."
+            )
+        # The capper works in the pre-origin frame, so the waterline is stated
+        # relative to the keel as it stands now. Caps add no new vertices, only
+        # new triangles over existing ones, so this keel height is the same one
+        # the origin block below finds.
+        cap_datum = _bounds(tris)[0][2]
+        cap_result = hull_cap.cap_boundary_loops(
+            tris,
+            waterline_z=cap_datum + float(draft_m),
+            allow_below_waterline=cap_below_waterline,
+        )
+        if cap_result.n_caps:
+            tris = cap_result.triangles
+            note_list.append(
+                f"{cap_result.n_caps} open boundary loop(s) were CAPPED, "
+                f"adding {cap_result.n_cap_triangles} triangles and "
+                f"{cap_result.cap_area:g} m2 of surface; see provenance."
+                "cap_loops for where"
+            )
+            if cap_result.below_waterline:
+                note_list.append(
+                    "at least one cap lies AT or BELOW the waterline "
+                    "(cap_below_waterline was set): displacement_m3 and "
+                    "wetted_surface_m2 include surface the source geometry "
+                    "did not describe"
+                )
+
     # --- the watertightness gate ------------------------------------------- #
     check = check_surface(tris)
     watertight = check.closed
@@ -1065,8 +1145,11 @@ def ingest_triangles(
             "solver will return a confident wrong answer, so this stage stops "
             "here.\n"
             "Options: raise weld_tolerance= if the gaps are numerical; repair "
-            "the surface in CAD if they are real; or pass force=True to emit "
-            "the STL anyway with watertight=false recorded in the manifest."
+            "the surface in CAD if they are real; pass "
+            "cap_open_boundaries=True if the surface simply stops at deck "
+            "level and its openings are closed loops ABOVE the waterline; or "
+            "pass force=True to emit the STL anyway with watertight=false "
+            "recorded in the manifest."
         )
 
     if watertight:
@@ -1168,6 +1251,19 @@ def ingest_triangles(
         degenerate_removed=dropped,
         weld_tolerance_m=tolerance,
         forced=bool(force and not watertight),
+        capped=bool(cap_result is not None and cap_result.n_caps),
+        cap_triangles_added=(
+            cap_result.n_cap_triangles if cap_result is not None else 0
+        ),
+        cap_area_m2=cap_result.cap_area if cap_result is not None else 0.0,
+        cap_below_waterline=(
+            bool(cap_result.below_waterline) if cap_result is not None else False
+        ),
+        cap_loops=(
+            cap_result.loop_records(z_datum=cap_datum)
+            if cap_result is not None
+            else []
+        ),
         stl_file=stl_path.name,
         source_layers=list(source_layers or []),
         notes=note_list,
@@ -1187,6 +1283,8 @@ def ingest_3dm(
     draft_m: Optional[float] = None,
     weld_tolerance: Optional[float] = None,
     force: bool = False,
+    cap_open_boundaries: bool = False,
+    cap_below_waterline: bool = False,
     stl_name: str = "hull",
     tessellate_breps: bool = False,
     linear_deflection: Optional[float] = None,
@@ -1202,6 +1300,9 @@ def ingest_3dm(
     ``tessellate_breps`` opts in to the CAD-kernel fallback for files that
     carry no cached render meshes. See :func:`read_3dm_triangles` for why it is
     never automatic.
+
+    ``cap_open_boundaries`` opts in to closing a hull surface that stops at
+    deck level. See :func:`ingest_triangles` and ``hull_cap``.
     """
     geometry = read_3dm_triangles(
         path,
@@ -1234,6 +1335,8 @@ def ingest_3dm(
         draft_m=draft_m,
         weld_tolerance=weld_tolerance,
         force=force,
+        cap_open_boundaries=cap_open_boundaries,
+        cap_below_waterline=cap_below_waterline,
         stl_name=stl_name,
         source_layers=used,
         notes=notes,
