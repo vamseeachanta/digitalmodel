@@ -52,14 +52,13 @@ class HullDomainError(ValueError):
     """A domain that would emit an invalid or inverted blockMeshDict."""
 
 
-# --------------------------------------------------------------------------- #
-#  Extents, in multiples of Lpp measured from MIDSHIP.
+# --- Extents, in multiples of Lpp measured from MIDSHIP --------------------- #
 #
-#  These reproduce the DTC tutorial's own proportions (whose domain the KCS
-#  validation case uses) to within rounding, and they satisfy the ITTC
-#  7.5-03-02-03 minimums measured from the hull ENDS: 1.5 Lpp ahead of the bow,
-#  4.0 Lpp astern, 3.0 Lpp to the side, 2.5 Lpp below the keel.
-# --------------------------------------------------------------------------- #
+#  DEFAULTS: every one is also a ``HullCaseConfig`` field, so a case can trim
+#  its own far field. These reproduce the DTC tutorial's own proportions (whose
+#  domain the KCS validation case uses) to within rounding, and they satisfy the
+#  ITTC 7.5-03-02-03 minimums measured from the hull ENDS: 1.5 Lpp ahead of the
+#  bow, 4.0 Lpp astern, 3.0 Lpp to the side, 2.5 Lpp below the keel.
 
 UPSTREAM_LPP = 2.0
 DOWNSTREAM_LPP = 4.5
@@ -83,14 +82,12 @@ FS_OUTER_LPP = 0.216
 
 #: Free-surface band cell HEIGHT as a fraction of the background cell size, and
 #: the stretching of each block above and below it relative to that height.
-#: DTC's own ratios (its band cell is 0.01475 m against a 1 m background).
-#:
-#: Every vertical count is driven by ``base_cell_size`` rather than by Lpp, so
-#: "hold the target cell size and grow the hull" grows the cell count with the
-#: VOLUME in all three directions. Anchoring the band to Lpp instead would hold
-#: the vertical counts fixed and the budget would grow by 100x, not 1000x --
-#: which reads like a working derivation right up until it silently under-sizes
-#: a full-scale case.
+#: DTC's own ratios (its band cell is 0.01475 m against a 1 m background). Every
+#: vertical count is driven by ``base_cell_size`` rather than by Lpp, so "hold
+#: the target cell size and grow the hull" grows the count with the VOLUME in
+#: all three directions; anchoring the band to Lpp would hold the vertical
+#: counts fixed and grow the budget by 100x, not 1000x -- which reads like a
+#: working derivation right up until it silently under-sizes a full-scale case.
 FREE_SURFACE_CELL_FRACTION = 0.0148
 NEAR_FIELD_STRETCH = 1.6
 OUTER_STRETCH = 2.2
@@ -208,12 +205,7 @@ def build_hull_domain(
 def _z_levels(
     config: DomainConfig, lpp: float, draft: float, keel_clearance_drafts: float
 ) -> Tuple[float, float, float, float, float, float, float]:
-    """The seven levels bounding blockMesh's six stacked blocks.
-
-    Near the keel the staging scales with the DRAFT; the free-surface band
-    scales with Lpp, because what it exists to resolve is the wave, whose
-    amplitude follows Lpp and Froude number rather than the draft.
-    """
+    """The seven levels bounding blockMesh's six stacked blocks."""
     levels = (
         config.min_coords[2],
         -keel_clearance_drafts * draft,
@@ -244,20 +236,28 @@ def _location_in_mesh(
     )
 
 
+#: What binds each z-level junction, so a refusal names the knob rather than an
+#: index. Index 5 -- FS_OUTER_LPP against ``freeboard_lpp`` -- is the one a
+#: trimmed freeboard hits: freeboard_lpp must exceed FS_OUTER_LPP + draft / Lpp.
+_LEVEL_CONSTRAINTS = (
+    "DEPTH_LPP/KEEL_CLEARANCE_DRAFTS KEEL_CLEARANCE_DRAFTS/FS_BAND_BELOW_LPP "
+    "FS_BAND_BELOW_LPP FS_BAND_ABOVE_LPP FS_BAND_ABOVE_LPP/FS_OUTER_LPP "
+    "FS_OUTER_LPP/freeboard_lpp"
+).split()
+
+
 def _check_levels(levels: Sequence[float]) -> None:
     for i, (a, b) in enumerate(zip(levels, levels[1:])):
         if not a < b:
             raise HullDomainError(
                 f"blockMesh z-levels are not strictly increasing at index {i}: "
-                f"{a:.6g} >= {b:.6g}. Levels: "
-                f"{[round(v, 6) for v in levels]}. An inverted block is a "
-                f"negative-volume cell blockMesh will refuse."
+                f"{a:.6g} >= {b:.6g}. Levels: {[round(v, 6) for v in levels]}. "
+                f"The binding constraint is {_LEVEL_CONSTRAINTS[i]}. An "
+                f"inverted block is a negative-volume cell blockMesh refuses."
             )
 
 
-# --------------------------------------------------------------------------- #
-#  Refinement boxes
-# --------------------------------------------------------------------------- #
+# --- Refinement boxes ------------------------------------------------------- #
 
 def refinement_boxes(
     manifest: HullManifest,
@@ -361,9 +361,7 @@ def _interp(outer: float, inner: float, t: float, ref: float) -> float:
     return ref + math.copysign(abs(a) ** (1.0 - t) * abs(b) ** t, a)
 
 
-# --------------------------------------------------------------------------- #
-#  Background block divisions
-# --------------------------------------------------------------------------- #
+# --- Background block divisions --------------------------------------------- #
 
 def block_divisions(
     domain: HullDomain,
@@ -374,9 +372,11 @@ def block_divisions(
     The free-surface band sets the finest vertical cell and every other block
     is a stated multiple of it. All six counts, and both horizontal counts,
     come from ``base_cell_size``, which is what makes ``relativeSizes true`` in
-    snappyHexMeshDict mean the same thing at every hull scale: with the default
-    Lpp-proportional cell size the counts are invariant, and with a fixed cell
-    size they track the domain volume.
+    snappyHexMeshDict mean the same thing at every hull scale.
+
+    The IN-PLANE free-surface requirement -- cells per wavelength, which moves
+    with the SPEED -- is the analogue in ``hull_free_surface``; it raises nx and
+    ny on top of these counts and leaves the vertical staging alone.
     """
     if free_surface_cell_fraction <= 0:
         raise HullDomainError("free_surface_cell_fraction must be positive")

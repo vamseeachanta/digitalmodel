@@ -33,7 +33,7 @@ import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from .hull_case_physics import (
     DEFAULT_CELL_SAFETY_FACTOR,
@@ -51,11 +51,25 @@ from .hull_case_physics import (
     wall_normal_first_cell_height,
 )
 from .hull_domain import (
+    DEPTH_LPP,
+    DOWNSTREAM_LPP,
+    FREEBOARD_LPP,
+    KEEL_CLEARANCE_DRAFTS,
+    LATERAL_LPP,
+    UPSTREAM_LPP,
     Box,
     HullDomain,
     block_divisions,
     build_hull_domain,
     refinement_boxes,
+)
+from .hull_free_surface import (
+    DEFAULT_FREE_SURFACE_CELLS_PER_WAVELENGTH,
+    GRAVITY,
+    FreeSurfaceResolution,
+    check_free_surface_resolution,
+    free_surface_divisions,
+    free_surface_resolution,
 )
 from .hull_case_dicts import case_provenance, hull_case_tokens
 from .hull_manifest import HullManifest, load_hull_manifest
@@ -69,8 +83,6 @@ __all__ = [
     "hull_case_templates_dir",
     "hull_case_tokens",
 ]
-
-GRAVITY = 9.80665
 
 #: Fresh water at 20 C. A PARAMETERISED DEFAULT, not a derivation: the manifest
 #: does not state the fluid. Supply ``reynolds`` instead when the case is being
@@ -116,6 +128,26 @@ class HullCaseConfig:
     cell_safety_factor: float = DEFAULT_CELL_SAFETY_FACTOR
     y_plus_target: float = DEFAULT_Y_PLUS_TARGET
     half_domain: bool = True
+
+    #: Domain extents in multiples of Lpp from midship, and the keel clearance
+    #: in drafts; defaults are ``hull_domain``'s constants, so a caller that
+    #: states nothing gets the domain it got before. Trimming them buys a
+    #: cheaper BACKGROUND mesh only -- the refinement stages do not shrink with
+    #: the far field. ``freeboard_lpp`` must clear FS_OUTER_LPP + draft/Lpp or
+    #: the free-surface outer block inverts and ``build_hull_domain`` refuses.
+    upstream_lpp: float = UPSTREAM_LPP
+    downstream_lpp: float = DOWNSTREAM_LPP
+    lateral_lpp: float = LATERAL_LPP
+    depth_lpp: float = DEPTH_LPP
+    freeboard_lpp: float = FREEBOARD_LPP
+    keel_clearance_drafts: float = KEEL_CLEARANCE_DRAFTS
+
+    #: Cells per wavelength required in the free-surface PLANE, scored against
+    #: the linear deep-water wavelength at this speed. ``None`` stands the
+    #: criterion down, and records that it was stood down.
+    free_surface_cells_per_wavelength: Optional[float] = (
+        DEFAULT_FREE_SURFACE_CELLS_PER_WAVELENGTH
+    )
 
     def __post_init__(self) -> None:
         if self.velocity <= 0:
@@ -177,20 +209,88 @@ class HullCaseDerivation:
     force_reference: ForceReference
     decomposition: Sequence[int]
     first_cell_height: float
+    free_surface: FreeSurfaceResolution
+
+
+def _derive_geometry(
+    config: HullCaseConfig,
+) -> Tuple[HullDomain, List[Box], Dict[str, int], FreeSurfaceResolution]:
+    """Domain, refinement boxes, block divisions and the free-surface score.
+
+    The order matters. The extents fix the box, the boxes fix how many times
+    the in-plane cell is halved, and only then can the free-surface criterion
+    be scored -- it is a statement about the cell size at the wave, which is
+    the background cell after every stage has run.
+    """
+    manifest = config.manifest
+    domain = build_hull_domain(
+        manifest,
+        base_cell_size=config.base_cell_size,
+        upstream_lpp=config.upstream_lpp,
+        downstream_lpp=config.downstream_lpp,
+        lateral_lpp=config.lateral_lpp,
+        depth_lpp=config.depth_lpp,
+        freeboard_lpp=config.freeboard_lpp,
+        keel_clearance_drafts=config.keel_clearance_drafts,
+    )
+    boxes = refinement_boxes(manifest, domain)
+    divisions = block_divisions(domain)
+
+    required = config.free_surface_cells_per_wavelength
+    stages = len(boxes)
+    # Refine only the grid the builder chose itself. A stated base_cell_size is
+    # the caller's grid LEVEL; moving it would meet the criterion and change the
+    # refinement ratio a convergence study is read from, so that case is refused
+    # below instead.
+    if required is not None and config.base_cell_size is None:
+        divisions = free_surface_divisions(
+            domain,
+            divisions,
+            config.velocity,
+            cells_per_wavelength=required,
+            refinement_stages=stages,
+        )
+    resolution = free_surface_resolution(
+        domain,
+        divisions,
+        config.velocity,
+        required_cells_per_wavelength=required,
+        refinement_stages=stages,
+    )
+    check_free_surface_resolution(
+        resolution, remedy=_free_surface_remedy(config, resolution)
+    )
+    return domain, boxes, divisions, resolution
+
+
+def _free_surface_remedy(
+    config: HullCaseConfig, resolution: FreeSurfaceResolution
+) -> str:
+    """What to change, named. A refusal that does not say is a puzzle."""
+    required = resolution.required_cells_per_wavelength
+    if required is None or config.base_cell_size is None:
+        return ""
+    needed = config.base_cell_size * resolution.cells_per_wavelength / required
+    return (
+        f"base_cell_size was stated as {config.base_cell_size:.6g} m, and a "
+        f"grid level the builder was handed is not one it will silently refine "
+        f"-- that would change the refinement ratio a convergence study is read "
+        f"from. State base_cell_size <= {needed:.6g} m, or set "
+        f"free_surface_cells_per_wavelength=None to record the shortfall."
+    )
 
 
 def derive_hull_case(config: HullCaseConfig) -> HullCaseDerivation:
     """Run every derivation. Raises before anything is written."""
     manifest = config.manifest
-    domain = build_hull_domain(manifest, base_cell_size=config.base_cell_size)
-    boxes = refinement_boxes(manifest, domain)
-    divisions = block_divisions(domain)
+    domain, boxes, divisions, free_surface = _derive_geometry(config)
 
     return HullCaseDerivation(
         config=config,
         domain=domain,
         boxes=boxes,
         divisions=divisions,
+        free_surface=free_surface,
         budget=derive_cell_budget(
             domain,
             boxes,

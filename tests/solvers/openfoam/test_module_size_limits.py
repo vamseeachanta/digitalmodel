@@ -38,6 +38,7 @@ GOVERNED_MODULES = (
     # deliberately: this surface is new, so there is no legacy to grandfather.
     "src/digitalmodel/solvers/openfoam/hull_manifest.py",
     "src/digitalmodel/solvers/openfoam/hull_domain.py",
+    "src/digitalmodel/solvers/openfoam/hull_free_surface.py",
     "src/digitalmodel/solvers/openfoam/hull_turbulence.py",
     "src/digitalmodel/solvers/openfoam/hull_case_physics.py",
     "src/digitalmodel/solvers/openfoam/hull_case_dicts.py",

@@ -166,9 +166,11 @@ def _domain_provenance(domain: "HullDomain") -> Dict[str, Any]:
 
 
 def _mesh_provenance(derivation: "HullCaseDerivation") -> Dict[str, Any]:
-    """The cell budget, plus the near-wall requirement it does NOT enforce."""
+    """The cell budget, the free-surface resolution it was sized to meet, and
+    the near-wall requirement it does NOT enforce."""
     return {
         **derivation.budget.to_provenance(),
+        "free_surface": derivation.free_surface.to_provenance(),
         "block_divisions": dict(derivation.divisions),
         "refinement_boxes": [
             {"lo": list(lo), "hi": list(hi)} for lo, hi in derivation.boxes
