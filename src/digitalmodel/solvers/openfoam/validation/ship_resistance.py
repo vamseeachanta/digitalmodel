@@ -797,6 +797,64 @@ class HullForce:
             )
 
 
+@dataclass(frozen=True)
+class ForceRow:
+    """One row of a forces log, in the solver's own sign and domain fraction.
+
+    Deliberately NOT sign-corrected and NOT doubled: those are reductions, and
+    a consumer that needs the raw oscillation - the iterative-uncertainty
+    estimate in ``referent_free_resistance`` does - must see the series the
+    solver actually wrote.
+    """
+
+    iteration: int
+    total: float
+    pressure: float
+    viscous: float
+
+
+def read_force_rows(
+    force_dat: Path | str,
+    *,
+    window: int = 4000,
+    drag_axis: int = 0,
+) -> list[ForceRow]:
+    """Rows of a forces log inside the final ``window`` ITERATIONS.
+
+    ``window`` is an iteration span, not a row count -- the two coincide only
+    when the forces object wrote every timestep.
+
+    Extracted from :func:`parse_hull_force` so the window semantics have
+    exactly ONE implementation. A second copy of this selection is precisely
+    how the #1173 row-count defect returns: on 11 rows at 2500-iteration
+    spacing, ``rows[-4000:]`` silently takes all eleven, averages the start-up
+    transient into the result and moves Ct by 8%.
+    """
+    rows: list[ForceRow] = []
+    for raw in Path(force_dat).read_text().splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.replace("(", " ").replace(")", " ").split()
+        if len(parts) < 10:
+            continue
+        try:
+            it = int(float(parts[0]))
+            total = float(parts[1 + drag_axis])
+            press = float(parts[4 + drag_axis])
+            visc = float(parts[7 + drag_axis])
+        except ValueError:
+            continue
+        rows.append(ForceRow(it, total, press, visc))
+
+    if not rows:
+        raise ValueError(f"no force samples parsed from {force_dat}")
+    if window > 0:
+        cutoff = rows[-1].iteration - window
+        return [r for r in rows if r.iteration > cutoff] or rows[-1:]
+    return rows
+
+
 def parse_hull_force(
     force_dat: Path | str,
     *,
@@ -815,43 +873,14 @@ def parse_hull_force(
     so the raw number is negative, and a sign convention is not something the
     gate should depend on.
     """
-    rows: list[tuple[int, float, float, float]] = []
-    for raw in Path(force_dat).read_text().splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#"):
-            continue
-        parts = line.replace("(", " ").replace(")", " ").split()
-        if len(parts) < 10:
-            continue
-        try:
-            it = int(float(parts[0]))
-            total = float(parts[1 + drag_axis])
-            press = float(parts[4 + drag_axis])
-            visc = float(parts[7 + drag_axis])
-        except ValueError:
-            continue
-        rows.append((it, total, press, visc))
-
-    if not rows:
-        raise ValueError(f"no force samples parsed from {force_dat}")
-    # `window` is a count of ITERATIONS, not of rows. Selecting rows[-window:]
-    # is only equivalent when writeInterval == 1, which was true of the
-    # original forces output and NOT of a function object re-run over written
-    # field times (#1173, 2026-08-19: 11 rows at 2500-iteration spacing, where
-    # rows[-4000:] silently took all of them, averaging the start-up transient
-    # into the result and moving Ct by 8%).
-    if window > 0:
-        cutoff = rows[-1][0] - window
-        tail = [r for r in rows if r[0] > cutoff] or rows[-1:]
-    else:
-        tail = rows
+    tail = read_force_rows(force_dat, window=window, drag_axis=drag_axis)
     n = len(tail)
     factor = 2.0 if half_domain else 1.0
 
-    mean_total = sum(r[1] for r in tail) / n
-    mean_press = sum(r[2] for r in tail) / n
-    mean_visc = sum(r[3] for r in tail) / n
-    var = sum((r[1] - mean_total) ** 2 for r in tail) / n
+    mean_total = sum(r.total for r in tail) / n
+    mean_press = sum(r.pressure for r in tail) / n
+    mean_visc = sum(r.viscous for r in tail) / n
+    var = sum((r.total - mean_total) ** 2 for r in tail) / n
 
     sign = -1.0 if mean_total < 0 else 1.0
     return HullForce(
@@ -859,8 +888,8 @@ def parse_hull_force(
         pressure=sign * mean_press * factor,
         viscous=sign * mean_visc * factor,
         samples=n,
-        first_iteration=tail[0][0],
-        last_iteration=tail[-1][0],
+        first_iteration=tail[0].iteration,
+        last_iteration=tail[-1].iteration,
         scatter=math.sqrt(var) * factor,
     )
 
