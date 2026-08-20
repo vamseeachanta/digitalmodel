@@ -27,7 +27,7 @@ code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.88em;
 </style>
 <main>
 <h1>KCS calm-water hull resistance — verification</h1>
-<p class="sub">Issue #1173 · interFoam towing · generated 2026-08-19T16:27:33.198753+00:00</p>
+<p class="sub">Issue #1173 · interFoam towing · generated 2026-08-20T01:04:09.741632+00:00</p>
 
 <div class="card">
 <b>The referent is a tuple, not a number.</b>
@@ -96,7 +96,7 @@ evidence and evaluated against no threshold. Every verdict above comes from
 V1/V2a/V2b/V3 alone, exactly as they were fixed before any result existed.</p>
 <div class="wrap"><table>
 <tr><th>level</th><th>min</th><th>average</th><th>max</th><th>regime</th></tr>
-<tr><td>production</td><td class='num'>not collected</td><td class='num'>—</td><td class='num'>—</td><td>log.yPlus not present</td></tr><tr><td>companion</td><td class='num'>not collected</td><td class='num'>—</td><td class='num'>—</td><td>log.yPlus not present</td></tr>
+<tr><td>production</td><td class='num'>4.390</td><td class='num'>82.61</td><td class='num'>1075.7</td><td>log layer (wall-function regime) · spans buffer layer</td></tr><tr><td>companion</td><td class='num'>11.745</td><td class='num'>154.89</td><td class='num'>1715.6</td><td>log layer (wall-function regime) · spans buffer layer</td></tr>
 </table></div>
 <p class="note">This run uses kOmegaSST with standard wall functions, which
 assume the log layer (y+ &gt; ~30). The buffer layer (5 &lt; y+ &lt; 30) is

@@ -137,7 +137,7 @@
     "V3": false
   },
   "all_passed": false,
-  "generated_utc": "2026-08-19T16:27:33.198753+00:00",
+  "generated_utc": "2026-08-20T01:04:09.741632+00:00",
   "mesh_quality": {
     "production": {
       "available": true,
@@ -154,12 +154,40 @@
   },
   "wall_resolution": {
     "production": {
-      "available": false,
-      "reason": "log.yPlus not present"
+      "available": true,
+      "patches": {
+        "hull": {
+          "min": 4.38992,
+          "max": 1075.67,
+          "average": 82.6145
+        }
+      },
+      "gates": false,
+      "hull": {
+        "min": 4.38992,
+        "max": 1075.67,
+        "average": 82.6145,
+        "band_at_average": "log layer (wall-function regime)",
+        "spans_buffer_layer": true
+      }
     },
     "companion": {
-      "available": false,
-      "reason": "log.yPlus not present"
+      "available": true,
+      "patches": {
+        "hull": {
+          "min": 11.7454,
+          "max": 1715.6,
+          "average": 154.894
+        }
+      },
+      "gates": false,
+      "hull": {
+        "min": 11.7454,
+        "max": 1715.6,
+        "average": 154.894,
+        "band_at_average": "log layer (wall-function regime)",
+        "spans_buffer_layer": true
+      }
     },
     "gates": false,
     "note": "Diagnostic only. No criterion is evaluated against y+; V1/V2a/V2b/V3 are unchanged. Added after the running coefficients were observed, so it reports rather than gates."
