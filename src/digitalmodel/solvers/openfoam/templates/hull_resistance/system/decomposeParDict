@@ -1,0 +1,31 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2312                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      decomposeParDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// hierarchical decomposition requires prod(n) == numberOfSubdomains.
+// decomposePar exits fatally when it does not -- AFTER the mesh is built,
+// which on a production grid is hours of meshing thrown away. Both entries
+// below come from one derivation so they cannot disagree.
+numberOfSubdomains @NRANKS@;
+
+method             hierarchical;
+
+coeffs
+{
+    n           (@DECOMPN@);
+}
+
+
+// ************************************************************************* //

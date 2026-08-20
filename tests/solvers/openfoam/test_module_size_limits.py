@@ -34,6 +34,14 @@ MAX_FUNCTION_LINES = 50
 # bring it under this limit.
 GOVERNED_MODULES = (
     "src/digitalmodel/solvers/openfoam/artifact_index.py",
+    # Arbitrary-hull case construction (#2023). Brought under the limit
+    # deliberately: this surface is new, so there is no legacy to grandfather.
+    "src/digitalmodel/solvers/openfoam/hull_manifest.py",
+    "src/digitalmodel/solvers/openfoam/hull_domain.py",
+    "src/digitalmodel/solvers/openfoam/hull_turbulence.py",
+    "src/digitalmodel/solvers/openfoam/hull_case_physics.py",
+    "src/digitalmodel/solvers/openfoam/hull_case_dicts.py",
+    "src/digitalmodel/solvers/openfoam/hull_case.py",
     "src/digitalmodel/solvers/openfoam/pressure_taps.py",
     "src/digitalmodel/solvers/openfoam/pressure_tap_models.py",
     "src/digitalmodel/solvers/openfoam/pressure_tap_analysis.py",

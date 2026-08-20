@@ -1,0 +1,107 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2312                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     interFoam;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         @ENDTIME@;
+
+deltaT          1;
+
+writeControl    timeStep;
+
+writeInterval   @WRITEINTERVAL@;
+
+purgeWrite      0;
+
+writeFormat     binary;
+
+writePrecision  6;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable yes;
+
+functions
+{
+    // TWO function objects, and the difference between them is the defect this
+    // case type was rewritten to prevent.
+    //
+    // `rho rho` names interFoam's variable-density VOF FIELD. `rho rhoInf`
+    // names a constant, and with a constant the ABOVE-WATER hull surface is
+    // integrated at water density. Measured on a benchmark container hull:
+    // 48.4% of the hull patch sits above the waterline and supplied 62.3% of
+    // the reported viscous force, putting the total resistance coefficient
+    // +113.79% out. Pressure barely moved, because topside pressure is near
+    // atmospheric and largely cancels fore-and-aft -- that asymmetry is the
+    // signature, a defect that hits only the friction integral.
+    //
+    // forceCoeffs needs BOTH: the FIELD for the force integral, and a constant
+    // rhoInf for the coefficient denominator. They are not interchangeable and
+    // neither is redundant.
+
+    forces
+    {
+        type            forces;
+        libs            (forces);
+        patches         (hull);
+        rho             rho;
+        log             on;
+        writeControl    timeStep;
+        writeInterval   1;
+        CofR            (@COFR@);
+    }
+
+    forceCoeffs
+    {
+        type            forceCoeffs;
+        libs            (forces);
+        patches         (hull);
+
+        // Force integral: the VOF density field.
+        rho             rho;
+        // Coefficient denominator only: 0.5 * rhoInf * magUInf^2 * Aref.
+        rhoInf          @RHOINF@;
+
+        magUInf         @MAGUINF@;
+        lRef            @LREF@;
+        // Aref is HALF the wetted surface: the domain is cut at the
+        // centreplane, the patch integral reports half of every force, and
+        // forceCoeffs has no way to double the numerator.
+        Aref            @AREF@;
+
+        CofR            (@COFR@);
+        dragDir         (@DRAGDIR@);
+        liftDir         (@LIFTDIR@);
+        pitchAxis       (@PITCHAXIS@);
+
+        log             on;
+        writeControl    timeStep;
+        writeInterval   1;
+    }
+}
+
+
+// ************************************************************************* //

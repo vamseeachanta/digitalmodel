@@ -1,0 +1,59 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2312                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setFieldsDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+defaultFieldValues
+(
+    volScalarFieldValue alpha.water 0
+);
+
+regions
+(
+    // Set cell values
+    // (does zerogradient on boundaries)
+    boxToCell
+    {
+        // The DOMAIN, not a literal. The tutorial's (-999 ... 999) box
+        // clips any domain wider than 999 m -- a 300 m ship is 2 km of
+        // domain -- and the failure is silent: alpha.water stays 0 in the
+        // clipped region, so the far field starts as air and the solve
+        // reports a resistance for a ship falling through the sky.
+        box (@SETFIELDSLO@) (@SETFIELDSHI@);
+
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+        );
+    }
+
+    // Set patch values (using ==)
+    boxToFace
+    {
+        // The DOMAIN, not a literal. The tutorial's (-999 ... 999) box
+        // clips any domain wider than 999 m -- a 300 m ship is 2 km of
+        // domain -- and the failure is silent: alpha.water stays 0 in the
+        // clipped region, so the far field starts as air and the solve
+        // reports a resistance for a ship falling through the sky.
+        box (@SETFIELDSLO@) (@SETFIELDSHI@);
+
+        fieldValues
+        (
+            volScalarFieldValue alpha.water 1
+        );
+    }
+);
+
+
+// ************************************************************************* //
