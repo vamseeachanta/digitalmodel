@@ -359,3 +359,20 @@ def test_setfields_is_gated_on_the_case_actually_being_two_phase(
         if "tstage setFields" in line:
             assert line.startswith("    "), (
                 f"setFields must be inside the gate, found at top level: {line!r}")
+
+
+def test_the_solver_is_read_from_the_case_not_hardcoded(codes: dict[str, str]):
+    """interFoam was hardcoded -- right for every two-phase case and silently
+    wrong for a single-phase one, which failed one second into a solve phase
+    that had just spent 35 minutes meshing.
+
+    Asserted on comment-stripped source so the prose explaining the defect
+    cannot satisfy the test that guards against it.
+    """
+    code = codes["stage45_driver.sh"]
+    assert re.search(r"awk.*\^application", code), (
+        "the solver must be read from the case controlDict")
+    assert 'mpirun -np "$RANKS" "$SOLVER"' in code, (
+        "the launch must use the solver read from the case")
+    assert "interFoam" not in code, (
+        "no solver name may remain hardcoded in executable lines")

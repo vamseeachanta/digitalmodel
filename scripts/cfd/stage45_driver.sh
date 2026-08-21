@@ -241,21 +241,33 @@ else
   # wrong -- an unsupervised 60 h solve.
   SOLVE_PGID="$(ps -o pgid= $$ 2>/dev/null | tr -d ' ')"
   [ -n "$SOLVE_PGID" ] || SOLVE_PGID=$$
+
+  # The solver is READ FROM THE CASE, never assumed. It was hardcoded to
+  # interFoam, which is right for every two-phase case and silently wrong for
+  # a single-phase one: the double-body case declares simpleFoam and got
+  # interFoam anyway, failing one second into a solve phase that had just
+  # spent 35 minutes meshing. Fourth defect of the same shape -- the chain was
+  # written when there was one kind of case, so "one kind of case" was baked
+  # in as an assumption rather than read as a property.
+  SOLVER="$(awk '/^application/ {gsub(/;/,"",$2); print $2; exit}' \
+            "$CASE/system/controlDict")"
+  [ -n "$SOLVER" ] || cfd_die "no application entry in $CASE/system/controlDict"
+  mark "SOLVER: $SOLVER (read from controlDict)"
   cat > "$CASE/detached_run.json" <<JSON
 {
   "case": "$CASE_NAME",
   "pid": $$,
   "pgid": $SOLVE_PGID,
-  "argv": ["interFoam", "-parallel"],
+  "argv": ["$SOLVER", "-parallel"],
   "ranks": $RANKS,
   "started_epoch": $(date +%s),
   "wallclock_budget_hours": $BUDGET,
-  "log_file": "log.interFoam"
+  "log_file": "log.$SOLVER"
 }
 JSON
 
-  tbegin interFoam
-  mpirun -np "$RANKS" interFoam -parallel > "$CASE/log.interFoam" 2>&1 < /dev/null
+  tbegin "$SOLVER"
+  mpirun -np "$RANKS" "$SOLVER" -parallel > "$CASE/log.$SOLVER" 2>&1 < /dev/null
   SOLVE_RC=$?
   # "SOLVER END" is the token the mesh stage greps for when deciding whether a
   # silent Stage 1 died or merely finished. Keep it whatever tend does next.
