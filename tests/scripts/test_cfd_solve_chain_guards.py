@@ -338,3 +338,24 @@ def test_hard_won_rationale_is_preserved(sources, name, fragment):
     concurrent again."""
     assert fragment in sources[name], \
         f"{name} lost the rationale for: {fragment!r}"
+
+
+def test_setfields_is_gated_on_the_case_actually_being_two_phase(
+        codes: dict[str, str]):
+    """setFields initialises a volume fraction; a single-phase case has none.
+
+    Running it unconditionally is not a stage that fails, it is a stage that
+    should never have run -- and it aborts the mesh phase AFTER the mesh is
+    built. Asserted on comment-stripped source, and asserted to be a
+    STRUCTURAL test: gating on a case name would be a backdoor, and the same
+    reasoning governs the forces density-source guard.
+    """
+    code = codes["stage45_driver.sh"]
+    assert "setFieldsDict" in code, "the gate must test for the dict"
+    assert re.search(r"compgen -G .0\.orig/alpha", code), (
+        "the gate must test for an alpha field, not a case name")
+    # The bare invocation must not appear outside the conditional.
+    for line in code.splitlines():
+        if "tstage setFields" in line:
+            assert line.startswith("    "), (
+                f"setFields must be inside the gate, found at top level: {line!r}")

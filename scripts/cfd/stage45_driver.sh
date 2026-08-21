@@ -186,7 +186,20 @@ if [ "$PHASE" = "mesh" ]; then
 
   restore0Dir >> "$CASE/driver.log" 2>&1
   mark "restore0Dir done"
-  tstage setFields runApplication setFields
+  # setFields initialises a VOLUME FRACTION. A single-phase case has none to
+  # initialise -- no alpha field, no setFieldsDict -- so running it there is
+  # not a stage that fails, it is a stage that should never have run. The
+  # chain was written when every case was two-phase, so "two-phase" was baked
+  # in as an assumption rather than tested as a property; the double-body case
+  # is what exposed it.
+  #
+  # Tested POSITIVELY and structurally, never by case name: a name check is a
+  # backdoor, and the same reasoning governs the forces density-source guard.
+  if [ -f system/setFieldsDict ] && compgen -G "0.orig/alpha.*" > /dev/null; then
+    tstage setFields runApplication setFields
+  else
+    mark "SKIP setFields -- single-phase case (no setFieldsDict, no alpha field)"
+  fi
 
   _check_decomposition
 
