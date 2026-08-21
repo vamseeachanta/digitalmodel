@@ -619,8 +619,12 @@ _PRINT_CSS = """
   .datagrid { display: block !important; }
   .datagrid > .kv { width: 100% !important; margin: 0 0 10px 0 !important;
                     break-inside: avoid; page-break-inside: avoid; }
-  .kv table { width: 100% !important; table-layout: fixed !important; }
-  .kv td { word-break: break-word !important; white-space: normal !important; }
+  /* auto, not fixed: `fixed` split every row 50/50, spending half the page
+     measure on a short label while the value wrapped beside it. */
+  .kv table { width: 100% !important; table-layout: auto !important; }
+  .kv td:first-child { white-space: nowrap !important; width: 1% !important; }
+  .kv td:last-child { white-space: normal !important; word-break: break-word !important;
+                      width: 99% !important; text-align: right; }
   .kpis { display: grid !important; grid-template-columns: 1fr 1fr !important; }
   section { break-inside: auto; }
   .l1head, .l2head { break-after: avoid; page-break-after: avoid; }

@@ -7,6 +7,8 @@ things worth pinning are the section order, the provenance encoding, and the
 completeness gate that stops a half-written report shipping.
 """
 
+import re
+
 import pytest
 
 from digitalmodel.reporting import (
@@ -203,3 +205,37 @@ def test_revision_history_renders_when_present():
 def test_revision_history_is_optional():
     """A first issue has no history and must not render an empty table."""
     assert "Revision history" not in minimal_report().render_html()
+
+
+def test_design_data_tables_stack_rather_than_sitting_abreast():
+    """A multi-column datagrid truncated values, it did not merely tighten them.
+
+    The track promised a 260px minimum, `.kv table{min-width:0}` defeated the
+    440px floor this sheet sets for every other table, and `.kv{overflow:hidden}`
+    turned the contradiction into values cut mid-word with no visual cue. Two
+    client-facing reports lost data to it before it was found.
+    """
+    html_out = minimal_report().render_html()
+    grid = re.search(r"\.datagrid\{[^}]*\}", html_out)
+    assert grid, "the datagrid rule must exist"
+    assert "grid-template-columns:1fr" in grid.group(0), grid.group(0)
+    assert "auto-fit" not in grid.group(0), (
+        "a multi-column track reintroduces the truncation")
+
+
+def test_a_long_design_data_value_can_wrap_instead_of_being_clipped():
+    """The label is sized to its content and the value takes the remainder, so
+    a long value wraps rather than being clipped by the container."""
+    html_out = minimal_report().render_html()
+    assert re.search(r"\.kv td:last-child\{[^}]*white-space:normal", html_out), (
+        "the value cell must be allowed to wrap")
+    assert re.search(r"\.kv td:first-child\{[^}]*white-space:nowrap", html_out), (
+        "the label cell must not wrap; that is what keeps a row on one line")
+
+
+def test_print_uses_auto_table_layout_not_fixed():
+    """`fixed` split every row 50/50, spending half the page measure on a short
+    label while the value wrapped beside it."""
+    html_out = minimal_report().render_html()
+    assert "table-layout: auto" in html_out
+    assert "table-layout: fixed" not in html_out
