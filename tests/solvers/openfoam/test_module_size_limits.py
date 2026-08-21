@@ -45,6 +45,7 @@ GOVERNED_MODULES = (
     # N-surface support: hull plus interpenetrating appendages (#2023). New
     # surface, so nothing to grandfather.
     "src/digitalmodel/solvers/openfoam/hull_case_regions.py",
+    "src/digitalmodel/solvers/openfoam/hull_field_patches.py",
     "src/digitalmodel/solvers/openfoam/hull_case.py",
     # The double-body (no free surface) variant of the same lane (#2023).
     # Same reasoning: new surface, nothing to grandfather.

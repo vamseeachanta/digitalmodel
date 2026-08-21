@@ -465,3 +465,37 @@ def test_supplying_the_declared_appendage_is_accepted(
         appendages=(SurfaceRegion(
             name="rudder", stl_path=write_stl(tmp_path / "rudder.stl", "rudder")),),
     )
+
+
+def test_every_mesh_patch_has_a_patchfield_in_every_field(two_region_case):
+    """snappyHexMesh creates a patch per region; a field lacking an entry for
+    one aborts with `Cannot find patchField entry for <name>` -- at setFields,
+    which is AFTER the mesh is built, so the failure costs a full meshing run.
+
+    Asserted as an agreement between two sets rather than as the presence of a
+    named string, so adding a third region cannot pass by accident.
+    """
+    config, out = two_region_case
+    case = build_hull_case(config, out / "fields")
+    expected = {r.name for r in config.surface_regions}
+    for field in sorted((case / "0.orig").glob("*")):
+        text = field.read_text()
+        present = {n for n in expected
+                   if re.search(rf"^\s*{re.escape(n)}\s*$", text, re.M)}
+        assert present == expected, (
+            f"{field.name}: mesh will have {sorted(expected)}, "
+            f"field declares {sorted(present)}"
+        )
+
+
+def test_the_appendage_inherits_the_hull_condition_rather_than_restating_it(
+        two_region_case):
+    """Copied, not restated: a change to the hull's boundary condition must
+    not leave the appendages silently on the old one."""
+    config, out = two_region_case
+    case = build_hull_case(config, out / "inherit")
+    alpha = (case / "0.orig" / "alpha.water").read_text()
+    hull_type = re.search(r"^\s*hull\s*$\s*\{[^}]*?type\s+(\w+)", alpha, re.M | re.S)
+    rud_type = re.search(r"^\s*rudder\s*$\s*\{[^}]*?type\s+(\w+)", alpha, re.M | re.S)
+    assert hull_type and rud_type
+    assert hull_type.group(1) == rud_type.group(1)

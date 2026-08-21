@@ -78,6 +78,7 @@ from .hull_case_regions import (
     SurfaceRegion, assert_regions_agree, check_region_surfaces,
     copy_region_surfaces, hull_region,
 )
+from .hull_field_patches import add_appendage_patchfields
 from .hull_manifest import HullManifest, load_hull_manifest
 
 __all__ = [
@@ -365,13 +366,13 @@ def build_hull_case(
 
     regions = config.surface_regions
     check_region_surfaces(regions)
-
     case = render_case_tree(templates, tokens, Path(parent_dir) / config.name)
 
     # The Allrun pipeline restores 0/ from 0.orig/ after meshing; both have to
     # exist for the runner's own structural check to pass.
     (case / "0").mkdir(exist_ok=True)
     copy_region_surfaces(regions, case / "constant" / "triSurface")
+    add_appendage_patchfields(case, regions)  # else setFields aborts post-mesh
 
     (case / "case_provenance.json").write_text(
         json.dumps(case_provenance(derivation), indent=2, sort_keys=True) + "\n"
