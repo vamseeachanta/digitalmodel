@@ -151,3 +151,55 @@ def test_print_stylesheet_collapses_the_data_grid():
     html = minimal_report().render_html()
     assert "@media print" in html
     assert ".datagrid { display: block !important; }" in html
+
+
+def test_a_reference_with_a_url_renders_as_a_link():
+    """A reference a reader cannot follow is a claim of provenance, not
+    provenance. Where a source has a public URL, it should be reachable."""
+    from digitalmodel.reporting.calc_report import Reference
+    r = Reference(text="ITTC 7.5-03-01-01", url="https://example.org/ittc")
+    report = minimal_report(references=[r])
+    html_out = report.render_html()
+    assert 'href="https://example.org/ittc"' in html_out
+    assert "ITTC 7.5-03-01-01" in html_out
+    assert 'rel="noopener noreferrer"' in html_out
+
+
+def test_a_reference_without_a_url_is_still_valid():
+    """Purchased standards and client-supplied models have no public URL.
+    The field is where-applicable, never required."""
+    from digitalmodel.reporting.calc_report import Reference
+    report = minimal_report(references=[Reference(text="Client hull model")])
+    html_out = report.render_html()
+    assert "Client hull model" in html_out
+    assert "<a href" not in html_out.split('class="refs"')[1].split("</ol>")[0]
+
+
+def test_a_non_http_reference_url_is_not_linkified():
+    """A javascript: or data: URL in a citation field is an injection vector
+    and no legitimate reference needs one."""
+    from digitalmodel.reporting.calc_report import Reference
+    report = minimal_report(
+        references=[Reference(text="bad", url="javascript:alert(1)")])
+    html_out = report.render_html()
+    assert "javascript:" not in html_out
+
+
+def test_revision_history_renders_when_present():
+    """The header carries the CURRENT revision; a reviewer holding an earlier
+    copy needs the trail behind it."""
+    from digitalmodel.reporting.calc_report import RevisionEntry
+    report = minimal_report(revision_history=[
+        RevisionEntry(revision="A", date="2026-08-21",
+                      description="First issue", by="AE"),
+        RevisionEntry(revision="B", date="2026-08-22",
+                      description="Conditions updated"),
+    ])
+    html_out = report.render_html()
+    assert "Revision history" in html_out
+    assert "First issue" in html_out and "Conditions updated" in html_out
+
+
+def test_revision_history_is_optional():
+    """A first issue has no history and must not render an empty table."""
+    assert "Revision history" not in minimal_report().render_html()

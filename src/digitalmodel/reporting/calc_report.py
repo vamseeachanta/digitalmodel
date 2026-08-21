@@ -291,9 +291,31 @@ class WayForwardStage(ReportDataModel):
 
 
 class Reference(ReportDataModel):
-    """One cited standard, paper or data source."""
+    """One cited standard, paper or data source.
+
+    ``url`` is optional and rendered as a link on the citation text when
+    present. A reference a reader cannot follow is a claim of provenance
+    rather than provenance itself -- but many legitimate sources have no
+    public URL (a purchased standard, a client-supplied model), so this is
+    where-applicable and never required.
+    """
 
     text: str
+    url: Optional[str] = None
+
+
+class RevisionEntry(ReportDataModel):
+    """One row of the revision history.
+
+    The header already carries the CURRENT revision. This is the trail behind
+    it, which is what a reviewer holding an earlier copy actually needs: not
+    which revision this is, but what changed since theirs.
+    """
+
+    revision: str
+    date: str
+    description: str
+    by: Optional[str] = None
 
 
 class KPI(ReportDataModel):
@@ -380,6 +402,7 @@ class CalcReport(ReportDataModel):
     way_forward: List[WayForwardStage] = Field(default_factory=list)
     references: List[Reference] = Field(default_factory=list)
     kpis: List[KPI] = Field(default_factory=list)
+    revision_history: List[RevisionEntry] = Field(default_factory=list)
 
     def completeness(self):
         """Which required house sections are still empty."""
@@ -473,12 +496,34 @@ class CalcReport(ReportDataModel):
             "the answer.",
             "".join(s.render(i) for i, s in enumerate(self.way_forward, start=1)))
 
+        def _ref_body(r: "Reference") -> str:
+            # Only http(s) is linkified: a javascript: or data: URL in a
+            # citation field would be an injection vector, and no legitimate
+            # reference needs one.
+            if r.url and r.url.startswith(("http://", "https://")):
+                return (f'<a href="{_esc(r.url)}" rel="noopener noreferrer" '
+                        f'target="_blank">{_esc(r.text)}</a>')
+            return _esc(r.text)
+
         refs = "".join(
-            f'<li><span class="rn">R{i}</span><span>{_esc(r.text)}</span></li>'
+            f'<li><span class="rn">R{i}</span><span>{_ref_body(r)}</span></li>'
             for i, r in enumerate(self.references, start=1))
         s7 = self._section("s7", "References &amp; provenance",
                            "Methods, data sources, traceability.",
                            f'<ol class="refs">{refs}</ol>')
+
+        if self.revision_history:
+            rows = "".join(
+                f'<tr><td>{_esc(h.revision)}</td><td>{_esc(h.date)}</td>'
+                f'<td>{_esc(h.description)}</td>'
+                f'<td>{_esc(h.by or "")}</td></tr>'
+                for h in self.revision_history)
+            s7 += self._section(
+                "s8", "Revision history",
+                "What changed, and when.",
+                '<table class="revhist"><thead><tr><th>Rev</th><th>Date</th>'
+                '<th>Description</th><th>By</th></tr></thead>'
+                f'<tbody>{rows}</tbody></table>')
 
         prelim = " &middot; Preliminary" if self.preliminary else ""
         kpis = "".join(k.render() for k in self.kpis)
