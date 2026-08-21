@@ -45,6 +45,11 @@ GOVERNED_MODULES = (
     # N-surface support: hull plus interpenetrating appendages (#2023). New
     # surface, so nothing to grandfather.
     "src/digitalmodel/solvers/openfoam/hull_case_regions.py",
+    # Deriving each region's refinement level from its own bounding box. Kept
+    # out of hull_case_regions.py, which is already near the limit, and it is
+    # a separate concern anyway: that module says which surfaces the mesher
+    # meets, this one says how finely it must meet them.
+    "src/digitalmodel/solvers/openfoam/region_refinement.py",
     "src/digitalmodel/solvers/openfoam/hull_field_patches.py",
     "src/digitalmodel/solvers/openfoam/hull_case.py",
     # The double-body (no free surface) variant of the same lane (#2023).

@@ -1,0 +1,53 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2312                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : _9a9aeb73-20260127 OPENFOAM=2312 patch=260127 version=2312
+Arch   : "LSB;label=32;scalar=64"
+Exec   : refineMesh -dict system/refineMeshDict -overwrite
+Date   : Aug 19 2026
+Time   : 10:49:40
+Host   : gpu-claw
+PID    : 420501
+I/O    : uncollated
+Case   : /home/undi/cfd/dm1173/kcs_cases/kcs_prod_yplus
+nProcs : 1
+trapFpe: Floating point exception trapping enabled (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 5, maxFileModificationPolls 20)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Create polyMesh for time = 0
+
+Mesh edge statistics:
+    x aligned :  number:248472	minLen:1.00914	maxLen:1.00914
+    y aligned :  number:242788	minLen:1.01227	maxLen:1.01227
+    z aligned :  number:252096	minLen:0.0137242	maxLen:0.95539
+    other     :  number:0	minLen:1e+15	maxLen:-1e+15
+
+Refining according to "system/refineMeshDict"
+
+Read 28350 cells from cellSet "constant/polyMesh/sets/c0"
+
+Global Coordinate system:
+     normal : (0 0 1)
+     tan1   : (1 0 0)
+     tan2   : (0 1 0)
+
+Writing refined cells (113400) to cellSet "constant/polyMesh/sets/refinedCells"
+
+Writing map from new to old cell to "/home/undi/cfd/dm1173/kcs_cases/kcs_prod_yplus/0/polyMesh/cellMap"
+
+Mesh edge statistics:
+    x aligned :  number:338122	minLen:0.504569	maxLen:1.00914
+    y aligned :  number:329504	minLen:0.506135	maxLen:1.01227
+    z aligned :  number:342330	minLen:0.0137242	maxLen:0.95539
+    other     :  number:0	minLen:1e+15	maxLen:-1e+15
+
+End
+
