@@ -189,3 +189,30 @@ def test_single_phase_template_names_the_constant_density_explicitly(template):
         f"{evidence['case']} says `rho rhoInf` without supplying rhoInf")
     assert not re.search(r"^\s*rho\s+rho\s*;", body, re.M), (
         f"{evidence['case']} names a VOF density field it does not have")
+
+
+@pytest.mark.parametrize("template", TEMPLATES)
+def test_per_patch_forces_take_the_density_source_from_the_case(template):
+    """The per-patch objects hardcoded the VOF field.
+
+    Right for a two-phase case, fatal for a single-phase one: simpleFoam has
+    no rho field and aborts with "Could not find rho:rho in database" one
+    iteration into a solve that had already meshed. The MAIN blocks were
+    correct throughout -- only these were not, so the case looked right
+    everywhere a reviewer would think to check.
+
+    Asserted as agreement between the main and per-patch blocks, so neither
+    can drift from the other regardless of which is right for the case.
+    """
+    text = _drop_comments(template.read_text())
+    main = re.search(r"^\s{4}forces\s*$.*?^\s{4}\}", text, re.M | re.S)
+    if main is None:
+        pytest.skip(f"{template.parent.parent.name} configures no forces")
+    main_rho = re.search(r"rho\s+(\w+)\s*;", main.group(0))
+    assert main_rho, "the union block must name a density source"
+    for blk in re.findall(r"^\s{4}forces_\w+\s*$.*?^\s{4}\}", text, re.M | re.S):
+        per_rho = re.search(r"rho\s+(\w+)\s*;", blk)
+        assert per_rho, "a per-patch block must name a density source"
+        assert per_rho.group(1) == main_rho.group(1), (
+            f"{template.parent.parent.name}: per-patch uses "
+            f"{per_rho.group(1)!r}, union uses {main_rho.group(1)!r}")

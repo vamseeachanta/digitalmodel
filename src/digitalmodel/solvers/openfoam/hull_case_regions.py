@@ -140,7 +140,8 @@ def _validate(regions: Sequence[SurfaceRegion]) -> None:
 # --------------------------------------------------------------------------- #
 
 def region_tokens(
-    regions: Sequence[SurfaceRegion], *, c_of_r: str
+    regions: Sequence[SurfaceRegion], *, c_of_r: str,
+    rho_source: str = "rho", rho_inf: Optional[float] = None,
 ) -> Dict[str, str]:
     """Every ``@TOKEN@`` that depends on HOW MANY surfaces there are.
 
@@ -159,7 +160,8 @@ def region_tokens(
         "LAYERS": _layers_block(regions),
         "FEATUREEXTRACT": _feature_extract_block(regions),
         "FORCEPATCHES": " ".join(r.name for r in regions),
-        "PERPATCHFORCES": _per_patch_forces(regions, c_of_r),
+        "PERPATCHFORCES": _per_patch_forces(regions, c_of_r,
+                                            rho_source, rho_inf),
     }
 
 
@@ -234,7 +236,24 @@ def _feature_extract_block(regions: Sequence[SurfaceRegion]) -> str:
     return "\n\n".join(parts)
 
 
-def _per_patch_forces(regions: Sequence[SurfaceRegion], c_of_r: str) -> str:
+
+def _rho_lines(rho_source: str, rho_inf: Optional[float]) -> str:
+    """The two lines that name where density comes from.
+
+    Two-phase: the VOF field, because a constant integrates the above-water
+    surface at water density. Single-phase: a constant, because there is no
+    density field to read and asking for one aborts the solver.
+    """
+    if rho_source == "rhoInf":
+        if rho_inf is None:
+            raise ValueError("rho_source 'rhoInf' needs an explicit rho_inf")
+        return (f"        rho             rhoInf;\n"
+                f"        rhoInf          {rho_inf:g};\n")
+    return "        rho             rho;\n"
+
+
+def _per_patch_forces(regions: Sequence[SurfaceRegion], c_of_r: str,
+                      rho_source: str = "rho", rho_inf: Optional[float] = None) -> str:
     """One ``forces`` object per patch, in NEWTONS, and only when it adds.
 
     Empty for a single-region case: the union's own ``forces`` block already
@@ -250,9 +269,12 @@ def _per_patch_forces(regions: Sequence[SurfaceRegion], c_of_r: str) -> str:
         "        type            forces;\n"
         "        libs            (forces);\n"
         f"        patches         ({r.name});\n"
-        "        // The VOF density FIELD, never a constant: a constant\n"
-        "        // integrates the above-water surface at water density.\n"
-        "        rho             rho;\n"
+        # The density source is the CASE's, never this emitter's opinion. It
+        # was hardcoded to the VOF field, which is right for a two-phase case
+        # and fatal for a single-phase one -- simpleFoam has no rho field and
+        # aborts with "Could not find rho:rho in database", one iteration into
+        # a solve that had already meshed.
+        + _rho_lines(rho_source, rho_inf) +
         "        log             on;\n"
         "        writeControl    timeStep;\n"
         "        writeInterval   1;\n"

@@ -50,7 +50,7 @@ def double_body_tokens(derivation: "DoubleBodyDerivation") -> Dict[str, str]:
     tokens.update(
         region_tokens(
             derivation.config.surface_regions, c_of_r=force["COFR"]
-        )
+        , rho_source="rhoInf", rho_inf=derivation.config.density)
     )
     return tokens
 
