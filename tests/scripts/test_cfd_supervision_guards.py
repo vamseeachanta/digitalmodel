@@ -507,3 +507,20 @@ def test_the_gate_halts_rather_than_launching_when_cells_are_out_of_bounds(
         assert m.start() < launch, "a HALT branch appears after the launch"
     assert re.search(r"exit\s+2", body), \
         "an out-of-bounds mesh must exit non-zero and distinguishably"
+
+
+def test_the_coefficient_object_name_is_discovered_not_hardcoded(
+        code: dict[Path, str]):
+    """It was pinned to the name one case happened to use.
+
+    On a case whose object is called something else the glob returned nothing,
+    the poll loop continued forever and the ITTC stop never armed -- silently,
+    because an empty result is indistinguishable from "not converged yet".
+    Asserted on comment-stripped source so the comment explaining the defect
+    cannot satisfy the guard against it.
+    """
+    body = next(v for k, v in code.items() if k.name == "ittc_watch.sh")
+    assert "forceCoeffs1" not in body, (
+        "a hardcoded function-object name reintroduces the silent-empty defect")
+    assert re.search(r"postProcessing/\*/\*/coefficient", body), (
+        "the coefficient file must be found by discovery across objects")

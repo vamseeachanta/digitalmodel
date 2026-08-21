@@ -82,7 +82,27 @@ HOLD="${HOLD:-3}"                  # consecutive passing checks required
 #
 # shellcheck disable=SC2012  # `ls -t` is the point: mtime ordering is the
 # selection criterion, and OpenFOAM's own filenames carry no whitespace.
-coef_file() { ls -t "$CASE"/postProcessing/forceCoeffs1/*/coefficient*.dat 2>/dev/null | head -1; }
+# The function-object NAME is discovered, not assumed. It was hardcoded to
+# `forceCoeffs1` -- the name one particular case happened to use -- so on a
+# case whose object is called `forceCoeffs` this returned nothing, the poll
+# loop `continue`d forever and the stop never armed. Silently: an empty
+# result is indistinguishable from "not converged yet".
+#
+# Refuses rather than guesses when more than one object writes coefficients:
+# picking one would be choosing which body's convergence to watch.
+coef_file() {
+  local dirs
+  dirs=$(ls -d "$CASE"/postProcessing/*/ 2>/dev/null \
+         | while read -r d; do
+             compgen -G "$d*/coefficient*.dat" > /dev/null && basename "$d"
+           done)
+  local n; n=$(printf '%s\n' "$dirs" | grep -c .)
+  if [ "$n" -gt 1 ]; then
+    cfd_say "FATAL more than one coefficient-writing object: $(echo $dirs) -- refusing to pick"
+    return 1
+  fi
+  ls -t "$CASE"/postProcessing/*/*/coefficient*.dat 2>/dev/null | head -1
+}
 
 cfd_say "ITTC watcher armed for '$CASE_NAME': min_iter=$MIN_ITER window=$WINDOW x$WINDOWS spread<=${SPREAD_PCT}% drift<=${DRIFT_PCT}% hold=$HOLD"
 
