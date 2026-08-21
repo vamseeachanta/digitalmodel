@@ -499,3 +499,30 @@ def test_the_appendage_inherits_the_hull_condition_rather_than_restating_it(
     rud_type = re.search(r"^\s*rudder\s*$\s*\{[^}]*?type\s+(\w+)", alpha, re.M | re.S)
     assert hull_type and rud_type
     assert hull_type.group(1) == rud_type.group(1)
+
+
+@pytest.mark.parametrize("builder", ["free_surface", "double_body"])
+def test_both_builders_declare_every_mesh_patch(builder, tmp_path, manifest_dict):
+    """The fix was applied to one builder and the other kept the defect.
+
+    Two build paths emit cases from the same region list, and wiring one and
+    not the other is invisible until a mesh is built and the solver refuses
+    the fields. Parametrised over BOTH so a third builder cannot be added
+    without this failing.
+    """
+    from digitalmodel.solvers.openfoam.hull_double_body import (
+        DoubleBodyCaseConfig, build_double_body_case)
+    hull = write_stl(tmp_path / "synthetic_hull.stl", "hull")
+    rudder = write_stl(tmp_path / "rudder.stl", "rudder")
+    common = dict(manifest=HullManifest.from_dict(manifest_dict), stl_path=hull,
+                  velocity=VELOCITY, ranks=RANKS,
+                  appendages=(SurfaceRegion(name="rudder", stl_path=rudder),))
+    if builder == "free_surface":
+        case = build_hull_case(HullCaseConfig(**common), tmp_path / builder)
+    else:
+        case = build_double_body_case(DoubleBodyCaseConfig(**common), tmp_path / builder)
+    for field in sorted((case / "0.orig").glob("*")):
+        text = field.read_text()
+        for name in ("hull", "rudder"):
+            assert re.search(rf"^\s*{name}\s*$", text, re.M), (
+                f"{builder}/{field.name} has no patchField for {name}")

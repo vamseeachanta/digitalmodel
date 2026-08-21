@@ -51,6 +51,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from .hull_case import HullCaseConfig
 from .hull_case_dicts import render_case_tree
+from .hull_field_patches import add_appendage_patchfields
 from .hull_case_regions import check_region_surfaces, copy_region_surfaces
 from .hull_case_physics import (
     Block,
@@ -264,6 +265,7 @@ def build_double_body_case(
     )
     (case / "0").mkdir(exist_ok=True)
     copy_region_surfaces(regions, case / "constant" / "triSurface")
+    add_appendage_patchfields(case, regions)  # else decomposePar aborts post-mesh
 
     (case / "case_provenance.json").write_text(
         json.dumps(double_body_case_provenance(derivation), indent=2, sort_keys=True)
