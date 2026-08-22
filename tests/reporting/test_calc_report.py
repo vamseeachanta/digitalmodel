@@ -239,3 +239,88 @@ def test_print_uses_auto_table_layout_not_fixed():
     html_out = minimal_report().render_html()
     assert "table-layout: auto" in html_out
     assert "table-layout: fixed" not in html_out
+
+
+# ---------------------------------------------------------------------------
+# The organisation marks
+#
+# A report carries the issuing organisation in three places that have to agree
+# -- masthead, footer byline, foot-bar. They are driven from one field so they
+# cannot drift apart, and that field defaults to the house mark so that adding
+# it moved no report that already existed.
+# ---------------------------------------------------------------------------
+
+#: The three marks exactly as they rendered *before* `organisation` and
+#: `organisation_logo` existed, captured from the previous revision of the
+#: module. They are byte-for-byte, not fuzzy matches: the point of the default
+#: is that every report already in a client's hands still renders the same.
+HOUSE_MASTHEAD = '<div class="brand">Ace<b>Engineer</b> &middot; Test</div>'
+HOUSE_BYLINE = "<p>Prepared by AceEngineer Test.</p>"
+HOUSE_FOOT_BAR = '<div class="foot-bar"><span>AceEngineer &middot; Test</span>'
+
+#: SHA-256 of the whole rendered document for the same report, captured at the
+#: same point. The three assertions above name what changed if this moves; this
+#: one catches a change anywhere else in the page. A deliberate house-format
+#: change is expected to move it -- regenerate it then, having first read the
+#: diff and confirmed the marks above are still intact.
+HOUSE_RENDER_SHA256 = (
+    "5f8da8c0b4bb55e634a8250ed51b74727c1922dfb28ef49a494cb17ac0d9c558")
+
+
+def test_default_organisation_renders_the_house_marks_unchanged():
+    """A report that sets neither field renders byte-identically to before."""
+    import hashlib
+
+    html_out = minimal_report().render_html()
+    assert HOUSE_MASTHEAD in html_out, "the masthead wordmark moved"
+    assert HOUSE_BYLINE in html_out, "the footer byline moved"
+    assert HOUSE_FOOT_BAR in html_out, "the foot-bar mark moved"
+    assert "brand-logo" not in html_out, (
+        "the house masthead is a wordmark; no logo element belongs in it")
+    assert hashlib.sha256(html_out.encode()).hexdigest() == HOUSE_RENDER_SHA256, (
+        "the rendered house report is no longer byte-identical; see "
+        "HOUSE_RENDER_SHA256")
+
+
+def test_organisation_carries_to_all_three_marks():
+    """Setting the organisation moves every mark, not just the masthead.
+
+    A masthead that says one organisation over a footer that says another is
+    the mixed-branding defect this field exists to prevent.
+    """
+    html_out = minimal_report(organisation="Nordwind Marine Ltd").render_html()
+    assert '<div class="brand">Nordwind Marine Ltd &middot; Test</div>' in html_out
+    assert "<p>Prepared by Nordwind Marine Ltd Test.</p>" in html_out
+    assert ('<div class="foot-bar"><span>Nordwind Marine Ltd &middot; Test</span>'
+            in html_out)
+    assert "AceEngineer" not in html_out, (
+        "no house mark may survive in a report issued by someone else")
+
+
+def test_only_the_house_name_gets_the_two_tone_wordmark():
+    """Another organisation's name is set plain, not split at a guessed seam."""
+    html_out = minimal_report(organisation="Ace Marine").render_html()
+    assert "<b>" not in re.search(
+        r'<div class="brand">.*?</div>', html_out, re.S).group(0)
+
+
+def test_an_organisation_logo_renders_in_the_masthead():
+    pixel = ("data:image/gif;base64,"
+             "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7")
+    html_out = minimal_report(
+        organisation="Nordwind Marine Ltd", organisation_logo=pixel).render_html()
+    brand = re.search(r'<div class="brand">.*?</div>', html_out, re.S).group(0)
+    assert f'src="{pixel}"' in brand
+    assert 'alt="Nordwind Marine Ltd"' in brand, (
+        "the logo carries the organisation as its accessible name")
+    assert brand.index("<img") < brand.index("Nordwind"), (
+        "the logo precedes the name on the first line")
+
+
+def test_a_logo_that_is_not_self_contained_is_refused():
+    """A remote logo leaves a broken image on a client reading offline, and an
+    arbitrary URI in an ``src`` is the injection surface the reference links
+    are already guarded against."""
+    report = minimal_report(organisation_logo="https://example.invalid/logo.png")
+    with pytest.raises(ValueError, match="data:image/"):
+        report.render_html()
