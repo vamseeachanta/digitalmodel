@@ -91,6 +91,43 @@ def _esc(text: str) -> str:
     return text if ("<" in text or "&" in text) else html.escape(text)
 
 
+#: The house organisation, and the wordmark it is set in on the masthead.
+#: Only the house name gets the two-tone treatment. Where to split another
+#: organisation's name into stem and stress is a typographic decision about
+#: someone else's identity, and guessing it wrong is worse than not trying:
+#: any other name is set as plain text.
+_HOUSE_ORGANISATION = "AceEngineer"
+_HOUSE_WORDMARK = "Ace<b>Engineer</b>"
+
+
+def _wordmark(organisation: str) -> str:
+    """The masthead form of an organisation name."""
+    if organisation == _HOUSE_ORGANISATION:
+        return _HOUSE_WORDMARK
+    return _esc(organisation)
+
+
+def _logo_img(data_uri: str, alt: str) -> str:
+    """The masthead logo, or nothing when no logo is set.
+
+    Only a ``data:`` image URI is accepted. A report is a single
+    self-contained file that has to render from an email attachment with no
+    network, so a remote logo would leave a broken image on the client's
+    screen; and an arbitrary URI in an ``src`` attribute is the same
+    injection surface the reference links are guarded against.
+    """
+    if not data_uri:
+        return ""
+    if not data_uri.startswith("data:image/"):
+        raise ValueError(
+            "organisation_logo must be a self-contained data:image/ URI, "
+            f"not {data_uri[:32]!r}")
+    return (f'<img class="brand-logo" src="{html.escape(data_uri, quote=True)}" '
+            f'alt="{html.escape(alt, quote=True)}" '
+            'style="height:30px;width:auto;display:inline-block;'
+            'vertical-align:middle;margin-right:10px">')
+
+
 # ---------------------------------------------------------------------------
 # Typed section content
 # ---------------------------------------------------------------------------
@@ -393,6 +430,15 @@ class CalcReport(ReportDataModel):
     revision: str = "A"
     preliminary: bool = False
 
+    #: Who the report is issued by. Carried in three places that have to
+    #: agree -- the masthead, the footer byline and the foot-bar -- so they
+    #: are set from one field rather than three strings that can drift apart.
+    #: Defaults to the house mark, so an existing report is unchanged.
+    organisation: str = _HOUSE_ORGANISATION
+    #: Optional masthead logo as a self-contained ``data:`` image URI. Empty
+    #: by default: the house masthead is a wordmark, not an image.
+    organisation_logo: str = ""
+
     objective: Objective
     design_data: List[DesignDataGroup] = Field(default_factory=list)
     assumptions: List[DesignDataGroup] = Field(default_factory=list)
@@ -527,6 +573,9 @@ class CalcReport(ReportDataModel):
 
         prelim = " &middot; Preliminary" if self.preliminary else ""
         kpis = "".join(k.render() for k in self.kpis)
+        logo = _logo_img(self.organisation_logo, self.organisation)
+        brand = _wordmark(self.organisation)
+        org = html.escape(self.organisation)
 
         return f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
@@ -536,7 +585,7 @@ class CalcReport(ReportDataModel):
 </head><body>
 <div class="doc" id="top">
   <header class="masthead"><div class="wrap" style="max-width:1240px">
-    <div class="brand">Ace<b>Engineer</b> &middot; {html.escape(self.discipline)}</div>
+    <div class="brand">{logo}{brand} &middot; {html.escape(self.discipline)}</div>
     <div class="mh-legend">
       <span class="lg"><span class="sw" style="background:var(--cfd)"></span>Validated</span>
       <span class="lg"><span class="sw" style="background:var(--ro)"></span>Analytical</span>
@@ -557,13 +606,13 @@ class CalcReport(ReportDataModel):
   <footer><div class="wrap" style="max-width:1240px">
     <div class="foot-grid">
       <div><h3>{html.escape(self.report_id)} &middot; Rev {html.escape(self.revision)}</h3>
-        <p>Prepared by AceEngineer {html.escape(self.discipline)}.</p></div>
+        <p>Prepared by {org} {html.escape(self.discipline)}.</p></div>
       <div><h3>Provenance</h3><ul>
         <li><span class="num">Teal</span> &mdash; validated</li>
         <li><span class="num">Amber</span> &mdash; analytical, assumptions carried</li>
         <li><span class="num">Muted</span> &mdash; pending data</li></ul></div>
     </div>
-    <div class="foot-bar"><span>AceEngineer &middot; {html.escape(self.discipline)}</span>
+    <div class="foot-bar"><span>{org} &middot; {html.escape(self.discipline)}</span>
       <span>Standard calculation report format &middot; Rev A</span></div>
   </div></footer>
 </div>
