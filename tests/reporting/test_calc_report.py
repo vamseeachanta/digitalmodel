@@ -7,6 +7,8 @@ things worth pinning are the section order, the provenance encoding, and the
 completeness gate that stops a half-written report shipping.
 """
 
+import re
+
 import pytest
 
 from digitalmodel.reporting import (
@@ -151,3 +153,174 @@ def test_print_stylesheet_collapses_the_data_grid():
     html = minimal_report().render_html()
     assert "@media print" in html
     assert ".datagrid { display: block !important; }" in html
+
+
+def test_a_reference_with_a_url_renders_as_a_link():
+    """A reference a reader cannot follow is a claim of provenance, not
+    provenance. Where a source has a public URL, it should be reachable."""
+    from digitalmodel.reporting.calc_report import Reference
+    r = Reference(text="ITTC 7.5-03-01-01", url="https://example.org/ittc")
+    report = minimal_report(references=[r])
+    html_out = report.render_html()
+    assert 'href="https://example.org/ittc"' in html_out
+    assert "ITTC 7.5-03-01-01" in html_out
+    assert 'rel="noopener noreferrer"' in html_out
+
+
+def test_a_reference_without_a_url_is_still_valid():
+    """Purchased standards and client-supplied models have no public URL.
+    The field is where-applicable, never required."""
+    from digitalmodel.reporting.calc_report import Reference
+    report = minimal_report(references=[Reference(text="Client hull model")])
+    html_out = report.render_html()
+    assert "Client hull model" in html_out
+    assert "<a href" not in html_out.split('class="refs"')[1].split("</ol>")[0]
+
+
+def test_a_non_http_reference_url_is_not_linkified():
+    """A javascript: or data: URL in a citation field is an injection vector
+    and no legitimate reference needs one."""
+    from digitalmodel.reporting.calc_report import Reference
+    report = minimal_report(
+        references=[Reference(text="bad", url="javascript:alert(1)")])
+    html_out = report.render_html()
+    assert "javascript:" not in html_out
+
+
+def test_revision_history_renders_when_present():
+    """The header carries the CURRENT revision; a reviewer holding an earlier
+    copy needs the trail behind it."""
+    from digitalmodel.reporting.calc_report import RevisionEntry
+    report = minimal_report(revision_history=[
+        RevisionEntry(revision="A", date="2026-08-21",
+                      description="First issue", by="AE"),
+        RevisionEntry(revision="B", date="2026-08-22",
+                      description="Conditions updated"),
+    ])
+    html_out = report.render_html()
+    assert "Revision history" in html_out
+    assert "First issue" in html_out and "Conditions updated" in html_out
+
+
+def test_revision_history_is_optional():
+    """A first issue has no history and must not render an empty table."""
+    assert "Revision history" not in minimal_report().render_html()
+
+
+def test_design_data_tables_stack_rather_than_sitting_abreast():
+    """A multi-column datagrid truncated values, it did not merely tighten them.
+
+    The track promised a 260px minimum, `.kv table{min-width:0}` defeated the
+    440px floor this sheet sets for every other table, and `.kv{overflow:hidden}`
+    turned the contradiction into values cut mid-word with no visual cue. Two
+    client-facing reports lost data to it before it was found.
+    """
+    html_out = minimal_report().render_html()
+    grid = re.search(r"\.datagrid\{[^}]*\}", html_out)
+    assert grid, "the datagrid rule must exist"
+    assert "grid-template-columns:1fr" in grid.group(0), grid.group(0)
+    assert "auto-fit" not in grid.group(0), (
+        "a multi-column track reintroduces the truncation")
+
+
+def test_a_long_design_data_value_can_wrap_instead_of_being_clipped():
+    """The label is sized to its content and the value takes the remainder, so
+    a long value wraps rather than being clipped by the container."""
+    html_out = minimal_report().render_html()
+    assert re.search(r"\.kv td:last-child\{[^}]*white-space:normal", html_out), (
+        "the value cell must be allowed to wrap")
+    assert re.search(r"\.kv td:first-child\{[^}]*white-space:nowrap", html_out), (
+        "the label cell must not wrap; that is what keeps a row on one line")
+
+
+def test_print_uses_auto_table_layout_not_fixed():
+    """`fixed` split every row 50/50, spending half the page measure on a short
+    label while the value wrapped beside it."""
+    html_out = minimal_report().render_html()
+    assert "table-layout: auto" in html_out
+    assert "table-layout: fixed" not in html_out
+
+
+# ---------------------------------------------------------------------------
+# The organisation marks
+#
+# A report carries the issuing organisation in three places that have to agree
+# -- masthead, footer byline, foot-bar. They are driven from one field so they
+# cannot drift apart, and that field defaults to the house mark so that adding
+# it moved no report that already existed.
+# ---------------------------------------------------------------------------
+
+#: The three marks exactly as they rendered *before* `organisation` and
+#: `organisation_logo` existed, captured from the previous revision of the
+#: module. They are byte-for-byte, not fuzzy matches: the point of the default
+#: is that every report already in a client's hands still renders the same.
+HOUSE_MASTHEAD = '<div class="brand">Ace<b>Engineer</b> &middot; Test</div>'
+HOUSE_BYLINE = "<p>Prepared by AceEngineer Test.</p>"
+HOUSE_FOOT_BAR = '<div class="foot-bar"><span>AceEngineer &middot; Test</span>'
+
+#: SHA-256 of the whole rendered document for the same report, captured at the
+#: same point. The three assertions above name what changed if this moves; this
+#: one catches a change anywhere else in the page. A deliberate house-format
+#: change is expected to move it -- regenerate it then, having first read the
+#: diff and confirmed the marks above are still intact.
+HOUSE_RENDER_SHA256 = (
+    "5f8da8c0b4bb55e634a8250ed51b74727c1922dfb28ef49a494cb17ac0d9c558")
+
+
+def test_default_organisation_renders_the_house_marks_unchanged():
+    """A report that sets neither field renders byte-identically to before."""
+    import hashlib
+
+    html_out = minimal_report().render_html()
+    assert HOUSE_MASTHEAD in html_out, "the masthead wordmark moved"
+    assert HOUSE_BYLINE in html_out, "the footer byline moved"
+    assert HOUSE_FOOT_BAR in html_out, "the foot-bar mark moved"
+    assert "brand-logo" not in html_out, (
+        "the house masthead is a wordmark; no logo element belongs in it")
+    assert hashlib.sha256(html_out.encode()).hexdigest() == HOUSE_RENDER_SHA256, (
+        "the rendered house report is no longer byte-identical; see "
+        "HOUSE_RENDER_SHA256")
+
+
+def test_organisation_carries_to_all_three_marks():
+    """Setting the organisation moves every mark, not just the masthead.
+
+    A masthead that says one organisation over a footer that says another is
+    the mixed-branding defect this field exists to prevent.
+    """
+    html_out = minimal_report(organisation="Nordwind Marine Ltd").render_html()
+    assert '<div class="brand">Nordwind Marine Ltd &middot; Test</div>' in html_out
+    assert "<p>Prepared by Nordwind Marine Ltd Test.</p>" in html_out
+    assert ('<div class="foot-bar"><span>Nordwind Marine Ltd &middot; Test</span>'
+            in html_out)
+    assert "AceEngineer" not in html_out, (
+        "no house mark may survive in a report issued by someone else")
+
+
+def test_only_the_house_name_gets_the_two_tone_wordmark():
+    """Another organisation's name is set plain, not split at a guessed seam."""
+    html_out = minimal_report(organisation="Ace Marine").render_html()
+    assert "<b>" not in re.search(
+        r'<div class="brand">.*?</div>', html_out, re.S).group(0)
+
+
+def test_an_organisation_logo_renders_in_the_masthead():
+    pixel = ("data:image/gif;base64,"
+             "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7")
+    html_out = minimal_report(
+        organisation="Nordwind Marine Ltd", organisation_logo=pixel).render_html()
+    brand = re.search(r'<div class="brand">.*?</div>', html_out, re.S).group(0)
+    assert f'src="{pixel}"' in brand
+    assert 'alt="Nordwind Marine Ltd"' in brand, (
+        "the logo carries the organisation as its accessible name")
+    assert brand.index("<img") < brand.index("Nordwind"), (
+        "the logo precedes the name on the first line")
+
+
+def test_a_logo_that_is_not_self_contained_is_refused():
+    """A remote logo leaves a broken image on a client reading offline, and an
+    arbitrary URI in an ``src`` is the injection surface the reference links
+    are already guarded against."""
+    report = minimal_report(organisation_logo="https://example.invalid/logo.png")
+    with pytest.raises(ValueError, match="data:image/"):
+        report.render_html()

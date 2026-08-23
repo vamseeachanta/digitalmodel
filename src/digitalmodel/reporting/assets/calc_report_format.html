@@ -240,14 +240,24 @@
   .chip{font-family:var(--mono);font-size:11.5px;background:var(--surface);border:1px solid var(--hairline);border-radius:999px;padding:5px 11px;color:var(--ink-2)}
 
   /* data / definition tables */
-  .datagrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:4px}
+  /* Single column, always. A multi-column track promised a 260px minimum,
+     but `.kv table{min-width:0}` below defeats the 440px floor this sheet
+     sets for every other table, and `.kv{overflow:hidden}` turns that into
+     SILENT TRUNCATION -- values cut mid-word with no visual cue. The grid
+     was only ever safe for groups with short labels AND short values, and
+     no report can promise that. See the min-width follow-up issue. */
+  .datagrid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:4px}
   .kv{border:1px solid var(--hairline);border-radius:12px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow)}
   .kv .cap{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);
     padding:11px 15px;background:var(--surface-2);border-bottom:1px solid var(--hairline);font-weight:600}
   .kv table{min-width:0}
   .kv td{border-bottom:1px solid var(--hairline)}
   .kv tr:last-child td{border-bottom:none}
-  .kv td:first-child{color:var(--ink-2)}
+  /* Label sized to its own content, value takes the remaining measure, so a
+     row reads as one line across the page instead of a stub with dead space
+     beside it -- and a long value wraps rather than being clipped. */
+  .kv td:first-child{color:var(--ink-2);width:1%;white-space:nowrap;padding-right:30px}
+  .kv td:last-child{width:99%;white-space:normal;overflow-wrap:break-word}
   .kv td:last-child{color:var(--ink);font-weight:600;font-family:var(--mono);font-size:13px}
   .kv td .un{color:var(--ink-muted);font-weight:400;font-size:11px}
 
