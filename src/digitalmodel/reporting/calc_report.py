@@ -558,17 +558,16 @@ class CalcReport(ReportDataModel):
         return (
             '<div class="l2" id="s8-1"><div class="l2head"><span class="n"></span>'
             "<h3>Issued revisions</h3></div>"
-            '<p class="prose">Each row is one issue of this document to the '
-            "client. The revision letter moves only on issue; it is set when "
-            "the document is sent, not when it is edited. This is the record "
-            "of what has been received.</p>"
+            '<p class="prose">One row per issue to the client. The revision '
+            "letter moves only on issue: it is set when the document is sent, "
+            "not when it is edited.</p>"
             f"{issued}</div>"
             '<div class="l2" id="s8-2"><div class="l2head"><span class="n"></span>'
             "<h3>Internal revisions</h3></div>"
             '<p class="prose">Changes made within the issuing organisation '
-            "between issues, numbered under the revision letter they will be "
-            "issued as. These have not been separately issued to the client: "
-            "they are folded into the next lettered revision above.</p>"
+            "between issues, numbered under the letter they will be issued "
+            "as. They are folded into the lettered revision above, not "
+            "separately issued.</p>"
             f"{self._revhist_table(internal_rows)}</div>"
         )
 
