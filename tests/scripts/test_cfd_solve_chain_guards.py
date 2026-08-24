@@ -38,6 +38,7 @@ from __future__ import annotations
 import re
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -376,3 +377,63 @@ def test_the_solver_is_read_from_the_case_not_hardcoded(codes: dict[str, str]):
         "the launch must use the solver read from the case")
     assert "interFoam" not in code, (
         "no solver name may remain hardcoded in executable lines")
+
+
+# --------------------------------------------------------------------------- #
+# 8. The post-mesh face-resolution gate (#2033).
+#
+# checkMesh scores SHAPE and says nothing about SIZE on a named patch. The
+# mesh that invalidated a resistance campaign was "Mesh OK", zero failed
+# checks, 95 % layer coverage -- and 0.7 % of its hull patch carried 122 % of
+# the net pressure drag, on faces up to 18.5 m2 against a 0.33 m target cell.
+# The gate must run, must run before the solve is released, and must be HARD.
+# --------------------------------------------------------------------------- #
+
+GATE = SCRIPTS_DIR / "check_face_resolution.py"
+
+
+def test_the_face_resolution_gate_script_exists_and_parses():
+    assert GATE.is_file(), f"post-mesh gate not found at {GATE}"
+    subprocess.run([sys.executable, "-c", f"import ast;ast.parse(open({str(GATE)!r}).read())"],
+                   check=True)
+
+
+def test_the_driver_runs_the_face_resolution_gate(codes: dict[str, str]):
+    code = codes["stage45_driver.sh"]
+    assert "check_face_resolution.py" in code, \
+        "the mesh phase does not measure the hull patch it is about to solve on"
+
+
+def test_the_face_resolution_gate_is_hard_not_advisory(codes: dict[str, str]):
+    """Through ``tstage``, which writes the FAILED marker and exits.
+
+    The checkMesh verdict beside it only ``mark``s and lets the driver carry
+    on; that is a deliberate difference and this one must not drift into it.
+    A soft gate on a 30 h solve is a log line nobody reads until afterwards.
+    """
+    line = next(ln for ln in codes["stage45_driver.sh"].splitlines()
+                if "check_face_resolution.py" in ln)
+    assert line.lstrip().startswith("tstage "), \
+        f"the gate is not run through tstage, so a failure does not stop the chain: {line!r}"
+
+
+def test_the_gate_runs_before_the_mesh_is_decomposed_for_solving(codes):
+    """Ordering is the entire economic argument: the point of a post-mesh gate
+    is that it costs one boundary traversal instead of the solve."""
+    code = codes["stage45_driver.sh"]
+    assert code.index("check_face_resolution.py") < code.index("redistributePar"), \
+        "the gate runs after the mesh has been decomposed for the solver"
+
+
+def test_the_gate_never_falls_through_to_a_pass():
+    """A gate that cannot run must exit non-zero.
+
+    Every route by which this gate can fail to produce a verdict -- no
+    provenance, an unreadable mesh, an absent patch, a missing package -- has
+    to end in a refusal. An absent check reads greener than a failing one, and
+    that is precisely how the defect it guards survived a whole campaign.
+    """
+    source = GATE.read_text()
+    assert "sys.exit(" in source or "return 1" in source
+    for forgiving in ("except Exception:\n        pass", "return 0  # skip", "continue"):
+        assert forgiving not in source, f"the gate has a silent-pass path: {forgiving!r}"

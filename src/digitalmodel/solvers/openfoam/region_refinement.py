@@ -60,6 +60,7 @@ __all__ = [
     "DEFAULT_TARGET_CELLS_ACROSS",
     "RegionRefinement",
     "derive_region_levels",
+    "finest_in_plane_cell",
     "near_hull_cell_size",
     "refinement_for_bbox",
     "refinement_for_extent",
@@ -95,6 +96,29 @@ def near_hull_cell_size(
     if stages < 0:
         raise ValueError(f"stages must be >= 0, got {stages}")
     return base_cell_size_m / 2**stages
+
+
+def finest_in_plane_cell(
+    domain: Any, divisions: Mapping[str, int], stages: int = REFINEMENT_STAGES
+) -> float:
+    """The in-plane cell the EMITTED mesh carries inside the innermost box.
+
+    Distinct from :func:`near_hull_cell_size`, which divides the requested
+    ``base_cell_size``. blockMesh takes an integer count, so the cell the case
+    actually gets is ``extent / round(extent / base)`` and differs from the
+    request by a few per cent. The post-mesh gate (#2033) compares a measured
+    face area against this number, so it has to be the one on the mesh and not
+    the one that was asked for.
+
+    The LARGER of the two in-plane cells: a face is bounded by the coarser of
+    the directions spanning it.
+    """
+    if stages < 0:
+        raise ValueError(f"stages must be >= 0, got {stages}")
+    nx, ny = int(divisions["nx"]), int(divisions["ny"])
+    if nx < 1 or ny < 1:
+        raise ValueError(f"block divisions must be positive, got nx={nx}, ny={ny}")
+    return max(domain.length / nx, domain.width / ny) / 2**stages
 
 
 @dataclass(frozen=True)
@@ -227,11 +251,13 @@ def derive_region_levels(
 ) -> List[RegionRefinement]:
     """Derive a level for every appendage region a hull manifest records.
 
-    The hull itself is SKIPPED, and not because it needs no refinement: its
-    resolution is already set by the staged refinement boxes that produced
-    ``near_cell_size_m`` in the first place, so putting it through this
-    derivation would refine the largest region in the domain against a target
-    written for the smallest.
+    The hull itself is SKIPPED by this derivation, which is written against a
+    smallest-dimension target and would score the largest body in the domain
+    against a number meant for the smallest. It is NOT left unrefined: the
+    hull carries ``hull_case_regions.HULL_REFINEMENT_LEVEL`` as a floor.
+    "Its resolution is already set by the staged refinement boxes" is what
+    this docstring used to say, and #2033 is what that assumption cost -- the
+    staging was mis-placed and there was no floor under it.
 
     A region with no bounding box on record is skipped rather than guessed at;
     a level derived from an assumed size is exactly the guess this module

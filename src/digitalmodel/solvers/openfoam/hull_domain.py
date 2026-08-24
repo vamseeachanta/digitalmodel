@@ -28,6 +28,12 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 from .domain_builder import DomainBuilder
 from .hull_manifest import HullManifest
+from .hull_placement import (
+    assert_boxes_contain_hull,
+    assert_inner_inside_outer,
+    hull_x_centre,
+    offset_interp as _offset_interp,
+)
 from .models import DomainConfig
 
 __all__ = [
@@ -56,9 +62,13 @@ class HullDomainError(ValueError):
 #
 #  DEFAULTS: every one is also a ``HullCaseConfig`` field, so a case can trim
 #  its own far field. These reproduce the DTC tutorial's own proportions (whose
-#  domain the KCS validation case uses) to within rounding, and they satisfy the
-#  ITTC 7.5-03-02-03 minimums measured from the hull ENDS: 1.5 Lpp ahead of the
-#  bow, 4.0 Lpp astern, 3.0 Lpp to the side, 2.5 Lpp below the keel.
+#  domain the KCS validation case uses) to within rounding.
+#
+#  MEASURED FROM THE ORIGIN OF THE CASE FRAME = the hull's AFT PERPENDICULAR,
+#  not midship and not the hull's ends. This claimed the ITTC 7.5-03-02-03
+#  minimums measured from the ends, which assumed a translation the builder
+#  does not perform: true forward clearance is ``upstream_lpp - LOA/Lpp``.
+#  Far-field sizing, deliberately left alone by #2033, which fixed resolution.
 
 UPSTREAM_LPP = 2.0
 DOWNSTREAM_LPP = 4.5
@@ -230,8 +240,12 @@ def _location_in_mesh(
     draft: float,
 ) -> Vec3:
     """A point in the free stream: aft of the placed hull's stern and below
-    the free surface, so snappy keeps the region OUTSIDE the hull."""
-    stern_x = manifest.bbox_min_m[0] - manifest.midship_x_m
+    the free surface, so snappy keeps the region OUTSIDE the hull.
+
+    ``stern_x`` is read in CASE coordinates (#2033); subtracting the
+    bounding-box centre put the keep-point half an Lpp further aft than meant.
+    """
+    stern_x = manifest.bbox_min_m[0]
     return (
         (stern_x + x_outlet) / 2.0,
         y_side / 2.0,
@@ -275,42 +289,51 @@ def refinement_boxes(
     The stages between interpolate geometrically, which is the character of the
     tutorial's own staging (its successive boxes shrink by roughly 0.77 per
     stage) without inheriting its numbers.
+
+    EVERY x IS MEASURED FROM THE HULL, NOT THE ORIGIN (#2033). These were
+    symmetric intervals about x = 0 over a bounding box translated by its own
+    centre. Nothing translates the hull, so the staging sat half an Lpp aft of
+    it: levels went on open water and the finest box stopped short of the bow.
     """
     if stages < 1:
         raise HullDomainError(f"stages must be >= 1, got {stages}")
 
     lpp = manifest.lpp_m
-    ref_x, ref_z = 0.0, domain.waterline  # hull centre: midship, free surface
+    # The hull's own centre, in the coordinates the surfaces are placed in.
+    ref_x, ref_z = hull_x_centre(manifest), domain.waterline
 
-    outer = _outer_box(lpp, domain)
+    outer = _outer_box(lpp, domain, ref_x)
     inner = _inner_box(manifest, domain)
-    _check_containment(inner, outer)
+    assert_inner_inside_outer(inner, outer)
 
     boxes: List[Box] = []
     for k in range(stages):
         t = k / (stages - 1) if stages > 1 else 1.0
         lo = (
-            _interp(outer[0][0], inner[0][0], t, ref_x),
-            _interp(outer[0][1], inner[0][1], t, 0.0),
-            _interp(outer[0][2], inner[0][2], t, ref_z),
+            _offset_interp(outer[0][0], inner[0][0], t, ref_x),
+            _offset_interp(outer[0][1], inner[0][1], t, 0.0),
+            _offset_interp(outer[0][2], inner[0][2], t, ref_z),
         )
         hi = (
-            _interp(outer[1][0], inner[1][0], t, ref_x),
+            _offset_interp(outer[1][0], inner[1][0], t, ref_x),
             0.0,
-            _interp(outer[1][2], inner[1][2], t, ref_z),
+            _offset_interp(outer[1][2], inner[1][2], t, ref_z),
         )
         boxes.append((lo, hi))
+    assert_boxes_contain_hull(manifest, domain, boxes)
     return boxes
 
 
-def _outer_box(lpp: float, domain: HullDomain) -> Box:
+def _outer_box(lpp: float, domain: HullDomain, ref_x: float) -> Box:
+    """Far field. DTC's x offsets, taken about the HULL's centre rather than
+    about the origin, then clamped to the domain."""
     lo = (
-        max(OUTER_BOX_LPP["x_lo"] * lpp, domain.x_outlet),
+        max(ref_x + OUTER_BOX_LPP["x_lo"] * lpp, domain.x_outlet),
         max(OUTER_BOX_LPP["y_lo"] * lpp, domain.y_side),
         max(OUTER_BOX_LPP["z_lo"] * lpp, domain.z_levels[0]),
     )
     hi = (
-        min(OUTER_BOX_LPP["x_hi"] * lpp, domain.x_inlet),
+        min(ref_x + OUTER_BOX_LPP["x_hi"] * lpp, domain.x_inlet),
         0.0,
         min(domain.waterline + OUTER_BOX_LPP["z_hi"] * lpp, domain.z_levels[-1]),
     )
@@ -318,14 +341,15 @@ def _outer_box(lpp: float, domain: HullDomain) -> Box:
 
 
 def _inner_box(manifest: HullManifest, domain: HullDomain) -> Box:
-    """The hull's bounding box, placed, expanded, and forced to straddle the
-    free surface even for a hull whose topsides sit below it."""
+    """The hull's bounding box, expanded, and forced to straddle the free
+    surface even for a hull whose topsides sit below it. NO TRANSLATION: y and
+    z were already read off the geometry, and x no longer subtracts the centre.
+    """
     lpp = manifest.lpp_m
-    shift = manifest.midship_x_m
     mx = INNER_MARGIN_X_LPP * lpp
     mz = INNER_MARGIN_Z_LPP * lpp
     lo = (
-        manifest.bbox_min_m[0] - shift - mx,
+        manifest.bbox_min_m[0] - mx,
         min(
             manifest.bbox_min_m[1] * (1.0 + INNER_MARGIN_Y_BEAM),
             -manifest.half_beam_m * (1.0 + INNER_MARGIN_Y_BEAM),
@@ -333,35 +357,11 @@ def _inner_box(manifest: HullManifest, domain: HullDomain) -> Box:
         min(manifest.bbox_min_m[2], domain.waterline) - mz,
     )
     hi = (
-        manifest.bbox_max_m[0] - shift + mx,
+        manifest.bbox_max_m[0] + mx,
         0.0,
         max(manifest.bbox_max_m[2], domain.waterline) + mz,
     )
     return lo, hi
-
-
-def _check_containment(inner: Box, outer: Box) -> None:
-    for axis, name in enumerate("xyz"):
-        if not (outer[0][axis] <= inner[0][axis] and inner[1][axis] <= outer[1][axis]):
-            raise HullDomainError(
-                f"the innermost refinement box escapes the outermost one in "
-                f"{name}: inner [{inner[0][axis]:.4g}, {inner[1][axis]:.4g}] vs "
-                f"outer [{outer[0][axis]:.4g}, {outer[1][axis]:.4g}]. The hull "
-                f"is too large a fraction of the domain for this staging."
-            )
-
-
-def _interp(outer: float, inner: float, t: float, ref: float) -> float:
-    """Geometric interpolation of the OFFSET from ``ref``.
-
-    Geometric rather than linear because the offsets span two orders of
-    magnitude and a linear ramp would put every intermediate box out near the
-    far field, leaving a 4:1 jump at the hull.
-    """
-    a, b = outer - ref, inner - ref
-    if a == 0.0 or b == 0.0 or (a > 0) != (b > 0):
-        return outer + (inner - outer) * t
-    return ref + math.copysign(abs(a) ** (1.0 - t) * abs(b) ** t, a)
 
 
 # --- Background block divisions --------------------------------------------- #

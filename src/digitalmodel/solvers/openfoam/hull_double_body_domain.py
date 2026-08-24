@@ -36,6 +36,7 @@ from .hull_domain import (
     refinement_boxes,
 )
 from .hull_manifest import HullManifest
+from .hull_placement import assert_boxes_contain_hull
 
 __all__ = [
     "build_double_body_domain",
@@ -99,8 +100,17 @@ def double_body_refinement_boxes(
     Generated against the UNTRUNCATED reference on purpose -- see
     :func:`clip_boxes_at_waterline` -- so the two steps are kept together and
     nobody has to remember which domain the first one takes.
+
+    The containment guard runs TWICE, and the second run is the load-bearing
+    one (#2033): ``refinement_boxes`` checks the staging against the reference
+    domain, and the check below re-runs it against the TRUNCATED domain the
+    case is actually meshed in, on the boxes that were actually emitted. A
+    guard that only ever sees the pre-clip boxes certifies something the mesher
+    never receives.
     """
-    return clip_boxes_at_waterline(refinement_boxes(manifest, reference), domain)
+    boxes = clip_boxes_at_waterline(refinement_boxes(manifest, reference), domain)
+    assert_boxes_contain_hull(manifest, domain, boxes)
+    return boxes
 
 
 def clip_boxes_at_waterline(
