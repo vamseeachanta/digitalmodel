@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Any, Dict
 # in the emitted mesh that no test comparing the two would attribute to
 # formatting.
 from .hull_case_dicts import _fmt, _vec, surfaces_provenance
+from .region_refinement import finest_in_plane_cell
 from .hull_case_regions import region_tokens
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -298,6 +299,16 @@ def _mesh_provenance(derivation: "DoubleBodyDerivation") -> Dict[str, Any]:
         "refinement_box_note": (
             "the free-surface staging, clipped at the waterline: the part of "
             "each box above it enclosed air that this domain does not have."
+        ),
+        "finest_in_plane_cell_m": finest_in_plane_cell(
+            derivation.domain, derivation.divisions, len(derivation.boxes)
+        ),
+        "finest_in_plane_cell_note": (
+            "the in-plane cell inside the innermost refinement box, on the "
+            "mesh as emitted: blockMesh takes an integer count, so this is "
+            "the delivered cell and not the requested base_cell_size / 2**stages. "
+            "The post-mesh face-area gate (#2033) scores the written hull "
+            "patch against it."
         ),
         "wall_normal_first_cell_height_m": derivation.first_cell_height,
         "y_plus_target": derivation.config.y_plus_target,

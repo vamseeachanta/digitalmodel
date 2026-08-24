@@ -46,6 +46,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 __all__ = [
     "HULL_PATCH",
+    "HULL_REFINEMENT_LEVEL",
     "SurfaceRegion",
     "check_region_surfaces",
     "copy_region_surfaces",
@@ -59,6 +60,21 @@ __all__ = [
 #: ``postProcessing/forces*/`` by it. Renaming it would leave a case that
 #: meshes and solves and reports nothing.
 HULL_PATCH = "hull"
+
+#: The hull's own ``refinementSurfaces`` level, and why it is not ``(0 0)``.
+#:
+#: WHAT (0 0) MEANT. The hull's resolution became a pure function of where the
+#: topoSet boxes landed. With the staging mis-placed (#2033) nothing else put a
+#: cell on it: 42 % of the hull met 8-16x the intended cell, over faces to
+#: 18.5 m2, and the case still converged.
+#:
+#: WHY 1. Appendage levels come from cells-across-the-smallest-dimension
+#: (``region_refinement``): a rudder took 2, a shaft boss 3. That ladder is
+#: monotone in body size and the hull is the largest body here, so it takes the
+#: lowest non-zero rung. One halving of whatever cell the staging delivers
+#: locally keeps the surface at a BOUNDED ratio to it even where the staging is
+#: wrong; higher is an isotropic 8x on the biggest surface for no requirement.
+HULL_REFINEMENT_LEVEL: Tuple[int, int] = (1, 1)
 
 #: Prefix for the per-patch breakdown function objects. Distinct from the
 #: union's plain ``forces``/``forceCoeffs`` so a reader parsing
@@ -110,7 +126,14 @@ class SurfaceRegion:
 
 
 def hull_region(stl_path: Path | str, **options: Any) -> SurfaceRegion:
-    """The hull region, with its patch name pinned to :data:`HULL_PATCH`."""
+    """The hull region, with its patch name pinned to :data:`HULL_PATCH` and
+    its surface refinement floored at :data:`HULL_REFINEMENT_LEVEL`.
+
+    A DEFAULT here rather than a case-config field so every construction route
+    inherits it, including callers that build the hull region themselves to
+    set a layer count -- which is how the ``(0 0)`` this replaces survived.
+    """
+    options.setdefault("refinement_level", HULL_REFINEMENT_LEVEL)
     return SurfaceRegion(
         name=HULL_PATCH, stl_path=Path(stl_path), role="hull", **options
     )

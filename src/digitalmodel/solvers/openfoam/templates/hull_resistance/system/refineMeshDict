@@ -30,6 +30,29 @@ patchLocalCoeffs
     tan1            (1 0 0);
 }
 
+// WHY ( tan1 tan2 ) AND NOT tan3 -- i.e. why z is never refined here.
+//
+// Raised by #2033, examined, and left as it is. The vertical resolution in
+// this case is NOT the refineMesh passes' job; it is blockMesh's, and it is
+// set deliberately by the graded vertical ladder in blockMeshDict, whose
+// near-field cell the double-body case takes from the free-surface ladder so
+// that the two case types resolve the boundary layer identically. A form
+// factor is a RATIO of one to the other, so a vertical cell that differed
+// between them would land in k and be indistinguishable from hull form.
+//
+// Adding tan3 would not adjust that ladder, it would demolish it: the passes
+// are nested, so a cell in the innermost box is cut SIX times. On a hull of
+// the size this was measured on the near-field vertical cell is 0.44 m
+// against a 0.328 m in-plane cell -- comparable, as intended -- and six
+// vertical cuts would take it to 0.0069 m, 48x THINNER than the cell is wide,
+// while multiplying the cells in the innermost box by 64. That is not a finer
+// mesh, it is an inverted aspect ratio bought at 64x the cost.
+//
+// Where isotropic near-wall resolution IS wanted, it comes from
+// snappyHexMesh: every surface carries a refinementSurfaces level, and #2033
+// gave the hull a non-zero one (hull_case_regions.HULL_REFINEMENT_LEVEL).
+// snappy refines in all three directions, so the vertical cell at the wall
+// follows the surface level and not this dictionary.
 directions      ( tan1 tan2 );
 
 useHexTopology  no;

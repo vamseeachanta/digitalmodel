@@ -12,6 +12,7 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, Mapping, Sequence
 
+from .region_refinement import finest_in_plane_cell
 from .hull_case_regions import region_provenance, region_tokens
 
 if TYPE_CHECKING:  # pragma: no cover - annotations only
@@ -245,6 +246,16 @@ def _mesh_provenance(derivation: "HullCaseDerivation") -> Dict[str, Any]:
         "refinement_boxes": [
             {"lo": list(lo), "hi": list(hi)} for lo, hi in derivation.boxes
         ],
+        "finest_in_plane_cell_m": finest_in_plane_cell(
+            derivation.domain, derivation.divisions, len(derivation.boxes)
+        ),
+        "finest_in_plane_cell_note": (
+            "the in-plane cell inside the innermost refinement box, on the "
+            "mesh as emitted: blockMesh takes an integer count, so this is "
+            "the delivered cell and not the requested base_cell_size / 2**stages. "
+            "The post-mesh face-area gate (#2033) scores the written hull "
+            "patch against it."
+        ),
         "wall_normal_first_cell_height_m": derivation.first_cell_height,
         "y_plus_target": derivation.config.y_plus_target,
         "wall_resolution_note": (

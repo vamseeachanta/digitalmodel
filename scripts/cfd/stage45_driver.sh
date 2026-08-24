@@ -184,6 +184,19 @@ if [ "$PHASE" = "mesh" ]; then
   fi
   mark "CELLS: $(cfd_mesh_cells "$CASE")"
 
+  # POST-MESH GATE (#2033). checkMesh above is necessary and not sufficient:
+  # it scores shape (skew, non-orthogonality, inversion) and says nothing
+  # about SIZE on a named patch. A hull whose refinement boxes missed 42 % of
+  # it was reported "Mesh OK", zero failed checks, 95 % layer coverage, and
+  # 0.7 % of its patch then carried 122 % of the net pressure drag.
+  #
+  # HARD, unlike the checkMesh verdict above, which only marks. It runs
+  # through tstage, so a non-zero exit writes the FAILED marker and the driver
+  # exits before redistributePar -- the solve is never launched. That is the
+  # whole value: the alternative is 30 h of compute on a mesh already known
+  # not to resolve the surface it integrates.
+  tstage faceResolution python3 "$SELF_DIR/check_face_resolution.py" "$CASE"
+
   restore0Dir >> "$CASE/driver.log" 2>&1
   mark "restore0Dir done"
   # setFields initialises a VOLUME FRACTION. A single-phase case has none to

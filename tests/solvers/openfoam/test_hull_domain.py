@@ -120,8 +120,10 @@ def test_location_in_mesh_is_inside_the_domain_and_outside_the_hull(
     assert domain.x_outlet < x < domain.x_inlet
     assert domain.y_side < y < 0.0
     assert domain.z_levels[0] < z < domain.z_levels[-1]
-    # clear of the placed hull in x, so snappy keeps the outside region
-    assert x < manifest.bbox_min_m[0] - manifest.midship_x_m
+    # Clear of the placed hull in x, so snappy keeps the outside region. In
+    # CASE coordinates (#2033): the hull is not translated, so the aft end of
+    # the surface is the manifest's own bbox_min.
+    assert x < manifest.bbox_min_m[0]
 
 
 def test_a_hull_whose_draft_exceeds_the_domain_is_refused(manifest_dict) -> None:
@@ -158,9 +160,17 @@ def test_refinement_boxes_are_nested(manifest, domain) -> None:
 
 
 def test_innermost_box_contains_the_placed_hull(manifest, domain) -> None:
+    """"Placed" means where the surfaces actually are (#2033).
+
+    This assertion used to be written in a TRANSLATED frame -- it subtracted
+    the bounding-box centre from both ends before comparing -- and so it
+    passed against a builder that placed the boxes half an Lpp aft of the
+    hull. Nothing translates the hull: the STL is copied into
+    ``constant/triSurface`` byte for byte. A test that adopts the code's
+    assumption cannot detect that the assumption is false.
+    """
     lo, hi = refinement_boxes(manifest, domain)[-1]
-    hx0 = manifest.bbox_min_m[0] - manifest.midship_x_m
-    hx1 = manifest.bbox_max_m[0] - manifest.midship_x_m
+    hx0, hx1 = manifest.bbox_min_m[0], manifest.bbox_max_m[0]
     assert lo[0] < hx0 and hx1 < hi[0]
     assert lo[1] < manifest.bbox_min_m[1]
     assert lo[2] < manifest.bbox_min_m[2]
