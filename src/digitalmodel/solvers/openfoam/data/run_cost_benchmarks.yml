@@ -1,0 +1,143 @@
+# Measured cost of hull-resistance CFD runs.
+#
+# PURPOSE: size a campaign and choose a lane BEFORE committing compute. Every
+# figure here is wall-clock read from a case's own logs -- none is an estimate.
+#
+# Headline finding: on comparable cell counts and identical iteration counts,
+# LANE CHOICE changed cost by 5x, while no numerical setting in the accompanying
+# sweep changed the ANSWER by more than a few per cent. Measure the lane first.
+#
+# Provenance: model-scale benchmark validation campaign, 2026-08, OpenFOAM
+# v2312, simpleFoam, k-omega SST, double-body, nutUSpaldingWallFunction unless
+# stated otherwise. Regenerate by re-reading log.snappyHexMesh and
+# log.simpleFoam (ExecutionTime) in each case directory.
+
+schema_version: 1
+measured_on: 2026-08-25
+solver:
+  application: simpleFoam
+  version: openfoam2312
+  turbulence: kOmegaSST
+
+lanes:
+  # Throughput is per-RANK, so a lane with fewer cores can win outright.
+  - id: gpu-claw
+    cores: 8
+    ranks_used: 8
+    seconds_per_iteration: 8.0         # at 3.95e6 cells
+    mesh_seconds: 1118                 # snappyHexMesh, 3.95e6 cells
+    relative_per_core_throughput: 4.2  # ace-linux-2 == 1.0
+    preferred: true
+    note: >-
+      Twice the wall-clock speed of the 16-rank lane on HALF the cores, and 8.2x
+      faster at meshing. Preferred lane for hull work.
+  - id: ace-linux-2
+    cores: 32
+    ranks_used: 16
+    seconds_per_iteration: 16.9        # at 3.82e6 cells
+    mesh_seconds: 9218                 # snappyHexMesh, 3.82e6 cells
+    relative_per_core_throughput: 1.0
+    preferred: false
+    note: >-
+      More cores, far less throughput per core. Useful for running several cases
+      concurrently, not for making any single case finish sooner.
+
+cases:
+  - {id: model_baseline,   lane: ace-linux-2, ranks: 16, cells: 3822392, mesh_h: 2.56, solve_h: 6.57, s_per_iter: 16.9, iterations: 1400, core_hours: 146}
+  - {id: model_alt_wallfn, lane: ace-linux-2, ranks: 16, cells: 3822392, mesh_h: 1.97, solve_h: 5.00, s_per_iter: 12.9, iterations: 1400, core_hours: 112}
+  - {id: model_low_yplus,  lane: gpu-claw,    ranks: 8,  cells: 3945132, mesh_h: 0.31, solve_h: 3.10, s_per_iter: 8.0,  iterations: 1400, core_hours: 27}
+  - {id: model_refined_L2, lane: gpu-claw,    ranks: 8,  cells: 5583857, mesh_h: 0.52, solve_h: 6.06, s_per_iter: 13.7, iterations: 1591, core_hours: 53}
+  - {id: full_scale_hull,  lane: ace-linux-2, ranks: 16, cells: 2312314, mesh_h: 0.76, solve_h: 7.58, s_per_iter: 4.6,  iterations: 6000, core_hours: 148}
+
+# ---------------------------------------------------------------------------
+# COST-TO-INFORMATION LADDER
+#
+# Rank a candidate experiment by what it can ELIMINATE per unit compute, not by
+# how relevant it feels. All rungs below were exercised in one campaign; the
+# cheap rungs eliminated more causes than the expensive ones did.
+cost_to_information:
+  - rung: 1
+    name: arithmetic_or_source_check
+    typical_cost: seconds
+    causes_eliminated: 3
+    examples:
+      - >-
+        Recompute the reference area from the source's own S/L^2 -- confirmed
+        the area basis to 0.09 % and retired a suspected 1.3 % error.
+      - >-
+        Back-calculate the benchmark's viscosity from its stated Reynolds number
+        -- found our runs 11.3 % high in Re.
+      - >-
+        Check a quoted uncertainty band against the source table -- the band in
+        campaign-wide use was not in the paper at all.
+
+  - rung: 2
+    name: mesh_statistic
+    typical_cost: free, already in the meshing log
+    causes_eliminated: 1
+    examples:
+      - >-
+        Layers GROWN vs requested -- the variable that turned out to govern the
+        answer, while cell count moved the opposite way.
+      - >-
+        Max hull face area vs target cell -- catches refinement that missed part
+        of the surface.
+    rule: >-
+      Record layers-grown beside cell count in every mesh summary and treat a
+      fall as a regression, whatever the cell count did.
+
+  - rung: 3
+    name: flat_plate_numerical_friction_line
+    typical_cost: ~2 minutes per case, ~140 iterations
+    causes_eliminated: 3
+    purpose: >-
+      C_F0 computed with the SAME solver, closure, wall treatment and Reynolds
+      number as the hull, so the solver's own friction bias cancels in the ratio
+      instead of accumulating into the answer.
+    examples:
+      - Six plates across two scales cost under 1 % of one hull solve.
+      - >-
+        Eliminated normalisation, friction-line choice, and solver/closure/
+        schemes as causes of an out-of-family result.
+      - >-
+        Exposed a spurious sensitivity -- half of an apparent y+ effect on the
+        hull belonged to the normaliser, not the hull.
+    caveat: >-
+      Valid for the DENOMINATOR only. A flat plate does not predict how a
+      wall-function change will affect a hull: measured to err 14x in one
+      direction at one scale and to reverse sign at another, because hull
+      wall-treatment sensitivity tracks the y+ DISTRIBUTION, which no flat plate
+      reproduces.
+
+  - rung: 4
+    name: single_hull_solve
+    typical_cost: 3-7 hours
+    note: >-
+      Buy only once the rungs above are exhausted for the question at hand. One
+      case in this campaign cost 2x the baseline solve for 46 % more cells and
+      returned a WORSE answer, because the finer cell left room for only one
+      prism layer.
+
+  - rung: 5
+    name: grid_convergence_study
+    typical_cost: 3x a hull solve, minimum
+    note: >-
+      Required before any number is quotable (>=3 grids at ratio ~sqrt(2) with
+      U_G attached to the result). Running it before the settings are settled
+      produces a rigorously grid-converged wrong answer.
+
+campaign_budgeting:
+  per_condition_hours:
+    mesh: 0.8
+    solve_min: 3.0
+    solve_max: 4.0
+  worked_example: >-
+    11 conditions at ~2.3e6 cells across three concurrent slots: about 18 hours
+    wall-clock, plus margin for cases that fail their layer gate and need
+    remeshing.
+  rules:
+    - Measure both candidate lanes with ONE case before committing the rest.
+    - Do not buy cells that come out of the prism stack.
+    - >-
+      The form factor is speed-independent, so N conditions x M speeds needs N
+      solves, not N*M.
