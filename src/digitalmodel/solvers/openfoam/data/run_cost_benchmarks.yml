@@ -77,8 +77,10 @@ cost_to_information:
     causes_eliminated: 1
     examples:
       - >-
-        Layers GROWN vs requested -- the variable that turned out to govern the
-        answer, while cell count moved the opposite way.
+        Layers GROWN vs requested -- one of two variables controlling the answer.
+        A case with 4x the cells and one fewer prism layer was materially worse;
+        a case with a quarter of the faces and one MORE layer was also worse.
+        Record both counts and gate on both.
       - >-
         Max hull face area vs target cell -- catches refinement that missed part
         of the surface.
