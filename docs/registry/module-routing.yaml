@@ -176,6 +176,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/power/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#power
+  - module: process_diagrams
+    entry_point: src/digitalmodel/process_diagrams/
+    maturity: beta
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/process_diagrams/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#process_diagrams
   - module: production_chemistry
     entry_point: src/digitalmodel/production_chemistry/
     maturity: development
