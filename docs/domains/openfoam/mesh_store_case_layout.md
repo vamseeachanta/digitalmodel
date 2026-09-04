@@ -42,6 +42,7 @@ hull at 2 M cells, 31 min at 4.4 M, 75 min for a 6 M-cell free-surface mesh.
       0.orig/, 0/, processor*/       fields, decomposition, results: OWNED BY THE CASE
       log.*, postProcessing/, TIMING.csv, driver.log, case_provenance.json, PRUNED.md
   scripts/                           chain library + helpers, deployed from this repo
+  stage/                             generator inputs and staged-but-unlaunched cases; never solved in place
   docs/, rejected/, runs/
 ```
 
