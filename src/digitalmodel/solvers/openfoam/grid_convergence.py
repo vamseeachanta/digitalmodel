@@ -92,7 +92,11 @@ def grid_convergence(h: Sequence[float], f: Sequence[float], fs: float = FS_THRE
     ea32 = abs(e32 / f2) if f2 else float("nan")
     gci_fine = fs * ea21 / (r21 ** p - 1.0)
     gci_medium = fs * ea32 / (r32 ** p - 1.0)
-    asym = gci_medium / (r21 ** p * gci_fine) if gci_fine else float("nan")
+    # Asymptotic-range check on ABSOLUTE errors: e32/(r32^p - 1) against
+    # r21^p * e21/(r21^p - 1) is exactly 1 for a pure power law; the same
+    # ratio of the relative GCIs is not, because they are normalised by
+    # different f's.
+    asym = (abs(e32) / (r32 ** p - 1.0)) / (r21 ** p * abs(e21) / (r21 ** p - 1.0))
     return GridConvergence(
         h=(h1, h2, h3), f=(f1, f2, f3), r21=r21, r32=r32, p=p, f_ext=f_ext,
         e21_pct=100 * ea21, e32_pct=100 * ea32,
