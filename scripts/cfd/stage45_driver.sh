@@ -149,40 +149,67 @@ if [ "$PHASE" = "mesh" ]; then
   echo "stage,seconds,rc" > "$TIMING"
   mark "MESH PHASE START $CASE_NAME pid=$$ ranks=$RANKS decompose='$DECOMPOSE_N'"
 
-  tstage surfaceFeatureExtract runApplication surfaceFeatureExtract
-  tstage blockMesh             runApplication blockMesh
-
-  # Refinement passes are discovered from the dicts the setup stage wrote
-  # rather than hard-coded to the six the two original levels happened to
-  # use -- the registry now carries four levels and they do not share a pass
-  # count.
-  topo_dicts=(system/topoSetDict.*)
-  if [ ! -e "${topo_dicts[0]}" ]; then
-    # Not fatal: a deliberately coarse level may have none. It is loud because
-    # an unrefined mesh still solves, and the resulting number looks like a
-    # result. The downstream cell-count gate is what must catch it.
-    mark "WARNING no system/topoSetDict.N present -- mesh will NOT be refined"
-    topo_dicts=()
-  fi
-  for dict in "${topo_dicts[@]}"; do
-    i="${dict##*.}"
-    tstage "topoSet.$i"    runApplication -s "$i" topoSet -dict "$dict"
-    tstage "refineMesh.$i" runApplication -s "$i" refineMesh -dict system/refineMeshDict -overwrite
-  done
-
-  tstage snappyHexMesh runApplication snappyHexMesh -overwrite
-  tstage checkMesh     runApplication checkMesh
-
-  # STRICT verdict rule: read the OUTPUT TEXT, not the exit code. checkMesh
-  # returns 0 even when it reports failed checks, so an exit-code gate would
-  # certify a mesh it had just been told was bad.
-  if grep -q "^Mesh OK" log.checkMesh && ! grep -q "Failed .* mesh checks" log.checkMesh; then
-    mark "CHECKMESH VERDICT: PASS (Mesh OK, zero failed checks)"
+  # ---- MASTER MESH STORE (scripts/cfd/mesh_store.sh; docs/domains/openfoam/mesh_store_case_layout.md)
+  # The serial mesh is identified by a hash of its inputs (surfaces + meshing
+  # dicts). If the store already holds that identity, link it and skip the
+  # 12-75 min build; otherwise build as before and promote the result so the
+  # next sibling case finds it. Decomposition below is always rebuilt per case.
+  MESH_STORE_SH="$SELF_DIR/mesh_store.sh"
+  # A linked mesh is read-only and belongs to the store; a rebuild must never
+  # write through the link. Remove the link, never the target.
+  [ -L constant/polyMesh ] && rm -f constant/polyMesh
+  MESH_REUSED=""
+  MESH_MASTER=""
+  if [ "${DM_CFD_MESH_REUSE:-1}" = "1" ] && MESH_MASTER="$("$MESH_STORE_SH" find "$CASE" 2>/dev/null)"; then
+    mark "MESH REUSE: input identity matches store $(basename "$MESH_MASTER") -- build stages skipped"
+    "$MESH_STORE_SH" link "$CASE" "$MESH_MASTER" >> "$CASE/driver.log" 2>&1 \
+      || cfd_die "mesh_store link $CASE_NAME -> $MESH_MASTER failed"
+    echo "mesh.reuse,0,0" >> "$TIMING"
+    mark "CHECKMESH VERDICT: $(grep -o '"checkMesh": "[A-Za-z]*"' "$MESH_MASTER/mesh_provenance.json" | cut -d'"' -f4) (from store provenance)"
+    MESH_REUSED=1
   else
-    mark "CHECKMESH VERDICT: FAIL -- $(grep -c 'Failed' log.checkMesh) failure line(s)"
-    grep -E "\*\*\*|Failed" log.checkMesh >> "$PROG"
+    tstage surfaceFeatureExtract runApplication surfaceFeatureExtract
+    tstage blockMesh             runApplication blockMesh
+
+    # Refinement passes are discovered from the dicts the setup stage wrote
+    # rather than hard-coded to the six the two original levels happened to
+    # use -- the registry now carries four levels and they do not share a pass
+    # count.
+    topo_dicts=(system/topoSetDict.*)
+    if [ ! -e "${topo_dicts[0]}" ]; then
+      # Not fatal: a deliberately coarse level may have none. It is loud because
+      # an unrefined mesh still solves, and the resulting number looks like a
+      # result. The downstream cell-count gate is what must catch it.
+      mark "WARNING no system/topoSetDict.N present -- mesh will NOT be refined"
+      topo_dicts=()
+    fi
+    for dict in "${topo_dicts[@]}"; do
+      i="${dict##*.}"
+      tstage "topoSet.$i"    runApplication -s "$i" topoSet -dict "$dict"
+      tstage "refineMesh.$i" runApplication -s "$i" refineMesh -dict system/refineMeshDict -overwrite
+    done
+
+    tstage snappyHexMesh runApplication snappyHexMesh -overwrite
+    tstage checkMesh     runApplication checkMesh
+
+    # STRICT verdict rule: read the OUTPUT TEXT, not the exit code. checkMesh
+    # returns 0 even when it reports failed checks, so an exit-code gate would
+    # certify a mesh it had just been told was bad.
+    if grep -q "^Mesh OK" log.checkMesh && ! grep -q "Failed .* mesh checks" log.checkMesh; then
+      mark "CHECKMESH VERDICT: PASS (Mesh OK, zero failed checks)"
+    else
+      mark "CHECKMESH VERDICT: FAIL -- $(grep -c 'Failed' log.checkMesh) failure line(s)"
+      grep -E "\*\*\*|Failed" log.checkMesh >> "$PROG"
+    fi
   fi
   mark "CELLS: $(cfd_mesh_cells "$CASE")"
+  if [ -z "$MESH_REUSED" ] && [ "${DM_CFD_MESH_PROMOTE:-1}" = "1" ]; then
+    if "$MESH_STORE_SH" promote "$CASE" "$CASE_NAME" >> "$CASE/driver.log" 2>&1; then
+      mark "MESH PROMOTED: $(basename "$(dirname "$(readlink -f constant/polyMesh)")")"
+    else
+      mark "WARNING mesh_store promote failed -- mesh stays private to this case (see driver.log)"
+    fi
+  fi
 
   # POST-MESH GATE (#2033). checkMesh above is necessary and not sufficient:
   # it scores shape (skew, non-orthogonality, inversion) and says nothing

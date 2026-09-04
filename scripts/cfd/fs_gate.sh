@@ -1,0 +1,66 @@
+#!/bin/bash
+# LOCAL variant of ace-linux-1 analysis/scripts/stage4_gate.sh (fetched 2026-09-04): the same
+# gates, run ON the solve host without ssh.  usage: stage4_gate_local.sh <case>
+# Gate 1 mass balance |drift| <= 0.5 %; Gate 2 settling: two 400-iteration windows of
+# forces_hull, |drift| < 0.2 % viscous AND pressure; plausibility 0.6 < Cf/ITTC < 1.3.
+set -o pipefail
+CASE=$1
+source /usr/lib/openfoam/openfoam2312/etc/bashrc >/dev/null 2>&1
+cd "$HOME/cfd/b1552/cases/$CASE" || { echo "no case $CASE"; exit 2; }
+echo "=== $CASE on $(hostname -s) $(date -u +%FT%TZ) ==="
+fail=0
+
+# ---- gate 1: mass balance ---------------------------------------------------
+FIRST=$(grep -a -m1 '^Phase-1 volume fraction' log.interFoam 2>/dev/null | awk '{print $5}')
+LAST=$(grep -a '^Phase-1 volume fraction' log.interFoam 2>/dev/null | tail -1 | awk '{print $5}')
+NIT=$(grep -ac '^Time = ' log.interFoam 2>/dev/null)
+if [ -z "$FIRST" ] || [ -z "$LAST" ]; then
+  echo "  MASS BALANCE        : FAIL (no Phase-1 volume fraction line in log.interFoam)"; fail=1
+else
+  awk -v a="$FIRST" -v b="$LAST" -v n="$NIT" 'BEGIN{
+    d=100*(b-a)/a; ok=(d<0.5 && d>-0.5)
+    printf "  Phase-1 fraction    : first %.6f  last %.6f  over %d iterations\n", a, b, n
+    printf "  mass drift          : %+.4f %%   (gate 0.5 %%)\n", d
+    printf "  MASS BALANCE        : %s\n", ok?"PASS":"FAIL"
+    exit !ok }' || fail=1
+fi
+BEACH=$(grep -ac '^beachDamping:' log.interFoam 2>/dev/null)
+echo "  beach report lines  : ${BEACH:-0}  $(grep -a -m1 '^beachDamping:' log.interFoam 2>/dev/null | cut -c1-70)"
+
+# ---- gate 2: settling + plausibility -----------------------------------------
+seg=$(ls -d postProcessing/forces_hull/*/ 2>/dev/null | awk -F/ '{print $(NF-1)}' | sort -g | tail -1)
+f="postProcessing/forces_hull/$seg/force.dat"
+if [ ! -f "$f" ]; then
+  echo "  SETTLING GATE       : FAIL (no $f)"; fail=1
+else
+  R=$(grep -vc '^#' "$f")
+  echo "  force segment       : $f ($R rows)"
+  if [ "$R" -lt 800 ]; then
+    echo "  SETTLING GATE       : FAIL (fewer than 800 rows)"; fail=1
+  else
+    U=$(foamDictionary -entry functions/forceCoeffs/magUInf -value system/controlDict)
+    A=$(foamDictionary -entry functions/forceCoeffs/Aref    -value system/controlDict)
+    L=$(foamDictionary -entry functions/forceCoeffs/lRef    -value system/controlDict)
+    D=$(foamDictionary -entry functions/forceCoeffs/rhoInf  -value system/controlDict)
+    NU=$(foamDictionary -entry water/nu -value constant/transportProperties)
+    echo "  rhoInf / nu(water)  : $D / $NU   (read from the case)"
+    grep -v '^#' "$f" | awk -v U="$U" -v A="$A" -v D="$D" -v L="$L" -v NU="$NU" '
+     {n++; P[n]=($5<0?-$5:$5); V[n]=($8<0?-$8:$8)}
+     END{q=0.5*D*U*U*A; Re=U*L/NU; cf=0.075/((log(Re)/log(10))-2)^2
+         for(i=n-399;i<=n;i++){bp+=P[i];bv+=V[i]}
+         for(i=n-799;i<=n-400;i++){ap+=P[i];av+=V[i]}
+         bp/=400;bv/=400;ap/=400;av/=400
+         dv=100*(bv-av)/av; dp=100*(bp-ap)/ap
+         printf "  Re / ITTC Cf        : %.3e / %.6f\n", Re, cf
+         printf "  window A (%d-%d) : Cf %.4f  Cp %.4f\n", n-799, n-400, av/q/cf, ap/q/cf
+         printf "  window B (%d-%d) : Cf %.4f  Cp %.4f\n", n-399, n,     bv/q/cf, bp/q/cf
+         printf "  final 400           : Cf %.4f  Cp %.4f  C_T/ITTC %.4f\n", bv/q/cf, bp/q/cf, (bv+bp)/q/cf
+         printf "  two-window drift    : visc %+.3f %%  press %+.3f %%   (gate 0.2 %%)\n", dv, dp
+         ok=(dv<0.2 && dv>-0.2 && dp<0.2 && dp>-0.2); pl=(bv/q/cf>0.6 && bv/q/cf<1.3)
+         printf "  SETTLING GATE       : %s\n", ok?"PASS":"FAIL"
+         printf "  PLAUSIBILITY (Cf)   : %s   (0.6 < Cf/ITTC < 1.3)\n", pl?"PASS":"FAIL"
+         exit !(ok && pl) }' || fail=1
+  fi
+fi
+echo "  VERDICT             : $([ $fail -eq 0 ] && echo USABLE || echo 'NOT USABLE - do not quote')"
+exit $fail
