@@ -147,3 +147,57 @@ def gci_report(cases: Sequence[Path], column: str = "Cd", window: int = 400,
     rows.sort(key=lambda r: r["h_m"])
     gc = grid_convergence([r["h_m"] for r in rows], [r["value"] for r in rows])
     return {"column": column, "window": window, "meshes": rows, "gci": gc.to_dict()}
+
+
+# --------------------------------------------------------------------------- #
+#  CLI: triplet report on Cd and on its pressure / viscous parts
+# --------------------------------------------------------------------------- #
+
+def force_split(case: Path, window: int = 400, forces_relpath: str = "postProcessing/forces/0/force.dat") -> tuple[float, float]:
+    """(pressure share, viscous share) of the x-force over the last window, from
+    a `forces` function object's force.dat (total_x, pressure_x, viscous_x)."""
+    rows = [l.split() for l in (Path(case) / forces_relpath).read_text().splitlines() if l.strip() and not l.startswith("#")]
+    if len(rows) < window:
+        raise GridConvergenceError(f"{case}: {len(rows)} force rows, need {window}")
+    last = rows[-window:]
+    tot = sum(float(r[1]) for r in last) / window
+    pr = sum(float(r[4]) for r in last) / window
+    vi = sum(float(r[7]) for r in last) / window
+    return pr / tot, vi / tot
+
+
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+
+    ap = argparse.ArgumentParser(description="three-mesh Richardson / GCI on Cd and its pressure and viscous parts")
+    ap.add_argument("cases", nargs=3, type=Path)
+    ap.add_argument("--window", type=int, default=400)
+    ap.add_argument("--json", type=Path, default=None, help="write the full report here")
+    ns = ap.parse_args(argv)
+    rep = gci_report(ns.cases, column="Cd", window=ns.window)
+    meshes = rep["meshes"]
+    for m in meshes:
+        pr, vi = force_split(next(c for c in ns.cases if c.name == m["case"]), ns.window)
+        m["Cp"], m["Cf"] = m["value"] * pr, m["value"] * vi
+    parts = {"Cd": [m["value"] for m in meshes], "Cp": [m["Cp"] for m in meshes], "Cf": [m["Cf"] for m in meshes]}
+    h = [m["h_m"] for m in meshes]
+    rep["parts"] = {}
+    print(f"{'case':16s} {'cells/λ':>8s} {'h [m]':>9s} {'Cd':>11s} {'Cp':>11s} {'Cf':>11s} {'drift%':>7s}")
+    for m in meshes:
+        print(f"{m['case']:16s} {m['cells_per_wavelength']:8.1f} {m['h_m']:9.5f} {m['value']:11.4e} {m['Cp']:11.4e} {m['Cf']:11.4e} {m['drift_pct']:7.3f}")
+    print(f"\n{'quantity':9s} {'p':>6s} {'extrap':>11s} {'GCI fine%':>10s} {'GCI med%':>9s} {'e21%':>7s} {'e32%':>7s} {'asym':>6s} {'conv':>11s}")
+    for k, f in parts.items():
+        try:
+            g = grid_convergence(h, f)
+            rep["parts"][k] = g.to_dict()
+            print(f"{k:9s} {g.p:6.2f} {g.f_ext:11.4e} {g.gci_fine_pct:10.3f} {g.gci_medium_pct:9.3f} {g.e21_pct:7.3f} {g.e32_pct:7.3f} {g.asymptotic_ratio:6.2f} {'oscillatory' if g.oscillatory else 'monotone':>11s}")
+        except GridConvergenceError as exc:
+            rep["parts"][k] = {"error": str(exc)}
+            print(f"{k:9s} -- {exc}")
+    if ns.json:
+        ns.json.write_text(json.dumps(rep, indent=2) + "\n")
+    return 0
+
+
+if __name__ == "__main__":  # pragma: no cover
+    raise SystemExit(main())
