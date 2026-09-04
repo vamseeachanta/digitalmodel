@@ -39,6 +39,9 @@ from pathlib import Path
 # gate that passed.
 _CANDIDATES = [
     Path(__file__).resolve().parents[2] / "src",   # running from a checkout
+    Path(__file__).resolve().parents[2] / "dm_src",  # deployed lane: deploy_lane.sh ships the
+                                                     # package to <lane cfd root>/dm_src beside
+                                                     # <campaign>/scripts, two levels up from here
     Path(os.environ.get("DM_CFD_SRC", "")) if os.environ.get("DM_CFD_SRC") else None,
 ]
 for _candidate in _CANDIDATES:

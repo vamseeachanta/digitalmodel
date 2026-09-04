@@ -280,6 +280,9 @@ def refinement_boxes(
     manifest: HullManifest,
     domain: HullDomain,
     stages: int = REFINEMENT_STAGES,
+    inner_margin_x_lpp: float = INNER_MARGIN_X_LPP,
+    inner_margin_y_beam: float = INNER_MARGIN_Y_BEAM,
+    inner_margin_z_lpp: float = INNER_MARGIN_Z_LPP,
 ) -> List[Box]:
     """The nested topoSet boxes, outermost first.
 
@@ -303,7 +306,7 @@ def refinement_boxes(
     ref_x, ref_z = hull_x_centre(manifest), domain.waterline
 
     outer = _outer_box(lpp, domain, ref_x)
-    inner = _inner_box(manifest, domain)
+    inner = _inner_box(manifest, domain, inner_margin_x_lpp, inner_margin_y_beam, inner_margin_z_lpp)
     assert_inner_inside_outer(inner, outer)
 
     boxes: List[Box] = []
@@ -340,19 +343,35 @@ def _outer_box(lpp: float, domain: HullDomain, ref_x: float) -> Box:
     return lo, hi
 
 
-def _inner_box(manifest: HullManifest, domain: HullDomain) -> Box:
+def _inner_box(
+    manifest: HullManifest,
+    domain: HullDomain,
+    margin_x_lpp: float = INNER_MARGIN_X_LPP,
+    margin_y_beam: float = INNER_MARGIN_Y_BEAM,
+    margin_z_lpp: float = INNER_MARGIN_Z_LPP,
+) -> Box:
     """The hull's bounding box, expanded, and forced to straddle the free
     surface even for a hull whose topsides sit below it. NO TRANSLATION: y and
     z were already read off the geometry, and x no longer subtracts the centre.
+
+    The margins are GEOMETRY-scaled, so in cells they shrink as the mesh
+    coarsens. snappyHexMesh needs its nCellsBetweenLevels transition (3 cells)
+    plus a cell or two between the hull surface and the box face, or its
+    dangling-cell pass reaches the hanging-node cells the x-y ladder leaves on
+    that face and hexRef8 aborts ("uses more than 8 points"). Measured on the
+    Wigley 44-cells-per-wavelength case: 2.4 cells above the deck, 1.5 beside
+    the hull -> abort; a convergence triplet therefore states margins sized
+    for its COARSEST member and uses them for every member, so the box
+    extents are identical and only the cell changes.
     """
     lpp = manifest.lpp_m
-    mx = INNER_MARGIN_X_LPP * lpp
-    mz = INNER_MARGIN_Z_LPP * lpp
+    mx = margin_x_lpp * lpp
+    mz = margin_z_lpp * lpp
     lo = (
         manifest.bbox_min_m[0] - mx,
         min(
-            manifest.bbox_min_m[1] * (1.0 + INNER_MARGIN_Y_BEAM),
-            -manifest.half_beam_m * (1.0 + INNER_MARGIN_Y_BEAM),
+            manifest.bbox_min_m[1] * (1.0 + margin_y_beam),
+            -manifest.half_beam_m * (1.0 + margin_y_beam),
         ),
         min(manifest.bbox_min_m[2], domain.waterline) - mz,
     )

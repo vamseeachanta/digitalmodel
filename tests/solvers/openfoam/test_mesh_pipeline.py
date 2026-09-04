@@ -125,3 +125,23 @@ class TestDomainBuilderFromBoundingBox:
         assert dc_sym.min_coords[1] == pytest.approx(0.0)
         # Full case: ymin should be negative
         assert dc_full.min_coords[1] < 0.0
+
+
+def test_inner_box_margins_are_configurable(tmp_path):
+    """A convergence triplet states inner-box margins sized for its coarsest
+    member (snappy's transition must not reach the ladder's hanging-node
+    face); the same margins on every member keep the box extents identical."""
+    from digitalmodel.naval_architecture.wigley_geometry import write_wigley
+    from digitalmodel.solvers.openfoam.hull_case import HullCaseConfig, derive_hull_case
+    from digitalmodel.solvers.openfoam.hull_manifest import load_hull_manifest
+
+    stl, man = write_wigley(tmp_path)
+    manifest = load_hull_manifest(man)
+    base = HullCaseConfig(manifest=manifest, stl_path=stl, velocity=1.452, ranks=16,
+                          free_surface_cells_per_wavelength=None)
+    wide = base.replace(inner_margin_y_beam=1.2, inner_margin_z_lpp=0.06)
+    inner_base = derive_hull_case(base).boxes[-1]
+    inner_wide = derive_hull_case(wide).boxes[-1]
+    assert inner_wide[0][1] < inner_base[0][1]  # wider to port (more negative y)
+    assert inner_wide[1][2] > inner_base[1][2]  # taller above the deck
+    assert inner_wide[0][0] == inner_base[0][0]  # x margin untouched

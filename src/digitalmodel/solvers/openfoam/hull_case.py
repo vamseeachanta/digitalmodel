@@ -60,6 +60,9 @@ from .hull_domain import (
     block_divisions,
     build_hull_domain,
     refinement_boxes,
+    INNER_MARGIN_X_LPP,
+    INNER_MARGIN_Y_BEAM,
+    INNER_MARGIN_Z_LPP,
 )
 from .hull_free_surface import (
     DEFAULT_FREE_SURFACE_CELLS_PER_WAVELENGTH,
@@ -162,6 +165,12 @@ class HullCaseConfig:
     free_surface_cells_per_wavelength: Optional[float] = (
         DEFAULT_FREE_SURFACE_CELLS_PER_WAVELENGTH
     )
+    # Innermost refinement box margins around the hull bounding box. Geometry
+    # scaled; a coarse member of a convergence triplet needs them widened so
+    # snappy's transition never reaches the box face (see hull_domain._inner_box).
+    inner_margin_x_lpp: float = INNER_MARGIN_X_LPP
+    inner_margin_y_beam: float = INNER_MARGIN_Y_BEAM
+    inner_margin_z_lpp: float = INNER_MARGIN_Z_LPP
 
     def __post_init__(self) -> None:
         if self.velocity <= 0:
@@ -255,7 +264,13 @@ def _derive_geometry(
         freeboard_lpp=config.freeboard_lpp,
         keel_clearance_drafts=config.keel_clearance_drafts,
     )
-    boxes = refinement_boxes(manifest, domain)
+    boxes = refinement_boxes(
+        manifest,
+        domain,
+        inner_margin_x_lpp=config.inner_margin_x_lpp,
+        inner_margin_y_beam=config.inner_margin_y_beam,
+        inner_margin_z_lpp=config.inner_margin_z_lpp,
+    )
     divisions = block_divisions(domain)
 
     required = config.free_surface_cells_per_wavelength

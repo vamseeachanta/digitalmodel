@@ -37,6 +37,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterator, List, Sequence, Tuple
 
+import numpy as np
+
 __all__ = [
     "DEFAULT_FACE_AREA_FACTOR",
     "HullFaceResolutionError",
@@ -239,7 +241,11 @@ def _face_area_and_centre(verts: Sequence[Vec3]) -> Tuple[float, Vec3]:
 
 
 def _read_boundary(path: Path) -> Dict[str, Tuple[int, int]]:
-    text = _read_ascii(path)
+    # polyBoundaryMesh is a dictionary: its body is text under BOTH write
+    # formats, only the header's `format` word changes.
+    if not path.is_file():
+        raise HullFaceResolutionError(f"no such polyMesh file: {path}")
+    text = path.read_text(errors="replace")
     return {
         m.group(1): (int(m.group(2)), int(m.group(3)))
         for m in _BOUNDARY_ENTRY.finditer(text)
@@ -247,6 +253,8 @@ def _read_boundary(path: Path) -> Dict[str, Tuple[int, int]]:
 
 
 def _read_faces(path: Path, start: int, count: int) -> List[List[int]]:
+    if _is_binary(path):
+        return _read_faces_binary(path, start, count)
     faces: List[List[int]] = []
     for index, line in enumerate(_list_body(path)):
         if index < start:
@@ -270,6 +278,8 @@ def _read_points(path: Path, wanted: set) -> Dict[int, Vec3]:
     thousands of hull faces; materialising the whole field to measure the
     boundary would make the gate cost more than it saves.
     """
+    if _is_binary(path):
+        return _read_points_binary(path, wanted)
     points: Dict[int, Vec3] = {}
     for index, line in enumerate(_list_body(path)):
         if index not in wanted:
@@ -284,6 +294,90 @@ def _read_points(path: Path, wanted: set) -> Dict[int, Vec3]:
             f"in the points file (first: {min(missing)})"
         )
     return points
+
+
+# --------------------------------------------------------------------------- #
+#  Binary polyMesh (writeFormat binary -- every production case here writes it)
+# --------------------------------------------------------------------------- #
+#
+# The FoamFile header stays ASCII; after it, each list is `<N>\n(` followed by
+# N raw little-endian items and `)`. `arch "LSB;label=32;scalar=64"` in the
+# header gives the widths. points is a vectorField (N x 3 scalars); faces is a
+# faceCompactList: an offsets list (N+1 labels) then one flat label list. Only
+# the patch's faces and the points they reference are materialised, as in the
+# ASCII path, so the gate stays cheap on a multi-million-cell hull mesh.
+
+_FORMAT_BINARY = re.compile(rb"format\s+binary\s*;")
+_ARCH = re.compile(rb'arch\s+"LSB;label=(\d+);scalar=(\d+)"')
+_CLASS = re.compile(rb"class\s+(\w+)\s*;")
+_LIST_START = re.compile(rb"\n(\d+)\s*\n\(")
+
+
+def _is_binary(path: Path) -> bool:
+    if not path.is_file():
+        raise HullFaceResolutionError(f"no such polyMesh file: {path}")
+    with path.open("rb") as handle:
+        return bool(_FORMAT_BINARY.search(handle.read(2000)))
+
+
+def _binary_header(data: np.memmap, path: Path) -> Tuple[str, str, bytes, int]:
+    head = bytes(data[:2000])
+    arch = _ARCH.search(head)
+    label = "<i4" if arch is None or arch.group(1) == b"32" else "<i8"
+    scalar = "<f8" if arch is None or arch.group(2) == b"64" else "<f4"
+    cls = _CLASS.search(head)
+    cls_name = cls.group(1) if cls else b""
+    try:
+        end = head.index(b"}", head.index(b"FoamFile"))
+    except ValueError as exc:
+        raise HullFaceResolutionError(f"{path}: no FoamFile header") from exc
+    return label, scalar, cls_name, end + 1
+
+
+def _binary_list(data: np.memmap, pos: int, path: Path) -> Tuple[int, int]:
+    """(count, byte offset of the first raw item) for the list starting at/after pos."""
+    window = bytes(data[pos: pos + 400])
+    m = _LIST_START.search(window)
+    if m is None:
+        raise HullFaceResolutionError(f"{path}: no binary list header after byte {pos}")
+    return int(m.group(1)), pos + m.end()
+
+
+def _read_points_binary(path: Path, wanted: set) -> Dict[int, Vec3]:
+    data = np.memmap(path, dtype=np.uint8, mode="r")
+    _, scalar, _, end = _binary_header(data, path)
+    n, start = _binary_list(data, end, path)
+    if wanted and max(wanted) >= n:
+        raise HullFaceResolutionError(
+            f"{path}: the patch references point {max(wanted)} but the file holds {n}"
+        )
+    arr = np.frombuffer(data, dtype=scalar, count=3 * n, offset=start).reshape(n, 3)
+    return {i: (float(arr[i, 0]), float(arr[i, 1]), float(arr[i, 2])) for i in wanted}
+
+
+def _read_faces_binary(path: Path, start_face: int, count: int) -> List[List[int]]:
+    data = np.memmap(path, dtype=np.uint8, mode="r")
+    label, _, cls_name, end = _binary_header(data, path)
+    if cls_name != b"faceCompactList":
+        raise HullFaceResolutionError(
+            f"{path}: binary faces of class {cls_name.decode(errors='replace')!r}; "
+            f"this reader handles faceCompactList (what OpenFOAM writes in binary)"
+        )
+    lsize = np.dtype(label).itemsize
+    n_off, s1 = _binary_list(data, end, path)
+    offsets = np.frombuffer(data, dtype=label, count=n_off, offset=s1)
+    n_lab, s2 = _binary_list(data, s1 + n_off * lsize, path)
+    labels = np.frombuffer(data, dtype=label, count=n_lab, offset=s2)
+    n_faces = n_off - 1
+    if start_face + count > n_faces:
+        raise HullFaceResolutionError(
+            f"{path}: expected {count} faces from index {start_face}, but the file "
+            f"holds {n_faces}. The face list is shorter than the boundary claims."
+        )
+    return [
+        labels[int(offsets[i]): int(offsets[i + 1])].tolist()
+        for i in range(start_face, start_face + count)
+    ]
 
 
 def _require_ascii(path: Path) -> None:

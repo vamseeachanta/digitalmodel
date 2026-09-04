@@ -57,6 +57,35 @@ def _write_list(path: Path, cls: str, obj: str, entries: Sequence[str],
     )
 
 
+def _write_binary_polymesh(poly: Path, points: Sequence[str], faces: Sequence[str]) -> None:
+    """What OpenFOAM writes under writeFormat binary: ASCII FoamFile header with
+    arch, then `<N>\n(` + raw little-endian items + `)`; faces as a
+    faceCompactList (offsets list, then the flat label list)."""
+    import numpy as np
+
+    def header(cls: str, obj: str) -> bytes:
+        return (
+            _HEADER.format(fmt="binary", cls=cls, obj=obj)
+            .replace("    format      binary;\n",
+                     "    format      binary;\n    arch        \"LSB;label=32;scalar=64\";\n")
+            .encode()
+        )
+
+    xyz = np.array([[float(v) for v in p.strip("()").split()] for p in points], dtype="<f8")
+    with (poly / "points").open("wb") as fh:
+        fh.write(header("vectorField", "points") + f"\n{len(xyz)}\n(".encode())
+        fh.write(xyz.tobytes()); fh.write(b")\n")
+    labels: list[int] = []; offsets = [0]
+    for f in faces:
+        ids = [int(v) for v in f[f.index("(") + 1: f.rindex(")")].split()]
+        labels += ids; offsets.append(len(labels))
+    with (poly / "faces").open("wb") as fh:
+        fh.write(header("faceCompactList", "faces") + f"\n{len(offsets)}\n(".encode())
+        fh.write(np.array(offsets, dtype="<i4").tobytes()); fh.write(b")\n")
+        fh.write(f"\n{len(labels)}\n(".encode())
+        fh.write(np.array(labels, dtype="<i4").tobytes()); fh.write(b")\n")
+
+
 def write_polymesh(root: Path, quad_sides: Sequence[float],
                    patch: str = "hull", other_faces: int = 2,
                    fmt: str = "ascii") -> Path:
@@ -90,8 +119,11 @@ def write_polymesh(root: Path, quad_sides: Sequence[float],
             points.append(f"({x + px} {py} 3.5)")
         faces.append(f"4({base} {base + 1} {base + 2} {base + 3})")
 
-    _write_list(poly / "points", "vectorField", "points", points, fmt=fmt)
-    _write_list(poly / "faces", "faceList", "faces", faces, fmt=fmt)
+    if fmt == "binary":
+        _write_binary_polymesh(poly, points, faces)
+    else:
+        _write_list(poly / "points", "vectorField", "points", points, fmt=fmt)
+        _write_list(poly / "faces", "faceList", "faces", faces, fmt=fmt)
     (poly / "boundary").write_text(
         _HEADER.format(fmt="ascii", cls="polyBoundaryMesh", obj="boundary")
         + "\n2\n(\n"
@@ -136,11 +168,26 @@ def test_an_absent_patch_fails_closed_and_names_what_is_there(tmp_path):
     assert "hull_surface" in str(exc.value)
 
 
-def test_a_binary_mesh_fails_closed_rather_than_reading_zero_faces(tmp_path):
+def test_a_binary_mesh_reads_exactly_like_ascii(tmp_path):
+    """Every production case writes binary (writeFormat binary), so a gate that
+    only read ASCII refused every real mesh -- found on the first lane run."""
+    ascii_case = write_polymesh(tmp_path / "a", [0.4, 0.25, 0.7], fmt="ascii")
+    binary_case = write_polymesh(tmp_path / "b", [0.4, 0.25, 0.7], fmt="binary")
+    a = patch_face_areas(ascii_case / "constant" / "polyMesh", "hull")
+    b = patch_face_areas(binary_case / "constant" / "polyMesh", "hull")
+    assert b.n_faces == a.n_faces == 3
+    assert b.max_area_m2 == pytest.approx(a.max_area_m2) == pytest.approx(0.49)
+    assert b.max_area_face == a.max_area_face
+    assert b.total_area_m2 == pytest.approx(a.total_area_m2)
+
+
+def test_a_binary_mesh_with_a_short_face_list_fails_closed(tmp_path):
     case = write_polymesh(tmp_path, [0.4], fmt="binary")
+    boundary = case / "constant" / "polyMesh" / "boundary"
+    boundary.write_text(boundary.read_text().replace("nFaces          1;", "nFaces          5;"))
     with pytest.raises(HullFaceResolutionError) as exc:
         patch_face_areas(case / "constant" / "polyMesh", "hull")
-    assert "binary" in str(exc.value).lower()
+    assert "shorter than the boundary claims" in str(exc.value)
 
 
 # --------------------------------------------------------------------------- #

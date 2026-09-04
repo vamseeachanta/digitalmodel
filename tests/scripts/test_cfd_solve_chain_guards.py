@@ -437,3 +437,24 @@ def test_the_gate_never_falls_through_to_a_pass():
     assert "sys.exit(" in source or "return 1" in source
     for forgiving in ("except Exception:\n        pass", "return 0  # skip", "continue"):
         assert forgiving not in source, f"the gate has a silent-pass path: {forgiving!r}"
+
+
+def test_the_mesh_store_promote_sits_after_the_face_gate_with_balanced_nesting():
+    """The store must never hold a mesh that failed a gate, and the promote
+    block must not swallow the solve phase's `else`: moving the block by an
+    inexact string match once left an unclosed `if`, so on the reuse path
+    the mesh call ran interFoam on an undecomposed case (2026-09-04)."""
+    import re
+    code = _load()["stage45_driver.sh"] if "_load" in globals() else (
+        __import__("pathlib").Path(__file__).resolve().parents[2] / "scripts/cfd/stage45_driver.sh").read_text()
+    face = code.index("check_face_resolution.py")
+    promote = code.index("MESH PROMOTED")
+    decompose = code.index("redistributePar -decompose")
+    assert face < promote < decompose
+    segment = code[code.index("tstage faceResolution"):code.index("restore0Dir")]
+    n_if = len(re.findall(r"^\s*if ", segment, re.M))
+    n_fi = len(re.findall(r"^\s*fi\s*$", segment, re.M))
+    assert n_if == n_fi, f"{n_if} if vs {n_fi} fi between the face gate and restore0Dir"
+    # and the solve phase is the driver's OUTER else, not nested in a mesh-phase block
+    solve = code.index("SOLVE PHASE START")
+    assert code.rfind("\nelse\n", 0, solve) > code.rfind("\nfi\n", 0, code.index("MESH PHASE COMPLETE"))

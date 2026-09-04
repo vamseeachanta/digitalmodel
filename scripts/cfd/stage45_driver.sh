@@ -203,13 +203,6 @@ if [ "$PHASE" = "mesh" ]; then
     fi
   fi
   mark "CELLS: $(cfd_mesh_cells "$CASE")"
-  if [ -z "$MESH_REUSED" ] && [ "${DM_CFD_MESH_PROMOTE:-1}" = "1" ]; then
-    if "$MESH_STORE_SH" promote "$CASE" "$CASE_NAME" >> "$CASE/driver.log" 2>&1; then
-      mark "MESH PROMOTED: $(basename "$(dirname "$(readlink -f constant/polyMesh)")")"
-    else
-      mark "WARNING mesh_store promote failed -- mesh stays private to this case (see driver.log)"
-    fi
-  fi
 
   # POST-MESH GATE (#2033). checkMesh above is necessary and not sufficient:
   # it scores shape (skew, non-orthogonality, inversion) and says nothing
@@ -223,6 +216,15 @@ if [ "$PHASE" = "mesh" ]; then
   # whole value: the alternative is 30 h of compute on a mesh already known
   # not to resolve the surface it integrates.
   tstage faceResolution python3 "$SELF_DIR/check_face_resolution.py" "$CASE"
+  # Promote only a mesh that passed EVERY mesh gate (checkMesh verdict and the
+  # face-resolution gate above): a store entry is reused without rebuilding.
+  if [ -z "$MESH_REUSED" ] && [ "${DM_CFD_MESH_PROMOTE:-1}" = "1" ]; then
+    if "$MESH_STORE_SH" promote "$CASE" "$CASE_NAME" >> "$CASE/driver.log" 2>&1; then
+      mark "MESH PROMOTED: $(basename "$(dirname "$(readlink -f constant/polyMesh)")")"
+    else
+      mark "WARNING mesh_store promote failed -- mesh stays private to this case (see driver.log)"
+    fi
+  fi
 
   restore0Dir >> "$CASE/driver.log" 2>&1
   mark "restore0Dir done"

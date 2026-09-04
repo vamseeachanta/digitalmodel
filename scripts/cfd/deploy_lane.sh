@@ -54,6 +54,13 @@ if [ "${drivers:-1}" != 0 ]; then
 fi
 [ "${solvers:-0}" = 0 ] || echo "deploy_lane: note: $HOST has $solvers solver/mesher process(es) (case-local chain); these do not read scripts/, proceeding"
 
+# The face-resolution gate imports digitalmodel; ship the package source beside
+# the chain so the gate can run on a lane that has no checkout (fail-closed
+# otherwise: "cannot import digitalmodel" reads as a FAILED mesh).
+SRC="$(cd "$HERE/../../src" && pwd)"
+echo "deploy_lane: $SRC/digitalmodel -> $HOST:~/cfd/dm_src/digitalmodel/ ${DRY:+(dry run)}"
+[ -n "$DRY" ] || $SSH "$HOST" "mkdir -p ~/cfd/dm_src ~/cfd/$CAMPAIGN/scripts" </dev/null
+rsync -a $DRY --delete --exclude '__pycache__' --exclude '*.pyc' "$SRC/digitalmodel/" "$HOST:~/cfd/dm_src/digitalmodel/"
 echo "deploy_lane: $HERE -> $HOST:$DEST ${DRY:+(dry run)}"
 rsync -a $DRY --itemize-changes \
   --exclude '__pycache__' --exclude '*.bak' --exclude '*.stale-bak' --exclude '*.upstream.sh' --exclude 'README.md' \
