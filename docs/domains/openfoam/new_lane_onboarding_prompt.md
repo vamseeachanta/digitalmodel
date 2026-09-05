@@ -47,11 +47,17 @@ Do this, in order, and stop to report after each numbered step:
 1. Inventory the machine read-only: OS/arch, lscpu (physical cores, sockets, NUMA),
    memory, disk free on the home filesystem, existing OpenFOAM/MPI, other users' jobs.
    Refuse to proceed if another CFD or GPU job is running without the owner's say-so.
-2. Install OpenFOAM v2312 from dl.openfoam.com (package openfoam2312-default; the other
-   lanes run 2312.260127-2 with system Open MPI 4.1.6) or, on aarch64 if no package
-   exists, build v2312 from source with the system compiler and Open MPI. Verify:
-   source /usr/lib/openfoam/openfoam2312/etc/bashrc; foamVersion; mpirun --version;
-   run the interFoam damBreak tutorial in parallel on 4 ranks. Record the exact versions.
+2. Install OpenFOAM v2312. Linux x86_64/aarch64: dl.openfoam.com package
+   openfoam2312-default (the other lanes run 2312.260127-2 with system Open MPI 4.1.6),
+   or build v2312 from source if no package exists. macOS (Apple silicon): use a native
+   build, not Docker (Docker on macOS runs a VM with poor memory bandwidth and breaks the
+   timing comparison); the gerlero openfoam-app project ships native v2312 builds with
+   bundled Open MPI (github.com/gerlero/openfoam-app), or build from source with Homebrew
+   open-mpi; ranks = performance cores only. Verify: source the bashrc; foamVersion;
+   mpirun --version; run the interFoam damBreak tutorial in parallel on 4 ranks. Record
+   the exact versions and the bashrc path (the chain scripts default to
+   /usr/lib/openfoam/openfoam2312/etc/bashrc; on macOS set DM_CFD_OPENFOAM_BASHRC or the
+   equivalent override and report if the scripts need a patch, which goes to digitalmodel).
 3. Create the lane tree ~/cfd/<campaign>/ {geometry, meshes, cases, scripts, docs, runs,
    stage, status} (root = control plane only: registries, lane entry points, the
    <case>.log/.marker ledger, status/). Deploy the chain with deploy_lane.sh from this
@@ -66,6 +72,20 @@ Do this, in order, and stop to report after each numbered step:
    lanes (primary 8.05 at 8 ranks, the 32-core x86 lanes 10.2-10.7 at 16 ranks, all at
    2/3/2). If the numerics decision from the benchmark on <LANE_C> is already in, run only
    the adopted variant.
+5b. Decide what this lane may run, from the benchmark and the machine, before touching
+   the queue. Compute: predicted wall time per case at the measured rate for each mesh
+   level in the queue (L4 3.2 M cells, L5 3.75 M, r3 6.05 M, each 8000 pseudo-iterations
+   at 2/3/2, or at the adopted variant); memory headroom (interFoam at 2/3/2 needs about
+   1.5-2 GB per million cells plus decomposition overhead, so a 6 M-cell case wants
+   16 GB free beyond the OS); disk (a 6 M-cell case with 500-iteration writes needs
+   ~15 GB; keep 50 GB free); and thermal sustainment (a laptop or small-form-factor box
+   must hold its rate over a 200-iteration run without throttling; check s/it drift over
+   the benchmark). Then assign: sustained rate within 1.5x of the primary lane and enough
+   memory -> full production cases (r3/L5 class and the 33-case star); slower or
+   memory-limited -> L4-class sensitivity cases, benchmark variants and reductions only;
+   throttling or under 16 GB free -> staging, meshing and post-processing lane, no long
+   solves. Write the decision and its numbers in the lane note and report it before
+   step 6.
 6. Add the lane to the records: config.yml (host, probe paths), facts.yml lanes[] (cpu,
    ranks, peak DP GFLOPS, measured rate with basis "measured"), a lane note in
    analysis/notes/<lane>-onboarding-<date>.md, and a one-line memory pointer. Regenerate
