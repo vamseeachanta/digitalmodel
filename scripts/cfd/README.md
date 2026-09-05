@@ -44,4 +44,5 @@ Python twin on one fixture case and asserts equal identities.
 
 Design notes: `docs/domains/openfoam/mesh_store_case_layout.md`. PIMPLE loop / cost facts
 (why 2/3/2 costs 3.4x 1/2/0, why residualControl is not a lever at nOuter 2):
-`docs/domains/openfoam/pimple_loop_cost_v2312.md`.
+`docs/domains/openfoam/pimple_loop_cost_v2312.md`. Bringing up a new lane:
+`docs/domains/openfoam/new_lane_onboarding_prompt.md`.
