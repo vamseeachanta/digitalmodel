@@ -2,6 +2,9 @@
 # Continue a finished or stopped parallel solve from its latest write.
 #
 #   continue_case.sh <case> <new endTime> [ranks]
+#   env DM_CFD_MPIRUN_FLAGS   extra mpirun flags, e.g. "--map-by numa --bind-to core"
+#                             (binding to physical cores; Open MPI 4.1 binds by socket
+#                             for np > 2 and lets ranks wander otherwise)
 #
 # What the stage driver and solve_case.sh cannot do: they are FRESH starts
 # (restore0Dir, setFields, decomposePar -force) and discard every processor
@@ -50,7 +53,7 @@ LEDGER="$ROOT/$NAME.log"
 echo "=== $STAMP continue $NAME from $LATEST to $END on $RANKS ranks ($SOLVER)" >> "$LEDGER"
 setsid nohup bash -c "
   echo \$\$ > run.pid
-  mpirun -np $RANKS $SOLVER -parallel > log.$SOLVER 2>&1 < /dev/null; rc=\$?
+  mpirun -np $RANKS ${DM_CFD_MPIRUN_FLAGS:-} $SOLVER -parallel > log.$SOLVER 2>&1 < /dev/null; rc=\$?
   last=\$(grep -a '^Time = ' log.$SOLVER | tail -1 | awk '{print \$3}')
   if [ \$rc -eq 0 ]; then echo \"\$(date -u +%FT%TZ) continued $NAME to Time=\$last rc=0\" | tee -a '$LEDGER' > CONT_DONE
   else echo \"\$(date -u +%FT%TZ) $SOLVER rc=\$rc at Time=\$last\" | tee -a '$LEDGER' > CONT_FAILED; fi
