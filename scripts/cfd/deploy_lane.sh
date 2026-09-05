@@ -35,10 +35,14 @@ DEST="~/cfd/$CAMPAIGN/scripts/"
 
 # shellcheck disable=SC2016
 state=$($SSH "$HOST" '
+  # Scan EVERY process by command line, not only those named bash: a script
+  # started through its shebang carries the script name as its process name
+  # ("stage45_driver." for stage45_driver.sh), so `pgrep -x bash` misses it.
   drivers=0
-  for p in $(pgrep -x bash); do
+  for d in /proc/[0-9]*; do
+    p=${d#/proc/}
     [ "$p" = "$$" ] || [ "$p" = "$PPID" ] && continue
-    if tr "\0" " " < /proc/$p/cmdline 2>/dev/null | grep -qE "stage45_driver\.sh|db_job(_matrix)?\.sh|solve_case\.sh|run_queue\.sh"; then
+    if tr "\0" " " < $d/cmdline 2>/dev/null | grep -qE "stage45_driver\.sh|db_job(_matrix)?\.sh|solve_case\.sh|run_queue\.sh|wigley_job\.sh"; then
       drivers=$((drivers + 1))
     fi
   done
