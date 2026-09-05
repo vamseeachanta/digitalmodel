@@ -32,8 +32,13 @@ for p in $(pgrep -x interFoam -x simpleFoam 2>/dev/null); do
 done
 if [ -f run.pid ] && kill -0 "$(cat run.pid)" 2>/dev/null; then echo "continue_case: run.pid $(cat run.pid) is alive" >&2; exit 1; fi
 
+# The OpenFOAM bashrc dereferences unset variables: source it with -u and -e
+# off, as lib/cfd_chain.sh does, or the script dies here silently (#2023).
+set +eu
 # shellcheck disable=SC1091
-source "${WM_BASHRC:-/usr/lib/openfoam/openfoam2312/etc/bashrc}" >/dev/null 2>&1 || true
+source "${WM_BASHRC:-/usr/lib/openfoam/openfoam2312/etc/bashrc}" >/dev/null 2>&1
+set -eu
+command -v foamDictionary >/dev/null || { echo "continue_case: OpenFOAM env did not load" >&2; exit 1; }
 SOLVER=$(awk '/^application/ {gsub(/;/,"",$2); print $2; exit}' system/controlDict)
 [ -n "$SOLVER" ] || { echo "continue_case: no application in system/controlDict" >&2; exit 1; }
 foamDictionary -entry startFrom -set latestTime system/controlDict >/dev/null
