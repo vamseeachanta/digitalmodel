@@ -13,6 +13,7 @@ Deployed from this directory with `deploy_lane.sh`; never edited on a lane.
 | `solve_case.sh` | Detached solver launcher (file-delivered, never piped: mpirun eats stdin); arms `ittc_watch.sh` and `poller.sh`. |
 | `gate_case.sh` | Terminal waiter + two-window settling gate for a free-surface case, runs on the host reparented to PID 1. |
 | `fs_gate.sh` | Free-surface acceptance gates read from the case's own log and force history: mass drift <= 0.5 %, two 400-iteration windows < 0.2 % on viscous and pressure, 0.6 < Cf/ITTC < 1.3. |
+| `continue_case.sh` | Continue a stopped parallel solve from its latest write (startFrom latestTime, raised endTime, detached, CONT_DONE/CONT_FAILED). The driver and solve_case.sh are fresh starts and discard processor time dirs. |
 | `ittc_watch.sh`, `poller.sh` | Convergence watcher and wall-clock budget poller for a running solve. |
 | `check_face_resolution.py` | The mesh-phase face-resolution gate the driver runs before decomposition. |
 | `deploy_lane.sh` | rsync this directory to `<host>:~/cfd/<campaign>/scripts/`; refuses while a chain driver runs there. |
