@@ -14,6 +14,7 @@ Deployed from this directory with `deploy_lane.sh`; never edited on a lane.
 | `gate_case.sh` | Terminal waiter + two-window settling gate for a free-surface case, runs on the host reparented to PID 1. |
 | `fs_gate.sh` | Free-surface acceptance gates read from the case's own log and force history: mass drift <= 0.5 %, two 400-iteration windows < 0.2 % on viscous and pressure, 0.6 < Cf/ITTC < 1.3. |
 | `continue_case.sh` | Continue a stopped parallel solve from its latest write (startFrom latestTime, raised endTime, detached, CONT_DONE/CONT_FAILED). The driver and solve_case.sh are fresh starts and discard processor time dirs. |
+| `lane_probe.sh` | One status row per case (iteration, s/it, pseudo-dt range raw and smoothed, Courant caps, mass drift, max U, hull forces, p_rgh residual) for a lanes table; LTS-aware. |
 | `ittc_watch.sh`, `poller.sh` | Convergence watcher and wall-clock budget poller for a running solve. |
 | `check_face_resolution.py` | The mesh-phase face-resolution gate the driver runs before decomposition. |
 | `deploy_lane.sh` | rsync this directory to `<host>:~/cfd/<campaign>/scripts/`; refuses while a chain driver runs there. |
