@@ -68,16 +68,16 @@ def audit_one(label, path, start, gate, amp):
 def md_table(rows, amp):
     scale = 1000.0 if any(abs(r.get("viscous") or 0) >= 1000 for r in rows if "error" not in r) else 1.0
     unit = "kN" if scale == 1000.0 else "N"
-    kN = lambda v: "—" if v is None else (f"{v / 1000:+.1f}" if abs(v) >= 1000 else f"{v:+.2f} N")
+    force = lambda v: "—" if v is None else f"{v / scale:+.{1 if scale == 1000 else 2}f}"
     it = lambda v: "—" if v is None else f"{v:.0f}"
     pc = lambda v: "—" if v is None else f"{v:.2f}"
-    o = ["| run | rows | extrema | half period | viscous kN | cycle total kN | cycle change % | Aitken total kN | fit total kN | fit period / tau | wobble < " + f"{amp:g} % at | verdict |",
+    o = [f"| run | rows | extrema | half period | viscous {unit} | cycle total {unit} | cycle change % | Aitken total {unit} | fit total {unit} | fit period / tau | wobble < " + f"{amp:g} % at | verdict |",
          "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|"]
     for r in rows:
         if "error" in r:
             o.append(f"| {r['label']} | error: {r['error'][:60]} |||||||||||"); continue
         fp = "—" if r["fit_period"] is None else f"{r['fit_period']:.0f} / {r['fit_tau']:.0f}"
-        o.append(f"| {r['label']} | {r['rows']} | {r['n_extrema']} | {it(r['half_period'])} | {kN(r['viscous'])} | {kN(r.get('cycle_total'))} | {pc(r['cycle_change_pct'])} | {kN(r['aitken_total'])} | {kN(r['fit_total'])} | {fp} | {it(r['amp_ok_at'])} | {r['verdict']} |")
+        o.append(f"| {r['label']} | {r['rows']} | {r['n_extrema']} | {it(r['half_period'])} | {force(r['viscous'])} | {force(r.get('cycle_total'))} | {pc(r['cycle_change_pct'])} | {force(r['aitken_total'])} | {force(r['fit_total'])} | {fp} | {it(r['amp_ok_at'])} | {r['verdict']} |")
     return "\n".join(o)
 
 

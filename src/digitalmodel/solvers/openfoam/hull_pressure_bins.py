@@ -34,17 +34,28 @@ def _patch_field_scalar(path: Path, patch: str) -> np.ndarray:
     """Read the nonuniform List<scalar> of `patch` from a volScalarField file (ascii or binary)."""
     data = np.memmap(path, dtype=np.uint8, mode="r")
     raw = bytes(data)
-    m = re.search(rb"\n\s*" + patch.encode() + rb"\s*\{", raw)
+    m = re.search(rb"(?:^|\s)" + re.escape(patch.encode()) + rb"\s*\{", raw)
     if not m:
         raise ValueError(f"{path}: patch {patch} not in boundaryField")
-    m2 = re.compile(rb"nonuniform\s+List<scalar>\s*\n?\s*(\d+)\s*\n?\(").search(raw, m.end())
+    # Bound the lookup to this patch. Otherwise a uniform patch can borrow a
+    # nonuniform value from the patch that follows it.
+    depth = 1
+    block_end = m.end()
+    while block_end < len(raw) and depth:
+        if raw[block_end] == ord("{"):
+            depth += 1
+        elif raw[block_end] == ord("}"):
+            depth -= 1
+        block_end += 1
+    block = raw[m.end():block_end - 1]
+    m2 = re.compile(rb"nonuniform\s+List<scalar>\s*\n?\s*(\d+)\s*\n?\(").search(block)
     if not m2:
         # uniform value
-        mu = re.compile(rb"value\s+uniform\s+([-+0-9.eE]+)").search(raw, m.end())
+        mu = re.compile(rb"value\s+uniform\s+([-+0-9.eE]+)").search(block)
         if mu:
             return np.array([float(mu.group(1))])
         raise ValueError(f"{path}: no List<scalar> for patch {patch}")
-    n = int(m2.group(1)); pos = m2.end()
+    n = int(m2.group(1)); pos = m.end() + m2.end()
     if _is_binary(path):
         return np.frombuffer(raw, dtype="<f8", count=n, offset=pos).copy()
     txt = raw[pos:pos + 40 * n].decode("ascii", errors="ignore")
@@ -61,15 +72,35 @@ def patch_faces_geometry(polymesh: Path, patch: str):
     wanted = set(v for f in faces for v in f)
     pts = _read_points(polymesh / "points", wanted)
     Sf = np.zeros((n, 3)); Cf = np.zeros((n, 3))
-    for i, f in enumerate(faces):
-        P = np.array([pts[v] for v in f], dtype=float)
-        # Newell area vector and area-weighted centre via triangle fan
-        c0 = P.mean(axis=0); s = np.zeros(3); cw = np.zeros(3); aw = 0.0
-        for k in range(len(P)):
-            a = P[k]; b = P[(k + 1) % len(P)]
-            t = 0.5 * np.cross(a - c0, b - c0); ta = np.linalg.norm(t)
-            s += t; cw += ta * (a + b + c0) / 3.0; aw += ta
-        Sf[i] = s; Cf[i] = cw / aw if aw > 0 else c0
+    # A production patch is overwhelmingly quads, but can contain triangles
+    # and other polygons after snapping.  Batch faces with the same vertex
+    # count so all edge crosses and triangle-fan centroids run in NumPy.
+    groups: dict[int, list[int]] = {}
+    for i, face in enumerate(faces):
+        groups.setdefault(len(face), []).append(i)
+    for width, face_indexes in groups.items():
+        vertex_indexes = np.asarray(
+            [[*faces[i]] for i in face_indexes], dtype=np.intp
+        )
+        # The mesh reader deliberately materialises only wanted points, so a
+        # dense global point array could be enormous. Gather the compact batch
+        # directly from that dictionary instead.
+        P = np.asarray(
+            [[pts[int(v)] for v in row] for row in vertex_indexes], dtype=float
+        )
+        c0 = P.mean(axis=1)
+        nxt = np.roll(P, -1, axis=1)
+        triangles = 0.5 * np.cross(P - c0[:, None, :], nxt - c0[:, None, :])
+        weights = np.linalg.norm(triangles, axis=2)
+        area_weights = weights.sum(axis=1)
+        centres_weighted = (
+            weights[:, :, None] * (P + nxt + c0[:, None, :]) / 3.0
+        ).sum(axis=1)
+        batch_cf = c0.copy()
+        valid = area_weights > 0
+        batch_cf[valid] = centres_weighted[valid] / area_weights[valid, None]
+        Sf[face_indexes] = triangles.sum(axis=1)
+        Cf[face_indexes] = batch_cf
     return Sf, Cf
 
 
