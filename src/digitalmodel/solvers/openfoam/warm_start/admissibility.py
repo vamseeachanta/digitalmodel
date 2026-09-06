@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -197,11 +198,36 @@ def _numeric_dictionary_match(source: Path, target: Path) -> tuple[bool, str]:
         if left == right:
             continue
         for key in sorted(set(left or {}) | set(right or {})):
-            if (left or {}).get(key) != (right or {}).get(key):
+            if not _foam_values_equal((left or {}).get(key), (right or {}).get(key)):
                 return False, (f"{name} first difference at {key}: "
                                f"source={(left or {}).get(key)!r}, target={(right or {}).get(key)!r}")
-        return False, f"{name} differs"
+        continue
     return True, "fvSchemes/fvSolution match semantically"
+
+
+def _numeric_value(value: str | None) -> tuple[float, ...] | None:
+    if value is None:
+        return None
+    stripped = value.strip()
+    if stripped.startswith("(") and stripped.endswith(")"):
+        stripped = stripped[1:-1].strip()
+    elif " " in stripped:
+        return None
+    parts = stripped.split()
+    try:
+        return tuple(float(part) for part in parts)
+    except ValueError:
+        return None
+
+
+def _foam_values_equal(left: str | None, right: str | None) -> bool:
+    if left == right:
+        return True
+    left_numbers, right_numbers = _numeric_value(left), _numeric_value(right)
+    return (left_numbers is not None and right_numbers is not None and
+            len(left_numbers) == len(right_numbers) and
+            all(math.isclose(a, b, rel_tol=1e-12, abs_tol=0.0)
+                for a, b in zip(left_numbers, right_numbers)))
 
 
 def _wall_signature(path: Path) -> str | None:

@@ -61,6 +61,76 @@ def _boundary(text: str) -> str:
     return text[span[0]:span[1]]
 
 
+def _block_text(text: str, key: str) -> str:
+    span = _balanced_block(text, key)
+    if not span:
+        raise ValueError(f"dictionary has no {key} block")
+    return text[span[0]:span[1]]
+
+
+def _entry(text: str, key: str) -> str:
+    match = re.search(r"(?:^|[;{])\s*" + re.escape(key) + r"\s+([^;]+);", text)
+    if not match:
+        raise ValueError(f"dictionary entry {key} is missing")
+    return re.sub(r"\s+", " ", match.group(1).strip())
+
+
+def _python_expand(text: str) -> str:
+    """Expand simple OpenFOAM ``$name`` variables when foamDictionary is absent."""
+    definitions = {
+        match.group(1): match.group(2).strip()
+        for match in re.finditer(r"(?m)^\s*([A-Za-z_]\w*)\s+([^;{}]+);", text)
+    }
+
+    def resolve(value: str, trail: tuple[str, ...] = ()) -> str:
+        def replacement(match: re.Match) -> str:
+            name = match.group(1)
+            if name in trail or name not in definitions:
+                raise ValueError(f"cannot expand OpenFOAM macro ${name}")
+            return resolve(definitions[name], (*trail, name))
+        previous = None
+        while "$" in value and value != previous:
+            previous = value
+            value = re.sub(r"\$([A-Za-z_]\w*)", replacement, value)
+        return value
+
+    return re.sub(r"\$([A-Za-z_]\w*)", lambda match: resolve(definitions.get(
+        match.group(1), match.group(0)), (match.group(1),)), text)
+
+
+def _expanded_field(path: Path) -> str:
+    foam_dictionary = shutil.which("foamDictionary")
+    if foam_dictionary:
+        completed = subprocess.run(
+            [foam_dictionary, str(path), "-expand"], cwd=path.parent.parent,
+            check=True, capture_output=True, text=True,
+        )
+        return completed.stdout
+    return _python_expand(path.read_text())
+
+
+def _canonical_literal(value: str) -> str:
+    value = re.sub(r"\s+", " ", value.strip())
+    value = re.sub(r"\(\s+", "(", value)
+    value = re.sub(r"\s+\)", ")", value)
+    return re.sub(r"(?<![\w.])([+-])\s+(?=\d|\.)", r"\1", value)
+
+
+def _patches(boundary: str) -> list[tuple[str, str]]:
+    outer = boundary[boundary.find("{") + 1:boundary.rfind("}")]
+    patches = []
+    position = 0
+    pattern = re.compile(r"(?m)^\s*([\w.-]+)\s*\{")
+    while match := pattern.search(outer, position):
+        span = _balanced_block(outer[match.start():], match.group(1))
+        if not span:
+            raise ValueError(f"unbalanced boundary patch {match.group(1)}")
+        end = match.start() + span[1]
+        patches.append((match.group(1), outer[match.start():end]))
+        position = end
+    return patches
+
+
 def _replace_boundaries(path: Path, template: Path) -> None:
     raw = path.read_bytes()
     # Binary internal fields can contain arbitrary bytes. changeDictionary is the
@@ -74,25 +144,97 @@ def _replace_boundaries(path: Path, template: Path) -> None:
     path.write_text(text[:old_span[0]] + _boundary(wanted) + text[old_span[1]:])
 
 
-def _change_dictionary_dict(target: Path) -> Path:
-    lines = ["dictionaryReplacement\n{\n"]
+def _change_dictionary_dict(target: Path) -> tuple[Path, dict[tuple[str, str], str]]:
+    lines = ["""FoamFile
+{
+    version 2.0;
+    format ascii;
+    class dictionary;
+    object changeDictionaryDict;
+}
+
+"""]
+    intended: dict[tuple[str, str], str] = {}
     for field in ("U", "k", "omega"):
         source = target / "0.orig" / field
-        if source.exists():
-            lines += [f"  {field}\n  {{\n    ", _boundary(source.read_text()), "\n  }\n"]
-    lines.append("}\n")
+        if not source.exists():
+            continue
+        expanded = _expanded_field(source)
+        boundary = _block_text(expanded, "boundaryField")
+        changes: dict[str, dict[str, str]] = {}
+        for patch, block in _patches(boundary):
+            patch_changes = changes.setdefault(patch, {})
+            patch_type = _entry(block, "type")
+            if field == "U" and patch == "inlet":
+                speed = abs(float(_entry(expanded, "Umean")))
+                patch_changes["value"] = f"uniform (-{speed:g} 0 0)"
+            if field == "U" and patch_type == "outletPhaseMeanVelocity":
+                patch_changes["Umean"] = _canonical_literal(_entry(block, "Umean"))
+                patch_changes["value"] = _canonical_literal(_entry(block, "value"))
+            if field in {"k", "omega"} and patch == "inlet":
+                patch_changes["value"] = _canonical_literal(_entry(block, "value"))
+            if patch_type == "inletOutlet":
+                patch_changes["inletValue"] = _canonical_literal(_entry(block, "inletValue"))
+            if not patch_changes:
+                changes.pop(patch)
+        if not changes:
+            continue
+        lines += [f"{field}\n{{\n    boundaryField\n    {{\n"]
+        for patch, entries in changes.items():
+            lines += [f"        {patch}\n        {{\n"]
+            for key, value in entries.items():
+                if "$" in value or value.startswith("#"):
+                    raise ValueError(f"{source}: {patch}.{key} did not expand to a literal")
+                lines.append(f"            {key} {value};\n")
+                intended[(field, f"boundaryField.{patch}.{key}")] = value
+            lines.append("        }\n")
+        lines += ["    }\n}\n\n"]
     path = target / "system" / "changeDictionaryDict"
-    path.parent.mkdir(parents=True, exist_ok=True); path.write_text("".join(lines))
-    return path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("".join(lines))
+    return path, intended
+
+
+def _validate_dictionary(path: Path) -> None:
+    text = path.read_text()
+    required = ("FoamFile", "version 2.0;", "format ascii;", "class dictionary;",
+                "object changeDictionaryDict;")
+    if any(item not in text for item in required) or text.count("{") != text.count("}"):
+        raise ValueError(f"invalid {path}")
+    if "$" in text or "#include" in text:
+        raise ValueError(f"{path} contains an unexpanded macro or include")
+    foam_dictionary = shutil.which("foamDictionary")
+    if foam_dictionary:
+        subprocess.run([foam_dictionary, str(path), "-expand"], cwd=path.parent.parent,
+                       check=True, capture_output=True, text=True)
+
+
+def _normal_literal(value: str) -> str:
+    return _canonical_literal(value)
+
+
+def _verify_changes(target: Path, intended: dict[tuple[str, str], str]) -> None:
+    foam_dictionary = shutil.which("foamDictionary")
+    if not foam_dictionary:
+        raise RuntimeError("foamDictionary is required to verify changeDictionary output")
+    for (field, entry), expected in intended.items():
+        completed = subprocess.run(
+            [foam_dictionary, f"0/{field}", "-entry", entry, "-value"],
+            cwd=target, check=True, capture_output=True, text=True,
+        )
+        actual = _normal_literal(completed.stdout)
+        if actual != _normal_literal(expected):
+            raise RuntimeError(f"changeDictionary verification failed for {field}.{entry}: "
+                               f"expected {expected!r}, got {actual!r}")
 
 
 def rewrite_speed_fields(target: Path, dry_run=False) -> None:
-    for field in ("U", "k", "omega"):
-        current, template = target / "0" / field, target / "0.orig" / field
-        if current.exists() and template.exists():
-            _replace_boundaries(current, template)
-    _change_dictionary_dict(target)
-    run(["changeDictionary", "-time", "0"], target, dry_run=dry_run)
+    dictionary, intended = _change_dictionary_dict(target)
+    _validate_dictionary(dictionary)
+    run(["changeDictionary", "-time", "0", "-enableFunctionEntries"], target,
+        dry_run=dry_run)
+    if not dry_run:
+        _verify_changes(target, intended)
 
 
 def reset_control(target: Path, n_cold: int) -> None:

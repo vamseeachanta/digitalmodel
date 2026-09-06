@@ -1,6 +1,9 @@
 import json
+import shutil
+import subprocess
 from pathlib import Path
 
+import pytest
 import yaml
 
 from digitalmodel.solvers.openfoam.warm_start.decision import decide
@@ -18,6 +21,136 @@ boundaryField
  outlet { type outletPhaseMeanVelocity; Umean 1; value uniform (-1 0 0); }
 }
 """
+
+
+def _literal_speed_templates(case: Path) -> None:
+    zero = case / "0.orig"
+    zero.mkdir(parents=True)
+    (zero / "U").write_text("""FoamFile { version 2.0; format ascii; class volVectorField; object U; }
+Umean 2.5;
+mUmean -$Umean;
+internalField uniform ($mUmean 0 0);
+boundaryField
+{
+    inlet { type fixedValue; value $internalField; }
+    outlet { type outletPhaseMeanVelocity; Umean $Umean; value $internalField; }
+    vent { type inletOutlet; inletValue uniform (0 0 0); value $internalField; }
+}
+""")
+    for name, value in (("k", "0.0375"), ("omega", "12.25")):
+        (zero / name).write_text(f"""FoamFile {{ version 2.0; format ascii; class volScalarField; object {name}; }}
+inletLevel {value};
+internalField uniform $inletLevel;
+boundaryField
+{{
+    inlet {{ type fixedValue; value uniform $inletLevel; }}
+    outlet {{ type inletOutlet; inletValue uniform $inletLevel; value $internalField; }}
+}}
+""")
+
+
+def test_change_dictionary_is_headered_literal_and_preserves_internal_field(tmp_path: Path):
+    target = tmp_path / "target"
+    _literal_speed_templates(target)
+    (target / "0").mkdir()
+    for name in ("U", "k", "omega"):
+        shutil.copy2(target / "0.orig" / name, target / "0" / name)
+    (target / "0" / "U").write_text(
+        (target / "0" / "U").read_text().replace(
+            "internalField uniform ($mUmean 0 0);", "internalField uniform (-1.75 0 0);"
+        )
+    )
+
+    rewrite_speed_fields(target, dry_run=True)
+
+    dictionary = (target / "system" / "changeDictionaryDict").read_text()
+    assert "class dictionary;" in dictionary
+    assert "object changeDictionaryDict;" in dictionary
+    assert "dictionaryReplacement" not in dictionary
+    assert "$internalField" not in dictionary
+    assert "#includeEtc" not in dictionary
+    assert "value uniform (-2.5 0 0);" in dictionary
+    assert "Umean 2.5;" in dictionary
+    assert "value uniform 0.0375;" in dictionary
+    assert "value uniform 12.25;" in dictionary
+    assert "inletValue uniform (0 0 0);" in dictionary
+    assert "inletValue uniform 0.0375;" in dictionary
+    assert "internalField" not in dictionary
+
+
+def test_change_dictionary_v2312_applies_literals_and_preserves_warm_internal(tmp_path: Path):
+    if not all(shutil.which(command) for command in
+               ("changeDictionary", "foamDictionary", "blockMesh")):
+        pytest.skip("OpenFOAM changeDictionary/foamDictionary/blockMesh are not on PATH")
+    target = tmp_path / "target"
+    _literal_speed_templates(target)
+    (target / "0").mkdir()
+    for name in ("U", "k", "omega"):
+        shutil.copy2(target / "0.orig" / name, target / "0" / name)
+    warm_internal = "internalField uniform (-1.75 0 0);"
+    (target / "0" / "U").write_text(
+        (target / "0" / "U").read_text().replace(
+            "internalField uniform ($mUmean 0 0);", warm_internal
+        )
+    )
+    (target / "system").mkdir()
+    (target / "system" / "controlDict").write_text("""FoamFile
+{ version 2.0; format ascii; class dictionary; object controlDict; }
+application interFoam;
+startFrom startTime;
+startTime 0;
+stopAt endTime;
+endTime 1;
+deltaT 1;
+writeControl timeStep;
+writeInterval 1;
+""")
+    (target / "constant").mkdir()
+    (target / "system" / "blockMeshDict").write_text("""FoamFile
+{ version 2.0; format ascii; class dictionary; object blockMeshDict; }
+scale 1;
+vertices ((0 0 0) (1 0 0) (1 1 0) (0 1 0) (0 0 1) (1 0 1) (1 1 1) (0 1 1));
+blocks (hex (0 1 2 3 4 5 6 7) (1 1 1) simpleGrading (1 1 1));
+edges ();
+boundary
+(
+ inlet { type patch; faces ((0 4 7 3)); }
+ outlet { type patch; faces ((1 2 6 5)); }
+ walls { type wall; faces ((0 1 5 4) (3 7 6 2) (0 3 2 1) (4 5 6 7)); }
+);
+""")
+    (target / "system" / "fvSchemes").write_text("""FoamFile
+{ version 2.0; format ascii; class dictionary; object fvSchemes; }
+ddtSchemes { default Euler; }
+gradSchemes { default Gauss linear; }
+divSchemes { default none; }
+laplacianSchemes { default Gauss linear corrected; }
+interpolationSchemes { default linear; }
+snGradSchemes { default corrected; }
+""")
+    (target / "system" / "fvSolution").write_text("""FoamFile
+{ version 2.0; format ascii; class dictionary; object fvSolution; }
+solvers {}
+""")
+    subprocess.run(["blockMesh"], cwd=target, check=True, capture_output=True, text=True)
+
+    rewrite_speed_fields(target)
+
+    checks = {
+        ("U", "internalField"): "uniform (-1.75 0 0)",
+        ("U", "boundaryField.inlet.value"): "uniform (-2.5 0 0)",
+        ("U", "boundaryField.outlet.Umean"): "2.5",
+        ("U", "boundaryField.outlet.value"): "uniform (-2.5 0 0)",
+        ("k", "boundaryField.inlet.value"): "uniform 0.0375",
+        ("omega", "boundaryField.inlet.value"): "uniform 12.25",
+    }
+    for (field, entry), expected in checks.items():
+        result = subprocess.run(
+            ["foamDictionary", f"0/{field}", "-entry", entry, "-value"],
+            cwd=target, check=True, capture_output=True, text=True,
+        )
+        actual = " ".join(result.stdout.split()).replace("( ", "(").replace(" )", ")")
+        assert actual == expected
 
 
 def test_beta_prior_refuses_first_geometry_hop_and_calibration_allows_it():
@@ -38,8 +171,9 @@ def test_copy_cleanup_and_ascii_boundary_rewrite(tmp_path: Path):
         (target / "0.orig" / name).write_text(FIELD.replace("-1", "-2").replace("Umean 1", "Umean 2"))
     clean_restart(source / "20", target)
     rewrite_speed_fields(target, dry_run=True)
-    assert "uniform (-2 0 0)" in (target / "0" / "U").read_text()
-    assert "Umean 2" in (target / "0" / "U").read_text()
+    dictionary = (target / "system" / "changeDictionaryDict").read_text()
+    assert "uniform (-2 0 0)" in dictionary
+    assert "Umean 2" in dictionary
     assert not (target / "0" / "phi").exists()
     assert not (target / "0" / "uniform").exists()
 
@@ -139,6 +273,68 @@ def test_a3_reports_first_differing_entry(tmp_path: Path):
     check = _check(evaluate(source, target, "speed"), "A3")
     assert not check.passed
     assert "p_rgh.solver" in check.detail
+
+
+def test_a3_compares_scalar_and_vector_entries_numerically(tmp_path: Path):
+    source, target = tmp_path / "source", tmp_path / "target"
+    for case in (source, target):
+        (case / "system").mkdir(parents=True)
+        (case / "system" / "fvSchemes").write_text("ddtSchemes { default Euler; }\n")
+    (source / "system" / "fvSolution").write_text(
+        "solvers { p { tolerance 1e-07; direction (1e-07 2 3.0); } }\n"
+    )
+    (target / "system" / "fvSolution").write_text(
+        "solvers { p { tolerance 1e-7; direction (0.0000001 2.0 3); } }\n"
+    )
+    assert _check(evaluate(source, target, "speed"), "A3").passed
+
+    (target / "system" / "fvSolution").write_text(
+        "solvers { p { tolerance 1e-6; direction (0.0000001 2.0 3); } }\n"
+    )
+    check = _check(evaluate(source, target, "speed"), "A3")
+    assert not check.passed
+    assert "p.tolerance" in check.detail
+
+
+def test_prepare_exception_after_copy_restores_cold_records_failure_and_relaunches(
+        tmp_path: Path, monkeypatch):
+    source, target = tmp_path / "source", tmp_path / "target"
+    source_time = source / "20"
+    source_time.mkdir(parents=True)
+    target.mkdir()
+    (target / "0").mkdir()
+    (target / "0" / "sentinel").write_text("cold\n")
+    for name in ("alpha.water", "U", "p_rgh", "k", "omega", "nut"):
+        (source_time / name).write_text(FIELD)
+    record = tmp_path / "records"
+    record.mkdir()
+    (record / "level_default.yml").write_text("n_cold: 5000\n")
+    passing = GateVerdict(tuple(GateCheck(identifier, True, "ok") for identifier in
+                                ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A9")))
+    monkeypatch.setattr("digitalmodel.solvers.openfoam.warm_start.cli.evaluate", lambda *a, **k: passing)
+    monkeypatch.setattr(
+        "digitalmodel.solvers.openfoam.warm_start.cli.rewrite_speed_fields",
+        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("forced dictionary failure")),
+    )
+    launches = []
+    monkeypatch.setattr(
+        "digitalmodel.solvers.openfoam.warm_start.cli.subprocess.Popen",
+        lambda command, **kwargs: launches.append((command, kwargs)),
+    )
+
+    rc = main([
+        "run", "--target", str(target), "--from", "case", "--hop", "speed",
+        "--source", str(source), "--record", str(record), "--calibrate",
+        "--relaunch", "cold-command",
+    ])
+
+    assert rc != 0
+    assert (target / "0" / "sentinel").read_text() == "cold\n"
+    assert "forced dictionary failure" in (target / "COLD_FALLBACK").read_text()
+    hops = yaml.safe_load((record / "record_speed_default.yml").read_text())["hops"]
+    assert hops[-1]["outcome"] == "WARM_ABORTED"
+    assert "forced dictionary failure" in hops[-1]["reason"]
+    assert launches and launches[-1][0] == "cold-command"
 
 
 def test_a1_accepts_fit_and_latest_cycle_mean_within_two_percent(tmp_path: Path, monkeypatch):

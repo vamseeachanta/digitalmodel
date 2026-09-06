@@ -174,32 +174,62 @@ def plan_or_prepare(args) -> int:
     append_ledger(ledger, _ledger_values(args, decision,
                   "PLAN_WARM_CALIBRATION" if decision.decision == "WARM_CALIBRATION" else "PLAN_WARM",
                   reason=override or ""))
-    source_time = _latest(source) if args.source_time == "latestTime" and source else (source / args.source_time if source else None)
-    if hop == "speed":
-        clean_restart(source_time, target); rewrite_speed_fields(target)
-    elif hop == "geometry":
-        if not (target / "0.cold").exists(): shutil.copytree(target / "0", target / "0.cold")
-        prepare_geometry(source, source_time.name, target, args.ranks)
-        if "flat_water_volume" in reference:
-            resharpen_alpha(target / "0" / "alpha.water", float(reference["flat_water_volume"]))
-    elif hop == "potential":
-        if not (target / "0.cold").exists(): shutil.copytree(target / "0", target / "0.cold")
-        prepare_potential(target)
-    elif hop == "analytic":
-        if not args.eta or not args.u: raise ValueError("analytic mode requires --eta and --u")
-        if not (target / "0.cold").exists(): shutil.copytree(target / "0", target / "0.cold")
-        prepare_analytic(target, args.eta, args.u)
-    reset_control(target, n_cold)
-    marker = gate.render() + "\n" + block + "\n"
-    (target / "WARM_PLANNED").write_text(marker)
-    store.append({"id": f"{timestamp()}_{target.name}", "source": source.name if source else None,
-                  "target": target.name, "decision": decision.decision, "ev": decision.__dict__,
-                  "outcome": None, "iterations": None, "reason": override})
-    if args.command == "run":
-        (target / "WARM_RUNNING").write_text(marker)
-        command = args.relaunch or str(target / "solve_chain.sh")
-        subprocess.Popen(command, cwd=target, shell=True, start_new_session=True)
-    return 0
+    copied = False
+    try:
+        source_time = (_latest(source) if args.source_time == "latestTime" and source
+                       else (source / args.source_time if source else None))
+        if hop == "speed":
+            copied = True
+            clean_restart(source_time, target)
+            rewrite_speed_fields(target)
+        elif hop == "geometry":
+            if not (target / "0.cold").exists(): shutil.copytree(target / "0", target / "0.cold")
+            copied = True
+            prepare_geometry(source, source_time.name, target, args.ranks)
+            if "flat_water_volume" in reference:
+                resharpen_alpha(target / "0" / "alpha.water", float(reference["flat_water_volume"]))
+        elif hop == "potential":
+            if not (target / "0.cold").exists(): shutil.copytree(target / "0", target / "0.cold")
+            copied = True
+            prepare_potential(target)
+        elif hop == "analytic":
+            if not args.eta or not args.u: raise ValueError("analytic mode requires --eta and --u")
+            if not (target / "0.cold").exists(): shutil.copytree(target / "0", target / "0.cold")
+            copied = True
+            prepare_analytic(target, args.eta, args.u)
+        reset_control(target, n_cold)
+        marker = gate.render() + "\n" + block + "\n"
+        (target / "WARM_PLANNED").write_text(marker)
+        store.append({"id": f"{timestamp()}_{target.name}", "source": source.name if source else None,
+                      "target": target.name, "decision": decision.decision, "ev": decision.__dict__,
+                      "outcome": None, "iterations": None, "reason": override})
+        if args.command == "run":
+            (target / "WARM_RUNNING").write_text(marker)
+            command = args.relaunch or str(target / "solve_chain.sh")
+            subprocess.Popen(command, cwd=target, shell=True, start_new_session=True)
+        return 0
+    except Exception as exc:
+        if not copied:
+            raise
+        reason = f"warm prepare failed: {type(exc).__name__}: {exc}"
+        try:
+            if (target / "0").exists():
+                shutil.rmtree(target / "0")
+            shutil.copytree(target / "0.cold", target / "0")
+            (target / "COLD_FALLBACK").write_text(reason + "\n")
+            store.append({"id": f"{timestamp()}_{target.name}",
+                          "source": source.name if source else None,
+                          "target": target.name, "decision": decision.decision,
+                          "ev": decision.__dict__, "outcome": "WARM_ABORTED",
+                          "iterations": None, "reason": reason})
+            append_ledger(ledger, _ledger_values(args, decision, "WARM_PREPARE_FAILED",
+                                                 reason=reason))
+            if args.relaunch:
+                subprocess.Popen(args.relaunch, cwd=target, shell=True, start_new_session=True)
+        except Exception as fallback_exc:
+            print(f"warm_start: cold fallback also failed: {fallback_exc}", file=sys.stderr)
+        print(f"warm_start: {reason}", file=sys.stderr)
+        return 2
 
 
 def _print_commands(args, hop, n_cold):
