@@ -44,7 +44,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${DM_CFD_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+source "$SCRIPT_DIR/lib/cfd_chain.sh"
+CAMPAIGN="$(cfd_campaign)"
+ROOT="${DM_CFD_ROOT:-$HOME/cfd/$CAMPAIGN}"
 STORE="${DM_CFD_MESH_STORE:-$ROOT/meshes}"
 CASES_DIR="$ROOT/${DM_CFD_CASES_DIR:-cases}"
 
@@ -215,7 +217,7 @@ verify_store_entry() {
 cmd_pull() {
   local remote="${1:?usage: pull <user@host> <id-prefix>}" prefix="${2:?usage: pull <user@host> <id-prefix>}" remote_store matches count source entry
   case "$prefix" in *[!A-Za-z0-9_.-]*) die "invalid id prefix: $prefix";; esac
-  remote_store="${DM_CFD_REMOTE_STORE:-cfd/${DM_CFD_CAMPAIGN:-campaign}/meshes}"
+  remote_store="${DM_CFD_REMOTE_STORE:-cfd/$CAMPAIGN/meshes}"
   if [ -d "$remote_store" ]; then
     matches=$(find "$remote_store" -mindepth 1 -maxdepth 1 -type d -name "$prefix*" -printf '%f\n' | sort)
   else

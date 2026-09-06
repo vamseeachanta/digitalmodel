@@ -29,7 +29,9 @@ set -euo pipefail
 DRY=""
 [ "${1:-}" = "--dry-run" ] && { DRY="--dry-run"; shift; }
 HOST="${1:?usage: deploy_lane.sh [--dry-run] <user@host> [campaign]}"
-CAMPAIGN="${2:-${DM_CFD_CAMPAIGN:-campaign}}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/cfd_chain.sh"
+CAMPAIGN="${2:-$(cfd_campaign)}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SSH="ssh -o BatchMode=yes -o ConnectTimeout=15"
 DEST="~/cfd/$CAMPAIGN/scripts/"

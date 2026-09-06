@@ -1,8 +1,11 @@
+import json
 from pathlib import Path
 
 import yaml
 
 from digitalmodel.solvers.openfoam.warm_start.decision import decide
+from digitalmodel.solvers.openfoam.warm_start.admissibility import evaluate
+from digitalmodel.solvers.openfoam.warm_start.cli import parser
 from digitalmodel.solvers.openfoam.warm_start.fields import clean_restart, rewrite_speed_fields
 from digitalmodel.solvers.openfoam.warm_start.record import RecordStore
 
@@ -47,3 +50,57 @@ def test_record_update(tmp_path: Path):
     data = yaml.safe_load(store.path.read_text())
     assert data["summary"]["successes"] == 1
     assert data["summary"]["p_posterior"] == .6
+
+
+def _check(verdict, identifier):
+    return next(check for check in verdict.checks if check.identifier == identifier)
+
+
+def _owner(case: Path, cells: int) -> None:
+    mesh = case / "constant" / "polyMesh"
+    mesh.mkdir(parents=True, exist_ok=True)
+    (mesh / "owner").write_text(f'note "nCells:{cells}";\n')
+
+
+def test_a7_infers_legacy_level_from_finest_cells_per_wavelength(tmp_path: Path):
+    source, target = tmp_path / "source", tmp_path / "target"
+    source.mkdir(); target.mkdir()
+    (source / "case_provenance.json").write_text(json.dumps({
+        "refinement": {"levels": [20, 40, 80]}, "speed": 1,
+    }))
+    (target / "case_provenance.json").write_text(json.dumps({"speed": 1}))
+    verdict = evaluate(source, target, "speed", level="r3")
+    check = _check(verdict, "A7")
+    assert check.passed
+    assert "80-class" in check.detail
+
+
+def test_a7_infers_matching_class_from_mesh_cell_count(tmp_path: Path):
+    source, target = tmp_path / "source", tmp_path / "target"
+    source.mkdir(); target.mkdir()
+    (source / "case_provenance.json").write_text('{"speed": 1}')
+    (target / "case_provenance.json").write_text('{"speed": 1, "mesh_level": "40"}')
+    _owner(source, 950); _owner(target, 1000)
+    check = _check(evaluate(source, target, "speed", level="40"), "A7")
+    assert check.passed
+    assert "within 10%" in check.detail
+
+
+def test_source_mesh_level_override_is_accepted_and_controls_a7(tmp_path: Path):
+    args = parser().parse_args([
+        "plan", "--target", str(tmp_path / "target"), "--from", "case",
+        "--hop", "speed", "--source", str(tmp_path / "source"),
+        "--mesh-level", "r3", "--source-mesh-level", "80",
+    ])
+    assert args.source_mesh_level == "80"
+
+
+def test_dry_run_can_mark_missing_target_mesh_a6_pending(tmp_path: Path):
+    source, target = tmp_path / "source", tmp_path / "target"
+    source.mkdir(); target.mkdir(); _owner(source, 1000)
+    (source / "case_provenance.json").write_text('{"speed": 1, "mesh_level": "40"}')
+    (target / "case_provenance.json").write_text('{"speed": 1, "mesh_level": "40"}')
+    check = _check(evaluate(source, target, "speed", level="40", allow_pending_mesh=True), "A6")
+    assert check.passed is None
+    assert "target mesh is not staged" in check.detail
+    assert "A6 PENDING" in evaluate(source, target, "speed", level="40", allow_pending_mesh=True).render()

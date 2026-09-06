@@ -34,7 +34,9 @@ while [ $# -gt 0 ]; do
 done
 [ ${#CASES[@]} -gt 0 ] || { sed -n '2,22p' "$0" >&2; exit 64; }
 
-ROOT="${DM_CFD_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/cfd_chain.sh"
+ROOT="$(cfd_campaign_root)"
 CASES_DIR="$ROOT/${DM_CFD_CASES_DIR:-cases}"
 
 total_before=0; total_after=0

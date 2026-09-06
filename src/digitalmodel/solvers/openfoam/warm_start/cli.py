@@ -27,15 +27,31 @@ def _latest(case: Path) -> Path:
 
 
 def _campaign(target: Path) -> Path:
+    configured_root = os.environ.get("DM_CFD_ROOT")
+    if configured_root:
+        root = Path(configured_root).expanduser().resolve()
+        if not os.environ.get("DM_CFD_CAMPAIGN"):
+            print(f"warm_start: resolved campaign {root.name} from DM_CFD_ROOT {root}", file=sys.stderr)
+        return root
     configured = os.environ.get("DM_CFD_CAMPAIGN")
     if configured:
-        path = Path(configured)
+        path = Path(configured).expanduser()
         if path.is_absolute():
             return path
         for parent in (target, *target.parents):
             if parent.name == configured:
                 return parent
-    return target.parent
+        return Path.home() / "cfd" / configured
+    cfd_home = (Path.home() / "cfd").resolve()
+    cwd = Path.cwd().resolve()
+    try:
+        campaign = cwd.relative_to(cfd_home).parts[0]
+        root, reason = cfd_home / campaign, f"working directory {cwd}"
+    except (ValueError, IndexError):
+        campaign, root = "campaign", cfd_home / "campaign"
+        reason = f"literal fallback (working directory is outside {cfd_home})"
+    print(f"warm_start: resolved campaign {campaign} from {reason}", file=sys.stderr)
+    return root
 
 
 def _reference(args, target: Path) -> tuple[dict, Path]:
@@ -76,7 +92,8 @@ def parser() -> argparse.ArgumentParser:
         p.add_argument("--source", type=Path); p.add_argument("--source-time", default="latestTime")
         p.add_argument("--hop", choices=("speed", "geometry")); p.add_argument("--eta", type=Path)
         p.add_argument("--u", type=Path); p.add_argument("--ranks", type=int)
-        p.add_argument("--mesh-level", default="default"); p.add_argument("--n-cold", type=int)
+        p.add_argument("--mesh-level", default="default"); p.add_argument("--source-mesh-level")
+        p.add_argument("--n-cold", type=int)
         p.add_argument("--n-abort", type=int); p.add_argument("--checkpoint", type=int, default=400)
         p.add_argument("--max-du", type=float, default=.10); p.add_argument("--margin", type=float, default=.10)
         p.add_argument("--record", type=Path); p.add_argument("--ledger", type=Path)
@@ -113,7 +130,9 @@ def plan_or_prepare(args) -> int:
     reference, record_dir = _reference(args, target)
     n_cold = int(reference["n_cold"])
     store = RecordStore(record_dir, hop, args.mesh_level, n_cold)
-    gate = evaluate(source, target, hop, max_du=args.max_du, ranks=args.ranks, level=args.mesh_level)
+    gate = evaluate(source, target, hop, max_du=args.max_du, ranks=args.ranks,
+                    level=args.mesh_level, source_level=args.source_mesh_level,
+                    allow_pending_mesh=args.command == "plan" and args.dry_run)
     print(gate.render())
     existing = store.load().get("hops", [])
     decision = decide(hop, n_cold, args.checkpoint, existing, n_abort=args.n_abort,

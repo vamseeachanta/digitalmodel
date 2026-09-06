@@ -6,7 +6,9 @@ set -o pipefail
 die() { echo "queue_after: FATAL: $*" >&2; exit 1; }
 stamp() { date -u +%FT%TZ; }
 
-ROOT="${DM_CFD_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/cfd_chain.sh"
+ROOT="$(cfd_campaign_root)"
 action=start
 case "${1:-}" in status|cancel|_wait) action=$1; shift;; esac
 name= wait_files= wait_regex= ledger= run= cwd= no_solver="interFoam,simpleFoam"

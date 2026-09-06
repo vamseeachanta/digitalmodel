@@ -7,12 +7,15 @@
 # maximum U componentwise (Ux/Uy/Uz), pressure/viscous hull force, and final
 # p_rgh initial residual. The active log is <case>/log.<solver>; continuation
 # logs are renamed to log.<solver>.to<time>.<timestamp> by continue_case.sh.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/cfd_chain.sh"
 if [ "${1:-}" = --header ]; then
   printf '%s\n' 'lane|case|state|iteration/end|s/it last 50|wall|last write|pseudo-dt min/max raw|pseudo-dt min/max smoothed|Co caps|mass drift %|max U (Ux/Uy/Uz)|pressure/viscous force|p_rgh residual'
   shift
   [ "$#" -gt 0 ] || exit 0
 fi
 lane=$1; c=$2; div=${3:-1000}; unit=$([ "$div" = 1000 ] && echo kN || echo N)
+if [ ! -d "$c" ]; then ROOT="$(cfd_campaign_root)"; c="$ROOT/${DM_CFD_CASES_DIR:-cases}/$c"; fi
 name=$(basename "$c"); solver=$(awk '/^[[:space:]]*application[[:space:]]/{gsub(/;/,"",$2); print $2; exit}' "$c/system/controlDict" 2>/dev/null); solver=${solver:-interFoam}; l=$c/log.$solver
 if [ ! -f "$l" ]; then st=queued; [ -f $c/MESH_DONE ] && st="queued (mesh done)"; printf '%s|%s|%s|-|-|-|-|-|-|-|-|-|-|-\n' "$lane" "$name" "$st"; exit 0; fi
 st=running; [ -f $c/RUN_DONE ] || [ -f $c/CONT_DONE ] && st=done; [ -f $c/RUN_FAILED ] || [ -f $c/CONT_FAILED ] && st=FAILED

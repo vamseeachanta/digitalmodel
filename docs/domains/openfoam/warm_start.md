@@ -2,8 +2,12 @@
 
 `scripts/cfd/warm_start.py` prepares and supervises OpenFOAM v2312 warm starts. It is
 fail-closed: a case is touched only after all admissibility checks pass and the expected
-iteration saving clears the configured margin. Campaign and lane identity remain external:
-set `DM_CFD_CAMPAIGN` and `DM_CFD_LANES_FILE`; do not put deployment identifiers in cases.
+iteration saving clears the configured margin. Campaign and lane identity remain external.
+`DM_CFD_ROOT` and `DM_CFD_CAMPAIGN` are authoritative when set. Without either override,
+commands run below `~/cfd/<campaign>/` infer the first directory below `~/cfd` (including
+the campaign root, `scripts/`, and `cases/<case>`); otherwise they retain the literal
+`~/cfd/campaign` fallback. The resolver writes one explanatory line to stderr. Keep lane
+identity in `DM_CFD_LANES_FILE`; do not put deployment identifiers in cases.
 
 ## Usage
 
@@ -12,6 +16,7 @@ The concise forms are:
 ```bash
 scripts/cfd/warm_start.py --from speed SOURCE --target CASE --mesh-level L2 --calibrate
 scripts/cfd/warm_start.py --from geometry SOURCE --target CASE --mesh-level L2 --calibrate
+scripts/cfd/warm_start.py plan --dry-run --from case --hop speed --source SOURCE --target CASE --mesh-level r3 --source-mesh-level r3
 scripts/cfd/warm_start.py --from potential --target CASE --mesh-level L2 --calibrate
 scripts/cfd/warm_start.py --from analytic --eta eta.csv --u velocity.csv --target CASE --mesh-level L2 --calibrate
 scripts/cfd/warm_start.py check --target CASE --mesh-level L2
@@ -35,6 +40,19 @@ Only `alpha.water U p_rgh k omega nut` transfer. `phi`, `alphaPhi0.water`, `rDel
 and `uniform/` are removed. Boundary values for inlet and outlet `U`, inlet `k`, and inlet
 `omega` come from the target and are applied with `changeDictionary -time 0`. Geometry
 hops use `mapFieldsPar -consistent -mapMethod cellVolumeWeight` and equal rank counts.
+
+A7 compares normalized mesh classes, not merely raw labels. Explicit source provenance is
+used first; `--source-mesh-level` overrides it for an older source. If no source level is
+recorded, the finest value in `case_provenance.json` `refinement.levels` maps to 80-class
+at 60 or more cells per wavelength, 40-class at 30 through below 60, and 20-class below
+30. As a final legacy fallback, source and target meshes within 10% in cell count are
+treated as the target class. Labels `r3`/`L3`/`80`, `r2`/`L2`/`40`, and
+`r1`/`L1`/`20` normalize to those three classes.
+
+For `plan --dry-run` only, a staged target without `constant/polyMesh` (including a
+mesh-store link not yet installed) reports A6 as `PENDING` and defers the identity check;
+it is not a refusal. Once both meshes exist, A6 prints both identity hashes and any
+mesh-store link targets. Prepare and run remain fail-closed when a target mesh is absent.
 
 Layer 2 uses a Beta(2,2) success prior. Default saving fractions are 40% for geometry,
 25% for speed, and 15% for potential or analytic starts. The default abort point is

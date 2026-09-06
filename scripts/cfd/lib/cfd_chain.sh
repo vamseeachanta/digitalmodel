@@ -15,6 +15,47 @@
 # never be mistaken for one that had nothing to do.
 cfd_die() { echo "FATAL: $*" >&2; exit 1; }
 
+# Resolve the deployment campaign. An explicit campaign remains authoritative;
+# otherwise a shell launched anywhere below $HOME/cfd/<campaign> carries enough
+# location information to recover it. The final literal keeps old deployments
+# working when neither configuration nor location supplies an answer.
+cfd_campaign() {
+  local campaign reason here prefix
+  if [ -n "${DM_CFD_CAMPAIGN:-}" ]; then
+    printf '%s' "$DM_CFD_CAMPAIGN"
+    return
+  fi
+  here="$(pwd -P)"
+  prefix="${HOME:?HOME unset}/cfd/"
+  case "$here/" in
+    "$prefix"*/*)
+      campaign="${here#"$prefix"}"; campaign="${campaign%%/*}"
+      reason="working directory $here"
+      ;;
+    *)
+      if [ -n "${DM_CFD_ROOT:-}" ]; then
+        campaign="$(basename "${DM_CFD_ROOT%/}")"
+        reason="DM_CFD_ROOT $DM_CFD_ROOT"
+      else
+        campaign=campaign
+        reason="literal fallback (working directory is outside $HOME/cfd)"
+      fi
+      ;;
+  esac
+  echo "cfd_chain: resolved campaign $campaign from $reason" >&2
+  printf '%s' "$campaign"
+}
+
+cfd_campaign_root() {
+  local campaign
+  campaign="$(cfd_campaign)"
+  if [ -n "${DM_CFD_ROOT:-}" ]; then
+    printf '%s' "$DM_CFD_ROOT"
+  else
+    printf '%s/cfd/%s' "${HOME:?HOME unset}" "$campaign"
+  fi
+}
+
 # ---------------------------------------------------------------------------
 # Resolve the case root. NO DEFAULT ABSOLUTE PATH ON PURPOSE:
 #   - the originals hard-coded ROOT="$HOME/cfd/dm1173", which is why they only

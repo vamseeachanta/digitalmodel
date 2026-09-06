@@ -20,7 +20,9 @@
 set -euo pipefail
 CASE_ARG="${1:?usage: continue_case.sh <case> <new endTime> [ranks]}"
 END="${2:?usage: continue_case.sh <case> <new endTime> [ranks]}"
-ROOT="${DM_CFD_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"   # deployed at <campaign>/scripts
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/cfd_chain.sh"
+ROOT="$(cfd_campaign_root)"
 CASE="$CASE_ARG"; [ -d "$CASE" ] || CASE="$ROOT/${DM_CFD_CASES_DIR:-cases}/$CASE_ARG"
 [ -d "$CASE" ] || { echo "continue_case: no case dir $CASE_ARG" >&2; exit 1; }
 cd "$CASE"

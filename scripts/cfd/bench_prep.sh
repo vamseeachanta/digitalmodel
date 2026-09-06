@@ -3,12 +3,17 @@
 set -euo pipefail
 set -o pipefail
 die() { echo "bench_prep: FATAL: $*" >&2; exit 1; }
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/cfd_chain.sh"
+ROOT="$(cfd_campaign_root)"
 source_case= dest= iterations= ranks_csv= variants_file=
 while [ "$#" -gt 0 ]; do
   case "$1" in --source) source_case=$2; shift 2;; --dest) dest=$2; shift 2;;
     --iterations) iterations=$2; shift 2;; --ranks) ranks_csv=$2; shift 2;;
     --variants) variants_file=$2; shift 2;; *) die "unknown argument: $1";; esac
 done
+[ -z "$source_case" ] || [ -d "$source_case" ] || source_case="$ROOT/${DM_CFD_CASES_DIR:-cases}/$source_case"
+if [ -n "$dest" ]; then case "$dest" in /*) ;; *) [ -e "$dest" ] || dest="$ROOT/$dest";; esac; fi
 [ -d "$source_case" ] && [ -n "$dest" ] && [ -n "$iterations" ] && [ -f "$variants_file" ] || die "required: --source CASE --dest DIR --iterations N --ranks LIST --variants FILE"
 mkdir -p "$dest"; : > "$dest/PREP_STATUS"; rm -f "$dest/PREP_DONE"
 set +e

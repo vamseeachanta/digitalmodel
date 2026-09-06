@@ -27,8 +27,10 @@ CASE=${1:?usage: gate_case.sh <case> <driver-pid> [deadline-hours]}
 DRIVER_PID=${2:?usage: gate_case.sh <case> <driver-pid> [deadline-hours]}
 DEADLINE_H=${3:-12}
 
-ROOT=$HOME/cfd/${DM_CFD_CAMPAIGN:-campaign}
-CASEDIR=$ROOT/cases/$CASE
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/cfd_chain.sh"
+ROOT="$(cfd_campaign_root)"
+CASEDIR=$ROOT/${DM_CFD_CASES_DIR:-cases}/$CASE
 MARKER=$ROOT/$CASE.gate.marker
 REPORT=$ROOT/$CASE.gate.log
 

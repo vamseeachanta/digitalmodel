@@ -13,6 +13,7 @@ shell rather than read it.
 """
 from __future__ import annotations
 
+import os
 import subprocess
 from pathlib import Path
 
@@ -20,6 +21,7 @@ import pytest
 
 LIB = (Path(__file__).resolve().parents[2]
        / "scripts" / "cfd" / "lib" / "cfd_chain.sh")
+FS_GATE = LIB.parents[1] / "fs_gate.sh"
 
 NO_SUCH = "definitelynotarealprocessname"
 
@@ -93,3 +95,53 @@ def test_case_directory_is_a_parameter_not_a_benchmark_name():
     assert r.stdout.strip() == "/tmp/kcs_cases/demo", r.stdout
     r = run('DM_CFD_ROOT=/tmp DM_CFD_CASES_DIR=cases cfd_case_dir demo')
     assert r.stdout.strip() == "/tmp/cases/demo", r.stdout
+
+
+def test_campaign_is_inferred_from_case_working_directory(tmp_path: Path):
+    home = tmp_path / "home"
+    case = home / "cfd" / "sea_trial" / "cases" / "run-01"
+    case.mkdir(parents=True)
+    result = subprocess.run(
+        ["bash", "-c", f'source "{LIB}"\ncfd_campaign'],
+        cwd=case, env=dict(os.environ, HOME=str(home)), capture_output=True, text=True,
+    )
+    assert result.stdout == "sea_trial"
+    assert "campaign sea_trial" in result.stderr
+    assert "working directory" in result.stderr
+
+
+def test_campaign_uses_literal_fallback_when_working_directory_is_unrelated(tmp_path: Path):
+    home = tmp_path / "home"
+    home.mkdir()
+    result = subprocess.run(
+        ["bash", "-c", f'source "{LIB}"\ncfd_campaign'],
+        cwd=tmp_path, env=dict(os.environ, HOME=str(home)), capture_output=True, text=True,
+    )
+    assert result.stdout == "campaign"
+    assert "campaign campaign" in result.stderr
+    assert "literal fallback" in result.stderr
+
+
+def test_fs_gate_infers_campaign_from_case_working_directory(tmp_path: Path):
+    home = tmp_path / "home"
+    case = home / "cfd" / "sea_trial" / "cases" / "run-01"
+    case.mkdir(parents=True)
+    result = subprocess.run(
+        ["bash", str(FS_GATE), "run-01"], cwd=case,
+        env=dict(os.environ, HOME=str(home)), capture_output=True, text=True,
+    )
+    assert "resolved campaign sea_trial from working directory" in result.stderr
+    assert "no case" not in result.stdout + result.stderr
+
+
+def test_fs_gate_literal_campaign_fallback_still_selects_case(tmp_path: Path):
+    home = tmp_path / "home"
+    case = home / "cfd" / "campaign" / "cases" / "run-01"
+    unrelated = tmp_path / "elsewhere"
+    case.mkdir(parents=True); unrelated.mkdir()
+    result = subprocess.run(
+        ["bash", str(FS_GATE), "run-01"], cwd=unrelated,
+        env=dict(os.environ, HOME=str(home)), capture_output=True, text=True,
+    )
+    assert "resolved campaign campaign from literal fallback" in result.stderr
+    assert "no case" not in result.stdout + result.stderr

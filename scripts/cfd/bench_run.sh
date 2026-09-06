@@ -3,9 +3,13 @@
 set -euo pipefail
 set -o pipefail
 die() { echo "bench_run: FATAL: $*" >&2; exit 1; }
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/cfd_chain.sh"
+ROOT="$(cfd_campaign_root)"
 dest= after= max_load= epilogue=
 while [ "$#" -gt 0 ]; do case "$1" in --dest) dest=$2; shift 2;; --after-marker) after=$2; shift 2;;
   --max-load) max_load=$2; shift 2;; --epilogue) epilogue=$2; shift 2;; *) die "unknown argument: $1";; esac; done
+if [ -n "$dest" ]; then case "$dest" in /*) ;; *) [ -d "$dest" ] || dest="$ROOT/$dest";; esac; fi
 [ -d "$dest" ] && [ -f "$dest/variants.tsv" ] || die "prepared --dest is required"
 [ -z "$after" ] || { while [ ! -e "$after" ]; do sleep 2; done; }
 for s in interFoam simpleFoam; do ! pgrep -x "$s" >/dev/null 2>&1 || die "$s is already running"; done

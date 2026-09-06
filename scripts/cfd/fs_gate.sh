@@ -7,8 +7,11 @@
 # plausibility 0.6 < Cf/ITTC < 1.3.
 set -o pipefail
 CASE=$1
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/cfd_chain.sh"
+ROOT="$(cfd_campaign_root)"
 source /usr/lib/openfoam/openfoam2312/etc/bashrc >/dev/null 2>&1
-cd "$HOME/cfd/${DM_CFD_CAMPAIGN:-campaign}/cases/$CASE" || { echo "no case $CASE"; exit 2; }
+cd "$ROOT/${DM_CFD_CASES_DIR:-cases}/$CASE" || { echo "no case $CASE"; exit 2; }
 echo "=== $CASE on $(hostname -s) $(date -u +%FT%TZ) ==="
 fail=0
 

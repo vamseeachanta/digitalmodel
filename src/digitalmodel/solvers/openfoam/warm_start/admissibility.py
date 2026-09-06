@@ -13,7 +13,7 @@ from ..convergence_audit import audit_one
 @dataclass(frozen=True)
 class GateCheck:
     identifier: str
-    passed: bool
+    passed: bool | None
     detail: str
 
 
@@ -23,14 +23,15 @@ class GateVerdict:
 
     @property
     def passed(self):
-        return all(c.passed for c in self.checks)
+        return all(c.passed is not False for c in self.checks)
 
     @property
     def first_failure(self):
-        return next((c.identifier for c in self.checks if not c.passed), None)
+        return next((c.identifier for c in self.checks if c.passed is False), None)
 
     def render(self):
-        rows = [f"  {c.identifier} {'PASS' if c.passed else 'REFUSE'}: {c.detail}" for c in self.checks]
+        state = lambda check: "PENDING" if check.passed is None else ("PASS" if check.passed else "REFUSE")
+        rows = [f"  {c.identifier} {state(c)}: {c.detail}" for c in self.checks]
         return "admissibility verdict: " + ("PASS" if self.passed else f"REFUSE ({self.first_failure})") + "\n" + "\n".join(rows)
 
 
@@ -84,6 +85,58 @@ def mesh_digest(case: Path) -> str:
     return digest.hexdigest()
 
 
+def _has_mesh(case: Path) -> bool:
+    return (case / "constant" / "polyMesh" / "owner").is_file()
+
+
+def _mesh_cells(case: Path) -> int | None:
+    owner = case / "constant" / "polyMesh" / "owner"
+    if not owner.is_file():
+        return None
+    match = re.search(r"\bnCells\s*:\s*(\d+)", owner.read_text(errors="ignore"))
+    return int(match.group(1)) if match else None
+
+
+def _mesh_identity(case: Path) -> str:
+    mesh = case / "constant" / "polyMesh"
+    link = f", link={mesh.resolve()}" if mesh.is_symlink() else ""
+    return f"sha256={mesh_digest(case)[:12]}{link}"
+
+
+def _level_class(value) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip().lower()
+    aliases = {
+        "r3": "80-class", "l3": "80-class", "80": "80-class", "80-class": "80-class",
+        "r2": "40-class", "l2": "40-class", "40": "40-class", "40-class": "40-class",
+        "r1": "20-class", "l1": "20-class", "20": "20-class", "20-class": "20-class",
+    }
+    if text in aliases:
+        return aliases[text]
+    try:
+        number = float(text)
+    except ValueError:
+        return text
+    return "80-class" if number >= 60 else ("40-class" if number >= 30 else "20-class")
+
+
+def _finest_refinement_class(provenance: dict) -> str | None:
+    levels = _dig(provenance, "refinement.levels")
+    if levels is None:
+        return None
+    values = levels if isinstance(levels, list) else list(levels.values()) if isinstance(levels, dict) else [levels]
+    resolutions = []
+    for item in values:
+        if isinstance(item, dict):
+            item = _dig(item, "cells_per_wavelength", "cells-per-wavelength", "cpw", "resolution")
+        try:
+            resolutions.append(float(item))
+        except (TypeError, ValueError):
+            continue
+    return _level_class(max(resolutions)) if resolutions else None
+
+
 def _normal(path: Path) -> str | None:
     return re.sub(r"\s+", " ", path.read_text(errors="ignore")).strip() if path.exists() else None
 
@@ -125,7 +178,9 @@ def _log_settled(source: Path) -> tuple[bool, str]:
 
 
 def evaluate(source: Path | None, target: Path, hop: str, *, max_du=.10,
-             ranks: int | None = None, level: str | None = None) -> GateVerdict:
+             ranks: int | None = None, level: str | None = None,
+             source_level: str | None = None,
+             allow_pending_mesh: bool = False) -> GateVerdict:
     checks: list[GateCheck] = []
     if hop in {"speed", "geometry"}:
         if source is None:
@@ -154,16 +209,35 @@ def evaluate(source: Path | None, target: Path, hop: str, *, max_du=.10,
         checks.append(GateCheck("A5", decomp_ok, f"source ranks={sr}, target ranks={tr}, reconstructed={serial_fields}"))
         try:
             u1, u2 = case_speed(source), case_speed(target); du = abs(u2-u1)/u1
-            same = mesh_digest(source) == mesh_digest(target)
-            hop_ok = (hop == "speed" and same and du <= max_du) or (hop == "geometry" and not same and du <= 1e-6)
-            detail = f"same_mesh={same}, U1={u1:g}, U2={u2:g}, |dU/U|={du:.4f}"
+            source_mesh, target_mesh = _has_mesh(source), _has_mesh(target)
+            if not target_mesh and allow_pending_mesh:
+                hop_ok = None
+                detail = "target mesh is not staged (no constant/polyMesh or mesh-store link); comparison deferred"
+            elif not source_mesh or not target_mesh:
+                hop_ok = False
+                detail = f"mesh unavailable: source={source_mesh}, target={target_mesh}"
+            else:
+                same = mesh_digest(source) == mesh_digest(target)
+                hop_ok = (hop == "speed" and same and du <= max_du) or (hop == "geometry" and not same and du <= 1e-6)
+                detail = (f"same_mesh={same}, source {_mesh_identity(source)}, target {_mesh_identity(target)}, "
+                          f"U1={u1:g}, U2={u2:g}, |dU/U|={du:.4f}")
         except Exception as exc:
             hop_ok, detail, du = False, str(exc), 0
         checks.append(GateCheck("A6", hop_ok, detail))
-        source_level = _dig(sp, "mesh_level", "mesh.level")
-        target_level = level or _dig(tp, "mesh_level", "mesh.level")
-        checks.append(GateCheck("A7", source_level == target_level and source_level is not None,
-                                f"source={source_level}, target={target_level}"))
+        source_class = _level_class(source_level or _dig(sp, "mesh_level", "mesh.level"))
+        source_reason = "explicit/provenance"
+        if source_class is None:
+            source_class = _finest_refinement_class(sp)
+            source_reason = "refinement.levels finest resolution"
+        target_class = _level_class(level or _dig(tp, "mesh_level", "mesh.level"))
+        source_cells, target_cells = _mesh_cells(source), _mesh_cells(target)
+        cells_match = (source_cells is not None and target_cells is not None and target_cells > 0
+                       and abs(source_cells - target_cells) / target_cells <= .10)
+        if source_class is None and target_class is not None and cells_match:
+            source_class = target_class
+            source_reason = f"mesh cells {source_cells}/{target_cells} within 10%"
+        checks.append(GateCheck("A7", source_class == target_class and source_class is not None,
+                                f"source={source_class} ({source_reason}), target={target_class}"))
     else:
         checks.extend(GateCheck(i, True, "not applicable to initial-field mode")
                       for i in ("A1", "A5", "A6"))
