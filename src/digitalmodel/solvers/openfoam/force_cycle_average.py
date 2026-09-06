@@ -35,7 +35,7 @@ import numpy as np
 def load_force(path: Path):
     p = Path(path)
     if p.is_dir():
-        segs = sorted((p / "postProcessing" / "forces_hull").glob("*/force.dat"), key=lambda q: float(q.parent.name))
+        segs = sorted(list((p / "postProcessing" / "forces_hull").glob("*/force.dat")) + list((p / "postProcessing" / "forces").glob("*/force.dat")), key=lambda q: float(q.parent.name))
         if not segs:
             raise FileNotFoundError(f"no forces_hull/*/force.dat under {p}")
         p = segs[-1]
