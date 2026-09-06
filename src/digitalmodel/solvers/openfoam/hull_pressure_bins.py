@@ -56,7 +56,7 @@ def patch_faces_geometry(polymesh: Path, patch: str):
     bnd = _read_boundary(polymesh / "boundary")
     if patch not in bnd:
         raise ValueError(f"patch {patch} not in {polymesh / 'boundary'}")
-    start, n = bnd[patch]
+    n, start = bnd[patch]          # _read_boundary returns (nFaces, startFace)
     faces = _read_faces(polymesh / "faces", start, n)
     wanted = set(v for f in faces for v in f)
     pts = _read_points(polymesh / "points", wanted)
