@@ -93,6 +93,7 @@ def parser() -> argparse.ArgumentParser:
         p.add_argument("--hop", choices=("speed", "geometry")); p.add_argument("--eta", type=Path)
         p.add_argument("--u", type=Path); p.add_argument("--ranks", type=int)
         p.add_argument("--mesh-level", default="default"); p.add_argument("--source-mesh-level")
+        p.add_argument("--source-settled-override", metavar="REASON")
         p.add_argument("--n-cold", type=int)
         p.add_argument("--n-abort", type=int); p.add_argument("--checkpoint", type=int, default=400)
         p.add_argument("--max-du", type=float, default=.10); p.add_argument("--margin", type=float, default=.10)
@@ -114,11 +115,12 @@ def parser() -> argparse.ArgumentParser:
 
 
 def _ledger_values(args, decision, event, iterations="", reason=""):
-    return {"target": args.target.name, "hop": decision.hop,
+    return {"target": args.target.name, "hop": decision.hop if decision else (args.hop or args.from_mode),
             "source": args.source.name if getattr(args, "source", None) else "",
-            "level": args.mesh_level, "event": event, "p": decision.probability,
-            "n_warm_est": decision.n_warm_est, "S": decision.saving,
-            "n_abort": decision.n_abort, "EV": decision.ev, "margin": decision.margin,
+            "level": args.mesh_level, "event": event, "p": decision.probability if decision else "",
+            "n_warm_est": decision.n_warm_est if decision else "", "S": decision.saving if decision else "",
+            "n_abort": decision.n_abort if decision else "", "EV": decision.ev if decision else "",
+            "margin": decision.margin if decision else "",
             "iterations": iterations, "reason": reason}
 
 
@@ -133,6 +135,14 @@ def plan_or_prepare(args) -> int:
     gate = evaluate(source, target, hop, max_du=args.max_du, ranks=args.ranks,
                     level=args.mesh_level, source_level=args.source_mesh_level,
                     allow_pending_mesh=args.command == "plan" and args.dry_run)
+    override = args.source_settled_override
+    if override:
+        if hop not in {"speed", "geometry"}:
+            raise ValueError("--source-settled-override applies only to speed/geometry hops")
+        gate = type(gate)(tuple(
+            type(check)(check.identifier, True, override, "OVERRIDDEN")
+            if check.identifier == "A1" else check for check in gate.checks
+        ))
     print(gate.render())
     existing = store.load().get("hops", [])
     decision = decide(hop, n_cold, args.checkpoint, existing, n_abort=args.n_abort,
@@ -142,6 +152,13 @@ def plan_or_prepare(args) -> int:
     else:
         block = f"warm_start plan target={target.name} hop={hop} -> COLD_BY_GATE {gate.first_failure}"
     ledger = args.ledger or _campaign(target) / "warm_start.tsv"
+    if override and args.command != "plan" and not args.dry_run:
+        append_ledger(ledger, _ledger_values(args, decision, "A1_OVERRIDDEN", reason=override))
+        if not args.calibrate:
+            (target / "COLD_FALLBACK").write_text(
+                gate.render() + "\nsource-settled override requires --calibrate\n"
+            )
+            return 3
     if args.command != "plan" and not args.dry_run:
         if not gate.passed:
             (target / "COLD_FALLBACK").write_text(block + "\n")
@@ -155,7 +172,8 @@ def plan_or_prepare(args) -> int:
         _print_commands(args, hop, n_cold)
         return 0 if gate.passed and decision.decision.startswith("WARM") else (3 if not gate.passed else 4)
     append_ledger(ledger, _ledger_values(args, decision,
-                  "PLAN_WARM_CALIBRATION" if decision.decision == "WARM_CALIBRATION" else "PLAN_WARM"))
+                  "PLAN_WARM_CALIBRATION" if decision.decision == "WARM_CALIBRATION" else "PLAN_WARM",
+                  reason=override or ""))
     source_time = _latest(source) if args.source_time == "latestTime" and source else (source / args.source_time if source else None)
     if hop == "speed":
         clean_restart(source_time, target); rewrite_speed_fields(target)
@@ -172,12 +190,13 @@ def plan_or_prepare(args) -> int:
         if not (target / "0.cold").exists(): shutil.copytree(target / "0", target / "0.cold")
         prepare_analytic(target, args.eta, args.u)
     reset_control(target, n_cold)
-    (target / "WARM_PLANNED").write_text(block + "\n")
+    marker = gate.render() + "\n" + block + "\n"
+    (target / "WARM_PLANNED").write_text(marker)
     store.append({"id": f"{timestamp()}_{target.name}", "source": source.name if source else None,
                   "target": target.name, "decision": decision.decision, "ev": decision.__dict__,
-                  "outcome": None, "iterations": None, "reason": None})
+                  "outcome": None, "iterations": None, "reason": override})
     if args.command == "run":
-        (target / "WARM_RUNNING").write_text(block + "\n")
+        (target / "WARM_RUNNING").write_text(marker)
         command = args.relaunch or str(target / "solve_chain.sh")
         subprocess.Popen(command, cwd=target, shell=True, start_new_session=True)
     return 0

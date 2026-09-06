@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Render the cached multi-lane CFD state as exactly one compact status line.
 # Usage: cfd_statusline.sh [--width COLUMNS]
-# Environment: DM_CFD_STATUS_CACHE, DM_CFD_STATUS_STALE_SECONDS (default 2400).
+# Environment: DM_CFD_STATUS_CONFIG, DM_CFD_STATUS_CACHE (override),
+# DM_CFD_STATUS_STALE_SECONDS (default 2400).
 set -uo pipefail
 
 WIDTH=160
@@ -16,7 +17,18 @@ case "$WIDTH" in ''|*[!0-9]*) echo "cfd_statusline: width must be a positive int
 
 # Claude Code supplies JSON on stdin. The CFD segment deliberately ignores it.
 if [ ! -t 0 ]; then input=$(cat); case "$input" in \{*\}) : ;; *) : ;; esac; fi
-CACHE="${DM_CFD_STATUS_CACHE:-$HOME/.cache/digitalmodel/cfd-status.cache}"
+configured_cache=""
+if [ -n "${DM_CFD_STATUS_CONFIG:-}" ] && [ -f "$DM_CFD_STATUS_CONFIG" ]; then
+  configured_cache=$(python3 - "$DM_CFD_STATUS_CONFIG" <<'PY'
+import sys
+import yaml
+with open(sys.argv[1], encoding="utf-8") as stream:
+    print(str((yaml.safe_load(stream) or {}).get("cache", "")))
+PY
+)
+fi
+CACHE="${DM_CFD_STATUS_CACHE:-${configured_cache:-$HOME/.cache/digitalmodel/cfd-status.cache}}"
+CACHE="${CACHE/#\~/$HOME}"
 if [ ! -s "$CACHE" ]; then
   line="CFD no cache"
 else

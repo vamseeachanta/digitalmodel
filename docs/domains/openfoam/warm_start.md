@@ -41,6 +41,19 @@ and `uniform/` are removed. Boundary values for inlet and outlet `U`, inlet `k`,
 `omega` come from the target and are applied with `changeDictionary -time 0`. Geometry
 hops use `mapFieldsPar -consistent -mapMethod cellVolumeWeight` and equal rank counts.
 
+A1 accepts a cleanly ended source when the convergence audit says `settled` or
+`extrapolable`, or when the damped-fit asymptote and latest full-cycle total mean
+agree within 2%. The verdict states which criterion passed. A3 strips comments and
+the `FoamFile` header and compares parsed dictionary entries, so formatting-only
+changes to `fvSchemes` or `fvSolution` do not refuse a hop; a real mismatch reports
+its first differing entry.
+
+`--source-settled-override "REASON"` is an explicit operator exception for A1.
+Plans render A1 as `OVERRIDDEN`; preparations/runs record the reason in markers,
+the YAML history, and the TSV ledger. It never overrides another admissibility
+gate, and execution requires `--calibrate` even if historical expected value would
+otherwise permit a warm start.
+
 A7 compares normalized mesh classes, not merely raw labels. Explicit source provenance is
 used first; `--source-mesh-level` overrides it for an older source. If no source level is
 recorded, the finest value in `case_provenance.json` `refinement.levels` maps to 80-class

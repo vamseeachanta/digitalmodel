@@ -64,9 +64,12 @@ Design notes: `docs/domains/openfoam/mesh_store_case_layout.md`. PIMPLE loop / c
 The generic tools in `status/` supersede the old lane-local `status-tools/`
 folder. Copy `status/status.example.yml` to a private configuration file,
 replace the lane SSH aliases, `<campaign>` placeholders, and case paths, then
-set `DM_CFD_STATUS_CONFIG` for `cfd_status_collect.sh`. The collector runs
-`lane_probe.sh` locally or over SSH for every configured case and atomically
-writes the cache selected by `DM_CFD_STATUS_CACHE` (or the YAML `cache` key).
+set `DM_CFD_STATUS_CONFIG` for the collector and renderer. A missing, empty, or
+`local` lane `ssh` value runs `lane_probe.sh` locally. Remote probe paths use
+`DM_CFD_CAMPAIGN`, then the YAML `campaign` key, then the campaign inferred from
+the first `~/cfd/<campaign>/cases/...` path. The collector atomically writes and
+both renderers read the cache selected by `DM_CFD_STATUS_CACHE` (override) or the
+YAML `cache` key.
 Optional `bench_status` and `queue_status` paths are also cached. Install the
 shipped `cfd_status_cron.example` entry to refresh it periodically.
 
@@ -84,5 +87,6 @@ executable and point `settings.json` at the combined command:
 }
 ```
 
-The renderer marks unreachable lanes and stale caches without blocking the
-prompt. Use `--width COLUMNS` to bound the entire CFD segment.
+The renderer emits one `lane:case it/end s/it w<write> m<drift%>` segment per
+lane, separated by ` │ `, then cache age. It marks unreachable lanes and stale
+caches without blocking the prompt. Use `--width COLUMNS` to bound the segment.

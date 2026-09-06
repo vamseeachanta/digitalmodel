@@ -24,9 +24,22 @@ import yaml
 with open(sys.argv[1], encoding="utf-8") as stream:
     cfg = yaml.safe_load(stream) or {}
 print("cache\t" + str(cfg.get("cache", "~/.cache/digitalmodel/cfd-status.cache")))
+campaign = cfg.get("campaign")
+if not campaign:
+    for lane in cfg.get("lanes", []):
+        for case in lane.get("cases", []):
+            path = case if isinstance(case, str) else case.get("path", "")
+            match = __import__("re").search(r"(?:^|/)cfd/([^/]+)/cases(?:/|$)", str(path))
+            if match:
+                campaign = match.group(1)
+                break
+        if campaign:
+            break
+print("campaign\t" + str(campaign or ""))
 for lane in cfg.get("lanes", []):
     name = str(lane["name"])
-    ssh = str(lane.get("ssh", "local"))
+    ssh_value = lane.get("ssh")
+    ssh = "local" if ssh_value is None or str(ssh_value).strip().lower() in {"", "local"} else str(ssh_value)
     for case in lane.get("cases", []):
         if isinstance(case, str):
             case = {"name": case, "path": case}
@@ -42,6 +55,8 @@ PY
 [ "${#records[@]}" -gt 0 ] || { echo "cfd_status_collect: empty config" >&2; exit 65; }
 
 configured_cache=${records[0]#*$'\t'}
+Ccampaign=${records[1]#*$'\t'}
+CAMPAIGN="${DM_CFD_CAMPAIGN:-$Ccampaign}"
 CACHE="${DM_CFD_STATUS_CACHE:-$configured_cache}"
 CACHE="${CACHE/#\~/$HOME}"
 if [ "$DRY_RUN" = false ]; then
@@ -52,14 +67,15 @@ if [ "$DRY_RUN" = false ]; then
 fi
 
 quote_cmd() { printf '%q ' "$@"; printf '\n'; }
-for record in "${records[@]:1}"; do
+for record in "${records[@]:2}"; do
   IFS=$'\t' read -r kind lane host name path extra <<< "$record"
   if [ "$kind" = probe ]; then
     if [ "$host" = local ] || [ "$host" = localhost ]; then
       if [ "$DRY_RUN" = true ]; then quote_cmd "$PROBE" "$lane" "$path" "$extra"; continue; fi
       row=$("$PROBE" "$lane" "$path" "$extra" 2>/dev/null) || row="$lane|$name|unreachable|-|-|-|-|-|-|-|-|-|-|-"
     else
-      remote="~/cfd/\${DM_CFD_CAMPAIGN:-<campaign>}/scripts/lane_probe.sh"
+      [ -n "$CAMPAIGN" ] || { echo "cfd_status_collect: campaign is not configured and cannot be inferred" >&2; exit 65; }
+      remote="~/cfd/$CAMPAIGN/scripts/lane_probe.sh"
       if [ "$DRY_RUN" = true ]; then quote_cmd ssh -o BatchMode=yes -o ConnectTimeout=8 "$host" "$remote" "$lane" "$path" "$extra"; continue; fi
       row=$(timeout 25 ssh -o BatchMode=yes -o ConnectTimeout=8 "$host" "$remote" "$lane" "$path" "$extra" 2>/dev/null) \
         || row="$lane|$name|unreachable|-|-|-|-|-|-|-|-|-|-|-"

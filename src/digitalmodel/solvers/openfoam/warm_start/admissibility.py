@@ -15,6 +15,7 @@ class GateCheck:
     identifier: str
     passed: bool | None
     detail: str
+    state: str | None = None
 
 
 @dataclass(frozen=True)
@@ -30,7 +31,10 @@ class GateVerdict:
         return next((c.identifier for c in self.checks if c.passed is False), None)
 
     def render(self):
-        state = lambda check: "PENDING" if check.passed is None else ("PASS" if check.passed else "REFUSE")
+        def state(check):
+            return check.state or ("PENDING" if check.passed is None else
+                                   ("PASS" if check.passed else "REFUSE"))
+
         rows = [f"  {c.identifier} {state(c)}: {c.detail}" for c in self.checks]
         return "admissibility verdict: " + ("PASS" if self.passed else f"REFUSE ({self.first_failure})") + "\n" + "\n".join(rows)
 
@@ -141,6 +145,65 @@ def _normal(path: Path) -> str | None:
     return re.sub(r"\s+", " ", path.read_text(errors="ignore")).strip() if path.exists() else None
 
 
+def _foam_entries(path: Path) -> dict[str, str] | None:
+    """Return a formatting-, comment-, and FoamFile-header-independent dictionary."""
+    if not path.exists():
+        return None
+    text = re.sub(r"/\*.*?\*/", " ", path.read_text(errors="ignore"), flags=re.S)
+    text = re.sub(r"//[^\n]*", " ", text)
+    header = re.search(r"\bFoamFile\s*\{", text)
+    if header:
+        start = text.find("{", header.start())
+        depth = 0
+        for pos in range(start, len(text)):
+            depth += text[pos] == "{"
+            depth -= text[pos] == "}"
+            if depth == 0:
+                text = text[:header.start()] + text[pos + 1:]
+                break
+    tokens = re.findall(r'"(?:\\.|[^"\\])*"|[{};()]|[^\s{};()]+', text)
+    entries: dict[str, str] = {}
+    stack: list[str] = []
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        if token == "}":
+            if stack:
+                stack.pop()
+            index += 1
+            continue
+        if index + 1 < len(tokens) and tokens[index + 1] == "{":
+            stack.append(token)
+            index += 2
+            continue
+        if token in {"{", ";"}:
+            index += 1
+            continue
+        end = index + 1
+        while end < len(tokens) and tokens[end] not in {";", "{", "}"}:
+            end += 1
+        if end < len(tokens) and tokens[end] == ";":
+            entries[".".join((*stack, token))] = " ".join(tokens[index + 1:end])
+            index = end + 1
+        else:
+            index += 1
+    return entries
+
+
+def _numeric_dictionary_match(source: Path, target: Path) -> tuple[bool, str]:
+    for name in ("fvSchemes", "fvSolution"):
+        left = _foam_entries(source / "system" / name)
+        right = _foam_entries(target / "system" / name)
+        if left == right:
+            continue
+        for key in sorted(set(left or {}) | set(right or {})):
+            if (left or {}).get(key) != (right or {}).get(key):
+                return False, (f"{name} first difference at {key}: "
+                               f"source={(left or {}).get(key)!r}, target={(right or {}).get(key)!r}")
+        return False, f"{name} differs"
+    return True, "fvSchemes/fvSolution match semantically"
+
+
 def _wall_signature(path: Path) -> str | None:
     """Compare wall treatment while deliberately excluding speed-dependent inlet data."""
     if not path.exists():
@@ -174,7 +237,17 @@ def _log_settled(source: Path) -> tuple[bool, str]:
         verdict = audit.get("verdict")
     except Exception as exc:  # defensive: audit is a numerical fit
         return False, str(exc)
-    return ended and verdict in {"settled", "extrapolable"}, f"audit={verdict}, clean End={ended}"
+    audit_ok = verdict in {"settled", "extrapolable"}
+    fit, cycle = audit.get("fit_total"), audit.get("cycle_total")
+    fit_cycle_delta = (abs(fit - cycle) / max(abs(cycle), 1e-9)
+                       if fit is not None and cycle is not None else None)
+    fit_cycle_ok = fit_cycle_delta is not None and fit_cycle_delta <= .02
+    ok = ended and (audit_ok or fit_cycle_ok)
+    criterion = ("audit verdict" if audit_ok else
+                 "fit-vs-cycle agreement" if fit_cycle_ok else "none")
+    delta = "unavailable" if fit_cycle_delta is None else f"{100 * fit_cycle_delta:.3g}%"
+    return ok, (f"criterion={criterion}, audit={verdict}, fit-vs-cycle={delta}, "
+                f"clean End={ended}")
 
 
 def evaluate(source: Path | None, target: Path, hop: str, *, max_du=.10,
@@ -195,9 +268,8 @@ def evaluate(source: Path | None, target: Path, hop: str, *, max_du=.10,
             if key in sp or key in tp:
                 wall_ok &= sp.get(key) == tp.get(key)
         checks.append(GateCheck("A2", wall_ok, "wall turbulence dictionaries/provenance match"))
-        numeric = all(_normal(source / "system" / n) == _normal(target / "system" / n)
-                      for n in ("fvSchemes", "fvSolution"))
-        checks.append(GateCheck("A3", numeric, "fvSchemes/fvSolution match"))
+        numeric, numeric_detail = _numeric_dictionary_match(source, target)
+        checks.append(GateCheck("A3", numeric, numeric_detail))
         frame = all(_normal(source / p) == _normal(target / p) for p in
                     (Path("constant/hRef"), Path("constant/g"), Path("system/blockMeshDict")))
         checks.append(GateCheck("A4", frame, "reference-frame dictionaries match"))
