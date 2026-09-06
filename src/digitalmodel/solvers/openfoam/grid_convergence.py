@@ -15,7 +15,7 @@ representative size is the finest in-plane cell the builder records in
 is what the wave resolution is set by; for a uniform refinement the ratio of
 those is the ratio of every cell.
 
-The 1 % target the B1552 programme accepts is a GCI on the MEDIUM mesh (the
+The 1 % target the calm-water resistance programme accepts is a GCI on the MEDIUM mesh (the
 one the production setting corresponds to), so :func:`gci_report` returns
 both the fine-mesh GCI (the usual number) and the medium-mesh GCI.
 """

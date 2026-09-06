@@ -1,0 +1,24 @@
+# Public example lane catalogue. Private project configuration supplies real IDs
+# and measurements via DM_CFD_LANES_FILE.
+schema_version: 1
+lanes:
+  lane-A:
+    architecture: x86_64
+    physical_cores: 8
+    ranks_used: 8
+    us_per_cell_iteration: 2.03
+  lane-B:
+    architecture: x86_64
+    physical_cores: 16
+    ranks_used: 16
+    us_per_cell_iteration: 3.19
+  lane-C:
+    architecture: x86_64
+    physical_cores: 16
+    ranks_used: 16
+    us_per_cell_iteration: 3.34
+  lane-D:
+    architecture: arm64
+    physical_cores: 20
+    ranks_used: 20
+    us_per_cell_iteration: 3.20

@@ -23,12 +23,28 @@ import statistics as st
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from digitalmodel.solvers.openfoam.lane_config import load_lanes
+
 _REPO = Path(__file__).resolve().parents[2]
 _OUT = _REPO / "docs" / "api" / "cfd" / "sloshing-compute.json"
 
-# Machine this study ran on (a-l-2 / dev-secondary).
-MACHINE = {"host": "dev-secondary (ace-linux-2)", "cores": 32, "ram_gb": 31,
-           "solver": "interFoam (VOF), OpenFOAM ESI v2312 — single-threaded per case"}
+
+def _lane_metadata() -> Dict[str, Any]:
+    """Return public lane-class metadata selected by configuration."""
+    lanes = load_lanes()
+    lane_id = os.environ.get("DM_CFD_LANE", "lane-B")
+    if lane_id not in lanes:
+        raise ValueError(f"DM_CFD_LANE {lane_id!r} is not present in the lane configuration")
+    lane = lanes[lane_id]
+    return {
+        "lane_id": lane_id,
+        "architecture": lane.get("architecture"),
+        "physical_cores": lane.get("physical_cores"),
+        "ranks_used": lane.get("ranks_used"),
+        "us_per_cell_iteration": lane.get("us_per_cell_iteration"),
+        "solver": "interFoam (VOF), OpenFOAM ESI v2312 — single-threaded per case",
+    }
+
 
 # Per-case uncontended baseline wall time (s) for the forced 60x60 case, measured
 # single (the smoke run) — used to separate contention from raw cost.
@@ -160,7 +176,7 @@ def main(argv: List[str] | None = None) -> int:
         "meta": {"generated_by": "scripts/cfd/collect_compute_stats.py", "epic": "#1429",
                  "issue": "#1439",
                  "note": "Derived compute characterization; case trees are not committed."},
-        "machine": MACHINE,
+        "lane": _lane_metadata(),
         "classes": classes,
         "parallel_efficiency": parallel,
         "runtime_model": {

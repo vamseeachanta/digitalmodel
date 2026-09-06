@@ -11,8 +11,8 @@ of any shared surface; the private project wiki holds the lane-specific facts.
 You are onboarding a new OpenFOAM solve lane for our free-surface hull-resistance chain.
 Lane: <LANE_NAME>, ssh <USER>@<HOST> (Tailscale; sudo needs a password, so hand me every
 install command and I will run it with "! <command>"). Control host: this machine.
-Chain repo: digitalmodel worktree <DM_WORKTREE> (branch <BRANCH>); records repo:
-llm-wiki-acma <WIKI_PATH>, project <PROJECT_DIR>. Existing lanes for reference:
+Chain repo: digitalmodel worktree <DM_WORKTREE> (branch <BRANCH>); private records at
+<WIKI_PATH>, project <PROJECT_DIR>. Existing lanes for reference:
 <LANE_A> (primary), <LANE_B>, <LANE_C>. Work autonomously; ask only for sudo commands
 and for anything destructive.
 

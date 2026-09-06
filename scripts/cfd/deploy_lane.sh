@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Deploy this repo's solve-host chain (scripts/cfd/) to a CFD lane.
 #
-#   deploy_lane.sh [--dry-run] <user@host> [campaign]      default campaign: b1552
+#   deploy_lane.sh [--dry-run] <user@host> [campaign]
+#   campaign defaults to DM_CFD_CAMPAIGN, then "campaign"
 #
 # Repo -> lane is the ONLY path for chain scripts. A lane-local edit is a bug
 # until it is committed here and redeployed; the two lanes ran different
@@ -28,7 +29,7 @@ set -euo pipefail
 DRY=""
 [ "${1:-}" = "--dry-run" ] && { DRY="--dry-run"; shift; }
 HOST="${1:?usage: deploy_lane.sh [--dry-run] <user@host> [campaign]}"
-CAMPAIGN="${2:-b1552}"
+CAMPAIGN="${2:-${DM_CFD_CAMPAIGN:-campaign}}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SSH="ssh -o BatchMode=yes -o ConnectTimeout=15"
 DEST="~/cfd/$CAMPAIGN/scripts/"

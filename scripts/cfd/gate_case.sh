@@ -1,9 +1,9 @@
 #!/bin/bash
-# Terminal waiter + settling gate for one B1552 free-surface case.
+# Terminal waiter + settling gate for one calm-water resistance case.
 #
 # Runs ON the solve host, detached and reparented to PID 1, so a control-surface
 # restart cannot take it with the session. Replaces wait_lam.sh, which polled
-# from ace-linux-1 over SSH and therefore died with it.
+# from the primary lane over SSH and therefore died with it.
 #
 # Two rules this encodes, both learned the hard way:
 #   - Poll by PID, never by process name. `pgrep -f X` matches the ssh command
@@ -27,7 +27,7 @@ CASE=${1:?usage: gate_case.sh <case> <driver-pid> [deadline-hours]}
 DRIVER_PID=${2:?usage: gate_case.sh <case> <driver-pid> [deadline-hours]}
 DEADLINE_H=${3:-12}
 
-ROOT=$HOME/cfd/b1552
+ROOT=$HOME/cfd/${DM_CFD_CAMPAIGN:-campaign}
 CASEDIR=$ROOT/cases/$CASE
 MARKER=$ROOT/$CASE.gate.marker
 REPORT=$ROOT/$CASE.gate.log
@@ -103,7 +103,7 @@ grep -v '^#' "$f" | awk -v U="$U" -v A="$A" -v D="$D" -v L="$L" -v NU="$NU" '
      printf "  SETTLING GATE       : %s\n", ok ? "PASS" : "FAIL"
      printf "  PLAUSIBILITY (Cf)   : %s   double-body gives 0.857 at the same Re\n", plaus ? "PASS" : "FAIL"
      printf "  VERDICT             : %s\n", (ok && plaus) ? "USABLE" : "NOT USABLE - do not quote"
-     printf "  COMPARISON          : fs_G04_best (k-omega SST) gave Cf 0.9673, press +35.15 %%\n"
+     printf "  COMPARISON          : the reference case (k-omega SST) gave Cf 0.9673, press +35.15 %%\n"
      printf "  READ                : if press drift is still large here, turbulence is NOT the cause\n" }' >> "$REPORT" 2>&1
 
 VERDICT=$(awk -F: '/VERDICT/{gsub(/^ +| +$/,"",$2); print $2}' "$REPORT" | tail -1)

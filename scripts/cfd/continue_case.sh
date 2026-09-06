@@ -47,7 +47,7 @@ SOLVER=$(awk '/^application/ {gsub(/;/,"",$2); print $2; exit}' system/controlDi
 foamDictionary -entry startFrom -set latestTime system/controlDict >/dev/null
 foamDictionary -entry endTime -set "$END" system/controlDict >/dev/null
 # A pause is done with `stopAt writeNow` or `nextWrite`; left in place it stops the
-# resumed solver after one iteration and writes a false CONT_DONE (ace-linux-1,
+# resumed solver after one iteration and writes a false CONT_DONE (the primary lane,
 # 2026-09-06). Always resume with stopAt endTime.
 foamDictionary -entry stopAt -set endTime system/controlDict >/dev/null
 rm -f PAUSED

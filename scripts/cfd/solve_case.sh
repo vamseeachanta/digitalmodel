@@ -3,8 +3,8 @@
 #
 # This is ONE generalised launcher folded from two host-side originals that
 # were the same job on two machines: kcs_cases/kcs_fine/runsolve.sh on
-# gpu-claw (foreground, mapped initial field, 8 ranks) and al2_solve.sh on
-# ace-linux-2 (detached, cold start, 16 ranks). They differed only in case,
+# lane-A (foreground, mapped initial field, 8 ranks) and a launcher on
+# lane-B (detached, cold start, 16 ranks). They differed only in case,
 # rank count and whether they blocked -- all three are now arguments.
 #
 #   usage: solve_case.sh <case-name> [--foreground]
@@ -16,7 +16,7 @@
 #          MIN_ITER ...    passed through to the watcher (see ittc_watch.sh)
 #
 # DELIVER THIS AS A FILE, never piped to `bash -s`. mpirun reads and closes
-# stdin: when the ace-linux-2 original was piped over ssh, an mpirun swallowed
+# stdin: when the lane-B original was piped over ssh, an mpirun swallowed
 # the remainder of the script -- the solver launch never executed, ssh
 # returned 0, and the lane reported OK while nothing was running. Every mpirun
 # below also gets an explicit `< /dev/null` so it cannot consume anything.

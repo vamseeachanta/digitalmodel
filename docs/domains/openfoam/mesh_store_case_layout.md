@@ -1,6 +1,6 @@
 # Campaign layout and the master mesh store
 
-Adopted 2026-09-04 on the B1552 campaign (gpu-claw and ace-linux-2 lanes).
+Adopted 2026-09-04 for the calm-water resistance programme (lane-A and lane-B).
 Mirrors the OrcaFlex modular-generator pattern: one master model, `includes/`
 that variations reference rather than copy, a campaign file naming the
 variations. Code: `scripts/cfd/mesh_store.sh` (solve-host runtime),
@@ -22,7 +22,7 @@ hull at 2 M cells, 31 min at 4.4 M, 75 min for a 6 M-cell free-surface mesh.
 
 ```
 <campaign root>/                     CONTROL PLANE, identical on every lane
-  db_chain.yml, b1552_chain.yml      case registries (lane-specific rank counts; never synced)
+  <registry>.yml                     case registry (lane-specific rank counts; never synced)
   db_job.sh, db_job_matrix.sh        lane entry points (canonical AT THE ROOT on every lane)
   cfd-status*.sh, status/            status pull read by the control surface
   <case>.log, <case>.marker,         RUN LEDGER: written by the job scripts and the solve chain,
@@ -75,7 +75,7 @@ asserts equal hashes. Change the rule in both or in neither.
 
 **Shared:** the serial `constant/polyMesh`, read-only in the store.
 
-**Not shared:** `processor*/constant/polyMesh`. Measured on gpu-claw,
+**Not shared:** `processor*/constant/polyMesh`. Measured on lane-A,
 `redistributePar -decompose` is not reproducible run to run: sibling cases
 with byte-identical serial meshes and identical hierarchical 2x2x2
 decomposeParDicts came out with processor-0 cell counts of 264122, 264030

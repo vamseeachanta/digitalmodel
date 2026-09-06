@@ -1,6 +1,6 @@
 # What "validated" means for a hull with no published Ct
 
-Design note for [#2023](https://github.com/vamseeachanta/digitalmodel/issues/2023),
+Design note for issue #2023,
 answering the open design question it flags as genuinely unresolved. Written
 against the code as it stands at `467d76d5` plus the additions described in
 §7. Nothing here is a solver change and no solver was run to produce it.
@@ -219,7 +219,7 @@ apply, and they are not negotiable:
    uninformative — so the envelope check must be arithmetic and must run before
    the comparison, not after.
 3. **It is unavailable today, and the manifest says so.**
-   [#2020](https://github.com/vamseeachanta/digitalmodel/issues/2020) records
+   Issue #2020 records
    that this repository's H&M returns a `Ct` that is near-identical for a
    Series 60 and a tanker — two hulls differing by 68% in waterline length and
    33% in block coefficient agree to 4 parts in 10⁵ — and that issue is blocked

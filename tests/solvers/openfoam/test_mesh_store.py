@@ -128,10 +128,10 @@ def test_normalise_matches_documented_pipeline():
 
 def test_promote_link_find_roundtrip(tmp_path):
     store = ms.MeshStore(tmp_path)
-    a = make_case(tmp_path, "db_G04_ms")
+    a = make_case(tmp_path, "generic_mesh_case")
     assert store.find(a) is None
-    entry = store.promote(a, "db_G04_ms")
-    assert entry.path == tmp_path / "meshes" / f"{entry.identity}-db_G04_ms"
+    entry = store.promote(a, "generic_mesh_case")
+    assert entry.path == tmp_path / "meshes" / f"{entry.identity}-generic_mesh_case"
     assert (a / "constant" / "polyMesh").is_symlink()
     assert os.readlink(a / "constant" / "polyMesh") == "../../../meshes/%s/polyMesh" % entry.path.name
     assert (a / "constant" / "polyMesh" / "owner").is_file()  # resolves through the link
@@ -146,7 +146,7 @@ def test_promote_link_find_roundtrip(tmp_path):
     # the master is read-only
     assert not os.access(entry.polymesh / "owner", os.W_OK)
 
-    sibling = make_case(tmp_path, "db_G04_msR", with_mesh=False)
+    sibling = make_case(tmp_path, "generic_mesh_sibling", with_mesh=False)
     assert store.find(sibling).path == entry.path
     store.link(sibling, entry.identity)
     assert (sibling / "constant" / "polyMesh" / "owner").is_file()

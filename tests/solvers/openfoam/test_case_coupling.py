@@ -128,7 +128,7 @@ class TestMapper:
     #
     # blockMesh emits `outlet` as the whole x=max face (1 2 6 5), full height,
     # so a pressure opening there sits below the free surface and the tank
-    # drains under its own hydrostatic head.  Measured on gpu-claw with
+    # drains under its own hydrostatic head. Measured on lane-A with
     # interFoam v2312, 12800 cells, 1000 timesteps, zero imposed flow: the
     # full-height pressure outlet lost 81.16% of a 600 m3 inventory in 10 s,
     # while venting through `top` held 600.000 m3 exactly.  Evidence:

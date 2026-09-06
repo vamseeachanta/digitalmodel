@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Master mesh store for the b1552 campaign: one serial mesh per mesh IDENTITY,
+# Master mesh store for a CFD campaign: one serial mesh per mesh IDENTITY,
 # cases link to it instead of carrying a private copy.
 #
 # The OrcaFlex analogue: a master model + includes/ that variations reference,
@@ -16,7 +16,7 @@
 #   mesh_store.sh drop    <store-dir>         remove a master nothing links to
 #
 # WHAT IS SHARED AND WHAT IS NOT. Only constant/polyMesh (serial) is shared.
-# processor*/constant/polyMesh is NOT: redistributePar -decompose on gpu-claw
+# processor*/constant/polyMesh is NOT: redistributePar -decompose on lane-A
 # is not reproducible run to run (sibling cases with byte-identical serial
 # meshes and identical decomposeParDicts came out with different processor
 # cell counts), and a case's processor time directories are numbered in ITS

@@ -16,6 +16,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Mapping, Sequence
 
 from .gmsh_bridge import hash_tree
+from .lane_config import load_lanes
 
 
 ASSETUTILITIES_COMMIT = "993f1b5ddc90b56ecf531bedb1b84f5efe096700"
@@ -25,7 +26,15 @@ _HASH = re.compile(r"[0-9a-f]{64}\Z")
 _COMMIT = re.compile(r"[0-9a-f]{40}\Z")
 _IPV4 = re.compile(r"(?<![0-9])(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?![0-9])")
 _EMAIL = re.compile(r"\b[^\s/@]+@[^\s/@]+\.[^\s/@]+\b")
-_INFRASTRUCTURE = re.compile(r"\b(?:ace-linux-[0-9]+|gpu-claw|localhost)\b", re.I)
+
+
+def _infrastructure_pattern() -> re.Pattern[str]:
+    lane_ids = sorted(load_lanes(), key=len, reverse=True)
+    alternatives = [re.escape(lane_id) for lane_id in lane_ids]
+    alternatives.append("localhost")
+    return re.compile(r"\b(?:" + "|".join(alternatives) + r")\b", re.I)
+
+
 _FORBIDDEN_KEYS = {"host", "hostname", "ssh", "ssh_target", "address", "ip", "ip_address", "machine", "node"}
 _PROVENANCE_FIELDS = {"clean", "commit", "tracked_sources_sha256"}
 
@@ -90,7 +99,7 @@ def validate_privacy(value: Any, path: str = "$") -> None:
     if not isinstance(value, str):
         return
     absolute = value.startswith(("/", "~/", "\\")) or re.match(r"^[A-Za-z]:[\\/]", value)
-    sensitive = _IPV4.search(value) or _EMAIL.search(value) or _INFRASTRUCTURE.search(value)
+    sensitive = _IPV4.search(value) or _EMAIL.search(value) or _infrastructure_pattern().search(value)
     if absolute or sensitive or "://" in value:
         raise EvidenceValidationError(f"privacy violation at {path}")
 

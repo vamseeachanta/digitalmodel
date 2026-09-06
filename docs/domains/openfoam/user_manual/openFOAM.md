@@ -34,7 +34,7 @@ For the pre and post processing layers for OpenFOAM
 
 ### Installation
 
-- Follow the instructions in the [OpenFOAM Installation Guide](https://github.com/vamseeachanta/energy/blob/61c3bb3bf50beeaac8f6cc2d4c9e143f91ff3083/eng/openfoam/InstallationOpenFoam-2.pdf). Replace "openfoam8" with appropriate openfoam version (i.e. "openfoam2212")
+- Follow the instructions in the [OpenFOAM Installation Guide](https://openfoam.org/download/). Replace "openfoam8" with appropriate openfoam version (i.e. "openfoam2212")
 
 ### Running
 
@@ -43,7 +43,7 @@ Typical steps for running a case study:
 - Meshing
 - Boundary Conditons
 - Solver
-- Paraview, see [paraview help guide](https://github.com/vamseeachanta/energy/blob/master/eng/paraview.md)
+- Paraview, see [paraview help guide](https://docs.paraview.org/)
 
 ## Common Errors
 

@@ -11,7 +11,7 @@ To summarize the steps to run the case study
 
 **Entry 'Umean' not found in dictionary in U.boundaryField.outflow**
 
-Entry 'Umean' not found in dictionary "/home/vamsee/openfoam_others/wigley_hull/wigleyHull_LTS/0/U.boundaryField.outflow"
+Entry 'Umean' not found in dictionary "<lane>:~/cfd/campaign/cases/wigleyHull_LTS/0/U.boundaryField.outflow"
 openfoam Entry 'Umean' not found in dictionary in U.boundaryField.outflow
 
 Solution:
@@ -40,9 +40,9 @@ Added the "Umean           1.452;" line to the outflow boundary condition in 0_o
 
     **Details**
 
-    cannot find file "/home/vamsee/openfoam_others/wigley_hull/wigleyHull_LTS/processor0/0/p_rgh"
-    cannot find file "/home/vamsee/openfoam_others/wigley_hull/wigleyHull_LTS/processor2/0/p_rgh"
-    cannot find file "/home/vamsee/openfoam_others/wigley_hull/wigleyHull_LTS/processor3/0/p_rgh"
+    cannot find file "<lane>:~/cfd/campaign/cases/wigleyHull_LTS/processor0/0/p_rgh"
+    cannot find file "<lane>:~/cfd/campaign/cases/wigleyHull_LTS/processor2/0/p_rgh"
+    cannot find file "<lane>:~/cfd/campaign/cases/wigleyHull_LTS/processor3/0/p_rgh"
 
 # Paraview PostProcess Errors
 
@@ -52,7 +52,7 @@ Alternatively can copy U file from another solution (sol_5000 or 500) folder to 
 
 <code>
 ERROR: In ./VTK/IO/Geometry/vtkOpenFOAMReader.cxx, line 8654
-vtkOpenFOAMReaderPrivate (0x5620750cb5a0): Error reading line 21 of /home/vamsee/openfoam_others/wigley_hull/0/U: Unexpected token 0
+vtkOpenFOAMReaderPrivate (0x5620750cb5a0): Error reading line 21 of <lane>:~/cfd/campaign/cases/wigleyHull_LTS/0/U: Unexpected token 0
 </code>
 
 **Rename Solution file from sol_5000 to 5000**
@@ -70,7 +70,6 @@ openfoam not creating 0 folders
 
 **Details**
 
-cannot find file "/home/vamsee/openfoam_others/wigley_hull/wigleyHull_LTS/processor0/0/p_rgh"
-cannot find file "/home/vamsee/openfoam_others/wigley_hull/wigleyHull_LTS/processor2/0/p_rgh"
-cannot find file "/home/vamsee/openfoam_others/wigley_hull/wigleyHull_LTS/processor3/0/p_rgh"
-
+cannot find file "<lane>:~/cfd/campaign/cases/wigleyHull_LTS/processor0/0/p_rgh"
+cannot find file "<lane>:~/cfd/campaign/cases/wigleyHull_LTS/processor2/0/p_rgh"
+cannot find file "<lane>:~/cfd/campaign/cases/wigleyHull_LTS/processor3/0/p_rgh"

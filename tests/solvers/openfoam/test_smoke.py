@@ -457,7 +457,7 @@ def test_evidence_validator_rejects_unknown_and_missing_records(tmp_path: Path) 
 
 @pytest.mark.parametrize(
     "value",
-    ["/srv/private/case", "10.20.30.40", "gpu-claw", "user@example.com"],
+    ["/srv/private/case", "10.20.30.40", "lane-A", "user@example.com"],
 )
 def test_evidence_privacy_validator_rejects_sensitive_strings(value: str) -> None:
     from digitalmodel.solvers.openfoam.smoke_evidence import (
@@ -467,6 +467,22 @@ def test_evidence_privacy_validator_rejects_sensitive_strings(value: str) -> Non
 
     with pytest.raises(EvidenceValidationError, match="privacy"):
         validate_privacy({"value": value})
+
+
+def test_evidence_privacy_uses_configured_lane_ids(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from digitalmodel.solvers.openfoam.smoke_evidence import (
+        EvidenceValidationError,
+        validate_privacy,
+    )
+
+    lane_file = tmp_path / "lanes.yml"
+    lane_file.write_text("lanes:\n  compute-east:\n    physical_cores: 12\n")
+    monkeypatch.setenv("DM_CFD_LANES_FILE", str(lane_file))
+
+    with pytest.raises(EvidenceValidationError, match="privacy"):
+        validate_privacy({"value": "compute-east"})
 
 
 def test_evidence_cli_validates_schema_and_privacy(tmp_path: Path) -> None:

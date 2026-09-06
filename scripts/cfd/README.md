@@ -1,8 +1,13 @@
 # scripts/cfd: the solve-host chain
 
-Bash that runs ON a CFD lane (gpu-claw, ace-linux-2) under OpenFOAM v2312,
-driven by a case registry (`db_chain.yml` / `b1552_chain.yml` at the campaign
-root) and the environment `DM_CFD_ROOT`, `DM_CFD_CONFIG`, `DM_CFD_CASES_DIR`.
+Bash that runs ON a CFD lane under OpenFOAM v2312, driven by a case registry at
+the campaign root and the environment `DM_CFD_ROOT`, `DM_CFD_CONFIG`,
+`DM_CFD_CASES_DIR`. `DM_CFD_CAMPAIGN` selects the campaign directory and
+defaults to the generic `campaign`; `deploy_lane.sh` retains its positional
+campaign override. Private project configuration supplies the real campaign
+name and registry path. `DM_CFD_LANES_FILE` optionally selects the lane mapping
+(default: the shipped `src/digitalmodel/solvers/openfoam/data/lanes.example.yml`),
+and `DM_CFD_LANE` selects an entry for compute-stat collection.
 Deployed from this directory with `deploy_lane.sh`; never edited on a lane.
 
 | Script | Role |

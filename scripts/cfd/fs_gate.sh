@@ -1,5 +1,5 @@
 #!/bin/bash
-# LOCAL variant of ace-linux-1 analysis/scripts/stage4_gate.sh (fetched 2026-09-04): the same
+# Local variant of the primary lane's stage4 gate (fetched 2026-09-04): the same
 # gates, run ON the solve host without ssh.  usage: stage4_gate_local.sh <case>
 # Gate 1 mass balance |drift| <= 0.5 %; Gate 2 settling: two 400-iteration windows of
 # forces_hull: POWER GATE = total force within 1 % between two 400-it windows and pressure wobble
@@ -8,7 +8,7 @@
 set -o pipefail
 CASE=$1
 source /usr/lib/openfoam/openfoam2312/etc/bashrc >/dev/null 2>&1
-cd "$HOME/cfd/b1552/cases/$CASE" || { echo "no case $CASE"; exit 2; }
+cd "$HOME/cfd/${DM_CFD_CAMPAIGN:-campaign}/cases/$CASE" || { echo "no case $CASE"; exit 2; }
 echo "=== $CASE on $(hostname -s) $(date -u +%FT%TZ) ==="
 fail=0
 

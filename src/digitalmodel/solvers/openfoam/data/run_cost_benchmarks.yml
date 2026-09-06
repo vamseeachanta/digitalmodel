@@ -19,19 +19,23 @@ solver:
   version: openfoam2312
   turbulence: kOmegaSST
 
+lane_config:
+  env: DM_CFD_LANES_FILE
+  default: lanes.example.yml
+
 lanes:
   # Throughput is per-RANK, so a lane with fewer cores can win outright.
-  - id: gpu-claw
+  lane-A:
     cores: 8
     ranks_used: 8
     seconds_per_iteration: 8.0         # at 3.95e6 cells
     mesh_seconds: 1118                 # snappyHexMesh, 3.95e6 cells
-    relative_per_core_throughput: 4.2  # ace-linux-2 == 1.0
+    relative_per_core_throughput: 4.2  # lane-B == 1.0
     preferred: true
     note: >-
       Twice the wall-clock speed of the 16-rank lane on HALF the cores, and 8.2x
       faster at meshing. Preferred lane for hull work.
-  - id: ace-linux-2
+  lane-B:
     cores: 32
     ranks_used: 16
     seconds_per_iteration: 16.9        # at 3.82e6 cells
@@ -47,19 +51,19 @@ lanes:
 # answer. A case with more cells and fewer layers is a worse mesh, not a better
 # one -- see cost_to_information/mesh_statistic.
 cases:
-  - {id: model_baseline,     lane: ace-linux-2, ranks: 16, cells: 3822392, layers_grown: "2/2",       mesh_h: 2.56, solve_h: 6.57,  s_per_iter: 16.9, iterations: 1400, core_hours: 146}
-  - {id: model_alt_wallfn,   lane: ace-linux-2, ranks: 16, cells: 3822392, layers_grown: "2/2",       mesh_h: 1.97, solve_h: 5.00,  s_per_iter: 12.9, iterations: 1400, core_hours: 112}
-  - {id: model_yplus30,      lane: gpu-claw,    ranks: 8,  cells: 3945132, layers_grown: "2.99/3",    mesh_h: 0.31, solve_h: 3.10,  s_per_iter: 8.0,  iterations: 1400, core_hours: 27}
-  - {id: model_yplus15,      lane: gpu-claw,    ranks: 8,  cells: 4184191, layers_grown: "4.93/5",    mesh_h: 0.47, solve_h: 8.64,  s_per_iter: 7.8,  iterations: 4000, core_hours: 73}
-  - {id: model_refined_L2,   lane: gpu-claw,    ranks: 8,  cells: 5583857, layers_grown: "1/1",       mesh_h: 0.52, solve_h: 6.06,  s_per_iter: 13.7, iterations: 1591, core_hours: 53}
-  - {id: model_coarse_L0,    lane: ace-linux-2, ranks: 16, cells: 3396518, layers_grown: "2.98/3",    mesh_h: 0.40, solve_h: 2.64,  s_per_iter: 6.8,  iterations: 1400, core_hours: 49}
-  - {id: model_re_corrected, lane: ace-linux-2, ranks: 16, cells: 3822392, layers_grown: "2/2",       mesh_h: 0.66, solve_h: 10.07, s_per_iter: 13.1, iterations: 2768, core_hours: 172}
-  - {id: full_scale_hull,    lane: ace-linux-2, ranks: 16, cells: 2312314, layers_grown: "6.8/11",    mesh_h: 0.76, solve_h: 7.58,  s_per_iter: 4.6,  iterations: 6000, core_hours: 148}
+  - {id: model_baseline,     lane: lane-B, ranks: 16, cells: 3822392, layers_grown: "2/2",       mesh_h: 2.56, solve_h: 6.57,  s_per_iter: 16.9, iterations: 1400, core_hours: 146}
+  - {id: model_alt_wallfn,   lane: lane-B, ranks: 16, cells: 3822392, layers_grown: "2/2",       mesh_h: 1.97, solve_h: 5.00,  s_per_iter: 12.9, iterations: 1400, core_hours: 112}
+  - {id: model_yplus30,      lane: lane-A, ranks: 8,  cells: 3945132, layers_grown: "2.99/3",    mesh_h: 0.31, solve_h: 3.10,  s_per_iter: 8.0,  iterations: 1400, core_hours: 27}
+  - {id: model_yplus15,      lane: lane-A, ranks: 8,  cells: 4184191, layers_grown: "4.93/5",    mesh_h: 0.47, solve_h: 8.64,  s_per_iter: 7.8,  iterations: 4000, core_hours: 73}
+  - {id: model_refined_L2,   lane: lane-A, ranks: 8,  cells: 5583857, layers_grown: "1/1",       mesh_h: 0.52, solve_h: 6.06,  s_per_iter: 13.7, iterations: 1591, core_hours: 53}
+  - {id: model_coarse_L0,    lane: lane-B, ranks: 16, cells: 3396518, layers_grown: "2.98/3",    mesh_h: 0.40, solve_h: 2.64,  s_per_iter: 6.8,  iterations: 1400, core_hours: 49}
+  - {id: model_re_corrected, lane: lane-B, ranks: 16, cells: 3822392, layers_grown: "2/2",       mesh_h: 0.66, solve_h: 10.07, s_per_iter: 13.1, iterations: 2768, core_hours: 172}
+  - {id: full_scale_hull,    lane: lane-B, ranks: 16, cells: 2312314, layers_grown: "6.8/11",    mesh_h: 0.76, solve_h: 7.58,  s_per_iter: 4.6,  iterations: 6000, core_hours: 148}
   # MESH FAILURE, retained deliberately: a full-scale hull asked for a y+ 30
   # first layer against a 0.164 m near-hull cell -- a 429:1 ratio -- and the
   # stack collapsed to 0.3 % of the request. The mesh cost 0.22 h and saved ten
   # conditions from being run on an unusable grid. See mesh_ratio_limits below.
-  - {id: full_scale_yplus30, lane: gpu-claw,    ranks: 8,  cells: 1740803, layers_grown: "0.01/21",   mesh_h: 0.22, solve_h: null,  s_per_iter: null, iterations: 0,    core_hours: 2, outcome: mesh_failed}
+  - {id: full_scale_yplus30, lane: lane-A, ranks: 8,  cells: 1740803, layers_grown: "0.01/21",   mesh_h: 0.22, solve_h: null,  s_per_iter: null, iterations: 0,    core_hours: 2, outcome: mesh_failed}
 
 # ---------------------------------------------------------------------------
 # MESH RATIO LIMITS
