@@ -13,13 +13,15 @@ Deployed from this directory with `deploy_lane.sh`; never edited on a lane.
 | Script | Role |
 |---|---|
 | `stage45_driver.sh` | Stage 4 (mesh) and Stage 5 (solve) for one case. Mesh phase: mesh-store lookup -> link, or build -> promote; refinement ladder from `topoSetDict.N`; snappy; strict checkMesh text verdict; face-resolution gate; restore0Dir/setFields; decomposition + renumber per case. |
-| `mesh_store.sh` | Master mesh store: `id find promote link dedupe verify status drop`. Library twin: `digitalmodel.solvers.openfoam.mesh_store`, tested against this script. |
+| `mesh_store.sh` | Master mesh store: `id find promote link dedupe verify status drop`; `promote --copy` preserves a running case's real mesh and `pull` imports one unambiguous entry from another lane. Library twin: `digitalmodel.solvers.openfoam.mesh_store`, tested against this script. |
 | `prune_case.sh` | Remove program artefacts of an assessed case (dry run by default); keeps inputs, logs, postProcessing; writes PRUNED.md. |
 | `solve_case.sh` | Detached solver launcher (file-delivered, never piped: mpirun eats stdin); arms `ittc_watch.sh` and `poller.sh`. |
 | `gate_case.sh` | Terminal waiter + two-window settling gate for a free-surface case, runs on the host reparented to PID 1. |
 | `fs_gate.sh` | Free-surface acceptance gates read from the case's own log and force history: mass drift <= 0.5 %, two 400-iteration windows < 0.2 % on viscous and pressure, 0.6 < Cf/ITTC < 1.3. |
 | `continue_case.sh` | Continue a stopped parallel solve from its latest write (startFrom latestTime, raised endTime, detached, CONT_DONE/CONT_FAILED). The driver and solve_case.sh are fresh starts and discard processor time dirs. |
-| `lane_probe.sh` | One status row per case (iteration, s/it, pseudo-dt range raw and smoothed, Courant caps, mass drift, max U, hull forces, p_rgh residual) for a lanes table; LTS-aware. |
+| `lane_probe.sh` | One status row per case (iteration, s/it, pseudo-dt range raw and smoothed, Courant caps, mass drift, componentwise max U, hull forces, p_rgh residual) for a lanes table; LTS-aware. Pass `--header` for column names. |
+| `queue_after.sh` | Detached marker/ledger queue: waits for any prerequisite, waits for exact-name solver processes to clear, then launches with `QUEUE_*` status markers and a campaign ledger entry; includes `status` and PID-specific `cancel`. |
+| `bench_prep.sh`, `bench_run.sh` | Prepare rank/PIMPLE/smoother variants from identical serial initial states, then run them one at a time and write `bench_results.tsv`, `BENCH_STATUS`, and `BENCH_DONE`; supports a readiness marker, host-load guard, and resume epilogue. |
 | `ittc_watch.sh`, `poller.sh` | Convergence watcher and wall-clock budget poller for a running solve. |
 | `check_face_resolution.py` | The mesh-phase face-resolution gate the driver runs before decomposition. |
 | `deploy_lane.sh` | rsync this directory to `<host>:~/cfd/<campaign>/scripts/`; refuses while a chain driver runs there. |
@@ -46,6 +48,8 @@ scripts (a script that cannot run still reads correctly, so the guards pin
 the invariants); `tests/scripts/test_cfd_chain_lib.py` executes the library;
 `tests/solvers/openfoam/test_mesh_store.py` executes `mesh_store.sh` and the
 Python twin on one fixture case and asserts equal identities.
+`tests/solvers/openfoam/test_cfd_queue_bench_tools.py` exercises queue release
+and cancellation plus benchmark preparation/results using stub OpenFOAM tools.
 
 Design notes: `docs/domains/openfoam/mesh_store_case_layout.md`. PIMPLE loop / cost facts
 (why 2/3/2 costs 3.4x 1/2/0, why residualControl is not a lever at nOuter 2):

@@ -248,3 +248,43 @@ def test_bash_promote_is_readable_by_library(tmp_path):
     assert entry.provenance()["cells"] == 1234
     ok, _ = store.verify(case)
     assert ok
+
+
+def test_bash_promote_copy_keeps_case_polymesh_real(tmp_path):
+    case = make_case(tmp_path, "running")
+    env = dict(os.environ, DM_CFD_ROOT=str(tmp_path))
+    subprocess.run(
+        ["bash", str(BASH_SCRIPT), "promote", "--copy", "running"],
+        env=env, capture_output=True, text=True, check=True,
+    )
+    assert (case / "constant" / "polyMesh").is_dir()
+    assert not (case / "constant" / "polyMesh").is_symlink()
+    ident = ms.mesh_identity(case)
+    assert len(list((tmp_path / "meshes").glob(f"{ident}-*"))) == 1
+
+
+def test_bash_pull_refuses_ambiguous_partial_id(tmp_path):
+    remote = tmp_path / "remote"
+    local = tmp_path / "local"
+    for suffix in ("tag-a", "tag-b"):
+        entry = remote / "meshes" / f"abcdef123456-{suffix}"
+        (entry / "polyMesh").mkdir(parents=True)
+        (entry / "polyMesh" / "owner").write_text('note "nCells:1";\n')
+    bindir = tmp_path / "bin"
+    bindir.mkdir()
+    _rsync = bindir / "rsync"
+    _rsync.write_text(
+        "#!/usr/bin/env bash\n"
+        "src=${@: -2:1}; dst=${@: -1}\n"
+        "src=${src#*:}\n"
+        "cp -a \"$src\" \"$dst\"\n"
+    )
+    _rsync.chmod(0o755)
+    env = dict(os.environ, DM_CFD_ROOT=str(local), DM_CFD_REMOTE_STORE=str(remote / "meshes"),
+               PATH=f"{bindir}:{os.environ['PATH']}")
+    result = subprocess.run(
+        ["bash", str(BASH_SCRIPT), "pull", "lane-A", "abcdef"],
+        env=env, capture_output=True, text=True,
+    )
+    assert result.returncode != 0
+    assert "ambiguous" in result.stderr.lower()

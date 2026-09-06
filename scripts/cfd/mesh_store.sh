@@ -9,6 +9,8 @@
 #   mesh_store.sh id      <case>              print the identity hash of the case's mesh INPUTS
 #   mesh_store.sh find    <case>              print the store dir whose identity matches, rc=1 if none
 #   mesh_store.sh promote <case> <tag>        move the case's built serial mesh into the store, link back
+#   mesh_store.sh promote --copy <case>       copy a running case's mesh into the store; leave it real
+#   mesh_store.sh pull <user@host> <id-prefix> copy one unambiguous remote store entry, then verify it
 #   mesh_store.sh link    <case> <store-dir>  replace the case's serial polyMesh with a link to the store
 #   mesh_store.sh dedupe  <case> <store-dir>  replace a byte-identical private mesh with a link
 #   mesh_store.sh verify  <case>              case inputs hash == provenance of the store it links to
@@ -152,8 +154,10 @@ cmd_link() {
 }
 
 cmd_promote() {
-  local case tag id dest pm cov verdict cells
-  case=$(case_dir "$1"); tag="${2:?usage: promote <case> <tag>}"
+  local case tag id dest pm cov verdict cells copy_mode=false
+  if [ "${1:-}" = --copy ]; then copy_mode=true; shift; fi
+  case=$(case_dir "$1")
+  if [ "$copy_mode" = true ]; then tag=$(basename "$case"); else tag="${2:?usage: promote <case> <tag> | promote --copy <case>}"; fi
   pm="$case/constant/polyMesh"
   [ -L "$pm" ] && die "$pm is already a link ($(readlink "$pm"))"
   [ -f "$pm/owner" ] || die "$pm has no built mesh"
@@ -163,7 +167,7 @@ cmd_promote() {
     die "identity $id already in store: $(ls -d "$STORE/$id"-*). Link to it, or drop it first."
   fi
   mkdir -p "$dest/inputs" "$dest/logs"
-  mv "$pm" "$dest/polyMesh"
+  if [ "$copy_mode" = true ]; then cp -a "$pm" "$dest/polyMesh"; else mv "$pm" "$dest/polyMesh"; fi
   # Keep the inputs beside the mesh so a future identity mismatch can be
   # diffed against what actually built it.
   mesh_inputs "$case" | while read -r f; do
@@ -194,8 +198,37 @@ cmd_promote() {
     echo "}"
   } > "$dest/mesh_provenance.json"
   chmod -R a-w "$dest/polyMesh"
-  cmd_link "$case" "$dest"
-  say "promoted $(basename "$case") -> $dest ($cells cells, checkMesh $verdict, coverage ${cov:-?}%)"
+  if [ "$copy_mode" = false ]; then cmd_link "$case" "$dest"; fi
+  say "promoted $(basename "$case") -> $dest ($cells cells, checkMesh $verdict, coverage ${cov:-?}%, copy=$copy_mode)"
+}
+
+verify_store_entry() {
+  local entry="$1" base id pid
+  [ -f "$entry/polyMesh/owner" ] || die "$entry has no polyMesh/owner"
+  [ -f "$entry/mesh_provenance.json" ] || die "$entry has no mesh_provenance.json"
+  base=$(basename "$entry"); pid=${base%%-*}
+  id=$(sed -n 's/.*"identity": "\([0-9a-f][0-9a-f]*\)".*/\1/p' "$entry/mesh_provenance.json" | head -1)
+  [ -n "$id" ] && [ "$id" = "$pid" ] || die "$entry provenance identity does not match its directory"
+  say "OK store entry $base ($id)"
+}
+
+cmd_pull() {
+  local remote="${1:?usage: pull <user@host> <id-prefix>}" prefix="${2:?usage: pull <user@host> <id-prefix>}" remote_store matches count source entry
+  case "$prefix" in *[!A-Za-z0-9_.-]*) die "invalid id prefix: $prefix";; esac
+  remote_store="${DM_CFD_REMOTE_STORE:-cfd/${DM_CFD_CAMPAIGN:-campaign}/meshes}"
+  if [ -d "$remote_store" ]; then
+    matches=$(find "$remote_store" -mindepth 1 -maxdepth 1 -type d -name "$prefix*" -printf '%f\n' | sort)
+  else
+    matches=$(ssh "$remote" "find '$remote_store' -mindepth 1 -maxdepth 1 -type d -name '$prefix*' -printf '%f\\n'" 2>/dev/null) || die "cannot list remote store on $remote"
+  fi
+  count=$(printf '%s\n' "$matches" | sed '/^$/d' | wc -l)
+  [ "$count" -eq 1 ] || { [ "$count" -eq 0 ] && die "no remote entry matches $prefix"; die "ambiguous id prefix $prefix matches $count entries"; }
+  entry=$(printf '%s\n' "$matches" | head -1); mkdir -p "$STORE"
+  [ ! -e "$STORE/$entry" ] || die "local store entry already exists: $entry"
+  if [ -d "$remote_store" ]; then source="$remote_store/$entry"; else source="$remote:$remote_store/$entry"; fi
+  rsync -a "$source" "$STORE/"
+  verify_store_entry "$STORE/$entry"
+  say "pulled $entry from $remote"
 }
 
 cmd_dedupe() {
@@ -261,6 +294,6 @@ cmd_drop() {
 
 cmd="${1:-}"; shift || true
 case "$cmd" in
-  id|find|link|promote|dedupe|verify|status|drop) "cmd_$cmd" "$@" ;;
+  id|find|link|promote|dedupe|verify|status|drop|pull) "cmd_$cmd" "$@" ;;
   *) sed -n '2,20p' "$0" >&2; exit 64 ;;
 esac
