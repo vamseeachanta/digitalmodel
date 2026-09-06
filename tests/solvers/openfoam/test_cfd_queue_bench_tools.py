@@ -5,9 +5,22 @@ import subprocess
 import time
 from pathlib import Path
 
+import pytest
+
 
 REPO = Path(__file__).resolve().parents[3]
 CFD = REPO / "scripts" / "cfd"
+
+
+@pytest.mark.parametrize("script", sorted(CFD.glob("*.sh")), ids=lambda p: p.name)
+def test_every_cfd_shell_tool_has_help(script: Path) -> None:
+    result = subprocess.run(
+        ["bash", str(script), "--help"], capture_output=True, text=True,
+        timeout=10,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip(), f"{script.name} printed empty help"
+    assert "usage" in result.stdout.lower(), result.stdout
 
 
 def _wait_for(path: Path, timeout: float = 5.0) -> None:

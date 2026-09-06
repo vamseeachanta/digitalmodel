@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Unattended solve launcher: wait for meshing, sanity-gate the cell counts,
 # then start the solve stage (#1173, #2023).
 #

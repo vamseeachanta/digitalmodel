@@ -1,4 +1,5 @@
 #!/bin/bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Build the wall-refined companion case: the companion base grid with a
 # near-wall mesh refined enough to bring y+ into the wall-function band.
 #

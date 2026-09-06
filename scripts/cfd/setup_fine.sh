@@ -1,4 +1,5 @@
 #!/bin/bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Build the fine grid: the third Richardson level, sqrt(2) finer than the
 # source (production) level, prolonged from the source solution with
 # mapFieldsPar.

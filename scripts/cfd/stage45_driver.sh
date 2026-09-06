@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Stage 4 (mesh) and Stage 5 (solve) driver for the KCS chain (#1173, #2023).
 #
 #   usage: stage45_driver.sh mesh  <case>

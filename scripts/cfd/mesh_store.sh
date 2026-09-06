@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Master mesh store for a CFD campaign: one serial mesh per mesh IDENTITY,
 # cases link to it instead of carrying a private copy.
+# Usage: mesh_store.sh <id|find|promote|pull|link|dedupe|verify|status|drop> [arguments]
 #
 # The OrcaFlex analogue: a master model + includes/ that variations reference,
 # never copy. Here the "master" is constant/polyMesh and the "variation" is a

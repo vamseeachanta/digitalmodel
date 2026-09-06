@@ -1,5 +1,7 @@
 #!/bin/bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Post-solve wall-resolution diagnostic for #1173.
+# Usage: yplus_after.sh
 #
 # WHY THIS IS A SEPARATE, LATER-RUNNING SCRIPT rather than a functionObject
 # added to the live case:

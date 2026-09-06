@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # ITTC 7.5-03-01-01 oscillatory convergence watcher (#1173, #2023).
 #
 #   usage: ittc_watch.sh <case-name>

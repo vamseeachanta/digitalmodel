@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Queue a detached command behind marker/ledger readiness and host solver idleness.
+# Usage: queue_after.sh [status|cancel] --root DIR --name NAME [queue options]
 set -euo pipefail
 set -o pipefail
 

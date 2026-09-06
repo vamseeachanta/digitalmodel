@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Unattended solver launcher for one case (#1173, #2023).
 #
 # This is ONE generalised launcher folded from two host-side originals that

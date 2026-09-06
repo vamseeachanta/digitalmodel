@@ -1,5 +1,6 @@
 #!/bin/bash
-# lane_probe.sh [--header] <lane> <case-dir> [force-unit-divisor]
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
+# Usage: lane_probe.sh [--header] <lane> <case-dir> [force-unit-divisor]
 #
 # Columns: lane, case, state, iteration/end, seconds/iteration over the last
 # 50 iterations, elapsed wall hours, latest processor write, pseudo-dt min/max

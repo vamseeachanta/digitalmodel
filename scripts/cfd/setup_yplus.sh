@@ -1,4 +1,5 @@
 #!/bin/bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Build the y+-targeted case: the source case's grid, with the near-wall layer
 # designed from a TARGET y+ instead of a fraction of the local cell size.
 #

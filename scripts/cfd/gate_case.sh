@@ -1,4 +1,5 @@
 #!/bin/bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Terminal waiter + settling gate for one calm-water resistance case.
 #
 # Runs ON the solve host, detached and reparented to PID 1, so a control-surface

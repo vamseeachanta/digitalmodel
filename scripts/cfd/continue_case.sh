@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Continue a finished or stopped parallel solve from its latest write.
 #
-#   continue_case.sh <case> <new endTime> [ranks]
+#   usage: continue_case.sh <case> <new endTime> [ranks]
 #   env DM_CFD_MPIRUN_FLAGS   extra mpirun flags, e.g. "--map-by numa --bind-to core"
 #                             (binding to physical cores; Open MPI 4.1 binds by socket
 #                             for np > 2 and lets ranks wander otherwise)

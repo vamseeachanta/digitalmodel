@@ -1,0 +1,17 @@
+# Copy to a private location, replace placeholders, and set DM_CFD_STATUS_CONFIG.
+cache: ~/.cache/digitalmodel/cfd-status.cache
+lanes:
+  - name: lane-A
+    ssh: lane-A
+    cases: [{name: fine, path: ~/cfd/<campaign>/cases/fine, force_divisor: 1000}]
+  - name: lane-B
+    ssh: lane-B
+    cases: [{name: coarse, path: ~/cfd/<campaign>/cases/coarse, force_divisor: 1000}]
+  - name: lane-C
+    ssh: lane-C
+    cases: [{name: wall, path: ~/cfd/<campaign>/cases/wall, force_divisor: 1000}]
+    bench_status: ~/cfd/<campaign>/bench/BENCH_STATUS
+  - name: lane-D
+    ssh: lane-D
+    cases: [{name: reserve, path: ~/cfd/<campaign>/cases/reserve, force_divisor: 1000}]
+    queue_status: ~/cfd/<campaign>/status/QUEUE_STATUS

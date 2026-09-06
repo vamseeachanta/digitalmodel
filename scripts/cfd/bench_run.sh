@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Run prepared benchmark variants serially and summarise their solver logs.
+# Usage: bench_run.sh --dest DIR [--after-marker FILE] [--max-load N] [--epilogue COMMAND]
 set -euo pipefail
 set -o pipefail
 die() { echo "bench_run: FATAL: $*" >&2; exit 1; }

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Host-side budget enforcement for a detached OpenFOAM run (#1173, #2023).
 #
 # Mirrors digitalmodel.solvers.openfoam.runner.poll_detached_run for a host

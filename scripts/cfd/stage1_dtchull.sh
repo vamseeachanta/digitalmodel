@@ -1,6 +1,8 @@
 #!/bin/bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Stage 1 of the #1173 ship-resistance chain: reproduce the OpenFOAM DTCHull
 # tutorial UNMODIFIED, with per-stage timing.
+# Usage: stage1_dtchull.sh
 #
 # WHY A BASELINE STAGE AT ALL. Every later case (production, companion, fine,
 # the near-wall variants) is a derivative of this tutorial's dictionaries. If

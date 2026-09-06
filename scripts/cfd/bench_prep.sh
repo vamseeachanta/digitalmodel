@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Prepare identical-state OpenFOAM benchmark variants.
+# Usage: bench_prep.sh --source CASE --dest DIR --iterations N --ranks LIST --variants FILE
 set -euo pipefail
 set -o pipefail
 die() { echo "bench_prep: FATAL: $*" >&2; exit 1; }

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Deploy this repo's solve-host chain (scripts/cfd/) to a CFD lane.
 #
-#   deploy_lane.sh [--dry-run] <user@host> [campaign]
+#   usage: deploy_lane.sh [--dry-run] <user@host> [campaign]
 #   campaign defaults to DM_CFD_CAMPAIGN, then "campaign"
 #
 # Repo -> lane is the ONLY path for chain scripts. A lane-local edit is a bug

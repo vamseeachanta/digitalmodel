@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Stage 5: solve the configured KCS levels, in registry order.
 #
 # Sequential by design. The box has 8 physical cores and the committed

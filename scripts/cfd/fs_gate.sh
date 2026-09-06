@@ -1,4 +1,5 @@
 #!/bin/bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Local variant of the primary lane's stage4 gate (fetched 2026-09-04): the same
 # gates, run ON the solve host without ssh.  usage: stage4_gate_local.sh <case>
 # Gate 1 mass balance |drift| <= 0.5 %; Gate 2 settling: two 400-iteration windows of

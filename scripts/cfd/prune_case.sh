@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Prune the PROGRAM ARTEFACTS of an assessed case and keep everything needed
 # to rebuild or audit it. Dry-run unless --apply is given.
 #

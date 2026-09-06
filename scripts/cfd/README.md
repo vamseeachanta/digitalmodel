@@ -16,7 +16,7 @@ Deployed from this directory with `deploy_lane.sh`; never edited on a lane.
 | Script | Role |
 |---|---|
 | `stage45_driver.sh` | Stage 4 (mesh) and Stage 5 (solve) for one case. Mesh phase: mesh-store lookup -> link, or build -> promote; refinement ladder from `topoSetDict.N`; snappy; strict checkMesh text verdict; face-resolution gate; restore0Dir/setFields; decomposition + renumber per case. |
-| `mesh_store.sh` | Master mesh store: `id find promote link dedupe verify status drop`; `promote --copy` preserves a running case's real mesh and `pull` imports one unambiguous entry from another lane. Library twin: `digitalmodel.solvers.openfoam.mesh_store`, tested against this script. |
+| `mesh_store.sh` | Master mesh store: `id find promote link dedupe verify status drop`; `promote --copy` preserves a running case's real mesh and `pull` imports one unambiguous entry from another lane. After a finished case's serial mesh was promoted with `--copy`, use `mesh_store.sh dedupe <case> <store-dir>` to replace that private copy with a link. Library twin: `digitalmodel.solvers.openfoam.mesh_store`, tested against this script. |
 | `prune_case.sh` | Remove program artefacts of an assessed case (dry run by default); keeps inputs, logs, postProcessing; writes PRUNED.md. |
 | `solve_case.sh` | Detached solver launcher (file-delivered, never piped: mpirun eats stdin); arms `ittc_watch.sh` and `poller.sh`. |
 | `gate_case.sh` | Terminal waiter + two-window settling gate for a free-surface case, runs on the host reparented to PID 1. |
@@ -58,3 +58,31 @@ Design notes: `docs/domains/openfoam/mesh_store_case_layout.md`. PIMPLE loop / c
 (why 2/3/2 costs 3.4x 1/2/0, why residualControl is not a lever at nOuter 2):
 `docs/domains/openfoam/pimple_loop_cost_v2312.md`. Bringing up a new lane:
 `docs/domains/openfoam/new_lane_onboarding_prompt.md`.
+
+## Status line for multi-lane operation
+
+The generic tools in `status/` supersede the old lane-local `status-tools/`
+folder. Copy `status/status.example.yml` to a private configuration file,
+replace the lane SSH aliases, `<campaign>` placeholders, and case paths, then
+set `DM_CFD_STATUS_CONFIG` for `cfd_status_collect.sh`. The collector runs
+`lane_probe.sh` locally or over SSH for every configured case and atomically
+writes the cache selected by `DM_CFD_STATUS_CACHE` (or the YAML `cache` key).
+Optional `bench_status` and `queue_status` paths are also cached. Install the
+shipped `cfd_status_cron.example` entry to refresh it periodically.
+
+Claude Code receives one fast, cache-only line from `cfd_statusline.sh`. To
+prepend an existing workspace-hub segment, set `WORKSPACE_STATUSLINE` to that
+executable and point `settings.json` at the combined command:
+
+```json
+{
+  "statusLine": {
+    "type": "command",
+    "command": "/absolute/path/to/digitalmodel/scripts/cfd/status/cfd_statusline_combined.sh",
+    "padding": 0
+  }
+}
+```
+
+The renderer marks unreachable lanes and stale caches without blocking the
+prompt. Use `--width COLUMNS` to bound the entire CFD segment.

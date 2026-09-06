@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/cfd_help.sh"
 # Stage 4: wait for Stage 1 to finish cleanly, then mesh the configured KCS
 # levels.
 #
