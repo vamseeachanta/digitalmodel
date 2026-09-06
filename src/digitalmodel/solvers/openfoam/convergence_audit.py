@@ -38,6 +38,12 @@ def audit_one(label, path, start, gate, amp):
     row["fit_period"] = r["fit"]["period"] if "fit" in r else None
     row["fit_tau"] = r["fit"]["tau"] if "fit" in r else None
     row["amp_ok_at"] = r.get("iteration_amp_below_pct")
+    tot_ref = abs(row.get("cycle_total") or r["viscous_last400"] or 1.0)
+    fit = r.get("fit")
+    fit_sane = bool(fit and fit["period"] > 200 and fit["tau"] > 0 and fit["amplitude"] > 0.002 * tot_ref)
+    flat = bool(fit and fit["amplitude"] <= 0.002 * tot_ref)   # no wobble to speak of
+    if not fit_sane:
+        row["fit_total"] = None; row["fit_period"] = None; row["fit_tau"] = None; row["amp_ok_at"] = None
     if r["rows"] < 800:
         v = "short"
     elif len(r["extrema"]) < 3:
@@ -47,13 +53,22 @@ def audit_one(label, path, start, gate, amp):
                  abs(row["aitken_total"] - row["fit_total"]) / max(abs(row["fit_total"]), 1e-9) < 0.02)
         amp_ok = row["amp_ok_at"] is not None and row["amp_ok_at"] <= r["last_iteration"]
         cyc_ok = row["cycle_change_pct"] is not None and row["cycle_change_pct"] < gate
-        v = "settled" if (amp_ok and (cyc_ok or agree)) else ("extrapolable" if agree else "oscillating")
+        if cyc_ok and (amp_ok or flat):
+            v = "settled"
+        elif agree:
+            v = "extrapolable"
+        elif flat and cyc_ok:
+            v = "settled"
+        else:
+            v = "oscillating"
     row["verdict"] = v
     return row
 
 
 def md_table(rows, amp):
-    kN = lambda v: "—" if v is None else f"{v / 1000:+.1f}"
+    scale = 1000.0 if any(abs(r.get("viscous") or 0) >= 1000 for r in rows if "error" not in r) else 1.0
+    unit = "kN" if scale == 1000.0 else "N"
+    kN = lambda v: "—" if v is None else (f"{v / 1000:+.1f}" if abs(v) >= 1000 else f"{v:+.2f} N")
     it = lambda v: "—" if v is None else f"{v:.0f}"
     pc = lambda v: "—" if v is None else f"{v:.2f}"
     o = ["| run | rows | extrema | half period | viscous kN | cycle total kN | cycle change % | Aitken total kN | fit total kN | fit period / tau | wobble < " + f"{amp:g} % at | verdict |",
