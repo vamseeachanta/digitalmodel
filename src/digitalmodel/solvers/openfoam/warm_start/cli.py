@@ -15,7 +15,8 @@ from .admissibility import evaluate
 from .checks import evaluate_checkpoint, stop_and_fallback
 from .decision import decide
 from .fields import (KEEP_FIELDS, clean_restart, prepare_analytic, prepare_geometry,
-                     prepare_potential, resharpen_alpha, reset_control, rewrite_speed_fields)
+                     prepare_potential, resharpen_alpha, reset_control,
+                     restore_cold_restart, rewrite_speed_fields)
 from .record import RecordStore, append_ledger, timestamp
 
 
@@ -225,9 +226,7 @@ def plan_or_prepare(args) -> int:
             raise
         reason = f"warm prepare failed: {type(exc).__name__}: {exc}"
         try:
-            if (target / "0").exists():
-                shutil.rmtree(target / "0")
-            shutil.copytree(target / "0.cold", target / "0")
+            restore_cold_restart(target)
             (target / "COLD_FALLBACK").write_text(reason + "\n")
             store.append({"id": f"{timestamp()}_{target.name}",
                           "source": source.name if source else None,
@@ -246,8 +245,10 @@ def plan_or_prepare(args) -> int:
 
 def _print_commands(args, hop, n_cold):
     if hop == "speed":
-        print(f"COMMAND: copy {' '.join(KEEP_FIELDS)} {args.source}/<latest>/ -> {args.target}/0/")
-        print("COMMAND: changeDictionary -time 0")
+        print(f"COMMAND: copy {' '.join(KEEP_FIELDS)} per rank for matching decompositions; "
+              f"otherwise reconstruct all fields then copy {args.source}/<latest>/ -> {args.target}/0/")
+        print("COMMAND: changeDictionary -time 0 [-parallel]")
+        print(f"VERIFY: {' '.join(KEEP_FIELDS)} internalField nonuniform List; no macros")
     elif hop == "geometry":
         prefix = f"mpirun -np {args.ranks} " if args.ranks else ""
         suffix = " -parallel" if args.ranks else ""

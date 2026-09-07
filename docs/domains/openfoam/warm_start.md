@@ -38,7 +38,13 @@ mapped alpha mass, rewritten speed fields, `pcorr`, and level references. Speed 
 limited to `|dU/U| <= 10%`. Geometry hops require equal speed and different meshes.
 Only `alpha.water U p_rgh k omega nut` transfer. `phi`, `alphaPhi0.water`, `rDeltaT`, `p`,
 and `uniform/` are removed. Boundary values for inlet and outlet `U`, inlet `k`, and inlet
-`omega` come from the target and are applied with `changeDictionary -time 0`. Geometry
+`omega` come from the target and are applied with `changeDictionary -time 0`. For an
+identical decomposed speed hop, all six fields copy directly from each
+`processorN/<time>/` to the corresponding `processorN/0/`; serial `0/` is not used.
+Otherwise all six fields are reconstructed together before the serial copy. Every copied
+field must have a `nonuniform List` internal field and contain no `$` macro after the
+boundary rewrite, or preparation restores the cold fields and writes `COLD_FALLBACK`.
+Geometry
 hops use `mapFieldsPar -consistent -mapMethod cellVolumeWeight` and equal rank counts.
 
 A1 accepts a cleanly ended source when the convergence audit says `settled` or

@@ -9,7 +9,11 @@ import yaml
 from digitalmodel.solvers.openfoam.warm_start.decision import decide
 from digitalmodel.solvers.openfoam.warm_start.admissibility import GateCheck, GateVerdict, evaluate
 from digitalmodel.solvers.openfoam.warm_start.cli import main, parser
-from digitalmodel.solvers.openfoam.warm_start.fields import clean_restart, rewrite_speed_fields
+from digitalmodel.solvers.openfoam.warm_start.fields import (
+    clean_restart,
+    rewrite_speed_fields,
+    verify_warm_fields,
+)
 from digitalmodel.solvers.openfoam.warm_start.record import RecordStore
 
 
@@ -19,6 +23,20 @@ boundaryField
 {
  inlet { type fixedValue; value uniform (-1 0 0); }
  outlet { type outletPhaseMeanVelocity; Umean 1; value uniform (-1 0 0); }
+}
+"""
+
+WARM_FIELD = """FoamFile { format ascii; class volVectorField; object U; }
+internalField nonuniform List<vector>
+2
+(
+(-1 0 0)
+(-1.1 0 0)
+);
+boundaryField
+{
+ inlet { type fixedValue; value uniform (-1 0 0); }
+ outlet { type zeroGradient; }
 }
 """
 
@@ -87,12 +105,22 @@ def test_change_dictionary_v2312_applies_literals_and_preserves_warm_internal(tm
     (target / "0").mkdir()
     for name in ("U", "k", "omega"):
         shutil.copy2(target / "0.orig" / name, target / "0" / name)
-    warm_internal = "internalField uniform (-1.75 0 0);"
+    warm_internal = "internalField nonuniform List<vector> 1 ((-1.75 0 0));"
     (target / "0" / "U").write_text(
         (target / "0" / "U").read_text().replace(
             "internalField uniform ($mUmean 0 0);", warm_internal
         )
     )
+    for name in ("k", "omega"):
+        path = target / "0" / name
+        path.write_text(path.read_text().replace(
+            "internalField uniform $inletLevel;",
+            "internalField nonuniform List<scalar> 1 (0.1);",
+        ))
+    for name in ("alpha.water", "p_rgh", "nut"):
+        (target / "0" / name).write_text(
+            WARM_FIELD.replace("object U", f"object {name}")
+        )
     (target / "system").mkdir()
     (target / "system" / "controlDict").write_text("""FoamFile
 { version 2.0; format ascii; class dictionary; object controlDict; }
@@ -137,7 +165,7 @@ solvers {}
     rewrite_speed_fields(target)
 
     checks = {
-        ("U", "internalField"): "uniform (-1.75 0 0)",
+        ("U", "internalField"): "nonuniform List<vector> 1((-1.75 0 0))",
         ("U", "boundaryField.inlet.value"): "uniform (-2.5 0 0)",
         ("U", "boundaryField.outlet.Umean"): "2.5",
         ("U", "boundaryField.outlet.value"): "uniform (-2.5 0 0)",
@@ -176,6 +204,63 @@ def test_copy_cleanup_and_ascii_boundary_rewrite(tmp_path: Path):
     assert "Umean 2" in dictionary
     assert not (target / "0" / "phi").exists()
     assert not (target / "0" / "uniform").exists()
+
+
+def test_same_decomposition_copies_and_verifies_all_fields_per_rank(tmp_path: Path):
+    source, target = tmp_path / "source", tmp_path / "target"
+    for rank in range(2):
+        source_time = source / f"processor{rank}" / "20"
+        target_zero = target / f"processor{rank}" / "0"
+        source_time.mkdir(parents=True)
+        target_zero.mkdir(parents=True)
+        for name in ("alpha.water", "U", "p_rgh", "k", "omega", "nut"):
+            (source_time / name).write_text(WARM_FIELD.replace("object U", f"object {name}"))
+            (target_zero / name).write_text(FIELD.replace("object U", f"object {name}"))
+    (source / "20").mkdir()
+    (source / "20" / "p").write_text(FIELD)
+    (target / "0").mkdir(parents=True)
+    (target / "0" / "sentinel").write_text("serial zero must be untouched\n")
+
+    layout = clean_restart(source / "20", target)
+
+    assert layout == (target / "processor0" / "0", target / "processor1" / "0")
+    assert (target / "0" / "sentinel").exists()
+    verify_warm_fields(layout)
+    for zero in layout:
+        assert set(path.name for path in zero.iterdir()) == set(
+            ("alpha.water", "U", "p_rgh", "k", "omega", "nut")
+        )
+        assert all("nonuniform List" in (zero / field).read_text()
+                   for field in ("alpha.water", "U", "p_rgh", "k", "omega", "nut"))
+
+
+def test_missing_warm_field_writes_cold_fallback_and_restores_cold(tmp_path: Path, monkeypatch):
+    source, target = tmp_path / "source", tmp_path / "target"
+    source_time = source / "20"
+    source_time.mkdir(parents=True)
+    target.mkdir()
+    (target / "0").mkdir()
+    (target / "0" / "sentinel").write_text("cold\n")
+    for name in ("alpha.water", "p_rgh", "k", "omega", "nut"):
+        (source_time / name).write_text(WARM_FIELD.replace("object U", f"object {name}"))
+    record = tmp_path / "records"
+    record.mkdir()
+    (record / "level_default.yml").write_text("n_cold: 5000\n")
+    passing = GateVerdict(tuple(GateCheck(identifier, True, "ok") for identifier in
+                                ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A9")))
+    monkeypatch.setattr("digitalmodel.solvers.openfoam.warm_start.cli.evaluate", lambda *a, **k: passing)
+    monkeypatch.setattr("digitalmodel.solvers.openfoam.warm_start.fields.run", lambda *a, **k: None)
+
+    rc = main([
+        "prepare", "--target", str(target), "--from", "case", "--hop", "speed",
+        "--source", str(source), "--record", str(record), "--calibrate",
+    ])
+
+    assert rc == 2
+    assert (target / "0" / "sentinel").read_text() == "cold\n"
+    marker = (target / "COLD_FALLBACK").read_text()
+    assert "required warm field missing" in marker
+    assert "U" in marker
 
 
 def test_record_update(tmp_path: Path):
