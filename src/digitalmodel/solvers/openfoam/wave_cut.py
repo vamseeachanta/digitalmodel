@@ -41,27 +41,38 @@ def _is_iso_surface(rows: Iterable[tuple[float, float, float, float]]) -> bool:
 
 
 def extract_eta(rows, waterline: float, bin_width: float) -> list[tuple[float, float]]:
-    """Bin a vertical cut by x and interpolate its alpha=0.5 elevation."""
-    columns: dict[float, list[tuple[float, float]]] = {}
-    for row in rows:
-        columns.setdefault(round(row[0], 9), []).append((row[2], row[3]))
+    """Bin a vertical cut and bracket the water-to-air alpha crossing."""
+    band = [row for row in rows if abs(row[2] - waterline) <= 3.0]
+    columns: dict[int, list[tuple[float, float, float]]] = {}
+    for x, _y, z, alpha in band:
+        columns.setdefault(math.floor(x / bin_width), []).append((x, z, alpha))
     crossings = []
-    for x, column in columns.items():
-        column.sort()
-        candidates = []
-        for (z0, a0), (z1, a1) in zip(column, column[1:]):
-            if (a0 - 0.5) * (a1 - 0.5) > 0.0 or a0 == a1:
-                continue
-            candidates.append(z0 + (0.5 - a0) * (z1 - z0) / (a1 - a0))
-        if candidates:
-            crossings.append((x, _median(candidates)))
-    bins: dict[int, list[tuple[float, float]]] = {}
-    for x, z in crossings:
-        bins.setdefault(math.floor(x / bin_width + 1.0e-9), []).append((x, z))
-    profile = []
-    for points in bins.values():
-        profile.append((sum(point[0] for point in points) / len(points),
-                        sum(point[1] for point in points) / len(points) - waterline))
+    indices = sorted(columns)
+    for index in indices:
+        samples = list(columns[index])
+        # Sparse edge bins are widened symmetrically in whole-bin increments.
+        radius = 1
+        while len(samples) < 3 and radius <= len(indices):
+            samples.extend(columns.get(index - radius, ()))
+            samples.extend(columns.get(index + radius, ()))
+            radius += 1
+        if len(samples) < 3:
+            continue
+        samples.sort(key=lambda item: item[1])
+        water = [sample for sample in samples if sample[2] >= 0.5]
+        if not water:
+            continue
+        lower = max(water, key=lambda item: item[1])
+        air = [sample for sample in samples
+               if sample[1] > lower[1] and sample[2] < 0.5]
+        if not air:
+            continue
+        upper = min(air, key=lambda item: item[1])
+        z = lower[1] + ((0.5 - lower[2]) * (upper[1] - lower[1])
+                        / (upper[2] - lower[2]))
+        x = sum(sample[0] for sample in samples) / len(samples)
+        crossings.append((x, z - waterline))
+    profile = crossings
     profile.sort()
     if len(profile) < 2:
         raise ValueError("cut has fewer than two alpha=0.5 crossings")
@@ -118,18 +129,37 @@ def _rms_bins(profile, stern: float, width: float) -> list[dict]:
 
 
 def summarize_cut(profile, stern: float, wavelength: float) -> dict:
-    astern = [point for point in profile if point[0] <= stern]
+    astern = [point for point in profile if point[0] < stern]
+    hull = [point for point in profile if point[0] >= stern]
     if not astern:
         raise ValueError(f"no wave-cut points astern of stern x={stern}")
-    crest = max(astern, key=lambda point: point[1])
-    trough = min(astern, key=lambda point: point[1])
+    def extrema(points):
+        if not points:
+            return None
+        crest = max(points, key=lambda point: point[1])
+        trough = min(points, key=lambda point: point[1])
+        return {"crest": {"x_m": crest[0], "eta_m": crest[1]},
+                "trough": {"x_m": trough[0], "eta_m": trough[1]}}
+    decay = _rms_bins(astern, stern, wavelength)
+    zero_wavelength = _crossing_wavelength(astern)
+    eta = [point[1] for point in profile]
+    first_rms = decay[0]["rms_eta_m"] if decay else None
     return {
         "point_count": len(profile),
-        "crest": {"x_m": crest[0], "eta_m": crest[1]},
-        "trough": {"x_m": trough[0], "eta_m": trough[1]},
-        "dominant_wavelength_zero_crossing_m": _crossing_wavelength(astern),
+        "eta_min_m": min(eta), "eta_max_m": max(eta),
+        "astern": extrema(astern),
+        "hull_region": extrema(hull),
+        "dominant_wavelength_zero_crossing_m": zero_wavelength,
         "dominant_wavelength_fft_m": _fft_wavelength(astern),
-        "amplitude_decay": _rms_bins(astern, stern, wavelength),
+        "amplitude_decay": decay,
+        "plausibility_checks": {
+            "eta_range_within_1p5_m": min(eta) >= -1.5 and max(eta) <= 1.5,
+            "first_lambda_rms_0p1_to_0p5_m": (
+                first_rms is not None and 0.1 <= first_rms <= 0.5),
+            "zero_crossing_wavelength_within_15_percent": (
+                zero_wavelength is not None
+                and abs(zero_wavelength - wavelength) <= 0.15 * wavelength),
+        },
     }
 
 
@@ -150,6 +180,16 @@ def summarize_iso(rows, waterline: float, stern: float, wavelength: float) -> di
                for index, values in sorted(bins.items())]
     return {"kind": "iso_surface", "radial_bin_width_m": width,
             "wedge_half_angle_deg": 45.0, "wedge_rms": metrics}
+
+
+def extract_iso_eta(rows, waterline: float, bin_width: float):
+    """Average alpha=0.5 iso-surface elevations in x bins."""
+    bins: dict[int, list[tuple[float, float]]] = {}
+    for x, _y, z, _alpha in rows:
+        bins.setdefault(math.floor(x / bin_width), []).append((x, z - waterline))
+    return sorted((sum(x for x, _ in points) / len(points),
+                   sum(eta for _, eta in points) / len(points))
+                  for points in bins.values())
 
 
 def _write_csv(path: Path, profile) -> None:
@@ -215,8 +255,13 @@ def reduce_files(inputs: Mapping[str, str | Path], out_dir: str | Path,
     for label, path in inputs.items():
         rows = read_raw(path)
         if _is_iso_surface(rows):
-            summary["iso_surfaces"][label] = summarize_iso(
-                rows, waterline, stern, wavelength)
+            iso_profile = extract_iso_eta(rows, waterline, bin_width)
+            iso_summary = summarize_iso(rows, waterline, stern, wavelength)
+            iso_summary.update({"point_count": len(iso_profile),
+                                "eta_min_m": min(eta for _, eta in iso_profile),
+                                "eta_max_m": max(eta for _, eta in iso_profile)})
+            summary["iso_surfaces"][label] = iso_summary
+            _write_csv(out / f"{label}.csv", iso_profile)
         else:
             profile = extract_eta(rows, waterline, bin_width)
             profiles[label] = profile
@@ -248,8 +293,16 @@ def main(argv=None) -> int:
             raise SystemExit(f"input must be LABEL=PATH: {item}")
         label, path = item.split("=", 1)
         inputs[label] = Path(path)
-    reduce_files(inputs, args.out, args.waterline, args.stern,
-                 args.wavelength, args.bin_width)
+    summary = reduce_files(inputs, args.out, args.waterline, args.stern,
+                           args.wavelength, args.bin_width)
+    for label, cut in summary["cuts"].items():
+        checks = cut["plausibility_checks"]
+        print(f"{label}: eta=[{cut['eta_min_m']:.3f}, {cut['eta_max_m']:.3f}] m; "
+              f"lambda0={cut['dominant_wavelength_zero_crossing_m']!r} m")
+        for name, passed in checks.items():
+            print(f"  {'PASS' if passed else 'FAIL'} {name}")
+    for label, iso in summary["iso_surfaces"].items():
+        print(f"{label}: eta=[{iso['eta_min_m']:.3f}, {iso['eta_max_m']:.3f}] m")
     return 0
 
 
