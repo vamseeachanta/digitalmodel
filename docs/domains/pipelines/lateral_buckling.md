@@ -47,3 +47,10 @@ Objective:  Estimate the thermal movement and associated reaction forces for sin
 - Route
   - lay tension
   - Route Curve radius
+
+## Closed-form post-buckling
+
+The screening above says whether a line is susceptible. For buckle length,
+amplitude, bending moment and combined stress once it has buckled, see
+[Hobbs closed-form lateral buckling](hobbs-lateral-buckling.md)
+(`digitalmodel.subsea.pipeline.global_buckling`).
