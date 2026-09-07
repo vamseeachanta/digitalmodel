@@ -90,6 +90,27 @@ def _crossing_wavelength(profile: list[tuple[float, float]]) -> float | None:
     return _median(spans) if spans else None
 
 
+def _crest_wavelength(profile: list[tuple[float, float]]) -> float | None:
+    """Return median crest spacing after demeaning and light smoothing."""
+    if len(profile) < 5:
+        return None
+    x = [point[0] for point in profile]
+    eta = [point[1] for point in profile]
+    mean = sum(eta) / len(eta)
+    demeaned = [value - mean for value in eta]
+    # A centred three-point moving average suppresses one-cell VOF stair steps
+    # without materially shifting a resolved crest.
+    smooth = demeaned[:]
+    for index in range(1, len(demeaned) - 1):
+        smooth[index] = sum(demeaned[index - 1:index + 2]) / 3.0
+    crests = [x[index] for index in range(1, len(x) - 1)
+              if smooth[index] > 0.0
+              and smooth[index] > smooth[index - 1]
+              and smooth[index] >= smooth[index + 1]]
+    spacings = [right - left for left, right in zip(crests, crests[1:])]
+    return _median(spacings) if spacings else None
+
+
 def _median(values: list[float]) -> float:
     ordered = sorted(values)
     middle = len(ordered) // 2
@@ -128,7 +149,8 @@ def _rms_bins(profile, stern: float, width: float) -> list[dict]:
             for index, values in sorted(bins.items())]
 
 
-def summarize_cut(profile, stern: float, wavelength: float) -> dict:
+def summarize_cut(profile, stern: float, wavelength: float,
+                  quantisation_uncertainty: float | None = None) -> dict:
     astern = [point for point in profile if point[0] < stern]
     hull = [point for point in profile if point[0] >= stern]
     if not astern:
@@ -142,23 +164,26 @@ def summarize_cut(profile, stern: float, wavelength: float) -> dict:
                 "trough": {"x_m": trough[0], "eta_m": trough[1]}}
     decay = _rms_bins(astern, stern, wavelength)
     zero_wavelength = _crossing_wavelength(astern)
+    crest_wavelength = _crest_wavelength(astern)
     eta = [point[1] for point in profile]
     first_rms = decay[0]["rms_eta_m"] if decay else None
     return {
         "point_count": len(profile),
+        "eta_quantisation_uncertainty_m": quantisation_uncertainty,
         "eta_min_m": min(eta), "eta_max_m": max(eta),
         "astern": extrema(astern),
         "hull_region": extrema(hull),
         "dominant_wavelength_zero_crossing_m": zero_wavelength,
+        "dominant_wavelength_crest_spacing_m": crest_wavelength,
         "dominant_wavelength_fft_m": _fft_wavelength(astern),
         "amplitude_decay": decay,
         "plausibility_checks": {
             "eta_range_within_1p5_m": min(eta) >= -1.5 and max(eta) <= 1.5,
             "first_lambda_rms_0p1_to_0p5_m": (
                 first_rms is not None and 0.1 <= first_rms <= 0.5),
-            "zero_crossing_wavelength_within_15_percent": (
-                zero_wavelength is not None
-                and abs(zero_wavelength - wavelength) <= 0.15 * wavelength),
+            "crest_spacing_wavelength_within_15_percent": (
+                crest_wavelength is not None
+                and abs(crest_wavelength - wavelength) <= 0.15 * wavelength),
         },
     }
 
@@ -180,6 +205,24 @@ def summarize_iso(rows, waterline: float, stern: float, wavelength: float) -> di
                for index, values in sorted(bins.items())]
     return {"kind": "iso_surface", "radial_bin_width_m": width,
             "wedge_half_angle_deg": 45.0, "wedge_rms": metrics}
+
+
+def _vertical_quantisation(rows, waterline: float) -> float | None:
+    """Infer the free-surface vertical sampling uncertainty, ``dz / 2``."""
+    levels = sorted({z for _x, _y, z, _alpha in rows
+                     if abs(z - waterline) <= 3.0})
+    steps = [right - left for left, right in zip(levels, levels[1:])
+             if right - left > 1.0e-12]
+    return _median(steps) / 2.0 if steps else None
+
+
+def _amplitude_statistics(profile) -> dict:
+    eta = [value for _x, value in profile]
+    mean = sum(eta) / len(eta)
+    return {"mean_eta_m": mean, "crest_amplitude_m": max(eta) - mean,
+            "trough_amplitude_m": mean - min(eta),
+            "rms_about_mean_m": math.sqrt(sum((value - mean) ** 2 for value in eta)
+                                            / len(eta))}
 
 
 def extract_iso_eta(rows, waterline: float, bin_width: float):
@@ -252,6 +295,7 @@ def reduce_files(inputs: Mapping[str, str | Path], out_dir: str | Path,
                "reference_wavelength_m": wavelength, "bin_width_m": bin_width,
                "cuts": {}, "iso_surfaces": {}}
     profiles = {}
+    amplitude_candidates = []
     for label, path in inputs.items():
         rows = read_raw(path)
         if _is_iso_surface(rows):
@@ -259,16 +303,30 @@ def reduce_files(inputs: Mapping[str, str | Path], out_dir: str | Path,
             iso_summary = summarize_iso(rows, waterline, stern, wavelength)
             iso_summary.update({"point_count": len(iso_profile),
                                 "eta_min_m": min(eta for _, eta in iso_profile),
-                                "eta_max_m": max(eta for _, eta in iso_profile)})
+                                "eta_max_m": max(eta for _, eta in iso_profile),
+                                "dominant_wavelength_crest_spacing_m":
+                                    _crest_wavelength(iso_profile),
+                                "amplitude_statistics": _amplitude_statistics(iso_profile)})
             summary["iso_surfaces"][label] = iso_summary
+            amplitude_candidates.append(("iso_surface", label,
+                                         iso_summary["amplitude_statistics"]))
             _write_csv(out / f"{label}.csv", iso_profile)
         else:
             profile = extract_eta(rows, waterline, bin_width)
             profiles[label] = profile
-            summary["cuts"][label] = summarize_cut(profile, stern, wavelength)
+            summary["cuts"][label] = summarize_cut(
+                profile, stern, wavelength, _vertical_quantisation(rows, waterline))
+            summary["cuts"][label]["amplitude_statistics"] = _amplitude_statistics(profile)
+            amplitude_candidates.append(("cut", label,
+                                         summary["cuts"][label]["amplitude_statistics"]))
             _write_csv(out / f"{label}.csv", profile)
     if profiles:
         _plot(out / "wave_cut.svg", profiles, stern, wavelength)
+    if amplitude_candidates:
+        preferred = next((item for item in amplitude_candidates if item[0] == "iso_surface"),
+                         amplitude_candidates[0])
+        summary["preferred_amplitude_statistics"] = {
+            "source_kind": preferred[0], "source_label": preferred[1], **preferred[2]}
     (out / "summary.json").write_text(
         json.dumps(summary, indent=2, allow_nan=False) + "\n", encoding="utf-8")
     return summary
@@ -297,8 +355,12 @@ def main(argv=None) -> int:
                            args.wavelength, args.bin_width)
     for label, cut in summary["cuts"].items():
         checks = cut["plausibility_checks"]
+        uncertainty = cut["eta_quantisation_uncertainty_m"]
+        quantisation = (f"; eta quantisation=±{uncertainty:.3f} m"
+                        if uncertainty is not None else "")
         print(f"{label}: eta=[{cut['eta_min_m']:.3f}, {cut['eta_max_m']:.3f}] m; "
-              f"lambda0={cut['dominant_wavelength_zero_crossing_m']!r} m")
+              f"lambda_crest={cut['dominant_wavelength_crest_spacing_m']!r} m"
+              f"{quantisation}")
         for name, passed in checks.items():
             print(f"  {'PASS' if passed else 'FAIL'} {name}")
     for label, iso in summary["iso_surfaces"].items():

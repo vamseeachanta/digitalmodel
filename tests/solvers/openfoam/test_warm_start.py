@@ -337,6 +337,32 @@ def test_prepare_exception_after_copy_restores_cold_records_failure_and_relaunch
     assert launches and launches[-1][0] == "cold-command"
 
 
+def test_refused_run_with_relaunch_starts_cold_and_records_not_attempted(
+        tmp_path: Path, monkeypatch):
+    source, target = tmp_path / "source", tmp_path / "target"
+    source.mkdir(); target.mkdir()
+    record = tmp_path / "records"; record.mkdir()
+    (record / "level_default.yml").write_text("n_cold: 5000\n")
+    refused = GateVerdict((GateCheck("A1", False, "source unsettled"),))
+    monkeypatch.setattr("digitalmodel.solvers.openfoam.warm_start.cli.evaluate",
+                        lambda *args, **kwargs: refused)
+    launches = []
+    monkeypatch.setattr("digitalmodel.solvers.openfoam.warm_start.cli.subprocess.Popen",
+                        lambda command, **kwargs: launches.append((command, kwargs)))
+
+    rc = main(["run", "--target", str(target), "--from", "case", "--hop", "speed",
+               "--source", str(source), "--record", str(record), "--calibrate",
+               "--relaunch", "cold-stub --marker SAME"])
+
+    assert rc == 0
+    assert launches == [("cold-stub --marker SAME", {
+        "cwd": target.resolve(), "shell": True, "start_new_session": True})]
+    assert "COLD_BY_GATE A1" in (target / "COLD_FALLBACK").read_text()
+    hop = yaml.safe_load((record / "record_speed_default.yml").read_text())["hops"][-1]
+    assert hop["decision"] == "COLD_BY_GATE"
+    assert hop["outcome"] == "NOT_ATTEMPTED"
+
+
 def test_a1_accepts_fit_and_latest_cycle_mean_within_two_percent(tmp_path: Path, monkeypatch):
     source, target = tmp_path / "source", tmp_path / "target"
     source.mkdir(); target.mkdir()

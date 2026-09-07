@@ -9,15 +9,17 @@ import pytest
 from digitalmodel.solvers.openfoam.wave_cut import reduce_files
 
 
-def _write_plane(path, wavelength=10.0, amplitude=0.4, waterline=3.0):
+def _write_plane(path, wavelength=10.0, amplitude=0.4, waterline=3.0,
+                 mean_eta=0.0, dz=0.005):
     rows = []
-    z_levels = [waterline - 1.2 + i * 0.005 for i in range(481)]
+    z_levels = [waterline - 1.2 + i * dz for i in range(int(2.4 / dz) + 1)]
     for i in range(81):
         # Deliberately use one vertical sample per x coordinate.  Real sampled
         # planes contain discrete cell-centre z levels whose x coordinates do
         # not form exact vertical columns.
         base_x = -19.75 + i * 0.5
-        surface = waterline + amplitude * math.sin(2.0 * math.pi * base_x / wavelength)
+        surface = (waterline + mean_eta
+                   + amplitude * math.sin(2.0 * math.pi * base_x / wavelength))
         for level, z in enumerate(z_levels):
             x = base_x + (level % 3 - 1) * 0.006
             alpha = 1.0 if z <= surface else 0.0
@@ -99,3 +101,26 @@ def test_plane_ignores_crossings_outside_free_surface_band(tmp_path):
         wavelength=10.0, bin_width=0.5,
     )
     assert summary["cuts"]["cut"]["eta_max_m"] == pytest.approx(0.4, rel=0.02)
+
+
+def test_quantised_positive_mean_uses_demeaned_crest_spacing(tmp_path):
+    raw = tmp_path / "quantised.raw"
+    _write_plane(raw, mean_eta=0.23, dz=0.15)
+    summary = reduce_files({"cut": raw}, tmp_path / "out", 3.0, 20.1, 10.0, 0.5)
+
+    cut = summary["cuts"]["cut"]
+    assert cut["eta_quantisation_uncertainty_m"] == pytest.approx(0.075)
+    assert cut["dominant_wavelength_crest_spacing_m"] == pytest.approx(10.0, rel=0.05)
+    assert cut["plausibility_checks"]["crest_spacing_wavelength_within_15_percent"]
+
+
+def test_iso_surface_is_preferred_for_amplitude_statistics(tmp_path):
+    plane, iso = tmp_path / "cut.raw", tmp_path / "iso.raw"
+    _write_plane(plane, amplitude=0.2)
+    _write_iso(iso, amplitude=0.4)
+    summary = reduce_files({"cut": plane, "iso": iso}, tmp_path / "out",
+                           3.0, 20.1, 10.0, 0.5)
+    preferred = summary["preferred_amplitude_statistics"]
+    assert preferred["source_kind"] == "iso_surface"
+    assert preferred["source_label"] == "iso"
+    assert preferred["crest_amplitude_m"] == pytest.approx(0.4, rel=0.02)

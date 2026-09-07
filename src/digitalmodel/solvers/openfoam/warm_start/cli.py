@@ -161,7 +161,19 @@ def plan_or_prepare(args) -> int:
             return 3
     if args.command != "plan" and not args.dry_run:
         if not gate.passed:
-            (target / "COLD_FALLBACK").write_text(block + "\n")
+            marker = gate.render() + "\n" + block + "\n"
+            (target / "COLD_FALLBACK").write_text(marker)
+            store.append({"id": f"{timestamp()}_{target.name}",
+                          "source": source.name if source else None,
+                          "target": target.name, "decision": "COLD_BY_GATE",
+                          "ev": None, "outcome": "NOT_ATTEMPTED",
+                          "iterations": None, "reason": gate.first_failure})
+            append_ledger(ledger, _ledger_values(
+                args, None, "WARM_NOT_ATTEMPTED", reason=gate.first_failure))
+            if args.command == "run" and args.relaunch:
+                subprocess.Popen(args.relaunch, cwd=target, shell=True,
+                                 start_new_session=True)
+                return 0
             return 3
         if decision.decision == "COLD_BY_EV":
             (target / "COLD_FALLBACK").write_text(block + "\n")
