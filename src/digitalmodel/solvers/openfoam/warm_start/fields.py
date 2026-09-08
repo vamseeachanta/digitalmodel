@@ -1,6 +1,8 @@
 """OpenFOAM field preparation; external utilities are deliberately subprocess boundaries."""
 from __future__ import annotations
 
+import contextlib
+
 import re
 import shutil
 import subprocess
@@ -299,6 +301,27 @@ def _verify_changes(target: Path, intended: dict[tuple[str, str], str],
                                    f"expected {expected!r}, got {actual!r}")
 
 
+@contextlib.contextmanager
+def ascii_write_format(target: Path):
+    """Force ``writeFormat ascii`` in controlDict for the duration of a field edit.
+
+    changeDictionary writes patch values in the case writeFormat; with ``binary`` the
+    rewritten boundary lists are binary blobs that the text-based verification cannot
+    decode (calibration hop 2026-09-08, UnicodeDecodeError).  The original text is
+    restored afterwards so the solver keeps its configured checkpoint format.
+    """
+    path = target / "system" / "controlDict"
+    original = path.read_text()
+    forced, count = re.subn(r"(?m)^(\s*writeFormat\s+)binary\s*;", r"\g<1>ascii;", original)
+    if count:
+        path.write_text(forced)
+    try:
+        yield
+    finally:
+        if count:
+            path.write_text(original)
+
+
 def rewrite_speed_fields(target: Path, dry_run=False) -> None:
     dictionary, intended = _change_dictionary_dict(target)
     _validate_dictionary(dictionary)
@@ -307,10 +330,13 @@ def rewrite_speed_fields(target: Path, dry_run=False) -> None:
     command = ["changeDictionary", "-time", "0", "-enableFunctionEntries"]
     if processors:
         command = ["mpirun", "-np", str(len(processors)), *command, "-parallel"]
-    run(command, target, dry_run=dry_run)
-    if not dry_run:
+    if dry_run:
+        run(command, target, dry_run=True)
+        return
+    with ascii_write_format(target):
+        run(command, target)
         _verify_changes(target, intended, zeros)
-        verify_warm_fields(zeros)
+    verify_warm_fields(zeros)
 
 
 def reset_control(target: Path, n_cold: int) -> None:
