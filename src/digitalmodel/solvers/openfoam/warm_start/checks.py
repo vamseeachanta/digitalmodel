@@ -1,7 +1,6 @@
 """Checkpoint rules R1--R6 and automatic cold fallback."""
 from __future__ import annotations
 
-import os
 import re
 import shutil
 import subprocess
@@ -38,6 +37,23 @@ def power_gate(total: np.ndarray, pressure: np.ndarray, window=400) -> bool:
     drift = abs(a-b) / max(abs(b), 1e-12)
     wobble = pressure[-window:].max() - pressure[-window:].min()
     return drift < .01 and wobble < .02 * max(abs(b), 1e-12)
+
+
+def cold_reference_statistics(case_or_force: Path) -> dict:
+    """Reduce a cold history to the checkpoint reference bundle."""
+    path = Path(case_or_force)
+    reduced = analyse(path, start=0)
+    extrema = reduced.get("extrema", [])
+    cycles = reduced.get("cycles", [])
+    if len(extrema) < 3 or not cycles:
+        raise ValueError(f"cold reference {path} needs at least 3 pressure extrema")
+    first_three = [float(item[1]) for item in extrema[:3]]
+    settling = reduced.get("iteration_amp_below_pct", cycles[0]["to"])
+    return {
+        "first_cycle_amplitude_pressure": max(first_three) - min(first_three),
+        "settled_viscous": float(cycles[0]["viscous"]),
+        "cold_settling_iteration": int(round(float(settling))),
+    }
 
 
 def evaluate_checkpoint(case: Path, reference: dict, *, n_cold: int,
@@ -91,10 +107,18 @@ def stop_and_fallback(case: Path, reason: str, relaunch: str | None = None,
     subprocess.run(["foamDictionary", "system/controlDict", "-entry", "stopAt", "-set", "writeNow"],
                    cwd=case, check=True)
     if pid:
-        while Path(f"/proc/{pid}/cwd").exists():
+        proc_cwd = Path(f"/proc/{pid}/cwd")
+        while proc_cwd.exists():
+            try:
+                if proc_cwd.resolve() != case.resolve():
+                    break
+            except OSError:
+                break
             time.sleep(1)
+    (case / "WARM_ABORTED").write_text(reason + "\n")
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    archive = case / f"warm_attempt_{stamp}"; archive.mkdir()
+    archive = case / f"warm_attempt_{stamp}"
+    archive.mkdir()
     for log in case.glob("log*"):
         shutil.move(str(log), archive / log.name)
     if (case / "postProcessing").exists():
@@ -102,9 +126,8 @@ def stop_and_fallback(case: Path, reason: str, relaunch: str | None = None,
     if (case / "0").exists():
         shutil.rmtree(case / "0")
     shutil.copytree(case / "0.cold", case / "0")
-    (case / "WARM_ABORTED").write_text(reason + "\n")
     (case / "COLD_FALLBACK").write_text(reason + "\n")
-    command = relaunch or str(case / "solve_chain.sh")
-    subprocess.Popen(command, cwd=case, shell=True, start_new_session=True,
-                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if relaunch:
+        subprocess.Popen(relaunch, cwd=case, shell=True, start_new_session=True,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return archive

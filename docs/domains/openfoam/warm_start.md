@@ -19,7 +19,8 @@ scripts/cfd/warm_start.py --from geometry SOURCE --target CASE --mesh-level L2 -
 scripts/cfd/warm_start.py plan --dry-run --from case --hop speed --source SOURCE --target CASE --mesh-level r3 --source-mesh-level r3
 scripts/cfd/warm_start.py --from potential --target CASE --mesh-level L2 --calibrate
 scripts/cfd/warm_start.py --from analytic --eta eta.csv --u velocity.csv --target CASE --mesh-level L2 --calibrate
-scripts/cfd/warm_start.py check --target CASE --mesh-level L2
+scripts/cfd/warm_start.py check --target CASE --mesh-level L2 --cold-ref COLD_CASE
+scripts/cfd/warm_start.py record add-cold --case COLD_CASE --mesh-level L2
 scripts/cfd/warm_start.py record --record CAMPAIGN/warm_start
 ```
 
@@ -28,7 +29,11 @@ The section-8 spelling is also supported: `prepare --from case --hop speed|geome
 to prepare and launch the case's `solve_chain.sh`. `--dry-run` prints the verdict,
 expected-value calculation, and exact commands. `--relaunch COMMAND` overrides the case
 driver. Reference data live in `warm_start/level_<tag>.yml`; `--n-cold` may supply the
-level budget explicitly.
+level budget explicitly. `record add-cold` reduces a cold history with at least three
+pressure extrema and stores its first-cycle pressure amplitude, settled viscous force,
+and settling iteration for that level. At check time `--cold-ref` takes precedence,
+followed by the source case recorded by the warm hop, then the per-level record. If none
+can provide all three statistics, the command prints one error line and exits 2.
 
 ## The three safety layers
 
@@ -82,9 +87,10 @@ level.
 Layer 3 evaluates R1--R6 at every 400-iteration write: pressure excursion, viscous level,
 force asymptotes, mass/solver health, POWER GATE success, and the `N_cold` cap. POWER GATE
 means total force changes by less than 1% between two 400-iteration windows and pressure
-wobble is below 2% of total. An early abort requests `stopAt writeNow`, waits using the
-known PID's `/proc/<pid>/cwd`, archives only logs and force output, restores `0.cold`, and
-launches the normal cold chain.
+wobble is below 2% of total. With `--act`, an abort requests `stopAt writeNow`, waits using
+the known PID's `/proc/<pid>/cwd`, writes `WARM_ABORTED`, archives only logs and force
+output, restores `0.cold`, and launches `--relaunch` when supplied. Without `--act`, check
+is read-only.
 
 ## Markers and scheduling
 
@@ -96,8 +102,9 @@ The matrix scheduler must call the checkpoint command after every solver write, 
 at the nominal abort point:
 
 ```bash
-scripts/cfd/warm_start.py check --target "$case" --mesh-level "$level" --fallback --pid "$solver_pid"
+scripts/cfd/warm_start.py check --target "$case" --mesh-level "$level" --act --pid "$solver_pid" --relaunch "$cold_command"
 ```
 
-Exit 0 means CONTINUE or OK, 3 is cold by admissibility, 4 is cold by EV, 5 means the warm
-attempt aborted and cold fallback launched, and 2 is a usage or I/O failure.
+The command prints exactly one `CONTINUE|ABORT|OK reason` verdict line. Exit 0 means
+CONTINUE or OK, 3 means ABORT, and 2 means missing reference input or another usage/I/O
+failure. Plan/run retain exit 3 for cold by admissibility and exit 4 for cold by EV.

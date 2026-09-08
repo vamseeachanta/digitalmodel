@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import argparse
-import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -12,7 +12,7 @@ from pathlib import Path
 import yaml
 
 from .admissibility import evaluate
-from .checks import evaluate_checkpoint, stop_and_fallback
+from .checks import cold_reference_statistics, evaluate_checkpoint, stop_and_fallback
 from .decision import decide
 from .fields import (KEEP_FIELDS, clean_restart, prepare_analytic, prepare_geometry,
                      prepare_potential, resharpen_alpha, reset_control,
@@ -56,8 +56,8 @@ def _campaign(target: Path) -> Path:
 
 
 def _reference(args, target: Path) -> tuple[dict, Path]:
-    campaign = _campaign(target)
-    reference_dir = Path(args.record) if args.record else campaign / "warm_start"
+    reference_dir = (Path(args.record) if args.record
+                     else _campaign(target) / "warm_start")
     path = reference_dir / f"level_{args.mesh_level}.yml"
     data = yaml.safe_load(path.read_text()) if path.exists() else {}
     if args.n_cold:
@@ -103,12 +103,16 @@ def parser() -> argparse.ArgumentParser:
         p.add_argument("--relaunch"); p.add_argument("--rescale-u", action="store_true")
     check = sub.add_parser("check", aliases=["monitor"])
     check.add_argument("--target", type=Path, required=True); check.add_argument("--mesh-level", default="default")
+    check.add_argument("--cold-ref", type=Path)
     check.add_argument("--n-cold", type=int); check.add_argument("--n-abort", type=int)
     check.add_argument("--checkpoint", type=int, default=400); check.add_argument("--hop", default="speed")
     check.add_argument("--record", type=Path); check.add_argument("--ledger", type=Path)
-    check.add_argument("--relaunch"); check.add_argument("--pid", type=int); check.add_argument("--fallback", action="store_true")
+    check.add_argument("--relaunch"); check.add_argument("--pid", type=int)
+    check.add_argument("--act", action="store_true"); check.add_argument("--fallback", action="store_true", help=argparse.SUPPRESS)
     rec = sub.add_parser("record")
-    rec.add_argument("--record", type=Path, required=True); rec.add_argument("--hop", choices=("speed", "geometry", "potential", "analytic"))
+    rec.add_argument("action", nargs="?", choices=("add-cold",))
+    rec.add_argument("--record", type=Path); rec.add_argument("--case", type=Path)
+    rec.add_argument("--hop", choices=("speed", "geometry", "potential", "analytic"))
     rec.add_argument("--mesh-level", default="default"); rec.add_argument("--n-cold", type=int, default=5000)
     rec.add_argument("--outcome", choices=("WARM_OK", "WARM_ABORTED", "WARM_FAILED_CAP")); rec.add_argument("--iterations", type=int)
     rec.add_argument("--target"); rec.add_argument("--source"); rec.add_argument("--reason"); rec.add_argument("--rebuild", action="store_true")
@@ -212,6 +216,8 @@ def plan_or_prepare(args) -> int:
             prepare_analytic(target, args.eta, args.u)
         reset_control(target, n_cold)
         marker = gate.render() + "\n" + block + "\n"
+        if source:
+            marker += f"source_path={source.resolve()}\n"
         (target / "WARM_PLANNED").write_text(marker)
         store.append({"id": f"{timestamp()}_{target.name}", "source": source.name if source else None,
                       "target": target.name, "decision": decision.decision, "ev": decision.__dict__,
@@ -258,22 +264,83 @@ def _print_commands(args, hop, n_cold):
     print(f"CONTROL: startFrom startTime; startTime 0; endTime {n_cold}; stopAt endTime; runTimeModifiable true")
 
 
+_COLD_KEYS = ("first_cycle_amplitude_pressure", "settled_viscous",
+              "cold_settling_iteration")
+
+
+def _source_case(target: Path) -> Path | None:
+    for marker_name in ("WARM_RUNNING", "WARM_PLANNED"):
+        marker = target / marker_name
+        if not marker.exists():
+            continue
+        text = marker.read_text(errors="ignore")
+        match = re.search(r"(?m)^source_path=(.+)$", text)
+        if match:
+            return Path(match.group(1).strip())
+        match = re.search(r"\bsource=([^\s]+)", text)
+        if match and match.group(1) != "-":
+            name = match.group(1)
+            for candidate in (target.parent / name, _campaign(target) / "cases" / name):
+                if candidate.exists():
+                    return candidate
+    return None
+
+
+def _checkpoint_reference(args, target: Path, recorded: dict, level_path: Path) -> dict:
+    if args.cold_ref:
+        return {**recorded, **cold_reference_statistics(args.cold_ref)}
+    source = _source_case(target)
+    if source is not None:
+        try:
+            return {**recorded, **cold_reference_statistics(source)}
+        except (OSError, ValueError):
+            pass
+    if all(recorded.get(key) is not None for key in _COLD_KEYS):
+        return recorded
+    raise ValueError(
+        "missing cold reference statistics; pass --cold-ref <case-or-force.dat>, "
+        f"provide the warm source history, or create {level_path} with record add-cold"
+    )
+
+
 def check(args) -> int:
-    target = args.target.resolve(); reference, record_dir = _reference(args, target)
+    target = args.target.resolve()
+    recorded, record_dir = _reference(args, target)
+    level_path = record_dir / f"level_{args.mesh_level}.yml"
+    reference = _checkpoint_reference(args, target, recorded, level_path)
     n_cold = int(reference["n_cold"]); n_abort = args.n_abort or int((n_cold/3)//args.checkpoint*args.checkpoint)
     result = evaluate_checkpoint(target, reference, n_cold=n_cold, n_abort=n_abort,
                                  checkpoint=args.checkpoint, hop=args.hop)
-    print(f"{result.verdict}: iteration={result.iteration} reason={result.reason or '-'}")
-    for detail in result.details: print(" ", detail)
-    if result.verdict == "OK": (target / "WARM_OK").write_text(f"iterations={result.iteration}\n")
-    elif result.verdict == "ABORT":
-        marker = "WARM_FAILED_CAP" if result.reason == "cap" else "WARM_ABORTED"
-        (target / marker).write_text(f"{result.reason} iterations={result.iteration}\n")
-        if args.fallback and result.reason != "cap": stop_and_fallback(target, result.reason, args.relaunch, args.pid)
-    return 5 if result.verdict == "ABORT" else 0
+    reason = result.reason or f"iteration={result.iteration}"
+    print(f"{result.verdict} {reason}")
+    acting = args.act or args.fallback
+    if acting and result.verdict == "OK":
+        (target / "WARM_OK").write_text(f"iterations={result.iteration}\n")
+    elif acting and result.verdict == "ABORT":
+        if result.reason == "cap":
+            (target / "WARM_FAILED_CAP").write_text(
+                f"{result.reason} iterations={result.iteration}\n"
+            )
+        stop_and_fallback(target, result.reason, args.relaunch, args.pid)
+    return 3 if result.verdict == "ABORT" else 0
 
 
 def record_command(args) -> int:
+    if args.action == "add-cold":
+        if not args.case:
+            raise ValueError("record add-cold requires --case <case-or-force.dat>")
+        record_dir = Path(args.record) if args.record else _campaign(args.case) / "warm_start"
+        data = cold_reference_statistics(args.case)
+        data["n_cold"] = args.n_cold
+        path = record_dir / f"level_{args.mesh_level}.yml"
+        if path.exists():
+            data = {**(yaml.safe_load(path.read_text()) or {}), **data}
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(yaml.safe_dump(data, sort_keys=False))
+        print(f"recorded cold reference {args.mesh_level} in {path}")
+        return 0
+    if not args.record:
+        raise ValueError("record requires --record, or use record add-cold --case <case>")
     if not args.hop:
         for path in sorted(args.record.glob("record_*.yml")): print(path.read_text(), end="")
         return 0

@@ -9,12 +9,14 @@ import yaml
 from digitalmodel.solvers.openfoam.warm_start.decision import decide
 from digitalmodel.solvers.openfoam.warm_start.admissibility import GateCheck, GateVerdict, evaluate
 from digitalmodel.solvers.openfoam.warm_start.cli import main, parser
+from digitalmodel.solvers.openfoam.warm_start.checks import stop_and_fallback
 from digitalmodel.solvers.openfoam.warm_start.fields import (
     clean_restart,
     rewrite_speed_fields,
     verify_warm_fields,
 )
 from digitalmodel.solvers.openfoam.warm_start.record import RecordStore
+from .test_force_cycle_average import write_force
 
 
 FIELD = """FoamFile { format ascii; class volVectorField; object U; }
@@ -426,7 +428,8 @@ def test_refused_run_with_relaunch_starts_cold_and_records_not_attempted(
         tmp_path: Path, monkeypatch):
     source, target = tmp_path / "source", tmp_path / "target"
     source.mkdir(); target.mkdir()
-    record = tmp_path / "records"; record.mkdir()
+    record = tmp_path / "records"
+    record.mkdir()
     (record / "level_default.yml").write_text("n_cold: 5000\n")
     refused = GateVerdict((GateCheck("A1", False, "source unsettled"),))
     monkeypatch.setattr("digitalmodel.solvers.openfoam.warm_start.cli.evaluate",
@@ -464,7 +467,8 @@ def test_a1_accepts_fit_and_latest_cycle_mean_within_two_percent(tmp_path: Path,
 def test_source_settled_override_is_explicit_in_plan_marker_and_ledger(tmp_path: Path, monkeypatch, capsys):
     source, target = tmp_path / "source", tmp_path / "target"
     source.mkdir(); target.mkdir()
-    record = tmp_path / "records"; record.mkdir()
+    record = tmp_path / "records"
+    record.mkdir()
     (record / "level_default.yml").write_text("n_cold: 5000\n")
     ledger = tmp_path / "warm_start.tsv"
     passing = GateVerdict(tuple(GateCheck(identifier, True, "ok") for identifier in
@@ -490,7 +494,8 @@ def test_source_settled_override_is_explicit_in_plan_marker_and_ledger(tmp_path:
 def test_source_settled_override_requires_calibration_to_proceed(tmp_path: Path, monkeypatch):
     source, target = tmp_path / "source", tmp_path / "target"
     source.mkdir(); target.mkdir()
-    record = tmp_path / "records"; record.mkdir()
+    record = tmp_path / "records"
+    record.mkdir()
     (record / "level_default.yml").write_text("n_cold: 5000\n")
     passing = GateVerdict(tuple(GateCheck(identifier, True, "ok") for identifier in
                                 ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A9")))
@@ -502,3 +507,173 @@ def test_source_settled_override_requires_calibration_to_proceed(tmp_path: Path,
     ])
     assert rc != 0
     assert not (target / "WARM_PLANNED").exists()
+
+
+def _write_checkpoint_history(case: Path, pressure: list[float], viscous=-100.0) -> None:
+    path = case / "postProcessing" / "forces_hull" / "0" / "force.dat"
+    path.parent.mkdir(parents=True)
+    with path.open("w") as stream:
+        for iteration, value in enumerate(pressure):
+            total = value + viscous
+            stream.write(
+                f"{iteration} {total} 0 0 {value} 0 0 {viscous} 0 0\n"
+            )
+
+
+@pytest.mark.parametrize(
+    ("pressure", "expected", "rc"),
+    [
+        ([0.0] * 799, "CONTINUE", 0),
+        ([0.0, 60.0] * 400, "ABORT", 3),
+        ([0.0] * 800, "OK", 0),
+    ],
+)
+def test_check_prints_one_verdict_line_for_synthetic_histories(
+        tmp_path: Path, capsys, pressure, expected, rc):
+    target = tmp_path / expected.lower()
+    _write_checkpoint_history(target, pressure)
+    record = tmp_path / "records"
+    record.mkdir(exist_ok=True)
+    (record / "level_r3.yml").write_text(
+        "n_cold: 5000\n"
+        "first_cycle_amplitude_pressure: 100\n"
+        "settled_viscous: -100\n"
+        "cold_settling_iteration: 2000\n"
+    )
+
+    actual_rc = main([
+        "check", "--target", str(target), "--n-cold", "5000",
+        "--mesh-level", "r3", "--record", str(record),
+    ])
+
+    assert actual_rc == rc
+    output = capsys.readouterr().out.splitlines()
+    assert len(output) == 1
+    assert output[0].startswith(f"{expected} ")
+
+
+def test_check_missing_cold_reference_is_one_line_rc_2(tmp_path: Path, capsys):
+    target = tmp_path / "target"
+    _write_checkpoint_history(target, [0.0] * 20)
+
+    rc = main([
+        "check", "--target", str(target), "--n-cold", "5000",
+        "--mesh-level", "r3", "--record", str(tmp_path / "empty"),
+    ])
+
+    captured = capsys.readouterr()
+    assert rc == 2
+    assert captured.out == ""
+    assert captured.err.count("\n") == 1
+    assert "--cold-ref" in captured.err
+
+
+def test_check_cold_reference_precedence_explicit_then_source_then_record(
+        tmp_path: Path, monkeypatch, capsys):
+    target = tmp_path / "cases" / "target"
+    source = tmp_path / "cases" / "source"
+    explicit = tmp_path / "explicit.dat"
+    _write_checkpoint_history(target, [0.0] * 20)
+    write_force(source / "postProcessing" / "forces_hull" / "0" / "force.dat")
+    write_force(explicit)
+    (target / "WARM_PLANNED").write_text(f"source_path={source.resolve()}\n")
+    record = tmp_path / "records"
+    record.mkdir()
+    (record / "level_r3.yml").write_text(
+        "n_cold: 5000\nfirst_cycle_amplitude_pressure: 3\n"
+        "settled_viscous: -100\ncold_settling_iteration: 9\n"
+    )
+    seen = []
+
+    def fake_reduce(path):
+        seen.append(Path(path))
+        return {"first_cycle_amplitude_pressure": 100.0,
+                "settled_viscous": -100.0, "cold_settling_iteration": 2000}
+
+    monkeypatch.setattr(
+        "digitalmodel.solvers.openfoam.warm_start.cli.cold_reference_statistics",
+        fake_reduce,
+    )
+    base = ["check", "--target", str(target), "--n-cold", "5000",
+            "--mesh-level", "r3", "--record", str(record)]
+    assert main([*base, "--cold-ref", str(explicit)]) == 0
+    assert seen.pop() == explicit
+    capsys.readouterr()
+    assert main(base) == 0
+    assert seen.pop() == source.resolve()
+
+
+def test_record_add_cold_stores_per_level_statistics(tmp_path: Path, capsys):
+    case = tmp_path / "case"
+    write_force(case / "postProcessing" / "forces_hull" / "0" / "force.dat")
+    record = tmp_path / "records"
+
+    rc = main([
+        "record", "add-cold", "--case", str(case), "--mesh-level", "r3",
+        "--record", str(record),
+    ])
+
+    assert rc == 0
+    data = yaml.safe_load((record / "level_r3.yml").read_text())
+    assert data["first_cycle_amplitude_pressure"] > 0
+    assert data["settled_viscous"] == pytest.approx(-174_000.0)
+    assert data["cold_settling_iteration"] > 0
+    assert capsys.readouterr().out.count("\n") == 1
+
+
+def test_check_act_invokes_abort_fallback_only_when_requested(
+        tmp_path: Path, monkeypatch, capsys):
+    target = tmp_path / "target"
+    _write_checkpoint_history(target, [0.0, 60.0] * 400)
+    record = tmp_path / "records"
+    record.mkdir()
+    (record / "level_r3.yml").write_text(
+        "n_cold: 5000\nfirst_cycle_amplitude_pressure: 100\n"
+        "settled_viscous: -100\ncold_settling_iteration: 2000\n"
+    )
+    actions = []
+    monkeypatch.setattr(
+        "digitalmodel.solvers.openfoam.warm_start.cli.stop_and_fallback",
+        lambda *args: actions.append(args),
+    )
+    command = ["check", "--target", str(target), "--mesh-level", "r3",
+               "--record", str(record), "--n-cold", "5000"]
+
+    assert main(command) == 3
+    assert actions == []
+    assert not (target / "WARM_ABORTED").exists()
+    capsys.readouterr()
+    assert main([*command, "--act", "--relaunch", "cold-command"]) == 3
+    assert actions and actions[-1][2] == "cold-command"
+
+
+def test_abort_action_stops_archives_restores_and_relaunches(
+        tmp_path: Path, monkeypatch):
+    target = tmp_path / "target"
+    (target / "system").mkdir(parents=True)
+    (target / "0").mkdir()
+    (target / "0" / "state").write_text("warm\n")
+    (target / "0.cold").mkdir()
+    (target / "0.cold" / "state").write_text("cold\n")
+    (target / "log.solver").write_text("warm log\n")
+    (target / "postProcessing" / "forces" / "0").mkdir(parents=True)
+    (target / "postProcessing" / "forces" / "0" / "force.dat").write_text("warm forces\n")
+    calls = []
+    launches = []
+    monkeypatch.setattr(
+        "digitalmodel.solvers.openfoam.warm_start.checks.subprocess.run",
+        lambda *args, **kwargs: calls.append((args, kwargs)),
+    )
+    monkeypatch.setattr(
+        "digitalmodel.solvers.openfoam.warm_start.checks.subprocess.Popen",
+        lambda *args, **kwargs: launches.append((args, kwargs)),
+    )
+
+    archive = stop_and_fallback(target, "pressure_excursion", "cold-command")
+
+    assert calls[0][0][0][-2:] == ["-set", "writeNow"]
+    assert (target / "WARM_ABORTED").read_text() == "pressure_excursion\n"
+    assert (archive / "log.solver").exists()
+    assert (archive / "postProcessing" / "forces" / "0" / "force.dat").exists()
+    assert (target / "0" / "state").read_text() == "cold\n"
+    assert launches[0][0][0] == "cold-command"
