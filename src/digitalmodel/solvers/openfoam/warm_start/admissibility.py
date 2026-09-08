@@ -279,6 +279,7 @@ def _log_settled(source: Path) -> tuple[bool, str]:
 def evaluate(source: Path | None, target: Path, hop: str, *, max_du=.10,
              ranks: int | None = None, level: str | None = None,
              source_level: str | None = None,
+             source_time: str = "latestTime",
              allow_pending_mesh: bool = False) -> GateVerdict:
     checks: list[GateCheck] = []
     if hop in {"speed", "geometry"}:
@@ -300,11 +301,22 @@ def evaluate(source: Path | None, target: Path, hop: str, *, max_du=.10,
                     (Path("constant/hRef"), Path("constant/g"), Path("system/blockMeshDict")))
         checks.append(GateCheck("A4", frame, "reference-frame dictionaries match"))
         sr, tr = rank_count(source), ranks or rank_count(target)
-        serial_fields = any((source / p).is_dir() and all((source / p / f).exists() for f in
-                            ("alpha.water", "U", "p_rgh", "k", "omega", "nut"))
-                            for p in source.iterdir() if p.is_dir() and p.name.replace(".", "", 1).isdigit())
+        numeric = [p.name for p in source.iterdir() if p.is_dir()
+                   and p.name.replace(".", "", 1).isdigit()]
+        processor_numeric = [p.name for processor in source.glob("processor[0-9]*")
+                             if processor.is_dir()
+                             for p in processor.iterdir() if p.is_dir()
+                             and p.name.replace(".", "", 1).isdigit()]
+        chosen_time = (max((*numeric, *processor_numeric), key=float)
+                       if source_time == "latestTime" and (numeric or processor_numeric)
+                       else source_time)
+        serial_fields = chosen_time != "latestTime" and all(
+            (source / chosen_time / field).exists() for field in
+            ("alpha.water", "U", "p_rgh", "k", "omega", "nut")
+        )
         decomp_ok = sr == tr or serial_fields
-        checks.append(GateCheck("A5", decomp_ok, f"source ranks={sr}, target ranks={tr}, reconstructed={serial_fields}"))
+        checks.append(GateCheck("A5", decomp_ok, f"source ranks={sr}, target ranks={tr}, "
+                                f"time={chosen_time}, reconstructed={serial_fields}"))
         try:
             u1, u2 = case_speed(source), case_speed(target); du = abs(u2-u1)/u1
             source_mesh, target_mesh = _has_mesh(source), _has_mesh(target)

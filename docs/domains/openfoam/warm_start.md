@@ -33,7 +33,10 @@ level budget explicitly. `record add-cold` reduces a cold history with at least 
 pressure extrema and stores its first-cycle pressure amplitude, settled viscous force,
 and settling iteration for that level. At check time `--cold-ref` takes precedence,
 followed by the source case recorded by the warm hop, then the per-level record. If none
-can provide all three statistics, the command prints one error line and exits 2.
+can provide all three statistics, the command prints one error line and exits 2. The
+explicit cold reference may be a different condition at the same speed when the
+same-condition cold run does not yet exist; it is used as a force-history shape reference,
+and the verdict identifies that fact.
 
 ## The three safety layers
 
@@ -46,7 +49,13 @@ and `uniform/` are removed. Boundary values for inlet and outlet `U`, inlet `k`,
 `omega` come from the target and are applied with `changeDictionary -time 0`. For an
 identical decomposed speed hop, all six fields copy directly from each
 `processorN/<time>/` to the corresponding `processorN/0/`; serial `0/` is not used.
-Otherwise all six fields are reconstructed together before the serial copy. Every copied
+Matching processor names are insufficient: each partition must also have the same
+`constant/polyMesh` hash or cell count. The implicit latest time considers both serial
+and processor directories and never selects time 0; if the newest time exists only under
+`processor*/`, all six fields are reconstructed unless that strong decomposition check
+permits direct copying. Use `--source-time 0` to request time 0 explicitly. A5 reports the
+chosen time and tests reconstruction at that exact time. Otherwise all six fields are
+reconstructed together before the serial copy. Every copied
 field must have a `nonuniform List` internal field and contain no `$` macro after the
 boundary rewrite, or preparation restores the cold fields and writes `COLD_FALLBACK`.
 Geometry
@@ -82,7 +91,9 @@ Layer 2 uses a Beta(2,2) success prior. Default saving fractions are 40% for geo
 25% for speed, and 15% for potential or analytic starts. The default abort point is
 `floor((N_cold/3)/400)*400`, and the EV margin is 10% of `N_cold`. A first hop is therefore
 refused unless `--calibrate` buys the single bounded calibration allowed per hop type and
-level.
+level. A calibration is spent only by a terminal `WARM_OK`, `WARM_ABORTED`, or
+`WARM_FAILED_CAP` result. Invalid and `NOT_ATTEMPTED` entries affect neither this guard nor
+the Beta posterior.
 
 Layer 3 evaluates R1--R6 at every 400-iteration write: pressure excursion, viscous level,
 force asymptotes, mass/solver health, POWER GATE success, and the `N_cold` cap. POWER GATE
@@ -98,6 +109,19 @@ Preparation and execution use `WARM_PLANNED` and `WARM_RUNNING`. Terminal marker
 `WARM_OK`, `WARM_ABORTED`, `WARM_FAILED_CAP`, and `COLD_FALLBACK`. Events append to the
 campaign `warm_start.tsv`; per-level/type Beta histories are YAML under `warm_start/`.
 
+After verification, `run` writes `WARM_FIELDS` beside `0/`, recording the resolved source,
+time, and SHA-256 of every installed field. A relaunch script must mention `WARM_FIELDS`
+or guard `internalField nonuniform`; otherwise `run` exits 3 with
+`relaunch script resets 0/ from 0.orig; use a warm-aware chain`. The reference
+`scripts/cfd/solve_chain_warm_aware.sh CASE COMMAND [ARG ...]` keeps `0/`, skips
+`setFields`, and touches `WARM_FIELDS_KEPT` when both the marker and nonuniform `0/U` are
+present; otherwise it follows the cold `0.orig`/`setFields` path.
+
+Calibration mode never launches a cold fallback: it writes `COLD_FALLBACK` with the
+reason and exits 3 so the lane agent can decide. Production refusals exit non-zero and may
+launch the requested cold chain. Cold restoration also forces `stopAt endTime`, preventing
+a stale `writeNow` request from ending the fallback after one iteration.
+
 The matrix scheduler must call the checkpoint command after every solver write, not only
 at the nominal abort point:
 
@@ -107,4 +131,6 @@ scripts/cfd/warm_start.py check --target "$case" --mesh-level "$level" --act --p
 
 The command prints exactly one `CONTINUE|ABORT|OK reason` verdict line. Exit 0 means
 CONTINUE or OK, 3 means ABORT, and 2 means missing reference input or another usage/I/O
-failure. Plan/run retain exit 3 for cold by admissibility and exit 4 for cold by EV.
+failure. Plans retain exit 3 for cold by admissibility and exit 4 for cold by EV.
+Production `run` refusals exit 2 after launching `--relaunch` when supplied; calibration
+refusals exit 3 without launching it.

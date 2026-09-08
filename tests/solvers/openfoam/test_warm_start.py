@@ -8,10 +8,12 @@ import yaml
 
 from digitalmodel.solvers.openfoam.warm_start.decision import decide
 from digitalmodel.solvers.openfoam.warm_start.admissibility import GateCheck, GateVerdict, evaluate
-from digitalmodel.solvers.openfoam.warm_start.cli import main, parser
+from digitalmodel.solvers.openfoam.warm_start.cli import _latest, main, parser
 from digitalmodel.solvers.openfoam.warm_start.checks import stop_and_fallback
 from digitalmodel.solvers.openfoam.warm_start.fields import (
+    ascii_write_format,
     clean_restart,
+    restore_cold_restart,
     rewrite_speed_fields,
     verify_warm_fields,
 )
@@ -190,6 +192,80 @@ def test_beta_prior_refuses_first_geometry_hop_and_calibration_allows_it():
     assert warm.decision == "WARM_CALIBRATION"
 
 
+def test_calibration_guard_and_posterior_ignore_invalid_unattempted_entries():
+    ignored = [
+        {"decision": "WARM_CALIBRATION_INVALID_COPY", "outcome": None, "iterations": None},
+        {"decision": "WARM_CALIBRATION", "outcome": "NOT_ATTEMPTED_TOOL", "iterations": None},
+    ]
+    result = decide("speed", 5000, 400, ignored, calibrate=True)
+    assert result.decision == "WARM_CALIBRATION"
+    assert result.successes == result.failures == 0
+    with pytest.raises(ValueError, match="calibration already used"):
+        decide("speed", 5000, 400, [
+            {"decision": "WARM_CALIBRATION", "outcome": "WARM_ABORTED", "iterations": 400}
+        ], calibrate=True)
+
+
+def test_latest_reconstructs_newer_processor_time_and_never_implicitly_uses_zero(
+        tmp_path: Path, monkeypatch):
+    source, target = tmp_path / "source", tmp_path / "target"
+    (source / "0").mkdir(parents=True)
+    (source / "processor0" / "5046").mkdir(parents=True)
+    target.mkdir()
+    calls = []
+    monkeypatch.setattr("digitalmodel.solvers.openfoam.warm_start.cli.run_foam",
+                        lambda command, cwd: calls.append((command, cwd)))
+
+    assert _latest(source, target) == source / "5046"
+    assert calls[0][0] == ["reconstructPar", "-time", "5046", "-fields",
+                           "(alpha.water U p_rgh k omega nut)"]
+
+    empty = tmp_path / "zero-only"
+    (empty / "0").mkdir(parents=True)
+    with pytest.raises(ValueError, match="--source-time 0"):
+        _latest(empty, target)
+
+
+def test_a5_checks_the_chosen_time_not_any_complete_serial_time(tmp_path: Path):
+    source, target = tmp_path / "source", tmp_path / "target"
+    for field in ("alpha.water", "U", "p_rgh", "k", "omega", "nut"):
+        path = source / "0" / field
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(FIELD)
+    for rank in range(2):
+        (source / f"processor{rank}" / "20").mkdir(parents=True)
+    target.mkdir()
+
+    latest = _check(evaluate(source, target, "speed", source_time="latestTime"), "A5")
+    assert not latest.passed
+    assert "time=20" in latest.detail and "reconstructed=False" in latest.detail
+    explicit = _check(evaluate(source, target, "speed", source_time="0"), "A5")
+    assert explicit.passed
+    assert "time=0" in explicit.detail
+
+
+def test_ascii_write_format_is_temporary_for_binary_control_dict(tmp_path: Path):
+    control = tmp_path / "system" / "controlDict"
+    control.parent.mkdir()
+    original = "application interFoam;\nwriteFormat binary;\n"
+    control.write_text(original)
+    with ascii_write_format(tmp_path):
+        assert "writeFormat ascii;" in control.read_text()
+        assert "writeFormat binary;" not in control.read_text()
+    assert control.read_text() == original
+
+
+def test_restore_cold_restart_clears_stale_write_now(tmp_path: Path):
+    (tmp_path / "0.cold").mkdir()
+    (tmp_path / "0.cold" / "state").write_text("cold\n")
+    (tmp_path / "0").mkdir()
+    (tmp_path / "system").mkdir()
+    (tmp_path / "system" / "controlDict").write_text("stopAt writeNow;\n")
+    restore_cold_restart(tmp_path)
+    assert (tmp_path / "0" / "state").read_text() == "cold\n"
+    assert "stopAt endTime;" in (tmp_path / "system" / "controlDict").read_text()
+
+
 def test_copy_cleanup_and_ascii_boundary_rewrite(tmp_path: Path):
     source, target = tmp_path / "source", tmp_path / "target"
     for name in ("alpha.water", "U", "p_rgh", "k", "omega", "nut", "phi", "p"):
@@ -215,6 +291,8 @@ def test_same_decomposition_copies_and_verifies_all_fields_per_rank(tmp_path: Pa
         target_zero = target / f"processor{rank}" / "0"
         source_time.mkdir(parents=True)
         target_zero.mkdir(parents=True)
+        _owner(source / f"processor{rank}", 10 + rank)
+        _owner(target / f"processor{rank}", 10 + rank)
         for name in ("alpha.water", "U", "p_rgh", "k", "omega", "nut"):
             (source_time / name).write_text(WARM_FIELD.replace("object U", f"object {name}"))
             (target_zero / name).write_text(FIELD.replace("object U", f"object {name}"))
@@ -258,11 +336,69 @@ def test_missing_warm_field_writes_cold_fallback_and_restores_cold(tmp_path: Pat
         "--source", str(source), "--record", str(record), "--calibrate",
     ])
 
-    assert rc == 2
+    assert rc == 3
     assert (target / "0" / "sentinel").read_text() == "cold\n"
     marker = (target / "COLD_FALLBACK").read_text()
     assert "required warm field missing" in marker
     assert "U" in marker
+
+
+def test_run_refuses_resetting_chain_before_copy(tmp_path: Path, monkeypatch, capsys):
+    source, target = tmp_path / "source", tmp_path / "target"
+    source.mkdir(); target.mkdir()
+    record = tmp_path / "records"
+    record.mkdir()
+    (record / "level_default.yml").write_text("n_cold: 5000\n")
+    unsafe = target / "solve_chain.sh"
+    unsafe.write_text("#!/bin/sh\nrm -rf 0\ncp -a 0.orig 0\n")
+    passing = GateVerdict(tuple(GateCheck(identifier, True, "ok") for identifier in
+                                ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A9")))
+    monkeypatch.setattr("digitalmodel.solvers.openfoam.warm_start.cli.evaluate", lambda *a, **k: passing)
+
+    rc = main(["run", "--target", str(target), "--from", "case", "--hop", "speed",
+               "--source", str(source), "--record", str(record), "--calibrate"])
+
+    assert rc == 3
+    message = "relaunch script resets 0/ from 0.orig; use a warm-aware chain"
+    assert message in capsys.readouterr().err
+    assert message in (target / "COLD_FALLBACK").read_text()
+    assert not (target / "WARM_FIELDS").exists()
+
+
+def test_successful_run_writes_field_hash_marker_before_launch(tmp_path: Path, monkeypatch):
+    source, target = tmp_path / "source", tmp_path / "target"
+    for name in ("alpha.water", "U", "p_rgh", "k", "omega", "nut"):
+        path = source / "20" / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(WARM_FIELD.replace("object U", f"object {name}"))
+        template = target / "0.orig" / name
+        template.parent.mkdir(parents=True, exist_ok=True)
+        template.write_text(FIELD.replace("object U", f"object {name}"))
+    (target / "system").mkdir()
+    (target / "system" / "controlDict").write_text("stopAt endTime;\n")
+    record = tmp_path / "records"
+    record.mkdir()
+    (record / "level_default.yml").write_text("n_cold: 5000\n")
+    warm_chain = target / "warm_chain.sh"
+    warm_chain.write_text("#!/bin/sh\n# preserve WARM_FIELDS\n")
+    passing = GateVerdict(tuple(GateCheck(identifier, True, "ok") for identifier in
+                                ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A9")))
+    monkeypatch.setattr("digitalmodel.solvers.openfoam.warm_start.cli.evaluate", lambda *a, **k: passing)
+    monkeypatch.setattr("digitalmodel.solvers.openfoam.warm_start.cli.rewrite_speed_fields", lambda *a: None)
+    launches = []
+    monkeypatch.setattr("digitalmodel.solvers.openfoam.warm_start.cli.subprocess.Popen",
+                        lambda command, **kwargs: launches.append(command))
+
+    rc = main(["run", "--target", str(target), "--from", "case", "--hop", "speed",
+               "--source", str(source), "--record", str(record), "--calibrate",
+               "--relaunch", str(warm_chain)])
+
+    assert rc == 0 and launches == [str(warm_chain)]
+    marker = yaml.safe_load((target / "WARM_FIELDS").read_text())
+    assert marker["source"] == str(source.resolve())
+    assert marker["source_time"] == "20"
+    assert set(marker["sha256"]) == {f"0/{name}" for name in
+                                      ("alpha.water", "U", "p_rgh", "k", "omega", "nut")}
 
 
 def test_record_update(tmp_path: Path):
@@ -383,7 +519,7 @@ def test_a3_compares_scalar_and_vector_entries_numerically(tmp_path: Path):
     assert "p.tolerance" in check.detail
 
 
-def test_prepare_exception_after_copy_restores_cold_records_failure_and_relaunches(
+def test_calibration_prepare_exception_restores_cold_without_relaunch(
         tmp_path: Path, monkeypatch):
     source, target = tmp_path / "source", tmp_path / "target"
     source_time = source / "20"
@@ -396,6 +532,8 @@ def test_prepare_exception_after_copy_restores_cold_records_failure_and_relaunch
     record = tmp_path / "records"
     record.mkdir()
     (record / "level_default.yml").write_text("n_cold: 5000\n")
+    warm_chain = target / "warm_chain.sh"
+    warm_chain.write_text("#!/bin/sh\n# preserve WARM_FIELDS\n")
     passing = GateVerdict(tuple(GateCheck(identifier, True, "ok") for identifier in
                                 ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A9")))
     monkeypatch.setattr("digitalmodel.solvers.openfoam.warm_start.cli.evaluate", lambda *a, **k: passing)
@@ -412,7 +550,7 @@ def test_prepare_exception_after_copy_restores_cold_records_failure_and_relaunch
     rc = main([
         "run", "--target", str(target), "--from", "case", "--hop", "speed",
         "--source", str(source), "--record", str(record), "--calibrate",
-        "--relaunch", "cold-command",
+        "--relaunch", str(warm_chain),
     ])
 
     assert rc != 0
@@ -421,7 +559,7 @@ def test_prepare_exception_after_copy_restores_cold_records_failure_and_relaunch
     hops = yaml.safe_load((record / "record_speed_default.yml").read_text())["hops"]
     assert hops[-1]["outcome"] == "WARM_ABORTED"
     assert "forced dictionary failure" in hops[-1]["reason"]
-    assert launches and launches[-1][0] == "cold-command"
+    assert launches == []
 
 
 def test_refused_run_with_relaunch_starts_cold_and_records_not_attempted(
@@ -442,13 +580,33 @@ def test_refused_run_with_relaunch_starts_cold_and_records_not_attempted(
                "--source", str(source), "--record", str(record), "--calibrate",
                "--relaunch", "cold-stub --marker SAME"])
 
-    assert rc == 0
-    assert launches == [("cold-stub --marker SAME", {
-        "cwd": target.resolve(), "shell": True, "start_new_session": True})]
+    assert rc == 3
+    assert launches == []
     assert "COLD_BY_GATE A1" in (target / "COLD_FALLBACK").read_text()
     hop = yaml.safe_load((record / "record_speed_default.yml").read_text())["hops"][-1]
     assert hop["decision"] == "COLD_BY_GATE"
     assert hop["outcome"] == "NOT_ATTEMPTED"
+
+
+def test_production_refusal_relaunches_cold_but_returns_rc_2(tmp_path: Path, monkeypatch):
+    source, target = tmp_path / "source", tmp_path / "target"
+    source.mkdir(); target.mkdir()
+    record = tmp_path / "records"
+    record.mkdir()
+    (record / "level_default.yml").write_text("n_cold: 5000\n")
+    monkeypatch.setattr("digitalmodel.solvers.openfoam.warm_start.cli.evaluate",
+                        lambda *args, **kwargs: GateVerdict((GateCheck("A1", False, "unsettled"),)))
+    launches = []
+    monkeypatch.setattr("digitalmodel.solvers.openfoam.warm_start.cli.subprocess.Popen",
+                        lambda command, **kwargs: launches.append(command))
+
+    rc = main(["run", "--target", str(target), "--from", "case", "--hop", "speed",
+               "--source", str(source), "--record", str(record),
+               "--relaunch", "cold-command"])
+
+    assert rc == 2
+    assert launches == ["cold-command"]
+    assert "COLD_BY_GATE A1" in (target / "COLD_FALLBACK").read_text()
 
 
 def test_a1_accepts_fit_and_latest_cycle_mean_within_two_percent(tmp_path: Path, monkeypatch):
@@ -477,6 +635,8 @@ def test_source_settled_override_is_explicit_in_plan_marker_and_ledger(tmp_path:
     source_time = source / "20"; source_time.mkdir()
     monkeypatch.setattr("digitalmodel.solvers.openfoam.warm_start.cli.clean_restart", lambda *a: None)
     monkeypatch.setattr("digitalmodel.solvers.openfoam.warm_start.cli.rewrite_speed_fields", lambda *a: None)
+    monkeypatch.setattr("digitalmodel.solvers.openfoam.warm_start.cli.verify_warm_fields", lambda *a: None)
+    monkeypatch.setattr("digitalmodel.solvers.openfoam.warm_start.cli._write_warm_fields_marker", lambda *a: None)
     monkeypatch.setattr("digitalmodel.solvers.openfoam.warm_start.cli.reset_control", lambda *a: None)
     rc = main([
         "prepare", "--target", str(target), "--from", "case", "--hop", "speed",
@@ -598,7 +758,7 @@ def test_check_cold_reference_precedence_explicit_then_source_then_record(
             "--mesh-level", "r3", "--record", str(record)]
     assert main([*base, "--cold-ref", str(explicit)]) == 0
     assert seen.pop() == explicit
-    capsys.readouterr()
+    assert "different condition at the same speed accepted" in capsys.readouterr().out
     assert main(base) == 0
     assert seen.pop() == source.resolve()
 
@@ -677,3 +837,19 @@ def test_abort_action_stops_archives_restores_and_relaunches(
     assert (archive / "postProcessing" / "forces" / "0" / "force.dat").exists()
     assert (target / "0" / "state").read_text() == "cold\n"
     assert launches[0][0][0] == "cold-command"
+
+
+def test_reference_warm_aware_chain_keeps_verified_zero(tmp_path: Path):
+    case = tmp_path / "case"
+    (case / "0").mkdir(parents=True)
+    (case / "0" / "U").write_text(WARM_FIELD)
+    (case / "0" / "state").write_text("warm\n")
+    (case / "0.orig").mkdir()
+    (case / "0.orig" / "state").write_text("cold\n")
+    (case / "WARM_FIELDS").write_text("source: fixture\n")
+    script = Path(__file__).parents[3] / "scripts" / "cfd" / "solve_chain_warm_aware.sh"
+
+    subprocess.run([str(script), str(case), "true"], check=True)
+
+    assert (case / "WARM_FIELDS_KEPT").exists()
+    assert (case / "0" / "state").read_text() == "warm\n"

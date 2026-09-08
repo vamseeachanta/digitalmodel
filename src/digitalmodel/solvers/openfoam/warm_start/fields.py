@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import contextlib
+import hashlib
 
 import re
 import shutil
@@ -43,6 +44,48 @@ def restore_cold_restart(target: Path) -> None:
         if zero.exists():
             shutil.rmtree(zero)
         shutil.copytree(cold, zero)
+    control = target / "system" / "controlDict"
+    if control.exists():
+        text = control.read_text()
+        text, count = re.subn(r"(?m)^(\s*stopAt\s+)[^;]+;", r"\g<1>endTime;", text)
+        if not count:
+            text += "\nstopAt endTime;\n"
+        control.write_text(text)
+
+
+def _processor_mesh_identity(processor: Path) -> tuple[str | None, int | None]:
+    """Return a strong mesh hash and advertised cell count for one partition."""
+    mesh = processor / "constant" / "polyMesh"
+    digest = hashlib.sha256()
+    found = False
+    for name in ("points", "faces", "owner", "neighbour", "boundary"):
+        path = mesh / name
+        if path.is_file():
+            found = True
+            digest.update(name.encode())
+            digest.update(path.read_bytes())
+    owner = mesh / "owner"
+    match = (re.search(r"\bnCells\s*:\s*(\d+)", owner.read_text(errors="ignore"))
+             if owner.is_file() else None)
+    return (digest.hexdigest() if found else None,
+            int(match.group(1)) if match else None)
+
+
+def identical_decomposition(source: Path, target: Path) -> bool:
+    """Require matching ranks plus mesh hashes or per-rank cell counts."""
+    source_processors = _processor_dirs(source)
+    target_processors = _processor_dirs(target)
+    if (not source_processors or
+            tuple(path.name for path in source_processors) !=
+            tuple(path.name for path in target_processors)):
+        return False
+    source_ids = tuple(_processor_mesh_identity(path) for path in source_processors)
+    target_ids = tuple(_processor_mesh_identity(path) for path in target_processors)
+    hashes_match = all(left[0] and left[0] == right[0]
+                       for left, right in zip(source_ids, target_ids))
+    cells_match = all(left[1] is not None and left[1] == right[1]
+                      for left, right in zip(source_ids, target_ids))
+    return hashes_match or cells_match
 
 
 def _copy_fields(source_time: Path, zero: Path) -> None:
@@ -60,9 +103,7 @@ def clean_restart(source_time: Path, target: Path) -> tuple[Path, ...]:
     source = source_time.parent
     source_processors = _processor_dirs(source)
     target_processors = _processor_dirs(target)
-    if (source_processors and target_processors
-            and tuple(path.name for path in source_processors)
-            == tuple(path.name for path in target_processors)):
+    if identical_decomposition(source, target):
         zeros = tuple(path / "0" for path in target_processors)
         for source_processor, zero in zip(source_processors, zeros):
             _backup_zero(zero)

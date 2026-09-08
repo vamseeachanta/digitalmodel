@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -16,15 +18,71 @@ from .checks import cold_reference_statistics, evaluate_checkpoint, stop_and_fal
 from .decision import decide
 from .fields import (KEEP_FIELDS, clean_restart, prepare_analytic, prepare_geometry,
                      prepare_potential, resharpen_alpha, reset_control,
-                     restore_cold_restart, rewrite_speed_fields)
+                     restore_cold_restart, rewrite_speed_fields, run as run_foam,
+                     identical_decomposition, verify_warm_fields)
 from .record import RecordStore, append_ledger, timestamp
 
 
-def _latest(case: Path) -> Path:
-    times = [p for p in case.iterdir() if p.is_dir() and p.name.replace(".", "", 1).isdigit()]
-    if not times:
+def _numeric_times(directory: Path) -> list[Path]:
+    return ([p for p in directory.iterdir()
+             if p.is_dir() and p.name.replace(".", "", 1).isdigit()]
+            if directory.is_dir() else [])
+
+
+def _latest(case: Path, target: Path | None = None) -> Path:
+    serial = _numeric_times(case)
+    processor_times = [time for processor in case.glob("processor[0-9]*")
+                       for time in _numeric_times(processor)]
+    if not serial and not processor_times:
         raise FileNotFoundError(f"no numeric source time under {case}")
-    return max(times, key=lambda p: float(p.name))
+    serial_latest = max(serial, key=lambda p: float(p.name)) if serial else None
+    processor_latest = (max(processor_times, key=lambda p: float(p.name))
+                        if processor_times else None)
+    latest_value = max(float(path.name) for path in (*serial, *processor_times))
+    if latest_value == 0:
+        raise ValueError("latestTime resolves to 0; use --source-time 0 explicitly for a cold source")
+    chosen = max((*serial, *processor_times), key=lambda path: float(path.name))
+    serial_path = next((path for path in serial if float(path.name) == latest_value),
+                       case / chosen.name)
+    processor_is_newer = (processor_latest is not None and
+                          (serial_latest is None or
+                           float(processor_latest.name) > float(serial_latest.name)))
+    if processor_is_newer:
+        if target is not None and identical_decomposition(case, target):
+            return serial_path
+        run_foam(["reconstructPar", "-time", processor_latest.name, "-fields",
+                  "(" + " ".join(KEEP_FIELDS) + ")"], case)
+        serial_path = case / processor_latest.name
+    return serial_path
+
+
+def _warm_aware_relaunch(command: str, target: Path) -> bool:
+    try:
+        words = shlex.split(command)
+    except ValueError:
+        return False
+    for word in words:
+        path = Path(word)
+        candidate = path if path.is_absolute() else target / path
+        if candidate.is_file() and (candidate.suffix == ".sh" or candidate.parent == target):
+            text = candidate.read_text(errors="ignore")
+            if ("WARM_FIELDS" in text or
+                    re.search(r"internalField\s+['\"*]*nonuniform", text) is not None):
+                return True
+    return False
+
+
+def _write_warm_fields_marker(target: Path, source: Path | None,
+                              source_time: Path | None, zeros: tuple[Path, ...]) -> None:
+    fields = {}
+    for zero in zeros:
+        for name in KEEP_FIELDS:
+            relative = str((zero / name).relative_to(target))
+            fields[relative] = hashlib.sha256((zero / name).read_bytes()).hexdigest()
+    data = {"source": str(source.resolve()) if source else None,
+            "source_time": source_time.name if source_time else None,
+            "sha256": fields}
+    (target / "WARM_FIELDS").write_text(yaml.safe_dump(data, sort_keys=False))
 
 
 def _campaign(target: Path) -> Path:
@@ -139,6 +197,7 @@ def plan_or_prepare(args) -> int:
     store = RecordStore(record_dir, hop, args.mesh_level, n_cold)
     gate = evaluate(source, target, hop, max_du=args.max_du, ranks=args.ranks,
                     level=args.mesh_level, source_level=args.source_mesh_level,
+                    source_time=args.source_time,
                     allow_pending_mesh=args.command == "plan" and args.dry_run)
     override = args.source_settled_override
     if override:
@@ -150,8 +209,18 @@ def plan_or_prepare(args) -> int:
         ))
     print(gate.render())
     existing = store.load().get("hops", [])
-    decision = decide(hop, n_cold, args.checkpoint, existing, n_abort=args.n_abort,
-                      margin_fraction=args.margin, calibrate=args.calibrate) if gate.passed else None
+    try:
+        decision = decide(hop, n_cold, args.checkpoint, existing, n_abort=args.n_abort,
+                          margin_fraction=args.margin, calibrate=args.calibrate) if gate.passed else None
+    except ValueError as exc:
+        reason = str(exc)
+        if args.command == "run":
+            (target / "COLD_FALLBACK").write_text(reason + "\n")
+            if args.relaunch and not args.calibrate:
+                restore_cold_restart(target)
+                subprocess.Popen(args.relaunch, cwd=target, shell=True, start_new_session=True)
+        print(f"warm_start: {reason}", file=sys.stderr)
+        return 2
     if decision:
         block = decision.block(target.name, source.name if source else "-", args.mesh_level); print(block)
     else:
@@ -163,6 +232,10 @@ def plan_or_prepare(args) -> int:
             (target / "COLD_FALLBACK").write_text(
                 gate.render() + "\nsource-settled override requires --calibrate\n"
             )
+            if args.command == "run" and args.relaunch:
+                restore_cold_restart(target)
+                subprocess.Popen(args.relaunch, cwd=target, shell=True, start_new_session=True)
+                return 2
             return 3
     if args.command != "plan" and not args.dry_run:
         if not gate.passed:
@@ -175,13 +248,20 @@ def plan_or_prepare(args) -> int:
                           "iterations": None, "reason": gate.first_failure})
             append_ledger(ledger, _ledger_values(
                 args, None, "WARM_NOT_ATTEMPTED", reason=gate.first_failure))
-            if args.command == "run" and args.relaunch:
+            if args.command == "run" and args.relaunch and not args.calibrate:
+                restore_cold_restart(target)
                 subprocess.Popen(args.relaunch, cwd=target, shell=True,
                                  start_new_session=True)
-                return 0
-            return 3
+                return 2
+            return 3 if args.calibrate else 2
         if decision.decision == "COLD_BY_EV":
             (target / "COLD_FALLBACK").write_text(block + "\n")
+            if args.command == "run":
+                if args.relaunch:
+                    restore_cold_restart(target)
+                    subprocess.Popen(args.relaunch, cwd=target, shell=True,
+                                     start_new_session=True)
+                return 2
             return 4
     if args.command == "plan":
         return 0 if gate.passed and decision.decision.startswith("WARM") else (3 if not gate.passed else 4)
@@ -191,29 +271,41 @@ def plan_or_prepare(args) -> int:
     append_ledger(ledger, _ledger_values(args, decision,
                   "PLAN_WARM_CALIBRATION" if decision.decision == "WARM_CALIBRATION" else "PLAN_WARM",
                   reason=override or ""))
+    command = args.relaunch or str(target / "solve_chain.sh")
+    if args.command == "run" and not _warm_aware_relaunch(command, target):
+        reason = "relaunch script resets 0/ from 0.orig; use a warm-aware chain"
+        (target / "COLD_FALLBACK").write_text(reason + "\n")
+        print(f"warm_start: {reason}", file=sys.stderr)
+        return 3
     copied = False
     try:
-        source_time = (_latest(source) if args.source_time == "latestTime" and source
+        source_time = (_latest(source, target) if args.source_time == "latestTime" and source
                        else (source / args.source_time if source else None))
+        zeros: tuple[Path, ...] = (target / "0",)
         if hop == "speed":
             copied = True
-            clean_restart(source_time, target)
+            zeros = clean_restart(source_time, target) or (target / "0",)
             rewrite_speed_fields(target)
         elif hop == "geometry":
             if not (target / "0.cold").exists(): shutil.copytree(target / "0", target / "0.cold")
             copied = True
             prepare_geometry(source, source_time.name, target, args.ranks)
+            zeros = (target / "0",)
             if "flat_water_volume" in reference:
                 resharpen_alpha(target / "0" / "alpha.water", float(reference["flat_water_volume"]))
         elif hop == "potential":
             if not (target / "0.cold").exists(): shutil.copytree(target / "0", target / "0.cold")
             copied = True
             prepare_potential(target)
+            zeros = (target / "0",)
         elif hop == "analytic":
             if not args.eta or not args.u: raise ValueError("analytic mode requires --eta and --u")
             if not (target / "0.cold").exists(): shutil.copytree(target / "0", target / "0.cold")
             copied = True
             prepare_analytic(target, args.eta, args.u)
+            zeros = (target / "0",)
+        verify_warm_fields(zeros)
+        _write_warm_fields_marker(target, source, source_time, zeros)
         reset_control(target, n_cold)
         marker = gate.render() + "\n" + block + "\n"
         if source:
@@ -224,7 +316,6 @@ def plan_or_prepare(args) -> int:
                       "outcome": None, "iterations": None, "reason": override})
         if args.command == "run":
             (target / "WARM_RUNNING").write_text(marker)
-            command = args.relaunch or str(target / "solve_chain.sh")
             subprocess.Popen(command, cwd=target, shell=True, start_new_session=True)
         return 0
     except Exception as exc:
@@ -241,12 +332,12 @@ def plan_or_prepare(args) -> int:
                           "iterations": None, "reason": reason})
             append_ledger(ledger, _ledger_values(args, decision, "WARM_PREPARE_FAILED",
                                                  reason=reason))
-            if args.relaunch:
+            if args.relaunch and not args.calibrate:
                 subprocess.Popen(args.relaunch, cwd=target, shell=True, start_new_session=True)
         except Exception as fallback_exc:
             print(f"warm_start: cold fallback also failed: {fallback_exc}", file=sys.stderr)
         print(f"warm_start: {reason}", file=sys.stderr)
-        return 2
+        return 3 if args.calibrate else 2
 
 
 def _print_commands(args, hop, n_cold):
@@ -312,7 +403,9 @@ def check(args) -> int:
     result = evaluate_checkpoint(target, reference, n_cold=n_cold, n_abort=n_abort,
                                  checkpoint=args.checkpoint, hop=args.hop)
     reason = result.reason or f"iteration={result.iteration}"
-    print(f"{result.verdict} {reason}")
+    shape_note = (f"; shape reference={args.cold_ref} (different condition at the same speed accepted)"
+                  if args.cold_ref else "")
+    print(f"{result.verdict} {reason}{shape_note}")
     acting = args.act or args.fallback
     if acting and result.verdict == "OK":
         (target / "WARM_OK").write_text(f"iterations={result.iteration}\n")

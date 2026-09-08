@@ -37,9 +37,12 @@ def decide(hop: str, n_cold: int, checkpoint: int, hops: list[dict], *,
            n_abort: int | None = None, margin_fraction: float = .10,
            calibrate: bool = False) -> Decision:
     f = PRIORS[hop]
-    successes = [h for h in hops if h.get("outcome") == "WARM_OK" and
+    usable = [h for h in hops if not str(h.get("decision", "")).startswith("NOT_ATTEMPTED")
+              and "_INVALID_" not in str(h.get("decision", ""))
+              and not str(h.get("outcome", "")).startswith("NOT_ATTEMPTED")]
+    successes = [h for h in usable if h.get("outcome") == "WARM_OK" and
                  int(h.get("iterations", n_cold + 1)) <= .75 * n_cold]
-    failures = [h for h in hops if h.get("outcome") in {"WARM_ABORTED", "WARM_FAILED_CAP"}]
+    failures = [h for h in usable if h.get("outcome") in {"WARM_ABORTED", "WARM_FAILED_CAP"}]
     abort = n_abort if n_abort is not None else int((n_cold / 3) // checkpoint * checkpoint)
     estimate = round((2 * (1 - f) * n_cold + sum(int(h["iterations"]) for h in successes)) /
                      (2 + len(successes)))
@@ -49,7 +52,9 @@ def decide(hop: str, n_cold: int, checkpoint: int, hops: list[dict], *,
     margin = round(margin_fraction * n_cold)
     decision = "WARM" if ev >= margin else "COLD_BY_EV"
     if calibrate:
-        if any(h.get("decision") == "WARM_CALIBRATION" for h in hops):
+        if any(h.get("decision") == "WARM_CALIBRATION" and
+               h.get("outcome") in {"WARM_OK", "WARM_ABORTED", "WARM_FAILED_CAP"}
+               for h in usable):
             raise ValueError(f"calibration already used for {hop}")
         decision = "WARM_CALIBRATION"
     return Decision(hop, n_cold, abort, checkpoint, f, len(successes), len(failures),
