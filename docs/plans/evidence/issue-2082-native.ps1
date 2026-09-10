@@ -106,14 +106,26 @@ def run_owned(argv, root, output, timeout):
             code = None if timed_out else _winapi.GetExitCodeProcess(process)
             return code, timed_out
     finally:
+        cleanup_owned(kernel, job, process, thread)
+
+def cleanup_owned(kernel, job, process, thread):
+    try:
         if process is not None and _winapi.WaitForSingleObject(process, 0) == 258:
             _winapi.TerminateProcess(process, 1)
-        kernel.CloseHandle(job)  # also kills descendants when the parent already exited
-        if process is not None:
-            _winapi.WaitForSingleObject(process, 5000)
-            _winapi.CloseHandle(process)
-        if thread is not None:
-            _winapi.CloseHandle(thread)
+    finally:
+        try:
+            # Closing the job also kills descendants after the parent exits.
+            if not kernel.CloseHandle(job):
+                raise RuntimeError('owned job termination could not be requested')
+            if process is not None and _winapi.WaitForSingleObject(process, 5000) != 0:
+                raise RuntimeError('owned process termination was not confirmed')
+        finally:
+            try:
+                if process is not None:
+                    _winapi.CloseHandle(process)
+            finally:
+                if thread is not None:
+                    _winapi.CloseHandle(thread)
 
 FLAGS = ('static_finite', 'dynamic_finite', 'simulation_complete', 'saved_sim_reloaded',
          'reloaded_simulation_complete', 'reloaded_dynamic_finite')
