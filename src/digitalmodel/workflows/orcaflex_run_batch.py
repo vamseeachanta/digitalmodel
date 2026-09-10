@@ -24,9 +24,15 @@ import pandas as pd
 import yaml
 from loguru import logger
 
+from digitalmodel.hydrodynamics.diffraction.validation_runner import (
+    VERDICT_FAIL,
+    VERDICT_PASS,
+    VERDICT_SKIPPED,
+)
 from digitalmodel.solvers.orcaflex.orcaflex_parallel_analysis import (
     OrcaFlexParallelAnalysis,
 )
+from digitalmodel.solvers.orcaflex.yaml_utils import OrcaFlexLoader, orcaflex_dump
 from digitalmodel.workflows.parametric_run import _load_cases, _set_dotted
 
 # Owner resource policy (dm#1553): OrcaFlex = multiple-batch mode sized to the
@@ -140,8 +146,27 @@ def router(cfg: dict) -> dict:
         "manifest": str(manifest_path),
         "summary": str(summary_path),
     }
+    _set_run_verdict(settings, rows, summary, results_dir)
     cfg["orcaflex_run_batch"] = settings
     return cfg
+
+
+def _set_run_verdict(settings: dict, rows: list[dict], summary: dict, output_dir: Path) -> None:
+    """Expose completed-case evidence to the existing engine exit contract."""
+    issues = [
+        f"{row['model']}: {row.get('error') or 'Missing or failed solver result'}"
+        for row in rows if row["status"] != "completed"
+    ]
+    if not rows:
+        issues.append("Batch produced no cases")
+    mock = summary["mock"]
+    settings["validation_verdict"] = (
+        VERDICT_FAIL if issues else VERDICT_SKIPPED if mock else VERDICT_PASS
+    )
+    settings["validation_issues"] = issues
+    settings["solver_available"] = not mock
+    settings["solver_identity"] = "OrcaFlex" if not mock else None
+    settings["output_directory"] = str(output_dir)
 
 
 def default_workers(cpu_count: int | None = None) -> int:
@@ -221,7 +246,7 @@ def _render_cases(
                     index=index, stem=model_path.stem
                 )
                 case_file.parent.mkdir(parents=True, exist_ok=True)
-                case_file.write_text(yaml.safe_dump(case_model, sort_keys=False))
+                orcaflex_dump(case_model, case_file)
             else:
                 case_file = model_path
             rendered.append(
@@ -302,8 +327,8 @@ def _write_summary(
 
 
 def _read_model_yaml(path: Path) -> dict:
-    with path.open() as stream:
-        loaded = yaml.safe_load(stream) or {}
+    with path.open(encoding="utf-8-sig") as stream:
+        loaded = yaml.load(stream, Loader=OrcaFlexLoader) or {}
     if not isinstance(loaded, dict):
         raise ValueError(f"Expected mapping YAML OrcaFlex model in {path}")
     return loaded

@@ -14,6 +14,26 @@ from typing import Any
 import yaml
 
 
+class OrcaFlexLoader(yaml.SafeLoader):
+    """Retain native blank scalars as empty text, distinct from defaults.
+
+    OrcaFlex exports empty script fields as blank scalars and numeric default
+    fields as ``~``. Collapsing both to None can turn an empty script into the
+    executable text ``~`` after dumping. Explicit YAML null tokens (``~``,
+    ``null``, ``Null``, ``NULL``) still become None and dump canonically as ``~``.
+    Quoted strings retain SafeLoader semantics. This is not lexical round-trip
+    preservation, and the subclass does not modify global SafeLoader behavior.
+    """
+
+
+def _construct_native_null(loader: yaml.SafeLoader, node: yaml.ScalarNode) -> Any:
+    value = loader.construct_scalar(node)
+    return "" if value == "" else None
+
+
+OrcaFlexLoader.add_constructor('tag:yaml.org,2002:null', _construct_native_null)
+
+
 class OrcaFlexDumper(yaml.SafeDumper):
     """Custom YAML dumper for OrcaFlex format.
 
@@ -57,7 +77,7 @@ def orcaflex_dump(data: dict, path: Path, header: str | None = None) -> None:
         sort_keys=False,
         width=1000,
     )
-    with open(path, 'w') as f:
+    with open(path, 'w', encoding='utf-8') as f:
         if header:
             f.write(header.rstrip('\n') + '\n')
             if not header.endswith('---'):
@@ -91,5 +111,5 @@ def orcaflex_load(path: Path) -> tuple[dict, list[str]]:
                     in_header = False
             yaml_lines.append(line)
 
-    data = yaml.safe_load('\n'.join(yaml_lines)) or {}
+    data = yaml.load('\n'.join(yaml_lines), Loader=OrcaFlexLoader) or {}
     return data, header_lines
