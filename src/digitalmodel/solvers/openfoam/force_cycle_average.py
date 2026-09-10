@@ -82,6 +82,52 @@ def extrema(t, y, start, smooth):
 MIN_SEP = 300.0
 
 
+def envelope_trend(iterations, series, period, n_windows=3):
+    """Measure period-scaled peak-to-peak envelopes at the end of a history.
+
+    Returned windows are chronological (the newest is last).  Each spans two of
+    this history's own wobble periods.
+    """
+    t = np.asarray(iterations, dtype=float)
+    y = np.asarray(series, dtype=float)
+    if len(t) != len(y):
+        raise ValueError("iterations and series must have the same length")
+    if len(t) < 2 or not np.isfinite(period) or period <= 0 or n_windows < 1:
+        return [], "indeterminate (history shorter than four wobble periods)"
+    steps = np.diff(t)
+    sample_step = float(np.median(steps))
+    if not np.all(np.isfinite(steps)) or np.any(steps <= 0):
+        raise ValueError("iterations must be strictly increasing")
+    width = max(11, int(round(period / (8.0 * sample_step))))
+    if width % 2 == 0:
+        width += 1
+    pad = width // 2
+    smoothed = np.convolve(
+        np.pad(y, pad, mode="reflect"), np.ones(width) / width, mode="valid"
+    )
+
+    newest_end = float(t[-1])
+    window_width = 2.0 * float(period)
+    windows = []
+    for offset in range(int(n_windows) - 1, -1, -1):
+        end = newest_end - offset * window_width
+        start = end - window_width
+        selected = (t >= start) & (t <= end)
+        if int(selected.sum()) < 200:
+            continue
+        envelope = float(np.ptp(smoothed[selected]))
+        windows.append((float(start), float(end), envelope))
+    if len(windows) < 2:
+        return windows, "indeterminate (history shorter than four wobble periods)"
+    ratio = (
+        windows[-1][2] / windows[-2][2]
+        if windows[-2][2] != 0
+        else (1.0 if windows[-1][2] == 0 else math.inf)
+    )
+    verdict = "decaying" if ratio < 0.8 else "rising" if ratio > 1.25 else "flat"
+    return windows, verdict
+
+
 def aitken(x1, x2, x3):
     d = x1 + x3 - 2 * x2
     return None if abs(d) < 1e-12 else (x1 * x3 - x2 * x2) / d
@@ -143,6 +189,17 @@ def analyse(path, start=500.0, smooth=25, gate_pct=1.0, amp_pct=1.0):
             out["aitken_pressure"] = float(m); out["aitken_total"] = float(vis_last + m)
     if len(ex) >= 2:
         out["half_period_last"] = float(ex[-1][0] - ex[-2][0])
+        period = float(2.0 * np.median(np.diff([point[0] for point in ex])))
+        windows, verdict = envelope_trend(t, pr, period)
+        out["envelope_windows"] = windows
+        out["envelope_newest"] = windows[-1][2] if windows else None
+        out["envelope_verdict"] = verdict
+        out["envelope_period"] = period
+    else:
+        out["envelope_windows"] = []
+        out["envelope_newest"] = None
+        out["envelope_verdict"] = "indeterminate (history shorter than four wobble periods)"
+        out["envelope_period"] = None
     fit = damped_fit(t, pr, ex[0][0]) if len(ex) >= 3 else None
     if len(ex) < 3:
         out["note"] = f"{len(ex)} extremum/extrema only: no cycle average or asymptote yet (need 3)"
@@ -153,6 +210,14 @@ def analyse(path, start=500.0, smooth=25, gate_pct=1.0, amp_pct=1.0):
             # amplitude A exp(-(t-t0)/tau) < amp_pct % of total
             need = fit["tau"] * math.log(fit["amplitude"] / (amp_pct / 100 * tot_abs)) if fit["amplitude"] > amp_pct / 100 * tot_abs else 0.0
             out["iteration_amp_below_pct"] = float(fit["t0"] + max(need, 0.0))
+    agreement = None
+    if "aitken_total" in out and "fit_total" in out:
+        agreement = float(abs(out["aitken_total"] - out["fit_total"]) / max(abs(out["fit_total"]), 1e-9) * 100.0)
+    out["estimator_agreement_pct"] = agreement
+    envelope_ok = out["envelope_verdict"] in {"decaying", "flat"}
+    out["settling_verdict"] = "settled" if envelope_ok and (
+        out.get("cycle_power_gate", False) or (agreement is not None and agreement <= 2.0)
+    ) else "not settled"
     return out
 
 
@@ -174,6 +239,11 @@ def main(argv=None):
         print(f"cycle {'latest' if i == 0 else 'previous' if i == 1 else 'earlier':8s} {c['from']:.0f}-{c['to']:.0f} ({c['n']} it): total {kN(c['total'])}  pressure {kN(c['pressure'])}  viscous {kN(c['viscous'])} kN")
     if "cycle_change_pct" in r:
         print(f"CYCLE POWER GATE   : {'PASS' if r['cycle_power_gate'] else 'FAIL'}  (cycle-to-cycle change of the total {r['cycle_change_pct']:.2f} %, gate {a.gate_pct} %)")
+    if r["envelope_windows"]:
+        values = " -> ".join(f"{window[2] / 1000:.0f}" for window in r["envelope_windows"])
+        print(f"envelope (2 periods)   : {values} kN  {r['envelope_verdict'].upper()}   (period {r['envelope_period']:.0f} it)")
+    else:
+        print(f"envelope (2 periods)   : unavailable  {r['envelope_verdict'].upper()}")
     if "aitken_total" in r:
         print(f"Aitken asymptote   : pressure {kN(r['aitken_pressure'])} kN -> settled total {kN(r['aitken_total'])} kN")
     if "fit" in r:
@@ -181,6 +251,9 @@ def main(argv=None):
         print(f"damped-cosine fit  : mean {kN(f['mean'])} ± {f['mean_se'] / 1000:.1f} kN, amplitude {f['amplitude'] / 1000:.0f} kN, tau {f['tau']:.0f} it, period {f['period']:.0f} it, rms resid {f['rms_residual'] / 1000:.1f} kN -> settled total {kN(r['fit_total'])} kN")
         if "iteration_amp_below_pct" in r:
             print(f"wobble < {a.amp_pct} % of total at ~{r['iteration_amp_below_pct']:.0f} iterations (fit)")
+    agreement = "n/a" if r["estimator_agreement_pct"] is None else f"{r['estimator_agreement_pct']:.2f}"
+    cycle_gate = "pass" if r.get("cycle_power_gate", False) else "fail"
+    print(f"SETTLING VERDICT    : {r['settling_verdict']}  (cycle gate {cycle_gate}, estimator agreement {agreement} %, envelope {r['envelope_verdict']})")
     if a.json:
         Path(a.json).write_text(json.dumps(r, indent=1))
     return 0

@@ -21,7 +21,7 @@ from typing import Any, Sequence
 
 import numpy as np
 
-from .force_cycle_average import extrema, load_force
+from .force_cycle_average import envelope_trend, extrema, load_force
 
 COMPONENTS = ("total", "pressure", "viscous")
 FALLBACK_WINDOW = 2_500.0
@@ -38,7 +38,7 @@ def _period(t: np.ndarray, pressure: np.ndarray) -> float | None:
     if len(points) < 3:
         return None
     full_periods = [points[index][0] - points[index - 2][0] for index in range(2, len(points))]
-    return float(np.mean(full_periods))
+    return float(np.median(full_periods))
 
 
 def _window_mean(t: np.ndarray, values: np.ndarray, end: float, window: float) -> float:
@@ -83,6 +83,17 @@ def analyse(
     path_a, ta, total_a, pressure_a, viscous_a = load_force(Path(case_a))
     path_b, tb, total_b, pressure_b, viscous_b = load_force(Path(case_b))
     period_a, period_b = _period(ta, pressure_a), _period(tb, pressure_b)
+    too_short = "indeterminate (history shorter than four wobble periods)"
+    envelope_a = (
+        envelope_trend(ta, pressure_a, period_a)[1]
+        if period_a is not None
+        else too_short
+    )
+    envelope_b = (
+        envelope_trend(tb, pressure_b, period_b)[1]
+        if period_b is not None
+        else too_short
+    )
     if period_a is None or period_b is None:
         estimated_period = FALLBACK_WINDOW / 2.0
         default_window = FALLBACK_WINDOW
@@ -162,6 +173,7 @@ def analyse(
         "files": [str(path_a), str(path_b)],
         "labels": list(labels),
         "periods": {"a": period_a, "b": period_b, "pair": estimated_period, "source": period_source},
+        "envelope_verdicts": {"a": envelope_a, "b": envelope_b},
         "default_window": default_window,
         "window": selected_window,
         "end": selected_end,
@@ -186,6 +198,10 @@ def _print(result: dict[str, Any]) -> None:
     print(
         f"matched windows: {label_a}/{label_b}; end {result['end']:.0f}; "
         f"window {result['window']:.0f} iterations"
+    )
+    print(
+        f"envelopes: {label_a} {result['envelope_verdicts']['a']}; "
+        f"{label_b} {result['envelope_verdicts']['b']}"
     )
     for name, row in result["components"].items():
         corr = "n/a" if row["correlation"] is None else f"{row['correlation']:.3f}"
@@ -227,6 +243,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     except WindowRangeError as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
+    for key, label in zip(("a", "b"), result["labels"]):
+        if result["envelope_verdicts"][key] == "rising":
+            print(
+                f"envelope is rising in {label}; the run is not converged and a relative "
+                "from it is not meaningful",
+                file=sys.stderr,
+            )
+            return 3
     _print(result)
     if args.json:
         Path(args.json).write_text(json.dumps(result, indent=2) + "\n")

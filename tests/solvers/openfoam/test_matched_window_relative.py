@@ -22,9 +22,10 @@ def _write_history(
     factor: float = 1.0,
     phase: float = 0.0,
     common: np.ndarray | None = None,
+    growth: float = 0.0,
 ) -> Path:
     t = np.arange(start, stop, dtype=float)
-    wobble = 65_000.0 * np.exp(-t / 8_000.0) * np.cos(
+    wobble = (65_000.0 * np.exp(-t / 8_000.0) + growth * t) * np.cos(
         2.0 * np.pi * t / PERIOD + phase
     )
     pressure = factor * (0.3 * BASE + wobble)
@@ -118,3 +119,14 @@ def test_cli_all_components_labels_and_json(tmp_path, capsys):
     assert result["labels"] == ["fine", "coarse"]
     assert set(result["components"]) == {"total", "pressure", "viscous"}
     assert "fine/coarse" in capsys.readouterr().out
+
+
+def test_cli_refuses_relative_when_an_envelope_is_rising(tmp_path, capsys):
+    rising = _write_history(tmp_path / "rising.dat", growth=30.0)
+    decaying = _write_history(tmp_path / "decaying.dat")
+
+    assert main([str(rising), str(decaying), "--labels", "candidate,baseline"]) == 3
+    assert (
+        "envelope is rising in candidate; the run is not converged and a relative "
+        "from it is not meaningful"
+    ) in capsys.readouterr().err

@@ -5,6 +5,11 @@ run**. Use `matched_window_relative` when the result of interest is the **relati
 difference between two comparable runs** that still contain the slow free-surface
 pressure wobble.
 
+Completing a planned iteration budget does not establish convergence. In particular,
+cycle averages can look stable while the pressure-force envelope is growing. The tool
+therefore reports both input envelope verdicts and exits with status 3 instead of
+reporting a relative if either envelope is rising.
+
 ## Why matched windows
 
 The total force in a free-surface resistance run can carry a slowly decaying pressure
@@ -44,5 +49,15 @@ It also reports the relative at the same final end for windows of 0.5, 1, 1.5, a
 times the selected length. A stable comparison should be insensitive to these window
 lengths and normally show strong positive correlation across the sweep.
 
+Both the matched averaging window and each envelope measurement scale with the
+period inferred from that history's own pressure-force extrema. This matters when
+case periods differ: a fixed-width window covers unequal fractions of their cycles
+and can suppress peak-to-peak swing by unequal amounts, creating a false case trend.
+For absolute convergence, the companion reduction requires a non-rising envelope
+and either a passing cycle gate or estimator agreement within 2%; see
+[Hull-force convergence](force_convergence.md).
+
 The command exits with status 2 if either history is shorter than the requested
 window or their iteration ranges do not overlap by at least one complete window.
+It exits with status 3 when either input has a rising envelope, because a relative
+from a demonstrably unconverged run is not meaningful.

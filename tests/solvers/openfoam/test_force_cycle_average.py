@@ -9,8 +9,10 @@ import pytest
 from digitalmodel.solvers.openfoam.force_cycle_average import (
     MIN_SEP,
     analyse,
+    envelope_trend,
     extrema,
     load_force,
+    main,
 )
 
 MEAN = -50_000.0
@@ -88,3 +90,63 @@ def test_load_force_accepts_case_directory_layout(tmp_path, function_name):
     assert loaded == expected
     assert len(t) == 10
     np.testing.assert_allclose(total, pressure + viscous)
+
+
+@pytest.mark.parametrize(
+    ("amplitudes", "expected"),
+    [
+        ([4.0, 2.0, 1.0], "decaying"),
+        ([1.0, 2.0, 4.0], "rising"),
+        ([2.0, 2.0, 2.0], "flat"),
+    ],
+)
+def test_envelope_trend_classifies_period_scaled_cosines(amplitudes, expected):
+    period = 800.0
+    t = np.arange(6 * int(period), dtype=float)
+    amplitude = np.repeat(amplitudes, 2 * int(period))
+    pressure = amplitude * np.cos(2.0 * np.pi * t / period)
+
+    windows, verdict = envelope_trend(t, pressure, period)
+
+    assert len(windows) == 3
+    assert verdict == expected
+
+
+def test_envelope_windows_scale_with_each_case_period():
+    results = []
+    fixed_verdicts = []
+    for period in (780.0, 1_270.0):
+        t = np.arange(6 * int(period), dtype=float)
+        pressure = 3.0 * np.exp(-t / (6.0 * period)) * np.cos(
+            2.0 * np.pi * t / period
+        )
+        windows, verdict = envelope_trend(t, pressure, period)
+        results.append((windows, verdict))
+        fixed_ranges = [
+            np.ptp(pressure[(t >= t[-1] - offset - 1_500) & (t <= t[-1] - offset)])
+            for offset in (1_500, 0)
+        ]
+        fixed_ratio = fixed_ranges[-1] / fixed_ranges[-2]
+        fixed_verdicts.append("decaying" if fixed_ratio < 0.8 else "flat")
+
+    assert [verdict for _, verdict in results] == ["decaying", "decaying"]
+    assert fixed_verdicts == ["decaying", "flat"]
+    assert results[0][0][-1][1] - results[0][0][-1][0] == pytest.approx(2 * 780)
+    assert results[1][0][-1][1] - results[1][0][-1][0] == pytest.approx(2 * 1_270)
+
+
+def test_growing_envelope_overrides_passing_cycle_gate(tmp_path, capsys):
+    path = tmp_path / "growing.dat"
+    t = np.arange(7_201, dtype=float)
+    pressure = (20_000.0 + 8.0 * t) * np.cos(2.0 * np.pi * t / 1_200.0)
+    viscous = np.full_like(t, VISCOUS)
+    with path.open("w") as handle:
+        for ti, fp, fv in zip(t, pressure, viscous):
+            handle.write(f"{ti:g} {fp + fv:.12g} 0 0 {fp:.12g} 0 0 {fv:.12g} 0 0\n")
+
+    result = analyse(path, start=500, smooth=25, gate_pct=100)
+    assert result["cycle_power_gate"] is True
+    assert result["envelope_verdict"] == "rising"
+    assert result["settling_verdict"] == "not settled"
+    assert main([str(path), "--gate-pct", "100"]) == 0
+    assert "SETTLING VERDICT    : not settled" in capsys.readouterr().out
