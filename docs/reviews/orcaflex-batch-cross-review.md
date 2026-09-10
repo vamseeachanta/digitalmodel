@@ -21,6 +21,12 @@ Claude reviewed the runbook/report and requested changes: distinguish overlappin
 
 ## General findings and limits
 
+### Requested Claude follow-up
+
+The user requested a further Claude adversarial code review of head `ce372809`. The first full packet timed out without a verdict; a reduced packet retaining changed source/tests completed with exit zero and **MINOR**, with no functional defect found. The complete record is [Claude final review](orcaflex-batch-claude-final-review.md). Native/CI outcomes were supplied evidence; Claude performed a static code review, not independent native execution.
+
+The two non-blocking findings remain explicit: sidecar failure messages omit the variant index (the full case manifest retains per-case detail), and explicit null/Null/NULL dump spelling coverage can be extended. Existing loading, canonical dumping and native blank/default tests passed; no broader lossless-conversion claim is made. These are recorded for follow-up in issue 2051, not silently promoted to fixed. No implementation changed in this review follow-up.
+
 The legal scanner's named-repository route printed an empty resolved path and falsely passed. Existing [workspace-hub 3804](https://github.com/vamseeachanta/workspace-hub/issues/3804) received the reproduction. The actual digitalmodel scan used explicit-root `--all --diff-only` in an isolated hub worktree without initialized submodules and printed the correct path before passing. This workaround is not valid for every workspace layout.
 
 Includes, duplicate-key fidelity, same-stem collisions, authenticated evidence, global resource guards, versioned sidecar identity and production rollout remain outside this bounded acceptance. Review evidence supports a draft repair for integration review; it does not certify the broader execution plan.
