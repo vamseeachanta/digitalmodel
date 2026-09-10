@@ -171,6 +171,8 @@ def main():
         revision = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=root, check=True,
                                   capture_output=True, text=True, timeout=10)
         proof['revision'] = revision.stdout.strip()
+        if not all(path.is_file() for path in sources):
+            raise ValueError('mandatory proof source missing')
         proof['input_hashes'] = hashes(sources, root)
         argv = [sys.executable, '-B', str(sources[0]), '--solver', 'orcaflex',
                 '--json', '--output-dir', str(scratch)]

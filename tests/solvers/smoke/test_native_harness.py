@@ -20,6 +20,10 @@ def fake_repo(tmp_path):
     scripts = root / "scripts"
     scripts.mkdir(parents=True)
     (scripts / "solver_smoke_test.py").write_bytes(FIXTURE.read_bytes())
+    source = root / "src/digitalmodel/solvers/smoke"
+    source.mkdir(parents=True)
+    for name in ("probes.py", "workflow.py"):
+        (source / name).write_text("# fixture source\n")
     for args in (["init"], ["add", "."], ["-c", "user.name=Fixture", "-c",
                  "user.email=fixture@example.invalid", "commit", "-m", "fixture"]):
         subprocess.run(["git", *args], cwd=root, check=True, capture_output=True)
@@ -43,7 +47,11 @@ def test_success_retains_artifacts_and_sanitizes_proof(fake_repo, tmp_path):
     proof = json.loads((output / "proof.json").read_text())
     assert proof["ok"] is True
     assert proof["python_version"] and len(proof["revision"]) == 40
-    assert proof["input_hashes"] and len(proof["output_hashes"]) == 2
+    assert set(proof["input_hashes"]) == {
+        "scripts/solver_smoke_test.py", "src/digitalmodel/solvers/smoke/probes.py",
+        "src/digitalmodel/solvers/smoke/workflow.py",
+    }
+    assert len(proof["output_hashes"]) == 2
     assert len(list(output.glob("scratch-*/orcaflex/smoke.sim"))) == 1
     assert str(fake_repo) not in (output / "proof.json").read_text()
 
@@ -100,3 +108,13 @@ def test_existing_output_is_rejected(fake_repo, tmp_path):
     marker.write_text("untouched")
     assert invoke(fake_repo, output, "success").returncode != 0
     assert marker.read_text() == "untouched"
+
+
+@pytest.mark.parametrize("name", ["probes.py", "workflow.py"])
+def test_missing_proof_input_refuses_before_child_launch(fake_repo, tmp_path, name):
+    (fake_repo / "src/digitalmodel/solvers/smoke" / name).unlink()
+    output = tmp_path / "proof"
+    assert invoke(fake_repo, output, "success").returncode != 0
+    proof = json.loads((output / "proof.json").read_text())
+    assert proof["ok"] is False
+    assert not (output / "stdout.log").exists()
