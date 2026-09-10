@@ -47,12 +47,14 @@ from __future__ import annotations
 
 import math
 import statistics as st
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Iterable, Mapping, Sequence
 
 __all__ = [
     "GaugeEstimate",
     "InvarianceRow",
+    "VarianceBudget",
+    "t_quantile_95",
     "gauge_from_short_interval",
     "invariance_family",
     "reference_set_size",
@@ -60,15 +62,23 @@ __all__ = [
     "variance_budget",
 ]
 
-# Two-sided 95% Student t quantiles. Control sets are small by nature -- the
-# whole point is that they are cheap -- so the normal quantile understates
-# every count derived from them, and the count goes as the square.
+# Two-sided 95% Student t quantiles, tabulated for every degree of freedom up
+# to 30. Control sets are small by nature -- the whole point is that they are
+# cheap -- so the normal quantile understates every count derived from them,
+# and the count goes as the square of the multiplier.
+#
+# The table is exhaustive rather than sparse deliberately. Interpolating a
+# sparse table by rounding the degrees of freedom UP selects a SMALLER
+# quantile, because t falls as df rises, and so silently under-provisions the
+# very control set this function exists to size.
 _T95: Mapping[int, float] = {
     1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571, 6: 2.447, 7: 2.365,
     8: 2.306, 9: 2.262, 10: 2.228, 11: 2.201, 12: 2.179, 13: 2.160, 14: 2.145,
-    15: 2.131, 16: 2.120, 18: 2.101, 20: 2.086, 25: 2.060, 30: 2.042,
-    40: 2.021, 60: 2.000, 120: 1.980,
+    15: 2.131, 16: 2.120, 17: 2.110, 18: 2.101, 19: 2.093, 20: 2.086,
+    21: 2.080, 22: 2.074, 23: 2.069, 24: 2.064, 25: 2.060, 26: 2.056,
+    27: 2.052, 28: 2.048, 29: 2.045, 30: 2.042,
 }
+_Z95 = 1.959964
 
 # Chi-square quantiles for a variance interval, small degrees of freedom.
 _CHI2_LO: Mapping[int, float] = {
@@ -83,13 +93,23 @@ _CHI2_HI: Mapping[int, float] = {
 
 
 def t_quantile_95(df: int) -> float:
-    """Two-sided 95% t quantile, rounded up to the next tabulated degree."""
+    """Two-sided 95% Student t quantile.
+
+    Exact to three decimals for one to thirty degrees of freedom, and a
+    Cornish-Fisher expansion above that, where it is accurate to better than
+    one part in ten thousand. Returns infinity below one degree of freedom,
+    because a single article cannot estimate a variance and the caller must
+    not be handed a finite number that conceals that.
+    """
     if df < 1:
         return float("inf")
-    for k in sorted(_T95):
-        if df <= k:
-            return _T95[k]
-    return 1.96
+    if df in _T95:
+        return _T95[df]
+    z, v = _Z95, float(df)
+    return (z
+            + (z ** 3 + z) / (4.0 * v)
+            + (5.0 * z ** 5 + 16.0 * z ** 3 + 3.0 * z) / (96.0 * v ** 2)
+            + (3.0 * z ** 7 + 19.0 * z ** 5 + 17.0 * z ** 3 - 15.0 * z) / (384.0 * v ** 3))
 
 
 def _chi2(table: Mapping[int, float], df: int) -> float | None:
@@ -176,11 +196,18 @@ def gauge_from_short_interval(differences: Sequence[float]) -> GaugeEstimate:
 
 @dataclass(frozen=True)
 class InvarianceRow:
-    """One point on the confounded line of rate-and-offset solutions."""
+    """One point on the confounded line of rate-and-offset solutions.
+
+    ``reference_minus_campaign_offset[i]`` pairs with ``campaigns[i]`` and is
+    the offset DIFFERENCE against the reference campaign, since absolute
+    offsets are not knowable. Every row satisfies the observed contrasts by
+    construction, which is why no goodness-of-fit field is carried: there is
+    nothing to report but an identity.
+    """
 
     assumed_rate: float
-    required_offsets: tuple[float, ...]
-    fits_data_exactly: bool = True
+    campaigns: tuple[object, ...]
+    reference_minus_campaign_offset: tuple[float, ...]
 
 
 def invariance_family(
@@ -190,30 +217,42 @@ def invariance_family(
 ) -> list[InvarianceRow]:
     """Show that any rate fits, given a suitable set of campaign offsets.
 
-    Each contrast is the mean difference between a reference campaign and
-    campaign j, measured on articles common to both. For an assumed rate the
-    offset campaign j must carry is simply
+    Each contrast is the mean of (reference reading minus campaign j reading),
+    over articles common to both. Under the model in the module docstring,
 
-        offset[j] = contrast[j] - rate * elapsed[j]
+        contrast[j] = rate * elapsed[j] + (offset[ref] - offset[j])
 
-    Every row returned reproduces the observed contrasts exactly. That is the
-    point: a table where every row fits is a demonstration that the data does
-    not choose, not a sensitivity study.
+    so what the returned tuple holds is the DIFFERENCE
+    ``offset[ref] - offset[j]``, not campaign j's offset on its own. Only
+    differences are knowable: the absolute level is absorbed by the article
+    baselines and never appears.
 
-    :param contrasts: campaign index -> mean (reference minus that campaign).
-    :param elapsed: campaign index -> time since the reference campaign.
-    :raises ValueError: if the two mappings do not cover the same campaigns.
+    Every row reproduces the observed contrasts exactly. That is the point --
+    a table in which every row fits is a demonstration that the data does not
+    choose, not a sensitivity study.
+
+    :param contrasts: campaign key -> mean (reference minus that campaign).
+    :param elapsed: campaign key -> time since the reference campaign.
+    :raises ValueError: if the two mappings do not cover the same campaigns,
+        or if any value is not finite.
     """
     if set(contrasts) != set(elapsed):
         raise ValueError("contrasts and elapsed must cover the same campaigns")
+    for name, m in (("contrasts", contrasts), ("elapsed", elapsed)):
+        if not all(math.isfinite(v) for v in m.values()):
+            raise ValueError(f"{name} must be finite")
     keys = sorted(contrasts)
-    return [
-        InvarianceRow(
+    rows = []
+    for r in rates:
+        if not math.isfinite(r):
+            raise ValueError("assumed rates must be finite")
+        rows.append(InvarianceRow(
             assumed_rate=r,
-            required_offsets=tuple(contrasts[k] - r * elapsed[k] for k in keys),
-        )
-        for r in rates
-    ]
+            campaigns=tuple(keys),
+            reference_minus_campaign_offset=tuple(
+                contrasts[k] - r * elapsed[k] for k in keys),
+        ))
+    return rows
 
 
 def reference_set_size(
@@ -245,21 +284,40 @@ def reference_set_size(
     the variance to ``sd^2 * (1 + (m-1)*rho) / m``, which for positive rho puts
     a floor under the achievable precision no matter how many are carried.
 
-    :raises ValueError: non-positive scatter or tolerance.
+    The count is found by searching for the smallest m that actually satisfies
+    the constraint, and the constraint is verified before the answer is
+    returned. Fixed-point iteration on ``m = (t(m-1) sd / tol)^2`` is the
+    obvious approach and it is wrong: because t falls as m rises, the map can
+    cycle -- for sd = tol it alternates 6, 7, 6, 7 -- and whichever value the
+    loop happens to stop on may not meet the requirement at all. At
+    sd = 0.5 tol it oscillates 41, 2, 41, 2 and can return 2, whose half-width
+    is more than four times the tolerance asked for.
+
+    :raises ValueError: non-positive scatter or tolerance, or a requirement
+        that cannot be met within ``max_articles``.
     """
-    if difference_sd <= 0.0:
-        raise ValueError("difference_sd must be positive")
-    if tolerance <= 0.0:
-        raise ValueError("tolerance must be positive")
+    if not math.isfinite(difference_sd) or difference_sd <= 0.0:
+        raise ValueError("difference_sd must be positive and finite")
+    if not math.isfinite(tolerance) or tolerance <= 0.0:
+        raise ValueError("tolerance must be positive and finite")
+    if max_articles < 1:
+        raise ValueError("max_articles must be at least one")
+
     if not sd_is_estimated:
-        return max(1, math.ceil((1.96 * difference_sd / tolerance) ** 2))
-    m = 2
-    for _ in range(200):
-        nxt = max(2, math.ceil((t_quantile_95(m - 1) * difference_sd / tolerance) ** 2))
-        if nxt == m or nxt > max_articles:
-            return min(nxt, max_articles)
-        m = nxt
-    return m
+        m = max(1, math.ceil((_Z95 * difference_sd / tolerance) ** 2))
+        if m > max_articles:
+            raise ValueError(
+                f"a tolerance of {tolerance:g} needs {m} articles, "
+                f"beyond the limit of {max_articles}")
+        return m
+
+    # Two articles is the floor: one cannot estimate a variance at all.
+    for m in range(2, max_articles + 1):
+        if t_quantile_95(m - 1) * difference_sd / math.sqrt(m) <= tolerance:
+            return m
+    raise ValueError(
+        f"a tolerance of {tolerance:g} at a scatter of {difference_sd:g} "
+        f"cannot be met with {max_articles} articles")
 
 
 def minimum_detectable_rate(
@@ -294,8 +352,12 @@ def minimum_detectable_rate(
 
     :raises ValueError: non-positive inputs, or a power outside (0, 1).
     """
-    if difference_sd <= 0.0 or interval <= 0.0 or n_articles < 1:
-        raise ValueError("difference_sd, interval and n_articles must be positive")
+    if not (math.isfinite(difference_sd) and math.isfinite(interval)):
+        raise ValueError("difference_sd and interval must be finite")
+    if difference_sd <= 0.0 or interval <= 0.0:
+        raise ValueError("difference_sd and interval must be positive")
+    if not isinstance(n_articles, int) or isinstance(n_articles, bool) or n_articles < 1:
+        raise ValueError("n_articles must be a positive integer")
     if not 0.0 < power < 1.0:
         raise ValueError("power must lie strictly between 0 and 1")
     z_alpha = 1.96 if two_sided else 1.645
@@ -303,8 +365,9 @@ def minimum_detectable_rate(
     z_beta = _normal_quantile(power)
     var = 1.0 / n_articles
     if n_reference is not None:
-        if n_reference < 1:
-            raise ValueError("n_reference must be positive when supplied")
+        if (not isinstance(n_reference, int) or isinstance(n_reference, bool)
+                or n_reference < 1):
+            raise ValueError("n_reference must be a positive integer when supplied")
         var += 1.0 / n_reference
     se = difference_sd * math.sqrt(var)
     return (z_alpha + z_beta) * se / interval
@@ -343,28 +406,42 @@ class VarianceBudget:
     gauge_difference_sd: float
     residual_sd: float
     gauge_fraction_of_variance: float
+    estimates_consistent: bool
 
 
 def variance_budget(observed_sd: float, gauge_sd: float) -> VarianceBudget:
     """Split observed difference scatter into gauge and everything else.
 
-    The residual carries real article-to-article variation in rate together
-    with any reproducibility effect -- crew, procedure, instrument. This does
-    not separate those two; it says how much room is left for them, which is
-    usually enough to settle whether better equipment could help. When the
-    residual dominates, it cannot.
+    Subtracting variances assumes the two components are additive and
+    uncorrelated. The residual then carries real article-to-article variation
+    in rate TOGETHER WITH any reproducibility effect -- crew, procedure and
+    instrument alike.
+
+    Note what that does not license. A dominant residual does not show that
+    better equipment cannot help, because instrument reproducibility sits
+    inside the residual and not inside the gauge term: a short-interval repeat
+    by one crew measures repeatability, not reproducibility. Separating them
+    needs a study that varies crew and instrument deliberately.
 
     A residual of zero is returned where the gauge exceeds the observed
-    scatter, which happens when the gauge estimate is itself noisy and should
-    be read as "the gauge accounts for all of it", not as a negative variance.
+    scatter. That is not a finding that the gauge explains everything; it means
+    the two estimates are mutually inconsistent, which ``estimates_consistent``
+    reports, and usually indicates the gauge estimate is itself too noisy to
+    subtract.
+
+    :raises ValueError: negative or non-finite standard deviations.
     """
+    if not (math.isfinite(observed_sd) and math.isfinite(gauge_sd)):
+        raise ValueError("standard deviations must be finite")
     if observed_sd < 0.0 or gauge_sd < 0.0:
         raise ValueError("standard deviations must be non-negative")
     resid_var = max(0.0, observed_sd ** 2 - gauge_sd ** 2)
-    frac = 1.0 if observed_sd == 0 else min(1.0, gauge_sd ** 2 / observed_sd ** 2)
+    frac = (float("nan") if observed_sd == 0.0
+            else min(1.0, gauge_sd ** 2 / observed_sd ** 2))
     return VarianceBudget(
         observed_difference_sd=observed_sd,
         gauge_difference_sd=gauge_sd,
         residual_sd=math.sqrt(resid_var),
         gauge_fraction_of_variance=frac,
+        estimates_consistent=gauge_sd <= observed_sd,
     )

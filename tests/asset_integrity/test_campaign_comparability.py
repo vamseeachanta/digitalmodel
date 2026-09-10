@@ -8,6 +8,7 @@ been broken.
 from __future__ import annotations
 
 import math
+import statistics as st
 
 import pytest
 
@@ -54,23 +55,50 @@ class TestGaugeFromShortInterval:
 
 
 class TestInvarianceFamily:
-    def test_every_assumed_rate_fits_the_data_exactly(self):
-        """The central negative result: the data does not choose a rate."""
-        contrasts = {1: 3.630, 2: 2.993}
-        elapsed = {1: 0.5914, 2: 0.6407}
-        rows = invariance_family(contrasts, elapsed, [0.0, 2.0, 4.67, 10.0])
-        assert len(rows) == 4
-        for row in rows:
-            # Reconstructing the contrast from rate and offset must return the
-            # observation, for every rate. That is the confounding.
-            for k, off in zip(sorted(contrasts), row.required_offsets):
-                assert off + row.assumed_rate * elapsed[k] == pytest.approx(
-                    contrasts[k], abs=1e-9)
+    def test_raw_observations_are_reproduced_under_every_assumed_rate(self):
+        """The central negative result, tested against synthetic RAW readings.
+
+        Rather than re-running the module's own arithmetic, this builds
+        observations from a known truth, derives the contrasts from them, and
+        then checks that a DIFFERENT assumed rate reconstructs the very same
+        readings once its offsets are applied. That is the confounding.
+        """
+        elapsed = {1: 0.6, 2: 1.4}
+        baselines = [350.0, 355.0, 360.0, 344.0]
+        true_rate, true_offset = 4.0, {0: 0.0, 1: 1.5, 2: -0.5}
+
+        def reading(base, j):
+            t = 0.0 if j == 0 else elapsed[j]
+            return base - true_rate * t + true_offset[j]
+
+        obs = {j: [reading(b, j) for b in baselines] for j in (0, 1, 2)}
+        contrasts = {j: st.mean([obs[0][i] - obs[j][i]
+                                 for i in range(len(baselines))])
+                     for j in (1, 2)}
+
+        for row in invariance_family(contrasts, elapsed, [0.0, true_rate, 9.0]):
+            for k, ref_minus in zip(row.campaigns,
+                                    row.reference_minus_campaign_offset):
+                # The returned value is offset[ref] - offset[k], so campaign k's
+                # own offset under this assumed rate is its negation.
+                offset_k = -ref_minus
+                for i in range(len(baselines)):
+                    rebuilt = (obs[0][i] - row.assumed_rate * elapsed[k] + offset_k)
+                    assert rebuilt == pytest.approx(obs[k][i], abs=1e-9)
 
     def test_offsets_move_with_the_assumed_rate(self):
         rows = invariance_family({1: 3.0}, {1: 0.5}, [0.0, 6.0])
-        assert rows[0].required_offsets[0] == pytest.approx(3.0)
-        assert rows[1].required_offsets[0] == pytest.approx(0.0)
+        assert rows[0].reference_minus_campaign_offset[0] == pytest.approx(3.0)
+        assert rows[1].reference_minus_campaign_offset[0] == pytest.approx(0.0)
+
+    def test_campaign_keys_are_carried_with_their_offsets(self):
+        rows = invariance_family({"b": 1.0, "a": 2.0}, {"b": 1.0, "a": 1.0}, [0.0])
+        assert rows[0].campaigns == ("a", "b")
+        assert rows[0].reference_minus_campaign_offset == (2.0, 1.0)
+
+    def test_non_finite_input_rejected(self):
+        with pytest.raises(ValueError):
+            invariance_family({1: float("nan")}, {1: 1.0}, [0.0])
 
     def test_mismatched_campaign_keys_rejected(self):
         with pytest.raises(ValueError):
@@ -89,12 +117,36 @@ class TestReferenceSetSize:
         estimated = reference_set_size(2.23, 1.0)
         assert estimated > known
 
-    def test_registered_scan_makes_the_control_set_practical(self):
-        assert reference_set_size(7.36, 1.0) > 100      # unregistered, cross-crew
-        assert reference_set_size(1.0, 1.0) <= 10       # registered scan
+    def test_returned_count_actually_meets_the_tolerance(self):
+        """The bug this replaced: fixed-point iteration returned counts that did not.
+
+        At sd == tol the iteration cycles 6, 7, 6 and could return 6, whose
+        half-width is 1.05. At sd == tol/2 it oscillates 41, 2 and could return
+        the floor of 2, whose half-width is 4.49 -- more than four times what
+        was asked for.
+        """
+        for sd, tol in ((7.36, 1.0), (2.23, 1.0), (1.0, 1.0), (0.5, 1.0),
+                        (0.5, 2.0), (4.9, 0.5), (3.0, 0.25)):
+            m = reference_set_size(sd, tol)
+            half = t_quantile_95(m - 1) * sd / math.sqrt(m)
+            assert half <= tol, f"sd={sd} tol={tol} returned {m}, half-width {half}"
+            # and it must be the SMALLEST such count
+            if m > 2:
+                prev = t_quantile_95(m - 2) * sd / math.sqrt(m - 1)
+                assert prev > tol, f"sd={sd} tol={tol}: {m-1} would have done"
+
+    def test_known_answers(self):
+        assert reference_set_size(7.36, 1.0) == 211
+        assert reference_set_size(2.23, 1.0) == 22
+        assert reference_set_size(1.0, 1.0) == 7
+        assert reference_set_size(0.5, 1.0) == 4
 
     def test_floor_is_two_articles(self):
         assert reference_set_size(0.01, 100.0) == 2
+
+    def test_infeasible_requirement_raises_rather_than_capping(self):
+        with pytest.raises(ValueError, match="cannot be met"):
+            reference_set_size(100.0, 0.001, max_articles=50)
 
     @pytest.mark.parametrize("sd,tol", [(0.0, 1.0), (-1.0, 1.0), (1.0, 0.0)])
     def test_rejects_non_positive_inputs(self, sd, tol):
@@ -141,6 +193,37 @@ class TestVarianceBudget:
         assert b.gauge_fraction_of_variance == 1.0
 
 
-def test_t_quantile_falls_to_normal_for_large_samples():
-    assert t_quantile_95(6) == pytest.approx(2.447)
-    assert t_quantile_95(10_000) == pytest.approx(1.96)
+class TestTQuantile:
+    def test_tabulated_values(self):
+        assert t_quantile_95(6) == pytest.approx(2.447)
+        assert t_quantile_95(17) == pytest.approx(2.110)
+        assert t_quantile_95(30) == pytest.approx(2.042)
+
+    def test_expansion_above_the_table(self):
+        assert t_quantile_95(40) == pytest.approx(2.021, abs=0.002)
+        assert t_quantile_95(60) == pytest.approx(2.000, abs=0.002)
+        assert t_quantile_95(120) == pytest.approx(1.980, abs=0.002)
+
+    def test_falls_to_normal_for_large_samples(self):
+        assert t_quantile_95(10_000) == pytest.approx(1.96, abs=1e-3)
+
+    def test_monotone_decreasing(self):
+        """Rounding df the wrong way understated every count derived from it."""
+        vals = [t_quantile_95(d) for d in range(1, 200)]
+        assert all(a > b for a, b in zip(vals, vals[1:]))
+
+    def test_below_one_degree_of_freedom_is_infinite(self):
+        assert t_quantile_95(0) == float("inf")
+
+
+def test_normal_quantile_matches_reference_values():
+    from digitalmodel.asset_integrity.campaign_comparability import _normal_quantile
+    for p, want in ((0.5, 0.0), (0.975, 1.959964), (0.8, 0.841621),
+                    (0.025, -1.959964), (0.001, -3.090232)):
+        assert _normal_quantile(p) == pytest.approx(want, abs=1e-6)
+
+
+class TestVarianceBudgetConsistency:
+    def test_inconsistent_estimates_are_flagged(self):
+        assert not variance_budget(1.0, 3.0).estimates_consistent
+        assert variance_budget(7.36, 2.23).estimates_consistent
