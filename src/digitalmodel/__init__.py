@@ -20,7 +20,7 @@ Domain groups::
 import warnings
 
 # Version of package
-__version__ = "0.0.9"
+__version__ = "2.1.0"
 
 __all__ = [
     "data_systems",
