@@ -105,6 +105,10 @@ class TestInvarianceFamily:
             invariance_family({1: 1.0}, {2: 1.0}, [0.0])
 
 
+# Scatter figures below are representative magnitudes for a repeat-inspection
+# programme, chosen so the known-answer cases exercise the small-sample regime
+# where the t correction and the search both matter. They are fixtures, not
+# measurements, and identify no asset.
 class TestReferenceSetSize:
     def test_count_is_quadratic_in_scatter(self):
         """Halving the scatter quarters the control set -- the design lever."""
