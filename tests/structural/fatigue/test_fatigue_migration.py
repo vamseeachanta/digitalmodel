@@ -36,6 +36,21 @@ from digitalmodel.fatigue import (
     quick_time_domain_analysis,
     quick_frequency_domain_analysis
 )
+from digitalmodel.fatigue.counting_contract import NonConservativeCountingError
+
+# Issue #3839: `quick_time_domain_analysis` and `FatigueAnalysisEngine.analyze_time_series`
+# count cycles through `structural.fatigue.rainflow`, which extracts a maximum stress
+# range below the signal's peak-to-valley span and so understates damage. Those entry
+# points now refuse damage calculation. The assertions below are preserved verbatim
+# rather than rewritten, and marked expected-fail against the refusal: when the path is
+# repaired or retired, strict=True turns the pass into a failure that demands this
+# marker's removal and a re-review of the numbers these tests assert.
+# https://github.com/vamseeachanta/workspace-hub/issues/3839
+_REFUSED_3839 = pytest.mark.xfail(
+    raises=NonConservativeCountingError,
+    strict=True,
+    reason="struct_fatigue refuses damage calculation pending #3839",
+)
 
 
 class TestSNCurveMigration:
@@ -315,6 +330,7 @@ class TestShearAnalysisMigration:
 class TestEngineeringValidationMigration:
     """Test engineering validation functions"""
 
+    @_REFUSED_3839
     def test_time_domain_validation(self):
         """Test time domain analysis validation"""
         # Generate test data with known characteristics
@@ -336,6 +352,7 @@ class TestEngineeringValidationMigration:
         # Should have some recommendations
         assert len(validation.recommendations) > 0
 
+    @_REFUSED_3839
     def test_validation_with_problematic_data(self):
         """Test validation with problematic input data"""
         # Very short time series
@@ -362,6 +379,7 @@ class TestEngineeringValidationMigration:
         )
         assert has_warning, "Expected warnings or damage for 10 GPa stress range"
 
+    @_REFUSED_3839
     def test_safety_factor_validation(self):
         """Test safety factor validation"""
         # Generate high damage scenario
@@ -380,6 +398,7 @@ class TestEngineeringValidationMigration:
 class TestComprehensiveIntegration:
     """Test comprehensive integration of migrated functionality"""
 
+    @_REFUSED_3839
     def test_full_analysis_workflow(self):
         """Test complete analysis workflow from data to report"""
         # Generate realistic stress history
