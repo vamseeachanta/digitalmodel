@@ -82,6 +82,72 @@ def extrema(t, y, start, smooth):
 MIN_SEP = 300.0
 
 
+def central_value(iterations, series, period, n_periods=4):
+    """Return a block-based mean and standard error over the newest full periods."""
+    t = np.asarray(iterations, dtype=float)
+    y = np.asarray(series, dtype=float)
+    if len(t) != len(y):
+        raise ValueError("iterations and series must have the same length")
+    if len(t) < 2 or not np.all(np.isfinite(t)) or np.any(np.diff(t) <= 0):
+        raise ValueError("iterations must contain at least two increasing finite values")
+    if (
+        not np.isfinite(period)
+        or period <= 0
+        or not isinstance(n_periods, int)
+        or n_periods < 1
+    ):
+        raise ValueError("period must be positive and n_periods a positive integer")
+
+    half_period = float(period) / 2.0
+    requested_blocks = 2 * int(n_periods)
+    available_blocks = int(math.floor((t[-1] - t[0]) / half_period))
+    available_blocks -= available_blocks % 2
+    blocks = min(requested_blocks, available_blocks)
+    window_end = float(t[-1])
+    window_start = window_end - blocks * half_period
+    selected = (t >= window_start) & (t <= window_end)
+    mean = float(np.mean(y[selected]))
+    result = {
+        "window_start": float(window_start),
+        "window_end": window_end,
+        "blocks": blocks,
+        "periods": blocks // 2,
+        "mean": mean,
+        "standard_error": None,
+        "relative_standard_error_pct": None,
+        "note": None,
+    }
+    if blocks < 4:
+        result["note"] = "fewer than 4 half-period blocks; standard error unavailable"
+        return result
+
+    block_means = []
+    for index in range(blocks):
+        lower = window_start + index * half_period
+        upper = lower + half_period
+        block_selected = (t >= lower) & (
+            (t <= upper) if index == blocks - 1 else (t < upper)
+        )
+        if np.any(block_selected):
+            block_means.append(float(np.mean(y[block_selected])))
+    if len(block_means) < 4:
+        result["blocks"] = len(block_means)
+        result["periods"] = len(block_means) // 2
+        result["note"] = "fewer than 4 populated half-period blocks; standard error unavailable"
+        return result
+    standard_error = float(np.std(block_means, ddof=1) / math.sqrt(len(block_means)))
+    result["blocks"] = len(block_means)
+    result["periods"] = len(block_means) // 2
+    result["standard_error"] = standard_error
+    if mean == 0:
+        result["note"] = "zero central value; relative standard error unavailable"
+    else:
+        result["relative_standard_error_pct"] = float(
+            standard_error / abs(mean) * 100.0
+        )
+    return result
+
+
 def envelope_trend(iterations, series, period, n_windows=3):
     """Measure period-scaled peak-to-peak envelopes at the end of a history.
 
@@ -195,6 +261,12 @@ def analyse(path, start=500.0, smooth=25, gate_pct=1.0, amp_pct=1.0):
         out["envelope_newest"] = windows[-1][2] if windows else None
         out["envelope_verdict"] = verdict
         out["envelope_period"] = period
+        out["central_value"] = {
+            "n_periods": 4,
+            "total": central_value(t, tot, period),
+            "pressure": central_value(t, pr, period),
+            "viscous": central_value(t, vi, period),
+        }
     else:
         out["envelope_windows"] = []
         out["envelope_newest"] = None
@@ -250,7 +322,7 @@ def analyse(path, start=500.0, smooth=25, gate_pct=1.0, amp_pct=1.0):
         agreement_basis = "Aitken vs latest cycle average (fit rejected)"
     out["estimator_agreement_pct"] = agreement
     out["estimator_agreement_basis"] = agreement_basis
-    envelope_ok = out["envelope_verdict"] in {"decaying", "flat"}
+    envelope_ok = out["envelope_verdict"] == "decaying"
     out["settling_verdict"] = "settled" if envelope_ok and (
         out.get("cycle_power_gate", False) or (agreement is not None and agreement <= 2.0)
     ) else "not settled"
@@ -273,6 +345,21 @@ def main(argv=None):
         print("note               : " + r["note"])
     for i, c in enumerate(r["cycles"]):
         print(f"cycle {'latest' if i == 0 else 'previous' if i == 1 else 'earlier':8s} {c['from']:.0f}-{c['to']:.0f} ({c['n']} it): total {kN(c['total'])}  pressure {kN(c['pressure'])}  viscous {kN(c['viscous'])} kN")
+    if "central_value" in r:
+        central = r["central_value"]
+        total = central["total"]
+        pressure = central["pressure"]
+        viscous = central["viscous"]
+        def uncertainty(value):
+            return "n/a" if value["standard_error"] is None else f"{value['standard_error'] / 1000:.1f}"
+        relative = total["relative_standard_error_pct"]
+        relative_text = "n/a" if relative is None else f"{relative:.1f} %"
+        print(
+            f"central value ({total['periods']} periods): total {kN(total['mean'])} +/- {uncertainty(total)} kN "
+            f"({relative_text})  pressure {kN(pressure['mean'])} +/- {uncertainty(pressure)}  "
+            f"viscous {kN(viscous['mean'])} +/- {uncertainty(viscous)}  "
+            f"[window {total['window_start']:.0f}-{total['window_end']:.0f}, {total['blocks']} blocks]"
+        )
     if "cycle_change_pct" in r:
         print(f"CYCLE POWER GATE   : {'PASS' if r['cycle_power_gate'] else 'FAIL'}  (cycle-to-cycle change of the total {r['cycle_change_pct']:.2f} %, gate {a.gate_pct} %)")
     if r["envelope_windows"]:
@@ -292,6 +379,15 @@ def main(argv=None):
     basis = r.get("estimator_agreement_basis")
     basis_txt = f", {basis}" if basis else ""
     print(f"SETTLING VERDICT    : {r['settling_verdict']}  (cycle gate {cycle_gate}, estimator agreement {agreement} %{basis_txt}, envelope {r['envelope_verdict']})")
+    if "central_value" in r:
+        total = r["central_value"]["total"]
+        relative = total["relative_standard_error_pct"]
+        uncertainty = "n/a" if relative is None else f"{relative:.1f} %"
+        print(
+            f"REPORTABLE AS      : {kN(total['mean'])} kN +/- {uncertainty} | settled: "
+            f"{'yes' if r['settling_verdict'] == 'settled' else 'no'}  "
+            "(a settled verdict does not imply a precise mean, and a precise mean does not imply a steady state)"
+        )
     if r.get("fit_reject_reason"):
         print(f"  fit rejected as an estimator: {r['fit_reject_reason']}")
     if a.json:

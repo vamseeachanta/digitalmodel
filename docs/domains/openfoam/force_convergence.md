@@ -18,10 +18,25 @@ sampled windows are required; without them the result is indeterminate.
 
 A run is reported as settled only when:
 
-1. the envelope is `decaying` or `flat`; and
+1. the envelope is `decaying`; and
 2. either the existing cycle-power gate passes or the Aitken and damped-cosine total
    force estimators agree within 2%.
 
-A rising or indeterminate envelope is not settled. The existing cycle-power and
-estimator output remains available separately so callers can diagnose which part of
-the three-part decision prevented settling.
+A flat, rising, or indeterminate envelope is not settled. The existing cycle-power
+and estimator output remains available separately so callers can diagnose which part
+of the three-part decision prevented settling.
+
+## Settled is not the same as precise
+
+The settling verdict describes whether the force history is approaching a steady
+state. It does not quantify how well the mean of the remaining oscillation is known.
+Conversely, a bounded, sustained oscillation can have a precisely determined mean
+without approaching a steady state.
+
+The reported central value is the plain mean over the final four complete wobble
+periods. Its standard error is calculated from half-period block means so that the
+oscillation's autocorrelation is retained. A force shall be quoted as the central
+value plus or minus its standard error, with the settling verdict carried as separate
+metadata. Use the uncertainty to state the precision of the mean and the settling
+verdict to state whether a steady state is being approached. Neither quantity
+substitutes for the other.

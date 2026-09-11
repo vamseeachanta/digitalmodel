@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import math
 from pathlib import Path
 
@@ -9,6 +10,7 @@ import pytest
 from digitalmodel.solvers.openfoam.force_cycle_average import (
     MIN_SEP,
     analyse,
+    central_value,
     envelope_trend,
     extrema,
     load_force,
@@ -21,6 +23,105 @@ TAU = 800.0
 PERIOD = 1_500.0
 PHASE = 0.35
 VISCOUS = -174_000.0
+
+
+def test_central_value_decaying_cosine_recovers_mean_and_se_shrinks():
+    t = np.arange(12 * int(PERIOD) + 1, dtype=float)
+    signal = MEAN + AMPLITUDE * np.exp(-t / (100 * PERIOD)) * np.cos(
+        2.0 * np.pi * t / PERIOD + PHASE
+    )
+
+    four = central_value(t, signal, PERIOD, n_periods=4)
+    eight = central_value(t, signal, PERIOD, n_periods=8)
+
+    assert abs(four["mean"] - MEAN) <= four["standard_error"]
+    assert abs(eight["mean"] - MEAN) <= eight["standard_error"]
+    assert eight["standard_error"] < four["standard_error"]
+
+
+def test_sustained_oscillation_mean_is_precise_independently_of_settling(tmp_path):
+    rows = 10_001
+    path = tmp_path / "sustained.dat"
+    t = np.arange(rows, dtype=float)
+    pressure = MEAN + AMPLITUDE * np.cos(2.0 * np.pi * t / PERIOD + PHASE)
+    viscous = np.full_like(t, VISCOUS)
+    _write_series(path, t, pressure + viscous, pressure, viscous)
+
+    result = analyse(path, start=0.0, smooth=25)
+    central = result["central_value"]["total"]
+
+    assert result["settling_verdict"] == "not settled"
+    assert abs(central["mean"] - (MEAN + VISCOUS)) <= central["standard_error"]
+
+
+def test_cli_reports_central_value_and_writes_component_json(tmp_path, capsys):
+    force_file = write_force(tmp_path / "long.dat", rows=10_000)
+    output = tmp_path / "result.json"
+
+    assert main([str(force_file), "--start", "0", "--json", str(output)]) == 0
+
+    stdout = capsys.readouterr().out
+    data = json.loads(output.read_text())
+    assert "central value (4 periods): total" in stdout
+    assert "REPORTABLE AS      :" in stdout
+    assert set(data["central_value"]) == {"n_periods", "total", "pressure", "viscous"}
+    for component in ("total", "pressure", "viscous"):
+        assert set(data["central_value"][component]) == {
+            "window_start", "window_end", "blocks", "periods", "mean", "standard_error",
+            "relative_standard_error_pct", "note",
+        }
+    old_line_prefixes = [
+        "pressure-force extrema", "last half period", "cycle latest",
+        "cycle previous", "cycle earlier", "CYCLE POWER GATE", "envelope",
+        "Aitken asymptote", "damped-cosine fit", "wobble <", "SETTLING VERDICT",
+    ]
+    positions = [stdout.index(prefix) for prefix in old_line_prefixes]
+    assert positions == sorted(positions)
+
+
+def test_zero_central_value_is_strict_json_compatible():
+    t = np.arange(4_001, dtype=float)
+    result = central_value(t, np.zeros_like(t), 1_000)
+
+    assert result["relative_standard_error_pct"] is None
+    assert "zero central value" in result["note"]
+    json.dumps(result, allow_nan=False)
+
+
+def test_large_residual_oscillation_reports_large_relative_standard_error(tmp_path):
+    rows = 10_001
+    path = tmp_path / "large-residual.dat"
+    t = np.arange(rows, dtype=float)
+    pressure = 20_000.0 + 2_000_000.0 * np.exp(-t / (6.0 * PERIOD)) * np.cos(
+        2.0 * np.pi * t / PERIOD + PHASE
+    )
+    viscous = np.zeros_like(t)
+    _write_series(path, t, pressure, pressure, viscous)
+
+    result = analyse(path, start=0.0, smooth=25)
+
+    assert result["estimator_agreement_pct"] <= 2.0
+    assert result["settling_verdict"] == "settled"
+    assert result["central_value"]["total"]["relative_standard_error_pct"] > 10.0
+
+
+def test_central_value_fewer_than_four_blocks_has_note():
+    t = np.arange(1_001, dtype=float)
+    result = central_value(t, np.cos(2 * np.pi * t / 1_000), 1_000, n_periods=1)
+
+    assert result["blocks"] == 2
+    assert result["periods"] == 1
+    assert result["standard_error"] is None
+    assert result["relative_standard_error_pct"] is None
+    assert result["note"]
+
+
+def _write_series(path, t, total, pressure, viscous):
+    with path.open("w") as handle:
+        handle.write("# OpenFOAM forces function object\n")
+        for values in zip(t, total, pressure, viscous):
+            ti, ft, fp, fv = values
+            handle.write(f"{ti:g} {ft:.12g} 0 0 {fp:.12g} 0 0 {fv:.12g} 0 0\n")
 
 
 def write_force(path: Path, rows: int = 4_000) -> Path:
