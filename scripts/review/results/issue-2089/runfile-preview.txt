@@ -1,0 +1,7 @@
+` PROVISIONAL NOT RUNNABLE: geometry, units, density and runtime qualification absent
+REPORT canary.pf
+HS 1
+HS 2
+HS 3
+REPORT OFF
+END

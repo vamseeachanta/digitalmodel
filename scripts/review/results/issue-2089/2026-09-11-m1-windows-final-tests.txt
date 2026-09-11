@@ -1,0 +1,61 @@
+Final Windows M1 synthetic verification; no GHS launch. Source copy uses tar byte preservation.
+
+src\digitalmodel\solvers\ghs\__init__.py SHA256 92694625a8108a6bfd920e8842cebfc1805f0b018eba06943aea11f79cabb355
+
+src\digitalmodel\solvers\ghs\_canonical.py SHA256 b5888a05501700f1a452ee6a8235c024c241c20e5615472340bf5955ea16794c
+
+src\digitalmodel\solvers\ghs\comparison.py SHA256 b193f80ea8476815a81499ff9372902d7a3721e540cbf4b8346ae7cc020e0676
+
+src\digitalmodel\solvers\ghs\contracts.py SHA256 9e68b82cd9db608b088327f8f1451c1e46d4b690f279a57d12176917973b8d0e
+
+src\digitalmodel\solvers\ghs\runner.py SHA256 349fb4aa1a0e42ba01606d1361d1afb697a6f57bc6a3093ddfd35bcc273155b7
+
+COMMAND ['C:\\Users\\vamseea\\.local\\bin\\uv.exe', 'venv', '--python', '3.11', 'C:\\Users\\vamseea\\AppData\\Local\\Temp\\dm2089-windows-final-nkuow_hd\\venv']
+
+Using CPython 3.11.15
+Creating virtual environment at: C:\Users\vamseea\AppData\Local\Temp\dm2089-windows-final-nkuow_hd\venv
+Activate with: C:\Users\vamseea\AppData\Local\Temp\dm2089-windows-final-nkuow_hd\venv\Scripts\activate
+
+
+EXIT 0
+
+COMMAND ['C:\\Users\\vamseea\\.local\\bin\\uv.exe', 'pip', 'install', '--python', 'C:\\Users\\vamseea\\AppData\\Local\\Temp\\dm2089-windows-final-nkuow_hd\\venv\\Scripts\\python.exe', 'pytest==8.4.2', 'numpy==2.4.4', 'scipy==1.17.1', 'PyYAML==6.0.3', 'loguru==0.7.3']
+
+Using Python 3.11.15 environment at: C:\Users\vamseea\AppData\Local\Temp\dm2089-windows-final-nkuow_hd\venv
+Resolved 11 packages in 6ms
+Installed 11 packages in 306ms
+ + colorama==0.4.6
+ + iniconfig==2.3.0
+ + loguru==0.7.3
+ + numpy==2.4.4
+ + packaging==26.3
+ + pluggy==1.6.0
+ + pygments==2.21.0
+ + pytest==8.4.2
+ + pyyaml==6.0.3
+ + scipy==1.17.1
+ + win32-setctime==1.2.0
+
+
+EXIT 0
+
+COMMAND ['C:\\Users\\vamseea\\AppData\\Local\\Temp\\dm2089-windows-final-nkuow_hd\\venv\\Scripts\\python.exe', '-c', 'import sys; import digitalmodel.solvers.ghs.contracts; import digitalmodel.solvers.ghs.runner; print(sys.version); print("Standalone actual parent-package import passed")']
+
+3.11.15 (main, Mar 24 2026, 22:57:51) [MSC v.1944 64 bit (AMD64)]
+Standalone actual parent-package import passed
+
+
+EXIT 0
+
+COMMAND ['C:\\Users\\vamseea\\AppData\\Local\\Temp\\dm2089-windows-final-nkuow_hd\\venv\\Scripts\\python.exe', '-m', 'pytest', 'tests/solvers/ghs', '--confcutdir=tests/solvers/ghs', '--import-mode=importlib', '-q', '-rs', '-p', 'no:cacheprovider', '--override-ini', 'addopts=', '--basetemp', 'C:\\Users\\vamseea\\AppData\\Local\\Temp\\dm2089-windows-final-nkuow_hd\\pytest']
+
+........................................................................ [ 85%]
+............                                                             [100%]
+84 passed in 1.56s
+
+
+EXIT 0
+
+Owned temp checkout, venv and pytest directory removed: True
+
+UV-managed cache preserved. Synthetic replay: test_synthetic_pipeline_binds_prepared_packet. Zero skips means local symlink tests executed; this does not qualify Windows live containment.
