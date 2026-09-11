@@ -19,7 +19,7 @@ def _key(node):
     return node.value if isinstance(node, ScalarNode) else None
 
 
-def _inventory(root):
+def _inventory(root, max_visits):
     """Bound expanded traversal as well as unique nodes (alias fan-out)."""
     stack = [(root, (), frozenset())]
     mappings, counts, visits = [], Counter(), 0
@@ -28,7 +28,7 @@ def _inventory(root):
         visits += 1
         if id(node) in ancestors:
             return mappings, counts, "Unsupported cyclic YAML alias graph"
-        if visits > 100000 or len(ancestors) > 100:
+        if visits > max_visits or len(ancestors) > 100:
             return mappings, counts, "Unsupported YAML graph traversal limit"
         counts[id(node)] += 1
         ancestors = ancestors | {id(node)}
@@ -115,7 +115,9 @@ def _mapping_issues(node, placement, ambiguous):
 def inspect_source(raw_text, sections, invalid_properties):
     """Return (severity, message, property, line) diagnostics and halt flag."""
     root = yaml.compose(raw_text, Loader=yaml.SafeLoader)
-    mappings, counts, failure = _inventory(root)
+    # Large vessel tables are legitimate linear-size documents. Bound expansion
+    # relative to source size, so compact alias fan-out cannot amplify work.
+    mappings, counts, failure = _inventory(root, max(100000, 2 * len(raw_text)))
     issues = []
     duplicate_general = isinstance(root, MappingNode) and sum(
         _key(key) == "General" for key, _ in root.value

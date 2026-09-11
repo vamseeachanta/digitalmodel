@@ -128,6 +128,19 @@ def test_deep_yaml_returns_diagnostic_before_recursive_parser_failure_escapes(tm
     assert result.errors
 
 
+def test_large_flat_table_is_not_an_alias_expansion(tmp_path):
+    result = check(tmp_path, "ExpansionTables: [" + ",".join(["0"] * 100010) + "]")
+    assert not result.errors
+
+
+def test_compact_alias_expansion_remains_bounded(tmp_path):
+    rows = ["ExpansionTables: &a0 [0]"]
+    for i in range(1, 8):
+        rows.append(f"Alias{i}: &a{i} [" + ",".join([f"*a{i-1}"] * 10) + "]")
+    result = check(tmp_path, "\n".join(rows))
+    assert any("traversal limit" in i.message for i in result.errors)
+
+
 def test_nested_unrelated_mode_does_not_enable_general(tmp_path):
     result = check(tmp_path, general(
         f"{METHOD}: Implicit time domain", "Unrelated:", f"  {MODE}: true",
