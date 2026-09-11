@@ -1,0 +1,6 @@
+# Stub standing in for an OrcaFlex binary .dat base file.
+# The content is deliberately irrelevant: the comparator
+# (template_generator.TemplateGenerator._generate_reference) performs path
+# arithmetic only and never opens the base file. This fixture exists so the
+# comparator's existence check passes during golden capture, and so the
+# `.dat` extension is exercised end to end.
