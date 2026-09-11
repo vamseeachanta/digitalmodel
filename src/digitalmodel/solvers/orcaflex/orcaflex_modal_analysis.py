@@ -16,6 +16,8 @@ except:
 # Reader imports
 from digitalmodel.solvers.orcaflex.orcaflex_utilities import OrcaflexUtilities
 
+from digitalmodel.solvers.orcaflex.run_state import check_statics
+
 ou = OrcaflexUtilities()
 
 
@@ -78,6 +80,9 @@ class OrcModalAnalysis:
         model = OrcFxAPI.Model()
         model.LoadData(file)
         model.CalculateStatics()
+        # #3838: modal results are taken about the static configuration, so a
+        # solve that did not reach a static state invalidates every mode below.
+        check_statics(model, context=str(file))
         ou.save_sim_file(model, file)
         lastMode = self.cfg["default"]["Analysis"]["Analyze"]["modal"]["lastMode"]
         spec = OrcFxAPI.ModalAnalysisSpecification(

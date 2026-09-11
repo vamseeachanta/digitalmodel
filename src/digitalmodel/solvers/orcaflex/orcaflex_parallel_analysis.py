@@ -14,6 +14,8 @@ import time
 from datetime import datetime
 import traceback
 
+from digitalmodel.solvers.orcaflex.run_state import check_simulation, check_statics
+
 try:
     import OrcFxAPI
     ORCAFLEX_AVAILABLE = True
@@ -106,12 +108,16 @@ class OrcaFlexParallelAnalysis:
             if run_static:
                 logger.info(f"Running static analysis: {file_path}")
                 model.CalculateStatics()
+                # #3838: the state is the only signal of a diverged solve, and
+                # it is read before the run is recorded complete.
+                check_statics(model, context=str(file_path))
                 result['static_complete'] = True
-            
+
             # Run dynamic simulation
             if run_dynamic:
                 logger.info(f"Running dynamic simulation: {file_path}")
                 model.RunSimulation()
+                check_simulation(model, context=str(file_path))
                 result['dynamic_complete'] = True
             
             # Save SIM file

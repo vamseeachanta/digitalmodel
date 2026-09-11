@@ -11,10 +11,12 @@ from digitalmodel.infrastructure.utils.ETL_components import ETL_components
 from digitalmodel.signal_processing.signal_analysis.adapters import TimeSeriesComponentsAdapter as TimeSeriesComponents
 from digitalmodel.solvers.orcaflex.orcaflex_objects import OrcaFlexObjects
 
-try:
-    # Third party imports
-    import OrcFxAPI
-except:
+# #3838: routed through the facade instead of `import OrcFxAPI`, so the binding
+# is not loaded before a version can be selected.
+from digitalmodel.solvers.orcaflex.orcaflex_api import available, lazy_api
+
+OrcFxAPI = lazy_api() if available() else None
+if OrcFxAPI is None:
     logging.debug("OrcFxAPI not available")
 
 

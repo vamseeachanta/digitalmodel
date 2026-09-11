@@ -29,7 +29,11 @@ from .builders import (  # noqa: F401
     GroupsBuilder,
 )
 
-from .post_validator import PostGenerationValidator, ValidationWarning
+from .post_validator import (
+    PostGenerationValidator,
+    ValidationWarning,
+    check_collection_collisions,
+)
 from .routers.mooring_router import MooringRouter
 from .routers.vessel_router import VesselRouter
 from .schema.generic import GenericModel
@@ -173,7 +177,14 @@ class ModularModelGenerator:
         self._write_parameters(inputs_dir / 'parameters.yml')
 
         # Generate master.yml (only include files that were actually generated)
-        self._write_master(output_dir / 'master.yml', generated_files)
+        master_path = output_dir / 'master.yml'
+        self._write_master(master_path, generated_files)
+
+        # A list-style collection REPLACES the collection in OrcaFlex, so two
+        # includefiles emitting the same key silently delete the earlier one's
+        # objects. This fails closed rather than warning: the defect produces a
+        # model that loads cleanly and is missing objects. See workspace-hub#3838.
+        check_collection_collisions(master_path, raise_on_collision=True)
 
         # Post-generation cross-builder validation
         self._run_post_validation(includes_dir)
@@ -330,6 +341,11 @@ class ModularModelGenerator:
         self._write_parameters(inputs_dir / 'parameters.yml')
         master_path = output_dir / 'master.yml'
         self._write_master(master_path, generated_files)
+
+        # Fails closed — see the note in generate(). Campaign overrides replace
+        # whole include files, which is exactly how a second emitter of the same
+        # collection key gets introduced. workspace-hub#3838.
+        check_collection_collisions(master_path, raise_on_collision=True)
 
         # Post-generation cross-builder validation
         findings = self._run_post_validation(includes_dir)

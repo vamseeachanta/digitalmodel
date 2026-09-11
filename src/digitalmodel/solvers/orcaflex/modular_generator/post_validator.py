@@ -5,6 +5,8 @@ Validates that generated model components are internally consistent:
 - Winches reference valid vessel names
 - Equipment (stinger/tensioner) is positioned coherently with vessel
 - No duplicate object names across builders
+- No OrcaFlex collection key is written in list style by more than one
+  includefile composed into the same master file
 """
 
 from __future__ import annotations
@@ -15,6 +17,8 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+
+from .schema.generic import SECTION_REGISTRY, SINGLETON_SECTIONS
 
 logger = logging.getLogger(__name__)
 
@@ -57,15 +61,105 @@ _OBJECT_SECTIONS = (
 )
 
 
+# Top-level OrcaFlex keys that are recognised but are not name-keyed
+# collections: a singleton section, or the master-file include directive.
+# Listed so that a legitimate key is not reported as unrecognised.
+_NON_COLLECTION_SECTIONS = frozenset(SINGLETON_SECTIONS) | frozenset(
+    {
+        "General",
+        "Environment",
+        # Master-file directive rather than a model section.
+        "includefile",
+        "BaseFile",
+    }
+)
+
+# Every top-level key this ecosystem recognises.  Union of the two existing
+# authorities: ``_OBJECT_SECTIONS`` above and ``SECTION_REGISTRY`` in
+# ``schema/generic.py`` (which additionally carries VariableData,
+# ExpansionTables and BrowserGroups), plus the non-collection keys.
+# ``BuilderRegistry`` is deliberately NOT a source here: it keys on output
+# file name, not on collection key.
+_KNOWN_TOP_LEVEL_KEYS = (
+    frozenset(_OBJECT_SECTIONS)
+    | frozenset(SECTION_REGISTRY)
+    | _NON_COLLECTION_SECTIONS
+)
+
+
 @dataclass
 class ValidationWarning:
     """A single validation finding."""
 
     level: str  # "error", "warning"
-    category: str  # "reference", "duplicate", "coherence"
+    category: str  # "reference", "duplicate", "coherence", "unrecognised"
     message: str
     file: str = ""
     object_name: str = ""
+
+
+@dataclass
+class CollectionCollision:
+    """One collection key written in list style by more than one file.
+
+    Attributes:
+        key: The OrcaFlex collection key, e.g. ``LineTypes``.
+        files: The composed files that each emit *key* in list style, in
+            composition order.  The last one wins in OrcaFlex; every
+            earlier one is destroyed.
+    """
+
+    key: str
+    files: list[str]
+
+    def describe(self) -> str:
+        """Return a one-line operator-readable statement of the collision."""
+        return (
+            f"Collection '{self.key}' is written in list style by "
+            f"{len(self.files)} composed includefiles: "
+            f"{', '.join(self.files)}. A list of '- Name:' entries REPLACES "
+            f"the collection in OrcaFlex, so '{self.files[-1]}' silently "
+            f"deletes every object written by "
+            f"{', '.join(self.files[:-1])}. Write each collection from "
+            f"exactly one includefile, or use name-keyed mapping style "
+            f"(which patches rather than replaces)."
+        )
+
+
+class CollectionCollisionError(Exception):
+    """Raised when composed includefiles destructively overwrite a collection.
+
+    Attributes:
+        collisions: Every collision found, not only the first.
+    """
+
+    def __init__(self, message: str, collisions: list[CollectionCollision]):
+        super().__init__(message)
+        self.collisions = collisions
+
+
+@dataclass
+class CollectionScanResult:
+    """Outcome of scanning a master file for collection-key collisions.
+
+    Attributes:
+        master: The master file scanned.
+        composed_files: Resolved includefiles, in composition order.
+        emitters: ``key -> [(display_path, style)]`` where *style* is
+            ``"list"`` or ``"mapping"``, in composition order.
+        unrecognised: ``(display_path, key)`` for every top-level key not
+            recognised as an OrcaFlex section.  Surfaced, never ignored.
+        collisions: Collection keys emitted in list style more than once.
+        warnings: Findings that do not by themselves fail the check
+            (unrecognised keys, unreadable or missing includefiles).
+    """
+
+    master: Path
+    composed_files: list[Path] = field(default_factory=list)
+    emitters: dict[str, list[tuple[str, str]]] = field(default_factory=dict)
+    unrecognised: list[tuple[str, str]] = field(default_factory=list)
+    collisions: list[CollectionCollision] = field(default_factory=list)
+    warnings: list[ValidationWarning] = field(default_factory=list)
 
 
 class PostGenerationValidator:
@@ -577,3 +671,317 @@ class PostGenerationValidator:
                     )
 
         return warnings
+
+    # ------------------------------------------------------------------
+    # Collection-key collision (destructive list-style overwrite)
+    # ------------------------------------------------------------------
+
+    def check_collection_collisions(
+        self, master_path: Path | str, *, raise_on_collision: bool = True
+    ) -> CollectionScanResult:
+        """Check a master file for destructive collection-key collisions.
+
+        See the module-level :func:`check_collection_collisions` for the
+        full contract.  This method exists so callers already holding a
+        validator instance need not import the function separately.
+
+        Args:
+            master_path: Master file that composes the includefiles.
+            raise_on_collision: Fail closed when a collision is found.
+
+        Returns:
+            The scan result.
+
+        Raises:
+            CollectionCollisionError: On collision, unless
+                *raise_on_collision* is False.
+        """
+        return check_collection_collisions(
+            master_path, raise_on_collision=raise_on_collision
+        )
+
+
+# ----------------------------------------------------------------------
+# Collection-key collision check
+# ----------------------------------------------------------------------
+#
+# OrcaFlex text data files encode a collection two ways, with different
+# semantics (Orcina webhelp, "Text data files: Examples of setting data"):
+#
+#   LineTypes:            <- name-keyed MAPPING: patches the collection
+#     Chain_84mm_R4:
+#       OD: 0.084
+#
+#   LineTypes:            <- LIST: REPLACES the collection; anything not
+#     - Name: Chain        listed is deleted
+#       OD: 0.084
+#
+# The generator emits list style, which is correct for authoring but safe
+# only while each collection is written by exactly one includefile.  Two
+# composed includefiles emitting the same key in list style means the later
+# one silently deletes the earlier one's objects, and OrcaFlex raises
+# nothing.  This check makes that condition fail closed.
+
+
+def _iter_includefile_refs(data: Any) -> list[str]:
+    """Collect ``includefile`` references in document order.
+
+    Walks the parsed document because OrcaFlex accepts the directive at the
+    top level (a list of ``- includefile:`` entries, the shape the
+    generator writes) and nested inside mappings.
+
+    Implemented here rather than reusing
+    ``modular_input_validation.utils.extract_includefiles`` because
+    importing that package executes its ``__init__``, which imports
+    ``OrcFxAPI`` at module scope.  This validator must stay importable
+    without a licensed solver installation.
+
+    Args:
+        data: Parsed YAML document.
+
+    Returns:
+        Include references as written, in document order.
+    """
+    refs: list[str] = []
+
+    def traverse(node: Any) -> None:
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key == "includefile" and isinstance(value, str):
+                    refs.append(value)
+                else:
+                    traverse(value)
+        elif isinstance(node, list):
+            for item in node:
+                traverse(item)
+
+    traverse(data)
+    return refs
+
+
+def _display_path(path: Path, base: Path) -> str:
+    """Render *path* relative to *base* with forward slashes when possible.
+
+    Args:
+        path: Path to render.
+        base: Directory to render relative to (the master file's parent).
+
+    Returns:
+        A stable, operator-readable path string.
+    """
+    try:
+        return path.relative_to(base).as_posix()
+    except ValueError:
+        return str(path)
+
+
+def _load_yaml_document(path: Path) -> tuple[Any, str | None]:
+    """Load a single YAML document.
+
+    Args:
+        path: File to load.
+
+    Returns:
+        Tuple of (parsed document or None, error message or None).
+    """
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return yaml.safe_load(fh), None
+    except (yaml.YAMLError, OSError) as exc:
+        return None, str(exc)
+
+
+def _compose(
+    master_path: Path, base: Path
+) -> tuple[list[tuple[Path, Any]], list[ValidationWarning]]:
+    """Resolve the includefiles a master composes, in composition order.
+
+    Nested includes are followed depth-first at the point of reference,
+    which is the order OrcaFlex applies them.  A file already composed is
+    not revisited, so an include cycle terminates.
+
+    Args:
+        master_path: The master file.
+        base: Directory used to render paths in findings.
+
+    Returns:
+        Tuple of (list of (resolved path, parsed document), warnings).
+    """
+    composed: list[tuple[Path, Any]] = []
+    warnings: list[ValidationWarning] = []
+    seen: set[Path] = {master_path}
+
+    def walk(parent: Path, data: Any) -> None:
+        for ref in _iter_includefile_refs(data):
+            ref_path = Path(ref)
+            resolved = (
+                ref_path
+                if ref_path.is_absolute()
+                else (parent.parent / ref_path)
+            )
+            try:
+                resolved = resolved.resolve()
+            except OSError:  # pragma: no cover - platform dependent
+                resolved = resolved.absolute()
+
+            if resolved in seen:
+                warnings.append(
+                    ValidationWarning(
+                        level="warning",
+                        category="coherence",
+                        message=(
+                            f"Includefile '{ref}' is composed more than once "
+                            f"(referenced from "
+                            f"'{_display_path(parent, base)}'); the repeat "
+                            f"is not re-scanned"
+                        ),
+                        file=_display_path(parent, base),
+                    )
+                )
+                continue
+            seen.add(resolved)
+
+            if not resolved.is_file():
+                warnings.append(
+                    ValidationWarning(
+                        level="error",
+                        category="reference",
+                        message=(
+                            f"Includefile '{ref}' referenced from "
+                            f"'{_display_path(parent, base)}' does not exist"
+                        ),
+                        file=_display_path(parent, base),
+                    )
+                )
+                continue
+
+            child, error = _load_yaml_document(resolved)
+            if error is not None:
+                warnings.append(
+                    ValidationWarning(
+                        level="error",
+                        category="coherence",
+                        message=(
+                            f"Includefile '{_display_path(resolved, base)}' "
+                            f"could not be parsed: {error}"
+                        ),
+                        file=_display_path(resolved, base),
+                    )
+                )
+                continue
+
+            composed.append((resolved, child))
+            walk(resolved, child)
+
+    master_data, master_error = _load_yaml_document(master_path)
+    if master_error is not None:
+        warnings.append(
+            ValidationWarning(
+                level="error",
+                category="coherence",
+                message=(
+                    f"Master file '{_display_path(master_path, base)}' could "
+                    f"not be parsed: {master_error}"
+                ),
+                file=_display_path(master_path, base),
+            )
+        )
+        return composed, warnings
+
+    walk(master_path, master_data)
+    return composed, warnings
+
+
+def check_collection_collisions(
+    master_path: Path | str, *, raise_on_collision: bool = True
+) -> CollectionScanResult:
+    """Fail closed when composed includefiles destructively overwrite a collection.
+
+    Takes a master file rather than generator state, so it validates a
+    hand-edited ``includes/`` directory that never passed through the
+    generator — the case most likely to trigger the defect.
+
+    A collection key emitted in **list** style by more than one composed
+    includefile is a collision: OrcaFlex applies a list as a replacement,
+    so the last file silently deletes the objects written by the earlier
+    ones.  Mapping-style repeats are legitimate and do not fire, because a
+    name-keyed mapping patches the collection.
+
+    Any top-level key not recognised as an OrcaFlex section is recorded in
+    ``result.unrecognised`` and as a ``ValidationWarning``, so an unknown
+    key cannot pass silently.
+
+    Args:
+        master_path: Master file that composes the includefiles.
+        raise_on_collision: When True (the default) a collision raises.
+            Set False to inspect the result instead, e.g. to report every
+            finding at once.
+
+    Returns:
+        A :class:`CollectionScanResult` describing the composition.
+
+    Raises:
+        CollectionCollisionError: A collection key is written in list style
+            by more than one composed includefile.
+    """
+    master = Path(master_path)
+    base = master.parent
+
+    composed, warnings = _compose(master, base)
+
+    result = CollectionScanResult(master=master, warnings=list(warnings))
+    result.composed_files = [path for path, _ in composed]
+
+    for path, data in composed:
+        display = _display_path(path, base)
+        if not isinstance(data, dict):
+            # A composed file that is not a mapping defines no sections.
+            continue
+        for key, value in data.items():
+            if not isinstance(key, str):
+                continue
+            if isinstance(value, list):
+                style = "list"
+            elif isinstance(value, dict):
+                style = "mapping"
+            else:
+                # Scalar or null: defines no collection.
+                continue
+            result.emitters.setdefault(key, []).append((display, style))
+
+            if key not in _KNOWN_TOP_LEVEL_KEYS:
+                result.unrecognised.append((display, key))
+                result.warnings.append(
+                    ValidationWarning(
+                        level="warning",
+                        category="unrecognised",
+                        message=(
+                            f"Top-level key '{key}' in '{display}' is not a "
+                            f"recognised OrcaFlex section. It is not covered "
+                            f"by the collection-collision check; confirm it "
+                            f"is intended and, if it is a collection, add it "
+                            f"to the known-section set"
+                        ),
+                        file=display,
+                        object_name=key,
+                    )
+                )
+
+    # The collision rule keys on style, not on section classification: a
+    # list REPLACES whatever the key names, recognised or not.
+    for key, entries in result.emitters.items():
+        list_emitters = [name for name, style in entries if style == "list"]
+        if len(list_emitters) > 1:
+            result.collisions.append(
+                CollectionCollision(key=key, files=list_emitters)
+            )
+
+    if result.collisions and raise_on_collision:
+        raise CollectionCollisionError(
+            "Destructive collection-key collision in "
+            f"'{_display_path(master, base)}': "
+            + " ".join(collision.describe() for collision in result.collisions),
+            result.collisions,
+        )
+
+    return result
