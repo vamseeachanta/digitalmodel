@@ -210,10 +210,46 @@ def analyse(path, start=500.0, smooth=25, gate_pct=1.0, amp_pct=1.0):
             # amplitude A exp(-(t-t0)/tau) < amp_pct % of total
             need = fit["tau"] * math.log(fit["amplitude"] / (amp_pct / 100 * tot_abs)) if fit["amplitude"] > amp_pct / 100 * tot_abs else 0.0
             out["iteration_amp_below_pct"] = float(fit["t0"] + max(need, 0.0))
+    # A damped-cosine fit is only usable as an estimator when it actually describes a
+    # damped oscillation: a positive decay time, a period comparable with the measured
+    # wobble period, a finite standard error on the mean, and residuals small against the
+    # oscillation it claims to fit. Unconstrained least squares can otherwise return a
+    # formally "converged" fit with tau < 0 or a period of a few iterations, which is
+    # numerical noise; letting such a fit veto two agreeing estimators wrongly marks a
+    # settled run as unsettled.
+    fit_usable = False
+    if fit:
+        measured_period = out.get("envelope_period")
+        period_ok = True
+        if measured_period:
+            period_ok = 0.3 <= fit["period"] / measured_period <= 3.0
+        se = fit.get("mean_se")
+        fit_usable = (
+            fit["tau"] > 0
+            and period_ok
+            and se is not None and math.isfinite(se)
+            and fit["rms_residual"] <= max(abs(fit["amplitude"]), 1e-9)
+        )
+        out["fit_usable"] = fit_usable
+        if not fit_usable:
+            reasons = []
+            if fit["tau"] <= 0: reasons.append("non-decaying tau")
+            if not period_ok: reasons.append(f"period {fit['period']:.0f} it vs measured {measured_period:.0f} it")
+            if se is None or not math.isfinite(se): reasons.append("infinite standard error")
+            if fit["rms_residual"] > max(abs(fit["amplitude"]), 1e-9): reasons.append("residual exceeds amplitude")
+            out["fit_reject_reason"] = "; ".join(reasons)
     agreement = None
-    if "aitken_total" in out and "fit_total" in out:
+    agreement_basis = None
+    if "aitken_total" in out and "fit_total" in out and fit_usable:
         agreement = float(abs(out["aitken_total"] - out["fit_total"]) / max(abs(out["fit_total"]), 1e-9) * 100.0)
+        agreement_basis = "Aitken vs damped-cosine fit"
+    elif "aitken_total" in out and out.get("cycles"):
+        # Fall back to the two estimators that remain trustworthy.
+        latest_cycle = out["cycles"][0]["total"]
+        agreement = float(abs(out["aitken_total"] - latest_cycle) / max(abs(latest_cycle), 1e-9) * 100.0)
+        agreement_basis = "Aitken vs latest cycle average (fit rejected)"
     out["estimator_agreement_pct"] = agreement
+    out["estimator_agreement_basis"] = agreement_basis
     envelope_ok = out["envelope_verdict"] in {"decaying", "flat"}
     out["settling_verdict"] = "settled" if envelope_ok and (
         out.get("cycle_power_gate", False) or (agreement is not None and agreement <= 2.0)
@@ -253,7 +289,11 @@ def main(argv=None):
             print(f"wobble < {a.amp_pct} % of total at ~{r['iteration_amp_below_pct']:.0f} iterations (fit)")
     agreement = "n/a" if r["estimator_agreement_pct"] is None else f"{r['estimator_agreement_pct']:.2f}"
     cycle_gate = "pass" if r.get("cycle_power_gate", False) else "fail"
-    print(f"SETTLING VERDICT    : {r['settling_verdict']}  (cycle gate {cycle_gate}, estimator agreement {agreement} %, envelope {r['envelope_verdict']})")
+    basis = r.get("estimator_agreement_basis")
+    basis_txt = f", {basis}" if basis else ""
+    print(f"SETTLING VERDICT    : {r['settling_verdict']}  (cycle gate {cycle_gate}, estimator agreement {agreement} %{basis_txt}, envelope {r['envelope_verdict']})")
+    if r.get("fit_reject_reason"):
+        print(f"  fit rejected as an estimator: {r['fit_reject_reason']}")
     if a.json:
         Path(a.json).write_text(json.dumps(r, indent=1))
     return 0

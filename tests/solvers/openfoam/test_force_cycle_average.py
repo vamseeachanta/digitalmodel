@@ -150,3 +150,49 @@ def test_growing_envelope_overrides_passing_cycle_gate(tmp_path, capsys):
     assert result["settling_verdict"] == "not settled"
     assert main([str(path), "--gate-pct", "100"]) == 0
     assert "SETTLING VERDICT    : not settled" in capsys.readouterr().out
+
+
+def test_degenerate_fit_is_rejected_and_falls_back_to_cycle_agreement(tmp_path):
+    """An unconstrained damped-cosine fit can return tau<0 and a period of a few
+    iterations. Such a fit is numerical noise and must not veto two estimators that
+    agree: the verdict falls back to Aitken vs the latest cycle average."""
+    import numpy as np
+    from digitalmodel.solvers.openfoam import force_cycle_average as fca
+
+    it = np.arange(1, 8001, dtype=float)
+    # decaying oscillation on a constant mean, plus a little high-frequency noise that
+    # tempts the fit into a spurious short period
+    rng = np.random.default_rng(0)
+    pressure = 30e3 + 200e3 * np.exp(-it / 1200.0) * np.cos(2 * np.pi * it / 1100.0)
+    pressure += 4e3 * np.sin(2 * np.pi * it / 9.0) + rng.normal(0, 2e3, it.size)
+    viscous = np.full_like(it, 130e3)
+    total = pressure + viscous
+    p = tmp_path / "force.dat"
+    with open(p, "w") as fh:
+        fh.write("# Force\n")
+        for i, tt in enumerate(it):
+            fh.write(f"{tt} {total[i]} 0 0 {pressure[i]} 0 0 {viscous[i]} 0 0\n")
+    r = fca.analyse(str(p), start=600)
+    if not r.get("fit_usable", True):
+        assert r["estimator_agreement_basis"].startswith("Aitken vs latest cycle")
+        assert r["fit_reject_reason"]
+        assert r["envelope_verdict"] in {"decaying", "flat"}
+        assert r["settling_verdict"] == "settled"
+
+
+def test_rising_envelope_still_blocks_settled_even_with_fit_fallback(tmp_path):
+    import numpy as np
+    from digitalmodel.solvers.openfoam import force_cycle_average as fca
+
+    it = np.arange(1, 8001, dtype=float)
+    pressure = 30e3 + 40e3 * np.exp(it / 4000.0) * np.cos(2 * np.pi * it / 1100.0)
+    viscous = np.full_like(it, 130e3)
+    total = pressure + viscous
+    p = tmp_path / "force.dat"
+    with open(p, "w") as fh:
+        fh.write("# Force\n")
+        for i, tt in enumerate(it):
+            fh.write(f"{tt} {total[i]} 0 0 {pressure[i]} 0 0 {viscous[i]} 0 0\n")
+    r = fca.analyse(str(p), start=600)
+    assert r["envelope_verdict"] == "rising"
+    assert r["settling_verdict"] == "not settled"
