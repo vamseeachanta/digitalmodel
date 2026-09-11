@@ -1,0 +1,67 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2093",
+  "code_revision": "f0f35bd14d9d695948463606c3606fe7408426fa",
+  "native_acceptance": "BLOCKED_LICENSE",
+  "candidate_construction_attempts": 1,
+  "models_loaded": 0,
+  "completed_solves": 0,
+  "readback_attempts": 0,
+  "original_attempts": 0,
+  "retries": 0,
+  "parent_proof": {
+    "ok": false,
+    "timed_out": false,
+    "python_version": "3.11.15",
+    "utc": "2026-09-11T21:02:05.474638+00:00",
+    "revision": "f0f35bd14d9d695948463606c3606fe7408426fa",
+    "input_hashes": {
+      "scripts/orcaflex_native_model_probe.py": "f4b075856cbad44400e802c650fd29bcb1db74beffe6a2f8335d8e3106495c77",
+      "src/digitalmodel/solvers/smoke/model_probe.py": "106c5e8d24b33b2455447bc9ee1bc6b909f0064cf55b94b33fef29ab315d2793",
+      "src/digitalmodel/solvers/smoke/model_manifest.py": "6c321f6f00ff56f0b436bcdfaf3a55739c28586b0f9a1b17bcec037cfdb16b28",
+      "src/digitalmodel/solvers/smoke/model_data_readback.py": "de0e0a6ced2b0f40567056621784c5839389c0b42c900c80003b11900008a49a",
+      "src/digitalmodel/solvers/smoke/model_proof.py": "73163369aca115a6d640ba4327fa08c39472be374bc7c2dedb40ef2acbe73856",
+      "docs/benchmarks/mooring_buoy/qualification.yml": "2a62c2b0e0cbe6707e907d32df74610295b2e5799a440fcb9f5fcaaf5d47335a",
+      "src/digitalmodel/solvers/smoke/model_results.py": "8bef6a15c18d82a588eee99910b4f5c20b528dedabf089c2b2c63a3d04806d4d"
+    },
+    "manifest_sha256": "63cb2c70becb38d4634e854ee145688ff1bf30c9ef29716f50b2e78964e868f0",
+    "pythonhashseed": "0",
+    "mode": "Model",
+    "cleanup_state": "confirmed",
+    "phase": "solve",
+    "exit_code": 1,
+    "error_type": "ValueError",
+    "failure_stage": "subprocess",
+    "elapsed_s": 4.922,
+    "output_hashes": {
+      "solve/results.json": "e79c4e216acd566f98a3eacbed48ae43ca24ebed0e4d0db9256a19863e11566e"
+    }
+  },
+  "child_proof": {
+    "ok": false,
+    "phase": "solve",
+    "stage": "construct",
+    "thread_count_requested": 1,
+    "manifest_sha256": "63cb2c70becb38d4634e854ee145688ff1bf30c9ef29716f50b2e78964e868f0",
+    "version": "11.6c",
+    "error_type": "DLLError",
+    "error": "phase failed; inspect private runtime diagnostics"
+  },
+  "failure": {
+    "stage": "construct",
+    "api_error_code": 25,
+    "primary_cause": "Licensed number of users already reached.",
+    "flexnet_error": "-4,132",
+    "fallback_statics_feature_error": "-5,412",
+    "hasp_fallback": "No licence files found.",
+    "raw_stderr_sha256": "54de404bc2f8b7c19bc3f2ef930bdef530b93ceba1ee79101e07194b15160b4b"
+  },
+  "source_and_bundle_hashes_unchanged_after_attempt": true,
+  "reference_compatible": false,
+  "reference_difference_count": 56,
+  "engineering_qualified": false,
+  "offline_tests": {
+    "passed": 178,
+    "elapsed_s": 19.36
+  },
+  "legal_scan": "PASS"
+}

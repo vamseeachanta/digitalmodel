@@ -1,0 +1,209 @@
+schema_version: 1
+case_id: mooring_buoy
+source: docs/domains/orcaflex/library/templates/mooring_buoy/spec.yml
+expected_settings:
+  general:
+    UnitsSystem: SI
+    StageDuration: [11.5, 100.0]
+    ImplicitConstantTimeStep: 0.01
+    TargetLogSampleInterval: 0.1
+    RestartStateRecordingTest: ''
+    DynamicsSolutionMethod: Implicit time domain
+  objects:
+    Mooring:
+      Length: [60, 230, 50, 230, 50]
+      LineType: [25mm Chain Studless, 50mm Nylon Rope, 50mm Polyester, 50mm Polyester, 38mm Chain Studless]
+      EndAConnection: Metocean buoy
+      EndBConnection: Anchored
+      TargetSegmentLength: [1, 20, 20, 20, 1]
+      EndAX: 0
+      EndAY: 0
+      EndAZ: -2.1
+      EndBX: -400
+      EndBY: 0
+      EndBZ: 0.06365
+    Metocean buoy:
+      Mass: 4
+      DampingRelativeTo: Earth
+      CylinderOuterDiameter: [0.35, 0.95, 1.5, 2.8, 1.5, 0.25, 0.7, 0.3]
+      CylinderInnerDiameter: [0, 0, 0, 0, 0, 0.15, 0.15, 0.15]
+      CylinderLength: [1, 1.4, 0.25, 1.3, 0.55, 0.7, 0.35, 0.25]
+    Generic Drag:
+      IndependentValue: [10000.0, 50000.0, 240000.0, 255000.0, 300000.0, 340000.0, 380000.0, 425000.0, 510000.0,
+        600000.0, 675000.0, 850000.0, 1300000.0, 1700000.0, 8500000.0, 25000000.0]
+      DependentValue: [1.2, 1.2, 1.2, 1.19, 1.16, 1.05, 0.8, 0.42, 0.4, 0.42, 0.48, 0.57, 0.68, 0.7, 0.7, 0.7]
+  environment:
+    WaterDepth: 500.0
+    Density: 1.025
+    WaveType: Dean stream
+    WaveHeight: 13.0
+    WavePeriod: 11.5
+    WaveDirection: 0.0
+    WindSpeed: 10.0
+    WindDirection: 0.0
+    RefCurrentSpeed: 1.125
+    RefCurrentDirection: 0
+    CurrentDepth: [0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0, 90.0, 100.0, 120.0, 140.0, 160.0, 180.0,
+      200.0, 220.0, 240.0, 260.0, 280.0, 300.0, 500.0]
+    CurrentFactor: [1.0, 0.857378568, 0.737887618, 0.637729546, 0.553737435, 0.483269127, 0.42411928, 0.374446329,
+      0.332711797, 0.297629844, 0.268125308, 0.222397609, 0.189952806, 0.166879357, 0.15042857, 0.138665616, 0.130226259,
+      0.124146975, 0.119746125, 0.1165407, 0.114187877, 0.106870728]
+    CurrentRotation: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+expected_types:
+  Mooring: Line
+  Metocean buoy: Buoy6D
+  25mm Chain Studless: LineType
+  50mm Polyester: LineType
+  50mm Nylon Rope: LineType
+  38mm Chain Studless: LineType
+  Mid-line buoy: ClumpType
+  Generic Drag: DragCoefficient
+period:
+  start: 0.0
+  end: 100.0
+  interval: 0.1
+  grid_atol: 1.0e-09
+results:
+- id: tension_end_a
+  object: Mooring
+  variable: Effective Tension
+  location: EndA
+  unit: kN
+  frame: line effective tension
+- id: tension_end_b
+  object: Mooring
+  variable: Effective Tension
+  location: EndB
+  unit: kN
+  frame: line effective tension
+- id: buoy_x
+  object: Metocean buoy
+  variable: X
+  location: buoy origin
+  unit: m
+  frame: global
+- id: buoy_z
+  object: Metocean buoy
+  variable: Z
+  location: buoy origin
+  unit: m
+  frame: global
+- id: buoy_rotation_2
+  object: Metocean buoy
+  variable: Rotation 2
+  location: buoy origin
+  unit: deg
+  frame: global
+- id: sea_surface_z
+  object: Metocean buoy
+  variable: Sea surface Z
+  location: buoy origin
+  unit: m
+  frame: global
+resources:
+  threads: 1
+  process_timeout_s: 300
+  cleanup_timeout_s: 10
+  max_solve_attempts: 2
+readback_comparison: exact
+engineering_qualified: false
+inventory_policy:
+  allowed_system_types: [General, Environment, FrictionCoefficients, RayleighDampingCoefficients, LineContact, CodeChecks,
+    Shear7Data, VIVAData]
+expected_export:
+  6DBuoys:
+    Metocean buoy:
+      CentreOfMass: [0.001, 0, 0]
+      MomentsOfInertia: [8, 8, 2.5]
+      StackBaseCentre: [0, 0, -2]
+      Cylinders:
+      - CylinderAxialDragArea: 0
+        DragForceCoefficient: [0.7, 0]
+        AddedMassForceCoefficient: [0, 0]
+        UnitDampingForce: [0, 0]
+        UnitDampingMoment: [0, 0]
+      - CylinderAxialDragArea: 0
+        DragForceCoefficient: [0.7, 0]
+        AddedMassForceCoefficient: [0, 0]
+        UnitDampingForce: [0, 0]
+        UnitDampingMoment: [0, 0]
+      - CylinderAxialDragArea: 0
+        DragForceCoefficient: [0.7, 0]
+        AddedMassForceCoefficient: [0, 0]
+        UnitDampingForce: [0, 0]
+        UnitDampingMoment: [0, 0]
+      - CylinderAxialDragArea: 4.390375733
+        DragForceCoefficient: [0.95, 0.35]
+        AddedMassForceCoefficient: [0.55, 0.4]
+        UnitDampingForce: [0, 0]
+        UnitDampingMoment: [0, 0]
+      - CylinderAxialDragArea: 1.382300768
+        DragForceCoefficient: [0.95, 0.35]
+        AddedMassForceCoefficient: [0.55, 0.4]
+        UnitDampingForce: [0, 2]
+        UnitDampingMoment: [2.5, 1]
+      - CylinderAxialDragArea: 0
+        DragForceCoefficient: [0.7, 0]
+        AddedMassForceCoefficient: [0.3, 0]
+        UnitDampingForce: [0, 0]
+        UnitDampingMoment: [0, 0]
+      - CylinderAxialDragArea: 0.314159265
+        DragForceCoefficient: [0.7, 1.11]
+        AddedMassForceCoefficient: [0.6, 0.6]
+        UnitDampingForce: [0, 0]
+        UnitDampingMoment: [0, 0]
+      - CylinderAxialDragArea: 0.070685835
+        DragForceCoefficient: [0.7, 0.95]
+        AddedMassForceCoefficient: [0.6, 0.6]
+        UnitDampingForce: [0, 0]
+        UnitDampingMoment: [0, 0]
+  LineTypes:
+    25mm Chain Studless:
+      OD: 0.045000000000000005
+      ID: 0
+      MassPerUnitLength: 0.0124375
+      EA: 53375.00000000001
+      Cd: [1, null, 0.4]
+      Ca: [1, null, 0.08]
+      NormalDragLiftDiameter: 0.052500000000000005
+      AxialDragLiftDiameter: 0.004297183463481174
+    50mm Polyester:
+      OD: 0.043000000000000003
+      ID: 0
+      MassPerUnitLength: 0.0019945
+      EA: 2725.0000000000005
+      Cd: [Generic Drag, null, 0.008]
+      Ca: [1, null, 0]
+      NormalDragLiftDiameter: null
+      AxialDragLiftDiameter: null
+    50mm Nylon Rope:
+      OD: 0.0425
+      ID: 0
+      MassPerUnitLength: 0.001619
+      EA: 295.00000000000006
+      Cd: [Generic Drag, null, 0.008]
+      Ca: [1, null, 0]
+      NormalDragLiftDiameter: null
+      AxialDragLiftDiameter: null
+    38mm Chain Studless:
+      OD: 0.0684
+      ID: 0
+      MassPerUnitLength: 0.028735599999999997
+      EA: 123317.59999999999
+      Cd: [1, null, 0.4]
+      Ca: [1, null, 0.08]
+      NormalDragLiftDiameter: 0.0798
+      AxialDragLiftDiameter: 0.0065317188644913845
+  ClumpTypes:
+    Mid-line buoy:
+      Mass: 1
+      Volume: 2.3
+      Height: 1
+      AlignWith: Line axes
+      DragArea: [2.3, 2.3, 3]
+      Cd: [1.1, 1.1, 1.1]
+      Ca: [1, 1, 1]
+  Lines:
+    Mooring:
+      AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo:
+      - [Mid-line buoy, 0, 0, 340, End A]
