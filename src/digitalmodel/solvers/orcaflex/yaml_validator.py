@@ -16,6 +16,8 @@ from typing import Any
 
 import yaml
 
+from .yaml_timestep_validation import inspect_source
+
 
 class Severity(Enum):
     ERROR = "error"      # Will definitely fail to load
@@ -76,6 +78,8 @@ VALID_TOP_LEVEL_SECTIONS = {
     "AttachedBuoys", "LineContents",
     "SolidTypes", "CodeChecks", "TurbineTypes", "Turbines",
     "VariableData", "FrictionCoefficients", "Groups",
+    "ExpansionTables", "LineContactData", "MultibodyGroups", "PyModels",
+    "RayleighDampingCoefficients", "StiffenerTypes",
 }
 
 # Valid top-level keys in include-file fragments (no section wrapper)
@@ -100,7 +104,6 @@ VALID_FRAGMENT_TOP_LEVEL = {
 
 # Properties that are known INVALID (commonly generated incorrectly)
 INVALID_PROPERTIES = {
-    "ImplicitVariableMaxTimeStep",  # Doesn't exist in OrcaFlex
     "CategoryType",                 # Not a valid LineType property
     "NumMooringLines",              # Not a valid OrcaFlex variable
 }
@@ -117,6 +120,7 @@ WAVE_TRAIN_ONLY_PROPERTIES = {
 }
 
 KNOWN_GENERAL_PROPS = {
+    "ImplicitUseVariableTimeStep", "ImplicitVariableMaxTimeStep",
     "UnitsSystem", "StageDuration", "StaticsMinDamping",
     "DynamicsSolutionMethod", "ImplicitConstantTimeStep",
     "TargetLogSampleInterval", "LogPrecision",
@@ -138,6 +142,17 @@ KNOWN_ENVIRONMENT_PROPS = {
     "WaveFrequencySpectrumDiscretisationMethod",
     "includefile",
 }
+
+
+def _add_source_issues(result, source_issues, filename):
+    """Prefer source locations to legacy diagnostics without losing occurrences."""
+    for severity, message, prop, line in source_issues:
+        result.issues[:] = [i for i in result.issues if not (
+            i.line is None and i.property == prop and i.message == message
+        )]
+        if not any(i.property == prop and i.message == message and i.line == line
+                   for i in result.issues):
+            result.add(Severity(severity), message, file=filename, prop=prop, line=line)
 
 
 class OrcaFlexYAMLValidator:
@@ -172,10 +187,19 @@ class OrcaFlexYAMLValidator:
             result.add(Severity.ERROR, "File is empty", file=filename)
             return result
 
+        source_issues = []
         try:
+            source_issues, halt = inspect_source(
+                raw_text, VALID_TOP_LEVEL_SECTIONS, INVALID_PROPERTIES,
+            )
+            if halt:
+                _add_source_issues(result, source_issues, filename)
+                return result
             data = yaml.safe_load(raw_text)
-        except yaml.YAMLError as exc:
+        except (yaml.YAMLError, RecursionError) as exc:
+            # The YAML composer can exhaust recursion before our graph check.
             result.add(Severity.ERROR, f"YAML parse error: {exc}", file=filename)
+            _add_source_issues(result, source_issues, filename)
             return result
 
         if data is None:
@@ -203,6 +227,7 @@ class OrcaFlexYAMLValidator:
         else:
             result.add(Severity.ERROR, f"Unrecognized YAML structure (type: {type(data).__name__})", file=filename)
 
+        _add_source_issues(result, source_issues, filename)
         return result
 
     def validate_directory(self, path: Path) -> ValidationResult:
