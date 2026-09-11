@@ -1,0 +1,10 @@
+{
+  "observed_at_utc": "2026-09-11T22:26:34.397419+00:00",
+  "windows_build": "22631",
+  "architecture": "64-bit",
+  "legacy_windows_version_field": "2009; not used as actual product version",
+  "matching_python_sentinel_process_count": 0,
+  "active_qualification_marker_present": false,
+  "scope": "Read-only process-name/command-line filter and exact expected state-file existence; no vendor processes launched or keys accessed",
+  "source": "Main Windows Get-ComputerInfo/Get-CimInstance/Test-Path probes"
+}

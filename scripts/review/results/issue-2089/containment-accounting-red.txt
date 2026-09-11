@@ -1,0 +1,39 @@
+......................FF.............                                    [100%]
+=================================== FAILURES ===================================
+_________________ test_empty_resource_set_never_proves_cleanup _________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x73a8f056b550>
+
+    def test_empty_resource_set_never_proves_cleanup(monkeypatch):
+        from digitalmodel.solvers.ghs import _qualification_scenarios as scenarios
+        monkeypatch.setattr(scenarios.w,'kernel_api',lambda:object())
+        resources=scenarios.Resources(lambda *args,**kw:None)
+>       assert resources.close_all() is False
+E       assert True is False
+E        +  where True = close_all()
+E        +    where close_all = <digitalmodel.solvers.ghs._qualification_scenarios.Resources object at 0x73a8f056b6d0>.close_all
+
+tests/solvers/ghs/test_qualification.py:98: AssertionError
+______________ test_non_breakaway_parent_requires_observed_child _______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x73a8f055df50>
+tmp_path = PosixPath('/tmp/pytest-of-vamsee/pytest-62/test_non_breakaway_parent_requ0')
+
+    def test_non_breakaway_parent_requires_observed_child(monkeypatch,tmp_path):
+        from digitalmodel.solvers.ghs import _qualification_scenarios as scenarios
+        from types import SimpleNamespace
+        identity={'pid':1,'creation_time':2}
+        item=SimpleNamespace(identity=identity,process=1,job=10,role='parent')
+        resources=SimpleNamespace(kernel=object())
+        monkeypatch.setattr(scenarios,'ready',lambda *args,**kw:{'role':'parent','identity':identity,'child':None})
+        monkeypatch.setattr(scenarios,'alive',lambda *args:None)
+        monkeypatch.setattr(scenarios.w,'member',lambda *args:True)
+        monkeypatch.setattr(scenarios.w,'census',lambda *args:{1})
+>       with pytest.raises(ValueError):scenarios.parent_members(resources,item,tmp_path)
+E       Failed: DID NOT RAISE <class 'ValueError'>
+
+tests/solvers/ghs/test_qualification.py:111: Failed
+=========================== short test summary info ============================
+FAILED tests/solvers/ghs/test_qualification.py::test_empty_resource_set_never_proves_cleanup
+FAILED tests/solvers/ghs/test_qualification.py::test_non_breakaway_parent_requires_observed_child
+2 failed, 35 passed in 4.47s
