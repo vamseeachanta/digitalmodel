@@ -71,7 +71,7 @@ class GeneralBuilder(BaseBuilder):
             "TimeHistoryImportTo": None,
             "StageDuration": list(sim.stages),
             "RestartStateRecordingPeriodicCount": 0,
-            "RestartStateRecordingTest": None,
+            "RestartStateRecordingTest": "",
         })
 
         # Only emit NorthDirection if non-zero (OrcaFlex defaults to 0)

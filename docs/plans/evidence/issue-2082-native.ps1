@@ -6,7 +6,9 @@ param(
     [Parameter(Mandatory=$true)][string]$Python,
     [Parameter(Mandatory=$true)][string]$RepoRoot,
     [string]$OutputDirectory = '',
-    [ValidateRange(1,90)][int]$TimeoutSeconds = 90
+    [ValidateSet('Smoke','Model')][string]$Mode = 'Smoke',
+    [string]$Manifest = '',
+    [ValidateRange(1,300)][int]$TimeoutSeconds = 90
 )
 $ErrorActionPreference = 'Stop'
 if ($PSVersionTable.PSVersion -lt [version]'5.1' -or $env:OS -ne 'Windows_NT') {
@@ -14,8 +16,17 @@ if ($PSVersionTable.PSVersion -lt [version]'5.1' -or $env:OS -ne 'Windows_NT') {
 }
 $Python = (Resolve-Path -LiteralPath $Python).ProviderPath
 $RepoRoot = (Resolve-Path -LiteralPath $RepoRoot).ProviderPath
+$Cli = 'scripts/solver_smoke_test.py'
+if ($Mode -eq 'Model') {
+    if (!$Manifest) { throw 'Model mode requires Manifest.' }
+    $Manifest = (Resolve-Path -LiteralPath $Manifest).ProviderPath
+    if (!(Test-Path -LiteralPath $Manifest -PathType Leaf)) { throw 'Manifest must be a file.' }
+    $Cli = 'scripts/orcaflex_native_model_probe.py'
+} elseif ($TimeoutSeconds -gt 90 -or $Manifest) {
+    throw 'Smoke mode requires at most 90 seconds and no Manifest.'
+}
 if (!(Test-Path -LiteralPath $Python -PathType Leaf) -or
-    !(Test-Path -LiteralPath (Join-Path $RepoRoot 'scripts/solver_smoke_test.py') -PathType Leaf)) {
+    !(Test-Path -LiteralPath (Join-Path $RepoRoot $Cli) -PathType Leaf)) {
     throw 'Existing Python executable and repository CLI are required.'
 }
 if (!$OutputDirectory) {
@@ -35,6 +46,7 @@ import json
 import math
 import msvcrt
 import os
+import runpy
 from pathlib import Path
 import subprocess
 import sys
@@ -56,6 +68,12 @@ class ExtendedLimits(c.Structure):
                 ('process_memory', c.c_size_t), ('job_memory', c.c_size_t),
                 ('peak_process', c.c_size_t), ('peak_job', c.c_size_t)]
 
+class BasicAccounting(c.Structure):
+    _fields_ = [(name, c.c_longlong) for name in
+                ('user_time', 'kernel_time', 'period_user', 'period_kernel')] + [
+                (name, w.DWORD) for name in
+                ('page_faults', 'total_processes', 'active_processes', 'terminated')]
+
 def kernel_api():
     kernel = c.WinDLL('kernel32', use_last_error=True)
     definitions = {
@@ -64,6 +82,9 @@ def kernel_api():
         'AssignProcessToJobObject': ([w.HANDLE, w.HANDLE], w.BOOL),
         'ResumeThread': ([w.HANDLE], w.DWORD),
         'CloseHandle': ([w.HANDLE], w.BOOL),
+        'TerminateJobObject': ([w.HANDLE, w.UINT], w.BOOL),
+        'QueryInformationJobObject': ([w.HANDLE, c.c_int, c.c_void_p, w.DWORD,
+                                      c.c_void_p], w.BOOL),
     }
     for name, (args, result) in definitions.items():
         function = getattr(kernel, name)
@@ -97,28 +118,63 @@ def run_owned(argv, root, output, timeout):
                 info.lpAttributeList = {'handle_list': handles}
                 process, thread, _, _ = _winapi.CreateProcess(
                     sys.executable, subprocess.list2cmdline(argv), None, None, True,
-                    0x4 | subprocess.CREATE_NO_WINDOW, None, str(root), info)
+                    0x4 | subprocess.CREATE_NO_WINDOW,
+                    {**os.environ, 'PYTHONHASHSEED': '0'}, str(root), info)
             if not kernel.AssignProcessToJobObject(job, process):
                 raise c.WinError(c.get_last_error())
             if kernel.ResumeThread(thread) == 0xffffffff:
                 raise c.WinError(c.get_last_error())
-            timed_out = _winapi.WaitForSingleObject(process, timeout*1000) == 258
+            wait = _winapi.WaitForSingleObject(process, timeout*1000)
+            if wait not in (0, 258):
+                raise RuntimeError('owned process wait failed')
+            timed_out = wait == 258
             code = None if timed_out else _winapi.GetExitCodeProcess(process)
             return code, timed_out
     finally:
         cleanup_owned(kernel, job, process, thread)
 
+def active_processes(kernel, job):
+    accounting = BasicAccounting()
+    if not kernel.QueryInformationJobObject(job, 1, c.byref(accounting),
+                                            c.sizeof(accounting), None):
+        raise RuntimeError('cleanup_unknown: job accounting failed')
+    return accounting.active_processes
+
+def drain_owned(kernel, job, process):
+    deadline = time.monotonic() + 10
+    active = active_processes(kernel, job)
+    exited = process is None or _winapi.WaitForSingleObject(process, 0) == 0
+    if active or not exited:
+        if not kernel.TerminateJobObject(job, 1):
+            raise RuntimeError('cleanup_unknown: job termination failed')
+        # A failed assignment can leave our suspended root outside the job.
+        if not exited and not active:
+            _winapi.TerminateProcess(process, 1)
+    while active or not exited:
+        if time.monotonic() >= deadline:
+            raise RuntimeError('cleanup_unknown: termination was not confirmed')
+        time.sleep(0.01)
+        active = active_processes(kernel, job)
+        exited = process is None or _winapi.WaitForSingleObject(process, 0) == 0
+
 def cleanup_owned(kernel, job, process, thread):
     try:
-        if process is not None and _winapi.WaitForSingleObject(process, 0) == 258:
-            _winapi.TerminateProcess(process, 1)
+        drain_owned(kernel, job, process)
+    except Exception:
+        # Assignment/query failures may leave our suspended root uncontained.
+        # Request direct-root termination without turning uncertainty into PASS.
+        try:
+            if process is not None and _winapi.WaitForSingleObject(process, 0) != 0:
+                _winapi.TerminateProcess(process, 1)
+        except Exception:
+            pass
+        raise
     finally:
         try:
-            # Closing the job also kills descendants after the parent exits.
+            # Keep the job queryable through drain. On failure close requests
+            # kill-on-close, but is never substituted for observed absence.
             if not kernel.CloseHandle(job):
-                raise RuntimeError('owned job termination could not be requested')
-            if process is not None and _winapi.WaitForSingleObject(process, 5000) != 0:
-                raise RuntimeError('owned process termination was not confirmed')
+                raise RuntimeError('cleanup_unknown: job handle close failed')
         finally:
             try:
                 if process is not None:
@@ -168,35 +224,115 @@ def hashes(paths, root):
 def reject_constant(value):
     raise ValueError('nonfinite JSON constant')
 
+def read_json(path):
+    return json.loads(path.read_text(encoding='utf-8-sig'), parse_constant=reject_constant)
+
+def digest(path):
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+def model_sources(root):
+    base = root/'src/digitalmodel/solvers/smoke'
+    paths = [root/'scripts/orcaflex_native_model_probe.py', base/'model_probe.py',
+             base/'model_manifest.py', base/'model_data_readback.py', base/'model_proof.py',
+             root/'docs/benchmarks/mooring_buoy/qualification.yml']
+    paths.extend(base/name for name in ('model_results.py', 'model_contract.py')
+                 if (base/name).exists())
+    return paths
+
+def model_phase(root, output, scratch, manifest, phase, timeout, proof):
+    proof['phase'] = phase
+    logs = output/phase
+    logs.mkdir()
+    argv = [sys.executable, '-B', str(root/'scripts/orcaflex_native_model_probe.py'),
+            '--manifest', str(manifest), '--phase', phase, '--output', str(scratch)]
+    code, timed_out = run_owned(argv, root, logs, timeout)
+    proof.update(exit_code=code, timed_out=timed_out, cleanup_state='confirmed')
+    if timed_out or code != 0:
+        raise ValueError('child timeout' if timed_out else 'child failed')
+    report = read_json(logs/'stdout.log')
+    if not isinstance(report, dict) or report != read_json(scratch/phase/'results.json'):
+        raise ValueError('phase report disagrees with retained result')
+    validate = runpy.run_path(str(root/'src/digitalmodel/solvers/smoke/model_proof.py'))['validate_report']
+    baseline = read_json(scratch/'solve/results.json') if phase == 'readback' else None
+    validate(report, phase, proof['manifest_sha256'], baseline)
+    if report['loaded_data_sha256'] != digest(scratch/phase/'loaded.yml'):
+        raise ValueError('native input export hash disagrees')
+    if report.get('ok') is not True or report.get('phase') != phase:
+        raise ValueError('phase proof missing or failed')
+    for key in ('thread_count_requested', 'thread_count_observed'):
+        if type(report.get(key)) is not int or report[key] != 1:
+            raise ValueError('phase one-thread proof missing')
+    if phase == 'readback' and report.get('fidelity_verified') is not True:
+        raise ValueError('readback fidelity not verified')
+    simulation = scratch/'solve/model.sim'
+    if simulation.stat().st_size <= 0 or report.get('simulation_sha256') != digest(simulation):
+        raise ValueError('saved simulation proof hash disagrees')
+    proof.setdefault('phases', {})[phase] = dict(ok=True, cleanup_state='confirmed',
+                                              thread_count_observed=1)
+
+def run_model(root, output, scratch, timeout, manifest, proof):
+    sources = model_sources(root)
+    if not all(path.is_file() for path in sources) or not manifest.is_file():
+        raise ValueError('mandatory model source missing')
+    before = hashes(sources, root)
+    manifest_hash = digest(manifest)
+    proof.update(input_hashes=before, manifest_sha256=manifest_hash,
+                 pythonhashseed='0', mode='Model')
+    simulation_hash = None
+    for phase in ('solve', 'readback'):
+        if hashes(model_sources(root), root) != before or digest(manifest) != manifest_hash:
+            raise ValueError('model sources or manifest changed')
+        if phase == 'readback' and digest(scratch/'solve/model.sim') != simulation_hash:
+            raise ValueError('simulation changed before readback')
+        proof['cleanup_state'] = 'unknown'
+        model_phase(root, output, scratch, manifest, phase, timeout, proof)
+        if hashes(model_sources(root), root) != before or digest(manifest) != manifest_hash:
+            raise ValueError('model sources or manifest changed')
+        simulation = scratch/'solve/model.sim'
+        if simulation.stat().st_size <= 0:
+            raise ValueError('saved simulation empty')
+        observed_hash = digest(simulation)
+        if simulation_hash is not None and observed_hash != simulation_hash:
+            raise ValueError('simulation changed during readback')
+        simulation_hash = observed_hash
+    proof.update(simulation_sha256=simulation_hash, source_hashes_after=before)
+
+def run_smoke(root, output, scratch, timeout, proof):
+    sources = [root/'scripts/solver_smoke_test.py', root/'src/digitalmodel/solvers/smoke/probes.py',
+               root/'src/digitalmodel/solvers/smoke/workflow.py']
+    if not all(path.is_file() for path in sources):
+        raise ValueError('mandatory proof source missing')
+    proof['input_hashes'] = hashes(sources, root)
+    argv = [sys.executable, '-B', str(sources[0]), '--solver', 'orcaflex',
+            '--json', '--output-dir', str(scratch)]
+    code, timed_out = run_owned(argv, root, output, timeout)
+    proof.update(exit_code=code, timed_out=timed_out)
+    if timed_out or code != 0:
+        raise ValueError('child timeout' if timed_out else 'child failed')
+    proof['result'] = validate_report(read_json(output/'stdout.log'), scratch)
+    if hashes(sources, root) != proof['input_hashes']:
+        raise ValueError('smoke proof sources changed')
+
 def main():
     root, output, timeout = Path(sys.argv[1]), Path(sys.argv[2]), int(sys.argv[3])
+    mode = sys.argv[4] if len(sys.argv) > 4 else 'Smoke'
+    manifest = Path(sys.argv[5]) if len(sys.argv) > 5 and sys.argv[5] else None
     output.mkdir(parents=True, exist_ok=False)
     scratch = output/('scratch-'+uuid.uuid4().hex)
     scratch.mkdir()
     started = time.monotonic()
     proof = dict(ok=False, timed_out=False, python_version=sys.version.split()[0],
                  utc=datetime.datetime.now(datetime.timezone.utc).isoformat())
-    sources = [root/'scripts/solver_smoke_test.py', root/'src/digitalmodel/solvers/smoke/probes.py',
-               root/'src/digitalmodel/solvers/smoke/workflow.py']
     stage = 'revision'
     try:
         revision = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=root, check=True,
                                   capture_output=True, text=True, timeout=10)
         proof['revision'] = revision.stdout.strip()
-        if not all(path.is_file() for path in sources):
-            raise ValueError('mandatory proof source missing')
-        proof['input_hashes'] = hashes(sources, root)
-        argv = [sys.executable, '-B', str(sources[0]), '--solver', 'orcaflex',
-                '--json', '--output-dir', str(scratch)]
         stage = 'subprocess'
-        code, timed_out = run_owned(argv, root, output, timeout)
-        proof.update(exit_code=code, timed_out=timed_out)
-        if timed_out or code != 0:
-            raise ValueError('child timeout' if timed_out else 'child failed')
-        stage = 'report-validation'
-        report = json.loads((output/'stdout.log').read_text(encoding='utf-8-sig'),
-                            parse_constant=reject_constant)
-        proof['result'] = validate_report(report, scratch)
+        if mode == 'Model':
+            run_model(root, output, scratch, timeout, manifest, proof)
+        else:
+            run_smoke(root, output, scratch, timeout, proof)
         proof['ok'] = True
     except Exception as error:
         proof['error_type'] = type(error).__name__  # raw diagnostics stay private
@@ -210,5 +346,5 @@ def main():
 
 sys.exit(main())
 '@
-& $Python -B -X utf8 -c $worker $RepoRoot $OutputDirectory $TimeoutSeconds
+& $Python -B -X utf8 -c $worker $RepoRoot $OutputDirectory $TimeoutSeconds $Mode $Manifest
 exit $LASTEXITCODE
