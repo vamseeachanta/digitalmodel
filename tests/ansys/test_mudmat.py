@@ -112,4 +112,7 @@ def test_committed_example_inp_matches_generator():
     spec = importlib.util.spec_from_file_location("mudmat_build", build)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    assert example.read_text() == generate_mudmat_apdl(module.GEOM)
+    # Line endings normalised -- see the note in test_padeye.py (#2094).
+    assert example.read_text(encoding="utf-8").replace("\r\n", "\n") == generate_mudmat_apdl(
+        module.GEOM
+    ).replace("\r\n", "\n")

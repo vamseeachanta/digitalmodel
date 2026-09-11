@@ -197,5 +197,5 @@ def write_mudmat_inp(geom: MudmatGeometry, path: Path | str) -> Path:
     """Write the generated APDL script to ``path`` and return it."""
     out = Path(path)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(generate_mudmat_apdl(geom))
+    out.write_text(generate_mudmat_apdl(geom), encoding="utf-8")
     return out
