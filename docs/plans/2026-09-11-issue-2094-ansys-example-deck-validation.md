@@ -261,7 +261,9 @@ axial restraint on the bottom edge already removes the only rigid-body mode pres
 | `test_mudmat_applied_load_is_mesh_independent` | the `FCUM` defect cannot return | decks generated at `element_size_mm` 100 and 50 | identical applied-resultant expression |
 | `test_committed_golden_is_stable` *(marked `requires_mapdl`)* | a re-solve reproduces the value | golden and fresh digest, run configuration matching `PROVENANCE.json` | relative difference <= 1e-3 |
 | `test_mudmat_deck_solves` *(marked `requires_mapdl`)* | the model is not singular | mudmat run on a licensed host | exit 0, digest present |
-| `test_mudmat_bearing_cross_checks_geotechnical_module` | the FE bearing answer is checked against independent code | mudmat golden | agrees with `geotechnical/mudmat.py` within a stated band |
+| `test_mudmat_pressure_patch_balances_applied_load` | D1 equilibrium holds by construction | generated deck | `q_applied * area_eff == V` and patch centroid offset `== M/V`, both exact to float tolerance |
+| `test_mudmat_unit_conversion_kn_m_kpa_to_n_mm_mpa` | the factor-of-1000 hazard cannot pass silently | a known capacity result | converted pressure matches a hand-computed value |
+| `test_mudmat_reactions_are_zero` *(marked `requires_mapdl`)* | the applied field and the reaction balance | mudmat golden | reaction resultant below a stated absolute floor, not a percentage |
 
 ---
 
@@ -351,6 +353,43 @@ cross-check each other — satisfying the comparator requirement rather than def
 Consequence: the FE no longer reports a bearing unity check. `mudmat.py`'s digest carries plate
 stress only. The bearing result comes from the geotechnical module and the two are reported
 together.
+
+**D1 feasibility, verified before approval.** The geotechnical module returns capacity, not a
+pressure field — `BearingCapacityResult` carries `effective_width_m`, `effective_length_m`,
+`effective_area_m2`, `q_ult_kpa` and a vertical capacity (`geotechnical/mudmat.py:27-42`,
+`:131-141`, `:176-187`). It does not return a distribution. The distribution nonetheless
+follows directly from the same idealisation, and this is what makes D1 work:
+
+Meyerhof's effective-area method carries the applied vertical load on a **uniform pressure over
+the effective area**, centred on the load. So the pressure applied to the plate is
+
+    q_applied = V / (b_eff * l_eff)
+
+over an offset rectangular patch, with `b_eff = B - 2e` taken from the module rather than
+recomputed. Two properties fall out by construction rather than by tolerance:
+
+- **Vertical equilibrium is exact.** `q_applied * area_eff = V` identically.
+- **Moment equilibrium is exact.** The patch centroid sits at eccentricity `e = M/V` from the
+  mat centre, so its moment about the centre is `V * e = M` identically.
+
+The FE therefore needs only a minimal statically determinate restraint set, and its reactions
+are zero to solver precision. The bearing check is then `q_applied` against `q_ult_kpa` with
+the governing factor, performed by the module.
+
+Implementation is a pressure on a selected element patch — `SFE,...,PRES` over the elements
+inside the effective rectangle — not a spring bed and not a node loop.
+
+**Limitation, to be stated in the module and in any output.** A uniform pressure block is the
+bearing-capacity idealisation, not the true contact-pressure field, which is neither uniform
+nor generally trapezoidal. Using it as the plate-bending load is a deliberate screening
+choice: it makes the strength check and the bearing check share one load path, so the two
+cannot disagree about what the soil is doing, at the cost of a bending distribution that is
+approximate near the patch edges. It shall not be described as the contact pressure.
+
+**Implementation hazard.** The geotechnical module works in kN, m and kPa; the decks work in
+N, mm and MPa. The conversion shall be explicit and unit-tested. An unchecked factor of 1000
+here would reproduce the exact failure mode this issue exists to remove — a plausible number
+with nothing to contradict it.
 
 **D2 — Examples shall be compliant designs.** Each example is re-parameterised so its peak
 stress sits safely inside the linear-elastic range and its unity check is below 1.0. For the
