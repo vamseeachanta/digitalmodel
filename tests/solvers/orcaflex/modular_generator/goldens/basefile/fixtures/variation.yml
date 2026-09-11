@@ -1,0 +1,5 @@
+# Variation fixture for BaseFile golden capture.
+# Only its path is used by the comparator; the content is never read.
+LineTypes:
+  - Name: Chain_84mm_R4
+    OD: 0.084
