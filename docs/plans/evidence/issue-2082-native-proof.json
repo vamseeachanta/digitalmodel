@@ -1,0 +1,43 @@
+{
+  "ok": true,
+  "timed_out": false,
+  "python_version": "3.11.15",
+  "utc": "2026-09-10T15:12:31.157776+00:00",
+  "revision": "f61dedfd80ecd57feb346fe172d640cbe63c1155",
+  "input_hashes": {
+    "scripts/solver_smoke_test.py": "b9cb4a6eee76b80479680494336397df318eba55fa2f6966f69a3be64556f27c",
+    "src/digitalmodel/solvers/smoke/probes.py": "074c57c7608db8162536a5dadb519c3cf9faf3308e25121474b78623006a0856",
+    "src/digitalmodel/solvers/smoke/workflow.py": "c4dc244b8fe32bcdb6a64494d781a77a53fbd039cdf14e062aae3f9662ce21fa"
+  },
+  "exit_code": 0,
+  "result": {
+    "solver": "orcaflex",
+    "ok": true,
+    "dll_version": "11.6c",
+    "thread_count_requested": 1,
+    "thread_counts_observed": {
+      "solve": 1,
+      "data_reader": 1,
+      "simulation_reader": 1
+    },
+    "dynamic_tension_kN": [
+      44.644,
+      46.092
+    ],
+    "static_finite": true,
+    "dynamic_finite": true,
+    "simulation_complete": true,
+    "saved_sim_reloaded": true,
+    "reloaded_simulation_complete": true,
+    "reloaded_dynamic_finite": true,
+    "static_tension_kN": 45.08,
+    "dynamic_samples": 81,
+    "reloaded_dynamic_samples": 81,
+    "sim_bytes": 122100
+  },
+  "elapsed_s": 1.797,
+  "output_hashes": {
+    "orcaflex/smoke.dat": "c9bfc60db2fed49147b0021861722f4abfee390fc712e43937ddc2c1bbcf7333",
+    "orcaflex/smoke.sim": "dcfdca1471ebb7a71048f1cb7ba17f556484681d6f3b7fe525de676a0abdfb3a"
+  }
+}
