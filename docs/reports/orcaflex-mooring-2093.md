@@ -2,7 +2,7 @@
 
 Issue: [digitalmodel 2093](https://github.com/vamseeachanta/digitalmodel/issues/2093). Human-facing report: [HTML](orcaflex-mooring-2093.html). **Code complete; operational qualification blocked by licence availability.** One native construction attempt failed before model loading; no retry occurred.
 
-The orchestrator reports 178 tests passed in 19.36 seconds and the legal scan passed. Earlier focused counts below are overlapping development checks and must not be added to this total.
+Before the native attempt, 178 tests passed in 19.36 seconds and the legal scan passed. The merge-time fixture correction below passed 179 tests in 19.90 seconds. Earlier focused counts below are overlapping development checks and must not be added to this total.
 
 ## Verified offline changes
 
@@ -37,3 +37,7 @@ The source remains a single mooring line and mid-line clump supporting one buoy.
 No production queue, scheduled task, environment deployment or native solve was performed by the corpus/packaging lane. Runtime adapter and Windows ownership tests have separate orchestrator evidence. The working source's explicit null overrides are intentionally preserved and can still require case-specific review. Engineering parity with C07, reference tolerances and reusable model-family qualification are not established here.
 
 Private corpus directory and raw logs are retained in the orchestrator handoff, outside this public document. The branch preserves the implementation, corpus audit and failed native checkpoint together; the issue remains open.
+
+## Merge-time Linux CI correction
+
+The first main-target CI run at `8b604109` failed seven packaging fixture setups with `ModuleNotFoundError: OrcFxAPI` ([failed job](https://github.com/vamseeachanta/digitalmodel/actions/runs/34651509346/job/103435222125)). That job reported 1469 passes, 66 skips and seven errors. The test fixture imported the optional API unconditionally; this was not a native model attempt or a demonstrated generator failure. A missing-module regression reproduced the failure locally before the repair. The fixture now blocks the optional import and guards any already-loaded Model constructor. All 179 focused tests pass in 19.90 seconds; a separate T1 adversarial review approved the fixture change. No production source, model coefficient, native input or retained native proof changed. Read live PR checks for the hosted rerun result.

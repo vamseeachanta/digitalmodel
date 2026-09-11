@@ -2,6 +2,7 @@
 import importlib.util
 import json
 from pathlib import Path
+import sys
 
 import pytest
 
@@ -10,15 +11,23 @@ from digitalmodel.solvers.smoke.model_manifest import verify_manifest
 SCRIPT = Path(__file__).resolve().parents[3] / "scripts/prepare_mooring_qualification.py"
 
 
+def test_packaging_fixture_without_optional_api(monkeypatch):
+    monkeypatch.setitem(sys.modules, "OrcFxAPI", None)
+    assert packaging.__wrapped__(monkeypatch).prepare_bundle
+
+
 @pytest.fixture
 def packaging(monkeypatch):
     monkeypatch.setenv("PYTHONHASHSEED", "0")
-    import OrcFxAPI
 
     def prohibited(*args, **kwargs):
         pytest.fail("packaging attempted native construction")
 
-    monkeypatch.setattr(OrcFxAPI, "Model", prohibited)
+    api = sys.modules.get("OrcFxAPI")
+    if api is not None:
+        monkeypatch.setattr(api, "Model", prohibited)
+    # Exercise the offline route even on workstations with the API installed.
+    monkeypatch.setitem(sys.modules, "OrcFxAPI", None)
     spec = importlib.util.spec_from_file_location("qualification_packaging", SCRIPT)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
