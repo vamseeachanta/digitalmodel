@@ -18,6 +18,8 @@ from datetime import datetime
 import traceback
 import gc
 
+from digitalmodel.solvers.orcaflex.run_state import check_simulation, check_statics
+
 try:
     import OrcFxAPI
     ORCAFLEX_AVAILABLE = True
@@ -94,11 +96,15 @@ def process_single_file_worker(file_info: Dict[str, Any]) -> Dict[str, Any]:
             if run_static:
                 logger.info(f"Running static analysis: {file_path}")
                 model.CalculateStatics()
-            
+                # #3838: the state is the only signal of a diverged solve, and
+                # it is read before any output file is written.
+                check_statics(model, context=str(file_path))
+
             # Run dynamic analysis if requested
             if run_dynamic:
                 logger.info(f"Running dynamic analysis: {file_path}")
                 model.RunSimulation()
+                check_simulation(model, context=str(file_path))
             
             # Save results
             if save_sim:

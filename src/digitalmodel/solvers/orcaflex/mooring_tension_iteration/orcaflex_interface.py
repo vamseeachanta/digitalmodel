@@ -12,6 +12,8 @@ from dataclasses import dataclass
 from loguru import logger
 from abc import ABC, abstractmethod
 
+from digitalmodel.solvers.orcaflex.run_state import check_statics
+
 
 @dataclass
 class MooringLine:
@@ -333,7 +335,10 @@ class OrcaFlexAPI(OrcaFlexAPIBase):
         
         logger.info("Running OrcaFlex static analysis")
         self.model.CalculateStatics()
-        
+        # #3838: the tensions read below are only meaningful from a converged
+        # static state, and the call itself does not report divergence.
+        check_statics(self.model, context="mooring tension iteration")
+
         # Extract results
         tensions = {}
         positions = {}

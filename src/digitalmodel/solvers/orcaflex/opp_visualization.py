@@ -6,9 +6,13 @@ from loguru import logger
 from assetutilities.common.yml_utilities import is_file_valid_func
 from digitalmodel.infrastructure.utils.parallel_processing import should_use_parallel
 from assetutilities.common.path_resolver import PathResolver
-try:
-    import OrcFxAPI
-except Exception:
+# #3838: routed through the facade instead of `import OrcFxAPI`, so the binding
+# is not loaded before a version can be selected.
+from digitalmodel.solvers.orcaflex.orcaflex_api import available, lazy_api
+from digitalmodel.solvers.orcaflex.run_state import check_statics
+
+OrcFxAPI = lazy_api() if available() else None
+if OrcFxAPI is None:
     print("OrcaFlex license not available. Run on different computer")
 
 
@@ -78,6 +82,9 @@ class OPPVisualization:
 
                 model = self.set_general_visualization_settings(model, cfg)
                 model.CalculateStatics()
+                # #3838: a view rendered from a non-converged configuration is
+                # a picture of a shape the model never reached.
+                check_statics(model, context=str(input_file))
                 self.save_all_views(cfg, model, input_file)
 
             # TODO
@@ -207,8 +214,10 @@ class OPPVisualization:
             model.LoadData(input_file)
             model = self.set_general_visualization_settings(model, cfg)
             model.CalculateStatics()
+            # #3838: as above -- the except below records this as a failure.
+            check_statics(model, context=str(input_file))
             self.save_all_views(cfg, model, input_file)
-            
+
             execution_time = time.time() - start_time
             logger.info(f"✓ Visualization completed: {os.path.basename(input_file)} ({execution_time:.2f}s)")
             return input_file, True, "Success", execution_time

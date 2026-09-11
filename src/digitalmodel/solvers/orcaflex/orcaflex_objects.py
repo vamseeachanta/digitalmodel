@@ -3,9 +3,13 @@ import logging
 import pandas as pd
 
 # Third party imports
-try:
-    import OrcFxAPI
-except Exception:
+# #3838: routed through the facade instead of `import OrcFxAPI`. A module-scope
+# import binds the DLL before OrcFxAPIConfig.setLibPath() can select a version,
+# and this module is on the import path of the package __init__.
+from digitalmodel.solvers.orcaflex.orcaflex_api import available, lazy_api
+
+OrcFxAPI = lazy_api() if available() else None
+if OrcFxAPI is None:
     print("OrcaFlex license not available. Run on different computer")
 
 
