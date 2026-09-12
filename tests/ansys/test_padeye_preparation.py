@@ -15,7 +15,7 @@ def load_build():
 
 def test_equilibrium_uses_only_support_nodes_in_global_coordinates():
     post = generate_padeye_apdl(PadeyeGeometry()).split("/POST1", 1)[1]
-    before_fsum = post.split("FSUM", 1)[0]
+    before_fsum = post.split("\nFSUM\n", 1)[0]
     assert "RSYS,0" in before_fsum
     assert "CSYS,0" in before_fsum
     assert before_fsum.rfind("NSEL,S,LOC,Y,0") > before_fsum.rfind("ALLSEL,ALL")
