@@ -4,7 +4,7 @@
     uv run python examples/ansys/padeye/build.py
     uv run python examples/ansys/padeye/build.py --mesh-study-dir results/mesh-study
 
-The candidate has t/D = 1 (80 mm thickness / 80 mm hole diameter). Its
+The candidate has t/D = 0.1 (8 mm thickness / 80 mm hole diameter). Its
 plane-stress idealisation establishes no pin/contact or 3D qualification.
 Native stress and mesh-convergence evidence remain pending.
 
@@ -19,13 +19,13 @@ from digitalmodel.ansys.padeye import PadeyeGeometry, write_padeye_inp
 
 HERE = Path(__file__).resolve().parent
 
-# Candidate only: retained load, thicker plate; native qualification is pending.
+# Numerical screening candidate only; this is not a 500 kN lug rating.
 GEOM = PadeyeGeometry(
     plate_width_mm=400.0,
     plate_height_mm=300.0,
-    thickness_mm=80.0,
+    thickness_mm=8.0,
     hole_diameter_mm=80.0,
-    sling_load_kn=500.0,
+    sling_load_kn=50.0,
     sling_angle_deg=0.0,
     yield_strength_mpa=355.0,
     design_factor=1.67,

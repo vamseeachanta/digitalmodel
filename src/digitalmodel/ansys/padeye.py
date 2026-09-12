@@ -142,9 +142,13 @@ FINISH
 ! --- post: peak von Mises + unity check ---
 /POST1
 SET,LAST
+/GRAPHICS,FULL
+AVPRIN,0
 CSYS,0
 RSYS,0
 ALLSEL,ALL
+*GET,mesh_nodes,NODE,0,COUNT
+*GET,mesh_elements,ELEM,0,COUNT
 NSORT,S,EQV
 *GET,smax,SORT,0,MAX
 *GET,peak_node,SORT,0,IMAX
@@ -154,6 +158,8 @@ NSORT,S,EQV
 allow = {allowable}
 uc = smax / allow
 mesh_size = {geom.element_size_mm}
+! Retain nodal stress listing for independent peak extraction checks.
+PRNSOL,S,PRIN
 
 ! --- equilibrium: support nodes only, all structural elements retained ---
 ! FSUM reports signed support force; reaction + applied load shall balance.
@@ -162,6 +168,8 @@ NSEL,S,LOC,Y,0
 FSUM
 *GET,rfx,FSUM,0,ITEM,FX
 *GET,rfy,FSUM,0,ITEM,FY
+! Retain nodal reactions independently of FSUM for sign/resultant checks.
+PRRSOL,F
 ALLSEL,ALL
 applied_fx = {fx_total}
 applied_fy = {fy_total}
@@ -181,6 +189,10 @@ peak von Mises = %G MPa ; allowable = %G MPa ; UC = %G
 ('peak_x_mm,',E20.12,',peak_y_mm,',E20.12,',peak_z_mm,',E20.12)
 *VWRITE,mesh_size
 ('mesh_size_mm,',E20.12)
+*VWRITE,nload
+('loaded_node_count,',F12.0)
+*VWRITE,mesh_nodes,mesh_elements
+('mesh_node_count,',F12.0,',mesh_element_count,',F12.0)
 *VWRITE,applied_fx,applied_fy
 ('applied_fx_n,',E20.12,',applied_fy_n,',E20.12)
 *VWRITE,rfx,rfy
