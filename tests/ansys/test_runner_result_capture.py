@@ -21,6 +21,13 @@ def test_csv_capture_requires_current_run_evidence(tmp_path, monkeypatch, mode):
     if mode != "fresh":
         digest.write_text("stress,1.0\n")
         previous = digest.stat()
+        original_stat = Path.stat
+
+        def pinned_stat(path, *args, **kwargs):
+            return previous if path == digest else original_stat(path, *args, **kwargs)
+
+        # Pin all metadata, including POSIX ctime: only the content hash differs.
+        monkeypatch.setattr(Path, "stat", pinned_stat)
 
     def simulate(*args, **kwargs):
         if mode != "unchanged":
