@@ -27,6 +27,10 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
+from digitalmodel.hydrodynamics.diffraction.benchmark_matrix_alignment import (
+    align_matrix_sets,
+)
+
 from digitalmodel.hydrodynamics.diffraction.benchmark_abscissa import (
     AbscissaConfig,
     AbscissaGapError,
@@ -43,10 +47,9 @@ REFUSAL_QUALITIES = {
     "INSUFFICIENT_SAMPLING",
     "UNTRUSTED_SOURCE",
     "INVALID_ABSCISSA",
-    # A zero DIAGONAL term is missing data, not physics: every real body has
-    # non-zero added mass and damping in all six DOFs. NOT_APPLICABLE stays out
-    # of this set because a symmetric body genuinely lacks off-diagonal
-    # couplings; a zero diagonal has no such reading (#1633).
+    # A zero diagonal has no established physical interpretation without
+    # geometry/frame and extraction evidence. Retain refusal; this code
+    # neither proves extraction failure nor excludes physical rotational zeros.
     "ABSENT_DIAGONAL",
 }
 
@@ -748,6 +751,20 @@ class MultiSolverComparator:
     # Matrix comparison helpers
     # ------------------------------------------------------------------
 
+    def _align_matrix_pair(self, set_a, set_b):
+        """Preserve source and axis refusals before comparing any cells."""
+        if not all(matrix.source == "solver" for matrix in (*set_a.matrices, *set_b.matrices)):
+            return None, self._untrusted_source_stats((0,))
+        try:
+            alignment = align_matrix_sets(
+                set_a, set_b, self.policy.abscissa_config if self.policy else None,
+            )
+        except (AbscissaOrderError, AbscissaOverlapError, AbscissaGapError):
+            return None, self._invalid_abscissa_stats((0,))
+        if isinstance(alignment, InsufficientSampling):
+            return None, self._insufficient_sampling_stats((0,))
+        return alignment, None
+
     def _compare_matrix_set(
         self,
         matrix_attr: str,
@@ -767,30 +784,19 @@ class MultiSolverComparator:
             set_a = getattr(self._results[solver_a], matrix_attr)
             set_b = getattr(self._results[solver_b], matrix_attr)
 
-            freqs = set_a.frequencies.values
-            trusted_sources = all(
-                matrix.source == "solver"
-                for matrix in (*set_a.matrices, *set_b.matrices)
-            )
+            alignment, refusal = self._align_matrix_pair(set_a, set_b)
 
             for i in range(6):
                 for j in range(6):
-                    vals_a = np.array(
-                        [m.matrix[i, j] for m in set_a.matrices]
-                    )
-                    vals_b = np.array(
-                        [m.matrix[i, j] for m in set_b.matrices]
-                    )
                     stats = (
-                        self._calculate_deviation_stats(vals_a, vals_b, freqs)
-                        if trusted_sources
-                        else self._untrusted_source_stats(vals_a.shape)
+                        self._calculate_deviation_stats(
+                            alignment.first[:, i, j], alignment.second[:, i, j],
+                            alignment.frequencies,
+                        ) if alignment is not None else replace(refusal)
                     )
                     if i == j and stats.quality == "NOT_APPLICABLE":
-                        # Off-diagonal absence is symmetry; diagonal absence is
-                        # missing data. Every DOF resists acceleration, so a
-                        # zero diagonal means the extraction failed and the
-                        # comparison must refuse rather than read as agreement.
+                        # Metadata cannot distinguish a physical rotational zero
+                        # from missing extraction. Neither is established here.
                         stats = replace(stats, quality="ABSENT_DIAGONAL")
                     # 1-based indexing
                     pair_stats[(i + 1, j + 1)] = stats

@@ -133,12 +133,11 @@ class TestStructurallyAbsentCouplings:
 
 
 class TestAbsentDiagonalRefuses:
-    """A zero diagonal is missing data, not physics.
+    """An unexplained zero diagonal refuses pending evidence.
 
-    NOT_APPLICABLE is correct for an off-diagonal coupling that a symmetric
-    body genuinely lacks. It is NOT correct for a diagonal term: every real
-    body has non-zero added mass and damping in all six DOFs, because every
-    DOF resists acceleration. So a zero diagonal means the extraction failed.
+    Physical rotational zeros can occur. The result metadata cannot establish
+    whether a diagonal zero is physical or missing extraction, so neither
+    explanation is inferred from the coefficient values alone.
 
     Without this rule an extraction returning np.zeros((6,6)) for every
     frequency on BOTH solvers reported overall_consensus FULL,
