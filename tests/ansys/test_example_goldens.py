@@ -16,7 +16,6 @@ The re-solve test at the bottom is the only licence-dependent one and carries th
 
 from __future__ import annotations
 
-import hashlib
 import importlib.util
 import json
 import math
@@ -25,7 +24,9 @@ from pathlib import Path
 
 import pytest
 
-from digitalmodel.ansys.results_extractor import ResultsExtractor
+from tests.ansys.golden_acceptance import (
+    load_golden, validate_acceptance, validate_pv_comparator, validate_equilibrium,
+)
 
 EXAMPLES = Path(__file__).resolve().parents[2] / "examples" / "ansys"
 
@@ -54,19 +55,7 @@ def test_golden_rejects_unbound_deck(tmp_path, monkeypatch, tamper):
 
 
 def _golden(case: str) -> tuple[dict[str, float], dict]:
-    gdir = EXAMPLES / case / "golden"
-    digest_files = sorted(gdir.glob("*_result.csv"))
-    assert digest_files, f"no committed golden digest for {case} in {gdir}"
-    digest = ResultsExtractor().parse_result_digest(
-        digest_files[0].read_text(encoding="utf-8")
-    )
-    provenance = json.loads((gdir / "PROVENANCE.json").read_text(encoding="utf-8"))
-    deck = EXAMPLES / case / provenance["input"]["deck"]
-    actual_sha256 = hashlib.sha256(deck.read_bytes()).hexdigest()
-    assert actual_sha256 == provenance["input"]["sha256"], (
-        f"{case} deck SHA-256 differs from the recorded golden input"
-    )
-    return digest, provenance
+    return load_golden(EXAMPLES / case)
 
 
 def _build_module(case: str):
@@ -101,13 +90,7 @@ def test_pressure_vessel_golden_matches_closed_form():
         0.5 * ((s_theta - s_r) ** 2 + (s_r - s_z) ** 2 + (s_z - s_theta) ** 2)
     )
 
-    observed = digest["max_seqv_mpa"]
-    tol = prov["comparator"]["tolerance_pct"]
-    deviation = abs(observed - expected_vm) / expected_vm * 100.0
-    assert deviation <= tol, (
-        f"golden {observed:.4f} MPa deviates {deviation:.2f}% from the closed-form "
-        f"{expected_vm:.4f} MPa (tolerance {tol}%)"
-    )
+    validate_pv_comparator(digest, prov, expected_vm, s_theta)
 
 
 # --- internal consistency and recorded status -------------------------------
@@ -129,35 +112,14 @@ def test_golden_matches_recorded_status(case: str):
     would still satisfy a test asserting only that some number was recorded.
     """
     digest, prov = _golden(case)
-    status = prov["acceptance"]["expected_status"]
-    assert status in {"within_allowable", "exceeds_allowable"}
-    if status == "within_allowable":
-        assert digest["uc"] <= 1.0, f"{case} records within_allowable but uc={digest['uc']}"
-    else:
-        assert digest["uc"] > 1.0
+    validate_acceptance(digest, prov, _build_module(case))
 
 
 @pytest.mark.parametrize("case", GOLDEN_CASES)
 def test_golden_respects_linear_elastic_validity(case: str):
-    """A linear result at yield is not an admissible screening answer.
-
-    It must either sit inside the elastic range or say explicitly that it does
-    not. Passing silently at 99.8 percent of yield is what the superseded
-    parameterisation did.
-    """
+    """D2 requires sub-yield stress; provenance cannot waive that criterion."""
     digest, prov = _golden(case)
-    module = _build_module(case)
-    yield_mpa = getattr(
-        getattr(module, "CONDITIONS", None), "yield_strength_mpa", None
-    ) or getattr(module.GEOM, "yield_strength_mpa", None)
-    assert yield_mpa, f"{case} build.py exposes no yield strength"
-
-    exceeded = prov["acceptance"]["linear_elastic_limit_exceeded"]
-    if not exceeded:
-        assert digest["max_seqv_mpa"] < yield_mpa, (
-            f"{case} peak {digest['max_seqv_mpa']} MPa reaches the {yield_mpa} MPa "
-            "yield while its provenance records the elastic limit as not exceeded"
-        )
+    validate_acceptance(digest, prov, _build_module(case))
 
 
 # --- equilibrium: the check that would have caught the original defect -------
@@ -165,26 +127,9 @@ def test_golden_respects_linear_elastic_validity(case: str):
 
 @pytest.mark.parametrize("case", GOLDEN_CASES)
 def test_golden_reactions_balance(case: str):
-    """Every reported reaction must vanish.
-
-    Both decks are constructed so their applied loads are self-balancing: the
-    pressure vessel applies no axial load and restrains nothing radially, and the
-    mudmat's applied field and soil patch integrate to the same force and moment.
-    The restraints therefore carry no load, and a non-zero reaction means the
-    applied system does not close.
-
-    This is the check that would have made every defect in #2094 self-announcing:
-    a large radial reaction at the over-constrained node, an applied resultant
-    4.88 percent short of intent, a near-zero reaction against 800 kN applied.
-    """
+    """Apply self-balanced or supported-load equilibrium as appropriate."""
     digest, prov = _golden(case)
-    tol = prov.get("comparator", {}).get("tolerance_n", 1.0)
-    reactions = {k: v for k, v in digest.items() if k.startswith("reaction_")}
-    assert reactions, f"{case} golden records no reaction: equilibrium unchecked"
-    for key, value in reactions.items():
-        assert abs(value) < tol, (
-            f"{case} {key}={value} N exceeds {tol} N; the applied system does not close"
-        )
+    validate_equilibrium(case, digest, prov, _build_module(case))
 
 
 @pytest.mark.parametrize("case", GOLDEN_CASES)

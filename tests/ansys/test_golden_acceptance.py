@@ -2,6 +2,7 @@
 import copy
 import json
 import shutil
+from types import SimpleNamespace
 
 import pytest
 
@@ -121,3 +122,28 @@ def test_supported_load_recomputes_balance(damage):
         digest["reaction_fx_n"] = float("nan")
     with pytest.raises(AssertionError):
         validate_equilibrium("padeye", digest, {})
+
+
+@pytest.mark.parametrize("residual", [0.1, 0.49])
+def test_supported_load_accepts_rounded_nonzero_residual(residual):
+    from tests.ansys.golden_acceptance import validate_equilibrium
+    digest = supported_digest()
+    digest["reaction_fx_n"] += residual
+    digest["force_residual_n"] = residual
+    validate_equilibrium("padeye", digest, {})
+
+
+def test_supported_load_does_not_accept_different_build_load():
+    from tests.ansys.golden_acceptance import validate_equilibrium
+    module = SimpleNamespace(GEOM=SimpleNamespace(sling_load_kn=1, sling_angle_deg=0))
+    with pytest.raises(AssertionError):
+        validate_equilibrium("padeye", supported_digest(), {}, module)
+
+
+def test_mudmat_applied_load_is_bound_to_build():
+    digest, provenance = goldens._golden("mudmat")
+    provenance["comparator"]["applied_vertical_load_n"] *= 2
+    provenance["comparator"]["relative_residual"] /= 2
+    from tests.ansys.golden_acceptance import validate_equilibrium
+    with pytest.raises(AssertionError):
+        validate_equilibrium("mudmat", digest, provenance, goldens._build_module("mudmat"))
