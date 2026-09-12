@@ -215,7 +215,8 @@ def test_golden_provenance_declares_a_comparator_class(case: str):
 def test_committed_golden_is_stable(case: str):
     """Re-solving reproduces the committed value.
 
-    Deselected by default (`-m "not requires_mapdl"`). Tolerance is 1e-3
+    Skipped unless ANSYS_NATIVE_TESTS=1; callers may also deselect the marker.
+    Tolerance is 1e-3
     relative and is valid **only** against the run configuration recorded in
     provenance: distributed and iterative solvers are not bit-reproducible
     across core counts, so a tighter gate would fail a correct result.

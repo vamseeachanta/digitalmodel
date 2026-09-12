@@ -214,8 +214,8 @@ class ANSYSRunner:
 
     def _detect_executable(self) -> Optional[Path]:
         configured = self._config.executable_path
-        if configured and Path(configured).is_file():
-            return Path(configured).resolve()
+        if configured is not None:
+            return Path(configured).resolve() if Path(configured).is_file() else None
         for env_var in ("ANSYS_MAPDL_PATH", "MAPDL_PATH", "ANSYS_EXECUTABLE"):
             val = os.environ.get(env_var)
             if val and Path(val).is_file():

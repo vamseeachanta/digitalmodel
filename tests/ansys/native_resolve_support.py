@@ -4,6 +4,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+import re
 import shutil
 
 from digitalmodel.ansys.results_extractor import ResultsExtractor
@@ -17,7 +18,8 @@ def _sha256(path):
 
 def _digest(path):
     text = Path(path).read_text(encoding='utf-8')
-    keys = text.strip().split(',')[::2]
+    tokens = [token.strip() for token in text.strip().replace('\n', ',').split(',')]
+    keys = [token for token in tokens if token][::2]
     if len(keys) != len(set(keys)):
         raise ValueError('Duplicate result labels')
     values = ResultsExtractor().parse_result_digest(text)
@@ -54,7 +56,9 @@ def _check_result(result, output, golden_path, expected, profile):
         raise ValueError('Fresh log and expected digest must be attributed to this run')
     with log.open('r', encoding='utf-8', errors='replace') as stream:
         header = stream.read(131072)
-    if not all(str(profile[key]) in header for key in ('release', 'build', 'update', 'platform')):
+    if not all(re.search(r'(?<![\w.\-])' + re.escape(str(profile[key]))
+                         + r'(?![\w.\-])', header)
+               for key in ('release', 'build', 'update', 'platform')):
         raise ValueError('Native log does not establish the recorded runtime profile')
     observed = _digest(digest)
     if observed.keys() != expected.keys():
@@ -70,6 +74,8 @@ def resolve_golden(case, output, executable):
     """Retain exact input and fresh native evidence without claiming qualification."""
     case, output = Path(case).resolve(), Path(output).resolve()
     provenance, deck, golden_path, expected = _candidate(case)
+    executable = Path(executable).resolve(strict=True)
+    executable_sha256 = _sha256(executable)
     if output.exists():
         raise ValueError('Re-solve requires a new, unused output directory')
     output.mkdir(parents=True, exist_ok=False)
@@ -87,6 +93,10 @@ def resolve_golden(case, output, executable):
         'profile': provenance['solver'], 'input_sha256': _sha256(copied),
         'harness_sha256': _sha256(__file__), 'relative_tolerance': 1e-3,
         'observed': observed,
+        'execution': {'executable': str(executable), 'executable_sha256': executable_sha256,
+                      'argv': [str(executable), '-b', '-i', str(copied), '-o',
+                               str(output / f'{copied.stem}.out'), '-np', '1', '-smp'],
+                      'timeout_seconds': 120, 'duration_seconds': result.duration_seconds},
         'artifacts': [{'path': path.relative_to(output).as_posix(), 'sha256': _sha256(path)}
                       for path in sorted(paths)],
     }
