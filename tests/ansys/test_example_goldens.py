@@ -29,7 +29,7 @@ EXAMPLES = Path(__file__).resolve().parents[2] / "examples" / "ansys"
 
 # Cases carrying a committed golden. A case is added here only once its golden
 # exists; an absent golden is a hard failure below, never a skip.
-GOLDEN_CASES = ["pressure-vessel"]
+GOLDEN_CASES = ["pressure-vessel", "mudmat"]
 
 
 def _golden(case: str) -> tuple[dict[str, float], dict]:
@@ -139,20 +139,26 @@ def test_golden_respects_linear_elastic_validity(case: str):
 
 @pytest.mark.parametrize("case", GOLDEN_CASES)
 def test_golden_reactions_balance(case: str):
-    """Reactions must match the applied load recorded in provenance.
+    """Every reported reaction must vanish.
 
-    For the pressure vessel no axial load is applied and nothing is restrained
-    radially, so both reactions are zero. The superseded deck carried a large
-    radial reaction at its spurious restraint and no artifact recorded it.
+    Both decks are constructed so their applied loads are self-balancing: the
+    pressure vessel applies no axial load and restrains nothing radially, and the
+    mudmat's applied field and soil patch integrate to the same force and moment.
+    The restraints therefore carry no load, and a non-zero reaction means the
+    applied system does not close.
+
+    This is the check that would have made every defect in #2094 self-announcing:
+    a large radial reaction at the over-constrained node, an applied resultant
+    4.88 percent short of intent, a near-zero reaction against 800 kN applied.
     """
     digest, prov = _golden(case)
-    eq = prov["equilibrium"]
-    applied = eq["applied_axial_load_n"]
-    for key in ("reaction_fx_n", "reaction_fy_n"):
-        if key in digest:
-            assert abs(digest[key] - (applied if key.endswith("fy_n") else 0.0)) < 1.0, (
-                f"{case} {key}={digest[key]} against an applied {applied} N"
-            )
+    tol = prov.get("comparator", {}).get("tolerance_n", 1.0)
+    reactions = {k: v for k, v in digest.items() if k.startswith("reaction_")}
+    assert reactions, f"{case} golden records no reaction: equilibrium unchecked"
+    for key, value in reactions.items():
+        assert abs(value) < tol, (
+            f"{case} {key}={value} N exceeds {tol} N; the applied system does not close"
+        )
 
 
 @pytest.mark.parametrize("case", GOLDEN_CASES)

@@ -260,9 +260,12 @@ reaction FZ = %G N  (shall be ~0: loads balance by construction)
 /COM,bearing check; this deck applies q = V/A_eff from that same idealisation.
 /COM,============================================================
 ! numeric digest for the postprocessor (small, returnable)
+! Field names follow the common digest schema shared by every screening deck:
+! max_seqv_mpa, allowable_mpa, uc, peak_node, reaction_*. Case-specific fields
+! follow. A common core is what lets one golden test serve every case.
 *CFOPEN,mudmat_result,csv
-*VWRITE,smax,stress_uc,peak_node,rfz,{q_soil:.8f},{ecc:.6f}
-('max_seqv_mpa,',F12.4,',stress_uc,',F10.5,',peak_node,',F10.0,',reaction_fz_n,',F14.4,',q_soil_mpa,',F12.6,',eccentricity_mm,',F12.4)
+*VWRITE,smax,allow,stress_uc,peak_node,rfz,{q_soil:.8f},{ecc:.6f}
+('max_seqv_mpa,',F12.4,',allowable_mpa,',F12.4,',uc,',F10.5,',peak_node,',F10.0,',reaction_fz_n,',F14.4,',q_soil_mpa,',F12.6,',eccentricity_mm,',F12.4)
 *CFCLOS
 FINISH
 """
