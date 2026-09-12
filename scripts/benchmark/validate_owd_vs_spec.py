@@ -942,8 +942,8 @@ def run_comparison(
             report_path = Path(result.report_path)
         print(f"  Report: {report_path}")
 
-        # Compute correlation
-        summary = _compute_correlation_summary(owd_r, spec_r)
+        # Published metrics and decisions share the authoritative report path.
+        summary = {}
         
         # Attach matrix and hydrostatic data from the advanced report
         pairwise = result.report.pairwise_results
@@ -951,13 +951,22 @@ def run_comparison(
         if pw_key in pairwise:
             pw = pairwise[pw_key]
             for dof, comparison in pw.rao_comparisons.items():
-                if dof in summary:
-                    summary[dof]["quality"] = comparison.magnitude_stats.quality
-                    summary[dof]["refusal_reason"] = comparison.refusal_reason
+                consensus = result.report.consensus_by_dof.get(dof.upper())
+                summary[dof] = {
+                    "correlation": consensus.mean_pairwise_correlation if consensus else None,
+                    "max_abs_diff": comparison.max_magnitude_diff,
+                    "quality": comparison.magnitude_stats.quality,
+                    "refusal_reason": comparison.refusal_reason,
+                    "rel_error_pct": None,
+                    "n_points": None,
+                    "phase_correlation": comparison.phase_stats.correlation,
+                    "max_phase_diff": comparison.max_phase_diff,
+                }
             dof_summary_by_body[bi] = {
                 **summary,
                 "_comparison_status": result.report.comparison_status,
                 "_overall_consensus": result.report.overall_consensus,
+                "_comparison_policy": result.report.comparison_policy,
                 "refusal_reasons": result.report.refusal_reasons,
                 "hydro": pw.hydrostatic_comparison,
                 "am_correlations": pw.added_mass_correlations,
@@ -1041,6 +1050,7 @@ def run_comparison(
 
     return {
         "dof_summary_by_body": dof_summary_by_body,
+        "expected_body_indices": [body["body_index"] for body in bodies],
         "coupling_summary": coupling_report,
         "semantic": sem,
     }
@@ -1071,20 +1081,23 @@ def _build_multibody_index_html(
         summary = dof_summary_by_body.get(bi, {})
 
         cells = f'<td style="font-weight:600">{vname}</td>'
-        all_pass = True
+        all_pass = _case_summary_passes({
+            "status": "completed", "dof_summary_by_body": {bi: summary},
+            "expected_body_indices": [bi],
+        })
         for dof in dof_names:
             corr = summary.get(dof, {}).get("correlation", float("nan"))
-            if corr >= 0.999:
+            if not _finite_number(corr):
+                bg, fg = "#f0f0f0", "#777"
+            elif corr >= 0.999:
                 bg, fg = "#d5f5e3", "#16a34a"
             elif corr >= 0.99:
                 bg, fg = "#fef9e7", "#d97706"
-                all_pass = False
             else:
                 bg, fg = "#fadbd8", "#dc2626"
-                all_pass = False
             cells += (
                 f'<td style="text-align:center;background:{bg};color:{fg}">'
-                f"{corr:.6f}</td>"
+                f"{_display_number(corr)}</td>"
             )
 
         verdict = "PASS" if all_pass else "REVIEW"
@@ -1918,18 +1931,11 @@ def _build_results_from_config() -> dict:
             am_min_diag = float("nan")
             damp_min_diag = float("nan")
 
-            # Detect body subdirectories
-            body_dirs = sorted(benchmark_dir.glob("body_*"))
-            if not body_dirs:
-                # Flat structure (single body or legacy)
-                body_dirs = [benchmark_dir]
-
-            for b_dir in body_dirs:
-                # Extract body index from dir name "body_N", default 0
-                try:
-                    bi = int(b_dir.name.split("_")[-1]) if b_dir.name.startswith("body_") else 0
-                except ValueError:
-                    bi = 0
+            # Completeness follows the declared case, never discovered folders.
+            case = CASES[case_key]
+            expected = [b["body_index"] for b in case["bodies"]] if "bodies" in case else [case.get("body_index", 0)]
+            for bi in expected:
+                b_dir = benchmark_dir / f"body_{bi}" if len(expected) > 1 else benchmark_dir
                 
                 report_path = b_dir / "benchmark_report.json"
                 
@@ -1973,6 +1979,7 @@ def _build_results_from_config() -> dict:
                         **dof_stats,
                         "_comparison_status": report.get("comparison_status"),
                         "_overall_consensus": report.get("overall_consensus"),
+                        "_comparison_policy": report.get("comparison_policy"),
                         "hydro": pw_hydro,
                         "am_correlations": pw_am,
                         "damp_correlations": pw_damp,
@@ -2015,6 +2022,7 @@ def _build_results_from_config() -> dict:
 
             result_entry = {
                 "case_id": case_key,
+                "expected_body_indices": expected,
                 "description": CASES[case_key]["description"],
                 "status": ("refused" if report_refused else
                            "incomplete" if report_missing else "completed"),
@@ -2058,11 +2066,13 @@ def _case_summary_passes(result: dict) -> bool:
     if result.get("status") != "completed" or _report_has_refusal(result):
         return False
     bodies = result.get("dof_summary_by_body", {})
-    if not bodies:
+    expected = result.get("expected_body_indices")
+    if not bodies or not expected or set(bodies) != set(expected):
         return False
     for summary in bodies.values():
         if (summary.get("_comparison_status") != "DECIDED"
-                or summary.get("_overall_consensus") != "FULL"):
+                or summary.get("_overall_consensus") != "FULL"
+                or not summary.get("_comparison_policy")):
             return False
         for dof in SUMMARY_DOFS:
             stat = summary.get(dof, {})
@@ -2073,10 +2083,8 @@ def _case_summary_passes(result: dict) -> bool:
             if correlation is not None and (
                     not _finite_number(correlation) or not -1 <= correlation <= 1):
                 return False
-            if stat.get("quality") == "NULL_RESPONSE":
-                if correlation is not None and not _finite_number(correlation):
-                    return False
-            elif (stat.get("quality") not in {"COMPARED", "IDENTICAL"}
+            if stat.get("quality") != "NULL_RESPONSE" and (
+                    stat.get("quality") not in {"COMPARED", "IDENTICAL"}
                   or not _finite_number(correlation) or not -1 <= correlation <= 1):
                 return False
     return True
@@ -2495,7 +2503,9 @@ def _generate_master_html(results: dict, output_dir: Path) -> Path:
   </div>
   <div class="footer">
     Correlation coefficient (r) computed per DOF between .owd ground truth and spec.yml pipeline.
-    Values shown for heading 0&deg; amplitude comparison. Threshold: r &ge; 0.999 = PASS.
+    Values follow the report's aligned comparison. PASS requires every declared body,
+    a declared comparison policy, a DECIDED/FULL report and usable DOF evidence.
+    Correlation colours are diagnostic; they do not define acceptance.
     Semantic column compares OrcaWave YAML configurations (cosmetic/convention differences excluded).
     <br>
     <strong>Ph.r</strong>: min phase correlation across non-trivial DOFs (hover DOF cells for per-DOF detail).

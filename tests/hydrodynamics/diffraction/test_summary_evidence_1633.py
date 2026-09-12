@@ -28,8 +28,10 @@ def write_report(tmp_path, report):
 
 
 def report_fixture():
+    from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import ComparisonPolicy
     dofs = ("surge", "sway", "heave", "roll", "pitch", "yaw")
     return {"comparison_status": "DECIDED", "overall_consensus": "FULL",
+            "comparison_policy": ComparisonPolicy(.025, 5e-11, .9801, "Synthetic test budget").to_dict(),
             "consensus_by_dof": {d.upper(): {"mean_pairwise_correlation": 1.0} for d in dofs},
             "pairwise_results": {"a_vs_b": {"comparison_status": "DECIDED",
                 "hydrostatic_comparison": None, "added_mass_correlations": {"1,1": 1.0},
