@@ -189,3 +189,70 @@ def test_live_comparison_preserves_actual_report_authority(tmp_path, monkeypatch
     assert body["_comparison_status"] == report.comparison_status
     assert body["_overall_consensus"] == report.overall_consensus
     assert module._case_summary_passes(result) is configured
+
+
+@pytest.mark.parametrize('policy', [None, {}])
+def test_report_without_declared_policy_never_passes(tmp_path, monkeypatch, policy):
+    module = load_module(tmp_path, monkeypatch)
+    report = report_fixture()
+    report['comparison_policy'] = policy
+    write_report(tmp_path, report)
+    assert not module._case_summary_passes(module._build_results_from_config()['2.7'])
+
+
+def test_missing_declared_body_never_passes_summary_only(tmp_path, monkeypatch):
+    module = load_module(tmp_path, monkeypatch)
+    module.CASES['2.7']['bodies'] = [
+        {'body_index': 0, 'vessel_name': 'Synthetic'},
+        {'body_index': 1, 'vessel_name': 'Second'},
+    ]
+    directory = tmp_path / '2.7/benchmark/body_0'
+    directory.mkdir(parents=True)
+    (directory / 'benchmark_report.json').write_text(json.dumps(report_fixture()))
+    result = module._build_results_from_config()['2.7']
+    assert result['status'] == 'incomplete'
+    assert not module._case_summary_passes(result)
+
+
+@pytest.mark.parametrize('correlation', [1.0, None, 'N/A'])
+def test_refused_multibody_overview_never_passes(tmp_path, monkeypatch, correlation):
+    module = load_module(tmp_path, monkeypatch)
+    summary = {d: {'correlation': correlation, 'max_abs_diff': 0.0, 'quality': 'COMPARED'}
+               for d in module.SUMMARY_DOFS}
+    summary.update(_comparison_status='REFUSED', _overall_consensus='FULL')
+    bodies = [{'body_index': 0, 'vessel_name': 'Synthetic'}]
+    page = module._build_multibody_index_html(
+        tmp_path, '2.7', module.CASES['2.7'], bodies, {0: summary}, {})
+    assert '>PASS<' not in page.read_text(encoding='utf-8')
+
+
+def test_live_summary_uses_report_metrics_and_declared_bodies(tmp_path, monkeypatch, two_identical_results):
+    from types import SimpleNamespace
+    from digitalmodel.hydrodynamics.diffraction import benchmark_runner
+    from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import ComparisonPolicy
+    from scripts.benchmark import solver_metadata
+    module = load_module(tmp_path, monkeypatch)
+    spec_path = tmp_path / 'spec.yml'
+    spec_path.write_text('{}')
+    module.CASES['2.7'].update(spec=spec_path, bodies=[
+        {'body_index': 0, 'vessel_name': 'Synthetic'},
+        {'body_index': 1, 'vessel_name': 'Second'}])
+    monkeypatch.setattr(module, 'OUTPUT_DIR', tmp_path)
+    monkeypatch.setattr(solver_metadata, 'build_solver_metadata', lambda *a, **kw: {})
+    values = list(two_identical_results.values())
+    for result in values:
+        result.raos.surge.magnitude[:] = 0
+    policy = ComparisonPolicy(.025, 5e-11, .9801, 'Synthetic test budget')
+    report = MultiSolverComparator(
+        {'OrcaWave (.owd)': values[0], 'OrcaWave (spec.yml)': values[1]}, policy=policy).generate_report()
+    monkeypatch.setattr(benchmark_runner.BenchmarkRunner, 'run_from_results',
+                        lambda *a, **kw: SimpleNamespace(report=report))
+    result = module.run_comparison({0: values[0]}, {0: values[1]}, {}, {}, '2.7')
+    result['status'] = 'completed'
+    summary = result['dof_summary_by_body'][0]
+    assert summary['surge']['correlation'] is None
+    assert not module._case_summary_passes(result)
+    pair = next(iter(report.pairwise_results.values()))
+    for dof in module.SUMMARY_DOFS:
+        assert summary[dof]['correlation'] == report.consensus_by_dof[dof.upper()].mean_pairwise_correlation
+        assert summary[dof]['max_abs_diff'] == pair.rao_comparisons[dof].max_magnitude_diff
