@@ -4,6 +4,10 @@
     uv run python examples/ansys/padeye/build.py
     uv run python examples/ansys/padeye/build.py --mesh-study-dir results/mesh-study
 
+The candidate has t/D = 1 (80 mm thickness / 80 mm hole diameter). Its
+plane-stress idealisation establishes no pin/contact or 3D qualification.
+Native stress and mesh-convergence evidence remain pending.
+
 Edit the PadeyeGeometry below (or import and parameterise) and re-run to refresh
 padeye.inp. Dispatch the solve on a licensed host via input.yml (#940/#948).
 """
