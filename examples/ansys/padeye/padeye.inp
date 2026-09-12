@@ -77,12 +77,24 @@ mesh_size = 10.0
 PRNSOL,S,PRIN
 
 ! --- equilibrium: support nodes only, all structural elements retained ---
-! FSUM reports signed support force; reaction + applied load shall balance.
+! FSUM is an element-force sum, not the signed restrained-node reaction.
+! Retain both; sum NODE RF explicitly for reaction + applied load balance.
 ALLSEL,ALL
 NSEL,S,LOC,Y,0
 FSUM
-*GET,rfx,FSUM,0,ITEM,FX
-*GET,rfy,FSUM,0,ITEM,FY
+*GET,fsum_fx,FSUM,0,ITEM,FX
+*GET,fsum_fy,FSUM,0,ITEM,FY
+*GET,support_count,NODE,0,COUNT
+*GET,support_node,NODE,0,NUM,MIN
+rfx = 0
+rfy = 0
+*DO,support_i,1,support_count
+*GET,node_rfx,NODE,support_node,RF,FX
+*GET,node_rfy,NODE,support_node,RF,FY
+rfx = rfx + node_rfx
+rfy = rfy + node_rfy
+support_node = NDNEXT(support_node)
+*ENDDO
 ! Retain nodal reactions independently of FSUM for sign/resultant checks.
 PRRSOL,F
 ALLSEL,ALL
@@ -112,6 +124,8 @@ peak von Mises = %G MPa ; allowable = %G MPa ; UC = %G
 ('applied_fx_n,',E20.12,',applied_fy_n,',E20.12)
 *VWRITE,rfx,rfy
 ('reaction_fx_n,',E20.12,',reaction_fy_n,',E20.12)
+*VWRITE,fsum_fx,fsum_fy
+('fsum_fx_n,',E20.12,',fsum_fy_n,',E20.12)
 *VWRITE,balance_n
 ('force_residual_n,',E20.12)
 *CFCLOS
