@@ -243,6 +243,17 @@ class Level2OrcaFlexValidator:
             # Try to calculate statics to generate warnings
             model.CalculateStatics()
 
+            # #3838: a solve that did not reach a static state is itself the
+            # finding. This collector returns warnings rather than raising, so
+            # the state is reported as a warning instead of being discarded.
+            from digitalmodel.solvers.orcaflex import run_state
+
+            state = run_state.state_name(model)
+            if state is not None and state not in run_state.STATICS_COMPLETE_STATES:
+                warnings.append(
+                    f"Statics did not converge: model state is {state}"
+                )
+
             # Get warnings from calculation
             # Note: OrcaFlex warnings are typically in model.WarningMessages
             if hasattr(model, 'WarningMessages'):

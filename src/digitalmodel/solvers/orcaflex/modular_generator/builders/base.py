@@ -20,6 +20,18 @@ class BaseBuilder(ABC):
     _output_file: str = ""
     _order: int = 0
 
+    # OrcaFlex object sections this builder emits, declared so that a consumer
+    # can read a section dependency order off BuilderRegistry directly.  The
+    # registry is keyed by output file name and carries the dependency order in
+    # its `order` argument, but nothing previously connected a file name to the
+    # sections inside it.
+    #
+    # Left empty for builders that emit only singleton sections (General,
+    # Environment, VariableData, Groups), and for GenericModelBuilder, which
+    # emits every section and orders its own output via
+    # `generic_builder._SECTION_ORDER`.
+    _sections: tuple[str, ...] = ()
+
     def __init__(self, spec: 'ProjectInputSpec', context: 'BuilderContext'):
         """Initialize builder with spec and context.
 
