@@ -19,6 +19,7 @@ def _check_mesh(digest, size):
         value = digest[key]
         assert value > 0 and value == int(value), f'invalid {key}'
     assert 0 <= digest['peak_x_mm'] <= 400 and 0 <= digest['peak_y_mm'] <= 300
+    assert math.hypot(digest['peak_x_mm'] - 200, digest['peak_y_mm'] - 220) >= 40 - 1e-8
     close(digest['peak_z_mm'], 0, 0)
     close(digest['applied_fx_n'], 0, 0)
     close(digest['applied_fy_n'], 50000, 0)
@@ -37,8 +38,8 @@ def _peak_metrics(coarse, fine, findings):
     try:
         growth = number(fine['max_seqv_mpa']) - number(coarse['max_seqv_mpa'])
         metrics['peak_growth_mpa'] = growth
-        if growth > 0.0001 + 1e-12:
-            findings.append('Global peak grew beyond recorded print resolution')
+        if abs(growth) > 0.0001 + 1e-12:
+            findings.append('Global peak changed beyond recorded print resolution')
     except (AssertionError, KeyError):
         findings.append('Peak growth unavailable: incomplete or nonfinite stress')
     try:
@@ -67,7 +68,7 @@ def _sizing(digest):
 
 
 def assess_mesh_pair(coarse, fine):
-    """Return an auditable disposition; never promote a golden or readiness."""
+    """Assess two parsed numeric dictionaries; never promote golden/readiness."""
     findings = []
     for label, digest, size in (('coarse', coarse, 10), ('fine', fine, 5)):
         try:
@@ -75,10 +76,12 @@ def assess_mesh_pair(coarse, fine):
         except (AssertionError, KeyError, ValueError, OverflowError) as error:
             findings.append(f'{label}: {error}')
     metrics = _peak_metrics(coarse, fine, findings)
-    if not findings:
+    try:
         for key in ('mesh_node_count', 'mesh_element_count'):
-            if fine[key] <= coarse[key]:
+            if number(fine[key]) <= number(coarse[key]):
                 findings.append(f'No demonstrated refinement in {key}')
+    except (AssertionError, KeyError):
+        findings.append('Refinement unavailable: incomplete or nonfinite counts')
     return {'status': 'unqualified_investigation_required' if findings else 'diagnostic_checks_passed',
             'native_qualification_complete': False, 'convergence_demonstrated': False,
             'evidence_binding_verified': False,
