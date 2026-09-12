@@ -1863,7 +1863,8 @@ def _run_qtf_plots(case_id: str) -> None:
 def _report_has_refusal(value: object) -> bool:
     """Preserve refusal from every report, solver pair and DOF in the summary."""
     if isinstance(value, dict):
-        if value.get("comparison_status") == "REFUSED":
+        if (value.get("comparison_status") == "REFUSED"
+                or value.get("refusal_reason") or value.get("refusal_reasons")):
             return True
         return any(_report_has_refusal(item) for item in value.values())
     if isinstance(value, list):
@@ -1877,7 +1878,6 @@ def _build_results_from_config() -> dict:
     Used by --summary-only to generate the master HTML without running solvers.
     """
     import json
-    import re
     import yaml
 
     config_path = L00_DIR / "validation_config.yaml"
@@ -1890,7 +1890,6 @@ def _build_results_from_config() -> dict:
     for case_id_raw, meta in raw.get("cases", {}).items():
         cid = str(case_id_raw)
         status_str = meta.get("status", "pending")
-        notes = meta.get("notes", "")
 
         if status_str == "blocked":
             continue
@@ -1907,6 +1906,7 @@ def _build_results_from_config() -> dict:
             benchmark_dir = L00_DIR / case_dir / "benchmark"
             
             report_refused = False
+            report_missing = False
             dof_summary_by_body = {}
             am_min_diag = float("nan")
             damp_min_diag = float("nan")
@@ -1948,42 +1948,24 @@ def _build_results_from_config() -> dict:
                             .get("mean_pairwise_correlation")
                         )
                         dof_rao = pw_raos.get(dof, {})
-                        max_diff = dof_rao.get("max_magnitude_diff", 0.0)
+                        max_diff = dof_rao.get("max_magnitude_diff")
                         dof_stats[dof] = {
                             "correlation": corr,
                             "max_abs_diff": max_diff,
-                            "rel_error_pct": 0.0,
-                            "n_points": 0,
+                            "rel_error_pct": None,
+                            "n_points": dof_rao.get("n_points"),
+                            "quality": dof_rao.get("magnitude_quality"),
                             "phase_correlation": dof_rao.get(
                                 "phase_correlation", float("nan")
                             ),
                             "max_phase_diff": dof_rao.get(
-                                "max_phase_diff", 0.0
-                            ),
-                        }
-                    dof_stats = {}
-                    for dof in dof_names:
-                        dof_upper = dof.upper()
-                        corr = (
-                            consensus.get(dof_upper, {})
-                            .get("mean_pairwise_correlation")
-                        )
-                        dof_rao = pw_raos.get(dof, {})
-                        max_diff = dof_rao.get("max_magnitude_diff", 0.0)
-                        dof_stats[dof] = {
-                            "correlation": corr,
-                            "max_abs_diff": max_diff,
-                            "rel_error_pct": 0.0,
-                            "n_points": 0,
-                            "phase_correlation": dof_rao.get(
-                                "phase_correlation", float("nan")
-                            ),
-                            "max_phase_diff": dof_rao.get(
-                                "max_phase_diff", 0.0
+                                "max_phase_diff"
                             ),
                         }
                     dof_summary_by_body[bi] = {
                         **dof_stats,
+                        "_comparison_status": report.get("comparison_status"),
+                        "_overall_consensus": report.get("overall_consensus"),
                         "hydro": pw_hydro,
                         "am_correlations": pw_am,
                         "damp_correlations": pw_damp,
@@ -1995,32 +1977,8 @@ def _build_results_from_config() -> dict:
                         damp_min_diag = _min_diag(pw_damp)
 
                 else:
-                    # Fallback to notes r= parsing (legacy/single-body only)
-                    # Only if dof_summary_by_body is empty
-                    if not dof_summary_by_body:
-                        r_match = re.search(r"r=([0-9.]+)", notes)
-                        corr_val = float(r_match.group(1)) if r_match else 1.0
-
-                        dof_stats = {}
-                        for dof in dof_names:
-                            if cid == "2.9" and dof == "heave":
-                                heave_match = re.search(r"heave r=([0-9.]+)", notes)
-                                dof_corr = (
-                                    float(heave_match.group(1))
-                                    if heave_match
-                                    else corr_val
-                                )
-                            else:
-                                dof_corr = corr_val
-                            dof_stats[dof] = {
-                                "correlation": dof_corr,
-                                "max_abs_diff": 1e-3,
-                                "rel_error_pct": 0.0,
-                                "n_points": 0,
-                                "phase_correlation": float("nan"),
-                                "max_phase_diff": 0.0,
-                            }
-                        dof_summary_by_body[0] = dof_stats
+                    # Missing artifacts cannot supply numerical comparison evidence.
+                    report_missing = True
 
             # Semantic equivalence check
             # Use bodies list to find files if needed, or just look in root/spec_orcawave
@@ -2052,7 +2010,7 @@ def _build_results_from_config() -> dict:
                 "case_id": case_key,
                 "description": CASES[case_key]["description"],
                 "status": ("refused" if report_refused else
-                           "completed" if status_str == "pass" else status_str),
+                           "incomplete" if report_missing else "completed"),
                 "dof_summary_by_body": dof_summary_by_body,
                 "am_min_diag": am_min_diag,
                 "damp_min_diag": damp_min_diag,
@@ -2077,9 +2035,46 @@ def _config_key(cid: str) -> str:
     return cid.rstrip("abcdefghijklmnopqrstuvwxyz")
 
 
+SUMMARY_DOFS = ("surge", "sway", "heave", "roll", "pitch", "yaw")
+
+
+def _finite_number(value: object) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+
+def _display_number(value: object, spec: str = ".6f") -> str:
+    return format(value, spec) if _finite_number(value) else "Unavailable"
+
+
+def _case_summary_passes(result: dict) -> bool:
+    """Pass only complete, decided FULL reports with usable DOF evidence."""
+    if result.get("status") != "completed" or _report_has_refusal(result):
+        return False
+    bodies = result.get("dof_summary_by_body", {})
+    if not bodies:
+        return False
+    for summary in bodies.values():
+        if (summary.get("_comparison_status") != "DECIDED"
+                or summary.get("_overall_consensus") != "FULL"):
+            return False
+        for dof in SUMMARY_DOFS:
+            stat = summary.get(dof, {})
+            if not _finite_number(stat.get("max_abs_diff")):
+                return False
+            correlation = stat.get("correlation")
+            if stat.get("quality") == "NULL_RESPONSE":
+                if correlation is not None and not _finite_number(correlation):
+                    return False
+            elif (stat.get("quality") not in {"COMPARED", "IDENTICAL"}
+                  or not _finite_number(correlation) or not -1 <= correlation <= 1):
+                return False
+    return True
+
+
 def _is_trivial_dof(dof_info: dict, threshold: float = 1e-6) -> bool:
     """DOF is trivial if max magnitude diff is below threshold (zero signal)."""
-    return dof_info.get("max_abs_diff", 0.0) < threshold
+    value = dof_info.get("max_abs_diff")
+    return _finite_number(value) and value < threshold
 
 
 def _corr_color(value: float) -> str:
@@ -2141,10 +2136,7 @@ def _generate_master_html(results: dict, output_dir: Path) -> Path:
 
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     total_cases = len(results)
-    passed = sum(
-        1 for r in results.values()
-        if r["status"] in ("completed", "owd_only", "comparison_failed")
-    )
+    passed = sum(_case_summary_passes(r) for r in results.values())
     blocked = sum(1 for cid in CASES if cid not in results)
 
     # Build per-case rows
@@ -2159,8 +2151,10 @@ def _generate_master_html(results: dict, output_dir: Path) -> Path:
         notes = meta.get("notes", "")
 
         # Status badge
-        if status == "completed":
+        if _case_summary_passes(r):
             badge = '<span style="color:#16a34a;font-weight:bold">PASS</span>'
+        elif status == "completed":
+            badge = '<span style="color:#d97706;font-weight:bold">INCOMPLETE</span>'
         elif status == "comparison_failed":
             badge = '<span style="color:#d97706;font-weight:bold">WARN</span>'
         elif status == "owd_only":
@@ -2224,16 +2218,16 @@ def _generate_master_html(results: dict, output_dir: Path) -> Path:
                     tip_parts = [f"Mag r: {corr:.8f}" if isinstance(corr, float) else "Mag r: Unavailable"]
                     if isinstance(ph_corr, float) and not math.isnan(ph_corr):
                         tip_parts.append(f"Phase r: {ph_corr:.8f}")
-                    tip_parts.append(f"Max |diff|: {max_diff:.2e}")
-                    tip_parts.append(f"Max phase diff: {ph_diff:.2f}°")
-                    if corr is not None and max_diff < 1e-6:
+                    tip_parts.append(f"Max |diff|: {_display_number(max_diff, '.2e')}")
+                    tip_parts.append(f"Max phase diff: {_display_number(ph_diff, '.2f')}°")
+                    if _finite_number(corr) and _is_trivial_dof(s):
                         tip_parts[0] += " [identical — Δ<1e-6]"
                     tooltip = "&#10;".join(tip_parts)
-                    if corr is None:
+                    if not _finite_number(corr) or not _finite_number(max_diff):
                         dof_cells.append(
                             f'<td style="text-align:center;color:#9ca3af" title="{tooltip}">Unavailable</td>'
                         )
-                    elif max_diff < 1e-6:
+                    elif _is_trivial_dof(s):
                         # Trivially identical results: show correlation in green,
                         # not "0.0" which is ambiguous and looks like zero correlation.
                         corr_display = f"{corr:.6f}" if isinstance(corr, float) else "1.000000"
@@ -2408,24 +2402,8 @@ def _generate_master_html(results: dict, output_dir: Path) -> Path:
         )
         rows_html.append(row)
 
-    # Count pass/fail
-    all_pass = True
-    for r in results.values():
-        if r["status"] not in ("completed", "owd_only", "comparison_failed"):
-            all_pass = False
-            continue
-        dof_by_body = r.get("dof_summary_by_body", {})
-        if not dof_by_body and "dof_summary" in r:
-             dof_by_body = {0: r["dof_summary"]}
-             
-        for summary in dof_by_body.values():
-            for dof, s in summary.items():
-                corr = s["correlation"]
-                max_diff = s["max_abs_diff"]
-                if max_diff < 1e-6:
-                    continue
-                if isinstance(corr, float) and corr < 0.999:
-                    all_pass = False
+    # Use the same evidence criterion for the count and the master verdict.
+    all_pass = bool(results) and all(_case_summary_passes(r) for r in results.values())
 
     verdict_color = "#16a34a" if all_pass else "#dc2626"
     verdict_text = "ALL PASS" if all_pass else "NEEDS INVESTIGATION"
@@ -2581,37 +2559,19 @@ def main():
                 print(f"  Body {bi}:")
             print(f"  {'DOF':<8} {'Corr':>10} {'MaxDiff':>10} {'Rel%':>8} {'Points':>8}")
             print(f"  {'-'*8} {'-'*10} {'-'*10} {'-'*8} {'-'*8}")
-            for dof, s in summary.items():
-                corr = s["correlation"]
-                corr_str = f"{corr:.6f}" if isinstance(corr, float) else corr
-                print(
-                    f"  {dof:<8} {corr_str:>10} {s['max_abs_diff']:>10.6f} "
-                    f"{s['rel_error_pct']:>7.2f}% {s['n_points']:>8}"
-                )
+            for dof in SUMMARY_DOFS:
+                stat = summary.get(dof, {})
+                values = [_display_number(stat.get(key)) for key in
+                          ("correlation", "max_abs_diff", "rel_error_pct", "n_points")]
+                print(f"  {dof:<8} " + " ".join(f"{value:>12}" for value in values))
 
-    # Overall pass/fail
-    all_pass = True
-    for cid, r in results.items():
-        if r["status"] not in ("completed", "owd_only", "comparison_failed"):
-            all_pass = False
-            continue
-        dof_by_body = r.get("dof_summary_by_body", {})
-        if not dof_by_body and "dof_summary" in r:
-            dof_by_body = {0: r["dof_summary"]}
-        for bi, summary in dof_by_body.items():
-            for dof, s in summary.items():
-                corr = s["correlation"]
-                max_diff = s["max_abs_diff"]
-                if max_diff < 1e-6:
-                    continue
-                if isinstance(corr, float) and corr < 0.999:
-                    all_pass = False
-                    body_tag = f" body {bi}" if len(dof_by_body) > 1 else ""
-                    print(f"\n  WARN: Case {cid}{body_tag} {dof} correlation {corr:.4f} < 0.999")
+    # Use the same derived-report criterion as the HTML summary.
+    all_pass = bool(results) and all(_case_summary_passes(r) for r in results.values())
+
 
     print(f"\n{'='*70}")
     if all_pass:
-        print("RESULT: ALL CASES PASS (correlation >= 0.999 per DOF)")
+        print("RESULT: ALL CASES PASS (complete reports with FULL consensus)")
     else:
         print("RESULT: SOME CASES NEED INVESTIGATION")
     print(f"{'='*70}")

@@ -107,3 +107,43 @@ def test_null_metrics_render_without_passing(tmp_path, monkeypatch, field):
     html = module._generate_master_html(results, tmp_path).read_text(encoding="utf-8")
     assert "ALL PASS" not in html
     assert "Unavailable" in html
+
+
+def test_actual_exporter_report_renders_without_sample_count(tmp_path, monkeypatch, two_identical_results):
+    from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import ComparisonPolicy
+    module = load_module(tmp_path, monkeypatch)
+    policy = ComparisonPolicy(.025, 5e-11, .9801, "Synthetic regression uncertainty budget")
+    path = tmp_path / "2.7/benchmark/benchmark_report.json"
+    MultiSolverComparator(two_identical_results, policy=policy).export_report_json(path)
+    results = module._build_results_from_config()
+    html = module._generate_master_html(results, tmp_path).read_text(encoding="utf-8")
+    assert "ALL PASS" in html
+    assert results["2.7"]["dof_summary_by_body"][0]["surge"]["n_points"] is None
+
+
+def test_summary_only_cli_reads_real_export(tmp_path, monkeypatch, two_identical_results):
+    import sys
+    from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import ComparisonPolicy
+    module = load_module(tmp_path, monkeypatch)
+    monkeypatch.setattr(module, "OUTPUT_DIR", tmp_path)
+    policy = ComparisonPolicy(.025, 5e-11, .9801, "Synthetic regression uncertainty budget")
+    MultiSolverComparator(two_identical_results, policy=policy).export_report_json(
+        tmp_path / "2.7/benchmark/benchmark_report.json")
+    monkeypatch.setattr(sys, "argv", ["validate_owd_vs_spec.py", "--summary-only"])
+    module.main()
+    assert any("ALL PASS" in path.read_text(encoding="utf-8") for path in tmp_path.glob("*.html"))
+
+
+def test_console_summary_handles_metadata_and_missing_values(tmp_path, monkeypatch, capsys):
+    import sys
+    module = load_module(tmp_path, monkeypatch)
+    report = report_fixture()
+    report["pairwise_results"]["a_vs_b"]["rao_comparisons"]["heave"]["max_magnitude_diff"] = None
+    write_report(tmp_path, report)
+    result = module._build_results_from_config()["2.7"]
+    monkeypatch.setattr(module, "run_case", lambda *args, **kwargs: result)
+    monkeypatch.setattr(sys, "argv", ["validate_owd_vs_spec.py", "--case", "2.7"])
+    module.main()
+    output = capsys.readouterr().out
+    assert "Unavailable" in output
+    assert "SOME CASES NEED INVESTIGATION" in output
