@@ -9,6 +9,29 @@ import pytest
 from tests.ansys import test_example_goldens as goldens
 
 
+@pytest.mark.parametrize('field', ['q_soil_mpa', 'eccentricity_mm'])
+@pytest.mark.parametrize('damage', ['replace', 'remove'])
+def test_mudmat_derived_fields_are_required_and_bound(field, damage):
+    from tests.ansys.golden_acceptance import validate_equilibrium
+    digest, provenance = copy.deepcopy(goldens._golden('mudmat'))
+    if damage == 'replace':
+        digest[field] = 999.0
+    else:
+        del digest[field]
+    with pytest.raises((AssertionError, KeyError)):
+        validate_equilibrium('mudmat', digest, provenance, goldens._build_module('mudmat'))
+
+
+def test_self_balanced_resultant_cannot_exceed_one_newton():
+    from tests.ansys.golden_acceptance import validate_equilibrium
+    digest, provenance = copy.deepcopy(goldens._golden('pressure-vessel'))
+    for axis in ('x', 'y'):
+        digest[f'reaction_f{axis}_n'] = 0.8
+        provenance['equilibrium'][f'observed_reaction_f{axis}_n'] = 0.8
+    with pytest.raises(AssertionError, match='resultant'):
+        validate_equilibrium('pressure-vessel', digest, provenance)
+
+
 @pytest.fixture
 def copied_case(tmp_path, monkeypatch):
     source = goldens.EXAMPLES / "pressure-vessel"

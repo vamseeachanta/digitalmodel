@@ -20,6 +20,14 @@ def test_stable_pair_never_establishes_full_qualification():
     assert not result['convergence_demonstrated']
 
 
+def test_overstressed_pair_retains_metrics_and_sizing_disposition():
+    result = assess_mesh_pair(mesh(10, 100), mesh(5, 400, stress=220.0, x=150.0))
+    assert result['metrics']['peak_growth_mpa'] == 120.0
+    assert result['metrics']['peak_displacement_mm'] == 10.0
+    assert result['case_acceptance']['fine'] == 'exceeds_allowable'
+    assert result['evidence_binding_verified'] is False
+
+
 @pytest.mark.parametrize('change', ['growth', 'movement', 'no_refinement', 'load',
                                   'nonfinite', 'overload', 'unbalanced', 'zero_nodes'])
 def test_adverse_pair_is_not_promoted(change):
