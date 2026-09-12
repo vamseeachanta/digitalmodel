@@ -38,10 +38,10 @@ def test_peak_location_is_recorded_before_support_selection():
     assert "peak_node," in post
 
 
-def test_candidate_keeps_design_load_and_prepares_two_meshes(tmp_path):
+def test_thin_screening_candidate_prepares_two_meshes(tmp_path):
     build = load_build()
-    assert build.GEOM.sling_load_kn == 500.0
-    assert build.GEOM.thickness_mm == 80.0
+    assert build.GEOM.sling_load_kn == 50.0
+    assert build.GEOM.thickness_mm == 8.0
     paths = build.prepare_mesh_study(tmp_path)
     assert len(paths) == 2
     texts = [path.read_text(encoding="utf-8") for path in paths]
@@ -57,7 +57,20 @@ def test_candidate_keeps_design_load_and_prepares_two_meshes(tmp_path):
 def test_candidate_states_plane_stress_and_pin_contact_limitations():
     build = load_build()
     deck = generate_padeye_apdl(build.GEOM)
-    assert "t/D = 1.0" in deck
+    assert "t/D = 0.1" in deck
     assert "plane-stress idealisation" in deck
     assert "No pin/contact or 3D qualification" in deck
-    assert "t/D = 1" in build.__doc__
+    assert "t/D = 0.1" in build.__doc__
+
+
+def test_native_diagnostics_establish_mesh_load_and_postprocessing_state():
+    deck = generate_padeye_apdl(PadeyeGeometry())
+    post = deck.split('/POST1', 1)[1]
+    assert post.index('/GRAPHICS,FULL') < post.index('NSORT,S,EQV')
+    assert post.index('AVPRIN,0') < post.index('NSORT,S,EQV')
+    assert '*GET,mesh_nodes,NODE,0,COUNT' in post
+    assert '*GET,mesh_elements,ELEM,0,COUNT' in post
+    assert 'PRNSOL,S,PRIN' in post
+    assert post.index('PRRSOL,F') > post.index('NSEL,S,LOC,Y,0')
+    for field in ('loaded_node_count', 'mesh_node_count', 'mesh_element_count'):
+        assert field in post
