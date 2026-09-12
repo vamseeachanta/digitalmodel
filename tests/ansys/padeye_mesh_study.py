@@ -28,7 +28,42 @@ def _check_mesh(digest, size):
     peak = digest['max_seqv_mpa']
     assert peak > 0 and peak + 0.00005 < min(355, allowable)
     assert 0 <= digest['uc'] and digest['uc'] + 0.000005 < 1
-    close(digest['uc'], peak / allowable, 0.000005 + 0.00005 / allowable)
+    close(digest['uc'], peak / allowable,
+          0.000005 + 0.00005 / allowable + peak * 0.00005 / allowable**2)
+
+
+def _peak_metrics(coarse, fine, findings):
+    metrics = {}
+    try:
+        growth = number(fine['max_seqv_mpa']) - number(coarse['max_seqv_mpa'])
+        metrics['peak_growth_mpa'] = growth
+        if growth > 0.0001 + 1e-12:
+            findings.append('Global peak grew beyond recorded print resolution')
+    except (AssertionError, KeyError):
+        findings.append('Peak growth unavailable: incomplete or nonfinite stress')
+    try:
+        displacement = []
+        for key in ('peak_x_mm', 'peak_y_mm', 'peak_z_mm'):
+            first, second = number(coarse[key]), number(fine[key])
+            delta = second - first
+            displacement.append(delta)
+            rounding = _scientific_rounding(second) + _scientific_rounding(first)
+            if abs(delta) > rounding + 1e-12:
+                findings.append(f'Global peak moved in {key}')
+        metrics['peak_displacement_mm'] = math.hypot(*displacement)
+    except (AssertionError, KeyError):
+        findings.append('Peak displacement unavailable: incomplete or nonfinite coordinates')
+    return metrics
+
+
+def _sizing(digest):
+    try:
+        peak = number(digest['max_seqv_mpa'])
+        if peak + 0.00005 >= 355:
+            return 'reaches_or_exceeds_yield'
+        return 'exceeds_allowable' if peak + 0.00005 >= 355 / 1.67 else 'within_allowable'
+    except (AssertionError, KeyError):
+        return 'not_evaluated'
 
 
 def assess_mesh_pair(coarse, fine):
@@ -39,24 +74,14 @@ def assess_mesh_pair(coarse, fine):
             _check_mesh(digest, size)
         except (AssertionError, KeyError, ValueError, OverflowError) as error:
             findings.append(f'{label}: {error}')
-    metrics = {}
+    metrics = _peak_metrics(coarse, fine, findings)
     if not findings:
         for key in ('mesh_node_count', 'mesh_element_count'):
             if fine[key] <= coarse[key]:
                 findings.append(f'No demonstrated refinement in {key}')
-        growth = fine['max_seqv_mpa'] - coarse['max_seqv_mpa']
-        metrics['peak_growth_mpa'] = growth
-        if growth > 0.0001 + 1e-12:  # Combined F12.4 half-last-place intervals.
-            findings.append('Global peak grew beyond recorded print resolution')
-        displacement = []
-        for key in ('peak_x_mm', 'peak_y_mm', 'peak_z_mm'):
-            delta = fine[key] - coarse[key]
-            displacement.append(delta)
-            rounding = _scientific_rounding(fine[key]) + _scientific_rounding(coarse[key])
-            if abs(delta) > rounding + 1e-12:
-                findings.append(f'Global peak moved in {key}')
-        metrics['peak_displacement_mm'] = math.hypot(*displacement)
     return {'status': 'unqualified_investigation_required' if findings else 'diagnostic_checks_passed',
             'native_qualification_complete': False, 'convergence_demonstrated': False,
+            'evidence_binding_verified': False,
+            'case_acceptance': {'coarse': _sizing(coarse), 'fine': _sizing(fine)},
             'findings': findings, 'metrics': metrics,
             'scope': 'Two-mesh sensitivity only; no physical lug rating or golden promotion'}

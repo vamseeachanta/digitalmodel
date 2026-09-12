@@ -126,12 +126,30 @@ def _check_applied_load(case, digest, provenance, module):
     elif case == "mudmat":
         close(provenance["comparator"]["applied_vertical_load_n"],
               module.GEOM.vertical_load_kn * 1000, 0)
+        _check_mudmat_fields(digest, provenance, module.GEOM)
     else:
         load = module.GEOM.sling_load_kn * 1000
         angle = math.radians(module.GEOM.sling_angle_deg)
         for key, expected in (("applied_fx_n", load * math.sin(angle)),
                               ("applied_fy_n", load * math.cos(angle))):
             close(digest[key], expected, _scientific_rounding(expected))
+
+
+def _check_mudmat_fields(digest, provenance, geom):
+    load = geom.vertical_load_kn * 1000
+    eccentricity = abs(geom.moment_kNm * 1e6 / load)
+    length = geom.mat_length_mm - 2 * eccentricity
+    area = length * geom.mat_width_mm
+    assert length > 0 and area > 0
+    pressure = load / area
+    derived = provenance['derived_quantities']
+    close(digest['eccentricity_mm'], eccentricity, 0.00005)
+    close(digest['q_soil_mpa'], pressure, 0.0000005)
+    close(derived['eccentricity_mm'], eccentricity, 0.00005)
+    close(derived['soil_pressure_mpa'], pressure, 0.0000005)
+    close(derived['effective_length_mm'], length, 0.00005)
+    close(derived['effective_area_mm2'], area, 0.00005)
+    close(derived['patch_start_x_mm'], 2 * eccentricity, 0.00005)
 
 
 def validate_equilibrium(case, digest, provenance, module=None):
@@ -145,6 +163,9 @@ def validate_equilibrium(case, digest, provenance, module=None):
     assert 0 < tolerance <= 1, "fixed self-balanced reaction ceiling is 1 N"
     keys = ("reaction_fx_n", "reaction_fy_n") if case == "pressure-vessel" else ("reaction_fz_n",)
     assert all(key in digest for key in keys), "missing reaction component"
+    assert math.hypot(*(number(digest[key]) for key in keys)) <= tolerance, (
+        'self-balanced reaction resultant exceeds fixed tolerance'
+    )
     for key in keys:
         assert abs(number(digest[key])) <= tolerance
         recorded = provenance["equilibrium" if case == "pressure-vessel" else "comparator"]
