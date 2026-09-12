@@ -28,6 +28,22 @@ def test_overstressed_pair_retains_metrics_and_sizing_disposition():
     assert result['evidence_binding_verified'] is False
 
 
+def test_refinement_is_checked_even_when_peak_grows():
+    result = assess_mesh_pair(mesh(10, 100), mesh(5, 100, stress=220.0))
+    assert any('refinement' in finding for finding in result['findings'])
+
+
+def test_decreased_peak_is_also_reported_as_sensitivity():
+    result = assess_mesh_pair(mesh(10, 100), mesh(5, 400, stress=50.0))
+    assert result['status'] == 'unqualified_investigation_required'
+    assert result['metrics']['peak_growth_mpa'] == -50.0
+
+
+def test_peak_inside_hole_is_invalid_evidence():
+    result = assess_mesh_pair(mesh(10, 100, x=200.0), mesh(5, 400, x=200.0))
+    assert result['status'] == 'unqualified_investigation_required'
+
+
 @pytest.mark.parametrize('change', ['growth', 'movement', 'no_refinement', 'load',
                                   'nonfinite', 'overload', 'unbalanced', 'zero_nodes'])
 def test_adverse_pair_is_not_promoted(change):
