@@ -20,7 +20,12 @@ def test_equilibrium_uses_only_support_nodes_in_global_coordinates():
     assert "CSYS,0" in before_fsum
     assert before_fsum.rfind("NSEL,S,LOC,Y,0") > before_fsum.rfind("ALLSEL,ALL")
     for axis in ("x", "y"):
-        assert f"*GET,rf{axis},FSUM,0,ITEM,F{axis.upper()}" in post
+        assert f"*GET,fsum_f{axis},FSUM,0,ITEM,F{axis.upper()}" in post
+        assert f"*GET,node_rf{axis},NODE,support_node,RF,F{axis.upper()}" in post
+        assert f"rf{axis} = rf{axis} + node_rf{axis}" in post
+    assert '*GET,support_count,NODE,0,COUNT' in post
+    assert '*DO,support_i,1,support_count' in post
+    assert 'support_node = NDNEXT(support_node)' in post
     assert "balance_n = SQRT((rfx + applied_fx)**2 + (rfy + applied_fy)**2)" in post
     for label in ("reaction_fx_n", "reaction_fy_n", "force_residual_n"):
         assert label in post
