@@ -19,11 +19,13 @@ def test_equilibrium_uses_only_support_nodes_in_global_coordinates():
     assert "RSYS,0" in before_fsum
     assert "CSYS,0" in before_fsum
     assert before_fsum.rfind("NSEL,S,LOC,Y,0") > before_fsum.rfind("ALLSEL,ALL")
-    for axis in ("x", "y", "z"):
+    for axis in ("x", "y"):
         assert f"*GET,rf{axis},FSUM,0,ITEM,F{axis.upper()}" in post
-    assert "balance_n = SQRT((rfx + applied_fx)**2 + (rfy + applied_fy)**2 + rfz**2)" in post
-    for label in ("reaction_fx_n", "reaction_fy_n", "reaction_fz_n", "force_residual_n"):
+    assert "balance_n = SQRT((rfx + applied_fx)**2 + (rfy + applied_fy)**2)" in post
+    for label in ("reaction_fx_n", "reaction_fy_n", "force_residual_n"):
         assert label in post
+    assert "FSUM,0,ITEM,FZ" not in post
+    assert "reaction_fz_n" not in post
 
 
 def test_peak_location_is_recorded_before_support_selection():
@@ -50,3 +52,12 @@ def test_candidate_keeps_design_load_and_prepares_two_meshes(tmp_path):
     assert without_mesh(texts[0]) == without_mesh(texts[1])
     assert sorted(path.suffix for path in tmp_path.rglob("*.*")) == [".inp", ".inp"]
     assert all("QUALIFICATION PENDING" in text for text in texts)
+
+
+def test_candidate_states_plane_stress_and_pin_contact_limitations():
+    build = load_build()
+    deck = generate_padeye_apdl(build.GEOM)
+    assert "t/D = 1.0" in deck
+    assert "plane-stress idealisation" in deck
+    assert "No pin/contact or 3D qualification" in deck
+    assert "t/D = 1" in build.__doc__
