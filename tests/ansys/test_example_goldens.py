@@ -19,6 +19,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import math
+import shutil
 from pathlib import Path
 
 import pytest
@@ -30,6 +31,25 @@ EXAMPLES = Path(__file__).resolve().parents[2] / "examples" / "ansys"
 # Cases carrying a committed golden. A case is added here only once its golden
 # exists; an absent golden is a hard failure below, never a skip.
 GOLDEN_CASES = ["pressure-vessel", "mudmat"]
+
+
+@pytest.mark.parametrize("tamper", ["deck", "provenance"])
+def test_golden_rejects_unbound_deck(tmp_path, monkeypatch, tamper):
+    original = EXAMPLES / "pressure-vessel"
+    copied = tmp_path / "pressure-vessel"
+    shutil.copytree(original / "golden", copied / "golden")
+    shutil.copyfile(original / "pv.inp", copied / "pv.inp")
+    if tamper == "deck":
+        with (copied / "pv.inp").open("ab") as stream:
+            stream.write(b"\n! changed input\n")
+    else:
+        path = copied / "golden" / "PROVENANCE.json"
+        provenance = json.loads(path.read_text())
+        provenance["input"]["sha256"] = "0" * 64
+        path.write_text(json.dumps(provenance))
+    monkeypatch.setitem(globals(), "EXAMPLES", tmp_path)
+    with pytest.raises(AssertionError, match="deck SHA-256"):
+        _golden("pressure-vessel")
 
 
 def _golden(case: str) -> tuple[dict[str, float], dict]:
