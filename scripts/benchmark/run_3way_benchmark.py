@@ -1379,7 +1379,7 @@ def run_benchmark(
             benchmark_output = output_dir / "benchmark_comparison"
             config = BenchmarkConfig(
                 output_dir=benchmark_output,
-                tolerance=0.05,
+                # No measured uncertainty budget; emit diagnostics without a verdict.
                 x_axis="period",
             )
             runner = BenchmarkRunner(config)

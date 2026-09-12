@@ -273,7 +273,7 @@ def main() -> int:
     print("\n[5/5] Running benchmark comparison...")
     config = BenchmarkConfig(
         output_dir=OUTPUT_DIR,
-        tolerance=0.05,
+        # No measured uncertainty budget; emit diagnostics without a verdict.
         x_axis="period",
     )
     runner = BenchmarkRunner(config)

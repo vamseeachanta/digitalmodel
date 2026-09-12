@@ -1860,6 +1860,17 @@ def _run_qtf_plots(case_id: str) -> None:
         traceback.print_exc()
 
 
+def _report_has_refusal(value: object) -> bool:
+    """Preserve refusal from every report, solver pair and DOF in the summary."""
+    if isinstance(value, dict):
+        if value.get("comparison_status") == "REFUSED":
+            return True
+        return any(_report_has_refusal(item) for item in value.values())
+    if isinstance(value, list):
+        return any(_report_has_refusal(item) for item in value)
+    return False
+
+
 def _build_results_from_config() -> dict:
     """Build results dict from benchmark artifacts, falling back to config notes.
 
@@ -1895,6 +1906,7 @@ def _build_results_from_config() -> dict:
             case_dir = case_key
             benchmark_dir = L00_DIR / case_dir / "benchmark"
             
+            report_refused = False
             dof_summary_by_body = {}
             am_min_diag = float("nan")
             damp_min_diag = float("nan")
@@ -1917,6 +1929,7 @@ def _build_results_from_config() -> dict:
                 if report_path.is_file():
                     with open(report_path, "r", encoding="utf-8") as jf:
                         report = json.load(jf)
+                    report_refused |= _report_has_refusal(report)
 
                     consensus = report.get("consensus_by_dof", {})
                     pairwise = report.get("pairwise_results", {})
@@ -2038,7 +2051,8 @@ def _build_results_from_config() -> dict:
             result_entry = {
                 "case_id": case_key,
                 "description": CASES[case_key]["description"],
-                "status": ("completed" if status_str == "pass" else status_str),
+                "status": ("refused" if report_refused else
+                           "completed" if status_str == "pass" else status_str),
                 "dof_summary_by_body": dof_summary_by_body,
                 "am_min_diag": am_min_diag,
                 "damp_min_diag": damp_min_diag,

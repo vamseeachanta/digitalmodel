@@ -62,10 +62,10 @@ class ComparisonPolicy:
     abscissa_config: AbscissaConfig = field(default_factory=AbscissaConfig)
 
     def __post_init__(self) -> None:
-        if self.solver_relative_uncertainty <= 0.0:
-            raise ValueError("solver_relative_uncertainty must be positive")
-        if self.response_absolute_resolution <= 0.0:
-            raise ValueError("response_absolute_resolution must be positive")
+        for name in ("solver_relative_uncertainty", "response_absolute_resolution"):
+            value = getattr(self, name)
+            if not np.isfinite(value) or value <= 0.0:
+                raise ValueError(f"{name} must be finite and positive")
         if not 0.0 < self.minimum_explained_variance < 1.0:
             raise ValueError("minimum_explained_variance must be between zero and one")
         if not self.justification.strip():

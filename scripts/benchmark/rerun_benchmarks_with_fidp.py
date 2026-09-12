@@ -482,7 +482,7 @@ def _run_ship_benchmark(
     )
     config = BenchmarkConfig(
         output_dir=SHIP_OUTPUT,
-        tolerance=0.05,
+        # No measured uncertainty budget; emit diagnostics without a verdict.
         x_axis="period",
     )
     runner = BenchmarkRunner(config)
@@ -592,7 +592,7 @@ def _run_barge_benchmark() -> Optional[HullResult]:
     BARGE_OUTPUT.mkdir(parents=True, exist_ok=True)
     config = BenchmarkConfig(
         output_dir=BARGE_OUTPUT,
-        tolerance=0.05,
+        # No measured uncertainty budget; emit diagnostics without a verdict.
         x_axis="period",
     )
     runner = BenchmarkRunner(config)
@@ -675,7 +675,7 @@ def _run_spar_benchmark() -> Optional[HullResult]:
     SPAR_OUTPUT.mkdir(parents=True, exist_ok=True)
     config = BenchmarkConfig(
         output_dir=SPAR_OUTPUT,
-        tolerance=0.05,
+        # No measured uncertainty budget; emit diagnostics without a verdict.
         x_axis="period",
     )
     runner = BenchmarkRunner(config)
