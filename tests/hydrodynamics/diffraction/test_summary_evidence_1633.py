@@ -147,3 +147,29 @@ def test_console_summary_handles_metadata_and_missing_values(tmp_path, monkeypat
     output = capsys.readouterr().out
     assert "Unavailable" in output
     assert "SOME CASES NEED INVESTIGATION" in output
+
+
+@pytest.mark.parametrize("configured", [True, False])
+def test_live_comparison_preserves_actual_report_authority(tmp_path, monkeypatch, two_identical_results, configured):
+    from types import SimpleNamespace
+    from digitalmodel.hydrodynamics.diffraction import benchmark_runner
+    from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import ComparisonPolicy
+    from scripts.benchmark import solver_metadata
+    module = load_module(tmp_path, monkeypatch)
+    spec_path = tmp_path / "spec.yml"
+    spec_path.write_text("{}", encoding="utf-8")
+    module.CASES["2.7"]["spec"] = spec_path
+    monkeypatch.setattr(module, "OUTPUT_DIR", tmp_path)
+    monkeypatch.setattr(solver_metadata, "build_solver_metadata", lambda *a, **kw: {})
+    values = list(two_identical_results.values())
+    policy = ComparisonPolicy(.025, 5e-11, .9801, "Synthetic test budget") if configured else None
+    report = MultiSolverComparator(
+        {"OrcaWave (.owd)": values[0], "OrcaWave (spec.yml)": values[1]}, policy=policy).generate_report()
+    monkeypatch.setattr(benchmark_runner.BenchmarkRunner, "run_from_results",
+                        lambda *a, **kw: SimpleNamespace(report=report))
+    result = module.run_comparison({0: values[0]}, {0: values[1]}, {}, {}, "2.7")
+    result["status"] = "completed"
+    body = result["dof_summary_by_body"][0]
+    assert body["_comparison_status"] == report.comparison_status
+    assert body["_overall_consensus"] == report.overall_consensus
+    assert module._case_summary_passes(result) is configured
