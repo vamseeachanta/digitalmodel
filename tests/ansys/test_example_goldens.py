@@ -220,7 +220,14 @@ def test_committed_golden_is_stable(case: str):
     provenance: distributed and iterative solvers are not bit-reproducible
     across core counts, so a tighter gate would fail a correct result.
     """
-    pytest.skip(
-        "re-solve harness lands with the licensed-run lane; the committed golden "
-        "is asserted against its closed-form comparator above without a licence"
-    )
+    import os
+    from tests.ansys.native_resolve_support import resolve_golden
+
+    if os.environ.get("ANSYS_NATIVE_TESTS") != "1":
+        pytest.skip("Native capture disabled; explicitly enable after seat preflight")
+    if os.environ.get("PYTEST_XDIST_WORKER"):
+        pytest.fail("Native captures must run serially, without xdist")
+    executable = Path(os.environ["ANSYS_NATIVE_EXECUTABLE"])
+    output_root = Path(os.environ["ANSYS_NATIVE_OUTPUT_ROOT"])
+    assert executable.is_file(), "Explicit native executable does not exist"
+    resolve_golden(EXAMPLES / case, output_root / case, executable)
