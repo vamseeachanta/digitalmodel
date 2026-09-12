@@ -19,13 +19,119 @@ Status: Multi-solver benchmark comparison
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from itertools import combinations
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
+
+from digitalmodel.hydrodynamics.diffraction.benchmark_matrix_alignment import (
+    align_matrix_sets,
+)
+
+from digitalmodel.hydrodynamics.diffraction.benchmark_abscissa import (
+    AbscissaConfig,
+    AbscissaGapError,
+    AbscissaOrderError,
+    AbscissaOverlapError,
+    AlignedResponses,
+    InsufficientSampling,
+    align_responses,
+)
+
+
+REFUSAL_QUALITIES = {
+    "INSUFFICIENT_DATA",
+    "INSUFFICIENT_SAMPLING",
+    "UNTRUSTED_SOURCE",
+    "INVALID_ABSCISSA",
+    # A zero diagonal has no established physical interpretation without
+    # geometry/frame and extraction evidence. Retain refusal; this code
+    # neither proves extraction failure nor excludes physical rotational zeros.
+    "ABSENT_DIAGONAL",
+}
+
+
+@dataclass(frozen=True)
+class ComparisonPolicy:
+    """Verdict thresholds derived from a declared uncertainty budget."""
+
+    solver_relative_uncertainty: float
+    response_absolute_resolution: float
+    minimum_explained_variance: float
+    justification: str
+    abscissa_config: AbscissaConfig = field(default_factory=AbscissaConfig)
+
+    def __post_init__(self) -> None:
+        for name in ("solver_relative_uncertainty", "response_absolute_resolution"):
+            value = getattr(self, name)
+            if not np.isfinite(value) or value <= 0.0:
+                raise ValueError(f"{name} must be finite and positive")
+        if not 0.0 < self.minimum_explained_variance < 1.0:
+            raise ValueError("minimum_explained_variance must be between zero and one")
+        if not self.justification.strip():
+            raise ValueError("comparison policy requires a justification")
+
+    @classmethod
+    def from_uncertainties(
+        cls,
+        *,
+        solver_relative_uncertainty: float,
+        response_absolute_resolution: float,
+        minimum_explained_variance: float,
+        justification: str,
+        abscissa_config: AbscissaConfig | None = None,
+    ) -> "ComparisonPolicy":
+        """Build policy from named solver uncertainty and resolution inputs."""
+        return cls(
+            solver_relative_uncertainty=solver_relative_uncertainty,
+            response_absolute_resolution=response_absolute_resolution,
+            minimum_explained_variance=minimum_explained_variance,
+            justification=justification,
+            abscissa_config=abscissa_config or AbscissaConfig(),
+        )
+
+    @property
+    def relative_rms_tolerance(self) -> float:
+        """Worst-case pair budget: each of two solvers contributes at most u."""
+        return 2.0 * self.solver_relative_uncertainty
+
+    @property
+    def absolute_rms_floor(self) -> float:
+        """Pairwise absolute floor from two solver resolution contributions."""
+        return 2.0 * self.response_absolute_resolution
+
+    @property
+    def null_response_magnitude(self) -> float:
+        """Magnitude below the pairwise resolution floor has undefined phase."""
+        return self.absolute_rms_floor
+
+    @property
+    def correlation_minimum(self) -> float:
+        """Correlation implied by the minimum explained-variance fraction."""
+        return float(np.sqrt(self.minimum_explained_variance))
+
+    def to_dict(self) -> Dict[str, object]:
+        return {
+            "solver_relative_uncertainty": self.solver_relative_uncertainty,
+            "response_absolute_resolution": self.response_absolute_resolution,
+            "minimum_explained_variance": self.minimum_explained_variance,
+            "relative_rms_tolerance": self.relative_rms_tolerance,
+            "absolute_rms_floor": self.absolute_rms_floor,
+            "null_response_magnitude": self.null_response_magnitude,
+            "correlation_minimum": self.correlation_minimum,
+            "phase_verdict_role": "diagnostic_only",
+            "justification": self.justification,
+            "abscissa": {
+                "minimum_samples": self.abscissa_config.min_samples,
+                "minimum_coverage": self.abscissa_config.min_coverage,
+                "maximum_relative_gap": self.abscissa_config.max_relative_gap,
+                "justification": self.abscissa_config.justification,
+            },
+        }
+
 
 from digitalmodel.hydrodynamics.diffraction.comparison_framework import (
     DeviationStatistics,
@@ -58,6 +164,8 @@ class PairwiseRAOComparison:
     peak_magnitude: float = 0.0
     max_phase_diff_x: float = 0.0  # frequency (rad/s) where max phase diff occurs
     max_phase_diff_heading_idx: int = 0  # heading index where max phase diff occurs
+    relative_rms_error: Optional[float] = None
+    refusal_reason: Optional[str] = None
 
 
 @dataclass
@@ -72,7 +180,7 @@ class HydrostaticComparison:
     cob_diff: List[float]             # [dx, dy, dz]
     waterplane_area_diff: float
     stiffness_matrix_diff: np.ndarray  # 6x6 matrix of absolute differences
-    stiffness_matrix_correlation: float
+    stiffness_matrix_correlation: Optional[float]
 
 
 @dataclass
@@ -82,10 +190,14 @@ class PairwiseResult:
     solver_a: str
     solver_b: str
     rao_comparisons: Dict[str, PairwiseRAOComparison]
-    added_mass_correlations: Dict[Tuple[int, int], float]
-    damping_correlations: Dict[Tuple[int, int], float]
-    overall_agreement: str  # EXCELLENT, GOOD, FAIR, POOR
+    added_mass_correlations: Dict[Tuple[int, int], Optional[float]]
+    damping_correlations: Dict[Tuple[int, int], Optional[float]]
+    overall_agreement: Optional[str]  # EXCELLENT, GOOD, FAIR, POOR
     hydrostatic_comparison: Optional[HydrostaticComparison] = None
+    added_mass_quality: Dict[Tuple[int, int], str] = field(default_factory=dict)
+    damping_quality: Dict[Tuple[int, int], str] = field(default_factory=dict)
+    comparison_status: str = "DECIDED"
+    refusal_reason: Optional[str] = None
 
 
 @dataclass
@@ -96,8 +208,10 @@ class ConsensusMetrics:
     solver_names: List[str]
     agreement_pairs: List[Tuple[str, str]]
     outlier_solver: Optional[str] = None
-    consensus_level: str = "UNKNOWN"
-    mean_pairwise_correlation: float = 0.0
+    consensus_level: Optional[str] = None
+    mean_pairwise_correlation: Optional[float] = None
+    comparison_status: str = "DECIDED"
+    refusal_reason: Optional[str] = None
 
 
 @dataclass
@@ -109,8 +223,11 @@ class BenchmarkReport:
     comparison_date: str
     pairwise_results: Dict[str, PairwiseResult]
     consensus_by_dof: Dict[str, ConsensusMetrics]
-    overall_consensus: str
+    overall_consensus: Optional[str]
     notes: List[str]
+    comparison_status: str = "DECIDED"
+    refusal_reasons: List[str] = field(default_factory=list)
+    comparison_policy: Optional[Dict[str, object]] = None
 
 
 # ---------------------------------------------------------------------------
@@ -123,7 +240,7 @@ class MultiSolverComparator:
 
     Args:
         solver_results: Mapping of solver name to DiffractionResults.
-        tolerance: Relative tolerance for agreement assessment (default 5%).
+        policy: Thresholds derived from named physical uncertainty inputs.
 
     Raises:
         ValueError: If fewer than 2 solvers or vessel names do not match.
@@ -132,10 +249,25 @@ class MultiSolverComparator:
     def __init__(
         self,
         solver_results: Dict[str, DiffractionResults],
-        tolerance: float = 0.05,
+        tolerance: Optional[float] = None,
+        *,
+        policy: Optional[ComparisonPolicy] = None,
     ) -> None:
+        if tolerance is not None:
+            raise ValueError(
+                "tolerance requires a comparison policy with justification"
+            )
         self._results = solver_results
-        self.tolerance = tolerance
+        self.policy = policy
+        self.tolerance = (
+            policy.relative_rms_tolerance if policy is not None else None
+        )
+        self.tolerance_semantics = (
+            "symmetric_relative_rms_with_absolute_floor"
+        )
+        self.tolerance_justification = (
+            policy.justification if policy is not None else None
+        )
         self._validate_inputs()
         self.solver_names: List[str] = sorted(solver_results.keys())
 
@@ -206,6 +338,23 @@ class MultiSolverComparator:
         frequencies: np.ndarray,
     ) -> DeviationStatistics:
         """Replicate deviation statistics from comparison_framework."""
+        if (
+            values1.size == 0
+            or values2.size == 0
+            or not np.all(np.isfinite(values1))
+            or not np.all(np.isfinite(values2))
+        ):
+            return DeviationStatistics(
+                mean_error=0.0,
+                max_error=0.0,
+                rms_error=0.0,
+                mean_abs_error=0.0,
+                correlation=None,
+                frequencies=frequencies,
+                errors=np.array([], dtype=float),
+                quality="INSUFFICIENT_DATA",
+            )
+
         errors = values2 - values1
         mean_error = float(np.mean(errors))
         max_error = float(np.max(np.abs(errors)))
@@ -214,10 +363,27 @@ class MultiSolverComparator:
 
         flat1 = values1.flatten()
         flat2 = values2.flatten()
-        if np.allclose(flat1, flat2):
+        # Zero variance is checked FIRST. Pearson r is undefined for a constant
+        # vector whether or not the two vectors are equal to each other, so
+        # equality must not be allowed to claim r = 1.0 on that input. Ordering
+        # these the other way assigned 168 of 216 committed matrix correlations
+        # an exact 1.0 -- the artifact signature #1633 was filed about.
+        if not np.any(flat1) and not np.any(flat2):
+            # Structurally absent coupling — zero on BOTH legs. A 6x6 added
+            # mass matrix legitimately has zero off-diagonals for a symmetric
+            # body, so this is an empty cell rather than a failed comparison.
+            # It claims no agreement and does not trigger a report refusal.
+            correlation = None
+            quality = "NOT_APPLICABLE"
+        elif np.ptp(flat1) == 0.0 or np.ptp(flat2) == 0.0:
+            correlation = None
+            quality = "INSUFFICIENT_DATA"
+        elif np.array_equal(flat1, flat2):
             correlation = 1.0
+            quality = "IDENTICAL"
         else:
             correlation = float(np.corrcoef(flat1, flat2)[0, 1])
+            quality = "COMPARED"
 
         return DeviationStatistics(
             mean_error=mean_error,
@@ -227,11 +393,161 @@ class MultiSolverComparator:
             correlation=correlation,
             frequencies=frequencies,
             errors=errors,
+            quality=quality,
+        )
+
+    @staticmethod
+    def _calculate_phase_deviation_stats(
+        values1: np.ndarray,
+        values2: np.ndarray,
+        frequencies: np.ndarray,
+    ) -> DeviationStatistics:
+        """Calculate phase differences on the shortest circular arc."""
+        if (
+            values1.size == 0
+            or values2.size == 0
+            or not np.all(np.isfinite(values1))
+            or not np.all(np.isfinite(values2))
+        ):
+            return DeviationStatistics(
+                mean_error=0.0,
+                max_error=0.0,
+                rms_error=0.0,
+                mean_abs_error=0.0,
+                correlation=None,
+                frequencies=frequencies,
+                errors=np.array([], dtype=float),
+                quality="INSUFFICIENT_DATA",
+            )
+
+        errors = (values2 - values1 + 180.0) % 360.0 - 180.0
+        error_radians = np.deg2rad(errors)
+        circular_mean = float(
+            np.rad2deg(
+                np.arctan2(
+                    np.mean(np.sin(error_radians)),
+                    np.mean(np.cos(error_radians)),
+                )
+            )
+        )
+        # Zero variance on BOTH legs first — the same ordering the magnitude
+        # and hydrostatic paths use. A real RAO's phase varies with frequency,
+        # so phase that is constant across the whole grid on both legs carries
+        # no information: "both solvers computed the same phase" cannot be
+        # distinguished from "neither solver computed a phase". Without this,
+        # an extraction that leaves phase as zeros on both legs yields
+        # IDENTICAL / correlation 1.0 / max_phase_diff 0.0, and IDENTICAL is
+        # not a refusal quality, so nothing objects (#1633).
+        if np.ptp(values1) == 0.0 and np.ptp(values2) == 0.0:
+            return DeviationStatistics(
+                mean_error=circular_mean,
+                max_error=float(np.max(np.abs(errors))),
+                rms_error=float(np.sqrt(np.mean(errors ** 2))),
+                mean_abs_error=float(np.mean(np.abs(errors))),
+                correlation=None,
+                frequencies=frequencies,
+                errors=errors,
+                quality="INSUFFICIENT_DATA",
+            )
+
+        identical = bool(np.array_equal(errors, np.zeros_like(errors)))
+        return DeviationStatistics(
+            mean_error=circular_mean,
+            max_error=float(np.max(np.abs(errors))),
+            rms_error=float(np.sqrt(np.mean(errors ** 2))),
+            mean_abs_error=float(np.mean(np.abs(errors))),
+            correlation=(
+                1.0
+                if identical
+                else float(np.mean(np.cos(error_radians)))
+            ),
+            frequencies=frequencies,
+            errors=errors,
+            quality="IDENTICAL" if identical else "COMPARED",
         )
 
     def _all_pairs(self) -> List[Tuple[str, str]]:
         """Return all unique solver pairs in alphabetical order."""
         return list(combinations(self.solver_names, 2))
+
+    @staticmethod
+    def _symmetric_relative_rms(
+        values1: np.ndarray,
+        values2: np.ndarray,
+        *,
+        absolute_floor: float,
+    ) -> float:
+        """Normalize RMS error without amplifying sub-resolution responses."""
+        rms_error = float(np.sqrt(np.mean((values2 - values1) ** 2)))
+        scale = float(
+            np.sqrt((np.mean(values1 ** 2) + np.mean(values2 ** 2)) / 2.0)
+        )
+        denominator = max(scale, absolute_floor)
+        if denominator == 0.0:
+            return 0.0 if rms_error == 0.0 else float("inf")
+        return rms_error / denominator
+
+    @staticmethod
+    def _insufficient_sampling_stats(
+        shape: Tuple[int, ...],
+    ) -> DeviationStatistics:
+        """Represent a sampling refusal without fabricating a correlation."""
+        errors = np.zeros(shape, dtype=float)
+        return DeviationStatistics(
+            mean_error=0.0,
+            max_error=0.0,
+            rms_error=0.0,
+            mean_abs_error=0.0,
+            correlation=None,
+            frequencies=np.array([], dtype=float),
+            errors=errors,
+            quality="INSUFFICIENT_SAMPLING",
+        )
+
+    @staticmethod
+    def _insufficient_data_stats(
+        shape: Tuple[int, ...],
+    ) -> DeviationStatistics:
+        """Represent invalid response values without propagating NaN."""
+        errors = np.zeros(shape, dtype=float)
+        return DeviationStatistics(
+            mean_error=0.0,
+            max_error=0.0,
+            rms_error=0.0,
+            mean_abs_error=0.0,
+            correlation=None,
+            frequencies=np.array([], dtype=float),
+            errors=errors,
+            quality="INSUFFICIENT_DATA",
+        )
+
+    @staticmethod
+    def _untrusted_source_stats(shape: Tuple[int, ...]) -> DeviationStatistics:
+        """Refuse a derived coefficient whose source is not solver output."""
+        return DeviationStatistics(
+            mean_error=0.0,
+            max_error=0.0,
+            rms_error=0.0,
+            mean_abs_error=0.0,
+            correlation=None,
+            frequencies=np.array([], dtype=float),
+            errors=np.zeros(shape, dtype=float),
+            quality="UNTRUSTED_SOURCE",
+        )
+
+    @staticmethod
+    def _invalid_abscissa_stats(shape: Tuple[int, ...]) -> DeviationStatistics:
+        """Represent an invalid comparison axis without losing the refusal."""
+        return DeviationStatistics(
+            mean_error=0.0,
+            max_error=0.0,
+            rms_error=0.0,
+            mean_abs_error=0.0,
+            correlation=None,
+            frequencies=np.array([], dtype=float),
+            errors=np.zeros(shape, dtype=float),
+            quality="INVALID_ABSCISSA",
+        )
 
     # ------------------------------------------------------------------
     # RAO comparison
@@ -261,40 +577,138 @@ class MultiSolverComparator:
                 rao_a: RAOComponent = getattr(res_a.raos, dof_name)
                 rao_b: RAOComponent = getattr(res_b.raos, dof_name)
 
+                try:
+                    alignment = align_responses(
+                        rao_a.frequencies.values,
+                        rao_a.magnitude,
+                        rao_a.phase,
+                        rao_b.frequencies.values,
+                        rao_b.magnitude,
+                        rao_b.phase,
+                        config=(
+                            self.policy.abscissa_config
+                            if self.policy is not None
+                            else None
+                        ),
+                    )
+                except (
+                    AbscissaOrderError,
+                    AbscissaOverlapError,
+                    AbscissaGapError,
+                ) as exc:
+                    unavailable = self._invalid_abscissa_stats(
+                        rao_a.magnitude.shape,
+                    )
+                    pair_comparisons[dof_name] = PairwiseRAOComparison(
+                        dof=dof,
+                        solver_a=solver_a,
+                        solver_b=solver_b,
+                        magnitude_stats=unavailable,
+                        phase_stats=self._invalid_abscissa_stats(
+                            rao_a.phase.shape,
+                        ),
+                        max_magnitude_diff=0.0,
+                        max_phase_diff=0.0,
+                        relative_rms_error=None,
+                        refusal_reason=f"{type(exc).__name__}: {exc}",
+                    )
+                    continue
+                if isinstance(alignment, InsufficientSampling):
+                    unavailable = self._insufficient_sampling_stats(
+                        rao_a.magnitude.shape,
+                    )
+                    pair_comparisons[dof_name] = PairwiseRAOComparison(
+                        dof=dof,
+                        solver_a=solver_a,
+                        solver_b=solver_b,
+                        magnitude_stats=unavailable,
+                        phase_stats=self._insufficient_sampling_stats(
+                            rao_a.phase.shape,
+                        ),
+                        max_magnitude_diff=0.0,
+                        max_phase_diff=0.0,
+                        relative_rms_error=None,
+                    )
+                    continue
+
+                if not isinstance(alignment, AlignedResponses):
+                    raise TypeError("unexpected abscissa alignment result")
+                frequencies = alignment.frequencies
+                magnitude_a = alignment.first.magnitude
+                magnitude_b = alignment.second.magnitude
+                phase_a = alignment.first.phase_degrees
+                phase_b = alignment.second.phase_degrees
+
+                if not all(
+                    np.all(np.isfinite(values))
+                    for values in (magnitude_a, magnitude_b, phase_a, phase_b)
+                ):
+                    pair_comparisons[dof_name] = PairwiseRAOComparison(
+                        dof=dof,
+                        solver_a=solver_a,
+                        solver_b=solver_b,
+                        magnitude_stats=self._insufficient_data_stats(
+                            magnitude_a.shape,
+                        ),
+                        phase_stats=self._insufficient_data_stats(phase_a.shape),
+                        max_magnitude_diff=0.0,
+                        max_phase_diff=0.0,
+                        relative_rms_error=None,
+                    )
+                    continue
+
                 mag_stats = self._calculate_deviation_stats(
-                    rao_a.magnitude,
-                    rao_b.magnitude,
-                    rao_a.frequencies.values,
+                    magnitude_a,
+                    magnitude_b,
+                    frequencies,
                 )
 
                 # Compute peak magnitude first to decide if phase
                 # correlation is physically meaningful.
-                avg_mag = 0.5 * (rao_a.magnitude + rao_b.magnitude)
+                avg_mag = 0.5 * (magnitude_a + magnitude_b)
                 peak_mag = float(np.max(avg_mag))
 
-                if peak_mag < 1e-10:
+                null_limit = (
+                    self.policy.null_response_magnitude
+                    if self.policy is not None
+                    else None
+                )
+                if peak_mag == 0.0 or (
+                    null_limit is not None and peak_mag < null_limit
+                ):
+                    # A null response carries no variance, so its magnitude
+                    # correlation is undefined too. Tag it explicitly rather
+                    # than letting an equality short-circuit fabricate r = 1.0
+                    # — that is what produced 168 exact-1.0 matrix correlations
+                    # in the committed evidence (#1633). The verdict layer
+                    # accepts NULL_RESPONSE without a correlation.
+                    mag_stats = replace(
+                        mag_stats, correlation=None, quality="NULL_RESPONSE",
+                    )
+
                     # Near-zero magnitude: phase is undefined
                     # (atan2(0,0) noise).  Override with perfect
                     # agreement instead of computing noise correlation.
-                    zeros = np.zeros_like(rao_a.phase)
+                    zeros = np.zeros_like(phase_a)
                     phase_stats = DeviationStatistics(
                         mean_error=0.0,
                         max_error=0.0,
                         rms_error=0.0,
                         mean_abs_error=0.0,
                         correlation=1.0,
-                        frequencies=rao_a.frequencies.values,
+                        frequencies=frequencies,
                         errors=zeros,
+                        quality="NULL_RESPONSE",
                     )
                 else:
-                    phase_stats = self._calculate_deviation_stats(
-                        rao_a.phase,
-                        rao_b.phase,
-                        rao_a.frequencies.values,
+                    phase_stats = self._calculate_phase_deviation_stats(
+                        phase_a,
+                        phase_b,
+                        frequencies,
                     )
 
-                mag_diff = np.abs(rao_b.magnitude - rao_a.magnitude)
-                phase_diff = np.abs(rao_b.phase - rao_a.phase)
+                mag_diff = np.abs(magnitude_b - magnitude_a)
+                phase_diff = np.abs(phase_stats.errors)
 
                 # Find where max phase diff occurs and what the
                 # amplitude is there (average of both solvers).
@@ -303,7 +717,7 @@ class MultiSolverComparator:
                 )
                 mag_at_max_pd = float(avg_mag[max_pd_idx])
                 freq_at_max_pd = float(
-                    rao_a.frequencies.values[max_pd_idx[0]],
+                    frequencies[max_pd_idx[0]],
                 )
 
                 pair_comparisons[dof_name] = PairwiseRAOComparison(
@@ -318,6 +732,15 @@ class MultiSolverComparator:
                     peak_magnitude=peak_mag,
                     max_phase_diff_x=freq_at_max_pd,
                     max_phase_diff_heading_idx=int(max_pd_idx[1]),
+                    relative_rms_error=self._symmetric_relative_rms(
+                        magnitude_a,
+                        magnitude_b,
+                        absolute_floor=(
+                            self.policy.absolute_rms_floor
+                            if self.policy is not None
+                            else 0.0
+                        ),
+                    ),
                 )
 
             result[key] = pair_comparisons
@@ -327,6 +750,20 @@ class MultiSolverComparator:
     # ------------------------------------------------------------------
     # Matrix comparison helpers
     # ------------------------------------------------------------------
+
+    def _align_matrix_pair(self, set_a, set_b):
+        """Preserve source and axis refusals before comparing any cells."""
+        if not all(matrix.source == "solver" for matrix in (*set_a.matrices, *set_b.matrices)):
+            return None, self._untrusted_source_stats((0,))
+        try:
+            alignment = align_matrix_sets(
+                set_a, set_b, self.policy.abscissa_config if self.policy else None,
+            )
+        except (AbscissaOrderError, AbscissaOverlapError, AbscissaGapError):
+            return None, self._invalid_abscissa_stats((0,))
+        if isinstance(alignment, InsufficientSampling):
+            return None, self._insufficient_sampling_stats((0,))
+        return alignment, None
 
     def _compare_matrix_set(
         self,
@@ -347,19 +784,20 @@ class MultiSolverComparator:
             set_a = getattr(self._results[solver_a], matrix_attr)
             set_b = getattr(self._results[solver_b], matrix_attr)
 
-            freqs = set_a.frequencies.values
+            alignment, refusal = self._align_matrix_pair(set_a, set_b)
 
             for i in range(6):
                 for j in range(6):
-                    vals_a = np.array(
-                        [m.matrix[i, j] for m in set_a.matrices]
+                    stats = (
+                        self._calculate_deviation_stats(
+                            alignment.first[:, i, j], alignment.second[:, i, j],
+                            alignment.frequencies,
+                        ) if alignment is not None else replace(refusal)
                     )
-                    vals_b = np.array(
-                        [m.matrix[i, j] for m in set_b.matrices]
-                    )
-                    stats = self._calculate_deviation_stats(
-                        vals_a, vals_b, freqs,
-                    )
+                    if i == j and stats.quality == "NOT_APPLICABLE":
+                        # Metadata cannot distinguish a physical rotational zero
+                        # from missing extraction. Neither is established here.
+                        stats = replace(stats, quality="ABSENT_DIAGONAL")
                     # 1-based indexing
                     pair_stats[(i + 1, j + 1)] = stats
 
@@ -406,12 +844,22 @@ class MultiSolverComparator:
             # Correlation for stiffness matrix (flat)
             flat_a = h_a.stiffness_matrix.flatten()
             flat_b = h_b.stiffness_matrix.flatten()
-            if np.allclose(flat_a, flat_b):
+            # Undefined-correlation cases first, equality second — a constant
+            # stiffness matrix has no correlation to report even when both
+            # solvers produce the same constant (#1633).
+            if (
+                not np.all(np.isfinite(flat_a))
+                or not np.all(np.isfinite(flat_b))
+                or np.ptp(flat_a) == 0.0
+                or np.ptp(flat_b) == 0.0
+            ):
+                corr = None
+            elif np.array_equal(flat_a, flat_b):
                 corr = 1.0
             else:
                 with np.errstate(invalid='ignore'):
                     c = np.corrcoef(flat_a, flat_b)[0, 1]
-                    corr = float(c) if not np.isnan(c) else 1.0
+                    corr = float(c) if not np.isnan(c) else None
 
             result[key] = HydrostaticComparison(
                 solver_a=solver_a,
@@ -455,20 +903,35 @@ class MultiSolverComparator:
 
             # For each pair, check both correlation AND rms_error
             pair_agrees: Dict[str, bool] = {}
-            pair_corrs: Dict[str, float] = {}
+            pair_corrs: Dict[str, Optional[float]] = {}
+            refused_pairs: Dict[str, str] = {}
 
             for solver_a, solver_b in pairs:
                 pk = self._pair_key(solver_a, solver_b)
                 comp = rao_comparisons[pk][dof_name]
                 corr = comp.magnitude_stats.correlation
-                rms = comp.magnitude_stats.rms_error
+                relative_rms = comp.relative_rms_error
                 pair_corrs[pk] = corr
 
-                # Agreement requires high correlation AND low rms
-                # rms threshold is based on tolerance (default 0.05)
-                pair_agrees[pk] = (
-                    corr > 0.99 and rms < self.tolerance
+                refusal_quality = next(
+                    (
+                        quality
+                        for quality in (
+                            comp.magnitude_stats.quality,
+                            comp.phase_stats.quality,
+                        )
+                        if quality in REFUSAL_QUALITIES
+                    ),
+                    None,
                 )
+                if refusal_quality is not None:
+                    refused_pairs[pk] = comp.refusal_reason or refusal_quality
+                    pair_agrees[pk] = False
+                elif self.policy is None:
+                    refused_pairs[pk] = "UNCONFIGURED_POLICY"
+                    pair_agrees[pk] = False
+                else:
+                    pair_agrees[pk] = self._rao_comparison_agrees(comp)
 
             high_pairs = [
                 pk for pk, agrees in pair_agrees.items() if agrees
@@ -477,17 +940,30 @@ class MultiSolverComparator:
                 pk for pk, agrees in pair_agrees.items() if not agrees
             ]
 
-            mean_corr = float(np.mean(list(pair_corrs.values())))
+            available_corrs = [
+                corr for corr in pair_corrs.values() if corr is not None
+            ]
+            mean_corr = (
+                float(np.mean(available_corrs)) if available_corrs else None
+            )
 
-            # Determine consensus level
-            if all(pair_agrees.values()):
-                level = "FULL"
-            elif len(high_pairs) >= 2:
-                level = "MAJORITY"
-            elif len(high_pairs) >= 1:
-                level = "SPLIT"
+            refusal_reason = None
+            if refused_pairs:
+                level = None
+                comparison_status = "REFUSED"
+                refusal_reason = sorted(set(refused_pairs.values()))[0]
             else:
-                level = "NO_CONSENSUS"
+                comparison_status = "DECIDED"
+                if len(pairs) == 1:
+                    level = "FULL" if high_pairs else "NO_CONSENSUS"
+                elif all(pair_agrees.values()):
+                    level = "FULL"
+                elif len(high_pairs) >= 2:
+                    level = "MAJORITY"
+                elif len(high_pairs) >= 1:
+                    level = "SPLIT"
+                else:
+                    level = "NO_CONSENSUS"
 
             # Identify agreement pairs
             agreement_tuples = []
@@ -497,7 +973,7 @@ class MultiSolverComparator:
 
             # Outlier detection for 3+ solvers
             outlier: Optional[str] = None
-            if len(self.solver_names) >= 3 and level == "MAJORITY":
+            if comparison_status == "DECIDED" and level == "MAJORITY":
                 solver_counts: Dict[str, int] = {
                     s: 0 for s in self.solver_names
                 }
@@ -522,6 +998,8 @@ class MultiSolverComparator:
                 outlier_solver=outlier,
                 consensus_level=level,
                 mean_pairwise_correlation=mean_corr,
+                comparison_status=comparison_status,
+                refusal_reason=refusal_reason,
             )
 
         return consensus
@@ -533,22 +1011,36 @@ class MultiSolverComparator:
     def _assess_pair_agreement(
         self,
         rao_comps: Dict[str, PairwiseRAOComparison],
-    ) -> str:
-        """Classify overall pairwise agreement."""
-        corrs = [
-            c.magnitude_stats.correlation
-            for c in rao_comps.values()
-        ]
-        min_corr = min(corrs)
-        mean_corr = float(np.mean(corrs))
+    ) -> Optional[str]:
+        """Classify a pair using only the configured comparison policy."""
+        if self.policy is None:
+            return None
+        agrees = all(
+            self._rao_comparison_agrees(comparison)
+            for comparison in rao_comps.values()
+        )
+        return "EXCELLENT" if agrees else "POOR"
 
-        if min_corr > 0.99 and mean_corr > 0.995:
-            return "EXCELLENT"
-        if min_corr > 0.95 and mean_corr > 0.98:
-            return "GOOD"
-        if min_corr > 0.90 and mean_corr > 0.95:
-            return "FAIR"
-        return "POOR"
+    def _rao_comparison_agrees(
+        self,
+        comparison: PairwiseRAOComparison,
+    ) -> bool:
+        """Apply the absolute null floor or the active-response criteria."""
+        if self.policy is None:
+            return False
+        if comparison.phase_stats.quality == "NULL_RESPONSE":
+            return (
+                comparison.magnitude_stats.rms_error
+                <= self.policy.absolute_rms_floor
+            )
+        return (
+            comparison.magnitude_stats.correlation is not None
+            and comparison.magnitude_stats.correlation
+            > self.policy.correlation_minimum
+            and comparison.relative_rms_error is not None
+            and comparison.relative_rms_error
+            < self.policy.relative_rms_tolerance
+        )
 
     def generate_report(self) -> BenchmarkReport:
         """Build a complete BenchmarkReport."""
@@ -570,8 +1062,35 @@ class MultiSolverComparator:
                 k: v.correlation
                 for k, v in damp_comparisons[pk].items()
             }
+            am_quality = {
+                k: v.quality for k, v in am_comparisons[pk].items()
+            }
+            damp_quality = {
+                k: v.quality for k, v in damp_comparisons[pk].items()
+            }
 
-            agreement = self._assess_pair_agreement(rao_comparisons[pk])
+            refusal_reasons = {
+                quality
+                for quality in (*am_quality.values(), *damp_quality.values())
+                if quality in REFUSAL_QUALITIES
+            }
+            refusal_reasons.update(
+                comparison.refusal_reason or quality
+                for comparison in rao_comparisons[pk].values()
+                for quality in (
+                    comparison.magnitude_stats.quality,
+                    comparison.phase_stats.quality,
+                )
+                if quality in REFUSAL_QUALITIES
+            )
+            if self.policy is None:
+                refusal_reasons.add("UNCONFIGURED_POLICY")
+
+            agreement = (
+                None
+                if refusal_reasons
+                else self._assess_pair_agreement(rao_comparisons[pk])
+            )
 
             pairwise_results[pk] = PairwiseResult(
                 solver_a=solver_a,
@@ -581,18 +1100,54 @@ class MultiSolverComparator:
                 damping_correlations=damp_corrs,
                 overall_agreement=agreement,
                 hydrostatic_comparison=hydro_comparisons.get(pk),
+                added_mass_quality=am_quality,
+                damping_quality=damp_quality,
+                comparison_status=(
+                    "REFUSED" if refusal_reasons else "DECIDED"
+                ),
+                refusal_reason=(
+                    sorted(refusal_reasons)[0] if refusal_reasons else None
+                ),
             )
 
         # Determine overall consensus from per-DOF levels
         levels = [m.consensus_level for m in consensus.values()]
-        if all(lv == "FULL" for lv in levels):
+        report_refusals = {
+            reason
+            for metrics in consensus.values()
+            if metrics.comparison_status == "REFUSED"
+            for reason in [metrics.refusal_reason]
+            if reason is not None
+        }
+        report_refusals.update(
+            result.refusal_reason
+            for result in pairwise_results.values()
+            if result.refusal_reason is not None
+        )
+        report_refusals.update(
+            quality
+            for result in pairwise_results.values()
+            for quality in (
+                *result.added_mass_quality.values(),
+                *result.damping_quality.values(),
+            )
+            if quality in REFUSAL_QUALITIES
+        )
+        if report_refusals:
+            overall = None
+            comparison_status = "REFUSED"
+        elif all(lv == "FULL" for lv in levels):
             overall = "FULL"
+            comparison_status = "DECIDED"
         elif levels.count("FULL") + levels.count("MAJORITY") >= 4:
             overall = "MAJORITY"
+            comparison_status = "DECIDED"
         elif any(lv in ("FULL", "MAJORITY") for lv in levels):
             overall = "SPLIT"
+            comparison_status = "DECIDED"
         else:
             overall = "NO_CONSENSUS"
+            comparison_status = "DECIDED"
 
         notes = self._generate_notes(consensus, rao_comparisons)
         vessel_name = next(iter(self._results.values())).vessel_name
@@ -605,6 +1160,11 @@ class MultiSolverComparator:
             consensus_by_dof=consensus,
             overall_consensus=overall,
             notes=notes,
+            comparison_status=comparison_status,
+            refusal_reasons=sorted(report_refusals),
+            comparison_policy=(
+                self.policy.to_dict() if self.policy is not None else None
+            ),
         )
 
     @staticmethod
@@ -640,6 +1200,9 @@ class MultiSolverComparator:
             "solver_names": report.solver_names,
             "comparison_date": report.comparison_date,
             "overall_consensus": report.overall_consensus,
+            "comparison_status": report.comparison_status,
+            "refusal_reasons": report.refusal_reasons,
+            "comparison_policy": report.comparison_policy,
             "pairwise_results": self._serialize_pairwise(
                 report.pairwise_results,
             ),
@@ -651,7 +1214,13 @@ class MultiSolverComparator:
 
         output_file.parent.mkdir(parents=True, exist_ok=True)
         with open(output_file, "w", encoding="utf-8") as fh:
-            json.dump(data, fh, indent=2, default=self._json_default)
+            json.dump(
+                data,
+                fh,
+                indent=2,
+                default=self._json_default,
+                allow_nan=False,
+            )
 
     @staticmethod
     def _json_default(obj: object) -> object:
@@ -674,25 +1243,40 @@ class MultiSolverComparator:
             rao_dict = {}
             for dof_name, comp in pr.rao_comparisons.items():
                 rao_dict[dof_name] = {
-                    "magnitude_correlation": float(
-                        comp.magnitude_stats.correlation,
+                    "magnitude_correlation": (
+                        float(comp.magnitude_stats.correlation)
+                        if comp.magnitude_stats.correlation is not None
+                        else None
                     ),
+                    "magnitude_quality": comp.magnitude_stats.quality,
                     "magnitude_rms_error": float(
                         comp.magnitude_stats.rms_error,
                     ),
-                    "phase_correlation": float(
-                        comp.phase_stats.correlation,
+                    "phase_correlation": (
+                        float(comp.phase_stats.correlation)
+                        if comp.phase_stats.correlation is not None
+                        else None
                     ),
+                    "phase_quality": comp.phase_stats.quality,
                     "max_magnitude_diff": float(comp.max_magnitude_diff),
                     "max_phase_diff": float(comp.max_phase_diff),
+                    "refusal_reason": comp.refusal_reason,
                 }
             am_corrs = {
-                f"{k[0]},{k[1]}": float(v)
+                f"{k[0]},{k[1]}": float(v) if v is not None else None
                 for k, v in pr.added_mass_correlations.items()
             }
             damp_corrs = {
-                f"{k[0]},{k[1]}": float(v)
+                f"{k[0]},{k[1]}": float(v) if v is not None else None
                 for k, v in pr.damping_correlations.items()
+            }
+            am_quality = {
+                f"{k[0]},{k[1]}": v
+                for k, v in pr.added_mass_quality.items()
+            }
+            damp_quality = {
+                f"{k[0]},{k[1]}": v
+                for k, v in pr.damping_quality.items()
             }
             hc_dict = None
             if pr.hydrostatic_comparison:
@@ -703,16 +1287,24 @@ class MultiSolverComparator:
                     "cog_diff": [float(v) for v in hc.cog_diff],
                     "cob_diff": [float(v) for v in hc.cob_diff],
                     "waterplane_area_diff": float(hc.waterplane_area_diff),
-                    "stiffness_matrix_correlation": float(hc.stiffness_matrix_correlation),
+                    "stiffness_matrix_correlation": (
+                        float(hc.stiffness_matrix_correlation)
+                        if hc.stiffness_matrix_correlation is not None
+                        else None
+                    ),
                 }
 
             out[pk] = {
                 "solver_a": pr.solver_a,
                 "solver_b": pr.solver_b,
                 "overall_agreement": pr.overall_agreement,
+                "comparison_status": pr.comparison_status,
+                "refusal_reason": pr.refusal_reason,
                 "rao_comparisons": rao_dict,
                 "added_mass_correlations": am_corrs,
                 "damping_correlations": damp_corrs,
+                "added_mass_quality": am_quality,
+                "damping_quality": damp_quality,
                 "hydrostatic_comparison": hc_dict,
             }
         return out
@@ -726,8 +1318,12 @@ class MultiSolverComparator:
         for dof_key, cm in consensus.items():
             out[dof_key] = {
                 "consensus_level": cm.consensus_level,
-                "mean_pairwise_correlation": float(
-                    cm.mean_pairwise_correlation,
+                "comparison_status": cm.comparison_status,
+                "refusal_reason": cm.refusal_reason,
+                "mean_pairwise_correlation": (
+                    float(cm.mean_pairwise_correlation)
+                    if cm.mean_pairwise_correlation is not None
+                    else None
                 ),
                 "outlier_solver": cm.outlier_solver,
                 "agreement_pairs": [

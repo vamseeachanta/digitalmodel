@@ -263,7 +263,8 @@ class OrcaWaveConverter:
                 matrix=matrix_data,
                 frequency=freq,
                 matrix_type="added_mass",
-                units=self._get_added_mass_units()
+                units=self._get_added_mass_units(),
+                source="solver",
             )
             matrices.append(matrix)
 
@@ -296,7 +297,8 @@ class OrcaWaveConverter:
                 matrix=matrix_data,
                 frequency=freq,
                 matrix_type="damping",
-                units=self._get_damping_units()
+                units=self._get_damping_units(),
+                source="solver",
             )
             matrices.append(matrix)
 

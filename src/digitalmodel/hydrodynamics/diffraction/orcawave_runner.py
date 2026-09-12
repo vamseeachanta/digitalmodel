@@ -775,6 +775,7 @@ class OrcaWaveRunner:
                     frequency=float(freq_rad_s[i]),
                     matrix_type="added_mass",
                     units=am_units,
+                    source="solver",
                 )
                 for i in range(n_freq)
             ],
@@ -792,6 +793,7 @@ class OrcaWaveRunner:
                     frequency=float(freq_rad_s[i]),
                     matrix_type="damping",
                     units=dp_units,
+                    source="solver",
                 )
                 for i in range(n_freq)
             ],

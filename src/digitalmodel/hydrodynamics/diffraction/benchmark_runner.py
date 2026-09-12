@@ -34,13 +34,52 @@ from pydantic import BaseModel
 from digitalmodel.hydrodynamics.diffraction.benchmark_plotter import (
     BenchmarkPlotter,
 )
+from digitalmodel.hydrodynamics.diffraction.benchmark_helpers import (
+    coefficient_coverage,
+    format_coverage_summary,
+    format_optional_correlation,
+    format_quality_distribution,
+    optional_float,
+    optional_round,
+)
 from digitalmodel.hydrodynamics.diffraction.multi_solver_comparator import (
     BenchmarkReport,
+    ComparisonPolicy,
     MultiSolverComparator,
 )
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     DiffractionResults,
 )
+
+
+# ---------------------------------------------------------------------------
+# Serialisation
+# ---------------------------------------------------------------------------
+
+
+class PinnedNullDumper(yaml.Dumper):
+    """YAML dumper that always writes None as ``null``, never ``~``.
+
+    Both spellings are the same value, so nothing about the data depends on
+    which one is emitted -- but ``hydro_data.yml`` is committed evidence and
+    its golden test compares LINES, so an ambient style difference reads as
+    177 lines of drift.
+
+    That is not hypothetical: the #1633 closeout on acma-hou-rds02 failed
+    exactly this way, on a file where no hydrodynamic number had moved. The
+    committed evidence uses ``null``, so pinning to ``null`` keeps it valid
+    and makes the round-trip reproducible on any host.
+
+    Pinned rather than relaxing the golden test to parsed-YAML equality:
+    byte-identity also catches formatting drift, which is worth keeping.
+    """
+
+
+def _represent_none_as_null(dumper: yaml.Dumper, _data: None) -> yaml.Node:
+    return dumper.represent_scalar("tag:yaml.org,2002:null", "null")
+
+
+PinnedNullDumper.add_representer(type(None), _represent_none_as_null)
 
 
 # ---------------------------------------------------------------------------
@@ -72,7 +111,11 @@ class BenchmarkConfig(BaseModel):
     ]
     output_dir: Path = Path("benchmark_output")
     dry_run: bool = False
-    tolerance: float = 0.05
+    tolerance: Optional[float] = None
+    solver_relative_uncertainty: Optional[float] = None
+    response_absolute_resolution: Optional[float] = None
+    minimum_explained_variance: Optional[float] = None
+    comparison_justification: Optional[str] = None
     x_axis: str = "period"
     headings: Optional[list[float]] = None
     timeout_seconds: int = 7200
@@ -178,7 +221,7 @@ class BenchmarkRunner:
 
             result.success = True
 
-        except Exception as exc:
+        except OSError as exc:
             result.error_message = str(exc)
             result.success = False
 
@@ -195,9 +238,37 @@ class BenchmarkRunner:
         """Run multi-solver comparison and return a BenchmarkReport."""
         comparator = MultiSolverComparator(
             solver_results,
-            tolerance=self.config.tolerance,
+            policy=self._build_comparison_policy(),
         )
         return comparator.generate_report()
+
+    def _build_comparison_policy(self) -> Optional[ComparisonPolicy]:
+        """Build a policy only from a complete, named uncertainty budget."""
+        if self.config.tolerance is not None:
+            raise ValueError(
+                "tolerance is ambiguous; configure named uncertainty inputs "
+                "and comparison_justification"
+            )
+        inputs = (
+            self.config.solver_relative_uncertainty,
+            self.config.response_absolute_resolution,
+            self.config.minimum_explained_variance,
+            self.config.comparison_justification,
+        )
+        if all(value is None for value in inputs):
+            return None
+        if any(value is None for value in inputs):
+            raise ValueError(
+                "comparison policy requires solver_relative_uncertainty, "
+                "response_absolute_resolution, minimum_explained_variance, "
+                "and comparison_justification"
+            )
+        return ComparisonPolicy.from_uncertainties(
+            solver_relative_uncertainty=self.config.solver_relative_uncertainty,
+            response_absolute_resolution=self.config.response_absolute_resolution,
+            minimum_explained_variance=self.config.minimum_explained_variance,
+            justification=self.config.comparison_justification,
+        )
 
     # ------------------------------------------------------------------
     # Internal: plotting
@@ -334,18 +405,22 @@ class BenchmarkRunner:
         # -- build comparison section ----------------------------------------
         comparison: Dict[str, Any] = {
             "overall_consensus": report.overall_consensus,
+            "comparison_status": report.comparison_status,
+            "refusal_reasons": report.refusal_reasons,
         }
 
         for pair_key, pr in report.pairwise_results.items():
             rao_corrs: Dict[str, Any] = {}
             for dof_name, comp in pr.rao_comparisons.items():
                 rao_corrs[dof_name] = {
-                    "magnitude_r": round(
-                        float(comp.magnitude_stats.correlation), 8,
+                    "magnitude_r": optional_round(
+                        comp.magnitude_stats.correlation, 8,
                     ),
-                    "phase_r": round(
-                        float(comp.phase_stats.correlation), 8,
+                    "magnitude_quality": comp.magnitude_stats.quality,
+                    "phase_r": optional_round(
+                        comp.phase_stats.correlation, 8,
                     ),
+                    "phase_quality": comp.phase_stats.quality,
                     "magnitude_rms": round(
                         float(comp.magnitude_stats.rms_error), 8,
                     ),
@@ -358,27 +433,39 @@ class BenchmarkRunner:
                 }
 
             am_corrs = {
-                f"{k[0]},{k[1]}": round(float(v), 8)
+                f"{k[0]},{k[1]}": optional_round(v, 8)
                 for k, v in pr.added_mass_correlations.items()
             }
             damp_corrs = {
-                f"{k[0]},{k[1]}": round(float(v), 8)
+                f"{k[0]},{k[1]}": optional_round(v, 8)
                 for k, v in pr.damping_correlations.items()
             }
 
             comparison[pair_key] = {
                 "overall_agreement": pr.overall_agreement,
+                "comparison_status": pr.comparison_status,
+                "refusal_reason": pr.refusal_reason,
                 "rao_correlations": rao_corrs,
                 "added_mass_correlations": am_corrs,
+                "added_mass_quality": {
+                    f"{k[0]},{k[1]}": v
+                    for k, v in pr.added_mass_quality.items()
+                },
                 "damping_correlations": damp_corrs,
+                "damping_quality": {
+                    f"{k[0]},{k[1]}": v
+                    for k, v in pr.damping_quality.items()
+                },
             }
 
         consensus_by_dof: Dict[str, Any] = {}
         for dof_key, cm in report.consensus_by_dof.items():
             consensus_by_dof[dof_key] = {
                 "level": cm.consensus_level,
-                "mean_correlation": round(
-                    float(cm.mean_pairwise_correlation), 8,
+                "comparison_status": cm.comparison_status,
+                "refusal_reason": cm.refusal_reason,
+                "mean_correlation": optional_round(
+                    cm.mean_pairwise_correlation, 8,
                 ),
             }
         comparison["consensus_by_dof"] = consensus_by_dof
@@ -399,6 +486,7 @@ class BenchmarkRunner:
             yaml.dump(
                 doc,
                 fh,
+                Dumper=PinnedNullDumper,
                 default_flow_style=False,
                 sort_keys=False,
                 allow_unicode=True,
@@ -418,25 +506,28 @@ class BenchmarkRunner:
             rao_dict: Dict[str, Any] = {}
             for dof_name, comp in pr.rao_comparisons.items():
                 rao_dict[dof_name] = {
-                    "magnitude_correlation": float(
+                    "magnitude_correlation": optional_float(
                         comp.magnitude_stats.correlation,
                     ),
+                    "magnitude_quality": comp.magnitude_stats.quality,
                     "magnitude_rms_error": float(
                         comp.magnitude_stats.rms_error,
                     ),
-                    "phase_correlation": float(
+                    "phase_correlation": optional_float(
                         comp.phase_stats.correlation,
                     ),
+                    "phase_quality": comp.phase_stats.quality,
                     "max_magnitude_diff": float(comp.max_magnitude_diff),
                     "max_phase_diff": float(comp.max_phase_diff),
+                    "refusal_reason": comp.refusal_reason,
                 }
 
             am_corrs = {
-                f"{k[0]},{k[1]}": float(v)
+                f"{k[0]},{k[1]}": optional_float(v)
                 for k, v in pr.added_mass_correlations.items()
             }
             damp_corrs = {
-                f"{k[0]},{k[1]}": float(v)
+                f"{k[0]},{k[1]}": optional_float(v)
                 for k, v in pr.damping_correlations.items()
             }
 
@@ -449,7 +540,7 @@ class BenchmarkRunner:
                     "cog_diff": [float(v) for v in hc.cog_diff],
                     "cob_diff": [float(v) for v in hc.cob_diff],
                     "waterplane_area_diff": float(hc.waterplane_area_diff),
-                    "stiffness_matrix_correlation": float(
+                    "stiffness_matrix_correlation": optional_float(
                         hc.stiffness_matrix_correlation,
                     ),
                 }
@@ -458,9 +549,29 @@ class BenchmarkRunner:
                 "solver_a": pr.solver_a,
                 "solver_b": pr.solver_b,
                 "overall_agreement": pr.overall_agreement,
+                "comparison_status": pr.comparison_status,
+                "refusal_reason": pr.refusal_reason,
                 "rao_comparisons": rao_dict,
                 "added_mass_correlations": am_corrs,
+                "added_mass_quality": {
+                    f"{k[0]},{k[1]}": v
+                    for k, v in pr.added_mass_quality.items()
+                },
+                # How much of each matrix carried a real comparison. Without
+                # this, a matrix that is 78% uncompared is indistinguishable
+                # from a fully compared one in the machine-readable record
+                # (#1633).
+                "added_mass_coverage": coefficient_coverage(
+                    pr.added_mass_quality, pr.added_mass_correlations,
+                ),
                 "damping_correlations": damp_corrs,
+                "damping_quality": {
+                    f"{k[0]},{k[1]}": v
+                    for k, v in pr.damping_quality.items()
+                },
+                "damping_coverage": coefficient_coverage(
+                    pr.damping_quality, pr.damping_correlations,
+                ),
                 "hydrostatic_comparison": hc_dict,
             }
 
@@ -468,7 +579,9 @@ class BenchmarkRunner:
         for dof_key, cm in report.consensus_by_dof.items():
             consensus_data[dof_key] = {
                 "consensus_level": cm.consensus_level,
-                "mean_pairwise_correlation": float(
+                "comparison_status": cm.comparison_status,
+                "refusal_reason": cm.refusal_reason,
+                "mean_pairwise_correlation": optional_float(
                     cm.mean_pairwise_correlation,
                 ),
                 "outlier_solver": cm.outlier_solver,
@@ -482,6 +595,9 @@ class BenchmarkRunner:
             "solver_names": report.solver_names,
             "comparison_date": report.comparison_date,
             "overall_consensus": report.overall_consensus,
+            "comparison_status": report.comparison_status,
+            "refusal_reasons": report.refusal_reasons,
+            "comparison_policy": report.comparison_policy,
             "pairwise_results": pairwise_data,
             "consensus_by_dof": consensus_data,
             "notes": report.notes,
@@ -602,8 +718,8 @@ class BenchmarkRunner:
                 f"<tr>"
                 f"<td><a href='#dof-{dof_key.lower()}'>{dof_key}</a></td>"
                 f"<td style='color:{color};font-weight:600;'>"
-                f"{cm.consensus_level}</td>"
-                f"<td>{cm.mean_pairwise_correlation:.4f}</td>"
+                f"{cm.consensus_level or cm.comparison_status}</td>"
+                f"<td>{format_optional_correlation(cm.mean_pairwise_correlation)}</td>"
                 f"<td>{cm.outlier_solver or '-'}</td>"
                 f"</tr>\n"
             )
@@ -690,7 +806,7 @@ class BenchmarkRunner:
         pw = report.pairwise_results[pw_key]
 
         # --- 1. Verdict banner -------------------------------------------
-        agreement = pw.overall_agreement
+        agreement = pw.overall_agreement or pw.comparison_status
         badge_colors = {
             "EXCELLENT": ("#27ae60", "#eafaf1"),
             "GOOD": ("#2980b9", "#ebf5fb"),
@@ -712,7 +828,9 @@ class BenchmarkRunner:
         # --- 2. RAO comparison table (6 DOFs) ----------------------------
         dof_names = ["surge", "sway", "heave", "roll", "pitch", "yaw"]
 
-        def _color(val: float) -> str:
+        def _color(val: Optional[float]) -> str:
+            if val is None:
+                return "#999"
             if val >= 0.999:
                 return "#27ae60"
             if val >= 0.99:
@@ -728,7 +846,7 @@ class BenchmarkRunner:
             phase_r = comp.phase_stats.correlation
             max_mag_diff = comp.max_magnitude_diff
             max_phase_diff = comp.max_phase_diff
-            near_zero = max_mag_diff < 1e-6
+            near_zero = comp.phase_stats.quality == "NULL_RESPONSE"
 
             signal_label = (
                 '<span style="color:#999;">Near-zero</span>'
@@ -740,13 +858,20 @@ class BenchmarkRunner:
                 if near_zero
                 else f"color:{_color(phase_r)};font-weight:600;"
             )
-            phase_val = f"{phase_r:.4f}" if not near_zero else "-"
+            phase_val = (
+                "-" if near_zero else format_optional_correlation(
+                    phase_r, comp.phase_stats.quality,
+                )
+            )
+            magnitude_val = format_optional_correlation(
+                mag_r, comp.magnitude_stats.quality,
+            )
 
             rao_rows.append(
                 f"<tr>"
                 f"<td>{dof.capitalize()}</td>"
                 f"<td style='color:{_color(mag_r)};font-weight:600;'>"
-                f"{mag_r:.4f}</td>"
+                f"{magnitude_val}</td>"
                 f"<td style='{phase_style}'>{phase_val}</td>"
                 f"<td>{max_mag_diff:.4g}</td>"
                 f"<td>{max_phase_diff:.2f}&deg;</td>"
@@ -765,26 +890,30 @@ class BenchmarkRunner:
         )
 
         # --- 3. Hydrodynamic coefficient summary -------------------------
-        def _matrix_summary(
-            corrs: Dict,
-        ) -> tuple:
-            """Return (min_diag, min_offdiag, min_overall) from 6x6 corrs."""
-            diag_vals = []
-            offdiag_vals = []
-            for (i, j), v in corrs.items():
-                if not np.isfinite(v):
-                    continue
-                if i == j:
-                    diag_vals.append(v)
-                else:
-                    offdiag_vals.append(v)
-            min_diag = min(diag_vals) if diag_vals else float("nan")
-            min_offdiag = (
-                min(offdiag_vals) if offdiag_vals else float("nan")
-            )
-            all_vals = diag_vals + offdiag_vals
-            min_all = min(all_vals) if all_vals else float("nan")
-            return min_diag, min_offdiag, min_all
+        def _partition_cells(corrs: Dict) -> Dict[str, list]:
+            """Split 6x6 cell keys into the three summary columns.
+
+            Each column must be summarised over its own cells only. Before
+            #1633 the minima were partitioned here but the quality
+            distribution was not, so the Min Diagonal column printed counts
+            spanning all 36 cells rather than its own 6.
+            """
+            diagonal = [key for key in corrs if key[0] == key[1]]
+            off_diagonal = [key for key in corrs if key[0] != key[1]]
+            return {
+                "diagonal": diagonal,
+                "off_diagonal": off_diagonal,
+                "all": diagonal + off_diagonal,
+            }
+
+        def _min_over(corrs: Dict, keys: list) -> Optional[float]:
+            """Minimum correlation over the given cells, or None if none."""
+            values = [
+                corrs[key]
+                for key in keys
+                if corrs[key] is not None and np.isfinite(corrs[key])
+            ]
+            return min(values) if values else None
 
         hydro_rows = []
         for label, corrs in [
@@ -793,22 +922,44 @@ class BenchmarkRunner:
         ]:
             if not corrs:
                 continue
-            min_d, min_od, min_a = _matrix_summary(corrs)
 
-            def _fmt(v: float) -> str:
-                if math.isnan(v):
-                    return "-"
-                c = _color(v)
+            qualities = (
+                pw.added_mass_quality
+                if label == "Added Mass"
+                else pw.damping_quality
+            )
+            partitions = _partition_cells(corrs)
+
+            def _fmt(keys: list) -> str:
+                value = _min_over(corrs, keys)
+                if value is None:
+                    counts: Dict[str, int] = {}
+                    for key in keys:
+                        quality = qualities.get(key)
+                        if quality is None:
+                            continue
+                        counts[quality] = counts.get(quality, 0) + 1
+                    if len(counts) == 1:
+                        return format_optional_correlation(
+                            None, next(iter(counts)),
+                        )
+                    return format_quality_distribution(counts)
+                c = _color(value)
                 return (
                     f"<span style='color:{c};font-weight:600;'>"
-                    f"{v:.4f}</span>"
+                    f"{value:.4f}</span>"
                 )
 
+            coverage_text = format_coverage_summary(
+                coefficient_coverage(qualities, corrs),
+            )
             hydro_rows.append(
                 f"<tr><td>{label}</td>"
-                f"<td>{_fmt(min_d)}</td>"
-                f"<td>{_fmt(min_od)}</td>"
-                f"<td>{_fmt(min_a)}</td></tr>"
+                f"<td>{_fmt(partitions['diagonal'])}</td>"
+                f"<td>{_fmt(partitions['off_diagonal'])}</td>"
+                f"<td>{_fmt(partitions['all'])}</td>"
+                f'<td class="matrix-coverage" style="color:#555;">'
+                f"{coverage_text}</td></tr>"
             )
 
         hydro_html = ""
@@ -816,13 +967,18 @@ class BenchmarkRunner:
             hydro_html = (
                 '<h3 style="margin-top:1em;">'
                 "Hydrodynamic Coefficients</h3>"
-                '<table style="width:100%;max-width:700px;">'
+                '<table style="width:100%;max-width:900px;">'
                 "<thead><tr>"
                 "<th>Matrix</th><th>Min Diagonal r</th>"
                 "<th>Min Off-Diag r</th><th>Min Overall r</th>"
+                "<th>Coverage</th>"
                 "</tr></thead>"
                 f"<tbody>{''.join(hydro_rows)}</tbody></table>"
                 '<p style="font-size:0.85em;color:#777;">'
+                "Each r column is summarised over its own cells only. "
+                "Coverage counts the cells that carried a real comparison; "
+                "the rest are named so an uncompared matrix cannot pass for "
+                "a compared one. "
                 'See <a href="#hydro-coefficients">'
                 "full 6&times;6 heatmaps</a> below.</p>"
             )
@@ -959,19 +1115,31 @@ def _json_default(obj: object) -> object:
 def run_benchmark(
     solver_results: Dict[str, DiffractionResults],
     output_dir: Path = Path("benchmark_output"),
-    tolerance: float = 0.05,
+    solver_relative_uncertainty: Optional[float] = None,
+    response_absolute_resolution: Optional[float] = None,
+    minimum_explained_variance: Optional[float] = None,
+    comparison_justification: Optional[str] = None,
 ) -> BenchmarkRunResult:
     """Convenience wrapper: configure and run a benchmark in one call.
 
     Args:
         solver_results: Mapping of solver name to DiffractionResults.
         output_dir: Directory for output artifacts.
-        tolerance: Relative tolerance for agreement assessment.
+        solver_relative_uncertainty: Per-solver relative uncertainty.
+        response_absolute_resolution: Smallest resolved response magnitude.
+        minimum_explained_variance: Required shared signal variance.
+        comparison_justification: Provenance for the uncertainty budget.
 
     Returns:
         BenchmarkRunResult with all outputs populated.
     """
-    config = BenchmarkConfig(output_dir=output_dir, tolerance=tolerance)
+    config = BenchmarkConfig(
+        output_dir=output_dir,
+        solver_relative_uncertainty=solver_relative_uncertainty,
+        response_absolute_resolution=response_absolute_resolution,
+        minimum_explained_variance=minimum_explained_variance,
+        comparison_justification=comparison_justification,
+    )
     runner = BenchmarkRunner(config)
     return runner.run_from_results(solver_results)
 
@@ -996,7 +1164,10 @@ def run_benchmark(
     default="benchmark_output",
 )
 @click.option("--dry-run", is_flag=True)
-@click.option("--tolerance", "-t", type=float, default=0.05)
+@click.option("--solver-relative-uncertainty", type=float, default=None)
+@click.option("--response-absolute-resolution", type=float, default=None)
+@click.option("--minimum-explained-variance", type=float, default=None)
+@click.option("--comparison-justification", type=str, default=None)
 @click.option(
     "--x-axis",
     type=click.Choice(["period", "frequency"]),
@@ -1019,7 +1190,10 @@ def benchmark_solvers_cmd(
     solvers: tuple[str, ...],
     output: str,
     dry_run: bool,
-    tolerance: float,
+    solver_relative_uncertainty: Optional[float],
+    response_absolute_resolution: Optional[float],
+    minimum_explained_variance: Optional[float],
+    comparison_justification: Optional[str],
     x_axis: str,
     headings: Optional[str],
     reference: Optional[str],
@@ -1034,7 +1208,10 @@ def benchmark_solvers_cmd(
         solvers=[SolverType(s) for s in solvers],
         output_dir=Path(output),
         dry_run=dry_run,
-        tolerance=tolerance,
+        solver_relative_uncertainty=solver_relative_uncertainty,
+        response_absolute_resolution=response_absolute_resolution,
+        minimum_explained_variance=minimum_explained_variance,
+        comparison_justification=comparison_justification,
         x_axis=x_axis,
         headings=heading_list,
         reference_solver=reference,
