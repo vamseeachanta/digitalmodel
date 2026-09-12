@@ -16,6 +16,7 @@ def candidate(tmp_path):
     case = tmp_path / 'pressure-vessel'
     shutil.copytree(source / 'golden', case / 'golden')
     shutil.copyfile(source / 'pv.inp', case / 'pv.inp')
+    (case / 'synthetic-mapdl').write_text('synthetic executable; never launched')
     return case, tmp_path / 'fresh'
 
 
@@ -30,6 +31,8 @@ def simulated_runner(case, failure=None):
         shutil.copyfile(case / 'golden/pv_result.csv', digest)
         if failure == 'version':
             log.write_text('Ansys 2025 R1')
+        if failure == 'partial_version':
+            log.write_text('Ansys 2026 R1.010 Build 126.1 UP202602020 WINDOWS x64-extra')
         if failure == 'drift':
             digest.write_text(digest.read_text().replace('134.7185', '234.7185'))
         if failure == 'nonfinite':
@@ -44,19 +47,22 @@ def simulated_runner(case, failure=None):
 def test_resolve_preserves_bytes_profile_and_receipt(candidate, monkeypatch):
     case, output = candidate
     monkeypatch.setattr(support, 'run_ansys', simulated_runner(case))
-    receipt = support.resolve_golden(case, output, Path('synthetic-mapdl'))
+    receipt = support.resolve_golden(case, output, case / 'synthetic-mapdl')
     assert receipt['status'] == 'comparison_passed_unreviewed'
     assert not receipt['native_qualification_complete']
+    assert receipt['execution']['executable_sha256'] == support._sha256(case / 'synthetic-mapdl')
+    assert receipt['execution']['argv'][-3:] == ['-np', '1', '-smp']
+    assert receipt['execution']['timeout_seconds'] == 120
     assert json.loads((output / 'resolve_receipt.json').read_text()) == receipt
     assert {item['path'] for item in receipt['artifacts']} >= {'pv.inp', 'pv.out', 'pv_result.csv'}
 
 
-@pytest.mark.parametrize('failure', ['version', 'drift', 'nonfinite', 'failed', 'missing'])
+@pytest.mark.parametrize('failure', ['version', 'drift', 'nonfinite', 'failed', 'missing', 'partial_version'])
 def test_invalid_native_evidence_never_passes(candidate, monkeypatch, failure):
     case, output = candidate
     monkeypatch.setattr(support, 'run_ansys', simulated_runner(case, failure))
     with pytest.raises(ValueError):
-        support.resolve_golden(case, output, Path('synthetic-mapdl'))
+        support.resolve_golden(case, output, case / 'synthetic-mapdl')
     assert not (output / 'resolve_receipt.json').exists()
 
 
@@ -85,6 +91,7 @@ def test_native_marker_invokes_real_support_when_explicitly_enabled(tmp_path, mo
     from tests.ansys import test_example_goldens as goldens
     called = []
     monkeypatch.setenv('ANSYS_NATIVE_TESTS', '1')
+    monkeypatch.delenv('PYTEST_XDIST_WORKER', raising=False)
     monkeypatch.setenv('ANSYS_NATIVE_EXECUTABLE', str(tmp_path / 'mapdl.exe'))
     monkeypatch.setenv('ANSYS_NATIVE_OUTPUT_ROOT', str(tmp_path / 'captures'))
     (tmp_path / 'mapdl.exe').write_text('synthetic stub')
@@ -95,3 +102,11 @@ def test_native_marker_invokes_real_support_when_explicitly_enabled(tmp_path, mo
         pytest.fail('Native test is still an unconditional skip')
     assert len(called) == 1
     assert called[0][1] == tmp_path / 'captures/pressure-vessel'
+
+
+@pytest.mark.parametrize('text', ['x,1\nx,2', 'x,1, x ,2', 'x,nan\nx,2'])
+def test_duplicate_normalized_labels_are_rejected(tmp_path, text):
+    digest = tmp_path / 'digest.csv'
+    digest.write_text(text)
+    with pytest.raises(ValueError, match='Duplicate'):
+        support._digest(digest)

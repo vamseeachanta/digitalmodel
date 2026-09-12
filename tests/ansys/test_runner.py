@@ -41,6 +41,14 @@ def test_no_executable_falls_back_to_dry_run(tmp_path: Path, monkeypatch):
     assert "No ANSYS/MAPDL executable" in result.error_message
 
 
+def test_explicit_missing_executable_never_uses_discovery(tmp_path, monkeypatch):
+    discovered = tmp_path / 'discovered.exe'
+    discovered.write_text('synthetic executable')
+    monkeypatch.setenv('ANSYS_MAPDL_PATH', str(discovered))
+    runner = ANSYSRunner(ANSYSRunConfig(executable_path=tmp_path / 'missing.exe'))
+    assert runner._detect_executable() is None
+
+
 def test_successful_solve_marks_completed(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(
         ANSYSRunner, "_detect_executable", lambda self: Path("/fake/mapdl")
