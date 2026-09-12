@@ -118,6 +118,22 @@ def test_actual_exporter_report_renders_without_sample_count(tmp_path, monkeypat
     results = module._build_results_from_config()
     html = module._generate_master_html(results, tmp_path).read_text(encoding="utf-8")
     assert "ALL PASS" in html
+
+
+@pytest.mark.parametrize("invalid", ["negative_difference", "null_correlation_range"])
+def test_malformed_report_metrics_never_pass(tmp_path, monkeypatch, invalid):
+    module = load_module(tmp_path, monkeypatch)
+    report = report_fixture()
+    entry = report["pairwise_results"]["a_vs_b"]["rao_comparisons"]["heave"]
+    if invalid == "negative_difference":
+        entry["max_magnitude_diff"] = -1.0
+    else:
+        entry["magnitude_quality"] = "NULL_RESPONSE"
+        report["consensus_by_dof"]["HEAVE"]["mean_pairwise_correlation"] = 2.0
+    write_report(tmp_path, report)
+    results = module._build_results_from_config()
+    assert not module._case_summary_passes(results["2.7"])
+    assert "ALL PASS" not in module._generate_master_html(results, tmp_path).read_text(encoding="utf-8")
     assert results["2.7"]["dof_summary_by_body"][0]["surge"]["n_points"] is None
 
 
