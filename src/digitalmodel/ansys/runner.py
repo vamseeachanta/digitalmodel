@@ -105,12 +105,21 @@ class ANSYSRunner:
     def prepare(self, script_path: Path | str) -> ANSYSRunResult:
         script = Path(script_path)
         output_dir = Path(self._config.output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
         self._result = ANSYSRunResult(
             status=ANSYSRunStatus.PREPARING,
             output_dir=output_dir,
             input_file=script,
         )
+        try:
+            script = script.resolve()
+            output_dir = output_dir.resolve()
+            self._result.input_file = script
+            self._result.output_dir = output_dir
+            output_dir.mkdir(parents=True, exist_ok=True)
+        except OSError as exc:
+            self._result.status = ANSYSRunStatus.FAILED
+            self._result.error_message = f"MAPDL preparation failed: {exc}"
+            return self._result
         if not script.is_file():
             self._result.status = ANSYSRunStatus.FAILED
             self._result.error_message = f"APDL script not found: {script}"
@@ -152,20 +161,49 @@ class ANSYSRunner:
         self._result.status = ANSYSRunStatus.RUNNING
         argv = [str(exe), "-b", "-i", str(self._result.input_file),
                 "-o", str(out_file), *self._config.extra_args]
-        proc = subprocess.run(  # noqa: S603 - argv is fixed; script is fs-resolved.
-            argv, cwd=str(self._result.output_dir), capture_output=True,
-            text=True, timeout=self._config.timeout_seconds, check=False,
-        )
+        try:
+            proc = subprocess.run(  # noqa: S603 - argv is fixed; script is fs-resolved.
+                argv, cwd=str(self._result.output_dir), capture_output=True,
+                text=True, timeout=self._config.timeout_seconds, check=False,
+            )
+        except subprocess.TimeoutExpired as exc:
+            self._record_timeout(exc, previous_files, out_file)
+            return
         self._result.return_code = proc.returncode
         self._result.stdout = proc.stdout or ""
         self._result.stderr = proc.stderr or ""
+        self._collect_evidence(previous_files, out_file, proc.returncode)
+
+    def _record_timeout(self, exc, previous_files, out_file) -> None:
+        """Retain partial evidence while timeout remains an unconditional failure."""
+        assert self._result is not None
+        for field_name in ("stdout", "stderr"):
+            value = getattr(exc, field_name) or ""
+            if isinstance(value, bytes):
+                value = value.decode("utf-8", errors="replace")
+            setattr(self._result, field_name, value)
+        evidence_error = ""
+        try:
+            self._collect_evidence(previous_files, out_file, 0)
+        except OSError as error:
+            evidence_error = f"; partial evidence unavailable: {error}"
+        self._result.status = ANSYSRunStatus.FAILED
+        self._result.error_message = f"MAPDL timeout after {exc.timeout} seconds{evidence_error}"
+
+    def _collect_evidence(self, previous_files, out_file, return_code) -> None:
+        """Attribute fresh outputs and publish only a readable solver log."""
+        assert self._result is not None
         current_files = self._snapshot_result_files(self._result.output_dir)
         self._result.result_files = [
             path for path, fingerprint in current_files.items()
             if previous_files.get(path) != fingerprint
         ]
         fresh_log = out_file if out_file in self._result.result_files else None
-        error = self._detect_error(proc.returncode, fresh_log)
+        try:
+            error = self._detect_error(return_code, fresh_log)
+        except OSError:
+            self._result.result_files = [p for p in self._result.result_files if p != fresh_log]
+            raise
         # Publish a log only after it has been attributed and successfully read.
         self._result.log_file = fresh_log
         if error is None:
