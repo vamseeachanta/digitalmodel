@@ -71,3 +71,11 @@ def test_longest_error_marker_with_minimal_cross_boundary_tail(tmp_path, monkeyp
 
     monkeypatch.setattr(Path, 'open', lambda *a, **k: BoundedStream(text))
     assert marker in ANSYSRunner()._detect_error(0, tmp_path / 'model.out')
+
+
+def test_configured_relative_executable_resolves_before_chdir(tmp_path, monkeypatch):
+    from digitalmodel.ansys.runner import ANSYSRunConfig
+    monkeypatch.chdir(tmp_path)
+    Path('mapdl.exe').write_text('offline stub; never executed')
+    runner = ANSYSRunner(ANSYSRunConfig(executable_path=Path('mapdl.exe')))
+    assert runner._detect_executable() == tmp_path / 'mapdl.exe'
