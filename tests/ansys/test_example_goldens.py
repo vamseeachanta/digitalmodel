@@ -16,6 +16,7 @@ The re-solve test at the bottom is the only licence-dependent one and carries th
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import math
@@ -60,6 +61,11 @@ def _golden(case: str) -> tuple[dict[str, float], dict]:
         digest_files[0].read_text(encoding="utf-8")
     )
     provenance = json.loads((gdir / "PROVENANCE.json").read_text(encoding="utf-8"))
+    deck = EXAMPLES / case / provenance["input"]["deck"]
+    actual_sha256 = hashlib.sha256(deck.read_bytes()).hexdigest()
+    assert actual_sha256 == provenance["input"]["sha256"], (
+        f"{case} deck SHA-256 differs from the recorded golden input"
+    )
     return digest, provenance
 
 

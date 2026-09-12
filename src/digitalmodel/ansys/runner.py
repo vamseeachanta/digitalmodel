@@ -17,6 +17,7 @@ Invocation is subprocess-based (no PyANSYS hard dependency).
 
 from __future__ import annotations
 
+import hashlib
 import os
 import platform
 import shutil
@@ -29,7 +30,7 @@ from typing import Optional
 
 # APDL solver error markers (MAPDL may return rc=0 yet write errors to the log).
 _ERROR_MARKERS = ("*** ERROR ***", "SOLUTION NOT CONVERGED", "*** FATAL ***")
-_RESULT_SUFFIXES = (".rst", ".rth", ".out", ".mntr", ".db")
+_RESULT_SUFFIXES = (".rst", ".rth", ".out", ".mntr", ".db", ".csv")
 
 
 class ANSYSRunStatus(str, Enum):
@@ -145,6 +146,7 @@ class ANSYSRunner:
             str(out_file),
             *self._config.extra_args,
         ]
+        previous_files = self._snapshot_result_files(self._result.output_dir)
         try:
             proc = subprocess.run(  # noqa: S603 - argv is fixed; script is fs-resolved.
                 argv,
@@ -165,7 +167,11 @@ class ANSYSRunner:
         self._result.stderr = proc.stderr or ""
         self._result.duration_seconds = time.monotonic() - start
         self._result.log_file = out_file if out_file.is_file() else None
-        self._result.result_files = self._capture_result_files(self._result.output_dir)
+        current_files = self._snapshot_result_files(self._result.output_dir)
+        self._result.result_files = [
+            path for path, fingerprint in current_files.items()
+            if previous_files.get(path) != fingerprint
+        ]
 
         error = self._detect_error(proc.returncode, out_file)
         if error is None:
@@ -201,6 +207,24 @@ class ANSYSRunner:
                 if marker in text:
                     return f"MAPDL log reported: {marker}"
         return None
+
+    @staticmethod
+    def _snapshot_result_files(output_dir: Path) -> dict[Path, tuple]:
+        """Record attribution evidence without hashing potentially huge FE binaries.
+
+        CSV digests also carry a content hash: a same-size rewrite can retain its
+        timestamp. Other result formats use filesystem metadata. Concurrent runs
+        must use separate output directories; a snapshot cannot identify writers.
+        """
+        snapshot = {}
+        for path in ANSYSRunner._capture_result_files(output_dir):
+            stat = path.stat()
+            digest = None
+            if path.suffix.lower() == ".csv":
+                with path.open("rb") as stream:
+                    digest = hashlib.file_digest(stream, "sha256").hexdigest()
+            snapshot[path] = (stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns, digest)
+        return snapshot
 
     @staticmethod
     def _capture_result_files(output_dir: Path) -> list[Path]:
