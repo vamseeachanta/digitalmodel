@@ -84,7 +84,7 @@ def test_preflight_rejects_invalid_inputs_before_launch(candidate, monkeypatch, 
     provenance_path.write_text(json.dumps(provenance))
     monkeypatch.setattr(support, 'run_ansys', lambda *a, **k: pytest.fail('invalid candidate launched'))
     with pytest.raises(ValueError):
-        support.resolve_golden(case, output, Path('synthetic-mapdl'))
+        support.resolve_golden(case, output, case / 'synthetic-mapdl')
 
 
 def test_native_marker_invokes_real_support_when_explicitly_enabled(tmp_path, monkeypatch):
