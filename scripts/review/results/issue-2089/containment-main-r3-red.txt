@@ -1,0 +1,29 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.14, pytest-8.4.2, pluggy-1.6.0
+rootdir: /mnt/ace/ws/agent-worktrees/dm-2089-containment-plan
+configfile: pytest.ini
+collected 21 items
+
+tests/solvers/ghs/test_qualification_finalization.py FF                  [  9%]
+tests/solvers/ghs/test_windows_launch.py ................F..             [100%]
+
+=================================== FAILURES ===================================
+___________ test_failed_marker_finalization_never_publishes_success ____________
+tests/solvers/ghs/test_qualification_finalization.py:25: in test_failed_marker_finalization_never_publishes_success
+    assert not (root / "public-summary.json").exists()
+E   AssertionError: assert not True
+E    +  where True = exists()
+E    +    where exists = (PosixPath('/tmp/pytest-of-vamsee/pytest-70/test_failed_marker_finalizatio0/observation') / 'public-summary.json').exists
+___________ test_second_handle_rechecks_budget_before_effective_kill ___________
+tests/solvers/ghs/test_qualification_finalization.py:40: in test_second_handle_rechecks_budget_before_effective_kill
+    with pytest.raises(ValueError, match="watchdog margin"):
+E   Failed: DID NOT RAISE <class 'ValueError'>
+_ test_crash_barrier_closes_observer_job_before_controller_termination[True-True] _
+tests/solvers/ghs/test_windows_launch.py:105: in test_crash_barrier_closes_observer_job_before_controller_termination
+    with pytest.raises(ValueError, match='watchdog margin'):
+E   Failed: DID NOT RAISE <class 'ValueError'>
+=========================== short test summary info ============================
+FAILED tests/solvers/ghs/test_qualification_finalization.py::test_failed_marker_finalization_never_publishes_success
+FAILED tests/solvers/ghs/test_qualification_finalization.py::test_second_handle_rechecks_budget_before_effective_kill
+FAILED tests/solvers/ghs/test_windows_launch.py::test_crash_barrier_closes_observer_job_before_controller_termination[True-True]
+========================= 3 failed, 18 passed in 6.89s =========================

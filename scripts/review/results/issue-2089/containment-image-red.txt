@@ -1,0 +1,30 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_______ test_native_image_comes_from_current_process_not_venv_redirector _______
+
+tmp_path = PosixPath('/tmp/pytest-of-vamsee/pytest-66/test_native_image_comes_from_c0')
+
+    def test_native_image_comes_from_current_process_not_venv_redirector(tmp_path):
+        from types import SimpleNamespace
+        real=tmp_path/'actual-python.exe';real.write_bytes(b'fixture')
+        def image(module,buffer,size):
+            assert module is None
+            buffer.value=str(real);return len(str(real))
+>       assert o.native_image(SimpleNamespace(GetModuleFileNameW=image))==real
+               ^^^^^^^^^^^^^^
+E       AttributeError: module 'digitalmodel.solvers.ghs._owned_process' has no attribute 'native_image'
+
+tests/solvers/ghs/test_windows_launch.py:112: AttributeError
+_______________ test_native_image_truncation_fails_before_launch _______________
+
+    def test_native_image_truncation_fails_before_launch():
+        from types import SimpleNamespace
+>       with pytest.raises(OSError):o.native_image(SimpleNamespace(GetModuleFileNameW=lambda *args:32768))
+                                    ^^^^^^^^^^^^^^
+E       AttributeError: module 'digitalmodel.solvers.ghs._owned_process' has no attribute 'native_image'
+
+tests/solvers/ghs/test_windows_launch.py:117: AttributeError
+=========================== short test summary info ============================
+FAILED tests/solvers/ghs/test_windows_launch.py::test_native_image_comes_from_current_process_not_venv_redirector
+FAILED tests/solvers/ghs/test_windows_launch.py::test_native_image_truncation_fails_before_launch
+2 failed, 15 deselected in 6.95s

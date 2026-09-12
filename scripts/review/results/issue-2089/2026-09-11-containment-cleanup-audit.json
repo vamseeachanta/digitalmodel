@@ -1,0 +1,18 @@
+{
+  "scope": "Task worktree, related canonical status, first-level checkout parent and task-named scratch; not whole-machine cleanup",
+  "task_stashes": "",
+  "task_tmp_partial": [],
+  "scoped_remote_scratch_count": 0,
+  "parent_entry_count": 79,
+  "cleanup_markers_present": false,
+  "EXPECTED": [
+    "Plan and review artifacts pending commit",
+    "Clean plan worktree retained for continuation",
+    "Pre-existing canonical metadata and sibling worktrees preserved",
+    "Managed dependency caches preserved"
+  ],
+  "UNEXPECTED": [],
+  "canonical_solver_dirty_lines": 4,
+  "general_wiki_dirty_lines": 1,
+  "company_wiki_dirty_lines": 0
+}
