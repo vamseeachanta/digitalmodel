@@ -135,51 +135,44 @@ class ANSYSRunner:
             )
             return self._result
 
-        self._result.status = ANSYSRunStatus.RUNNING
-        out_file = self._result.output_dir / f"{self._result.input_file.stem}.out"
-        argv = [
-            str(exe),
-            "-b",
-            "-i",
-            str(self._result.input_file),
-            "-o",
-            str(out_file),
-            *self._config.extra_args,
-        ]
-        previous_files = self._snapshot_result_files(self._result.output_dir)
         try:
-            proc = subprocess.run(  # noqa: S603 - argv is fixed; script is fs-resolved.
-                argv,
-                cwd=str(self._result.output_dir),
-                capture_output=True,
-                text=True,
-                timeout=self._config.timeout_seconds,
-                check=False,
-            )
+            self._execute_solver(exe)
         except (OSError, subprocess.TimeoutExpired) as exc:
             self._result.status = ANSYSRunStatus.FAILED
-            self._result.error_message = f"MAPDL invocation failed: {exc}"
+            self._result.error_message = f"MAPDL invocation failed: execution/evidence I/O: {exc}"
+        finally:
             self._result.duration_seconds = time.monotonic() - start
-            return self._result
+        return self._result
 
+    def _execute_solver(self, exe: Path) -> None:
+        """Preserve subprocess metadata before inspecting any produced evidence."""
+        assert self._result is not None
+        out_file = self._result.output_dir / f"{self._result.input_file.stem}.out"
+        previous_files = self._snapshot_result_files(self._result.output_dir)
+        self._result.status = ANSYSRunStatus.RUNNING
+        argv = [str(exe), "-b", "-i", str(self._result.input_file),
+                "-o", str(out_file), *self._config.extra_args]
+        proc = subprocess.run(  # noqa: S603 - argv is fixed; script is fs-resolved.
+            argv, cwd=str(self._result.output_dir), capture_output=True,
+            text=True, timeout=self._config.timeout_seconds, check=False,
+        )
         self._result.return_code = proc.returncode
         self._result.stdout = proc.stdout or ""
         self._result.stderr = proc.stderr or ""
-        self._result.duration_seconds = time.monotonic() - start
-        self._result.log_file = out_file if out_file.is_file() else None
         current_files = self._snapshot_result_files(self._result.output_dir)
         self._result.result_files = [
             path for path, fingerprint in current_files.items()
             if previous_files.get(path) != fingerprint
         ]
-
-        error = self._detect_error(proc.returncode, out_file)
+        fresh_log = out_file if out_file in self._result.result_files else None
+        error = self._detect_error(proc.returncode, fresh_log)
+        # Publish a log only after it has been attributed and successfully read.
+        self._result.log_file = fresh_log
         if error is None:
             self._result.status = ANSYSRunStatus.COMPLETED
         else:
             self._result.status = ANSYSRunStatus.FAILED
             self._result.error_message = error
-        return self._result
 
     def _detect_executable(self) -> Optional[Path]:
         configured = self._config.executable_path
@@ -197,16 +190,25 @@ class ANSYSRunner:
             return std
         return None
 
-    def _detect_error(self, return_code: int, out_file: Path) -> Optional[str]:
-        if return_code != 0:
-            return f"MAPDL returned non-zero exit code {return_code}"
-        # MAPDL can return 0 yet write errors to the .out log.
-        if out_file.is_file():
-            text = out_file.read_text(errors="replace")
-            for marker in _ERROR_MARKERS:
-                if marker in text:
-                    return f"MAPDL log reported: {marker}"
-        return None
+    def _detect_error(self, return_code: int, out_file: Optional[Path]) -> Optional[str]:
+        exit_error = (
+            f"MAPDL returned non-zero exit code {return_code}" if return_code else None
+        )
+        if out_file is None:
+            return exit_error or "No fresh MAPDL log was produced by this run"
+        # Bounded chunks also handle logs with exceptionally long lines. Carry
+        # overlap so an error marker split across reads is still detected.
+        overlap = max(map(len, _ERROR_MARKERS)) - 1
+        tail = ""
+        log_error = None
+        with out_file.open("r", encoding="utf-8", errors="replace") as stream:
+            while chunk := stream.read(65536):
+                text = tail + chunk
+                for marker in _ERROR_MARKERS:
+                    if marker in text:
+                        log_error = f"MAPDL log reported: {marker}"
+                tail = text[-overlap:]
+        return exit_error or log_error
 
     @staticmethod
     def _snapshot_result_files(output_dir: Path) -> dict[Path, tuple]:
