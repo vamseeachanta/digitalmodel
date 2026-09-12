@@ -55,7 +55,7 @@ The allowable stresses already embedded in the decks are unchanged by this plan.
 ### Documents consulted
 
 - Issue #2094 — this plan's subject.
-- `docs/domains/ansys/workflows/aqwa-to-structural-submodel.md` §12A — establishes the
+- [Preserved AQWA workflow at its original commit](https://github.com/vamseeachanta/digitalmodel/blob/93cf3c927e08504db80fa23e9f1cbc08a6d6d3eb/docs/domains/ansys/workflows/aqwa-to-structural-submodel.md) §12A — establishes the
   house pattern of recording a verified restriction with its evidence.
 - Related issue #1524 — versioned launcher discovery; confirmed live on the host used for the
   reproduction below, and explains why discovery must be exercised on a real host.
