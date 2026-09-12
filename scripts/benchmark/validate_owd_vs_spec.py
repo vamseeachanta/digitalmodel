@@ -2066,9 +2066,13 @@ def _case_summary_passes(result: dict) -> bool:
             return False
         for dof in SUMMARY_DOFS:
             stat = summary.get(dof, {})
-            if not _finite_number(stat.get("max_abs_diff")):
+            difference = stat.get("max_abs_diff")
+            if not _finite_number(difference) or difference < 0:
                 return False
             correlation = stat.get("correlation")
+            if correlation is not None and (
+                    not _finite_number(correlation) or not -1 <= correlation <= 1):
+                return False
             if stat.get("quality") == "NULL_RESPONSE":
                 if correlation is not None and not _finite_number(correlation):
                     return False

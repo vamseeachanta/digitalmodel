@@ -118,6 +118,7 @@ def test_actual_exporter_report_renders_without_sample_count(tmp_path, monkeypat
     results = module._build_results_from_config()
     html = module._generate_master_html(results, tmp_path).read_text(encoding="utf-8")
     assert "ALL PASS" in html
+    assert results["2.7"]["dof_summary_by_body"][0]["surge"]["n_points"] is None
 
 
 @pytest.mark.parametrize("invalid", ["negative_difference", "null_correlation_range"])
@@ -134,7 +135,6 @@ def test_malformed_report_metrics_never_pass(tmp_path, monkeypatch, invalid):
     results = module._build_results_from_config()
     assert not module._case_summary_passes(results["2.7"])
     assert "ALL PASS" not in module._generate_master_html(results, tmp_path).read_text(encoding="utf-8")
-    assert results["2.7"]["dof_summary_by_body"][0]["surge"]["n_points"] is None
 
 
 def test_summary_only_cli_reads_real_export(tmp_path, monkeypatch, two_identical_results):
