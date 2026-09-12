@@ -950,8 +950,15 @@ def run_comparison(
         pw_key = "OrcaWave (.owd)-vs-OrcaWave (spec.yml)"
         if pw_key in pairwise:
             pw = pairwise[pw_key]
+            for dof, comparison in pw.rao_comparisons.items():
+                if dof in summary:
+                    summary[dof]["quality"] = comparison.magnitude_stats.quality
+                    summary[dof]["refusal_reason"] = comparison.refusal_reason
             dof_summary_by_body[bi] = {
                 **summary,
+                "_comparison_status": result.report.comparison_status,
+                "_overall_consensus": result.report.overall_consensus,
+                "refusal_reasons": result.report.refusal_reasons,
                 "hydro": pw.hydrostatic_comparison,
                 "am_correlations": pw.added_mass_correlations,
                 "damp_correlations": pw.damping_correlations,
@@ -1873,7 +1880,7 @@ def _report_has_refusal(value: object) -> bool:
 
 
 def _build_results_from_config() -> dict:
-    """Build results dict from benchmark artifacts, falling back to config notes.
+    """Build results from benchmark artifacts; leave missing evidence incomplete.
 
     Used by --summary-only to generate the master HTML without running solvers.
     """
