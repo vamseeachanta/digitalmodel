@@ -33,10 +33,22 @@ state. It does not quantify how well the mean of the remaining oscillation is kn
 Conversely, a bounded, sustained oscillation can have a precisely determined mean
 without approaching a steady state.
 
-The reported central value is the plain mean over the final four complete wobble
-periods. Its standard error is calculated from half-period block means so that the
-oscillation's autocorrelation is retained. A force shall be quoted as the central
-value plus or minus its standard error, with the settling verdict carried as separate
-metadata. Use the uncertainty to state the precision of the mean and the settling
-verdict to state whether a steady state is being approached. Neither quantity
-substitutes for the other.
+The reported central-value window excludes the start-up transient. The final wobble
+period defines an eventual mean and peak-to-peak envelope; the transient ends at the
+first iteration from which every complete one-period running mean remains within
+three final half-envelopes of the eventual mean. The window then uses the newest four
+complete periods without starting before that point. `--central-start` overrides the
+automatic boundary when engineering evidence establishes a better boundary. The
+extrema-search `--start` does not move this window.
+
+If fewer than four complete periods remain, the count is reduced to the available
+number, with two periods required for a standard error. A shorter history reports its
+post-transient mean without a standard error. The standard error is calculated from
+half-period block means so that the oscillation's autocorrelation is retained. A run
+that is short relative to its oscillation period cannot establish a precise mean;
+additional iterations are required rather than a narrower reporting window.
+
+A force shall be quoted as the central value plus or minus its standard error, with
+the settling verdict carried as separate metadata. Use the uncertainty to state the
+precision of the mean and the settling verdict to state whether a steady state is
+being approached. Neither quantity substitutes for the other.

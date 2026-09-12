@@ -15,6 +15,7 @@ from digitalmodel.solvers.openfoam.force_cycle_average import (
     extrema,
     load_force,
     main,
+    transient_end,
 )
 
 MEAN = -50_000.0
@@ -23,6 +24,76 @@ TAU = 800.0
 PERIOD = 1_500.0
 PHASE = 0.35
 VISCOUS = -174_000.0
+
+
+def test_transient_exclusion_removes_large_startup_bias():
+    period = 1_000.0
+    t = np.arange(5_001, dtype=float)
+    signal = 100.0 + 800.0 * np.exp(-t / 500.0)
+    signal += 10.0 * np.sin(2.0 * np.pi * t / period)
+
+    old_mean = np.mean(signal[t >= t[-1] - 4 * period])
+    result = central_value(t, signal, period, n_periods=4)
+
+    assert abs(old_mean - 100.0) / 100.0 > 0.10
+    assert result["window_start"] >= result["transient_end"]
+    assert abs(result["mean"] - 100.0) <= result["standard_error"]
+
+
+def test_central_window_is_independent_of_extrema_start(tmp_path):
+    period = 1_000.0
+    t = np.arange(7_001, dtype=float)
+    pressure = 220_000.0 + 900_000.0 * np.exp(-t / 550.0)
+    pressure += np.where(
+        t < 3_000.0,
+        200_000.0 * np.sin(2.0 * np.pi * t / 650.0),
+        40_000.0 * np.sin(2.0 * np.pi * t / period),
+    )
+    path = tmp_path / "start-independent.dat"
+    _write_series(path, t, pressure, pressure, np.zeros_like(t))
+
+    early = analyse(path, start=100.0, smooth=25)
+    late = analyse(path, start=3_500.0, smooth=25)
+
+    _, early_extrema = extrema(t, pressure, start=100.0, smooth=25)
+    _, late_extrema = extrema(t, pressure, start=3_500.0, smooth=25)
+    early_period = 2.0 * np.median(np.diff([item[0] for item in early_extrema]))
+    late_period = 2.0 * np.median(np.diff([item[0] for item in late_extrema]))
+    assert early_period != pytest.approx(late_period)
+
+    for key in ("window_start", "window_end", "mean", "transient_end"):
+        assert early["central_value"]["total"][key] == pytest.approx(
+            late["central_value"]["total"][key]
+        )
+
+
+def test_short_post_transient_history_reduces_periods_or_omits_error():
+    t = np.arange(3_501, dtype=float)
+    signal = 100.0 + np.sin(2.0 * np.pi * t / 1_000.0)
+
+    reduced = central_value(t, signal, 1_000.0, n_periods=4, central_start=1_000.0)
+    too_short = central_value(t, signal, 1_000.0, n_periods=4, central_start=2_200.0)
+
+    assert reduced["n_periods_used"] == 2
+    assert reduced["n_periods_requested"] == 4
+    assert "reduced" in reduced["window_note"]
+    assert reduced["standard_error"] is not None
+    assert too_short["n_periods_used"] == 1
+    assert too_short["standard_error"] is None
+    assert "too short" in too_short["window_note"]
+
+
+def test_no_transient_keeps_exact_final_period_window():
+    period = 1_000.0
+    t = np.arange(8_001, dtype=float)
+    signal = 100.0 + 10.0 * np.sin(2.0 * np.pi * t / period)
+
+    assert transient_end(t, signal, period) == pytest.approx(t[0])
+    result = central_value(t, signal, period, n_periods=4)
+
+    assert result["window_start"] == pytest.approx(t[-1] - 4 * period)
+    assert result["n_periods_used"] == 4
+    assert result["window_note"] is None
 
 
 def test_central_value_decaying_cosine_recovers_mean_and_se_shrinks():
@@ -62,13 +133,18 @@ def test_cli_reports_central_value_and_writes_component_json(tmp_path, capsys):
 
     stdout = capsys.readouterr().out
     data = json.loads(output.read_text())
-    assert "central value (4 periods): total" in stdout
+    assert "central value (" in stdout
+    assert "of 4 periods, transient ends" in stdout
     assert "REPORTABLE AS      :" in stdout
-    assert set(data["central_value"]) == {"n_periods", "total", "pressure", "viscous"}
+    assert set(data["central_value"]) == {
+        "n_periods", "n_periods_requested", "n_periods_used", "transient_end",
+        "window_note", "total", "pressure", "viscous",
+    }
     for component in ("total", "pressure", "viscous"):
         assert set(data["central_value"][component]) == {
             "window_start", "window_end", "blocks", "periods", "mean", "standard_error",
-            "relative_standard_error_pct", "note",
+            "relative_standard_error_pct", "note", "n_periods_used",
+            "n_periods_requested", "transient_end", "window_note",
         }
     old_line_prefixes = [
         "pressure-force extrema", "last half period", "cycle latest",
@@ -77,6 +153,21 @@ def test_cli_reports_central_value_and_writes_component_json(tmp_path, capsys):
     ]
     positions = [stdout.index(prefix) for prefix in old_line_prefixes]
     assert positions == sorted(positions)
+
+
+def test_cli_central_start_overrides_detected_transient(tmp_path, capsys):
+    force_file = write_force(tmp_path / "override.dat", rows=10_000)
+    output = tmp_path / "override.json"
+
+    assert main([
+        str(force_file), "--start", "0", "--central-start", "3000",
+        "--json", str(output),
+    ]) == 0
+
+    data = json.loads(output.read_text())
+    stdout = capsys.readouterr().out
+    assert data["central_value"]["transient_end"] == 3_000.0
+    assert "transient ends 3000" in stdout
 
 
 def test_zero_central_value_is_strict_json_compatible():
@@ -109,7 +200,7 @@ def test_central_value_fewer_than_four_blocks_has_note():
     t = np.arange(1_001, dtype=float)
     result = central_value(t, np.cos(2 * np.pi * t / 1_000), 1_000, n_periods=1)
 
-    assert result["blocks"] == 2
+    assert result["blocks"] == 0
     assert result["periods"] == 1
     assert result["standard_error"] is None
     assert result["relative_standard_error_pct"] is None

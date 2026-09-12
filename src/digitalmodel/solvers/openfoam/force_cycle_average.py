@@ -19,7 +19,8 @@ xyz, viscous xyz; x is the flow direction):
   5. the iteration at which the fitted wobble amplitude falls below `--amp-pct` % of the total.
 
 CLI: python -m digitalmodel.solvers.openfoam.force_cycle_average <case-or-force.dat> [--start 500]
-     [--smooth 25] [--gate-pct 1.0] [--amp-pct 1.0] [--json out.json]
+     [--central-start ITERATION] [--smooth 25] [--gate-pct 1.0] [--amp-pct 1.0]
+     [--json out.json]
 """
 from __future__ import annotations
 
@@ -82,62 +83,107 @@ def extrema(t, y, start, smooth):
 MIN_SEP = 300.0
 
 
-def central_value(iterations, series, period, n_periods=4):
-    """Return a block-based mean and standard error over the newest full periods."""
+def _validated_history(iterations, series, period):
     t = np.asarray(iterations, dtype=float)
     y = np.asarray(series, dtype=float)
     if len(t) != len(y):
         raise ValueError("iterations and series must have the same length")
     if len(t) < 2 or not np.all(np.isfinite(t)) or np.any(np.diff(t) <= 0):
         raise ValueError("iterations must contain at least two increasing finite values")
-    if (
-        not np.isfinite(period)
-        or period <= 0
-        or not isinstance(n_periods, int)
-        or n_periods < 1
-    ):
-        raise ValueError("period must be positive and n_periods a positive integer")
+    if not np.all(np.isfinite(y)):
+        raise ValueError("series must contain only finite values")
+    if not np.isfinite(period) or period <= 0:
+        raise ValueError("period must be positive")
+    return t, y
 
-    half_period = float(period) / 2.0
-    requested_blocks = 2 * int(n_periods)
-    available_blocks = int(math.floor((t[-1] - t[0]) / half_period))
-    available_blocks -= available_blocks % 2
-    blocks = min(requested_blocks, available_blocks)
-    window_end = float(t[-1])
-    window_start = window_end - blocks * half_period
-    selected = (t >= window_start) & (t <= window_end)
-    mean = float(np.mean(y[selected]))
-    result = {
-        "window_start": float(window_start),
-        "window_end": window_end,
-        "blocks": blocks,
-        "periods": blocks // 2,
-        "mean": mean,
-        "standard_error": None,
-        "relative_standard_error_pct": None,
-        "note": None,
-    }
-    if blocks < 4:
-        result["note"] = "fewer than 4 half-period blocks; standard error unavailable"
-        return result
 
+def transient_end(iterations, series, period):
+    """Return the first iteration after the start-up transient.
+
+    The final period defines an eventual mean and peak-to-peak envelope. The end
+    is the earliest iteration from which every complete one-period running mean
+    remains within three final half-envelopes of that eventual mean. This rejects
+    large start-up offsets without mistaking the bounded final oscillation for a
+    transient. Slow drift inside that band or an outlier-inflated final envelope
+    can make the estimate early; histories shorter than two periods cannot
+    establish a transient and return their first iteration.
+    """
+    t, y = _validated_history(iterations, series, period)
+    if t[-1] - t[0] < 2.0 * period:
+        return float(t[0])
+    final = y[t >= t[-1] - period]
+    final_mean = float(np.mean(final))
+    half_envelope = float(np.ptp(final)) / 2.0
+    tolerance = max(3.0 * half_envelope, np.finfo(float).eps * max(abs(final_mean), 1.0))
+    candidates = np.flatnonzero(t <= t[-1] - period)
+    ends = np.searchsorted(t, t[candidates] + period, side="left")
+    cumulative = np.concatenate(([0.0], np.cumsum(y)))
+    means = (cumulative[ends] - cumulative[candidates]) / (ends - candidates)
+    within = np.abs(means - final_mean) <= tolerance
+    stable_suffix = np.logical_and.accumulate(within[::-1])[::-1]
+    matches = candidates[stable_suffix]
+    return float(t[matches[0]]) if len(matches) else float(t[candidates[-1]])
+
+
+def _block_standard_error(t, y, window_start, window_end, blocks, half_period):
     block_means = []
     for index in range(blocks):
         lower = window_start + index * half_period
         upper = lower + half_period
-        block_selected = (t >= lower) & (
-            (t <= upper) if index == blocks - 1 else (t < upper)
-        )
-        if np.any(block_selected):
-            block_means.append(float(np.mean(y[block_selected])))
+        selected = (t >= lower) & ((t <= upper) if index == blocks - 1 else (t < upper))
+        if np.any(selected):
+            block_means.append(float(np.mean(y[selected])))
     if len(block_means) < 4:
-        result["blocks"] = len(block_means)
-        result["periods"] = len(block_means) // 2
-        result["note"] = "fewer than 4 populated half-period blocks; standard error unavailable"
+        return None, len(block_means)
+    return float(np.std(block_means, ddof=1) / math.sqrt(len(block_means))), len(block_means)
+
+
+def central_value(iterations, series, period, n_periods=4, central_start=None):
+    """Return a transient-excluded mean and half-period-block standard error."""
+    t, y = _validated_history(iterations, series, period)
+    if not isinstance(n_periods, int) or n_periods < 1:
+        raise ValueError("n_periods must be a positive integer")
+    detected_end = transient_end(t, y, period) if central_start is None else float(central_start)
+    if not np.isfinite(detected_end) or detected_end < t[0] or detected_end > t[-1]:
+        raise ValueError("central_start must lie within the available history")
+
+    half_period = float(period) / 2.0
+    window_end = float(t[-1])
+    available_periods = int(math.floor((window_end - detected_end) / period))
+    periods_used = min(n_periods, available_periods)
+    window_start = window_end - periods_used * period if periods_used >= 2 else detected_end
+    selected = (t >= window_start) & (t <= window_end)
+    mean = float(np.mean(y[selected]))
+    blocks = 2 * periods_used if periods_used >= 2 else 0
+    window_note = None
+    if periods_used < 2:
+        window_note = "history too short after the transient for two complete periods; standard error unavailable"
+    elif periods_used < n_periods:
+        window_note = f"period count reduced from {n_periods} to {periods_used} after transient exclusion"
+    result = {
+        "window_start": float(window_start),
+        "window_end": window_end,
+        "blocks": blocks,
+        "periods": periods_used,
+        "n_periods_used": periods_used,
+        "n_periods_requested": n_periods,
+        "transient_end": detected_end,
+        "window_note": window_note,
+        "mean": mean,
+        "standard_error": None,
+        "relative_standard_error_pct": None,
+        "note": window_note,
+    }
+    if periods_used < 2:
         return result
-    standard_error = float(np.std(block_means, ddof=1) / math.sqrt(len(block_means)))
-    result["blocks"] = len(block_means)
-    result["periods"] = len(block_means) // 2
+    standard_error, populated_blocks = _block_standard_error(
+        t, y, window_start, window_end, blocks, half_period
+    )
+    result["blocks"] = populated_blocks
+    if standard_error is None:
+        result["note"] = "fewer than 4 populated half-period blocks; standard error unavailable"
+        result["window_note"] = result["note"]
+        return result
     result["standard_error"] = standard_error
     if mean == 0:
         result["note"] = "zero central value; relative standard error unavailable"
@@ -230,9 +276,12 @@ def damped_fit(t, y, t0):
             "period": float(2 * math.pi / abs(popt[3])), "rms_residual": float(math.sqrt(r / len(tt))), "t0": float(t0)}
 
 
-def analyse(path, start=500.0, smooth=25, gate_pct=1.0, amp_pct=1.0):
+def analyse(
+    path, start=500.0, smooth=25, gate_pct=1.0, amp_pct=1.0, central_start=None
+):
     p, t, tot, pr, vi = load_force(path)
     ys, ex = extrema(t, pr, start, smooth)
+    _, history_extrema = extrema(t, pr, t[0], smooth)
     out = {"file": str(p), "rows": int(len(t)), "last_iteration": float(t[-1]), "extrema": [(float(a), float(b), c) for a, b, c in ex]}
     vis_last = float(vi[-400:].mean())
     out["viscous_last400"] = vis_last
@@ -255,17 +304,27 @@ def analyse(path, start=500.0, smooth=25, gate_pct=1.0, amp_pct=1.0):
             out["aitken_pressure"] = float(m); out["aitken_total"] = float(vis_last + m)
     if len(ex) >= 2:
         out["half_period_last"] = float(ex[-1][0] - ex[-2][0])
-        period = float(2.0 * np.median(np.diff([point[0] for point in ex])))
+    if len(history_extrema) >= 2:
+        period_extrema = history_extrema[-7:]
+        period = float(
+            2.0 * np.median(np.diff([point[0] for point in period_extrema]))
+        )
         windows, verdict = envelope_trend(t, pr, period)
         out["envelope_windows"] = windows
         out["envelope_newest"] = windows[-1][2] if windows else None
         out["envelope_verdict"] = verdict
         out["envelope_period"] = period
+        total_central = central_value(t, tot, period, central_start=central_start)
+        common_start = total_central["transient_end"]
         out["central_value"] = {
             "n_periods": 4,
-            "total": central_value(t, tot, period),
-            "pressure": central_value(t, pr, period),
-            "viscous": central_value(t, vi, period),
+            "n_periods_requested": 4,
+            "n_periods_used": total_central["n_periods_used"],
+            "transient_end": common_start,
+            "window_note": total_central["window_note"],
+            "total": total_central,
+            "pressure": central_value(t, pr, period, central_start=common_start),
+            "viscous": central_value(t, vi, period, central_start=common_start),
         }
     else:
         out["envelope_windows"] = []
@@ -331,11 +390,11 @@ def analyse(path, start=500.0, smooth=25, gate_pct=1.0, amp_pct=1.0):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("case"); ap.add_argument("--start", type=float, default=500); ap.add_argument("--smooth", type=int, default=25)
+    ap.add_argument("case"); ap.add_argument("--start", type=float, default=500); ap.add_argument("--central-start", type=float); ap.add_argument("--smooth", type=int, default=25)
     ap.add_argument("--gate-pct", type=float, default=1.0); ap.add_argument("--amp-pct", type=float, default=1.0); ap.add_argument("--min-sep", type=float, default=300); ap.add_argument("--json")
     a = ap.parse_args(argv)
     global MIN_SEP; MIN_SEP = a.min_sep
-    r = analyse(a.case, a.start, a.smooth, a.gate_pct, a.amp_pct)
+    r = analyse(a.case, a.start, a.smooth, a.gate_pct, a.amp_pct, a.central_start)
     kN = lambda v: f"{v / 1000:+.1f}"
     print(f"{r['file']}: {r['rows']} rows to {r['last_iteration']:.0f}; viscous last 400 {kN(r['viscous_last400'])} kN")
     print("pressure-force extrema (it, kN): " + ", ".join(f"{a:.0f}:{kN(b)} {c[0]}" for a, b, c in r["extrema"]))
@@ -355,11 +414,14 @@ def main(argv=None):
         relative = total["relative_standard_error_pct"]
         relative_text = "n/a" if relative is None else f"{relative:.1f} %"
         print(
-            f"central value ({total['periods']} periods): total {kN(total['mean'])} +/- {uncertainty(total)} kN "
+            f"central value ({total['n_periods_used']} of {total['n_periods_requested']} periods, "
+            f"transient ends {total['transient_end']:.0f}): total {kN(total['mean'])} +/- {uncertainty(total)} kN "
             f"({relative_text})  pressure {kN(pressure['mean'])} +/- {uncertainty(pressure)}  "
             f"viscous {kN(viscous['mean'])} +/- {uncertainty(viscous)}  "
             f"[window {total['window_start']:.0f}-{total['window_end']:.0f}, {total['blocks']} blocks]"
         )
+        if total["window_note"]:
+            print(f"central value note  : {total['window_note']}")
     if "cycle_change_pct" in r:
         print(f"CYCLE POWER GATE   : {'PASS' if r['cycle_power_gate'] else 'FAIL'}  (cycle-to-cycle change of the total {r['cycle_change_pct']:.2f} %, gate {a.gate_pct} %)")
     if r["envelope_windows"]:
