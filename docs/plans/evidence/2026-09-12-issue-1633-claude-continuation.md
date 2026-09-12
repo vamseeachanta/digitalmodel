@@ -4,7 +4,7 @@ Reference revision: f5f1bb20. Review tools were read-only. Code-stage verdict: M
 
 VERDICT: MAJOR
 
-The three recorded corrections are partially substantiated. Correction 1 (tolerance callers) and Correction 3 (nonfinite scalars) hold as narrowly stated. Correction 2 (summary refusal preservation) does not support the claim made for it: the ALL PASS path retains an independent false-pass channel that the new regression cannot reach, and the same loop carries a latent exception on the ordinary non-refused shape. Plan text at `D:/ws/digitalmodel/docs/plans/2026-08-03-issue-1633-ship-benchmark-verdict.md` was not readable from this worktree (Read denied on that path; no copy under `docs/plans/` here), so the scope assessment below rests on the evidence document and the code, not on the approved plan wording.
+The three recorded corrections are partially substantiated. Correction 1 (tolerance callers) and Correction 3 (nonfinite scalars) hold as narrowly stated. Correction 2 (summary refusal preservation) does not support the claim made for it: the ALL PASS path retains an independent false-pass channel that the new regression cannot reach, and the same loop carries a latent exception on the ordinary non-refused shape. Plan text at `<canonical-checkout>/docs/plans/2026-08-03-issue-1633-ship-benchmark-verdict.md` was not readable from this worktree (Read denied on that path; no copy under `docs/plans/` here), so the scope assessment below rests on the evidence document and the code, not on the approved plan wording.
 
 ================================================================
 BOUNDED CORRECTION FINDINGS
@@ -91,7 +91,7 @@ SCOPE AND GATE ASSESSMENT
 EVIDENCE CHECKED
 ================================================================
 
-Read in full or in the cited ranges, worktree `D:\ws\_worktrees\digitalmodel-1633-review-fixes`, branch `bugfix/1633-review-blockers`, clean at `f5f1bb20`:
+Read in full or in the cited ranges, worktree `<diffraction-worktree>`, branch `bugfix/1633-review-blockers`, clean at `f5f1bb20`:
 
 - `docs/plans/evidence/2026-09-12-issue-1633-review-corrections.md` (whole file)
 - `tests/hydrodynamics/diffraction/test_review_1633_blockers.py` (whole file)
@@ -109,3 +109,4 @@ Read in full or in the cited ranges, worktree `D:\ws\_worktrees\digitalmodel-163
 Repository-wide greps: `MultiSolverComparator(` / `ComparisonPolicy` / `from_uncertainties` / `tolerance` across `scripts/benchmark/**` and `src/digitalmodel/hydrodynamics/**`; `BenchmarkConfig(` across `src`, `scripts`, `tests`; `derive_status` and `BenchmarkVerdict` across `src` and `scripts`; `ABSENT_DIAGONAL|NOT_APPLICABLE|NULL_RESPONSE|REFUSAL_QUALITIES` across `src`, `scripts`, `tests`; `symmetr|axisymmetric` across `src/digitalmodel/hydrodynamics/diffraction/*.py`; `tolerance=` across `tests/hydrodynamics/diffraction/*.py`.
 
 Not done: no test execution, no solver run, no file writes (read-only constraint). BC-2 and BC-1 are control-flow readings and should be confirmed by running `validate_owd_vs_spec.py --summary-only` against a non-refused artifact set and against a config-only case. The approved plan document was not readable from this worktree.
+
