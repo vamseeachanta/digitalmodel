@@ -21,7 +21,7 @@ def test_changed_plate_or_hole_cannot_pass_frozen_domain(change):
         if change == 'left_out' and node['x_mm'] == 0:
             node['x_mm'] = -10
         elif change == 'left_in' and node['x_mm'] == 0:
-            node['x_mm'] = 10
+            node['x_mm'] = 7
         elif change == 'top_out' and node['y_mm'] == 300:
             node['y_mm'] = 310
         elif change == 'lower_hole' and node['id'] == 25:
