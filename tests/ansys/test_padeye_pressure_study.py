@@ -8,7 +8,9 @@ import pytest
 def synthetic_ring(count=16, nonuniform=False):
     """Independent annular fixture, not the production rectangle generator."""
     upper = [math.pi * i / count for i in range(count + 1)]
-    if nonuniform:
+    if nonuniform == "asymmetric":
+        upper = [math.pi * (i / count)**4 for i in range(count + 1)]
+    elif nonuniform:
         upper = [a + 0.15 * math.sin(2 * a) for a in upper]
     angles = upper + [math.pi + a for a in upper[1:-1]]
     nodes = []
@@ -79,6 +81,29 @@ def test_cdb_formatted_coordinate_and_pressure_precision_is_supported():
         for key in ("p1_mpa", "p2_mpa"):
             row[key] = float(f"{row[key]:.8e}")
     assert verify(mesh, pressures)["status"] == "verified_preparation"
+
+
+def test_scalar_normalization_cannot_repair_asymmetric_polygon_moment():
+    mesh, pressures = synthetic_ring(nonuniform="asymmetric")
+    with pytest.raises(ValueError, match="moment exceeds"):
+        verify(mesh, pressures)
+
+
+@pytest.mark.parametrize("field", ["nodes", "elements", "center_mm"])
+def test_malformed_container_types_are_refused(field):
+    mesh, pressures = synthetic_ring()
+    mesh[field] = 3
+    with pytest.raises(ValueError):
+        verify(mesh, pressures)
+
+
+def test_reordered_export_rows_do_not_change_physical_integration():
+    mesh, pressures = synthetic_ring(32)
+    baseline = verify(mesh, pressures)
+    mesh["nodes"].reverse()
+    mesh["elements"].reverse()
+    pressures.reverse()
+    assert verify(mesh, pressures) == baseline
 
 
 @pytest.mark.parametrize("damage", ["missing", "duplicate", "interior", "lower", "outer",
