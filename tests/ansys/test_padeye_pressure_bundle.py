@@ -38,8 +38,21 @@ def test_composed_native_format_fixture_passes_without_qualification():
     assert result['pressure']['force_n'][1] == pytest.approx(50000, abs=0.001)
     assert result['native_qualification_complete'] is False
     assert result['log_artifact_class'] == 'format_reproduction'
-    assert result['status'] == 'format_fixture_checks_passed'
+    assert result['status'] == 'preparation_content_checks_passed'
     assert result['verified_hashes']['cdb_sha256'] == expected['cdb_sha256']
+
+
+@pytest.mark.parametrize('kind', ['native_capture', 'format_reproduction'])
+def test_caller_classification_never_authenticates_native_capture(kind):
+    files, expected = bundle()
+    expected['log_artifact_class'] = kind
+    result = verify_pressure_bundle(*files, expected)
+    assert result['status'] == 'preparation_content_checks_passed'
+    assert result['log_artifact_class'] == kind
+    assert result['log_artifact_class_independently_verified'] is False
+    assert result['native_capture_independently_verified'] is False
+    assert result['source_revision_independently_verified'] is False
+    assert result['stress_solve_authorized'] is False
 
 
 @pytest.mark.parametrize('index', [0, 1, 2])
