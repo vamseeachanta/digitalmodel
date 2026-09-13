@@ -1,0 +1,12 @@
+{
+  "scope": "Native CDB bytes and extracted shape-format regression fixture; not a complete run receipt",
+  "source_head": "a44cbb0df1588788f69b2c8774063e4a0e04838b",
+  "capture": "20260913T021534Z",
+  "cdb_sha256": "f1b53a670920d562e2d3657e5917a73f1d2f87f7481d9d0cc8aaa3a0e32e599f",
+  "raw_log_sha256": "04d52d9c3f75764fa5c27622feeff5934aeceaca73ffd075d2bbe981b8e9d6a8",
+  "shape_excerpt_sha256": "796cb3d70f342f4a1c9506018ccf204c129d3ff0eacd9e4d7e4e9e1acf9a22c6",
+  "shape_excerpt_method": "Retained native summary block; benign initialization status and final zero totals reproduced as explicit format fixture. Full native log is locally retained, not published. Trailing whitespace was stripped in this format reproduction.",
+  "capture_timezone": "UTC",
+  "capture_local_time": "2026-09-12T21:15:34-05:00",
+  "shape_artifact_class": "format_reproduction"
+}

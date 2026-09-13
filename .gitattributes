@@ -28,3 +28,9 @@
 
 # OrcaWave solver artifacts
 *.owr binary
+
+# Retain the exact executed deck bytes bound by the historical golden digests.
+examples/ansys/pressure-vessel/pv.inp -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+examples/ansys/mudmat/mudmat.inp -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/ansys/fixtures/pressure-coarse-v261.cdb -text whitespace=-blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
+tests/ansys/fixtures/pressure-coarse-shape-v261.txt text eol=lf

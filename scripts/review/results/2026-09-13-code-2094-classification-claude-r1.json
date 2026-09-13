@@ -1,0 +1,60 @@
+{
+  "provider": "Claude CLI",
+  "revision": "43d22d97",
+  "scope": "Narrow bundle contract, classification and source/hash claims only",
+  "source_blobs": [
+    {
+      "path": "tests/ansys/padeye_pressure_bundle.py",
+      "git_blob": "a7e178319a1110d308bfa179be4fe2f8aee7033e",
+      "sha256": "2d93e792adfc336aefec8a8087fa7f1b7a7fe544bdfdffaf9afbde7e21eeabeb",
+      "bytes": 3610
+    },
+    {
+      "path": "tests/ansys/padeye_pressure_domain.py",
+      "git_blob": "f337af33c5eeedb045ac93193fd049fdeccbead5",
+      "sha256": "230a7b93a9adbf8f2a8f4cef3b49626e093cef5ce54c3b1eadee23c8ba637450",
+      "bytes": 2655
+    },
+    {
+      "path": "tests/ansys/padeye_pressure_quality.py",
+      "git_blob": "9a446a73b85fd99e582ee01f520f0b82505961b8",
+      "sha256": "5761eba94e0e3bdb57785e1bbc0cc595a236048617edecfc90c798dd4ba62ce8",
+      "bytes": 2125
+    },
+    {
+      "path": "tests/ansys/test_padeye_pressure_bundle.py",
+      "git_blob": "a9d2ce44e6bad3bf8649f7e9cae9a2c576eca5b0",
+      "sha256": "a58d905136796e33f5e815175b47aaee9f7874de3d850e7beaf1e3f7cc4d15e8",
+      "bytes": 4153
+    },
+    {
+      "path": "tests/ansys/fixtures/pressure-coarse-v261-provenance.json",
+      "git_blob": "8ad6a7bbe359bd38d52adacf7e3868842cc7537d",
+      "sha256": "f032645cb769df199e05efbaa24a8888157d32f372b243f8ca68bcc51911ea50",
+      "bytes": 863
+    }
+  ],
+  "prompt_sha256": "e11b515b5cb223209220dcd1eb69fe0a2ad5c2452770244df7578f7d1c011c33",
+  "status": "VALID",
+  "structured_output": {
+    "verdict": "MAJOR",
+    "findings": [
+      "MAJOR — classification false-accept: `log_artifact_class` is a free caller-supplied string validated only against the literal set `('native_capture','format_reproduction')` in `_check_receipt`. Nothing binds it to the log bytes, to the digest, or to the provenance record. Passing the same `pressure-coarse-shape-v261.txt` fixture with `log_artifact_class='native_capture'` changes `status` to `native_preparation_checks_passed` and the returned `log_artifact_class` to `native_capture` while every other gate is unchanged. A format reproduction is therefore representable as a native capture through the public entry point. Mitigating, not curing: `native_qualification_complete` and `stress_solve_authorized` remain hardcoded `False`, so this is a provenance-classification defect rather than an authorization escalation.",
+      "MAJOR — the receipt schema is closed (`set(expected) != set(keys) | {'source_head','capture_id','log_artifact_class'}`) and has no slot for `raw_log_sha256` or for any derivation evidence. The provenance fixture records `raw_log_sha256` and `shape_artifact_class`, but `verify_pressure_bundle` consumes neither. Consequently the contract cannot carry the one piece of evidence that would separate the two classes, and the claim that `shape_excerpt_sha256` is an excerpt of the log at `raw_log_sha256` is structurally unfalsifiable by this code: no transformation is recorded as a reproducible operation, only as English prose in `shape_excerpt_method`.",
+      "MAJOR — missing test: no case asserts that the supplied format-reproduction fixture is rejected, or even flagged, when declared `native_capture`. Every test in the file passes `'format_reproduction'`. The `native_capture` branch of the `status` ternary and the `native_preparation_checks_passed` string are executed by no supplied test.",
+      "MAJOR — missing tests for three of the five `_check_receipt` validators. There is no case for a malformed `source_head` (non-40-hex), a malformed `capture_id` (non-`YYYYMMDDTHHMMSSZ`), an unsupported `log_artifact_class` value, a non-`bytes` artifact, or a non-hex `expected[key]`. `test_unrecognized_receipt_assertions_are_not_silently_ignored` exercises only the extra-field direction of the set comparison; the missing-field direction (for example, dropping `source_head`) is untested.",
+      "Hash binding is weaker than the `verified_hashes` / `artifact_hashes_verified: 3` naming suggests. Only `input_sha256` is bound to an in-repo frozen constant (`INPUT_MATRIX` keys). `cdb_sha256` and `log_sha256` are supplied by the caller alongside the bytes they cover, so for those two the digest gate is a self-consistency check only and establishes no external attestation. `test_rehashed_wrong_endpoint_pressure_reaches_semantic_rejection` and `test_rehashed_wrong_log_count_reaches_quality_rejection` correctly demonstrate that the semantic gates, not the digests, are the operative defence for the captured artifacts — the returned key names should not imply otherwise.",
+      "`source_head` receives format validation only (`[0-9a-f]{40}`) and is then echoed as `recorded_source_head`. The accompanying `source_revision_independently_verified: False` is accurate and appropriately conservative, and the module docstring states the limit plainly. Recorded here as a material limit rather than a defect: the source-revision claim is caller hearsay with no repository existence check, no tree/blob correspondence check, and no cross-check against the provenance file (which the module never reads).",
+      "`capture_id` validation is lexical, not calendar or freshness bounded: `99999999T999999Z` passes `re.fullmatch(r'\\d{8}T\\d{6}Z', ...)`. The identifier is echoed into the result but bound to nothing — no artifact, no digest, no `capture_local_time`/`capture_timezone` consistency check against the provenance fields (which are unused by the module). The fixture's own pair is internally consistent (20260913T021534Z ↔ 2026-09-12T21:15:34-05:00), but that consistency is a property of the hand-written fixture, not of any check in the code.",
+      "`INPUT_MATRIX` carries three entries but only the 16-edge row is exercised end-to-end. The `(32, 4284, 4128)` and `(64, 16824, 16512)` node/element counts are asserted against no artifact anywhere in the supplied tests: `test_all_generated_levels_have_fixed_lf_bytes_and_independent_pressure_verification` checks the generator input digests and an independent pressure resultant, but never routes those levels through `verify_pressure_bundle`, so the `'native mesh counts differ from frozen matrix'` branch is untested and two thirds of the frozen matrix is unverified. A transcription error in either row would be silent until a future capture exists.",
+      "Exception funnel is narrower than the imported surface. `verify_pressure_bundle` catches only `(KeyError, TypeError, UnicodeError)`. `parse_pressure_cdb`, `verify_pressure_mesh` and `assess_shape_output` may raise other types on malformed input; in `padeye_pressure_domain._boundaries`, the tuple unpack `a, b = (nodes[node] for node in faces[owners[0]])` raises a bare `ValueError` with an unpacking message for any face that is not two-noded, which escapes the domain module's own `(KeyError, TypeError, OverflowError)` wrapper and surfaces to callers as an unrelated diagnostic. Tests using bare `pytest.raises(ValueError)` would not distinguish this from an intended rejection. Not verifiable further without the unsupplied helpers.",
+      "Shape-log gate (in scope only as it underwrites the native-capture claim): `states[-1] != 'ON WITH DEFAULT LIMITS'` plus `set(states) <= allowed` establishes ordering only over the last matched line in the pre-summary text. It does not establish that default shape checking was active during mesh generation, and it detects a disabled state only if ANSYS phrases it as the exact `ELEMENT SHAPE CHECKING IS ...` capture; an alternative phrasing for suspension would be invisible to the regex. `'ALREADY ON'` is accepted without establishing default limits.",
+      "Shape-log gate: `counts = re.findall(r'Element count\\s+(\\d+)\\s+PLANE182', summary)` matched against `[str(expected_elements)]` constrains PLANE182 rows only. Additional element types reported in the same summary block are ignored rather than rejected. Element-type homogeneity is instead implied by the unsupplied `parse_pressure_cdb`/`_configuration` path, which this review cannot confirm.",
+      "Format reproduction is acknowledged to be non-byte-faithful — `shape_excerpt_method` states trailing whitespace was stripped and that initialization status and final zero totals were 'reproduced'. The regexes in `assess_shape_output` are whitespace-tolerant (`[^\\r\\n]+` with `.strip()`, `\\s*%`), so passing on this fixture demonstrates that the gate accepts the reproduction; it does not demonstrate that it accepts, or would correctly reject, bytes from a native solver log. No test consumes the artifact at `raw_log_sha256`. This is the central evidentiary gap behind the classification finding.",
+      "Preparation-versus-qualification separation is handled correctly and should be preserved: `native_qualification_complete: False` and `stress_solve_authorized: False` are unconditional literals in the return dict, not derived from caller input, and `assess_shape_output` independently returns `native_qualification_complete: False`. The module docstrings and the provenance `scope` field ('not a complete run receipt') are consistent with what the code actually establishes. No stress-qualification claim is made or implied by the supplied code.",
+      "Ordering of gates is sound: `_check_receipt` runs before `INPUT_MATRIX` membership, and membership runs before parsing, so `test_altered_input_database_or_log_rejected` is correctly a digest-gate test and the three rehash tests are correctly semantic-gate tests. `test_self_rehashed_changed_generator_is_not_the_frozen_case` closes the obvious self-attestation path for the generator input.",
+      "LIMIT — `parse_pressure_cdb`, `verify_frozen_pressure_domain`'s helpers (`_configuration`, `_nodes`, `_topology`, `_require`), `verify_pressure_mesh`, `assess_shape_output`'s fixture input, `build_pressure_mesh`, `generate_pressure_preparation`, `pressure_geometry`, `pressure-coarse-v261.cdb` and `pressure-coarse-shape-v261.txt` were not supplied. The frozen digests in `INPUT_MATRIX` and `INPUT_HASHES`, the 1110/1032 counts, the 50000 N resultant, and the area target `120000 - count*40**2*sin(pi/count)` were not recomputed or executed. Domain-module observations (non-manifold edges with `len(owners) != 1` being skipped rather than rejected; no explicit per-element orientation/Jacobian check independent of the shape log) are noted for completeness and fall outside the requested bundle/classification scope.",
+      "LIMIT — external receipt authenticity is out of reach of this code by construction and is not asserted to have been checked. The caller attests receipt of the external capture; the recorded source revision is explicitly not independently verified, and this review does not treat the provenance JSON as independent evidence of anything beyond its own contents."
+    ]
+  }
+}
