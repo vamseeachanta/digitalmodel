@@ -3,10 +3,12 @@
 
     uv run python examples/ansys/padeye/build.py
     uv run python examples/ansys/padeye/build.py --mesh-study-dir results/mesh-study
+    uv run python examples/ansys/padeye/build.py --pressure-study-dir results/pressure-study
 
 The candidate has t/D = 0.1 (8 mm thickness / 80 mm hole diameter). Its
 plane-stress idealisation establishes no pin/contact or 3D qualification.
-Native stress and mesh-convergence evidence remain pending.
+Equal-force diagnostic stresses are captured; convergence remains unestablished.
+The separate pressure study prepares inputs only and contains no SOLVE command.
 
 Edit the PadeyeGeometry below (or import and parameterise) and re-run to refresh
 padeye.inp. Dispatch the solve on a licensed host via input.yml (#940/#948).
@@ -16,6 +18,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from digitalmodel.ansys.padeye import PadeyeGeometry, write_padeye_inp
+from digitalmodel.ansys.padeye_pressure import prepare_pressure_study
 
 HERE = Path(__file__).resolve().parent
 
@@ -47,9 +50,12 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mesh-study-dir", type=Path)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--mesh-study-dir", type=Path)
+    group.add_argument("--pressure-study-dir", type=Path)
     args = parser.parse_args()
-    outputs = (prepare_mesh_study(args.mesh_study_dir) if args.mesh_study_dir
+    outputs = (prepare_pressure_study(args.pressure_study_dir) if args.pressure_study_dir
+               else prepare_mesh_study(args.mesh_study_dir) if args.mesh_study_dir
                else (write_padeye_inp(GEOM, HERE / "padeye.inp"),))
     for out in outputs:
         print(f"wrote {out}; native qualification pending")
