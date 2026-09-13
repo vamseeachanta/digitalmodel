@@ -1,0 +1,5 @@
+........................................................................ [ 50%]
+.....................................................................s   [100%]
+=========================== short test summary info ============================
+SKIPPED [1] tests/solvers/ghs/test_windows_qualification.py:7: Explicit Windows harmless-sentinel acceptance only
+141 passed, 1 skipped in 7.50s

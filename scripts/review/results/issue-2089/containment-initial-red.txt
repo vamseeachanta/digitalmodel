@@ -1,0 +1,29 @@
+
+==================================== ERRORS ====================================
+___________ ERROR collecting tests/solvers/ghs/test_qualification.py ___________
+ImportError while importing test module '/mnt/ace/ws/agent-worktrees/dm-2089-containment-plan/tests/solvers/ghs/test_qualification.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+tests/solvers/ghs/test_qualification.py:9: in <module>
+    from digitalmodel.solvers.ghs import qualification as q
+E   ImportError: cannot import name 'qualification' from 'digitalmodel.solvers.ghs' (/mnt/ace/ws/agent-worktrees/dm-2089-containment-plan/src/digitalmodel/solvers/ghs/__init__.py)
+____________ ERROR collecting tests/solvers/ghs/test_windows_job.py ____________
+ImportError while importing test module '/mnt/ace/ws/agent-worktrees/dm-2089-containment-plan/tests/solvers/ghs/test_windows_job.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+tests/solvers/ghs/test_windows_job.py:5: in <module>
+    from digitalmodel.solvers.ghs import _windows_job as w
+E   ImportError: cannot import name '_windows_job' from 'digitalmodel.solvers.ghs' (/mnt/ace/ws/agent-worktrees/dm-2089-containment-plan/src/digitalmodel/solvers/ghs/__init__.py)
+_______ ERROR collecting tests/solvers/ghs/test_windows_qualification.py _______
+ImportError while importing test module '/mnt/ace/ws/agent-worktrees/dm-2089-containment-plan/tests/solvers/ghs/test_windows_qualification.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+tests/solvers/ghs/test_windows_qualification.py:4: in <module>
+    from digitalmodel.solvers.ghs import qualification as q
+E   ImportError: cannot import name 'qualification' from 'digitalmodel.solvers.ghs' (/mnt/ace/ws/agent-worktrees/dm-2089-containment-plan/src/digitalmodel/solvers/ghs/__init__.py)
+=========================== short test summary info ============================
+ERROR tests/solvers/ghs/test_qualification.py
+ERROR tests/solvers/ghs/test_windows_job.py
+ERROR tests/solvers/ghs/test_windows_qualification.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 3 errors during collection !!!!!!!!!!!!!!!!!!!!
+3 errors in 5.96s
