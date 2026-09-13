@@ -76,6 +76,13 @@ def test_case_files_are_separate_and_do_not_overwrite(tmp_path):
     assert not list(tmp_path.rglob('*.rst'))
 
 
+def test_example_build_exposes_separate_pressure_preparation(tmp_path):
+    from tests.ansys.test_padeye_preparation import load_build
+    paths = load_build().prepare_pressure_study(tmp_path)
+    assert len(paths) == 3
+    assert all(p.name == 'pressure_prepare.inp' for p in paths)
+
+
 @pytest.mark.parametrize('size,lf,crlf', [
     (10, '9d0c99dd48fa12117f8d971374563a1f10430f19176dab2c338bb8213416c2ff',
      '6900ea44695fed80031f007b5fe79e1926b626877b7d31582a0d1199b80ce084'),
