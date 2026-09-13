@@ -27,6 +27,12 @@ def test_complete_default_shape_summary_passes():
     assert result['native_qualification_complete'] is False
 
 
+def test_observed_native_initialization_status_sequence_is_supported():
+    text = ('ELEMENT SHAPE CHECKING IS ALREADY USING DEFAULT LIMITS\n'
+            'ELEMENT SHAPE CHECKING IS ALREADY ON\n' + summary())
+    assert assess_shape_output(text, 1032)['shape_gate_passed'] is True
+
+
 @pytest.mark.parametrize('text', [
     summary(34), summary().replace('DEFAULT LIMITS', 'MODIFIED LIMITS'),
     summary().replace('Maximum Angle 1032', 'Maximum Angle 1031'),
