@@ -52,6 +52,7 @@ def test_caller_classification_never_authenticates_native_capture(kind):
     assert result['log_artifact_class_independently_verified'] is False
     assert result['native_capture_independently_verified'] is False
     assert result['source_revision_independently_verified'] is False
+    assert result['native_qualification_complete'] is False
     assert result['stress_solve_authorized'] is False
 
 
