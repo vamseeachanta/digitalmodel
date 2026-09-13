@@ -2,6 +2,50 @@
   "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2094",
   "approval": "https://github.com/vamseeachanta/digitalmodel/issues/2094#issuecomment-5650114708",
   "scope": "native coarse preparation only; no stress solution",
+  "review_annotation": {
+    "recorded_on": "2026-09-13",
+    "kind": "documentation_only_no_reexecution",
+    "baseline_receipt_revision": "f77178876b547773c99b2cf007fb1bf95afaf211",
+    "baseline_receipt_path": "docs/plans/evidence/2026-09-12-issue-2094-pressure-preparation.json",
+    "baseline_receipt_sha256": "74e6faf9330fdd7a37a4b40cf323a78e8e0c7bd4ec6a738bb3200b796284c938",
+    "comparison_method": "The orchestration reads baseline canonical Git bytes at the recorded revision, verifies their SHA-256, parses baseline and annotated JSON, removes only review_annotation from the annotated object, and checks full recursive equality. This caller-run content check does not authenticate the historical capture.",
+    "compared_top_level_fields": ["issue", "approval", "scope", "audit_source_head", "native_qualification_complete", "stress_solve_authorized", "captures", "corrected_native_mesh"],
+    "historical_record_policy": "The original audit_source_head, both captures, all inputs, digests, computed values and dispositions remain unchanged. The annotation does not create a new capture or evaluation.",
+    "historical_status_location": "captures[1].composed_check.status",
+    "historical_status": "native_preparation_checks_passed",
+    "historical_source_binding_interpretation": {
+      "location": "captures[*].source_binding_verified",
+      "historical_value": true,
+      "interpretation": "Historical audit claims retained verbatim. This documentation correction does not independently verify those claims or establish source-revision or artifact binding. They do not override captures[1].composed_check.source_revision_independently_verified=false or pressure_check.native_binding_verified=false. The current helper independently authenticates neither source revision nor native capture."
+    },
+    "historical_log_class_interpretation": {
+      "location": "captures[1].composed_check.log_artifact_class",
+      "historical_value": "native_capture",
+      "interpretation": "Recorded caller-attested metadata, not an independently verified artifact class. The public shape fixture is separately labelled format_reproduction by tests/ansys/fixtures/pressure-coarse-v261-provenance.json:shape_artifact_class. The annotation does not establish derivation of that fixture from the recorded raw log."
+    },
+    "current_helper_readback": {
+      "revision": "f77178876b547773c99b2cf007fb1bf95afaf211",
+      "path": "tests/ansys/padeye_pressure_bundle.py",
+      "sha256": "c9a040189da979fc87cc52dfe84a15c93bc73c6d753e26a0756d4224273cc95d",
+      "status_literal": "preparation_content_checks_passed",
+      "log_artifact_class_independently_verified_literal": false,
+      "native_capture_independently_verified_literal": false,
+      "interpretation": "These literals describe current source-code semantics, not rerun results. Historical native-preparation wording does not establish independent native-capture or source-revision authenticity."
+    },
+    "error_count_evidence": {
+      "failed_capture": {
+        "capture_id": "20260913T021014Z",
+        "error_count": null,
+        "status": "not_recorded_in_historical_receipt"
+      },
+      "corrected_capture": {
+        "capture_id": "20260913T021534Z",
+        "error_count": 0,
+        "source_field": "captures[1].shape_gate.error_count"
+      }
+    },
+    "remaining_review_status": "unresolved_broader_implementation_and_evidence_review; no independent native or stress qualification"
+  },
   "audit_source_head": "851d1e1439ac23bcfdf76e85608f87c2bdab216f",
   "native_qualification_complete": false,
   "stress_solve_authorized": false,
