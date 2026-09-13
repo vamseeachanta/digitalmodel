@@ -1,5 +1,6 @@
 """Composition and fixed-input checks, including an observed native CDB fixture."""
 import hashlib
+import json
 from pathlib import Path
 
 import pytest
@@ -20,9 +21,11 @@ def bundle():
     files = [generate_pressure_preparation(pressure_geometry(10)).encode(),
              (FIXTURES/'pressure-coarse-v261.cdb').read_bytes(),
              (FIXTURES/'pressure-coarse-shape-v261.txt').read_bytes()]
-    expected = dict(zip(('input_sha256', 'cdb_sha256', 'log_sha256'),
-                        [hashlib.sha256(data).hexdigest() for data in files]))
-    expected['source_head'] = 'a44cbb0d' + '0'*32
+    provenance = json.loads((FIXTURES/'pressure-coarse-v261-provenance.json').read_text())
+    expected = {'input_sha256': INPUT_HASHES[10], 'cdb_sha256': provenance['cdb_sha256'],
+                'log_sha256': provenance['shape_excerpt_sha256'],
+                'source_head': provenance['source_head'], 'capture_id': provenance['capture'],
+                'log_artifact_class': 'format_reproduction'}
     return files, expected
 
 
@@ -34,6 +37,9 @@ def test_composed_native_format_fixture_passes_without_qualification():
     assert result['shape']['shape_gate_passed'] is True
     assert result['pressure']['force_n'][1] == pytest.approx(50000, abs=0.001)
     assert result['native_qualification_complete'] is False
+    assert result['log_artifact_class'] == 'format_reproduction'
+    assert result['status'] == 'format_fixture_checks_passed'
+    assert result['verified_hashes']['cdb_sha256'] == expected['cdb_sha256']
 
 
 @pytest.mark.parametrize('index', [0, 1, 2])
@@ -48,6 +54,33 @@ def test_self_rehashed_changed_generator_is_not_the_frozen_case():
     files, expected = bundle()
     files[0] += b'! changed generator\n'
     expected['input_sha256'] = hashlib.sha256(files[0]).hexdigest()
+    with pytest.raises(ValueError):
+        verify_pressure_bundle(*files, expected)
+
+
+def test_rehashed_wrong_endpoint_pressure_reaches_semantic_rejection():
+    files, expected = bundle()
+    lines = files[1].splitlines(keepends=True)
+    i = next(i for i, line in enumerate(lines) if line.startswith(b'SFEBLOCK')) + 2
+    lines[i] = lines[i][:17] + f'{1.0:20.9g}'.encode() + lines[i][37:]
+    files[1] = b''.join(lines)
+    expected['cdb_sha256'] = hashlib.sha256(files[1]).hexdigest()
+    with pytest.raises(ValueError, match='pressure shape'):
+        verify_pressure_bundle(*files, expected)
+
+
+def test_rehashed_wrong_log_count_reaches_quality_rejection():
+    import re
+    files, expected = bundle()
+    files[2] = re.sub(rb'(Element count\s+)1032', rb'\g<1>1031', files[2])
+    expected['log_sha256'] = hashlib.sha256(files[2]).hexdigest()
+    with pytest.raises(ValueError, match='shape element count'):
+        verify_pressure_bundle(*files, expected)
+
+
+def test_unrecognized_receipt_assertions_are_not_silently_ignored():
+    files, expected = bundle()
+    expected['native_qualification_complete'] = True
     with pytest.raises(ValueError):
         verify_pressure_bundle(*files, expected)
 
