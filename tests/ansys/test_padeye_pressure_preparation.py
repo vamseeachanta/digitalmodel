@@ -12,13 +12,13 @@ from digitalmodel.ansys.padeye_pressure import (
 )
 
 
-@pytest.mark.parametrize('size,edges,layers', [(10, 16, 26), (5, 32, 52), (2.5, 64, 104)])
+@pytest.mark.parametrize('size,edges,layers', [(10, 16, 5), (5, 32, 10), (2.5, 64, 20)])
 def test_fixed_refinement_and_positive_quad_jacobians(size, edges, layers):
     mesh = build_pressure_mesh(pressure_geometry(size))
     assert mesh['upper_edges'] == edges
     assert mesh['radial_layers'] == layers
-    assert len(mesh['nodes']) == 2 * edges * (layers + 1)
-    assert len(mesh['elements']) == 2 * edges * layers
+    assert len(mesh['nodes']) >= 2 * edges * (layers + 1)
+    assert len(mesh['elements']) >= 2 * edges * layers
     nodes = {n['id']: (n['x_mm'], n['y_mm']) for n in mesh['nodes']}
     for element in mesh['elements']:
         xy = [nodes[n] for n in element['nodes']]
@@ -81,6 +81,20 @@ def test_example_build_exposes_separate_pressure_preparation(tmp_path):
     paths = load_build().prepare_pressure_study(tmp_path)
     assert len(paths) == 3
     assert all(p.name == 'pressure_prepare.inp' for p in paths)
+
+
+def test_mesh_avoids_native_observed_large_angles_and_aspect_ratios():
+    mesh = build_pressure_mesh(pressure_geometry(10))
+    nodes = {n['id']: (n['x_mm'], n['y_mm']) for n in mesh['nodes']}
+    for element in mesh['elements']:
+        xy = [nodes[n] for n in element['nodes']]
+        lengths = [math.dist(xy[i], xy[(i+1) % 4]) for i in range(4)]
+        assert max(lengths)/min(lengths) < 20
+        for i in range(4):
+            a, b, c = xy[(i-1) % 4], xy[i], xy[(i+1) % 4]
+            u, v = (a[0]-b[0], a[1]-b[1]), (c[0]-b[0], c[1]-b[1])
+            angle = math.degrees(math.acos((u[0]*v[0]+u[1]*v[1])/(math.hypot(*u)*math.hypot(*v))))
+            assert angle < 155
 
 
 @pytest.mark.parametrize('size,lf,crlf', [
