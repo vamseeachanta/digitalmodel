@@ -70,6 +70,21 @@ def test_observed_block_profile_and_blank_z():
     assert pressures[0] == {"element": 1, "face": 4, "p1_mpa": 1, "p2_mpa": 2}
 
 
+def test_blank_export_separator_outside_blocks():
+    mesh, _ = parse(synthetic_cdb().replace("/PREP7", "/PREP7\n\n"))
+    assert len(mesh["nodes"]) == 64
+
+
+def test_native_omits_trailing_zero_y_at_base():
+    lines = synthetic_cdb().splitlines()
+    start = lines.index("(3i9,6e21.13e3)") + 1
+    for i in range(start, start + 64):
+        if abs(float(lines[i][48:69])) < 1e-7:
+            lines[i] = lines[i][:48]
+    mesh, _ = parse("\n".join(lines))
+    assert len(mesh["fixed_base_node_ids"]) == 9
+
+
 @pytest.mark.parametrize("old,new", [
     ("2026 R1.01", "2025 R1.01"), ("NBLOCK,6", "NBLOCK,3"),
     ("64,64", "64,63"), ("32,32", "32,31"),
