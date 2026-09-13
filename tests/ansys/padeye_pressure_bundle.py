@@ -2,7 +2,8 @@
 
 The expected mapping must come from the frozen external capture receipt, not
 be recomputed from the candidate artifacts. Hash matching does not authenticate
-that receipt or independently establish its source-revision claim.
+that receipt or independently establish its source-revision or artifact-class
+claims. Returned classification is recorded caller metadata, not verification.
 """
 import hashlib
 import re
@@ -51,9 +52,10 @@ def verify_pressure_bundle(input_bytes, cdb_bytes, log_bytes, expected):
         pressure = verify_pressure_mesh(mesh, pressures)
         shape = assess_shape_output(log_bytes.decode('utf-8'), element_count)
         kind = expected['log_artifact_class']
-        status = 'native_preparation_checks_passed' if kind == 'native_capture' else 'format_fixture_checks_passed'
-        return {'status': status, 'artifact_hashes_verified': 3,
+        return {'status': 'preparation_content_checks_passed', 'artifact_hashes_verified': 3,
                 'log_artifact_class': kind, 'capture_id': expected['capture_id'],
+                'log_artifact_class_independently_verified': False,
+                'native_capture_independently_verified': False,
                 'verified_hashes': hashes,
                 'recorded_source_head': expected['source_head'],
                 'source_revision_independently_verified': False,
