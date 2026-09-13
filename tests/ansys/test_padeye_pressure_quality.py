@@ -32,6 +32,7 @@ def test_complete_default_shape_summary_passes():
     summary().replace('Maximum Angle 1032', 'Maximum Angle 1031'),
     summary().replace('Jacobian Ratio 1032 0 0 0.00 %', ''),
     summary()+summary(), summary().replace('ENCOUNTERED= 0', 'ENCOUNTERED= 1'),
+    summary().replace('SHAPE TESTING SUMMARY', 'ELEMENT SHAPE CHECKING IS ON WITH MODIFIED LIMITS\nSHAPE TESTING SUMMARY'),
     summary().replace('Any 1032', 'Any 1031'),
     summary()+'\n*** ERROR *** database export failed',
 ])
