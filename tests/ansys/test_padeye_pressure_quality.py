@@ -50,3 +50,9 @@ def test_missing_partial_duplicated_or_failed_summary_refuses(text):
 def test_wrong_expected_mesh_count_refuses():
     with pytest.raises(ValueError):
         assess_shape_output(summary(), 832)
+
+
+@pytest.mark.parametrize('invalid', [None, 1, {}])
+def test_nontext_log_refuses_with_value_error(invalid):
+    with pytest.raises(ValueError):
+        assess_shape_output(invalid, 1032)
