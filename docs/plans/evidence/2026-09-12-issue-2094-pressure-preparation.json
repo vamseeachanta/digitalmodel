@@ -1,0 +1,212 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2094",
+  "approval": "https://github.com/vamseeachanta/digitalmodel/issues/2094#issuecomment-5650114708",
+  "scope": "native coarse preparation only; no stress solution",
+  "audit_source_head": "851d1e1439ac23bcfdf76e85608f87c2bdab216f",
+  "native_qualification_complete": false,
+  "stress_solve_authorized": false,
+  "captures": [
+    {
+      "created_utc": "20260913T021014Z",
+      "source_head": "fb515fe0a536ee5c52dbf93bae4ba232a70cd078",
+      "input_sha256": "943b06aa01fbbfe43bd622456c44af0d9c8913e1a53d0873a2845ee26d151b59",
+      "operator_sha256": "a44d03315d05a7b08883e03f854ce4b12f12e6f6d0c2c7226088ab75a6928bcc",
+      "executable_sha256": "6c6327f6b906db8e6dd498bd38c97685d7e3e4acf52fccbf243b2dff7ed7af1b",
+      "duration_seconds": 20.358999999938533,
+      "seat_lock_released": true,
+      "artifacts": [
+        {
+          "path": "mesh-10mm/file.err",
+          "sha256": "9de76f3bd86f7d14d920bbcd3bce3f59275d7229e51981b758752f74ceadb823"
+        },
+        {
+          "path": "mesh-10mm/file.log",
+          "sha256": "777ae31120a72dcb75ee6866fe1e6781260efceb6676079c6098ed91ff21acde"
+        },
+        {
+          "path": "mesh-10mm/pressure_faces.txt",
+          "sha256": "147501a3db12829daabb1927a17b0e6cfbea66a1e961f0219ad479234db71279"
+        },
+        {
+          "path": "mesh-10mm/pressure_intent.json",
+          "sha256": "2a0de9c11c8513ca36fea13d9eb134527e37d7f16c6629c73d2a923dd7baaf5a"
+        },
+        {
+          "path": "mesh-10mm/pressure_native.cdb",
+          "sha256": "2844eac33b334cd67469c9d49d21bbd1cc600a010f473a2b7a96522eb966c8fe"
+        },
+        {
+          "path": "mesh-10mm/pressure_prepare.inp",
+          "sha256": "943b06aa01fbbfe43bd622456c44af0d9c8913e1a53d0873a2845ee26d151b59"
+        },
+        {
+          "path": "mesh-10mm/pressure_prepare.out",
+          "sha256": "66d84c54a5833e51f65b57258d2cb8b7df826bc70057053f527166af7953a20d"
+        }
+      ],
+      "artifact_hashes_verified": 7,
+      "source_binding_verified": true,
+      "node_count": 864,
+      "element_count": 832,
+      "pressure_faces": 16,
+      "pressure_check": {
+        "status": "verified_preparation",
+        "force_n": [
+          -1.1368683772161603e-13,
+          49999.99999053805
+        ],
+        "moment_hole_nmm": -8.313350008393172e-12,
+        "moment_origin_nmm": 9999999.998107608,
+        "alpha": 1.0116327567281769,
+        "unscaled_force_n": [
+          -7.958078640513122e-13,
+          49425.05041227611
+        ],
+        "unscaled_moment_hole_nmm": -1.2875034371973015e-11,
+        "upper_edges": 16,
+        "evidence_scope": "structured_pressure_mesh_only",
+        "native_binding_verified": false,
+        "native_qualification_complete": false
+      },
+      "native_qualification_complete": false,
+      "shape_gate": {
+        "passed": false,
+        "reason": "incomplete or failed native shape check: Aspect Ratio",
+        "elements_with_warnings": 34,
+        "warning_messages": 104
+      },
+      "disposition": "retained_failed_preparation"
+    },
+    {
+      "created_utc": "20260913T021534Z",
+      "source_head": "a44cbb0df1588788f69b2c8774063e4a0e04838b",
+      "input_sha256": "a54f2e7a3bee45b3943dd98b23e1a9b340c33745f083a6ccf48ffa8af2fef18a",
+      "operator_sha256": "a44d03315d05a7b08883e03f854ce4b12f12e6f6d0c2c7226088ab75a6928bcc",
+      "executable_sha256": "6c6327f6b906db8e6dd498bd38c97685d7e3e4acf52fccbf243b2dff7ed7af1b",
+      "duration_seconds": 18.531999999890104,
+      "seat_lock_released": true,
+      "artifacts": [
+        {
+          "path": "mesh-10mm/file.err",
+          "sha256": "00c60928e2d6e59aaff8c559bd9b0fe6d8976fb8a4b5a4225fe5761531a9cb8f"
+        },
+        {
+          "path": "mesh-10mm/file.log",
+          "sha256": "98922813fd8bc78f93ad0d5516d4c00e6ddcedbffb7ba3ab17b562063b9e7d85"
+        },
+        {
+          "path": "mesh-10mm/pressure_faces.txt",
+          "sha256": "0ccd6172ca2093369691ad1f546c87c9ad7cf412f91cbcf721060fef01e6583f"
+        },
+        {
+          "path": "mesh-10mm/pressure_intent.json",
+          "sha256": "af0178842e15fd9a65b530c78deffef59bddfa5ee26f522d4b55d1bcf22beab1"
+        },
+        {
+          "path": "mesh-10mm/pressure_native.cdb",
+          "sha256": "f1b53a670920d562e2d3657e5917a73f1d2f87f7481d9d0cc8aaa3a0e32e599f"
+        },
+        {
+          "path": "mesh-10mm/pressure_prepare.inp",
+          "sha256": "a54f2e7a3bee45b3943dd98b23e1a9b340c33745f083a6ccf48ffa8af2fef18a"
+        },
+        {
+          "path": "mesh-10mm/pressure_prepare.out",
+          "sha256": "04d52d9c3f75764fa5c27622feeff5934aeceaca73ffd075d2bbe981b8e9d6a8"
+        }
+      ],
+      "artifact_hashes_verified": 7,
+      "source_binding_verified": true,
+      "node_count": 1110,
+      "element_count": 1032,
+      "pressure_faces": 16,
+      "pressure_check": {
+        "status": "verified_preparation",
+        "force_n": [
+          -3.410605131648481e-13,
+          50000.000023287124
+        ],
+        "moment_hole_nmm": -3.410605131648481e-12,
+        "moment_origin_nmm": 10000000.004657425,
+        "alpha": 1.006454542799641,
+        "unscaled_force_n": [
+          9.094947017729282e-13,
+          49679.34255720649
+        ],
+        "unscaled_moment_hole_nmm": -2.3874235921539366e-12,
+        "upper_edges": 16,
+        "evidence_scope": "structured_pressure_mesh_only",
+        "native_binding_verified": false,
+        "native_qualification_complete": false
+      },
+      "native_qualification_complete": false,
+      "domain_check": {
+        "frozen_domain_verified": true,
+        "outer_perimeter_mm": 1400.0,
+        "area_mm2": 115005.6877563875,
+        "hole_edges": 32
+      },
+      "shape_gate": {
+        "shape_gate_passed": true,
+        "elements_tested": 1032,
+        "default_shape_limits": true,
+        "warning_count": 0,
+        "error_count": 0,
+        "native_qualification_complete": false
+      },
+      "composed_check": {
+        "status": "native_preparation_checks_passed",
+        "artifact_hashes_verified": 3,
+        "log_artifact_class": "native_capture",
+        "capture_id": "20260913T021534Z",
+        "verified_hashes": {
+          "input_sha256": "a54f2e7a3bee45b3943dd98b23e1a9b340c33745f083a6ccf48ffa8af2fef18a",
+          "cdb_sha256": "f1b53a670920d562e2d3657e5917a73f1d2f87f7481d9d0cc8aaa3a0e32e599f",
+          "log_sha256": "04d52d9c3f75764fa5c27622feeff5934aeceaca73ffd075d2bbe981b8e9d6a8"
+        },
+        "recorded_source_head": "a44cbb0df1588788f69b2c8774063e4a0e04838b",
+        "source_revision_independently_verified": false,
+        "domain": {
+          "frozen_domain_verified": true,
+          "outer_perimeter_mm": 1400.0,
+          "area_mm2": 115005.6877563875,
+          "hole_edges": 32
+        },
+        "pressure": {
+          "status": "verified_preparation",
+          "force_n": [
+            -3.410605131648481e-13,
+            50000.000023287124
+          ],
+          "moment_hole_nmm": -3.410605131648481e-12,
+          "moment_origin_nmm": 10000000.004657425,
+          "alpha": 1.006454542799641,
+          "unscaled_force_n": [
+            9.094947017729282e-13,
+            49679.34255720649
+          ],
+          "unscaled_moment_hole_nmm": -2.3874235921539366e-12,
+          "upper_edges": 16,
+          "evidence_scope": "structured_pressure_mesh_only",
+          "native_binding_verified": false,
+          "native_qualification_complete": false
+        },
+        "shape": {
+          "shape_gate_passed": true,
+          "elements_tested": 1032,
+          "default_shape_limits": true,
+          "warning_count": 0,
+          "error_count": 0,
+          "native_qualification_complete": false
+        },
+        "native_qualification_complete": false,
+        "stress_solve_authorized": false
+      },
+      "disposition": "coarse_preparation_verified"
+    }
+  ],
+  "corrected_native_mesh": {
+    "nodes": 1110,
+    "elements": 1032
+  }
+}

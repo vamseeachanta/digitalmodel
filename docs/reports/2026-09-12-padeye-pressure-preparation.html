@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Padeye pressure preparation — technical report supplement</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;color:#173245;background:#edf2f5;margin:0}main{max-width:1040px;margin:auto;background:white;padding:44px}h1{font-size:34px;line-height:1.2}h2{margin-top:36px;border-bottom:2px solid #ccdce5}a{color:#075783}nav{display:flex;flex-wrap:wrap;gap:18px}.status{padding:18px;border-left:5px solid #bd7800;background:#fff5df}table{border-collapse:collapse;width:100%;font-size:15px}th,td{padding:9px;text-align:left;border-bottom:1px solid #d6e0e7}th{background:#edf3f6}caption{caption-side:bottom;text-align:left;padding:8px 0;color:#526572}figure{margin:24px 0}img{width:100%;height:auto}figcaption{color:#526572}code{overflow-wrap:anywhere}small{color:#526572}@media(max-width:650px){main{padding:20px}table{font-size:12px}th,td{padding:5px}}</style></head>
+<body><main><header><small>Technical review draft · Revision 0 · 12 September 2026 · Neutral verification model</small>
+<h1>Padeye pressure preparation</h1><p>Supplement to the consolidated solver-automation technical report.</p></header>
+<nav><a href="#finding">Finding</a><a href="#basis">Basis</a><a href="#method">Method</a><a href="#results">Results</a><a href="#verification">Verification</a><a href="#limits">Limitations</a><a href="#references">Evidence</a></nav>
+<section id="finding"><h2>1. Finding and authorization</h2>
+<p class="status">The corrected coarse pressure model passes the defined native preparation gates. This finding covers load application, frozen geometry and element shape. A stress result, convergence conclusion and qualified golden case are not established.</p>
+<p>The <a href="https://github.com/vamseeachanta/digitalmodel/issues/2094#issuecomment-5650114708">recorded user approval</a> authorizes tests, a separate pressure generator, independent native verification and a no-SOLVE preparation probe. Stress solves remain gated pending a reviewed nonsingular reported quantity. The issue and draft pull request remain open.</p></section>
+<section id="basis"><h2>2. Analysis basis</h2>
+<table><thead><tr><th>Parameter</th><th>Value</th><th>Basis</th></tr></thead><tbody>
+<tr><td>Plate width × height (mm)</td><td>400 × 300</td><td>Frozen neutral model</td></tr>
+<tr><td>Thickness (mm)</td><td>8.000</td><td>Plane-stress real constant</td></tr>
+<tr><td>Hole radius; centre (mm)</td><td>40; (200, 220)</td><td>Frozen geometry</td></tr>
+<tr><td>Young's modulus (MPa); Poisson ratio (—)</td><td>205,000; 0.3</td><td>Inherited model inputs</td></tr>
+<tr><td>Yield stress (MPa); design factor (—)</td><td>355; 1.67</td><td>Retained basis; no utilization calculation</td></tr>
+<tr><td>Target force (N)</td><td>50,000 in global +Y</td><td>Upper-hole radial pressure</td></tr>
+<tr><td>Restraint</td><td>UX = UY = 0 at y = 0</td><td>Unchanged base restraint</td></tr>
+</tbody><caption>Table 1. Frozen input basis. Values are model assumptions, not measured material certification.</caption></table></section>
+<section id="method"><h2>3. Method</h2>
+<p>The continuous pressure is defined as p(θ) = p₀ sin(θ), radially outward on the upper hole, 0 ≤ θ ≤ π. With F = 50,000 N, R = 40 mm and t = 8.000 mm, p₀ = 2F/(πRt) = 99.4718394324 MPa. A discrete normalization factor of 1.006454542799641 is applied to the coarse polygonal faces. Native face values are independently integrated using two-point Gauss quadrature.</p>
+<p>The generated deck specifies PLANE182 plane stress, material and thickness, explicit nodes and connectivity, the base constraints, and a Y-dependent native face-pressure gradient. Default shape checking, CHECK, shape status, shape summary, face listing and a CDB export are requested. No SOLVE or solution processor command is issued.</p>
+<p>An initial mapped mesh extending directly to the outer rectangle failed the shape gate. The corrected mesh uses a compact circular-to-square mapped region and conforming outer rectangular blocks. Geometry, thickness, material, force and restraint remain frozen. The change was made before any stress outcome was available.</p></section>
+<section id="results"><h2>4. Native preparation results</h2>
+<table><thead><tr><th>Capture (UTC)</th><th>Elements (—)</th><th>Elements with shape warnings (—)</th><th>Warning messages (—)</th><th>Disposition</th></tr></thead><tbody>
+<tr><td>13 Sep 02:10:14</td><td>832</td><td>34</td><td>104</td><td>Failed; retained</td></tr>
+<tr><td>13 Sep 02:15:34</td><td>1,032</td><td>0</td><td>0</td><td>Coarse preparation passes</td></tr>
+</tbody><caption>Table 2. Native shape evidence at the time of execution. The corrected capture is 12 September 21:15:34 at UTC−05:00. Both runs report zero errors.</caption></table>
+<table><thead><tr><th>Quantity</th><th>Corrected coarse result</th><th>Criterion</th><th>Disposition</th></tr></thead><tbody>
+<tr><td>Applied FY (N)</td><td>50,000.000023</td><td>Force-vector error ≤ 50 N</td><td>Pass</td></tr>
+<tr><td>Applied FX (N)</td><td>−3.41 × 10⁻¹³</td><td>Target 0; included in vector error</td><td>Pass</td></tr>
+<tr><td>Moment about hole centre (N mm)</td><td>−3.41 × 10⁻¹²</td><td>Absolute moment ≤ 2,000 N mm</td><td>Pass</td></tr>
+<tr><td>Shape coverage (elements)</td><td>1,032 of 1,032</td><td>All selected; default limits; zero warnings/errors</td><td>Pass</td></tr>
+<tr><td>Outer perimeter (mm)</td><td>1,400</td><td>Complete frozen 400 × 300 mm boundary</td><td>Pass</td></tr>
+<tr><td>Area (mm²)</td><td>115,005.687756</td><td>Plate less the 32-edge polygonal hole</td><td>Pass</td></tr>
+</tbody><caption>Table 3. Independent checks on actual native CDB values and the full retained native output. These are applied-load checks; solved reactions are unavailable.</caption></table>
+<figure><img src="assets/2026-09-12-padeye-pressure-native-mesh.svg" alt="Corrected native plate mesh with a circular hole and compact mapped ring"><figcaption>Figure 1. Corrected coarse mesh reconstructed from the native CDB: 1,110 nodes and 1,032 PLANE182 elements. No stress solution is represented.</figcaption></figure>
+<table><thead><tr><th>Nominal level (mm)</th><th>Upper-hole faces (—)</th><th>Ring layers (—)</th><th>Nodes (—)</th><th>Elements (—)</th><th>Evidence readiness</th></tr></thead><tbody>
+<tr><td>10</td><td>16</td><td>5</td><td>1,110</td><td>1,032</td><td>Offline and native preparation</td></tr>
+<tr><td>5</td><td>32</td><td>10</td><td>4,284</td><td>4,128</td><td>Offline only</td></tr>
+<tr><td>2.5</td><td>64</td><td>20</td><td>16,824</td><td>16,512</td><td>Offline only</td></tr>
+</tbody><caption>Table 4. Frozen refinement hierarchy. The nominal level does not assert a uniform element edge length.</caption></table></section>
+<section id="verification"><h2>5. Verification and review</h2>
+<p>The offline ANSYS suite passed 600 tests; two native tests were deselected. A final focused run passed 19 bundle/domain tests after fixture whitespace and test-coordinate corrections. Tests were added and observed failing before their implementation. Existing equal-force generator hashes remain unchanged; all three pressure input hashes are pinned.</p>
+<p>Claude and Codex reviews returned MAJOR findings during two review rounds. Main-session corrections subsequently added full-domain enforcement, current native shape-status interpretation, composed artifact checks, frozen input hashes, production-mesh integration tests, explicit log artifact classes and rehashed semantic-rejection tests. The review record preserves those verdicts; no final provider APPROVE verdict is asserted. <a href="../../scripts/review/results/2026-09-12-code-2094-pressure-disposition.md">The inline disposition</a> records the evidence for each correction.</p>
+<p>The scoped legal scan passed on 18 exact current code/test blobs. The native audit re-read and verified 14 captured artifact hashes across the failed and corrected preparations. Input commands, executable identity, native output version, pressure faces, domain, shape and process/seat-release receipts were checked. The corrected input bytes and native mesh were also compared with the current generator.</p></section>
+<section id="limits"><h2>6. Limitations and next checkpoint</h2>
+<p>A nonsingular reported stress quantity has not been established. Consequently, stress utilization, stress convergence and physical qualification cannot be calculated from this preparation. The earlier equal-node-force diagnostic cannot be relabelled as a pressure result. No golden case or registry qualification is promoted.</p>
+<p>The next recommended step is a reviewed definition of the reported quantity and its extraction region, together with a restraint assessment. Any proposed change to the fixed base or governing quantity will require a separate reviewable proposal before stress execution. Fine-level native preparation remains unverified.</p>
+<p>The native CDB fixture is a verbatim neutral-model export. The public shape text is a labelled format reproduction, not the raw solver log. Full logs remain in local licensed-results storage; independent backup has not been established. The bundle verifier checks bytes against a caller-attested receipt and then applies semantic gates; a matching hash does not authenticate the receipt or independently prove its source revision.</p>
+<p>This supplement makes no new fleet-wide cleanup claim. The preceding consolidation established direct evidence for four of seven machine routes; unavailable routes, including ws014 access, remain outside verified coverage.</p></section>
+<section id="references"><h2>7. Evidence and traceability</h2>
+<ul><li><a href="../plans/2026-09-12-issue-2094-padeye-load-model-addendum.html">Approved load-model addendum</a> and <a href="2026-09-12-solver-automation-technical-report.html">original consolidated technical report</a>.</li>
+<li><a href="../plans/evidence/2026-09-12-issue-2094-pressure-preparation.json">Native preparation audit and artifact digests</a>; corrected capture source <code>a44cbb0df1588788f69b2c8774063e4a0e04838b</code>.</li>
+<li><a href="../../tests/ansys/fixtures/pressure-coarse-v261-provenance.json">Fixture provenance</a> and <a href="../../tests/ansys/fixtures/pressure-coarse-v261.cdb">verbatim native CDB</a>.</li>
+<li><a href="../plans/evidence/2026-09-12-issue-2094-pressure-legal.json">Scoped legal-scan receipt</a>.</li>
+<li><a href="https://github.com/vamseeachanta/digitalmodel/issues/2094">Issue 2094</a> and <a href="https://github.com/vamseeachanta/digitalmodel/pull/2114">draft PR 2114</a>.</li></ul></section>
+</main></body></html>
