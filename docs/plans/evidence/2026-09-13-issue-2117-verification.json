@@ -1,0 +1,44 @@
+{
+  "scope": "Exact copied plan/review/handoff/index files and both deny lists; complete scoped scan, not --diff-only",
+  "exit_code": 0,
+  "stderr": "",
+  "stdout": "",
+  "files": [
+    {
+      "file": "scripts/legal/legal-sanity-scan.sh",
+      "sha256": "e0c38d41a33fcfde590465ccd59d9dfa79c3d417246412fddb0f4a2b11634db3"
+    },
+    {
+      "file": ".legal-deny-list.yaml",
+      "sha256": "77ea4133ee858ce8ee4336ccf475f96d7ee392e3b996cc0c620e71c13520a1d3"
+    },
+    {
+      "file": "digitalmodel/.legal-deny-list.yaml",
+      "status": "absent in source; global deny list will govern"
+    },
+    {
+      "file": "digitalmodel/docs/plans/2026-09-13-issue-2117-padeye-parametric.html",
+      "sha256": "2f427cd5fc4d23a082e32819d4b3f81249654564f0339ad5e4de01ccfcd43931"
+    },
+    {
+      "file": "digitalmodel/docs/plans/README.md",
+      "sha256": "7343ba43b1dc9dfa59cd5733e5d786bff350956ebb79f8ce1341c8c098cfa8c1"
+    },
+    {
+      "file": "digitalmodel/docs/plans/evidence/2026-09-13-issue-2117-review.md",
+      "sha256": "ac179e0700517cb5c7d06a1242b2affab4c5997bc6d79f355a979ea7a83b06ff"
+    },
+    {
+      "file": "digitalmodel/docs/session-handoffs/2026-09-13-padeye-parametric-plan.html",
+      "sha256": "3d54a78696e6e01e468f0f1f43a4010a81483507268b6ebafea9440238efdd92"
+    }
+  ],
+  "padeye-parametric-claude-r1.json": {
+    "sha256": "224c5bd88a050df03f9324e711e6ea7d9742751458aadf4f93498715fd712f9e",
+    "verdict": "MAJOR"
+  },
+  "padeye-parametric-claude-r2.json": {
+    "sha256": "bdcb56015b142e43030d8f14249ff7f3a70752ffdec15c16737d7f50686cc870",
+    "verdict": "MAJOR"
+  }
+}
