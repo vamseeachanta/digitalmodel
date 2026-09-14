@@ -1,0 +1,35 @@
+{
+  "observed_utc": "2026-09-14T22:28:45.726481+00:00",
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "status": "corrected_not_native_admitted",
+  "finding": "Capacity interval and timestamp used different clocks; retained live samples falsely failed the consecutive-window condition.",
+  "correction": "Collect interval and timestamp from time.time_ns; integer decimal serialization; refuse backward movement. Existing thresholds remain unchanged.",
+  "red": {
+    "failed": 4,
+    "passed": 7
+  },
+  "green": {
+    "passed": 94,
+    "scope": "capacity clock, preflight, resources, driver"
+  },
+  "new_native_runs": 0,
+  "new_qualified_rows": 0,
+  "independent_review": "Pending exact-current code/config/runtime review. Prior large transport attempts timed out without verdicts.",
+  "sources": [
+    {
+      "path": "src/digitalmodel/ansys/cylinder_diagnostic_preflight.py",
+      "sha256": "0bb0b11b7e9b5a4f125beb5c6503e17578ca0451a1672986f7a77c8aceb91c8d"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_capacity_clock.py",
+      "sha256": "3439d6488e69cad368ea11dd726d984089190181b66b58c3bbf6ac3fdbfb976b"
+    }
+  ],
+  "observations": {
+    "prior_refused_capture_sha256": "0482dbaec08aa8e90862e79ea6c7663a289428fb0f1ab108cbabfd5dac846d7d",
+    "fresh_corrected_capture_sha256": "207de68bf189067adb37d45295e334fa9dad8c0553dbbdeca751371698c44dd0",
+    "fresh_minimum_idle_core_equivalents": "3.072",
+    "required_idle_core_equivalents": "2",
+    "readiness_limit": "A read-only capacity pass is not a reservation or native admission."
+  }
+}

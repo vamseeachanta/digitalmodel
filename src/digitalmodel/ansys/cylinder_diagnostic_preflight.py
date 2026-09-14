@@ -53,14 +53,30 @@ def _free_bytes(path):
     return shutil.disk_usage(_owned_path(path).parent).free
 
 
+def _decimal_nanoseconds(value):
+    if type(value) is not int or value < 0:
+        raise ValueError('nonnegative integer nanoseconds required')
+    seconds, nanoseconds = divmod(value, 1_000_000_000)
+    fraction = f'{nanoseconds:09d}'.rstrip('0')
+    return str(seconds) + ('.' + fraction if fraction else '')
+
+
 def _capacity():
     samples = []
+    previous_end = None
     for _ in range(5):
-        start = time.monotonic()
+        start = time.time_ns()
+        if previous_end is not None and start < previous_end:
+            raise ValueError('capacity wall clock moved backward between samples')
         cpu = psutil.cpu_percent(interval=1)
-        samples.append(dict(observed_at=_now(), interval_seconds=str(time.monotonic()-start),
+        end = time.time_ns()
+        if end < start:
+            raise ValueError('capacity wall clock moved backward during sample')
+        samples.append(dict(observed_at=_decimal_nanoseconds(end),
+                            interval_seconds=_decimal_nanoseconds(end-start),
                             logical_processors=psutil.cpu_count(), cpu_percent=str(cpu),
                             available_memory_bytes=psutil.virtual_memory().available))
+        previous_end = end
     return {'samples': samples}
 
 
