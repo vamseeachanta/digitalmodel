@@ -97,6 +97,18 @@
       "C4": "Neutral B1-pending status with exact checkpoint receipts governing review state; historical round labels remain historical.",
       "C5": "Removed ambiguous scope hash from characterization; canonical verification binds both records.",
       "C6": "Zero-control native load database explicitly has no surface-load/nodal-force records; complete empty listings required and separately tested."
+    },
+    "frozen_review": {
+      "K1": "Unary plus/minus, integer literals, parentheses and exact whitespace rules now explicit in output contract and brief; B1 identity tests precede invocation.",
+      "K2": "HTML now distinguishes output-schema description supplied in brief from expressions returned by checker.",
+      "K3": "Fixed audit then FINISH/CONFIGSTAT/SOLU/SOLVE sequence with no state mutation; B1 test will enforce window.",
+      "K4": "Added committed-fixture tree-id extraction test; published four-input extraction will be rerun and recorded with measured bytes/digest, separate from the regenerated receipt."
+    },
+    "frozen_R2": {
+      "F1": "Bare JSON envelope, exact keys, duplicate-key refusal, strict UTF8 and raw retention will be explicit. Codex confirms clarification; provider nonconformance will still refuse rather than be repaired. No guarantee of syntactic success.",
+      "F2": "Literal syntax, signed exponent forms, precedence/association, grouped powers and whitespace handling will be explicit with B1 identity/refusal tests.",
+      "F3": "Historical rounds now identify superseded revisions; vendor roles will identify purpose, while exact review receipts will govern coverage. Load audits will precede the fixed status/re-entry sequence.",
+      "F4": "The committed-tree test is regression-only against existing helper behavior; no implementation change or artificial RED cycle is claimed. Fixture Git newline configuration will match the existing test."
     }
   },
   "review_status": "Current checkpoint corrections await exact-current independent review; B1 approval pending",
@@ -106,35 +118,50 @@
       "tree": "8f07fc3294f7813a30e5a1de4bd2ebc3240141d6",
       "claude": "MAJOR",
       "codex": "APPROVE",
-      "status": "superseded technical revision; original receipts immutable"
+      "status": "superseded technical revision; original receipts retain their historical verdicts"
     },
     {
       "round": "canary R2",
       "tree": "526c14fb08f16008e83cd65efe30364b7404c52c",
       "claude": "MAJOR",
       "codex": "APPROVE",
-      "status": "superseded by current inline corrections; original receipts immutable"
+      "status": "superseded technical revision; original receipts retain their historical verdicts"
     },
     {
       "round": "canary R3",
       "tree": "53518eef91f925807c76cb9d130964fc06acd4c5",
       "claude": "MAJOR",
       "codex": "APPROVE",
-      "status": "Last independently reviewed technical revision; inline corrections await exact-current review; no fourth automatic round"
+      "status": "superseded technical revision; original receipts retain their historical verdicts"
     },
     {
       "round": "user-authorized checkpoint R1",
       "tree": "e03359e1b1b56079ed9b53f1934d57e7dfe2a9b3",
       "claude": "MAJOR",
       "codex": "APPROVE",
-      "status": "current corrections await next exact review"
+      "status": "superseded technical revision; original receipts retain their historical verdicts"
     },
     {
       "round": "checkpoint R2",
       "tree": "082ed61b32ff7f48f70a2394f53d2ddd92c363cd",
       "claude": "MAJOR",
       "codex": "APPROVE",
-      "status": "final checkpoint corrections awaiting exact-current review"
+      "status": "superseded technical revision; original receipts retain their historical verdicts"
+    },
+    {
+      "round": "frozen R1",
+      "revision": "4bcf77b2c28abad45e925a1641f29e4203c8d370",
+      "revision_kind": "Git commit",
+      "claude": "MAJOR",
+      "codex": "prior unchanged-byte APPROVE coverage",
+      "status": "superseded by K1-K4 corrections"
+    },
+    {
+      "round": "frozen R2",
+      "tree": "ec502ca6a5fdb151b74c083d350cd32f8f2ce199",
+      "claude": "MAJOR",
+      "codex": "APPROVE",
+      "status": "F1-F4 independently adjudicated; current bounded corrections require exact-current coverage"
     }
   ],
   "diagnostic_corpus": [

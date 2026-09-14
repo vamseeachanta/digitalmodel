@@ -33,3 +33,23 @@ def test_receipt_uses_staged_bytes_instead_of_modified_working_file(tmp_path):
     assert receipt["inputs"][0]["bytes"] == len(staged)
     assert receipt["inputs"][0]["sha256"] == helper.digest(staged)
     assert receipt["extracted_bytes"] == len(b"staged\n\nsecond")
+
+
+def test_commit_tree_extraction_and_digest_are_reproducible(tmp_path):
+    """Regression-only coverage of existing committed-tree extraction behavior."""
+    helper = load_helper()
+    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    subprocess.run(["git", "-C", str(tmp_path), "config", "core.autocrlf", "false"], check=True)
+    path = tmp_path / "fixture.json"
+    path.write_bytes(b'{"first":"alpha","nested":["beta",2]}\n')
+    subprocess.run(["git", "-C", str(tmp_path), "add", "--", "fixture.json"], check=True)
+    subprocess.run(["git", "-C", str(tmp_path), "-c", "user.name=Fixture",
+                    "-c", "user.email=fixture@example.invalid", "commit", "-qm", "fixture"], check=True)
+    tree = subprocess.check_output(
+        ["git", "-C", str(tmp_path), "rev-parse", "HEAD^{tree}"], text=True
+    ).strip()
+    path.write_bytes(b'{"first":"changed working file"}\n')
+    receipt = helper.extract(tmp_path, tree, ["fixture.json"])
+    assert receipt["prose"] == "alpha\n\nbeta"
+    assert receipt["extracted_prose_sha256"] == helper.digest(b"alpha\n\nbeta")
+    assert receipt["extracted_bytes"] == len(b"alpha\n\nbeta")

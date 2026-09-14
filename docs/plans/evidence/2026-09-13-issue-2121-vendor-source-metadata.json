@@ -206,7 +206,7 @@
         "precision": "/FORMAT applies to table output; beam/pipe section fixed-format exceptions do not apply to PLANE183"
       },
       "retention": "Raw page not persisted; factual metadata only",
-      "canary_role": "R3 inline correction; exact-current independent review pending"
+      "canary_role": "canary method/evidence reference; exact-revision review receipts govern coverage"
     },
     {
       "source_id": "CFOPEN-v242",
@@ -220,7 +220,7 @@
         "destination": "VWRITE data goes to open command file; blank Loc overwrites, APPEND appends; canary forbids APPEND"
       },
       "retention": "Raw page not persisted; factual metadata only",
-      "canary_role": "R3 inline correction; exact-current independent review pending"
+      "canary_role": "canary method/evidence reference; exact-revision review receipts govern coverage"
     },
     {
       "source_id": "MSG-v242",
@@ -235,7 +235,7 @@
         "limitation": "semantics, not a complete byte-level grammar"
       },
       "retention": "Raw page not persisted; factual metadata only",
-      "canary_role": "R3 inline correction; independent current review pending"
+      "canary_role": "canary method/evidence reference; exact-revision review receipts govern coverage"
     },
     {
       "source_id": "NERR-v242",
@@ -250,7 +250,7 @@
         "state": "STAT reports settings; canary requires nonnegative NMERR and no suppression"
       },
       "retention": "Raw page not persisted; factual metadata only",
-      "canary_role": "R3 inline correction; independent current review pending"
+      "canary_role": "canary method/evidence reference; exact-revision review receipts govern coverage"
     },
     {
       "source_id": "CONFIG-v242",
@@ -279,7 +279,7 @@
       "recorded_facts": {
         "command": "SFELIST,ALL,ALL lists all surface-load labels on selected elements",
         "scope": "current database values; POST1 does not update surface loads from result history",
-        "canary": "capture full selected-element listing immediately before SOLVE, keyed by element and face"
+        "canary": "capture full selected-element listing before the fixed FINISH; /CONFIG,STAT; /SOLU; SOLVE sequence, keyed by element and face"
       },
       "retention": "Raw page not persisted; factual metadata only",
       "canary_role": "current checkpoint correction"
@@ -293,7 +293,7 @@
       "retrieved_bytes_length": 14000,
       "recorded_facts": {
         "command": "FLIST lists applied nodal forces; canary requires none",
-        "canary": "full selected-node listing immediately before SOLVE"
+        "canary": "full selected-node listing before the fixed FINISH; /CONFIG,STAT; /SOLU; SOLVE sequence"
       },
       "retention": "Raw page not persisted; factual metadata only",
       "canary_role": "current checkpoint correction"
