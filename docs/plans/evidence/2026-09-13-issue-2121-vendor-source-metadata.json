@@ -251,6 +251,80 @@
       },
       "retention": "Raw page not persisted; factual metadata only",
       "canary_role": "R3 inline correction; independent current review pending"
+    },
+    {
+      "source_id": "CONFIG-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_CONFIG.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T11:33:08.083551+00:00",
+      "retrieved_bytes_sha256": "40635a800d335b77ace8b9ba6a105b03dbcbfcd430a75ef2f9274ce08442009b",
+      "retrieved_bytes_length": 24257,
+      "recorded_facts": {
+        "RESUPREC0": "entire results file double precision; documented v242 default",
+        "RESUPREC1": "element results single, other results double",
+        "RESUPREC2": "geometry double, other results single",
+        "verification": "STAT reports current settings; command overrides same config.ans parameter; set before required",
+        "placement": "Canary will issue configuration and STAT at Begin level with explicit processor exits/re-entry. The recorded CONFIG page establishes semantics/STAT; no unsupported claim of exclusive processor availability is made."
+      },
+      "retention": "Raw page not persisted; factual metadata only",
+      "canary_role": "current checkpoint correction"
+    },
+    {
+      "source_id": "SFELIST-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_SFELIST.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T11:33:08.267321+00:00",
+      "retrieved_bytes_sha256": "eb70d4eabe72cff4f6522e4d828be2059fbc9efcb70fa608be09d5ac5c05a600",
+      "retrieved_bytes_length": 15188,
+      "recorded_facts": {
+        "command": "SFELIST,ALL,ALL lists all surface-load labels on selected elements",
+        "scope": "current database values; POST1 does not update surface loads from result history",
+        "canary": "capture full selected-element listing immediately before SOLVE, keyed by element and face"
+      },
+      "retention": "Raw page not persisted; factual metadata only",
+      "canary_role": "current checkpoint correction"
+    },
+    {
+      "source_id": "FLIST-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_FLIST.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T11:33:08.396105+00:00",
+      "retrieved_bytes_sha256": "f235b74f9ad7c8a1125661df59c2ae42e4aab80eb3fea77bae91ecb97af89255",
+      "retrieved_bytes_length": 14000,
+      "recorded_facts": {
+        "command": "FLIST lists applied nodal forces; canary requires none",
+        "canary": "full selected-node listing immediately before SOLVE"
+      },
+      "retention": "Raw page not persisted; factual metadata only",
+      "canary_role": "current checkpoint correction"
+    },
+    {
+      "source_id": "DLIST-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_DLIST.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T11:33:08.546102+00:00",
+      "retrieved_bytes_sha256": "cf70155fd383cc0cb5e31004f834b2d1b9d4f9e53e38dd0474614f72d3917a47",
+      "retrieved_bytes_length": 13830,
+      "recorded_facts": {
+        "command": "DLIST lists DOF constraints",
+        "canary": "verify complete bottom-row UY0 including midside nodes; no radial constraints"
+      },
+      "retention": "Raw page not persisted; factual metadata only",
+      "canary_role": "current checkpoint correction"
+    },
+    {
+      "source_id": "FINISH-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_FINISH.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T11:41:59.136321+00:00",
+      "retrieved_bytes_sha256": "545a3b44220f97e91dce4947153a315a8624228c05f648ec14a8131235d93523",
+      "retrieved_bytes_length": 13475,
+      "recorded_facts": {
+        "exit": "exits processor; database data retained, not automatically saved",
+        "placement": "FINISH issued from processor, not Begin; canary config status will be at Begin between processor entries"
+      },
+      "retention": "Raw page not persisted; factual metadata only",
+      "canary_role": "explicit configuration-status sequencing"
     }
   ],
   "boundary_note": "VM25 top-axial coupling was additionally checked against public PyMAPDL listing; the independently checked Hooke-law branch will govern proposed uz, not an asserted vendor axial target."

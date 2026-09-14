@@ -1,122 +1,137 @@
 {
-  "review_input_tree": "1ff31c5dd8d3e9af18e671c8b9e6e33d71017c7d",
-  "verified_utc": "2026-09-14T03:26:19.105096+00:00",
-  "scope": "All staged canary planning files except this regenerated verification receipt; no implementation/native tests",
-  "receipt_exclusion": "This receipt is excluded from its own digest set. A subsequent staged-file scan will include it; no self-hash claim.",
-  "review_input_tree_kind": "git tree object, not commit; staged tree before regenerated receipt",
-  "baseline_commit": "17bb5527150bb18ce4c942b04627bf00e4355a3e",
-  "publication_mapping": "The eventual publication commit will be identified in the issue comment and Git history; it does not yet exist at receipt generation",
+  "review_input_tree": "3ea02cd6cb58b05d340249eaef9521283d792d1e",
+  "review_input_tree_kind": "Git tree before receipt regeneration",
+  "verified_utc": "2026-09-14T11:46:36.499241+00:00",
+  "scope": "Exact staged files except this regenerated receipt; no engineering solver implementation or native runs",
+  "receipt_exclusion": "This receipt is excluded from its own input hashes/prose extraction; after staging it will receive a separate legal/register check. Later review receipts bind the final reviewed tree. No circular self-hash claim.",
   "staged_and_scanned_mirror_files": [
     {
       "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
-      "sha256": "8005d4984cac2571ddf3b873e0c20629bb92a62eaf7540008df8e67d7c695529"
+      "sha256": "b87003671a959eae99590a174b682fe2400ae2f69a96edc4b349be37eb1fb17a"
     },
     {
       "path": "docs/plans/README.md",
-      "sha256": "f908277a61fd38460d6459636c9b99115feb14d844d6cbaea0091e2034d9f3ad"
-    },
-    {
-      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-claude-r1.json",
-      "sha256": "b256c71197afa2d16bfc698d124765a6a9720036a090e754322534004b964c6d"
-    },
-    {
-      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-claude-r2.json",
-      "sha256": "34b5b9eda783f27decdabcdf7d7d8dc810d51da7f073ddc904ced3a5ff1c2ea1"
-    },
-    {
-      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-claude-r3.json",
-      "sha256": "36834dad8f5f4f1b0455ca89da831a779f16ecfd13dd98f90f2a742888df9f02"
-    },
-    {
-      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-codex-r1.json",
-      "sha256": "5ac3a3ef70aecaaf55eabe7b82d8d66e096271fbe09d8f010f8bf83c7f778e4c"
-    },
-    {
-      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-codex-r2.json",
-      "sha256": "bae22075f520421a9588ee30523b8e5984cfcfac330087f0f1524dda16d9e4f3"
-    },
-    {
-      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-codex-r3.json",
-      "sha256": "573568bfbc64c92bce8e0be41857cd535306f1773078bbc7ad2bff7cf72be666"
+      "sha256": "72fd817132c456ee8977da76e6b9228286bc3cd0c37766297e2ac7311a20efd7"
     },
     {
       "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json",
-      "sha256": "89b855c6209c850ddef03a69738bce186862dd9853e0ef9b285bb28f70d3721e"
+      "sha256": "068500e455438502f009ae8aa6236151b8f150b0cedc32851391d3388373ed97"
     },
     {
       "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json",
-      "sha256": "78460c5564dc32154c843df17ddbd3b1ba1e7641572b33ff81ff7f0e307555cc"
+      "sha256": "6b226025b55cc3abb2aec2a4bfe6476fade88596dbd4358ed20f23f2d932e6a0"
     },
     {
       "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
-      "sha256": "68d962b7f51bdcf2293cbbc98b96af54cba3e7807441d81401a8a59357cb24b4"
+      "sha256": "25c0fde670b38dc7e3a4413cf79911e718b550467b6a9ebb3fffdbe7d4df4648"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-claude-r1.json",
+      "sha256": "067a261029c77cf79622872f10c44a49ed51233a1b588147d5e96a40030c66fa"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-claude-r2.json",
+      "sha256": "9f9e1d765719dc03517756ed03510b0b9f406ac70c12d35961f6869b21e5e934"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-codex-r1.json",
+      "sha256": "3696285441c87f3c65978c27c46a9f7eb7abff3f29c6e27e1019014240a8e64f"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-codex-r2.json",
+      "sha256": "6d6a75230be8bdd6f6ace6113cc79708331c6681f092ed98f7a16a50e9421d6f"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-diagnostic-characterization.json",
+      "sha256": "9893804445f2d79321e41d4750dd83cbc132d006b0b94b221e80f3715800009a"
+    },
+    {
+      "path": "docs/plans/evidence/register_json_prose.py",
+      "sha256": "8511cd91f5eb489867510ece719409fbf47f83a7392d1c0dbad96f2cdbf5da69"
+    },
+    {
+      "path": "tests/docs/test_register_json_prose.py",
+      "sha256": "c771031a1122750346074fe62060a009698a5e4a5a29eb7e5c64d07081a65dfe"
     }
   ],
   "mirror_matches_staged": true,
   "legal": {
-    "shared_scanner": "scripts/legal/legal-sanity-scan.sh --all; scoped exact-blob mirror",
+    "shared_scanner": "scripts/legal/legal-sanity-scan.sh --all on scoped exact-blob mirror",
     "exit_code": 0,
-    "result": "PASS",
-    "limitation": "Shared live-root resolution/fail-open concerns remain; bounded mirror and independent literal scan used; no whole-repository claim",
-    "followup": "https://github.com/vamseeachanta/workspace-hub/issues/3804",
-    "repo_level_deny_list_exists": false,
-    "owner_list_disposition": "No .legal-deny-list.yaml exists at the live digitalmodel worktree root; global rules apply. No existing owner list was omitted.",
+    "independent_literal_patterns": 23,
+    "matches": 0,
+    "exemptions": false,
+    "owner_deny_list_exists": false,
     "global_deny_list_sha256": "77ea4133ee858ce8ee4336ccf475f96d7ee392e3b996cc0c620e71c13520a1d3",
-    "independent_literal_scan": {
-      "declared_pattern_entries": 23,
-      "patterns_tested": 23,
-      "entry_rule": "all mapping entries with a pattern key in every list-valued rule category; no exemptions applied",
-      "matches": 0,
-      "exemptions_applied": false
-    }
-  },
-  "render": "PASS; no overflow/page errors; local links resolve",
-  "render_scope": "staged HTML browser-rendered; changed issue-2121 README row checked separately for engineering register and local relative-link existence",
-  "index_row_checks": {
-    "relative_links_exist": true,
-    "engineering_register_exit": 0,
-    "row_sha256": "5de78b43cafdc23a301cef8259265990522de33392fa063cf93a71b8f86fdf80"
-  },
-  "caption_validation": "two table captions first in source content, visually below via CSS",
-  "checks": [
-    {
-      "command": "python -m pytest tests/docs/test_digitalmodel_routing_contract.py -q",
-      "exit_code": 0,
-      "stdout_sha256": "3bb54659ec7200bd3f6420e1b65f9650efc72d2c3c47ee0950660ef74bd4a80b",
-      "result": "============================== 8 passed in 1.41s ==============================",
-      "completed_utc": "2026-09-14T03:26:18.797319+00:00"
-    },
-    {
-      "command": "python workspace-hub:scripts/enforcement/check-engineering-register.py <canary plan>",
-      "exit_code": 0,
-      "stdout_sha256": "74bc6f89c5542b63c71513a0ab7c31d5290a121696bd7a0ce60ae7d9b8969e9a",
-      "result": "1 file(s) checked, 0 violation(s)",
-      "completed_utc": "2026-09-14T03:26:19.105096+00:00"
-    }
-  ],
-  "manifest_checks": [
-    "four unique nonexecuted cases",
-    "21 primary quantities",
-    "Q8 mesh counts",
-    "explicit absolute residual/control criteria",
-    "five baseline source hashes match"
-  ],
-  "screenshot": {
-    "local_name": "SOLVERS-2121-2026-09-13-issue-2121-ansys-cylinder-campaign.png",
-    "sha256": "ad6962d09090d42110d3e8b96faf2df250f42894735d2ffa6fc9a9c1366bdbed",
-    "residence": "SOLVERS coordination evidence; HTML is repository deliverable"
+    "limitation": "Bounded mirror and independent literal scan; no whole-repo or all-machine coverage; shared scanner follow-up workspace-hub issue3804"
   },
   "register_json_prose": {
-    "paths": [
-      "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json",
-      "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json",
-      "docs/plans/evidence/2026-09-13-issue-2121-canary-verification.json",
-      "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json"
+    "inputs": [
+      {
+        "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json",
+        "sha256": "068500e455438502f009ae8aa6236151b8f150b0cedc32851391d3388373ed97",
+        "bytes": 25621
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json",
+        "sha256": "6b226025b55cc3abb2aec2a4bfe6476fade88596dbd4358ed20f23f2d932e6a0",
+        "bytes": 20974
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
+        "sha256": "25c0fde670b38dc7e3a4413cf79911e718b550467b6a9ebb3fffdbe7d4df4648",
+        "bytes": 16770
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-diagnostic-characterization.json",
+        "sha256": "9893804445f2d79321e41d4750dd83cbc132d006b0b94b221e80f3715800009a",
+        "bytes": 16326
+      }
     ],
-    "extracted_prose_sha256": "41f4be289a5c0b560f2b2cabb5531e795ebb13e368589a95a37474ab44c35f43",
-    "exit_code": 0,
-    "result": "1 file(s) checked, 0 violation(s)",
-    "exclusion": "All canary provider review receipts are verbatim immutable evidence quotations; excluded from house-style rewriting, not from legal scan or hash verification."
+    "extracted_bytes": 54177,
+    "extracted_prose_sha256": "fbba9e66663fab67c0229324139a469106545855f9e92a3fb619987565f24f5e",
+    "revision": "3ea02cd6cb58b05d340249eaef9521283d792d1e",
+    "input_hashes": {
+      "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json": "068500e455438502f009ae8aa6236151b8f150b0cedc32851391d3388373ed97",
+      "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json": "6b226025b55cc3abb2aec2a4bfe6476fade88596dbd4358ed20f23f2d932e6a0",
+      "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json": "25c0fde670b38dc7e3a4413cf79911e718b550467b6a9ebb3fffdbe7d4df4648",
+      "docs/plans/evidence/2026-09-14-issue-2121-diagnostic-characterization.json": "9893804445f2d79321e41d4750dd83cbc132d006b0b94b221e80f3715800009a"
+    },
+    "extractor_path": "docs/plans/evidence/register_json_prose.py",
+    "extractor_sha256": "8511cd91f5eb489867510ece719409fbf47f83a7392d1c0dbad96f2cdbf5da69",
+    "extraction_rule": "Listed paths in order; JSON object values in insertion order; list items in order; recursively collect all string VALUES, omit keys/non-string scalars; join with two LF; UTF8 without BOM/trailing separator. Input hashes are exact git-show bytes, not working-tree newline conversions.",
+    "invocation": "python docs/plans/evidence/register_json_prose.py --revision <review_input_tree> <paths in inputs order>",
+    "quoted_receipt_exclusion": "Verbatim provider review receipts excluded from house-style rewriting, not legal/hash checks."
   },
-  "current_review_coverage": "Last exact technical tree53518eef: Claude MAJOR, independent Codex APPROVE. R3 inline corrections are mechanically verified but not independently reviewed. B1 approval remains blocked; no fourth automatic review cycle."
+  "checks": [
+    {
+      "check": "engineering register",
+      "scope": "four canonical JSON prose inputs",
+      "input_sha256": "fbba9e66663fab67c0229324139a469106545855f9e92a3fb619987565f24f5e",
+      "exit_code": 0,
+      "result": "1 file(s) checked, 0 violation(s)",
+      "stdout_sha256": "74bc6f89c5542b63c71513a0ab7c31d5290a121696bd7a0ce60ae7d9b8969e9a"
+    },
+    {
+      "check": "engineering register",
+      "scope": "HTML plan",
+      "input_sha256": "b87003671a959eae99590a174b682fe2400ae2f69a96edc4b349be37eb1fb17a",
+      "exit_code": 0,
+      "result": "1 file(s) checked, 0 violation(s)",
+      "stdout_sha256": "74bc6f89c5542b63c71513a0ab7c31d5290a121696bd7a0ce60ae7d9b8969e9a"
+    }
+  ],
+  "index_row": {
+    "sha256": "ec13c52b9c1c43f58373e4b7aba521c58f725c7581d6f7fd9be854810fbe2f6d",
+    "register_exit": 0,
+    "local_links": "unchanged HTML target exists"
+  },
+  "render": "PASS; no overflow/page errors; local links resolve",
+  "test_evidence": {
+    "command": "python -m pytest tests/docs/test_register_json_prose.py tests/docs/test_digitalmodel_routing_contract.py -q",
+    "passed": 10,
+    "native_runs": 0,
+    "TDD": "Two new extractor tests failed with missing helper before implementation, then passed; checks include staged/working divergence and nested Unicode string order."
+  },
+  "current_review_coverage": "Checkpoint R2: Claude MAJOR / Codex APPROVE at tree082ed61b. Final corrected plan and verification helper/tests await exact-current review. B1 user approval and B2 execution approval remain outstanding."
 }

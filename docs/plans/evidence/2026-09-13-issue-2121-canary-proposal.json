@@ -2,7 +2,7 @@
   "schema": "ansys-four-run-canary-proposal-1",
   "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
   "source_baseline": "17bb5527150bb18ce4c942b04627bf00e4355a3e",
-  "status": "blocked for B1 approval; R3 inline corrections awaiting exact-current independent review",
+  "status": "proposed; B1 user approval pending; exact-current checkpoint review receipts govern review status",
   "implementation_authorized": false,
   "execution_authorized": false,
   "results_present": false,
@@ -200,12 +200,19 @@
       "files": "Scan attributed native .out, manifest jobname .err and captured process stdout/stderr. Required streams/files must be captured, including explicit empty files. Preserve raw bytes, offsets, digests and coverage. Missing required evidence is INCOMPLETE.",
       "recognition": "Parse line-start native *** severity *** diagnostic blocks with optional whitespace. NOTE is nonblocking; WARNING/ERROR/FATAL ERROR refuse. Malformed envelopes, unknown severity, decoding loss, truncation, suppression and missing/inconsistent final warning/error totals cause INCOMPLETE. Nonzero totals refuse even if headings were suppressed. Ordinary command echoes/tables remain raw unclassified output; unknown diagnostic candidates never default to informational.",
       "settings": "Retain /NERR,STAT; require nonnegative NMERR and no suppression indication. B1 will freeze exact anchored diagnostic/final-total grammar from documented semantics and retained corpus; B2 will bind its hash and observed native profile.",
-      "offline_validation": "Use scope-record private corpus hashes as observed NOTE/WARNING fixtures, including a successful historical solve that must refuse the zero-warning gate. Synthetic ERROR/FATAL/malformed/truncated tests remain labelled synthetic. No observed native ERROR/FATAL fixture is established. B1 will record population and coverage; missing fixtures or unresolved rights block their use."
+      "offline_validation": "Use scope-record private corpus hashes as observed NOTE/WARNING fixtures, including a successful historical solve that must refuse the zero-warning gate. Synthetic ERROR/FATAL/malformed/truncated tests remain labelled synthetic. No observed native ERROR/FATAL fixture is established. B1 will record population and coverage; missing fixtures or unresolved rights block their use.",
+      "process_streams": "Require process stderr to be byte-empty. Process stdout outside the attributed native output file will also be byte-empty under this strict profile; any nonempty stream causes INCOMPLETE even with exit0. No undocumented launcher/license message will fall through as ordinary MAPDL output. B1 will test zero-exit nonempty streams; an incompatible launcher profile will require a reviewed amendment, never an after-run waiver.",
+      "characterization": "Versioned 2026-09-14 diagnostic characterization records observed message identities, exact headings and method. Empty allowlist retained; warning absence/reachability is not established before generated-deck verification. B1 tests will reproduce recorded identities and offsets, not only counts.",
+      "stream_basis": "Byte-empty process stdout/stderr remains unverified for this launcher. B1 approval will adopt the strict empty-stream gate as an explicit assumption, not a historical result. Incompatible B2 output yields INCOMPLETE without waiver or tolerance change.",
+      "raw_capture": "Existing runner captures decoded text without persisting pipes. B1 will add an opt-in binary-capture path to runner.py for the canary, preserving default caller behaviour; raw bytes will be saved and hashed before separate strict decoding. RED tests will establish exact CRLF/non-UTF8 byte retention, empty versus missing streams, timeout partial bytes and unchanged default interface. No native launch in B1."
     },
     "contribution_readback": "PRESOL,S,COMP under /GRAPHICS,FULL, RSYS,0 and /FORMAT,8,E,24,16,100,240 will list element-node components. Preserve complete selected-element listings; parse required element/node pairs by key and verify adjacency before averaging. All contribution half-quanta must be <= fixed readback tolerance/100. Default-width or truncated contribution listings will be refused by B1 RED tests. /FORMAT applies to PRESOL tables; beam/pipe section exceptions are outside PLANE183 scope.",
     "selection_sequence": "Immediately after SET,1,1 use full node/element selection and verify case counts. Obtain acceptance and PRESOL data with full selection. Reduce only NSEL to the nine sampled nodes for PRNSOL, preserving the exact full ESEL; assert nine selected nodes and unchanged element identity/count. Restore full NSEL afterward and recheck counts. B1 RED test will refuse listings under changed ESEL. Full-count requirements govern pre/post-listing state; nine-row requirement governs PRNSOL state.",
     "export_destination": "Open dedicated station_values.txt with *CFOPEN,station_values,txt in the fresh attempt directory, without APPEND; close with *CFCLOS after the 54-record *VWRITE block. No native stdout is accepted as this file. A separate precision_witness.txt file will carry the formatting witness. Existing/pre-launch files will refuse execution. The extractor will read only the attributed dedicated file.",
-    "listing_width": "NDIGIT8 + six components at width24 gives 152 field columns, inside CHAR240; B1 will verify actual headings/separators fit and reject truncated/wrapped or low-precision data. NDIGIT valid3..32; LINE minimum11; LINE100 selected."
+    "listing_width": "NDIGIT8 + six components at width24 gives 152 field columns, inside CHAR240; B1 will verify actual headings/separators fit and reject truncated/wrapped or low-precision data. NDIGIT valid3..32; LINE minimum11; LINE100 selected.",
+    "stored_precision": "At initial Begin level set /CONFIG,RESUPREC,0 before any result writing. After solution settings and load audit in /SOLU, use FINISH; /CONFIG,STAT; /SOLU; SOLVE; FINISH; /CONFIG,STAT; /POST1; SET,1,1. Both Begin-level status captures must show RESUPREC0; missing/conflicting status or later override refuses evidence. FINISH preserves database data; do not clear/reset settings between entries. B1 deck tests will assert placement and both captures; one-capture or nonzero fixtures refuse. Exact native version and deck are required. v242 defines entire-result-file double precision at RESUPREC0. No binary32 representability inference.",
+    "load_audit": "Use direct FE surface loads; retain SFELIST,ALL,ALL with full ESEL immediately before SOLVE, alongside FLIST and DLIST. Bind element/face keys to connectivity and coordinates; require only intended inner-face pressure with correct sign/magnitude, no outer/top/bottom surface load and no applied nodal force. Check complete restrained-node UY set separately. SFELIST reports current database values, not a reconstructed POST1 result history. B1 RED fixtures will refuse reversed sign, wrong magnitude, wrong face and unsupported/missing load records.",
+    "zero_control_load_audit": "ocv-zero-t60-n16 will create no SFE/SF surface-load records and no nodal-force records. Its complete SFELIST/FLIST evidence will show no loads; absence of records is the required control state, not a missing-artifact exemption. Pressure cases will require the exact inner-face records at10MPa. B1 fixtures will distinguish a complete empty control listing from an absent/truncated listing and from unexpected zero-valued SFE records."
   },
   "criteria": [
     {
@@ -250,7 +257,7 @@
     {
       "id": "execution_evidence",
       "applies": "every attempt",
-      "rule": "correct input/material/mesh/load/support/stations; complete attributed native evidence; finite outputs; successful solver completion; zero native WARNING/ERROR/FATAL diagnostics or live owned processes after completion; full-precision export/witness/half-quantum checks passed; explicit ESOL/OUTRES state, active result-set/coordinate/key checks, fixed high-precision readback and independent-reference agreement passed; pinned PRESOL contribution precision and pre/listing/post selection-state checks passed"
+      "rule": "correct input/material/mesh/load/support/stations; complete attributed native evidence; finite outputs; successful solver completion; no native WARNING/ERROR/FATAL diagnostic and no live owned process after completion; full-precision export/witness/half-quantum checks passed; explicit ESOL/OUTRES state, active result-set/coordinate/key checks, fixed high-precision readback passed; pinned PRESOL contribution precision and pre/listing/post selection-state checks passed; approved reference hash unchanged; pre/post RESUPREC0 status retained; dedicated process streams empty"
     }
   ],
   "freeze": "B1 approval will adopt these numerical limits. Exact criteria/deck/reference/extractor hashes and owner-appointed checker/adjudicator identities will be recorded before separate B2 approval. Any change before or after first run, including loosening an initial band, requires an amended reviewed basis and matching user approval. No observed-result calibration.",
@@ -282,7 +289,30 @@
     "brief_sources": "Inline factual geometry/material/load/restraints, X radial/Y axial/Z hoop, tension-positive convention, MPa/mm units and source metadata only; URLs attribution only; no producer formula or vendor prose/table.",
     "agreement": "Same exact branch/formulas/frame/sign/units; numeric comparison of producer values against deterministic evaluation of independently checker-authored expressions: abs difference <=1e-10 MPa and <=1e-12 mm at all nine stations for pressure and control. No twelve-digit unaided checker arithmetic is required.",
     "disagreement": "Any disagreement beyond tolerance blocks reference acceptance and B2. Owner-appointed competent independent checker/adjudicator resolves on recorded evidence; producer cannot prevail unilaterally. A changed analytical basis requires amended plan review/approval; any already-approved reference hash change requires renewed approval. Corrections to implement the unchanged approved formulas remain B1 TDD/review work before final reference freeze.",
-    "evaluation": "The isolated tools-disabled provider will return exact symbolic expressions and derivation before comparison. A separately frozen generic arithmetic evaluator will consume only those expressions and frozen inputs, without importing producer functions or reference values; it will use rational arithmetic and 50-digit Decimal square root for equivalent stress. A whitelist expression grammar will allow numeric literals, defined input symbols, arithmetic and sqrt only; no eval, filesystem, network or arbitrary code. B1 RED tests will reject unsupported expressions and establish evaluator arithmetic identities. Both expression sets, evaluator version/hash and outputs will be retained. Independent adjudicator will verify branch and symbolic equivalence before numeric acceptance."
+    "evaluation": "The isolated tools-disabled provider will return exact symbolic expressions and derivation before comparison. A separately frozen generic arithmetic evaluator will consume only those expressions and frozen inputs, without importing producer functions or reference values; it will use rational arithmetic and 50-digit Decimal square root for equivalent stress. A whitelist expression grammar will allow numeric literals, defined input symbols, arithmetic and sqrt only; no eval, filesystem, network or arbitrary code. B1 RED tests will reject unsupported expressions and establish evaluator arithmetic identities. Both expression sets, evaluator version/hash and outputs will be retained. Independent adjudicator will verify branch and symbolic equivalence before numeric acceptance.",
+    "output_contract": {
+      "symbols": [
+        "a",
+        "b",
+        "p",
+        "E",
+        "nu",
+        "r",
+        "y"
+      ],
+      "operators": [
+        "+",
+        "-",
+        "*",
+        "/",
+        "** (integer exponent only)",
+        "sqrt(expression)"
+      ],
+      "literals": "finite decimal literals; no implicit multiplication, caret exponent, attribute access or unknown names",
+      "shape": "JSON object with expressions mapping exactly sigma_r,sigma_theta,sigma_z,tau_rz,sigma_vm,u_r,u_z to arithmetic strings, and derivation string; expressions will inline helper expressions, with no separately defined symbols",
+      "brief": "The exact syntax/output contract, axis/sign and unit definitions will be included in the hashed physics brief; no comparator formulas or expected values will be supplied."
+    },
+    "session_control": "Exactly one checker invocation will be permitted under B1. Before invocation, evaluator source, grammar, tests, output schema and complete physics brief will be hashed and committed. The register will record every invocation, including failed launches, timestamps, provider/version, prompt hash and verbatim output hash. A missing/unregistered invocation, parse rejection or unusable output will leave the reference gate unestablished and block B2. No syntax-only retry, alternate provider sampling, output selection or evaluator tuning to the output will be permitted; a further attempt requires recorded adjudication and renewed approval."
   },
   "limitations": [
     "zero-valued sigma_z/tau_rz mappings are not independently validated by nonzero native signals; source-based and synthetic protocol checks only",
@@ -302,5 +332,6 @@
     "relative_scale": "about 0.000077 of inner hoop stress and 0.000083 of outer hoop stress; other nonzero-channel ratios will be recorded from independent analytical references in B1",
     "locations": "y60 is one wall thickness from the restrained row; exact continuum stresses are y-invariant, but discrete recovery may vary",
     "failure_disposition": "FAIL remains tied to fixed band; later investigation distinguishes displacement/recovery/discretization from modelling contributions; changed method/limit needs reviewed amendment and approval. Not every addressing error is detectable in a y-invariant field."
-  }
+  },
+  "preflight_reference_gate": "Before any solver invocation, require committed independent-reference agreement and exact approved reference hash. Failure refuses execution and consumes no attempt. Per-attempt evidence checks will verify the same hash/approval remains valid; they will not invoke a new checker or consume an attempt to resolve a B1 failure."
 }

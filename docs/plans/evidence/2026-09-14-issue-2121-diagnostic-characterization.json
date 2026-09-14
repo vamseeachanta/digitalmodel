@@ -1,0 +1,300 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "observed_utc": "2026-09-14T11:31:55.000626+00:00",
+  "python_version": "3.12.13 (main, Jun 23 2026, 15:23:43) [MSC v.1944 64 bit (AMD64)]",
+  "method": "Read bytes without newline translation; splitlines(keepends=True); cumulative byte lengths define zero-based half-open offsets. Recognize anchored triple-asterisk severity header. Body digest spans subsequent nonblank lines up to first blank or next triple-asterisk line. This is an explicit reproducible block-span convention, not proof of vendor message termination: warning-summary NOTE spans following contiguous status text. Raw bodies are not copied. Headers retain elapsed/time text and no host identity.",
+  "header_regex": "^\\s*\\*\\*\\*\\s+(WARNING|NOTE|ERROR|FATAL ERROR)\\s+\\*\\*\\*",
+  "files": [
+    {
+      "relative_path": "ansys-2094-canary-20260912T205311Z/pressure-vessel/pv.out",
+      "sha256": "5f3b0a90a91a723efe12e5d98dfe5a5a7aadd2e1d575316981ff1dbba7e6a54f",
+      "bytes": 25321,
+      "heading_counts": {
+        "WARNING": 1,
+        "NOTE": 5
+      },
+      "exact_distinct_heading_lines": [
+        " *** WARNING ***                         ELAPSED TIME =       8.282   TIME= 15:53:27",
+        " *** NOTE ***                            ELAPSED TIME =       8.345   TIME= 15:53:27",
+        " *** NOTE ***                            ELAPSED TIME =       8.346   TIME= 15:53:27",
+        " *** NOTE ***                            ELAPSED TIME =       8.360   TIME= 15:53:27",
+        " *** NOTE ***                            ELAPSED TIME =       8.384   TIME= 15:53:27"
+      ],
+      "message_class_counts": {
+        "mixed_load_domains": 1,
+        "axisymmetric_force_basis": 1,
+        "default_time": 1,
+        "direct_assembly": 1,
+        "memory_mode": 1,
+        "set_bc_update": 1
+      },
+      "representative_message_records": [
+        {
+          "line_1based": 293,
+          "header_byte_start": 12194,
+          "header_byte_end_exclusive": 12280,
+          "exact_heading_line": " *** WARNING ***                         ELAPSED TIME =       8.282   TIME= 15:53:27",
+          "severity": "WARNING",
+          "body_byte_start": 12280,
+          "body_byte_end_exclusive": 12505,
+          "body_sha256": "931fd5e2e553afb7245e913567827e322b003b2ef5e25f51db38fd14e4950360",
+          "message_class": "mixed_load_domains",
+          "safe_paraphrase": "Solid-model loads and direct FE boundary conditions coexist; transfer may overwrite direct loads."
+        },
+        {
+          "line_1based": 320,
+          "header_byte_start": 13002,
+          "header_byte_end_exclusive": 13088,
+          "exact_heading_line": " *** NOTE ***                            ELAPSED TIME =       8.345   TIME= 15:53:27",
+          "severity": "NOTE",
+          "body_byte_start": 13088,
+          "body_byte_end_exclusive": 13313,
+          "body_sha256": "ef9be16c40f456d46527f8b3dc9cb02ea49ff363c95226fa3aa601c0c8afd3d7",
+          "message_class": "axisymmetric_force_basis",
+          "safe_paraphrase": "Nodal forces and reactions use a full-circle basis."
+        },
+        {
+          "line_1based": 349,
+          "header_byte_start": 14230,
+          "header_byte_end_exclusive": 14316,
+          "exact_heading_line": " *** NOTE ***                            ELAPSED TIME =       8.346   TIME= 15:53:27",
+          "severity": "NOTE",
+          "body_byte_start": 14316,
+          "body_byte_end_exclusive": 14466,
+          "body_sha256": "4f55c9f751c71148b5de330766b163d1ff01313a8ad0a1b3ce4a2f4536703cb4",
+          "message_class": "default_time",
+          "safe_paraphrase": "Nonincreasing analysis time is defaulted to one."
+        },
+        {
+          "line_1based": 353,
+          "header_byte_start": 14468,
+          "header_byte_end_exclusive": 14554,
+          "exact_heading_line": " *** NOTE ***                            ELAPSED TIME =       8.346   TIME= 15:53:27",
+          "severity": "NOTE",
+          "body_byte_start": 14554,
+          "body_byte_end_exclusive": 14704,
+          "body_sha256": "1e0951762493cb772a48496def5c9b94a86e4d3d18056826a1d5d18906e3ea20",
+          "message_class": "direct_assembly",
+          "safe_paraphrase": "Direct assembly omits intermediate matrix files."
+        },
+        {
+          "line_1based": 392,
+          "header_byte_start": 16481,
+          "header_byte_end_exclusive": 16567,
+          "exact_heading_line": " *** NOTE ***                            ELAPSED TIME =       8.360   TIME= 15:53:27",
+          "severity": "NOTE",
+          "body_byte_start": 16567,
+          "body_byte_end_exclusive": 17317,
+          "body_sha256": "c096ebb8e953e82201865ce52c7879f2a4126fd83c1a5f28b729276e7ef1105e",
+          "message_class": "memory_mode",
+          "safe_paraphrase": "Sparse solver uses in-core memory mode."
+        },
+        {
+          "line_1based": 439,
+          "header_byte_start": 18443,
+          "header_byte_end_exclusive": 18529,
+          "exact_heading_line": " *** NOTE ***                            ELAPSED TIME =       8.384   TIME= 15:53:27",
+          "severity": "NOTE",
+          "body_byte_start": 18529,
+          "body_byte_end_exclusive": 18904,
+          "body_sha256": "6087f510a4be430153899312b28765a232c964f1194c1ef6e1548d061d1bb09b",
+          "message_class": "set_bc_update",
+          "safe_paraphrase": "Result-set reading updates database boundary conditions."
+        }
+      ]
+    },
+    {
+      "relative_path": "ansys-2094-canary-20260912T205311Z/pressure-vessel/file.err",
+      "sha256": "cc3b3f1318065e3ae95de2daff3059952b15496a027ba49c87d919be367dc662",
+      "bytes": 393,
+      "heading_counts": {
+        "WARNING": 1
+      },
+      "exact_distinct_heading_lines": [
+        " *** WARNING ***                         ELAPSED TIME =       8.282   TIME= 15:53:27"
+      ],
+      "message_class_counts": {
+        "mixed_load_domains": 1
+      },
+      "representative_message_records": [
+        {
+          "line_1based": 3,
+          "header_byte_start": 82,
+          "header_byte_end_exclusive": 168,
+          "exact_heading_line": " *** WARNING ***                         ELAPSED TIME =       8.282   TIME= 15:53:27",
+          "severity": "WARNING",
+          "body_byte_start": 168,
+          "body_byte_end_exclusive": 393,
+          "body_sha256": "931fd5e2e553afb7245e913567827e322b003b2ef5e25f51db38fd14e4950360",
+          "message_class": "mixed_load_domains",
+          "safe_paraphrase": "Solid-model loads and direct FE boundary conditions coexist; transfer may overwrite direct loads."
+        }
+      ]
+    },
+    {
+      "relative_path": "ansys-2094-pressure-prep-20260913T021014Z/mesh-10mm/pressure_prepare.out",
+      "sha256": "66d84c54a5833e51f65b57258d2cb8b7df826bc70057053f527166af7953a20d",
+      "bytes": 225091,
+      "heading_counts": {
+        "WARNING": 104,
+        "NOTE": 2
+      },
+      "exact_distinct_heading_lines": [
+        " *** WARNING ***                         ELAPSED TIME =       7.873   TIME= 21:10:25",
+        " *** WARNING ***                         ELAPSED TIME =       7.874   TIME= 21:10:25",
+        " *** WARNING ***                         ELAPSED TIME =       7.875   TIME= 21:10:25",
+        " *** WARNING ***                         ELAPSED TIME =       7.876   TIME= 21:10:25",
+        " *** WARNING ***                         ELAPSED TIME =       7.877   TIME= 21:10:25",
+        " *** WARNING ***                         ELAPSED TIME =       7.878   TIME= 21:10:25",
+        " *** WARNING ***                         ELAPSED TIME =       7.879   TIME= 21:10:25",
+        " *** WARNING ***                         ELAPSED TIME =       7.880   TIME= 21:10:25",
+        " *** NOTE ***                            ELAPSED TIME =       7.888   TIME= 21:10:25",
+        " *** WARNING ***                         ELAPSED TIME =       7.889   TIME= 21:10:25",
+        " *** WARNING ***                         ELAPSED TIME =       7.890   TIME= 21:10:25",
+        " *** NOTE ***                            ELAPSED TIME =       7.891   TIME= 21:10:25"
+      ],
+      "message_class_counts": {
+        "aspect_ratio": 68,
+        "corner_angle": 36,
+        "default_time": 1,
+        "warning_summary_note": 1
+      },
+      "representative_message_records": [
+        {
+          "line_1based": 4490,
+          "header_byte_start": 168834,
+          "header_byte_end_exclusive": 168920,
+          "exact_heading_line": " *** WARNING ***                         ELAPSED TIME =       7.873   TIME= 21:10:25",
+          "severity": "WARNING",
+          "body_byte_start": 168920,
+          "body_byte_end_exclusive": 169070,
+          "body_sha256": "c6e55f17b0ca6f432d802a74e655dc1b1f6fab8a60f0b404a344e486799ee98c",
+          "message_class": "aspect_ratio",
+          "safe_paraphrase": "Element aspect ratio exceeds the warning threshold."
+        },
+        {
+          "line_1based": 4782,
+          "header_byte_start": 177120,
+          "header_byte_end_exclusive": 177206,
+          "exact_heading_line": " *** WARNING ***                         ELAPSED TIME =       7.876   TIME= 21:10:25",
+          "severity": "WARNING",
+          "body_byte_start": 177206,
+          "body_byte_end_exclusive": 177356,
+          "body_sha256": "ad0c4ff318bece3fbcb88babde3c94930ab826d45c1af8efbffc096ea42f991f",
+          "message_class": "corner_angle",
+          "safe_paraphrase": "Element corner angle exceeds the warning threshold."
+        },
+        {
+          "line_1based": 5594,
+          "header_byte_start": 203709,
+          "header_byte_end_exclusive": 203795,
+          "exact_heading_line": " *** NOTE ***                            ELAPSED TIME =       7.888   TIME= 21:10:25",
+          "severity": "NOTE",
+          "body_byte_start": 203795,
+          "body_byte_end_exclusive": 203945,
+          "body_sha256": "4f55c9f751c71148b5de330766b163d1ff01313a8ad0a1b3ce4a2f4536703cb4",
+          "message_class": "default_time",
+          "safe_paraphrase": "Nonincreasing analysis time is defaulted to one."
+        },
+        {
+          "line_1based": 5806,
+          "header_byte_start": 216323,
+          "header_byte_end_exclusive": 216409,
+          "exact_heading_line": " *** NOTE ***                            ELAPSED TIME =       7.891   TIME= 21:10:25",
+          "severity": "NOTE",
+          "body_byte_start": 216409,
+          "body_byte_end_exclusive": 218923,
+          "body_sha256": "602b4fd3d517d682fbaaa182a8711d13e9858107daed22e068873c56a5bae2be",
+          "message_class": "warning_summary_note",
+          "safe_paraphrase": "Model checking found warnings and refers to output/error evidence."
+        }
+      ]
+    },
+    {
+      "relative_path": "ansys-2094-pressure-prep-20260913T021014Z/mesh-10mm/file.err",
+      "sha256": "9de76f3bd86f7d14d920bbcd3bce3f59275d7229e51981b758752f74ceadb823",
+      "bytes": 24832,
+      "heading_counts": {
+        "WARNING": 104
+      },
+      "exact_distinct_heading_lines": [
+        " *** WARNING ***                         ELAPSED TIME =       7.873   TIME= 21:10:25",
+        " *** WARNING ***                         ELAPSED TIME =       7.874   TIME= 21:10:25",
+        " *** WARNING ***                         ELAPSED TIME =       7.875   TIME= 21:10:25",
+        " *** WARNING ***                         ELAPSED TIME =       7.876   TIME= 21:10:25",
+        " *** WARNING ***                         ELAPSED TIME =       7.877   TIME= 21:10:25",
+        " *** WARNING ***                         ELAPSED TIME =       7.878   TIME= 21:10:25",
+        " *** WARNING ***                         ELAPSED TIME =       7.879   TIME= 21:10:25",
+        " *** WARNING ***                         ELAPSED TIME =       7.880   TIME= 21:10:25",
+        " *** WARNING ***                         ELAPSED TIME =       7.889   TIME= 21:10:25",
+        " *** WARNING ***                         ELAPSED TIME =       7.890   TIME= 21:10:25"
+      ],
+      "message_class_counts": {
+        "aspect_ratio": 68,
+        "corner_angle": 36
+      },
+      "representative_message_records": [
+        {
+          "line_1based": 3,
+          "header_byte_start": 82,
+          "header_byte_end_exclusive": 168,
+          "exact_heading_line": " *** WARNING ***                         ELAPSED TIME =       7.873   TIME= 21:10:25",
+          "severity": "WARNING",
+          "body_byte_start": 168,
+          "body_byte_end_exclusive": 318,
+          "body_sha256": "c6e55f17b0ca6f432d802a74e655dc1b1f6fab8a60f0b404a344e486799ee98c",
+          "message_class": "aspect_ratio",
+          "safe_paraphrase": "Element aspect ratio exceeds the warning threshold."
+        },
+        {
+          "line_1based": 39,
+          "header_byte_start": 2224,
+          "header_byte_end_exclusive": 2310,
+          "exact_heading_line": " *** WARNING ***                         ELAPSED TIME =       7.876   TIME= 21:10:25",
+          "severity": "WARNING",
+          "body_byte_start": 2310,
+          "body_byte_end_exclusive": 2460,
+          "body_sha256": "ad0c4ff318bece3fbcb88babde3c94930ab826d45c1af8efbffc096ea42f991f",
+          "message_class": "corner_angle",
+          "safe_paraphrase": "Element corner angle exceeds the warning threshold."
+        }
+      ]
+    }
+  ],
+  "aggregate_message_class_counts": {
+    "mixed_load_domains": 2,
+    "axisymmetric_force_basis": 1,
+    "default_time": 2,
+    "direct_assembly": 1,
+    "memory_mode": 1,
+    "set_bc_update": 1,
+    "aspect_ratio": 136,
+    "corner_angle": 72,
+    "warning_summary_note": 1
+  },
+  "verification": {
+    "files": 4,
+    "all_prior_digests_match": true,
+    "all_prior_heading_counts_match": true,
+    "diagnostic_occurrences": 217,
+    "warning_occurrences": 210,
+    "note_occurrences": 7,
+    "error_fatal_observed": false,
+    "duplicate_channel_warning_occurrences": "210 warning occurrences include repeats between .out and .err; they represent 105 warning occurrences per capture stream, not 210 distinct solver warnings."
+  },
+  "reachability": {
+    "mixed_load_domains": "Historical PV used solid-model pressure and direct FE displacement constraints. Proposed direct FE load/support generation would remove that specific combination if implemented and verified; absent proposed generated decks, warning absence is not established.",
+    "aspect_ratio_corner_angle": "Historical pressure preparation had poorly shaped PLANE182 elements. A correctly constructed straight mapped rectangular PLANE183 mesh with the proposed aspect ratios would not reproduce those particular geometry violations. Connectivity, midside placement and native checking are unverified; no no-warning guarantee follows.",
+    "notes": "Informational time/default, axisymmetric force basis, assembly/memory and SET notes can remain relevant; observed corpus does not prove future occurrence.",
+    "classification_limit": "All observed severities are WARNING or NOTE. ERROR/FATAL and malformed-envelope behavior requires explicitly synthetic offline fixtures. No native prediction is claimed."
+  },
+  "review_status": "Pending exact-artifact independent Claude review; characterization only; no new implementation or native execution.",
+  "full_occurrence_record": {
+    "private_name": "SOLVERS-2121-diagnostic-characterization.json",
+    "sha256": "b23ccd3723dda7526d8ccbb3bc8463dbaa7fb2885c0ade2f6ff5300a3dd42496",
+    "retention": "private SOLVERS coordination evidence; complete source files remain at existing licensed resolver",
+    "canonical_scope": "all distinct headings and class counts, one exact-offset/hash example per class per file; all 217 private records independently verified before reduction"
+  },
+  "warning_policy_disposition": "Empty warning allowlist retained as an informed strict-canary choice. Future warning reachability is not established before deck generation; known warnings remain refusal fixtures, never calibration targets. B1 will test recorded identities and severity/header offsets as well as counts; manual class labels derive from source bodies and remain separate from the future parser.",
+  "binding": "Per-file native source hashes identify the characterization inputs; the current verification receipt binds this file and the current scope record. No circular cross-file scope digest is claimed."
+}

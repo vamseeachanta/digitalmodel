@@ -80,9 +80,26 @@
       "F6": "Dedicated CFOPEN/CFCLOS export; FORMAT bounds and field width recorded.",
       "F7": "A self-containing tree hash cannot be stored in its own receipt without changing the tree. Per-file digests plus subsequent R3 receipts bind tree53518eef; publication commit will bind final inline files. No circular self-hash requirement adopted.",
       "F8": "Non-receipt JSON prose will be extracted for register checking. Verbatim provider receipts remain evidence quotations, explicitly excluded from house-style rewriting."
+    },
+    "checkpoint_R1": {
+      "N1": "Explicit symbol/operator/output contract; evaluator/grammar/test/brief commit before exactly one registered checker invocation; any rejection leaves gate unestablished, no resampling.",
+      "N2": "All 217 private source header/body offsets verified; canonical characterization records distinct headings, classes, representative identities, tool/method and reachability limitations. Empty allowlist retained; B1 tests identities not only counts.",
+      "N3": "CONFIG-v242 establishes RESUPREC0 double storage. Pin command before output plus pre/post native STAT; numerical bands unchanged. Binary32 representability test rejected as nondecisive: exact zeros can be binary64, while averages of binary32 can be non-binary32. Independent Codex confirmed disposition.",
+      "N4": "Pre-solve SFELIST full selected loads plus FLIST/DLIST, keyed face/sign/magnitude/support verification; database-state caveat explicit.",
+      "N5": "Strict byte-empty process stdout/stderr; unexpected launcher content refuses even exit0.",
+      "N6": "Verification will record recursive JSON string-value extraction rule, input hashes, script digest and nonempty UTF8 byte count; immutable quoted receipts excluded from style rewriting only.",
+      "N7": "Reference agreement moved to pre-invocation prerequisite consuming no attempt; per-attempt approved hash check retained; no-diagnostic and no-live-process conjunction explicit."
+    },
+    "checkpoint_R2": {
+      "C1": "Confirmed all four reported mismatches are only CRLF working bytes versus LF staged Git bytes, not changed prose. New reproducible register extraction will use exact staged blobs and input hashes; committed extractor, per-input byte lengths and HTML hash included.",
+      "C2": "Explicit Begin-level CONFIG status sequence with FINISH and processor re-entry; FINISH-v242 supports database persistence. No unsupported exclusive-availability assertion.",
+      "C3": "Both pinned runs have no retained native pipe evidence in inspected directories/receipts. Byte-empty streams are explicit unverified approval-scope assumption. Future B1 opt-in raw capture preserves original bytes; no existing raw-stream retention claimed.",
+      "C4": "Neutral B1-pending status with exact checkpoint receipts governing review state; historical round labels remain historical.",
+      "C5": "Removed ambiguous scope hash from characterization; canonical verification binds both records.",
+      "C6": "Zero-control native load database explicitly has no surface-load/nodal-force records; complete empty listings required and separately tested."
     }
   },
-  "review_status": "BLOCKED for B1 approval: last exact review Claude MAJOR/Codex APPROVE; inline corrections are not independently cleared",
+  "review_status": "Current checkpoint corrections await exact-current independent review; B1 approval pending",
   "historical_rounds": [
     {
       "round": "canary R1",
@@ -104,6 +121,20 @@
       "claude": "MAJOR",
       "codex": "APPROVE",
       "status": "Last independently reviewed technical revision; inline corrections await exact-current review; no fourth automatic round"
+    },
+    {
+      "round": "user-authorized checkpoint R1",
+      "tree": "e03359e1b1b56079ed9b53f1934d57e7dfe2a9b3",
+      "claude": "MAJOR",
+      "codex": "APPROVE",
+      "status": "current corrections await next exact review"
+    },
+    {
+      "round": "checkpoint R2",
+      "tree": "082ed61b32ff7f48f70a2394f53d2ddd92c363cd",
+      "claude": "MAJOR",
+      "codex": "APPROVE",
+      "status": "final checkpoint corrections awaiting exact-current review"
     }
   ],
   "diagnostic_corpus": [
@@ -159,5 +190,122 @@
       },
       "readiness": "offline diagnostic fixture basis only; not canary evidence"
     }
-  ]
+  ],
+  "diagnostic_characterization": "2026-09-14-issue-2121-diagnostic-characterization.json",
+  "process_stream_characterization": {
+    "scope": "Only the two pinned pressure-vessel/preparation runs are promoted here; no fleet-wide absence claim",
+    "sources": [
+      {
+        "path": "src/digitalmodel/ansys/runner.py",
+        "git_commit": "377be1d535388709b16e01d43bb43b652a63663e",
+        "git_blob_sha256": "05a0816a516938dfd953ec85a10a47296b9c78889a852a97a4baf847fb2fa6d8",
+        "working_bytes_sha256": "6357c043d7bfb080b8e9f50233ff95695f1ca90495b1c9a1a735acf1980dd3c3",
+        "byte_basis": "Git blob is canonical; working bytes may use CRLF"
+      },
+      {
+        "path": "tests/ansys/native_resolve_support.py",
+        "git_commit": "377be1d535388709b16e01d43bb43b652a63663e",
+        "git_blob_sha256": "79d003127f99f8e239ad51784747fc74c075b316b4928aa0a81268bb10863286",
+        "working_bytes_sha256": "9ed7f59aa64b0c16294a829a4f8511919fc811df1495526d9cb01ca2a38a1989",
+        "byte_basis": "Git blob is canonical; working bytes may use CRLF"
+      }
+    ],
+    "runner_behavior": "run_ansys uses subprocess.run(capture_output=True,text=True); ANSYSRunResult receives stdout/stderr in memory, including decoded timeout partial streams. Runner does not itself persist streams. Text decoding and newline handling prevent these strings from establishing original pipe-byte digests.",
+    "retention_behavior": "Inspected resolve_golden and historical padeye/preparation operators serialize status, return code, duration, errors and native result-file hashes; they do not serialize result.stdout/result.stderr. Historical canary wrapper records pytest_output separately; wrapper output is not equivalent to native pipes. Current operator sources are supporting behavior evidence, not automatically authenticated executed historical revisions.",
+    "runs": [
+      {
+        "run": "ansys-2094-canary-20260912T205311Z/pressure-vessel",
+        "process_stdout": {
+          "retained": false,
+          "status": "not_found_in_bounded_retention_inventory",
+          "bytes": null,
+          "sha256": null
+        },
+        "process_stderr": {
+          "retained": false,
+          "status": "not_found_in_bounded_retention_inventory",
+          "bytes": null,
+          "sha256": null
+        },
+        "stream_named_files": [],
+        "receipts": [
+          {
+            "relative_path": "ansys-2094-canary-20260912T205311Z/pressure-vessel/resolve_receipt.json",
+            "bytes": 2589,
+            "sha256": "eda201039156cc24546f2509e65e7ecf7667468ac564e18f675a60c1fd5e3463",
+            "embedded_streams": []
+          }
+        ],
+        "other_native_output_evidence": [
+          {
+            "relative_path": "ansys-2094-canary-20260912T205311Z/pressure-vessel/file.err",
+            "bytes": 393,
+            "sha256": "cc3b3f1318065e3ae95de2daff3059952b15496a027ba49c87d919be367dc662",
+            "role": "native_output_file_not_process_pipe"
+          },
+          {
+            "relative_path": "ansys-2094-canary-20260912T205311Z/pressure-vessel/file.log",
+            "bytes": 170,
+            "sha256": "6de4947f24a30df729a9d906149d7f1f60bc23e36aa9624985463b3aabf1e124",
+            "role": "native_output_file_not_process_pipe"
+          },
+          {
+            "relative_path": "ansys-2094-canary-20260912T205311Z/pressure-vessel/pv.out",
+            "bytes": 25321,
+            "sha256": "5f3b0a90a91a723efe12e5d98dfe5a5a7aadd2e1d575316981ff1dbba7e6a54f",
+            "role": "native_output_file_not_process_pipe"
+          }
+        ],
+        "interpretation": "No persisted native pipe bytes or stream-valued receipt fields found. Available .out/.err/.log are distinct channels, not substitutes for process stdout/stderr. Absence does not establish that runtime pipes were empty."
+      },
+      {
+        "run": "ansys-2094-pressure-prep-20260913T021014Z/mesh-10mm",
+        "process_stdout": {
+          "retained": false,
+          "status": "not_found_in_bounded_retention_inventory",
+          "bytes": null,
+          "sha256": null
+        },
+        "process_stderr": {
+          "retained": false,
+          "status": "not_found_in_bounded_retention_inventory",
+          "bytes": null,
+          "sha256": null
+        },
+        "stream_named_files": [],
+        "receipts": [
+          {
+            "relative_path": "ansys-2094-pressure-prep-20260913T021014Z/operator-receipt.json",
+            "bytes": 2036,
+            "sha256": "74031e3da3449f08ae80d671a21831e42ff063e08a27429e17fb9275e5edef0c",
+            "embedded_streams": []
+          }
+        ],
+        "other_native_output_evidence": [
+          {
+            "relative_path": "ansys-2094-pressure-prep-20260913T021014Z/mesh-10mm/file.err",
+            "bytes": 24832,
+            "sha256": "9de76f3bd86f7d14d920bbcd3bce3f59275d7229e51981b758752f74ceadb823",
+            "role": "native_output_file_not_process_pipe"
+          },
+          {
+            "relative_path": "ansys-2094-pressure-prep-20260913T021014Z/mesh-10mm/file.log",
+            "bytes": 170,
+            "sha256": "777ae31120a72dcb75ee6866fe1e6781260efceb6676079c6098ed91ff21acde",
+            "role": "native_output_file_not_process_pipe"
+          },
+          {
+            "relative_path": "ansys-2094-pressure-prep-20260913T021014Z/mesh-10mm/pressure_prepare.out",
+            "bytes": 225091,
+            "sha256": "66d84c54a5833e51f65b57258d2cb8b7df826bc70057053f527166af7953a20d",
+            "role": "native_output_file_not_process_pipe"
+          }
+        ],
+        "interpretation": "No persisted native pipe bytes or stream-valued receipt fields found. Available .out/.err/.log are distinct channels, not substitutes for process stdout/stderr. Absence does not establish that runtime pipes were empty."
+      }
+    ],
+    "conclusion": "Native process-stream corpus is unavailable in inspected retention. No zero-byte native stream can be asserted. Offline classifier may use retained native .out/.err and synthetic process-stream fixtures labelled as such. Future operator must explicitly retain each stream and its presence/encoding identity.",
+    "private_full_inventory_sha256": "c816305883e95575bac2373d780b45d65496d1912e2990cc8956c01826982c7d",
+    "approval_scope_assumption": "Byte-empty process stdout/stderr remains unverified for this launcher. B1 approval will adopt the strict empty-stream gate as an explicit assumption, not a historical result. Incompatible B2 output yields INCOMPLETE without waiver or tolerance change."
+  }
 }
