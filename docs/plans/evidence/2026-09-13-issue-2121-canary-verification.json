@@ -1,0 +1,122 @@
+{
+  "review_input_tree": "1ff31c5dd8d3e9af18e671c8b9e6e33d71017c7d",
+  "verified_utc": "2026-09-14T03:26:19.105096+00:00",
+  "scope": "All staged canary planning files except this regenerated verification receipt; no implementation/native tests",
+  "receipt_exclusion": "This receipt is excluded from its own digest set. A subsequent staged-file scan will include it; no self-hash claim.",
+  "review_input_tree_kind": "git tree object, not commit; staged tree before regenerated receipt",
+  "baseline_commit": "17bb5527150bb18ce4c942b04627bf00e4355a3e",
+  "publication_mapping": "The eventual publication commit will be identified in the issue comment and Git history; it does not yet exist at receipt generation",
+  "staged_and_scanned_mirror_files": [
+    {
+      "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+      "sha256": "8005d4984cac2571ddf3b873e0c20629bb92a62eaf7540008df8e67d7c695529"
+    },
+    {
+      "path": "docs/plans/README.md",
+      "sha256": "f908277a61fd38460d6459636c9b99115feb14d844d6cbaea0091e2034d9f3ad"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-claude-r1.json",
+      "sha256": "b256c71197afa2d16bfc698d124765a6a9720036a090e754322534004b964c6d"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-claude-r2.json",
+      "sha256": "34b5b9eda783f27decdabcdf7d7d8dc810d51da7f073ddc904ced3a5ff1c2ea1"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-claude-r3.json",
+      "sha256": "36834dad8f5f4f1b0455ca89da831a779f16ecfd13dd98f90f2a742888df9f02"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-codex-r1.json",
+      "sha256": "5ac3a3ef70aecaaf55eabe7b82d8d66e096271fbe09d8f010f8bf83c7f778e4c"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-codex-r2.json",
+      "sha256": "bae22075f520421a9588ee30523b8e5984cfcfac330087f0f1524dda16d9e4f3"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-codex-r3.json",
+      "sha256": "573568bfbc64c92bce8e0be41857cd535306f1773078bbc7ad2bff7cf72be666"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json",
+      "sha256": "89b855c6209c850ddef03a69738bce186862dd9853e0ef9b285bb28f70d3721e"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json",
+      "sha256": "78460c5564dc32154c843df17ddbd3b1ba1e7641572b33ff81ff7f0e307555cc"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
+      "sha256": "68d962b7f51bdcf2293cbbc98b96af54cba3e7807441d81401a8a59357cb24b4"
+    }
+  ],
+  "mirror_matches_staged": true,
+  "legal": {
+    "shared_scanner": "scripts/legal/legal-sanity-scan.sh --all; scoped exact-blob mirror",
+    "exit_code": 0,
+    "result": "PASS",
+    "limitation": "Shared live-root resolution/fail-open concerns remain; bounded mirror and independent literal scan used; no whole-repository claim",
+    "followup": "https://github.com/vamseeachanta/workspace-hub/issues/3804",
+    "repo_level_deny_list_exists": false,
+    "owner_list_disposition": "No .legal-deny-list.yaml exists at the live digitalmodel worktree root; global rules apply. No existing owner list was omitted.",
+    "global_deny_list_sha256": "77ea4133ee858ce8ee4336ccf475f96d7ee392e3b996cc0c620e71c13520a1d3",
+    "independent_literal_scan": {
+      "declared_pattern_entries": 23,
+      "patterns_tested": 23,
+      "entry_rule": "all mapping entries with a pattern key in every list-valued rule category; no exemptions applied",
+      "matches": 0,
+      "exemptions_applied": false
+    }
+  },
+  "render": "PASS; no overflow/page errors; local links resolve",
+  "render_scope": "staged HTML browser-rendered; changed issue-2121 README row checked separately for engineering register and local relative-link existence",
+  "index_row_checks": {
+    "relative_links_exist": true,
+    "engineering_register_exit": 0,
+    "row_sha256": "5de78b43cafdc23a301cef8259265990522de33392fa063cf93a71b8f86fdf80"
+  },
+  "caption_validation": "two table captions first in source content, visually below via CSS",
+  "checks": [
+    {
+      "command": "python -m pytest tests/docs/test_digitalmodel_routing_contract.py -q",
+      "exit_code": 0,
+      "stdout_sha256": "3bb54659ec7200bd3f6420e1b65f9650efc72d2c3c47ee0950660ef74bd4a80b",
+      "result": "============================== 8 passed in 1.41s ==============================",
+      "completed_utc": "2026-09-14T03:26:18.797319+00:00"
+    },
+    {
+      "command": "python workspace-hub:scripts/enforcement/check-engineering-register.py <canary plan>",
+      "exit_code": 0,
+      "stdout_sha256": "74bc6f89c5542b63c71513a0ab7c31d5290a121696bd7a0ce60ae7d9b8969e9a",
+      "result": "1 file(s) checked, 0 violation(s)",
+      "completed_utc": "2026-09-14T03:26:19.105096+00:00"
+    }
+  ],
+  "manifest_checks": [
+    "four unique nonexecuted cases",
+    "21 primary quantities",
+    "Q8 mesh counts",
+    "explicit absolute residual/control criteria",
+    "five baseline source hashes match"
+  ],
+  "screenshot": {
+    "local_name": "SOLVERS-2121-2026-09-13-issue-2121-ansys-cylinder-campaign.png",
+    "sha256": "ad6962d09090d42110d3e8b96faf2df250f42894735d2ffa6fc9a9c1366bdbed",
+    "residence": "SOLVERS coordination evidence; HTML is repository deliverable"
+  },
+  "register_json_prose": {
+    "paths": [
+      "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json",
+      "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json",
+      "docs/plans/evidence/2026-09-13-issue-2121-canary-verification.json",
+      "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json"
+    ],
+    "extracted_prose_sha256": "41f4be289a5c0b560f2b2cabb5531e795ebb13e368589a95a37474ab44c35f43",
+    "exit_code": 0,
+    "result": "1 file(s) checked, 0 violation(s)",
+    "exclusion": "All canary provider review receipts are verbatim immutable evidence quotations; excluded from house-style rewriting, not from legal scan or hash verification."
+  },
+  "current_review_coverage": "Last exact technical tree53518eef: Claude MAJOR, independent Codex APPROVE. R3 inline corrections are mechanically verified but not independently reviewed. B1 approval remains blocked; no fourth automatic review cycle."
+}
