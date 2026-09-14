@@ -34,3 +34,10 @@ examples/ansys/pressure-vessel/pv.inp -text whitespace=blank-at-eol,blank-at-eof
 examples/ansys/mudmat/mudmat.inp -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 tests/ansys/fixtures/pressure-coarse-v261.cdb -text whitespace=-blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
 tests/ansys/fixtures/pressure-coarse-shape-v261.txt text eol=lf
+
+# Preserve single-invocation analytical checker evidence byte for byte.
+examples/ansys/cylinder-benchmark/checker_response.json -text
+examples/ansys/cylinder-benchmark/checker_transport.json -text
+examples/ansys/cylinder-benchmark/checker_process_stderr.txt -text
+examples/ansys/cylinder-benchmark/checker_capture.json -text
+examples/ansys/cylinder-benchmark/checker_invocation.json -text
