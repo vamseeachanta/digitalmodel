@@ -1,0 +1,84 @@
+{
+  "scope": "Offline Stage A and selected existing regressions; no native execution",
+  "reviewed_source_tree": "1a9800e14afbd52643cc4e3d09c8871301b189cf",
+  "command": [
+    "python",
+    "-m",
+    "pytest",
+    "tests/ansys/test_analysis_evidence.py",
+    "tests/ansys/test_analysis_lookup.py",
+    "tests/ansys/test_analysis_qualification.py",
+    "tests/ansys/test_analysis_intake.py",
+    "tests/ansys/test_analysis_review_regressions.py",
+    "tests/ansys/test_results_extractor.py",
+    "tests/ansys/test_design_points.py",
+    "tests/ansys/test_example_goldens.py",
+    "tests/docs/test_digitalmodel_routing_contract.py",
+    "-q"
+  ],
+  "counts": {
+    "tests": 177,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 2,
+    "passed": 175
+  },
+  "skips": "Two existing licensed native re-solve cases intentionally disabled by ANSYS_NATIVE_TESTS gate",
+  "files": [
+    {
+      "path": "tests/ansys/test_analysis_evidence.py",
+      "sha256": "3ec9270b28a7be42a96c71fe0819748a4269784506f35cecd8c73f4b01254ed7"
+    },
+    {
+      "path": "tests/ansys/test_analysis_lookup.py",
+      "sha256": "2085b3e5ec8c3fb090693fd0e5119fbbea7bcd2218a9ca66f801e027ee54ff19"
+    },
+    {
+      "path": "tests/ansys/test_analysis_qualification.py",
+      "sha256": "9a8efcb1dc468323ad9896979e78a32a664132edb392da7965c9a260daf6a9d1"
+    },
+    {
+      "path": "tests/ansys/test_analysis_intake.py",
+      "sha256": "7702ac71120486b417446bd62402c5ea96e6b7d2ec880c5e401be7bcfbb6b427"
+    },
+    {
+      "path": "tests/ansys/test_analysis_review_regressions.py",
+      "sha256": "918fd3c5dbb680d41c860b2d70932a24dd2a15ebd00d3736e27a3bc2f71e2342"
+    },
+    {
+      "path": "tests/ansys/test_results_extractor.py",
+      "sha256": "0a74fafc2564a3f2884d539ecc625effb5fe12f66370feb72a302912096cc8b6"
+    },
+    {
+      "path": "tests/ansys/test_design_points.py",
+      "sha256": "3b6caafc93de17636fc1de81b3f705bc3bb4fd7d7c9be75a57e34c782c22a288"
+    },
+    {
+      "path": "tests/ansys/test_example_goldens.py",
+      "sha256": "f553f6a2c47095253e51e1edbf89bf3f0b41dd0aa303aa9c7ff12b12af8be4ce"
+    },
+    {
+      "path": "tests/docs/test_digitalmodel_routing_contract.py",
+      "sha256": "83fc474d47504e37ec809c51297eb9cf0a807aa75b655d51ffb7d1e63f44c822"
+    },
+    {
+      "path": "src/digitalmodel/ansys/analysis_records.py",
+      "sha256": "06dce5eb10d244c48df0fa1075bf48010170a668b81cd45694eb43fe3d349511"
+    },
+    {
+      "path": "src/digitalmodel/ansys/analysis_evidence.py",
+      "sha256": "ee4cd981296f306f5ca86087287ead8a36878295ff7a3f018e795580d84f40a7"
+    },
+    {
+      "path": "src/digitalmodel/ansys/analysis_lookup.py",
+      "sha256": "c1d29198f818e3b1063f3194dfe54a9c2bea023a84ffd5c2088b7eb245ea4e92"
+    },
+    {
+      "path": "src/digitalmodel/ansys/analysis_intake.py",
+      "sha256": "5d7a8c5a3765f238f65277b7a57b1db789b90be6f27c1acf2284b813dfd9aa1a"
+    }
+  ],
+  "raw_log_sha256": "26bea279b467d510e3c465bc9bda4128ab0fb31180eb66431f86b3786703f799",
+  "junit_sha256": "93f11d9f5a32b6eeeda284f37530cc484354323bf71a9110747155bf60d3901f",
+  "raw_receipt_residence": "Private SOLVERS coordination evidence; summary and exact source/test digests retained here"
+}

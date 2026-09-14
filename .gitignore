@@ -226,6 +226,9 @@ node_modules/
 /output/
 /results/
 reports/
+!docs/reports/
+docs/reports/*
+!docs/reports/2026-09-13-ansys-evidence-stage-a.html
 
 # ==========================================
 # Project-Specific: Agent/AI Runtime
