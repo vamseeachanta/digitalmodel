@@ -1,0 +1,93 @@
+{
+  "schema": "source-fact-register-1",
+  "sources": [
+    {
+      "source_id": "VM25-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_vm/Hlp_V_VM25.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T02:25:51.991263+00:00",
+      "retrieved_bytes_sha256": "19fa7bce5dc08612a349a3a3c79c74a8e493952bf26fa87bbb9b31874c2776a4",
+      "retrieved_bytes_length": 17379,
+      "recorded_facts": {
+        "E_psi": "30000000",
+        "nu": "0.3",
+        "a_in": "4",
+        "b_in": "8",
+        "pressure_psi": "30000",
+        "element": "PLANE183",
+        "scope": "pressure-only and separate rotation case; only pressure corroboration proposed"
+      },
+      "retention": "Raw vendor page not committed; factual parameter/method metadata only; vendor numeric fixture retention remains B1 rights gate"
+    },
+    {
+      "source_id": "VM38-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_vm/Hlp_V_VM38.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T02:25:52.173468+00:00",
+      "retrieved_bytes_sha256": "df024318620ff4ab248fd5e33e0b4d53d4795f619fba58dec0148bdbee763245",
+      "retrieved_bytes_length": 18805,
+      "recorded_facts": {
+        "scope": "includes fully elastic targets and elastic-plastic targets; no end-cap load; background reference only"
+      },
+      "retention": "Raw vendor page not committed; factual parameter/method metadata only; vendor numeric fixture retention remains B1 rights gate"
+    },
+    {
+      "source_id": "PLANE182-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_elem/Hlp_E_PLANE182.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T02:25:52.410585+00:00",
+      "retrieved_bytes_sha256": "09f6a8ac55cf6d9f887876eae257e3e615897e3faf55a1cd2d82787e03e5f29d",
+      "retrieved_bytes_length": 50577,
+      "recorded_facts": {
+        "keyopt1": "0 selective reduced integration B-bar",
+        "keyopt3": "1 axisymmetric",
+        "keyopt6": "0 displacement",
+        "axis_mapping": "global X radial, Y axial, Z hoop, XY rz shear"
+      },
+      "retention": "Raw vendor page not committed; factual parameter/method metadata only; vendor numeric fixture retention remains B1 rights gate"
+    },
+    {
+      "source_id": "PRRSOL-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_PRRSOL.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T02:25:52.629295+00:00",
+      "retrieved_bytes_sha256": "57b6475768fca4729cd8d5aeec82cd88e9bc71f36c61014b2d9031592af6d3b4",
+      "retrieved_bytes_length": 16295,
+      "recorded_facts": {
+        "scope": "constrained-node reaction output"
+      },
+      "retention": "Raw vendor page not committed; factual parameter/method metadata only; vendor numeric fixture retention remains B1 rights gate"
+    },
+    {
+      "source_id": "FSUM-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_FSUM.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T02:25:52.831647+00:00",
+      "retrieved_bytes_sha256": "7ed2df6c88035f66b9a654e3c5c8bf35e9fb723537a952580a45e4f2d4958415",
+      "retrieved_bytes_length": 21356,
+      "recorded_facts": {
+        "scope": "surface-load force exclusion and axisymmetric caution"
+      },
+      "retention": "Raw vendor page not committed; factual parameter/method metadata only; vendor numeric fixture retention remains B1 rights gate"
+    },
+    {
+      "source_id": "PLANE183-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_elem/Hlp_E_PLANE183.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T02:27:37.168907+00:00",
+      "retrieved_bytes_sha256": "2f42cf5f3ac650f0134953f3b9c4ee027bc047906a273093b7ac32c01aec53ae",
+      "retrieved_bytes_length": 50110,
+      "recorded_facts": {
+        "displacement_order": "quadratic",
+        "keyopts": {
+          "1": 0,
+          "3": 1,
+          "6": 0
+        },
+        "mapping": "X radial; Y axial; Z hoop; XY in-plane shear"
+      },
+      "retention": "Raw page not committed; factual element metadata only"
+    }
+  ],
+  "boundary_note": "VM25 top-axial coupling was additionally checked against public PyMAPDL listing; the independently checked Hooke-law branch will govern proposed uz, not an asserted vendor axial target."
+}
