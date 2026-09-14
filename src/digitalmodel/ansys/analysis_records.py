@@ -155,6 +155,33 @@ def validate_case(case: dict) -> None:
     require_fields(case["input_descriptor"], {"load_basis", "source_revision",
                    "solver", "frame", "dependencies"}, "input descriptor")
     validate_case_evidence(case)
+    validate_attempt_state(case)
+
+
+def validate_attempt_state(case: dict) -> None:
+    """Absent attempt metadata stays unknown; pending metadata cannot imply a run."""
+    present = {key for key in ('attempt_consumed', 'native_attempt_count') if key in case}
+    if present:
+        if len(present) != 2:
+            raise ValueError('attempt metadata requires both fields')
+        consumed, count = case['attempt_consumed'], case['native_attempt_count']
+        if type(consumed) is not bool or type(count) is not int or count < 0:
+            raise ValueError('invalid typed attempt metadata')
+        if consumed != (count > 0):
+            raise ValueError('attempt flag and count disagree')
+    if case['capture_role'] != 'pending_native':
+        return
+    if not present or case['attempt_consumed'] or case['native_attempt_count'] != 0:
+        raise ValueError('pending case requires explicit unattempted state')
+    if case['source_kind'] != 'unverified' or case['execution_status'] != 'unknown':
+        raise ValueError('pending case cannot claim native execution')
+    if case['author'] != 'unverified' or case['author_status'] != 'unverified':
+        raise ValueError('pending native author must remain unverified')
+    for row in case['responses']:
+        if (row['value'] is not None or row['calculation_status'] != 'not_evaluated'
+                or 'observed_value' in row
+                or 'native-not-attempted' not in row['limitations']):
+            raise ValueError('pending response requires null, unattempted evidence')
 
 
 def string_list(value: list, label: str) -> None:

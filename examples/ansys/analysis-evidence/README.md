@@ -14,6 +14,43 @@ fields and true zero. Six invalid original padeye reaction/residual channels hav
 null usable values and preserve their observed values separately. `generated_at`
 is the intake observation time, not a claim about native execution time.
 
+## Pending cylinder coverage
+
+The `analysis_pending` builder adds four explicitly unattempted cylinder cases to
+the eight historical cases: 12 cases and 350 response records, including 256 new
+null values. This is coverage registration, with no new native result or
+engineering qualification. The frozen 17-candidate intake remains the authority
+for the eight historical cases; each cylinder case binds its prepared benchmark
+manifest, input deck, metadata, criteria and analytical reference separately.
+
+The backward-compatible `ansys-evidence-1` extension uses paired
+`attempt_consumed` (boolean) and `native_attempt_count` (nonnegative integer)
+fields. Both absent means not recorded; it never means zero. A `pending_native`
+case requires false/zero, unverified capture author and source, unknown execution,
+and null/not-evaluated responses with the `native-not-attempted` limitation.
+`matrix_preparer` identifies descriptor preparation only. Shared loading and
+construction validation enforce these rules. Native ingestion requires a separate
+reviewed evidence contract; changing these fields does not qualify a result.
+
+`analysis_pending_inputs.pending_inputs` reads retained benchmark descriptors
+against caller-supplied frozen manifest and reference digests, without executing
+a solver or the frozen checker. `build_pending_package` binds
+all source bytes and preserves the historical case payloads. The caller supplies
+the current code fingerprint, explicit revision and observation time.
+`analysis_matrix_publish.publish_matrix` publishes into the existing owner root,
+retaining r1 and refusing a different payload at an existing revision. The
+canonical manifest is atomically replaced; the CSV refresh is separate. A crash
+after manifest replacement can leave a stale CSV: regenerate it from the manifest,
+or retry the same explicit revision to repair it without creating another one.
+
+The owner-recorded `.integration.lock` serializes participating publishers and
+contains host/PID/time/baseline identity. It is never removed automatically as
+stale. Existing revision publication uses its nested `.publish.lock`. Both owner
+termination and absence of an active publisher must be established before stale
+lock removal. Nonparticipating writers and concurrent source mutation are outside
+this cooperative protocol; source evidence must remain quiescent during capture.
+The original frozen r1 importer below remains unchanged.
+
 ## Reproduce the offline import
 
 Run from the repository with its Python environment and source package available:
