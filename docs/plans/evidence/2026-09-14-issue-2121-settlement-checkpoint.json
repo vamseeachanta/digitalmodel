@@ -1,0 +1,64 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "status": "CORRECTED_CHECKPOINT; exact-current Claude code/report/plan reviews pending provider availability",
+  "authorization": "User standing lifecycle authorization; no additional non-destructive approval required",
+  "source_files": [
+    {
+      "path": "src/digitalmodel/ansys/cylinder_runner.py",
+      "sha256": "5091b6969b65250ba05642a7c016ed71f64ca0dc5aee2c7d45d94391a44ac5f9"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_runner.py",
+      "sha256": "cbc464550ea5246710c8f40e4f629f48cb75f1d01151ea3c3583b964a12b4ae3"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/manifest.json",
+      "sha256": "ea69920aad1d84a17ce37aacabcfc2308ac33eb99c4155d6b7b6421e9192f8c1"
+    }
+  ],
+  "tests": {
+    "passed": 1082,
+    "total": 1082,
+    "collected": 1084,
+    "deselected": 2
+  },
+  "test_report_sha256": "9f264432b7714cf2297655eca5d913e68b800d8980881330c2e91bb2b9d50f14",
+  "process_guard": {
+    "exit_code": 0,
+    "elapsed_seconds": "45.32799999997951",
+    "subprocess_executables": [
+      "git",
+      "git",
+      "git",
+      "git",
+      "git",
+      "git"
+    ],
+    "native_process_invocations": 0,
+    "guard": "Only real Git subprocesses permitted; all other Popen audit events raise"
+  },
+  "live_helper": "One corrected real Python helper through _invoke: exit0, active0, no forced cleanup; no native ANSYS or checkout",
+  "correction": "Clean exits poll natural settlement within one existing5-second deadline; forced cleanup and uncertainty remain incomplete. Fixed300/1800-second limits unchanged.",
+  "review": "New correction requires Claude exact-revision review; historical MINOR does not cover changed runner or manifest",
+  "matrix": {
+    "path": "examples/ansys/analysis-evidence/manifest.json",
+    "revision": "r1",
+    "cases": 8,
+    "responses": 94,
+    "qualified": 0,
+    "new_reusable_rows": 0,
+    "native_cylinder_attempts": 0
+  },
+  "license_observation": "Read-only status reported two ansys feature versions with zero in use; product/release compatibility and exclusive ownership not established. Original operational output remains private.",
+  "capacity_proposal": {
+    "total_capture_bytes": 1073741824,
+    "reserve_bytes": 2147483648,
+    "status": "provisional from retained final sizes; no peak scratch guarantee"
+  },
+  "remaining": [
+    "Claude current-revision review when available",
+    "Matrix integration under the same owner/dataset",
+    "Product and real authority/preflight/adjudication binding",
+    "Operator/checker assignments and actual licence/resource ownership"
+  ]
+}

@@ -41,23 +41,36 @@ def _paths(case, directory, timeout, executable):
     return directory, executable, deck, output
 
 
+def _poll_settlement(supervisor, remaining, deadline):
+    while remaining:
+        allowance = deadline - time.monotonic()
+        if allowance <= 0:
+            break
+        time.sleep(min(0.01, allowance))
+        remaining = supervisor.active()
+    return remaining
+
+
 def _settle(supervisor, result):
     try:
-        remaining = supervisor.active()
-        if remaining:
-            result["settlement_required"] = True
-        if result["error"] or result["timed_out"] or remaining:
-            supervisor.terminate()
         deadline = time.monotonic() + 5
-        while remaining and time.monotonic() < deadline:
-            time.sleep(0.01)
+        remaining = supervisor.active()
+        clean_exit = (result.get("return_code") == 0 and not result["error"]
+                      and not result["timed_out"])
+        if clean_exit:
+            remaining = _poll_settlement(supervisor, remaining, deadline)
+        if not clean_exit or remaining:
+            result["settlement_required"] = True
+            supervisor.terminate()
             remaining = supervisor.active()
+            remaining = _poll_settlement(supervisor, remaining, deadline)
         result["owned_processes_remaining"] = remaining
         if remaining == 0:
             supervisor.close()
             return
         result["error"].append("owned process settlement timed out")
     except Exception as exc:
+        result["settlement_required"] = True
         result["error"].append(f"settlement: {type(exc).__name__}: {exc}")
         result["owned_processes_remaining"] = None
         try:
@@ -114,7 +127,7 @@ def launch_case(case, directory, timeout, executable, *, supervisor_factory=None
     result["duration_seconds"] = time.monotonic() - start
     _read_streams(directory, result)
     result["evidence_complete"] = bool(result["containment_verified"] and
-        result["owned_processes_remaining"] == 0 and not result["error"] and
+        result["return_code"] == 0 and result["owned_processes_remaining"] == 0 and not result["error"] and
         not result["timed_out"] and not result["settlement_required"])
     return result
 
