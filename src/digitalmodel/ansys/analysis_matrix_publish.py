@@ -23,7 +23,7 @@ def _evidence(package, resolver):
         verify_reference(reference, resolver)
 
 
-def _relation(package, baseline):
+def _relation(package, baseline, resolver=None, *, review_sha256=None):
     validate_package(baseline)
     validate_package(package)
     if package['dataset_id'] != baseline['dataset_id']:
@@ -34,7 +34,14 @@ def _relation(package, baseline):
         raise ValueError('new explicit revision required')
     count = len(baseline['cases'])
     if package['cases'][:count] != baseline['cases']:
-        raise ValueError('historical case payload changed')
+        if any(c.get('capture_role') == 'diagnostic_replay' for c in package['cases']):
+            from digitalmodel.ansys.analysis_replay import validate_replay_transition
+            validate_replay_transition(package, baseline, resolver, review_sha256=review_sha256)
+            return
+        if not any(c.get('capture_role') == 'diagnostic_observation' for c in package['cases']):
+            raise ValueError('historical case payload changed')
+        from digitalmodel.ansys.analysis_observed import validate_observed_transition
+        validate_observed_transition(package, baseline, resolver)
 
 
 def _plain(path):
@@ -70,24 +77,26 @@ def _replace(target, raw):
             temporary.unlink(missing_ok=True)
 
 
-def _refresh(package, baseline, manifest, root, resolver):
+def _refresh(package, baseline, manifest, root, resolver, *, review_sha256=None):
     current = load_package(manifest)
     if current not in (baseline, package):
         raise ValueError('canonical baseline changed')
     _evidence(baseline, resolver)
     _evidence(package, resolver)
+    _relation(package, baseline, resolver, review_sha256=review_sha256)
     _immutable(baseline, root)
     revision = _immutable(package, root)
     if load_package(revision) != package:
         raise OSError('revision readback mismatch')
     if load_package(manifest) != current:
         raise ValueError('canonical baseline changed before replacement')
+    _relation(package, baseline, resolver, review_sha256=review_sha256)
     _replace(manifest, canonical_bytes(package))
     _replace(manifest.with_name('responses.csv'), response_csv(package).encode('utf-8'))
     return revision
 
 
-def publish_matrix(package, baseline, manifest_path, owner_root, resolver):
+def publish_matrix(package, baseline, manifest_path, owner_root, resolver, *, review_sha256=None):
     """Publish or resume one explicit revision; CSV is a non-atomic derived view.
 
     The outer lock serializes participating integration writers only. Source
@@ -95,7 +104,7 @@ def publish_matrix(package, baseline, manifest_path, owner_root, resolver):
     are not excluded by filesystem locks. No stale lock is removed automatically.
     """
     package, baseline = copy.deepcopy(package), copy.deepcopy(baseline)
-    _relation(package, baseline)
+    _relation(package, baseline, resolver, review_sha256=review_sha256)
     root, manifest = Path(owner_root).absolute(), Path(manifest_path).absolute()
     _plain(root)
     _plain(manifest)
@@ -116,7 +125,7 @@ def publish_matrix(package, baseline, manifest_path, owner_root, resolver):
             stream.write(owner)
             stream.flush()
             os.fsync(stream.fileno())
-        return _refresh(package, baseline, manifest, root, resolver)
+        return _refresh(package, baseline, manifest, root, resolver, review_sha256=review_sha256)
     finally:
         try:
             if lock.read_bytes() == owner:

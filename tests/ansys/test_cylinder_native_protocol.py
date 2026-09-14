@@ -25,7 +25,7 @@ def test_composed_synthetic_protocol_complete(request, fixture_name):
     assert len(result["values"]) == 63
     assert result["rfy_sum"] == 0
     assert result["engineering_qualified"] is False
-    assert "Unestablished" in result["native_grammar_compatibility"]
+    assert "unsupported layouts refuse" in result["native_grammar_compatibility"]
     if fixture_name == "control":
         assert all(value == 0 for value in result["values"].values())
     else:

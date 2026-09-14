@@ -1,8 +1,7 @@
-"""Strict audit adapters; the fixed table/status grammar is synthetic-tested.
+"""Strict synthetic and observed v261 audit/status adapters.
 
-Actual SFELIST, DLIST and status-output layout for the proposed native profile
-has not been captured. Unsupported native text is INCOMPLETE, never converted
-to an assertion of verified model state. No caller-supplied PASS flags are used.
+Only explicit implemented layouts are supported; every native line is consumed.
+Unsupported text remains INCOMPLETE, never inferred from requested settings.
 """
 import re
 from decimal import Decimal
@@ -58,6 +57,9 @@ def _supports(lines):
 
 def verify_load_audit(raw, case):
     """Audit raw surface/nodal/support rows against frozen pressure and bottom set."""
+    if b'No surface loads to list.' in raw:
+        from digitalmodel.ansys.cylinder_results_native_loads import verify_zero_loads
+        return verify_zero_loads(raw,case)
     lines = _lines(raw)
     pressures, index = _surface(lines)
     if index >= len(lines) or lines[index].strip() != b'NO NODAL FORCES':
@@ -95,10 +97,21 @@ def parse_configuration(raw):
         raise EvidenceError('Missing native output')
     transition = split_load_audit(raw)['transition']
     _transition_configuration(transition)
+    native_layout = b'CURRENT ANSYS CONFIGURATION' in transition
     matches = re.findall(rb'(?m)^ *RESUPREC *= *([+-]?\d+) *\r?$', raw)
-    if matches != [b'0',b'0']:
+    if ((native_layout and (matches or raw.count(b'USE DOUBLE PRECISION RESULTS FILE FORMAT') != 3
+            or re.split(rb'(?m)^ *OCV_LOAD_AUDIT_BEGIN *\r?$',raw)[0].count(b'USE DOUBLE PRECISION RESULTS FILE FORMAT') != 1))
+            or (not native_layout and matches != [b'0',b'0'])):
         raise EvidenceError('Unexpected RESUPREC outside bound pre/post sections')
     expected = dict(NDIGIT='8',FTYPE='E',NWIDTH='24',DSIGNF='16',LINE='100',CHAR='240')
+    from digitalmodel.ansys.cylinder_results_native_status import format_status, outres_status, nerr_status
+    if native_layout:
+        format_status(extract_block(raw,'FORMAT'))
+        outres_status(extract_block(raw,'OUTRES'))
+        return {'nerr_nmerr':nerr_status(extract_block(raw,'NERR')),
+                'resuprec':'0',
+                'resuprec_basis':'inferred_from_native_double_precision_status',
+                'resuprec_source_version':'v261'}
     if _settings(extract_block(raw,'FORMAT'),expected) != expected:
         raise EvidenceError('Native listing format differs')
     if _settings(extract_block(raw,'OUTRES'),('ALL','NAR')) != dict(ALL='ALL',NAR='NONE'):
@@ -111,15 +124,15 @@ def parse_configuration(raw):
 
 def load_audit_block(raw):
     """Delimited window preserves the required no-mutation pre-solve sequence."""
-    begin = b'OCV_LOAD_AUDIT_BEGIN\n'
-    end = b'OCV_SOLVED_STATE_BEGIN\n'
     normalized = raw.replace(b'\r\n',b'\n')
-    if normalized.count(begin)!=1 or normalized.count(end)!=1:
-        raise EvidenceError('Missing or duplicate load-audit window')
-    section = normalized.split(begin)[1].split(end)[0]
-    if not section or end not in normalized.split(begin)[1]:
+    bounds = []
+    for label in ('LOAD_AUDIT_BEGIN','SOLVED_STATE_BEGIN'):
+        pattern = re.compile(rb'(?m)^ *OCV_' + label.encode() + rb' *\n')
+        bounds.append(_one_match(pattern, normalized, label))
+    if bounds[0].end() >= bounds[1].start():
         raise EvidenceError('Invalid load-audit window')
-    return section
+    return normalized[bounds[0].end():bounds[1].start()]
+
 
 
 FINISH = re.compile(rb'(?m)^ *\*{5} ROUTINE COMPLETED \*{5} +ELAPSED TIME = +[0-9]+(?:\.[0-9]+)? *\n')
@@ -150,8 +163,8 @@ def _one_match(pattern, raw, name):
 def _transition_configuration(raw):
     """Bind statuses to processor boundaries; unknown CONFIG layouts refuse.
 
-    RESUPREC-only section bodies are synthetic-tested, not an observed native
-    CONFIG layout. Full solution bytes remain retained and diagnostic-scanned
+    RESUPREC-only sections retain the synthetic profile; complete observed v261
+    CONFIG sections use a separate strict reader. Full solution bytes remain retained and diagnostic-scanned
     by the composed validator; no arbitrary CONFIG text is ignored.
     """
     finishes = list(FINISH.finditer(raw))
@@ -164,7 +177,12 @@ def _transition_configuration(raw):
         raise EvidenceError('Invalid pre/post-solve transition order')
     for section in (raw[finishes[0].end():solution.start()],
                     raw[finishes[1].end():post.start()]):
-        if _settings(section, ('RESUPREC',)) != {'RESUPREC':'0'}:
+        if b'CURRENT ANSYS CONFIGURATION' in section:
+            from digitalmodel.ansys.cylinder_results_native_status import config_section
+            state = {'RESUPREC':config_section(section)}
+        else:
+            state = _settings(section, ('RESUPREC',))
+        if state != {'RESUPREC':'0'}:
             raise EvidenceError('Pre/post native RESUPREC differs')
     return {'solution_bytes': raw[solution.start():finishes[1].end()],
             'post_bytes': raw[post.start():]}

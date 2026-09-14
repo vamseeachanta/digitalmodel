@@ -160,6 +160,13 @@ def validate_case(case: dict) -> None:
 
 def validate_attempt_state(case: dict) -> None:
     """Absent attempt metadata stays unknown; pending metadata cannot imply a run."""
+    if case['capture_role'] == 'diagnostic_replay':
+        from digitalmodel.ansys.analysis_replay import validate_replay_record
+        validate_replay_record(case)
+        return
+    if case['capture_role'] == 'diagnostic_observation':
+        validate_observed_attempt(case)
+        return
     present = {key for key in ('attempt_consumed', 'native_attempt_count') if key in case}
     if present:
         if len(present) != 2:
@@ -182,6 +189,56 @@ def validate_attempt_state(case: dict) -> None:
                 or 'observed_value' in row
                 or 'native-not-attempted' not in row['limitations']):
             raise ValueError('pending response requires null, unattempted evidence')
+
+
+def validate_observed_attempt(case: dict) -> None:
+    validate_observed_metadata(case)
+    count = case.get('native_attempt_count')
+    if (case.get('attempt_consumed') is not True or 'native_attempt_count' not in case
+            or (count is not None and type(count) is not int) or count not in (0, 1, None)):
+        raise ValueError('invalid typed diagnostic attempt metadata')
+    if (case.get('assessment_status') not in ('incomplete', 'failed')
+            or case['author'] != 'SOLVERS' or case['author_status'] != 'recorded'):
+        raise ValueError('diagnostic assessment or author differs')
+    reference = case.get('observation_reference')
+    if not isinstance(reference, dict) or set(reference) != {'id', 'sha256'}:
+        raise ValueError('diagnostic observation reference required')
+    if not any(r['id'] == reference['id'] and r['sha256'] == reference['sha256']
+               and r['role'] == 'diagnostic_intake' for r in case['evidence']):
+        raise ValueError('diagnostic receipt absent from case evidence')
+    if count == 1:
+        if case['source_kind'] != 'native' or case['execution_status'] != 'completed':
+            raise ValueError('diagnostic execution state differs')
+    else:
+        ref = case.get('attempt_boundary_reference')
+        if (case['source_kind'] != 'unverified' or case['execution_status'] != 'unknown'
+                or not isinstance(ref, dict) or set(ref) != {'id', 'sha256'}
+                or not any(r['id'] == ref['id'] and r['sha256'] == ref['sha256']
+                           for r in case['evidence'])):
+            raise ValueError('claim or uncertainty evidence required')
+    if any(row['value'] is not None or row['calculation_status'] != 'failed'
+           or 'diagnostic-only' not in row['limitations'] for row in case['responses']):
+        raise ValueError('diagnostic observation requires failed null responses')
+
+
+def validate_observed_metadata(case: dict) -> None:
+    execution = case.get('observed_execution')
+    if (case.get('input_descriptor_scope') != 'historical-prelaunch-basis'
+            or 'observed_solver_profile' not in case or case['observed_solver_profile'] is not None
+            or case.get('observed_solver_profile_status') != 'not-established-from-native-header'
+            or case.get('observed_retention') != dict(status='retained-local-source-evidence',
+                                                     private_git_backup='not-established')
+            or not isinstance(execution, dict)
+            or set(execution) != {'return_code', 'duration_seconds'}):
+        raise ValueError('observed metadata differs')
+    if case.get('native_attempt_count') == 1:
+        if (type(execution['return_code']) is not int or execution['return_code'] != 0
+                or not isinstance(execution['duration_seconds'], str)
+                or decimal_text(execution['duration_seconds']) != execution['duration_seconds']
+                or Decimal(execution['duration_seconds']) <= 0):
+            raise ValueError('observed metadata execution differs')
+    elif execution != dict(return_code=None, duration_seconds=None):
+        raise ValueError('observed metadata without execution differs')
 
 
 def string_list(value: list, label: str) -> None:

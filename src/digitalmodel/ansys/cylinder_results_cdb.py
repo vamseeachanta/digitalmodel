@@ -1,8 +1,8 @@
 """Bounded PLANE183 CDB reader: database bytes are data, never executed commands.
 
 NBLOCK/EBLOCK/ETBLOCK grammar follows the existing pressure-CDB reader and
-Ansys Programmer's Reference Coded Database File Commands. Q8 branch fixtures
-are synthetic; no native PLANE183 capture has established format compatibility.
+Ansys Programmer's Reference Coded Database File Commands. Q8 fixtures are synthetic. Retained native CDB observations additionally inform
+the explicit zero-default grammar; full result acceptance remains separate.
 """
 from decimal import Decimal
 
@@ -48,10 +48,14 @@ def _nodes(header, rows):
     for row in rows:
         fields = _fields(row, [9]*3+[21]*6)
         node, solid, location = map(int, fields[:3])
+        # NBLOCK omits trailing zero coordinates (v242 Programmer's Reference).
+        # A missing nonzero Y still refuses in verify_model against frozen nodes.
+        _require(fields[3] and (fields[4] or not any(fields[5:])),
+                 'Native node requires explicit X and Y unless trailing zeros omitted')
         xyz = [decimal_value(v or '0') for v in fields[3:]]
         _require(node > 0 and node not in result and not solid and not location,
                  'Invalid/duplicate node or unsupported flags')
-        _require(fields[3] and not any(xyz[2:]), 'Nonplanar or rotated native node')
+        _require(not any(xyz[2:]), 'Nonplanar or rotated native node')
         result[node] = tuple(xyz[:2])
     _require(result and [max(result),len(result)] == list(map(int,header[3:])),
              'NBLOCK count/max mismatch')
@@ -83,7 +87,11 @@ def _inert(parts):
              'ERESX,DEFA','EXTOPT,ACLEAR,0','EXTOPT,ATTR,0,0,0'}
     if ','.join(parts) in fixed or parts[0] in ('/COM','/TITLE'):
         return True
-    zero_counts = {'ACEL':3,'OMEGA':4,'DOMEGA':3,'CGLOC':3,'CGOMEGA':3,
+    # Current OMEGA grammar has three components; retain the prior all-zero
+    # fourth-field fixture only. No nonzero legacy option is accepted.
+    if parts[0] == 'OMEGA':
+        return len(parts) in (4,5) and all(decimal_value(v)==0 for v in parts[1:])
+    zero_counts = {'ACEL':3,'DOMEGA':3,'CGLOC':3,'CGOMEGA':3,
                    'DCGOMG':3,'TREF':1,'IRLF':1,'KUSE':1,'TIME':1,'ALPHAD':1,
                    'BETAD':1,'DMPRAT':1,'DMPSTR':1,'NEQIT':1}
     if parts[0] in zero_counts:

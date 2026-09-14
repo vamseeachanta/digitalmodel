@@ -29,8 +29,10 @@ def validate_precision_witness(raw, case_token):
         raise EvidenceError('Exactly one precision witness required')
     node, x, y, component, field = records[0]
     value, quantum = parse_e24(field, 'dimensionless')
+    # E24.16 may use 0.ddddE+01 for this exact 16-significant-digit literal.
+    # parse_e24 returns half the last-place quantum: 0.5 * 10**(1-16).
     if (node or x or y or component != 'WITNESS'
-            or value != Decimal('1.234567890123456') or quantum > Decimal('1e-16')):
+            or value != Decimal('1.234567890123456') or quantum > Decimal('5e-16')):
         raise EvidenceError('Precision witness does not match approved digits')
 
 

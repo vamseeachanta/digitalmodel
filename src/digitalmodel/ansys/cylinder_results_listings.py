@@ -56,6 +56,9 @@ def parse_nodal_listing(raw, stations, kind):
     if kind not in HEADERS:
         raise EvidenceError('Unknown native listing kind')
     nodes = validated_stations(stations)
+    if raw.lstrip().startswith(b'PRINT '):
+        from digitalmodel.ansys.cylinder_results_native_listings import normalize_nodal
+        raw = normalize_nodal(raw,kind)
     rows = _table(raw, kind)
     if set(rows) != set(nodes):
         raise EvidenceError('Native listing does not contain exactly nine stations')
@@ -69,6 +72,9 @@ def parse_contribution_listing(raw, stations, *, element_ids):
     nodes = validated_stations(stations)
     if not isinstance(raw, bytes) or not element_ids:
         raise EvidenceError('Missing native contributions or expected element set')
+    if raw.lstrip().startswith(b'PRINT '):
+        from digitalmodel.ansys.cylinder_results_native_listings import normalize_presol
+        raw = normalize_presol(raw)
     matches = list(re.finditer(rb'(?m)^ *ELEMENT *= *([1-9]\d*) *\r?\n', raw))
     if not matches or raw[:matches[0].start()].strip():
         raise EvidenceError('Unsupported element contribution preamble')

@@ -29,6 +29,9 @@ def _recovery(artifacts, case, values):
 def _reaction_listing(raw, expected):
     """Strict synthetic-tested RF table profile; unsupported native headers refuse."""
     from digitalmodel.ansys.cylinder_results import parse_e24
+    if raw.lstrip().startswith(b'PRINT F'):
+        from digitalmodel.ansys.cylinder_results_native_reactions import verify_reactions
+        return verify_reactions(raw,expected)
     lines = [line.rstrip(b'\r') for line in raw.split(b'\n') if line.strip()]
     if not lines or lines[0].split() != [b'NODE',b'FX',b'FY']:
         raise EvidenceError('Unsupported or missing PRRSOL force table header')
@@ -55,6 +58,11 @@ def _parse_all(case, artifacts):
     values = parse_station_values(artifacts['station_values.txt'],token,stations)
     parse_state_values(artifacts['state_values.txt'],token,len(case['nodes']),len(case['elements']))
     validate_precision_witness(artifacts['precision_witness.txt'],token)
+    native = artifacts['native.out']
+    if (b'CURRENT ANSYS CONFIGURATION' in native or b'No surface loads to list.' in native
+            or re.search(rb'(?m)^ *PRINT ', native)):
+        from digitalmodel.ansys.cylinder_results_native_status import verify_case_titles
+        verify_case_titles(artifacts['native.out'],token)
     config = parse_configuration(artifacts['native.out'])
     diagnostic = classify_diagnostics(artifacts['native.out'],artifacts['jobname.err'],
                     artifacts['stdout'],artifacts['stderr'],nerr_nmerr=config['nerr_nmerr'])
@@ -87,4 +95,4 @@ def validate_native_evidence(case, artifacts, approved_reference_hash, observed_
             errors.append(str(exc))
     return {'status':'INCOMPLETE' if errors else 'COMPLETE','errors':errors,
             'values':values,'rfy_sum':force,'engineering_qualified':False,
-            'native_grammar_compatibility':'Unestablished until actual matching canary evidence; unsupported layouts refuse'}
+            'native_grammar_compatibility':'Explicit synthetic and retained v261 layouts only; unsupported layouts refuse'}

@@ -1,0 +1,107 @@
+"""Synthetic digest inventories and transport refusals; no provider invocation."""
+from copy import deepcopy
+import pytest
+from digitalmodel.ansys import analysis_replay_inputs as inputs
+from digitalmodel.ansys.analysis_records import canonical_bytes, digest_bytes
+
+
+def inventory_fixture(tmp_path):
+    refs, resolver = {}, {}
+    inventory = inputs.source_inventory()
+    for group, names in [('raw', inputs.RAW_NAMES), ('code', inventory),
+                         ('documents', inputs.DOCUMENT_ROLES)]:
+        refs[group] = {}
+        for number, name in enumerate(names):
+            identity = group + '-' + str(number)
+            raw = b'{}'
+            if group == 'code':
+                from pathlib import Path
+                raw = (Path(inputs.__file__).resolve().parents[3] / name).read_bytes()
+            path = tmp_path / identity
+            path.write_bytes(raw)
+            resolver[identity] = path
+            refs[group][name] = dict(id=identity, sha256=digest_bytes(raw), required=True)
+    return refs, resolver
+
+
+def test_complete_fixed_inventory_resolves_original_bytes(tmp_path):
+    receipt, resolver = inventory_fixture(tmp_path)
+    raw, evidence = inputs._resolve_inventory(receipt, resolver)
+    assert len(raw['raw']) == 23
+    assert len(evidence) == sum(len(rows) for rows in receipt.values())
+
+
+@pytest.mark.parametrize('fault', ['raw_missing', 'code_missing', 'changed_bytes', 'required', 'path', 'duplicate'])
+def test_inventory_rejects_missing_changed_or_private_identifiers(tmp_path, fault):
+    receipt, resolver = inventory_fixture(tmp_path)
+    ref = next(iter(receipt['raw'].values()))
+    if fault == 'raw_missing':
+        receipt['raw'].pop(next(iter(receipt['raw'])))
+    elif fault == 'code_missing':
+        receipt['code'].pop(next(iter(receipt['code'])))
+    elif fault == 'changed_bytes':
+        resolver[ref['id']].write_bytes(b'changed')
+    elif fault == 'required':
+        ref['required'] = False
+    elif fault == 'path':
+        ref['id'] = 'private/path'
+    else:
+        receipt['raw'][list(receipt['raw'])[1]] = deepcopy(ref)
+    with pytest.raises(ValueError):
+        inputs._resolve_inventory(receipt, resolver)
+
+
+def transport_fixture():
+    content = 'synthetic reviewed source\n'
+    inventory = {'src/digitalmodel/ansys/example.py': digest_bytes(content.encode())}
+    files = [dict(path=next(iter(inventory)), sha256=next(iter(inventory.values())), content=content)]
+    bundle = canonical_bytes(dict(files=files))
+    review = dict(bundle_sha256=digest_bytes(bundle), verdict='MINOR', findings=[])
+    transport = canonical_bytes(dict(is_error=False, session_id='synthetic-provider-session', structured_output=review))
+    receipt = canonical_bytes(dict(status='REVIEW_RECEIVED', bundle_sha256=digest_bytes(bundle),
+        stdout_sha256=digest_bytes(transport), files=files, review=review))
+    return dict(review=receipt, review_transport=transport, review_bundle=bundle), inventory
+
+
+def test_pinned_transport_and_bundle_agree():
+    raw, inventory = transport_fixture()
+    inputs._review_binding(raw, inventory, digest_bytes(raw['review']))
+
+
+@pytest.mark.parametrize('fault', ['external_pin', 'bundle', 'transport'])
+def test_review_chain_tamper_refuses(fault):
+    raw, inventory = transport_fixture()
+    pin = digest_bytes(raw['review'])
+    if fault == 'external_pin':
+        pin = 'a' * 64
+    else:
+        raw['review_' + fault] += b' '
+    with pytest.raises(ValueError):
+        inputs._review_binding(raw, inventory, pin)
+
+
+def test_code_inventory_covers_fixed_deck_export_dependency():
+    assert 'src/digitalmodel/ansys/cylinder_deck_exports.py' in inputs.source_inventory()
+
+
+def test_original_binding_uses_observation_receipt_not_ambiguous_role(tmp_path):
+    from digitalmodel.ansys.analysis_replay import _original
+    original = dict(status='INCOMPLETE', attempted=[inputs.CASE_ID], records=[dict(
+        evidence_errors=['Unsupported CDB command OMEGA'], values={})])
+    raw = {'outcome.json': canonical_bytes(original), inputs.CASE_ID+'/execution.json': b'{}'}
+    sources, resolver = {}, {}
+    for role, data in [('outcome', raw['outcome.json']), ('execution', b'{}'), ('review', b'old review')]:
+        path = tmp_path/role
+        path.write_bytes(data)
+        resolver[role] = path
+        sources[role] = dict(id=role, sha256=digest_bytes(data))
+    encoded = canonical_bytes(dict(sources=sources))
+    path = tmp_path/'observation'
+    path.write_bytes(encoded)
+    resolver['observation'] = path
+    old = dict(observation_reference=dict(id='observation', sha256=digest_bytes(encoded)),
+               evidence=[dict(role='outcome', id='unrelated', sha256='a'*64)])
+    assert _original(raw, old, resolver, {'review': b'new independent replay review'}) == original
+    path.write_bytes(b'changed')
+    with pytest.raises(ValueError):
+        _original(raw, old, resolver, {})
