@@ -52,3 +52,14 @@ examples/ansys/cylinder-benchmark/checker_brief.txt text eol=lf
 examples/ansys/cylinder-benchmark/checker_contract.json text eol=lf
 examples/ansys/cylinder-benchmark/producer_derivation.json text eol=lf
 examples/ansys/cylinder-benchmark/manifest.json text eol=lf
+
+# Complete imported-package and diagnostic-entry source bindings.
+.gitattributes text eol=lf
+src/digitalmodel/ansys/*.py text eol=lf
+src/digitalmodel/__init__.py text eol=lf
+scripts/ansys/*.py text eol=lf
+tests/ansys/fixtures/lmstat_ansys_increment_layout.txt -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/ansys/fixtures/lmstat_ansys_increment_layout.provenance.json text eol=lf
+examples/ansys/cylinder-runtime/** -text
+docs/plans/2026-09-14-issue-2121-zero-diagnostic-amendment.html text eol=lf
+docs/plans/evidence/2026-09-14-issue-2121-zero-diagnostic-preparation.json text eol=lf

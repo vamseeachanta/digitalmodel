@@ -1,5 +1,6 @@
 """Synthetic immutable-bundle tests; no native/provider/process invocation."""
 import json
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -220,3 +221,85 @@ def test_git_binding_subprocess_contract(tmp_path, monkeypatch, kind_code, kind,
     else:
         assert module._git_blob(tmp_path, 'a' * 40, 'src/example.py') == b'exact-source'
     assert len(calls) == (1 if kind_code or kind != b'commit' else 2)
+
+
+def test_pending_alias_unlink_failure_preserves_published_bundle(setup_bundle, monkeypatch):
+    root, source, inventory, pins = setup_bundle
+    original = (source / 'manifest.json').read_bytes()
+    baseline = json.loads(original)
+    target = root / 'examples/ansys/cylinder-runtime/retained-alias'
+    pending = target / 'manifest.pending.json'
+    final = target / 'manifest.json'
+    unlink = Path.unlink
+    observed = []
+
+    def fail_only_published_alias(path, *args, **kwargs):
+        if path == pending:
+            assert final.exists()
+            assert path.samefile(final)
+            observed.append(path.read_bytes())
+            raise PermissionError('injected pending-alias cleanup failure')
+        return unlink(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, 'unlink', fail_only_published_alias)
+    result = module.prepare_runtime_bundle('retained-alias', **pins)
+    expected = canonical_bytes({**baseline, 'runtime_sources': inventory,
+                                'runtime_lineage': pins})
+    assert observed == [expected]
+    assert result['pending_manifest_alias_retained'] is True
+    assert result['manifest_sha256'] == digest_bytes(expected)
+    assert final.read_bytes() == pending.read_bytes() == expected
+    assert (source / 'manifest.json').read_bytes() == original
+    assert len(baseline['artifacts']) == 21
+    for row in baseline['artifacts']:
+        raw = (target / row['path']).read_bytes()
+        assert raw == (source / row['path']).read_bytes()
+        assert digest_bytes(raw) == row['sha256']
+    assert not (target / 'preparation-failure.json').exists()
+
+
+def test_runtime_inventory_covers_imported_base_runner():
+    from digitalmodel.ansys import cylinder_runner
+
+    root = Path(cylinder_runner.__file__).resolve().parents[3]
+    runner = root / 'src/digitalmodel/ansys/runner.py'
+    assert cylinder_runner.ANSYSRunner.__module__ == 'digitalmodel.ansys.runner'
+    inventory = module.runtime_sources()
+    rows = [row for row in inventory
+            if row['path'] == 'src/digitalmodel/ansys/runner.py']
+    assert rows == [{'path': 'src/digitalmodel/ansys/runner.py',
+                     'sha256': digest_bytes(runner.read_bytes())}]
+
+
+def test_runtime_inventory_covers_every_immediate_package_source():
+    from digitalmodel.ansys import cylinder_canary
+
+    directory = Path(cylinder_canary.__file__).resolve().parent
+    expected = [{'path': 'src/digitalmodel/ansys/' + path.name,
+                 'sha256': digest_bytes(path.read_bytes())}
+                for path in sorted(directory.glob('*.py'))]
+    assert module.runtime_sources() == expected
+    assert any(row['path'].endswith('/__init__.py') for row in expected)
+
+
+@pytest.mark.parametrize('name,origin', [
+    ('digitalmodel.ansys.unlisted_extension', 'unlisted.py'),
+    ('digitalmodel.ansys.runner', 'runner.py'),
+    ('digitalmodel.ansys', '__init__.py'),
+    ('digitalmodel.ansys.nested.runner', 'runner.py'),
+])
+def test_loaded_package_module_outside_inventory_refuses(tmp_path, monkeypatch, name, origin):
+    other = tmp_path / origin
+    other.write_bytes(b'# untrusted source')
+    monkeypatch.setitem(sys.modules, name, SimpleNamespace(__file__=str(other)))
+    with pytest.raises(ValueError, match='inventory|runtime|source'):
+        module.runtime_sources()
+
+
+def test_unlisted_module_cannot_borrow_inventoried_file_origin(monkeypatch):
+    from digitalmodel.ansys import cylinder_canary
+
+    monkeypatch.setitem(sys.modules, 'digitalmodel.ansys.unlisted_extension',
+                        SimpleNamespace(__file__=cylinder_canary.__file__))
+    with pytest.raises(ValueError, match='inventory|runtime|source'):
+        module.runtime_sources()

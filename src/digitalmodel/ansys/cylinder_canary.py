@@ -25,13 +25,14 @@ def runtime_sources():
     Python bytecode attestation. Production adapters remain trusted boundaries.
     """
     directory = Path(__file__).resolve().parent
-    paths = sorted([*directory.glob('cylinder_*.py'), directory / 'analysis_records.py'])
-    expected = {path.stem: path for path in paths}
+    paths = sorted(directory.glob('*.py'))
+    expected = {('digitalmodel.ansys' if path.name == '__init__.py'
+                 else 'digitalmodel.ansys.' + path.stem): path for path in paths}
     for name, module in list(sys.modules.items()):
-        if name.startswith('digitalmodel.ansys.') and name.rsplit('.', 1)[-1] in expected:
-            stem = name.rsplit('.', 1)[-1]
+        if name == 'digitalmodel.ansys' or name.startswith('digitalmodel.ansys.'):
             origin = getattr(module, '__file__', None)
-            if not origin or Path(origin).resolve() != expected[stem].resolve():
+            if (name not in expected or not origin
+                    or Path(origin).resolve() != expected[name].resolve()):
                 raise ValueError('loaded runtime dependency originates outside source inventory')
     result = []
     for path in paths:

@@ -22,6 +22,7 @@ def test_windows_assignment_precedes_resume_and_is_suspended():
     supervisor.start(["synthetic"], ".", io.BytesIO(), io.BytesIO())
     assert events == ["assign", "resume"]
     assert popen.call_args.kwargs["creationflags"] == 0x08000004
+    assert "env" not in popen.call_args.kwargs  # subprocess inherits the bound parent environment.
     job.assign.assert_called_once_with(99)
     supervisor.terminate()
     job.terminate.assert_called_once()

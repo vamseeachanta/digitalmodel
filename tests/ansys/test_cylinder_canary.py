@@ -17,7 +17,7 @@ ORDER = ['ocv-zero-t60-n16', 'ocv-t60-p10-n4',
 
 def source_inventory():
     directory = Path(cylinder_canary.__file__).resolve().parent
-    paths = sorted([*directory.glob('cylinder_*.py'), directory / 'analysis_records.py'])
+    paths = sorted(directory.glob('*.py'))
     return [{'path': 'src/digitalmodel/ansys/' + path.name,
              'sha256': digest_bytes(path.read_bytes())} for path in paths]
 
