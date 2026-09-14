@@ -392,3 +392,6 @@ docs/api/_datasets/
 # 3D tension-moment study: 191 MB of JSON that compresses to ~1 MB as parquet.
 # Regenerated on demand and published to Hugging Face; never committed. (#1915)
 docs/api/structural/wall-thickness-3d.json
+
+# Retain the reviewed offline cylinder engineering report.
+!docs/reports/2026-09-14-issue-2121-b1-preparation.html

@@ -1,0 +1,14 @@
+{
+  "provider": "Codex",
+  "review_sha256": "9693ef637eeeb3e848fc3f43afd6b6d15c1c56d7ca632ff487e891ea4eead8cf",
+  "reviewed_report_revision": "report-sha256:5f367038422e37485822b1c1e9de5885fbace5400fca23c1bd76c81a40865788",
+  "current_report_sha256": "32a20aae5326988fde99780be97f72419ceb8e5356ac853c1ea960321cf66e78",
+  "verdict": "ALL_FIVE_NONBLOCKING_FINDINGS_ADDRESSED",
+  "findings": [
+    "B1 authorization URL is now explicit.",
+    "Historical non-canary native ANSYS corpus is named, with licensed source retention and parser-only purpose.",
+    "Process guard statement now limits evidence to executable names and disclaims argument attestation.",
+    "Absence of human engineering qualification of the reference is explicit in HTML.",
+    "Future recovery/check methods and refinement difference plus floor match the approved rules."
+  ]
+}
