@@ -48,3 +48,10 @@ def test_invalid_deny_controls_refuse(rule):
 def test_standalone_high_confidence_tokens(prefix,length,rule,encoding):
     planted=prefix+'A'*length
     assert rule in screen()(planted.encode(encoding))
+
+
+@pytest.mark.parametrize('quote',['"', "'"])
+@pytest.mark.parametrize('encoding',['ascii','utf-16-le','utf-16-be'])
+def test_quoted_credential_keys(quote,encoding):
+    raw=('{'+quote+'password'+quote+': '+quote+'synthetic-secret-value'+quote+'}').encode(encoding)
+    assert 'credential-assignment' in screen()(raw)

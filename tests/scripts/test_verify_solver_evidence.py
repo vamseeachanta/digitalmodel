@@ -29,7 +29,7 @@ def git(*args):
 
 
 def bare(tmp_path, root):
-    git('init',tmp_path/'repo')
+    git('init','-b','main',tmp_path/'repo')
     target=tmp_path/'repo'/'data'; target.mkdir()
     import shutil
     shutil.copytree(root,target/'case')
@@ -137,3 +137,36 @@ def test_git_directory_casefold_collision_refuses(monkeypatch):
         return b'100644 blob '+b'a'*40+b'\tdata/case/A/x\0'+b'100644 blob '+b'b'*40+b'\tdata/case/a/y\0'
     monkeypatch.setattr(tool,'_git',fake_git)
     with pytest.raises(ValueError):tool._git_inventory('data/case','unused','b'*40)
+
+
+def test_bare_git_ref_rejects_dangling_commit(tmp_path):
+    root,_=dataset(tmp_path);git_dir,revision=bare(tmp_path,root)
+    tree=git('--git-dir='+str(git_dir),'rev-parse',revision+'^{tree}').decode().strip()
+    dangling=git('--git-dir='+str(git_dir),'-c','user.name=Synthetic Test',
+        '-c','user.email=synthetic@example.invalid','commit-tree',tree,'-m','Unreachable fixture').decode().strip()
+    with pytest.raises(ValueError):module().verify('data/case',git_dir=git_dir,revision=dangling)
+
+
+def test_bare_git_accepts_ancestor_and_current_tip(tmp_path):
+    root,_=dataset(tmp_path);git_dir,revision=bare(tmp_path,root)
+    repo=tmp_path/'repo';(repo/'outside.txt').write_bytes(b'outside dataset')
+    git('-C',repo,'add','.')
+    git('-C',repo,'-c','user.name=Synthetic Test','-c','user.email=synthetic@example.invalid',
+        'commit','-m','Next synthetic commit')
+    tip=git('-C',repo,'rev-parse','HEAD').decode().strip()
+    git('--git-dir='+str(git_dir),'fetch',repo,'main:refs/heads/main')
+    for commit in (revision,tip):
+        assert module().verify('data/case',git_dir=git_dir,revision=commit)['file_count']==1
+
+
+def test_bare_git_missing_named_ref_refuses(tmp_path):
+    root,_=dataset(tmp_path);git_dir,revision=bare(tmp_path,root)
+    with pytest.raises(ValueError):
+        module().verify('data/case',git_dir=git_dir,revision=revision,git_ref='refs/heads/absent')
+
+
+def test_explicit_staging_ref_is_local_reachability_only(tmp_path):
+    root,_=dataset(tmp_path);git_dir,revision=bare(tmp_path,root)
+    git('--git-dir='+str(git_dir),'update-ref','refs/heads/staging',revision)
+    assert module().verify('data/case',git_dir=git_dir,revision=revision,
+        git_ref='refs/heads/staging')['file_count']==1

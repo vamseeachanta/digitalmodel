@@ -11,7 +11,7 @@ BUILTINS = (
     ('private-key', r'-----BEGIN (?:RSA |EC |DSA |OPENSSH |ENCRYPTED )?PRIVATE KEY-----'),
     ('aws-access-key', r'\b(?:AKIA|ASIA)[A-Z0-9]{16}\b'),
     ('credential-assignment', r'(?i)\b(?:password|passwd|api[_-]?key|access[_-]?token|client[_-]?secret)'
-     r'''\s*[:=]\s*["'][^"'\r\n]{8,}["']'''),
+     r'''["']?\s*[:=]\s*["'][^"'\r\n]{8,}["']'''),
 )
 
 

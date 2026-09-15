@@ -152,7 +152,19 @@ def _git_inventory(dataset, git_dir, revision):
     return found
 
 
-def verify(dataset_dir, git_dir=None, revision=None):
+def _reachable(git_dir, revision, git_ref):
+    if not isinstance(git_ref, str) or not git_ref.startswith('refs/heads/'):
+        raise ValueError('Explicit branch ref required')
+    _git(git_dir, 'check-ref-format', git_ref)
+    tip = _git(git_dir, 'rev-parse', '--verify', git_ref+'^{commit}').decode('ascii').strip()
+    if not re.fullmatch('[0-9a-fA-F]{40}', tip):
+        raise ValueError('Named branch commit is invalid')
+    if _git(git_dir, 'cat-file', '-t', tip).strip() != b'commit':
+        raise ValueError('Named branch must identify a commit')
+    _git(git_dir, 'merge-base', '--is-ancestor', revision, tip)
+
+
+def verify(dataset_dir, git_dir=None, revision=None, git_ref='refs/heads/main'):
     """Return verified counts and manifest digest; never infer qualification."""
     if git_dir is None:
         if revision is not None:
@@ -162,6 +174,7 @@ def verify(dataset_dir, git_dir=None, revision=None):
         read = lambda name: _disk_read(root, inventory[name])
     else:
         inventory = _git_inventory(str(dataset_dir), _root(git_dir), revision)
+        _reachable(git_dir, revision, git_ref)
         read = lambda name: _git(git_dir, 'show', revision+':'+inventory[name])
     if 'manifest.json' not in inventory:
         raise ValueError('Manifest missing')
@@ -186,9 +199,10 @@ def main():
     parser.add_argument('dataset_dir')
     parser.add_argument('--git-dir')
     parser.add_argument('--revision')
+    parser.add_argument('--git-ref', default='refs/heads/main')
     args = parser.parse_args()
     try:
-        result = verify(args.dataset_dir, args.git_dir, args.revision)
+        result = verify(args.dataset_dir, args.git_dir, args.revision, args.git_ref)
     except (ValueError, OSError) as error:
         parser.exit(1, str(error)+'\n')
     print(json.dumps(result, sort_keys=True))
