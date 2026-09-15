@@ -261,3 +261,87 @@ def test_successful_license_stdout_does_not_override_stderr(prepared, monkeypatc
     assert base64.b64decode(retained['stderr_base64']) == stderr
     assert retained['stderr_sha256'] == digest_bytes(stderr)
     assert base64.b64decode(retained['stdout_base64']) == LICENSE
+
+
+def _set_cfd_binding(config, binding):
+    raw = canonical_bytes(binding)
+    Path(config['cfd_binding_path']).write_bytes(raw)
+    config['cfd_binding_sha256'] = digest_bytes(raw)
+
+
+def test_pressure_scope_refuses_v1_in_nested_operational_config(prepared):
+    from digitalmodel.ansys.cylinder_pressure_admission import SCOPE
+
+    config, approval, reservation, _, _ = prepared
+    approval['scope'] = SCOPE
+    _set_cfd_binding(config, {'schema': 'cfd-process-binding-1'})
+    assert 'schema' not in config
+    with pytest.raises(ValueError, match='pressure.*v2'):
+        module.ProductionPreflight(config, approval, reservation)._bindings()
+
+
+def test_historical_scope_retains_v1_binding_route(prepared):
+    config, approval, reservation, _, _ = prepared
+    binding = {'schema': 'cfd-process-binding-1'}
+    _set_cfd_binding(config, binding)
+    assert module.ProductionPreflight(config, approval, reservation)._bindings() == binding
+
+
+def test_v2_owner_resolution_repeats_and_retains_evidence(prepared, monkeypatch):
+    from digitalmodel.ansys import cylinder_cfd_owner_evidence as owner
+    from digitalmodel.ansys.cylinder_pressure_admission import SCOPE
+
+    config, approval, reservation, _, _ = prepared
+    approval['scope'] = SCOPE
+    binding = {'schema': 'cfd-process-binding-2'}
+    _set_cfd_binding(config, binding)
+    calls = []
+    evidence = {'scope': 'synthetic-fixed-source-relationships'}
+    def resolve(operation, supplied, read_callback):
+        calls.append((operation, supplied, read_callback))
+        return evidence.copy()
+    monkeypatch.setattr(owner, 'resolve_owner_evidence', resolve)
+    collector = module.ProductionPreflight(config, approval, reservation)
+    for _ in range(3):
+        assert collector._bindings() == binding
+    assert calls == [(config, binding, module._read_owner)] * 3
+    assert collector.last_evidence['cfd_owner_evidence'] == evidence
+
+
+def test_v2_missing_owner_evidence_refuses(prepared):
+    config, approval, reservation, _, _ = prepared
+    _set_cfd_binding(config, {'schema': 'cfd-process-binding-2'})
+    with pytest.raises(ValueError):
+        module.ProductionPreflight(config, approval, reservation)._bindings()
+
+
+def test_owner_reader_rejects_oversize_before_open(tmp_path, monkeypatch):
+    path = tmp_path / 'oversize.json'
+    path.write_bytes(b'x' * (4 * 1024 * 1024 + 1))
+    monkeypatch.setattr(Path, 'open', lambda *a, **k: pytest.fail('oversize file opened'))
+    with pytest.raises(ValueError, match='bound'):
+        module._read_owner(path, 'a' * 64)
+
+
+def test_pressure_owner_recheck_runs_in_actual_phase2(prepared, monkeypatch):
+    from digitalmodel.ansys import cylinder_cfd_owner_evidence as owner
+    from digitalmodel.ansys import cylinder_pressure_resources as resources
+    from digitalmodel.ansys.cylinder_pressure_admission import SCOPE
+
+    config, approval, reservation, _, _ = prepared
+    approval['scope'] = SCOPE
+    _set_cfd_binding(config, {'schema': 'cfd-process-binding-2'})
+    calls = []
+    monkeypatch.setattr(owner, 'resolve_owner_evidence',
+                        lambda *args: calls.append('owner') or {'synthetic': True})
+    monkeypatch.setattr(resources, '_now', lambda: '1006')
+    monkeypatch.setattr(module, 'classify_process_inventory',
+                        lambda *a, **k: {'status': 'CLEAR', 'process_inventory': []})
+    collector = module.ProductionPreflight(config, approval, reservation)
+    collector(approval)
+    collector.before_launch()
+    assert calls == ['owner', 'owner']
+    monkeypatch.setattr(module, '_license_query', lambda *a: pytest.fail('postclaim query'))
+    result = resources.production_phase2(collector, lambda supplied: supplied == approval, approval)
+    assert result['status'] == 'PASS'
+    assert calls == ['owner', 'owner', 'owner']

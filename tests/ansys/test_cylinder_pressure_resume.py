@@ -351,3 +351,33 @@ def test_execution_failure_and_deadline_remain_distinct(harness):
     result = harness.run()
     assert result['terminal_reason'] == 'EXECUTION_INCOMPLETE'
     assert 'DEADLINE_EXCEEDED' in result['terminal_reasons']
+
+
+@pytest.mark.parametrize('stage', ['preflight_write', 'case_copy', 'storage'])
+def test_entire_preclaim_interval_counts_against_freshness(harness, monkeypatch, stage):
+    if stage == 'preflight_write':
+        original = resume._write_exclusive
+        def write(path, value):
+            result = original(path, value)
+            if path.name == 'preflight.json':
+                harness.clock.advance(21_000_000_000)
+            return result
+        monkeypatch.setattr(resume, '_write_exclusive', write)
+    elif stage == 'case_copy':
+        original = resume._prepare_case
+        def prepare(*args):
+            result = original(*args)
+            harness.clock.advance(21_000_000_000)
+            return result
+        monkeypatch.setattr(resume, '_prepare_case', prepare)
+    else:
+        original = harness.storage
+        def storage(*args):
+            result = original(*args)
+            harness.clock.advance(21_000_000_000)
+            return result
+        harness.storage = storage
+    result = harness.run()
+    assert not harness.launches
+    assert result['consumed_count'] == 1
+    assert not harness.record('').exists()

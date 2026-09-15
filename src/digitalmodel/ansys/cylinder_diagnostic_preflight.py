@@ -49,6 +49,18 @@ def _read(value, expected):
     return raw
 
 
+def _read_owner(value, expected):
+    path = _owned_path(value)
+    maximum = 4 * 1024 * 1024
+    if path.stat().st_size > maximum:
+        raise ValueError('owner source exceeds read bound')
+    with path.open('rb') as stream:
+        raw = stream.read(maximum + 1)
+    if len(raw) > maximum or digest_bytes(raw) != expected:
+        raise ValueError('owner source bound or digest differs')
+    return raw
+
+
 def _free_bytes(path):
     return shutil.disk_usage(_owned_path(path).parent).free
 
@@ -146,7 +158,19 @@ class ProductionPreflight:
         self.last_evidence['environment'] = environment
         self.last_evidence['source_rights'] = config['source_rights_sha256']
         self.last_evidence['source_rights_observation_base64'] = base64.b64encode(rights).decode()
-        return None if binding.strip() == b'null' else parse_json(binding)
+        parsed = None if binding.strip() == b'null' else parse_json(binding)
+        self.last_evidence.pop('cfd_owner_evidence', None)
+        if parsed is not None:
+            from digitalmodel.ansys.cylinder_pressure_admission import SCOPE
+            from digitalmodel.ansys.cylinder_cfd_owner_evidence import resolve_owner_evidence
+
+            if not isinstance(parsed, dict):
+                raise ValueError('CFD binding requires an object or null')
+            if approval.get('scope') == SCOPE and parsed.get('schema') != 'cfd-process-binding-2':
+                raise ValueError('pressure admission requires v2 CFD binding')
+            if parsed.get('schema') == 'cfd-process-binding-2':
+                self.last_evidence['cfd_owner_evidence'] = resolve_owner_evidence(config, parsed, _read_owner)
+        return parsed
 
     def _reservation(self):
         lock = self.reservation.evidence()

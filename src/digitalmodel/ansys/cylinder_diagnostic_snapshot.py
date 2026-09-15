@@ -71,12 +71,15 @@ def _seed(row):
             or '/ansys/bin/' in path)
 
 
-def collect_process_snapshot(binding):
+def collect_process_snapshot(binding=None, *, discovery_seed=None):
     """Select solver/MPI descendants plus explicit CFD pins, never terminal peers.
 
     Seed-only binding is sufficient for discovery; the classifier separately
     requires full reviewed identities before any CFD exemption.
     """
+    if discovery_seed is not None or (isinstance(binding, dict) and binding.get('schema') == 'cfd-process-binding-2'):
+        from .cylinder_diagnostic_snapshot_v2 import collect_v2
+        return collect_v2(binding, discovery_seed=discovery_seed)
     initial = _enumerate()
     pinned = {row['pid'] for row in (binding or {}).get('processes', [])}
     for key in ('controller', 'guard', 'mpi', 'helper'):
@@ -84,7 +87,7 @@ def collect_process_snapshot(binding):
             pinned.add(binding[key])
     for key in ('ranks', 'wrappers', 'console_helpers'):
         pinned.update((binding or {}).get(key, []))
-    family = {row['pid'] for row in initial if _seed(row)}
+    family = {row['pid'] for row in initial if _seed(row)} | pinned
     while True:
         expanded = family | {r['pid'] for r in initial if r['parent_pid'] in family}
         if expanded == family:

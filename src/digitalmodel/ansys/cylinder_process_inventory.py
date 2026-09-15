@@ -247,6 +247,10 @@ def classify_process_inventory(snapshot, *, expected_host, cfd_binding, now, max
     Decimal times preserve PID creation identity. Missing parents outside a bound
     controller root are permitted; missing members of its pinned family are not.
     """
+    if isinstance(snapshot, dict) and snapshot.get("schema") == "process-snapshot-2":
+        from digitalmodel.ansys.cylinder_process_inventory_v2 import classify
+        return classify(snapshot, expected_host=expected_host, cfd_binding=cfd_binding,
+                        now=now, maximum_age_seconds=maximum_age_seconds)
     try:
         rows, observed = _snapshot(snapshot, expected_host, now, maximum_age_seconds)
         pins, identities = _binding(cfd_binding, expected_host, observed)
