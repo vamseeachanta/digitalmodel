@@ -107,50 +107,6 @@ _PRIORITY_KEYS: list[str] = [
     "DegreesOfFreedomInStatics",  # 6DBuoys: must precede stiffness props
 ]
 
-# General-section keys to skip when emitting general_properties.
-# These are view/display/cosmetic properties that OrcaFlex exports via
-# SaveData() but which can be dormant (not settable) depending on the
-# current view mode.  Setting a dormant property triggers a
-# "Change not allowed" error at load time.
-_SKIP_GENERAL_KEYS: set[str] = {
-    # Default view settings
-    "DefaultViewAngle1",
-    "DefaultViewAngle2",
-    "DefaultViewCentre",
-    "DefaultViewSize",
-    "DefaultViewOrientation",
-    "DefaultViewResetWhenConnectedObjectMoved",
-    "DefaultViewDistortionX",
-    "DefaultViewDistortionY",
-    "DefaultViewDistortionZ",
-    "DefaultViewAzimuth",
-    "DefaultViewElevation",
-    "DefaultViewMode",
-    # Default shaded view settings (dormant unless view mode is Shaded)
-    "DefaultShadedFillMode",
-    "DefaultShadedProjectionMode",
-    # Drawing cosmetics
-    "BackgroundColour",
-    "WireframeMode",
-    # Sea surface / seabed rendering
-    "SeaSurfaceTranslucency",
-    "SeabedTranslucency",
-    "SeaSurfaceGridDensity",
-    "SeabedGridDensity",
-    "SeaSurfacePen",
-    # Model state bookkeeping
-    "ModelState",
-    # Temperature units — display-only, encoding of degree symbol (°)
-    # differs between UTF-8 and Latin-1 causing OrcFxAPI "not found" errors
-    "TemperatureUnits",
-    # Variable time-step max — only settable when ImplicitUseVariableTimeStep
-    # is True; dormant otherwise, causing "Change not allowed" errors.
-    # NOT skipped when general_properties re-enables variable time stepping
-    # (see build()) — stripping it then would silently revert the model to
-    # OrcaFlex's default max step and change dynamics results.
-    "ImplicitVariableMaxTimeStep",
-}
-
 # VariableData row-table key by (lower-cased) data_type.  Grounded in the
 # golden monolithic examples (docs/domains/orcaflex/examples/yml): every
 # row-table category uses "IndependentValue, DependentValue" except
@@ -168,7 +124,7 @@ _DEFAULT_VARIABLE_DATA_ROW_KEY = "IndependentValue, DependentValue"
 # ``ApplySeabedContactLoadsAtCentreline`` is only settable for LineType
 # categories that support centreline seabed contact.
 #
-# Unlike ``_SKIP_GENERAL_KEYS`` (which filters only the General section),
+# Unlike GeneralBuilder's display-key filter,
 # this set applies to every object emitted by the generic builder.
 _SKIP_OBJECT_KEYS: set[str] = {
     # LineType / Line seabed properties — only valid for certain categories
@@ -246,38 +202,7 @@ class GenericModelBuilder(BaseBuilder):
                 else:
                     result[section_key] = dict(singleton.data)
 
-        # Merge general_properties into "General", filtering out dormant
-        # view/display properties that cause "Change not allowed" errors.
-        if generic.general_properties:
-            skip_keys = _SKIP_GENERAL_KEYS
-            if generic.general_properties.get("ImplicitUseVariableTimeStep") is True:
-                # Variable time stepping is re-enabled in this same General
-                # section, so ImplicitVariableMaxTimeStep is settable (not
-                # dormant) and must be preserved — stripping it would run the
-                # model with OrcaFlex's default max step instead of the
-                # source model's value.
-                skip_keys = _SKIP_GENERAL_KEYS - {"ImplicitVariableMaxTimeStep"}
-            filtered = {
-                k: v
-                for k, v in generic.general_properties.items()
-                if k not in skip_keys
-            }
-            # OrcaFlex applies YAML sequentially: the mode switch must precede
-            # its dependent property for the latter to be settable.
-            if (
-                "ImplicitVariableMaxTimeStep" in filtered
-                and "ImplicitUseVariableTimeStep" in filtered
-            ):
-                max_step = filtered.pop("ImplicitVariableMaxTimeStep")
-                reordered: dict[str, Any] = {}
-                for k, v in filtered.items():
-                    reordered[k] = v
-                    if k == "ImplicitUseVariableTimeStep":
-                        reordered["ImplicitVariableMaxTimeStep"] = max_step
-                filtered = reordered
-            if filtered:
-                result["General"] = filtered
-
+        # GeneralBuilder owns all General settings in the first include.
         return self._order_sections(result)
 
     @staticmethod
