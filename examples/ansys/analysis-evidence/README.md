@@ -33,8 +33,8 @@ label derived von Mises values with the other measured values; separate derived
 provenance remains a tracked refinement, not native validation. All 23 original
 files remain retained unchanged. Nine consumed numerical/diagnostic files are
 within the 13 execution-bound artifacts; other retained files do not acquire
-numerical authority merely by retention. Private raw-repository backup remains
-unestablished. The pending-coverage description below records the r2 builder basis.
+numerical authority merely by retention. Private raw-repository backup was unestablished at initial r4 publication;
+see Original evidence storage below for the later verified backup. The pending-coverage description below records the r2 builder basis.
 
 ## Pending cylinder coverage
 
@@ -214,7 +214,7 @@ retains the non-client cylinder originals under
 [`data/ansys-cylinder-benchmark/manifest.json`](https://github.com/vamseeachanta/digitalmodel-data/blob/fb25f39f285127fe63cf54579df4e53260f16c7d/data/ansys-cylinder-benchmark/manifest.json).
 The existing run and case IDs are preserved. Fresh remote verification on
 2026-09-15 checked 133 payloads; the private owner records the verification receipt
-at `reports/ansys-cylinder-benchmark-r1-publication.json`.
+in the [pinned publication receipt](https://github.com/vamseeachanta/digitalmodel-data/blob/68a2b9e955bec4b2753a60751454b34a3dc3a619/reports/ansys-cylinder-benchmark-r1-publication.json).
 
 This `ansys-retained-evidence` matrix remains the sole computational lookup
 authority. Private retention does not qualify diagnostic results. The completed
