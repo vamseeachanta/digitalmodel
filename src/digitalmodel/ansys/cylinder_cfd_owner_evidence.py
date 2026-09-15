@@ -218,7 +218,7 @@ def _fixed_sources(receipt, cfg, pins, roles, ancestors, callback, retained):
                  [(1, cfg['adapter'], cfg['adapter_sha256']), (2, cfg['guard'], cfg['guard_sha256'])], callback, retained)
 
 
-def resolve_owner_evidence(operation, binding, read_callback):
+def _resolve_original_owner(operation, binding, read_callback):
     """Resolve fixed facts using the caller's redirect-refusing pinned reader.
 
     The two-argument reader must enforce MAX_BYTES before allocating file bytes.
@@ -250,3 +250,15 @@ def resolve_owner_evidence(operation, binding, read_callback):
                  'Volatile state is historical corroboration only and is never read by this resolver.']}
     except (KeyError, TypeError, IndexError, AttributeError, OverflowError) as error:
         raise ValueError('Malformed owner evidence relationships') from error
+
+
+def resolve_owner_evidence(operation, binding, read_callback):
+    """Resolve the original family plus any independently pinned two-row supplement."""
+    from .cylinder_wrapper_consoles import resolve_supplement
+
+    historical, supplement = resolve_supplement(operation, binding, read_callback)
+    result = _resolve_original_owner(operation, historical, read_callback)
+    result['wrapper_console_pids'] = [] if supplement is None else supplement['pids']
+    if supplement is not None:
+        result['wrapper_console_evidence'] = supplement
+    return result

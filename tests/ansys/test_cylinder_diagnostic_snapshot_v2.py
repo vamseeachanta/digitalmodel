@@ -25,6 +25,7 @@ def fixture(tmp_path,monkeypatch):
         process.is_running=lambda:True;processes[row['pid']]=process
     monkeypatch.setattr(current.psutil,'Process',lambda pid:processes[pid])
     monkeypatch.setattr(current,'_enumerate',lambda:raw)
+    monkeypatch.setattr(current,'read_windows_parent_map',lambda:{r['pid']:r['parent_pid'] for r in raw},raising=False)
     monkeypatch.setattr(current.time,'time',lambda:10)
     monkeypatch.setattr(current.socket,'gethostname',lambda:'synthetic')
     def forwarder(candidate,rows,cache):
@@ -117,3 +118,90 @@ def test_process_change_during_final_file_read_is_detected(tmp_path,monkeypatch)
     monkeypatch.setattr(current.DeclaredReads,'verify',changed)
     result=current.collect_v2(discovery_seed=seed)
     assert dict(pid=2,reason_code='identity_changed') in result['errors']
+
+
+def test_four_maps_and_fresh_process_instances(tmp_path,monkeypatch):
+    current,seed,templates=fixture(tmp_path,monkeypatch)
+    maps=importlib.import_module('digitalmodel.ansys.cylinder_parent_map')
+    acquisitions=[];instances=[]
+    def read():acquisitions.append(1);return {1:0,2:1}
+    def process(pid):
+        value=SimpleNamespace(**vars(templates[pid]))
+        value.ppid=lambda:pytest.fail('per-process parent call')
+        instances.append(value);return value
+    monkeypatch.setattr(maps,'read_windows_parent_map',read)
+    monkeypatch.setattr(current,'read_windows_parent_map',read)
+    monkeypatch.setattr(current,'_enumerate',maps.enumerate_windows_v2)
+    monkeypatch.setattr(current.psutil,'Process',process)
+    result=current.collect_v2(discovery_seed=seed)
+    assert result['errors']==[] and len(acquisitions)==4
+    assert len(instances)==6 and len({id(p) for p in instances})==6
+
+
+@pytest.mark.parametrize('phase', [1, 2])
+def test_new_process_during_details_or_stability_refuses(tmp_path, monkeypatch, phase):
+    current, seed, _ = fixture(tmp_path, monkeypatch)
+    calls = []
+    def read():
+        calls.append(1)
+        return {1: 0, 2: 1, 3: 2} if len(calls) == phase else {1: 0, 2: 1}
+    monkeypatch.setattr(current, 'read_windows_parent_map', read)
+    with pytest.raises(ValueError, match='population'):
+        current.collect_v2(discovery_seed=seed)
+
+
+@pytest.mark.parametrize('phase', [1, 2])
+def test_excluded_process_joins_family_during_collection(tmp_path, monkeypatch, phase):
+    current, seed, _ = fixture(tmp_path, monkeypatch)
+    initial = current._enumerate()
+    initial.append(dict(initial[0], pid=3, parent_pid=0, name='unrelated.exe'))
+    monkeypatch.setattr(current, '_enumerate', lambda: initial)
+    calls = []
+    def read():
+        calls.append(1)
+        return {1: 0, 2: 1, 3: 2 if len(calls) == phase else 0}
+    monkeypatch.setattr(current, 'read_windows_parent_map', read)
+    with pytest.raises(ValueError, match='population'):
+        current.collect_v2(discovery_seed=seed)
+
+
+@pytest.mark.parametrize('phase',[1,2])
+@pytest.mark.parametrize('fault',['missing','parent','whole_map'])
+def test_phase_map_changes_refuse(tmp_path,monkeypatch,phase,fault):
+    current,seed,_=fixture(tmp_path,monkeypatch);calls=[]
+    def read():
+        calls.append(1)
+        if len(calls)==phase:
+            if fault=='whole_map':raise ValueError('whole map unavailable')
+            return {1:0} if fault=='missing' else {1:0,2:999}
+        return {1:0,2:1}
+    monkeypatch.setattr(current,'read_windows_parent_map',read,raising=False)
+    if fault=='whole_map':
+        with pytest.raises(ValueError):current.collect_v2(discovery_seed=seed)
+    else:
+        result=current.collect_v2(discovery_seed=seed)
+        assert dict(pid=2,reason_code='missing_process' if fault=='missing' else 'identity_changed') in result['errors']
+
+
+@pytest.mark.parametrize('changed_phase',[1,2])
+def test_creation_reuse_with_same_parent_refuses(tmp_path,monkeypatch,changed_phase):
+    current,seed,templates=fixture(tmp_path,monkeypatch);calls={1:0,2:0}
+    def process(pid):
+        calls[pid]+=1;value=SimpleNamespace(**vars(templates[pid]))
+        if pid==2 and calls[pid]==changed_phase:value.create_time=lambda:'3'
+        return value
+    monkeypatch.setattr(current.psutil,'Process',process)
+    result=current.collect_v2(discovery_seed=seed)
+    assert dict(pid=2,reason_code='identity_changed') in result['errors']
+
+
+def test_constructor_vanish_of_pinned_pid_still_refuses_selection(tmp_path,monkeypatch):
+    current,seed,templates=fixture(tmp_path,monkeypatch)
+    maps=importlib.import_module('digitalmodel.ansys.cylinder_parent_map')
+    monkeypatch.setattr(maps,'read_windows_parent_map',lambda:{1:0,2:1})
+    monkeypatch.setattr(current,'_enumerate',maps.enumerate_windows_v2)
+    def process(pid):
+        if pid==2:raise current.psutil.NoSuchProcess(pid)
+        return templates[pid]
+    monkeypatch.setattr(current.psutil,'Process',process)
+    with pytest.raises(ValueError,match='missing.*initial'):current.collect_v2(discovery_seed=seed)

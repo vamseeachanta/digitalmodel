@@ -2,6 +2,7 @@
 from copy import deepcopy
 from pathlib import PureWindowsPath
 import re
+from .cylinder_wrapper_consoles import console_pids, historical_projection
 
 
 def _base():
@@ -193,7 +194,10 @@ def _binding(binding, host, observed):
     for role, name in expected.items():
         if any(pins[i]['name'].casefold() != name for i in roles[role]):
             raise ValueError('Role executor differs')
-    v._topology(pins, roles)
+    supplemental = console_pids(binding, pins, parents)
+    historical = historical_projection(binding, supplemental)
+    historical_roles, _ = v._roles(historical)
+    v._topology({pid: row for pid, row in pins.items() if pid not in supplemental}, historical_roles)
     argv = pins[roles['mpi'][0]]['argv']
     if argv.count('-n') != 1 or argv.index('-n')+1 >= len(argv) or argv[argv.index('-n')+1] != str(len(roles['ranks'])):
         raise ValueError('Pinned rank count differs')
@@ -224,6 +228,9 @@ def classify(snapshot, *, expected_host, cfd_binding, now, maximum_age_seconds):
             result['process_inventory'] = deepcopy(result['conflicts'] + result['unknowns'])
         result['evidence_scope'] = 'conditional_structural_classification'
         result['incomplete'] = bool(errors)
+        from .cylinder_wrapper_consoles import observed_console_pids
+        result['wrapper_console_pids'] = sorted(observed_console_pids(
+            rows, {f['parent_pid'] for f in snapshot['forwarders']}))
         return result
     except (KeyError, TypeError, OverflowError) as error:
         raise ValueError('Malformed v2 process evidence') from error

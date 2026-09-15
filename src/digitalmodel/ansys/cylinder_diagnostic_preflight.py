@@ -154,11 +154,14 @@ class ProductionPreflight:
         _read(Path(config['bundle'])/'manifest.json', approval['manifest_sha256'])
         _owned_path(config['output_directory'])
         rights = _read(config['source_rights_path'], config['source_rights_sha256'])
-        binding = _read(config['cfd_binding_path'], config['cfd_binding_sha256'])
+        binding = _read_owner(config['cfd_binding_path'], config['cfd_binding_sha256'])
         self.last_evidence['environment'] = environment
         self.last_evidence['source_rights'] = config['source_rights_sha256']
         self.last_evidence['source_rights_observation_base64'] = base64.b64encode(rights).decode()
         parsed = None if binding.strip() == b'null' else parse_json(binding)
+        if ('cfd_wrapper_console_evidence' in config and
+                (not isinstance(parsed, dict) or parsed.get('schema') != 'cfd-process-binding-2')):
+            raise ValueError('Wrapper console supplement requires v2 binding')
         self.last_evidence.pop('cfd_owner_evidence', None)
         if parsed is not None:
             from digitalmodel.ansys.cylinder_pressure_admission import SCOPE
@@ -170,7 +173,15 @@ class ProductionPreflight:
                 raise ValueError('pressure admission requires v2 CFD binding')
             if parsed.get('schema') == 'cfd-process-binding-2':
                 self.last_evidence['cfd_owner_evidence'] = resolve_owner_evidence(config, parsed, _read_owner)
+        self._console_agreement(parsed)
         return parsed
+
+    def _console_agreement(self, binding):
+        from digitalmodel.ansys.cylinder_wrapper_consoles import verify_agreement
+
+        verify_agreement(self.config, binding,
+            self.last_evidence.get('cfd_owner_evidence', {}),
+            self.last_evidence.get('classification'))
 
     def _reservation(self):
         lock = self.reservation.evidence()
@@ -216,6 +227,7 @@ class ProductionPreflight:
         self.last_evidence.update(classification=classification,
             raw_inventory=snapshot['rows'], process_inventory=classification['process_inventory'],
             process_inventory_scope='blocking-projection-only')
+        self._console_agreement(binding)
         self._licence()
         validate_capacity(capacity, now=_now())
         _fresh(snapshot['observed_at'], _now())

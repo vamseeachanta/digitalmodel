@@ -7,7 +7,8 @@ import time
 
 import psutil
 
-from .cylinder_diagnostic_snapshot import _enumerate, _seed
+from .cylinder_diagnostic_snapshot import _seed
+from .cylinder_parent_map import enumerate_windows_v2 as _enumerate, read_windows_parent_map, parent_of
 from .cylinder_forwarder_resources import DeclaredReads, observe_forwarder
 
 
@@ -75,7 +76,7 @@ def _selection(initial,pinned):
     return [row for row in initial if row['pid'] in family | set(pinned)]
 
 
-def _state(process):
+def _state(process, parent_map):
     argv = process.cmdline()
     if (not isinstance(argv,list) or len(argv)>512
             or any(not isinstance(a,str) or len(a)>4096 or '\0' in a for a in argv)):
@@ -86,7 +87,7 @@ def _state(process):
         cwd = None
     if cwd is not None and (not isinstance(cwd,str) or len(cwd)>4096):
         raise ValueError('invalid process cwd')
-    return dict(pid=process.pid,parent_pid=process.ppid(),creation_time=str(process.create_time()),
+    return dict(pid=process.pid,parent_pid=parent_of(parent_map,process.pid),creation_time=str(process.create_time()),
                 name=process.name(),executable_path=process.exe(),argv=argv,cwd=cwd)
 
 
@@ -110,9 +111,9 @@ def _sources(state,cache):
     return result
 
 
-def _detail(initial,cache,forwarding,alias,started,pinned):
+def _detail(initial,cache,forwarding,alias,started,pinned,parent_map):
     process = psutil.Process(initial['pid'])
-    state = _state(process)
+    state = _state(process,parent_map)
     if (any(state[k] != initial[k] for k in initial)
             or _created(state['creation_time']) > _created(started)
             or state['pid'] in pinned and pinned[state['pid']] != state['creation_time']):
@@ -136,14 +137,25 @@ def _error(error):
     return 'unresolved_source' if str(error)=='unresolved_source' else 'identity_changed'
 
 
-def _details(selected,pinned,candidates,cache,started):
+def _population(initial, selected, parent_map):
+    initial_ids = {row['pid'] for row in initial}
+    selected_ids = {row['pid'] for row in selected}
+    if (set(parent_map) - initial_ids or any(
+            row['pid'] not in selected_ids and parent_map.get(row['pid']) in selected_ids
+            for row in initial)):
+        raise ValueError('process population changed after selection')
+
+
+def _details(selected,pinned,candidates,cache,started,initial):
+    parent_map = read_windows_parent_map()
+    _population(initial, selected, parent_map)
     parents = {row['parent_pid'] for row in candidates}
     aliases = {row['child_pid']:row['declared_target_alias'] for row in candidates}
     rows,states,errors = {},{},{}
-    for initial in selected:
-        pid = initial['pid']
+    for row in selected:
+        pid = row['pid']
         try:
-            rows[pid],states[pid] = _detail(initial,cache,pid in parents,aliases.get(pid),started,pinned)
+            rows[pid],states[pid] = _detail(row,cache,pid in parents,aliases.get(pid),started,pinned,parent_map)
         except (psutil.Error,OSError,ValueError) as error:
             errors[pid] = dict(pid=pid,reason_code=_error(error))
     return rows,states,errors
@@ -165,16 +177,18 @@ def _forwarders(candidates,rows,cache,errors):
     return records
 
 
-def _stability(rows,states,errors,cache):
+def _stability(rows,states,errors,cache,initial,selected):
     try:
         cache.verify()
     except (OSError,ValueError):
         for pid in list(rows):
             errors[pid] = dict(pid=pid,reason_code='identity_changed');rows.pop(pid)
+    parent_map = read_windows_parent_map()
+    _population(initial, selected, parent_map)
     for pid in list(rows):
         try:
             process = psutil.Process(pid)
-            if _state(process) != states[pid] or not process.is_running():
+            if _state(process,parent_map) != states[pid] or not process.is_running():
                 raise ValueError('identity_changed')
         except (psutil.Error,OSError,ValueError) as error:
             errors[pid] = dict(pid=pid,reason_code=_error(error));rows.pop(pid)
@@ -190,9 +204,9 @@ def collect_v2(binding=None, *, discovery_seed=None):
     initial = _enumerate()
     selected = _selection(initial,pinned)
     cache = DeclaredReads()
-    rows,states,errors = _details(selected,pinned,candidates,cache,started)
+    rows,states,errors = _details(selected,pinned,candidates,cache,started,initial)
     forwarders = _forwarders(candidates,rows,cache,errors)
-    _stability(rows,states,errors,cache)
+    _stability(rows,states,errors,cache,initial,selected)
     forwarders = [r for r in forwarders if r['parent_pid'] in rows and r['child_pid'] in rows]
     return dict(schema='process-snapshot-2',host=socket.gethostname(),observed_at=started,
         enumeration_complete=True,initial_inventory=initial,rows=list(rows.values()),
