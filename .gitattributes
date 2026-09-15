@@ -68,3 +68,7 @@ docs/plans/evidence/2026-09-14-issue-2121-zero-diagnostic-preparation.json text 
 conftest.py text eol=lf
 tests/conftest.py text eol=lf
 src/digitalmodel/_compat.py text eol=lf
+docs/plans/2026-09-14-issue-2121-numerical-replay-intake.html text eol=lf
+docs/plans/2026-09-14-issue-2121-observed-native-intake.html text eol=lf
+docs/plans/evidence/2026-09-14-issue-2121-replay-review-status.json text eol=lf
+docs/reports/2026-09-14-ansys-cylinder-zero-native-checkpoint.html text eol=lf
