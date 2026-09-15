@@ -1,5 +1,7 @@
 """Bounded replay inventories; read-only sources, no receipt-driven imports."""
 from pathlib import Path
+import json
+import math
 import re
 
 from digitalmodel.ansys.analysis_records import canonical_bytes, digest_bytes, parse_json, verify_reference
@@ -104,10 +106,33 @@ def _resolve_inventory(receipt, resolver):
     return resolved, evidence
 
 
+def _provider_transport(raw):
+    """Decode provider metrics only; engineering evidence keeps parse_json."""
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError('duplicate provider transport key')
+            result[key] = value
+        return result
+    def finite(value):
+        number = float(value)
+        if not math.isfinite(number):
+            raise ValueError('nonfinite provider metric')
+        return number
+    result = json.loads(raw, object_pairs_hook=unique, parse_float=finite,
+                        parse_constant=finite)
+    if not isinstance(result, dict):
+        raise ValueError('provider transport must be an object')
+    # Only metadata may contain floats; the reviewed engineering payload may not.
+    canonical_bytes(result.get('structured_output'))
+    return result
+
+
 def _review_binding(raw, inventory, expected):
     if digest_bytes(raw['review']) != expected:
         raise ValueError('externally pinned review digest differs')
-    review, transport = parse_json(raw['review']), parse_json(raw['review_transport'])
+    review, transport = parse_json(raw['review']), _provider_transport(raw['review_transport'])
     bundle = parse_json(raw['review_bundle'])
     validate_review(review, inventory)
     if (digest_bytes(raw['review_bundle']) != review['bundle_sha256']
@@ -116,7 +141,12 @@ def _review_binding(raw, inventory, expected):
             or transport.get('structured_output') != review['review']):
         raise ValueError('review transport or bundle differs')
     entries = bundle.get('files', [])
+    if not isinstance(entries, list):
+        raise ValueError('review bundled file list invalid')
     for item in entries:
+        if (not isinstance(item, dict) or set(item) != {'path', 'content', 'sha256'}
+                or any(not isinstance(item[key], str) for key in ('path', 'content', 'sha256'))):
+            raise ValueError('review bundled source row invalid')
         if digest_bytes(item['content'].encode('utf-8')) != item['sha256']:
             raise ValueError('review bundled source bytes differ')
     validate_review(dict(review, files=entries), inventory)

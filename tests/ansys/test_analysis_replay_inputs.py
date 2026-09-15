@@ -68,6 +68,55 @@ def test_pinned_transport_and_bundle_agree():
     inputs._review_binding(raw, inventory, digest_bytes(raw['review']))
 
 
+def repin_transport(raw, transport):
+    import json
+    receipt = json.loads(raw['review'])
+    raw['review_transport'] = transport
+    receipt['stdout_sha256'] = digest_bytes(transport)
+    raw['review'] = canonical_bytes(receipt)
+    return digest_bytes(raw['review'])
+
+
+def test_provider_cost_float_is_metadata_without_changing_engineering_parser():
+    from digitalmodel.ansys.analysis_records import parse_json
+    raw, inventory = transport_fixture()
+    transport = raw['review_transport'][:-1] + b',"total_cost_usd":0.123456,"metrics":{"rate":1e-7}}'
+    pin = repin_transport(raw, transport)
+    inputs._review_binding(raw, inventory, pin)
+    with pytest.raises(ValueError, match='float'):
+        parse_json(b'{"engineering_value":0.123456}')
+
+
+@pytest.mark.parametrize('extra', [b'"rate":NaN', b'"rate":Infinity',
+    b'"rate":-Infinity', b'"rate":1e9999', b'"rate":1,"rate":2', b'"is_error":false'])
+def test_provider_metadata_nonfinite_and_duplicates_refuse(extra):
+    raw, inventory = transport_fixture()
+    pin = repin_transport(raw, raw['review_transport'][:-1] + b',' + extra + b'}')
+    with pytest.raises(ValueError):
+        inputs._review_binding(raw, inventory, pin)
+
+
+def test_provider_structured_payload_retains_float_refusal():
+    with pytest.raises(ValueError, match='float'):
+        inputs._provider_transport(b'{"structured_output":{"engineering_value":0.125}}')
+
+
+@pytest.mark.parametrize('entry', [None, [], {}, {'path': 1, 'content': 2, 'sha256': 3}])
+def test_malformed_review_bundle_row_refuses_with_value_error(entry):
+    import json
+    raw, inventory = transport_fixture()
+    raw['review_bundle'] = canonical_bytes({'files': [entry]})
+    receipt = json.loads(raw['review'])
+    receipt['bundle_sha256'] = digest_bytes(raw['review_bundle'])
+    receipt['review']['bundle_sha256'] = receipt['bundle_sha256']
+    transport = json.loads(raw['review_transport'])
+    transport['structured_output'] = receipt['review']
+    raw['review'] = canonical_bytes(receipt)
+    pin = repin_transport(raw, canonical_bytes(transport))
+    with pytest.raises(ValueError):
+        inputs._review_binding(raw, inventory, pin)
+
+
 @pytest.mark.parametrize('fault', ['external_pin', 'bundle', 'transport'])
 def test_review_chain_tamper_refuses(fault):
     raw, inventory = transport_fixture()
