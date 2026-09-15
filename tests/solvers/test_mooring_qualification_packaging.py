@@ -1,13 +1,43 @@
 """Synthetic generator isolation for packaging; no native or include-closure claim."""
 import importlib.util
 import json
+from datetime import date
 from pathlib import Path
+import sys
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
-spec = importlib.util.spec_from_file_location('mooring_packaging', ROOT/'scripts/prepare_mooring_qualification.py')
-packaging = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(packaging)
+
+
+def _load_packaging_offline():
+    missing = object()
+    prior_api = sys.modules.get('OrcFxAPI', missing)
+    prior_path = sys.path[:]
+    try:
+        sys.modules['OrcFxAPI'] = None
+        spec = importlib.util.spec_from_file_location(
+            'mooring_packaging', ROOT/'scripts/prepare_mooring_qualification.py')
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+    finally:
+        sys.path[:] = prior_path
+        if prior_api is missing:
+            sys.modules.pop('OrcFxAPI', None)
+        else:
+            sys.modules['OrcFxAPI'] = prior_api
+
+
+packaging = _load_packaging_offline()
+
+
+def test_packaging_loader_restores_optional_api_and_sys_path(monkeypatch):
+    sentinel = object()
+    monkeypatch.setitem(sys.modules, 'OrcFxAPI', sentinel)
+    before = sys.path[:]
+    assert _load_packaging_offline().prepare_bundle
+    assert sys.modules['OrcFxAPI'] is sentinel
+    assert sys.path == before
 
 
 @pytest.fixture
@@ -189,4 +219,79 @@ def test_ordered_object_updates_are_retained_and_reported(tmp_path, isolated):
     assert update['section'] == 'Lines'
     assert update['previous_include'] == 'a.yml'
     assert update['current_include'] == 'b.yml'
-    assert update['previous_value_sha256'] != update['current_value_sha256']
+    assert update['previous_value_sha256'] == 'd83822bbb3f89a8110928bd97b53d38a5398f94c236d7b371811c489ef75ef44'
+    assert update['current_value_sha256'] == '057cdddf8118dcb18cec9733a19ffc35f6ee38d9168ed9f4367abe967ec7edd9'
+
+
+def test_reference_report_serializes_presence_aware_missing_hashes(tmp_path, isolated):
+    _, reference, _ = isolated
+    reference.write_bytes(b'General:\n  ExplicitNull: null\n')
+    bundle = tmp_path / 'bundle'
+    bundle.mkdir()
+    (bundle / 'master.yml').write_bytes(b'- includefile: 01_general.yml\n')
+    (bundle / '01_general.yml').write_bytes(b'General: {}\n')
+    packaging._reference_report(tmp_path, {'source': {'sha256': 'a' * 64}, 'files': []})
+    report = json.loads((tmp_path / 'reference-differences.json').read_bytes())
+    difference, = report['differences']
+    rule = report['missing_member_hash_rule']
+    decoded = bytes.fromhex(rule['absent_preimage_hex'])
+    assert set(report) == {
+        'schema_version', 'missing_member_hash_rule', 'reference_sha256',
+        'source_sha256', 'input_files', 'reference_compatible', 'ordered_updates',
+        'difference_count', 'differences', 'comparison', 'native_verified',
+        'engineering_parity', 'contract_source_role',
+    }
+    assert report['schema_version'] == 2
+    assert rule['id'] == 'digitalmodel.missing-member.sha256.v1'
+    assert rule['algorithm'] == 'sha256'
+    assert rule['absent_sha256'] == (
+        'feb0e82e6d4e278cde90a7ae8c85488c89227c452d53bb0384db99b02a2ebbab')
+    assert report['difference_count'] == 1
+    assert difference['path'] == '/General/ExplicitNull'
+    assert difference['reference_present'] is True
+    assert difference['candidate_present'] is False
+    assert difference['reference_value_sha256'] == '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b'
+    assert decoded == packaging.ABSENT_VALUE_BYTES
+    assert packaging.hashlib.sha256(decoded).hexdigest() == rule['absent_sha256']
+    assert difference['candidate_value_sha256'] == rule['absent_sha256']
+    assert rule['container_limit'] == {
+        'id': 'recursive-leaf-only-v2',
+        'mapping_key_missing_nonempty_mapping_action': 'recurse_with_empty_mapping',
+        'mapping_key_missing_nonempty_mapping_container_row_emitted': False,
+        'mapping_key_missing_nonempty_mapping_distinguishes_absent_from_empty': False,
+        'mapping_key_missing_other_value_action': 'hash_whole_value',
+        'list_missing_member_action': 'hash_whole_member',
+        'list_missing_member_row_emitted': True,
+    }
+    assert 'mapping-key parent' in report['comparison']
+    assert 'missing list member hashes the whole member' in report['comparison']
+
+
+def test_reference_report_declares_reproducible_present_encoder(tmp_path, isolated):
+    _, reference, _ = isolated
+    reference.write_bytes(b'General:\n  ExplicitNull: null\n')
+    bundle = tmp_path / 'bundle'
+    bundle.mkdir()
+    (bundle / 'master.yml').write_bytes(b'- includefile: 01_general.yml\n')
+    (bundle / '01_general.yml').write_bytes(b'General: {}\n')
+    packaging._reference_report(tmp_path, {'source': {'sha256': 'a' * 64}, 'files': []})
+    report = json.loads((tmp_path / 'reference-differences.json').read_bytes())
+    encoder = report['missing_member_hash_rule']['present_encoder']
+    assert report['missing_member_hash_rule']['present_value_digest_uniqueness'] is False
+    assert encoder == {
+        'function': 'json.dumps', 'sort_keys': True, 'default': 'str',
+        'ensure_ascii': True, 'allow_nan': True, 'skipkeys': False,
+        'check_circular': True, 'indent': None, 'separators': [', ', ': '],
+        'text_encoding': 'utf-8',
+    }
+    encoded = json.dumps(None, sort_keys=encoder['sort_keys'], default=str,
+                         ensure_ascii=encoder['ensure_ascii'], allow_nan=encoder['allow_nan'],
+                         skipkeys=encoder['skipkeys'], check_circular=encoder['check_circular'],
+                         indent=encoder['indent'], separators=tuple(encoder['separators']))
+    assert packaging.hashlib.sha256(encoded.encode(encoder['text_encoding'])).hexdigest() == (
+        '74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b')
+    assert packaging._value_hash(date(2024, 1, 1)) == packaging._value_hash('2024-01-01')
+
+
+def test_present_and_ordered_update_hashes_remain_legacy_compatible():
+    assert packaging._value_hash(3) == '4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce'
