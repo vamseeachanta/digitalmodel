@@ -28,3 +28,6 @@
 
 # OrcaWave solver artifacts
 *.owr binary
+
+# Preserve the byte identity used by the reproducible installation example.
+docs/domains/orcaflex/jumper/manifold_to_plet/monolithic/DZ_AHCoff.yml text eol=lf
