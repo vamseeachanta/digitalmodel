@@ -33,3 +33,15 @@ def test_coverage_rejects_boolean_substitution_for_integer_zero(pressure):
     package = rehash(package, pressure['resolver'])
     with pytest.raises(ValueError, match='coverage differs'):
         _relation(package, pressure['base'], pressure['resolver'])
+
+
+@pytest.mark.parametrize("field", ["analysis_id", "criteria_revision", "finding_ledger", "intended_uses"])
+def test_diagnostic_transition_preserves_other_study_metadata(pressure, field):
+    from digitalmodel.ansys.analysis_matrix_publish import _relation
+    package = build(pressure)
+    package[field] = ["forged-use"] if field == "intended_uses" else ([] if isinstance(package.get(field), list) else "forged-metadata")
+    if field == 'finding_ledger':
+        package[field] = [{'finding': 'forged', 'disposition': 'forged', 'affected_responses': []}]
+    package = rehash(package, pressure['resolver'])
+    with pytest.raises(ValueError, match='study metadata differs'):
+        _relation(package, pressure['base'], pressure['resolver'])

@@ -137,6 +137,15 @@ def _coverage(baseline,cases):
 def validate_pressure_observed_transition(package,baseline,resolver):
     _baseline(baseline)
     _fingerprint(package)
+    changed_fields = {'revision', 'previous_package_hash', 'package_hash', 'cases',
+        'coverage', 'generated_at', 'generated_at_scope', 'code_revision',
+        'source_revision', 'code_files', 'code_canonicalization',
+        'code_inventory_scope', 'method_revision'}
+    stable = lambda study: {k: v for k, v in study.items() if k not in changed_fields}
+    require(canonical_bytes(stable(package)) == canonical_bytes(stable(baseline)),
+            'study metadata differs outside the pressure transition')
+    require(package.get('method_revision') == 'pressure-diagnostic-intake-1',
+            'pressure method revision differs')
     require(len(package['cases'])==12 and package['expected_cases']==baseline['expected_cases'],'matrix membership differs')
     for i in range(12):
         if i!=9:require(canonical_bytes(package['cases'][i])==canonical_bytes(baseline['cases'][i]),'other historical case changed')
