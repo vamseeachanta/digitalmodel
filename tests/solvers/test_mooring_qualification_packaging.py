@@ -157,3 +157,36 @@ def test_generator_failure_preserves_owned_partial_evidence(tmp_path, isolated, 
     assert (root/'source/derivation.json').is_file()
     assert (root/'bundle/partial.yml').is_file()
     assert not (root/'manifest.json').exists()
+
+
+@pytest.mark.parametrize('first,second', [
+    ('General: {}\nGeneral: {}\n', 'Environment: {}'),
+    ('General: &a {}\nOther: *a\n', 'Environment: {}'),
+    ('General: {}', 'General: {}'),
+])
+def test_generated_report_refuses_hidden_assignments(tmp_path, first, second):
+    (tmp_path / 'master.yml').write_text('- includefile: a.yml\n- includefile: b.yml\n', encoding='utf-8')
+    (tmp_path / 'a.yml').write_text(first, encoding='utf-8')
+    (tmp_path / 'b.yml').write_text(second, encoding='utf-8')
+    with pytest.raises(ValueError, match='duplicate|aliases|General'):
+        packaging._generated_sections(tmp_path)
+
+
+def test_ordered_object_updates_are_retained_and_reported(tmp_path, isolated):
+    _, reference, _ = isolated
+    bundle = tmp_path / 'bundle'
+    bundle.mkdir()
+    (bundle / 'master.yml').write_text('- includefile: a.yml\n- includefile: b.yml\n', encoding='utf-8')
+    (bundle / 'a.yml').write_text('Lines: [{Name: Mooring, Length: 1}]\n', encoding='utf-8')
+    (bundle / 'b.yml').write_text('Lines: [{Name: Mooring, Length: 2}]\n', encoding='utf-8')
+    reference.write_bytes((bundle / 'b.yml').read_bytes())
+    packaging._reference_report(tmp_path, {'source': {'sha256': 'a'*64}, 'files': []})
+    report = json.loads((tmp_path / 'reference-differences.json').read_bytes())
+    assert report['difference_count'] == 0
+    assert report['reference_compatible'] is False
+    assert len(report['ordered_updates']) == 1
+    update = report['ordered_updates'][0]
+    assert update['section'] == 'Lines'
+    assert update['previous_include'] == 'a.yml'
+    assert update['current_include'] == 'b.yml'
+    assert update['previous_value_sha256'] != update['current_value_sha256']

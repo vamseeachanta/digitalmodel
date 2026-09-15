@@ -19,7 +19,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 from digitalmodel.solvers.smoke.model_manifest import (
-    OUTPUTS, digest, load_contract, read_yaml, verify_manifest,
+    OUTPUTS, _relative, digest, load_contract, read_yaml, verify_manifest,
 )
 
 SOURCE = ROOT / "docs/domains/orcaflex/library/templates/mooring_buoy/spec.yml"
@@ -35,14 +35,30 @@ def _merge(target, incoming):
 
 
 def _generated_sections(bundle):
-    master = yaml.safe_load((bundle / "master.yml").read_text(encoding="utf-8"))
-    result = {}
+    master = read_yaml(bundle / "master.yml")
+    if not isinstance(master, list):
+        raise ValueError('generated master requires ordered includes')
+    result, owners, updates = {}, {}, []
     for item in master:
-        path = (bundle / item["includefile"]).resolve()
-        if not path.is_relative_to(bundle.resolve()):
-            raise ValueError("generated include escapes bundle")
-        _merge(result, yaml.safe_load(path.read_text(encoding="utf-8")))
-    return result
+        if not isinstance(item, dict) or set(item) != {'includefile'}:
+            raise ValueError('generated master requires explicit include records')
+        name = item['includefile']
+        if not isinstance(name, str):
+            raise ValueError('generated include requires filename')
+        path = _relative(bundle.resolve(), name)
+        incoming = read_yaml(path)
+        if not isinstance(incoming, dict) or 'includefile' in incoming:
+            raise ValueError('generated section must be a direct section mapping')
+        for section, value in incoming.items():
+            if section in result:
+                if section == 'General':
+                    raise ValueError('duplicate General ownership in generated includes')
+                updates.append(dict(section=section, previous_include=owners[section],
+                    current_include=name, previous_value_sha256=_value_hash(result[section]),
+                    current_value_sha256=_value_hash(value)))
+            owners[section] = name
+        _merge(result, incoming)
+    return result, updates
 
 
 def _value_hash(value):
@@ -82,12 +98,13 @@ def _differences(reference, candidate, path=""):
 
 def _reference_report(root, manifest):
     reference = read_yaml(REFERENCE)
-    generated = _generated_sections(root / "bundle")
+    generated, updates = _generated_sections(root / "bundle")
     differences = list(_differences(reference, generated))
     report = {"reference_sha256": digest(REFERENCE), "source_sha256": manifest["source"]["sha256"],
-              "input_files": manifest["files"], "reference_compatible": not differences,
+              "input_files": manifest["files"], "reference_compatible": not differences and not updates,
+              "ordered_updates": updates,
               "difference_count": len(differences), "differences": differences,
-              "comparison": "Recursive mapping merge in generated include order; lists compared in order; no metadata exclusions.",
+              "comparison": "Strict YAML; ordered non-General section updates recorded; recursive mapping merge, lists compared in order; no metadata exclusions.",
               "native_verified": False, "engineering_parity": False}
     report["contract_source_role"] = "governing_template"
     (root / "reference-differences.json").write_text(json.dumps(report, indent=2), encoding="utf-8")

@@ -63,7 +63,8 @@ def test_complete_bundle_and_reference_differences(packaging, tmp_path):
     assert packaging.SOURCE.read_bytes() == original
     actual = {p.relative_to(root).as_posix() for p in (root / "bundle").rglob("*") if p.is_file()}
     listed = {item["path"] for item in data["files"]}
-    assert actual | {"source/spec.yml"} == listed
+    assert actual | {"source/spec.yml", "source/template.yml",
+                     "source/derivation.json", "reference-differences.json"} == listed
     assert [x["path"] for x in data["files"]] == sorted(listed)
     assert data["master"] == "bundle/master.yml"
     differences = json.loads((root / "reference-differences.json").read_text())
@@ -82,7 +83,7 @@ def test_existing_file_is_rejected(packaging, tmp_path):
     assert output.read_text() == "preserve"
 
 
-def test_failed_generation_removes_only_owned_output(packaging, tmp_path, monkeypatch):
+def test_failed_generation_preserves_owned_evidence(packaging, tmp_path, monkeypatch):
     def fail(*args):
         raise ValueError("injected generation failure")
 
@@ -92,7 +93,10 @@ def test_failed_generation_removes_only_owned_output(packaging, tmp_path, monkey
     output = tmp_path / "output"
     with pytest.raises(ValueError, match="injected"):
         packaging.prepare_bundle(output)
-    assert not output.exists()
+    assert (output / "source/spec.yml").is_file()
+    assert (output / "source/template.yml").is_file()
+    assert (output / "source/derivation.json").is_file()
+    assert not (output / "manifest.json").exists()
     assert neighbor.read_text() == "preserve"
 
 
