@@ -135,11 +135,10 @@ def test_code_inventory_covers_fixed_deck_export_dependency():
 
 def test_original_binding_uses_observation_receipt_not_ambiguous_role(tmp_path):
     from digitalmodel.ansys.analysis_replay import _original
-    original = dict(status='INCOMPLETE', attempted=[inputs.CASE_ID], records=[dict(
-        evidence_errors=['Unsupported CDB command OMEGA'], values={})])
-    raw = {'outcome.json': canonical_bytes(original), inputs.CASE_ID+'/execution.json': b'{}'}
+    from tests.ansys.test_analysis_replay_original_artifacts import fixture
+    raw, original, _ = fixture(tmp_path)
     sources, resolver = {}, {}
-    for role, data in [('outcome', raw['outcome.json']), ('execution', b'{}'), ('review', b'old review')]:
+    for role, data in [('outcome', raw['outcome.json']), ('execution', raw[inputs.CASE_ID+'/execution.json']), ('review', b'old review')]:
         path = tmp_path/role
         path.write_bytes(data)
         resolver[role] = path

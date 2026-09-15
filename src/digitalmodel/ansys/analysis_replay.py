@@ -6,7 +6,7 @@ import re
 from digitalmodel.ansys.analysis_records import canonical_bytes, digest_bytes, parse_json, nonempty, verify_reference
 from digitalmodel.ansys.analysis_evidence import build_package, validate_package
 from digitalmodel.ansys.analysis_replay_inputs import (
-    CASE_ID, REFERENCE_HASH, load_replay_inputs, opaque_reference, validate_mapping, observed_reference_hash,
+    CASE_ID, REFERENCE_HASH, load_replay_inputs, opaque_reference, validate_mapping, observed_reference_hash, verify_original_artifacts,
 )
 from digitalmodel.ansys.cylinder_benchmark import build_case
 from digitalmodel.ansys.cylinder_criteria import EXPECTED_KEYS, evaluate_attempt, evaluate_canary
@@ -103,6 +103,7 @@ def _original(raw, old, resolver, documents):
     for role, path in [('outcome', 'outcome.json'), ('execution', CASE_ID + '/execution.json')]:
         if refs.get(role, {}).get('sha256') != digest_bytes(raw[path]):
             raise ValueError('original observation source differs')
+    verify_original_artifacts(raw, outcome)
     return outcome
 
 

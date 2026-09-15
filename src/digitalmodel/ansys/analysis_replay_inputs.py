@@ -159,6 +159,35 @@ def _review_binding(raw, inventory, expected):
     validate_review(dict(review, files=entries), inventory)
 
 
+ORIGINAL_ARTIFACT_NAMES = ('file.db', 'file.err', 'file.mntr', 'file.rst', 'model.cdb',
+    CASE_ID + '.inp', CASE_ID + '.out', 'precision_witness.txt', 'state_values.txt',
+    'station_values.txt', 'stderr.bin', 'stdout.bin', 'support_reactions.txt')
+
+
+def verify_original_artifacts(raw, outcome):
+    """Use independently bound execution-time records, never replay inventory claims."""
+    artifacts = outcome['records'][0].get('artifacts')
+    if not isinstance(artifacts, dict):
+        raise ValueError('original artifact inventory missing')
+    for name in ORIGINAL_ARTIFACT_NAMES:
+        item, data = artifacts.get(name), raw.get(CASE_ID + '/' + name)
+        if (not isinstance(item, dict) or not isinstance(data, bytes)
+                or item.get('path') != name or item.get('sha256') != digest_bytes(data)
+                or type(item.get('bytes')) is not int or item['bytes'] != len(data)):
+            raise ValueError('original artifact binding differs: ' + name)
+    execution = parse_json(raw[CASE_ID + '/execution.json'])
+    if (execution.get('streams_finalized') is not True
+            or execution.get('stream_readback_errors') != []):
+        raise ValueError('original stream finalization or readback differs')
+    for stream in ('stdout', 'stderr'):
+        actual = digest_bytes(raw[CASE_ID + '/' + stream + '.bin'])
+        if (execution.get(stream + '_available') is not True
+                or execution.get(stream + '_readback_matches') is not True
+                or execution.get(stream + '_sha256') != actual
+                or execution.get(stream + '_retained_sha256') != actual):
+            raise ValueError('original stream binding differs: ' + stream)
+
+
 def observed_reference_hash(resolved):
     """Bind retained reference bytes to the executed manifest and original record."""
     docs = resolved['documents']

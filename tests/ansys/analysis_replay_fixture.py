@@ -92,6 +92,18 @@ def synthetic_code_review(root, resolver):
     return code, dict(review=review, review_transport=transport, review_bundle=bundle)
 
 
+def original_artifact_records(raw):
+    artifacts = {name: dict(path=name, sha256=digest_bytes(raw[inputs.CASE_ID+'/'+name]),
+        bytes=len(raw[inputs.CASE_ID+'/'+name])) for name in inputs.ORIGINAL_ARTIFACT_NAMES}
+    execution = dict(streams_finalized=True, stream_readback_errors=[])
+    for stream in ('stdout', 'stderr'):
+        digest = artifacts[stream+'.bin']['sha256']
+        execution.update({stream+'_sha256': digest, stream+'_retained_sha256': digest,
+            stream+'_available': True, stream+'_readback_matches': True})
+    raw[inputs.CASE_ID+'/execution.json'] = canonical_bytes(execution)
+    return artifacts
+
+
 def synthetic_inputs(root, resolver, monkeypatch):
     case, artifacts = synthetic_protocol(inputs.CASE_ID)
     raw = {name: b'{}' for name in inputs.RAW_NAMES}
@@ -112,7 +124,8 @@ def synthetic_inputs(root, resolver, monkeypatch):
     raw['operator-outcome.json'] = canonical_bytes(dict(execution_approval_sha256=approval['sha256']))
     raw['outcome.json'] = canonical_bytes(dict(status='INCOMPLETE', attempted=[inputs.CASE_ID],
         records=[dict(case_id=inputs.CASE_ID, reference_sha256=digest_bytes(reference),
-                      evidence_errors=['Unsupported CDB command OMEGA'], values={})]))
+                      evidence_errors=['Unsupported CDB command OMEGA'], values={},
+                      artifacts=original_artifact_records(raw))]))
     rawrefs = {name: retain(root, resolver, 'raw-'+str(i), data, binary=True)
                for i, (name, data) in enumerate(raw.items())}
     mapping = mapping_for(case)
