@@ -10,8 +10,9 @@ BUILTINS = (
     ('provider-token', r'\bsk-(?:proj-|ant-api[0-9]+-)?[A-Za-z0-9_-]{32,}\b'),
     ('private-key', r'-----BEGIN (?:RSA |EC |DSA |OPENSSH |ENCRYPTED )?PRIVATE KEY-----'),
     ('aws-access-key', r'\b(?:AKIA|ASIA)[A-Z0-9]{16}\b'),
-    ('credential-assignment', r'(?i)\b(?:password|passwd|api[_-]?key|access[_-]?token|client[_-]?secret)'
-     r'''["']?\s*[:=]\s*["'][^"'\r\n]{8,}["']'''),
+    ('credential-assignment', r'(?i)\b(?:[a-z][a-z0-9]*[_-])*'
+     r'(?:password|passwd|api[_-]?key|access[_-]?token|client[_-]?secret)'
+     r'''["']?\s*[:=]\s*(?:["'][^"'\r\n]{8,}["']|[^\s"'`$;,{}\[\]][^\s"'`;,{}\[\]]{7,})'''),
 )
 
 
