@@ -61,6 +61,9 @@ def verify_load_audit(raw, case):
         from digitalmodel.ansys.cylinder_results_native_loads import verify_zero_loads
         return verify_zero_loads(raw,case)
     lines = _lines(raw)
+    if lines and b' '.join(lines[0].split()) == b'LIST ELEMENT SURFACE LOAD PRES FOR ALL SELECTED ELEMENTS':
+        from digitalmodel.ansys.cylinder_results_native_pressure import verify_pressure_loads
+        return verify_pressure_loads(raw, case)
     pressures, index = _surface(lines)
     if index >= len(lines) or lines[index].strip() != b'NO NODAL FORCES':
         raise EvidenceError('Missing FLIST or applied nodal force exists')
