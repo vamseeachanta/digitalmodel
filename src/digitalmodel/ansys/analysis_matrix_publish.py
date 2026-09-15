@@ -33,6 +33,20 @@ def _relation(package, baseline, resolver=None, *, review_sha256=None):
     if package['revision'] == baseline['revision']:
         raise ValueError('new explicit revision required')
     count = len(baseline['cases'])
+    if len(package['cases']) != count or package['expected_cases'] != baseline['expected_cases']:
+        raise ValueError('fixed matrix membership differs')
+    changed = [i for i in range(count) if package['cases'][i] != baseline['cases'][i]]
+    if not changed:
+        revision_fields = {'revision', 'previous_package_hash', 'package_hash'}
+        before = {k: v for k, v in baseline.items() if k not in revision_fields}
+        after = {k: v for k, v in package.items() if k not in revision_fields}
+        if canonical_bytes(before) != canonical_bytes(after):
+            raise ValueError('unchanged cases require identical study metadata')
+        return
+    if changed == [9] and package['cases'][9].get('capture_role') == 'diagnostic_capture':
+        from digitalmodel.ansys.analysis_pressure_observed import validate_pressure_observed_transition
+        validate_pressure_observed_transition(package, baseline, resolver)
+        return
     if package['cases'][:count] != baseline['cases']:
         if any(c.get('capture_role') == 'diagnostic_replay' for c in package['cases']):
             from digitalmodel.ansys.analysis_replay import validate_replay_transition

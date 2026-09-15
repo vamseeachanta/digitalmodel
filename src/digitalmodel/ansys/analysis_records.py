@@ -160,6 +160,10 @@ def validate_case(case: dict) -> None:
 
 def validate_attempt_state(case: dict) -> None:
     """Absent attempt metadata stays unknown; pending metadata cannot imply a run."""
+    if case['capture_role'] == 'diagnostic_capture':
+        from digitalmodel.ansys.analysis_pressure_observed import validate_pressure_observed_case
+        validate_pressure_observed_case(case)
+        return
     if case['capture_role'] == 'diagnostic_replay':
         from digitalmodel.ansys.analysis_replay import validate_replay_record
         validate_replay_record(case)

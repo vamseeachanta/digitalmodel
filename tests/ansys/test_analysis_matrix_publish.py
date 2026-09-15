@@ -118,3 +118,20 @@ def test_empty_owner_root_is_not_an_authoritative_store(records, tmp_path):
     with pytest.raises(ValueError, match='existing owner'):
         publish_matrix(package, baseline, manifest, tmp_path/'other-owner', resolver)
     assert not (tmp_path/'other-owner'/'dataset-1'/'r1.json').exists()
+
+
+@pytest.mark.parametrize('key,value', [
+    ('coverage', {'qualified_responses': 999}), ('code_revision', 'forged'),
+    ('source_revision', 'a' * 40), ('generated_at', '2099-01-01T00:00:00Z'),
+])
+def test_unchanged_cases_cannot_publish_forged_study_metadata(records, key, value):
+    package, baseline, manifest, root, resolver = records
+    study = copy.deepcopy(package)
+    study.pop('package_hash')
+    for case in study['cases']:
+        case.pop('row_hash')
+    study[key] = value
+    damaged = build_package(study, resolver)
+    with pytest.raises(ValueError, match='unchanged cases'):
+        publish_matrix(damaged, baseline, manifest, root, resolver)
+    assert load_package(manifest) == baseline
