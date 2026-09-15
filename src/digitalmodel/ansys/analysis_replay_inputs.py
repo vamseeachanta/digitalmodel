@@ -106,7 +106,17 @@ def _resolve_inventory(receipt, resolver):
                 raise ValueError('duplicate evidence id')
             ids.add(ref['id'])
             resolved[group][role] = verify_reference(ref, resolver)
-            evidence.append(dict(ref, role=group))
+            provenance = group
+            if group == 'raw':
+                # Provenance category only; later binding checks still gate reuse.
+                provenance = 'unbound_auxiliary'
+                if role in {CASE_ID + '/' + name for name in ORIGINAL_ARTIFACT_NAMES}:
+                    provenance = 'execution_bound_output'
+                elif role in {'outcome.json', CASE_ID + '/execution.json'}:
+                    provenance = 'observation_bound_record'
+                elif role == 'operator-outcome.json':
+                    provenance = 'approval_linked_record'
+            evidence.append(dict(ref, role=provenance))
     for path, expected in source_inventory().items():
         if digest_bytes(resolved['code'][path]) != expected:
             raise ValueError('current source differs from replay inventory')
