@@ -2,7 +2,7 @@
 from copy import deepcopy
 import pytest
 
-from digitalmodel.ansys.analysis_evidence import publish_package, load_package
+from digitalmodel.ansys.analysis_evidence import publish_package, load_package, build_package
 from digitalmodel.ansys.analysis_records import canonical_bytes, validate_case
 from digitalmodel.ansys.analysis_replay import derive_replay_case, build_replay_package
 from digitalmodel.ansys.analysis_matrix_publish import publish_matrix
@@ -77,3 +77,25 @@ def test_publish_matrix_refuses_wrong_external_review_pin(tmp_path, monkeypatch)
     owner, manifest = publication_paths(data)
     with pytest.raises(ValueError, match='review'):
         publish_matrix(package, data['baseline'], manifest, owner, data['resolver'], review_sha256='a'*64)
+
+
+def test_replay_preserves_six_historical_failed_responses(tmp_path, monkeypatch):
+    data = full_fixture(tmp_path, monkeypatch)
+    study = deepcopy(data['baseline'])
+    study.pop('package_hash')
+    for case in study['cases']:
+        case.pop('row_hash')
+    for response in study['cases'][0]['responses']:
+        response['calculation_status'] = 'failed'
+    data['baseline'] = build_package(study, data['resolver'])
+    historical = deepcopy(data['baseline']['cases'][0])
+    package = prepared(data)
+    owner, manifest = publication_paths(data)
+    publish_matrix(package, data['baseline'], manifest, owner, data['resolver'],
+                   review_sha256=data['review_sha256'])
+    published = load_package(manifest)
+    assert published['cases'][0] == historical
+    assert published['coverage']['assessment_failed_responses'] == 6
+    assert published['coverage']['assessment_incomplete_cases'] == 0
+    assert all(r['value'] is None for r in published['cases'][0]['responses'])
+    assert published['cases'][8]['engineering_qualified'] is False

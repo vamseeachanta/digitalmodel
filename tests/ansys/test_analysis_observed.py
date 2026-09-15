@@ -360,3 +360,17 @@ def test_baseline_physical_artifact_mapping(transition, matches):
     else:
         with pytest.raises(ValueError, match='runtime input artifact differs'):
             build(transition)
+
+
+def test_coverage_includes_historical_failed_responses(transition):
+    baseline = transition['baseline']
+    baseline.pop('package_hash')
+    for case in baseline['cases']:
+        case.pop('row_hash')
+    for response in baseline['cases'][0]['responses']:
+        response.update(calculation_status='failed', limitations=['historical-parse-failure'])
+    transition['baseline'] = build_package(baseline, transition['resolver'])
+    result = build(transition)
+    assert result['coverage']['assessment_failed_responses'] == 70
+    assert result['coverage']['assessment_incomplete_cases'] == 1
+    assert result['cases'][0] == transition['baseline']['cases'][0]

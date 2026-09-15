@@ -171,8 +171,7 @@ def _coverage(baseline, case):
     coverage = deepcopy(baseline['coverage'])
     coverage.update(assessment_incomplete_cases=sum(c.get('assessment_status') == 'incomplete' for c in cases),
         assessment_failed_responses=sum(r['calculation_status'] == 'failed' for c in cases for r in c['responses']))
-    if coverage['assessment_incomplete_cases'] or coverage['assessment_failed_responses']:
-        raise ValueError('unexpected remaining incomplete/failed counters')
+    # Historical failures remain visible; the replaced case is validated separately.
     return coverage
 
 

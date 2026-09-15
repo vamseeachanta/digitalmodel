@@ -242,8 +242,9 @@ def _coverage(baseline, case):
     pending = [row for row in cases if row['capture_role'] == 'pending_native']
     coverage.update(total_cases=len(cases), total_responses=sum(len(c['responses']) for c in cases),
         pending_cases=len(pending), pending_responses=sum(len(c['responses']) for c in pending),
-        assessment_incomplete_cases=1,
-        assessment_failed_responses=64, qualified_responses=0,
+        assessment_incomplete_cases=sum(c.get('assessment_status') == 'incomplete' for c in cases),
+        assessment_failed_responses=sum(r['calculation_status'] == 'failed'
+                                        for c in cases for r in c['responses']), qualified_responses=0,
         observed_transition_native_attempts=case['native_attempt_count'])
     return coverage
 
