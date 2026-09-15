@@ -219,6 +219,10 @@ in the [pinned publication receipt](https://github.com/vamseeachanta/digitalmode
 This `ansys-retained-evidence` matrix remains the sole computational lookup
 authority. Private retention does not qualify diagnostic results. The completed
 zero-load diagnostic and three pressure cases not attempted retain their existing
-states. Future non-client solver evidence follows the private owner README and
-the llm-wiki source/domain catalogs; client evidence stays with its private project
-owner and vendor-licensed standards stay at licensed locations.
+states. Future non-client evidence and authorized generalized/de-identified client-derived
+solver inputs/results follow the private owner README and existing llm-wiki
+catalogs. Identifiable client originals remain canonical in their private project
+owners; licensed-standard originals remain at licensed locations. Generalization
+requires recorded transformations, restricted provenance and physical-meaning
+validation under the charter. This scope amendment adds no client-derived dataset
+or qualified result.
