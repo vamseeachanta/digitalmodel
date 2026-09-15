@@ -203,5 +203,22 @@ this local trust boundary.
 
 The remaining engineering work is source/use-rights qualification, disposition
 of inherited findings, response definitions and an independently checked
-verification register. A new native campaign requires a separate approved case
-manifest and solve budget. See the [technical report](../../../docs/reports/2026-09-13-ansys-evidence-stage-a.html).
+verification register. A new native campaign requires a reviewed case manifest, technical prerequisites
+and a bounded solve budget under the standing analysis authorization. See the [technical report](../../../docs/reports/2026-09-13-ansys-evidence-stage-a.html).
+
+
+## Original evidence storage
+
+The private [digitalmodel-data evidence owner](https://github.com/vamseeachanta/digitalmodel-data)
+retains the non-client cylinder originals under
+[`data/ansys-cylinder-benchmark/manifest.json`](https://github.com/vamseeachanta/digitalmodel-data/blob/fb25f39f285127fe63cf54579df4e53260f16c7d/data/ansys-cylinder-benchmark/manifest.json).
+The existing run and case IDs are preserved. Fresh remote verification on
+2026-09-15 checked 133 payloads; the private owner records the verification receipt
+at `reports/ansys-cylinder-benchmark-r1-publication.json`.
+
+This `ansys-retained-evidence` matrix remains the sole computational lookup
+authority. Private retention does not qualify diagnostic results. The completed
+zero-load diagnostic and three pressure cases not attempted retain their existing
+states. Future non-client solver evidence follows the private owner README and
+the llm-wiki source/domain catalogs; client evidence stays with its private project
+owner and vendor-licensed standards stay at licensed locations.
