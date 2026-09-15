@@ -1,0 +1,79 @@
+{
+  "case": "mudmat",
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2094",
+  "captured_utc": "2026-09-12T01:29:51Z",
+
+  "solver": {
+    "product": "Ansys Mechanical APDL",
+    "release": "2026 R1.01",
+    "build": "26.1",
+    "update": "UP20260202",
+    "platform": "WINDOWS x64",
+    "argv": "-b -np 1 -smp",
+    "cores": 1,
+    "parallel": "smp",
+    "equation_solver": "default sparse direct"
+  },
+
+  "input": {
+    "deck": "mudmat.inp",
+    "sha256": "9936d9313776f5d4f917d8ecd05a83eaa6b9597f90d50b15e85656e902f2156f",
+    "generator_module": "src/digitalmodel/ansys/mudmat.py",
+    "generator_commit_at_capture": "d49068c6c82aafb7e8b0f8935e614aef5e4c2c31",
+    "note": "This is the first value this deck has ever produced. Before #2094 it did not solve: SHELL181 accepted the subgrade modulus as a real constant and ignored it, leaving every UZ degree of freedom unrestrained."
+  },
+
+  "comparator": {
+    "class": "conservation",
+    "basis": "Global equilibrium. The applied pressure field and the Meyerhof effective-area soil patch are constructed to integrate to the same force and the same moment, so the statically determinate restraints carry no load and every reaction shall vanish.",
+    "applied_vertical_load_n": 800000.0,
+    "observed_reaction_fz_n": 0.03,
+    "relative_residual": 3.75e-8,
+    "tolerance_n": 1.0,
+    "note": "Verified independently of the solver by integrating the emitted pressure cards in Python: test_applied_field_integrates_to_the_applied_load reproduces both the force and the moment integrals from the numbers actually written into the deck, so the deck is not merely self-consistent with its generator."
+  },
+
+  "secondary_checks": {
+    "applied_field_mesh_independence": {
+      "status": "asserted",
+      "test": "test_applied_field_is_mesh_independent",
+      "note": "Compares the emitted pressure cards at element sizes 100 and 50 mm. This guards the defect class that a mesh-convergence study would have concealed: the superseded deck's applied resultant varied as 2/(L/ESIZE + 1), so refinement changed the answer and would have been read as convergence."
+    },
+    "bearing_cross_check": {
+      "status": "UNAVAILABLE",
+      "intended_source": "digitalmodel.geotechnical.mudmat.mudmat_bearing_capacity",
+      "reason": "That module applies the Meyerhof reduction to width_b_m and enforces B <= L, so it can only express eccentricity along the shorter plan dimension. This example's moment acts about the width axis, giving eccentricity along the longer dimension. Supplying the dimensions in the order its guard demands returns 8.0 m2 against a correct 9.0 m2, an 11.1 percent error, silently.",
+      "tracked_by": "https://github.com/vamseeachanta/digitalmodel/issues/2105",
+      "note": "Recorded as unavailable rather than satisfied. A cross-check computed from a different geometry is not a cross-check."
+    }
+  },
+
+  "derived_quantities": {
+    "eccentricity_mm": 500.0,
+    "effective_length_mm": 3000.0,
+    "effective_area_mm2": 9000000.0,
+    "soil_pressure_mpa": 0.088889,
+    "patch_start_x_mm": 1000.0,
+    "note": "The effective area runs flush to the loaded edge because x_centroid + L_eff/2 = L/2 + e + (L - 2e)/2 = L identically. No additional geometry parameter is required."
+  },
+
+  "acceptance": {
+    "unity_check": 0.18212,
+    "allowable_mpa": 212.5749,
+    "expected_status": "within_allowable",
+    "basis": "yield 355 MPa / design factor 1.67",
+    "linear_elastic_limit_exceeded": false,
+    "peak_vs_yield_pct": 10.9
+  },
+
+  "peak_location": {
+    "node": 20,
+    "note": "Recorded so the peak can be distinguished from a mesh-dependent singularity."
+  },
+
+  "limitations": [
+    "The FE reports plate bending only. Soil bearing is not evaluated by this deck; the bearing check belongs to the geotechnical module and, for this orientation, is currently blocked by #2105.",
+    "The uniform pressure block is the bearing-capacity idealisation, not the true contact-pressure field. It is adopted so the strength check and the bearing check share one load path, at the cost of an approximate bending distribution near the patch edges. It shall not be described as contact pressure.",
+    "The peak plate stress carries no independent comparator. A rectangular plate under this load and support arrangement has no convenient closed form, so the stress magnitude is an archived run; only the equilibrium is independently established."
+  ]
+}

@@ -1,0 +1,4 @@
+# Keep the observed parser fixture and its digest-bound metadata byte-exact.
+v261_pressure_loads.txt -text whitespace=-blank-at-eol,-blank-at-eof
+v261_pressure_case.json -text
+v261_pressure_provenance.json -text

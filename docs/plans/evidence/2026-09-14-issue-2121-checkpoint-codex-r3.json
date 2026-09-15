@@ -1,0 +1,99 @@
+{
+  "provider": "Codex",
+  "reviewer": "independent parametric_scope worker",
+  "verdict": "APPROVE",
+  "reviewed_revision": "57b661af89c3fe44cd7e8a0a2105813466fd75e3",
+  "reviewed_revision_kind": "Git tree object",
+  "reviewed_files": [
+    {
+      "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+      "sha256": "b87003671a959eae99590a174b682fe2400ae2f69a96edc4b349be37eb1fb17a"
+    },
+    {
+      "path": "docs/plans/README.md",
+      "sha256": "72fd817132c456ee8977da76e6b9228286bc3cd0c37766297e2ac7311a20efd7"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json",
+      "sha256": "068500e455438502f009ae8aa6236151b8f150b0cedc32851391d3388373ed97"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json",
+      "sha256": "6b226025b55cc3abb2aec2a4bfe6476fade88596dbd4358ed20f23f2d932e6a0"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-verification.json",
+      "sha256": "08e7804ead0f27f97d8a742452a03bb227f91c602dcb0bd019fa4a9fdcfda17b"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
+      "sha256": "25c0fde670b38dc7e3a4413cf79911e718b550467b6a9ebb3fffdbe7d4df4648"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-claude-r1.json",
+      "sha256": "067a261029c77cf79622872f10c44a49ed51233a1b588147d5e96a40030c66fa"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-claude-r2.json",
+      "sha256": "9f9e1d765719dc03517756ed03510b0b9f406ac70c12d35961f6869b21e5e934"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-codex-r1.json",
+      "sha256": "3696285441c87f3c65978c27c46a9f7eb7abff3f29c6e27e1019014240a8e64f"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-codex-r2.json",
+      "sha256": "6d6a75230be8bdd6f6ace6113cc79708331c6681f092ed98f7a16a50e9421d6f"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-diagnostic-characterization.json",
+      "sha256": "9893804445f2d79321e41d4750dd83cbc132d006b0b94b221e80f3715800009a"
+    },
+    {
+      "path": "docs/plans/evidence/register_json_prose.py",
+      "sha256": "8511cd91f5eb489867510ece719409fbf47f83a7392d1c0dbad96f2cdbf5da69"
+    },
+    {
+      "path": "tests/docs/test_register_json_prose.py",
+      "sha256": "c771031a1122750346074fe62060a009698a5e4a5a29eb7e5c64d07081a65dfe"
+    }
+  ],
+  "findings": [],
+  "verified": [
+    "All thirteen changed files were assessed at the exact tree. All twelve non-self verification-receipt file hashes match. Four historical review receipts retain SHA maps matching their respective reviewed trees.",
+    "C1: Executed the exact-tree extractor in memory against the current tree. All four canonical input byte lengths and digests, 54177 extracted UTF-8 bytes, and fbba9e66663fab67c0229324139a469106545855f9e92a3fb619987565f24f5e prose digest match the receipt. HTML and extractor hashes match. The self-receipt exclusion is explicit.",
+    "Both helper tests passed independently: ordered recursive Unicode string extraction and canonical staged bytes despite modified working content. Executed helper/test working files were compared with canonical Git bytes after CRLF normalization. No material defect identified in the bounded read-only Git extraction helper.",
+    "C2: Explicit Begin-level configuration/status sequence, processor exits and re-entry remove placement ambiguity. Official FINISH-v242 states database data remains intact when exiting processors and FINISH is not valid at Begin. No exclusive CONFIG processor-availability fact is asserted without evidence. Fixed numerical criteria are unchanged.",
+    "C3: Both pinned run directories and retained receipts were inspected. The eight stated native files/receipts match byte lengths and hashes; the two source Git hashes match. No retained process-pipe capture was identified in this bounded inventory. Available .out/.err/.log are distinct evidence channels. Byte-empty streams are explicitly an unverified launcher assumption; opt-in raw capture and its tests are proposed B1 work, not completed evidence.",
+    "C4-C6: Neutral approval-pending status, removal of ambiguous cross-file scope hash, and explicit no-load-record zero-control branch resolve the respective traceability and load-audit ambiguities. Complete empty listings remain mandatory.",
+    "Four-attempt zero/N4/N8/N16 ordering, immutable criteria, independent reference/checker gate, coarse diagnostic continuation, mandatory failure stops, separate B1/B2 approvals, and no lookup promotion or campaign expansion remain consistent.",
+    "Prior result-storage precision disposition remains valid: RESUPREC0 status establishes the configured double-precision storage mode, not actual FE accuracy; binary32 representability is not a decisive alternative test."
+  ],
+  "checks": [
+    {
+      "command": "python -B -m pytest tests/docs/test_register_json_prose.py -q -p no:cacheprovider",
+      "result": "2 passed in 0.96s",
+      "exit_code": 0,
+      "native_runs": 0
+    }
+  ],
+  "source_checks": [
+    {
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_FINISH.html",
+      "verified_fact": "Processor exit retains database data; FINISH is not valid at Begin."
+    }
+  ],
+  "limitations": [
+    "Approval is the independent review verdict only, not user approval for B1 or B2. Native canary feasibility and numerical accuracy remain unestablished.",
+    "The two helper tests were rerun; the historical RED-before-implementation sequence was not independently replayed. The broader routing test, legal scan and browser render receipts were reviewed but not rerun.",
+    "Native ERROR/FATAL coverage and process-stream byte-empty behavior remain unestablished; neither is silently promoted from synthetic tests or missing captures.",
+    "Stored vendor HTTP byte digests were not independently regenerated; the added FINISH semantics were checked against the official v242 page."
+  ],
+  "cleanup": {
+    "classification": "EXPECTED",
+    "repository_mutations": "None by review; parent staged thirteen artifacts retained",
+    "private_output": "SOLVERS-2121-checkpoint-codex-r3.json",
+    "other_residue": "Pytest-managed temporary fixture directory; cache provider disabled and Python bytecode disabled",
+    "audit_owner": "Parent orchestrator under subagent exemption in pre-completion-cleanup-audit skill"
+  }
+}

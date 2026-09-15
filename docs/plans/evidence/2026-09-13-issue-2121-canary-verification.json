@@ -1,0 +1,149 @@
+{
+  "review_input_tree": "db02db753c10a66af0634107cb5e39942dfcdabd",
+  "review_input_tree_kind": "Git tree before receipt regeneration",
+  "verified_utc": "2026-09-14T13:36:50.250837+00:00",
+  "scope": "Exact staged files except this regenerated receipt; no engineering solver implementation or native runs",
+  "receipt_exclusion": "This receipt is excluded from its own input hashes/prose extraction; after staging it will receive a separate legal/register check. Later review receipts bind the final reviewed tree. No circular self-hash claim.",
+  "staged_and_scanned_mirror_files": [
+    {
+      "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+      "sha256": "bc08cee28154cf3c211313f3fc08d4bc65f534ad8df36617192956e0ec5b542f"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json",
+      "sha256": "c765ad316307b36090595ec265e71b4b0459aaa8f82adf9ce8b94f27c9e69423"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json",
+      "sha256": "4e45f59e2c79dce31f166dc3cb4e873d7a71343bd6c5a7efc530973e3ade635e"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
+      "sha256": "b799302c0fcb77b833c08075614d91b318175da9528c10bd2a9cd2511268ce04"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-frozen-claude-r1.json",
+      "sha256": "7bf825420bf7c801369fd086e168b7d893e2820671a347439682a7aa2d547f65"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-frozen-claude-r2.json",
+      "sha256": "b503d9f50e158482c7dd58088ffc8ec512fb50f0f4c21fa42e5f85b9358003ea"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-frozen-codex-r2.json",
+      "sha256": "b15259e6cbc757bd4399a6fe2daa5031cbeeb102a355941ed2fe89ca8485c29a"
+    },
+    {
+      "path": "tests/docs/test_register_json_prose.py",
+      "sha256": "c3d0c1a0bc2aad4a196cc5894c65e6b138afea66f415fe2e5d6f28f7fdb8d241"
+    }
+  ],
+  "mirror_matches_staged": true,
+  "legal": {
+    "shared_scanner": "scripts/legal/legal-sanity-scan.sh --all on scoped exact-blob mirror",
+    "exit_code": 0,
+    "independent_literal_patterns": 23,
+    "matches": 0,
+    "exemptions": false,
+    "owner_deny_list_exists": false,
+    "global_deny_list_sha256": "77ea4133ee858ce8ee4336ccf475f96d7ee392e3b996cc0c620e71c13520a1d3",
+    "limitation": "Bounded mirror and independent literal scan; no whole-repo or all-machine coverage; shared scanner follow-up workspace-hub issue3804"
+  },
+  "register_json_prose": {
+    "inputs": [
+      {
+        "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json",
+        "sha256": "c765ad316307b36090595ec265e71b4b0459aaa8f82adf9ce8b94f27c9e69423",
+        "bytes": 28405
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json",
+        "sha256": "4e45f59e2c79dce31f166dc3cb4e873d7a71343bd6c5a7efc530973e3ade635e",
+        "bytes": 23068
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
+        "sha256": "b799302c0fcb77b833c08075614d91b318175da9528c10bd2a9cd2511268ce04",
+        "bytes": 16926
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-diagnostic-characterization.json",
+        "sha256": "9893804445f2d79321e41d4750dd83cbc132d006b0b94b221e80f3715800009a",
+        "bytes": 16326
+      }
+    ],
+    "extracted_bytes": 58586,
+    "extracted_prose_sha256": "1b743bf0e646d61266c430a13b29a3c04a63aedef5b883c60fa5410141e86625",
+    "revision": "db02db753c10a66af0634107cb5e39942dfcdabd",
+    "input_hashes": {
+      "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json": "c765ad316307b36090595ec265e71b4b0459aaa8f82adf9ce8b94f27c9e69423",
+      "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json": "4e45f59e2c79dce31f166dc3cb4e873d7a71343bd6c5a7efc530973e3ade635e",
+      "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json": "b799302c0fcb77b833c08075614d91b318175da9528c10bd2a9cd2511268ce04",
+      "docs/plans/evidence/2026-09-14-issue-2121-diagnostic-characterization.json": "9893804445f2d79321e41d4750dd83cbc132d006b0b94b221e80f3715800009a"
+    },
+    "extractor_path": "docs/plans/evidence/register_json_prose.py",
+    "extractor_sha256": "8511cd91f5eb489867510ece719409fbf47f83a7392d1c0dbad96f2cdbf5da69",
+    "extraction_rule": "Listed paths in order; JSON object values in insertion order; list items in order; recursively collect all string VALUES, omit keys/non-string scalars; join with two LF; UTF8 without BOM/trailing separator. Input hashes are exact git-show bytes, not working-tree newline conversions.",
+    "invocation": "python docs/plans/evidence/register_json_prose.py --revision <review_input_tree> <paths in inputs order>",
+    "quoted_receipt_exclusion": "Verbatim provider review receipts excluded from house-style rewriting, not legal/hash checks."
+  },
+  "checks": [
+    {
+      "check": "engineering register",
+      "scope": "four canonical JSON prose inputs",
+      "input_sha256": "1b743bf0e646d61266c430a13b29a3c04a63aedef5b883c60fa5410141e86625",
+      "exit_code": 0,
+      "result": "1 file(s) checked, 0 violation(s)",
+      "stdout_sha256": "74bc6f89c5542b63c71513a0ab7c31d5290a121696bd7a0ce60ae7d9b8969e9a"
+    },
+    {
+      "check": "engineering register",
+      "scope": "HTML plan",
+      "input_sha256": "bc08cee28154cf3c211313f3fc08d4bc65f534ad8df36617192956e0ec5b542f",
+      "exit_code": 0,
+      "result": "1 file(s) checked, 0 violation(s)",
+      "stdout_sha256": "74bc6f89c5542b63c71513a0ab7c31d5290a121696bd7a0ce60ae7d9b8969e9a"
+    }
+  ],
+  "index_row": {
+    "sha256": "ec13c52b9c1c43f58373e4b7aba521c58f725c7581d6f7fd9be854810fbe2f6d",
+    "register_exit": 0,
+    "local_links": "unchanged HTML target exists"
+  },
+  "render": "PASS; no overflow/page errors; local links resolve",
+  "test_evidence": {
+    "command": "python -m pytest tests/docs/test_register_json_prose.py tests/docs/test_digitalmodel_routing_contract.py -q",
+    "passed": 11,
+    "native_runs": 0,
+    "TDD": "Two new extractor tests failed with missing helper before implementation, then passed; checks include staged/working divergence and nested Unicode string order. A third regression-only test verifies committed-tree extraction after working-file divergence; no implementation change or RED claim is made for that test. Both fixture repositories disable newline conversion."
+  },
+  "current_review_coverage": "Frozen R2 returned Claude MAJOR and Codex APPROVE at treeec502ca6. Independent Codex adjudication supports bounded F1-F4 clarifications. Exact revision receipts will govern coverage; B1 approval and B2 execution approval remain outstanding.",
+  "published_extraction_reproduction": {
+    "inputs": [
+      {
+        "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json",
+        "sha256": "068500e455438502f009ae8aa6236151b8f150b0cedc32851391d3388373ed97",
+        "bytes": 25621
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json",
+        "sha256": "6b226025b55cc3abb2aec2a4bfe6476fade88596dbd4358ed20f23f2d932e6a0",
+        "bytes": 20974
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
+        "sha256": "25c0fde670b38dc7e3a4413cf79911e718b550467b6a9ebb3fffdbe7d4df4648",
+        "bytes": 16770
+      },
+      {
+        "path": "docs/plans/evidence/2026-09-14-issue-2121-diagnostic-characterization.json",
+        "sha256": "9893804445f2d79321e41d4750dd83cbc132d006b0b94b221e80f3715800009a",
+        "bytes": 16326
+      }
+    ],
+    "extracted_bytes": 54177,
+    "extracted_prose_sha256": "fbba9e66663fab67c0229324139a469106545855f9e92a3fb619987565f24f5e",
+    "revision": "4bcf77b2c28abad45e925a1641f29e4203c8d370",
+    "result": "PASS: all four published inputs, extracted bytes and SHA256 reproduced"
+  }
+}

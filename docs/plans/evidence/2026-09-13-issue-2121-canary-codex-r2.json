@@ -1,0 +1,51 @@
+{
+  "provider": "Codex",
+  "reviewer": "independent parametric_scope worker",
+  "verdict": "APPROVE",
+  "reviewed_revision": "526c14fb08f16008e83cd65efe30364b7404c52c",
+  "reviewed_files": [
+    {
+      "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+      "sha256": "e924036114d95af5374a53be65c72838cfc351c83cc4095b788be564686eaf7e"
+    },
+    {
+      "path": "docs/plans/README.md",
+      "sha256": "cb8ce63b7d6f191c67e29c948e90688e57e1cb9ffb131a036564f9bcd8c0a41a"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-claude-r1.json",
+      "sha256": "b256c71197afa2d16bfc698d124765a6a9720036a090e754322534004b964c6d"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-codex-r1.json",
+      "sha256": "5ac3a3ef70aecaaf55eabe7b82d8d66e096271fbe09d8f010f8bf83c7f778e4c"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json",
+      "sha256": "8d3c52409e4c09d1a55f1b4896049a51d2d343dfb2f1dd3b62aff47cba3e7976"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json",
+      "sha256": "aba7ebcf67f1797b44f283e3bcc4f81e30c58451cf443711186b68edcdd52ae4"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-verification.json",
+      "sha256": "9d0540ac468c04fb23bc4f6f84a5d0566311316e72ba0044c340d48538f502c0"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
+      "sha256": "15f1b3e329528ac886bc4071c6bb4ef7b87e59cbc8b4ce8eb01d4211cd491d6f"
+    }
+  ],
+  "findings": [],
+  "verified": [
+    "E24.16 precision witness and half-quantum guard; default tables excluded",
+    "Fresh no-tools checker with unavailable-isolation stop",
+    "Zero control first; four attempts; fixed numerical limits",
+    "Explicit zero-channel and cancellation limitations",
+    "All seven receipt hashes match staged blobs",
+    "No discretionary numerical adjudication gate",
+    "B1/B2 authorization and deferred expansion/lookup preserved"
+  ],
+  "authority": "Review only; B1 implementation and native execution need user approval"
+}

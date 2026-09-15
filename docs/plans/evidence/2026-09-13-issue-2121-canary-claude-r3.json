@@ -1,0 +1,102 @@
+{
+  "findings": [
+    {
+      "id": "R-00",
+      "severity": "INFO",
+      "defect": "Review-capability statement, recorded so the verdict is not over-read. This review assessed supplied content only. No sha256 was recomputed and no file was read from disk; every digest in reviewed_files is transcribed from the bundle. The reviewed revision 53518eef91f925807c76cb9d130964fc06acd4c5 is treated as a Git tree object per the brief and was not resolved. UNAUDITED, neither accepted nor disputed: the five pinned source_files digests in canary-scope.json; the twelve vendor retrieved_bytes digests and the v242 page contents behind them (including the *GET stress Item2 ESOL selector, the OUTRES NAR scope, the /FORMAT argument ranges and the *VWRITE descriptor restrictions); the existence and behaviour of analysis_records.decimal_text; the requires_mapdl marker and native opt-in; the retained pressure-vessel PROVENANCE facts; README.md link resolution; the routing-contract '8 passed' count and its stdout digests; the 23-entry deny-list count; the screenshot digest; and the relationship between tree 4ec28b8b and tree 53518eef. POSITIVELY RE-DERIVED from bundle content and found correct: A = p*a^2/(b^2-a^2) = 60.0962 MPa and B = 3.94291e7 mm^2*MPa; sigma_r(a) = -10.000, sigma_theta(a) = 130.19, sigma_theta(b) = 120.19, sigma_r(b) = 0; u_r(a) = 0.49947 mm; u_z(120) = -0.021635 mm; the open-end branch u_r = ((1-nu)Ar+(1+nu)B/r)/E and u_z = -2*nu*A*y/E being the branch that satisfies UY=0 at y=0, a traction-free top and no end cap identically, so no continuum end effect exists at y=60; lambda = 115384.6 MPa, lambda+2mu = 269230.8 MPa, eps_r+eps_theta = 4.2067e-4, eps_z = -1.80289e-4, giving the recorded +/-48.539 MPa terms and 0.010/48.539 = 2.06e-4; the von Mises expression; element counts 96/384/1536 and node counts 345/1265/4833 from (2nr+1)(2na+1) - nr*na; all nine stations (r = 750, 780, 810 at y = 60, 120, 180) landing on corner nodes at N4, N8 and N16 with adjacency 2/4/2; counts 21 primary, 42 auxiliary, 54 native keyed records plus 9 derived equivalent stresses = 63; the record width 8+8+48+8+24 = 96 columns and the 27-character format line, both inside the recorded 80-character format and 128-character output limits; E24.16 satisfying w >= d+7 for a signed value; the auxiliary relative scales 0.010/130.19 = 7.7e-5 and 0.010/120.19 = 8.3e-5; the budget arithmetic 4 x 300 s = 20 min inside the 30-minute cap; and the nine mirror digests in the verification receipt matching the nine bundle entries exactly. The findings below rest on bundle content plus independently held MAPDL and elasticity facts, not on filesystem verification.",
+      "correction": "Re-run the mechanical verification listed as UNAUDITED in a session with filesystem and repository access before treating any of it as cleared. Findings F1-F8 do not depend on it."
+    },
+    {
+      "id": "F1",
+      "severity": "MAJOR",
+      "defect": "The producer/checker agreement tolerance is incompatible with the checker configuration the same artifact mandates, so the independent-reference gate is not satisfiable on its stated path. checker_isolation.agreement fixes abs(producer-checker) <= 1e-10 MPa for stresses and <= 1e-12 mm for displacements at all nine stations. Against sigma_theta(a) = 130.19 MPa that is 7.7e-13 relative, and against u_r(a) = 0.49947 mm it is 2.0e-12 relative: approximately twelve significant digits on each of sixty-three values. checker_isolation.method simultaneously requires 'all filesystem/network/shell tools disabled', which removes any means of evaluating the closed form other than unaided arithmetic. The two requirements cannot both be met. The consequence is not a blocked outlier but the expected case: checker_isolation.disagreement routes any excursion beyond tolerance to the owner-appointed adjudicator and blocks B2, so the gate resolves to human adjudication on essentially every run, and the tolerance is adopted at B1 approval and cannot be adjusted afterwards without amended review. The substantive independent contribution available from a tools-disabled checker is branch selection (open-end versus plane-strain versus closed-end), sign convention and frame - which the plan itself names as a detection goal - and that contribution is verifiable exactly, not to twelve digits.",
+      "correction": "Before B1 approval, since checker_isolation is adopted at that gate: make the binding comparison the closed-form expressions, the branch, the frame, the sign convention and the units, compared symbolically or as exact rationals over the frozen inputs, and record that comparison as the independent-reference gate. Apply the numeric tolerance only to values the checker is configured to produce, at a level stated as attainable by unaided evaluation. Alternatively, state explicitly that deterministic arithmetic evaluation is permitted inside the isolated session because the isolation requirement targets repository, plan and producer-code access rather than arithmetic, and record the evaluation method in the register alongside the prompt and output digests. Also add the axis/sign convention and output units to the brief contents list, since checker_isolation.agreement requires frame and unit agreement while brief_sources enumerates only geometry, material, load, boundary conditions and source metadata."
+    },
+    {
+      "id": "F2",
+      "severity": "MAJOR",
+      "defect": "A mandatory frozen evidence gate depends on a retrieval command that is neither named nor pinned to a recorded source fact, and on an unrecorded precision assumption. recovery.readback_tolerance requires abs(export - mean(element-node contributions)) <= max(1e-12 * max(abs(export), max(abs(contributions))), dimensional_floor/100), and execution_evidence makes 'fixed high-precision readback' mandatory at every attempt, with execution and evidence failures stopping immediately at every mesh. The listing side of the other comparison is pinned - /FORMAT,8,E,24,16,100,240 with PRNSOL,S,COMP and PRNSOL,U,COMP - but the element-node contribution side is described only as 'element-node recovery contributions' in the artifact-retention list and 'retain element-node contributions' in recovery.independent_readback. No command appears in the plan, and the source register carries entries for ERESX, PRNSOL, *VWRITE, *GET, OUTRES, /FORMAT, PRRSOL and FSUM but none for any element-result print or table command. The tolerance presumes the contribution values arrive at full precision: a mean of two to four values each carrying sixteen significant digits agrees with the averaged value to roughly 1e-16 relative, comfortably inside 1e-12, whereas values printed at a default table width of five to seven significant digits disagree at roughly 1e-6 to 1e-8 relative, exceeding 1e-12 by four to six decades. In that case the mandatory readback fails on the zero control - the first attempt - and on every subsequent attempt, producing INCOMPLETE with no waiver path, no retry and no fifth attempt, and the freeze rule forbids relaxing the tolerance to the observation.",
+      "correction": "Before B1 approval: name the element-node contribution retrieval command explicitly in recovery, add its v242 page to the source register with the same retrieved-bytes treatment as the other entries, and record whether its output honours /FORMAT at the frozen E24.16 width. If it does not, route the contributions through the same *GET plus *VWRITE keyed export path already specified for acceptance values, so both sides of the readback carry the same representation quantum. Add a B1 RED test asserting that a contribution listing at default width is refused rather than silently compared, and state the half-quantum relationship for the contribution side as is already stated for export and listing."
+    },
+    {
+      "id": "F3",
+      "severity": "MAJOR",
+      "defect": "The zero-warning policy is the binding gate on the first executed attempt, and the classification it depends on is defined nowhere and has no offline validation basis. recovery.warning_policy sets an empty allowed_warning_identifiers list and rules that any native WARNING, ERROR or FATAL diagnostic is INCOMPLETE and stops, with unknown or unparsed severity also INCOMPLETE and no after-run waiver; execution_evidence repeats this as a mandatory per-attempt criterion; and the zero control now runs first, so this gate fires before any pressure case. Neither the plan nor the proposal states which files are scanned, how a diagnostic line is recognised, how severity is extracted, or how a diagnostic is distinguished from an informational status line, and no vendor source fact describing the native diagnostic format is recorded in the register. The exposure runs in both directions. A classifier that fails to recognise a genuine diagnostic token does not reach the 'unparsed severity' branch at all - the line is consumed as an informational status line and the attempt passes, which is a defect in the PASS direction on the single criterion that gates every other one. A classifier that over-recognises ends the canary on attempt one with no physical observation and three attempts unused, and INCOMPLETE from that cause is indistinguishable in the record from a genuine evidence failure. B1 invokes no ANSYS executable, so the synthetic fixtures named in the artifact map encode the same format assumption they are meant to test.",
+      "correction": "Before B1 approval, give the classifier a recorded basis that does not require a native run. Add the native diagnostic-format facts to the source register from the v242 documentation on the same footing as the other entries. Use the retained native diagnostic evidence already packaged in this repository for the pressure-vessel example as an offline corpus: record which files it covers, run the classifier over it at B1, and record the observed message population and severities as the fixture basis. State explicitly which files are scanned at B2, how an unrecognised line is dispositioned, and that an unrecognised line defaults to INCOMPLETE rather than to informational. If no retained capture carries native stdout or error output, say so and record that the classifier rests on documentation alone."
+    },
+    {
+      "id": "F4",
+      "severity": "MINOR",
+      "defect": "Two frozen checks contradict each other on the node selection in force at listing time. recovery.retrieval_checks requires that 'selected nodes/elements must equal case counts', and the plan repeats 'Selected node/element counts will match the proposal' - 4833 nodes and 1536 elements for the N16 cases. recovery.listing_format requires 'nine keyed node rows in each listing, not 63 node rows', and the plan states 'The independent stress and displacement listings will each contain those nine node rows with complete component labels'. PRNSOL prints one row per selected node, so a nine-row listing requires the node selection to be reduced to the nine sampled nodes at listing time, at which point the selected-node count is 9 and not 4833. No ordering or scoping is stated, so a verifier presented with the evidence cannot determine which state the count check governs. The underlying procedure is sound - reducing the node selection while leaving the full element selection intact preserves the full-graphics nodal averaging that the recovery method depends on - but it is the unstated step that reconciles the two requirements.",
+      "correction": "State the command sequence and the scope of each check in recovery: perform the selected-node and selected-element count assertions against the full selection immediately after SET,1,1; then reduce the node selection to the nine sampled nodes for PRNSOL, leaving the element selection unchanged so averaging is unaffected; then restore the full node selection. Record in the proposal that the count check governs the pre-listing state and that the nine-row requirement governs the listing state, and add a B1 RED test that a listing produced under a changed element selection is refused."
+    },
+    {
+      "id": "F5",
+      "severity": "MINOR",
+      "defect": "The frozen proposal states the acceptance data source two different ways. recovery.stress_source reads 'element-based extrapolated nodal components; PRNSOL,S,COMP with DataKey ESOL', which names PRNSOL as the source of the stresses. recovery.acceptance_values reads 'full-precision *GET node/component values exported with *VWRITE E24.16 ... PRNSOL only independent listing/check', and recovery.precision_gate adds 'never parse default-width tables as acceptance values'; recovery.stress_get pins the acceptance retrieval to *GET,par,NODE,node,S,component,ESOL. The plan HTML resolves the conflict correctly - 'PRNSOL listings ... will remain independent checks, not acceptance-value inputs' - but the machine-readable artifact is the one B1 approval adopts and the one the extractor and its tests will be written against, and it carries both statements. This is the residual of the round-two finding on recovery pinning: the acceptance path was added without removing the superseded attribution.",
+      "correction": "Amend recovery.stress_source to name only the data characterisation - element-based extrapolated nodal components under ERESX,YES, RSYS,0, full graphics, arithmetically averaged over adjacent selected elements - and move the PRNSOL reference into the listing role, where listing_format already places it. Confirm that no other field in the proposal attributes acceptance values to a table listing."
+    },
+    {
+      "id": "F6",
+      "severity": "MINOR",
+      "defect": "Two frozen command specifications are not fully covered by recorded source facts. First, the destination of the keyed export is unspecified: recovery.acceptance_values and record_format fix the *VWRITE format, width and key fields but never state whether the records are written to a dedicated file or to the solver output stream, and no file-open command appears in the plan or the source register. The consequence is determined by a frozen rule: record_format.failure requires the extractor to 'refuse missing, duplicate, unexpected, truncated or interleaved keys', and records written to the output stream are by construction interleaved with native solver text, so the unpinned destination choice decides between a clean extraction and a deterministic refusal. Second, /FORMAT is frozen at 8,E,24,16,100,240 while the FORMAT-v242 register entry records constraints for only three of the six arguments - width_range '9 to 32', E_decimals_max 'width minus 7' and character_limit 'up to 240'. NWIDTH=24, DSIGNF=16 and CHAR=240 are covered and correct; NDIGIT=8 and LINE=100 are asserted with no recorded bound, and the 152-column PRNSOL,S,COMP line implied by six components at width 24 plus the node field is not recorded either.",
+      "correction": "Pin the export destination explicitly in recovery - a dedicated file opened and closed around the *VWRITE block, with the command added to the source register - and state that the extractor operates on that file. Record the NDIGIT and LINE argument ranges in the FORMAT-v242 recorded_facts alongside the three already present, and record the resulting maximum listing line width against the CHAR setting so the frozen command is fully covered by pinned facts."
+    },
+    {
+      "id": "F7",
+      "severity": "MINOR",
+      "defect": "No artifact binds to the tree under review. The verification receipt records review_input_tree 4ec28b8b86c5e98d3ba866d07e55f982acec9148 and qualifies it as 'git tree object, not commit; staged tree before regenerated receipt', and publication_mapping states that the publication commit does not yet exist at receipt generation. The tree dispatched for this review is 53518eef91f925807c76cb9d130964fc06acd4c5, which appears in none of the nine artifacts, and no successor relationship between the two trees is recorded. Coverage is substantively established - all nine mirror digests match the bundle entries exactly and mirror_matches_staged is true - so this is a binding gap rather than a coverage gap, and it is the unresolved remainder of the round-two finding on the same point. A later reader holding tree 53518eef cannot confirm from the receipt alone that the receipt covers it.",
+      "correction": "Record the successor tree identifier in the verification receipt alongside review_input_tree, stating the relationship (staged tree with the regenerated receipt added), or regenerate the receipt against the tree that is dispatched for review and retain the predecessor identifier. Add the publication commit after commit, as already planned."
+    },
+    {
+      "id": "F8",
+      "severity": "MINOR",
+      "defect": "Engineering-register verification covers two of the ten changed surfaces, and the exclusion is not recorded. The verification receipt records one register invocation - 'check-engineering-register.py <canary plan>', result '1 file(s) checked, 0 violation(s)' - plus index_row_checks.engineering_register_exit 0 for the changed README row. The eight JSON artifacts in the same change carry substantial narrative prose in limitation, note, failure_disposition, defect and correction fields, and the governing register applies to the text an agent produces for another agent. The immutable r1 receipt contains first-person constructions the register excludes ('I could not check whether the other plan HTMLs in docs/plans/ share this pattern'), which means the correct disposition here is a recorded exemption rather than a mutation: prior receipts are immutable historical rounds and altering them to satisfy a later check would destroy the evidence they exist to preserve.",
+      "correction": "Record the register scope decision in the verification receipt: state that committed review receipts are verbatim immutable records and are exempt from the register check, name the exemption basis, and either run the register check over the non-receipt JSON artifacts (proposal, scope, verification, vendor source metadata) or record why the machine-readable registers are out of scope. Do not modify any committed receipt."
+    }
+  ],
+  "reviewed_files": [
+    {
+      "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+      "sha256": "8e75a0da871e4d2dc8125d3e7245a20608a306fc87a57ecff3022d475d2ba9e4"
+    },
+    {
+      "path": "docs/plans/README.md",
+      "sha256": "27fa83381234a1ae4c50c6dd5ec3c5f9da9ec77f880f698ecc62106a11adfb1e"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-claude-r1.json",
+      "sha256": "b256c71197afa2d16bfc698d124765a6a9720036a090e754322534004b964c6d"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-claude-r2.json",
+      "sha256": "34b5b9eda783f27decdabcdf7d7d8dc810d51da7f073ddc904ced3a5ff1c2ea1"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-codex-r1.json",
+      "sha256": "5ac3a3ef70aecaaf55eabe7b82d8d66e096271fbe09d8f010f8bf83c7f778e4c"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-codex-r2.json",
+      "sha256": "bae22075f520421a9588ee30523b8e5984cfcfac330087f0f1524dda16d9e4f3"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json",
+      "sha256": "da5dc1762fc6e0494d3a6103ea61e145f877efd967566043a0b11c60ae580673"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json",
+      "sha256": "21e63dbb14f91e3503a969551a082563d6efa1a3be026928f87c518459c6388c"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-verification.json",
+      "sha256": "66ca75186d3b13cd1b38fa6bbf93a6432e0360096b610299b715e336a8bb71df"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
+      "sha256": "43ac6965fe4e89e08a688f246432a63bbdd23db0a2f9f98544d43c8ebe7dff16"
+    }
+  ],
+  "reviewed_revision": "53518eef91f925807c76cb9d130964fc06acd4c5",
+  "verdict": "MAJOR"
+}

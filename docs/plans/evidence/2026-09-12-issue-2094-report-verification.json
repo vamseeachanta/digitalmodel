@@ -1,0 +1,27 @@
+{
+  "scope": "Static plan/report browser and source verification",
+  "artifacts": [
+    {
+      "path": "docs/plans/2026-09-12-issue-2094-padeye-load-model-addendum.html",
+      "sha256": "90d88131f4f7e16944078276de57a62ea47743b2892514096285eab9e76b2231",
+      "http_status": 200,
+      "headings": 7,
+      "tables": 3,
+      "local_links_verified": true,
+      "console_page_errors": [],
+      "horizontal_overflow": false,
+      "screenshot": "2026-09-12-issue-2094-padeye-load-model-addendum.png"
+    },
+    {
+      "path": "docs/reports/2026-09-12-solver-automation-technical-report.html",
+      "sha256": "775d7493ca04eced04e138f8a53c047fd819373593b6013255800dc9f1306b28",
+      "http_status": 200,
+      "headings": 8,
+      "tables": 6,
+      "local_links_verified": true,
+      "console_page_errors": [],
+      "horizontal_overflow": false,
+      "screenshot": "2026-09-12-solver-automation-technical-report.png"
+    }
+  ]
+}

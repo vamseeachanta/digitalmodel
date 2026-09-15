@@ -1,0 +1,331 @@
+{
+  "schema": "source-fact-register-1",
+  "sources": [
+    {
+      "source_id": "VM25-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_vm/Hlp_V_VM25.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T02:25:51.991263+00:00",
+      "retrieved_bytes_sha256": "19fa7bce5dc08612a349a3a3c79c74a8e493952bf26fa87bbb9b31874c2776a4",
+      "retrieved_bytes_length": 17379,
+      "recorded_facts": {
+        "E_psi": "30000000",
+        "nu": "0.3",
+        "a_in": "4",
+        "b_in": "8",
+        "pressure_psi": "30000",
+        "element": "PLANE183",
+        "scope": "pressure-only and separate rotation case; only pressure corroboration proposed"
+      },
+      "retention": "Raw vendor page not committed; factual parameter/method metadata only; vendor numeric fixture retention remains B1 rights gate",
+      "canary_role": "canary governing method or supporting reference"
+    },
+    {
+      "source_id": "VM38-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_vm/Hlp_V_VM38.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T02:25:52.173468+00:00",
+      "retrieved_bytes_sha256": "df024318620ff4ab248fd5e33e0b4d53d4795f619fba58dec0148bdbee763245",
+      "retrieved_bytes_length": 18805,
+      "recorded_facts": {
+        "scope": "includes fully elastic targets and elastic-plastic targets; no end-cap load; background reference only"
+      },
+      "retention": "Raw vendor page not committed; factual parameter/method metadata only; vendor numeric fixture retention remains B1 rights gate",
+      "canary_role": "background only; no VM38 target used"
+    },
+    {
+      "source_id": "PLANE182-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_elem/Hlp_E_PLANE182.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T02:25:52.410585+00:00",
+      "retrieved_bytes_sha256": "09f6a8ac55cf6d9f887876eae257e3e615897e3faf55a1cd2d82787e03e5f29d",
+      "retrieved_bytes_length": 50577,
+      "recorded_facts": {
+        "keyopt1": "0 selective reduced integration B-bar",
+        "keyopt3": "1 axisymmetric",
+        "keyopt6": "0 displacement",
+        "axis_mapping": "global X radial, Y axial, Z hoop, XY rz shear"
+      },
+      "retention": "Raw vendor page not committed; factual parameter/method metadata only; vendor numeric fixture retention remains B1 rights gate",
+      "canary_role": "historical review background; not a canary formulation source"
+    },
+    {
+      "source_id": "PRRSOL-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_PRRSOL.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T02:25:52.629295+00:00",
+      "retrieved_bytes_sha256": "57b6475768fca4729cd8d5aeec82cd88e9bc71f36c61014b2d9031592af6d3b4",
+      "retrieved_bytes_length": 16295,
+      "recorded_facts": {
+        "scope": "constrained-node reaction output"
+      },
+      "retention": "Raw vendor page not committed; factual parameter/method metadata only; vendor numeric fixture retention remains B1 rights gate",
+      "canary_role": "canary governing method or supporting reference"
+    },
+    {
+      "source_id": "FSUM-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_FSUM.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T02:25:52.831647+00:00",
+      "retrieved_bytes_sha256": "7ed2df6c88035f66b9a654e3c5c8bf35e9fb723537a952580a45e4f2d4958415",
+      "retrieved_bytes_length": 21356,
+      "recorded_facts": {
+        "scope": "surface-load force exclusion and axisymmetric caution"
+      },
+      "retention": "Raw vendor page not committed; factual parameter/method metadata only; vendor numeric fixture retention remains B1 rights gate",
+      "canary_role": "canary governing method or supporting reference"
+    },
+    {
+      "source_id": "PLANE183-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_elem/Hlp_E_PLANE183.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T02:27:37.168907+00:00",
+      "retrieved_bytes_sha256": "2f42cf5f3ac650f0134953f3b9c4ee027bc047906a273093b7ac32c01aec53ae",
+      "retrieved_bytes_length": 50110,
+      "recorded_facts": {
+        "displacement_order": "quadratic",
+        "keyopts": {
+          "1": 0,
+          "3": 1,
+          "6": 0
+        },
+        "mapping": "X radial; Y axial; Z hoop; XY in-plane shear"
+      },
+      "retention": "Raw page not committed; factual element metadata only",
+      "canary_role": "canary governing method or supporting reference"
+    },
+    {
+      "source_id": "ERESX-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_ERESX.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T02:45:39.833361+00:00",
+      "retrieved_bytes_sha256": "48f1a2a6d973b858a755a3f73721c284d204291b65337c41a02fc67cec381bfc",
+      "retrieved_bytes_length": 15994,
+      "recorded_facts": {
+        "key": "YES",
+        "meaning": "extrapolate linear integration-point results to nodes; pure elastic canary"
+      },
+      "retention": "Raw page not persisted; factual method metadata only",
+      "canary_role": "governing recovery/reporting reference"
+    },
+    {
+      "source_id": "PRNSOL-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_PRNSOL.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T02:45:39.974445+00:00",
+      "retrieved_bytes_sha256": "74eea7417ab5b9076d6047ea8620fc1c62a532fd7738a1e35c4d101b75b7c596",
+      "retrieved_bytes_length": 57237,
+      "recorded_facts": {
+        "graphics": "FULL",
+        "DataKey": "ESOL for element-based stress reporting",
+        "averaging": "full-graphics nodal reporting averages results at node; independent element-contribution comparison required"
+      },
+      "retention": "Raw page not persisted; factual method metadata only",
+      "canary_role": "governing recovery/reporting reference"
+    },
+    {
+      "source_id": "VWRITE-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_VWRITE.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T02:58:03.714560+00:00",
+      "retrieved_bytes_sha256": "34791374ae20379f69ca13d255dbf0c301abc331b57a83f109d073b84d745ba7",
+      "retrieved_bytes_length": 19822,
+      "recorded_facts": {
+        "format": "FORTRAN real format on following parenthesized line",
+        "format_character_limit": 80,
+        "output_line_character_limit": 128,
+        "canary_format": "E24.16; one response per line; numeric witness/precision gate required"
+      },
+      "retention": "Raw page not persisted; factual method metadata only",
+      "canary_role": "governing export format reference"
+    },
+    {
+      "source_id": "GET-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_GET.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T03:10:02.793781+00:00",
+      "retrieved_bytes_sha256": "a588494899e919dc566cf2046f0670c0debf925738c660849c49877420ea30db",
+      "retrieved_bytes_length": 311348,
+      "recorded_facts": {
+        "stress_Item2": "ESOL selects element-based results only",
+        "ACTIVE_SET": "NSET result-file count; LSTP current loadstep; SBST substep"
+      },
+      "retention": "Raw page not persisted; factual API metadata only",
+      "canary_role": "retrieval/precision gate reference"
+    },
+    {
+      "source_id": "OUTRES-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_OUTRES.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T03:10:02.937986+00:00",
+      "retrieved_bytes_sha256": "469c944939d4047e66c4ffa9eb14cc417ebab6bd0a93465326454e33218dea4a",
+      "retrieved_bytes_length": 59497,
+      "recorded_facts": {
+        "canary": [
+          "ERASE",
+          "ALL,ALL",
+          "NAR,NONE",
+          "STAT"
+        ],
+        "ALL_scope": "all solution items except LOCI,SVAR,NAR"
+      },
+      "retention": "Raw page not persisted; factual API metadata only",
+      "canary_role": "retrieval/precision gate reference"
+    },
+    {
+      "source_id": "FORMAT-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_FORMAT.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T03:10:03.085395+00:00",
+      "retrieved_bytes_sha256": "c9849fe1ecbb70496bd1ed94da236291895b021e47a939910f71c88e0c179e1a",
+      "retrieved_bytes_length": 17921,
+      "recorded_facts": {
+        "canary": "8,E,24,16,100,240",
+        "width_range": "9 to32",
+        "E_decimals_max": "width minus7",
+        "character_limit": "up to240",
+        "NDIGIT_range": "3 to 32",
+        "LINE_minimum": 11,
+        "canary_listing_field_columns": 152,
+        "CHAR": 240,
+        "PRESOL": "POST1 table format applies; PLANE183 is outside beam/pipe section exceptions"
+      },
+      "retention": "Raw page not persisted; factual API metadata only",
+      "canary_role": "retrieval/precision gate reference"
+    },
+    {
+      "source_id": "PRESOL-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_PRESOL.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T03:21:58.435019+00:00",
+      "retrieved_bytes_sha256": "61fd787e00253df93c47b25f0828080cdc6e474ee984040cd404846ba8f5c1ef",
+      "retrieved_bytes_length": 53730,
+      "recorded_facts": {
+        "command": "PRESOL,S,COMP",
+        "scope": "selected-element nodal stress components; global unless RSYS transforms; unaffected by NAR",
+        "precision": "/FORMAT applies to table output; beam/pipe section fixed-format exceptions do not apply to PLANE183"
+      },
+      "retention": "Raw page not persisted; factual metadata only",
+      "canary_role": "canary method/evidence reference; exact-revision review receipts govern coverage"
+    },
+    {
+      "source_id": "CFOPEN-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_CFOPEN.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T03:21:58.569776+00:00",
+      "retrieved_bytes_sha256": "1f255267e50e961c1771c07e22c1ceb6787abe4f4fdc7a143206547cb4fc2d72",
+      "retrieved_bytes_length": 14408,
+      "recorded_facts": {
+        "command": "*CFOPEN,station_values,txt then *VWRITE then *CFCLOS",
+        "destination": "VWRITE data goes to open command file; blank Loc overwrites, APPEND appends; canary forbids APPEND"
+      },
+      "retention": "Raw page not persisted; factual metadata only",
+      "canary_role": "canary method/evidence reference; exact-revision review receipts govern coverage"
+    },
+    {
+      "source_id": "MSG-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_MSG.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T03:25:22.849469+00:00",
+      "retrieved_bytes_sha256": "97e9ac595affcf2aa9d37c4407942855987edd12c439c6e88622a5065cedae36",
+      "retrieved_bytes_length": 19744,
+      "recorded_facts": {
+        "labels": "INFO headingless; NOTE heading; WARN produces WARNING; ERROR and FATAL produce error headings",
+        "files": "warnings/errors/fatal also go to Jobname.err",
+        "limitation": "semantics, not a complete byte-level grammar"
+      },
+      "retention": "Raw page not persisted; factual metadata only",
+      "canary_role": "canary method/evidence reference; exact-revision review receipts govern coverage"
+    },
+    {
+      "source_id": "NERR-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_NERR.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T03:25:22.992753+00:00",
+      "retrieved_bytes_sha256": "9bd99cbd96e39634275722fbe0868331082379a9481418562febc8bd09a0c70f",
+      "retrieved_bytes_length": 17701,
+      "recorded_facts": {
+        "display_limit": "batch NMERR default200 per command; negative NMERR also limits err retention",
+        "error_file": "warning/error messages continue in Jobname.err unless limited by negative NMERR",
+        "state": "STAT reports settings; canary requires nonnegative NMERR and no suppression"
+      },
+      "retention": "Raw page not persisted; factual metadata only",
+      "canary_role": "canary method/evidence reference; exact-revision review receipts govern coverage"
+    },
+    {
+      "source_id": "CONFIG-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_CONFIG.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T11:33:08.083551+00:00",
+      "retrieved_bytes_sha256": "40635a800d335b77ace8b9ba6a105b03dbcbfcd430a75ef2f9274ce08442009b",
+      "retrieved_bytes_length": 24257,
+      "recorded_facts": {
+        "RESUPREC0": "entire results file double precision; documented v242 default",
+        "RESUPREC1": "element results single, other results double",
+        "RESUPREC2": "geometry double, other results single",
+        "verification": "STAT reports current settings; command overrides same config.ans parameter; set before required",
+        "placement": "Canary will issue configuration and STAT at Begin level with explicit processor exits/re-entry. The recorded CONFIG page establishes semantics/STAT; no unsupported claim of exclusive processor availability is made."
+      },
+      "retention": "Raw page not persisted; factual metadata only",
+      "canary_role": "current checkpoint correction"
+    },
+    {
+      "source_id": "SFELIST-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_SFELIST.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T11:33:08.267321+00:00",
+      "retrieved_bytes_sha256": "eb70d4eabe72cff4f6522e4d828be2059fbc9efcb70fa608be09d5ac5c05a600",
+      "retrieved_bytes_length": 15188,
+      "recorded_facts": {
+        "command": "SFELIST,ALL,ALL lists all surface-load labels on selected elements",
+        "scope": "current database values; POST1 does not update surface loads from result history",
+        "canary": "capture full selected-element listing before the fixed FINISH; /CONFIG,STAT; /SOLU; SOLVE sequence, keyed by element and face"
+      },
+      "retention": "Raw page not persisted; factual metadata only",
+      "canary_role": "current checkpoint correction"
+    },
+    {
+      "source_id": "FLIST-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_FLIST.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T11:33:08.396105+00:00",
+      "retrieved_bytes_sha256": "f235b74f9ad7c8a1125661df59c2ae42e4aab80eb3fea77bae91ecb97af89255",
+      "retrieved_bytes_length": 14000,
+      "recorded_facts": {
+        "command": "FLIST lists applied nodal forces; canary requires none",
+        "canary": "full selected-node listing before the fixed FINISH; /CONFIG,STAT; /SOLU; SOLVE sequence"
+      },
+      "retention": "Raw page not persisted; factual metadata only",
+      "canary_role": "current checkpoint correction"
+    },
+    {
+      "source_id": "DLIST-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_DLIST.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T11:33:08.546102+00:00",
+      "retrieved_bytes_sha256": "cf70155fd383cc0cb5e31004f834b2d1b9d4f9e53e38dd0474614f72d3917a47",
+      "retrieved_bytes_length": 13830,
+      "recorded_facts": {
+        "command": "DLIST lists DOF constraints",
+        "canary": "verify complete bottom-row UY0 including midside nodes; no radial constraints"
+      },
+      "retention": "Raw page not persisted; factual metadata only",
+      "canary_role": "current checkpoint correction"
+    },
+    {
+      "source_id": "FINISH-v242",
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_FINISH.html",
+      "version": "2024 R2",
+      "retrieved_utc": "2026-09-14T11:41:59.136321+00:00",
+      "retrieved_bytes_sha256": "545a3b44220f97e91dce4947153a315a8624228c05f648ec14a8131235d93523",
+      "retrieved_bytes_length": 13475,
+      "recorded_facts": {
+        "exit": "exits processor; database data retained, not automatically saved",
+        "placement": "FINISH issued from processor, not Begin; canary config status will be at Begin between processor entries"
+      },
+      "retention": "Raw page not persisted; factual metadata only",
+      "canary_role": "explicit configuration-status sequencing"
+    }
+  ],
+  "boundary_note": "VM25 top-axial coupling was additionally checked against public PyMAPDL listing; the independently checked Hooke-law branch will govern proposed uz, not an asserted vendor axial target."
+}

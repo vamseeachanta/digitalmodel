@@ -88,7 +88,15 @@ def test_generate_pv_apdl_defined_once():
 
 
 def test_committed_example_inp_matches_generator():
-    """Drift guard: the committed pv.inp must equal build.py's output."""
+    """Drift guard: the committed pv.inp must equal build.py's output.
+
+    Line endings are normalised before comparison. Git checks this file out with
+    CRLF wherever ``core.autocrlf`` is true, while the generator emits LF, so a
+    byte-exact comparison fails on every Windows checkout regardless of whether
+    the deck has drifted. That failure was standing on main when #2094 was
+    opened: the one guard covering these decks was red on this platform and
+    proving nothing on any other.
+    """
     inp = EXAMPLE / "pv.inp"
     build = EXAMPLE / "build.py"
     assert inp.is_file(), "example pv.inp not present"
@@ -103,4 +111,65 @@ def test_committed_example_inp_matches_generator():
         include_thermal=True,
         include_hydrotest=False,
     )
-    assert inp.read_text() == expected
+    assert inp.read_text(encoding="utf-8").replace("\r\n", "\n") == expected.replace("\r\n", "\n")
+
+
+# --- physics correctness (#2094) -------------------------------------------
+# The byte-match guard above proves the generator is deterministic. It proved
+# nothing about the physics: the deck over-predicted peak von Mises by 3.8x for
+# months while this suite was green. These assert against the model, not against
+# the generator.
+
+
+def test_no_spurious_radial_point_restraint():
+    """An axisymmetric model has no radial rigid-body mode.
+
+    A single node restrained in UX therefore removes no rigid-body motion; it
+    resists the model's own pressure and thermal expansion and produces a
+    spurious point stress concentration, which NSORT then reports as the peak.
+    Measured: 981.34 MPa with the restraint, 259.54 MPa without, against a
+    closed-form Lame von Mises of 260.24 MPa.
+    """
+    script = _gen().generate_pv_apdl(VesselGeometry(), DesignConditions())
+    directives = [
+        ln.strip()
+        for ln in script.splitlines()
+        if ln.strip() and not ln.strip().startswith("!")
+    ]
+    radial = [ln for ln in directives if ln.upper().replace(" ", "").startswith("D,ALL,UX")]
+    assert not radial, (
+        "radial restraint re-introduced: "
+        f"{radial}. An axisymmetric model has no radial rigid-body mode, so this "
+        "removes no rigid-body motion and instead resists the wall's own pressure "
+        "and thermal expansion (#2094)."
+    )
+
+
+def test_deck_is_axisymmetric():
+    """Binds the safety of the restraint's absence to its precondition.
+
+    Deleting the radial restraint is correct *because* the element is
+    axisymmetric. If KEYOPT(3) is ever changed to plane stress or plane strain,
+    the deleted restraint becomes a live singularity with nothing guarding it.
+    """
+    script = _gen().generate_pv_apdl(VesselGeometry(), DesignConditions())
+    assert "KEYOPT,1,3,1" in script
+
+
+def test_reaction_sum_is_reported():
+    """Equilibrium is the check that would have caught the defect at first run.
+
+    A reaction sum over the constrained set makes an over-constraint
+    self-announcing: the spurious restraint carried a large radial reaction that
+    no committed artifact recorded.
+    """
+    script = _gen().generate_pv_apdl(VesselGeometry(), DesignConditions())
+    assert "FSUM" in script, "deck reports no reaction sum"
+    assert "rfy" in script, "reaction resultant not captured for the digest"
+
+
+def test_digest_carries_reaction_and_peak_node():
+    """A value without its location cannot be told from a singularity."""
+    script = _gen().generate_pv_apdl(VesselGeometry(), DesignConditions())
+    assert "peak_node" in script
+    assert "reaction_fy_n" in script

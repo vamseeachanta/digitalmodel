@@ -1,0 +1,84 @@
+{
+  "findings": [
+    {
+      "id": "C1",
+      "severity": "MAJOR",
+      "defect": "The plan names PyMAPDL VM25 as the external comparator that validates the analytical reference, but VM25 publishes pressure-only radial displacement and radial/hoop stress for a LONG cylinder. Hoop and radial stress are independent of the axial end condition, so those targets discriminate nothing about the plan's open-ended assumption. The entire differentiator between open-ended (sigma_z=0), closed-end and plane-strain formulations sits in the Poisson weighting of ur = ((1-nu)Ar + (1+nu)B/r)/E and in uz = -2*nu*A*y/E, and VM25 publishes no axial-displacement target at all. At nu=0.3, t=60 mm, p=10 MPa, a=750 mm the open-ended ur(a) = 0.4995 mm against plane-strain ur(a) = 0.4589 mm, an 8% separation; if the VM25 fixture uses nu=0 (as its rotating companion case makes likely) the separation vanishes entirely and a plane-strain or closed-end reference passes every proposed B1 test. The stated supporting tests (boundary identities sigma_r(a)=-p, sigma_r(b)=0; dimensional scaling) are also axial-condition-blind. VM38 adds nothing here (see C5). The plan therefore has no independent check on its central modelling assumption.",
+      "correction": "State VM25's Poisson ratio and axial end condition explicitly in the plan and record whether they match the proposed open-ended case. Add B1 discrimination tests that fail for the wrong axial condition at nu=0.3: (a) an axial-strain identity test asserting the FE-recovered uz(y=120)/120 equals -2*nu*A/E and that the plane-strain (eps_z=0) and closed-end (sigma_z = p a^2/(b^2-a^2)) variants both violate the 1% band; (b) a mutation test that substitutes each competing closed form and asserts the suite turns RED; (c) a second independently derived closed form for the same open-ended case from a non-vendor source, recomputed rather than transcribed. Record in the checker register that the axial branch is validated by derivation plus discrimination, not by VM25."
+    },
+    {
+      "id": "C2",
+      "severity": "MAJOR",
+      "defect": "The exact-query identity is specified as geometry, pressure, elastic constants, thermal condition and formulation/boundary version, with the response identity adding station and definition; mesh is explicitly excluded and 'N=16 will be fixed in the production revision provenance'. Under that definition pv-t60-p10-n4, pv-t60-p10-n8 and pv-t60-p10-n16 all carry an identical identity tuple, so every coarse-mesh ledger record duplicates a production exact-query identity. The step-4 test 'meshes/control records cannot duplicate production exact-query identities' is therefore unsatisfiable as written. Adding mesh to the key to satisfy it contradicts the lookup refusal semantics elsewhere in the plan ('a request for another mesh or off-grid physical input will be refused'), because the caller would then have to supply a mesh level to form a valid query.",
+      "correction": "Define two distinct key spaces and test both. Ledger key = production key + mesh level + purpose (physical-and-refinement | zero-load-control), unique across all 28 attempts. Production key = physical identity + station + definition, mesh excluded, with the frozen mesh level carried as provenance only. Specify the promotion rule as: select exactly one ledger record whose mesh level equals the frozen production mesh, and refuse promotion (rather than pick or rank) when zero or more than one candidate exists. Add tests that a coarse-mesh record, a zero-control record and a second N=16 record for the same physical identity each cause promotion to refuse, and that the production lookup is total on exactly 189 keys and refuses everything else."
+    },
+    {
+      "id": "C3",
+      "severity": "MAJOR",
+      "defect": "The plan's own pinned resource-intelligence record inventories an existing pressure-vessel surface at the baseline: src/digitalmodel/ansys/pressure_vessel.py, examples/ansys/pressure-vessel/pv.inp, examples/ansys/pressure-vessel/golden/PROVENANCE.json and tests/ansys/golden_acceptance.py. The plan text never dispositions any of them. It does not state what that existing golden dataset covers, whether any of the nine proposed physical cases are already covered, whether the new cylinder benchmark supersedes or duplicates it, or which artifact is the authoritative owner for cylindrical-wall verification responses. The proposed case-ID prefix 'pv-' additionally reuses the existing 'pv' example/deck namespace, so case identifiers are ambiguous across the two surfaces. The resource-intel record also reports catalog_matches 0 with registration_status unresolved, so nothing external resolves the ownership question either. Registering ansys-open-cylinder-verification without this disposition creates two competing authoritative comparators for the same component with colliding identifiers.",
+      "correction": "Before B1 implementation, add an explicit prior-artifact disposition section: read pressure_vessel.py, pv.inp, PROVENANCE.json and golden_acceptance.py at the pinned baseline; state what physical cases, response definitions and provenance the existing golden set holds; and record one of supersede / extend / coexist-with-disjoint-scope, with the overlap set enumerated. Rename the proposed case-ID prefix to a namespace that cannot collide with the existing pv decks (for example ocv-t60-p10-n16). Name the single authoritative owner for cylindrical-wall verification responses in the plan, and add a B1 test asserting no proposed case ID or dataset identity collides with an existing example, golden record or catalog entry."
+    },
+    {
+      "id": "C4",
+      "severity": "MINOR",
+      "defect": "Two coupled specification gaps in the acceptance gate. First, the campaign-stopping condition is 'any failed initial criterion' over the first four attempts (N=4, N=8, N=16 at t=60/p=10, then the zero control), but the plan also declares that 'coarse accuracy will be diagnostic'. It never says which of the Table 2 criteria bind on the N=4 and N=8 attempts, so the stop-gate is undefined for two of the four initial attempts. Second, the expected-zero criterion max(0.001p, 1e-8 MPa) is a single ungraded band applied at every mesh. For the proposed geometry that band is 0.01 MPa at p=10 MPa, which is the same order as the coarse-mesh discretisation artifact in sigma_z: with the exact field u_r = c1*r + c2/r, the piecewise-linear interpolation error at h = t/N = 15 mm gives a strain residual of order 1e-7 and hence lambda*delta ~ 0.01 MPa in sigma_z at N=4, falling roughly as h^2 to well under the band at N=16. A numerically correct model can therefore fail the N=4 expected-zero check and, under the undefined stop-gate, halt the campaign.",
+      "correction": "Enumerate in Table 2 exactly which criteria are blocking at each mesh level, and state that the initial stop-gate binds only on the finest-mesh accuracy, the refinement criterion and the zero-pressure control. Grade the expected-zero band by mesh from an a priori discretisation-error estimate (for example band_N = max(k * (t/N)^2 / L_ref^2 * sigma_theta_max, 1e-8 MPa) with k recorded), or apply the flat band only at N=16 and record coarse-mesh zero-component residuals as diagnostics."
+    },
+    {
+      "id": "C5",
+      "severity": "MINOR",
+      "defect": "ANSYS VM38 is a plastic-loading verification of a thick-walled cylinder; its published target quantities are elastic-plastic. The plan cites it as one of three primary vendor references 'for a thick-cylinder pressure comparator' and then states 'the campaign will omit VM25 rotation and VM38 plasticity'. With plasticity omitted, none of VM38's published targets apply to the proposed linear-elastic small-displacement campaign, so the reference contributes no comparison quantity and its citation overstates the external corroboration available.",
+      "correction": "Either name the specific VM38 quantity that will be compared and show it is an elastic-regime published target, or drop VM38 from the primary reference list and cite it only as background on thick-cylinder modelling practice. Adjust the sentence so the count of comparators that actually supply a target is stated accurately."
+    },
+    {
+      "id": "C6",
+      "severity": "MINOR",
+      "defect": "The plan states that vendor deck listings and licensed standards PDFs will not be copied into the repository, and that the vendor references 'support independently derived equations, not a claim of identical vendor fixtures'. It then commits B1 to 'compare the reference with the published VM25 pressure-only targets at their stated precision', which in practice means embedding vendor verification-manual numeric target values in repository test fixtures. Those numbers are vendor-published golden data behind a secured documentation view. The plan resolves rights for sources and datasets generally but states no rights disposition for the VM25 target values specifically, and does not say whether they will be transcribed or recomputed.",
+      "correction": "Recompute the VM25 comparison targets from the published closed form using VM25's stated inputs rather than transcribing vendor result values, mark the fixture as independently recomputed with the derivation recorded in the sidecar, and cite VM25 as corroboration by reference (URL and version) only. If any vendor numeric target is to be stored, record its rights disposition and permitted-use basis in the same rights review that covers sources and datasets, before the fixture lands."
+    },
+    {
+      "id": "C7",
+      "severity": "MINOR",
+      "defect": "The axial-equilibrium criterion is |sum RFy| <= max(1e-6 * p*pi*a^2, 1e-6 N). p*pi*a^2 is the closed-end pressure resultant, an inapt scale for a model whose defining feature is that no end cap is applied; the plan acknowledges this as 'a normalization scale only' but still inherits its magnitude. At p=10 MPa, a=750 mm the band is 17.7 N, while the true expected reaction is identically zero and solver round-off relative to the applied radial resultant (p*2*pi*a*L = 1.13e8 N) is of order 1e-4 N. The criterion is therefore about five decades looser than achievable and cannot detect a small spurious axial load, an incorrectly applied edge traction at the free end, or a partial end-cap term; it only catches a gross full end-cap load.",
+      "correction": "Normalise the band to the quantity that actually sets round-off, for example |sum RFy| <= max(1e-9 * p*2*pi*a*L, 1e-6 N), or state an absolute band derived from an observed zero-load reaction floor on the target solver. Add a companion check that the reaction at every individual constrained node, not only the sum, is below the same band, so that a self-equilibrating spurious axial traction cannot cancel in the sum."
+    },
+    {
+      "id": "C8",
+      "severity": "MINOR",
+      "defect": "Neither acceptance band is derived from an expected error magnitude. The accuracy criterion is 1% of the reference and the refinement criterion 0.5%, but for this geometry the wall is thin relative to the radius (t/a = 0.06 to 0.12) and the hoop stress varies only about 8% across the wall, so the expected finest-mesh discretisation error is of order 1e-4 relative or smaller. Passing the 1% band at N=16 is close to vacuous: it confirms the model is not grossly wrong but provides no evidence that the solution is converged, and the 0.5% refinement band is satisfied by differences several orders below it. The plan correctly declines to claim asymptotic convergence, but the gates as written cannot distinguish a converged correct model from a wrong-but-close one.",
+      "correction": "Record an a priori expected-error estimate per response and mesh level in the case proposal before execution. Keep the 1% and 0.5% bands as outer limits, and add a diagnostic assertion that flags any response which passes the outer band but deviates from its a priori estimate by a stated factor (for example 10x), so the gate detects an unexpected-but-small discrepancy instead of only a gross one."
+    },
+    {
+      "id": "C9",
+      "severity": "MINOR",
+      "defect": "All 21 responses are sampled at a single axial station, y = 120 mm. The central modelling claim is that the finite 240 mm slice reproduces the open-ended solution with no end effect, and stresses should be exactly y-invariant; that invariance is never sampled, so a y-dependent artifact (spurious edge traction, discretisation-driven end layer, wrong constraint edge) is invisible to the response set. The decay length scale sqrt(a*t) is 212 to 260 mm for the proposed cases, comparable to the 120 mm station offset, so an end layer would not be clearly separated from the station. Separately, the plan tests the analytical reference against boundary identities and dimensional scaling but not against the exact radial-equilibrium identity integral(a to b) sigma_theta dr = p*a, which follows from the Lame constants independently of nu and of the axial condition and is a strong, cheap check on the reference implementation.",
+      "correction": "Add two auxiliary axial stations (for example y = 60 mm and y = 180 mm) for the stress components and assert y-invariance within the expected-zero band, and assert uz linearity in y across the three stations. Add a B1 reference test asserting integral(a to b) sigma_theta dr = p*a to within numerical quadrature tolerance for every proposed physical case, and assert the companion identity sigma_r(a) + sigma_theta(a) = sigma_r(b) + sigma_theta(b) = 2A."
+    },
+    {
+      "id": "C10",
+      "severity": "MINOR",
+      "defect": "The B1 approval boundary is offline implementation with no authorised solves, and the plan states decks will be generated and verified 'without invoking ANSYS'. Step 5 nonetheless commits B1 to 'run relevant ANSYS and documentation tests'. On the licensed Windows host the existing suite carries native tests that are skipped only because the environment is unlicensed; there is no stated affirmative guard preventing a native solve during the B1 test run, so the offline boundary is enforced by circumstance rather than by construction. This is a fail-open path across an explicit approval gate.",
+      "correction": "Add an affirmative offline enforcement to B1: an environment guard or pytest marker deselection that refuses to launch the solver regardless of license availability, plus an assertion in the offline tests that no solver executable was invoked (process/audit check or injected launcher stub that raises). Require the B1 evidence to record the skip or refusal of every native-marked test by node ID, so the no-solve boundary is demonstrated rather than assumed."
+    }
+  ],
+  "reviewed_files": [
+    {
+      "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+      "sha256": "be300d198bfbaa1b37a5e7c87a9dbc7f69e901606441c5afa2f940fc184af32f"
+    },
+    {
+      "path": "docs/plans/README.md",
+      "sha256": "a91e878c821c94725a16d741499c16c9de7a0bfd422e3ae8b52265b53b514c10"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-case-proposal.json",
+      "sha256": "2215b5e7a3f5213b35e0941584f2fb48bf14f7ac656e449b6894049d603aa6b7"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-resource-intel.json",
+      "sha256": "5ae40fbe794ef3521362de400f648e5e66dcbde860ddcdeb7641c4c98a6c7a92"
+    }
+  ],
+  "reviewed_revision": "4a249ab7126c40fe6025e14096bb258a80c5cfcb",
+  "verdict": "MAJOR"
+}
