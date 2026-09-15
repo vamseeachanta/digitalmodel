@@ -6,7 +6,7 @@ import re
 from digitalmodel.ansys.analysis_records import canonical_bytes, digest_bytes, parse_json, nonempty, verify_reference
 from digitalmodel.ansys.analysis_evidence import build_package, validate_package
 from digitalmodel.ansys.analysis_replay_inputs import (
-    CASE_ID, REFERENCE_HASH, load_replay_inputs, opaque_reference, validate_mapping,
+    CASE_ID, REFERENCE_HASH, load_replay_inputs, opaque_reference, validate_mapping, observed_reference_hash,
 )
 from digitalmodel.ansys.cylinder_benchmark import build_case
 from digitalmodel.ansys.cylinder_criteria import EXPECTED_KEYS, evaluate_attempt, evaluate_canary
@@ -107,6 +107,7 @@ def _original(raw, old, resolver, documents):
 
 
 def _evaluate(resolved):
+    observed_hash = observed_reference_hash(resolved)
     raw = resolved['raw']
     artifacts = {name.split('/')[-1]: value for name, value in raw.items() if name.startswith(CASE_ID + '/')}
     for old, new in [(CASE_ID + '.out', 'native.out'), ('file.err', 'jobname.err'),
@@ -115,7 +116,7 @@ def _evaluate(resolved):
     case = build_case(CASE_ID)
     if artifacts[CASE_ID + '.inp'] != case['deck_bytes']:
         raise ValueError('executed deck differs from fixed zero case')
-    result = validate_native_evidence(case, artifacts, REFERENCE_HASH, REFERENCE_HASH)
+    result = validate_native_evidence(case, artifacts, REFERENCE_HASH, observed_hash)
     if result['status'] != 'COMPLETE' or result['errors']:
         raise ValueError('native replay extraction incomplete')
     measured = {key: str(value) for key, value in result['values'].items()}

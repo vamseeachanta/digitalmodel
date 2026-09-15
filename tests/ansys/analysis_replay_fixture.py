@@ -100,14 +100,19 @@ def synthetic_inputs(root, resolver, monkeypatch):
     for name, data in artifacts.items():
         raw[inputs.CASE_ID+'/'+aliases.get(name, name)] = data
     raw[inputs.CASE_ID+'/'+inputs.CASE_ID+'.inp'] = case['deck_bytes']
-    runtime = retain(root, resolver, 'runtime', dict(runtime_lineage=dict(
+    source_root = Path(inputs.__file__).resolve().parents[3]
+    reference = (source_root/'examples/ansys/cylinder-benchmark/reference.json').read_bytes()
+    runtime = retain(root, resolver, 'runtime', dict(reference='reference.json',
+        artifacts=[dict(path='reference.json', sha256=digest_bytes(reference), bytes=len(reference))],
+        runtime_lineage=dict(
         source_revision=inputs.RUNTIME_REVISION, runtime_inventory_sha256=inputs.RUNTIME_INVENTORY)))
     monkeypatch.setattr(inputs, 'RUNTIME_HASH', runtime['sha256'])
     config = retain(root, resolver, 'config', dict(execution_binding=dict(manifest_sha256=runtime['sha256'])))
     approval = retain(root, resolver, 'approval', dict(manifest_sha256=runtime['sha256'], config_sha256=config['sha256']))
     raw['operator-outcome.json'] = canonical_bytes(dict(execution_approval_sha256=approval['sha256']))
     raw['outcome.json'] = canonical_bytes(dict(status='INCOMPLETE', attempted=[inputs.CASE_ID],
-        records=[dict(evidence_errors=['Unsupported CDB command OMEGA'], values={})]))
+        records=[dict(case_id=inputs.CASE_ID, reference_sha256=digest_bytes(reference),
+                      evidence_errors=['Unsupported CDB command OMEGA'], values={})]))
     rawrefs = {name: retain(root, resolver, 'raw-'+str(i), data, binary=True)
                for i, (name, data) in enumerate(raw.items())}
     mapping = mapping_for(case)

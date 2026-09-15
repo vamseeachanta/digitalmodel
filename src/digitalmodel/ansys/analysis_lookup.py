@@ -150,10 +150,11 @@ def _verification(package: dict, case: dict, response: dict, authority: dict,
 
 def _qualify(package: dict, case: dict, response: dict, intended_use: str,
              authority: dict, resolver: dict[str, Path]) -> dict:
-    if (case.get("engineering_qualified") is False
-            or case.get("capture_role") in {"diagnostic_observation", "diagnostic_replay"}
-            or ("campaign_assessment_status" in case
-                and case["campaign_assessment_status"] != "PASS")):
+    # Preserve historical roles as evidence; only explicit qualification claims
+    # may enter the independent rights, provenance and verification checks below.
+    if (case.get("engineering_qualified") is not True
+            or case.get("capture_role") != "qualified_native"
+            or case.get("campaign_assessment_status") != "PASS"):
         raise ValueError("diagnostic or incomplete campaign evidence cannot qualify")
     _check_provenance(package, case, response, authority, resolver)
     if case["source_kind"] != "native" or case["execution_status"] != "completed":

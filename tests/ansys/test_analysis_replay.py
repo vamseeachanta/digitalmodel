@@ -148,7 +148,13 @@ def synthetic_evaluation_inputs():
     raw[CASE_ID + '/' + CASE_ID + '.inp'] = case['deck_bytes']
     repo = Path(__file__).resolve().parents[2]
     reference = (repo/'examples/ansys/cylinder-benchmark/reference.json').read_bytes()
-    return {'raw': raw, 'documents': {'reference': reference}}
+    from digitalmodel.ansys.analysis_records import canonical_bytes, digest_bytes
+    reference_hash = digest_bytes(reference)
+    manifest = canonical_bytes(dict(reference='reference.json', artifacts=[dict(
+        path='reference.json', sha256=reference_hash, bytes=len(reference))]))
+    raw['outcome.json'] = canonical_bytes(dict(records=[dict(
+        case_id=CASE_ID, reference_sha256=reference_hash)]))
+    return {'raw': raw, 'documents': {'reference': reference, 'runtime_manifest': manifest}}
 
 
 def test_existing_parser_and_criteria_produce_all_64_synthetic_checks():

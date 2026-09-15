@@ -19,7 +19,9 @@ from digitalmodel.ansys.analysis_lookup import lookup, create_ledger, append_wit
 def protocol(intake, tmp_path):
     study, resolver = intake
     case = study["cases"][0]
-    case.update(source_kind="native", use_rights="approved")
+    case.update(source_kind="native", use_rights="approved",
+                capture_role="qualified_native", engineering_qualified=True,
+                campaign_assessment_status="PASS")
     case["responses"][0]["limitations"] = []
     for role in ["input", "log", "native", "source"]:
         path = tmp_path / role

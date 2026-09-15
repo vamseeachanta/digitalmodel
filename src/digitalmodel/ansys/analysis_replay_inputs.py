@@ -49,7 +49,14 @@ def validate_review(review, inventory):
             or not review.get('bundle_sha256') or result.get('bundle_sha256') != review['bundle_sha256']):
         raise ValueError('independent review unavailable, blocking or inconsistent')
     covered = {}
-    for row in review.get('files', []):
+    files = review.get('files')
+    if not isinstance(files, list):
+        raise ValueError('review receipt file list invalid')
+    for row in files:
+        if (not isinstance(row, dict) or not isinstance(row.get('path'), str)
+                or not row['path'] or not isinstance(row.get('sha256'), str)
+                or not re.fullmatch(r'[0-9a-f]{64}', row['sha256'])):
+            raise ValueError('review receipt source row invalid')
         path = row['path'].replace('\\', '/')
         if '/src/digitalmodel/' in path:
             path = 'src/digitalmodel/' + path.split('/src/digitalmodel/')[-1]
@@ -152,6 +159,33 @@ def _review_binding(raw, inventory, expected):
     validate_review(dict(review, files=entries), inventory)
 
 
+def observed_reference_hash(resolved):
+    """Bind retained reference bytes to the executed manifest and original record."""
+    docs = resolved['documents']
+    if 'reference' not in docs or 'runtime_manifest' not in docs:
+        raise ValueError('reference documents missing')
+    runtime = parse_json(docs['runtime_manifest'])
+    artifacts = runtime.get('artifacts')
+    if (runtime.get('reference') != 'reference.json' or not isinstance(artifacts, list)
+            or any(not isinstance(row, dict) for row in artifacts)):
+        raise ValueError('runtime reference artifact inventory invalid')
+    matches = [row for row in artifacts if row.get('path') == 'reference.json']
+    actual = digest_bytes(docs['reference'])
+    if (len(matches) != 1 or actual != REFERENCE_HASH
+            or matches[0].get('sha256') != actual
+            or type(matches[0].get('bytes')) is not int
+            or matches[0]['bytes'] != len(docs['reference'])):
+        raise ValueError('runtime reference artifact differs from retained bytes')
+    if 'outcome.json' not in resolved['raw']:
+        raise ValueError('original reference outcome missing')
+    rows = parse_json(resolved['raw']['outcome.json']).get('records')
+    if (not isinstance(rows, list) or len(rows) != 1 or not isinstance(rows[0], dict)
+            or rows[0].get('case_id') != CASE_ID
+            or rows[0].get('reference_sha256') != actual):
+        raise ValueError('original outcome reference binding differs')
+    return actual
+
+
 def load_replay_inputs(reference, resolver, previous_case_hash, review_sha256):
     opaque_reference(reference)
     receipt = parse_json(verify_reference(reference, resolver))
@@ -175,4 +209,5 @@ def load_replay_inputs(reference, resolver, previous_case_hash, review_sha256):
     outcome = parse_json(resolved['raw']['operator-outcome.json'])
     if outcome.get('execution_approval_sha256') != digest_bytes(docs['approval']):
         raise ValueError('original outcome approval binding differs')
+    observed_reference_hash(resolved)
     return receipt, resolved, evidence

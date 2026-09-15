@@ -157,9 +157,11 @@ def response_csv(package: dict) -> str:
     for case in package["cases"]:
         for response in case["responses"]:
             kind = "null" if response["value"] is None else "decimal"
+            if kind == "decimal" and case["capture_role"].startswith("diagnostic_"):
+                kind = "diagnostic_decimal"
             record = {"case_id": case["case_id"], "row_hash": case["row_hash"],
                       "dataset_id": package["dataset_id"], "revision": package["revision"],
-                      "response": response}
+                      "capture_role": case["capture_role"], "response": response}
             writer.writerow([case["case_id"], response["name"], kind,
                              "" if kind == "null" else response["value"],
                              canonical_bytes(record).decode("utf-8")])
@@ -183,6 +185,8 @@ def read_response_csv(text: str) -> list[dict]:
             raise ValueError("noncanonical CSV payload")
         response = record["response"]
         kind = "null" if response["value"] is None else "decimal"
+        if kind == "decimal" and record.get("capture_role", "").startswith("diagnostic_"):
+            kind = "diagnostic_decimal"
         value = "" if kind == "null" else decimal_text(response["value"])
         if (record["case_id"] != key[0] or response["name"] != key[1]
                 or kind != row["value_type"] or value != row["value"]):
