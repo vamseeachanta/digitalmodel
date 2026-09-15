@@ -14,6 +14,28 @@ fields and true zero. Six invalid original padeye reaction/residual channels hav
 null usable values and preserve their observed values separately. `generated_at`
 is the intake observation time, not a claim about native execution time.
 
+
+## Current diagnostic result revision
+
+Revision r4 contains 12 cases and 350 responses: 88 historical computed responses,
+64 newly computed zero-control diagnostic responses, six historical failures,
+and 192 not-evaluated responses. Qualified responses remain zero. The bounded
+cylinder canary has one native attempt/completion and three unattempted pressure
+cases; this intake adds no native run. Revisions r1-r4 remain in the existing
+retained-evidence owner. `manifest.json` is authoritative; `responses.csv` and the
+[diagnostic report](../../../docs/reports/2026-09-14-ansys-cylinder-zero-native-checkpoint.html)
+are views of it.
+
+The new 64 responses comprise 54 extracted station components, nine derived von
+Mises values and one summed reaction. All fixed zero-control checks pass; pressure
+accuracy and mesh convergence are not established. Current receipt field names
+label derived von Mises values with the other measured values; separate derived
+provenance remains a tracked refinement, not native validation. All 23 original
+files remain retained unchanged. Nine consumed numerical/diagnostic files are
+within the 13 execution-bound artifacts; other retained files do not acquire
+numerical authority merely by retention. Private raw-repository backup remains
+unestablished. The pending-coverage description below records the r2 builder basis.
+
 ## Pending cylinder coverage
 
 The `analysis_pending` builder adds four explicitly unattempted cylinder cases to
@@ -77,8 +99,8 @@ The cooperative `.publish.lock` is removed on normal exit. After interruption,
 the owner first confirms that no publisher is active, then removes only that
 dataset's stale lock before retrying; active locks must not be cleared.
 
-The CLI reloads the published JSON before reporting success. The committed
-`manifest.json` is a copy of that published revision. This self-contained check
+The CLI reloads its published JSON before reporting success. The committed
+`manifest.json` tracks the current reviewed matrix revision, which can be later than r1. This self-contained check
 compares its package hash and reproduces the derived CSV:
 
 ```python
@@ -86,13 +108,13 @@ from pathlib import Path
 from os import environ
 from digitalmodel.ansys.analysis_evidence import load_package, response_csv, read_response_csv
 root = Path(environ["ANSYS_DATASET_ROOT"])
-package = load_package(root / "ansys-retained-evidence/r1.json")
 expected = load_package(Path("examples/ansys/analysis-evidence/manifest.json"))
+package = load_package(root / "ansys-retained-evidence" / (expected["revision"] + ".json"))
 assert package["package_hash"] == expected["package_hash"]
 text = response_csv(package)
-output = root / "responses.csv"
-output.write_text(text, encoding="utf-8", newline="")
-assert read_response_csv(output.read_text(encoding="utf-8"))
+output = Path("examples/ansys/analysis-evidence/responses.csv")
+assert output.read_text(encoding="utf-8") == text
+assert read_response_csv(text)
 ```
 
 The code fingerprint uses declared `utf8-lf-v1` canonical source bytes so LF and
@@ -159,8 +181,9 @@ evidence, required roles, allowed limitations and completed source-rights,
 equilibrium, numerical-quality and independent-method checks. The checker must
 have a different normalized recorded author identity; `author_status=recorded`
 is required and unknown authorship refuses qualification.
-The retained examples all declare unknown individual authorship and unverified
-execution completion. Superseded captures cannot qualify. Each inherited finding
+The eight historical retained cases declare unknown individual authorship and
+unverified execution completion; the later diagnostic case records its own
+operational author and observed execution, without engineering qualification. Superseded captures cannot qualify. Each inherited finding
 requires its own response-specific authority disposition, justification and live
 evidence references under `finding_dispositions["case_id:response_name"][finding_id]`.
 The disposition is `resolved` only after the owner accepts its supporting evidence.
