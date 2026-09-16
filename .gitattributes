@@ -36,6 +36,9 @@ tests/ansys/fixtures/pressure-coarse-v261.cdb -text whitespace=-blank-at-eol,-bl
 tests/ansys/fixtures/pressure-coarse-shape-v261.txt text eol=lf
 
 # Preserve single-invocation analytical checker evidence byte for byte.
+docs/plans/evidence/issue-2121-n8-predecessor/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+docs/plans/issue-2121-n8-predecessor-replay.html text eol=lf
+docs/plans/README.md text eol=lf
 examples/ansys/cylinder-benchmark/checker_response.json -text
 examples/ansys/cylinder-benchmark/checker_transport.json -text
 examples/ansys/cylinder-benchmark/checker_process_stderr.txt -text
