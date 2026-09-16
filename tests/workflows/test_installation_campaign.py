@@ -131,3 +131,29 @@ def test_supplemental_trace_hash_verified_before_skip(study):
     assert result['status'] == 'stopped'
     assert len(calls) == 1
     assert trace.read_bytes() == b'tampered'
+
+
+@pytest.mark.parametrize('timeout', [0, -1, float('nan'), float('inf'), True, None, 'bad'])
+def test_invalid_timeout_rejected_before_campaign_write(study, timeout):
+    root, output, calls = study
+    with pytest.raises(ValueError, match='timeout_seconds'):
+        campaign.run_campaign(root, output, [0], extraction={}, api=object(), timeout_seconds=timeout)
+    assert not output.exists()
+    assert not calls
+
+
+def test_extended_timeout_reaches_materializer_and_preserves_completed_request(study, monkeypatch):
+    root, output, calls = study
+    original = campaign.materialize_case
+    values = []
+    def recording(*args, **kwargs):
+        values.append(kwargs['timeout_seconds'])
+        return original(*args, **kwargs)
+    monkeypatch.setattr(campaign, 'materialize_case', recording)
+    campaign.run_campaign(root, output, [0], extraction={}, api=object(), timeout_seconds=14400)
+    request = output / 'prepared/case_000/request.yml'
+    before = request.read_bytes()
+    campaign.run_campaign(root, output, [0], extraction={}, api=object(), timeout_seconds=28800)
+    assert values == [14400]
+    assert request.read_bytes() == before
+    assert len(calls) == 1

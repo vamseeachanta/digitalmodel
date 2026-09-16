@@ -68,6 +68,7 @@ def test_case_preserves_source_and_structure_and_full_stages(setup):
     request = yaml.safe_load((output / 'request.yml').read_text())
     assert request['model_sha256'] == sea.compute_hash(output / 'model.yml')
     assert request['extraction'] == extraction
+    assert request['timeout_seconds'] == 1800
     assert json.loads((output / 'generation.json').read_text()) == result
 
 
@@ -167,3 +168,23 @@ def test_sensitivity_settings_are_persisted_and_materialized(setup):
     model = yaml.safe_load((output.parent/'selected/model.yml').read_text())
     assert model['General']['ImplicitVariableMaxTimeStep'] == .05
     assert sea.compute_hash(source) == digest
+
+
+def test_materialization_accepts_extended_timeout_without_changing_inputs(setup):
+    api, source, digest, output, extraction = setup
+    sea.prepare_matrix(source, digest, output)
+    before = {p: p.read_bytes() for p in output.rglob('*') if p.is_file()}
+    selected = output.parent / 'selected'
+    sea.materialize_case(api, output, 95, selected, extraction=extraction, timeout_seconds=14400)
+    assert yaml.safe_load((selected / 'request.yml').read_text())['timeout_seconds'] == 14400
+    assert all(p.read_bytes() == content for p, content in before.items())
+
+
+@pytest.mark.parametrize('timeout', [0, -1, float('nan'), float('inf'), True, None, 'bad'])
+def test_invalid_timeout_fails_before_materialization_writes(setup, timeout):
+    api, source, digest, output, extraction = setup
+    sea.prepare_matrix(source, digest, output)
+    selected = output.parent / 'selected'
+    with pytest.raises(ValueError, match='timeout_seconds'):
+        sea.materialize_case(api, output, 95, selected, extraction=extraction, timeout_seconds=timeout)
+    assert not selected.exists()

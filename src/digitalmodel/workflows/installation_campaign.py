@@ -15,7 +15,7 @@ import time
 import yaml
 
 from digitalmodel.infrastructure.persistence.provenance import compute_hash
-from digitalmodel.workflows.installation_seastates import materialize_case
+from digitalmodel.workflows.installation_seastates import materialize_case, _validate_timeout
 from digitalmodel.workflows.orcaflex_reproduce import reproduce, _load_api
 
 
@@ -125,7 +125,7 @@ def _pilot(pilot_run, pilot_generation, manifest, solver_version):
     return matches[0]
 
 
-def _execute(index, manifest, root, study, extraction, api, solver_version, row):
+def _execute(index, manifest, root, study, extraction, api, solver_version, row, timeout_seconds):
     if row.get('disposition') == 'verified_pilot':
         receipt = _verify_run(Path(row['run_dir']), Path(row['generation_file']), manifest, index, solver_version)
         _ensure_traces(Path(row['run_dir']), receipt)
@@ -147,7 +147,8 @@ def _execute(index, manifest, root, study, extraction, api, solver_version, row)
     extraction = copy.deepcopy(extraction)
     case = manifest['cases'][index]
     extraction['title'] = f"Installation screening: Hs {case['hs_m']:g} m, Tp {case['tp_s']:g} s, seed {case['seed']}"
-    materialize_case(api, study, index, prepared, extraction=extraction, solver_version=solver_version)
+    materialize_case(api, study, index, prepared, extraction=extraction,
+                     solver_version=solver_version, timeout_seconds=timeout_seconds)
     reproduce(prepared / 'request.yml', run)
     receipt = _verify_run(run, prepared / 'generation.json', manifest, index, solver_version)
     _ensure_traces(run, receipt)
@@ -156,8 +157,9 @@ def _execute(index, manifest, root, study, extraction, api, solver_version, row)
 
 
 def run_campaign(study_dir, output_root, case_indices, *, extraction, api=None,
-                 pilot_run=None, pilot_generation=None, solver_version='11.6c'):
+                 pilot_run=None, pilot_generation=None, solver_version='11.6c', timeout_seconds=1800):
     """Execute only selected cases serially; stop on first failed evidence check."""
+    timeout_seconds = _validate_timeout(timeout_seconds)
     study, root = Path(study_dir).resolve(), Path(output_root).resolve()
     manifest = _manifest(study, case_indices)
     summary = _summary(manifest, study, root)
@@ -175,7 +177,7 @@ def run_campaign(study_dir, output_root, case_indices, *, extraction, api=None,
                 row.update(status='COMPLETED', disposition='verified_pilot',
                            run_dir=str(Path(pilot_run).resolve()), generation_file=str(Path(pilot_generation).resolve()))
             else:
-                api = _execute(index, manifest, root, study, extraction, api, solver_version, row)
+                api = _execute(index, manifest, root, study, extraction, api, solver_version, row, timeout_seconds)
         except Exception as error:
             row.update(status='FAILED', error=f'{type(error).__name__}: {error}')
             summary['status'] = 'stopped'
@@ -199,6 +201,8 @@ def main():
     parser.add_argument('--pilot-run', type=Path)
     parser.add_argument('--pilot-generation', type=Path)
     parser.add_argument('--solver-version', default='11.6c')
+    parser.add_argument('--timeout-seconds', type=float, default=1800,
+                        help='Positive finite solver timeout per new case (default: 1800)')
     args = parser.parse_args()
     if args.extraction_config:
         extraction = yaml.safe_load(args.extraction_config.read_text(encoding='utf-8'))
@@ -208,7 +212,8 @@ def main():
         parser.error('--extraction-config or a verified --pilot-run is required')
     result = run_campaign(args.study_dir, args.output_root,
         [int(i) for i in args.case_indices.split(',')], extraction=extraction,
-        pilot_run=args.pilot_run, pilot_generation=args.pilot_generation, solver_version=args.solver_version)
+        pilot_run=args.pilot_run, pilot_generation=args.pilot_generation,
+        solver_version=args.solver_version, timeout_seconds=args.timeout_seconds)
     print(json.dumps({'status': result['status'], 'campaign': str(args.output_root / 'campaign.json')}))
     return 1 if result['status'] == 'stopped' else 0
 

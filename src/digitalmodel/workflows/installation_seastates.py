@@ -113,9 +113,17 @@ def _json(path, payload):
         raise ValueError('JSON readback mismatch')
 
 
-def _request(output, extraction, settings, solver_version):
+def _validate_timeout(timeout_seconds):
+    if (isinstance(timeout_seconds, bool) or not isinstance(timeout_seconds, (int, float))
+            or not math.isfinite(timeout_seconds) or timeout_seconds <= 0):
+        raise ValueError('timeout_seconds must be finite and positive')
+    return timeout_seconds
+
+
+def _request(output, extraction, settings, solver_version, timeout_seconds=1800):
+    timeout_seconds = _validate_timeout(timeout_seconds)
     config = {'model': 'model.yml', 'model_sha256': compute_hash(output / 'model.yml'),
-              'solver_version': solver_version, 'timeout_seconds': 1800,
+              'solver_version': solver_version, 'timeout_seconds': timeout_seconds,
               'extraction': copy.deepcopy(extraction), 'limitations': [
                   'Irregular-wave screening case; no engineering acceptance limits established.',
                   'One fixed heading, loading condition and random seed; not an operational envelope.',
@@ -203,8 +211,10 @@ def _change_payload(settings, wave_name):
             'WaveSeed': settings['seed'], 'WaveNumberOfComponents': settings['components']}]}}
 
 
-def materialize_case(api, study_dir, case_index, output_dir, *, extraction, solver_version='11.6c'):
+def materialize_case(api, study_dir, case_index, output_dir, *, extraction,
+                     solver_version='11.6c', timeout_seconds=1800):
     """Resolve ONE hashed master/change pair into the runner's standalone input."""
+    timeout_seconds = _validate_timeout(timeout_seconds)
     study = Path(study_dir).resolve()
     manifest = json.loads((study / 'matrix.json').read_text(encoding='utf-8'))
     case = manifest['cases'][case_index]
@@ -245,7 +255,7 @@ def materialize_case(api, study_dir, case_index, output_dir, *, extraction, solv
         raise ValueError('Generated model changed structural/non-wave inputs')
     if compute_hash(master) != manifest['master_sha256'] or compute_hash(change) != case['change_sha256']:
         raise ValueError('Dependency digest changed during materialization')
-    _request(output, extraction, settings, solver_version)
+    _request(output, extraction, settings, solver_version, timeout_seconds)
     receipt = {'status': 'prepared_not_run', 'settings': settings,
                'model_sha256': compute_hash(output / 'model.yml'), 'wave_reference': reference,
                'request': str(output / 'request.yml'), 'dependencies': {
