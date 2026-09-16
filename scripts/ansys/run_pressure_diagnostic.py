@@ -1,4 +1,4 @@
-"""Externally pinned ordinal-2 pressure driver; no retry or numerical qualification."""
+"""Externally pinned coarse/intermediate pressure driver; no retry or numerical qualification."""
 import argparse
 from copy import deepcopy
 import os
@@ -97,16 +97,24 @@ def _pins(config, arguments, root):
         pins.append({'path': str(path), 'sha256': digest_bytes(_read(path))})
     for path in _resolver(config).values():
         pins.append({'path': str(path), 'sha256': digest_bytes(_read(path))})
+    from digitalmodel.ansys.cylinder_pressure_scope import pressure_step
+    if pressure_step(config)[0] == 3:
+        from digitalmodel.ansys.cylinder_intermediate_lineage import coarse_read_pins
+        pins.extend(coarse_read_pins(config))
     baseline = config['lineage']['baseline']
     pins.append({'path': baseline['path'], 'sha256': baseline['file_sha256']})
     return pins
 
 
-def ledger_paths(parent_claim):
-    """Enumerate only the three deterministic ordinal-2 siblings, never all ledger files."""
+def ledger_paths(parent_claim, ordinal=2):
+    """Count coarse (N4) records and, for intermediate (N8), its successor records."""
+    if type(ordinal) is not int or ordinal not in (2, 3):
+        raise ValueError('only integer pressure ordinals 2 and 3 supported')
     parent = _path(parent_claim)
     result = []
-    for suffix in ('.ordinal-2.invocation.json', '.ordinal-2.json', '.ordinal-2.terminal.json'):
+    suffixes = [f'.ordinal-{number}{suffix}' for number in range(2, ordinal + 1)
+                for suffix in ('.invocation.json', '.json', '.terminal.json')]
+    for suffix in suffixes:
         path = parent.with_name(parent.stem + suffix)
         if path.is_symlink() or path.is_junction():
             raise ValueError('Redirected ordinal ledger path')
@@ -121,6 +129,8 @@ def production_callbacks(config, admission, arguments, root, reservation):
     from digitalmodel.ansys.cylinder_pressure_resources import production_phase2, cumulative_storage
     from digitalmodel.ansys.cylinder_runner import launch_case
 
+    from digitalmodel.ansys.cylinder_pressure_scope import pressure_step
+    ordinal, case_id = pressure_step(config)
     operation, approval = config['operational'], admission['approval']
     preflight = ProductionPreflight(operation, approval, reservation)
     check = fast_binding_check(_pins(config, arguments, root), approval)
@@ -131,13 +141,16 @@ def production_callbacks(config, admission, arguments, root, reservation):
         bound_case = dict(case, deck_basename=Path(case['deck']).name)
         return launch_case(bound_case, directory, timeout, operation['executable'])
     def capture(case, directory, execution):
-        return capture_pressure(case, directory, execution, runtime_profile=approval['runtime_profile'])
+        kwargs = {'capture_case_id': case['case_id']} if ordinal == 3 else {}
+        return capture_pressure(case, directory, execution,
+            runtime_profile=approval['runtime_profile'], **kwargs)
     def account_storage():
         lineage = config['lineage']
         parent = lineage['parent_claim']['path']
         free = shutil.disk_usage(operation['output_directory']).free
+        kwargs = {'prior_capture_roots': (config['predecessor']['original_root'],)} if ordinal == 3 else {}
         return cumulative_storage(lineage['original_root'], parent, operation['output_directory'],
-            ledger_paths(parent), operation['lock_path'], free)
+            ledger_paths(parent, ordinal=ordinal), operation['lock_path'], free, **kwargs)
     return dict(replay_prefix=replay_callback(config), preflight=preflight,
                 phase2_recheck=phase2, launch=launch, capture=capture,
                 clock=time, reservation=reservation, account_storage=account_storage)

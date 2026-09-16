@@ -1,4 +1,4 @@
-"""Offline externally pinned authority for ordinal-2 capture; never claims or launches."""
+"""Offline externally pinned authority for a selected pressure capture; never claims or launches."""
 from copy import deepcopy
 from pathlib import Path
 import re
@@ -8,10 +8,12 @@ from digitalmodel.ansys import cylinder_canary
 from digitalmodel.ansys import cylinder_diagnostic_admission as shared
 from digitalmodel.ansys.cylinder_pressure_lineage import validate_lineage
 from digitalmodel.ansys.cylinder_runtime_bundle import _git_blob
+from digitalmodel.ansys.cylinder_pressure_scope import COARSE_SCOPE, pressure_step
+from digitalmodel.ansys.cylinder_intermediate_lineage import validate_coarse_predecessor
 
 ENTRYPOINT = 'scripts/ansys/run_pressure_diagnostic.py'
-SCOPE = dict(case_ids=['ocv-t60-p10-n4'],ordinal=2,max_attempts=1,
-             qualification='diagnostic_only',capture_only=True)
+# Legacy public alias for coarse admission only; intermediate callers use INTERMEDIATE_SCOPE.
+SCOPE = COARSE_SCOPE
 
 
 def required_source_inventory(source_root):
@@ -57,10 +59,10 @@ def verify_source_commit(config,source_root):
 
 
 def _config(config):
-    if config['schema'] != 'cylinder-pressure-admission-1':
-        raise ValueError('unknown pressure admission schema')
-    if canonical_bytes(config['scope']) != canonical_bytes(SCOPE):
-        raise ValueError('fixed ordinal-2 capture scope differs')
+    ordinal, _ = pressure_step(config)
+    expected = 'cylinder-pressure-admission-1' if ordinal == 2 else 'cylinder-pressure-admission-2'
+    if config['schema'] != expected:
+        raise ValueError('pressure admission schema differs from selected scope')
     shared._text(config['campaign_id']); shared._text(config['operator_id'])
     shared._execution(config['execution_binding'])
     binding = config['execution_binding']
@@ -89,7 +91,7 @@ def _blocking_severity(finding):
         if match:
             labels.append(match.group(1))
     allowed = {'MINOR','INFO','INFORMATIONAL','NOTE','NONBLOCKING'}
-    return any(label.upper() not in allowed for label in labels)
+    return not labels or any(label.upper() not in allowed for label in labels)
 
 
 def _review(paths,sha,required):
@@ -109,6 +111,8 @@ def _validate(paths,root,config_sha,review_sha):
     session = _review(paths,review_sha,required)
     if session == config['operator_id']:
         raise ValueError('operator and independent reviewer must differ')
+    if pressure_step(config)[0] == 3:
+        validate_coarse_predecessor(config)
     successor = validate_lineage(config)
     inventory = cylinder_canary.runtime_sources()
     if canonical_bytes(successor.get('runtime_sources')) != canonical_bytes(inventory):
@@ -117,11 +121,14 @@ def _validate(paths,root,config_sha,review_sha):
     if (lineage.get('original_manifest_sha256') != config['lineage']['base_manifest']['sha256']
             or lineage.get('runtime_inventory_sha256') != digest_bytes(canonical_bytes(inventory))):
         raise ValueError('successor runtime lineage differs')
-    return dict(deepcopy(config['execution_binding']),approval_id=config['campaign_id'],
+    approval = dict(deepcopy(config['execution_binding']),approval_id=config['campaign_id'],
         operator_id=config['operator_id'],checker_id=session,ledger_directory=config['ledger_directory'],
         config_sha256=config_sha,review_receipt_sha256=review_sha,
         source_revision=config['source_revision'],
         scope=deepcopy(config['scope']),lineage=deepcopy(config['lineage']))
+    if pressure_step(config)[0] == 3:
+        approval['predecessor'] = deepcopy(config['predecessor'])
+    return approval
 
 
 def make_pressure_admission(config_path,review_receipt_path,review_stdout_path,review_bundle_path,

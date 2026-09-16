@@ -73,6 +73,11 @@ def _decimal_nanoseconds(value):
     return str(seconds) + ('.' + fraction if fraction else '')
 
 
+def _absence_snapshot():
+    from .cylinder_absence_collection import collect_absence_snapshot
+    return collect_absence_snapshot()
+
+
 def _capacity():
     samples = []
     previous_end = None
@@ -140,6 +145,7 @@ class ProductionPreflight:
         self.last_evidence = {}
         self._ready_at = None
         self._lock = None
+        self._absence_mode = False
 
     def _bindings(self):
         config, approval = self.config, self.approval
@@ -159,22 +165,75 @@ class ProductionPreflight:
         self.last_evidence['source_rights'] = config['source_rights_sha256']
         self.last_evidence['source_rights_observation_base64'] = base64.b64encode(rights).decode()
         parsed = None if binding.strip() == b'null' else parse_json(binding)
+        parsed = self._pressure_binding(parsed)
         if ('cfd_wrapper_console_evidence' in config and
                 (not isinstance(parsed, dict) or parsed.get('schema') != 'cfd-process-binding-2')):
             raise ValueError('Wrapper console supplement requires v2 binding')
         self.last_evidence.pop('cfd_owner_evidence', None)
         if parsed is not None:
-            from digitalmodel.ansys.cylinder_pressure_admission import SCOPE
             from digitalmodel.ansys.cylinder_cfd_owner_evidence import resolve_owner_evidence
 
             if not isinstance(parsed, dict):
                 raise ValueError('CFD binding requires an object or null')
-            if approval.get('scope') == SCOPE and parsed.get('schema') != 'cfd-process-binding-2':
-                raise ValueError('pressure admission requires v2 CFD binding')
             if parsed.get('schema') == 'cfd-process-binding-2':
                 self.last_evidence['cfd_owner_evidence'] = resolve_owner_evidence(config, parsed, _read_owner)
         self._console_agreement(parsed)
         return parsed
+
+    def _pressure_binding(self, parsed):
+        from .cylinder_pressure_scope import COARSE_SCOPE, INTERMEDIATE_SCOPE
+        from .cylinder_resource_absence import validate_absence_descriptor
+
+        self._absence_mode = False
+        if self.approval.get('scope') not in (COARSE_SCOPE, INTERMEDIATE_SCOPE):
+            return parsed
+        if validate_absence_descriptor(parsed, _host()):
+            if any(key in self.config for key in ('cfd_owner_evidence', 'cfd_wrapper_console_evidence')):
+                raise ValueError('absence mode cannot request owner or wrapper exemptions')
+            self._absence_mode = True
+            self.last_evidence['process_absence'] = dict(
+                descriptor_sha256=self.config['cfd_binding_sha256'],
+                scope='ansys-mpi-lineage-v1 plus interFoam.exe names',
+                meaning='point-in-time observed absence; no family exemption or ownership')
+            return None
+        if not isinstance(parsed, dict) or parsed.get('schema') != 'cfd-process-binding-2':
+            raise ValueError('pressure admission requires v2 CFD binding or explicit absence descriptor')
+        return parsed
+
+    def _observe_processes(self, binding, stage):
+        try:
+            snapshot = _absence_snapshot() if self._absence_mode else collect_process_snapshot(binding)
+        except Exception as error:
+            self.last_evidence['process_collection_error'] = dict(stage=stage,
+                error=f'{type(error).__name__}: {error}',
+                evidence=deepcopy(getattr(error, 'evidence', {})))
+            raise
+        self.last_evidence['process_snapshot_stage'] = stage if self._absence_mode else 'initial-only'
+        self.last_evidence['process_snapshot'] = snapshot
+        if self._absence_mode:
+            from .cylinder_resource_absence import verify_absence_snapshot
+            checks = self.last_evidence.setdefault('process_absence_checks', [])
+            record = dict(stage=stage, observed_at=snapshot['observed_at'],
+                snapshot_sha256=digest_bytes(canonical_bytes(snapshot)),
+                snapshot=deepcopy(snapshot), status='NOT_EVALUATED')
+            checks.append(record)
+            try:
+                classification = verify_absence_snapshot(snapshot, _host(), _now())
+                record['status'] = classification['status']
+            except Exception as error:
+                record.update(status='REFUSED', error=f'{type(error).__name__}: {error}')
+                raise
+        else:
+            classification = classify_process_inventory(snapshot, expected_host=_host(),
+                cfd_binding=binding, now=_now(), maximum_age_seconds='30')
+        self.last_evidence.update(classification=classification,
+            raw_inventory=snapshot['rows'], process_inventory=classification['process_inventory'],
+            process_inventory_scope='blocking-projection-only')
+        return classification
+
+    def refresh_absence(self, stage):
+        if self._absence_mode:
+            self._observe_processes(None, stage)
 
     def _console_agreement(self, binding):
         from digitalmodel.ansys.cylinder_wrapper_consoles import verify_agreement
@@ -220,13 +279,8 @@ class ProductionPreflight:
         capacity = _capacity()
         self.last_evidence['capacity_observation'] = capacity
         self.last_evidence['capacity'] = validate_capacity(capacity, now=_now())
-        snapshot = collect_process_snapshot(binding)
-        self.last_evidence['process_snapshot'] = snapshot
-        classification = classify_process_inventory(snapshot, expected_host=_host(),
-            cfd_binding=binding, now=_now(), maximum_age_seconds='30')
-        self.last_evidence.update(classification=classification,
-            raw_inventory=snapshot['rows'], process_inventory=classification['process_inventory'],
-            process_inventory_scope='blocking-projection-only')
+        classification = self._observe_processes(binding, 'initial')
+        snapshot = self.last_evidence['process_snapshot']
         self._console_agreement(binding)
         self._licence()
         validate_capacity(capacity, now=_now())
@@ -248,6 +302,7 @@ class ProductionPreflight:
         validate_capacity(self.last_evidence['capacity_observation'], now=_now())
         _fresh(self.last_evidence['process_snapshot']['observed_at'], _now())
         self._licence()
+        self.refresh_absence('before_launch')
         _fresh(self._ready_at, _now())
         self._reservation()
         validate_capacity(self.last_evidence['capacity_observation'], now=_now())

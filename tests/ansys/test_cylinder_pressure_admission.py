@@ -227,7 +227,7 @@ def test_required_inventory_includes_parent_compatibility_module():
     assert 'src/digitalmodel/_compat.py' in names
 
 
-@pytest.mark.parametrize('finding',['no major concerns','not a blocker',
+@pytest.mark.parametrize('finding',['INFO: no major concerns','INFO: not a blocker',
     'MINOR - no major concerns','MINOR: prior MAJOR finding resolved'])
 def test_negated_or_historical_prose_is_not_a_blocking_label(fixture,finding):
     fixture['findings']=[finding];refresh(fixture)

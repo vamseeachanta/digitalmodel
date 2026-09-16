@@ -115,7 +115,9 @@ def test_production_callbacks_bind_existing_implementations(driver, tmp_path, mo
     monkeypatch.setattr(resources, 'production_phase2', lambda *a: seen.append(('phase2', a)))
     monkeypatch.setattr(runner, 'launch_case', lambda *a: seen.append(('launch', a)))
     monkeypatch.setattr(capture, 'capture_pressure', lambda *a, **k: seen.append(('capture', a, k)))
-    config = {'operational': {'executable': 'bound-executable'}, 'synthetic': True}
+    config = {'operational': {'executable': 'bound-executable'}, 'synthetic': True,
+              'scope': dict(case_ids=['ocv-t60-p10-n4'], ordinal=2, max_attempts=1,
+                            capture_only=True, qualification='diagnostic_only')}
     admission = {'approval': {'runtime_profile': {'release': 'synthetic'}}}
     callbacks = driver.production_callbacks(config, admission, None, tmp_path, 'seat')
     callbacks['phase2_recheck'](admission['approval'])

@@ -1,10 +1,10 @@
-"""Single ordinal-2 diagnostic capture; injected adapters are explicit trust boundaries."""
+"""Single selected pressure diagnostic capture; injected adapters are explicit trust boundaries."""
 from copy import deepcopy
 import os
 from pathlib import Path
 import time
 
-from digitalmodel.ansys.analysis_records import canonical_bytes, digest_bytes
+from digitalmodel.ansys.analysis_records import digest_bytes
 from digitalmodel.ansys.cylinder_benchmark import validate_deck
 from digitalmodel.ansys.cylinder_canary import _manifest, _record_execution
 from digitalmodel.ansys.cylinder_criteria import EXPECTED_KEYS
@@ -12,27 +12,28 @@ from digitalmodel.ansys.cylinder_pressure_journal import (
     InvocationClock, PressureJournal, owned_path, write_exclusive,
 )
 from digitalmodel.ansys.cylinder_pressure_resources import validate_observation_ages
+from digitalmodel.ansys.cylinder_pressure_scope import pressure_step
+from digitalmodel.ansys.cylinder_intermediate_lineage import replay_coarse_predecessor
 
 CASE_ID = 'ocv-t60-p10-n4'
 _write_exclusive = write_exclusive
 
 
-def _empty():
-    return dict(schema='cylinder-pressure-resume-1', case_id=CASE_ID,
-                terminal_reason='PRECLAIM_REFUSAL', consumed_count=1,
+def _empty(ordinal=2, case_id=CASE_ID):
+    return dict(schema='cylinder-pressure-resume-1', case_id=case_id,
+                terminal_reason='PRECLAIM_REFUSAL', consumed_count=ordinal - 1,
                 native_launch_count=0, launch_adapter_calls=0,
                 launch_scope='this invocation only; null means unestablished',
+                recording_boundary='terminal/outcome writes follow reservation release',
                 accepted_values={}, assessment_status='NOT_EVALUATED',
-                assessment_reason='PRESSURE_PARSER_NOT_VALIDATED',
+                assessment_reason=('PRESSURE_PARSER_NOT_VALIDATED' if ordinal == 2
+                    else 'PRESSURE_NUMERICAL_ASSESSMENT_NOT_EVALUATED'),
                 campaign_status='INCOMPLETE', engineering_qualified=False,
                 no_owned_processes_established=True, reservation_released=False)
 
 
 def _scope(config):
-    expected = dict(case_ids=[CASE_ID], ordinal=2, max_attempts=1,
-                    capture_only=True, qualification='diagnostic_only')
-    if canonical_bytes(config['scope']) != canonical_bytes(expected):
-        raise ValueError('fixed ordinal-2 capture scope required')
+    return pressure_step(config)
 
 
 def _prefix(case):
@@ -65,13 +66,15 @@ def _verify(admission, approval):
 def _prepare_case(config, approval, output):
     bundle = owned_path(config['operational']['bundle'])
     manifest = _manifest(bundle, approval)
-    case = manifest['cases'][1]
-    if case['case_id'] != CASE_ID:
-        raise ValueError('ordinal-2 case differs')
-    directory = output / CASE_ID
+    _, case_id = pressure_step(config)
+    matches = [row for row in manifest['cases'] if row['case_id'] == case_id]
+    if len(matches) != 1:
+        raise ValueError('selected pressure case missing or duplicated')
+    case = matches[0]
+    directory = output / case_id
     directory.mkdir(exist_ok=False)
     raw = (bundle / case['deck']).read_bytes()
-    validate_deck(CASE_ID, raw)
+    validate_deck(case_id, raw)
     target = directory / Path(case['deck']).name
     with target.open('xb') as stream:
         stream.write(raw)
@@ -104,6 +107,9 @@ def _observe(state, adapters):
     case = adapters['replay_prefix'](deepcopy(approval))
     _prefix(case)
     _write_exclusive(output / 'prefix-replay.json', case)
+    if state['ordinal'] == 3:
+        coarse = replay_coarse_predecessor(state['config'])
+        _write_exclusive(output / 'coarse-prefix-replay.json', coarse)
     adapters['preflight'](deepcopy(approval))
     evidence = adapters['preflight'].before_launch()
     _write_exclusive(output / 'preflight.json', evidence)
@@ -132,15 +138,15 @@ def _claim_and_launch(state, adapters):
     if window.remaining_seconds() < 365:
         raise ValueError('less than 365 seconds before successor claim')
     claim_start = state['clock'].monotonic_ns()
-    attempt = dict(ordinal=2, case_id=CASE_ID, state='attempt_consumed',
+    attempt = dict(ordinal=state['ordinal'], case_id=state['case_id'], state='attempt_consumed',
         parent_sha256=journal.parent_sha256, output=str(state['output']),
         input_sha256=digest_bytes((directory / Path(case['deck']).name).read_bytes()),
         config_sha256=state['approval']['config_sha256'],
         review_receipt_sha256=state['approval']['review_receipt_sha256'])
     journal.claim(attempt)
-    result['consumed_count'] = 2
-    _write_exclusive(state['output'] / 'attempt-2.json', attempt)
-    adapters['phase2_recheck'](deepcopy(state['approval']))
+    result['consumed_count'] = state['ordinal']
+    _write_exclusive(state['output'] / f"attempt-{state['ordinal']}.json", attempt)
+    result['phase2_evidence'] = adapters['phase2_recheck'](deepcopy(state['approval']))
     result['postclaim_storage'] = _storage(adapters)
     _ages(state, preflight, 30)
     remaining = window.remaining_seconds()
@@ -181,9 +187,13 @@ def _retain(state, adapters, execution):
           and capture.get('engineering_qualified') is False
           and capture.get('capture_status') == 'INCOMPLETE'):
         reasons.append('CAPTURE_CHECKS_INCOMPLETE')
+    if state['ordinal'] == 3 and (capture.get('case_id') != state['case_id']
+            or capture.get('numerical_assessment') != 'NOT_EVALUATED'
+            or capture.get('reason') != 'PRESSURE_NUMERICAL_ASSESSMENT_NOT_EVALUATED'):
+        reasons.append('CAPTURE_CHECKS_INCOMPLETE')
     if remaining < 0:
         reasons.append('DEADLINE_EXCEEDED')
-    result['terminal_reasons'] = reasons or ['PLANNED_SCOPE_STOP']
+    result['terminal_reasons'] = list(dict.fromkeys(reasons)) or ['PLANNED_SCOPE_STOP']
     result['terminal_reason'] = result['terminal_reasons'][0]
 
 
@@ -220,21 +230,38 @@ def _final_accounting(state, adapters):
         _additional_reason(result, 'FINAL_ACCOUNTING_INCOMPLETE')
 
 
+def _terminal_records(state):
+    journal, result = state['journal'], state['result']
+    if not journal.started:
+        return
+    try:
+        journal.terminal(result)
+    except Exception as error:
+        result['terminal_record_error'] = f'{type(error).__name__}: {error}'
+        _additional_reason(result, 'TERMINAL_RETENTION_INCOMPLETE')
+    try:
+        _write_exclusive(state['output'] / 'outcome.json', result)
+    except Exception as error:
+        result['outcome_record_error'] = f'{type(error).__name__}: {error}'
+        _additional_reason(result, 'OUTCOME_RETENTION_INCOMPLETE')
+
+
 def execute_pressure_resume(config, admission, *, replay_prefix, preflight,
                             phase2_recheck, launch, capture, clock=time,
                             reservation, account_storage):
     """One call only; production driver must bind each required reviewed adapter."""
     try:
-        _scope(config)
+        ordinal, case_id = _scope(config)
         parent = config['lineage']['parent_claim']
-        journal = PressureJournal(parent['path'], parent['sha256'], writer=_write_exclusive)
+        journal = PressureJournal(parent['path'], parent['sha256'], writer=_write_exclusive,
+            ordinal=ordinal, predecessor=config['predecessor']['claim'] if ordinal == 3 else None)
     except BaseException as error:
         reservation.release(no_owned_processes=True)  # No native adapter was entered.
         if isinstance(error, (OSError, ValueError)):
             raise ValueError('existing or invalid ordinal lineage; no readmission') from error
         raise
     state = dict(config=config, approval=deepcopy(admission['approval']), journal=journal,
-                 clock=clock, result=_empty())
+                 clock=clock, ordinal=ordinal, case_id=case_id, result=_empty(ordinal, case_id))
     adapters = dict(admission=admission, replay_prefix=replay_prefix, preflight=preflight,
                     phase2_recheck=phase2_recheck, launch=launch, capture=capture,
                     account_storage=account_storage)
@@ -244,7 +271,7 @@ def execute_pressure_resume(config, admission, *, replay_prefix, preflight,
         output = owned_path(config['operational']['output_directory'])
         output.mkdir(exist_ok=False)
         state.update(output=output, window=InvocationClock(clock))
-        journal.start(dict(state['window'].record(), ordinal=2, case_id=CASE_ID,
+        journal.start(dict(state['window'].record(), ordinal=ordinal, case_id=case_id,
             parent_sha256=parent['sha256'], output=str(output),
             config_sha256=state['approval']['config_sha256'],
             review_receipt_sha256=state['approval']['review_receipt_sha256']))
@@ -255,11 +282,11 @@ def execute_pressure_resume(config, admission, *, replay_prefix, preflight,
         state['result'].update(terminal_reason='POSTCLAIM_INCOMPLETE' if journal.consumed
             else 'PRECLAIM_REFUSAL', error=f'{type(error).__name__}: {error}')
     finally:
-        state['result']['consumed_count'] = 2 if journal.consumed else 1
+        state['result']['consumed_count'] = ordinal if journal.consumed else ordinal - 1
+        state['result']['last_preflight_evidence'] = deepcopy(
+            getattr(preflight, 'last_evidence', {}))
         _final_accounting(state, adapters)
         _release(state, reservation)
     result = state['result']
-    if journal.started:
-        journal.terminal(result)
-        _write_exclusive(state['output'] / 'outcome.json', result)
+    _terminal_records(state)
     return result

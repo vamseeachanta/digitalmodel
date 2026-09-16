@@ -5,6 +5,7 @@ The caller supplies the fully verified preflight and a mandatory current-byte
 binding callback; no native processes or renewed observations are created here.
 """
 import os
+from copy import deepcopy
 import re
 import stat
 from fractions import Fraction
@@ -54,13 +55,18 @@ def production_phase2(preflight, verify_current, approval):
         raise ValueError('current source/config binding did not pass')
     preflight._bindings()
     preflight._reservation()
+    if getattr(preflight, '_absence_mode', False):
+        preflight.refresh_absence('phase2')
     evidence = preflight.last_evidence
     if evidence.get('classification', {}).get('status') != 'CLEAR':
         raise ValueError('retained process classification is not clear')
     now = _now()
     ages = validate_observation_ages(evidence, preflight._ready_at, now, 30)
     capacity = validate_capacity(evidence['capacity_observation'], now=now)
-    return {'status': 'PASS', 'ages': ages, 'capacity': capacity}
+    result = {'status': 'PASS', 'ages': ages, 'capacity': capacity}
+    if getattr(preflight, '_absence_mode', False):
+        result['process_absence_checks'] = deepcopy(evidence['process_absence_checks'])
+    return result
 
 
 def _checked_path(value, directory):
@@ -79,11 +85,16 @@ def _checked_path(value, directory):
     return path
 
 
-def _declarations(original_root, parent_claim, output_root, ledger_paths, reservation_path):
+def _declarations(original_root, parent_claim, output_root, ledger_paths, reservation_path,
+                  prior_capture_roots=()):
     if not isinstance(ledger_paths, (list, tuple)):
         raise ValueError('explicit ledger path list required')
+    if not isinstance(prior_capture_roots, (list, tuple)):
+        raise ValueError('explicit prior capture root list required')
     rows = [('original', original_root, True), ('claim', parent_claim, False),
             ('output', output_root, True), ('reservation', reservation_path, False)]
+    rows += [(f'prior-{index}', path, True)
+             for index, path in enumerate(prior_capture_roots)]
     rows += [(f'ledger-{index}', path, False) for index, path in enumerate(ledger_paths)]
     checked = [(label, _checked_path(path, directory), directory)
                for label, path, directory in rows]
@@ -128,17 +139,19 @@ def _account(declarations):
 
 
 def cumulative_storage(original_root, parent_claim, output_root, ledger_paths,
-                       reservation_path, free_bytes):
+                       reservation_path, free_bytes, *, prior_capture_roots=()):
     """Count explicitly owned files; metadata integrity is verified separately.
 
     FAIL retains all files and reports a budget violation. Missing declarations,
     redirects, duplicate identities and original-size drift refuse with ValueError.
+    Prior roots include retained coarse mesh (N4) evidence for intermediate mesh
+    (N8) execution. Callers bind their identities and supply all owned ledger files.
     This is a point-in-time accounting check, not a filesystem quota.
     """
     if type(free_bytes) is not int or free_bytes < 0:
         raise ValueError('nonnegative integer free bytes required')
     declarations = _declarations(original_root, parent_claim, output_root,
-                                 ledger_paths, reservation_path)
+                                 ledger_paths, reservation_path, prior_capture_roots)
     files = _account(declarations)
     original = sum(row['bytes'] for row in files if row['path'].startswith('original/'))
     if original != ORIGINAL_BYTES:

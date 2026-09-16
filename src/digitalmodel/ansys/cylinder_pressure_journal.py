@@ -4,7 +4,7 @@ from pathlib import Path
 import re
 import stat
 
-from digitalmodel.ansys.analysis_records import canonical_bytes, digest_bytes
+from digitalmodel.ansys.analysis_records import canonical_bytes, digest_bytes, parse_json
 
 
 def owned_path(value):
@@ -61,19 +61,28 @@ class InvocationClock:
 class PressureJournal:
     """Fixed parent-stem names refuse partial, alternate and repeated records."""
 
-    def __init__(self, parent, parent_sha256, *, writer=write_exclusive):
+    def __init__(self, parent, parent_sha256, *, writer=write_exclusive,
+                 ordinal=2, predecessor=None):
+        if type(ordinal) is not int or ordinal not in (2, 3):
+            raise ValueError('only integer pressure ordinals 2 and 3 supported')
+        if (ordinal == 2 and predecessor is not None
+                or ordinal == 3 and (not isinstance(predecessor, dict)
+                or set(predecessor) != {'path', 'sha256'})):
+            raise ValueError('ordinal predecessor descriptor differs')
+        self.ordinal = ordinal
+        self.predecessor = dict(predecessor) if predecessor is not None else None
         self.parent = owned_path(parent)
         if not re.fullmatch(r'[0-9a-f]{64}', self.parent.stem):
             raise ValueError('fixed parent claim stem required')
         self.parent_sha256 = parent_sha256
         self.writer = writer
-        stem = self.parent.stem + '.ordinal-2'
+        stem = self.parent.stem + f'.ordinal-{ordinal}'
         self.paths = {key: self.parent.with_name(stem + suffix) for key, suffix in
                       [('invocation', '.invocation.json'), ('claim', '.json'),
                        ('terminal', '.terminal.json')]}
         self._parent()
         if any(self.parent.parent.glob(stem + '*')):
-            raise FileExistsError('ordinal-2 record already present; no restart')
+            raise FileExistsError(f'ordinal-{ordinal} record already present; no restart')
         self.started = False
 
     def _parent(self):
@@ -82,6 +91,28 @@ class PressureJournal:
         if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1
                 or digest_bytes(path.read_bytes()) != self.parent_sha256):
             raise ValueError('original parent claim changed or aliased')
+        self._predecessor()
+
+    def _predecessor(self):
+        if self.ordinal == 2:
+            return
+        expected = self.parent.with_name(self.parent.stem + '.ordinal-2.json')
+        try:
+            path = owned_path(self.predecessor['path'])
+            info = path.stat()
+            if path != expected or not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+                raise ValueError('coarse predecessor path or identity differs')
+            raw = path.read_bytes()
+            if digest_bytes(raw) != self.predecessor['sha256']:
+                raise ValueError('coarse predecessor digest differs')
+            row = parse_json(raw)
+            if (type(row.get('ordinal')) is not int or row['ordinal'] != 2
+                    or row.get('state') != 'attempt_consumed'
+                    or row.get('case_id') != 'ocv-t60-p10-n4'
+                    or row.get('parent_sha256') != self.parent_sha256):
+                raise ValueError('consumed coarse predecessor binding differs')
+        except (OSError, TypeError, KeyError) as error:
+            raise ValueError('coarse predecessor unavailable or malformed') from error
 
     @property
     def consumed(self):
@@ -102,4 +133,6 @@ class PressureJournal:
     def terminal(self, value):
         if not self.started:
             raise ValueError('durable invocation required before terminal record')
+        if self.ordinal == 3:
+            self._parent()
         self.writer(self.paths['terminal'], value)
