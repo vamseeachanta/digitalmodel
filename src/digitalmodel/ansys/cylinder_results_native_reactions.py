@@ -4,6 +4,7 @@ from decimal import Decimal
 from digitalmodel.ansys.cylinder_results import EvidenceError,parse_e24,decimal_context
 from digitalmodel.ansys.cylinder_results_native_listings import _rows,_words
 from digitalmodel.ansys.cylinder_results_native_status import page_header
+from digitalmodel.ansys.cylinder_results_native_values import summary_fields
 
 
 def _prefix(rows):
@@ -40,7 +41,6 @@ def verify_reactions(raw,expected):
     if set(found)!=set(expected):raise EvidenceError('Missing native reactions')
     if len(rows)!=2 or _words(rows[0])!=b'TOTAL VALUES':
         raise EvidenceError('Missing or extra native reaction total')
-    total=rows[1].split()
-    if len(total)!=3 or total[0]!=b'VALUE':raise EvidenceError('Invalid native reaction total')
-    if parse_e24(total[1].rjust(24),'N')[0]!=0:raise EvidenceError('Unexpected unconstrained reaction total')
-    _value(total[2].rjust(24),sum(found.values(),Decimal(0)))
+    total=summary_fields(rows[1], 2)
+    if parse_e24(total[0],'N')[0]!=0:raise EvidenceError('Unexpected unconstrained reaction total')
+    _value(total[1],sum(found.values(),Decimal(0)))

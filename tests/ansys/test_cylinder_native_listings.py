@@ -18,7 +18,7 @@ def row(node=1,count=6):
 
 
 def summary(label,count=6):
-    return label+b'\nNODE '+b'1 '*count+b'\nVALUE '+b'0.0000000000000000E+000 '*count+b'\n'
+    return label+b'\nNODE '+b'1 '*count+b'\n VALUE  '+b' 0.0000000000000000E+000'*count+b'\n'
 
 
 def nodal(kind='stress'):

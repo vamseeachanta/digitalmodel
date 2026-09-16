@@ -2,6 +2,7 @@
 import re
 from digitalmodel.ansys.cylinder_results import EvidenceError,parse_e24
 from digitalmodel.ansys.cylinder_results_native_status import page_header
+from digitalmodel.ansys.cylinder_results_native_values import summary_fields
 
 STRESS = b'NODE SX SY SZ SXY SYZ SXZ'
 DISPLACEMENT = b'NODE UX UY UZ USUM'
@@ -39,12 +40,12 @@ def _numeric(row,count,unit):
 def _summary(rows,label,count,nodes):
     if len(rows)<3 or _words(rows[0])!=label:
         raise EvidenceError('Missing native extrema summary')
-    ids=rows[1].split(); values=rows[2].split()
-    if len(ids)!=count+1 or ids[0]!=b'NODE' or len(values)!=count+1 or values[0]!=b'VALUE':
+    ids=rows[1].split()
+    if len(ids)!=count+1 or ids[0]!=b'NODE':
         raise EvidenceError('Truncated native extrema summary')
     if any(not re.fullmatch(rb'[0-9]+',n) or int(n) not in nodes|{0} for n in ids[1:]):
         raise EvidenceError('Unknown summary node')
-    for v in values[1:]:parse_e24(v.rjust(24), 'dimensionless')
+    summary_fields(rows[2], count)
     return rows[3:]
 
 

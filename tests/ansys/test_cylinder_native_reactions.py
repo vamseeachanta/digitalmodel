@@ -12,7 +12,7 @@ def reaction():
         b'THE FOLLOWING X,Y,Z SOLUTIONS ARE IN THE GLOBAL COORDINATE SYSTEM')
     row=b' '+f'{1:8d}'.encode()+b' '+b' '*24+b' 0.0000000000000000E+000\n'
     return (b'PRINT F REACTION SOLUTIONS PER NODE\n'+prefix+b'NODE FX FY\n'+row+
-            b'TOTAL VALUES\nVALUE 0.0000000000000000E+000 0.0000000000000000E+000\n')
+            b'TOTAL VALUES\n VALUE   0.0000000000000000E+000 0.0000000000000000E+000\n')
 
 
 def test_blank_unconstrained_fx_does_not_hide_fy():
@@ -29,6 +29,6 @@ def test_unknown_or_mismatching_reaction_refuses(damage):
     elif damage=='duplicate':
         row=next(r for r in raw.splitlines() if len(r)==58)
         raw=raw.replace(row+b'\n',row+b'\n'+row+b'\n')
-    elif damage=='total':raw=raw.replace(b'VALUE 0.',b'VALUE 1.')
+    elif damage=='total':raw=raw.replace(b' VALUE   0.',b' VALUE   1.')
     else:raw=raw.replace(b'GLOBAL COORDINATE',b'LOCAL COORDINATE')
     with pytest.raises(EvidenceError):_reaction_listing(raw,{1:Decimal(0)})
