@@ -17,7 +17,7 @@ is the intake observation time, not a claim about native execution time.
 
 ## Current diagnostic result revision
 
-Revision r5 retains 12 cases and 350 responses, with zero engineering-qualified
+Revision r6 retains 12 cases and 350 responses, with zero engineering-qualified
 responses. The bounded canary has two recorded native attempts/completions: the
 zero control and pressure N4. N8 and N16 remain unattempted. All 64 N4 matrix
 values remain null/not_evaluated; numerical response counts remain 152 computed,
@@ -27,10 +27,20 @@ The [retained N4 offline recovery report](https://github.com/vamseeachanta/digit
 records 54 checked exported quantities, nine derived von Mises values and the
 support sum. Frozen N4 criteria give 21 passing checks and one failed check:
 outer_y120 radial stress 0.01059709996930703 MPa exceeds the 0.010 MPa zero limit.
-The coarse-mesh outcome is CONTINUE, not PASS. These observations are not yet
-adopted into the matrix; native originals and matrix r5 remain unchanged.
+The coarse-mesh outcome is CONTINUE, not PASS. The r6 package-level diagnostic supplement records this assessment and its
+qualification-blocking finding. Numerical adoption remains NOT_ADOPTED: all case
+rows and numerical values are unchanged from r5. The original capture record
+remains historical. Only 21 primary y120 checks plus axial equilibrium were
+evaluated; auxiliary and refinement criteria were not evaluated. The two
+auxiliary outer radial values also exceed the same numeric threshold, as
+disclosed in the supplement, without widening the governing N4 criteria.
 The private result owner is digitalmodel-data; this repository maintains the
 existing computational lookup view. No additional native run is represented.
+The r6 supplement fingerprints four transformation entry files using
+`raw-sha256-v1`, distinct from the historical import fingerprint. It does not
+claim transitive dependency closure or cross-checkout line-ending equivalence.
+Replaying this bounded migration requires those exact source bytes; loading a
+historical package verifies its recorded hashes without re-running the migration.
 
 ## Historical r4 diagnostic result revision
 

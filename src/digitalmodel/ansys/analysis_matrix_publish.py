@@ -35,6 +35,11 @@ def _relation(package, baseline, resolver=None, *, review_sha256=None):
     count = len(baseline['cases'])
     if len(package['cases']) != count or package['expected_cases'] != baseline['expected_cases']:
         raise ValueError('fixed matrix membership differs')
+    if ('diagnostic_supplement' in package
+            and package['diagnostic_supplement'] != baseline.get('diagnostic_supplement')):
+        from digitalmodel.ansys.analysis_recovery_note import validate_recovery_note_transition
+        validate_recovery_note_transition(package, baseline, resolver)
+        return
     changed = [i for i in range(count) if package['cases'][i] != baseline['cases'][i]]
     if not changed:
         revision_fields = {'revision', 'previous_package_hash', 'package_hash'}
