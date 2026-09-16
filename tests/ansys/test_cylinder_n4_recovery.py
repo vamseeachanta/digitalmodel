@@ -91,3 +91,14 @@ def test_left_stripped_positive_summary_refuses():
     with pytest.raises(EvidenceError):
         _summary([lines[index - 2], lines[index - 1], row.lstrip()],
                  b'MAXIMUM VALUES', 6, {s['node_id'] for s in case()['stations']})
+
+
+@pytest.mark.parametrize('field,message', [
+    (b' 0.1000000000000000E+300', 'Exponent outside'),
+    (b'0.1000000000E+000'.rjust(24), 'Missing E24.16 precision'),
+])
+def test_width_preserving_numeric_refusals(field, message):
+    from digitalmodel.ansys.cylinder_results_native_values import summary_fields
+    assert len(field) == 24
+    with pytest.raises(EvidenceError, match=message):
+        summary_fields(b' VALUE  ' + field * 2, 2)
