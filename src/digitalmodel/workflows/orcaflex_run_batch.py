@@ -111,6 +111,8 @@ def router(cfg: dict) -> dict:
         "save_dat": False,
         "output_dir": str(work_dir / "sims"),
     }
+    if 'progress_interval_seconds' in run_settings:
+        executor_config['progress_interval_seconds'] = run_settings['progress_interval_seconds']
 
     started_at = datetime.now(timezone.utc)
     pool_summary = executor.process_files_parallel(

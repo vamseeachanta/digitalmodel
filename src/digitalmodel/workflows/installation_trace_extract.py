@@ -133,6 +133,8 @@ def extract(run_dir):
     destination.mkdir(exist_ok=False)
     np.savez_compressed(destination / 'traces.npz', **arrays)
     metadata = {'solver': identity, 'simulation_sha256': receipt['simulation_sha256'],
+                'extractor_sha256': compute_hash(Path(__file__)),
+                'metrics_sha256': compute_hash(Path(__file__).with_name('installation_response_metrics.py')),
                 'channels': channels, 'engineering_acceptance': 'NOT EVALUATED',
                 'limitations': ['Zero-tension events are not geometric slack distance.',
                                 'Sampling and snap-load fidelity require convergence.',

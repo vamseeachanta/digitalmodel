@@ -103,3 +103,18 @@ def test_verified_solve_without_trace_metadata_is_not_evaluated(tmp_path):
     assert result['cases'][0]['status'] == 'NOT EVALUATED'
     assert 'extraction missing' in result['cases'][0]['reason']
     assert 'peak_tension_kN' not in result['cases'][0]
+
+
+@pytest.mark.parametrize('status', ['started', 'preflight', 'solving', 'postprocessing'])
+def test_active_run_is_running_without_claimed_metrics(tmp_path, status):
+    matrix, mapping = _fixture(tmp_path)
+    receipt = tmp_path / 'run/run.json'
+    data = json.loads(receipt.read_text())
+    data['status'] = status
+    data.pop('simulation_sha256')
+    _json(receipt, data)
+    result = generate_report(matrix, mapping, tmp_path / 'report.html')
+    assert result['cases'][0]['status'] == 'RUNNING'
+    assert status in result['cases'][0]['reason']
+    assert 'peak_tension_kN' not in result['cases'][0]
+    assert result['grid']['rows'][0]['incomplete']

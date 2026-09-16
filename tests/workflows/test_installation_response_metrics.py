@@ -93,6 +93,14 @@ def test_grid_all_pass_is_upper_censored():
     assert row["boundary_bracket_hs_m"] is None
 
 
+def test_grid_running_cell_is_incomplete_not_failure():
+    result = summarize_grid([{"hs_m": .25, "tp_s": 8, "status": "RUNNING"}])
+    row = result['rows'][0]
+    assert row['statuses'] == ['RUNNING']
+    assert row['incomplete']
+    assert row['first_pass_band_upper_hs_m'] is None
+
+
 def test_grid_disconnected_nonmonotonic_and_missing():
     cases = [{"hs_m": h, "tp_s": 8, "status": s} for h, s in
              [(0.25, "PASS"), (0.5, "FAIL"), (0.75, "PASS")]]

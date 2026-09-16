@@ -156,7 +156,7 @@ def summarize_grid(cases):
     Pass bands are sample adjacency only; gaps between samples are untested.
     """
     lookup = {}
-    allowed = {"PASS", "FAIL", "NOT EVALUATED", "FAILED", "MISSING"}
+    allowed = {"PASS", "FAIL", "NOT EVALUATED", "FAILED", "MISSING", "RUNNING"}
     for case in cases:
         hs, tp, status = float(case["hs_m"]), float(case["tp_s"]), case["status"]
         if not np.isfinite([hs, tp]).all() or hs < 0 or tp <= 0 or status not in allowed:

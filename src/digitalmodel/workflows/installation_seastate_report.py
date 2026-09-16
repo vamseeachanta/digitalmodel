@@ -42,10 +42,12 @@ def _generation(index, mapping, case, matrix):
 
 def _verified_sim(run, generation):
     receipt = _read(run / 'run.json')
-    if receipt.get('status') != 'completed':
-        raise ValueError(f"Run status: {receipt.get('status', 'missing')}")
     if receipt.get('model_sha256') != generation['model_sha256']:
         raise ValueError('Run/generated model identity mismatch')
+    if receipt.get('status') in ('started', 'preflight', 'solving', 'postprocessing'):
+        return receipt
+    if receipt.get('status') != 'completed':
+        raise ValueError(f"Run status: {receipt.get('status', 'missing')}")
     sims = list((run / 'batch_runs/sims').glob('*.sim'))
     if len(sims) != 1 or compute_hash(sims[0]) != receipt.get('simulation_sha256'):
         raise ValueError('Saved simulation digest mismatch')
@@ -110,6 +112,10 @@ def _case(index, case, mapping, matrix):
         result.update(run_dir=str(run), settings=generation['settings'],
                       heading_degrees=generation['wave_reference']['WaveDirection'])
         receipt = _verified_sim(run, generation)
+        if receipt['status'] != 'completed':
+            result.update(status='RUNNING', reason=f"Recorded run state: {receipt['status']}; "
+                          'completion and engineering acceptance not established')
+            return result
         result.update(status='NOT EVALUATED', simulation_sha256=receipt['simulation_sha256'],
                       reason='Component capacities and slack/snap criteria unverified')
         if not (run / 'installation_traces/metadata.json').exists():

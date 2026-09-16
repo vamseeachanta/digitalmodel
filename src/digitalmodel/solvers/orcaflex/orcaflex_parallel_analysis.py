@@ -15,6 +15,7 @@ from datetime import datetime
 import traceback
 
 from digitalmodel.solvers.orcaflex.run_state import check_simulation, check_statics
+from digitalmodel.solvers.orcaflex.dynamics_progress import dynamics_progress
 
 try:
     import OrcFxAPI
@@ -116,7 +117,8 @@ class OrcaFlexParallelAnalysis:
             # Run dynamic simulation
             if run_dynamic:
                 logger.info(f"Running dynamic simulation: {file_path}")
-                model.RunSimulation()
+                with dynamics_progress(model, config.get('progress_interval_seconds'), logger, str(file_path)):
+                    model.RunSimulation()
                 check_simulation(model, context=str(file_path))
                 result['dynamic_complete'] = True
             
