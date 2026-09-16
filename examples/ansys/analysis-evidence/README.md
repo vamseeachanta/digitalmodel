@@ -1,6 +1,6 @@
 # ANSYS retained-evidence go-by
 
-[Issue 2119](https://github.com/vamseeachanta/digitalmodel/issues/2119) Stage A
+[Issue 2119](https://github.com/vamseeachanta/digitalmodel/issues/2119) historical Stage A baseline
 retains eight diagnostic case records and 94 response fields from pressure-vessel,
 padeye and mudmat examples. Six records represent native captures; two are older
 repository response references with incomplete native provenance. **Zero responses
@@ -16,6 +16,23 @@ is the intake observation time, not a claim about native execution time.
 
 
 ## Current diagnostic result revision
+
+Revision r5 retains 12 cases and 350 responses, with zero engineering-qualified
+responses. The bounded canary has two recorded native attempts/completions: the
+zero control and pressure N4. N8 and N16 remain unattempted. All 64 N4 matrix
+values remain null/not_evaluated; numerical response counts remain 152 computed,
+six failed and 192 not_evaluated.
+
+The [retained N4 offline recovery report](https://github.com/vamseeachanta/digitalmodel-data/blob/main/reports/ansys-n4-recovery-2026-09-16.html)
+records 54 checked exported quantities, nine derived von Mises values and the
+support sum. Frozen N4 criteria give 21 passing checks and one failed check:
+outer_y120 radial stress 0.01059709996930703 MPa exceeds the 0.010 MPa zero limit.
+The coarse-mesh outcome is CONTINUE, not PASS. These observations are not yet
+adopted into the matrix; native originals and matrix r5 remain unchanged.
+The private result owner is digitalmodel-data; this repository maintains the
+existing computational lookup view. No additional native run is represented.
+
+## Historical r4 diagnostic result revision
 
 Revision r4 contains 12 cases and 350 responses: 88 historical computed responses,
 64 newly computed zero-control diagnostic responses, six historical failures,
