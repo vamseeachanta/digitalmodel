@@ -47,7 +47,8 @@ def test_missing_map_entry_is_nosuchprocess():
 
 def fake_process(pid):
     return SimpleNamespace(pid=pid,name=lambda:'python.exe',exe=lambda:'synthetic.exe',
-        create_time=lambda:1.0,ppid=lambda:pytest.fail('per-process parent query'))
+        create_time=lambda:1.0,ppid=lambda:pytest.fail('per-process parent query'),
+        _proc=SimpleNamespace(exe=lambda:'synthetic.exe'))
 
 
 def test_initial_population_is_map_keys_and_no_other_enumeration(monkeypatch):

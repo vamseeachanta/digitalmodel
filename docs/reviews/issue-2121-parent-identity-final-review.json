@@ -1,0 +1,112 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "observed_utc": "2026-09-17T22:58:19.395710+00:00",
+  "status": "DIAGNOSTIC_SOURCE_REVIEW_NONBLOCKING",
+  "reviews": [
+    {
+      "scope": "main capture and cap/schema correction",
+      "bundle_sha256": "f9b31e98c813a39595acba53bb7ba2a1558d519d1266001b2f9be75dc3e1c5f5",
+      "stdout_sha256": "32535288e5325ff323869e6ac1ba2400ec3db6b85b15390cddd599ba19762827",
+      "review": {
+        "bundle_sha256": "f9b31e98c813a39595acba53bb7ba2a1558d519d1266001b2f9be75dc3e1c5f5",
+        "verdict": "MINOR",
+        "findings": [
+          "Moderate - Evidence gap on accessors actually called: SOLVERS-parent-api-inspection.txt documents only ppid/ppid_map, i.e. the accessor deliberately avoided. cylinder_parent_identities._sample calls create_time(), name() and exe(), and every test uses SimpleNamespace fakes (test_cylinder_parent_map.py:48, test_cylinder_parent_identity_capture.py:16), so no supplied artifact or test can show whether those three accessors re-enumerate a table in installed psutil 5.9.6. Remedy: extend the retained inspection to the installed _pswindows implementations of create_time/name/exe and Process.__init__ under the same pinned SOURCE_DIGESTS.",
+          "Moderate - Documented size-omission ordering is not pinned by any test: test_aggregate_canonical_byte_limit_and_copy_isolation asserts only any(... OMITTED_SIZE_LIMIT) and test_near_limit_retains_all_trailing_omission_metadata only sum(...)>=2 of 8 records. Neither pins which indices are stubbed nor asserts that any detail is retained, so stubbing all eight rows on overflow, or reverse iteration order, would still pass at widths 3930-3990. Remedy: assert the exact retained/omitted index pattern for a fixed-width equal-size case plus at least one fully retained detail.",
+          "Minor-Moderate - post_table variant field sets unasserted despite the r2 claim of exact field-set contracts: only set(child['post_table'])=={'status','identity'} is pinned. The IDENTITY_CHANGED shape {status,before,after} (the only variant carrying two bounded identity payloads) and the single-key DISAPPEARED/UNAVAILABLE/INVALID_FIELDS/NOT_IN_FINAL_TABLE shapes are checked via ['status'] alone in test_unavailable_changed_and_invalid_identity_states. Remedy: assert set(post_table) and set(before)/set(after) per status token.",
+          "Minor - CAPTURE_FAILED cannot distinguish helper faults from the metadata-bound fault: _fit_details raises ValueError('Supplemental metadata exceeds canonical byte limit'), which enumerate_windows_v2's containment collapses to error_type='ValueError', identical to any other escaping ValueError. With selected capped at 8 and fixed metadata (~1.5 KiB) the branch is also unreachable and untested. Remedy: remove it or add a distinct sentinel/reason field to parent-change-identities-error-1.",
+          "Minor - ended_monotonic_ns excludes the canonical-fitting pass: record['ended_monotonic_ns'] is set before _fit_details, omitting up to nine canonical_bytes serializations of a <=32 KiB record, while the plan says the integers describe capture timing. Remedy: move the end stamp after fitting or document the field as sampling-only.",
+          "Minor - Silent one-sided sample loss: if the first _sample(pid) succeeds and the second raises NoSuchProcess/AccessDenied, _post_table returns bare {'status':'DISAPPEARED'}/{'status':'UNAVAILABLE'} and discards the successfully read first identity, with no record that one sample was obtained; neither documented nor tested. Remedy: state it in the record limitation text or retain the first sample under an explicit partial_sample key."
+        ]
+      }
+    },
+    {
+      "scope": "final native-accessor and original-image provenance supplement",
+      "bundle_sha256": "de8006c01d0dd08efca28e79431e246f95dc7045dfaca7d382a7b463bec7090d",
+      "stdout_sha256": "176f197199a367b1d396004f35187cdc5bf2d7b8650e7aa4a46e8c8ade773057",
+      "review": {
+        "bundle_sha256": "de8006c01d0dd08efca28e79431e246f95dc7045dfaca7d382a7b463bec7090d",
+        "verdict": "MINOR",
+        "findings": [
+          "MINOR: Retained rows gained a sixth key (initial_image_basis) at cylinder_parent_identities.py:70-72 while the record still declares schema='parent-change-identities-1'. The inline disposition's code_review_round_2 pins 'exact root/row/identity field sets' plus the literal schema id as the public evidence contract, so a consumer pinned to that field set now sees an unexpected key at an unchanged version. Remedy: bump to parent-change-identities-2 or state in the disposition that row keys are additive within version 1.",
+          "MINOR: SOLVERS-parent-identities-provenance-regression.json attests only tests/ansys/* digests and omits src/digitalmodel/ansys/cylinder_parent_identities.py (dfc1cf49...), unlike SOLVERS-PM-Claude-04b012487b36.json which carries src digests. The 966-pass/2-skip run is therefore bound to the reviewed source only indirectly, via the digested test file asserting the marker and forbidding the high-level fallback. Remedy: include src digests in the regression manifest.",
+          "MINOR: Marker absence is pinned only for the NOT_IN_INITIAL_TABLE row (test_cylinder_parent_identity_capture.py:46-48). test_invalid_original_status_is_explicit and test_missing_original_and_disappeared_table_have_explicit_states assert original_row_status only, so nothing forbids initial_image_basis on a row retaining no original image bytes. Remedy: add field-set assertions for the INVALID_FIELDS and UNOBSERVED_INITIAL rows.",
+          "Carry-forward, unchanged by this delta and not re-raised as blocking: _sample still derives name and executable_path from two separate native cext.proc_exe reads, and an absent/renamed process._proc would still escalate one unreadable candidate into whole-capture CAPTURE_FAILED instead of per-pid UNAVAILABLE.",
+          "Verified not defective: the prior MAJOR is disposed via the explicit-marker alternative; cylinder_parent_map.py (38d3e30d...) is unchanged so original collector/admission behaviour is untouched; plan lines 18 and 21 and native_accessor_supplement_review.disposition now scope the native accessor to post-table samples; SOLVERS-parent-initial-provenance-RED.log collects 26 and fails only the provenance/field-set assertion before the marker; the green regression log (968 collected, 966 passed, 2 skipped, exit 0) matches its manifest and inventory digests, and post-table name remains native-derived via _pswindows basename(self.exe())."
+        ]
+      }
+    }
+  ],
+  "source_pins": {
+    "docs/plans/issue-2121-parent-change-identity-capture.html": "086b4ca02504102080b35ebf9814bb11989a6e7a90ffecd8a033f86442985508",
+    "docs/reviews/issue-2121-parent-identity-inline-disposition.json": "6db793fd31413622b1df08ce92ac3a728775bb0c6b5d47be558dd87e9467c4ee",
+    "src/digitalmodel/ansys/cylinder_parent_identities.py": "dfc1cf49328a4b2f5835b1f8189760e7f708dccd08e562993717312d9a80d4fa",
+    "src/digitalmodel/ansys/cylinder_parent_map.py": "38d3e30d9ec0a2c2450f50013c87fe6c7020a85655619453be1fc0e2f54abbf2",
+    "tests/ansys/test_cylinder_parent_identity_capture.py": "43f632b94ba12874efd08461bfcf3c10f90916a3862c34a2d0b2f4da45af2605",
+    "tests/ansys/test_cylinder_parent_refusal_evidence.py": "3beac318aa30c1943faa6a215d41c99610d8bff3c06662f24bfc235d3329e30b",
+    "tests/ansys/test_cylinder_parent_map.py": "5a9b9b678c3ec01a581431c0780b47eeea0bf8ca54660c01409face5004754f1"
+  },
+  "regression": {
+    "passed": 966,
+    "skipped": 2,
+    "seconds": "82.61",
+    "log_sha256": "43a5a9321b974681f96625710eec1d57320c9e974d6c2b6ddf043e8db8f44954",
+    "tested_file_pins": {
+      "tests/ansys/test_cylinder_absence_collection.py": "689615f1e3e8771c4d16f9f9e372943dea33935a35339fbf865b2f0d62efba3e",
+      "tests/ansys/test_cylinder_absence_population.py": "9ece51c9651a0ffa2b93a4a13375efe60282fecd10c1d25c75de349bf31844e7",
+      "tests/ansys/test_cylinder_absence_population_integration.py": "5f45fc23c7668d544c4917e7b37ead6e240347034e7bab57b12f511c0412ff2a",
+      "tests/ansys/test_cylinder_active_name_integration.py": "831ec3dbc3d66f4c44b37816f3b7497513a9333013fff75cced3f1e4807c2647",
+      "tests/ansys/test_cylinder_active_names.py": "c2826f853fcb6cd582463cb39d0999e2c7db34c2d24ac6435d70e90f8d1760d9",
+      "tests/ansys/test_cylinder_active_population.py": "15930b284e8924e3ff52b223a36ae3f5cb016226778685fdc81fe5035e391e40",
+      "tests/ansys/test_cylinder_cfd_owner_evidence.py": "f1ab6021b5aa3c2372b1827055937fc881a998efc307e8971dba440597cc33d5",
+      "tests/ansys/test_cylinder_console_branches.py": "aa2e92a29dbe7ba4cca6067cbc11e4a0c44de42fbe52853d2f1b6cfdae5ebb90",
+      "tests/ansys/test_cylinder_console_preflight.py": "27ef6fd8dec320c826ba06b16fe9389691f1d135fe35ee4d97c13a235f7005f6",
+      "tests/ansys/test_cylinder_controller_arguments.py": "505bef3a00ce01280c6a0023b37daa0e56a6f4c00f5fd8b6d6643e2a76e2fdea",
+      "tests/ansys/test_cylinder_diagnostic_preflight.py": "6f0250c9a319ef1801617ab5c5b6a5875182c798cf7cfe91b94fb0edd9dbdda9",
+      "tests/ansys/test_cylinder_diagnostic_snapshot_v2.py": "a5276ad3585f6003a473bf9868f082dde43163d47ec05c1192d44a85b5277a2e",
+      "tests/ansys/test_cylinder_intermediate_admission.py": "ccca5775c73a43bdd8949bf5810daf4909496c22ca37abdc9253ddab773ddf92",
+      "tests/ansys/test_cylinder_intermediate_capture.py": "b71c2e32d4adfe10e779cec10ec423945bbded491b18db970c913968a195bd7c",
+      "tests/ansys/test_cylinder_intermediate_driver.py": "63c0ff358c6f664751153ff75325513a60e29be5441ce5661d833d8701f3ecbf",
+      "tests/ansys/test_cylinder_intermediate_journal_storage.py": "c29148ba6100f33594bcd16d7cb91558c51473187e00b1bbd0bc20a042e6e944",
+      "tests/ansys/test_cylinder_intermediate_lineage.py": "8e6a53bc171a0c1f06141ef1af34bce95a3b70857efd273baf9f7146243e4f45",
+      "tests/ansys/test_cylinder_intermediate_resume.py": "d7aa889cc873c171761c8b2c68ebc0396ab1770389ff9c37d7fb6c81c5704597",
+      "tests/ansys/test_cylinder_n4_recovery.py": "5dce60e53db61bbd79bd04c482a3c406ad1d76eaf3ea9782a8119eca3e8586e9",
+      "tests/ansys/test_cylinder_parent_map.py": "5a9b9b678c3ec01a581431c0780b47eeea0bf8ca54660c01409face5004754f1",
+      "tests/ansys/test_cylinder_parent_refusal_evidence.py": "3beac318aa30c1943faa6a215d41c99610d8bff3c06662f24bfc235d3329e30b",
+      "tests/ansys/test_cylinder_preclaim_probe.py": "305b3ca1b89d8c9cc3e762cdf6682c4367d4f7f7034e1da743deb3106f57816c",
+      "tests/ansys/test_cylinder_preparation_driver.py": "2971010fac6911a62b9f61a641e877f865bf8ee907240c9c6baba9fc563a6329",
+      "tests/ansys/test_cylinder_preparation_history.py": "c8e70aa41afcc43cbaa16ddf9f88a3276cec6ff28271e6153210252775be7da6",
+      "tests/ansys/test_cylinder_preparation_streams.py": "d03918d12e25e9029073dd6ef242392c651219dab1e14f0083869bae445ca6ba",
+      "tests/ansys/test_cylinder_pressure_absence_integration.py": "1e1bca86c80ff3d5ca425ef4af7b3a9f6471f64d37460f7436b86aa864dcfa3c",
+      "tests/ansys/test_cylinder_pressure_admission.py": "1f29a7fb21e107f719caf87c1a3947943f9b0117ebe4578bafd5214c7ee2e9fc",
+      "tests/ansys/test_cylinder_pressure_capture.py": "90fce4a622c3f2e199d39b5bcca8dabdc4938c77cf8f1672521203333a76a492",
+      "tests/ansys/test_cylinder_pressure_journal.py": "bdfa7a80a8ae965982fa053b5dfc622c8e77986771068d46a3e43ff490c31733",
+      "tests/ansys/test_cylinder_pressure_resources.py": "f4aec15613c149493558c817f93b1a47f3cec5ca5def4c8f92696f985d626ab3",
+      "tests/ansys/test_cylinder_pressure_resume.py": "41a86a25facc406bee5ccf7f94a57bb7fe81c143fc25e13e060ee19c371a3af5",
+      "tests/ansys/test_cylinder_process_inventory.py": "36d34315854ccb6443dbd31fd53a4da577c940352e1196852ca95f663b39335a",
+      "tests/ansys/test_cylinder_process_inventory_v2.py": "82c135f8d08aa5e7eedb3df2c01e2429b94a3a93173aa52fb78b3d48897a6183",
+      "tests/ansys/test_cylinder_refinement_replay.py": "4e8a1a16e0b818882953f96e53f5772397a5cf22c0f5e44630f997bd08d97257",
+      "tests/ansys/test_cylinder_resource_absence.py": "fcdce73d7aca484421415fb43dc08a56ddef54f0a8ba7d1576fa24fcb8341ab8",
+      "tests/ansys/test_cylinder_wrapper_consoles.py": "15a918b14896015a73528bbe3c9734b621c527520121238961ec4fa528d8965c",
+      "tests/ansys/test_run_pressure_diagnostic.py": "5a2296e7f073606634428eba3dff385f19d8d83260b93be8f674b5cb3f5afd09",
+      "tests/ansys/test_cylinder_absence_failure_serialization.py": "cfccc329b5d1685b854548186b3cba4b3d89e4d32efc2673233f0f905c4206e9",
+      "tests/ansys/test_cylinder_parent_identity_capture.py": "43f632b94ba12874efd08461bfcf3c10f90916a3862c34a2d0b2f4da45af2605"
+    },
+    "source_binding": "Source pins verified after the run against exact review union; no separate start-of-run source hash receipt is claimed."
+  },
+  "minor_dispositions": [
+    "Schema version1 is first published by this correction, including the provenance marker; prior review candidates were unpublished and are not released consumer contracts. Future schema changes require explicit compatibility handling.",
+    "RETAINED describes original fields copied, not completeness/readiness. Their initial_image_basis explicitly preserves possible high-level path guessing.",
+    "Post-table image uses pinned Windows backend; name and path are separate native reads, not an atomic image snapshot. No historical table binding or resource relevance is established.",
+    "Missing private backend attribute or unexpected helper error yields whole-capture CAPTURE_FAILED under a distinct schema; original numeric refusal survives.",
+    "Timing fields cover identity sampling through the final sample, excluding canonical detail fitting.",
+    "If second sample fails, successful first-sample details are not retained; no complete pair is claimed.",
+    "Size omissions fit in candidate order against final metadata; discarded oversized samples are not reconstructible from the bounded record alone.",
+    "Fixed metadata bound guard is defensive; generic error_type does not distinguish that guard from another escaping ValueError."
+  ],
+  "limits": [
+    "Original refusal predicate/message unchanged; no resource exemption.",
+    "One bounded read-only observation; no automatic retry.",
+    "No native solver attempt, result-matrix promotion or engineering qualification."
+  ]
+}

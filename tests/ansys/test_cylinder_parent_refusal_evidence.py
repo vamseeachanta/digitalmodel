@@ -82,8 +82,13 @@ def test_unbounded_process_text_is_excluded(monkeypatch):
         return process
     monkeypatch.setattr(maps_fixture, 'fake_process', huge_process)
     error = rejected(monkeypatch, {1: 0}, {1: 2})
-    assert len(json.dumps(error.evidence)) < 2048
-    assert 'executable_path' not in json.dumps(error.evidence)
+    numeric = error.evidence['rejected_parent_observation']
+    assert len(json.dumps(numeric)) < 2048
+    assert 'executable_path' not in json.dumps(numeric)
+    from digitalmodel.ansys.analysis_records import canonical_bytes
+    assert len(canonical_bytes(error.evidence['rejected_parent_identity'])) <= 32768
+    assert 'x' * 100000 not in json.dumps(error.evidence)
+    assert 'y' * 100000 not in json.dumps(error.evidence)
 
 
 @pytest.mark.parametrize('copy_method', [deepcopy, lambda error: pickle.loads(pickle.dumps(error))])

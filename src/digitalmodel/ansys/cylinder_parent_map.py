@@ -6,6 +6,7 @@ from copy import deepcopy
 
 import psutil
 from psutil import _common, _compat
+from .cylinder_parent_identities import capture_parent_identities
 
 if os.name == 'nt':
     from psutil import _pswindows as backend
@@ -130,5 +131,14 @@ def enumerate_windows_v2():
     final_map = read_windows_parent_map()
     if (set(final_map) - set(parent_map)
             or any(final_map.get(row['pid']) != row['parent_pid'] for row in rows)):
-        raise ParentMapChangeError(_parent_change_evidence(parent_map, final_map, rows))
+        evidence = _parent_change_evidence(parent_map, final_map, rows)
+        try:
+            evidence['rejected_parent_identity'] = capture_parent_identities(
+                parent_map, final_map, rows,
+                evidence['rejected_parent_observation']['trigger_pids'])
+        except Exception as error:
+            evidence['rejected_parent_identity'] = dict(schema='parent-change-identities-error-1',
+                status='CAPTURE_FAILED', error_type=type(error).__name__[:64],
+                resource_relevance='NOT_EVALUATED', table_identity_binding='NOT_ESTABLISHED')
+        raise ParentMapChangeError(evidence)
     return rows
