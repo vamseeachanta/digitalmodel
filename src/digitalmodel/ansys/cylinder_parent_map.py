@@ -2,6 +2,7 @@
 import hashlib
 import os
 from pathlib import Path
+from copy import deepcopy
 
 import psutil
 from psutil import _common, _compat
@@ -19,6 +20,42 @@ SOURCE_DIGESTS = {
     '__init__.py': '04b07a82ef53a2308857f9d3e538561ed182121426f6f07eb24017f8a5f48007',
     '_pswindows.py': '267f2738387b5a85ebf290b49d07d70957a3167a1315f4da65e648f5217ea851',
 }
+
+
+class ParentMapChangeError(ValueError):
+    """Rejected numeric observation; does not establish resource relevance."""
+
+    def __init__(self, evidence):
+        super().__init__('initial parent identity changed before selection')
+        self.evidence = deepcopy(evidence)
+
+    def __reduce__(self):
+        return type(self), (self.evidence,)
+
+
+def _parent_change_evidence(initial, final, rows):
+    observed = {row['pid'] for row in rows}
+    triggers = sorted((set(final) - set(initial)) |
+                      {row['pid'] for row in rows if final.get(row['pid']) != row['parent_pid']})
+    changes = []
+    for pid in sorted(set(initial) | set(final)):
+        before, after = initial.get(pid), final.get(pid)
+        if before == after:
+            continue
+        kind = 'added' if pid not in initial else 'disappeared' if pid not in final else 'parent_changed'
+        changes.append(dict(pid=pid, change=kind,
+                            initial_parent_pid=before, final_parent_pid=after))
+    observation = dict(schema='parent-map-refusal-1', status='REFUSED',
+        resource_relevance='NOT_EVALUATED',
+        initial_parent_table=[[pid, initial[pid]] for pid in sorted(initial)],
+        final_parent_table=[[pid, final[pid]] for pid in sorted(final)],
+        initial_observed_pids=sorted(observed),
+        unobserved_initial_pids=sorted(set(initial) - observed),
+        changes=changes, trigger_pids=triggers,
+        limitation='Numeric parent observations only; creation identity and relevance are not established.')
+    return dict(rejected_parent_observation=observation,
+                events=[dict(change='parent_table_changed', disposition='REFUSED_PARENT_TABLE_CHANGED',
+                             trigger_pids=triggers)])
 
 
 def _backend_reader():
@@ -93,5 +130,5 @@ def enumerate_windows_v2():
     final_map = read_windows_parent_map()
     if (set(final_map) - set(parent_map)
             or any(final_map.get(row['pid']) != row['parent_pid'] for row in rows)):
-        raise ValueError('initial parent identity changed before selection')
+        raise ParentMapChangeError(_parent_change_evidence(parent_map, final_map, rows))
     return rows
