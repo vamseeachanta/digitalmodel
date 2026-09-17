@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 
 from digitalmodel.workflows.installation_seastate_report import _case, _read
+from digitalmodel.workflows.installation_report_sections import front_sections, pending_sections, marketing_section
 
 
 def collect_cases(snapshot, matrix):
@@ -216,37 +217,37 @@ def render_html(summary, links, base=Path('.')):
     return f'''<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>Jumper installation · partial results</title>
 <style>{STYLE}</style></head><body><main><header><div class="tag">Installation engineering / review issue</div>
-<h1>Jumper installation<br>Partial sea-state study</h1><p>Simulated irregular waves · immutable snapshot {summary['created_utc']}</p>
+<h1>Jumper installation<br>Engineering analysis report</h1><p>Partial issue · simulated irregular waves · immutable snapshot {summary['created_utc']}</p>
 </header><div class="cards">{cards}</div><div class="notice"><strong>Engineering acceptance: NOT EVALUATED.</strong>
 No operating window has been established. Completed cells represent verified simulation evidence, not approved operating conditions.</div>
-<section><h2>1 · Assessment basis</h2><p>{len(cases)} planned Hs–Tp combinations are shown in Table 1.
-The verified case settings, seed, heading, duration and sample interval are retained in the JSON sidecar.
-This is a partial, single-realization irregular-wave demand study; operating acceptance remains unassessed.</p>
-<p>Completed results are checked against model, simulation and trace hashes; channel extrema and signed low-tension durations
-are checked against the time histories. This establishes data consistency, not design acceptance or statistical convergence.</p></section>
-<section><h2>2 · Hs–Tp coverage</h2>{_grid(cases)}<p class="caption">Table 1. ● verified completed; ◐ running;
+{front_sections(summary)}
+<section id="results"><h2>5 · Results</h2><h3>5.1 Hs–Tp coverage</h3>{_grid(cases)}<p class="caption">Table 1. ● verified completed; ◐ running;
 — queued / missing; ! evidence problem or extraction incomplete. Colours indicate execution state only.</p></section>
-<section><h2>3 · Component demand envelopes</h2>{_envelope_table(summary['envelopes'], True)}
+<section><h3>5.2 Component demand envelopes</h3>{_envelope_table(summary['envelopes'], True)}
 <p class="caption">Table 2. Each end remains separate. Minimum, maximum and longest accumulated low-tension duration can govern
 in different cases; each result includes its coordinates. Units are kN and seconds. Effective tension is not abbreviated as Te.</p></section>
-<section><h2>4 · Jumper and connector response</h2>{_envelope_table(summary['envelopes'], False)}
+<section><h3>5.3 Jumper and connector response</h3>{_envelope_table(summary['envelopes'], False)}
 <p class="caption">Table 3. Native quantities and units are retained. Governing arcs are selected from each full simulated record
 for diagnostic envelopes; they are not causal forecast locations. Minima are at the selected arc, not necessarily global spatial minima.
 These are demand results without an approved utilisation calculation.</p></section>
-<section><h2>5 · Intentional slack: Sling 5</h2><p>Signed tension at or below zero identifies a model-response diagnostic.
+<section><h3>5.4 Intentional slack: Sling 5</h3><p>Signed tension at or below zero identifies a model-response diagnostic.
 It is not measured geometric slack or an allowable-compression criterion. Intended slack requires separate re-tension,
 snap-load and interference assessment before an Hs–Tp operating boundary can be assigned.</p>{_scatter(cases)}
 <p class="caption">Figure 1. Sling 5 End B low-tension duration by Tp; marker colour varies with Hs. Hover for case values.</p>
 {_sling_rows(cases)}<p class="caption">Table 4. Chord deficit = unstretched line length minus endpoint span; sag and extension
 contribute, so this is not physical slack length. Event durations are interpolated at each case's recorded sampling interval.</p></section>
+{pending_sections(summary)}
 <section><h2>6 · Criteria and two-minute forecasting</h2><p>The linked criteria records retain candidate capacities,
 source editions and unresolved mappings. No candidate has been silently promoted to an approved limit.
-The pilot forecast separates history from a 120 s prediction and compares history-only predictions with persistence and mean baselines.
-Its two-minute advantage over the history mean is small; this simulation does not validate offshore live forecasting.</p><ul>{references}</ul>
+The linked pilot demonstration separates history from a 120 s prediction and compares history-only predictions with persistence and mean baselines.
+Forecast performance is not calculated by this report; linked results remain specific to that simulated pilot and do not validate offshore live forecasting.</p><ul>{references}</ul>
 <p>Operating-window qualification will require applicable capacity and DNV criteria, resolution of the pipe strength discrepancy,
 RAO coverage assessment, slack/snap and interference checks, and duration, time-step, seed and heading sensitivities.</p></section>
-<section><h2>7 · Per-case review</h2>{_case_details(cases, base)}</section>
-<section><h2>8 · Provenance and limitations</h2><p>All status counts refer to the captured campaign manifest; later progress is
+{marketing_section()}
+<section id="appendix-a"><h2>Appendix A · Detailed results by case</h2>{_case_details(cases, base)}
+<h3>A.1 Pending detailed results</h3><p>Detailed records for queued, running, failed or incomplete cases will populate here
+after successful evidence verification. Their current states remain visible in Section 5.1.</p></section>
+<section><h2>Appendix B · Provenance, references and limitations</h2><p>All status counts refer to the captured campaign manifest; later progress is
 excluded. The JSON sidecar retains the captured manifest, channel metrics, source hashes and governing cases.
 Failed evidence remains visible and is excluded from demand envelopes.</p><p class="hash">Matrix SHA-256: {summary['matrix_sha256']}<br>
 Campaign snapshot SHA-256: {summary['campaign_sha256']}</p></section>
