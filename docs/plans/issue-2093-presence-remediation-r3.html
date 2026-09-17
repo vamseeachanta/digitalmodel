@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Issue 2093 presence remediation review snapshot</title>
+<style>body{max-width:960px;margin:30px auto;padding:0 20px;font:15px/1.45 system-ui,"Segoe UI",sans-serif;color:#172033}h2{border-bottom:1px solid #ccd3df;padding-bottom:.2rem}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccd3df;padding:.4rem;vertical-align:top;text-align:left}th{background:#f2f5f9}code{background:#f2f5f9;padding:.04rem .2rem;overflow-wrap:anywhere}.status{border-left:5px solid #a16207;background:#fff3cd;padding:.7rem}li{margin:.2rem 0}</style>
+</head><body>
+<h1>OrcaFlex presence-aware difference hashing</h1>
+<p class="status"><strong>Status at preparation:</strong> four paths contain the current bounded correction and are pending external exact rereview. This snapshot records no live approval and grants no self-approval. Commit, regeneration, native execution, qualification, and adoption remain outside this checkpoint.</p>
+<p><strong>Issues:</strong> <a href="https://github.com/vamseeachanta/digitalmodel/issues/2093">2093</a>, <a href="https://github.com/vamseeachanta/digitalmodel/issues/2104">2104</a>. <strong>Case:</strong> <code>mooring_buoy</code>.</p>
+
+<h2>Four-path scope</h2>
+<table><thead><tr><th>Path</th><th>Change</th></tr></thead><tbody>
+<tr><td><code>scripts/prepare_mooring_qualification.py</code></td><td>Presence-aware hashes and report contract.</td></tr>
+<tr><td><code>tests/solvers/smoke/test_prepare_mooring_qualification.py</code></td><td>Null, absence, and parent-shape tests.</td></tr>
+<tr><td><code>tests/solvers/test_mooring_qualification_packaging.py</code></td><td>Report, compatibility, derivation, and import-isolation tests.</td></tr>
+<tr><td><code>docs/plans/issue-2093-presence-remediation-r3.html</code></td><td>This snapshot.</td></tr>
+</tbody></table>
+
+<h2>Narrow behavior</h2>
+<ul>
+<li>An absent <code>missing_key</code>/<code>missing_item</code> side hashes runtime bytes <code>b"\x00digitalmodel.absent.v1"</code>. Present null retains <code>74234e98…</code>; all present values retain the prior <code>json.dumps</code> encoder.</li>
+<li>The report adds <code>schema_version</code> and <code>missing_member_hash_rule</code>. Its exact 13-key set also contains <code>reference_sha256</code>, <code>source_sha256</code>, <code>input_files</code>, <code>reference_compatible</code>, <code>ordered_updates</code>, <code>difference_count</code>, <code>differences</code>, <code>comparison</code>, <code>native_verified</code>, <code>engineering_parity</code>, and <code>contract_source_role</code>.</li>
+<li>A missing non-empty mapping under a mapping key recurses and emits descendant rows without a container row. Other missing mapping-key values emit one whole-value <code>missing_key</code> row. Missing list members emit one whole-member <code>missing_item</code> row. <code>container_limit</code> ID <code>recursive-leaf-only-v2</code> declares these actions and the known absent-container versus empty-mapping ambiguity.</li>
+<li>The machine-readable rule states <code>present_value_digest_uniqueness: false</code>. The retained <code>default=str</code> encoder can give equal digests to unlike present values, such as a YAML date and its equivalent string; row selection still detects the type difference.</li>
+<li>Traversal, row selection, source YAML, include order, two-key derivation, contract values, solver controls, case ID, and physics do not change.</li>
+</ul>
+
+<h2>Actual test contract</h2>
+<ul>
+<li><code>test_present_null_and_absent_mapping_member_have_distinct_hashes</code> and <code>test_present_null_and_absent_list_item_have_distinct_hashes</code>: both directions pin presence flags, null digest, and absent digest.</li>
+<li><code>test_missing_mapping_container_and_present_empty_mapping_share_disclosed_leaf_rows</code>: reproduces the mapping-key ambiguity and pins the complete limit object.</li>
+<li><code>test_missing_list_mapping_member_hashes_whole_member</code>: both directions pin one whole-member list row. <code>test_missing_mapping_key_with_list_hashes_whole_value</code>: pins one whole-value mapping-key row.</li>
+<li><code>test_reference_report_serializes_presence_aware_missing_hashes</code>: pins the 13 keys; rule ID/algorithm; expected digest; decoded preimage, runtime SHA, and emitted-row equality; parent actions; and prose.</li>
+<li><code>test_reference_report_declares_reproducible_present_encoder</code>: pins encoder fields, reproduces the null digest, asserts <code>present_value_digest_uniqueness: false</code>, and demonstrates the date/string digest collision limit.</li>
+<li><code>test_present_and_ordered_update_hashes_remain_legacy_compatible</code> pins integer <code>3</code> at <code>4e074085…</code>. <code>test_ordered_object_updates_are_retained_and_reported</code> pins structured <code>Lines</code> hashes <code>d83822bb…</code>/<code>057cdddf…</code>.</li>
+<li><code>test_packaging_loader_restores_optional_api_and_sys_path</code> pins restoration of both guarded states. <code>test_packaging_fixture_without_optional_api</code> pins <code>sys.path</code> restoration in the smoke fixture.</li>
+</ul>
+
+<h2>Executed evidence and coverage</h2>
+<p>The retained isolated r5 RED materializes original comparator blob/SHA <code>bed5e662…</code> with the then-current tests. Result: 10 failed, 2 passed, 25 deselected. Four AssertionErrors and two KeyErrors demonstrate absent/null digest and report-contract failures. Four TypeErrors show that the original helper lacked the proposed presence argument; they are API-shape evidence and are not row-content comparisons.</p>
+<p>The scratch tree has no pytest/project/setup/tox configuration, applicable <code>conftest.py</code>, or <code>src</code>. Pytest climbs to empty <code>D:\ws\pytest.ini</code> (SHA <code>e3b0c442…</code>) and reports rootdir <code>D:\ws</code>; worktree configuration lies outside scratch ancestry. Exact paths and hashes appear below.</p>
+<p>Current failing-first evidence <code>SOLVERS-OrcaFlex-r7-supported-red.log</code> records three selected failures for the container ID, smoke <code>sys.path</code> leak, and missing uniqueness field. Its packaging test is the delivered byte sequence. Its smoke test is the exact intermediate preimage SHA <code>f882ffc5721a6b6997a267b0c1eaeccf6ca0f385bf798b03a06e6b5fead9a8bb</code>, retained as <code>SOLVERS-OrcaFlex-r7-red-smoke-input.py</code>; that preimage differs from the delivered smoke test by the loader-restoration hunk. The source preimage SHA <code>8b3d22591a0150777632bc201d2fb59fc29cfd138222045bf7f9d096a149e7f1</code> is retained in the exact b62 review bundle. Focused GREEN passes the same three tests. Final bounded regression covers both changed modules plus <code>test_model_manifest.py</code>: 70 passed. The broad solver suite remains deferred because literal <code>OrcFxAPI</code> scanning cannot prove remaining collectors exclude indirect or dynamic native imports.</p>
+<p>Final Ruff evidence applies only E402 exclusion to the comparator bootstrap file; both test files receive no exclusions. <code>SOLVERS-OrcaFlex-r8-ruff-red.log</code> records the otherwise exposed unused <code>yaml</code> import, which was removed. <code>SOLVERS-OrcaFlex-r8-ruff-green.log</code> passes. Earlier <code>SOLVERS-OrcaFlex-r7-ruff.log</code> and <code>SOLVERS-OrcaFlex-r7-ruff-r2.log</code> retain the rejected argument form and the interim broader gate.</p>
+<p>The three r6 field-scope captures have no byte-binding headers. They are retained only as unheadered historical context and are superseded by the hash-bound r7 and r8 evidence.</p>
+<p>Both test loaders snapshot <code>sys.path</code>, import the comparator, and restore the path in <code>finally</code>. The packaging loader also temporarily sets <code>sys.modules["OrcFxAPI"] = None</code> and restores that state. These guards cover those import paths only and do not prove the dependency graph or the repository avoids every native or external action.</p>
+
+<h2>Governing resources and limits</h2>
+<ul>
+<li><code>docs/plans/2026-09-14-issue-2093-orcaflex-preservation.html</code>, SHA <code>34ede22f0bf3eebaf13940329dc938641dc2703291c8fb1f9a020acc25759c5e</code>.</li>
+<li><code>docs/benchmarks/mooring_buoy/qualification.yml</code>, SHA <code>2a62c2b0e0cbe6707e907d32df74610295b2e5799a440fcb9f5fcaaf5d47335a</code>; <code>engineering_qualified: false</code>.</li>
+<li><code>src/digitalmodel/solvers/smoke/model_manifest.py</code>, SHA <code>cd374b397e166b135f42082d7a335fb07b7dc2faef2a8752475a2d6d88c1fb85</code>; manifest schema stays at 1.</li>
+</ul>
+<p>Permitted derivation paths remain <code>/environment/raw_properties/VerticalWindVariationFactor</code> and <code>/environment/raw_properties/WindType</code>. Offline evidence does not establish native equivalence, engineering parity, or qualification.</p>
+
+<h2>Required exact review inputs</h2>
+<ul>
+<li>The four scoped paths and an externally generated exact-current diff. The root-owned staged-path/HEAD receipt is a separate pre-commit gate and is not an input to this working-byte review.</li>
+<li><code>SOLVERS-OrcaFlex-presence-red-isolated-20260915-r5.stdout.log</code>, SHA <code>b3eb0bc16f1678cb83cce71c87c2bee509f984c6a10314b630f265f65a48f3e3</code>; matching evidence JSON, SHA <code>29b9632824dcd5068fe162579df65d95817d06eb1d5e61453a49f36cb05c36f4</code>.</li>
+<li>Current evidence: <code>SOLVERS-OrcaFlex-r7-supported-red.log</code>, its retained smoke preimage, <code>SOLVERS-OrcaFlex-r7-supported-green.log</code>, <code>SOLVERS-OrcaFlex-r8-ruff-red.log</code>, <code>SOLVERS-OrcaFlex-r8-ruff-green.log</code>, and <code>SOLVERS-OrcaFlex-r8-bounded-regression.log</code>. The external review receipt will pin their full digests and current source/test bytes.</li>
+<li>The three governing resources; held r7 report; r6 disposition; b62 exact bundle and receipt; and current exact receipt <code>SOLVERS-PM-Claude-1c976d5cd38c.json</code>. The earlier e49 receipt is historical context superseded by b62, which restates its findings. Historical plan receipts are <code>SOLVERS-PM-Claude-3f13f5647c64.json</code>, SHA <code>1f40fd97ce093a7291e8f40f8a2f336f3a42aa2d11c5c2e6f610208f96f578d4</code>, and <code>SOLVERS-PM-Claude-a4e0cda065b0.json</code>, SHA <code>f6c52183f94f219f4b700b5ddc7549fa640cee92c8e0b599a3477f2dcdd115c6</code>.</li>
+</ul>
+
+<h2>Review history</h2>
+<table><thead><tr><th>Stage</th><th>Verdict/disposition</th></tr></thead><tbody>
+<tr><td>Plan r1 <code>3f13f564…</code>; plan r2 <code>a4e0cda0…</code></td><td>MAJOR; revised. R3 was corrected inline and was not independently approved.</td></tr>
+<tr><td>Code/plan r1 <code>0ef773dc…</code></td><td>MAJOR; limits, RED provenance, ownership, and shape corrected.</td></tr>
+<tr><td>Code/plan r2 <code>4dd0858d…</code></td><td>MAJOR; parent actions, status, coverage, and names corrected.</td></tr>
+<tr><td>Code/plan r3 <code>b68980c9…</code></td><td>MAJOR; stale plan text, missing mapping action, and packaging import guard corrected.</td></tr>
+<tr><td>Code/plan r5 <code>e49c0cf7…</code></td><td>MAJOR; two ambiguous container-limit field names were scoped by the r6 inline correction. Five MINOR evidence and contract findings remained open.</td></tr>
+<tr><td>Code/plan r6 <code>b62cb286…</code></td><td>MAJOR; the scoped field rename was accepted, but current RED/lint evidence and this plan were stale. Contract version, digest non-uniqueness, loader restoration, and Ruff scope findings were supported and corrected.</td></tr>
+<tr><td>Code/plan r7 <code>1c976d5c…</code></td><td>MAJOR; the smoke RED preimage was absent, F401 hid an unused import, unheadered r6 logs were not labeled historical, and one declared historical receipt was omitted. The preimage is retained, the import is removed under failing-first Ruff evidence, and evidence roles are narrowed above.</td></tr>
+<tr><td>Current external exact rereview</td><td>PENDING. No approval is inferred.</td></tr>
+</tbody></table>
+</body></html>

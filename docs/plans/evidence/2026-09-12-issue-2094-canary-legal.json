@@ -1,0 +1,56 @@
+{
+  "head": "175f0771808526719c9217fa2ef8ef04d93e95be",
+  "base": "8a23f139",
+  "files": [
+    {
+      "path": ".gitignore",
+      "sha256": "c30f6f9937baf6b84e329bf392088091d5d32225739638461153792978309ee5"
+    },
+    {
+      "path": "examples/ansys/padeye/build.py",
+      "sha256": "1ee78e904d8607c56a339dde549e7bd1eaada78c89be4170ed7d3284289947bd"
+    },
+    {
+      "path": "examples/ansys/padeye/padeye.inp",
+      "sha256": "d22a31363907ecda31845cfe70fc44857156ce221065e17708545b395e612529"
+    },
+    {
+      "path": "src/digitalmodel/ansys/padeye.py",
+      "sha256": "992a4cb910f3326f5a6947965b7b4d5fde52577fcb0afd21800acfbb510b6796"
+    },
+    {
+      "path": "src/digitalmodel/ansys/runner.py",
+      "sha256": "05a0816a516938dfd953ec85a10a47296b9c78889a852a97a4baf847fb2fa6d8"
+    },
+    {
+      "path": "src/digitalmodel/usecase_registry/registry.yaml",
+      "sha256": "ac01f68f490d2feb91007c99cc9667ea3464999fcfef02473cf57726e6f8608e"
+    },
+    {
+      "path": "tests/ansys/native_resolve_support.py",
+      "sha256": "79d003127f99f8e239ad51784747fc74c075b316b4928aa0a81268bb10863286"
+    },
+    {
+      "path": "tests/ansys/test_example_goldens.py",
+      "sha256": "12df2bb712047a7b636a1b7d60368c422123553824fb0348f19cab4f319a524d"
+    },
+    {
+      "path": "tests/ansys/test_native_resolve_support.py",
+      "sha256": "1103cf22bfa0743d8b79b14bf1ae625cdadccabc72c7201387dd5a865beeb78c"
+    },
+    {
+      "path": "tests/ansys/test_padeye_preparation.py",
+      "sha256": "21d5d193307b6792d49a9dddc2fd2b00939af5a0821e0979748146c938db0cf9"
+    },
+    {
+      "path": "tests/ansys/test_runner.py",
+      "sha256": "143c32c46b77b29d577286138c2fdc7e6e9058d979140b922ee6a214b28e1c88"
+    },
+    {
+      "path": "tests/test_usecase_registry.py",
+      "sha256": "b833148f55515ef87cfe05a61266722b011e31b29f928b50e56d783ec48b0969"
+    }
+  ],
+  "exit_code": 0,
+  "scope": "Exact changed Git blobs staged in retained isolated scan repo; not full repository compliance"
+}

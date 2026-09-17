@@ -28,3 +28,60 @@
 
 # OrcaWave solver artifacts
 *.owr binary
+
+# Retain the exact executed deck bytes bound by the historical golden digests.
+examples/ansys/pressure-vessel/pv.inp -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+examples/ansys/mudmat/mudmat.inp -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/ansys/fixtures/pressure-coarse-v261.cdb -text whitespace=-blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
+tests/ansys/fixtures/pressure-coarse-shape-v261.txt text eol=lf
+
+# Preserve single-invocation analytical checker evidence byte for byte.
+docs/plans/evidence/issue-2121-n8-predecessor/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+docs/plans/issue-2121-n8-predecessor-replay.html text eol=lf
+docs/plans/README.md text eol=lf
+examples/ansys/cylinder-benchmark/checker_response.json -text
+examples/ansys/cylinder-benchmark/checker_transport.json -text
+examples/ansys/cylinder-benchmark/checker_process_stderr.txt -text
+examples/ansys/cylinder-benchmark/checker_capture.json -text
+examples/ansys/cylinder-benchmark/checker_invocation.json -text
+
+# Hash-bound offline canary source and generated inputs.
+src/digitalmodel/ansys/cylinder_*.py text eol=lf
+tests/ansys/*cylinder*.py text eol=lf
+tests/ansys/test_analysis_observed.py text eol=lf
+tests/ansys/*replay*.py text eol=lf
+examples/ansys/cylinder-benchmark/prepared/* -text
+examples/ansys/cylinder-benchmark/reference*.json -text
+src/digitalmodel/ansys/analysis_records.py text eol=lf
+examples/ansys/cylinder-benchmark/checker_brief.txt text eol=lf
+examples/ansys/cylinder-benchmark/checker_contract.json text eol=lf
+examples/ansys/cylinder-benchmark/producer_derivation.json text eol=lf
+examples/ansys/cylinder-benchmark/manifest.json text eol=lf
+
+# Complete imported-package and diagnostic-entry source bindings.
+.gitattributes text eol=lf
+src/digitalmodel/ansys/*.py text eol=lf
+src/digitalmodel/__init__.py text eol=lf
+scripts/ansys/*.py text eol=lf
+tests/ansys/fixtures/lmstat_ansys_increment_layout.txt -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+tests/ansys/fixtures/lmstat_ansys_increment_layout.provenance.json text eol=lf
+examples/ansys/cylinder-runtime/** -text
+docs/plans/2026-09-14-issue-2121-zero-diagnostic-amendment.html text eol=lf
+docs/plans/evidence/2026-09-14-issue-2121-zero-diagnostic-preparation.json text eol=lf
+conftest.py text eol=lf
+tests/conftest.py text eol=lf
+src/digitalmodel/_compat.py text eol=lf
+docs/plans/2026-09-14-issue-2121-numerical-replay-intake.html text eol=lf
+docs/plans/2026-09-14-issue-2121-observed-native-intake.html text eol=lf
+docs/plans/evidence/2026-09-14-issue-2121-replay-review-status.json text eol=lf
+docs/reports/2026-09-14-ansys-cylinder-zero-native-checkpoint.html text eol=lf
+src/digitalmodel/solvers/orcaflex/modular_generator/builders/general_builder.py text eol=lf
+src/digitalmodel/solvers/orcaflex/modular_generator/builders/generic_builder.py text eol=lf
+src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py text eol=lf
+tests/solvers/orcaflex/modular_generator/test_mooring_semantic_preservation.py text eol=lf
+tests/solvers/orcaflex/modular_generator/test_generic_builder.py text eol=lf
+tests/solvers/orcaflex/modular_generator/builders/test_general_builder.py text eol=lf
+scripts/prepare_mooring_qualification.py text eol=lf
+docs/benchmarks/mooring_buoy/spec_constant_wind.yml text eol=lf
+tests/solvers/test_mooring_qualification_packaging.py text eol=lf
+docs/plans/2026-09-14-issue-2093-orcaflex-preservation.html text eol=lf

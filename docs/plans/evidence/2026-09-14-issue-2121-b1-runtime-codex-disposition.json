@@ -1,0 +1,62 @@
+{
+  "scope": "Runtime F1 implementation handoff and independent F4/F5 Claude finding disposition; not overall runtime approval",
+  "claude_review_revision": "dbb098f4837d1a688baacb71997599c9d19f4a25",
+  "files": [
+    {
+      "path": "src/digitalmodel/ansys/cylinder_adapter.py",
+      "sha256": "3d507d56493bb1a394e434ae507eb478c1074c8e1d2ca9e52927f07ac56a83b8",
+      "bytes": 14443,
+      "lines": 285,
+      "maximum_function_lines": 46,
+      "largest_function": "make_execution_adapters"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_adapter.py",
+      "sha256": "0e43ef0137459caa426ecfc9984ba2965081b3c5de501188e386eb4cdc7cc7d9",
+      "bytes": 11467,
+      "lines": 201,
+      "maximum_function_lines": 31,
+      "largest_function": "test_execution_factory_requires_profile_and_rechecks_executable"
+    },
+    {
+      "path": ".gitattributes",
+      "sha256": "19caf877a0122d6c70151cdc9b4b9d693e64e3f4e4aab3595333f21d8e20b450",
+      "bytes": 1965,
+      "lines": 54
+    }
+  ],
+  "tdd": {
+    "red": {
+      "tool_chunk": "9b2221",
+      "result": "1 failed,25 deselected; mutated copied deck did not raise before fix"
+    },
+    "green": {
+      "tool_chunk": "d7e3f3",
+      "result": "26 passed in1.78 seconds"
+    },
+    "initial_command_error": "Relative test path unavailable in login shell; no tests ran. Corrected with absolute path and login=False."
+  },
+  "F1": "Owned copied deck read and exact validate_deck enforced before _launch_case; real frozen zero deck fixture and changed-deck refusal prove mock launcher called only once.",
+  "F4": {
+    "disposition": "PARTIALLY_SUPPORTED_CORRECTED",
+    "basis": "No-process docstring corrected to no solver/checker invocation at construction. Each reference verification uses14 read-only trusted PATH Git subprocesses. All9 frozen files empirically matched pinned INPUT_COMMIT raw blobs and had zero CRLF; existing eol=lf rules cover frozen inputs and all5 rawcaptures retain -text. No blanket Windows mismatch established. Executable pinning remains optional hardening under declared trusted-runtime boundary."
+  },
+  "F5": {
+    "disposition": "NONBLOCKING_OPERATIONAL_LIMITATION",
+    "basis": "Approved300-second admission reserve and1800-second overall budget retained. Processing,cleanup,Git or adjudication overrun yieldsINCOMPLETE; this is not hard real-time cancellation. Arbitrary330-second reserve does not bound those operations and changes the frozen admission threshold without evidence."
+  },
+  "limitations": [
+    "No native solver or checker invocation",
+    "No staging or commit",
+    "Exact-current independent Claude review remains required",
+    "F2/F3 parent-owned changes are not assessed by this receipt"
+  ],
+  "cleanup": {
+    "classification": "EXPECTED",
+    "residue": [
+      "Two authorized modified main-worktree files retained for parent integration",
+      "This private coordination receipt"
+    ],
+    "unexpected": []
+  }
+}

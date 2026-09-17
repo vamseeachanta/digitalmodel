@@ -1,0 +1,348 @@
+{
+  "schema": "ansys-four-run-canary-proposal-1",
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "source_baseline": "17bb5527150bb18ce4c942b04627bf00e4355a3e",
+  "status": "proposed; B1 user approval pending; exact-current checkpoint review receipts govern review status",
+  "implementation_authorized": false,
+  "execution_authorized": false,
+  "results_present": false,
+  "intended_use": "bounded_numerical_canary_only",
+  "future_dataset_id": "ansys-open-cylinder-verification",
+  "dataset_registration": "deferred; no lookup publication or promotion in this canary",
+  "basis": {
+    "inner_radius_mm": "750",
+    "wall_thickness_mm": "60",
+    "axial_length_mm": "240",
+    "youngs_modulus_mpa": "200000",
+    "poisson_ratio": "0.3",
+    "delta_temperature_C": "0",
+    "external_pressure_mpa": "0",
+    "element": "PLANE183",
+    "keyopts": {
+      "1": 0,
+      "3": 1,
+      "6": 0
+    },
+    "element_shape": "eight-node quadrilateral; all midside nodes retained",
+    "nlgeom": "OFF",
+    "axes": "X radial; Y axial; Z hoop; tension positive",
+    "restraints": "UY=0 on all y=0 nodes including midside nodes; no radial restraints; top axially free; no end-cap loads"
+  },
+  "cases": [
+    {
+      "case_id": "ocv-zero-t60-n16",
+      "pressure_mpa": "0",
+      "radial_divisions": 16,
+      "axial_divisions": 96,
+      "expected_elements": 1536,
+      "expected_nodes": 4833,
+      "role": "zero-control",
+      "status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t60-p10-n4",
+      "pressure_mpa": "10",
+      "radial_divisions": 4,
+      "axial_divisions": 24,
+      "expected_elements": 96,
+      "expected_nodes": 345,
+      "role": "physical-refinement",
+      "status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t60-p10-n8",
+      "pressure_mpa": "10",
+      "radial_divisions": 8,
+      "axial_divisions": 48,
+      "expected_elements": 384,
+      "expected_nodes": 1265,
+      "role": "physical-refinement",
+      "status": "not_executed"
+    },
+    {
+      "case_id": "ocv-t60-p10-n16",
+      "pressure_mpa": "10",
+      "radial_divisions": 16,
+      "axial_divisions": 96,
+      "expected_elements": 1536,
+      "expected_nodes": 4833,
+      "role": "physical-refinement",
+      "status": "not_executed"
+    }
+  ],
+  "budget": {
+    "maximum_attempts": 4,
+    "timeout_seconds_per_attempt": 300,
+    "total_wall_minutes": 30,
+    "automatic_retries": 0,
+    "cores": 1,
+    "parallel_mode": "smp",
+    "attempt_consumed": "immediately before invoking solver; launch failure consumes attempt; preflight refusal does not",
+    "timeout_action": "terminate only owned run process tree, retain evidence, stop; if ownership/termination cannot be verified retain seat and escalate"
+  },
+  "stations": {
+    "radial": [
+      {
+        "id": "inner",
+        "radius": "a",
+        "adjacent_elements": 2
+      },
+      {
+        "id": "middle",
+        "radius": "a+t/2",
+        "adjacent_elements": 4
+      },
+      {
+        "id": "outer",
+        "radius": "a+t",
+        "adjacent_elements": 2
+      }
+    ],
+    "primary_axial_mm": "120",
+    "auxiliary_axial_mm": [
+      "60",
+      "180"
+    ],
+    "node_type": "corner nodes at all sampled coordinates for every mesh; mismatched type or count refuses extraction"
+  },
+  "quantities": [
+    {
+      "name": "sigma_r",
+      "unit": "MPa",
+      "mapdl_component": "S:X",
+      "zero_class": "outer only"
+    },
+    {
+      "name": "sigma_theta",
+      "unit": "MPa",
+      "mapdl_component": "S:Z",
+      "zero_class": "none at positive pressure"
+    },
+    {
+      "name": "sigma_z",
+      "unit": "MPa",
+      "mapdl_component": "S:Y",
+      "zero_class": "all stations"
+    },
+    {
+      "name": "tau_rz",
+      "unit": "MPa",
+      "mapdl_component": "S:XY",
+      "zero_class": "all stations"
+    },
+    {
+      "name": "sigma_vm",
+      "unit": "MPa",
+      "mapdl_component": "recompute from recovered components",
+      "zero_class": "none at positive pressure"
+    },
+    {
+      "name": "u_r",
+      "unit": "mm",
+      "mapdl_component": "U:X",
+      "zero_class": "none at positive pressure"
+    },
+    {
+      "name": "u_z",
+      "unit": "mm",
+      "mapdl_component": "U:Y",
+      "zero_class": "none at positive pressure"
+    }
+  ],
+  "recovery": {
+    "extrapolation": "ERESX,YES set before solution",
+    "frame": "RSYS,0; no element coordinate rotations",
+    "selection": "all homogeneous PLANE183 elements selected; full graphics",
+    "stress_source": "Element-based extrapolated nodal components under ERESX,YES; RSYS,0; full graphics; arithmetic average over all adjacent homogeneous selected elements. Acceptance retrieval is explicit *GET ESOL; PRNSOL is an independent listing only.",
+    "averaging": "arithmetic mean of all elements sharing each sampled corner node; adjacent counts from stations",
+    "equivalent_stress": "recomputed after component averaging",
+    "independent_readback": "retain element-node contributions and independently compare their arithmetic means with station export; no silently substituted recovery",
+    "boundary_response_note": "sigma_r_inner and sigma_r_outer assess recovery of specified tractions, not independent applied-load evidence",
+    "acceptance_values": "full-precision *GET node/component values exported with *VWRITE E24.16, one response per line, within 128-character line limit; PRNSOL only independent listing/check",
+    "precision_gate": "record requested/observed E24.16 format and numeric witness; reject overflow, truncation, missing digits or any value with decimal export half-quantum > applicable dimensional floor/100. Use exact-decimal arithmetic for comparison; never parse default-width tables as acceptance values.",
+    "precision_witness": "per-attempt nonengineering numeric formatting witness with known digits; no native evidence accepted if witness or round-trip precision check fails",
+    "outres_commands": [
+      "OUTRES,ERASE",
+      "OUTRES,ALL,ALL",
+      "OUTRES,NAR,NONE",
+      "OUTRES,STAT"
+    ],
+    "stress_get": "*GET,par,NODE,node,S,component,ESOL; component restricted to X,Y,Z,XY; element-based path explicitly selected",
+    "activation": "fresh one-load-step/substep solve with NSUBST,1,1,1 and AUTOTS,OFF; SET,1,1; ACTIVE,SET,NSET/LSTP/SBST must each equal 1",
+    "retrieval_checks": "selected nodes/elements must equal case counts; each response record carries actual *GET node X/Y and must match positive expected station coordinates within 1e-9 mm; sampled node membership/type/adjacency must match; missing/invalid/defaulted retrieval is INCOMPLETE, never a zero result",
+    "record_format": {
+      "fields": [
+        "case_token",
+        "node_id",
+        "X_mm",
+        "Y_mm",
+        "component",
+        "value"
+      ],
+      "fortran_format": "(A8,F8.0,2E24.16,A8,E24.16)",
+      "case_tokens": {
+        "CTRL16": "ocv-zero-t60-n16",
+        "P10N4": "ocv-t60-p10-n4",
+        "P10N8": "ocv-t60-p10-n8",
+        "P10N16": "ocv-t60-p10-n16"
+      },
+      "record_width": 96,
+      "mapping": "explicit manifest-bound key; node_id numeric field must parse as an exact integer; token/component <=8 characters; no positional value attribution",
+      "count": "54 native keyed component/DOF records per attempt at nine nodes; nine sigma_vm values derived after verified component averaging, giving 63 total values",
+      "failure": "refuse missing, duplicate, unexpected, truncated or interleaved keys; reordered complete records remain valid"
+    },
+    "listing_format": "/FORMAT,8,E,24,16,100,240; /FORMAT,STAT; PRNSOL,S,COMP with DataKey ESOL and PRNSOL,U,COMP; nine keyed node rows in each listing, not 63 node rows",
+    "readback_tolerance": "For every native quantity, abs(export-listing) and abs(export-mean(element-node contributions)) <= max(1e-12*max(abs(export),max(abs(contributions))), dimensional_floor/100). For displacement compare nodal listing directly. All listing/export half-quanta must be <= this readback tolerance/100; 1e-12 relative allowance covers arithmetic rounding and remains distinct from engineering accuracy.",
+    "warning_policy": {
+      "allowed_warning_identifiers": [],
+      "rule": "Any native WARNING, ERROR or FATAL diagnostic is INCOMPLETE and stops; informational status lines are retained but non-gating. Unknown/unparsed diagnostic severity is INCOMPLETE. No after-run waiver.",
+      "limitation": "A benign warning can stop this strict canary; adding an allowlist would require a new reviewed basis and matching approval, not reclassification of the current result.",
+      "files": "Scan attributed native .out, manifest jobname .err and captured process stdout/stderr. Required streams/files must be captured, including explicit empty files. Preserve raw bytes, offsets, digests and coverage. Missing required evidence is INCOMPLETE.",
+      "recognition": "Parse line-start native *** severity *** diagnostic blocks with optional whitespace. NOTE is nonblocking; WARNING/ERROR/FATAL ERROR refuse. Malformed envelopes, unknown severity, decoding loss, truncation, suppression and missing/inconsistent final warning/error totals cause INCOMPLETE. Nonzero totals refuse even if headings were suppressed. Ordinary command echoes/tables remain raw unclassified output; unknown diagnostic candidates never default to informational.",
+      "settings": "Retain /NERR,STAT; require nonnegative NMERR and no suppression indication. B1 will freeze exact anchored diagnostic/final-total grammar from documented semantics and retained corpus; B2 will bind its hash and observed native profile.",
+      "offline_validation": "Use scope-record private corpus hashes as observed NOTE/WARNING fixtures, including a successful historical solve that must refuse the zero-warning gate. Synthetic ERROR/FATAL/malformed/truncated tests remain labelled synthetic. No observed native ERROR/FATAL fixture is established. B1 will record population and coverage; missing fixtures or unresolved rights block their use.",
+      "process_streams": "Require process stderr to be byte-empty. Process stdout outside the attributed native output file will also be byte-empty under this strict profile; any nonempty stream causes INCOMPLETE even with exit0. No undocumented launcher/license message will fall through as ordinary MAPDL output. B1 will test zero-exit nonempty streams; an incompatible launcher profile will require a reviewed amendment, never an after-run waiver.",
+      "characterization": "Versioned 2026-09-14 diagnostic characterization records observed message identities, exact headings and method. Empty allowlist retained; warning absence/reachability is not established before generated-deck verification. B1 tests will reproduce recorded identities and offsets, not only counts.",
+      "stream_basis": "Byte-empty process stdout/stderr remains unverified for this launcher. B1 approval will adopt the strict empty-stream gate as an explicit assumption, not a historical result. Incompatible B2 output yields INCOMPLETE without waiver or tolerance change.",
+      "raw_capture": "Existing runner captures decoded text without persisting pipes. B1 will add an opt-in binary-capture path to runner.py for the canary, preserving default caller behaviour; raw bytes will be saved and hashed before separate strict decoding. RED tests will establish exact CRLF/non-UTF8 byte retention, empty versus missing streams, timeout partial bytes and unchanged default interface. No native launch in B1."
+    },
+    "contribution_readback": "PRESOL,S,COMP under /GRAPHICS,FULL, RSYS,0 and /FORMAT,8,E,24,16,100,240 will list element-node components. Preserve complete selected-element listings; parse required element/node pairs by key and verify adjacency before averaging. All contribution half-quanta must be <= fixed readback tolerance/100. Default-width or truncated contribution listings will be refused by B1 RED tests. /FORMAT applies to PRESOL tables; beam/pipe section exceptions are outside PLANE183 scope.",
+    "selection_sequence": "Immediately after SET,1,1 use full node/element selection and verify case counts. Obtain acceptance and PRESOL data with full selection. Reduce only NSEL to the nine sampled nodes for PRNSOL, preserving the exact full ESEL; assert nine selected nodes and unchanged element identity/count. Restore full NSEL afterward and recheck counts. B1 RED test will refuse listings under changed ESEL. Full-count requirements govern pre/post-listing state; nine-row requirement governs PRNSOL state.",
+    "export_destination": "Open dedicated station_values.txt with *CFOPEN,station_values,txt in the fresh attempt directory, without APPEND; close with *CFCLOS after the 54-record *VWRITE block. No native stdout is accepted as this file. A separate precision_witness.txt file will carry the formatting witness. Existing/pre-launch files will refuse execution. The extractor will read only the attributed dedicated file.",
+    "listing_width": "NDIGIT8 + six components at width24 gives 152 field columns, inside CHAR240; B1 will verify actual headings/separators fit and reject truncated/wrapped or low-precision data. NDIGIT valid3..32; LINE minimum11; LINE100 selected.",
+    "stored_precision": "At initial Begin level set /CONFIG,RESUPREC,0 before any result writing. After solution settings and load audit in /SOLU, use FINISH; /CONFIG,STAT; /SOLU; SOLVE; FINISH; /CONFIG,STAT; /POST1; SET,1,1. Both Begin-level status captures must show RESUPREC0; missing/conflicting status or later override refuses evidence. FINISH preserves database data; do not clear/reset settings between entries. B1 deck tests will assert placement and both captures; one-capture or nonzero fixtures refuse. Exact native version and deck are required. v242 defines entire-result-file double precision at RESUPREC0. No binary32 representability inference.",
+    "load_audit": "Use direct FE surface loads; retain SFELIST,ALL,ALL with full ESEL in /SOLU before the fixed FINISH; /CONFIG,STAT; /SOLU; SOLVE sequence, alongside FLIST and DLIST. Bind element/face keys to connectivity and coordinates; require only intended inner-face pressure with correct sign/magnitude, no outer/top/bottom surface load and no applied nodal force. Check complete restrained-node UY set separately. SFELIST reports current database values, not a reconstructed POST1 result history. B1 RED fixtures will refuse reversed sign, wrong magnitude, wrong face and unsupported/missing load records.",
+    "zero_control_load_audit": "ocv-zero-t60-n16 will create no SFE/SF surface-load records and no nodal-force records. Its complete SFELIST/FLIST evidence will show no loads; absence of records is the required control state, not a missing-artifact exemption. Pressure cases will require the exact inner-face records at10MPa. B1 fixtures will distinguish a complete empty control listing from an absent/truncated listing and from unexpected zero-valued SFE records.",
+    "audit_to_solve_window": "After SFELIST/FLIST/DLIST under full selection, only FINISH, /CONFIG,STAT, /SOLU and SOLVE may occur before solution. No load, constraint, selection or solution-control mutation is permitted in that window. B1 deck tests will enforce the exact sequence and reject an inserted mutation."
+  },
+  "criteria": [
+    {
+      "id": "accuracy",
+      "applies": "N16, nonzero analytic primary response",
+      "rule": "abs(q-reference) <= max(0.01*abs(reference), floor)",
+      "stress_floor_mpa": "0.00000001",
+      "displacement_floor_mm": "0.000000001"
+    },
+    {
+      "id": "expected_zero",
+      "applies": "N16, response-definition zero stresses at pressure 10 MPa",
+      "rule": "abs(q) <= 0.010 MPa; zero classification by definition, never float equality"
+    },
+    {
+      "id": "refinement",
+      "applies": "all 21 primary responses across N4,N8,N16",
+      "rule": "abs(q16-q8) <= max(0.005*abs(reference), floor); abs(q16-q8) <= abs(q8-q4)+floor",
+      "floor": "0.010 MPa for definition-zero stresses; otherwise accuracy dimensional floor"
+    },
+    {
+      "id": "auxiliary_stress",
+      "applies": "N16 stress components and recomputed equivalent stress at y60/y180 versus y120",
+      "rule": "abs(q_y-q_120) <= 0.010 MPa"
+    },
+    {
+      "id": "auxiliary_displacement",
+      "applies": "N16 at each radius, y60/y180",
+      "rule": "abs(ur_y-ur_120) <= max(0.01*abs(ur_reference),1e-9 mm); abs(uz_y-(y/120)*uz_120) <= max(0.01*abs(uz_reference_y),1e-9 mm)"
+    },
+    {
+      "id": "axial_equilibrium",
+      "applies": "N16 pressure case; control uses force floor",
+      "rule": "abs(sum constrained-node RFy) <= max(1e-6*p*pi*a*a,1e-6 N)",
+      "note": "net reaction is the equilibrium identity in net applied axial load; screening target is unintended net axial load/end-cap loading only. Individual RFy diagnostic, not an unfrozen pass threshold; compare support sets and independent listing/export consistency."
+    },
+    {
+      "id": "zero_control",
+      "applies": "all 63 stress/displacement quantities in zero control",
+      "rule": "abs(each stress) <= 1e-8 MPa; abs(each displacement) <= 1e-9 mm; axial force floor 1e-6 N"
+    },
+    {
+      "id": "execution_evidence",
+      "applies": "every attempt",
+      "rule": "correct input/material/mesh/load/support/stations; complete attributed native evidence; finite outputs; successful solver completion; no native WARNING/ERROR/FATAL diagnostic and no live owned process after completion; full-precision export/witness/half-quantum checks passed; explicit ESOL/OUTRES state, active result-set/coordinate/key checks, fixed high-precision readback passed; pinned PRESOL contribution precision and pre/listing/post selection-state checks passed; approved reference hash unchanged; pre/post RESUPREC0 status retained; dedicated process streams empty"
+    }
+  ],
+  "freeze": "B1 approval will adopt these numerical limits. Exact criteria/deck/reference/extractor hashes and owner-appointed checker/adjudicator identities will be recorded before separate B2 approval. Any change before or after first run, including loosening an initial band, requires an amended reviewed basis and matching user approval. No observed-result calibration.",
+  "flow": [
+    "preflight and approval/hash match",
+    "N16 zero control first; stop any control or execution/evidence failure",
+    "N4 physical; stop execution/evidence failure only; response discrepancies diagnostic",
+    "N8 physical; same rule",
+    "N16 physical; any mandatory failure ends canary FAIL or INCOMPLETE; no further attempts",
+    "independent adjudication of all four; no numerical gate redefinition"
+  ],
+  "outcomes": {
+    "PASS": "all four complete, every frozen mandatory criterion met, independent reviewer/adjudicator verifies evidence and recomputation; no discretionary numerical thresholds; bounded numerical canary only",
+    "FAIL": "complete evidence establishes any mandatory criterion exceeded; retain attempted/unattempted counts; stop",
+    "INCOMPLETE": "missing/invalid execution or evidence, timeout, budget/preflight obstruction; never PASS"
+  },
+  "identity": "reuse analysis_records.decimal_text: exact decimal strings, fractional trailing-zero normalization only; preserve integer zeros; exponent strings normalize numerically; reject JSON numbers, wrong units and off-grid requests",
+  "counts": {
+    "attempts": 4,
+    "physical_points": 1,
+    "primary_quantities_per_attempt": 21,
+    "auxiliary_quantities_per_attempt": 42,
+    "lookup_entries_published": 0
+  },
+  "checker_isolation": {
+    "method": "distinct provider in fresh nonpersistent session with no inherited conversation; all filesystem/network/shell tools disabled; only hashed physics brief",
+    "evidence": "CLI/version, tools-disabled invocation, prompt digest, no tool calls, raw derivation/output digest, provider identity; commit output before comparison",
+    "failure": "if enforced isolation is unavailable, independent-reference gate remains unestablished and B2 approval is blocked; no downgrade to verified",
+    "brief_sources": "Inline factual geometry/material/load/restraints, X radial/Y axial/Z hoop, tension-positive convention, MPa/mm units and source metadata only; URLs attribution only; no producer formula or vendor prose/table.",
+    "agreement": "Same exact branch/formulas/frame/sign/units; numeric comparison of producer values against deterministic evaluation of independently checker-authored expressions: abs difference <=1e-10 MPa and <=1e-12 mm at all nine stations for pressure and control. No twelve-digit unaided checker arithmetic is required.",
+    "disagreement": "Any disagreement beyond tolerance blocks reference acceptance and B2. Owner-appointed competent independent checker/adjudicator resolves on recorded evidence; producer cannot prevail unilaterally. A changed analytical basis requires amended plan review/approval; any already-approved reference hash change requires renewed approval. Corrections to implement the unchanged approved formulas remain B1 TDD/review work before final reference freeze.",
+    "evaluation": "The isolated tools-disabled provider will return exact symbolic expressions and derivation before comparison. A separately frozen generic arithmetic evaluator will consume only those expressions and frozen inputs, without importing producer functions or reference values; it will use rational arithmetic and 50-digit Decimal square root for equivalent stress. A whitelist expression grammar will allow numeric literals, defined input symbols, arithmetic and sqrt only; no eval, filesystem, network or arbitrary code. B1 RED tests will reject unsupported expressions and establish evaluator arithmetic identities. Both expression sets, evaluator version/hash and outputs will be retained. Independent adjudicator will verify branch and symbolic equivalence before numeric acceptance. B1 identity tests will cover unary plus/minus, integer literals, grouping and the exact whitespace policy before checker invocation.",
+    "output_contract": {
+      "symbols": [
+        "a",
+        "b",
+        "p",
+        "E",
+        "nu",
+        "r",
+        "y"
+      ],
+      "operators": [
+        "+",
+        "-",
+        "*",
+        "/",
+        "** (integer exponent only)",
+        "sqrt(expression)"
+      ],
+      "literals": "ASCII numeric tokens: one or more digits optionally followed by a decimal point and zero or more digits, or a decimal point followed by one or more digits; optionally followed by e or E, an optional sign and one or more digits. Signs outside exponent notation are unary operators. Literals will be converted exactly to rationals, never through binary float. NaN, Infinity, underscores, hex and implicit multiplication will be refused.",
+      "shape": "JSON object with expressions mapping exactly sigma_r,sigma_theta,sigma_z,tau_rz,sigma_vm,u_r,u_z to arithmetic strings, and derivation string; expressions will inline helper expressions, with no separately defined symbols",
+      "brief": "The exact syntax/output contract, axis/sign and unit definitions will be included in the hashed physics brief; no comparator formulas or expected values will be supplied.",
+      "unary_operators": [
+        "+",
+        "-"
+      ],
+      "integer_literals": true,
+      "grouping": "parenthesized expressions accepted",
+      "whitespace": "ASCII space/tab/CR/LF will be allowed around the response and in expression strings between tokens; each expression CR/LF will become one space before parsing, without joining tokens. Original raw output will remain unchanged. JSON control characters inside strings will require normal JSON escaping.",
+      "envelope": "The entire decoded response will be exactly one bare JSON object, allowing only surrounding ASCII space/tab/CR/LF. UTF8 decoding will be strict; BOM, fences, prose, duplicate keys and extra keys will be refused. Top-level keys will be exactly expressions and derivation; expressions will have exactly the seven specified keys with string values; derivation will be a nonempty string. No wrapper stripping or output repair will occur. Raw bytes will be retained. Noncompliant provider output will leave the gate unestablished; successful conformance is not guaranteed.",
+      "precedence": "Grouping and sqrt(one expression) first, then power, unary signs, multiplication/division, addition/subtraction. Binary +,-,*,/ will associate left. A power exponent will be a signed integer literal, optionally parenthesized: r**-2 and r**(-2) will be equivalent. Chained powers will be refused unless grouped explicitly. -a**2 will mean -(a**2), while (-a)**2 will square the signed base. Noninteger exponents and other function calls will be refused.",
+      "pre_invocation_tests": "B1 tests will cover bare JSON success; fences/prose/extra or duplicate keys/BOM refusal; literal forms including 1e-3; signed exponent equivalence; -a**2 versus (-a)**2; left association of subtraction/division; chained power refusal and explicit grouping; internal escaped newline normalization. Evaluator, envelope, grammar, schema, tests and brief will be frozen before invocation."
+    },
+    "session_control": "Exactly one checker invocation will be permitted under B1. Before invocation, evaluator source, grammar, tests, output schema and complete physics brief will be hashed and committed. The register will record every invocation, including failed launches, timestamps, provider/version, prompt hash and verbatim output hash. A missing/unregistered invocation, parse rejection or unusable output will leave the reference gate unestablished and block B2. No syntax-only retry, alternate provider sampling, output selection or evaluator tuning to the output will be permitted; a further attempt requires recorded adjudication and renewed approval."
+  },
+  "limitations": [
+    "zero-valued sigma_z/tau_rz mappings are not independently validated by nonzero native signals; source-based and synthetic protocol checks only",
+    "zero control screens unintentional nonzero loads/thermal or stale outputs that produce nonzero responses; cannot prove geometry, restraints, station or component addressing when response remains zero",
+    "net axial reaction screens net unintended axial load; cannot exclude self-equilibrating error. Individual reactions are diagnostic; only fixed aggregate and evidence-consistency checks govern PASS.",
+    "expected-zero cancellation can cause accuracy failure; FAIL does not diagnose modelling versus recovery error without later investigation"
+  ],
+  "expected_zero_basis": {
+    "description": "For analytic inputs, lambda*(eps_r+eps_theta) and (lambda+2mu)*eps_z cancel in sigma_z; lambda=E*nu/((1+nu)*(1-2nu)); A=p*a^2/(b^2-a^2).",
+    "term_scale_mpa": "approximately +48.539 and -48.539 at p=10; derived analytical scale, not FE evidence",
+    "implied_relative_term_resolution": "approximately 0.000206 for a 0.010 MPa residual",
+    "failure_disposition": "retain FAIL against fixed limit; later analysis will distinguish FE displacement, recovery/precision or modelling contributions; changed method/limit requires reviewed amended basis and user approval, never calibration to pass"
+  },
+  "auxiliary_basis": {
+    "fixed_limit_mpa": "0.010",
+    "basis": "detect station-dependent numerical/contamination differences exceeding 0.010 MPa; this is tighter than the 1% absolute-response limit on large stresses",
+    "relative_scale": "about 0.000077 of inner hoop stress and 0.000083 of outer hoop stress; other nonzero-channel ratios will be recorded from independent analytical references in B1",
+    "locations": "y60 is one wall thickness from the restrained row; exact continuum stresses are y-invariant, but discrete recovery may vary",
+    "failure_disposition": "FAIL remains tied to fixed band; later investigation distinguishes displacement/recovery/discretization from modelling contributions; changed method/limit needs reviewed amendment and approval. Not every addressing error is detectable in a y-invariant field."
+  },
+  "preflight_reference_gate": "Before any solver invocation, require committed independent-reference agreement and exact approved reference hash. Failure refuses execution and consumes no attempt. Per-attempt evidence checks will verify the same hash/approval remains valid; they will not invoke a new checker or consume an attempt to resolve a B1 failure."
+}

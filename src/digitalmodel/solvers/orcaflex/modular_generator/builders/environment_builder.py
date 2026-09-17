@@ -42,7 +42,7 @@ class EnvironmentBuilder(BaseBuilder):
         but causes "Change not allowed" errors due to OrcaFlex mode-dependent
         dormant properties.  The ``raw_properties`` field on the Environment
         schema is preserved for diagnostic use (semantic validation tool)
-        but is NOT used by this builder.
+        and selectively emitted by the declared mode-dependent policies.
     """
 
     # Default Environment dict used when no raw_properties are available.
@@ -121,6 +121,7 @@ class EnvironmentBuilder(BaseBuilder):
     # Wind-type-dependent properties keyed by WindType value.
     # Only emitted when the detected wind type matches.
     _WIND_TYPE_PROPS: dict[str, set[str]] = {
+        "Constant": {"VerticalWindVariationFactor"},
         "API spectrum": {
             "VerticalWindVariationFactor",
             "WindSpectrumElevation",
@@ -186,10 +187,6 @@ class EnvironmentBuilder(BaseBuilder):
         # Step 3: Detect and apply wind type from raw_properties
         wind_type = raw.get("WindType", "Constant")
         environment["WindType"] = wind_type
-        wind_dep_keys = self._WIND_TYPE_PROPS.get(wind_type, set())
-        for key in wind_dep_keys:
-            if key in raw:
-                environment[key] = raw[key]
 
         # Step 4: Overlay spec-derived values (always authoritative)
         environment["Density"] = env.water.density
@@ -236,6 +233,12 @@ class EnvironmentBuilder(BaseBuilder):
         if wind_type not in self._WIND_SPEED_DORMANT:
             environment["WindSpeed"] = env.wind.speed
         environment["WindDirection"] = env.wind.direction
+
+        # Preserve explicit dependent values after the wind controls.
+        wind_dep_keys = self._WIND_TYPE_PROPS.get(wind_type, set())
+        for key in wind_dep_keys:
+            if key in raw:
+                environment[key] = raw[key]
 
         return {"Environment": environment}
 
