@@ -1,4 +1,5 @@
 from digitalmodel.workflows.installation_report_sections import front_sections, pending_sections, marketing_section
+import xml.etree.ElementTree as ET
 
 
 def test_standard_sections_and_recorded_design_settings():
@@ -28,3 +29,25 @@ def test_design_values_are_escaped():
     html = front_sections({'counts': {}, 'cases': [
         {'status': 'VERIFIED', 'settings': {}, 'seed': '<unsafe>'}]})
     assert '&lt;unsafe&gt;' in html and '<unsafe>' not in html
+
+
+def test_workflow_accessible_and_qualification_is_not_forecast_driven():
+    html = front_sections({'counts': {}, 'cases': []})
+    svg = ET.fromstring(html[html.index('<svg'):html.index('</svg>') + 6])
+    assert svg.attrib['role'] == 'img'
+    identifiers = {node.attrib.get('id') for node in svg.iter()}
+    assert set(svg.attrib['aria-labelledby'].split()) <= identifiers
+    text = ' '.join(svg.itertext())
+    for label in ('Master + change files', 'Static equilibrium', 'Verified extraction',
+                  'Component demand', 'Slack / re-tension', 'Simulated 120 s forecast',
+                  'Qualification pending', 'Conditional Hs–Tp window', 'Reviewed report',
+                  'Pamphlet evidence', 'Missing evidence retains pending status'):
+        assert label in text
+    edges = {(node.attrib.get('data-from'), node.attrib.get('data-to')) for node in svg.iter()}
+    assert ('forecast', 'report') in edges
+    assert ('forecast', 'qualification') not in edges
+    assert ('forecast', 'window') not in edges
+    assert ('demand', 'qualification') in edges
+    assert ('slack', 'qualification') in edges
+    assert 'Live operational validation remains pending' in text
+    assert 'http' not in ET.tostring(svg, encoding='unicode').replace('http://www.w3.org/2000/svg', '')

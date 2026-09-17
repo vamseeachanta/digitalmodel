@@ -1,5 +1,6 @@
 """Engineering report sections and explicit outstanding-result placeholders."""
 from html import escape
+from digitalmodel.workflows.installation_workflow_schematic import workflow_schematic
 
 
 def _table(headers, rows):
@@ -55,6 +56,7 @@ provenance and data consistency; it does not establish compliance with engineeri
 restrictions and required operating controls will be populated after the outstanding calculations and evidence checks.</p></section>
 {design_data(summary)}
 <section id="methodology"><h2>4 · Analysis methodology</h2>
+{workflow_schematic()}
 <h3>4.1 Model and environmental cases</h3><p>A common master model and hashed change files define the Hs–Tp cases.
 The recorded solver version, model identity and case settings are retained with each run. Static equilibrium precedes
 time-domain irregular-wave dynamics; the build-up interval is excluded from the reported dynamic record.</p>
