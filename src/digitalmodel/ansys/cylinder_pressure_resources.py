@@ -49,14 +49,16 @@ def validate_observation_ages(evidence, ready_at, now, maximum_age):
             'maximum_age_seconds': maximum_age}
 
 
-def production_phase2(preflight, verify_current, approval):
+def production_phase2(preflight, verify_current, approval, *, stage='phase2'):
     """Recheck existing evidence after claim without Git or licence queries."""
+    if stage not in ('phase2', 'preclaim-probe'):
+        raise ValueError('unsupported pressure resource-check stage')
     if not callable(verify_current) or verify_current(approval) is not True:
         raise ValueError('current source/config binding did not pass')
     preflight._bindings()
     preflight._reservation()
     if getattr(preflight, '_absence_mode', False):
-        preflight.refresh_absence('phase2')
+        preflight.refresh_absence(stage)
     evidence = preflight.last_evidence
     if evidence.get('classification', {}).get('status') != 'CLEAR':
         raise ValueError('retained process classification is not clear')

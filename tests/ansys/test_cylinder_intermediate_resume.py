@@ -36,6 +36,22 @@ class Intermediate(Harness):
         parent = Path(self.config['lineage']['parent_claim']['path'])
         return parent.with_name(parent.stem+'.ordinal-3'+suffix+'.json')
 
+    def preclaim(self, approval):
+        assert approval == self.approval
+        self.events.append('preclaim_probe')
+        self.clock.advance(getattr(self, 'preclaim_delay', 0))
+        if self.failure == 'preclaim':
+            raise ValueError('synthetic probe refusal')
+        return {'status': 'PASS', 'synthetic': True}
+
+    def run(self):
+        admission = dict(approval=self.approval, verify_authority=self.verify,
+                         checker_id='synthetic-reviewer')
+        return resume.execute_pressure_resume(self.config, admission,
+            replay_prefix=self.replay, preflight=self, phase2_recheck=self.phase2,
+            preclaim_recheck=self.preclaim, launch=self.launch, capture=self.capture,
+            account_storage=self.storage, clock=self.clock, reservation=self.reservation)
+
 @pytest.fixture
 def intermediate(tmp_path, monkeypatch):
     harness = Intermediate(tmp_path)
@@ -67,7 +83,9 @@ def test_preclaim_failure_leaves_two_consumed(intermediate, failure):
     assert result['case_id'] == CASE and result['consumed_count'] == 2
     assert result['native_launch_count'] == 0 and not intermediate.launches
     assert not intermediate.record('').exists()
-    with pytest.raises(ValueError): intermediate.run()
+    assert not intermediate.record('.invocation').exists()
+    output = Path(intermediate.config['operational']['output_directory'])
+    assert parse_json((output/'preparation-refusal.json').read_bytes()) == result
 
 @pytest.mark.parametrize('failure', ['phase2', 'spawn'])
 def test_postclaim_failure_never_reopens_attempt(intermediate, failure):

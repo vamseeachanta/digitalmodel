@@ -129,11 +129,51 @@ def _ages(state, preflight, maximum):
     return validate_observation_ages(preflight.last_evidence, preflight._ready_at, now, maximum)
 
 
+def _probe_before_claim(state, adapters):
+    if state['ordinal'] != 3:
+        return
+    preflight = adapters['preflight']
+    record = dict(status='REFUSED', maximum_postclaim_ns=5_000_000_000,
+        multiplier=2, unmeasured_write_reserve_ns=1_000_000_000,
+        limitation='Measured scheduling heuristic; final hard stop still applies.',
+        pre_probe_evidence=deepcopy(preflight.last_evidence))
+    state['result']['preclaim_probe'] = record
+    ready, licence = preflight._ready_at, deepcopy(preflight.last_evidence['license_observation'])
+    _ages(state, preflight, 20)
+    started = state['clock'].monotonic_ns()
+    try:
+        callback = adapters.get('preclaim_recheck')
+        if not callable(callback):
+            raise ValueError('intermediate preclaim production probe required')
+        record['checked_evidence'] = callback(deepcopy(state['approval']))
+        if (not isinstance(record['checked_evidence'], dict)
+                or record['checked_evidence'].get('status') != 'PASS'):
+            raise ValueError('preclaim resource probe did not pass')
+        record['storage_evidence'] = _storage(adapters)
+    finally:
+        record['elapsed_ns'] = state['clock'].monotonic_ns() - started
+    elapsed = record['elapsed_ns']
+    if type(elapsed) is not int or not 0 <= elapsed <= 2_000_000_000:
+        raise ValueError('preclaim measured workload exceeds scheduling allowance')
+    if preflight._ready_at != ready or preflight.last_evidence['license_observation'] != licence:
+        raise ValueError('preclaim probe changed observation authority')
+    _ages(state, preflight, 20)
+    record['status'] = 'PASS'
+
+
+def _prepare_launch(state, adapters):
+    state['case'], state['directory'] = _prepare_case(
+        state['config'], state['approval'], state['output'])
+    state['result']['preclaim_storage'] = _storage(adapters)
+    _probe_before_claim(state, adapters)
+    _ages(state, adapters['preflight'], 20)
+    if state['window'].remaining_seconds() < 365:
+        raise ValueError('less than 365 seconds before successor invocation')
+
+
 def _claim_and_launch(state, adapters):
     journal, window, result = state['journal'], state['window'], state['result']
-    case, directory = _prepare_case(state['config'], state['approval'], state['output'])
-    result['preclaim_storage'] = _storage(adapters)
-    preflight = adapters['preflight']
+    case, directory, preflight = state['case'], state['directory'], adapters['preflight']
     _ages(state, preflight, 20)
     if window.remaining_seconds() < 365:
         raise ValueError('less than 365 seconds before successor claim')
@@ -233,6 +273,12 @@ def _final_accounting(state, adapters):
 def _terminal_records(state):
     journal, result = state['journal'], state['result']
     if not journal.started:
+        if state['ordinal'] == 3 and 'output' in state:
+            try:
+                _write_exclusive(state['output'] / 'preparation-refusal.json', deepcopy(result))
+            except Exception as error:
+                result['preparation_record_error'] = f'{type(error).__name__}: {error}'
+                _additional_reason(result, 'PREPARATION_RETENTION_INCOMPLETE')
         return
     try:
         journal.terminal(result)
@@ -246,9 +292,27 @@ def _terminal_records(state):
         _additional_reason(result, 'OUTCOME_RETENTION_INCOMPLETE')
 
 
+def _start_invocation(state):
+    approval = state['approval']
+    state['journal'].start(dict(state['window'].record(), ordinal=state['ordinal'],
+        case_id=state['case_id'], parent_sha256=state['journal'].parent_sha256,
+        output=str(state['output']), config_sha256=approval['config_sha256'],
+        review_receipt_sha256=approval['review_receipt_sha256']))
+
+
+def _run_prepared(state, adapters):
+    if state['ordinal'] == 2:
+        _start_invocation(state)
+    _observe(state, adapters)
+    _prepare_launch(state, adapters)
+    if state['ordinal'] == 3:
+        _start_invocation(state)
+    _retain(state, adapters, _claim_and_launch(state, adapters))
+
+
 def execute_pressure_resume(config, admission, *, replay_prefix, preflight,
                             phase2_recheck, launch, capture, clock=time,
-                            reservation, account_storage):
+                            reservation, account_storage, preclaim_recheck=None):
     """One call only; production driver must bind each required reviewed adapter."""
     try:
         ordinal, case_id = _scope(config)
@@ -264,20 +328,14 @@ def execute_pressure_resume(config, admission, *, replay_prefix, preflight,
                  clock=clock, ordinal=ordinal, case_id=case_id, result=_empty(ordinal, case_id))
     adapters = dict(admission=admission, replay_prefix=replay_prefix, preflight=preflight,
                     phase2_recheck=phase2_recheck, launch=launch, capture=capture,
-                    account_storage=account_storage)
+                    account_storage=account_storage, preclaim_recheck=preclaim_recheck)
     try:
         _verify(admission, state['approval'])
         reservation.evidence()
         output = owned_path(config['operational']['output_directory'])
         output.mkdir(exist_ok=False)
         state.update(output=output, window=InvocationClock(clock))
-        journal.start(dict(state['window'].record(), ordinal=ordinal, case_id=case_id,
-            parent_sha256=parent['sha256'], output=str(output),
-            config_sha256=state['approval']['config_sha256'],
-            review_receipt_sha256=state['approval']['review_receipt_sha256']))
-        _observe(state, adapters)
-        execution = _claim_and_launch(state, adapters)
-        _retain(state, adapters, execution)
+        _run_prepared(state, adapters)
     except Exception as error:
         state['result'].update(terminal_reason='POSTCLAIM_INCOMPLETE' if journal.consumed
             else 'PRECLAIM_REFUSAL', error=f'{type(error).__name__}: {error}')

@@ -42,6 +42,29 @@ def test_three_fresh_empty_observations(absence):
     assert len(calls) == 3
     assert collector.last_evidence['process_absence']['scope'] == 'ansys-mpi-lineage-v1 plus interFoam.exe names'
 
+
+def test_preclaim_probe_has_distinct_stage_and_preserves_observation_times(absence):
+    collector, approval, _, calls = absence
+    collector(approval)
+    collector.before_launch()
+    ready, license_record = collector._ready_at, deepcopy(collector.last_evidence['license_observation'])
+    result = resources.production_phase2(collector, lambda _: True, approval, stage='preclaim-probe')
+    assert result['process_absence_checks'][-1]['stage'] == 'preclaim-probe'
+    assert collector._ready_at == ready
+    assert collector.last_evidence['license_observation'] == license_record
+    final = resources.production_phase2(collector, lambda _: True, approval)
+    assert final['process_absence_checks'][-1]['stage'] == 'phase2'
+    assert len(calls) == 4
+
+
+@pytest.mark.parametrize('name', ['ANSYS261.EXE', 'mpiexec.exe', 'interFoam.exe'])
+def test_independent_verifier_rejects_competitor_only_in_history(absence, name):
+    collector, approval, snapshot, _ = absence
+    row = dict(pid=44,parent_pid=1,name=name,creation_time='1000',executable_path='C:/bin/'+name)
+    snapshot['observed_inventories'] = [[row], [], []]
+    with pytest.raises(ValueError, match='historical'):
+        collector(approval)
+
 @pytest.mark.parametrize('phase', ['initial', 'before_launch', 'phase2'])
 def test_orphan_fluid_solver_refuses_at_each_observation(absence, phase):
     collector, approval, snapshot, calls = absence

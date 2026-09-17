@@ -75,11 +75,30 @@ def _cross_link(snapshot, indexed):
     return {row["pid"] for row in rows}
 
 
+def _historical_absence(snapshot):
+    if 'observed_inventories' not in snapshot:
+        return  # Legacy snapshots have no multi-observation claim.
+    histories = snapshot['observed_inventories']
+    if not isinstance(histories, list) or len(histories) != 3:
+        raise ValueError('three historical process inventories required')
+    for rows in histories:
+        if not isinstance(rows, list):
+            raise ValueError('invalid historical process inventory')
+        indexed = _initial_rows(dict(initial_inventory=rows,
+                                     coverage={'enumerated_count': len(rows)}))
+        if any(_seed(row) or row['name'].casefold() == 'interfoam.exe'
+               for row in indexed.values()):
+            raise ValueError('historical competing process prevents resource absence')
+    if histories[-1] != snapshot['initial_inventory']:
+        raise ValueError('final historical process inventory differs')
+
+
 def verify_absence_snapshot(snapshot, host, now):
     """Return an unchanged unbound CLEAR classification or refuse."""
     if not isinstance(snapshot, dict) or snapshot.get("schema") != "process-snapshot-1":
         raise ValueError("Resource absence requires process-snapshot-1")
     indexed = _initial_rows(snapshot)
+    _historical_absence(snapshot)
     selected = _cross_link(snapshot, indexed)
     if any(_seed(row) and pid not in selected for pid, row in indexed.items()):
         raise ValueError("Selector seed omitted from selected process rows")

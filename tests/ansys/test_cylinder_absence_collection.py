@@ -51,14 +51,24 @@ def resolution(rows):
 
 def install_observation(monkeypatch, rows, resolved=None, final_map=None):
     observed = deepcopy(rows)
-    monkeypatch.setattr(module(), "enumerate_windows_v2", lambda: deepcopy(observed))
+    final = deepcopy(observed)
+    if final_map is not None:
+        final = [{**item, "parent_pid": final_map[item["pid"]]}
+                 for item in observed if item["pid"] in final_map]
+        for pid, parent in final_map.items():
+            if pid not in {item["pid"] for item in final}:
+                final.append(initial(pid, parent, "python.exe", r"C:\Python\python.exe"))
+    monkeypatch.setattr(
+        module(), "_collect_initial_populations",
+        lambda: ([deepcopy(observed), deepcopy(observed)],
+                 [{item["pid"]: item["parent_pid"] for item in observed}] * 2),
+    )
+    monkeypatch.setattr(
+        module(), "_collect_final_population",
+        lambda: (deepcopy(final), {item["pid"]: item["parent_pid"] for item in final}),
+    )
     if resolved is not None:
         monkeypatch.setattr(module(), "_query_blank_names", lambda pids: deepcopy(resolved))
-    monkeypatch.setattr(
-        module(), "read_windows_parent_map",
-        lambda: deepcopy(final_map if final_map is not None
-                         else {row["pid"]: row["parent_pid"] for row in rows}),
-    )
     monkeypatch.setattr(module().socket, "gethostname", lambda: "TEST-HOST")
     monkeypatch.setattr(module().time, "time_ns", lambda: 100_000_000_000)
 
@@ -72,14 +82,14 @@ def test_retains_originals_and_resolves_blank_name_without_pid_allowance(monkeyp
 
     assert value["schema"] == "process-snapshot-1"
     assert value["original_initial_inventory"] == rows
+    assert value["observed_inventories"] == [value["initial_inventory"]] * 3
     assert value["initial_inventory"] == [
         initial(4, 0, "System", None, "0"),
         initial(820, 4, "Secure System", None, "0"),
     ]
     assert value["name_resolution"] == evidence
     assert value["rows"] == []
-    assert value["population_check"]["new_pids"] == []
-    assert value["population_check"]["changed_or_missing"] == []
+    assert value["population_check"]["events"] == []
     assert value["coverage"] == {
         "selector": "ansys-mpi-lineage-v1",
         "enumerated_count": 2,
@@ -163,13 +173,18 @@ def test_ignoring_dmtf_offset_would_refuse(monkeypatch):
 
 
 @pytest.mark.parametrize("final_map", [{820: 5}, {820: 4, 900: 4}])
-def test_parent_change_or_new_population_after_cim_refuses(monkeypatch, final_map):
+def test_relevant_parent_change_or_unrelated_addition_is_classified(monkeypatch, final_map):
     rows = [initial(820, 4, "", None, "0")]
     install_observation(
         monkeypatch, rows, resolution([cim_row(820, 4, "Secure System")]), final_map,
     )
-    with pytest.raises(ValueError, match="population|parent"):
-        module().collect_absence_snapshot()
+    if 900 in final_map:
+        value = module().collect_absence_snapshot()
+        assert value["coverage"]["enumerated_count"] == 2
+        assert value["population_check"]["events"][-1]["disposition"] == "RETAINED_UNRELATED"
+    else:
+        with pytest.raises(ValueError, match="complete|parent"):
+            module().collect_absence_snapshot()
 
 
 def test_existing_seed_and_descendant_are_selected_with_existing_details(monkeypatch):
@@ -263,7 +278,10 @@ def test_targeted_powershell_timeout_refuses(monkeypatch):
 
 def test_collection_timeout_retains_original_table_and_partial_query(monkeypatch):
     rows = [initial(820, 4, "", None, "0")]
-    monkeypatch.setattr(module(), "enumerate_windows_v2", lambda: deepcopy(rows))
+    monkeypatch.setattr(
+        module(), "_collect_initial_populations",
+        lambda: ([deepcopy(rows), deepcopy(rows)], [{820: 4}, {820: 4}]),
+    )
     partial = {"performed": True, "stdout_base64": "cGFydGlhbA==", "raw_rows": []}
 
     def timeout(pids):
@@ -272,10 +290,11 @@ def test_collection_timeout_retains_original_table_and_partial_query(monkeypatch
     monkeypatch.setattr(module(), "_query_blank_names", timeout)
     with pytest.raises(module().CollectionError) as caught:
         module().collect_absence_snapshot()
-    assert caught.value.evidence == {
-        "original_initial_inventory": rows,
-        "name_resolution": partial,
-    }
+    assert caught.value.evidence["original_initial_inventory"] == rows
+    assert caught.value.evidence["original_observed_inventories"] == [rows, rows]
+    assert caught.value.evidence["observed_inventories"] == []
+    assert caught.value.evidence["name_resolution"] == partial
+    assert [item["stage"] for item in caught.value.evidence["parent_maps"]] == ["A", "B"]
 
 
 @pytest.mark.parametrize(
@@ -325,16 +344,3 @@ def test_collection_issues_at_most_one_name_query(monkeypatch):
     assert calls == [[820, 821]]
 
 
-def test_powershell_identity_requires_regular_executable_and_records_digest(monkeypatch, tmp_path):
-    executable = tmp_path / "System32/WindowsPowerShell/v1.0/powershell.exe"
-    executable.parent.mkdir(parents=True)
-    executable.write_bytes(b"pinned executable")
-    monkeypatch.setenv("SystemRoot", str(tmp_path))
-    monkeypatch.setattr(module().shutil, "which", lambda name: str(executable))
-    path, digest = module()._powershell_identity()
-    assert path == str(executable)
-    assert digest == module().hashlib.sha256(b"pinned executable").hexdigest()
-
-    monkeypatch.setattr(module().shutil, "which", lambda name: str(tmp_path))
-    with pytest.raises(ValueError, match="executable"):
-        module()._powershell_identity()

@@ -137,6 +137,9 @@ def production_callbacks(config, admission, arguments, root, reservation):
     def phase2(actual):
         validate_environment(actual, os.environ)
         return production_phase2(preflight, check, actual)
+    def preclaim(actual):
+        validate_environment(actual, os.environ)
+        return production_phase2(preflight, check, actual, stage='preclaim-probe')
     def launch(case, directory, timeout):
         bound_case = dict(case, deck_basename=Path(case['deck']).name)
         return launch_case(bound_case, directory, timeout, operation['executable'])
@@ -151,9 +154,12 @@ def production_callbacks(config, admission, arguments, root, reservation):
         kwargs = {'prior_capture_roots': (config['predecessor']['original_root'],)} if ordinal == 3 else {}
         return cumulative_storage(lineage['original_root'], parent, operation['output_directory'],
             ledger_paths(parent, ordinal=ordinal), operation['lock_path'], free, **kwargs)
-    return dict(replay_prefix=replay_callback(config), preflight=preflight,
+    callbacks = dict(replay_prefix=replay_callback(config), preflight=preflight,
                 phase2_recheck=phase2, launch=launch, capture=capture,
                 clock=time, reservation=reservation, account_storage=account_storage)
+    if ordinal == 3:
+        callbacks['preclaim_recheck'] = preclaim
+    return callbacks
 
 
 def pressure_exit_code(result):

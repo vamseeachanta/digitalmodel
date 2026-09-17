@@ -14,8 +14,11 @@ import socket
 import subprocess
 import time
 
+import psutil
+
+from .cylinder_absence_population import PopulationError, reconcile_observed_inventories
 from .cylinder_diagnostic_snapshot import _details, _seed
-from .cylinder_parent_map import enumerate_windows_v2, read_windows_parent_map
+from .cylinder_parent_map import _initial_identity, read_windows_parent_map
 
 QUERY_TIMEOUT_SECONDS = 2
 MAX_QUERY_PIDS = 64
@@ -38,6 +41,14 @@ ConvertTo-Json -Compress -InputObject $rows
 
 class CollectionError(ValueError):
     """Fail closed while retaining JSON-safe subprocess observation evidence."""
+
+    def __init__(self, message, evidence):
+        super().__init__(message)
+        self.evidence = evidence
+
+
+class PopulationReadError(ValueError):
+    """Identity-read refusal retaining its parent map and completed rows."""
 
     def __init__(self, message, evidence):
         super().__init__(message)
@@ -205,33 +216,81 @@ def _reconcile(original, evidence):
     return indexed
 
 
-def _normalize(original, evidence):
-    resolved = _reconcile(original, evidence) if evidence["performed"] else {}
+def _normalize(original, resolved):
     rows = deepcopy(original)
     for row in rows:
-        if row["pid"] in resolved:
-            row["name"] = resolved[row["pid"]]["Name"]
+        if not row["name"].strip():
+            raw = resolved.get(row["pid"])
+            if raw is None:
+                raise ValueError("Process name remained unresolved after the single query")
+            if abs(_dmtf_epoch(raw["CreationDate"]) - _psutil_epoch(
+                    row["creation_time"])) > Fraction(1, 1_000_000):
+                raise ValueError("Resolved process creation identity differs")
+            row["name"] = raw["Name"]
         if row["executable_path"] == "":
             row["executable_path"] = None
     return rows
 
 
-def _check_population(original):
-    final = read_windows_parent_map()
-    original_pids = {row["pid"] for row in original}
-    new_pids = sorted(set(final) - original_pids)
-    changed = [{"pid": row["pid"], "before_parent_pid": row["parent_pid"],
-                "after_parent_pid": final.get(row["pid"])} for row in original
-               if final.get(row["pid"]) != row["parent_pid"]]
-    evidence = {"kind": "population_check", "new_pids": new_pids,
-                "changed_or_missing": changed,
-                "after_parent_map": [{"pid": pid, "parent_pid": final[pid]}
-                                     for pid in sorted(final)]}
-    if new_pids:
-        raise CollectionError("Process population changed after name resolution", evidence)
-    if changed:
-        raise CollectionError("Process parent changed after name resolution", evidence)
-    return evidence
+def _read_population(parent_map):
+    rows = []
+    for pid in sorted(parent_map):
+        try:
+            process = psutil.Process(pid)
+            rows.append(_initial_identity(process, parent_map))
+        except (psutil.Error, OSError, ValueError) as exc:
+            evidence = {"failed_pid": pid, "rows": deepcopy(rows),
+                        "parent_map": deepcopy(parent_map)}
+            raise PopulationReadError(
+                f"Process {pid} identity unreadable", evidence,
+            ) from exc
+    return rows
+
+
+def _collect_initial_populations():
+    map_a = read_windows_parent_map()
+    try:
+        rows_a = _read_population(map_a)
+    except PopulationReadError as exc:
+        exc.evidence["stage"] = "A"
+        raise
+    map_b = read_windows_parent_map()
+    try:
+        rows_b = _read_population(map_b)
+    except PopulationReadError as exc:
+        exc.evidence.update(stage="B", prior_rows=[deepcopy(rows_a)],
+                            prior_maps=[deepcopy(map_a)])
+        raise
+    return [rows_a, rows_b], [map_a, map_b]
+
+
+def _collect_final_population():
+    map_c = read_windows_parent_map()
+    try:
+        return _read_population(map_c), map_c
+    except PopulationReadError as exc:
+        exc.evidence["stage"] = "C"
+        raise
+
+
+def _query_targets(raw_inventories):
+    indexed = {}
+    blank_pids = set()
+    for rows in raw_inventories:
+        for row in rows:
+            previous = indexed.get(row["pid"])
+            if previous and previous["creation_time"] != row["creation_time"]:
+                raise ValueError("Process identifier reused before name resolution")
+            indexed[row["pid"]] = row
+            if not row["name"].strip():
+                blank_pids.add(row["pid"])
+    return [indexed[pid] for pid in sorted(blank_pids)]
+
+
+def _parent_map_evidence(parent_maps):
+    return [{"stage": stage, "rows": [
+        {"pid": pid, "parent_pid": values[pid]} for pid in sorted(values)]}
+        for stage, values in zip(("A", "B", "C"), parent_maps)]
 
 
 def _selected(initial):
@@ -262,14 +321,27 @@ def _decimal_nanoseconds(value):
     return f"{seconds}.{remainder:09d}".rstrip("0")
 
 
-def _collection_failure(error, original, name_resolution, population_check=None):
-    evidence = {"original_initial_inventory": deepcopy(original),
-                "name_resolution": deepcopy(name_resolution)}
-    if isinstance(error, CollectionError):
-        if error.evidence.get("kind") == "population_check":
-            evidence["population_check"] = deepcopy(error.evidence)
+def _collection_failure(error, raw, normalized, maps, name_resolution,
+                        population_check=None):
+    if isinstance(error, PopulationReadError):
+        partial = deepcopy(error.evidence)
+        if partial["stage"] == "C":
+            raw = [*raw, partial["rows"]]
+            maps = [*maps, partial["parent_map"]]
         else:
-            evidence["name_resolution"] = deepcopy(error.evidence)
+            raw = [*partial.get("prior_rows", []), partial["rows"]]
+            maps = [*partial.get("prior_maps", []), partial["parent_map"]]
+    evidence = {"original_initial_inventory": deepcopy(raw[0]) if raw else [],
+                "original_observed_inventories": deepcopy(raw),
+                "observed_inventories": deepcopy(normalized),
+                "parent_maps": _parent_map_evidence(maps) if maps else [],
+                "name_resolution": deepcopy(name_resolution)}
+    if isinstance(error, PopulationReadError):
+        evidence["identity_read_failure"] = deepcopy(error.evidence)
+    if isinstance(error, CollectionError):
+        evidence["name_resolution"] = deepcopy(error.evidence)
+    elif isinstance(error, PopulationError):
+        evidence["population_check"] = deepcopy(error.evidence)
     elif population_check is not None:
         evidence["population_check"] = deepcopy(population_check)
     return CollectionError(str(error), evidence)
@@ -277,18 +349,29 @@ def _collection_failure(error, original, name_resolution, population_check=None)
 
 def collect_absence_snapshot():
     """Collect one fail-closed pressure-absence process snapshot."""
-    original, evidence, population_check = [], None, None
+    raw, normalized, parent_maps = [], [], []
+    evidence, population_check = None, None
     try:
-        original = enumerate_windows_v2()
-        unresolved = [row["pid"] for row in original if not row["name"].strip()]
-        evidence = _query_blank_names(unresolved) if unresolved else _no_query_evidence()
-        initial = _normalize(original, evidence)
-        population_check = _check_population(original)
+        raw, parent_maps = _collect_initial_populations()
+        targets = _query_targets(raw)
+        evidence = (_query_blank_names([row["pid"] for row in targets])
+                    if targets else _no_query_evidence())
+        resolved = _reconcile(targets, evidence) if targets else {}
+        normalized = [_normalize(rows, resolved) for rows in raw]
+        final_raw, final_map = _collect_final_population()
+        raw.append(final_raw)
+        parent_maps.append(final_map)
+        normalized.append(_normalize(final_raw, resolved))
+        population_check = reconcile_observed_inventories(normalized, parent_maps)
+        population_check["parent_maps"] = _parent_map_evidence(parent_maps)
+        initial = normalized[-1]
         selected = _selected(initial)
         cache = {}
         rows = [_details(row, cache) for row in selected]
     except (ValueError, OSError, subprocess.SubprocessError) as exc:
-        raise _collection_failure(exc, original, evidence, population_check) from exc
+        raise _collection_failure(
+            exc, raw, normalized, parent_maps, evidence, population_check,
+        ) from exc
     coverage = {"selector": "ansys-mpi-lineage-v1",
                 "enumerated_count": len(initial), "selected_count": len(rows),
                 "excluded_count": len(initial) - len(rows),
@@ -298,5 +381,7 @@ def collect_absence_snapshot():
             "observed_at": _decimal_nanoseconds(time.time_ns()),
             "enumeration_complete": True, "rows": rows,
             "initial_inventory": initial, "coverage": coverage,
-            "original_initial_inventory": deepcopy(original),
+            "original_initial_inventory": deepcopy(raw[0]),
+            "original_observed_inventories": deepcopy(raw),
+            "observed_inventories": deepcopy(normalized),
             "name_resolution": evidence, "population_check": population_check}
