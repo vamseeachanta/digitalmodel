@@ -1,40 +1,66 @@
-"""Two pinned forwarding-wrapper consoles; conditional structural evidence only."""
+"""Pinned controller/guard branch consoles; conditional structural evidence."""
 import base64
 from copy import deepcopy
 
 from .cylinder_process_inventory import _hash, _pid, _text
 
 
-def observed_console_pids(rows, parents):
+def _branches(forwarders):
+    if not isinstance(forwarders, list) or len(forwarders) > 16:
+        raise ValueError('Invalid bounded console branches')
+    branches, endpoints = [], set()
+    for forwarder in forwarders:
+        if not isinstance(forwarder, dict):
+            raise ValueError('Invalid console branch')
+        parent = _pid(forwarder.get('parent_pid'))
+        child = _pid(forwarder.get('child_pid'))
+        branch = {parent, child}
+        if parent == child or endpoints & branch:
+            raise ValueError('Console branches must have disjoint endpoints')
+        branches.append(branch)
+        endpoints.update(branch)
+    return branches
+
+
+def observed_console_pids(rows, forwarders):
+    endpoints = set().union(*_branches(forwarders)) if forwarders else set()
     return {pid for pid, row in rows.items()
-            if row['parent_pid'] in parents and row['name'].casefold() == 'conhost.exe'
+            if row['parent_pid'] in endpoints and row['name'].casefold() == 'conhost.exe'
             and not row['script_sources']}
 
 
-def console_pids(binding, pins, validated_parents):
+def console_pids(binding, pins, validated_forwarders):
     if 'wrapper_console_supplement' not in binding:
         return set()
     declaration = binding['wrapper_console_supplement']
     if not isinstance(declaration, dict) or set(declaration) != {'id', 'sha256', 'pids'}:
         raise ValueError('Malformed wrapper console declaration')
-    _text(declaration['id']); _hash(declaration['sha256'])
+    _text(declaration['id'])
+    _hash(declaration['sha256'])
     values = declaration['pids']
     if not isinstance(values, list) or len(values) != 2:
         raise ValueError('Exactly two supplemental console PIDs required')
     pids = {_pid(value) for value in values}
     if len(pids) != 2 or not pids <= set(binding['console_helpers']):
         raise ValueError('Duplicate or unassigned supplemental console PID')
-    if len(validated_parents) != 2:
-        raise ValueError('Exactly two validated forwarding parents required')
-    parents = set()
+    branches = _branches(validated_forwarders)
+    if len(branches) != 2:
+        raise ValueError('Exactly two validated console branches required')
+    assignments = [0, 0]
     for pid in pids:
+        if pid not in pins:
+            raise ValueError('Supplemental console process is not pinned')
         row = pins[pid]
         if row['name'].casefold() != 'conhost.exe' or row['script_sources']:
             raise ValueError('Supplement must contain source-free console processes')
-        parents.add(row['parent_pid'])
-    if parents != set(validated_parents):
-        raise ValueError('One supplemental console per validated forwarding parent required')
-    observed = observed_console_pids(pins, validated_parents)
+        matches = [index for index, branch in enumerate(branches)
+                   if row['parent_pid'] in branch]
+        if len(matches) != 1:
+            raise ValueError('Supplemental console parent is not a bound branch endpoint')
+        assignments[matches[0]] += 1
+    if assignments != [1, 1]:
+        raise ValueError('Exactly one supplemental console per branch required')
+    observed = observed_console_pids(pins, validated_forwarders)
     if observed != pids:
         raise ValueError('Observed wrapper consoles differ from declaration')
     return observed
@@ -103,7 +129,7 @@ def resolve_supplement(operation, binding, read_callback):
         if (errors or len(rows) != 128 or rows != pins
                 or source['forwarders'] != forwarders or len(binding['console_helpers']) != 62):
             raise ValueError('Complete pinned 128-row supplement source differs')
-        pids = observed_console_pids(rows, {f['parent_pid'] for f in source['forwarders']})
+        pids = console_pids(binding, rows, source['forwarders'])
         if pids != set(binding['wrapper_console_supplement']['pids']):
             raise ValueError('Historical observed consoles differ from declaration')
         projected = historical_projection(binding, pids)

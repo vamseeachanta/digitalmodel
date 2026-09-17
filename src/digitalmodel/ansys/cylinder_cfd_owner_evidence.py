@@ -72,6 +72,22 @@ def _same_path(left, right):
         raise ValueError('Owner source path relationship differs')
 
 
+def _controller_argument(value, cwd):
+    """Resolve only a basename or strict local absolute file identity."""
+    _text(value)
+    parts = value.replace('\\', '/').split('/')
+    path = PureWindowsPath(value)
+    absolute = path.is_absolute()
+    tail = parts[1:] if absolute else parts
+    if (any(not p or p in ('.', '..') or p.endswith((' ', '.'))
+            or any(c in p for c in '<>:"|?*') for p in tail)
+            or (not absolute and (path.anchor or len(parts) != 1))):
+        raise ValueError('Unexpected controller argument identity')
+    resolved = value if absolute else str(PureWindowsPath(cwd) / value)
+    _path(resolved)
+    return resolved
+
+
 def _identities(receipt, binding):
     if binding.get('schema') != 'cfd-process-binding-2':
         raise ValueError('Owner resolution requires v2 binding')
@@ -156,6 +172,10 @@ def _source_join(ancestor, pin, expected, callback, retained):
         if len(matches) != 1 or len(historic) != 1:
             raise ValueError('Interpreter source index join differs')
         source, old = matches[0], historic[0]
+        basis = ('absolute_argument' if PureWindowsPath(pin['argv'][index]).is_absolute()
+                 else 'observed_interpreter_cwd')
+        if source.get('resolution_basis') != basis:
+            raise ValueError('Interpreter source resolution basis differs')
         _same_path(source['path'], path); _same_path(old['cwd_resolved_path'], path)
         if source['sha256'] != digest or old['sha256'] != digest or old['exists'] is not True:
             raise ValueError('Interpreter source digest join differs')
@@ -172,10 +192,8 @@ def _config(receipt, pins, roles, callback, retained):
     if len(controller['argv']) != 3:
         raise ValueError('Controller arguments differ')
     _same_path(cfg['root'], controller['cwd'])
-    arg = PureWindowsPath(controller['argv'][2])
-    if arg.anchor or any(x in ('.','..') for x in controller['argv'][2].replace('\\','/').split('/')):
-        raise ValueError('Unexpected controller config argument')
-    _same_path(record['path'], str(PureWindowsPath(controller['cwd']) / arg))
+    _same_path(str(PureWindowsPath(record['path']).parent), controller['cwd'])
+    _same_path(record['path'], _controller_argument(controller['argv'][2], controller['cwd']))
     return cfg
 
 
@@ -209,9 +227,8 @@ def _fixed_sources(receipt, cfg, pins, roles, ancestors, callback, retained):
     controller, guard = pins[roles['controller'][0]], pins[roles['guard'][0]]
     _same_path(guard['argv'][1], cfg['adapter'])
     _same_path(guard['argv'][2], cfg['guard'])
-    if controller['argv'][1] != 'rotation_queue.py':
-        raise ValueError('Unexpected controller script argument')
     controller_path = str(PureWindowsPath(controller['cwd']) / 'rotation_queue.py')
+    _same_path(_controller_argument(controller['argv'][1], controller['cwd']), controller_path)
     _source_join(ancestors[2], controller,
                  [(1, controller_path, cfg['evidence_sha256']['rotation_queue.py'])], callback, retained)
     _source_join(ancestors[0], guard,

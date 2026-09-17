@@ -121,9 +121,12 @@ def _forwarders(records, rows, *, incomplete=False):
         parent, child = v._pid(f['parent_pid']), v._pid(f['child_pid'])
         if parent == child or parent in parents or child in children:
             raise ValueError('Duplicate or self forwarder relation')
-        parents.add(parent); children.add(child)
-        v._time(f['parent_creation_time']); v._time(f['child_creation_time'])
-        v._hash(f['launcher_sha256']); v._hash(f['resolved_target_sha256'])
+        parents.add(parent)
+        children.add(child)
+        v._time(f['parent_creation_time'])
+        v._time(f['child_creation_time'])
+        v._hash(f['launcher_sha256'])
+        v._hash(f['resolved_target_sha256'])
         kind = f['resource_kind_hex']
         if not isinstance(kind, str) or not re.fullmatch('02(?:[0-9a-f]{2}){0,15}', kind):
             raise ValueError('Unsupported forwarder kind bytes')
@@ -175,7 +178,8 @@ def _binding(binding, host, observed):
     owner = binding.get('owner_reference')
     if not isinstance(owner, dict) or set(owner) != {'id', 'sha256'}:
         raise ValueError('Missing structural owner reference')
-    v._text(owner['id']); v._hash(owner['sha256'])
+    v._text(owner['id'])
+    v._hash(owner['sha256'])
     roles, ids = v._roles(binding)
     pins = _rows(binding.get('processes'), observed)
     if set(pins) != ids:
@@ -194,7 +198,7 @@ def _binding(binding, host, observed):
     for role, name in expected.items():
         if any(pins[i]['name'].casefold() != name for i in roles[role]):
             raise ValueError('Role executor differs')
-    supplemental = console_pids(binding, pins, parents)
+    supplemental = console_pids(binding, pins, binding['forwarders'])
     historical = historical_projection(binding, supplemental)
     historical_roles, _ = v._roles(historical)
     v._topology({pid: row for pid, row in pins.items() if pid not in supplemental}, historical_roles)
@@ -230,7 +234,7 @@ def classify(snapshot, *, expected_host, cfd_binding, now, maximum_age_seconds):
         result['incomplete'] = bool(errors)
         from .cylinder_wrapper_consoles import observed_console_pids
         result['wrapper_console_pids'] = sorted(observed_console_pids(
-            rows, {f['parent_pid'] for f in snapshot['forwarders']}))
+            rows, snapshot['forwarders']))
         return result
     except (KeyError, TypeError, OverflowError) as error:
         raise ValueError('Malformed v2 process evidence') from error
