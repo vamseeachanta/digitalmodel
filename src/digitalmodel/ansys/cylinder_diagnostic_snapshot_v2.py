@@ -12,6 +12,7 @@ from .cylinder_diagnostic_snapshot import _seed
 from .cylinder_parent_map import enumerate_windows_v2 as _enumerate, parent_of
 from .cylinder_forwarder_resources import DeclaredReads, observe_forwarder
 from .cylinder_absence_population import PopulationError, reconcile_observed_inventories
+from .cylinder_active_names import ActiveNameResolution, parent_map_evidence
 
 
 def _created(value):
@@ -183,15 +184,25 @@ def _stability(rows,states,errors,cache,parent_map):
             errors[pid] = dict(pid=pid,reason_code=_error(error));rows.pop(pid)
 
 
-def _observed_stage(inventories, maps):
-    rows = _enumerate()
+def _observed_stage(inventories, maps, names):
+    raw = _enumerate()
+    try:
+        rows = names.observe(raw)
+    except (ValueError, OSError) as exc:
+        events = [dict(pid=row.get('pid'), disposition='REFUSED_INCOMPLETE',
+                       change='blank_process_name') for row in raw
+                  if isinstance(row, dict) and
+                  (not isinstance(row.get('name'), str) or not row['name'].strip())]
+        raise PopulationError(str(exc), dict(events=events, rejected_inventory=deepcopy(raw),
+            refusal_reason=str(exc), event_scope='Raw blank-name candidates, not causal attribution',
+            limitation='Process observation or name-resolution validation failed; collection refuses.')) from exc
     for row in rows:
         if not isinstance(row.get('name'), str) or not row['name'].strip():
             raise PopulationError('Incomplete observed process name', {
                 'events': [dict(pid=row.get('pid'), disposition='REFUSED_INCOMPLETE',
                                 change='blank_process_name')],
                 'rejected_inventory': deepcopy(rows),
-                'limitation': 'No secondary name resolution in active collector; blank names refuse.'})
+                'limitation': 'Normalized process-name invariant failed; collection refuses.'})
     inventories.append(deepcopy(rows))
     maps.append({row['pid']: row['parent_pid'] for row in rows})
     return rows
@@ -199,19 +210,20 @@ def _observed_stage(inventories, maps):
 
 def _observed_collection(pinned, candidates, started):
     inventories, maps = [], []
+    names = ActiveNameResolution()
     stage = 'A'
     try:
-        initial = _observed_stage(inventories, maps)
+        initial = _observed_stage(inventories, maps, names)
         selected = _selection(initial, pinned)
         stage = 'B'
-        _observed_stage(inventories, maps)
+        _observed_stage(inventories, maps, names)
         stage = 'detail_reads'
         cache = DeclaredReads()
         rows, states, errors = _details(selected, pinned, candidates, cache, started, maps[1])
         stage = 'forwarders'
         forwarders = _forwarders(candidates, rows, cache, errors)
         stage = 'C'
-        final = _observed_stage(inventories, maps)
+        final = _observed_stage(inventories, maps, names)
         stage = 'reconciliation'
         population = reconcile_observed_inventories(
             inventories, maps, required_relevant_pids=sorted(row['pid'] for row in selected))
@@ -220,15 +232,19 @@ def _observed_collection(pinned, candidates, started):
             raise ValueError('Final selected population differs')
         stage = 'stability'
         _stability(rows, states, errors, cache, maps[2])
-        population['parent_maps'] = maps
+        stage = 'evidence_accounting'
+        population['parent_maps'] = parent_map_evidence(maps)
         population['parent_map_basis'] = 'row-derived views of completed identity observations'
         population['enumeration_limitation'] = (
             'Pre-yield disappearance may omit identities; within-observation inconsistency refuses.')
+        population['name_resolution'] = names.evidence()
+        if population['name_resolution']['completed_stages'] != len(inventories):
+            raise ValueError('Name-resolution completion count differs from inventories')
         return initial, selected, cache, rows, forwarders, errors, inventories, population
     except (ValueError, OSError, psutil.Error) as exc:
         evidence = deepcopy(getattr(exc, 'evidence', {}))
         evidence.update(failed_stage=stage, completed_inventories=inventories,
-                        completed_parent_maps=maps)
+                        completed_parent_maps=parent_map_evidence(maps), name_resolution=names.evidence())
         evidence.setdefault('events', [])
         raise PopulationError(str(exc), evidence) from exc
 

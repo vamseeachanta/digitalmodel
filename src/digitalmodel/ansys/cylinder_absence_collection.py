@@ -337,7 +337,11 @@ def _collection_failure(error, raw, normalized, maps, name_resolution,
                 "parent_maps": _parent_map_evidence(maps) if maps else [],
                 "name_resolution": deepcopy(name_resolution)}
     if isinstance(error, PopulationReadError):
-        evidence["identity_read_failure"] = deepcopy(error.evidence)
+        failure = deepcopy(error.evidence)
+        failure["parent_map"] = _parent_map_evidence([failure["parent_map"]])[0]["rows"]
+        if "prior_maps" in failure:
+            failure["prior_maps"] = _parent_map_evidence(failure["prior_maps"])
+        evidence["identity_read_failure"] = failure
     if isinstance(error, CollectionError):
         evidence["name_resolution"] = deepcopy(error.evidence)
     elif isinstance(error, PopulationError):

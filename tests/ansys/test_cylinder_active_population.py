@@ -113,6 +113,10 @@ def test_missing_required_identifier_retains_relevance():
 
 @pytest.mark.parametrize('stage', [0, 1, 2])
 def test_blank_name_is_explicit_refusal(tmp_path, monkeypatch, stage):
+    from digitalmodel.ansys import cylinder_absence_collection as resolver
+    def refuse_query(pids):
+        raise resolver.CollectionError('synthetic unresolved name', {'performed': True})
+    monkeypatch.setattr(resolver, '_query_blank_names', refuse_query)
     current, seed, _ = observations(
         tmp_path, monkeypatch, lambda s: s[stage].append(extra(name=' ')))
     with pytest.raises(PopulationError) as caught:
@@ -136,6 +140,10 @@ def test_parent_change_across_middle_gap_is_retained():
 
 
 def test_stable_blank_name_refuses_without_normalization(tmp_path, monkeypatch):
+    from digitalmodel.ansys import cylinder_absence_collection as resolver
+    def refuse_query(pids):
+        raise resolver.CollectionError('synthetic unresolved name', {'performed': True})
+    monkeypatch.setattr(resolver, '_query_blank_names', refuse_query)
     def transform(stages):
         for stage in stages:
             stage.append(extra(name=' '))
@@ -143,7 +151,7 @@ def test_stable_blank_name_refuses_without_normalization(tmp_path, monkeypatch):
     with pytest.raises(PopulationError) as caught:
         current.collect_v2(discovery_seed=seed)
     assert caught.value.evidence['completed_inventories'] == []
-    assert 'No secondary name resolution' in caught.value.evidence['limitation']
+    assert 'Process observation or name-resolution validation failed' in caught.value.evidence['limitation']
 
 
 @pytest.mark.parametrize('function,stage', [('_details', 'detail_reads'),

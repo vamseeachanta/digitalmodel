@@ -18,7 +18,12 @@ def test_final_identity_read_failure_retains_map_and_partial_rows(monkeypatch):
     monkeypatch.setattr(module(), "_collect_final_population", fail)
     with pytest.raises(module().CollectionError) as caught:
         module().collect_absence_snapshot()
-    assert caught.value.evidence["identity_read_failure"] == failure
+    expected = dict(failure, parent_map=[
+        {"pid": 10, "parent_pid": 4}, {"pid": 20, "parent_pid": 4}])
+    assert caught.value.evidence["identity_read_failure"] == expected
+    assert failure["parent_map"] == {10: 4, 20: 4}
+    from digitalmodel.ansys.analysis_records import canonical_bytes
+    assert canonical_bytes(caught.value.evidence)
     assert caught.value.evidence["original_observed_inventories"][-1] == rows
     assert caught.value.evidence["parent_maps"][-1]["stage"] == "C"
     assert caught.value.evidence["parent_maps"][-1]["rows"][-1] == {
