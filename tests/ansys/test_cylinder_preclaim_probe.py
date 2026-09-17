@@ -8,6 +8,18 @@ from digitalmodel.ansys.analysis_records import parse_json
 intermediate = fixtures.intermediate
 
 
+def test_refusal_does_not_claim_unverified_stream_binding(intermediate, monkeypatch):
+    intermediate.failure = 'preclaim'
+    def refuse(config):
+        raise ValueError('changed stream')
+    monkeypatch.setattr(resume, 'verify_streams', refuse)
+    result = intermediate.run()
+    assert 'preparation_binding' not in result
+    assert 'PREPARATION_RETENTION_INCOMPLETE' in result['terminal_reasons']
+    assert not (Path(intermediate.config['operational']['output_directory']) /
+                'preparation-refusal.json').exists()
+
+
 @pytest.mark.parametrize('elapsed,passes', [(2_000_000_000, True),
     (2_000_000_001, False), (-1, False)])
 def test_measured_probe_threshold_precedes_all_ledger_records(intermediate, elapsed, passes):
@@ -27,6 +39,11 @@ def test_probe_error_retains_release_and_fresh_output_can_be_prepared(intermedia
     old_output = Path(intermediate.config['operational']['output_directory'])
     retained = parse_json((old_output/'preparation-refusal.json').read_bytes())
     assert retained == first and retained['reservation_released'] is True
+    assert retained['preparation_binding'] == dict(
+        config_sha256=intermediate.approval['config_sha256'], ordinal=3,
+        output=str(old_output),
+        streams={'stdout': 'synthetic-stdout', 'stderr': 'synthetic-stderr'},
+        parent_claim_sha256=intermediate.config['lineage']['parent_claim']['sha256'])
     assert 'last_preflight_evidence' in retained and 'final_storage_before_receipts' in retained
     intermediate.failure = None
     new_output = str(old_output.with_name('fresh-reviewed-output'))

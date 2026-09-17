@@ -88,16 +88,19 @@ def _checked_path(value, directory):
 
 
 def _declarations(original_root, parent_claim, output_root, ledger_paths, reservation_path,
-                  prior_capture_roots=()):
+                  prior_capture_roots=(), supplemental_files=()):
     if not isinstance(ledger_paths, (list, tuple)):
         raise ValueError('explicit ledger path list required')
     if not isinstance(prior_capture_roots, (list, tuple)):
         raise ValueError('explicit prior capture root list required')
+    if not isinstance(supplemental_files, (list, tuple)):
+        raise ValueError('explicit supplemental capture file list required')
     rows = [('original', original_root, True), ('claim', parent_claim, False),
             ('output', output_root, True), ('reservation', reservation_path, False)]
     rows += [(f'prior-{index}', path, True)
              for index, path in enumerate(prior_capture_roots)]
     rows += [(f'ledger-{index}', path, False) for index, path in enumerate(ledger_paths)]
+    rows += [(f'supplemental-{index}', path, False) for index, path in enumerate(supplemental_files)]
     checked = [(label, _checked_path(path, directory), directory)
                for label, path, directory in rows]
     for index, (_, path, directory) in enumerate(checked):
@@ -141,7 +144,7 @@ def _account(declarations):
 
 
 def cumulative_storage(original_root, parent_claim, output_root, ledger_paths,
-                       reservation_path, free_bytes, *, prior_capture_roots=()):
+                       reservation_path, free_bytes, *, prior_capture_roots=(), supplemental_files=()):
     """Count explicitly owned files; metadata integrity is verified separately.
 
     FAIL retains all files and reports a budget violation. Missing declarations,
@@ -153,7 +156,7 @@ def cumulative_storage(original_root, parent_claim, output_root, ledger_paths,
     if type(free_bytes) is not int or free_bytes < 0:
         raise ValueError('nonnegative integer free bytes required')
     declarations = _declarations(original_root, parent_claim, output_root,
-                                 ledger_paths, reservation_path, prior_capture_roots)
+                                 ledger_paths, reservation_path, prior_capture_roots, supplemental_files)
     files = _account(declarations)
     original = sum(row['bytes'] for row in files if row['path'].startswith('original/'))
     if original != ORIGINAL_BYTES:

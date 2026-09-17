@@ -14,6 +14,7 @@ from digitalmodel.ansys.cylinder_pressure_journal import (
 from digitalmodel.ansys.cylinder_pressure_resources import validate_observation_ages
 from digitalmodel.ansys.cylinder_pressure_scope import pressure_step
 from digitalmodel.ansys.cylinder_intermediate_lineage import replay_coarse_predecessor
+from digitalmodel.ansys.cylinder_preparation_streams import verify_streams
 
 CASE_ID = 'ocv-t60-p10-n4'
 _write_exclusive = write_exclusive
@@ -275,6 +276,10 @@ def _terminal_records(state):
     if not journal.started:
         if state['ordinal'] == 3 and 'output' in state:
             try:
+                result['preparation_binding'] = dict(
+                    streams=verify_streams(state['config']),
+                    config_sha256=state['approval']['config_sha256'], ordinal=state['ordinal'],
+                    output=str(state['output']), parent_claim_sha256=journal.parent_sha256)
                 _write_exclusive(state['output'] / 'preparation-refusal.json', deepcopy(result))
             except Exception as error:
                 result['preparation_record_error'] = f'{type(error).__name__}: {error}'

@@ -74,6 +74,7 @@ def history(tmp, monkeypatch):
 
 @pytest.fixture
 def fixture(tmp_path,monkeypatch):
+    (tmp_path.parent/'_coordination').mkdir(exist_ok=True)
     hist, successor=history(tmp_path,monkeypatch)
     monkeypatch.setattr(admission,'_git_blob',lambda root,revision,name:(root/name).read_bytes(),raising=False)
     source=tmp_path/'source'; name='scripts/ansys/run_pressure_diagnostic.py'
@@ -89,7 +90,8 @@ def fixture(tmp_path,monkeypatch):
     config=dict(schema='cylinder-pressure-admission-1',source_revision='e'*40,campaign_id='pressure-once',operator_id='SOLVERS',
         ledger_directory=str(tmp_path/'ledger'),lineage=hist,scope=copy.deepcopy(admission.SCOPE),
         source_files=[dict(path=name,sha256=digest_bytes(p.read_bytes()))],
-        operational=dict(bundle=str(Path(successor['path']).parent)),
+        operational=dict(bundle=str(Path(successor['path']).parent),
+                         output_directory=str(tmp_path/'output')),
         execution_binding=dict(manifest_sha256=successor['sha256'],executable_sha256='c'*64,
         execution_host='synthetic-host',profile=copy.deepcopy(PROFILE),
         runtime_profile=dict(release='2026 R1.01',build='26.1',update='20260202',platform='WINDOWS x64'),

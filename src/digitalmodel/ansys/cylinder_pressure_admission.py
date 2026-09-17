@@ -10,6 +10,7 @@ from digitalmodel.ansys.cylinder_pressure_lineage import validate_lineage
 from digitalmodel.ansys.cylinder_runtime_bundle import _git_blob
 from digitalmodel.ansys.cylinder_pressure_scope import COARSE_SCOPE, pressure_step
 from digitalmodel.ansys.cylinder_intermediate_lineage import validate_coarse_predecessor
+from digitalmodel.ansys.cylinder_preparation_history import validate_preparation_history
 
 ENTRYPOINT = 'scripts/ansys/run_pressure_diagnostic.py'
 # Legacy public alias for coarse admission only; intermediate callers use INTERMEDIATE_SCOPE.
@@ -113,6 +114,7 @@ def _validate(paths,root,config_sha,review_sha):
         raise ValueError('operator and independent reviewer must differ')
     if pressure_step(config)[0] == 3:
         validate_coarse_predecessor(config)
+        validate_preparation_history(config)
     successor = validate_lineage(config)
     inventory = cylinder_canary.runtime_sources()
     if canonical_bytes(successor.get('runtime_sources')) != canonical_bytes(inventory):

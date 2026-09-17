@@ -12,6 +12,8 @@ from digitalmodel.ansys.analysis_replay import derive_replay_case
 from digitalmodel.ansys.cylinder_diagnostic_admission import _path, _read, _sha
 from digitalmodel.ansys.cylinder_diagnostic_resources import validate_environment
 from digitalmodel.ansys.cylinder_pressure_admission import make_pressure_admission
+from digitalmodel.ansys.cylinder_preparation_history import validate_preparation_history
+from digitalmodel.ansys.cylinder_preparation_streams import verify_streams
 
 
 def _arguments(argv):
@@ -123,6 +125,29 @@ def ledger_paths(parent_claim, ordinal=2):
     return result
 
 
+def history_binding(config, check):
+    """Recheck retained membership after source/config pins, including postclaim."""
+    frozen = deepcopy(config)
+    def verify(actual):
+        if check(actual) is not True:
+            raise ValueError('Current source/config binding did not pass')
+        verify_streams(frozen)
+        validate_preparation_history(frozen, require_unclaimed=False)
+        return True
+    return verify
+
+
+def history_storage(config):
+    """Bind prior captures without rejecting the journal's own current claim."""
+    from digitalmodel.ansys.cylinder_pressure_scope import pressure_step
+    if pressure_step(config)[0] != 3:
+        return {}
+    history = validate_preparation_history(config, require_unclaimed=False)
+    return dict(prior_capture_roots=(config['predecessor']['original_root'],
+                                    *history['prior_capture_roots']),
+                supplemental_files=tuple(history['supplemental_files']))
+
+
 def production_callbacks(config, admission, arguments, root, reservation):
     from digitalmodel.ansys.cylinder_diagnostic_preflight import ProductionPreflight
     from digitalmodel.ansys.cylinder_pressure_capture import capture_pressure
@@ -130,10 +155,15 @@ def production_callbacks(config, admission, arguments, root, reservation):
     from digitalmodel.ansys.cylinder_runner import launch_case
 
     from digitalmodel.ansys.cylinder_pressure_scope import pressure_step
+    config = deepcopy(config)
     ordinal, case_id = pressure_step(config)
+    verify_streams(config)
+    validate_preparation_history(config)
     operation, approval = config['operational'], admission['approval']
     preflight = ProductionPreflight(operation, approval, reservation)
     check = fast_binding_check(_pins(config, arguments, root), approval)
+    if ordinal == 3:
+        check = history_binding(config, check)
     def phase2(actual):
         validate_environment(actual, os.environ)
         return production_phase2(preflight, check, actual)
@@ -148,10 +178,11 @@ def production_callbacks(config, admission, arguments, root, reservation):
         return capture_pressure(case, directory, execution,
             runtime_profile=approval['runtime_profile'], **kwargs)
     def account_storage():
+        verify_streams(config)
         lineage = config['lineage']
         parent = lineage['parent_claim']['path']
         free = shutil.disk_usage(operation['output_directory']).free
-        kwargs = {'prior_capture_roots': (config['predecessor']['original_root'],)} if ordinal == 3 else {}
+        kwargs = history_storage(config)
         return cumulative_storage(lineage['original_root'], parent, operation['output_directory'],
             ledger_paths(parent, ordinal=ordinal), operation['lock_path'], free, **kwargs)
     callbacks = dict(replay_prefix=replay_callback(config), preflight=preflight,
@@ -180,6 +211,7 @@ def main(argv=None):
     arguments = _arguments(argv)
     root = script.parents[2]
     config, admission = bound_inputs(arguments, root)
+    verify_streams(config)
     reservation = acquire_local_reservation(config['operational']['lock_path'])
     try:
         callbacks = production_callbacks(config, admission, arguments, root, reservation)
@@ -187,6 +219,7 @@ def main(argv=None):
         reservation.release(no_owned_processes=True)  # No native adapter entered.
         raise
     result = execute_pressure_resume(config, admission, **callbacks)
+    verify_streams(config)
     print(canonical_bytes(result).decode('utf-8'))
     return pressure_exit_code(result)  # Never grants numerical qualification.
 

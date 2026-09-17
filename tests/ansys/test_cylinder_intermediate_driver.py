@@ -57,6 +57,10 @@ def wiring(driver, tmp_path, monkeypatch, ordinal):
     from digitalmodel.ansys import cylinder_pressure_capture as capture
     from digitalmodel.ansys import cylinder_pressure_resources as resources
     calls = []
+    monkeypatch.setattr(driver, 'verify_streams', lambda config: calls.append(('streams', {})))
+    monkeypatch.setattr(driver, 'validate_preparation_history', lambda *a, **k:
+        calls.append(('history', k)) or dict(prior_capture_roots=['abandoned'],
+            supplemental_files=['driver-stdout', 'driver-stderr'], retained_bytes=941247))
     monkeypatch.setattr(pf, 'ProductionPreflight', lambda *a: object())
     monkeypatch.setattr(driver, '_pins', lambda *a: [])
     monkeypatch.setattr(driver, 'fast_binding_check', lambda *a: object())
@@ -78,7 +82,10 @@ def wiring(driver, tmp_path, monkeypatch, ordinal):
 def test_intermediate_capture_and_prior_storage_wiring(driver, tmp_path, monkeypatch):
     calls = wiring(driver,tmp_path,monkeypatch,3)
     assert ('capture',{'runtime_profile':{},'capture_case_id':'ocv-t60-p10-n8'}) in calls
-    assert ('storage',{'prior_capture_roots':('coarse',)}) in calls
+    assert ('storage',{'prior_capture_roots':('coarse', 'abandoned'),
+                      'supplemental_files':('driver-stdout', 'driver-stderr')}) in calls
+    assert ('history', {}) in calls
+    assert ('history', {'require_unclaimed':False}) in calls
     assert ('ledger',{'ordinal':3}) in calls
 
 

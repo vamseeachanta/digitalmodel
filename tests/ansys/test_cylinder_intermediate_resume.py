@@ -55,6 +55,8 @@ class Intermediate(Harness):
 @pytest.fixture
 def intermediate(tmp_path, monkeypatch):
     harness = Intermediate(tmp_path)
+    monkeypatch.setattr(resume, 'verify_streams', lambda config:
+                        {'stdout': 'synthetic-stdout', 'stderr': 'synthetic-stderr'})
     def replay(config):
         harness.events.append('coarse_replay')
         if harness.failure == 'coarse_replay': raise ValueError('altered coarse evidence')

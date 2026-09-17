@@ -175,7 +175,9 @@ def test_main_does_not_duplicate_resume_owned_early_release(driver, monkeypatch)
     monkeypatch.setattr(driver.sys, 'argv', [str(SCRIPT)])
     monkeypatch.setattr(driver, '_arguments', lambda _: None)
     monkeypatch.setattr(driver, 'bound_inputs', lambda *a:
-                        ({'operational': {'lock_path': 'synthetic'}}, {}))
+                        ({'operational': {'lock_path': 'synthetic'},
+                          'scope': dict(case_ids=['ocv-t60-p10-n4'], ordinal=2, max_attempts=1,
+                                        capture_only=True, qualification='diagnostic_only')}, {}))
     monkeypatch.setattr(driver, 'production_callbacks', lambda *a: {'reservation': seat})
     monkeypatch.setattr(seats, 'acquire_local_reservation', lambda _: seat)
     def early_refusal(*args, **kwargs):
