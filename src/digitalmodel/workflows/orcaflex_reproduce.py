@@ -86,7 +86,7 @@ def batch_config(model_path, output):
     return {"basename": "orcaflex_run_batch", "orcaflex_run_batch": {
         "models": {"files": [str(Path(model_path).resolve())]},
         "analysis": {"type": "both"}, "run_batch": {
-            "workers": 1, "mock": False, "save_sim": True, "progress_interval_seconds": 30,
+            "workers": 1, "solver_threads": 1, "mock": False, "save_sim": True, "progress_interval_seconds": 30,
             "work_dir": str(Path(output).resolve() / "batch_runs"),
             "output_dir": str(Path(output).resolve() / "results")}},
         "default": {"log_level": "INFO"}}
