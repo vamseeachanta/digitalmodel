@@ -1,6 +1,5 @@
 """Synthetic process adapter tests; no live collector invocation."""
 import importlib
-from pathlib import Path
 from types import SimpleNamespace
 import pytest
 
@@ -120,7 +119,7 @@ def test_process_change_during_final_file_read_is_detected(tmp_path,monkeypatch)
     assert dict(pid=2,reason_code='identity_changed') in result['errors']
 
 
-def test_four_maps_and_fresh_process_instances(tmp_path,monkeypatch):
+def test_six_maps_and_fresh_process_instances(tmp_path,monkeypatch):
     current,seed,templates=fixture(tmp_path,monkeypatch)
     maps=importlib.import_module('digitalmodel.ansys.cylinder_parent_map')
     acquisitions=[];instances=[]
@@ -130,22 +129,23 @@ def test_four_maps_and_fresh_process_instances(tmp_path,monkeypatch):
         value.ppid=lambda:pytest.fail('per-process parent call')
         instances.append(value);return value
     monkeypatch.setattr(maps,'read_windows_parent_map',read)
-    monkeypatch.setattr(current,'read_windows_parent_map',read)
     monkeypatch.setattr(current,'_enumerate',maps.enumerate_windows_v2)
     monkeypatch.setattr(current.psutil,'Process',process)
     result=current.collect_v2(discovery_seed=seed)
-    assert result['errors']==[] and len(acquisitions)==4
-    assert len(instances)==6 and len({id(p) for p in instances})==6
+    assert result['errors']==[] and len(acquisitions)==6
+    assert len(instances)==10 and len({id(p) for p in instances})==10
 
 
 @pytest.mark.parametrize('phase', [1, 2])
 def test_new_process_during_details_or_stability_refuses(tmp_path, monkeypatch, phase):
     current, seed, _ = fixture(tmp_path, monkeypatch)
+    initial = current._enumerate()
     calls = []
     def read():
         calls.append(1)
-        return {1: 0, 2: 1, 3: 2} if len(calls) == phase else {1: 0, 2: 1}
-    monkeypatch.setattr(current, 'read_windows_parent_map', read)
+        added = [dict(initial[1], pid=3, parent_pid=2)]
+        return initial + added if len(calls) == phase + 1 else initial
+    monkeypatch.setattr(current, '_enumerate', read)
     with pytest.raises(ValueError, match='population'):
         current.collect_v2(discovery_seed=seed)
 
@@ -155,13 +155,13 @@ def test_excluded_process_joins_family_during_collection(tmp_path, monkeypatch, 
     current, seed, _ = fixture(tmp_path, monkeypatch)
     initial = current._enumerate()
     initial.append(dict(initial[0], pid=3, parent_pid=0, name='unrelated.exe'))
-    monkeypatch.setattr(current, '_enumerate', lambda: initial)
     calls = []
     def read():
         calls.append(1)
-        return {1: 0, 2: 1, 3: 2 if len(calls) == phase else 0}
-    monkeypatch.setattr(current, 'read_windows_parent_map', read)
-    with pytest.raises(ValueError, match='population'):
+        return [dict(r, parent_pid=2) if r['pid']==3 and len(calls)==phase+1
+                else dict(r) for r in initial]
+    monkeypatch.setattr(current, '_enumerate', read)
+    with pytest.raises(ValueError, match='parent transition'):
         current.collect_v2(discovery_seed=seed)
 
 
@@ -169,18 +169,17 @@ def test_excluded_process_joins_family_during_collection(tmp_path, monkeypatch, 
 @pytest.mark.parametrize('fault',['missing','parent','whole_map'])
 def test_phase_map_changes_refuse(tmp_path,monkeypatch,phase,fault):
     current,seed,_=fixture(tmp_path,monkeypatch);calls=[]
+    initial=current._enumerate()
     def read():
         calls.append(1)
-        if len(calls)==phase:
+        if len(calls)==phase+1:
             if fault=='whole_map':raise ValueError('whole map unavailable')
-            return {1:0} if fault=='missing' else {1:0,2:999}
-        return {1:0,2:1}
-    monkeypatch.setattr(current,'read_windows_parent_map',read,raising=False)
-    if fault=='whole_map':
-        with pytest.raises(ValueError):current.collect_v2(discovery_seed=seed)
-    else:
-        result=current.collect_v2(discovery_seed=seed)
-        assert dict(pid=2,reason_code='missing_process' if fault=='missing' else 'identity_changed') in result['errors']
+            return initial[:1] if fault=='missing' else [initial[0],dict(initial[1],parent_pid=999)]
+        return initial
+    monkeypatch.setattr(current,'_enumerate',read)
+    with pytest.raises(ValueError) as caught:
+        current.collect_v2(discovery_seed=seed)
+    assert caught.value.evidence['failed_stage']
 
 
 @pytest.mark.parametrize('changed_phase',[1,2])

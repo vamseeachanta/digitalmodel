@@ -46,8 +46,8 @@ def _index(rows, parent_map):
     return indexed
 
 
-def _relevant(indexed):
-    relevant = {pid for pid, row in indexed.items()
+def _relevant(indexed, required=()):
+    relevant = set(required) | {pid for pid, row in indexed.items()
                 if _seed(row) or row["name"].casefold() == "interfoam.exe"}
     while True:
         expanded = relevant | {pid for pid, row in indexed.items()
@@ -108,18 +108,33 @@ def _transition(before, after, before_stage, after_stage, relevant, evidence):
             evidence["events"].append(event)
 
 
-def reconcile_observed_inventories(inventories, parent_maps):
+def reconcile_observed_inventories(inventories, parent_maps, *, required_relevant_pids=()):
     """Retain verified unrelated churn and refuse relevant or unknown churn."""
     if (not isinstance(inventories, list) or len(inventories) != 3
             or not isinstance(parent_maps, list) or len(parent_maps) != 3):
         raise ValueError("Exactly three observed populations are required")
+    if (not isinstance(required_relevant_pids, (list, tuple))
+            or len(required_relevant_pids) > 65536
+            or any(type(pid) is not int or not 0 < pid < 2**32
+                   for pid in required_relevant_pids)
+            or list(required_relevant_pids) != sorted(set(required_relevant_pids))):
+        raise ValueError('Sorted unique bounded relevant process identifiers required')
     indexed = [_index(rows, parents)
                for rows, parents in zip(inventories, parent_maps)]
-    relevant = {stage: _relevant(values)
+    relevant = {stage: _relevant(values, required_relevant_pids)
                 for stage, values in zip(STAGES, indexed)}
     evidence = {"events": [],
                 "relevant_pids": {stage: sorted(relevant[stage])
                                   for stage in STAGES}}
+    for pid in sorted(set(indexed[0]) & set(indexed[2])):
+        if _identity(indexed[0][pid]) != _identity(indexed[2][pid]):
+            _refuse('Observed endpoint process identity changed', evidence,
+                    dict(from_stage='A', to_stage='C', pid=pid, change='identity_changed'),
+                    'REFUSED_IDENTITY_CHANGE')
+        if pid not in indexed[1] and indexed[0][pid]['parent_pid'] != indexed[2][pid]['parent_pid']:
+            _transition({pid: indexed[0][pid]}, {pid: indexed[2][pid]},
+                        'A', 'C', relevant, evidence)
+            evidence['events'][-1]['basis'] = 'endpoint_gap'
     _transition(indexed[0], indexed[1], "A", "B", relevant, evidence)
     _transition(indexed[1], indexed[2], "B", "C", relevant, evidence)
     return evidence

@@ -1,5 +1,6 @@
 """Explicit v2 factual collection; no ownership exemption or native execution."""
 from fractions import Fraction
+from copy import deepcopy
 from pathlib import Path
 import re
 import socket
@@ -8,8 +9,9 @@ import time
 import psutil
 
 from .cylinder_diagnostic_snapshot import _seed
-from .cylinder_parent_map import enumerate_windows_v2 as _enumerate, read_windows_parent_map, parent_of
+from .cylinder_parent_map import enumerate_windows_v2 as _enumerate, parent_of
 from .cylinder_forwarder_resources import DeclaredReads, observe_forwarder
+from .cylinder_absence_population import PopulationError, reconcile_observed_inventories
 
 
 def _created(value):
@@ -137,18 +139,7 @@ def _error(error):
     return 'unresolved_source' if str(error)=='unresolved_source' else 'identity_changed'
 
 
-def _population(initial, selected, parent_map):
-    initial_ids = {row['pid'] for row in initial}
-    selected_ids = {row['pid'] for row in selected}
-    if (set(parent_map) - initial_ids or any(
-            row['pid'] not in selected_ids and parent_map.get(row['pid']) in selected_ids
-            for row in initial)):
-        raise ValueError('process population changed after selection')
-
-
-def _details(selected,pinned,candidates,cache,started,initial):
-    parent_map = read_windows_parent_map()
-    _population(initial, selected, parent_map)
+def _details(selected,pinned,candidates,cache,started,parent_map):
     parents = {row['parent_pid'] for row in candidates}
     aliases = {row['child_pid']:row['declared_target_alias'] for row in candidates}
     rows,states,errors = {},{},{}
@@ -171,20 +162,18 @@ def _forwarders(candidates,rows,cache,errors):
             continue
         try:
             records.append(observe_forwarder(candidate,rows,cache))
-        except (OSError,ValueError,KeyError) as error:
+        except (OSError,ValueError,KeyError):
             errors[pid] = dict(pid=pid,reason_code='invalid_forwarder')
             rows.pop(pid,None)
     return records
 
 
-def _stability(rows,states,errors,cache,initial,selected):
+def _stability(rows,states,errors,cache,parent_map):
     try:
         cache.verify()
     except (OSError,ValueError):
         for pid in list(rows):
             errors[pid] = dict(pid=pid,reason_code='identity_changed');rows.pop(pid)
-    parent_map = read_windows_parent_map()
-    _population(initial, selected, parent_map)
     for pid in list(rows):
         try:
             process = psutil.Process(pid)
@@ -194,6 +183,56 @@ def _stability(rows,states,errors,cache,initial,selected):
             errors[pid] = dict(pid=pid,reason_code=_error(error));rows.pop(pid)
 
 
+def _observed_stage(inventories, maps):
+    rows = _enumerate()
+    for row in rows:
+        if not isinstance(row.get('name'), str) or not row['name'].strip():
+            raise PopulationError('Incomplete observed process name', {
+                'events': [dict(pid=row.get('pid'), disposition='REFUSED_INCOMPLETE',
+                                change='blank_process_name')],
+                'rejected_inventory': deepcopy(rows),
+                'limitation': 'No secondary name resolution in active collector; blank names refuse.'})
+    inventories.append(deepcopy(rows))
+    maps.append({row['pid']: row['parent_pid'] for row in rows})
+    return rows
+
+
+def _observed_collection(pinned, candidates, started):
+    inventories, maps = [], []
+    stage = 'A'
+    try:
+        initial = _observed_stage(inventories, maps)
+        selected = _selection(initial, pinned)
+        stage = 'B'
+        _observed_stage(inventories, maps)
+        stage = 'detail_reads'
+        cache = DeclaredReads()
+        rows, states, errors = _details(selected, pinned, candidates, cache, started, maps[1])
+        stage = 'forwarders'
+        forwarders = _forwarders(candidates, rows, cache, errors)
+        stage = 'C'
+        final = _observed_stage(inventories, maps)
+        stage = 'reconciliation'
+        population = reconcile_observed_inventories(
+            inventories, maps, required_relevant_pids=sorted(row['pid'] for row in selected))
+        stage = 'final_selection'
+        if {r['pid'] for r in _selection(final, pinned)} != {r['pid'] for r in selected}:
+            raise ValueError('Final selected population differs')
+        stage = 'stability'
+        _stability(rows, states, errors, cache, maps[2])
+        population['parent_maps'] = maps
+        population['parent_map_basis'] = 'row-derived views of completed identity observations'
+        population['enumeration_limitation'] = (
+            'Pre-yield disappearance may omit identities; within-observation inconsistency refuses.')
+        return initial, selected, cache, rows, forwarders, errors, inventories, population
+    except (ValueError, OSError, psutil.Error) as exc:
+        evidence = deepcopy(getattr(exc, 'evidence', {}))
+        evidence.update(failed_stage=stage, completed_inventories=inventories,
+                        completed_parent_maps=maps)
+        evidence.setdefault('events', [])
+        raise PopulationError(str(exc), evidence) from exc
+
+
 def collect_v2(binding=None, *, discovery_seed=None):
     """Collect nominated roles without granting their ownership or exemption."""
     started = str(time.time())
@@ -201,15 +240,12 @@ def collect_v2(binding=None, *, discovery_seed=None):
         pinned,candidates = _configuration(binding,discovery_seed)
     except (KeyError,TypeError) as exc:
         raise ValueError('invalid v2 collector configuration') from exc
-    initial = _enumerate()
-    selected = _selection(initial,pinned)
-    cache = DeclaredReads()
-    rows,states,errors = _details(selected,pinned,candidates,cache,started,initial)
-    forwarders = _forwarders(candidates,rows,cache,errors)
-    _stability(rows,states,errors,cache,initial,selected)
+    initial,selected,cache,rows,forwarders,errors,inventories,population = _observed_collection(
+        pinned,candidates,started)
     forwarders = [r for r in forwarders if r['parent_pid'] in rows and r['child_pid'] in rows]
     return dict(schema='process-snapshot-2',host=socket.gethostname(),observed_at=started,
         enumeration_complete=True,initial_inventory=initial,rows=list(rows.values()),
+        observed_inventories=inventories,population_check=population,
         forwarders=forwarders,errors=list(errors.values()),declared_file_observations=cache.evidence(),
         coverage=dict(selector='ansys-mpi-lineage-v1',
         enumerated_count=len(initial),selected_count=len(selected),excluded_count=len(initial)-len(selected),
