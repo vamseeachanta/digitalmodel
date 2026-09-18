@@ -38,9 +38,11 @@ def _front(payload):
         '<h1>Refinery pressure vessel<br>Fitness-for-service assessment</h1>'
         '<p class="subtitle">Four independent areas of local metal loss: assessment, reduced-pressure '
         'operation and welded-insert repair.</p>'
-        f'<p class="cover-meta">Revision {revision} · {date}<br>EXAMPLE DATA · INTERNAL TECHNICAL REVIEW</p></header>')
-    controls = [('Document','Pressure-vessel four-area FFS example'),('Revision / date',f'{revision} / {date}'),
-        ('Prepared by','AceEngineer'),('Purpose','Illustrative engineering assessment using assumed input data'),
+        f'<p class="cover-meta">Revision {revision} · {date}<br>Simulated data based on measurements · INTERNAL TECHNICAL REVIEW</p>'
+        '<p>Illustrative measurement-style thickness grids; all values are assumed. '
+        'No field measurements were supplied.</p></header>')
+    controls = [('Document','Pressure-vessel four-area FFS assessment'),('Revision / date',f'{revision} / {date}'),
+        ('Prepared by','AceEngineer'),('Purpose','Engineering assessment using simulated data based on an assumed measurement grid'),
         ('Assessment basis','API 579-1/ASME FFS-1:2007; assumed material properties at '+
          base._number(payload.get('basis',{}).get('assessment_temperature_c'))+' °C'),
         ('Issue status','Internal technical review; formal engineering sign-off not established')]
@@ -54,8 +56,9 @@ def _summary(payload):
     paragraphs = ''.join(f'<p>{base._text(v)}</p>' for v in payload.get('conclusions', [])[:4])
     decisions = base._decisions(payload).replace('<h2>', '<h3>').replace('</h2>', '</h3>')
     decisions = decisions.replace('Decision matrix.', 'Table 1.1. Area decision matrix.')
-    return ('<p class="notice"><strong>EXAMPLE DATA.</strong> All geometry, damage and material inputs '
-        'are assumed. The following findings are conditional numerical comparisons; no certified '
+    return ('<p class="notice"><strong>Simulated data based on measurements.</strong> The '
+        'measurement grid is assumed; no field measurements were supplied. Geometry, damage and material '
+        'inputs remain assumed. The following findings are conditional numerical comparisons; no certified '
         'equipment rating or completed physical repair is established.</p>' + paragraphs + _wrap_tables(decisions))
 
 
@@ -68,7 +71,7 @@ def _introduction():
     return ('<p>A cylindrical refinery pressure vessel is assessed to demonstrate four independent '
         'dispositions: Level 1 acceptance, Level 2 acceptance, reduced-pressure elastic assessment '
         'and restoration by a flush insert. The progression demonstrates how additional analysis '
-        'or repair changes the disposition for the stated example.</p><p>The four damage areas are '
+        'or repair changes the disposition for the simulated assessment.</p><p>The four damage areas are '
         'assumed far apart and noninteracting. No inspection data from an operating vessel is used. '
         'The assessment excludes crack-like damage, cyclic service, creep and external pressure; '
         'supplementary loads are assumed negligible.</p><h3>2.1 Nomenclature</h3>' + _table(
@@ -91,7 +94,7 @@ def _basis(payload):
     material = [('Material','Generic assumed carbon steel','—'),('Elastic modulus',n(m.get('elastic_modulus_mpa')),'MPa'),
         ('Poisson ratio',n(m.get('poisson_ratio')),'—'),('Assumed allowable stress',n(m.get('screening_stress_mpa')),'MPa'),
         ('Assumed yield strength',n(m.get('yield_mpa')),'MPa'),('Executed response','Linear elastic, isotropic','—')]
-    content = '<p>All dimensions and assumed material properties define this synthetic example. '
+    content = '<p>The simulated data are based on an assumed measurement grid, with assumed geometry and material properties. '
     content += 'The assumed allowable stress is not established from a qualified material table.</p><div class="two-column"><div>'
     content += '<h3>3.1 Geometry and loading</h3>'+_table(('Parameter','Value','Unit'),geometry,'Table 3.1. Assumed vessel basis.')
     content += '</div><div><h3>3.2 Material model</h3>'+_table(('Property','Value','Unit'),material,
@@ -225,7 +228,7 @@ def _references(payload):
         'Source identity and digest are recorded with the verified locators.</li>'
         '<li>ANSYS Mechanical APDL 2026 R1: retained input decks, native results and postprocessing records, Appendix B.</li>'
         '</ol><h3>10.1 Revision history</h3>'+_table(('Revision','Description'),[
-            (payload.get('document',{}).get('revision','01'),'Engineering report presentation; native FEA images and case evidence. Numerical basis retained.')],
+            (payload.get('document',{}).get('revision','01'),'Updated simulated-data terminology and PDF edition; native FEA images and case evidence. Numerical basis retained.')],
             'Table 10.1. Presentation revision; no new equipment authorization.'))
 
 
@@ -265,7 +268,7 @@ def render_professional(payload):
     body += _section(8,conclusions+'<p>Application to operating equipment requires measured wall data, '
         'qualified material/design information, complete load and damage-mechanism checks, and qualified '
         'repair fabrication, examination and testing. The current common operating pressure remains '
-        'conditional on this example basis.</p>')
+        'conditional on this simulated-data basis.</p>')
     body += _section(9,_references(payload))
     body += _section(10,'<details><summary>All retained numerical comparisons</summary>'+_case_table(
         payload.get('fea',[]),'Table A.1. Full case register, including shell diagnostics and verification repeats.',True)+'</details>'+
@@ -276,4 +279,4 @@ def render_professional(payload):
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         '<title>Refinery pressure vessel | Engineering assessment | AceEngineer</title>'
         f'<style>{STYLE}</style></head><body><main>{body}<footer>AceEngineer · Pressure-vessel '
-        'fitness-for-service example · Internal technical review</footer></main>'+PRINT_SCRIPT+'</body></html>')
+        'fitness-for-service assessment · Simulated data based on measurements · Internal technical review</footer></main>'+PRINT_SCRIPT+'</body></html>')

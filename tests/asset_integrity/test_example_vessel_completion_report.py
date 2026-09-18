@@ -59,7 +59,9 @@ def test_professional_structure_and_document_control_without_false_signoff():
     html = render_report({'document': {'revision': '01', 'date': '2026-09-18'}})
     assert '<nav' in html and 'href="#fea-comparisons"' in html
     assert 'Document control' in html and 'Nomenclature' in html
-    assert 'INTERNAL TECHNICAL REVIEW' in html and 'EXAMPLE DATA' in html
+    assert 'INTERNAL TECHNICAL REVIEW' in html and 'Simulated data based on measurements' in html
+    assert 'EXAMPLE DATA' not in html
+    assert 'measurement grid is assumed; no field measurements were supplied' in html
     assert 'Approved by' not in html
     assert '@media print' in html and 'Appendix A' in html
 
