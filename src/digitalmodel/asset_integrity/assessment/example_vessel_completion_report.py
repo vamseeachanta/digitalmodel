@@ -245,30 +245,6 @@ def _repair():
 
 
 def render_report(payload):
-    """Return an escaped HTML report from supplied, separately qualified evidence."""
-    style = ('body{max-width:1250px;margin:32px auto;padding:20px;font:15px/1.5 system-ui;color:#183044}'
-             'table{border-collapse:collapse;width:100%;font-size:13px}td,th{border:1px solid #bccbd4;padding:6px}'
-             'th{background:#e7f0f5}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f3f6f8;padding:12px}'
-             'svg{width:100%;height:auto}svg:not(.grid) rect{fill:#e7f0f5;stroke:#315c76}svg path{fill:none;stroke:#315c76}'
-             'svg text{font:12px system-ui;fill:#183044}img{max-width:100%}.caption,figcaption{font-size:13px}'
-             '.notice{padding:16px;background:#fff4d8;border-left:5px solid #b27b13}')
-    body = ('<h1>Pressure-vessel four-area demonstration</h1><p class="notice">EXAMPLE DATA — '
-            'conditional results only. No actual-asset fitness, certified pressure rating or completed '
-            'physical repair is established.</p><h2>Assessment method</h2>'
-            + _method_flow())
-    body += (f'<p><a href="{_url(payload.get("data_href", "../data/pressure-vessel-example/v2/report.html"))}">'
-             'Thickness grids and sampling evidence</a></p>')
-    for item in payload.get('conclusions', []):
-        body += f'<p>{_text(item)}</p>'
-    body += _decisions(payload) + _basis(payload) + _location(payload) + _grids(payload)
-    body += _level12(payload) + _circumferential(payload)
-    body += _fea(payload) + _evidence(payload) + _repair()
-    for item in payload.get('repair_method', []):
-        body += f'<p>{_text(item)}</p>'
-    source = payload.get('source_href', SOURCE)
-    body += ('<h2>Source and qualification</h2><p>Assessment edition: API 579-1/ASME FFS-1:2007. '
-             'Edition-specific equation verification and material assumptions remain separate. '
-             f'<a href="{_url(source)}">Source or example-manual reference</a>. '
-             'The publisher catalog alone does not verify calculation details or material properties. '
-             'Original licensed documents remain referenced; no licensed original is embedded.</p>')
-    return f'<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Vessel example</title><style>{style}</style></head><body>{body}</body></html>'
+    """Render the controlled engineering presentation without changing supplied results."""
+    from .example_vessel_professional_report import render_professional
+    return render_professional(payload)
