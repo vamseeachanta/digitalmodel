@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
 import numpy as np
+import yaml
 
 from digitalmodel.infrastructure.persistence.provenance import compute_hash
 from digitalmodel.workflows.orcaflex_reproduce import _load_api, validate_samples
@@ -39,9 +41,8 @@ def chord_diagnostics(times, end_a, end_b, unstretched_length):
                               'includes sag and elastic extension effects.'}
 
 
-def _geometry_channels(model, api, arrays, channels, period):
-    for index in range(1, 7):
-        name = f'Sling#{index}'
+def _geometry_channels(model, api, arrays, channels, period, names=None):
+    for name in names if names is not None else [f'Sling#{i}' for i in range(1, 7)]:
         ends = []
         for end in ('A', 'B'):
             extra = getattr(api, 'oeEnd' + end)
@@ -72,6 +73,8 @@ def _add_channel(model, api, arrays, channels, key, name, variable, units,
             arrays['time'], values, units=units, near_zero_threshold=0.0)
         channels[key]['static_tension_kN'] = float(
             model[name].StaticResult(variable, extra))
+        if not np.isfinite(channels[key]['static_tension_kN']):
+            raise ValueError('Nonfinite static tension')
 
 
 def _line_channels(model, api, arrays, channels, period):
@@ -107,11 +110,101 @@ def _line_channels(model, api, arrays, channels, period):
     channels['JumperLine_midpoint_bend']['selection'] = 'fixed geometric midpoint'
 
 
-def extract(run_dir):
+def _validate_profile(profile):
+    if (not isinstance(profile, dict) or type(profile.get('schema_version')) is not int
+            or profile['schema_version'] != 1):
+        raise ValueError('Supplemental profile schema_version 1 required')
+    if set(profile) - {'schema_version', 'channels', 'geometry_lines'}:
+        raise ValueError('Unknown supplemental profile field')
+    rows, names = profile.get('channels'), profile.get('geometry_lines', [])
+    if not isinstance(rows, list) or not rows or not isinstance(names, list):
+        raise ValueError('Explicit nonempty channels and geometry list required')
+    identities = []
+    for row in rows:
+        if (not isinstance(row, dict) or set(row) - {'object', 'variable', 'units', 'position'}
+                or any(not isinstance(row.get(k), str) or not row[k].strip()
+                       for k in ('object', 'variable', 'units'))
+                or row.get('position') not in (None, 'End A', 'End B')):
+            raise ValueError('Invalid supplemental channel selector')
+        identities.append((row['object'], row['variable'], row.get('position')))
+    if len(set(identities)) != len(identities):
+        raise ValueError('Duplicate supplemental channels')
+    if any(not isinstance(n, str) or not n.strip() for n in names) or len(set(names)) != len(names):
+        raise ValueError('Invalid or duplicate geometry lines')
+    return rows, names
+
+
+def _profile_channels(model, api, arrays, channels, period, profile):
+    rows, names = _validate_profile(profile)
+    for index, row in enumerate(rows):
+        position = row.get('position')
+        extra = getattr(api, 'oeEnd' + position[-1]) if position else None
+        _add_channel(model, api, arrays, channels, f'profile_{index:03d}',
+                     row['object'], row['variable'], row['units'], period, extra, position)
+    _geometry_channels(model, api, arrays, channels, period, names=names)
+
+
+def _read_profile(run_dir, receipt, override):
+    request = run_dir / 'request.yml'
+    raw = request.read_bytes()
+    if hashlib.sha256(raw).hexdigest() != receipt.get('request_sha256'):
+        raise ValueError('Request identity mismatch')
+    embedded = yaml.safe_load(raw).get('extraction', {}).get('supplemental_profile')
+    if override is not None and embedded is not None and override != embedded:
+        raise ValueError('Supplemental profile override conflicts with embedded profile')
+    profile = embedded if override is None else override
+    if profile is not None:
+        _validate_profile(profile)
+    return profile
+
+
+def profile_digest(profile):
+    return hashlib.sha256(json.dumps(profile, sort_keys=True,
+                                    separators=(',', ':')).encode()).hexdigest()
+
+
+def verify_profile_metadata(run_dir, receipt, metadata):
+    expected = _read_profile(run_dir, receipt, None)
+    saved = metadata.get('supplemental_profile')
+    if expected is not None and saved != expected:
+        raise ValueError('Saved supplemental profile differs from request')
+    if saved is not None:
+        rows, names = _validate_profile(saved)
+        if (metadata.get('supplemental_profile_sha256') != profile_digest(saved)
+                or metadata.get('request_sha256') != receipt['request_sha256']):
+            raise ValueError('Supplemental profile provenance mismatch')
+        channels = metadata.get('channels', {})
+        if 'wave_elevation' not in channels:
+            raise ValueError('Missing supplemental wave channel')
+        for index, row in enumerate(rows):
+            actual = channels.get(f'profile_{index:03d}', {})
+            if any(actual.get(k) != row.get(k) for k in ('object', 'variable', 'units', 'position')):
+                raise ValueError('Supplemental channel coverage mismatch')
+        for name in names:
+            for field in ('span_m', 'unstretched_length_minus_span_m', 'span_rate_m_per_s'):
+                if channels.get(f'{name}_{field}', {}).get('object') != name:
+                    raise ValueError('Supplemental geometry coverage mismatch')
+
+
+def verify_profile_arrays(path, receipt, metadata):
+    if metadata.get('supplemental_profile') is None:
+        return
+    with np.load(path, allow_pickle=False) as arrays:
+        times = arrays['time']
+        validate_samples(times, [0.0, receipt['simulation_stop']], receipt['actual_logging_interval'])
+        if set(arrays.files) != {'time', *metadata['channels']}:
+            raise ValueError('Supplemental saved array coverage mismatch')
+        if any(arrays[key].shape != times.shape or not np.isfinite(arrays[key]).all()
+               for key in arrays.files):
+            raise ValueError('Invalid supplemental saved arrays')
+
+
+def extract(run_dir, supplemental_profile=None):
     run_dir = Path(run_dir).resolve()
     receipt = json.loads((run_dir / 'run.json').read_text())
     if receipt['status'] != 'completed':
         raise ValueError('Completed reproduction required')
+    profile = _read_profile(run_dir, receipt, supplemental_profile)
     sims = list((run_dir / 'batch_runs/sims').glob('*.sim'))
     if len(sims) != 1 or compute_hash(sims[0]) != receipt['simulation_sha256']:
         raise ValueError('Simulation identity mismatch')
@@ -119,7 +212,7 @@ def extract(run_dir):
     if destination.exists():
         raise FileExistsError(destination)
     api, identity = _load_api({'solver_version': receipt['solver_version']})
-    model = api.Model(str(sims[0]))
+    model = api.Model(str(sims[0]), threadCount=1)
     period = api.SpecifiedPeriod(0.0, receipt['simulation_stop'])
     times = np.asarray(model.SampleTimes(period))
     validate_samples(times, [0.0, receipt['simulation_stop']],
@@ -128,8 +221,11 @@ def extract(run_dir):
     _add_channel(model, api, arrays, channels, 'wave_elevation', 'Environment',
                  'Elevation', 'm', period, api.oeEnvironment(0, 0, 0),
                  {'x_m': 0, 'y_m': 0, 'z_m': 0})
-    _line_channels(model, api, arrays, channels, period)
-    _geometry_channels(model, api, arrays, channels, period)
+    if profile is None:
+        _line_channels(model, api, arrays, channels, period)
+        _geometry_channels(model, api, arrays, channels, period)
+    else:
+        _profile_channels(model, api, arrays, channels, period, profile)
     destination.mkdir(exist_ok=False)
     np.savez_compressed(destination / 'traces.npz', **arrays)
     metadata = {'solver': identity, 'simulation_sha256': receipt['simulation_sha256'],
@@ -140,6 +236,11 @@ def extract(run_dir):
                                 'Sampling and snap-load fidelity require convergence.',
                                 'Component capacities and project edition unverified.'],
                 'trace_sha256': compute_hash(destination / 'traces.npz')}
+    if profile is not None:
+        metadata.update(supplemental_profile=profile,
+            supplemental_profile_source='override' if supplemental_profile is not None else 'request',
+            supplemental_profile_sha256=profile_digest(profile),
+            request_sha256=receipt['request_sha256'])
     (destination / 'metadata.json').write_text(
         json.dumps(metadata, indent=2, allow_nan=False), encoding='utf-8')
     with np.load(destination / 'traces.npz') as check:

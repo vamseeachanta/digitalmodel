@@ -77,9 +77,13 @@ def _ensure_traces(run, receipt):
     if not directory.exists():
         _extract_traces(run)
     metadata = _read(directory / 'metadata.json')
+    from digitalmodel.workflows.installation_trace_extract import verify_profile_metadata
+    verify_profile_metadata(run, receipt, metadata)
     if metadata.get('simulation_sha256') != receipt['simulation_sha256'] or not metadata.get('channels'):
         raise ValueError('Supplemental trace metadata does not identify the simulation/channels')
     _hash(directory / 'traces.npz', metadata.get('trace_sha256'))
+    from digitalmodel.workflows.installation_trace_extract import verify_profile_arrays
+    verify_profile_arrays(directory / 'traces.npz', receipt, metadata)
 
 
 def _summary(manifest, study, root):
