@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from hashlib import sha256
 from html import escape
@@ -14,38 +15,45 @@ from digitalmodel.workflows.installation_seastate_report import _case, _read
 from digitalmodel.workflows.installation_report_sections import front_sections, pending_sections, marketing_section
 
 
-def collect_cases(snapshot, matrix):
+def collect_cases(snapshot, matrix, *, workers=1):
     """Inspect completed cases only; preserve the captured campaign state."""
+    if isinstance(workers, bool) or not isinstance(workers, int) or workers < 1:
+        raise ValueError('workers must be a positive integer')
     captured = {row['index']: row for row in snapshot['cases']}
     if len(captured) != len(snapshot['cases']) or any(i < 0 or i >= len(matrix['cases']) for i in captured):
         raise ValueError('Duplicate or out-of-range campaign index')
     for index, row in captured.items():
         if any(row.get(key) != matrix['cases'][index][key] for key in ('hs_m', 'tp_s', 'seed')):
             raise ValueError('Campaign coordinates differ from matrix')
-    results = []
-    for index, case in enumerate(matrix['cases']):
-        current = captured.get(index, {'status': 'MISSING'})
-        row = dict(index=index, **{k: case[k] for k in ('hs_m', 'tp_s', 'seed')})
-        row.update(status=current['status'], reason='Campaign snapshot; acceptance not evaluated')
-        if current['status'] == 'COMPLETED':
-            metadata_path = Path(current.get('run_dir', '.')) / 'installation_traces/metadata.json'
-            before = metadata_path.read_bytes() if metadata_path.exists() else None
-            row = _case(index, case, current, matrix)
-            if 'trace_sha256' in row and row['status'] != 'FAILED':
-                metadata_path = Path(current['run_dir']) / 'installation_traces/metadata.json'
-                raw = metadata_path.read_bytes()
-                if raw != before:
-                    raise ValueError('Metadata changed during verification')
-                metadata = json.loads(raw)
-                if metadata['trace_sha256'] != row['trace_sha256']:
-                    raise ValueError('Metadata changed during verification')
-                row.update(status='VERIFIED', channels=_compact_channels(metadata['channels']),
-                           metadata_sha256=sha256(raw).hexdigest(),
-                           limitations=metadata.get('limitations', []))
-            elif row['status'] != 'FAILED':
-                row['status'] = 'INCOMPLETE'
-        results.append(row)
-    return results
+    jobs = [(i, case, captured.get(i, {'status': 'MISSING'}), matrix)
+            for i, case in enumerate(matrix['cases'])]
+    if workers == 1:
+        return [_collect_case(*job) for job in jobs]
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        return list(executor.map(lambda job: _collect_case(*job), jobs))
+
+
+def _collect_case(index, case, current, matrix):
+    row = dict(index=index, **{k: case[k] for k in ('hs_m', 'tp_s', 'seed')})
+    row.update(status=current['status'], reason='Campaign snapshot; acceptance not evaluated')
+    if current['status'] == 'COMPLETED':
+        metadata_path = Path(current.get('run_dir', '.')) / 'installation_traces/metadata.json'
+        before = metadata_path.read_bytes() if metadata_path.exists() else None
+        row = _case(index, case, current, matrix)
+        if 'trace_sha256' in row and row['status'] != 'FAILED':
+            metadata_path = Path(current['run_dir']) / 'installation_traces/metadata.json'
+            raw = metadata_path.read_bytes()
+            if raw != before:
+                raise ValueError('Metadata changed during verification')
+            metadata = json.loads(raw)
+            if metadata['trace_sha256'] != row['trace_sha256']:
+                raise ValueError('Metadata changed during verification')
+            row.update(status='VERIFIED', channels=_compact_channels(metadata['channels']),
+                       metadata_sha256=sha256(raw).hexdigest(),
+                       limitations=metadata.get('limitations', []))
+        elif row['status'] != 'FAILED':
+            row['status'] = 'INCOMPLETE'
+    return row
 
 
 def _compact_channels(channels):
@@ -207,6 +215,8 @@ th{background:#eef3f7}small{display:block;color:#64788c;font-size:11px;white-spa
 
 def render_html(summary, links, base=Path('.')):
     counts, cases = summary['counts'], summary['cases']
+    issue = ('Complete run-demand snapshot; engineering acceptance pending'
+             if cases and all(case['status'] == 'VERIFIED' for case in cases) else 'Partial issue')
     if any(':' in url.split('/')[0] or url.startswith('//') for url in links.values()):
         raise ValueError('Report links must be relative paths')
     cards = ''.join(f'<div class="card"><b>{counts.get(status, 0)}</b>{label}</div>' for status, label in
@@ -215,9 +225,9 @@ def render_html(summary, links, base=Path('.')):
                      ('INCOMPLETE', 'Extraction incomplete')])
     references = ''.join(f'<li><a href="{escape(url, quote=True)}">{escape(name)}</a></li>' for name, url in links.items())
     return f'''<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>Jumper installation · partial results</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>Jumper installation · engineering analysis</title>
 <style>{STYLE}</style></head><body><main><header><div class="tag">Installation engineering / review issue</div>
-<h1>Jumper installation<br>Engineering analysis report</h1><p>Partial issue · simulated irregular waves · immutable snapshot {summary['created_utc']}</p>
+<h1>Jumper installation<br>Engineering analysis report</h1><p>{issue} · simulated irregular waves · immutable snapshot {summary['created_utc']}</p>
 </header><div class="cards">{cards}</div><div class="notice"><strong>Engineering acceptance: NOT EVALUATED.</strong>
 No operating window has been established. Completed cells represent verified simulation evidence, not approved operating conditions.</div>
 {front_sections(summary)}
@@ -254,7 +264,7 @@ Campaign snapshot SHA-256: {summary['campaign_sha256']}</p></section>
 <footer>Reusable engineering results owner: private digitalmodel-data. Local retention does not establish remote backup.</footer></main></body></html>'''
 
 
-def generate_report(campaign_path, matrix_path, output, links=None):
+def generate_report(campaign_path, matrix_path, output, links=None, *, workers=1):
     output, campaign_path, matrix_path = map(Path, (output, campaign_path, matrix_path))
     sidecar = output.with_suffix('.json')
     if output.exists() or sidecar.exists() or sidecar == output:
@@ -265,11 +275,12 @@ def generate_report(campaign_path, matrix_path, output, links=None):
     digest = sha256(matrix_raw).hexdigest()
     if snapshot['matrix_sha256'] != digest:
         raise ValueError('Campaign does not match matrix')
-    cases = collect_cases(snapshot, matrix)
+    cases = collect_cases(snapshot, matrix, workers=workers)
     summary = dict(created_utc=captured_utc,
                    campaign_sha256=sha256(raw).hexdigest(), matrix_sha256=digest,
                    campaign_snapshot=snapshot, engineering_acceptance='NOT EVALUATED',
                    counts=dict(Counter(row['status'] for row in cases)), cases=cases,
+                   verification_workers=workers,
                    envelopes=component_envelopes(cases))
     html = render_html(summary, links or {}, output.parent)
     payload = json.dumps(summary, indent=2, allow_nan=False)
@@ -288,8 +299,9 @@ def main():
     parser.add_argument('--campaign', required=True, type=Path)
     parser.add_argument('--matrix', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path)
+    parser.add_argument('--workers', type=int, default=1)
     args = parser.parse_args()
-    result = generate_report(args.campaign, args.matrix, args.output)
+    result = generate_report(args.campaign, args.matrix, args.output, workers=args.workers)
     print(json.dumps(result['counts']))
 
 

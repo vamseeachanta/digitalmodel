@@ -1,8 +1,46 @@
 import json
+from threading import Barrier, get_ident
 
 import pytest
 
 from digitalmodel.workflows import installation_partial_report as report
+
+
+@pytest.mark.parametrize('workers', [0, -1, 1.5, True, '3'])
+def test_invalid_workers_rejected(workers):
+    with pytest.raises(ValueError, match='workers'):
+        report.collect_cases({'cases': []}, {'cases': []}, workers=workers)
+
+
+def test_parallel_cases_preserve_serial_order_and_use_three_threads(monkeypatch):
+    cases = [dict(hs_m=i + 1, tp_s=8, seed=1) for i in range(3)]
+    snapshot = {'cases': [dict(index=i, status='COMPLETED', **c) for i, c in enumerate(cases)]}
+    monkeypatch.setattr(report, '_case', lambda i, *args: dict(index=i, status='FAILED'))
+    serial = report.collect_cases(snapshot, {'cases': cases})
+    barrier, identities = Barrier(3), set()
+    def inspect(i, *args):
+        identities.add(get_ident())
+        barrier.wait(timeout=5)
+        return dict(index=i, status='FAILED')
+    monkeypatch.setattr(report, '_case', inspect)
+    assert report.collect_cases(snapshot, {'cases': cases}, workers=3) == serial
+    assert len(identities) == 3
+
+
+def test_parallel_worker_exception_aborts_report(monkeypatch, tmp_path):
+    from hashlib import sha256
+    matrix = tmp_path / 'matrix.json'
+    matrix.write_text(json.dumps({'cases': [dict(hs_m=1, tp_s=8, seed=1)]}))
+    campaign = tmp_path / 'campaign.json'
+    campaign.write_text(json.dumps({'matrix_sha256': sha256(matrix.read_bytes()).hexdigest(),
+        'cases': [dict(index=0, status='COMPLETED', hs_m=1, tp_s=8, seed=1)]}))
+    def broken(*args):
+        raise ValueError('invalid evidence')
+    monkeypatch.setattr(report, '_case', broken)
+    output = tmp_path / 'report.html'
+    with pytest.raises(ValueError, match='invalid evidence'):
+        report.generate_report(campaign, matrix, output, workers=3)
+    assert not output.exists() and not output.with_suffix('.json').exists()
 
 
 def test_snapshot_does_not_promote_running_case(monkeypatch, tmp_path):

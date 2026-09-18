@@ -44,7 +44,7 @@ def front_sections(summary):
 <p>The analysis evaluates simulated irregular-wave demand during jumper installation. The objectives are to quantify
 crane-wire, sling, jumper and connector response; assess intentional sling unloading and re-tension; and develop a
 qualified Hs–Tp operating window. A separate two-minute forecasting demonstration will support assessment of installation monitoring.</p>
-<p>This issue is a partial engineering report. Pending results retain their designated sections for later population.</p></section>
+<p>The engineering acceptance assessment remains incomplete. Pending results retain their designated sections for later population.</p></section>
 <section id="conclusions"><h2>2 · Summary and conclusions</h2>
 <p>{verified} of {planned} planned cases have verified completed evidence at the stated snapshot. Verification refers to
 provenance and data consistency; it does not establish compliance with engineering acceptance criteria.</p>
