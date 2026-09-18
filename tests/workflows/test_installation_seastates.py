@@ -63,6 +63,11 @@ def test_fixed_metadata_rejects_variable_mode_readback(setup):
 class Environment(NS):
     def __setattr__(self, key, value):
         super().__setattr__(key, value)
+        if key == 'WaveType' and hasattr(self, 'WaveDirection'):
+            super().__setattr__('WaveDirection', 180.)
+        if key == 'WaveOrigin':
+            super().__setattr__('WaveOriginX', value[0])
+            super().__setattr__('WaveOriginY', value[1])
         if key == 'WaveGamma' and hasattr(self, 'WaveTp'):
             super().__setattr__('WaveTp', self.WaveTp * .9)
 
@@ -121,6 +126,32 @@ def test_case_preserves_source_and_structure_and_full_stages(setup):
     assert request['extraction'] == extraction
     assert request['timeout_seconds'] == 1800
     assert json.loads((output / 'generation.json').read_text()) == result
+
+
+def test_wave_conversion_preserves_nondefault_heading(setup):
+    api, source, _, output, extraction = setup
+    payload = yaml.safe_load(source.read_text())
+    payload['Environment']['WaveDirection'] = 165.
+    payload['Environment'].update(WaveOriginX=12., WaveOriginY=-7., WaveTimeOrigin=3.)
+    source.write_text(yaml.safe_dump(payload))
+    digest = sea.compute_hash(source)
+    sea.generate_case(api, source, digest, output, extraction=extraction)
+    matrix = output.parent / 'matrix'
+    sea.prepare_matrix(source, digest, matrix)
+    sea.materialize_case(api, matrix, 43, output.parent / 'pilot', extraction=extraction)
+
+
+@pytest.mark.parametrize('reference', [
+    {'WaveDirection': 165., 'WaveOrigin': [0., 0.], 'WaveTimeOrigin': 0., 'WaveHs': 999},
+    {'WaveDirection': float('nan'), 'WaveOrigin': [0., 0.], 'WaveTimeOrigin': 0.},
+    {'WaveDirection': 165., 'WaveOrigin': [0.], 'WaveTimeOrigin': 0.},
+    {'WaveDirection': 165., 'WaveOrigin': [0., float('inf')], 'WaveTimeOrigin': 0.},
+])
+def test_wave_reference_rejects_unbounded_overrides(reference):
+    settings = sea._settings(1, 8, 1, 80, 600, .1, 1.5, 80)
+    settings['wave_reference'] = reference
+    with pytest.raises(ValueError, match='Wave reference'):
+        sea._change_payload(settings, 'Wave1')
 
 
 def test_refuses_overwrite_or_wrong_source_hash(setup):

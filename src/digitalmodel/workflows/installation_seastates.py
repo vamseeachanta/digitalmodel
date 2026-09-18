@@ -67,6 +67,18 @@ def _fixed_mode(value):
     return value is False or value == 'No'
 
 
+def _validated_wave_reference(reference):
+    if not isinstance(reference, dict) or set(reference) != {'WaveDirection', 'WaveOrigin', 'WaveTimeOrigin'}:
+        raise ValueError('Wave reference requires exactly direction, origin and time')
+    origin = reference['WaveOrigin']
+    if not isinstance(origin, (list, tuple)) or len(origin) != 2:
+        raise ValueError('Wave reference origin must contain two coordinates')
+    values = [reference['WaveDirection'], reference['WaveTimeOrigin'], *origin]
+    if any(isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) for v in values):
+        raise ValueError('Wave reference values must be finite numbers')
+    return copy.deepcopy(reference)
+
+
 def _configure(model, settings):
     env, general = model.environment, model.general
     if int(env.NumberOfWaveTrains) != 1:
@@ -89,6 +101,8 @@ def _configure(model, settings):
     env.WaveTp = settings['tp_s']
     env.WaveSeed = settings['seed']
     env.WaveNumberOfComponents = settings['components']
+    for key, value in reference.items():
+        setattr(env, key, value)
     return reference
 
 
@@ -201,6 +215,12 @@ def prepare_matrix(source, source_sha256, output_dir, *, seed=20260915,
     trains = master['Environment'].get('WaveTrains', [{'Name': 'Wave1'}])
     if len(trains) != 1:
         raise ValueError('Exactly one source wave train required')
+    wave = trains[0] if 'WaveTrains' in master['Environment'] else master['Environment']
+    common['wave_reference'] = {
+        'WaveDirection': wave.get('WaveDirection', 180.),
+        'WaveOrigin': wave.get('WaveOrigin', [wave.get('WaveOriginX', 0.), wave.get('WaveOriginY', 0.)]),
+        'WaveTimeOrigin': wave.get('WaveTimeOrigin', 0.)}
+    _validated_wave_reference(common['wave_reference'])
     output = Path(output_dir).resolve()
     output.mkdir(parents=True, exist_ok=False)
     shutil.copyfile(source, output / 'master.yml')
@@ -233,6 +253,8 @@ def _change_payload(settings, wave_name):
             'WaveSeed': settings['seed'], 'WaveNumberOfComponents': settings['components']}]}}
     if 'fixed_time_step_s' in settings:
         result['General'].pop('ImplicitVariableMaxTimeStep')
+    if 'wave_reference' in settings:
+        result['Environment']['WaveTrains'][0].update(_validated_wave_reference(settings['wave_reference']))
     return result
 
 
@@ -256,6 +278,8 @@ def materialize_case(api, study_dir, case_index, output_dir, *, extraction,
                          common.get('gamma', 3.3), common.get('components', 200), common.get('max_time_step_s', .1))
     if 'fixed_time_step_s' in common:
         settings['fixed_time_step_s'] = common['fixed_time_step_s']
+    if 'wave_reference' in common:
+        settings['wave_reference'] = common['wave_reference']
     wave_name = payload.get('Environment', {}).get('WaveTrains', [{}])[0].get('Name')
     expected_change = _change_payload(settings, wave_name)
     if 'max_time_step_s' not in common and 'ImplicitVariableMaxTimeStep' not in payload.get('General', {}):
