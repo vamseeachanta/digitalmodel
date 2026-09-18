@@ -10,10 +10,11 @@ from digitalmodel.workflows import installation_seastates as sea
 
 
 @pytest.mark.parametrize('cap', [.05, .1])
-def test_fixed_timestep_master_preserves_mode_and_skips_inactive_setting(setup, cap):
+@pytest.mark.parametrize('mode', ['No', False])
+def test_fixed_timestep_master_preserves_mode_and_skips_inactive_setting(setup, cap, mode):
     api, source, _, output, extraction = setup
     payload = yaml.safe_load(source.read_text())
-    payload['General'].update(ImplicitUseVariableTimeStep='No', ImplicitConstantTimeStep=.05)
+    payload['General'].update(ImplicitUseVariableTimeStep=mode, ImplicitConstantTimeStep=.05)
     source.write_text(yaml.safe_dump(payload))
     manifest = sea.prepare_matrix(source, sea.compute_hash(source), output, max_time_step=cap)
     change = yaml.safe_load((output / manifest['cases'][0]['change_file']).read_text())
@@ -21,7 +22,7 @@ def test_fixed_timestep_master_preserves_mode_and_skips_inactive_setting(setup, 
     assert manifest['settings']['fixed_time_step_s'] == .05
     result = sea.materialize_case(api, output, 0, output.parent / 'fixed-case', extraction=extraction)
     actual = yaml.safe_load((output.parent / 'fixed-case/model.yml').read_text())
-    assert actual['General']['ImplicitUseVariableTimeStep'] == 'No'
+    assert actual['General']['ImplicitUseVariableTimeStep'] == mode
     assert actual['General']['ImplicitConstantTimeStep'] == .05
     assert 'ImplicitVariableMaxTimeStep' not in actual['General']
     assert result['settings']['fixed_time_step_s'] == .05

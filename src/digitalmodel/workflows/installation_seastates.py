@@ -62,6 +62,11 @@ def _wave_reference(env):
             ('WaveDirection', 'WaveOriginX', 'WaveOriginY', 'WaveTimeOrigin')}
 
 
+def _fixed_mode(value):
+    """Accept native API strings and YAML's boolean representation of No."""
+    return value is False or value == 'No'
+
+
 def _configure(model, settings):
     env, general = model.environment, model.general
     if int(env.NumberOfWaveTrains) != 1:
@@ -69,7 +74,7 @@ def _configure(model, settings):
     reference = _wave_reference(env)
     general.StageDuration = [settings['buildup_s'], settings['duration_s']]
     general.TargetLogSampleInterval = settings['sample_interval_s']
-    if getattr(general, 'ImplicitUseVariableTimeStep', 'Yes') != 'No':
+    if not _fixed_mode(getattr(general, 'ImplicitUseVariableTimeStep', 'Yes')):
         general.ImplicitVariableMaxTimeStep = settings['max_time_step_s']
     else:
         settings.setdefault('fixed_time_step_s', float(general.ImplicitConstantTimeStep))
@@ -105,9 +110,9 @@ def _verify(model, settings, reference):
     if not math.isclose(float(model.general.TargetLogSampleInterval), settings['sample_interval_s']):
         raise ValueError('Logging interval readback mismatch')
     mode = getattr(model.general, 'ImplicitUseVariableTimeStep', 'Yes')
-    if 'fixed_time_step_s' in settings and mode != 'No':
+    if 'fixed_time_step_s' in settings and not _fixed_mode(mode):
         raise ValueError('Fixed integration mode readback mismatch')
-    if mode == 'No':
+    if _fixed_mode(mode):
         fixed = float(model.general.ImplicitConstantTimeStep)
         if not math.isfinite(fixed) or not 0 < fixed <= settings['max_time_step_s']:
             raise ValueError('Fixed integration timestep exceeds requested cap')
@@ -188,7 +193,7 @@ def prepare_matrix(source, source_sha256, output_dir, *, seed=20260915,
     common = _settings(2, 8, seed, buildup, duration, sample_interval, gamma, components, max_time_step)
     from digitalmodel.solvers.orcaflex.yaml_utils import OrcaFlexLoader, orcaflex_dump
     master = yaml.load(source.read_text(encoding='utf-8-sig'), Loader=OrcaFlexLoader)
-    if master.get('General', {}).get('ImplicitUseVariableTimeStep') == 'No':
+    if _fixed_mode(master.get('General', {}).get('ImplicitUseVariableTimeStep')):
         fixed = float(master['General']['ImplicitConstantTimeStep'])
         if not math.isfinite(fixed) or not 0 < fixed <= max_time_step:
             raise ValueError('Fixed integration timestep exceeds requested cap')
