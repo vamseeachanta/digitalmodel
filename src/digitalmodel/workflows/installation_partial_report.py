@@ -193,8 +193,8 @@ def _case_details(cases, base):
                      f'<p><a href="{link}">Original extraction report</a> — its legacy executive '
                      'summary can incorrectly state no data; supplemental channels appear below.</p>' +
                      _table(['Channel', 'Position / selected arc', 'Unit', 'Min', 'Max'], rows) +
-                     f'<p class="hash">Simulation SHA-256: {case["simulation_sha256"]}<br>'
-                     f'Traces SHA-256: {case["trace_sha256"]}</p></details>')
+                     f'<p class="hash">Simulation SHA-256: {escape(str(case["simulation_sha256"]))}<br>'
+                     f'Traces SHA-256: {escape(str(case["trace_sha256"]))}</p></details>')
     return ''.join(parts)
 
 

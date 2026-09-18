@@ -6,6 +6,15 @@ import pytest
 from digitalmodel.workflows import installation_partial_report as report
 
 
+def test_case_detail_hashes_are_escaped(tmp_path):
+    row = dict(index=0, hs_m=1, tp_s=8, status='VERIFIED', run_dir=str(tmp_path),
+               channels={}, simulation_sha256='<img src=x onerror=alert(1)>',
+               trace_sha256='<script>bad</script>')
+    html = report._case_details([row], tmp_path)
+    assert '<img' not in html and '<script>' not in html
+    assert '&lt;img' in html and '&lt;script&gt;' in html
+
+
 @pytest.mark.parametrize('workers', [0, -1, 1.5, True, '3'])
 def test_invalid_workers_rejected(workers):
     with pytest.raises(ValueError, match='workers'):
