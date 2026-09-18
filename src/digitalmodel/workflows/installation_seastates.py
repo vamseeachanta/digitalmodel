@@ -69,7 +69,10 @@ def _configure(model, settings):
     reference = _wave_reference(env)
     general.StageDuration = [settings['buildup_s'], settings['duration_s']]
     general.TargetLogSampleInterval = settings['sample_interval_s']
-    general.ImplicitVariableMaxTimeStep = settings['max_time_step_s']
+    if getattr(general, 'ImplicitUseVariableTimeStep', 'Yes') != 'No':
+        general.ImplicitVariableMaxTimeStep = settings['max_time_step_s']
+    else:
+        settings.setdefault('fixed_time_step_s', float(general.ImplicitConstantTimeStep))
     env.WaveType = 'JONSWAP'
     env.WaveJONSWAPParameters = 'Partially specified'
     env.UserSpecifiedRandomWaveSeeds = 'Yes'
@@ -101,7 +104,16 @@ def _verify(model, settings, reference):
         raise ValueError('Stage-duration readback mismatch')
     if not math.isclose(float(model.general.TargetLogSampleInterval), settings['sample_interval_s']):
         raise ValueError('Logging interval readback mismatch')
-    if not math.isclose(float(model.general.ImplicitVariableMaxTimeStep), settings['max_time_step_s']):
+    mode = getattr(model.general, 'ImplicitUseVariableTimeStep', 'Yes')
+    if 'fixed_time_step_s' in settings and mode != 'No':
+        raise ValueError('Fixed integration mode readback mismatch')
+    if mode == 'No':
+        fixed = float(model.general.ImplicitConstantTimeStep)
+        if not math.isfinite(fixed) or not 0 < fixed <= settings['max_time_step_s']:
+            raise ValueError('Fixed integration timestep exceeds requested cap')
+        if 'fixed_time_step_s' in settings and fixed != settings['fixed_time_step_s']:
+            raise ValueError('Fixed integration timestep readback mismatch')
+    elif not math.isclose(float(model.general.ImplicitVariableMaxTimeStep), settings['max_time_step_s']):
         raise ValueError('Integration maximum timestep readback mismatch')
     if _wave_reference(env) != reference:
         raise ValueError('Wave heading/origin changed')
@@ -174,15 +186,20 @@ def prepare_matrix(source, source_sha256, output_dir, *, seed=20260915,
     """Prepare exactly 156 unrun cells; exclude no cell by an assumed criterion."""
     source = _source(source, source_sha256)
     common = _settings(2, 8, seed, buildup, duration, sample_interval, gamma, components, max_time_step)
+    from digitalmodel.solvers.orcaflex.yaml_utils import OrcaFlexLoader, orcaflex_dump
+    master = yaml.load(source.read_text(encoding='utf-8-sig'), Loader=OrcaFlexLoader)
+    if master.get('General', {}).get('ImplicitUseVariableTimeStep') == 'No':
+        fixed = float(master['General']['ImplicitConstantTimeStep'])
+        if not math.isfinite(fixed) or not 0 < fixed <= max_time_step:
+            raise ValueError('Fixed integration timestep exceeds requested cap')
+        common['fixed_time_step_s'] = fixed
+    trains = master['Environment'].get('WaveTrains', [{'Name': 'Wave1'}])
+    if len(trains) != 1:
+        raise ValueError('Exactly one source wave train required')
     output = Path(output_dir).resolve()
     output.mkdir(parents=True, exist_ok=False)
     shutil.copyfile(source, output / 'master.yml')
     _source(output / 'master.yml', source_sha256)
-    from digitalmodel.solvers.orcaflex.yaml_utils import OrcaFlexLoader, orcaflex_dump
-    master = yaml.load(source.read_text(encoding='utf-8-sig'), Loader=OrcaFlexLoader)
-    trains = master['Environment'].get('WaveTrains', [{'Name': 'Wave1'}])
-    if len(trains) != 1:
-        raise ValueError('Exactly one source wave train required')
     (output / 'changes').mkdir()
     cases = [{'hs_m': index / 4, 'tp_s': period, 'seed': seed, 'status': 'not_run'}
              for index in range(1, 13) for period in range(4, 17)]
@@ -200,7 +217,7 @@ def prepare_matrix(source, source_sha256, output_dir, *, seed=20260915,
 
 
 def _change_payload(settings, wave_name):
-    return {'BaseFile': '../master.yml', 'General': {
+    result = {'BaseFile': '../master.yml', 'General': {
         'StageDuration': [settings['buildup_s'], settings['duration_s']],
         'ImplicitVariableMaxTimeStep': settings['max_time_step_s'],
         'TargetLogSampleInterval': settings['sample_interval_s']}, 'Environment': {
@@ -209,6 +226,9 @@ def _change_payload(settings, wave_name):
             'WaveNumberOfSpectralDirections': 1, 'WaveJONSWAPParameters': 'Partially specified',
             'WaveHs': settings['hs_m'], 'WaveGamma': settings['gamma'], 'WaveTp': settings['tp_s'],
             'WaveSeed': settings['seed'], 'WaveNumberOfComponents': settings['components']}]}}
+    if 'fixed_time_step_s' in settings:
+        result['General'].pop('ImplicitVariableMaxTimeStep')
+    return result
 
 
 def materialize_case(api, study_dir, case_index, output_dir, *, extraction,
@@ -229,6 +249,8 @@ def materialize_case(api, study_dir, case_index, output_dir, *, extraction,
     settings = _settings(case['hs_m'], case['tp_s'], case['seed'], common.get('buildup_s', 80),
                          common.get('duration_s', 600), common.get('sample_interval_s', .1),
                          common.get('gamma', 3.3), common.get('components', 200), common.get('max_time_step_s', .1))
+    if 'fixed_time_step_s' in common:
+        settings['fixed_time_step_s'] = common['fixed_time_step_s']
     wave_name = payload.get('Environment', {}).get('WaveTrains', [{}])[0].get('Name')
     expected_change = _change_payload(settings, wave_name)
     if 'max_time_step_s' not in common and 'ImplicitVariableMaxTimeStep' not in payload.get('General', {}):

@@ -9,6 +9,56 @@ import yaml
 from digitalmodel.workflows import installation_seastates as sea
 
 
+@pytest.mark.parametrize('cap', [.05, .1])
+def test_fixed_timestep_master_preserves_mode_and_skips_inactive_setting(setup, cap):
+    api, source, _, output, extraction = setup
+    payload = yaml.safe_load(source.read_text())
+    payload['General'].update(ImplicitUseVariableTimeStep='No', ImplicitConstantTimeStep=.05)
+    source.write_text(yaml.safe_dump(payload))
+    manifest = sea.prepare_matrix(source, sea.compute_hash(source), output, max_time_step=cap)
+    change = yaml.safe_load((output / manifest['cases'][0]['change_file']).read_text())
+    assert 'ImplicitVariableMaxTimeStep' not in change['General']
+    assert manifest['settings']['fixed_time_step_s'] == .05
+    result = sea.materialize_case(api, output, 0, output.parent / 'fixed-case', extraction=extraction)
+    actual = yaml.safe_load((output.parent / 'fixed-case/model.yml').read_text())
+    assert actual['General']['ImplicitUseVariableTimeStep'] == 'No'
+    assert actual['General']['ImplicitConstantTimeStep'] == .05
+    assert 'ImplicitVariableMaxTimeStep' not in actual['General']
+    assert result['settings']['fixed_time_step_s'] == .05
+
+
+@pytest.mark.parametrize('fixed', [0, -.1, .2, float('nan'), float('inf')])
+def test_invalid_fixed_timestep_rejected_before_matrix_write(setup, fixed):
+    _, source, _, output, _ = setup
+    payload = yaml.safe_load(source.read_text())
+    payload['General'].update(ImplicitUseVariableTimeStep='No', ImplicitConstantTimeStep=fixed)
+    source.write_text(yaml.safe_dump(payload))
+    with pytest.raises(ValueError, match='Fixed integration timestep'):
+        sea.prepare_matrix(source, sea.compute_hash(source), output, max_time_step=.1)
+    assert not output.exists()
+
+
+def test_standalone_fixed_case_records_actual_step_separately(setup):
+    api, source, _, output, extraction = setup
+    payload = yaml.safe_load(source.read_text())
+    payload['General'].update(ImplicitUseVariableTimeStep='No', ImplicitConstantTimeStep=.05)
+    source.write_text(yaml.safe_dump(payload))
+    result = sea.generate_case(api, source, sea.compute_hash(source), output, extraction=extraction)
+    assert result['settings']['fixed_time_step_s'] == .05
+    assert result['settings']['max_time_step_s'] == .1
+
+
+def test_fixed_metadata_rejects_variable_mode_readback(setup):
+    api, source, _, _, _ = setup
+    model = api.Model(); model.LoadData(source)
+    settings = sea._settings(1, 8, 1, 80, 600, .1, 1.5, 80)
+    reference = sea._configure(model, settings)
+    settings['fixed_time_step_s'] = .05
+    model.general.ImplicitUseVariableTimeStep = 'Yes'
+    with pytest.raises(ValueError, match='mode'):
+        sea._verify(model, settings, reference)
+
+
 class Environment(NS):
     def __setattr__(self, key, value):
         super().__setattr__(key, value)
