@@ -39,6 +39,7 @@ import numpy as np
 
 __all__ = [
     "OrientationReport",
+    "UnreliableOrientation",
     "orientation_report",
     "orient_outward",
     "panel_vector_areas",
@@ -306,14 +307,51 @@ def orientation_report(
     )
 
 
-def orient_outward(mesh) -> tuple[object, tuple[int, ...]]:
+class UnreliableOrientation(ValueError):
+    """The mesh does not meet the conditions the orientation argument needs."""
+
+
+def _refuse_if_unreliable(report: OrientationReport) -> None:
+    """Refuse to repair a mesh whose orientation cannot be determined.
+
+    Repair rests on two arguments, and each has a precondition. Edge traversal
+    fixes orientation only within a connected component and only on a manifold
+    surface. The enclosed volume then supplies one global sign, which is enough
+    for a single component and not enough for several. And the axis-volume
+    identity assumes the body closes in the plane z = 0, so geometry above the
+    waterline invalidates it. Silently rewinding panels under any of these is
+    worse than declining.
+    """
+    problems = []
+    if report.components != 1:
+        problems.append(
+            f"{report.components} disconnected components; their relative "
+            f"orientation cannot be resolved from one enclosed volume")
+    if report.non_manifold_edges:
+        problems.append(
+            f"{report.non_manifold_edges} edges shared by more than two panels")
+    if report.above_waterline_vertices:
+        problems.append(
+            f"{report.above_waterline_vertices} vertices above z = 0; the "
+            f"axis-volume identity assumes the body closes at the free surface")
+    if problems:
+        raise UnreliableOrientation("; ".join(problems))
+
+
+def orient_outward(mesh, strict: bool = True) -> tuple[object, tuple[int, ...]]:
     """Return a copy of the mesh with every panel wound outward.
 
     Vertex positions are untouched; only the order in which a panel lists them
     changes. The indices of the panels that were rewound are returned so the
     caller can record exactly what the repair did.
+
+    Raises ``UnreliableOrientation`` when the mesh does not meet the conditions
+    the argument needs. Pass ``strict=False`` only when the caller has its own
+    reason to trust the result.
     """
     report = orientation_report(mesh)
+    if strict:
+        _refuse_if_unreliable(report)
     panels = np.asarray(mesh.panels).copy()
     for i in report.inverted_panels:
         panels[i] = panels[i][::-1]
@@ -338,7 +376,7 @@ def orient_outward(mesh) -> tuple[object, tuple[int, ...]]:
     return fixed, report.inverted_panels
 
 
-def repair_gdf_text(text: str) -> tuple[str, tuple[int, ...]]:
+def repair_gdf_text(text: str, strict: bool = True) -> tuple[str, tuple[int, ...]]:
     """Rewind inward-facing panels in WAMIT GDF text, preserving formatting.
 
     A GDF file lists four vertex lines per panel, so rewinding a panel means
@@ -383,7 +421,14 @@ def repair_gdf_text(text: str) -> tuple[str, tuple[int, ...]]:
     )
 
     tri_vecs, tri_cens, tri_owner = _triangle_terms(vertices, panels)
-    flip, _, _, _ = _consistency_flips(panels)
+    flip, components, boundary, non_manifold = _consistency_flips(panels)
+    if strict:
+        _refuse_if_unreliable(OrientationReport(
+            axis_volumes=(0.0, 0.0, 0.0), volume=0.0, consistent=True,
+            outward=True, inverted_panels=(), max_axis_discrepancy=0.0,
+            waterplane_area=0.0, components=components,
+            boundary_edges=boundary, non_manifold_edges=non_manifold,
+            above_waterline_vertices=int(np.sum(vertices[:, 2] > 1e-7))))
     signs = np.where(flip, -1.0, 1.0)
     if float(np.mean(_axis_volumes(tri_vecs, tri_cens, tri_owner, signs))) < 0.0:
         flip = ~flip

@@ -24,6 +24,7 @@ import pytest
 from digitalmodel.hydrodynamics.bemrosetta.mesh import GDFHandler
 from digitalmodel.hydrodynamics.diffraction.mesh_orientation import (
     OrientationReport,
+    UnreliableOrientation,
     orient_outward,
     orientation_report,
     repair_gdf_text,
@@ -262,6 +263,47 @@ def test_geometry_above_the_waterline_is_not_reported_as_ok():
     r = orientation_report(_mesh_from_quads(lifted))
     assert r.above_waterline_vertices > 0
     assert not r.ok
+
+
+# ------------------------------------- repair refuses what it cannot judge
+
+def test_orient_outward_refuses_disjoint_components():
+    first = _box_panels(1.0, 1.0, 1.0)
+    second = _box_panels(1.0, 1.0, 1.0) + np.array([10.0, 0.0, 0.0])
+    mesh = _mesh_from_quads(np.concatenate([first, second]))
+    with pytest.raises(UnreliableOrientation, match="disconnected"):
+        orient_outward(mesh)
+
+
+def test_orient_outward_refuses_geometry_above_the_waterline():
+    lifted = _box_panels()
+    lifted[:, :, 2] += 0.25
+    with pytest.raises(UnreliableOrientation, match="above z = 0"):
+        orient_outward(_mesh_from_quads(lifted))
+
+
+def test_orient_outward_can_be_forced():
+    """The caller may override, but must say so."""
+    first = _box_panels(1.0, 1.0, 1.0)
+    second = _box_panels(1.0, 1.0, 1.0) + np.array([10.0, 0.0, 0.0])
+    mesh = _mesh_from_quads(np.concatenate([first, second]))
+    fixed, flipped = orient_outward(mesh, strict=False)
+    assert fixed is not None
+
+
+def test_repair_gdf_text_refuses_disjoint_components():
+    first = _box_panels(1.0, 1.0, 1.0)
+    second = _box_panels(1.0, 1.0, 1.0) + np.array([10.0, 0.0, 0.0])
+    text = _gdf_text(np.concatenate([first, second]))
+    with pytest.raises(UnreliableOrientation, match="disconnected"):
+        repair_gdf_text(text)
+
+
+def test_repair_gdf_text_refuses_geometry_above_the_waterline():
+    lifted = _box_panels()
+    lifted[:, :, 2] += 0.25
+    with pytest.raises(UnreliableOrientation, match="above z = 0"):
+        repair_gdf_text(_gdf_text(lifted))
 
 
 # ------------------------------------------- format-preserving text repair
