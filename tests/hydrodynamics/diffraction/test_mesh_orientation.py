@@ -203,6 +203,67 @@ def test_committed_fixtures_are_outward(path):
     assert r.volume > 0.0
 
 
+# --------------------------------------- warped panels and disjoint parts
+
+def test_warped_panel_volume_matches_its_own_triangulation():
+    """A quadrilateral that is not planar must integrate as its triangles do.
+
+    Collapsing such a panel to one centroid and one summed vector area is
+    exact only when the two triangle normals are parallel. Hull meshes are
+    routinely warped, so this is the case that matters in practice.
+    """
+    quads = _box_panels()
+    # Lift one bottom corner so two panels become non-planar.
+    warped = quads.copy()
+    for p in range(len(warped)):
+        for v in range(4):
+            if np.allclose(warped[p, v], (-0.5, -0.5, -1.0)):
+                warped[p, v] = (-0.5, -0.5, -0.7)
+    mesh = _mesh_from_quads(warped)
+    r = orientation_report(mesh)
+
+    # Same surface, but every quad split into two triangles explicitly. The
+    # divergence theorem is exact on triangles, so this is the reference.
+    tris = []
+    for q in warped:
+        tris.append(np.asarray([q[0], q[1], q[2], q[0]]))
+        tris.append(np.asarray([q[0], q[2], q[3], q[0]]))
+    tri_mesh = _mesh_from_quads(np.asarray(tris))
+    rt = orientation_report(tri_mesh)
+
+    assert r.volume == pytest.approx(rt.volume, rel=1e-12)
+    for a, b in zip(r.axis_volumes, rt.axis_volumes):
+        assert a == pytest.approx(b, rel=1e-12)
+
+
+def test_disjoint_components_are_not_reported_as_ok():
+    """Two separate bodies: adjacency cannot fix their relative orientation."""
+    first = _box_panels(1.0, 1.0, 1.0)
+    second = _box_panels(1.0, 1.0, 1.0) + np.array([10.0, 0.0, 0.0])
+    mesh = _mesh_from_quads(np.concatenate([first, second]))
+    r = orientation_report(mesh)
+    assert r.components == 2
+    assert not r.ok, "a multi-component mesh must not pass unchecked"
+
+
+def test_single_component_box_reports_one_component():
+    r = orientation_report(_mesh_from_quads(_box_panels()))
+    assert r.components == 1
+    assert r.non_manifold_edges == 0
+    assert r.above_waterline_vertices == 0
+    assert r.ok
+
+
+def test_geometry_above_the_waterline_is_not_reported_as_ok():
+    """The axis-volume identity assumes the body closes in the plane z = 0."""
+    quads = _box_panels()
+    lifted = quads.copy()
+    lifted[:, :, 2] += 0.25  # push the top edge above the free surface
+    r = orientation_report(_mesh_from_quads(lifted))
+    assert r.above_waterline_vertices > 0
+    assert not r.ok
+
+
 # ------------------------------------------- format-preserving text repair
 
 def _gdf_text(quads, eol="\r\n"):

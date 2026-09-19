@@ -66,7 +66,21 @@ class OrientationReport:
 
     @property
     def ok(self) -> bool:
-        return self.consistent and self.outward and not self.inverted_panels
+        """Safe to use as is.
+
+        A single connected component is required. With more than one, the
+        edge-adjacency argument fixes orientation only within each component
+        and the enclosed volume gives one global sign, so a component that is
+        inverted relative to the others cannot be identified.
+        """
+        return (
+            self.consistent
+            and self.outward
+            and not self.inverted_panels
+            and self.components == 1
+            and self.non_manifold_edges == 0
+            and self.above_waterline_vertices == 0
+        )
 
     def describe(self) -> str:
         if self.ok:
@@ -83,36 +97,65 @@ class OrientationReport:
         return f"normals point inward: V = {self.volume:.9g} m^3"
 
 
+def _panel_triangles(
+    vertices: np.ndarray, panel: Sequence[int]
+) -> list[tuple[np.ndarray, np.ndarray]]:
+    """Fan-triangulate a panel, returning (vector area, centroid) per triangle."""
+    idx = list(panel)
+    pts = vertices[idx]
+    v0 = pts[0]
+    out = []
+    for k in range(1, len(idx) - 1):
+        vec = np.cross(pts[k] - v0, pts[k + 1] - v0) / 2.0
+        out.append((vec, (v0 + pts[k] + pts[k + 1]) / 3.0))
+    return out
+
+
 def panel_vector_areas(
     vertices: np.ndarray, panels: Sequence[Sequence[int]]
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Vector area and centroid of every panel, from its stored winding.
+    """Vector area and area-weighted centroid of every panel.
 
-    Quadrilaterals are split into two triangles and their vector areas summed,
-    which is the quantity the divergence-theorem integrals require and which
-    stays correct when a panel is not quite planar.
+    These are reported for inspection. The volume integrals do not use them,
+    because collapsing a panel to a single centroid and a single vector area
+    is exact only when the panel is planar: for a warped quadrilateral the two
+    triangle normals differ and the product of the mean centroid with the
+    summed vector area is not the integral. Hull meshes are routinely warped,
+    so the integrals are accumulated per triangle in ``_axis_volumes``.
     """
     verts = np.asarray(vertices, dtype=float)
     vec_areas = np.zeros((len(panels), 3))
     centroids = np.zeros((len(panels), 3))
     for i, panel in enumerate(panels):
-        idx = list(panel)
-        pts = verts[idx]
-        v0 = pts[0]
-        n1 = np.cross(pts[1] - v0, pts[2] - v0) / 2.0
-        if len(idx) >= 4:
-            n2 = np.cross(pts[2] - v0, pts[3] - v0) / 2.0
-        else:
-            n2 = np.zeros(3)
-        vec_areas[i] = n1 + n2
-        a1, a2 = np.linalg.norm(n1), np.linalg.norm(n2)
-        if a1 + a2 > _AREA_FLOOR:
-            c1 = (v0 + pts[1] + pts[2]) / 3.0
-            c2 = (v0 + pts[2] + pts[3]) / 3.0 if len(idx) >= 4 else np.zeros(3)
-            centroids[i] = (a1 * c1 + a2 * c2) / (a1 + a2)
-        else:
-            centroids[i] = pts.mean(axis=0)
+        tris = _panel_triangles(verts, panel)
+        total = np.zeros(3)
+        weighted = np.zeros(3)
+        weight = 0.0
+        for vec, cen in tris:
+            total += vec
+            area = float(np.linalg.norm(vec))
+            weighted += area * cen
+            weight += area
+        vec_areas[i] = total
+        centroids[i] = (weighted / weight if weight > _AREA_FLOOR
+                        else verts[list(panel)].mean(axis=0))
     return vec_areas, centroids
+
+
+def _triangle_terms(
+    vertices: np.ndarray, panels: Sequence[Sequence[int]]
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Per-triangle vector areas and centroids, with their owning panel index."""
+    verts = np.asarray(vertices, dtype=float)
+    vecs, cens, owner = [], [], []
+    for i, panel in enumerate(panels):
+        for vec, cen in _panel_triangles(verts, panel):
+            vecs.append(vec)
+            cens.append(cen)
+            owner.append(i)
+    return (np.asarray(vecs).reshape(-1, 3),
+            np.asarray(cens).reshape(-1, 3),
+            np.asarray(owner, dtype=int))
 
 
 def _directed_edges(panel: Sequence[int]) -> list[tuple[int, int]]:
@@ -174,10 +217,20 @@ def _consistency_flips(panels: Sequence[Sequence[int]]) -> tuple[np.ndarray, int
 
 
 def _axis_volumes(
-    vec_areas: np.ndarray, centroids: np.ndarray, signs: np.ndarray
+    tri_vecs: np.ndarray,
+    tri_cens: np.ndarray,
+    tri_owner: np.ndarray,
+    signs: np.ndarray,
 ) -> tuple[float, float, float]:
-    signed = vec_areas * signs[:, None]
-    return tuple(float(np.sum(centroids[:, k] * signed[:, k])) for k in range(3))
+    """Displaced volume along each axis, accumulated triangle by triangle.
+
+    Each of the three is the divergence-theorem integral of one of (x,0,0),
+    (0,y,0) and (0,0,z). For a correctly oriented surface that closes at the
+    free surface they agree, since the waterplane lid lies in z = 0 and has no
+    horizontal normal component.
+    """
+    signed = tri_vecs * signs[tri_owner][:, None]
+    return tuple(float(np.sum(tri_cens[:, k] * signed[:, k])) for k in range(3))
 
 
 def _waterplane_area(
@@ -213,21 +266,25 @@ def orientation_report(
     vertices = np.asarray(mesh.vertices, dtype=float)
     panels = [list(p) for p in np.asarray(mesh.panels)]
 
-    vec_areas, centroids = panel_vector_areas(vertices, panels)
+    tri_vecs, tri_cens, tri_owner = _triangle_terms(vertices, panels)
     flip, components, boundary, non_manifold = _consistency_flips(panels)
 
     signs = np.where(flip, -1.0, 1.0)
-    axis_v = _axis_volumes(vec_areas, centroids, signs)
+    axis_v = _axis_volumes(tri_vecs, tri_cens, tri_owner, signs)
     volume = float(np.mean(axis_v))
     if volume < 0.0:
         # The adjacency argument fixes relative orientation only; the sign of
-        # the enclosed volume fixes the absolute direction.
+        # the enclosed volume fixes the absolute direction. With more than one
+        # connected component this single global sign cannot resolve their
+        # relative orientation, which is why `components` is reported and why
+        # `ok` requires a single component.
         flip = ~flip
         signs = -signs
-        axis_v = _axis_volumes(vec_areas, centroids, signs)
+        axis_v = _axis_volumes(tri_vecs, tri_cens, tri_owner, signs)
         volume = float(np.mean(axis_v))
 
-    as_stored = _axis_volumes(vec_areas, centroids, np.ones(len(panels)))
+    as_stored = _axis_volumes(tri_vecs, tri_cens, tri_owner,
+                              np.ones(len(panels)))
     spread = max(as_stored) - min(as_stored)
     scale = max(abs(volume), max(abs(v) for v in as_stored), 1e-30)
     consistent = spread <= rtol * scale
@@ -325,10 +382,10 @@ def repair_gdf_text(text: str) -> tuple[str, tuple[int, ...]]:
         [[remap[tuple(np.round(v, 9))] for v in quad] for quad in coords]
     )
 
-    vec_areas, centroids = panel_vector_areas(vertices, panels)
+    tri_vecs, tri_cens, tri_owner = _triangle_terms(vertices, panels)
     flip, _, _, _ = _consistency_flips(panels)
     signs = np.where(flip, -1.0, 1.0)
-    if float(np.mean(_axis_volumes(vec_areas, centroids, signs))) < 0.0:
+    if float(np.mean(_axis_volumes(tri_vecs, tri_cens, tri_owner, signs))) < 0.0:
         flip = ~flip
 
     flipped = tuple(int(i) for i in np.flatnonzero(flip))
