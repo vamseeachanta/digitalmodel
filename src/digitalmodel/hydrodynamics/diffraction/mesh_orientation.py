@@ -64,6 +64,21 @@ class OrientationReport:
     boundary_edges: int
     non_manifold_edges: int
     above_waterline_vertices: int
+    waterline_lid_panels: int = 0
+    symmetry_plane: str | None = None
+
+    @property
+    def sector_fraction(self) -> int:
+        """How many copies of the stored mesh make the whole body.
+
+        A GDF may store a half or quarter model and declare the symmetry
+        planes that reproduce the rest. Volume and waterplane area then belong
+        to the stored sector, not to the vessel.
+        """
+        if not self.symmetry_plane:
+            return 1
+        s = self.symmetry_plane.lower()
+        return 4 if len(s) >= 2 and "x" in s and "y" in s else 2
 
     @property
     def ok(self) -> bool:
@@ -73,6 +88,11 @@ class OrientationReport:
         edge-adjacency argument fixes orientation only within each component
         and the enclosed volume gives one global sign, so a component that is
         inverted relative to the others cannot be identified.
+
+        Panels lying wholly in the free surface are rejected because they are
+        not wetted-hull panels: an interior lid contributes waterline edges
+        that cancel the hull's own, leaving a waterplane area of zero while
+        every other indicator still looks correct.
         """
         return (
             self.consistent
@@ -81,13 +101,14 @@ class OrientationReport:
             and self.components == 1
             and self.non_manifold_edges == 0
             and self.above_waterline_vertices == 0
+            and self.waterline_lid_panels == 0
         )
 
     def describe(self) -> str:
-        if self.ok:
+        if self.waterline_lid_panels:
             return (
-                f"outward, V = {self.volume:.9g} m^3, "
-                f"Awp = {self.waterplane_area:.9g} m^2"
+                f"{self.waterline_lid_panels} panel(s) lie in the free "
+                f"surface; waterplane area is not meaningful for this mesh"
             )
         if not self.consistent:
             return (
@@ -95,7 +116,15 @@ class OrientationReport:
                 f"{self.axis_volumes}, {len(self.inverted_panels)} panel(s) "
                 f"disagree"
             )
-        return f"normals point inward: V = {self.volume:.9g} m^3"
+        if not self.outward:
+            return f"normals point inward: V = {self.volume:.9g} m^3"
+        scope = (f" for the stored sector, {self.sector_fraction} of which "
+                 f"make the body (symmetry {self.symmetry_plane})"
+                 if self.sector_fraction > 1 else "")
+        return (
+            f"outward, V = {self.volume:.9g} m^3, "
+            f"Awp = {self.waterplane_area:.9g} m^2{scope}"
+        )
 
 
 def _panel_triangles(
@@ -292,6 +321,9 @@ def orientation_report(
     inverted = tuple(int(i) for i in np.flatnonzero(flip))
     outward = consistent and volume > 0.0 and not inverted
 
+    lids = sum(1 for p in panels
+               if np.all(np.abs(vertices[list(p)][:, 2]) <= z_tol))
+
     return OrientationReport(
         axis_volumes=as_stored,
         volume=float(np.mean(as_stored)) if consistent else volume,
@@ -304,6 +336,8 @@ def orientation_report(
         boundary_edges=boundary,
         non_manifold_edges=non_manifold,
         above_waterline_vertices=int(np.sum(vertices[:, 2] > z_tol)),
+        waterline_lid_panels=lids,
+        symmetry_plane=getattr(mesh, "symmetry_plane", None),
     )
 
 
@@ -334,6 +368,11 @@ def _refuse_if_unreliable(report: OrientationReport) -> None:
         problems.append(
             f"{report.above_waterline_vertices} vertices above z = 0; the "
             f"axis-volume identity assumes the body closes at the free surface")
+    if report.waterline_lid_panels:
+        problems.append(
+            f"{report.waterline_lid_panels} panel(s) lie wholly in the free "
+            f"surface; this routine handles wetted-hull panels only, and a "
+            f"lid cancels the hull's own waterline contributions")
     if problems:
         raise UnreliableOrientation("; ".join(problems))
 
@@ -407,18 +446,35 @@ def repair_gdf_text(text: str, strict: bool = True) -> tuple[str, tuple[int, ...
         [[float(v) for v in ln.split()[:3]] for ln in rows], dtype=float
     ).reshape(npan, 4, 3)
 
-    # Reuse the same analysis the report uses, on a flat index space where each
-    # panel owns its own four vertices. Coincident vertices are merged first so
-    # that panels sharing an edge are recognised as neighbours.
+    # Panels share vertices only by coincidence of coordinates, so they have to
+    # be welded before adjacency means anything. The weld is by exact bytes,
+    # matching what GDFHandler does when it reads the same file: a rounding
+    # bin would merge distinct coordinates that fall inside it while leaving
+    # arbitrarily close ones on either side of a boundary apart, and would give
+    # this routine a different topology from the one the reader recovers.
     flat = coords.reshape(-1, 3)
     _, first, inverse = np.unique(
-        np.round(flat, 9), axis=0, return_index=True, return_inverse=True
+        flat, axis=0, return_index=True, return_inverse=True
     )
-    vertices = flat[np.sort(first)]
-    remap = {tuple(np.round(v, 9)): i for i, v in enumerate(vertices)}
-    panels = np.asarray(
-        [[remap[tuple(np.round(v, 9))] for v in quad] for quad in coords]
-    )
+    order_of_appearance = np.argsort(first)
+    rank = np.empty_like(order_of_appearance)
+    rank[order_of_appearance] = np.arange(len(first))
+    vertices = flat[first[order_of_appearance]]
+    panels = rank[inverse].reshape(-1, 4)
+
+    # Near-coincident but unequal vertices would leave the surface open where
+    # it should be closed, so the caller is told rather than left guessing.
+    if len(vertices) > 1:
+        extent = float(np.max(vertices.max(axis=0) - vertices.min(axis=0)))
+        if extent > 0:
+            from scipy.spatial import cKDTree  # local: optional at import time
+
+            pairs = cKDTree(vertices).query_pairs(1e-9 * extent)
+            if pairs:
+                raise UnreliableOrientation(
+                    f"{len(pairs)} vertex pair(s) are distinct but closer than "
+                    f"1e-9 of the mesh extent; welding is ambiguous"
+                )
 
     tri_vecs, tri_cens, tri_owner = _triangle_terms(vertices, panels)
     flip, components, boundary, non_manifold = _consistency_flips(panels)
@@ -428,7 +484,10 @@ def repair_gdf_text(text: str, strict: bool = True) -> tuple[str, tuple[int, ...
             outward=True, inverted_panels=(), max_axis_discrepancy=0.0,
             waterplane_area=0.0, components=components,
             boundary_edges=boundary, non_manifold_edges=non_manifold,
-            above_waterline_vertices=int(np.sum(vertices[:, 2] > 1e-7))))
+            above_waterline_vertices=int(np.sum(vertices[:, 2] > 1e-7)),
+            waterline_lid_panels=sum(
+                1 for p in panels
+                if np.all(np.abs(vertices[list(p)][:, 2]) <= 1e-7))))
     signs = np.where(flip, -1.0, 1.0)
     if float(np.mean(_axis_volumes(tri_vecs, tri_cens, tri_owner, signs))) < 0.0:
         flip = ~flip
@@ -443,8 +502,41 @@ def repair_gdf_text(text: str, strict: bool = True) -> tuple[str, tuple[int, ...
     it = iter(out_rows)
     for ln in body:
         rebuilt.append(next(it) if len(ln.split()) >= 3 else ln)
+    out = eol.join(rebuilt) + (eol if trailing else "")
 
-    return eol.join(rebuilt) + (eol if trailing else ""), flipped
+    if strict and flipped:
+        # Read the emitted text back and confirm it is what was intended,
+        # rather than trusting that the rewrite did what the analysis asked.
+        check = _report_from_coords(
+            np.asarray([[float(v) for v in r.split()[:3]]
+                        for r in out_rows], dtype=float).reshape(npan, 4, 3))
+        if not check.outward or check.inverted_panels:
+            raise UnreliableOrientation(
+                f"repaired text does not read back as outward: axis volumes "
+                f"{check.axis_volumes}, inverted {check.inverted_panels}"
+            )
+
+    return out, flipped
+
+
+def _report_from_coords(coords: np.ndarray) -> OrientationReport:
+    """Orientation report for panels given as an (n, 4, 3) coordinate array."""
+
+    class _Bare:
+        pass
+
+    flat = coords.reshape(-1, 3)
+    _, first, inverse = np.unique(
+        flat, axis=0, return_index=True, return_inverse=True
+    )
+    order_of_appearance = np.argsort(first)
+    rank = np.empty_like(order_of_appearance)
+    rank[order_of_appearance] = np.arange(len(first))
+    bare = _Bare()
+    bare.vertices = flat[first[order_of_appearance]]
+    bare.panels = rank[inverse].reshape(-1, 4)
+    bare.symmetry_plane = None
+    return orientation_report(bare)
 
 
 def format_report(name: str, report: OrientationReport) -> str:

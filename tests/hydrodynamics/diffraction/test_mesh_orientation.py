@@ -265,6 +265,55 @@ def test_geometry_above_the_waterline_is_not_reported_as_ok():
     assert not r.ok
 
 
+# -------------------------------------------- lids and symmetry-reduced meshes
+
+def _lid_panel(L=1.0, B=1.0):
+    hx, hy = L / 2, B / 2
+    return np.asarray([[(-hx, -hy, 0.0), (hx, -hy, 0.0),
+                        (hx, hy, 0.0), (-hx, hy, 0.0)]])
+
+
+def test_free_surface_lid_is_detected_not_silently_absorbed():
+    """A lid cancels the hull's waterline edges, zeroing the waterplane area.
+
+    Every other indicator still looks correct: the axis volumes agree, the
+    volume is right and no panel is inverted. Only an explicit check catches
+    it, so the report must carry one.
+    """
+    with_lid = np.concatenate([_box_panels(), _lid_panel()])
+    r = orientation_report(_mesh_from_quads(with_lid))
+    assert r.waterline_lid_panels == 1
+    assert r.volume == pytest.approx(1.0, rel=1e-12)
+    assert r.waterplane_area == pytest.approx(0.0, abs=1e-12)
+    assert not r.ok, "a lid must not pass as a plain wetted-hull mesh"
+    assert "free surface" in r.describe()
+
+
+def test_repair_refuses_a_mesh_carrying_a_lid():
+    with_lid = np.concatenate([_box_panels(), _lid_panel()])
+    with pytest.raises(UnreliableOrientation, match="free surface"):
+        orient_outward(_mesh_from_quads(with_lid))
+
+
+def test_symmetry_reduced_mesh_reports_its_scope():
+    """The vendor cylinder stores a quarter body and declares both planes."""
+    mesh = GDFHandler().read(VENDOR_CYLINDER)
+    r = orientation_report(mesh)
+    assert r.symmetry_plane is not None
+    assert r.sector_fraction == 4
+    assert "stored sector" in r.describe()
+    # The orientation verdict remains valid: the symmetry cuts lie at x = 0
+    # and y = 0, so they contribute nothing to the axis integrals.
+    assert r.outward
+
+
+def test_plain_mesh_reports_no_symmetry_scope():
+    r = orientation_report(_mesh_from_quads(_box_panels()))
+    assert r.symmetry_plane is None
+    assert r.sector_fraction == 1
+    assert "stored sector" not in r.describe()
+
+
 # ------------------------------------- repair refuses what it cannot judge
 
 def test_orient_outward_refuses_disjoint_components():

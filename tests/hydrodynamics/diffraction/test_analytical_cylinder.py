@@ -148,79 +148,181 @@ def test_rejects_invalid_mode_count():
 
 # ------------------------------------------- boundary-condition residuals
 
-def test_free_surface_and_seabed_conditions_hold():
-    """Rebuild the potential and test conditions never imposed pointwise.
+def _fields(s):
+    """Rebuild the potential and its derivatives from solved coefficients."""
+    from scipy.special import hankel1, ive, kve
 
-    The coefficients come from projections onto a truncated basis, so
-    reproducing those projections would be circular. Evaluating the resulting
-    field on the boundaries is not.
-    """
-    from scipy.special import hankel1, iv, kv
+    A, Bc = s["interior"], s["exterior"]
+    lam, k0, ks = s["lam"], s["k0"], s["k_evanescent"]
+    n0s, nm, order = s["n0_scaled"], s["nm"], s["order"]
+    a, h, gap = s["radius"], s["water_depth"], s["gap"]
 
-    omega, modes = 1.0, 60
-    a, d, h = GEOM.radius, GEOM.draft, GEOM.water_depth
+    def z0(z):
+        u = z + h
+        # cosh(k0 u) / (N0) with both sides scaled by exp(k0 h).
+        return 0.5 * (np.exp(k0 * (u - h)) + np.exp(-k0 * (u + h))) / n0s
 
-    # Re-solve, exposing the coefficients through a direct rebuild of the
-    # same linear system the module forms.
-    import digitalmodel.hydrodynamics.diffraction.analytical_cylinder as ac
-
-    k0, ks = ac.wavenumbers(omega, h, modes)
-    n0, nm = ac._depth_normalisations(k0, ks, h)
-    gap = GEOM.gap
-    lam = np.array([0.0] + [n * math.pi / gap for n in range(1, modes + 1)])
-    overlap = np.zeros((modes + 1, modes + 1))
-    for n in range(modes + 1):
-        overlap[0, n] = ac._int_cos_cosh(lam[n], k0, gap) / n0
-        for m in range(1, modes + 1):
-            overlap[m, n] = ac._int_cos_cos(lam[n], ks[m - 1], gap) / nm[m - 1]
-    slope = np.empty(modes + 1, dtype=complex)
-    slope[0] = -k0 * hankel1(1, k0 * a) / hankel1(0, k0 * a)
-    for m in range(1, modes + 1):
-        slope[m] = -ks[m - 1] * kv(1, ks[m - 1] * a) / kv(0, ks[m - 1] * a)
-    inner = np.zeros(modes + 1)
-    for n in range(1, modes + 1):
-        inner[n] = iv(1, lam[n] * a) / iv(0, lam[n] * a)
-
-    size = 2 * (modes + 1)
-    M = np.zeros((size, size), dtype=complex)
-    b = np.zeros(size, dtype=complex)
-    for m in range(modes + 1):
-        M[m, (modes + 1) + m] = slope[m] * h
-        for n in range(1, modes + 1):
-            M[m, n] = -lam[n] * inner[n] * overlap[m, n]
-        b[m] = -(a / (2 * gap)) * overlap[m, 0]
-    for n in range(modes + 1):
-        row = (modes + 1) + n
-        for m in range(modes + 1):
-            M[row, (modes + 1) + m] = overlap[m, n]
-        M[row, n] = -(gap if n == 0 else gap / 2.0)
-        b[row] = (gap ** 2 / 6.0 - a ** 2 / 4.0) if n == 0 else \
-            gap ** 2 * ((-1) ** n) / (n ** 2 * math.pi ** 2)
-    x = np.linalg.solve(M, b)
-    A, B = x[: modes + 1], x[modes + 1:]
+    def zm(m, z):
+        return np.cos(ks[m - 1] * (z + h)) / nm[m - 1]
 
     def phi_E(r, z):
-        u = z + h
-        out = B[0] * hankel1(0, k0 * r) / hankel1(0, k0 * a) * np.cosh(k0 * u) / n0
-        for m in range(1, modes + 1):
+        out = Bc[0] * hankel1(0, k0 * r) / hankel1(0, k0 * a) * z0(z)
+        for m in range(1, order + 1):
             km = ks[m - 1]
-            out = out + B[m] * kv(0, km * r) / kv(0, km * a) * np.cos(km * u) / nm[m - 1]
+            ratio = (kve(0, km * r) / kve(0, km * a)) * np.exp(-km * (r - a))
+            out = out + Bc[m] * ratio * zm(m, z)
         return out
+
+    def dphi_E_dr(r, z):
+        out = (-Bc[0] * k0 * hankel1(1, k0 * r) / hankel1(0, k0 * a)) * z0(z)
+        for m in range(1, order + 1):
+            km = ks[m - 1]
+            ratio = (kve(1, km * r) / kve(0, km * a)) * np.exp(-km * (r - a))
+            out = out - Bc[m] * km * ratio * zm(m, z)
+        return out
+
+    def phi_I(r, z):
+        u = z + h
+        out = (1.0 / (2 * gap)) * (u ** 2 - r ** 2 / 2.0) + A[0]
+        for n in range(1, order + 1):
+            ln = lam[n]
+            ratio = (ive(0, ln * r) / ive(0, ln * a)) * np.exp(ln * (r - a))
+            out = out + A[n] * ratio * np.cos(ln * u)
+        return out
+
+    def dphi_I_dr(r, z):
+        u = z + h
+        out = np.full_like(np.asarray(r, dtype=float), -r / (2 * gap))
+        for n in range(1, order + 1):
+            ln = lam[n]
+            ratio = (ive(1, ln * r) / ive(0, ln * a)) * np.exp(ln * (r - a))
+            out = out + A[n] * ln * ratio * np.cos(ln * u)
+        return out
+
+    return phi_E, dphi_E_dr, phi_I, dphi_I_dr
+
+
+def _interface_errors(s, zero_coefficients=False):
+    """Relative L2 mismatch across the interface, over the gap."""
+    import copy
+
+    s = copy.deepcopy(s)
+    if zero_coefficients:
+        s["interior"] = np.zeros_like(s["interior"])
+        s["exterior"] = np.zeros_like(s["exterior"])
+    phi_E, dphi_E_dr, phi_I, dphi_I_dr = _fields(s)
+    a, h, d = s["radius"], s["water_depth"], s["draft"]
+    z = np.linspace(-h, -d, 801)[1:-1]
+    dz = z[1] - z[0]
+
+    def l2(v):
+        return math.sqrt(float(np.sum(np.abs(v) ** 2) * dz))
+
+    pi_, pe_ = phi_I(a, z), phi_E(a, z)
+    return l2(pi_ - pe_) / max(l2(pi_), 1e-30)
+
+
+def test_interface_potential_continuity_converges():
+    """The matching condition itself, on the coefficients the module returns.
+
+    This is the check that distinguishes a correct solution from a wrong one.
+    The base, seabed and free-surface conditions below are satisfied by the
+    basis functions whatever the coefficients are, so they cannot detect a
+    faulty match; interface continuity can, because nothing enforces it
+    pointwise.
+    """
+    import digitalmodel.hydrodynamics.diffraction.analytical_cylinder as ac
+
+    errors = []
+    for modes in (20, 40, 80):
+        s = ac._solve(1.0, GEOM, STANDARD_GRAVITY, modes)
+        errors.append(_interface_errors(s))
+    assert errors[0] > errors[1] > errors[2], (
+        f"interface mismatch must fall with mode count, got {errors}")
+    assert errors[-1] < 2e-2
+
+
+def test_zeroed_coefficients_fail_the_interface_check():
+    """Guards against a test that would pass on a trivial solution."""
+    import digitalmodel.hydrodynamics.diffraction.analytical_cylinder as ac
+
+    s = ac._solve(1.0, GEOM, STANDARD_GRAVITY, 40)
+    real = _interface_errors(s)
+    trivial = _interface_errors(s, zero_coefficients=True)
+    assert trivial > 10 * real, (
+        f"zeroing the coefficients must break continuity: "
+        f"solved {real:.3e}, zeroed {trivial:.3e}")
+
+
+def test_side_wall_is_impermeable_away_from_the_edge():
+    """No radial flow through the cylinder wall, sampled clear of the corner."""
+    import digitalmodel.hydrodynamics.diffraction.analytical_cylinder as ac
+
+    s = ac._solve(1.0, GEOM, STANDARD_GRAVITY, 80)
+    _, dphi_E_dr, _, _ = _fields(s)
+    a, d = s["radius"], s["draft"]
+    z = np.linspace(-0.85 * d, -0.05 * d, 40)
+    scale = np.max(np.abs(dphi_E_dr(a * 1.0, np.linspace(-s["water_depth"],
+                                                         -d, 40))))
+    assert np.max(np.abs(dphi_E_dr(a, z))) < 0.35 * scale
+
+
+def test_shallow_gap_and_deep_water_stay_finite():
+    """Arguments that overflow the unscaled Bessel and hyperbolic forms."""
+    shallow = heave_added_mass_damping(
+        1.0, CylinderGeometry(1.0, 2.0, 2.2), RHO, modes=60)
+    assert math.isfinite(shallow.added_mass)
+    assert math.isfinite(shallow.damping)
+    assert shallow.damping > 0.0
+    assert shallow.residual < 1e-8
+
+    deep = heave_added_mass_damping(
+        3.0, CylinderGeometry(1.0, 2.0, 500.0), RHO, modes=60)
+    assert math.isfinite(deep.added_mass)
+    assert math.isfinite(deep.damping)
+    assert deep.damping > 0.0
+
+
+def test_free_surface_and_seabed_conditions_hold():
+    """Conditions the basis satisfies by construction, checked for regression.
+
+    These are weak evidence on their own: the vertical eigenfunctions satisfy
+    the free-surface and seabed conditions whatever the coefficients are, and
+    the particular solution supplies the base velocity, so zeroing every
+    coefficient would still pass. They are retained to catch a broken basis,
+    not to validate the matching. The matching is tested by
+    test_interface_potential_continuity_converges.
+    """
+    import digitalmodel.hydrodynamics.diffraction.analytical_cylinder as ac
+
+    omega, modes = 1.0, 60
+    s = ac._solve(omega, GEOM, STANDARD_GRAVITY, modes)
+    phi_E, _, _, _ = _fields(s)
+    h, d, a = s["water_depth"], s["draft"], s["radius"]
+    k0, ks, n0s, nm, order = (s["k0"], s["k_evanescent"], s["n0_scaled"],
+                              s["nm"], s["order"])
+    A, Bc = s["interior"], s["exterior"]
+    lam, gap = s["lam"], s["gap"]
+
+    from scipy.special import hankel1, ive, kve
 
     def dphi_E_dz(r, z):
         u = z + h
-        out = B[0] * hankel1(0, k0 * r) / hankel1(0, k0 * a) * k0 * np.sinh(k0 * u) / n0
-        for m in range(1, modes + 1):
+        dz0 = k0 * 0.5 * (np.exp(k0 * (u - h)) - np.exp(-k0 * (u + h))) / n0s
+        out = Bc[0] * hankel1(0, k0 * r) / hankel1(0, k0 * a) * dz0
+        for m in range(1, order + 1):
             km = ks[m - 1]
-            out = out - B[m] * kv(0, km * r) / kv(0, km * a) * km * np.sin(km * u) / nm[m - 1]
+            ratio = (kve(0, km * r) / kve(0, km * a)) * np.exp(-km * (r - a))
+            out = out - Bc[m] * ratio * km * np.sin(km * u) / nm[m - 1]
         return out
 
     def dphi_I_dz(r, z):
         u = z + h
         out = np.full_like(np.asarray(r, dtype=float), u / gap)
-        for n in range(1, modes + 1):
+        for n in range(1, order + 1):
             ln = lam[n]
-            out = out - A[n] * iv(0, ln * r) / iv(0, ln * a) * ln * math.sin(ln * u)
+            ratio = (ive(0, ln * r) / ive(0, ln * a)) * np.exp(ln * (r - a))
+            out = out - A[n] * ratio * ln * math.sin(ln * u)
         return out
 
     r_out = np.linspace(1.05 * a, 6.0 * a, 40)
@@ -228,15 +330,11 @@ def test_free_surface_and_seabed_conditions_hold():
                                  + STANDARD_GRAVITY * dphi_E_dz(r_out, 0.0)))
     assert free_surface < 1e-10
 
-    seabed = np.max(np.abs(dphi_E_dz(r_out, -h)))
-    assert seabed < 1e-12
+    assert np.max(np.abs(dphi_E_dz(r_out, -h))) < 1e-12
 
     r_in = np.linspace(0.02, 0.98 * a, 40)
-    base = np.max(np.abs(dphi_I_dz(r_in, -d) - 1.0))
-    assert base < 1e-10
-
-    seabed_inner = np.max(np.abs(dphi_I_dz(r_in, -h)))
-    assert seabed_inner < 1e-12
+    assert np.max(np.abs(dphi_I_dz(r_in, -d) - 1.0)) < 1e-10
+    assert np.max(np.abs(dphi_I_dz(r_in, -h))) < 1e-12
 
 
 # --------------------------------------------------------- regression pins
