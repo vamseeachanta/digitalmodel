@@ -6,6 +6,7 @@ from dataclasses import asdict
 import hashlib
 import json
 import math
+import re
 from pathlib import Path
 
 import yaml
@@ -49,6 +50,59 @@ def _validate_inputs(inputs, body, expected):
             _finite(inputs[field][axis], field)
 
 
+
+def _basis_record(source, config):
+    reference = config.get('geometry_basis', {})
+    if not isinstance(reference, dict) or not reference.get('path'):
+        raise ValueError('Pinned geometry basis required')
+    path = (source.parent / reference['path']).resolve(strict=True)
+    raw = path.read_bytes()
+    digest = hashlib.sha256(raw).hexdigest()
+    if digest != reference.get('sha256'):
+        raise ValueError('Geometry basis digest mismatch')
+    record = json.loads(raw)
+    if (record.get('schema_version') != 1 or record.get('units') != 'm'
+            or record.get('status') not in ('project_assumption', 'source_evidence')):
+        raise ValueError('Unsupported geometry basis schema, units or status')
+    provenance = record.get('provenance')
+    if not isinstance(provenance, list) or not provenance:
+        raise ValueError('Geometry source provenance required')
+    for item in provenance:
+        value = item.get('sha256', '')
+        if (len(value) != 64 or any(c not in '0123456789abcdef' for c in value)
+                or not item.get('source_id') or not item.get('locator')):
+            raise ValueError('Geometry source digest and locator required')
+    return path, {'sha256': digest, 'record': record}
+
+
+def _validate_geometry(inputs, body, record):
+    tolerance = _finite(record.get('rounding_tolerance_m'), 'rounding tolerance', True)
+    if tolerance > .001:
+        raise ValueError('Geometry rounding tolerance exceeds 1 mm')
+    if not all(isinstance(record.get(k), str) and record[k].strip()
+               for k in ('input_datum', 'model_datum')):
+        raise ValueError('Input and model datum declarations required')
+    offset = record.get('translation_m')
+    if not isinstance(offset, list) or len(offset) != 3:
+        raise ValueError('Three-component datum translation required')
+    for value in offset:
+        _finite(value, 'datum translation')
+    dimensions = record.get('dimensions_m', {})
+    for key in ('l', 'w', 'h'):
+        value = _finite(dimensions.get(key), 'sourced dimension', True)
+        if not math.isclose(inputs[key], value, rel_tol=0, abs_tol=1e-12):
+            raise ValueError('Input dimension differs from pinned geometry basis')
+    centres = record.get('centres_m', {})
+    for field, native in [('cog', 'CentreOfMass'), ('cov', 'CentreOfVolume')]:
+        for i, axis in enumerate('xyz'):
+            value = _finite(centres.get(field, {}).get(axis), 'sourced centre')
+            if not math.isclose(inputs[field][axis], value, rel_tol=0, abs_tol=1e-12):
+                raise ValueError('Input centre differs from pinned geometry basis')
+            target = _finite(body[native][i], 'model centre')
+            if abs(value + offset[i] - target) > tolerance:
+                raise ValueError('Transformed centre differs from source model')
+
+
 def _calculate(inputs):
     import inspect
     from digitalmodel.infrastructure.base_solvers.hydrodynamics.code_dnvrph103_hydrodynamics_rectangular import (
@@ -71,8 +125,9 @@ def _citations(config, wiki_root):
     if not citations or any((c.code_id, c.publisher, c.revision)
                             != ('dnv-rp-h103', 'DNV', '2011') for c in citations):
         raise ValueError('Calculation requires DNV-RP-H103 2011 citations')
-    sections = ' '.join(c.section for c in citations)
-    if any(section not in sections for section in ('A-2', 'B-2', '4.6.3.3', '4.6.4.1')):
+    sections = set(re.findall(r'(?<![\w.])(?:[AB]-\d+|\d+(?:\.\d+)+)(?![\w.])',
+                              ';'.join(c.section for c in citations)))
+    if not {'A-2', 'B-2', '4.6.3.3', '4.6.4.1'} <= sections:
         raise ValueError('Missing citation coverage for a calculation component')
     for citation in citations:
         validate_citation(citation, repo_root=wiki_root)
@@ -95,7 +150,11 @@ def _hydro_fields(properties, displaced_mass_t):
 
 
 def _model(source_bytes, config):
-    model = yaml.load(source_bytes.decode('utf-8-sig'), Loader=OrcaFlexLoader)
+    try:
+        text = source_bytes.decode('utf-8-sig')
+    except UnicodeDecodeError as error:
+        raise ValueError('Source model requires UTF-8 encoding (optional BOM)') from error
+    model = yaml.load(text, Loader=OrcaFlexLoader)
     if model.get('General', {}).get('UnitsSystem') != 'SI':
         raise ValueError('Only SI source models are supported')
     bodies = model.get('6DBuoys', [])
@@ -141,12 +200,15 @@ def _write(output, after, receipt):
     return receipt
 
 
-def build_candidate(source, expectedsha, output, config, *, wiki_root=None):
-    """Retain source rotational properties; calculate deep translation only.
+def _unchanged(path, digest, label):
+    if hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+        raise ValueError(f'{label} changed during preparation')
 
-    Citation resolution establishes traceability, not formula qualification.
-    Source inertia remains as-modelled and is not independently qualified here.
-    """
+
+def build_candidate(source, expectedsha, output, config, *, wiki_root):
+    """Calculate translation; citation/basis checks do not establish qualification."""
+    if wiki_root is None:
+        raise ValueError('Explicit wiki_root required')
     source, output = Path(source).resolve(strict=True), Path(output).absolute()
     if output.exists():
         raise FileExistsError(output)
@@ -154,6 +216,8 @@ def build_candidate(source, expectedsha, output, config, *, wiki_root=None):
     if hashlib.sha256(raw).hexdigest() != expectedsha:
         raise ValueError('Source digest mismatch')
     before, index = _model(raw, config)
+    basis_path, basis = _basis_record(source, config)
+    _validate_geometry(config['inputs'], before['6DBuoys'][index], basis['record'])
     citations = _citations(config, wiki_root)
     props, rho, lookupsha, codesha = _calculate(config['inputs'])
     density = _finite(before.get('Environment', {}).get('Density'), 'source density', True)
@@ -163,7 +227,7 @@ def build_candidate(source, expectedsha, output, config, *, wiki_root=None):
     after, diff = _apply(before, index, _hydro_fields(props, mass_kg / 1000))
     receipt = {'schema_version': 1, 'state': 'diagnostic_candidate_not_run',
                'analysis_executed': False, 'acceptance_established': False,
-               'source_sha256': expectedsha, 'lookup_sha256': lookupsha,
+               'source_sha256': expectedsha, 'geometry_basis': basis, 'lookup_sha256': lookupsha,
                'legacy_calculator_sha256': codesha, 'rho_water_kg_m3': rho,
                'units': {'added_mass': 'kg', 'area_drag': 'm2', 'ca': 'dimensionless',
                          'cd': 'dimensionless', 'HydrodynamicMass': 't'},
@@ -188,8 +252,8 @@ def build_candidate(source, expectedsha, output, config, *, wiki_root=None):
                ],
                'properties': props, 'semantic_diff': diff,
                'citations': [asdict(citation) for citation in citations]}
-    if hashlib.sha256(source.read_bytes()).hexdigest() != expectedsha:
-        raise ValueError('Source changed during preparation')
+    _unchanged(source, expectedsha, 'Source')
+    _unchanged(basis_path, basis['sha256'], 'Geometry basis')
     return _write(output, after, receipt)
 
 

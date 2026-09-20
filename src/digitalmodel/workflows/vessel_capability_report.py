@@ -42,13 +42,32 @@ def _critical_table(rows):
                    'Peak-load Tp (s) / tension (kN)', 'Low-tension Tp (s) / total ≤0 duration (s)'], values)
 
 
-def _pending(basis):
+def _campaign_status(captured):
+    if not isinstance(captured, dict):
+        return 'No campaign snapshot supplied; execution status unknown'
+    snapshot = captured.get('snapshot', captured)
+    if not isinstance(snapshot, dict):
+        return 'Invalid campaign snapshot; execution status unknown'
+    status = str(snapshot.get('status', 'unknown')).lower()
+    counts = Counter(str(row.get('status', 'unknown')).lower()
+                     for row in snapshot.get('cases', []) if isinstance(row, dict))
+    if status == 'completed' and (not counts or set(counts) != {'completed'}):
+        status = 'Inconsistent snapshot: recorded completed'
+    text = status + '; ' + ', '.join(f'{key}: {count}' for key, count in sorted(counts.items()))
+    if captured.get('read_utc'):
+        text += '; read ' + str(captured['read_utc'])
+    if captured.get('captured_utc'):
+        text += '; captured ' + str(captured['captured_utc'])
+    return escape(text)
+
+
+def _pending(basis, campaign=None, sensitivity=None):
     rows = [
-        ['Baseline size', f"{basis.get('dry_mass_t', 'Not recorded')} t; demand assessment in progress"],
+        ['Baseline size', f"{escape(str(basis.get('dry_mass_t', 'Not recorded')))} t; {_campaign_status(campaign)}"],
         ['Smaller structure', 'Geometry, mass, buoyancy, drag/added mass and rigging basis pending'],
         ['Larger structure', 'Source-supported design selection and rigging/vessel compatibility pending'],
         ['Splash-zone and lowering stages', 'Not evaluated by this deep-submerged campaign'],
-        ['Hydrodynamic sensitivity', 'Five matched Hs 1 m / Tp 8 s pilots prepared; results pending'],
+        ['Hydrodynamic sensitivity', _campaign_status(sensitivity)],
         ['Hs–Tp operating envelopes', 'Not established; capacity and slack/snap/interference criteria pending'],
         ['Two-minute forecasting', 'Mudmat forecast and holdout skill not evaluated; history/prediction divider and uncertainty pending'],
         ['Multiple random seeds', 'Not evaluated; single seed does not establish extreme-load statistics'],
@@ -97,7 +116,7 @@ Incomplete rows cannot establish a critical period over the full planned range.<
 <p class="caption">Table 4. Signed tension extrema and longest accumulated tension ≤0 duration, with governing case.</p></section>
 <section><h3>5.4 Body and winch response</h3>{_envelope_table(summary['envelopes'], False)}
 <p class="caption">Table 5. Native response channels. Body reference-point Z is not seabed clearance of the lowest rotated point.</p></section>
-<section><h2>6 · Pending installation envelopes and qualification</h2>{_pending(summary['design_basis'])}
+<section><h2>6 · Pending installation envelopes and qualification</h2>{_pending(summary['design_basis'], summary.get('campaign_snapshot'), summary.get('sensitivity_campaign_snapshot'))}
 <p class="caption">Table 6. Placeholders retained for subsequent evidence and sizes.</p>
 <p>Endpoint chord deficit is unstretched length minus endpoint separation; sag and extension contribute, so it is not physical slack.
 Re-tension peaks over a specified diagnostic window do not alone qualify snap loads.</p></section>
@@ -127,7 +146,61 @@ def _audit_profile(row):
         return dict(index=row['index'], status='FAILED', channels_verified=0, errors=[str(error)])
 
 
-def generate_report(campaign, matrix, output, design_basis):
+def _pinned_json(path, digest):
+    raw = Path(path).read_bytes()
+    if sha256(raw).hexdigest() != digest:
+        raise ValueError('Sensitivity dependency digest mismatch')
+    return json.loads(raw)
+
+
+def _sensitivity_source(matrix_path, matrix):
+    source_path = (matrix_path.parent / matrix['source_manifest']).resolve()
+    source = _pinned_json(source_path, matrix['source_manifest_sha256'])
+    entries = {row['path']: row['sha256'] for row in source['files']}
+    if len(entries) != len(source['files']):
+        raise ValueError('Duplicate sensitivity source artifact')
+    master = source_path.parent / 'master.yml'
+    if sha256(master.read_bytes()).hexdigest() != entries.get('master.yml'):
+        raise ValueError('Sensitivity source master digest mismatch')
+    for case in matrix['cases']:
+        if entries.get(f"matched-pilot/{case['id']}/model.yml") != case['model_sha256']:
+            raise ValueError('Sensitivity model differs from source manifest')
+    return dict(source_manifest_sha256=matrix['source_manifest_sha256'],
+                source_master_sha256=entries['master.yml'])
+
+
+def _capture_sensitivity(campaign, matrix_path, campaign_sha, matrix_sha):
+    from digitalmodel.workflows.installation_priority_requests import _inputs
+    if not matrix_path or not campaign_sha or not matrix_sha:
+        raise ValueError('Pinned sensitivity campaign and matrix required')
+    observed = datetime.now(timezone.utc).isoformat()
+    snapshot = _pinned_json(campaign, campaign_sha)
+    matrix_path = Path(matrix_path).resolve()
+    matrix = _pinned_json(matrix_path, matrix_sha)
+    pinned = snapshot['pinned_inputs']
+    if pinned['manifest_sha256'] != matrix_sha:
+        raise ValueError('Sensitivity campaign matrix binding mismatch')
+    artifact = (Path(campaign).parent / pinned['artifact_manifest']).resolve()
+    expected = _inputs(matrix_path, matrix_sha, artifact, pinned['artifact_manifest_sha256'])
+    cases = {row['id']: row for row in snapshot['cases']}
+    if len(cases) != len(snapshot['cases']) or set(cases) != {row['id'] for row in expected}:
+        raise ValueError('Sensitivity campaign case identities differ')
+    for row in expected:
+        if any(cases[row['id']].get(k) != row[k] for k in ('model_sha256', 'request_sha256')):
+            raise ValueError('Sensitivity campaign case dependency mismatch')
+    provenance = _sensitivity_source(matrix_path, matrix)
+    _pinned_json(campaign, campaign_sha)
+    result = dict(read_utc=observed, sha256=campaign_sha, snapshot=snapshot,
+                  matrix_sha256=matrix_sha, artifact_manifest_sha256=pinned['artifact_manifest_sha256'],
+                  **provenance)
+    if snapshot.get('captured_utc'):
+        result['captured_utc'] = snapshot['captured_utc']
+    return result
+
+
+def generate_report(campaign, matrix, output, design_basis, *, sensitivity_campaign=None,
+                    sensitivity_matrix=None, sensitivity_campaign_sha256=None,
+                    sensitivity_matrix_sha256=None):
     output = Path(output)
     sidecar = output.with_suffix('.json')
     if output.exists() or sidecar.exists() or output == sidecar:
@@ -153,6 +226,10 @@ def generate_report(campaign, matrix, output, design_basis):
                    counts=dict(Counter(row['status'] for row in cases)), cases=cases,
                    verification_workers=1, envelopes=component_envelopes(cases),
                    critical_periods=critical_periods(cases), event_audits=event_audits)
+    if sensitivity_campaign is not None:
+        summary['sensitivity_campaign_snapshot'] = _capture_sensitivity(
+            sensitivity_campaign, sensitivity_matrix, sensitivity_campaign_sha256,
+            sensitivity_matrix_sha256)
     rendered = render_html(summary, output.parent)
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open('x', encoding='utf-8') as stream:

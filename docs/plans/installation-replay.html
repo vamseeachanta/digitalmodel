@@ -1,0 +1,10 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Single-case installation replay plan</title>
+<h1>Single-case installation replay plan</h1>
+<p>The workflow will reproduce one explicitly selected case from pinned inputs in a new output directory. The existing materializer, solver runner, extraction, screening and report modules will be composed.</p>
+<ol><li>Input digests, code revisions, package versions and processor affinity will be verified before native execution.</li>
+<li>The master, matrix and selected change will be copied into a new study; materialization and solving will run without any resume path.</li>
+<li>Fresh traces and full tension-event metrics will be verified. Every numeric retained channel field, including extrema, static tensions and event summaries, will be compared using explicit absolute and relative tolerances.</li>
+<li>A single-case monitoring payload and HTML/PDF pilot reports will be generated. The full operating envelope will not be reconstructed from one case.</li>
+<li>Stage lineage and output hashes will be retained. Only the fresh simulation will be removed after comparison and artifact verification pass. A failed replay will retain its simulation for diagnosis.</li></ol>
+<h2>Adversarial review</h2><p>The review will challenge hidden resume paths, input drift, partial comparison coverage, default tolerances, unpinned dependency changes, misleading envelope claims and deletion outside the new run. Tests will reject missing or changed inputs and existing output roots; the retention boundary will be verified before deletion.</p>
+<p>Historical campaign state and simulations will remain untouched. Native execution will be scheduled separately after code review.</p></html>

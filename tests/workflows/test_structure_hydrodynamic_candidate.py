@@ -37,6 +37,18 @@ def case(tmp_path):
                       'cov': {'x': 0, 'y': 0, 'z': 0},
                       'perforation_ratio': {'x': 0, 'y': 0, 'z': 0}},
            'citations': [citation]}
+    basis = {'schema_version': 1, 'status': 'project_assumption', 'units': 'm',
+             'dimensions_m': {k: cfg['inputs'][k] for k in ('l', 'w', 'h')},
+             'centres_m': {k: cfg['inputs'][k] for k in ('cog', 'cov')},
+             'input_datum': 'body origin', 'model_datum': 'body origin',
+             'translation_m': [0, 0, 0], 'rounding_tolerance_m': .001,
+             'provenance': [{'source_id': 'fixture-design', 'sha256': 'a' * 64,
+                             'locator': 'design dimensions and centres'}],
+             'limitations': ['Illustrative geometry; no design qualification.']}
+    basis_path = tmp_path / 'basis.json'
+    basis_path.write_text(json.dumps(basis))
+    cfg['geometry_basis'] = {'path': 'basis.json',
+                             'sha256': hashlib.sha256(basis_path.read_bytes()).hexdigest()}
     return path, hashlib.sha256(path.read_bytes()).hexdigest(), tmp_path / 'out', cfg, wiki, model
 
 
@@ -127,3 +139,86 @@ def test_cli_uses_same_validation(case):
                  '--config', str(config_path), '--output', str(output),
                  '--wiki-root', str(wiki)]) == 0
     assert (output / 'master.yml').is_file()
+
+
+def _replace_basis(case, update):
+    path, _, _, cfg, _, _ = case
+    target = path.parent / 'basis.json'
+    record = json.loads(target.read_text())
+    update(record)
+    target.write_text(json.dumps(record))
+    cfg['geometry_basis']['sha256'] = hashlib.sha256(target.read_bytes()).hexdigest()
+    return record
+
+
+def test_top_plate_datum_preserves_distinct_centres(case):
+    path, digest, output, cfg, wiki, _ = case
+    cfg['inputs']['cog']['z'] = -.25
+    cfg['inputs']['cov']['z'] = -.25
+    record = _replace_basis(case, lambda b: b.update(
+        centres_m=copy.deepcopy({k: cfg['inputs'][k] for k in ('cog', 'cov')}),
+        input_datum='top plate', translation_m=[0, 0, .25]))
+    result = build_candidate(path, digest, output, cfg, wiki_root=wiki)
+    assert result['geometry_basis']['record'] == record
+    assert result['geometry_basis']['sha256'] == cfg['geometry_basis']['sha256']
+    body = yaml.load((output / 'master.yml').read_bytes(), Loader=OrcaFlexLoader)['6DBuoys'][0]
+    assert body['CentreOfMass'] == [.1, 0, 0]
+    assert body['CentreOfVolume'] == [0, 0, 0]
+
+
+@pytest.mark.parametrize('bad', ['missing', 'digest', 'length', 'width', 'centre',
+                                'offset', 'datum', 'units', 'tolerance', 'provenance'])
+def test_geometry_basis_fails_before_output(case, bad):
+    path, digest, output, cfg, wiki, _ = case
+    if bad == 'missing': cfg.pop('geometry_basis')
+    elif bad == 'digest': cfg['geometry_basis']['sha256'] = 'f' * 64
+    elif bad in ('length', 'width'): cfg['inputs'][{'length': 'l', 'width': 'w'}[bad]] += 1
+    elif bad == 'centre': cfg['inputs']['cog']['x'] += .1
+    else:
+        changes = {'offset': {'translation_m': [0, 0, -.25]},
+                   'datum': {'input_datum': ''}, 'units': {'units': 'ft'},
+                   'tolerance': {'rounding_tolerance_m': .2},
+                   'provenance': {'provenance': []}}
+        _replace_basis(case, lambda b: b.update(changes[bad]))
+    with pytest.raises(ValueError):
+        build_candidate(path, digest, output, cfg, wiki_root=wiki)
+    assert not output.exists()
+
+
+def test_geometry_basis_change_during_calculation_fails(case, monkeypatch):
+    from digitalmodel.workflows import structure_hydrodynamic_candidate as module
+    path, digest, output, cfg, wiki, _ = case
+    original = module._calculate
+    def tamper(inputs):
+        result = original(inputs)
+        (path.parent / 'basis.json').write_text('{}')
+        return result
+    monkeypatch.setattr(module, '_calculate', tamper)
+    with pytest.raises(ValueError, match='Geometry basis changed'):
+        build_candidate(path, digest, output, cfg, wiki_root=wiki)
+    assert not output.exists()
+
+
+@pytest.mark.parametrize('section', ['A-25;B-2;4.6.3.3;4.6.4.1',
+                                    'A-2;B-2;4.6.3.30;4.6.4.1'])
+def test_citation_coverage_rejects_substring_sections(case, section):
+    path, digest, output, cfg, wiki, _ = case
+    cfg['citations'][0]['section'] = section
+    with pytest.raises(ValueError, match='coverage'):
+        build_candidate(path, digest, output, cfg, wiki_root=wiki)
+    assert not output.exists()
+
+
+def test_explicit_wiki_root_required(case):
+    path, digest, output, cfg, _, _ = case
+    with pytest.raises(ValueError, match='wiki_root'):
+        build_candidate(path, digest, output, cfg, wiki_root=None)
+    assert not output.exists()
+
+
+def test_non_utf8_source_reports_named_encoding_precondition(case):
+    path, _, output, cfg, wiki, _ = case
+    path.write_bytes(path.read_bytes() + b'\n# degree: \xb0\n')
+    with pytest.raises(ValueError, match='UTF-8'):
+        build_candidate(path, hashlib.sha256(path.read_bytes()).hexdigest(), output, cfg, wiki_root=wiki)
+    assert not output.exists()
