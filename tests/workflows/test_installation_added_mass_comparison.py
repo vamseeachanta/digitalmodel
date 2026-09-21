@@ -189,6 +189,7 @@ def test_synthetic_complete_chain_generates_fifteen_case_report(tmp_path):
     args=synthetic_study(tmp_path)
     result=comparison.generate_comparison(*args,tmp_path/'report')
     assert len(result['cases'])==15
+    assert all(c['status']=='VERIFIED' and 'source_status' in c for c in result['cases'])
     assert result['engineering_acceptance']=='NOT EVALUATED'
     assert (tmp_path/'report/comparison.html').is_file()
     assert json.loads((tmp_path/'report/comparison.json').read_bytes())==result

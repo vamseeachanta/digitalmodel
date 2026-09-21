@@ -241,6 +241,9 @@ def generate_comparison(sequence_path, sequence_sha256, bracket_path, bracket_sh
         sample_count=len(item['arrays']['time']),
         logging_interval_s=item['context']['logging_interval_s'],warnings=item['warnings'],
         warning_count=len(item['warnings'])) for item in verified]
+    for case in cases:
+        case['source_status']=case.get('status','Not recorded')
+        case['status']='VERIFIED'
     result=dict(created_utc=datetime.now(timezone.utc).isoformat(),engineering_acceptance='NOT EVALUATED',
         status='verified_diagnostic_comparison',cases=cases,comparisons=_comparisons(cases),rankings=_rankings(cases),
         input_sha256=dict(sequence=sequence_sha256,bracket=bracket_sha256),sources=evidence,
