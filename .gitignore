@@ -136,6 +136,20 @@ ENV/
 env/
 env.bak/
 venv.bak/
+
+# `env/` above matches a directory of that name at ANY depth, which is the
+# wrong shape for this repository: OrcaFlex model trees keep their metocean
+# case definitions in a sibling directory called `env`, and the rule silently
+# excluded 162 of them. That is how the 24in_pipeline campaign came to have
+# tracked run files whose `includefile: ../env/...` targets were never
+# committed, leaving 26 solved simulations unreproducible.
+#
+# Engineering input is re-included explicitly. A real virtual environment is
+# never nested under a model tree, so these exceptions do not weaken the rule.
+!docs/**/env/
+!docs/**/env/**
+!projects/**/env/
+!projects/**/env/**
 .python-version
 __pypackages__/
 

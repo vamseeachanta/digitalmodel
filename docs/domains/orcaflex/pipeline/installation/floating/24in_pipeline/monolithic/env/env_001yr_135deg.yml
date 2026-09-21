@@ -1,0 +1,15 @@
+# Environment for this run, recovered from the solved simulation.
+# Source: 1250kN_env_001yr_135deg.sim
+Environment:
+  WaveTrains:
+    Wave1:
+      WaveDirection: 135
+      WaveHeight: 3
+      WavePeriod: 10
+  RefCurrentSpeed: 0.4
+  RefCurrentDirection: 135
+  CurrentFactor[1]: 1
+  CurrentFactor[2]: 1
+  CurrentFactor[3]: 0.2
+  WindSpeed: 16
+  WindDirection: 135
