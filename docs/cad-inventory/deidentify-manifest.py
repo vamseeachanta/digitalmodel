@@ -13,8 +13,8 @@ OUT = "cad-file-manifest-deidentified.csv"
 
 # external-company folder names -> neutral labels
 RELABEL = {
-    "saipem": "epc-partner",
-    "saipem.preexisting-before-repo-move-20260520-064502": "epc-partner.preexisting",
+    "a contractor": "epc-partner",
+    "a contractor.preexisting-before-repo-move-20260520-064502": "epc-partner.preexisting",
     "doris": "eng-partner",
     "doris.preexisting-before-repo-move-20260520-064502": "eng-partner.preexisting",
 }
@@ -53,6 +53,6 @@ print(f"deid gz bytes: {os.path.getsize(OUT + '.gz')}")
 # leak self-check on the de-identified output
 import subprocess
 bad = subprocess.run(
-    ["grep","-iEc","bassey|macondo|yellowtail|trion|blk31|woodfibre|perdido|ballymore|verderg|cameron|saipem|doris", OUT],
+    ["grep","-iEc","field E|field D|field C|trion|blk31|the project|field B|field A|a contractor|cameron|a contractor|doris", OUT],
     capture_output=True, text=True).stdout.strip()
 print(f"sensitive-token hits in deid manifest: {bad}")

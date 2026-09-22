@@ -16,7 +16,7 @@ Waiting on response from Inaki
 
 ### UI Tab-General
 
-\\ACMA-ANSYS03\Data\1522\ctr7\aqwa\benchmark\fsts\AL_FST2F_FST1F_LWL.dat
+\\ACMA-ANSYS03\Data\1522\<CTR>\aqwa\benchmark\fsts\AL_FST2F_FST1F_LWL.dat
 
 
 Choose the folder location.
@@ -39,7 +39,7 @@ Data will be saved irrepective of the renaming of bodies in "Tab: Bodies".
 
 
 
-WLNG Example Model - 2 Bodies
+the project Example Model - 2 Bodies
 
 Body 1: Strt1_FST2type
 Body 2: Strt2_FST1type

@@ -45,6 +45,11 @@ tmpclaude-*-cwd
 !docker-compose.yml
 !mkdocs.yml
 !.pre-commit-config.yaml
+# The rules the client-identifier gate reads. Without this exception the root
+# hygiene rule above swallows it, the gate finds no rules file and exits
+# non-zero, and the natural fix is to disable the gate. That is the same shape
+# as the `env/` rule that silently excluded model inputs for eight months.
+!.legal-deny-list.yaml
 /*.json
 !package.json
 /*.ini

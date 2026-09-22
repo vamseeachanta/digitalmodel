@@ -669,7 +669,7 @@ class TestCSVBulkRegistration:
 
     The CSV contains 17 real-world construction vessels (crane vessels,
     pipelay vessels, wind installation vessels) from operators including
-    Heerema, Allseas, Saipem, Subsea 7, McDermott, and TechnipFMC.
+    Heerema, Allseas, a contractor, Subsea 7, the contractor, and TechnipFMC.
     """
 
     @pytest.fixture(autouse=True)

@@ -166,6 +166,33 @@ repos:
         pass_filenames: false
         stages: [pre-commit]
 
+  # Client identifier gate.
+  #
+  # The census hook above is deliberately value-blind, because no rule value was
+  # committed to this repository. That left nothing checking identifiers, and
+  # 146 lines binding a client to a job code, a CTR number or an internal path
+  # reached the public remote. `.legal-deny-list.yaml` now carries structural
+  # patterns in the clear and names as salted hashes, so a name is matched
+  # without this repository publishing it.
+  #
+  # It runs on STAGED FILES, not the whole tree. The tracked tree still carries
+  # a backlog of lower-severity matches, dominated by one token in two generated
+  # result files, and whose classification is an open question. Requiring that
+  # backlog to be cleared before the gate could be switched on would mean never
+  # switching it on. This blocks new content and leaves the backlog visible:
+  # `python scripts/legal/check_identifiers.py --all` audits it.
+  #
+  # Unlike the hook it sits beside, it fails closed. A missing rules file, an
+  # unreadable one, or a private list named through DIGITALMODEL_DENY_LIST and
+  # absent, each exit non-zero rather than reporting a pass.
+  - repo: local
+    hooks:
+      - id: client-identifier-gate
+        name: Client identifiers (public repository)
+        language: system
+        entry: python scripts/legal/check_identifiers.py
+        stages: [pre-commit]
+
   # Performance and complexity checks
   - repo: local
     hooks:

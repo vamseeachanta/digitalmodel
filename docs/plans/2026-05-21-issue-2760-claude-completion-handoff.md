@@ -12,7 +12,7 @@ Do not ask the user questions. If an approved source/citation/output dependency 
 ## Primary issue
 
 - Workspace issue: https://github.com/vamseeachanta/workspace-hub/issues/2760
-- Title: `revise(naval-arch): B1528 SIROCCO force calculation review updates`
+- Title: `revise(naval-arch): <job-code> SIROCCO force calculation review updates`
 - Current label state verified 2026-05-21: `status:plan-approved` is present, so implementation is authorized.
 - Parent/source issue: https://github.com/vamseeachanta/workspace-hub/issues/2642
 - Related upstream visualization capability shipped in digitalmodel#616: `src/digitalmodel/marine_ops/marine_engineering/visualization/polar_force_overlay.py`
@@ -118,9 +118,9 @@ outputs/b1528_sirocco/current_rudder_force/**
 In `/mnt/local-analysis/workspace-hub`, you may write only if needed for final packaged deliverables and issue closeout:
 
 ```text
-acma-projects/B1528/output/b1528_sirocco_current_rudder_force_report.docx
-acma-projects/B1528/output/b1528_sirocco_current_rudder_force_report.pdf
-acma-projects/B1528/output/b1528_sirocco_current_rudder_force_manifest.json
+<project-archive>/<job-code>/output/b1528_sirocco_current_rudder_force_report.docx
+<project-archive>/<job-code>/output/b1528_sirocco_current_rudder_force_report.pdf
+<project-archive>/<job-code>/output/b1528_sirocco_current_rudder_force_manifest.json
 ```
 
 If the live implementation discovers a different canonical ACMA output path, document it before writing.
@@ -186,7 +186,7 @@ Minimum behavior:
   - optionally velocity correction `K` from A16 if the selected formula requires it.
 - Interpolate by absolute heading angle within workbook heading domain.
 - Apply approved port-positive sign convention for signed heading: longitudinal force sign/magnitude should be documented; lateral/yaw signs must follow `+Y` port and `+N` bow-to-port after any OCIMF convention conversion.
-- Select and document one generic/reference basis curve (`WD/T`, bow shape, loaded/ballast family, etc.). If basis cannot be selected from available B1528 geometry, stop with blocker rather than guessing.
+- Select and document one generic/reference basis curve (`WD/T`, bow shape, loaded/ballast family, etc.). If basis cannot be selected from available <job-code> geometry, stop with blocker rather than guessing.
 - Emit provenance/citation sidecar metadata containing pointer path, workbook checksum or mtime/size, sheet/figure IDs, selected basis labels, code_id(s), and license boundary. Do not serialize full coefficient tables.
 - Preserve existing report writer behavior for CSV/JSON/MD/HTML/DOCX/PDF/manifest, but update content to accurately describe workbook-derived coefficients and limitations.
 
@@ -228,7 +228,7 @@ If and only if all tests, artifact checks, and code review pass:
 2. Commit in `digitalmodel` with a message like:
    - `feat: complete SIROCCO current rudder force report`
 3. Push `digitalmodel` main/active branch.
-4. If ACMA output files under `workspace-hub/acma-projects/B1528/output` changed, commit/push only those output files in `workspace-hub` separately.
+4. If ACMA output files under `workspace-hub<project-root>/` changed, commit/push only those output files in `workspace-hub` separately.
 5. Post a final comment on https://github.com/vamseeachanta/workspace-hub/issues/2760 with:
    - changed files,
    - output artifact paths/links,

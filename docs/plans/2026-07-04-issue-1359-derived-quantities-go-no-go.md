@@ -11,7 +11,7 @@
 
 ## Reuse (verified 2026-07-04)
 - **Motion source (module functions, not methods):** `motion_forecast.MotionForecast` (`.dof`, `.t`, `.significant(dof)`), `vertical_motion_at(motion, offset)`, `time_derivative(t, x)` — all merged/exported in #1358.
-- **Criterion primitives:** `marine_ops/installation/go_no_go.py` — `_check_criterion(name, value, limit, unit, above_is_safe=False, warning_factor=...)`, `CriterionResult`, `CriterionState` (PASS/WARNING/FAIL), `DecisionState` (GO/MARGINAL/NO_GO). Reused directly. **Do NOT call `evaluate_go_no_go`** — verified jumper-lift-specific (hardcodes crane SWL 77.5 Te, sling MBL 1200 Te, Saipem deck, Ballymore baselines).
+- **Criterion primitives:** `marine_ops/installation/go_no_go.py` — `_check_criterion(name, value, limit, unit, above_is_safe=False, warning_factor=...)`, `CriterionResult`, `CriterionState` (PASS/WARNING/FAIL), `DecisionState` (GO/MARGINAL/NO_GO). Reused directly. **Do NOT call `evaluate_go_no_go`** — verified jumper-lift-specific (hardcodes crane SWL 77.5 Te, sling MBL 1200 Te, a contractor deck, field A baselines).
 - **Operation model (pattern only):** `operation_envelope.py::Operation`, `MotionLimit`, `OPERATIONS`. Note `operation_envelope()` returns a *limiting Hs* (`EnvelopeResult.hs_limit_m`), and the significant response lives in the private `_significant_response(...)` — so it is **not** used as the consistency oracle (see acceptance).
 
 ## Net-new

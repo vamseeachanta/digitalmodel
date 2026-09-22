@@ -21,7 +21,7 @@ The final T3 gate degraded to T2 because Agy did not return a valid round-4 revi
 - Maximum file length: 400 lines; maximum function length: 37 lines.
 - Deterministic canonical composed output: 43 top-level keys; SHA-256 `eb31e8c2eed4924daaa76a0d2aff0918ef0ddeabe78fa950e38d3de1ed847c9b`.
 - Targeted legal scan of Task 1 paths: zero deny-list matches.
-- Full-tree legal scan remains blocked by 40 pre-existing findings outside Task 1 (33 Perdido, 3 Caesar Tonga, 4 Yellowtail).
+- Full-tree legal scan remains blocked by 40 pre-existing findings outside Task 1 (33 field B, 3 Caesar Tonga, 4 field C).
 
 ## Scope boundary
 
