@@ -1,13 +1,17 @@
 # Data pointers for bulky engineering artifacts moved out of git.
 #
 # On 2026-09-22 the repository was slimmed (~2.87 GB -> ~0.30 GB at HEAD).
-# The files below were relocated to canonical archive storage; this file
+# 2,319 files (~2.52 GB) were relocated to canonical archive storage; this file
 # records where they live and how to verify them. Nothing here is fetched
 # automatically — copy what you need from the archive host.
 #
+# Note: the archive manifest lists 2,472 files; 153 docs/api/** files (the
+# generated API documentation site, 33 MB) were restored to git the same day
+# because CI's "Generated HTML freshness" check requires them committed.
+#
 # Full per-file SHA-256 manifest:
 #   ace-linux-1:/mnt/ace/digitalmodel/MANIFEST.sha256.tsv
-# (tab-separated: sha256, bytes, repo-relative path)
+# (tab-separated: sha256, bytes, repo-relative path; 2,472 entries)
 
 archive:
   host: ace-linux-1
@@ -26,9 +30,9 @@ classes:
       AQWA/OrcaFlex solver inputs (.dat, .lis, .qtf) and OrcaWave results
       (.owr), OrcaFlex models (.sim), CAD/mesh (.igs, .stl, .dwg, .dxf),
       plus large vessel-RAO YAML and CSV inputs (>1 MB).
-    files: 1180
-    bytes: 2220000000  # ~2.22 GB
-    extensions: [dat, lis, qtf, sim, owr, igs, stl, dwg, dxf, yml, yaml, csv, engd, scdoc, gz, tif]
+    files: 488
+    bytes: 1384926067  # ~1.39 GB
+    extensions: [dat, lis, qtf, sim, owr, igs, stl, dwg, dxf, yml, yaml, csv, engd, scdoc, gz]
     note: >-
       Solver tests that consumed these fixtures now skip cleanly when the
       files are absent; see tests/hydrodynamics/diffraction/conftest.py and
@@ -38,28 +42,30 @@ classes:
     description: >-
       Rendered HTML analysis reports (examples/reporting, OrcaWave benchmark
       pages, docs renders). Regenerable from code + inputs; archived, not deleted.
-    files: 562
-    bytes: 720400000  # ~720 MB
+    files: 474
+    bytes: 693073217  # ~693 MB
     extensions: [html]
     note: >-
       Runtime test fixtures (*.report.snapshot.html, fixtures/golden/*.html)
-      were explicitly kept in git; only report renders moved.
+      were explicitly kept in git; only report renders moved. The 88
+      docs/api/** HTML pages (generated API docs) were restored to git —
+      CI's generated-HTML freshness check requires them committed.
 
   - name: documentation-images
     description: >-
-      Documentation images (wave 2 of the 2026-09-22 slim): .png/.jpg/.gif/.svg
-      illustrations under docs/ and examples/. Theme-critical UI assets were kept.
-    files: 1292
-    bytes: 335000000  # ~335 MB
-    extensions: [png, jpg, jpeg, gif, svg, bmp, jfif]
+      Documentation images: .png/.jpg/.jfif/.gif/.svg illustrations under
+      docs/ and examples/. Theme-critical UI assets were kept.
+    files: 1287
+    bytes: 344496108  # ~344 MB
+    extensions: [png, jpg, jpeg, jfif, gif, svg, bmp, tif, tiff, webp]
 
   - name: office-documents
     description: >-
       Engineering documents (.pptx, .docx, .pdf) superseded by or duplicated in
       the docs/ knowledge base; archived for reference.
-    files: 117
-    bytes: 97000000  # ~97 MB
-    extensions: [pptx, ppt, docx, doc, pdf]
+    files: 70
+    bytes: 99689919  # ~100 MB
+    extensions: [pptx, ppt, docx, doc, pdf, xlsx, xls]
 
 verification: >-
   To verify a file: sha256sum the archive copy and compare against
