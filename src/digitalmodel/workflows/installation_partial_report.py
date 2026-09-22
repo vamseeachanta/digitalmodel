@@ -138,7 +138,7 @@ def _envelope_table(envelopes, tensions):
             row.append(_value(channel['low_duration']))
         rows.append(row)
     headers = ['Component / location', 'Quantity', 'Unit', 'Minimum / governing case', 'Maximum / governing case']
-    return _table(headers + (['Longest total ≤0 duration (s) / case'] if tensions else []), rows)
+    return _table(headers + (['Maximum total ≤0 duration (s) / case'] if tensions else []), rows)
 
 
 def _sling_rows(cases):

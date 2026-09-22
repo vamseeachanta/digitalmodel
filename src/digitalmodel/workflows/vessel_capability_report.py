@@ -36,7 +36,8 @@ def _critical_table(rows):
     values = [[str(row['hs_m']), ', '.join(map(str, row['verified_periods'])),
                'Complete planned row' if row['complete_tp_row'] else 'Partial row',
                f"{row['peak_tension']['tp_s']} / {row['peak_tension']['peak_tension_kN']:.3f}",
-               f"{row['low_duration']['tp_s']} / {row['low_duration']['maximum_low_tension_duration_s']:.3f}"]
+               ('No governing Tp; no positive-duration nonpositive-tension events' if row['low_duration']['maximum_low_tension_duration_s']==0 else
+                f"{row['low_duration']['tp_s']} / {row['low_duration']['maximum_low_tension_duration_s']:.3f}")]
               for row in rows]
     return _table(['Hs (m)', 'Verified Tp (s)', 'Coverage',
                    'Peak-load Tp (s) / tension (kN)', 'Low-tension Tp (s) / total ≤0 duration (s)'], values)
@@ -77,54 +78,10 @@ def _pending(basis, campaign=None, sensitivity=None):
     return _table(['Assessment', 'Current evidence / placeholder'], rows)
 
 
-def _front_html(summary):
-    counts = ', '.join(f'{key}: {value}' for key, value in summary['counts'].items())
-    basis = _table(['Parameter', 'Recorded basis'], [[escape(str(k)), escape(str(v))]
-                   for k, v in summary['design_basis'].items()])
-    return f'''<!doctype html><html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>Vessel capability — mudmat installation</title>
-<style>{STYLE}</style></head><body><main><header><div class="tag">Engineering assessment / partial results</div>
-<h1>Vessel capability for mudmat installation</h1><p>Simulated irregular-wave demand study · {summary['created_utc']}</p></header>
-<section><h2>1 · Introduction</h2><p>The assessment will establish vessel-specific installation envelopes for
-structures of varying sizes. This partial issue presents completed baseline deep-submerged responses.
-Execution coverage and load demand are recorded separately from engineering acceptance.</p></section>
-<section><h2>2 · Summary and conclusions</h2><p>{escape(counts)}</p>
-<p class="notice"><strong>No operating window has been established.</strong> Load and low-tension maxima below govern only
-the verified sampled cases. Component capacities, geometric clearance and slack/re-tension criteria remain unresolved.</p>
-<p>Negative signed tension can reflect the model's line properties during unloading. It is not a physically sustainable
-sling compression load or an allowable-compression criterion. A tension ≤0 event is a diagnostic; actual slack,
-re-tensioning loads and interference require separate interpretation.</p></section>
-<section><h2>3 · Design data</h2>{basis}<p class="caption">Table 1. Baseline model and environmental basis.</p></section>
-<section><h2>4 · Analysis methodology</h2><p>An immutable campaign snapshot is compared with the input matrix.
-Completed case generation, model, simulation and trace hashes are checked using digitalmodel's existing installation
-report workflow. Tension event durations are recomputed from recorded traces. Running cases are excluded.
-No solver is invoked by this report. Native sampled extrema are reported separately for each line end.</p>
-<p>Only the imported vessel RAO condition, heading and single wave seed are represented. The native solver reports
-wave components below the shortest displacement-RAO period; extrapolation requires assessment before acceptance.
-Hydrodynamic coefficient sensitivities, time-step/duration convergence and repeated seeds remain required evidence.</p></section>
-'''
-
-
-def render_html(summary, base=Path('.')):
-    return _front_html(summary) + f'''<section><h2>5 · Results</h2><h3>5.1 Execution coverage</h3>{_grid(summary['cases'])}
-<p class="caption">Table 2. ● verified completed; ◐ running at snapshot; — missing; ! other state. These symbols are not acceptance verdicts.</p>
-<h3>5.2 Governing sampled periods</h3>{_critical_table(summary['critical_periods'])}
-<p class="caption">Table 3. Governing sampled Tp by Hs; different components can govern load and total low-tension duration.
-Duration is accumulated tension ≤0 time over the 600 s record, not the longest continuous event.
-Incomplete rows cannot establish a critical period over the full planned range.</p></section>
-<section><h3>5.3 Line-end demand</h3>{_envelope_table(summary['envelopes'], True)}
-<p class="caption">Table 4. Signed tension extrema and longest accumulated tension ≤0 duration, with governing case.</p></section>
-<section><h3>5.4 Body and winch response</h3>{_envelope_table(summary['envelopes'], False)}
-<p class="caption">Table 5. Native response channels. Body reference-point Z is not seabed clearance of the lowest rotated point.</p></section>
-<section><h2>6 · Pending installation envelopes and qualification</h2>{_pending(summary['design_basis'], summary.get('campaign_snapshot'), summary.get('sensitivity_campaign_snapshot'))}
-<p class="caption">Table 6. Placeholders retained for subsequent evidence and sizes.</p>
-<p>Endpoint chord deficit is unstretched length minus endpoint separation; sag and extension contribute, so it is not physical slack.
-Re-tension peaks over a specified diagnostic window do not alone qualify snap loads.</p></section>
-<section><h2>Appendix A · Detailed results</h2>{_case_details(summary['cases'], base)}</section>
-<section><h2>Appendix B · Provenance</h2><p class="hash">Matrix SHA-256: {summary['matrix_sha256']}<br>
-Campaign snapshot SHA-256: {summary['campaign_sha256']}</p><p>The JSON sidecar retains the captured campaign,
-verified channels, case hashes and supplied design basis. Verification failures are excluded from demand summaries.</p></section>
-<footer>Reusable results owner: private digitalmodel-data. Local retention does not establish remote backup.</footer></main></body></html>'''
+def render_html(summary, base=Path('.'), config=None):
+    """Render pinned findings without changing their numerical evidence."""
+    from digitalmodel.workflows.vessel_capability_layout import render_layout
+    return render_layout(summary, base, config or {})
 
 
 def _audit_profile(row):
