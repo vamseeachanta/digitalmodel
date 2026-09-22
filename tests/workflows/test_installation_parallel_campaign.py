@@ -229,3 +229,51 @@ def test_windows_spawn_transports_failed_receipts_without_loading_solver(setup, 
         assert row['worker_cpu_affinity'] == cpus
         assert json.loads((Path(row['run_dir']) / 'run.json').read_text()) == {'status': 'solving'}
     assert result['cases'][len(cpus)]['status'] == 'MISSING'
+
+
+def test_explicit_subset_preserves_failed_case(setup):
+    run(setup)
+    path = setup['root'] / 'campaign.json'
+    summary = json.loads(path.read_text())
+    summary['cases'][0].update(status='FAILED', error='retained instability')
+    for index in (4, 5, 6):
+        summary['cases'][index]['status'] = 'MISSING'
+    path.write_text(json.dumps(summary))
+    setup['calls'].clear()
+    result = run(setup, case_indices=[4, 5])
+    assert setup['calls'] == [4, 5]
+    assert result['cases'][0] == summary['cases'][0]
+    assert result['cases'][6]['status'] == 'MISSING'
+    assert result['selected_indices'] == [4, 5]
+    assert result['status'] == 'selected_cases_complete'
+
+
+@pytest.mark.parametrize('indices', [[], [1, 1], [-1], [7], [True], ['1']])
+def test_invalid_case_subset_rejected_before_output(setup, indices):
+    with pytest.raises(ValueError):
+        run(setup, case_indices=indices)
+    assert not setup['root'].exists()
+    assert not setup['calls']
+
+
+def test_completed_subset_is_not_resubmitted(setup):
+    run(setup)
+    setup['calls'].clear()
+    result = run(setup, case_indices=[1, 3])
+    assert not setup['calls']
+    assert result['selected_indices'] == []
+
+
+def test_selected_failure_stops_remaining_subset(setup, monkeypatch):
+    original = parallel.campaign._execute
+    def execute(*args):
+        if args[0] == 3:
+            raise RuntimeError('selected unstable case')
+        return original(*args)
+    monkeypatch.setattr(parallel.campaign, '_execute', execute)
+    result = run(setup, case_indices=[2, 3, 4, 5])
+    assert setup['calls'] == [2, 4]
+    assert result['status'] == 'stopped'
+    assert result['cases'][3]['status'] == 'FAILED'
+    assert result['cases'][5]['status'] == 'MISSING'
+    assert result['cases'][0]['status'] == 'MISSING'

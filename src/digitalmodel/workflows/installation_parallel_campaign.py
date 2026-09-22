@@ -163,8 +163,11 @@ def _merge_wave(summary, indices, results):
         summary['cases'][index] = row
 
 
-def _waves(root, summary, config, workers):
-    pending = [row['index'] for row in summary['cases'] if row['status'] != 'COMPLETED']
+def _waves(root, summary, config, workers, case_indices=None):
+    selected = set(case_indices) if case_indices is not None else None
+    pending = [row['index'] for row in summary['cases']
+               if row['status'] != 'COMPLETED'
+               and (selected is None or row['index'] in selected)]
     summary['selected_indices'] = pending
     started = time.perf_counter()
     for offset in range(0, len(pending), workers):
@@ -191,7 +194,8 @@ def _waves(root, summary, config, workers):
 
 
 def run_parallel_campaign(study_dir, output_root, *, source_campaign, workers=3,
-                          cpus, extraction, solver_version='11.6c', timeout_seconds=14400):
+                          cpus, extraction, solver_version='11.6c', timeout_seconds=14400,
+                          case_indices=None):
     """Run only unfinished cases after a separately verified serial handover."""
     _validate_resources(workers, cpus)
     timeout = campaign._validate_timeout(timeout_seconds)
@@ -200,7 +204,8 @@ def run_parallel_campaign(study_dir, output_root, *, source_campaign, workers=3,
     if source.is_relative_to(root) or study.is_relative_to(root) or root.is_relative_to(study):
         raise ValueError('Output root must be separate from frozen source and input study')
     matrix = campaign._read(study / 'matrix.json')
-    manifest = campaign._manifest(study, list(range(len(matrix['cases']))))
+    indices = list(range(len(matrix['cases']))) if case_indices is None else case_indices
+    manifest = campaign._manifest(study, indices)
     with _resources(cpus), _ownership(root):
         summary = _initialize(study, root, source, manifest, solver_version)
         summary['execution_policy'] = {'workers': workers, 'cpu_ids': list(cpus),
@@ -209,7 +214,7 @@ def run_parallel_campaign(study_dir, output_root, *, source_campaign, workers=3,
             'inner_batch_workers': 1, 'thread_environment': {k: os.environ[k] for k in _THREAD_VARIABLES}}
         config = dict(manifest=manifest, root=str(root), study=str(study), cpus=list(cpus),
                       extraction=extraction, solver_version=solver_version, timeout_seconds=timeout)
-        return _waves(root, summary, config, workers)
+        return _waves(root, summary, config, workers, case_indices)
 
 
 def main():
@@ -217,6 +222,7 @@ def main():
     parser.add_argument('study_dir', type=Path)
     parser.add_argument('output_root', type=Path)
     parser.add_argument('--source-campaign', required=True, type=Path)
+    parser.add_argument('--case-indices', help='Optional explicit comma-separated subset; other rows remain unchanged')
     parser.add_argument('--workers', type=int, default=3)
     parser.add_argument('--cpus', required=True, help='Explicit comma-separated logical CPU IDs')
     parser.add_argument('--extraction-config', required=True, type=Path)
@@ -229,7 +235,8 @@ def main():
     result = run_parallel_campaign(args.study_dir, args.output_root,
         source_campaign=args.source_campaign, workers=args.workers,
         cpus=[int(cpu) for cpu in args.cpus.split(',')], extraction=extraction,
-        solver_version=args.solver_version, timeout_seconds=args.timeout_seconds)
+        solver_version=args.solver_version, timeout_seconds=args.timeout_seconds,
+        case_indices=None if args.case_indices is None else [int(i) for i in args.case_indices.split(',')])
     print(json.dumps({'status': result['status'], 'campaign': str(args.output_root / 'campaign.json')}))
     return 1 if result['status'] == 'stopped' else 0
 
