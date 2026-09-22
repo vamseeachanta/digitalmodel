@@ -331,7 +331,17 @@ benchmarks/results/
 
 # OrcaWave binary results (regenerable from .yml)
 **/*.owr
-!tests/fixtures/solver/*.owr
+
+# ==========================================
+# Archived engineering data (2026-09-22 slim)
+# ==========================================
+# Bulky solver inputs/outputs, report renders, vessel-RAO YAML, and
+# documentation images were moved out of git. Canonical copies live at
+# ace-linux-1:/mnt/ace/digitalmodel/ mirroring repo-relative paths.
+# See DOCUMENT-MAP.md and data/inputs.yaml. Do not re-add these.
+tests/fixtures/solver/*.owr
+tests/fixtures/solver/*.xlsx
+tests/fixtures/solver/*.sim
 
 # Wind binary time series
 **/*.bts

@@ -1,0 +1,76 @@
+# Data pointers for bulky engineering artifacts moved out of git.
+#
+# On 2026-09-22 the repository was slimmed (~2.87 GB -> ~0.30 GB at HEAD).
+# 2,299 files (~2.49 GB) were relocated to canonical archive storage; this file
+# records where they live and how to verify them. Nothing here is fetched
+# automatically — copy what you need from the archive host.
+#
+# Note: the archive manifest lists 2,472 files; 173 were restored to git the
+# same day (153 docs/api/** generated API docs required by CI, 5 assets/logo/**
+# build inputs, 15 tests/fixtures/** solver fixtures required by tests).
+#
+# Full per-file SHA-256 manifest:
+#   ace-linux-1:/mnt/ace/digitalmodel/MANIFEST.sha256.tsv
+# (tab-separated: sha256, bytes, repo-relative path; 2,472 entries)
+
+archive:
+  host: ace-linux-1
+  root: /mnt/ace/digitalmodel
+  # Paths under root mirror the repo-relative paths from the slim commit's parent.
+
+slim:
+  date: "2026-09-22"
+  parent_commit: 7e71d6b26eb863e95ae3f0ec9957b081d85dea28
+  backup_bundle: /mnt/ace/_transfer/digitalmodel-pre-slim-20260922.bundle  # on ace-linux-1; verified complete history
+  document_map: DOCUMENT-MAP.md  # repo root; full class inventory
+
+classes:
+  - name: solver-inputs
+    description: >-
+      AQWA/OrcaFlex solver inputs (.dat, .lis, .qtf) and OrcaWave results
+      (.owr), OrcaFlex models (.sim), CAD/mesh (.igs, .stl, .dwg, .dxf),
+      plus large vessel-RAO YAML and CSV inputs (>1 MB). 15 tests/fixtures/**
+      solver fixtures were restored to git (CI requires them).
+    files: 479
+    bytes: 1351268967  # ~1.35 GB
+    extensions: [dat, lis, qtf, sim, owr, igs, stl, dwg, dxf, yml, yaml, csv, engd, scdoc, gz]
+    note: >-
+      Solver tests that consumed these fixtures now skip cleanly when the
+      files are absent; see tests/hydrodynamics/diffraction/conftest.py and
+      tests/solvers/orcaflex/reporting/test_fixture_snapshot.py.
+
+  - name: html-report-renders
+    description: >-
+      Rendered HTML analysis reports (examples/reporting, OrcaWave benchmark
+      pages, docs renders). Regenerable from code + inputs; archived, not deleted.
+    files: 474
+    bytes: 693073217  # ~693 MB
+    extensions: [html]
+    note: >-
+      Runtime test fixtures (*.report.snapshot.html, fixtures/golden/*.html)
+      were explicitly kept in git; only report renders moved. The 88
+      docs/api/** HTML pages (generated API docs) were restored to git —
+      CI's generated-HTML freshness check requires them committed.
+
+  - name: documentation-images
+    description: >-
+      Documentation images: .png/.jpg/.jfif/.gif/.svg illustrations under
+      docs/ and examples/. Theme-critical UI assets were kept; the 5
+      assets/logo/** build inputs were restored to git.
+    files: 1282
+    bytes: 344324800  # ~344 MB
+    extensions: [png, jpg, jpeg, jfif, gif, svg, bmp, tif, tiff, webp]
+
+  - name: office-documents
+    description: >-
+      Engineering documents (.pptx, .docx, .pdf) superseded by or duplicated in
+      the docs/ knowledge base; archived for reference. 6
+      tests/fixtures/solver/*.xlsx were restored to git (CI requires them).
+    files: 64
+    bytes: 94000000  # ~94 MB
+    extensions: [pptx, ppt, docx, doc, pdf, xlsx, xls]
+
+verification: >-
+  To verify a file: sha256sum the archive copy and compare against
+  MANIFEST.sha256.tsv. To restore: copy ace-linux-1:/mnt/ace/digitalmodel/<path>
+  back to <path> in a checkout (paths mirror the pre-slim tree).

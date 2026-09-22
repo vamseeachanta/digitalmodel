@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from tests.solvers.orcaflex.reporting.fixture_helpers import (
     generate_minimal_fixture_report,
     minimal_fixture_snapshot_path,
@@ -55,6 +57,11 @@ def test_snapshot_scope_is_structural_not_incidental(tmp_path) -> None:
     assert 'id="loads"' in actual
 
 
+@pytest.mark.skip(
+    reason="mooring_with_raos.sim archived 2026-09-22 at "
+    "ace-linux-1:/mnt/ace/digitalmodel/tests/fixtures/solver/mooring_with_raos.sim; "  # abs-path-allowed
+    "re-enable when the minimal fixture snapshot path is stable"
+)
 def test_mooring_with_raos_snapshot_is_deferred_until_minimal_fixture_stable() -> None:
     # TODO: replace with real extension test only after minimal fixture snapshot path is stable.
     assert True

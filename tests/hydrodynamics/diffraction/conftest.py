@@ -28,6 +28,10 @@ from digitalmodel.hydrodynamics.diffraction.output_schemas import (
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 SOLVER_FIXTURES_DIR = Path(__file__).parent.parent.parent / "fixtures" / "solver"
 
+# Canonical archive for bulky solver fixtures moved out of git (2026-09-22 slim).
+# Paths below mirror the repo-relative fixture paths.
+SOLVER_FIXTURE_ARCHIVE = "ace-linux-1:/mnt/ace/digitalmodel"  # abs-path-allowed
+
 MIN_FREQUENCY = 0.05
 MAX_FREQUENCY = 2.0
 N_FREQ = int(
@@ -142,37 +146,49 @@ def solver_fixtures_dir() -> Path:
 
 @pytest.fixture
 def l00_owr_path() -> Path:
-    """Path to L00 reference .owr file (committed artifact from Phase 7 Plan 03)."""
+    """Path to L00 reference .owr file (archived 2026-09-22; see SOLVER_FIXTURE_ARCHIVE)."""
     path = SOLVER_FIXTURES_DIR / "L00_test01.owr"
     if not path.exists():
-        pytest.skip("L00 .owr fixture not available (requires solver run on licensed-win-1)")
+        pytest.skip(
+            "L00 .owr fixture not in this checkout; archived at "
+            f"{SOLVER_FIXTURE_ARCHIVE}/tests/fixtures/solver/L00_test01.owr"
+        )
     return path
 
 
 @pytest.fixture
 def l00_xlsx_path() -> Path:
-    """Path to L00 reference .xlsx file (committed artifact from Phase 7 Plan 03)."""
+    """Path to L00 reference .xlsx file (archived 2026-09-22; see SOLVER_FIXTURE_ARCHIVE)."""
     path = SOLVER_FIXTURES_DIR / "L00_test01.xlsx"
     if not path.exists():
-        pytest.skip("L00 .xlsx fixture not available (requires solver run on licensed-win-1)")
+        pytest.skip(
+            "L00 .xlsx fixture not in this checkout; archived at "
+            f"{SOLVER_FIXTURE_ARCHIVE}/tests/fixtures/solver/L00_test01.xlsx"
+        )
     return path
 
 
 @pytest.fixture
 def l01_owr_path() -> Path:
-    """Path to L01 reference .owr file (committed artifact from Phase 7 Plan 03)."""
+    """Path to L01 reference .owr file (archived 2026-09-22; see SOLVER_FIXTURE_ARCHIVE)."""
     path = SOLVER_FIXTURES_DIR / "L01_001_ship_raos.owr"
     if not path.exists():
-        pytest.skip("L01 .owr fixture not available (requires solver run on licensed-win-1)")
+        pytest.skip(
+            "L01 .owr fixture not in this checkout; archived at "
+            f"{SOLVER_FIXTURE_ARCHIVE}/tests/fixtures/solver/L01_001_ship_raos.owr"
+        )
     return path
 
 
 @pytest.fixture
 def l01_xlsx_path() -> Path:
-    """Path to L01 reference .xlsx file (committed artifact from Phase 7 Plan 03)."""
+    """Path to L01 reference .xlsx file (archived 2026-09-22; see SOLVER_FIXTURE_ARCHIVE)."""
     path = SOLVER_FIXTURES_DIR / "L01_001_ship_raos.xlsx"
     if not path.exists():
-        pytest.skip("L01 .xlsx fixture not available (requires solver run on licensed-win-1)")
+        pytest.skip(
+            "L01 .xlsx fixture not in this checkout; archived at "
+            f"{SOLVER_FIXTURE_ARCHIVE}/tests/fixtures/solver/L01_001_ship_raos.xlsx"
+        )
     return path
 
 
