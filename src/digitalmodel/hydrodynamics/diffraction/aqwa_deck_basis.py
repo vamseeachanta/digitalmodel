@@ -32,7 +32,12 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-__all__ = ["AqwaBasis", "read_aqwa_basis"]
+__all__ = [
+    "AmbiguousDeck",
+    "AqwaBasis",
+    "read_aqwa_basis",
+    "structures_in_deck",
+]
 
 
 @dataclass(frozen=True)
@@ -56,6 +61,8 @@ class AqwaBasis:
     panel_count: int = 0
     source: str | None = None
     warnings: tuple[str, ...] = field(default=())
+    #: The structure this basis was read from. Every field above belongs to it.
+    structure: int | None = None
 
     @property
     def radii_of_gyration(self) -> tuple[float, float, float] | None:
@@ -121,14 +128,86 @@ class AqwaBasis:
 
 _NUM = r"[-+]?\d*\.?\d+(?:[eEdD][-+]?\d+)?"
 
+#: An AQWA data record is column positional, not whitespace delimited: six
+#: columns of structure number, four of keyword, then seven fields of ten.
+#: A value that fills its field abuts the one before it -- the shipped
+#: ``F_FST1_L00_DAMPAD.dat`` writes ``0.000e+00-9.332e+10`` -- so a record read
+#: by splitting on spaces loses a field, and one read by a free-form number
+#: regex fuses two into a single wrong number.
+_STRUCT_COLS = slice(0, 6)
+_KEYWORD_COLS = slice(6, 10)
+_FIELD_WIDTH = 10
+_FIRST_FIELD = 10
+
+
+class AmbiguousDeck(ValueError):
+    """The deck does not identify one body, or not the body that was asked for.
+
+    Raised rather than returning a basis assembled from more than one
+    structure, because a mixed basis is a plausible-looking wrong answer: it
+    was returning a 45,225 t hull's mass beside a turret's inertia, and radii
+    of gyration of 1.22 m, with nothing to say so.
+    """
+
 
 def _floats(text: str) -> list[float]:
+    """Free-form numbers, for the single-value records that are not columnar."""
     out = []
     for token in re.findall(_NUM, text):
         try:
             out.append(float(token.replace("d", "e").replace("D", "E")))
         except ValueError:
             continue
+    return out
+
+
+def _structure_of(raw: str) -> int | None:
+    """The structure a record belongs to, or None when the field is blank."""
+    field = raw[_STRUCT_COLS].strip()
+    if not field:
+        return None
+    try:
+        return int(field)
+    except ValueError:
+        return None
+
+
+#: Record keywords that carry per-structure physical data. Structure detection
+#: keys on these rather than on "any record with a number in columns 1-6",
+#: because a coordinate card's node number spills into the keyword columns --
+#: node 13905 on structure 1 reads as keyword "1390" -- and counting those
+#: reported fourteen structures in a deck that defines one.
+_BODY_KEYWORDS = frozenset({"PMAS", "FIDP", "FISK"})
+
+
+def _keyword_of(raw: str) -> str:
+    """The four-column record keyword, or "" when those columns are not one.
+
+    A keyword begins with a letter. Anything else in those columns is another
+    field bleeding into them, and must not be mistaken for a record type.
+    """
+    field = raw[_KEYWORD_COLS].strip().upper()
+    if not field or not field[0].isalpha():
+        return ""
+    return field
+
+
+def _column_fields(raw: str, count: int) -> list[float] | None:
+    """``count`` ten-column fields, read by position.
+
+    Returns None when any field is not a number, which is how a record of a
+    different shape is rejected instead of being partly believed.
+    """
+    out: list[float] = []
+    for i in range(count):
+        start = _FIRST_FIELD + i * _FIELD_WIDTH
+        chunk = raw[start:start + _FIELD_WIDTH].strip()
+        if not chunk:
+            return None
+        try:
+            out.append(float(chunk.replace("d", "e").replace("D", "E")))
+        except ValueError:
+            return None
     return out
 
 
@@ -140,8 +219,38 @@ def _matrix_from_cards(cards: dict[int, list[float]]) -> tuple[tuple[float, ...]
     return tuple(rows)
 
 
+def structures_in_deck(path: str | Path) -> tuple[int, ...]:
+    """Every structure number the deck's records carry, in order.
+
+    A deck with more than one entry here cannot be read without saying which
+    body is wanted.
+    """
+    found: set[int] = set()
+    in_mate = False
+    for raw in Path(path).read_text(errors="replace").splitlines():
+        if raw.lstrip().startswith("*"):
+            continue
+        body = raw.strip()
+        if body == "MATE":
+            in_mate = True
+            continue
+        if in_mate:
+            if body in ("END", "FINI"):
+                in_mate = False
+            else:
+                s = _structure_of(raw)
+                if s is not None and len(_floats(body)) >= 3:
+                    found.add(s)
+            continue
+        if _keyword_of(raw) in _BODY_KEYWORDS:
+            s = _structure_of(raw)
+            if s is not None:
+                found.add(s)
+    return tuple(sorted(found))
+
+
 def _find_node_coordinates(
-    lines: list[str], node: int
+    lines: list[str], node: int, structure: int | None = None
 ) -> tuple[float, float, float] | None:
     """Locate a node's coordinates on a fixed-column AQWA coordinate card.
 
@@ -157,7 +266,11 @@ def _find_node_coordinates(
             continue
         if raw[6:11] != target:
             continue
-        if any(tag in raw for tag in ("PMAS", "QPPL", "TPPL", "ELM")):
+        # Without this the node column alone decides, and a second structure's
+        # node of the same number wins on file order.
+        if structure is not None and _structure_of(raw) not in (None, structure):
+            continue
+        if _keyword_of(raw) in ("PMAS", "QPPL", "TPPL", "ELM"):
             continue
         try:
             x = float(raw[20:30])
@@ -169,16 +282,43 @@ def _find_node_coordinates(
     return None
 
 
-def read_aqwa_basis(path: str | Path) -> AqwaBasis:
-    """Read the physical basis from an AQWA deck.
+def read_aqwa_basis(
+    path: str | Path, structure: int | None = None
+) -> AqwaBasis:
+    """Read one structure's physical basis from an AQWA deck.
 
     Fields the deck does not define come back as ``None`` rather than a guess,
     and anything ambiguous is recorded in ``warnings`` rather than resolved
     silently.
+
+    Parameters
+    ----------
+    structure:
+        Which body to read. A deck defining exactly one structure needs no
+        argument. A deck defining several raises :class:`AmbiguousDeck` unless
+        one is named, because every field below -- mass, inertia, mass node,
+        coordinates, additional damping -- is per structure, and assembling
+        them across bodies produces a basis that looks valid and is not.
+        Use :func:`structures_in_deck` to see what a deck offers.
     """
     path = Path(path)
     text = path.read_text(errors="replace")
     lines = text.splitlines()
+
+    present = structures_in_deck(path)
+    if structure is None:
+        if len(present) > 1:
+            raise AmbiguousDeck(
+                f"{path.name} defines {len(present)} structures {present}; "
+                f"mass, inertia and coordinates are per structure, so pass "
+                f"structure=<n> to say which body to read"
+            )
+        structure = present[0] if present else 1
+    elif present and structure not in present:
+        raise AmbiguousDeck(
+            f"{path.name} defines structures {present}, not "
+            f"structure={structure}"
+        )
 
     mass = inertia = cog = cog_node = None
     depth = density = gravity = waterline = None
@@ -206,13 +346,18 @@ def read_aqwa_basis(path: str | Path) -> AqwaBasis:
             continue
 
         token = body.split()[0] if body.split() else ""
+        keyword = _keyword_of(raw)
+        owner = _structure_of(raw)
+        # A record with a blank structure field belongs to the structure whose
+        # block it sits in; within a single-structure read that is this one.
+        mine = owner in (None, structure)
 
-        if "PMAS" in line and "GEOM" not in line:
-            nums = _floats(line)
-            if len(nums) >= 8 and "(" not in line:
-                # struct, node, then six inertia values
-                cog_node = int(nums[1])
-                inertia = tuple(nums[2:8])
+        if keyword == "PMAS" and mine and "(" not in line:
+            # node, then six inertia terms, in ten-column fields.
+            fields = _column_fields(raw, 7)
+            if fields is not None:
+                cog_node = int(fields[0])
+                inertia = tuple(fields[1:7])
         if token == "DPTH":
             v = _floats(body)
             depth = v[0] if v else None
@@ -225,43 +370,58 @@ def read_aqwa_basis(path: str | Path) -> AqwaBasis:
         elif token == "ZLWL":
             v = _floats(body)
             waterline = v[0] if v else None
-        elif "HRTZ" in line:
-            v = _floats(line)
-            if len(v) >= 4:
-                freqs.append(2.0 * math.pi * v[-1])
-        elif "DIRN" in line:
-            v = _floats(line)
-            if len(v) >= 4:
-                headings.append(v[-1])
-        elif "FIDP" in line:
-            v = _floats(line)
-            if len(v) >= 7:
-                damping_cards[int(v[0])] = v[1:7]
-        elif "FISK" in line:
-            v = _floats(line)
-            if len(v) >= 7:
-                stiffness_cards[int(v[0])] = v[1:7]
+        elif keyword in ("HRTZ", "DIRN") and mine:
+            # Two five-column index fields, then the value in columns 21-30.
+            chunk = raw[20:30].strip()
+            if chunk:
+                try:
+                    value = float(chunk.replace("d", "e").replace("D", "E"))
+                except ValueError:
+                    value = None
+                if value is not None:
+                    if keyword == "HRTZ":
+                        freqs.append(2.0 * math.pi * value)
+                    else:
+                        headings.append(value)
+        elif keyword in ("FIDP", "FISK") and mine:
+            fields = _column_fields(raw, 7)
+            if fields is not None:
+                mode = int(fields[0])
+                if 1 <= mode <= 6:
+                    target = (damping_cards if keyword == "FIDP"
+                              else stiffness_cards)
+                    target[mode] = fields[1:7]
+                else:
+                    notes.append(
+                        f"{keyword} record carries mode index {mode}, outside "
+                        f"1 to 6; the record was not applied")
 
-    # Mass sits on a bare MATE data card: struct, node, mass.
+    # Mass sits on a bare MATE data card: structure, node, mass. The scan stops
+    # at the deck's END so it cannot run on into the next deck and take the
+    # first number it finds there as a mass.
     in_mate = False
     for raw in lines:
         body = raw.strip()
         if body == "MATE":
             in_mate = True
             continue
-        if in_mate:
-            if body in ("END", "FINI") or body.startswith("*"):
-                in_mate = False
-                continue
-            v = _floats(body)
-            if len(v) >= 3:
-                mass = v[2]
-                if cog_node is None:
-                    cog_node = int(v[1])
-                in_mate = False
+        if not in_mate:
+            continue
+        if body in ("END", "FINI") or body.startswith("*"):
+            in_mate = False
+            continue
+        owner = _structure_of(raw)
+        if owner not in (None, structure):
+            continue
+        v = _floats(body)
+        if len(v) >= 3:
+            mass = v[2]
+            if cog_node is None:
+                cog_node = int(v[1])
+            in_mate = False
 
     if cog_node is not None:
-        cog = _find_node_coordinates(lines, cog_node)
+        cog = _find_node_coordinates(lines, cog_node, structure)
 
     if mass is None:
         notes.append("no MATE mass card found")
@@ -281,5 +441,5 @@ def read_aqwa_basis(path: str | Path) -> AqwaBasis:
         additional_damping=_matrix_from_cards(damping_cards) if damping_cards else None,
         additional_stiffness=_matrix_from_cards(stiffness_cards) if stiffness_cards else None,
         unit_system=unit_system, options=tuple(options), panel_count=panels,
-        source=str(path), warnings=tuple(notes),
+        source=str(path), warnings=tuple(notes), structure=structure,
     )

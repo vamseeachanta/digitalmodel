@@ -66,6 +66,9 @@ class OrientationReport:
     above_waterline_vertices: int
     waterline_lid_panels: int = 0
     symmetry_plane: str | None = None
+    #: Boundary edges lying neither at the waterline nor on a declared symmetry
+    #: plane. Any is a hole in the wetted surface.
+    submerged_boundary_edges: int = 0
 
     @property
     def sector_fraction(self) -> int:
@@ -93,6 +96,13 @@ class OrientationReport:
         not wetted-hull panels: an interior lid contributes waterline edges
         that cancel the hull's own, leaving a waterplane area of zero while
         every other indicator still looks correct.
+
+        A boundary edge away from the waterline and away from any declared
+        symmetry plane is a hole in the wetted surface. The axis volumes do not
+        always show it: a face removed from a plane through the origin
+        contributes nothing to any of the three integrals, so an open mesh can
+        report the closed volume, agree across all three axes and read as
+        outward.
         """
         return (
             self.consistent
@@ -102,6 +112,7 @@ class OrientationReport:
             and self.non_manifold_edges == 0
             and self.above_waterline_vertices == 0
             and self.waterline_lid_panels == 0
+            and self.submerged_boundary_edges == 0
         )
 
     def describe(self) -> str:
@@ -198,12 +209,20 @@ def _directed_edges(panel: Sequence[int]) -> list[tuple[int, int]]:
     return edges
 
 
-def _consistency_flips(panels: Sequence[Sequence[int]]) -> tuple[np.ndarray, int, int, int]:
+def _consistency_flips(
+    panels: Sequence[Sequence[int]],
+) -> tuple[np.ndarray, int, int, int, list[tuple[int, int]]]:
     """Flip flags making every panel agree with its neighbours.
 
     Returns the flags, the number of connected components, the count of
-    boundary edges (shared by one panel, expected along the waterline) and the
-    count of non-manifold edges (shared by more than two).
+    boundary edges (shared by one panel, expected along the waterline), the
+    count of non-manifold edges (shared by more than two), and the boundary
+    edges themselves.
+
+    The edges are returned, not only counted, because where they lie is what
+    separates a wetted surface that closes at the free surface from one with a
+    hole in it. A count cannot make that distinction: a closed hull already has
+    a boundary all along its waterline.
     """
     shared: dict[tuple[int, int], list[tuple[int, int]]] = defaultdict(list)
     for p, panel in enumerate(panels):
@@ -212,10 +231,11 @@ def _consistency_flips(panels: Sequence[Sequence[int]]) -> tuple[np.ndarray, int
             shared[key].append((p, 1 if a < b else -1))
 
     adjacency: dict[int, list[tuple[int, int]]] = defaultdict(list)
-    boundary = non_manifold = 0
+    boundary_edges: list[tuple[int, int]] = []
+    non_manifold = 0
     for key, users in shared.items():
         if len(users) == 1:
-            boundary += 1
+            boundary_edges.append(key)
             continue
         if len(users) > 2:
             non_manifold += 1
@@ -243,7 +263,50 @@ def _consistency_flips(panels: Sequence[Sequence[int]]) -> tuple[np.ndarray, int
                 seen[q] = True
                 flip[q] = flip[p] if agrees else not flip[p]
                 queue.append(q)
-    return flip, components, boundary, non_manifold
+    return flip, components, len(boundary_edges), non_manifold, boundary_edges
+
+
+def _submerged_boundary_edges(
+    vertices: np.ndarray,
+    boundary_edges: Sequence[tuple[int, int]],
+    symmetry_plane: str | None,
+    z_tol: float,
+) -> int:
+    """Boundary edges that lie neither at the waterline nor on a symmetry cut.
+
+    A wetted-surface mesh is legitimately open in two places: along the
+    waterline, where it stops at z = 0, and along a declared symmetry plane,
+    where the rest of the body is reproduced by reflection rather than stored.
+    An edge anywhere else is a hole, and a hole breaks the divergence-theorem
+    identity the whole module rests on.
+
+    The hole is not always visible in the axis volumes. A face removed from a
+    plane through the origin contributes nothing to any of the three integrals,
+    so they stay equal to each other and to the closed value. Symmetry-reduced
+    meshes are cut on exactly those planes, which is why this is checked
+    directly rather than inferred from a volume discrepancy.
+    """
+    if not len(boundary_edges):
+        return 0
+    verts = np.asarray(vertices, dtype=float)
+    planes = []
+    if symmetry_plane:
+        s = symmetry_plane.lower()
+        # A GDF's ISX mirrors about x = 0, ISY about y = 0.
+        if "x" in s:
+            planes.append(0)
+        if "y" in s:
+            planes.append(1)
+
+    count = 0
+    for a, b in boundary_edges:
+        pa, pb = verts[a], verts[b]
+        if abs(pa[2]) <= z_tol and abs(pb[2]) <= z_tol:
+            continue                      # at the waterline
+        if any(abs(pa[i]) <= z_tol and abs(pb[i]) <= z_tol for i in planes):
+            continue                      # on a declared symmetry cut
+        count += 1
+    return count
 
 
 def _axis_volumes(
@@ -297,7 +360,7 @@ def orientation_report(
     panels = [list(p) for p in np.asarray(mesh.panels)]
 
     tri_vecs, tri_cens, tri_owner = _triangle_terms(vertices, panels)
-    flip, components, boundary, non_manifold = _consistency_flips(panels)
+    flip, components, boundary, non_manifold, boundary_keys = _consistency_flips(panels)
 
     signs = np.where(flip, -1.0, 1.0)
     axis_v = _axis_volumes(tri_vecs, tri_cens, tri_owner, signs)
@@ -338,6 +401,9 @@ def orientation_report(
         above_waterline_vertices=int(np.sum(vertices[:, 2] > z_tol)),
         waterline_lid_panels=lids,
         symmetry_plane=getattr(mesh, "symmetry_plane", None),
+        submerged_boundary_edges=_submerged_boundary_edges(
+            vertices, boundary_keys,
+            getattr(mesh, "symmetry_plane", None), z_tol),
     )
 
 
@@ -373,6 +439,15 @@ def _refuse_if_unreliable(report: OrientationReport) -> None:
             f"{report.waterline_lid_panels} panel(s) lie wholly in the free "
             f"surface; this routine handles wetted-hull panels only, and a "
             f"lid cancels the hull's own waterline contributions")
+    if report.submerged_boundary_edges:
+        declared = report.symmetry_plane or "none"
+        problems.append(
+            f"{report.submerged_boundary_edges} boundary edge(s) lie away from "
+            f"the waterline and away from any declared symmetry plane "
+            f"(declared: {declared}); the wetted surface is open, and the "
+            f"axis-volume identity does not hold through a hole. A hole in a "
+            f"plane through the origin does not disturb the axis volumes at "
+            f"all, so this cannot be inferred from them")
     if problems:
         raise UnreliableOrientation("; ".join(problems))
 
@@ -436,6 +511,18 @@ def repair_gdf_text(text: str, strict: bool = True) -> tuple[str, tuple[int, ...
     npan = int(float(lines[3].split()[0]))
     head, body = lines[:4], lines[4:]
 
+    # Line 3 is the ISX/ISY symmetry record. A declared plane makes the cut
+    # along it a legitimate boundary rather than a hole, so it has to reach the
+    # refusal check; without it a half model would be rejected as open.
+    symmetry = None
+    try:
+        isx, isy = (int(float(v)) for v in lines[2].split()[:2])
+        symmetry = ("xy" if isx and isy else
+                    "x" if isx else
+                    "y" if isy else None)
+    except (ValueError, IndexError):
+        symmetry = None
+
     rows = [ln for ln in body if len(ln.split()) >= 3]
     if len(rows) != npan * 4:
         raise ValueError(
@@ -477,7 +564,7 @@ def repair_gdf_text(text: str, strict: bool = True) -> tuple[str, tuple[int, ...
                 )
 
     tri_vecs, tri_cens, tri_owner = _triangle_terms(vertices, panels)
-    flip, components, boundary, non_manifold = _consistency_flips(panels)
+    flip, components, boundary, non_manifold, boundary_keys = _consistency_flips(panels)
     if strict:
         _refuse_if_unreliable(OrientationReport(
             axis_volumes=(0.0, 0.0, 0.0), volume=0.0, consistent=True,
@@ -487,7 +574,10 @@ def repair_gdf_text(text: str, strict: bool = True) -> tuple[str, tuple[int, ...
             above_waterline_vertices=int(np.sum(vertices[:, 2] > 1e-7)),
             waterline_lid_panels=sum(
                 1 for p in panels
-                if np.all(np.abs(vertices[list(p)][:, 2]) <= 1e-7))))
+                if np.all(np.abs(vertices[list(p)][:, 2]) <= 1e-7)),
+            symmetry_plane=symmetry,
+            submerged_boundary_edges=_submerged_boundary_edges(
+                vertices, boundary_keys, symmetry, 1e-7)))
     signs = np.where(flip, -1.0, 1.0)
     if float(np.mean(_axis_volumes(tri_vecs, tri_cens, tri_owner, signs))) < 0.0:
         flip = ~flip

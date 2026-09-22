@@ -162,6 +162,35 @@ class AQWALISParser:
 
         return headings
 
+    #: A coefficient table ends where the next one begins. Bounding it that way
+    #: is structural; the previous 2,000-character window held about twelve
+    #: rows and silently dropped the rest, so a 43-frequency run returned ten
+    #: matrices and the converter padded the difference with zeros.
+    _TABLE_END_MARKERS = (
+        "-VARIATION WITH WAVE PERIOD/FREQUENCY",
+        "H Y D R O D Y N A M I C",
+        "S T A B I L I T Y",
+        "M O O R I N G",
+    )
+
+    def _table_span(self, marker: str) -> str:
+        """The listing text from one table's header to the next boundary."""
+        pos = self.find_section(marker)
+        if pos is None:
+            return ""
+        rest = self.content[pos:]
+        # Skip this table's own header before looking for the next boundary.
+        head = rest.find("\n")
+        if head < 0:
+            return rest
+        tail = rest[head:]
+        cut = len(tail)
+        for end in self._TABLE_END_MARKERS:
+            found = tail.find(end)
+            if 0 <= found < cut:
+                cut = found
+        return rest[:head + cut]
+
     def parse_added_mass_table(self) -> Dict[float, np.ndarray]:
         """
         Parse added mass table from .LIS file.
@@ -176,7 +205,7 @@ class AQWALISParser:
         if pos is None:
             raise ValueError("Could not find added mass table")
 
-        table_text = self.content[pos:pos + 2000]
+        table_text = self._table_span(section_marker)
 
         # Pattern for data rows: period, freq, then 12 matrix values in scientific notation
         # Format: " 62.83   0.100  1.95E+06  2.60E+07  1.80E+08..."
@@ -238,7 +267,7 @@ class AQWALISParser:
         if pos is None:
             raise ValueError("Could not find damping table")
 
-        table_text = self.content[pos:pos + 2000]
+        table_text = self._table_span(section_marker)
 
         # Same pattern as added mass - must contain scientific notation
         pattern = r'^\s+([\d.]+)\s+([\d.]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)\s+([\d.E+-]+)'
