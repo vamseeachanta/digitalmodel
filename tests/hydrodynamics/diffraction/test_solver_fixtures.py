@@ -41,10 +41,17 @@ def test_l01_xlsx_fixture_skips_when_missing(l01_xlsx_path: Path) -> None:
     assert l01_xlsx_path.suffix == ".xlsx"
 
 
-def test_solver_fixture_owr_paths_are_not_gitignored() -> None:
-    """Solver fixture .owr files must be committable as permanent references."""
+def test_solver_fixture_binaries_covered_by_archive_policy() -> None:
+    """Bulky solver fixture binaries are archived, not committed (2026-09-22 slim).
+
+    Canonical copies live at ace-linux-1:/mnt/ace/digitalmodel/tests/fixtures/solver/.
+    .gitignore must keep these patterns ignored so the archived binaries are
+    not accidentally re-added. See DOCUMENT-MAP.md.
+    """
     gitignore = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
-    assert "!tests/fixtures/solver/*.owr" in gitignore
+    assert "tests/fixtures/solver/*.owr" in gitignore
+    assert "tests/fixtures/solver/*.xlsx" in gitignore
+    assert "tests/fixtures/solver/*.sim" in gitignore
 
 
 def test_solver_fixture_binary_types_marked_in_gitattributes() -> None:
