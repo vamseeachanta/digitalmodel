@@ -1,15 +1,17 @@
 # digitalmodel — Document Map (2026-09-22 slim)
 
 On 2026-09-22 the repository was slimmed from ~2.87 GB to ~0.30 GB at HEAD.
-**2,314 files (~2.52 GB)** of bulky engineering artifacts were moved out of git
+**2,299 files (~2.49 GB)** of bulky engineering artifacts were moved out of git
 to canonical archive storage. Nothing was deleted: every file is byte-verified
 in the archive, and a complete pre-slim backup bundle exists.
 
-> Note: the archive manifest lists 2,472 files. 158 of those were restored to
+> Note: the archive manifest lists 2,472 files. 173 of those were restored to
 > git the same day: 153 `docs/api/**` files (the generated API documentation
 > site, 33 MB) required by CI's "Generated HTML freshness" check
-> (`scripts/check_generated_html.py`), and 5 `assets/logo/**` files read by the
-> docs generators as build inputs. 2,314 files remain moved out of git.
+> (`scripts/check_generated_html.py`), 5 `assets/logo/**` files read by the
+> docs generators as build inputs, and 15 `tests/fixtures/**` solver fixtures
+> (33.7 MB) required by the domain test suite. 2,299 files remain moved out of
+> git.
 
 ## Archive location
 
@@ -23,7 +25,7 @@ copy it back to the same relative path in a checkout.
 
 - Full per-file SHA-256 manifest: `ace-linux-1:/mnt/ace/digitalmodel/MANIFEST.sha256.tsv`
   (tab-separated: `sha256`, `bytes`, `repo-relative path`; 2,472 entries —
-  158 entries were restored to git, 2,314 remain archived)
+  173 entries were restored to git, 2,299 remain archived)
 - Machine-readable pointers: `data/inputs.yaml` (in this repo)
 - Pre-slim backup (verified complete history): `ace-linux-1:/mnt/ace/_transfer/digitalmodel-pre-slim-20260922.bundle`
 
@@ -31,11 +33,11 @@ copy it back to the same relative path in a checkout.
 
 | Class | Files | Bytes | Contents |
 |---|---|---|---|
-| solver-inputs | 488 | ~1.39 GB | `.dat` (550 MB) / `.lis` / `.qtf` AQWA inputs, `.owr` OrcaWave results, `.sim` OrcaFlex models, `.igs`/`.stl`/`.dwg`/`.dxf` CAD & mesh, large vessel-RAO `.yml`/`.yaml` (>1 MB, 395 MB), `.csv`, `.engd`/`.scdoc`, `.gz` |
+| solver-inputs | 479 | ~1.35 GB | `.dat` / `.lis` / `.qtf` AQWA inputs, `.owr` OrcaWave results, `.sim` OrcaFlex models, `.igs`/`.stl`/`.dwg`/`.dxf` CAD & mesh, large vessel-RAO `.yml`/`.yaml` (>1 MB), `.csv`, `.engd`/`.scdoc`, `.gz` (15 `tests/fixtures/**` solver fixtures restored to git for CI) |
 | html-report-renders | 474 | ~693 MB | Rendered HTML analysis reports (regenerable from code + inputs) |
 | documentation-images | 1,282 | ~344 MB | `.png`/`.jpg`/`.jfif`/`.gif`/`.svg` illustrations under `docs/` and `examples/` (5 `assets/logo/**` build inputs were restored to git) |
-| office-documents | 70 | ~100 MB | `.pptx`/`.ppt`/`.docx`/`.pdf` engineering docs archived for reference |
-| **Total moved** | **2,314** | **~2.52 GB** | Mutually exclusive classes; verified against the archive manifest |
+| office-documents | 64 | ~94 MB | `.pptx`/`.ppt`/`.docx`/`.pdf` engineering docs archived for reference (6 `tests/fixtures/solver/*.xlsx` restored to git for CI) |
+| **Total moved** | **2,299** | **~2.49 GB** | Mutually exclusive classes; verified against the archive manifest |
 
 The 153 `docs/api/**` files (88 HTML + 58 PDF + 7 images, 33 MB) in the manifest
 were restored to git because they are the generated API documentation site,
