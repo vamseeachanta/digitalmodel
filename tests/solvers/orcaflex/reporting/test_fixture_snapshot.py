@@ -59,7 +59,7 @@ def test_snapshot_scope_is_structural_not_incidental(tmp_path) -> None:
 
 @pytest.mark.skip(
     reason="mooring_with_raos.sim archived 2026-09-22 at "
-    "ace-linux-1:/mnt/ace/digitalmodel/tests/fixtures/solver/mooring_with_raos.sim; "
+    "ace-linux-1:/mnt/ace/digitalmodel/tests/fixtures/solver/mooring_with_raos.sim; "  # abs-path-allowed
     "re-enable when the minimal fixture snapshot path is stable"
 )
 def test_mooring_with_raos_snapshot_is_deferred_until_minimal_fixture_stable() -> None:

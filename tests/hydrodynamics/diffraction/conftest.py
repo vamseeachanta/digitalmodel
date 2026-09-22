@@ -30,7 +30,7 @@ SOLVER_FIXTURES_DIR = Path(__file__).parent.parent.parent / "fixtures" / "solver
 
 # Canonical archive for bulky solver fixtures moved out of git (2026-09-22 slim).
 # Paths below mirror the repo-relative fixture paths.
-SOLVER_FIXTURE_ARCHIVE = "ace-linux-1:/mnt/ace/digitalmodel"
+SOLVER_FIXTURE_ARCHIVE = "ace-linux-1:/mnt/ace/digitalmodel"  # abs-path-allowed
 
 MIN_FREQUENCY = 0.05
 MAX_FREQUENCY = 2.0

@@ -44,7 +44,7 @@ def test_l01_xlsx_fixture_skips_when_missing(l01_xlsx_path: Path) -> None:
 def test_solver_fixture_binaries_covered_by_archive_policy() -> None:
     """Bulky solver fixture binaries are archived, not committed (2026-09-22 slim).
 
-    Canonical copies live at ace-linux-1:/mnt/ace/digitalmodel/tests/fixtures/solver/.
+    Canonical copies live at ace-linux-1:/mnt/ace/digitalmodel/tests/fixtures/solver/.  # abs-path-allowed
     .gitignore must keep these patterns ignored so the archived binaries are
     not accidentally re-added. See DOCUMENT-MAP.md.
     """

@@ -96,7 +96,7 @@ def main():
     
     # Step 2: Generate .sim files from .dat files
     # (.dat solver inputs were archived 2026-09-22 to
-    #  ace-linux-1:/mnt/ace/digitalmodel/<repo-relative path>; see DOCUMENT-MAP.md)
+    #  ace-linux-1:/mnt/ace/digitalmodel/<repo-relative path>; see DOCUMENT-MAP.md)  # abs-path-allowed
     if dat_dir.exists() and list(dat_dir.glob("*.dat")):
         cmd = [
             str(python_exe),
@@ -112,7 +112,7 @@ def main():
     else:
         print(f"Step 2: Skipping .sim generation (no .dat files in {dat_dir})")
         print("        (.dat inputs archived 2026-09-22 at "
-              "ace-linux-1:/mnt/ace/digitalmodel/tests/solvers/orcaflex/"
+              "ace-linux-1:/mnt/ace/digitalmodel/tests/solvers/orcaflex/"  # abs-path-allowed
               "mooring-tension-iteration/fsts-l015-test-cases/run_files/dat/)")
     
     # Step 3: Post-process results
