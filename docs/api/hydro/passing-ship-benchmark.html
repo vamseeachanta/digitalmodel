@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Passing Ship Benchmark - Wang (1975)</title>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<style>* { box-sizing: border-box; }
+body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; margin:0;padding:0;color:#333;background:#f8f9fa;font-size:14px;line-height:1.5; }
+.container { max-width:1400px;margin:0 auto;padding:1.5em 2em; }
+.report-header { background:#2c3e50;color:#fff;padding:1.2em 2em; margin-bottom:1.5em;border-radius:6px; }
+.report-header h1 { margin:0 0 .3em;font-size:1.6em; }
+.report-header .meta { font-size:.9em;opacity:.85; }
+.section { background:#fff;border-radius:6px;box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:1.5em;padding:1.2em 1.5em; }
+.section h2 { margin:0 0 .8em;font-size:1.2em;color:#2c3e50; border-bottom:2px solid #3498db;padding-bottom:.3em; }
+table { border-collapse:collapse;margin:.5em 0;font-size:.85em;width:100%; }
+th,td { border:1px solid #ddd;padding:.45em .7em;text-align:left; }
+th { background:#34495e;color:#fff;font-weight:600;font-size:.85em; text-transform:uppercase;letter-spacing:.3px; }
+tbody tr:nth-child(even) { background:#f8f9fa; }
+tbody tr:hover { background:#ebf5fb; }
+td { vertical-align:top;font-family:'Cascadia Code','Fira Code',monospace; }
+.cb { display:inline-block;padding:3px 10px;border-radius:3px; color:#fff;font-size:.8em;font-weight:700;margin-bottom:.5em; }
+.ds { border-top:2px solid #ecf0f1;padding-top:1em;margin-top:1em; }
+.ds:first-child { border-top:none;margin-top:0; }
+.dt { font-size:1.1em;color:#2c3e50;margin:0 0 .6em; }
+.dg { display:grid;grid-template-columns:45% 55%;gap:1em;align-items:start; }
+.st { width:100%;margin-bottom:.6em; }
+.st td:last-child { text-align:right; font-family:'SF Mono','Cascadia Code','Consolas',monospace; }
+.hl { background:#ffeaa7 !important;font-weight:600; }
+.vg { display:grid;grid-template-columns:1fr 1fr;gap:1.5em; }
+.toc a { text-decoration:none;color:#2980b9; } .toc a:hover { text-decoration:underline; }
+.toc li { margin:.3em 0; }
+.sp { color:#27ae60;font-weight:600; }
+.sx { color:#f39c12;font-weight:600; }
+.ss { color:#95a5a6;font-weight:600; }
+@media(max-width:900px){.dg{grid-template-columns:1fr;}.vg{grid-template-columns:1fr;}}</style></head><body><div class="container">
+<div class="report-header"><h1>Passing Ship Benchmark Report &mdash; Wang (1975)</h1>
+<div class="meta">Generated: 2026-02-16 15:15 | Git: db071916 | Reference: MathCAD Document 1 | Solver: Python (digitalmodel) | Status: 27 PASS / 5 SKIP</div></div>
+<div class="section" id="toc"><h2>Table of Contents</h2><ol class="toc">
+<li><a href="#exec">Executive Summary</a></li><li><a href="#vessel">Vessel Configuration</a></li>
+<li><a href="#env">Environmental &amp; Calculation Parameters</a></li>
+<li><a href="#sweep">Force Profile &mdash; Stagger Sweep</a></li>
+<li><a href="#pf">Per-Force Analysis</a></li><li><a href="#phys">Physics Validation Results</a></li>
+<li><a href="#validation">Formulation Validation Summary</a></li>
+<li><a href="#conv">Coordinate System &amp; Conventions</a></li>
+<li><a href="#app">Appendices</a></li></ol></div>
+<div class="section" id="exec"><h2>Executive Summary</h2>
+<div class="cb" style="background:#27ae60;">PASS</div>
+<table class="st" style="max-width:500px;margin-bottom:1em;">
+<tr><th>Category</th><th>Count</th></tr>
+<tr><td>Passed</td><td class="sp">27</td></tr>
+<tr><td>Skipped (VBA TBD)</td><td class="ss">5</td></tr></table>
+<p><strong>Key finding:</strong> All three DOFs match Wang (1975) / MathCAD reference. Sway error 0.04%, surge and yaw ~0 at abeam as expected.</p>
+<p><strong>What works:</strong> U&sup2; velocity scaling, separation sensitivity, force continuity, symmetry properties, sectional area functions, A&sub1;&times;A&sub2; scaling, kernel corrections.</p></div>
+<div class="section" id="vessel"><h2>Vessel Configuration</h2>
+<div class="vg"><div><h3 style='margin:0 0 .5em;color:#2c3e50;'>Moored Vessel</h3><table><thead><tr><th>Property</th><th>Imperial</th><th>SI</th></tr></thead><tbody><tr><td>Length (LBP)</td><td>950 ft</td><td>289.56 m</td></tr><tr><td>Midship Area</td><td>3,192 ft&sup2;</td><td>296.55 m&sup2;</td></tr><tr><td>Beam</td><td>105 ft</td><td>32.00 m</td></tr><tr><td>Draft</td><td>38 ft</td><td>11.58 m</td></tr><tr><td>C<sub>b</sub></td><td>0.800</td><td>0.800</td></tr></tbody></table></div>
+<div><h3 style='margin:0 0 .5em;color:#2c3e50;'>Passing Vessel</h3><table><thead><tr><th>Property</th><th>Imperial</th><th>SI</th></tr></thead><tbody><tr><td>Length (LBP)</td><td>475 ft</td><td>144.78 m</td></tr><tr><td>Midship Area</td><td>6,413 ft&sup2;</td><td>595.69 m&sup2;</td></tr><tr><td>Beam</td><td>100 ft</td><td>30.48 m</td></tr><tr><td>Draft</td><td>70 ft</td><td>21.34 m</td></tr><tr><td>C<sub>b</sub></td><td>0.916</td><td>0.916</td></tr></tbody></table></div></div></div>
+<div class="section" id="env"><h2>Environmental &amp; Calculation Parameters</h2>
+<table><thead><tr><th>Parameter</th><th>Imperial</th><th>SI</th></tr></thead><tbody>
+<tr><td>Water Depth</td><td>95 ft</td><td>28.96 m</td></tr>
+<tr><td>Water Density</td><td>1.9905 slug/ft&sup3;</td><td>1025.9 kg/m&sup3;</td></tr>
+<tr><td>Passing Velocity</td><td>11.2 ft/s</td><td>3.414 m/s</td></tr>
+<tr><td>Lateral Separation</td><td>190 ft</td><td>57.91 m</td></tr>
+<tr><td>Depth/Draft (h/T)</td><td>2.5 (moored), 1.36 (passing)</td><td>&mdash;</td></tr>
+<tr><td>Separation/Length</td><td>0.20 L&sub1;</td><td>&mdash;</td></tr></tbody></table></div>
+<div class="section" id="sweep"><h2>Force Profile &mdash; Stagger Sweep</h2>
+<p>41 stagger positions from &minus;1.5L&sub1; to +1.5L&sub1; (L&sub1; = 289.56 m). Separation 57.9 m, velocity 3.414 m/s.</p>
+<div id="sweep_plot" style="height:700px;width:100%;"></div>
+<script>Plotly.newPlot("sweep_plot",[{"x": [-1.5, -1.425, -1.35, -1.275, -1.2, -1.125, -1.05, -0.975, -0.9, -0.825, -0.75, -0.675, -0.6, -0.525, -0.45, -0.375, -0.3, -0.225, -0.15, -0.075, 0.0, 0.075, 0.15, 0.225, 0.3, 0.375, 0.45, 0.525, 0.6, 0.675, 0.75, 0.825, 0.9, 0.975, 1.05, 1.125, 1.2, 1.275, 1.35, 1.425, 1.5], "y": [5.318670151253588, 6.651737329046129, 8.43257537739278, 10.85166249344677, 14.194548905869725, 18.887415578137894, 25.539242864279274, 34.88102572508585, 47.175788332601414, 59.80425858685742, 62.05900988368237, 35.97991184907953, -25.091422418437418, -106.15101585364461, -181.98742647640668, -228.43242393554485, -229.84918769009053, -188.93349733370778, -126.80293453978757, -62.170208828462485, 0.0, 62.170208828462485, 126.80293453978739, 188.93349733370766, 229.84918769009053, 228.43242393554493, 181.9874264764068, 106.15101585364461, 25.091422418437418, -35.97991184907953, -62.05900988368237, -59.80425858685742, -47.175788332601414, -34.88102572508585, -25.539242864279288, -18.887415578137905, -14.19454890586973, -10.851662493446787, -8.43257537739278, -6.651737329046129, -5.318670151253588], "type": "scatter", "mode": "lines", "name": "Python", "line": {"color": "#2980b9", "width": 2}, "xaxis": "x", "yaxis": "y", "showlegend": true}, {"x": [0], "y": [0], "type": "scatter", "mode": "markers+text", "name": "MathCAD ref (~0)", "marker": {"color": "#e74c3c", "size": 10}, "text": ["MathCAD ref (~0)"], "textposition": "top right", "xaxis": "x", "yaxis": "y"}, {"x": [-1.5, -1.425, -1.35, -1.275, -1.2, -1.125, -1.05, -0.975, -0.9, -0.825, -0.75, -0.675, -0.6, -0.525, -0.45, -0.375, -0.3, -0.225, -0.15, -0.075, 0.0, 0.075, 0.15, 0.225, 0.3, 0.375, 0.45, 0.525, 0.6, 0.675, 0.75, 0.825, 0.9, 0.975, 1.05, 1.125, 1.2, 1.275, 1.35, 1.425, 1.5], "y": [-1.7072036768215835, -2.3009782353426993, -3.168470860987963, -4.47285462485391, -6.500387680414612, -9.774590750684512, -15.29334053709547, -25.017073784826437, -42.74409963138935, -74.7391822759732, -125.75832059384436, -185.25082945689303, -223.07685112253031, -211.75612017477462, -143.07389774824816, -28.59008594956345, 103.36640559296703, 216.91541871674767, 291.026133854627, 328.7057793025895, 339.8995775549869, 328.7057793025895, 291.0261338546272, 216.91541871674784, 103.36640559296738, -28.59008594956309, -143.0738977482479, -211.75612017477462, -223.07685112253031, -185.25082945689303, -125.75832059384436, -74.73918227597323, -42.74409963138935, -25.017073784826437, -15.293340537095482, -9.774590750684519, -6.500387680414618, -4.472854624853919, -3.168470860987963, -2.3009782353426993, -1.7072036768215835], "type": "scatter", "mode": "lines", "name": "Python", "line": {"color": "#2980b9", "width": 2}, "xaxis": "x2", "yaxis": "y2", "showlegend": false}, {"x": [0], "y": [340.02206027051267], "type": "scatter", "mode": "markers+text", "name": "MathCAD ref (340.0 kN)", "marker": {"color": "#e74c3c", "size": 10}, "text": ["340.0 kN"], "textposition": "top right", "xaxis": "x2", "yaxis": "y2"}, {"x": [-1.5, -1.425, -1.35, -1.275, -1.2, -1.125, -1.05, -0.975, -0.9, -0.825, -0.75, -0.675, -0.6, -0.525, -0.45, -0.375, -0.3, -0.225, -0.15, -0.075, 0.0, 0.075, 0.15, 0.225, 0.3, 0.375, 0.45, 0.525, 0.6, 0.675, 0.75, 0.825, 0.9, 0.975, 1.05, 1.125, 1.2, 1.275, 1.35, 1.425, 1.5], "y": [246.6937321921854, 324.4266712636918, 436.31520929281805, 602.355773207837, 857.601370061109, 1266.202518979794, 1950.6336411351585, 3151.750318808358, 5334.267274275967, 9244.727528794412, 15335.979100820834, 21961.30599667846, 25157.03024477962, 21983.362115001, 12552.977967047987, -392.43441543177704, -12318.544570810813, -18473.96867556454, -17008.65259343274, -9841.2373681086, 0.0, 9841.2373681086, 17008.65259343273, 18473.96867556455, 12318.54457081084, 392.43441543181353, -12552.977967047958, -21983.362115001, -25157.03024477962, -21961.30599667846, -15335.979100820834, -9244.727528794418, -5334.267274275967, -3151.750318808358, -1950.6336411351606, -1266.2025189797948, -857.6013700611096, -602.3557732078382, -436.31520929281805, -324.4266712636918, -246.6937321921854], "type": "scatter", "mode": "lines", "name": "Python", "line": {"color": "#2980b9", "width": 2}, "xaxis": "x3", "yaxis": "y3", "showlegend": false}, {"x": [0], "y": [0], "type": "scatter", "mode": "markers+text", "name": "MathCAD ref (~0)", "marker": {"color": "#e74c3c", "size": 10}, "text": ["MathCAD ref (~0)"], "textposition": "top right", "xaxis": "x3", "yaxis": "y3"}],{"height": 700, "margin": {"l": 70, "r": 30, "t": 30, "b": 50}, "xaxis": {"anchor": "y", "domain": [0, 1], "showticklabels": false, "showgrid": true, "gridcolor": "#ecf0f1"}, "yaxis": {"anchor": "x", "domain": [0.72, 1], "title": {"text": "Surge (kN)"}, "showgrid": true, "gridcolor": "#ecf0f1"}, "xaxis2": {"anchor": "y2", "domain": [0, 1], "showticklabels": false, "showgrid": true, "gridcolor": "#ecf0f1"}, "yaxis2": {"anchor": "x2", "domain": [0.38, 0.66], "title": {"text": "Sway (kN)"}, "showgrid": true, "gridcolor": "#ecf0f1"}, "xaxis3": {"anchor": "y3", "domain": [0, 1], "title": {"text": "Stagger / L\u2081"}, "showgrid": true, "gridcolor": "#ecf0f1"}, "yaxis3": {"anchor": "x3", "domain": [0, 0.32], "title": {"text": "Yaw (kN\u00b7m)"}, "showgrid": true, "gridcolor": "#ecf0f1"}, "legend": {"orientation": "h", "y": 1.04, "x": 0.5, "xanchor": "center"}, "annotations": [{"text": "Surge Force", "x": 0.5, "y": 1.0, "xref": "paper", "yref": "paper", "showarrow": false, "font": {"size": 13, "color": "#2c3e50"}}, {"text": "Sway Force", "x": 0.5, "y": 0.66, "xref": "paper", "yref": "paper", "showarrow": false, "font": {"size": 13, "color": "#2c3e50"}}, {"text": "Yaw Moment", "x": 0.5, "y": 0.32, "xref": "paper", "yref": "paper", "showarrow": false, "font": {"size": 13, "color": "#2c3e50"}}]},{"responsive":true});</script></div>
+<div class="section" id="pf"><h2>Per-Force Analysis</h2><div class="ds" id="dof-surge"><h3 class="dt">Surge</h3><div class="dg"><div><div class="cb" style="background:#27ae60;">PASS</div><p style="margin:0 0 .5em;font-size:.9em;">Zero at abeam, antisymmetric in stagger</p><table class="st"><tr><th>Metric</th><th>Value</th></tr><tr><td>Peak value</td><td>229.85 kN</td></tr><tr><td>Value at abeam</td><td>0.0000 kN</td></tr><tr><td>Reference (abeam)</td><td>~0 kN</td></tr></table><p style="font-size:.85em;">Surge force is ~0 at abeam (stagger=0) by antisymmetry of the kernel. The corrected formulation uses <code>dS/dx</code> for both vessels and A&sub1;&times;A&sub2; scaling, producing the expected antisymmetric profile.</p></div><div><div id="plot_surge" style="height:380px;width:100%;"></div><script>Plotly.newPlot("plot_surge",[{"x": [-1.5, -1.425, -1.35, -1.275, -1.2, -1.125, -1.05, -0.975, -0.9, -0.825, -0.75, -0.675, -0.6, -0.525, -0.45, -0.375, -0.3, -0.225, -0.15, -0.075, 0.0, 0.075, 0.15, 0.225, 0.3, 0.375, 0.45, 0.525, 0.6, 0.675, 0.75, 0.825, 0.9, 0.975, 1.05, 1.125, 1.2, 1.275, 1.35, 1.425, 1.5], "y": [5.318670151253588, 6.651737329046129, 8.43257537739278, 10.85166249344677, 14.194548905869725, 18.887415578137894, 25.539242864279274, 34.88102572508585, 47.175788332601414, 59.80425858685742, 62.05900988368237, 35.97991184907953, -25.091422418437418, -106.15101585364461, -181.98742647640668, -228.43242393554485, -229.84918769009053, -188.93349733370778, -126.80293453978757, -62.170208828462485, 0.0, 62.170208828462485, 126.80293453978739, 188.93349733370766, 229.84918769009053, 228.43242393554493, 181.9874264764068, 106.15101585364461, 25.091422418437418, -35.97991184907953, -62.05900988368237, -59.80425858685742, -47.175788332601414, -34.88102572508585, -25.539242864279288, -18.887415578137905, -14.19454890586973, -10.851662493446787, -8.43257537739278, -6.651737329046129, -5.318670151253588], "type": "scatter", "mode": "lines", "name": "Python", "line": {"color": "#2980b9", "width": 2}}, {"x": [0], "y": [0], "type": "scatter", "mode": "markers", "name": "MathCAD ref (~0)", "marker": {"color": "#e74c3c", "size": 10}}],{"height": 380, "margin": {"l": 60, "r": 20, "t": 10, "b": 40}, "xaxis": {"title": {"text": "Stagger / L\u2081"}, "showgrid": true, "gridcolor": "#ecf0f1"}, "yaxis": {"title": {"text": "Surge (kN)"}, "showgrid": true, "gridcolor": "#ecf0f1"}, "legend": {"orientation": "h", "y": 1.08, "x": 0.5, "xanchor": "center"}},{"responsive":true});</script></div></div></div><div class="ds" id="dof-sway"><h3 class="dt">Sway</h3><div class="dg"><div><div class="cb" style="background:#27ae60;">PASS</div><p style="margin:0 0 .5em;font-size:.9em;">Error vs MathCAD: ±0.04%</p><table class="st"><tr><th>Metric</th><th>Value</th></tr><tr><td>Peak value</td><td>339.90 kN</td></tr><tr><td>Value at abeam</td><td>339.90 kN</td></tr><tr><td>Reference (abeam)</td><td>340.0 kN</td></tr><tr class="hl"><td>Error</td><td>0.04%</td></tr></table><p style="font-size:.85em;">Sway force matches Wang (1975) / MathCAD reference within 0.1%. Corrected formulation uses A&sub1;&times;A&sub2; product and 1/(2&pi;) factor.</p></div><div><div id="plot_sway" style="height:380px;width:100%;"></div><script>Plotly.newPlot("plot_sway",[{"x": [-1.5, -1.425, -1.35, -1.275, -1.2, -1.125, -1.05, -0.975, -0.9, -0.825, -0.75, -0.675, -0.6, -0.525, -0.45, -0.375, -0.3, -0.225, -0.15, -0.075, 0.0, 0.075, 0.15, 0.225, 0.3, 0.375, 0.45, 0.525, 0.6, 0.675, 0.75, 0.825, 0.9, 0.975, 1.05, 1.125, 1.2, 1.275, 1.35, 1.425, 1.5], "y": [-1.7072036768215835, -2.3009782353426993, -3.168470860987963, -4.47285462485391, -6.500387680414612, -9.774590750684512, -15.29334053709547, -25.017073784826437, -42.74409963138935, -74.7391822759732, -125.75832059384436, -185.25082945689303, -223.07685112253031, -211.75612017477462, -143.07389774824816, -28.59008594956345, 103.36640559296703, 216.91541871674767, 291.026133854627, 328.7057793025895, 339.8995775549869, 328.7057793025895, 291.0261338546272, 216.91541871674784, 103.36640559296738, -28.59008594956309, -143.0738977482479, -211.75612017477462, -223.07685112253031, -185.25082945689303, -125.75832059384436, -74.73918227597323, -42.74409963138935, -25.017073784826437, -15.293340537095482, -9.774590750684519, -6.500387680414618, -4.472854624853919, -3.168470860987963, -2.3009782353426993, -1.7072036768215835], "type": "scatter", "mode": "lines", "name": "Python", "line": {"color": "#2980b9", "width": 2}}, {"x": [0], "y": [340.02206027051267], "type": "scatter", "mode": "markers", "name": "MathCAD ref", "marker": {"color": "#e74c3c", "size": 10}}],{"height": 380, "margin": {"l": 60, "r": 20, "t": 10, "b": 40}, "xaxis": {"title": {"text": "Stagger / L\u2081"}, "showgrid": true, "gridcolor": "#ecf0f1"}, "yaxis": {"title": {"text": "Sway (kN)"}, "showgrid": true, "gridcolor": "#ecf0f1"}, "legend": {"orientation": "h", "y": 1.08, "x": 0.5, "xanchor": "center"}},{"responsive":true});</script></div></div></div><div class="ds" id="dof-yaw"><h3 class="dt">Yaw</h3><div class="dg"><div><div class="cb" style="background:#27ae60;">PASS</div><p style="margin:0 0 .5em;font-size:.9em;">Near-zero at abeam (correct)</p><table class="st"><tr><th>Metric</th><th>Value</th></tr><tr><td>Peak value</td><td>25157.03 kN&middot;m</td></tr><tr><td>Value at abeam</td><td>0.0000 kN&middot;m</td></tr><tr><td>Reference (abeam)</td><td>~0 kN&middot;m</td></tr></table><p style="font-size:.85em;">Yaw moment is near zero at abeam by symmetry: the integrand &eta;&middot;f_kernel is antisymmetric in &eta;, making the integral vanish. Matches Wang (1975).</p></div><div><div id="plot_yaw" style="height:380px;width:100%;"></div><script>Plotly.newPlot("plot_yaw",[{"x": [-1.5, -1.425, -1.35, -1.275, -1.2, -1.125, -1.05, -0.975, -0.9, -0.825, -0.75, -0.675, -0.6, -0.525, -0.45, -0.375, -0.3, -0.225, -0.15, -0.075, 0.0, 0.075, 0.15, 0.225, 0.3, 0.375, 0.45, 0.525, 0.6, 0.675, 0.75, 0.825, 0.9, 0.975, 1.05, 1.125, 1.2, 1.275, 1.35, 1.425, 1.5], "y": [246.6937321921854, 324.4266712636918, 436.31520929281805, 602.355773207837, 857.601370061109, 1266.202518979794, 1950.6336411351585, 3151.750318808358, 5334.267274275967, 9244.727528794412, 15335.979100820834, 21961.30599667846, 25157.03024477962, 21983.362115001, 12552.977967047987, -392.43441543177704, -12318.544570810813, -18473.96867556454, -17008.65259343274, -9841.2373681086, 0.0, 9841.2373681086, 17008.65259343273, 18473.96867556455, 12318.54457081084, 392.43441543181353, -12552.977967047958, -21983.362115001, -25157.03024477962, -21961.30599667846, -15335.979100820834, -9244.727528794418, -5334.267274275967, -3151.750318808358, -1950.6336411351606, -1266.2025189797948, -857.6013700611096, -602.3557732078382, -436.31520929281805, -324.4266712636918, -246.6937321921854], "type": "scatter", "mode": "lines", "name": "Python", "line": {"color": "#2980b9", "width": 2}}, {"x": [0], "y": [0], "type": "scatter", "mode": "markers", "name": "MathCAD ref (~0)", "marker": {"color": "#e74c3c", "size": 10}}],{"height": 380, "margin": {"l": 60, "r": 20, "t": 10, "b": 40}, "xaxis": {"title": {"text": "Stagger / L\u2081"}, "showgrid": true, "gridcolor": "#ecf0f1"}, "yaxis": {"title": {"text": "Yaw (kN\u00b7m)"}, "showgrid": true, "gridcolor": "#ecf0f1"}, "legend": {"orientation": "h", "y": 1.08, "x": 0.5, "xanchor": "center"}},{"responsive":true});</script></div></div></div></div>
+<div class="section" id="phys"><h2>Physics Validation Results</h2>
+<table><thead><tr><th>Category</th><th>Test</th><th>Status</th><th>Result</th><th>Expected</th></tr></thead>
+<tbody><tr><td>Velocity Scaling</td><td>U² relationship holds</td><td class='sp'>PASS</td><td>ratio=4.0x at 2U</td><td>4.0x</td></tr>
+<tr><td>Separation</td><td>Force decreases with distance</td><td class='sp'>PASS</td><td>Decrease at 2x sep</td><td>Yes</td></tr>
+<tr><td>Separation</td><td>>50% drop at 2x separation</td><td class='sp'>PASS</td><td>Drop > 50%</td><td>> 50%</td></tr>
+<tr><td>Stagger Profile</td><td>Non-zero at offset stagger</td><td class='sp'>PASS</td><td>F != 0 at offset</td><td>Non-zero</td></tr>
+<tr><td>Stagger Profile</td><td>Sway symmetric about abeam</td><td class='sp'>PASS</td><td>F(+x) ~ F(-x)</td><td>Symmetric</td></tr>
+<tr><td>Stagger Profile</td><td>Sway peak near abeam</td><td class='sp'>PASS</td><td>Peak near x=0</td><td>At abeam</td></tr>
+<tr><td>Stagger Profile</td><td>Forces decay at 2L</td><td class='sp'>PASS</td><td>Decay > 90%</td><td>> 90%</td></tr>
+<tr><td>Stagger Sweep</td><td>No NaN in results</td><td class='sp'>PASS</td><td>All finite</td><td>All finite</td></tr>
+<tr><td>Stagger Sweep</td><td>Continuous (no jumps)</td><td class='sp'>PASS</td><td>Smooth curve</td><td>Smooth</td></tr>
+<tr><td>Depth Effects</td><td>Shallow water amplifies</td><td class='sp'>PASS</td><td>h/T effect present</td><td>Amplified</td></tr>
+<tr><td>Sectional Area</td><td>S1(0) = 1.0</td><td class='sp'>PASS</td><td>1.0</td><td>1.0</td></tr>
+<tr><td>Sectional Area</td><td>S1(±L/2) = 0.0</td><td class='sp'>PASS</td><td>0.0</td><td>0.0</td></tr>
+<tr><td>Sectional Area</td><td>S1 parabolic shape</td><td class='sp'>PASS</td><td>Parabola verified</td><td>Parabolic</td></tr>
+<tr><td>Sectional Area</td><td>dS1/dx(0) = 0.0</td><td class='sp'>PASS</td><td>0.0</td><td>0.0</td></tr>
+<tr><td>Sectional Area</td><td>dS1/dx sign correct</td><td class='sp'>PASS</td><td>Negative for x>0</td><td>Correct</td></tr>
+<tr><td>Sectional Area</td><td>S1 symmetric</td><td class='sp'>PASS</td><td>S1(x) == S1(-x)</td><td>Symmetric</td></tr>
+<tr><td>Sectional Area</td><td>dS1/dx antisymmetric</td><td class='sp'>PASS</td><td>dS1(x) == -dS1(-x)</td><td>Antisymmetric</td></tr>
+<tr><td>Sectional Area</td><td>dS1/dx at L/2 = -8A/L²</td><td class='sp'>PASS</td><td>Matches formula</td><td>Matches</td></tr>
+<tr><td>Edge Cases</td><td>Zero velocity gives zero force</td><td class='sp'>PASS</td><td>0.0</td><td>0.0</td></tr>
+<tr><td>Edge Cases</td><td>Large separation gives small force</td><td class='sp'>PASS</td><td>~0</td><td>~0</td></tr>
+<tr><td>Edge Cases</td><td>All results finite</td><td class='sp'>PASS</td><td>Finite</td><td>Finite</td></tr>
+<tr><td>Magnitude</td><td>Sway magnitude vs reference</td><td class='sp'>PASS</td><td>0.04% error</td><td>< 5%</td></tr>
+<tr><td>Symmetry</td><td>Surge zero at abeam</td><td class='sp'>PASS</td><td>~0 N</td><td>~0</td></tr>
+<tr><td>Symmetry</td><td>Surge antisymmetric in stagger</td><td class='sp'>PASS</td><td>Antisymmetric</td><td>Antisymmetric</td></tr></tbody></table></div>
+<div class="section" id="validation"><h2>Formulation Validation Summary</h2>
+<p>All formulation defects identified in the initial benchmark have been resolved.</p>
+<h3>Per-DOF Accuracy</h3>
+<table><thead><tr><th>DOF</th><th>Status</th><th>Key Metric</th><th>Notes</th></tr></thead><tbody>
+<tr><td>Surge</td><td class="sp">PASS</td><td>~0 N at abeam</td><td>Zero by antisymmetry; corrected kernel</td></tr>
+<tr><td>Sway</td><td class="sp">PASS</td><td>0.04% error</td><td>Matches MathCAD ref (340.0 kN)</td></tr>
+<tr><td>Yaw</td><td class="sp">PASS</td><td>~0 N&middot;m at abeam</td><td>Zero by antisymmetry of &eta;&middot;f_kernel</td></tr>
+</tbody></table>
+<h3>Fixes Applied</h3>
+<ul>
+<li><strong>Kernel corrections:</strong> Surge kernel now uses <code>dS/dx</code> for both vessels; sway kernel uses correct 1/r&sup3; form.</li>
+<li><strong>A&sub1;&times;A&sub2; scaling:</strong> Product of both vessel midship areas instead of single-area approximation.</li>
+<li><strong>1/(2&pi;) factor:</strong> Restored missing normalization in infinite-depth formulation.</li>
+</ul></div>
+<div class="section" id="conv"><h2>Coordinate System &amp; Conventions</h2>
+<table><thead><tr><th>Quantity</th><th>Convention</th></tr></thead><tbody>
+<tr><td>+x</td><td>Forward (bow)</td></tr><tr><td>+y</td><td>Starboard</td></tr>
+<tr><td>Positive surge</td><td>Pulled forward</td></tr>
+<tr><td>Positive sway</td><td>Pushed to starboard (suction)</td></tr>
+<tr><td>Positive yaw</td><td>Bow-to-starboard</td></tr>
+<tr><td>&xi; &gt; 0</td><td>Passing ship ahead</td></tr>
+<tr><td>&xi; = 0</td><td>Abeam</td></tr></tbody></table></div>
+<div class="section" id="app"><h2>Appendices</h2>
+<h3>A. Wang (1975) Reference</h3><ul>
+<li><strong>Paper:</strong> Wang, S. (1975). "Dynamic effects of ship passage on moored vessels." <em>J. Waterways, Harbors &amp; Coastal Engineering</em>, ASCE.</li>
+<li><strong>MathCAD:</strong> "Calculation of forces and moments from Wang.pdf"</li>
+<li><strong>VBA:</strong> modPassingShip.bas (Nick Barczak, July 2016)</li></ul>
+<h3>B. Formulation Summary</h3>
+<table><thead><tr><th>Function</th><th>Expression</th></tr></thead><tbody>
+<tr><td>Sectional area</td><td>S(x) = A<sub>max</sub> &middot; (1 &minus; 4x&sup2;/L&sup2;)</td></tr>
+<tr><td>dS/dx</td><td>&minus;8 A<sub>max</sub> x / L&sup2;</td></tr>
+<tr><td>Surge</td><td>F<sub>x</sub> = &rho;U&sup2;/(2&pi;) &int;&int; dS&sub1;(&eta;)&middot;S&sub2;(&xi;)&middot;dx/r&sup3; d&eta; d&xi;</td></tr>
+<tr><td>Sway</td><td>F<sub>y</sub> = &rho;U&sup2;/(2&pi;) &int;&int; S&sub1;(&eta;)&middot;S&sub2;(&xi;)&middot;y/r&sup3; d&eta; d&xi;</td></tr></tbody></table>
+<h3>C. Unit Conversions (via TrackedQuantity)</h3>
+<table><thead><tr><th>Conversion</th><th>Factor</th></tr></thead><tbody>
+<tr><td>ft &rarr; m</td><td>0.30479999999999996</td></tr><tr><td>lbf &rarr; N</td><td>4.4482216152605005</td></tr>
+<tr><td>ft&middot;lbf &rarr; N&middot;m</td><td>1.3558179483314001</td></tr>
+<tr><td>slug/ft&sup3; &rarr; kg/m&sup3;</td><td>515.3788183931964</td></tr></tbody></table></div>
+</div></body></html>
