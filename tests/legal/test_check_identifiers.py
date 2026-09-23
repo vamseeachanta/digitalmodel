@@ -34,7 +34,8 @@ def run(*args, env=None):
     if env:
         e.update(env)
     return subprocess.run([sys.executable, str(CHECKER), *args],
-                          cwd=REPO, capture_output=True, text=True, env=e)
+                          cwd=REPO, capture_output=True, text=True, env=e,
+                          encoding="utf-8", errors="replace")
 
 
 def write(tmp_path: Path, text: str, name: str = "sample.md") -> str:
@@ -97,8 +98,13 @@ class TestDeniedNames:
             f"{salt}:{self.TOKEN}".encode()).hexdigest()
         return digest
 
-    def test_a_hashed_name_is_matched_without_being_published(self, tmp_path):
-        """The rules file must not contain the token it matches."""
+    def test_the_rules_file_does_not_publish_a_token(self, tmp_path):
+        """The rules file must not contain a token or an unlisted hash.
+
+        Matching itself is tested in test_check_identifiers_fail_closed.py,
+        against a rules copy that carries the token's hash; this test never
+        called the matcher and used to claim that it did.
+        """
         digest = self._rules_with_token(tmp_path)
         assert self.TOKEN not in RULES.read_text(encoding="utf-8")
         # The hash of a name not on the list must not be on the list either.
@@ -155,8 +161,14 @@ class TestTheExistingBacklog:
     the count through two generated result files.
     """
 
-    #: Measured 2026-09-21, after the HIGH-severity redaction.
-    BASELINE_FINDINGS = 11647
+    #: Measured 2026-09-21 after the HIGH-severity redaction: 11,647. Re-measured
+    #: 2026-09-23 at 21,640 once the job-code rule was made case-insensitive and
+    #: underscore-aware and the UNC rule was corrected -- the same tree, seen
+    #: more completely. Not a regression; the earlier figure undercounted.
+    BASELINE_FINDINGS = 21640
+    #: Files the gate cannot read (binary, not declared media). Same logic:
+    #: this may fall, it must not rise.
+    BASELINE_UNINSPECTABLE = 445
 
     @pytest.mark.slow
     def test_the_backlog_has_not_grown(self):
@@ -166,8 +178,14 @@ class TestTheExistingBacklog:
         text = out.stdout or ""
         import re as _re
 
+        u = _re.search(r"(\d+) uninspectable", text)
+        assert u, f"could not read an uninspectable count from:\n{text[:2000]}"
+        assert int(u.group(1)) <= self.BASELINE_UNINSPECTABLE, (
+            f"uninspectable files rose from {self.BASELINE_UNINSPECTABLE} to "
+            f"{u.group(1)}")
         m = _re.search(r"(\d+) finding\(s\)", text)
-        assert m, f"could not read a finding count from:\n{text[:2000]}"
+        if m is None:
+            return                      # no findings, only binaries: fine
         found = int(m.group(1))
         assert found <= self.BASELINE_FINDINGS, (
             f"identifier findings rose from {self.BASELINE_FINDINGS} to "

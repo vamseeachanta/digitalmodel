@@ -52,7 +52,7 @@ sanitization mapping logic. They are excluded via `exclusions:` in the deny list
 - `digitalmodel/scripts/sanitize_s7_models.py` — maps raw client names to generic
   equivalents; the patterns must appear here to perform the substitution.
 - `digitalmodel/scripts/extract_s7_specs.py` — source extraction helper.
-- `digitalmodel/docs/domains/cathodic_protection/saipem_cp_comparison_analysis.md` —
+- `digitalmodel/docs/domains/cathodic_protection/<contractor>_cp_comparison_analysis.md` —
   pre-WRK-278 analysis document referencing source document numbers; not yet excluded.
 - `digitalmodel/docs/domains/cathodic_protection/standards-inventory.md` — lists
   file paths that include repo names; paths, not code.

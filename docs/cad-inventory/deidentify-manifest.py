@@ -4,22 +4,39 @@
 Raw manifest (cad-file-manifest.csv) keeps full paths incl. a personal name +
 client/field linkage -> must NOT go public. This writes a de-identified manifest
 that keeps every analytically-useful column but replaces the leaf `path` with a
-stable hash and relabels the two external-company top folders.
+stable hash and relabels the external-company top folders.
+
+The company names it relabels, and the tokens its leak self-check searches for,
+are themselves identifiers, so they are NOT in this public file. They are read
+from a private JSON file named by DEIDENTIFY_MAP:
+
+    {"relabel": {"<raw folder>": "<neutral label>", ...},
+     "sensitive_tokens": ["<token>", ...]}
+
+Without it the script refuses to run rather than publishing an un-relabelled
+manifest.
 """
-import csv, hashlib, gzip
+import csv, gzip, hashlib, json, os, re, shutil, sys
 
 IN  = "cad-file-manifest.csv"
 OUT = "cad-file-manifest-deidentified.csv"
 
-# external-company folder names -> neutral labels
-RELABEL = {
-    "a contractor": "epc-partner",
-    "a contractor.preexisting-before-repo-move-20260520-064502": "epc-partner.preexisting",
-    "doris": "eng-partner",
-    "doris.preexisting-before-repo-move-20260520-064502": "eng-partner.preexisting",
-}
+_map_path = os.environ.get("DEIDENTIFY_MAP")
+if not _map_path or not os.path.isfile(_map_path):
+    sys.exit("deidentify-manifest: set DEIDENTIFY_MAP to the private relabel "
+             "file; refusing to write a manifest without it")
+with open(_map_path, encoding="utf-8") as fh:
+    _private = json.load(fh)
+RELABEL = dict(_private["relabel"])
+SENSITIVE = [str(t) for t in _private["sensitive_tokens"]]
+if not RELABEL or not SENSITIVE:
+    sys.exit("deidentify-manifest: the private map has an empty relabel table "
+             "or token list; refusing to continue")
+
+
 def relabel(v):
     return RELABEL.get(v, v)
+
 
 with open(IN, newline="", encoding="utf-8") as fi, \
      open(OUT, "w", newline="", encoding="utf-8") as fo:
@@ -45,14 +62,15 @@ with open(IN, newline="", encoding="utf-8") as fi, \
         n += 1
 
 with open(OUT, "rb") as fi, gzip.open(OUT + ".gz", "wb", compresslevel=9) as fo:
-    import shutil; shutil.copyfileobj(fi, fo)
+    shutil.copyfileobj(fi, fo)
 
-import os
 print(f"rows: {n}")
 print(f"deid gz bytes: {os.path.getsize(OUT + '.gz')}")
-# leak self-check on the de-identified output
-import subprocess
-bad = subprocess.run(
-    ["grep","-iEc","field E|field D|field C|trion|blk31|the project|field B|field A|a contractor|cameron|a contractor|doris", OUT],
-    capture_output=True, text=True).stdout.strip()
+# Leak self-check on the de-identified output, in-process (no grep dependency).
+rx = re.compile("|".join(re.escape(t) for t in SENSITIVE), re.IGNORECASE)
+with open(OUT, encoding="utf-8") as fh:
+    bad = sum(1 for line in fh if rx.search(line))
 print(f"sensitive-token hits in deid manifest: {bad}")
+if bad:
+    sys.exit("deidentify-manifest: the de-identified output still carries "
+             "sensitive tokens; do not publish it")

@@ -44,7 +44,9 @@ salt: "digitalmodel-identifier-check-v1"
 # ---------------------------------------------------------------------------
 structural:
   - id: job-code
-    pattern: '\bB1[0-9]{3}\b'
+    # Any case, and joined to other text by _ or - (b1528_report): \b does not
+    # fire between a digit and an underscore, so file names slipped through.
+    pattern: '(?i)(?<![A-Za-z0-9])B1[0-9]{3}(?![0-9])'
     severity: block
     message: >-
       Internal job code. Use a neutral placeholder such as <job-code>.
@@ -64,7 +66,11 @@ structural:
       live there and disclose nothing.
 
   - id: unc-share
-    pattern: '\\\\\\\\[A-Za-z0-9._-]+\\+'
+    # Single-quoted YAML keeps backslashes literal, so this regex is \\\\host\\+ :
+    # two literal backslashes, a host, a separator. A JSON-serialised path (four
+    # backslashes) contains two and matches too. The earlier eight-backslash
+    # form needed four and missed every ordinary \\server\share.
+    pattern: '\\\\[A-Za-z0-9._-]+\\+'
     severity: block
     message: >-
       UNC share path. Names an internal server.
@@ -107,6 +113,33 @@ hashed_names:
   - db80ec818eb6f89ac6c7bf38032b227968b524cbc19f8a71bda0d918d33b3848
 
 # ---------------------------------------------------------------------------
+# Binary types that carry no inspectable text. Files of these types are
+# counted and reported, not read. Any OTHER binary -- a PDF, an unknown blob --
+# is uninspectable and FAILS the check: content that was not read has not
+# passed. Office documents are not listed; their XML is read.
+# ---------------------------------------------------------------------------
+binary_media_extensions:
+  - .png
+  - .jpg
+  - .jpeg
+  - .gif
+  - .bmp
+  - .ico
+  - .webp
+  - .woff
+  - .woff2
+  - .ttf
+  - .otf
+  - .sim
+  - .owr
+  - .hyd
+  - .pyc
+  - .npz
+  - .npy
+  - .parquet
+  - .h5
+
+# ---------------------------------------------------------------------------
 # Paths excluded from the check, with the reason. Keep this list short and
 # justified; an exclusion is how a gate stops being one.
 # ---------------------------------------------------------------------------
@@ -115,5 +148,3 @@ exclusions:
     reason: this file necessarily contains the patterns it matches
   - path: scripts/legal/check_identifiers.py
     reason: the checker's own tests and messages quote example shapes
-  - path: docs/legal-scanning.md
-    reason: documents the regime and quotes pattern shapes, not values
