@@ -13,7 +13,6 @@ This workflow evaluates a **preliminary** rudder-stock torque and equal/opposite
 | Rudder force source | [`maneuverability.py`](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/maneuverability.py) |
 | Packaged input YAML | [`rudder_stock_torque_typical_ship.yml`](https://github.com/vamseeachanta/digitalmodel/blob/main/src/digitalmodel/naval_architecture/data/rudder_stock_torque_typical_ship.yml) |
 | Validation tests | [`test_rudder_stock_torque_sweep.py`](https://github.com/vamseeachanta/digitalmodel/blob/main/tests/naval_architecture/test_rudder_stock_torque_sweep.py) |
-| Master calculation review | [`rudder-and-ship-force-calculation-review.md`](https://github.com/vamseeachanta/digitalmodel/blob/main/docs/domains/marine-engineering/rudder-and-ship-force-calculation-review.md) |
 
 ## Scope boundary
 
@@ -41,7 +40,7 @@ Positive hydrodynamic torque follows the right-hand rule about the positive rudd
 
 ## Propeller rotation factor `Cr`
 
-The rudder-stock torque sweep does not use the B1528 workbook propeller rotation
+The rudder-stock torque sweep does not use the <job-code> workbook propeller rotation
 factor `Cr`. It uses the reusable rudder normal-force helper and a user-supplied
 stock-to-center-of-pressure arm. If the separate legacy workbook force formula
 is run for a non-rotating propeller, the neutral propeller-rotation multiplier is

@@ -4,14 +4,14 @@ Repo: **digitalmodel** (+ one upstream touch in **assetutilities**). All deliver
 
 ## 1. What was built
 
-Extended the B1528 SIROCCO rudder work into a general, reusable **rudder + low-speed manoeuvring / station-keeping capability**, then followed up with parallel-agent-driven enhancements. No new hydrodynamics — everything composes existing physics (Nomoto, Whicker-Fehlner, Söding/Brix, OCIMF).
+Extended the <job-code> tanker_225m_1 rudder work into a general, reusable **rudder + low-speed manoeuvring / station-keeping capability**, then followed up with parallel-agent-driven enhancements. No new hydrodynamics — everything composes existing physics (Nomoto, Whicker-Fehlner, Söding/Brix, OCIMF).
 
 ### Core (issue #1207)
 | PR | Deliverable |
 |---|---|
 | **#1208** | `data/rudder_database.yml` (9 rudder types), `naval_architecture/maneuvering_envelope.py` (Clarke 1983 derivatives, turning circle R/L=1/(K'·δ) + IMO MSC.137(76) check, threshold steerage speed, engine-on rudder-angle-to-hold-heading, critical current), 16 tests, Plotly explorer `docs/api/hydro/rudder-maneuvering-explorer.html`, capabilities-page section, `docs/domains/manoeuvring-rudder-reference.md` |
 | **#1212** | Light theme (match capabilities house style) |
-| **#1217** | Genericised the public explorer (dropped "B1528 SIROCCO"/client identifiers → generic vessel) |
+| **#1217** | Genericised the public explorer (dropped "<job-code> tanker_225m_1"/client identifiers → generic vessel) |
 
 ### Follow-ups (via 3 parallel agents → 4 PRs, all merged)
 | PR | Deliverable |
@@ -26,7 +26,7 @@ Pre-existing main regression: `engine.py` (#1136 embed-port) called assetutiliti
 
 ## 2. Verification highlights
 - Explorer client-side JS verified against the Python module to **machine precision over 1,944 parameter combinations** (incl. engine-on Söding vs `soding_forces`).
-- Golden numbers: SIROCCO = **Panamax/LR1** (not Aframax); lift slope 3.77/rad; Clarke C≈−9.3e-6 (marginally unstable); TD≈3.2L (IMO PASS); U_min ≈2.9 kn laden / 4.1 kn ballast / 2.7 kn kick-ahead.
+- Golden numbers: tanker_225m_1 = **Panamax/LR1** (not Aframax); lift slope 3.77/rad; Clarke C≈−9.3e-6 (marginally unstable); TD≈3.2L (IMO PASS); U_min ≈2.9 kn laden / 4.1 kn ballast / 2.7 kn kick-ahead.
 - All new tests pass; baseline-red fixes empirically validated (applied→green→reverted by the diagnosis agent).
 
 ## 3. Live pages (GitHub Pages)

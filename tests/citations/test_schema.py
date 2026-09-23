@@ -119,8 +119,8 @@ def test_citation_accepts_explicit_source_sibling_client_slug():
 
 def test_citation_accepts_source_project_when_set():
     """source_project is optional but valid when populated."""
-    c = Citation(**_valid_kwargs(source_sibling="acma", source_project="sirocco"))
-    assert c.source_project == "sirocco"
+    c = Citation(**_valid_kwargs(source_sibling="acma", source_project="example-project"))
+    assert c.source_project == "example-project"
 
 
 def test_citation_rejects_empty_source_sibling():
