@@ -30,7 +30,7 @@ new -
 new2 - 
 
 
-Dear Vamsee,
+Dear reviewer,
 
 I will do the following changes as discussed below:
 Short Term:
@@ -47,7 +47,7 @@ Long Term:
 1/ Tensioners are not defined at the right location. Usually, the tension ring is located at approximately 5 m above mean sea level (MSL). Discuss with MP and correct it
 2/ I have not done tension matching. I will learn from the reviewers on why we should do tension matching.
 
-Dear Vamsee sir,
+Dear reviewer,
 
 I will do the following changes as discussed below:
 Short Term:

@@ -1068,7 +1068,7 @@ VesselTypes:
       - [14, 11, ~]
     # Shaded drawing
     ShadedDrawingCullingMode: Anticlockwise
-  - Name: Q4000
+  - Name: Intervention_Semisub_95m
     Length: 95.19
     # Conventions
     RAOResponseUnits: degrees
