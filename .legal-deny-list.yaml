@@ -44,7 +44,7 @@ salt: "digitalmodel-identifier-check-v1"
 # ---------------------------------------------------------------------------
 structural:
   - id: job-code
-    # Any case, and joined to other text by _ or - (b1528_report): \b does not
+    # Any case, and joined to other text by _ or - (b1234_report): \b does not
     # fire between a digit and an underscore, so file names slipped through.
     pattern: '(?i)(?<![A-Za-z0-9])B1[0-9]{3}(?![0-9])'
     severity: block
