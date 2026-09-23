@@ -80,9 +80,13 @@ def compute_rao_manual(
     For cases where the user supplies their own structural properties rather
     than computing from the mesh geometry (e.g., known vessel mass distribution).
 
-    RAO_j = F_exc_j / sum_k[ (-omega^2*(M_jk + A_jk) - j*omega*(B_jk + B_ext_jk) + K_jk) ]
+    The coupled system is solved, not divided row by row:
+
+        sum_k Z_jk RAO_k = F_exc_j,   i.e.  RAO = solve(Z, F_exc)
+        Z = -omega^2*(M + A) - j*omega*(B + B_ext) + K
+
     (DNV-RP-C205 §7.2.5, Eq 7.2.1, written in Capytaine's exp(-j*omega*t)
-    convention, which its excitation force is expressed in -- hence -j*omega*B)
+    convention, which its excitation force is expressed in -- hence -j*omega*B.)
 
     Args:
         bem_result: BEM results with added_mass, radiation_damping, excitation_force.
