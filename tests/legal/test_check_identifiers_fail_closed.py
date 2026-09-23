@@ -289,6 +289,69 @@ class TestSecondReview:
         assert out.returncode == 0, out.stdout
 
 
+class TestThirdReview:
+    """Fail-open paths the third review (#2145) found."""
+
+    def test_a_ttf_header_does_not_exempt_text(self, gate):
+        out = gate(_file(gate, "f.ttf", f"true {TOKEN} scope\n".encode()))
+        assert out.returncode != 0, out.stdout
+
+    def test_a_riff_that_is_not_webp_is_not_exempt(self, gate):
+        data = b"RIFF\x24\x00\x00\x00WAVEfmt " + f" {TOKEN} ".encode()
+        out = gate(_file(gate, "a.webp", data))
+        assert out.returncode != 0, out.stdout
+
+    def test_a_denied_name_in_a_file_name_is_caught(self, gate):
+        out = gate(_file(gate, f"notes_{TOKEN}.md", b""))
+        assert out.returncode == 1, out.stdout
+        assert "denied-name" in out.stdout
+
+    def test_a_job_code_in_a_file_name_is_caught(self, gate):
+        out = gate(_file(gate, "b" + "1234_report.md", b"clean\n"))
+        assert out.returncode == 1, out.stdout
+        assert "job-code" in out.stdout
+
+    def _xlsx(self, sheet_xml):
+        import io
+        import zipfile
+
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as z:
+            z.writestr("xl/worksheets/sheet1.xml", sheet_xml)
+        return buf.getvalue()
+
+    def test_a_name_split_across_inline_string_runs_is_caught(self, gate):
+        a, b = TOKEN[:9], TOKEN[9:]
+        xml = ("<worksheet xmlns='s'><sheetData><row>"
+               "<c t='inlineStr'><is><t>abc</t></is></c>"
+               f"<c t='inlineStr'><is><r><t>{a}</t></r><r><t>{b}</t></r></is></c>"
+               "<c t='inlineStr'><is><t>def</t></is></c>"
+               "</row></sheetData></worksheet>")
+        out = gate(_file(gate, "w.xlsx", self._xlsx(xml)))
+        assert out.returncode == 1, out.stdout
+        assert "denied-name" in out.stdout
+
+    def test_cell_coordinates_are_not_job_codes(self, gate):
+        ref = "B" + "1234"
+        xml = (f"<worksheet xmlns='s'><sheetData><row r='1234'>"
+               f"<c r='{ref}'><v>1.5</v></c></row></sheetData>"
+               f"<dimension ref='A1:{ref}'/></worksheet>")
+        out = gate(_file(gate, "w.xlsx", self._xlsx(xml)))
+        assert out.returncode == 0, out.stdout
+
+    def test_an_office_archive_with_too_many_members_is_uninspectable(self, gate):
+        import io
+        import zipfile
+
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as z:
+            for i in range(20001):
+                z.writestr(f"x/{i}.xml", "<a/>")
+        out = gate(_file(gate, "big.docx", buf.getvalue()))
+        assert out.returncode != 0, out.stdout
+        assert "uninspect" in out.stdout.lower()
+
+
 class TestExemptFilesCarryNoValues:
     """The files the gate exempts are where a real value slips in unseen.
 
@@ -310,12 +373,14 @@ class TestExemptFilesCarryNoValues:
         word = re.compile(r"[A-Za-z][A-Za-z0-9-]{3,}")
         text = (REPO / rel).read_text(encoding="utf-8")
         for n, line in enumerate(text.splitlines(), start=1):
-            if line.strip().startswith("pattern:"):
-                continue
-            m = job_rx.search(line)
-            # Synthetic examples are allowed: B1 followed by 234 is the house example.
-            if m and not re.fullmatch("(?i)b1" + "234", m.group(0)):
-                pytest.fail(f"{rel}:{n}: job code in an exempt file")
+            # Only the quoted pattern value is exempt; the rest of the line
+            # (a trailing comment, say) is checked like any other.
+            line = re.sub(r"^(\s*pattern:\s*)'(?:[^']|'')*'", r"\1", line)
+            # Every match, not the first: a synthetic example must not mask a
+            # real code later on the same line. B1 then 234 is the house example.
+            for m in job_rx.finditer(line):
+                if not re.fullmatch("(?i)b1" + "234", m.group(0)):
+                    pytest.fail(f"{rel}:{n}: job code in an exempt file")
             for w in word.findall(line):
                 for c in {w.lower(), *re.split(r"[-\d]+", w.lower())}:
                     if len(c) >= 4 and hashlib.sha256(

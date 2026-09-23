@@ -185,30 +185,50 @@ def index_blobs(paths: list[str]) -> dict[str, bytes | None]:
 
 #: Leading bytes of each declared media type. A file is exempt only if its
 #: content IS that type; text renamed to .png is read like any other text.
+#: Signatures are specific: `true` (legacy Mac TrueType) and a bare RIFF header
+#: were accepted once and let text through under .ttf and .webp.
 MEDIA_MAGIC = {
     ".png": (b"\x89PNG\r\n\x1a\n",),
     ".jpg": (b"\xff\xd8\xff",), ".jpeg": (b"\xff\xd8\xff",),
     ".gif": (b"GIF87a", b"GIF89a"),
     ".bmp": (b"BM",),
     ".ico": (b"\x00\x00\x01\x00",),
-    ".webp": (b"RIFF",),
     ".woff": (b"wOFF",), ".woff2": (b"wOF2",),
-    ".ttf": (b"\x00\x01\x00\x00", b"true"), ".otf": (b"OTTO",),
+    ".ttf": (b"\x00\x01\x00\x00",), ".otf": (b"OTTO",),
 }
 
 
 def is_media(blob: bytes, ext: str) -> bool:
+    if ext == ".webp":
+        return blob[:4] == b"RIFF" and blob[8:12] == b"WEBP"
     magic = MEDIA_MAGIC.get(ext)
     return bool(magic) and blob.startswith(magic)
+
+
+#: Bounds on unpacking an office archive: the file-size limit does not bound
+#: what it expands to.
+OFFICE_MAX_MEMBERS = 10000
+OFFICE_MAX_EXPANDED = 256 * 1024 * 1024
+
+#: Spreadsheet attributes that hold cell coordinates, which can look like a
+#: job code (column B, row 1234). Skipped only when the value IS a coordinate.
+_COORD_ATTRS = frozenset({"r", "ref", "sqref", "topLeftCell", "activeCell"})
+_COORD = re.compile(
+    r"\$?[A-Z]{1,3}\$?[0-9]+(?::\$?[A-Z]{1,3}\$?[0-9]+)?"
+    r"(?:\s+\$?[A-Z]{1,3}\$?[0-9]+(?::\$?[A-Z]{1,3}\$?[0-9]+)?)*")
+
+#: Elements whose runs are read together: Word paragraphs and runs, shared and
+#: inline spreadsheet strings, drawing shapes and text bodies.
+_RUN_CONTAINERS = frozenset({"p", "r", "si", "is", "sp", "txBody"})
 
 
 def _office_text(blob: bytes) -> str:
     """Every text node and attribute value of every XML part, as whole words.
 
-    Text is emitted twice: each node on its own, and the nodes of a paragraph
-    run together -- Word splits a name across runs freely. Character references
-    are decoded by the XML parser. Any member that is neither XML nor a
-    recognised image is uninspectable, not skipped.
+    Text is emitted in views: each node on its own, and each paragraph or string
+    container run together -- Word and Excel split a name across runs freely.
+    Character references are decoded by the XML parser. Any member that is
+    neither XML nor a recognised image is uninspectable, not skipped.
     """
     import io
     import zipfile
@@ -217,10 +237,19 @@ def _office_text(blob: bytes) -> str:
     out: list[str] = []
     try:
         with zipfile.ZipFile(io.BytesIO(blob)) as z:
-            for name in z.namelist():
+            infos = z.infolist()
+            if len(infos) > OFFICE_MAX_MEMBERS:
+                raise Uninspectable(
+                    f"office archive has {len(infos)} members "
+                    f"(limit {OFFICE_MAX_MEMBERS})")
+            if sum(i.file_size for i in infos) > OFFICE_MAX_EXPANDED:
+                raise Uninspectable("office archive expands beyond "
+                                    f"{OFFICE_MAX_EXPANDED // 1024 // 1024} MB")
+            for info in infos:
+                name = info.filename
                 if name.endswith("/"):
                     continue
-                data = z.read(name)
+                data = z.read(info)
                 if name.endswith((".xml", ".rels", ".vml")):
                     try:
                         root = ET.fromstring(data)
@@ -228,15 +257,15 @@ def _office_text(blob: bytes) -> str:
                         raise Uninspectable(
                             f"office part {name} is not well-formed XML: {exc}")
                     for el in root.iter():
-                        out.extend(v for v in el.attrib.values())
-                        pieces = [t for t in (el.text, el.tail) if t]
-                        out.extend(pieces)
-                    # Paragraph-level run-together view.
+                        for key, value in el.attrib.items():
+                            local = key.rsplit("}", 1)[-1]
+                            if local in _COORD_ATTRS and _COORD.fullmatch(value):
+                                continue
+                            out.append(value)
+                        out.extend(t for t in (el.text, el.tail) if t)
                     for el in root.iter():
-                        tag = el.tag.rsplit("}", 1)[-1]
-                        if tag in ("p", "si", "sp", "txBody", "r"):
+                        if el.tag.rsplit("}", 1)[-1] in _RUN_CONTAINERS:
                             out.append("".join(el.itertext()))
-                    out.append("".join(root.itertext()))
                     continue
                 ext = os.path.splitext(name)[1].lower()
                 if is_media(data, ext):
@@ -328,10 +357,44 @@ def check(paths: list[str], rules: dict, staged: bool = False
     media_skipped: list[str] = []
     uninspectable: list[str] = []
     scanned = 0
+    def scan(label: str, n: int | str, line: str) -> None:
+        for rid, rx, msg in compiled:
+            pos = 0
+            while (m := rx.search(line, pos)) is not None:
+                # A vendor install path exempts itself, not its neighbours.
+                # The pattern admits spaces, so one match can run on into the
+                # next path; resume just past the exempt match's start rather
+                # than after its end.
+                if (rid == "mapped-drive-path"
+                        and VENDOR_PATH.match(line, m.start())):
+                    pos = m.start() + 1
+                    continue
+                findings.append(f"{label}:{n}: [{rid}] {msg.strip()}\n"
+                                f"    {line.strip()[:160]}")
+                break
+        if hashed or private:
+            for word in WORD.findall(line):
+                if any(c in private or token_hash(c, salt) in hashed
+                       for c in _candidates(word)):
+                    findings.append(f"{label}:{n}: [denied-name] a name on the "
+                                    f"deny list appears here\n"
+                                    f"    {line.strip()[:160]}")
+                    break
+
     for rel in paths:
         norm = rel.replace("\\", "/")
         if norm in excluded:
             continue
+        # The path is content too: an identifier in a file name is published
+        # whatever the file holds, and an empty file used to pass.
+        full = os.path.join(ROOT, rel.replace("/", os.sep))
+        try:
+            shown = os.path.relpath(full, ROOT)
+        except ValueError:                  # another drive on Windows
+            shown = ".."
+        if shown.startswith(".."):
+            shown = os.path.basename(full)
+        scan(norm, "path", shown.replace("\\", "/"))
         ext = os.path.splitext(norm)[1].lower()
         try:
             if staged:
@@ -339,7 +402,6 @@ def check(paths: list[str], rules: dict, staged: bool = False
                 if blob is None:
                     raise Uninspectable("not in the index")
             else:
-                full = os.path.join(ROOT, rel.replace("/", os.sep))
                 if not os.path.isfile(full):
                     raise Uninspectable("file does not exist")
                 if os.path.getsize(full) > MAX_BYTES:
@@ -356,31 +418,8 @@ def check(paths: list[str], rules: dict, staged: bool = False
             uninspectable.append(f"{norm}: {exc}")
             continue
         scanned += 1
-
         for n, line in enumerate(text.splitlines(), start=1):
-            for rid, rx, msg in compiled:
-                pos = 0
-                while (m := rx.search(line, pos)) is not None:
-                    # A vendor install path exempts itself, not its neighbours.
-                    # The pattern admits spaces, so one match can run on into
-                    # the next path; resume just past the exempt match's start
-                    # rather than after its end.
-                    if (rid == "mapped-drive-path"
-                            and VENDOR_PATH.match(line, m.start())):
-                        pos = m.start() + 1
-                        continue
-                    findings.append(
-                        f"{norm}:{n}: [{rid}] {msg.strip()}\n"
-                        f"    {line.strip()[:160]}")
-                    break
-            if hashed or private:
-                for word in WORD.findall(line):
-                    if any(c in private or token_hash(c, salt) in hashed
-                           for c in _candidates(word)):
-                        findings.append(
-                            f"{norm}:{n}: [denied-name] a name on the deny "
-                            f"list appears here\n    {line.strip()[:160]}")
-                        break
+            scan(norm, n, line)
     return findings, scanned, media_skipped, uninspectable
 
 
