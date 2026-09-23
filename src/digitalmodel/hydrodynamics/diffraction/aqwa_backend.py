@@ -434,13 +434,18 @@ class AQWABackend:
 
         # OPTIONS GOON — continue past non-fatal mesh errors
         cards.append("OPTIONS GOON ")
-        # Feature options
+
+        # AHD1 has to precede the OPTIONS card carrying END, which closes the
+        # options list, and must not come between REST and RESTART: AQWA
+        # requires the RESTART card to follow the REST option directly and
+        # otherwise stops in the preliminary data check.
+        cards.extend(self._build_ah1_option(spec))
+
+        # Feature options, ending the list
         options = self._build_options(spec)
         cards.append(f"OPTIONS {options}")
 
-        cards.extend(self._build_ah1_option(spec))
-
-        # RESTART
+        # RESTART, immediately after the REST option
         cards.append("RESTART  1  5")
 
         return cards
