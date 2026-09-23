@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 10.0e
-# File: M:\documents\0185 ECS FFS Engineering\COD\results\app_vertical_riser_2500ft_WT0750_064pcf_Wave1_FE.yml
+# File: docs/domains/orcaflex/risers/drilling/gom/app_vertical_riser_2500ft_WT0750_064pcf_Wave1_FE.yml
 # Created: 3:53 PM on 11/10/2019
-# User: Analysis_Server3
-# Machine: DESKTOP-K82UDB4
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units

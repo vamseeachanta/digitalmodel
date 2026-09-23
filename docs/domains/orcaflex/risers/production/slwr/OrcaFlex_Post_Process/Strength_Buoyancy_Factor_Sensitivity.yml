@@ -6,19 +6,19 @@ default:
 
 Files: 
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\BuoyancyFactor\SLWR_16OD_SE1200_HE1500_BF_2p0_GA2_Driving.sim
+    Name: ..\BuoyancyFactor\SLWR_16OD_SE1200_HE1500_BF_2p0_GA2_Driving.sim
     Label: Sag Elevation 1200m BFactor =2.0
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\BuoyancyFactor\SLWR_16OD_SE1200_HE1500_BF_2p5_GA2_Driving.sim
+    Name: ..\BuoyancyFactor\SLWR_16OD_SE1200_HE1500_BF_2p5_GA2_Driving.sim
     Label: Sag Elevation 1200m BFactor =2.5
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\BuoyancyFactor\SLWR_16OD_SE1200_HE1500_BF_3p0_GA2_Driving.sim
+    Name: ..\BuoyancyFactor\SLWR_16OD_SE1200_HE1500_BF_3p0_GA2_Driving.sim
     Label: Sag Elevation 1200m BFactor =3.0  
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\BuoyancyFactor\SLWR_16OD_SE1200_HE1500_BF_3p5_GA2_Driving.sim
+    Name: ..\BuoyancyFactor\SLWR_16OD_SE1200_HE1500_BF_3p5_GA2_Driving.sim
     Label: Sag Elevation 1200m BFactor =3.5  
     ObjectName: SLWR
 

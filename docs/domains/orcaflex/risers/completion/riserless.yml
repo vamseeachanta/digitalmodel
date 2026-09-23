@@ -1,13 +1,13 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\risers\completion\riserless.yml
+# File: docs/domains/orcaflex/risers/completion/riserless.yml
 # Created: 9:59 PM on 1/17/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
-  Comments: ! "31242 Shell Riser Less Analysis\r\nVamsee Achanta 8th May 2014"
+  Comments: ! "Riserless completion string analysis; 236 m water depth; NW Australia (approximate location)\r\nVamsee Achanta 8th May 2014"
   # Units
   UnitsSystem: SI
   # Reset

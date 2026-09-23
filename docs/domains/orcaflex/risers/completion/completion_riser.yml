@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.0e
-# File: M:\documents\simulation\OrcaFlex\31354 Static_OpEn_LC_KillMud.yml
+# File: docs/domains/orcaflex/risers/completion/completion_riser.yml
 # Created: 8:41 PM on 11/20/2020
-# User: AceEngineer_Server2
-# Machine: DESKTOP-KB8FML8
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units
@@ -234,7 +234,7 @@ Environment:
   WindSpeed: 0
   WindDirection: 0
 VesselTypes:
-  - Name: Transocean LC14
+  - Name: Vessel_103m
     Length: 103
     # Conventions
     RAOResponseUnits: degrees
@@ -4108,8 +4108,8 @@ P-yModels:
         J: 0.5
         Epsilonc: 0.01
 Vessels:
-  - Name: H534
-    VesselType: Transocean LC14
+  - Name: Vessel_103m_A
+    VesselType: Vessel_103m
     Draught: Draught1
     Length: ~
     Connection: Free
@@ -4320,7 +4320,7 @@ Lines:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [H534, 0, 0, 52.603, 0, 180, 0, ~]
+      - [Vessel_103m_A, 0, 0, 52.603, 0, 180, 0, ~]
       - [Tension Frame, 1.524, 0, 10, 0, 180, 0, ~]
     # End connection stiffness and damping
     ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
@@ -4380,7 +4380,7 @@ Links:
   - Name: TopTension
     LinkType: Spring/damper
     Connection, ConnectionX, ConnectionY, ConnectionZ:
-      - [H534, 0, 0, 90.858]
+      - [Vessel_103m_A, 0, 0, 90.858]
       - [Tension Frame, 1.524, 0, 19.2]
     ReleaseStage: ~
     LinearSpring: No
@@ -4427,7 +4427,7 @@ Links:
   - Name: VertStroke
     LinkType: Spring/damper
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - [H534, 0, 0, 1020]
+      - [Vessel_103m_A, 0, 0, 1020]
       - [Riser, 0, 0, 2, End A]
     ReleaseStage: ~
     LinearSpring: Yes
@@ -4441,7 +4441,7 @@ Links:
     LinkType: Spring/damper
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
       - [Riser, 0, 0, 12.19, End A]
-      - [H534, 10e3, 0, 13.96]
+      - [Vessel_103m_A, 10e3, 0, 13.96]
     ReleaseStage: ~
     LinearSpring: Yes
     UnstretchedLength: 10e3
@@ -4453,7 +4453,7 @@ Links:
     LinkType: Spring/damper
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
       - [Riser, 0, 0, 12.19, End A]
-      - [H534, -10e3, 0, 13.96]
+      - [Vessel_103m_A, -10e3, 0, 13.96]
     ReleaseStage: ~
     LinearSpring: Yes
     UnstretchedLength: 10e3
@@ -4465,7 +4465,7 @@ Links:
     LinkType: Spring/damper
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
       - [Riser, 0, 0, 12.19, End A]
-      - [H534, 0, 10e3, 13.96]
+      - [Vessel_103m_A, 0, 10e3, 13.96]
     ReleaseStage: ~
     LinearSpring: Yes
     UnstretchedLength: 10e3
@@ -4477,7 +4477,7 @@ Links:
     LinkType: Spring/damper
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
       - [Riser, 0, 0, 12.19, End A]
-      - [H534, 0, -10e3, 13.96]
+      - [Vessel_103m_A, 0, -10e3, 13.96]
     ReleaseStage: ~
     LinearSpring: Yes
     UnstretchedLength: 10e3
@@ -4499,7 +4499,7 @@ LineContactData:
 Groups:
   Structure:
     Riser: Model
-    H534: Model
+    Vessel_103m_A: Model
     Bail1: Model
     Tension Frame: Model
     Bail2: Model

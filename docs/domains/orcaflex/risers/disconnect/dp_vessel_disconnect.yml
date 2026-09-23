@@ -156,7 +156,7 @@ Environment:
   WindSpeed: 0
   WindDirection: 0
 VesselTypes:
-  - Name: Pisces RAO Data Set
+  - Name: DP_Vessel_161m RAO Data Set
     Length: 161.5
     # Conventions
     RAOResponseUnits: degrees
@@ -1689,8 +1689,8 @@ StiffenerTypes:
     ConnectionArclengthRelativeTo: End A
     AxialLoadInertiaTransfer: at connection point
 Vessels:
-  - Name: Pisces
-    VesselType: Pisces RAO Data Set
+  - Name: DP_Vessel_161m
+    VesselType: DP_Vessel_161m RAO Data Set
     Draught: 6.9 m
     Length: ~
     InitialPosition: [-170.688, -22.5999995910645, -0.300000002288818]
@@ -2301,7 +2301,7 @@ Lines:
     # Connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzm, ConnectionDec, ConnectionGamma, ReleaseStage:
       - [URB, -0.6096, 0, -2.5908, 180, 154.952141078287, 0, ~]
-      - [Pisces, 22.6, -5, 13.925, 0, 0, -90, 1]
+      - [DP_Vessel_161m, 22.6, -5, 13.925, 0, 0, -90, 1]
     # Connection Stiffness
     ConnectionStiffnessX, ConnectionStiffnessY:
       - [Infinity, ~]
@@ -2507,7 +2507,7 @@ Links:
   - Name: Link1
     LinkType: Spring/Damper
     Connection, ConnectionX, ConnectionY, ConnectionZ:
-      - [Pisces, 11.6892393075704, -10.3614005525684, 15.8071762006558]
+      - [DP_Vessel_161m, 11.6892393075704, -10.3614005525684, 15.8071762006558]
       - [DHB, 0, 0, 0.74295]
     ReleaseStage: 3
     LinearSpring: Yes
@@ -2519,7 +2519,7 @@ Links:
   - Name: Link2
     LinkType: Spring/Damper
     Connection, ConnectionX, ConnectionY, ConnectionZ:
-      - [Pisces, 15.5628700152642, -10.3828813086946, 15.6393037179605]
+      - [DP_Vessel_161m, 15.5628700152642, -10.3828813086946, 15.6393037179605]
       - [DHB, 0, 0, -0.74295]
     ReleaseStage: 3
     LinearSpring: Yes
@@ -2531,7 +2531,7 @@ Links:
   - Name: Link3
     LinkType: Tether
     Connection, ConnectionX, ConnectionY, ConnectionZ:
-      - [Pisces, 21.336, -9.924131707955, 14.661957575297]
+      - [DP_Vessel_161m, 21.336, -9.924131707955, 14.661957575297]
       - [microdrag, 0, 0, 0.600075]
     ReleaseStage: 2
     UnstretchedLength: 2
@@ -2664,7 +2664,7 @@ Shapes:
   - Name: Chute
     Type: Elastic Solid
     Shape: Curved Plate
-    Connection: Pisces
+    Connection: DP_Vessel_161m
     # Geometry
     Origin: [19.1, -10, 11.425]
     Orientation: [0, 90, 90]
@@ -2682,7 +2682,7 @@ Shapes:
   - Name: Chute1
     Type: Elastic Solid
     Shape: Curved Plate
-    Connection: Pisces
+    Connection: DP_Vessel_161m
     # Geometry
     Origin: [19.1, -10, 11.425]
     Orientation: [0, 90, 90]
@@ -2699,7 +2699,7 @@ Shapes:
   - Name: Chute2
     Type: Elastic Solid
     Shape: Cylinder
-    Connection: Pisces
+    Connection: DP_Vessel_161m
     # Geometry
     Origin: [23.1, -10, 11.425]
     Azimuth: 0
@@ -2713,7 +2713,7 @@ Shapes:
   - Name: Chute3
     Type: Elastic Solid
     Shape: Curved Plate
-    Connection: Pisces
+    Connection: DP_Vessel_161m
     # Geometry
     Origin: [18.1122468328571, -9.8584342160695, 8.34713471544932]
     Orientation: [180, 180, 0]
@@ -2728,7 +2728,7 @@ Shapes:
   - Name: GuideTube
     Type: Elastic Solid
     Shape: Cylinder
-    Connection: Pisces
+    Connection: DP_Vessel_161m
     # Geometry
     Origin: [22.6, -10, 13.925]
     Azimuth: 90
@@ -2744,7 +2744,7 @@ Shapes:
   - Name: Chute4
     Type: Elastic Solid
     Shape: Curved Plate
-    Connection: Pisces
+    Connection: DP_Vessel_161m
     # Geometry
     Origin: [9.86081159233196, -9.89299616503863, 9.6735973930121]
     Orientation: [180, 180, 0]
@@ -2759,7 +2759,7 @@ Shapes:
   - Name: Chute5
     Type: Elastic Solid
     Shape: Cylinder
-    Connection: Pisces
+    Connection: DP_Vessel_161m
     # Geometry
     Origin: [15.3924, -10, 11.425]
     Azimuth: 0
@@ -2773,7 +2773,7 @@ Shapes:
   - Name: Chute6
     Type: Elastic Solid
     Shape: Curved Plate
-    Connection: Pisces
+    Connection: DP_Vessel_161m
     # Geometry
     Origin: [10.668, -10, 11.425]
     Orientation: [0, 90, 90]
@@ -2790,7 +2790,7 @@ Shapes:
   - Name: Chute7
     Type: Elastic Solid
     Shape: Curved Plate
-    Connection: Pisces
+    Connection: DP_Vessel_161m
     # Geometry
     Origin: [11.1, -10, 11.425]
     Orientation: [0, 90, 90]

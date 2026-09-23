@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 10.0e
-# File: K:\OneDrive - Occidental Petroleum Corporation\Temp\Horn Mountain\Reference_TTR_Model_VA_Metric.yml
+# File: docs/domains/orcaflex/risers/production/ttr/TTR_Metric.yml
 # Created: 8:54 PM on 9/22/2019
-# User: Analysis_Server3
-# Machine: DESKTOP-K82UDB4
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units

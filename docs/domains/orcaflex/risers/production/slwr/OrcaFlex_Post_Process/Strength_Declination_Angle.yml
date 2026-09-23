@@ -6,23 +6,23 @@ default:
 
 Files: 
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\Declination_Angle\SLWR_16OD_SE1200_HE1500_Ang06_GA2_Driving.sim
+    Name: ..\Declination_Angle\SLWR_16OD_SE1200_HE1500_Ang06_GA2_Driving.sim
     Label: Declination 6deg
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\SLWR_Extreme\Static\SLWR_16OD_SE1200_HE1500_1LC_GA2_Driving.sim
+    Name: ..\SLWR_Extreme\Static\SLWR_16OD_SE1200_HE1500_1LC_GA2_Driving.sim
     Label: BaseCase, Declination 8 deg
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\Declination_Angle\SLWR_16OD_SE1200_HE1500_Ang10_GA2_Driving.sim
+    Name: ..\Declination_Angle\SLWR_16OD_SE1200_HE1500_Ang10_GA2_Driving.sim
     Label: Declination 10 deg
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\Declination_Angle\SLWR_16OD_SE1200_HE1500_Ang12_GA2_Driving.sim
+    Name: ..\Declination_Angle\SLWR_16OD_SE1200_HE1500_Ang12_GA2_Driving.sim
     Label: Declination 12 deg
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\Declination_Angle\SLWR_16OD_SE1200_HE1500_Ang14_GA2_Driving.sim
+    Name: ..\Declination_Angle\SLWR_16OD_SE1200_HE1500_Ang14_GA2_Driving.sim
     Label: Declination 14 deg
     ObjectName: SLWR
 
