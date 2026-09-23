@@ -165,10 +165,13 @@ class TestTheExistingBacklog:
     #: 2026-09-23 at 21,640 once the job-code rule was made case-insensitive and
     #: underscore-aware and the UNC rule was corrected -- the same tree, seen
     #: more completely. Not a regression; the earlier figure undercounted.
-    BASELINE_FINDINGS = 21640
+    #: Re-measured 2026-09-23 after review round 3 at 21,786: file names are now
+    #: scanned too, and spreadsheet cell coordinates no longer count.
+    BASELINE_FINDINGS = 21786
     #: Files the gate cannot read (binary, not declared media). Same logic:
-    #: this may fall, it must not rise.
-    BASELINE_UNINSPECTABLE = 445
+    #: this may fall, it must not rise. 507 once solver results and array
+    #: formats stopped being exempt by extension.
+    BASELINE_UNINSPECTABLE = 507
 
     @pytest.mark.slow
     def test_the_backlog_has_not_grown(self):
