@@ -74,13 +74,13 @@ critical_rules:
       - "Overwriting existing .sim files with test data"
       - "Reducing .sim file sizes for testing"
       - "Replacing binary .sim content with text/mock data"
-      - "Writing any data to D:\\1522\\ctr7\\orcaflex\\rev_a08\\runtime_test\\*.sim"
+      - "Writing any data to <project-root>"
   
   - name: "PRESERVE_PRODUCTION_DATA"
     rule: "Production directories and files must remain untouched"
     severity: "CRITICAL"
     protected_paths:
-      - "D:\\1522\\ctr7\\orcaflex\\rev_a08\\runtime_test\\*.sim"
-      - "D:\\1522\\ctr7\\orcaflex\\**\\*.sim"
+      - "<project-root>"
+      - "<project-root>"
       - "*/runtime_test/*.sim"
       - "*/production/*.sim"

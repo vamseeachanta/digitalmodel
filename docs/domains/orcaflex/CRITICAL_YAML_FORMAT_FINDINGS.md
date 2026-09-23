@@ -436,10 +436,10 @@ Environment:
 ## References
 
 **Working Reference Files:**
-- `D:\1522\ctr7\rev_a09\base_files\fsts_l095_lwl.yml` - Include-based structure
-- `D:\workspace-hub\digitalmodel\projects\modules\calm\baltic_039m\...test_minimal_complete.yml` - Flat YAML
-- `D:\workspace-hub\digitalmodel\projects\modules\calm\baltic_039m\...\_04_vessel_type1.yml` - Vessel type format
-- `D:\workspace-hub\digitalmodel\projects\modules\calm\baltic_039m\...\waves_000deg_1yr.yml` - Wave format
+- `<project-root> - Include-based structure
+- `<repo-root> - Flat YAML
+- `<repo-root> - Vessel type format
+- `<repo-root> - Wave format
 
 ---
 

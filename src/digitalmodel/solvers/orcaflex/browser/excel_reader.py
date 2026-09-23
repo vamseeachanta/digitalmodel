@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class ExcelCollationReader:
     """Reads and parses Excel collation files for dynamic UI configuration"""
     
-    def __init__(self, base_path: str = r"D:\1522\ctr7\orcaflex\rev_a08"):
+    def __init__(self, base_path: str = r"<project-root>"):
         self.base_path = Path(base_path)
         self.collated_path = self.base_path / "postproc" / "collated"
         self.config = {}

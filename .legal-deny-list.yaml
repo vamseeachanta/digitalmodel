@@ -1,0 +1,144 @@
+# =============================================================================
+# Identifier deny list — digitalmodel (PUBLIC repository)
+# =============================================================================
+# Read by scripts/legal/check_identifiers.py, which is wired into pre-commit.
+#
+# WHY THIS FILE LOOKS ODD
+#
+# A deny list of client names, committed to a public repository, is itself a
+# list of clients. That is why no rule value was committed here before, and why
+# the surviving hook checks only that the census is well formed and matches no
+# values at all (see .pre-commit-config.yaml). The consequence was that nothing
+# in this repository checked identifiers, and 146 lines binding a client to a
+# job code, a CTR number or an internal path reached the public remote.
+#
+# So the rules come in two kinds.
+#
+#   structural  Patterns, not names. A job code, a mapped drive, a UNC share, a
+#               CTR number, an address at someone else's domain. Publishing the
+#               shape of these discloses nothing, and they catch the majority of
+#               real cases, because an identifier rarely travels alone.
+#
+#   hashed      Names, as salted SHA-256 of the lowercased token. The checker
+#               hashes each candidate word and compares. A name on this list is
+#               caught without this file naming it. The salt is published: it
+#               stops accidental matches, not a determined reader with a word
+#               list, and pretending otherwise would be the same fail-open
+#               thinking that produced the leak. Use it for names that are
+#               already public knowledge as companies; put anything genuinely
+#               secret in the private list below instead.
+#
+# An optional private list extends this one. Set DIGITALMODEL_DENY_LIST to a
+# path outside the repository and the checker reads plain values from it. When
+# the variable is set and the file is missing, the checker FAILS rather than
+# continuing without it: a gate that silently degrades is not a gate.
+# =============================================================================
+
+version: "1.0"
+updated: "2026-09-21"
+
+salt: "digitalmodel-identifier-check-v1"
+
+# ---------------------------------------------------------------------------
+# Structural patterns. Severity block = fail the check.
+# ---------------------------------------------------------------------------
+structural:
+  - id: job-code
+    # Any case, and joined to other text by _ or - (b1234_report): \b does not
+    # fire between a digit and an underscore, so file names slipped through.
+    pattern: '(?i)(?<![A-Za-z0-9])B1[0-9]{3}(?![A-Za-z0-9])'
+    severity: block
+    message: >-
+      Internal job code. Use a neutral placeholder such as <job-code>.
+
+  - id: ctr-number
+    pattern: '\bCTR\s*[0-9]{1,3}\b'
+    severity: block
+    message: >-
+      Contract/CTR number. Identifies a specific engagement.
+
+  - id: mapped-drive-path
+    pattern: '\b[D-Zd-z]:\\+[A-Za-z0-9_ .\\-]{6,}'
+    severity: block
+    message: >-
+      Path on a mapped or network drive. Replace with <project-root> or a
+      repository-relative path. C: is excluded because vendor install paths
+      live there and disclose nothing.
+
+  - id: unc-share
+    # Single-quoted YAML keeps backslashes literal, so this regex is \\\\host\\+ :
+    # two literal backslashes, a host, a separator. A JSON-serialised path (four
+    # backslashes) contains two and matches too. The earlier eight-backslash
+    # form needed four and missed every ordinary \\server\share.
+    pattern: '\\\\[A-Za-z0-9._-]+\\+'
+    severity: block
+    message: >-
+      UNC share path. Names an internal server.
+
+  - id: foreign-domain-email
+    pattern: '[A-Za-z0-9._%+-]+@(?!example\.|localhost)[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
+    severity: block
+    message: >-
+      Email address. An address at a client domain identifies both the
+      engagement and the person on it.
+
+  - id: project-archive-path
+    pattern: '\bacma-projects\b'
+    severity: block
+    message: >-
+      Internal project archive name.
+
+# ---------------------------------------------------------------------------
+# Hashed names. Salted SHA-256 of the lowercased token.
+#
+# Deliberately unannotated. A comment naming each hash would publish the very
+# list the hashing exists to withhold, which is the mistake this whole file is
+# a response to. To check whether a name is already covered, hash it and look:
+#
+#   python scripts/legal/check_identifiers.py --hash "<token>"
+#
+# To add one, append the hash it prints. Do not add a comment saying what it is.
+# ---------------------------------------------------------------------------
+hashed_names:
+  - 139b69de092589943616ac20b52a1772fbe835dbeecb0b742bb3c7b3c6abd8c8
+  - 333f8b7bbaa03907b3d9845c62ed1960e55d52adbf1024f8a0f9f69b2a4b9481
+  - b25e0efd9c8ba0b864a8948fbb877b928985ca6d583d9d09b73e69dd2a643597
+  - c6968cfecbfd9af55b9ee5b93db08e7d77ac5ca533511c50bd1eb24408083c0d
+  - 1edae3dfd7af09f3810ecf912fdd5b05032af2ad35202f1c182df63687187d55
+  - 81981d5834e3b4754e4e41ac378d1e016211e056b0d618bae764c4601a3a5c37
+  - 3ddbf21990af5aaea531a2a73e140c26e0adc15d882e6760ae14364b80afa26c
+  - 5399ae2c454b5172967cad6b747e6a41e51abfd804ffa4bf30b702e943dcde41
+  - 67566990dbc8eb46687ec6a37378e5346a863e1cf7a055ee64e75708c75ebe47
+  - 0db2030be0fb6726b51ee358bf706e7de39d496beac99b5e5e4af89797d13a73
+  - db80ec818eb6f89ac6c7bf38032b227968b524cbc19f8a71bda0d918d33b3848
+
+# ---------------------------------------------------------------------------
+# Binary types that carry no inspectable text. Files of these types are
+# counted and reported, not read -- but only when their leading bytes ARE that
+# type; text renamed to .png is read. Any OTHER binary -- a PDF, a solver
+# result, an array or table format that can carry strings -- is uninspectable
+# and FAILS the check: content that was not read has not passed. Office
+# documents are not listed; their XML is read.
+# ---------------------------------------------------------------------------
+binary_media_extensions:
+  - .png
+  - .jpg
+  - .jpeg
+  - .gif
+  - .bmp
+  - .ico
+  - .webp
+  - .woff
+  - .woff2
+  - .ttf
+  - .otf
+
+# ---------------------------------------------------------------------------
+# Paths excluded from the check, with the reason. Keep this list short and
+# justified; an exclusion is how a gate stops being one.
+# ---------------------------------------------------------------------------
+exclusions:
+  - path: .legal-deny-list.yaml
+    reason: this file necessarily contains the patterns it matches
+  - path: scripts/legal/check_identifiers.py
+    reason: the checker's own tests and messages quote example shapes

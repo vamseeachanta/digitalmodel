@@ -6,9 +6,9 @@
 
 | Repo | File | Patterns |
 |------|------|----------|
-| `digitalmodel` | `digitalmodel/.legal-deny-list.yaml` | s7 OrcaFlex model sources + Yellowtail (GYYT) + Woodfiber LNG (WLNG/350106/B1522) |
-| `saipem` | `saipem/.legal-deny-list.yaml` | Yellowtail/GYYT/GYFI, ExxonMobil, SBM Offshore, EEPGL, Prosperity |
-| `acma-projects` | `acma-projects/.legal-deny-list.yaml` | Woodfiber/WLNG/B1522, PSVM/BP Angola, MC252, FST-1/FST-2, CB&I |
+| `digitalmodel` | `digitalmodel/.legal-deny-list.yaml` | s7 OrcaFlex model sources + field C (<field-code>) + the project LNG (the project/350106/<job-code>) |
+| `a contractor` | `a contractor/.legal-deny-list.yaml` | field C/<field-code>/<field-code>, an operator, a contractor, an operator, a vessel |
+| `<project-archive>` | `<project-archive>/.legal-deny-list.yaml` | the project/the project/<job-code>, <field-code>/an operator, <field-code>, FST-1/FST-2, CB&I |
 
 All three lists extend the global `workspace-hub/.legal-deny-list.yaml`.
 
@@ -17,8 +17,8 @@ All three lists extend the global `workspace-hub/.legal-deny-list.yaml`.
 ```bash
 # From workspace-hub root
 bash scripts/legal/legal-sanity-scan.sh --repo=digitalmodel
-bash scripts/legal/legal-sanity-scan.sh --repo=saipem
-bash scripts/legal/legal-sanity-scan.sh --repo=acma-projects
+bash scripts/legal/legal-sanity-scan.sh --repo=a contractor
+bash scripts/legal/legal-sanity-scan.sh --repo=<project-archive>
 bash scripts/legal/legal-sanity-scan.sh --all
 ```
 
@@ -32,14 +32,14 @@ It does not receive filenames — it always scans the whole tree.
 
 Install: `pre-commit install` inside the `digitalmodel` submodule.
 
-## Manual Gate — saipem and acma-projects
+## Manual Gate — a contractor and <project-archive>
 
-Neither `saipem` nor `acma-projects` has a `.pre-commit-config.yaml`.
+Neither `a contractor` nor `<project-archive>` has a `.pre-commit-config.yaml`.
 Run the scan manually before raising any PR from these repos:
 
 ```bash
-bash scripts/legal/legal-sanity-scan.sh --repo=saipem
-bash scripts/legal/legal-sanity-scan.sh --repo=acma-projects
+bash scripts/legal/legal-sanity-scan.sh --repo=a contractor
+bash scripts/legal/legal-sanity-scan.sh --repo=<project-archive>
 ```
 
 The scan must exit 0 before the PR can proceed (legal-compliance rule: block severity).
@@ -52,7 +52,7 @@ sanitization mapping logic. They are excluded via `exclusions:` in the deny list
 - `digitalmodel/scripts/sanitize_s7_models.py` — maps raw client names to generic
   equivalents; the patterns must appear here to perform the substitution.
 - `digitalmodel/scripts/extract_s7_specs.py` — source extraction helper.
-- `digitalmodel/docs/domains/cathodic_protection/saipem_cp_comparison_analysis.md` —
+- `digitalmodel/docs/domains/cathodic_protection/<contractor>_cp_comparison_analysis.md` —
   pre-WRK-278 analysis document referencing source document numbers; not yet excluded.
 - `digitalmodel/docs/domains/cathodic_protection/standards-inventory.md` — lists
   file paths that include repo names; paths, not code.
