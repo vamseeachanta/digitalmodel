@@ -177,6 +177,18 @@ class TestPerStructureBlocks:
         assert read_aqwa_basis(deck, structure=1).inertia[3] == pytest.approx(1.1e11)
         assert read_aqwa_basis(deck, structure=2).inertia[3] == pytest.approx(5.0e8)
 
+    def test_a_titled_block_header_still_assigns_its_structure(self, tmp_path):
+        """Real decks title their blocks: ``          ELM1      ShipHull``."""
+        deck = _two_body_deck(tmp_path, 1.234e3, 5.678e3)
+        text = deck.read_text(encoding="ascii")
+        text = (text.replace("          WFS1\n", "          WFS1      Hull\n")
+                    .replace("          WFS2\n", "          WFS2      Turret\n"))
+        deck.write_text(text, encoding="ascii")
+        assert read_aqwa_basis(deck, structure=1).additional_damping[3][3] \
+            == pytest.approx(1.234e3, rel=1e-12)
+        assert read_aqwa_basis(deck, structure=2).additional_damping[3][3] \
+            == pytest.approx(5.678e3, rel=1e-12)
+
     def test_a_blank_owner_record_outside_any_numbered_block_is_refused(
         self, tmp_path
     ):

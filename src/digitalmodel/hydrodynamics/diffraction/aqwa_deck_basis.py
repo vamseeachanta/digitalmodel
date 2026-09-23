@@ -176,8 +176,9 @@ def _structure_of(raw: str) -> int | None:
 #: structure number -- ``ELM1``, ``FDR1``, ``WFS2``, ``DRC1`` -- with nothing in
 #: columns 1-10. Records inside the block may leave the structure field blank;
 #: AQWA takes it from the header. ``COOR``, ``MATE``, ``GEOM`` and ``GLOB`` carry
-#: no number, and their records name the structure themselves.
-_BLOCK_HEADER = re.compile(r"^ {10}([A-Z]{2,3})(\d{1,2})\s*$")
+#: no number, and their records name the structure themselves. A header may
+#: carry a title after the keyword (``          ELM1      ShipHull``).
+_BLOCK_HEADER = re.compile(r"^ {10}([A-Z]{2,3})(\d{1,2})(?:\s.*)?$")
 
 
 def _block_structure(raw: str) -> int | None | bool:
@@ -187,7 +188,7 @@ def _block_structure(raw: str) -> int | None | bool:
     if m:
         return int(m.group(2))
     body = raw.strip()
-    if raw.startswith(" " * 10) and re.fullmatch(r"[A-Z]{4}", body):
+    if raw.startswith(" " * 10) and re.match(r"[A-Z]{4}(\s|$)", body):
         return None
     return False
 
