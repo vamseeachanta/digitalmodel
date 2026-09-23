@@ -34,6 +34,7 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import functools
 import hashlib
 import os
 import re
@@ -85,6 +86,7 @@ def load_rules() -> dict:
     return rules
 
 
+@functools.lru_cache(maxsize=1 << 18)
 def token_hash(token: str, salt: str) -> str:
     return hashlib.sha256(f"{salt}:{token.strip().lower()}".encode()).hexdigest()
 
@@ -123,41 +125,128 @@ def tracked_files() -> list[str]:
     return [p for p in out.decode("utf-8", "surrogateescape").split("\0") if p]
 
 
-def index_blobs(paths: list[str]) -> dict[str, bytes]:
+def index_blobs(paths: list[str]) -> dict[str, bytes | None]:
     """The staged content of each path -- what the commit will contain.
 
     Reading the working tree instead checks bytes the commit does not carry.
+    Paths are resolved to object IDs through NUL-delimited ``ls-files -s``, and
+    only object IDs go into the batch request: a path written into a
+    newline-framed request could, with a newline in its name, make git answer
+    for a different path. The response framing is validated completely.
     """
     if not paths:
         return {}
-    raw = _git(["cat-file", "--batch"],
-               stdin="".join(f":{p}\n" for p in paths).encode())
-    blobs, pos = {}, 0
-    for p in paths:
-        end = raw.index(b"\n", pos)
-        header = raw[pos:end].decode(errors="replace").split()
-        pos = end + 1
-        if len(header) < 3 or header[1] != "blob":
-            blobs[p] = None
+    listing = _git(["ls-files", "-s", "-z", "--", *paths])
+    entries: dict[str, tuple[str, str]] = {}
+    for rec in listing.decode("utf-8", "surrogateescape").split("\0"):
+        if not rec:
             continue
-        size = int(header[2])
-        blobs[p] = raw[pos:pos + size]
-        pos += size + 1
+        meta, _, path = rec.partition("\t")
+        mode, oid, stage = meta.split()
+        if stage == "0":
+            entries[path] = (mode, oid)
+
+    wanted = sorted({oid for p, (mode, oid) in entries.items()
+                     if p in paths and mode != "160000"})
+    contents: dict[str, bytes] = {}
+    if wanted:
+        raw = _git(["cat-file", "--batch"],
+                   stdin="".join(f"{o}\n" for o in wanted).encode())
+        pos = 0
+        for oid in wanted:
+            end = raw.find(b"\n", pos)
+            if end < 0:
+                sys.exit("check_identifiers: truncated `git cat-file` response")
+            header = raw[pos:end].decode("ascii", "replace").split()
+            pos = end + 1
+            if len(header) != 3 or header[0] != oid or header[1] != "blob":
+                sys.exit(f"check_identifiers: unexpected `git cat-file` "
+                         f"response for {oid}: {' '.join(header)!r}")
+            size = int(header[2])
+            body = raw[pos:pos + size]
+            if len(body) != size or raw[pos + size:pos + size + 1] != b"\n":
+                sys.exit(f"check_identifiers: malformed `git cat-file` body "
+                         f"for {oid}")
+            contents[oid] = body
+            pos += size + 1
+        if pos != len(raw):
+            sys.exit("check_identifiers: unconsumed `git cat-file` output")
+
+    blobs: dict[str, bytes | None] = {}
+    for p in paths:
+        if p not in entries:
+            blobs[p] = None                         # not in the index
+        elif entries[p][0] == "160000":
+            blobs[p] = b""                          # submodule pointer: no content
+        else:
+            blobs[p] = contents[entries[p][1]]
     return blobs
 
 
+#: Leading bytes of each declared media type. A file is exempt only if its
+#: content IS that type; text renamed to .png is read like any other text.
+MEDIA_MAGIC = {
+    ".png": (b"\x89PNG\r\n\x1a\n",),
+    ".jpg": (b"\xff\xd8\xff",), ".jpeg": (b"\xff\xd8\xff",),
+    ".gif": (b"GIF87a", b"GIF89a"),
+    ".bmp": (b"BM",),
+    ".ico": (b"\x00\x00\x01\x00",),
+    ".webp": (b"RIFF",),
+    ".woff": (b"wOFF",), ".woff2": (b"wOF2",),
+    ".ttf": (b"\x00\x01\x00\x00", b"true"), ".otf": (b"OTTO",),
+}
+
+
+def is_media(blob: bytes, ext: str) -> bool:
+    magic = MEDIA_MAGIC.get(ext)
+    return bool(magic) and blob.startswith(magic)
+
+
 def _office_text(blob: bytes) -> str:
+    """Every text node and attribute value of every XML part, as whole words.
+
+    Text is emitted twice: each node on its own, and the nodes of a paragraph
+    run together -- Word splits a name across runs freely. Character references
+    are decoded by the XML parser. Any member that is neither XML nor a
+    recognised image is uninspectable, not skipped.
+    """
     import io
     import zipfile
+    from xml.etree import ElementTree as ET
 
+    out: list[str] = []
     try:
         with zipfile.ZipFile(io.BytesIO(blob)) as z:
-            parts = [z.read(n).decode("utf-8", "replace") for n in z.namelist()
-                     if n.endswith((".xml", ".rels"))]
+            for name in z.namelist():
+                if name.endswith("/"):
+                    continue
+                data = z.read(name)
+                if name.endswith((".xml", ".rels", ".vml")):
+                    try:
+                        root = ET.fromstring(data)
+                    except ET.ParseError as exc:
+                        raise Uninspectable(
+                            f"office part {name} is not well-formed XML: {exc}")
+                    for el in root.iter():
+                        out.extend(v for v in el.attrib.values())
+                        pieces = [t for t in (el.text, el.tail) if t]
+                        out.extend(pieces)
+                    # Paragraph-level run-together view.
+                    for el in root.iter():
+                        tag = el.tag.rsplit("}", 1)[-1]
+                        if tag in ("p", "si", "sp", "txBody", "r"):
+                            out.append("".join(el.itertext()))
+                    out.append("".join(root.itertext()))
+                    continue
+                ext = os.path.splitext(name)[1].lower()
+                if is_media(data, ext):
+                    continue
+                raise Uninspectable(f"office member {name} is not inspectable")
+    except Uninspectable:
+        raise
     except Exception as exc:  # noqa: BLE001
         raise Uninspectable(f"office archive unreadable: {exc}") from exc
-    # Tags become spaces so words in adjacent runs stay separate.
-    return "\n".join(re.sub(r"<[^>]+>", " ", x) for x in parts)
+    return "\n".join(out)
 
 
 def _looks_utf16(blob: bytes) -> str | None:
@@ -173,6 +262,17 @@ def _looks_utf16(blob: bytes) -> str | None:
     return None
 
 
+def _ascii_strings(blob: bytes) -> str:
+    """Printable ASCII runs in raw bytes, like ``strings``.
+
+    A UTF-16 decode turns ASCII bytes into unrelated code points, so an ASCII
+    tail after a UTF-16 head would vanish from the decoded text. Reading the
+    raw runs as well means content cannot hide in either encoding.
+    """
+    return "\n".join(m.decode("ascii")
+                     for m in re.findall(rb"[\x20-\x7e]{4,}", blob))
+
+
 def text_of(blob: bytes, ext: str) -> str:
     """Decode content for inspection, or raise Uninspectable."""
     if len(blob) > MAX_BYTES:
@@ -181,10 +281,9 @@ def text_of(blob: bytes, ext: str) -> str:
         return _office_text(blob)
     enc = _looks_utf16(blob)
     if enc:
-        try:
-            return blob.decode(enc)
-        except UnicodeDecodeError as exc:
-            raise Uninspectable(f"undecodable {enc}: {exc}") from exc
+        # Lenient decode plus the raw ASCII runs: a malformed or mixed payload
+        # is still read in both encodings rather than given up on.
+        return blob.decode(enc, errors="replace") + "\n" + _ascii_strings(blob)
     if b"\x00" in blob[:4096]:
         raise Uninspectable("binary content")
     try:
@@ -193,7 +292,8 @@ def text_of(blob: bytes, ext: str) -> str:
         return blob.decode("latin-1", errors="replace")
 
 
-def _candidates(word: str) -> set[str]:
+@functools.lru_cache(maxsize=1 << 18)
+def _candidates(word: str) -> frozenset[str]:
     """The word, and its parts either side of hyphens and digits.
 
     A denied name with a suffix attached -- ``name-archive``, ``name2`` -- is
@@ -202,7 +302,7 @@ def _candidates(word: str) -> set[str]:
     low = word.lower()
     out = {low}
     out.update(p for p in re.split(r"[-\d]+", low) if len(p) >= 4)
-    return out
+    return frozenset(out)
 
 
 def check(paths: list[str], rules: dict, staged: bool = False
@@ -233,9 +333,6 @@ def check(paths: list[str], rules: dict, staged: bool = False
         if norm in excluded:
             continue
         ext = os.path.splitext(norm)[1].lower()
-        if ext in media:
-            media_skipped.append(norm)
-            continue
         try:
             if staged:
                 blob = blobs.get(rel)
@@ -245,11 +342,15 @@ def check(paths: list[str], rules: dict, staged: bool = False
                 full = os.path.join(ROOT, rel.replace("/", os.sep))
                 if not os.path.isfile(full):
                     raise Uninspectable("file does not exist")
-                if os.path.getsize(full) > MAX_BYTES and ext not in OFFICE:
+                if os.path.getsize(full) > MAX_BYTES:
                     raise Uninspectable(
                         f"over {MAX_BYTES // 1024 // 1024} MB")
                 with open(full, "rb") as fh:
                     blob = fh.read()
+            # Exempt only if the bytes ARE the declared type, not just named so.
+            if ext in media and is_media(blob, ext):
+                media_skipped.append(norm)
+                continue
             text = text_of(blob, ext)
         except Uninspectable as exc:
             uninspectable.append(f"{norm}: {exc}")

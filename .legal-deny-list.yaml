@@ -46,7 +46,7 @@ structural:
   - id: job-code
     # Any case, and joined to other text by _ or - (b1234_report): \b does not
     # fire between a digit and an underscore, so file names slipped through.
-    pattern: '(?i)(?<![A-Za-z0-9])B1[0-9]{3}(?![0-9])'
+    pattern: '(?i)(?<![A-Za-z0-9])B1[0-9]{3}(?![A-Za-z0-9])'
     severity: block
     message: >-
       Internal job code. Use a neutral placeholder such as <job-code>.
@@ -114,9 +114,11 @@ hashed_names:
 
 # ---------------------------------------------------------------------------
 # Binary types that carry no inspectable text. Files of these types are
-# counted and reported, not read. Any OTHER binary -- a PDF, an unknown blob --
-# is uninspectable and FAILS the check: content that was not read has not
-# passed. Office documents are not listed; their XML is read.
+# counted and reported, not read -- but only when their leading bytes ARE that
+# type; text renamed to .png is read. Any OTHER binary -- a PDF, a solver
+# result, an array or table format that can carry strings -- is uninspectable
+# and FAILS the check: content that was not read has not passed. Office
+# documents are not listed; their XML is read.
 # ---------------------------------------------------------------------------
 binary_media_extensions:
   - .png
@@ -130,14 +132,6 @@ binary_media_extensions:
   - .woff2
   - .ttf
   - .otf
-  - .sim
-  - .owr
-  - .hyd
-  - .pyc
-  - .npz
-  - .npy
-  - .parquet
-  - .h5
 
 # ---------------------------------------------------------------------------
 # Paths excluded from the check, with the reason. Keep this list short and

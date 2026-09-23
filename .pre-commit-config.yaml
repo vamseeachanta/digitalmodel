@@ -191,6 +191,9 @@ repos:
         name: Client identifiers (public repository)
         language: system
         entry: python scripts/legal/check_identifiers.py
+        # No filenames: with none the checker reads the INDEX, i.e. what the
+        # commit will contain. Filenames would select working-tree reads.
+        pass_filenames: false
         stages: [pre-commit]
 
   # Performance and complexity checks

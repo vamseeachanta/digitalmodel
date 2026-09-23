@@ -104,7 +104,8 @@ class TestContentThatWasSkipped:
         with zipfile.ZipFile(buf, "w") as z:
             z.writestr("[Content_Types].xml", "<Types/>")
             z.writestr("word/document.xml",
-                       f"<w:document><w:t>Prepared for {TOKEN}</w:t></w:document>")
+                       f"<w:document xmlns:w='w'><w:t>Prepared for {TOKEN}"
+                       f"</w:t></w:document>")
         out = gate(_file(gate, "report.docx", buf.getvalue()))
         assert out.returncode == 1, out.stdout
         assert "denied-name" in out.stdout
@@ -160,6 +161,132 @@ class TestPatterns:
         out = gate(_file(gate, "a.md", f"{text}\n".encode()))
         assert out.returncode == 1, out.stdout
         assert "job-code" in out.stdout
+
+
+def _module():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("check_identifiers_mod", CHECKER)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules["check_identifiers_mod"] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+class TestSecondReview:
+    """Fail-open paths a second review (#2145) found in the first rewrite."""
+
+    def test_the_hook_runs_in_staged_mode(self):
+        """pre-commit passes filenames unless told not to, and filenames select
+        working-tree reads; the hook must read what the commit contains."""
+        cfg = yaml.safe_load((REPO / ".pre-commit-config.yaml").read_text(
+            encoding="utf-8"))
+        hooks = [h for r in cfg["repos"] for h in r.get("hooks", [])
+                 if h.get("id") == "client-identifier-gate"]
+        assert len(hooks) == 1
+        assert hooks[0].get("pass_filenames") is False
+
+    def test_index_blobs_are_requested_by_object_id(self, monkeypatch):
+        """A path is never written into the batch request, so a newline in a
+        filename cannot make git answer for a different path."""
+        mod = _module()
+        calls = []
+        blob = b"hello\n"
+        oid = hashlib.sha1(b"blob %d\0" % len(blob) + blob).hexdigest()
+        weird = "a\nb.md"
+
+        def fake_git(args, stdin=None):
+            calls.append((args, stdin))
+            if args[:2] == ["ls-files", "-s"]:
+                return f"100644 {oid} 0\t{weird}\0".encode()
+            if args[:2] == ["cat-file", "--batch"]:
+                return f"{oid} blob {len(blob)}\n".encode() + blob + b"\n"
+            raise AssertionError(args)
+
+        monkeypatch.setattr(mod, "_git", fake_git)
+        got = mod.index_blobs([weird])
+        assert got == {weird: blob}
+        batch_stdin = [s for a, s in calls if a[:2] == ["cat-file", "--batch"]][0]
+        assert weird.encode() not in batch_stdin
+
+    def test_a_malformed_batch_response_is_an_error(self, monkeypatch):
+        mod = _module()
+        oid = "0" * 40
+
+        def fake_git(args, stdin=None):
+            if args[:2] == ["ls-files", "-s"]:
+                return f"100644 {oid} 0\tx.md\0".encode()
+            return f"{oid} blob 5\nabc".encode()        # truncated body
+
+        monkeypatch.setattr(mod, "_git", fake_git)
+        with pytest.raises(SystemExit):
+            mod.index_blobs(["x.md"])
+
+    def _docx(self, xml):
+        import io
+        import zipfile
+
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as z:
+            z.writestr("[Content_Types].xml", "<Types/>")
+            z.writestr("word/document.xml", xml)
+        return buf.getvalue()
+
+    @pytest.mark.parametrize("xml", [
+        # split across runs
+        "<w:document xmlns:w='w'><w:p><w:r><w:t>{a}</w:t></w:r>"
+        "<w:r><w:t>{b}</w:t></w:r></w:p></w:document>",
+        # in an attribute
+        "<w:document xmlns:w='w'><w:p w:author='{a}{b}'/></w:document>",
+        # as character references
+        "<w:document xmlns:w='w'><w:t>{ref}</w:t></w:document>",
+    ])
+    def test_office_text_is_read_whole(self, gate, xml):
+        a, b = TOKEN[:9], TOKEN[9:]
+        ref = "".join(f"&#{ord(c)};" for c in TOKEN)
+        data = self._docx(xml.format(a=a, b=b, ref=ref))
+        out = gate(_file(gate, "r.docx", data))
+        assert out.returncode == 1, out.stdout
+        assert "denied-name" in out.stdout
+
+    def test_an_embedded_binary_in_an_office_file_is_uninspectable(self, gate):
+        import io
+        import zipfile
+
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as z:
+            z.writestr("word/document.xml", "<w:document xmlns:w='w'/>")
+            z.writestr("word/embeddings/oleObject1.bin", b"\xd0\xcf\x11\xe0\x00\x01")
+        out = gate(_file(gate, "r.docx", buf.getvalue()))
+        assert out.returncode != 0, out.stdout
+        assert "uninspect" in out.stdout.lower()
+
+    def test_text_renamed_to_a_media_extension_is_read(self, gate):
+        out = gate(_file(gate, "not-an-image.png",
+                         f"The {TOKEN} scope.\n".encode()))
+        assert out.returncode != 0, out.stdout
+
+    @pytest.mark.parametrize("ext", [".npz", ".npy", ".parquet", ".h5", ".sim",
+                                     ".owr"])
+    def test_data_formats_that_can_carry_strings_are_not_exempt(self, gate, ext):
+        rules = yaml.safe_load((gate.root / ".legal-deny-list.yaml").read_text(
+            encoding="utf-8"))
+        assert ext not in (rules.get("binary_media_extensions") or [])
+
+    def test_an_ascii_tail_after_utf16_text_is_still_read(self, gate):
+        head = ("x" * 2100).encode("utf-16-le")
+        tail = f" {TOKEN} ".encode("ascii")
+        out = gate(_file(gate, "mixed.txt", head + tail))
+        assert out.returncode != 0, out.stdout
+        assert "denied-name" in out.stdout
+
+    @pytest.mark.parametrize("text", ["color: #" + "b1" + "234f;",
+                                      "0x" + "b1" + "234",
+                                      "id=" + "b1" + "234abc"])
+    def test_a_job_code_shape_inside_a_longer_token_is_not_flagged(self, gate,
+                                                                  text):
+        out = gate(_file(gate, "a.css", f"{text}\n".encode()))
+        assert out.returncode == 0, out.stdout
 
 
 class TestExemptFilesCarryNoValues:
