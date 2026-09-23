@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.1d
-# File: D:\ACE Engineer\9648 Viking Hose Analysis\Model_Rev5_1050m_riser__jumper_interferece_va.yml
+# File: docs/domains/orcaflex/risers/drilling/bop-hose/proj2/critical_condition_jumper_interference.yml
 # Created: 11:49 AM on 1/30/2022
-# User: ACE
-# Machine: LAPTOP-OO1NSO22
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units
@@ -133,7 +133,7 @@ Environment:
   SeaHidden: Yes
   SeabedPen: [1, Clear, $0060B8]
 VesselTypes:
-  - Name: Viking
+  - Name: Drillship_219m
     Length: 219.4
     # Conventions
     RAOResponseUnits: degrees
@@ -5653,7 +5653,7 @@ LineTypes:
     Pen: [2, Solid, Yellow]
 Vessels:
   - Name: Drillship
-    VesselType: Viking
+    VesselType: Drillship_219m
     Draught: Full
     Length: ~
     Connection: Free
