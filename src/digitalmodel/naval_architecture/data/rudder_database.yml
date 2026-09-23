@@ -116,9 +116,9 @@ rudder_types:
     stall_angle_deg: "wide angle range; vectoring avoids classic single-blade stall limit"
     applications: Coastal/feeder container ships, ferries; emerging energy-saving + manoeuvring installations (~10% reported saving).
 
-# Worked-example classification for the SIROCCO (B1528) reference vessel.
-worked_example_sirocco:
-  vessel: B1528 SIROCCO
+# Worked-example classification for the tanker_225m_1 (<job-code>) reference vessel.
+worked_example_tanker_225m_1:
+  vessel: <job-code> tanker_225m_1
   vessel_class: Panamax / LR1 single-screw product/crude tanker  # beam 32.26 m = Panamax limit; NOT Aframax
   lbp_m: 225.5
   beam_m: 32.26

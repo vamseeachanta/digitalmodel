@@ -1,6 +1,6 @@
 """Tests for the low-speed manoeuvring & station-keeping envelope.
 
-Golden values are the adversarially-verified SIROCCO (B1528) numbers:
+Golden values are the adversarially-verified tanker_225m_1 (<job-code>) numbers:
     Lbp 225.5 m, B 32.26 m, T 12.2 m (laden), Cb 0.82,
     rudder area 44.94 m², span 9.0 m, Barrass lever x_R = 0.6*Lbp = 135.3 m.
 References reproduced: Clarke (1983), Whicker & Fehlner (1958),
@@ -107,12 +107,12 @@ def test_current_moment_quadratic_in_speed():
     assert n3 / n1 == pytest.approx(9.0, rel=1e-6)
 
 
-def _sirocco_propulsion():
+def _tanker_225m_1_propulsion():
     return VesselPropulsion(D=7.0, kt_coeffs=(0.35, -0.30), t=0.2, w=0.25, C_rp=0.5)
 
 
 def test_engine_on_holds_near_head_current():
-    vessel = _sirocco_propulsion()
+    vessel = _tanker_225m_1_propulsion()
     rudder = RudderGeometry(area=A_R, aspect_ratio=1.80, x_R=X_R)
     n_head = me.current_yaw_moment_ocimf(CXYc=0.012, current_speed_m_s=3.0 * me.KNOT_TO_M_PER_S,
                                          lbp_m=L, draft_m=T)
@@ -127,7 +127,7 @@ def test_engine_on_holds_near_head_current():
 def test_beam_current_exceeds_rudder_authority():
     # At 5 kn beam current the yaw moment (~105 MN.m) is well beyond the
     # engine-on rudder authority (~39 MN.m at this thrust) — tug assist needed.
-    vessel = _sirocco_propulsion()
+    vessel = _tanker_225m_1_propulsion()
     rudder = RudderGeometry(area=A_R, aspect_ratio=1.80, x_R=X_R)
     n_beam = me.current_yaw_moment_ocimf(CXYc=0.05, current_speed_m_s=5.0 * me.KNOT_TO_M_PER_S,
                                          lbp_m=L, draft_m=T)
@@ -140,7 +140,7 @@ def test_beam_current_exceeds_rudder_authority():
 
 
 def test_critical_current_speed_positive_and_finite():
-    vessel = _sirocco_propulsion()
+    vessel = _tanker_225m_1_propulsion()
     rudder = RudderGeometry(area=A_R, aspect_ratio=1.80, x_R=X_R)
     vc = me.critical_current_speed_for_heading(
         CXYc=0.012, lbp_m=L, draft_m=T, ship_speed_m_s=1.0, shaft_speed_rev_s=1.2,

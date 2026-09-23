@@ -1,7 +1,7 @@
-# Rudder & low-speed manoeuvring reference — B1528 SIROCCO
+# Rudder & low-speed manoeuvring reference — <job-code> tanker_225m_1
 
 Screening-level reference for rudder selection and low-speed ship controllability,
-worked on the SIROCCO (B1528) **Panamax/LR1 single-screw tanker** (LBP 225.5 m,
+worked on the tanker_225m_1 (<job-code>) **Panamax/LR1 single-screw tanker** (LBP 225.5 m,
 B 32.26 m, T 12.2 m laden, Cb ≈ 0.82, rudder area 44.94 m², span 9.0 m).
 
 > All numbers below were produced by an adversarially-verified research sweep and
@@ -16,11 +16,11 @@ Data: [`data/rudder_database.yml`](../../src/digitalmodel/naval_architecture/dat
 
 ## 0 · Review of the existing rudder calculation
 
-The prior B1528 work is **sound but narrow**:
+The prior <job-code> work is **sound but narrow**:
 
 - `hydrodynamics/propeller_rudder.py` — Söding/Brix + actuator-disk slipstream rudder
   forces (engine-on capable; correctly guarded for engine-off and braking quadrants).
-- `naval_architecture/b1528_sirocco_current_heading_rudder*` — the ACMA deliverable:
+- `naval_architecture/moved-private_current_heading_rudder*` — the ACMA deliverable:
   the rudder-induced **current-heading force component** for a **moored** vessel
   (SOG = 0, engine off). Explicitly excludes hull current loads, turning, propeller race.
 - Reusable building blocks already present: `maneuverability.py` (Whicker-Fehlner lift,
@@ -41,7 +41,7 @@ Schilling, fishtail, Kort nozzle, twisted leading-edge, gate) with area ratio
 A_R/(L·T), geometric aspect ratio, max normal-force coefficient, stall behaviour, and
 applications. See `rudder_database.yml`.
 
-**SIROCCO classification:** conventional semi-balanced horn / balanced spade. A_R/(L·T) =
+**tanker_225m_1 classification:** conventional semi-balanced horn / balanced spade. A_R/(L·T) =
 **1.63 %** laden — upper-normal for a full-form tanker (1.5–2.0 %). DNV minimum area
 A = (L·T/100)(1+25(B/L)²) = **41.6 m²**, so 44.94 m² is compliant with ~8 % margin.
 Geometric AR 1.80, effective AR ≈ 3.60 → lift slope **a = 3.77 / rad**.
@@ -55,7 +55,7 @@ the circle (in ship-lengths) is the same from sea speed down to the steerage thr
 lower speed only makes the turn *slower*, not *larger*. Tactical diameter TD/L ≈ 2·R/L,
 with K′ calibrated to the Lyster & Knights (1979) sea-trial regression.
 
-| Quantity | SIROCCO (35° helm) | IMO MSC.137(76) limit | Verdict |
+| Quantity | tanker_225m_1 (35° helm) | IMO MSC.137(76) limit | Verdict |
 |---|---:|---:|:--:|
 | Tactical diameter | 3.2·L ≈ 720 m | ≤ 5·L = 1128 m | PASS |
 | Advance | ≈ 3.2·L ≈ 720 m | ≤ 4.5·L = 1015 m | PASS |

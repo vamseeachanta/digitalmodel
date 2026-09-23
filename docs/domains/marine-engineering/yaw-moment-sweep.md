@@ -65,7 +65,7 @@ makes the force-direction mapping explicit with `positive_force_direction`:
 
 ## Propeller rotation factor `Cr`
 
-The reusable yaw-moment sweep does not use the B1528 workbook propeller rotation
+The reusable yaw-moment sweep does not use the <job-code> workbook propeller rotation
 factor `Cr`. `Cr` belongs to the legacy workbook-regression formula
 `F = beta * AR * V^2 * Cr`, not to the Whicker/Fehlner-style rudder normal-force
 helper used here. If that legacy workbook formula is run for a non-rotating

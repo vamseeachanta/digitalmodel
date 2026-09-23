@@ -41,7 +41,7 @@ Positive hydrodynamic torque follows the right-hand rule about the positive rudd
 
 ## Propeller rotation factor `Cr`
 
-The rudder-stock torque sweep does not use the B1528 workbook propeller rotation
+The rudder-stock torque sweep does not use the <job-code> workbook propeller rotation
 factor `Cr`. It uses the reusable rudder normal-force helper and a user-supplied
 stock-to-center-of-pressure arm. If the separate legacy workbook force formula
 is run for a non-rotating propeller, the neutral propeller-rotation multiplier is
