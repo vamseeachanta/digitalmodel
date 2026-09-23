@@ -60,10 +60,46 @@ from collections import Counter
 
 warnings.filterwarnings("ignore")
 
-try:
-    import OrcFxAPI as O
-except ImportError:  # pragma: no cover
-    sys.exit("OrcFxAPI is not available; this check needs an OrcaFlex install")
+# OrcFxAPI is imported in main(), not here, so the verdict logic below can be
+# tested where OrcaFlex is not installed.
+O = None
+
+CAVEATS = (
+    "Compares model input only. The solver was not run and results were not "
+    "compared.",
+    "Cannot detect solver-version drift: both sides are opened by the same "
+    "library, so any data migration applies to both and cancels.",
+    "The shared-base check is PARTIAL. Its probes cover the object set, "
+    "pipeline length, line types and segmentation, stage durations, the "
+    "implicit time step and the winch stages. They do not cover mass, "
+    "structural stiffness or hydrodynamic coefficients held in the shared "
+    "base, so drift there is not detected. Base properties are constant across "
+    "the campaign by design; they detect drift in the shared base, not a wrong "
+    "per-run override.",
+)
+
+
+class Unreadable:
+    """A probe that raised. Never equal to anything, itself included.
+
+    An unread property is absence of evidence. Recording it as a string made
+    two identical failures compare equal and count as agreement.
+    """
+
+    def __init__(self, error: str):
+        self.error = error
+
+    def __eq__(self, other):
+        return False
+
+    def __ne__(self, other):
+        return True
+
+    __hash__ = None
+
+    def __repr__(self):
+        return f"<unreadable: {self.error}>"
+
 
 #: Base-derived properties, for check B. Constant across a campaign by design.
 _BASE_PROBES = (
@@ -113,8 +149,47 @@ def _base_probe(model) -> dict:
         try:
             out[name] = fn(model)
         except Exception as exc:                           # noqa: BLE001
-            out[name] = f"<unreadable: {type(exc).__name__}>"
+            out[name] = Unreadable(type(exc).__name__)
     return out
+
+
+def case_verdict(a: list[str], b: list[str], b2: list[str],
+                 base_a: dict, base_b: dict) -> dict:
+    """Judge one case from its rebuilt and solved saves and base probes.
+
+    ``a`` is the rebuilt model's saved delta, ``b`` and ``b2`` two saves of the
+    solved model. A case rebuilds only if the deltas match, the save is
+    deterministic, and every base probe was READ on both sides and agrees.
+    """
+    deterministic = b == b2
+    delta_match = a == b
+    names = sorted(set(base_a) | set(base_b))
+    unreadable = [k for k in names
+                  if isinstance(base_a.get(k), Unreadable)
+                  or isinstance(base_b.get(k), Unreadable)
+                  or k not in base_a or k not in base_b]
+    base_diff = [k for k in names
+                 if k not in unreadable and base_a[k] != base_b[k]]
+
+    diff_lines = []
+    if not delta_match:
+        for n, (x, y) in enumerate(zip(a, b)):
+            if x != y:
+                diff_lines.append({"line": n, "rebuild": x, "sim": y})
+        if len(a) != len(b):
+            diff_lines.append({"line": "length",
+                               "rebuild": len(a), "sim": len(b)})
+
+    return dict(
+        delta_lines=len(b),
+        delta_matches=delta_match,
+        delta_differences=diff_lines,
+        save_is_deterministic=deterministic,
+        base_properties_differing=base_diff,
+        unreadable_probes=unreadable,
+        rebuilds=(delta_match and deterministic and not base_diff
+                  and not unreadable),
+    )
 
 
 def digest(path: str) -> str:
@@ -132,6 +207,13 @@ def main() -> int:
     ap.add_argument("-o", "--out", default="campaign-verification.json")
     ap.add_argument("--limit", type=int, default=0)
     args = ap.parse_args()
+
+    global O
+    try:
+        import OrcFxAPI as O
+    except ImportError:
+        sys.exit("OrcFxAPI is not available; this check needs an OrcaFlex "
+                 "install")
 
     runs_dir = os.path.join(args.source, "runs")
     cases = sorted(f[:-4] for f in os.listdir(args.sims)
@@ -179,35 +261,25 @@ def main() -> int:
             print(f"    rebuild failed: {exc}")
             continue
 
-        solved = O.Model(sim)
-        b = _save_body(solved, solved_path)
-        b2 = _save_body(solved, solved_again)
-        base_b = _base_probe(solved)
-        del solved
-
-        deterministic = b == b2
-        delta_match = a == b
-        base_diff = sorted(k for k in base_b if base_a.get(k) != base_b.get(k))
+        try:
+            solved = O.Model(sim)
+            b = _save_body(solved, solved_path)
+            b2 = _save_body(solved, solved_again)
+            base_b = _base_probe(solved)
+            del solved
+        except Exception as exc:                           # noqa: BLE001
+            failures.append(dict(case=case, error=f"sim unreadable: {exc}"))
+            print(f"    sim unreadable: {exc}")
+            continue
 
         deltas[case] = tuple(b)
         base_values[case] = base_b
 
-        diff_lines = []
-        if not delta_match:
-            for n, (x, y) in enumerate(zip(a, b)):
-                if x != y:
-                    diff_lines.append({"line": n, "rebuild": x, "sim": y})
-            if len(a) != len(b):
-                diff_lines.append({"line": "length",
-                                   "rebuild": len(a), "sim": len(b)})
-
+        verdict = case_verdict(a, b, b2, base_a, base_b)
+        deterministic = verdict["save_is_deterministic"]
+        base_diff = verdict["base_properties_differing"]
         per_case[case] = dict(
-            delta_lines=len(b),
-            delta_matches=delta_match,
-            delta_differences=diff_lines,
-            save_is_deterministic=deterministic,
-            base_properties_differing=base_diff,
-            rebuilds=delta_match and not base_diff and deterministic,
+            **verdict,
             sim_sha256=digest(sim),
             sim_bytes=os.path.getsize(sim),
             source=os.path.relpath(yml, args.source).replace("\\", "/"),
@@ -215,7 +287,9 @@ def main() -> int:
         status = "rebuilds" if per_case[case]["rebuilds"] else "DIFFERS"
         print(f"    {len(b)} delta lines, {status}"
               + ("" if deterministic else "  [save NOT deterministic]")
-              + (f"  base differs on {base_diff}" if base_diff else ""))
+              + (f"  base differs on {base_diff}" if base_diff else "")
+              + (f"  UNREAD {verdict['unreadable_probes']}"
+                 if verdict["unreadable_probes"] else ""))
 
     # How much can the per-run check actually tell apart?
     distinct_deltas = len(set(deltas.values()))
@@ -244,14 +318,7 @@ def main() -> int:
             per_run="full saved-data delta compared as text, property-agnostic",
             shared_base=[name for name, _ in _BASE_PROBES],
         ),
-        caveats=[
-            "Compares model input only. The solver was not run and results "
-            "were not compared.",
-            "Cannot detect solver-version drift: both sides are opened by the "
-            "same library, so any data migration applies to both and cancels.",
-            "Base properties are constant across the campaign by design; they "
-            "detect drift in the shared base, not a wrong per-run override.",
-        ],
+        caveats=list(CAVEATS),
         source_dir=args.source,
         sim_dir=args.sims,
         summary=dict(

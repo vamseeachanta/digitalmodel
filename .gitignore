@@ -144,9 +144,11 @@ venv.bak/
 # run files whose `includefile: ../env/...` targets were never committed,
 # leaving 26 solved simulations unreproducible.
 #
-# Engineering input under docs/ is re-included explicitly. A real virtual
-# environment is never nested under a model tree, so this does not weaken the
-# rule.
+# Engineering input under docs/ is re-included explicitly, and ONLY the YAML
+# case files. The directory is opened so its *.yml can be seen, then everything
+# else inside it is ignored again: a virtual environment created under docs/
+# (pyvenv.cfg, Lib/, Scripts/activate) stays ignored. Review found an earlier
+# `!docs/**/env/**` re-included all of that.
 #
 # There is deliberately no equivalent for `projects/`. That tree is excluded
 # wholesale further down, and git cannot re-include a file whose parent
@@ -154,7 +156,8 @@ venv.bak/
 # and do nothing. Re-including anything under `projects/` requires opening the
 # directory chain first and is a separate change.
 !docs/**/env/
-!docs/**/env/**
+docs/**/env/**
+!docs/**/env/*.yml
 .python-version
 __pypackages__/
 
@@ -365,7 +368,7 @@ docs/domains/orcaflex/pipeline/installation/floating/24in_pipeline/monolithic/ru
 .swarm/
 
 # Windows-path directory artifacts (cross-platform path bug — WRK-364)
-# Matches dirs like: D:\workspace-hub\... created on Windows and synced to Linux
+# Matches dirs like: <drive>:\workspace-hub\... created on Windows and synced to Linux
 [A-Z]:\*
 tests/outputs/
 
