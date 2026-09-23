@@ -18,8 +18,10 @@ logger = logging.getLogger(__name__)
 def compute_rao(bem_result: BEMResult) -> RAOResult:
     """Compute RAOs from BEM hydrodynamic coefficients using Capytaine's post-processing.
 
-    Uses the impedance method: RAO = F_exc / Z where
-    Z = -omega^2 * (M + A) + j*omega*B + K  (DNV-RP-C205 §7.2.5)
+    Uses the impedance method: RAO = F_exc / Z where, in Capytaine's
+    exp(-j*omega*t) convention, Z = -omega^2 * (M + A) - j*omega*B + K
+    (DNV-RP-C205 §7.2.5). The operator is Capytaine's own; this function
+    delegates to it.
 
     Args:
         bem_result: Completed BEM analysis results with hydrostatics.
@@ -78,8 +80,13 @@ def compute_rao_manual(
     For cases where the user supplies their own structural properties rather
     than computing from the mesh geometry (e.g., known vessel mass distribution).
 
-    RAO_j = F_exc_j / sum_k[ (-omega^2*(M_jk + A_jk) + j*omega*(B_jk + B_ext_jk) + K_jk) ]
-    (DNV-RP-C205 §7.2.5, Eq 7.2.1)
+    The coupled system is solved, not divided row by row:
+
+        sum_k Z_jk RAO_k = F_exc_j,   i.e.  RAO = solve(Z, F_exc)
+        Z = -omega^2*(M + A) - j*omega*(B + B_ext) + K
+
+    (DNV-RP-C205 §7.2.5, Eq 7.2.1, written in Capytaine's exp(-j*omega*t)
+    convention, which its excitation force is expressed in -- hence -j*omega*B.)
 
     Args:
         bem_result: BEM results with added_mass, radiation_damping, excitation_force.
@@ -109,8 +116,10 @@ def compute_rao_manual(
     rao_complex = np.zeros((n_omega, n_heading, n_dof), dtype=complex)
 
     for i, omega in enumerate(omegas):
-        # Impedance matrix: Z = -omega^2*(M+A) + j*omega*(B+B_ext) + K
-        Z = (-omega**2 * (M + A[i]) + 1j * omega * (B[i] + B_ext) + K)
+        # Impedance matrix in exp(-j*omega*t): Z = -omega^2*(M+A) - j*omega*(B+B_ext) + K.
+        # +j*omega*B is the other time convention; in coupled modes it changes
+        # the response magnitudes, not only the phase (#2147).
+        Z = (-omega**2 * (M + A[i]) - 1j * omega * (B[i] + B_ext) + K)
 
         for h in range(n_heading):
             # Solve Z * xi = F_exc for each heading
