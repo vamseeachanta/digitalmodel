@@ -145,7 +145,7 @@ Environment:
   WindSpeed: 0
   WindDirection: 0
 VesselTypes:
-  - Name: MaerskSamsung
+  - Name: Drillship_228m
     Length: 228
     # Conventions
     RAOResponseUnits: degrees
@@ -5983,7 +5983,7 @@ StiffenerTypes:
     AxialLoadInertiaTransfer: at connection point
 Vessels:
   - Name: Drillship
-    VesselType: MaerskSamsung
+    VesselType: Drillship_228m
     Draught: Draught1
     Length: ~
     Connection: Free

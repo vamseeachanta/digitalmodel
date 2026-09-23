@@ -3237,7 +3237,7 @@ FlexJointTypes:
   - Name: LFJ
     BendStiffness: [50, ~]
 Vessels:
-  - Name: Aban Abraham
+  - Name: Drillship_137m
     Locked: Yes
     VesselType: Vessel Type1
     Draught: 7.5m
@@ -3339,7 +3339,7 @@ Lines:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [Aban Abraham, 0, 0, 15.5, 0, 180, 0, ~]
+      - [Drillship_137m, 0, 0, 15.5, 0, 180, 0, ~]
       - [Free, 0, 0, -622, 0, 180, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
@@ -3398,8 +3398,8 @@ Lines:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [Aban Abraham, -3.6, 4.1, 4.8, 0, 0, 0, ~]
-      - [Aban Abraham, 3.6, 4.1, 4.8, 0, 0, 0, ~]
+      - [Drillship_137m, -3.6, 4.1, 4.8, 0, 0, 0, ~]
+      - [Drillship_137m, 3.6, 4.1, 4.8, 0, 0, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -3447,8 +3447,8 @@ Lines:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [Aban Abraham, -3.6, -4.1, 4.8, 0, 0, 0, ~]
-      - [Aban Abraham, 3.6, -4.1, 4.8, 0, 0, 0, ~]
+      - [Drillship_137m, -3.6, -4.1, 4.8, 0, 0, 0, ~]
+      - [Drillship_137m, 3.6, -4.1, 4.8, 0, 0, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -3495,8 +3495,8 @@ Lines:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [Aban Abraham, -3.6, 4.1, 4.8, 0, 0, 0, ~]
-      - [Aban Abraham, -3.6, -4.1, 4.8, 0, 0, 0, ~]
+      - [Drillship_137m, -3.6, 4.1, 4.8, 0, 0, 0, ~]
+      - [Drillship_137m, -3.6, -4.1, 4.8, 0, 0, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -3543,8 +3543,8 @@ Lines:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [Aban Abraham, 3.6, 4.1, 4.8, 0, 0, 0, ~]
-      - [Aban Abraham, 3.6, -4.1, 4.8, 0, 0, 0, ~]
+      - [Drillship_137m, 3.6, 4.1, 4.8, 0, 0, 0, ~]
+      - [Drillship_137m, 3.6, -4.1, 4.8, 0, 0, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -3591,8 +3591,8 @@ Lines:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [Aban Abraham, -3.6, 4.1, -7.5, 0, 0, 0, ~]
-      - [Aban Abraham, 3.6, 4.1, -7.5, 0, 0, 0, ~]
+      - [Drillship_137m, -3.6, 4.1, -7.5, 0, 0, 0, ~]
+      - [Drillship_137m, 3.6, 4.1, -7.5, 0, 0, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -3639,8 +3639,8 @@ Lines:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [Aban Abraham, -3.6, -4.1, -7.5, 0, 0, 0, ~]
-      - [Aban Abraham, 3.6, -4.1, -7.5, 0, 0, 0, ~]
+      - [Drillship_137m, -3.6, -4.1, -7.5, 0, 0, 0, ~]
+      - [Drillship_137m, 3.6, -4.1, -7.5, 0, 0, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -3687,8 +3687,8 @@ Lines:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [Aban Abraham, -3.6, 4.1, -7.5, 0, 0, 0, ~]
-      - [Aban Abraham, -3.6, -4.1, -7.5, 0, 0, 0, ~]
+      - [Drillship_137m, -3.6, 4.1, -7.5, 0, 0, 0, ~]
+      - [Drillship_137m, -3.6, -4.1, -7.5, 0, 0, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -3735,8 +3735,8 @@ Lines:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [Aban Abraham, 3.6, 4.1, -7.5, 0, 0, 0, ~]
-      - [Aban Abraham, 3.6, -4.1, -7.5, 0, 0, 0, ~]
+      - [Drillship_137m, 3.6, 4.1, -7.5, 0, 0, 0, ~]
+      - [Drillship_137m, 3.6, -4.1, -7.5, 0, 0, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -3783,8 +3783,8 @@ Lines:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [Aban Abraham, -3.26, 4.1, 0, 0, 0, 0, ~]
-      - [Aban Abraham, -3.26, -4.1, 0, 0, 0, 0, ~]
+      - [Drillship_137m, -3.26, 4.1, 0, 0, 0, 0, ~]
+      - [Drillship_137m, -3.26, -4.1, 0, 0, 0, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -3831,8 +3831,8 @@ Lines:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [Aban Abraham, 3.26, 4.1, 0, 0, 0, 0, ~]
-      - [Aban Abraham, 3.26, -4.1, 0, 0, 0, 0, ~]
+      - [Drillship_137m, 3.26, 4.1, 0, 0, 0, 0, ~]
+      - [Drillship_137m, 3.26, -4.1, 0, 0, 0, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -3879,8 +3879,8 @@ Lines:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [Aban Abraham, -3.6, 2.79, 0, 0, 0, 0, ~]
-      - [Aban Abraham, 3.6, 2.79, 0, 0, 0, 0, ~]
+      - [Drillship_137m, -3.6, 2.79, 0, 0, 0, 0, ~]
+      - [Drillship_137m, 3.6, 2.79, 0, 0, 0, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -3928,8 +3928,8 @@ Lines:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [Aban Abraham, -3.6, -2.79, 0, 0, 0, 0, ~]
-      - [Aban Abraham, 3.6, -2.79, 0, 0, 0, 0, ~]
+      - [Drillship_137m, -3.6, -2.79, 0, 0, 0, 0, ~]
+      - [Drillship_137m, 3.6, -2.79, 0, 0, 0, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -3967,7 +3967,7 @@ Winches:
     Locked: Yes
     WinchType: Simple
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - [Aban Abraham, -0.85, -0.85, 12.24]
+      - [Drillship_137m, -0.85, -0.85, 12.24]
       - [Riser, 0, 0, 14.48, End A]
     Stiffness: 200e3
     Damping: 0.01
@@ -3982,7 +3982,7 @@ Winches:
     Locked: Yes
     WinchType: Simple
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - [Aban Abraham, -0.85, 0.85, 12.24]
+      - [Drillship_137m, -0.85, 0.85, 12.24]
       - [Riser, 0, 0, 14.48, End A]
     Stiffness: 200e3
     Damping: 0.01
@@ -3997,7 +3997,7 @@ Winches:
     Locked: Yes
     WinchType: Simple
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - [Aban Abraham, 0.85, 0.85, 12.24]
+      - [Drillship_137m, 0.85, 0.85, 12.24]
       - [Riser, 0, 0, 14.48, End A]
     Stiffness: 200e3
     Damping: 0.01
@@ -4012,7 +4012,7 @@ Winches:
     Locked: Yes
     WinchType: Simple
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - [Aban Abraham, 0.85, -0.85, 12.24]
+      - [Drillship_137m, 0.85, -0.85, 12.24]
       - [Riser, 0, 0, 14.48, End A]
     Stiffness: 200e3
     Damping: 0.01
@@ -4045,7 +4045,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: Aban Abraham
+    Connection: Drillship_137m
     # Geometry
     Origin: [-6.33, -6.33, 16.3]
     Size: [12.66, 5.83, 0.49999999999999983]
@@ -4061,7 +4061,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: Aban Abraham
+    Connection: Drillship_137m
     # Geometry
     Origin: [-6.33, 0.49999999999999983, 16.3]
     Size: [12.66, 5.83, 0.49999999999999983]
@@ -4077,7 +4077,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: Aban Abraham
+    Connection: Drillship_137m
     # Geometry
     Origin: [-6.33, -0.49999999999999983, 16.3]
     Size: [5.83, 0.9999999999999997, 0.49999999999999983]
@@ -4093,7 +4093,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: Aban Abraham
+    Connection: Drillship_137m
     # Geometry
     Origin: [0.49999999999999983, -0.49999999999999983, 16.3]
     Size: [5.83, 0.9999999999999997, 0.49999999999999983]
@@ -4107,7 +4107,7 @@ Shapes:
     ShadedDrawingCullingMode: Anticlockwise
 Groups:
   Structure:
-    Aban Abraham: Model
+    Drillship_137m: Model
     Lines for Moonpool: Model
     Moon pool - Bottom: Lines for Moonpool
     MP port -bottom: Moon pool - Bottom

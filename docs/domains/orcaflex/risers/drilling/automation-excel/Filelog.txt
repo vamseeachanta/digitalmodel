@@ -1,5 +1,4 @@
-﻿J:\0113 Drilling Riser Development\Rev2
-StA - ?? (Harsha!!)
+﻿(archive path removed)
 
 again run all simulations files and getting below results,
 
@@ -26,7 +25,7 @@ we are changing the boundary condition the results will be updated like this,
         
 
 
-J:\0113 Drilling Riser Development\Rev1
+(archive path removed)
 new - 
 new2 - 
 
@@ -35,24 +34,24 @@ Dear Vamsee,
 
 I will do the following changes as discussed below:
 Short Term:
-1/ Change "Riser length (m)" to "Elevation above Seabed (m)". I will discuss with Harsha/Manoj.
+1/ Change "Riser length (m)" to "Elevation above Seabed (m)". I will discuss with the reviewers.
 a/ Where is the seabed. Annotate this in all charts
 b/ Where is the MSL. Annotate this in all charts
 2/ Data is not referencing the right spreadsheet. I will ensure I correct them.
 3/ We increased wave height and also time period. This will help us latch on to higher RAOS. I will review the latest results
 4/ Link up objectives in sheet from TItle sheet.
 5/ I will summarize results again
-6/ Ask Manoj for a Stack-up drawing?
+6/ Ask a reviewer for a Stack-up drawing?
 
 Long Term:
 1/ Tensioners are not defined at the right location. Usually, the tension ring is located at approximately 5 m above mean sea level (MSL). Discuss with MP and correct it
-2/ I have not done tension matching. I will learn from Manoj/Harsha on why we should do tension matching.
+2/ I have not done tension matching. I will learn from the reviewers on why we should do tension matching.
 
 Dear Vamsee sir,
 
 I will do the following changes as discussed below:
 Short Term:
-1/ Change "Riser length (m)" to "Elevation above Seabed (m)". I will discuss with Harsha/Manoj.
+1/ Change "Riser length (m)" to "Elevation above Seabed (m)". I will discuss with the reviewers.
 a/ Where is the seabed. Annotate this in all charts
 b/ Where is the MSL. Annotate this in all charts
 2/ Data is not referencing the right spreadsheet. I will ensure I correct them.

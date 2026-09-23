@@ -2118,7 +2118,7 @@ FlexJointTypes:
     BendStiffness: [37.96290255327921, ~]
     Pen: [5, Solid, $FFFF80]
 Vessels:
-  - Name: SagarVijay
+  - Name: Semisub_A
     Locked: Yes
     VesselType: Vessel Type1
     Draught: 6.7m
@@ -2216,8 +2216,8 @@ Lines:
     DynamicsVIV: None
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [SagarVijay, -3.9999999999999987, 3.9999999999999987, -6.699999999999999, 9.541664044390547e-15, 90, 0, ~]
-      - [SagarVijay, 3.9999999999999987, 3.9999999999999987, -6.699999999999999, 9.541664044390547e-15, 90, 0, ~]
+      - [Semisub_A, -3.9999999999999987, 3.9999999999999987, -6.699999999999999, 9.541664044390547e-15, 90, 0, ~]
+      - [Semisub_A, 3.9999999999999987, 3.9999999999999987, -6.699999999999999, 9.541664044390547e-15, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -2263,8 +2263,8 @@ Lines:
     DynamicsVIV: None
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [SagarVijay, -3.9999999999999987, -3.9999999999999987, -6.699999999999999, 360, 90, 0, ~]
-      - [SagarVijay, 3.9999999999999987, -3.9999999999999987, -6.699999999999999, 360, 90, 0, ~]
+      - [Semisub_A, -3.9999999999999987, -3.9999999999999987, -6.699999999999999, 360, 90, 0, ~]
+      - [Semisub_A, 3.9999999999999987, -3.9999999999999987, -6.699999999999999, 360, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -2310,8 +2310,8 @@ Lines:
     DynamicsVIV: None
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [SagarVijay, -3.9999999999999987, 3.9999999999999987, -6.699999999999999, 270, 90, 0, ~]
-      - [SagarVijay, -3.9999999999999987, -3.9999999999999987, -6.699999999999999, 270, 90, 0, ~]
+      - [Semisub_A, -3.9999999999999987, 3.9999999999999987, -6.699999999999999, 270, 90, 0, ~]
+      - [Semisub_A, -3.9999999999999987, -3.9999999999999987, -6.699999999999999, 270, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -2357,8 +2357,8 @@ Lines:
     DynamicsVIV: None
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [SagarVijay, 3.9999999999999987, 3.9999999999999987, -6.699999999999999, 270, 90, 0, ~]
-      - [SagarVijay, 3.9999999999999987, -3.9999999999999987, -6.699999999999999, 270, 90, 0, ~]
+      - [Semisub_A, 3.9999999999999987, 3.9999999999999987, -6.699999999999999, 270, 90, 0, ~]
+      - [Semisub_A, 3.9999999999999987, -3.9999999999999987, -6.699999999999999, 270, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -2404,8 +2404,8 @@ Lines:
     DynamicsVIV: None
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [SagarVijay, -3.9999999999999987, 3.9999999999999987, 4.5, 9.541664044390547e-15, 90, 0, ~]
-      - [SagarVijay, 3.9999999999999987, 3.9999999999999987, 4.5, 9.541664044390547e-15, 90, 0, ~]
+      - [Semisub_A, -3.9999999999999987, 3.9999999999999987, 4.5, 9.541664044390547e-15, 90, 0, ~]
+      - [Semisub_A, 3.9999999999999987, 3.9999999999999987, 4.5, 9.541664044390547e-15, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -2452,8 +2452,8 @@ Lines:
     DynamicsVIV: None
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [SagarVijay, -3.9999999999999987, -3.9999999999999987, 4.5, 360, 90, 0, ~]
-      - [SagarVijay, 3.9999999999999987, -3.9999999999999987, 4.5, 360, 90, 0, ~]
+      - [Semisub_A, -3.9999999999999987, -3.9999999999999987, 4.5, 360, 90, 0, ~]
+      - [Semisub_A, 3.9999999999999987, -3.9999999999999987, 4.5, 360, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -2499,8 +2499,8 @@ Lines:
     DynamicsVIV: None
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [SagarVijay, -3.9999999999999987, 3.9999999999999987, 4.5, 270, 90, 0, ~]
-      - [SagarVijay, -3.9999999999999987, -3.9999999999999987, 4.5, 270, 90, 0, ~]
+      - [Semisub_A, -3.9999999999999987, 3.9999999999999987, 4.5, 270, 90, 0, ~]
+      - [Semisub_A, -3.9999999999999987, -3.9999999999999987, 4.5, 270, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -2546,8 +2546,8 @@ Lines:
     DynamicsVIV: None
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [SagarVijay, 3.9999999999999987, 3.9999999999999987, 4.5, 270, 90, 0, ~]
-      - [SagarVijay, 3.9999999999999987, -3.9999999999999987, 4.5, 270, 90, 0, ~]
+      - [Semisub_A, 3.9999999999999987, 3.9999999999999987, 4.5, 270, 90, 0, ~]
+      - [Semisub_A, 3.9999999999999987, -3.9999999999999987, 4.5, 270, 90, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
       - [0, ~]
@@ -2593,7 +2593,7 @@ Lines:
     DynamicsVIV: None
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [SagarVijay, 0, 0, 16.299, 0, 180, 0, ~]
+      - [Semisub_A, 0, 0, 16.299, 0, 180, 0, ~]
       - [Fixed, 0, 0, -96.2, 0, 180, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
@@ -2647,7 +2647,7 @@ Lines:
     DynamicsVIV: None
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [SagarVijay, 71.14946400000001, -2.200656, 7.199999999999998, 333.3088857740107, 175.33003955949522, 0, ~]
+      - [Semisub_A, 71.14946400000001, -2.200656, 7.199999999999998, 333.3088857740107, 175.33003955949522, 0, ~]
       - [Anchored, 915.0614160000001, -593.113368, 0.12599999999997635, 305.32307871316516, 86.76687493408481, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
@@ -2695,7 +2695,7 @@ Lines:
     DynamicsVIV: None
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [SagarVijay, 68.448936, -7.400544000000001, 7.199999999999998, 261.20594897725067, 163.97872410601704, 0, ~]
+      - [Semisub_A, 68.448936, -7.400544000000001, 7.199999999999998, 261.20594897725067, 163.97872410601704, 0, ~]
       - [Anchored, 420.80688, -975.4941120000001, 0.12599999999997635, 300.5842998987554, 87.12199346195669, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
@@ -2743,7 +2743,7 @@ Lines:
     DynamicsVIV: None
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [SagarVijay, -72.950832, -8.001000000000001, 7.199999999999998, 232.90397749118733, 124.63474578456136, 0, ~]
+      - [Semisub_A, -72.950832, -8.001000000000001, 7.199999999999998, 232.90397749118733, 124.63474578456136, 0, ~]
       - [Anchored, -425.30877599999997, -976.094568, 0.12599999999997635, 255.10548628784733, 88.84527768459732, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
@@ -2791,7 +2791,7 @@ Lines:
     DynamicsVIV: None
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [SagarVijay, -72.950832, -2.5999439999999994, 7.199999999999998, 197.35908965432654, 108.63155864900665, 0, ~]
+      - [Semisub_A, -72.950832, -2.5999439999999994, 7.199999999999998, 197.35908965432654, 108.63155864900665, 0, ~]
       - [Anchored, -916.8597360000001, -593.512656, 0.12599999999997635, 217.97664914836253, 88.23573306613736, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
@@ -2839,7 +2839,7 @@ Lines:
     DynamicsVIV: None
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [SagarVijay, -72.950832, 2.5999439999999994, 7.199999999999998, 119.07864564373696, 118.66871332372509, 0, ~]
+      - [Semisub_A, -72.950832, 2.5999439999999994, 7.199999999999998, 119.07864564373696, 118.66871332372509, 0, ~]
       - [Anchored, -916.8597360000001, 593.512656, 0.12599999999997635, 144.99993535162176, 89.95693891203904, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
@@ -2887,7 +2887,7 @@ Lines:
     DynamicsVIV: None
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [SagarVijay, -72.950832, 8.001000000000001, 7.199999999999998, 78.79079417929589, 123.71153886045356, 0, ~]
+      - [Semisub_A, -72.950832, 8.001000000000001, 7.199999999999998, 78.79079417929589, 123.71153886045356, 0, ~]
       - [Anchored, -425.30877599999997, 976.094568, 0.12610302587961542, 109.99997458726374, 89.837123657761, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
@@ -2935,7 +2935,7 @@ Lines:
     DynamicsVIV: None
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [SagarVijay, 68.448936, 7.400544000000001, 7.199999999999998, 46.5376205806221, 120.0713100036216, 0, ~]
+      - [Semisub_A, 68.448936, 7.400544000000001, 7.199999999999998, 46.5376205806221, 120.0713100036216, 0, ~]
       - [Anchored, 420.80688, 975.4941120000001, 0.12599999999997635, 67.45943029562801, 89.50476566314161, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
@@ -2983,7 +2983,7 @@ Lines:
     DynamicsVIV: None
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [SagarVijay, 71.14946400000001, 1.9994879999999997, 7.199999999999998, 1.677728010609617, 101.29952957327649, 0, ~]
+      - [Semisub_A, 71.14946400000001, 1.9994879999999997, 7.199999999999998, 1.677728010609617, 101.29952957327649, 0, ~]
       - [Anchored, 915.0614160000001, 592.9122, 0.12599999999997635, 22.32552790456985, 90.78785854106337, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
@@ -3023,7 +3023,7 @@ Winches:
     Locked: Yes
     WinchType: Simple
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - [SagarVijay, -2.749999999999999, -2.749999999999999, 21.999999999999993]
+      - [Semisub_A, -2.749999999999999, -2.749999999999999, 21.999999999999993]
       - [Riser, 0, 0, 8.482, End A]
     Stiffness: 200e3
     Damping: 0.01
@@ -3036,7 +3036,7 @@ Winches:
     Locked: Yes
     WinchType: Simple
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - [SagarVijay, -2.749999999999999, 2.749999999999999, 21.999999999999993]
+      - [Semisub_A, -2.749999999999999, 2.749999999999999, 21.999999999999993]
       - [Riser, 0, 0, 8.482, End A]
     Stiffness: 200e3
     Damping: 0.01
@@ -3049,7 +3049,7 @@ Winches:
     Locked: Yes
     WinchType: Simple
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - [SagarVijay, 2.749999999999999, 2.749999999999999, 21.999999999999993]
+      - [Semisub_A, 2.749999999999999, 2.749999999999999, 21.999999999999993]
       - [Riser, 0, 0, 8.482, End A]
     Stiffness: 200e3
     Damping: 0.01
@@ -3062,7 +3062,7 @@ Winches:
     Locked: Yes
     WinchType: Simple
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-      - [SagarVijay, 2.749999999999999, -2.749999999999999, 21.999999999999993]
+      - [Semisub_A, 2.749999999999999, -2.749999999999999, 21.999999999999993]
       - [Riser, 0, 0, 8.482, End A]
     Stiffness: 200e3
     Damping: 0.01
@@ -3091,7 +3091,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: SagarVijay
+    Connection: Semisub_A
     # Geometry
     Origin: [-6.33, -6.33, 16.3]
     Size: [12.66, 5.83, 0.49999999999999983]
@@ -3108,7 +3108,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: SagarVijay
+    Connection: Semisub_A
     # Geometry
     Origin: [-6.33, 0.49999999999999983, 16.3]
     Size: [12.66, 5.83, 0.49999999999999983]
@@ -3125,7 +3125,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: SagarVijay
+    Connection: Semisub_A
     # Geometry
     Origin: [-6.33, -0.49999999999999983, 16.3]
     Size: [5.83, 0.9999999999999997, 0.49999999999999983]
@@ -3142,7 +3142,7 @@ Shapes:
     Locked: Yes
     ShapeType: Elastic solid
     Shape: Block
-    Connection: SagarVijay
+    Connection: Semisub_A
     # Geometry
     Origin: [0.49999999999999983, -0.49999999999999983, 16.3]
     Size: [5.83, 0.9999999999999997, 0.49999999999999983]
@@ -3157,7 +3157,7 @@ Shapes:
     ShadedDrawingCullingMode: Anticlockwise
 Groups:
   Structure:
-    SagarVijay: Model
+    Semisub_A: Model
     Lines for Moonpool: Model
     Moon pool - Bottom: Lines for Moonpool
     MP port -bottom: Moon pool - Bottom

@@ -1480,7 +1480,7 @@ ClumpTypes:
     Cd: [1.1, ~, 0.08]
     Ca: [1, ~, 1]
 Vessels:
-  - Name: Norshore
+  - Name: Vessel_A
     VesselType: Vessel Type1
     Draught: Draught1
     Length: ~
@@ -1520,7 +1520,7 @@ Lines:
     WaveCalculationMethod: Specified by environment
     # End connections
     Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo:
-      - [Norshore, 9.18, 0, 3.3000000000000114, 0, 180, 0, ~]
+      - [Vessel_A, 9.18, 0, 3.3000000000000114, 0, 180, 0, ~]
       - [Free, 0, 0, -100, 0, 0, 0, ~]
     # End connection stiffness
     ConnectionxBendingStiffness, ConnectionyBendingStiffness:
@@ -1909,7 +1909,7 @@ Links:
 Groups:
   Structure:
     Tubing: Model
-    Norshore: Model
+    Vessel_A: Model
     X10: Model
     X1: Model
     X2: Model

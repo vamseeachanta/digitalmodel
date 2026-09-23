@@ -9267,7 +9267,7 @@ LineTypes:
     # Drawing
     Pen: [1, Solid, $408080]
 P-yModels:
-  - Name: Atlantis
+  - Name: GoM_DW_Site
     PyCurves:
       - DepthBelowSeabedFrom: 0
         ModelType: API RP 2A soft clay

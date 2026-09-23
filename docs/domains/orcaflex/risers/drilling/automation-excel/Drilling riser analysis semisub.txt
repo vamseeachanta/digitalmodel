@@ -2,7 +2,7 @@
 // The script generates separate data files for 5 wave directions, 10 wave heights and 10 wave periods.
 
 // Case  1
-LoadData "SemiSub_BC.dat"
+LoadData "SemiSub_BC.yml"
 Select Environment
 Select WaveTrain "Wave1"
 WaveHeight = 0.0
@@ -12,10 +12,10 @@ Waveperiod = 5.0
 RefCurrentSpeed= 0.0
 Select ship
 InitialX =  0.00
-SaveData SS_Wh_0_Cs_0_Off_0.dat
+SaveData SS_Wh_0_Cs_0_Off_0.yml
 
 // Case  2
-LoadData "SemiSub_BC.dat"
+LoadData "SemiSub_BC.yml"
 Select Environment
 Select WaveTrain "Wave1"
 WaveHeight = 0.0
@@ -25,10 +25,10 @@ Waveperiod = 5.0
 RefCurrentSpeed= 0.0
 Select ship
 InitialX =  71.32
-SaveData SS_Wh_0_Cs_0_Off_4.dat
+SaveData SS_Wh_0_Cs_0_Off_4.yml
 
 // Case  3
-LoadData "SemiSub_BC.dat"
+LoadData "SemiSub_BC.yml"
 Select Environment
 Select WaveTrain "Wave1"
 WaveHeight = 5.0
@@ -38,10 +38,10 @@ Waveperiod = 10.0
 RefCurrentSpeed= 0.0
 Select ship
 InitialX =  0.00
-SaveData SS_Wh_5_Cs_0_Off_0.dat
+SaveData SS_Wh_5_Cs_0_Off_0.yml
 
 // Case  4
-LoadData "SemiSub_BC.dat"
+LoadData "SemiSub_BC.yml"
 Select Environment
 Select WaveTrain "Wave1"
 WaveHeight = 0.0
@@ -51,10 +51,10 @@ Waveperiod = 5.0
 RefCurrentSpeed= 1.5
 Select ship
 InitialX =  0.00
-SaveData SS_Wh_0_Cs_1P5_Off_0.dat
+SaveData SS_Wh_0_Cs_1P5_Off_0.yml
 
 // Case  5
-LoadData "SemiSub_BC.dat"
+LoadData "SemiSub_BC.yml"
 Select Environment
 Select WaveTrain "Wave1"
 WaveHeight = 5.0
@@ -64,5 +64,5 @@ Waveperiod = 10.0
 RefCurrentSpeed= 1.5
 Select ship
 InitialX =  71.32
-SaveData SS_Wh_5_Cs_1P5_Off_4.dat
+SaveData SS_Wh_5_Cs_1P5_Off_4.yml
 

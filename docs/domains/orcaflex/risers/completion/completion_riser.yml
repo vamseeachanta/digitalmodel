@@ -4027,7 +4027,7 @@ LineTypes:
     # Structural damping
     RayleighDampingCoefficients: (no damping)
 P-yModels:
-  - Name: Appomattox Soil_Undrained
+  - Name: GoM_DW_Soil_Undrained
     P-y Curves:
       - DepthBelowSeabedFrom: 0
         ModelType: API RP 2A soft clay
@@ -4232,7 +4232,7 @@ Lines:
     IncludeTorsion: No
     TopEnd: End A
     Representation: Finite element
-    PyModel: Appomattox Soil_Undrained
+    PyModel: GoM_DW_Soil_Undrained
     PreBendSpecifiedBy: Curvature
     DragFormulation: Standard
     StaticsVIV: None

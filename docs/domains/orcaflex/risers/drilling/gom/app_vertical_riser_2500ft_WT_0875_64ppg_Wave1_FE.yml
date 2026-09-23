@@ -70,7 +70,7 @@ Environment:
   WindDirection: 0
 ﻿
 VesselTypes:
-  - Name: West Sirius
+  - Name: Semisub_120m
     Length: 120
     # Conventions
     RAOResponseUnits: degrees
@@ -3267,8 +3267,8 @@ P-yModels:
     - [2.8956, 215.52692315993164]
     - [3.04038, 0]
 Vessels:
-- Name: West Sirius_vessel
-  VesselType: West Sirius
+- Name: Semisub_120m_vessel
+  VesselType: Semisub_120m
   Draught: Ballast
   Length: '~'
   InitialPosition: [0, 0, 0]
@@ -3335,7 +3335,7 @@ Links:
 - Name: Tensioner0
   LinkType: Spring/Damper
   Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-  - [West Sirius_vessel, 2.5, 1.9999999999999998, 45.87240000000013]
+  - [Semisub_120m_vessel, 2.5, 1.9999999999999998, 45.87240000000013]
   - [vertical, 0, 0, 12.192, End A]
   ReleaseStage: '~'
   LinearSpring: 'No'
@@ -3360,7 +3360,7 @@ Links:
 - Name: Tensioner1
   LinkType: Spring/Damper
   Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-  - [West Sirius_vessel, 2.5, 0, 45.87240000000013]
+  - [Semisub_120m_vessel, 2.5, 0, 45.87240000000013]
   - [vertical, 0, 0, 12.192, End A]
   ReleaseStage: '~'
   LinearSpring: 'No'
@@ -3385,7 +3385,7 @@ Links:
 - Name: Tensioner2
   LinkType: Spring/Damper
   Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-  - [West Sirius_vessel, 2.5, -1.9999999999999998, 45.87240000000013]
+  - [Semisub_120m_vessel, 2.5, -1.9999999999999998, 45.87240000000013]
   - [vertical, 0, 0, 12.192, End A]
   ReleaseStage: '~'
   LinearSpring: 'No'
@@ -3410,7 +3410,7 @@ Links:
 - Name: Tensioner3
   LinkType: Spring/Damper
   Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-  - [West Sirius_vessel, -2.5, 1.9999999999999998, 45.87240000000013]
+  - [Semisub_120m_vessel, -2.5, 1.9999999999999998, 45.87240000000013]
   - [vertical, 0, 0, 12.192, End A]
   ReleaseStage: '~'
   LinearSpring: 'No'
@@ -3435,7 +3435,7 @@ Links:
 - Name: Tensioner4
   LinkType: Spring/Damper
   Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-  - [West Sirius_vessel, -2.5, 0, 45.87240000000013]
+  - [Semisub_120m_vessel, -2.5, 0, 45.87240000000013]
   - [vertical, 0, 0, 12.192, End A]
   ReleaseStage: '~'
   LinearSpring: 'No'
@@ -3460,7 +3460,7 @@ Links:
 - Name: Tensioner5
   LinkType: Spring/Damper
   Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-  - [West Sirius_vessel, -2.5, -1.9999999999999998, 45.87240000000013]
+  - [Semisub_120m_vessel, -2.5, -1.9999999999999998, 45.87240000000013]
   - [vertical, 0, 0, 12.192, End A]
   ReleaseStage: '~'
   LinearSpring: 'No'
@@ -3485,7 +3485,7 @@ Links:
 - Name: support_spring
   LinkType: Spring/Damper
   Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
-  - [West Sirius_vessel, 0, 0, 105.96640000000014]
+  - [Semisub_120m_vessel, 0, 0, 105.96640000000014]
   - [vertical, 0, 0, 0, End A]
   ReleaseStage: '~'
   LinearSpring: 'No'
