@@ -162,6 +162,40 @@ class TestPatterns:
         assert "job-code" in out.stdout
 
 
+class TestExemptFilesCarryNoValues:
+    """The files the gate exempts are where a real value slips in unseen.
+
+    A real job code was once written into the rules file as the example in a
+    comment; the exemption meant nothing caught it. The exemption covers the
+    PATTERNS these files must hold, not values, so values are checked here.
+    """
+
+    @pytest.mark.parametrize("rel", [".legal-deny-list.yaml",
+                                     "scripts/legal/check_identifiers.py"])
+    def test_no_denied_name_or_job_code_outside_pattern_lines(self, rel):
+        import re
+
+        rules = yaml.safe_load(RULES.read_text(encoding="utf-8"))
+        salt = str(rules.get("salt", ""))
+        hashed = set(rules.get("hashed_names") or [])
+        job = next(r for r in rules["structural"] if r["id"] == "job-code")
+        job_rx = re.compile(job["pattern"])
+        word = re.compile(r"[A-Za-z][A-Za-z0-9-]{3,}")
+        text = (REPO / rel).read_text(encoding="utf-8")
+        for n, line in enumerate(text.splitlines(), start=1):
+            if line.strip().startswith("pattern:"):
+                continue
+            m = job_rx.search(line)
+            # Synthetic examples are allowed: B1 followed by 234 is the house example.
+            if m and not re.fullmatch(r"(?i)b1234", m.group(0)):
+                pytest.fail(f"{rel}:{n}: job code in an exempt file")
+            for w in word.findall(line):
+                for c in {w.lower(), *re.split(r"[-\d]+", w.lower())}:
+                    if len(c) >= 4 and hashlib.sha256(
+                            f"{salt}:{c}".encode()).hexdigest() in hashed:
+                        pytest.fail(f"{rel}:{n}: denied name in an exempt file")
+
+
 class TestGitEnumeration:
     def _init(self, root):
         env = _env()
