@@ -1,8 +1,10 @@
 """Tests for the low-speed manoeuvring & station-keeping envelope.
 
-Golden values are the adversarially-verified tanker_225m_1 (<job-code>) numbers:
-    Lbp 225.5 m, B 32.26 m, T 12.2 m (laden), Cb 0.82,
-    rudder area 44.94 m², span 9.0 m, Barrass lever x_R = 0.6*Lbp = 135.3 m.
+Hull: a Panamax/LR1 single-screw tanker (tanker_225m_1), main particulars from
+public register data: Lbp 225.5 m, B 32.26 m, T 12.2 m (laden), Cb 0.82.
+Rudder: generic -- the DNV minimum rudder area for that hull (41.59 m^2) at a
+geometric aspect ratio of 1.80 (span 8.65 m); Barrass lever x_R = 0.6*Lbp.
+Rudder-dependent expectations are computed from the stated formulas.
 References reproduced: Clarke (1983), Whicker & Fehlner (1958),
 Nomoto (1957), Soeding (1982), OCIMF (1994), IMO MSC.137(76).
 """
@@ -14,7 +16,11 @@ from digitalmodel.hydrodynamics.propeller_rudder import RudderGeometry, VesselPr
 from digitalmodel.naval_architecture import maneuvering_envelope as me
 
 L, B, T, CB = 225.5, 32.26, 12.2, 0.82
-A_R, SPAN = 44.94, 9.0
+# Generic rudder, not the vessel's: DNV minimum rudder area
+# A = T*L/100 * (1 + 25*(B/L)^2), at the geometric aspect ratio 1.80 used for
+# the rudder below. Neither value comes from the ship's drawings.
+A_R = T * L / 100.0 * (1.0 + 25.0 * (B / L) ** 2)        # 41.587 m^2
+SPAN = math.sqrt(1.80 * A_R)                               # 8.652 m
 X_R = 0.6 * L
 
 
@@ -79,9 +85,11 @@ def test_imo_fails_when_circle_too_large():
 def test_threshold_speed_laden_engine_off():
     u = me.threshold_speed_for_steerage(
         wind_speed_m_s=10.0, windage_area_m2=2200.0,
-        rudder_effective_area_m2=44.94, rudder_span_m=9.0, inflow_factor=1.0,
+        rudder_effective_area_m2=A_R, rudder_span_m=SPAN, inflow_factor=1.0,
     )
-    assert u * me.M_PER_S_TO_KNOT == pytest.approx(2.9, abs=0.4)
+    # By hand: U = V_w*sqrt(rho_air*A_L*C_Y / (rho_w*A_R*a*sin 35 deg)),
+    # a = 6.13*3.6/(3.6+2.25) = 3.772 /rad  ->  1.529 m/s = 2.97 kn.
+    assert u * me.M_PER_S_TO_KNOT == pytest.approx(2.97, abs=0.02)
 
 
 def test_kick_ahead_lowers_threshold():
