@@ -275,11 +275,26 @@ class TestFidpCard:
             read_aqwa_basis,
         )
 
-        source = (
-            r"D:\ws\_worktrees\digitalmodel-2140\docs\domains\aqwa\examples"
-            r"\03_dat\001_ship_raos\001_ship_raos.dat"
-        )
-        text = open(source, errors="ignore").read()
+        # A minimal single-structure deck, built here so the test depends on no
+        # particular checkout location.
+        text = "\n".join([
+            "* Hydrodynamic Solver Unit System : Metric: kg, m [N]",
+            "JOB AQWA  LINE",
+            "OPTIONS REST END",
+            "          COOR",
+            f"{1:>6d}{98000:>5d}" + " " * 9
+            + f"{0.0:>10.4f}{0.0:>10.4f}{-4.0:>10.4f}",
+            " END",
+            "          MATE",
+            "     1         98000  45000000",
+            " END",
+            "          GEOM",
+            "     1PMAS     98000 8.358e+09 0.000e+00 0.000e+00"
+            " 1.130e+11 0.000e+00 1.222e+11",
+            " END",
+            "          WFS1",
+            " END",
+        ]) + "\n"
         target = 1.9054e08
         rows = [
             fidp_row_card(

@@ -172,12 +172,40 @@ def _structure_of(raw: str) -> int | None:
         return None
 
 
+#: A per-structure block header: a name in columns 11-14 ending in the
+#: structure number -- ``ELM1``, ``FDR1``, ``WFS2``, ``DRC1`` -- with nothing in
+#: columns 1-10. Records inside the block may leave the structure field blank;
+#: AQWA takes it from the header. ``COOR``, ``MATE``, ``GEOM`` and ``GLOB`` carry
+#: no number, and their records name the structure themselves.
+_BLOCK_HEADER = re.compile(r"^ {10}([A-Z]{2,3})(\d{1,2})\s*$")
+
+
+def _block_structure(raw: str) -> int | None | bool:
+    """The structure a block header opens, None for an unnumbered header,
+    False when the line is not a header at all."""
+    m = _BLOCK_HEADER.match(raw.rstrip("\r\n"))
+    if m:
+        return int(m.group(2))
+    body = raw.strip()
+    if raw.startswith(" " * 10) and re.fullmatch(r"[A-Z]{4}", body):
+        return None
+    return False
+
+
+def _is_block_end(raw: str) -> bool:
+    return raw.strip() in ("END", "FINI")
+
+
 #: Record keywords that carry per-structure physical data. Structure detection
 #: keys on these rather than on "any record with a number in columns 1-6",
 #: because a coordinate card's node number spills into the keyword columns --
 #: node 13905 on structure 1 reads as keyword "1390" -- and counting those
 #: reported fourteen structures in a deck that defines one.
 _BODY_KEYWORDS = frozenset({"PMAS", "FIDP", "FISK"})
+
+#: Records read per structure. A blank-owner one of these that no block
+#: assigns cannot be credited to a body in a multi-structure deck.
+_PER_STRUCTURE = _BODY_KEYWORDS | {"HRTZ", "DIRN"}
 
 
 def _keyword_of(raw: str) -> str:
@@ -227,9 +255,15 @@ def structures_in_deck(path: str | Path) -> tuple[int, ...]:
     """
     found: set[int] = set()
     in_mate = False
+    block: int | None = None
     for raw in Path(path).read_text(errors="replace").splitlines():
         if raw.lstrip().startswith("*"):
             continue
+        header = _block_structure(raw)
+        if header is not False:
+            block = header
+        elif _is_block_end(raw):
+            block = None
         body = raw.strip()
         if body == "MATE":
             in_mate = True
@@ -244,6 +278,8 @@ def structures_in_deck(path: str | Path) -> tuple[int, ...]:
             continue
         if _keyword_of(raw) in _BODY_KEYWORDS:
             s = _structure_of(raw)
+            if s is None:
+                s = block
             if s is not None:
                 found.add(s)
     return tuple(sorted(found))
@@ -330,10 +366,19 @@ def read_aqwa_basis(
     stiffness_cards: dict[int, list[float]] = {}
     panels = 0
     notes: list[str] = []
+    several = len(present) > 1
+    block: int | None = None
 
     for raw in lines:
         line = raw.rstrip()
         body = line.lstrip()
+        header = _block_structure(raw)
+        if header is not False:
+            block = header
+            continue
+        if _is_block_end(raw):
+            block = None
+            continue
         if body.startswith("*"):
             if "Unit System" in line:
                 unit_system = line.split(":", 1)[-1].strip()
@@ -349,13 +394,28 @@ def read_aqwa_basis(
         keyword = _keyword_of(raw)
         owner = _structure_of(raw)
         # A record with a blank structure field belongs to the structure whose
-        # block it sits in; within a single-structure read that is this one.
-        mine = owner in (None, structure)
+        # block it sits in (WFS2, FDR1, ...), not to whichever body was asked
+        # for. With one body in the deck there is no one else it can belong to.
+        if owner is None:
+            owner = block
+        # Unassignable: blank owner, no numbered block, several bodies. Only an
+        # error if the record carries a value that would be applied -- a bare
+        # keyword such as the Deck 13 spectrum-units flag ``HRTZ`` is not data.
+        stray = owner is None and several and keyword in _PER_STRUCTURE
+        mine = owner is None or owner == structure
+
+        def refuse() -> None:
+            raise AmbiguousDeck(
+                f"{path.name}: a {keyword} record carries data but names no "
+                f"structure and sits in no numbered block, in a deck defining "
+                f"structures {present}; it cannot be assigned to a body")
 
         if keyword == "PMAS" and mine and "(" not in line:
             # node, then six inertia terms, in ten-column fields.
             fields = _column_fields(raw, 7)
             if fields is not None:
+                if stray:
+                    refuse()
                 cog_node = int(fields[0])
                 inertia = tuple(fields[1:7])
         if token == "DPTH":
@@ -379,6 +439,8 @@ def read_aqwa_basis(
                 except ValueError:
                     value = None
                 if value is not None:
+                    if stray:
+                        refuse()
                     if keyword == "HRTZ":
                         freqs.append(2.0 * math.pi * value)
                     else:
@@ -386,6 +448,8 @@ def read_aqwa_basis(
         elif keyword in ("FIDP", "FISK") and mine:
             fields = _column_fields(raw, 7)
             if fields is not None:
+                if stray:
+                    refuse()
                 mode = int(fields[0])
                 if 1 <= mode <= 6:
                     target = (damping_cards if keyword == "FIDP"

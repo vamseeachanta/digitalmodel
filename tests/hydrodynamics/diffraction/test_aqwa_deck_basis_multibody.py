@@ -100,6 +100,92 @@ class TestMultiStructureDecks:
             read_aqwa_basis(SHIP, structure=7)
 
 
+def _pmas(structure, node, values):
+    return (f"{structure:>6d}PMAS{node:>10d}"
+            + "".join(f"{v:10.3e}" for v in values))
+
+
+def _two_body_deck(tmp_path, b44_one, b44_two, stray_fidp=False):
+    """Two structures, each with its own Deck 7 block and its own B44.
+
+    FIDP cards are written the way ``fidp_row_card`` writes them -- structure
+    field blank -- because AQWA takes the structure from the enclosing block
+    header (``WFS1``, ``WFS2``), not from the record.
+    """
+    from digitalmodel.hydrodynamics.diffraction.roll_damping import fidp_row_card
+
+    def fidp(b44):
+        return fidp_row_card(4, [0.0, 0.0, 0.0, b44, 0.0, 0.0])
+
+    lines = [
+        "* Hydrodynamic Solver Unit System : Metric: kg, m [N]",
+        "JOB AQWA  LINE",
+        "OPTIONS REST END",
+        "          COOR",
+        # Structure in columns 1-6, node in 7-11, coordinates from column 21.
+        f"{1:>6d}{98000:>5d}" + " " * 9 + f"{100.0:>10.4f}{0.0:>10.4f}{5.0:>10.4f}",
+        f"{2:>6d}{98001:>5d}" + " " * 9 + f"{20.0:>10.4f}{0.0:>10.4f}{2.0:>10.4f}",
+        " END",
+        "          ELM1",
+        "     1PMAS        18(1)(98000)(98000)(98000)",
+        " END",
+        "          ELM2",
+        "     2PMAS        18(1)(98001)(98001)(98001)",
+        " END",
+        "          MATE",
+        "     1         98000  45000000",
+        "     2         98001   1000000",
+        " END",
+        "          GEOM",
+        _pmas(1, 98000, (8.0e9, 0.0, 0.0, 1.1e11, 0.0, 1.2e11)),
+        _pmas(2, 98001, (4.0e7, 0.0, 0.0, 5.0e8, 0.0, 6.0e8)),
+    ]
+    if stray_fidp:
+        # A blank-owner card in a block that names no structure.
+        lines.append(fidp(9.999e3))
+    lines += [
+        " END",
+        "          WFS1",
+        fidp(b44_one),
+        " END",
+        "          WFS2",
+        fidp(b44_two),
+        " END",
+    ]
+    p = tmp_path / "two_body.dat"
+    p.write_text("\n".join(lines) + "\n", encoding="ascii")
+    return p
+
+
+class TestPerStructureBlocks:
+    """A blank structure field means the block's structure, not the caller's.
+
+    Review found ``owner in (None, structure)`` credited every blank-owner record
+    to whichever body was asked for, so in a two-body deck with B44 1,234 in
+    body 1's block and 5,678 in body 2's, body 1 read 5,678.
+    """
+
+    def test_each_body_reads_its_own_damping(self, tmp_path):
+        deck = _two_body_deck(tmp_path, 1.234e3, 5.678e3)
+        one = read_aqwa_basis(deck, structure=1)
+        two = read_aqwa_basis(deck, structure=2)
+        assert one.additional_damping[3][3] == pytest.approx(1.234e3, rel=1e-12)
+        assert two.additional_damping[3][3] == pytest.approx(5.678e3, rel=1e-12)
+
+    def test_each_body_reads_its_own_inertia(self, tmp_path):
+        deck = _two_body_deck(tmp_path, 1.234e3, 5.678e3)
+        assert read_aqwa_basis(deck, structure=1).inertia[3] == pytest.approx(1.1e11)
+        assert read_aqwa_basis(deck, structure=2).inertia[3] == pytest.approx(5.0e8)
+
+    def test_a_blank_owner_record_outside_any_numbered_block_is_refused(
+        self, tmp_path
+    ):
+        """With two bodies and nothing to say whose it is, guessing is the defect."""
+        deck = _two_body_deck(tmp_path, 1.234e3, 5.678e3, stray_fidp=True)
+        with pytest.raises(AmbiguousDeck):
+            read_aqwa_basis(deck, structure=1)
+
+
 class TestFixedColumnFields:
     """Records are read by column, not by the spaces between numbers."""
 
