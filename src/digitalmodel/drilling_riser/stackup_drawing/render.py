@@ -1451,10 +1451,17 @@ class _Renderer:
             + self._ref("stackup_length_m", 2, " m")
         )
         if "closure_residual_m" in rt:
+            # An adapter-computed residual restates the data; it is not an
+            # independent source, so the drawing must not call it one.
+            tail = (
+                " (not established: adapter-derived, string incomplete)."
+                if rt["closure_residual_m"].basis == "adapter"
+                else " (source-flagged)."
+            )
             closure += (
                 [_txt("; residual ")]
                 + self._ref("closure_residual_m", 2, " m", signed=True)
-                + [_txt(" (source-flagged).")]
+                + [_txt(tail)]
             )
         notes.append(closure)
         notes.append(

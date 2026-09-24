@@ -10,7 +10,9 @@ Input (paths relative to the input file)::
 Writes ``<stem>_stackup.svg``, ``<stem>_stackup_spec.json`` (the spec as
 rendered) and ``<stem>_reconcile.json`` into ``output_dir``, where ``<stem>``
 is the input file's stem. Raises :class:`StackupReconcileError` after writing
-all three when the reconciliation fails, so the run exits non-zero.
+all three when the reconciliation result is ``fail``, so the run exits
+non-zero. A ``pass_with_open_items`` result completes; the open items are in
+the report and the summary.
 """
 
 from __future__ import annotations
@@ -64,11 +66,13 @@ def router(cfg: dict) -> dict:
         "result": report["result"],
         "checks": checks,
     }
-    if report["result"] != "pass":
+    # "pass_with_open_items" completes: the open items are in the report and
+    # the summary; only a failed check stops the run.
+    if report["result"] == "fail":
         failed = {
             k: v["failures"][:3]
             for k, v in report["checks"].items()
-            if v["status"] != "pass"
+            if v["status"] == "fail"
         }
         raise StackupReconcileError(
             f"stack-up drawing does not reconcile ({report_path}): {failed}"
