@@ -204,7 +204,7 @@ def test_c203_label_fails_closed_for_unmapped_edition():
 def test_free_corrosion_notes_disclose_unverified_values():
     fc = [
         r
-        for r in get_catalog()
+        for r in get_catalog().curves
         if r.standard == "DNV-RP-C203" and r.environment == "free_corrosion"
     ]
     assert fc

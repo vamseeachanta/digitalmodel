@@ -273,7 +273,8 @@ def _build_dnv_curves() -> List[SNCurveRecord]:
             endurance_limit=None,
             note=(
                 f"DNV-RP-C203 {c203_sn_table('free_corrosion', edition)}, {cls}, "
-                "seawater free corrosion (single slope)"
+                "seawater free corrosion (single slope); "
+                "values not verified against the table (#2165)"
             ),
         ))
     return out

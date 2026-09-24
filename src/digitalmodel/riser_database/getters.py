@@ -77,7 +77,7 @@ _API_STD_2RD_CITATION_TEMPLATE: Final = {
     "wiki_path": "wikis/engineering-standards/wiki/standards/api-std-2rd.md",
 }
 
-#: AMJIG deepwater drilling riser integrity management guideline, Rev 2 (2000).
+#: AMJIG drilling riser integrity management guideline, Rev 2 (2000).
 _AMJIG_CITATION_TEMPLATE: Final = {
     "code_id": "amjig-2000",
     "publisher": "AMJIG",
@@ -149,8 +149,8 @@ def get_riser_scf(
     The standard sources the METHODOLOGY (SCF applied to nominal stress ranges
     before S-N lookup); 1.0 is the neutral no-concentration default matching
     the live riser_fatigue defaults, not a C203-tabulated value. The code
-    implements the 2021 edition tables while the wiki page tracks 2024-10 —
-    the drift is recorded in ``standards_crosswalk``.
+    follows the 2021 edition table numbering; the crosswalk and the wiki page
+    both record revision ``2021``.
     """
     value = RISER_SCF_DEFAULT
     note = (

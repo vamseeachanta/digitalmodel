@@ -18,7 +18,9 @@ layouts.
 
 :data:`DNV_RP_C203_IMPLEMENTED_EDITION` is the edition whose tables the
 S-N library in :mod:`digitalmodel.fatigue.sn_library` and
-:mod:`digitalmodel.fatigue.sn_curves` implements.
+:mod:`digitalmodel.fatigue.sn_curves` follows for table numbering. The
+numeric correspondence of the stored values to that edition is not
+verified here; the free-corrosion values are known to differ (#2165).
 """
 
 from __future__ import annotations
@@ -68,5 +70,10 @@ def c203_sn_table(
 
 
 def c203_label(edition: str = DNV_RP_C203_IMPLEMENTED_EDITION) -> str:
-    """``"DNV-RP-C203 (2021)"``-style label for ``edition``."""
+    """``"DNV-RP-C203 (2021)"``-style label for ``edition``.
+
+    Raises ``KeyError`` for an edition that is not mapped.
+    """
+    if edition not in DNV_RP_C203_SN_TABLES:
+        raise KeyError(f"DNV-RP-C203 edition {edition!r} is not mapped")
     return f"DNV-RP-C203 ({edition})"
