@@ -96,3 +96,25 @@ def test_router_fails_when_reconcile_fails(tmp_path):
 def test_router_requires_a_spec(tmp_path):
     with pytest.raises(ValueError, match="spec"):
         router({"riser_stackup_drawing": {}, "_config_dir_path": str(tmp_path)})
+
+
+def test_router_records_open_items_without_failing(tmp_path):
+    from digitalmodel.drilling_riser.stackup_drawing import (
+        from_schedule_assembly,
+        to_json,
+    )
+
+    from .test_schema_adapters import _demo_assembly
+
+    spec = from_schedule_assembly(_demo_assembly(), ordered_top_down=True)
+    (tmp_path / "partial.json").write_text(to_json(spec), encoding="utf-8")
+    cfg = {
+        "riser_stackup_drawing": {"spec": "partial.json"},
+        "_config_file_path": str(tmp_path / "partial.yml"),
+        "_config_dir_path": str(tmp_path),
+    }
+
+    summary = router(cfg)["riser_stackup_drawing"]
+
+    assert summary["result"] == "pass_with_open_items"
+    assert summary["checks"]["d_totals"] == "not_established"

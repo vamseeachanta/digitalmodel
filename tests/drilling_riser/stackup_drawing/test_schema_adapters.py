@@ -136,17 +136,20 @@ def test_from_schedule_assembly_renders_na_and_reconciles():
     svg = render(spec)
     report = reconcile(spec, svg)
 
-    assert report["result"] == "pass", {
+    # every check passes except closure, which an adapter cannot establish
+    assert report["result"] == "pass_with_open_items", {
         k: v["failures"] for k, v in report["checks"].items()
     }
+    assert report["checks"]["d_totals"]["status"] == "not_established"
     # every NOT_FOUND OD is shown as grey n/a, never as a number
     na_od = svg.count('<tspan class="na" data-field="od_in">n/a</tspan>')
     assert na_od == len(spec.components)
     assert 'data-od-in="NOT_FOUND"' in svg
     # the string does not reach the drill floor or the mudline: the gap is
     # flagged, not hidden
-    notes = " ".join(report["checks"]["d_totals"]["notes"])
-    assert "does NOT close" in notes
+    open_items = " ".join(report["checks"]["d_totals"]["open_items"])
+    assert "does NOT close" in open_items
+    assert "not established" in svg
     assert any(g["item"] == "od_in" for g in spec.gaps)
 
 
