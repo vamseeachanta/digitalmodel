@@ -130,13 +130,16 @@ def from_schedule_assembly(
             )
         )
 
+    # drawing-level entries: no single component row carries them (#2158)
     gaps = [
         {
+            "component_id": None,
             "item": "od_in",
             "status": "open",
             "detail": "ScheduleAssembly carries no diameters",
         },
         {
+            "component_id": None,
             "item": "subsea stack",
             "status": "open",
             "detail": "LMRP/BOP/wellhead/conductor are outside the tensioned string",
@@ -169,6 +172,7 @@ def from_schedule_assembly(
             )
             gaps.append(
                 {
+                    "component_id": None,
                     "item": "closure",
                     "status": "open",
                     "detail": (

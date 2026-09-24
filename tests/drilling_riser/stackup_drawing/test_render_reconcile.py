@@ -38,9 +38,16 @@ from digitalmodel.drilling_riser.stackup_drawing import (
     to_json,
 )
 
-from .conftest import GOLDEN_SVG
+from .conftest import GOLDEN_SVG, row_cell
 
-CHECKS = ("a_mapping", "b_positions", "c_numbers", "d_totals", "e_not_found")
+CHECKS = (
+    "a_mapping",
+    "b_positions",
+    "c_numbers",
+    "d_totals",
+    "e_not_found",
+    "f_design_data",
+)
 
 
 def _status(report: dict, check: str) -> str:
@@ -153,12 +160,12 @@ def test_component_moved_two_px_fails_positions(spec, svg):
 
 
 def test_callout_number_changed_fails_numbers(spec, svg):
-    pattern = re.compile(
-        r'(<text [^>]*data-component-id="c08-riser-joint-bare"[^>]*>'
-        r'<tspan data-field="count"[^>]*>)3(</tspan>)'
-    )
-    tampered, n = pattern.subn(r"\g<1>4\g<2>", svg)
+    # #2158: the callout is the component's table row; its count cell
+    cell = row_cell(svg, "c08-riser-joint-bare", "qty")
+    pattern = re.compile(r'(<tspan data-field="count"[^>]*>)3(</tspan>)')
+    new, n = pattern.subn(r"\g<1>4\g<2>", cell)
     assert n == 1
+    tampered = svg.replace(cell, new)
 
     report = reconcile(spec, tampered)
 

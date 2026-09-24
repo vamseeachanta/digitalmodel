@@ -1,4 +1,4 @@
-"""Riser stack-up SVG renderer (#2152).
+"""Riser stack-up SVG renderer (#2152, #2158).
 
 ``render(spec) -> str`` depends only on :mod:`.schema` and the standard
 library. Output is deterministic (no timestamps, no random ids): the same spec
@@ -15,7 +15,18 @@ Drawing conventions
   the elevation transform, which is embedded as JSON in
   ``<g id="elevation-transform" data-zones=...>`` so the reconciler can invert it.
 * Every printed number sits in its own ``<tspan>`` carrying ``data-field``
-  (and ``data-unit`` / ``data-decimals``). NOT_FOUND renders as grey "n/a".
+  (and ``data-unit`` / ``data-decimals``). NOT_FOUND renders as grey "n/a";
+  a field that does not apply renders as "–".
+* Callouts are table rows (design A, owner decision L11): one row per
+  component plus the drill floor and the tensioners, fixed columns under one
+  header (units in the header), each row placed at the nearest free position
+  to its component's elevation with an angled leader when rows cluster. The
+  last column lists the report design-data items (``D-nn``) behind the row's
+  values with a class flag: P public, D owner decision, A assumed. The sheet
+  width follows the table columns.
+* A review list above the title block lists every open data conflict and gap
+  keyed by ``component_id``; the rows named there carry a warning mark.
+* A component with ``nested_in`` is drawn after its host.
 
 Primitives: ``marine_ops.artificial_lift.dynacard.visualization.svg_primitives``
 was reviewed and not reused - its ``CoordMapper`` is linear only (no broken
@@ -35,8 +46,10 @@ from typing import Any, Iterable, Optional
 from digitalmodel.drilling_riser.stackup_drawing.schema import (
     NESTED_TYPES,
     NOT_FOUND,
+    SOURCE_CLASSES,
     StackupComponent,
     StackupDrawingSpec,
+    open_review_entries,
 )
 from digitalmodel.drilling_riser.stackup_drawing.schema import (
     ComponentType as CT,
@@ -63,6 +76,54 @@ WT_TYPES = {
 }
 FRAME_TYPES = {CT.LMRP, CT.BOP, CT.TREE, CT.TUBING_HANGER_SPOOL}
 
+# -- table (design A) and review list; the reconciler freezes the same numbers ----------
+TABLE_X0 = 516.0
+TABLE_RIGHT_MARGIN = 14.0
+ROW_PITCH = 20.0
+HEADER_HEIGHT = 32.0
+CELL_BASELINE = 4.4
+LEGEND_HEIGHT = 56.0
+WARN_INSET = 16.0
+#: (key, header, header units, width px); units live in the header only.
+COLUMNS = (
+    ("component", "Component", "", 206.0),
+    ("qty", "Qty × length", "no. × ft", 84.0),
+    ("top", "Top EL", "m (ft)", 144.0),
+    ("bot", "Bottom EL", "m", 80.0),
+    ("od", "OD / width", "in", 76.0),
+    ("wall", "Wall", "in", 60.0),
+    ("buoy", "Buoyancy", "OD in / rating ft", 104.0),
+    ("dd", "Design data", "D-ID and class", 240.0),
+)
+#: data-col -> (column, x offset from the column's left edge, text-anchor).
+CELL_POS = {
+    "component": ("component", 6.0, "start"),
+    "qty": ("qty", 18.0, "end"),
+    "qty_x": ("qty", 33.0, "middle"),
+    "qty_len": ("qty", 73.0, "end"),
+    "top": ("top", 64.0, "end"),
+    "top_ft": ("top", 138.0, "end"),
+    "bot": ("bot", 66.0, "end"),
+    "od_w": ("od", 5.0, "start"),
+    "od": ("od", 62.0, "end"),
+    "wall": ("wall", 46.0, "end"),
+    "buoy": ("buoy", 28.0, "end"),
+    "buoy_sep": ("buoy", 44.0, "middle"),
+    "buoy_rating": ("buoy", 90.0, "end"),
+    "dd": ("dd", 6.0, "start"),
+}
+LITERAL_COLS = {"qty_x", "od_w", "buoy_sep"}
+#: "not applicable" cell content.
+DASH = (("–", {"class": "nap"}),)
+REVIEW_GAP = 14.0
+REVIEW_HEADER_BASELINE = 16.0
+REVIEW_PITCH = 15.0
+REVIEW_BOTTOM_PAD = 9.0
+REVIEW_TEXT_X = 26.0
+REVIEW_CHAR_PX = 6.2
+TITLE_GAP = 10.0
+TITLE_NOTE_LINES = 5
+
 
 # ---------------------------------------------------------------------------
 # layout + elevation transform
@@ -71,7 +132,8 @@ FRAME_TYPES = {CT.LMRP, CT.BOP, CT.TREE, CT.TUBING_HANGER_SPOOL}
 
 @dataclass(frozen=True)
 class Layout:
-    width: float = 860.0
+    """Drawing-band layout. The sheet width follows the table (``COLUMNS``)."""
+
     axis_x: float = 70.0
     center_x: float = 330.0
     label_x: float = 524.0
@@ -83,7 +145,6 @@ class Layout:
     above_floor_m: float = 10.0
     below_lowest_m: float = 10.0
     run_margin_m: float = 12.0
-    label_pitch: float = 37.0
     title_block_height: float = 196.0
 
 
@@ -277,7 +338,6 @@ def _num(
     decimals: Optional[int] = None,
     *,
     signed: bool = False,
-    dagger: bool = False,
     factor: float = 1.0,
     cls: Optional[str] = None,
 ) -> list[tuple[str, dict]]:
@@ -296,14 +356,7 @@ def _num(
             },
         )
     ]
-    if dagger:
-        spans.append(("†", {"class": "rpt"}))
     return spans
-
-
-def _is_report(prov: dict, name: str) -> bool:
-    p = prov.get(name)
-    return bool(p) and p.basis == "report table"
 
 
 # ---------------------------------------------------------------------------
@@ -359,10 +412,26 @@ text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Aria
 .cut{fill:none;stroke:#1c252e;stroke-width:1.1}
 .leader{fill:none;stroke:#46505a;stroke-width:0.7}
 .dot{fill:#46505a}
-.co1{font-size:14px;font-weight:600}
-.co2{font-size:12.5px;fill:#39444f}
 .na{fill:#8a939c;font-style:italic}
-.rpt{fill:#8a3b12}
+.nap{fill:#9aa3ab}
+.tc{font-size:13px;stroke:none;font-variant-numeric:tabular-nums lining-nums;font-feature-settings:"tnum" 1,"lnum" 1}
+.tl{font-size:11.5px;fill:#39444f;stroke:none}
+.tdd{font-size:11px;fill:#2b3642;stroke:none;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.th{font-size:11px;font-weight:700;fill:#2b3642;stroke:none;letter-spacing:.02em}
+.thu{font-size:10.5px;fill:#5b6670;stroke:none}
+.ddc-p,.ddc-d,.ddc-a{font-size:8.5px;font-weight:700;baseline-shift:super}
+.ddc-p{fill:#1f6f43}
+.ddc-d{fill:#6b2fa3}
+.ddc-a{fill:#9a6a00}
+.row-a{fill:#f3f6f9}
+.row-b{fill:#ffffff}
+.row-rule{stroke:#c9d1d8;stroke-width:0.6}
+.hdr-bg{fill:#e6ebf0;stroke:#9aa4ad;stroke-width:0.8}
+.grid{stroke:#b3bcc4;stroke-width:0.6;fill:none}
+.warn{fill:#f2a60c;stroke:#8a5a00;stroke-width:0.7}
+.rl-bg{fill:#fffaf0;stroke:#1c252e;stroke-width:1}
+.rl-hdr{font-size:9.5px;font-weight:600;fill:#5b6670;letter-spacing:.04em}
+.rl,.rl-none{font-size:11.5px;fill:#39444f}
 .dlbl{font-size:12px;font-weight:600}
 .dlbl2{font-size:11px;fill:#39444f}
 .note-l{font-size:11.5px;fill:#39444f;font-style:italic}
@@ -414,7 +483,15 @@ class _Renderer:
         self.T = ElevationTransform.build(spec, lay)
         self.cx = lay.center_x
         self.out: list[str] = []
-        self.callouts: list[dict] = []
+        #: (row key attribute, value) -> leader anchor (x, y) of drawn items.
+        self.anchors: dict[tuple[str, str], tuple[float, float]] = {}
+        self.col_x: dict[str, float] = {}
+        x = TABLE_X0
+        for key, _, _, w in COLUMNS:
+            self.col_x[key] = x
+            x += w
+        self.table_x1 = x
+        self.width = x + TABLE_RIGHT_MARGIN
         bare = [c for c in spec.components if c.type in RUN_TYPES and c.known("od_in")]
         self.nominal_od = float(bare[0].od_in) if bare else 21.0
         self.buoy_class: dict[str, str] = {}
@@ -454,13 +531,22 @@ class _Renderer:
     # -- document -----------------------------------------------------------
     def render(self) -> str:
         lay = self.lay
-        H = self.y_draw_bottom + 14 + lay.title_block_height + 12
+        self.review_lines = self._review_lines()
+        self.review_height = (
+            REVIEW_HEADER_BASELINE
+            + len(self.review_lines) * REVIEW_PITCH
+            + REVIEW_BOTTOM_PAD
+        )
+        self.y_review = self.y_draw_bottom + REVIEW_GAP
+        self.y_title = self.y_review + self.review_height + TITLE_GAP
+        H = self.y_title + lay.title_block_height + 12
         self.H = H
+        W = self.width
         tb = self.s.title_block
         o = self.out
         o.append(
-            f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {_n(lay.width)} {_n(H)}" '
-            f'width="{_n(lay.width)}" height="{_n(H)}" role="img" '
+            f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {_n(W)} {_n(H)}" '
+            f'width="{_n(W)}" height="{_n(H)}" role="img" '
             f'aria-label="{html.escape(tb.title, quote=True)}">'
         )
         o.append(f"<title>{html.escape(tb.title)}</title>")
@@ -470,7 +556,7 @@ class _Renderer:
         )
         o.append(f"<style>{STYLE}</style>")
         o.append(DEFS)
-        o.append(f'<g data-role="decor">{svg_rect(0, 0, lay.width, H, "bg")}</g>')
+        o.append(f'<g data-role="decor">{svg_rect(0, 0, W, H, "bg")}</g>')
         o.append(
             f'<g id="elevation-transform" data-role="axis" data-zones="{html.escape(self.T.to_json(), quote=True)}" '
             f'data-px-per-in="{lay.px_per_in}" data-center-x="{_n(self.cx)}" '
@@ -481,10 +567,10 @@ class _Renderer:
         self.axis()
         self.centreline()
         self.tensioners()
-        for c in self.s.components:
-            self.component(c)
+        self.components()
         self.breaks()
-        self.place_callouts()
+        self.place_table()
+        self.review_list()
         self.title_block()
         o.append("</svg>")
         return "\n".join(o) + "\n"
@@ -550,34 +636,8 @@ class _Renderer:
                 )
                 + "</g>"
             )
-            self.callouts.append(
-                {
-                    "ay": yf,
-                    "ax": cx + 168,
-                    "role": "datum",
-                    "datum": "drill_floor_el_m",
-                    "l1": [_txt("Drill floor (RKB)")],
-                    "l2": [_txt("EL ")]
-                    + _num(
-                        d.drill_floor_el_m,
-                        "datums.drill_floor_el_m",
-                        "m",
-                        2,
-                        signed=True,
-                    )
-                    + [_txt(" m (")]
-                    + _num(
-                        d.drill_floor_el_m,
-                        "datums.drill_floor_el_m",
-                        "ft",
-                        1,
-                        signed=True,
-                        factor=M2FT,
-                    )
-                    + [_txt(" ft) · ")]
-                    + [_txt(self.s.title_block.vessel_label)],
-                }
-            )
+            # leader anchor: the right end of the drill-floor line
+            self.anchors[("data-datum", "drill_floor_el_m")] = (cx + 166, yf)
         y0 = T.y(0.0)
         g.append(
             '<g data-role="datum" data-datum="msl_el_m" data-el-m="0">'
@@ -616,18 +676,22 @@ class _Renderer:
                 + svg_text(
                     lay.axis_x + 64,
                     yml + 31,
-                    [_txt("EL ")]
-                    + _num(d.mudline_el_m, "datums.mudline_el_m", "m", 2, signed=True)
-                    + [_txt(" m (")]
-                    + _num(
-                        d.mudline_el_m,
-                        "datums.mudline_el_m",
-                        "ft",
-                        1,
-                        signed=True,
-                        factor=M2FT,
-                    )
-                    + [_txt(" ft)")],
+                    self._inline_dd(
+                        [_txt("EL ")]
+                        + _num(
+                            d.mudline_el_m, "datums.mudline_el_m", "m", 2, signed=True
+                        )
+                        + [_txt(" m (")]
+                        + _num(
+                            d.mudline_el_m,
+                            "datums.mudline_el_m",
+                            "ft",
+                            1,
+                            signed=True,
+                            factor=M2FT,
+                        )
+                        + [_txt(" ft)")]
+                    ),
                     "dlbl2",
                 )
                 + "</g>"
@@ -797,42 +861,64 @@ class _Renderer:
             g.append(svg_circle(xs, ys, 2.0, "dot"))
         g.append("</g>")
         self.out.extend(g)
-        self.callouts.append(
-            {
-                "ay": ys,
-                "ax": cx + r_px + rs + 12,
-                "role": "tensioner",
-                "l1": [_txt("Riser tensioners, ")]
-                + _num(ts.count, "tensioner_system.count", "count", 0)
-                + [_txt(" lines (two shown)")],
-                "l2": [_txt("Sheave EL ")]
-                + _num(
-                    ts.sheave_el_m, "tensioner_system.sheave_el_m", "m", 2, signed=True
-                )
-                + [_txt(" m · radius ")]
-                + _num(ts.sheave_radius_m, "tensioner_system.sheave_radius_m", "m", 2)
-                + [_txt(" m")],
-            }
-        )
+        # leader anchor: the right sheave's rim
+        self.anchors[("data-row", "tensioner_system")] = (cx + r_px + rs - 2, ys)
 
     # -- components ------------------------------------------------------------------
+    def components(self) -> None:
+        """Draw in spec order, each ``nested_in`` component right after its host."""
+        done: set[str] = set()
+        waiting: list[StackupComponent] = []
+
+        def draw(c: StackupComponent) -> None:
+            self.component(c)
+            done.add(c.id)
+            for w in [w for w in waiting if w.nested_in == c.id]:
+                waiting.remove(w)
+                draw(w)
+
+        for c in self.s.components:
+            if c.nested_in and c.nested_in not in done:
+                waiting.append(c)
+            else:
+                draw(c)
+        for c in waiting:  # host not drawable: keep spec order
+            self.component(c)
+
+    def _group_attrs(self, c: StackupComponent) -> str:
+        attrs = (
+            f'data-role="component" data-component-id="{html.escape(c.id)}" data-type="{c.type.value}" '
+            f'data-top-el-m="{c.top_el_m}" data-bottom-el-m="{c.bottom_el_m}" '
+            f'data-od-in="{_av(c.od_in)}" data-count="{c.count}"'
+        )
+        if c.nested_in:
+            attrs += f' data-nested-in="{html.escape(c.nested_in, quote=True)}"'
+        return attrs
+
+    def _pivot(self, c: StackupComponent) -> Optional[float]:
+        """Pivot elevation for the first flex joint of each kind, if stated."""
+        key = {
+            CT.UPPER_FLEX_JOINT: "ufj_pivot_el_m",
+            CT.LOWER_FLEX_JOINT: "lfj_pivot_el_m",
+        }.get(c.type)
+        if key is None:
+            return None
+        first = next(x for x in self.s.components if x.type == c.type)
+        rv = self.s.reference_totals.get(key)
+        if first is not c or rv is None or rv.value in (None, NOT_FOUND):
+            return None
+        return float(rv.value)
+
     def component(self, c: StackupComponent) -> None:
         if not (c.known("top_el_m") and c.known("bottom_el_m")):
             self.out.append(
-                f'<g data-role="component" data-component-id="{html.escape(c.id)}" data-type="{c.type.value}" '
-                f'data-top-el-m="{c.top_el_m}" data-bottom-el-m="{c.bottom_el_m}" data-od-in="{_av(c.od_in)}" '
-                f'data-count="{c.count}" data-source="{html.escape(c.source)}" data-not-drawn="elevation NOT_FOUND"></g>'
+                f'<g {self._group_attrs(c)} data-not-drawn="elevation NOT_FOUND"></g>'
             )
             return
         top, bot = float(c.top_el_m), float(c.bottom_el_m)
         pieces = self.T.pieces(top, bot)
         clipped = bot < self.T.zones[-1]["z_lo"] - 1e-9
-        attrs = (
-            f'data-role="component" data-component-id="{html.escape(c.id)}" data-type="{c.type.value}" '
-            f'data-top-el-m="{c.top_el_m}" data-bottom-el-m="{c.bottom_el_m}" '
-            f'data-od-in="{_av(c.od_in)}" data-count="{c.count}" '
-            f'data-source="{html.escape(c.source, quote=True)}"'
-        )
+        attrs = self._group_attrs(c)
         if clipped:
             attrs += ' data-clipped="bottom"'
         g = [f"<g {attrs}>"]
@@ -966,10 +1052,24 @@ class _Renderer:
                     )
                 )
         elif t in (CT.UPPER_FLEX_JOINT, CT.LOWER_FLEX_JOINT):
-            ym = (yT + yB) / 2
+            pivot = self._pivot(c)
+            ym = (yT + yB) / 2 if pivot is None else T.y(pivot)
             g.append(svg_rect(cx - 14, ym - 12, 28, 3, "flange", data_part="symbol"))
             g.append(svg_rect(cx - 14, ym + 9, 28, 3, "flange", data_part="symbol"))
-            g.append(svg_circle(cx, ym, 9, "ball", data_part="symbol"))
+            if pivot is None:
+                g.append(svg_circle(cx, ym, 9, "ball", data_part="symbol"))
+            else:
+                # the pivot carries its elevation and is position-checked
+                g.append(
+                    svg_circle(
+                        cx,
+                        ym,
+                        9,
+                        "ball",
+                        data_part="pivot",
+                        data_pivot_el_m=repr(pivot),
+                    )
+                )
         elif t == CT.TENSION_RING:
             g.append(
                 svg_rect(cx - wpx / 2, yT - 3.5, wpx, 7, "ring", data_part="symbol")
@@ -1021,7 +1121,7 @@ class _Renderer:
             )
         g.append("</g>")
         self.out.extend(g)
-        self._queue_callout(c, pieces, wpx, clipped)
+        self._anchor(c, pieces, wpx)
 
     def _frame_detail(self, c, yT, yB, wpx) -> list[str]:
         cx, h = self.cx, yB - yT
@@ -1193,173 +1293,445 @@ class _Renderer:
         g.append("</g>")
         self.out.extend(g)
 
-    # -- callouts -----------------------------------------------------------------------------
-    def _queue_callout(self, c: StackupComponent, pieces, wpx, clipped) -> None:
+    # -- table rows (design A, #2158) --------------------------------------------------------
+    def _anchor(self, c: StackupComponent, pieces, wpx) -> None:
+        """Leader anchor of a drawn component: body edge, middle of its largest piece."""
         if not pieces:
             return
         big = max(pieces, key=lambda p: p[1] - p[0])
         ay = (big[0] + min(big[1], self.y_draw_bottom)) / 2
         if c.type in (CT.UPPER_FLEX_JOINT, CT.LOWER_FLEX_JOINT):
             ax = self.cx + 10
-        elif c.type == CT.TENSION_RING:
-            ax = self.cx + wpx / 2 + 1
         else:
             ax = self.cx + wpx / 2 + 1
-        P = c.provenance
-        l1: list = []
-        if c.type in COUNTED_TYPES:
-            l1 += _num(c.count, "count", "count", 0) + [_txt(" × ")]
-            if c.known("joint_length_m"):
+        self.anchors[("data-component-id", c.id)] = (ax, ay)
+
+    def _rows(self) -> list[dict]:
+        """Every table row: drill floor, tensioners, then components."""
+        s = self.s
+        rows = []
+        if s.datums.drill_floor_el_m not in (None, NOT_FOUND):
+            rows.append({"kind": "datum", "key": ("data-datum", "drill_floor_el_m")})
+        if s.tensioner_system is not None:
+            rows.append({"kind": "tensioner", "key": ("data-row", "tensioner_system")})
+        for c in s.components:
+            rows.append(
+                {"kind": "component", "key": ("data-component-id", c.id), "c": c}
+            )
+        for r in rows:
+            r["anchor"] = self.anchors.get(r["key"])
+        return rows
+
+    def _val(self, v, fld, unit, dec=None, *, signed=False, factor=1.0):
+        if v is None:
+            return list(DASH)
+        return _num(v, fld, unit, dec, signed=signed, factor=factor)
+
+    def _cells(self, row: dict) -> list[tuple[str, list]]:
+        """``(data-col, spans)`` of one row; the design-data cell is added later."""
+        s = self.s
+        if row["kind"] == "datum":
+            v = s.datums.drill_floor_el_m
+            return [
+                ("component", [_txt("Drill floor (RKB)")]),
+                ("qty", list(DASH)),
+                ("top", _num(v, "datums.drill_floor_el_m", "m", 2, signed=True)),
+                ("top_ft", self._ft(v, "datums.drill_floor_el_m")),
+                ("bot", list(DASH)),
+                ("od", list(DASH)),
+                ("wall", list(DASH)),
+                ("buoy", list(DASH)),
+            ]
+        if row["kind"] == "tensioner":
+            ts = s.tensioner_system
+            radius = self._val(
+                ts.sheave_radius_m, "tensioner_system.sheave_radius_m", "m", 2
+            )
+            label = [_txt("Tensioners, sheave R ")] + radius
+            if ts.sheave_radius_m not in (None, NOT_FOUND):
+                label += [_txt(" m")]
+            return [
+                ("component", label),
+                ("qty", self._val(ts.count, "tensioner_system.count", "count", 0)),
+                ("qty_len", list(DASH)),
+                (
+                    "top",
+                    self._val(
+                        ts.sheave_el_m,
+                        "tensioner_system.sheave_el_m",
+                        "m",
+                        2,
+                        signed=True,
+                    ),
+                ),
+                ("top_ft", self._ft(ts.sheave_el_m, "tensioner_system.sheave_el_m")),
+                ("bot", list(DASH)),
+                ("od", list(DASH)),
+                ("wall", list(DASH)),
+                ("buoy", list(DASH)),
+            ]
+        c = row["c"]
+        out = [
+            ("component", [_txt(c.label[:1].upper() + c.label[1:])]),
+            ("qty", self._val(c.count, "count", "count", 0)),
+        ]
+        if c.joint_length_m is None:
+            out.append(("qty_len", list(DASH)))
+        else:
+            dec = 1
+            if c.joint_length_m != NOT_FOUND:
                 lft = float(c.joint_length_m) * M2FT
-                l1 += _num(
-                    c.joint_length_m,
-                    "joint_length_m",
-                    "ft",
-                    0 if abs(lft - round(lft)) < 0.05 else 1,
-                    factor=M2FT,
-                    dagger=_is_report(P, "joint_length_m"),
-                ) + [_txt(" ft ")]
-            else:
-                l1 += [
-                    ("n/a", {"class": "na", "data-field": "joint_length_m"}),
-                    _txt(" "),
-                ]
-            l1 += [_txt(c.label)]
-            if c.type == CT.RISER_JOINT_BUOYANT and c.buoyancy_od_in is not None:
-                l1 += (
-                    [_txt(" (Ø")]
-                    + _num(
-                        c.buoyancy_od_in,
-                        "buoyancy_od_in",
-                        "in",
-                        dagger=_is_report(P, "buoyancy_od_in"),
-                    )
-                    + [_txt(" in)")]
+                dec = 0 if abs(lft - round(lft)) < 0.05 else 1
+            out.append(("qty_x", [_txt("×")]))
+            out.append(
+                (
+                    "qty_len",
+                    _num(c.joint_length_m, "joint_length_m", "ft", dec, factor=M2FT),
                 )
-        else:
-            l1 = [_txt(c.label)]
-        long_form = c.type in RUN_TYPES or clipped or c.type == CT.CASING
-        dg = lambda f: _is_report(P, f)  # noqa: E731
-        if long_form:
-            l2 = (
-                [_txt("EL ")]
-                + _num(
-                    c.top_el_m, "top_el_m", "m", 2, signed=True, dagger=dg("top_el_m")
-                )
-                + [_txt(" to ")]
-                + _num(
-                    c.bottom_el_m,
-                    "bottom_el_m",
-                    "m",
-                    2,
-                    signed=True,
-                    dagger=dg("bottom_el_m"),
-                )
-                + [_txt(" m")]
             )
-        else:
-            l2 = (
-                [_txt("EL ")]
-                + _num(
-                    c.top_el_m, "top_el_m", "m", 2, signed=True, dagger=dg("top_el_m")
-                )
-                + [_txt(" m (")]
-                + _num(c.top_el_m, "top_el_m", "ft", 1, signed=True, factor=M2FT)
-                + [_txt(" ft)")]
-            )
+        out.append(("top", self._val(c.top_el_m, "top_el_m", "m", 2, signed=True)))
+        out.append(("top_ft", self._ft(c.top_el_m, "top_el_m")))
+        out.append(
+            ("bot", self._val(c.bottom_el_m, "bottom_el_m", "m", 2, signed=True))
+        )
         if c.od_in is not None:
-            if c.od_in == NOT_FOUND:
-                l2 += [_txt(" · OD "), ("n/a", {"class": "na", "data-field": "od_in"})]
-            else:
-                l2 += [_txt(" · Ø")] + _num(c.od_in, "od_in", "in", dagger=dg("od_in"))
-                if c.type in WT_TYPES and c.wall_thickness_in is not None:
-                    l2 += [_txt(" × ")] + _num(
-                        c.wall_thickness_in,
-                        "wall_thickness_in",
-                        "in",
-                        3,
-                        dagger=dg("wall_thickness_in"),
-                    )
-                l2 += [_txt(" in")]
+            out.append(("od", _num(c.od_in, "od_in", "in")))
         elif c.envelope_width_in is not None:
-            l2 += [_txt(" · W ")] + _num(
-                c.envelope_width_in,
-                "envelope_width_in",
-                "in",
-                dagger=dg("envelope_width_in"),
+            out.append(("od_w", [_txt("W")]))
+            out.append(("od", _num(c.envelope_width_in, "envelope_width_in", "in")))
+        else:
+            out.append(("od", list(DASH)))
+        out.append(
+            ("wall", self._val(c.wall_thickness_in, "wall_thickness_in", "in", 3))
+        )
+        if c.buoyancy_od_in is None and c.buoyancy_depth_rating_ft is None:
+            out.append(("buoy", list(DASH)))
+        else:
+            out.append(("buoy", self._val(c.buoyancy_od_in, "buoyancy_od_in", "in")))
+            out.append(("buoy_sep", [_txt("/")]))
+            out.append(
+                (
+                    "buoy_rating",
+                    self._val(
+                        c.buoyancy_depth_rating_ft, "buoyancy_depth_rating_ft", "ft", 0
+                    ),
+                )
             )
-            if c.envelope_width_in != NOT_FOUND:
-                l2 += [_txt(" in")]
-        if c.type == CT.RISER_JOINT_BUOYANT and c.buoyancy_depth_rating_ft is not None:
-            l2 += (
-                [_txt(" · ")]
-                + _num(c.buoyancy_depth_rating_ft, "buoyancy_depth_rating_ft", "ft", 0)
-                + [_txt(" ft rating")]
-            )
-        self.callouts.append(
-            {"ay": ay, "ax": ax, "role": "callout", "cid": c.id, "l1": l1, "l2": l2}
+        return out
+
+    def _ft(self, v, fld):
+        if v is None:
+            return list(DASH)
+        if v == NOT_FOUND:
+            return _num(v, fld, "ft")
+        return (
+            [_txt("(")] + _num(v, fld, "ft", 1, signed=True, factor=M2FT) + [_txt(")")]
         )
 
-    def place_callouts(self) -> None:
-        lay = self.lay
-        items = sorted(self.callouts, key=lambda k: k["ay"])
-        pitch = lay.label_pitch
-        lo, hi = lay.top_margin + 4, self.y_draw_bottom - pitch + 10
-        # cluster relaxation: labels centred on their anchors, min spacing = pitch
-        clusters = [[i] for i in range(len(items))]
-        pos = [it["ay"] - 6 for it in items]
+    def _prov_of(self, row: Optional[dict], fld: str):
+        """Provenance entry behind a printed field (a row field or a dotted path)."""
+        s = self.s
+        if "." not in fld:
+            return row["c"].provenance.get(fld) if row and row.get("c") else None
+        head, rest = fld.split(".", 1)
+        if head == "datums":
+            return s.datums.provenance.get(rest)
+        if head == "tensioner_system" and s.tensioner_system is not None:
+            return s.tensioner_system.provenance.get(rest)
+        if head == "reference_totals":
+            return s.reference_totals.get(rest.rsplit(".", 1)[0])
+        return None
 
-        def place(cl):
-            mean = sum(items[i]["ay"] - 6 for i in cl) / len(cl)
-            start = mean - (len(cl) - 1) * pitch / 2
-            start = max(lo, min(start, hi - (len(cl) - 1) * pitch))
-            for k, i in enumerate(cl):
-                pos[i] = start + k * pitch
+    def _dd_ids(self, row: Optional[dict], spans_list) -> tuple[list[str], bool]:
+        """Sorted D-IDs behind the printed values, and whether any value lacks one."""
+        ids, missing = set(), False
+        for spans in spans_list:
+            for _, a in spans:
+                fld = a.get("data-field")
+                if fld is None or a.get("class") == "na" or fld.startswith("derived."):
+                    continue
+                if fld == "datums.msl_el_m":
+                    continue
+                prov = self._prov_of(row, fld)
+                did = getattr(prov, "design_data_id", None)
+                if did is not None and self.s.design_item(did) is not None:
+                    ids.add(did)
+                else:
+                    missing = True
+        return sorted(ids, key=lambda d: int(d.split("-")[1])), missing
 
-        for cl in clusters:
-            place(cl)
-        changed = True
-        while changed:
-            changed = False
-            for k in range(len(clusters) - 1):
-                a, b = clusters[k], clusters[k + 1]
-                if pos[b[0]] - pos[a[-1]] < pitch - 1e-6:
-                    clusters[k] = a + b
-                    del clusters[k + 1]
-                    place(clusters[k])
-                    changed = True
-                    break
-        g = []
-        lx = lay.label_x
-        for i, it in enumerate(items):
-            y = pos[i]
-            role = it["role"]
-            head = f'<g data-role="{"datum-label" if role == "datum" else role}"'
-            if it.get("cid"):
-                head += f' data-component-id="{html.escape(it["cid"])}"'
-            if it.get("datum"):
-                head += f' data-datum="{it["datum"]}"'
-            g.append(head + ">")
-            ax, ay = it["ax"], it["ay"]
-            g.append(
-                svg_polyline(
-                    [(ax + 2, ay), (lx - 34, ay), (lx - 8, y - 4), (lx - 3, y - 4)],
-                    "leader",
-                )
+    def _dd_spans(self, ids: list[str], missing: bool, lead: str = "") -> list:
+        """``D-nn`` + class flag per id, comma separated; ``n/a`` when a value has none."""
+        parts = []
+        for did in ids:
+            flag = SOURCE_CLASSES[self.s.design_item(did).source_class]
+            parts.append(
+                [(did, {"data-dd": did}), (flag, {"class": f"ddc-{flag.lower()}"})]
             )
-            g.append(svg_circle(ax + 2, ay, 1.8, "dot"))
-            extra = {"data_component_id": it["cid"]} if it.get("cid") else {}
-            g.append(svg_text(lx, y, it["l1"], "co1", **extra))
-            g.append(svg_text(lx, y + 15, it["l2"], "co2", **extra))
+        if missing:
+            parts.append([("n/a", {"class": "na"})])
+        out = [_txt(lead)] if lead and parts else []
+        for i, part in enumerate(parts):
+            if i:
+                out.append(_txt(", "))
+            out += part
+        return out
+
+    def _inline_dd(self, spans: list) -> list:
+        """Append the D-IDs of the values printed in ``spans`` (non-table text)."""
+        ids, _ = self._dd_ids(None, [spans])
+        return spans + self._dd_spans(ids, False, lead=" ")
+
+    def place_table(self) -> None:
+        P = ROW_PITCH
+        x0, x1 = TABLE_X0, self.table_x1
+        rows = self._rows()
+        drawn = sorted(
+            [r for r in rows if r["anchor"] is not None], key=lambda r: r["anchor"][1]
+        )
+        undrawn = [r for r in rows if r["anchor"] is None]
+        lo = self.lay.top_margin + HEADER_HEIGHT + P / 2
+        legend_top = self.y_draw_bottom - LEGEND_HEIGHT
+        hi = legend_top - P / 2 - len(undrawn) * P
+        pos = _relax([r["anchor"][1] for r in drawn], P, lo, hi)
+        placed = list(zip(drawn, pos)) + [
+            (r, hi + P * (k + 1)) for k, r in enumerate(undrawn)
+        ]
+        o = self.out
+        o.extend(self._header())
+        review = {}
+        for kind, i, entry in open_review_entries(self.s):
+            review.setdefault(entry.get("component_id"), []).append(f"{kind}[{i}]")
+        for n, (row, yc) in enumerate(placed):
+            akey, aval = row["key"]
+            g = [f'<g data-role="table-row" {akey}="{html.escape(aval, quote=True)}">']
+            g.append(
+                svg_rect(x0, yc - P / 2, x1 - x0, P, "row-a" if n % 2 == 0 else "row-b")
+            )
+            g.append(svg_line(x0, yc + P / 2, x1, yc + P / 2, "row-rule"))
+            if row["anchor"] is not None:
+                ax, ay = row["anchor"]
+                bend = max(ax + 2, x0 - 34)
+                g.append(
+                    svg_polyline(
+                        [(ax + 2, ay), (bend, ay), (x0 - 10, yc), (x0 - 1, yc)],
+                        "leader",
+                    )
+                )
+                g.append(svg_circle(ax + 2, ay, 1.8, "dot"))
+            cells = self._cells(row)
+            ids, missing = self._dd_ids(row, [sp for _, sp in cells])
+            cells.append(("dd", self._dd_spans(ids, missing)))
+            base = yc + CELL_BASELINE
+            for col, spans in cells:
+                ckey, off, anchor = CELL_POS[col]
+                cls = "tdd" if col == "dd" else ("tl" if col in LITERAL_COLS else "tc")
+                g.append(
+                    svg_text(
+                        self.col_x[ckey] + off,
+                        base,
+                        spans,
+                        cls,
+                        text_anchor=anchor,
+                        data_col=col,
+                    )
+                )
+            rkey = {
+                "datum": "datums",
+                "tensioner": "tensioner_system",
+                "component": aval,
+            }[row["kind"]]
+            if rkey in review:
+                wx = x1 - WARN_INSET
+                g.append(
+                    svg_path(
+                        f"M{_n(wx)},{_n(yc + 5)} l5.5,-10 l5.5,10 z",
+                        "warn",
+                        data_part="warn",
+                        data_review=" ".join(review[rkey]),
+                    )
+                )
             g.append("</g>")
+            o.extend(g)
+        o.extend(self._legend(legend_top))
+
+    def _header(self) -> list[str]:
+        x0, x1, y0 = TABLE_X0, self.table_x1, self.lay.top_margin
+        g = ['<g data-role="table-header">']
+        g.append(svg_rect(x0, y0, x1 - x0, HEADER_HEIGHT, "hdr-bg"))
+        for key, h1, h2, _ in COLUMNS:
+            a = self.col_x[key]
+            b = a + dict((k, w) for k, _, _, w in COLUMNS)[key]
+            if key == "component":
+                g.append(svg_text(a + 6, y0 + 20, [_txt(h1)], "th", data_col=key))
+            else:
+                xm = (a + b) / 2
+                g.append(
+                    svg_text(
+                        xm,
+                        y0 + 13,
+                        [_txt(h1)],
+                        "th",
+                        text_anchor="middle",
+                        data_col=key,
+                    )
+                )
+                g.append(
+                    svg_text(
+                        xm,
+                        y0 + 26,
+                        [_txt(h2)],
+                        "thu",
+                        text_anchor="middle",
+                        data_col=key,
+                    )
+                )
+            if a > x0:
+                g.append(svg_line(a, y0 + 3, a, y0 + HEADER_HEIGHT - 3, "grid"))
+        g.append("</g>")
+        return g
+
+    def _legend(self, y_top: float) -> list[str]:
+        x = TABLE_X0 + 2
+        y = y_top + 14
+        g = ['<g data-role="table-legend">']
+        g.append(
+            svg_text(
+                x,
+                y,
+                [
+                    _txt(
+                        "Design data: D-ID = item in the report's Design data table; "
+                    ),
+                    ("P", {"class": "ddc-p"}),
+                    _txt(" = public source · "),
+                    ("D", {"class": "ddc-d"}),
+                    _txt(" = owner decision · "),
+                    ("A", {"class": "ddc-a"}),
+                    _txt(" = ASSUMED - to be confirmed (no public data)."),
+                ],
+                "tl",
+            )
+        )
+        g.append(
+            svg_text(
+                x,
+                y + 15,
+                [
+                    ("n/a", {"class": "na"}),
+                    _txt(" applies but not found in the sources · "),
+                    ("–", {"class": "nap"}),
+                    _txt(" not applicable to the item type."),
+                ],
+                "tl",
+            )
+        )
+        g.append(svg_path(f"M{_n(x)},{_n(y + 35)} l5.5,-10 l5.5,10 z", "warn"))
+        g.append(
+            svg_text(
+                x + 16,
+                y + 34,
+                [_txt("Open data conflict or gap for the item: see the review list.")],
+                "tl",
+            )
+        )
+        g.append("</g>")
+        return g
+
+    # -- review list (L12) --------------------------------------------------------------------
+    def _review_lines(self) -> list[tuple[Optional[str], list]]:
+        """``(data-review key or None, spans)`` per line of the review list."""
+        lines: list[tuple[Optional[str], list]] = []
+        width_chars = int((self.width - 24 - REVIEW_TEXT_X - 12) / REVIEW_CHAR_PX)
+        for kind, i, e in open_review_entries(self.s):
+            key = f"{kind}[{i}]"
+            path = f"{kind}.{i}"
+            head = [
+                _txt("Conflict" if kind == "data_conflicts" else "Gap"),
+                _txt(" · "),
+            ]
+            cid = e.get("component_id")
+            if cid is None:
+                head += [_txt("drawing")]
+            else:
+                head += [
+                    (
+                        str(cid),
+                        {"data-field": f"{path}.component_id", "data-kind": "text"},
+                    )
+                ]
+            if e.get("item") not in (None, ""):
+                head += [
+                    _txt(" · "),
+                    (
+                        str(e["item"]),
+                        {"data-field": f"{path}.item", "data-kind": "text"},
+                    ),
+                ]
+            detail = e.get("detail")
+            if detail in (None, ""):
+                lines.append((key, head))
+                continue
+            head += [_txt(": ")]
+            used = sum(len(t) for t, _ in head)
+            words = str(detail).split(" ")
+            fld = {"data-field": f"{path}.detail", "data-kind": "text"}
+            cur: list[str] = []
+            budget = max(width_chars - used, 20)
+            first = True
+            for w in words:
+                trial = " ".join(cur + [w])
+                if cur and len(trial) > budget:
+                    spans = (head if first else []) + [(" ".join(cur), dict(fld))]
+                    lines.append((key, spans))
+                    first, cur, budget = False, [w], width_chars
+                else:
+                    cur.append(w)
+            spans = (head if first else []) + [(" ".join(cur), dict(fld))]
+            lines.append((key, spans))
+        if not lines:
+            lines.append((None, [_txt("No open data conflicts or gaps.")]))
+        return lines
+
+    def review_list(self) -> None:
+        x0, y0 = 12.0, self.y_review
+        w = self.width - 24
+        lines = self.review_lines
+        g = ['<g data-role="review-list">']
+        g.append(svg_rect(x0, y0, w, self.review_height, "rl-bg"))
+        g.append(
+            svg_text(
+                x0 + 10,
+                y0 + REVIEW_HEADER_BASELINE,
+                [_txt("REVIEW LIST: OPEN DATA CONFLICTS AND GAPS")],
+                "rl-hdr",
+            )
+        )
+        seen = set()
+        for k, (key, spans) in enumerate(lines):
+            y = y0 + REVIEW_HEADER_BASELINE + (k + 1) * REVIEW_PITCH
+            if key is not None and key not in seen:
+                seen.add(key)
+                g.append(
+                    svg_path(
+                        f"M{_n(x0 + 10)},{_n(y + 1)} l5.5,-10 l5.5,10 z",
+                        "warn",
+                        data_part="warn",
+                        data_review=key,
+                    )
+                )
+            extra = {"data_review": key} if key is not None else {}
+            cls = "rl" if key is not None else "rl-none"
+            g.append(svg_text(x0 + REVIEW_TEXT_X, y, spans, cls, **extra))
+        g.append("</g>")
         self.out.extend(g)
 
     # -- title block ---------------------------------------------------------------------------
     def title_block(self) -> None:
-        lay, s = self.lay, self.s
+        s = self.s
         d, tb, rt = s.datums, s.title_block, s.reference_totals
-        x0, y0 = 12.0, self.y_draw_bottom + 14
-        w, h = lay.width - 24, lay.title_block_height
+        x0, y0 = 12.0, self.y_title
+        w, h = self.width - 24, self.lay.title_block_height
         g = ['<g data-role="titleblock">']
         g.append(svg_rect(x0, y0, w, h, "tb"))
         r1 = 46.0
@@ -1377,34 +1749,35 @@ class _Renderer:
         )
         xs = x0 + w - 190
         g.append(svg_line(xs, y0, xs, y0 + r1, "tb-line"))
-        g.append(svg_text(xs + 10, y0 + 15, [_txt("SOURCE")], "tb-hdr"))
-        g.append(
-            svg_text(
-                xs + 10,
-                y0 + 35,
-                [
-                    (
-                        tb.document_ref,
-                        {"data-field": "title_block.document_ref", "data-kind": "text"},
-                    )
-                ],
-                "tb-val",
-            )
+        g.append(svg_text(xs + 10, y0 + 15, [_txt("DOCUMENT")], "tb-hdr"))
+        # the report's own number; the archive document_ref is never printed
+        doc_fld = "title_block.report_document_no"
+        doc = (
+            [("n/a", {"class": "na", "data-field": doc_fld})]
+            if tb.report_document_no in (None, "")
+            else [(tb.report_document_no, {"data-field": doc_fld, "data-kind": "text"})]
         )
+        g.append(svg_text(xs + 10, y0 + 35, doc, "tb-val"))
         cells = [
             (
                 "WATER DEPTH",
-                _num(d.water_depth_m, "datums.water_depth_m", "m", 2)
-                + [_txt(" m (")]
-                + _num(d.water_depth_m, "datums.water_depth_m", "ft", 1, factor=M2FT)
-                + [_txt(" ft)")],
+                self._inline_dd(
+                    _num(d.water_depth_m, "datums.water_depth_m", "m", 2)
+                    + [_txt(" m (")]
+                    + _num(
+                        d.water_depth_m, "datums.water_depth_m", "ft", 1, factor=M2FT
+                    )
+                    + [_txt(" ft)")]
+                ),
             ),
             (
                 "DRILL FLOOR (RKB) ABOVE MSL",
-                _num(d.air_gap_m, "datums.air_gap_m", "m", 2)
-                + [_txt(" m (")]
-                + _num(d.air_gap_m, "datums.air_gap_m", "ft", 1, factor=M2FT)
-                + [_txt(" ft)")],
+                self._inline_dd(
+                    _num(d.air_gap_m, "datums.air_gap_m", "m", 2)
+                    + [_txt(" m (")]
+                    + _num(d.air_gap_m, "datums.air_gap_m", "ft", 1, factor=M2FT)
+                    + [_txt(" ft)")]
+                ),
             ),
             ("STACK-UP LENGTH, TOP TO MUDLINE", self._ref("stackup_length_m", 2, " m")),
             ("RISER LENGTH, UFJ TO LFJ", self._ref("riser_length_ufj_lfj_m", 2, " m")),
@@ -1465,27 +1838,76 @@ class _Renderer:
                 + [_txt(tail)]
             )
         notes.append(closure)
-        notes.append(
-            [
-                _txt("† value from design-basis report table; "),
-                ("n/a", {"class": "na"}),
-                _txt(" = not available in the sources."),
-            ]
-        )
-        for k, line in enumerate(notes):
+        if "tj_ib_tensioned_m" in rt:
+            notes.append(
+                [_txt("Telescopic joint: inner barrel out ")]
+                + self._ref("tj_ib_geometric_m", 2, " m")
+                + [_txt(" as drawn, ")]
+                + self._ref("tj_ib_tensioned_m", 2, " m")
+                + [_txt(" under target tension (static stretch ")]
+                + self._ref("static_stretch_m", 2, " m")
+                + [_txt("); ")]
+                + self._ref("tj_offset_from_mid_m", 2, " m", signed=True)
+                + [_txt(" from mid-stroke (")]
+                + self._ref("tj_ib_mid_stroke_m", 2, " m")
+                + [_txt(" out).")]
+            )
+        if "ufj_pivot_el_m" in rt or "lfj_pivot_el_m" in rt:
+            notes.append(
+                [_txt("Flex-joint pivots (ball symbol): UFJ EL ")]
+                + self._ref("ufj_pivot_el_m", 2, " m", signed=True)
+                + [_txt(" · LFJ EL ")]
+                + self._ref("lfj_pivot_el_m", 2, " m", signed=True)
+                + [_txt(".")]
+            )
+        for k, line in enumerate(notes[:TITLE_NOTE_LINES]):
             g.append(svg_text(x0 + 10, yn + k * 17, line, "tb-note"))
         g.append("</g>")
         self.out.extend(g)
 
     def _ref(self, key: str, dec: int, suffix: str, signed: bool = False):
+        """A reference total, its unit and (when it has one) its D-ID."""
         rv = self.s.reference_totals.get(key)
         if rv is None:
             return [
                 ("n/a", {"class": "na", "data-field": f"reference_totals.{key}.value"})
             ]
-        return _num(
-            rv.value, f"reference_totals.{key}.value", "m", dec, signed=signed
-        ) + [_txt(suffix)]
+        spans = _num(rv.value, f"reference_totals.{key}.value", "m", dec, signed=signed)
+        if rv.value == NOT_FOUND:
+            return spans
+        return self._inline_dd(spans + [_txt(suffix)])
+
+
+def _relax(anchors: list[float], pitch: float, lo: float, hi: float) -> list[float]:
+    """Row centres nearest their (sorted) anchors, at least ``pitch`` apart.
+
+    Rows start at their anchors; touching clusters merge and centre on the
+    mean anchor, clamped to ``[lo, hi]``.
+    """
+    pos = list(anchors)
+    clusters = [[i] for i in range(len(anchors))]
+
+    def place(cl):
+        mean = sum(anchors[i] for i in cl) / len(cl)
+        start = mean - (len(cl) - 1) * pitch / 2
+        start = max(lo, min(start, hi - (len(cl) - 1) * pitch))
+        for k, i in enumerate(cl):
+            pos[i] = start + k * pitch
+
+    for cl in clusters:
+        place(cl)
+    changed = True
+    while changed:
+        changed = False
+        for k in range(len(clusters) - 1):
+            a, b = clusters[k], clusters[k + 1]
+            if pos[b[0]] - pos[a[-1]] < pitch - 1e-6:
+                clusters[k] = a + b
+                del clusters[k + 1]
+                place(clusters[k])
+                changed = True
+                break
+    return pos
 
 
 def _av(v: Any) -> str:

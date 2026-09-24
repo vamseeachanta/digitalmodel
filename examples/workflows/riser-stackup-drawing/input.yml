@@ -1,6 +1,9 @@
 # Riser stack-up drawing (#2152): render a StackupDrawingSpec to SVG and
 # reconcile the drawing against the data. The spec is a synthetic, generic
 # fixture (1500 m water depth, 25 m air gap); it describes no real project.
+# Since #2158 the callouts are table rows, open conflicts and gaps are listed
+# above the title block, and every drawn value names its item (D-nn) in the
+# spec's synthetic design-data register (references are generic examples).
 #
 #   python -m digitalmodel examples/workflows/riser-stackup-drawing/input.yml
 #

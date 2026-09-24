@@ -12,6 +12,8 @@ import pytest
 
 from digitalmodel.drilling_riser.stackup_drawing import reconcile
 
+from .conftest import row_cell
+
 
 def _lines(svg: str) -> list[str]:
     return svg.split("\n")
@@ -42,11 +44,8 @@ def _replace_once(text: str, old: str, new: str) -> str:
 
 
 def _c06_line(svg: str, cls: str) -> str:
-    return next(
-        ln
-        for ln in _lines(svg)
-        if f'class="{cls}" data-component-id="c06-pup-joint"' in ln
-    )
+    """#2158: the r2 callout lines are table cells now (co1 -> top, co2 -> od)."""
+    return row_cell(svg, "c06-pup-joint", {"co1": "top", "co2": "od"}[cls])
 
 
 # -- r2-1: definitions are not rendered instances ------------------------------------
@@ -79,10 +78,9 @@ def test_r2_2_display_none_important_is_rejected(spec, svg):
 
 
 def test_r2_2_font_size_zero_on_callout_is_rejected(spec, svg):
+    cell = _c06_line(svg, "co1")
     tampered = _replace_once(
-        svg,
-        'class="co1" data-component-id="c06-pup-joint"',
-        'class="co1" font-size="0" data-component-id="c06-pup-joint"',
+        svg, cell, _replace_once(cell, ' class="tc"', ' class="tc" font-size="0"')
     )
     _assert_reason(
         reconcile(spec, tampered),
@@ -233,8 +231,11 @@ def test_malformed_svg_returns_a_fail_report(spec, svg):
 def test_document_reference_with_digits_is_verbatim_text(spec):
     from digitalmodel.drilling_riser.stackup_drawing import render
 
-    spec.title_block.document_ref = "DOC-100-A"
+    # #2158: the title block prints the report's own document number
+    spec.title_block.report_document_no = "DOC-100-A"
     svg = render(spec)
     assert reconcile(spec, svg)["result"] == "pass"
     tampered = svg.replace(">DOC-100-A<", ">DOC-101-A<")
-    _assert_reason(reconcile(spec, tampered), "c_numbers", "title_block.document_ref")
+    _assert_reason(
+        reconcile(spec, tampered), "c_numbers", "title_block.report_document_no"
+    )

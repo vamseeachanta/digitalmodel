@@ -21,6 +21,7 @@ from digitalmodel.drilling_riser.stackup_drawing import (
     to_json,
 )
 
+from .conftest import row_cell
 from .test_schema_adapters import FT, _demo_assembly, _record
 
 
@@ -47,8 +48,10 @@ def _comp_head(cid: str) -> str:
     return f'<g data-role="component" data-component-id="{cid}"'
 
 
-def _callout_head(cid: str) -> str:
-    return f'<g data-role="callout" data-component-id="{cid}"'
+def _row_head(cid: str) -> str:
+    # #2158: the callout is a table row (design A); the r1 classes are
+    # re-expressed against the row and its cells
+    return f'<g data-role="table-row" data-component-id="{cid}"'
 
 
 def _replace_once(text: str, old: str, new: str) -> str:
@@ -78,16 +81,14 @@ def test_f1_display_none_on_component_is_rejected(spec, svg):
 
 
 def test_f1_style_opacity_zero_on_callout_is_rejected(spec, svg):
-    tampered = _replace_once(
-        svg,
-        'class="co1" data-component-id="c06-pup-joint"',
-        'class="co1" style="opacity:0" data-component-id="c06-pup-joint"',
-    )
+    cell = row_cell(svg, "c06-pup-joint", "top")
+    hidden = _replace_once(cell, ' class="tc"', ' class="tc" style="opacity:0"')
+    tampered = _replace_once(svg, cell, hidden)
     _assert_fails(reconcile(spec, tampered), "a_mapping")
 
 
 def test_f1_stylesheet_hiding_rule_is_rejected(spec, svg):
-    tampered = _replace_once(svg, "</style>", ".co2{display:none}</style>")
+    tampered = _replace_once(svg, "</style>", ".tc{display:none}</style>")
     _assert_fails(reconcile(spec, tampered), "a_mapping")
 
 
@@ -146,16 +147,16 @@ def test_f3_non_finite_zone_scale_is_rejected(spec, svg):
 
 def test_f4_empty_callout_text_is_rejected(spec, svg):
     lines = _lines(svg)
-    start, end = _group_span(lines, _callout_head("c06-pup-joint"))
+    start, end = _group_span(lines, _row_head("c06-pup-joint"))
     kept = [ln for ln in lines[start:end] if not ln.startswith("<text ")]
-    kept.append('<text data-component-id="c06-pup-joint"/>')
+    kept.append('<text data-col="top"/>')
     tampered = "\n".join(lines[:start] + kept + lines[end:])
     _assert_fails(reconcile(spec, tampered), "a_mapping")
 
 
 def test_f4_detached_leader_is_rejected(spec, svg):
     lines = _lines(svg)
-    start, end = _group_span(lines, _callout_head("c06-pup-joint"))
+    start, end = _group_span(lines, _row_head("c06-pup-joint"))
     leader = next(i for i in range(start, end) if 'class="leader"' in lines[i])
     lines[leader] = re.sub(
         r'points="([\d.]+),',
@@ -182,20 +183,16 @@ def test_f5_number_inside_na_class_is_rejected(spec, svg):
 
 
 def _c06_co2(svg: str) -> str:
-    return next(
-        ln
-        for ln in _lines(svg)
-        if 'class="co2" data-component-id="c06-pup-joint"' in ln
-    )
+    """The OD cell of the pup-joint row (the r1 second callout line)."""
+    return row_cell(svg, "c06-pup-joint", "od")
 
 
 def test_f6_extra_token_after_number_is_rejected(spec, svg):
-    pattern = re.compile(
-        r'(<text [^>]*data-component-id="c08-riser-joint-bare"[^>]*>'
-        r'<tspan data-field="count"[^>]*>)3(</tspan>)'
-    )
-    tampered, n = pattern.subn(r"\g<1>3 999\g<2>", svg)
+    cell = row_cell(svg, "c08-riser-joint-bare", "qty")
+    pattern = re.compile(r'(<tspan data-field="count"[^>]*>)3(</tspan>)')
+    new, n = pattern.subn(r"\g<1>3 999\g<2>", cell)
     assert n == 1
+    tampered = _replace_once(svg, cell, new)
     _assert_fails(reconcile(spec, tampered), "c_numbers")
 
 
@@ -213,17 +210,13 @@ def test_f6_number_outside_tspans_is_rejected(spec, svg, where):
     if where == "tail":
         new = line.replace("</tspan></text>", "</tspan>99</text>")
     else:
-        new = line.replace(
-            'data-component-id="c06-pup-joint">',
-            'data-component-id="c06-pup-joint">99',
-            1,
-        )
+        new = line.replace('data-col="od">', 'data-col="od">99', 1)
     assert new != line
     _assert_fails(reconcile(spec, svg.replace(line, new)), "c_numbers")
 
 
 def test_f6_numeric_field_without_digits_is_rejected(spec, svg):
-    line = _c06_co2(svg)
+    line = row_cell(svg, "c06-pup-joint", "top")
     new = re.sub(
         r'(<tspan data-field="top_el_m" data-unit="m" data-decimals="2">)[^<]*(</tspan>)',
         r"\g<1>see note\g<2>",
