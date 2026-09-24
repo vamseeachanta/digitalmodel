@@ -113,6 +113,19 @@ CELL_POS = {
     "dd": ("dd", 6.0, "start"),
 }
 LITERAL_COLS = {"qty_x", "od_w", "buoy_sep"}
+#: Design data column (owner decision G08): sized from its widest cell, never
+#: narrower than the ``COLUMNS`` width, in whole steps; the sheet follows.
+#: The right pad keeps the text clear of a row's warning mark.
+DD_RIGHT_PAD = 20.0
+DD_WIDTH_STEP = 10.0
+#: Upper-bound advance widths (em) of the design-data text: ``.tdd`` 11 px,
+#: class flags 8.5 px bold. Deliberately wider than common UI fonts.
+DD_FONT_PX = 11.0
+DD_FLAG_PX = 8.5
+DD_EM = {"-": 0.42, "/": 0.42, ",": 0.26, " ": 0.28}
+DD_EM_DIGIT = 0.56
+DD_EM_LOWER = 0.6
+DD_EM_OTHER = 0.78
 #: "not applicable" cell content.
 DASH = (("–", {"class": "nap"}),)
 REVIEW_GAP = 14.0
@@ -331,6 +344,25 @@ def _txt(t: str, cls: Optional[str] = None) -> tuple[str, dict]:
     return (t, {"class": cls} if cls else {})
 
 
+def dd_text_width(spans: list[tuple[str, dict]]) -> float:
+    """Upper-bound width (px) of design-data text spans under ``DD_EM``."""
+    total = 0.0
+    for text, attrs in spans:
+        flag = str(attrs.get("class") or "").startswith("ddc-")
+        px = DD_FLAG_PX if flag else DD_FONT_PX
+        for ch in text:
+            if ch in DD_EM:
+                em = DD_EM[ch]
+            elif ch.isdigit():
+                em = DD_EM_DIGIT
+            elif ch.islower():
+                em = DD_EM_LOWER
+            else:
+                em = DD_EM_OTHER
+            total += em * px
+    return total
+
+
 def _num(
     value: Any,
     field: str,
@@ -485,13 +517,6 @@ class _Renderer:
         self.out: list[str] = []
         #: (row key attribute, value) -> leader anchor (x, y) of drawn items.
         self.anchors: dict[tuple[str, str], tuple[float, float]] = {}
-        self.col_x: dict[str, float] = {}
-        x = TABLE_X0
-        for key, _, _, w in COLUMNS:
-            self.col_x[key] = x
-            x += w
-        self.table_x1 = x
-        self.width = x + TABLE_RIGHT_MARGIN
         bare = [c for c in spec.components if c.type in RUN_TYPES and c.known("od_in")]
         self.nominal_od = float(bare[0].od_in) if bare else 21.0
         self.buoy_class: dict[str, str] = {}
@@ -501,6 +526,15 @@ class _Renderer:
             self.buoy_class[c.id] = ("buoy-a", "buoy-b", "buoy-c")[i % 3]
         self.y_draw_bottom = self.T.y_bottom
         self._cuts: list[tuple[Optional[float], Optional[float], float]] = []
+        self.col_w = {key: w for key, _, _, w in COLUMNS}
+        self.col_w["dd"] = self._dd_column_width()
+        self.col_x: dict[str, float] = {}
+        x = TABLE_X0
+        for key, _, _, _ in COLUMNS:
+            self.col_x[key] = x
+            x += self.col_w[key]
+        self.table_x1 = x
+        self.width = x + TABLE_RIGHT_MARGIN
 
     # -- helpers ------------------------------------------------------------
     def w(self, inches: float) -> float:
@@ -1477,6 +1511,16 @@ class _Renderer:
             out += part
         return out
 
+    def _dd_column_width(self) -> float:
+        """Design data column width: the widest row cell plus pads, in whole steps."""
+        widest = 0.0
+        for row in self._rows():
+            ids, missing = self._dd_ids(row, [sp for _, sp in self._cells(row)])
+            widest = max(widest, dd_text_width(self._dd_spans(ids, missing)))
+        need = CELL_POS["dd"][1] + widest + DD_RIGHT_PAD
+        base = dict((k, w) for k, _, _, w in COLUMNS)["dd"]
+        return max(base, math.ceil(need / DD_WIDTH_STEP) * DD_WIDTH_STEP)
+
     def _inline_dd(self, spans: list) -> list:
         """Append the D-IDs of the values printed in ``spans`` (non-table text)."""
         ids, _ = self._dd_ids(None, [spans])
@@ -1561,7 +1605,7 @@ class _Renderer:
         g.append(svg_rect(x0, y0, x1 - x0, HEADER_HEIGHT, "hdr-bg"))
         for key, h1, h2, _ in COLUMNS:
             a = self.col_x[key]
-            b = a + dict((k, w) for k, _, _, w in COLUMNS)[key]
+            b = a + self.col_w[key]
             if key == "component":
                 g.append(svg_text(a + 6, y0 + 20, [_txt(h1)], "th", data_col=key))
             else:

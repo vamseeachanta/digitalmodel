@@ -20,7 +20,8 @@ of the renderer's copy. Steps:
    for positioning attributes, and in (c) for tspan profiles.
 3. The zone table embedded in the SVG is validated. The root
    ``width``/``height``/``viewBox`` must equal the sheet the table columns
-   (width) and the zone table, review band and title block (height) imply,
+   (width; the Design data column is sized from its widest cell, owner
+   decision G08) and the zone table, review band and title block (height) imply,
    and every drawn element must lie inside it.
 4. Paint and geometry: the top-level group order (by ``data-role``) must be
    the renderer's; the first painted group is the full-sheet background and
@@ -82,7 +83,8 @@ Then it checks:
                   joint seams sit at T(top - i*L); datum lines, sheaves,
                   pivots and axis ticks sit at T(z); every required datum is
                   drawn; the header, rows and cells sit on the frozen column
-                  edges; rows do not overlap, keep anchor order, stay within
+                  edges; no Design data cell runs past the table's right
+                  edge; rows do not overlap, keep anchor order, stay within
                   a bounded offset of their anchor, and each leader runs from
                   the component body (datum line, sheave) to the row's left
                   edge at the row's centre
@@ -208,6 +210,8 @@ COLUMNS = (
     ("dd", "Design data", "D-ID and class", 240.0),
 )
 TABLE_X0 = 516.0
+#: Table right edge and sheet width at the minimum Design data column width;
+#: the drawn table is wider when a Design data cell needs it (see below).
 TABLE_X1 = TABLE_X0 + sum(c[3] for c in COLUMNS)
 COL_X = {}
 _x = TABLE_X0
@@ -215,7 +219,23 @@ for _key, _h1, _h2, _w in COLUMNS:
     COL_X[_key] = _x
     _x += _w
 #: Sheet width: the table's right edge plus a margin.
-SHEET_WIDTH = TABLE_X1 + 14.0
+SHEET_MARGIN_RIGHT = 14.0
+SHEET_WIDTH = TABLE_X1 + SHEET_MARGIN_RIGHT
+#: Design data column (owner decision G08): the last column is sized from its
+#: widest cell (text x offset + text width + right pad, rounded up to whole
+#: steps), never narrower than its ``COLUMNS`` width; table and sheet follow.
+#: The cell text itself is pinned by (f), so its width is a function of the
+#: spec. Text width uses the frozen upper-bound advances below (em): ``.tdd``
+#: 11 px, class flags (``ddc-*``) 8.5 px bold.
+DD_MIN_WIDTH = COLUMNS[-1][3]
+DD_RIGHT_PAD = 20.0
+DD_WIDTH_STEP = 10.0
+DD_FONT_PX = 11.0
+DD_FLAG_PX = 8.5
+DD_EM = {"-": 0.42, "/": 0.42, ",": 0.26, " ": 0.28}
+DD_EM_DIGIT = 0.56
+DD_EM_LOWER = 0.6
+DD_EM_OTHER = 0.78
 ROW_PITCH = 20.0
 HEADER_HEIGHT = 32.0
 #: Text baseline below a row's centre line.
@@ -1671,12 +1691,19 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
         by_role.setdefault(g.get("data-role"), []).append(g)
 
     # sheet: width from the table columns, height from the bands --------------------
+    dd_w = _dd_column_width(
+        t
+        for g in by_role.get("table-row", [])
+        for t in g.iter(NS + "text")
+        if t.get("data-col") == "dd"
+    )
     band = by_role.get("review-list", [])
     band_lines = [t for g in band for t in g if t.get("class") in ("rl", "rl-none")]
     band_h = REVIEW_HEADER_BASELINE + len(band_lines) * REVIEW_PITCH + REVIEW_BOTTOM_PAD
     y_review = y_bottom + REVIEW_GAP
     y_title = y_review + band_h + TITLE_GAP
-    W, H = SHEET_WIDTH, y_title + TITLE_BLOCK_HEIGHT + SHEET_BOTTOM_MARGIN
+    W = SHEET_WIDTH - DD_MIN_WIDTH + dd_w
+    H = y_title + TITLE_BLOCK_HEIGHT + SHEET_BOTTOM_MARGIN
     for msg in _viewport_problems(root, top_groups, W, H):
         fail("b_positions", msg)
     for msg in _layer_problems(root, top_groups, W, H):
@@ -1782,7 +1809,7 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
             fail("a_mapping", f"{key}: table row for an item that has none")
     rows = {k: v[0] for k, v in row_groups.items() if len(v) == 1 and k in row_keys}
     # header and legend are frozen text
-    _header_problems(by_role.get("table-header", []), zones[0]["y_top"], fail)
+    _header_problems(by_role.get("table-header", []), zones[0]["y_top"], fail, dd_w)
     legend = by_role.get("table-legend", [])
     got_legend = tuple(
         "".join(t.itertext()) for g in legend for t in g.iter(NS + "text")
@@ -1792,7 +1819,7 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
     # review list: one entry per open conflict or gap, keyed by id
     open_entries = open_review_entries(spec)
     open_keys = {f"{k}[{i}]": e for k, i, e in open_entries}
-    _review_problems(spec, band, open_keys, y_review, band_h, band_lines, fail)
+    _review_problems(spec, band, open_keys, y_review, band_h, band_lines, fail, W)
     # warning marks: each row lists exactly its open entries (by component_id)
     by_cid: dict[Any, list[str]] = {}
     for kind, i, e in open_entries:
@@ -1983,7 +2010,7 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
         ]
     placed = []
     for key, g in rows.items():
-        yc, anchor, problems = _row_geometry(key, g, anchor_boxes.get(key))
+        yc, anchor, problems = _row_geometry(key, g, anchor_boxes.get(key), dd_w)
         for p in problems:
             fail("b_positions", p)
         if yc is not None:
@@ -2210,7 +2237,34 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
     return _finish(spec, res)
 
 
-def _header_problems(headers, y0: float, fail) -> None:
+def _dd_text_width(t: ET.Element) -> float:
+    """Upper-bound width (px) of a Design data text under the frozen advances."""
+    total = 0.0
+    for sp in t.iter(NS + "tspan"):
+        flag = (sp.get("class") or "").startswith("ddc-")
+        px = DD_FLAG_PX if flag else DD_FONT_PX
+        for ch in sp.text or "":
+            if ch in DD_EM:
+                em = DD_EM[ch]
+            elif ch.isdigit():
+                em = DD_EM_DIGIT
+            elif ch.islower():
+                em = DD_EM_LOWER
+            else:
+                em = DD_EM_OTHER
+            total += em * px
+    return total
+
+
+def _dd_column_width(dd_texts) -> float:
+    """Design data column width implied by its widest cell (owner decision G08)."""
+    widest = max((_dd_text_width(t) for t in dd_texts), default=0.0)
+    need = CELL_POS["dd"][1] + widest + DD_RIGHT_PAD
+    return max(DD_MIN_WIDTH, math.ceil(need / DD_WIDTH_STEP) * DD_WIDTH_STEP)
+
+
+def _header_problems(headers, y0: float, fail, dd_w: float = DD_MIN_WIDTH) -> None:
+    table_x1 = TABLE_X1 - DD_MIN_WIDTH + dd_w
     if len(headers) != 1:
         fail("a_mapping", f"{len(headers)} table headers (expected one)")
         return
@@ -2220,13 +2274,14 @@ def _header_problems(headers, y0: float, fail) -> None:
         abs(a - b) > PX_TOL
         for a, b in zip(
             (_fnan(rects[0], k) for k in ("x", "y", "width", "height")),
-            (TABLE_X0, y0, TABLE_X1 - TABLE_X0, HEADER_HEIGHT),
+            (TABLE_X0, y0, table_x1 - TABLE_X0, HEADER_HEIGHT),
         )
     ):
         fail("b_positions", "table header is not on the frozen column edges")
     want = []
     for key, h1, h2, w in COLUMNS:
         a = COL_X[key]
+        w = dd_w if key == "dd" else w
         if key == "component":
             want.append((key, h1, a + 6, y0 + 20))
         else:
@@ -2251,16 +2306,17 @@ def _header_problems(headers, y0: float, fail) -> None:
         fail("b_positions", "table header column lines are not on the column edges")
 
 
-def _row_geometry(key: str, g: ET.Element, boxes):
+def _row_geometry(key: str, g: ET.Element, boxes, dd_w: float = DD_MIN_WIDTH):
     """(row centre, anchor or None, problems) of one table row."""
     out = []
+    table_x1 = TABLE_X1 - DD_MIN_WIDTH + dd_w
     rects = [el for el in g if el.tag == NS + "rect"]
     if len(rects) != 1:
         return None, None, [f"{key}: row needs exactly one background rect"]
     x, y, w, h = (_fnan(rects[0], k) for k in ("x", "y", "width", "height"))
     if not (
         abs(x - TABLE_X0) <= PX_TOL
-        and abs(w - (TABLE_X1 - TABLE_X0)) <= PX_TOL
+        and abs(w - (table_x1 - TABLE_X0)) <= PX_TOL
         and abs(h - ROW_PITCH) <= PX_TOL
     ):
         out.append(f"{key}: row background is not the table width x row pitch")
@@ -2281,10 +2337,17 @@ def _row_geometry(key: str, g: ET.Element, boxes):
             and t.get("text-anchor") == anchor
         ):
             out.append(f"{key}: cell {col} is not at its column position")
+        if col == "dd":
+            right = _fnan(t, "x") + _dd_text_width(t)
+            if not right <= table_x1 - DD_RIGHT_PAD + PX_TOL:
+                out.append(
+                    f"{key}: Design data cell runs past the table's right edge "
+                    f"(text to x={right:.1f}, limit {table_x1 - DD_RIGHT_PAD:.1f})"
+                )
     for p in (el for el in g if el.tag == NS + "path"):
         pts = _points(p)
         if pts and not (
-            abs(pts[0][0] - (TABLE_X1 - WARN_INSET)) <= PX_TOL
+            abs(pts[0][0] - (table_x1 - WARN_INSET)) <= PX_TOL
             and abs(pts[0][1] - (yc + 5)) <= PX_TOL
         ):
             out.append(f"{key}: warning mark is not in its row")
@@ -2323,7 +2386,9 @@ def _row_geometry(key: str, g: ET.Element, boxes):
     return yc, (ax, ay), out
 
 
-def _review_problems(spec, band, open_keys, y0, band_h, lines, fail) -> None:
+def _review_problems(
+    spec, band, open_keys, y0, band_h, lines, fail, sheet_w: float = SHEET_WIDTH
+) -> None:
     if len(band) != 1:
         fail("a_mapping", f"{len(band)} review lists (expected one)")
         return
@@ -2333,7 +2398,7 @@ def _review_problems(spec, band, open_keys, y0, band_h, lines, fail) -> None:
         abs(a - b) > PX_TOL
         for a, b in zip(
             (_fnan(rects[0], k) for k in ("x", "y", "width", "height")),
-            (12.0, y0, SHEET_WIDTH - 24, band_h),
+            (12.0, y0, sheet_w - 24, band_h),
         )
     ):
         fail(
