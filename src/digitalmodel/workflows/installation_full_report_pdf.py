@@ -67,7 +67,7 @@ def _mapped_cases(summary, payload):
 
 def _cover(story, summary, payload):
     config = payload.get("_report_config", {})
-    story.extend([Spacer(1, 80), _p("Jumper installation analysis", "Title"),
+    story.extend([Spacer(1, 80), _p(config.get("report_title", "Jumper installation analysis"), "Title"),
                   _p("Vessel capability screening and near-real-time support demonstration", "Heading2"),
                   Spacer(1, 30)])
     rows = [["Revision", config.get("revision", "r7") + " - engineering review draft"],
@@ -86,7 +86,7 @@ def _cover(story, summary, payload):
 
 
 def _intro_summary(story, summary, payload, cases):
-    _section(story, "1. Introduction", "The analysis assesses the response of the selected suspended jumper and lifting system over the sampled sea states. The report supports review of vessel installation capability and the proposed near-real-time support workflow.")
+    _section(story, "1. Introduction", "The analysis assesses the response of the selected " + payload.get("_report_config", {}).get("structure_description", "suspended jumper and lifting system") + " over the sampled sea states. The report supports review of vessel installation capability and the proposed near-real-time support workflow.")
     story.append(_p("The current scope is a fixed deep-zone arrangement. Splash-zone passage, continuous lowering, landing, additional vessel headings and additional random seeds require separate assessment. The report does not establish operating release."))
     counts = Counter(c["status"] for _, c in cases)
     _section(story, "2. Summary and conclusions", f"The report contains {len(cases)} source cases. Assumed-criteria classifications are: " + "; ".join(f"{key}: {value}" for key, value in sorted(counts.items())) + ". Engineering acceptance: NOT EVALUATED.")
@@ -95,7 +95,7 @@ def _intro_summary(story, summary, payload, cases):
     if governing:
         story.append(_p(f"The largest recorded screening utilization is {governing['max_utilization']:.3f}, against a utilization criterion of 1.000, for {governing.get('governing_check', 'unrecorded criterion')}, at Hs {governing['hs_m']:g} m and Tp {governing['tp_s']:g} s (case {governing['index']}). This conclusion applies only to the checks included in the assumed-criteria screen."))
     story.append(_p("Passing cells at the upper study edge are censored by the sampled range; they do not locate a physical failure boundary. Intentional sling slack is not rejected solely by a zero crossing. Snap loads, geometric slack and interference remain separate acceptance checks."))
-    story.append(_p("The monitoring illustration supplies a simulated future irregular-wave record to a load surrogate fitted using past data. Conditional prediction performance does not validate offshore wave prediction or field operating decisions."))
+    story.append(_p(_monitoring_statement(payload)))
 
 
 def _evaluated_cases(cases):
@@ -150,13 +150,35 @@ def _design_extra(story, items):
                "Table 2a. Arrangement design inputs. Model readback is not material or drawing certification.")
 
 
-def _method(story):
+def _history_only(payload):
+    return payload.get("demo", {}).get("default_mode") == "history_only"
+
+
+def _monitoring_statement(payload):
+    if _history_only(payload):
+        return ("The monitoring illustration predicts the next two minutes using only samples available at NOW in a SIMULATED record. "
+                "Held-out prediction errors do not validate offshore wave prediction or field operating decisions.")
+    return ("The monitoring illustration supplies a simulated future irregular-wave record to a load surrogate fitted using past data. "
+            "Conditional prediction performance does not validate offshore wave prediction or field operating decisions.")
+
+
+def _method_statement(payload):
+    if _history_only(payload):
+        return ("The monitoring illustration separates recorded history from a two-minute causal forecast at the displayed NOW line. "
+                "The history-only predictor uses only samples available at NOW; no future wave or load sample is supplied. "
+                "Withheld future response is used only for error assessment, with persistence and history-mean comparators.")
+    return ("The monitoring illustration separates recorded history from a two-minute conditional forecast at the displayed NOW line. "
+            "The simulated future wave trace is supplied input. The load surrogate is fitted to past data. "
+            "Withheld future load response is used for error assessment, with persistence and history-mean comparators.")
+
+
+def _method(story, payload):
     _section(story, "4. Analysis methodology", "The irregular-wave sea-state matrix is simulated in OrcaFlex. Recorded response channels and retained simulation digests provide the analysis evidence. The same model basis is used across the sea-state grid, with case-specific environmental changes.")
     for text in [
         "Effective-tension histories are examined at the recorded line endpoints. Maximum loads are compared with the corresponding assumed component limits. The hoist minimum/static ratio is compared with the assumed minimum ratio. These checks are not a complete line-interior or crane side-lead assessment.",
         "Negative effective tension and nonpositive-tension duration are retained as signed model-response diagnostics. They are not interpreted as physical sling compression capacity or measured geometric slack. A detailed slack assessment requires rigging stiffness, resolved re-tension peaks and interference checks.",
         "The detailed slack-sling method is discussed against the historical DNVGL-ST-N001 June 2016 clauses 16.17.2.6 to 16.17.2.8. Hoist and individual-sling requirements differ. Governing project edition and applicability remain unverified.",
-        "The monitoring illustration separates recorded history from a two-minute conditional forecast at the displayed NOW line. The simulated future wave trace is supplied input. The load surrogate is fitted to past data. Withheld future load response is used for error assessment, with persistence and history-mean comparators.",
+        _method_statement(payload),
         "Numerical completion and digest verification establish retained computational evidence. Mesh/time-step convergence, alternative seeds, forecast validation and all operating acceptance checks remain separately qualified.",
     ]:
         story.append(_p(text))
@@ -254,7 +276,7 @@ def _appendix(story, cases):
                   _p("The following three pages contain the same payload-derived Hs-Tp envelope, simulated irregular-wave preview and conditional load response as the interactive report. Global report pagination applies.")])
 
 
-def _number_pages(body, snapshot, output, revision):
+def _number_pages(body, snapshot, output, revision, title="Jumper installation analysis"):
     writer = PdfWriter()
     for stream in [body, snapshot]:
         writer.append(PdfReader(stream))
@@ -266,7 +288,7 @@ def _number_pages(body, snapshot, output, revision):
         canvas.rect(0, 0, PAGE_WIDTH, 39, fill=1, stroke=0)
         canvas.setFillColor(colors.HexColor("#17384d"))
         canvas.setFont("Helvetica", 8)
-        canvas.drawString(44, 23, f"Jumper installation analysis | {revision} | Engineering review draft")
+        canvas.drawString(44, 23, f"{title} | {revision} | Engineering review draft")
         canvas.drawRightString(PAGE_WIDTH - 44, 23, f"Page {number} of {total}")
         canvas.save()
         page.merge_page(PdfReader(overlay).pages[0])
@@ -301,7 +323,7 @@ def render_full_pdf(summary, payload, output, config=None, *, summary_bytes=None
     _cover(story, summary, payload)
     _intro_summary(story, summary, payload, cases)
     _design(story, summary, payload, cases)
-    _method(story)
+    _method(story, payload)
     _results(story, summary, payload, cases)
     _other_results(story, summary)
     _validation_references(story, summary, payload)
@@ -309,8 +331,10 @@ def render_full_pdf(summary, payload, output, config=None, *, summary_bytes=None
     body, snapshot = BytesIO(), BytesIO()
     document = SimpleDocTemplate(body, pagesize=A4, leftMargin=44, rightMargin=44,
                                  topMargin=44, bottomMargin=49,
-                                 title="Jumper installation engineering report")
+                                 title=(config or {}).get("report_title", "Jumper installation engineering report"))
     document.build(story)
-    identity = render_pdf(payload, snapshot)
-    pages = _number_pages(body, snapshot, output, (config or {}).get("revision", "r7"))
+    reference = payload.get("snapshot") or {}
+    identity = render_pdf(payload, snapshot, **{key: reference[key] for key in ("hs_m", "tp_s", "now_s") if key in reference})
+    pages = _number_pages(body, snapshot, output, (config or {}).get("revision", "r7"),
+                          (config or {}).get("report_title", "Jumper installation analysis"))
     return {"pages": pages, "cases": len(cases), "snapshot": identity}

@@ -62,15 +62,19 @@ def _campaign_status(captured):
     return escape(text)
 
 
-def _pending(basis, campaign=None, sensitivity=None):
+def _pending(basis, campaign=None, sensitivity=None, screened=False):
+    envelope = ('Provisional project-assumption screen reported in 5.4; operating envelope not approved'
+                if screened else 'Not established; capacity and slack/snap/interference criteria pending')
+    forecast = ('Causal 120 s held-out errors reported in 5.5 for one SIMULATED case; offshore validation not established'
+                if screened else 'Mudmat forecast and holdout skill not evaluated; history/prediction divider and uncertainty pending')
     rows = [
         ['Baseline size', f"{escape(str(basis.get('dry_mass_t', 'Not recorded')))} t; {_campaign_status(campaign)}"],
         ['Smaller structure', 'Geometry, mass, buoyancy, drag/added mass and rigging basis pending'],
         ['Larger structure', 'Source-supported design selection and rigging/vessel compatibility pending'],
         ['Splash-zone and lowering stages', 'Not evaluated by this deep-submerged campaign'],
         ['Hydrodynamic sensitivity', _campaign_status(sensitivity)],
-        ['Hs–Tp operating envelopes', 'Not established; capacity and slack/snap/interference criteria pending'],
-        ['Two-minute forecasting', 'Mudmat forecast and holdout skill not evaluated; history/prediction divider and uncertainty pending'],
+        ['Hs–Tp operating envelopes', envelope],
+        ['Two-minute forecasting', forecast],
         ['Multiple random seeds', 'Not evaluated; single seed does not establish extreme-load statistics'],
     ]
     rows.extend([[escape(str(name)), escape(str(value))]
@@ -78,10 +82,10 @@ def _pending(basis, campaign=None, sensitivity=None):
     return _table(['Assessment', 'Current evidence / placeholder'], rows)
 
 
-def render_html(summary, base=Path('.'), config=None):
+def render_html(summary, base=Path('.'), config=None, screening=None):
     """Render pinned findings without changing their numerical evidence."""
     from digitalmodel.workflows.vessel_capability_layout import render_layout
-    return render_layout(summary, base, config or {})
+    return render_layout(summary, base, config or {}, screening)
 
 
 def _audit_profile(row):

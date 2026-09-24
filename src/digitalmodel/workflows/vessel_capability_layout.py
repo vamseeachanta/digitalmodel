@@ -1,6 +1,7 @@
 """Engineering presentation of an unchanged partial structure-demand snapshot."""
 from html import escape
 import json
+import math
 import re
 
 from digitalmodel.workflows.installation_partial_report import STYLE, _table, _grid, _envelope_table, _case_details
@@ -81,7 +82,122 @@ def _workflow():
     return '<svg viewBox="0 0 1000 125" role="img" aria-label="Pinned inputs to pending engineering qualification" style="width:100%;max-width:none;height:auto">'+''.join(nodes)+'</svg>'
 
 
-def _results(summary):
+_PRODUCER_STATUS={'WITHIN_ASSUMPTIONS':'PASS','EXCEEDS_ASSUMPTIONS':'FAIL','NOT_EVALUATED':'NOT_EVALUATED'}
+_BOUNDARY_KEYS=('highest_contiguous_pass_hs_m','first_nonpass_hs_m','first_nonpass_status',
+                'upper_edge_censored','contiguous_upper_edge_censored','nonmonotonic_observed')
+
+
+def _boundaries(cases):
+    """Sampled per-Tp boundaries recomputed with the producer's rule; no interpolation."""
+    from digitalmodel.workflows.installation_assumed_envelope import _boundary
+    cells=[dict(tp_s=case['tp_s'],hs_m=case['hs_m'],status=_PRODUCER_STATUS[case['status']]) for case in cases]
+    return [_boundary(period,cells) for period in sorted({cell['tp_s'] for cell in cells})]
+
+def _finite(value):
+    return isinstance(value,(int,float)) and not isinstance(value,bool) and math.isfinite(value)
+
+
+def _bind_forecast(screened,screening):
+    for scenario in screening['demo']['scenarios']:
+        case=screened.get(scenario['case_index'])
+        if case is None or case['status']=='NOT_EVALUATED' or any(case[k]!=scenario[k] for k in ('hs_m','tp_s')):
+            raise ValueError('Forecast scenario must reference a verified screened case')
+        for frame in scenario['frames']:
+            now,horizon=frame['now_s'],frame.get('forecast_horizon_s')
+            if horizon!=120:raise ValueError('Forecast horizon must be 120 s')
+            for channel in frame['channels']:
+                if any(t>now for t in channel.get('history',{}).get('times',[])):
+                    raise ValueError('History samples after NOW')
+                times=channel.get('forecast',{}).get('times',[])
+                metrics=channel.get('metrics')
+                if (times or metrics is not None) and (not times or not _finite(channel.get('training_end_s'))
+                        or channel['training_end_s']>now or any(not now<t<=now+horizon for t in times)):
+                    raise ValueError('Forecast is not causal within the 120 s horizon')
+                if metrics is not None and not all(_finite(metrics.get(k,{}).get('rmse'))
+                        for k in ('autoregression','persistence','history_mean')):
+                    raise ValueError('Forecast metrics require finite RMSE for all comparators')
+
+
+def bind_screening(summary,screening):
+    """Reject screening evidence that is not case-for-case bound to the source snapshot."""
+    if screening.get('engineering_acceptance')!='NOT EVALUATED':
+        raise ValueError('Screening payload must retain engineering acceptance NOT EVALUATED')
+    if screening.get('demo',{}).get('default_mode')!='history_only':
+        raise ValueError('Screening forecast must be causal history-only')
+    source={row['index']:row for row in summary['cases']};screened={row['index']:row for row in screening['cases']}
+    if len(source)!=len(summary['cases']) or len(screened)!=len(screening['cases']) or not source or set(source)!=set(screened):
+        raise ValueError('Screening and source case coverage differ')
+    for index,case in screened.items():
+        if any(case[key]!=source[index][key] for key in ('hs_m','tp_s')):
+            raise ValueError('Screening and source case coordinates differ')
+        if case['status']!='NOT_EVALUATED' and source[index]['status']!='VERIFIED':
+            raise ValueError('Screened classification requires a verified source case')
+    cases=[screened[index] for index in sorted(screened)]
+    recomputed={row['tp_s']:row for row in _boundaries(cases)}
+    for row in screening.get('boundaries',[]):
+        expected=recomputed.get(row['tp_s'])
+        if expected is None or any(row.get(k,expected[k])!=expected[k] for k in _BOUNDARY_KEYS):
+            raise ValueError('Screening boundary differs from bound case classifications')
+    _bind_forecast(screened,screening)
+    return cases
+
+
+def _screening_envelope(cases,screening):
+    counts={}
+    for case in cases:counts[case['status']]=counts.get(case['status'],0)+1
+    text='<p><strong>Provisional screen only; not an approved operating limit.</strong> Each verified case is compared with '
+    text+='project assumption endpoint limits. Engineering acceptance: NOT EVALUATED. Numerical failures and unrun cases are NOT_EVALUATED, not exceedances.</p>'
+    text+='<p>'+escape(', '.join(f'{key}: {value}' for key,value in sorted(counts.items())))+'</p>'
+    text+=_table(['Criterion','Limit','Units','Status'],[[escape(str(c.get('label',c['id']))),escape(str(c['limit'])),
+        escape(str(c['units'])),'project assumption'] for c in screening['criteria']])
+    text+='<p class="caption">Table 5-5. Provisional endpoint criteria from the recorded project assumption basis.</p>'
+    rows=[]
+    for case in cases:
+        if case['status']!='EXCEEDS_ASSUMPTIONS':continue
+        for check in case['checks']:
+            if check.get('status')=='FAIL':
+                rows.append([f"{case['index']:03d}",f"{case['hs_m']:g}",f"{case['tp_s']:g}",escape(str(check['id'])),
+                             f"{check['utilization']:.3f}",escape(str(check.get('governing_channel','Not recorded')))])
+    text+=_table(['Case','Hs (m)','Tp (s)','Assumed criterion','Utilization (-)','Governing channel'],rows or [['-']*6])
+    text+='<p class="caption">Table 5-6. Cases exceeding a provisional criterion; unity is the screening threshold.</p>'
+    fmt=lambda value:'-' if value is None else f'{value:g}'
+    label={value:key for key,value in _PRODUCER_STATUS.items()}
+    text+=_table(['Tp (s)','Highest contiguous pass Hs (m)','First non-pass Hs (m)','First non-pass state','Highest sampled Hs passes','Pass above observed exceedance'],
+        [[fmt(b['tp_s']),fmt(b['highest_contiguous_pass_hs_m']),fmt(b['first_nonpass_hs_m']),
+          escape(label.get(b['first_nonpass_status'],'-')),'yes' if b['upper_edge_censored'] else 'no',
+          'yes' if b['nonmonotonic_observed'] else 'no'] for b in _boundaries(cases)])
+    text+='<p class="caption">Table 5-7. Sampled boundary per Tp, recomputed with the screening rule from the bound case classifications. A NOT_EVALUATED first non-pass state is a coverage gap, not a limit; '
+    text+='a column whose highest sampled Hs passes is censored by the study range. No interpolation or extrapolation is applied.</p>'
+    return text
+
+
+def _screening_forecast(screening):
+    rows,better,total,undefined=[],0,0,0
+    for scenario in screening['demo']['scenarios']:
+        for frame in scenario['frames']:
+            for channel in frame['channels']:
+                m=channel.get('metrics')
+                if not m:continue
+                ar,pers,mean=(m[k]['rmse'] for k in ('autoregression','persistence','history_mean'))
+                ratio='undefined (zero baseline)' if mean==0 else f'{ar/mean:.3f}'
+                if channel['id']!='wave_elevation':
+                    if mean==0:undefined+=1
+                    else:total+=1;better+=ar<mean
+                rows.append([f"{frame['now_s']:g}",escape(str(channel.get('label',channel['id']))),escape(str(channel['units'])),
+                             f'{ar:.3f}',f'{pers:.3f}',f'{mean:.3f}',ratio])
+    scenario=screening['demo']['scenarios'][0]
+    text=f"<p>The causal demonstration replays the SIMULATED reference case {scenario['case_index']:03d} (Hs {scenario['hs_m']:g} m, Tp {scenario['tp_s']:g} s). "
+    text+='At each origin a history-only autoregression predicts the next 120 s using samples at or before NOW; withheld samples are used only for scoring. '
+    text+=f'For load channels, autoregression RMSE is lower than the history-mean baseline in {better} of {total} channel-origin pairs'
+    text+=f' ({undefined} pairs with a zero baseline error are undefined). ' if undefined else '. '
+    text+='Forecast skill over naive baselines is therefore reported as measured, not assumed. Offshore forecast validation is not established.</p>'
+    text+=_table(['NOW (s)','Channel','Units','Autoregression RMSE','Persistence RMSE','History-mean RMSE','RMSE ratio to history mean (-)'],rows)
+    text+='<p class="caption">Table 5-8. Held-out 120 s forecast errors at the preselected origins. A ratio below 1.000 indicates lower error than the history-mean baseline.</p>'
+    text+=''.join('<p>'+escape(str(item))+'</p>' for item in screening.get('limitations',[]))
+    return text
+
+
+def _results(summary,screening=None):
     from digitalmodel.workflows.vessel_capability_report import _critical_table
     text='<h3>5.1 Execution coverage and sampled periods</h3>'+_grid(summary['cases'])
     text+='<p class="caption">Table 5-1. Coverage at the source snapshot: ● verified, ◐ running, — missing, ! other state. No acceptance verdict is implied.</p>'
@@ -95,6 +211,11 @@ def _results(summary):
     text+='<h3>5.3 Unloading and re-tension diagnostics</h3><p>Accumulated duration and longest continuous events are distinct quantities. '
     text+='Endpoint chord deficit is unstretched length minus endpoint separation; sag and extension contribute, so it is not physical slack. '
     text+='Post-exit tension peaks do not alone establish physical snap loads or an allowable slack distance.</p>'
+    if screening is not None:
+        cases=bind_screening(summary,screening)
+        text+='<h3>5.4 Provisional installation envelope</h3>'+_screening_envelope(cases,screening)
+        text+='<h3>5.5 Two-minute forecasting</h3>'+_screening_forecast(screening)
+        return _section(5,'Results — conditional screening',text)
     text+='<h3>5.4 Provisional installation envelope</h3><p><strong>Not established.</strong> A future Hs–Tp envelope requires declared criteria, '
     text+='matched component checks, numerical/model qualification and documented boundaries. No boundary is inferred from execution coverage.</p>'
     text+='<h3>5.5 Two-minute forecasting</h3><p>Mudmat forecast validation remains pending. The intended 120 s demonstration will separate '
@@ -103,9 +224,9 @@ def _results(summary):
     return _section(5,'Results — conditional screening',text)
 
 
-def _validation_conclusions(summary,config):
+def _validation_conclusions(summary,config,screened=False):
     from digitalmodel.workflows.vessel_capability_report import _pending
-    text=_pending(summary['design_basis'],summary.get('campaign_snapshot'),summary.get('sensitivity_campaign_snapshot'))
+    text=_pending(summary['design_basis'],summary.get('campaign_snapshot'),summary.get('sensitivity_campaign_snapshot'),screened)
     text+='<p class="caption">Table 6-1. Evidence status at the retained source snapshot.</p>'
     notes=_metadata(config,'decisions')+_metadata(config,'supplements')
     if notes:text+='<h3>6.1 Subsequent review context</h3><p>The supplied notes do not update source coverage or constitute completed qualification.</p>'+notes
@@ -137,7 +258,7 @@ def _appendices(summary,base,config):
     return text+escape(json.dumps(provenance,indent=2,allow_nan=False))+'</pre></section>'
 
 
-def render_layout(summary,base,config):
+def render_layout(summary,base,config,screening=None):
     config=dict(config)
     config.setdefault('title','Vessel capability for mudmat installation')
     config.setdefault('document_id','Structure installation engineering assessment')
@@ -146,8 +267,8 @@ def render_layout(summary,base,config):
     created=config.get('rendered_utc',summary['created_utc'])
     cover=(report_cover(config,created)+'<section><p>Source snapshot UTC: '+escape(summary['created_utc'])+
         '</p><p>Presentation generated UTC: '+escape(str(created))+'</p></section>')
-    content=cover+_intro_summary(summary,config)+_design(summary,config)+_method(summary)+_results(summary)
-    content+=_validation_conclusions(summary,config)+_appendices(summary,base,config)
+    content=cover+_intro_summary(summary,config)+_design(summary,config)+_method(summary)+_results(summary,screening)
+    content+=_validation_conclusions(summary,config,screening is not None)+_appendices(summary,base,config)
     text='<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
     text+='<title>'+escape(config['title'])+'</title><style>'+STYLE
     text+='pre{white-space:pre-wrap;overflow-wrap:anywhere}p,td,a{overflow-wrap:anywhere}</style></head><body><main>'+content
