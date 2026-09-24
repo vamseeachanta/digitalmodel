@@ -190,3 +190,23 @@ def test_no_c203_2016_edition_label_in_src():
             if _C203_2016.search(line):
                 hits.append(f"{path.relative_to(SRC)}:{i}")
     assert not hits, hits
+
+
+# -- review r1 (PR #2164) ------------------------------------------------------
+
+
+def test_c203_label_fails_closed_for_unmapped_edition():
+    assert ce.c203_label("2011") == "DNV-RP-C203 (2011)"
+    with pytest.raises(KeyError):
+        ce.c203_label("2099")
+
+
+def test_free_corrosion_notes_disclose_unverified_values():
+    fc = [
+        r
+        for r in get_catalog()
+        if r.standard == "DNV-RP-C203" and r.environment == "free_corrosion"
+    ]
+    assert fc
+    for r in fc:
+        assert "values not verified" in r.note and "#2165" in r.note, r.note
