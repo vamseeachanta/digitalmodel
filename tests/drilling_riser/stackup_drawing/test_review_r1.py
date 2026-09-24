@@ -204,3 +204,35 @@ def test_f6_archive_citations_fail(spec, text):
 def test_f6_ordinary_punctuation_passes(spec, text):
     spec.gaps[0]["detail"] = text
     assert reconcile(spec, render(spec))["result"] == "pass"
+
+
+# -- confirmation pass: URL ports and IPv6 hosts --------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://example.com:abc/x",
+        "https://example.com:99999/x",
+        "https://example.com:-1/x",
+    ],
+)
+def test_confirm_invalid_port_is_rejected(url):
+    from digitalmodel.drilling_riser.stackup_drawing.schema import _usable_url
+
+    assert _usable_url(url) is False
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://[2001:db8::1]/reference",
+        "http://192.0.2.10/doc.pdf",
+        "https://example.com:8443/x",
+        "https://rules.example.org/docs/rp.pdf",
+    ],
+)
+def test_confirm_valid_hosts_are_accepted(url):
+    from digitalmodel.drilling_riser.stackup_drawing.schema import _usable_url
+
+    assert _usable_url(url) is True
