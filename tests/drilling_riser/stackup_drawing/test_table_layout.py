@@ -341,7 +341,9 @@ def test_spec_without_a_register_is_not_established(spec):
         ("CAL-0123", "report_document_no"),
         ("CAL-0123-A", "title"),
         ("see Data!B12", "gap"),
-        ("see Data!", "gap"),
+        # review r1 finding 6: a bare "Data!" is punctuation, not a citation;
+        # the rule needs a cell reference (see test_review_r1)
+        ("see Data!$B$12", "gap"),
     ],
 )
 def test_archive_citation_text_on_the_drawing_fails(spec, text, where):
