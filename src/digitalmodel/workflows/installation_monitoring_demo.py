@@ -114,7 +114,7 @@ def add_wave_preview(frames, arrays):
     return frames
 
 
-def _scenario(summary, selection, channels):
+def _scenario(summary, selection, channels, *, include_wave_preview=True):
     cases = [c for c in summary['cases'] if c['hs_m'] == selection['hs_m']
              and c['tp_s'] == selection['tp_s'] and c['status'] == 'VERIFIED']
     if len(cases) != 1:
@@ -129,14 +129,22 @@ def _scenario(summary, selection, channels):
         channel = metadata['channels'][spec['id']]
         if channel['units'] != spec['units'] or channel.get('selection') is not None:
             raise ValueError('Demo requires matching units and fixed channel locations')
+    frames = build_frames(arrays, channels)
+    if include_wave_preview:
+        frames = add_wave_preview(frames, arrays)
     return {'case_index': case['index'], **selection,
             'source_label': 'SIMULATED replay; prescribed stationary sea state, no live sensors',
             'trace_sha256': metadata['trace_sha256'],
-            'frames': add_wave_preview(build_frames(arrays, channels), arrays)}
+            'frames': frames}
 
 
 def prepare_payload(summary, criteria, demo_config):
     from digitalmodel.workflows.installation_assumed_envelope import build_envelope
+    include_preview = demo_config.get('include_wave_preview', True)
+    if type(include_preview) is not bool:
+        raise ValueError('include_wave_preview must be boolean')
+    if not include_preview and demo_config['default_mode'] != 'history_only':
+        raise ValueError('Disabled wave preview requires history_only default mode')
     envelope = build_envelope(summary, criteria)
     channels = resolve_channels(criteria, demo_config['channels'])
     mapping = {'PASS': 'WITHIN_ASSUMPTIONS', 'FAIL': 'EXCEEDS_ASSUMPTIONS',
@@ -145,14 +153,15 @@ def prepare_payload(summary, criteria, demo_config):
               'reason': cell.get('governing_check') or 'Criteria not evaluated',
               'metrics': {'max_utilization': cell.get('max_utilization')}}
              for cell in envelope['cells']]
-    return {'title': 'Jumper installation - assumed-project envelope and monitoring example',
+    return {'title': demo_config.get('title', 'Jumper installation - assumed-project envelope and monitoring example'),
             'created_utc': datetime.now(timezone.utc).isoformat(),
             'criteria': [{'id': c['id'], 'label': c['id'], 'limit': c['limit'],
                           'units': c['value_units'], 'status': 'project_assumption'}
                          for c in criteria['checks']],
             'cases': cells, 'boundaries': envelope['boundaries'],
             'envelope': envelope, 'demo': {'default_mode': demo_config['default_mode'], 'scenarios': [
-                _scenario(summary, s, channels) for s in demo_config['scenarios']]},
+                _scenario(summary, s, channels, include_wave_preview=include_preview)
+                for s in demo_config['scenarios']]},
             'limitations': demo_config['limitations'], 'provenance': {},
             'snapshot': demo_config['snapshot'],
             'engineering_acceptance': 'NOT EVALUATED', 'criteria_basis': criteria}

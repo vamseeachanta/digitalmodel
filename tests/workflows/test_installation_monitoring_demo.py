@@ -99,3 +99,79 @@ def test_random_wave_preview_is_labelled_input_and_future_loads_do_not_fit():
     assert wave['wave_preview_metrics'] is None
     assert wave['preview_fit_status'] == 'supplied_simulated_wave_input'
     assert first[0]['channels'][1]['wave_preview_metrics'] != second[0]['channels'][1]['wave_preview_metrics']
+
+
+def _profile_evidence(tmp_path):
+    import hashlib
+    import json
+    arrays = traces()
+    arrays['wave_elevation'] = arrays.pop('wave')
+    arrays['profile_005'] = arrays.pop('load')
+    directory = tmp_path / 'installation_traces'
+    directory.mkdir()
+    np.savez(directory / 'traces.npz', **arrays)
+    metadata = {'trace_sha256': hashlib.sha256((directory / 'traces.npz').read_bytes()).hexdigest(),
+                'channels': {'wave_elevation': {'object': 'Environment', 'variable': 'Elevation',
+                                              'units': 'm'},
+                             'profile_005': {'object': 'TopRigging', 'variable': 'Effective tension',
+                                             'position': 'End B', 'units': 'kN'}}}
+    raw = json.dumps(metadata).encode()
+    (directory / 'metadata.json').write_bytes(raw)
+    case = {'index': 0, 'hs_m': 1., 'tp_s': 8., 'status': 'VERIFIED', 'run_dir': str(tmp_path),
+            'trace_sha256': metadata['trace_sha256'], 'metadata_sha256': hashlib.sha256(raw).hexdigest(),
+            'channels': metadata['channels']}
+    specs = [{'id': 'wave_elevation', 'label': 'Wave', 'units': 'm', 'assumed_limit': None},
+             {'id': 'profile_005', 'label': 'Top rigging End B', 'units': 'kN', 'assumed_limit': 30}]
+    return {'cases': [case]}, specs
+
+
+def test_profile_scenario_causal_only_omits_preview(tmp_path, monkeypatch):
+    from digitalmodel.workflows import installation_monitoring_demo as module
+    summary, specs = _profile_evidence(tmp_path)
+    def forbidden(*args):
+        pytest.fail('Causal-only scenario must not construct supplied-future-wave predictions')
+    monkeypatch.setattr(module, 'add_wave_preview', forbidden)
+    result = module._scenario(summary, {'hs_m': 1., 'tp_s': 8.}, specs, include_wave_preview=False)
+    assert len(result['frames']) == 5
+    for frame in result['frames']:
+        for channel in frame['channels']:
+            assert 'wave_preview' not in channel
+            assert set(channel['metrics']) == {'autoregression', 'persistence', 'history_mean'}
+            assert channel['history']['times'][-1] == frame['now_s']
+            assert channel['forecast']['times'][-1] == frame['now_s'] + 120
+
+
+def test_payload_title_and_preview_defaults(monkeypatch):
+    from digitalmodel.workflows import installation_monitoring_demo as module
+    from digitalmodel.workflows import installation_assumed_envelope as envelopes
+    monkeypatch.setattr(envelopes, 'build_envelope', lambda *args: {'cells': [], 'boundaries': []})
+    monkeypatch.setattr(module, 'resolve_channels', lambda *args: [])
+    calls = []
+    def scenario(*args, include_wave_preview=True):
+        calls.append(include_wave_preview)
+        return {}
+    monkeypatch.setattr(module, '_scenario', scenario)
+    config = {'channels': [], 'default_mode': 'history_only', 'scenarios': [{}],
+              'limitations': [], 'snapshot': {}}
+    old = module.prepare_payload({}, {'checks': []}, config)
+    assert old['title'].startswith('Jumper installation')
+    assert calls == [True]
+    config.update(title='Mudmat installation', include_wave_preview=False)
+    new = module.prepare_payload({}, {'checks': []}, config)
+    assert new['title'] == 'Mudmat installation'
+    assert new['demo']['default_mode'] == 'history_only'
+    assert calls == [True, False]
+    config['default_mode'] = 'wave_preview'
+    with pytest.raises(ValueError, match='preview'):
+        module.prepare_payload({}, {'checks': []}, config)
+    config.update(default_mode='history_only', include_wave_preview='false')
+    with pytest.raises(ValueError, match='boolean'):
+        module.prepare_payload({}, {'checks': []}, config)
+
+
+def test_profile_scenario_preserves_metadata_identity_gate(tmp_path):
+    from digitalmodel.workflows import installation_monitoring_demo as module
+    summary, specs = _profile_evidence(tmp_path)
+    summary['cases'][0]['channels']['profile_005']['position'] = 'End A'
+    with pytest.raises(ValueError, match='identity'):
+        module._scenario(summary, {'hs_m': 1., 'tp_s': 8.}, specs, include_wave_preview=False)
