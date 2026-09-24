@@ -1041,7 +1041,8 @@
     "configuration": "BOP on wellhead (generic test fixture)",
     "vessel_label": "Drilling vessel (DP)",
     "document_ref": "SYNTHETIC",
-    "notes": []
+    "notes": [],
+    "report_document_no": "RPT-SYN-001"
   },
   "tensioner_system": {
     "count": 6,

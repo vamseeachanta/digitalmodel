@@ -231,8 +231,11 @@ def test_malformed_svg_returns_a_fail_report(spec, svg):
 def test_document_reference_with_digits_is_verbatim_text(spec):
     from digitalmodel.drilling_riser.stackup_drawing import render
 
-    spec.title_block.document_ref = "DOC-100-A"
+    # #2158: the title block prints the report's own document number
+    spec.title_block.report_document_no = "DOC-100-A"
     svg = render(spec)
     assert reconcile(spec, svg)["result"] == "pass"
     tampered = svg.replace(">DOC-100-A<", ">DOC-101-A<")
-    _assert_reason(reconcile(spec, tampered), "c_numbers", "title_block.document_ref")
+    _assert_reason(
+        reconcile(spec, tampered), "c_numbers", "title_block.report_document_no"
+    )

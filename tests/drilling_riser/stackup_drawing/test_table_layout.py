@@ -334,14 +334,43 @@ def test_spec_without_a_register_is_not_established(spec):
 
 @pytest.mark.parametrize(
     ("text", "where"),
-    [("CAL-0123", "document_ref"), ("see Data!B12", "gap")],
+    [
+        ("CAL-0123", "report_document_no"),
+        ("CAL-0123-A", "title"),
+        ("see Data!B12", "gap"),
+        ("see Data!", "gap"),
+    ],
 )
 def test_archive_citation_text_on_the_drawing_fails(spec, text, where):
-    if where == "document_ref":
-        spec.title_block.document_ref = text
+    if where == "report_document_no":
+        spec.title_block.report_document_no = text
+    elif where == "title":
+        spec.title_block.title = f"Riser stack-up {text}"
     else:
         spec.gaps[0]["detail"] = text
     _assert_reason(reconcile(spec, render(spec)), "f_design_data", "archive")
+
+
+def test_title_block_prints_the_report_document_number(spec, svg):
+    assert spec.title_block.report_document_no == "RPT-SYN-001"
+    assert ">DOCUMENT<" in svg and ">SOURCE<" not in svg
+    assert 'data-field="title_block.report_document_no"' in svg
+    assert ">RPT-SYN-001<" in svg
+    assert reconcile(spec, svg)["result"] == "pass"
+
+
+def test_archive_document_ref_is_never_printed(spec):
+    spec.title_block.document_ref = "CAL-0456-B"
+    svg = render(spec)
+    assert "CAL-0456-B" not in svg
+    assert reconcile(spec, svg)["result"] == "pass"
+
+
+def test_missing_report_document_number_prints_na(spec):
+    spec.title_block.report_document_no = None
+    svg = render(spec)
+    assert '<tspan class="na" data-field="title_block.report_document_no">n/a</tspan>' in svg
+    assert reconcile(spec, svg)["result"] == "pass"
 
 
 def test_public_item_without_references_fails_validation(spec):
