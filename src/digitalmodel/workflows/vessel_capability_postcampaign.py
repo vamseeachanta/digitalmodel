@@ -5,6 +5,7 @@ from hashlib import sha256
 import json
 import math
 from pathlib import Path
+import subprocess
 import time
 
 import psutil
@@ -26,6 +27,39 @@ def _code_paths():
     root = Path(__file__).resolve().parent
     return [root / (name + '.py') for name in names] + [
         root.parent / 'infrastructure/persistence/provenance.py']
+
+
+def _git_state(paths, start=None):
+    """Return the checkout HEAD and which pinned code paths differ from it."""
+    start = Path(start or Path(__file__).resolve().parent)
+    probe = lambda cwd, *args: subprocess.run(['git', '-C', str(cwd), *args], capture_output=True,
+                                              text=True, check=True).stdout
+    top = Path(probe(start, 'rev-parse', '--show-toplevel').strip()).resolve()
+    head = probe(top, 'rev-parse', 'HEAD').strip()
+    relative = [Path(path).resolve().relative_to(top).as_posix() for path in paths]
+    fields = probe(top, 'status', '--porcelain=v1', '-z', '--untracked-files=all', '--',
+                   *(':(top,literal)' + path for path in relative)).split('\0')
+    dirty, index = {}, 0
+    while index < len(fields):
+        entry = fields[index]
+        index += 1
+        if not entry:
+            continue
+        dirty[entry[3:]] = entry[:2]
+        if entry[0] in 'RC':  # rename/copy records carry the source path as the next field
+            dirty[fields[index]] = entry[:2]
+            index += 1
+    return dict(head=head, dirty=sorted(dirty), dirty_status=dict(sorted(dirty.items())))
+
+
+def _code_identity():
+    try:
+        state = _git_state(_code_paths())
+    except (OSError, ValueError, subprocess.CalledProcessError) as error:
+        return dict(status='UNKNOWN', git_head=None, dirty_paths=[], error=f'{type(error).__name__}: {error}')
+    return dict(status='UNPINNED_CODE' if state['dirty'] else 'PINNED',
+                git_head=state['head'], dirty_paths=state['dirty'],
+                dirty_status=state.get('dirty_status', {}), observed_utc=_utc())
 
 
 def _process_identity(pid):
@@ -178,16 +212,27 @@ def _generate(config, paths, record):
     paths['staging_summary'].rename(paths['summary'])
 
 
+def _close_identity(record):
+    record['code_identity_end'] = _code_identity()
+    compared = ('git_head', 'dirty_paths', 'dirty_status', 'status')
+    if any(record['code_identity_end'].get(k) != record['code_identity'].get(k) for k in compared):
+        record['code_identity']['status'] = 'UNPINNED_CODE'
+        record['code_identity']['changed_during_run'] = True
+
+
 def run(config):
     """Return an audit receipt; partial coverage is never reported as complete."""
     paths = _validate(config)
     paths['receipt'].parent.mkdir(parents=True, exist_ok=True)
     record = dict(schema_version=1, status='FAILED', started_utc=_utc(), config=config,
                   engineering_acceptance='NOT EVALUATED',
-                  module_sha256=sha256(Path(__file__).read_bytes()).hexdigest())
+                  module_sha256=sha256(Path(__file__).read_bytes()).hexdigest(),
+                  code_identity=_code_identity())
     try:
         _generate(config, paths, record)
+        _close_identity(record)
     except Exception as error:
+        _close_identity(record)
         record.update(status='FAILED', completed_utc=_utc(), error=f'{type(error).__name__}: {error}')
         _save(paths['receipt'], record)
         raise

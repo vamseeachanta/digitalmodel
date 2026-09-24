@@ -106,7 +106,7 @@ def test_design_data_validation_rejects_unbound_values(rows):
 def test_audit_claims_and_unlinked_design_context_explicit():
     html=mudmat.render_html(summary(),config={'design_data':[design_row()]})
     assert 'source event audit is not established' in html
-    assert 'authored configuration context' in html
+    assert 'report-author interpretations' in html
     assert 'over the 600 s record' not in html and 'recorded analysis interval' in html
     assert '6.1 Subsequent review context' not in html
     data=summary();data['event_audits']=[{'status':'VERIFIED'}]

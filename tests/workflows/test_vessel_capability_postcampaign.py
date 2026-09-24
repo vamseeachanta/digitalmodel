@@ -192,3 +192,89 @@ def test_case_evidence_hash_detects_trace_mutation(tmp_path):
     before = workflow._evidence_hashes(snapshot)
     trace.write_bytes(b'changed')
     assert workflow._evidence_hashes(snapshot) != before
+
+
+@pytest.mark.parametrize('git,status', [
+    ({'head': 'a' * 40, 'dirty': []}, 'PINNED'),
+    ({'head': 'a' * 40, 'dirty': ['src/digitalmodel/workflows/vessel_capability_report.py']}, 'UNPINNED_CODE'),
+    (None, 'UNKNOWN')])
+def test_receipt_records_git_code_identity(monkeypatch, tmp_path, git, status):
+    config = fixture_config(tmp_path)
+    monkeypatch.setattr(workflow, '_process_identity', lambda pid: None)
+    monkeypatch.setattr(workflow, 'generate_report', fake_report)
+    def fake_git(paths):
+        if git is None: raise OSError('git unavailable')
+        return git
+    monkeypatch.setattr(workflow, '_git_state', fake_git)
+    receipt = workflow.run(config)
+    identity = receipt['code_identity']
+    assert identity['status'] == status
+    assert identity['git_head'] == (None if git is None else 'a' * 40)
+    assert identity['dirty_paths'] == ([] if git is None else git['dirty'])
+    assert json.loads((tmp_path / 'new.completion.json').read_text())['code_identity'] == identity
+
+
+def test_real_git_state_lists_only_pinned_paths():
+    state = workflow._git_state(workflow._code_paths())
+    assert len(state['head']) == 40 and isinstance(state['dirty'], list)
+
+
+def _git_repo(tmp_path, monkeypatch):
+    import subprocess
+    for key in ('GIT_DIR', 'GIT_WORK_TREE', 'GIT_COMMON_DIR', 'GIT_INDEX_FILE'):
+        monkeypatch.delenv(key, raising=False)
+    repo = tmp_path / 'repo with space'
+    (repo / 'pkg').mkdir(parents=True)
+    git = lambda *a: subprocess.run(['git', '-C', str(repo), *a], check=True, capture_output=True)
+    git('init', '-q'); git('config', 'user.email', 't@t'); git('config', 'user.name', 't')
+    for name in ('pinned.py', 'other.py', 'moved.py'):
+        (repo / 'pkg' / name).write_text('x = 1\n')
+    git('add', '.'); git('commit', '-qm', 'init')
+    return repo, git
+
+
+def test_git_state_detects_dirty_pinned_file_from_subdirectory(tmp_path, monkeypatch):
+    repo, git = _git_repo(tmp_path, monkeypatch)
+    pinned, other, moved = (repo / 'pkg' / n for n in ('pinned.py', 'other.py', 'moved.py'))
+    assert workflow._git_state([pinned, moved], start=repo / 'pkg')['dirty'] == []
+    pinned.write_text('x = 2\n'); other.write_text('x = 3\n')
+    git('mv', 'pkg/moved.py', 'pkg/renamed.py')
+    state = workflow._git_state([pinned, moved], start=repo / 'pkg')
+    assert state['dirty'] == ['pkg/moved.py', 'pkg/pinned.py']
+    assert len(state['head']) == 40
+
+
+def test_git_identity_change_during_run_marks_unpinned(monkeypatch, tmp_path):
+    config = fixture_config(tmp_path)
+    monkeypatch.setattr(workflow, '_process_identity', lambda pid: None)
+    monkeypatch.setattr(workflow, 'generate_report', fake_report)
+    heads = iter(['a' * 40, 'b' * 40])
+    monkeypatch.setattr(workflow, '_git_state', lambda paths: {'head': next(heads), 'dirty': []})
+    receipt = workflow.run(config)
+    assert receipt['code_identity']['status'] == 'UNPINNED_CODE'
+    assert receipt['code_identity']['changed_during_run'] is True
+    assert receipt['code_identity_end']['git_head'] == 'b' * 40
+
+
+def test_staging_change_during_run_is_detected(tmp_path, monkeypatch):
+    repo, git = _git_repo(tmp_path, monkeypatch)
+    pinned = repo / 'pkg' / 'pinned.py'
+    pinned.write_text('x = 2\n')
+    before = workflow._git_state([pinned], start=repo)
+    git('add', 'pkg/pinned.py')
+    after = workflow._git_state([pinned], start=repo)
+    assert before['dirty'] == after['dirty'] and before['dirty_status'] != after['dirty_status']
+
+
+def test_failed_run_records_end_identity(monkeypatch, tmp_path):
+    config = fixture_config(tmp_path)
+    monkeypatch.setattr(workflow, '_process_identity', lambda pid: None)
+    heads = iter(['a' * 40, 'b' * 40])
+    monkeypatch.setattr(workflow, '_git_state', lambda paths: {'head': next(heads), 'dirty': []})
+    def fail(*args): raise ValueError('Input changed during report generation')
+    monkeypatch.setattr(workflow, 'generate_report', fail)
+    with pytest.raises(ValueError): workflow.run(config)
+    receipt = json.loads((tmp_path / 'new.completion.json').read_text())
+    assert receipt['status'] == 'FAILED'
+    assert receipt['code_identity_end']['git_head'] == 'b' * 40
+    assert receipt['code_identity']['changed_during_run'] is True
