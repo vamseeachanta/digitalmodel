@@ -46,7 +46,7 @@ CHECKS = (
     "c_numbers",
     "d_totals",
     "e_not_found",
-    "f_markers",
+    "f_design_data",
 )
 
 

@@ -1,9 +1,12 @@
-"""Tabular callouts, review list, nesting and provenance markers (#2158).
+"""Tabular callouts, review list, nesting and design-data references (#2158).
 
-Owner decisions: L10 (report-table † and owner-decision ‡ markers, round-ft
-axis ticks), L11 = A (aligned table rows are the only callout layout), L12
+Owner decisions: L10 (value provenance on the drawing, round-ft axis
+ticks), L11 = A (aligned table rows are the only callout layout), L12
 (review list keyed by ``component_id``), K10/K05 (``nested_in`` overlay and
-landing, provenance bases and space-out reference totals).
+landing, provenance bases and space-out reference totals), and the
+2026-09-24 instruction that every drawn value references the report's
+design-data table (D-IDs with a P/D/A class flag), which replaces the
+report-table † and owner-decision ‡ markers.
 
 Every tamper test changes one thing in a correct drawing and asserts the
 check that fails AND its reason text.
@@ -33,7 +36,7 @@ CHECKS = (
     "c_numbers",
     "d_totals",
     "e_not_found",
-    "f_markers",
+    "f_design_data",
 )
 
 
@@ -74,26 +77,10 @@ def _row_line(svg: str, cid: str, needle: str) -> str:
 
 
 def _cell(svg: str, cid: str, col: str) -> str:
-    """The value cell (not a marker text) of column ``col`` in row ``cid``."""
+    """The cell text of column ``col`` in row ``cid``."""
     lines = _lines(svg)
     start, end = _row_span(lines, _row_head(cid))
-    hits = [
-        ln
-        for ln in lines[start:end]
-        if f'data-col="{col}"' in ln and 'class="mk"' not in ln
-    ]
-    assert len(hits) == 1, (cid, col, hits)
-    return hits[0]
-
-
-def _marks(svg: str, cid: str, col: str) -> str:
-    lines = _lines(svg)
-    start, end = _row_span(lines, _row_head(cid))
-    hits = [
-        ln
-        for ln in lines[start:end]
-        if f'data-col="{col}"' in ln and 'class="mk"' in ln
-    ]
+    hits = [ln for ln in lines[start:end] if f'data-col="{col}"' in ln]
     assert len(hits) == 1, (cid, col, hits)
     return hits[0]
 
@@ -189,10 +176,15 @@ def test_cell_dash_swapped_for_na_fails(spec, svg):
     _assert_reason(reconcile(spec, svg.replace(line, new)), "e_not_found", "cell")
 
 
-def test_cell_dropped_owner_decision_flag_fails(spec, svg):
-    line = _marks(svg, "c09-riser-joint-buoyant", "buoy_rating")
-    assert "‡" in line
-    _assert_reason(reconcile(spec, _drop_line(svg, line)), "f_markers", "‡")
+def test_cell_dropped_design_data_id_fails(spec, svg):
+    line = _cell(svg, "c09-riser-joint-buoyant", "dd")
+    new = re.sub(
+        r'<tspan>, </tspan><tspan data-dd="D-10">D-10</tspan><tspan class="[^"]+">D</tspan>',
+        "",
+        line,
+    )
+    assert new != line
+    _assert_reason(reconcile(spec, svg.replace(line, new)), "f_design_data", "D-10")
 
 
 def test_cell_missing_warning_mark_fails(spec, svg):
@@ -255,31 +247,154 @@ def test_leader_not_ending_at_the_row_fails(spec, svg):
     _assert_reason(reconcile(spec, svg.replace(line, new)), "b_positions", "leader")
 
 
-# -- L10: markers and round-ft ticks -------------------------------------------------------
+# -- design data (owner instruction 2026-09-24) and round-ft ticks ------------------------
 
 
-def test_missing_report_table_dagger_fails(spec, svg):
-    line = _marks(svg, "c10-riser-joint-buoyant", "buoy")
-    assert "†" in line
-    _assert_reason(reconcile(spec, _drop_line(svg, line)), "f_markers", "†")
+def _dd_ids(line: str) -> list[str]:
+    return re.findall(r'<tspan data-dd="(D-\d+)">', line)
 
 
-def test_missing_owner_decision_mark_in_source_flags_fails(spec, svg):
-    line = _cell(svg, "c09-riser-joint-buoyant", "flags")
-    new = _swap(line, '<tspan class="own">‡</tspan>', "")
-    _assert_reason(reconcile(spec, svg.replace(line, new)), "f_markers", "Source flags")
+def test_design_data_column_lists_the_row_ids_with_class_flags(spec, svg):
+    line = _cell(svg, "c09-riser-joint-buoyant", "dd")
+    assert _dd_ids(line) == ["D-04", "D-05", "D-06", "D-07", "D-08", "D-10"]
+    assert re.findall(r'<tspan class="ddc-([pda])">', line) == [
+        "d",
+        "p",
+        "p",
+        "p",
+        "p",
+        "d",
+    ]
+    lines = _lines(svg)
+    start, end = _row_span(lines, '<g data-role="table-row" data-row="tensioner_system"')
+    tens = next(ln for ln in lines[start:end] if 'data-col="dd"' in ln)
+    assert _dd_ids(tens) == ["D-16", "D-17", "D-18"]
+    assert 'class="ddc-a">A<' in tens
+    # the legend refers the IDs to the report's design-data table
+    assert "Design data" in svg
 
 
-def test_marker_on_a_value_without_that_basis_fails(spec, svg):
-    line = _cell(svg, "c06-pup-joint", "top")
-    x = float(re.search(r' x="([\d.]+)"', line).group(1))
-    y = float(re.search(r' y="([\d.]+)"', line).group(1))
-    mark = (
-        f'<text x="{x + 1.5:g}" y="{y - 4.5:.2f}" class="mk" data-col="top">'
-        '<tspan class="rpt">†</tspan></text>'
+def test_drawing_never_prints_provenance_source_or_basis(spec, svg):
+    assert "synthetic fixture" not in svg
+    assert "data-source=" not in svg
+    assert "owner decision" not in svg
+    assert "report table" not in svg
+
+
+def test_printed_design_data_id_that_does_not_exist_fails(spec, svg):
+    line = _cell(svg, "c09-riser-joint-buoyant", "dd")
+    new = line.replace('data-dd="D-08">D-08<', 'data-dd="D-98">D-98<')
+    assert new != line
+    _assert_reason(reconcile(spec, svg.replace(line, new)), "f_design_data", "D-98")
+
+
+def test_wrong_design_data_class_flag_fails(spec, svg):
+    line = _cell(svg, "c09-riser-joint-buoyant", "dd")
+    new = line.replace(
+        '<tspan data-dd="D-10">D-10</tspan><tspan class="ddc-d">D</tspan>',
+        '<tspan data-dd="D-10">D-10</tspan><tspan class="ddc-p">P</tspan>',
     )
-    tampered = svg.replace(line, line + "\n" + mark)
-    _assert_reason(reconcile(spec, tampered), "f_markers", "†")
+    assert new != line
+    _assert_reason(reconcile(spec, svg.replace(line, new)), "f_design_data", "class")
+
+
+def test_register_value_disagreeing_with_its_field_fails(spec):
+    item = next(i for i in spec.design_data if i.id == "D-06")
+    item.value = 22.0  # the riser main tube OD fields are 21 in
+    _assert_reason(reconcile(spec, render(spec)), "f_design_data", "D-06")
+
+
+def test_register_value_within_the_formatting_tolerance_passes(spec):
+    item = next(i for i in spec.design_data if i.id == "D-05")
+    item.value = 75.004  # joint length prints to 0.1 ft at worst
+    assert reconcile(spec, render(spec))["result"] == "pass"
+
+
+def test_printed_value_without_design_data_id_fails(spec):
+    spec.component("c06-pup-joint").provenance["od_in"].design_data_id = None
+    _assert_reason(reconcile(spec, render(spec)), "f_design_data", "design_data_id")
+
+
+def test_spec_without_a_register_is_not_established(spec):
+    spec.design_data = []
+    spec.references = []
+    for comp in spec.components:
+        for p in comp.provenance.values():
+            p.design_data_id = None
+    for p in list(spec.datums.provenance.values()) + list(
+        spec.tensioner_system.provenance.values()
+    ):
+        p.design_data_id = None
+    for ref in spec.reference_totals.values():
+        ref.design_data_id = None
+    report = reconcile(spec, render(spec))
+    assert report["checks"]["f_design_data"]["status"] == "not_established"
+    assert report["result"] == "pass_with_open_items"
+
+
+@pytest.mark.parametrize(
+    ("text", "where"),
+    [("CAL-0123", "document_ref"), ("see Data!B12", "gap")],
+)
+def test_archive_citation_text_on_the_drawing_fails(spec, text, where):
+    if where == "document_ref":
+        spec.title_block.document_ref = text
+    else:
+        spec.gaps[0]["detail"] = text
+    _assert_reason(reconcile(spec, render(spec)), "f_design_data", "archive")
+
+
+def test_public_item_without_references_fails_validation(spec):
+    item = next(i for i in spec.design_data if i.id == "D-06")
+    item.reference_ids = []
+    assert any("D-06" in p and "public" in p for p in spec.validate())
+
+
+def test_unresolved_reference_id_fails_validation(spec):
+    item = next(i for i in spec.design_data if i.id == "D-06")
+    item.reference_ids = ["R-9"]
+    assert any("R-9" in p for p in spec.validate())
+
+
+def test_assumed_item_must_say_why_no_public_data(spec):
+    item = next(i for i in spec.design_data if i.id == "D-18")
+    item.note = "sheave radius from a sketch"
+    assert any("D-18" in p and "no public data" in p for p in spec.validate())
+
+
+def test_assumed_item_may_cite_only_context_references(spec):
+    item = next(i for i in spec.design_data if i.id == "D-18")
+    item.reference_ids = ["R-1"]
+    assert any("D-18" in p and "context" in p for p in spec.validate())
+
+
+def test_owner_decision_item_must_name_the_decision(spec):
+    item = next(i for i in spec.design_data if i.id == "D-10")
+    item.note = "chosen by the owner"
+    assert any("D-10" in p and "decision" in p for p in spec.validate())
+
+
+def test_design_data_id_must_resolve(spec):
+    spec.component("c06-pup-joint").provenance["od_in"].design_data_id = "D-97"
+    assert any("D-97" in p for p in spec.validate())
+
+
+@pytest.mark.parametrize("bad", ["D-1", "D12", "X-12", "D-1234"])
+def test_design_data_item_id_pattern(spec, bad):
+    spec.design_data[0].id = bad
+    assert any(bad in p for p in spec.validate())
+
+
+def test_register_round_trips_through_json(spec):
+    again = from_json(to_json(spec))
+    assert again.design_data == spec.design_data
+    assert again.references == spec.references
+    assert (
+        again.component("c09-riser-joint-buoyant")
+        .provenance["buoyancy_depth_rating_ft"]
+        .design_data_id
+        == "D-10"
+    )
 
 
 def test_non_round_ft_tick_fails(spec, svg):
@@ -295,7 +410,7 @@ def test_non_round_ft_tick_fails(spec, svg):
     z_new = f"{float(z) + 0.05:.9f}"  # 50.16 ft: prints as "50" but is not round
     tampered = svg.replace(f'data-tick-el-m="{z}"', f'data-tick-el-m="{z_new}"')
     assert tampered != svg
-    _assert_reason(reconcile(spec, tampered), "f_markers", "round")
+    _assert_reason(reconcile(spec, tampered), "f_design_data", "round")
 
 
 # -- nested_in: overlay and landing ---------------------------------------------------------
