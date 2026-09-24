@@ -1384,7 +1384,7 @@
       "unit": "m",
       "source_class": "assumed",
       "reference_ids": [],
-      "note": "ASSUMED — no public data for the sheave geometry of this tensioner class."
+      "note": "ASSUMED - to be confirmed: no public data for the sheave geometry of this tensioner class."
     },
     {
       "id": "D-19",
@@ -1395,7 +1395,7 @@
       "reference_ids": [
         "R-4"
       ],
-      "note": "ASSUMED — no public data for the pivot offset of this flex-joint class; taken at mid-height. R-4 is context for the hydrodynamic model only."
+      "note": "ASSUMED - to be confirmed: no public data for the pivot offset of this flex-joint class; taken at mid-height. R-4 is context for the hydrodynamic model only."
     },
     {
       "id": "D-20",
@@ -1406,7 +1406,7 @@
       "reference_ids": [
         "R-4"
       ],
-      "note": "ASSUMED — no public data for the pivot offset of this flex-joint class; taken at mid-height. R-4 is context for the hydrodynamic model only."
+      "note": "ASSUMED - to be confirmed: no public data for the pivot offset of this flex-joint class; taken at mid-height. R-4 is context for the hydrodynamic model only."
     },
     {
       "id": "D-21",

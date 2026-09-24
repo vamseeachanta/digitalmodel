@@ -266,7 +266,9 @@ def test_design_data_column_lists_the_row_ids_with_class_flags(spec, svg):
         "d",
     ]
     lines = _lines(svg)
-    start, end = _row_span(lines, '<g data-role="table-row" data-row="tensioner_system"')
+    start, end = _row_span(
+        lines, '<g data-role="table-row" data-row="tensioner_system"'
+    )
     tens = next(ln for ln in lines[start:end] if 'data-col="dd"' in ln)
     assert _dd_ids(tens) == ["D-16", "D-17", "D-18"]
     assert 'class="ddc-a">A<' in tens
@@ -277,7 +279,8 @@ def test_design_data_column_lists_the_row_ids_with_class_flags(spec, svg):
 def test_drawing_never_prints_provenance_source_or_basis(spec, svg):
     assert "synthetic fixture" not in svg
     assert "data-source=" not in svg
-    assert "owner decision" not in svg
+    # the provenance basis strings (the legend's class names are fine)
+    assert "owner decision S0" not in svg
     assert "report table" not in svg
 
 
@@ -369,7 +372,10 @@ def test_archive_document_ref_is_never_printed(spec):
 def test_missing_report_document_number_prints_na(spec):
     spec.title_block.report_document_no = None
     svg = render(spec)
-    assert '<tspan class="na" data-field="title_block.report_document_no">n/a</tspan>' in svg
+    assert (
+        '<tspan class="na" data-field="title_block.report_document_no">n/a</tspan>'
+        in svg
+    )
     assert reconcile(spec, svg)["result"] == "pass"
 
 
@@ -389,6 +395,32 @@ def test_assumed_item_must_say_why_no_public_data(spec):
     item = next(i for i in spec.design_data if i.id == "D-18")
     item.note = "sheave radius from a sketch"
     assert any("D-18" in p and "no public data" in p for p in spec.validate())
+
+
+@pytest.mark.parametrize(
+    "note",
+    [
+        "no public data for the sheave geometry",
+        "Assumed - to be confirmed: no public data",
+        "ASSUMED — no public data for the sheave geometry",
+        "ASSUMED - to be confirmed",
+    ],
+)
+def test_assumed_note_must_start_with_the_owner_wording(spec, note):
+    # owner decision DD01 (2026-09-24): exact label, plain hyphen, then why
+    item = next(i for i in spec.design_data if i.id == "D-18")
+    item.note = note
+    assert any("D-18" in p for p in spec.validate())
+
+
+def test_assumed_notes_in_the_fixture_follow_dd01(spec):
+    assumed = [i for i in spec.design_data if i.source_class == "assumed"]
+    assert assumed
+    assert all(i.note.startswith("ASSUMED - to be confirmed") for i in assumed)
+
+
+def test_legend_states_the_assumed_label(svg):
+    assert "A = ASSUMED - to be confirmed" in "".join(ET.fromstring(svg).itertext())
 
 
 def test_assumed_item_may_cite_only_context_references(spec):
@@ -639,7 +671,9 @@ def test_review_entry_dropped_from_the_list_fails(spec, svg):
 
 
 def test_review_entry_text_must_equal_the_spec(spec, svg):
-    tampered = _swap(svg, ">two synthetic sources disagree", ">two synthetic sources agree")
+    tampered = _swap(
+        svg, ">two synthetic sources disagree", ">two synthetic sources agree"
+    )
     _assert_reason(reconcile(spec, tampered), "c_numbers", "data_conflicts.0.detail")
 
 
