@@ -27,6 +27,7 @@ Conventions
 from __future__ import annotations
 
 import datetime
+import ipaddress
 import json
 import math
 import re
@@ -125,15 +126,26 @@ def _parse_date(text: Any) -> Optional[datetime.date]:
 
 
 def _usable_url(url: Any) -> bool:
-    """http(s) URL whose host name is non-empty and dotted (no fetch)."""
+    """http(s) URL with a valid host and port (no fetch).
+
+    The host is an IP literal (IPv4 or bracketed IPv6) or a dotted DNS name; a port,
+    if given, must be an integer in 0..65535 (``.port`` raises ValueError otherwise).
+    """
     if not isinstance(url, str) or any(ch.isspace() for ch in url):
         return False
     try:
         parts = urllib.parse.urlsplit(url)
         host = parts.hostname
+        parts.port  # noqa: B018 - validates the port; raises ValueError if invalid
     except ValueError:
         return False
-    return parts.scheme in ("http", "https") and bool(host) and "." in host.strip(".")
+    if parts.scheme not in ("http", "https") or not host:
+        return False
+    try:
+        ipaddress.ip_address(host)
+        return True
+    except ValueError:
+        return "." in host.strip(".")
 
 
 _DECISION_ID_RE = re.compile(r"\b[A-Z]\d{2}\b")
