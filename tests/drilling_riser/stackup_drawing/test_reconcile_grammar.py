@@ -205,6 +205,23 @@ def test_unknown_attribute_is_rejected(spec, svg):
     )
 
 
+def test_non_ascii_digits_in_field_are_rejected(spec, svg):
+    # Full-width "２１" parses numerically as 21 in Python but is not the canonical form.
+    line = _c06_line(svg, "co2")
+    old = '<tspan data-field="od_in" data-unit="in" data-decimals="0">21</tspan>'
+    new = '<tspan data-field="od_in" data-unit="in" data-decimals="0">２１</tspan>'
+    tampered = svg.replace(line, _replace_once(line, old, new))
+    _assert_reason(reconcile(spec, tampered), "c_numbers", "non-ASCII digit")
+
+
+def test_non_ascii_digits_outside_fields_are_rejected(spec, svg):
+    # Arabic-Indic digits in an unannotated span must count as an untraceable number.
+    line = _c06_line(svg, "co2")
+    old = '<tspan data-field="od_in"'
+    tampered = svg.replace(line, _replace_once(line, old, "<tspan>٣</tspan>" + old))
+    _assert_reason(reconcile(spec, tampered), "c_numbers", "non-ASCII digit")
+
+
 def test_document_reference_with_digits_is_verbatim_text(spec):
     from digitalmodel.drilling_riser.stackup_drawing import render
 
