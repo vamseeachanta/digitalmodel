@@ -133,9 +133,8 @@ def test_r3_5_nan_viewbox_is_rejected(spec, svg):
 
 
 def test_r3_5_non_plain_number_syntax_is_rejected(spec, svg):
-    tampered = svg.replace(
-        '<rect x="0" y="0" width="860"', '<rect x="0e0" y="0" width="860"'
-    )
+    # #2158: the sheet width is layout-derived, so match the origin only
+    tampered = svg.replace('<rect x="0" y="0" width=', '<rect x="0e0" y="0" width=', 1)
     assert tampered != svg
     _assert_reason(
         reconcile(spec, tampered), "b_positions", "not a plain finite SVG number"

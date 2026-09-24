@@ -67,7 +67,8 @@
           "basis": "synthetic"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c02-upper-flex-joint",
@@ -100,9 +101,14 @@
         "bottom_el_m": {
           "source": "synthetic fixture",
           "basis": "synthetic"
+        },
+        "pivot_el_m": {
+          "source": "synthetic fixture",
+          "basis": "assumed"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c03-telescopic-joint-inner",
@@ -145,7 +151,8 @@
           "basis": "synthetic"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c04-tension-ring",
@@ -184,7 +191,8 @@
           "basis": "synthetic"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c05-telescopic-joint-outer",
@@ -227,7 +235,8 @@
           "basis": "synthetic"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c06-pup-joint",
@@ -270,7 +279,8 @@
           "basis": "synthetic"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c07-pup-joint",
@@ -313,7 +323,8 @@
           "basis": "synthetic"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c08-riser-joint-bare",
@@ -356,7 +367,8 @@
           "basis": "synthetic"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c09-riser-joint-buoyant",
@@ -404,10 +416,11 @@
         },
         "buoyancy_depth_rating_ft": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "owner decision S01 (2026-01-01)"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c10-riser-joint-buoyant",
@@ -451,14 +464,15 @@
         },
         "buoyancy_od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "report table"
         },
         "buoyancy_depth_rating_ft": {
           "source": "synthetic fixture",
           "basis": "synthetic"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c11-riser-joint-bare",
@@ -501,7 +515,8 @@
           "basis": "synthetic"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c12-termination-joint",
@@ -544,16 +559,17 @@
           "basis": "synthetic"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c13-other",
       "type": "other",
       "label": "Riser adaptor",
       "count": 1,
-      "joint_length_m": 1.5,
+      "joint_length_m": 2.5,
       "top_el_m": -1475.4999999999998,
-      "bottom_el_m": -1476.9999999999998,
+      "bottom_el_m": -1477.9999999999998,
       "od_in": 21.0,
       "buoyancy_od_in": null,
       "wall_thickness_in": null,
@@ -583,7 +599,8 @@
           "basis": "synthetic"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c14-lower-flex-joint",
@@ -591,8 +608,8 @@
       "label": "Lower flex joint (LFJ)",
       "count": 1,
       "joint_length_m": 1.0,
-      "top_el_m": -1476.9999999999998,
-      "bottom_el_m": -1477.9999999999998,
+      "top_el_m": -1478.4999999999998,
+      "bottom_el_m": -1479.4999999999998,
       "od_in": 40.0,
       "buoyancy_od_in": null,
       "wall_thickness_in": null,
@@ -620,9 +637,18 @@
         "od_in": {
           "source": "synthetic fixture",
           "basis": "synthetic"
+        },
+        "nested_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "pivot_el_m": {
+          "source": "synthetic fixture",
+          "basis": "assumed"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": "c15-lmrp"
     },
     {
       "id": "c15-lmrp",
@@ -661,7 +687,8 @@
           "basis": "synthetic"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c16-bop",
@@ -700,7 +727,8 @@
           "basis": "synthetic"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c17-wellhead",
@@ -741,17 +769,22 @@
         "wall_thickness_in": {
           "source": "synthetic fixture",
           "basis": "synthetic"
+        },
+        "nested_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": "c18-conductor"
     },
     {
       "id": "c18-conductor",
       "type": "conductor",
       "label": "conductor",
       "count": 1,
-      "joint_length_m": 45.72,
-      "top_el_m": -1500.0,
+      "joint_length_m": 48.72,
+      "top_el_m": -1497.0,
       "bottom_el_m": -1545.72,
       "od_in": 36.0,
       "buoyancy_od_in": null,
@@ -786,7 +819,8 @@
           "basis": "synthetic"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c19-conductor",
@@ -829,7 +863,8 @@
           "basis": "synthetic"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c20-casing",
@@ -872,7 +907,8 @@
           "basis": "synthetic"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     }
   ],
   "title_block": {
@@ -897,7 +933,7 @@
       },
       "sheave_radius_m": {
         "source": "synthetic fixture",
-        "basis": "synthetic"
+        "basis": "assumed"
       }
     }
   },
@@ -915,7 +951,7 @@
       "description": ""
     },
     "riser_length_ufj_lfj_m": {
-      "value": 1499.0,
+      "value": 1500.5,
       "source": "synthetic fixture",
       "basis": "synthetic",
       "description": ""
@@ -925,6 +961,48 @@
       "source": "synthetic fixture",
       "basis": "synthetic",
       "description": ""
+    },
+    "ufj_pivot_el_m": {
+      "value": 21.5,
+      "source": "synthetic fixture",
+      "basis": "assumed",
+      "description": "upper flex-joint pivot"
+    },
+    "lfj_pivot_el_m": {
+      "value": -1479.0,
+      "source": "synthetic fixture",
+      "basis": "assumed",
+      "description": "lower flex-joint pivot"
+    },
+    "tj_ib_geometric_m": {
+      "value": 15.17,
+      "source": "synthetic fixture",
+      "basis": "synthetic",
+      "description": "inner barrel out, as drawn"
+    },
+    "static_stretch_m": {
+      "value": 0.25,
+      "source": "synthetic fixture",
+      "basis": "synthetic",
+      "description": "static stretch at target tension"
+    },
+    "tj_ib_tensioned_m": {
+      "value": 15.42,
+      "source": "synthetic fixture",
+      "basis": "synthetic",
+      "description": "inner barrel out, tensioned"
+    },
+    "tj_ib_mid_stroke_m": {
+      "value": 15.24,
+      "source": "synthetic fixture",
+      "basis": "synthetic",
+      "description": "inner barrel out at mid-stroke"
+    },
+    "tj_offset_from_mid_m": {
+      "value": 0.18,
+      "source": "synthetic fixture",
+      "basis": "synthetic",
+      "description": "tensioned minus mid-stroke"
     }
   },
   "sources": [
@@ -935,10 +1013,18 @@
       "sha256": ""
     }
   ],
-  "data_conflicts": [],
+  "data_conflicts": [
+    {
+      "component_id": "c19-conductor",
+      "item": "wall_thickness_in",
+      "status": "open",
+      "detail": "two synthetic sources disagree on the lower conductor wall"
+    }
+  ],
   "gaps": [
     {
-      "item": "c02-upper-flex-joint od_in",
+      "component_id": "c02-upper-flex-joint",
+      "item": "od_in",
       "status": "open",
       "detail": "deliberately NOT_FOUND to exercise the n/a rendering path"
     }
