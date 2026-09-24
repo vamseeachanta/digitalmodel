@@ -96,6 +96,8 @@ def _intro_summary(story, summary, payload, cases):
         story.append(_p(f"The largest recorded screening utilization is {governing['max_utilization']:.3f}, against a utilization criterion of 1.000, for {governing.get('governing_check', 'unrecorded criterion')}, at Hs {governing['hs_m']:g} m and Tp {governing['tp_s']:g} s (case {governing['index']}). This conclusion applies only to the checks included in the assumed-criteria screen."))
     story.append(_p("Passing cells at the upper study edge are censored by the sampled range; they do not locate a physical failure boundary. Intentional sling slack is not rejected solely by a zero crossing. Snap loads, geometric slack and interference remain separate acceptance checks."))
     story.append(_p(_monitoring_statement(payload)))
+    for finding in payload.get("_report_config", {}).get("summary_findings", []):
+        story.append(_p(finding))
 
 
 def _evaluated_cases(cases):
@@ -114,14 +116,30 @@ def _evaluated_cases(cases):
 
 def _design(story, summary, payload, cases):
     _section(story, "3. Design data and assumed criteria", "The retained model is the arrangement authority. The values below are extracted from the source case settings; reproduction does not qualify the underlying design inputs.")
-    headings = sorted({str(c.get("heading_degrees", "Not established")) for c, _ in cases})
-    rows = [["Heading", ", ".join(headings), "deg", "Source cases"]]
-    rows.insert(0, ["Solver version", payload.get("_report_config", {}).get("solver_version", "Not established"), "Version", "Retained report configuration"])
-    for key, unit in [("buildup_s", "s"), ("duration_s", "s"), ("sample_interval_s", "s"),
-                      ("gamma", "dimensionless"), ("max_time_step_s", "s"),
-                      ("components", "count"), ("seed", "identifier")]:
-        observed = {c.get(key, c["settings"].get(key, "Not established")) for c, _ in cases}
-        rows.append([key, ", ".join(map(str, sorted(observed, key=str))), unit, "Source settings"])
+    # Failed and unrun rows carry no solved settings; configuration is read from verified rows
+    # and any value present only on excluded rows is disclosed with its evidence status.
+    verified = [c for c, _ in cases if c.get("status") == "VERIFIED"]
+    excluded = [c for c, _ in cases if c.get("status") != "VERIFIED"]
+    scope = (f"Verified source cases ({len(verified)} of {len(cases)})" if verified
+             else f"No verified source cases; all {len(cases)} rows shown")
+    shown = verified or excluded
+    rows = [["Solver version", payload.get("_report_config", {}).get("solver_version", "Not established"), "Version", "Retained report configuration"]]
+    fields = [("heading_degrees", "deg")] + [(key, unit) for key, unit in [
+        ("buildup_s", "s"), ("duration_s", "s"), ("sample_interval_s", "s"), ("gamma", "dimensionless"),
+        ("max_time_step_s", "s"), ("components", "count"), ("seed", "identifier")]]
+
+    def value(case, key):
+        return case.get(key, case.get("settings", {}).get(key))
+
+    for key, unit in fields:
+        observed = {value(c, key) for c in shown}
+        text = ", ".join(sorted(("Not established" if v is None else str(v)) for v in observed))
+        rows.append(["Heading" if key == "heading_degrees" else key, text, unit, scope])
+        if verified:
+            other = {str(value(c, key)) for c in excluded if value(c, key) is not None} - {str(v) for v in observed}
+            if other:
+                rows.append([f"{key} (excluded non-verified rows)", ", ".join(sorted(other)), unit,
+                             "Excluded non-verified rows; not used for results"])
     _table(story, ["Input", "Value", "Units", "Status / source"], rows,
            [133, 145, 80, 149], "Table 2. Analysis configuration retained with the case summaries.")
     _design_extra(story, payload.get("design_data", []))
@@ -220,8 +238,16 @@ def _validation_references(story, summary, payload):
         ["Equipment capacity and drawing reconciliation", "Pending qualification."],
         ["Slack, snap and interference", "Pending stiffness/model-form, geometric and convergence assessment."],
         ["RAO range and warnings", "Warnings require disposition; completion alone does not establish adequacy."],
-        ["Forecast field validation", "Not established; conditional simulated preview only."],
+        ["Forecast field validation", "Not established; causal SIMULATED demonstration only." if _history_only(payload)
+         else "Not established; conditional simulated preview only."],
     ], [200, 307], "Table 6. Validation and qualification register.")
+    config = payload.get("_report_config", {})
+    notes = list(config.get("decisions", [])) + list(config.get("supplements", []))
+    if notes:
+        story.append(_p("6.1 Subsequent review context", "Heading2"))
+        story.append(_p("The notes below do not update source coverage or constitute completed qualification."))
+        for note in notes:
+            story.append(_p(note))
     _section(story, "7. Recommendations", "The capacity register and governing edition should be confirmed. Selected governing cases should then receive rigging-stiffness, limited-compression, time-step and mesh sensitivities. Geometric slack, interference, crane off/side lead, clamp/connector forces and pipe-code checks should be completed before an operating envelope is issued.")
     story.append(_p("Additional random seeds and operation phases should be assessed near any emerging boundary. Offshore wave-preview and load-prediction performance should be measured against independent observations before near-real-time guidance is used operationally."))
     _section(story, "8. References and revision history", "The private retained source workbook, model manifest, simulation records and code revision form the evidence chain. Licensed standards remain at their licensed source locations.")
@@ -237,7 +263,8 @@ def _config_references(story, config):
     source = config.get("design_source", {})
     story.append(_p(f"Design source: {source.get('path', 'Not established')}; SHA-256: {source.get('sha256', 'Not established')}", "Cell"))
     for ref in config.get("references", []):
-        story.append(_p(f"{ref.get('label', 'Reference')}: {ref.get('path', 'Not established')}", "Cell"))
+        text = ref if isinstance(ref, str) else f"{ref.get('label', 'Reference')}: {ref.get('path', 'Not established')}"
+        story.append(_p(text, "Cell"))
     story.append(Spacer(1, 10))
     for rev in config.get("revision_history", []):
         story.append(_p(f"{rev.get('revision', '')}, {rev.get('date', '')}: {rev.get('description', '')}. Status: {rev.get('status', 'Not recorded')}"))

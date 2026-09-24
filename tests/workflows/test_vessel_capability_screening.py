@@ -202,3 +202,75 @@ def test_scored_channel_without_forecast_times_rejected():
     screen=payload();channel=screen['demo']['scenarios'][0]['frames'][0]['channels'][0]
     channel.pop('forecast');channel['training_end_s']=480
     with pytest.raises(ValueError):mudmat.render_html(summary(),config={},screening=screen)
+
+
+def test_full_pdf_configuration_uses_verified_rows_only():
+    data,screen=summary(),payload()
+    for row in data['cases']:
+        if row['status']=='VERIFIED':row.update(settings=dict(duration_s=600),heading_degrees=165)
+    raw=json.dumps(data).encode()
+    screen['provenance']['summary']=dict(sha256=sha256(raw).hexdigest())
+    stream=BytesIO()
+    render_full_pdf(data,screen,stream,dict(report_title='Mudmat installation analysis'),summary_bytes=raw)
+    text=' '.join(' '.join(p.extract_text() for p in PdfReader(stream).pages).split())
+    assert 'Heading 165 deg' in text and 'CASE-001' in text
+
+
+def test_full_pdf_accepts_plain_string_references():
+    data,screen,raw=pdf_inputs();stream=BytesIO()
+    render_full_pdf(data,screen,stream,dict(report_title='Mudmat installation analysis',
+        references=['Baseline audit: audit.json; SHA-256 abc']),summary_bytes=raw)
+    text=' '.join(' '.join(p.extract_text() for p in PdfReader(stream).pages).split())
+    assert 'Baseline audit: audit.json; SHA-256 abc' in text
+
+
+def test_full_pdf_carries_configured_findings_and_supplements():
+    data,screen,raw=pdf_inputs();stream=BytesIO()
+    config=dict(report_title='Mudmat installation analysis',summary_findings=['Seven cells stopped unstable <x>'],
+                supplements=['Added-mass bracket factor 1.5 governs'],decisions=['Causal demonstration only'])
+    render_full_pdf(data,screen,stream,config,summary_bytes=raw)
+    text=' '.join(' '.join(p.extract_text() for p in PdfReader(stream).pages).split())
+    for phrase in ('Seven cells stopped unstable <x>','Added-mass bracket factor 1.5 governs','Causal demonstration only'):
+        assert phrase in text
+
+
+def _table2_text(statuses_headings):
+    data,screen=summary(),payload()
+    for row,(status,heading) in zip(data['cases'],statuses_headings):
+        row['status']=status
+        if heading is not None:row.update(settings=dict(duration_s=600),heading_degrees=heading)
+        else:row.pop('settings',None);row.pop('heading_degrees',None)
+    for case in screen['cases']:case.update(status='NOT_EVALUATED',checks=[])
+    screen['demo']['scenarios']=[];screen['boundaries']=[]
+    raw=json.dumps(data).encode();screen['provenance']['summary']=dict(sha256=sha256(raw).hexdigest())
+    stream=BytesIO()
+    from digitalmodel.workflows import installation_full_report_pdf as pdf
+    story=[];pdf._design(story,data,dict(screen,_report_config={}),pdf._mapped_cases(data,screen))
+    return ' '.join(' '.join(getattr(item,'text','') for item in _flatten(story)).split())
+
+
+def _flatten(items):
+    for item in items:
+        if hasattr(item,'_content'):yield from _flatten(item._content)
+        elif hasattr(item,'_cellvalues'):
+            for row in item._cellvalues:yield from _flatten(row)
+        else:yield item
+
+
+def test_table2_discloses_verified_scope_and_excluded_differences():
+    text=_table2_text([('VERIFIED',180),('FAILED',165),('VERIFIED',180),('MISSING',None)])
+    assert 'Verified source cases (2 of 4)' in text
+    assert 'Excluded non-verified rows' in text and '165' in text
+
+
+def test_table2_zero_verified_scope_is_explicit():
+    text=_table2_text([('FAILED',165),('FAILED',165),('MISSING',None),('MISSING',None)])
+    assert 'No verified source cases; all 4 rows shown' in text
+
+
+def test_replay_qualifies_inherited_campaign_findings():
+    from digitalmodel.workflows.installation_replay_report import _qualify_inherited
+    config=_qualify_inherited(dict(summary_findings=['Peak 151 kN'],decisions=['D'],supplements=['S'],disclosures=['X']))
+    prefix='Historical full-campaign context; not fresh pilot findings: '
+    assert config['summary_findings']==[prefix+'Peak 151 kN'] and config['decisions']==[prefix+'D']
+    assert config['supplements']==[prefix+'S'] and config['disclosures']==[prefix+'X']

@@ -33,6 +33,15 @@ def _summary(root, matrix, manifest):
                 engineering_acceptance='NOT EVALUATED', full_event_audit=audit)
 
 
+def _qualify_inherited(config):
+    """Mark inherited campaign-level statements as historical context for a single-case replay."""
+    config = dict(config)
+    for key in ('disclosures', 'summary_findings', 'decisions', 'supplements'):
+        config[key] = ['Historical full-campaign context; not fresh pilot findings: ' + text
+                       for text in config.get(key, [])]
+    return config
+
+
 def _demo_configuration(frozen, summary, manifest):
     demo = json.loads(frozen['demo_config'].read_bytes())
     case = summary['cases'][0]
@@ -75,8 +84,7 @@ def build_reports(root, frozen, matrix, manifest):
     config['design_source'] = artifact_record(root / 'prepared/model.yml', root)
     for row in config.get('design_data', []):
         row['source'] = 'Inherited design basis; original source: ' + str(row.get('source', 'Not recorded'))
-    config['disclosures'] = ['Historical full-campaign context; not fresh pilot findings: ' + text
-                             for text in config.get('disclosures', [])]
+    config = _qualify_inherited(config)
     config.setdefault('disclosures', []).append('Design-data qualifications are inherited from the pinned source report; the replay does not independently qualify drawings or material certificates. Fresh model identity is retained separately.')
     _json(root / 'pilot-config.json', config)
     generate_report(root / 'summary.json', root / 'payload.json', root / 'pilot-report.html', root / 'pilot-config.json')
