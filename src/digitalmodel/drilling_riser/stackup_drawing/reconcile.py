@@ -1,31 +1,35 @@
-"""Reconcile a rendered riser stack-up SVG against its spec (#2152).
+"""Reconcile a rendered riser stack-up SVG against its spec (#2152, #2158).
 
 ``reconcile(spec, svg_text) -> dict`` depends only on :mod:`.schema` and the
-standard library; it does not import the renderer. Steps:
+standard library; it does not import the renderer. Every layout number it
+needs (table columns, row pitch, band heights) is frozen below, independent
+of the renderer's copy. Steps:
 
 1. ``spec.validate()``: every numeric spec value finite (or NOT_FOUND/None),
-   before any arithmetic. Problems fail (d) as "spec invalid: ...".
+   nesting hosts, provenance and reference keys, review-entry
+   ``component_id`` values and the design-data register rules (ids,
+   resolvable references, source classes) before any arithmetic. Problems
+   fail (d) as "spec invalid: ...".
 2. Closed grammar (allowlist): only the elements, parent/child placements,
    attributes, attribute values and tspan attribute profiles the renderer
    emits are accepted; the single ``<style>`` and ``<defs>`` must hash to the
    frozen canonical ones; no DOCTYPE, comment, CDATA or processing
    instruction. Only top-level ``<g>`` groups count as rendered instances.
-   Violations are reported as "grammar: ..." in (a), in (b) for positioning
-   attributes, and in (c) for tspan profiles.
-3. The zone table embedded in the SVG is validated, then the root
-   ``width``/``height``/``viewBox`` must equal the sheet the zone table and
-   the frozen layout constants imply, and every drawn element must lie inside
-   it.
+   The table columns (``data-col``) and review keys (``data-review``) are
+   closed sets too. Violations are reported as "grammar: ..." in (a), in (b)
+   for positioning attributes, and in (c) for tspan profiles.
+3. The zone table embedded in the SVG is validated. The root
+   ``width``/``height``/``viewBox`` must equal the sheet the table columns
+   (width) and the zone table, review band and title block (height) imply,
+   and every drawn element must lie inside it.
 4. Paint and geometry: the top-level group order (by ``data-role``) must be
    the renderer's; the first painted group is the full-sheet background and
-   nothing decorative follows the drawing; the title block stays below the
-   drawing. Every drawn element carries its role's class and all the
-   attributes the renderer always emits for it; geometric attributes and
-   ``points`` are plain finite SVG numbers (no exponent, NaN or infinity);
-   each path ``d`` matches the full command grammar of its symbol; rects,
-   circles, lines, polylines and paths have positive size, with the frozen
-   symbol sizes (e.g. sheave radius) and the sheaves at the spec's sheave
-   radius.
+   nothing decorative follows the drawing; the review list and title block
+   stay below the drawing. Every drawn element carries its role's class and
+   all the attributes the renderer always emits for it; geometric attributes
+   and ``points`` are plain finite SVG numbers; each path ``d`` matches the
+   full command grammar of its symbol; rects, circles, lines, polylines and
+   paths have positive size, with the frozen symbol sizes.
 
 Threat model: the gate is built to catch generator bugs and drift - a
 changed renderer, a hand-edited drawing or an AI-generated SVG that follows
@@ -33,53 +37,82 @@ the drawing contract - and to state which check a wrong drawing breaks. It
 closes: undrawn, extra or duplicate data; hidden, covered, clipped or moved
 content (transforms, visibility, paint order, viewport, positioning
 attributes); degenerate or empty geometry; wrong, extra, re-signed or
-re-unit-ed printed numbers; NOT_FOUND shown as a value; broken length and
-datum closure; non-finite spec or SVG numbers. It is not proof against a
-deliberately adversarial author: within the allowed grammar and frozen
-stylesheet, content can still be made hard to read without being wrong
-(e.g. callout labels placed over one another or over components, or
-geometry the checks do not pin, such as the horizontal extent of decorative
-and symbol shapes). The rendered pixels are not compared; the checks read
-the SVG, not a raster of it.
+re-unit-ed printed numbers; NOT_FOUND shown as a value and "not applicable"
+confused with "not found"; broken length and datum closure; non-finite spec
+or SVG numbers. Since #2158 it also closes: table cells that differ from
+their spec field under the column's format, that name another field, or
+that sit off their column; rows moved away from their component, rows
+overlapping, leaders that do not join a row to its component; a nested
+component that is neither an overlay of its host nor in the chain, and an
+overlap in the chain without an explicit landing relation; flex-joint
+pivots off their stated elevation; open conflicts and gaps missing from the
+review list or from their row's warning mark (matched by ``component_id``);
+printed values without a design-data reference, design-data IDs that do not
+resolve, class flags that differ from the register, register values that
+differ from the field they back, archive citations (calculation numbers,
+spreadsheet cells, workbook or report-table wording, provenance source
+strings) anywhere on the drawing; ft axis ticks that are not round feet.
+It is not proof against a deliberately adversarial author: within the
+allowed grammar and frozen stylesheet, content can still be made hard to
+read without being wrong (e.g. geometry the checks do not pin, such as the
+horizontal extent of decorative and symbol shapes, or a long review-list
+line running past the sheet edge). The rendered pixels are not compared;
+the checks read the SVG, not a raster of it.
 
 Then it checks:
 
-  (a) mapping   - every spec component drawn exactly once; no orphan groups;
-                  group data-* attributes equal the spec; every drawn
-                  component owns exactly one callout carrying its required
-                  fields
-  (b) positions - the zone table is finite,
-                  positive, contiguous and matches the drawn axis and break
-                  marks; each component's body pieces equal the expected
-                  per-zone intervals within 0.5 px (no missing, extra,
-                  duplicate, gap or overlap); joint seams sit at
-                  T(top - i*L); datum lines, sheaves and axis ticks sit at
-                  T(z); every required datum is drawn; each callout leader
-                  runs from its label to its component's body and each
-                  further callout line sits directly under the first
+  (a) mapping   - every spec component drawn exactly once and after its
+                  ``nested_in`` host; no orphan groups; group data-* equal
+                  the spec; exactly one table row per component, plus the
+                  drill floor and tensioner rows; each row has exactly the
+                  cells its item needs; header and legend text frozen; the
+                  review list has one entry per open conflict or gap and
+                  each row's warning mark lists exactly its open entries
+  (b) positions - the zone table is finite, positive, contiguous and matches
+                  the drawn axis and break marks; each component's body
+                  pieces equal the expected per-zone intervals within 0.5 px;
+                  joint seams sit at T(top - i*L); datum lines, sheaves,
+                  pivots and axis ticks sit at T(z); every required datum is
+                  drawn; the header, rows and cells sit on the frozen column
+                  edges; rows do not overlap, keep anchor order, stay within
+                  a bounded offset of their anchor, and each leader runs from
+                  the component body (datum line, sheave) to the row's left
+                  edge at the row's centre
   (c) numbers   - every text holds only flat ``<tspan>`` children with no
-                  direct or tail text; the text is read as rendered (all
-                  tspans concatenated): every number token, with any sign in
-                  front of it, lies wholly inside one field tspan and equals
-                  its whole text; no stray digits; every m/ft/in field is
-                  followed by its own unit (or " to "/" × " and a field of the
-                  same unit); each field uses the precision fixed by its
-                  field type and equals the spec value at that precision
+                  direct or tail text; every number token lies wholly inside
+                  one field tspan and equals its whole text; no stray digits;
+                  a table cell's number carries its column's header unit, any
+                  other m/ft/in field is followed by its own unit; each field
+                  uses the precision fixed by its field type and equals the
+                  spec value at that precision; every table cell equals its
+                  spec field under the column format; verbatim text fields
+                  equal the spec text
   (d) totals    - per component, count x joint length equals the elevation
                   span; lengths sum to the stack-up length; elevations are
-                  continuous; water depth and air gap equal the datum
-                  elevations; nothing stands above the drill floor; the
-                  stack-up closes, or its residual is flagged by an
-                  independent source. A residual computed by an adapter from
-                  the same data is reported ``not_established``.
+                  continuous along the chain (a landing overlap is excused
+                  only by an explicit ``nested_in``; overlays are outside the
+                  chain); water depth and air gap equal the datum elevations;
+                  nothing stands above the drill floor; the stack-up closes,
+                  or its residual is flagged by an independent source. A
+                  residual computed by an adapter from the same data is
+                  reported ``not_established``.
   (e) NOT_FOUND - never printed or attributed as a number; shown as the
-                  literal text "n/a"
+                  literal text "n/a"; "–" only where the field does not apply
+  (f) design data - every printed spec value's field has a
+                  ``design_data_id`` (``not_established`` when the spec has
+                  no register at all); the IDs printed per row equal the IDs
+                  of the row's printed fields, and inline IDs those of the
+                  text's fields; every printed ID resolves and its class flag
+                  equals the item's ``source_class``; every register value
+                  agrees with the fields it backs within the formatting
+                  tolerance; no archive citation text on the drawing; ft axis
+                  ticks are round feet
 
 Result: ``"fail"`` if any check fails; else ``"pass_with_open_items"`` if any
 check is ``"not_established"``; else ``"pass"``.
 
-Changing the renderer's emitted grammar, stylesheet or definitions is a
-deliberate act: update the frozen constants below (``canonical_digests``
+Changing the renderer's emitted grammar, layout, stylesheet or definitions
+is a deliberate act: update the frozen constants below (``canonical_digests``
 recomputes the two hashes) together with the golden snapshot.
 
 CLI::
@@ -103,11 +136,11 @@ from pathlib import Path
 from typing import Any, Optional
 
 from digitalmodel.drilling_riser.stackup_drawing.schema import (
-    NESTED_TYPES,
     NOT_FOUND,
-    StackupComponent,
+    SOURCE_CLASSES,
     StackupDrawingSpec,
     not_found_fields,
+    open_review_entries,
 )
 from digitalmodel.drilling_riser.stackup_drawing.schema import (
     ComponentType as CT,
@@ -120,54 +153,143 @@ M2FT = 1.0 / 0.3048
 PX_TOL = 0.5
 #: Horizontal reach allowed between a leader's anchor and the body edge.
 LEADER_TOL_PX = 5.0
-#: Distance allowed between a leader's label end and its first text anchor.
-LABEL_TOL_PX = 6.0
 LEN_TOL_M = 1e-3
 DATUM_TOL_M = 1e-6
 MAX_DECIMALS = 4
-CHECKS = ("a_mapping", "b_positions", "c_numbers", "d_totals", "e_not_found")
+CHECKS = (
+    "a_mapping",
+    "b_positions",
+    "c_numbers",
+    "d_totals",
+    "e_not_found",
+    "f_design_data",
+)
 ALLOWED_ROLES = {
     "decor",
     "axis",
     "datum",
-    "datum-label",
     "tensioner",
     "component",
-    "callout",
     "break",
+    "table-header",
+    "table-row",
+    "table-legend",
+    "review-list",
     "titleblock",
 }
 DATUM_NAMES = ("drill_floor_el_m", "msl_el_m", "mudline_el_m")
-#: Types whose callout states count x joint length.
-COUNTED_TYPES = {
-    CT.RISER_JOINT_BARE,
-    CT.RISER_JOINT_BUOYANT,
-    CT.PUP_JOINT,
-    CT.TERMINATION_JOINT,
-    CT.CONDUCTOR,
-    CT.CASING,
-}
 #: A printed number: optional sign, comma-grouped integer part, fraction.
 NUM_FULL = re.compile(r"([+\-−]?)(\d{1,3}(?:,\d{3})*)(?:\.(\d+))?", re.ASCII)
 #: A number as it reads in the rendered string, with any sign before it.
 RENDERED_NUM = re.compile(r"(?<![\d.,])([+\-−]\s*)?\d[\d,]*(?:\.\d+)?", re.ASCII)
 
-# -- frozen SVG grammar -----------------------------------------------------------
-# The closed set of elements and attributes the renderer emits (derived from
-# its output for the synthetic, adapter and prototype specs). Anything else is
-# rejected. These are grammar, not geometry: no coordinate or scale is taken
-# from them. A deliberate renderer change must update them, which the tests
-# enforce through the golden snapshot and the positive fixtures.
+# -- frozen layout (#2158) ----------------------------------------------------------------
+# The table, review band and title block the renderer lays out. These are
+# frozen here independently of the renderer; a deliberate layout change
+# updates both, and the golden snapshot.
 
-#: Sheet layout the root must declare: width, and sheet height below the
-#: drawing's last zone (gap + title block + margin).
-SHEET_WIDTH = 860.0
-SHEET_BELOW_DRAWING = 14.0 + 196.0 + 12.0
-#: Vertical pitch between successive callout text lines.
-CALLOUT_LINE_PITCH = 15.0
+#: (column, header, header units, width px). Units live in the header only.
+COLUMNS = (
+    ("component", "Component", "", 206.0),
+    ("qty", "Qty × length", "no. × ft", 84.0),
+    ("top", "Top EL", "m (ft)", 144.0),
+    ("bot", "Bottom EL", "m", 80.0),
+    ("od", "OD / width", "in", 76.0),
+    ("wall", "Wall", "in", 60.0),
+    ("buoy", "Buoyancy", "OD in / rating ft", 104.0),
+    ("dd", "Design data", "D-ID and class", 240.0),
+)
+TABLE_X0 = 516.0
+TABLE_X1 = TABLE_X0 + sum(c[3] for c in COLUMNS)
+COL_X = {}
+_x = TABLE_X0
+for _key, _h1, _h2, _w in COLUMNS:
+    COL_X[_key] = _x
+    _x += _w
+#: Sheet width: the table's right edge plus a margin.
+SHEET_WIDTH = TABLE_X1 + 14.0
+ROW_PITCH = 20.0
+HEADER_HEIGHT = 32.0
+#: Text baseline below a row's centre line.
+CELL_BASELINE = 4.4
+LEGEND_HEIGHT = 56.0
+WARN_INSET = 16.0
+#: Largest vertical distance between a row's centre and its anchor.
+MAX_ROW_OFFSET_PX = 160.0
+#: data-col -> (column, x offset from the column's left edge, text-anchor).
+CELL_POS = {
+    "component": ("component", 6.0, "start"),
+    "qty": ("qty", 18.0, "end"),
+    "qty_x": ("qty", 33.0, "middle"),
+    "qty_len": ("qty", 73.0, "end"),
+    "top": ("top", 64.0, "end"),
+    "top_ft": ("top", 138.0, "end"),
+    "bot": ("bot", 66.0, "end"),
+    "od_w": ("od", 5.0, "start"),
+    "od": ("od", 62.0, "end"),
+    "wall": ("wall", 46.0, "end"),
+    "buoy": ("buoy", 28.0, "end"),
+    "buoy_sep": ("buoy", 44.0, "middle"),
+    "buoy_rating": ("buoy", 90.0, "end"),
+    "dd": ("dd", 6.0, "start"),
+}
+#: Unit a numeric cell's value carries (stated once, in the column header).
+CELL_UNITS = {
+    "qty": "count",
+    "qty_len": "ft",
+    "top": "m",
+    "top_ft": "ft",
+    "bot": "m",
+    "od": "in",
+    "wall": "in",
+    "buoy": "in",
+    "buoy_rating": "ft",
+}
+CELL_CLASS = {
+    **{c: "tc" for c in CELL_POS},
+    "qty_x": "tl",
+    "od_w": "tl",
+    "buoy_sep": "tl",
+    "dd": "tdd",
+}
+LEGEND_TEXTS = (
+    "Design data: D-ID = item in the report's Design data table; P = public source"
+    " · D = owner decision · A = ASSUMED - to be confirmed (no public data).",
+    "n/a applies but not found in the sources · – not applicable to the item type.",
+    "Open data conflict or gap for the item: see the review list.",
+)
+REVIEW_GAP = 14.0
+REVIEW_HEADER_BASELINE = 16.0
+REVIEW_PITCH = 15.0
+REVIEW_BOTTOM_PAD = 9.0
+REVIEW_TEXT_X = 26.0
+REVIEW_HEADER = "REVIEW LIST: OPEN DATA CONFLICTS AND GAPS"
+TITLE_GAP = 10.0
+TITLE_BLOCK_HEIGHT = 196.0
+SHEET_BOTTOM_MARGIN = 12.0
+DASH = "–"
+NA = "n/a"
 #: sha256 of the canonical <style> text and of the canonical <defs> tree.
-STYLE_SHA256 = "e5624e4872cafada452ddb0fb9dd042b1e6c80d3728c8ec3ce5c0427f3fb99c3"
+STYLE_SHA256 = "45c5e4779eea74dea32f7a83afb2e38d19653963c8de27052ac9d73b715394f2"
 DEFS_SHA256 = "5be3761097837b884410f947978afdec12be2ed91ebafa54fd3f9b362ed09c2f"
+
+#: Archive citations that must never reach the drawing (owner instruction
+#: 2026-09-24): calculation numbers, spreadsheet sheet!cell references,
+#: spreadsheet files, workbook or report-table wording.
+ARCHIVE_PATTERNS = (
+    (re.compile(r"\bCAL-\d"), "calculation document number (CAL-<n>)"),
+    (re.compile(r"\w!"), "spreadsheet sheet reference (<sheet>!)"),
+    (re.compile(r"\.xls[xmb]?\b", re.I), "spreadsheet file name"),
+    (re.compile(r"\bworkbook\b", re.I), "workbook citation"),
+    (re.compile(r"\breport table\b", re.I), "report-table citation"),
+)
+#: Provenance source strings at least this long must not be printed verbatim.
+MIN_SOURCE_LEN = 8
+
+
+# -- frozen SVG grammar -----------------------------------------------------------
+# The closed set of elements and attributes the renderer emits. Anything else
+# is rejected. These are grammar, not geometry.
 
 _ELEMENTS = {
     "svg",
@@ -209,13 +331,18 @@ _ATTRS: dict[tuple[str, Optional[str]], frozenset[str]] = {
     ("line", "g"): frozenset(
         {"class", "data-part", "data-tick-el-m", "data-unit", "x1", "x2", "y1", "y2"}
     ),
-    ("circle", "g"): frozenset({"class", "cx", "cy", "data-part", "r"}),
-    ("path", "g"): frozenset({"class", "d", "data-part"}),
+    ("circle", "g"): frozenset(
+        {"class", "cx", "cy", "data-part", "data-pivot-el-m", "r"}
+    ),
+    ("path", "g"): frozenset({"class", "d", "data-part", "data-review"}),
     ("polyline", "g"): frozenset({"class", "points"}),
-    ("text", "g"): frozenset({"class", "data-component-id", "text-anchor", "x", "y"}),
+    ("text", "g"): frozenset(
+        {"class", "data-col", "data-review", "text-anchor", "x", "y"}
+    ),
     ("tspan", "text"): frozenset(
         {
             "class",
+            "data-dd",
             "data-decimals",
             "data-field",
             "data-kind",
@@ -234,18 +361,22 @@ _G_ATTRS: dict[str, frozenset[str]] = {
             "data-bottom-el-m",
             "data-od-in",
             "data-count",
-            "data-source",
+            "data-nested-in",
             "data-clipped",
             "data-not-drawn",
         }
     ),
-    "callout": frozenset({"data-role", "data-component-id"}),
+    "table-row": frozenset(
+        {"data-role", "data-component-id", "data-datum", "data-row"}
+    ),
     "datum": frozenset({"data-role", "data-datum", "data-el-m"}),
-    "datum-label": frozenset({"data-role", "data-datum"}),
     "tensioner": frozenset({"data-role", "data-sheave-el-m", "data-count"}),
     "axis": frozenset({"data-role"}),
     "decor": frozenset({"data-role"}),
     "break": frozenset({"data-role"}),
+    "table-header": frozenset({"data-role"}),
+    "table-legend": frozenset({"data-role"}),
+    "review-list": frozenset({"data-role"}),
     "titleblock": frozenset({"data-role"}),
 }
 _TRANSFORM_G_ATTRS = frozenset(
@@ -258,10 +389,16 @@ _TRANSFORM_G_ATTRS = frozenset(
         "data-y-bottom",
     }
 )
+#: Review keys: ``gaps[<i>]`` / ``data_conflicts[<i>]``, space separated.
+_REVIEW_KEY = r"(?:gaps|data_conflicts)\[\d+\]"
+_REVIEW_RE = re.compile(rf"{_REVIEW_KEY}(?: {_REVIEW_KEY})*")
 #: Frozen attribute values (outside <defs>).
 _VALUES: dict[str, dict[str, frozenset[str]]] = {
     "svg": {"role": frozenset({"img"})},
-    "g": {"data-clipped": frozenset({"bottom"})},
+    "g": {
+        "data-clipped": frozenset({"bottom"}),
+        "data-row": frozenset({"tensioner_system"}),
+    },
     "rect": {
         "data-part": frozenset({"body", "seam", "symbol"}),
         "rx": frozenset({"2"}),
@@ -270,11 +407,14 @@ _VALUES: dict[str, dict[str, frozenset[str]]] = {
         "data-part": frozenset({"body", "datum-line", "seam"}),
         "data-unit": frozenset({"m", "ft"}),
     },
-    "circle": {"data-part": frozenset({"sheave", "symbol"})},
-    "path": {"data-part": frozenset({"symbol"})},
-    "text": {"text-anchor": frozenset({"start", "end"})},
+    "circle": {"data-part": frozenset({"sheave", "symbol", "pivot"})},
+    "path": {"data-part": frozenset({"symbol", "warn"})},
+    "text": {
+        "text-anchor": frozenset({"start", "end", "middle"}),
+        "data-col": frozenset(CELL_POS),
+    },
     "tspan": {
-        "class": frozenset({"na", "rpt"}),
+        "class": frozenset({"na", "nap", "ddc-p", "ddc-d", "ddc-a"}),
         "data-kind": frozenset({"text"}),
         "data-unit": frozenset({"count", "ft", "in", "m", "ratio"}),
     },
@@ -287,7 +427,11 @@ _TSPAN_PROFILES = {
     frozenset({"class", "data-field"}): "na-field",
     frozenset({"data-field", "data-kind"}): "text-field",
     frozenset({"data-tick-el-m", "data-unit", "data-decimals"}): "tick",
+    frozenset({"data-dd"}): "dd-id",
 }
+#: Marker tspans: class -> the only text it may show.
+_MARKERS = {"na": NA, "nap": DASH, "ddc-p": "P", "ddc-d": "D", "ddc-a": "A"}
+_DD_ID = re.compile(r"D-\d{2,3}")
 #: Attributes that position or move content: violations go to (b).
 _POSITIONAL = frozenset(
     {
@@ -311,7 +455,7 @@ _POSITIONAL = frozenset(
 )
 _UNIT_JOINERS = (" to ", " × ")
 
-# -- required attribute profiles (r3) --------------------------------------------
+# -- required attribute profiles -------------------------------------------------
 _L = frozenset({"class", "x1", "x2", "y1", "y2"})
 _R = frozenset({"class", "x", "y", "width", "height"})
 _T = frozenset({"class", "x", "y"})
@@ -329,9 +473,8 @@ _COMPONENT_RECTS = (
     "buoy-a buoy-b buoy-c pipe pipe-dark chrome body-thin frame housing cond "
     "cond-b hidden flange ring post connector pod ram"
 )
+_WARN = frozenset({"class", "d"})
 #: (group role, element) -> {class: (required attributes, optional attributes)}.
-#: Every drawn element must carry a listed class and exactly its required
-#: attributes (plus any optional ones). A class is valid only in its role.
 _PROFILES: dict[tuple[str, str], dict[str, tuple[frozenset, frozenset]]] = {
     ("decor", "rect"): _classes("bg water soil rig-floor rotary", _R),
     ("decor", "polyline"): _classes("wave", _PL),
@@ -353,28 +496,40 @@ _PROFILES: dict[tuple[str, str], dict[str, tuple[frozenset, frozenset]]] = {
         **_classes("sheave", _C | _P),
         **_classes("dot", _C),
     },
-    ("tensioner", "polyline"): _classes("leader", _PL),
-    ("tensioner", "text"): _classes("co1 co2", _T),
     ("component", "rect"): {
         **_classes(_COMPONENT_RECTS, _R | _P),
         **_classes("bonnet", _R | _P | {"rx"}),
     },
     ("component", "line"): _classes("seam cut", _L | _P),
-    ("component", "circle"): _classes("ball dot", _C | _P),
+    ("component", "circle"): {
+        **_classes("ball", _C | _P, {"data-pivot-el-m"}),
+        **_classes("dot", _C | _P),
+    },
     ("component", "path"): _classes("annular valve hidden", {"class", "d"} | _P),
     ("break", "polyline"): _classes("break cut", _PL),
     ("break", "text"): _classes("note-l", _T),
-    ("callout", "polyline"): _classes("leader", _PL),
-    ("callout", "circle"): _classes("dot", _C),
-    ("callout", "text"): _classes("co1 co2", _T | {"data-component-id"}),
-    ("datum-label", "polyline"): _classes("leader", _PL),
-    ("datum-label", "circle"): _classes("dot", _C),
-    ("datum-label", "text"): _classes("co1 co2", _T),
+    ("table-header", "rect"): _classes("hdr-bg", _R),
+    ("table-header", "line"): _classes("grid", _L),
+    ("table-header", "text"): _classes("th thu", _T | {"data-col"}, {"text-anchor"}),
+    ("table-row", "rect"): _classes("row-a row-b", _R),
+    ("table-row", "line"): _classes("row-rule", _L),
+    ("table-row", "polyline"): _classes("leader", _PL),
+    ("table-row", "circle"): _classes("dot", _C),
+    ("table-row", "text"): _classes("tc tl tdd", _T | {"text-anchor", "data-col"}),
+    ("table-row", "path"): _classes("warn", _WARN | _P | {"data-review"}),
+    ("table-legend", "text"): _classes("tl", _T),
+    ("table-legend", "path"): _classes("warn", _WARN),
+    ("review-list", "rect"): _classes("rl-bg", _R),
+    ("review-list", "text"): {
+        **_classes("rl-hdr rl-none", _T),
+        **_classes("rl", _T | {"data-review"}),
+    },
+    ("review-list", "path"): _classes("warn", _WARN | _P | {"data-review"}),
     ("titleblock", "rect"): _classes("tb", _R),
     ("titleblock", "line"): _classes("tb-line", _L),
     ("titleblock", "text"): _classes("tb-title tb-sub tb-hdr tb-val tb-note", _T),
 }
-#: data-part value required per (role, element), where the renderer fixes it.
+#: data-part value required per (role, element, class), where the renderer fixes it.
 _PART_VALUES = {
     **{
         ("datum", "line", c): frozenset({"datum-line"})
@@ -382,43 +537,53 @@ _PART_VALUES = {
     },
     ("tensioner", "circle", "sheave"): frozenset({"sheave"}),
     ("tensioner", "rect", "cyl"): frozenset({"symbol"}),
+    ("component", "circle", "ball"): frozenset({"symbol", "pivot"}),
+    ("component", "circle", "dot"): frozenset({"symbol"}),
+    ("table-row", "path", "warn"): frozenset({"warn"}),
+    ("review-list", "path", "warn"): frozenset({"warn"}),
 }
 
-# -- layer (paint) order (r3) ------------------------------------------------------
+# -- layer (paint) order ------------------------------------------------------------
 #: Top-level children in paint order, as tokens: element name, or g:<role>
-#: (g:transform for the elevation-transform group). The full-sheet background
-#: is the first painted group; nothing decorative follows the drawing.
+#: (g:transform for the elevation-transform group).
 _LAYER_ORDER = re.compile(
     r"title desc style defs g:decor g:transform g:decor (?:g:datum ){1,3}g:axis "
     r"(?:g:decor )?(?:g:tensioner )?(?:g:component )*g:break "
-    r"(?:g:(?:datum-label|callout|tensioner) )*g:titleblock "
+    r"g:table-header (?:g:table-row )*g:table-legend g:review-list g:titleblock "
 )
 
-# -- numbers and paths (r3) ----------------------------------------------------------
-#: Plain SVG number as the renderer writes it: no exponent, NaN or infinity.
+# -- numbers and paths ----------------------------------------------------------------
 _PLAIN = r"[+-]?(?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)"  # ASCII digits only
 _PLAIN_RE = re.compile(_PLAIN)
 _PAIR = rf"{_PLAIN},{_PLAIN}"
 _POINTS_RE = re.compile(rf"{_PAIR}(?: {_PAIR})*")
-#: Full ``d`` grammar per (role, class): only the renderer's commands, in its
-#: order, with its argument counts.
+_TRIANGLE = re.compile(rf"M{_PAIR} l{_PAIR} l{_PAIR} z")
+#: Full ``d`` grammar per (role, class).
 _PATH_GRAMMAR = {
-    ("datum", "datum"): re.compile(rf"M{_PAIR} l{_PAIR} l{_PAIR} z"),
+    ("datum", "datum"): _TRIANGLE,
     ("component", "annular"): re.compile(
         rf"M{_PAIR} v{_PLAIN} q{_PAIR} {_PAIR} h{_PLAIN} q{_PAIR} {_PAIR} v{_PLAIN} z"
     ),
     ("component", "valve"): re.compile(rf"M{_PAIR} L{_PAIR} L{_PAIR} L{_PAIR} z"),
     ("component", "hidden"): re.compile(rf"M{_PAIR} l{_PAIR} l{_PAIR}"),
+    ("table-row", "warn"): _TRIANGLE,
+    ("table-legend", "warn"): _TRIANGLE,
+    ("review-list", "warn"): _TRIANGLE,
 }
 #: Symbol extents the renderer fixes exactly: (width, height) in px.
-_PATH_EXTENT = {("datum", "datum"): (12.0, 9.0), ("component", "valve"): (12.0, 8.0)}
+_PATH_EXTENT = {
+    ("datum", "datum"): (12.0, 9.0),
+    ("component", "valve"): (12.0, 8.0),
+    ("table-row", "warn"): (11.0, 10.0),
+    ("table-legend", "warn"): (11.0, 10.0),
+    ("review-list", "warn"): (11.0, 10.0),
+}
 #: Smallest extent, in px, of any other symbol path, line or polyline.
 MIN_EXTENT_PX = 0.5
 #: Circle radii the renderer fixes, per (role, class).
 _RADII = {
-    ("callout", "dot"): frozenset({1.8}),
-    ("datum-label", "dot"): frozenset({1.8}),
-    ("tensioner", "dot"): frozenset({1.8, 2.0}),
+    ("table-row", "dot"): frozenset({1.8}),
+    ("tensioner", "dot"): frozenset({2.0}),
     ("tensioner", "sheave"): frozenset({7.0}),
     ("component", "dot"): frozenset({2.2}),
     ("component", "ball"): frozenset({9.0}),
@@ -502,17 +667,6 @@ def _seam_y(el: ET.Element) -> float:
     if el.tag == NS + "line":
         return _fnan(el, "y1")
     return _fnan(el, "y") + _fnan(el, "height") / 2
-
-
-def _path(d: Any, path: str) -> Any:
-    for part in path.split("."):
-        if isinstance(d, dict):
-            if part not in d:
-                raise KeyError(path)
-            d = d[part]
-        else:
-            raise KeyError(path)
-    return d
 
 
 def _min_decimals(v: float, max_dec: int = 3) -> int:
@@ -772,42 +926,6 @@ def _path_points(d: str) -> list[tuple[float, float]]:
     return pts
 
 
-def _tspan_problems(sp: ET.Element, parent: dict) -> list[tuple[str, str]]:
-    keys = frozenset(sp.attrib)
-    if "data-field" in keys and "data-tick-el-m" in keys:
-        return [("c_numbers", "grammar: tspan mixes data-field with tick metadata")]
-    profile = _TSPAN_PROFILES.get(keys)
-    if profile is None:
-        # unknown attributes are reported by the attribute allowlist
-        if keys <= _ATTRS[("tspan", "text")]:
-            return [
-                (
-                    "c_numbers",
-                    f"grammar: tspan attribute set {sorted(keys)} is not an allowed profile",
-                )
-            ]
-        return []
-    text = sp.text or ""
-    if profile == "marker" and not (
-        (sp.get("class") == "rpt" and text == "†")
-        or (sp.get("class") == "na" and text == "n/a")
-    ):
-        return [
-            (
-                "c_numbers",
-                f"grammar: marker tspan class={sp.get('class')!r} shows {text!r}",
-            )
-        ]
-    if profile == "na-field" and sp.get("class") != "na":
-        return [("c_numbers", "grammar: field tspan with a class other than na")]
-    if profile == "tick":
-        t = parent.get(sp)
-        g = parent.get(t) if t is not None else None
-        if g is None or g.get("data-role") != "axis" or t.get("class") != "tick-lbl":
-            return [("c_numbers", "grammar: tick metadata outside the axis group")]
-    return []
-
-
 def _plain(v: Optional[str]) -> float:
     """Float of a plain SVG number; ValueError for anything else (NaN, 1e3)."""
     if v is None or not _PLAIN_RE.fullmatch(v):
@@ -852,10 +970,98 @@ def _points(el: ET.Element) -> Optional[list[tuple[float, float]]]:
     return pts
 
 
-def _viewport_problems(root: ET.Element, top_groups, y_bottom: float) -> list[str]:
+def _validate_zones(zones: Any, y_bottom: Optional[float], px_per_in) -> list[str]:
+    """Structural problems of the embedded zone table (empty = valid)."""
+    if not isinstance(zones, list) or not zones:
+        return ["zone table is not a non-empty list"]
+    problems: list[str] = []
+    for i, zn in enumerate(zones):
+        if not isinstance(zn, dict):
+            return [f"zone {i} is not an object"]
+        for k in _ZONE_KEYS:
+            if not _finite(zn.get(k)):
+                problems.append(f"zone {i} {k}={zn.get(k)!r} is not a finite number")
+    if problems:
+        return problems
+    for i, zn in enumerate(zones):
+        if zn["px_per_m"] <= 0:
+            problems.append(f"zone {i} scale {zn['px_per_m']} is not positive")
+        if zn["z_hi"] <= zn["z_lo"]:
+            problems.append(f"zone {i} z_hi {zn['z_hi']} <= z_lo {zn['z_lo']}")
+        if i:
+            prev = zones[i - 1]
+            if abs(zn["z_hi"] - prev["z_lo"]) > 1e-6:
+                problems.append(f"zone {i} does not continue zone {i - 1} in elevation")
+            if zn["y_top"] < _T.y_bot(prev) - 1e-6:
+                problems.append(f"zone {i} overlaps zone {i - 1} on the sheet")
+    if y_bottom is None:
+        problems.append("data-y-bottom missing or non-finite")
+    elif not problems and abs(y_bottom - _T.y_bot(zones[-1])) > 1e-6:
+        problems.append("data-y-bottom does not match the last zone")
+    if px_per_in is None or px_per_in <= 0:
+        problems.append("data-px-per-in missing, non-finite or not positive")
+    return problems
+
+
+def _path(d: Any, path: str) -> Any:
+    """Value at a dotted path; digit parts index lists (``gaps.0.detail``)."""
+    for part in path.split("."):
+        if isinstance(d, dict):
+            if part not in d:
+                raise KeyError(path)
+            d = d[part]
+        elif isinstance(d, list) and part.isdigit() and int(part) < len(d):
+            d = d[int(part)]
+        else:
+            raise KeyError(path)
+    return d
+
+
+def _tspan_problems(sp: ET.Element, parent: dict) -> list[tuple[str, str]]:
+    keys = frozenset(sp.attrib)
+    if "data-field" in keys and "data-tick-el-m" in keys:
+        return [("c_numbers", "grammar: tspan mixes data-field with tick metadata")]
+    profile = _TSPAN_PROFILES.get(keys)
+    if profile is None:
+        # unknown attributes are reported by the attribute allowlist
+        if keys <= _ATTRS[("tspan", "text")]:
+            return [
+                (
+                    "c_numbers",
+                    f"grammar: tspan attribute set {sorted(keys)} is not an allowed profile",
+                )
+            ]
+        return []
+    text = sp.text or ""
+    if profile == "marker" and _MARKERS.get(sp.get("class")) != text:
+        return [
+            (
+                "c_numbers",
+                f"grammar: marker tspan class={sp.get('class')!r} shows {text!r}",
+            )
+        ]
+    if profile == "na-field" and (sp.get("class") != "na" or text != NA):
+        return [("c_numbers", "grammar: field tspan with a class other than na")]
+    if profile == "dd-id" and not (
+        _DD_ID.fullmatch(text) and sp.get("data-dd") == text
+    ):
+        return [
+            (
+                "c_numbers",
+                f"grammar: design-data tspan shows {text!r} for {sp.get('data-dd')!r}",
+            )
+        ]
+    if profile == "tick":
+        t = parent.get(sp)
+        g = parent.get(t) if t is not None else None
+        if g is None or g.get("data-role") != "axis" or t.get("class") != "tick-lbl":
+            return [("c_numbers", "grammar: tick metadata outside the axis group")]
+    return []
+
+
+def _viewport_problems(root: ET.Element, top_groups, w: float, h: float) -> list[str]:
     """Root viewport pinned to the layout; every drawn element inside it."""
     out = []
-    w, h = SHEET_WIDTH, y_bottom + SHEET_BELOW_DRAWING
     raw = root.get("viewBox") or ""
     parts = raw.split(" ")
     if len(parts) != 4 or not all(_PLAIN_RE.fullmatch(p) for p in parts):
@@ -889,7 +1095,7 @@ def _viewport_problems(root: ET.Element, top_groups, y_bottom: float) -> list[st
     return out
 
 
-def _layer_problems(root: ET.Element, top_groups, y_bottom: float) -> list[str]:
+def _layer_problems(root: ET.Element, top_groups, w: float, h: float) -> list[str]:
     """Paint order frozen; the background is first and covers the sheet."""
     out = []
     tokens = []
@@ -910,7 +1116,6 @@ def _layer_problems(root: ET.Element, top_groups, y_bottom: float) -> list[str]:
     decor = [g for g in top_groups if g.get("data-role") == "decor"]
     if decor:
         first = list(decor[0])
-        w, h = SHEET_WIDTH, y_bottom + SHEET_BELOW_DRAWING
         ok = (
             len(first) == 1
             and _local(first[0].tag) == "rect"
@@ -937,7 +1142,7 @@ def _layer_problems(root: ET.Element, top_groups, y_bottom: float) -> list[str]:
 
 
 def _geometry_problems(top_groups, y_bottom: float, tf: ET.Element, spec) -> list[str]:
-    """Positive, finite, frozen-size geometry; title block below the drawing."""
+    """Positive, finite, frozen-size geometry; bands below the drawing."""
     out = []
     for g in top_groups:
         role = g.get("data-role")
@@ -975,8 +1180,12 @@ def _geometry_problems(top_groups, y_bottom: float, tf: ET.Element, spec) -> lis
                     )
                 elif fixed is None and not min(ext) >= MIN_EXTENT_PX:
                     out.append(f"{where}: path d extent {ext} below {MIN_EXTENT_PX} px")
-            if role == "titleblock" and min(p[1] for p in pts) < y_bottom - 1e-6:
-                out.append(f"title block: {where} reaches above the drawing band")
+            if (
+                role in ("titleblock", "review-list")
+                and min(p[1] for p in pts) < y_bottom - 1e-6
+            ):
+                name = "title block" if role == "titleblock" else "review list"
+                out.append(f"{name}: {where} reaches above the drawing band")
     # sheaves: frozen symbol radius (above) at the spec's sheave radius
     ts = spec.tensioner_system
     cx0, px_per_in = _float_attr(tf, "data-center-x"), _float_attr(tf, "data-px-per-in")
@@ -1004,8 +1213,11 @@ def _geometry_problems(top_groups, y_bottom: float, tf: ET.Element, spec) -> lis
     return out
 
 
-def _rendered_text_problems(t: ET.Element, ctx: str) -> list[str]:
-    """Numbers, signs and units as the whole <text> reads, across tspans."""
+def _rendered_text_problems(t: ET.Element, ctx: str, col: Optional[str]) -> list[str]:
+    """Numbers, signs and units as the whole <text> reads, across tspans.
+
+    ``col`` is the table column of a cell (its unit is in the header).
+    """
     spans = [c for c in t if c.tag == NS + "tspan"]
     rendered, owner = "", []
     for i, sp in enumerate(spans):
@@ -1031,9 +1243,9 @@ def _rendered_text_problems(t: ET.Element, ctx: str) -> list[str]:
         if any(owner[k] != i for k in range(s, e)):
             out.append(f"{ctx}: number {m.group(0)!r} crosses tspans in {rendered!r}")
             continue
-        if kind(spans[i]) == "text-field":
-            # verbatim spec text (e.g. a document reference), checked for
-            # exact equality with the spec; its digits are not a number
+        if kind(spans[i]) in ("text-field", "dd-id"):
+            # verbatim spec text or a design-data ID, checked for exact
+            # equality elsewhere; its digits are not a number
             continue
         if kind(spans[i]) not in ("number", "tick"):
             out.append(f"{ctx}: number {m.group(0)!r} outside a field span")
@@ -1045,6 +1257,15 @@ def _rendered_text_problems(t: ET.Element, ctx: str) -> list[str]:
     stray = [k for k, ch in enumerate(rendered) if ch.isdigit() and k not in covered]
     if stray:
         out.append(f"{ctx}: stray digits in {rendered!r}")
+    if col in CELL_UNITS:
+        # a numeric cell: its unit is the column header's
+        for sp in spans:
+            if kind(sp) == "number" and sp.get("data-unit") != CELL_UNITS[col]:
+                out.append(
+                    f"{ctx}: {sp.get('data-field')} in column {col} carries unit "
+                    f"{sp.get('data-unit')!r}, the header states {CELL_UNITS[col]!r}"
+                )
+        return out
     # every m/ft/in field is followed by its own unit, or by a joiner and
     # another field of the same unit ("EL a to b m", "OD x WT in")
     for i, sp in enumerate(spans):
@@ -1052,8 +1273,6 @@ def _rendered_text_problems(t: ET.Element, ctx: str) -> list[str]:
         if kind(sp) != "number" or unit not in ("m", "ft", "in"):
             continue
         j = i + 1
-        if j < len(spans) and spans[j].get("class") == "rpt":
-            j += 1
         following = "".join(x.text or "" for x in spans[j:])
         if re.match(rf" {unit}(?![A-Za-z])", following):
             continue
@@ -1070,37 +1289,251 @@ def _rendered_text_problems(t: ET.Element, ctx: str) -> list[str]:
     return out
 
 
-def _validate_zones(zones: Any, y_bottom: Optional[float], px_per_in) -> list[str]:
-    """Structural problems of the embedded zone table (empty = valid)."""
-    if not isinstance(zones, list) or not zones:
-        return ["zone table is not a non-empty list"]
-    problems: list[str] = []
-    for i, zn in enumerate(zones):
-        if not isinstance(zn, dict):
-            return [f"zone {i} is not an object"]
-        for k in _ZONE_KEYS:
-            if not _finite(zn.get(k)):
-                problems.append(f"zone {i} {k}={zn.get(k)!r} is not a finite number")
-    if problems:
-        return problems
-    for i, zn in enumerate(zones):
-        if zn["px_per_m"] <= 0:
-            problems.append(f"zone {i} scale {zn['px_per_m']} is not positive")
-        if zn["z_hi"] <= zn["z_lo"]:
-            problems.append(f"zone {i} z_hi {zn['z_hi']} <= z_lo {zn['z_lo']}")
-        if i:
-            prev = zones[i - 1]
-            if abs(zn["z_hi"] - prev["z_lo"]) > 1e-6:
-                problems.append(f"zone {i} does not continue zone {i - 1} in elevation")
-            if zn["y_top"] < _T.y_bot(prev) - 1e-6:
-                problems.append(f"zone {i} overlaps zone {i - 1} on the sheet")
-    if y_bottom is None:
-        problems.append("data-y-bottom missing or non-finite")
-    elif not problems and abs(y_bottom - _T.y_bot(zones[-1])) > 1e-6:
-        problems.append("data-y-bottom does not match the last zone")
-    if px_per_in is None or px_per_in <= 0:
-        problems.append("data-px-per-in missing, non-finite or not positive")
-    return problems
+def _row_key(g: ET.Element) -> Optional[str]:
+    """Row key: component id, ``datums`` (drill floor) or ``tensioner_system``."""
+    if g.get("data-component-id") is not None:
+        return g.get("data-component-id")
+    if g.get("data-datum") == "drill_floor_el_m":
+        return "datums"
+    if g.get("data-row") == "tensioner_system":
+        return "tensioner_system"
+    return None
+
+
+def _fmt(v: float, d: int, signed: bool = False) -> str:
+    """Independent restatement of the drawing's number format."""
+    s = f"{abs(v):,.{d}f}"
+    if float(s.replace(",", "")) == 0:
+        return s
+    if v < 0:
+        return "−" + s
+    return ("+" + s) if signed else s
+
+
+def _cell(v: Any, fld: str, dec: Optional[int], signed: bool = False, factor=1.0):
+    """(text, field) of a value cell under its column format; field None = "–"."""
+    if v is None:
+        return (DASH, None)
+    if v == NOT_FOUND:
+        return (NA, fld)
+    x = float(v) * factor
+    return (_fmt(x, _min_decimals(x) if dec is None else dec, signed), fld)
+
+
+def _ft_cell(v: Any, fld: str):
+    if v is None:
+        return (DASH, None)
+    if v == NOT_FOUND:
+        return (NA, fld)
+    return ("(" + _fmt(float(v) * M2FT, 1, True) + ")", fld)
+
+
+def _expected_cells(spec: StackupDrawingSpec, key: str) -> dict[str, tuple]:
+    """Every cell of a row except the design-data cell: col -> (text, field)."""
+    dash = (DASH, None)
+    if key == "datums":
+        v, f = spec.datums.drill_floor_el_m, "datums.drill_floor_el_m"
+        return {
+            "component": ("Drill floor (RKB)", None),
+            "qty": dash,
+            "top": _cell(v, f, 2, True),
+            "top_ft": _ft_cell(v, f),
+            "bot": dash,
+            "od": dash,
+            "wall": dash,
+            "buoy": dash,
+        }
+    if key == "tensioner_system":
+        ts = spec.tensioner_system
+        f = "tensioner_system.sheave_radius_m"
+        r_text, r_fld = _cell(ts.sheave_radius_m, f, 2)
+        label = (
+            "Tensioners, sheave R "
+            + r_text
+            + (" m" if _known(ts.sheave_radius_m) else "")
+        )
+        return {
+            "component": (label, r_fld),
+            "qty": _cell(ts.count, "tensioner_system.count", 0),
+            "qty_len": dash,
+            "top": _cell(ts.sheave_el_m, "tensioner_system.sheave_el_m", 2, True),
+            "top_ft": _ft_cell(ts.sheave_el_m, "tensioner_system.sheave_el_m"),
+            "bot": dash,
+            "od": dash,
+            "wall": dash,
+            "buoy": dash,
+        }
+    c = spec.component(key)
+    out = {
+        "component": (c.label[:1].upper() + c.label[1:], None),
+        "qty": _cell(c.count, "count", 0),
+    }
+    if c.joint_length_m is None:
+        out["qty_len"] = dash
+    else:
+        dec = 1
+        if _known(c.joint_length_m):
+            lft = float(c.joint_length_m) * M2FT
+            dec = 0 if abs(lft - round(lft)) < 0.05 else 1
+        out["qty_x"] = ("×", None)
+        out["qty_len"] = _cell(c.joint_length_m, "joint_length_m", dec, factor=M2FT)
+    out["top"] = _cell(c.top_el_m, "top_el_m", 2, True)
+    out["top_ft"] = _ft_cell(c.top_el_m, "top_el_m")
+    out["bot"] = _cell(c.bottom_el_m, "bottom_el_m", 2, True)
+    if c.od_in is not None:
+        out["od"] = _cell(c.od_in, "od_in", None)
+    elif c.envelope_width_in is not None:
+        out["od_w"] = ("W", None)
+        out["od"] = _cell(c.envelope_width_in, "envelope_width_in", None)
+    else:
+        out["od"] = dash
+    out["wall"] = _cell(c.wall_thickness_in, "wall_thickness_in", 3)
+    if c.buoyancy_od_in is None and c.buoyancy_depth_rating_ft is None:
+        out["buoy"] = dash
+    else:
+        out["buoy"] = _cell(c.buoyancy_od_in, "buoyancy_od_in", None)
+        out["buoy_sep"] = ("/", None)
+        out["buoy_rating"] = _cell(
+            c.buoyancy_depth_rating_ft, "buoyancy_depth_rating_ft", 0
+        )
+    return out
+
+
+def _prov_for(spec: StackupDrawingSpec, row_key: Optional[str], fld: str):
+    """Provenance entry (or ReferenceValue) behind a printed field, or None."""
+    if "." not in fld:
+        if row_key is None:
+            return None
+        try:
+            return spec.component(row_key).provenance.get(fld)
+        except KeyError:
+            return None
+    head, rest = fld.split(".", 1)
+    if head == "datums":
+        return spec.datums.provenance.get(rest)
+    if head == "tensioner_system" and spec.tensioner_system is not None:
+        return spec.tensioner_system.provenance.get(rest)
+    if head == "reference_totals":
+        return spec.reference_totals.get(rest.rsplit(".", 1)[0])
+    return None
+
+
+def _value_fields(t: ET.Element) -> list[str]:
+    """Printed spec values of a text that must reference design data."""
+    out = []
+    for sp in t.iter(NS + "tspan"):
+        fld = sp.get("data-field")
+        if (
+            fld is None
+            or sp.get("data-kind") == "text"
+            or (sp.text or "") == NA
+            or fld.startswith("derived.")
+            or fld == "datums.msl_el_m"  # the zero of the elevation axis
+        ):
+            continue
+        out.append(fld)
+    return out
+
+
+def _dd_printed(t: ET.Element) -> list[tuple[str, Optional[str]]]:
+    """(ID, class flag shown after it) for each design-data tspan of a text."""
+    spans = list(t.iter(NS + "tspan"))
+    out = []
+    for i, sp in enumerate(spans):
+        if sp.get("data-dd") is None:
+            continue
+        nxt = spans[i + 1] if i + 1 < len(spans) else None
+        flag = None
+        if nxt is not None and (nxt.get("class") or "").startswith("ddc-"):
+            flag = nxt.text
+        out.append((sp.get("data-dd"), flag))
+    return out
+
+
+_NATIVE = {"m": 1.0, "ft": 0.3048, "in": 0.0254}
+
+
+def _native(key: str) -> tuple[str, float]:
+    """(unit, formatting tolerance) of a spec field by name."""
+    if key == "count":
+        return "count", 0.5
+    if key == "joint_length_m":
+        return "m", 0.05 * 0.3048  # printed to 0.1 ft
+    if key.endswith("_ft"):
+        return "ft", 0.5
+    if key.endswith("_in"):
+        return "in", 0.0005
+    return "m", 0.005
+
+
+def _design_value_problems(spec: StackupDrawingSpec) -> list[str]:
+    """Register values against every field they back, in the field's unit."""
+    out = []
+    entries = []
+    for key, p in spec.datums.provenance.items():
+        entries.append((f"datums.{key}", key, getattr(spec.datums, key, None), p))
+    if spec.tensioner_system is not None:
+        ts = spec.tensioner_system
+        for key, p in ts.provenance.items():
+            entries.append((f"tensioner_system.{key}", key, getattr(ts, key, None), p))
+    for c in spec.components:
+        for key, p in c.provenance.items():
+            entries.append((f"{c.id}.{key}", key, getattr(c, key, None), p))
+    for key, rv in spec.reference_totals.items():
+        entries.append(
+            (f"reference_totals.{key}", key.removesuffix("_workbook"), rv.value, rv)
+        )
+    for path, key, value, p in entries:
+        item = spec.design_item(getattr(p, "design_data_id", None))
+        if item is None or item.value is None or not _known(value):
+            continue
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            continue
+        unit, tol = _native(key)
+        if item.unit == unit == "count":
+            got = float(item.value)
+        elif item.unit in _NATIVE and unit in _NATIVE:
+            got = float(item.value) * _NATIVE[item.unit] / _NATIVE[unit]
+        else:
+            out.append(
+                f"{item.id}: register unit {item.unit!r} cannot state {path} ({unit})"
+            )
+            continue
+        if abs(got - float(value)) > tol + 1e-12:
+            out.append(
+                f"{item.id}: register value {item.value:g} {item.unit} disagrees with "
+                f"{path} = {float(value):.6g} {unit} (tolerance {tol:g} {unit})"
+            )
+    return out
+
+
+def _archive_problems(spec: StackupDrawingSpec, root: ET.Element) -> list[str]:
+    """Archive citations and provenance source strings anywhere on the drawing."""
+    texts = [("aria-label", root.get("aria-label") or "")]
+    for el in root.iter():
+        tag = _local(el.tag)
+        if tag in ("title", "desc"):
+            texts.append((tag, el.text or ""))
+        elif tag == "text":
+            texts.append(("text", "".join(el.itertext())))
+    sources = set()
+    for _, p in spec._provenance_entries():
+        if len(str(p.source)) >= MIN_SOURCE_LEN:
+            sources.add(str(p.source))
+    for c in spec.components:
+        if len(str(c.source)) >= MIN_SOURCE_LEN and c.source != NOT_FOUND:
+            sources.add(str(c.source))
+    if len(spec.title_block.document_ref) >= 4:
+        sources.add(spec.title_block.document_ref)
+    out = []
+    for where, s in texts:
+        for rx, what in ARCHIVE_PATTERNS:
+            if rx.search(s):
+                out.append(f"archive citation ({what}) on the drawing: {s!r}")
+        for src in sources:
+            if src in s:
+                out.append(f"archive citation (provenance source {src!r}) in {where}")
+    return out
 
 
 def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
@@ -1108,7 +1541,7 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
 
     ``result`` is ``"pass"``, ``"pass_with_open_items"`` or ``"fail"`` (see
     the module docstring). The report carries one entry per check
-    (``a_mapping`` .. ``e_not_found``) with ``status`` (``pass``,
+    (``a_mapping`` .. ``f_design_data``) with ``status`` (``pass``,
     ``not_established`` or ``fail``), ``failures``, ``notes`` and
     ``open_items``, plus the spec's NOT_FOUND paths, conflicts and gaps.
     """
@@ -1162,6 +1595,10 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
     # closed grammar: only what the renderer emits ------------------------------
     for check, msg in _grammar_problems(root, parent):
         fail(check, msg)
+    for el in root.iter():
+        v = el.get("data-review")
+        if v is not None and not _REVIEW_RE.fullmatch(v):
+            fail("a_mapping", f"grammar: data-review={v!r} is not a review key list")
     # digits must be ASCII: Python parses other Unicode decimal digits (e.g. full-width)
     # as numbers, which would let a non-canonical rendering pass the number checks.
     for t in root.iter(NS + "text"):
@@ -1191,9 +1628,20 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
         return _finish(spec, res)
     T = _T(zones)
     z_min = zones[-1]["z_lo"]
-    for msg in _viewport_problems(root, top_groups, y_bottom):
+    by_role: dict[str, list] = {}
+    for g in top_groups:
+        by_role.setdefault(g.get("data-role"), []).append(g)
+
+    # sheet: width from the table columns, height from the bands --------------------
+    band = by_role.get("review-list", [])
+    band_lines = [t for g in band for t in g if t.get("class") in ("rl", "rl-none")]
+    band_h = REVIEW_HEADER_BASELINE + len(band_lines) * REVIEW_PITCH + REVIEW_BOTTOM_PAD
+    y_review = y_bottom + REVIEW_GAP
+    y_title = y_review + band_h + TITLE_GAP
+    W, H = SHEET_WIDTH, y_title + TITLE_BLOCK_HEIGHT + SHEET_BOTTOM_MARGIN
+    for msg in _viewport_problems(root, top_groups, W, H):
         fail("b_positions", msg)
-    for msg in _layer_problems(root, top_groups, y_bottom):
+    for msg in _layer_problems(root, top_groups, W, H):
         fail("a_mapping", msg)
     for msg in _geometry_problems(top_groups, y_bottom, tf, spec):
         fail("b_positions", msg)
@@ -1220,11 +1668,9 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
     }
 
     # (a) mapping -----------------------------------------------------------------
-    # only top-level groups are rendered instances (the grammar forbids others)
-    groups = top_groups
     comp_groups: dict[str, list] = {}
-    callout_groups: dict[str, list] = {}
-    for g in groups:
+    row_groups: dict[str, list] = {}
+    for g in top_groups:
         r = g.get("data-role")
         cid = g.get("data-component-id")
         if r is None and cid is None:
@@ -1239,21 +1685,19 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
             comp_groups.setdefault(cid, []).append(g)
             if cid not in comps:
                 fail("a_mapping", f"component group {cid!r} not in spec (orphan)")
-        if r == "callout":
-            callout_groups.setdefault(cid, []).append(g)
-            if cid not in comps:
-                fail("a_mapping", f"callout for unknown component {cid!r}")
+        if r == "table-row":
+            key = _row_key(g)
+            if key is None or (
+                key not in comps and key not in ("datums", "tensioner_system")
+            ):
+                fail("a_mapping", f"table row for unknown item {key!r}")
+            else:
+                row_groups.setdefault(key, []).append(g)
         if r == "decor":
             for t in g.iter(NS + "text"):
                 if re.search(r"\d", "".join(t.itertext())):
                     fail("a_mapping", "decor element carries a number")
-    for t in texts:
-        cid = t.get("data-component-id")
-        if cid is None:
-            continue
-        r, owner = role_of(t)
-        if r != "callout" or owner.get("data-component-id") != cid:
-            fail("a_mapping", f"{cid}: callout text outside its own callout group")
+    order = [g.get("data-component-id") for g in by_role.get("component", [])]
     for cid, c in comps.items():
         gl = comp_groups.get(cid, [])
         if len(gl) != 1:
@@ -1263,12 +1707,14 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
         expect = {
             "data-type": c.type.value,
             "data-count": str(c.count),
-            "data-source": c.source,
             "data-od-in": "" if c.od_in is None else str(c.od_in),
+            "data-nested-in": c.nested_in,
         }
         for k, v in expect.items():
             if g.get(k) != v:
                 fail("a_mapping", f"{cid}: {k}={g.get(k)!r} != spec {v!r}")
+        if c.nested_in in order and order.index(cid) < order.index(c.nested_in):
+            fail("a_mapping", f"{cid}: drawn before its nested_in host {c.nested_in}")
         for k, f in (
             ("data-top-el-m", c.top_el_m),
             ("data-bottom-el-m", c.bottom_el_m),
@@ -1283,22 +1729,50 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
                     fail("a_mapping", f"{cid}: {k}={a!r} != spec {f!r}")
             elif a != str(f):
                 fail("a_mapping", f"{cid}: {k}={a!r} but spec is {f!r}")
-        cl = callout_groups.get(cid, [])
-        if len(cl) != 1:
-            fail("a_mapping", f"{cid}: {len(cl)} callout groups (expected exactly one)")
-            continue
-        shown = {
-            sp.get("data-field")
-            for t in cl[0].iter(NS + "text")
-            if t.get("data-component-id") == cid
-            for sp in t.iter(NS + "tspan")
-        }
-        missing = sorted(_required_callout_fields(c) - shown)
-        if missing:
-            fail("a_mapping", f"{cid}: callout lacks required fields {missing}")
+    # rows: one per component, drill floor and tensioner system
+    row_keys = list(comps)
+    if _known(d_.drill_floor_el_m):
+        row_keys.append("datums")
+    if spec.tensioner_system is not None:
+        row_keys.append("tensioner_system")
+    for key in row_keys:
+        n = len(row_groups.get(key, []))
+        if n != 1:
+            fail("a_mapping", f"{key}: {n} table rows (expected exactly one)")
+    for key in row_groups:
+        if key not in row_keys:
+            fail("a_mapping", f"{key}: table row for an item that has none")
+    rows = {k: v[0] for k, v in row_groups.items() if len(v) == 1 and k in row_keys}
+    # header and legend are frozen text
+    _header_problems(by_role.get("table-header", []), zones[0]["y_top"], fail)
+    legend = by_role.get("table-legend", [])
+    got_legend = tuple(
+        "".join(t.itertext()) for g in legend for t in g.iter(NS + "text")
+    )
+    if len(legend) != 1 or got_legend != LEGEND_TEXTS:
+        fail("a_mapping", f"table legend {got_legend!r} is not the frozen legend")
+    # review list: one entry per open conflict or gap, keyed by id
+    open_entries = open_review_entries(spec)
+    open_keys = {f"{k}[{i}]": e for k, i, e in open_entries}
+    _review_problems(spec, band, open_keys, y_review, band_h, band_lines, fail)
+    # warning marks: each row lists exactly its open entries (by component_id)
+    by_cid: dict[Any, list[str]] = {}
+    for kind, i, e in open_entries:
+        by_cid.setdefault(e.get("component_id"), []).append(f"{kind}[{i}]")
+    for key, g in rows.items():
+        marks = [el for el in g if el.get("class") == "warn"]
+        want = sorted(by_cid.get(key, []))
+        got = sorted(k for el in marks for k in (el.get("data-review") or "").split())
+        if got != want or len(marks) > 1:
+            fail(
+                "a_mapping",
+                f"{key}: warning mark lists {got} but the open conflicts/gaps "
+                f"for this component_id are {want}",
+            )
     note(
         "a_mapping",
-        f"{len(comps)} spec components, {sum(len(v) for v in comp_groups.values())} component groups",
+        f"{len(comps)} spec components, {sum(len(v) for v in comp_groups.values())} "
+        f"component groups, {len(rows)} table rows, {len(open_keys)} open review entries",
     )
 
     # (b) positions ---------------------------------------------------------------
@@ -1324,7 +1798,7 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
         return None
 
     max_dev = 0.0
-    body_boxes: dict[str, list[tuple[float, float, float, float]]] = {}
+    boxes: dict[str, list[tuple[float, float, float, float]]] = {}
     for cid, c in comps.items():
         gl = comp_groups.get(cid, [])
         if len(gl) != 1:
@@ -1351,7 +1825,7 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
                 fail("b_positions", f"{cid}: unreadable body element <{e.tag}>")
                 continue
             actual.append(ye)
-            body_boxes.setdefault(cid, []).append((*xe, *ye))
+            boxes.setdefault(cid, []).append((*xe, *ye))
         actual.sort()
         expected = sorted((yt, min(yb, y_bottom)) for yt, yb in T.pieces(top, bot))
         if len(actual) != len(expected):
@@ -1384,37 +1858,22 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
                     "b_positions",
                     f"{cid}: {len(seams)} joint seams drawn, data implies {len(exp)}",
                 )
-            else:
-                bad = [(a, b) for a, b in zip(seams, exp) if not abs(a - b) <= PX_TOL]
-                if bad:
-                    fail(
-                        "b_positions",
-                        f"{cid}: {len(bad)} joint seams off T(top - i*L) by > {PX_TOL} px",
-                    )
-                zk = {
-                    zn.get("kind", "?")
-                    for zn in zones
-                    if zn["z_lo"] < top and zn["z_hi"] > bot
-                }
-                note(
+            elif any(not abs(a - b) <= PX_TOL for a, b in zip(seams, exp)):
+                fail(
                     "b_positions",
-                    f"{cid}: {n} joints x {float(c.joint_length_m):.4f} m, {len(seams)} seams at "
-                    f"T(top-i*L) (zones: {', '.join(sorted(str(k) for k in zk))})",
+                    f"{cid}: joint seams off T(top - i*L) by > {PX_TOL} px",
                 )
-    # callout leaders: label end at the text, anchor end on the component body
-    for cid, cl in callout_groups.items():
-        if cid not in comps or len(cl) != 1 or cid not in body_boxes:
-            continue
-        for problem in _leader_problems(cid, cl[0], body_boxes[cid]):
+        # flex-joint pivot: at its stated elevation, inside the component
+        for problem in _pivot_problems(spec, c, g, T):
             fail("b_positions", problem)
     # datums: every known datum drawn exactly once, at its elevation
     datum_groups: dict[str, list] = {}
-    for g in groups:
-        if g.get("data-role") == "datum":
-            datum_groups.setdefault(g.get("data-datum"), []).append(g)
+    for g in by_role.get("datum", []):
+        datum_groups.setdefault(g.get("data-datum"), []).append(g)
     for name in datum_groups:
         if name not in DATUM_NAMES:
             fail("a_mapping", f"unknown datum {name!r}")
+    datum_lines: dict[str, list] = {}
     for name in DATUM_NAMES:
         val = getattr(d_, name)
         gl = datum_groups.get(name, [])
@@ -1434,6 +1893,7 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
         lines = [
             ln for ln in gl[0].iter(NS + "line") if ln.get("data-part") == "datum-line"
         ]
+        datum_lines[name] = lines
         if not lines:
             fail("b_positions", f"datum {name}: no datum line")
         for ln in lines:
@@ -1445,14 +1905,18 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
                 or max(abs(y1 - exp_y), abs(y2 - exp_y)) > PX_TOL
             ):
                 fail("b_positions", f"datum {name}: line not at T({val})")
-    for g in groups:
-        if g.get("data-role") == "tensioner" and spec.tensioner_system is not None:
-            for cc in g.iter(NS + "circle"):
-                if cc.get("data-part") == "sheave":
-                    cy = _float_attr(cc, "cy")
-                    exp_y = T.y(float(spec.tensioner_system.sheave_el_m))
-                    if cy is None or abs(cy - exp_y) > PX_TOL:
-                        fail("b_positions", "tensioner sheave not at T(sheave_el_m)")
+    sheaves = [
+        cc
+        for g in by_role.get("tensioner", [])
+        for cc in g.iter(NS + "circle")
+        if cc.get("data-part") == "sheave"
+    ]
+    if spec.tensioner_system is not None:
+        for cc in sheaves:
+            cy = _float_attr(cc, "cy")
+            exp_y = T.y(float(spec.tensioner_system.sheave_el_m))
+            if cy is None or abs(cy - exp_y) > PX_TOL:
+                fail("b_positions", "tensioner sheave not at T(sheave_el_m)")
     n_ticks = 0
     for ln in (ln for g in top_groups for ln in g.iter(NS + "line")):
         z = ln.get("data-tick-el-m")
@@ -1461,17 +1925,71 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
             zf, y1 = _float_attr(ln, "data-tick-el-m"), _float_attr(ln, "y1")
             if zf is None or y1 is None or abs(y1 - T.y(zf)) > PX_TOL:
                 fail("b_positions", f"axis tick {z} not at T({z})")
+    # rows: geometry, cells on the column edges, anchors and leaders
+    anchor_boxes: dict[str, list] = {k: v for k, v in boxes.items()}
+    if "drill_floor_el_m" in datum_lines:
+        anchor_boxes["datums"] = [
+            (*x_ext(ln), *y_ext(ln))
+            for ln in datum_lines["drill_floor_el_m"]
+            if x_ext(ln) and y_ext(ln)
+        ]
+    if sheaves:
+        anchor_boxes["tensioner_system"] = [
+            (
+                _fnan(cc, "cx") - _fnan(cc, "r"),
+                _fnan(cc, "cx") + _fnan(cc, "r"),
+                _fnan(cc, "cy"),
+                _fnan(cc, "cy"),
+            )
+            for cc in sheaves
+        ]
+    placed = []
+    for key, g in rows.items():
+        yc, anchor, problems = _row_geometry(key, g, anchor_boxes.get(key))
+        for p in problems:
+            fail("b_positions", p)
+        if yc is not None:
+            placed.append((key, yc, anchor))
+    lo = zones[0]["y_top"] + HEADER_HEIGHT + ROW_PITCH / 2 - PX_TOL
+    hi = y_bottom - LEGEND_HEIGHT - ROW_PITCH / 2 + PX_TOL
+    worst = 0.0
+    for key, yc, anchor in placed:
+        if not lo <= yc <= hi:
+            fail("b_positions", f"{key}: row at y={yc:.2f} outside the table band")
+        if anchor is not None:
+            off = abs(yc - anchor[1])
+            worst = max(worst, off)
+            if off > MAX_ROW_OFFSET_PX:
+                fail(
+                    "b_positions",
+                    f"{key}: row offset {off:.1f} px from its component exceeds "
+                    f"{MAX_ROW_OFFSET_PX:g} px",
+                )
+    ys = sorted(yc for _, yc, _ in placed)
+    for a, b in zip(ys, ys[1:]):
+        if b - a < ROW_PITCH - PX_TOL:
+            fail("b_positions", f"rows overlap: centres {a:.2f} and {b:.2f}")
+    anchored = sorted((a[1], yc, k) for k, yc, a in placed if a is not None)
+    for (_, y1, k1), (_, y2, k2) in zip(anchored, anchored[1:]):
+        if y2 < y1:
+            fail("b_positions", f"rows {k1} and {k2} are not in their anchors' order")
+    unanchored = [yc for _, yc, a in placed if a is None]
+    if anchored and unanchored and min(unanchored) < max(y for _, y, _ in anchored):
+        fail("b_positions", "an undrawn component's row sits among the drawn rows")
     note(
         "b_positions",
-        f"max body-piece deviation {max_dev:.3f} px; {n_ticks} axis ticks checked",
+        f"max body-piece deviation {max_dev:.3f} px; {n_ticks} axis ticks checked; "
+        f"largest row offset {worst:.1f} px",
     )
 
     # (c) numbers + (e) NOT_FOUND -----------------------------------------------------
     n_checked = 0
+    text_fields: dict[str, list[str]] = {}
     for t in texts:
-        cid = t.get("data-component-id")
-        r, _ = role_of(t)
-        for msg in _rendered_text_problems(t, f"{r}:{cid or ''}"):
+        r, owner = role_of(t)
+        cid = owner.get("data-component-id") if r == "table-row" else None
+        col = t.get("data-col") if r == "table-row" else None
+        for msg in _rendered_text_problems(t, f"{r}:{cid or ''}", col):
             fail("c_numbers", msg)
         if (t.text or "").strip():
             fail("c_numbers", f"text outside a tspan: {t.text.strip()!r} (role={r})")
@@ -1487,7 +2005,7 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
             txt = sp.text or ""
             fld = sp.get("data-field")
             classes = (sp.get("class") or "").split()
-            if txt == "n/a":
+            if txt == NA:
                 if fld is not None:
                     exp = _resolve(fld, cid, comps, sd, derived)
                     if exp != NOT_FOUND:
@@ -1520,23 +2038,25 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
                     v = z * (M2FT if unit == "ft" else 1.0)
                     if abs(parsed[0] - v) > 0.5 + 1e-6:
                         fail("c_numbers", f"axis label {txt!r} != {v:.3f}")
+                    if unit == "ft" and (
+                        abs(v - round(v)) > 1e-6 or parsed[0] != round(v)
+                    ):
+                        fail(
+                            "f_design_data",
+                            f"axis tick {sp.get('data-tick-el-m')} m is {v:.4f} ft, "
+                            "not a round ft tick",
+                        )
                 n_checked += 1
                 continue
             if fld is None:
-                if re.search(r"\d", txt):
+                if re.search(r"\d", txt) and sp.get("data-dd") is None:
                     fail(
                         "c_numbers",
                         f"untraceable number {txt!r} (role={r}, component={cid})",
                     )
                 continue
             if sp.get("data-kind") == "text":
-                try:
-                    exp = _path(sd, fld)
-                except KeyError:
-                    exp = None
-                if txt != exp:
-                    fail("c_numbers", f"{fld}: {txt!r} != {exp!r}")
-                n_checked += 1
+                text_fields.setdefault(fld, []).append(txt)
                 continue
             exp = _resolve(fld, cid, comps, sd, derived)
             if not _known(exp):
@@ -1549,7 +2069,64 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
             if problem:
                 fail("c_numbers", f"{cid or ''}:{fld} {problem}")
             n_checked += 1
-    note("c_numbers", f"{n_checked} printed numbers verified")
+    # verbatim text fields: all parts of one field, in order, joined by spaces
+    for fld, parts in text_fields.items():
+        try:
+            exp = _path(sd, fld)
+        except KeyError:
+            exp = None
+        got = " ".join(parts)
+        if got != exp:
+            fail("c_numbers", f"{fld}: {got!r} != {exp!r}")
+        n_checked += 1
+    # table cells: each equals its spec field under the column format
+    n_cells = 0
+    for key, g in rows.items():
+        expected = _expected_cells(spec, key)
+        cells: dict[str, list] = {}
+        for t in g.iter(NS + "text"):
+            cells.setdefault(t.get("data-col"), []).append(t)
+        want_cols = set(expected) | {"dd"}
+        got_cols = set(cells)
+        if got_cols != want_cols or any(len(v) != 1 for v in cells.values()):
+            fail(
+                "a_mapping",
+                f"row {key}: cells {sorted(got_cols)} "
+                f"(x{max((len(v) for v in cells.values()), default=0)}) != the "
+                f"row's cells {sorted(want_cols)}",
+            )
+        for col, (exp_text, exp_fld) in expected.items():
+            if len(cells.get(col, [])) != 1:
+                continue
+            t = cells[col][0]
+            n_cells += 1
+            got = "".join(t.itertext())
+            flds = [
+                sp.get("data-field")
+                for sp in t.iter(NS + "tspan")
+                if sp.get("data-field") is not None
+            ]
+            want = [exp_fld] if exp_fld else []
+            if flds != want:
+                fail(
+                    "c_numbers",
+                    f"cell {key}.{col}: field {flds} != column field {want}",
+                )
+            if got == exp_text:
+                continue
+            if {got, exp_text} & {DASH, NA}:
+                meaning = {DASH: "not applicable", NA: "NOT_FOUND"}
+                fail(
+                    "e_not_found",
+                    f"cell {key}.{col}: shows {got!r} but the spec field is "
+                    f"{meaning.get(exp_text, repr(exp_text))}",
+                )
+            else:
+                fail(
+                    "c_numbers",
+                    f"cell {key}.{col}: shows {got!r}, spec gives {exp_text!r}",
+                )
+    note("c_numbers", f"{n_checked} printed numbers verified; {n_cells} table cells")
 
     for cid, c in comps.items():
         for f in (
@@ -1566,12 +2143,10 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
             if getattr(c, f) == NOT_FOUND:
                 shown = [
                     sp
-                    for t in texts
-                    if t.get("data-component-id") == cid
-                    for sp in t.iter(NS + "tspan")
+                    for sp in (rows[cid].iter(NS + "tspan") if cid in rows else [])
                     if sp.get("data-field") == f
                 ]
-                if any((sp.text or "") != "n/a" for sp in shown):
+                if any((sp.text or "") != NA for sp in shown):
                     fail("e_not_found", f"{cid}:{f} NOT_FOUND drawn as a value")
                 note(
                     "e_not_found",
@@ -1588,95 +2163,302 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
                 "e_not_found",
                 f"{cid}: data-od-in attribute shows {g.get('data-od-in')!r} for NOT_FOUND",
             )
-        if c.od_in == NOT_FOUND and c.type in (
-            CT.UPPER_FLEX_JOINT,
-            CT.LOWER_FLEX_JOINT,
-        ):
-            note(
-                "e_not_found",
-                f"{cid}: OD n/a - body drawn at the nominal riser width as an unscaled symbol",
-            )
-        if c.envelope_width_in == NOT_FOUND:
-            note(
-                "e_not_found",
-                f"{cid}: width n/a - frame drawn at the drag diameter, callout shows n/a",
-            )
 
     # (d) totals ---------------------------------------------------------------------------
     _check_totals(spec, res, fail, note, open_item)
+
+    # (f) design data -------------------------------------------------------------
+    _check_design_data(spec, root, texts, rows, role_of, fail, note, open_item)
     return _finish(spec, res)
 
 
-def _required_callout_fields(c: StackupComponent) -> set[str]:
-    """Fields a drawn component's callout must print (a value or n/a)."""
-    req = {"top_el_m"}
-    if c.type in COUNTED_TYPES:
-        req |= {"count", "joint_length_m"}
-    if c.od_in is not None:
-        req.add("od_in")
-    elif c.envelope_width_in is not None:
-        req.add("envelope_width_in")
-    if c.type == CT.RISER_JOINT_BUOYANT:
-        for f in ("buoyancy_od_in", "buoyancy_depth_rating_ft"):
-            if getattr(c, f) is not None:
-                req.add(f)
-    return req
-
-
-def _leader_problems(cid: str, group: ET.Element, boxes) -> list[str]:
-    leaders = [
-        p
-        for p in group.iter(NS + "polyline")
-        if "leader" in (p.get("class") or "").split()
-    ]
-    texts = [t for t in group.iter(NS + "text") if t.get("data-component-id") == cid]
-    if len(leaders) != 1 or not texts:
-        return [
-            f"{cid}: callout needs exactly one leader and a label ({len(leaders)} leaders)"
-        ]
-    try:
-        pts = [
-            tuple(float(v) for v in pair.split(","))
-            for pair in (leaders[0].get("points") or "").split()
-        ]
-        if len(pts) < 2 or any(
-            len(p) != 2 or not all(map(math.isfinite, p)) for p in pts
-        ):
-            raise ValueError
-    except ValueError:
-        return [f"{cid}: unreadable leader points"]
-    (ax, ay), (lx, ly) = pts[0], pts[-1]
-    tx, ty = _float_attr(texts[0], "x"), _float_attr(texts[0], "y")
-    out = []
-    if (
-        tx is None
-        or ty is None
-        or abs(lx - tx) > LABEL_TOL_PX
-        or abs(ly - ty) > LABEL_TOL_PX
+def _header_problems(headers, y0: float, fail) -> None:
+    if len(headers) != 1:
+        fail("a_mapping", f"{len(headers)} table headers (expected one)")
+        return
+    g = headers[0]
+    rects = [el for el in g if el.tag == NS + "rect"]
+    if len(rects) != 1 or any(
+        abs(a - b) > PX_TOL
+        for a, b in zip(
+            (_fnan(rects[0], k) for k in ("x", "y", "width", "height")),
+            (TABLE_X0, y0, TABLE_X1 - TABLE_X0, HEADER_HEIGHT),
+        )
     ):
-        out.append(f"{cid}: leader does not start at its callout label")
-    else:
-        # every further line sits directly under the first (tspans cannot move:
-        # the grammar forbids x/y/dx/dy on them)
-        for i, t in enumerate(texts[1:], start=1):
-            x, y = _float_attr(t, "x"), _float_attr(t, "y")
-            if (
-                x is None
-                or y is None
-                or abs(x - tx) > PX_TOL
-                or abs(y - (ty + i * CALLOUT_LINE_PITCH)) > PX_TOL
-            ):
-                out.append(f"{cid}: callout line {i + 1} is not under its label")
-    on_body = any(
+        fail("b_positions", "table header is not on the frozen column edges")
+    want = []
+    for key, h1, h2, w in COLUMNS:
+        a = COL_X[key]
+        if key == "component":
+            want.append((key, h1, a + 6, y0 + 20))
+        else:
+            want.append((key, h1, a + w / 2, y0 + 13))
+            want.append((key, h2, a + w / 2, y0 + 26))
+    got = [
+        (t.get("data-col"), "".join(t.itertext()), _fnan(t, "x"), _fnan(t, "y"))
+        for t in g
+        if t.tag == NS + "text"
+    ]
+    if [(k, s) for k, s, _, _ in got] != [(k, s) for k, s, _, _ in want]:
+        fail("a_mapping", "table header text/units are not the frozen column headers")
+    elif any(
+        not (abs(gx - wx) <= PX_TOL and abs(gy - wy) <= PX_TOL)
+        for (_, _, gx, gy), (_, _, wx, wy) in zip(got, want)
+    ):
+        fail("b_positions", "table header text is off its column")
+    seps = sorted(_fnan(ln, "x1") for ln in g if ln.tag == NS + "line")
+    if len(seps) != len(COLUMNS) - 1 or any(
+        not abs(a - COL_X[k]) <= PX_TOL for a, (k, *_r) in zip(seps, COLUMNS[1:])
+    ):
+        fail("b_positions", "table header column lines are not on the column edges")
+
+
+def _row_geometry(key: str, g: ET.Element, boxes):
+    """(row centre, anchor or None, problems) of one table row."""
+    out = []
+    rects = [el for el in g if el.tag == NS + "rect"]
+    if len(rects) != 1:
+        return None, None, [f"{key}: row needs exactly one background rect"]
+    x, y, w, h = (_fnan(rects[0], k) for k in ("x", "y", "width", "height"))
+    if not (
+        abs(x - TABLE_X0) <= PX_TOL
+        and abs(w - (TABLE_X1 - TABLE_X0)) <= PX_TOL
+        and abs(h - ROW_PITCH) <= PX_TOL
+    ):
+        out.append(f"{key}: row background is not the table width x row pitch")
+    yc = y + h / 2
+    for ln in (el for el in g if el.tag == NS + "line"):
+        if not abs(_fnan(ln, "y1") - (y + h)) <= PX_TOL:
+            out.append(f"{key}: row rule not at the row's bottom edge")
+    for t in g.iter(NS + "text"):
+        col = t.get("data-col")
+        if col not in CELL_POS:
+            continue
+        ckey, off, anchor = CELL_POS[col]
+        if t.get("class") != CELL_CLASS[col]:
+            out.append(f"{key}: cell {col} has class {t.get('class')!r}")
+        if not (
+            abs(_fnan(t, "x") - (COL_X[ckey] + off)) <= PX_TOL
+            and abs(_fnan(t, "y") - (yc + CELL_BASELINE)) <= PX_TOL
+            and t.get("text-anchor") == anchor
+        ):
+            out.append(f"{key}: cell {col} is not at its column position")
+    for p in (el for el in g if el.tag == NS + "path"):
+        pts = _points(p)
+        if pts and not (
+            abs(pts[0][0] - (TABLE_X1 - WARN_INSET)) <= PX_TOL
+            and abs(pts[0][1] - (yc + 5)) <= PX_TOL
+        ):
+            out.append(f"{key}: warning mark is not in its row")
+    leaders = [el for el in g if el.tag == NS + "polyline"]
+    dots = [el for el in g if el.tag == NS + "circle"]
+    if boxes is None:
+        if leaders or dots:
+            out.append(f"{key}: leader on a row whose item is not drawn")
+        return yc, None, out
+    if len(leaders) != 1 or len(dots) != 1:
+        return yc, None, out + [f"{key}: row needs exactly one leader and one dot"]
+    pts = _points(leaders[0])
+    if not pts or len(pts) != 4:
+        return yc, None, out + [f"{key}: leader is not the four-point row leader"]
+    (ax, ay), (bx, by), (cx, cy), (ex, ey) = pts
+    if not (
+        abs(ex - (TABLE_X0 - 1)) <= PX_TOL
+        and abs(ey - yc) <= PX_TOL
+        and abs(cx - (TABLE_X0 - 10)) <= PX_TOL
+        and abs(cy - yc) <= PX_TOL
+        and abs(by - ay) <= PX_TOL
+    ):
+        out.append(f"{key}: leader does not end at the row's left edge and centre")
+    if not (
+        abs(_fnan(dots[0], "cx") - ax) <= PX_TOL
+        and abs(_fnan(dots[0], "cy") - ay) <= PX_TOL
+    ):
+        out.append(f"{key}: leader dot is not at the leader's anchor")
+    on = any(
         x0 - LEADER_TOL_PX <= ax <= x1 + LEADER_TOL_PX
         and y0 - PX_TOL <= ay <= y1 + PX_TOL
         for x0, x1, y0, y1 in boxes
     )
-    if not on_body:
-        out.append(
-            f"{cid}: leader does not end on the component body ({ax:.2f}, {ay:.2f})"
+    if not on:
+        out.append(f"{key}: leader does not end on its item ({ax:.2f}, {ay:.2f})")
+    return yc, (ax, ay), out
+
+
+def _review_problems(spec, band, open_keys, y0, band_h, lines, fail) -> None:
+    if len(band) != 1:
+        fail("a_mapping", f"{len(band)} review lists (expected one)")
+        return
+    g = band[0]
+    rects = [el for el in g if el.tag == NS + "rect"]
+    if len(rects) != 1 or any(
+        abs(a - b) > PX_TOL
+        for a, b in zip(
+            (_fnan(rects[0], k) for k in ("x", "y", "width", "height")),
+            (12.0, y0, SHEET_WIDTH - 24, band_h),
         )
+    ):
+        fail(
+            "b_positions", "review list band is not above the title block at full width"
+        )
+    heads = [t for t in g if t.get("class") == "rl-hdr"]
+    if len(heads) != 1 or "".join(heads[0].itertext()) != REVIEW_HEADER:
+        fail("a_mapping", "review list header is not the frozen header")
+    for k, t in enumerate(lines):
+        want_y = y0 + REVIEW_HEADER_BASELINE + (k + 1) * REVIEW_PITCH
+        if not (
+            abs(_fnan(t, "y") - want_y) <= PX_TOL
+            and abs(_fnan(t, "x") - (12.0 + REVIEW_TEXT_X)) <= PX_TOL
+        ):
+            fail("b_positions", f"review list line {k + 1} is not at its line position")
+    keys = [t.get("data-review") for t in lines if t.get("class") == "rl"]
+    none = [t for t in lines if t.get("class") == "rl-none"]
+    if set(keys) != set(open_keys):
+        fail(
+            "a_mapping",
+            f"review list entries {sorted(set(keys))} != open conflicts and gaps "
+            f"{sorted(open_keys)}",
+        )
+    if bool(none) == bool(open_keys) or len(none) > 1:
+        fail("a_mapping", "review list 'none open' line does not match the spec")
+    warns = [el.get("data-review") for el in g if el.get("class") == "warn"]
+    if sorted(warns) != sorted(open_keys):
+        fail(
+            "a_mapping",
+            f"review list warning marks {sorted(warns)} != {sorted(open_keys)}",
+        )
+    for key, e in open_keys.items():
+        kind, i = key[:-1].split("[")
+        shown = {
+            sp.get("data-field")
+            for t in lines
+            if t.get("data-review") == key
+            for sp in t.iter(NS + "tspan")
+            if sp.get("data-field")
+        }
+        need = {
+            f"{kind}.{i}.{f}"
+            for f in ("component_id", "item", "detail")
+            if e.get(f) not in (None, "")
+        }
+        if shown != need:
+            fail(
+                "a_mapping",
+                f"review entry {key} shows {sorted(shown)}, needs {sorted(need)}",
+            )
+
+
+def _pivot_problems(spec, c, g, T) -> list[str]:
+    key = {
+        CT.UPPER_FLEX_JOINT: "ufj_pivot_el_m",
+        CT.LOWER_FLEX_JOINT: "lfj_pivot_el_m",
+    }.get(c.type)
+    pivots = [cc for cc in g.iter(NS + "circle") if cc.get("data-part") == "pivot"]
+    rv = spec.reference_totals.get(key) if key else None
+    first = key and next(x for x in spec.components if x.type == c.type) is c
+    if not (first and rv is not None and _known(rv.value)):
+        return (
+            [f"{c.id}: pivot drawn without a stated pivot elevation"] if pivots else []
+        )
+    zp = float(rv.value)
+    if len(pivots) != 1:
+        return [f"{c.id}: {len(pivots)} pivot symbols for {key} (expected one)"]
+    out = []
+    attr = _float_attr(pivots[0], "data-pivot-el-m")
+    if attr is None or abs(attr - zp) > 1e-9:
+        out.append(f"{c.id}: pivot data-pivot-el-m != reference_totals.{key}")
+    if not float(c.bottom_el_m) - 1e-9 <= zp <= float(c.top_el_m) + 1e-9:
+        out.append(f"{c.id}: pivot EL {zp:.3f} m outside the component")
+    cy = _float_attr(pivots[0], "cy")
+    if cy is None or abs(cy - T.y(zp)) > PX_TOL:
+        out.append(f"{c.id}: pivot symbol not at T({zp:g})")
     return out
+
+
+def _check_design_data(spec, root, texts, rows, role_of, fail, note, open_item):
+    k = "f_design_data"
+    has_register = bool(spec.design_data)
+    missing: set[str] = set()
+
+    def ids_of(row_key, fields):
+        ids, lacking = set(), False
+        for fld in fields:
+            p = _prov_for(spec, row_key, fld)
+            did = getattr(p, "design_data_id", None)
+            if did is None:
+                lacking = True
+                missing.add(
+                    f"{row_key + ':' if row_key and '.' not in fld else ''}{fld}"
+                )
+            else:
+                ids.add(did)
+        return ids, lacking
+
+    def check_printed(where, printed, want):
+        got = {d for d, _ in printed}
+        for did, flag in printed:
+            item = spec.design_item(did)
+            if item is None:
+                fail(k, f"{where}: {did} does not resolve in the design-data register")
+                continue
+            want_flag = SOURCE_CLASSES.get(item.source_class)
+            if flag != want_flag:
+                fail(
+                    k,
+                    f"{where}: {did} class flag {flag!r} != {want_flag!r} "
+                    f"({item.source_class})",
+                )
+        if got != want:
+            fail(
+                k,
+                f"{where}: printed IDs {sorted(got)} != IDs of the printed values "
+                f"{sorted(want)} (missing {sorted(want - got)}, extra {sorted(got - want)})",
+            )
+
+    n_rows = 0
+    for key, g in rows.items():
+        cells = [t for t in g.iter(NS + "text") if t.get("data-col") != "dd"]
+        dd = [t for t in g.iter(NS + "text") if t.get("data-col") == "dd"]
+        fields = [f for t in cells for f in _value_fields(t)]
+        want, lacking = ids_of(key, fields)
+        if len(dd) != 1:
+            continue  # reported by the cell set check in (a)
+        check_printed(f"row {key}", _dd_printed(dd[0]), want)
+        items = sorted(want, key=lambda d: int(d.split("-")[1]))
+        parts = [
+            d
+            + SOURCE_CLASSES.get(getattr(spec.design_item(d), "source_class", ""), "?")
+            for d in items
+        ] + ([NA] if lacking else [])
+        got = "".join(dd[0].itertext())
+        if got != ", ".join(parts):
+            fail(k, f"row {key}: Design data cell {got!r} != {', '.join(parts)!r}")
+        n_rows += 1
+    for t in texts:
+        r, _ = role_of(t)
+        if r in ("table-row", "table-header", "table-legend", "review-list", "axis"):
+            continue
+        fields = _value_fields(t)
+        printed = _dd_printed(t)
+        if not fields and not printed:
+            continue
+        want, _ = ids_of(None, fields)
+        check_printed(f"{r} text {''.join(t.itertext())[:40]!r}", printed, want)
+    for f in sorted(missing):
+        msg = f"{f}: printed value has no design_data_id"
+        if has_register:
+            fail(k, msg)
+        else:
+            open_item(k, msg + " (the spec has no design-data register)")
+    for p in _design_value_problems(spec):
+        fail(k, p)
+    for p in _archive_problems(spec, root):
+        fail(k, p)
+    note(
+        k,
+        f"{len(spec.design_data)} design-data items, {len(spec.references)} references; "
+        f"{n_rows} Design data cells checked",
+    )
 
 
 def _axis_correspondence(root: ET.Element, zones: list[dict]) -> list[str]:
@@ -1781,7 +2563,7 @@ def _check_totals(spec: StackupDrawingSpec, res, fail, note, open_item) -> None:
                 f"air gap {d_.air_gap_m} m != drill floor - MSL "
                 f"{float(d_.drill_floor_el_m) - msl} m",
             )
-    stacked = [c for c in spec.components if c.type not in NESTED_TYPES]
+    stacked = spec.stacked()
     if _known(d_.drill_floor_el_m):
         for c in stacked:
             if (
@@ -1795,10 +2577,36 @@ def _check_totals(spec: StackupDrawingSpec, res, fail, note, open_item) -> None:
             and _known(b.top_el_m)
             and abs(float(a.bottom_el_m) - float(b.top_el_m)) > 1e-6
         ):
+            gap = float(a.bottom_el_m) - float(b.top_el_m)
+            # the only excused discontinuity: an explicit landing relation
+            # (a.nested_in == b.id), a's lower part inside its host b
+            if (
+                a.nested_in == b.id
+                and gap < 0
+                and _known(b.bottom_el_m)
+                and float(b.bottom_el_m) <= float(a.bottom_el_m)
+                and float(b.top_el_m) <= float(a.top_el_m)
+            ):
+                note(k, f"{a.id} lands {-gap:.3f} m inside {b.id} (explicit nested_in)")
+                continue
             fail(
                 k,
-                f"elevation gap/overlap between {a.id} and {b.id}: "
-                f"{float(a.bottom_el_m) - float(b.top_el_m):+.4f} m",
+                f"elevation gap/overlap between {a.id} and {b.id}: {gap:+.4f} m",
+            )
+    for c in spec.components:
+        if not c.nested_in:
+            continue
+        if spec.is_overlay(c):
+            note(
+                k,
+                f"{c.id} is an overlay inside {c.nested_in} (explicit nested_in; "
+                "not in the chain or the length sum)",
+            )
+        elif c not in stacked:
+            fail(
+                k,
+                f"{c.id}: nested_in {c.nested_in} but neither an overlay nor in the "
+                "stacked chain",
             )
     if not _known(d_.mudline_el_m):
         open_item(k, "mudline NOT_FOUND: stack-up totals not established")
@@ -1842,8 +2650,9 @@ def _check_totals(spec: StackupDrawingSpec, res, fail, note, open_item) -> None:
             k,
             f"sum of lengths {sum_len * M2FT:.3f} ft != {reff.value} ft ({reff.source})",
         )
-    ufj = next((c for c in stacked if c.type == CT.UPPER_FLEX_JOINT), None)
-    lfj = next((c for c in stacked if c.type == CT.LOWER_FLEX_JOINT), None)
+    # flex joints may be overlays (e.g. inside the LMRP): search every component
+    ufj = next((c for c in spec.components if c.type == CT.UPPER_FLEX_JOINT), None)
+    lfj = next((c for c in spec.components if c.type == CT.LOWER_FLEX_JOINT), None)
     rl = rt.get("riser_length_ufj_lfj_m")
     if ufj and lfj and rl is not None and _known(rl.value):
         L = float(ufj.top_el_m) - float(lfj.top_el_m)
@@ -1916,9 +2725,12 @@ def _resolve(fld: str, cid, comps, sd, derived):
             return NOT_FOUND
         return getattr(comps[cid], fld)
     try:
-        return _path(sd, fld)
+        value = _path(sd, fld)
     except KeyError:
         return NOT_FOUND
+    if fld == "title_block.report_document_no" and value in (None, ""):
+        return NOT_FOUND  # optional; absent prints n/a
+    return value
 
 
 def _finish(spec: StackupDrawingSpec, res: dict) -> dict[str, Any]:

@@ -9,19 +9,23 @@
     "provenance": {
       "water_depth_m": {
         "source": "synthetic fixture",
-        "basis": "synthetic"
+        "basis": "synthetic",
+        "design_data_id": "D-01"
       },
       "drill_floor_el_m": {
         "source": "synthetic fixture",
-        "basis": "synthetic"
+        "basis": "synthetic",
+        "design_data_id": "D-02"
       },
       "air_gap_m": {
         "source": "synthetic fixture",
-        "basis": "synthetic"
+        "basis": "synthetic",
+        "design_data_id": "D-02"
       },
       "mudline_el_m": {
         "source": "synthetic fixture",
-        "basis": "synthetic"
+        "basis": "synthetic",
+        "design_data_id": "D-03"
       }
     }
   },
@@ -44,30 +48,37 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-12"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-12"
         },
         "wall_thickness_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-12"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c02-upper-flex-joint",
@@ -87,22 +98,32 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-12"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
+        },
+        "pivot_el_m": {
+          "source": "synthetic fixture",
+          "basis": "assumed",
+          "design_data_id": "D-19"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c03-telescopic-joint-inner",
@@ -122,30 +143,37 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-12"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-12"
         },
         "wall_thickness_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-12"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c04-tension-ring",
@@ -165,26 +193,32 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-12"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-12"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c05-telescopic-joint-outer",
@@ -204,30 +238,37 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-12"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-12"
         },
         "wall_thickness_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-12"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c06-pup-joint",
@@ -247,30 +288,37 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-13"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-06"
         },
         "wall_thickness_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-07"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c07-pup-joint",
@@ -290,30 +338,37 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-13"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-06"
         },
         "wall_thickness_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-07"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c08-riser-joint-bare",
@@ -333,30 +388,37 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-05"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-06"
         },
         "wall_thickness_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-07"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c09-riser-joint-buoyant",
@@ -376,38 +438,47 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-05"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-06"
         },
         "wall_thickness_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-07"
         },
         "buoyancy_od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-08"
         },
         "buoyancy_depth_rating_ft": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "owner decision S03 (2026-01-01)",
+          "design_data_id": "D-10"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c10-riser-joint-buoyant",
@@ -427,38 +498,47 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-05"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-06"
         },
         "wall_thickness_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-07"
         },
         "buoyancy_od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "report table",
+          "design_data_id": "D-09"
         },
         "buoyancy_depth_rating_ft": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-11"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c11-riser-joint-bare",
@@ -478,30 +558,37 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-05"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-06"
         },
         "wall_thickness_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-07"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c12-termination-joint",
@@ -521,39 +608,46 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-13"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-06"
         },
         "wall_thickness_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-13"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c13-other",
       "type": "other",
       "label": "Riser adaptor",
       "count": 1,
-      "joint_length_m": 1.5,
+      "joint_length_m": 2.5,
       "top_el_m": -1475.4999999999998,
-      "bottom_el_m": -1476.9999999999998,
+      "bottom_el_m": -1477.9999999999998,
       "od_in": 21.0,
       "buoyancy_od_in": null,
       "wall_thickness_in": null,
@@ -564,26 +658,32 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-12"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-12"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c14-lower-flex-joint",
@@ -591,8 +691,8 @@
       "label": "Lower flex joint (LFJ)",
       "count": 1,
       "joint_length_m": 1.0,
-      "top_el_m": -1476.9999999999998,
-      "bottom_el_m": -1477.9999999999998,
+      "top_el_m": -1478.4999999999998,
+      "bottom_el_m": -1479.4999999999998,
       "od_in": 40.0,
       "buoyancy_od_in": null,
       "wall_thickness_in": null,
@@ -603,26 +703,42 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-12"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-12"
+        },
+        "nested_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic",
+          "design_data_id": null
+        },
+        "pivot_el_m": {
+          "source": "synthetic fixture",
+          "basis": "assumed",
+          "design_data_id": "D-20"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": "c15-lmrp"
     },
     {
       "id": "c15-lmrp",
@@ -642,26 +758,32 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-14"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "envelope_width_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-14"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c16-bop",
@@ -681,26 +803,32 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-14"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "envelope_width_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-14"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c17-wellhead",
@@ -720,38 +848,50 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-14"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-14"
         },
         "wall_thickness_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-14"
+        },
+        "nested_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic",
+          "design_data_id": null
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": "c18-conductor"
     },
     {
       "id": "c18-conductor",
       "type": "conductor",
       "label": "conductor",
       "count": 1,
-      "joint_length_m": 45.72,
-      "top_el_m": -1500.0,
+      "joint_length_m": 48.72,
+      "top_el_m": -1497.0,
       "bottom_el_m": -1545.72,
       "od_in": 36.0,
       "buoyancy_od_in": null,
@@ -763,30 +903,37 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-15"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-15"
         },
         "wall_thickness_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-15"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c19-conductor",
@@ -806,30 +953,37 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-15"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-15"
         },
         "wall_thickness_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-15"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     },
     {
       "id": "c20-casing",
@@ -849,30 +1003,37 @@
       "provenance": {
         "count": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "joint_length_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-15"
         },
         "top_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-04"
         },
         "od_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-15"
         },
         "wall_thickness_in": {
           "source": "synthetic fixture",
-          "basis": "synthetic"
+          "basis": "synthetic",
+          "design_data_id": "D-15"
         }
       },
-      "notes": []
+      "notes": [],
+      "nested_in": null
     }
   ],
   "title_block": {
@@ -880,7 +1041,8 @@
     "configuration": "BOP on wellhead (generic test fixture)",
     "vessel_label": "Drilling vessel (DP)",
     "document_ref": "SYNTHETIC",
-    "notes": []
+    "notes": [],
+    "report_document_no": "RPT-SYN-001"
   },
   "tensioner_system": {
     "count": 6,
@@ -889,15 +1051,18 @@
     "provenance": {
       "count": {
         "source": "synthetic fixture",
-        "basis": "synthetic"
+        "basis": "synthetic",
+        "design_data_id": "D-16"
       },
       "sheave_el_m": {
         "source": "synthetic fixture",
-        "basis": "synthetic"
+        "basis": "synthetic",
+        "design_data_id": "D-17"
       },
       "sheave_radius_m": {
         "source": "synthetic fixture",
-        "basis": "synthetic"
+        "basis": "assumed",
+        "design_data_id": "D-18"
       }
     }
   },
@@ -906,25 +1071,78 @@
       "value": 1525.0,
       "source": "synthetic fixture",
       "basis": "synthetic",
-      "description": ""
+      "description": "",
+      "design_data_id": "D-21"
     },
     "rkb_node_above_mudline_m": {
       "value": 1525.0,
       "source": "synthetic fixture",
       "basis": "synthetic",
-      "description": ""
+      "description": "",
+      "design_data_id": null
     },
     "riser_length_ufj_lfj_m": {
-      "value": 1499.0,
+      "value": 1500.5,
       "source": "synthetic fixture",
       "basis": "synthetic",
-      "description": ""
+      "description": "",
+      "design_data_id": "D-22"
     },
     "closure_residual_m": {
       "value": 0.0,
       "source": "synthetic fixture",
       "basis": "synthetic",
-      "description": ""
+      "description": "",
+      "design_data_id": "D-23"
+    },
+    "ufj_pivot_el_m": {
+      "value": 21.5,
+      "source": "synthetic fixture",
+      "basis": "assumed",
+      "description": "upper flex-joint pivot",
+      "design_data_id": "D-19"
+    },
+    "lfj_pivot_el_m": {
+      "value": -1479.0,
+      "source": "synthetic fixture",
+      "basis": "assumed",
+      "description": "lower flex-joint pivot",
+      "design_data_id": "D-20"
+    },
+    "tj_ib_geometric_m": {
+      "value": 15.17,
+      "source": "synthetic fixture",
+      "basis": "synthetic",
+      "description": "inner barrel out, as drawn",
+      "design_data_id": "D-24"
+    },
+    "static_stretch_m": {
+      "value": 0.25,
+      "source": "synthetic fixture",
+      "basis": "synthetic",
+      "description": "static stretch at target tension",
+      "design_data_id": "D-25"
+    },
+    "tj_ib_tensioned_m": {
+      "value": 15.42,
+      "source": "synthetic fixture",
+      "basis": "synthetic",
+      "description": "inner barrel out, tensioned",
+      "design_data_id": "D-26"
+    },
+    "tj_ib_mid_stroke_m": {
+      "value": 15.24,
+      "source": "synthetic fixture",
+      "basis": "synthetic",
+      "description": "inner barrel out at mid-stroke",
+      "design_data_id": "D-27"
+    },
+    "tj_offset_from_mid_m": {
+      "value": 0.18,
+      "source": "synthetic fixture",
+      "basis": "synthetic",
+      "description": "tensioned minus mid-stroke",
+      "design_data_id": "D-28"
     }
   },
   "sources": [
@@ -935,12 +1153,332 @@
       "sha256": ""
     }
   ],
-  "data_conflicts": [],
+  "data_conflicts": [
+    {
+      "component_id": "c19-conductor",
+      "item": "wall_thickness_in",
+      "status": "open",
+      "detail": "two synthetic sources disagree on the lower conductor wall"
+    }
+  ],
   "gaps": [
     {
-      "item": "c02-upper-flex-joint od_in",
+      "component_id": "c02-upper-flex-joint",
+      "item": "od_in",
       "status": "open",
       "detail": "deliberately NOT_FOUND to exercise the n/a rendering path"
+    }
+  ],
+  "references": [
+    {
+      "id": "R-1",
+      "citation": "Marine drilling riser system, 21 in class: manufacturer product manual (generic equipment class; synthetic test citation)",
+      "url": "https://example.com/riser-manufacturer/marine-drilling-riser-manual",
+      "retrieved": "2026-09-24",
+      "role": "source"
+    },
+    {
+      "id": "R-2",
+      "citation": "Subsea BOP stack and wellhead housing: manufacturer brochure (generic equipment class; synthetic test citation)",
+      "url": "https://example.com/subsea-stack-manufacturer/bop-stack-brochure",
+      "retrieved": "2026-09-24",
+      "role": "source"
+    },
+    {
+      "id": "R-3",
+      "citation": "Dynamically positioned drilling vessel: class specification (generic vessel class; synthetic test citation)",
+      "url": "https://example.com/drilling-vessel/class-specification",
+      "retrieved": "2026-09-24",
+      "role": "source"
+    },
+    {
+      "id": "R-4",
+      "citation": "DNV-RP-C205 Environmental conditions and environmental loads",
+      "url": "https://www.dnv.com/rules-standards/",
+      "retrieved": "2026-09-24",
+      "role": "context"
+    }
+  ],
+  "design_data": [
+    {
+      "id": "D-01",
+      "parameter": "Water depth",
+      "value": 1500.0,
+      "unit": "m",
+      "source_class": "owner_decision",
+      "reference_ids": [],
+      "note": "Owner decision S01: synthetic design water depth."
+    },
+    {
+      "id": "D-02",
+      "parameter": "Drill floor (RKB) above MSL",
+      "value": 25.0,
+      "unit": "m",
+      "source_class": "public",
+      "reference_ids": [
+        "R-3"
+      ],
+      "note": ""
+    },
+    {
+      "id": "D-03",
+      "parameter": "Mudline elevation",
+      "value": -1500.0,
+      "unit": "m",
+      "source_class": "owner_decision",
+      "reference_ids": [],
+      "note": "Follows owner decision S01 (water depth)."
+    },
+    {
+      "id": "D-04",
+      "parameter": "Stack-up arrangement: order, joint counts and elevations (per row)",
+      "value": null,
+      "unit": "-",
+      "source_class": "owner_decision",
+      "reference_ids": [],
+      "note": "Owner decision S02: synthetic arrangement; elevations stack down from the drill floor."
+    },
+    {
+      "id": "D-05",
+      "parameter": "Riser joint length",
+      "value": 75.0,
+      "unit": "ft",
+      "source_class": "public",
+      "reference_ids": [
+        "R-1"
+      ],
+      "note": ""
+    },
+    {
+      "id": "D-06",
+      "parameter": "Riser main tube OD",
+      "value": 21.0,
+      "unit": "in",
+      "source_class": "public",
+      "reference_ids": [
+        "R-1"
+      ],
+      "note": ""
+    },
+    {
+      "id": "D-07",
+      "parameter": "Riser main tube wall thickness",
+      "value": 0.875,
+      "unit": "in",
+      "source_class": "public",
+      "reference_ids": [
+        "R-1"
+      ],
+      "note": ""
+    },
+    {
+      "id": "D-08",
+      "parameter": "Buoyancy module OD, upper rating class",
+      "value": 52.0,
+      "unit": "in",
+      "source_class": "public",
+      "reference_ids": [
+        "R-1"
+      ],
+      "note": ""
+    },
+    {
+      "id": "D-09",
+      "parameter": "Buoyancy module OD, lower rating class",
+      "value": 54.0,
+      "unit": "in",
+      "source_class": "public",
+      "reference_ids": [
+        "R-1"
+      ],
+      "note": ""
+    },
+    {
+      "id": "D-10",
+      "parameter": "Buoyancy depth rating, upper section",
+      "value": 3000.0,
+      "unit": "ft",
+      "source_class": "owner_decision",
+      "reference_ids": [],
+      "note": "Owner decision S03: rating class selected for the upper buoyant section."
+    },
+    {
+      "id": "D-11",
+      "parameter": "Buoyancy depth rating, lower section",
+      "value": 5000.0,
+      "unit": "ft",
+      "source_class": "public",
+      "reference_ids": [
+        "R-1"
+      ],
+      "note": ""
+    },
+    {
+      "id": "D-12",
+      "parameter": "Surface equipment dimensions: diverter, flex joints, telescopic joint, tension ring, riser adaptor (per row)",
+      "value": null,
+      "unit": "-",
+      "source_class": "public",
+      "reference_ids": [
+        "R-1"
+      ],
+      "note": ""
+    },
+    {
+      "id": "D-13",
+      "parameter": "Pup and termination joint dimensions (per row)",
+      "value": null,
+      "unit": "-",
+      "source_class": "public",
+      "reference_ids": [
+        "R-1"
+      ],
+      "note": ""
+    },
+    {
+      "id": "D-14",
+      "parameter": "Subsea stack dimensions: LMRP, BOP, wellhead housing (per row)",
+      "value": null,
+      "unit": "-",
+      "source_class": "public",
+      "reference_ids": [
+        "R-2"
+      ],
+      "note": ""
+    },
+    {
+      "id": "D-15",
+      "parameter": "Conductor and casing dimensions (per row)",
+      "value": null,
+      "unit": "-",
+      "source_class": "owner_decision",
+      "reference_ids": [],
+      "note": "Owner decision S04: synthetic well design."
+    },
+    {
+      "id": "D-16",
+      "parameter": "Riser tensioner lines",
+      "value": 6.0,
+      "unit": "count",
+      "source_class": "public",
+      "reference_ids": [
+        "R-3"
+      ],
+      "note": ""
+    },
+    {
+      "id": "D-17",
+      "parameter": "Tensioner sheave elevation",
+      "value": 20.5,
+      "unit": "m",
+      "source_class": "public",
+      "reference_ids": [
+        "R-3"
+      ],
+      "note": ""
+    },
+    {
+      "id": "D-18",
+      "parameter": "Tensioner sheave radius",
+      "value": 3.5,
+      "unit": "m",
+      "source_class": "assumed",
+      "reference_ids": [],
+      "note": "ASSUMED - to be confirmed: no public data for the sheave geometry of this tensioner class."
+    },
+    {
+      "id": "D-19",
+      "parameter": "Upper flex-joint pivot elevation",
+      "value": 21.5,
+      "unit": "m",
+      "source_class": "assumed",
+      "reference_ids": [
+        "R-4"
+      ],
+      "note": "ASSUMED - to be confirmed: no public data for the pivot offset of this flex-joint class; taken at mid-height. R-4 is context for the hydrodynamic model only."
+    },
+    {
+      "id": "D-20",
+      "parameter": "Lower flex-joint pivot elevation",
+      "value": -1479.0,
+      "unit": "m",
+      "source_class": "assumed",
+      "reference_ids": [
+        "R-4"
+      ],
+      "note": "ASSUMED - to be confirmed: no public data for the pivot offset of this flex-joint class; taken at mid-height. R-4 is context for the hydrodynamic model only."
+    },
+    {
+      "id": "D-21",
+      "parameter": "Stack-up length, top to mudline",
+      "value": 1525.0,
+      "unit": "m",
+      "source_class": "owner_decision",
+      "reference_ids": [],
+      "note": "Follows owner decision S02."
+    },
+    {
+      "id": "D-22",
+      "parameter": "Riser length, UFJ to LFJ",
+      "value": 1500.5,
+      "unit": "m",
+      "source_class": "owner_decision",
+      "reference_ids": [],
+      "note": "Follows owner decision S02."
+    },
+    {
+      "id": "D-23",
+      "parameter": "Closure residual",
+      "value": 0.0,
+      "unit": "m",
+      "source_class": "owner_decision",
+      "reference_ids": [],
+      "note": "Follows owner decision S02."
+    },
+    {
+      "id": "D-24",
+      "parameter": "Telescopic joint inner barrel out, as drawn",
+      "value": 15.17,
+      "unit": "m",
+      "source_class": "owner_decision",
+      "reference_ids": [],
+      "note": "Owner decision S05: synthetic space-out."
+    },
+    {
+      "id": "D-25",
+      "parameter": "Static stretch at target tension",
+      "value": 0.25,
+      "unit": "m",
+      "source_class": "owner_decision",
+      "reference_ids": [],
+      "note": "Follows owner decision S05."
+    },
+    {
+      "id": "D-26",
+      "parameter": "Telescopic joint inner barrel out, tensioned",
+      "value": 15.42,
+      "unit": "m",
+      "source_class": "owner_decision",
+      "reference_ids": [],
+      "note": "Follows owner decision S05."
+    },
+    {
+      "id": "D-27",
+      "parameter": "Telescopic joint inner barrel out, mid-stroke",
+      "value": 15.24,
+      "unit": "m",
+      "source_class": "owner_decision",
+      "reference_ids": [],
+      "note": "Follows owner decision S05."
+    },
+    {
+      "id": "D-28",
+      "parameter": "Telescopic joint offset from mid-stroke",
+      "value": 0.18,
+      "unit": "m",
+      "source_class": "owner_decision",
+      "reference_ids": [],
+      "note": "Follows owner decision S05."
     }
   ],
   "schema_version": "riser-stackup-drawing/1"

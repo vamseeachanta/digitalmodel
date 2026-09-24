@@ -898,7 +898,7 @@ text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Aria
 <path d="M1494,1741.1 l5.5,-10 l5.5,10 z" class="warn" data-part="warn" data-review="data_conflicts[0]"/>
 </g>
 <g data-role="table-legend">
-<text x="518" y="1907.69" class="tl"><tspan>Design data: D-ID = item in the report's Design data table; </tspan><tspan class="ddc-p">P</tspan><tspan> public source · </tspan><tspan class="ddc-d">D</tspan><tspan> owner decision · </tspan><tspan class="ddc-a">A</tspan><tspan> assumed, no public data.</tspan></text>
+<text x="518" y="1907.69" class="tl"><tspan>Design data: D-ID = item in the report's Design data table; </tspan><tspan class="ddc-p">P</tspan><tspan> = public source · </tspan><tspan class="ddc-d">D</tspan><tspan> = owner decision · </tspan><tspan class="ddc-a">A</tspan><tspan> = ASSUMED - to be confirmed (no public data).</tspan></text>
 <text x="518" y="1922.69" class="tl"><tspan class="na">n/a</tspan><tspan> applies but not found in the sources · </tspan><tspan class="nap">–</tspan><tspan> not applicable to the item type.</tspan></text>
 <path d="M518,1942.69 l5.5,-10 l5.5,10 z" class="warn"/>
 <text x="534" y="1941.69" class="tl"><tspan>Open data conflict or gap for the item: see the review list.</tspan></text>
