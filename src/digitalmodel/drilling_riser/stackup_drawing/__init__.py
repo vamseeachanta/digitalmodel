@@ -1,4 +1,4 @@
-"""Data-driven riser stack-up drawing with a reconciliation check (#2152).
+"""Data-driven riser stack-up drawing with a reconciliation check (#2152, #2158).
 
 Pipeline: adapter -> :class:`StackupDrawingSpec` -> :func:`render` (SVG text)
 -> :func:`reconcile` (report). The render and reconcile layers use only the
@@ -30,7 +30,9 @@ from digitalmodel.drilling_riser.stackup_drawing.schema import (
     SCHEMA_VERSION,
     ComponentType,
     Datums,
+    DesignDataItem,
     Provenance,
+    Reference,
     ReferenceValue,
     StackupComponent,
     StackupDrawingSpec,
@@ -45,8 +47,10 @@ __all__ = [
     "SCHEMA_VERSION",
     "ComponentType",
     "Datums",
+    "DesignDataItem",
     "Layout",
     "Provenance",
+    "Reference",
     "ReferenceValue",
     "StackupComponent",
     "StackupDrawingSpec",
