@@ -1207,7 +1207,8 @@
       "unit": "m",
       "source_class": "owner_decision",
       "reference_ids": [],
-      "note": "Owner decision S01: synthetic design water depth."
+      "note": "Owner decision S01: synthetic design water depth.",
+      "values": {}
     },
     {
       "id": "D-02",
@@ -1218,7 +1219,8 @@
       "reference_ids": [
         "R-3"
       ],
-      "note": ""
+      "note": "",
+      "values": {}
     },
     {
       "id": "D-03",
@@ -1227,7 +1229,8 @@
       "unit": "m",
       "source_class": "owner_decision",
       "reference_ids": [],
-      "note": "Follows owner decision S01 (water depth)."
+      "note": "Follows owner decision S01 (water depth).",
+      "values": {}
     },
     {
       "id": "D-04",
@@ -1236,7 +1239,249 @@
       "unit": "-",
       "source_class": "owner_decision",
       "reference_ids": [],
-      "note": "Owner decision S02: synthetic arrangement; elevations stack down from the drill floor."
+      "note": "Owner decision S02: synthetic arrangement; elevations stack down from the drill floor.",
+      "values": {
+        "components.c01-diverter.count": {
+          "value": 1,
+          "unit": "count"
+        },
+        "components.c01-diverter.top_el_m": {
+          "value": 25.0,
+          "unit": "m"
+        },
+        "components.c01-diverter.bottom_el_m": {
+          "value": 22.0,
+          "unit": "m"
+        },
+        "components.c02-upper-flex-joint.count": {
+          "value": 1,
+          "unit": "count"
+        },
+        "components.c02-upper-flex-joint.top_el_m": {
+          "value": 22.0,
+          "unit": "m"
+        },
+        "components.c02-upper-flex-joint.bottom_el_m": {
+          "value": 21.0,
+          "unit": "m"
+        },
+        "components.c03-telescopic-joint-inner.count": {
+          "value": 1,
+          "unit": "count"
+        },
+        "components.c03-telescopic-joint-inner.top_el_m": {
+          "value": 21.0,
+          "unit": "m"
+        },
+        "components.c03-telescopic-joint-inner.bottom_el_m": {
+          "value": 5.827999999999999,
+          "unit": "m"
+        },
+        "components.c04-tension-ring.count": {
+          "value": 1,
+          "unit": "count"
+        },
+        "components.c04-tension-ring.top_el_m": {
+          "value": 5.827999999999999,
+          "unit": "m"
+        },
+        "components.c04-tension-ring.bottom_el_m": {
+          "value": 5.827999999999999,
+          "unit": "m"
+        },
+        "components.c05-telescopic-joint-outer.count": {
+          "value": 1,
+          "unit": "count"
+        },
+        "components.c05-telescopic-joint-outer.top_el_m": {
+          "value": 5.827999999999999,
+          "unit": "m"
+        },
+        "components.c05-telescopic-joint-outer.bottom_el_m": {
+          "value": -12.46,
+          "unit": "m"
+        },
+        "components.c06-pup-joint.count": {
+          "value": 1,
+          "unit": "count"
+        },
+        "components.c06-pup-joint.top_el_m": {
+          "value": -12.46,
+          "unit": "m"
+        },
+        "components.c06-pup-joint.bottom_el_m": {
+          "value": -21.604,
+          "unit": "m"
+        },
+        "components.c07-pup-joint.count": {
+          "value": 1,
+          "unit": "count"
+        },
+        "components.c07-pup-joint.top_el_m": {
+          "value": -21.604,
+          "unit": "m"
+        },
+        "components.c07-pup-joint.bottom_el_m": {
+          "value": -24.652,
+          "unit": "m"
+        },
+        "components.c08-riser-joint-bare.count": {
+          "value": 3,
+          "unit": "count"
+        },
+        "components.c08-riser-joint-bare.top_el_m": {
+          "value": -24.652,
+          "unit": "m"
+        },
+        "components.c08-riser-joint-bare.bottom_el_m": {
+          "value": -93.232,
+          "unit": "m"
+        },
+        "components.c09-riser-joint-buoyant.count": {
+          "value": 25,
+          "unit": "count"
+        },
+        "components.c09-riser-joint-buoyant.top_el_m": {
+          "value": -93.232,
+          "unit": "m"
+        },
+        "components.c09-riser-joint-buoyant.bottom_el_m": {
+          "value": -664.732,
+          "unit": "m"
+        },
+        "components.c10-riser-joint-buoyant.count": {
+          "value": 25,
+          "unit": "count"
+        },
+        "components.c10-riser-joint-buoyant.top_el_m": {
+          "value": -664.732,
+          "unit": "m"
+        },
+        "components.c10-riser-joint-buoyant.bottom_el_m": {
+          "value": -1236.232,
+          "unit": "m"
+        },
+        "components.c11-riser-joint-bare.count": {
+          "value": 10,
+          "unit": "count"
+        },
+        "components.c11-riser-joint-bare.top_el_m": {
+          "value": -1236.232,
+          "unit": "m"
+        },
+        "components.c11-riser-joint-bare.bottom_el_m": {
+          "value": -1464.8319999999999,
+          "unit": "m"
+        },
+        "components.c12-termination-joint.count": {
+          "value": 1,
+          "unit": "count"
+        },
+        "components.c12-termination-joint.top_el_m": {
+          "value": -1464.8319999999999,
+          "unit": "m"
+        },
+        "components.c12-termination-joint.bottom_el_m": {
+          "value": -1475.4999999999998,
+          "unit": "m"
+        },
+        "components.c13-other.count": {
+          "value": 1,
+          "unit": "count"
+        },
+        "components.c13-other.top_el_m": {
+          "value": -1475.4999999999998,
+          "unit": "m"
+        },
+        "components.c13-other.bottom_el_m": {
+          "value": -1477.9999999999998,
+          "unit": "m"
+        },
+        "components.c14-lower-flex-joint.count": {
+          "value": 1,
+          "unit": "count"
+        },
+        "components.c14-lower-flex-joint.top_el_m": {
+          "value": -1478.4999999999998,
+          "unit": "m"
+        },
+        "components.c14-lower-flex-joint.bottom_el_m": {
+          "value": -1479.4999999999998,
+          "unit": "m"
+        },
+        "components.c15-lmrp.count": {
+          "value": 1,
+          "unit": "count"
+        },
+        "components.c15-lmrp.top_el_m": {
+          "value": -1477.9999999999998,
+          "unit": "m"
+        },
+        "components.c15-lmrp.bottom_el_m": {
+          "value": -1484.9999999999998,
+          "unit": "m"
+        },
+        "components.c16-bop.count": {
+          "value": 1,
+          "unit": "count"
+        },
+        "components.c16-bop.top_el_m": {
+          "value": -1484.9999999999998,
+          "unit": "m"
+        },
+        "components.c16-bop.bottom_el_m": {
+          "value": -1495.9999999999998,
+          "unit": "m"
+        },
+        "components.c17-wellhead.count": {
+          "value": 1,
+          "unit": "count"
+        },
+        "components.c17-wellhead.top_el_m": {
+          "value": -1495.9999999999998,
+          "unit": "m"
+        },
+        "components.c17-wellhead.bottom_el_m": {
+          "value": -1499.9999999999998,
+          "unit": "m"
+        },
+        "components.c18-conductor.count": {
+          "value": 1,
+          "unit": "count"
+        },
+        "components.c18-conductor.top_el_m": {
+          "value": -1497.0,
+          "unit": "m"
+        },
+        "components.c18-conductor.bottom_el_m": {
+          "value": -1545.72,
+          "unit": "m"
+        },
+        "components.c19-conductor.count": {
+          "value": 1,
+          "unit": "count"
+        },
+        "components.c19-conductor.top_el_m": {
+          "value": -1545.72,
+          "unit": "m"
+        },
+        "components.c19-conductor.bottom_el_m": {
+          "value": -1591.44,
+          "unit": "m"
+        },
+        "components.c20-casing.count": {
+          "value": 1,
+          "unit": "count"
+        },
+        "components.c20-casing.top_el_m": {
+          "value": -1500.0,
+          "unit": "m"
+        },
+        "components.c20-casing.bottom_el_m": {
+          "value": -1800.0,
+          "unit": "m"
+        }
+      }
     },
     {
       "id": "D-05",
@@ -1247,7 +1492,8 @@
       "reference_ids": [
         "R-1"
       ],
-      "note": ""
+      "note": "",
+      "values": {}
     },
     {
       "id": "D-06",
@@ -1258,7 +1504,8 @@
       "reference_ids": [
         "R-1"
       ],
-      "note": ""
+      "note": "",
+      "values": {}
     },
     {
       "id": "D-07",
@@ -1269,7 +1516,8 @@
       "reference_ids": [
         "R-1"
       ],
-      "note": ""
+      "note": "",
+      "values": {}
     },
     {
       "id": "D-08",
@@ -1280,7 +1528,8 @@
       "reference_ids": [
         "R-1"
       ],
-      "note": ""
+      "note": "",
+      "values": {}
     },
     {
       "id": "D-09",
@@ -1291,7 +1540,8 @@
       "reference_ids": [
         "R-1"
       ],
-      "note": ""
+      "note": "",
+      "values": {}
     },
     {
       "id": "D-10",
@@ -1300,7 +1550,8 @@
       "unit": "ft",
       "source_class": "owner_decision",
       "reference_ids": [],
-      "note": "Owner decision S03: rating class selected for the upper buoyant section."
+      "note": "Owner decision S03: rating class selected for the upper buoyant section.",
+      "values": {}
     },
     {
       "id": "D-11",
@@ -1311,7 +1562,8 @@
       "reference_ids": [
         "R-1"
       ],
-      "note": ""
+      "note": "",
+      "values": {}
     },
     {
       "id": "D-12",
@@ -1322,7 +1574,73 @@
       "reference_ids": [
         "R-1"
       ],
-      "note": ""
+      "note": "",
+      "values": {
+        "components.c01-diverter.joint_length_m": {
+          "value": 3.0,
+          "unit": "m"
+        },
+        "components.c01-diverter.od_in": {
+          "value": 21.0,
+          "unit": "in"
+        },
+        "components.c01-diverter.wall_thickness_in": {
+          "value": 0.875,
+          "unit": "in"
+        },
+        "components.c02-upper-flex-joint.joint_length_m": {
+          "value": 1.0,
+          "unit": "m"
+        },
+        "components.c03-telescopic-joint-inner.joint_length_m": {
+          "value": 15.172,
+          "unit": "m"
+        },
+        "components.c03-telescopic-joint-inner.od_in": {
+          "value": 46.0,
+          "unit": "in"
+        },
+        "components.c03-telescopic-joint-inner.wall_thickness_in": {
+          "value": 1.0,
+          "unit": "in"
+        },
+        "components.c04-tension-ring.joint_length_m": {
+          "value": 0.0,
+          "unit": "m"
+        },
+        "components.c04-tension-ring.od_in": {
+          "value": 150.0,
+          "unit": "in"
+        },
+        "components.c05-telescopic-joint-outer.joint_length_m": {
+          "value": 18.288,
+          "unit": "m"
+        },
+        "components.c05-telescopic-joint-outer.od_in": {
+          "value": 48.0,
+          "unit": "in"
+        },
+        "components.c05-telescopic-joint-outer.wall_thickness_in": {
+          "value": 1.0,
+          "unit": "in"
+        },
+        "components.c13-other.joint_length_m": {
+          "value": 2.5,
+          "unit": "m"
+        },
+        "components.c13-other.od_in": {
+          "value": 21.0,
+          "unit": "in"
+        },
+        "components.c14-lower-flex-joint.joint_length_m": {
+          "value": 1.0,
+          "unit": "m"
+        },
+        "components.c14-lower-flex-joint.od_in": {
+          "value": 40.0,
+          "unit": "in"
+        }
+      }
     },
     {
       "id": "D-13",
@@ -1333,7 +1651,25 @@
       "reference_ids": [
         "R-1"
       ],
-      "note": ""
+      "note": "",
+      "values": {
+        "components.c06-pup-joint.joint_length_m": {
+          "value": 9.144,
+          "unit": "m"
+        },
+        "components.c07-pup-joint.joint_length_m": {
+          "value": 3.048,
+          "unit": "m"
+        },
+        "components.c12-termination-joint.joint_length_m": {
+          "value": 10.668000000000001,
+          "unit": "m"
+        },
+        "components.c12-termination-joint.wall_thickness_in": {
+          "value": 1.0,
+          "unit": "in"
+        }
+      }
     },
     {
       "id": "D-14",
@@ -1344,7 +1680,37 @@
       "reference_ids": [
         "R-2"
       ],
-      "note": ""
+      "note": "",
+      "values": {
+        "components.c15-lmrp.joint_length_m": {
+          "value": 7.0,
+          "unit": "m"
+        },
+        "components.c15-lmrp.envelope_width_in": {
+          "value": 180.0,
+          "unit": "in"
+        },
+        "components.c16-bop.joint_length_m": {
+          "value": 11.0,
+          "unit": "m"
+        },
+        "components.c16-bop.envelope_width_in": {
+          "value": 200.0,
+          "unit": "in"
+        },
+        "components.c17-wellhead.joint_length_m": {
+          "value": 4.0,
+          "unit": "m"
+        },
+        "components.c17-wellhead.od_in": {
+          "value": 27.0,
+          "unit": "in"
+        },
+        "components.c17-wellhead.wall_thickness_in": {
+          "value": 2.0,
+          "unit": "in"
+        }
+      }
     },
     {
       "id": "D-15",
@@ -1353,7 +1719,45 @@
       "unit": "-",
       "source_class": "owner_decision",
       "reference_ids": [],
-      "note": "Owner decision S04: synthetic well design."
+      "note": "Owner decision S04: synthetic well design.",
+      "values": {
+        "components.c18-conductor.joint_length_m": {
+          "value": 48.72,
+          "unit": "m"
+        },
+        "components.c18-conductor.od_in": {
+          "value": 36.0,
+          "unit": "in"
+        },
+        "components.c18-conductor.wall_thickness_in": {
+          "value": 2.0,
+          "unit": "in"
+        },
+        "components.c19-conductor.joint_length_m": {
+          "value": 45.72,
+          "unit": "m"
+        },
+        "components.c19-conductor.od_in": {
+          "value": 36.0,
+          "unit": "in"
+        },
+        "components.c19-conductor.wall_thickness_in": {
+          "value": 1.5,
+          "unit": "in"
+        },
+        "components.c20-casing.joint_length_m": {
+          "value": 300.0,
+          "unit": "m"
+        },
+        "components.c20-casing.od_in": {
+          "value": 22.0,
+          "unit": "in"
+        },
+        "components.c20-casing.wall_thickness_in": {
+          "value": 1.0,
+          "unit": "in"
+        }
+      }
     },
     {
       "id": "D-16",
@@ -1364,7 +1768,8 @@
       "reference_ids": [
         "R-3"
       ],
-      "note": ""
+      "note": "",
+      "values": {}
     },
     {
       "id": "D-17",
@@ -1375,7 +1780,8 @@
       "reference_ids": [
         "R-3"
       ],
-      "note": ""
+      "note": "",
+      "values": {}
     },
     {
       "id": "D-18",
@@ -1384,7 +1790,8 @@
       "unit": "m",
       "source_class": "assumed",
       "reference_ids": [],
-      "note": "ASSUMED - to be confirmed: no public data for the sheave geometry of this tensioner class."
+      "note": "ASSUMED - to be confirmed: no public data for the sheave geometry of this tensioner class.",
+      "values": {}
     },
     {
       "id": "D-19",
@@ -1395,7 +1802,8 @@
       "reference_ids": [
         "R-4"
       ],
-      "note": "ASSUMED - to be confirmed: no public data for the pivot offset of this flex-joint class; taken at mid-height. R-4 is context for the hydrodynamic model only."
+      "note": "ASSUMED - to be confirmed: no public data for the pivot offset of this flex-joint class; taken at mid-height. R-4 is context for the hydrodynamic model only.",
+      "values": {}
     },
     {
       "id": "D-20",
@@ -1406,7 +1814,8 @@
       "reference_ids": [
         "R-4"
       ],
-      "note": "ASSUMED - to be confirmed: no public data for the pivot offset of this flex-joint class; taken at mid-height. R-4 is context for the hydrodynamic model only."
+      "note": "ASSUMED - to be confirmed: no public data for the pivot offset of this flex-joint class; taken at mid-height. R-4 is context for the hydrodynamic model only.",
+      "values": {}
     },
     {
       "id": "D-21",
@@ -1415,7 +1824,8 @@
       "unit": "m",
       "source_class": "owner_decision",
       "reference_ids": [],
-      "note": "Follows owner decision S02."
+      "note": "Follows owner decision S02.",
+      "values": {}
     },
     {
       "id": "D-22",
@@ -1424,7 +1834,8 @@
       "unit": "m",
       "source_class": "owner_decision",
       "reference_ids": [],
-      "note": "Follows owner decision S02."
+      "note": "Follows owner decision S02.",
+      "values": {}
     },
     {
       "id": "D-23",
@@ -1433,7 +1844,8 @@
       "unit": "m",
       "source_class": "owner_decision",
       "reference_ids": [],
-      "note": "Follows owner decision S02."
+      "note": "Follows owner decision S02.",
+      "values": {}
     },
     {
       "id": "D-24",
@@ -1442,7 +1854,8 @@
       "unit": "m",
       "source_class": "owner_decision",
       "reference_ids": [],
-      "note": "Owner decision S05: synthetic space-out."
+      "note": "Owner decision S05: synthetic space-out.",
+      "values": {}
     },
     {
       "id": "D-25",
@@ -1451,7 +1864,8 @@
       "unit": "m",
       "source_class": "owner_decision",
       "reference_ids": [],
-      "note": "Follows owner decision S05."
+      "note": "Follows owner decision S05.",
+      "values": {}
     },
     {
       "id": "D-26",
@@ -1460,7 +1874,8 @@
       "unit": "m",
       "source_class": "owner_decision",
       "reference_ids": [],
-      "note": "Follows owner decision S05."
+      "note": "Follows owner decision S05.",
+      "values": {}
     },
     {
       "id": "D-27",
@@ -1469,7 +1884,8 @@
       "unit": "m",
       "source_class": "owner_decision",
       "reference_ids": [],
-      "note": "Follows owner decision S05."
+      "note": "Follows owner decision S05.",
+      "values": {}
     },
     {
       "id": "D-28",
@@ -1478,8 +1894,10 @@
       "unit": "m",
       "source_class": "owner_decision",
       "reference_ids": [],
-      "note": "Follows owner decision S05."
+      "note": "Follows owner decision S05.",
+      "values": {}
     }
   ],
+  "as_of": "2026-09-24",
   "schema_version": "riser-stackup-drawing/1"
 }

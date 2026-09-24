@@ -117,7 +117,8 @@ def test_f3_retrieval_after_the_spec_date_fails_validation(spec):
 # -- finding 4: review entries target a real row ------------------------------------------
 
 
-def test_f4_entry_for_a_missing_tensioner_row_fails(spec):
+def test_f4_entry_for_a_missing_tensioner_row_fails(spec, svg):
+    # the drawing was rendered with the tensioner; the spec no longer has one
     spec.tensioner_system = None
     spec.gaps.append(
         {
@@ -128,7 +129,7 @@ def test_f4_entry_for_a_missing_tensioner_row_fails(spec):
         }
     )
     assert any("tensioner_system" in p for p in spec.validate())
-    _assert_reason(reconcile(spec, render(spec)), "d_totals", "tensioner_system")
+    _assert_reason(reconcile(spec, svg), "d_totals", "tensioner_system")
 
 
 def test_f4_drawing_level_entry_has_no_row_mark(spec, svg):

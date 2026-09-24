@@ -26,9 +26,11 @@ Conventions
 
 from __future__ import annotations
 
+import datetime
 import json
 import math
 import re
+import urllib.parse
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Any, Optional, Union
@@ -109,8 +111,31 @@ SOURCE_CLASSES = {"public": "P", "owner_decision": "D", "assumed": "A"}
 DESIGN_DATA_UNITS = ("m", "ft", "in", "count", "-")
 _DD_ID_RE = re.compile(r"D-\d{2,3}")
 _REF_ID_RE = re.compile(r"R-\d{1,3}")
-_URL_RE = re.compile(r"https?://[^\s]+")
 _DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+
+
+def _parse_date(text: Any) -> Optional[datetime.date]:
+    """A real calendar date written YYYY-MM-DD, else ``None``."""
+    if not isinstance(text, str) or not _DATE_RE.fullmatch(text):
+        return None
+    try:
+        return datetime.date.fromisoformat(text)
+    except ValueError:
+        return None
+
+
+def _usable_url(url: Any) -> bool:
+    """http(s) URL whose host name is non-empty and dotted (no fetch)."""
+    if not isinstance(url, str) or any(ch.isspace() for ch in url):
+        return False
+    try:
+        parts = urllib.parse.urlsplit(url)
+        host = parts.hostname
+    except ValueError:
+        return False
+    return parts.scheme in ("http", "https") and bool(host) and "." in host.strip(".")
+
+
 _DECISION_ID_RE = re.compile(r"\b[A-Z]\d{2}\b")
 #: Exact label an assumed item's note starts with (owner decision DD01,
 #: 2026-09-24; plain hyphen), followed by why no public data exists.
@@ -177,12 +202,20 @@ class Reference:
 class DesignDataItem:
     """One row of the report's DESIGN DATA table.
 
-    ``value`` is the stated value in ``unit``; ``None`` marks a per-row item
-    (e.g. "component dimensions, per row") whose values are the component
-    fields themselves. ``source_class`` is ``public`` (cites at least one
-    resolvable reference), ``owner_decision`` (the note names the decision
-    ID) or ``assumed`` (no public data; the note says why; it may cite
-    context references only).
+    ``value`` is the stated value in ``unit``. A composite item (e.g.
+    "surface equipment dimensions") states one value per backed field in
+    ``values``: ``{spec_path: {"value": v, "unit": u}}`` with paths such as
+    ``components.c01-diverter.od_in``, ``datums.water_depth_m``,
+    ``tensioner_system.count`` or ``reference_totals.stackup_length_m``. A
+    field whose item states neither is not verifiable: the reconciler
+    reports it ``not_established`` (review r1 finding 1).
+
+    ``reference_ids`` cites references either as plain ids (the citation
+    takes the reference's own ``role``) or as ``{"id": ..., "role":
+    "source" | "context"}``. ``source_class`` is ``public`` (at least one
+    resolved ``source`` citation), ``owner_decision`` (the note names the
+    decision ID) or ``assumed`` (note starts with the DD01 label and says why
+    there is no public data; context citations only).
     """
 
     id: str
@@ -190,8 +223,20 @@ class DesignDataItem:
     value: Optional[float]
     unit: str
     source_class: str
-    reference_ids: list[str] = field(default_factory=list)
+    reference_ids: list[Any] = field(default_factory=list)
     note: str = ""
+    values: dict[str, dict[str, Any]] = field(default_factory=dict)
+
+    def citations(self, refs: dict[str, "Reference"]) -> list[tuple[Any, Any]]:
+        """``(reference id, role)`` per citation; a plain id takes the reference's role."""
+        out = []
+        for cit in self.reference_ids:
+            if isinstance(cit, dict):
+                out.append((cit.get("id"), cit.get("role")))
+            else:
+                ref = refs.get(cit) if isinstance(cit, str) else None
+                out.append((cit, ref.role if ref is not None else None))
+        return out
 
 
 @dataclass
@@ -341,6 +386,9 @@ class StackupDrawingSpec:
     #: The report's design-data table and its public references (#2158).
     design_data: list[DesignDataItem] = field(default_factory=list)
     references: list[Reference] = field(default_factory=list)
+    #: Date the spec's data stands at (YYYY-MM-DD); no reference may be
+    #: retrieved after it. Optional.
+    as_of: Optional[str] = None
     schema_version: str = SCHEMA_VERSION
 
     # -- nesting ----------------------------------------------------------------
@@ -404,7 +452,14 @@ class StackupDrawingSpec:
         for key in self.reference_totals:
             if key not in REFERENCE_KEYS:
                 problems.append(f"unknown reference_totals key {key!r}")
-        row_keys = set(ids) | set(REVIEW_ROW_KEYS)
+        # a review entry targets a row that exists: a component, the drawn
+        # drill-floor datum, or the tensioner system when there is one;
+        # drawing-level entries use component_id null (review r1 finding 4)
+        row_keys = set(ids)
+        if self.datums.drill_floor_el_m not in (None, NOT_FOUND):
+            row_keys.add("datums")
+        if self.tensioner_system is not None:
+            row_keys.add("tensioner_system")
         for kind in ("data_conflicts", "gaps"):
             for i, entry in enumerate(getattr(self, kind)):
                 if not isinstance(entry, dict):
@@ -413,7 +468,8 @@ class StackupDrawingSpec:
                 cid = entry.get("component_id")
                 if cid is not None and cid not in row_keys:
                     problems.append(
-                        f"{kind}[{i}]: component_id {cid!r} names no component"
+                        f"{kind}[{i}]: component_id {cid!r} names no table row "
+                        "(use null for a drawing-level entry)"
                     )
         problems.extend(self.design_data_problems())
         if problems:
@@ -432,16 +488,30 @@ class StackupDrawingSpec:
         """Register rules: ids, references, source classes and resolution."""
         out: list[str] = []
         refs = {}
+        as_of = _parse_date(self.as_of) if self.as_of is not None else None
+        if self.as_of is not None and as_of is None:
+            out.append(f"as_of {self.as_of!r} is not a calendar date YYYY-MM-DD")
         for r in self.references:
             if not _REF_ID_RE.fullmatch(str(r.id)):
                 out.append(f"reference id {r.id!r} is not R-<n>")
             if r.id in refs:
                 out.append(f"duplicate reference id {r.id!r}")
             refs[r.id] = r
-            if not _URL_RE.fullmatch(str(r.url)):
-                out.append(f"{r.id}: url {r.url!r} is not an http(s) URL")
-            if not _DATE_RE.fullmatch(str(r.retrieved)):
-                out.append(f"{r.id}: retrieved {r.retrieved!r} is not YYYY-MM-DD")
+            # structure only: resolution of an id is not a check that the
+            # reference is reachable, and URLs are never fetched
+            if not _usable_url(r.url):
+                out.append(
+                    f"{r.id}: url {r.url!r} is not an http(s) URL with a host name"
+                )
+            retrieved = _parse_date(r.retrieved)
+            if retrieved is None:
+                out.append(
+                    f"{r.id}: retrieved {r.retrieved!r} is not a calendar date YYYY-MM-DD"
+                )
+            elif as_of is not None and retrieved > as_of:
+                out.append(
+                    f"{r.id}: retrieved {r.retrieved} is after the spec date {self.as_of}"
+                )
             if r.role not in ("source", "context"):
                 out.append(f"{r.id}: role {r.role!r} is not source or context")
             if not str(r.citation).strip():
@@ -471,12 +541,28 @@ class StackupDrawingSpec:
                 out.append(f"{it.id}: value {v!r} is not a finite number or null")
             if not str(it.parameter).strip():
                 out.append(f"{it.id}: empty parameter")
-            for rid in it.reference_ids:
-                if rid not in refs:
+            cites = it.citations(refs)
+            for rid, role in cites:
+                if not isinstance(rid, str) or rid not in refs:
                     out.append(f"{it.id}: reference {rid!r} does not resolve")
+                elif role not in ("source", "context"):
+                    out.append(
+                        f"{it.id}: citation of {rid} has role {role!r}, not source "
+                        "or context"
+                    )
+            resolved = [
+                (rid, role)
+                for rid, role in cites
+                if isinstance(rid, str) and rid in refs
+            ]
             note = str(it.note or "")
-            if it.source_class == "public" and not it.reference_ids:
-                out.append(f"{it.id}: a public item must cite at least one reference")
+            if it.source_class == "public" and not any(
+                role == "source" for _, role in resolved
+            ):
+                out.append(
+                    f"{it.id}: a public item must cite at least one resolved source "
+                    "reference (context citations do not state the value)"
+                )
             elif it.source_class == "assumed":
                 if not note.startswith(ASSUMED_LABEL):
                     out.append(
@@ -488,11 +574,11 @@ class StackupDrawingSpec:
                         f"{it.id}: an assumed item's note must say why "
                         f"('{NO_PUBLIC_DATA}')"
                     )
-                for rid in it.reference_ids:
-                    if rid in refs and refs[rid].role != "context":
+                for rid, role in resolved:
+                    if role != "context":
                         out.append(
                             f"{it.id}: an assumed item may cite context "
-                            f"references only, not {rid}"
+                            f"references only, not {rid} as {role!r}"
                         )
             elif it.source_class == "owner_decision" and not _DECISION_ID_RE.search(
                 note
@@ -500,10 +586,36 @@ class StackupDrawingSpec:
                 out.append(
                     f"{it.id}: an owner_decision item's note must name the decision ID"
                 )
+        backs: dict[str, str] = {}
         for path, prov in self._provenance_entries():
             did = prov.design_data_id
             if did is not None and did not in items:
                 out.append(f"{path}: design_data_id {did!r} does not resolve")
+            elif did is not None:
+                backs[path] = did
+        for it in self.design_data:
+            if not isinstance(it.values, dict):
+                out.append(f"{it.id}: values is not an object")
+                continue
+            for path, entry in it.values.items():
+                if backs.get(path) != it.id:
+                    out.append(
+                        f"{it.id}: values key {path!r} does not back a field of this item"
+                    )
+                ok = (
+                    isinstance(entry, dict)
+                    and set(entry) == {"value", "unit"}
+                    and isinstance(entry["value"], (int, float))
+                    and not isinstance(entry["value"], bool)
+                    and math.isfinite(entry["value"])
+                    and entry["unit"] in DESIGN_DATA_UNITS
+                    and entry["unit"] != "-"
+                )
+                if not ok:
+                    out.append(
+                        f"{it.id}: values[{path!r}] is not {{value: <finite number>, "
+                        f"unit: one of {DESIGN_DATA_UNITS[:-1]}}}"
+                    )
         return out
 
     def _provenance_entries(self):
@@ -515,7 +627,7 @@ class StackupDrawingSpec:
                 yield f"tensioner_system.{key}", p
         for comp in self.components:
             for key, p in comp.provenance.items():
-                yield f"components[{comp.id}].{key}", p
+                yield f"components.{comp.id}.{key}", p
         for key, ref in self.reference_totals.items():
             yield f"reference_totals.{key}", ref
 
@@ -608,6 +720,7 @@ class StackupDrawingSpec:
             gaps=_with_component_id(data.get("gaps", []), ids),
             design_data=[DesignDataItem(**d) for d in data.get("design_data", [])],
             references=[Reference(**r) for r in data.get("references", [])],
+            as_of=data.get("as_of"),
             schema_version=data.get("schema_version", SCHEMA_VERSION),
         )
 

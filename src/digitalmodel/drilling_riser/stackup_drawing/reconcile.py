@@ -49,9 +49,17 @@ pivots off their stated elevation; open conflicts and gaps missing from the
 review list or from their row's warning mark (matched by ``component_id``);
 printed values without a design-data reference, design-data IDs that do not
 resolve, class flags that differ from the register, register values that
-differ from the field they back, archive citations (calculation numbers,
-spreadsheet cells, workbook or report-table wording, provenance source
-strings) anywhere on the drawing; ft axis ticks that are not round feet.
+differ from the field they back, archive citations (calculation numbers in
+any case, quoted or unquoted spreadsheet cell or range references,
+workbook or report-table wording, provenance source strings) anywhere on
+the drawing; ft axis ticks that are not round feet. After review r1 of PR
+#2159: a register item that states no value for a field it backs leaves
+that field ``not_established`` (its class flag is not a verified source);
+a public item must cite a resolved ``source`` reference (context citations
+do not count); reference URLs and retrieval dates are parsed, not pattern
+matched (no URL is fetched: an id that resolves is not a reference that is
+reachable); a review entry must target a row that exists; each review
+entry's classification, whole text and warning-mark position are pinned.
 It is not proof against a deliberately adversarial author: within the
 allowed grammar and frozen stylesheet, content can still be made hard to
 read without being wrong (e.g. geometry the checks do not pin, such as the
@@ -263,6 +271,10 @@ REVIEW_HEADER_BASELINE = 16.0
 REVIEW_PITCH = 15.0
 REVIEW_BOTTOM_PAD = 9.0
 REVIEW_TEXT_X = 26.0
+#: A review entry's warning mark: x from the band's left edge, y below the
+#: baseline of the entry's first line (the triangle's lower-left corner).
+REVIEW_WARN_X = 10.0
+REVIEW_WARN_DY = 1.0
 REVIEW_HEADER = "REVIEW LIST: OPEN DATA CONFLICTS AND GAPS"
 TITLE_GAP = 10.0
 TITLE_BLOCK_HEIGHT = 196.0
@@ -276,9 +288,16 @@ DEFS_SHA256 = "5be3761097837b884410f947978afdec12be2ed91ebafa54fd3f9b362ed09c2f"
 #: Archive citations that must never reach the drawing (owner instruction
 #: 2026-09-24): calculation numbers, spreadsheet sheet!cell references,
 #: spreadsheet files, workbook or report-table wording.
+#: A spreadsheet cell or range: A1, $A$1, A1:C7, $B$4:$D$9.
+_CELL = r"\$?[A-Za-z]{1,3}\$?\d+(?::\$?[A-Za-z]{1,3}\$?\d+)?"
 ARCHIVE_PATTERNS = (
-    (re.compile(r"\bCAL-\d"), "calculation document number (CAL-<n>)"),
-    (re.compile(r"\w!"), "spreadsheet sheet reference (<sheet>!)"),
+    (re.compile(r"\bCAL-\d", re.I), "calculation document number (CAL-<n>)"),
+    # quoted ('Input Data'!B12) or unquoted (Data!$A$1) sheet reference; a
+    # cell must follow the "!", so "Confirm!" or "Note!" is punctuation
+    (
+        re.compile(rf"(?:'[^'\n]+'|\b[A-Za-z_][\w.]*)!{_CELL}(?![\w$])"),
+        "spreadsheet cell reference (<sheet>!<cell>)",
+    ),
     (re.compile(r"\.xls[xmb]?\b", re.I), "spreadsheet file name"),
     (re.compile(r"\bworkbook\b", re.I), "workbook citation"),
     (re.compile(r"\breport table\b", re.I), "report-table citation"),
@@ -1466,9 +1485,17 @@ def _native(key: str) -> tuple[str, float]:
     return "m", 0.005
 
 
-def _design_value_problems(spec: StackupDrawingSpec) -> list[str]:
-    """Register values against every field they back, in the field's unit."""
-    out = []
+def _design_value_problems(spec: StackupDrawingSpec) -> tuple[list[str], list[str]]:
+    """Register values against every field they back, in the field's unit.
+
+    Returns ``(failures, open items)``. Each backed field is compared with
+    the item's per-field ``values[path]`` when given, else with the item's
+    scalar ``value``. A field whose item states neither cannot be verified:
+    it is an open item, so the item's class flag is not taken as a checked
+    source (review r1 finding 1).
+    """
+    out: list[str] = []
+    opens: list[str] = []
     entries = []
     for key, p in spec.datums.provenance.items():
         entries.append((f"datums.{key}", key, getattr(spec.datums, key, None), p))
@@ -1478,33 +1505,44 @@ def _design_value_problems(spec: StackupDrawingSpec) -> list[str]:
             entries.append((f"tensioner_system.{key}", key, getattr(ts, key, None), p))
     for c in spec.components:
         for key, p in c.provenance.items():
-            entries.append((f"{c.id}.{key}", key, getattr(c, key, None), p))
+            entries.append((f"components.{c.id}.{key}", key, getattr(c, key, None), p))
     for key, rv in spec.reference_totals.items():
         entries.append(
             (f"reference_totals.{key}", key.removesuffix("_workbook"), rv.value, rv)
         )
     for path, key, value, p in entries:
         item = spec.design_item(getattr(p, "design_data_id", None))
-        if item is None or item.value is None or not _known(value):
+        if item is None or not _known(value):
             continue
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             continue
+        stated = (item.values or {}).get(path)
+        if isinstance(stated, dict) and "value" in stated:
+            reg_value, reg_unit = stated.get("value"), stated.get("unit")
+        elif item.value is not None:
+            reg_value, reg_unit = item.value, item.unit
+        else:
+            opens.append(
+                f"{path}: {item.id} states no verifiable value for this field "
+                "(no values entry and no scalar value); integrity not established"
+            )
+            continue
         unit, tol = _native(key)
-        if item.unit == unit == "count":
-            got = float(item.value)
-        elif item.unit in _NATIVE and unit in _NATIVE:
-            got = float(item.value) * _NATIVE[item.unit] / _NATIVE[unit]
+        if reg_unit == unit == "count":
+            got = float(reg_value)
+        elif reg_unit in _NATIVE and unit in _NATIVE:
+            got = float(reg_value) * _NATIVE[reg_unit] / _NATIVE[unit]
         else:
             out.append(
-                f"{item.id}: register unit {item.unit!r} cannot state {path} ({unit})"
+                f"{item.id}: register unit {reg_unit!r} cannot state {path} ({unit})"
             )
             continue
         if abs(got - float(value)) > tol + 1e-12:
             out.append(
-                f"{item.id}: register value {item.value:g} {item.unit} disagrees with "
+                f"{item.id}: register value {reg_value:g} {reg_unit} disagrees with "
                 f"{path} = {float(value):.6g} {unit} (tolerance {tol:g} {unit})"
             )
-    return out
+    return out, opens
 
 
 def _archive_problems(spec: StackupDrawingSpec, root: ET.Element) -> list[str]:
@@ -2346,6 +2384,44 @@ def _review_problems(spec, band, open_keys, y0, band_h, lines, fail) -> None:
                 "a_mapping",
                 f"review entry {key} shows {sorted(shown)}, needs {sorted(need)}",
             )
+        # review r1 finding 5: classification, whole text, mark attachment
+        entry_lines = [t for t in lines if t.get("data-review") == key]
+        if not entry_lines:
+            continue
+        first = entry_lines[0]
+        label = "Conflict" if kind == "data_conflicts" else "Gap"
+        spans = list(first.iter(NS + "tspan"))
+        if not spans or (spans[0].text or "") != label or spans[0].attrib:
+            fail(
+                "a_mapping",
+                f"review entry {key}: printed classification "
+                f"{(spans[0].text if spans else '')!r} != {label!r}",
+            )
+        want = f"{label} · " + (
+            "drawing" if e.get("component_id") is None else str(e["component_id"])
+        )
+        if e.get("item") not in (None, ""):
+            want += f" · {e['item']}"
+        if e.get("detail") not in (None, ""):
+            want += f": {e['detail']}"
+        got = " ".join("".join(t.itertext()) for t in entry_lines)
+        if got != want:
+            fail("a_mapping", f"review entry {key}: entry text {got!r} != {want!r}")
+        marks = [
+            el for el in g if el.get("class") == "warn" and el.get("data-review") == key
+        ]
+        y_line = _fnan(first, "y")
+        for m in marks:
+            pts = _points(m)
+            if not pts or not (
+                abs(pts[0][0] - (12.0 + REVIEW_WARN_X)) <= PX_TOL
+                and abs(pts[0][1] - (y_line + REVIEW_WARN_DY)) <= PX_TOL
+            ):
+                fail(
+                    "b_positions",
+                    f"review entry {key}: warning mark is not beside its entry's "
+                    "first line",
+                )
 
 
 def _pivot_problems(spec, c, g, T) -> list[str]:
@@ -2450,8 +2526,11 @@ def _check_design_data(spec, root, texts, rows, role_of, fail, note, open_item):
             fail(k, msg)
         else:
             open_item(k, msg + " (the spec has no design-data register)")
-    for p in _design_value_problems(spec):
+    value_fails, value_opens = _design_value_problems(spec)
+    for p in value_fails:
         fail(k, p)
+    for p in value_opens:
+        open_item(k, p)
     for p in _archive_problems(spec, root):
         fail(k, p)
     note(
