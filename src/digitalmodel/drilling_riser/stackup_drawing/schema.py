@@ -72,8 +72,13 @@ Num = Union[float, str, None]
 #: ``"owner decision <ID> (<YYYY-MM-DD>)"`` (see :data:`OWNER_DECISION_RE`);
 #: ``"assumed"`` marks a value the drawing states but no source establishes.
 BASES = ("workbook", "report table", "derived", "synthetic", "adapter", "assumed")
+#: An owner decision ID: one or two capital letters and two digits (``K05``,
+#: ``DD04``; owner decision G08). Not a hyphenated design-data ID (``D-04``).
+DECISION_ID = r"[A-Z]{1,2}\d{2}"
 #: An owner basis decision, e.g. ``"owner decision K05 (2026-09-24)"`` (#2158).
-OWNER_DECISION_RE = re.compile(r"owner decision [A-Z]\d{2} \(\d{4}-\d{2}-\d{2}\)")
+OWNER_DECISION_RE = re.compile(
+    rf"owner decision {DECISION_ID} \(\d{{4}}-\d{{2}}-\d{{2}}\)", re.ASCII
+)
 
 
 def valid_basis(basis: Any) -> bool:
@@ -148,7 +153,9 @@ def _usable_url(url: Any) -> bool:
         return "." in host.strip(".")
 
 
-_DECISION_ID_RE = re.compile(r"\b[A-Z]\d{2}\b")
+#: A decision ID standing alone in a note: not part of a longer word or
+#: number and not joined by a hyphen, so ``D-04`` or ``DDD04`` do not count.
+_DECISION_ID_RE = re.compile(rf"(?<![\w-]){DECISION_ID}(?![\w-])", re.ASCII)
 #: Exact label an assumed item's note starts with (owner decision DD01,
 #: 2026-09-24; plain hyphen), followed by why no public data exists.
 ASSUMED_LABEL = "ASSUMED - to be confirmed"

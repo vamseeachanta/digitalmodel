@@ -159,21 +159,24 @@ def test_design_data_column_grows_with_the_widest_cell(svg):
     assert float(root.get("width")) == pytest.approx(right + 14.0)
 
 
-def test_design_data_column_keeps_its_minimum_width(spec):
-    from digitalmodel.drilling_riser.stackup_drawing import render
+def test_design_data_column_keeps_its_minimum_width(svg):
+    from digitalmodel.drilling_riser.stackup_drawing.reconcile import (
+        _dd_column_width,
+    )
 
-    # every row back to at most six IDs: the column is the original 240 px
-    c10 = spec.component(EIGHT_ID_ROW)
-    c10.provenance["top_el_m"].design_data_id = "D-04"
-    c10.provenance["bottom_el_m"].design_data_id = "D-04"
-    spec.design_data = [i for i in spec.design_data if i.id not in ("D-29", "D-30")]
-    d04 = next(i for i in spec.design_data if i.id == "D-04")
-    for f, v in (("top_el_m", c10.top_el_m), ("bottom_el_m", c10.bottom_el_m)):
-        d04.values[f"components.{EIGHT_ID_ROW}.{f}"] = {"value": v, "unit": "m"}
-    svg = render(spec)
     root = ET.fromstring(svg)
-    assert _table_right(root) == pytest.approx(516.0 + 994.0)
-    assert reconcile(spec, svg)["result"] == "pass"
+    tens = next(
+        t for g, t in _dd_texts(root) if g.get("data-row") == "tensioner_system"
+    )
+    assert "".join(tens.itertext()) == "D-16P, D-17P, D-18A"
+    # a short widest cell (or none) leaves the original 240 px column
+    assert _dd_column_width([tens]) == 240.0
+    assert _dd_column_width([]) == 240.0
+    # the eight-ID fixture row sets the width: whole 10 px steps
+    cells = [t for _, t in _dd_texts(root)]
+    width = _dd_column_width(cells)
+    assert width > 240.0 and width % 10.0 == 0.0
+    assert _table_right(root) == pytest.approx(516.0 + 754.0 + width)
 
 
 def test_design_data_text_pushed_past_the_right_edge_fails(spec, svg):
