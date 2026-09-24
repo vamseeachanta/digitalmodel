@@ -16,6 +16,31 @@ standard library; it does not import the renderer. Steps:
    ``width``/``height``/``viewBox`` must equal the sheet the zone table and
    the frozen layout constants imply, and every drawn element must lie inside
    it.
+4. Paint and geometry: the top-level group order (by ``data-role``) must be
+   the renderer's; the first painted group is the full-sheet background and
+   nothing decorative follows the drawing; the title block stays below the
+   drawing. Every drawn element carries its role's class and all the
+   attributes the renderer always emits for it; geometric attributes and
+   ``points`` are plain finite SVG numbers (no exponent, NaN or infinity);
+   each path ``d`` matches the full command grammar of its symbol; rects,
+   circles, lines, polylines and paths have positive size, with the frozen
+   symbol sizes (e.g. sheave radius) and the sheaves at the spec's sheave
+   radius.
+
+Threat model: the gate is built to catch generator bugs and drift - a
+changed renderer, a hand-edited drawing or an AI-generated SVG that follows
+the drawing contract - and to state which check a wrong drawing breaks. It
+closes: undrawn, extra or duplicate data; hidden, covered, clipped or moved
+content (transforms, visibility, paint order, viewport, positioning
+attributes); degenerate or empty geometry; wrong, extra, re-signed or
+re-unit-ed printed numbers; NOT_FOUND shown as a value; broken length and
+datum closure; non-finite spec or SVG numbers. It is not proof against a
+deliberately adversarial author: within the allowed grammar and frozen
+stylesheet, content can still be made hard to read without being wrong
+(e.g. callout labels placed over one another or over components, or
+geometry the checks do not pin, such as the horizontal extent of decorative
+and symbol shapes). The rendered pixels are not compared; the checks read
+the SVG, not a raster of it.
 
 Then it checks:
 
@@ -238,38 +263,16 @@ _VALUES: dict[str, dict[str, frozenset[str]]] = {
     "svg": {"role": frozenset({"img"})},
     "g": {"data-clipped": frozenset({"bottom"})},
     "rect": {
-        "class": frozenset(
-            "bg body-thin bonnet buoy-a buoy-b buoy-c chrome cond cond-b connector "
-            "cyl flange frame hidden housing pipe pipe-dark pod post ram rig-floor "
-            "ring rotary soil tb water".split()
-        ),
         "data-part": frozenset({"body", "seam", "symbol"}),
         "rx": frozenset({"2"}),
     },
     "line": {
-        "class": frozenset(
-            "axis break centre cut datum datum-ml datum-msl rig seam tb-line tick "
-            "wire".split()
-        ),
         "data-part": frozenset({"body", "datum-line", "seam"}),
         "data-unit": frozenset({"m", "ft"}),
     },
-    "circle": {
-        "class": frozenset({"ball", "dot", "sheave"}),
-        "data-part": frozenset({"sheave", "symbol"}),
-    },
-    "path": {
-        "class": frozenset({"annular", "datum", "hidden", "valve"}),
-        "data-part": frozenset({"symbol"}),
-    },
-    "polyline": {"class": frozenset({"break", "cut", "leader", "wave"})},
-    "text": {
-        "class": frozenset(
-            "axis-hdr co1 co2 dlbl dlbl2 note-l tb-hdr tb-note tb-sub tb-title "
-            "tb-val tick-lbl".split()
-        ),
-        "text-anchor": frozenset({"start", "end"}),
-    },
+    "circle": {"data-part": frozenset({"sheave", "symbol"})},
+    "path": {"data-part": frozenset({"symbol"})},
+    "text": {"text-anchor": frozenset({"start", "end"})},
     "tspan": {
         "class": frozenset({"na", "rpt"}),
         "data-kind": frozenset({"text"}),
@@ -307,6 +310,123 @@ _POSITIONAL = frozenset(
     }
 )
 _UNIT_JOINERS = (" to ", " × ")
+
+# -- required attribute profiles (r3) --------------------------------------------
+_L = frozenset({"class", "x1", "x2", "y1", "y2"})
+_R = frozenset({"class", "x", "y", "width", "height"})
+_T = frozenset({"class", "x", "y"})
+_C = frozenset({"class", "cx", "cy", "r"})
+_PL = frozenset({"class", "points"})
+_P = frozenset({"data-part"})
+_NONE: frozenset[str] = frozenset()
+
+
+def _classes(names: str, required, optional=_NONE) -> dict:
+    return {n: (frozenset(required), frozenset(optional)) for n in names.split()}
+
+
+_COMPONENT_RECTS = (
+    "buoy-a buoy-b buoy-c pipe pipe-dark chrome body-thin frame housing cond "
+    "cond-b hidden flange ring post connector pod ram"
+)
+#: (group role, element) -> {class: (required attributes, optional attributes)}.
+#: Every drawn element must carry a listed class and exactly its required
+#: attributes (plus any optional ones). A class is valid only in its role.
+_PROFILES: dict[tuple[str, str], dict[str, tuple[frozenset, frozenset]]] = {
+    ("decor", "rect"): _classes("bg water soil rig-floor rotary", _R),
+    ("decor", "polyline"): _classes("wave", _PL),
+    ("decor", "line"): _classes("rig centre", _L),
+    ("axis", "line"): {
+        **_classes("axis break", _L),
+        **_classes("tick", _L | {"data-tick-el-m", "data-unit"}),
+    },
+    ("axis", "text"): {
+        **_classes("axis-hdr", _T, {"text-anchor"}),
+        **_classes("tick-lbl", _T | {"text-anchor"}),
+    },
+    ("datum", "line"): _classes("datum datum-msl datum-ml", _L | _P),
+    ("datum", "path"): _classes("datum", {"class", "d"}),
+    ("datum", "text"): _classes("dlbl dlbl2", _T),
+    ("tensioner", "line"): _classes("rig wire", _L),
+    ("tensioner", "rect"): _classes("cyl", _R | _P),
+    ("tensioner", "circle"): {
+        **_classes("sheave", _C | _P),
+        **_classes("dot", _C),
+    },
+    ("tensioner", "polyline"): _classes("leader", _PL),
+    ("tensioner", "text"): _classes("co1 co2", _T),
+    ("component", "rect"): {
+        **_classes(_COMPONENT_RECTS, _R | _P),
+        **_classes("bonnet", _R | _P | {"rx"}),
+    },
+    ("component", "line"): _classes("seam cut", _L | _P),
+    ("component", "circle"): _classes("ball dot", _C | _P),
+    ("component", "path"): _classes("annular valve hidden", {"class", "d"} | _P),
+    ("break", "polyline"): _classes("break cut", _PL),
+    ("break", "text"): _classes("note-l", _T),
+    ("callout", "polyline"): _classes("leader", _PL),
+    ("callout", "circle"): _classes("dot", _C),
+    ("callout", "text"): _classes("co1 co2", _T | {"data-component-id"}),
+    ("datum-label", "polyline"): _classes("leader", _PL),
+    ("datum-label", "circle"): _classes("dot", _C),
+    ("datum-label", "text"): _classes("co1 co2", _T),
+    ("titleblock", "rect"): _classes("tb", _R),
+    ("titleblock", "line"): _classes("tb-line", _L),
+    ("titleblock", "text"): _classes("tb-title tb-sub tb-hdr tb-val tb-note", _T),
+}
+#: data-part value required per (role, element), where the renderer fixes it.
+_PART_VALUES = {
+    **{
+        ("datum", "line", c): frozenset({"datum-line"})
+        for c in ("datum", "datum-msl", "datum-ml")
+    },
+    ("tensioner", "circle", "sheave"): frozenset({"sheave"}),
+    ("tensioner", "rect", "cyl"): frozenset({"symbol"}),
+}
+
+# -- layer (paint) order (r3) ------------------------------------------------------
+#: Top-level children in paint order, as tokens: element name, or g:<role>
+#: (g:transform for the elevation-transform group). The full-sheet background
+#: is the first painted group; nothing decorative follows the drawing.
+_LAYER_ORDER = re.compile(
+    r"title desc style defs g:decor g:transform g:decor (?:g:datum ){1,3}g:axis "
+    r"(?:g:decor )?(?:g:tensioner )?(?:g:component )*g:break "
+    r"(?:g:(?:datum-label|callout|tensioner) )*g:titleblock "
+)
+
+# -- numbers and paths (r3) ----------------------------------------------------------
+#: Plain SVG number as the renderer writes it: no exponent, NaN or infinity.
+_PLAIN = r"[+-]?(?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+)"  # ASCII digits only
+_PLAIN_RE = re.compile(_PLAIN)
+_PAIR = rf"{_PLAIN},{_PLAIN}"
+_POINTS_RE = re.compile(rf"{_PAIR}(?: {_PAIR})*")
+#: Full ``d`` grammar per (role, class): only the renderer's commands, in its
+#: order, with its argument counts.
+_PATH_GRAMMAR = {
+    ("datum", "datum"): re.compile(rf"M{_PAIR} l{_PAIR} l{_PAIR} z"),
+    ("component", "annular"): re.compile(
+        rf"M{_PAIR} v{_PLAIN} q{_PAIR} {_PAIR} h{_PLAIN} q{_PAIR} {_PAIR} v{_PLAIN} z"
+    ),
+    ("component", "valve"): re.compile(rf"M{_PAIR} L{_PAIR} L{_PAIR} L{_PAIR} z"),
+    ("component", "hidden"): re.compile(rf"M{_PAIR} l{_PAIR} l{_PAIR}"),
+}
+#: Symbol extents the renderer fixes exactly: (width, height) in px.
+_PATH_EXTENT = {("datum", "datum"): (12.0, 9.0), ("component", "valve"): (12.0, 8.0)}
+#: Smallest extent, in px, of any other symbol path, line or polyline.
+MIN_EXTENT_PX = 0.5
+#: Circle radii the renderer fixes, per (role, class).
+_RADII = {
+    ("callout", "dot"): frozenset({1.8}),
+    ("datum-label", "dot"): frozenset({1.8}),
+    ("tensioner", "dot"): frozenset({1.8, 2.0}),
+    ("tensioner", "sheave"): frozenset({7.0}),
+    ("component", "dot"): frozenset({2.2}),
+    ("component", "ball"): frozenset({9.0}),
+}
+#: Geometric attributes that must be plain numbers wherever they appear.
+_GEOM_ATTRS = ("x", "y", "width", "height", "r", "cx", "cy", "x1", "y1", "x2", "y2")
+#: Horizontal sheave offset (px) when the spec gives no sheave radius.
+DEFAULT_SHEAVE_OFFSET_PX = 110.0
 _ZONE_KEYS = ("z_hi", "z_lo", "y_top", "px_per_m")
 
 
@@ -521,6 +641,8 @@ def _grammar_problems(root: ET.Element, parent: dict) -> list[tuple[str, str]]:
                     out.append(
                         ("a_mapping", f"grammar: <{tag}> {attr}={v!r} not allowed")
                     )
+        if ptag == "g":
+            out.extend(_profile_problems(el, par.get("data-role"), tag))
         if tag == "style" and _sha256(el.text or "") != STYLE_SHA256:
             out.append(
                 (
@@ -544,6 +666,110 @@ def _grammar_problems(root: ET.Element, parent: dict) -> list[tuple[str, str]]:
                     ("a_mapping", "grammar: tick metadata outside the axis group")
                 )
     return out
+
+
+def _profile_problems(el: ET.Element, role: Optional[str], tag: str) -> list:
+    """Required attributes, role-specific class, plain numbers, path grammar."""
+    out: list[tuple[str, str]] = []
+    where = f"<{tag}> in <g data-role={role}>"
+    classes = _PROFILES.get((role, tag))
+    if classes is None:
+        return [("a_mapping", f"grammar: {where} is not an element this role draws")]
+    cls = el.get("class")
+    if cls is None:
+        return [("a_mapping", f"grammar: {where} lacks required attribute 'class'")]
+    if cls not in classes:
+        return [
+            (
+                "a_mapping",
+                f"grammar: class '{cls}' not allowed on <{tag}> in <g data-role={role}>",
+            )
+        ]
+    required, optional = classes[cls]
+    for a in sorted(required - set(el.attrib)):
+        out.append(
+            (
+                "a_mapping",
+                f"grammar: {where} class '{cls}' lacks required attribute '{a}'",
+            )
+        )
+    for a in sorted(set(el.attrib) - required - optional):
+        check = "b_positions" if _local(a) in _POSITIONAL else "a_mapping"
+        out.append(
+            (
+                check,
+                f"grammar: attribute '{_local(a)}' not allowed on <{tag} class={cls}>",
+            )
+        )
+    part = _PART_VALUES.get((role, tag, cls))
+    if part is not None and el.get("data-part") not in part:
+        out.append(
+            (
+                "a_mapping",
+                f"grammar: {where} data-part={el.get('data-part')!r} not allowed",
+            )
+        )
+    for a in _GEOM_ATTRS:
+        v = el.get(a)
+        if v is not None and not _PLAIN_RE.fullmatch(v):
+            out.append(
+                (
+                    "b_positions",
+                    f"numeric: <{tag}> {a}={v!r} is not a plain finite SVG number",
+                )
+            )
+    if tag == "polyline" and not _POINTS_RE.fullmatch(el.get("points") or ""):
+        out.append(
+            (
+                "b_positions",
+                f"numeric: <polyline> points={el.get('points')!r} is not a plain finite SVG number list",
+            )
+        )
+    if tag == "path":
+        grammar = _PATH_GRAMMAR.get((role, cls))
+        d = el.get("d") or ""
+        if grammar is None or not grammar.fullmatch(d):
+            out.append(
+                (
+                    "b_positions",
+                    f"path d {d!r} does not match the <{cls}> symbol grammar",
+                )
+            )
+    return out
+
+
+def _path_points(d: str) -> list[tuple[float, float]]:
+    """Every vertex and control point of a grammar-checked path."""
+    tokens = re.findall(rf"[MLlvhqz]|{_PLAIN}", d)
+    pts: list[tuple[float, float]] = []
+    x = y = 0.0
+    i = 0
+    cmd = ""
+    while i < len(tokens):
+        tok = tokens[i]
+        if tok in "MLlvhqz":
+            cmd = tok
+            i += 1
+            if cmd == "z":
+                continue
+        nums = []
+        take = {"M": 2, "L": 2, "l": 2, "v": 1, "h": 1, "q": 4}[cmd]
+        for _ in range(take):
+            nums.append(float(tokens[i]))
+            i += 1
+        if cmd in "ML":
+            x, y = nums
+        elif cmd == "l":
+            x, y = x + nums[0], y + nums[1]
+        elif cmd == "v":
+            y += nums[0]
+        elif cmd == "h":
+            x += nums[0]
+        elif cmd == "q":
+            pts.append((x + nums[0], y + nums[1]))
+            x, y = x + nums[2], y + nums[3]
+        pts.append((x, y))
+    return pts
 
 
 def _tspan_problems(sp: ET.Element, parent: dict) -> list[tuple[str, str]]:
@@ -582,35 +808,44 @@ def _tspan_problems(sp: ET.Element, parent: dict) -> list[tuple[str, str]]:
     return []
 
 
+def _plain(v: Optional[str]) -> float:
+    """Float of a plain SVG number; ValueError for anything else (NaN, 1e3)."""
+    if v is None or not _PLAIN_RE.fullmatch(v):
+        raise ValueError(v)
+    return float(v)
+
+
 def _points(el: ET.Element) -> Optional[list[tuple[float, float]]]:
     """Extreme points of a drawn element, or None when unreadable."""
     tag = _local(el.tag)
+
+    def f(name: str) -> float:
+        return _plain(el.get(name))
+
     try:
         if tag == "rect":
-            x, y = float(el.get("x", "0")), float(el.get("y", "0"))
-            w, h = float(el.get("width")), float(el.get("height"))
+            x, y, w, h = f("x"), f("y"), f("width"), f("height")
             pts = [(x, y), (x + w, y + h)]
         elif tag == "line":
-            pts = [
-                (float(el.get("x1")), float(el.get("y1"))),
-                (float(el.get("x2")), float(el.get("y2"))),
-            ]
+            pts = [(f("x1"), f("y1")), (f("x2"), f("y2"))]
         elif tag == "circle":
-            cx, cy, r = float(el.get("cx")), float(el.get("cy")), float(el.get("r"))
+            cx, cy, r = f("cx"), f("cy"), f("r")
             pts = [(cx - r, cy - r), (cx + r, cy + r)]
         elif tag == "polyline":
-            pts = [
-                tuple(float(v) for v in p.split(","))
-                for p in (el.get("points") or "").split()
-            ]
+            points = el.get("points") or ""
+            if not _POINTS_RE.fullmatch(points):
+                return None
+            pts = [tuple(float(v) for v in p.split(",")) for p in points.split()]
         elif tag == "path":
-            m = re.match(r"\s*M\s*([-\d.]+)\s*,\s*([-\d.]+)", el.get("d") or "")
-            pts = [(float(m.group(1)), float(m.group(2)))] if m else []
+            d = el.get("d") or ""
+            if not any(g.fullmatch(d) for g in _PATH_GRAMMAR.values()):
+                return None
+            pts = _path_points(d)
         elif tag == "text":
-            pts = [(float(el.get("x")), float(el.get("y")))]
+            pts = [(f("x"), f("y"))]
         else:
             return []
-    except (TypeError, ValueError, AttributeError):
+    except (TypeError, ValueError):
         return None
     if not pts or any(len(p) != 2 or not all(map(math.isfinite, p)) for p in pts):
         return None
@@ -621,15 +856,21 @@ def _viewport_problems(root: ET.Element, top_groups, y_bottom: float) -> list[st
     """Root viewport pinned to the layout; every drawn element inside it."""
     out = []
     w, h = SHEET_WIDTH, y_bottom + SHEET_BELOW_DRAWING
-    try:
-        vb = [float(v) for v in (root.get("viewBox") or "").split()]
-    except ValueError:
-        vb = []
-    if len(vb) != 4 or any(abs(a - b) > 0.01 for a, b in zip(vb, (0.0, 0.0, w, h))):
-        out.append(f"root viewBox {root.get('viewBox')!r} != '0 0 {w:g} {h:.2f}'")
+    raw = root.get("viewBox") or ""
+    parts = raw.split(" ")
+    if len(parts) != 4 or not all(_PLAIN_RE.fullmatch(p) for p in parts):
+        out.append(f"root viewBox {raw!r} is not four plain finite SVG numbers")
+    elif any(abs(float(a) - b) > 0.01 for a, b in zip(parts, (0.0, 0.0, w, h))):
+        out.append(f"root viewBox {raw!r} != '0 0 {w:g} {h:.2f}'")
     for name, exp in (("width", w), ("height", h)):
-        v = _float_attr(root, name)
-        if v is None or abs(v - exp) > 0.01:
+        try:
+            v = _plain(root.get(name))
+        except ValueError:
+            out.append(
+                f"root {name} {root.get(name)!r} is not a plain finite SVG number"
+            )
+            continue
+        if abs(v - exp) > 0.01:
             out.append(f"root {name} {root.get(name)!r} != {exp:.2f}")
     for g in top_groups:
         for el in g.iter():
@@ -645,6 +886,121 @@ def _viewport_problems(root: ET.Element, top_groups, y_bottom: float) -> list[st
                         f"<{_local(el.tag)}> at ({x:.2f}, {y:.2f}) outside the viewBox"
                     )
                     break
+    return out
+
+
+def _layer_problems(root: ET.Element, top_groups, y_bottom: float) -> list[str]:
+    """Paint order frozen; the background is first and covers the sheet."""
+    out = []
+    tokens = []
+    for c in root:
+        tag = _local(c.tag)
+        if tag != "g":
+            tokens.append(tag)
+        elif c.get("id") == "elevation-transform":
+            tokens.append("g:transform")
+        else:
+            tokens.append(f"g:{c.get('data-role')}")
+    if not _LAYER_ORDER.fullmatch(" ".join(tokens) + " "):
+        out.append(
+            "layer order: top-level paint order "
+            f"{' '.join(t for i, t in enumerate(tokens) if i == 0 or t != tokens[i - 1])!r}"
+            " is not the renderer's"
+        )
+    decor = [g for g in top_groups if g.get("data-role") == "decor"]
+    if decor:
+        first = list(decor[0])
+        w, h = SHEET_WIDTH, y_bottom + SHEET_BELOW_DRAWING
+        ok = (
+            len(first) == 1
+            and _local(first[0].tag) == "rect"
+            and first[0].get("class") == "bg"
+            and _points(first[0]) is not None
+            and all(
+                abs(a - b) <= 0.01
+                for a, b in zip(
+                    (_fnan(first[0], k) for k in ("x", "y", "width", "height")),
+                    (0.0, 0.0, w, h),
+                )
+            )
+        )
+        if not ok:
+            out.append(
+                "layer order: the first decor group is not the full-sheet background"
+            )
+        for g in decor[1:]:
+            if any(el.get("class") == "bg" for el in g):
+                out.append(
+                    "layer order: a background rect outside the first decor group"
+                )
+    return out
+
+
+def _geometry_problems(top_groups, y_bottom: float, tf: ET.Element, spec) -> list[str]:
+    """Positive, finite, frozen-size geometry; title block below the drawing."""
+    out = []
+    for g in top_groups:
+        role = g.get("data-role")
+        for el in g:
+            tag, cls = _local(el.tag), el.get("class")
+            where = f"<{tag} class={cls}> in <g data-role={role}>"
+            pts = _points(el)
+            if pts is None:
+                continue  # reported as unreadable by the viewport check
+            if tag == "rect":
+                if not (_fnan(el, "width") > 0 and _fnan(el, "height") > 0):
+                    out.append(f"{where}: width/height not positive")
+            elif tag == "circle":
+                r = _fnan(el, "r")
+                radii = _RADII.get((role, cls))
+                if not r > 0:
+                    out.append(f"{where}: radius {el.get('r')!r} not positive")
+                elif radii is not None and not any(abs(r - v) <= 1e-9 for v in radii):
+                    out.append(
+                        f"{where}: radius {r:g} is not the symbol's {sorted(radii)}"
+                    )
+            elif tag in ("line", "polyline"):
+                length = sum(math.dist(a, b) for a, b in zip(pts, pts[1:]))
+                if len(pts) < 2 or not length >= MIN_EXTENT_PX:
+                    out.append(f"{where}: length {length:.3f} px below {MIN_EXTENT_PX}")
+            elif tag == "path":
+                xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+                ext = (max(xs) - min(xs), max(ys) - min(ys))
+                fixed = _PATH_EXTENT.get((role, cls))
+                if fixed is not None and any(
+                    abs(a - b) > 0.02 for a, b in zip(ext, fixed)
+                ):
+                    out.append(
+                        f"{where}: path d extent {ext} is not the symbol's {fixed}"
+                    )
+                elif fixed is None and not min(ext) >= MIN_EXTENT_PX:
+                    out.append(f"{where}: path d extent {ext} below {MIN_EXTENT_PX} px")
+            if role == "titleblock" and min(p[1] for p in pts) < y_bottom - 1e-6:
+                out.append(f"title block: {where} reaches above the drawing band")
+    # sheaves: frozen symbol radius (above) at the spec's sheave radius
+    ts = spec.tensioner_system
+    cx0, px_per_in = _float_attr(tf, "data-center-x"), _float_attr(tf, "data-px-per-in")
+    sheaves = [
+        el
+        for g in top_groups
+        if g.get("data-role") == "tensioner"
+        for el in g
+        if el.get("class") == "sheave"
+    ]
+    if sheaves and ts is not None and cx0 is not None and px_per_in is not None:
+        off = (
+            float(ts.sheave_radius_m) / 0.0254 * px_per_in
+            if _known(ts.sheave_radius_m)
+            else DEFAULT_SHEAVE_OFFSET_PX
+        )
+        xs = sorted(_fnan(el, "cx") for el in sheaves)
+        if len(xs) != 2 or not (
+            abs(xs[0] - (cx0 - off)) <= PX_TOL and abs(xs[1] - (cx0 + off)) <= PX_TOL
+        ):
+            out.append(
+                f"sheave radius: sheaves at x={xs} are not at the centre "
+                f"{cx0:g} +- {off:.2f} px the spec sheave radius implies"
+            )
     return out
 
 
@@ -836,6 +1192,10 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
     T = _T(zones)
     z_min = zones[-1]["z_lo"]
     for msg in _viewport_problems(root, top_groups, y_bottom):
+        fail("b_positions", msg)
+    for msg in _layer_problems(root, top_groups, y_bottom):
+        fail("a_mapping", msg)
+    for msg in _geometry_problems(top_groups, y_bottom, tf, spec):
         fail("b_positions", msg)
     if root.get("aria-label") != spec.title_block.title:
         fail("a_mapping", "root aria-label differs from the spec title")
