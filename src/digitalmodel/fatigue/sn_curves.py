@@ -3,7 +3,9 @@ DNV-RP-C203 (2021) S-N Curve Library
 
 Provides all detail categories from DNV-RP-C203 Table 2-1 (in-air),
 with environment adjustments for seawater with cathodic protection
-and free corrosion per Table 2-2.
+(Table 2-2) and free corrosion (Table 2-4). Table IDs are those of the
+2021 edition; see :mod:`digitalmodel.fatigue.c203_editions` for the
+2011 layout (free corrosion in Table 2-3).
 
 Uses pyLife's WoehlerCurve for cycle calculations.
 """
@@ -59,7 +61,7 @@ _SEAWATER_CP_ADJUSTMENTS = {
     "W3": {"log_a1": 10.570, "log_a2": 13.617},
 }
 
-# ── Free Corrosion (DNV-RP-C203 Table 2-2) ────────────────────────
+# ── Free Corrosion (DNV-RP-C203 Table 2-4, 2021 edition) ──────────
 # Single slope (no endurance limit): k_2 = k_1, log_a2 = log_a1
 _FREE_CORROSION_LOG_A = {
     "B1": 14.917, "B2": 14.685,

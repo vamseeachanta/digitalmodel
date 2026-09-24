@@ -130,7 +130,9 @@ def test_weld_classification_rules_cite_appendix_a_or_tubular_table():
 
 def test_weld_classification_result_table_label():
     result = weld_classification.classify_weld_detail(
-        weld_classification.WeldDetail(description="fillet weld toe", joint_type="fillet")
+        weld_classification.WeldDetail(
+            description="fillet weld toe", joint_type="fillet"
+        )
     )
     assert result.dnv_table.startswith("Appendix A")
 
@@ -143,13 +145,17 @@ def test_design_code_report_cites_edition_tables():
 
     refs = " | ".join(_SUPPORTED_STANDARDS["DNV-RP-C203"]["references"])
     assert "2016" not in refs
-    assert "Table 2-1 / Table 2-2 / Table 2-4 (air / seawater+CP / free corrosion)" in refs
+    assert (
+        "Table 2-1 / Table 2-2 / Table 2-4 (air / seawater+CP / free corrosion)" in refs
+    )
     assert "Table 2-1 to Table 2-3" not in refs
 
 
 # -- source-level scans --------------------------------------------------------
 
-_FREE_CORR_2_2 = re.compile(r"free[ -_]?corrosion.*Table 2-2|Table 2-2.*free[ -_]?corrosion", re.I)
+_FREE_CORR_2_2 = re.compile(
+    r"free[ -_]?corrosion.*Table 2-2|Table 2-2.*free[ -_]?corrosion", re.I
+)
 _C203_2016 = re.compile(r"C203\s*\(2016\)")
 
 
@@ -165,7 +171,14 @@ def test_no_free_corrosion_cited_as_table_2_2_in_fatigue_sources():
         for i, line in enumerate(lines, 1):
             # a comment heading followed by the body on the next line
             window = line + " " + (lines[i] if i < len(lines) else "")
-            if "Table 2-2" in line and _FREE_CORR_2_2.search(window):
+            # a line may name Table 2-2 (seawater with CP) next to the correct
+            # free-corrosion table; only a free-corrosion mention without it is wrong
+            names_fc_table = "Table 2-4" in window or "Table 2-3" in window
+            if (
+                "Table 2-2" in line
+                and _FREE_CORR_2_2.search(window)
+                and not names_fc_table
+            ):
                 hits.append(f"{path.relative_to(SRC)}:{i}")
     assert not hits, hits
 

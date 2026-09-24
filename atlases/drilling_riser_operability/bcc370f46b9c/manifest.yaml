@@ -1,4 +1,4 @@
-atlas_id: 229487678a1a
+atlas_id: bcc370f46b9c
 basename: drilling_riser_operability
 physics: linear
 response: governing_utilisation
@@ -45,8 +45,8 @@ provenance:
   - id: API-RP-16Q
     edition: '1993'
   - id: API-STD-2RD
-    edition: 3e-2025
-  content_fingerprint: 229487678a1a345119e3b2ca272b8a4862579001947c80ed977c8aeedd00a0bb
+    edition: 2e-2013
+  content_fingerprint: bcc370f46b9c290e34554f6ddf2b82c0e147f0da2e8f41ccfc6d2d401da9e79e
   tier: analytical-static
   disclaimer: "Static analytical operability surface (dynamic amplification, drift-off\
     \ and VIV are the solver tier). Screening estimate \u2014 a full on-demand run\

@@ -60,7 +60,7 @@ def generate_riser_example():
     )
 
     checks = DesignCheckData(
-        code="DNV-OS-F201 (2010) + DNV-RP-C203 (2016)",
+        code="DNV-OS-F201 (2010) + DNV-RP-C203",
         checks=[
             UtilizationData(name="Combined Loading §5.4.2.2",
                             value=0.82, allowable=1.0, uc=0.82, pass_fail=True,

@@ -23,7 +23,9 @@ from digitalmodel.riser_database import getters
 REPO = Path(__file__).resolve().parents[2]
 CROSSWALK = REPO / "data" / "riser_database" / "standards_crosswalk.csv"
 SOURCES = REPO / "scripts" / "riser_database" / "sources.yml"
-OPERABILITY = REPO / "src" / "digitalmodel" / "drilling_riser" / "operability_configs.yml"
+OPERABILITY = (
+    REPO / "src" / "digitalmodel" / "drilling_riser" / "operability_configs.yml"
+)
 
 API_STD_2RD_REVISION = "2e-2013"
 C203_REVISION = "2021"
@@ -48,7 +50,10 @@ def test_crosswalk_2rd_is_second_edition_2013():
 
 
 def test_sources_2rd_is_second_edition_2013():
-    assert str(_sources_crosswalk()["api-std-2rd"]["registry_revision"]) == API_STD_2RD_REVISION
+    assert (
+        str(_sources_crosswalk()["api-std-2rd"]["registry_revision"])
+        == API_STD_2RD_REVISION
+    )
 
 
 def test_getter_template_2rd_is_second_edition_2013():
@@ -76,7 +81,9 @@ def test_no_third_edition_2rd_label_left():
     hits = []
     roots = [REPO / "src", REPO / "data" / "riser_database", SOURCES]
     for root in roots:
-        files = [root] if root.is_file() else [p for p in root.rglob("*") if p.is_file()]
+        files = (
+            [root] if root.is_file() else [p for p in root.rglob("*") if p.is_file()]
+        )
         for path in files:
             if path.suffix not in {".py", ".yml", ".yaml", ".csv", ".md"}:
                 continue

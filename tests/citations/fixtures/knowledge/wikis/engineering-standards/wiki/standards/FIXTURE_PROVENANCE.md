@@ -47,6 +47,9 @@ formulas, or licensed source material.
   canonical SHA at vendoring time: `acdbc9f842b59340d384392941fa0c3177af90b2`
 - `wikis/engineering-standards/wiki/standards/dnv-rp-c203.md` —
   canonical SHA at vendoring time: `23f3251def0dac360eb6b6b80e585fbcb1608efe`
+  (#2161: fixture revision re-pinned from `2024-10` to `2021`, the edition
+  whose S-N tables the code implements; the canonical page needs the
+  matching re-pin in a paired llm-wiki change)
 
 ## Vendored copies
 
@@ -114,6 +117,9 @@ or licensed source material.
   canonical SHA at vendoring time: `74aeb6f3e47806c377fc614b152d80c31b61bb5e`
   (revision `3e-2025`; the page was already citation-ready — no paired wiki PR
   was needed for #1281a).
+- #2161 (owner decision C04): the fixture revision is re-pinned to `2e-2013`
+  (API STD 2RD 2nd Edition, 2013). The canonical page needs the matching
+  re-pin in a paired llm-wiki change.
 
 ## Vendored copy
 

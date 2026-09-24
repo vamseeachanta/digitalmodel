@@ -1,5 +1,5 @@
 source_type: standard
-source_description: "DNV-RP-C203 (2016) S-N curve parameters and power-law calculations extracted from test_sn_curves.py"
+source_description: "DNV-RP-C203 (edition not established) S-N curve parameters and power-law calculations extracted from test_sn_curves.py"
 extracted_date: "2026-03-16"
 legal_scan_passed: true
 category: "fatigue"
@@ -127,7 +127,7 @@ assumptions:
   - "Cutoff cycles cap N at the specified maximum"
   - "Bilinear curve uses slope m1 above transition, m2 below"
 references:
-  - "DNV-RP-C203 (2016) Table 2-1 — S-N curves in air"
+  - "DNV-RP-C203 (edition not established) Table 2-1 — S-N curves in air"
   - "API RP 2A-WSD (2014) Table 5.5-2 — Fatigue S-N curves"
   - "BS 7608:2014 — Fatigue design and assessment of steel structures"
   - "AWS D1.1/D1.1M:2015 — Structural Welding Code"

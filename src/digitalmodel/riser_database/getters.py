@@ -49,10 +49,12 @@ _DNV_OS_F201_CITATION_TEMPLATE: Final = {
     "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-os-f201.md",
 }
 
+#: DNV-RP-C203, 2021 edition: the edition whose S-N tables
+#: digitalmodel.fatigue implements (fatigue.c203_editions).
 _DNV_RP_C203_CITATION_TEMPLATE: Final = {
     "code_id": "dnv-rp-c203",
     "publisher": "DNV",
-    "revision": "2024-10",
+    "revision": "2021",
     "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-c203.md",
 }
 
@@ -66,20 +68,21 @@ _API_RP_16Q_CITATION_TEMPLATE: Final = {
     "wiki_path": "wikis/engineering-standards/wiki/standards/api-rp-16q.md",
 }
 
-#: API STD 2RD, 3rd Edition 2025 (formerly API RP 2RD; API reclassified it as
+#: API STD 2RD, 2nd Edition 2013 (formerly API RP 2RD; API reclassified it as
 #: STD 2RD). Home of the von Mises equivalent-stress design factor.
 _API_STD_2RD_CITATION_TEMPLATE: Final = {
     "code_id": "api-std-2rd",
     "publisher": "API",
-    "revision": "3e-2025",
+    "revision": "2e-2013",
     "wiki_path": "wikis/engineering-standards/wiki/standards/api-std-2rd.md",
 }
 
+#: AMJIG deepwater drilling riser integrity management guideline, Rev 2 (2000).
 _AMJIG_CITATION_TEMPLATE: Final = {
-    "code_id": "amjig-1997",
+    "code_id": "amjig-2000",
     "publisher": "AMJIG",
     "revision": "Rev 2 (2000)",
-    "wiki_path": "wikis/engineering-standards/wiki/standards/amjig-1997.md",
+    "wiki_path": "wikis/engineering-standards/wiki/standards/amjig-2000.md",
 }
 
 _AMJIG_CRITERIA_BLOCK = "amjig_envelope_criteria_v1"
