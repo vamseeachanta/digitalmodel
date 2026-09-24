@@ -123,9 +123,9 @@ COUNTED_TYPES = {
     CT.CASING,
 }
 #: A printed number: optional sign, comma-grouped integer part, fraction.
-NUM_FULL = re.compile(r"([+\-−]?)(\d{1,3}(?:,\d{3})*)(?:\.(\d+))?")
+NUM_FULL = re.compile(r"([+\-−]?)(\d{1,3}(?:,\d{3})*)(?:\.(\d+))?", re.ASCII)
 #: A number as it reads in the rendered string, with any sign before it.
-RENDERED_NUM = re.compile(r"(?<![\d.,])([+\-−]\s*)?\d[\d,]*(?:\.\d+)?")
+RENDERED_NUM = re.compile(r"(?<![\d.,])([+\-−]\s*)?\d[\d,]*(?:\.\d+)?", re.ASCII)
 
 # -- frozen SVG grammar -----------------------------------------------------------
 # The closed set of elements and attributes the renderer emits (derived from
@@ -773,7 +773,12 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
             "grammar: DOCTYPE, entity, comment, CDATA or processing instruction"
         )
         return _finish(spec, res)
-    root = ET.fromstring(svg_text)
+    try:
+        root = ET.fromstring(svg_text)
+    except ET.ParseError as exc:
+        res["a_mapping"]["status"] = "fail"
+        res["a_mapping"]["failures"].append(f"SVG is not well-formed XML: {exc}")
+        return _finish(spec, res)
     parent = {c: p for p in root.iter() for c in p}
     sd = spec.to_dict()
     comps = {c.id: c for c in spec.components}
@@ -801,6 +806,13 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
     # closed grammar: only what the renderer emits ------------------------------
     for check, msg in _grammar_problems(root, parent):
         fail(check, msg)
+    # digits must be ASCII: Python parses other Unicode decimal digits (e.g. full-width)
+    # as numbers, which would let a non-canonical rendering pass the number checks.
+    for t in root.iter(NS + "text"):
+        rendered = "".join(t.itertext())
+        odd = sorted({ch for ch in rendered if ch.isdecimal() and not ch.isascii()})
+        if odd:
+            fail("c_numbers", f"non-ASCII digit {''.join(odd)!r} in {rendered!r}")
     top_groups = [g for g in root if g.tag == NS + "g"]
     texts = [t for g in top_groups for t in g.iter(NS + "text")]
 

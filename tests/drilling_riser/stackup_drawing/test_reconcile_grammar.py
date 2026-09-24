@@ -222,6 +222,14 @@ def test_non_ascii_digits_outside_fields_are_rejected(spec, svg):
     _assert_reason(reconcile(spec, tampered), "c_numbers", "non-ASCII digit")
 
 
+def test_malformed_svg_returns_a_fail_report(spec, svg):
+    report = reconcile(spec, svg + "<g>")
+    assert report["result"] == "fail"
+    assert any(
+        "not well-formed" in f for f in report["checks"]["a_mapping"]["failures"]
+    )
+
+
 def test_document_reference_with_digits_is_verbatim_text(spec):
     from digitalmodel.drilling_riser.stackup_drawing import render
 
