@@ -1,27 +1,45 @@
 """Reconcile a rendered riser stack-up SVG against its spec (#2152).
 
 ``reconcile(spec, svg_text) -> dict`` depends only on :mod:`.schema` and the
-standard library. It reconstructs the elevation transform from the zone table
-embedded in the SVG (it does not import the renderer), validates that table
-before any arithmetic, then checks:
+standard library; it does not import the renderer. Steps:
 
-  (a) mapping   - every spec component drawn exactly once and visibly; no
-                  orphan groups; group data-* attributes equal the spec; every
-                  drawn component owns exactly one callout carrying its
-                  required fields; no hidden elements or hiding CSS rules
-  (b) positions - no ``transform`` anywhere; the zone table is finite,
+1. ``spec.validate()``: every numeric spec value finite (or NOT_FOUND/None),
+   before any arithmetic. Problems fail (d) as "spec invalid: ...".
+2. Closed grammar (allowlist): only the elements, parent/child placements,
+   attributes, attribute values and tspan attribute profiles the renderer
+   emits are accepted; the single ``<style>`` and ``<defs>`` must hash to the
+   frozen canonical ones; no DOCTYPE, comment, CDATA or processing
+   instruction. Only top-level ``<g>`` groups count as rendered instances.
+   Violations are reported as "grammar: ..." in (a), in (b) for positioning
+   attributes, and in (c) for tspan profiles.
+3. The zone table embedded in the SVG is validated, then the root
+   ``width``/``height``/``viewBox`` must equal the sheet the zone table and
+   the frozen layout constants imply, and every drawn element must lie inside
+   it.
+
+Then it checks:
+
+  (a) mapping   - every spec component drawn exactly once; no orphan groups;
+                  group data-* attributes equal the spec; every drawn
+                  component owns exactly one callout carrying its required
+                  fields
+  (b) positions - the zone table is finite,
                   positive, contiguous and matches the drawn axis and break
                   marks; each component's body pieces equal the expected
                   per-zone intervals within 0.5 px (no missing, extra,
                   duplicate, gap or overlap); joint seams sit at
                   T(top - i*L); datum lines, sheaves and axis ticks sit at
                   T(z); every required datum is drawn; each callout leader
-                  runs from its label to its component's body
+                  runs from its label to its component's body and each
+                  further callout line sits directly under the first
   (c) numbers   - every text holds only flat ``<tspan>`` children with no
-                  direct or tail text; every printed number is traceable
-                  (data-field), is the complete tspan text in the permitted
-                  format, uses the precision fixed by its field type and
-                  equals the spec value at that precision
+                  direct or tail text; the text is read as rendered (all
+                  tspans concatenated): every number token, with any sign in
+                  front of it, lies wholly inside one field tspan and equals
+                  its whole text; no stray digits; every m/ft/in field is
+                  followed by its own unit (or " to "/" × " and a field of the
+                  same unit); each field uses the precision fixed by its
+                  field type and equals the spec value at that precision
   (d) totals    - per component, count x joint length equals the elevation
                   span; lengths sum to the stack-up length; elevations are
                   continuous; water depth and air gap equal the datum
@@ -35,8 +53,9 @@ before any arithmetic, then checks:
 Result: ``"fail"`` if any check fails; else ``"pass_with_open_items"`` if any
 check is ``"not_established"``; else ``"pass"``.
 
-Out of scope: CSS other than the hiding rules above (e.g. a stylesheet that
-repositions text) is not interpreted.
+Changing the renderer's emitted grammar, stylesheet or definitions is a
+deliberate act: update the frozen constants below (``canonical_digests``
+recomputes the two hashes) together with the golden snapshot.
 
 CLI::
 
@@ -49,6 +68,7 @@ exits 1 on failure (0 for pass and pass_with_open_items).
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import re
@@ -104,11 +124,189 @@ COUNTED_TYPES = {
 }
 #: A printed number: optional sign, comma-grouped integer part, fraction.
 NUM_FULL = re.compile(r"([+\-−]?)(\d{1,3}(?:,\d{3})*)(?:\.(\d+))?")
-_HIDING_CSS = re.compile(
-    r"display\s*:\s*none|visibility\s*:\s*(?:hidden|collapse)"
-    r"|(?<![\w-])opacity\s*:\s*0*(?:\.0*)?\s*(?:[;}!]|$)|transform\s*:",
-    re.IGNORECASE,
+#: A number as it reads in the rendered string, with any sign before it.
+RENDERED_NUM = re.compile(r"(?<![\d.,])([+\-−]\s*)?\d[\d,]*(?:\.\d+)?")
+
+# -- frozen SVG grammar -----------------------------------------------------------
+# The closed set of elements and attributes the renderer emits (derived from
+# its output for the synthetic, adapter and prototype specs). Anything else is
+# rejected. These are grammar, not geometry: no coordinate or scale is taken
+# from them. A deliberate renderer change must update them, which the tests
+# enforce through the golden snapshot and the positive fixtures.
+
+#: Sheet layout the root must declare: width, and sheet height below the
+#: drawing's last zone (gap + title block + margin).
+SHEET_WIDTH = 860.0
+SHEET_BELOW_DRAWING = 14.0 + 196.0 + 12.0
+#: Vertical pitch between successive callout text lines.
+CALLOUT_LINE_PITCH = 15.0
+#: sha256 of the canonical <style> text and of the canonical <defs> tree.
+STYLE_SHA256 = "e5624e4872cafada452ddb0fb9dd042b1e6c80d3728c8ec3ce5c0427f3fb99c3"
+DEFS_SHA256 = "5be3761097837b884410f947978afdec12be2ed91ebafa54fd3f9b362ed09c2f"
+
+_ELEMENTS = {
+    "svg",
+    "title",
+    "desc",
+    "style",
+    "defs",
+    "linearGradient",
+    "radialGradient",
+    "stop",
+    "pattern",
+    "g",
+    "rect",
+    "line",
+    "circle",
+    "path",
+    "polyline",
+    "text",
+    "tspan",
+}
+#: (element, parent element) -> allowed attributes. ``g`` is keyed by role.
+_ATTRS: dict[tuple[str, Optional[str]], frozenset[str]] = {
+    ("svg", None): frozenset({"aria-label", "height", "role", "viewBox", "width"}),
+    ("title", "svg"): frozenset(),
+    ("desc", "svg"): frozenset(),
+    ("style", "svg"): frozenset(),
+    ("defs", "svg"): frozenset(),
+    ("linearGradient", "defs"): frozenset({"id", "x1", "x2", "y1", "y2"}),
+    ("radialGradient", "defs"): frozenset({"cx", "cy", "id", "r"}),
+    ("pattern", "defs"): frozenset(
+        {"height", "id", "patternTransform", "patternUnits", "width"}
+    ),
+    ("stop", "linearGradient"): frozenset({"offset", "stop-color"}),
+    ("stop", "radialGradient"): frozenset({"offset", "stop-color"}),
+    ("rect", "pattern"): frozenset({"fill", "height", "width"}),
+    ("line", "pattern"): frozenset({"stroke", "stroke-width", "x1", "x2", "y1", "y2"}),
+    ("g", "svg"): frozenset(),  # per role, see _G_ATTRS
+    ("rect", "g"): frozenset({"class", "data-part", "height", "rx", "width", "x", "y"}),
+    ("line", "g"): frozenset(
+        {"class", "data-part", "data-tick-el-m", "data-unit", "x1", "x2", "y1", "y2"}
+    ),
+    ("circle", "g"): frozenset({"class", "cx", "cy", "data-part", "r"}),
+    ("path", "g"): frozenset({"class", "d", "data-part"}),
+    ("polyline", "g"): frozenset({"class", "points"}),
+    ("text", "g"): frozenset({"class", "data-component-id", "text-anchor", "x", "y"}),
+    ("tspan", "text"): frozenset(
+        {
+            "class",
+            "data-decimals",
+            "data-field",
+            "data-kind",
+            "data-tick-el-m",
+            "data-unit",
+        }
+    ),
+}
+_G_ATTRS: dict[str, frozenset[str]] = {
+    "component": frozenset(
+        {
+            "data-role",
+            "data-component-id",
+            "data-type",
+            "data-top-el-m",
+            "data-bottom-el-m",
+            "data-od-in",
+            "data-count",
+            "data-source",
+            "data-clipped",
+            "data-not-drawn",
+        }
+    ),
+    "callout": frozenset({"data-role", "data-component-id"}),
+    "datum": frozenset({"data-role", "data-datum", "data-el-m"}),
+    "datum-label": frozenset({"data-role", "data-datum"}),
+    "tensioner": frozenset({"data-role", "data-sheave-el-m", "data-count"}),
+    "axis": frozenset({"data-role"}),
+    "decor": frozenset({"data-role"}),
+    "break": frozenset({"data-role"}),
+    "titleblock": frozenset({"data-role"}),
+}
+_TRANSFORM_G_ATTRS = frozenset(
+    {
+        "id",
+        "data-role",
+        "data-zones",
+        "data-px-per-in",
+        "data-center-x",
+        "data-y-bottom",
+    }
 )
+#: Frozen attribute values (outside <defs>).
+_VALUES: dict[str, dict[str, frozenset[str]]] = {
+    "svg": {"role": frozenset({"img"})},
+    "g": {"data-clipped": frozenset({"bottom"})},
+    "rect": {
+        "class": frozenset(
+            "bg body-thin bonnet buoy-a buoy-b buoy-c chrome cond cond-b connector "
+            "cyl flange frame hidden housing pipe pipe-dark pod post ram rig-floor "
+            "ring rotary soil tb water".split()
+        ),
+        "data-part": frozenset({"body", "seam", "symbol"}),
+        "rx": frozenset({"2"}),
+    },
+    "line": {
+        "class": frozenset(
+            "axis break centre cut datum datum-ml datum-msl rig seam tb-line tick "
+            "wire".split()
+        ),
+        "data-part": frozenset({"body", "datum-line", "seam"}),
+        "data-unit": frozenset({"m", "ft"}),
+    },
+    "circle": {
+        "class": frozenset({"ball", "dot", "sheave"}),
+        "data-part": frozenset({"sheave", "symbol"}),
+    },
+    "path": {
+        "class": frozenset({"annular", "datum", "hidden", "valve"}),
+        "data-part": frozenset({"symbol"}),
+    },
+    "polyline": {"class": frozenset({"break", "cut", "leader", "wave"})},
+    "text": {
+        "class": frozenset(
+            "axis-hdr co1 co2 dlbl dlbl2 note-l tb-hdr tb-note tb-sub tb-title "
+            "tb-val tick-lbl".split()
+        ),
+        "text-anchor": frozenset({"start", "end"}),
+    },
+    "tspan": {
+        "class": frozenset({"na", "rpt"}),
+        "data-kind": frozenset({"text"}),
+        "data-unit": frozenset({"count", "ft", "in", "m", "ratio"}),
+    },
+}
+#: Allowed tspan attribute sets.
+_TSPAN_PROFILES = {
+    frozenset(): "literal",
+    frozenset({"class"}): "marker",
+    frozenset({"data-field", "data-unit", "data-decimals"}): "number",
+    frozenset({"class", "data-field"}): "na-field",
+    frozenset({"data-field", "data-kind"}): "text-field",
+    frozenset({"data-tick-el-m", "data-unit", "data-decimals"}): "tick",
+}
+#: Attributes that position or move content: violations go to (b).
+_POSITIONAL = frozenset(
+    {
+        "transform",
+        "x",
+        "y",
+        "dx",
+        "dy",
+        "rotate",
+        "viewBox",
+        "x1",
+        "x2",
+        "y1",
+        "y2",
+        "cx",
+        "cy",
+        "textLength",
+        "lengthAdjust",
+        "patternTransform",
+    }
+)
+_UNIT_JOINERS = (" to ", " × ")
 _ZONE_KEYS = ("z_hi", "z_lo", "y_top", "px_per_m")
 
 
@@ -232,30 +430,288 @@ def _parse_number(txt: str) -> Optional[tuple[float, int]]:
     return _num(txt), len(m.group(3) or "")
 
 
-def _hidden(el: ET.Element) -> Optional[str]:
-    """Reason ``el`` is hidden by its own attributes or inline style."""
-    props = {
-        k: el.get(k)
-        for k in ("display", "visibility", "opacity")
-        if el.get(k) is not None
+def _local(name: str) -> str:
+    return name.split("}", 1)[1] if name.startswith("{") else name
+
+
+def _canon(el: ET.Element) -> tuple:
+    """Order-preserving canonical form of an element tree (ignores tails)."""
+    return (
+        _local(el.tag),
+        tuple(sorted(el.attrib.items())),
+        (el.text or "").strip(),
+        tuple(_canon(c) for c in el),
+    )
+
+
+def _sha256(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def canonical_digests(svg_text: str) -> dict[str, str]:
+    """sha256 of the <style> text and the canonical <defs> tree of an SVG.
+
+    Used to freeze :data:`STYLE_SHA256` / :data:`DEFS_SHA256` deliberately.
+    """
+    root = ET.fromstring(svg_text)
+    style = root.find(NS + "style")
+    defs = root.find(NS + "defs")
+    return {
+        "style": _sha256(style.text or "") if style is not None else "",
+        "defs": _sha256(repr(_canon(defs))) if defs is not None else "",
     }
-    for decl in (el.get("style") or "").split(";"):
-        if ":" in decl:
-            k, v = decl.split(":", 1)
-            props[k.strip().lower()] = v.strip()
-    if str(props.get("display", "")).strip().lower() == "none":
-        return "display:none"
-    if str(props.get("visibility", "")).strip().lower() in ("hidden", "collapse"):
-        return "visibility:hidden"
-    if "opacity" in props:
-        try:
-            if float(str(props["opacity"]).rstrip("%")) <= 0.0:
-                return "opacity:0"
-        except ValueError:
-            return f"unparsable opacity {props['opacity']!r}"
-    if "transform" in props:
-        return "style transform"
-    return None
+
+
+def _grammar_problems(root: ET.Element, parent: dict) -> list[tuple[str, str]]:
+    """(check, reason) for everything outside the frozen SVG grammar."""
+    out: list[tuple[str, str]] = []
+    if root.tag != NS + "svg":
+        return [("a_mapping", f"grammar: root is <{_local(root.tag)}>, not <svg>")]
+    for tag in ("title", "desc", "style", "defs"):
+        n = sum(1 for c in root if c.tag == NS + tag)
+        if n != 1:
+            out.append(
+                ("a_mapping", f"grammar: <{tag}> appears {n} times (expected 1)")
+            )
+    for el in root.iter():
+        if not el.tag.startswith(NS):
+            out.append(
+                ("a_mapping", f"grammar: element {el.tag} outside the SVG namespace")
+            )
+            continue
+        tag = _local(el.tag)
+        par = parent.get(el)
+        ptag = _local(par.tag) if par is not None else None
+        if tag not in _ELEMENTS:
+            out.append(("a_mapping", f"grammar: element <{tag}> not allowed"))
+            continue
+        allowed = _ATTRS.get((tag, ptag))
+        if allowed is None:
+            out.append(("a_mapping", f"grammar: <{tag}> not allowed under <{ptag}>"))
+            continue
+        if tag == "g":
+            role = el.get("data-role")
+            if el.get("id") == "elevation-transform" and role == "axis":
+                allowed = _TRANSFORM_G_ATTRS
+                if len(el):
+                    out.append(
+                        ("a_mapping", "grammar: elevation transform group has children")
+                    )
+            elif role in _G_ATTRS:
+                allowed = _G_ATTRS[role]
+            else:
+                out.append(
+                    ("a_mapping", f"grammar: <g> without a known data-role ({role!r})")
+                )
+                allowed = frozenset({"data-role", "data-component-id"})
+        for attr in el.attrib:
+            if attr not in allowed:
+                check = "b_positions" if _local(attr) in _POSITIONAL else "a_mapping"
+                out.append(
+                    (
+                        check,
+                        f"grammar: attribute '{_local(attr)}' not allowed on <{tag}>",
+                    )
+                )
+        in_defs = ptag in ("defs", "pattern", "linearGradient", "radialGradient")
+        if not in_defs:
+            for attr, values in _VALUES.get(tag, {}).items():
+                v = el.get(attr)
+                if v is not None and v not in values:
+                    out.append(
+                        ("a_mapping", f"grammar: <{tag}> {attr}={v!r} not allowed")
+                    )
+        if tag == "style" and _sha256(el.text or "") != STYLE_SHA256:
+            out.append(
+                (
+                    "a_mapping",
+                    "grammar: stylesheet differs from the canonical stylesheet",
+                )
+            )
+        if tag == "defs" and _sha256(repr(_canon(el))) != DEFS_SHA256:
+            out.append(
+                ("a_mapping", "grammar: <defs> differs from the canonical definitions")
+            )
+        if tag == "tspan":
+            out.extend(_tspan_problems(el, parent))
+        if tag == "line" and el.get("data-tick-el-m") is not None:
+            if (
+                par is None
+                or par.get("data-role") != "axis"
+                or el.get("class") != "tick"
+            ):
+                out.append(
+                    ("a_mapping", "grammar: tick metadata outside the axis group")
+                )
+    return out
+
+
+def _tspan_problems(sp: ET.Element, parent: dict) -> list[tuple[str, str]]:
+    keys = frozenset(sp.attrib)
+    if "data-field" in keys and "data-tick-el-m" in keys:
+        return [("c_numbers", "grammar: tspan mixes data-field with tick metadata")]
+    profile = _TSPAN_PROFILES.get(keys)
+    if profile is None:
+        # unknown attributes are reported by the attribute allowlist
+        if keys <= _ATTRS[("tspan", "text")]:
+            return [
+                (
+                    "c_numbers",
+                    f"grammar: tspan attribute set {sorted(keys)} is not an allowed profile",
+                )
+            ]
+        return []
+    text = sp.text or ""
+    if profile == "marker" and not (
+        (sp.get("class") == "rpt" and text == "†")
+        or (sp.get("class") == "na" and text == "n/a")
+    ):
+        return [
+            (
+                "c_numbers",
+                f"grammar: marker tspan class={sp.get('class')!r} shows {text!r}",
+            )
+        ]
+    if profile == "na-field" and sp.get("class") != "na":
+        return [("c_numbers", "grammar: field tspan with a class other than na")]
+    if profile == "tick":
+        t = parent.get(sp)
+        g = parent.get(t) if t is not None else None
+        if g is None or g.get("data-role") != "axis" or t.get("class") != "tick-lbl":
+            return [("c_numbers", "grammar: tick metadata outside the axis group")]
+    return []
+
+
+def _points(el: ET.Element) -> Optional[list[tuple[float, float]]]:
+    """Extreme points of a drawn element, or None when unreadable."""
+    tag = _local(el.tag)
+    try:
+        if tag == "rect":
+            x, y = float(el.get("x", "0")), float(el.get("y", "0"))
+            w, h = float(el.get("width")), float(el.get("height"))
+            pts = [(x, y), (x + w, y + h)]
+        elif tag == "line":
+            pts = [
+                (float(el.get("x1")), float(el.get("y1"))),
+                (float(el.get("x2")), float(el.get("y2"))),
+            ]
+        elif tag == "circle":
+            cx, cy, r = float(el.get("cx")), float(el.get("cy")), float(el.get("r"))
+            pts = [(cx - r, cy - r), (cx + r, cy + r)]
+        elif tag == "polyline":
+            pts = [
+                tuple(float(v) for v in p.split(","))
+                for p in (el.get("points") or "").split()
+            ]
+        elif tag == "path":
+            m = re.match(r"\s*M\s*([-\d.]+)\s*,\s*([-\d.]+)", el.get("d") or "")
+            pts = [(float(m.group(1)), float(m.group(2)))] if m else []
+        elif tag == "text":
+            pts = [(float(el.get("x")), float(el.get("y")))]
+        else:
+            return []
+    except (TypeError, ValueError, AttributeError):
+        return None
+    if not pts or any(len(p) != 2 or not all(map(math.isfinite, p)) for p in pts):
+        return None
+    return pts
+
+
+def _viewport_problems(root: ET.Element, top_groups, y_bottom: float) -> list[str]:
+    """Root viewport pinned to the layout; every drawn element inside it."""
+    out = []
+    w, h = SHEET_WIDTH, y_bottom + SHEET_BELOW_DRAWING
+    try:
+        vb = [float(v) for v in (root.get("viewBox") or "").split()]
+    except ValueError:
+        vb = []
+    if len(vb) != 4 or any(abs(a - b) > 0.01 for a, b in zip(vb, (0.0, 0.0, w, h))):
+        out.append(f"root viewBox {root.get('viewBox')!r} != '0 0 {w:g} {h:.2f}'")
+    for name, exp in (("width", w), ("height", h)):
+        v = _float_attr(root, name)
+        if v is None or abs(v - exp) > 0.01:
+            out.append(f"root {name} {root.get(name)!r} != {exp:.2f}")
+    for g in top_groups:
+        for el in g.iter():
+            if el is g or _local(el.tag) == "tspan":
+                continue
+            pts = _points(el)
+            if pts is None:
+                out.append(f"<{_local(el.tag)}> has unreadable coordinates")
+                continue
+            for x, y in pts:
+                if not (-PX_TOL <= x <= w + PX_TOL and -PX_TOL <= y <= h + PX_TOL):
+                    out.append(
+                        f"<{_local(el.tag)}> at ({x:.2f}, {y:.2f}) outside the viewBox"
+                    )
+                    break
+    return out
+
+
+def _rendered_text_problems(t: ET.Element, ctx: str) -> list[str]:
+    """Numbers, signs and units as the whole <text> reads, across tspans."""
+    spans = [c for c in t if c.tag == NS + "tspan"]
+    rendered, owner = "", []
+    for i, sp in enumerate(spans):
+        s = sp.text or ""
+        rendered += s
+        owner += [i] * len(s)
+    out: list[str] = []
+
+    def kind(sp) -> Optional[str]:
+        return _TSPAN_PROFILES.get(frozenset(sp.attrib))
+
+    covered = set()
+    for m in RENDERED_NUM.finditer(rendered):
+        s, e = m.span()
+        covered.update(range(s, e))
+        digits_at = m.start(0) + (len(m.group(1)) if m.group(1) else 0)
+        i = owner[digits_at]
+        if m.group(1) and owner[s] != i:
+            out.append(
+                f"{ctx}: sign outside its field before {m.group(0)!r} in {rendered!r}"
+            )
+            continue
+        if any(owner[k] != i for k in range(s, e)):
+            out.append(f"{ctx}: number {m.group(0)!r} crosses tspans in {rendered!r}")
+            continue
+        if kind(spans[i]) == "text-field":
+            # verbatim spec text (e.g. a document reference), checked for
+            # exact equality with the spec; its digits are not a number
+            continue
+        if kind(spans[i]) not in ("number", "tick"):
+            out.append(f"{ctx}: number {m.group(0)!r} outside a field span")
+        elif m.group(0) != (spans[i].text or ""):
+            out.append(
+                f"{ctx}: number {m.group(0)!r} is not the whole field text "
+                f"{spans[i].text!r}"
+            )
+    stray = [k for k, ch in enumerate(rendered) if ch.isdigit() and k not in covered]
+    if stray:
+        out.append(f"{ctx}: stray digits in {rendered!r}")
+    # every m/ft/in field is followed by its own unit, or by a joiner and
+    # another field of the same unit ("EL a to b m", "OD x WT in")
+    for i, sp in enumerate(spans):
+        unit = sp.get("data-unit")
+        if kind(sp) != "number" or unit not in ("m", "ft", "in"):
+            continue
+        j = i + 1
+        if j < len(spans) and spans[j].get("class") == "rpt":
+            j += 1
+        following = "".join(x.text or "" for x in spans[j:])
+        if re.match(rf" {unit}(?![A-Za-z])", following):
+            continue
+        if (
+            j + 1 < len(spans)
+            and (spans[j].text or "") in _UNIT_JOINERS
+            and kind(spans[j + 1]) == "number"
+            and spans[j + 1].get("data-unit") == unit
+        ):
+            continue
+        out.append(
+            f"{ctx}: {sp.get('data-field')} is not followed by its unit '{unit}'"
+        )
+    return out
 
 
 def _validate_zones(zones: Any, y_bottom: Optional[float], px_per_in) -> list[str]:
@@ -300,14 +756,27 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
     ``not_established`` or ``fail``), ``failures``, ``notes`` and
     ``open_items``, plus the spec's NOT_FOUND paths, conflicts and gaps.
     """
-    root = ET.fromstring(svg_text)
-    parent = {c: p for p in root.iter() for c in p}
-    sd = spec.to_dict()
-    comps = {c.id: c for c in spec.components}
     res: dict[str, dict[str, Any]] = {
         k: {"status": "pass", "failures": [], "notes": [], "open_items": []}
         for k in CHECKS
     }
+    # the spec first: no arithmetic on NaN/inf or on a structurally bad spec
+    spec_problems = spec.validate()
+    if spec_problems:
+        for p in spec_problems:
+            res["d_totals"]["status"] = "fail"
+            res["d_totals"]["failures"].append(f"spec invalid: {p}")
+        return _finish(spec, res)
+    if re.search(r"<!|<\?", svg_text):
+        res["a_mapping"]["status"] = "fail"
+        res["a_mapping"]["failures"].append(
+            "grammar: DOCTYPE, entity, comment, CDATA or processing instruction"
+        )
+        return _finish(spec, res)
+    root = ET.fromstring(svg_text)
+    parent = {c: p for p in root.iter() for c in p}
+    sd = spec.to_dict()
+    comps = {c.id: c for c in spec.components}
 
     def fail(k, msg):
         res[k]["status"] = "fail"
@@ -329,33 +798,14 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
             el = parent.get(el)
         return None, None
 
-    def in_defs(el) -> bool:
-        while el is not None:
-            if el.tag == NS + "defs":
-                return True
-            el = parent.get(el)
-        return False
-
-    # (a)/(b) presentation: no transforms, nothing hidden --------------------------
-    for el in root.iter():
-        if in_defs(el):
-            continue
-        r, owner = role_of(el)
-        where = f"<{el.tag.replace(NS, '')}> (role={r}, component={owner.get('data-component-id') if owner is not None else None})"
-        if el.get("transform") is not None:
-            fail("b_positions", f"transform attribute on {where} is not supported")
-        why = _hidden(el)
-        if why == "style transform":
-            fail("b_positions", f"CSS transform on {where} is not supported")
-        elif why:
-            fail("a_mapping", f"{where} is hidden ({why})")
-        if el.tag == NS + "style" and _HIDING_CSS.search(el.text or ""):
-            fail("a_mapping", "stylesheet contains a hiding or transform rule")
+    # closed grammar: only what the renderer emits ------------------------------
+    for check, msg in _grammar_problems(root, parent):
+        fail(check, msg)
+    top_groups = [g for g in root if g.tag == NS + "g"]
+    texts = [t for g in top_groups for t in g.iter(NS + "text")]
 
     # zone table: validate before any arithmetic ------------------------------------
-    tf = next(
-        (g for g in root.iter(NS + "g") if g.get("id") == "elevation-transform"), None
-    )
+    tf = next((g for g in top_groups if g.get("id") == "elevation-transform"), None)
     if tf is None:
         fail("b_positions", "no embedded elevation transform")
         return _finish(spec, res)
@@ -373,6 +823,10 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
         return _finish(spec, res)
     T = _T(zones)
     z_min = zones[-1]["z_lo"]
+    for msg in _viewport_problems(root, top_groups, y_bottom):
+        fail("b_positions", msg)
+    if root.get("aria-label") != spec.title_block.title:
+        fail("a_mapping", "root aria-label differs from the spec title")
     d_ = spec.datums
     top_datum = float(d_.drill_floor_el_m) if _known(d_.drill_floor_el_m) else 0.0
     if zones[0]["z_hi"] < top_datum - 1e-6:
@@ -394,7 +848,8 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
     }
 
     # (a) mapping -----------------------------------------------------------------
-    groups = list(root.iter(NS + "g"))
+    # only top-level groups are rendered instances (the grammar forbids others)
+    groups = top_groups
     comp_groups: dict[str, list] = {}
     callout_groups: dict[str, list] = {}
     for g in groups:
@@ -420,7 +875,7 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
             for t in g.iter(NS + "text"):
                 if re.search(r"\d", "".join(t.itertext())):
                     fail("a_mapping", "decor element carries a number")
-    for t in root.iter(NS + "text"):
+    for t in texts:
         cid = t.get("data-component-id")
         if cid is None:
             continue
@@ -627,7 +1082,7 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
                     if cy is None or abs(cy - exp_y) > PX_TOL:
                         fail("b_positions", "tensioner sheave not at T(sheave_el_m)")
     n_ticks = 0
-    for ln in root.iter(NS + "line"):
+    for ln in (ln for g in top_groups for ln in g.iter(NS + "line")):
         z = ln.get("data-tick-el-m")
         if z is not None:
             n_ticks += 1
@@ -641,9 +1096,11 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
 
     # (c) numbers + (e) NOT_FOUND -----------------------------------------------------
     n_checked = 0
-    for t in root.iter(NS + "text"):
+    for t in texts:
         cid = t.get("data-component-id")
         r, _ = role_of(t)
+        for msg in _rendered_text_problems(t, f"{r}:{cid or ''}"):
+            fail("c_numbers", msg)
         if (t.text or "").strip():
             fail("c_numbers", f"text outside a tspan: {t.text.strip()!r} (role={r})")
         for ch in t:
@@ -737,7 +1194,7 @@ def reconcile(spec: StackupDrawingSpec, svg_text: str) -> dict[str, Any]:
             if getattr(c, f) == NOT_FOUND:
                 shown = [
                     sp
-                    for t in root.iter(NS + "text")
+                    for t in texts
                     if t.get("data-component-id") == cid
                     for sp in t.iter(NS + "tspan")
                     if sp.get("data-field") == f
@@ -826,6 +1283,18 @@ def _leader_problems(cid: str, group: ET.Element, boxes) -> list[str]:
         or abs(ly - ty) > LABEL_TOL_PX
     ):
         out.append(f"{cid}: leader does not start at its callout label")
+    else:
+        # every further line sits directly under the first (tspans cannot move:
+        # the grammar forbids x/y/dx/dy on them)
+        for i, t in enumerate(texts[1:], start=1):
+            x, y = _float_attr(t, "x"), _float_attr(t, "y")
+            if (
+                x is None
+                or y is None
+                or abs(x - tx) > PX_TOL
+                or abs(y - (ty + i * CALLOUT_LINE_PITCH)) > PX_TOL
+            ):
+                out.append(f"{cid}: callout line {i + 1} is not under its label")
     on_body = any(
         x0 - LEADER_TOL_PX <= ax <= x1 + LEADER_TOL_PX
         and y0 - PX_TOL <= ay <= y1 + PX_TOL
@@ -842,7 +1311,7 @@ def _axis_correspondence(root: ET.Element, zones: list[dict]) -> list[str]:
     """The drawn axis segments and break marks must match the zone table."""
     out = []
     axis_segs, axis_breaks, zone_breaks = [], [], []
-    for g in root.iter(NS + "g"):
+    for g in (c for c in root if c.tag == NS + "g"):
         role = g.get("data-role")
         for el in g:
             cls = (el.get("class") or "").split()

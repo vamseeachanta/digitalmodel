@@ -594,7 +594,8 @@ class _Renderer:
             + svg_text(
                 lay.axis_x + 112,
                 y0 - 5,
-                [_txt("EL ")] + _num(0.0, "datums.msl_el_m", "m", 2),
+                # every printed number carries its unit (#2152 r2)
+                [_txt("EL ")] + _num(0.0, "datums.msl_el_m", "m", 2) + [_txt(" m")],
                 "dlbl2",
             )
             + "</g>"

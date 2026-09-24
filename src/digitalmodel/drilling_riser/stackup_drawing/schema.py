@@ -18,6 +18,7 @@ Conventions
 from __future__ import annotations
 
 import json
+import math
 import re
 from dataclasses import asdict, dataclass, field
 from enum import Enum
@@ -175,6 +176,28 @@ class ReferenceValue:
     description: str = ""
 
 
+_DATUM_FIELDS = (
+    "water_depth_m",
+    "drill_floor_el_m",
+    "air_gap_m",
+    "mudline_el_m",
+    "msl_el_m",
+)
+_COMPONENT_FIELDS = (
+    "count",
+    "joint_length_m",
+    "top_el_m",
+    "bottom_el_m",
+    "od_in",
+    "buoyancy_od_in",
+    "wall_thickness_in",
+    "envelope_width_in",
+    "drag_diameter_in",
+    "buoyancy_depth_rating_ft",
+)
+_TENSIONER_FIELDS = ("count", "sheave_el_m", "sheave_radius_m")
+
+
 @dataclass
 class StackupDrawingSpec:
     """Everything the renderer draws and the reconciler checks."""
@@ -193,8 +216,14 @@ class StackupDrawingSpec:
 
     # -- validation -------------------------------------------------------------
     def validate(self) -> list[str]:
-        """Structural problems (empty list = valid)."""
-        problems: list[str] = []
+        """Structural problems (empty list = valid).
+
+        Every numeric field must be a finite number, ``NOT_FOUND`` or ``None``;
+        NaN and +-inf are rejected before any ordering arithmetic.
+        """
+        problems = self.non_finite_fields()
+        if problems:
+            return problems
         ids = [c.id for c in self.components]
         if len(ids) != len(set(ids)):
             problems.append("duplicate component ids")
@@ -209,6 +238,30 @@ class StackupDrawingSpec:
                     problems.append(f"{comp.id}: out of top-to-bottom order")
                 prev_top = float(comp.top_el_m)
         return problems
+
+    def non_finite_fields(self) -> list[str]:
+        """Numeric fields that are neither finite, ``NOT_FOUND`` nor ``None``."""
+        out: list[str] = []
+
+        def check(path: str, value: Any) -> None:
+            if value is None or value == NOT_FOUND:
+                return
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                out.append(f"{path}={value!r} is not a number")
+            elif not math.isfinite(value):
+                out.append(f"{path}={value!r} is not finite")
+
+        for name in _DATUM_FIELDS:
+            check(f"datums.{name}", getattr(self.datums, name))
+        for comp in self.components:
+            for name in _COMPONENT_FIELDS:
+                check(f"components[{comp.id}].{name}", getattr(comp, name))
+        if self.tensioner_system is not None:
+            for name in _TENSIONER_FIELDS:
+                check(f"tensioner_system.{name}", getattr(self.tensioner_system, name))
+        for key, ref in self.reference_totals.items():
+            check(f"reference_totals.{key}.value", ref.value)
+        return out
 
     def component(self, component_id: str) -> StackupComponent:
         """Component by id (``KeyError`` when absent)."""

@@ -203,3 +203,13 @@ def test_unknown_attribute_is_rejected(spec, svg):
         "a_mapping",
         "grammar: attribute 'data-evil' not allowed on <rect>",
     )
+
+
+def test_document_reference_with_digits_is_verbatim_text(spec):
+    from digitalmodel.drilling_riser.stackup_drawing import render
+
+    spec.title_block.document_ref = "DOC-100-A"
+    svg = render(spec)
+    assert reconcile(spec, svg)["result"] == "pass"
+    tampered = svg.replace(">DOC-100-A<", ">DOC-101-A<")
+    _assert_reason(reconcile(spec, tampered), "c_numbers", "title_block.document_ref")
