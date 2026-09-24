@@ -1,0 +1,59 @@
+.............F.                                                          [100%]
+=================================== FAILURES ===================================
+_ test_crash_barrier_closes_observer_job_before_controller_termination[False] __
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b58deeff310>
+tmp_path = PosixPath('/tmp/pytest-of-vamsee/pytest-65/test_crash_barrier_closes_obse0')
+before = False
+
+    @pytest.mark.parametrize('before',[False,True])
+    def test_crash_barrier_closes_observer_job_before_controller_termination(monkeypatch,tmp_path,before):
+        from types import SimpleNamespace
+        from digitalmodel.solvers.ghs import _qualification_scenarios as s
+        events=[];identities=[{'pid':n,'creation_time':n} for n in (1,2,3)]
+        role='controller_before' if before else 'controller_after'
+        controller=SimpleNamespace(identity=identities[0],role=role,started=s.time.monotonic())
+        kernel=SimpleNamespace(TerminateProcess=lambda *args:events.append('terminate') or 1)
+        r=SimpleNamespace(start=lambda *args:controller,kernel=kernel,retained=[],jobs=[],
+                          retain=lambda identity:identity['pid'])
+        records=iter([{'role':role,'identity':identities[0],'target':identities[1],'job_handle':7},
+                      {'role':'parent','identity':identities[1],'child':identities[2]}])
+        monkeypatch.setattr(s,'ready',lambda path,role:next(records))
+        monkeypatch.setattr(s.o,'retain',lambda *args,**kwargs:1)
+        monkeypatch.setattr(s.o,'duplicate_job',lambda *args:7)
+        monkeypatch.setattr(s.w,'member',lambda *args:True)
+        monkeypatch.setattr(s.w,'census',lambda *args:{2} if before else {2,3})
+        monkeypatch.setattr(s.w,'close',lambda *args:events.append('duplicate_closed'))
+        monkeypatch.setattr(s.w,'wait',lambda *args:True)
+        monkeypatch.setattr(s,'alive',lambda *args:None)
+        monkeypatch.setattr(s,'terminated',lambda *args:events.append('terminated'))
+>       result=s.crash('controller_before_resume' if before else 'controller_after_readiness',tmp_path,r)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/solvers/ghs/test_windows_launch.py:99:
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+name = 'controller_after_readiness'
+root = PosixPath('/tmp/pytest-of-vamsee/pytest-65/test_crash_barrier_closes_obse0')
+r = namespace(start=<function test_crash_barrier_closes_observer_job_before_controller_termination.<locals>.<lambda> at 0x...in=<function test_crash_barrier_closes_observer_job_before_controller_termination.<locals>.<lambda> at 0x7b58def04220>)
+
+    def crash(name,root,r):
+        before=name=='controller_before_resume'
+        controller=r.start('controller_before' if before else 'controller_after',root)
+        record=ready(root/'controller.json',controller.role)
+        if record.get('identity')!=controller.identity:raise ValueError('Controller identity disagreement')
+        controller_handle=o.retain(r.kernel,controller.identity,controller=True)
+        r.retained.append(controller_handle)
+        target=r.retain(record['target']);handles=[target];identities=[record['target']]
+        duplicate=o.duplicate_job(r.kernel,controller_handle,record['job_handle']);r.jobs.append(duplicate)
+        if not w.member(r.kernel,target,duplicate):raise ValueError('Suspended membership missing')
+        if not before:
+            (root/'resume_ack').touch(exist_ok=False)
+>           parent_record=ready(root/'parent.json',item.role)
+                                                   ^^^^
+E           NameError: name 'item' is not defined
+
+src/digitalmodel/solvers/ghs/_qualification_scenarios.py:172: NameError
+=========================== short test summary info ============================
+FAILED tests/solvers/ghs/test_windows_launch.py::test_crash_barrier_closes_observer_job_before_controller_termination[False]
+1 failed, 14 passed in 3.19s

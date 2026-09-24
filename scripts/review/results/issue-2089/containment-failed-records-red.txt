@@ -1,0 +1,17 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_______ test_failed_scenario_diagnostics_survive_work_directory_cleanup ________
+
+tmp_path = PosixPath('/tmp/pytest-of-vamsee/pytest-68/test_failed_scenario_diagnosti0')
+
+    def test_failed_scenario_diagnostics_survive_work_directory_cleanup(tmp_path):
+        directory=tmp_path/'scenario';directory.mkdir()
+        (directory/'child.json').write_text('{"role":"child","identity":{"pid":1,"creation_time":2}}')
+>       records=q.preserve_failed_records(directory)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+E       AttributeError: module 'digitalmodel.solvers.ghs.qualification' has no attribute 'preserve_failed_records'
+
+tests/solvers/ghs/test_qualification.py:197: AttributeError
+=========================== short test summary info ============================
+FAILED tests/solvers/ghs/test_qualification.py::test_failed_scenario_diagnostics_survive_work_directory_cleanup
+1 failed, 33 deselected in 7.08s
