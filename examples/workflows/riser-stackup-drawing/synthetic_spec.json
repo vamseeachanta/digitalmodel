@@ -509,12 +509,12 @@
         "top_el_m": {
           "source": "synthetic fixture",
           "basis": "synthetic",
-          "design_data_id": "D-04"
+          "design_data_id": "D-29"
         },
         "bottom_el_m": {
           "source": "synthetic fixture",
           "basis": "synthetic",
-          "design_data_id": "D-04"
+          "design_data_id": "D-30"
         },
         "od_in": {
           "source": "synthetic fixture",
@@ -1353,14 +1353,6 @@
           "value": 25,
           "unit": "count"
         },
-        "components.c10-riser-joint-buoyant.top_el_m": {
-          "value": -664.732,
-          "unit": "m"
-        },
-        "components.c10-riser-joint-buoyant.bottom_el_m": {
-          "value": -1236.232,
-          "unit": "m"
-        },
         "components.c11-riser-joint-bare.count": {
           "value": 10,
           "unit": "count"
@@ -1895,6 +1887,26 @@
       "source_class": "owner_decision",
       "reference_ids": [],
       "note": "Follows owner decision S05.",
+      "values": {}
+    },
+    {
+      "id": "D-29",
+      "parameter": "Lower buoyant section top elevation",
+      "value": -664.732,
+      "unit": "m",
+      "source_class": "owner_decision",
+      "reference_ids": [],
+      "note": "Follows owner decision S02.",
+      "values": {}
+    },
+    {
+      "id": "D-30",
+      "parameter": "Lower buoyant section bottom elevation",
+      "value": -1236.232,
+      "unit": "m",
+      "source_class": "owner_decision",
+      "reference_ids": [],
+      "note": "Follows owner decision S02.",
       "values": {}
     }
   ],
