@@ -1,0 +1,66 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "plan_reviews": [
+    {
+      "bundle_sha256": "65ae023a77690d3851d93c45ce892a40b49a65a2565c45c6845b238d92226af4",
+      "verdict": "MAJOR"
+    },
+    {
+      "bundle_sha256": "c55b77edf8dafbe9fbf8c95a3e0f7fe9a5552855e5d90b21c8b5c41efcc3b786",
+      "verdict": "MAJOR"
+    }
+  ],
+  "status": "SUPPORTED_FINDINGS_DISPOSED_INLINE_CODE_REVIEW_PENDING",
+  "dispositions": [
+    "Pinned-parent invariant preserved: no ppid calls; installed API inspection demonstrated hidden full-table enumeration. Two fresh creation/name/image samples only.",
+    "Initial/final parent union explicitly sorted after sorted unique triggers, with first-occurrence dedup before cap; omission count and derivation rule retained.",
+    "Original missing/unobserved/invalid statuses explicit; OMITTED_SIZE_LIMIT supersedes identity details on aggregate cap.",
+    "New bounded text is confined to separate namespace; historical numeric-object tests explicitly scoped and augmented with canonical size and oversized-value exclusion checks.",
+    "Capture helper runs after numeric refusal evidence construction under Exception containment; whole-helper failures tested.",
+    "32 KiB canonical-data limit, not pretty-printed physical bytes; API-call/candidate bound, not hard execution-time promise. Monotonic integer clocks are not birth epochs."
+  ],
+  "tests": {
+    "initial_helper_red": "14 failed before helper implementation",
+    "integration_red": "Two integration failures plus a corrected Unicode test-source encoding fault before integration",
+    "focused": "89 passed in 1.95 seconds",
+    "cap_regression": "Four RED failures: two aggregate-limit cases, missing initial field and whitespace creation form; corrected focused suite 97 passed."
+  },
+  "limitations": [
+    "Later identities cannot bind creation time to earlier numeric table entries.",
+    "No new native run or qualified reusable result."
+  ],
+  "code_review_round_1": {
+    "bundle_sha256": "32384bc8c709d401f41bcdd566a2f00aa049bc7c36fdc3b8f588eb1a02613dd0",
+    "verdict": "MAJOR",
+    "dispositions": [
+      "Aggregate cap defect reproduced with two near-threshold multi-stub cases. Final metadata plus all omission stubs now precede measured detail replacement; timestamps and attempted IDs are final, not estimated.",
+      "Initial 14-failure log, integration failure/Unicode assertion log and cap RED logs are now supplied. Historical misencoded source file was not separately retained; the current ASCII escape and corrected tests are reviewable.",
+      "Missing original fields now yield INVALID_FIELDS; explicit test added. Creation syntax follows active collector bounded digit grammar (not analysis_records.decimal_text, which also permits signed/exponent forms).",
+      "Whole-helper CAPTURE_FAILED now uses distinct parent-change-identities-error-1 schema.",
+      "Success-path test explicitly fails if refusal capture runs."
+    ]
+  },
+  "code_review_round_2": {
+    "bundle_sha256": "68081854fba0be762b149b192049cd1f8d05b4e412ee60ebbc171b70e7e4e2f8",
+    "verdict": "MAJOR",
+    "dispositions": [
+      "The r2 full suite completed964pass/two skips while review ran; it will be supplied with the final current regression before final review dispatch. No pending regression will be described as complete.",
+      "Literal supplemental/error schema identifiers, exact root/row/identity field sets and canonical cap are now asserted as the public evidence contract.",
+      "Timing type, positivity and ordering are asserted; largest two differing Unicode samples are tested for omission with complete metadata.",
+      "RETAINED means original bytes/fields copied, not completeness or readiness. Original blank/null fields remain visible. Post-table status has additional paired-sample semantics; no equivalence or table binding is claimed.",
+      "Eight-candidate omissions are reproducible from numeric tables and the rule. Size omissions are selected in candidate order against final metadata; discarded oversized sample text is intentionally not retained, so its exact original size cannot be reconstructed from the bounded record alone."
+    ]
+  },
+  "post_review_accessor_discovery": {
+    "baseline_review_bundle": "f9b31e98c813a39595acba53bb7ba2a1558d519d1266001b2f9be75dc3e1c5f5",
+    "baseline_verdict": "MINOR",
+    "finding": "Installed high-level Process.exe can read command line and guess executable path after native failure.",
+    "resolution": "One accessor switched to pinned Windows process._proc.exe; a failing regression forbids high-level fallback and covers native-image failure. Native creation-time fallback acquisition breadth is explicitly not guaranteed. The final source revision requires independent supplemental review.",
+    "evidence": "SOLVERS-parent-called-api-inspection.txt"
+  },
+  "native_accessor_supplement_review": {
+    "bundle_sha256": "04b012487b360ffc079ee728afda56a5522acc67425fdb313ac22be6ac8e4bc3",
+    "verdict": "MAJOR",
+    "disposition": "Supported provenance finding resolved inline: every retained original row now carries initial_image_basis=original_collector_psutil_high_level_may_guess. The original collector acquisition and all admission rules remain unchanged. A failing schema/provenance assertion preceded this metadata addition. Native accessor restriction applies to post-table samples only."
+  }
+}

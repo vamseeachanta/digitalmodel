@@ -1,0 +1,77 @@
+{
+  "provider": "Codex",
+  "reviewer": "independent parametric_scope worker",
+  "verdict": "APPROVE",
+  "reviewed_revision": "53518eef91f925807c76cb9d130964fc06acd4c5",
+  "reviewed_revision_kind": "git tree object, not commit",
+  "reviewed_files": [
+    {
+      "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+      "sha256": "8e75a0da871e4d2dc8125d3e7245a20608a306fc87a57ecff3022d475d2ba9e4"
+    },
+    {
+      "path": "docs/plans/README.md",
+      "sha256": "27fa83381234a1ae4c50c6dd5ec3c5f9da9ec77f880f698ecc62106a11adfb1e"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-claude-r1.json",
+      "sha256": "b256c71197afa2d16bfc698d124765a6a9720036a090e754322534004b964c6d"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-claude-r2.json",
+      "sha256": "34b5b9eda783f27decdabcdf7d7d8dc810d51da7f073ddc904ced3a5ff1c2ea1"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-codex-r1.json",
+      "sha256": "5ac3a3ef70aecaaf55eabe7b82d8d66e096271fbe09d8f010f8bf83c7f778e4c"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-codex-r2.json",
+      "sha256": "bae22075f520421a9588ee30523b8e5984cfcfac330087f0f1524dda16d9e4f3"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json",
+      "sha256": "da5dc1762fc6e0494d3a6103ea61e145f877efd967566043a0b11c60ae580673"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json",
+      "sha256": "21e63dbb14f91e3503a969551a082563d6efa1a3be026928f87c518459c6388c"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-verification.json",
+      "sha256": "66ca75186d3b13cd1b38fa6bbf93a6432e0360096b610299b715e336a8bb71df"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
+      "sha256": "43ac6965fe4e89e08a688f246432a63bbdd23db0a2f9f98544d43c8ebe7dff16"
+    }
+  ],
+  "findings": [],
+  "verified": [
+    "All ten dispatched raw tree blobs read and SHA-256 computed; historical R1/R2 receipts remain historical",
+    "Five baseline source hashes and nine verification inventory hashes match",
+    "Four unique cases in zero/N4/N8/N16 order; Q8 counts, stations and unchanged budgets",
+    "Explicit OUTRES NAR suppression and stress GET Item2 ESOL supported by v242 documentation",
+    "Fixed 96-column keyed export, coordinate/result-set validation and nine-row listings prevent silent positional/default-zero attribution",
+    "FORMAT E24.16 is within documented width/significance limits; independent readback and representation thresholds frozen",
+    "Empty warning allowlist fails closed; no discretionary post-run waiver",
+    "Distinct-provider fresh isolated checker brief and fixed branch/frame/unit/value agreement; disagreement blocks B2",
+    "R2 findings have supported dispositions; author does not claim current consensus from historical receipts",
+    "B1 offline-only; B2 separately approved; no FE pass, fifth attempt, lookup promotion or expansion authorized"
+  ],
+  "limitations": [
+    "This is plan review, not executed recovery validation or proof of native feasibility",
+    "Published vendor documentation was inspected; recorded historical HTTP-byte digests were not independently re-fetched byte-for-byte",
+    "Own earlier Codex receipts checked for faithful transcription, not counted as a new independent provider lane"
+  ],
+  "cleanup": {
+    "CLEAN": [
+      "No repository edits, solver invocations or persistent sessions created by this review"
+    ],
+    "EXPECTED": [
+      "Private SOLVERS-2121-canary-codex-r3.json review receipt",
+      "Parent-owned staged planning/review files"
+    ],
+    "UNEXPECTED": []
+  }
+}

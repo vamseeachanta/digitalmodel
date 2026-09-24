@@ -1,0 +1,134 @@
+{
+  "schema": "ansys-zero-diagnostic-preparation-1",
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "observed_utc": "2026-09-14T21:59:46.065267+00:00",
+  "state_at_recording": "PREPARED_NOT_NATIVE_ADMITTED",
+  "source_base_revision": "37585c98a67916efa735342a3337bb8f38ec1aba",
+  "files": [
+    {
+      "path": ".gitattributes",
+      "sha256": "8051ea093ceabc3552d7ade720bff44dfb74e7561f42d85db91f3011f7edd69d"
+    },
+    {
+      "path": "docs/plans/2026-09-14-issue-2121-zero-diagnostic-amendment.html",
+      "sha256": "f1a17407bd06cbacb408faea6e9673fd1a32627a64f4c034991af60d44a597d5"
+    },
+    {
+      "path": "scripts/ansys/run_zero_control_diagnostic.py",
+      "sha256": "fcd868c47b332e967dc81093ab21d3fbdb108fda23bacfbfe35d356bc88bf5a3"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_canary.py",
+      "sha256": "dbd22368c3788acd58469a4b35920720ccda4861a5d3a72ab85b2ce3f45a0da4"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_diagnostic_admission.py",
+      "sha256": "75dde7cad36d58e6c94f7c5f5553ef3ef094d5bf42fdf66703e02dfc0056c542"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_diagnostic_preflight.py",
+      "sha256": "2331dd0be676436d2185fefa44c7b477a667610637c84071b2f341d4f8d2678e"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_diagnostic_resources.py",
+      "sha256": "f4baeef880ca5438e2ad5397f0b9281e23ef061575768b98ed63b2745ae58d92"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_diagnostic_snapshot.py",
+      "sha256": "45f95ce549c71e216c6fd23455bd715bb2f22de70ba76095469ec0b7afd3727f"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_operational_reservation.py",
+      "sha256": "65ec002405d7bbfa589ce4a9e0047fe0baaa16c5e10a3e9b5c4931b516107807"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_process_inventory.py",
+      "sha256": "0802104989a7e1b3c1d83821cd357e651c01130db4bd4b3ab8517a8520215172"
+    },
+    {
+      "path": "tests/ansys/fixtures/lmstat_ansys_increment_layout.provenance.json",
+      "sha256": "612edc453d0f2f0779a8ed9e698ed89721d9905f33c2804b04308a4e86a2a05a"
+    },
+    {
+      "path": "tests/ansys/fixtures/lmstat_ansys_increment_layout.txt",
+      "sha256": "c701c3c4a71b533924f9c900f581cf5ae46cec663409ff1e42d68652a36e27a2"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_canary.py",
+      "sha256": "1b38e983f6fbc05e4c9e8be2d5ce1faa524359aaa875b3a9350767c9c4745e62"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_diagnostic_admission.py",
+      "sha256": "43a08ce5c961df538108e02dea971afe6bb8a19f0950e672cb376283a8174e89"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_diagnostic_driver.py",
+      "sha256": "0e561f68b2a804cb5371d841688fbe92c76b1fe6465ae88d777762010ff36323"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_diagnostic_integration.py",
+      "sha256": "b59d8fdaea080d68e353c674f4cdf520fb69722cc161b48a5fbc509a790ff9a4"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_diagnostic_preflight.py",
+      "sha256": "5ae68fa12eac3a6f44f2d84f3f3b8e408db22517f867bb3c536f3be9570f082a"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_diagnostic_resources.py",
+      "sha256": "dc32af67a3987c98d7bef55376cb82a3ef6a5597b14db1043b4e2d420f128c25"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_operational_reservation.py",
+      "sha256": "dff6a7ea9e36dd76a916bcb06bf4606a02ed525767b7ce945b2f389fa09cd938"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_process.py",
+      "sha256": "0a0c26d0531a172027a2a16ca415a6fb5a4ce6268d9b50af26ccc461172c29bc"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_process_inventory.py",
+      "sha256": "36d34315854ccb6443dbd31fd53a4da577c940352e1196852ca95f663b39335a"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_runtime_bundle.py",
+      "sha256": "422ae77aa56528448beff7d0570b2204e5a7accaa4bdc3469291bae0cad649b8"
+    }
+  ],
+  "validation": {
+    "offline_suite": "1435 passed;1 corpus skipped;2 native tests explicitly deselected",
+    "post_correction": "199 focused tests passed after deterministic Decimal correction and LF binding normalization",
+    "legal": "PASS through hash-verified scoped scanner; named --repo resolver defect avoided using supported root invocation",
+    "style": "changed Python files <=400lines; functions<=50lines"
+  },
+  "reviews": {
+    "plan_rounds": [
+      {
+        "receipt": "private-coordination:SOLVERS-PM-Claude-46bf34398119.json",
+        "bundle": "46bf34398119195511778c48da75114d0564d63b681aa3d41c379e3a4b451eb4",
+        "verdict": "MAJOR"
+      },
+      {
+        "receipt": "private-coordination:SOLVERS-PM-Claude-d5e60edd1043.json",
+        "bundle": "d5e60edd1043eafe3cbf9d343054e286754c466fa6774ece76bfd4fe2fdfd033",
+        "verdict": "MAJOR"
+      }
+    ],
+    "disposition": "r3 inline corrections: exact externally pinned campaign scope, explicit postclaim checks, full loaded-package origins, deterministic arithmetic, actual retained licence layout. Independent Codex integration found no additional blocking mismatch; exact-current Claude code/configuration/artifact review remains required before native use."
+  },
+  "scope": {
+    "admitted_case": "ocv-zero-t60-n16",
+    "max_attempts": 1,
+    "automatic_retries": 0,
+    "qualified_reuse": false,
+    "pressure_continuation": "Not implemented by current API"
+  },
+  "native_attempts_added": 0,
+  "qualified_rows_added": 0,
+  "matrix": {
+    "path": "examples/ansys/analysis-evidence/manifest.json",
+    "cases": 12,
+    "responses": 350,
+    "not_evaluated": 256,
+    "qualified": 0
+  }
+}

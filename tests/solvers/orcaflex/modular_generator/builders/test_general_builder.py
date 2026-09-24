@@ -78,7 +78,7 @@ def test_explicit_generic_restart_override_is_preserved(tmp_path, value):
         "line_types": [], "vessels": [],
     })
     ModularModelGenerator.from_spec(spec).generate(tmp_path)
-    text = (tmp_path / "includes/20_generic_objects.yml").read_text()
+    text = (tmp_path / "includes/01_general.yml").read_text()
     actual = yaml.safe_load(text)["General"]["RestartStateRecordingTest"]
     assert actual == value
     assert type(actual) is type(value)
@@ -203,3 +203,18 @@ class TestOtherProperties:
         gen = _build(_make_spec())
         assert gen["JacobianBufferingPolicy"] == 1
         assert gen["JacobianPerturbationFactor"] == 0
+
+
+@pytest.mark.parametrize('flag', ['Yes', 1, None])
+def test_variable_step_switch_requires_boolean(flag):
+    with pytest.raises(ValueError, match='ImplicitUseVariableTimeStep.*Boolean'):
+        _build(_make_spec(generic={'general_properties': {'ImplicitUseVariableTimeStep': flag}}))
+
+
+def test_source_display_keys_remain_filtered():
+    general = _build(_make_spec(generic={'general_properties': {
+        'DefaultViewMode': 'Wire frame', 'TemperatureUnits': 'C',
+        'StaticsMaxIterations': 4400}}))
+    assert 'DefaultViewMode' not in general
+    assert 'TemperatureUnits' not in general
+    assert general['StaticsMaxIterations'] == 4400

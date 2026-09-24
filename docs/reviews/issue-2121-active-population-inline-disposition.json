@@ -1,0 +1,50 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "observed_utc": "2026-09-17T14:55:52.909282+00:00",
+  "scope": "Active process collector correction only; abandoned-preparation accounting remains unimplemented",
+  "status": "IMPLEMENTED_OFFLINE_FINAL_INTEGRATED_REVIEW_PENDING",
+  "source_pins": {
+    "docs/plans/issue-2121-active-population-accounting.html": "535b18774b8b618c35fffa2cc5930d31747000a8983bb0a1ab4b3ad681f06290",
+    "src/digitalmodel/ansys/cylinder_absence_population.py": "9fdf82b5ba18f08ab314f122d7427b6c85c14e4b684b6d55b3da2fd67de53841",
+    "src/digitalmodel/ansys/cylinder_diagnostic_snapshot_v2.py": "c94c008846d3a452376766508f272b8dee7187509c07bb5a1ce5b9e1847179d1",
+    "tests/ansys/test_cylinder_active_population.py": "8f4046cd709141a03805ffa7195c55d982da024a24a2abe9634eac24d33f4dd5",
+    "tests/ansys/test_cylinder_diagnostic_snapshot_v2.py": "a5276ad3585f6003a473bf9868f082dde43163d47ec05c1192d44a85b5277a2e"
+  },
+  "plan_reviews": [
+    {
+      "bundle": "bab37456052f023d0c5e1154a3298ba8144432ac5c4bb17936c115ff8514b565",
+      "verdict": "MAJOR"
+    },
+    {
+      "bundle": "ea803012d7cdb492230f58800ce8ff5244ad672ce0f3d2e292d2ebc5f5a8c876",
+      "verdict": "MAJOR"
+    }
+  ],
+  "code_reviews": [
+    {
+      "bundle": "9fc050529b9c730cdbbf95819b943f4a81586effbe3240f1892bde2e03da682e",
+      "verdict": "MAJOR"
+    },
+    {
+      "bundle": "bb0406397b71c88b7fe8d29962ed3515273c87cdc57f23ff92002d0e1b7e6f0f",
+      "verdict": "MAJOR"
+    }
+  ],
+  "inline_dispositions": [
+    "Rejected blank-name observations now remain outside completed observations and retain rejected_inventory with exact process and failed stage.",
+    "Blank names remain refused; no secondary name resolution is attempted in active collection.",
+    "Detail and forwarding phases are independently named.",
+    "Endpoint parent-change events carry endpoint_gap basis; adjacent observations retain their separate events.",
+    "Exact final full regression follows the inline corrections; earlier834-pass run is historical, not final-byte coverage.",
+    "No native admission from prior MAJOR verdicts or inline corrections; complete accounting and exact integrated review remain prerequisites."
+  ],
+  "engineering_qualified": false,
+  "native_attempt_delta": 0,
+  "matrix_changed": false,
+  "provider_availability": "Delegated Codex diagnostic worker returned findings then reported usage limit; no blind retry. Claude review available.",
+  "known_limits": [
+    "Within-observation inconsistency and incomplete identities still refuse.",
+    "Historical changed process identities were not retained and cannot be recovered from refusal.",
+    "Runtime and execution configuration are not rebound to this implementation."
+  ]
+}

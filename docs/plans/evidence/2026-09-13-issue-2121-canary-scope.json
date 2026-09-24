@@ -1,0 +1,338 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "baseline": "17bb5527150bb18ce4c942b04627bf00e4355a3e",
+  "observed_utc": "2026-09-14T02:45:04.812000+00:00",
+  "scope": "user selected four-run native-canary planning; no implementation or solve approval",
+  "prior_scope": "28 attempts and lookup promotion deferred; prior proposals/receipts retained as historical",
+  "source_files": [
+    {
+      "path": "src/digitalmodel/ansys/runner.py",
+      "sha256": "05a0816a516938dfd953ec85a10a47296b9c78889a852a97a4baf847fb2fa6d8"
+    },
+    {
+      "path": "src/digitalmodel/ansys/analysis_records.py",
+      "sha256": "06dce5eb10d244c48df0fa1075bf48010170a668b81cd45694eb43fe3d349511"
+    },
+    {
+      "path": "tests/ansys/native_resolve_support.py",
+      "sha256": "79d003127f99f8e239ad51784747fc74c075b316b4928aa0a81268bb10863286"
+    },
+    {
+      "path": "tests/ansys/test_example_goldens.py",
+      "sha256": "f553f6a2c47095253e51e1edbf89bf3f0b41dd0aa303aa9c7ff12b12af8be4ce"
+    },
+    {
+      "path": "examples/ansys/pressure-vessel/golden/PROVENANCE.json",
+      "sha256": "e06207a24a19ca50ea308b1f663cfe86347f6231b3e67780cd93d99d63e08aa6"
+    }
+  ],
+  "drive_discovery": {
+    "query": "ANSYS cylinder canary stress recovery",
+    "unavailable_indexes": 5,
+    "available_catalog_matches": 1,
+    "usable_verified_cylinder_sources": 0,
+    "limitation": "single generic stress-directory token match; no source-content verification; no ecosystem-wide absence claim"
+  },
+  "catalogs": "llm-wiki data-source-catalog.yml and domain-database-index.yml; bounded ansys/cylinder text query returned zero; no ID allocated",
+  "dispositions": {
+    "D1": "Replaced undefined offline feasibility prediction with a separately approved four-attempt native evidence test and explicit PASS/FAIL/INCOMPLETE rules. B1 prepares that test without claiming numerical feasibility.",
+    "D2": "Fixed limits and independently stated detection goals; any initial or later relaxation requires amended review and matching approval; no observation-calibrated acceptance.",
+    "D3": "Verification will include exact staged-to-mirror hash inventory, owner-deny-list existence and a direct literal-pattern scan in addition to the qualified shared scanner.",
+    "D4": "Single fixed canary proposal; table rendered from its criteria. All method/criterion changes reopen review/approval.",
+    "D5": "Distinct hashed physics-only checker brief; exclude published comparator/producer paths before independent derivation.",
+    "D6": "Sampled corner-node adjacency fixed at 2/4/2; all sharing elements, explicit extrapolation and independent contribution-to-mean readback.",
+    "D7": "Prior per-round receipts retain their exact trees; new canary reviews will use distinct filenames and hashes.",
+    "D8": "Verified current decimal_text preserves integer zeros; test exact decimal/exponent behavior and wrong-unit refusal.",
+    "D9": "PLANE182 source remains historical only; proposal consumes PLANE183-specific keyopts.",
+    "D10": "Radial boundary stresses explicitly measure traction recovery; applied-load audit is separate.",
+    "CX3": "All new machine-readable zero/control/auxiliary criteria explicitly use abs.",
+    "canary_R1": {
+      "R-00": "Claude reviewed supplied content with tools disabled; independent Codex mechanically checked raw Git blobs, paths and hashes. No Claude filesystem recomputation is claimed.",
+      "F1": "Added *GET/*VWRITE E24.16 acceptance export, numeric witness and half-quantum <= floor/100 evidence guard. No default table acceptance. Existing floors unchanged; they exceed required representation resolution by at least 100.",
+      "F2": "Enforced fresh no-history no-tools checker session, recorded invocation and prompt/output hashes; unavailable isolation blocks independent-reference gate.",
+      "F3": "Named unresolved nonzero-native axial/shear mapping validation and carry-forward limitation.",
+      "F4": "Zero control moved first, still four attempts; narrow detection limitations explicit.",
+      "F5": "Aggregate check explicitly targets net unintended axial load; individual reaction distribution diagnostic, evidence consistency/frozen rules govern PASS. No post-observation numerical threshold.",
+      "F6": "Recorded analytical cancellation scale; failed limit remains FAIL and subsequent cause analysis requires reviewed basis, not relaxation.",
+      "F7": "Caption moved first in table content; caption-side bottom retained.",
+      "F8": "Verification receipt will explicitly state its exclusion from its own digest set, tree-object semantics, literal-pattern entry count, absent owner-list fallback and HTML-only render/link scope; final staged scan will include receipts."
+    },
+    "canary_R2": {
+      "R-00": "Independent Codex verified raw Git hashes and source paths; Claude supplied-content review does not claim filesystem verification. All revision IDs in these bundles are Git trees, not commits.",
+      "F1": "Pinned OUTRES suppression of NAR and *GET Item2 ESOL, verified in v242 command documentation; fixed independent readback gate.",
+      "F2": "Active result count/loadstep/substep, mesh counts, positive station coordinates, keyed complete export/listings and argument whitelist required; no default-zero evidence. Reviewer suggested63node rows corrected to9node rows/54native+9derived quantities.",
+      "F3": "Empty frozen warning allowlist; WARNING/ERROR/FATAL/unparsed severity => INCOMPLETE; no posthoc waiver or numerical recalibration.",
+      "F4": "Explicit reference agreement tolerances and independent adjudicator; disagreement blocksB2; changed basis/approvedhash reopens approval.",
+      "F5": "96-column keyed Fortran format with A8 and F8.0; rejected reviewer example A20/I8 because *VWRITE forbids I descriptors and limits A fields to8.",
+      "F6": "Fixed E24.16 listing and numerical readback tolerance well below engineering criteria; precision checks before comparison.",
+      "F7": "Auxiliary absolute-limit severity/detection and relative scales explicit; cannot detect all y-addressing errors; fixed-band FAIL retained.",
+      "F8": "Distinct provider in fresh session; factual inputs inline, URLs attribution only; no licensed prose required.",
+      "F9": "Per-round superseded mapping in scope record; unmodified verbatim receipts remain historical; index will reference current verdict through publication record.",
+      "F10": "Verify changed indexrow link and changed prose separately; keep wholehistoricalindexoutside registerclaim. Git-tree semantics explicit; publicationcommit will be recorded aftercommit, no inventedprecommitidentity."
+    },
+    "canary_R3": {
+      "R-00": "Main-session and independent Codex raw-blob checks establish mechanical evidence; no tools-disabled Claude filesystem audit claimed.",
+      "F1": "Valid capability gap: checker will emit exact independent expressions; a frozen arithmetic-only evaluator will calculate numeric values without producer-function reuse. Frame/sign/units added to brief. Inline correction awaits review.",
+      "F2": "PRESOL,S,COMP and FORMAT behaviour pinned to v242; contributions receive the same half-quantum gate and default-width refusal test. Inline correction awaits review.",
+      "F3": "Valid classifier gap. Native logs verified in private retained storage, not a complete committed corpus. Diagnostic envelope, totals and file-coverage rules added. Ordinary unclassified output is not a diagnostic; unknown diagnostic candidates fail. No observed ERROR/FATAL coverage claimed. Inline correction awaits review.",
+      "F4": "Full-count, nine-node listing with unchanged ESEL, full-node restoration sequence explicit.",
+      "F5": "GET ESOL is acceptance source; PRNSOL is independent listing.",
+      "F6": "Dedicated CFOPEN/CFCLOS export; FORMAT bounds and field width recorded.",
+      "F7": "A self-containing tree hash cannot be stored in its own receipt without changing the tree. Per-file digests plus subsequent R3 receipts bind tree53518eef; publication commit will bind final inline files. No circular self-hash requirement adopted.",
+      "F8": "Non-receipt JSON prose will be extracted for register checking. Verbatim provider receipts remain evidence quotations, explicitly excluded from house-style rewriting."
+    },
+    "checkpoint_R1": {
+      "N1": "Explicit symbol/operator/output contract; evaluator/grammar/test/brief commit before exactly one registered checker invocation; any rejection leaves gate unestablished, no resampling.",
+      "N2": "All 217 private source header/body offsets verified; canonical characterization records distinct headings, classes, representative identities, tool/method and reachability limitations. Empty allowlist retained; B1 tests identities not only counts.",
+      "N3": "CONFIG-v242 establishes RESUPREC0 double storage. Pin command before output plus pre/post native STAT; numerical bands unchanged. Binary32 representability test rejected as nondecisive: exact zeros can be binary64, while averages of binary32 can be non-binary32. Independent Codex confirmed disposition.",
+      "N4": "Pre-solve SFELIST full selected loads plus FLIST/DLIST, keyed face/sign/magnitude/support verification; database-state caveat explicit.",
+      "N5": "Strict byte-empty process stdout/stderr; unexpected launcher content refuses even exit0.",
+      "N6": "Verification will record recursive JSON string-value extraction rule, input hashes, script digest and nonempty UTF8 byte count; immutable quoted receipts excluded from style rewriting only.",
+      "N7": "Reference agreement moved to pre-invocation prerequisite consuming no attempt; per-attempt approved hash check retained; no-diagnostic and no-live-process conjunction explicit."
+    },
+    "checkpoint_R2": {
+      "C1": "Confirmed all four reported mismatches are only CRLF working bytes versus LF staged Git bytes, not changed prose. New reproducible register extraction will use exact staged blobs and input hashes; committed extractor, per-input byte lengths and HTML hash included.",
+      "C2": "Explicit Begin-level CONFIG status sequence with FINISH and processor re-entry; FINISH-v242 supports database persistence. No unsupported exclusive-availability assertion.",
+      "C3": "Both pinned runs have no retained native pipe evidence in inspected directories/receipts. Byte-empty streams are explicit unverified approval-scope assumption. Future B1 opt-in raw capture preserves original bytes; no existing raw-stream retention claimed.",
+      "C4": "Neutral B1-pending status with exact checkpoint receipts governing review state; historical round labels remain historical.",
+      "C5": "Removed ambiguous scope hash from characterization; canonical verification binds both records.",
+      "C6": "Zero-control native load database explicitly has no surface-load/nodal-force records; complete empty listings required and separately tested."
+    },
+    "frozen_review": {
+      "K1": "Unary plus/minus, integer literals, parentheses and exact whitespace rules now explicit in output contract and brief; B1 identity tests precede invocation.",
+      "K2": "HTML now distinguishes output-schema description supplied in brief from expressions returned by checker.",
+      "K3": "Fixed audit then FINISH/CONFIGSTAT/SOLU/SOLVE sequence with no state mutation; B1 test will enforce window.",
+      "K4": "Added committed-fixture tree-id extraction test; published four-input extraction will be rerun and recorded with measured bytes/digest, separate from the regenerated receipt."
+    },
+    "frozen_R2": {
+      "F1": "Bare JSON envelope, exact keys, duplicate-key refusal, strict UTF8 and raw retention will be explicit. Codex confirms clarification; provider nonconformance will still refuse rather than be repaired. No guarantee of syntactic success.",
+      "F2": "Literal syntax, signed exponent forms, precedence/association, grouped powers and whitespace handling will be explicit with B1 identity/refusal tests.",
+      "F3": "Historical rounds now identify superseded revisions; vendor roles will identify purpose, while exact review receipts will govern coverage. Load audits will precede the fixed status/re-entry sequence.",
+      "F4": "The committed-tree test is regression-only against existing helper behavior; no implementation change or artificial RED cycle is claimed. Fixture Git newline configuration will match the existing test."
+    }
+  },
+  "review_status": "Current checkpoint corrections await exact-current independent review; B1 approval pending",
+  "historical_rounds": [
+    {
+      "round": "canary R1",
+      "tree": "8f07fc3294f7813a30e5a1de4bd2ebc3240141d6",
+      "claude": "MAJOR",
+      "codex": "APPROVE",
+      "status": "superseded technical revision; original receipts retain their historical verdicts"
+    },
+    {
+      "round": "canary R2",
+      "tree": "526c14fb08f16008e83cd65efe30364b7404c52c",
+      "claude": "MAJOR",
+      "codex": "APPROVE",
+      "status": "superseded technical revision; original receipts retain their historical verdicts"
+    },
+    {
+      "round": "canary R3",
+      "tree": "53518eef91f925807c76cb9d130964fc06acd4c5",
+      "claude": "MAJOR",
+      "codex": "APPROVE",
+      "status": "superseded technical revision; original receipts retain their historical verdicts"
+    },
+    {
+      "round": "user-authorized checkpoint R1",
+      "tree": "e03359e1b1b56079ed9b53f1934d57e7dfe2a9b3",
+      "claude": "MAJOR",
+      "codex": "APPROVE",
+      "status": "superseded technical revision; original receipts retain their historical verdicts"
+    },
+    {
+      "round": "checkpoint R2",
+      "tree": "082ed61b32ff7f48f70a2394f53d2ddd92c363cd",
+      "claude": "MAJOR",
+      "codex": "APPROVE",
+      "status": "superseded technical revision; original receipts retain their historical verdicts"
+    },
+    {
+      "round": "frozen R1",
+      "revision": "4bcf77b2c28abad45e925a1641f29e4203c8d370",
+      "revision_kind": "Git commit",
+      "claude": "MAJOR",
+      "codex": "prior unchanged-byte APPROVE coverage",
+      "status": "superseded by K1-K4 corrections"
+    },
+    {
+      "round": "frozen R2",
+      "tree": "ec502ca6a5fdb151b74c083d350cd32f8f2ce199",
+      "claude": "MAJOR",
+      "codex": "APPROVE",
+      "status": "F1-F4 independently adjudicated; current bounded corrections require exact-current coverage"
+    }
+  ],
+  "diagnostic_corpus": [
+    {
+      "resolver": "private licensed-results root; no raw capture copied into Git by this plan",
+      "relative_path": "ansys-2094-canary-20260912T205311Z/pressure-vessel/pv.out",
+      "sha256": "5f3b0a90a91a723efe12e5d98dfe5a5a7aadd2e1d575316981ff1dbba7e6a54f",
+      "bytes": 25321,
+      "observed_headings": {
+        "WARNING": 1,
+        "NOTE": 5,
+        "ERROR": 0,
+        "FATAL ERROR": 0
+      },
+      "readiness": "offline diagnostic fixture basis only; not canary evidence"
+    },
+    {
+      "resolver": "private licensed-results root; no raw capture copied into Git by this plan",
+      "relative_path": "ansys-2094-canary-20260912T205311Z/pressure-vessel/file.err",
+      "sha256": "cc3b3f1318065e3ae95de2daff3059952b15496a027ba49c87d919be367dc662",
+      "bytes": 393,
+      "observed_headings": {
+        "WARNING": 1,
+        "NOTE": 0,
+        "ERROR": 0,
+        "FATAL ERROR": 0
+      },
+      "readiness": "offline diagnostic fixture basis only; not canary evidence"
+    },
+    {
+      "resolver": "private licensed-results root; no raw capture copied into Git by this plan",
+      "relative_path": "ansys-2094-pressure-prep-20260913T021014Z/mesh-10mm/pressure_prepare.out",
+      "sha256": "66d84c54a5833e51f65b57258d2cb8b7df826bc70057053f527166af7953a20d",
+      "bytes": 225091,
+      "observed_headings": {
+        "WARNING": 104,
+        "NOTE": 2,
+        "ERROR": 0,
+        "FATAL ERROR": 0
+      },
+      "readiness": "offline diagnostic fixture basis only; not canary evidence"
+    },
+    {
+      "resolver": "private licensed-results root; no raw capture copied into Git by this plan",
+      "relative_path": "ansys-2094-pressure-prep-20260913T021014Z/mesh-10mm/file.err",
+      "sha256": "9de76f3bd86f7d14d920bbcd3bce3f59275d7229e51981b758752f74ceadb823",
+      "bytes": 24832,
+      "observed_headings": {
+        "WARNING": 104,
+        "NOTE": 0,
+        "ERROR": 0,
+        "FATAL ERROR": 0
+      },
+      "readiness": "offline diagnostic fixture basis only; not canary evidence"
+    }
+  ],
+  "diagnostic_characterization": "2026-09-14-issue-2121-diagnostic-characterization.json",
+  "process_stream_characterization": {
+    "scope": "Only the two pinned pressure-vessel/preparation runs are promoted here; no fleet-wide absence claim",
+    "sources": [
+      {
+        "path": "src/digitalmodel/ansys/runner.py",
+        "git_commit": "377be1d535388709b16e01d43bb43b652a63663e",
+        "git_blob_sha256": "05a0816a516938dfd953ec85a10a47296b9c78889a852a97a4baf847fb2fa6d8",
+        "working_bytes_sha256": "6357c043d7bfb080b8e9f50233ff95695f1ca90495b1c9a1a735acf1980dd3c3",
+        "byte_basis": "Git blob is canonical; working bytes may use CRLF"
+      },
+      {
+        "path": "tests/ansys/native_resolve_support.py",
+        "git_commit": "377be1d535388709b16e01d43bb43b652a63663e",
+        "git_blob_sha256": "79d003127f99f8e239ad51784747fc74c075b316b4928aa0a81268bb10863286",
+        "working_bytes_sha256": "9ed7f59aa64b0c16294a829a4f8511919fc811df1495526d9cb01ca2a38a1989",
+        "byte_basis": "Git blob is canonical; working bytes may use CRLF"
+      }
+    ],
+    "runner_behavior": "run_ansys uses subprocess.run(capture_output=True,text=True); ANSYSRunResult receives stdout/stderr in memory, including decoded timeout partial streams. Runner does not itself persist streams. Text decoding and newline handling prevent these strings from establishing original pipe-byte digests.",
+    "retention_behavior": "Inspected resolve_golden and historical padeye/preparation operators serialize status, return code, duration, errors and native result-file hashes; they do not serialize result.stdout/result.stderr. Historical canary wrapper records pytest_output separately; wrapper output is not equivalent to native pipes. Current operator sources are supporting behavior evidence, not automatically authenticated executed historical revisions.",
+    "runs": [
+      {
+        "run": "ansys-2094-canary-20260912T205311Z/pressure-vessel",
+        "process_stdout": {
+          "retained": false,
+          "status": "not_found_in_bounded_retention_inventory",
+          "bytes": null,
+          "sha256": null
+        },
+        "process_stderr": {
+          "retained": false,
+          "status": "not_found_in_bounded_retention_inventory",
+          "bytes": null,
+          "sha256": null
+        },
+        "stream_named_files": [],
+        "receipts": [
+          {
+            "relative_path": "ansys-2094-canary-20260912T205311Z/pressure-vessel/resolve_receipt.json",
+            "bytes": 2589,
+            "sha256": "eda201039156cc24546f2509e65e7ecf7667468ac564e18f675a60c1fd5e3463",
+            "embedded_streams": []
+          }
+        ],
+        "other_native_output_evidence": [
+          {
+            "relative_path": "ansys-2094-canary-20260912T205311Z/pressure-vessel/file.err",
+            "bytes": 393,
+            "sha256": "cc3b3f1318065e3ae95de2daff3059952b15496a027ba49c87d919be367dc662",
+            "role": "native_output_file_not_process_pipe"
+          },
+          {
+            "relative_path": "ansys-2094-canary-20260912T205311Z/pressure-vessel/file.log",
+            "bytes": 170,
+            "sha256": "6de4947f24a30df729a9d906149d7f1f60bc23e36aa9624985463b3aabf1e124",
+            "role": "native_output_file_not_process_pipe"
+          },
+          {
+            "relative_path": "ansys-2094-canary-20260912T205311Z/pressure-vessel/pv.out",
+            "bytes": 25321,
+            "sha256": "5f3b0a90a91a723efe12e5d98dfe5a5a7aadd2e1d575316981ff1dbba7e6a54f",
+            "role": "native_output_file_not_process_pipe"
+          }
+        ],
+        "interpretation": "No persisted native pipe bytes or stream-valued receipt fields found. Available .out/.err/.log are distinct channels, not substitutes for process stdout/stderr. Absence does not establish that runtime pipes were empty."
+      },
+      {
+        "run": "ansys-2094-pressure-prep-20260913T021014Z/mesh-10mm",
+        "process_stdout": {
+          "retained": false,
+          "status": "not_found_in_bounded_retention_inventory",
+          "bytes": null,
+          "sha256": null
+        },
+        "process_stderr": {
+          "retained": false,
+          "status": "not_found_in_bounded_retention_inventory",
+          "bytes": null,
+          "sha256": null
+        },
+        "stream_named_files": [],
+        "receipts": [
+          {
+            "relative_path": "ansys-2094-pressure-prep-20260913T021014Z/operator-receipt.json",
+            "bytes": 2036,
+            "sha256": "74031e3da3449f08ae80d671a21831e42ff063e08a27429e17fb9275e5edef0c",
+            "embedded_streams": []
+          }
+        ],
+        "other_native_output_evidence": [
+          {
+            "relative_path": "ansys-2094-pressure-prep-20260913T021014Z/mesh-10mm/file.err",
+            "bytes": 24832,
+            "sha256": "9de76f3bd86f7d14d920bbcd3bce3f59275d7229e51981b758752f74ceadb823",
+            "role": "native_output_file_not_process_pipe"
+          },
+          {
+            "relative_path": "ansys-2094-pressure-prep-20260913T021014Z/mesh-10mm/file.log",
+            "bytes": 170,
+            "sha256": "777ae31120a72dcb75ee6866fe1e6781260efceb6676079c6098ed91ff21acde",
+            "role": "native_output_file_not_process_pipe"
+          },
+          {
+            "relative_path": "ansys-2094-pressure-prep-20260913T021014Z/mesh-10mm/pressure_prepare.out",
+            "bytes": 225091,
+            "sha256": "66d84c54a5833e51f65b57258d2cb8b7df826bc70057053f527166af7953a20d",
+            "role": "native_output_file_not_process_pipe"
+          }
+        ],
+        "interpretation": "No persisted native pipe bytes or stream-valued receipt fields found. Available .out/.err/.log are distinct channels, not substitutes for process stdout/stderr. Absence does not establish that runtime pipes were empty."
+      }
+    ],
+    "conclusion": "Native process-stream corpus is unavailable in inspected retention. No zero-byte native stream can be asserted. Offline classifier may use retained native .out/.err and synthetic process-stream fixtures labelled as such. Future operator must explicitly retain each stream and its presence/encoding identity.",
+    "private_full_inventory_sha256": "c816305883e95575bac2373d780b45d65496d1912e2990cc8956c01826982c7d",
+    "approval_scope_assumption": "Byte-empty process stdout/stderr remains unverified for this launcher. B1 approval will adopt the strict empty-stream gate as an explicit assumption, not a historical result. Incompatible B2 output yields INCOMPLETE without waiver or tolerance change."
+  }
+}

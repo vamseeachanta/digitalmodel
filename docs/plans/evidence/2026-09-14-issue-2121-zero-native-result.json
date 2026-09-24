@@ -1,0 +1,171 @@
+{
+  "schema": "ansys-zero-native-execution-evidence-1",
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "case_id": "ocv-zero-t60-n16",
+  "capture_id": "ansys-2121-zero-diagnostic-20260914-r1",
+  "recorded_at": "2026-09-14T22:52:54.596474+00:00",
+  "execution_source_revision": "16894a32dfc92c217c7398720897ce3e54cdb1ee",
+  "config_sha256": "1c9d45cbbd44bd8d37a324e151121a52c1c0a54c1ce8c1137a2838fd3541e21a",
+  "runtime_manifest_sha256": "922a3fd53ccfecf6d16fbfab680df917e3bcc2c04a04f0422813e12d1accc0f9",
+  "review": {
+    "provider": "Claude",
+    "verdict": "MINOR",
+    "bundle_sha256": "4ba0df4455058eace4a29818efa9cc9e3490f2b17cc2e7a24cad71bf88fa5704",
+    "receipt_sha256": "6d42d2842f8b488e6f8c8c9a78af8203a64adbc68f1bd3cd1bb96819a266d53f",
+    "scope": "Exact diagnostic code/configuration; not engineering signoff"
+  },
+  "solver": {
+    "product": "ANSYS Mechanical APDL",
+    "release": "2026 R1.01",
+    "build": "26.1",
+    "update": "20260202",
+    "platform": "WINDOWS x64",
+    "cores": 1,
+    "parallel": "smp"
+  },
+  "execution": {
+    "return_code": 0,
+    "duration_seconds": "21.219000000040978",
+    "containment_verified": true,
+    "owned_processes_remaining": 0,
+    "streams_finalized": true,
+    "reservation_released": true
+  },
+  "attempt_consumed": true,
+  "native_attempt_count": 1,
+  "assessment": {
+    "status": "INCOMPLETE",
+    "reason": "evidence assessment incomplete",
+    "evidence_errors": [
+      "Unsupported CDB command OMEGA"
+    ],
+    "original_assessment_preserved": true
+  },
+  "engineering_qualified": false,
+  "qualified_rows_added": 0,
+  "raw_evidence": [
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/attempt-1.json",
+      "bytes": 151,
+      "sha256": "99a02addece087c38765db5c374e0b7e88893649537207c602516a879ec1f401"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/ocv-zero-t60-n16/execution.json",
+      "bytes": 743,
+      "sha256": "03e56b8f53c8a366c895756c17c9ebbff40a0933641f6791a190e427a35a29f2"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/ocv-zero-t60-n16/file.db",
+      "bytes": 2031616,
+      "sha256": "56ce35a9100c6d88ab7ee8ba7c2ae900cc80f729240696a571eb422e54a38b3b"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/ocv-zero-t60-n16/file.DSP",
+      "bytes": 2133,
+      "sha256": "5a1b098a01d410f8edbf126d703b605b5e13060a00aa1c364bed846aa01001cf"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/ocv-zero-t60-n16/file.err",
+      "bytes": 80,
+      "sha256": "122bbcfb932e6dc86606191c483a37fd36ec775d0ab665e23cf31abc3aa22dcd"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/ocv-zero-t60-n16/file.esav",
+      "bytes": 458752,
+      "sha256": "3d0a165bac54876f4d8f8a71371d280304d2fff36080fec91d09f42ab9ffd075"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/ocv-zero-t60-n16/file.full",
+      "bytes": 2490368,
+      "sha256": "1305caa982685f9b80af50ef5362279d7a9831d87e7364f1ba2d3c1b4f3ad423"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/ocv-zero-t60-n16/file.log",
+      "bytes": 170,
+      "sha256": "f9871a8dd7bcaa829108afcf4eccf1d4c3d8bd3ccf2af85a0257523ec4786c40"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/ocv-zero-t60-n16/file.mntr",
+      "bytes": 875,
+      "sha256": "3baa57efc1dd210e0dade6f9395cb3066eac026795d735b58decc005c1055bce"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/ocv-zero-t60-n16/file.rst",
+      "bytes": 1048576,
+      "sha256": "93296aa7bb41a7e940782ec5f367a064df795eb2b7a779b98166e2c6cefd5727"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/ocv-zero-t60-n16/file.stat",
+      "bytes": 169,
+      "sha256": "da14e7d14cc328e8e118b38e4b695621061836c74d4394d6011306054c281163"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/ocv-zero-t60-n16/model.cdb",
+      "bytes": 639214,
+      "sha256": "7a86ac6bae1f9d623332122f6fee9afab99feef5344462c0134dcf75fc4b6c0e"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/ocv-zero-t60-n16/ocv-zero-t60-n16.inp",
+      "bytes": 185013,
+      "sha256": "1fcaf94c00c7f40ad9ccffbde512ee084e21a6600cb668204a823d23e4241448"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/ocv-zero-t60-n16/ocv-zero-t60-n16.out",
+      "bytes": 2738202,
+      "sha256": "dc7985e152dbb59e254e6a3458ad09d7abd92390ea2282d94bc6c74894401f5d"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/ocv-zero-t60-n16/precision_witness.txt",
+      "bytes": 98,
+      "sha256": "6195f094823839e084d72835be6f6ce34df078e466528c715bbb8f61a2f0e22d"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/ocv-zero-t60-n16/state_values.txt",
+      "bytes": 882,
+      "sha256": "5ae26f4caa3a8beac7e37f1072399ec16c5ea99bbe54890344f1574c52bba8fa"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/ocv-zero-t60-n16/station_values.txt",
+      "bytes": 5292,
+      "sha256": "c4254f0b03f20131b1bb1d542adb6349e5421b841f7b23ac937b58819f12ad73"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/ocv-zero-t60-n16/stderr.bin",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/ocv-zero-t60-n16/stdout.bin",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/ocv-zero-t60-n16/support_reactions.txt",
+      "bytes": 3234,
+      "sha256": "90fbed07bb0b25214908882ded7a5fbf429d73e1c0c25f780154a75e7627ef73"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/operator-outcome.json",
+      "bytes": 284243,
+      "sha256": "bff905a57bb193a87d72283515e9d671a59c196be69ed12015d93b46e45ee021"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/outcome.json",
+      "bytes": 2285,
+      "sha256": "d3ba56d9475e5149ccd770012db71aaaa9363ba10904554c96afe979e6279351"
+    },
+    {
+      "id": "retained-native/ansys-2121-zero-diagnostic-20260914-r1/preflight-1.json",
+      "bytes": 282096,
+      "sha256": "35e997ccaee35b9fca85f88607001dc639ba68abe5ef1442173ca4a5ed89558b"
+    }
+  ],
+  "retention": {
+    "residence": "local private native-capture residence",
+    "private_git_backup_established": false,
+    "public_raw_payload": false,
+    "limitation": "Opaque references and hashes do not establish backup, native assessment completion or engineering reuse readiness."
+  },
+  "canonical_matrix": "examples/ansys/analysis-evidence/manifest.json",
+  "matrix_update_status": "pending reviewed offline intake; original assessment and subsequent replays remain separate"
+}

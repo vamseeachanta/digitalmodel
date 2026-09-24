@@ -1,0 +1,112 @@
+{
+  "provider": "Codex",
+  "reviewer": "independent parametric_scope worker",
+  "verdict": "APPROVE",
+  "reviewed_revision": "11768e3108cc693852d26848fe9a83578517eaa9",
+  "reviewed_revision_kind": "frozen Git tree",
+  "reviewed_files": [
+    {
+      "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+      "sha256": "bc08cee28154cf3c211313f3fc08d4bc65f534ad8df36617192956e0ec5b542f"
+    },
+    {
+      "path": "docs/plans/README.md",
+      "sha256": "72fd817132c456ee8977da76e6b9228286bc3cd0c37766297e2ac7311a20efd7"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json",
+      "sha256": "c765ad316307b36090595ec265e71b4b0459aaa8f82adf9ce8b94f27c9e69423"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json",
+      "sha256": "4e45f59e2c79dce31f166dc3cb4e873d7a71343bd6c5a7efc530973e3ade635e"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-verification.json",
+      "sha256": "e7a86f3c9543da62da6e104fbc725d03b9f0f7e1e53d2d26907fd6e62355ff14"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
+      "sha256": "b799302c0fcb77b833c08075614d91b318175da9528c10bd2a9cd2511268ce04"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-claude-r1.json",
+      "sha256": "067a261029c77cf79622872f10c44a49ed51233a1b588147d5e96a40030c66fa"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-claude-r2.json",
+      "sha256": "9f9e1d765719dc03517756ed03510b0b9f406ac70c12d35961f6869b21e5e934"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-codex-r1.json",
+      "sha256": "3696285441c87f3c65978c27c46a9f7eb7abff3f29c6e27e1019014240a8e64f"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-codex-r2.json",
+      "sha256": "6d6a75230be8bdd6f6ace6113cc79708331c6681f092ed98f7a16a50e9421d6f"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-diagnostic-characterization.json",
+      "sha256": "9893804445f2d79321e41d4750dd83cbc132d006b0b94b221e80f3715800009a"
+    },
+    {
+      "path": "docs/plans/evidence/register_json_prose.py",
+      "sha256": "8511cd91f5eb489867510ece719409fbf47f83a7392d1c0dbad96f2cdbf5da69"
+    },
+    {
+      "path": "tests/docs/test_register_json_prose.py",
+      "sha256": "c3d0c1a0bc2aad4a196cc5894c65e6b138afea66f415fe2e5d6f28f7fdb8d241"
+    }
+  ],
+  "findings": [],
+  "finding_dispositions": [
+    {
+      "id": "F1",
+      "disposition": "Resolved contract clarification; prior MAJOR consequence overstated",
+      "basis": "The entire response must be one bare JSON object with exact keys, strict UTF-8, permitted surrounding whitespace and explicit refusal of BOM, fences, prose, duplicate keys and extra keys. Raw bytes remain retained. Provider conformance is explicitly unestablished until invocation; unusable output blocks B2 without repair or retry."
+    },
+    {
+      "id": "F2",
+      "disposition": "Resolved",
+      "basis": "Numeric token syntax and rational conversion, signed integer exponents, precedence, left association, grouped powers and escaped internal-newline normalization are explicit, with pre-invocation identity/refusal tests. The exponent remains restricted to a signed integer literal; grouping does not authorize arbitrary exponent expressions."
+    },
+    {
+      "id": "F3",
+      "disposition": "Resolved minor traceability issue",
+      "basis": "Frozen R1/R2 history is added, superseded verdicts remain historical, vendor roles defer review status to exact-revision receipts, and SFELIST/FLIST timing matches the fixed processor/status sequence."
+    },
+    {
+      "id": "F4",
+      "disposition": "Resolved advisory; no new implementation RED cycle required",
+      "basis": "The committed-tree test is expressly regression-only against existing behavior, with core.autocrlf false aligned across fixtures. No unsupported RED history is claimed."
+    }
+  ],
+  "verified": [
+    "All thirteen supplied bundle contents and raw SHA-256 digests match the exact Git tree. Current corrections were compared with the previously reviewed ec502ca6 tree; no supported material defect remains in the bounded scope.",
+    "Current four-input extraction independently reproduced 58586 UTF-8 bytes and SHA-256 1b743bf0e646d61266c430a13b29a3c04a63aedef5b883c60fa5410141e86625, including all input hashes and byte lengths.",
+    "Published extraction independently reproduced 54177 bytes and SHA-256 fbba9e66663fab67c0229324139a469106545855f9e92a3fb619987565f24f5e, including all four published input hashes and byte lengths.",
+    "All current verification mirror hashes match the exact tree. Tested helper/test working bytes match this tree after CRLF normalization.",
+    "Three helper tests passed independently in 1.94 seconds with bytecode and pytest cache disabled.",
+    "One-point four-attempt scope, fixed numerical criteria, independent reference preflight, intentional fail-closed syntax outcomes and separate B1/B2 approvals remain unchanged. No native success, lookup qualification or capacity conclusion is asserted."
+  ],
+  "checks": [
+    {
+      "command": "python -B -m pytest tests/docs/test_register_json_prose.py -q -p no:cacheprovider",
+      "result": "3 passed in 1.94s",
+      "exit_code": 0,
+      "native_runs": 0
+    }
+  ],
+  "limitations": [
+    "This is a planning/verification-tooling review, not user authorization for B1 implementation or B2 native execution. Native feasibility and numerical accuracy remain unestablished.",
+    "The broader eleven-test suite, render and legal scanner receipts were reviewed but not independently rerun in this checkpoint.",
+    "The thirteen-file bundle defines coverage; this is not a whole-tree or whole-repository review. Historical review receipts remain historical."
+  ],
+  "cleanup": {
+    "classification": "EXPECTED",
+    "repository_mutations": "None",
+    "private_output": "SOLVERS-2121-frozen-codex-r3.json",
+    "other_residue": "Pytest-managed temporary fixture directories; Python bytecode and pytest cache disabled",
+    "completion_audit_owner": "Parent orchestrator under subagent exemption"
+  }
+}

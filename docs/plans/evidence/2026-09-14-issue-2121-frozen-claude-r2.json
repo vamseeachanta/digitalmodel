@@ -1,0 +1,90 @@
+{
+  "verdict": "MAJOR",
+  "reviewed_revision": "ec502ca6a5fdb151b74c083d350cd32f8f2ce199",
+  "reviewed_files": [
+    {
+      "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+      "sha256": "f50c1f1bbb78b758f600271447fa61f6ff43389c86adb5afe02fc364bfa4df44"
+    },
+    {
+      "path": "docs/plans/README.md",
+      "sha256": "72fd817132c456ee8977da76e6b9228286bc3cd0c37766297e2ac7311a20efd7"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json",
+      "sha256": "cba6ed62d375fd4c7772b1283471495e50ad8aa1d28b519db9671cabc0a0b8c3"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json",
+      "sha256": "b9919e2bd5fd241c56772a7aed373c99f9d70b586fc5baa78eccea2377a49bde"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-verification.json",
+      "sha256": "fca78ad963af7c0495461e7a086fd426fd9fb5a935049d06524e07fce057c335"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
+      "sha256": "25c0fde670b38dc7e3a4413cf79911e718b550467b6a9ebb3fffdbe7d4df4648"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-claude-r1.json",
+      "sha256": "067a261029c77cf79622872f10c44a49ed51233a1b588147d5e96a40030c66fa"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-claude-r2.json",
+      "sha256": "9f9e1d765719dc03517756ed03510b0b9f406ac70c12d35961f6869b21e5e934"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-codex-r1.json",
+      "sha256": "3696285441c87f3c65978c27c46a9f7eb7abff3f29c6e27e1019014240a8e64f"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-codex-r2.json",
+      "sha256": "6d6a75230be8bdd6f6ace6113cc79708331c6681f092ed98f7a16a50e9421d6f"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-diagnostic-characterization.json",
+      "sha256": "9893804445f2d79321e41d4750dd83cbc132d006b0b94b221e80f3715800009a"
+    },
+    {
+      "path": "docs/plans/evidence/register_json_prose.py",
+      "sha256": "8511cd91f5eb489867510ece719409fbf47f83a7392d1c0dbad96f2cdbf5da69"
+    },
+    {
+      "path": "tests/docs/test_register_json_prose.py",
+      "sha256": "284342dae5de94679352bbb95bb78893493014da5ef9f2b77753696345f130b7"
+    }
+  ],
+  "findings": [
+    {
+      "id": "R-00",
+      "severity": "INFO",
+      "defect": "Supplied-content review only; no filesystem, Git or network access. All digests are transcribed from the bundle; blob-level agreement is the Codex lane. The verification receipt's staged mirror lists docs/plans/evidence/2026-09-14-issue-2121-frozen-claude-r1.json (7bf82542...), which was not supplied, so its content is unreviewed. K1-K4 corrections were checked against the current HTML, proposal, scope, receipt, helper and tests.",
+      "correction": "None required; include the frozen receipt in future bundles that bind it."
+    },
+    {
+      "id": "F1",
+      "severity": "MAJOR",
+      "defect": "The checker output envelope is undefined. output_contract fixes the JSON shape and expression grammar but not what raw provider output may surround it: Markdown code fences, leading prose or extra keys are ordinary tools-disabled provider behaviour. session_control permits exactly one invocation, forbids syntax retry, and treats unusable output as an unestablished gate blocking B2. The 'parseable by construction' claim under K1 is therefore not met on a foreseeable normal path.",
+      "correction": "Before invocation, freeze and test an envelope rule in the contract and brief: whether the entire raw output must be one bare JSON object, whether fences/prose are stripped by a fixed rule, and whether extra keys are refused or ignored. Hash it with the grammar; retain raw output unchanged."
+    },
+    {
+      "id": "F2",
+      "severity": "MINOR",
+      "defect": "Grammar remains ambiguous on: negative integer exponents (r**-2 versus r**(-2)); precedence and associativity of ** relative to unary minus (-a**2); exponent-notation literals (1e-3) under 'finite decimal literals'; and internal LF inside a long inlined sigma_vm string, since only internal spaces/tabs are accepted. A conforming checker can hit any of these and be refused or misevaluated.",
+      "correction": "State explicit precedence/associativity, negative-exponent form, literal syntax and internal-newline handling in output_contract and the brief; add B1 identity tests for each."
+    },
+    {
+      "id": "F3",
+      "severity": "MINOR",
+      "defect": "Traceability is stale in the current tree. canary-scope.json historical_rounds omits the frozen Claude R1 review at commit 4bcf77b2 recorded in the verification receipt, and its checkpoint R2 entry still reads 'awaiting exact-current review'. Vendor register roles for PRESOL/CFOPEN/MSG/NERR still say review pending, and the SFELIST/FLIST 'immediately before SOLVE' entries contradict the fixed FINISH; /CONFIG,STAT; /SOLU; SOLVE window adopted for K3.",
+      "correction": "Add the frozen round with tree, verdict and status; update superseded status labels; reword the SFELIST/FLIST canary facts to 'before the fixed status/re-entry sequence'."
+    },
+    {
+      "id": "F4",
+      "severity": "MINOR",
+      "defect": "The receipt states the committed-tree extraction test passed with no implementation change, so it was never observed RED. The test does not disable core.autocrlf as the staged-bytes test does; harmless for the LF-only fixture but inconsistent. A test never seen failing is not established as sensitive to the property it guards.",
+      "correction": "Record a mutation check (e.g. helper reading the working file) that fails the test, or note the test as regression-only; align the git config setup between the two tests."
+    }
+  ]
+}

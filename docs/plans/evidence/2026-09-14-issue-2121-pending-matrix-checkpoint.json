@@ -1,0 +1,139 @@
+{
+  "schema": "pending-matrix-checkpoint-1",
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "observed_utc": "2026-09-14T17:56:28.481654+00:00",
+  "scope": "Pending coverage publication only; analysis lifecycle and native execution remain incomplete",
+  "source_commit": "806f4d8f46bb02b5bb74b2b41515b0d336f37be8",
+  "code_files": {
+    "analysis_records.py": "17ebff0d840c8ffc0f285ed4e1123434b5793bf7084c8b69e2b5896244d53e9e",
+    "analysis_evidence.py": "ee4cd981296f306f5ca86087287ead8a36878295ff7a3f018e795580d84f40a7",
+    "analysis_lookup.py": "c1d29198f818e3b1063f3194dfe54a9c2bea023a84ffd5c2088b7eb245ea4e92",
+    "analysis_intake.py": "5d7a8c5a3765f238f65277b7a57b1db789b90be6f27c1acf2284b813dfd9aa1a",
+    "analysis_pending.py": "dde52cecc96ba012ee841937e2e1ba030d0c779229a54d517aa979619149e516",
+    "analysis_pending_inputs.py": "4e5fe2af6ed8e9f2a569a824e4a094ee7359378a492453ecb78afe3d688dab7c",
+    "analysis_matrix_publish.py": "ea109b71067f4b6d5481bcaf7cf7c461de675eab370462e8d1ed8e1fe52e2e52"
+  },
+  "matrix": {
+    "path": "examples/ansys/analysis-evidence/manifest.json",
+    "dataset_id": "ansys-retained-evidence",
+    "revision": "r2",
+    "sha256": "8926a4362f33ced3460b23a542e03539bf5c872b8d3617515477a1e4ac86b552",
+    "package_hash": "fb909b15620d24f8e8ea1e8e50792efacd0807f76e8258d4d5ac3e7a9a6d4c32",
+    "cases": 12,
+    "responses": 350,
+    "computed_diagnostic": 88,
+    "failed_null": 6,
+    "not_evaluated": 256,
+    "qualified": 0,
+    "new_native_attempts": 0,
+    "historical_cases_unchanged": 8
+  },
+  "validation": {
+    "focused_passed": 90,
+    "offline_suite_passed": 1134,
+    "private_corpus_skipped": 1,
+    "native_tests_deselected": 2,
+    "native_execution_performed": false,
+    "legal": "Default-root unchanged scanner, exact scoped snapshot; named-repository route invalid under workspace-hub issue3804"
+  },
+  "reviews": [
+    {
+      "stage": "plan1",
+      "receipt_sha256": "0d31f075a08ee07d0cf2a35f4b6cbc6c7a411ff2881580a334d5b1249d55804d",
+      "bundle_sha256": "39722d84c4de5fbf5c975e026479ddf64724782bc15edcce7d554e571ec2d231",
+      "provider": "Claude",
+      "review": {
+        "bundle_sha256": "39722d84c4de5fbf5c975e026479ddf64724782bc15edcce7d554e571ec2d231",
+        "verdict": "MAJOR",
+        "findings": [
+          "MAJOR: Unattempted discriminator (attempt_consumed, native_attempt_count) sits outside the frozen ansys-evidence-1 schema. require_fields is a subset check (analysis_records.py:70) and execution_status enum (analysis_records.py:140) has no not-attempted value, so validate_package/load_package accept tampered or missing discriminators; only the entry point enforces them, and historical rows cannot be distinguished from unattempted ones. Remedy: optional typed attempt block or not_attempted enum validated in validate_case, absent = not recorded, and bump or document schema version.",
+          "MAJOR: Acceptance relies on unbundled artifacts: analysis_lookup.py gate behavior for not_applicable, r1 package/raw hashes, README contract and manifest layout. _validate_study accepts any disposition string and does not verify affected_responses reference real case/response pairs. Remedy: bundle lookup, manifest and README for exact-current review; add disposition enum and reference validation at build time.",
+          "MINOR: Revision publish and manifest os.replace run under separate lock acquisitions, allowing an interleaved writer; the .publish.lock is empty so the no-delete-other-owner rule makes crash-orphaned locks permanent. Remedy: lock content with owner/host/pid/time, single critical section for publish+manifest+CSV, defined stale-lock adjudication.",
+          "MINOR: Pending-case values for use_rights, author, author_status, capture_role, generated_at are unspecified, and parameter units have no typed field (parameters are name->decimal). Remedy: pin each value and the unit-in-key convention in the plan.",
+          "MINOR: No typed home for analytical comparators; any comparator stored in responses[].value appears in the CSV as a native decimal. Remedy: keep comparators in the criteria reference or a validated comparator field; test that no pending response is calculation_status=computed.",
+          "MINOR: read_response_csv uses json.loads without duplicate-key rejection and raises KeyError on missing 'response'; publish_package mkdirs before the residence check; a manifest copy in the revision directory double counts against the cumulative size limit. Remedy: reuse parse_json, check residence before mkdir, exclude manifest.json from the size glob or document it."
+        ]
+      }
+    },
+    {
+      "stage": "plan2",
+      "receipt_sha256": "07ccd0538e4312a9e3bea52b5c3bcae3db0d4fd8f7c239f0954e433695420a51",
+      "bundle_sha256": "9c102e52870352813484dc6acf86ed6e713c3f37e4f86afe69436d18a9af0515",
+      "provider": "Claude",
+      "review": {
+        "bundle_sha256": "9c102e52870352813484dc6acf86ed6e713c3f37e4f86afe69436d18a9af0515",
+        "verdict": "MAJOR",
+        "findings": [
+          "MAJOR: Pending rows record author=Codex with author_status=recorded. analysis_lookup.py _check_provenance refuses only author_status!=recorded or author in {unknown, unverified, historical-neutral-capture}, so pending rows clear the capture-author gate that all eight historical rows fail. The 'matrix preparation only' qualifier is prose-only; case IDs are stable and carry into later revisions. Remedy: validate_case must require author_status=unverified for capture_role=pending_native; record preparer in a separate input_descriptor field; test that engineering lookup refuses pending rows at the provenance gate.",
+          "MINOR: execution_status=unknown encodes a known fact (not attempted) and the derived CSV record_json carries only the response, so CSV consumers cannot see capture_role or attempt fields. Remedy: additive not_attempted enum required for pending_native (r1 stays valid), or at minimum a mandatory fixed limitation string such as native-not-attempted on every pending response.",
+          "MINOR: Package-level metadata refresh for r2 is unspecified: code_files/code_revision (analysis_records.py changes), method_revision, coverage counts, and the 17-candidate intake_reference that does not cover cylinder cases. Remedy: enumerate refreshed fields, keep native_captures=6, add pending-case count, and state how cylinder cases enter (intake revision or prepared benchmark manifest descriptor).",
+          "MINOR: A crash after immutable r2.json publication but before manifest refresh leads a retry using 'next unused revision' to publish a duplicate r3. Remedy: recovery locates and validates the highest published revision and resumes refresh idempotently; refuse publishing a revision whose case set and row hashes equal the latest; add a test.",
+          "MINOR: Outer integration lock must be O_EXCL in the dataset directory and must not use a .json suffix because publish_package sums *.json toward the 25 MB limit; README must document the r2 entry point, attempt-field semantics and revised stale-lock rule since it currently states the importer reproduces r1 only."
+        ]
+      }
+    },
+    {
+      "stage": "code1",
+      "receipt_sha256": "ec1ac01b2294bd62ab34171d03c1a5a52f0beea11cb0897452da58fbfb4d1c2f",
+      "bundle_sha256": "39d54195a02ef4e5fe75c2b4e0f545180a67b4962e29b9dca26505145ab29cbc",
+      "provider": "Claude",
+      "review": {
+        "bundle_sha256": "39d54195a02ef4e5fe75c2b4e0f545180a67b4962e29b9dca26505145ab29cbc",
+        "verdict": "MAJOR",
+        "findings": [
+          "MAJOR: Package-level source_revision in the r2 candidate is stale (still r1 commit 9493f7b2...) while pending rows, code_files and the preparation record bind 5e7780f0...; build_pending_package never sets it. Remedy: builder must require/set the package-level source_revision (or record baseline_source_revision plus new), with a test that it differs from r1.",
+          "MAJOR: Frozen input identity is unpinned and self-referential: pending_inputs digests manifest.json from the bytes it just read and takes all other artifact digests from that manifest; the expected hash ea69920a... is never asserted as an input. Prepare script records git HEAD without a clean-tree check, so source_revision may not contain the bound bytes. Remedy: pass frozen manifest/reference digests into pending_inputs as required arguments, assert them in the prepare script, and refuse or record a dirty worktree.",
+          "MINOR: Ownership guarantee not enforced: _refresh calls _immutable(baseline, root) and materializes r1.json into any owner root lacking it (the fresh-root path is what the publish test exercises); nothing binds publication to the SOLVERS-2119-cli-final root. Remedy: require the baseline revision file to pre-exist at the given root or gate baseline creation behind an explicit flag.",
+          "MINOR: Plan r3 overclaims: promises 'explicit failed-refresh evidence' after manifest-then-CSV failure (code leaves only a stale CSV plus exception), says both 'explicit revision' and 'next unused revision' in item 3, and says lookup tests verify pending-row refusal but no such test is in the bundle. Remedy: correct plan text and add an engineering-mode lookup test on a pending row asserting refusal at the author-status gate.",
+          "MINOR: Pending responses carry inherited_findings=[] while historical rows list all 13; lookup unions the ledger so qualification is unaffected, but diagnostic answers copy the empty list, contradicting the plan's explicit-applicability claim. Remedy: populate wildcard-scoped findings on pending responses in the builder or document reliance on ledger union.",
+          "MINOR: analysis_matrix_publish._plain uses Path.is_junction (Python 3.12+ only; fails with AttributeError before locking on older runtimes) and the lock cleanup calls lock.read_bytes() in finally, which can mask the original refresh error. Remedy: document minimum Python or use guarded attribute lookup; wrap lock readback to preserve the original exception."
+        ]
+      }
+    },
+    {
+      "stage": "code2",
+      "receipt_sha256": "3f0933566d48d5f119414a5fe0e015314ac40df1766c821d6113ae346166a9cc",
+      "bundle_sha256": "99b4ea31ea6945079a423336cf1ac2b53e2819c726b31ee7f8b48c6b5b3c807d",
+      "provider": "Claude",
+      "review": {
+        "bundle_sha256": "99b4ea31ea6945079a423336cf1ac2b53e2819c726b31ee7f8b48c6b5b3c807d",
+        "verdict": "MAJOR",
+        "findings": [
+          "MAJOR | Candidate r2 provenance is self-inconsistent and not publishable as these bytes. Evidence: SOLVERS-PM-matrix-r2-candidate.json has source_revision=5e7780f0\u2026 while code_files binds analysis_pending.py dde52cec\u2026, analysis_pending_inputs.py 4e5fe2af\u2026, analysis_matrix_publish.py ea109b71\u2026, analysis_records.py 17ebff0d\u2026 (baseline_code_files shows records.py was 06dce5eb\u2026 at r1). SOLVERS-PM-matrix-preparation.json records source_tree_dirty=true, but that record is external and not digest-bound into the package; the package itself carries no dirty-tree marker. README/plan promise reproducibility from the frozen source commit, yet the builder that produced r2 does not exist at 5e7780f0, so r2 cannot be regenerated from its own provenance fields. Remedy: commit the seven ansys modules, then rerun SOLVERS-PM-prepare-matrix.py (observation time is persisted, so generated_at is stable) and add `assert not dirty` before writing the candidate (or embed source_tree_state into the package). Re-review the regenerated candidate hash before any publish_matrix call.",
+          "MINOR | The added engineering-refusal test does not exercise pending-specific gates. Evidence: tests/ansys/test_analysis_pending.py::test_pending_lookup_remains_diagnostic_and_refuses_engineering calls lookup(package, query, resolver) with no authority/ledger, so it raises at analysis_lookup._check_authority ('current publication authority and ledger required') before _check_provenance/_qualify are reached. It would pass identically for a fully qualified row. Remedy: build a synthetic authority (revisions bound to package_hash, blocking_findings=False, criteria/review refs resolvable, empty ledger) and assert pytest.raises(ValueError, match='capture author is unknown') for the pending row, proving refusal originates from author_status/source_kind, not from missing authority.",
+          "MINOR | Pending rows publish inherited_findings=[] while the ledger declares '*'-scoped open findings. Evidence: analysis_pending_inputs._responses sets 'inherited_findings': [] for all 256 rows; finding_ledger entries broad-review-unresolved and unmapped-finding have affected_responses ['*'] and README states all inherited findings conservatively affect every response. Engineering lookup is safe because _check_provenance unions the ledger, but the diagnostic answer (lookup diagnostic=True returns the response copy) exposes an empty list to consumers and the historical rows list all 13 IDs. Remedy: populate pending rows with the '*'-scoped ledger IDs (or all 13, matching historical rows), or add an explicit limitation token such as 'ledger-findings-apply' so the data-level record is not read as finding-free.",
+          "MINOR | validate_attempt_state permits contradictory non-pending metadata. Evidence: analysis_records.validate_attempt_state returns after the consistency check for any capture_role other than pending_native, so a case with source_kind='native', execution_status='completed', attempt_consumed=False, native_attempt_count=0 validates and is not blocked by _qualify (which never reads attempt fields). test_shared_validator_accepts_consistent_nonpending_attempt_metadata only covers unverified/unknown cases. Remedy: when the pair is present, require native_attempt_count>=1 for execution_status in {'completed','failed'} and add a rehash-refusal test; leave absent-metadata historical rows untouched.",
+          "MINOR | Several refusal paths raise KeyError instead of ValueError, escaping the documented refusal contract. Evidence: analysis_matrix_publish._relation indexes package['previous_package_hash'] directly; analysis_pending_inputs.pending_inputs indexes manifest['artifacts'], manifest['reference'], manifest['case_order'], artifacts['prepared/basis-criteria.json'], entry['deck'], entry['metadata'] without require_fields. A malformed (but digest-pinned) manifest or a package lacking previous_package_hash fails with an unlabelled KeyError, which the operational wrapper described in context (retain exception as failed-refresh evidence) will record without a reason string. Remedy: use require_fields/nonempty with explicit ValueError messages ('successor package requires previous_package_hash', 'prepared manifest missing artifacts/reference/case_order') and add one negative test each.",
+          "MINOR | Resolver namespace and stranded-revision recovery are undocumented operational hazards. Evidence: SOLVERS-PM-prepare-matrix.py maps 'repository/\u2026' IDs for r1 evidence to the content-addressed cache but pending_inputs maps 'repository/examples/ansys/cylinder-benchmark/\u2026' to working-tree paths, then resolver.update(additional) overwrites on any collision; analysis_matrix_publish._refresh publishes the immutable r2 via _immutable before the final load_package(manifest)!=current recheck, so a nonparticipating manifest change after that point leaves r2.json published while every retry refuses ('canonical baseline changed'), with no documented recovery. Remedy: assert no key overlap when merging resolvers (raise on differing paths); add a README recovery note that a stranded immutable revision is retained and the canonical manifest must be restored to the r1 or r2 bytes before retrying, and that no new revision id is allocated."
+        ]
+      }
+    },
+    {
+      "stage": "final_candidate",
+      "receipt_sha256": "0d765b5a3e21e716416391a9d60f01a87b0ba665cac07ef6923e68823c0da901",
+      "bundle_sha256": "d77dc7c85e2aea01ab7767205c0467fabe62d236a60dac244d271e6fc60c05d4",
+      "provider": "Claude",
+      "review": {
+        "bundle_sha256": "d77dc7c85e2aea01ab7767205c0467fabe62d236a60dac244d271e6fc60c05d4",
+        "verdict": "MINOR",
+        "findings": [
+          "MINOR | Pending generated_at predates the cited commit. Evidence: pending rows and SOLVERS-PM-matrix-preparation.json carry 2026-09-14T17:38:57.886592Z (persisted from the earlier dirty-tree run) while source_revision=806f4d8f\u2026 necessarily postdates that run; commit binding observed 17:52:58Z. Non-blocking because content is digest-bound. Remedy: keep the persisted value as inputs_observed_utc and add a separate preparation_utc in the preparation record, or document the semantics in the README.",
+          "MINOR | Regeneration inputs outside the repo are not digest-bound. Evidence: reproduction requires SOLVERS-PM-prepare-matrix.py (sha256 a74aea11\u2026), SOLVERS-PM-matrix-observation.txt, SOLVERS-PM-matrix-resolver.json, the SOLVERS-2119-source-cache and deckhand-licensed-results tree; none are hashed in the preparation or commit-binding record. Remedy: record the prepare-script SHA256, observation file bytes, and resolver JSON SHA256 in SOLVERS-PM-matrix-commit-binding.json before publication.",
+          "MINOR | Pending solver descriptor is looser than the retained captures it will be compared against. Evidence: pending rows record only requested_release '2026 R1', cores 1, parallel smp, observed_native_version null; all six retained native captures record release '2026 R1.01', update UP20260202, build 26.1, argv '-b -np 1 -smp', equation_solver 'default sparse direct', and their note states stability comparison is valid only against a matching configuration. Remedy: pin build/update/argv/equation_solver in the pending solver block, or add an explicit limitation token that configuration matching is unverified until native capture.",
+          "MINOR | Ledger response-name mismatch inherited unchanged from r1. Evidence: finding_ledger entry original-padeye-force-channel lists 'padeye:equilibrium_residual_n' but the response is named force_residual_n; coverage is preserved by the 'padeye:*' wildcard and the row-level 'invalid-original-force-channel' limitation, so no bypass exists. Remedy: correct the ledger entry at the next revision that touches the ledger; not grounds to re-open r1.",
+          "MINOR | Prior 99b4ea MINOR items remain open and unchanged: empty inherited_findings on 256 pending rows versus '*'-scoped ledger entries; engineering-refusal test short-circuits at _check_authority; validate_attempt_state does not constrain non-pending attempt metadata; KeyError refusal paths in analysis_matrix_publish._relation and analysis_pending_inputs.pending_inputs; resolver.update collision and stranded-immutable-revision recovery undocumented. Accepted followups; track against the next code revision, not this candidate."
+        ]
+      }
+    }
+  ],
+  "disposition": "Plan blockers corrected inline; code blockers corrected with TDD. Code2 remaining MAJOR concerned only uncommitted candidate provenance. Implementation806f4d8f was committed unchanged, candidate regenerated from clean source, all7GitLFhashes verified; final exact candidate ClaudeMINOR no blockers. Initial invalid candidates never published. Independent Codex source review MINOR; temporary cleanup and CSV recovery findings corrected before code review.",
+  "remaining_limits": [
+    "No native operator/checker or production preflight/adjudication binding established",
+    "B1 runtime manifest requires rebind and exact review because shared validation source changed; input decks and frozen reference unchanged",
+    "No comparison configuration equivalence until observed native version/build captured",
+    "Prior native evidence rights and qualification limits remain unchanged",
+    "Pending generated_at records persisted input observation, not final packaging/native execution",
+    "Accepted MINOR review followups remain attached to owning issue; no campaign closeout or engineering acceptance"
+  ],
+  "reproduction": "Owning private source cache and retained-native sources remain necessary; every referenced file digest verified. Native raw evidence is not duplicated by this pending-only slice."
+}

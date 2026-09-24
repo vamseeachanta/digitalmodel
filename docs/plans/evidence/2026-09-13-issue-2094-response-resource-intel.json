@@ -1,0 +1,52 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2094",
+  "baseline_head": "43d22d976d1d1c87c4914c41d7d5fa539ea9ccb3",
+  "new_scope_approved": false,
+  "native_invocations_this_stage": 0,
+  "gap_paths": [
+    {
+      "path": "src/digitalmodel/ansys/padeye_response.py",
+      "exists": false
+    },
+    {
+      "path": "tests/ansys/padeye_response_assessment.py",
+      "exists": false
+    },
+    {
+      "path": "tests/ansys/padeye_section_assessment.py",
+      "exists": false
+    },
+    {
+      "path": "tests/ansys/test_padeye_response.py",
+      "exists": false
+    },
+    {
+      "path": "tests/ansys/test_padeye_section_assessment.py",
+      "exists": false
+    }
+  ],
+  "analytical_reference": {
+    "force_n": 50000,
+    "width_mm": 400,
+    "thickness_mm": 8,
+    "section_y_mm": 90,
+    "section_average_sy_mpa": 15.625,
+    "method": "equilibrium definition; not a native result or strength allowable"
+  },
+  "resource_search": {
+    "query": "padeye finite element stress singularity compliance",
+    "observed_at_utc": "2026-09-13T03:41:14Z",
+    "selected_indexes": 6,
+    "unreachable_stale_indexes": 5,
+    "catalog_hits": 1,
+    "hit_class": "directory metadata only",
+    "qualified_reference_established": false
+  },
+  "ws014_followup": {
+    "observed_at_utc": "2026-09-13T03:40:00Z",
+    "desktop_process_ids_unchanged": true,
+    "newer_cli_transcript_found": false,
+    "live_conversation_identified": false,
+    "remote_mutations": false
+  }
+}

@@ -431,6 +431,42 @@ class ResultsExtractor:
             ))
         return rows
 
+    def parse_result_digest(self, csv_text: str) -> dict[str, float]:
+        """Parse the ``*CFOPEN`` digest the screening decks emit (#2094).
+
+        The decks write a single line of flat ``label,value`` pairs::
+
+            max_seqv_mpa,  134.7185,allowable_mpa,  138.0000,uc,   0.97622
+
+        Until this existed nothing in Python read the digest, so the decks
+        computed their own acceptance quantity and discarded it. Trailing
+        Fortran-style decimal points (``22.``) are accepted, since ``*VWRITE``
+        emits integers through a float format.
+
+        Raises
+        ------
+        ValueError
+            If the token count is odd, or a value is not numeric. A malformed
+            digest must fail loudly: it is the artifact a golden comparison
+            reads, so a silent partial parse would compare against nothing.
+        """
+        tokens = [t.strip() for t in csv_text.strip().replace("\n", ",").split(",")]
+        tokens = [t for t in tokens if t]
+        if len(tokens) % 2 != 0:
+            raise ValueError(
+                f"digest has an odd token count ({len(tokens)}); "
+                "expected flat label,value pairs"
+            )
+        out: dict[str, float] = {}
+        for label, value in zip(tokens[0::2], tokens[1::2]):
+            try:
+                out[label] = float(value)
+            except ValueError as exc:
+                raise ValueError(
+                    f"digest field {label!r} has non-numeric value {value!r}"
+                ) from exc
+        return out
+
     def export_results(
         self, summary: "ResultSummary", format: str = "json"
     ) -> str:

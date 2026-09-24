@@ -1,0 +1,133 @@
+{
+  "revision": "c102f60beda3db304401bf8fda0b03384d6bd166",
+  "bundle_sha256": "aa416e8feb1deb40e8665dfc3a7e188f4b3a0688098870fa1dd7fefe120a452c",
+  "files": [
+    {
+      "path": "src/digitalmodel/ansys/analysis_records.py",
+      "sha256": "06dce5eb10d244c48df0fa1075bf48010170a668b81cd45694eb43fe3d349511"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_canary.py",
+      "sha256": "3bc79ff642cc08c379b7b3d316fe107ec35c1681b4bf78a938753c57cd6c9ef3"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_adapter.py",
+      "sha256": "3d507d56493bb1a394e434ae507eb478c1074c8e1d2ca9e52927f07ac56a83b8"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_criteria.py",
+      "sha256": "286e287834d2e38c675ce08a6aa44b8be1ba96739fbc807e65e1b8d82608eef3"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_reference_provenance.py",
+      "sha256": "93c35eca16451f61864c91d605ec38df5cb88bb61d8345e843c323ea811e4c1c"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_agreement.py",
+      "sha256": "49619d08d43b1cf541139c47fdce8a32a47dcf47d3dce5db92b4b453399856a0"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_expression.py",
+      "sha256": "28a3c4742595ed2f8bef62fe2fc0a2ef8bdf3b4034742b0650b4d91f7d467cae"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_reference.py",
+      "sha256": "55a9874f21b633e7e15f232035bd71a15dad82325041e44cc7f73a41955bb641"
+    },
+    {
+      "path": "src/digitalmodel/ansys/cylinder_benchmark.py",
+      "sha256": "1a4ab9ceb167a31278aa39c6fb946af8ee6b47dceedcff28d466865159b4e30b"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_canary.py",
+      "sha256": "13b53bc6f5506ed4af79955c37c54f1d4d4d5b7fc61fcfba9af0bf2ea0fcd6ff"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_canary_boundaries.py",
+      "sha256": "bc4ba2ea2cd4650d17af5092bcdd39608bd8b2446b38af6a9a11a5678ce26d4c"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_adapter.py",
+      "sha256": "0e43ef0137459caa426ecfc9984ba2965081b3c5de501188e386eb4cdc7cc7d9"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_criteria_history.py",
+      "sha256": "d2ddd9dd9758cdfd703952dd4f79562343ec960c210ee9c09c53839225a998b3"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_reference_provenance.py",
+      "sha256": "90779a7fe743a7501878890b1503bf6d54676e142456671cbef2babdc4ebabd5"
+    },
+    {
+      "path": "tests/ansys/test_cylinder_workflow.py",
+      "sha256": "dc9b6312054ce7bcd1aa820e0b449b02457f5fe6119f5602640f160d1b37e5b8"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/manifest.json",
+      "sha256": "54bff7d35ec0fa8e915185f8858f09c7f452614e7817b9dbccbeb238dd2a7d06"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/checker_invocation.json",
+      "sha256": "f1b57bdc9f7d9498d360f503cc0852a5dd039c7944be9cc22bd46aad61d2167c"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/checker_capture.json",
+      "sha256": "487dfeda6c6a398a9cd892d267d7b85a0af4f6d12985cb4adb19627c04284363"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/checker_response.json",
+      "sha256": "4a6c12f105980f4cb22776d0fa34df84ea729d93bbddd108363d29b838d84b2d"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/producer_derivation.json",
+      "sha256": "405ba2af48734f66a1ad3d5738741d900587b444e6a589ed6e7b1a391ec91c9a"
+    },
+    {
+      "path": "examples/ansys/cylinder-benchmark/reference.json",
+      "sha256": "385ff3d42e4219faefd8cc1a72c20525f4b2731cf2fcb31aa51ba5b1de63c3b4"
+    },
+    {
+      "path": ".gitattributes",
+      "sha256": "19caf877a0122d6c70151cdc9b4b9d693e64e3f4e4aab3595333f21d8e20b450"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-b1-checker-observation-limitations.json",
+      "sha256": "86814c0d2f342dfea099ad73d48253900511e6513339e4603869c55df35539dd"
+    },
+    {
+      "path": "docs/reports/2026-09-14-issue-2121-b1-preparation.html",
+      "sha256": "980839efebbd0fef4c0c524bd5f4242e5ddecf48cdd2c871e0b9768e8b3c5248"
+    }
+  ],
+  "seconds": "159.6710000000894",
+  "exit_code": 0,
+  "stdout_sha256": "560828af7fd44d209ac855ece307133a779840c9a6930be5bdfcf9b4cc46a0aa",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "status": "REVIEW_RECEIVED",
+  "review": {
+    "reviewed_revision": "c102f60beda3db304401bf8fda0b03384d6bd166",
+    "bundle_sha256": "aa416e8feb1deb40e8665dfc3a7e188f4b3a0688098870fa1dd7fefe120a452c",
+    "verdict": "MINOR",
+    "blocking_findings": [],
+    "nonblocking_findings": [
+      "N1 Correction traceability: codex receipt records cylinder_criteria.py sha256 4dafd98d... and tests/ansys/test_cylinder_criteria_history.py sha256 dc112f36..., but the reviewed bundle bytes hash 286e2878... and d2ddd9dd... (manifest runtime_sources matches the reviewed 286e2878...). The claimed 30-passed green run is not bound to the reviewed criteria bytes; orchestrator should confirm the post-handoff diff is limited to the F2 scope. The reviewed bytes themselves are correct.",
+      "N2 cylinder_criteria.evaluate_canary final line builds attempted via a.get('case_id') outside the try; a non-dict attempt (e.g. str/list) raises AttributeError instead of returning INCOMPLETE. Production path is guarded by cylinder_adapter._attempt_row; pre-existing edge, unchanged by patch.",
+      "N3 cylinder_canary._run: if the launch adapter raises after the attempt journal, _record_execution is never reached, so no execution.json exists for that attempt; only receipt['reason'] retains the failure fact. Test test_runtime_failure_after_journal_retains_incomplete_outcome covers attempt-1.json and outcome.json only.",
+      "N4 F5 retained as operational limitation: the 300-second admission reserve does not bound settlement, stream readback, extract-time provenance replay (three verify_prepared_reference replays per attempt, 14 Git subprocesses each) or adjudication; overrun after a consumed licensed solve yields INCOMPLETE, not PASS. No arbitrary 330-second change authorized.",
+      "N5 Historical checker_invocation.json frozen_files (nine files) still omits analysis_records.py and cylinder_benchmark.py on which cylinder_reference/_agreement depend; the record is immutable and the current manifest inventories them, but any future re-freeze should list them explicitly. Git blob identity across bf60335f/48027b1a/dbb098f4 is orchestrator-asserted, not independently re-checked here."
+    ],
+    "prior_findings_disposition": [
+      "F1 (major): CORRECTED. cylinder_canary._attempt checks manifest digest then validate_deck before copying/journaling; cylinder_adapter.make_execution_adapters.launch re-reads the copied deck via _read_owned and calls validate_deck before _launch_case. test_execution_factory_requires_profile_and_rechecks_executable proves the mutated copied deck refuses with one mock launch call.",
+      "F2 (minor): CORRECTED. evaluate_canary early return now uses dict(result, checks=checks, attempted=..., unattempted=...) preserving accumulated checks; tests/ansys/test_cylinder_criteria_history.py covers final-attempt FAIL and third-attempt INCOMPLETE. See N1 for hash traceability caveat.",
+      "F3 (minor): CORRECTED. _adjudicate canonicalizes proof before binding; extract output, detached records passed to assess, and assess output are canonicalized before receipt inclusion; all receipt fields are canonical so the final _save cannot fail on canonicalization. Callbacks are declared trusted boundaries, no sandbox asserted.",
+      "F4 (minor): PARTIALLY SUPPORTED, CORRECTED. Docstring now states creation invokes no solver/checker and documents 14 read-only PATH Git subprocesses per verification. .gitattributes applies eol=lf to frozen src/tests/brief/contract/derivation and -text to captures/reference/prepared; no blanket Windows CRLF mismatch established. Executable pinning remains optional hardening.",
+      "F5 (minor): NONBLOCKING OPERATIONAL LIMITATION. Approved 300 s admission reserve and 1800 s total retained; overrun returns INCOMPLETE; not hard real-time. No 330 s change authorized. Retained as N4.",
+      "B1-1 (MAJOR): NOT SUSTAINED. verify_prepared_reference replays compare_reference on committed response bytes, requires equality with committed comparison minus documented checker_capture_commit key, AGREEMENT status, exactly 126 comparisons, and verifies every reference.json row coordinate and value against replayed producer values. Missing regeneration writer is a maintainability gap, not an arithmetic or verification defect.",
+      "B1-2 (MAJOR): NOT SUSTAINED. analysis_records.py supplied (sha256 06dce5eb...) and matches manifest runtime_sources; cylinder_benchmark.py supplied; cylinder_criteria.py inventoried. Historical frozen_files omission retained as N5.",
+      "B1-3 (MINOR): ADDRESSED. New uncertainty note (checker-observation-limitations-1) records auxiliary Haiku usage and cache tokens as unestablished without mutating historical records; single CLI invocation does not prove single internal model activity.",
+      "B1-4 (MINOR): ADDRESSED. Accumulated-check loss corrected (F2); criteria present in manifest runtime_sources; fixed 10 MPa / 750 mm force scale matches frozen four-case scope; 'reference' key collision yields INCOMPLETE via caught TypeError, adapter row filter prevents it in production.",
+      "B1-5 (MINOR): NOT SUSTAINED as defect. extract_record hashes actual reference bytes via _read_owned and requires equality with approved_reference_hash before calling validate_native_evidence; validator string comparison is downstream of real byte authentication.",
+      "B1-6 (INFO): RETAINED as bounded reviewer note on symbolic branch equivalence; confers no engineering qualification."
+    ]
+  }
+}

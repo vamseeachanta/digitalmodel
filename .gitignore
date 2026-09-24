@@ -253,6 +253,9 @@ node_modules/
 /output/
 /results/
 reports/
+!docs/reports/
+docs/reports/*
+!docs/reports/2026-09-13-ansys-evidence-stage-a.html
 
 # ==========================================
 # Project-Specific: Agent/AI Runtime
@@ -391,6 +394,7 @@ specs/
 # Client/NDA scratch data — never commit
 .scratch/
 examples/workflows/*/results/
+examples/ansys/*/results/
 examples/workflows/*/logs/
 src/digitalmodel/base_configs/modules/*/logs/
 
@@ -415,3 +419,6 @@ docs/api/_datasets/
 # 3D tension-moment study: 191 MB of JSON that compresses to ~1 MB as parquet.
 # Regenerated on demand and published to Hugging Face; never committed. (#1915)
 docs/api/structural/wall-thickness-3d.json
+
+# Retain the reviewed offline cylinder engineering report.
+!docs/reports/2026-09-14-issue-2121-b1-preparation.html

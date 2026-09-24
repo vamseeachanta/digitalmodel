@@ -10,6 +10,7 @@ import pytest
 from digitalmodel.solvers.orcaflex.modular_generator.builders.generic_builder import (
     GenericModelBuilder,
 )
+from digitalmodel.solvers.orcaflex.modular_generator.builders.general_builder import GeneralBuilder
 from digitalmodel.solvers.orcaflex.modular_generator.builders.context import (
     BuilderContext,
 )
@@ -294,9 +295,10 @@ class TestBuildGeneralProperties:
         builder, _ = _make_builder(model)
         result = builder.build()
 
-        assert "General" in result
-        assert result["General"]["StaticsMethod"] == "Full statics"
-        assert result["General"]["DynamicsSolutionMethod"] == "Implicit"
+        assert "General" not in result
+        general = GeneralBuilder(builder.spec, BuilderContext()).build()["General"]
+        assert general["StaticsMethod"] == "Full statics"
+        assert general["DynamicsSolutionMethod"] == "Implicit"
 
     def test_empty_general_properties_skipped(self):
         model = GenericModel(general_properties={})
@@ -458,7 +460,7 @@ class TestImplicitVariableMaxTimeStep:
             }
         )
         builder, _ = _make_builder(model)
-        result = builder.build()
+        result = GeneralBuilder(builder.spec, BuilderContext()).build()
 
         general = result["General"]
         assert general["ImplicitUseVariableTimeStep"] is True
@@ -473,7 +475,7 @@ class TestImplicitVariableMaxTimeStep:
             }
         )
         builder, _ = _make_builder(model)
-        general = builder.build()["General"]
+        general = GeneralBuilder(builder.spec, BuilderContext()).build()["General"]
         keys = list(general)
         assert keys.index("ImplicitUseVariableTimeStep") < keys.index(
             "ImplicitVariableMaxTimeStep"
@@ -488,14 +490,14 @@ class TestImplicitVariableMaxTimeStep:
             }
         )
         builder, _ = _make_builder(model)
-        general = builder.build()["General"]
+        general = GeneralBuilder(builder.spec, BuilderContext()).build()["General"]
         assert "ImplicitVariableMaxTimeStep" not in general
 
         model = GenericModel(
             general_properties={"ImplicitVariableMaxTimeStep": 0.5}
         )
         builder, _ = _make_builder(model)
-        result = builder.build()
+        result = GeneralBuilder(builder.spec, BuilderContext()).build()
         assert "ImplicitVariableMaxTimeStep" not in result.get("General", {})
 
 

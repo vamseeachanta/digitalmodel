@@ -1,0 +1,48 @@
+{
+  "provider": "Codex",
+  "reviewer": "independent parametric_scope worker",
+  "verdict": "MINOR",
+  "reviewed_revision": "4a249ab7126c40fe6025e14096bb258a80c5cfcb",
+  "reviewed_files": [
+    {
+      "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+      "sha256": "be300d198bfbaa1b37a5e7c87a9dbc7f69e901606441c5afa2f940fc184af32f"
+    },
+    {
+      "path": "docs/plans/README.md",
+      "sha256": "a91e878c821c94725a16d741499c16c9de7a0bfd422e3ae8b52265b53b514c10"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-case-proposal.json",
+      "sha256": "2215b5e7a3f5213b35e0941584f2fb48bf14f7ac656e449b6894049d603aa6b7"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-resource-intel.json",
+      "sha256": "5ae40fbe794ef3521362de400f648e5e66dcbde860ddcdeb7641c4c98a6c7a92"
+    }
+  ],
+  "findings": [
+    {
+      "id": "CX1",
+      "severity": "MINOR",
+      "defect": "Initial criterion phrase may imply coarse accuracy is a hard gate despite diagnostic designation.",
+      "correction": "Enumerate mandatory initial checks and explicitly keep coarse discrepancies diagnostic."
+    },
+    {
+      "id": "CX2",
+      "severity": "MINOR",
+      "defect": "Total 180-minute campaign limit missing from machine-readable case proposal.",
+      "correction": "Add total_wall_time_minutes:180."
+    }
+  ],
+  "verified": [
+    "eight baseline hashes",
+    "28 unique nonexecuted attempts and four valid first IDs",
+    "mesh/station/aspect ratio consistency",
+    "Lame formula and VM25 target consistency",
+    "PLANE182 axis options",
+    "zero-reference floors",
+    "exact-query separation",
+    "B1/B2 authority and rights gates"
+  ]
+}

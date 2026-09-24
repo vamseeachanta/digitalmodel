@@ -1,0 +1,105 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "scope": "One bounded initial name query with strict process identity joins; no exemption or native execution",
+  "plan_reviews": [
+    {
+      "bundle_sha256": "a29213a85b4c55edb4521e8c640cb923c05eb0276a256c4fcd2721abb82a7abb",
+      "verdict": "MAJOR"
+    },
+    {
+      "bundle_sha256": "606a3f21847ea710c7798a5902e65fbd9337393c384b4aa5c66497611c9b9729",
+      "verdict": "MAJOR"
+    }
+  ],
+  "disposition": "Supported findings resolved inline after two plan rounds; code review pending",
+  "findings": [
+    {
+      "finding": "Raw versus normalized selection semantics",
+      "resolution": "Normalized initial/final rows feed selection. Existing live detail and stability checks remain unchanged; selected inaccessible identities refuse."
+    },
+    {
+      "finding": "Flattened query evidence on failure",
+      "resolution": "Reserved name_resolution record survives collection exceptions; rejected raw inventory and blank-name events are retained."
+    },
+    {
+      "finding": "Obsolete blank-name tests",
+      "resolution": "Tests inject failed query and assert new limitation; original refusal remains covered."
+    },
+    {
+      "finding": "Time precision and prelaunch failure",
+      "resolution": "Existing one-microsecond fail-closed tolerance retained without worst-case precision claim; no-query records preserved for excessive count and interpreter failure."
+    },
+    {
+      "finding": "Cached parent join absent from normalization helper",
+      "resolution": "Adapter explicitly compares parent before existing birth join at each blank observation."
+    },
+    {
+      "finding": "Query-induced helper churn",
+      "resolution": "Incomplete newly observed helper receives ordinary refusal; regression covers WmiPrvSE with unavailable image. No warmup, exemption or retry."
+    },
+    {
+      "finding": "Completed count agreement",
+      "resolution": "Successful collection requires adapter completed stages equal retained completed inventory count; failure evidence retains both independently."
+    }
+  ],
+  "validation": {
+    "focused": "117 passed in 2.87 seconds",
+    "static": "ruff F passed",
+    "canonical_regressions": "Three failures reproduced before correction; 79 tests now pass, including conditional classifier integration and six exact tolerance-boundary cases."
+  },
+  "native_execution_delta": 0,
+  "qualified_rows_delta": 0,
+  "code_review_round_1": {
+    "bundle_sha256": "b66d9a6389e95b6b92925adb9758fc649ad3695dccf583e77cd9e2dc6f0e4ade",
+    "verdict": "MAJOR",
+    "dispositions": [
+      {
+        "finding": "Integer-keyed parent maps fail canonical serializer",
+        "resolution": "Reproduced with three failing regressions before correction. Success and refusal evidence now reuse existing canonical stage/rows projection. Numeric working maps remain unchanged. Synthetic collect-to-classifier regression passes."
+      },
+      {
+        "finding": "Helper churn probability and full regression absent",
+        "resolution": "No refusal-rate evidence exists; no rate is invented. One bounded observation acceptance is evidence completeness, not guaranteed success, with no retry or exemption. Previous revision full regression completed 927 passed/two skipped; changed revision regression pending."
+      },
+      {
+        "finding": "Blank-name events are not causal attribution",
+        "resolution": "Retained as nonblocking limitation: events enumerate raw blank-name candidates, not only the causal identity. Exception text, failed stage, raw identities and query receipt preserve actual failure evidence. No event disposition grants clearance."
+      },
+      {
+        "finding": "False dead-branch limitation and stage label",
+        "resolution": "Defensive invariant text corrected; evidence_accounting stage now labels projection and count checks. Structurally redundant count check retained as explicit invariant."
+      },
+      {
+        "finding": "Creation-time boundary tests absent",
+        "resolution": "Adapter tests now exercise just inside, exactly at and just outside one microsecond for initial and cached joins; original timestamps and query retained on refusal."
+      }
+    ]
+  },
+  "code_review_round_2": {
+    "bundle_sha256": "8d6b59009b76e93338df6fec4372f5a66188379626bffff03cb2e898085651f1",
+    "verdict": "MAJOR",
+    "dispositions": [
+      {
+        "finding": "Shared absence identity-read failure carries numeric object keys",
+        "resolution": "Three real collector-stage failure tests reproduced canonical serialization refusal before correction. Outer identity_read_failure parent_map and prior_maps now use existing canonical row projection. Internal PopulationReadError numeric maps remain unchanged for working collection logic."
+      },
+      {
+        "finding": "Empty executable identity becomes selected-detail refusal",
+        "resolution": "Required refusal retained. No executable path means the image cannot be hashed or bound; matching two empty values cannot establish identity. Regression verifies empty executable selected process stays incomplete and absent from accepted rows. Reason identity_changed remains conservative diagnostic wording, not clearance."
+      },
+      {
+        "finding": "Success/failure name-resolution nesting differs",
+        "resolution": "Documented explicit locations in plan: success population_check.name_resolution; failure evidence.name_resolution. No alternate authoritative store or schema alias introduced."
+      },
+      {
+        "finding": "Blank-name candidates not actual failure cause",
+        "resolution": "Added neutral refusal_reason and explicit candidate event_scope; limitation now covers observation and resolution validation failures."
+      },
+      {
+        "finding": "Changed regression missing from review bundle",
+        "resolution": "Second revision full suite completed 936 passed/two skipped; included in next review. Final revised suite will be recorded before observation."
+      }
+    ]
+  },
+  "line_endings": "Final source will use repository-required LF; normalized exact bytes will be independently reviewed before commit."
+}

@@ -1,81 +1,133 @@
-"""Builder for the General section of OrcaFlex models."""
-
+"""Single ordered owner of General settings; explicit source precedes fallbacks."""
+import logging
 from typing import Any
 
 from .base import BaseBuilder
 from .registry import BuilderRegistry
 
+logger = logging.getLogger(__name__)
 
-@BuilderRegistry.register("01_general.yml", order=10)
+# General-section keys to skip when emitting general_properties.
+# These are view/display/cosmetic properties that OrcaFlex exports via
+# SaveData() but which can be dormant (not settable) depending on the
+# current view mode.  Setting a dormant property triggers a
+# "Change not allowed" error at load time.
+_SKIP_GENERAL_KEYS: set[str] = {
+    # Default view settings
+    "DefaultViewAngle1",
+    "DefaultViewAngle2",
+    "DefaultViewCentre",
+    "DefaultViewSize",
+    "DefaultViewOrientation",
+    "DefaultViewResetWhenConnectedObjectMoved",
+    "DefaultViewDistortionX",
+    "DefaultViewDistortionY",
+    "DefaultViewDistortionZ",
+    "DefaultViewAzimuth",
+    "DefaultViewElevation",
+    "DefaultViewMode",
+    # Default shaded view settings (dormant unless view mode is Shaded)
+    "DefaultShadedFillMode",
+    "DefaultShadedProjectionMode",
+    # Drawing cosmetics
+    "BackgroundColour",
+    "WireframeMode",
+    # Sea surface / seabed rendering
+    "SeaSurfaceTranslucency",
+    "SeabedTranslucency",
+    "SeaSurfaceGridDensity",
+    "SeabedGridDensity",
+    "SeaSurfacePen",
+    # Model state bookkeeping
+    "ModelState",
+    # Temperature units — display-only, encoding of degree symbol (°)
+    # differs between UTF-8 and Latin-1 causing OrcFxAPI "not found" errors
+    "TemperatureUnits",
+    # Variable time-step max — only settable when ImplicitUseVariableTimeStep
+    # is True; dormant otherwise, causing "Change not allowed" errors.
+    # NOT skipped when general_properties re-enables variable time stepping
+    # (see build()) — stripping it then would silently revert the model to
+    # OrcaFlex's default max step and change dynamics results.
+    "ImplicitVariableMaxTimeStep",
+}
+
+
+def _defaults(sim):
+    defaults = {
+        "JacobianBufferingPolicy": 1,
+        "JacobianPerturbationFactor": 0,
+        "BuoysIncludedInStatics": "Individually specified",
+        "LineStaticsStep1Policy": "All lines included",
+        "LineStaticsStep2Policy": "Solve coupled systems",
+        "WholeSystemStaticsEnabled": True,
+        "DynamicsSolutionMethod": "Implicit time domain",
+        "ImplicitUseVariableTimeStep": False,
+        "ImplicitConstantTimeStep": sim.time_step,
+        "LogPrecision": "Single",
+        "TargetLogSampleInterval": sim.time_step,
+        "LogStartTime": None,
+        "StartTime": None,
+        "FirstStage": None,
+        "RampStartTime": None,
+        "RampFinishTime": None,
+        "TimeHistoryImportFrom": None,
+        "TimeHistoryImportTo": None,
+        "StageDuration": list(sim.stages),
+        "RestartStateRecordingPeriodicCount": 0,
+        "RestartStateRecordingTest": "",
+    }
+    defaults['UnitsSystem'] = 'SI'
+    if sim.north_direction:
+        defaults['NorthDirection'] = sim.north_direction
+    return {'UnitsSystem': defaults.pop('UnitsSystem'), **defaults}
+
+
+def _insert_fallbacks(source, defaults):
+    keys = list(source)
+    order = list(defaults)
+    for index, key in enumerate(order):
+        if key not in source:
+            following = next((item for item in order[index + 1:] if item in keys), None)
+            keys.insert(keys.index(following) if following else len(keys), key)
+    return {key: source[key] if key in source else defaults[key] for key in keys}
+
+
+def _source_settings(spec):
+    generic = getattr(spec, 'generic', None)
+    source = dict(generic.general_properties) if generic and generic.general_properties else {}
+    flag = source.get('ImplicitUseVariableTimeStep', False)
+    if type(flag) is not bool:
+        raise ValueError('ImplicitUseVariableTimeStep requires a Boolean')
+    skip = _SKIP_GENERAL_KEYS - {'ImplicitVariableMaxTimeStep'} if flag else _SKIP_GENERAL_KEYS
+    source = {key: value for key, value in source.items() if key not in skip}
+    typed = dict(ImplicitConstantTimeStep=spec.simulation.time_step,
+                 TargetLogSampleInterval=spec.simulation.time_step,
+                 StageDuration=list(spec.simulation.stages), NorthDirection=spec.simulation.north_direction)
+    for key, value in typed.items():
+        if key in source and source[key] != value:
+            logger.warning('General %s explicit source overrides typed simulation fallback', key)
+    return source
+
+
+def _order_controls(general):
+    units = ['UnitsSystem']
+    if general['UnitsSystem'] != 'SI':
+        units += [key for key in ('LengthUnits', 'MassUnits', 'ForceUnits', 'g') if key in general]
+    flag = general['ImplicitUseVariableTimeStep']
+    active = 'ImplicitVariableMaxTimeStep' if flag else 'ImplicitConstantTimeStep'
+    inactive = 'ImplicitConstantTimeStep' if flag else 'ImplicitVariableMaxTimeStep'
+    general.pop(inactive, None)
+    keys = units + [key for key in general if key not in units and key != active]
+    if active in general:
+        keys.insert(keys.index('ImplicitUseVariableTimeStep') + 1, active)
+    return {key: general[key] for key in keys}
+
+
+@BuilderRegistry.register('01_general.yml', order=10)
 class GeneralBuilder(BaseBuilder):
-    """Builds the General section of the OrcaFlex model.
-
-    The General section contains simulation control settings including:
-    - Units system
-    - Time stepping parameters
-    - Stage durations
-    - Solver configuration
-    - North direction
-
-    Reference: 01_general.yml in modular include format.
-    """
+    """Emit source controls once, before Environment and object includes."""
 
     def build(self) -> dict[str, Any]:
-        """Build the General section from simulation settings.
-
-        Returns:
-            Dictionary with 'General' key containing OrcaFlex settings.
-        """
-        sim = self.spec.simulation
-
-        # Preserve original unit system from extracted models.
-        # Default to SI only when no generic properties are available.
-        # Unit sub-properties (LengthUnits, MassUnits, ForceUnits, g) MUST
-        # appear in this file (order=10) BEFORE the Environment section
-        # (order=30), otherwise OrcFxAPI interprets environment values with
-        # wrong units when UnitsSystem is "User".
-        units_system = "SI"
-        gen_props: dict[str, Any] = {}
-        generic = getattr(self.spec, "generic", None)
-        if generic and generic.general_properties:
-            gen_props = generic.general_properties
-            units_system = gen_props.get("UnitsSystem", units_system)
-
-        general: dict[str, Any] = {
-            "UnitsSystem": units_system,
-        }
-        # Emit unit sub-properties for non-SI models so they're set early
-        if units_system != "SI":
-            for key in ("LengthUnits", "MassUnits", "ForceUnits", "g"):
-                if key in gen_props:
-                    general[key] = gen_props[key]
-
-        general.update({
-            "JacobianBufferingPolicy": 1,
-            "JacobianPerturbationFactor": 0,
-            "BuoysIncludedInStatics": "Individually specified",
-            "LineStaticsStep1Policy": "All lines included",
-            "LineStaticsStep2Policy": "Solve coupled systems",
-            "WholeSystemStaticsEnabled": True,
-            "DynamicsSolutionMethod": "Implicit time domain",
-            "ImplicitUseVariableTimeStep": False,
-            "ImplicitConstantTimeStep": sim.time_step,
-            "LogPrecision": "Single",
-            "TargetLogSampleInterval": sim.time_step,
-            "LogStartTime": None,
-            "StartTime": None,
-            "FirstStage": None,
-            "RampStartTime": None,
-            "RampFinishTime": None,
-            "TimeHistoryImportFrom": None,
-            "TimeHistoryImportTo": None,
-            "StageDuration": list(sim.stages),
-            "RestartStateRecordingPeriodicCount": 0,
-            "RestartStateRecordingTest": "",
-        })
-
-        # Only emit NorthDirection if non-zero (OrcaFlex defaults to 0)
-        if sim.north_direction:
-            general["NorthDirection"] = sim.north_direction
-
-        return {"General": general}
+        source = _source_settings(self.spec)
+        general = _insert_fallbacks(source, _defaults(self.spec.simulation))
+        return {'General': _order_controls(general)}

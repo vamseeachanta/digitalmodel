@@ -335,8 +335,8 @@ usecases:
     operation: run_ansys
     template: examples/ansys/padeye/input.yml
     analysis: [static_structural]
-    readiness: ready
-    notes: Padeye / lifting-lug screening FE (PLANE182 plate+pin-hole); generator + dispatchable template (#950).
+    readiness: partial
+    notes: Padeye / lifting-lug screening FE (PLANE182 plate+pin-hole); generator and dispatchable template exist, but native qualification and a committed golden are pending (#2094).
   - id: ansys-pressure-vessel
     domain: ansys/structural
     solver: ansys
@@ -344,8 +344,8 @@ usecases:
     operation: run_ansys
     template: examples/ansys/pressure-vessel/input.yml
     analysis: [static_structural]
-    readiness: ready
-    notes: Pressure vessel FE; pressure_vessel.py generator (rewritten runnable) + dispatchable template (#956).
+    readiness: partial
+    notes: Pressure vessel FE; generator and dispatchable template exist. The historical golden supports regression checks only; current native qualification remains pending (#2094).
   - id: ansys-mudmat
     domain: ansys/structural
     solver: ansys
@@ -353,8 +353,8 @@ usecases:
     operation: run_ansys
     template: examples/ansys/mudmat/input.yml
     analysis: [static_structural]
-    readiness: ready
-    notes: Mudmat / foundation screening FE (SHELL181 on Winkler EFS soil); generator + dispatchable template (#954).
+    readiness: partial
+    notes: Mudmat SHELL181 plate-bending FE with a separate geotechnical bearing check; no Winkler-EFS soil foundation is modelled. The historical golden supports regression checks only; current native qualification remains pending (#2094).
   # --- OpenFOAM (CFD) ------------------------------------------------------
   # Engine route digitalmodel #1161: basename openfoam (or cfd) -> case build
   # (OpenFOAMCaseBuilder, license-free) + optional solve (OpenFOAMRunner,

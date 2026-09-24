@@ -1,0 +1,9 @@
+{
+  "revision": "3bef8dff104cecb43bed9673db4343ab2dcae5ed",
+  "status": "UNAVAILABLE",
+  "reason": "Full73file read-tools code review timed out after600seconds; no verdict received",
+  "capture_limitation": "Timeout handler raised AttributeError on str.decode while retaining exception streams; partial stdout/stderr not preserved. No reconstructed provider output is asserted.",
+  "tool_session": 65786,
+  "checker_invocation_affected": false,
+  "next_method": "Smaller scoped no-tools code/artifact review calls; same reciprocal requirement"
+}

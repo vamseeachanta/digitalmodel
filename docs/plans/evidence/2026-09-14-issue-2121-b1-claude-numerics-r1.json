@@ -1,0 +1,194 @@
+{
+  "revision": "dbb098f4837d1a688baacb71997599c9d19f4a25",
+  "section": "numerics",
+  "seconds": "394.51499999989755",
+  "exit_code": 0,
+  "bundle_sha256": "a060dbe52cea49b82787b3d64b656a0cce8543da5b3f9496a0881cb5e0ab06bf",
+  "stdout_sha256": "058c365e78ccec7179c8050c94d1794538d35ad56560a779cab8f77ada90cec2",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "status": "REVIEW_RECEIVED",
+  "review": {
+    "verdict": "MAJOR",
+    "reviewed_revision": "dbb098f4837d1a688baacb71997599c9d19f4a25",
+    "reviewed_files": [
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_brief.txt",
+        "sha256": "c738fa008bb6d6be0508d5f7678108956f80cfa8ebaeb27033568ad598c57911"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_capture.json",
+        "sha256": "487dfeda6c6a398a9cd892d267d7b85a0af4f6d12985cb4adb19627c04284363"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_contract.json",
+        "sha256": "85818d3a9203bf08ce2f931b910f9f187e97a8d5c69c82a823f5c8fb2c91da6e"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_invocation.json",
+        "sha256": "f1b57bdc9f7d9498d360f503cc0852a5dd039c7944be9cc22bd46aad61d2167c"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_process_stderr.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_response.json",
+        "sha256": "4a6c12f105980f4cb22776d0fa34df84ea729d93bbddd108363d29b838d84b2d"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/checker_transport.json",
+        "sha256": "063ad98e481a142b150fe03244723432e5008928393bc9b01adf35af2fbf9938"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/producer_derivation.json",
+        "sha256": "405ba2af48734f66a1ad3d5738741d900587b444e6a589ed6e7b1a391ec91c9a"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/reference.json",
+        "sha256": "385ff3d42e4219faefd8cc1a72c20525f4b2731cf2fcb31aa51ba5b1de63c3b4"
+      },
+      {
+        "path": "examples/ansys/cylinder-benchmark/reference_comparison.json",
+        "sha256": "372e2e6658f3d43f49609d1529c4b75883a64bd418711a25f9c162ea165ecacf"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_agreement.py",
+        "sha256": "49619d08d43b1cf541139c47fdce8a32a47dcf47d3dce5db92b4b453399856a0"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_criteria.py",
+        "sha256": "f546a4068ec40a7055074d521b3ab4ae8fc94453fa2ed374067ddc480371ee73"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_expression.py",
+        "sha256": "28a3c4742595ed2f8bef62fe2fc0a2ef8bdf3b4034742b0650b4d91f7d467cae"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_reference.py",
+        "sha256": "55a9874f21b633e7e15f232035bd71a15dad82325041e44cc7f73a41955bb641"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_results.py",
+        "sha256": "a099fc97882a9ce2cc552a634b1bc73e63229b0d25cf2e774db9a074446f5c41"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_results_audit.py",
+        "sha256": "079c4a0201ece1dc7db58b9edef407e4102e792d875bde4f0b22757762dda9ea"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_results_cdb.py",
+        "sha256": "fbd3318e0baee4cc01ea1c1350776293d224ac8e44fe9d87e7ee2bc0c619f020"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_results_diagnostics.py",
+        "sha256": "4ac407fcb01c7747c610e96a6ed1970d484a1dec5bbd46d5905eb5527c8eb852"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_results_listings.py",
+        "sha256": "44eb5addfb873a900e8101588af6417bd9c4b2f3e4c493101b2190df035bb2c6"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_results_state.py",
+        "sha256": "651aac88c2b49f82ba25af84e557e195427342e96cd03031213cd0d6b9fb870b"
+      },
+      {
+        "path": "src/digitalmodel/ansys/cylinder_results_validation.py",
+        "sha256": "da149366a2d3f08a943d9c5bac23aa71b4eeaa723d87ff99f3c821f18bcdd8a3"
+      },
+      {
+        "path": "tests/ansys/cylinder_synthetic_protocol.py",
+        "sha256": "ec04324c7504095cd250c9adb0bcde27da96edf4da5d8c22d2d1b8bb284fd220"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_agreement.py",
+        "sha256": "841eb7717eaecb649dab4abd1fca496c8b2d271dbf7e19f039d9700d3e425d2f"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_criteria.py",
+        "sha256": "e4d1e1fe6a52d5e77ad1fe6d35efafe15a71405d05d526a5c2b23e30f2b856c8"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_expression.py",
+        "sha256": "482e9aac2e513889434256384458f8ad70740a450cc90c49c772b24fb0df9faa"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_native_protocol.py",
+        "sha256": "d35b88b5dbfb83a35dfb95bbae0ad745c85f880361f209e4b735470d99f999ad"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_reference.py",
+        "sha256": "e52f8e1d6b4788a1b5a2dd2ae78fd39616e19406d39c03179662a33926243a09"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_results.py",
+        "sha256": "6f9a0b22bef386c100d6021d4fb7069936225dbc1f7b0d30d594651ea8a6ca94"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_results_audit.py",
+        "sha256": "82318aa20c2e2705a706aeff97c41ca192fc1f546d629d3ba8a7f52243e9c302"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_results_cdb.py",
+        "sha256": "bc74723ab521442c9cd415567ae1419aa94b6432b4c83e184205a527a95c5639"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_results_corpus.py",
+        "sha256": "9d8d5c97b42a92659e0503d97692192099b514f5294f8d59e20dcde4859d8291"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_results_diagnostics.py",
+        "sha256": "6b747db2d8a27a07a7ad824b951b38983811e158301ace317dd15087b7d6492c"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_results_listings.py",
+        "sha256": "9e1956cbdd198fb79793790667dbcac0608385cdff46644e494bf4d17b582b25"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_results_state.py",
+        "sha256": "de70c5b9fd6b1a33b71da69b7b46b6c4f66f18e3285002d81b75883baa14e2a7"
+      },
+      {
+        "path": "tests/ansys/test_cylinder_results_validation.py",
+        "sha256": "eefbbe42ec715cef5e78a9c03a2f8073a1a6b7ac5e66a7f0af13123e1220086c"
+      }
+    ],
+    "findings": [
+      {
+        "id": "B1-1",
+        "severity": "MAJOR",
+        "defect": "The committed AGREEMENT artifacts are not reproducible from supplied code. compare_reference() returns exactly {schema, checker_output_sha256, status, comparisons, engineering_qualification, limitation}, yet reference_comparison.json additionally contains checker_capture_commit (and CRLF formatting), proving an unsupplied post-processing/serialization step produced the hashed record. reference.json (schema cylinder-analytical-reference-1, rows/station_id layout) has no generator or test in the bundle. No test loads checker_response.json bytes, re-runs compare_reference, and asserts equality with the committed 126-row record, nor checks reference.json rows against reference_text(). The section's central claim therefore rests on hand-assembled artifacts whose derivation cannot be re-executed offline from the reviewed sources.",
+        "correction": "Add an offline regression test that (a) reads examples/.../checker_response.json, calls compare_reference on the raw bytes, and asserts the result equals the committed comparison after removing only the documented post-added key, and (b) rebuilds reference.json rows from reference_text() and asserts byte/field equality. Commit the serializer that adds checker_capture_commit and the reference.json writer, and hash them alongside the frozen set."
+      },
+      {
+        "id": "B1-2",
+        "severity": "MAJOR",
+        "defect": "Frozen math and comparison depend on modules that are neither supplied nor in checker_invocation.json frozen_files: digitalmodel.ansys.analysis_records (decimal_text, digest_bytes, canonical_bytes, parse_json) and digitalmodel.ansys.cylinder_benchmark (build_case). cylinder_reference._input passes every pressure/r/y string through decimal_text() before the Decimal domain guard, and compare_reference derives checker_output_sha256 and all producer/checker strings via these helpers. The freeze bf60335f therefore does not cover the full code path from raw checker bytes to the committed comparison, and the mapping from criteria CASE_IDS to CASE_TOKENS/stations lives in unsupplied build_case. The reviewed set cannot be declared complete or frozen.",
+        "correction": "Supply analysis_records.py and cylinder_benchmark.py in the bundle, add their sha256 to the frozen_files list for any future invocation record and to the B2 pre-execution freeze, and add a test asserting decimal_text is identity-preserving on the exact input strings used by symbols_for (\"0\",\"10\",\"750\",\"780\",\"810\",\"60\",\"120\",\"180\")."
+      },
+      {
+        "id": "B1-3",
+        "severity": "MINOR",
+        "defect": "Checker provenance records are incomplete relative to the isolation claim. checker_capture.json/checker_transport.json show a second model (claude-haiku-4-5-20251001) consuming 2535 input tokens and emitting 15 output tokens, comparable to the brief size, and the primary call shows 3219 cache_read_input_tokens on a claimed fresh, no-persistence invocation. checker_invocation.json 'isolation' states the sole input was the frozen brief and does not account for the auxiliary call or the cached prefix. This does not alter the retained response bytes but leaves the single-invocation/isolation narrative unsupported by its own capture.",
+        "correction": "Amend the invocation/capture annotation (as a new, non-mutating note; historical labels stay immutable) to identify the CLI auxiliary Haiku call and the shared cached system prefix, and record that neither received producer code or expected values. Do not re-invoke."
+      },
+      {
+        "id": "B1-4",
+        "severity": "MINOR",
+        "defect": "cylinder_criteria.py is not in any freeze record although it defines the B2 PASS/FAIL limits. It also hard-codes the axial-equilibrium load scale as 1e-6*10*PI*750**2 rather than deriving it from the case pressure/inner radius, and evaluate_canary discards the accumulated checks of earlier attempts when a later attempt returns FAIL/INCOMPLETE (returns only result['checks'] of that attempt). An attempt dict carrying a 'reference' key silently becomes INCOMPLETE via TypeError rather than an explicit evidence error.",
+        "correction": "Hash-freeze cylinder_criteria.py and its test before B2; compute the RFY limit from case pressure and inner radius passed in; include prior attempts' checks in early-return outcomes; reject unexpected attempt keys explicitly."
+      },
+      {
+        "id": "B1-5",
+        "severity": "MINOR",
+        "defect": "validate_native_evidence's 'approved reference hash' gate compares two caller-supplied strings (approved_reference_hash vs observed_reference_hash) and never hashes any reference bytes; tests pass with 'a'*64 on both sides. It reads as a binding of native evidence to the approved reference but establishes nothing beyond string equality, contrary to the stated rule that no library flag establishes an external trust boundary.",
+        "correction": "Either take the reference bytes (or reference.json path) and compute sha256 internally against the approved constant, or rename/document the parameters as caller-attested identity and remove the 'reference hash' wording from errors and tests."
+      },
+      {
+        "id": "B1-6",
+        "severity": "INFO",
+        "defect": "Symbolic branch review (listed as an open item in reference_comparison.json 'limitation') performed here: the checker's seven expressions reduce algebraically to the producer's (sigma_vm: (1-x)^2+(1+x)^2-(1-x)(1+x)=1+3x^2 with x=b^2/r^2; u_r: K*r*((1-nu)+(1+nu)b^2/r^2)/E = ((1-nu)A r+(1+nu)B/r)/E; u_z=-2*nu*K*y/E; sigma_z=tau_rz=0 open-end branch). Equivalence holds for all r,y and both pressures, so the 18-point sampling limitation and 1e-10 absolute tolerance do not conceal a divergent branch in this instance. Evaluator grammar, precedence, bounds and envelope refusal match checker_contract.json; no arithmetic defect found in cylinder_expression.py or cylinder_reference.py.",
+        "correction": "Record this symbolic equivalence as a reviewer note in the section evidence; it does not by itself establish engineering qualification or replace human adjudication."
+      }
+    ]
+  }
+}

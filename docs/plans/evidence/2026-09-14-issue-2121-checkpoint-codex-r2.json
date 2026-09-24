@@ -1,0 +1,86 @@
+{
+  "provider": "Codex",
+  "reviewer": "independent parametric_scope worker",
+  "checkpoint": "user-authorized correction checkpoint R2",
+  "verdict": "APPROVE",
+  "reviewed_revision": "082ed61b32ff7f48f70a2394f53d2ddd92c363cd",
+  "reviewed_revision_kind": "git tree object",
+  "reviewed_files": [
+    {
+      "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+      "sha256": "c8ef2899824a3c6a27bbebe35c5f5b8a2603f7ceb7c980dbba51ac42f4d90126"
+    },
+    {
+      "path": "docs/plans/README.md",
+      "sha256": "72fd817132c456ee8977da76e6b9228286bc3cd0c37766297e2ac7311a20efd7"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json",
+      "sha256": "1a10c0cf3a0efd45c268647f76155c12a367305a371aa58edafff9b5e20cf806"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json",
+      "sha256": "e7d80942fb3d3d847e95f90f0b428dc684a5505690b5451aa5a37efbf25566e9"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-verification.json",
+      "sha256": "e178fc7848547b3f537756250bedc62f91f55a90bbcd3545ebd456a14282a043"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
+      "sha256": "340cd7ff863d9c4fefa7e5811bdf16fd93841212a1370e290ad2aec3a9832988"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-claude-r1.json",
+      "sha256": "067a261029c77cf79622872f10c44a49ed51233a1b588147d5e96a40030c66fa"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-codex-r1.json",
+      "sha256": "3696285441c87f3c65978c27c46a9f7eb7abff3f29c6e27e1019014240a8e64f"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-diagnostic-characterization.json",
+      "sha256": "e96e0d41fd0e6ca21a80d43dcd986cb00577dc1a018ae1548d43e5014174d6c0"
+    }
+  ],
+  "findings": [],
+  "verified": [
+    "All nine staged paths were reviewed at the specified Git tree; raw Git blob SHA-256 values were computed. The eight non-self file hashes in the verification receipt match this tree.",
+    "N1: The checker expression grammar, exact seven-expression JSON schema, frozen generic evaluator, complete physics-only brief and exactly one registered independent checker invocation are specified before execution. Unusable output, disagreement or unavailable isolation blocks B2; resampling or evaluator tuning requires adjudication and renewed approval.",
+    "N2: The four characterized native source files were independently read. Raw source digests, distinct header identities, class counts, representative byte spans and body digests match. The total is 217 header occurrences across duplicated output/error channels: 210 WARNING and seven NOTE. The full private characterization record digest also matches.",
+    "N3: Explicit /CONFIG,RESUPREC,0 before result output and native /CONFIG,STAT immediately before and after SOLVE address stored-result precision. Missing, conflicting or overridden settings fail the gate. Original numerical criteria remain fixed; neither storage precision nor binary32 representability is treated as proof of FE accuracy.",
+    "N4: Full-selection SFELIST,ALL,ALL with FLIST and DLIST provides a specified current-database load/constraint audit; face geometry, sign, magnitude and absence of extraneous loads are mandatory checks.",
+    "N5: External process stdout and stderr are required to be byte-empty; unexplained nonempty streams produce INCOMPLETE without discretionary waiver.",
+    "N6: Engineering-register extraction records deterministic JSON string-value traversal, separators, encoding, input digests, script digest and output digest/size. The four current working-file input digests match; the prior verification receipt is explicitly identified as a pre-regeneration input.",
+    "N7: Independent reference agreement is required before any native launch; failure consumes zero attempts. Per-attempt checks use frozen approved reference hashes rather than new checker calls.",
+    "HTML and machine-readable scope retain one physical case, zero control first followed by N4/N8/N16, four attempts maximum, fixed accuracy/refinement/zero/reaction criteria, continuation on coarse accuracy diagnostics only, and mandatory stops for evidence or control failures.",
+    "B1 remains offline preparation; B2 requires separate explicit approval and frozen evidence. No lookup promotion, parametric expansion, offline FE engine or native-pass prediction is authorized by this plan review.",
+    "Historical R1 verdicts are retained as historical evidence; conservative awaiting-review status text is not interpreted as an additional permanent engineering blocker."
+  ],
+  "source_checks": [
+    {
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_CONFIG.html",
+      "disposition": "Official v242 documentation supports RESUPREC=0 double-precision result storage, STAT reporting and command override of config.ans. Binary32 representability is not a decisive storage-precision test."
+    },
+    {
+      "url": "https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_cmd/Hlp_C_SFELIST.html",
+      "disposition": "Official v242 documentation supports ALL selected elements and ALL appropriate surface-load labels; listing reflects the current database, not reconstructed POST1 load history."
+    }
+  ],
+  "limitations": [
+    "This is an exact-current planning review, not implementation approval, solver validation, native-run authorization or lookup qualification.",
+    "No solver was invoked and no implementation or test suite was executed during this review. Future B1 feasibility and B2 native accuracy remain unestablished.",
+    "No native ERROR or FATAL diagnostic was present in the characterized corpus; planned synthetic coverage does not establish native message-format coverage.",
+    "The official documentation semantics were checked; stored HTTP-response byte digests were not independently reproduced by a new raw download.",
+    "The extraction recipe and input identities were inspected; the recorded engineering-register scanner execution was not rerun."
+  ],
+  "cleanup": {
+    "classification": "EXPECTED",
+    "items": [
+      "Requested private review JSON",
+      "Parent-owned staged planning artifacts and existing private evidence"
+    ],
+    "repository_mutations": "None by this review",
+    "completion_audit_owner": "Parent orchestrator; subagent exemption in pre-completion-cleanup-audit skill applies."
+  }
+}

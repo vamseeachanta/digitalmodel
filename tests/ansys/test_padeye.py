@@ -100,4 +100,10 @@ def test_committed_example_inp_matches_generator():
     spec = importlib.util.spec_from_file_location("padeye_build", build)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    assert example.read_text() == generate_padeye_apdl(module.GEOM)
+    # Line endings normalised: git checks the deck out with CRLF wherever
+    # core.autocrlf is true while the generator emits LF, so a byte-exact
+    # comparison fails on every Windows checkout whether or not the deck has
+    # drifted (#2094).
+    assert example.read_text(encoding="utf-8").replace("\r\n", "\n") == generate_padeye_apdl(
+        module.GEOM
+    ).replace("\r\n", "\n")

@@ -1,0 +1,156 @@
+{
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "BLOCKER",
+      "defect": "tests/ansys/test_analysis_lookup.py::test_missing_authority_and_changed_review_refuse_engineering fails at this revision. analysis_lookup._check_authority evaluates the criteria-reference gate (`criteria = package.get(\"criteria_reference\")` -> `current criteria evidence required`) before the review-source gate. The package under test is built from the base `intake` fixture in test_analysis_evidence.py, whose study dict contains no `criteria_reference`, so the criteria gate fires first and the raised message does not satisfy `pytest.raises(ValueError, match=\"changed\")`. The supplied test evidence (\"141 passed, 2 skipped\") is stated to predate the criteria digest guard and therefore does not evidence the current tree. No completion claim can rest on it.",
+      "correction": "Add `criteria_reference` to the study and to the authority record in that test, mirroring the `protocol` fixture in test_analysis_qualification.py. Then split the assertion into the two distinct review branches it conflates: one asserting `verify_reference` refusal when the review bytes change on disk (`evidence changed: review`), and one asserting pin mismatch when `package[\"review_sources\"] != authority[\"review_sources\"]` (`review sources changed; requalification required`). Re-run the full suite and record the result at the reviewed revision before any closeout."
+    },
+    {
+      "id": "F2",
+      "severity": "MAJOR",
+      "defect": "analysis_intake._make_case derives the highest-trust attributes from an identifier prefix: `native = candidate[\"candidate_id\"].startswith(\"ansys-\")` sets `source_kind` to \"native\" and `execution_status` to \"completed\". Those two fields are precisely the gates analysis_lookup._qualify uses to refuse synthetic, failed and dry-run evidence. A renamed, mistyped or adversarially named candidate id silently promotes a record to the trusted class. Separately, `execution_status=\"completed\"` is asserted without reading any completion evidence; the `.out` and `.mntr` artifacts are carried and hashed but never inspected. Malformed trusted input therefore fails open, contrary to the stated requirement.",
+      "correction": "Require explicit `source_kind` and `execution_status` fields on every eligible intake candidate, validate them against the closed vocabularies already enforced in analysis_records.validate_case, and refuse import when either is absent or outside the vocabulary. Retain the id prefix at most as a cross-check that must agree with the declared fields, not as the source of the classification."
+    },
+    {
+      "id": "F3",
+      "severity": "MAJOR",
+      "defect": "The published package discards the supersession relation and the inherited finding ledger. _make_case drops `role` (\"original_invalid_reaction_extraction\" versus \"corrected_reaction_extraction\"), `reaction_channel_validity` and `warnings_claim`; build_intake_package carries no `finding_ledger`. The 13 frozen findings in intake.json, each `blocks_engineering_qualification: true`, survive only as the single string \"inherited-review-unresolved\" on each response, and _check_authority clears all of them with one owner boolean, `blocking_findings is False`. An owner who lists that string in `allowed_limitations` can qualify a superseded original-extraction response (for example `ansys-2094-padeye-20260912T221414Z/coarse:max_seqv_mpa`) with no signal in the package that a corrected capture exists. The intake's own `unmapped-finding` fail-closed-default rule has no representation in code.",
+      "correction": "Carry `role` and an explicit supersession pointer into each case record, and carry a per-response list of inherited finding ids. Require the authority record to disposition each finding id individually against the affected response names, and refuse qualification for any response whose finding set is open or unmapped, rather than accepting one aggregate boolean."
+    },
+    {
+      "id": "F4",
+      "severity": "MAJOR",
+      "defect": "Rights and authorship are asserted as constants. _make_case hardcodes `\"retention_rights\": \"approved\"` and `\"author\": \"historical-neutral-capture\"` for every case. analysis_records.validate_case refuses any retention_rights value other than \"approved\", so the only rights gate in the pipeline can never fail for the only producer that feeds it; the gate is vacuous. The constant author additionally reduces the independence test in _verification (`entry[\"checker\"] == case[\"author\"]`) to a check that the checker is not literally that placeholder, which does not establish that the checker differs from whoever produced the capture. README.md states \"The checker must be a different recorded author\", which reads stronger than the implemented check supports.",
+      "correction": "Read retention rights from an explicit per-candidate field and fail closed when it is absent or not \"approved\". Record the actual capture author where it is known; where it is not, set authorship to an explicit unknown marker and refuse qualification while it remains unknown, instead of comparing the checker against a placeholder string. Amend the README sentence to state what the check actually establishes."
+    },
+    {
+      "id": "F5",
+      "severity": "MAJOR",
+      "defect": "tests/ansys/test_analysis_evidence.py::test_size_failure_publishes_nothing asserts `not list(root.rglob(\"manifest.json\"))`, but publish_package writes `<dataset_id>/<revision>.json` and never produces a file named manifest.json. The assertion is vacuously true. The revision-limit branch also raises before `directory.mkdir`, so the test exercises no filesystem state whatever. The cumulative-limit branch, which is the one that creates the dataset directory and the `.publish.lock` before raising, has no test at all.",
+      "correction": "Change the assertion to `not list(root.rglob(\"*.json\"))`. Add a cumulative-limit case that pre-populates the dataset directory, triggers the cumulative refusal, and asserts that no new `.json` is published, that `.publish.lock` has been removed, and that no `.pending` temporary file remains."
+    },
+    {
+      "id": "F6",
+      "severity": "MINOR",
+      "defect": "Dead assertion in tests/ansys/test_analysis_lookup.py::test_ledger_withdrawal_and_external_head_detect_rollback. With a single ledger entry, `list(reversed(updated[\"entries\"]))` reconstructs an equal list, so `{**updated, \"entries\": ...} == updated` and the `if bad == updated: continue` guard skips the reordering case entirely. Ledger entry reordering is therefore unverified, while the test's name and shape imply it is covered.",
+      "correction": "Append a second withdrawal before the loop, then assert that validate_ledger refuses both the reordered and the truncated ledger against the current head."
+    },
+    {
+      "id": "F7",
+      "severity": "MINOR",
+      "defect": "manifest.json records `criteria_sha256`, `intake_digest` and intake.json records 12 `source_records` digests, none of which any code path verifies. validate_package never reads `package[\"criteria_sha256\"]`; _check_authority verifies only `criteria_reference`, which the published manifest does not carry. `intake_digest` pins the intake bytes but no evidence reference and no resolver entry exist for them, so verify_reference is never reachable for the intake. These fields read as cryptographic bindings but are inert metadata.",
+      "correction": "Express criteria and the intake ledger as `{id, sha256}` evidence references resolved and checked through verify_reference on the same footing as review and verification references. Remove the bare digest fields, or label them explicitly as unbound records with no locator so a reader does not take them for verified bindings."
+    },
+    {
+      "id": "F8",
+      "severity": "MINOR",
+      "defect": "Unverified document references. docs/domains/ansys/analysis-workflow.html states \"The implementation report records its coverage\" and links ../../reports/2026-09-13-ansys-evidence-stage-a.html; examples/ansys/analysis-evidence/README.md links the same file; intake.json sets `review_record` to docs/plans/evidence/2026-09-13-issue-2119-implementation-review.md. Neither artifact appears in this change set, no committed file in the set produces them, and no code verifies either. If they are absent the present-tense claim is false and both links are broken.",
+      "correction": "Confirm on the filesystem that both artifacts exist and are committed at this revision. If either does not, remove the present-tense claim and the link, or mark the reference explicitly as forthcoming, consistent with the stated position that the reviews and cleanup receipt path is a forthcoming record."
+    },
+    {
+      "id": "F9",
+      "severity": "MINOR",
+      "defect": "docs/domains/ansys/analysis-workflow.html is stale relative to the commit that ships with it. It states \"The issue 2119 adapter will require its own TDD and exact-current review\" and \"The offline intake ledger will distinguish original/corrected pressure-vessel, padeye and mudmat captures\", both in future tense, while this same change set delivers src/digitalmodel/ansys/analysis_*.py and examples/ansys/analysis-evidence/intake.json. The same document asserts an implementation report in the present tense. The tense no longer tracks delivered state, which misleads a reader about what remains unperformed.",
+      "correction": "Restate the adapter and intake-ledger sentences in the tense matching delivered state, naming the delivered modules and the intake file. Reserve future tense for what genuinely remains unperformed: the native campaign, the source and use-rights qualification, the finding disposition and the independently checked verification register."
+    },
+    {
+      "id": "F10",
+      "severity": "MINOR",
+      "defect": "analysis_records.safe_id rejects CON, PRN, AUX and NUL but not COM1 through COM9 or LPT1 through LPT9. `dataset_id` and `revision` pass through safe_id and become a directory name and a file name in publish_package. On this Windows platform, a revision of \"COM1\" would address a serial device rather than a file, and the no-overwrite `target.exists()` guard does not behave as intended against a device name.",
+      "correction": "Extend the reserved set to COM1 through COM9 and LPT1 through LPT9. The existing `value.upper().split(\".\")[0]` prefix test already covers their dotted forms, so only the set membership needs widening."
+    },
+    {
+      "id": "F11",
+      "severity": "MINOR",
+      "defect": "The go-by documents no reproduction path for responses.csv and performs no post-publication readback. analysis_intake.main publishes <output-root>/ansys-retained-evidence/r1.json and prints a summary; it never writes a CSV, and response_csv has no command-line entry point. README.md describes responses.csv as \"its derived response export\" and supplies a command that cannot produce it. main also never reloads the published artifact, so the published file is not read back and re-validated at the production entry point, only the pre-link temporary is.",
+      "correction": "Emit the response CSV from the same entry point, or add a second documented command that does, and record its path in the README reproduction block. Call load_package on the published target before printing the success summary so the published bytes are verified by readback, per the data-handling contract."
+    },
+    {
+      "id": "F12",
+      "severity": "MINOR",
+      "defect": "Untested refusal branches under a TDD-mandatory contract. analysis_evidence.read_response_csv carries five refusal paths (unsupported header schema, malformed row, duplicate case/response pair, noncanonical payload, typed columns disagreeing with payload) and none is exercised; only the positive round trip is tested. The _check_authority revision-binding branch (`authority[\"revisions\"][revision] != package_hash`) is never reached by any test, because test_missing_authority_and_changed_review_refuse_engineering raises earlier and every qualification test sets the binding correctly. safe_id's reserved-name path is also untested.",
+      "correction": "Add one negative case per read_response_csv refusal path, a case in which the authority binds a different package hash for the same revision, and a safe_id case covering reserved device names and the length and character-class limits."
+    },
+    {
+      "id": "F13",
+      "severity": "MINOR",
+      "defect": "analysis_evidence.parse_digest calls `ResultsExtractor().parse_result_digest(text)` and discards the result. The call performs no comparison against the `values` dict it is placed to corroborate, so it does not validate reuse of the established parser; it only adds a failure surface and a hard import dependency on results_extractor. The adjacent comment claims reuse of established parsing, which the discarded call does not deliver. No test asserts the behaviour either way.",
+      "correction": "Either compare the established parser's output against `values` on the fields that are comparable and refuse on disagreement, or remove the call and state in the comment that parse_digest replaces rather than reuses the lossy parser."
+    },
+    {
+      "id": "F14",
+      "severity": "MINOR",
+      "defect": "analysis_evidence.parse_digest enforces `required.issubset(labels)` but not the reverse. A retained CSV containing a label absent from the candidate's `response_units` passes the digest guard and reaches analysis_intake._make_case, where `units[name]` raises KeyError rather than a validation error. The outcome is fail-closed but the failure is an unhandled exception type rather than the ValueError the rest of the boundary raises, which breaks the caller's error contract.",
+      "correction": "Reject any label not present in `required` inside parse_digest with a ValueError naming the unexpected field, so digest field-set closure is enforced at the validated boundary rather than by an incidental KeyError downstream."
+    },
+    {
+      "id": "F15",
+      "severity": "MINOR",
+      "defect": "Publication lock handling in analysis_evidence.publish_package. The `finally: lock.unlink()` call has no `missing_ok=True`, so a lock removed by anything else raises FileNotFoundError and masks the primary exception. A process terminated while holding `.publish.lock` leaves the lock in place, after which every subsequent publication to that dataset fails permanently with FileExistsError and no documented recovery path. The README describes an owner-serialized publication process but records neither the lock's existence nor its recovery.",
+      "correction": "Use `lock.unlink(missing_ok=True)`. Document the `.publish.lock` file and its manual clearance procedure in the README, or record the holding process identity and start time in the lock so a stale holder can be distinguished from a live one."
+    },
+    {
+      "id": "F16",
+      "severity": "MINOR",
+      "defect": "Cross-module pytest fixture import. tests/ansys/test_analysis_lookup.py and tests/ansys/test_analysis_qualification.py do `from tests.ansys.test_analysis_evidence import intake`, and the latter also imports `query` from test_analysis_lookup. This binds fixture visibility to module import order and to `tests.ansys` being importable as a package; no tests/ansys/__init__.py appears in the change set, so collection depends on the ambient import mode rather than on anything this change establishes. It is an optional improvement, not a correctness defect at this revision.",
+      "correction": "Move the `intake` fixture and the `query` helper into tests/ansys/conftest.py so pytest resolves them by fixture discovery rather than by cross-module import, removing the dependency on package importability and module ordering."
+    }
+  ],
+  "reviewed_files": [
+    {
+      "path": "docs/domains/ansys/analysis-workflow.html",
+      "sha256": "e67d79ffa7b59eac0a3a2751ada9e8f9b02b02409aa5ec3392ed582e229a6ffe"
+    },
+    {
+      "path": "examples/ansys/analysis-evidence/README.md",
+      "sha256": "1649a17d35f53938c6d317a251db8cfdccfd2fa622c70a7d5659322020adbee8"
+    },
+    {
+      "path": "examples/ansys/analysis-evidence/intake.json",
+      "sha256": "edf29351e010a5f43534f9db0bb964d23df7a08c8142ad5f4638079e8dcf9110"
+    },
+    {
+      "path": "examples/ansys/analysis-evidence/manifest.json",
+      "sha256": "ee1e774aabca83f00d5956b8b169b4f03cfd3b5ca63eb45c6b55c9bc09eed9f0"
+    },
+    {
+      "path": "examples/ansys/analysis-evidence/responses.csv",
+      "sha256": "b2f337366f706b5e41a8c1626d9927a31f6420bbaf3b6f7b841543532050643a"
+    },
+    {
+      "path": "src/digitalmodel/ansys/analysis_evidence.py",
+      "sha256": "fe2c23bc44f57d372b3ddec781639f9fd9d97487c7a531cf29c778e6b18a6f26"
+    },
+    {
+      "path": "src/digitalmodel/ansys/analysis_intake.py",
+      "sha256": "c32c582524e7389acf9224792f872d7440835c7fa5e87f88cbcab14046f559c4"
+    },
+    {
+      "path": "src/digitalmodel/ansys/analysis_lookup.py",
+      "sha256": "0002ae332c1c98fb1103de3ec21f24b64f404552e6c65e679781fd85f894c13e"
+    },
+    {
+      "path": "src/digitalmodel/ansys/analysis_records.py",
+      "sha256": "e113c1a13ba99312d8c1858b1965ac59d9f5cef1c7770b8bc1c89606e8294ee2"
+    },
+    {
+      "path": "tests/ansys/test_analysis_evidence.py",
+      "sha256": "ea96336263f93ee2c38104d74617add8fab2ed60e9f53a776d2e1401203cfe10"
+    },
+    {
+      "path": "tests/ansys/test_analysis_intake.py",
+      "sha256": "7702ac71120486b417446bd62402c5ea96e6b7d2ec880c5e401be7bcfbb6b427"
+    },
+    {
+      "path": "tests/ansys/test_analysis_lookup.py",
+      "sha256": "260e1ff0a3690c971f06380cb97b64157e9f58f63929178bc399e4670e09c9bf"
+    },
+    {
+      "path": "tests/ansys/test_analysis_qualification.py",
+      "sha256": "3fc146985d8aefc777d120f49e68b85cfc513befbc6160043f32dadf8b690dc6"
+    }
+  ],
+  "reviewed_revision": "43ee0ab92426671d0f1ed5bba8532e4cc43a20d2",
+  "verdict": "MAJOR"
+}

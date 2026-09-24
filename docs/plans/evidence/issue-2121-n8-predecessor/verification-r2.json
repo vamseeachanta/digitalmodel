@@ -1,0 +1,113 @@
+{
+  "schema": "n4-predecessor-verification-1",
+  "observed_utc": "2026-09-16T12:21:01.417982+00:00",
+  "command": "python -m pytest tests/ansys/test_cylinder_refinement_replay.py tests/ansys/test_cylinder_n4_recovery.py -q --disable-warnings",
+  "test_exit_code": 0,
+  "passed": 66,
+  "skipped": 0,
+  "strict_corpus_mode": true,
+  "logs": {
+    "red.log": "ce5f1ed15fdad23dd58577ae6b6d9e166d6a56c42c135839162ed9002db17254",
+    "tests.log": "78d7dfe7bc5df7a6b9fbeb7037098f34edbc08e924ca50b283b6247fecc6b1f5",
+    "tests-r2.log": "44976baf8adb7f30584a2e35d8d84d292d26e421118f4bbf9a3efe421431f2dc",
+    "review-red.log": "23b519005a10723ae5d6065fdd16933721992cc28287c3b6e0c87b48e8d1003b",
+    "strict-refusal.log": "886c0aa4cbb90afe103d815b7e96cf7982f6d0d3e9c5331a821f304121a0ff8f"
+  },
+  "observation_sha256": "d38703f10f5cdd190802b57d1374ddf9f7b81d628e36ae77030a0e1418881c5f",
+  "replay_status": "COMPLETE",
+  "assessment_status": "CONTINUE",
+  "values": 63,
+  "checks": 22,
+  "passed_checks": 21,
+  "failed_checks": [
+    {
+      "criterion": "expected_zero",
+      "response": [
+        "outer_y120",
+        "sigma_r"
+      ],
+      "residual": "0.01059709996930703",
+      "limit": "0.010",
+      "passed": false
+    }
+  ],
+  "native_attempt_delta": 0,
+  "native_completion_delta": 0,
+  "qualified_row_delta": 0,
+  "engineering_qualified": false,
+  "native_admission": "NOT_EVALUATED",
+  "sources": {
+    "src/digitalmodel/ansys/cylinder_refinement_replay.py": "a5969a9c622c71ad821eb1a4a4e5c769b75f46d22c7feaa94011c89f5dcb6f71",
+    "tests/ansys/test_cylinder_refinement_replay.py": "4e8a1a16e0b818882953f96e53f5772397a5cf22c0f5e44630f997bd08d97257",
+    "docs/plans/issue-2121-n8-predecessor-replay.html": "a5c587f8fe344d0ab4e63c2852029eba230051c3fa2f9cf365c28c56e31e6b0a",
+    "docs/plans/README.md": "6a76e773eb5b3302c820f6ae8708af63464e1ef207ea479c673041244b824ad0",
+    "src/digitalmodel/ansys/analysis_records.py": "52d8b1939b59297fbdacf7fe84dec6a38e31f9cc29129063ceced16dfdd2a727"
+  },
+  "historical_source_files": {
+    "src/digitalmodel/ansys/models.py": "6f1d2815c3bb8a4777df693db63ebc3678d2ca412f5bc6230871185be1954798",
+    "src/digitalmodel/ansys/apdl_reader.py": "ccfddaea6bb91c65ad9243e76228fe5c1bc7c86adbccfe22052c9fdf74bc1058",
+    "src/digitalmodel/ansys/design_points.py": "fbbd344be999d11d6f79c8f3a97fe04beee7c82cc6736791496488286e6022c4",
+    "src/digitalmodel/ansys/wbjn_reader.py": "c2e5cc1a37e6df2d128c0f5b9113d2bb6e2506f63d62e49f35e70cc386a735e5",
+    "src/digitalmodel/ansys/apdl_generator.py": "ee1bada419584bd6e7986bb7009ddcf9b2dcc94e39f31d19d5aa02f353d4d2c5",
+    "src/digitalmodel/ansys/batch_runner.py": "800db49957f46f6a01e3b8525cfdaf586e9f8e3376fa8f2ba21be44f51b384a7",
+    "src/digitalmodel/ansys/results_extractor.py": "44645085ca23ee606d08d26a9549e646ceb190b4b79ddaffca7aea989382af60",
+    "src/digitalmodel/ansys/pressure_vessel.py": "081064599f9e32c36344beb8cbe948710d29f531eef7b9b4f40bf2e8eb4fbd11",
+    "src/digitalmodel/ansys/bolt_analysis.py": "262fc823ca1f6efe48f9c89e4face3aaf0bda41499bf874d43629352953cd746",
+    "src/digitalmodel/ansys/weld_assessment.py": "f8d92788a662c23f1a4ed2b12fbe5c7dad77411bfc17d8a9ae9a38dcacd0124a",
+    "src/digitalmodel/ansys/fatigue_postprocessor.py": "fd0d1e64f7c3ed4816c6e036466d3d845c1380d65f0ac60f53c8825577b79994",
+    "src/digitalmodel/ansys/contact_analysis.py": "596c5943b03c912956a0bce72a7821387a89c56a4c7714d364efb28ae9a942fd",
+    "src/digitalmodel/ansys/thermal_analysis.py": "2075946c225232bd4218593a72d27a23eaffd540c3525e886be4af29499f040a",
+    "src/digitalmodel/ansys/report_generator.py": "23de8b10527c9e562e6cade9be75d7176632e8182584b2ea6011a25ad1e35b50",
+    "src/digitalmodel/ansys/__init__.py": "893d9721253e1a4e52c3285d11c88d4f57b6bfdb2fb84e12b3fdd0c2eb282f8a",
+    "src/digitalmodel/ansys/cylinder_results.py": "a099fc97882a9ce2cc552a634b1bc73e63229b0d25cf2e774db9a074446f5c41",
+    "src/digitalmodel/ansys/cylinder_results_listings.py": "84447f05e8ee34b91165d782ec3994d67ddd4397e873c2a225ee39ff90a5960a",
+    "src/digitalmodel/ansys/cylinder_results_audit.py": "c3461be6a7ef5d46e0ff9a752bfaf0e64471cc0865421dc8afd0c46ab2e3510a",
+    "src/digitalmodel/ansys/cylinder_results_cdb.py": "bba7868a601870992068ac9115b0670347bda26993bd045289057764c1cd361c",
+    "src/digitalmodel/ansys/cylinder_results_diagnostics.py": "4ac407fcb01c7747c610e96a6ed1970d484a1dec5bbd46d5905eb5527c8eb852",
+    "src/digitalmodel/ansys/cylinder_results_state.py": "e961c307ec403f04b81d8ee5fc88f5a92f5cf3ab06c001f524d846f8c741f798",
+    "src/digitalmodel/ansys/cylinder_results_validation.py": "e9b6bb5c89ad1f023e462842008d31f8912b5d433f3e4c54581f57b79cd2daf4",
+    "src/digitalmodel/ansys/cylinder_criteria.py": "286e287834d2e38c675ce08a6aa44b8be1ba96739fbc807e65e1b8d82608eef3",
+    "src/digitalmodel/ansys/cylinder_results_native_status.py": "ed80fb3906e2604cee58df2d2fce8d4fd86c0d128753fa6fc8d16930639ab5a0",
+    "src/digitalmodel/ansys/cylinder_results_native_loads.py": "7681c92894f7fe1c8102638db9f5c3a1673be45616e7adc93ecd150d2b8dfaf0",
+    "src/digitalmodel/ansys/cylinder_results_native_pressure.py": "454282b185cd47d6f4c53865845ff06deca8bcf081e41cbbed6d8b5fe3bd6157",
+    "src/digitalmodel/ansys/cylinder_results_native_values.py": "31e9f91bbdfbd5d8aa1389154b1b84a40eed335a636a2e79a5356f786fcf3dfa",
+    "src/digitalmodel/ansys/cylinder_results_native_listings.py": "49d79cdc149bab12a80054e10248f4885c46766a01b8f1208cdf091890fd9f50",
+    "src/digitalmodel/ansys/cylinder_results_native_reactions.py": "fbe77baf7ffc813b1de294d294b9e3ae40f04b4a09edc06808d4db265a68c7b8"
+  },
+  "runtime_pins": {
+    "manifest.json": "d4f8f080d075b7fe3883451f0c818de0f3cb1c4a7846085bf717a6fa4c98a8fc",
+    "prepared/ocv-t60-p10-n4.json": "7b7956d25ad848bdc781ada64eea6edc4646e40f63d0fcea9d0dcbc527a44e5b",
+    "reference.json": "385ff3d42e4219faefd8cc1a72c20525f4b2731cf2fcb31aa51ba5b1de63c3b4"
+  },
+  "matrix_r6_sha256": "5b2d08289e0e2affea908883c73967f9ab5afa6af4a864aceb04ef68bb400e59",
+  "review_status": "PENDING exact code r2 review; no native admission",
+  "review_r1_disposition": {
+    "blocking_exact_equality": "Fixed literal canonical digests for 63 values and full assessment, plus exact reaction and failed row; not loaded expectations at runtime.",
+    "malformed_errors": "Normalized to ValueError with RED tests.",
+    "historical_guards": "Five report-header refusal cases added. Duplicate-artifact/package-prefix branches remain indirectly covered by immutable observation and runtime pins; synthetic exhaustive branch coverage is not claimed.",
+    "failure_limits": "Returned failed_checks, historical_limits, historical_matrix_adoption and wrapper-assigned label basis.",
+    "no_write": "Test re-enumerates complete after-file set.",
+    "unit_origin": "Explicit wrapper-assigned frozen benchmark labels; no independent measurement claimed."
+  },
+  "replay_receipt_summary": {
+    "failed_checks": [
+      {
+        "criterion": "expected_zero",
+        "response": [
+          "outer_y120",
+          "sigma_r"
+        ],
+        "residual": "0.01059709996930703",
+        "limit": "0.010",
+        "passed": false
+      }
+    ],
+    "historical_limits": [
+      "CONTINUE is coarse-mesh progression, not PASS.",
+      "Original capture and native files remain unchanged.",
+      "No N8/N16, convergence, capacity or engineering reuse qualification."
+    ],
+    "historical_matrix_adoption": "NOT_ADOPTED; existing r5 N4 numerical values remain null",
+    "label_basis": "Unit and origin are wrapper-assigned frozen-benchmark labels; label agreement is not an independent units/provenance measurement."
+  }
+}

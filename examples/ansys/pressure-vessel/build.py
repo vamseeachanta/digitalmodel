@@ -22,7 +22,13 @@ HERE = Path(__file__).resolve().parent
 GEOM = VesselGeometry(
     inner_diameter_mm=1500.0,
     shell_length_mm=5000.0,
-    wall_thickness_mm=30.0,
+    # 60.0, not 30.0 (#2094 D2). ASME VIII UG-27 requires
+    # t = PR/(SE - 0.6P) = 10*750/(138 - 6) = 56.8 mm at 10 MPa, so a 30 mm wall
+    # is an overstressed section, not a design. At 30 mm the corrected model
+    # peaks at 259.5 MPa -- 99.8 percent of the 260 MPa yield -- which puts a
+    # linear-elastic idealisation at its own validity boundary. At 60 mm the
+    # peak is 135.5 MPa and the unity check 0.98: a just-acceptable vessel.
+    wall_thickness_mm=60.0,
     head_type="2:1_ellipsoidal",
     corrosion_allowance_mm=3.0,
 )
@@ -50,5 +56,5 @@ def build() -> str:
 
 if __name__ == "__main__":
     out = HERE / "pv.inp"
-    out.write_text(build())
+    out.write_text(build(), encoding="utf-8")
     print(f"wrote {out}")

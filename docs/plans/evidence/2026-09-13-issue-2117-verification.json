@@ -1,0 +1,68 @@
+{
+  "scope": "Nine named documentation artifacts, exact scanner and global deny list; local deny list absent. This receipt is not engineering acceptance.",
+  "exit_code": 0,
+  "stderr": "",
+  "stdout_summary": "Named scoped digitalmodel directory scanned; RESULT: PASS, no block violations",
+  "canonicalization": "Git index blobs for repository artifacts; raw bytes for scanner and deny list",
+  "command": "legal-sanity-scan.sh --all with LEGAL_SCAN_REPO_ROOTS set to verified scoped snapshot",
+  "files": [
+    {
+      "file": "scripts/legal/legal-sanity-scan.sh",
+      "sha256": "e0c38d41a33fcfde590465ccd59d9dfa79c3d417246412fddb0f4a2b11634db3"
+    },
+    {
+      "file": ".legal-deny-list.yaml",
+      "sha256": "77ea4133ee858ce8ee4336ccf475f96d7ee392e3b996cc0c620e71c13520a1d3"
+    },
+    {
+      "file": "digitalmodel/.legal-deny-list.yaml",
+      "status": "absent in source; global deny list will govern"
+    },
+    {
+      "file": "digitalmodel/docs/README.md",
+      "sha256": "888975b62d4a735d7205a2cc505c90768944b9464708d9ee2aee8d7c3f7ffbdc"
+    },
+    {
+      "file": "digitalmodel/docs/standards/analysis-parametric-lookup-criteria.html",
+      "sha256": "1cebe3d4c8577b9795e67024a05a58bda7514c5d2334bea7d39f281f96af5bd0"
+    },
+    {
+      "file": "digitalmodel/docs/plans/2026-09-13-issue-2117-padeye-parametric.html",
+      "sha256": "17f6d2c9bf1f2d2afb8bbcda453bf9c2d7c5d65f2ab7910795311dcc8fe93e19"
+    },
+    {
+      "file": "digitalmodel/docs/plans/README.md",
+      "sha256": "c9d5bd71a82917435313c981a66862da61d0d7fd0da14d14e1d9ed79bf96d51a"
+    },
+    {
+      "file": "digitalmodel/docs/plans/evidence/2026-09-13-issue-2117-review.md",
+      "sha256": "46cb598ba6f90450307e76804780cf6ad41b462b6fcab2dfcfad8c490983728e"
+    },
+    {
+      "file": "digitalmodel/docs/session-handoffs/2026-09-13-padeye-parametric-plan.html",
+      "sha256": "b4b4ca9112401e7786e1a9081ec9f3fd004b97bfcceea5f5f75745247d36d846"
+    },
+    {
+      "file": "digitalmodel/docs/reports/2026-09-12-padeye-pressure-preparation.html",
+      "sha256": "df6a798c02d945d817cece246774625fabea0c725682c15aba555ce7d994dddc"
+    },
+    {
+      "file": "digitalmodel/docs/plans/evidence/2026-09-12-issue-2094-pressure-preparation.json",
+      "sha256": "ca38a8b8843322f23980b9c66666a059cf891deb6804d7d5213d6164a07a180d"
+    },
+    {
+      "file": "digitalmodel/docs/plans/evidence/2026-09-13-solvers-current-review-coverage.md",
+      "sha256": "d9c3b027c784953de022a7defb373cd4cad5fda3f30e038a1ad76534f1c09e12"
+    }
+  ],
+  "verified_at": "2026-09-13T17:15:14.963147+00:00",
+  "stdout": "\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n  Legal Sanity Scanner\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\nScanning: digitalmodel (/d/ws/_coordination/solver-legal-padeye-parametric/digitalmodel)\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n  RESULT: PASS \u2014 no block violations found\n\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n",
+  "padeye-parametric-claude-r1.json": {
+    "sha256": "224c5bd88a050df03f9324e711e6ea7d9742751458aadf4f93498715fd712f9e",
+    "verdict": "MAJOR"
+  },
+  "padeye-parametric-claude-r2.json": {
+    "sha256": "bdcb56015b142e43030d8f14249ff7f3a70752ffdec15c16737d7f50686cc870",
+    "verdict": "MAJOR"
+  }
+}

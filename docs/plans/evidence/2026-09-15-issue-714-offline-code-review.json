@@ -1,0 +1,46 @@
+{
+  "schema": "independent-review-source-view-1",
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/714",
+  "provider": "Claude",
+  "receipt_sha256": "71b13c55e561e3ba67710eaac3904d7348723da1f11ab6a7dcf6c5d7e1b8954b",
+  "bundle_sha256": "632bccfb1446c40ab343743d435b1f8b1a8e61fdbce5010400688b810b9383b4",
+  "source_files": [
+    {
+      "path": "src/digitalmodel/hydrodynamics/diffraction/diagnostic_basis.py",
+      "sha256": "07e142cc08e0391a020521e62a40e5596ad85da8dbda928840f15384e1a1e193"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/diffraction/diagnostic_inputs.py",
+      "sha256": "e9676ee48353ff0045e781c403cd6b619ca3e84172319e420806c6c35e0408f9"
+    },
+    {
+      "path": "src/digitalmodel/hydrodynamics/diffraction/diagnostic_mesh.py",
+      "sha256": "809bc80777c2e2c9ad555a5173f4b9d56f4b5aa8833349ed82cc002fa7805e36"
+    },
+    {
+      "path": "tests/hydrodynamics/diffraction/test_diagnostic_basis.py",
+      "sha256": "1eeb859d9870ac347b3a66f685717d843a463ef41481ca74cc585c9a451c0217"
+    },
+    {
+      "path": "tests/hydrodynamics/diffraction/test_diagnostic_inputs.py",
+      "sha256": "20d0b6ea0d9fae3808a5a1b9310081348a8f80aee9b7dfde151443ebe665bc72"
+    },
+    {
+      "path": "tests/hydrodynamics/diffraction/test_diagnostic_mesh.py",
+      "sha256": "63b207cb660b570903af320b59f68f18be503a3008cb2cf98ccb540c9d940dcf"
+    }
+  ],
+  "review": {
+    "bundle_sha256": "632bccfb1446c40ab343743d435b1f8b1a8e61fdbce5010400688b810b9383b4",
+    "verdict": "MINOR",
+    "findings": [
+      "MINOR | Unicode line-boundary splitting still normalizes 'retained' header bytes with no ledger record (prior MINOR 1 not fully closed). diagnostic_mesh.py:46 refuses only CR and a missing final LF, then :49 uses str.splitlines(), which also splits on \u2028, \u2029, \\x85, \\v, \\f; :70 rejoins with '\\n'. The 24-row guard does not make this unreachable: a 23-physical-line, LF-only, UTF-8 mesh whose first line is 'TITLE\u20281 9.81' splits into 24 rows, passes rows[0].strip(), the ULEN/GRAV/symmetry/NPAN checks and all five role/winding checks, and emits derived bytes in which \u2028 has become LF. header['title'] is ledgered as 'TITLE' only, so r2 step 2's 'retain ... the original header' and the ledger's preserved_input_record claim are both silently false for that input. Remedy: split on '\\n' explicitly (raw.decode('utf-8').split('\\n')[:-1]) or refuse any row containing a non-LF Unicode line boundary, with a \u2028 fixture.",
+      "MINOR | ledger_sha256 is labelled canonical JSON but does not follow the module's own frozen canonical form. diagnostic_inputs.py:191-192 re-implements the serializer inline and omits the terminal LF, while diagnostic_basis.canonical_intent:56-57 and r2 ('Canonical JSON bytes will be ... + \\n, with exactly one terminal LF') define canonical bytes as including it; manifest['ledger_digest_scope'] nonetheless asserts 'canonical-json:...'. An independent verifier re-deriving the ledger digest under the frozen rule gets a different value, and test_diagnostic_inputs.py:172 only re-copies the same inline expression, so the divergence is untestable by construction. Remedy: serialize the ledger through canonical_intent-equivalent bytes (or relabel the scope as json-compact-sorted-no-terminal-lf) and assert against the shared helper, not a duplicated dumps call.",
+      "MINOR | Rights evidence is the only unbounded, recursion-unguarded input, and it breaks the module's ValueError refusal contract. _rights:133-136 accepts whatever the caller's resolver returns with no length bound (contrast :58 1 MB spec, diagnostic_mesh.py:44 100 kB mesh, :182 1 MB sources, MAX_SOURCE_NODES) and passes it to strict_json, which catches only TypeError/UnicodeError/JSONDecodeError (diagnostic_basis.py:32). A deeply nested payload (e.g. b'['*100000 + b']'*100000) raises RecursionError out of build_bundle, so the permission path - the input class the design treats as least trusted - is the least bounded. Remedy: bound evidence length and catch RecursionError (or pre-scan nesting) in strict_json, with a fixture.",
+      "MINOR | Manifest binding is still narrower than r2 step 5, and expected_source_sha256 carries no trust qualifier. The correction added derived_sha256/intent_sha256/ledger_sha256 (:198-201), but r2 'Explicit derived-input production' step 5 freezes that the manifest binds 'raw originals, derived GDF/YAML, semantic intent, mapping evidence, transformation ledger and builder/test source hashes'; no builder/test digest or explicit deferral field exists. Separately, rights_status honestly flags caller-supplied rights as unauthenticated, but expected_source_sha256 - whose whole purpose per the docstring is that it 'must not be derived from received bytes', something the code cannot check - is echoed into the manifest with no equivalent qualifier, and every test derives it from the received bytes. Remedy: add a builder/test-source binding field (or builder_source_sha256: deferred_root_owned) and an expected_source_status: caller_pinned_not_independently_verified field, both asserted.",
+      "MINOR | Coverage and verification limits. Verified from exact bytes: all six files on disk are byte-consistent with the inline copies (diagnostic_inputs.py 211 lines, test_diagnostic_inputs.py 181 lines, matching the 29b3 handoff); the five 29b3 corrections are present - empty/non-string/dotted key refusal (:79-80) plus independent _insert collision refusal on all three write loops (:96-99, 113, 116, 122); derived/intent/ledger digests and scope (:198-201); exact rights key set {sources,decision,destination,audience,operations,basis} (:138-139) refusing unknown limiting terms; source_field_not_carried vs prescribed_not_recovered split (:111-112); and a genuinely shared node budget threaded through _leaves/_check_list (:69-93), which the 2^14-alias fixture exceeds (16384 > 10000) at depth ~16, before the depth-20 cap, so the test is load-bearing. Test enumeration reconciles exactly with the claimed 57 passed (15 basis + 11 mesh + 31 inputs). Also re-checked: _role set equality is Decimal-valued; all four rotations of each panel normal; canonical_decimal yields a unique zero ('0.', '-0.0', '-0' refused); prescribed_basis() leaves are canonical under _intent_types' value/numerator/denominator rule; PyYAML alias sharing plus deep=True object caching means the budget bounds traversal work rather than parse memory. Noted, not scored: an empty spec {} yields a ledger entry keyed '' (:87); the _leaves empty-key guard is unreachable through _source_spec because _mapping:37 already refuses empty keys, so test_diagnostic_inputs.py:130-134 exercises the YAML layer rather than the cited fix; roundtrip_equal remains unused with dead is_finite(); test_diagnostic_inputs.py:10 still imports via the tests. package path; the superseded handoff 9d95ecf1 still carries stale diagnostic_inputs/test digests and '44 passed' without an internal supersession marker, and the 29b3 per-finding dispositions live in the correction handoff rather than SOLVERS-AQWA-offline-review-dispositions.json. Not verifiable here: the bundle SHA256 and every listed digest (read-only, no execution); the bundle JSON was not opened; coordination artifacts were read only as supplied inline content; the claimed RED/GREEN logs were not in the inventory, so the '11 failed,18 passed' / '57 passed' receipts are accepted as asserted, with the test-count reconciliation the only independent corroboration. The addendum's existing-output refusal remains unimplemented and is accepted as a root-owned publication gate outside this in-memory slice. No native call, source processing, derivative issuance, dataset publication or rights clearance was performed or requested, and the frozen analytical reference was not re-derived. This receipt identifies a diagnostic software reviewer only; it grants no engineering qualification, no native-runtime readiness, no rights authority from any digest, and no physical validity beyond the prescribed conditional benchmark."
+    ]
+  },
+  "status": "nonblocking-code-review-only",
+  "scope_limit": "No native readiness or engineering qualification; MINOR findings retained verbatim. Production inputs/runtime and retained result evidence require their own current verification."
+}
