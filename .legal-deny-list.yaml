@@ -31,11 +31,23 @@
 # An optional private list extends this one. Set DIGITALMODEL_DENY_LIST to a
 # path outside the repository and the checker reads plain values from it. When
 # the variable is set and the file is missing, the checker FAILS rather than
-# continuing without it: a gate that silently degrades is not a gate.
+# continuing without it: a gate that silently degrades is not a gate. With the
+# variable unset, ~/.config/digitalmodel/identifier-deny-list.txt is read when
+# present. A line "re:<pattern>" is a regular expression, for identifiers that
+# are phrases or shapes and must not be published even as a pattern; findings
+# name the line of the scanned file, never the private pattern.
+#
+# CI has no private list. It relies on the structural classes below and on the
+# hashed names, which is why every category the owner's C11 decision names
+# (operator/client, field/project, vessel, person or Windows user, private
+# path, machine hostname) has a public class or hashed entries here.
+#
+# A line that documents a pattern may carry "identifier-gate: example"; the
+# structural rules skip that line and only that line. Names are still checked.
 # =============================================================================
 
 version: "1.0"
-updated: "2026-09-21"
+updated: "2026-09-24"
 
 salt: "digitalmodel-identifier-check-v1"
 
@@ -66,14 +78,60 @@ structural:
       live there and disclose nothing.
 
   - id: unc-share
-    # Single-quoted YAML keeps backslashes literal, so this regex is \\\\host\\+ :
-    # two literal backslashes, a host, a separator. A JSON-serialised path (four
-    # backslashes) contains two and matches too. The earlier eight-backslash
-    # form needed four and missed every ordinary \\server\share.
-    pattern: '\\\\[A-Za-z0-9._-]+\\+'
+    # Single-quoted YAML keeps backslashes literal. Two shapes are a share: two
+    # backslashes, a host, ONE separator and a name (\\server\share, as text or
+    # a raw string); and the escaped form, four, a host, two (JSON or a Python
+    # literal). Two, a word, two is neither: it is an escaped relative path
+    # ("results\\plots\\"), a registry key or LaTeX (\\log, \\Delta\\sigma),
+    # and the old rule '\\\\[A-Za-z0-9._-]+\\+' flagged all three. The share
+    # must not follow a word character, a backslash, a colon or a dot, which
+    # also rules out the inside of C:\\Users\\... and ..\\..\\ (C11).
+    pattern: '(?<![\w\\:.])(?:\\\\[A-Za-z0-9][A-Za-z0-9._-]+\\(?=[\w$.-])|\\\\\\\\[A-Za-z0-9][A-Za-z0-9._-]+\\\\(?=[\w$.-]))'
     severity: block
     message: >-
       UNC share path. Names an internal server.
+
+  - id: windows-user-path
+    # C: is exempt from mapped-drive-path for vendor installs, and that let
+    # every C:\Users\<name>\... through, with the Windows account name in it.
+    # Any separator form: \, \\ (escaped) or /.
+    pattern: '(?i)\b[A-Z]:(?:\\|/)+Users(?:\\|/)+(?!(?:public|default|all users)(?:[\\/"''\s]|$))(?![<%$])[A-Za-z0-9][A-Za-z0-9._-]*'
+    severity: block
+    message: >-
+      Windows user profile path: names the account. Replace with
+      <private-data>/... or a repository-relative path.
+
+  - id: onedrive-org
+    pattern: 'OneDrive\s+-\s+(?!<)[A-Za-z]'
+    severity: block
+    message: >-
+      Organisation OneDrive folder ("OneDrive - <organisation>"). Names the
+      employer or client.
+
+  - id: solver-export-user
+    # OrcaFlex and OrcaWave stamp the saving account into exported YAML
+    # headers. "(removed)" is the normalised form.
+    pattern: '#\s*User:\s*(?![(<]|&lt;)\S'
+    severity: block
+    message: >-
+      Solver export header names the Windows account. Write "# User: (removed)".
+
+  - id: solver-export-machine
+    pattern: '#\s*Machine:\s*(?![(<]|&lt;)\S'
+    severity: block
+    message: >-
+      Solver export header names the machine. Write "# Machine: (removed)".
+
+  - id: windows-hostname
+    # Organisation-prefixed Windows host names: a site code is optional, and
+    # the role (remote desktop, solver, workstation, host, file server, domain
+    # controller) carries a number. Logical labels such as ace-win-1 do not
+    # match and are the replacement.
+    pattern: '(?i)\b[a-z]{2,6}-(?:[a-z]{2,4}-)?(?:rds|ansys|ws|host|fs|srv|dc)[0-9]{2,}\b'
+    severity: block
+    message: >-
+      Physical machine hostname. Use the logical fleet label (ace-win-1,
+      ace-win-2, ...) or "a Windows workstation".
 
   - id: foreign-domain-email
     pattern: '[A-Za-z0-9._%+-]+@(?!example\.|localhost)[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
@@ -111,6 +169,22 @@ hashed_names:
   - 67566990dbc8eb46687ec6a37378e5346a863e1cf7a055ee64e75708c75ebe47
   - 0db2030be0fb6726b51ee358bf706e7de39d496beac99b5e5e4af89797d13a73
   - db80ec818eb6f89ac6c7bf38032b227968b524cbc19f8a71bda0d918d33b3848
+  - 803406e2b5fba538b56d8b8e4bc9cf5579c1a1b7110c59dd08929e0f945ec9d1
+  - 01b3f7232ac3631e2d103f9017912ae5510a52b215401c6925c14f8ecded471e
+  - ef95471aa08cee4d30b132508ec4230f52378d2814e5ad532b856a57ed1b81dd
+  - db094fddc6ad5e6b5f054327b072038d4e99d8c1249e162592789531bc091c19
+  - be6d8f082982854000cf358f6b1d8b0ab64b0416c785def1521dcc541d07f775
+  - 89785d401169e5076da48d629555d2df81c996260988a1c095db546730890c9d
+  - 8b3809c85fe49e721947f68e2192ed1f2f187730629b53ff0b366403aa449615
+  - 0eae3165b890bbde3b0bbb7549313d32b6bf3b2f9beab6f7bf5a3b7a5ec728e5
+  - 910fcf6e46dbe73cfb8340fb15bd85821688b29fe96b8f4e4bd780125166091e
+  - 1e51f2d8a2bca333358e12e319bcfcba381da7ca48d90ec7f2ace0c448538a5b
+  - 0485ca507532f5be0cf0eef7d5a7e07ab17175e481ff1ae05fd94846e7bece38
+  - f96377eee6b9da8059efe2eebfab69e56d48e9dcf699af04c5265056bb225f2c
+  - 1249893604858eda41cef988001b8a4b40167d4b7ba79bf8f156722212e2c3a1
+  - 903e4d041949f0094e46fb0d338b433afb63e0a408eaf30e1c05e743de2e41ca
+  - ab3f5d38f73e4cee65570b1ce0c6e238d2b873729e52bc43324eaf481348362b
+  - 0d551627c099756a246279c42b8d46a4f6b027ac2d4da54eebd4b2d7e65114fd
 
 # ---------------------------------------------------------------------------
 # Binary types that carry no inspectable text. Files of these types are
@@ -142,3 +216,119 @@ exclusions:
     reason: this file necessarily contains the patterns it matches
   - path: scripts/legal/check_identifiers.py
     reason: the checker's own tests and messages quote example shapes
+  # --- Owner decision C11 (2026-09-24): reported, not edited. Each is listed in
+  # the C11 PR as needing an owner decision (move private, delete or keep).
+  - path: 'data/vessels/COVERAGE.md'
+    reason: >-
+      C11 reported: public-source vessel register; vessel and owner names are the join key with the worldenergydata fleet. Owner decision pending.
+  - path: 'data/vessels/processed/crane_summary.csv'
+    reason: >-
+      C11 reported: public-source vessel register; vessel and owner names are the join key with the worldenergydata fleet. Owner decision pending.
+  - path: 'data/vessels/processed/particulars.csv'
+    reason: >-
+      C11 reported: public-source vessel register; vessel and owner names are the join key with the worldenergydata fleet. Owner decision pending.
+  - path: 'data/vessels/processed/PROVENANCE_REPORT.md'
+    reason: >-
+      C11 reported: public-source vessel register; vessel and owner names are the join key with the worldenergydata fleet. Owner decision pending.
+  - path: 'data/vessels/processed/rao_datasets.csv'
+    reason: >-
+      C11 reported: public-source vessel register; vessel and owner names are the join key with the worldenergydata fleet. Owner decision pending.
+  - path: 'data/vessels/raw/floating__particulars.json'
+    reason: >-
+      C11 reported: public-source vessel register; vessel and owner names are the join key with the worldenergydata fleet. Owner decision pending.
+  - path: 'data/vessels/raw/install__crane_deck.json'
+    reason: >-
+      C11 reported: public-source vessel register; vessel and owner names are the join key with the worldenergydata fleet. Owner decision pending.
+  - path: 'data/vessels/raw/install__particulars.json'
+    reason: >-
+      C11 reported: public-source vessel register; vessel and owner names are the join key with the worldenergydata fleet. Owner decision pending.
+  - path: 'data/vessels/raw/install__rao.json'
+    reason: >-
+      C11 reported: public-source vessel register; vessel and owner names are the join key with the worldenergydata fleet. Owner decision pending.
+  - path: 'data/vessels/sources/floating.json'
+    reason: >-
+      C11 reported: public-source vessel register; vessel and owner names are the join key with the worldenergydata fleet. Owner decision pending.
+  - path: 'data/vessels/sources/install.json'
+    reason: >-
+      C11 reported: public-source vessel register; vessel and owner names are the join key with the worldenergydata fleet. Owner decision pending.
+  - path: 'docs/domains/ansys/thin-wall-pipeline/Loading Matrix_1_Rev_12_DT67_Rev1_files/dp0/designPoint.wbdp'
+    reason: >-
+      C11 reported: a client ANSYS Workbench project dump (user profiles, project name). Move private or delete; owner decision pending.
+  - path: 'docs/domains/ansys/thin-wall-pipeline/Loading Matrix_1_Rev_12_DT67_Rev1_files/dp0/SYS-2/ENGD/EngineeringData.xml'
+    reason: >-
+      C11 reported: a client ANSYS Workbench project dump (user profiles, project name). Move private or delete; owner decision pending.
+  - path: 'docs/domains/ansys/thin-wall-pipeline/Loading Matrix_1_Rev_12_DT67_Rev1_files/dp0/SYS-2/ENGD/material.engd'
+    reason: >-
+      C11 reported: a client ANSYS Workbench project dump (user profiles, project name). Move private or delete; owner decision pending.
+  - path: 'docs/domains/ansys/thin-wall-pipeline/Loading Matrix_1_Rev_12_DT67_Rev1_files/dp0/SYS-2/MECH/CAERep.xml'
+    reason: >-
+      C11 reported: a client ANSYS Workbench project dump (user profiles, project name). Move private or delete; owner decision pending.
+  - path: 'docs/domains/ansys/thin-wall-pipeline/Loading Matrix_1_Rev_12_DT67_Rev1_files/dp0/SYS-2/MECH/ds.dat'
+    reason: >-
+      C11 reported: a client ANSYS Workbench project dump (user profiles, project name). Move private or delete; owner decision pending.
+  - path: 'docs/domains/ansys/thin-wall-pipeline/Loading Matrix_1_Rev_12_DT67_Rev1_files/dp0/SYS/ENGD/material.engd'
+    reason: >-
+      C11 reported: a client ANSYS Workbench project dump (user profiles, project name). Move private or delete; owner decision pending.
+  - path: 'docs/domains/ansys/thin-wall-pipeline/Loading Matrix_1_Rev_12_DT67_Rev1_files/session_files/journal16.wbjn'
+    reason: >-
+      C11 reported: a client ANSYS Workbench project dump (user profiles, project name). Move private or delete; owner decision pending.
+  - path: 'docs/domains/ansys/thin-wall-pipeline/Loading Matrix_1_Rev_12_DT67_Rev1_files/session_files/journal21.wbjn'
+    reason: >-
+      C11 reported: a client ANSYS Workbench project dump (user profiles, project name). Move private or delete; owner decision pending.
+  - path: 'docs/domains/ansys/thin-wall-pipeline/Loading Matrix_1_Rev_12_DT67_Rev1_files/session_files/journal25.wbjn'
+    reason: >-
+      C11 reported: a client ANSYS Workbench project dump (user profiles, project name). Move private or delete; owner decision pending.
+  - path: 'docs/domains/ansys/thin-wall-pipeline/Loading Matrix_1_Rev_12_DT67_Rev1_files/session_files/journal26.wbjn'
+    reason: >-
+      C11 reported: a client ANSYS Workbench project dump (user profiles, project name). Move private or delete; owner decision pending.
+  - path: 'docs/domains/ansys/thin-wall-pipeline/Loading Matrix_1_Rev_12_DT67_Rev1_files/session_files/journal27.wbjn'
+    reason: >-
+      C11 reported: a client ANSYS Workbench project dump (user profiles, project name). Move private or delete; owner decision pending.
+  - path: 'docs/domains/ansys/thin-wall-pipeline/Loading Matrix_1_Rev_12_DT67_Rev1_files/session_files/journal28.wbjn'
+    reason: >-
+      C11 reported: a client ANSYS Workbench project dump (user profiles, project name). Move private or delete; owner decision pending.
+  - path: 'docs/domains/ansys/thin-wall-pipeline/Loading Matrix_1_Rev_12_DT67_Rev1_files/session_files/journal31.wbjn'
+    reason: >-
+      C11 reported: a client ANSYS Workbench project dump (user profiles, project name). Move private or delete; owner decision pending.
+  - path: 'docs/domains/ansys/thin-wall-pipeline/Loading Matrix_1_Rev_12_DT67_Rev1_files/session_files/journal4.wbjn'
+    reason: >-
+      C11 reported: a client ANSYS Workbench project dump (user profiles, project name). Move private or delete; owner decision pending.
+  - path: 'docs/domains/ansys/thin-wall-pipeline/Loading Matrix_1_Rev_12_DT67_Rev1.wbpj'
+    reason: >-
+      C11 reported: a client ANSYS Workbench project dump (user profiles, project name). Move private or delete; owner decision pending.
+  - path: 'docs/domains/artificial_lift/references/REF-ENG-SRP-Predator Technical Bulletin July 2019.docx'
+    reason: >-
+      C11 reported: binary office document with client, server or personal identifiers; a re-save embeds user and machine metadata. Owner decision pending.
+  - path: 'docs/domains/cathodic_protection/contractor_cp_comparison_analysis.md'
+    reason: >-
+      C11 reported: comparison against a client calculation (names and document numbers). Move private; owner decision pending.
+  - path: 'docs/domains/drilling/Drilling-Automation-Pain-Points-and-User-Stories-V0.3-1.docx'
+    reason: >-
+      C11 reported: binary office document with client, server or personal identifiers; a re-save embeds user and machine metadata. Owner decision pending.
+  - path: 'docs/domains/freecad/src/ref/125 LNGC.igs'
+    reason: >-
+      C11 reported: IGES header carries a client project path; fixed-width Hollerith fields cannot be edited without re-export.
+  - path: 'docs/domains/legacy/sn_curves/MAN/0119-017-MAN-001 Fatigue Basic Curves (Draft1).docx'
+    reason: >-
+      C11 reported: binary office document with client, server or personal identifiers; a re-save embeds user and machine metadata. Owner decision pending.
+  - path: 'docs/domains/pipecapacity/PDF_EXTRACTS.md'
+    reason: >-
+      C11 reported: OCR/extract dump of client reports and licensed standards. Move private; owner decision pending.
+  - path: 'docs/domains/pipecapacity/WALL_THICKNESS_CODES_STANDARDS.md'
+    reason: >-
+      C11 reported: OCR/extract dump of client reports and licensed standards. Move private; owner decision pending.
+  - path: 'docs/domains/platecapacity/0119-015-MAN-001 Plate Buckling Manual (Draft8).docx'
+    reason: >-
+      C11 reported: binary office document with client, server or personal identifiers; a re-save embeds user and machine metadata. Owner decision pending.
+  - path: 'docs/domains/pyintegrity/0119-004 MAN-0XXX-01 Fracture Mechanics (Draft1).docx'
+    reason: >-
+      C11 reported: binary office document with client, server or personal identifiers; a re-save embeds user and machine metadata. Owner decision pending.
+  - path: 'scripts/sanitize_s7_models.py'
+    reason: >-
+      C11 reported: the de-identification key itself (real-to-neutral name map). Its map belongs in a private file; owner decision pending (docs/legal-scanning.md says not to edit it).
+  - path: 'src/digitalmodel/web/digitaltwinfeed/StockAnalysis/static/StockAnalysis/data/company_tickers_exchange.json'
+    reason: >-
+      Public SEC company-ticker registry; company names are listed securities, not engagements.
+  - path: 'src/digitalmodel/web/digitaltwinfeed/StockAnalysis/static/StockAnalysis/data/company_tickers.json'
+    reason: >-
+      Public SEC company-ticker registry; company names are listed securities, not engagements.

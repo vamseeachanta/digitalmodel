@@ -31,8 +31,8 @@ TOKEN = "zzsynthetictestvessel"
 BS = "\\"
 
 pytestmark = pytest.mark.skipif(
-    not CHECKER.exists() or not RULES.exists(),
-    reason="identifier gate not installed")
+    not CHECKER.exists() or not RULES.exists(), reason="identifier gate not installed"
+)
 
 _GIT_BINDINGS = ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE")
 
@@ -47,9 +47,9 @@ def gate(tmp_path):
     rules = yaml.safe_load(RULES.read_text(encoding="utf-8"))
     salt = str(rules.get("salt", ""))
     rules["hashed_names"] = list(rules.get("hashed_names") or []) + [
-        hashlib.sha256(f"{salt}:{TOKEN}".encode()).hexdigest()]
-    (root / ".legal-deny-list.yaml").write_text(
-        yaml.safe_dump(rules), encoding="utf-8")
+        hashlib.sha256(f"{salt}:{TOKEN}".encode()).hexdigest()
+    ]
+    (root / ".legal-deny-list.yaml").write_text(yaml.safe_dump(rules), encoding="utf-8")
     home = tmp_path / "home"
     home.mkdir()
 
@@ -61,10 +61,18 @@ def gate(tmp_path):
         if env:
             e.update(env)
         return subprocess.run(
-            [sys.executable, str(root / "scripts" / "legal" / "check_identifiers.py"),
-             *args],
-            cwd=root, capture_output=True, text=True, env=e,
-            encoding="utf-8", errors="replace")
+            [
+                sys.executable,
+                str(root / "scripts" / "legal" / "check_identifiers.py"),
+                *args,
+            ],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            env=e,
+            encoding="utf-8",
+            errors="replace",
+        )
 
     run.root = root
     run.home = home
@@ -84,30 +92,36 @@ def _user_path(sep: str = BS) -> str:
 class TestEachC11CategoryIsDetected:
     """One positive case per category, named by the rule that must fire."""
 
-    @pytest.mark.parametrize("line,rule", [
-        # operator / client and vessel names: the salted-hash list
-        (f"Prepared for {TOKEN} under the charter.", "denied-name"),
-        # field / project: a job code
-        ("see B" + "1234 for the scope", "job-code"),
-        # person / Windows user
-        (f"fe_folder: {_user_path()}", "windows-user-path"),
-        (f"fe_folder: {_user_path('/')}", "windows-user-path"),
-        (f"path: {_user_path(BS * 2)}", "windows-user-path"),
-        ("# " + "User: " + "jdoe" + "123", "solver-export-user"),
-        # operator / client through a corporate OneDrive folder
-        ("OneDrive" + " - " + "Example Operator Corporation" + BS + "Temp",
-         "onedrive-org"),
-        # private path
-        ("K:" + BS + "projects" + BS + "run" + BS + "a.dat", "mapped-drive-path"),
-        (BS * 2 + "fileserver" + BS + "share" + BS + "a.dat", "unc-share"),
-        (BS * 4 + "fileserver" + BS * 2 + "share" + BS * 2 + "a.dat",
-         "unc-share"),
-        # machine hostname
-        ("# " + "Machine: " + "WORKSTATION" + "7", "solver-export-machine"),
-        ("closeout on " + "abcd-hou-" + "rds" + "07" + " failed",
-         "windows-hostname"),
-        ("run it on " + "ABCD-" + "ANSYS" + "09", "windows-hostname"),
-    ])
+    @pytest.mark.parametrize(
+        "line,rule",
+        [
+            # operator / client and vessel names: the salted-hash list
+            (f"Prepared for {TOKEN} under the charter.", "denied-name"),
+            # field / project: a job code
+            ("see B" + "1234 for the scope", "job-code"),
+            # person / Windows user
+            (f"fe_folder: {_user_path()}", "windows-user-path"),
+            (f"fe_folder: {_user_path('/')}", "windows-user-path"),
+            (f"path: {_user_path(BS * 2)}", "windows-user-path"),
+            ("# " + "User: " + "jdoe" + "123", "solver-export-user"),
+            # operator / client through a corporate OneDrive folder
+            (
+                "OneDrive" + " - " + "Example Operator Corporation" + BS + "Temp",
+                "onedrive-org",
+            ),
+            # private path
+            ("K:" + BS + "projects" + BS + "run" + BS + "a.dat", "mapped-drive-path"),
+            (BS * 2 + "fileserver" + BS + "share" + BS + "a.dat", "unc-share"),
+            (BS * 4 + "fileserver" + BS * 2 + "share" + BS * 2 + "a.dat", "unc-share"),
+            # machine hostname
+            ("# " + "Machine: " + "WORKSTATION" + "7", "solver-export-machine"),
+            (
+                "closeout on " + "abcd-hou-" + "rds" + "07" + " failed",
+                "windows-hostname",
+            ),
+            ("run it on " + "ABCD-" + "ANSYS" + "09", "windows-hostname"),
+        ],
+    )
     def test_the_rule_fires(self, gate, line, rule):
         out = gate(_file(gate, line + "\n"))
         assert out.returncode == 1, out.stdout
@@ -116,8 +130,10 @@ class TestEachC11CategoryIsDetected:
     def test_a_vessel_name_on_the_private_list_is_detected(self, gate):
         private = gate.home / "private.txt"
         private.write_text("zzprivatevessel\n", encoding="utf-8")
-        out = gate(_file(gate, "moored alongside zzprivatevessel\n"),
-                   env={"DIGITALMODEL_DENY_LIST": str(private)})
+        out = gate(
+            _file(gate, "moored alongside zzprivatevessel\n"),
+            env={"DIGITALMODEL_DENY_LIST": str(private)},
+        )
         assert out.returncode == 1, out.stdout
         assert "denied-name" in out.stdout
 
@@ -125,18 +141,21 @@ class TestEachC11CategoryIsDetected:
 class TestPlaceholdersPass:
     """The replacements the cleanup writes must not themselves be findings."""
 
-    @pytest.mark.parametrize("line", [
-        "# " + "User: (removed)",
-        "# " + "Machine: (removed)",
-        '<span class="line"># ' + "User: (removed)</span>",
-        "fe_folder: <private-data>" + BS + "Temp" + BS + "model.yml",
-        "log_folder: <private-data>/results/",
-        "C:" + BS + "Users" + BS + "Public" + BS + "Documents",
-        "C:" + BS + "Users" + BS + "<user>" + BS + "AppData",
-        "Store it under OneDrive" + " - " + "<org>" + BS + "Temp",
-        "the licensed host ace-win-1 ran the case",
-        "The mooring line has twelve anchors on a 2000 m spread.",
-    ])
+    @pytest.mark.parametrize(
+        "line",
+        [
+            "# " + "User: (removed)",
+            "# " + "Machine: (removed)",
+            '<span class="line"># ' + "User: (removed)</span>",
+            "fe_folder: <private-data>" + BS + "Temp" + BS + "model.yml",
+            "log_folder: <private-data>/results/",
+            "C:" + BS + "Users" + BS + "Public" + BS + "Documents",
+            "C:" + BS + "Users" + BS + "<user>" + BS + "AppData",
+            "Store it under OneDrive" + " - " + "<org>" + BS + "Temp",
+            "the licensed host ace-win-1 ran the case",
+            "The mooring line has twelve anchors on a 2000 m spread.",
+        ],
+    )
     def test_no_finding(self, gate, line):
         out = gate(_file(gate, line + "\n"))
         assert out.returncode == 0, out.stdout
@@ -146,19 +165,55 @@ class TestUncFalsePositives:
     """A LaTeX command, an escaped relative path or a registry key is not a
     UNC share. The LaTeX lines are the two that tripped the old rule."""
 
-    @pytest.mark.parametrize("line", [
-        '      latex: "' + BS * 2 + "log N = " + BS * 2 + "log " + BS * 2
-        + "bar{a} - m " + BS * 2 + "log " + BS * 2 + "Delta" + BS * 2
-        + 'sigma"',
-        '    latex: "' + BS * 2 + "log(N) = 15.19 - 3.0 " + BS * 2 + "times "
-        + BS * 2 + "log(" + BS * 2 + "Delta" + BS * 2 + 'sigma)"',
-        "plt.savefig('results" + BS * 2 + "ASMEB31" + BS * 2 + "' + name)",
-        '(vl-registry-write "HKEY_CURRENT_USER' + BS * 2 + "SOFTWARE" + BS * 2
-        + 'App" "App" "T")',
-        "u = " + BS * 2 + "frac{u_*}{" + BS * 2 + "kappa} " + BS * 2 + "ln"
-        + BS * 2 + "!" + BS * 2 + "left( z " + BS * 2 + "right)",
-        'pattern: "^' + BS * 2 + "d+" + BS * 2 + 'd+$"',
-    ])
+    @pytest.mark.parametrize(
+        "line",
+        [
+            '      latex: "'
+            + BS * 2
+            + "log N = "
+            + BS * 2
+            + "log "
+            + BS * 2
+            + "bar{a} - m "
+            + BS * 2
+            + "log "
+            + BS * 2
+            + "Delta"
+            + BS * 2
+            + 'sigma"',
+            '    latex: "'
+            + BS * 2
+            + "log(N) = 15.19 - 3.0 "
+            + BS * 2
+            + "times "
+            + BS * 2
+            + "log("
+            + BS * 2
+            + "Delta"
+            + BS * 2
+            + 'sigma)"',
+            "plt.savefig('results" + BS * 2 + "ASMEB31" + BS * 2 + "' + name)",
+            '(vl-registry-write "HKEY_CURRENT_USER'
+            + BS * 2
+            + "SOFTWARE"
+            + BS * 2
+            + 'App" "App" "T")',
+            "u = "
+            + BS * 2
+            + "frac{u_*}{"
+            + BS * 2
+            + "kappa} "
+            + BS * 2
+            + "ln"
+            + BS * 2
+            + "!"
+            + BS * 2
+            + "left( z "
+            + BS * 2
+            + "right)",
+            'pattern: "^' + BS * 2 + "d+" + BS * 2 + 'd+$"',
+        ],
+    )
     def test_not_a_unc_share(self, gate, line):
         out = gate(_file(gate, line + "\n"))
         assert "[unc-share]" not in out.stdout, out.stdout
@@ -171,8 +226,10 @@ class TestPrivatePatterns:
     def test_a_private_regex_is_applied(self, gate):
         private = gate.home / "private.txt"
         private.write_text("re:zzcode-[0-9]{3}\n", encoding="utf-8")
-        out = gate(_file(gate, "job zzcode-481 closed\n"),
-                   env={"DIGITALMODEL_DENY_LIST": str(private)})
+        out = gate(
+            _file(gate, "job zzcode-481 closed\n"),
+            env={"DIGITALMODEL_DENY_LIST": str(private)},
+        )
         assert out.returncode == 1, out.stdout
         assert "private-pattern" in out.stdout
         # The pattern itself is not echoed into a public CI log.
@@ -181,15 +238,15 @@ class TestPrivatePatterns:
     def test_an_invalid_private_regex_is_an_error(self, gate):
         private = gate.home / "private.txt"
         private.write_text("re:(unclosed\n", encoding="utf-8")
-        out = gate(_file(gate, "clean\n"),
-                   env={"DIGITALMODEL_DENY_LIST": str(private)})
+        out = gate(_file(gate, "clean\n"), env={"DIGITALMODEL_DENY_LIST": str(private)})
         assert out.returncode not in (0, 1), out.stdout
 
     def test_the_default_private_location_is_read_when_present(self, gate):
         cfg = gate.home / ".config" / "digitalmodel"
         cfg.mkdir(parents=True)
         (cfg / "identifier-deny-list.txt").write_text(
-            "zzdefaultlisted\n", encoding="utf-8")
+            "zzdefaultlisted\n", encoding="utf-8"
+        )
         out = gate(_file(gate, "the zzdefaultlisted field\n"))
         assert out.returncode == 1, out.stdout
         assert "denied-name" in out.stdout
@@ -248,6 +305,7 @@ class TestWholeTreeCeiling:
 class TestCiRunsTheGate:
     def test_the_quality_workflow_scans_the_whole_tree(self):
         wf = (REPO / ".github" / "workflows" / "quality-gates.yml").read_text(
-            encoding="utf-8")
+            encoding="utf-8"
+        )
         assert "scripts/legal/check_identifiers.py --all" in wf
         assert "--max-uninspectable" in wf

@@ -54,10 +54,20 @@ RULES = os.path.join(ROOT, ".legal-deny-list.yaml")
 MAX_BYTES = 64 * 1024 * 1024
 WORD = re.compile(r"[A-Za-z][A-Za-z0-9-]{3,}")
 
+#: Read when present and DIGITALMODEL_DENY_LIST is unset. One entry per line:
+#: a name, or ``re:<pattern>`` for a pattern that must itself stay private.
+DEFAULT_PRIVATE = os.path.join(
+    os.path.expanduser("~"), ".config", "digitalmodel", "identifier-deny-list.txt"
+)
+#: A line documenting a pattern has to show one. Marked with this, it is exempt
+#: from the structural rules -- never from the name lists -- and only itself.
+EXAMPLE_MARK = "identifier-gate: " + "example"
+
 #: A vendor or interpreter install path discloses nothing about an engagement.
 VENDOR_PATH = re.compile(
     r"(?i)[A-Za-z]:\\+(?:program files|programdata|windows|python\d*"
-    r"|miniconda|anaconda)")
+    r"|miniconda|anaconda)"
+)
 
 
 def load_rules() -> dict:
@@ -72,17 +82,41 @@ def load_rules() -> dict:
         sys.exit("check_identifiers: rules file has no 'structural' section")
 
     private = os.environ.get("DIGITALMODEL_DENY_LIST")
-    extra: list[str] = []
     if private:
         if not os.path.isfile(private):
             sys.exit(
                 f"check_identifiers: DIGITALMODEL_DENY_LIST is set to "
                 f"{private!r}, which does not exist. Refusing to continue "
-                f"without the rules it names.")
-        with open(private, encoding="utf-8") as fh:
-            extra = [ln.strip().lower() for ln in fh
-                     if ln.strip() and not ln.startswith("#")]
-    rules["_private_names"] = extra
+                f"without the rules it names."
+            )
+    elif os.path.isfile(DEFAULT_PRIVATE):
+        # Named by nobody, so its absence is not an error -- CI has none and
+        # relies on the public pattern classes. Present, it is always read.
+        private = DEFAULT_PRIVATE
+    names: list[str] = []
+    patterns: list[re.Pattern] = []
+    if private:
+        with open(private, encoding="utf-8-sig") as fh:
+            for n, raw in enumerate(fh, start=1):
+                ln = raw.strip()
+                if not ln or ln.startswith("#"):
+                    continue
+                if ln.startswith("re:"):
+                    try:
+                        patterns.append(re.compile(ln[3:]))
+                    except re.error:
+                        # The pattern is private: name the line, not the text.
+                        print(
+                            f"check_identifiers: private list line {n} is "
+                            f"not a valid regular expression. Refusing to "
+                            f"continue without the rule it names.",
+                            file=sys.stderr,
+                        )
+                        sys.exit(3)
+                else:
+                    names.append(ln.lower())
+    rules["_private_names"] = names
+    rules["_private_patterns"] = patterns
     return rules
 
 
@@ -96,8 +130,20 @@ class Uninspectable(Exception):
 
 
 #: Office formats are zip archives of XML; their text is read, not skipped.
-OFFICE = frozenset({".docx", ".docm", ".dotx", ".xlsx", ".xlsm", ".pptx",
-                    ".pptm", ".odt", ".ods", ".odp"})
+OFFICE = frozenset(
+    {
+        ".docx",
+        ".docm",
+        ".dotx",
+        ".xlsx",
+        ".xlsm",
+        ".pptx",
+        ".pptm",
+        ".odt",
+        ".ods",
+        ".odp",
+    }
+)
 
 
 def _git(args: list[str], stdin: bytes | None = None) -> bytes:
@@ -106,12 +152,13 @@ def _git(args: list[str], stdin: bytes | None = None) -> bytes:
     An empty result from a failed enumeration used to read as "nothing to
     scan", which is a pass the gate did not earn.
     """
-    out = subprocess.run(["git", *args], cwd=ROOT, capture_output=True,
-                         input=stdin)
+    out = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, input=stdin)
     if out.returncode != 0:
-        sys.exit(f"check_identifiers: `git {' '.join(args)}` failed "
-                 f"(exit {out.returncode}): "
-                 f"{out.stderr.decode(errors='replace').strip()}")
+        sys.exit(
+            f"check_identifiers: `git {' '.join(args)}` failed "
+            f"(exit {out.returncode}): "
+            f"{out.stderr.decode(errors='replace').strip()}"
+        )
     return out.stdout
 
 
@@ -146,12 +193,14 @@ def index_blobs(paths: list[str]) -> dict[str, bytes | None]:
         if stage == "0":
             entries[path] = (mode, oid)
 
-    wanted = sorted({oid for p, (mode, oid) in entries.items()
-                     if p in paths and mode != "160000"})
+    wanted = sorted(
+        {oid for p, (mode, oid) in entries.items() if p in paths and mode != "160000"}
+    )
     contents: dict[str, bytes] = {}
     if wanted:
-        raw = _git(["cat-file", "--batch"],
-                   stdin="".join(f"{o}\n" for o in wanted).encode())
+        raw = _git(
+            ["cat-file", "--batch"], stdin="".join(f"{o}\n" for o in wanted).encode()
+        )
         pos = 0
         for oid in wanted:
             end = raw.find(b"\n", pos)
@@ -160,13 +209,16 @@ def index_blobs(paths: list[str]) -> dict[str, bytes | None]:
             header = raw[pos:end].decode("ascii", "replace").split()
             pos = end + 1
             if len(header) != 3 or header[0] != oid or header[1] != "blob":
-                sys.exit(f"check_identifiers: unexpected `git cat-file` "
-                         f"response for {oid}: {' '.join(header)!r}")
+                sys.exit(
+                    f"check_identifiers: unexpected `git cat-file` "
+                    f"response for {oid}: {' '.join(header)!r}"
+                )
             size = int(header[2])
-            body = raw[pos:pos + size]
-            if len(body) != size or raw[pos + size:pos + size + 1] != b"\n":
-                sys.exit(f"check_identifiers: malformed `git cat-file` body "
-                         f"for {oid}")
+            body = raw[pos : pos + size]
+            if len(body) != size or raw[pos + size : pos + size + 1] != b"\n":
+                sys.exit(
+                    f"check_identifiers: malformed `git cat-file` body " f"for {oid}"
+                )
             contents[oid] = body
             pos += size + 1
         if pos != len(raw):
@@ -175,9 +227,9 @@ def index_blobs(paths: list[str]) -> dict[str, bytes | None]:
     blobs: dict[str, bytes | None] = {}
     for p in paths:
         if p not in entries:
-            blobs[p] = None                         # not in the index
+            blobs[p] = None  # not in the index
         elif entries[p][0] == "160000":
-            blobs[p] = b""                          # submodule pointer: no content
+            blobs[p] = b""  # submodule pointer: no content
         else:
             blobs[p] = contents[entries[p][1]]
     return blobs
@@ -189,12 +241,15 @@ def index_blobs(paths: list[str]) -> dict[str, bytes | None]:
 #: were accepted once and let text through under .ttf and .webp.
 MEDIA_MAGIC = {
     ".png": (b"\x89PNG\r\n\x1a\n",),
-    ".jpg": (b"\xff\xd8\xff",), ".jpeg": (b"\xff\xd8\xff",),
+    ".jpg": (b"\xff\xd8\xff",),
+    ".jpeg": (b"\xff\xd8\xff",),
     ".gif": (b"GIF87a", b"GIF89a"),
     ".bmp": (b"BM",),
     ".ico": (b"\x00\x00\x01\x00",),
-    ".woff": (b"wOFF",), ".woff2": (b"wOF2",),
-    ".ttf": (b"\x00\x01\x00\x00",), ".otf": (b"OTTO",),
+    ".woff": (b"wOFF",),
+    ".woff2": (b"wOF2",),
+    ".ttf": (b"\x00\x01\x00\x00",),
+    ".otf": (b"OTTO",),
 }
 
 
@@ -215,7 +270,8 @@ OFFICE_MAX_EXPANDED = 256 * 1024 * 1024
 _COORD_ATTRS = frozenset({"r", "ref", "sqref", "topLeftCell", "activeCell"})
 _COORD = re.compile(
     r"\$?[A-Z]{1,3}\$?[0-9]+(?::\$?[A-Z]{1,3}\$?[0-9]+)?"
-    r"(?:\s+\$?[A-Z]{1,3}\$?[0-9]+(?::\$?[A-Z]{1,3}\$?[0-9]+)?)*")
+    r"(?:\s+\$?[A-Z]{1,3}\$?[0-9]+(?::\$?[A-Z]{1,3}\$?[0-9]+)?)*"
+)
 
 #: Elements whose runs are read together: Word paragraphs and runs, shared and
 #: inline spreadsheet strings, drawing shapes and text bodies.
@@ -241,10 +297,13 @@ def _office_text(blob: bytes) -> str:
             if len(infos) > OFFICE_MAX_MEMBERS:
                 raise Uninspectable(
                     f"office archive has {len(infos)} members "
-                    f"(limit {OFFICE_MAX_MEMBERS})")
+                    f"(limit {OFFICE_MAX_MEMBERS})"
+                )
             if sum(i.file_size for i in infos) > OFFICE_MAX_EXPANDED:
-                raise Uninspectable("office archive expands beyond "
-                                    f"{OFFICE_MAX_EXPANDED // 1024 // 1024} MB")
+                raise Uninspectable(
+                    "office archive expands beyond "
+                    f"{OFFICE_MAX_EXPANDED // 1024 // 1024} MB"
+                )
             for info in infos:
                 name = info.filename
                 if name.endswith("/"):
@@ -255,7 +314,8 @@ def _office_text(blob: bytes) -> str:
                         root = ET.fromstring(data)
                     except ET.ParseError as exc:
                         raise Uninspectable(
-                            f"office part {name} is not well-formed XML: {exc}")
+                            f"office part {name} is not well-formed XML: {exc}"
+                        )
                     for el in root.iter():
                         for key, value in el.attrib.items():
                             local = key.rsplit("}", 1)[-1]
@@ -298,8 +358,7 @@ def _ascii_strings(blob: bytes) -> str:
     tail after a UTF-16 head would vanish from the decoded text. Reading the
     raw runs as well means content cannot hide in either encoding.
     """
-    return "\n".join(m.decode("ascii")
-                     for m in re.findall(rb"[\x20-\x7e]{4,}", blob))
+    return "\n".join(m.decode("ascii") for m in re.findall(rb"[\x20-\x7e]{4,}", blob))
 
 
 def text_of(blob: bytes, ext: str) -> str:
@@ -334,51 +393,73 @@ def _candidates(word: str) -> frozenset[str]:
     return frozenset(out)
 
 
-def check(paths: list[str], rules: dict, staged: bool = False
-          ) -> tuple[list[str], int, list[str], list[str]]:
+def check(
+    paths: list[str], rules: dict, staged: bool = False
+) -> tuple[list[str], int, list[str], list[str]]:
     """Returns findings, files scanned, media skipped, and uninspectable."""
     salt = str(rules.get("salt", ""))
     hashed = {str(h).lower() for h in rules.get("hashed_names") or []}
     private = set(rules.get("_private_names") or [])
-    excluded = {str(e["path"]).replace("\\", "/")
-                for e in (rules.get("exclusions") or []) if "path" in e}
+    excluded = {
+        str(e["path"]).replace("\\", "/")
+        for e in (rules.get("exclusions") or [])
+        if "path" in e
+    }
     media = {str(x).lower() for x in rules.get("binary_media_extensions") or []}
     compiled = []
     for rule in rules["structural"]:
         try:
-            compiled.append((rule["id"], re.compile(rule["pattern"]),
-                             rule.get("message", "")))
+            compiled.append(
+                (rule["id"], re.compile(rule["pattern"]), rule.get("message", ""))
+            )
         except re.error as exc:
-            sys.exit(f"check_identifiers: rule {rule.get('id')!r} "
-                     f"has an invalid pattern: {exc}")
+            sys.exit(
+                f"check_identifiers: rule {rule.get('id')!r} "
+                f"has an invalid pattern: {exc}"
+            )
 
     blobs = index_blobs(paths) if staged else {}
     findings: list[str] = []
     media_skipped: list[str] = []
     uninspectable: list[str] = []
     scanned = 0
+    private_rx = list(rules.get("_private_patterns") or [])
+
     def scan(label: str, n: int | str, line: str) -> None:
-        for rid, rx, msg in compiled:
+        for rx in private_rx:
+            if rx.search(line):
+                findings.append(
+                    f"{label}:{n}: [private-pattern] a pattern on "
+                    f"the private list matches here\n"
+                    f"    {line.strip()[:160]}"
+                )
+                break
+        structural = [] if EXAMPLE_MARK in line else compiled
+        for rid, rx, msg in structural:
             pos = 0
             while (m := rx.search(line, pos)) is not None:
                 # A vendor install path exempts itself, not its neighbours.
                 # The pattern admits spaces, so one match can run on into the
                 # next path; resume just past the exempt match's start rather
                 # than after its end.
-                if (rid == "mapped-drive-path"
-                        and VENDOR_PATH.match(line, m.start())):
+                if rid == "mapped-drive-path" and VENDOR_PATH.match(line, m.start()):
                     pos = m.start() + 1
                     continue
-                findings.append(f"{label}:{n}: [{rid}] {msg.strip()}\n"
-                                f"    {line.strip()[:160]}")
+                findings.append(
+                    f"{label}:{n}: [{rid}] {msg.strip()}\n" f"    {line.strip()[:160]}"
+                )
                 break
         if hashed or private:
             for word in WORD.findall(line):
-                if any(c in private or token_hash(c, salt) in hashed
-                       for c in _candidates(word)):
-                    findings.append(f"{label}:{n}: [denied-name] a name on the "
-                                    f"deny list appears here\n"
-                                    f"    {line.strip()[:160]}")
+                if any(
+                    c in private or token_hash(c, salt) in hashed
+                    for c in _candidates(word)
+                ):
+                    findings.append(
+                        f"{label}:{n}: [denied-name] a name on the "
+                        f"deny list appears here\n"
+                        f"    {line.strip()[:160]}"
+                    )
                     break
 
     for rel in paths:
@@ -390,7 +471,7 @@ def check(paths: list[str], rules: dict, staged: bool = False
         full = os.path.join(ROOT, rel.replace("/", os.sep))
         try:
             shown = os.path.relpath(full, ROOT)
-        except ValueError:                  # another drive on Windows
+        except ValueError:  # another drive on Windows
             shown = ".."
         if shown.startswith(".."):
             shown = os.path.basename(full)
@@ -405,8 +486,7 @@ def check(paths: list[str], rules: dict, staged: bool = False
                 if not os.path.isfile(full):
                     raise Uninspectable("file does not exist")
                 if os.path.getsize(full) > MAX_BYTES:
-                    raise Uninspectable(
-                        f"over {MAX_BYTES // 1024 // 1024} MB")
+                    raise Uninspectable(f"over {MAX_BYTES // 1024 // 1024} MB")
                 with open(full, "rb") as fh:
                     blob = fh.read()
             # Exempt only if the bytes ARE the declared type, not just named so.
@@ -434,10 +514,24 @@ def main() -> int:
             pass
     ap = argparse.ArgumentParser(description="Client identifier gate")
     ap.add_argument("paths", nargs="*")
-    ap.add_argument("--all", action="store_true",
-                    help="scan the whole tracked tree, not just staged files")
-    ap.add_argument("--hash", metavar="TOKEN",
-                    help="print the salted hash of TOKEN, to extend the list")
+    ap.add_argument(
+        "--all",
+        action="store_true",
+        help="scan the whole tracked tree, not just staged files",
+    )
+    ap.add_argument(
+        "--hash",
+        metavar="TOKEN",
+        help="print the salted hash of TOKEN, to extend the list",
+    )
+    ap.add_argument(
+        "--max-uninspectable",
+        type=int,
+        metavar="N",
+        default=None,
+        help="accept up to N files the gate cannot read (they are "
+        "still listed); above N, or with no N, they fail",
+    )
     args = ap.parse_args()
 
     rules = load_rules()
@@ -454,30 +548,47 @@ def main() -> int:
         return 0
 
     findings, scanned, media, uninspectable = check(paths, rules, staged=staged)
-    print(f"check_identifiers: scanned {scanned} file(s); "
-          f"{len(media)} declared binary media not inspected; "
-          f"{len(uninspectable)} uninspectable")
+    print(
+        f"check_identifiers: scanned {scanned} file(s); "
+        f"{len(media)} declared binary media not inspected; "
+        f"{len(uninspectable)} uninspectable"
+    )
     status = 0
+    ceiling = args.max_uninspectable
     if uninspectable:
-        status = 2
+        if ceiling is None or len(uninspectable) > ceiling:
+            status = 2
+        else:
+            print(
+                f"check_identifiers: {len(uninspectable)} uninspectable "
+                f"file(s) within the declared ceiling of {ceiling}"
+            )
         print()
-        print(f"check_identifiers: {len(uninspectable)} file(s) could not be "
-              f"inspected — content that was not read has not passed:")
+        print(
+            f"check_identifiers: {len(uninspectable)} file(s) could not be "
+            f"inspected — content that was not read has not passed:"
+        )
         for u in uninspectable:
             print(f"  {u}")
-        print("  Convert to text, remove the file, or declare its type in "
-              "binary_media_extensions with a reason.")
+        print(
+            "  Convert to text, remove the file, or declare its type in "
+            "binary_media_extensions with a reason."
+        )
     if findings:
         status = 1
         print()
-        print(f"check_identifiers: {len(findings)} finding(s) — this repository "
-              f"is PUBLIC")
+        print(
+            f"check_identifiers: {len(findings)} finding(s) — this repository "
+            f"is PUBLIC"
+        )
         for f in findings:
             print(f"  {f}")
         print()
-        print("  Replace the identifier with a neutral placeholder. If a finding "
-              "is a false positive, add a justified entry to the exclusions in "
-              ".legal-deny-list.yaml rather than widening a pattern.")
+        print(
+            "  Replace the identifier with a neutral placeholder. If a finding "
+            "is a false positive, add a justified entry to the exclusions in "
+            ".legal-deny-list.yaml rather than widening a pattern."
+        )
     if status == 0:
         print("check_identifiers: no client identifier found")
     return status
