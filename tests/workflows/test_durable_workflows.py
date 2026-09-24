@@ -732,6 +732,13 @@ def test_workflow_registry(workflow, monkeypatch):
         assert results["utilisation"].map(math.isfinite).all()
         assert results["utilisation"].max() == pytest.approx(summary["max_utilisation"])
         assert results["vm_stress_Pa"].iloc[-1] > results["vm_stress_Pa"].iloc[0]
+    elif workflow["id"] == "riser-stackup-drawing":
+        summary = cfg["riser_stackup_drawing"]
+        assert summary["result"] == "pass"
+        assert set(summary["checks"].values()) == {"pass"}
+        report = json.loads(Path(summary["reconcile_report"]).read_text("utf-8"))
+        assert report["result"] == "pass"
+        assert Path(summary["svg"]).read_text("utf-8").startswith("<svg ")
     elif workflow["id"] == "riser-stackup-parametric":
         cases = cfg["parametric_run"]["cases"]
         manifest = pd.read_csv(

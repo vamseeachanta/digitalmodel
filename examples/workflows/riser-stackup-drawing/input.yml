@@ -1,0 +1,19 @@
+# Riser stack-up drawing (#2152): render a StackupDrawingSpec to SVG and
+# reconcile the drawing against the data. The spec is a synthetic, generic
+# fixture (1500 m water depth, 25 m air gap); it describes no real project.
+#
+#   python -m digitalmodel examples/workflows/riser-stackup-drawing/input.yml
+#
+# Outputs (results/): input_stackup.svg, input_stackup_spec.json,
+# input_reconcile.json. The run fails if the reconciliation fails.
+basename: riser_stackup_drawing
+
+riser_stackup_drawing:
+  spec: synthetic_spec.json
+  output_dir: results
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

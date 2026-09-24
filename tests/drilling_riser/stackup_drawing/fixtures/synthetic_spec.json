@@ -1,0 +1,947 @@
+{
+  "spec_id": "example-synthetic",
+  "datums": {
+    "water_depth_m": 1500.0,
+    "drill_floor_el_m": 25.0,
+    "air_gap_m": 25.0,
+    "mudline_el_m": -1500.0,
+    "msl_el_m": 0.0,
+    "provenance": {
+      "water_depth_m": {
+        "source": "synthetic fixture",
+        "basis": "synthetic"
+      },
+      "drill_floor_el_m": {
+        "source": "synthetic fixture",
+        "basis": "synthetic"
+      },
+      "air_gap_m": {
+        "source": "synthetic fixture",
+        "basis": "synthetic"
+      },
+      "mudline_el_m": {
+        "source": "synthetic fixture",
+        "basis": "synthetic"
+      }
+    }
+  },
+  "components": [
+    {
+      "id": "c01-diverter",
+      "type": "diverter",
+      "label": "Diverter",
+      "count": 1,
+      "joint_length_m": 3.0,
+      "top_el_m": 25.0,
+      "bottom_el_m": 22.0,
+      "od_in": 21.0,
+      "buoyancy_od_in": null,
+      "wall_thickness_in": 0.875,
+      "envelope_width_in": null,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": null,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "od_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "wall_thickness_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    },
+    {
+      "id": "c02-upper-flex-joint",
+      "type": "upper_flex_joint",
+      "label": "Upper flex joint (UFJ)",
+      "count": 1,
+      "joint_length_m": 1.0,
+      "top_el_m": 22.0,
+      "bottom_el_m": 21.0,
+      "od_in": "NOT_FOUND",
+      "buoyancy_od_in": null,
+      "wall_thickness_in": null,
+      "envelope_width_in": null,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": null,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    },
+    {
+      "id": "c03-telescopic-joint-inner",
+      "type": "telescopic_joint_inner",
+      "label": "Telescopic joint, inner barrel",
+      "count": 1,
+      "joint_length_m": 15.172,
+      "top_el_m": 21.0,
+      "bottom_el_m": 5.827999999999999,
+      "od_in": 46.0,
+      "buoyancy_od_in": null,
+      "wall_thickness_in": 1.0,
+      "envelope_width_in": null,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": null,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "od_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "wall_thickness_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    },
+    {
+      "id": "c04-tension-ring",
+      "type": "tension_ring",
+      "label": "Tension ring",
+      "count": 1,
+      "joint_length_m": 0.0,
+      "top_el_m": 5.827999999999999,
+      "bottom_el_m": 5.827999999999999,
+      "od_in": 150.0,
+      "buoyancy_od_in": null,
+      "wall_thickness_in": null,
+      "envelope_width_in": null,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": null,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "od_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    },
+    {
+      "id": "c05-telescopic-joint-outer",
+      "type": "telescopic_joint_outer",
+      "label": "Telescopic joint, outer barrel",
+      "count": 1,
+      "joint_length_m": 18.288,
+      "top_el_m": 5.827999999999999,
+      "bottom_el_m": -12.46,
+      "od_in": 48.0,
+      "buoyancy_od_in": null,
+      "wall_thickness_in": 1.0,
+      "envelope_width_in": null,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": null,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "od_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "wall_thickness_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    },
+    {
+      "id": "c06-pup-joint",
+      "type": "pup_joint",
+      "label": "pup joint",
+      "count": 1,
+      "joint_length_m": 9.144,
+      "top_el_m": -12.46,
+      "bottom_el_m": -21.604,
+      "od_in": 21.0,
+      "buoyancy_od_in": null,
+      "wall_thickness_in": 0.875,
+      "envelope_width_in": null,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": null,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "od_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "wall_thickness_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    },
+    {
+      "id": "c07-pup-joint",
+      "type": "pup_joint",
+      "label": "pup joint",
+      "count": 1,
+      "joint_length_m": 3.048,
+      "top_el_m": -21.604,
+      "bottom_el_m": -24.652,
+      "od_in": 21.0,
+      "buoyancy_od_in": null,
+      "wall_thickness_in": 0.875,
+      "envelope_width_in": null,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": null,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "od_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "wall_thickness_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    },
+    {
+      "id": "c08-riser-joint-bare",
+      "type": "riser_joint_bare",
+      "label": "bare joints",
+      "count": 3,
+      "joint_length_m": 22.86,
+      "top_el_m": -24.652,
+      "bottom_el_m": -93.232,
+      "od_in": 21.0,
+      "buoyancy_od_in": null,
+      "wall_thickness_in": 0.875,
+      "envelope_width_in": null,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": null,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "od_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "wall_thickness_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    },
+    {
+      "id": "c09-riser-joint-buoyant",
+      "type": "riser_joint_buoyant",
+      "label": "buoyant joints",
+      "count": 25,
+      "joint_length_m": 22.86,
+      "top_el_m": -93.232,
+      "bottom_el_m": -664.732,
+      "od_in": 21.0,
+      "buoyancy_od_in": 52.0,
+      "wall_thickness_in": 0.875,
+      "envelope_width_in": null,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": 3000.0,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "od_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "wall_thickness_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "buoyancy_od_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "buoyancy_depth_rating_ft": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    },
+    {
+      "id": "c10-riser-joint-buoyant",
+      "type": "riser_joint_buoyant",
+      "label": "buoyant joints",
+      "count": 25,
+      "joint_length_m": 22.86,
+      "top_el_m": -664.732,
+      "bottom_el_m": -1236.232,
+      "od_in": 21.0,
+      "buoyancy_od_in": 54.0,
+      "wall_thickness_in": 0.875,
+      "envelope_width_in": null,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": 5000.0,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "od_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "wall_thickness_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "buoyancy_od_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "buoyancy_depth_rating_ft": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    },
+    {
+      "id": "c11-riser-joint-bare",
+      "type": "riser_joint_bare",
+      "label": "bare joints",
+      "count": 10,
+      "joint_length_m": 22.86,
+      "top_el_m": -1236.232,
+      "bottom_el_m": -1464.8319999999999,
+      "od_in": 21.0,
+      "buoyancy_od_in": null,
+      "wall_thickness_in": 0.875,
+      "envelope_width_in": null,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": null,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "od_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "wall_thickness_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    },
+    {
+      "id": "c12-termination-joint",
+      "type": "termination_joint",
+      "label": "termination joint",
+      "count": 1,
+      "joint_length_m": 10.668000000000001,
+      "top_el_m": -1464.8319999999999,
+      "bottom_el_m": -1475.4999999999998,
+      "od_in": 21.0,
+      "buoyancy_od_in": null,
+      "wall_thickness_in": 1.0,
+      "envelope_width_in": null,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": null,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "od_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "wall_thickness_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    },
+    {
+      "id": "c13-other",
+      "type": "other",
+      "label": "Riser adaptor",
+      "count": 1,
+      "joint_length_m": 1.5,
+      "top_el_m": -1475.4999999999998,
+      "bottom_el_m": -1476.9999999999998,
+      "od_in": 21.0,
+      "buoyancy_od_in": null,
+      "wall_thickness_in": null,
+      "envelope_width_in": null,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": null,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "od_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    },
+    {
+      "id": "c14-lower-flex-joint",
+      "type": "lower_flex_joint",
+      "label": "Lower flex joint (LFJ)",
+      "count": 1,
+      "joint_length_m": 1.0,
+      "top_el_m": -1476.9999999999998,
+      "bottom_el_m": -1477.9999999999998,
+      "od_in": 40.0,
+      "buoyancy_od_in": null,
+      "wall_thickness_in": null,
+      "envelope_width_in": null,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": null,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "od_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    },
+    {
+      "id": "c15-lmrp",
+      "type": "lmrp",
+      "label": "LMRP",
+      "count": 1,
+      "joint_length_m": 7.0,
+      "top_el_m": -1477.9999999999998,
+      "bottom_el_m": -1484.9999999999998,
+      "od_in": null,
+      "buoyancy_od_in": null,
+      "wall_thickness_in": null,
+      "envelope_width_in": 180.0,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": null,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "envelope_width_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    },
+    {
+      "id": "c16-bop",
+      "type": "bop",
+      "label": "BOP stack",
+      "count": 1,
+      "joint_length_m": 11.0,
+      "top_el_m": -1484.9999999999998,
+      "bottom_el_m": -1495.9999999999998,
+      "od_in": null,
+      "buoyancy_od_in": null,
+      "wall_thickness_in": null,
+      "envelope_width_in": 200.0,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": null,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "envelope_width_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    },
+    {
+      "id": "c17-wellhead",
+      "type": "wellhead",
+      "label": "Wellhead housing",
+      "count": 1,
+      "joint_length_m": 4.0,
+      "top_el_m": -1495.9999999999998,
+      "bottom_el_m": -1499.9999999999998,
+      "od_in": 27.0,
+      "buoyancy_od_in": null,
+      "wall_thickness_in": 2.0,
+      "envelope_width_in": null,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": null,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "od_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "wall_thickness_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    },
+    {
+      "id": "c18-conductor",
+      "type": "conductor",
+      "label": "conductor",
+      "count": 1,
+      "joint_length_m": 45.72,
+      "top_el_m": -1500.0,
+      "bottom_el_m": -1545.72,
+      "od_in": 36.0,
+      "buoyancy_od_in": null,
+      "wall_thickness_in": 2.0,
+      "envelope_width_in": null,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": null,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "od_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "wall_thickness_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    },
+    {
+      "id": "c19-conductor",
+      "type": "conductor",
+      "label": "conductor",
+      "count": 1,
+      "joint_length_m": 45.72,
+      "top_el_m": -1545.72,
+      "bottom_el_m": -1591.44,
+      "od_in": 36.0,
+      "buoyancy_od_in": null,
+      "wall_thickness_in": 1.5,
+      "envelope_width_in": null,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": null,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "od_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "wall_thickness_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    },
+    {
+      "id": "c20-casing",
+      "type": "casing",
+      "label": "casing",
+      "count": 1,
+      "joint_length_m": 300.0,
+      "top_el_m": -1500.0,
+      "bottom_el_m": -1800.0,
+      "od_in": 22.0,
+      "buoyancy_od_in": null,
+      "wall_thickness_in": 1.0,
+      "envelope_width_in": null,
+      "drag_diameter_in": null,
+      "buoyancy_depth_rating_ft": null,
+      "source": "synthetic fixture",
+      "provenance": {
+        "count": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "joint_length_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "top_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "bottom_el_m": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "od_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        },
+        "wall_thickness_in": {
+          "source": "synthetic fixture",
+          "basis": "synthetic"
+        }
+      },
+      "notes": []
+    }
+  ],
+  "title_block": {
+    "title": "Riser stack-up — synthetic example",
+    "configuration": "BOP on wellhead (generic test fixture)",
+    "vessel_label": "Drilling vessel (DP)",
+    "document_ref": "SYNTHETIC",
+    "notes": []
+  },
+  "tensioner_system": {
+    "count": 6,
+    "sheave_el_m": 20.5,
+    "sheave_radius_m": 3.5,
+    "provenance": {
+      "count": {
+        "source": "synthetic fixture",
+        "basis": "synthetic"
+      },
+      "sheave_el_m": {
+        "source": "synthetic fixture",
+        "basis": "synthetic"
+      },
+      "sheave_radius_m": {
+        "source": "synthetic fixture",
+        "basis": "synthetic"
+      }
+    }
+  },
+  "reference_totals": {
+    "stackup_length_m": {
+      "value": 1525.0,
+      "source": "synthetic fixture",
+      "basis": "synthetic",
+      "description": ""
+    },
+    "rkb_node_above_mudline_m": {
+      "value": 1525.0,
+      "source": "synthetic fixture",
+      "basis": "synthetic",
+      "description": ""
+    },
+    "riser_length_ufj_lfj_m": {
+      "value": 1499.0,
+      "source": "synthetic fixture",
+      "basis": "synthetic",
+      "description": ""
+    },
+    "closure_residual_m": {
+      "value": 0.0,
+      "source": "synthetic fixture",
+      "basis": "synthetic",
+      "description": ""
+    }
+  },
+  "sources": [
+    {
+      "id": "synthetic",
+      "kind": "generic test fixture",
+      "file": "",
+      "sha256": ""
+    }
+  ],
+  "data_conflicts": [],
+  "gaps": [
+    {
+      "item": "c02-upper-flex-joint od_in",
+      "status": "open",
+      "detail": "deliberately NOT_FOUND to exercise the n/a rendering path"
+    }
+  ],
+  "schema_version": "riser-stackup-drawing/1"
+}
