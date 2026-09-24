@@ -26,5 +26,8 @@
 *.o binary
 *.a binary
 
+# Golden snapshots compared byte-for-byte (#2152): no line-ending conversion
+tests/drilling_riser/stackup_drawing/fixtures/*.svg -text
+
 # OrcaWave solver artifacts
 *.owr binary

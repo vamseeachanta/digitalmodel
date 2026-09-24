@@ -468,6 +468,16 @@ workflows:
       - examples/workflows/tsj-sizing/results/input_tsj.csv
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[tsj-sizing]
     runtime: offline
+  - id: riser-stackup-drawing
+    basename: riser_stackup_drawing
+    title: Data-driven riser stack-up drawing with reconciliation check
+    input: examples/workflows/riser-stackup-drawing/input.yml
+    outputs:
+      - examples/workflows/riser-stackup-drawing/results/input_stackup.svg
+      - examples/workflows/riser-stackup-drawing/results/input_stackup_spec.json
+      - examples/workflows/riser-stackup-drawing/results/input_reconcile.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-stackup-drawing]
+    runtime: offline
   - id: riser-stackup-parametric
     basename: parametric_run
     title: Legacy-derived drilling riser stack-up parametric sweep

@@ -86,7 +86,9 @@ def test_router_fails_when_reconcile_fails(tmp_path):
         router(cfg)
 
     # the report is still written so the failure can be inspected
-    report = json.loads((tmp_path / "results" / "bad_reconcile.json").read_text("utf-8"))
+    report = json.loads(
+        (tmp_path / "results" / "bad_reconcile.json").read_text("utf-8")
+    )
     assert report["result"] == "fail"
     assert report["checks"]["d_totals"]["status"] == "fail"
 

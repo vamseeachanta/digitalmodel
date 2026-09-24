@@ -1,0 +1,637 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 2171.69" width="860" height="2171.69" role="img" aria-label="Riser stack-up — synthetic example">
+<title>Riser stack-up — synthetic example</title>
+<desc>BOP on wellhead (generic test fixture). Elevations relative to MSL. Diameters not to scale.</desc>
+<style>
+svg{background:#fff}
+text{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;fill:#1d2733;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
+.bg{fill:#fff}
+.water{fill:#eef5fa}
+.wave{fill:none;stroke:#3f7fb0;stroke-width:1.4}
+.soil{fill:url(#soil-hatch)}
+.soil-edge{fill:none;stroke:#6b5236;stroke-width:2}
+.rig{fill:none;stroke:#8a939c;stroke-width:1}
+.rig-floor{fill:url(#steel-hatch);stroke:#3b4652;stroke-width:1.2}
+.rotary{fill:#cfd6dd;stroke:#3b4652;stroke-width:1}
+.datum{stroke:#3b4652;stroke-width:1.6;fill:none}
+.datum-msl{stroke:#3f7fb0;stroke-width:0.8;stroke-dasharray:6 3;fill:none}
+.datum-ml{stroke:#6b5236;stroke-width:1.8;fill:none}
+.axis{stroke:#3b4652;stroke-width:1;fill:none}
+.tick{stroke:#3b4652;stroke-width:0.8}
+.tick-lbl{font-size:11px;fill:#3b4652}
+.axis-hdr{font-size:11px;font-weight:600;fill:#3b4652}
+.centre{stroke:#7a8691;stroke-width:0.6;stroke-dasharray:14 3 2 3;fill:none}
+.pipe{fill:url(#g-steel);stroke:#27313b;stroke-width:0.9}
+.pipe-dark{fill:url(#g-steel-dark);stroke:#27313b;stroke-width:0.9}
+.chrome{fill:url(#g-chrome);stroke:#27313b;stroke-width:0.9}
+.buoy-a{fill:url(#g-buoy-a);stroke:#5e4a1c;stroke-width:0.9}
+.buoy-b{fill:url(#g-buoy-b);stroke:#5e4a1c;stroke-width:0.9}
+.buoy-c{fill:url(#g-buoy-c);stroke:#5e4a1c;stroke-width:0.9}
+.seam{stroke:#5e4a1c;stroke-width:0.8}
+.flange{fill:#58636e;stroke:#27313b;stroke-width:0.6}
+.body-thin{fill:#58636e;stroke:none}
+.ball{fill:url(#g-ball);stroke:#1c252e;stroke-width:1}
+.ring{fill:url(#g-steel-dark);stroke:#1c252e;stroke-width:1}
+.wire{stroke:#46505a;stroke-width:0.9;fill:none}
+.sheave{fill:#e3e7eb;stroke:#27313b;stroke-width:1}
+.cyl{fill:url(#g-steel);stroke:#27313b;stroke-width:0.8}
+.frame{fill:#f4f6f8;stroke:#1c252e;stroke-width:1.3}
+.post{fill:#9aa4ad;stroke:#27313b;stroke-width:0.6}
+.annular{fill:url(#g-red);stroke:#3a1d1d;stroke-width:0.9}
+.ram{fill:url(#g-red);stroke:#3a1d1d;stroke-width:0.9}
+.bonnet{fill:#d8a3a0;stroke:#3a1d1d;stroke-width:0.8}
+.connector{fill:url(#g-steel-dark);stroke:#1c252e;stroke-width:0.8}
+.pod{fill:#e8d58f;stroke:#5e4a1c;stroke-width:0.7}
+.valve{fill:#fff;stroke:#1c252e;stroke-width:0.8}
+.cond{fill:url(#g-cond);stroke:#1c252e;stroke-width:0.9}
+.cond-b{fill:url(#g-steel);stroke:#1c252e;stroke-width:0.9}
+.hidden{fill:none;stroke:#1c252e;stroke-width:1.2;stroke-dasharray:6 3}
+.housing{fill:url(#g-steel);stroke:#1c252e;stroke-width:1}
+.break{fill:none;stroke:#1c252e;stroke-width:1}
+.cut{fill:none;stroke:#1c252e;stroke-width:1.1}
+.leader{fill:none;stroke:#46505a;stroke-width:0.7}
+.dot{fill:#46505a}
+.co1{font-size:14px;font-weight:600}
+.co2{font-size:12.5px;fill:#39444f}
+.na{fill:#8a939c;font-style:italic}
+.rpt{fill:#8a3b12}
+.dlbl{font-size:12px;font-weight:600}
+.dlbl2{font-size:11px;fill:#39444f}
+.note-l{font-size:11.5px;fill:#39444f;font-style:italic}
+.tb{fill:#fff;stroke:#1c252e;stroke-width:1.2}
+.tb-line{stroke:#1c252e;stroke-width:0.7}
+.tb-title{font-size:16px;font-weight:700}
+.tb-sub{font-size:12px;fill:#39444f}
+.tb-hdr{font-size:9.5px;font-weight:600;fill:#5b6670;letter-spacing:.04em}
+.tb-val{font-size:13px;font-weight:600}
+.tb-note{font-size:11.5px;fill:#39444f}
+</style>
+<defs><linearGradient id="g-steel" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#8d98a3"/><stop offset="0.38" stop-color="#eef1f4"/><stop offset="1" stop-color="#8d98a3"/></linearGradient><linearGradient id="g-steel-dark" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#5b6670"/><stop offset="0.38" stop-color="#c5ccd3"/><stop offset="1" stop-color="#5b6670"/></linearGradient><linearGradient id="g-chrome" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#a9b3bc"/><stop offset="0.38" stop-color="#ffffff"/><stop offset="1" stop-color="#a9b3bc"/></linearGradient><linearGradient id="g-cond" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#8f9aa4"/><stop offset="0.38" stop-color="#e6eaee"/><stop offset="1" stop-color="#8f9aa4"/></linearGradient><linearGradient id="g-buoy-a" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#d9c07a"/><stop offset="0.38" stop-color="#fbf2d2"/><stop offset="1" stop-color="#d9c07a"/></linearGradient><linearGradient id="g-buoy-b" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#caa650"/><stop offset="0.38" stop-color="#f4e3ad"/><stop offset="1" stop-color="#caa650"/></linearGradient><linearGradient id="g-buoy-c" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#b98f34"/><stop offset="0.38" stop-color="#ecd28a"/><stop offset="1" stop-color="#b98f34"/></linearGradient><linearGradient id="g-red" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#a9605c"/><stop offset="0.38" stop-color="#f0d0cd"/><stop offset="1" stop-color="#a9605c"/></linearGradient><radialGradient id="g-ball" cx="0.35" cy="0.35" r="0.7"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#6c7883"/></radialGradient><pattern id="soil-hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="9" height="9" fill="#efe6d8"/><line x1="0" y1="0" x2="0" y2="9" stroke="#b69d7a" stroke-width="1"/></pattern><pattern id="steel-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#dfe4e8"/><line x1="0" y1="0" x2="0" y2="6" stroke="#8a939c" stroke-width="0.8"/></pattern></defs>
+<g data-role="decor"><rect x="0" y="0" width="860" height="2171.69" class="bg"/></g>
+<g id="elevation-transform" data-role="axis" data-zones="[{&quot;z_hi&quot;:35.0,&quot;z_lo&quot;:-36.652,&quot;y_top&quot;:18.0,&quot;px_per_m&quot;:6.5,&quot;kind&quot;:&quot;true&quot;},{&quot;z_hi&quot;:-36.652,&quot;z_lo&quot;:-1452.832,&quot;y_top&quot;:513.738,&quot;px_per_m&quot;:0.310694968,&quot;kind&quot;:&quot;condensed&quot;},{&quot;z_hi&quot;:-1452.832,&quot;z_lo&quot;:-1601.44,&quot;y_top&quot;:983.738,&quot;px_per_m&quot;:6.5,&quot;kind&quot;:&quot;true&quot;}]" data-px-per-in="0.8" data-center-x="330" data-y-bottom="1949.69"></g>
+<g data-role="decor">
+<rect x="71" y="245.5" width="429" height="1044.83" class="water"/>
+<rect x="71" y="1290.33" width="429" height="659.36" class="soil"/>
+<polyline points="71,245.19 73.5,244.45 76,243.84 78.5,243.44 81,243.3 83.5,243.44 86,243.84 88.5,244.45 91,245.19 93.5,245.97 96,246.69 98.5,247.26 101,247.61 103.5,247.69 106,247.5 108.5,247.05 111,246.41 113.5,245.65 116,244.87 118.5,244.18 121,243.65 123.5,243.35 126,243.32 128.5,243.57 131,244.07 133.5,244.74 136,245.51 138.5,246.28 141,246.95 143.5,247.44 146,247.68 148.5,247.65 151,247.35 153.5,246.81 156,246.11 158.5,245.33 161,244.58 163.5,243.94 166,243.49 168.5,243.3 171,243.39 173.5,243.75 176,244.32 178.5,245.05 181,245.83 183.5,246.57 186,247.17 188.5,247.57 191,247.7 193.5,247.56 196,247.15 198.5,246.54 201,245.8 203.5,245.02 206,244.3 208.5,243.73 211,243.38 213.5,243.31 216,243.51 218.5,243.96 221,244.6 223.5,245.36 226,246.14 228.5,246.83 231,247.36 233.5,247.65 236,247.67 238.5,247.42 241,246.92 243.5,246.25 246,245.48 248.5,244.71 251,244.04 253.5,243.56 256,243.32 258.5,243.36 261,243.66 263.5,244.2 266,244.9 268.5,245.68 271,246.44 273.5,247.07 276,247.51 278.5,247.7 281,247.6 283.5,247.24 286,246.67 288.5,245.94 291,245.16 293.5,244.42 296,243.82 298.5,243.43 301,243.3 303.5,243.45 306,243.86 308.5,244.47 311,245.22 313.5,246 316,246.72 318.5,247.28 321,247.62 323.5,247.69 326,247.49 328.5,247.03 331,246.38 333.5,245.62 336,244.85 338.5,244.15 341,243.63 343.5,243.34 346,243.33 348.5,243.59 351,244.09 353.5,244.76 356,245.54 358.5,246.3 361,246.97 363.5,247.45 366,247.68 368.5,247.64 371,247.33 373.5,246.79 376,246.08 378.5,245.3 381,244.55 383.5,243.92 386,243.48 388.5,243.3 391,243.4 393.5,243.76 396,244.35 398.5,245.07 401,245.85 403.5,246.59 406,247.19 408.5,247.58 411,247.7 413.5,247.55 416,247.13 418.5,246.52 421,245.77 423.5,244.99 426,244.27 428.5,243.71 431,243.38 433.5,243.31 436,243.52 438.5,243.98 441,244.63 443.5,245.39 446,246.17 448.5,246.86 451,247.38 453.5,247.66 456,247.67 458.5,247.41 461,246.9 463.5,246.22 466,245.45 468.5,244.68 471,244.02 473.5,243.55 476,243.32 478.5,243.36 481,243.68 483.5,244.22 486,244.93 488.5,245.71 491,246.46 493.5,247.09 496,247.52 498.5,247.7" class="wave"/>
+<rect x="162" y="83" width="336" height="9" class="rig-floor"/>
+<rect x="294" y="81" width="72" height="11" class="rotary"/>
+<line x1="190" y1="83" x2="238" y2="18" class="rig"/>
+<line x1="202" y1="83" x2="246" y2="18" class="rig"/>
+<line x1="470" y1="83" x2="422" y2="18" class="rig"/>
+<line x1="458" y1="83" x2="414" y2="18" class="rig"/>
+<line x1="190" y1="83" x2="211.48" y2="69" class="rig"/>
+<line x1="470" y1="83" x2="448.52" y2="69" class="rig"/>
+<line x1="200.34" y1="69" x2="220.95" y2="55" class="rig"/>
+<line x1="459.66" y1="69" x2="439.05" y2="55" class="rig"/>
+<line x1="210.68" y1="55" x2="230.43" y2="41" class="rig"/>
+<line x1="449.32" y1="55" x2="429.57" y2="41" class="rig"/>
+<line x1="221.02" y1="41" x2="239.91" y2="27" class="rig"/>
+<line x1="438.98" y1="41" x2="420.09" y2="27" class="rig"/>
+</g>
+<g data-role="datum" data-datum="drill_floor_el_m" data-el-m="25.0"><line x1="162" y1="83" x2="498" y2="83" class="datum" data-part="datum-line"/><line x1="70" y1="83" x2="162" y2="83" class="datum-msl" data-part="datum-line"/></g>
+<g data-role="datum" data-datum="msl_el_m" data-el-m="0"><line x1="122" y1="245.5" x2="500" y2="245.5" class="datum-msl" data-part="datum-line"/><path d="M134,232.5 l6,9 l6,-9 z" class="datum"/><text x="150" y="240.5" class="dlbl"><tspan>MSL</tspan></text><text x="182" y="240.5" class="dlbl2"><tspan>EL </tspan><tspan data-field="datums.msl_el_m" data-unit="m" data-decimals="2">0.00</tspan></text></g>
+<g data-role="datum" data-datum="mudline_el_m" data-el-m="-1500.0"><line x1="122" y1="1290.33" x2="500" y2="1290.33" class="datum-ml" data-part="datum-line"/><text x="134" y="1307.33" class="dlbl"><tspan>Mudline</tspan></text><text x="134" y="1321.33" class="dlbl2"><tspan>EL </tspan><tspan data-field="datums.mudline_el_m" data-unit="m" data-decimals="2">−1,500.00</tspan><tspan> m (</tspan><tspan data-field="datums.mudline_el_m" data-unit="ft" data-decimals="1">−4,921.3</tspan><tspan> ft)</tspan></text></g>
+<g data-role="axis">
+<text x="62" y="24" class="axis-hdr" text-anchor="end"><tspan>EL m</tspan></text>
+<text x="78" y="24" class="axis-hdr"><tspan>ft</tspan></text>
+<text x="62" y="37" class="tick-lbl" text-anchor="end"><tspan>MSL</tspan></text>
+<line x1="70" y1="18" x2="70" y2="483.74" class="axis"/>
+<line x1="70" y1="440.5" x2="64" y2="440.5" class="tick" data-tick-el-m="-30.000000000" data-unit="m"/>
+<text x="62" y="444.3" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-30.000000000" data-unit="m" data-decimals="0">−30</tspan></text>
+<line x1="70" y1="375.5" x2="64" y2="375.5" class="tick" data-tick-el-m="-20.000000000" data-unit="m"/>
+<text x="62" y="379.3" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-20.000000000" data-unit="m" data-decimals="0">−20</tspan></text>
+<line x1="70" y1="310.5" x2="64" y2="310.5" class="tick" data-tick-el-m="-10.000000000" data-unit="m"/>
+<text x="62" y="314.3" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-10.000000000" data-unit="m" data-decimals="0">−10</tspan></text>
+<line x1="70" y1="245.5" x2="64" y2="245.5" class="tick" data-tick-el-m="0.000000000" data-unit="m"/>
+<text x="62" y="249.3" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="0.000000000" data-unit="m" data-decimals="0">0</tspan></text>
+<line x1="70" y1="180.5" x2="64" y2="180.5" class="tick" data-tick-el-m="10.000000000" data-unit="m"/>
+<text x="62" y="184.3" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="10.000000000" data-unit="m" data-decimals="0">10</tspan></text>
+<line x1="70" y1="115.5" x2="64" y2="115.5" class="tick" data-tick-el-m="20.000000000" data-unit="m"/>
+<text x="62" y="119.3" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="20.000000000" data-unit="m" data-decimals="0">20</tspan></text>
+<line x1="70" y1="50.5" x2="64" y2="50.5" class="tick" data-tick-el-m="30.000000000" data-unit="m"/>
+<text x="62" y="54.3" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="30.000000000" data-unit="m" data-decimals="0">30</tspan></text>
+<line x1="70" y1="443.62" x2="76" y2="443.62" class="tick" data-tick-el-m="-30.480000000" data-unit="ft"/>
+<text x="78" y="447.42" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-30.480000000" data-unit="ft" data-decimals="0">−100</tspan></text>
+<line x1="70" y1="394.09" x2="76" y2="394.09" class="tick" data-tick-el-m="-22.860000000" data-unit="ft"/>
+<text x="78" y="397.89" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-22.860000000" data-unit="ft" data-decimals="0">−75</tspan></text>
+<line x1="70" y1="344.56" x2="76" y2="344.56" class="tick" data-tick-el-m="-15.240000000" data-unit="ft"/>
+<text x="78" y="348.36" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-15.240000000" data-unit="ft" data-decimals="0">−50</tspan></text>
+<line x1="70" y1="295.03" x2="76" y2="295.03" class="tick" data-tick-el-m="-7.620000000" data-unit="ft"/>
+<text x="78" y="298.83" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-7.620000000" data-unit="ft" data-decimals="0">−25</tspan></text>
+<line x1="70" y1="245.5" x2="76" y2="245.5" class="tick" data-tick-el-m="0.000000000" data-unit="ft"/>
+<text x="78" y="249.3" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="0.000000000" data-unit="ft" data-decimals="0">0</tspan></text>
+<line x1="70" y1="195.97" x2="76" y2="195.97" class="tick" data-tick-el-m="7.620000000" data-unit="ft"/>
+<text x="78" y="199.77" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="7.620000000" data-unit="ft" data-decimals="0">25</tspan></text>
+<line x1="70" y1="146.44" x2="76" y2="146.44" class="tick" data-tick-el-m="15.240000000" data-unit="ft"/>
+<text x="78" y="150.24" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="15.240000000" data-unit="ft" data-decimals="0">50</tspan></text>
+<line x1="70" y1="96.91" x2="76" y2="96.91" class="tick" data-tick-el-m="22.860000000" data-unit="ft"/>
+<text x="78" y="100.71" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="22.860000000" data-unit="ft" data-decimals="0">75</tspan></text>
+<line x1="70" y1="47.38" x2="76" y2="47.38" class="tick" data-tick-el-m="30.480000000" data-unit="ft"/>
+<text x="78" y="51.18" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="30.480000000" data-unit="ft" data-decimals="0">100</tspan></text>
+<line x1="70" y1="513.74" x2="70" y2="953.74" class="axis"/>
+<line x1="70" y1="937.32" x2="64" y2="937.32" class="tick" data-tick-el-m="-1400.000000000" data-unit="m"/>
+<text x="62" y="941.12" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-1400.000000000" data-unit="m" data-decimals="0">−1,400</tspan></text>
+<line x1="70" y1="875.18" x2="64" y2="875.18" class="tick" data-tick-el-m="-1200.000000000" data-unit="m"/>
+<text x="62" y="878.98" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-1200.000000000" data-unit="m" data-decimals="0">−1,200</tspan></text>
+<line x1="70" y1="813.05" x2="64" y2="813.05" class="tick" data-tick-el-m="-1000.000000000" data-unit="m"/>
+<text x="62" y="816.85" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-1000.000000000" data-unit="m" data-decimals="0">−1,000</tspan></text>
+<line x1="70" y1="750.91" x2="64" y2="750.91" class="tick" data-tick-el-m="-800.000000000" data-unit="m"/>
+<text x="62" y="754.71" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-800.000000000" data-unit="m" data-decimals="0">−800</tspan></text>
+<line x1="70" y1="688.77" x2="64" y2="688.77" class="tick" data-tick-el-m="-600.000000000" data-unit="m"/>
+<text x="62" y="692.57" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-600.000000000" data-unit="m" data-decimals="0">−600</tspan></text>
+<line x1="70" y1="626.63" x2="64" y2="626.63" class="tick" data-tick-el-m="-400.000000000" data-unit="m"/>
+<text x="62" y="630.43" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-400.000000000" data-unit="m" data-decimals="0">−400</tspan></text>
+<line x1="70" y1="564.49" x2="64" y2="564.49" class="tick" data-tick-el-m="-200.000000000" data-unit="m"/>
+<text x="62" y="568.29" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-200.000000000" data-unit="m" data-decimals="0">−200</tspan></text>
+<line x1="70" y1="928.5" x2="76" y2="928.5" class="tick" data-tick-el-m="-1371.600000000" data-unit="ft"/>
+<text x="78" y="932.3" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1371.600000000" data-unit="ft" data-decimals="0">−4,500</tspan></text>
+<line x1="70" y1="881.15" x2="76" y2="881.15" class="tick" data-tick-el-m="-1219.200000000" data-unit="ft"/>
+<text x="78" y="884.95" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1219.200000000" data-unit="ft" data-decimals="0">−4,000</tspan></text>
+<line x1="70" y1="833.8" x2="76" y2="833.8" class="tick" data-tick-el-m="-1066.800000000" data-unit="ft"/>
+<text x="78" y="837.6" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1066.800000000" data-unit="ft" data-decimals="0">−3,500</tspan></text>
+<line x1="70" y1="786.45" x2="76" y2="786.45" class="tick" data-tick-el-m="-914.400000000" data-unit="ft"/>
+<text x="78" y="790.25" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-914.400000000" data-unit="ft" data-decimals="0">−3,000</tspan></text>
+<line x1="70" y1="739.1" x2="76" y2="739.1" class="tick" data-tick-el-m="-762.000000000" data-unit="ft"/>
+<text x="78" y="742.9" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-762.000000000" data-unit="ft" data-decimals="0">−2,500</tspan></text>
+<line x1="70" y1="691.75" x2="76" y2="691.75" class="tick" data-tick-el-m="-609.600000000" data-unit="ft"/>
+<text x="78" y="695.55" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-609.600000000" data-unit="ft" data-decimals="0">−2,000</tspan></text>
+<line x1="70" y1="644.4" x2="76" y2="644.4" class="tick" data-tick-el-m="-457.200000000" data-unit="ft"/>
+<text x="78" y="648.2" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-457.200000000" data-unit="ft" data-decimals="0">−1,500</tspan></text>
+<line x1="70" y1="597.05" x2="76" y2="597.05" class="tick" data-tick-el-m="-304.800000000" data-unit="ft"/>
+<text x="78" y="600.85" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-304.800000000" data-unit="ft" data-decimals="0">−1,000</tspan></text>
+<line x1="70" y1="549.7" x2="76" y2="549.7" class="tick" data-tick-el-m="-152.400000000" data-unit="ft"/>
+<text x="78" y="553.5" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-152.400000000" data-unit="ft" data-decimals="0">−500</tspan></text>
+<line x1="70" y1="983.74" x2="70" y2="1949.69" class="axis"/>
+<line x1="70" y1="1940.33" x2="64" y2="1940.33" class="tick" data-tick-el-m="-1600.000000000" data-unit="m"/>
+<text x="62" y="1944.13" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-1600.000000000" data-unit="m" data-decimals="0">−1,600</tspan></text>
+<line x1="70" y1="1875.33" x2="64" y2="1875.33" class="tick" data-tick-el-m="-1590.000000000" data-unit="m"/>
+<text x="62" y="1879.13" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-1590.000000000" data-unit="m" data-decimals="0">−1,590</tspan></text>
+<line x1="70" y1="1810.33" x2="64" y2="1810.33" class="tick" data-tick-el-m="-1580.000000000" data-unit="m"/>
+<text x="62" y="1814.13" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-1580.000000000" data-unit="m" data-decimals="0">−1,580</tspan></text>
+<line x1="70" y1="1745.33" x2="64" y2="1745.33" class="tick" data-tick-el-m="-1570.000000000" data-unit="m"/>
+<text x="62" y="1749.13" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-1570.000000000" data-unit="m" data-decimals="0">−1,570</tspan></text>
+<line x1="70" y1="1680.33" x2="64" y2="1680.33" class="tick" data-tick-el-m="-1560.000000000" data-unit="m"/>
+<text x="62" y="1684.13" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-1560.000000000" data-unit="m" data-decimals="0">−1,560</tspan></text>
+<line x1="70" y1="1615.33" x2="64" y2="1615.33" class="tick" data-tick-el-m="-1550.000000000" data-unit="m"/>
+<text x="62" y="1619.13" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-1550.000000000" data-unit="m" data-decimals="0">−1,550</tspan></text>
+<line x1="70" y1="1550.33" x2="64" y2="1550.33" class="tick" data-tick-el-m="-1540.000000000" data-unit="m"/>
+<text x="62" y="1554.13" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-1540.000000000" data-unit="m" data-decimals="0">−1,540</tspan></text>
+<line x1="70" y1="1485.33" x2="64" y2="1485.33" class="tick" data-tick-el-m="-1530.000000000" data-unit="m"/>
+<text x="62" y="1489.13" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-1530.000000000" data-unit="m" data-decimals="0">−1,530</tspan></text>
+<line x1="70" y1="1420.33" x2="64" y2="1420.33" class="tick" data-tick-el-m="-1520.000000000" data-unit="m"/>
+<text x="62" y="1424.13" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-1520.000000000" data-unit="m" data-decimals="0">−1,520</tspan></text>
+<line x1="70" y1="1355.33" x2="64" y2="1355.33" class="tick" data-tick-el-m="-1510.000000000" data-unit="m"/>
+<text x="62" y="1359.13" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-1510.000000000" data-unit="m" data-decimals="0">−1,510</tspan></text>
+<line x1="70" y1="1290.33" x2="64" y2="1290.33" class="tick" data-tick-el-m="-1500.000000000" data-unit="m"/>
+<text x="62" y="1294.13" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-1500.000000000" data-unit="m" data-decimals="0">−1,500</tspan></text>
+<line x1="70" y1="1225.33" x2="64" y2="1225.33" class="tick" data-tick-el-m="-1490.000000000" data-unit="m"/>
+<text x="62" y="1229.13" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-1490.000000000" data-unit="m" data-decimals="0">−1,490</tspan></text>
+<line x1="70" y1="1160.33" x2="64" y2="1160.33" class="tick" data-tick-el-m="-1480.000000000" data-unit="m"/>
+<text x="62" y="1164.13" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-1480.000000000" data-unit="m" data-decimals="0">−1,480</tspan></text>
+<line x1="70" y1="1095.33" x2="64" y2="1095.33" class="tick" data-tick-el-m="-1470.000000000" data-unit="m"/>
+<text x="62" y="1099.13" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-1470.000000000" data-unit="m" data-decimals="0">−1,470</tspan></text>
+<line x1="70" y1="1030.33" x2="64" y2="1030.33" class="tick" data-tick-el-m="-1460.000000000" data-unit="m"/>
+<text x="62" y="1034.13" class="tick-lbl" text-anchor="end"><tspan data-tick-el-m="-1460.000000000" data-unit="m" data-decimals="0">−1,460</tspan></text>
+<line x1="70" y1="1941.63" x2="76" y2="1941.63" class="tick" data-tick-el-m="-1600.200000000" data-unit="ft"/>
+<text x="78" y="1945.43" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1600.200000000" data-unit="ft" data-decimals="0">−5,250</tspan></text>
+<line x1="70" y1="1892.1" x2="76" y2="1892.1" class="tick" data-tick-el-m="-1592.580000000" data-unit="ft"/>
+<text x="78" y="1895.9" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1592.580000000" data-unit="ft" data-decimals="0">−5,225</tspan></text>
+<line x1="70" y1="1842.57" x2="76" y2="1842.57" class="tick" data-tick-el-m="-1584.960000000" data-unit="ft"/>
+<text x="78" y="1846.37" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1584.960000000" data-unit="ft" data-decimals="0">−5,200</tspan></text>
+<line x1="70" y1="1793.04" x2="76" y2="1793.04" class="tick" data-tick-el-m="-1577.340000000" data-unit="ft"/>
+<text x="78" y="1796.84" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1577.340000000" data-unit="ft" data-decimals="0">−5,175</tspan></text>
+<line x1="70" y1="1743.51" x2="76" y2="1743.51" class="tick" data-tick-el-m="-1569.720000000" data-unit="ft"/>
+<text x="78" y="1747.31" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1569.720000000" data-unit="ft" data-decimals="0">−5,150</tspan></text>
+<line x1="70" y1="1693.98" x2="76" y2="1693.98" class="tick" data-tick-el-m="-1562.100000000" data-unit="ft"/>
+<text x="78" y="1697.78" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1562.100000000" data-unit="ft" data-decimals="0">−5,125</tspan></text>
+<line x1="70" y1="1644.45" x2="76" y2="1644.45" class="tick" data-tick-el-m="-1554.480000000" data-unit="ft"/>
+<text x="78" y="1648.25" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1554.480000000" data-unit="ft" data-decimals="0">−5,100</tspan></text>
+<line x1="70" y1="1594.92" x2="76" y2="1594.92" class="tick" data-tick-el-m="-1546.860000000" data-unit="ft"/>
+<text x="78" y="1598.72" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1546.860000000" data-unit="ft" data-decimals="0">−5,075</tspan></text>
+<line x1="70" y1="1545.39" x2="76" y2="1545.39" class="tick" data-tick-el-m="-1539.240000000" data-unit="ft"/>
+<text x="78" y="1549.19" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1539.240000000" data-unit="ft" data-decimals="0">−5,050</tspan></text>
+<line x1="70" y1="1495.86" x2="76" y2="1495.86" class="tick" data-tick-el-m="-1531.620000000" data-unit="ft"/>
+<text x="78" y="1499.66" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1531.620000000" data-unit="ft" data-decimals="0">−5,025</tspan></text>
+<line x1="70" y1="1446.33" x2="76" y2="1446.33" class="tick" data-tick-el-m="-1524.000000000" data-unit="ft"/>
+<text x="78" y="1450.13" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1524.000000000" data-unit="ft" data-decimals="0">−5,000</tspan></text>
+<line x1="70" y1="1396.8" x2="76" y2="1396.8" class="tick" data-tick-el-m="-1516.380000000" data-unit="ft"/>
+<text x="78" y="1400.6" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1516.380000000" data-unit="ft" data-decimals="0">−4,975</tspan></text>
+<line x1="70" y1="1347.27" x2="76" y2="1347.27" class="tick" data-tick-el-m="-1508.760000000" data-unit="ft"/>
+<text x="78" y="1351.07" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1508.760000000" data-unit="ft" data-decimals="0">−4,950</tspan></text>
+<line x1="70" y1="1297.74" x2="76" y2="1297.74" class="tick" data-tick-el-m="-1501.140000000" data-unit="ft"/>
+<text x="78" y="1301.54" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1501.140000000" data-unit="ft" data-decimals="0">−4,925</tspan></text>
+<line x1="70" y1="1248.21" x2="76" y2="1248.21" class="tick" data-tick-el-m="-1493.520000000" data-unit="ft"/>
+<text x="78" y="1252.01" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1493.520000000" data-unit="ft" data-decimals="0">−4,900</tspan></text>
+<line x1="70" y1="1198.68" x2="76" y2="1198.68" class="tick" data-tick-el-m="-1485.900000000" data-unit="ft"/>
+<text x="78" y="1202.48" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1485.900000000" data-unit="ft" data-decimals="0">−4,875</tspan></text>
+<line x1="70" y1="1149.15" x2="76" y2="1149.15" class="tick" data-tick-el-m="-1478.280000000" data-unit="ft"/>
+<text x="78" y="1152.95" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1478.280000000" data-unit="ft" data-decimals="0">−4,850</tspan></text>
+<line x1="70" y1="1099.62" x2="76" y2="1099.62" class="tick" data-tick-el-m="-1470.660000000" data-unit="ft"/>
+<text x="78" y="1103.42" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1470.660000000" data-unit="ft" data-decimals="0">−4,825</tspan></text>
+<line x1="70" y1="1050.09" x2="76" y2="1050.09" class="tick" data-tick-el-m="-1463.040000000" data-unit="ft"/>
+<text x="78" y="1053.89" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1463.040000000" data-unit="ft" data-decimals="0">−4,800</tspan></text>
+<line x1="70" y1="1000.56" x2="76" y2="1000.56" class="tick" data-tick-el-m="-1455.420000000" data-unit="ft"/>
+<text x="78" y="1004.36" class="tick-lbl" text-anchor="start"><tspan data-tick-el-m="-1455.420000000" data-unit="ft" data-decimals="0">−4,775</tspan></text>
+<line x1="63" y1="492.74" x2="77" y2="486.74" class="break"/>
+<line x1="63" y1="499.74" x2="77" y2="493.74" class="break"/>
+<line x1="63" y1="962.74" x2="77" y2="956.74" class="break"/>
+<line x1="63" y1="969.74" x2="77" y2="963.74" class="break"/>
+</g>
+<g data-role="decor">
+<line x1="330" y1="76.5" x2="330" y2="483.74" class="centre"/>
+<line x1="330" y1="513.74" x2="330" y2="953.74" class="centre"/>
+<line x1="330" y1="983.74" x2="330" y2="1949.69" class="centre"/>
+</g>
+<g data-role="tensioner" data-sheave-el-m="20.5" data-count="6">
+<line x1="219.76" y1="92" x2="219.76" y2="112.25" class="rig"/>
+<rect x="202.76" y="92" width="10" height="25.25" class="cyl" data-part="symbol"/>
+<line x1="271.9" y1="207.62" x2="224.26" y2="116.45" class="wire"/>
+<line x1="274.1" y1="207.62" x2="226.46" y2="116.45" class="wire"/>
+<line x1="219.76" y1="105.25" x2="207.76" y2="105.25" class="wire"/>
+<circle cx="219.76" cy="112.25" r="7" class="sheave" data-part="sheave"/>
+<circle cx="219.76" cy="112.25" r="2" class="dot"/>
+<line x1="440.24" y1="92" x2="440.24" y2="112.25" class="rig"/>
+<rect x="447.24" y="92" width="10" height="25.25" class="cyl" data-part="symbol"/>
+<line x1="385.9" y1="207.62" x2="433.54" y2="116.45" class="wire"/>
+<line x1="388.1" y1="207.62" x2="435.74" y2="116.45" class="wire"/>
+<line x1="440.24" y1="105.25" x2="452.24" y2="105.25" class="wire"/>
+<circle cx="440.24" cy="112.25" r="7" class="sheave" data-part="sheave"/>
+<circle cx="440.24" cy="112.25" r="2" class="dot"/>
+</g>
+<g data-role="component" data-component-id="c01-diverter" data-type="diverter" data-top-el-m="25.0" data-bottom-el-m="22.0" data-od-in="21.0" data-count="1" data-source="synthetic fixture">
+<rect x="304" y="83" width="52" height="19.5" class="housing" data-part="symbol"/>
+<rect x="321.6" y="83" width="16.8" height="19.5" class="pipe" data-part="body"/>
+<rect x="300" y="83" width="60" height="2.5" class="flange" data-part="symbol"/>
+</g>
+<g data-role="component" data-component-id="c02-upper-flex-joint" data-type="upper_flex_joint" data-top-el-m="22.0" data-bottom-el-m="21.0" data-od-in="NOT_FOUND" data-count="1" data-source="synthetic fixture">
+<rect x="321.6" y="102.5" width="16.8" height="6.5" class="body-thin" data-part="body"/>
+<rect x="316" y="93.75" width="28" height="3" class="flange" data-part="symbol"/>
+<rect x="316" y="114.75" width="28" height="3" class="flange" data-part="symbol"/>
+<circle cx="330" cy="105.75" r="9" class="ball" data-part="symbol"/>
+</g>
+<g data-role="component" data-component-id="c03-telescopic-joint-inner" data-type="telescopic_joint_inner" data-top-el-m="21.0" data-bottom-el-m="5.827999999999999" data-od-in="46.0" data-count="1" data-source="synthetic fixture">
+<rect x="311.6" y="109" width="36.8" height="98.62" class="chrome" data-part="body"/>
+</g>
+<g data-role="component" data-component-id="c04-tension-ring" data-type="tension_ring" data-top-el-m="5.827999999999999" data-bottom-el-m="5.827999999999999" data-od-in="150.0" data-count="1" data-source="synthetic fixture">
+<line x1="270" y1="207.62" x2="390" y2="207.62" class="cut" data-part="body"/>
+<rect x="270" y="204.12" width="120" height="7" class="ring" data-part="symbol"/>
+<circle cx="273" cy="207.62" r="2.2" class="dot" data-part="symbol"/>
+<circle cx="387" cy="207.62" r="2.2" class="dot" data-part="symbol"/>
+</g>
+<g data-role="component" data-component-id="c05-telescopic-joint-outer" data-type="telescopic_joint_outer" data-top-el-m="5.827999999999999" data-bottom-el-m="-12.46" data-od-in="48.0" data-count="1" data-source="synthetic fixture">
+<rect x="310.8" y="207.62" width="38.4" height="118.87" class="pipe-dark" data-part="body"/>
+<rect x="306.8" y="323.49" width="46.4" height="3" class="flange" data-part="symbol"/>
+</g>
+<g data-role="component" data-component-id="c06-pup-joint" data-type="pup_joint" data-top-el-m="-12.46" data-bottom-el-m="-21.604" data-od-in="21.0" data-count="1" data-source="synthetic fixture">
+<rect x="321.6" y="326.49" width="16.8" height="59.44" class="pipe" data-part="body"/>
+<rect x="318.6" y="325.49" width="22.8" height="2" class="flange" data-part="symbol"/>
+</g>
+<g data-role="component" data-component-id="c07-pup-joint" data-type="pup_joint" data-top-el-m="-21.604" data-bottom-el-m="-24.652" data-od-in="21.0" data-count="1" data-source="synthetic fixture">
+<rect x="321.6" y="385.93" width="16.8" height="19.81" class="pipe" data-part="body"/>
+<rect x="318.6" y="384.93" width="22.8" height="2" class="flange" data-part="symbol"/>
+</g>
+<g data-role="component" data-component-id="c08-riser-joint-bare" data-type="riser_joint_bare" data-top-el-m="-24.652" data-bottom-el-m="-93.232" data-od-in="21.0" data-count="3" data-source="synthetic fixture">
+<rect x="321.6" y="405.74" width="16.8" height="78" class="pipe" data-part="body"/>
+<rect x="321.6" y="513.74" width="16.8" height="17.58" class="pipe" data-part="body"/>
+<rect x="318.6" y="516.11" width="22.8" height="2" class="flange" data-part="seam"/>
+<rect x="318.6" y="523.21" width="22.8" height="2" class="flange" data-part="seam"/>
+</g>
+<g data-role="component" data-component-id="c09-riser-joint-buoyant" data-type="riser_joint_buoyant" data-top-el-m="-93.232" data-bottom-el-m="-664.732" data-od-in="21.0" data-count="25" data-source="synthetic fixture">
+<rect x="309.2" y="531.32" width="41.6" height="177.56" class="buoy-a" data-part="body"/>
+<line x1="309.2" y1="538.42" x2="350.8" y2="538.42" class="seam" data-part="seam"/>
+<rect x="319.6" y="537.42" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="545.52" x2="350.8" y2="545.52" class="seam" data-part="seam"/>
+<rect x="319.6" y="544.52" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="552.62" x2="350.8" y2="552.62" class="seam" data-part="seam"/>
+<rect x="319.6" y="551.62" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="559.73" x2="350.8" y2="559.73" class="seam" data-part="seam"/>
+<rect x="319.6" y="558.73" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="566.83" x2="350.8" y2="566.83" class="seam" data-part="seam"/>
+<rect x="319.6" y="565.83" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="573.93" x2="350.8" y2="573.93" class="seam" data-part="seam"/>
+<rect x="319.6" y="572.93" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="581.03" x2="350.8" y2="581.03" class="seam" data-part="seam"/>
+<rect x="319.6" y="580.03" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="588.14" x2="350.8" y2="588.14" class="seam" data-part="seam"/>
+<rect x="319.6" y="587.14" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="595.24" x2="350.8" y2="595.24" class="seam" data-part="seam"/>
+<rect x="319.6" y="594.24" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="602.34" x2="350.8" y2="602.34" class="seam" data-part="seam"/>
+<rect x="319.6" y="601.34" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="609.44" x2="350.8" y2="609.44" class="seam" data-part="seam"/>
+<rect x="319.6" y="608.44" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="616.55" x2="350.8" y2="616.55" class="seam" data-part="seam"/>
+<rect x="319.6" y="615.55" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="623.65" x2="350.8" y2="623.65" class="seam" data-part="seam"/>
+<rect x="319.6" y="622.65" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="630.75" x2="350.8" y2="630.75" class="seam" data-part="seam"/>
+<rect x="319.6" y="629.75" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="637.85" x2="350.8" y2="637.85" class="seam" data-part="seam"/>
+<rect x="319.6" y="636.85" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="644.96" x2="350.8" y2="644.96" class="seam" data-part="seam"/>
+<rect x="319.6" y="643.96" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="652.06" x2="350.8" y2="652.06" class="seam" data-part="seam"/>
+<rect x="319.6" y="651.06" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="659.16" x2="350.8" y2="659.16" class="seam" data-part="seam"/>
+<rect x="319.6" y="658.16" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="666.26" x2="350.8" y2="666.26" class="seam" data-part="seam"/>
+<rect x="319.6" y="665.26" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="673.37" x2="350.8" y2="673.37" class="seam" data-part="seam"/>
+<rect x="319.6" y="672.37" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="680.47" x2="350.8" y2="680.47" class="seam" data-part="seam"/>
+<rect x="319.6" y="679.47" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="687.57" x2="350.8" y2="687.57" class="seam" data-part="seam"/>
+<rect x="319.6" y="686.57" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="694.67" x2="350.8" y2="694.67" class="seam" data-part="seam"/>
+<rect x="319.6" y="693.67" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="309.2" y1="701.78" x2="350.8" y2="701.78" class="seam" data-part="seam"/>
+<rect x="319.6" y="700.78" width="20.8" height="2" class="flange" data-part="seam"/>
+</g>
+<g data-role="component" data-component-id="c10-riser-joint-buoyant" data-type="riser_joint_buoyant" data-top-el-m="-664.732" data-bottom-el-m="-1236.232" data-od-in="21.0" data-count="25" data-source="synthetic fixture">
+<rect x="308.4" y="708.88" width="43.2" height="177.56" class="buoy-b" data-part="body"/>
+<line x1="308.4" y1="715.98" x2="351.6" y2="715.98" class="seam" data-part="seam"/>
+<rect x="319.6" y="714.98" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="723.08" x2="351.6" y2="723.08" class="seam" data-part="seam"/>
+<rect x="319.6" y="722.08" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="730.19" x2="351.6" y2="730.19" class="seam" data-part="seam"/>
+<rect x="319.6" y="729.19" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="737.29" x2="351.6" y2="737.29" class="seam" data-part="seam"/>
+<rect x="319.6" y="736.29" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="744.39" x2="351.6" y2="744.39" class="seam" data-part="seam"/>
+<rect x="319.6" y="743.39" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="751.49" x2="351.6" y2="751.49" class="seam" data-part="seam"/>
+<rect x="319.6" y="750.49" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="758.6" x2="351.6" y2="758.6" class="seam" data-part="seam"/>
+<rect x="319.6" y="757.6" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="765.7" x2="351.6" y2="765.7" class="seam" data-part="seam"/>
+<rect x="319.6" y="764.7" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="772.8" x2="351.6" y2="772.8" class="seam" data-part="seam"/>
+<rect x="319.6" y="771.8" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="779.9" x2="351.6" y2="779.9" class="seam" data-part="seam"/>
+<rect x="319.6" y="778.9" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="787.01" x2="351.6" y2="787.01" class="seam" data-part="seam"/>
+<rect x="319.6" y="786.01" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="794.11" x2="351.6" y2="794.11" class="seam" data-part="seam"/>
+<rect x="319.6" y="793.11" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="801.21" x2="351.6" y2="801.21" class="seam" data-part="seam"/>
+<rect x="319.6" y="800.21" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="808.31" x2="351.6" y2="808.31" class="seam" data-part="seam"/>
+<rect x="319.6" y="807.31" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="815.42" x2="351.6" y2="815.42" class="seam" data-part="seam"/>
+<rect x="319.6" y="814.42" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="822.52" x2="351.6" y2="822.52" class="seam" data-part="seam"/>
+<rect x="319.6" y="821.52" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="829.62" x2="351.6" y2="829.62" class="seam" data-part="seam"/>
+<rect x="319.6" y="828.62" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="836.72" x2="351.6" y2="836.72" class="seam" data-part="seam"/>
+<rect x="319.6" y="835.72" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="843.83" x2="351.6" y2="843.83" class="seam" data-part="seam"/>
+<rect x="319.6" y="842.83" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="850.93" x2="351.6" y2="850.93" class="seam" data-part="seam"/>
+<rect x="319.6" y="849.93" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="858.03" x2="351.6" y2="858.03" class="seam" data-part="seam"/>
+<rect x="319.6" y="857.03" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="865.13" x2="351.6" y2="865.13" class="seam" data-part="seam"/>
+<rect x="319.6" y="864.13" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="872.24" x2="351.6" y2="872.24" class="seam" data-part="seam"/>
+<rect x="319.6" y="871.24" width="20.8" height="2" class="flange" data-part="seam"/>
+<line x1="308.4" y1="879.34" x2="351.6" y2="879.34" class="seam" data-part="seam"/>
+<rect x="319.6" y="878.34" width="20.8" height="2" class="flange" data-part="seam"/>
+</g>
+<g data-role="component" data-component-id="c11-riser-joint-bare" data-type="riser_joint_bare" data-top-el-m="-1236.232" data-bottom-el-m="-1464.8319999999999" data-od-in="21.0" data-count="10" data-source="synthetic fixture">
+<rect x="321.6" y="886.44" width="16.8" height="67.3" class="pipe" data-part="body"/>
+<rect x="321.6" y="983.74" width="16.8" height="78" class="pipe" data-part="body"/>
+<rect x="318.6" y="892.54" width="22.8" height="2" class="flange" data-part="seam"/>
+<rect x="318.6" y="899.65" width="22.8" height="2" class="flange" data-part="seam"/>
+<rect x="318.6" y="906.75" width="22.8" height="2" class="flange" data-part="seam"/>
+<rect x="318.6" y="913.85" width="22.8" height="2" class="flange" data-part="seam"/>
+<rect x="318.6" y="920.95" width="22.8" height="2" class="flange" data-part="seam"/>
+<rect x="318.6" y="928.06" width="22.8" height="2" class="flange" data-part="seam"/>
+<rect x="318.6" y="935.16" width="22.8" height="2" class="flange" data-part="seam"/>
+<rect x="318.6" y="942.26" width="22.8" height="2" class="flange" data-part="seam"/>
+<rect x="318.6" y="949.36" width="22.8" height="2" class="flange" data-part="seam"/>
+</g>
+<g data-role="component" data-component-id="c12-termination-joint" data-type="termination_joint" data-top-el-m="-1464.8319999999999" data-bottom-el-m="-1475.4999999999998" data-od-in="21.0" data-count="1" data-source="synthetic fixture">
+<rect x="321.6" y="1061.74" width="16.8" height="69.34" class="pipe" data-part="body"/>
+<rect x="318.6" y="1060.74" width="22.8" height="2" class="flange" data-part="symbol"/>
+</g>
+<g data-role="component" data-component-id="c13-other" data-type="other" data-top-el-m="-1475.4999999999998" data-bottom-el-m="-1476.9999999999998" data-od-in="21.0" data-count="1" data-source="synthetic fixture">
+<rect x="321.6" y="1131.08" width="16.8" height="9.75" class="pipe" data-part="body"/>
+<rect x="316.6" y="1137.83" width="26.8" height="3" class="flange" data-part="symbol"/>
+</g>
+<g data-role="component" data-component-id="c14-lower-flex-joint" data-type="lower_flex_joint" data-top-el-m="-1476.9999999999998" data-bottom-el-m="-1477.9999999999998" data-od-in="40.0" data-count="1" data-source="synthetic fixture">
+<rect x="314" y="1140.83" width="32" height="6.5" class="body-thin" data-part="body"/>
+<rect x="316" y="1132.08" width="28" height="3" class="flange" data-part="symbol"/>
+<rect x="316" y="1153.08" width="28" height="3" class="flange" data-part="symbol"/>
+<circle cx="330" cy="1144.08" r="9" class="ball" data-part="symbol"/>
+</g>
+<g data-role="component" data-component-id="c15-lmrp" data-type="lmrp" data-top-el-m="-1477.9999999999998" data-bottom-el-m="-1484.9999999999998" data-od-in="" data-count="1" data-source="synthetic fixture">
+<rect x="258" y="1147.33" width="144" height="45.5" class="frame" data-part="body"/>
+<rect x="260" y="1148.33" width="5" height="43.5" class="post" data-part="symbol"/>
+<rect x="395" y="1148.33" width="5" height="43.5" class="post" data-part="symbol"/>
+<path d="M301.2,1164.53 v-8.2 q0,-6 10.37,-6 h36.86 q10.37,0 10.37,6 v8.2 z" class="annular" data-part="symbol"/>
+<path d="M301.2,1179.73 v-8.2 q0,-6 10.37,-6 h36.86 q10.37,0 10.37,6 v8.2 z" class="annular" data-part="symbol"/>
+<rect x="302.64" y="1182.73" width="54.72" height="9.1" class="connector" data-part="symbol"/>
+<rect x="273.48" y="1155.52" width="18" height="22.75" class="pod" data-part="symbol"/>
+<rect x="368.52" y="1155.52" width="18" height="22.75" class="pod" data-part="symbol"/>
+</g>
+<g data-role="component" data-component-id="c16-bop" data-type="bop" data-top-el-m="-1484.9999999999998" data-bottom-el-m="-1495.9999999999998" data-od-in="" data-count="1" data-source="synthetic fixture">
+<rect x="250" y="1192.83" width="160" height="71.5" class="frame" data-part="body"/>
+<rect x="252" y="1193.83" width="5" height="69.5" class="post" data-part="symbol"/>
+<rect x="403" y="1193.83" width="5" height="69.5" class="post" data-part="symbol"/>
+<rect x="306" y="1195.83" width="48" height="12.02" class="ram" data-part="symbol"/>
+<rect x="274" y="1197.91" width="32" height="7.85" class="bonnet" data-part="symbol" rx="2"/>
+<rect x="354" y="1197.91" width="32" height="7.85" class="bonnet" data-part="symbol" rx="2"/>
+<rect x="306" y="1209.84" width="48" height="12.02" class="ram" data-part="symbol"/>
+<rect x="274" y="1211.93" width="32" height="7.85" class="bonnet" data-part="symbol" rx="2"/>
+<rect x="354" y="1211.93" width="32" height="7.85" class="bonnet" data-part="symbol" rx="2"/>
+<rect x="306" y="1223.86" width="48" height="12.02" class="ram" data-part="symbol"/>
+<rect x="274" y="1225.94" width="32" height="7.85" class="bonnet" data-part="symbol" rx="2"/>
+<rect x="354" y="1225.94" width="32" height="7.85" class="bonnet" data-part="symbol" rx="2"/>
+<rect x="306" y="1237.87" width="48" height="12.02" class="ram" data-part="symbol"/>
+<rect x="274" y="1239.96" width="32" height="7.85" class="bonnet" data-part="symbol" rx="2"/>
+<rect x="354" y="1239.96" width="32" height="7.85" class="bonnet" data-part="symbol" rx="2"/>
+<rect x="302.8" y="1251.89" width="54.4" height="11.44" class="connector" data-part="symbol"/>
+</g>
+<g data-role="component" data-component-id="c17-wellhead" data-type="wellhead" data-top-el-m="-1495.9999999999998" data-bottom-el-m="-1499.9999999999998" data-od-in="27.0" data-count="1" data-source="synthetic fixture">
+<rect x="319.2" y="1264.33" width="21.6" height="26" class="housing" data-part="body"/>
+<rect x="314.2" y="1264.33" width="31.6" height="5" class="connector" data-part="symbol"/>
+<rect x="310.2" y="1284.33" width="39.6" height="6" class="housing" data-part="symbol"/>
+</g>
+<g data-role="component" data-component-id="c18-conductor" data-type="conductor" data-top-el-m="-1500.0" data-bottom-el-m="-1545.72" data-od-in="36.0" data-count="1" data-source="synthetic fixture">
+<rect x="315.6" y="1290.33" width="28.8" height="297.18" class="cond" data-part="body"/>
+</g>
+<g data-role="component" data-component-id="c19-conductor" data-type="conductor" data-top-el-m="-1545.72" data-bottom-el-m="-1591.44" data-od-in="36.0" data-count="1" data-source="synthetic fixture">
+<rect x="315.6" y="1587.51" width="28.8" height="297.18" class="cond" data-part="body"/>
+</g>
+<g data-role="component" data-component-id="c20-casing" data-type="casing" data-top-el-m="-1500.0" data-bottom-el-m="-1800.0" data-od-in="22.0" data-count="1" data-source="synthetic fixture" data-clipped="bottom">
+<rect x="321.2" y="1290.33" width="17.6" height="659.36" class="hidden" data-part="body"/>
+<path d="M321.2,1939.69 l8.8,8 l8.8,-8" class="hidden" data-part="symbol"/>
+</g>
+<g data-role="break">
+<polyline points="318.6,483.74 321.45,486.24 324.3,483.74 327.15,481.24 330,483.74 332.85,486.24 335.7,483.74 338.55,481.24 341.4,483.74" class="cut"/>
+<polyline points="318.6,513.74 321.45,511.24 324.3,513.74 327.15,516.24 330,513.74 332.85,511.24 335.7,513.74 338.55,516.24 341.4,513.74" class="cut"/>
+<polyline points="318.6,953.74 321.45,956.24 324.3,953.74 327.15,951.24 330,953.74 332.85,956.24 335.7,953.74 338.55,951.24 341.4,953.74" class="cut"/>
+<polyline points="318.6,983.74 321.45,981.24 324.3,983.74 327.15,986.24 330,983.74 332.85,981.24 335.7,983.74 338.55,986.24 341.4,983.74" class="cut"/>
+<polyline points="84,498.74 254,498.74 259,492.74 265,504.74 270,498.74 276,498.74" class="break"/>
+<polyline points="84,968.74 254,968.74 259,962.74 265,974.74 270,968.74 276,968.74" class="break"/>
+<text x="134" y="725.74" class="note-l"><tspan>Condensed section:</tspan></text>
+<text x="134" y="740.74" class="note-l"><tspan>vertical scale reduced ÷</tspan><tspan data-field="derived.condensed_ratio" data-unit="ratio" data-decimals="1">20.9</tspan></text>
+</g>
+<g data-role="datum-label" data-datum="drill_floor_el_m">
+<polyline points="500,83 490,83 516,24.11 521,24.11" class="leader"/>
+<circle cx="500" cy="83" r="1.8" class="dot"/>
+<text x="524" y="28.11" class="co1"><tspan>Drill floor (RKB)</tspan></text>
+<text x="524" y="43.11" class="co2"><tspan>EL </tspan><tspan data-field="datums.drill_floor_el_m" data-unit="m" data-decimals="2">+25.00</tspan><tspan> m (</tspan><tspan data-field="datums.drill_floor_el_m" data-unit="ft" data-decimals="1">+82.0</tspan><tspan> ft) · </tspan><tspan>Drilling vessel (DP)</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c01-diverter">
+<polyline points="341.4,92.75 490,92.75 516,61.11 521,61.11" class="leader"/>
+<circle cx="341.4" cy="92.75" r="1.8" class="dot"/>
+<text x="524" y="65.11" class="co1" data-component-id="c01-diverter"><tspan>Diverter</tspan></text>
+<text x="524" y="80.11" class="co2" data-component-id="c01-diverter"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">+25.00</tspan><tspan> m (</tspan><tspan data-field="top_el_m" data-unit="ft" data-decimals="1">+82.0</tspan><tspan> ft)</tspan><tspan> · Ø</tspan><tspan data-field="od_in" data-unit="in" data-decimals="0">21</tspan><tspan> in</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c02-upper-flex-joint">
+<polyline points="342,105.75 490,105.75 516,98.11 521,98.11" class="leader"/>
+<circle cx="342" cy="105.75" r="1.8" class="dot"/>
+<text x="524" y="102.11" class="co1" data-component-id="c02-upper-flex-joint"><tspan>Upper flex joint (UFJ)</tspan></text>
+<text x="524" y="117.11" class="co2" data-component-id="c02-upper-flex-joint"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">+22.00</tspan><tspan> m (</tspan><tspan data-field="top_el_m" data-unit="ft" data-decimals="1">+72.2</tspan><tspan> ft)</tspan><tspan> · OD </tspan><tspan class="na" data-field="od_in">n/a</tspan></text>
+</g>
+<g data-role="tensioner">
+<polyline points="461.24,112.25 490,112.25 516,135.11 521,135.11" class="leader"/>
+<circle cx="461.24" cy="112.25" r="1.8" class="dot"/>
+<text x="524" y="139.11" class="co1"><tspan>Riser tensioners, </tspan><tspan data-field="tensioner_system.count" data-unit="count" data-decimals="0">6</tspan><tspan> lines (two shown)</tspan></text>
+<text x="524" y="154.11" class="co2"><tspan>Sheave EL </tspan><tspan data-field="tensioner_system.sheave_el_m" data-unit="m" data-decimals="2">+20.50</tspan><tspan> m · radius </tspan><tspan data-field="tensioner_system.sheave_radius_m" data-unit="m" data-decimals="2">3.50</tspan><tspan> m</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c03-telescopic-joint-inner">
+<polyline points="351.4,158.31 490,158.31 516,172.11 521,172.11" class="leader"/>
+<circle cx="351.4" cy="158.31" r="1.8" class="dot"/>
+<text x="524" y="176.11" class="co1" data-component-id="c03-telescopic-joint-inner"><tspan>Telescopic joint, inner barrel</tspan></text>
+<text x="524" y="191.11" class="co2" data-component-id="c03-telescopic-joint-inner"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">+21.00</tspan><tspan> m (</tspan><tspan data-field="top_el_m" data-unit="ft" data-decimals="1">+68.9</tspan><tspan> ft)</tspan><tspan> · Ø</tspan><tspan data-field="od_in" data-unit="in" data-decimals="0">46</tspan><tspan> in</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c04-tension-ring">
+<polyline points="393,207.62 490,207.62 516,209.11 521,209.11" class="leader"/>
+<circle cx="393" cy="207.62" r="1.8" class="dot"/>
+<text x="524" y="213.11" class="co1" data-component-id="c04-tension-ring"><tspan>Tension ring</tspan></text>
+<text x="524" y="228.11" class="co2" data-component-id="c04-tension-ring"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">+5.83</tspan><tspan> m (</tspan><tspan data-field="top_el_m" data-unit="ft" data-decimals="1">+19.1</tspan><tspan> ft)</tspan><tspan> · Ø</tspan><tspan data-field="od_in" data-unit="in" data-decimals="0">150</tspan><tspan> in</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c05-telescopic-joint-outer">
+<polyline points="352.2,267.05 490,267.05 516,257.05 521,257.05" class="leader"/>
+<circle cx="352.2" cy="267.05" r="1.8" class="dot"/>
+<text x="524" y="261.05" class="co1" data-component-id="c05-telescopic-joint-outer"><tspan>Telescopic joint, outer barrel</tspan></text>
+<text x="524" y="276.05" class="co2" data-component-id="c05-telescopic-joint-outer"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">+5.83</tspan><tspan> m (</tspan><tspan data-field="top_el_m" data-unit="ft" data-decimals="1">+19.1</tspan><tspan> ft)</tspan><tspan> · Ø</tspan><tspan data-field="od_in" data-unit="in" data-decimals="0">48</tspan><tspan> in</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c06-pup-joint">
+<polyline points="341.4,356.21 490,356.21 516,346.21 521,346.21" class="leader"/>
+<circle cx="341.4" cy="356.21" r="1.8" class="dot"/>
+<text x="524" y="350.21" class="co1" data-component-id="c06-pup-joint"><tspan data-field="count" data-unit="count" data-decimals="0">1</tspan><tspan> × </tspan><tspan data-field="joint_length_m" data-unit="ft" data-decimals="0">30</tspan><tspan> ft </tspan><tspan>pup joint</tspan></text>
+<text x="524" y="365.21" class="co2" data-component-id="c06-pup-joint"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">−12.46</tspan><tspan> m (</tspan><tspan data-field="top_el_m" data-unit="ft" data-decimals="1">−40.9</tspan><tspan> ft)</tspan><tspan> · Ø</tspan><tspan data-field="od_in" data-unit="in" data-decimals="0">21</tspan><tspan> × </tspan><tspan data-field="wall_thickness_in" data-unit="in" data-decimals="3">0.875</tspan><tspan> in</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c07-pup-joint">
+<polyline points="341.4,395.83 490,395.83 516,385.83 521,385.83" class="leader"/>
+<circle cx="341.4" cy="395.83" r="1.8" class="dot"/>
+<text x="524" y="389.83" class="co1" data-component-id="c07-pup-joint"><tspan data-field="count" data-unit="count" data-decimals="0">1</tspan><tspan> × </tspan><tspan data-field="joint_length_m" data-unit="ft" data-decimals="0">10</tspan><tspan> ft </tspan><tspan>pup joint</tspan></text>
+<text x="524" y="404.83" class="co2" data-component-id="c07-pup-joint"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">−21.60</tspan><tspan> m (</tspan><tspan data-field="top_el_m" data-unit="ft" data-decimals="1">−70.9</tspan><tspan> ft)</tspan><tspan> · Ø</tspan><tspan data-field="od_in" data-unit="in" data-decimals="0">21</tspan><tspan> × </tspan><tspan data-field="wall_thickness_in" data-unit="in" data-decimals="3">0.875</tspan><tspan> in</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c08-riser-joint-bare">
+<polyline points="341.4,444.74 490,444.74 516,434.74 521,434.74" class="leader"/>
+<circle cx="341.4" cy="444.74" r="1.8" class="dot"/>
+<text x="524" y="438.74" class="co1" data-component-id="c08-riser-joint-bare"><tspan data-field="count" data-unit="count" data-decimals="0">3</tspan><tspan> × </tspan><tspan data-field="joint_length_m" data-unit="ft" data-decimals="0">75</tspan><tspan> ft </tspan><tspan>bare joints</tspan></text>
+<text x="524" y="453.74" class="co2" data-component-id="c08-riser-joint-bare"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">−24.65</tspan><tspan> to </tspan><tspan data-field="bottom_el_m" data-unit="m" data-decimals="2">−93.23</tspan><tspan> m</tspan><tspan> · Ø</tspan><tspan data-field="od_in" data-unit="in" data-decimals="0">21</tspan><tspan> × </tspan><tspan data-field="wall_thickness_in" data-unit="in" data-decimals="3">0.875</tspan><tspan> in</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c09-riser-joint-buoyant">
+<polyline points="353.8,620.1 490,620.1 516,610.1 521,610.1" class="leader"/>
+<circle cx="353.8" cy="620.1" r="1.8" class="dot"/>
+<text x="524" y="614.1" class="co1" data-component-id="c09-riser-joint-buoyant"><tspan data-field="count" data-unit="count" data-decimals="0">25</tspan><tspan> × </tspan><tspan data-field="joint_length_m" data-unit="ft" data-decimals="0">75</tspan><tspan> ft </tspan><tspan>buoyant joints</tspan><tspan> (Ø</tspan><tspan data-field="buoyancy_od_in" data-unit="in" data-decimals="0">52</tspan><tspan> in)</tspan></text>
+<text x="524" y="629.1" class="co2" data-component-id="c09-riser-joint-buoyant"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">−93.23</tspan><tspan> to </tspan><tspan data-field="bottom_el_m" data-unit="m" data-decimals="2">−664.73</tspan><tspan> m</tspan><tspan> · Ø</tspan><tspan data-field="od_in" data-unit="in" data-decimals="0">21</tspan><tspan> in</tspan><tspan> · </tspan><tspan data-field="buoyancy_depth_rating_ft" data-unit="ft" data-decimals="0">3,000</tspan><tspan> ft rating</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c10-riser-joint-buoyant">
+<polyline points="354.6,797.66 490,797.66 516,787.66 521,787.66" class="leader"/>
+<circle cx="354.6" cy="797.66" r="1.8" class="dot"/>
+<text x="524" y="791.66" class="co1" data-component-id="c10-riser-joint-buoyant"><tspan data-field="count" data-unit="count" data-decimals="0">25</tspan><tspan> × </tspan><tspan data-field="joint_length_m" data-unit="ft" data-decimals="0">75</tspan><tspan> ft </tspan><tspan>buoyant joints</tspan><tspan> (Ø</tspan><tspan data-field="buoyancy_od_in" data-unit="in" data-decimals="0">54</tspan><tspan> in)</tspan></text>
+<text x="524" y="806.66" class="co2" data-component-id="c10-riser-joint-buoyant"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">−664.73</tspan><tspan> to </tspan><tspan data-field="bottom_el_m" data-unit="m" data-decimals="2">−1,236.23</tspan><tspan> m</tspan><tspan> · Ø</tspan><tspan data-field="od_in" data-unit="in" data-decimals="0">21</tspan><tspan> in</tspan><tspan> · </tspan><tspan data-field="buoyancy_depth_rating_ft" data-unit="ft" data-decimals="0">5,000</tspan><tspan> ft rating</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c11-riser-joint-bare">
+<polyline points="341.4,1022.74 490,1022.74 516,1012.74 521,1012.74" class="leader"/>
+<circle cx="341.4" cy="1022.74" r="1.8" class="dot"/>
+<text x="524" y="1016.74" class="co1" data-component-id="c11-riser-joint-bare"><tspan data-field="count" data-unit="count" data-decimals="0">10</tspan><tspan> × </tspan><tspan data-field="joint_length_m" data-unit="ft" data-decimals="0">75</tspan><tspan> ft </tspan><tspan>bare joints</tspan></text>
+<text x="524" y="1031.74" class="co2" data-component-id="c11-riser-joint-bare"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">−1,236.23</tspan><tspan> to </tspan><tspan data-field="bottom_el_m" data-unit="m" data-decimals="2">−1,464.83</tspan><tspan> m</tspan><tspan> · Ø</tspan><tspan data-field="od_in" data-unit="in" data-decimals="0">21</tspan><tspan> × </tspan><tspan data-field="wall_thickness_in" data-unit="in" data-decimals="3">0.875</tspan><tspan> in</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c12-termination-joint">
+<polyline points="341.4,1096.41 490,1096.41 516,1071.02 521,1071.02" class="leader"/>
+<circle cx="341.4" cy="1096.41" r="1.8" class="dot"/>
+<text x="524" y="1075.02" class="co1" data-component-id="c12-termination-joint"><tspan data-field="count" data-unit="count" data-decimals="0">1</tspan><tspan> × </tspan><tspan data-field="joint_length_m" data-unit="ft" data-decimals="0">35</tspan><tspan> ft </tspan><tspan>termination joint</tspan></text>
+<text x="524" y="1090.02" class="co2" data-component-id="c12-termination-joint"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">−1,464.83</tspan><tspan> m (</tspan><tspan data-field="top_el_m" data-unit="ft" data-decimals="1">−4,805.9</tspan><tspan> ft)</tspan><tspan> · Ø</tspan><tspan data-field="od_in" data-unit="in" data-decimals="0">21</tspan><tspan> × </tspan><tspan data-field="wall_thickness_in" data-unit="in" data-decimals="3">1.000</tspan><tspan> in</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c13-other">
+<polyline points="341.4,1135.95 490,1135.95 516,1108.02 521,1108.02" class="leader"/>
+<circle cx="341.4" cy="1135.95" r="1.8" class="dot"/>
+<text x="524" y="1112.02" class="co1" data-component-id="c13-other"><tspan>Riser adaptor</tspan></text>
+<text x="524" y="1127.02" class="co2" data-component-id="c13-other"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">−1,475.50</tspan><tspan> m (</tspan><tspan data-field="top_el_m" data-unit="ft" data-decimals="1">−4,840.9</tspan><tspan> ft)</tspan><tspan> · Ø</tspan><tspan data-field="od_in" data-unit="in" data-decimals="0">21</tspan><tspan> in</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c14-lower-flex-joint">
+<polyline points="342,1144.08 490,1144.08 516,1145.02 521,1145.02" class="leader"/>
+<circle cx="342" cy="1144.08" r="1.8" class="dot"/>
+<text x="524" y="1149.02" class="co1" data-component-id="c14-lower-flex-joint"><tspan>Lower flex joint (LFJ)</tspan></text>
+<text x="524" y="1164.02" class="co2" data-component-id="c14-lower-flex-joint"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">−1,477.00</tspan><tspan> m (</tspan><tspan data-field="top_el_m" data-unit="ft" data-decimals="1">−4,845.8</tspan><tspan> ft)</tspan><tspan> · Ø</tspan><tspan data-field="od_in" data-unit="in" data-decimals="0">40</tspan><tspan> in</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c15-lmrp">
+<polyline points="405,1170.08 490,1170.08 516,1182.02 521,1182.02" class="leader"/>
+<circle cx="405" cy="1170.08" r="1.8" class="dot"/>
+<text x="524" y="1186.02" class="co1" data-component-id="c15-lmrp"><tspan>LMRP</tspan></text>
+<text x="524" y="1201.02" class="co2" data-component-id="c15-lmrp"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">−1,478.00</tspan><tspan> m (</tspan><tspan data-field="top_el_m" data-unit="ft" data-decimals="1">−4,849.1</tspan><tspan> ft)</tspan><tspan> · W </tspan><tspan data-field="envelope_width_in" data-unit="in" data-decimals="0">180</tspan><tspan> in</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c16-bop">
+<polyline points="413,1228.58 490,1228.58 516,1219.02 521,1219.02" class="leader"/>
+<circle cx="413" cy="1228.58" r="1.8" class="dot"/>
+<text x="524" y="1223.02" class="co1" data-component-id="c16-bop"><tspan>BOP stack</tspan></text>
+<text x="524" y="1238.02" class="co2" data-component-id="c16-bop"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">−1,485.00</tspan><tspan> m (</tspan><tspan data-field="top_el_m" data-unit="ft" data-decimals="1">−4,872.0</tspan><tspan> ft)</tspan><tspan> · W </tspan><tspan data-field="envelope_width_in" data-unit="in" data-decimals="0">200</tspan><tspan> in</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c17-wellhead">
+<polyline points="343.8,1277.33 490,1277.33 516,1267.33 521,1267.33" class="leader"/>
+<circle cx="343.8" cy="1277.33" r="1.8" class="dot"/>
+<text x="524" y="1271.33" class="co1" data-component-id="c17-wellhead"><tspan>Wellhead housing</tspan></text>
+<text x="524" y="1286.33" class="co2" data-component-id="c17-wellhead"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">−1,496.00</tspan><tspan> m (</tspan><tspan data-field="top_el_m" data-unit="ft" data-decimals="1">−4,908.1</tspan><tspan> ft)</tspan><tspan> · Ø</tspan><tspan data-field="od_in" data-unit="in" data-decimals="0">27</tspan><tspan> in</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c18-conductor">
+<polyline points="347.4,1438.92 490,1438.92 516,1428.92 521,1428.92" class="leader"/>
+<circle cx="347.4" cy="1438.92" r="1.8" class="dot"/>
+<text x="524" y="1432.92" class="co1" data-component-id="c18-conductor"><tspan data-field="count" data-unit="count" data-decimals="0">1</tspan><tspan> × </tspan><tspan data-field="joint_length_m" data-unit="ft" data-decimals="0">150</tspan><tspan> ft </tspan><tspan>conductor</tspan></text>
+<text x="524" y="1447.92" class="co2" data-component-id="c18-conductor"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">−1,500.00</tspan><tspan> m (</tspan><tspan data-field="top_el_m" data-unit="ft" data-decimals="1">−4,921.3</tspan><tspan> ft)</tspan><tspan> · Ø</tspan><tspan data-field="od_in" data-unit="in" data-decimals="0">36</tspan><tspan> × </tspan><tspan data-field="wall_thickness_in" data-unit="in" data-decimals="3">2.000</tspan><tspan> in</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c20-casing">
+<polyline points="341.8,1620.01 490,1620.01 516,1610.01 521,1610.01" class="leader"/>
+<circle cx="341.8" cy="1620.01" r="1.8" class="dot"/>
+<text x="524" y="1614.01" class="co1" data-component-id="c20-casing"><tspan data-field="count" data-unit="count" data-decimals="0">1</tspan><tspan> × </tspan><tspan data-field="joint_length_m" data-unit="ft" data-decimals="1">984.3</tspan><tspan> ft </tspan><tspan>casing</tspan></text>
+<text x="524" y="1629.01" class="co2" data-component-id="c20-casing"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">−1,500.00</tspan><tspan> to </tspan><tspan data-field="bottom_el_m" data-unit="m" data-decimals="2">−1,800.00</tspan><tspan> m</tspan><tspan> · Ø</tspan><tspan data-field="od_in" data-unit="in" data-decimals="0">22</tspan><tspan> × </tspan><tspan data-field="wall_thickness_in" data-unit="in" data-decimals="3">1.000</tspan><tspan> in</tspan></text>
+</g>
+<g data-role="callout" data-component-id="c19-conductor">
+<polyline points="347.4,1736.1 490,1736.1 516,1726.1 521,1726.1" class="leader"/>
+<circle cx="347.4" cy="1736.1" r="1.8" class="dot"/>
+<text x="524" y="1730.1" class="co1" data-component-id="c19-conductor"><tspan data-field="count" data-unit="count" data-decimals="0">1</tspan><tspan> × </tspan><tspan data-field="joint_length_m" data-unit="ft" data-decimals="0">150</tspan><tspan> ft </tspan><tspan>conductor</tspan></text>
+<text x="524" y="1745.1" class="co2" data-component-id="c19-conductor"><tspan>EL </tspan><tspan data-field="top_el_m" data-unit="m" data-decimals="2">−1,545.72</tspan><tspan> m (</tspan><tspan data-field="top_el_m" data-unit="ft" data-decimals="1">−5,071.3</tspan><tspan> ft)</tspan><tspan> · Ø</tspan><tspan data-field="od_in" data-unit="in" data-decimals="0">36</tspan><tspan> × </tspan><tspan data-field="wall_thickness_in" data-unit="in" data-decimals="3">1.500</tspan><tspan> in</tspan></text>
+</g>
+<g data-role="titleblock">
+<rect x="12" y="1963.69" width="836" height="196" class="tb"/>
+<line x1="12" y1="2009.69" x2="848" y2="2009.69" class="tb-line"/>
+<line x1="12" y1="2059.69" x2="848" y2="2059.69" class="tb-line"/>
+<text x="22" y="1983.69" class="tb-title"><tspan>Riser stack-up — synthetic example</tspan></text>
+<text x="22" y="2000.69" class="tb-sub"><tspan>Drilling vessel (DP) · BOP on wellhead (generic test fixture)</tspan></text>
+<line x1="658" y1="1963.69" x2="658" y2="2009.69" class="tb-line"/>
+<text x="668" y="1978.69" class="tb-hdr"><tspan>SOURCE</tspan></text>
+<text x="668" y="1998.69" class="tb-val"><tspan data-field="title_block.document_ref" data-kind="text">SYNTHETIC</tspan></text>
+<text x="22" y="2025.69" class="tb-hdr"><tspan>WATER DEPTH</tspan></text>
+<text x="22" y="2045.69" class="tb-val"><tspan data-field="datums.water_depth_m" data-unit="m" data-decimals="2">1,500.00</tspan><tspan> m (</tspan><tspan data-field="datums.water_depth_m" data-unit="ft" data-decimals="1">4,921.3</tspan><tspan> ft)</tspan></text>
+<line x1="221" y1="2009.69" x2="221" y2="2059.69" class="tb-line"/>
+<text x="231" y="2025.69" class="tb-hdr"><tspan>DRILL FLOOR (RKB) ABOVE MSL</tspan></text>
+<text x="231" y="2045.69" class="tb-val"><tspan data-field="datums.air_gap_m" data-unit="m" data-decimals="2">25.00</tspan><tspan> m (</tspan><tspan data-field="datums.air_gap_m" data-unit="ft" data-decimals="1">82.0</tspan><tspan> ft)</tspan></text>
+<line x1="430" y1="2009.69" x2="430" y2="2059.69" class="tb-line"/>
+<text x="440" y="2025.69" class="tb-hdr"><tspan>STACK-UP LENGTH, TOP TO MUDLINE</tspan></text>
+<text x="440" y="2045.69" class="tb-val"><tspan data-field="reference_totals.stackup_length_m.value" data-unit="m" data-decimals="2">1,525.00</tspan><tspan> m</tspan></text>
+<line x1="639" y1="2009.69" x2="639" y2="2059.69" class="tb-line"/>
+<text x="649" y="2025.69" class="tb-hdr"><tspan>RISER LENGTH, UFJ TO LFJ</tspan></text>
+<text x="649" y="2045.69" class="tb-val"><tspan data-field="reference_totals.riser_length_ufj_lfj_m.value" data-unit="m" data-decimals="2">1,499.00</tspan><tspan> m</tspan></text>
+<text x="22" y="2077.69" class="tb-note"><tspan>Elevations in m (ft) relative to MSL, positive up. Diameters not to scale: horizontal exaggeration ×</tspan><tspan data-field="derived.diameter_exaggeration" data-unit="ratio" data-decimals="1">4.8</tspan><tspan>.</tspan></text>
+<text x="22" y="2094.69" class="tb-note"><tspan>Vertical scale true within each zone; repeated joints condensed ÷</tspan><tspan data-field="derived.condensed_ratio" data-unit="ratio" data-decimals="1">20.9</tspan><tspan> between break lines.</tspan></text>
+<text x="22" y="2111.69" class="tb-note"><tspan>Closure: water depth + air gap </tspan><tspan data-field="derived.wd_plus_air_gap_m" data-unit="m" data-decimals="2">1,525.00</tspan><tspan> m vs stack-up </tspan><tspan data-field="reference_totals.stackup_length_m.value" data-unit="m" data-decimals="2">1,525.00</tspan><tspan> m</tspan><tspan>; residual </tspan><tspan data-field="reference_totals.closure_residual_m.value" data-unit="m" data-decimals="2">0.00</tspan><tspan> m</tspan><tspan> (source-flagged).</tspan></text>
+<text x="22" y="2128.69" class="tb-note"><tspan>† value from design-basis report table; </tspan><tspan class="na">n/a</tspan><tspan> = not available in the sources.</tspan></text>
+</g>
+</svg>

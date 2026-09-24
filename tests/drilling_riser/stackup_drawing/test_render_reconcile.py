@@ -58,9 +58,8 @@ def _component_block(svg: str, cid: str) -> tuple[int, int]:
 
 def _assert_fails(report: dict, check: str) -> None:
     assert report["result"] == "fail"
-    assert _status(report, check) == "fail", (
-        f"{check} did not fail; checks: "
-        + str({k: v["status"] for k, v in report["checks"].items()})
+    assert _status(report, check) == "fail", f"{check} did not fail; checks: " + str(
+        {k: v["status"] for k, v in report["checks"].items()}
     )
 
 
@@ -115,7 +114,9 @@ def test_orphan_element_fails_mapping(spec, svg):
 
 
 def test_unlabelled_group_fails_mapping(spec, svg):
-    tampered = svg.replace("</svg>", '<g><rect x="1" y="1" width="2" height="2"/></g>\n</svg>')
+    tampered = svg.replace(
+        "</svg>", '<g><rect x="1" y="1" width="2" height="2"/></g>\n</svg>'
+    )
 
     _assert_fails(reconcile(spec, tampered), "a_mapping")
 
@@ -143,7 +144,9 @@ def test_component_moved_two_px_fails_positions(spec, svg):
     report = reconcile(spec, tampered)
 
     _assert_fails(report, "b_positions")
-    assert any("c06-pup-joint" in f for f in report["checks"]["b_positions"]["failures"])
+    assert any(
+        "c06-pup-joint" in f for f in report["checks"]["b_positions"]["failures"]
+    )
 
 
 # -- negative: (c) numbers -------------------------------------------------------------------

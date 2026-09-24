@@ -456,6 +456,13 @@ def engine(
         from digitalmodel.drilling_riser.tsj_workflow import router as tsj_sizing
 
         cfg_base = tsj_sizing(cfg_base)
+    elif basename == "riser_stackup_drawing":
+        # #2152: data-driven stack-up SVG + reconcile report. NEW basename.
+        from digitalmodel.drilling_riser.stackup_drawing.workflow import (
+            router as riser_stackup_drawing,
+        )
+
+        cfg_base = riser_stackup_drawing(cfg_base)
     elif basename == "sn_curve":
         from digitalmodel.fatigue.workflow import router as sn_curve
 
