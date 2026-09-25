@@ -127,20 +127,22 @@ def create_simple_gdf():
     12 4  1 4 3 2
 """
     
-    output_file = "test_box.gdf"
+    # One absolute path, written and then referenced, so the model points at
+    # this mesh wherever the script is run from.
+    output_file = str(Path("test_box.gdf").resolve())
     with open(output_file, 'w') as f:
         f.write(gdf_content)
-    
+
     print(f"[OK] Created simple GDF: {output_file}")
-    
+
     # Also create a minimal working model using this GDF
-    create_minimal_with_test_box()
-    
+    create_minimal_with_test_box(output_file)
+
     return output_file
 
-def create_minimal_with_test_box():
-    """Create minimal config with the test box"""
-    
+def create_minimal_with_test_box(mesh_path):
+    """Create minimal config with the test box mesh at ``mesh_path``"""
+
     config = {
         'UnitsSystem': 'SI',
         'SolveType': 'Potential formulation only',
@@ -152,7 +154,7 @@ def create_minimal_with_test_box():
         'WaveHeading': [0],
         'Bodies': [{
             'BodyName': 'TestBox',
-            'BodyMeshFileName': str(Path(__file__).resolve().parents[4] / 'test_box.gdf'),
+            'BodyMeshFileName': str(Path(mesh_path).resolve()),
             'BodyMeshFormat': 'Wamit gdf',
             'BodyMeshLengthUnits': 'm',
             'BodyMeshPosition': [0, 0, 0],

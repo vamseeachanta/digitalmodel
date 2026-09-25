@@ -29,13 +29,32 @@ ORCAWAVE_PATHS = [
     r"C:\Program Files\Orcina\OrcaWave\OrcaWave.exe",
     r"C:\Program Files (x86)\Orcina\OrcaWave\OrcaWave.exe",
 ]
-# An install elsewhere is named by ORCAWAVE_EXE and searched first.
-if os.environ.get("ORCAWAVE_EXE"):
-    ORCAWAVE_PATHS.insert(0, os.environ["ORCAWAVE_EXE"])
+
+
+def configured_orcawave_exe():
+    """The install named by ORCAWAVE_EXE, or None when it is unset.
+
+    An explicit choice that does not exist is an error: falling back to
+    autodetection could run a different solver version.
+    """
+    configured = os.environ.get("ORCAWAVE_EXE")
+    if not configured:
+        return None
+    if not Path(configured).expanduser().is_file():
+        raise FileNotFoundError(
+            f"ORCAWAVE_EXE is set to {configured!r}, which is not a file. "
+            "Correct it or unset it to autodetect; no other installation is "
+            "substituted for an explicit choice."
+        )
+    return configured
 
 
 def find_orcawave_exe():
     """Find OrcaWave executable"""
+    configured = configured_orcawave_exe()
+    if configured:
+        print(f"[OK] Using ORCAWAVE_EXE: {configured}")
+        return configured
     for path in ORCAWAVE_PATHS:
         if Path(path).exists():
             print(f"[OK] Found OrcaWave: {path}")
