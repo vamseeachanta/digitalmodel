@@ -38,6 +38,17 @@ outputs:
     test_expected: 10.53
     tolerance: 0.1
 worked_examples:
+  - description: "Effective bare area of a 100 m x 0.1524 m FBE segment at 20 yr (headline case)"
+    derivation: "A = pi * 0.1524 * 100 = 47.878 m2; f = 0.02 + 0.01 * 20 = 0.22; A_bare = 47.878 * 0.22 = 10.533 m2"
+    inputs:
+      length_m: 100.0
+      outer_diameter_m: 0.1524
+      coating_type: "FBE"
+      years: 20
+    outputs:
+      effective_bare_area_m2: 10.533
+    tolerance: 0.001
+    use_as_test: true
   - description: "Coating breakdown factors by type"
     inputs:
       coating_types:

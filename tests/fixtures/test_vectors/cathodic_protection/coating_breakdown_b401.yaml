@@ -1,13 +1,22 @@
 source_type: standard
-source_description: "DNV-RP-B401 coating breakdown factor calculations for Category III and 3LPP coatings"
+source_description: "Linear coating breakdown f_c = a + b t: DNV-RP-B401 Table 10-4 constants, plus the calc-008 project factors"
 extracted_date: "2026-03-16"
+revised_date: "2026-09-25"
+revision_note: >-
+  #2213: the earlier file labelled a = 0.02, b = 0.00818 as "Category III (DNV-RP-B401
+  Table 10-4)". Table 10-4 Category III is a = 0.02 with b = 0.012 (0-30 m) or 0.008
+  (>30 m); 0.00818 is the slope back-calculated from the calc-008 project factors
+  (0.02 / 0.11 / 0.20 over 22 yr), and 3LPP a = 0.005, b = 0.0002 is likewise a calc-008
+  line-pipe value (incl. field joints), not Table 10-4. Those examples are kept with
+  their true source; examples that actually use Table 10-4 through the package's
+  table lookup are added with derivations.
 legal_scan_passed: true
 category: "cathodic_protection"
 subcategory: "coating_breakdown"
 equations:
   - name: "Coating Breakdown Factor"
     latex: "f_c = a + b \\cdot t"
-    description: "Linear coating breakdown factor at time t per DNV-RP-B401 Table 10-4"
+    description: "Linear coating breakdown factor at time t, capped at 1.0 (DNV-RP-B401 Sec. 6.4 with Table 10-4 constants)"
 inputs:
   - name: "Initial breakdown constant"
     symbol: "a"
@@ -16,7 +25,7 @@ inputs:
   - name: "Annual degradation rate"
     symbol: "b"
     unit: "1/year"
-    test_value: 0.00818
+    test_value: 0.012
   - name: "Elapsed time"
     symbol: "t"
     unit: "years"
@@ -25,52 +34,113 @@ outputs:
   - name: "Breakdown factor"
     symbol: "f_c"
     unit: "dimensionless"
-    test_expected: 0.10998
-    tolerance: 0.005
+    test_expected: 0.152
+    tolerance: 0.0005
 worked_examples:
-  - description: "Category III coating at t=0 (initial)"
+  - description: "Table 10-4 Category III, 0-30 m, mean factor at t = 11 yr (22-yr life)"
+    source: "tests/fixtures/test_vectors/cathodic_protection/datasets/dnv-rp-b401/2005-with-2008-amendments/dnv-rp-b401-2005-with-2008-amendments-table-004.csv (III: a = 0.02, b = 0.012 for 0-30 m)"
+    derivation: "0.02 + 0.012 * 11 = 0.152"
+    inputs:
+      category: "III"
+      depth_band: "0-30"
+      edition: "2005"
+      t_years: 11.0
+    outputs:
+      breakdown_factor: 0.152
+    tolerance: 0.0005
+    use_as_test: true
+  - description: "Table 10-4 Category III, 0-30 m, final factor at t = 22 yr"
+    source: "Table 10-4 CSV as above"
+    derivation: "0.02 + 0.012 * 22 = 0.284"
+    inputs:
+      category: "III"
+      depth_band: "0-30"
+      edition: "2005"
+      t_years: 22.0
+    outputs:
+      breakdown_factor: 0.284
+    tolerance: 0.0005
+    use_as_test: true
+  - description: "Table 10-4 Category III, >30 m row, final factor at t = 22 yr"
+    source: "Table 10-4 CSV as above (III: b = 0.008 for >30 m)"
+    derivation: "0.02 + 0.008 * 22 = 0.196"
+    inputs:
+      category: "III"
+      depth_band: ">30-100"
+      edition: "2005"
+      t_years: 22.0
+    outputs:
+      breakdown_factor: 0.196
+    tolerance: 0.0005
+    use_as_test: true
+  - description: "Table 10-4 Category I, 0-30 m, at t = 12 yr is capped at 1.0"
+    source: "Table 10-4 CSV as above (I: a = 0.10, b = 0.10 for 0-30 m)"
+    derivation: "0.10 + 0.10 * 12 = 1.30 -> capped at 1.0 (bare steel)"
+    inputs:
+      category: "I"
+      depth_band: "0-30"
+      edition: "2005"
+      t_years: 12.0
+    outputs:
+      breakdown_factor: 1.0
+    tolerance: 0.0
+    use_as_test: true
+  - description: "calc-008 'DNV Category III (min.)' project factors: initial at t = 0"
+    source: "docs/domains/cathodic_protection/examples/calc-008-dnv-b401-2005-slhr-deepwater.md, 'Coating Breakdown Factors (Table 4.10)': 0.02 / 0.11 / 0.20; b = (0.20 - 0.02) / 22 = 0.00818 back-calculated (NOT Table 10-4)"
     inputs:
       a: 0.02
       b: 0.00818
       t_years: 0.0
     outputs:
       breakdown_factor: 0.02
+    tolerance: 0.0005
     use_as_test: true
-  - description: "Category III coating at t=11 years (mean, T/2 for 22-yr life)"
+  - description: "calc-008 project factors: mean at t = 11 yr"
+    source: "calc-008 Table 4.10 mean 0.11"
+    derivation: "0.02 + 0.00818 * 11 = 0.10998"
     inputs:
       a: 0.02
       b: 0.00818
       t_years: 11.0
     outputs:
       breakdown_factor: 0.10998
+    tolerance: 0.0005
     use_as_test: true
-  - description: "Category III coating at t=22 years (final)"
+  - description: "calc-008 project factors: final at t = 22 yr"
+    source: "calc-008 Table 4.10 final 0.20"
+    derivation: "0.02 + 0.00818 * 22 = 0.19996"
     inputs:
       a: 0.02
       b: 0.00818
       t_years: 22.0
     outputs:
       breakdown_factor: 0.19996
+    tolerance: 0.0005
     use_as_test: true
-  - description: "3LPP coating at t=0 (initial)"
+  - description: "calc-008 line pipe 3LPP (incl. field joints): initial at t = 0"
+    source: "calc-008 Table 4.10 line pipe 3LPP 0.0050 / 0.0072 / 0.0094; b = (0.0094 - 0.0050) / 22 = 0.0002 (NOT Table 10-4)"
     inputs:
       a: 0.005
       b: 0.0002
       t_years: 0.0
     outputs:
       breakdown_factor: 0.005
+    tolerance: 0.0005
     use_as_test: true
-  - description: "3LPP coating at t=22 years (final)"
+  - description: "calc-008 line pipe 3LPP: final at t = 22 yr"
+    source: "calc-008 Table 4.10 line pipe 3LPP final 0.0094"
+    derivation: "0.005 + 0.0002 * 22 = 0.0094"
     inputs:
       a: 0.005
       b: 0.0002
       t_years: 22.0
     outputs:
       breakdown_factor: 0.0094
+    tolerance: 0.0005
     use_as_test: true
 assumptions:
-  - "Linear degradation model for coating breakdown"
-  - "Category III coating constants: a=0.02, b=0.00818 (DNV-RP-B401 Table 10-4)"
-  - "3LPP coating constants: a=0.005, b=0.0002 (DNV-RP-B401 Table 10-4)"
+  - "Linear degradation model, capped at 1.0"
+  - "Table 10-4: a depends on the paint category only; b on category and the 0-30 / >30 m row"
 references:
-  - "DNV-RP-B401 (2005/2017), Table 10-4"
+  - "DNV-RP-B401 (2005 with 2008 amendments), Table 10-4"
+  - "docs/domains/cathodic_protection/examples/calc-008-dnv-b401-2005-slhr-deepwater.md"
