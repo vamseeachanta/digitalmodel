@@ -2,6 +2,7 @@
   "note": "Every FE state declared here must have a committed receipt <state>.receipt.json; a missing receipt fails CI (tests/ansys/test_crack_receipts.py).",
   "states": [
     {"state": "p0a_verification", "kind": "verification"},
-    {"state": "p0b_uncracked", "kind": "weldolet_uncracked"}
+    {"state": "p0b_uncracked", "kind": "weldolet_uncracked"},
+    {"state": "p0b_fullcirc_a2p35", "kind": "weldolet_crack"}
   ]
 }

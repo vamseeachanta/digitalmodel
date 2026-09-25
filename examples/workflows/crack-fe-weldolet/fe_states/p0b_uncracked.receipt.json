@@ -46,12 +46,12 @@
   "start_node_correction": "K at front node 1 from a second SIFS definition starting at node 2 (MAPDL 2026 R1 perturbs K at the first CENC node of a closed front; J is unaffected); sign factors from reference node 3"
  },
  "run": {
-  "producing_commit": "b4ea0f12e434ed9fafc9e1ada853e80308b74b3d",
+  "producing_commit": "e5a316a9f460c1209dd04adb380d6b54355f9d78",
   "generator_tree_clean": true,
   "generator_files": {
-   "src/digitalmodel/ansys/weldolet_crack.py": "4d8aaa439defcb72e78fff732b5fc52f34ae4283",
+   "src/digitalmodel/ansys/weldolet_crack.py": "2918496726ec453d04c67f00d58df1e888c027f9",
    "src/digitalmodel/ansys/crack_verification.py": "aefde929d711884b55ac317cbe3208265114cd63",
-   "src/digitalmodel/ansys/cint_parser.py": "841b09d2e92d267e3400e9632829d50d41e19c97"
+   "src/digitalmodel/ansys/cint_parser.py": "9ebc24728614c956ea6bf26f419c2e4365f05c07"
   },
   "mapdl_version": "26.1",
   "mapdl_release": "2026 R1",
@@ -62,7 +62,7 @@
  "meshes": [
   {
    "level": 0,
-   "deck_sha256": "1fe39dedb1c03181f85ae9911564f32790eed9e0dfc3164eb7839757666ff579",
+   "deck_sha256": "da68ba67caedc72114f917a299d5da827324014e3cc8883253dc67007c8b5581",
    "run": {
     "argv": [
      "MAPDL.exe",
@@ -76,16 +76,16 @@
      "4"
     ],
     "mapdl_version": "26.1",
-    "solve_seconds": 151.0
+    "solve_seconds": 178.6
    },
    "artifacts": {
     "reac": {
      "path": "solved/p0b_uncracked/weldolet_reac_L0.txt",
-     "sha256": "259516782cc2012ec50435de08deef27d6a3429a809abde4c159c4b0e89d1201"
+     "sha256": "53bacd98d2f6e02d51a703cde039ecec3aefae50b09105a598bb525f1b2f9702"
     },
     "path": {
      "path": "solved/p0b_uncracked/weldolet_path_L0.txt",
-     "sha256": "623539650150e9cb4df016727f6db07d66b881cf8d67761269e7200b2ac49673"
+     "sha256": "f32fdb93e909c7c989bfb27e7b7cd7255e9d76bdf55b84279e6f3fee390cf9a6"
     },
     "hoop": {
      "path": "solved/p0b_uncracked/weldolet_hoop_L0.txt",
@@ -118,17 +118,18 @@
     "n_ligament_nodes": null,
     "extras": {
      "n_fixed_nodes": 1012.0,
-     "reaction_y_sum": -3.37472537737e-06,
-     "reaction_z_sum": 1.7709014557e-06
+     "reaction_y_sum": -3.40866538906e-06,
+     "reaction_z_sum": 1.71587650755e-06
     }
    },
    "front": [],
    "derived": {
     "sigma_ref": {
-     "basis": "FE-linearised stress normal to the fusion face, uncracked model (owner card B02); paths from the root (rho = C/2) to the fillet toe on v = 0",
+     "basis": "FE-linearised stress of the uncracked model (owner card B02). Fusion-face plane: stress normal to the fusion face (SRR) on paths 1-3, from the root (rho = C/2) to the fillet toe on v = 0. Crotch plane: hoop stress (SHH, normal to y = 0) on path 4, radially from the bore at the a0 crotch-flaw centre height, and on path 1 (the root line at the crotch).",
      "paths": [
       {
        "path": 1,
+       "plane": "fusion_face",
        "theta_deg": 0.0,
        "start_xyz_mm": [
         11.905,
@@ -145,12 +146,17 @@
        "component": "SRR (normal to the fusion face, CS 11 radial)",
        "sigma_m_mpa": 3.4300545709743755,
        "sigma_b_mpa": 4.607347974608784,
-       "shear_rh_membrane_mpa": 3.647880080478438e-10,
+       "shear_rh_membrane_mpa": 3.7629645818452357e-10,
        "shear_ra_membrane_mpa": -6.337278444669571,
-       "peak_srr_mpa": 15.59924173
+       "peak_srr_mpa": 15.59924173,
+       "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
+       "hoop_sigma_m_mpa": 56.28173976968747,
+       "hoop_sigma_b_mpa": 19.845734883620647,
+       "peak_shh_mpa": 89.96165848
       },
       {
        "path": 2,
+       "plane": "fusion_face",
        "theta_deg": 45.0,
        "start_xyz_mm": [
         8.41810623,
@@ -165,14 +171,19 @@
        "length_mm": 8.601246778,
        "n_samples": 129,
        "component": "SRR (normal to the fusion face, CS 11 radial)",
-       "sigma_m_mpa": 1.317735377110225,
-       "sigma_b_mpa": -2.9957723494633166,
+       "sigma_m_mpa": 1.3177353771039821,
+       "sigma_b_mpa": -2.995772349471821,
        "shear_rh_membrane_mpa": 6.4850808787964676,
        "shear_ra_membrane_mpa": -3.844061331234873,
-       "peak_srr_mpa": 19.4669356
+       "peak_srr_mpa": 19.4669356,
+       "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
+       "hoop_sigma_m_mpa": 42.165328883429865,
+       "hoop_sigma_b_mpa": -18.74850821960826,
+       "peak_shh_mpa": 91.70012779
       },
       {
        "path": 3,
+       "plane": "fusion_face",
        "theta_deg": 90.0,
        "start_xyz_mm": [
         0.0,
@@ -190,8 +201,39 @@
        "sigma_m_mpa": -0.5657399328010305,
        "sigma_b_mpa": -11.292622735596085,
        "shear_rh_membrane_mpa": 9.17100983411439,
-       "shear_ra_membrane_mpa": 7.2443149315623e-09,
-       "peak_srr_mpa": 24.10725434
+       "shear_ra_membrane_mpa": 7.2201384560424375e-09,
+       "peak_srr_mpa": 24.10725434,
+       "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
+       "hoop_sigma_m_mpa": 21.98870942734008,
+       "hoop_sigma_b_mpa": -35.51791615011585,
+       "peak_shh_mpa": 101.8081776
+      },
+      {
+       "path": 4,
+       "plane": "crotch",
+       "theta_deg": 0.0,
+       "start_xyz_mm": [
+        11.905,
+        0.0,
+        82.3
+       ],
+       "end_xyz_mm": [
+        20.465,
+        0.0,
+        82.3
+       ],
+       "length_mm": 8.56,
+       "n_samples": 129,
+       "component": "SRR (normal to the fusion face, CS 11 radial)",
+       "sigma_m_mpa": 0.32499263039656134,
+       "sigma_b_mpa": 3.4552642396946625,
+       "shear_rh_membrane_mpa": -7.510712427630467e-11,
+       "shear_ra_membrane_mpa": -1.6413223970910658,
+       "peak_srr_mpa": 5.991521282,
+       "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
+       "hoop_sigma_m_mpa": 71.93364660156247,
+       "hoop_sigma_b_mpa": 23.196511129011213,
+       "peak_shh_mpa": 108.7310756
       }
      ]
     },
@@ -221,7 +263,7 @@
   },
   {
    "level": 1,
-   "deck_sha256": "66abb994643acbed86fd9a7446ea556a2b60da690bcd0800547f9287eaeb222c",
+   "deck_sha256": "c07a52de82ef489cf05d3789864f9987c6da9787c9b3ce862049aeb2beaf0c30",
    "run": {
     "argv": [
      "MAPDL.exe",
@@ -235,16 +277,16 @@
      "4"
     ],
     "mapdl_version": "26.1",
-    "solve_seconds": 376.3
+    "solve_seconds": 429.2
    },
    "artifacts": {
     "reac": {
      "path": "solved/p0b_uncracked/weldolet_reac_L1.txt",
-     "sha256": "d6eb86cff2a5d6606ecb203e92f31e6f0ddc53456abbacada207c15b3fe90f6d"
+     "sha256": "1d00d757ea350da5736638459f26fa358f4b7cf8909fa1b64cfc55cb3a5743ef"
     },
     "path": {
      "path": "solved/p0b_uncracked/weldolet_path_L1.txt",
-     "sha256": "9c851b50861651cd491c7cc42deb21ed1bcb950cbd5a7f0f597656474f3f994a"
+     "sha256": "e3921feac52917a6998249df0c23932ec07b30562210fa343cf0b6baab5c3baf"
     },
     "hoop": {
      "path": "solved/p0b_uncracked/weldolet_hoop_L1.txt",
@@ -277,17 +319,18 @@
     "n_ligament_nodes": null,
     "extras": {
      "n_fixed_nodes": 1380.0,
-     "reaction_y_sum": -3.0913896012e-06,
-     "reaction_z_sum": 1.94364212192e-06
+     "reaction_y_sum": -3.08326558951e-06,
+     "reaction_z_sum": 1.96045267842e-06
     }
    },
    "front": [],
    "derived": {
     "sigma_ref": {
-     "basis": "FE-linearised stress normal to the fusion face, uncracked model (owner card B02); paths from the root (rho = C/2) to the fillet toe on v = 0",
+     "basis": "FE-linearised stress of the uncracked model (owner card B02). Fusion-face plane: stress normal to the fusion face (SRR) on paths 1-3, from the root (rho = C/2) to the fillet toe on v = 0. Crotch plane: hoop stress (SHH, normal to y = 0) on path 4, radially from the bore at the a0 crotch-flaw centre height, and on path 1 (the root line at the crotch).",
      "paths": [
       {
        "path": 1,
+       "plane": "fusion_face",
        "theta_deg": 0.0,
        "start_xyz_mm": [
         11.905,
@@ -304,12 +347,17 @@
        "component": "SRR (normal to the fusion face, CS 11 radial)",
        "sigma_m_mpa": 3.4522436515705484,
        "sigma_b_mpa": 4.588417494124302,
-       "shear_rh_membrane_mpa": 7.453945790795392e-10,
+       "shear_rh_membrane_mpa": 7.611143992601018e-10,
        "shear_ra_membrane_mpa": -6.3309030307055085,
-       "peak_srr_mpa": 15.63194942
+       "peak_srr_mpa": 15.63194942,
+       "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
+       "hoop_sigma_m_mpa": 56.30971177054688,
+       "hoop_sigma_b_mpa": 19.76285440142453,
+       "peak_shh_mpa": 89.85863876
       },
       {
        "path": 2,
+       "plane": "fusion_face",
        "theta_deg": 45.0,
        "start_xyz_mm": [
         8.41810623,
@@ -324,14 +372,19 @@
        "length_mm": 8.601246778,
        "n_samples": 129,
        "component": "SRR (normal to the fusion face, CS 11 radial)",
-       "sigma_m_mpa": 1.317711740635179,
-       "sigma_b_mpa": -2.9975775942164,
-       "shear_rh_membrane_mpa": 6.485931620143471,
+       "sigma_m_mpa": 1.3177117406648322,
+       "sigma_b_mpa": -2.9975775941806813,
+       "shear_rh_membrane_mpa": 6.485931620151274,
        "shear_ra_membrane_mpa": -3.8370915654830786,
-       "peak_srr_mpa": 19.46852088
+       "peak_srr_mpa": 19.46852088,
+       "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
+       "hoop_sigma_m_mpa": 42.146703382132806,
+       "hoop_sigma_b_mpa": -18.71385900176924,
+       "peak_shh_mpa": 91.65043282
       },
       {
        "path": 3,
+       "plane": "fusion_face",
        "theta_deg": 90.0,
        "start_xyz_mm": [
         0.0,
@@ -349,8 +402,39 @@
        "sigma_m_mpa": -0.5817168190079792,
        "sigma_b_mpa": -11.274351863745215,
        "shear_rh_membrane_mpa": 9.16359650750161,
-       "shear_ra_membrane_mpa": 7.116973330594345e-09,
-       "peak_srr_mpa": 24.08642942
+       "shear_ra_membrane_mpa": 7.101774129674967e-09,
+       "peak_srr_mpa": 24.08642942,
+       "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
+       "hoop_sigma_m_mpa": 22.00725326436764,
+       "hoop_sigma_b_mpa": -35.504656220897786,
+       "peak_shh_mpa": 101.7976604
+      },
+      {
+       "path": 4,
+       "plane": "crotch",
+       "theta_deg": 0.0,
+       "start_xyz_mm": [
+        11.905,
+        0.0,
+        82.3
+       ],
+       "end_xyz_mm": [
+        20.465,
+        0.0,
+        82.3
+       ],
+       "length_mm": 8.56,
+       "n_samples": 129,
+       "component": "SRR (normal to the fusion face, CS 11 radial)",
+       "sigma_m_mpa": 0.3435481558744529,
+       "sigma_b_mpa": 3.440582461211925,
+       "shear_rh_membrane_mpa": 8.160689293201201e-11,
+       "shear_ra_membrane_mpa": -1.636848093222219,
+       "peak_srr_mpa": 5.989913571,
+       "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
+       "hoop_sigma_m_mpa": 71.94325722929689,
+       "hoop_sigma_b_mpa": 23.10805227546998,
+       "peak_shh_mpa": 108.5934711
       }
      ]
     },
@@ -416,13 +500,26 @@
    "value": 0.0,
    "limit": 0.0,
    "detail": ""
+  },
+  "g_j_mesh": {
+   "status": "not_applicable",
+   "value": null,
+   "limit": null,
+   "detail": "not applicable: the model has no crack front"
+  },
+  "c_contour_legacy": {
+   "status": "not_applicable",
+   "value": null,
+   "limit": null,
+   "detail": "not applicable: the model has no crack front"
   }
  },
  "sigma_ref": {
-  "basis": "FE-linearised stress normal to the fusion face, uncracked model (owner card B02); paths from the root (rho = C/2) to the fillet toe on v = 0",
+  "basis": "FE-linearised stress of the uncracked model (owner card B02). Fusion-face plane: stress normal to the fusion face (SRR) on paths 1-3, from the root (rho = C/2) to the fillet toe on v = 0. Crotch plane: hoop stress (SHH, normal to y = 0) on path 4, radially from the bore at the a0 crotch-flaw centre height, and on path 1 (the root line at the crotch).",
   "paths": [
    {
     "path": 1,
+    "plane": "fusion_face",
     "theta_deg": 0.0,
     "start_xyz_mm": [
      11.905,
@@ -439,12 +536,17 @@
     "component": "SRR (normal to the fusion face, CS 11 radial)",
     "sigma_m_mpa": 3.4522436515705484,
     "sigma_b_mpa": 4.588417494124302,
-    "shear_rh_membrane_mpa": 7.453945790795392e-10,
+    "shear_rh_membrane_mpa": 7.611143992601018e-10,
     "shear_ra_membrane_mpa": -6.3309030307055085,
-    "peak_srr_mpa": 15.63194942
+    "peak_srr_mpa": 15.63194942,
+    "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
+    "hoop_sigma_m_mpa": 56.30971177054688,
+    "hoop_sigma_b_mpa": 19.76285440142453,
+    "peak_shh_mpa": 89.85863876
    },
    {
     "path": 2,
+    "plane": "fusion_face",
     "theta_deg": 45.0,
     "start_xyz_mm": [
      8.41810623,
@@ -459,14 +561,19 @@
     "length_mm": 8.601246778,
     "n_samples": 129,
     "component": "SRR (normal to the fusion face, CS 11 radial)",
-    "sigma_m_mpa": 1.317711740635179,
-    "sigma_b_mpa": -2.9975775942164,
-    "shear_rh_membrane_mpa": 6.485931620143471,
+    "sigma_m_mpa": 1.3177117406648322,
+    "sigma_b_mpa": -2.9975775941806813,
+    "shear_rh_membrane_mpa": 6.485931620151274,
     "shear_ra_membrane_mpa": -3.8370915654830786,
-    "peak_srr_mpa": 19.46852088
+    "peak_srr_mpa": 19.46852088,
+    "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
+    "hoop_sigma_m_mpa": 42.146703382132806,
+    "hoop_sigma_b_mpa": -18.71385900176924,
+    "peak_shh_mpa": 91.65043282
    },
    {
     "path": 3,
+    "plane": "fusion_face",
     "theta_deg": 90.0,
     "start_xyz_mm": [
      0.0,
@@ -484,8 +591,39 @@
     "sigma_m_mpa": -0.5817168190079792,
     "sigma_b_mpa": -11.274351863745215,
     "shear_rh_membrane_mpa": 9.16359650750161,
-    "shear_ra_membrane_mpa": 7.116973330594345e-09,
-    "peak_srr_mpa": 24.08642942
+    "shear_ra_membrane_mpa": 7.101774129674967e-09,
+    "peak_srr_mpa": 24.08642942,
+    "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
+    "hoop_sigma_m_mpa": 22.00725326436764,
+    "hoop_sigma_b_mpa": -35.504656220897786,
+    "peak_shh_mpa": 101.7976604
+   },
+   {
+    "path": 4,
+    "plane": "crotch",
+    "theta_deg": 0.0,
+    "start_xyz_mm": [
+     11.905,
+     0.0,
+     82.3
+    ],
+    "end_xyz_mm": [
+     20.465,
+     0.0,
+     82.3
+    ],
+    "length_mm": 8.56,
+    "n_samples": 129,
+    "component": "SRR (normal to the fusion face, CS 11 radial)",
+    "sigma_m_mpa": 0.3435481558744529,
+    "sigma_b_mpa": 3.440582461211925,
+    "shear_rh_membrane_mpa": 8.160689293201201e-11,
+    "shear_ra_membrane_mpa": -1.636848093222219,
+    "peak_srr_mpa": 5.989913571,
+    "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
+    "hoop_sigma_m_mpa": 71.94325722929689,
+    "hoop_sigma_b_mpa": 23.10805227546998,
+    "peak_shh_mpa": 108.5934711
    }
   ]
  },

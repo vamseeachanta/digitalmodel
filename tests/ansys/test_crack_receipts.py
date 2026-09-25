@@ -217,6 +217,45 @@ def test_stop_rule_evidence_under_owner_g13_g14(pair):
     assert res["c_contour_legacy"].status == "fail"
 
 
+CROTCH_EVIDENCE = EVIDENCE / "crotch"
+
+
+def test_crotch_stop_rule_evidence_fails_only_guard_g():
+    """Crotch-plane a0 (owner card G15), solved at the current generator: the
+    (L1, L2) receipt is genuine and current, and guard (g) is its only failure
+    (J at the governing free-surface end node changes by more than 1 %)."""
+    receipt = json.loads(
+        (CROTCH_EVIDENCE / "p0b_crotch_a2p35.receipt.json").read_text("utf-8")
+    )
+    assert cint_parser.validate_receipt_schema(receipt) == []
+    assert crack_receipt.provenance_problems(receipt, REPO, []) == []
+    assert crack_receipt.artifact_problems(receipt, CROTCH_EVIDENCE) == []
+    for mesh in receipt["meshes"]:
+        assert crack_receipt.regenerate_deck_sha256(receipt, mesh["level"]) == mesh[
+            "deck_sha256"
+        ]
+    assert [m["level"] for m in receipt["meshes"]] == [1, 2]
+    failed = sorted(n for n in cint_parser.GUARD_NAMES
+                    if receipt["guards"][n]["status"] != "pass")
+    assert failed == ["g_j_mesh"]
+    assert receipt["guards"]["g_j_mesh"]["value"] > 0.01
+    assert "p0b_crotch_a2p35" not in DECLARED
+
+
+def test_crotch_first_pair_also_fails_only_guard_g():
+    """(L0, L1) re-evaluated from the committed artifacts: again only (g)."""
+    base = CROTCH_EVIDENCE / "solved" / "p0b_crotch_a2p35"
+    receipt = json.loads(
+        (CROTCH_EVIDENCE / "p0b_crotch_a2p35.receipt.json").read_text("utf-8")
+    )
+    cint = {lv: (base / f"weldolet_cint_L{lv}.txt").read_text("utf-8") for lv in (0, 1)}
+    reac = {lv: (base / f"weldolet_reac_L{lv}.txt").read_text("utf-8") for lv in (0, 1)}
+    res = cint_parser.evaluate_guards(cint, reac, front_geometry=receipt["front_geometry"])
+    failed = sorted(n for n in cint_parser.GUARD_NAMES if res[n].status != "pass")
+    assert failed == ["g_j_mesh"]
+    assert res["g_j_mesh"].value > 0.01
+
+
 # --------------------------------------------------------------------------- #
 # Negative fixtures: each check fails for its own reason
 # --------------------------------------------------------------------------- #
