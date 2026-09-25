@@ -1,0 +1,7 @@
+"Table 5-1 Recommended design mean current densities
+(in A/m2) as a function of internal fluid temperature",,,,
+"Exposure
+Condition",Internal Fluid Temperature (°C),,,
+,≤ 50,>50 - 80,>80 - 120,>120
+Non-Buried*),0.050,0.060,0.070,0.100
+Buried*),0.020,0.025,0.030,0.040
