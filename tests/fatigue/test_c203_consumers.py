@@ -8,10 +8,12 @@ hand calculation.
 Representation per path (unchanged API shape):
 
 * structural.fatigue.sn_curves (and its re-export digitalmodel.fatigue
-  .get_dnv_curve): PowerLawSNCurve, in air. The m1 segment with the tabulated
-  fatigue limit at 1e7 cycles as the cut-off; in air the knee is also at 1e7.
+  .get_dnv_curve): PowerLawSNCurve, in air, carrying both segments: m1 above
+  the 1e7 knee and the tabulated log a2 with m2 = 5 below it, no cut-off
+  (PR #2195 review r1 finding 2). The tabulated fatigue limit is kept for
+  reporting.
 * signal_processing...fatigue.curves.SNCurve('standard', DNV): bilinear, in
-  air, knee at 1e7, m2 = 5 from continuity, cut-off at the tabulated limit.
+  air, knee at 1e7, tabulated log a2 with m2 = 5 below it, no cut-off.
 * subsea.pipeline.free_span._bilinear_sn: bilinear with its knee per
   environment (1e7 air, 1e6 CP) and the tabulated log a2.
 """
@@ -121,12 +123,15 @@ def test_structural_d_air_100_mpa_hand_calc():
     )
 
 
-def test_structural_below_the_tabulated_limit_is_infinite():
+def test_structural_below_the_tabulated_limit_uses_m2():
     """E air: the tabulated limit is 46.78 MPa (the old 45.54 was not in the
-    table), so 46.0 MPa is now below the cut-off."""
+    table). 46.0 MPa is below it and lies on the m2 = 5 segment, with no
+    cut-off (PR #2195 review r1 finding 2): 10^15.350 / 46^5 = 1.08695e7."""
     from digitalmodel.structural.fatigue.sn_curves import get_dnv_curve
 
-    assert math.isinf(get_dnv_curve("E").get_allowable_cycles(46.0))
+    assert get_dnv_curve("E").get_allowable_cycles(46.0) == pytest.approx(
+        10**15.350 / 46.0**5, rel=1e-12
+    )
     assert get_dnv_curve("E").fatigue_limit == pytest.approx(46.78)
 
 
@@ -167,9 +172,10 @@ def test_yaml_holds_no_dnv_curve_copy():
     assert "multislope" in data["standards"]["DNV"]
 
 
-def test_yaml_dnv_curves_are_ignored_if_present(tmp_path, monkeypatch):
+def test_yaml_dnv_curves_are_rejected_if_present(tmp_path, monkeypatch):
     """A data-dir YAML that still carries stale DNV curves cannot override the
-    verified tables."""
+    verified tables, and is not dropped silently either: loading raises
+    (PR #2195 review r1 finding 4; see test_c203_variable_amplitude)."""
     from digitalmodel.structural.fatigue.sn_curves import StandardSNCurves
 
     d = tmp_path / "fatigue"
@@ -182,8 +188,11 @@ def test_yaml_dnv_curves_are_ignored_if_present(tmp_path, monkeypatch):
     monkeypatch.setattr(
         StandardSNCurves, "DNV_CURVES", dict(StandardSNCurves.DNV_CURVES)
     )
-    c = StandardSNCurves.get_curve("DNV", "D")
-    assert math.log10(c.A) == pytest.approx(12.164, abs=1e-9)
+    with pytest.raises(ValueError, match="standards.DNV.curves"):
+        StandardSNCurves.get_curve("DNV", "D")
+    assert math.log10(StandardSNCurves.DNV_CURVES["D"]["A"]) == pytest.approx(
+        12.164, abs=1e-9
+    )
 
 
 # -- signal_processing ... fatigue.curves (finding 1) ---------------------------
@@ -323,14 +332,14 @@ def _span_input(**kw):
 
 
 def test_span_fatigue_damage_uses_the_verified_cp_curve():
-    """SpanFatigueDamage reaches _bilinear_sn directly. D CP at 60 MPa is above
-    the tabulated fatigue limit (52.63 MPa; the same value in Tables 2-1 and
-    2-2), so the cut-off does not apply and N = 5.191e6 (m2 below the 1e6 knee).
-    B1 CP at 200 MPa gives 516,274 (m1)."""
+    """SpanFatigueDamage reaches _bilinear_sn directly. D CP at 60 MPa: N =
+    5.191e6 (m2 below the 1e6 knee). CP has no cut-off (PR #2195 review r1
+    finding 3): 52 MPa, below the in-air limit 52.63 MPa, gives 10^15.606 /
+    52^5 = 1.0617e7 (was infinite). B1 CP at 200 MPa gives 516,274 (m1)."""
     from digitalmodel.subsea.pipeline.free_span import SpanFatigueDamage
 
     d = SpanFatigueDamage(_span_input(sn_curve_class="D"), 0.5, 60.0)
     assert d.allowable_cycles(60.0) == pytest.approx(5.191e6, rel=1e-3)
-    assert math.isinf(d.allowable_cycles(52.0))  # below the 52.63 MPa limit
+    assert d.allowable_cycles(52.0) == pytest.approx(1.0617e7, rel=1e-4)
     b1 = SpanFatigueDamage(_span_input(sn_curve_class="B1"), 0.5, 200.0)
     assert b1.allowable_cycles(200.0) == pytest.approx(516_274, rel=1e-5)
