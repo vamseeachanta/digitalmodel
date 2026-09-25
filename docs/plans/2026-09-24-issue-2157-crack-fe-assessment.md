@@ -423,4 +423,17 @@ Public sources for the P0 values are backed up at `/mnt/ace/docs/literature/mate
 - **D03 (repo ecosystem only, from the owner's note "no HF flow"):** crack-front FE state tables live in `digitalmodel` `data/` with a manifest, registered in the domain-database index. They are not published to Hugging Face.
 - **D04 (extend structural-ffs):** result lookups are generated from `CrackAssessmentResult` in P3.
 
+## P0b stop-rule decisions (owner save 2026-09-25T16:30Z, `crack-fe-2157-decisions (6).json`)
+
+P0b stopped at a₀ = 2.35 mm on the full-circumference fusion-face flaw. Evidence is merged in `08176d3e` under `fe_states/stop_rule_evidence/`. The definitions below are fixed **before** any further FE run.
+
+- **G13, guard (c) redefined.** Contour independence is evaluated as:
+  - (i) the K spread over the last three contours at each front node, normalised by the maximum |K| along the whole front, ≤ 3 %; **and**
+  - (ii) the J spread over the last three contours at each front node, normalised by that node's mean J, ≤ 3 %.
+
+  The tolerance is unchanged. The reason for the change is that the previous metric, (max − min)/|mean| per node, is undefined where K_I passes through zero on the front, which is a physical feature that no refinement or submodel removes. The previous definition and the failing evidence stay in the record.
+- **G14, governing K.** The governing crack driving force is K = √(E′ J), with E′ = E/(1 − ν²) and J from the converged contours. The mode mix (K_I, K_II, K_III) comes from the interaction integral and is reported alongside. A new mesh-convergence guard (g) is added: J at the governing node changes by ≤ 1 % between the two finest meshes.
+- **G15, second crack plane.** A root flaw in the radial–axial plane at the crotch, normal to the run-pipe hoop stress, is added as a second base case, with the same a₀ and depth states. The governing case at each depth is the worse of the two planes. The fusion-face plane gives a crotch K of about 1.39 MPa√m, below ΔK_th, so it predicts no growth. Treating that as the answer without the hoop-opened plane could be non-conservative. That the hoop-opened plane governs is a hypothesis until it is modelled.
+- **D02:** the owner kept the private-catalogue selection in two saves. The fitting-dimension table is not built as public and waits for the owner.
+
 ## Complexity: T3
