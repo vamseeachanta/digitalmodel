@@ -15,6 +15,7 @@ import argparse
 import importlib.util
 import json
 import os
+import sys
 from pathlib import Path
 
 import pytest
@@ -40,8 +41,11 @@ SYNTHETIC = {
 
 
 def _load():
-    spec = importlib.util.spec_from_file_location("_s7_sanitize_under_test", SCRIPT)
+    name = "_s7_sanitize_under_test"
+    spec = importlib.util.spec_from_file_location(name, SCRIPT)
     mod = importlib.util.module_from_spec(spec)
+    # dataclasses resolve their module through sys.modules.
+    sys.modules[name] = mod
     spec.loader.exec_module(mod)
     return mod
 
