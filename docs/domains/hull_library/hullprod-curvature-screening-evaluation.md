@@ -50,7 +50,7 @@ change the form, so it produces no measure of how a variant's surface differs fr
 
 ## 3. What was run
 
-HullProd installed cleanly into a Python 3.12 venv on ACMA-WS014 (Windows 11), bundling
+HullProd installed cleanly into a Python 3.12 venv on the dev-primary Windows 11 workstation, bundling
 OpenCascade via `cadquery-ocp`. Each hull assessed in 0.4 to 1.2 s.
 
 Our panel meshes are WAMIT GDF. HullProd does not read GDF, so the spike adds a 60-line
