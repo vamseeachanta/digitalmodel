@@ -93,13 +93,19 @@ class PowerLawSNCurve(SNCurveBase):
     This is the most common form for high-cycle fatigue analysis.
     """
 
-    def __init__(self,
-                 name: str,
-                 A: float,
-                 m: float,
-                 fatigue_limit: float = 0.0,
-                 cutoff_cycles: float = 1e7,
-                 material: Optional[MaterialProperties] = None):
+    def __init__(
+        self,
+        name: str,
+        A: float,
+        m: float,
+        fatigue_limit: float = 0.0,
+        cutoff_cycles: float = 1e7,
+        material: Optional[MaterialProperties] = None,
+        *,
+        A2: Optional[float] = None,
+        m2: Optional[float] = None,
+        knee_cycles: Optional[float] = None,
+    ):
         """
         Initialize power law S-N curve
 
@@ -112,17 +118,36 @@ class PowerLawSNCurve(SNCurveBase):
         m : float
             Fatigue strength exponent (slope)
         fatigue_limit : float, default=0.0
-            Constant amplitude fatigue limit (CAFL) in MPa
+            Constant amplitude fatigue limit (CAFL) in MPa. With a second
+            segment it is kept for reporting only and is not a cut-off.
         cutoff_cycles : float, default=1e7
-            Cycle cutoff for fatigue limit application
+            Cycle cutoff for fatigue limit application (single slope only)
         material : MaterialProperties, optional
             Material properties
+        A2, m2, knee_cycles : float, optional
+            Second segment, N = A2 * S^(-m2) below the knee stress
+            (A / knee_cycles)^(1/m). Give all three or none. With a second
+            segment the curve has no cut-off, as DNV-RP-C203 (2011) section
+            2.4 prescribes for variable-amplitude loading (#2165).
         """
         super().__init__(name, material)
         self.A = A
         self.m = m
         self.fatigue_limit = fatigue_limit
         self.cutoff_cycles = cutoff_cycles
+        given = [v is not None for v in (A2, m2, knee_cycles)]
+        if any(given) and not all(given):
+            raise ValueError("A second segment needs A2, m2 and knee_cycles together")
+        self.A2 = A2
+        self.m2 = m2
+        self.knee_cycles = knee_cycles
+
+    @property
+    def knee_stress(self) -> Optional[float]:
+        """Stress range at the slope change, or None for a single slope."""
+        if self.m2 is None:
+            return None
+        return (self.A / self.knee_cycles) ** (1.0 / self.m)
 
     def get_allowable_cycles(self, stress_range: StressCycles) -> StressCycles:
         """Calculate allowable cycles using power law"""
@@ -134,6 +159,15 @@ class PowerLawSNCurve(SNCurveBase):
             scalar_input = True
         else:
             scalar_input = False
+
+        if self.m2 is not None:
+            # Two segments, no cut-off (DNV-RP-C203 variable amplitude).
+            N = np.full_like(S, np.inf)
+            upper = S >= self.knee_stress
+            lower = (S > 0) & ~upper
+            N[upper] = self.A * S[upper] ** (-self.m)
+            N[lower] = self.A2 * S[lower] ** (-self.m2)
+            return float(N[0]) if scalar_input else N
 
         N = np.zeros_like(S)
 
@@ -162,6 +196,14 @@ class PowerLawSNCurve(SNCurveBase):
 
         # Check for infinite cycles
         finite_mask = np.isfinite(N)
+
+        if self.m2 is not None:
+            S = np.zeros_like(N, dtype=float)
+            upper = finite_mask & (N <= self.knee_cycles)
+            lower = finite_mask & (N > self.knee_cycles)
+            S[upper] = (self.A / N[upper]) ** (1 / self.m)
+            S[lower] = (self.A2 / N[lower]) ** (1 / self.m2)
+            return float(S[0]) if scalar_input else S
 
         S = np.full_like(N, self.fatigue_limit, dtype=float)
         S[finite_mask] = np.maximum(
@@ -281,14 +323,18 @@ class StandardSNCurves:
     Enhanced with multi-slope capabilities and legacy curve data integration.
     """
 
-    # DNV-RP-C203 curves, in air: the first segment (A = 10^log a1, m = m1) and
-    # the tabulated fatigue limit at 1e7 cycles, which is also the in-air knee,
-    # as the constant-amplitude cut-off. Filled at the end of this module from
-    # digitalmodel.fatigue.c203_sn_tables, verified against DNV-RP-C203 (2011)
-    # Table 2-1 (#2165). The m2 = 5 segment below the limit is not represented
-    # by PowerLawSNCurve; for variable-amplitude damage use
-    # digitalmodel.fatigue.get_sn_curve or digitalmodel.fatigue.sn_library.
+    # DNV-RP-C203 curves, in air: both segments (A = 10^log a1, m = m1 above
+    # the 1e7 knee; A2 = 10^log a2, m2 = 5 below it) and the tabulated fatigue
+    # limit at 1e7 cycles, kept for reporting. No cut-off: DNV-RP-C203 (2011)
+    # section 2.4 has none for variable-amplitude loading. Filled at the end of
+    # this module from digitalmodel.fatigue.c203_sn_tables, verified against
+    # Table 2-1 (#2165). Other environments: get_dnv_c203_curve().
     DNV_CURVES: Dict[str, Dict[str, float]] = {}
+
+    # User curves under their own names: standards.CUSTOM.curves in the data-dir
+    # YAML, or register_custom_curve(). The DNV-RP-C203 names are reserved for
+    # the verified tables.
+    CUSTOM_CURVES: Dict[str, Dict[str, float]] = {}
 
     # Multi-slope DNV curves (based on legacy data structure)
     DNV_MULTISLOPE_CURVES = {
@@ -402,9 +448,30 @@ class StandardSNCurves:
         try:
             with open(yaml_path) as f:
                 data = yaml.safe_load(f)
-            standards = data.get('standards', {})
-            # DNV-RP-C203 curves always come from fatigue.c203_sn_tables; a
-            # 'DNV: curves' block in the YAML is ignored (#2165).
+        except Exception as e:
+            logger.warning(
+                "Failed to load SN curves YAML: %s, using hardcoded dicts", e
+            )
+            return
+        standards = (data or {}).get("standards", {}) or {}
+        # DNV-RP-C203 curves always come from fatigue.c203_sn_tables. A
+        # 'DNV: curves' block would be discarded, so it is rejected (#2165).
+        dnv_block = standards.get("DNV") or {}
+        if isinstance(dnv_block, dict) and "curves" in dnv_block:
+            raise ValueError(
+                f"{yaml_path}: the 'standards.DNV.curves' block is not supported; "
+                "DNV-RP-C203 curves come from the verified tables in "
+                "digitalmodel.fatigue.c203_sn_tables and cannot be overridden. "
+                "To use a modified curve, give it its own name under "
+                "'standards.CUSTOM.curves' in this file, or call "
+                "StandardSNCurves.register_custom_curve(), and select it with "
+                "get_curve('CUSTOM', <name>)."
+            )
+        # User curves under their own names; a malformed entry raises.
+        custom_block = standards.get("CUSTOM") or {}
+        for curve_name, params in (custom_block.get("curves") or {}).items():
+            cls.register_custom_curve(str(curve_name), **params)
+        try:
             if 'API' in standards and 'curves' in standards['API']:
                 cls.API_CURVES = standards['API']['curves']
             if 'BS' in standards and 'curves' in standards['BS']:
@@ -422,14 +489,112 @@ class StandardSNCurves:
     def _all_curves_dict(cls) -> Dict[str, Dict]:
         """Return mapping of all standard names to their curve parameter dicts."""
         return {
-            'DNV': cls.DNV_CURVES,
-            'API': cls.API_CURVES,
-            'BS': cls.BS_CURVES,
-            'AWS': cls.AWS_CURVES,
-            'BS_7608_REVISED': cls.BS_7608_REVISED_CURVES,
-            'ISO_19902': cls.ISO_19902_CURVES,
-            'DNVGL_RP_C203': cls.DNVGL_RP_C203_CURVES,
+            "DNV": cls.DNV_CURVES,
+            "API": cls.API_CURVES,
+            "BS": cls.BS_CURVES,
+            "AWS": cls.AWS_CURVES,
+            "BS_7608_REVISED": cls.BS_7608_REVISED_CURVES,
+            "ISO_19902": cls.ISO_19902_CURVES,
+            "DNVGL_RP_C203": cls.DNVGL_RP_C203_CURVES,
+            "CUSTOM": cls.CUSTOM_CURVES,
         }
+
+    @classmethod
+    def register_custom_curve(
+        cls,
+        name: str,
+        A: float,
+        m: float,
+        fatigue_limit: float = 0.0,
+        cutoff_cycles: float = 1e7,
+        A2: Optional[float] = None,
+        m2: Optional[float] = None,
+        knee_cycles: Optional[float] = None,
+    ) -> None:
+        """Register a user S-N curve under its own name (standard 'CUSTOM').
+
+        The route for a deliberately modified curve, e.g. a reduced DNV class:
+        the DNV-RP-C203 names stay bound to the verified tables (#2165).
+        Single slope: A, m, and optionally fatigue_limit and cutoff_cycles.
+        Two segments: also A2, m2 and knee_cycles (no cut-off).
+        """
+        if not name:
+            raise ValueError("A custom S-N curve needs a name")
+        # Validates the parameter set (e.g. an incomplete second segment).
+        PowerLawSNCurve(
+            name=f"CUSTOM-{name}",
+            A=A,
+            m=m,
+            fatigue_limit=fatigue_limit,
+            cutoff_cycles=cutoff_cycles,
+            A2=A2,
+            m2=m2,
+            knee_cycles=knee_cycles,
+        )
+        params: Dict[str, float] = {
+            "A": float(A),
+            "m": float(m),
+            "fatigue_limit": float(fatigue_limit),
+            "cutoff_cycles": float(cutoff_cycles),
+        }
+        if m2 is not None:
+            params.update(
+                {"A2": float(A2), "m2": float(m2), "knee_cycles": float(knee_cycles)}
+            )
+        cls.CUSTOM_CURVES = {**cls.CUSTOM_CURVES, name: params}
+
+    @classmethod
+    def get_dnv_c203_curve(
+        cls,
+        curve_class: str,
+        environment: str = "air",
+        material: Optional[MaterialProperties] = None,
+    ) -> PowerLawSNCurve:
+        """DNV-RP-C203 (2011) curve for one class and environment, from
+        digitalmodel.fatigue.c203_sn_tables (#2165).
+
+        environment: 'air' (Table 2-1, knee at 1e7 cycles), 'seawater_cp'
+        (Table 2-2, knee at 1e6 cycles, the same second segment as in air) or
+        'free_corrosion' (Table 2-3, single slope m = 3, no limit). The
+        bilinear curves have no cut-off; the tabulated fatigue limit at 1e7
+        cycles is kept for reporting.
+        """
+        key = curve_class.upper()
+        if key not in _c203.BILINEAR:
+            raise ValueError(
+                f"Unknown DNV curve class: {curve_class}. Available: {list(_c203.CLASSES)}"
+            )
+        env = environment.lower()
+        if env == "free_corrosion":
+            fc = _c203.FREE_CORROSION[key]
+            return PowerLawSNCurve(
+                name=f"DNV-{key}-free_corrosion",
+                A=10.0**fc.log_a,
+                m=_c203.M_FREE_CORROSION,
+                fatigue_limit=0.0,
+                cutoff_cycles=np.inf,
+                material=material,
+            )
+        p = _c203.BILINEAR[key]
+        if env == "air":
+            log_a1, knee = p.log_a1_air, _c203.N_KNEE_AIR
+        elif env == "seawater_cp":
+            log_a1, knee = p.log_a1_cp, _c203.N_KNEE_SEAWATER_CP
+        else:
+            raise ValueError(
+                f"Unknown environment: {environment}. "
+                "Use 'air', 'seawater_cp' or 'free_corrosion'."
+            )
+        return PowerLawSNCurve(
+            name=f"DNV-{key}" if env == "air" else f"DNV-{key}-{env}",
+            A=10.0**log_a1,
+            m=p.m1,
+            fatigue_limit=p.fatigue_limit_mpa,
+            material=material,
+            A2=10.0**p.log_a2,
+            m2=p.m2,
+            knee_cycles=knee,
+        )
 
     @classmethod
     def get_curve(cls,
@@ -443,7 +608,9 @@ class StandardSNCurves:
         ----------
         standard : str
             Standard/code name.  Supported values: 'DNV', 'API', 'BS', 'AWS',
-            'BS_7608_REVISED', 'ISO_19902', 'DNVGL_RP_C203'.
+            'BS_7608_REVISED', 'ISO_19902', 'DNVGL_RP_C203', 'CUSTOM'.
+            'DNV' is DNV-RP-C203 (2011) in air with both segments and no
+            cut-off; other environments: get_dnv_c203_curve().
         curve_class : str
             Curve classification (e.g., 'D', 'C', 'X', 'T_AIR')
         material : MaterialProperties, optional
@@ -475,7 +642,10 @@ class StandardSNCurves:
             m=params['m'],
             fatigue_limit=params['fatigue_limit'],
             cutoff_cycles=params.get('cutoff_cycles', 1e7),
-            material=material
+            material=material,
+            A2=params.get("A2"),
+            m2=params.get("m2"),
+            knee_cycles=params.get("knee_cycles"),
         )
 
     @classmethod
@@ -528,14 +698,15 @@ class StandardSNCurves:
         """List available curves by standard"""
         cls._ensure_loaded()
         all_curves = {
-            'DNV': list(cls.DNV_CURVES.keys()),
-            'API': list(cls.API_CURVES.keys()),
-            'BS': list(cls.BS_CURVES.keys()),
-            'AWS': list(cls.AWS_CURVES.keys()),
-            'DNV_MULTISLOPE': list(cls.DNV_MULTISLOPE_CURVES.keys()),
-            'BS_7608_REVISED': list(cls.BS_7608_REVISED_CURVES.keys()),
-            'ISO_19902': list(cls.ISO_19902_CURVES.keys()),
-            'DNVGL_RP_C203': list(cls.DNVGL_RP_C203_CURVES.keys()),
+            "DNV": list(cls.DNV_CURVES.keys()),
+            "API": list(cls.API_CURVES.keys()),
+            "BS": list(cls.BS_CURVES.keys()),
+            "AWS": list(cls.AWS_CURVES.keys()),
+            "DNV_MULTISLOPE": list(cls.DNV_MULTISLOPE_CURVES.keys()),
+            "BS_7608_REVISED": list(cls.BS_7608_REVISED_CURVES.keys()),
+            "ISO_19902": list(cls.ISO_19902_CURVES.keys()),
+            "DNVGL_RP_C203": list(cls.DNVGL_RP_C203_CURVES.keys()),
+            "CUSTOM": list(cls.CUSTOM_CURVES.keys()),
         }
 
         if standard:
@@ -705,13 +876,24 @@ class ThicknessCorrection:
         # Create corrected curve
         corrected_name = f"{base_curve.name}_t{actual_thickness}mm"
 
+        # A second segment, if any, shifts with the same stress factor.
+        m2 = getattr(base_curve, "m2", None)
+        second = {}
+        if m2 is not None:
+            second = dict(
+                A2=base_curve.A2 / (thickness_factor**m2),
+                m2=m2,
+                knee_cycles=base_curve.knee_cycles,
+            )
+
         return PowerLawSNCurve(
             name=corrected_name,
             A=corrected_A,
             m=base_curve.m,
             fatigue_limit=base_curve.fatigue_limit / thickness_factor,
             cutoff_cycles=base_curve.cutoff_cycles,
-            material=base_curve.material
+            material=base_curve.material,
+            **second,
         )
 
 
@@ -847,6 +1029,8 @@ def get_dnv_curve(curve_class: str,
                   thickness: Optional[float] = None) -> PowerLawSNCurve:
     """Get a DNV-RP-C203 in-air curve with optional thickness correction.
 
+    Both segments (m1 above the 1e7 knee, m2 = 5 below it) and no cut-off.
+
     The thickness correction uses the class exponent k from DNV-RP-C203
     Table 2-1 and applies only above the 25 mm reference thickness (#2165).
     """
@@ -880,13 +1064,17 @@ from digitalmodel.fatigue import c203_sn_tables as _c203  # noqa: E402
 
 
 def _dnv_curves_from_c203() -> Dict[str, Dict[str, float]]:
-    """DNV-RP-C203 (2011) Table 2-1, in air: A = 10^log a1, m = m1, and the
-    tabulated fatigue limit at 1e7 cycles."""
+    """DNV-RP-C203 (2011) Table 2-1, in air: A = 10^log a1, m = m1 above the
+    1e7 knee, A2 = 10^log a2, m2 below it, and the tabulated fatigue limit at
+    1e7 cycles (reported, not a cut-off)."""
     return {
         name: {
             "A": 10.0**p.log_a1_air,
             "m": p.m1,
             "fatigue_limit": p.fatigue_limit_mpa,
+            "A2": 10.0**p.log_a2,
+            "m2": p.m2,
+            "knee_cycles": _c203.N_KNEE_AIR,
         }
         for name, p in _c203.BILINEAR.items()
     }

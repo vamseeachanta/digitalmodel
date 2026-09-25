@@ -18,10 +18,10 @@ Knee per environment (2011 Sec 2.4):
     SEAWATER_CP    — N_transition = 1e6; A1 from Table 2-2, and the same second
                      segment (A2) as in air
 
-The curve object keeps the in-air tabulated fatigue limit as a cut-off and no
-cut-off for seawater with CP; :class:`.SpanFatigueDamage` applies the in-air
-limit as its screening cut-off in both environments (the tabulated value is the
-same in Tables 2-1 and 2-2).
+The curve object keeps the in-air tabulated fatigue limit as a cut-off (a
+screening convention for the constant-amplitude VIV check) and no cut-off for
+seawater with CP; :class:`.SpanFatigueDamage` uses the selected curve's own
+limit and never carries the in-air limit to seawater with CP (#2165).
 
 Thickness correction (DNV-RP-C203 Sec 2.4.3), applied only above t_ref:
     S_corrected = S × (t / t_ref)^k

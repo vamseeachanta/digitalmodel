@@ -11,10 +11,16 @@ DNV-RP-C203 F class, for example:
     seawater with CP: log a1 = 11.455, m1 = 3.0; the same second segment
     fatigue limit at 1e7 cycles: 41.52 MPa (the same in both tables)
 
-This screening implementation retains the in-air fatigue limit as a
-low-stress cutoff before applying the seawater-with-CP curve above the cutoff.
-That preserves the module's historical "below fatigue limit → zero damage"
-behavior; the tabulated limit is the same in Tables 2-1 and 2-2.
+Each environment uses its own curve and nothing else (#2165, PR #2195 review
+r1 finding 3):
+
+* seawater with CP: the full bilinear curve, m2 = 5 below the 1e6 knee, with
+  no cut-off; damage below the in-air limit is counted.
+* in air: screening convention for the single constant-amplitude VIV stress
+  range: below the air curve's own tabulated fatigue limit (41.52 MPa for F,
+  equal to its 1e7 knee stress) the damage is taken as zero. The cut-off is
+  the curve's own ``fatigue_limit`` and is never carried to another
+  environment.
 
 Palmgren-Miner rule (F105 Eq 7.3-1):
     D_annual = f_n × T_year / N(Δσ)
@@ -52,21 +58,26 @@ class SpanFatigueDamage:
         self._inp = inp
         self._fn = fn
         self._stress_mpa = stress_mpa
-        self._fatigue_limit_mpa = 0.0
         self._curve = self._load_sn_curve()
+        # Screening cut-off: the selected curve's own fatigue limit (in air
+        # the tabulated limit; seawater with CP has none).
+        self._fatigue_limit_mpa = self._curve.fatigue_limit
+
+    @property
+    def screening_cut_off_mpa(self) -> float:
+        """Stress range at or below which the damage is taken as zero [MPa].
+
+        The selected curve's own fatigue limit: the tabulated in-air limit for
+        the air curve, 0.0 for seawater with CP (no cut-off).
+        """
+        return self._fatigue_limit_mpa
 
     # ------------------------------------------------------------------
     # S-N curve loading
     # ------------------------------------------------------------------
 
     def _load_sn_curve(self):
-        """Load the DNV-RP-C203 S-N curve.
-
-        The free-span fatigue check needs the environment-specific
-        seawater-with-CP curve from DNV-RP-C203. The broader structural
-        fatigue helper currently exposes in-air DNV curves only, so this
-        path uses the local bilinear table directly.
-        """
+        """Load the DNV-RP-C203 S-N curve of the selected environment."""
         from ._bilinear_sn import get_sn_curve
 
         env_str = (
@@ -74,18 +85,10 @@ class SpanFatigueDamage:
             if self._inp.environment == EnvironmentType.SEAWATER_CP
             else "air"
         )
-        curve = get_sn_curve(
+        return get_sn_curve(
             curve_class=self._inp.sn_curve_class,
             environment=env_str,
         )
-        if env_str == "seawater_cp":
-            self._fatigue_limit_mpa = get_sn_curve(
-                curve_class=self._inp.sn_curve_class,
-                environment="air",
-            ).fatigue_limit
-        else:
-            self._fatigue_limit_mpa = curve.fatigue_limit
-        return curve
 
     # ------------------------------------------------------------------
     # Allowable cycles N(S)
@@ -97,7 +100,8 @@ class SpanFatigueDamage:
         The environment correction is already baked into the curve selection
         (separate "air" and "seawater_cp" parameter sets in DNV-RP-C203).
 
-        Returns ``math.inf`` when *stress_mpa* ≤ CAFL.
+        Returns ``math.inf`` when *stress_mpa* is at or below the screening
+        cut-off of the selected curve (in air only).
         """
         if abs(stress_mpa) <= self._fatigue_limit_mpa:
             return math.inf
@@ -113,7 +117,7 @@ class SpanFatigueDamage:
     def damage_per_year(self) -> float:
         """Annual Miner fatigue damage  D = f_n × T_year / N(Δσ).
 
-        Returns 0.0 when stress is below the S-N fatigue limit.
+        Returns 0.0 at or below the screening cut-off (in air only).
         """
         N = self.allowable_cycles(self._stress_mpa)
         if not math.isfinite(N) or N <= 0.0:
@@ -124,7 +128,7 @@ class SpanFatigueDamage:
     def fatigue_life_years(self) -> float:
         """Fatigue life = 1 / D_annual  [years].
 
-        Returns math.inf when stress is below the CAFL.
+        Returns math.inf when the annual damage is zero.
         """
         D = self.damage_per_year()
         if D <= 0.0:

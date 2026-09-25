@@ -23,18 +23,23 @@ class SNCurve:
 
     # Standard DNV curves (DNV-RP-C203), in air, from
     # digitalmodel.fatigue.c203_sn_tables, verified against DNV-RP-C203 (2011)
-    # Table 2-1 (#2165): A = 10^log a1, m = m1, m2 = 5, knee at 1e7 cycles, and
-    # the tabulated fatigue limit at 1e7 cycles as the cut-off below which the
-    # life is infinite (constant amplitude). The second-segment intercept is
-    # recovered from continuity at the knee, which matches the tabulated log a2
-    # within table rounding.
+    # Table 2-1 (#2165): A = 10^log a1, m = m1 above the knee at 1e7 cycles,
+    # A2 = 10^log a2 (tabulated), m2 = 5 below it. No cut-off: DNV-RP-C203
+    # (2011) section 2.4 has none for variable-amplitude loading; the tabulated
+    # fatigue limit at 1e7 cycles is kept for reporting only. A1/m1 repeat
+    # A/m so that FatigueDamageCalculator reads the same curve from
+    # get_curve_parameters().
     DNV_CURVES = {
         name: {
             "A": 10.0**p.log_a1_air,
             "m": p.m1,
+            "A1": 10.0**p.log_a1_air,
+            "m1": p.m1,
+            "A2": 10.0**p.log_a2,
             "m2": p.m2,
             "fatigue_limit": p.fatigue_limit_mpa,
             "N_transition": _c203.N_KNEE_AIR,
+            "cutoff": False,
         }
         for name, p in _c203.BILINEAR.items()
     }
@@ -193,9 +198,17 @@ class SNCurve:
         high_stress = S > S_transition
         N[high_stress] = A * (S[high_stress] ** (-m))
 
+        # A curve without a cut-off (DNV-RP-C203) continues on the second
+        # segment all the way down; otherwise the fatigue limit applies.
+        cutoff = self.params.get("cutoff", True)
+        if not cutoff:
+            fatigue_limit = 0.0
+
         # Medium stress regime (high cycle)
         medium_stress = (S <= S_transition) & (S > fatigue_limit)
-        if m2 != m:
+        if "A2" in self.params:
+            N[medium_stress] = self.params["A2"] * (S[medium_stress] ** (-m2))
+        elif m2 != m:
             # Calculate A2 to ensure continuity
             A2 = N_transition * (S_transition ** m2)
             N[medium_stress] = A2 * (S[medium_stress] ** (-m2))
@@ -265,7 +278,9 @@ class SNCurve:
 
             # High cycle regime
             high_cycle = n_cycles > N_transition
-            if m2 != m:
+            if "A2" in self.params:
+                S[high_cycle] = (self.params["A2"] / n_cycles[high_cycle]) ** (1 / m2)
+            elif m2 != m:
                 A2 = N_transition * (S_transition ** m2)
                 S[high_cycle] = (A2 / n_cycles[high_cycle]) ** (1 / m2)
             else:
