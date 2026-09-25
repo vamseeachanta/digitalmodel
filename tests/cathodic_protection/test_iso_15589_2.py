@@ -8,13 +8,6 @@ import math
 import pytest
 
 from digitalmodel.cathodic_protection.iso_15589_2 import (
-    ANODE_CAPACITY_ALZNI,
-    ANODE_OC_POTENTIAL_ALZNI,
-    ANODE_UTILIZATION_FACTOR,
-    IC_COLD,
-    IC_WARM,
-    PROTECTION_POTENTIAL_AGAGCL,
-    PROTECTION_POTENTIAL_MAX,
     anode_mass_requirement,
     anode_output_current,
     anode_resistance,

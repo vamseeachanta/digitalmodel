@@ -9,8 +9,6 @@ import math
 import pytest
 
 from digitalmodel.cathodic_protection.api_rp_1632 import (
-    ANODE_CAPACITY,
-    ANODE_OC_POTENTIAL,
     PROTECTION_POTENTIAL_CSE,
     anode_driving_voltage,
     anode_life_years,

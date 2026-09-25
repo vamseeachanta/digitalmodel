@@ -72,15 +72,25 @@ def test_workflow_registry(workflow, monkeypatch):
         assert cp["anode_requirements"]["total_mass_kg"] == pytest.approx(5067.071173)
         assert cp["anode_requirements"]["anode_count"] > 180
     elif workflow["id"] == "cathodic-protection-jacket":
+        # #2207: densities/coating from DNV-RP-B401 Tables 10-1/10-2/10-4.
+        # Temperate (10 C), 0-30 m, Cat III (a=0.02, b=0.012), 25 yr, 5000 m2:
+        # I_mean = 5000 * 0.100 * (0.02 + 0.012*12.5) = 85.0 A
+        # I_final = 5000 * 0.130 * (0.02 + 0.012*25) = 208.0 A
+        # M = 85.0 * 25 * 8760 / (2000 * 0.85) = 10950 kg -> 55 x 200 kg anodes
+        # Splash/atmospheric zones draw no CP current.
         results = cfg["results"]
-        assert results["standard"] == "DNV-RP-B401-2021"
-        assert results["current_demand_A"]["total_mean_A"] == pytest.approx(101.85)
-        assert results["current_demand_A"]["total_final_A"] == pytest.approx(168.6)
-        assert results["anode_requirements"]["total_mass_kg"] == pytest.approx(13120.68)
-        assert results["anode_requirements"]["anode_count"] == 66
+        assert results["standard"] == "DNV-RP-B401 (2021)"
+        assert results["current_demand_A"]["total_mean_A"] == pytest.approx(85.0)
+        assert results["current_demand_A"]["total_final_A"] == pytest.approx(208.0)
+        assert results["anode_requirements"]["total_mass_kg"] == pytest.approx(10950.0)
+        assert results["anode_requirements"]["anode_count"] == 55
         verification = results["current_output_verification"]
         assert verification["driving_voltage_V"] == pytest.approx(0.25)
-        assert verification["recommended_anode_count"] == 109
+        # Final-current check governs; the demo anode geometry does not meet it
+        # (#2210 retires these demos in favour of the standard report).
+        assert verification["adequate"] is False
+        assert verification["governing_case"] == "final"
+        assert verification["recommended_anode_count"] == 135
     elif workflow["id"] == "cathodic-protection-pipeline":
         results = cfg["results"]
         densities = results["current_densities_mA_m2"]
@@ -123,19 +133,27 @@ def test_workflow_registry(workflow, monkeypatch):
             REPO_ROOT / "knowledge" / citation["wiki_path"]
         )
     elif workflow["id"] == "cathodic-protection-manifold":
+        # #2207: Table 10-1/10-2/10-4 values (Cat III, 850 m2 submerged).
         results = cfg["results"]
-        assert results["standard"] == "DNV-RP-B401-2021"
-        assert results["current_demand_A"]["total_mean_A"] == pytest.approx(29.75)
-        assert results["anode_requirements"]["total_mass_kg"] == pytest.approx(3832.5)
-        assert results["anode_requirements"]["anode_count"] == 48
-        assert results["current_output_verification"]["adequate"] is True
+        assert results["standard"] == "DNV-RP-B401 (2021)"
+        assert results["current_demand_A"]["total_mean_A"] == pytest.approx(17.34)
+        assert results["anode_requirements"]["total_mass_kg"] == pytest.approx(2233.8)
+        assert results["anode_requirements"]["anode_count"] == 28
+        verification = results["current_output_verification"]
+        assert verification["adequate"] is False
+        assert verification["governing_case"] == "final"
+        assert verification["recommended_anode_count"] == 49
     elif workflow["id"] == "cathodic-protection-monopile":
+        # #2207: Table 10-1/10-2/10-4 values (Cat III, 1200 m2 submerged).
         results = cfg["results"]
-        assert results["standard"] == "DNV-RP-B401-2021"
-        assert results["current_demand_A"]["total_mean_A"] == pytest.approx(27.72)
-        assert results["anode_requirements"]["total_mass_kg"] == pytest.approx(4285.19)
-        assert results["anode_requirements"]["anode_count"] == 29
-        assert results["current_output_verification"]["recommended_anode_count"] == 32
+        assert results["standard"] == "DNV-RP-B401 (2021)"
+        assert results["current_demand_A"]["total_mean_A"] == pytest.approx(24.0)
+        assert results["anode_requirements"]["total_mass_kg"] == pytest.approx(3710.12)
+        assert results["anode_requirements"]["anode_count"] == 25
+        verification = results["current_output_verification"]
+        assert verification["adequate"] is False
+        assert verification["governing_case"] == "final"
+        assert verification["recommended_anode_count"] == 37
     elif workflow["id"] == "cathodic-protection-fpso":
         results = cfg["results"]
         assert results["current_demand_A"]["mean"] == pytest.approx(96.0)
