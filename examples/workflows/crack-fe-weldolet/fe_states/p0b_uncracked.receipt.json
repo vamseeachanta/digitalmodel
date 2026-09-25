@@ -46,12 +46,12 @@
   "start_node_correction": "K at front node 1 from a second SIFS definition starting at node 2 (MAPDL 2026 R1 perturbs K at the first CENC node of a closed front; J is unaffected); sign factors from reference node 3"
  },
  "run": {
-  "producing_commit": "e5a316a9f460c1209dd04adb380d6b54355f9d78",
+  "producing_commit": "8033a20a5cc666e7cb777ea019544663b2cf484a",
   "generator_tree_clean": true,
   "generator_files": {
    "src/digitalmodel/ansys/weldolet_crack.py": "2918496726ec453d04c67f00d58df1e888c027f9",
    "src/digitalmodel/ansys/crack_verification.py": "aefde929d711884b55ac317cbe3208265114cd63",
-   "src/digitalmodel/ansys/cint_parser.py": "9ebc24728614c956ea6bf26f419c2e4365f05c07"
+   "src/digitalmodel/ansys/cint_parser.py": "8bca50cc7d21c16f9de0206bf8c5afc41a81a77f"
   },
   "mapdl_version": "26.1",
   "mapdl_release": "2026 R1",
@@ -76,16 +76,16 @@
      "4"
     ],
     "mapdl_version": "26.1",
-    "solve_seconds": 178.6
+    "solve_seconds": 171.2
    },
    "artifacts": {
     "reac": {
      "path": "solved/p0b_uncracked/weldolet_reac_L0.txt",
-     "sha256": "53bacd98d2f6e02d51a703cde039ecec3aefae50b09105a598bb525f1b2f9702"
+     "sha256": "51cde0741f236206e5327f69dbeb015d9c9be4385d2b101fb9be3b51e17b5b97"
     },
     "path": {
      "path": "solved/p0b_uncracked/weldolet_path_L0.txt",
-     "sha256": "f32fdb93e909c7c989bfb27e7b7cd7255e9d76bdf55b84279e6f3fee390cf9a6"
+     "sha256": "c45a587ae828e052cd7398411a66a74fe8ce873f686f7b29a4e2445a66f28021"
     },
     "hoop": {
      "path": "solved/p0b_uncracked/weldolet_hoop_L0.txt",
@@ -118,8 +118,8 @@
     "n_ligament_nodes": null,
     "extras": {
      "n_fixed_nodes": 1012.0,
-     "reaction_y_sum": -3.40866538906e-06,
-     "reaction_z_sum": 1.71587650755e-06
+     "reaction_y_sum": -3.43511938539e-06,
+     "reaction_z_sum": 1.72303827028e-06
     }
    },
    "front": [],
@@ -144,9 +144,9 @@
        "length_mm": 8.56,
        "n_samples": 129,
        "component": "SRR (normal to the fusion face, CS 11 radial)",
-       "sigma_m_mpa": 3.4300545709743755,
-       "sigma_b_mpa": 4.607347974608784,
-       "shear_rh_membrane_mpa": 3.7629645818452357e-10,
+       "sigma_m_mpa": 3.430054570763438,
+       "sigma_b_mpa": 4.607347974312152,
+       "shear_rh_membrane_mpa": 3.697942083313438e-10,
        "shear_ra_membrane_mpa": -6.337278444669571,
        "peak_srr_mpa": 15.59924173,
        "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
@@ -171,10 +171,10 @@
        "length_mm": 8.601246778,
        "n_samples": 129,
        "component": "SRR (normal to the fusion face, CS 11 radial)",
-       "sigma_m_mpa": 1.3177353771039821,
-       "sigma_b_mpa": -2.995772349471821,
+       "sigma_m_mpa": 1.3177353771156874,
+       "sigma_b_mpa": -2.995772349455875,
        "shear_rh_membrane_mpa": 6.4850808787964676,
-       "shear_ra_membrane_mpa": -3.844061331234873,
+       "shear_ra_membrane_mpa": -3.844061331211462,
        "peak_srr_mpa": 19.4669356,
        "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
        "hoop_sigma_m_mpa": 42.165328883429865,
@@ -201,7 +201,7 @@
        "sigma_m_mpa": -0.5657399328010305,
        "sigma_b_mpa": -11.292622735596085,
        "shear_rh_membrane_mpa": 9.17100983411439,
-       "shear_ra_membrane_mpa": 7.2201384560424375e-09,
+       "shear_ra_membrane_mpa": 7.22967306277623e-09,
        "peak_srr_mpa": 24.10725434,
        "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
        "hoop_sigma_m_mpa": 21.98870942734008,
@@ -227,7 +227,7 @@
        "component": "SRR (normal to the fusion face, CS 11 radial)",
        "sigma_m_mpa": 0.32499263039656134,
        "sigma_b_mpa": 3.4552642396946625,
-       "shear_rh_membrane_mpa": -7.510712427630467e-11,
+       "shear_rh_membrane_mpa": -7.509770068175776e-11,
        "shear_ra_membrane_mpa": -1.6413223970910658,
        "peak_srr_mpa": 5.991521282,
        "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
@@ -277,20 +277,20 @@
      "4"
     ],
     "mapdl_version": "26.1",
-    "solve_seconds": 429.2
+    "solve_seconds": 337.6
    },
    "artifacts": {
     "reac": {
      "path": "solved/p0b_uncracked/weldolet_reac_L1.txt",
-     "sha256": "1d00d757ea350da5736638459f26fa358f4b7cf8909fa1b64cfc55cb3a5743ef"
+     "sha256": "f4d44d86e322b32a26a33f9a3601da5c9f7b21b3bb4e7c20dc04c336e4cc0eb1"
     },
     "path": {
      "path": "solved/p0b_uncracked/weldolet_path_L1.txt",
-     "sha256": "e3921feac52917a6998249df0c23932ec07b30562210fa343cf0b6baab5c3baf"
+     "sha256": "a16a5444bba93f1817c81c34e497aef5110e18d521dbf57a6737d18bc9f8a13d"
     },
     "hoop": {
      "path": "solved/p0b_uncracked/weldolet_hoop_L1.txt",
-     "sha256": "03caea88a5719c38e8add840e87d4dedfed47e4808ea19f5f74d8fedae494a89"
+     "sha256": "fe00b6c896a25060ae7d9f14f17d3b5333ee2961dca0e08b74730dd3adf9ff44"
     }
    },
    "n_nodes": 575469,
@@ -319,8 +319,8 @@
     "n_ligament_nodes": null,
     "extras": {
      "n_fixed_nodes": 1380.0,
-     "reaction_y_sum": -3.08326558951e-06,
-     "reaction_z_sum": 1.96045267842e-06
+     "reaction_y_sum": -3.12092616284e-06,
+     "reaction_z_sum": 1.94966533584e-06
     }
    },
    "front": [],
@@ -347,7 +347,7 @@
        "component": "SRR (normal to the fusion face, CS 11 radial)",
        "sigma_m_mpa": 3.4522436515705484,
        "sigma_b_mpa": 4.588417494124302,
-       "shear_rh_membrane_mpa": 7.611143992601018e-10,
+       "shear_rh_membrane_mpa": 7.504417108499065e-10,
        "shear_ra_membrane_mpa": -6.3309030307055085,
        "peak_srr_mpa": 15.63194942,
        "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
@@ -372,9 +372,9 @@
        "length_mm": 8.601246778,
        "n_samples": 129,
        "component": "SRR (normal to the fusion face, CS 11 radial)",
-       "sigma_m_mpa": 1.3177117406648322,
-       "sigma_b_mpa": -2.9975775941806813,
-       "shear_rh_membrane_mpa": 6.485931620151274,
+       "sigma_m_mpa": 1.3177117407155574,
+       "sigma_b_mpa": -2.9975775941183054,
+       "shear_rh_membrane_mpa": 6.485931620166884,
        "shear_ra_membrane_mpa": -3.8370915654830786,
        "peak_srr_mpa": 19.46852088,
        "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
@@ -399,14 +399,14 @@
        "length_mm": 8.727208635,
        "n_samples": 129,
        "component": "SRR (normal to the fusion face, CS 11 radial)",
-       "sigma_m_mpa": -0.5817168190079792,
-       "sigma_b_mpa": -11.274351863745215,
-       "shear_rh_membrane_mpa": 9.16359650750161,
-       "shear_ra_membrane_mpa": 7.101774129674967e-09,
+       "sigma_m_mpa": -0.5817168191635019,
+       "sigma_b_mpa": -11.274351863958424,
+       "shear_rh_membrane_mpa": 9.163596507478282,
+       "shear_ra_membrane_mpa": 7.111802970348555e-09,
        "peak_srr_mpa": 24.08642942,
        "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
-       "hoop_sigma_m_mpa": 22.00725326436764,
-       "hoop_sigma_b_mpa": -35.504656220897786,
+       "hoop_sigma_m_mpa": 22.007253264359864,
+       "hoop_sigma_b_mpa": -35.504656220908444,
        "peak_shh_mpa": 101.7976604
       },
       {
@@ -428,7 +428,7 @@
        "component": "SRR (normal to the fusion face, CS 11 radial)",
        "sigma_m_mpa": 0.3435481558744529,
        "sigma_b_mpa": 3.440582461211925,
-       "shear_rh_membrane_mpa": 8.160689293201201e-11,
+       "shear_rh_membrane_mpa": 8.42732426990156e-11,
        "shear_ra_membrane_mpa": -1.636848093222219,
        "peak_srr_mpa": 5.989913571,
        "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
@@ -512,6 +512,12 @@
    "value": null,
    "limit": null,
    "detail": "not applicable: the model has no crack front"
+  },
+  "g_end_nodes_record": {
+   "status": "not_applicable",
+   "value": null,
+   "limit": null,
+   "detail": "not applicable: the model has no crack front"
   }
  },
  "sigma_ref": {
@@ -536,7 +542,7 @@
     "component": "SRR (normal to the fusion face, CS 11 radial)",
     "sigma_m_mpa": 3.4522436515705484,
     "sigma_b_mpa": 4.588417494124302,
-    "shear_rh_membrane_mpa": 7.611143992601018e-10,
+    "shear_rh_membrane_mpa": 7.504417108499065e-10,
     "shear_ra_membrane_mpa": -6.3309030307055085,
     "peak_srr_mpa": 15.63194942,
     "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
@@ -561,9 +567,9 @@
     "length_mm": 8.601246778,
     "n_samples": 129,
     "component": "SRR (normal to the fusion face, CS 11 radial)",
-    "sigma_m_mpa": 1.3177117406648322,
-    "sigma_b_mpa": -2.9975775941806813,
-    "shear_rh_membrane_mpa": 6.485931620151274,
+    "sigma_m_mpa": 1.3177117407155574,
+    "sigma_b_mpa": -2.9975775941183054,
+    "shear_rh_membrane_mpa": 6.485931620166884,
     "shear_ra_membrane_mpa": -3.8370915654830786,
     "peak_srr_mpa": 19.46852088,
     "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
@@ -588,14 +594,14 @@
     "length_mm": 8.727208635,
     "n_samples": 129,
     "component": "SRR (normal to the fusion face, CS 11 radial)",
-    "sigma_m_mpa": -0.5817168190079792,
-    "sigma_b_mpa": -11.274351863745215,
-    "shear_rh_membrane_mpa": 9.16359650750161,
-    "shear_ra_membrane_mpa": 7.101774129674967e-09,
+    "sigma_m_mpa": -0.5817168191635019,
+    "sigma_b_mpa": -11.274351863958424,
+    "shear_rh_membrane_mpa": 9.163596507478282,
+    "shear_ra_membrane_mpa": 7.111802970348555e-09,
     "peak_srr_mpa": 24.08642942,
     "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",
-    "hoop_sigma_m_mpa": 22.00725326436764,
-    "hoop_sigma_b_mpa": -35.504656220897786,
+    "hoop_sigma_m_mpa": 22.007253264359864,
+    "hoop_sigma_b_mpa": -35.504656220908444,
     "peak_shh_mpa": 101.7976604
    },
    {
@@ -617,7 +623,7 @@
     "component": "SRR (normal to the fusion face, CS 11 radial)",
     "sigma_m_mpa": 0.3435481558744529,
     "sigma_b_mpa": 3.440582461211925,
-    "shear_rh_membrane_mpa": 8.160689293201201e-11,
+    "shear_rh_membrane_mpa": 8.42732426990156e-11,
     "shear_ra_membrane_mpa": -1.636848093222219,
     "peak_srr_mpa": 5.989913571,
     "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 on theta = 0 paths)",

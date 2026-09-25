@@ -5,6 +5,6 @@ mapdl_rev    26.10
 stress_mpa   0.470000000000E+01
 loaded_area_mm2   0.186458600804E+05
 reaction_sum  -0.876354015775E+05
-reaction_y_sum  -0.308326558951E-05
-reaction_z_sum   0.196045267842E-05
+reaction_y_sum  -0.312092616284E-05
+reaction_z_sum   0.194966533584E-05
 n_fixed_nodes      1380.

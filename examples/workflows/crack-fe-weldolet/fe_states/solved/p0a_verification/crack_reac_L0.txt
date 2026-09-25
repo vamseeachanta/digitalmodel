@@ -5,6 +5,6 @@ mapdl_rev    26.10
 stress_mpa   0.100000000000E+03
 loaded_area_mm2   0.800000000000E+03
 fz_ligament  -0.800000000000E+05
-fx_symmetry  -0.117353109125E-07
-fy_point  -0.464556435369E-07
+fx_symmetry  -0.118559203779E-07
+fy_point  -0.464266050354E-07
 n_ligament      1735.

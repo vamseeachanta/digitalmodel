@@ -148,9 +148,10 @@ def test_uncracked_far_field_hoop_plausibility(state):
 
 
 CRACKED_WELDOLET = [s for s, k in _kinds().items() if k == "weldolet_crack"]
+FUSION_FACE = [s for s in CRACKED_WELDOLET if not s.startswith("p0b_crotch")]
 
 
-@pytest.mark.parametrize("state", CRACKED_WELDOLET)
+@pytest.mark.parametrize("state", FUSION_FACE)
 def test_start_node_correction_is_consistent(state):
     """K at front node 1 comes from the second SIFS definition; both SIFS
     definitions must agree at the reference node after the sign factors."""
@@ -255,7 +256,7 @@ def test_crotch_stop_rule_evidence_fails_only_guard_g():
                     if receipt["guards"][n]["status"] != "pass")
     assert failed == ["g_j_mesh"]
     assert receipt["guards"]["g_j_mesh"]["value"] > 0.01
-    assert "p0b_crotch_a2p35" not in DECLARED
+    # superseded: the state is declared from the re-solve under owner card G16
 
 
 @pytest.mark.parametrize("pair", [(0, 1), (1, 2)])

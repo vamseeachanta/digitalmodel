@@ -38,11 +38,11 @@
   ]
  },
  "run": {
-  "producing_commit": "e5a316a9f460c1209dd04adb380d6b54355f9d78",
+  "producing_commit": "8033a20a5cc666e7cb777ea019544663b2cf484a",
   "generator_tree_clean": true,
   "generator_files": {
    "src/digitalmodel/ansys/crack_verification.py": "aefde929d711884b55ac317cbe3208265114cd63",
-   "src/digitalmodel/ansys/cint_parser.py": "9ebc24728614c956ea6bf26f419c2e4365f05c07"
+   "src/digitalmodel/ansys/cint_parser.py": "8bca50cc7d21c16f9de0206bf8c5afc41a81a77f"
   },
   "mapdl_version": "26.1",
   "mapdl_release": "2026 R1",
@@ -67,7 +67,7 @@
      "4"
     ],
     "mapdl_version": "26.1",
-    "solve_seconds": 38.4
+    "solve_seconds": 40.5
    },
    "artifacts": {
     "cint": {
@@ -76,7 +76,7 @@
     },
     "reac": {
      "path": "solved/p0a_verification/crack_reac_L0.txt",
-     "sha256": "a2a30c46ef0db526d552d9cb4a3614d06ba7d57d5c37267e5e68e4e849a41e39"
+     "sha256": "c6edb0464dabcb85b9a603e8a35d058c066c4e2d82610f28abf05dfa5a32d475"
     }
    },
    "n_nodes": 62261,
@@ -97,8 +97,8 @@
     "loaded_area_mm2": 800.0,
     "reaction_sum_n": -80000.0,
     "fz_ligament_n": -80000.0,
-    "fx_symmetry_n": -1.17353109125e-08,
-    "fy_point_n": -4.64556435369e-08,
+    "fx_symmetry_n": -1.18559203779e-08,
+    "fy_point_n": -4.64266050354e-08,
     "n_ligament_nodes": 1735,
     "extras": {}
    },
@@ -1496,7 +1496,7 @@
      "4"
     ],
     "mapdl_version": "26.1",
-    "solve_seconds": 62.9
+    "solve_seconds": 66.8
    },
    "artifacts": {
     "cint": {
@@ -1505,7 +1505,7 @@
     },
     "reac": {
      "path": "solved/p0a_verification/crack_reac_L1.txt",
-     "sha256": "262069f9b1eee93799c23164266121eba75bcd419cc8bc5ca6edbbc6e2800832"
+     "sha256": "b553c89a1116318e1ed89e74f51bd27a4fcfd802e6b7061124fc6d57dd961356"
     }
    },
    "n_nodes": 138555,
@@ -1526,8 +1526,8 @@
     "loaded_area_mm2": 800.0,
     "reaction_sum_n": -80000.0000002,
     "fz_ligament_n": -80000.0000002,
-    "fx_symmetry_n": -1.06000956565e-07,
-    "fy_point_n": -2.77498183943e-07,
+    "fx_symmetry_n": -1.05908763392e-07,
+    "fy_point_n": -2.76913830115e-07,
     "n_ligament_nodes": 3695,
     "extras": {}
    },
@@ -4297,15 +4297,21 @@
   },
   "g_j_mesh": {
    "status": "pass",
-   "value": 0.00043863986054559767,
+   "value": 0.001270086891566935,
    "limit": 0.01,
-   "detail": "|J(L1) / J(L0) - 1| at the governing node phi 90 (max J on L1)"
+   "detail": "max |J(L1) / J(L0) - 1| over interior front nodes (owner G16), at phi 53.1301"
   },
   "c_contour_legacy": {
    "status": "pass",
    "value": 0.00036653147998615235,
    "limit": 0.03,
    "detail": "legacy, not gating (owner G13): max (max-min)/|mean| per node, last 3 contours (L0 K1)"
+  },
+  "g_end_nodes_record": {
+   "status": "fail",
+   "value": 0.01325234611864734,
+   "limit": 0.01,
+   "detail": "record, not gating (owner G16): max |J(L1) / J(L0) - 1| at the free-surface end nodes, at phi 0"
   }
  }
 }

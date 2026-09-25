@@ -57,8 +57,9 @@ def test_receipt_guards_all_pass():
     for name in cint_parser.GUARD_NAMES:
         assert receipt["guards"][name]["status"] == "pass", receipt["guards"][name]
     # re-evaluate from the recorded solved data, not only the stored verdicts
-    for name, result in cint_parser.evaluate_receipt_guards(receipt).items():
-        assert result.status == "pass", f"recomputed guard {name}: {result}"
+    recomputed = cint_parser.evaluate_receipt_guards(receipt)
+    for name in cint_parser.GUARD_NAMES:  # records (legacy, end nodes) do not gate
+        assert recomputed[name].status == "pass", f"recomputed guard {name}"
 
 
 def test_receipt_is_host_free():
