@@ -476,9 +476,44 @@ def compute_convergence(levels: dict[str, MeshLevel]) -> list[MeshConvergence]:
 # ---------------------------------------------------------------------------
 # Discovery + JSON
 # ---------------------------------------------------------------------------
-def discover_models() -> list[Path]:
-    if not EXAMPLES_ROOT.exists(): print(f"ERROR: {EXAMPLES_ROOT} not found"); return []
-    fs = sorted(EXAMPLES_ROOT.rglob("*.dat"), key=lambda p: p.stat().st_size)
+#: A text model saved by OrcaFlex starts with this header; a batch config or a
+#: preserved record of a lost .sim file does not, and is not a model.
+_MODEL_HEADER = re.compile(r"^(?:#\s*Type:\s*Model\b|General\s*:)", re.MULTILINE)
+
+
+def _is_model_yml(path: Path) -> bool:
+    try:
+        with open(path, encoding="utf-8", errors="replace") as fh:
+            head = fh.read(4096)
+    except OSError:
+        return False
+    return bool(_MODEL_HEADER.search(head))
+
+
+def discover_model_files(root: Path) -> list[Path]:
+    """One path per model under *root*: its text .yml, else its binary .dat.
+
+    C13 removed the binary .dat of models that have a .yml twin; discovering
+    .dat only dropped those models. A model is keyed by folder and stem.
+    """
+    chosen: dict[tuple[Path, str], Path] = {}
+    for path in sorted(root.rglob("*")):
+        suffix = path.suffix.lower()
+        if suffix not in (".yml", ".dat") or not path.is_file():
+            continue
+        if suffix == ".yml" and not _is_model_yml(path):
+            continue
+        key = (path.parent, path.stem.lower())
+        if key not in chosen or suffix == ".yml":
+            chosen[key] = path
+    return sorted(chosen.values())
+
+
+def discover_models(root: Path | None = None) -> list[Path]:
+    """Every model under *root* (default EXAMPLES_ROOT), .yml preferred, by size."""
+    root = EXAMPLES_ROOT if root is None else Path(root)
+    if not root.exists(): print(f"ERROR: {root} not found"); return []
+    fs = sorted(discover_model_files(root), key=lambda p: p.stat().st_size)
     return [f for f in fs if f.stat().st_size < MAX_FILE_SIZE]
 
 def save_json(results: list[ModelBenchmark]) -> None:

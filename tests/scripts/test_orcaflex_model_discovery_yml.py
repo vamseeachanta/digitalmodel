@@ -22,7 +22,9 @@ RAW = REPO / "docs" / "domains" / "orcaflex" / "examples" / "raw"
 GEN = REPO / "scripts" / "generate_all_specs.py"
 BENCH = REPO / "scripts" / "benchmark_model_library.py"
 
-MODEL_HEAD = "%YAML 1.1\n# Type: Model\n# Program: OrcaFlex 11.6b\n---\nGeneral:\n  x: 1\n"
+MODEL_HEAD = (
+    "%YAML 1.1\n# Type: Model\n# Program: OrcaFlex 11.6b\n---\nGeneral:\n  x: 1\n"
+)
 A01 = {
     "A01 Catenary riser",
     "A01 Lazy wave riser",
@@ -84,6 +86,8 @@ def test_yml_is_preferred_and_a_lone_dat_is_kept(discover, tmp_path):
     (tmp_path / "a" / "Twin.yml").write_text(MODEL_HEAD, encoding="utf-8")
     (tmp_path / "a" / "Lone.dat").write_bytes(b"\x00dat")
     (tmp_path / "a" / "OnlyText.yml").write_text(MODEL_HEAD, encoding="utf-8")
-    (tmp_path / "a" / "config.yml").write_text("basecaseName: x.dat\n", encoding="utf-8")
+    (tmp_path / "a" / "config.yml").write_text(
+        "basecaseName: x.dat\n", encoding="utf-8"
+    )
     found = sorted(p.name for p in discover(tmp_path))
     assert found == ["Lone.dat", "OnlyText.yml", "Twin.yml"]
