@@ -80,7 +80,7 @@ Recorded from the decision page (`docs/plans/assets/2026-09-25-issue-1057-owner-
 | D3 | API 579 2016 Level 2 FAD equation | **Resolved on secondary sources** (owner asked for a check; result below) | #2175 and #2157 implement the Level 2A form; the 2016 viewer check becomes a verification item, not a blocker |
 | D4 | Wave 2 asset-class order | **#2198 platforms → #2202 hulls → #2201 casing → #2172 tanks → #2199 moorings → #2200 flexible pipe** | Wave 2 list reordered; platforms and hulls start first in parallel |
 | D5 | Subsea design screens in the FFS catalog | **B** move to a separate design-screen catalog | `ffs_design_screen_catalog.yml` created; FFS catalog is 78 rows; #2197 renders both |
-| D6 | Review coverage | **A** re-run Gemini before approval | Gemini re-run requested 2026-09-25 (result recorded in the review summary when it lands) |
+| D6 | Review coverage | **A** re-run Gemini before approval | Re-run done 2026-09-25: UNAVAILABLE (empty provider output). Owner now chooses: run Gemini on ace-linux-1 from their own shell, or accept the two-provider review |
 | Gate | Plan approval | **Approve r1.2 as is** | conflicts with D6; label withheld until the owner says which wins |
 
 **D3 check (2026-09-25).** The #2157 plan (PR #2194, board card R01, 2026-09-24) already settled the equation form on secondary sources: an open-access peer-reviewed paper (*Materials* 19 (2026) 465, CC BY 4.0) states that API 579-1/ASME FFS-1 2016 Level 2 uses the BS 7910 Level 2A generic curve, (1 − 0.14 Lr²)(0.3 + 0.7 e^(−0.65 Lr⁶)); the licensed BS 7910:2013 text confirms that its Option 1 is the different (1 + 0.5 Lr²)^−½ form that `crack_fad` implements today; and owner card G10 declared the Level 2 curve form committable (it is also the original R6 Option 1 curve in the open literature). The 2007 API 579 text held in llm-wiki refers to Figure 9.20 for the curve, and that figure is an image the extraction did not capture, so it neither confirms nor contradicts. What remains open is only a primary-source read of the 2016 PDF, which is FileOpen-protected; treat it as verification, not a gate. Recommendation for D3: record as *resolved by literature; viewer check optional*.
@@ -164,6 +164,7 @@ Parallelism: Wave 0 items are disjoint and can run concurrently on separate work
 | r1.1 | Codex confirming pass | MAJOR, 7 findings | all applied in r1.2 (below) |
 | r1.1 | Gemini (`plan-review-fanout.sh --providers=gemini`, CLI 0.61.0 installed) | no verdict: the run was stopped by the host under memory pressure after producing empty artifacts (`2026-09-25-plan-1057-gemini.md`, `.err`, 0 bytes) | owner chose D6 = A; re-run requested 2026-09-25 |
 | r1.3 | owner decisions | D1 A, D2 A, D4 order, D5 B, D6 A applied; D3 resolved on secondary sources | catalog split, Wave 2 reordered, serialization updated |
+| r1.3 | Gemini re-run (D6 A, `plan-review-fanout.sh --providers=gemini`, 2026-09-25 11:19) | UNAVAILABLE: the CLI exited rc=0 with empty provider output; fanout wrote a no-signal artifact (`review-gemini2/2026-09-25-plan-1057-gemini.md`) | Gemini has now failed twice on this host (memory kill, then empty output); a third attempt needs a different host (ace-linux-1) from the owner's shell, or the owner accepts the two-provider review |
 
 **r1.1 → r1.2 (Codex confirming pass):**
 
@@ -188,7 +189,7 @@ Parallelism: Wave 0 items are disjoint and can run concurrently on separate work
 9. Coverage gaps: added exchanger and fired-heater tubes, conductors/caissons, wellhead fatigue, wire and fibre rope, anchors, geohazards, ECDA/ICDA, wind lifetime extension as rows.
 10. Acceptance #2 now names its evidence (durable test id + route line + Deckhand API contract) instead of asserting behaviour the repo cannot show.
 
-Next: Gemini re-run result recorded here; owner confirms the D3 reading and resolves the D6-versus-approval conflict; then `status:plan-approved` and Wave 0 starts.
+Next: owner confirms the D3 reading, decides how to close D6 (Gemini on another host, or accept two providers), and the approval gate follows; then `status:plan-approved` and Wave 0 starts.
 
 ## Risks and Open Questions
 
