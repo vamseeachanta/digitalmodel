@@ -174,12 +174,14 @@ def assess_touchdown_fatigue(
     if inp.dff <= 0:
         raise ValueError("dff must be > 0")
 
-    # 3) S-N curve first: it validates the class and environment.
-    sn_curve = get_sn_curve(inp.sn_class, inp.environment)
+    # 3) S-N curve first: it validates the class and environment. The class
+    # is normalised once, as get_sn_curve() does, for both lookups.
+    sn_class = inp.sn_class.upper()
+    sn_curve = get_sn_curve(sn_class, inp.environment)
     k = (
         float(inp.thickness_exponent)
         if inp.thickness_exponent is not None
-        else _class_thickness_exponent(inp.sn_class, inp.environment)
+        else _class_thickness_exponent(sn_class, inp.environment)
     )
 
     # 1) SCF on nominal stress ranges, then 2) DNV thickness correction.
@@ -236,7 +238,7 @@ def assess_touchdown_fatigue(
         allowable_damage=allowable_damage,
         usage_factor=usage_factor,
         pass_fail=pass_fail,
-        sn_class=inp.sn_class,
+        sn_class=sn_class,
         environment=inp.environment,
         thickness_exponent=k,
         scf=float(inp.scf),
