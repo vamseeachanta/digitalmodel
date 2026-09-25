@@ -436,4 +436,12 @@ P0b stopped at a₀ = 2.35 mm on the full-circumference fusion-face flaw. Eviden
 - **G15, second crack plane.** A root flaw in the radial–axial plane at the crotch, normal to the run-pipe hoop stress, is added as a second base case, with the same a₀ and depth states. The governing case at each depth is the worse of the two planes. The fusion-face plane gives a crotch K of about 1.39 MPa√m, below ΔK_th, so it predicts no growth. Treating that as the answer without the hoop-opened plane could be non-conservative. That the hoop-opened plane governs is a hypothesis until it is modelled.
 - **D02:** the owner kept the private-catalogue selection in two saves. The fitting-dimension table is not built as public and waits for the owner.
 
+## Guard (g) at free-surface end nodes (owner card G16, save 2026-09-25T18:47Z)
+
+Fixed before any further FE run. For fronts that end on a free surface:
+- guard (g) (J mesh convergence ≤ 1 % between the two finest meshes) is evaluated over the interior front nodes only;
+- the governing K_gov is still the maximum over **all** front nodes, including the free-surface end nodes.
+
+The reason is that free-surface end nodes carry a non-square-root singularity, so their extracted J does not converge like the interior field. On the crotch plane at a₀ it oscillated +1.28 % then −1.10 % while every interior node converged within 0.04 %. Taking the end-node value as governing keeps the result conservative: 7.57 MPa√m against an interior maximum of 7.16 MPa√m. Each receipt reports the end-node J spread for the record. Closed fronts (the fusion-face ring) have no end nodes and are unaffected.
+
 ## Complexity: T3
