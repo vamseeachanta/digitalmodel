@@ -1,16 +1,38 @@
 #!/usr/bin/env python
-"""Sanitize and organize OrcaFlex models from rock-oil-field/s7/ into the
-digitalmodel library.
+"""Sanitize and organize OrcaFlex models from a private s7 model archive into
+the digitalmodel library.
 
 Walks the s7 directory, deduplicates by content hash, applies client-name
 sanitization, strips metadata headers, and writes sanitized .yml files into
 an organized category-based folder structure under docs/domains/orcaflex/.
 
+The name map is private
+-----------------------
+The real-to-neutral name map is the de-identification key, so it is not in
+this public file (owner decisions C13/C16). It is read at run time from a
+private JSON file:
+
+    1. ``--map PATH``, else
+    2. the path in ``DIGITALMODEL_S7_SANITIZE_MAP``, else
+    3. ``~/.config/digitalmodel/s7-sanitize-map.json``.
+
+When none is found, or the configured file is missing or malformed, the
+script stops before reading or writing any model: running with an empty map
+would write unsanitized models. The file holds::
+
+    {
+      "default_s7_root": "<path to the s7 archive, optional>",
+      "sanitization_map": {"<real name>": "<neutral name>", ...},
+      "category_map": {"<source folder prefix>": "<target category>", ...},
+      "exclusions": ["<source folder prefix to skip>", ...]
+    }
+
 Usage:
     uv run python scripts/sanitize_s7_models.py
     uv run python scripts/sanitize_s7_models.py --dry-run
     uv run python scripts/sanitize_s7_models.py --skip-dat
-    uv run python scripts/sanitize_s7_models.py --s7-root /path/to/s7 --output-root /path/to/out
+    uv run python scripts/sanitize_s7_models.py --map /private/s7-map.json \
+        --s7-root /path/to/s7 --output-root /path/to/out
 """
 from __future__ import annotations
 
@@ -18,6 +40,7 @@ import argparse
 import hashlib
 import json
 import logging
+import os
 import re
 import sys
 import time
@@ -35,129 +58,106 @@ except ImportError:
 # Constants
 # ---------------------------------------------------------------------------
 
-DEFAULT_S7_ROOT = Path(r"D:\workspace-hub\rock-oil-field\s7")
 DEFAULT_OUTPUT_ROOT = Path("docs/domains/orcaflex")
 
-# Longest-first ordering is enforced at runtime; this dict is the canonical
-# source of all sanitization replacements.
-SANITIZATION_MAP: dict[str, str] = {
-    # Client project names
-    "Ballymore": "deepwater_field_a",
-    "ballymore": "deepwater_field_a",
-    # Vessel names
-    "Candies": "installation_vessel_01",
-    "WyatteCandies": "iv01_type",
-    "WyattCandies": "iv01_type",
-    "Seven Arctic": "installation_vessel_02",
-    "7arctic": "region_a",
-    "7seas": "region_b",
-    "Seven Seas": "region_b",
-    "SevenSeas": "region_b",
-    # Project names
-    "Shell Perdido": "deepwater_field_b",
-    "Perdido South": "deepwater_field_b",
-    "shell_perdido_south": "deepwater_field_b",
-    "Perdido": "deepwater_field_b",
-    "Talos Venice": "deepwater_field_c",
-    "talos_venice": "deepwater_field_c",
-    "BP_MD2_FJR": "regional_design_01",
-    "BP_MD2": "regional_design_01",
-    "ONGC": "operator_a",
-    "Limerock": "pipeline_route_a",
-    "limerock": "pipeline_route_a",
-    # User/machine identifiers (remove entirely)
-    "SS7A2365": "",
-    "USNGL23LR3": "",
-    "ss7a2365": "",
-}
+MAP_ENV_VAR = "DIGITALMODEL_S7_SANITIZE_MAP"
+MAP_FILE_NAME = "s7-sanitize-map.json"
 
-# Pre-sorted by key length descending to avoid partial-match corruption.
-_SORTED_SANITIZATION_PAIRS: list[tuple[str, str]] = sorted(
-    SANITIZATION_MAP.items(), key=lambda kv: len(kv[0]), reverse=True
-)
 
-# Source-to-target category mapping.  Keys are path fragments relative to
-# s7-root using forward slashes.
-CATEGORY_MAP: dict[str, str] = {
-    # ballymore jumper models
-    "ballymore/Jumper_Manifold to PLET": "jumper/manifold_to_plet",
-    "ballymore/Jumper_PLET to PLEM": "jumper/plet_to_plem",
-    "ballymore/sut_mm/01-SZ-Xdeg": "jumper/sut_mm",
-    "ballymore/sut_mm/02-DZ-30deg_no_AHC": "jumper/sut_mm",
-    "ballymore/sut_mm/03-DZ-00deg_AHC": "jumper/sut_mm",
-    "ballymore/sut_mm/04-RES": "jumper/sut_mm/resonance",
-    # installation
-    "shell_perdido_south/anl/manifold": "installation/manifold/region_a",
-    "shell_perdido_south/mudmat_tool/rev2": "installation/mudmat",
-    "shell_perdido_south/mudmat_tool/rev3": "installation/mudmat",
-    "talos_venice/infield": "installation/pipeline/route_a",
-    "talos_venice/limerock": "installation/pipeline/route_b",
-    # mooring
-    "analysis_general/moorings": "mooring/reference",
-    "analysis_general/_ref/mooring": "mooring/reference",
-    # training
-    "analysis_general/train/CraneMaster": "training/crane_master",
-    "analysis_general/train/hulls": "training/hulls",
-    "analysis_general/train/Node feeding": "training/node_feeding",
-    "analysis_general/train/jumper": "training/jumper_training",
-    "analysis_general/train/s-lay": "training/s_lay",
-    "analysis_general/train/structure": "training/structure",
-    "analysis_general/train/Riser Design": "training/riser_design",
-    "analysis_general/train/SCR Design April 2015": "training/scr_design",
-    "analysis_general/train/Reeling": "training/reeling",
-    "analysis_general/train/Pipeline Design Workshop": "training/pipeline_design",
-    # RAOs
-    "ballymore/WyattCandies-Case1-2-seastateRAOs": "vessel_raos/iv01",
-    "talos_venice/raos": "vessel_raos/route_a",
-    # regional / general
-    "BP_MD2_FJR": "regional",
-    "analysis_general/_ref": "reference",
-    "analysis_general/umbilical": "installation/umbilical",
-    # Catch-all for unmapped subdirectories
-    "ballymore/sut_mm/qa": "jumper/sut_mm",
-    "ballymore/sut_mm/data": "jumper/sut_mm",
-    "ballymore/sut_mm": "jumper/sut_mm",
-    "analysis_general": "reference",
-    "shell_perdido_south/anl": "installation/manifold/region_a",
-}
+def default_map_path() -> Path:
+    """``~/.config/digitalmodel/s7-sanitize-map.json`` for the current user."""
+    return Path.home() / ".config" / "digitalmodel" / MAP_FILE_NAME
 
-# Pre-sorted by specificity (longest prefix first) so the most specific
-# category wins during lookup.
-_SORTED_CATEGORY_PAIRS: list[tuple[str, str]] = sorted(
-    CATEGORY_MAP.items(), key=lambda kv: len(kv[0]), reverse=True
-)
 
-# Directories to skip entirely (relative to s7-root, forward slashes).
-EXCLUSIONS: list[str] = [
-    "shell_perdido_south/mudmat_tool/rev1",
-    "ballymore/sut_mm/mudmat_tool",
-    "ballymore/sut_mm/Ballymore Graphics",
-    "ballymore/weather",
-    "analysis_general/ssRAOs_toolkit",
-    "analysis_general/cad",
-    "analysis_general/py",
-    "analysis_general/orcina",
-    "analysis_general/eca",
-    "analysis_general/f101",
-    "analysis_general/flow_assurance",
-    "analysis_general/geotech",
-    "analysis_general/foundations",
-    "analysis_general/lifting",
-    "analysis_general/eng_process",
-    "analysis_general/pipelines",
-    "analysis_general/i7",
-    "md2",
-    "shell_perdido_south/data",
-    "shell_perdido_south/_ref",
-    "shell_perdido_south/anl/go_by",
-    "talos_venice/report",
-    "talos_venice/stormgeo",
-    "talos_venice/infield/data",
-    "talos_venice/infield/report",
-    "talos_venice/infield/calculatedpositions",
-    "talos_venice/infield/calculatedpositions_qa",
-    "talos_venice/infield/uth",
-]
+class SanitizeMapError(RuntimeError):
+    """The private name map is missing or malformed; the run must stop."""
+
+
+@dataclass(frozen=True)
+class SanitizeConfig:
+    """The private name map, validated, with lookup orders precomputed."""
+
+    sanitization_map: dict[str, str]
+    category_map: dict[str, str]
+    exclusions: tuple[str, ...]
+    default_s7_root: str = ""
+    source: str = ""
+
+    @property
+    def sorted_sanitization_pairs(self) -> list[tuple[str, str]]:
+        # Longest key first, to avoid partial-match corruption.
+        return sorted(
+            self.sanitization_map.items(), key=lambda kv: len(kv[0]), reverse=True
+        )
+
+    @property
+    def sorted_category_pairs(self) -> list[tuple[str, str]]:
+        # Longest prefix first, so the most specific category wins.
+        return sorted(
+            self.category_map.items(), key=lambda kv: len(kv[0]), reverse=True
+        )
+
+
+def _str_map(data: dict, key: str, path: Path, required: bool) -> dict[str, str]:
+    value = data.get(key, None)
+    if value is None:
+        if required:
+            raise SanitizeMapError(f"{path}: '{key}' is missing")
+        return {}
+    if not isinstance(value, dict) or not all(
+        isinstance(k, str) and isinstance(v, str) for k, v in value.items()
+    ):
+        raise SanitizeMapError(f"{path}: '{key}' must map strings to strings")
+    if required and not value:
+        raise SanitizeMapError(f"{path}: '{key}' is empty")
+    return dict(value)
+
+
+def load_sanitize_config(path: str | Path | None = None) -> SanitizeConfig:
+    """Load the private name map; raise :class:`SanitizeMapError` if absent.
+
+    Resolution: *path*, else ``$DIGITALMODEL_S7_SANITIZE_MAP``, else
+    ``~/.config/digitalmodel/s7-sanitize-map.json``. There is no built-in
+    fallback map.
+    """
+    if path is not None:
+        resolved, origin = Path(path), "--map"
+    elif os.environ.get(MAP_ENV_VAR):
+        resolved, origin = Path(os.environ[MAP_ENV_VAR]), MAP_ENV_VAR
+    else:
+        resolved, origin = default_map_path(), "the default location"
+
+    if not resolved.is_file():
+        raise SanitizeMapError(
+            f"private s7 name map not found at {resolved} (from {origin}); set "
+            f"{MAP_ENV_VAR} or install {default_map_path()}. Refusing to run "
+            "without it."
+        )
+    try:
+        data = json.loads(resolved.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise SanitizeMapError(f"{resolved}: cannot read the name map: {exc}") from exc
+    if not isinstance(data, dict):
+        raise SanitizeMapError(f"{resolved}: the name map must be a JSON object")
+
+    sanitization = _str_map(data, "sanitization_map", resolved, required=True)
+    categories = _str_map(data, "category_map", resolved, required=False)
+    exclusions = data.get("exclusions", [])
+    if not isinstance(exclusions, list) or not all(
+        isinstance(e, str) for e in exclusions
+    ):
+        raise SanitizeMapError(f"{resolved}: 'exclusions' must be a list of strings")
+    root = data.get("default_s7_root", "") or ""
+    if not isinstance(root, str):
+        raise SanitizeMapError(f"{resolved}: 'default_s7_root' must be a string")
+
+    return SanitizeConfig(
+        sanitization_map=sanitization,
+        category_map=categories,
+        exclusions=tuple(exclusions),
+        default_s7_root=root,
+        source=str(resolved),
+    )
 
 # YAML metadata lines that OrcFxAPI.SaveData() embeds at file top.
 _HEADER_LINE_RE = re.compile(r"^(User|Machine|File)\s*:.*$", re.MULTILINE)
@@ -229,22 +229,22 @@ def sha256_of_file(path: Path) -> str:
     return h.hexdigest()
 
 
-def is_excluded(rel_path: str) -> bool:
+def is_excluded(rel_path: str, config: SanitizeConfig) -> bool:
     """Check whether *rel_path* (forward-slash, relative to s7-root) falls
     under any excluded directory prefix."""
     rel_lower = rel_path.lower()
-    for exc in EXCLUSIONS:
+    for exc in config.exclusions:
         exc_lower = exc.lower().replace("\\", "/")
         if rel_lower.startswith(exc_lower + "/") or rel_lower == exc_lower:
             return True
     return False
 
 
-def resolve_category(rel_path: str) -> str | None:
+def resolve_category(rel_path: str, config: SanitizeConfig) -> str | None:
     """Return the target category for a file's relative directory, or None
     if no mapping matches."""
     rel_norm = rel_path.replace("\\", "/")
-    for prefix, category in _SORTED_CATEGORY_PAIRS:
+    for prefix, category in config.sorted_category_pairs:
         prefix_norm = prefix.replace("\\", "/")
         if rel_norm.startswith(prefix_norm + "/") or rel_norm == prefix_norm:
             return category
@@ -269,7 +269,7 @@ def looks_like_orcaflex_yml(path: Path) -> bool:
     return False
 
 
-def sanitize_text(text: str) -> tuple[str, list[str]]:
+def sanitize_text(text: str, config: SanitizeConfig) -> tuple[str, list[str]]:
     """Apply all sanitization replacements and strip metadata headers.
 
     Returns (sanitized_text, list_of_transformation_descriptions).
@@ -277,7 +277,7 @@ def sanitize_text(text: str) -> tuple[str, list[str]]:
     transformations: list[str] = []
 
     # Apply replacements longest-first.
-    for old, new in _SORTED_SANITIZATION_PAIRS:
+    for old, new in config.sorted_sanitization_pairs:
         if old in text:
             count = text.count(old)
             if new:
@@ -299,7 +299,9 @@ def sanitize_text(text: str) -> tuple[str, list[str]]:
     return text, transformations
 
 
-def sanitize_object_names(model: "OrcFxAPI.Model") -> list[str]:
+def sanitize_object_names(
+    model: "OrcFxAPI.Model", config: SanitizeConfig
+) -> list[str]:
     """Rename objects inside a loaded OrcFxAPI model using the sanitization
     map.  Returns list of transformation descriptions."""
     transformations: list[str] = []
@@ -307,7 +309,7 @@ def sanitize_object_names(model: "OrcFxAPI.Model") -> list[str]:
     for obj in model.objects:
         original_name = obj.Name
         new_name = original_name
-        for old, new in _SORTED_SANITIZATION_PAIRS:
+        for old, new in config.sorted_sanitization_pairs:
             if old in new_name:
                 new_name = new_name.replace(old, new)
         if new_name != original_name:
@@ -320,14 +322,14 @@ def sanitize_object_names(model: "OrcFxAPI.Model") -> list[str]:
 
 
 def target_yml_path(
-    output_root: Path, category: str, source_name: str
+    output_root: Path, category: str, source_name: str, config: SanitizeConfig
 ) -> Path:
     """Build the target path:
     <output_root>/<category>/monolithic/<sanitized_filename>.yml
     """
     # Sanitize the filename itself.
     sanitized_name = source_name
-    for old, new in _SORTED_SANITIZATION_PAIRS:
+    for old, new in config.sorted_sanitization_pairs:
         if old in sanitized_name:
             sanitized_name = sanitized_name.replace(old, new)
 
@@ -345,11 +347,12 @@ def process_yml_file(
     output_root: Path,
     category: str,
     dry_run: bool,
+    config: SanitizeConfig,
 ) -> AuditEntry:
     """Text-based sanitization of a .yml file."""
     file_hash = sha256_of_file(source)
     file_size = source.stat().st_size
-    target = target_yml_path(output_root, category, source.name)
+    target = target_yml_path(output_root, category, source.name, config)
 
     entry = AuditEntry(
         source_path=str(source),
@@ -363,7 +366,7 @@ def process_yml_file(
         with open(source, "r", encoding="latin-1", errors="replace") as f:
             raw_text = f.read()
 
-        sanitized, transforms = sanitize_text(raw_text)
+        sanitized, transforms = sanitize_text(raw_text, config)
         entry.transformations = transforms
 
         if not dry_run:
@@ -385,12 +388,13 @@ def process_dat_file(
     output_root: Path,
     category: str,
     dry_run: bool,
+    config: SanitizeConfig,
 ) -> AuditEntry:
     """Load .dat via OrcFxAPI, sanitize object names, save as .yml, then
     apply text-based sanitization on the result."""
     file_hash = sha256_of_file(source)
     file_size = source.stat().st_size
-    target = target_yml_path(output_root, category, source.name)
+    target = target_yml_path(output_root, category, source.name, config)
 
     entry = AuditEntry(
         source_path=str(source),
@@ -407,7 +411,7 @@ def process_dat_file(
 
     try:
         model = OrcFxAPI.Model(str(source))
-        obj_transforms = sanitize_object_names(model)
+        obj_transforms = sanitize_object_names(model, config)
         entry.transformations.extend(obj_transforms)
 
         if not dry_run:
@@ -419,7 +423,7 @@ def process_dat_file(
             with open(target, "r", encoding="latin-1", errors="replace") as f:
                 raw_text = f.read()
 
-            sanitized, text_transforms = sanitize_text(raw_text)
+            sanitized, text_transforms = sanitize_text(raw_text, config)
             entry.transformations.extend(text_transforms)
 
             with open(target, "w", encoding="latin-1", newline="") as f:
@@ -439,7 +443,7 @@ def process_dat_file(
 # ---------------------------------------------------------------------------
 
 def discover_model_files(
-    s7_root: Path,
+    s7_root: Path, config: SanitizeConfig
 ) -> tuple[list[Path], list[Path], int]:
     """Walk s7_root and return (yml_files, dat_files, excluded_count).
 
@@ -459,7 +463,7 @@ def discover_model_files(
 
         rel = path.relative_to(s7_root).as_posix()
 
-        if is_excluded(rel):
+        if is_excluded(rel, config):
             excluded_count += 1
             continue
 
@@ -479,8 +483,23 @@ def discover_model_files(
 # ---------------------------------------------------------------------------
 
 def run(args: argparse.Namespace) -> int:
-    """Main entry point.  Returns exit code (0 = success)."""
-    s7_root = Path(args.s7_root).resolve()
+    """Main entry point.  Returns exit code (0 = success).
+
+    Stops with exit code 2, before reading or writing any model, when the
+    private name map cannot be loaded.
+    """
+    try:
+        config = load_sanitize_config(getattr(args, "map", None))
+    except SanitizeMapError as exc:
+        logger.error("%s", exc)
+        return 2
+    logger.info("Name map loaded (%d entries)", len(config.sanitization_map))
+
+    s7_arg = args.s7_root or config.default_s7_root
+    if not s7_arg:
+        logger.error("No --s7-root given and the name map sets no default_s7_root")
+        return 2
+    s7_root = Path(s7_arg).resolve()
     output_root = Path(args.output_root).resolve()
     dry_run: bool = args.dry_run
     skip_dat: bool = args.skip_dat
@@ -494,7 +513,7 @@ def run(args: argparse.Namespace) -> int:
     seen_hashes: set[str] = set()
 
     logger.info("Discovering model files in %s ...", s7_root)
-    yml_files, dat_files, excluded_count = discover_model_files(s7_root)
+    yml_files, dat_files, excluded_count = discover_model_files(s7_root, config)
     stats.excluded_skipped = excluded_count
     stats.total_files_found = len(yml_files) + len(dat_files)
 
@@ -516,13 +535,13 @@ def run(args: argparse.Namespace) -> int:
         seen_hashes.add(file_hash)
 
         rel_dir = source.parent.relative_to(s7_root).as_posix()
-        category = resolve_category(rel_dir)
+        category = resolve_category(rel_dir, config)
         if category is None:
             category = "uncategorized"
             logger.warning("No category mapping for: %s", rel_dir)
 
         stats.categories_used.add(category)
-        entry = process_yml_file(source, output_root, category, dry_run)
+        entry = process_yml_file(source, output_root, category, dry_run, config)
         audit_log.append(entry)
 
         if entry.status == "error":
@@ -548,13 +567,13 @@ def run(args: argparse.Namespace) -> int:
             seen_hashes.add(file_hash)
 
             rel_dir = source.parent.relative_to(s7_root).as_posix()
-            category = resolve_category(rel_dir)
+            category = resolve_category(rel_dir, config)
             if category is None:
                 category = "uncategorized"
                 logger.warning("No category mapping for: %s", rel_dir)
 
             stats.categories_used.add(category)
-            entry = process_dat_file(source, output_root, category, dry_run)
+            entry = process_dat_file(source, output_root, category, dry_run, config)
             audit_log.append(entry)
 
             if entry.status == "error":
@@ -632,9 +651,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--s7-root",
         type=str,
-        default=str(DEFAULT_S7_ROOT),
-        help="Path to the rock-oil-field/s7/ directory "
-        f"(default: {DEFAULT_S7_ROOT})",
+        default=None,
+        help="Path to the s7 model archive (default: default_s7_root in the "
+        "private name map)",
+    )
+    parser.add_argument(
+        "--map",
+        type=str,
+        default=None,
+        help=f"Private name map JSON (default: ${MAP_ENV_VAR}, else "
+        f"~/.config/digitalmodel/{MAP_FILE_NAME})",
     )
     parser.add_argument(
         "--output-root",

@@ -72,6 +72,7 @@ BASELINE_HEADER = """\
 # Every line is content nobody has read; review the diff before committing it.
 """
 _BASELINE_ROW = re.compile(r"([0-9a-f]{64})  (\S.*)")
+_SHA256 = re.compile(r"[0-9a-f]{64}")
 #: Text is read up to this size. Above it the file is uninspectable, which
 #: fails: GitHub refuses files over 100 MB, so this bounds nothing real.
 MAX_BYTES = 64 * 1024 * 1024
@@ -106,6 +107,25 @@ def load_rules() -> dict:
         sys.exit(f"check_identifiers: rules file unreadable: {exc}")
     if not isinstance(rules, dict) or "structural" not in rules:
         sys.exit("check_identifiers: rules file has no 'structural' section")
+    # Hashes kept under the salt they were made with, when the salt was
+    # rotated and their plaintext was not available to re-hash (C13/C16).
+    # Malformed, the block would silently match nothing: refuse instead.
+    legacy = rules.get("legacy_hashed_names")
+    if legacy is not None and not (
+        isinstance(legacy, dict)
+        and isinstance(legacy.get("salt"), str)
+        and legacy["salt"].strip()
+        and isinstance(legacy.get("hashes"), list)
+        and legacy["hashes"]
+        and all(
+            isinstance(h, str) and _SHA256.fullmatch(h.lower())
+            for h in legacy["hashes"]
+        )
+    ):
+        sys.exit(
+            "check_identifiers: 'legacy_hashed_names' must be a mapping with a "
+            "non-empty 'salt' and a non-empty list of sha256 'hashes'"
+        )
 
     private = os.environ.get("DIGITALMODEL_DENY_LIST")
     if private:
@@ -489,6 +509,9 @@ def check(
     """
     salt = str(rules.get("salt", ""))
     hashed = {str(h).lower() for h in rules.get("hashed_names") or []}
+    legacy = rules.get("legacy_hashed_names") or {}
+    legacy_salt = str(legacy.get("salt", ""))
+    legacy_hashed = {str(h).lower() for h in legacy.get("hashes") or []}
     private = set(rules.get("_private_names") or [])
     excluded = {
         str(e["path"]).replace("\\", "/")
@@ -539,10 +562,12 @@ def check(
                     f"{label}:{n}: [{rid}] {msg.strip()}\n" f"    {line.strip()[:160]}"
                 )
                 break
-        if hashed or private:
+        if hashed or private or legacy_hashed:
             for word in WORD.findall(line):
                 if any(
-                    c in private or token_hash(c, salt) in hashed
+                    c in private
+                    or token_hash(c, salt) in hashed
+                    or (legacy_hashed and token_hash(c, legacy_salt) in legacy_hashed)
                     for c in _candidates(word)
                 ):
                     findings.append(

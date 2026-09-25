@@ -2,7 +2,7 @@
 # A01 Pliant Wave Riser - Pliant wave riser with subsea buoy (simplified)
 #
 # Model Type: Riser (pliant wave configuration)
-# Source: OrcaFlex Examples - A01 Pliant wave riser.dat
+# Source: OrcaFlex Examples - A01 Pliant wave riser.yml
 # Tier: 2 (Fast validation, <15s statics)
 #
 # This uses the "Simple" line variant from the monolithic model where the

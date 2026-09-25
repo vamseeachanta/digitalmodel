@@ -46,19 +46,20 @@ The scan must exit 0 before the PR can proceed (legal-compliance rule: block sev
 
 ## Pre-Existing Violations
 
-The following files contain client identifiers intentionally as part of the
-sanitization mapping logic. They are excluded via `exclusions:` in the deny list:
-
-- `digitalmodel/scripts/sanitize_s7_models.py` — maps raw client names to generic
-  equivalents; the patterns must appear here to perform the substitution.
-- `digitalmodel/scripts/extract_s7_specs.py` — source extraction helper.
-- `digitalmodel/docs/domains/cathodic_protection/<contractor>_cp_comparison_analysis.md` —
-  pre-WRK-278 analysis document referencing source document numbers; not yet excluded.
-- `digitalmodel/docs/domains/cathodic_protection/standards-inventory.md` — lists
-  file paths that include repo names; paths, not code.
-
-Do NOT modify `sanitize_s7_models.py` or `extract_s7_specs.py` to remove these
-references — they are the sanitization source of truth.
+> **Superseded by owner decisions C13/C16 (2026-09-25).** The paragraph that
+> stood here excluded the de-identification script and a contractor
+> cathodic-protection comparison from the gate and said not to edit the
+> script. Now:
+>
+> - `scripts/sanitize_s7_models.py` carries no names. Its real-to-neutral map
+>   is a private JSON file read at run time from `DIGITALMODEL_S7_SANITIZE_MAP`
+>   or `~/.config/digitalmodel/s7-sanitize-map.json`; without it the script
+>   stops. The script has no exclusion.
+> - The cathodic-protection comparison document was removed from this public
+>   repository (a private copy is kept) and has no exclusion.
+> - `scripts/extract_s7_specs.py` is not in this repository.
+> - `docs/domains/cathodic_protection/standards-inventory.md` lists file paths
+>   only and is checked like any other file.
 
 ---
 

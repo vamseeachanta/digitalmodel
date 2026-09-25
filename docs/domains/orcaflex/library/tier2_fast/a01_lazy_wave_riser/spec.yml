@@ -2,7 +2,7 @@
 # A01 Lazy Wave Riser - Lazy wave riser with distributed buoyancy
 #
 # Model Type: Riser (lazy wave configuration)
-# Source: OrcaFlex Examples - A01 Lazy wave riser.dat
+# Source: OrcaFlex Examples - A01 Lazy wave riser.yml
 # Tier: 2 (Fast validation, <15s statics)
 #
 # The lazy wave configuration uses a buoyant section in the middle of the
