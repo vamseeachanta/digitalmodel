@@ -503,6 +503,11 @@ def check(
                 blob = blobs.get(rel)
                 if blob is None:
                     raise Uninspectable("not in the index")
+            elif os.path.islink(full):
+                # Git stores a symlink as its target text, and that text is
+                # what is published. Following the link instead made a link
+                # to a directory "not exist" on Linux and pass elsewhere.
+                blob = os.readlink(full).encode("utf-8", "surrogateescape")
             else:
                 if not os.path.isfile(full):
                     raise Uninspectable("file does not exist")
