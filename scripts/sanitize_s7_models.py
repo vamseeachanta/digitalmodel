@@ -27,6 +27,18 @@ would write unsanitized models. The file holds::
       "exclusions": ["<source folder prefix to skip>", ...]
     }
 
+The audit is private too
+------------------------
+The audit records every replacement as original -> replacement and every
+source path, which is the name map again. It is written to private storage:
+
+    1. ``--audit PATH``, else
+    2. the path in ``DIGITALMODEL_S7_SANITIZE_AUDIT``, else
+    3. ``s7-sanitize-audit.json`` next to the private name map.
+
+A location inside this repository or inside the output tree is refused before
+any model is read. Public output carries counts only.
+
 Usage:
     uv run python scripts/sanitize_s7_models.py
     uv run python scripts/sanitize_s7_models.py --dry-run
@@ -62,6 +74,10 @@ DEFAULT_OUTPUT_ROOT = Path("docs/domains/orcaflex")
 
 MAP_ENV_VAR = "DIGITALMODEL_S7_SANITIZE_MAP"
 MAP_FILE_NAME = "s7-sanitize-map.json"
+AUDIT_ENV_VAR = "DIGITALMODEL_S7_SANITIZE_AUDIT"
+AUDIT_FILE_NAME = "s7-sanitize-audit.json"
+#: The repository this script belongs to: nothing identifying is written here.
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def default_map_path() -> Path:
@@ -479,6 +495,50 @@ def discover_model_files(
 
 
 # ---------------------------------------------------------------------------
+# Audit location
+# ---------------------------------------------------------------------------
+
+
+class AuditPathError(RuntimeError):
+    """The audit location is public; the run must stop."""
+
+
+def _inside(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+    except ValueError:
+        return False
+    return True
+
+
+def resolve_audit_path(
+    explicit: str | Path | None, config: SanitizeConfig, output_root: Path
+) -> Path:
+    """The private audit location, or :class:`AuditPathError`.
+
+    Resolution: *explicit*, else ``$DIGITALMODEL_S7_SANITIZE_AUDIT``, else
+    ``s7-sanitize-audit.json`` next to the private name map. The audit holds
+    original names and source paths, so a location inside this repository or
+    inside the (public) output tree is refused.
+    """
+    if explicit:
+        audit, origin = Path(explicit), "--audit"
+    elif os.environ.get(AUDIT_ENV_VAR):
+        audit, origin = Path(os.environ[AUDIT_ENV_VAR]), AUDIT_ENV_VAR
+    else:
+        audit, origin = Path(config.source).parent / AUDIT_FILE_NAME, "the map folder"
+    audit = audit.resolve()
+    for root, what in ((REPO_ROOT, "the repository"), (output_root, "the output tree")):
+        if _inside(audit, root.resolve()):
+            raise AuditPathError(
+                f"the audit location (from {origin}) is inside {what}; the audit "
+                f"holds original names and source paths and must stay private. "
+                f"Set --audit or {AUDIT_ENV_VAR} to a private location."
+            )
+    return audit
+
+
+# ---------------------------------------------------------------------------
 # Main orchestration
 # ---------------------------------------------------------------------------
 
@@ -503,6 +563,11 @@ def run(args: argparse.Namespace) -> int:
     output_root = Path(args.output_root).resolve()
     dry_run: bool = args.dry_run
     skip_dat: bool = args.skip_dat
+    try:
+        audit_path = resolve_audit_path(getattr(args, "audit", None), config, output_root)
+    except AuditPathError as exc:
+        logger.error("%s", exc)
+        return 2
 
     if not s7_root.is_dir():
         logger.error("S7 root directory does not exist: %s", s7_root)
@@ -585,8 +650,7 @@ def run(args: argparse.Namespace) -> int:
 
     stats.end_time = time.time()
 
-    # --- Write audit log ---
-    audit_path = output_root / "sanitization_audit.json"
+    # --- Write audit log (private: it names originals and sources) ---
     audit_data = {
         "summary": {
             "total_files_found": stats.total_files_found,
@@ -608,9 +672,9 @@ def run(args: argparse.Namespace) -> int:
         audit_path.parent.mkdir(parents=True, exist_ok=True)
         with open(audit_path, "w", encoding="utf-8") as f:
             json.dump(audit_data, f, indent=2)
-        logger.info("Audit log written to %s", audit_path)
+        logger.info("Private audit log written (%d entries)", len(audit_log))
     else:
-        logger.info("DRY RUN: audit log not written (would be %s)", audit_path)
+        logger.info("DRY RUN: private audit log not written")
 
     # --- Print summary ---
     _print_summary(stats, dry_run)
@@ -632,8 +696,6 @@ def _print_summary(stats: RunStats, dry_run: bool) -> None:
     print(f"  Non-OrcaFlex .yml skip  : {stats.non_orcaflex_skipped}")
     print(f"  Errors                  : {stats.errors}")
     print(f"  Categories used         : {len(stats.categories_used)}")
-    for cat in sorted(stats.categories_used):
-        print(f"    - {cat}")
     print(f"  Elapsed time            : {elapsed:.1f}s")
     print(f"  OrcFxAPI available      : {HAS_ORCFX}")
     print(f"{'=' * 60}\n")
@@ -661,6 +723,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default=None,
         help=f"Private name map JSON (default: ${MAP_ENV_VAR}, else "
         f"~/.config/digitalmodel/{MAP_FILE_NAME})",
+    )
+    parser.add_argument(
+        "--audit",
+        type=str,
+        default=None,
+        help=f"Private audit JSON (default: ${AUDIT_ENV_VAR}, else "
+        f"{AUDIT_FILE_NAME} next to the name map). Refused inside the "
+        "repository or the output tree.",
     )
     parser.add_argument(
         "--output-root",
