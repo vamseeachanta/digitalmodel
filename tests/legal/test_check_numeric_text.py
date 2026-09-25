@@ -143,6 +143,30 @@ def test_reordered_json_keys_with_the_same_values_pass(repo):
     assert out.returncode == 0, out.stdout
 
 
+def test_a_redacted_key_with_the_same_values_passes_and_is_listed(repo):
+    # The cleanup renames objects keyed by a private name (a vessel, a line
+    # type). Every number stays at the same place under the new key.
+    base = _commit(repo, {"m.yml": "Vessels:\n  zzship:\n    X: 1.5\n    Y: 2\n"})
+    head = _commit(repo, {"m.yml": "Vessels:\n  iv02:\n    X: 1.5\n    Y: 2\n"})
+    out = _run(repo, base, head)
+    assert out.returncode == 0, out.stdout
+    assert "renamed key" in out.stdout
+
+
+def test_a_redacted_key_with_a_changed_value_fails(repo):
+    base = _commit(repo, {"m.yml": "Vessels:\n  zzship:\n    X: 1.5\n"})
+    head = _commit(repo, {"m.yml": "Vessels:\n  iv02:\n    X: 1.25\n"})
+    assert _run(repo, base, head).returncode == 1
+
+
+def test_keys_swapped_in_place_are_not_a_rename(repo):
+    # {"x": 1, "y": 2} -> {"y": 1, "x": 2}: same numbers at the same places,
+    # but x changed from 1 to 2. A rename to a name already present is a swap.
+    base = _commit(repo, {"s.json": '{"x": 1, "y": 2}\n'})
+    head = _commit(repo, {"s.json": '{"y": 1, "x": 2}\n'})
+    assert _run(repo, base, head).returncode == 1
+
+
 @pytest.mark.parametrize(
     "name,before,after",
     [
