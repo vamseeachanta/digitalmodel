@@ -1,9 +1,9 @@
 # Plan for #1057: Fitness-For-Service Offering Program
 
 **Issue:** [#1057](https://github.com/vamseeachanta/digitalmodel/issues/1057) (epic), Phase 4 and readiness demonstrators
-**Date:** 2026-09-25 · **Revision:** r1.1 (after Claude r1 MAJOR and Codex r1 MAJOR; findings and dispositions in *Adversarial Review Summary*)
+**Date:** 2026-09-25 · **Revision:** r1.2 (after Claude r1 MAJOR, Codex r1 MAJOR, Codex r1.1 MAJOR; findings and dispositions in *Adversarial Review Summary*)
 **Status:** under adversarial review. `status:plan-review` on the epic means "a plan exists and is being reviewed"; approval is the owner's `status:plan-approved`, which this plan never self-applies.
-**Depends on:** PR #2186 (program note and readiness review, cited below) and PR #2194 (#2157 crack FE plan) being merged, or their content being read from those branches.
+**Evidence locality:** the program note and readiness review cited below are in this branch (cherry-picked from PR #2186, which is superseded by this PR). The #2157 crack FE plan is external (PR #2194, open). Deckhand `report_url` is a target contract (deckhand #498/#499), not current behaviour.
 **Objective (owner's words):** be able to offer fitness-for-service (FFS) services for a wide variety of assets via available codes and standards.
 
 ## Resource Intelligence Summary
@@ -32,7 +32,7 @@ None. The #2157 weldolet MAPDL model lives on ACMA-HOU-RDS02 and was not accessi
 ### Documents Consulted
 
 - `docs/domains/asset-integrity/ffs-architecture.md`, `ffs-validation-record-2026-06-27.md`, `b31g-validation-2026-06-27.md`, `docs/domains/circumferential-defect-validation-2026-06-29.md`, `docs/domains/rstreng-2d-validation-2026-06-29.md`
-- PR #2186: `docs/domains/asset-integrity/level3-and-part9-program-2026-09-25.md`, `ffs-readiness-review-2026-09-25.md`
+- `docs/domains/asset-integrity/level3-and-part9-program-2026-09-25.md`, `ffs-readiness-review-2026-09-25.md` (in this branch; originally PR #2186)
 - Issues #1057, #1094, #1274, #2157, #2160, #2171–#2178, #2180–#2185, #2197–#2203, #2205, llm-wiki #913
 - Public overviews listed in `docs/domains/asset-integrity/ffs-offering-catalog.md`
 
@@ -43,7 +43,7 @@ From the offering catalog (`src/digitalmodel/asset_integrity/data/ffs_offering_c
 | Status | Rows | Meaning for the offering |
 |---|---|---|
 | live | 0 | nothing is both validated and routed today |
-| routed | 5 | run link exists, no validation record (legacy API 579 pipe, inspection planning, riser fatigue, plate buckling, two subsea design screens) |
+| routed | 5 | run link exists, no validation record: inspection interval, riser fatigue, plate buckling, free-span screen, on-bottom-stability screen (the legacy API 579 pipe engine is also routed but no row depends on it) |
 | validated | 6 | defensible numbers, no run link |
 | engine | 31 | code exists, no validation record or run link |
 | planned | 25 | issue filed |
@@ -53,8 +53,8 @@ Structural gaps: no Level 3 numerical path in the unlicensed chain; three duplic
 
 ### Evidence
 
-- Readiness matrix and per-module test counts: `ffs-readiness-review-2026-09-25.md` (PR #2186).
-- Catalog validation: `tests/asset_integrity/test_offering_catalog.py` (7 tests: shape, engine entries incl. module import and workflow ids, Deckhand routes when the sibling checkout exists, row references, status not stronger than engines, no threshold-like numerics, page summary equals data).
+- Readiness matrix and per-module test counts: `docs/domains/asset-integrity/ffs-readiness-review-2026-09-25.md` (this branch).
+- Catalog validation: `tests/asset_integrity/test_offering_catalog.py` (7 tests: shape, engine entries incl. module import and workflow ids, Deckhand routes when the sibling checkout exists, row references, status semantics (none ⇒ no engines; row ≤ strongest engine; live ⇒ only live/validated engines), no threshold-like numerics, page summary equals data). Run locally with the repo venv (`.venv/Scripts/python.exe -m pytest tests/asset_integrity/test_offering_catalog.py`) because `uv run` re-syncs the lock and fails building `cx-oracle` / `pyyaml` wheels on this Windows host; the CI job `tests-asset-integrity` on PR #2204 is the arbiter.
 - #2157 review trail: Codex r1 MAJOR, Claude r1 MAJOR, Codex r2 MAJOR, Codex r2.1 MINOR; r2.2 pending owner approval.
 
 ## Offering Model
@@ -78,6 +78,7 @@ Industries in scope (catalog sections 1–8): pipelines, refining and petrochemi
 | D3 | API 579 2016 Level 2 FAD equation confirmed in an authorised viewer (#2157 card R01) | curves stay labelled BS 7910 Option 1 |
 | D4 | Wave 2 asset-class order (tanks, moorings, platforms, hulls, casing, flexible pipe) by prospect demand | order as listed |
 | D5 | Whether the two subsea design screens (free span, on-bottom stability) stay in the FFS catalog as `routed` rows or move to a design-screen catalog | stay, flagged "not an FFS verdict" |
+| D6 | Accept a two-provider (Claude + Codex) review for this T4 plan, or require a Gemini pass re-run by the owner on a host with memory headroom before approval | owner re-runs Gemini; approval waits |
 
 ## Artifact Map
 
@@ -86,8 +87,8 @@ plan  docs/plans/2026-09-25-issue-1057-ffs-offering-program.md          (this fi
 data  src/digitalmodel/asset_integrity/data/ffs_offering_catalog.yml    (single source: industries x assets x defects x codes x status)
 test  tests/asset_integrity/test_offering_catalog.py                    (schema, references, status semantics, rights, page counts)
 page  docs/domains/asset-integrity/ffs-offering-catalog.md              (lookup tables; generator lands in #2197, counts already enforced)
-notes docs/domains/asset-integrity/level3-and-part9-program-2026-09-25.md   (PR #2186)
-      docs/domains/asset-integrity/ffs-readiness-review-2026-09-25.md       (PR #2186)
+notes docs/domains/asset-integrity/level3-and-part9-program-2026-09-25.md   (this branch)
+      docs/domains/asset-integrity/ffs-readiness-review-2026-09-25.md       (this branch)
 epic  #1057  Phase 4 (Level 3 / Part 9) + readiness demonstrators + offering asset classes
 wiki  llm-wiki #913 (API 653 pointers, 2007->2021 crosswalk, Part 9 dataset audit)
 ```
@@ -114,7 +115,7 @@ wiki  llm-wiki #913 (API 653 pointers, 2007->2021 crosswalk, Part 9 dataset audi
 
 ## Execution Protocol (per issue)
 
-1. **Plan-lite** on the issue (scope, sources, files, tests, acceptance); adversarial review per `../workspace-hub/docs/standards/AI_REVIEW_ROUTING_POLICY.md` (workspace-hub repo; Codex + Claude, Gemini unavailable on Windows hosts); owner applies `status:plan-approved`.
+1. **Plan-lite** on the issue (scope, sources, files, tests, acceptance); adversarial review per `../workspace-hub/docs/standards/AI_REVIEW_ROUTING_POLICY.md` (workspace-hub repo; Claude + Codex + Gemini by default, any provider shortfall recorded with its artifact); owner applies `status:plan-approved`.
 2. **TDD**: golden test from a published example first; applicability-limit tests (flags, never silent extrapolation); negative fixtures for guards.
 3. **Implement** in an isolated worktree on the lane's host (`machine:dev-primary` for closed-form work; `machine:licensed-win-1` / RDS02 for ANSYS; Linux host for CalculiX). Use `uv run`.
 4. **Wire**: registry row + `examples/workflows/<id>/` with committed results + durable test + Deckhand route (deckhand repo PR) + `ffs_report` output + catalog status update; `test_offering_catalog.py` fails if a `live`/`routed` row lacks a registry id or route, or a `live`/`validated` row lacks a validation record.
@@ -143,7 +144,7 @@ Parallelism: Wave 0 items are disjoint and can run concurrently on separate work
 ## Acceptance Criteria (program)
 
 1. Catalog is the single source; the page is generated (#2197) and its counts are enforced now; CI enforces status semantics.
-2. Every `live` row has a registered workflow whose durable test passes and a `digitalmodel:<id>` Deckhand route; the Deckhand `POST /api/run` contract (deckhand `docs/deckhand/API.md`) returns its report URL. Evidence per row: the durable test id and the route line.
+2. Every `live` row has a registered workflow whose durable test passes and a `digitalmodel:<id>` Deckhand route. Evidence per row: the durable test id and the route line in deckhand `config/deckhand/routing/paths.yaml`. A report URL from `POST /api/run` becomes part of the evidence only once deckhand #498/#499 land (today `docs/deckhand/API.md` calls `report_url` a target contract); until then the report is the committed `examples/workflows/<id>/results/` output.
 3. No standards clause text, table, figure, formula or licensed threshold in the repo; rights card recorded per issue.
 4. Every engine that reaches `validated` has a validation record with a published comparator and a test asserting the record's numbers.
 5. Level 3 offerings state the solver, receipts and sign-off requirement in the report.
@@ -155,22 +156,33 @@ Parallelism: Wave 0 items are disjoint and can run concurrently on separate work
 |---|---|---|---|
 | r1 | Claude (subagent, read-only) | MAJOR, 9 findings | all applied in r1.1 (below) |
 | r1 | Codex (`plan-review-fanout.sh`, workspace-hub) | MAJOR, 9 findings | all applied in r1.1 (below) |
-| r1 | Gemini | unavailable on Windows host | T2 review |
+| r1.1 | Codex confirming pass | MAJOR, 7 findings | all applied in r1.2 (below) |
+| r1.1 | Gemini (`plan-review-fanout.sh --providers=gemini`, CLI 0.61.0 installed) | no verdict: the run was stopped by the host under memory pressure after producing empty artifacts (`2026-09-25-plan-1057-gemini.md`, `.err`, 0 bytes) | review is two-provider (Claude + Codex), below the three-provider default in `AI_REVIEW_ROUTING_POLICY.md`; owner decision D6 |
 
-Findings and how r1.1 answers them:
+**r1.1 → r1.2 (Codex confirming pass):**
+
+1. Status validator was vacuous for `none` rows and used the wrong comparison: rewritten as `test_status_semantics` (none ⇒ no engines; row ≤ strongest engine; planned ⇒ planned engine or issue; live ⇒ only live/validated engines) and the catalog header now states the same rule.
+2. Offshore-wind lifetime-extension row listed an engine while `none`: engines cleared, note kept.
+3. Acceptance #2 relied on Deckhand `report_url`, which `docs/deckhand/API.md` calls a target contract: evidence is now the durable test id + route line, with `report_url` gated on deckhand #498/#499.
+4. Gemini downgrade was unsupported: attempted; artifact recorded above; owner decision D6 added.
+5. PR #2186 evidence was outside this PR: its commit is cherry-picked into this branch; #2186 is superseded.
+6. Routed narrative named six engines for five rows: fixed (the legacy pipe engine is routed but no row depends on it).
+7. `uv run pytest` fails on this host before tests: the plan now names the venv command actually used and the CI job that arbitrates.
+
+**r1 → r1.1** findings and how r1.1 answered them:
 
 1. Catalog over-stated `live` and `validated` (both reviewers): added `routed` status; legacy API 579 pipe, inspection planning, riser fatigue, plate buckling and the two subsea screens are `routed`; boiler tube thinning and measurement sufficiency downgraded to `engine`; live count is 0 and the plan says so.
 2. "Every engine reference resolves" was false: `structural-health` and `scour` engine entries added; seven code identifiers added (`asme-b31-8`, `dnv-rp-f105/f109/f110`, `dnv-rp-c201`, `api-rp-2fsim`, `chain-fears-jip`); `plate-panel-buckling` now points at the real `plate-buckling` registry id; the catalog test enforces all of this in this PR.
 3. Rights: IACS percentage limits and chain pitting dimensions removed from catalog and page; a test rejects threshold-like numerics.
 4. Misattributions: B31.8 Appendix R (not B31.8S); API STD 2RD supersedes RP 2RD; ISO 19902 note; unused DNV-RP-E303 replaced by DNV-OS-E303 for fibre rope.
-5. Paths: review policy lives in workspace-hub; Deckhand routing files live in the deckhand repo; companion notes are on PR #2186 (declared dependency).
+5. Paths: review policy lives in workspace-hub; Deckhand routing files live in the deckhand repo; companion notes were on PR #2186 and are now cherry-picked into this branch.
 6. End state vs milestones contradiction: end state now admits `none` rows with dated deferral notes, and M5 requires none to be undocumented.
 7. Missing enforcement test: `tests/asset_integrity/test_offering_catalog.py` ships in this PR; 7 tests pass.
 8. Decision vocabulary for non-pressure assets: filed #2205 (Wave 0) and owner decision D1.
 9. Coverage gaps: added exchanger and fired-heater tubes, conductors/caissons, wellhead fatigue, wire and fibre rope, anchors, geohazards, ECDA/ICDA, wind lifetime extension as rows.
 10. Acceptance #2 now names its evidence (durable test id + route line + Deckhand API contract) instead of asserting behaviour the repo cannot show.
 
-Next: Codex confirming pass on r1.1, then owner approval.
+Next: owner decides D6 (Gemini re-run or accept two-provider), then a Codex confirming pass on r1.2 if further edits are made, then owner approval.
 
 ## Risks and Open Questions
 
@@ -182,6 +194,6 @@ Next: Codex confirming pass on r1.1, then owner approval.
 | Scope breadth: 14 `none` rows after triage | Waves ordered by demand; catalog makes deferrals explicit and dated |
 | Duplicate implementations recur | #2160 first; catalog CI checks one engine per (code, mechanism) once #2197 lands |
 | #2157 depends on a licensed machine | Its plan is public (PR #2194); receipts are committed before #2178 compares against them; program does not block on it |
-| Companion notes unmerged (PR #2186) | Declared dependency; merge #2186 before or with this PR |
+| Deckhand `report_url` not implemented (deckhand #498/#499) | Acceptance #2 uses committed results + route line until it lands; `live` never claims a report URL before then |
 
 ## Complexity: T4 (program of ~27 issues across five waves; individual issues T2–T3)

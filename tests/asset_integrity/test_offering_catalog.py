@@ -99,21 +99,34 @@ def test_defect_rows_resolve(catalog, rows):
             assert "api-579-1" in r["codes"], f"{where}: parts given without api-579-1"
 
 
-def test_status_is_not_stronger_than_engines(catalog, rows):
-    order = {"none": 0, "planned": 1, "engine": 2, "routed": 3, "validated": 3, "live": 4}
+ORDER = {"none": 0, "planned": 1, "engine": 2, "routed": 3, "validated": 3, "live": 4}
+
+
+def test_status_semantics(catalog, rows):
+    """Row status describes what can be delivered today for that mechanism.
+
+    - ``none`` rows list no engines (nothing exists and nothing is filed).
+    - Every other row lists at least one engine and is never stronger than the
+      strongest engine it depends on.
+    - ``planned`` rows point at a planned engine or carry their own issue.
+    - ``live`` rows require every listed engine to be live or validated (a live
+      deliverable cannot lean on an unvalidated engine).
+    """
     engines = catalog["engines"]
     for r in rows:
         where = f"{r['_industry']} / {r['mechanism']}"
         if r["status"] == "none":
-            assert not any(engines[e]["status"] != "none" for e in r["engines"]) or True
+            assert r["engines"] == [], f"{where}: 'none' row lists engines {r['engines']}"
             continue
-        if not r["engines"]:
-            assert r["status"] == "none", f"{where}: status without engines"
-            continue
-        best = max(order[engines[e]["status"]] for e in r["engines"])
-        assert order[r["status"]] <= best, f"{where}: row status stronger than its engines"
+        assert r["engines"], f"{where}: status {r['status']} without engines"
+        strongest = max(ORDER[engines[e]["status"]] for e in r["engines"])
+        assert ORDER[r["status"]] <= strongest, f"{where}: row status stronger than its engines"
         if r["status"] == "planned":
-            assert any(engines[e]["status"] == "planned" for e in r["engines"]) or r.get("issue"), where
+            assert any(engines[e]["status"] == "planned" for e in r["engines"]) or isinstance(
+                r.get("issue"), int
+            ), f"{where}: planned row without a planned engine or issue"
+        if r["status"] == "live":
+            assert all(engines[e]["status"] in {"live", "validated"} for e in r["engines"]), where
 
 
 def test_no_licensed_numeric_thresholds_in_catalog():

@@ -8,7 +8,8 @@
 #   engine     engine + tests, no validation record
 #   planned    GitHub issue exists, no engine
 #   none       no engine, no issue (candidate for the offering roadmap)
-# A row's status is the weakest of its engines' statuses, capped by the row's own validation evidence.
+# A row's status says what can be delivered today for that mechanism: never stronger than the strongest
+# engine it lists; 'none' rows list no engines; 'live' rows lean only on live/validated engines.
 # Tier vocabulary:
 #   T1  field screen (API 579 Level 1 or code screening rule; inspector-facing verdict)
 #   T2  office Level 2 (closed-form; engineer-facing report)
@@ -260,7 +261,7 @@ industries:
           - {mechanism: grouted connection slippage / cracking, codes: [dnv-st-0126], engines: [], tiers: [T2], status: none}
           - {mechanism: bolted flange preload loss, codes: [dnv-st-0126], engines: [], tiers: [T1], status: none}
           - {mechanism: scour, codes: [dnv-st-0126], engines: [scour], tiers: [T1], status: engine}
-          - {mechanism: lifetime extension assessment (remaining fatigue life, load re-evaluation), codes: [dnv-st-0262, dnv-rp-c203], engines: [sn-fatigue], tiers: [T2], status: none, caveat: "S-N library only"}
+          - {mechanism: lifetime extension assessment (remaining fatigue life, load re-evaluation), codes: [dnv-st-0262, dnv-rp-c203], engines: [], tiers: [T2], status: none, note: "S-N library exists but no lifetime-extension engine"}
 
   - id: marine-ships
     title: Ships and floating hulls (class rules)

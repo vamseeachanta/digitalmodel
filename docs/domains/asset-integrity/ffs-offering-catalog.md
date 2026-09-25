@@ -117,7 +117,7 @@ Frameworks: API RP 2MIM, API RP 2FSIM, API RP 2I, DNV-OS-E301, DNV-OS-E303. Chai
 | Grouted connection slippage / cracking | DNV-ST-0126 | — | T2 | none |
 | Bolted flange preload loss | DNV-ST-0126 | — | T1 | none |
 | Scour | DNV-ST-0126 | geotechnical/scour | T1 | engine |
-| Lifetime extension (remaining fatigue life, load re-evaluation) | DNV-ST-0262, DNV-RP-C203 | S-N library only | T2 | none |
+| Lifetime extension (remaining fatigue life, load re-evaluation) | DNV-ST-0262, DNV-RP-C203 | — (S-N library exists, no engine) | T2 | none |
 
 ## 7. Ships and floating hulls (class rules)
 
