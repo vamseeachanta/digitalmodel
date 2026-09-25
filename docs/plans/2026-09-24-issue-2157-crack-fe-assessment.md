@@ -416,4 +416,11 @@ Gemini remains unavailable on this host, so the review stays at T2.
 
 Public sources for the P0 values are backed up at `/mnt/ace/docs/literature/materials/stainless-steel-1.4404/` and `/mnt/ace/docs/literature/piping/fittings-and-pipe-dimensions/`, each with a `SOURCES.md`.
 
+## Database decisions (owner save 2026-09-25T14:02Z, `crack-fe-2157-decisions (5).json`)
+
+- **D01 (public; this differs from the recommendation):** elevated-temperature material properties are published in `data/materials_database/`, each row cited to the public manufacturer datasheet it was read from. Only the values used are included, and no standard table is reproduced. The owner's rights decision is recorded in the manifest. This was implemented in `38ebad0a`: 22 rows for 1.4404, with a hash-checked manifest and temperature-monotonic invariants.
+- **D02 (awaiting confirmation):** the owner selected the private catalogue but noted "why not public then". The recommended option is public with per-row citation, the same rule as D01. The table is built after confirmation.
+- **D03 (repo ecosystem only, from the owner's note "no HF flow"):** crack-front FE state tables live in `digitalmodel` `data/` with a manifest, registered in the domain-database index. They are not published to Hugging Face.
+- **D04 (extend structural-ffs):** result lookups are generated from `CrackAssessmentResult` in P3.
+
 ## Complexity: T3
