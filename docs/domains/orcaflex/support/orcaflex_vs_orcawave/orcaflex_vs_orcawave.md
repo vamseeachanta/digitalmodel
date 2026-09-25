@@ -1,7 +1,7 @@
 
-From: Orcina <orcina@orcina.com>
+From: Orcina [email removed]
 Sent: Thursday, December 5, 2024 6:19 AM
-To: Vamsee Achanta <vamseea@acma-inc.com>
+To: Vamsee Achanta [email removed]
 Subject: RE: OrcaFlex Vs. OrcaWave
 
 Vamsee
@@ -18,9 +18,9 @@ Best regards,
 
 David Heffernan
 
-From: Vamsee Achanta <vamseea@acma-inc.com>
+From: Vamsee Achanta [email removed]
 Sent: 05 December 2024 12:00
-To: Orcina <orcina@orcina.com>
+To: Orcina [email removed]
 Subject: OrcaFlex Vs. OrcaWave
 
 Dear Support Representative,

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Pre-commit guard: reject staged files with Windows-path directory names.
 
-Catches artifacts like 'D:\\workspace-hub\\...' that are created when a
+Catches artifacts like '<drive>:\\workspace-hub\\...' that are created when a
 Windows-environment script writes a path string as a directory name.
 """
 import re

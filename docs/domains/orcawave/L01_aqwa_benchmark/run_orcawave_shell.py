@@ -48,7 +48,7 @@ ORCAWAVE_PATHS_WINDOWS = [
     r"C:\Program Files\Orcina\OrcaWave\OrcaWave.exe",
     r"C:\Program Files (x86)\Orcina\OrcaWave\OrcaWave.exe",
     r"C:\Program Files\Orcina\OrcaFlex\OrcaWave.exe",
-    r"D:\OrcaWave\OrcaWave.exe",
+    r"<private-data>\OrcaWave.exe",
 ]
 
 ORCAWAVE_PATHS_LINUX = [

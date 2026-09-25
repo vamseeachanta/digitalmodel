@@ -1,7 +1,7 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\iterate\02_draft_wd925m.yml
+# File: <private-data>/02_draft_wd925m.yml
 # Created: 12:00 AM on 5/14/2023
 # User: 
 # Machine: 
@@ -13,7 +13,7 @@ General:
 Environment:
   WaterDepth: 858.5
 Vessels:
-  SevenArctic:
+  iv02:
     VesselType: C13_EndLaying_ARTempty
     Draught: 7.09m
 ...

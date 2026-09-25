@@ -31,8 +31,8 @@ def fix_working_model():
     
     # List of GDF files to try in order of preference
     gdf_files = [
-        "sea_cypress_corrected.gdf",
-        "sea_cypress_orcawave.gdf", 
+        "tug_30m_1_corrected.gdf",
+        "tug_30m_1_orcawave.gdf", 
         "small_box_test.gdf",
         "waterline_test_box.gdf"
     ]
@@ -74,7 +74,7 @@ def fix_working_model():
     config['WaveHeading'] = [0, 45, 90, 135, 180]
     
     # FIX 4: Update body name
-    config['Bodies'][0]['BodyName'] = 'SeaCypressTest'
+    config['Bodies'][0]['BodyName'] = 'Tug30m1Test'
     
     # Save the fixed configuration
     output_file = "working_model_fixed.yml"
@@ -152,7 +152,7 @@ def create_minimal_with_test_box():
         'WaveHeading': [0],
         'Bodies': [{
             'BodyName': 'TestBox',
-            'BodyMeshFileName': 'D:\\github\\digitalmodel\\test_box.gdf',
+            'BodyMeshFileName': '<private-data>\\test_box.gdf',
             'BodyMeshFormat': 'Wamit gdf',
             'BodyMeshLengthUnits': 'm',
             'BodyMeshPosition': [0, 0, 0],

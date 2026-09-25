@@ -49,7 +49,7 @@ Bodies
     
     Body 1
         Name = "TestBox"
-        MeshFile = "D:\\github\\digitalmodel\\specs\\modules\\orcawave\\diffraction-analysis\\inputs\\geometry\\simple_box_test.gdf"
+        MeshFile = "<private-data>\\simple_box_test.gdf"
         MeshFormat = "Wamit gdf"
         Mass = 1.0e5
         CentreOfMass = 0.0, 0.0, -1.0
@@ -136,7 +136,7 @@ def create_diagnostic_script():
 
 2. CHECK MESH FILE
    - File -> Open
-   - Navigate to: D:\\github\\digitalmodel\\specs\\modules\\orcawave\\diffraction-analysis\\inputs\\geometry\\
+   - Navigate to: <private-data>\\
    - Try opening: simple_box_test.gdf directly
    - If it opens, the mesh file is valid
 

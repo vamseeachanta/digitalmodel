@@ -3,7 +3,7 @@
 ;;; By Jimmy Bergmark
 ;;; Copyright (C) 1997-2006 JTB World, All Rights Reserved
 ;;; Website: www.jtbworld.com
-;;; E-mail: info@jtbworld.com
+;;; E-mail: [email removed]
 ;;; 2000-03-29 - First release
 ;;; 2003-03-07 - Now for AutoCAD 2004
 ;;; Tested on AutoCAD 2000, 2000i, 2002 and 2004

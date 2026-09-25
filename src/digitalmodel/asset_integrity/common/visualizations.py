@@ -724,7 +724,7 @@ class Visualization():
 
 if __name__ == "__main__":
     import pandas as pd
-    data = pd.read_csv(r'C:\Users\achantv\Documents\Utilities\aceengineer\data_manager\TimeLine.csv',
+    data = pd.read_csv(r'<private-data>\TimeLine.csv',
                        parse_dates=True,
                        index_col=0)
     ax = GenerateTimeLine(data)

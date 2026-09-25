@@ -348,6 +348,6 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         filepath = sys.argv[1]
     else:
-        filepath = r"D:\workspace-hub\_temp\marine_analysis_data.xlsm"
+        filepath = r"<private-data>\marine_analysis_data.xlsm"
 
     analyze_excel_file(filepath)

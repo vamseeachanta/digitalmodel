@@ -39,7 +39,7 @@ Error
 
 [Content]
 
-• 'fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.yml' (Error reading K:\github\digitalmodel\docs\pkg_orcaflex\notes\pre_restarts\mooring\fsts_lngc\01_qa\fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.yml: Failed to set StageDataStageCount=1 (Change not allowed). Last parsed name: 'StageMode, StageValue' near line 5 Last parsed name: 'includefile', value: includefile_fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.yml near line 8)
+• 'fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.yml' (Error reading <private-data>\fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.yml: Failed to set StageDataStageCount=1 (Change not allowed). Last parsed name: 'StageMode, StageValue' near line 5 Last parsed name: 'includefile', value: includefile_fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_02.yml near line 8)
 
 
 [OK]
@@ -64,7 +64,7 @@ OrcaFlex
 Error
 
 [Content]
-Error reading K:\github\digitalmodel\docs\pkg_orcaflex\notes\pre_restarts\mooring\fsts_lngc\01_qa\fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_01.yml: Failed to set StageMode[1]=Specified payout ('Specified payout' not found. Possible values are: Specified length and Specified tension).
+Error reading <private-data>\fst1_f_fst2_f_lngc_ec125km3_l_pb_hwl_iteration_01.yml: Failed to set StageMode[1]=Specified payout ('Specified payout' not found. Possible values are: Specified length and Specified tension).
 
 Last parsed name: 'StageMode, StageValue' near line 16
 

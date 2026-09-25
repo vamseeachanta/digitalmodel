@@ -10,10 +10,10 @@ Best regards,
 
 David Heffernan
 
-From: Vamsee Achanta <vamseea@acma-inc.com> 
+From: Vamsee Achanta [email removed] 
 Sent: 21 February 2025 13:28
-To: Orcina <orcina@orcina.com>
-Cc: Scott McClure <scottm@acma-inc.com>
+To: Orcina [email removed]
+Cc: Scott McClure [email removed]
 Subject: RE: OrcaFlex | Environment JONSWAP | Seed
 
 David,
@@ -32,10 +32,10 @@ If this needs more clarification, please let me know
 Thank you again,
 Vamsee
 
-From: Orcina <orcina@orcina.com> 
+From: Orcina [email removed] 
 Sent: Friday, February 21, 2025 7:22 AM
-To: Vamsee Achanta <vamseea@acma-inc.com>
-Cc: Scott McClure <scottm@acma-inc.com>
+To: Vamsee Achanta [email removed]
+Cc: Scott McClure [email removed]
 Subject: RE: OrcaFlex | Environment JONSWAP | Seed
 
 Vamsee
@@ -46,10 +46,10 @@ Best regards,
 
 David Heffernan
 
-From: Vamsee Achanta <vamseea@acma-inc.com> 
+From: Vamsee Achanta [email removed] 
 Sent: 21 February 2025 13:17
-To: Orcina <orcina@orcina.com>
-Cc: Scott McClure <scottm@acma-inc.com>
+To: Orcina [email removed]
+Cc: Scott McClure [email removed]
 Subject: OrcaFlex | Environment JONSWAP | Seed
 
 Dear Support Representative,

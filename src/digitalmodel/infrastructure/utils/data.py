@@ -304,7 +304,7 @@ class ReadData():
         return result
 
     def get_file_list_from_folder(self, folder_with_file_type, with_path=True, with_extension=True):
-        folder_with_file_type_example = 'Q:\projects\Mole\log_files\*.log'
+        folder_with_file_type_example = '<private-data>\*.log'
 
         import glob
         import os
@@ -925,7 +925,7 @@ class TransformData():
 
 if __name__ == '__main__':
     # write better tests
-    FileName = 'K:\\0173 KM Extreme\\SLWR\\Fatigue\\Test.xlsx'
+    FileName = '<private-data>\\Test.xlsx'
     Columns = ['Arc Length', 'S-N Curve', 'Theta', 'Overall Damage', 'Life (years)']
     CustomData = {
         "FileName": FileName,

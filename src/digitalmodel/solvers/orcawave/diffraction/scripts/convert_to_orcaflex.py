@@ -100,7 +100,7 @@ class OrcaFlexConverter:
             cob = list(attrs.get('centre_of_buoyancy', [0, 0, -1]))
             waterplane = attrs.get('waterplane_area', 100.0)
             gm = attrs.get('metacentric_height', 1.0)
-            name = attrs.get('vessel_name', 'Sea Cypress')
+            name = attrs.get('vessel_name', 'tug_30m_1')
         
         return VesselData(
             name=name,
@@ -189,7 +189,7 @@ class OrcaFlexConverter:
             gm = props.loc['metacentric_height', 'value']
         
         return VesselData(
-            name="Sea Cypress",
+            name="tug_30m_1",
             frequencies=frequencies,
             directions=directions,
             added_mass=added_mass,
@@ -269,7 +269,7 @@ class OrcaFlexConverter:
             vessel_props['gm'] = props_df.loc['GM', 'Value']
         
         return VesselData(
-            name="Sea Cypress",
+            name="tug_30m_1",
             frequencies=frequencies,
             directions=directions,
             added_mass=added_mass,
@@ -403,7 +403,7 @@ class OrcaFlexConverter:
         """Save OrcaFlex vessel type to YAML file"""
         
         if filename is None:
-            filename = "sea_cypress_vessel_type.yml"
+            filename = "tug_30m_1_vessel_type.yml"
         
         output_file = self.output_dir / filename
         
@@ -512,7 +512,7 @@ def main():
     )
     parser.add_argument(
         '--vessel-name',
-        default='Sea Cypress',
+        default='tug_30m_1',
         help='Vessel name for OrcaFlex type'
     )
     

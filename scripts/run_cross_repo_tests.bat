@@ -22,7 +22,7 @@ if "%1"=="--help" (
 )
 
 echo Starting cross-repository tests...
-echo This will test all repositories in D:\workspace-hub
+echo This will test all repositories in <private-data>\workspace-hub
 echo.
 
 uv run python scripts/cross_repo_test_runner.py %*

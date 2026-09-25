@@ -27,7 +27,7 @@ All Phase 1 and Phase 2 marine engineering modules have been comprehensively pro
 
 ### 1. Performance Profiling Scripts
 
-**Location:** `D:\workspace-hub\digitalmodel\scripts\`
+**Location:** `<private-data>\`
 
 #### profile_marine_modules.py
 - Comprehensive profiling tool for all marine engineering modules
@@ -88,7 +88,7 @@ All Phase 1 and Phase 2 marine engineering modules have been comprehensively pro
 
 ### 2. Performance Benchmark Suite
 
-**Location:** `D:\workspace-hub\digitalmodel\tests\marine_engineering\test_performance.py`
+**Location:** `<private-data>\test_performance.py`
 
 Comprehensive pytest-benchmark test suite with:
 - Wave spectrum performance tests (JONSWAP, Pierson-Moskowitz)
@@ -115,7 +115,7 @@ pytest tests/marine_engineering/test_performance.py --benchmark-json=results.jso
 
 ### 3. Performance Metrics and Analysis
 
-**Location:** `D:\workspace-hub\digitalmodel\outputs\profiling\`
+**Location:** `<private-data>\`
 
 #### Metrics JSON
 - File: `outputs/profiling/metrics/performance_metrics_20251003_115654.json`
@@ -146,7 +146,7 @@ pytest tests/marine_engineering/test_performance.py --benchmark-json=results.jso
 
 ### 4. Performance Visualization Charts (8+ Charts)
 
-**Location:** `D:\workspace-hub\digitalmodel\docs\charts\phase3\performance\`
+**Location:** `<private-data>\`
 
 All charts generated at 300 DPI in PNG format:
 
@@ -196,7 +196,7 @@ All charts generated at 300 DPI in PNG format:
 
 ### 5. Optimization Report
 
-**Location:** `D:\workspace-hub\digitalmodel\docs\performance_optimization_report.md`
+**Location:** `<private-data>\performance_optimization_report.md`
 
 Comprehensive 540+ line markdown report including:
 
@@ -416,7 +416,7 @@ Even though all modules are exceeding targets, the following optimizations could
 ## File Locations Summary
 
 ```
-D:\workspace-hub\digitalmodel\
+<private-data>\
 ├── scripts\
 │   ├── profile_marine_modules.py          # Main profiling script
 │   ├── generate_performance_charts.py     # Chart generator

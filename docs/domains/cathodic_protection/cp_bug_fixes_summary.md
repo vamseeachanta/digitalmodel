@@ -81,7 +81,7 @@ return {
 **Date Fixed:** 2026-01-06
 
 **Issue:**
-The enhanced attenuation formula implementation from DNV RP-F103:2016 (Saipem approach) was producing results **262 million times too large**. The formula as documented was completely inverted - all parameters that should be in the numerator were in the denominator.
+The enhanced attenuation formula implementation from DNV RP-F103:2016 (Contractor approach) was producing results **262 million times too large**. The formula as documented was completely inverted - all parameters that should be in the numerator were in the denominator.
 
 **Test Failure:**
 ```python
@@ -112,7 +112,7 @@ A systematic hypothesis testing approach was used to discover the correct formul
 1. **Baseline Verification** (`/tmp/debug_attenuation_formula.py`)
    - Confirmed implementation matched documentation exactly
    - Proved formula itself was wrong (not implementation error)
-   - Error: 262,803,614× with Saipem reference values
+   - Error: 262,803,614× with Contractor reference values
 
 2. **Systematic Hypothesis Testing** (`/tmp/test_formula_hypotheses.py`)
    - Tested 9 different correction approaches:
@@ -137,14 +137,14 @@ A systematic hypothesis testing approach was used to discover the correct formul
      ```
 
 4. **Verification** (`/tmp/confirm_solution.py`)
-   - Verified with Saipem reference values: 2.85% error ✅
+   - Verified with Contractor reference values: 2.85% error ✅
    - Verified with test configuration: 4.542e-5 < 0.001 ✅
    - Confirmed ready for implementation
 
 **Fix:**
 ```python
 # Before (WRONG - Line 647-657):
-# Enhanced attenuation factor (DNV RP-F103 2016 / Saipem approach)
+# Enhanced attenuation factor (DNV RP-F103 2016 / Contractor approach)
 # α = sqrt(2 / (π × D × RL × CBFf × P))
 
 coating_breakdown_final_fraction = coating_breakdown["final_factor"] - 1.0
@@ -163,13 +163,13 @@ else:
     attenuation_factor_enhanced_per_m = 0.0
 
 # After (CORRECT - Lines 634-663):
-# Enhanced attenuation factor (DNV RP-F103 2016 / Saipem approach - CORRECTED)
+# Enhanced attenuation factor (DNV RP-F103 2016 / Contractor approach - CORRECTED)
 # α = sqrt((π × D × RL × CBFf × P) / 8)
 #
 # Note: The original documented formula α = sqrt(2 / (π × D × RL × CBFf × P)) was
 # found to be incorrect (inverted). The correct formula places all variables in the
 # numerator with divisor of 8 under the square root. This was discovered through
-# systematic hypothesis testing and verified against Saipem reference values
+# systematic hypothesis testing and verified against Contractor reference values
 # (error: 2.85% vs 262 million× with wrong formula).
 
 coating_breakdown_final_fraction = coating_breakdown["final_factor"] - 1.0
@@ -190,7 +190,7 @@ else:
 
 **Verification Results:**
 
-With Saipem reference values (D=0.273m, RL=1.012e-5, CBFf=0.00062, P=2.909):
+With Contractor reference values (D=0.273m, RL=1.012e-5, CBFf=0.00062, P=2.909):
 ```
 Wrong formula: α = 11,320 m⁻¹ (262 million× too large)
 Right formula: α = 4.424e-5 m⁻¹
@@ -211,7 +211,7 @@ Result: ✅ PASS (4.542e-5 << 0.001)
 - ✅ Test `test_workflow_edge_case_short_pipeline` now passes (was affected by formula)
 - ✅ Test results improved from 37/39 (94.9%) to 38/39 (97.4%)
 - ✅ Enhanced attenuation now produces physically reasonable values
-- ✅ Compatible with Saipem CP analysis methodology
+- ✅ Compatible with Contractor CP analysis methodology
 
 **Key Changes:**
 1. Variable renamed: `denominator_enhanced` → `numerator_enhanced` (semantic correctness)
@@ -268,8 +268,8 @@ inputs:
 
 ## Additional Notes
 
-### Saipem CP Calculations
-**Search Result:** The requested directory `/mnt/github/workspace-hub/saipem/general/cp` was empty or doesn't exist. No additional CP calculation methods were found for incorporation.
+### Contractor CP Calculations
+**Search Result:** The requested directory `/mnt/github/workspace-hub/contractor/general/cp` was empty or doesn't exist. No additional CP calculation methods were found for incorporation.
 
 ### Two DNV RP-F103 Implementations
 The codebase has two separate DNV RP-F103 implementations:

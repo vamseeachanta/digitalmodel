@@ -177,7 +177,7 @@ Totals under `data_manager/data`: ~29 csv, 27 xlsx, 14 mds, 4 dat.
 
 **Sanity cleanup required before reuse (mechanical, scriptable):**
 - **62** config YAMLs hardcode Windows absolute paths
-  (`C:\Users\achantv\…\Desktop\…`, `K:\0198\…`) — strip / repoint at portable
+  (`<private-data>\…`, `K:\0198\…`) — strip / repoint at portable
   fixture locations.
 - **94** configs use backslash separators (`data_manager\data\…`) — convert to
   POSIX `/`.

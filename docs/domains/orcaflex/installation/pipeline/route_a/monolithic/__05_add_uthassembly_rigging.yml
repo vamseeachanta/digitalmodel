@@ -1,12 +1,12 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\5.ld\__05_add_uthassembly_rigging.yml
+# File: docs/domains/orcaflex/installation/pipeline/route_a/monolithic/__05_add_uthassembly_rigging.yml
 # Created: 10:01 PM on 7/6/2023
 # User: 
 # Machine: 
 ---
-BaseFile: __04_wd718m_orlov.yml
+BaseFile: __04_wd718m_umb_b.yml
 General:
   StaticsMaxIterations: 1600
   StaticsTolerance: 0.025
@@ -30,11 +30,11 @@ VariableData:
       ExternalResults: (none)
 LineTypes:
   New:
-    - InfUmbVenice-4.13in-cardona
+    - InfUmb-4.13in-UmbA
     - VBR_LineType
     - ArmorPot_LineType
     - 20Te Soft sling
-  InfUmbVenice-4.13in-cardona:
+  InfUmb-4.13in-UmbA:
     Category: General
     OD: 0.1047
     ID: 0

@@ -31,7 +31,7 @@ from digitalmodel.field_development.concept_selection import (
 
 # 15 real GoM fields with known concept decisions (public data)
 GOM_BENCHMARK_RECORDS = [
-    {"name": "Perdido", "water_depth_m": 2438, "concept_type": "Spar",
+    {"name": "GoM-UD-Spar", "water_depth_m": 2438, "concept_type": "Spar",
      "operator": "Shell", "region": "GoM"},
     {"name": "Mars", "water_depth_m": 896, "concept_type": "TLP",
      "operator": "Shell", "region": "GoM"},
@@ -73,7 +73,7 @@ CASE_STUDIES = [
         "expected_concept": "TLP",
     },
     {
-        "name": "Perdido-like",
+        "name": "GoM-UD-Spar-like",
         "water_depth": 2438,
         "reservoir_size_mmbbl": 300,
         "distance_to_infra_km": 80,

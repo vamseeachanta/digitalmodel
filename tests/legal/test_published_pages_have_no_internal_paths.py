@@ -72,21 +72,6 @@ _OPENFOAM = (
 )
 
 RECORDED_ABSOLUTE_PATHS = {
-    "docs/domains/orcaflex/examples/model_library_report.html": (2, _ORCAFLEX),
-    "docs/domains/orcawave/L00_validation_wamit/2.1/benchmark/benchmark_report.html": (10, _ORCAWAVE),
-    "docs/domains/orcawave/L00_validation_wamit/2.2/benchmark/benchmark_report.html": (10, _ORCAWAVE),
-    "docs/domains/orcawave/L00_validation_wamit/2.3/benchmark/benchmark_report.html": (10, _ORCAWAVE),
-    "docs/domains/orcawave/L00_validation_wamit/2.5c/benchmark/benchmark_report.html": (10, _ORCAWAVE),
-    "docs/domains/orcawave/L00_validation_wamit/2.5f/benchmark/benchmark_report.html": (10, _ORCAWAVE),
-    "docs/domains/orcawave/L00_validation_wamit/2.6/benchmark/body_0/benchmark_report.html": (10, _ORCAWAVE),
-    "docs/domains/orcawave/L00_validation_wamit/2.6/benchmark/body_1/benchmark_report.html": (10, _ORCAWAVE),
-    "docs/domains/orcawave/L00_validation_wamit/2.7/benchmark/benchmark_report.html": (10, _ORCAWAVE),
-    "docs/domains/orcawave/L00_validation_wamit/2.8/benchmark/benchmark_report.html": (10, _ORCAWAVE),
-    "docs/domains/orcawave/L00_validation_wamit/2.9/benchmark/benchmark_report.html": (10, _ORCAWAVE),
-    "docs/domains/orcawave/L00_validation_wamit/3.1/benchmark/benchmark_report.html": (20, _ORCAWAVE),
-    "docs/domains/orcawave/L00_validation_wamit/3.2/benchmark/benchmark_report.html": (10, _ORCAWAVE),
-    "docs/domains/orcawave/L00_validation_wamit/3.3/benchmark/body_0/benchmark_report.html": (24, _ORCAWAVE),
-    "docs/domains/orcawave/L00_validation_wamit/3.3/benchmark/body_1/benchmark_report.html": (24, _ORCAWAVE),
     "docs/reports/2026-08-04-issue-1959-solver-start-evidence.html": (1, _OPENFOAM),
 }
 
@@ -111,7 +96,7 @@ _POSIX_ABSOLUTE_PATH = re.compile(
 )
 
 # A drive letter followed by at least two separators. Requiring two separators
-# rather than one is what distinguishes ``D:\workspace-hub\repo`` from the
+# rather than one is what distinguishes ``<drive>:\workspace-hub\repo`` from the
 # two-character escape sequences (``a:\n``) that appear inside embedded scripts;
 # with a single separator the pattern fired 575 times on escape sequences alone.
 _WINDOWS_ABSOLUTE_PATH = re.compile(
@@ -181,16 +166,16 @@ def test_detector_catches_a_planted_absolute_path():
 
 
 def test_detector_catches_a_planted_windows_absolute_path():
-    planted = r"<td>E:\build-area\project\run\input.yml</td>"
-    assert find_absolute_paths(planted) == [r"E:\build-area\project\run\input.yml"]
+    planted = r"<td>E:\build-area\project\run\input.yml</td>"  # identifier-gate: example
+    assert find_absolute_paths(planted) == [r"E:\build-area\project\run\input.yml"]  # identifier-gate: example
 
 
 def test_detector_catches_a_planted_unc_share_path():
     # A UNC path names a file server and a share directly, which is the same
     # disclosure this issue is about, so the detector must cover it.
-    planted = r"<td>\\file-server\group-share\project\data.xlsx</td>"
+    planted = r"<td>\\file-server\group-share\project\data.xlsx</td>"  # identifier-gate: example
     assert find_absolute_paths(planted) == [
-        r"\\file-server\group-share\project\data.xlsx"
+        r"\\file-server\group-share\project\data.xlsx"  # identifier-gate: example
     ]
 
 

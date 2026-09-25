@@ -213,7 +213,7 @@ pytest --cov=src --cov-report=html
 - **Documentation**: See `docs/` directory
 - **Issues**: Report bugs on GitHub Issues
 - **Questions**: Post in Discussions section
-- **Email**: support@your-org.com
+- **Email**: [email removed]
 
 ## License
 

@@ -40,9 +40,9 @@ Best regards,
 
 David Heffernan
 
-From: Vamsee Achanta <vamseea@acma-inc.com> 
+From: Vamsee Achanta [email removed] 
 Sent: 11 March 2025 16:48
-To: Orcina <orcina@orcina.com>
+To: Orcina [email removed]
 Subject: YML File | Read Using Python
 
 Dear Support Representative,

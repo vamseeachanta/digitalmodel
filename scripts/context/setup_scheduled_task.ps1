@@ -4,7 +4,7 @@
 $TaskName = "ContextManagementDaily"
 $TaskPath = "\Claude\"
 $Description = "Daily context file health check and improvement suggestions"
-$WorkspaceRoot = "D:\workspace-hub"
+$WorkspaceRoot = "<private-data>\workspace-hub"
 $ScriptPath = "$WorkspaceRoot\scripts\context\daily_context_check.bat"
 
 # Check if running as admin

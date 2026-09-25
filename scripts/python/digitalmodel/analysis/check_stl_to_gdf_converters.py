@@ -131,7 +131,7 @@ def test_meshmagick_conversion():
         import meshmagick.mesh as mmesh
         
         results = {}
-        stl_file = GEOMETRY_PATH / "Sea Cypress_0.25 Mesh_Binary.stl"
+        stl_file = GEOMETRY_PATH / "tug_30m_1_0.25 Mesh_Binary.stl"
         
         # Load STL
         start_time = time.time()
@@ -157,7 +157,7 @@ def test_meshmagick_conversion():
         
         # Convert to GDF
         start_time = time.time()
-        gdf_file = OUTPUT_PATH / "sea_cypress_meshmagick.gdf"
+        gdf_file = OUTPUT_PATH / "tug_30m_1_meshmagick.gdf"
         mesh.write_GDF(str(gdf_file))
         conversion_time = time.time() - start_time
         
@@ -188,7 +188,7 @@ def test_capytaine_conversion():
         from capytaine.io.mesh_writers import write_GDF
         
         results = {}
-        stl_file = GEOMETRY_PATH / "Sea Cypress_0.25 Mesh_Binary.stl"
+        stl_file = GEOMETRY_PATH / "tug_30m_1_0.25 Mesh_Binary.stl"
         
         # Load STL
         start_time = time.time()
@@ -214,7 +214,7 @@ def test_capytaine_conversion():
         
         # Convert to GDF
         start_time = time.time()
-        gdf_file = OUTPUT_PATH / "sea_cypress_capytaine.gdf"
+        gdf_file = OUTPUT_PATH / "tug_30m_1_capytaine.gdf"
         mesh.export(str(gdf_file), file_format='GDF')
         conversion_time = time.time() - start_time
         
@@ -244,7 +244,7 @@ def test_gmsh_conversion():
         import numpy as np
         
         results = {}
-        stl_file = GEOMETRY_PATH / "Sea Cypress_0.25 Mesh_Binary.stl"
+        stl_file = GEOMETRY_PATH / "tug_30m_1_0.25 Mesh_Binary.stl"
         
         # Initialize GMsh
         gmsh.initialize()
@@ -314,7 +314,7 @@ def test_gmsh_conversion():
         
         # Convert to GDF format
         start_time = time.time()
-        gdf_file = OUTPUT_PATH / "sea_cypress_gmsh.gdf"
+        gdf_file = OUTPUT_PATH / "tug_30m_1_gmsh.gdf"
         
         # Write GDF file
         with open(gdf_file, 'w') as f:
@@ -342,7 +342,7 @@ def test_gmsh_conversion():
         conversion_time = time.time() - start_time
         
         # Also save as MSH for verification
-        msh_file = OUTPUT_PATH / "sea_cypress_gmsh.msh"
+        msh_file = OUTPUT_PATH / "tug_30m_1_gmsh.msh"
         gmsh.write(str(msh_file))
         
         quality_metrics['conversion_time'] = conversion_time
@@ -376,7 +376,7 @@ def test_custom_trimesh_conversion():
         import trimesh
         
         results = {}
-        stl_file = GEOMETRY_PATH / "Sea Cypress_0.25 Mesh_Binary.stl"
+        stl_file = GEOMETRY_PATH / "tug_30m_1_0.25 Mesh_Binary.stl"
         
         # Load STL
         start_time = time.time()
@@ -403,7 +403,7 @@ def test_custom_trimesh_conversion():
         
         # Convert to GDF format
         start_time = time.time()
-        gdf_file = OUTPUT_PATH / "sea_cypress_trimesh.gdf"
+        gdf_file = OUTPUT_PATH / "tug_30m_1_trimesh.gdf"
         
         # Write GDF file (WAMIT format)
         with open(gdf_file, 'w') as f:

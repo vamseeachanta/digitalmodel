@@ -49,7 +49,7 @@ def WorkSheetRowNumberWithText(sh, KeyWordArray):
 
 
 if __name__ == "__main__":
-    FileName = "K:\\0173 KM Extreme\\SLWR\\Fatigue\\Test.xlsx"
+    FileName = "<private-data>\\Test.xlsx"
     Columns = ["Arc Length", "S-N Curve", "Theta", "Overall Damage", "Life (years)"]
     CustomData = {
         "FileName": FileName,

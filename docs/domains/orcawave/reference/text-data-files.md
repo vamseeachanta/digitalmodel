@@ -64,8 +64,8 @@ A text data file saved by OrcaWave contains some extra information:
 # Program: OrcaWave 11.0a
 # File: C:\Desktop\untitled.yml
 # Created: 12:35 on 21/07/2019
-# User: Stuart
-# Machine: StuartsDesktop
+# User: (removed)
+# Machine: (removed)
 ---
 # Units
 UnitsSystem: SI

@@ -61,7 +61,7 @@ False         WrACT           - Output coherent turbulence time steps in AeroDyn
 "default"     CohExp          - Coherence exponent for general model [-] (or "default")
 
 --------Coherent Turbulence Scaling Parameters-------------------
-"M:\coh_events\eventdata"    CTEventPath     - Name of the path where event data files are located
+"<private-data>\eventdata"    CTEventPath     - Name of the path where event data files are located
 "Random"      CTEventFile     - Type of event files ("LES", "DNS", or "RANDOM")
 true          Randomize       - Randomize the disturbance scale and locations? (true/false)
           1   DistScl         - Disturbance scale [-] (ratio of event dataset height to rotor disk). (Ignored when Randomize = true.)

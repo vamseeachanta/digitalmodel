@@ -26,7 +26,7 @@ Exit codes: ``0`` every selected solver solved; ``1`` at least one failed.
 Running this remotely over SSH
 ------------------------------
 The Windows licensed host answers SSH with Git bash (MSYS), so use POSIX-style
-paths -- ``D:\\ws\\...`` backslashes are escape characters there::
+paths -- ``<drive>:\\ws\\...`` backslashes are escape characters there::
 
     ssh <user>@<licensed-host> \\
       '/d/ws/digitalmodel/.venv/Scripts/python.exe \\

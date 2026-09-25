@@ -1,10 +1,10 @@
 %YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.5e
-# File: D:\github\digitalmodel\docs\modules\orcaflex\examples\raw\F01\F01 Manifold block.yml
+# File: <private-data>/F01 Manifold block.yml
 # Created: 1:29 PM on 8/20/2025
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 # Input Parameters (for parametric analysis)
 # See inputs/parameters.yml for extracted values:

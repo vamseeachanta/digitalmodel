@@ -145,7 +145,7 @@ A EF server can be started from AQWA provided method (or) advanced programming e
 
 ```markdown
 # Server waiting for a connection from an AqwaClient on
-ACMA-ANSYS03:52642
+win-workstation:52642
 ```
 
 ```markdown

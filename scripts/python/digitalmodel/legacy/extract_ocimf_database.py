@@ -20,8 +20,8 @@ from pathlib import Path
 from typing import List, Dict
 
 # Excel file path
-EXCEL_FILE = r"D:\workspace-hub\_temp\marine_analysis_data.xlsm"
-OUTPUT_CSV = r"D:\workspace-hub\digitalmodel\data\ocimf_database.csv"
+EXCEL_FILE = r"<private-data>\marine_analysis_data.xlsm"
+OUTPUT_CSV = r"<private-data>\ocimf_database.csv"
 
 
 def extract_wind_coefficients(ws) -> pd.DataFrame:

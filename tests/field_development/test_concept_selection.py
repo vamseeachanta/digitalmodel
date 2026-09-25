@@ -166,7 +166,7 @@ class TestConceptSelectionWaterDepth:
         assert _top(result) in ("Spar", "Semi")
 
     def test_ultra_deep_2900m_spar_tops(self):
-        """Perdido is 2438 m Spar; at 2900 m Spar/Semi are viable."""
+        """GoM-UD-Spar is 2438 m Spar; at 2900 m Spar/Semi are viable."""
         result = concept_selection(
             water_depth=2900,
             reservoir_size_mmbbl=150,
@@ -316,8 +316,8 @@ class TestConceptSelectionFluidType:
 class TestConceptSelectionBenchmarks:
     """Cross-check results against known GoM field decisions."""
 
-    def test_perdido_analog_deep_spar(self):
-        """Perdido: 2438 m, ~100 MMbbl → Spar or Semi."""
+    def test_gom_ud_spar_analog_deep_spar(self):
+        """GoM-UD-Spar: 2438 m, ~100 MMbbl → Spar or Semi."""
         result = concept_selection(
             water_depth=2438,
             reservoir_size_mmbbl=100,

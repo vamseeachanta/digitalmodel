@@ -1,6 +1,6 @@
 """The emitted null style must be pinned, not inherited from PyYAML.
 
-The #1633 closeout on the Windows host (acma-hou-rds02) failed
+The #1633 closeout on the Windows host (ace-win-1) failed
 test_unit_box_docs_hydro_data_matches_fresh_run with 177 line differences,
 every one of the form:
 

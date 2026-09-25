@@ -57,7 +57,7 @@ def create_simple_vessel_config():
             'BodyIncludedInAnalysis': True,
             
             # Using the actual L01 mesh file from examples
-            'BodyMeshFileName': 'D:\\github\\digitalmodel\\docs\\modules\\orcawave\\examples\\L01_default_vessel\\L01 Vessel mesh.gdf',
+            'BodyMeshFileName': '<private-data>\\L01 Vessel mesh.gdf',
             'BodyMeshFormat': 'Wamit gdf',
             'BodyMeshLengthUnits': 'm',
             'BodyMeshSymmetry': 'xz plane',  # From L01 example
@@ -186,7 +186,7 @@ def create_oc4_semisub_config():
             'BodyIncludedInAnalysis': True,
             
             # Using the actual L02 mesh file from examples
-            'BodyMeshFileName': 'D:\\github\\digitalmodel\\docs\\modules\\orcawave\\examples\\L02 OC4 Semi-sub\\L02 OC4 Semi-sub mesh.gdf',
+            'BodyMeshFileName': '<private-data>\\L02 OC4 Semi-sub mesh.gdf',
             'BodyMeshFormat': 'Wamit gdf',
             'BodyMeshLengthUnits': 'm',
             'BodyMeshSymmetry': 'xz plane',
@@ -287,7 +287,7 @@ def create_minimal_test_config():
         # Single body using L01 vessel
         'Bodies': [{
             'BodyName': 'TestBody',
-            'BodyMeshFileName': 'D:\\github\\digitalmodel\\docs\\modules\\orcawave\\examples\\L01_default_vessel\\L01 Vessel mesh.gdf',
+            'BodyMeshFileName': '<private-data>\\L01 Vessel mesh.gdf',
             'BodyMeshFormat': 'Wamit gdf',
             'BodyMeshLengthUnits': 'm',
             'BodyMeshPosition': [0, 0, 0],
@@ -338,8 +338,8 @@ def verify_gdf_paths():
     print("="*60)
     
     gdf_files = [
-        "D:\\github\\digitalmodel\\docs\\modules\\orcawave\\examples\\L01_default_vessel\\L01 Vessel mesh.gdf",
-        "D:\\github\\digitalmodel\\docs\\modules\\orcawave\\examples\\L02 OC4 Semi-sub\\L02 OC4 Semi-sub mesh.gdf"
+        "<private-data>\\L01 Vessel mesh.gdf",
+        "<private-data>\\L02 OC4 Semi-sub mesh.gdf"
     ]
     
     for gdf_path in gdf_files:

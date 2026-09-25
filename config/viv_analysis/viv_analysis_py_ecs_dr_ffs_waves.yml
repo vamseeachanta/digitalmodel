@@ -1,9 +1,9 @@
 ---
 
 parameters:
-  file_io_01: &file_io_01 C:\Users\achantv\Desktop\S7\HM\D6\EX\100yr_Low_Shear_A5_Low_TTF.plt
+  file_io_01: &file_io_01 <private-data>\100yr_Low_Shear_A5_Low_TTF.plt
   label_01: &label_01 A5, Low TTF
-  file_io_02: &file_io_02 C:\Users\achantv\Desktop\S7\HM\D6\EX\100yr_Low_Shear_A5_Nom_TTF.plt
+  file_io_02: &file_io_02 <private-data>\100yr_Low_Shear_A5_Nom_TTF.plt
   label_02: &label_02 A5, Nominal TTF
 
   ascii_data_columns_parameter: &ascii_data_columns_parameter [x/L, unknown1, unknown2, unknown3, unknown4, Damage, unknown5]

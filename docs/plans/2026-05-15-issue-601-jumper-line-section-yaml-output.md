@@ -21,7 +21,7 @@ Verified from GitHub issue #601 on 2026-05-15:
 
 - State: open
 - Labels: `cat:engineering`
-- Acceptance criteria require both Ballymore specs to write parseable `line_sections.yml`
+- Acceptance criteria require both GoM tieback specs to write parseable `line_sections.yml`
   containing exactly 27 entries under `line_sections`.
 
 ### Sources consulted
@@ -41,8 +41,8 @@ Verified from GitHub issue #601 on 2026-05-15:
   `line_sections.yml` only when `PipelineOutput.line_sections_yaml` is non-empty.
 - `src/digitalmodel/marine_ops/installation/jumper_installation.py:290-346` - `run_pipeline()`
   wires the stage output into `stage_5_write_outputs()`.
-- `docs/domains/orcaflex/subsea/jumper/installation/ballymore_mf_plet/spec.yml`
-- `docs/domains/orcaflex/subsea/jumper/installation/ballymore_plet_plem/spec.yml`
+- `docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_mf_plet/spec.yml`
+- `docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_plet_plem/spec.yml`
 - `tests/marine_ops/installation/` - existing home for jumper installation tests; this plan uses
   that path instead of the issue's seed path under `tests/solvers/orcaflex/modular_generator/`
   because #601 is a `marine_ops.installation` pipeline key-contract bug, not a generator behavior
@@ -65,8 +65,8 @@ from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerato
 from digitalmodel.marine_ops.installation.jumper_installation import run_pipeline
 
 spec_paths = [
-    Path('docs/domains/orcaflex/subsea/jumper/installation/ballymore_mf_plet/spec.yml'),
-    Path('docs/domains/orcaflex/subsea/jumper/installation/ballymore_plet_plem/spec.yml'),
+    Path('docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_mf_plet/spec.yml'),
+    Path('docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_plet_plem/spec.yml'),
 ]
 
 for spec_path in spec_paths:
@@ -92,21 +92,21 @@ PY
 Tail of output:
 
 ```text
-docs/domains/orcaflex/subsea/jumper/installation/ballymore_mf_plet/spec.yml: ProjectInputSpec FAIL: Value error, Either 'pipeline', 'riser', 'mooring', or 'generic' must be defined in spec
-docs/domains/orcaflex/subsea/jumper/installation/ballymore_mf_plet/spec.yml: pipeline_output_files=['analysis_summary.json']
-docs/domains/orcaflex/subsea/jumper/installation/ballymore_mf_plet/spec.yml: line_sections_yaml_len=0
-docs/domains/orcaflex/subsea/jumper/installation/ballymore_mf_plet/spec.yml: analysis_section_count=27
-docs/domains/orcaflex/subsea/jumper/installation/ballymore_mf_plet/spec.yml: has_line_sections_file=False
-docs/domains/orcaflex/subsea/jumper/installation/ballymore_plet_plem/spec.yml: ProjectInputSpec FAIL: Value error, Either 'pipeline', 'riser', 'mooring', or 'generic' must be defined in spec
-docs/domains/orcaflex/subsea/jumper/installation/ballymore_plet_plem/spec.yml: pipeline_output_files=['analysis_summary.json']
-docs/domains/orcaflex/subsea/jumper/installation/ballymore_plet_plem/spec.yml: line_sections_yaml_len=0
-docs/domains/orcaflex/subsea/jumper/installation/ballymore_plet_plem/spec.yml: analysis_section_count=27
-docs/domains/orcaflex/subsea/jumper/installation/ballymore_plet_plem/spec.yml: has_line_sections_file=False
+docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_mf_plet/spec.yml: ProjectInputSpec FAIL: Value error, Either 'pipeline', 'riser', 'mooring', or 'generic' must be defined in spec
+docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_mf_plet/spec.yml: pipeline_output_files=['analysis_summary.json']
+docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_mf_plet/spec.yml: line_sections_yaml_len=0
+docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_mf_plet/spec.yml: analysis_section_count=27
+docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_mf_plet/spec.yml: has_line_sections_file=False
+docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_plet_plem/spec.yml: ProjectInputSpec FAIL: Value error, Either 'pipeline', 'riser', 'mooring', or 'generic' must be defined in spec
+docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_plet_plem/spec.yml: pipeline_output_files=['analysis_summary.json']
+docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_plet_plem/spec.yml: line_sections_yaml_len=0
+docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_plet_plem/spec.yml: analysis_section_count=27
+docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_plet_plem/spec.yml: has_line_sections_file=False
 ```
 
 ## Deliverable
 
-`run_pipeline(..., run_go_no_go=False)` writes a parseable `line_sections.yml` for both Ballymore
+`run_pipeline(..., run_go_no_go=False)` writes a parseable `line_sections.yml` for both GoM tieback
 jumper specs, with exactly 27 entries under `line_sections`, without changing the scope or shape of
 full model generation.
 
@@ -125,15 +125,15 @@ full model generation.
 1. Add tests before editing production code. The consumer/pipeline tests are expected to be RED at
    HEAD; the producer-side test is a GREEN guard proving the calculation stage already emits the
    intended key.
-   - `test_stage_2_calculate_emits_orcaflex_sections_yaml_key` loading one Ballymore spec and
+   - `test_stage_2_calculate_emits_orcaflex_sections_yaml_key` loading one GoM tieback spec and
      asserting `stage_2_calculate()` returns a non-empty `orcaflex_sections_yaml`, contains 27
      `orcaflex_sections`, and does not rely on a producer-side `orcaflex_yaml` key.
    - `test_stage_4_generate_yaml_uses_orcaflex_sections_yaml_key` with a minimal dict containing
      `orcaflex_sections_yaml`.
    - `test_stage_4_generate_yaml_accepts_legacy_orcaflex_yaml_key` to cover the planned compatibility
      fallback.
-   - Parametrized `test_run_pipeline_writes_line_sections_file_for_ballymore_specs` for both
-     Ballymore specs, calling `run_pipeline(..., generate_report=False, run_go_no_go=False)`,
+   - Parametrized `test_run_pipeline_writes_line_sections_file_for_gom_tieback_specs` for both
+     GoM tieback specs, calling `run_pipeline(..., generate_report=False, run_go_no_go=False)`,
      asserting `line_sections.yml` exists, `yaml.safe_load()` succeeds, and
      `len(data["line_sections"]) == 27`.
 2. Make the smallest production change in `stage_4_generate_yaml()`:
@@ -158,8 +158,8 @@ full model generation.
    from digitalmodel.marine_ops.installation.jumper_installation import run_pipeline
 
    for spec in [
-       'docs/domains/orcaflex/subsea/jumper/installation/ballymore_mf_plet/spec.yml',
-       'docs/domains/orcaflex/subsea/jumper/installation/ballymore_plet_plem/spec.yml',
+       'docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_mf_plet/spec.yml',
+       'docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_plet_plem/spec.yml',
    ]:
        out = Path('/tmp/jumper-line-sections') / Path(spec).parent.name
        if out.exists():
@@ -175,7 +175,7 @@ full model generation.
 | Action | Path | Reason |
 |---|---|---|
 | Modify | `src/digitalmodel/marine_ops/installation/jumper_installation.py` | Use the actual result key emitted by `jumper_lift.py` |
-| Add | `tests/marine_ops/installation/test_jumper_pipeline_line_sections.py` | Lock the key contract and Ballymore pipeline output |
+| Add | `tests/marine_ops/installation/test_jumper_pipeline_line_sections.py` | Lock the key contract and GoM tieback pipeline output |
 
 ## TDD Test List
 
@@ -184,11 +184,11 @@ full model generation.
 | `test_stage_2_calculate_emits_orcaflex_sections_yaml_key` | expected GREEN at HEAD; guard test | producer emits `orcaflex_sections_yaml` and 27 sections |
 | `test_stage_4_generate_yaml_uses_orcaflex_sections_yaml_key` | returns empty string | returns the YAML value |
 | `test_stage_4_generate_yaml_accepts_legacy_orcaflex_yaml_key` | expected GREEN at HEAD; fallback guard | old callers still work |
-| `test_run_pipeline_writes_line_sections_file_for_ballymore_specs` | no `line_sections.yml` | file exists with 27 `line_sections` |
+| `test_run_pipeline_writes_line_sections_file_for_gom_tieback_specs` | no `line_sections.yml` | file exists with 27 `line_sections` |
 
 ## Acceptance Criteria
 
-- [ ] Both Ballymore specs write `line_sections.yml` through `run_pipeline()`.
+- [ ] Both GoM tieback specs write `line_sections.yml` through `run_pipeline()`.
 - [ ] `line_sections.yml` parses with `yaml.safe_load()`.
 - [ ] Parsed `line_sections` count is exactly 27 for each spec.
 - [ ] Tests lock the `orcaflex_sections_yaml` key contract so the drift cannot recur.

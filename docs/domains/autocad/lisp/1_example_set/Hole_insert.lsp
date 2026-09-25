@@ -1,7 +1,7 @@
 ;
 ; insert holes top and side, solid and hidden
 ; Created by Allan Wise, Professional Draftsperson
-; Email: allanyz@bigpond.com
+; Email: [email removed]
 ;
 ; Installation
 ; 1. Copy all the files into an AutoCAD support Directory

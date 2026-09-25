@@ -20,7 +20,7 @@ NUM_CORES         3
 OPTIONS CONV NASF
 OPTIONS NOST 
 OPTIONS RDEP REST END
-RESTART  1  5       K:\tutorial\sp\wb\003_FPSO_Turret\003_FPSO_Turret.tutorial_files\dp0\AQW-1\AQW\AQ\Analysis\TimeResponse_EQ
+RESTART  1  5       <private-data>\tutorial\sp\wb\003_FPSO_Turret\003_FPSO_Turret.tutorial_files\dp0\AQW-1\AQW\AQ\Analysis\TimeResponse_EQ
 ********************************************************************************
 *********************************** DECK  1 ************************************
 ********************************************************************************
@@ -27026,14 +27026,14 @@ RESTART  1  5       K:\tutorial\sp\wb\003_FPSO_Turret\003_FPSO_Turret.tutorial_f
 ********************************************************************************
 ********************************************************************************
           FDR1
-      FILE          K:\tutorial\sp\wb\003_FPSO_Turret\003_FPSO_Turret.tutorial_files\dp0\AQW\AQW\AQ\Analysis\Analysis.hyd
+      FILE          <private-data>\tutorial\sp\wb\003_FPSO_Turret\003_FPSO_Turret.tutorial_files\dp0\AQW\AQW\AQ\Analysis\Analysis.hyd
       CSTR    1
       CPDB
  END
 ********************************************************************************
 ********************************************************************************
           FDR2
-      FILE          K:\tutorial\sp\wb\003_FPSO_Turret\003_FPSO_Turret.tutorial_files\dp0\AQW\AQW\AQ\Analysis\Analysis.hyd
+      FILE          <private-data>\tutorial\sp\wb\003_FPSO_Turret\003_FPSO_Turret.tutorial_files\dp0\AQW\AQW\AQ\Analysis\Analysis.hyd
       CSTR    2
       CPDB
  END

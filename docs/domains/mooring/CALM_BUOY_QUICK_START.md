@@ -10,7 +10,7 @@ This guide will help you create your first CALM Buoy project in just a few steps
 
 ```bash
 # Navigate to repository root
-cd D:\workspace-hub\digitalmodel
+cd <private-data>\digitalmodel
 
 # Copy example to your project
 cp examples/north_sea_calm_project.yml projects/my_first_calm_project.yml
@@ -96,7 +96,7 @@ CALM BUOY PROJECT GENERATOR
 ✅ PROJECT GENERATION COMPLETE
 ================================================================================
 
-Project location: D:\workspace-hub\digitalmodel\projects\CALM_001
+Project location: <private-data>\CALM_001
 
 Next steps:
   1. Review configuration: projects/CALM_001/project_config.yml

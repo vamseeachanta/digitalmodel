@@ -69,9 +69,9 @@ b/ .dat to workbench: After I prepare my .dat file (eg. Simple run)
 Thank you,
 Vamsee
 
-From: Alex Austin <aaustin@drd.com>
+From: Alex Austin [email removed]
 Sent: Friday, May 31, 2024 8:03 AM
-To: Vamsee Achanta <vamseea@none.com>
+To: Vamsee Achanta [email removed]
 Subject: RE: AQWA | .DAT and WB
 
 Vamsee,
@@ -87,9 +87,9 @@ DRD Technology
 Technical Support: 918.743.3013 x 1
 Office: 918.743.3013 x 612
 
-From: Vamsee Achanta <vamseea@none.com>
+From: Vamsee Achanta [email removed]
 Sent: Friday, May 31, 2024 7:24 AM
-To: support <support@drd.com>
+To: support [email removed]
 Subject: AQWA | .DAT and WB
 
 Dear Support Representative,

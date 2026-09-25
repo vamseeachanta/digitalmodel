@@ -26,8 +26,8 @@ plt.style.use('seaborn-v0_8-darkgrid')
 sns.set_palette("husl")
 
 # Paths
-CSV_FILE = r"D:\workspace-hub\digitalmodel\data\ocimf_database.csv"
-OUTPUT_DIR = r"D:\workspace-hub\digitalmodel\docs\charts\phase2\ocimf"
+CSV_FILE = r"<private-data>\ocimf_database.csv"
+OUTPUT_DIR = r"<private-data>\ocimf"
 
 # Create output directory
 Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)

@@ -216,7 +216,7 @@ class Database():
                 dbq = r"DBQ={0}".format(PureWindowsPath(self.database))
                 # below not working
                 connection_string_generic = r"Driver={Microsoft Access Driver (*.mdb, *.accdb)};" + dbq + ";"
-                connection_string_generic = r"Driver={Microsoft Access Driver (*.mdb, *.accdb)};" + r"Dbq=C:\Users\achantv\Documents\Utilities\aceengineer\data_manager\data\bsee\2018_Atlas_Update.accdb;"
+                connection_string_generic = r"Driver={Microsoft Access Driver (*.mdb, *.accdb)};" + r"Dbq=<private-data>\2018_Atlas_Update.accdb;"
                 print(connection_string_generic)
                 self.conn = pyodbc.connect(connection_string_generic)
 
@@ -226,7 +226,7 @@ class Database():
                 dbq = r"DBQ={0}".format(PureWindowsPath(self.database))
                 # below not working
                 connection_string_generic = r"Driver={Microsoft Access Driver (*.mdb, *.accdb)};" + dbq + ";"
-                connection_string_generic = r"Driver={Microsoft Access Driver (*.mdb, *.accdb)};" + r"Dbq=C:\Users\achantv\Documents\Utilities\aceengineer\data_manager\data\bsee\2018_Atlas_Update.accdb;"
+                connection_string_generic = r"Driver={Microsoft Access Driver (*.mdb, *.accdb)};" + r"Dbq=<private-data>\2018_Atlas_Update.accdb;"
                 print(connection_string_generic)
                 self.conn = pypyodbc.connect(connection_string_generic)
 

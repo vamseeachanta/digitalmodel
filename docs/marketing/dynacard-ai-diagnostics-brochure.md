@@ -296,7 +296,7 @@ DynaCard AI Diagnostics is available for integration into your production monito
 
 | | |
 |---|---|
-| **Email** | [contact@yourcompany.com] |
+| **Email** | [[email removed]] |
 | **Web** | [www.yourcompany.com/dynacard] |
 | **Technical Documentation** | Available upon request |
 

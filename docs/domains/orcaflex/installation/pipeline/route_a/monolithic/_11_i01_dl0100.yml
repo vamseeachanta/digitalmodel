@@ -5,11 +5,11 @@ General:
   StaticsMaxDamping: 80
 
 Vessels:
-  SevenArctic:
+  iv02:
     InitialX: 632.14
 
 Vessels:
-  SevenArctic:
+  iv02:
     InitialX: 652.14
 
 6DBuoys:

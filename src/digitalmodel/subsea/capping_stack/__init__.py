@@ -1,7 +1,7 @@
 """Subsea capping-stack emergency-containment mechanics (API 17W).
 
 Bounded deterministic core for emergency-response planning of a subsea
-capping stack (the post-Macondo source-control device lowered onto a
+capping stack (the post-2010 GoM blowout source-control device lowered onto a
 flowing wellhead):
 
 * ``containment_capacity`` — central pressure-adequacy check: stack rated

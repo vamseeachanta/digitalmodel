@@ -8,7 +8,7 @@ import xmltodict
 from bs4 import BeautifulSoup
 
 headers_default = {
-    'User-Agent': 'Vamsee Achanta support@aceengineer.com',
+    'User-Agent': 'Vamsee Achanta support@example.com',
     'Accept-Encoding': 'gzip, deflate',
     'Host': 'www.sec.gov'
 }
@@ -17,7 +17,7 @@ headers_default = {
 class ReadDataFromSystemFiles():
 
     def get_file_list_from_folder(self, folder_with_file_type, with_path=True, with_extension=True):
-        folder_with_file_type_example = 'Q:\projects\Mole\log_files\*.log'
+        folder_with_file_type_example = '<private-data>\*.log'
 
         import glob
         import os

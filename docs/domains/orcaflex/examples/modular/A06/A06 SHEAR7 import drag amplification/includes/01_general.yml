@@ -30,8 +30,8 @@ General:
   DefaultViewAzimuth: 270
   DefaultViewElevation: 0
 SHEAR7Data:
-  SHEAR7ExecutableLocation: \\orcfile2\apps\Shear7\v4.11b\bin\shear7_4.11b.exe
-  SHEAR7LiftFileLocation: \\orcfile2\apps\Shear7\v4.11b\bin\common.S7CL
+  SHEAR7ExecutableLocation: <private-data>\shear7_4.11b.exe
+  SHEAR7LiftFileLocation: <private-data>\common.S7CL
   SHEAR7Version: 4.11
   SHEAR7OutputAnm: No
   SHEAR7OutputDmg: No

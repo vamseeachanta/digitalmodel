@@ -2,9 +2,9 @@
 
 ## Quick Reference Guide
 
-**File Analyzed:** `D:\workspace-hub\_temp\marine_analysis_data.xlsm`
+**File Analyzed:** `<private-data>\marine_analysis_data.xlsm`
 **Analysis Date:** 2025-10-02
-**Full Report:** `D:\workspace-hub\digitalmodel\docs\marine_excel_analysis_report.md`
+**Full Report:** `<private-data>\marine_excel_analysis_report.md`
 
 ---
 
@@ -477,12 +477,12 @@ numpydoc>=1.5.0
 ## Contact & Support
 
 **Analysis Files:**
-- Full Report: `D:\workspace-hub\digitalmodel\docs\marine_excel_analysis_report.md`
-- This Summary: `D:\workspace-hub\digitalmodel\docs\marine_excel_analysis_summary.md`
-- JSON Data: `D:\workspace-hub\_temp\marine_analysis_data_analysis.json`
-- Analysis Script: `D:\workspace-hub\digitalmodel\scripts\analyze_marine_excel.py`
+- Full Report: `<private-data>\marine_excel_analysis_report.md`
+- This Summary: `<private-data>\marine_excel_analysis_summary.md`
+- JSON Data: `<private-data>\marine_analysis_data_analysis.json`
+- Analysis Script: `<private-data>\analyze_marine_excel.py`
 
-**Source File:** `D:\workspace-hub\_temp\marine_analysis_data.xlsm`
+**Source File:** `<private-data>\marine_analysis_data.xlsm`
 
 ---
 

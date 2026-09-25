@@ -579,7 +579,7 @@ class CathodicProtection:
         ensures adequate protection between discrete anode locations.
 
         Enhanced to support polarization resistance and advanced attenuation
-        calculations per DNV RP-F103 2016 / Saipem approach.
+        calculations per DNV RP-F103 2016 / Contractor approach.
 
         Args:
             inputs (dict): Configuration with coating resistance parameters
@@ -640,7 +640,7 @@ class CathodicProtection:
             # Edge case: zero denominator (should not occur with valid inputs)
             attenuation_length_m = 0.0
 
-        # Enhanced attenuation calculation (DNV RP-F103 2016 / Saipem approach)
+        # Enhanced attenuation calculation (DNV RP-F103 2016 / Contractor approach)
         # Calculate polarization resistance: P = (Ecorr - Ea) / i
         #
         # Where:
@@ -661,13 +661,13 @@ class CathodicProtection:
         else:
             polarization_resistance_ohm_m2 = 0.0
 
-        # Enhanced attenuation factor (DNV RP-F103 2016 / Saipem approach - CORRECTED)
+        # Enhanced attenuation factor (DNV RP-F103 2016 / Contractor approach - CORRECTED)
         # α = sqrt((π × D × RL × CBFf × P) / 8)
         #
         # Note: The original documented formula α = sqrt(2 / (π × D × RL × CBFf × P)) was
         # found to be incorrect (inverted). The correct formula places all variables in the
         # numerator with divisor of 8 under the square root. This was discovered through
-        # systematic hypothesis testing and verified against Saipem reference values
+        # systematic hypothesis testing and verified against Contractor reference values
         # (error: 2.85% vs 262 million× with wrong formula).
         #
         # Where:

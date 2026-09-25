@@ -1,10 +1,10 @@
 %YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.5e
-# File: D:\github\digitalmodel\docs\modules\orcaflex\examples\raw\A01\A01 Pliant wave riser.yml
+# File: <private-data>/A01 Pliant wave riser.yml
 # Created: 1:29 PM on 8/20/2025
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 # Input Parameters (for parametric analysis)
 # See inputs/parameters.yml for extracted values:

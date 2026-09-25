@@ -4,7 +4,7 @@
 > **Complexity:** T2
 > **Date:** 2026-07-13
 > **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/1571
-> **Client:** N/A — tests use synthetic meshes only; private Noble data stays outside this repository
+> **Client:** N/A — tests use synthetic meshes only; private client data stays outside this repository
 > **Lane:** lane:codex
 > **Execution mode:** single-lane
 

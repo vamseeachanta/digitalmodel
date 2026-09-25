@@ -19,7 +19,7 @@ import yaml
 class LinkValidator:
     """Validates internal links and manages cross-references."""
     
-    def __init__(self, docs_root: str = "K:\\github\\digitalmodel\\docs"):
+    def __init__(self, docs_root: str = "<private-data>\\docs"):
         """Initialize validator with docs root directory."""
         self.docs_root = Path(docs_root)
         self.markdown_files = []

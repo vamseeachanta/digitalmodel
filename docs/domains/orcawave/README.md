@@ -198,7 +198,7 @@ threads relevant to this workflow:
 ## Legacy workflow (historical)
 
 Earlier documentation described a 5-phase vessel-name-driven orchestrator
-(`orchestrator.py --vessel sea_cypress`) and a `modules/` package layout. That
+(`orchestrator.py --vessel tug_30m_1`) and a `modules/` package layout. That
 layout no longer exists; the orchestrator survives at
 `src/digitalmodel/solvers/orcawave/diffraction/orchestrator.py` for existing
 vessel configs but is **not** the canonical path — new work should start from a

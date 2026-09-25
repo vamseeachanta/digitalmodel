@@ -8,17 +8,17 @@
 | DNV-RP-B401-1993 | Cathodic Protection Design | 1993 | `/mnt/ace/O&G-Standards/DNV/DNV_RP_B401_(1993)_Cathodic_Protection_Design.pdf` | Available |
 | DNV-RP-B401-2005 | Cathodic Protection Design | Jan 2005 + Apr 2008 amend | `/mnt/ace/O&G-Standards/DNV/DNV_RP_B401_with_2008_amendments_(2005)_Cathodic_Protection_Design.pdf` | Available |
 | DNV-RP-B401-2011 | Cathodic Protection Design | Oct 2010 + Apr 2011 amend | `/mnt/ace/O&G-Standards/DNV/DNV_RP_B401_(2011)_Cathodic_Protection_Design.pdf` | Available |
-| DNV-RP-B401-2021 | Cathodic Protection Design | May 2021 | `/mnt/local-analysis/workspace-hub/acma-projects/B1522/ctr-2/cal/DNV-RP-B401-2021.pdf` | Available |
+| DNV-RP-B401-2021 | Cathodic Protection Design | May 2021 | `/mnt/local-analysis/workspace-hub/<project-archive>/<job-code>/ctr-2/cal/DNV-RP-B401-2021.pdf` | Available |
 | DNV-RP-F103-2003 | CP of Submarine Pipelines by Galvanic Anodes | Oct 2003 + Apr 2008 amend | `/mnt/ace/O&G-Standards/DNV/DNV_RP_F103_(2003)_Cathodic_protection_of_submarine_pipelines_by_galvanic_anodes.pdf` | Available |
 | DNV-RP-F103-2010 | CP of Submarine Pipelines by Galvanic Anodes | Oct 2010 | `/mnt/ace/O&G-Standards/DNV/DNV_RP_F103_(2010)_Cathodic_Protection_of_Submarine_Pipelines_by_Galvanic_Anodes.pdf` | Available |
 | DNVGL-RP-F103-2016 | CP of Submarine Pipelines | Jul 2016 | Not locally available; proxied via GP 56-01-04U V4 | Proxy only |
 | DNV-RP-F112-2008 | Design of Duplex SS Subsea Equipment Exposed to CP | Oct 2008 | `/mnt/ace/O&G-Standards/DNV/DNV_RP_F112_(2008)_Stainless_steel_subsea_equipment_exposed_to_cathodic_protection.pdf` | Available |
-| ABS-GN-Ships-2017 | GN on CP of Ships | Dec 2017 | `/mnt/local-analysis/workspace-hub/acma-projects/B1522/ctr-2/ref/ABS cathodic-protection-of-ships-gn-dec17.pdf` | Available |
+| ABS-GN-Ships-2017 | GN on CP of Ships | Dec 2017 | `/mnt/local-analysis/workspace-hub/<project-archive>/<job-code>/ctr-2/ref/ABS cathodic-protection-of-ships-gn-dec17.pdf` | Available |
 | ABS-GN-Offshore-2018 | GN on CP of Offshore Structures | Dec 2018 | `/mnt/local-analysis/workspace-hub/digitalmodel/docs/domains/cathodic_protection/codes/ABS cathodic-protection-offshore-gn-dec18.pdf` | Available |
 | ISO-15589-2:2004 | Petroleum and Natural Gas — CP of Pipeline Transport Systems — Part 2: Offshore Pipelines | 1st edition 2004 | `/mnt/ace/O&G-Standards/ISO/ISO15589-2-2004forOR_Cathodic_Protection.pdf` | Available |
-| SNAME-TRR21 | Fundamentals of CP for Marine Service (T&R R-21 / B7.5) | — | `/mnt/local-analysis/workspace-hub/acma-projects/B1522/ctr-2/ref/SNAME T&R R-21 Cathodic Protection Marine Service.pdf` | Available |
-| EMX-GP-56-01-04U-V4 | ExxonMobil GP: CP Requirements for Offshore Pipelines | V4.0 Feb 2021 | `/mnt/local-analysis/workspace-hub/saipem/general/cp/GP 56-01-04U_4.pdf` | Available |
-| EMX-GP-56-01-08U-V1 | ExxonMobil GP: CP Requirements for Offshore Structures | V1.0 Apr 2020 | `/mnt/local-analysis/workspace-hub/saipem/general/cp/GP 56-01-08U_Rev1.0_external.pdf` | Available |
+| SNAME-TRR21 | Fundamentals of CP for Marine Service (T&R R-21 / B7.5) | — | `/mnt/local-analysis/workspace-hub/<project-archive>/<job-code>/ctr-2/ref/SNAME T&R R-21 Cathodic Protection Marine Service.pdf` | Available |
+| EMX-GP-56-01-04U-V4 | ExxonMobil GP: CP Requirements for Offshore Pipelines | V4.0 Feb 2021 | `/mnt/local-analysis/workspace-hub/contractor/general/cp/GP 56-01-04U_4.pdf` | Available |
+| EMX-GP-56-01-08U-V1 | ExxonMobil GP: CP Requirements for Offshore Structures | V1.0 Apr 2020 | `/mnt/local-analysis/workspace-hub/contractor/general/cp/GP 56-01-08U_Rev1.0_external.pdf` | Available |
 
 ---
 
@@ -159,13 +159,13 @@ Source file: `/mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/in
 
 | Method | Docstring / Comment | Formula Implemented | Correct Standard? | Notes |
 |--------|--------------------|--------------------|------------------|-------|
-| `_dnv_pipeline_geometry` | "DNV RP-F103 2016 / Saipem approach" | A_ext = π·D·L; A_s = π/4·((D)²−(d)²); RL = ρ_Me / A_s | F103-2016 (Eq.8 variant) | Longitudinal resistance RL = ρ_Me/A_s is 2016 feature; 2010 uses Eq.8 R_Me = L·ρ_Me/(π·d·(D−d)) |
-| `_dnv_coating_breakdown` | "DNV RP-F103 2016 / Saipem approach" | compound exponential; includes `wet_storage_years` | F103-2016 hybrid | Wet storage period is 2016 feature; 2010 uses linear f_cm = a + 0.5·b·t_f (Annex 1) — formula is non-standard |
+| `_dnv_pipeline_geometry` | "DNV RP-F103 2016 / Contractor approach" | A_ext = π·D·L; A_s = π/4·((D)²−(d)²); RL = ρ_Me / A_s | F103-2016 (Eq.8 variant) | Longitudinal resistance RL = ρ_Me/A_s is 2016 feature; 2010 uses Eq.8 R_Me = L·ρ_Me/(π·d·(D−d)) |
+| `_dnv_coating_breakdown` | "DNV RP-F103 2016 / Contractor approach" | compound exponential; includes `wet_storage_years` | F103-2016 hybrid | Wet storage period is 2016 feature; 2010 uses linear f_cm = a + 0.5·b·t_f (Annex 1) — formula is non-standard |
 | `_dnv_current_densities` | references "Table 4-1" and "Table 4-2" | coating-quality lookup (excellent/good/average/poor) + Arrhenius temperature correction + soil resistivity factor | INCORRECT — table numbers do not exist in F103-2010 or F103-2016 | F103-2010 uses Table 5-1 (burial + internal fluid temp). Coating quality categories are non-standard. Temperature Arrhenius correction not in any F103 edition. Table references are fabricated. |
 | `_dnv_current_demand` | — | I = A · i_design · CBF · design_margin | F103-2010 Eq.1/Eq.3 (correct form) | Design margin factor not in F103-2010 (is in EMX GP k=1.1) |
 | `_dnv_anode_requirements` | — | M = I_total · t_f · 8760 / (u · ε) | F103-2010 Eq.5 (correct) | Capacity ε and utilization u must match standard values |
 | `_dnv_anode_spacing` | — | uniform distribution via np.linspace; validates against min/max spacing | F103-2010 Sec.5.10 (default ≤300 m) | Spacing validation present; max spacing constant should be checked against configured value |
-| `_dnv_attenuation` | "DNV RP-F103 2016 / Saipem approach" | simplified 2010: La = sqrt(D·t·ρ_coating / (4·ρ_steel·ln(D/d))); enhanced 2016: α = sqrt(π·D·RL·CBFf·P/8) where P = (Ecorr−Ea)/i_mean | Both F103-2010 Sec.5.11 and F103-2016 enhanced formula | Two paths present; 2016 path uses polarization resistance P — correct conceptually for 2016 |
+| `_dnv_attenuation` | "DNV RP-F103 2016 / Contractor approach" | simplified 2010: La = sqrt(D·t·ρ_coating / (4·ρ_steel·ln(D/d))); enhanced 2016: α = sqrt(π·D·RL·CBFf·P/8) where P = (Ecorr−Ea)/i_mean | Both F103-2010 Sec.5.11 and F103-2016 enhanced formula | Two paths present; 2016 path uses polarization resistance P — correct conceptually for 2016 |
 
 ### 3.3 ABS Ships Route — Private Methods
 
@@ -211,7 +211,7 @@ Note: These standalone methods are NOT called from `router()`. They appear to be
 
 | # | Location | Issue |
 |---|----------|-------|
-| V-1 | Class `DNV_RP_F103_2010` | The class name claims 2010 but three private methods (`_dnv_pipeline_geometry`, `_dnv_coating_breakdown`, `_dnv_attenuation`) explicitly document "DNV RP-F103 2016 / Saipem approach". The implementation is a hybrid of 2010 and 2016, not a clean 2010 implementation. |
+| V-1 | Class `DNV_RP_F103_2010` | The class name claims 2010 but three private methods (`_dnv_pipeline_geometry`, `_dnv_coating_breakdown`, `_dnv_attenuation`) explicitly document "DNV RP-F103 2016 / Contractor approach". The implementation is a hybrid of 2010 and 2016, not a clean 2010 implementation. |
 | V-2 | `_dnv_attenuation` | The enhanced attenuation path using polarization resistance P = (Ecorr−Ea)/i_mean is from F103-2016. Selecting the correct code path depends on configuration; misapplication will produce incorrect results. |
 | V-3 | `_dnv_current_demand` | Design margin factor (k) is from EMX GP 56-01-04U (k=1.1) and not present in F103-2010. Applying it when calculating to F103-2010 adds an undocumented safety factor. |
 

@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\examples\raw\H01\H01 Chinese lantern.yml
+# File: docs/domains/orcaflex/library/model_library/h01_chinese_lantern/monolithic/H01 Chinese lantern.yml
 # Created: 7:13 PM on 2/10/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units

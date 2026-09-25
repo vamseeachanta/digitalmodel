@@ -35,7 +35,7 @@ class ETL_components:
                 row_items = {}
                 row_items.update(
                     {
-                        "Name": "K:\\0182\\Rev6\\Extreme\\"
+                        "Name": "<private-data>\\"
                         + df_array[file_index].loc[row_index, "SaveData"]
                     }
                 )

@@ -17,9 +17,9 @@ from digitalmodel.common.cathodic_protection import CathodicProtection
 from digitalmodel.reporting.cp_html_report import CPHTMLReportGenerator
 
 
-def create_saipem_config():
+def create_contractor_config():
     """
-    Create Saipem test configuration for CP analysis.
+    Create Contractor test configuration for CP analysis.
 
     Returns:
         Configuration dictionary with pipeline, coating, environment, and anode parameters
@@ -121,7 +121,7 @@ def main():
     Workflow:
         1. Initialize CP calculator
         2. Run DNV 2010 calculation (standard)
-        3. Run DNV 2016 calculation (enhanced Saipem with wet storage)
+        3. Run DNV 2016 calculation (enhanced Contractor with wet storage)
         4. Generate interactive HTML comparison report
         5. Export CSV summary data
     """

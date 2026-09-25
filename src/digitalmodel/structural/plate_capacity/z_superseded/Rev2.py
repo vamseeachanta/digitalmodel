@@ -1,9 +1,9 @@
 """Superseded plate buckling calculation revision 2 (archived)."""
 
 import pandas as pd
-sheet1=pd.read_excel("C:/Users/AceEngineer-002/Desktop/PB/pandas/ParametricInputs.xlsx",sheetname='Locations')
-sheet2=pd.read_excel("C:/Users/AceEngineer-002/Desktop/PB/pandas/ParametricInputs.xlsx",sheetname='Stress')
-sheet3=pd.read_excel("C:/Users/AceEngineer-002/Desktop/PB/pandas/ParametricInputs.xlsx",sheetname='PlateNo')
+sheet1=pd.read_excel("<private-data>/ParametricInputs.xlsx",sheetname='Locations')
+sheet2=pd.read_excel("<private-data>/ParametricInputs.xlsx",sheetname='Stress')
+sheet3=pd.read_excel("<private-data>/ParametricInputs.xlsx",sheetname='PlateNo')
 x1=sheet1.max() #minimum length
 x2=sheet1.min() #maximum length
 y1=sheet2.max()

@@ -7,7 +7,7 @@ Comprehensive validation system comparing Python implementations against Excel r
 - **Hydrodynamic Coefficients** (Added Mass & Damping)
 
 **Generated:** 2025-10-03
-**Validation Script:** `D:\workspace-hub\digitalmodel\scripts\validate_phase2.py`
+**Validation Script:** `<private-data>\validate_phase2.py`
 
 ---
 

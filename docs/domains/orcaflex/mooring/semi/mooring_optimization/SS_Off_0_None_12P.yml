@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\mooring\semi\mooring_optimization\SS_Off_0_None_12P.yml
+# File: docs/domains/orcaflex/mooring/semi/mooring_optimization/SS_Off_0_None_12P.yml
 # Created: 9:58 PM on 1/17/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units

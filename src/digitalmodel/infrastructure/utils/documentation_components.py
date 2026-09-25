@@ -119,7 +119,7 @@ if __name__ == '__main__':
     except Exception as e:
         print("Error: {}".format(e))
         print("Enter physical path for running")
-        parent_path = str(Path('C:/Users/achantv/Documents/Utilities/aceengineer'))
+        parent_path = str(Path('<private-data>/aceengineer'))
 
     jl.output_from_template_example1(searchpath=parent_path)
     # pdfkit unit tests

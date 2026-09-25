@@ -16,7 +16,7 @@
 
 **After Assetutilities Fix:**
 - ✅ Linked real assetutilities repo from workspace-hub
-- ✅ Installed in editable mode: `-e D:\workspace-hub\assetutilities`
+- ✅ Installed in editable mode: `-e <private-data>\assetutilities`
 - ✅ **1180 tests collected** (+38 tests)
 - ✅ **9 collection errors** (down from 45!)
 - ✅ **36 test files unblocked** 

@@ -20,7 +20,7 @@ import hashlib
 class NavigationGenerator:
     """Generates master navigation and taxonomy systems."""
     
-    def __init__(self, docs_root: str = "K:\\github\\digitalmodel\\docs"):
+    def __init__(self, docs_root: str = "<private-data>\\docs"):
         """Initialize navigation generator."""
         self.docs_root = Path(docs_root)
         self.category_descriptions = {

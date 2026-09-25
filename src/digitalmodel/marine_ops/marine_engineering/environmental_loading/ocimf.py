@@ -12,7 +12,7 @@ References (off-repo per feedback_offrepo_intel_routing):
 - Digitized lookup tables — /mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx (17 sheets,
   Annex A Figures A5-A19; A15 absent from digitization)
 - Figure PDF extracts — /mnt/ace/acma-codes/OCIMF/Figures/
-- Project-bundled extracts — /mnt/ace/acma-projects/B1522/ctr-7/_data/ocimf/
+- Project-bundled extracts — /mnt/ace/<project-archive>/<job-code>/ctr-7/_data/ocimf/
 - OCIMF "Prediction of Wind and Current Loads on VLCCs" (1994) — separately
   referenced for tanker wind; NOT in OCIMF Coef.xlsx
 - Interactive explorer — docs/domains/charts/phase2/ocimf/ocimf_coefficient_explorer.html

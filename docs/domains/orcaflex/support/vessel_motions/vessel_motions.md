@@ -14,9 +14,9 @@ Best regards,
 
 David Heffernan
 
-From: Vamsee Achanta <vamseea@acma-inc.com> 
+From: Vamsee Achanta [email removed] 
 Sent: 05 December 2024 11:36
-To: Orcina <orcina@orcina.com>
+To: Orcina [email removed]
 Subject: OrcaFlex | 6DOF Transformation
 
 Dear Support Representative,

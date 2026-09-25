@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Geometry Validation Script for Sea Cypress Vessel
+Geometry Validation Script for tug_30m_1 Vessel
 Validates STL and OBJ mesh files for OrcaWave analysis
 """
 
@@ -54,9 +54,9 @@ class GeometryValidator:
         """Validate all geometry files in parallel"""
 
         geometry_files = {
-            "Sea Cypress_0.25 Mesh_Ascii.stl": "stl_ascii",
-            "Sea Cypress_0.25 Mesh_Binary.stl": "stl_binary",
-            "Sea Cypress_0.25 Mesh_Binary.obj": "obj"
+            "tug_30m_1_0.25 Mesh_Ascii.stl": "stl_ascii",
+            "tug_30m_1_0.25 Mesh_Binary.stl": "stl_binary",
+            "tug_30m_1_0.25 Mesh_Binary.obj": "obj"
         }
 
         logger.info(f"Validating {len(geometry_files)} geometry files...")
@@ -314,7 +314,7 @@ class GeometryValidator:
         
         report = []
         report.append("=" * 80)
-        report.append("GEOMETRY VALIDATION REPORT - SEA CYPRESS VESSEL")
+        report.append("GEOMETRY VALIDATION REPORT - TUG_30M_1 VESSEL")
         report.append("=" * 80)
         report.append("")
         

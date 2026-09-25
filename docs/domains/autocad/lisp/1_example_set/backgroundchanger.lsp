@@ -5,7 +5,7 @@
 ;;; By Jimmy Bergmark
 ;;; Copyright (C) 1997-2004 JTB World, All Rights Reserved
 ;;; Website: www.jtbworld.com
-;;; E-mail: info@jtbworld.com
+;;; E-mail: [email removed]
 ;;; 2003-07-01 - First release
 ;;; Tested on AutoCAD 2002, 2004, 2005
 

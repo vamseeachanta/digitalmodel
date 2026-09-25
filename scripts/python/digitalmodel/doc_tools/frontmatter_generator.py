@@ -19,7 +19,7 @@ from datetime import datetime
 class FrontmatterGenerator:
     """Generates and manages YAML frontmatter for markdown files."""
     
-    def __init__(self, docs_root: str = "K:\\github\\digitalmodel\\docs"):
+    def __init__(self, docs_root: str = "<private-data>\\docs"):
         """Initialize generator with docs root directory."""
         self.docs_root = Path(docs_root)
         self.analysis_file = self.docs_root / "docs_analysis_results.json"

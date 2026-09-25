@@ -1,6 +1,6 @@
 ;;;DIVAREA.LSP  ver 2.0   Plot division utility (metric units)
 ;;;                       by Yorgos Angelopoulos
-;;;                       agior1959@gmail.com
+;;;                       [email removed]
 ;;;
 ;;;  Suppose that you have to split a big part into 2, 3, 4 (even works for 5.014)
 ;;;  or you want to cut a smaller part out of the parent one.

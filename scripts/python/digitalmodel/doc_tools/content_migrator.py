@@ -20,7 +20,7 @@ import time
 class ContentMigrator:
     """Handles systematic content migration with backward compatibility."""
     
-    def __init__(self, docs_root: str = "K:\\github\\digitalmodel\\docs"):
+    def __init__(self, docs_root: str = "<private-data>\\docs"):
         """Initialize migrator with docs root directory."""
         self.docs_root = Path(docs_root)
         self.analysis_file = self.docs_root / "docs_analysis_results.json"

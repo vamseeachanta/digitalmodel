@@ -57,7 +57,7 @@ plot_multiple:
     file_name_extension: vessel
     nrows: 2
     ncols: 1
-    suptitle: Yellowtail Well, Noble Bob Douglas
+    suptitle: Deepwater well, drillship
     sets:
     -
       title: Vessel Motions

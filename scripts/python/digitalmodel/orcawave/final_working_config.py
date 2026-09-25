@@ -65,7 +65,7 @@ def create_final_working_config():
             'BodyIncludedInAnalysis': True,
             
             # STICK TO THIS MESH FILE - NO CHANGING
-            'BodyMeshFileName': 'D:\\github\\digitalmodel\\specs\\modules\\orcawave\\diffraction-analysis\\inputs\\geometry\\small_box_test.gdf',
+            'BodyMeshFileName': '<private-data>\\small_box_test.gdf',
             'BodyMeshFormat': 'Wamit gdf',
             'BodyMeshLengthUnits': 'm',
             'BodyMeshSymmetry': 'None',

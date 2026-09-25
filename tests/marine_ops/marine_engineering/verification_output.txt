@@ -7,18 +7,18 @@ Found 2 test file(s)
 
 ================================================================================
 Verifying: ship_rao
-File: D:\workspace-hub\digitalmodel\specs\modules\aqwa\ship-analysis\go-by-ship-raos\001_SHIP_RAOS_REV3.LIS
+File: <private-data>\001_SHIP_RAOS_REV3.LIS
 ================================================================================
 
 Traceback (most recent call last):
-  File "D:\workspace-hub\digitalmodel\tests\marine_engineering\test_rao_verification_all_routes.py", line 394, in <module>
+  File "<private-data>\test_rao_verification_all_routes.py", line 394, in <module>
     main()
     ~~~~^^
-  File "D:\workspace-hub\digitalmodel\tests\marine_engineering\test_rao_verification_all_routes.py", line 378, in main
+  File "<private-data>\test_rao_verification_all_routes.py", line 378, in main
     results = verifier.run_all_verifications()
-  File "D:\workspace-hub\digitalmodel\tests\marine_engineering\test_rao_verification_all_routes.py", line 324, in run_all_verifications
+  File "<private-data>\test_rao_verification_all_routes.py", line 324, in run_all_verifications
     result = self.verify_file(file_path, file_name)
-  File "D:\workspace-hub\digitalmodel\tests\marine_engineering\test_rao_verification_all_routes.py", line 92, in verify_file
+  File "<private-data>\test_rao_verification_all_routes.py", line 92, in verify_file
     print("\U0001f4ca Route 1: Unified Reader (v2.0 - NEW)")
     ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   File "C:\Python313\Lib\encodings\cp1252.py", line 19, in encode
