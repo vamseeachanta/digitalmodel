@@ -302,6 +302,36 @@ class TestWholeTreeCeiling:
         assert out.returncode == 1, out.stdout
 
 
+class TestLargeStagedCommits:
+    """A commit touching ~1,500 files overflowed the Windows command line
+    (WinError 206) because every staged path went into one git invocation."""
+
+    def test_index_lookups_are_batched(self, monkeypatch):
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location("ci_batch", CHECKER)
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules["ci_batch"] = mod
+        spec.loader.exec_module(mod)
+        paths = [f"docs/domain_{i:05d}/a_long_file_name_for_batching.md" for i in range(3000)]
+        calls = []
+        oid = "0" * 40
+
+        def fake_git(args, stdin=None):
+            calls.append(args)
+            if args[:2] == ["ls-files", "-s"]:
+                listed = args[args.index("--") + 1 :]
+                return "".join(f"160000 {oid} 0\t{p}\0" for p in listed).encode()
+            raise AssertionError(args)
+
+        monkeypatch.setattr(mod, "_git", fake_git)
+        got = mod.index_blobs(paths)
+        assert set(got) == set(paths)
+        assert len(calls) > 1
+        for args in calls:
+            assert sum(len(a) + 1 for a in args) < 30000
+
+
 class TestCiRunsTheGate:
     def test_the_quality_workflow_scans_the_whole_tree(self):
         wf = (REPO / ".github" / "workflows" / "quality-gates.yml").read_text(
