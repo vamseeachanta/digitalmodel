@@ -1,6 +1,8 @@
 """Cathodic protection calculations — API RP 1632, ISO 15589-2, DNV-RP-B401
-(2005-2021) and DNV-RP-F103 cited tables, and impressed current fuel system
-CP design."""
+(2005-2021) and DNV-RP-F103 cited tables and bracelet design, the shared
+formula kernel, and impressed current fuel system CP design."""
+
+from typing import Any
 
 from digitalmodel.cathodic_protection._edition import (
     DEFAULT_EDITION,
@@ -45,12 +47,44 @@ from digitalmodel.cathodic_protection.f103_tables import (
     FieldJointCoating as F103FieldJointCoating,
     FluidTemperatureBand as F103FluidTemperatureBand,
     LinepipeCoating as F103LinepipeCoating,
+    b401_edition_for_f103 as f103_b401_edition_for_f103,
     bracelet_utilisation_factor as f103_bracelet_utilisation_factor,
     edition_provenance as f103_edition_provenance,
     field_joint_coating_constants as f103_field_joint_coating_constants,
     fluid_temperature_band as f103_fluid_temperature_band,
     linepipe_coating_constants as f103_linepipe_coating_constants,
     mean_current_density as f103_mean_current_density,
+)
+
+# --- Shared formula kernel (#2211) ---
+
+from digitalmodel.cathodic_protection._kernels import (
+    anode_count as kernel_anode_count,
+    anode_current_output as kernel_anode_current_output,
+    anode_mass as kernel_anode_mass,
+    anodes_for_current as kernel_anodes_for_current,
+    coating_breakdown_final as kernel_coating_breakdown_final,
+    coating_breakdown_linear as kernel_coating_breakdown_linear,
+    coating_breakdown_mean as kernel_coating_breakdown_mean,
+    current_demand as kernel_current_demand,
+    equivalent_radius_from_mass as kernel_equivalent_radius_from_mass,
+    equivalent_radius_from_periphery as kernel_equivalent_radius_from_periphery,
+    long_flush as kernel_long_flush,
+    long_slender_standoff as kernel_long_slender_standoff,
+    mass_consumed as kernel_mass_consumed,
+    resistance_proximity_factor as kernel_resistance_proximity_factor,
+    short_flush_or_bracelet as kernel_short_flush_or_bracelet,
+    short_slender_standoff as kernel_short_slender_standoff,
+    slender_standoff as kernel_slender_standoff,
+)
+
+# --- DNV-RP-F103 bracelet anode design (#2211) ---
+
+from digitalmodel.cathodic_protection.dnv_rp_f103 import (
+    BraceletDesignInput as F103BraceletDesignInput,
+    BraceletDesignResult as F103BraceletDesignResult,
+    design_bracelet_cp as f103_design_bracelet_cp,
+    protected_length as f103_protected_length,
 )
 
 from digitalmodel.cathodic_protection.api_rp_1632 import (
@@ -137,10 +171,12 @@ from digitalmodel.cathodic_protection.pipeline_cp import (
 from digitalmodel.cathodic_protection.marine_structure_cp import (
     ExposureZone,
     ClimateRegion,
+    DesignLoopResult,
     StructuralZone,
     MarineCPResult,
     RetrofitAssessment,
     marine_structure_current_demand,
+    standoff_anode_design_loop,
     anode_distribution,
     retrofit_assessment,
 )
@@ -227,9 +263,14 @@ from digitalmodel.cathodic_protection.anode_sizing import (
     calculate_current_demand as sizing_current_demand,
     calculate_anode_mass as sizing_anode_mass,
     calculate_anode_resistance as sizing_anode_resistance,
+    depleted_equivalent_radius as sizing_depleted_equivalent_radius,
     design_cp_system,
 )
 
+# marine_cp is a deprecated facade over marine_structure_cp (#2211);
+# ``design_marine_cp`` is resolved lazily so that the DeprecationWarning
+# fires on first access, not on package import.
+from digitalmodel.cathodic_protection import marine_cp as _marine_cp
 from digitalmodel.cathodic_protection.marine_cp import (
     ZoneType as MarineZoneType,
     Zone as MarineZone,
@@ -237,7 +278,6 @@ from digitalmodel.cathodic_protection.marine_cp import (
     MarineCPResult as MarineCPDesignResult,
     get_seawater_current_density,
     calculate_zone_demand,
-    design_marine_cp,
 )
 
 from digitalmodel.cathodic_protection.pipeline_cp import (
@@ -286,12 +326,36 @@ __all__ = [
     "F103FieldJointCoating",
     "F103FluidTemperatureBand",
     "F103LinepipeCoating",
+    "f103_b401_edition_for_f103",
     "f103_bracelet_utilisation_factor",
     "f103_edition_provenance",
     "f103_field_joint_coating_constants",
     "f103_fluid_temperature_band",
     "f103_linepipe_coating_constants",
     "f103_mean_current_density",
+    # _kernels
+    "kernel_anode_count",
+    "kernel_anode_current_output",
+    "kernel_anode_mass",
+    "kernel_anodes_for_current",
+    "kernel_coating_breakdown_final",
+    "kernel_coating_breakdown_linear",
+    "kernel_coating_breakdown_mean",
+    "kernel_current_demand",
+    "kernel_equivalent_radius_from_mass",
+    "kernel_equivalent_radius_from_periphery",
+    "kernel_long_flush",
+    "kernel_long_slender_standoff",
+    "kernel_mass_consumed",
+    "kernel_resistance_proximity_factor",
+    "kernel_short_flush_or_bracelet",
+    "kernel_short_slender_standoff",
+    "kernel_slender_standoff",
+    # dnv_rp_f103
+    "F103BraceletDesignInput",
+    "F103BraceletDesignResult",
+    "f103_design_bracelet_cp",
+    "f103_protected_length",
     "anode_driving_voltage",
     "anode_resistance_vertical_rod",
     "current_demand",
@@ -356,10 +420,12 @@ __all__ = [
     # marine_structure_cp
     "ExposureZone",
     "ClimateRegion",
+    "DesignLoopResult",
     "StructuralZone",
     "MarineCPResult",
     "RetrofitAssessment",
     "marine_structure_current_demand",
+    "standoff_anode_design_loop",
     "anode_distribution",
     "retrofit_assessment",
     # iccp_design
@@ -430,6 +496,7 @@ __all__ = [
     "sizing_current_demand",
     "sizing_anode_mass",
     "sizing_anode_resistance",
+    "sizing_depleted_equivalent_radius",
     "design_cp_system",
     # marine_cp
     "MarineZoneType",
@@ -448,3 +515,10 @@ __all__ = [
     "design_pipeline_cp",
     "soil_resistivity_correction",
 ]
+
+
+def __getattr__(name: str) -> Any:
+    """Lazily resolve the deprecated ``design_marine_cp`` (warns on access)."""
+    if name == "design_marine_cp":
+        return _marine_cp.design_marine_cp
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
