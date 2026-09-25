@@ -169,3 +169,93 @@ def test_schema_rejects_missing_fields():
     problems = cint_parser.validate_receipt_schema({"schema": "x"})
     assert problems
     assert any("meshes" in p for p in problems)
+
+
+# --------------------------------------------------------------------------- #
+# P0b weldolet outputs: closed polar front, generic reaction_sum, uncracked
+# --------------------------------------------------------------------------- #
+WELD_FIXTURES = Path(__file__).resolve().parent / "fixtures" / "cint_weldolet"
+POLAR = {"type": "polar_z"}
+
+
+def _load_weld(case: str) -> tuple[dict[int, str], dict[int, str]]:
+    texts = {}
+    for name in FILES:
+        own = WELD_FIXTURES / case / name
+        src = own if own.is_file() else WELD_FIXTURES / "good" / name
+        texts[name] = src.read_text(encoding="utf-8")
+    return ({0: texts["cint_L0.txt"], 1: texts["cint_L1.txt"]},
+            {0: texts["reac_L0.txt"], 1: texts["reac_L1.txt"]})
+
+
+def test_weldolet_reaction_sum_parsed_as_the_equilibrium_quantity():
+    _, reac = _load_weld("good")
+    r = cint_parser.parse_reaction_file(reac[0])
+    assert r.fz_ligament is None
+    assert r.reaction_sum == pytest.approx(-4.7 * 18645.86008, rel=1e-12)
+    assert r.extras["reaction_y_sum"] == pytest.approx(-3.0e-6)
+    assert r.extras["n_fixed_nodes"] == 1012.0
+
+
+def test_weldolet_polar_front_angles():
+    cint, _ = _load_weld("good")
+    table = cint_parser.parse_cint_table(cint[1])
+    front = cint_parser.front_records(table, front_geometry=POLAR)
+    assert [n["phi_deg"] for n in front] == [0.0, 90.0, 180.0, 270.0]
+    for key in ("K1_reported", "K2_reported", "K3_reported", "J_reported"):
+        assert all(n[key] is not None for n in front)
+
+
+def test_weldolet_good_fixture_passes_every_guard():
+    cint, reac = _load_weld("good")
+    res = cint_parser.evaluate_guards(cint, reac, front_geometry=POLAR, extra_tokens=())
+    assert {n: r.status for n, r in res.items()} == dict.fromkeys(GUARDS, "pass")
+
+
+@pytest.mark.parametrize(
+    "case, guard",
+    [
+        ("neg_a_equilibrium", "a_equilibrium"),
+        ("neg_b_stale_mesh", "b_mesh_load"),
+        ("neg_c_contour", "c_contour"),
+        ("neg_d_missing_field", "d_complete"),
+        ("neg_e_host_token", "e_sanitised"),
+        ("neg_f_wrong_unit", "f_units"),
+    ],
+)
+def test_weldolet_negative_fixture_fails_only_its_guard(case, guard):
+    cint, reac = _load_weld(case)
+    res = cint_parser.evaluate_guards(cint, reac, front_geometry=POLAR, extra_tokens=())
+    assert sorted(n for n, r in res.items() if r.status != "pass") == [guard]
+
+
+def test_uncracked_evaluation_marks_contour_guards_not_applicable():
+    _, reac = _load_weld("good")
+    res = cint_parser.evaluate_guards({}, reac, cracked=False, extra_tokens=())
+    assert res["c_contour"].status == "not_applicable"
+    assert res["d_complete"].status == "not_applicable"
+    for name in ("a_equilibrium", "b_mesh_load", "e_sanitised", "f_units"):
+        assert res[name].status == "pass", name
+    _, bad = _load_weld("neg_a_equilibrium")
+    res = cint_parser.evaluate_guards({}, bad, cracked=False, extra_tokens=())
+    assert res["a_equilibrium"].status == "fail"
+
+
+def test_uncracked_record_has_empty_front():
+    _, reac = _load_weld("good")
+    rec = cint_parser.build_mesh_record(level=0, cint_text=None, reac_text=reac[0])
+    assert rec["front"] == [] and rec["declared_front_nodes"] == 0
+    assert rec["reactions"]["reaction_sum_n"] == pytest.approx(-4.7 * 18645.86008)
+
+
+def test_schema_v2_requires_per_level_run_and_artifacts():
+    mesh = {"level": 0, "deck_sha256": "0" * 64, "declared_front_nodes": 1,
+            "declared_contours": 6, "reactions": {}, "front": [{"node": 1}]}
+    receipt = {"schema": cint_parser.RECEIPT_SCHEMA_ID, "state": "x", "issue": 2157,
+               "kind": "weldolet_crack", "spec": {}, "units": {}, "meshing": {},
+               "run": {}, "meshes": [mesh, dict(mesh, level=1)], "primary_level": 1,
+               "guards": {}, "crack": {}, "sigma_ref": {}, "front_geometry": POLAR}
+    problems = " | ".join(cint_parser.validate_receipt_schema(receipt))
+    assert "meshes[0]: missing 'run'" in problems
+    assert "meshes[0]: missing 'artifacts'" in problems
+    assert "run: missing 'generator_files'" in problems

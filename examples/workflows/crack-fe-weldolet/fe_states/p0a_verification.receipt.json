@@ -1,6 +1,7 @@
 {
- "schema": "digitalmodel.crack_fe.receipt/v1",
+ "schema": "digitalmodel.crack_fe.receipt/v2",
  "state": "p0a_verification",
+ "kind": "verification",
  "issue": 2157,
  "spec": {
   "crack_depth_mm": 2.0,
@@ -12,6 +13,11 @@
   "youngs_modulus_mpa": 200000.0,
   "poisson": 0.3,
   "tube_radius_mm": 0.6
+ },
+ "front_geometry": {
+  "type": "ellipse",
+  "a": 2.0,
+  "c": 4.0
  },
  "units": {
   "length": "mm",
@@ -32,21 +38,14 @@
   ]
  },
  "run": {
-  "producing_commit": "49d9796d3c76214f099e348b4c4b42fee409fabd",
+  "producing_commit": "b4ea0f12e434ed9fafc9e1ada853e80308b74b3d",
   "generator_tree_clean": true,
+  "generator_files": {
+   "src/digitalmodel/ansys/crack_verification.py": "aefde929d711884b55ac317cbe3208265114cd63",
+   "src/digitalmodel/ansys/cint_parser.py": "841b09d2e92d267e3400e9632829d50d41e19c97"
+  },
   "mapdl_version": "26.1",
   "mapdl_release": "2026 R1",
-  "argv": [
-   "MAPDL.exe",
-   "-b",
-   "-i",
-   "crack_verification_L1.inp",
-   "-o",
-   "crack_verification_L1.out",
-   "-smp",
-   "-np",
-   "4"
-  ],
   "cores": 4,
   "platform": "windows",
   "solver_wrapper": "digitalmodel.ansys fail-closed MAPDL subprocess (#940)"
@@ -55,6 +54,31 @@
   {
    "level": 0,
    "deck_sha256": "c24f5b21fb2d37086b6c613a8244017a5055c2c91814449dfba5fb8a886af985",
+   "run": {
+    "argv": [
+     "MAPDL.exe",
+     "-b",
+     "-i",
+     "crack_verification_L0.inp",
+     "-o",
+     "crack_verification_L0.out",
+     "-smp",
+     "-np",
+     "4"
+    ],
+    "mapdl_version": "26.1",
+    "solve_seconds": 33.4
+   },
+   "artifacts": {
+    "cint": {
+     "path": "solved/p0a_verification/crack_cint_L0.txt",
+     "sha256": "37221c74102a01717bff7661576303a5f425860d19147a64c37b63d637e27342"
+    },
+    "reac": {
+     "path": "solved/p0a_verification/crack_reac_L0.txt",
+     "sha256": "6aee8827573f11fcf4ab803938096371011f7a947c848222b483fe6463cc50ba"
+    }
+   },
    "n_nodes": 62261,
    "n_elements": 14244,
    "mesh_parameters": {
@@ -66,16 +90,17 @@
     "core_radial_divisions": 4,
     "growth_ratio_target": 1.3
    },
-   "solve_seconds": 34.8,
    "declared_front_nodes": 25,
    "declared_contours": 6,
    "reactions": {
     "stress_mpa": 100.0,
     "loaded_area_mm2": 800.0,
+    "reaction_sum_n": -80000.0,
     "fz_ligament_n": -80000.0,
-    "fx_symmetry_n": -1.1835093634e-08,
-    "fy_point_n": -4.63595179772e-08,
-    "n_ligament_nodes": 1735
+    "fx_symmetry_n": -1.19279330652e-08,
+    "fy_point_n": -4.6375573161e-08,
+    "n_ligament_nodes": 1735,
+    "extras": {}
    },
    "front": [
     {
@@ -128,7 +153,10 @@
        "J": 0.1480953609
       }
      ],
-     "K1_reported": 5.711566495515015
+     "K1_reported": 5.711566495515015,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.14807535076666667
     },
     {
      "node": 2,
@@ -180,7 +208,10 @@
        "J": 0.1437300214
       }
      ],
-     "K1_reported": 5.697336642383057
+     "K1_reported": 5.697336642383057,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.14373389903333333
     },
     {
      "node": 3,
@@ -232,7 +263,10 @@
        "J": 0.1479706259
       }
      ],
-     "K1_reported": 5.759453568148586
+     "K1_reported": 5.759453568148586,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.14796980893333334
     },
     {
      "node": 4,
@@ -284,7 +318,10 @@
        "J": 0.1602413445
       }
      ],
-     "K1_reported": 5.970027981559796
+     "K1_reported": 5.970027981559796,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.16023936466666666
     },
     {
      "node": 5,
@@ -336,7 +373,10 @@
        "J": 0.1750004035
       }
      ],
-     "K1_reported": 6.225268497016945
+     "K1_reported": 6.225268497016945,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.17499818066666664
     },
     {
      "node": 6,
@@ -388,7 +428,10 @@
        "J": 0.1894463505
       }
      ],
-     "K1_reported": 6.4688448395907505
+     "K1_reported": 6.4688448395907505,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.18944387570000001
     },
     {
      "node": 7,
@@ -440,7 +483,10 @@
        "J": 0.2021971876
       }
      ],
-     "K1_reported": 6.67831247163229
+     "K1_reported": 6.67831247163229,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.2021945126
     },
     {
      "node": 8,
@@ -492,7 +538,10 @@
        "J": 0.2126652752
       }
      ],
-     "K1_reported": 6.844972990822311
+     "K1_reported": 6.844972990822311,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.2126624359
     },
     {
      "node": 9,
@@ -544,7 +593,10 @@
        "J": 0.2207213989
       }
      ],
-     "K1_reported": 6.971395685568239
+     "K1_reported": 6.971395685568239,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.22071843506666666
     },
     {
      "node": 10,
@@ -596,7 +648,10 @@
        "J": 0.2264946822
       }
      ],
-     "K1_reported": 7.060775567320395
+     "K1_reported": 7.060775567320395,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.22649162933333333
     },
     {
      "node": 11,
@@ -648,7 +703,10 @@
        "J": 0.2302455862
       }
      ],
-     "K1_reported": 7.118019731006629
+     "K1_reported": 7.118019731006629,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.23024247526666666
     },
     {
      "node": 12,
@@ -700,7 +758,10 @@
        "J": 0.2322843269
       }
      ],
-     "K1_reported": 7.148397474621618
+     "K1_reported": 7.148397474621618,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.2322811844
     },
     {
      "node": 13,
@@ -752,7 +813,10 @@
        "J": 0.2329237772
       }
      ],
-     "K1_reported": 7.157868853551197
+     "K1_reported": 7.157868853551197,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.23292061633333336
     },
     {
      "node": 14,
@@ -804,7 +868,10 @@
        "J": 0.2322843269
       }
      ],
-     "K1_reported": 7.148397474621618
+     "K1_reported": 7.148397474621618,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.2322811844
     },
     {
      "node": 15,
@@ -856,7 +923,10 @@
        "J": 0.2302455862
       }
      ],
-     "K1_reported": 7.118019731006629
+     "K1_reported": 7.118019731006629,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.23024247526666666
     },
     {
      "node": 16,
@@ -908,7 +978,10 @@
        "J": 0.2264946822
       }
      ],
-     "K1_reported": 7.060775567320395
+     "K1_reported": 7.060775567320395,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.22649162933333333
     },
     {
      "node": 17,
@@ -960,7 +1033,10 @@
        "J": 0.2207213989
       }
      ],
-     "K1_reported": 6.971395685568239
+     "K1_reported": 6.971395685568239,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.22071843506666666
     },
     {
      "node": 18,
@@ -1012,7 +1088,10 @@
        "J": 0.2126652752
       }
      ],
-     "K1_reported": 6.844972990822311
+     "K1_reported": 6.844972990822311,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.2126624359
     },
     {
      "node": 19,
@@ -1064,7 +1143,10 @@
        "J": 0.2021971876
       }
      ],
-     "K1_reported": 6.67831247163229
+     "K1_reported": 6.67831247163229,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.2021945126
     },
     {
      "node": 20,
@@ -1116,7 +1198,10 @@
        "J": 0.1894463505
       }
      ],
-     "K1_reported": 6.4688448395907505
+     "K1_reported": 6.4688448395907505,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.18944387570000001
     },
     {
      "node": 21,
@@ -1168,7 +1253,10 @@
        "J": 0.1750004035
       }
      ],
-     "K1_reported": 6.225268497016945
+     "K1_reported": 6.225268497016945,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.17499818066666664
     },
     {
      "node": 22,
@@ -1220,7 +1308,10 @@
        "J": 0.1602413446
       }
      ],
-     "K1_reported": 5.970027981559796
+     "K1_reported": 5.970027981559796,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.1602393647
     },
     {
      "node": 23,
@@ -1272,7 +1363,10 @@
        "J": 0.1479706259
       }
      ],
-     "K1_reported": 5.759453568148586
+     "K1_reported": 5.759453568148586,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.14796980893333334
     },
     {
      "node": 24,
@@ -1324,7 +1418,10 @@
        "J": 0.1437300214
       }
      ],
-     "K1_reported": 5.697336642383057
+     "K1_reported": 5.697336642383057,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.14373389903333333
     },
     {
      "node": 25,
@@ -1376,13 +1473,41 @@
        "J": 0.1480953609
       }
      ],
-     "K1_reported": 5.711566495515015
+     "K1_reported": 5.711566495515015,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.14807535076666667
     }
    ]
   },
   {
    "level": 1,
    "deck_sha256": "f4dcd70c1344a853f343f7c408a4589e10614fbd29d278f60e19fede361f9523",
+   "run": {
+    "argv": [
+     "MAPDL.exe",
+     "-b",
+     "-i",
+     "crack_verification_L1.inp",
+     "-o",
+     "crack_verification_L1.out",
+     "-smp",
+     "-np",
+     "4"
+    ],
+    "mapdl_version": "26.1",
+    "solve_seconds": 58.4
+   },
+   "artifacts": {
+    "cint": {
+     "path": "solved/p0a_verification/crack_cint_L1.txt",
+     "sha256": "65ad6020d99c18c3d7d33d0eb69e90de53d350bef3eabaf9feaca25000163c3c"
+    },
+    "reac": {
+     "path": "solved/p0a_verification/crack_reac_L1.txt",
+     "sha256": "4ac7b1280b4dd923f8b3fa12ab85a5f73dc083d282ba4f8f71a2d0d0f1f1accb"
+    }
+   },
    "n_nodes": 138555,
    "n_elements": 32376,
    "mesh_parameters": {
@@ -1394,16 +1519,17 @@
     "core_radial_divisions": 4,
     "growth_ratio_target": 1.3
    },
-   "solve_seconds": 94.0,
    "declared_front_nodes": 49,
    "declared_contours": 6,
    "reactions": {
     "stress_mpa": 100.0,
     "loaded_area_mm2": 800.0,
+    "reaction_sum_n": -80000.0000002,
     "fz_ligament_n": -80000.0000002,
-    "fx_symmetry_n": -1.06005819638e-07,
-    "fy_point_n": -2.77307717487e-07,
-    "n_ligament_nodes": 3695
+    "fx_symmetry_n": -1.06059795343e-07,
+    "fy_point_n": -2.76828209165e-07,
+    "n_ligament_nodes": 3695,
+    "extras": {}
    },
    "front": [
     {
@@ -1456,7 +1582,10 @@
        "J": 0.1500332061
       }
      ],
-     "K1_reported": 5.773985054081066
+     "K1_reported": 5.773985054081066,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.15003769656666666
     },
     {
      "node": 2,
@@ -1508,7 +1637,10 @@
        "J": 0.147562506
       }
      ],
-     "K1_reported": 5.715184712476412
+     "K1_reported": 5.715184712476412,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.14755604263333333
     },
     {
      "node": 3,
@@ -1560,7 +1692,10 @@
        "J": 0.1436562207
       }
      ],
-     "K1_reported": 5.6392756212675925
+     "K1_reported": 5.6392756212675925,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.14365531563333334
     },
     {
      "node": 4,
@@ -1612,7 +1747,10 @@
        "J": 0.1442915425
       }
      ],
-     "K1_reported": 5.649207081028043
+     "K1_reported": 5.649207081028043,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.14428985453333334
     },
     {
      "node": 5,
@@ -1664,7 +1802,10 @@
        "J": 0.1479815002
       }
      ],
-     "K1_reported": 5.717859336352698
+     "K1_reported": 5.717859336352698,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.14797973856666669
     },
     {
      "node": 6,
@@ -1716,7 +1857,10 @@
        "J": 0.1535878657
       }
      ],
-     "K1_reported": 5.822155684990146
+     "K1_reported": 5.822155684990146,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.15358599436666667
     },
     {
      "node": 7,
@@ -1768,7 +1912,10 @@
        "J": 0.1603301291
       }
      ],
-     "K1_reported": 5.945824470180199
+     "K1_reported": 5.945824470180199,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.16032815316666668
     },
     {
      "node": 8,
@@ -1820,7 +1967,10 @@
        "J": 0.1676546329
       }
      ],
-     "K1_reported": 6.0769327096270125
+     "K1_reported": 6.0769327096270125,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.16765254666666665
     },
     {
      "node": 9,
@@ -1872,7 +2022,10 @@
        "J": 0.175162777
       }
      ],
-     "K1_reported": 6.210161220405823
+     "K1_reported": 6.210161220405823,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.17516058166666668
     },
     {
      "node": 10,
@@ -1924,7 +2077,10 @@
        "J": 0.1825685492
       }
      ],
-     "K1_reported": 6.339048736662581
+     "K1_reported": 6.339048736662581,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.1825662482
     },
     {
      "node": 11,
@@ -1976,7 +2132,10 @@
        "J": 0.1896698454
       }
      ],
-     "K1_reported": 6.460353608621939
+     "K1_reported": 6.460353608621939,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.18966744433333335
     },
     {
      "node": 12,
@@ -2028,7 +2187,10 @@
        "J": 0.1963282141
       }
      ],
-     "K1_reported": 6.572145056007948
+     "K1_reported": 6.572145056007948,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.19632572013333335
     },
     {
      "node": 13,
@@ -2080,7 +2242,10 @@
        "J": 0.2024538962
       }
      ],
-     "K1_reported": 6.673368773340524
+     "K1_reported": 6.673368773340524,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.2024513172
     },
     {
      "node": 14,
@@ -2132,7 +2297,10 @@
        "J": 0.2079944074
       }
      ],
-     "K1_reported": 6.7635601872463305
+     "K1_reported": 6.7635601872463305,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.2079917519
     },
     {
      "node": 15,
@@ -2184,7 +2352,10 @@
        "J": 0.2129254803
       }
      ],
-     "K1_reported": 6.842768016829095
+     "K1_reported": 6.842768016829095,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.21292275689999998
     },
     {
      "node": 16,
@@ -2236,7 +2407,10 @@
        "J": 0.2172439953
       }
      ],
-     "K1_reported": 6.911524539826854
+     "K1_reported": 6.911524539826854,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.21724121266666666
     },
     {
      "node": 17,
@@ -2288,7 +2462,10 @@
        "J": 0.2209625563
       }
      ],
-     "K1_reported": 6.9702441031568645
+     "K1_reported": 6.9702441031568645,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.2209597227
     },
     {
      "node": 18,
@@ -2340,7 +2517,10 @@
        "J": 0.2241050955
       }
      ],
-     "K1_reported": 7.01948597775927
+     "K1_reported": 7.01948597775927,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.22410221893333335
     },
     {
      "node": 19,
@@ -2392,7 +2572,10 @@
        "J": 0.2267033066
       }
      ],
-     "K1_reported": 7.0599354924485835
+     "K1_reported": 7.0599354924485835,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.22670039453333332
     },
     {
      "node": 20,
@@ -2444,7 +2627,10 @@
        "J": 0.2287938462
       }
      ],
-     "K1_reported": 7.092309124474267
+     "K1_reported": 7.092309124474267,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.2287909056
     },
     {
      "node": 21,
@@ -2496,7 +2682,10 @@
        "J": 0.2304161547
       }
      ],
-     "K1_reported": 7.117323515524226
+     "K1_reported": 7.117323515524226,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.23041319196666665
     },
     {
      "node": 22,
@@ -2548,7 +2737,10 @@
        "J": 0.2316107443
       }
      ],
-     "K1_reported": 7.135677240139995
+     "K1_reported": 7.135677240139995,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.23160776513333334
     },
     {
      "node": 23,
@@ -2600,7 +2792,10 @@
        "J": 0.2324179607
       }
      ],
-     "K1_reported": 7.148038331585474
+     "K1_reported": 7.148038331585474,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.23241497043333334
     },
     {
      "node": 24,
@@ -2652,7 +2847,10 @@
        "J": 0.2328768136
       }
      ],
-     "K1_reported": 7.155032614096439
+     "K1_reported": 7.155032614096439,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.23287381726666667
     },
     {
      "node": 25,
@@ -2704,7 +2902,10 @@
        "J": 0.2330257905
       }
      ],
-     "K1_reported": 7.15728126230642
+     "K1_reported": 7.15728126230642,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.2330227846
     },
     {
      "node": 26,
@@ -2756,7 +2957,10 @@
        "J": 0.2328768136
       }
      ],
-     "K1_reported": 7.155032614096439
+     "K1_reported": 7.155032614096439,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.23287381726666667
     },
     {
      "node": 27,
@@ -2808,7 +3012,10 @@
        "J": 0.2324179607
       }
      ],
-     "K1_reported": 7.148038331585474
+     "K1_reported": 7.148038331585474,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.23241497046666668
     },
     {
      "node": 28,
@@ -2860,7 +3067,10 @@
        "J": 0.2316107443
       }
      ],
-     "K1_reported": 7.135677240139995
+     "K1_reported": 7.135677240139995,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.23160776513333334
     },
     {
      "node": 29,
@@ -2912,7 +3122,10 @@
        "J": 0.2304161547
       }
      ],
-     "K1_reported": 7.117323515524226
+     "K1_reported": 7.117323515524226,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.23041319196666665
     },
     {
      "node": 30,
@@ -2964,7 +3177,10 @@
        "J": 0.2287938463
       }
      ],
-     "K1_reported": 7.092309124474267
+     "K1_reported": 7.092309124474267,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.22879090563333335
     },
     {
      "node": 31,
@@ -3016,7 +3232,10 @@
        "J": 0.2267033066
       }
      ],
-     "K1_reported": 7.0599354924485835
+     "K1_reported": 7.0599354924485835,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.22670039453333332
     },
     {
      "node": 32,
@@ -3068,7 +3287,10 @@
        "J": 0.2241050955
       }
      ],
-     "K1_reported": 7.01948597775927
+     "K1_reported": 7.01948597775927,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.22410221893333335
     },
     {
      "node": 33,
@@ -3120,7 +3342,10 @@
        "J": 0.2209625563
       }
      ],
-     "K1_reported": 6.9702441031568645
+     "K1_reported": 6.9702441031568645,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.2209597227
     },
     {
      "node": 34,
@@ -3172,7 +3397,10 @@
        "J": 0.2172439954
       }
      ],
-     "K1_reported": 6.911524539826854
+     "K1_reported": 6.911524539826854,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.2172412127
     },
     {
      "node": 35,
@@ -3224,7 +3452,10 @@
        "J": 0.2129254803
       }
      ],
-     "K1_reported": 6.842768016829095
+     "K1_reported": 6.842768016829095,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.21292275693333332
     },
     {
      "node": 36,
@@ -3276,7 +3507,10 @@
        "J": 0.2079944075
       }
      ],
-     "K1_reported": 6.7635601872463305
+     "K1_reported": 6.7635601872463305,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.20799175193333333
     },
     {
      "node": 37,
@@ -3328,7 +3562,10 @@
        "J": 0.2024538962
       }
      ],
-     "K1_reported": 6.673368773340524
+     "K1_reported": 6.673368773340524,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.2024513172
     },
     {
      "node": 38,
@@ -3380,7 +3617,10 @@
        "J": 0.1963282142
       }
      ],
-     "K1_reported": 6.572145056007948
+     "K1_reported": 6.572145056007948,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.1963257201666667
     },
     {
      "node": 39,
@@ -3432,7 +3672,10 @@
        "J": 0.1896698454
       }
      ],
-     "K1_reported": 6.460353609676031
+     "K1_reported": 6.460353609676031,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.18966744433333335
     },
     {
      "node": 40,
@@ -3484,7 +3727,10 @@
        "J": 0.1825685492
       }
      ],
-     "K1_reported": 6.339048736662581
+     "K1_reported": 6.339048736662581,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.1825662482
     },
     {
      "node": 41,
@@ -3536,7 +3782,10 @@
        "J": 0.175162777
       }
      ],
-     "K1_reported": 6.210161220405823
+     "K1_reported": 6.210161220405823,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.1751605817
     },
     {
      "node": 42,
@@ -3588,7 +3837,10 @@
        "J": 0.1676546329
       }
      ],
-     "K1_reported": 6.076932710681105
+     "K1_reported": 6.076932710681105,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.16765254666666665
     },
     {
      "node": 43,
@@ -3640,7 +3892,10 @@
        "J": 0.1603301291
       }
      ],
-     "K1_reported": 5.945824470180199
+     "K1_reported": 5.945824470180199,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.16032815316666668
     },
     {
      "node": 44,
@@ -3692,7 +3947,10 @@
        "J": 0.1535878657
       }
      ],
-     "K1_reported": 5.822155686044238
+     "K1_reported": 5.822155686044238,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.15358599436666667
     },
     {
      "node": 45,
@@ -3744,7 +4002,10 @@
        "J": 0.1479815002
       }
      ],
-     "K1_reported": 5.717859336352698
+     "K1_reported": 5.717859336352698,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.14797973856666669
     },
     {
      "node": 46,
@@ -3796,7 +4057,10 @@
        "J": 0.1442915425
       }
      ],
-     "K1_reported": 5.649207081028043
+     "K1_reported": 5.649207081028043,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.14428985453333334
     },
     {
      "node": 47,
@@ -3848,7 +4112,10 @@
        "J": 0.1436562207
       }
      ],
-     "K1_reported": 5.6392756212675925
+     "K1_reported": 5.6392756212675925,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.14365531563333334
     },
     {
      "node": 48,
@@ -3900,7 +4167,10 @@
        "J": 0.147562506
       }
      ],
-     "K1_reported": 5.715184712476412
+     "K1_reported": 5.715184712476412,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.14755604263333333
     },
     {
      "node": 49,
@@ -3952,7 +4222,10 @@
        "J": 0.1500332061
       }
      ],
-     "K1_reported": 5.773985054081066
+     "K1_reported": 5.773985054081066,
+     "K2_reported": 0.0,
+     "K3_reported": 0.0,
+     "J_reported": 0.15003769656666666
     }
    ]
   }
