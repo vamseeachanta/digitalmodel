@@ -334,6 +334,35 @@ class TestLargeStagedCommits:
             assert sum(len(a) + 1 for a in args) < 30000
 
 
+class TestSymlinks:
+    """A tracked symlink is committed as its target text. On Linux CI a link
+    to a directory read as 'file does not exist' and counted as uninspectable,
+    so the same tree gave different counts on Windows and Linux."""
+
+    def test_a_symlink_to_a_directory_is_read_as_its_target(self, gate):
+        target = gate.root / "somewhere"
+        target.mkdir()
+        link = gate.root / "linked"
+        try:
+            os.symlink(target, link, target_is_directory=True)
+        except (OSError, NotImplementedError):
+            pytest.skip("symlinks cannot be created here")
+        out = gate(str(link))
+        assert out.returncode == 0, out.stdout
+        assert "0 uninspectable" in out.stdout
+
+    def test_a_symlink_target_is_checked_for_identifiers(self, gate):
+        target = gate.root / ("K:" + BS + "projects" + BS + "run")
+        link = gate.root / "linked2"
+        try:
+            os.symlink(str(target), link)
+        except (OSError, NotImplementedError):
+            pytest.skip("symlinks cannot be created here")
+        out = gate(str(link))
+        assert out.returncode == 1, out.stdout
+        assert "mapped-drive-path" in out.stdout
+
+
 class TestCiRunsTheGate:
     def test_the_quality_workflow_scans_the_whole_tree(self):
         wf = (REPO / ".github" / "workflows" / "quality-gates.yml").read_text(
