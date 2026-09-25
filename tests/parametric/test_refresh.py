@@ -86,3 +86,32 @@ def test_sn_curve_atlases_track_the_c203_sources():
         files = refresh.SOURCE_FILES[basename]
         assert "src/digitalmodel/fatigue/sn_curves.py" in files, basename
         assert "src/digitalmodel/fatigue/c203_sn_tables.py" in files, basename
+
+
+def _copy_basis(workflow_id: str, dst):
+    """Copy the files a workflow's fingerprint reads into a scratch repo root."""
+    import shutil
+
+    row = refresh._row(workflow_id)
+    rels = [row["input"], *refresh.SOURCE_FILES[row["basename"]]]
+    for rel in rels:
+        target = dst / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(refresh.REPO_ROOT / rel, target)
+
+
+def test_riser_fatigue_fingerprint_tracks_touchdown(tmp_path):
+    """#2165 review finding 4: the wave contribution runs through
+    riser_fatigue.touchdown.assess_touchdown_fatigue, so an edit to
+    touchdown.py must change the riser_fatigue fingerprint (stale atlas)."""
+    rel = "src/digitalmodel/riser_fatigue/touchdown.py"
+    assert rel in refresh.SOURCE_FILES["riser_fatigue"]
+
+    _copy_basis("riser-fatigue", tmp_path)
+    before = refresh.content_fingerprint("riser-fatigue", repo_root=tmp_path)
+    assert before == refresh.content_fingerprint("riser-fatigue")
+
+    touchdown = tmp_path / rel
+    touchdown.write_bytes(touchdown.read_bytes() + b"\n# edited\n")
+    after = refresh.content_fingerprint("riser-fatigue", repo_root=tmp_path)
+    assert after != before

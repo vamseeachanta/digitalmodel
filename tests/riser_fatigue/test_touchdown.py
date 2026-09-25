@@ -143,6 +143,71 @@ def test_thickness_correction_increases_damage():
     assert thick.period_damage > thin.period_damage
 
 
+def _e_class_40mm(**overrides):
+    kwargs = dict(
+        section=_section(40.0),
+        stress_ranges_mpa=[100.0],
+        cycles=[1.0e5],
+        sn_class="E",
+        environment="seawater_cp",
+    )
+    kwargs.update(overrides)
+    return TouchdownFatigueInput(**kwargs)
+
+
+def test_thickness_exponent_defaults_from_the_class():
+    """#2165 review finding 3: k comes from the selected class, not 0.25.
+
+    DNV-RP-C203 (2011) Table 2-2 gives k = 0.20 for class E.
+    E, t = 40 mm, 100 MPa nominal:
+      100 * (40/25)^0.20 = 100 * exp(0.20 * ln 1.6) = 100 * 1.098560 = 109.856 MPa
+    The old universal default k = 0.25 gave
+      100 * (40/25)^0.25 = 100 * 1.124683 = 112.468 MPa.
+    """
+    res = assess_touchdown_fatigue(_e_class_40mm())
+    assert res.bins[0].stress_corrected_mpa == pytest.approx(109.856, abs=5e-4)
+    assert res.bins[0].stress_corrected_mpa == pytest.approx(
+        100.0 * 1.6**0.20, rel=1e-12
+    )
+    assert res.thickness_exponent == pytest.approx(0.20)
+
+
+def test_thickness_exponent_explicit_override_is_kept():
+    """An explicit k still wins: k = 0.25 on class E gives 112.468 MPa."""
+    res = assess_touchdown_fatigue(_e_class_40mm(thickness_exponent=0.25))
+    assert res.bins[0].stress_corrected_mpa == pytest.approx(112.468, abs=5e-4)
+    assert res.thickness_exponent == pytest.approx(0.25)
+
+
+@pytest.mark.parametrize(
+    "sn_class, environment, k",
+    [
+        ("B1", "air", 0.0),
+        ("C", "seawater_cp", 0.15),
+        ("D", "free_corrosion", 0.20),
+        ("F1", "seawater_cp", 0.25),
+    ],
+)
+def test_thickness_exponent_default_per_class_and_environment(
+    sn_class, environment, k
+):
+    """k per class from DNV-RP-C203 (2011) Tables 2-1 to 2-3, via
+    fatigue.c203_sn_tables (the same source as the quick-check)."""
+    res = assess_touchdown_fatigue(
+        _e_class_40mm(sn_class=sn_class, environment=environment)
+    )
+    assert res.thickness_exponent == pytest.approx(k)
+    assert res.bins[0].stress_corrected_mpa == pytest.approx(
+        100.0 * 1.6**k, rel=1e-12
+    )
+
+
+def test_report_states_the_applied_thickness_exponent():
+    inp = _e_class_40mm()
+    md = report_markdown(inp, assess_touchdown_fatigue(inp))
+    assert "k=0.20" in md
+
+
 def test_mismatched_lengths_raise():
     with pytest.raises(ValueError):
         assess_touchdown_fatigue(

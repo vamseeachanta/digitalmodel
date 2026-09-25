@@ -295,12 +295,73 @@ def test_catalog_count_unchanged():
     assert get_catalog().total_count == 221
 
 
-def test_non_dnv_bilinear_curves_unchanged_by_knee_switch():
-    """Switching segments at the knee stress (not the rounded endurance limit)
-    leaves other standards unchanged away from the 0.01 MPa rounding band."""
-    r = get_library_curve("IIW:FAT90:air")
-    s = np.array([30.0, 100.0])
+def _non_dnv_bilinear():
+    return [
+        r
+        for r in get_catalog().curves
+        if r.standard != "DNV-RP-C203" and r.m2 is not None and r.log_a2 is not None
+    ]
+
+
+def test_non_dnv_bilinear_set_is_what_the_switch_test_covers():
+    """70 non-DNV bilinear records (BS 7608 10, IIW 14, Eurocode 3 14,
+    NORSOK N-004 14, EN 13445 8, ISO 19902 16), every one with a stated
+    endurance limit, so the switch test below covers each standard."""
+    recs = _non_dnv_bilinear()
+    counts = {}
+    for r in recs:
+        counts[r.standard] = counts.get(r.standard, 0) + 1
+    assert counts == {
+        "BS 7608": 10,
+        "IIW": 14,
+        "Eurocode 3": 14,
+        "NORSOK N-004": 14,
+        "EN 13445": 8,
+        "ISO 19902": 16,
+    }
+    assert all(r.endurance_limit is not None for r in recs)
+
+
+@pytest.mark.parametrize("r", _non_dnv_bilinear(), ids=lambda r: r.curve_id)
+def test_non_dnv_bilinear_switch_stays_at_endurance_limit(r):
+    """#2165 review finding 5: the knee-stress switch applies only to
+    DNV-RP-C203, whose knee is defined in cycles (1e7 air, 1e6 CP). Every
+    other standard keeps its pre-#2165 behaviour: m1 at and above the stated
+    endurance limit, m2 below it. Checked on both sn_library and
+    sn_library_api, just either side of the switch."""
+    el = r.endurance_limit
+    s = np.array([el * (1.0 - 1e-9), el, el * (1.0 + 1e-9)])
     expected = np.array(
-        [10**r.log_a2 * 30.0 ** (-r.m2), 10**r.log_a1 * 100.0 ** (-r.m1)]
+        [
+            10**r.log_a2 * s[0] ** (-r.m2),
+            10**r.log_a1 * s[1] ** (-r.m1),
+            10**r.log_a1 * s[2] ** (-r.m1),
+        ]
     )
     assert np.allclose(r.cycles(s), expected, rtol=1e-12)
+    api = get_curve(r.curve_id)
+    assert np.allclose(calculate_endurance(api, s), expected, rtol=1e-12)
+
+
+def test_ec3_cat160_between_knee_and_endurance_limit_hand_calc():
+    """EC3 Cat160: log a1 = 12.913, log a2 = 17.056, stated endurance limit
+    117.89 MPa; the knee stress from log a1 at 5e6 cycles is
+    10^((12.913 - 6.69897) / 3) = 117.854 MPa. At 117.87 MPa (between them)
+    the pre-#2165 rule uses m2:
+      N = 10^(17.056 - 5 * log10(117.87)) = 10^(17.056 - 10.357015)
+        = 10^6.698985 = 5.000156e6 cycles.
+    The knee-stress rule would give m1: 10^12.913 * 117.87^-3 = 4.997930e6."""
+    r = get_library_curve("EC3:Cat160:air")
+    assert r.cycles(117.87) == pytest.approx(5.000156e6, rel=1e-6)
+    api = get_curve("EC3:Cat160:air")
+    assert calculate_endurance(api, 117.87) == pytest.approx(5.000156e6, rel=1e-6)
+
+
+def test_dnv_switch_is_at_the_knee_not_the_fatigue_limit():
+    """DNV-RP-C203 keeps the knee-stress switch: D (CP) at 60 MPa lies
+    between the tabulated fatigue limit (52.63) and the 1e6-cycle knee
+    stress (83.43), and uses m2."""
+    api = get_curve("DNV-RP-C203:D:seawater_cp")
+    assert calculate_endurance(api, 60.0) == pytest.approx(
+        10 ** (15.606 - 5 * math.log10(60.0)), rel=1e-9
+    )
