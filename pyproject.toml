@@ -104,6 +104,11 @@ gis-imagery = [
     "earthengine-api>=0.1.370,<1.0.0",
     "planetary-computer>=0.5.0,<2.0.0",
 ]
+curvature = [
+    # HullProd curvature / fairness screening for hull_library meshes (#2170, #2187).
+    # Optional: bundles OpenCascade (~150 MB installed); Python 3.10-3.12 only.
+    "hullprod>=1.0.1,<2",
+]
 dev = [
     # Linting / typing / release tooling. Invoked as executables, never imported
     # by shipped code -- moved out of [project] dependencies in #1632.
