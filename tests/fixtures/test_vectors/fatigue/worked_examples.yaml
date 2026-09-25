@@ -5,12 +5,12 @@ legal_scan_passed: true
 category: "fatigue"
 subcategory: "worked_examples"
 equations:
-  - name: "Seawater+CP S-N curve reduction"
-    latex: "A_{SwCP} = 0.87 \\times A_{air}"
-    description: "DNV-RP-C203 seawater+CP reduction factor on intercept A"
-  - name: "Seawater free-corrosion S-N curve reduction"
-    latex: "A_{SwFree} = 0.72 \\times A_{air}"
-    description: "DNV-RP-C203 seawater free-corrosion reduction on intercept A"
+  - name: "Seawater+CP S-N curve"
+    latex: "N = a_{1,CP} \\Delta\\sigma^{-m_1} (N \\le 10^6);\\; N = a_2 \\Delta\\sigma^{-5} (N > 10^6)"
+    description: "DNV-RP-C203 (2011) Table 2-2, bilinear, no cut-off for variable-amplitude loading (#2165)"
+  - name: "Seawater free-corrosion S-N curve"
+    latex: "N = a \\Delta\\sigma^{-3}"
+    description: "DNV-RP-C203 (2011) Table 2-3, single slope, no fatigue limit (#2165)"
   - name: "Chain S-N curve"
     latex: "\\log(N) = 15.19 - 3.0 \\times \\log(\\Delta\\sigma)"
     description: "DNVGL-OS-E301 R3 studless chain curve, seawater+CP"
@@ -126,7 +126,7 @@ worked_examples:
     inputs:
       standard: "DNV"
       curve_class: "D"
-      sw_cp_factor: 0.87
+      log_a1_cp: 11.764  # DNV-RP-C203 (2011) Table 2-2, D (air 12.164)
     outputs:
       A_sw_cp_less_than_A_air: true
     use_as_test: true
@@ -146,13 +146,13 @@ worked_examples:
     use_as_test: true
 assumptions:
   - "Weibull stress distribution for synthetic histograms (no client data)"
-  - "Seawater+CP factor 0.87 reduces A per DNV-RP-C203 Table 2-2"
-  - "Free-corrosion factor 0.72 with fatigue limit removed per Cl. 2.4.3"
+  - "Seawater+CP: DNV-RP-C203 (2011) Table 2-2, knee at 1e6 cycles, m2 = 5 below it, no cut-off"
+  - "Free corrosion: DNV-RP-C203 (2011) Table 2-3, m = 3, no fatigue limit"
   - "Chain curve: log(K)=15.19, m=3.0 per DNVGL-OS-E301 Table 6-2"
   - "Palmgren-Miner linear damage accumulation"
   - "Reference thickness 25 mm (no thickness correction)"
 references:
-  - "DNV-RP-C203 (edition not established) Table 2-2 — seawater+CP S-N curves"
+  - "DNV-RP-C203 (2011) Tables 2-2 and 2-3 — seawater S-N curves"
   - "DNV-RP-C203 (edition not established) Cl. 2.4.3 — seawater free-corrosion guidance"
   - "DNVGL-OS-E301 (2021) Table 6-2 — chain S-N curves"
   - "DNVGL-ST-F101 (2017) Cl. 6.7 — DFF for seabed pipelines"

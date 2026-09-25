@@ -58,17 +58,22 @@ class TestSNCurveMigration:
 
     def test_basic_sn_curve_calculations(self):
         """Test basic S-N curve calculations match expected values"""
-        # DNV-D curve (from legacy data)
-        # DNV-D: A=5.73e11, m=3.0, fatigue_limit=52.63
+        # DNV-D curve, DNV-RP-C203 (2011) Table 2-1 in air (#2165):
+        # A = 10^12.164 = 1.45881e12, m = 3.0, fatigue_limit = 52.63
+        # (the legacy A = 5.73e11 was not a Table 2-1 value)
         curve = get_dnv_curve('D')
 
         # Test specific stress-life points
-        # Formula: N = A / S^m = 5.73e11 / S^3
+        # Above the knee N = A / S^m = 10^12.164 / S^3. The knee stress is
+        # 10^(5.164/3) = 52.650 MPa; below it N = 10^15.606 / S^5 with no
+        # cut-off (#2165 PR #2195 review r1 finding 2; these were infinite).
         test_cases = [
-            (100.0, 5.73e5),   # High stress: 5.73e11 / 100^3 = 573,000
-            (60.0, 2.65e6),    # Medium stress: 5.73e11 / 60^3 = 2,652,778
-            (52.63, np.inf),   # At fatigue limit - infinite life
-            (40.0, np.inf),    # Below fatigue limit - infinite life
+            (100.0, 1.4588e6),  # High stress: 1.45881e12 / 100^3 = 1,458,814
+            (60.0, 6.754e6),  # Medium stress: 1.45881e12 / 60^3 = 6,753,770
+            # 52.63 < 52.650: 10^(15.606 - 5 x 1.721233) = 10^6.999833 = 9.9962e6
+            (52.63, 9.9962e6),
+            # 10^15.606 / 40^5 = 4.0365e15 / 1.024e8 = 3.9418e7
+            (40.0, 3.9418e7),
         ]
 
         for stress, expected_cycles in test_cases:
@@ -306,25 +311,28 @@ class TestShearAnalysisMigration:
         assert all(data['stress'] >= 1.0 for data in low_analysis)
         assert all(data['stress'] <= 16.0 for data in low_analysis)
 
-        # Should have some finite and some infinite life points
-        finite_points = [data for data in low_analysis if data['is_finite']]
-        infinite_points = [data for data in low_analysis if not data['is_finite']]
+        # The default DNV-RP-C203 D curve has no cut-off (#2165 PR #2195 review
+        # r1 finding 2): every low-stress point is finite, on the m2 segment.
+        # At 1 MPa: N = 10^15.606 / 1^5 = 4.0365e15.
+        assert all(data["is_finite"] for data in low_analysis)
+        assert low_analysis[0]["cycles"] == pytest.approx(10**15.606, rel=1e-12)
 
-        # At very low stress, should have infinite life
-        assert len(infinite_points) > 0
-
-    def test_shear_analysis_fatigue_limit(self):
-        """Test that shear analysis respects fatigue limit"""
+    def test_shear_analysis_below_the_fatigue_limit_uses_m2(self):
+        """Below the reported fatigue limit (52.63 MPa, D) the life is finite
+        and follows N = 10^15.606 / S^5 (was infinite)."""
         engine = FatigueAnalysisEngine()
         result = engine.analyze_shear_data(1000.0, (1.0, 100.0))
 
         fatigue_limit = result['curve_characteristics']['fatigue_limit']
         low_analysis = result['low_stress_analysis']
 
-        # Points below fatigue limit should have infinite life
-        for data in low_analysis:
-            if data['stress'] <= fatigue_limit:
-                assert not data['is_finite'], f"Stress {data['stress']} <= {fatigue_limit} should have infinite life"
+        below = [d for d in low_analysis if d["stress"] <= fatigue_limit]
+        assert below
+        for data in below:
+            assert data["is_finite"]
+            assert data["cycles"] == pytest.approx(
+                10**15.606 / data["stress"] ** 5, rel=1e-12
+            )
 
 
 class TestEngineeringValidationMigration:
@@ -468,29 +476,31 @@ class TestComprehensiveIntegration:
     def test_multislope_vs_single_slope_comparison(self):
         """Test that multi-slope curves behave correctly and both curves follow S-N principles"""
         # Create comparable single and multi-slope curves
-        # DNV-D: A=5.73e11, m=3.0, fatigue_limit=52.63
+        # DNV-D, DNV-RP-C203 (2011) Table 2-1 (#2165): A = 10^12.164, m = 3.0,
+        # fatigue_limit = 52.63
         single_curve = get_dnv_curve('D')
+        A1 = 10**12.164
 
         # Create a multi-slope curve that matches single slope in first region
         # Use same A and m for first slope, then transition to steeper slope
-        # Transition at 2e6 cycles means transition_stress = (5.73e11 / 2e6)^(1/3) = ~66.2 MPa
+        # Transition at 2e6 cycles means
+        # transition_stress = (1.45881e12 / 2e6)^(1/3) = 90.0 MPa
         transition_cycles = 2e6
-        transition_stress = (5.73e11 / transition_cycles) ** (1/3.0)  # ~66.2 MPa
+        transition_stress = (A1 / transition_cycles) ** (1 / 3.0)  # 90.0 MPa
 
         # For continuity, second slope constant: A2 = transition_stress^m2 * transition_cycles
-        # With m2=5.0: A2 = 66.2^5 * 2e6 = ~2.67e14
         A2 = (transition_stress ** 5.0) * transition_cycles
 
         multi_curve = MultislopeSNCurve(
             name="Multi Test",
             slopes=[3.0, 5.0],
-            constants=[5.73e11, A2],
+            constants=[A1, A2],
             transition_cycles=[transition_cycles],
-            fatigue_limit=52.63
+            fatigue_limit=52.63,
         )
 
         # Test in high stress region (above transition stress) - both use first slope
-        stress_high = 100.0  # Above transition stress (~66 MPa)
+        stress_high = 100.0  # Above transition stress (90.0 MPa)
         single_high = single_curve.get_allowable_cycles(stress_high)
         multi_high = multi_curve.get_allowable_cycles(stress_high)
 
@@ -500,11 +510,14 @@ class TestComprehensiveIntegration:
         ratio_high = multi_high / single_high
         assert 0.5 < ratio_high < 2.0, f"High stress region: curves differ too much, ratio = {ratio_high:.3f}"
 
-        # Test both curves respect fatigue limit
+        # Below the 52.63 MPa limit: the DNV-RP-C203 curve continues on m2 = 5
+        # with no cut-off (#2165), N = 10^15.606 / 50^5 = 4.0365e15 / 3.125e8
+        # = 1.2917e7; the user multi-slope curve keeps its own cut-off.
         stress_below_limit = 50.0  # Below fatigue limit (52.63 MPa)
         single_below = single_curve.get_allowable_cycles(stress_below_limit)
         multi_below = multi_curve.get_allowable_cycles(stress_below_limit)
-        assert np.isinf(single_below), "Single curve should give infinite life below fatigue limit"
+        assert single_below == pytest.approx(10**15.606 / 50.0**5, rel=1e-12)
+        assert single_below == pytest.approx(1.2917e7, rel=1e-4)
         assert np.isinf(multi_below), "Multi curve should give infinite life below fatigue limit"
 
         # Test that higher stress gives fewer cycles (basic S-N curve property)
