@@ -40,17 +40,19 @@ sha256. After reviewing new or changed content, accept it with::
 from __future__ import annotations
 
 import argparse
+import contextlib
 import functools
 import hashlib
 import os
 import re
 import subprocess
 import sys
+import traceback
 
 try:
     import yaml
 except ImportError:  # pragma: no cover
-    sys.exit("check_identifiers: PyYAML is required")
+    yaml = None  # refused by load_rules(), through emit()
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
@@ -102,6 +104,183 @@ def path_label(path: str) -> str:
     return "<path " + hashlib.sha256(path.encode("utf-8")).hexdigest()[:12] + ">"
 
 
+# -- the output sink ------------------------------------------------------------
+#
+# Every line this module writes goes through emit(). Redacting call site by
+# call site missed git's stderr, exception text, tracebacks and an
+# acknowledgement naming a file; one sink cannot be bypassed that way, and
+# tests/legal fail if a bare print() returns.
+
+#: Pattern classes redacted from every printed line whatever the rules file
+#: says: a diagnostic can be written before the rules are read, or after they
+#: failed to load.
+REDACT_PUBLIC = (
+    # A user profile path, Windows or POSIX: the account name is personal.
+    re.compile(r"(?i)\b[A-Z]:(?:\\|/)+Users(?:\\|/)+[^\\/\s'\"<>]+"),
+    re.compile(r"(?<![\w.])/(?:home|Users)/[^/\s'\"<>]+"),
+    # A UNC share names a host and a share.
+    re.compile(r"\\\\+[A-Za-z0-9][A-Za-z0-9._$-]*\\+[^\\\s'\"<>]*"),
+    # A host name in the fleet's naming scheme.
+    re.compile(
+        r"(?i)\b[a-z]{2,6}-(?:[a-z]{2,4}-)?(?:rds|ansys|ws|host|fs|srv|dc)[0-9]{2,}\b"
+    ),
+    # An e-mail address names a person or an organisation.
+    re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"),
+)
+#: Characters that end a redacted run: a public match covers the whole token
+#: around it (the rest of a path is as identifying as its start).
+_RUN_END = frozenset(" \t\r\n'\"<>()[]{},;|`")
+
+
+class Redactor:
+    """Replaces every identifier the gate knows with ``<redacted:digest12>``.
+
+    Matched: a deny-listed name, tokenised and hashed exactly as the gate
+    does (hashed, legacy-hashed, private plain names); a private pattern; a
+    private or extra name as a literal phrase, case-insensitively; and the
+    public pattern classes -- built in, plus the rules' structural patterns.
+    """
+
+    def __init__(self, rules: dict | None = None, names=()) -> None:
+        rules = rules or {}
+        self.salt = str(rules.get("salt", ""))
+        self.hashed = {str(h).lower() for h in rules.get("hashed_names") or []}
+        legacy = rules.get("legacy_hashed_names")
+        legacy = legacy if isinstance(legacy, dict) else {}
+        self.legacy_salt = str(legacy.get("salt", ""))
+        self.legacy = {str(h).lower() for h in legacy.get("hashes") or []}
+        self.private = {str(n).lower() for n in rules.get("_private_names") or []}
+        phrases = self.private | {str(n).strip().lower() for n in names}
+        self.phrases = sorted((p for p in phrases if len(p) >= 4), key=len)[::-1]
+        self.patterns = list(REDACT_PUBLIC)
+        for rule in rules.get("structural") or []:
+            try:
+                self.patterns.append(re.compile(str(rule["pattern"])))
+            except (re.error, KeyError, TypeError):
+                continue
+        self.patterns.extend(rules.get("_private_patterns") or [])
+
+    def _denied(self, word: str) -> bool:
+        return any(
+            c in self.private
+            or (self.hashed and token_hash(c, self.salt) in self.hashed)
+            or (self.legacy and token_hash(c, self.legacy_salt) in self.legacy)
+            for c in _candidates(word)
+        )
+
+    def _tag(self, text: str) -> str:
+        digest = hashlib.sha256(f"{self.salt}:redact:{text}".encode("utf-8"))
+        return "<redacted:" + digest.hexdigest()[:12] + ">"
+
+    def redact(self, text: str) -> str:
+        spans: list[tuple[int, int]] = []
+        for rx in self.patterns:
+            for m in rx.finditer(text):
+                if m.end() == m.start():
+                    continue
+                s, e = m.start(), m.end()
+                while s > 0 and text[s - 1] not in _RUN_END:
+                    s -= 1
+                while e < len(text) and text[e] not in _RUN_END:
+                    e += 1
+                spans.append((s, e))
+        for m in WORD.finditer(text):
+            if self._denied(m.group(0)):
+                spans.append(m.span())
+        low = text.lower()
+        for phrase in self.phrases:
+            start = low.find(phrase)
+            while start >= 0:
+                spans.append((start, start + len(phrase)))
+                start = low.find(phrase, start + 1)
+        if not spans:
+            return text
+        spans.sort()
+        merged = [list(spans[0])]
+        for s, e in spans[1:]:
+            if s <= merged[-1][1]:
+                merged[-1][1] = max(merged[-1][1], e)
+            else:
+                merged.append([s, e])
+        out, pos = [], 0
+        for s, e in merged:
+            out.append(text[pos:s])
+            out.append(self._tag(text[s:e]))
+            pos = e
+        out.append(text[pos:])
+        return "".join(out)
+
+
+class _Sink:
+    """The output policy. main() resets it on entry and on exit, so no call
+    can leave --show-lines on for the next."""
+
+    def __init__(self) -> None:
+        self.reset()
+
+    def reset(self) -> None:
+        self.show = False
+        self.redactor = Redactor()
+
+
+_SINK = _Sink()
+
+
+def set_output_policy(rules: dict | None, show: bool = False) -> None:
+    """Redact against *rules* (None: the public classes only); *show*
+    disables redaction and is for a local --show-lines run only."""
+    _SINK.redactor = Redactor(rules)
+    _SINK.show = bool(show)
+
+
+def emit(message: object = "", *, err: bool = False) -> None:
+    """The only writer to stdout and stderr in this module."""
+    text = str(message)
+    if not _SINK.show:
+        text = _SINK.redactor.redact(text)
+    stream = sys.stderr if err else sys.stdout
+    stream.write(text + "\n")
+
+
+def die(message: str, code: int = 1) -> None:
+    """Emit *message* on stderr and exit with *code*."""
+    emit(message, err=True)
+    raise SystemExit(code)
+
+
+#: Exit status for an exception the gate did not anticipate.
+EXIT_INTERNAL = 4
+
+
+class StageError(Exception):
+    """An exception raised while the gate was at *stage*. Only the stage and
+    the exception type are printed: the message and the traceback can quote
+    a file name or file content."""
+
+    def __init__(self, stage: str, cause: BaseException) -> None:
+        super().__init__(stage)
+        self.stage = stage
+        self.cause = cause
+
+
+@contextlib.contextmanager
+def stage(name: str):
+    try:
+        yield
+    except StageError:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        raise StageError(name, exc) from exc
+
+
+class _Parser(argparse.ArgumentParser):
+    """argparse echoes an unknown argument; route it through the sink."""
+
+    def _print_message(self, message, file=None):
+        if message:
+            emit(message.rstrip("\n"), err=file is sys.stderr)
+
+
 def validate_legacy(rules: dict) -> None:
     """Refuse a present but malformed ``legacy_hashed_names`` block.
 
@@ -125,7 +304,7 @@ def validate_legacy(rules: dict) -> None:
             for h in legacy["hashes"]
         )
     ):
-        sys.exit(
+        die(
             "check_identifiers: 'legacy_hashed_names' must be a mapping with a "
             "non-empty 'salt' and a non-empty list of sha256 'hashes' (omit the "
             "block entirely when there are none; an explicit null is refused)"
@@ -133,8 +312,10 @@ def validate_legacy(rules: dict) -> None:
 
 
 def load_rules() -> dict:
+    if yaml is None:  # pragma: no cover
+        die("check_identifiers: PyYAML is required")
     if not os.path.isfile(RULES):
-        sys.exit(
+        die(
             f"check_identifiers: rules file missing: {os.path.basename(RULES)} "
             f"at the repository root"
         )
@@ -142,16 +323,17 @@ def load_rules() -> dict:
         with open(RULES, encoding="utf-8") as fh:
             rules = yaml.safe_load(fh)
     except Exception as exc:  # noqa: BLE001
-        sys.exit(f"check_identifiers: rules file unreadable: {exc}")
+        # The parser's message quotes the offending YAML: name its type only.
+        die(f"check_identifiers: rules file unreadable ({type(exc).__name__})")
     if not isinstance(rules, dict) or "structural" not in rules:
-        sys.exit("check_identifiers: rules file has no 'structural' section")
+        die("check_identifiers: rules file has no 'structural' section")
     validate_legacy(rules)
 
     private = os.environ.get("DIGITALMODEL_DENY_LIST")
     if private:
         if not os.path.isfile(private):
             # The path is not printed: it can carry an account or a client.
-            sys.exit(
+            die(
                 "check_identifiers: the file DIGITALMODEL_DENY_LIST names does "
                 "not exist. Refusing to continue without the rules it names."
             )
@@ -162,7 +344,7 @@ def load_rules() -> dict:
     names: list[str] = []
     patterns: list[re.Pattern] = []
     if private:
-        with open(private, encoding="utf-8-sig") as fh:
+        with stage("reading private list"), open(private, encoding="utf-8-sig") as fh:
             for n, raw in enumerate(fh, start=1):
                 ln = raw.strip()
                 if not ln or ln.startswith("#"):
@@ -172,13 +354,12 @@ def load_rules() -> dict:
                         patterns.append(re.compile(ln[3:]))
                     except re.error:
                         # The pattern is private: name the line, not the text.
-                        print(
+                        die(
                             f"check_identifiers: private list line {n} is "
                             f"not a valid regular expression. Refusing to "
                             f"continue without the rule it names.",
-                            file=sys.stderr,
+                            3,
                         )
-                        sys.exit(3)
                 else:
                     names.append(ln.lower())
     rules["_private_names"] = names
@@ -196,10 +377,10 @@ def read_baseline(path: str) -> dict[str, str] | None:
                 continue
             m = _BASELINE_ROW.fullmatch(ln)
             if not m:
-                print(
+                emit(
                     f"check_identifiers: baseline line {n} is not "
                     f"'<sha256>  <path>'. Refusing to continue.",
-                    file=sys.stderr,
+                    err=True,
                 )
                 return None
             out[m.group(2)] = m.group(1)
@@ -246,14 +427,15 @@ def _git(args: list[str], stdin: bytes | None = None) -> bytes:
     """
     out = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, input=stdin)
     if out.returncode != 0:
-        # The arguments and git's message can carry paths; quoted spans are
-        # dropped rather than risk publishing a name.
-        err = out.stderr.decode(errors="replace").strip()
-        err = re.sub(r"'[^'\n]*'|\"[^\"\n]*\"", "'<redacted>'", err)
-        sys.exit(
-            f"check_identifiers: `git {args[0]}` failed "
-            f"(exit {out.returncode}): {err}"
-        )
+        # git's message quotes paths in forms no filter parses reliably
+        # (unquoted, embedded quotes, multi-line). Only the command and the
+        # status are printed; the message only for a local --show-lines run.
+        msg = f"check_identifiers: `git {args[0]}` failed (exit {out.returncode})"
+        if _SINK.show:
+            detail = out.stderr.decode(errors="replace").strip()
+            if detail:
+                msg += ": " + detail
+        die(msg)
     return out.stdout
 
 
@@ -321,24 +503,19 @@ def index_blobs(paths: list[str]) -> dict[str, bytes | None]:
         for oid in wanted:
             end = raw.find(b"\n", pos)
             if end < 0:
-                sys.exit("check_identifiers: truncated `git cat-file` response")
+                die("check_identifiers: truncated `git cat-file` response")
             header = raw[pos:end].decode("ascii", "replace").split()
             pos = end + 1
             if len(header) != 3 or header[0] != oid or header[1] != "blob":
-                sys.exit(
-                    f"check_identifiers: unexpected `git cat-file` "
-                    f"response for {oid}: {' '.join(header)!r}"
-                )
+                die(f"check_identifiers: unexpected `git cat-file` response for {oid}")
             size = int(header[2])
             body = raw[pos : pos + size]
             if len(body) != size or raw[pos + size : pos + size + 1] != b"\n":
-                sys.exit(
-                    f"check_identifiers: malformed `git cat-file` body " f"for {oid}"
-                )
+                die(f"check_identifiers: malformed `git cat-file` body for {oid}")
             contents[oid] = body
             pos += size + 1
         if pos != len(raw):
-            sys.exit("check_identifiers: unconsumed `git cat-file` output")
+            die("check_identifiers: unconsumed `git cat-file` output")
 
     blobs: dict[str, bytes | None] = {}
     for p in paths:
@@ -567,11 +744,9 @@ def check(
             compiled.append(
                 (rule["id"], re.compile(rule["pattern"]), rule.get("message", ""))
             )
-        except re.error as exc:
-            sys.exit(
-                f"check_identifiers: rule {rule.get('id')!r} "
-                f"has an invalid pattern: {exc}"
-            )
+        except re.error:
+            # The error text quotes the pattern: name the rule only.
+            die(f"check_identifiers: rule {rule.get('id')!r} has an invalid pattern")
 
     blobs = index_blobs(paths) if staged else {}
     findings: list[str] = []
@@ -631,14 +806,18 @@ def check(
         if shown.startswith(".."):
             shown = os.path.basename(full)
         before = len(findings)
-        scan(norm, "path", shown.replace("\\", "/"))
-        label = norm
+        # Findings name the repository-relative path -- the text scanned
+        # here -- never the argument as given, which can be absolute and
+        # carry the account that ran the gate.
+        disp = shown.replace("\\", "/")
+        scan(disp, "path", disp)
+        label = disp
         if len(findings) > before and not show_lines:
             # The path itself carries the identifier: name it by digest, for
             # every finding and every diagnostic about this file, so the log
             # does not publish it.
-            label = path_label(norm)
-            findings[before:] = [label + f[len(norm) :] for f in findings[before:]]
+            label = path_label(disp)
+            findings[before:] = [label + f[len(disp) :] for f in findings[before:]]
         ext = os.path.splitext(norm)[1].lower()
         blob: bytes | None = None
         try:
@@ -667,7 +846,7 @@ def check(
             uninspectable.append(f"{label}: {exc}")
             key = shown.replace("\\", "/")
             if labels is not None:
-                labels[key] = key if label == norm else label
+                labels[key] = label
             if digests is not None:
                 digests[key] = (
                     hashlib.sha256(blob).hexdigest() if blob is not None else None,
@@ -691,6 +870,10 @@ def _excerpt(line: str, show_lines: bool) -> str:
 
 
 def main() -> int:
+    """Run the gate. Every exception is reported by its type and the stage
+    the gate was at, with exit status 4: an exception message or traceback
+    can quote a denied file name or file content. ``--show-lines`` on a local
+    run adds the traceback."""
     # A finding line can carry any character from the file it quotes. On a
     # console whose encoding cannot represent it (cp1252 on Windows) printing
     # raised mid-report and the report was lost.
@@ -699,7 +882,39 @@ def main() -> int:
             stream.reconfigure(encoding="utf-8", errors="replace")
         except (AttributeError, ValueError):
             pass
-    ap = argparse.ArgumentParser(description="Client identifier gate")
+    _SINK.reset()
+    try:
+        return _run()
+    except StageError as exc:
+        failed, cause = exc.stage, exc.cause
+    except Exception as exc:  # noqa: BLE001
+        failed, cause = "running", exc
+    finally:
+        show = _SINK.show
+        _SINK.reset()
+    _SINK.show = show
+    try:
+        emit(
+            f"check_identifiers: failed while {failed} "
+            f"({type(cause).__name__}); the detail is not printed because it "
+            f"can quote a file name or content (--show-lines shows it locally)",
+            err=True,
+        )
+        if show:
+            emit("".join(traceback.format_exception(cause)).rstrip(), err=True)
+    finally:
+        _SINK.reset()
+    return EXIT_INTERNAL
+
+
+def _run() -> int:
+    # The rules come first so that every line after them -- argparse's own
+    # usage errors, which echo the argument, included -- is redacted against
+    # the full deny list.
+    with stage("loading rules"):
+        rules = load_rules()
+    set_output_policy(rules)
+    ap = _Parser(description="Client identifier gate")
     ap.add_argument("paths", nargs="*")
     ap.add_argument(
         "--all",
@@ -737,13 +952,13 @@ def main() -> int:
     args = ap.parse_args()
     show_lines = bool(args.show_lines)
     if show_lines and (os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS")):
-        print("check_identifiers: --show-lines is refused in CI", file=sys.stderr)
+        emit("check_identifiers: --show-lines is refused in CI", err=True)
         return 3
-
-    rules = load_rules()
+    # Local only: quotes lines, shows paths, and turns redaction off.
+    set_output_policy(rules, show=show_lines)
 
     if args.hash:
-        print(token_hash(args.hash, str(rules.get("salt", ""))))
+        emit(token_hash(args.hash, str(rules.get("salt", ""))))
         return 0
 
     staged = not args.paths and not args.all
@@ -752,58 +967,61 @@ def main() -> int:
     ):
         # An update accepts every uninspectable file it finds, unread. In CI
         # nobody reviews that, so a new binary would pass by its own digest.
-        print(
+        emit(
             "check_identifiers: --update-baseline refuses to run in CI (CI or "
             "GITHUB_ACTIONS is set). Regenerate the baseline locally, review "
             "the diff and commit it.",
-            file=sys.stderr,
+            err=True,
         )
         return 3
     if args.update_baseline and staged:
-        print(
+        emit(
             "check_identifiers: --update-baseline needs --all or paths; the "
             "staged mode scans a partial set and would drop entries.",
-            file=sys.stderr,
+            err=True,
         )
         return 3
     if args.baseline:
         baseline_path = os.path.abspath(args.baseline)
         if not args.update_baseline and not os.path.isfile(baseline_path):
-            print(
+            emit(
                 "check_identifiers: the baseline named by --baseline does not "
                 "exist. Refusing to continue without the list it names.",
-                file=sys.stderr,
+                err=True,
             )
             return 3
     else:
         baseline_path = DEFAULT_BASELINE
-    baseline = read_baseline(baseline_path) if os.path.isfile(baseline_path) else {}
+    with stage("reading baseline"):
+        baseline = read_baseline(baseline_path) if os.path.isfile(baseline_path) else {}
     if baseline is None:
         return 3
 
-    paths = args.paths or (tracked_files() if args.all else staged_files())
+    with stage("listing files"):
+        paths = args.paths or (tracked_files() if args.all else staged_files())
     if not paths:
         # Enumeration succeeded (a failure exits above) and found nothing.
-        print("check_identifiers: nothing to scan")
+        emit("check_identifiers: nothing to scan")
         return 0
 
     digests: dict[str, tuple[str | None, str]] = {}
     labels: dict[str, str] = {}
-    findings, scanned, media, uninspectable = check(
-        paths,
-        rules,
-        staged=staged,
-        digests=digests,
-        show_lines=show_lines,
-        labels=labels,
-    )
+    with stage("scanning a file"):
+        findings, scanned, media, uninspectable = check(
+            paths,
+            rules,
+            staged=staged,
+            digests=digests,
+            show_lines=show_lines,
+            labels=labels,
+        )
 
     def shown(key: str) -> str:
         # Every line that names a file goes through here: a path carrying an
         # identifier is printed by digest unless --show-lines (local only).
         return key if show_lines else labels.get(key, path_label(key))
 
-    print(
+    emit(
         f"check_identifiers: scanned {scanned} file(s); "
         f"{len(media)} declared binary media not inspected; "
         f"{len(uninspectable)} uninspectable"
@@ -813,10 +1031,10 @@ def main() -> int:
     if args.update_baseline:
         unreadable = [k for k, (sha, _) in digests.items() if sha is None]
         if unreadable:
-            print(
+            emit(
                 "check_identifiers: cannot baseline files whose bytes were not "
                 "read: " + ", ".join(shown(k) for k in unreadable),
-                file=sys.stderr,
+                err=True,
             )
             return 3
         new = {} if args.all else dict(baseline)
@@ -829,10 +1047,17 @@ def main() -> int:
                     key = p
                 new.pop(key, None)
         new.update({k: sha for k, (sha, _) in digests.items()})
-        write_baseline(baseline_path, new)
-        print(
-            f"check_identifiers: baseline {os.path.basename(baseline_path)} "
-            f"now lists {len(new)} uninspectable file(s)"
+        with stage("writing baseline"):
+            write_baseline(baseline_path, new)
+        # A --baseline name is the caller's and unchecked: it is not echoed.
+        named = (
+            os.path.basename(baseline_path)
+            if show_lines or baseline_path == DEFAULT_BASELINE
+            else "named by --baseline"
+        )
+        emit(
+            f"check_identifiers: baseline {named} now lists {len(new)} "
+            f"uninspectable file(s)"
         )
         baseline = new
 
@@ -848,49 +1073,49 @@ def main() -> int:
         else:
             accepted += 1
     if accepted:
-        print(
+        emit(
             f"check_identifiers: {accepted} uninspectable file(s) match the "
             f"baseline by path and sha256"
         )
     if args.all and baseline:
         stale = sorted(set(baseline) - set(digests))
         if stale:
-            print(
+            emit(
                 f"check_identifiers: {len(stale)} baseline entr(y/ies) no longer "
                 f"uninspectable; --update-baseline drops them"
             )
     if failing:
         status = 2
-        print()
-        print(
+        emit("")
+        emit(
             f"check_identifiers: {len(failing)} file(s) could not be "
             f"inspected and are not accepted — content that was not read has "
             f"not passed:"
         )
         for u in failing:
-            print(f"  {u}")
-        print(
+            emit(f"  {u}")
+        emit(
             "  Convert to text, remove the file, declare its type in "
             "binary_media_extensions with a reason, or -- after reviewing the "
             "content -- accept it with --update-baseline."
         )
     if findings:
         status = 1
-        print()
-        print(
+        emit("")
+        emit(
             f"check_identifiers: {len(findings)} finding(s) — this repository "
             f"is PUBLIC"
         )
         for f in findings:
-            print(f"  {f}")
-        print()
-        print(
+            emit(f"  {f}")
+        emit("")
+        emit(
             "  Replace the identifier with a neutral placeholder. If a finding "
             "is a false positive, add a justified entry to the exclusions in "
             ".legal-deny-list.yaml rather than widening a pattern."
         )
     if status == 0:
-        print("check_identifiers: no client identifier found")
+        emit("check_identifiers: no client identifier found")
     return status
 
 
