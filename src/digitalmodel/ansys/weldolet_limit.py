@@ -22,6 +22,8 @@ Collapse criterion (stated before the run)
 
 from __future__ import annotations
 
+import math
+
 from dataclasses import asdict, dataclass
 from itertools import pairwise
 from pathlib import Path
@@ -82,6 +84,12 @@ def lpl_file_name(level: int) -> str:
     return f"weldolet_lpl_L{level}"
 
 
+def reacconv_file_name(level: int) -> str:
+    """Reactions at the last converged substep (the elastic writer's file is
+    taken at SET,LAST, which after a divergence is the non-converged set)."""
+    return f"weldolet_reacconv_L{level}"
+
+
 def state_name(spec: LimitLoadSpec) -> str:
     tag = wc.depth_tag(spec.base.crack_depth_mm)
     cfp = "" if spec.base.crack_face_pressure else "_cfp_off"
@@ -90,9 +98,19 @@ def state_name(spec: LimitLoadSpec) -> str:
 
 
 def _post(spec: LimitLoadSpec):
+    """Load-deflection record and reactions at the last converged substep.
+
+    A result set is accepted as a converged substep when its load-factor
+    increment does not exceed the controlled maximum step (1/substeps of the
+    ramp, NSUBST) and every earlier set was accepted. After a divergence
+    MAPDL writes one more set at the requested end of the ramp; it fails this
+    rule, is flagged 0 in the record and is excluded.
+    """
+
     def write(w, base: wc.WeldoletSpec, mesh: wc.WeldoletMesh, lv: int) -> None:
         geo = wc.derived_geometry(base)
         top_z = geo["run_outer_radius_mm"] + base.weldolet_a_mm + base.branch_length_mm
+        dt_max = 1.0 / spec.substeps
         w("*GET,NSETS,ACTIVE,0,SET,NSET")
         w(f"*CFOPEN,{lpl_file_name(lv)},txt")
         w("*VWRITE")
@@ -101,10 +119,13 @@ def _post(spec: LimitLoadSpec):
         w("('# units: length=mm force=N stress=MPa')")
         w("*VWRITE")
         w("('# columns: set load_factor pressure_mpa uz_branch_end_mm "
-          "ur_far_field_od_mm')")
+          "ur_far_field_od_mm accepted')")
         w(f"NSEL,S,LOC,Z,{top_z - 1.0e-6!r},{top_z + 1.0e-6!r}")
         w("*GET,NTOP,NODE,0,NUM,MIN")
         w("ALLSEL,ALL")
+        w(f"DTLIM = {dt_max * 1.000001!r}")
+        w("NCONV = 0")
+        w("TPREV = 0.0")
         w("*DO,KS,1,NSETS")
         w("SET,,,,,,,KS")
         w("*GET,TK,ACTIVE,0,SET,TIME")
@@ -112,11 +133,57 @@ def _post(spec: LimitLoadSpec):
         # far-field OD node at the bottom of the run pipe: radial = -UZ
         w(f"*GET,URK,NODE,{mesh.hoop_line[-1]},U,Z")
         w("URK = -URK")
+        w("DTK = TK - TPREV")
+        w("KM1 = KS - 1")
+        w("ACC = 0")
+        w("*IF,DTK,LE,DTLIM,AND,NCONV,EQ,KM1,THEN")
+        w("ACC = 1")
+        w("NCONV = KS")
+        w("*ENDIF")
+        w("TPREV = TK")
         w(f"LFK = {spec.load_factor!r}*TK")
         w(f"PK = {base.pressure_mpa!r}*LFK")
-        w("*VWRITE,KS,LFK,PK,UZK,URK")
-        w("(F8.0,4(1X,E18.10))")
+        w("*VWRITE,KS,LFK,PK,UZK,URK,ACC")
+        w("(F8.0,4(1X,E18.10),1X,F3.0)")
         w("*ENDDO")
+        w("*CFCLOS")
+        # reactions at the last converged substep (same format as the elastic
+        # reaction file, so guard (a) is evaluated at a converged state)
+        length = base.run_half_length_mm
+        ri = geo["run_inner_radius_mm"]
+        w("SET,,,,,,,NCONV")
+        w("*GET,TC,ACTIVE,0,SET,TIME")
+        w(f"PCONV = {base.pressure_mpa!r}*{spec.load_factor!r}*TC")
+        w(f"NSEL,S,LOC,X,{-length - 1.0e-6!r},{-length + 1.0e-6!r}")
+        w("*GET,NFIXC,NODE,0,COUNT")
+        w("FXC = 0.0")
+        w("NN = 0")
+        w("*DO,II,1,NFIXC")
+        w("NN = NDNEXT(NN)")
+        w("*GET,RV,NODE,NN,RF,FX")
+        w("FXC = FXC + RV")
+        w("*ENDDO")
+        w("ALLSEL,ALL")
+        w(f"AREAC = {math.pi * ri * ri * mesh.area_factor!r}")
+        w(f"*CFOPEN,{reacconv_file_name(lv)},txt")
+        w("*VWRITE")
+        w("('# digitalmodel weldolet_limit reactions at the last converged substep')")
+        w("*VWRITE")
+        w("('# units: length=mm force=N stress=MPa')")
+        w("*VWRITE,LVL")
+        w("('mesh_level ',F6.0)")
+        w("*VWRITE,MREV")
+        w("('mapdl_rev ',F8.2)")
+        w("*VWRITE,PCONV")
+        w("('stress_mpa ',E20.12)")
+        w("*VWRITE,AREAC")
+        w("('loaded_area_mm2 ',E20.12)")
+        w("*VWRITE,FXC")
+        w("('reaction_sum ',E20.12)")
+        w("*VWRITE,NCONV")
+        w("('converged_set ',F8.0)")
+        w("*VWRITE,NFIXC")
+        w("('n_fixed_nodes ',F10.0)")
         w("*CFCLOS")
 
     return write
@@ -171,24 +238,37 @@ def deck_sha256_for_receipt(receipt: dict, level: int) -> str:
 
 
 def only_nonconvergence_errors(out_text: str) -> bool:
-    """True when every ``*** ERROR ***`` in the log reports non-convergence and
-    no ``*** FATAL ***`` occurred (accepted only for the limit-load run)."""
+    """True when every ``*** ERROR ***`` in the log reports non-convergence
+    (Newton non-convergence, or the NCNV displacement-limit divergence with its
+    diagnostic continuation) and no ``*** FATAL ***`` occurred. Accepted only
+    for the limit-load run, whose criterion is this non-convergence."""
     if "*** FATAL ***" in out_text:
         return False
     lines = out_text.splitlines()
     found = False
+    previous_ok = False
     for i, line in enumerate(lines):
         if "*** ERROR ***" in line:
             found = True
             block = " ".join(lines[i + 1:i + 4]).lower()
-            if "converge" not in block:
+            if "message continuation" in block:
+                ok = previous_ok  # diagnostic text of the preceding error
+            else:
+                # Newton non-convergence, or the NCNV displacement-limit
+                # divergence MAPDL reports when the EPP solution runs away
+                ok = "converge" in block or ("ncnv" in block and "limit" in block)
+            if not ok:
                 return False
+            previous_ok = ok
     return found
 
 
 def limit_load_result(spec: LimitLoadSpec, lpl_text: str) -> dict:
     """Limit load and its checks from the load-deflection record."""
-    rows = wc._data_rows(lpl_text)
+    all_rows = wc._data_rows(lpl_text)
+    rows = [r for r in all_rows if len(r) < 6 or r[5] == 1.0]
+    rejected = [{"set": round(r[0]), "load_factor": r[1]} for r in all_rows
+                if len(r) >= 6 and r[5] != 1.0]
     p = [r[2] for r in rows]
     u = [r[3] for r in rows]
     p_nc = p[-1]
@@ -207,6 +287,7 @@ def limit_load_result(spec: LimitLoadSpec, lpl_text: str) -> dict:
     return {
         "criterion": LIMIT_LOAD_CRITERION,
         "n_converged_substeps": len(rows),
+        "rejected_sets": rejected,
         "final_load_factor_requested": spec.load_factor,
         "last_load_increment_mpa": p[-1] - p[-2] if len(p) > 1 else None,
         "min_load_increment_allowed_mpa": design * spec.load_factor / (20 * spec.substeps),
@@ -222,7 +303,7 @@ def limit_load_result(spec: LimitLoadSpec, lpl_text: str) -> dict:
 
 def limit_variant(spec: LimitLoadSpec) -> wc.StateVariant:
     def outputs(level: int) -> dict[str, str]:
-        return {"reac": wc.reaction_file_name(level), "lpl": lpl_file_name(level)}
+        return {"reac": reacconv_file_name(level), "lpl": lpl_file_name(level)}
 
     def derive(level: int, texts: dict[str, str]) -> dict:
         return {"limit_load": limit_load_result(at_level(spec, level), texts["lpl"])}
