@@ -160,6 +160,22 @@ def test_start_node_correction_is_consistent(state):
         assert audit["within_tolerance"] is True
 
 
+@pytest.mark.parametrize("state", CRACKED_WELDOLET)
+def test_k_gov_is_the_maximum_over_all_front_nodes(state):
+    """Owner cards G14/G16: K_gov = sqrt(E' J) maximised over ALL front nodes,
+    free-surface end nodes included; open fronts carry the end-node record."""
+    receipt = _receipt(state)
+    primary = next(m for m in receipt["meshes"] if m["level"] == receipt["primary_level"])
+    e = receipt["spec"].get("youngs_modulus_mpa") or receipt["spec"]["base"]["youngs_modulus_mpa"]
+    nu = receipt["spec"].get("poisson") or receipt["spec"]["base"]["poisson"]
+    k_all = [cint_parser.k_from_j(n["J_reported"], e, nu) for n in primary["front"]]
+    assert receipt["governing"]["k_gov_max_mpa_sqrt_m"] == pytest.approx(max(k_all), rel=1e-12)
+    if cint_parser.is_open_front(receipt["front_geometry"]):
+        assert receipt["guards"]["g_end_nodes_record"]["status"] in ("pass", "fail")
+    else:
+        assert receipt["guards"]["g_end_nodes_record"]["status"] == "not_applicable"
+
+
 @pytest.mark.parametrize("state", UNCRACKED)
 def test_uncracked_axial_reaction_equals_end_thrust(state):
     receipt = _receipt(state)
@@ -221,15 +237,15 @@ CROTCH_EVIDENCE = EVIDENCE / "crotch"
 
 
 def test_crotch_stop_rule_evidence_fails_only_guard_g():
-    """Crotch-plane a0 (owner card G15), solved at the current generator: the
-    (L1, L2) receipt is genuine and current, and guard (g) is its only failure
-    (J at the governing free-surface end node changes by more than 1 %)."""
+    """Crotch-plane a0 (owner card G15), solved before owner card G16: the
+    (L1, L2) receipt is a genuine historical record, and under the G14 form of
+    guard (g) its only failure was J at the governing free-surface end node."""
     receipt = json.loads(
         (CROTCH_EVIDENCE / "p0b_crotch_a2p35.receipt.json").read_text("utf-8")
     )
     assert cint_parser.validate_receipt_schema(receipt) == []
-    assert crack_receipt.provenance_problems(receipt, REPO, []) == []
-    assert crack_receipt.artifact_problems(receipt, CROTCH_EVIDENCE) == []
+    assert crack_receipt.provenance_problems(receipt, REPO, [], historical=True) == []
+    assert crack_receipt.artifact_problems(receipt, CROTCH_EVIDENCE, historical=True) == []
     for mesh in receipt["meshes"]:
         assert crack_receipt.regenerate_deck_sha256(receipt, mesh["level"]) == mesh[
             "deck_sha256"
@@ -242,18 +258,22 @@ def test_crotch_stop_rule_evidence_fails_only_guard_g():
     assert "p0b_crotch_a2p35" not in DECLARED
 
 
-def test_crotch_first_pair_also_fails_only_guard_g():
-    """(L0, L1) re-evaluated from the committed artifacts: again only (g)."""
+@pytest.mark.parametrize("pair", [(0, 1), (1, 2)])
+def test_crotch_evidence_under_owner_g16(pair):
+    """Re-evaluated from the committed artifacts under owner card G16 (guard (g)
+    over interior front nodes of an open front): every gating guard passes,
+    and the end-node J change stays on record above 1 %."""
     base = CROTCH_EVIDENCE / "solved" / "p0b_crotch_a2p35"
     receipt = json.loads(
         (CROTCH_EVIDENCE / "p0b_crotch_a2p35.receipt.json").read_text("utf-8")
     )
-    cint = {lv: (base / f"weldolet_cint_L{lv}.txt").read_text("utf-8") for lv in (0, 1)}
-    reac = {lv: (base / f"weldolet_reac_L{lv}.txt").read_text("utf-8") for lv in (0, 1)}
+    cint = {lv: (base / f"weldolet_cint_L{lv}.txt").read_text("utf-8") for lv in pair}
+    reac = {lv: (base / f"weldolet_reac_L{lv}.txt").read_text("utf-8") for lv in pair}
     res = cint_parser.evaluate_guards(cint, reac, front_geometry=receipt["front_geometry"])
-    failed = sorted(n for n in cint_parser.GUARD_NAMES if res[n].status != "pass")
-    assert failed == ["g_j_mesh"]
-    assert res["g_j_mesh"].value > 0.01
+    for name in cint_parser.GUARD_NAMES:
+        assert res[name].status == "pass", (name, res[name])
+    assert res["g_end_nodes_record"].status == "fail"
+    assert res["g_end_nodes_record"].value > 0.01
 
 
 # --------------------------------------------------------------------------- #

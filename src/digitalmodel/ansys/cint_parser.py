@@ -29,7 +29,11 @@ independently from that solved output (never from prescribed loads):
 (g) mesh convergence of J (owner card G14): J at the governing node (the node
     of maximum J, i.e. of maximum K = sqrt(E' J), among the positions present
     on both meshes, taken on the finer mesh) changes by <= 1 % between the two
-    mesh densities.
+    mesh densities. For a front ending on a free surface (owner card G16) the
+    J change is checked at every interior front node instead; the two
+    free-surface end nodes are recorded as ``g_end_nodes_record`` and do not
+    gate (their J carries a non-square-root singularity). The governing
+    K_gov remains the maximum over all front nodes.
 
 The limits are fixed by the approved plan and are not parameters of the
 guards. The parser needs no licence.
@@ -563,8 +567,65 @@ def governing_node(fronts: Mapping[int, list[dict]]) -> dict | None:
     }
 
 
+OPEN_FRONT_TYPES = ("ellipse", "crotch")  # fronts ending on a free surface
+END_NODE_RECORD = "g_end_nodes_record"  # recorded, not gating (owner card G16)
+
+
+def is_open_front(front_geometry: Mapping | None) -> bool:
+    return bool(front_geometry) and front_geometry.get("type") in OPEN_FRONT_TYPES
+
+
+def _j_changes(fronts: Mapping[int, list[dict]]) -> tuple[list[tuple[float, float]], int, int]:
+    """(phi, |J_fine / J_coarse - 1|) at positions present on both meshes."""
+    (lc, coarse), (lf, fine) = sorted(fronts.items())
+    by_pos = {_position_key(n["phi_deg"]): n for n in coarse}
+    out = []
+    for n in sorted(fine, key=lambda n: n["phi_deg"]):
+        c = by_pos.get(_position_key(n["phi_deg"]))
+        if c is None or not c.get("J_reported") or n.get("J_reported") is None:
+            continue
+        out.append((n["phi_deg"], abs(n["J_reported"] / c["J_reported"] - 1.0)))
+    return out, lc, lf
+
+
+def guard_j_mesh_open(fronts: Mapping[int, list[dict]]) -> tuple[GuardResult, GuardResult]:
+    """Guard (g) for a front ending on a free surface (owner card G16): the J
+    change between the two meshes at every interior front node <= 1 %; the two
+    free-surface end nodes are recorded (``g_end_nodes_record``), not gated."""
+    if len(fronts) != 2:
+        bad = GuardResult("fail", None, J_MESH_TOL, "need exactly two mesh densities")
+        return bad, _not_applicable()
+    changes, lc, lf = _j_changes(fronts)
+    if len(changes) < 3:
+        bad = GuardResult("fail", None, J_MESH_TOL, "fewer than three common front nodes")
+        return bad, _not_applicable()
+    interior, ends = changes[1:-1], [changes[0], changes[-1]]
+    worst = max(interior, key=lambda t: t[1])
+    end = max(ends, key=lambda t: t[1])
+    g = GuardResult(
+        _pass(worst[1] <= J_MESH_TOL), worst[1], J_MESH_TOL,
+        f"max |J(L{lf}) / J(L{lc}) - 1| over interior front nodes (owner G16), "
+        f"at phi {worst[0]:g}",
+    )
+    rec = GuardResult(
+        _pass(end[1] <= J_MESH_TOL), end[1], J_MESH_TOL,
+        f"record, not gating (owner G16): max |J(L{lf}) / J(L{lc}) - 1| at the "
+        f"free-surface end nodes, at phi {end[0]:g}",
+    )
+    return g, rec
+
+
+def guard_j_mesh_for(
+    fronts: Mapping[int, list[dict]], front_geometry: Mapping | None
+) -> tuple[GuardResult, GuardResult]:
+    """Guard (g) and the end-node record for the front's topology."""
+    if is_open_front(front_geometry):
+        return guard_j_mesh_open(fronts)
+    return guard_j_mesh(fronts), _not_applicable()
+
+
 def guard_j_mesh(fronts: Mapping[int, list[dict]]) -> GuardResult:
-    """Guard (g), owner card G14."""
+    """Guard (g), owner card G14 (closed fronts): J at the governing node."""
     gov = governing_node(fronts)
     if gov is None:
         return GuardResult("fail", None, J_MESH_TOL, "no governing node on two meshes")
@@ -691,11 +752,13 @@ def evaluate_guards(
             "f_units": guard_units({}, reactions, {}),
             "g_j_mesh": _not_applicable(),
             LEGACY_GUARD: _not_applicable(),
+            END_NODE_RECORD: _not_applicable(),
         }
     tables = {lvl: parse_cint_table(t) for lvl, t in cint_texts.items()}
     fronts = {
         lvl: front_records(t, front_geometry=geometry) for lvl, t in tables.items()
     }
+    g_mesh, g_record = guard_j_mesh_for(fronts, geometry)
     return {
         "a_equilibrium": guard_equilibrium(reactions),
         "b_mesh_load": guard_mesh_load(reactions),
@@ -705,8 +768,9 @@ def evaluate_guards(
             list(cint_texts.values()) + list(reac_texts.values()), tokens
         ),
         "f_units": guard_units(tables, reactions, fronts),
-        "g_j_mesh": guard_j_mesh(fronts),
+        "g_j_mesh": g_mesh,
         LEGACY_GUARD: guard_contour_legacy(fronts),
+        END_NODE_RECORD: g_record,
     }
 
 
@@ -952,6 +1016,10 @@ def evaluate_receipt_guards(
             )
         )
     single = receipt.get("kind") == "limit_load" and len(reactions) == 1
+    if cracked:
+        g_mesh, g_record = guard_j_mesh_for(fronts, receipt.get("front_geometry"))
+    else:
+        g_mesh, g_record = _not_applicable(), _not_applicable()
     return {
         "a_equilibrium": guard_equilibrium(reactions),
         "b_mesh_load": single_mesh_not_applicable() if single else guard_mesh_load(reactions),
@@ -965,6 +1033,7 @@ def evaluate_receipt_guards(
             [json.dumps(receipt, sort_keys=True)], extra_tokens
         ),
         "f_units": GuardResult(_pass(unit_ok), None, None, "recorded unit tags"),
-        "g_j_mesh": guard_j_mesh(fronts) if cracked else _not_applicable(),
+        "g_j_mesh": g_mesh,
         LEGACY_GUARD: guard_contour_legacy(fronts) if cracked else _not_applicable(),
+        END_NODE_RECORD: g_record,
     }

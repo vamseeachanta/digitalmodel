@@ -104,7 +104,7 @@ def test_centre_crack_secant_value():
 # --------------------------------------------------------------------------- #
 def test_good_fixture_passes_every_guard():
     results = _guards("good")
-    assert set(results) == set(GUARDS) | {"c_contour_legacy"}
+    assert set(results) == set(GUARDS) | {"c_contour_legacy", "g_end_nodes_record"}
     for name, res in _gates(results).items():
         assert res.status == "pass", f"{name}: {res}"
 
@@ -124,6 +124,32 @@ def test_negative_fixture_fails_only_its_guard(case, guard):
     results = _gates(_guards(case))
     failed = sorted(n for n, r in results.items() if r.status != "pass")
     assert failed == [guard]
+
+
+def test_g_open_front_end_node_oscillation_is_recorded_not_gating():
+    """Owner G16: on a front ending on a free surface, guard (g) uses interior
+    nodes only; the end node's J change (2 % here) is recorded, not gated."""
+    res = _guards("g_end_node_oscillates")
+    assert {n: r.status for n, r in _gates(res).items()} == dict.fromkeys(GUARDS, "pass")
+    rec = res["g_end_nodes_record"]
+    assert rec.status == "fail" and rec.value > 0.01
+    assert "not gating" in rec.detail
+
+
+def test_g_open_front_interior_node_failure_fails_g_only():
+    res = _gates(_guards("neg_g_interior"))
+    assert sorted(n for n, r in res.items() if r.status != "pass") == ["g_j_mesh"]
+    assert res["g_j_mesh"].value > 0.01
+
+
+def test_g_closed_front_unaffected_and_has_no_end_node_record():
+    cint, reac = _load_weld("good")
+    res = cint_parser.evaluate_guards(cint, reac, front_geometry=POLAR, extra_tokens=())
+    assert res["g_end_nodes_record"].status == "not_applicable"
+    cint, reac = _load_weld("neg_g_j_mesh")
+    res = cint_parser.evaluate_guards(cint, reac, front_geometry=POLAR, extra_tokens=())
+    assert res["g_j_mesh"].status == "fail"
+    assert "governing node" in res["g_j_mesh"].detail
 
 
 def test_guard_limits_are_the_plan_values():
