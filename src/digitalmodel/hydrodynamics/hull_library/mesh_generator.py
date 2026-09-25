@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 from numpy.typing import NDArray
 from pydantic import BaseModel, Field
-from scipy.interpolate import interp1d
+from scipy.interpolate import PchipInterpolator
 
 from digitalmodel.hydrodynamics.bemrosetta.models.mesh_models import (
     MeshFormat,
@@ -27,6 +27,42 @@ if TYPE_CHECKING:
     from digitalmodel.hydrodynamics.hull_library.profile_schema import (
         HullProfile,
     )
+
+
+def _shape_preserving_interp(
+    x: NDArray[np.float64],
+    y: NDArray[np.float64],
+    x_new: NDArray[np.float64],
+    fill: tuple[float, float],
+) -> NDArray[np.float64]:
+    """Monotone cubic (PCHIP) interpolation with constant fill outside the data range.
+
+    Linear lofting between stations produces ruled surfaces, which have Gaussian
+    curvature K <= 0 everywhere, so generated monohulls read as saddle plate at bow and
+    stern regardless of resolution (#2188, HullProd evaluation 2026-09-25). PCHIP is
+    shape preserving (no overshoot) and gives the smooth, doubly curved ends a faired
+    hull has. With two data points it reduces to linear interpolation.
+    """
+    x = np.asarray(x, dtype=np.float64)
+    y = np.asarray(y, dtype=np.float64)
+    order = np.argsort(x)
+    x, y = x[order], y[order]
+    unique_x, first = np.unique(x, return_index=True)
+    if len(unique_x) < len(x):
+        x, y = unique_x, y[first]
+    x_new = np.asarray(x_new, dtype=np.float64)
+
+    if len(x) == 1:
+        values = np.full(len(x_new), y[0], dtype=np.float64)
+    elif len(x) == 2:
+        values = np.interp(x_new, x, y)
+    else:
+        values = PchipInterpolator(x, y, extrapolate=False)(x_new)
+
+    values = np.where(x_new < x[0], fill[0], values)
+    values = np.where(x_new > x[-1], fill[1], values)
+    values = np.where(np.isnan(values), np.where(x_new <= x[0], fill[0], fill[1]), values)
+    return values.astype(np.float64)
 
 
 class MeshGeneratorConfig(BaseModel):
@@ -147,14 +183,9 @@ class HullMeshGenerator:
         if len(z_keel) == 1:
             return np.full(len(z_values), y_half[0], dtype=np.float64)
 
-        interp_fn = interp1d(
-            z_keel,
-            y_half,
-            kind="linear",
-            bounds_error=False,
-            fill_value=(y_half[0], y_half[-1]),
+        return _shape_preserving_interp(
+            z_keel, y_half, z_values, fill=(y_half[0], y_half[-1])
         )
-        return interp_fn(z_values).astype(np.float64)
 
     def _compute_grid_resolution(
         self,
@@ -226,14 +257,12 @@ class HullMeshGenerator:
         if len(station_x) == 1:
             y_fine = np.full(n_sample, station_y_at_draft[0])
         else:
-            interp_x = interp1d(
+            y_fine = _shape_preserving_interp(
                 station_x,
                 station_y_at_draft,
-                kind="linear",
-                bounds_error=False,
-                fill_value=(station_y_at_draft[0], station_y_at_draft[-1]),
+                x_fine,
+                fill=(station_y_at_draft[0], station_y_at_draft[-1]),
             )
-            y_fine = interp_x(x_fine)
 
         # Compute second derivative as curvature proxy
         dy = np.gradient(y_fine, x_fine)
@@ -299,14 +328,9 @@ class HullMeshGenerator:
             if len(station_x) == 1:
                 y_grid[:, j] = station_y_at_z[0, j]
             else:
-                interp_x = interp1d(
-                    station_x,
-                    station_y_at_z[:, j],
-                    kind="linear",
-                    bounds_error=False,
-                    fill_value=0.0,
+                y_grid[:, j] = _shape_preserving_interp(
+                    station_x, station_y_at_z[:, j], x_values, fill=(0.0, 0.0)
                 )
-                y_grid[:, j] = interp_x(x_values)
 
         # Clamp negative half-breadths to zero
         y_grid = np.maximum(y_grid, 0.0)

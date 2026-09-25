@@ -208,7 +208,7 @@ def environment_correction(
             desc = "Seawater with cathodic protection"
 
     elif env == "free_corrosion":
-        # DNV-RP-C203 Table 2-2: free corrosion
+        # DNV-RP-C203 (2021) Table 2-4: free corrosion (Table 2-3 in 2011)
         # Single slope, no endurance limit
         life_f = 0.33  # roughly factor 3 on life vs CP, factor 10 vs air
         log_a_adj = -0.4
