@@ -368,13 +368,17 @@ class TestSpanFatigueDamage:
         )
 
     def test_dnv_f_class_wired_correctly(self, ref_input):
-        """DNV F-class (in air): N = 1.73e11 * S^-3. Verify allowable cycles."""
+        """DNV F-class (in air): N = 10^11.855 * S^-3 (DNV-RP-C203 2011 Table 2-1).
+
+        #2165: the local table used A = 1.73e11 (log 11.238), not a Table 2-1
+        value; 100 MPa gives 10^11.855 / 1e6 = 716,143 (was 173,000).
+        """
         from dataclasses import replace
         inp_air = replace(ref_input, environment=EnvironmentType.IN_AIR)
         fat = SpanFatigueDamage(inp_air, 0.43, 100.0)  # 100 MPa, in air
         N = fat.allowable_cycles(100.0)
-        # Expected: A * S^(-m) = 1.73e11 * 100^(-3) = 1730
-        expected_N = 1.73e11 * 100.0**(-3.0)
+        expected_N = 10**11.855 * 100.0**(-3.0)
+        assert abs(expected_N - 716_143) / 716_143 < 1e-6
         assert abs(N - expected_N) / expected_N < 0.01, (
             f"N={N:.1f} vs expected {expected_N:.1f} — check DNV F-class wiring"
         )

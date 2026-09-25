@@ -48,48 +48,53 @@ class TestSNCurveDNVReference:
     """Validate S-N curve parameters against DNV-RP-C203 Table 2-1."""
 
     def test_dnv_d_curve_parameters(self):
-        """DNV-RP-C203 D-curve: log_a1 = 11.764, m1 = 3.0 (N < 1e7)."""
+        """DNV-RP-C203 (2011) Table 2-1 D-curve in air: log a1 = 12.164, m1 = 3.0.
+
+        #2165: the helper used A = 5.73e11 (log 11.758), not a Table 2-1 value;
+        the D intercepts are 12.164 (air) and 11.764 (seawater with CP)."""
         curve = get_dnv_curve('D')
         assert curve.m == 3.0
-        # A = 10^(log_a) with log_a ~ 11.764 for m=3 regime
-        # The hardcoded value is 5.73e11; check log10(A) ~ 11.758
         log_a = math.log10(curve.A)
-        assert abs(log_a - 11.758) < 0.02, f"log10(A) = {log_a}, expected ~11.758"
+        assert abs(log_a - 12.164) < 1e-9, f"log10(A) = {log_a}, expected 12.164"
 
     def test_dnv_e_curve_parameters(self):
-        """DNV-RP-C203 E-curve: A = 3.29e11, m = 3.0."""
+        """DNV-RP-C203 (2011) Table 2-1 E-curve: log a1 = 12.010, m = 3.0
+        (#2165; the helper used A = 3.29e11, log 11.517)."""
         curve = get_dnv_curve('E')
         assert curve.m == 3.0
         log_a = math.log10(curve.A)
-        # log10(3.29e11) = 11.517
-        assert abs(log_a - 11.517) < 0.02, f"log10(A) = {log_a}"
+        assert abs(log_a - 12.010) < 1e-9, f"log10(A) = {log_a}"
 
     def test_dnv_f1_curve_parameters(self):
-        """DNV-RP-C203 F1-curve: A = 1.08e11, m = 3.0."""
+        """DNV-RP-C203 (2011) Table 2-1 F1-curve: log a1 = 11.699, m = 3.0
+        (#2165; the helper used A = 1.08e11, log 11.033)."""
         curve = get_dnv_curve('F1')
         assert curve.m == 3.0
         log_a = math.log10(curve.A)
-        # log10(1.08e11) = 11.033
-        assert abs(log_a - 11.033) < 0.02, f"log10(A) = {log_a}"
+        assert abs(log_a - 11.699) < 1e-9, f"log10(A) = {log_a}"
 
     def test_dnv_d_curve_cycles_at_100mpa(self):
-        """At S = 100 MPa on D-curve: N = A / S^m = 5.73e11 / 1e6 = 573000."""
+        """At S = 100 MPa on D-curve: N = 10^12.164 / 100^3 = 1.45881e12 / 1e6
+        = 1,458,814 (#2165; was 5.73e11 / 1e6 = 573,000)."""
         curve = get_dnv_curve('D')
         N = curve.get_allowable_cycles(100.0)
-        expected = 5.73e11 / (100.0 ** 3.0)
+        expected = 10**12.164 / (100.0 ** 3.0)
+        assert abs(N - 1_458_814) / 1_458_814 < 1e-6
         assert abs(N - expected) / expected < 1e-6
 
     def test_dnv_d_curve_cycles_at_200mpa(self):
-        """At S = 200 MPa on D-curve: N = 5.73e11 / 8e6 = 71625."""
+        """At S = 200 MPa on D-curve: N = 10^12.164 / 8e6 = 182,352
+        (#2165; was 5.73e11 / 8e6 = 71,625)."""
         curve = get_dnv_curve('D')
         N = curve.get_allowable_cycles(200.0)
-        expected = 5.73e11 / (200.0 ** 3.0)
+        expected = 10**12.164 / (200.0 ** 3.0)
+        assert abs(N - 182_352) / 182_352 < 1e-5
         assert abs(N - expected) / expected < 1e-6
 
     def test_dnv_d_curve_inverse(self):
-        """Inverse: S(N=573000) should return ~100 MPa."""
+        """Inverse: S(N = 1,458,814) should return ~100 MPa (#2165)."""
         curve = get_dnv_curve('D')
-        S = curve.get_stress_range(573000.0)
+        S = curve.get_stress_range(1_458_814.0)
         assert abs(S - 100.0) < 0.5, f"S = {S}, expected ~100"
 
     def test_dnv_d_fatigue_limit(self):
@@ -109,8 +114,9 @@ class TestSNCurveDNVReference:
             'B1', 'B2', 'C', 'C1', 'C2', 'D', 'E',
             'F', 'F1', 'F3', 'G', 'W1', 'W2', 'W3',
         ]
-        # DNV-RP-C203 slopes are 3.0, 3.5, or 4.0 depending on class
-        valid_slopes = {3.0, 3.5, 4.0}
+        # DNV-RP-C203 (2011) Table 2-1 m1 is 4.0 for B1 and B2 and 3.0 for the
+        # rest (#2165: B2 was 3.5)
+        valid_slopes = {3.0, 4.0}
         for cc in expected_classes:
             curve = StandardSNCurves.get_curve('DNV', cc)
             assert curve.m in valid_slopes, f"DNV-{cc} m={curve.m} not in {valid_slopes}"
@@ -192,9 +198,11 @@ class TestMinersDamage:
     def test_damage_with_dnv_d_curve(self):
         """Damage using actual DNV-D curve matches hand calculation."""
         curve = get_dnv_curve('D')
-        # S = 80 MPa -> N = 5.73e11 / 80^3 = 5.73e11 / 512000 = 1119140.6
-        # n = 10000 -> D = 10000 / 1119140.6 = 0.008936
-        N_80 = 5.73e11 / (80.0 ** 3)
+        # S = 80 MPa -> N = 10^12.164 / 80^3 = 1.45881e12 / 512000 = 2,849,247
+        # n = 10000 -> D = 10000 / 2,849,247 = 0.0035097
+        # (#2165; was 5.73e11 / 80^3 = 1,119,141 and D = 0.008936)
+        N_80 = 10**12.164 / (80.0 ** 3)
+        assert abs(10000.0 / N_80 - 0.0035097) < 1e-7
         expected = 10000.0 / N_80
 
         cycles = pd.DataFrame({'range': [80.0], 'count': [10000.0]})
