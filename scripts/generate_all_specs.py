@@ -127,18 +127,35 @@ class ProcessResult:
 # ---------------------------------------------------------------------------
 
 
-#: A text model saved by OrcaFlex starts with this header; a batch config or a
-#: preserved record of a lost .sim file does not, and is not a model.
+#: A text model saved by OrcaFlex carries this header near the start of its
+#: content; a batch config or a preserved record of a lost .sim file does not,
+#: and is not a model.
 _MODEL_HEADER = re.compile(r"^(?:#\s*Type:\s*Model\b|General\s*:)", re.MULTILINE)
+_MODEL_TYPE_COMMENT = re.compile(r"#\s*Type:\s*Model\b")
+#: Characters of content, from its first line, searched for the header.
+_CONTENT_WINDOW = 4096
 
 
 def _is_model_yml(path: Path) -> bool:
+    """Stream past the preamble -- comments, blank lines, YAML directives and
+    document markers, of any length -- then search the header in the content
+    that follows. ``utf-8-sig`` drops a byte-order mark, which otherwise sits
+    before an initial ``General:`` and defeats the anchored match; a fixed
+    window from the start of the file let a long preamble hide the header."""
     try:
-        with open(path, encoding="utf-8", errors="replace") as fh:
-            head = fh.read(4096)
+        with open(path, encoding="utf-8-sig", errors="replace") as fh:
+            for raw in fh:
+                line = raw.strip()
+                if not line or line.startswith("%") or line in ("---", "..."):
+                    continue
+                if line.startswith("#"):
+                    if _MODEL_TYPE_COMMENT.match(line):
+                        return True
+                    continue
+                return bool(_MODEL_HEADER.search(raw + fh.read(_CONTENT_WINDOW)))
     except OSError:
         return False
-    return bool(_MODEL_HEADER.search(head))
+    return False
 
 
 def discover_model_files(root: Path) -> list[Path]:

@@ -70,7 +70,7 @@ def test_a_long_blank_preamble_with_a_bom(is_model, tmp_path):
 
 def test_a_batch_config_is_still_not_a_model(is_model, tmp_path):
     preamble = "# config\n" * 1000
-    data = (preamble + "basecaseName: x.dat\nGeneral: 1\n").encode()
+    data = (preamble + "basecaseName: x.dat\nloadcases: []\n").encode()
     assert not is_model(_write(tmp_path, data))
 
 
