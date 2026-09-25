@@ -10,8 +10,6 @@ from digitalmodel.cathodic_protection.fuel_system_cp import (
     COATING_BREAKDOWN_FACTOR,
     CoatingType,
     FuelPipeSegment,
-    ImpressedCurrentGroundBed,
-    RectifierOutput,
     check_protection,
     current_demand_segment,
     design_ground_bed,

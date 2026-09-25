@@ -4,9 +4,14 @@ Covers CP design for offshore platforms, jackets, monopiles, and subsea
 structures with zone-based current density allocation (splash, tidal,
 submerged, buried zones), anode distribution, and retrofitting assessment.
 
+Design current densities come from the cited DNV-RP-B401 table lookups in
+``b401_tables`` (Table 10-1 initial/final, Table 10-2 mean, Sec. 6.3 buried)
+keyed by climatic region and depth band; every result carries the rendered
+citations it used (issue #2207).
+
 References
 ----------
-- DNV-RP-B401 (2017) "Cathodic Protection Design"
+- DNV-RP-B401 "Cathodic Protection Design", Tables 10-1, 10-2, Sec. 6.3
 - NACE SP0176 "Corrosion Control of Submerged Areas of Permanently Installed
   Steel Offshore Structures"
 - ISO 12473 (2006) "General Principles of Cathodic Protection in Seawater"
@@ -16,7 +21,7 @@ from __future__ import annotations
 
 import math
 from enum import Enum
-from typing import Any, Optional
+from typing import Any, Final
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -26,6 +31,17 @@ from digitalmodel.cathodic_protection._edition import (
     normalize_edition,
     standard_for_edition,
 )
+from digitalmodel.cathodic_protection.b401_tables import (
+    Climate,
+    DepthBand,
+    DesignPhase,
+    buried_current_density,
+    citation_label,
+    climate_from_temperature,
+    depth_band,
+    design_current_density,
+)
+from digitalmodel.citations import CitedValue
 
 
 class ExposureZone(str, Enum):
@@ -47,30 +63,25 @@ class ClimateRegion(str, Enum):
     ARCTIC = "arctic"
 
 
-# DNV-RP-B401 Table 10-1: Design current densities [mA/m²]
-# Format: (initial, mean, final)
-ZONE_CURRENT_DENSITY: dict[tuple[ExposureZone, ClimateRegion], tuple[float, float, float]] = {
-    # Submerged zone
-    (ExposureZone.SUBMERGED, ClimateRegion.TROPICAL): (150.0, 70.0, 90.0),
-    (ExposureZone.SUBMERGED, ClimateRegion.SUBTROPICAL): (170.0, 80.0, 100.0),
-    (ExposureZone.SUBMERGED, ClimateRegion.TEMPERATE): (200.0, 100.0, 120.0),
-    (ExposureZone.SUBMERGED, ClimateRegion.ARCTIC): (250.0, 120.0, 150.0),
-    # Buried/mudline zone
-    (ExposureZone.BURIED_MUDLINE, ClimateRegion.TROPICAL): (25.0, 20.0, 20.0),
-    (ExposureZone.BURIED_MUDLINE, ClimateRegion.SUBTROPICAL): (25.0, 20.0, 20.0),
-    (ExposureZone.BURIED_MUDLINE, ClimateRegion.TEMPERATE): (25.0, 20.0, 20.0),
-    (ExposureZone.BURIED_MUDLINE, ClimateRegion.ARCTIC): (25.0, 20.0, 20.0),
-    # Splash zone — typically not CP-protected (coatings + allowance)
-    (ExposureZone.SPLASH, ClimateRegion.TROPICAL): (0.0, 0.0, 0.0),
-    (ExposureZone.SPLASH, ClimateRegion.SUBTROPICAL): (0.0, 0.0, 0.0),
-    (ExposureZone.SPLASH, ClimateRegion.TEMPERATE): (0.0, 0.0, 0.0),
-    (ExposureZone.SPLASH, ClimateRegion.ARCTIC): (0.0, 0.0, 0.0),
-    # Tidal zone
-    (ExposureZone.TIDAL, ClimateRegion.TROPICAL): (130.0, 60.0, 80.0),
-    (ExposureZone.TIDAL, ClimateRegion.SUBTROPICAL): (150.0, 70.0, 90.0),
-    (ExposureZone.TIDAL, ClimateRegion.TEMPERATE): (170.0, 80.0, 100.0),
-    (ExposureZone.TIDAL, ClimateRegion.ARCTIC): (200.0, 100.0, 120.0),
+# ClimateRegion is kept for backward compatibility; the table lookups are
+# keyed on ``b401_tables.Climate``.
+_CLIMATE_BY_REGION: Final[dict[ClimateRegion, Climate]] = {
+    ClimateRegion.TROPICAL: Climate.TROPICAL,
+    ClimateRegion.SUBTROPICAL: Climate.SUBTROPICAL,
+    ClimateRegion.TEMPERATE: Climate.TEMPERATE,
+    ClimateRegion.ARCTIC: Climate.ARCTIC,
 }
+
+_PHASES: Final[tuple[DesignPhase, ...]] = (
+    DesignPhase.INITIAL,
+    DesignPhase.MEAN,
+    DesignPhase.FINAL,
+)
+
+# Bare steel: an omitted coating breakdown factor means f_c = 1.0.
+_BARE_STEEL_BREAKDOWN: Final = 1.0
+
+_HOURS_PER_YEAR: Final = 8760.0
 
 
 class StructuralZone(BaseModel):
@@ -79,12 +90,30 @@ class StructuralZone(BaseModel):
     zone_name: str = Field(..., description="Zone identifier")
     exposure_zone: ExposureZone = Field(..., description="Exposure zone type")
     surface_area_m2: float = Field(..., gt=0, description="Surface area [m²]")
-    coating_breakdown_factor: float = Field(
+    depth_m: float = Field(
         default=0.0,
         ge=0.0,
-        le=1.0,
-        description="Coating breakdown factor (0 = fully coated, 1 = bare)",
+        description=(
+            "Representative water depth of the zone [m]; selects the "
+            "Table 10-1 / 10-2 depth band for submerged surfaces"
+        ),
     )
+    coating_breakdown_factor: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Coating breakdown factor f_c (0 = perfect coating, 1 = bare). "
+            "None means bare steel (f_c = 1.0); an explicit 0.0 is honoured."
+        ),
+    )
+
+    @property
+    def effective_breakdown_factor(self) -> float:
+        """f_c used in the demand calculation: ``None`` is bare steel."""
+        if self.coating_breakdown_factor is None:
+            return _BARE_STEEL_BREAKDOWN
+        return self.coating_breakdown_factor
 
 
 class MarineCPResult(BaseModel):
@@ -116,6 +145,18 @@ class MarineCPResult(BaseModel):
     standard: str = Field(
         ..., description="Standards reference matching the selected edition"
     )
+    citations: list[str] = Field(
+        default_factory=list,
+        description=(
+            "Rendered citations ('code_id revision section') of every table "
+            "value used, in first-use order"
+        ),
+    )
+
+    @property
+    def edition(self) -> Edition:
+        """Alias of ``edition_used`` for report provenance."""
+        return self.edition_used
 
     @model_validator(mode="before")
     @classmethod
@@ -154,6 +195,83 @@ class RetrofitAssessment(BaseModel):
     )
 
 
+def _resolve_climate(
+    climate_region: ClimateRegion,
+    surface_temperature_c: float | None,
+) -> Climate:
+    """Climate from the surface temperature when given, else from the region."""
+    if surface_temperature_c is not None:
+        return climate_from_temperature(surface_temperature_c)
+    return _CLIMATE_BY_REGION[ClimateRegion(climate_region)]
+
+
+def zone_current_density(
+    exposure_zone: ExposureZone,
+    climate: Climate,
+    depth_m: float,
+    phase: DesignPhase,
+    edition: Edition,
+) -> CitedValue | None:
+    """Design current density [A/m²] for one exposure zone and phase.
+
+    Parameters
+    ----------
+    exposure_zone : ExposureZone
+        Exposure zone of the surface.
+    climate : Climate
+        Climatic region (Table 10-1 / 10-2 column).
+    depth_m : float
+        Representative depth [m]; mapped to a Table 10-1 / 10-2 band.
+    phase : DesignPhase
+        Initial, mean or final.
+    edition : Edition
+        Normalized DNV-RP-B401 edition token.
+
+    Returns
+    -------
+    CitedValue or None
+        Cited density in A/m², or ``None`` for zones above the waterline
+        where CP is not applied (density 0.0, nothing to cite).
+    """
+    zone = ExposureZone(exposure_zone)
+    if zone is ExposureZone.SUBMERGED:
+        return design_current_density(climate, depth_band(depth_m), phase, edition)
+    if zone is ExposureZone.TIDAL:
+        # B401 Tables 10-1 / 10-2 have no tidal row; the tidal zone is treated
+        # as seawater-exposed bare metal in the shallowest (0-30 m) band.
+        return design_current_density(climate, DepthBand.M0_30, phase, edition)
+    if zone is ExposureZone.BURIED_MUDLINE:
+        # Sec. 6.3: 0.020 A/m2 for all phases. The previous 25/20/20 mA/m2
+        # were ABS values, not B401.
+        return buried_current_density(edition)
+    # SPLASH and ATMOSPHERIC: CP is not applied above the waterline in the
+    # scope of B401; these zones rely on coating and corrosion allowance.
+    # Design choice of this module (0.0 A/m2), no clause to cite.
+    return None
+
+
+def _zone_densities(
+    zone: StructuralZone,
+    climate: Climate,
+    edition: Edition,
+) -> tuple[dict[DesignPhase, float], list[str]]:
+    """Densities [A/m²] per phase and the distinct citations used."""
+    densities: dict[DesignPhase, float] = {}
+    labels: list[str] = []
+    for phase in _PHASES:
+        cited = zone_current_density(
+            zone.exposure_zone, climate, zone.depth_m, phase, edition
+        )
+        if cited is None:
+            densities[phase] = 0.0
+            continue
+        densities[phase] = cited.value
+        label = citation_label(cited.citation)
+        if label not in labels:
+            labels.append(label)
+    return densities, labels
+
+
 def marine_structure_current_demand(
     zones: list[StructuralZone],
     climate_region: ClimateRegion = ClimateRegion.TEMPERATE,
@@ -162,18 +280,21 @@ def marine_structure_current_demand(
     anode_capacity_Ah_kg: float = 2000.0,
     utilization_factor: float = 0.90,
     edition: Edition | None = None,
+    surface_temperature_c: float | None = None,
 ) -> MarineCPResult:
     """Calculate current demand and anode requirements for an offshore structure.
 
-    Sums current demand across all exposure zones using DNV-RP-B401
-    Table 10-1 current densities and coating breakdown factors.
+    Sums current demand across all exposure zones using the DNV-RP-B401
+    Table 10-1 (initial, final) and Table 10-2 (mean) current densities by
+    climate and depth band, and each zone's coating breakdown factor.
 
     Parameters
     ----------
     zones : list[StructuralZone]
-        List of structural zones with areas and coating data.
+        List of structural zones with areas, depths and coating data.
     climate_region : ClimateRegion
-        Climate region for current density selection.
+        Climate region for current density selection; ignored when
+        ``surface_temperature_c`` is given.
     design_life_years : float
         CP design life [years].
     anode_net_mass_kg : float
@@ -182,46 +303,60 @@ def marine_structure_current_demand(
         Anode electrochemical capacity [A-h/kg].
     utilization_factor : float
         Anode utilization factor.
+    edition : Edition, optional
+        DNV-RP-B401 edition token; ``None`` warns and defaults to 2021.
+    surface_temperature_c : float, optional
+        Surface water temperature [°C]; when given it selects the climatic
+        region via ``b401_tables.climate_from_temperature``.
 
     Returns
     -------
     MarineCPResult
-        Total current demand, anode mass, and number of anodes.
+        Total current demand, anode mass, number of anodes and citations.
     """
     ed = normalize_edition(edition, stacklevel=3)
+    climate = _resolve_climate(climate_region, surface_temperature_c)
 
     total_initial = 0.0
     total_mean = 0.0
     total_final = 0.0
-    zone_details = []
+    zone_details: list[dict] = []
+    citations: list[str] = []
 
     for zone in zones:
-        key = (zone.exposure_zone, climate_region)
-        densities = ZONE_CURRENT_DENSITY.get(key, (0.0, 0.0, 0.0))
-        ic_initial, ic_mean, ic_final = densities
+        densities, labels = _zone_densities(zone, climate, ed)
+        fc = zone.effective_breakdown_factor
 
-        # Apply coating breakdown factor
-        fc = zone.coating_breakdown_factor if zone.coating_breakdown_factor > 0 else 1.0
-
-        i_initial = zone.surface_area_m2 * fc * ic_initial / 1000.0
-        i_mean = zone.surface_area_m2 * fc * ic_mean / 1000.0
-        i_final = zone.surface_area_m2 * fc * ic_final / 1000.0
+        i_initial = zone.surface_area_m2 * fc * densities[DesignPhase.INITIAL]
+        i_mean = zone.surface_area_m2 * fc * densities[DesignPhase.MEAN]
+        i_final = zone.surface_area_m2 * fc * densities[DesignPhase.FINAL]
 
         total_initial += i_initial
         total_mean += i_mean
         total_final += i_final
 
+        for label in labels:
+            if label not in citations:
+                citations.append(label)
+
         zone_details.append({
             "zone_name": zone.zone_name,
             "exposure_zone": zone.exposure_zone.value,
             "surface_area_m2": zone.surface_area_m2,
+            "depth_m": zone.depth_m,
+            "climate": climate.value,
+            "coating_breakdown_factor": fc,
+            "initial_current_density_A_m2": densities[DesignPhase.INITIAL],
+            "mean_current_density_A_m2": densities[DesignPhase.MEAN],
+            "final_current_density_A_m2": densities[DesignPhase.FINAL],
             "initial_current_A": round(i_initial, 4),
             "mean_current_A": round(i_mean, 4),
             "final_current_A": round(i_final, 4),
+            "citations": labels,
         })
 
-    # Anode mass from mean current demand (DNV-RP-B401 Eq 2)
-    total_mass = (total_mean * design_life_years * 8760.0) / (
+    # Anode mass from mean current demand (DNV-RP-B401 §7.7.1, Eq 2)
+    total_mass = (total_mean * design_life_years * _HOURS_PER_YEAR) / (
         anode_capacity_Ah_kg * utilization_factor
     )
 
@@ -236,6 +371,7 @@ def marine_structure_current_demand(
         zone_details=zone_details,
         edition_used=ed,
         standard=standard_for_edition(ed),
+        citations=citations,
     )
 
 
@@ -243,11 +379,13 @@ def anode_distribution(
     zones: list[StructuralZone],
     total_anodes: int,
     climate_region: ClimateRegion = ClimateRegion.TEMPERATE,
+    edition: Edition | None = None,
+    surface_temperature_c: float | None = None,
 ) -> dict[str, int]:
     """Distribute anodes across structural zones proportional to current demand.
 
     Allocates anodes based on each zone's fraction of total final current
-    demand (conservative approach using final/design values).
+    demand (conservative approach using Table 10-1 final values).
 
     Parameters
     ----------
@@ -256,20 +394,27 @@ def anode_distribution(
     total_anodes : int
         Total number of anodes to distribute.
     climate_region : ClimateRegion
-        Climate region.
+        Climate region; ignored when ``surface_temperature_c`` is given.
+    edition : Edition, optional
+        DNV-RP-B401 edition token; ``None`` warns and defaults to 2021.
+    surface_temperature_c : float, optional
+        Surface water temperature [°C] selecting the climatic region.
 
     Returns
     -------
     dict[str, int]
         Anode count per zone name.
     """
+    ed = normalize_edition(edition, stacklevel=3)
+    climate = _resolve_climate(climate_region, surface_temperature_c)
+
     demands: list[tuple[str, float]] = []
     for zone in zones:
-        key = (zone.exposure_zone, climate_region)
-        densities = ZONE_CURRENT_DENSITY.get(key, (0.0, 0.0, 0.0))
-        _, _, ic_final = densities
-        fc = zone.coating_breakdown_factor if zone.coating_breakdown_factor > 0 else 1.0
-        demand = zone.surface_area_m2 * fc * ic_final
+        cited = zone_current_density(
+            zone.exposure_zone, climate, zone.depth_m, DesignPhase.FINAL, ed
+        )
+        ic_final = 0.0 if cited is None else cited.value
+        demand = zone.surface_area_m2 * zone.effective_breakdown_factor * ic_final
         demands.append((zone.zone_name, demand))
 
     total_demand = sum(d for _, d in demands)
@@ -280,7 +425,7 @@ def anode_distribution(
 
     distribution: dict[str, int] = {}
     allocated = 0
-    for i, (name, demand) in enumerate(demands):
+    for name, demand in demands:
         fraction = demand / total_demand
         count = max(0, round(fraction * total_anodes))
         distribution[name] = count
@@ -338,16 +483,15 @@ def retrofit_assessment(
         Assessment of remaining life and retrofit needs.
     """
     # Mass consumed so far
-    mass_consumed = (mean_current_A * elapsed_years * 8760.0) / (
+    mass_consumed = (mean_current_A * elapsed_years * _HOURS_PER_YEAR) / (
         anode_capacity_Ah_kg * utilization_factor
     )
-    usable_mass = original_anode_mass_kg * utilization_factor
     remaining_mass = max(0, original_anode_mass_kg - mass_consumed)
 
     # Remaining life from mass
     if mean_current_A > 0:
         remaining_life = (remaining_mass * anode_capacity_Ah_kg * utilization_factor) / (
-            mean_current_A * 8760.0
+            mean_current_A * _HOURS_PER_YEAR
         )
     else:
         remaining_life = design_life_years - elapsed_years
@@ -358,7 +502,7 @@ def retrofit_assessment(
     # Additional mass needed for remaining design life
     additional_mass = 0.0
     if shortfall_years > 0:
-        additional_mass = (mean_current_A * shortfall_years * 8760.0) / (
+        additional_mass = (mean_current_A * shortfall_years * _HOURS_PER_YEAR) / (
             anode_capacity_Ah_kg * utilization_factor
         )
 

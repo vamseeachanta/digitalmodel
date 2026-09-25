@@ -3,7 +3,6 @@
 TDD: These tests were written BEFORE the implementation.
 """
 
-import math
 
 import pytest
 
