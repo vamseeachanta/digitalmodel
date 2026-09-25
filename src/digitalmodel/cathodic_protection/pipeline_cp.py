@@ -16,10 +16,13 @@ References
 from __future__ import annotations
 
 import math
+import warnings
 from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel, Field
+
+from digitalmodel.cathodic_protection import dnv_rp_f106
 
 
 class PipelineEnvironment(str, Enum):
@@ -137,6 +140,7 @@ def pipeline_current_demand(
         total_surface_area_m2=total_area,
         effective_bare_area_m2=effective_bare,
         current_demand_A=current_demand,
+        recommended_anode_spacing_m=None,
     )
 
 
@@ -192,38 +196,72 @@ def anode_spacing(
     )
 
 
-def holiday_detection_voltage(
-    wall_thickness_mm: float,
-    coating_type: str = "FBE",
-) -> float:
-    """Calculate holiday detection test voltage per NACE SP0490 / ISO 21809.
+# NACE SP0490 section 5: FBE holiday-detection voltage V = 525 * sqrt(t [mil]),
+# equivalently V = 3294 * sqrt(t [mm]) (525 / sqrt(0.0254) = 3294.2).
+_SP0490_FBE_VOLTAGE_PER_SQRT_MM: float = 525.0 / math.sqrt(0.0254)
+_FBE_ALIASES = frozenset({"FBE", "EPOXY", "FUSION_BONDED_EPOXY"})
 
-    For thin-film coatings (<0.5 mm): V = 5 * sqrt(T_microns)
-    For thick-film coatings (>=0.5 mm): V = 3.7 * sqrt(T_microns)
+
+def holiday_detection_voltage(
+    coating_thickness_mm: Optional[float] = None,
+    coating_type: str = "FBE",
+    *,
+    wall_thickness_mm: Optional[float] = None,
+) -> float:
+    """Holiday (jeep) detection test voltage [V] for a factory-applied coating.
+
+    Delegates to :func:`digitalmodel.cathodic_protection.dnv_rp_f106.holiday_detection_voltage`
+    for every coating family DNV-RP-F106 Annex 1 gives a rule for (3LPE/3LPP:
+    10 kV/mm capped at 25 kV; asphalt/coal-tar enamel: 15 kV). F106 leaves FBE
+    to the project ITP, so FBE uses the NACE SP0490 section 5 rule
+    ``V = 525 * sqrt(t_mil)`` (= 3294 * sqrt(t_mm)); 0.4 mm FBE gives ~2.08 kV.
+
+    The previous body (``5 * sqrt(t_um)``) gave 100 V for 0.4 mm FBE, twenty
+    times too low (issue #2209), and its first parameter was misnamed
+    ``wall_thickness_mm`` -- it was always the coating thickness.
 
     Parameters
     ----------
-    wall_thickness_mm : float
+    coating_thickness_mm : float
         Coating dry film thickness [mm].
     coating_type : str
-        Coating type: "FBE" for thin-film, "PE" or "PP" for thick-film.
+        Coating family: "FBE"/"EPOXY", or any alias accepted by F106
+        ("PE", "3LPE", "PP", "3LPP", "ASPHALT", "COAL_TAR", ...).
+    wall_thickness_mm : float, optional
+        Deprecated alias for ``coating_thickness_mm`` (emits ``DeprecationWarning``).
 
     Returns
     -------
     float
         Holiday detection test voltage [V].
+
+    Raises
+    ------
+    ValueError
+        If the thickness is missing/non-positive, or the coating family has
+        no tabulated rule in F106 (e.g. polychloroprene is project-specific).
     """
-    t_microns = wall_thickness_mm * 1000.0
+    if wall_thickness_mm is not None:
+        warnings.warn(
+            "holiday_detection_voltage(wall_thickness_mm=...) is deprecated; "
+            "use coating_thickness_mm (the value was always the coating thickness)",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        if coating_thickness_mm is not None:
+            raise ValueError(
+                "pass either coating_thickness_mm or wall_thickness_mm, not both"
+            )
+        coating_thickness_mm = wall_thickness_mm
+    if coating_thickness_mm is None:
+        raise ValueError("coating_thickness_mm is required")
+    if coating_thickness_mm <= 0.0:
+        raise ValueError("coating_thickness_mm must be positive")
 
-    if coating_type.upper() in ("FBE", "EPOXY"):
-        # Low-voltage wet sponge for thin film, or spark test
-        voltage = 5.0 * math.sqrt(t_microns)
-    else:
-        # High-voltage spark test for thick coatings
-        voltage = 3.7 * math.sqrt(t_microns)
-
-    # Cap at practical limits
-    return min(voltage, 25000.0)
+    key = coating_type.strip().replace("-", "_").replace(" ", "_").upper()
+    if key in _FBE_ALIASES:
+        return _SP0490_FBE_VOLTAGE_PER_SQRT_MM * math.sqrt(coating_thickness_mm)
+    return dnv_rp_f106.holiday_detection_voltage(coating_type, coating_thickness_mm)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -368,7 +406,7 @@ def soil_resistivity_correction(
     """
     if resistivity_ohm_m <= 0:
         return 1.0
-    return (reference_ohm_m / resistivity_ohm_m) ** 0.3
+    return float((reference_ohm_m / resistivity_ohm_m) ** 0.3)
 
 
 def check_potential_criteria(
