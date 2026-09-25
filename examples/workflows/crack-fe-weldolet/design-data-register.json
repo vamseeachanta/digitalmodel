@@ -1,0 +1,419 @@
+{
+  "schema": "crack-fe-weldolet-design-data-register/1",
+  "generated": "2026-09-25",
+  "issue": 2157,
+  "scope": "Assumed design basis of the P0b weldolet crack FE model: 6 x 1/2 STD weldolet on NPS 6 Sch 40S run pipe, 1.4404 at 250 degC, internal pressure. Mirrors the riser design-data register schema (id, parameter, value, unit, source_class, reference_ids, note, status_label).",
+  "decision_reference_format": "decision:<ID> = owner decision board, save 2026-09-25T11:04Z (plan section 'Phase card decisions')",
+  "source_class_values": {
+    "public": "value read from a public manufacturer catalogue, distributor chart or datasheet listed under references",
+    "derived": "computed from other register items; the derivation is stated in the note",
+    "assumed": "engineering assumption with no public source",
+    "owner_decision": "value or choice fixed by an owner decision card",
+    "missing_evidence": "value supplied without any public source; listed so the gap is visible"
+  },
+  "conventions": {
+    "assumed_label": "ASSUMED - to be confirmed",
+    "note_format": "ASSUMED - to be confirmed: <reason>. Confirm with <evidence>.",
+    "units": "mm, N, MPa unless stated",
+    "coordinates": "run-pipe axis = global X, branch axis = global Z, crown of the run pipe at z = R_o; rho = distance from the branch axis; v = height above the run-pipe outer surface (v < 0 inside the run-pipe wall)"
+  },
+  "summary_counts": {
+    "public": 12,
+    "derived": 6,
+    "assumed": 8,
+    "owner_decision": 7,
+    "missing_evidence": 1
+  },
+  "design_data": [
+    {
+      "id": "G-01",
+      "parameter": "Run pipe outside diameter (NPS 6)",
+      "value": 168.3,
+      "unit": "mm",
+      "source_class": "public",
+      "reference_ids": ["R02", "R03", "decision:V01"],
+      "note": "ASSUMED - to be confirmed: the run pipe size is an assumed design basis (owner card V01); the OD is the NPS 6 chart value 6.625 in. Confirm with the line list or piping isometric.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "G-02",
+      "parameter": "Run pipe wall thickness (Sch 40S, nominal)",
+      "value": 7.11,
+      "unit": "mm",
+      "source_class": "public",
+      "reference_ids": ["R02", "decision:V01"],
+      "note": "ASSUMED - to be confirmed: Sch 40S nominal wall 0.280 in from the distributor chart; no mill tolerance or corrosion allowance is deducted. Confirm with the piping class and a thickness survey.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "G-03",
+      "parameter": "Branch outside diameter (NPS 1/2)",
+      "value": 21.34,
+      "unit": "mm",
+      "source_class": "public",
+      "reference_ids": ["R03", "decision:S03"],
+      "note": "ASSUMED - to be confirmed: NPS 1/2 OD 0.840 in from the distributor chart. Confirm with the line list.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "G-04",
+      "parameter": "Branch wall thickness (Sch 40S, nominal)",
+      "value": 2.77,
+      "unit": "mm",
+      "source_class": "public",
+      "reference_ids": ["R03", "decision:S03"],
+      "note": "ASSUMED - to be confirmed: Sch 40S nominal wall 0.109 in (ID 0.622 in) from the distributor chart. Confirm with the piping class.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "G-05",
+      "parameter": "Weldolet outlet bore (= branch ID)",
+      "value": 15.80,
+      "unit": "mm",
+      "source_class": "derived",
+      "reference_ids": ["G-03", "G-04", "R01", "decision:S03"],
+      "note": "ASSUMED - to be confirmed: the reducing 6 x 1/2 weldolet bore is not tabulated in the public catalogue, so the outlet bore is set equal to the branch ID 21.34 - 2 x 2.77 = 15.80 mm. Confirm with the fitting manufacturer's drawing.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "G-06",
+      "parameter": "Weldolet height A (run-pipe crown to outlet weld end), 6 x 1/2 STD",
+      "value": 19.05,
+      "unit": "mm",
+      "source_class": "public",
+      "reference_ids": ["R01", "decision:S03"],
+      "note": "ASSUMED - to be confirmed: A = 3/4 in from the reducing STD table (printed p.16); the fitting on site is not identified. Confirm with the fitting marking and manufacturer's data.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "G-07",
+      "parameter": "Weldolet maximum OD at the base B, 6 x 1/2 STD",
+      "value": 34.93,
+      "unit": "mm",
+      "source_class": "public",
+      "reference_ids": ["R01", "decision:S03"],
+      "note": "ASSUMED - to be confirmed: B = 1 3/8 in from the reducing STD table (printed p.16). Confirm with the fitting marking and manufacturer's data.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "G-08",
+      "parameter": "Weldolet opening at the run surface C, 6 x 1/2 STD",
+      "value": 23.81,
+      "unit": "mm",
+      "source_class": "public",
+      "reference_ids": ["R01", "decision:S03"],
+      "note": "ASSUMED - to be confirmed: C = 15/16 in from the reducing STD table (printed p.16); C is the base opening, not the bore. Confirm with the fitting marking and manufacturer's data.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "G-09",
+      "parameter": "Run-pipe hole diameter (cut to the weldolet opening C)",
+      "value": 23.81,
+      "unit": "mm",
+      "source_class": "assumed",
+      "reference_ids": ["G-08"],
+      "note": "ASSUMED - to be confirmed: the hole is taken as cut to the fitting opening C so that the attachment-weld root sits at the hole edge and the bore is continuous; the public catalogue gives no hole size for the reducing fitting. Confirm with the fabrication drawing or WPS.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "G-10",
+      "parameter": "Attachment-weld root gap",
+      "value": 1.6,
+      "unit": "mm",
+      "source_class": "owner_decision",
+      "reference_ids": ["decision:S03", "R01"],
+      "note": "ASSUMED - to be confirmed: numeric joint geometry is in licensed MSS SP-97 / B31.3 figures, not in any public catalogue; 1.6 mm is an engineering assumption (the catalogue only describes a spacer root gap). In the model the root gap is the height of the wetted root face above the run-pipe surface. Confirm with the WPS and fabrication drawing.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "G-11",
+      "parameter": "Weldolet base bevel angle (full-penetration groove)",
+      "value": 45.0,
+      "unit": "deg",
+      "source_class": "owner_decision",
+      "reference_ids": ["decision:S03"],
+      "note": "ASSUMED - to be confirmed: engineering assumption. Weld metal and weldolet are modelled as one monolithic solid of the same material, so the bevel line itself carries no stiffness change; it fixes the groove height g + (B - C)/2 x tan(45 deg) = 7.16 mm, where the weldolet outer cone starts. Confirm with the WPS and fabrication drawing.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "G-12",
+      "parameter": "Cover-fillet leg (both legs, at the groove/run-pipe corner)",
+      "value": 3.0,
+      "unit": "mm",
+      "source_class": "owner_decision",
+      "reference_ids": ["decision:S03", "R01"],
+      "note": "ASSUMED - to be confirmed: engineering assumption for the cover fillet over the groove weld; the toe on the run pipe is at rho = B/2 + 3 = 20.465 mm. Confirm with the WPS, fabrication drawing or a weld profile measurement.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "G-13",
+      "parameter": "Weldolet internal profile: straight taper from C at the root-face top (v = 1.6 mm) to the bore at v = A/2 = 9.525 mm, then the bore to the outlet",
+      "value": 9.525,
+      "unit": "mm",
+      "source_class": "assumed",
+      "reference_ids": ["G-05", "G-06", "G-08"],
+      "note": "ASSUMED - to be confirmed: the catalogue gives A, B and C but not the internal transition; a straight taper ending at mid-height is assumed. Confirm with the fitting manufacturer's drawing.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "G-14",
+      "parameter": "Weldolet external profile: cylinder of diameter B from the fillet top (v = 3 mm) to the groove top (v = 7.16 mm), then a straight cone to the branch OD at v = A",
+      "value": 7.16,
+      "unit": "mm",
+      "source_class": "assumed",
+      "reference_ids": ["G-06", "G-07", "G-11", "G-12"],
+      "note": "ASSUMED - to be confirmed: the catalogue gives only the envelope dimensions; the outer contour is idealised as a cylinder plus a straight cone. The base is contoured to the run pipe (surfaces at constant height above the run-pipe OD) and blends to a flat outlet plane at z = R_o + A. Confirm with the fitting manufacturer's drawing.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "G-15",
+      "parameter": "Crack plane: run-pipe fusion face of the attachment weld",
+      "value": "v = 0 surface (run-pipe OD cylinder), from the root at rho = C/2 = 11.905 mm toward the fillet toe at rho = 20.465 mm",
+      "unit": "-",
+      "source_class": "assumed",
+      "reference_ids": ["G-09", "G-12", "decision:V03"],
+      "note": "ASSUMED - to be confirmed: a root flaw in a set-on attachment weld is taken as a lack-of-fusion type flaw along the run-pipe fusion boundary. This plane is normal to the branch-axis thrust carried by the weld (mode I under pressure), it contains the whole weld footprint (the longest ligament that must be exhausted, root to toe), and at constant rho it gives a closed crack front that a structured crack block can follow. Growth into the run-pipe wall or through the weld throat is not modelled. Confirm with the flaw characterisation (NDE sizing and orientation).",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "G-16",
+      "parameter": "Weld metal properties equal to parent 1.4404",
+      "value": "monolithic",
+      "unit": "-",
+      "source_class": "assumed",
+      "reference_ids": ["M-01", "M-02"],
+      "note": "ASSUMED - to be confirmed: weld, weldolet and run pipe share one isotropic elastic material, so the contour integrals see a single material (a CINT stress-intensity requirement). Confirm with the filler-metal certificate and weld-metal tensile data.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "M-01",
+      "parameter": "Young's modulus of 1.4404 at 250 degC",
+      "value": 182500.0,
+      "unit": "MPa",
+      "source_class": "public",
+      "reference_ids": ["R04", "decision:S05"],
+      "note": "ASSUMED - to be confirmed: linear interpolation of the datasheet values 186 GPa (200 degC) and 179 GPa (300 degC); 250 degC is not tabulated. Confirm with the material certificate or a cited elevated-temperature standard value.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "M-02",
+      "parameter": "Poisson's ratio",
+      "value": 0.3,
+      "unit": "-",
+      "source_class": "public",
+      "reference_ids": ["R05", "decision:S05"],
+      "note": "ASSUMED - to be confirmed: design-manual value (s.2.3.1), taken as temperature independent. Confirm with the material certificate or cited standard value.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "M-03",
+      "parameter": "0.2 % proof strength Rp0.2 of 1.4404 at 250 degC (minimum); also the yield strength of the elastic-perfectly-plastic limit-load model",
+      "value": 127.0,
+      "unit": "MPa",
+      "source_class": "public",
+      "reference_ids": ["R04", "decision:S05"],
+      "note": "ASSUMED - to be confirmed: the datasheet minimum 'according to DIN EN 10088-3' at 250 degC; actual proof strength is normally higher. Confirm with the material certificate and elevated-temperature test data.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "M-04",
+      "parameter": "Tensile strength Rm of 1.4404 at 250 degC",
+      "value": 385.0,
+      "unit": "MPa",
+      "source_class": "public",
+      "reference_ids": ["R06", "decision:S05"],
+      "note": "ASSUMED - to be confirmed: linear interpolation of 390 MPa (200 degC) and 380 MPa (300 degC) from an undated third-party-hosted datasheet; not used by the P0b FE model. Confirm with the material certificate or a cited standard value.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "M-05",
+      "parameter": "Ramberg-Osgood exponent n",
+      "value": 7.0,
+      "unit": "-",
+      "source_class": "public",
+      "reference_ids": ["R05", "decision:S05"],
+      "note": "ASSUMED - to be confirmed: design-manual value for 1.4401/1.4404 (Tables 6.4/6.5), a room-temperature design model; not used by the P0b FE model (the limit-load run is elastic-perfectly-plastic). Confirm with a measured stress-strain curve at 250 degC.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "M-06",
+      "parameter": "Fracture toughness Kmat",
+      "value": 132.0,
+      "unit": "MPa*sqrt(m)",
+      "source_class": "missing_evidence",
+      "reference_ids": ["decision:S05"],
+      "note": "ASSUMED - to be confirmed: no public source was found; the value is listed so the gap is visible and it is not used in P0b. Confirm with fracture-toughness tests of the weld metal and HAZ at 250 degC.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "M-07",
+      "parameter": "Design temperature",
+      "value": 250.0,
+      "unit": "degC",
+      "source_class": "owner_decision",
+      "reference_ids": ["decision:S05"],
+      "note": "ASSUMED - to be confirmed: the temperature at which M-01, M-03 and M-04 are taken; thermal stress is not modelled. Confirm with the process design basis.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "L-01",
+      "parameter": "Internal pressure on all wetted surfaces",
+      "value": 4.7,
+      "unit": "MPa",
+      "source_class": "assumed",
+      "reference_ids": [],
+      "note": "ASSUMED - to be confirmed: assumed design pressure applied to the run-pipe bore, hole wall, root face, weldolet bore and branch bore. Confirm with the process design basis (design pressure and operating envelope).",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "L-02",
+      "parameter": "Closed-end thrust, applied as an equivalent tensile end pressure p r_i^2 / (r_o^2 - r_i^2) on the free run-pipe end and on the branch end",
+      "value": "run 24.34 MPa; branch 11.23 MPa",
+      "unit": "MPa",
+      "source_class": "derived",
+      "reference_ids": ["L-01", "G-01", "G-02", "G-03", "G-04"],
+      "note": "ASSUMED - to be confirmed: the system is taken as closed (capped) so the axial pressure thrust is carried by the pipe wall; piping external loads (weight, thermal, restraint) are not included. Confirm with the piping stress analysis.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "L-03",
+      "parameter": "Crack-face pressure (base case ON)",
+      "value": "ON (sensitivity OFF)",
+      "unit": "-",
+      "source_class": "assumed",
+      "reference_ids": ["G-15", "L-01"],
+      "note": "ASSUMED - to be confirmed: the weld-root flaw starts at the wetted root face, so the fluid can enter the crack and load its faces; ON is taken as the base case because it is the physically connected condition and it raises the opening load. OFF is run as a sensitivity. Confirm with the flaw characterisation (open to the bore or embedded).",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "F-01",
+      "parameter": "Base-case flaw: full-circumference weld-root flaw on the fusion face, initial depth a0 (measured from the root at rho = 11.905 mm along the fusion face)",
+      "value": 2.35,
+      "unit": "mm",
+      "source_class": "owner_decision",
+      "reference_ids": ["decision:V03", "G-15"],
+      "note": "ASSUMED - to be confirmed: owner card V03 fixes the flaw type and a0; the flaw is idealised as a uniform-depth annulus, so the crack front is a closed curve at rho = 11.905 + a on the run-pipe OD. Confirm with NDE sizing.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "F-02",
+      "parameter": "Sensitivity flaw: part-circumferential semi-elliptical flaw at the crotch (theta = 0 deg), a/2c",
+      "value": 0.25,
+      "unit": "-",
+      "source_class": "owner_decision",
+      "reference_ids": ["decision:V03"],
+      "note": "ASSUMED - to be confirmed: owner card V03; a = a0 = 2.35 mm, 2c = 9.4 mm along the root circumference. Confirm with NDE sizing.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "F-03",
+      "parameter": "Weld footprint on the crack plane (root to fillet toe) = total ligament at a = 0",
+      "value": 8.56,
+      "unit": "mm",
+      "source_class": "derived",
+      "reference_ids": ["G-07", "G-08", "G-12"],
+      "note": "ASSUMED - to be confirmed: (B/2 + fillet leg) - C/2 = 20.465 - 11.905 = 8.56 mm; the remaining ligament of a state is 8.56 - a (6.21 mm at a0). Confirm with a weld profile measurement.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "F-04",
+      "parameter": "Declared crack-depth states (base case)",
+      "value": [2.35, 2.8, 3.2, 3.6, 4.0, 4.5, 5.0, 5.5, 6.0],
+      "unit": "mm",
+      "source_class": "derived",
+      "reference_ids": ["F-01", "F-03", "N-03"],
+      "note": "ASSUMED - to be confirmed: steps of about 0.4-0.5 mm from a0; the last state (a = 6.0 mm, ligament 2.56 mm) is the deepest the crack block fits (N-03), which stops before ligament exhaustion at a = 8.56 mm. Confirm with the resolution needs of the growth analysis (P1).",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "F-05",
+      "parameter": "Limit state: ligament exhaustion on the fusion face",
+      "value": 8.56,
+      "unit": "mm",
+      "source_class": "owner_decision",
+      "reference_ids": ["decision:B03", "F-03"],
+      "note": "ASSUMED - to be confirmed: owner card B03; depth at which the remaining ligament reaches zero. Confirm with the assessment procedure adopted in P1.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "N-01",
+      "parameter": "Modelled run-pipe half-length (each side of the branch axis)",
+      "value": 200.0,
+      "unit": "mm",
+      "source_class": "derived",
+      "reference_ids": ["G-01", "G-02", "G-12"],
+      "note": "ASSUMED - to be confirmed: shell bending disturbances decay over about 2.5 sqrt(R_m t) = 2.5 sqrt(80.595 x 7.11) = 59.9 mm; the half-length 200 mm leaves 179.5 mm (7.5 sqrt(R_m t)) between the fillet toe (20.465 mm) and each end. Confirm with an end-length sensitivity if the model is reused.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "N-02",
+      "parameter": "Modelled branch stub length above the weldolet outlet",
+      "value": 40.0,
+      "unit": "mm",
+      "source_class": "derived",
+      "reference_ids": ["G-03", "G-04"],
+      "note": "ASSUMED - to be confirmed: 40 mm is about 8 sqrt(r_m t) of the branch (sqrt(9.285 x 2.77) = 5.07 mm), so the end-pressure application does not disturb the weldolet. Confirm with the branch piping layout (valves or supports near the outlet are not modelled).",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "N-03",
+      "parameter": "Crack-block tube half-size d and maximum modelled depth",
+      "value": "d = 0.8 mm; a <= 6.0 mm",
+      "unit": "mm",
+      "source_class": "assumed",
+      "reference_ids": ["F-03", "G-12"],
+      "note": "ASSUMED - to be confirmed: the structured crack block (a square of half-size d around the front) must stay clear of the root face behind the front and of the fillet face ahead of it (fillet at rho = 20.465 - d at v = d), which limits the modelled depth to about 20.465 - 2d - 0.5 - 11.905 = 6.46 mm; the last declared state is 6.0 mm. Deeper states would need a smaller block. Confirm with the owner if states beyond 6.0 mm are needed.",
+      "status_label": "ASSUMED - to be confirmed"
+    }
+  ],
+  "references": [
+    {
+      "id": "R01",
+      "citation": "Bonney Forge catalogue (WELDOLET Reducing STD table, printed p.16; attachment procedure PDF p.8-9), public manufacturer catalogue, file bonneyforge_BC_min.pdf",
+      "source": "docs:literature/piping/fittings-and-pipe-dimensions/SOURCES.md",
+      "url": "https://bonneyforge.com/assets/files/BC_min.pdf",
+      "sha256": "2bbc1b2e4a1627a8bd5536b6234d77cd501101f22ae185621f28a68a7b67b412",
+      "retrieved": "2026-09-25"
+    },
+    {
+      "id": "R02",
+      "citation": "Tioga pipe chart (NPS 6: OD 6.625 in, Sch 40S 0.280 in), public distributor chart, file tioga_pipe_chart.pdf",
+      "source": "docs:literature/piping/fittings-and-pipe-dimensions/SOURCES.md",
+      "url": "https://www.tiogapipe.com/assets/files/pipe-chart.pdf",
+      "sha256": "b404d6cd7a0e44a79455490971f33500a24a78a14e3c8f95dc3212969c22e101",
+      "retrieved": "2026-09-25"
+    },
+    {
+      "id": "R03",
+      "citation": "JP Steel stainless pipe chart (NPS 1/2: OD 0.840 in, Sch 40S 0.109 in), public distributor chart, file jpsteel_stainless_pipe_chart.pdf",
+      "source": "docs:literature/piping/fittings-and-pipe-dimensions/SOURCES.md",
+      "url": "https://www.jpsteel.us/wp-content/uploads/2023/01/Stainless_Steel_Pipe_Chart.pdf",
+      "sha256": "53bce759f02316199eeaa9f6704dcce047e21fc1f7444b559be566ddafed288f",
+      "retrieved": "2026-09-25"
+    },
+    {
+      "id": "R04",
+      "citation": "Swiss Steel / DEW 'Acidur 4404' datasheet (2016): p.3 Rp0.2 minimum at elevated temperature according to DIN EN 10088-3; p.2 E at 100/200/300 degC, file swisssteel_acidur_4404_en.pdf",
+      "source": "docs:literature/materials/stainless-steel-1.4404/SOURCES.md",
+      "url": "https://swisssteel-group.com/content-media/documents/Data-Sheets/Stainless-Steel/1.4404_en.pdf",
+      "sha256": "daadedbc4a2bfc17fdfcf66b1b710240234f40a9f3b73424ed1bbe6c7d78884a",
+      "retrieved": "2026-09-25"
+    },
+    {
+      "id": "R05",
+      "citation": "SCI P413 / Euro Inox 'Design Manual for Structural Stainless Steel', 4th ed.: Poisson 0.3 (s.2.3.1); Ramberg-Osgood n (Tables 6.4/6.5), free publication, file sci_P413_design_manual_4th_ed_imoa.pdf",
+      "source": "docs:literature/materials/stainless-steel-1.4404/SOURCES.md",
+      "url": "https://www.imoa.info/download_files/stainless-steel/sci/P413-designmanual-structuralstainless-steelbiz.pdf",
+      "sha256": "0dcbe8af8e300027b68ff08ced7d67a700f6ae41e0f7a534c86230bde6a244b6",
+      "retrieved": "2026-09-25"
+    },
+    {
+      "id": "R06",
+      "citation": "Older Outokumpu 316 datasheet, Table 4c Rm minimum at 200/300 degC (undated, third-party host; cross-check before use), file outokumpu_std_CrNiMo_316_datasheet_via_stainless-lintels.pdf",
+      "source": "docs:literature/materials/stainless-steel-1.4404/SOURCES.md",
+      "url": "https://www.stainless-lintels.co.uk/ldx2101_cat/316_datasheet.pdf",
+      "sha256": "20bf7cbb59ffd0004cb708f74d4b7b06c440076cc292993aaf4872403dba7c4e",
+      "retrieved": "2026-09-25"
+    }
+  ]
+}

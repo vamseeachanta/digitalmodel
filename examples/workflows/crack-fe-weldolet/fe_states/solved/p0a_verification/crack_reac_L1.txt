@@ -1,0 +1,10 @@
+# digitalmodel crack_verification reactions
+# units: length=mm force=N stress=MPa
+mesh_level     1.
+mapdl_rev    26.10
+stress_mpa   0.100000000000E+03
+loaded_area_mm2   0.800000000000E+03
+fz_ligament  -0.800000000002E+05
+fx_symmetry  -0.106059795343E-06
+fy_point  -0.276828209165E-06
+n_ligament      3695.

@@ -39,7 +39,9 @@ import socket
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 
-RECEIPT_SCHEMA_ID = "digitalmodel.crack_fe.receipt/v1"
+RECEIPT_SCHEMA_ID = "digitalmodel.crack_fe.receipt/v2"
+RECEIPT_KINDS = ("verification", "weldolet_uncracked", "weldolet_crack", "limit_load")
+GUARD_STATUSES = ("pass", "fail", "not_applicable")
 
 # Guard limits, frozen by the approved plan (#2157, P0 step 3).
 EQUILIBRIUM_TOL = 0.005
@@ -109,6 +111,10 @@ class ReactionRecord:
     fx_symmetry: float | None = None
     fy_point: float | None = None
     n_ligament: int | None = None
+    # generic solved reaction sum balancing stress_mpa * loaded_area_mm2
+    # (P0a: fz_ligament; weldolet: the axial reaction at the constrained end)
+    reaction_sum: float | None = None
+    extras: dict[str, float] = field(default_factory=dict)
 
 
 @dataclass
@@ -217,8 +223,13 @@ def parse_reaction_file(text: str) -> ReactionRecord:
             "fz_ligament",
             "fx_symmetry",
             "fy_point",
+            "reaction_sum",
         ):
             setattr(rec, key, num)
+        else:
+            rec.extras[key] = num
+    if rec.reaction_sum is None:
+        rec.reaction_sum = rec.fz_ligament
     return rec
 
 
@@ -228,13 +239,49 @@ def _phi_deg(x: float, y: float, a: float, c: float) -> float:
     return round(phi, 9) + 0.0
 
 
-def front_records(
-    table: CintTable, *, crack_depth_mm: float, crack_half_length_mm: float
-) -> list[dict]:
-    """Per-node records with K converted **once** to MPa*sqrt(m), ordered by phi.
+def _polar_z_deg(x: float, y: float) -> float:
+    """Position angle about the z axis in [0, 360) deg (closed weldolet front)."""
+    ang = math.degrees(math.atan2(y, x))
+    if ang < 0.0:
+        ang += 360.0
+    ang = round(ang, 9) + 0.0
+    return 0.0 if ang >= 360.0 else ang
 
-    ``K1_reported`` is the mean K_I over the last three contours.
+
+def front_angle(front_geometry: Mapping, x: float, y: float) -> float:
+    """Front position angle for a declared front geometry.
+
+    ``{"type": "ellipse", "a": .., "c": ..}``: Newman-Raju parametric angle
+    (90 = deepest); ``{"type": "polar_z"}``: angle about the z axis.
     """
+    kind = front_geometry.get("type")
+    if kind == "ellipse":
+        return _phi_deg(x, y, front_geometry["a"], front_geometry["c"])
+    if kind == "polar_z":
+        return _polar_z_deg(x, y)
+    raise ValueError(f"unknown front geometry {kind!r}")
+
+
+def front_records(
+    table: CintTable,
+    *,
+    crack_depth_mm: float | None = None,
+    crack_half_length_mm: float | None = None,
+    front_geometry: Mapping | None = None,
+) -> list[dict]:
+    """Per-node records with K converted **once** to MPa*sqrt(m), ordered by
+    position angle ``phi_deg``.
+
+    ``K1_reported`` (and ``K2/K3/J_reported``) are means over the last three
+    contours. The angle comes from ``front_geometry``; the P0a form
+    ``crack_depth_mm``/``crack_half_length_mm`` means an elliptical front.
+    """
+    if front_geometry is None:
+        front_geometry = {
+            "type": "ellipse",
+            "a": crack_depth_mm,
+            "c": crack_half_length_mm,
+        }
     by_node: dict[int, list[CintRow]] = {}
     for row in table.rows:
         by_node.setdefault(row.node, []).append(row)
@@ -255,20 +302,18 @@ def front_records(
                     "J": r.j,
                 }
             )
-        last = [c["K1"] for c in contours[-LAST_CONTOURS:] if c["K1"] is not None]
-        out.append(
-            {
-                "node": node,
-                "phi_deg": _phi_deg(
-                    ref.x, ref.y, crack_depth_mm, crack_half_length_mm
-                ),
-                "x": ref.x,
-                "y": ref.y,
-                "z": ref.z,
-                "contours": contours,
-                "K1_reported": sum(last) / len(last) if last else None,
-            }
-        )
+        rec = {
+            "node": node,
+            "phi_deg": front_angle(front_geometry, ref.x, ref.y),
+            "x": ref.x,
+            "y": ref.y,
+            "z": ref.z,
+            "contours": contours,
+        }
+        for key in ("K1", "K2", "K3", "J"):
+            last = [c[key] for c in contours[-LAST_CONTOURS:] if c[key] is not None]
+            rec[f"{key}_reported"] = sum(last) / len(last) if last else None
+        out.append(rec)
     out.sort(key=lambda n: (n["phi_deg"], n["node"]))
     return out
 
@@ -340,11 +385,11 @@ def _pass(ok: bool) -> str:
 def guard_equilibrium(reactions: Mapping[int, ReactionRecord]) -> GuardResult:
     worst = None
     for lvl, r in sorted(reactions.items()):
-        if None in (r.fz_ligament, r.stress_mpa, r.loaded_area_mm2):
+        if None in (r.reaction_sum, r.stress_mpa, r.loaded_area_mm2):
             return GuardResult("fail", None, EQUILIBRIUM_TOL, f"L{lvl}: missing field")
         applied = r.stress_mpa * r.loaded_area_mm2
-        # reaction balances the applied tension: sum(RF_z) = -sigma*A
-        err = abs(r.fz_ligament + applied) / abs(applied)
+        # the solved reaction balances the applied load: sum(RF) = -sigma*A
+        err = abs(r.reaction_sum + applied) / abs(applied)
         worst = err if worst is None else max(worst, err)
     ok = worst is not None and worst <= EQUILIBRIUM_TOL
     return GuardResult(_pass(ok), worst, EQUILIBRIUM_TOL, "|sum RF_z + sigma*A| / sigma*A")
@@ -354,9 +399,9 @@ def guard_mesh_load(reactions: Mapping[int, ReactionRecord]) -> GuardResult:
     if len(reactions) != 2:
         return GuardResult("fail", None, MESH_LOAD_TOL, "need exactly two mesh densities")
     (l0, r0), (l1, r1) = sorted(reactions.items())
-    if r0.fz_ligament is None or r1.fz_ligament is None or r1.fz_ligament == 0:
+    if r0.reaction_sum is None or r1.reaction_sum is None or r1.reaction_sum == 0:
         return GuardResult("fail", None, MESH_LOAD_TOL, "missing reaction sum")
-    diff = abs(r0.fz_ligament - r1.fz_ligament) / abs(r1.fz_ligament)
+    diff = abs(r0.reaction_sum - r1.reaction_sum) / abs(r1.reaction_sum)
     return GuardResult(
         _pass(diff <= MESH_LOAD_TOL),
         diff,
@@ -467,24 +512,57 @@ def guard_units(
     )
 
 
+NOT_APPLICABLE_DETAIL = "not applicable: the model has no crack front"
+
+
+def _not_applicable() -> GuardResult:
+    return GuardResult("not_applicable", None, None, NOT_APPLICABLE_DETAIL)
+
+
+def single_mesh_not_applicable() -> GuardResult:
+    """Guard (b) of a single-density run (the limit-load sensitivity)."""
+    return GuardResult(
+        "not_applicable", None, None,
+        "not applicable: single mesh density (limit-load sensitivity run)",
+    )
+
+
 def evaluate_guards(
     cint_texts: Mapping[int, str],
     reac_texts: Mapping[int, str],
     *,
     crack_depth_mm: float = 2.0,
     crack_half_length_mm: float = 4.0,
+    front_geometry: Mapping | None = None,
     extra_tokens: Iterable[str] | None = None,
+    cracked: bool = True,
 ) -> dict[str, GuardResult]:
-    """Evaluate guards (a)-(f) from the solved output of two mesh densities."""
-    tables = {lvl: parse_cint_table(t) for lvl, t in cint_texts.items()}
-    reactions = {lvl: parse_reaction_file(t) for lvl, t in reac_texts.items()}
-    fronts = {
-        lvl: front_records(
-            t, crack_depth_mm=crack_depth_mm, crack_half_length_mm=crack_half_length_mm
-        )
-        for lvl, t in tables.items()
+    """Evaluate guards (a)-(f) from the solved output of two mesh densities.
+
+    ``cracked=False`` (uncracked global model, limit-load run): there is no
+    crack front, so (c) and (d) are ``not_applicable``; (a), (b), (e) and (f)
+    are evaluated on the reaction output.
+    """
+    geometry = front_geometry or {
+        "type": "ellipse",
+        "a": crack_depth_mm,
+        "c": crack_half_length_mm,
     }
+    reactions = {lvl: parse_reaction_file(t) for lvl, t in reac_texts.items()}
     tokens = None if extra_tokens is None else tuple(extra_tokens)
+    if not cracked:
+        return {
+            "a_equilibrium": guard_equilibrium(reactions),
+            "b_mesh_load": guard_mesh_load(reactions),
+            "c_contour": _not_applicable(),
+            "d_complete": _not_applicable(),
+            "e_sanitised": guard_sanitised(list(reac_texts.values()), tokens),
+            "f_units": guard_units({}, reactions, {}),
+        }
+    tables = {lvl: parse_cint_table(t) for lvl, t in cint_texts.items()}
+    fronts = {
+        lvl: front_records(t, front_geometry=geometry) for lvl, t in tables.items()
+    }
     return {
         "a_equilibrium": guard_equilibrium(reactions),
         "b_mesh_load": guard_mesh_load(reactions),
@@ -500,34 +578,54 @@ def evaluate_guards(
 # --------------------------------------------------------------------------- #
 # Host-free records, CSV and receipt checks
 # --------------------------------------------------------------------------- #
+def reaction_record_dict(reac: ReactionRecord) -> dict:
+    """Host-free dictionary of a parsed reaction file (receipt ``reactions``)."""
+    return {
+        "stress_mpa": reac.stress_mpa,
+        "loaded_area_mm2": reac.loaded_area_mm2,
+        "reaction_sum_n": reac.reaction_sum,
+        "fz_ligament_n": reac.fz_ligament,
+        "fx_symmetry_n": reac.fx_symmetry,
+        "fy_point_n": reac.fy_point,
+        "n_ligament_nodes": reac.n_ligament,
+        "extras": dict(sorted(reac.extras.items())),
+    }
+
+
 def build_mesh_record(
     *,
     level: int,
-    cint_text: str,
+    cint_text: str | None,
     reac_text: str,
-    crack_depth_mm: float,
-    crack_half_length_mm: float,
+    crack_depth_mm: float | None = None,
+    crack_half_length_mm: float | None = None,
+    front_geometry: Mapping | None = None,
 ) -> dict:
-    """Host-free record of one solved mesh density (K in MPa*sqrt(m))."""
-    table = parse_cint_table(cint_text)
+    """Host-free record of one solved mesh density (K in MPa*sqrt(m)).
+
+    ``cint_text=None`` (uncracked model): no front, zero declared nodes.
+    """
     reac = parse_reaction_file(reac_text)
+    geometry = front_geometry or {
+        "type": "ellipse",
+        "a": crack_depth_mm,
+        "c": crack_half_length_mm,
+    }
+    if cint_text is None:
+        return {
+            "level": level,
+            "declared_front_nodes": 0,
+            "declared_contours": 0,
+            "reactions": reaction_record_dict(reac),
+            "front": [],
+        }
+    table = parse_cint_table(cint_text)
     return {
         "level": level,
         "declared_front_nodes": table.declared_front_nodes,
         "declared_contours": table.declared_contours,
-        "reactions": {
-            "stress_mpa": reac.stress_mpa,
-            "loaded_area_mm2": reac.loaded_area_mm2,
-            "fz_ligament_n": reac.fz_ligament,
-            "fx_symmetry_n": reac.fx_symmetry,
-            "fy_point_n": reac.fy_point,
-            "n_ligament_nodes": reac.n_ligament,
-        },
-        "front": front_records(
-            table,
-            crack_depth_mm=crack_depth_mm,
-            crack_half_length_mm=crack_half_length_mm,
-        ),
+        "reactions": reaction_record_dict(reac),
+        "front": front_records(table, front_geometry=geometry),
     }
 
 
@@ -548,42 +646,59 @@ _REQUIRED_TOP = {
     "schema": str,
     "state": str,
     "issue": int,
+    "kind": str,
     "spec": dict,
     "units": dict,
     "meshing": dict,
     "run": dict,
     "meshes": list,
     "primary_level": int,
-    "comparator": dict,
     "guards": dict,
 }
 _REQUIRED_RUN = {
     "producing_commit": str,
+    "generator_tree_clean": bool,
+    "generator_files": dict,
     "mapdl_version": str,
-    "argv": list,
     "cores": int,
     "platform": str,
 }
 _REQUIRED_MESH = {
     "level": int,
     "deck_sha256": str,
+    "run": dict,
+    "artifacts": dict,
     "declared_front_nodes": int,
     "declared_contours": int,
     "reactions": dict,
     "front": list,
 }
+_REQUIRED_MESH_RUN = {"argv": list, "mapdl_version": str, "solve_seconds": (int, float)}
+# kind-specific top-level sections
+_REQUIRED_BY_KIND = {
+    "verification": {"comparator": dict, "front_geometry": dict},
+    "weldolet_uncracked": {"sigma_ref": dict, "plausibility": dict},
+    "weldolet_crack": {"crack": dict, "sigma_ref": dict, "front_geometry": dict},
+    "limit_load": {"limit_load": dict},
+}
+CRACKED_KINDS = ("verification", "weldolet_crack")
 
 
 def _check_fields(obj: dict, spec: dict, where: str, problems: list[str]) -> None:
     for key, typ in spec.items():
         if key not in obj:
             problems.append(f"{where}: missing '{key}'")
-        elif not isinstance(obj[key], typ) or (typ is int and isinstance(obj[key], bool)):
-            problems.append(f"{where}: '{key}' is not {typ.__name__}")
+            continue
+        val = obj[key]
+        types = typ if isinstance(typ, tuple) else (typ,)
+        bad_bool = isinstance(val, bool) and bool not in types
+        if not isinstance(val, types) or bad_bool:
+            names = "/".join(t.__name__ for t in types)
+            problems.append(f"{where}: '{key}' is not {names}")
 
 
 def validate_receipt_schema(receipt: dict) -> list[str]:
-    """Structural validation of a verification receipt (empty list = valid)."""
+    """Structural validation of a v2 receipt (empty list = valid)."""
     problems: list[str] = []
     if not isinstance(receipt, dict):
         return ["receipt is not an object"]
@@ -592,12 +707,24 @@ def validate_receipt_schema(receipt: dict) -> list[str]:
         return problems
     if receipt["schema"] != RECEIPT_SCHEMA_ID:
         problems.append(f"receipt: schema is not {RECEIPT_SCHEMA_ID}")
+    kind = receipt["kind"]
+    if kind not in RECEIPT_KINDS:
+        problems.append(f"receipt: unknown kind {kind!r}")
+        return problems
+    _check_fields(receipt, _REQUIRED_BY_KIND[kind], "receipt", problems)
     _check_fields(receipt["run"], _REQUIRED_RUN, "run", problems)
     if not re.fullmatch(r"[0-9a-f]{40}", str(receipt["run"].get("producing_commit", ""))):
         problems.append("run: producing_commit is not a 40-hex SHA")
+    for path, blob in receipt["run"].get("generator_files", {}).items():
+        if not re.fullmatch(r"[0-9a-f]{40}", str(blob)):
+            problems.append(f"run.generator_files[{path}]: not a 40-hex blob id")
+    if not receipt["run"].get("generator_files"):
+        problems.append("run: generator_files is empty")
     units = receipt["units"]
-    if units.get("k") != K_UNIT or units.get("length") != "mm":
-        problems.append("units: expected length=mm and k=MPa*sqrt(m)")
+    if units.get("length") != "mm" or units.get("force") != "N":
+        problems.append("units: expected length=mm and force=N")
+    if kind in CRACKED_KINDS and units.get("k") != K_UNIT:
+        problems.append("units: expected k=MPa*sqrt(m)")
     levels = []
     for i, mesh in enumerate(receipt["meshes"]):
         where = f"meshes[{i}]"
@@ -605,14 +732,31 @@ def validate_receipt_schema(receipt: dict) -> list[str]:
             problems.append(f"{where}: not an object")
             continue
         _check_fields(mesh, _REQUIRED_MESH, where, problems)
+        if isinstance(mesh.get("run"), dict):
+            _check_fields(mesh["run"], _REQUIRED_MESH_RUN, f"{where}.run", problems)
         if not re.fullmatch(r"[0-9a-f]{64}", str(mesh.get("deck_sha256", ""))):
             problems.append(f"{where}: deck_sha256 is not a 64-hex digest")
+        arts = mesh.get("artifacts", {}) if isinstance(mesh.get("artifacts"), dict) else {}
+        needed = ("reac", "cint") if kind in CRACKED_KINDS else ("reac",)
+        for name in needed:
+            if name not in arts:
+                problems.append(f"{where}.artifacts: missing '{name}'")
+        for name, art in arts.items():
+            if not isinstance(art, dict) or not re.fullmatch(
+                r"[0-9a-f]{64}", str(art.get("sha256", ""))
+            ) or not isinstance(art.get("path"), str):
+                problems.append(f"{where}.artifacts.{name}: needs path and sha256")
         levels.append(mesh.get("level"))
         for j, node in enumerate(mesh.get("front", [])):
             for key in ("node", "phi_deg", "contours", "K1_reported"):
                 if key not in node:
                     problems.append(f"{where}.front[{j}]: missing '{key}'")
-    if len(levels) != 2:
+        if kind in CRACKED_KINDS and not mesh.get("front"):
+            problems.append(f"{where}: cracked model with an empty front")
+    if kind == "limit_load":
+        if len(levels) not in (1, 2):
+            problems.append("meshes: one or two mesh densities required")
+    elif len(levels) != 2:
         problems.append("meshes: exactly two mesh densities required")
     if receipt["primary_level"] not in levels:
         problems.append("primary_level is not one of the mesh levels")
@@ -620,11 +764,12 @@ def validate_receipt_schema(receipt: dict) -> list[str]:
     if missing_guards:
         problems.append(f"guards: missing {sorted(missing_guards)}")
     for name, g in receipt["guards"].items():
-        if not isinstance(g, dict) or g.get("status") not in ("pass", "fail"):
-            problems.append(f"guards.{name}: status must be 'pass' or 'fail'")
-    for key in ("deepest", "surface"):
-        if key not in receipt["comparator"]:
-            problems.append(f"comparator: missing '{key}'")
+        if not isinstance(g, dict) or g.get("status") not in GUARD_STATUSES:
+            problems.append(f"guards.{name}: status must be one of {GUARD_STATUSES}")
+    if kind == "verification":
+        for key in ("deepest", "surface"):
+            if key not in receipt["comparator"]:
+                problems.append(f"comparator: missing '{key}'")
     return problems
 
 
@@ -635,8 +780,10 @@ def evaluate_receipt_guards(
 
     (a), (b) and (c) are recomputed from the recorded reactions and per-contour
     values; (d) from the declared counts; (e) on the receipt text; (f) from the
-    recorded unit tags.
+    recorded unit tags. Models without a crack front report (c) and (d) as
+    ``not_applicable``.
     """
+    cracked = receipt.get("kind", "verification") in CRACKED_KINDS
     reactions = {}
     fronts = {}
     missing = 0
@@ -647,6 +794,7 @@ def evaluate_receipt_guards(
             stress_mpa=r.get("stress_mpa"),
             loaded_area_mm2=r.get("loaded_area_mm2"),
             fz_ligament=r.get("fz_ligament_n"),
+            reaction_sum=r.get("reaction_sum_n", r.get("fz_ligament_n")),
         )
         fronts[mesh["level"]] = mesh["front"]
         if len(mesh["front"]) != mesh["declared_front_nodes"]:
@@ -658,19 +806,26 @@ def evaluate_receipt_guards(
                 if any(c.get(k) is None for k in ("K1", "K2", "K3", "J")):
                     missing += 1
     units = receipt["units"]
-    unit_ok = (
-        all(units.get(k) == v for k, v in EXPECTED_BASE_UNITS.items())
-        and units.get("k") == K_UNIT
-        and units.get("k_raw") == RAW_K_UNIT
-        and units.get("j") == J_UNIT
-        and math.isclose(float(units.get("k_conversion_factor", 0.0)), K_RAW_TO_SI,
-                         rel_tol=1e-12)
-    )
+    unit_ok = all(units.get(k) == v for k, v in EXPECTED_BASE_UNITS.items())
+    if cracked:
+        unit_ok = unit_ok and (
+            units.get("k") == K_UNIT
+            and units.get("k_raw") == RAW_K_UNIT
+            and units.get("j") == J_UNIT
+            and math.isclose(
+                float(units.get("k_conversion_factor", 0.0)), K_RAW_TO_SI, rel_tol=1e-12
+            )
+        )
+    single = receipt.get("kind") == "limit_load" and len(reactions) == 1
     return {
         "a_equilibrium": guard_equilibrium(reactions),
-        "b_mesh_load": guard_mesh_load(reactions),
-        "c_contour": guard_contour(fronts),
-        "d_complete": GuardResult(_pass(missing == 0), float(missing), 0.0, "recorded"),
+        "b_mesh_load": single_mesh_not_applicable() if single else guard_mesh_load(reactions),
+        "c_contour": guard_contour(fronts) if cracked else _not_applicable(),
+        "d_complete": (
+            GuardResult(_pass(missing == 0), float(missing), 0.0, "recorded")
+            if cracked
+            else _not_applicable()
+        ),
         "e_sanitised": guard_sanitised(
             [json.dumps(receipt, sort_keys=True)], extra_tokens
         ),

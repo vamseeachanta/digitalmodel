@@ -752,6 +752,12 @@ MESHING_APPROACH = (
 )
 
 
+GENERATOR_FILES = (
+    "src/digitalmodel/ansys/crack_verification.py",
+    "src/digitalmodel/ansys/cint_parser.py",
+)
+
+
 def _producing_commit(repo_dir: Path) -> tuple[str, bool]:
     def git(*args: str) -> str:
         return subprocess.run(  # nosec B603 B607 - fixed argv, no shell
@@ -763,8 +769,19 @@ def _producing_commit(repo_dir: Path) -> tuple[str, bool]:
         ).stdout.strip()
 
     sha = git("rev-parse", "HEAD")
-    dirty = git("status", "--porcelain", "--", "src/digitalmodel/ansys")
+    dirty = git("status", "--porcelain", "--", *GENERATOR_FILES)
     return sha, dirty == ""
+
+
+def save_artifact(text: str, base_dir: Path, rel_path: str) -> dict:
+    """Write host-free solver output under ``base_dir`` (LF) and describe it."""
+    from digitalmodel.ansys.crack_receipt import text_sha256
+
+    norm = text.replace("\r\n", "\n")
+    out = Path(base_dir) / rel_path
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_bytes(norm.encode("utf-8"))
+    return {"path": rel_path, "sha256": text_sha256(norm)}
 
 
 def run_verification(
@@ -782,14 +799,21 @@ def run_verification(
     from digitalmodel.ansys.runner import ANSYSRunConfig, ANSYSRunner, ANSYSRunStatus
     from digitalmodel.asset_integrity.assessment.crack_fad import newman_raju_k
 
+    from digitalmodel.ansys.crack_receipt import generator_blobs
+
     base = spec or CrackPlateSpec()
     workdir = Path(workdir)
+    receipt_out = Path(receipt_path)
+    geometry = {
+        "type": "ellipse",
+        "a": base.crack_depth_mm,
+        "c": base.crack_half_length_mm,
+    }
     # shared-memory: a distributed (MPI) run was seen to hang after a FATAL
     extra = ["-smp", "-np", str(cores)]
     cint_texts: dict[int, str] = {}
     reac_texts: dict[int, str] = {}
     meshes = []
-    argv = None
     for lv in levels:
         s = CrackPlateSpec(**{**asdict(base), "mesh_level": lv})
         run_dir = workdir / f"L{lv}"
@@ -816,33 +840,40 @@ def run_verification(
             f"{deck.stem}.out",
             *extra,
         ]
-        cint_texts[lv] = (run_dir / f"{cint_table_name(lv)}.txt").read_text()
-        reac_texts[lv] = (run_dir / f"{reaction_file_name(lv)}.txt").read_text()
+        cint_name = f"{cint_table_name(lv)}.txt"
+        reac_name = f"{reaction_file_name(lv)}.txt"
+        cint_texts[lv] = (run_dir / cint_name).read_bytes().decode("utf-8")
+        reac_texts[lv] = (run_dir / reac_name).read_bytes().decode("utf-8")
+        solved = f"solved/{RECEIPT_STATE}"
+        artifacts = {
+            "cint": save_artifact(cint_texts[lv], receipt_out.parent, f"{solved}/{cint_name}"),
+            "reac": save_artifact(reac_texts[lv], receipt_out.parent, f"{solved}/{reac_name}"),
+        }
         mesh = build_mesh(s)
         record = cint_parser.build_mesh_record(
             level=lv,
             cint_text=cint_texts[lv],
             reac_text=reac_texts[lv],
-            crack_depth_mm=s.crack_depth_mm,
-            crack_half_length_mm=s.crack_half_length_mm,
+            front_geometry=geometry,
         )
+        rev_lv = cint_parser.parse_reaction_file(reac_texts[lv]).mapdl_rev or ""
         record = {
             "level": lv,
             "deck_sha256": deck_sha256(text),
+            "run": {
+                "argv": argv,
+                "mapdl_version": rev_lv,
+                "solve_seconds": round(result.duration_seconds, 1),
+            },
+            "artifacts": artifacts,
             "n_nodes": len(mesh.nodes),
             "n_elements": len(mesh.elements),
             "mesh_parameters": mesh_parameters(s),
-            "solve_seconds": round(result.duration_seconds, 1),
             **{k: v for k, v in record.items() if k != "level"},
         }
         meshes.append(record)
 
-    guards = cint_parser.evaluate_guards(
-        cint_texts,
-        reac_texts,
-        crack_depth_mm=base.crack_depth_mm,
-        crack_half_length_mm=base.crack_half_length_mm,
-    )
+    guards = cint_parser.evaluate_guards(cint_texts, reac_texts, front_geometry=geometry)
     primary_level = max(levels)
     primary = next(m for m in meshes if m["level"] == primary_level)
     rev = cint_parser.parse_reaction_file(reac_texts[primary_level]).mapdl_rev or ""
@@ -874,8 +905,10 @@ def run_verification(
     receipt = {
         "schema": cint_parser.RECEIPT_SCHEMA_ID,
         "state": RECEIPT_STATE,
+        "kind": "verification",
         "issue": 2157,
         "spec": {k: v for k, v in asdict(base).items() if k != "mesh_level"},
+        "front_geometry": geometry,
         "units": {
             "length": "mm",
             "force": "N",
@@ -894,9 +927,9 @@ def run_verification(
         "run": {
             "producing_commit": commit,
             "generator_tree_clean": clean,
+            "generator_files": generator_blobs(repo_dir, commit, list(GENERATOR_FILES)),
             "mapdl_version": rev,
             "mapdl_release": _release_name(rev),
-            "argv": argv or [],
             "cores": cores,
             "platform": platform.system().lower(),
             "solver_wrapper": "digitalmodel.ansys fail-closed MAPDL subprocess (#940)",
@@ -911,9 +944,8 @@ def run_verification(
         },
         "guards": {name: g.to_dict() for name, g in guards.items()},
     }
-    out = Path(receipt_path)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_bytes((json.dumps(receipt, indent=1) + "\n").encode("utf-8"))
+    receipt_out.parent.mkdir(parents=True, exist_ok=True)
+    receipt_out.write_bytes((json.dumps(receipt, indent=1) + "\n").encode("utf-8"))
     return receipt
 
 

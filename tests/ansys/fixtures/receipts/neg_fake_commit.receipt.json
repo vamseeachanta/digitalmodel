@@ -1,0 +1,14 @@
+{
+ "schema": "digitalmodel.crack_fe.receipt/v2",
+ "state": "neg_fake_commit",
+ "kind": "verification",
+ "note": "Negative provenance fixture: a well-formed but fake 40-hex producing commit and a dirty generator tree. provenance_problems() must reject it for both reasons.",
+ "run": {
+  "producing_commit": "0123456789abcdef0123456789abcdef01234567",
+  "generator_tree_clean": false,
+  "generator_files": {
+   "src/digitalmodel/ansys/crack_verification.py": "89abcdef0123456789abcdef0123456789abcdef",
+   "src/digitalmodel/ansys/cint_parser.py": "fedcba9876543210fedcba9876543210fedcba98"
+  }
+ }
+}

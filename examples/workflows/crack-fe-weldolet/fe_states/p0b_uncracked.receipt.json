@@ -1,0 +1,514 @@
+{
+ "schema": "digitalmodel.crack_fe.receipt/v2",
+ "state": "p0b_uncracked",
+ "kind": "weldolet_uncracked",
+ "issue": 2157,
+ "spec": {
+  "run_od_mm": 168.3,
+  "run_wall_mm": 7.11,
+  "branch_od_mm": 21.34,
+  "branch_wall_mm": 2.77,
+  "weldolet_a_mm": 19.05,
+  "weldolet_b_mm": 34.93,
+  "weldolet_c_mm": 23.81,
+  "root_gap_mm": 1.6,
+  "bevel_deg": 45.0,
+  "fillet_leg_mm": 3.0,
+  "run_half_length_mm": 200.0,
+  "branch_length_mm": 40.0,
+  "pressure_mpa": 4.7,
+  "youngs_modulus_mpa": 182500.0,
+  "poisson": 0.3,
+  "yield_mpa": 127.0,
+  "crack_depth_mm": null,
+  "crack_face_pressure": true,
+  "tube_radius_mm": 0.8
+ },
+ "design_basis": "examples/workflows/crack-fe-weldolet/design-data-register.json",
+ "units": {
+  "length": "mm",
+  "force": "N",
+  "stress": "MPa",
+  "k": "MPa*sqrt(m)",
+  "k_raw": "MPa*sqrt(mm)",
+  "k_conversion_factor": 0.03162277660168379,
+  "j": "N/mm"
+ },
+ "meshing": {
+  "approach": "Structured 20-node hexahedral mesh (SOLID186) generated in Python and written as N/E commands. In the (rho, v) section a square tube of half-size d around the crack front carries a 360 deg spider-web of rings, the innermost ring collapsed onto the tip (degenerate prism) with quarter-point mid-side nodes, with separate upper and lower crack-face nodes (the P0a crack block extended from 180 to 360 deg); tensor blocks in the run-pipe wall and a column-fraction block following the weld/weldolet contour; the section swept through 360 deg about the branch axis (closed crack front, no end nodes); an O-block and a tensor mesh for the rest of the run pipe. CINT crack-extension directions per front node (CINT,CENC) in the fusion face, normal to the front.",
+  "element": "SOLID186 (20-node, full integration)",
+  "k_reported": "mean over contours 4-6",
+  "contour_guard_quantities": [
+   "K1",
+   "J"
+  ],
+  "modelling_route": "global structured crack-block model (no submodel)",
+  "start_node_correction": "K at front node 1 from a second SIFS definition starting at node 2 (MAPDL 2026 R1 perturbs K at the first CENC node of a closed front; J is unaffected); sign factors from reference node 3"
+ },
+ "run": {
+  "producing_commit": "b4ea0f12e434ed9fafc9e1ada853e80308b74b3d",
+  "generator_tree_clean": true,
+  "generator_files": {
+   "src/digitalmodel/ansys/weldolet_crack.py": "4d8aaa439defcb72e78fff732b5fc52f34ae4283",
+   "src/digitalmodel/ansys/crack_verification.py": "aefde929d711884b55ac317cbe3208265114cd63",
+   "src/digitalmodel/ansys/cint_parser.py": "841b09d2e92d267e3400e9632829d50d41e19c97"
+  },
+  "mapdl_version": "26.1",
+  "mapdl_release": "2026 R1",
+  "cores": 4,
+  "platform": "windows",
+  "solver_wrapper": "digitalmodel.ansys fail-closed MAPDL subprocess (#940)"
+ },
+ "meshes": [
+  {
+   "level": 0,
+   "deck_sha256": "1fe39dedb1c03181f85ae9911564f32790eed9e0dfc3164eb7839757666ff579",
+   "run": {
+    "argv": [
+     "MAPDL.exe",
+     "-b",
+     "-i",
+     "p0b_uncracked_L0.inp",
+     "-o",
+     "p0b_uncracked_L0.out",
+     "-smp",
+     "-np",
+     "4"
+    ],
+    "mapdl_version": "26.1",
+    "solve_seconds": 151.0
+   },
+   "artifacts": {
+    "reac": {
+     "path": "solved/p0b_uncracked/weldolet_reac_L0.txt",
+     "sha256": "259516782cc2012ec50435de08deef27d6a3429a809abde4c159c4b0e89d1201"
+    },
+    "path": {
+     "path": "solved/p0b_uncracked/weldolet_path_L0.txt",
+     "sha256": "623539650150e9cb4df016727f6db07d66b881cf8d67761269e7200b2ac49673"
+    },
+    "hoop": {
+     "path": "solved/p0b_uncracked/weldolet_hoop_L0.txt",
+     "sha256": "8da57e1a462b1f13694d7ac6cfcb2fc6a9f3b91386193c3b62a8002a490087d5"
+    }
+   },
+   "n_nodes": 285309,
+   "n_elements": 67576,
+   "mesh_parameters": {
+    "level": 0,
+    "front_divisions": 64,
+    "first_ring_mm": 0.0235,
+    "ring_ratio_target": 1.35,
+    "tube_side_divisions": 3,
+    "tube_radius_mm": 0.8,
+    "patch_radius_mm": 36.0,
+    "square_half_mm": 56.0,
+    "band_divisions": 28,
+    "o_block_divisions": 4
+   },
+   "declared_front_nodes": 0,
+   "declared_contours": 0,
+   "reactions": {
+    "stress_mpa": 4.7,
+    "loaded_area_mm2": 18645.8600804,
+    "reaction_sum_n": -87635.3998446,
+    "fz_ligament_n": null,
+    "fx_symmetry_n": null,
+    "fy_point_n": null,
+    "n_ligament_nodes": null,
+    "extras": {
+     "n_fixed_nodes": 1012.0,
+     "reaction_y_sum": -3.37472537737e-06,
+     "reaction_z_sum": 1.7709014557e-06
+    }
+   },
+   "front": [],
+   "derived": {
+    "sigma_ref": {
+     "basis": "FE-linearised stress normal to the fusion face, uncracked model (owner card B02); paths from the root (rho = C/2) to the fillet toe on v = 0",
+     "paths": [
+      {
+       "path": 1,
+       "theta_deg": 0.0,
+       "start_xyz_mm": [
+        11.905,
+        0.0,
+        84.15
+       ],
+       "end_xyz_mm": [
+        20.465,
+        0.0,
+        84.15
+       ],
+       "length_mm": 8.56,
+       "n_samples": 129,
+       "component": "SRR (normal to the fusion face, CS 11 radial)",
+       "sigma_m_mpa": 3.4300545709743755,
+       "sigma_b_mpa": 4.607347974608784,
+       "shear_rh_membrane_mpa": 3.647880080478438e-10,
+       "shear_ra_membrane_mpa": -6.337278444669571,
+       "peak_srr_mpa": 15.59924173
+      },
+      {
+       "path": 2,
+       "theta_deg": 45.0,
+       "start_xyz_mm": [
+        8.41810623,
+        8.41810623,
+        83.72788059
+       ],
+       "end_xyz_mm": [
+        14.47094028,
+        14.47094028,
+        82.89640757
+       ],
+       "length_mm": 8.601246778,
+       "n_samples": 129,
+       "component": "SRR (normal to the fusion face, CS 11 radial)",
+       "sigma_m_mpa": 1.317735377110225,
+       "sigma_b_mpa": -2.9957723494633166,
+       "shear_rh_membrane_mpa": 6.4850808787964676,
+       "shear_ra_membrane_mpa": -3.844061331234873,
+       "peak_srr_mpa": 19.4669356
+      },
+      {
+       "path": 3,
+       "theta_deg": 90.0,
+       "start_xyz_mm": [
+        0.0,
+        11.905,
+        83.30362222
+       ],
+       "end_xyz_mm": [
+        0.0,
+        20.465,
+        81.62356446
+       ],
+       "length_mm": 8.727208635,
+       "n_samples": 129,
+       "component": "SRR (normal to the fusion face, CS 11 radial)",
+       "sigma_m_mpa": -0.5657399328010305,
+       "sigma_b_mpa": -11.292622735596085,
+       "shear_rh_membrane_mpa": 9.17100983411439,
+       "shear_ra_membrane_mpa": 7.2443149315623e-09,
+       "peak_srr_mpa": 24.10725434
+      }
+     ]
+    },
+    "plausibility": {
+     "hoop": {
+      "location": {
+       "x_mm": 100.0,
+       "psi_deg": 180.0,
+       "radius": "mean radius R_m"
+      },
+      "radius_mm": 80.595,
+      "radius_offset_from_rm_mm": 0.0,
+      "fe_hoop_mpa": 51.03015614,
+      "fe_axial_mpa": 24.35660887,
+      "fe_radial_mpa": -2.3570503,
+      "comparator": "barlow_id_hoop_mpa",
+      "comparator_mpa": 50.926582278481014,
+      "lame_at_rm_mpa": 50.87485453099427,
+      "axial_closed_end_mpa": 24.34011972662187,
+      "relative_error": 0.0020337877957845585,
+      "tolerance": 0.02,
+      "within_tolerance": true,
+      "relative_error_vs_lame_at_rm": 0.003052620207712131
+     }
+    }
+   }
+  },
+  {
+   "level": 1,
+   "deck_sha256": "66abb994643acbed86fd9a7446ea556a2b60da690bcd0800547f9287eaeb222c",
+   "run": {
+    "argv": [
+     "MAPDL.exe",
+     "-b",
+     "-i",
+     "p0b_uncracked_L1.inp",
+     "-o",
+     "p0b_uncracked_L1.out",
+     "-smp",
+     "-np",
+     "4"
+    ],
+    "mapdl_version": "26.1",
+    "solve_seconds": 376.3
+   },
+   "artifacts": {
+    "reac": {
+     "path": "solved/p0b_uncracked/weldolet_reac_L1.txt",
+     "sha256": "d6eb86cff2a5d6606ecb203e92f31e6f0ddc53456abbacada207c15b3fe90f6d"
+    },
+    "path": {
+     "path": "solved/p0b_uncracked/weldolet_path_L1.txt",
+     "sha256": "9c851b50861651cd491c7cc42deb21ed1bcb950cbd5a7f0f597656474f3f994a"
+    },
+    "hoop": {
+     "path": "solved/p0b_uncracked/weldolet_hoop_L1.txt",
+     "sha256": "03caea88a5719c38e8add840e87d4dedfed47e4808ea19f5f74d8fedae494a89"
+    }
+   },
+   "n_nodes": 575469,
+   "n_elements": 136984,
+   "mesh_parameters": {
+    "level": 1,
+    "front_divisions": 128,
+    "first_ring_mm": 0.01175,
+    "ring_ratio_target": 1.35,
+    "tube_side_divisions": 3,
+    "tube_radius_mm": 0.8,
+    "patch_radius_mm": 36.0,
+    "square_half_mm": 56.0,
+    "band_divisions": 28,
+    "o_block_divisions": 4
+   },
+   "declared_front_nodes": 0,
+   "declared_contours": 0,
+   "reactions": {
+    "stress_mpa": 4.7,
+    "loaded_area_mm2": 18645.8600804,
+    "reaction_sum_n": -87635.4015775,
+    "fz_ligament_n": null,
+    "fx_symmetry_n": null,
+    "fy_point_n": null,
+    "n_ligament_nodes": null,
+    "extras": {
+     "n_fixed_nodes": 1380.0,
+     "reaction_y_sum": -3.0913896012e-06,
+     "reaction_z_sum": 1.94364212192e-06
+    }
+   },
+   "front": [],
+   "derived": {
+    "sigma_ref": {
+     "basis": "FE-linearised stress normal to the fusion face, uncracked model (owner card B02); paths from the root (rho = C/2) to the fillet toe on v = 0",
+     "paths": [
+      {
+       "path": 1,
+       "theta_deg": 0.0,
+       "start_xyz_mm": [
+        11.905,
+        0.0,
+        84.15
+       ],
+       "end_xyz_mm": [
+        20.465,
+        0.0,
+        84.15
+       ],
+       "length_mm": 8.56,
+       "n_samples": 129,
+       "component": "SRR (normal to the fusion face, CS 11 radial)",
+       "sigma_m_mpa": 3.4522436515705484,
+       "sigma_b_mpa": 4.588417494124302,
+       "shear_rh_membrane_mpa": 7.453945790795392e-10,
+       "shear_ra_membrane_mpa": -6.3309030307055085,
+       "peak_srr_mpa": 15.63194942
+      },
+      {
+       "path": 2,
+       "theta_deg": 45.0,
+       "start_xyz_mm": [
+        8.41810623,
+        8.41810623,
+        83.72788059
+       ],
+       "end_xyz_mm": [
+        14.47094028,
+        14.47094028,
+        82.89640757
+       ],
+       "length_mm": 8.601246778,
+       "n_samples": 129,
+       "component": "SRR (normal to the fusion face, CS 11 radial)",
+       "sigma_m_mpa": 1.317711740635179,
+       "sigma_b_mpa": -2.9975775942164,
+       "shear_rh_membrane_mpa": 6.485931620143471,
+       "shear_ra_membrane_mpa": -3.8370915654830786,
+       "peak_srr_mpa": 19.46852088
+      },
+      {
+       "path": 3,
+       "theta_deg": 90.0,
+       "start_xyz_mm": [
+        0.0,
+        11.905,
+        83.30362222
+       ],
+       "end_xyz_mm": [
+        0.0,
+        20.465,
+        81.62356446
+       ],
+       "length_mm": 8.727208635,
+       "n_samples": 129,
+       "component": "SRR (normal to the fusion face, CS 11 radial)",
+       "sigma_m_mpa": -0.5817168190079792,
+       "sigma_b_mpa": -11.274351863745215,
+       "shear_rh_membrane_mpa": 9.16359650750161,
+       "shear_ra_membrane_mpa": 7.116973330594345e-09,
+       "peak_srr_mpa": 24.08642942
+      }
+     ]
+    },
+    "plausibility": {
+     "hoop": {
+      "location": {
+       "x_mm": 100.0,
+       "psi_deg": 180.0,
+       "radius": "mean radius R_m"
+      },
+      "radius_mm": 80.595,
+      "radius_offset_from_rm_mm": 0.0,
+      "fe_hoop_mpa": 51.03015137,
+      "fe_axial_mpa": 24.35657644,
+      "fe_radial_mpa": -2.357057571,
+      "comparator": "barlow_id_hoop_mpa",
+      "comparator_mpa": 50.926582278481014,
+      "lame_at_rm_mpa": 50.87485453099427,
+      "axial_closed_end_mpa": 24.34011972662187,
+      "relative_error": 0.0020336941315370893,
+      "tolerance": 0.02,
+      "within_tolerance": true,
+      "relative_error_vs_lame_at_rm": 0.003052526448230397
+     }
+    }
+   }
+  }
+ ],
+ "primary_level": 1,
+ "guards": {
+  "a_equilibrium": {
+   "status": "pass",
+   "value": 1.6264323372245303e-06,
+   "limit": 0.005,
+   "detail": "|sum RF_z + sigma*A| / sigma*A"
+  },
+  "b_mesh_load": {
+   "status": "pass",
+   "value": 1.977397222326831e-08,
+   "limit": 0.001,
+   "detail": "|RF_z(L0) - RF_z(L1)| / |RF_z(L1)|"
+  },
+  "c_contour": {
+   "status": "not_applicable",
+   "value": null,
+   "limit": null,
+   "detail": "not applicable: the model has no crack front"
+  },
+  "d_complete": {
+   "status": "not_applicable",
+   "value": null,
+   "limit": null,
+   "detail": "not applicable: the model has no crack front"
+  },
+  "e_sanitised": {
+   "status": "pass",
+   "value": 0.0,
+   "limit": 0.0,
+   "detail": ""
+  },
+  "f_units": {
+   "status": "pass",
+   "value": 0.0,
+   "limit": 0.0,
+   "detail": ""
+  }
+ },
+ "sigma_ref": {
+  "basis": "FE-linearised stress normal to the fusion face, uncracked model (owner card B02); paths from the root (rho = C/2) to the fillet toe on v = 0",
+  "paths": [
+   {
+    "path": 1,
+    "theta_deg": 0.0,
+    "start_xyz_mm": [
+     11.905,
+     0.0,
+     84.15
+    ],
+    "end_xyz_mm": [
+     20.465,
+     0.0,
+     84.15
+    ],
+    "length_mm": 8.56,
+    "n_samples": 129,
+    "component": "SRR (normal to the fusion face, CS 11 radial)",
+    "sigma_m_mpa": 3.4522436515705484,
+    "sigma_b_mpa": 4.588417494124302,
+    "shear_rh_membrane_mpa": 7.453945790795392e-10,
+    "shear_ra_membrane_mpa": -6.3309030307055085,
+    "peak_srr_mpa": 15.63194942
+   },
+   {
+    "path": 2,
+    "theta_deg": 45.0,
+    "start_xyz_mm": [
+     8.41810623,
+     8.41810623,
+     83.72788059
+    ],
+    "end_xyz_mm": [
+     14.47094028,
+     14.47094028,
+     82.89640757
+    ],
+    "length_mm": 8.601246778,
+    "n_samples": 129,
+    "component": "SRR (normal to the fusion face, CS 11 radial)",
+    "sigma_m_mpa": 1.317711740635179,
+    "sigma_b_mpa": -2.9975775942164,
+    "shear_rh_membrane_mpa": 6.485931620143471,
+    "shear_ra_membrane_mpa": -3.8370915654830786,
+    "peak_srr_mpa": 19.46852088
+   },
+   {
+    "path": 3,
+    "theta_deg": 90.0,
+    "start_xyz_mm": [
+     0.0,
+     11.905,
+     83.30362222
+    ],
+    "end_xyz_mm": [
+     0.0,
+     20.465,
+     81.62356446
+    ],
+    "length_mm": 8.727208635,
+    "n_samples": 129,
+    "component": "SRR (normal to the fusion face, CS 11 radial)",
+    "sigma_m_mpa": -0.5817168190079792,
+    "sigma_b_mpa": -11.274351863745215,
+    "shear_rh_membrane_mpa": 9.16359650750161,
+    "shear_ra_membrane_mpa": 7.116973330594345e-09,
+    "peak_srr_mpa": 24.08642942
+   }
+  ]
+ },
+ "plausibility": {
+  "hoop": {
+   "location": {
+    "x_mm": 100.0,
+    "psi_deg": 180.0,
+    "radius": "mean radius R_m"
+   },
+   "radius_mm": 80.595,
+   "radius_offset_from_rm_mm": 0.0,
+   "fe_hoop_mpa": 51.03015137,
+   "fe_axial_mpa": 24.35657644,
+   "fe_radial_mpa": -2.357057571,
+   "comparator": "barlow_id_hoop_mpa",
+   "comparator_mpa": 50.926582278481014,
+   "lame_at_rm_mpa": 50.87485453099427,
+   "axial_closed_end_mpa": 24.34011972662187,
+   "relative_error": 0.0020336941315370893,
+   "tolerance": 0.02,
+   "within_tolerance": true,
+   "relative_error_vs_lame_at_rm": 0.003052526448230397
+  }
+ }
+}
