@@ -17,7 +17,7 @@ headers_default = {
 class ReadDataFromSystemFiles():
 
     def get_file_list_from_folder(self, folder_with_file_type, with_path=True, with_extension=True):
-        folder_with_file_type_example = '<private-data>\*.log'
+        # folder_with_file_type example: r"<folder>\*.log"
 
         import glob
         import os

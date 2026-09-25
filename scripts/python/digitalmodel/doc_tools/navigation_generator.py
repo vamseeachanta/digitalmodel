@@ -20,8 +20,11 @@ import hashlib
 class NavigationGenerator:
     """Generates master navigation and taxonomy systems."""
     
-    def __init__(self, docs_root: str = "<private-data>\\docs"):
+    def __init__(self, docs_root: str | None = None):
         """Initialize navigation generator."""
+        # Default: this checkout's docs folder (was an absolute path).
+        if docs_root is None:
+            docs_root = Path(__file__).resolve().parents[4] / "docs"
         self.docs_root = Path(docs_root)
         self.category_descriptions = {
             "software": "Software tools, libraries, and development environments used in offshore engineering",

@@ -348,6 +348,8 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         filepath = sys.argv[1]
     else:
-        filepath = r"<private-data>\marine_analysis_data.xlsm"
+        from digitalmodel.infrastructure.utils.private_paths import private_data_path
+
+        filepath = str(private_data_path("marine_analysis_data.xlsm"))
 
     analyze_excel_file(filepath)

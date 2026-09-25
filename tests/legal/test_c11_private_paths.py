@@ -181,6 +181,17 @@ class TestPrivatePathHelper:
         assert got == tmp_path / "cfg" / "a.csv"
 
 
+def _import_quietly(modname: str):
+    """Import a legacy module whose unrelated invalid escape sequences raise
+    under the suite's warnings-as-errors setting."""
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", SyntaxWarning)
+        warnings.simplefilter("ignore", DeprecationWarning)
+        return importlib.import_module(modname)
+
+
 ACCESS_MODULES = [
     "digitalmodel.infrastructure.utils.database",
     "digitalmodel.asset_integrity.common.database",
@@ -198,7 +209,7 @@ class TestAccessDatabaseConnection:
     @pytest.mark.parametrize("modname", ACCESS_MODULES)
     def test_no_database_is_a_clear_error(self, modname, private_paths):
         try:
-            mod = importlib.import_module(modname)
+            mod = _import_quietly(modname)
         except Exception as exc:  # noqa: BLE001
             pytest.skip(f"{modname} does not import here: {exc}")
         db = object.__new__(mod.Database)
@@ -214,7 +225,7 @@ class TestAccessDatabaseConnection:
         import types
 
         try:
-            mod = importlib.import_module(modname)
+            mod = _import_quietly(modname)
         except Exception as exc:  # noqa: BLE001
             pytest.skip(f"{modname} does not import here: {exc}")
         seen = []

@@ -152,7 +152,7 @@ def create_minimal_with_test_box():
         'WaveHeading': [0],
         'Bodies': [{
             'BodyName': 'TestBox',
-            'BodyMeshFileName': '<private-data>\\test_box.gdf',
+            'BodyMeshFileName': str(Path(__file__).resolve().parents[4] / 'test_box.gdf'),
             'BodyMeshFormat': 'Wamit gdf',
             'BodyMeshLengthUnits': 'm',
             'BodyMeshPosition': [0, 0, 0],

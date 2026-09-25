@@ -48,8 +48,10 @@ ORCAWAVE_PATHS_WINDOWS = [
     r"C:\Program Files\Orcina\OrcaWave\OrcaWave.exe",
     r"C:\Program Files (x86)\Orcina\OrcaWave\OrcaWave.exe",
     r"C:\Program Files\Orcina\OrcaFlex\OrcaWave.exe",
-    r"<private-data>\OrcaWave.exe",
 ]
+# An install elsewhere is named by ORCAWAVE_EXE and searched first.
+if os.environ.get("ORCAWAVE_EXE"):
+    ORCAWAVE_PATHS_WINDOWS.insert(0, os.environ["ORCAWAVE_EXE"])
 
 ORCAWAVE_PATHS_LINUX = [
     "/usr/local/bin/orcawave",

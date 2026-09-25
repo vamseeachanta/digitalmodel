@@ -20,8 +20,11 @@ import time
 class ContentMigrator:
     """Handles systematic content migration with backward compatibility."""
     
-    def __init__(self, docs_root: str = "<private-data>\\docs"):
+    def __init__(self, docs_root: str | None = None):
         """Initialize migrator with docs root directory."""
+        # Default: this checkout's docs folder (was an absolute path).
+        if docs_root is None:
+            docs_root = Path(__file__).resolve().parents[4] / "docs"
         self.docs_root = Path(docs_root)
         self.analysis_file = self.docs_root / "docs_analysis_results.json"
         self.migration_log = []

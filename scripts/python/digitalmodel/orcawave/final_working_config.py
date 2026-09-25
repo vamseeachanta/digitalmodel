@@ -6,6 +6,14 @@ STICK TO THIS ONE MESH FILE - NO SWITCHING
 """
 
 import yaml
+from pathlib import Path
+
+#: This repository's diffraction geometry folder (was an absolute path).
+GEOMETRY_DIR = (
+    Path(__file__).resolve().parents[4]
+    / "specs" / "modules" / "orcawave" / "diffraction-analysis" / "inputs" / "geometry"
+)
+
 
 def create_final_working_config():
     """Create the final configuration using only small_box_test.gdf"""
@@ -65,7 +73,7 @@ def create_final_working_config():
             'BodyIncludedInAnalysis': True,
             
             # STICK TO THIS MESH FILE - NO CHANGING
-            'BodyMeshFileName': '<private-data>\\small_box_test.gdf',
+            'BodyMeshFileName': str(GEOMETRY_DIR / 'small_box_test.gdf'),
             'BodyMeshFormat': 'Wamit gdf',
             'BodyMeshLengthUnits': 'm',
             'BodyMeshSymmetry': 'None',

@@ -49,7 +49,12 @@ def WorkSheetRowNumberWithText(sh, KeyWordArray):
 
 
 if __name__ == "__main__":
-    FileName = "<private-data>\\Test.xlsx"
+    import sys
+
+    from digitalmodel.infrastructure.utils.private_paths import private_data_path
+
+    # The workbook: first argument, else under DIGITALMODEL_PRIVATE_DATA.
+    FileName = sys.argv[1] if len(sys.argv) > 1 else str(private_data_path("Test.xlsx"))
     Columns = ["Arc Length", "S-N Curve", "Theta", "Overall Damage", "Life (years)"]
     CustomData = {
         "FileName": FileName,

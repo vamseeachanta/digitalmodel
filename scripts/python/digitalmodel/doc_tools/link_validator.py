@@ -19,8 +19,11 @@ import yaml
 class LinkValidator:
     """Validates internal links and manages cross-references."""
     
-    def __init__(self, docs_root: str = "<private-data>\\docs"):
+    def __init__(self, docs_root: str | None = None):
         """Initialize validator with docs root directory."""
+        # Default: this checkout's docs folder (was an absolute path).
+        if docs_root is None:
+            docs_root = Path(__file__).resolve().parents[4] / "docs"
         self.docs_root = Path(docs_root)
         self.markdown_files = []
         self.link_patterns = [

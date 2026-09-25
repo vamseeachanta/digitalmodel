@@ -2,7 +2,10 @@
 REM daily_context_check.bat - Windows wrapper for daily context check
 REM Called by Windows Task Scheduler
 
-set WORKSPACE_ROOT=<private-data>\workspace-hub
+if not defined WORKSPACE_ROOT (
+    echo Set WORKSPACE_ROOT to the workspace-hub checkout.
+    exit /b 1
+)
 set PATH=%PATH%;C:\Program Files\Git\bin;C:\Program Files\Git\usr\bin
 
 cd /d %WORKSPACE_ROOT%

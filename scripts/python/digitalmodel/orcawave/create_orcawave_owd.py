@@ -4,6 +4,15 @@ Create a proper OrcaWave .owd file instead of YAML
 OrcaWave might be having issues with YAML import
 """
 
+from pathlib import Path
+
+#: This repository's diffraction geometry folder (was an absolute path).
+GEOMETRY_DIR = (
+    Path(__file__).resolve().parents[4]
+    / "specs" / "modules" / "orcawave" / "diffraction-analysis" / "inputs" / "geometry"
+)
+
+
 def create_minimal_owd():
     """Create a minimal .owd file in OrcaWave native format"""
     
@@ -11,7 +20,7 @@ def create_minimal_owd():
     
     # OrcaWave .owd files use a specific format
     # This is based on OrcaWave's native format structure
-    owd_content = """% OrcaWave version 11.5
+    owd_content = f"""% OrcaWave version 11.5
 % Minimal test configuration
 % Units: SI
 
@@ -49,7 +58,7 @@ Bodies
     
     Body 1
         Name = "TestBox"
-        MeshFile = "<private-data>\\simple_box_test.gdf"
+        MeshFile = "{GEOMETRY_DIR / 'simple_box_test.gdf'}"
         MeshFormat = "Wamit gdf"
         Mass = 1.0e5
         CentreOfMass = 0.0, 0.0, -1.0
@@ -103,9 +112,7 @@ Bodies:
 
 def check_gdf_file():
     """Check if the GDF file exists and show its path"""
-    from pathlib import Path
-    
-    gdf_path = Path("D:/github/digitalmodel/specs/modules/orcawave/diffraction-analysis/inputs/geometry/simple_box_test.gdf")
+    gdf_path = GEOMETRY_DIR / "simple_box_test.gdf"
     
     if gdf_path.exists():
         print(f"[OK] GDF file exists: {gdf_path}")
@@ -126,7 +133,7 @@ def check_gdf_file():
 def create_diagnostic_script():
     """Create a script to help diagnose the issue"""
     
-    diagnostic = """# OrcaWave Diagnostic Steps
+    diagnostic = f"""# OrcaWave Diagnostic Steps
 # Run these checks in order
 
 1. CHECK ORCAWAVE VERSION
@@ -136,7 +143,7 @@ def create_diagnostic_script():
 
 2. CHECK MESH FILE
    - File -> Open
-   - Navigate to: <private-data>\\
+   - Navigate to: {GEOMETRY_DIR}
    - Try opening: simple_box_test.gdf directly
    - If it opens, the mesh file is valid
 

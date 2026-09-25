@@ -19,29 +19,36 @@ def load_dxf_layer(dxf_filename, layer_name):
         QgsProject.instance().addMapLayer(vlayer)
 
 
-# Input Files
+# Input Files: the DXF folder is DIGITALMODEL_PRIVATE_DATA.
+import os
+
+DXF_DIR = os.environ.get("DIGITALMODEL_PRIVATE_DATA")
+if not DXF_DIR:
+    raise RuntimeError(
+        "Set DIGITALMODEL_PRIVATE_DATA to the folder holding the field-line DXF files."
+    )
 
 layer_name = "18inch_flowline_main"
-dxf_filename = r"<private-data>\18inch Flowline_4.dxf"
+dxf_filename = os.path.join(DXF_DIR, "18inch Flowline_4.dxf")
 load_dxf_layer(dxf_filename, layer_name)
 
 layer_name = "18inch_flowline_infield"
-dxf_filename = r"<private-data>\18inch Flowline_4.1.dxf"
+dxf_filename = os.path.join(DXF_DIR, "18inch Flowline_4.1.dxf")
 load_dxf_layer(dxf_filename, layer_name)
 
 layer_name = "umbilical_main"
-dxf_filename = r"<private-data>\Main Umbilical_2.1.dxf"
+dxf_filename = os.path.join(DXF_DIR, "Main Umbilical_2.1.dxf")
 load_dxf_layer(dxf_filename, layer_name)
 
 layer_name = "umbilical_infield"
-dxf_filename = r"<private-data>\Main Infield Umbilical_2.1.dxf"
+dxf_filename = os.path.join(DXF_DIR, "Main Infield Umbilical_2.1.dxf")
 load_dxf_layer(dxf_filename, layer_name)
 
 layer_name = "4inch_ct"
-dxf_filename = r"<private-data>\4inch Coiled Pipeline_2.1.dxf"
+dxf_filename = os.path.join(DXF_DIR, "4inch Coiled Pipeline_2.1.dxf")
 load_dxf_layer(dxf_filename, layer_name)
 
 layer_name = "4inch_saline"
-dxf_filename = r"<private-data>\4inch Saline Diffuser Line_2.1.dxf"
+dxf_filename = os.path.join(DXF_DIR, "4inch Saline Diffuser Line_2.1.dxf")
 load_dxf_layer(dxf_filename, layer_name)
 

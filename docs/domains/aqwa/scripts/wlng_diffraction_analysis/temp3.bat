@@ -1,5 +1,9 @@
-"C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind <private-data>\F_125K_LNGC_L00_DAMPNO
-"C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind <private-data>\F_125K_LNGC_L99_DAMPNO
+if not defined DIGITALMODEL_PRIVATE_DATA (
+    echo Set DIGITALMODEL_PRIVATE_DATA to the folder that holds the model files.
+    exit /b 1
+)
+"C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind %DIGITALMODEL_PRIVATE_DATA%\F_125K_LNGC_L00_DAMPNO
+"C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind %DIGITALMODEL_PRIVATE_DATA%\F_125K_LNGC_L99_DAMPNO
 
-"C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind <private-data>\F_180K_LNGC_L00_DAMPNO
-"C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind <private-data>\F_180K_LNGC_L99_DAMPNO
+"C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind %DIGITALMODEL_PRIVATE_DATA%\F_180K_LNGC_L00_DAMPNO
+"C:\Program Files\ANSYS Inc\v182\aqwa\bin\winx64\aqwa.exe" /nowind %DIGITALMODEL_PRIVATE_DATA%\F_180K_LNGC_L99_DAMPNO

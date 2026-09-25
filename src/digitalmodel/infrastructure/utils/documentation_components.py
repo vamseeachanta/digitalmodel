@@ -119,7 +119,9 @@ if __name__ == '__main__':
     except Exception as e:
         print("Error: {}".format(e))
         print("Enter physical path for running")
-        parent_path = str(Path('<private-data>/aceengineer'))
+        from digitalmodel.infrastructure.utils.private_paths import private_data_path
+
+        parent_path = str(private_data_path("aceengineer"))
 
     jl.output_from_template_example1(searchpath=parent_path)
     # pdfkit unit tests
