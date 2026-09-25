@@ -182,12 +182,14 @@ class TestMinersRule:
     def test_single_constant_amplitude_damage(self):
         """
         For one stress range S with N cycles:
-        N_allowable = A * S^(-m) (DNV-D: A=5.73e11, m=3)
-        damage = N / N_allowable
+        N_allowable = A * S^(-m) (DNV-D in air, DNV-RP-C203 2011 Table 2-1:
+        A = 10^12.164, m = 3; #2165, was 5.73e11)
+        S = 100 MPa: N_allowable = 1.45881e12 / 1e6 = 1,458,814
+        damage = 10000 / 1,458,814 = 0.0068549
         """
         S = 100.0
         n = 10000.0
-        A = 5.73e11
+        A = 10**12.164
         m = 3.0
         N_allow = A * (S ** (-m))
         expected_damage = n / N_allow

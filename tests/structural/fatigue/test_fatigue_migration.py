@@ -58,17 +58,18 @@ class TestSNCurveMigration:
 
     def test_basic_sn_curve_calculations(self):
         """Test basic S-N curve calculations match expected values"""
-        # DNV-D curve (from legacy data)
-        # DNV-D: A=5.73e11, m=3.0, fatigue_limit=52.63
+        # DNV-D curve, DNV-RP-C203 (2011) Table 2-1 in air (#2165):
+        # A = 10^12.164 = 1.45881e12, m = 3.0, fatigue_limit = 52.63
+        # (the legacy A = 5.73e11 was not a Table 2-1 value)
         curve = get_dnv_curve('D')
 
         # Test specific stress-life points
-        # Formula: N = A / S^m = 5.73e11 / S^3
+        # Formula: N = A / S^m = 10^12.164 / S^3
         test_cases = [
-            (100.0, 5.73e5),   # High stress: 5.73e11 / 100^3 = 573,000
-            (60.0, 2.65e6),    # Medium stress: 5.73e11 / 60^3 = 2,652,778
-            (52.63, np.inf),   # At fatigue limit - infinite life
-            (40.0, np.inf),    # Below fatigue limit - infinite life
+            (100.0, 1.4588e6),  # High stress: 1.45881e12 / 100^3 = 1,458,814
+            (60.0, 6.754e6),  # Medium stress: 1.45881e12 / 60^3 = 6,753,770
+            (52.63, np.inf),  # At fatigue limit - infinite life
+            (40.0, np.inf),  # Below fatigue limit - infinite life
         ]
 
         for stress, expected_cycles in test_cases:
@@ -468,29 +469,31 @@ class TestComprehensiveIntegration:
     def test_multislope_vs_single_slope_comparison(self):
         """Test that multi-slope curves behave correctly and both curves follow S-N principles"""
         # Create comparable single and multi-slope curves
-        # DNV-D: A=5.73e11, m=3.0, fatigue_limit=52.63
+        # DNV-D, DNV-RP-C203 (2011) Table 2-1 (#2165): A = 10^12.164, m = 3.0,
+        # fatigue_limit = 52.63
         single_curve = get_dnv_curve('D')
+        A1 = 10**12.164
 
         # Create a multi-slope curve that matches single slope in first region
         # Use same A and m for first slope, then transition to steeper slope
-        # Transition at 2e6 cycles means transition_stress = (5.73e11 / 2e6)^(1/3) = ~66.2 MPa
+        # Transition at 2e6 cycles means
+        # transition_stress = (1.45881e12 / 2e6)^(1/3) = 90.0 MPa
         transition_cycles = 2e6
-        transition_stress = (5.73e11 / transition_cycles) ** (1/3.0)  # ~66.2 MPa
+        transition_stress = (A1 / transition_cycles) ** (1 / 3.0)  # 90.0 MPa
 
         # For continuity, second slope constant: A2 = transition_stress^m2 * transition_cycles
-        # With m2=5.0: A2 = 66.2^5 * 2e6 = ~2.67e14
         A2 = (transition_stress ** 5.0) * transition_cycles
 
         multi_curve = MultislopeSNCurve(
             name="Multi Test",
             slopes=[3.0, 5.0],
-            constants=[5.73e11, A2],
+            constants=[A1, A2],
             transition_cycles=[transition_cycles],
-            fatigue_limit=52.63
+            fatigue_limit=52.63,
         )
 
         # Test in high stress region (above transition stress) - both use first slope
-        stress_high = 100.0  # Above transition stress (~66 MPa)
+        stress_high = 100.0  # Above transition stress (90.0 MPa)
         single_high = single_curve.get_allowable_cycles(stress_high)
         multi_high = multi_curve.get_allowable_cycles(stress_high)
 

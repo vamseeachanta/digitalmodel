@@ -356,7 +356,8 @@ class TestStandardSNCurvesGetCurve:
 
     def test_dnv_d_curve(self, dnv_d_curve):
         assert isinstance(dnv_d_curve, PowerLawSNCurve)
-        assert dnv_d_curve.A == pytest.approx(5.73e11, rel=1e-6)
+        # DNV-RP-C203 (2011) Table 2-1, D in air: log a1 = 12.164 (#2165)
+        assert dnv_d_curve.A == pytest.approx(10**12.164, rel=1e-9)
         assert dnv_d_curve.m == pytest.approx(3.0, rel=1e-6)
         assert dnv_d_curve.fatigue_limit == pytest.approx(52.63, rel=1e-3)
 
@@ -417,17 +418,21 @@ class TestDNVCurveValuesFromStandard:
     """Verify specific DNV-RP-C203 S-N curve values against known reference data."""
 
     def test_dnv_d_at_1e6_cycles(self):
-        """DNV-D: at N=1e6, S = (5.73e11/1e6)^(1/3) ~ 83.04 MPa"""
+        """DNV-D: at N=1e6, S = (10^12.164/1e6)^(1/3) = 10^2.054667 = 113.414 MPa
+        (#2165; the old A = 5.73e11 gave 83.06 MPa)"""
         curve = get_dnv_curve("D")
         S = curve.get_stress_range(1e6)
-        expected = (5.73e11 / 1e6) ** (1 / 3)
+        expected = (10**12.164 / 1e6) ** (1 / 3)
+        assert expected == pytest.approx(113.414, abs=5e-4)
         assert S == pytest.approx(expected, rel=1e-4)
 
     def test_dnv_c_at_1e5_cycles(self):
-        """DNV-C: at N=1e5, S = (1.08e12/1e5)^(1/3) ~ 102.6 MPa (above fatigue limit)"""
+        """DNV-C: at N=1e5, S = (10^12.592/1e5)^(1/3) = 10^2.530667 = 339.365 MPa
+        (above fatigue limit; #2165, the old A = 1.08e12 gave 221.04 MPa)"""
         curve = get_dnv_curve("C")
         S = curve.get_stress_range(1e5)
-        expected = (1.08e12 / 1e5) ** (1 / 3)
+        expected = (10**12.592 / 1e5) ** (1 / 3)
+        assert expected == pytest.approx(339.365, abs=5e-4)
         assert S == pytest.approx(expected, rel=1e-4)
 
     def test_dnv_b1_higher_than_d(self):
