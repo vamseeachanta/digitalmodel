@@ -98,6 +98,22 @@ class RectifierSizingResult(BaseModel):
     recommended_rating_A: float = Field(
         ..., description="Recommended standard rectifier current rating [A]"
     )
+    exceeds_standard_range: bool = Field(
+        default=False,
+        description=(
+            "True when the required voltage or current exceeds the largest "
+            "standard single-unit rating; recommended_rating_* are then per unit"
+        ),
+    )
+    units_required: int = Field(
+        default=1,
+        ge=1,
+        description=(
+            "Number of largest-standard units needed: ceil(required / largest) "
+            "for whichever of voltage or current exceeds the range (the larger "
+            "of the two if both do), 1 otherwise"
+        ),
+    )
 
 
 class AnodeBedResult(BaseModel):
@@ -112,8 +128,12 @@ class AnodeBedResult(BaseModel):
     bed_resistance_ohm: float = Field(
         ..., description="Total anode bed resistance [ohm]"
     )
-    estimated_life_years: float = Field(
-        ..., description="Estimated anode bed life [years]"
+    estimated_life_years: Optional[float] = Field(
+        None,
+        description=(
+            "Estimated anode bed life [years]; None unless anode_bed_design was "
+            "called with experimental=True (issue #2209 quarantine)"
+        ),
     )
 
 
@@ -125,7 +145,11 @@ def rectifier_sizing(
     Calculates required DC voltage as:
         V_dc = I * (R_gb + R_struct + R_cable) + V_back_emf
 
-    Then applies safety factor and rounds up to standard ratings.
+    Then applies safety factor and rounds up to standard ratings. If the
+    required voltage or current exceeds the largest standard rating the
+    result is flagged (``exceeds_standard_range``) with ``units_required``
+    set to the number of largest-standard units, instead of silently
+    capping at the largest size (issue #2209).
 
     Parameters
     ----------
@@ -135,7 +159,7 @@ def rectifier_sizing(
     Returns
     -------
     RectifierSizingResult
-        Required voltage, current, and power with standard ratings.
+        Required voltage, current, and power with standard (per-unit) ratings.
     """
     total_resistance = (
         input_params.ground_bed_resistance_ohm
@@ -163,12 +187,20 @@ def rectifier_sizing(
         standard_currents[-1],
     )
 
+    # Never cap silently: report how many largest-standard units are needed.
+    voltage_units = math.ceil(v_dc / standard_voltages[-1])
+    current_units = math.ceil(input_params.total_current_A / standard_currents[-1])
+    units_required = max(1, voltage_units, current_units)
+    exceeds = units_required > 1
+
     return RectifierSizingResult(
         dc_voltage_V=round(v_dc, 2),
         dc_current_A=input_params.total_current_A,
         power_W=round(power, 2),
         recommended_rating_V=float(rec_voltage),
         recommended_rating_A=float(rec_current),
+        exceeds_standard_range=exceeds,
+        units_required=units_required,
     )
 
 
@@ -180,12 +212,25 @@ def anode_bed_design(
     anode_material: AnodeMaterial = AnodeMaterial.HIGH_SILICON_CAST_IRON,
     anode_length_m: float = 1.5,
     anode_diameter_m: float = 0.075,
+    *,
+    experimental: bool = False,
 ) -> AnodeBedResult:
     """Design an impressed current anode bed.
 
     Determines number of anodes based on current capacity and consumption
     rate, and calculates bed resistance using the Dwight equation with
     parallel resistance adjustment.
+
+    Experimental
+    ------------
+    The geometry, anode count and bed resistance are always returned. The
+    life figure (``estimated_life_years``) is quarantined (issue #2209): it
+    uses the cast-iron density (7200 kg/m3) for every anode material, so
+    the mass-based life for MMO / platinised-titanium / graphite / magnetite
+    is meaningless, and the parallel-interference term is labelled "Sunde"
+    but is not Sunde's formula. It is returned as ``None`` unless
+    ``experimental=True``. A re-model must follow NACE SP0169 section 6
+    (ICCP ground-bed design and anode consumption) with per-material densities.
 
     Parameters
     ----------
@@ -203,11 +248,14 @@ def anode_bed_design(
         Length of each anode [m].
     anode_diameter_m : float
         Diameter of each anode [m].
+    experimental : bool
+        Return the quarantined ``estimated_life_years`` figure.
 
     Returns
     -------
     AnodeBedResult
-        Anode bed design parameters.
+        Anode bed design parameters (``estimated_life_years`` is ``None``
+        unless ``experimental=True``).
     """
     # Max current per anode surface area
     anode_surface_area = math.pi * anode_diameter_m * anode_length_m
@@ -262,11 +310,15 @@ def anode_bed_design(
     if bed_type == AnodeBedType.DEEP_WELL:
         r_bed *= 0.6  # deep anode beds have ~40% lower resistance
 
-    # Estimated life
-    if mass_consumed_per_year > 0:
-        estimated_life = anode_mass_kg * n_anodes / mass_consumed_per_year
-    else:
-        estimated_life = 100.0
+    # Estimated life -- quarantined, see the "Experimental" section above.
+    estimated_life: Optional[float] = None
+    if experimental:
+        if mass_consumed_per_year > 0:
+            estimated_life = round(
+                anode_mass_kg * n_anodes / mass_consumed_per_year, 1
+            )
+        else:
+            estimated_life = 100.0
 
     return AnodeBedResult(
         bed_type=bed_type.value,
@@ -276,7 +328,7 @@ def anode_bed_design(
         anode_diameter_m=anode_diameter_m,
         anode_spacing_m=spacing,
         bed_resistance_ohm=round(r_bed, 4),
-        estimated_life_years=round(estimated_life, 1),
+        estimated_life_years=estimated_life,
     )
 
 

@@ -22,6 +22,8 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+from digitalmodel.cathodic_protection._experimental import require_experimental
+
 
 class InterferenceType(str, Enum):
     """Type of stray current interference."""
@@ -130,6 +132,8 @@ class MitigationDesign(BaseModel):
 
 def assess_stray_current(
     input_params: StrayCurrentInput,
+    *,
+    experimental: bool = False,
 ) -> StrayCurrentResult:
     """Assess stray current interference on a buried pipeline.
 
@@ -137,16 +141,46 @@ def assess_stray_current(
     resistivity and geometry. For AC interference, estimates induced
     voltage using simplified parallel exposure model.
 
+    Experimental
+    ------------
+    Quarantined (issue #2209). The DC branch equates the point-source earth
+    potential ``I*rho/(2*pi*d)`` with the pipe-to-soil potential shift, which
+    is not how interference is assessed. The AC branch carries an unexplained
+    ``/1000`` on the induced voltage, goes negative when the separation
+    exceeds the Carson equivalent depth (d > 658 m at 50 ohm-m), and
+    multiplies V/R by the pipe circumference to obtain a current density.
+    A re-model must follow EN 50162 Table 1 (DC interference acceptance
+    criteria) and ISO 18086 (AC corrosion: coupon current density and
+    voltage criteria). Calling without ``experimental=True`` raises
+    :class:`~digitalmodel.cathodic_protection._experimental.ExperimentalModelError`.
+
     Parameters
     ----------
     input_params : StrayCurrentInput
         Assessment input parameters.
+    experimental : bool
+        Acknowledge the quarantine and run the model anyway.
 
     Returns
     -------
     StrayCurrentResult
         Interference assessment with risk level and mitigation recommendations.
+
+    Raises
+    ------
+    ExperimentalModelError
+        If ``experimental`` is false.
     """
+    require_experimental(
+        experimental,
+        model="stray_current.assess_stray_current",
+        reason=(
+            "DC branch equates point-source earth potential with pipe-to-soil "
+            "shift; AC branch has an unexplained /1000, goes negative for "
+            "d > 658 m and scales V/R by circumference"
+        ),
+        standard="EN 50162 Table 1 (DC) and ISO 18086 (AC)",
+    )
     is_ac = input_params.interference_type in (
         InterferenceType.AC_POWERLINE,
         InterferenceType.AC_RAILROAD,
@@ -164,9 +198,9 @@ def _assess_dc_interference(params: StrayCurrentInput) -> StrayCurrentResult:
     # V = (I * rho) / (2 * pi * d) for a remote point source
     rho = params.soil_resistivity_ohm_m
     d = params.separation_distance_m
-    I = params.source_current_A
+    i_source = params.source_current_A
 
-    induced_voltage = (I * rho) / (2.0 * math.pi * d)
+    induced_voltage = (i_source * rho) / (2.0 * math.pi * d)
 
     # Current density through coating
     i_density = induced_voltage / params.coating_resistance_ohm_m2 * 1000.0  # mA/m²
@@ -220,7 +254,7 @@ def _assess_ac_interference(params: StrayCurrentInput) -> StrayCurrentResult:
     rho = params.soil_resistivity_ohm_m
     d = params.separation_distance_m
     L = params.pipeline_length_m
-    I = params.source_current_A
+    i_source = params.source_current_A
 
     # Mutual impedance approach (simplified)
     # For 50 Hz: omega = 2*pi*50 = 314 rad/s
@@ -231,7 +265,7 @@ def _assess_ac_interference(params: StrayCurrentInput) -> StrayCurrentResult:
     De = 658.0 * math.sqrt(rho / 50.0)  # equivalent earth return depth [m]
     mutual_impedance_per_m = omega * mu_0 / (2.0 * math.pi) * math.log(De / d)
 
-    induced_voltage = I * mutual_impedance_per_m * L / 1000.0  # simplified with length factor
+    induced_voltage = i_source * mutual_impedance_per_m * L / 1000.0  # simplified with length factor
 
     # AC current density
     pipe_circumference = math.pi * params.pipeline_od_m
@@ -282,11 +316,23 @@ def design_drainage_bond(
     source_potential_V: float = -0.50,
     pipeline_potential_V: float = -0.85,
     max_bond_current_A: float = 10.0,
+    *,
+    experimental: bool = False,
 ) -> MitigationDesign:
     """Design a drainage bond for DC stray current mitigation.
 
     A drainage bond provides a low-resistance return path for stray
     current, preventing it from discharging through the soil/coating.
+
+    Experimental
+    ------------
+    Quarantined (issue #2209): the bond resistance is set from the
+    difference of two structure-to-soil potentials divided by the stray
+    current, and the resulting "bond current" is that same current fed
+    back, so the effectiveness figure is circular. A re-model must follow
+    EN 50162 Table 1 (DC stray-current acceptance criteria and drainage
+    design). Calling without ``experimental=True`` raises
+    :class:`~digitalmodel.cathodic_protection._experimental.ExperimentalModelError`.
 
     Parameters
     ----------
@@ -298,12 +344,25 @@ def design_drainage_bond(
         Pipeline protection potential [V].
     max_bond_current_A : float
         Maximum allowable bond current [A].
+    experimental : bool
+        Acknowledge the quarantine and run the model anyway.
 
     Returns
     -------
     MitigationDesign
         Drainage bond design specification.
+
+    Raises
+    ------
+    ExperimentalModelError
+        If ``experimental`` is false.
     """
+    require_experimental(
+        experimental,
+        model="stray_current.design_drainage_bond",
+        reason="bond resistance and bond current are derived circularly from the input current",
+        standard="EN 50162 Table 1",
+    )
     # Bond resistance to limit current
     delta_v = abs(source_potential_V - pipeline_potential_V)
 

@@ -6,6 +6,7 @@ from digitalmodel.cathodic_protection._edition import (
     Edition,
     normalize_edition,
 )
+from digitalmodel.cathodic_protection._experimental import ExperimentalModelError
 
 from digitalmodel.cathodic_protection.api_rp_1632 import (
     anode_driving_voltage,
@@ -56,7 +57,6 @@ from digitalmodel.cathodic_protection.fuel_system_cp import (
     FuelPipeSegment,
     ImpressedCurrentGroundBed,
     RectifierOutput,
-    check_protection,
     current_demand_segment,
     design_ground_bed,
     design_rectifier,
@@ -125,7 +125,6 @@ from digitalmodel.cathodic_protection.corrosion_rate import (
     GalvanicCorrosionResult,
     de_waard_milliams_co2,
     norsok_m506_co2,
-    galvanic_corrosion,
     pitting_rate_estimate,
 )
 
@@ -156,8 +155,6 @@ from digitalmodel.cathodic_protection.stray_current import (
     StrayCurrentInput,
     StrayCurrentResult,
     MitigationDesign,
-    assess_stray_current,
-    design_drainage_bond,
 )
 
 from digitalmodel.cathodic_protection.cp_reporting import (
@@ -202,10 +199,17 @@ from digitalmodel.cathodic_protection.pipeline_cp import (
     soil_resistivity_correction,
 )
 
+# Quarantined models (issue #2209) are deliberately NOT re-exported here:
+# stray_current.assess_stray_current / design_drainage_bond,
+# fuel_system_cp.check_protection, corrosion_rate.galvanic_corrosion.
+# They remain importable from their own modules and raise
+# ExperimentalModelError unless called with experimental=True.
+
 __all__ = [
     "DEFAULT_EDITION",
     "Edition",
     "normalize_edition",
+    "ExperimentalModelError",
     "anode_driving_voltage",
     "anode_resistance_vertical_rod",
     "current_demand",
@@ -243,7 +247,6 @@ __all__ = [
     "FuelPipeSegment",
     "ImpressedCurrentGroundBed",
     "RectifierOutput",
-    "check_protection",
     "current_demand_segment",
     "design_ground_bed",
     "design_rectifier",
@@ -298,7 +301,6 @@ __all__ = [
     "GalvanicCorrosionResult",
     "de_waard_milliams_co2",
     "norsok_m506_co2",
-    "galvanic_corrosion",
     "pitting_rate_estimate",
     # anode_depletion
     "AnodeStatus",
@@ -323,8 +325,6 @@ __all__ = [
     "StrayCurrentInput",
     "StrayCurrentResult",
     "MitigationDesign",
-    "assess_stray_current",
-    "design_drainage_bond",
     # cp_reporting
     "ComplianceStatus",
     "RecommendationPriority",

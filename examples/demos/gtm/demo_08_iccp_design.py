@@ -212,7 +212,13 @@ def run_single_case(
     else:
         status = "OK"
 
-    life_ok = bed.estimated_life_years >= DESIGN_LIFE_YEARS
+    # The mass-based anode life model is quarantined (#2209): it uses a
+    # cast-iron density for every material. Until re-modelled, the demo
+    # reports the life as unavailable rather than passing a non-physical number.
+    life_ok = (
+        bed.estimated_life_years is not None
+        and bed.estimated_life_years >= DESIGN_LIFE_YEARS
+    )
 
     return {
         "structure_id": structure["id"],
