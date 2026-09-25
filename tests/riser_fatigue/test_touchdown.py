@@ -198,6 +198,19 @@ def test_thickness_exponent_default_per_class_and_environment(sn_class, environm
     assert res.bins[0].stress_corrected_mpa == pytest.approx(100.0 * 1.6**k, rel=1e-12)
 
 
+def test_lowercase_class_matches_uppercase():
+    """#2165 PR #2192 review r2 finding 1: the class is normalised once, as
+    get_sn_curve() does (upper case), before both the S-N lookup and the
+    class-k lookup. "e" gives the same result as "E" (109.856 MPa, k = 0.20)."""
+    lower = assess_touchdown_fatigue(_e_class_40mm(sn_class="e"))
+    upper = assess_touchdown_fatigue(_e_class_40mm(sn_class="E"))
+    assert lower.thickness_exponent == pytest.approx(0.20)
+    assert lower.bins[0].stress_corrected_mpa == pytest.approx(109.856, abs=5e-4)
+    assert lower.period_damage == upper.period_damage
+    assert lower.bins[0].allowable_cycles == upper.bins[0].allowable_cycles
+    assert lower.sn_class == "E"
+
+
 def test_report_states_the_applied_thickness_exponent():
     inp = _e_class_40mm()
     md = report_markdown(inp, assess_touchdown_fatigue(inp))
