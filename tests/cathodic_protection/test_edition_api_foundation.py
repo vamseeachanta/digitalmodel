@@ -219,10 +219,21 @@ def test_coating_breakdown_result_carries_explicit_edition_metadata():
         coating_breakdown_factors,
     )
 
-    result = coating_breakdown_factors(CoatingCategory.FBE, edition="2017")
+    # Paint categories are B401 Table 10-4 rows: standard follows the edition.
+    result = coating_breakdown_factors(CoatingCategory.PAINT_III, edition="2017")
 
     assert result.edition_used == "2017"
     assert result.standard == "DNVGL-RP-B401 (2017)"
+
+    # Linepipe coatings are F103 Table A.1 rows (#2207): the B401 edition is
+    # recorded, but ``standard`` agrees with the F103 citation.
+    result = coating_breakdown_factors(
+        CoatingCategory.FBE, edition="2017", f103_edition="2010"
+    )
+
+    assert result.edition_used == "2017"
+    assert result.f103_edition_used == "2010"
+    assert result.standard == "DNV-RP-F103 (October 2010)"
 
 
 def test_coating_breakdown_missing_edition_warns_and_defaults_metadata():
@@ -232,11 +243,18 @@ def test_coating_breakdown_missing_edition_warns_and_defaults_metadata():
     )
 
     with pytest.warns(UserWarning, match="defaulting to DNV-RP-B401 2021") as warnings:
-        result = coating_breakdown_factors(CoatingCategory.FBE)
+        result = coating_breakdown_factors(CoatingCategory.PAINT_III)
 
     assert Path(warnings[0].filename).name == "test_edition_api_foundation.py"
     assert result.edition_used == "2021"
     assert result.standard == "DNV-RP-B401 (2021)"
+
+    with pytest.warns(UserWarning, match="defaulting to DNV-RP-F103 2010") as warnings:
+        result = coating_breakdown_factors(CoatingCategory.FBE, edition="2021")
+
+    assert Path(warnings[0].filename).name == "test_edition_api_foundation.py"
+    assert result.f103_edition_used == "2010"
+    assert result.standard == "DNV-RP-F103 (October 2010)"
 
 
 def test_coating_breakdown_explicit_edition_preserves_p1_numerics():

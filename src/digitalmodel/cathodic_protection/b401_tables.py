@@ -305,6 +305,16 @@ _BURIED_CURRENT_DENSITY_SECTION: Final = "Sec. 6.3 (buried surfaces)"
 _POTENTIAL_DECIMALS: Final = 3
 
 
+def citation_label(citation: Citation) -> str:
+    """Render a citation as ``"code_id revision section"`` for report provenance.
+
+    The edition and provenance live in ``citation.note``; the label is kept
+    edition-free so per-zone result rows compare equal across editions whose
+    tables are identical.
+    """
+    return f"{citation.code_id} {citation.revision} {citation.section}"
+
+
 def edition_provenance(edition: Edition | str | None = None) -> str:
     """Return the provenance flag for a B401 edition token.
 

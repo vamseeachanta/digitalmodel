@@ -1,10 +1,56 @@
 """Cathodic protection calculations — API RP 1632, ISO 15589-2, DNV-RP-B401
-2017/2021, and impressed current fuel system CP design."""
+(2005-2021) and DNV-RP-F103 cited tables, and impressed current fuel system
+CP design."""
 
 from digitalmodel.cathodic_protection._edition import (
     DEFAULT_EDITION,
+    DEFAULT_F103_EDITION,
     Edition,
+    F103Edition,
+    f103_standard_for_edition,
     normalize_edition,
+    normalize_f103_edition,
+    standard_for_edition,
+)
+
+# --- Cited, edition-keyed DNV-RP-B401 / DNV-RP-F103 table lookups (#2207) ---
+
+from digitalmodel.cathodic_protection.b401_tables import (
+    AnodeEnvironment as B401AnodeEnvironment,
+    AnodeMaterial as B401AnodeMaterial,
+    AnodeShape as B401AnodeShape,
+    Climate as B401Climate,
+    DepthBand as B401DepthBand,
+    DesignPhase as B401DesignPhase,
+    PaintCategory as B401PaintCategory,
+    anode_capacity as b401_anode_capacity,
+    anode_closed_circuit_potential as b401_anode_closed_circuit_potential,
+    buried_current_density as b401_buried_current_density,
+    citation_label,
+    climate_from_temperature as b401_climate_from_temperature,
+    coating_breakdown_constants as b401_coating_breakdown_constants,
+    depth_band as b401_depth_band,
+    design_current_density as b401_design_current_density,
+    design_driving_voltage as b401_design_driving_voltage,
+    edition_provenance,
+    protection_potential as b401_protection_potential,
+    reinforcement_current_density as b401_reinforcement_current_density,
+    utilisation_factor as b401_utilisation_factor,
+)
+from digitalmodel.cathodic_protection.b401_tables import (
+    edition_provenance as b401_edition_provenance,
+)
+from digitalmodel.cathodic_protection.f103_tables import (
+    Exposure as F103Exposure,
+    FieldJointCoating as F103FieldJointCoating,
+    FluidTemperatureBand as F103FluidTemperatureBand,
+    LinepipeCoating as F103LinepipeCoating,
+    bracelet_utilisation_factor as f103_bracelet_utilisation_factor,
+    edition_provenance as f103_edition_provenance,
+    field_joint_coating_constants as f103_field_joint_coating_constants,
+    fluid_temperature_band as f103_fluid_temperature_band,
+    linepipe_coating_constants as f103_linepipe_coating_constants,
+    mean_current_density as f103_mean_current_density,
 )
 
 from digitalmodel.cathodic_protection.api_rp_1632 import (
@@ -70,8 +116,10 @@ from digitalmodel.cathodic_protection.fuel_system_cp import (
 from digitalmodel.cathodic_protection.coating import (
     CoatingCategory,
     CoatingBreakdownResult,
+    CoatingConstants,
     CoatingLifeResult,
     coating_breakdown_factors,
+    coating_constants,
     coating_life_estimate,
     effective_bare_area_coated,
 )
@@ -204,8 +252,46 @@ from digitalmodel.cathodic_protection.pipeline_cp import (
 
 __all__ = [
     "DEFAULT_EDITION",
+    "DEFAULT_F103_EDITION",
     "Edition",
+    "F103Edition",
     "normalize_edition",
+    "normalize_f103_edition",
+    "standard_for_edition",
+    "f103_standard_for_edition",
+    "edition_provenance",
+    # b401_tables
+    "B401AnodeEnvironment",
+    "B401AnodeMaterial",
+    "B401AnodeShape",
+    "B401Climate",
+    "B401DepthBand",
+    "B401DesignPhase",
+    "B401PaintCategory",
+    "b401_anode_capacity",
+    "b401_anode_closed_circuit_potential",
+    "b401_buried_current_density",
+    "b401_climate_from_temperature",
+    "b401_coating_breakdown_constants",
+    "b401_depth_band",
+    "b401_design_current_density",
+    "b401_design_driving_voltage",
+    "b401_edition_provenance",
+    "b401_protection_potential",
+    "b401_reinforcement_current_density",
+    "b401_utilisation_factor",
+    "citation_label",
+    # f103_tables
+    "F103Exposure",
+    "F103FieldJointCoating",
+    "F103FluidTemperatureBand",
+    "F103LinepipeCoating",
+    "f103_bracelet_utilisation_factor",
+    "f103_edition_provenance",
+    "f103_field_joint_coating_constants",
+    "f103_fluid_temperature_band",
+    "f103_linepipe_coating_constants",
+    "f103_mean_current_density",
     "anode_driving_voltage",
     "anode_resistance_vertical_rod",
     "current_demand",
@@ -253,8 +339,10 @@ __all__ = [
     # coating
     "CoatingCategory",
     "CoatingBreakdownResult",
+    "CoatingConstants",
     "CoatingLifeResult",
     "coating_breakdown_factors",
+    "coating_constants",
     "coating_life_estimate",
     "effective_bare_area_coated",
     # pipeline_cp

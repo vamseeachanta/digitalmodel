@@ -6,7 +6,6 @@ Documents use generic engineering names (no client identifiers).
 
 from __future__ import annotations
 
-import math
 
 import pytest
 
@@ -15,7 +14,6 @@ from digitalmodel.cathodic_protection.dnv_rp_b401 import (
     ANODE_DENSITY_ALZNI,
     DESIGN_DRIVING_VOLTAGE,
     STEEL_RESISTIVITY,
-    UTILIZATION_FACTOR_FLUSH,
     UTILIZATION_FACTOR_STANDOFF,
     anode_current_output,
     anode_mass_requirement,
