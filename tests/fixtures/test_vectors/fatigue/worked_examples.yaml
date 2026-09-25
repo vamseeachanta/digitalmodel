@@ -152,8 +152,8 @@ assumptions:
   - "Palmgren-Miner linear damage accumulation"
   - "Reference thickness 25 mm (no thickness correction)"
 references:
-  - "DNV-RP-C203 (2016) Table 2-2 — seawater+CP S-N curves"
-  - "DNV-RP-C203 (2016) Cl. 2.4.3 — seawater free-corrosion guidance"
+  - "DNV-RP-C203 (edition not established) Table 2-2 — seawater+CP S-N curves"
+  - "DNV-RP-C203 (edition not established) Cl. 2.4.3 — seawater free-corrosion guidance"
   - "DNVGL-OS-E301 (2021) Table 6-2 — chain S-N curves"
   - "DNVGL-ST-F101 (2017) Cl. 6.7 — DFF for seabed pipelines"
   - "DNVGL-ST-F201 (2018) Cl. 5.4.4 — SCR DFF requirements"

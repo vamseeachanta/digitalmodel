@@ -57,6 +57,8 @@ from typing import Dict, List, Optional, Sequence, Union
 import numpy as np
 from pydantic import BaseModel, Field
 
+from .c203_editions import DNV_RP_C203_IMPLEMENTED_EDITION, c203_sn_table
+
 
 # ---------------------------------------------------------------------------
 # Pydantic models
@@ -196,8 +198,10 @@ def _sd(log_a: float, m: float, nd: float) -> float:
 def _build_dnv_curves() -> List[SNCurveRecord]:
     """DNV-RP-C203 (2021) — 14 classes × 3 environments = 42 curves.
 
-    Table 2-1 (in air), Table 2-2 (seawater CP & free corrosion).
+    Table 2-1 (in air), Table 2-2 (seawater with CP), Table 2-4 (free
+    corrosion); table IDs come from :mod:`.c203_editions`.
     """
+    edition = DNV_RP_C203_IMPLEMENTED_EDITION
     ND = 1e7
     raw = {
         "B1": {"m1": 4.0, "log_a1": 15.117, "m2": 5.0, "log_a2": 17.146},
@@ -230,41 +234,48 @@ def _build_dnv_curves() -> List[SNCurveRecord]:
         out.append(SNCurveRecord(
             curve_id=f"DNV-RP-C203:{cls}:air",
             standard="DNV-RP-C203",
-            standard_edition="2021",
+            standard_edition=edition,
             curve_class=cls,
             environment="air",
             m1=p["m1"], log_a1=p["log_a1"],
             m2=p["m2"], log_a2=p["log_a2"],
             n_transition=ND,
             endurance_limit=round(sd_air, 2),
-            note=f"DNV-RP-C203 Table 2-1, detail category {cls}, in air",
+            note=f"DNV-RP-C203 {c203_sn_table('air', edition)}, detail category {cls}, in air",
         ))
         # Seawater with CP (bilinear, reduced intercepts)
         sd_cp = _sd(cp[cls], p["m1"], ND)
         out.append(SNCurveRecord(
             curve_id=f"DNV-RP-C203:{cls}:seawater_cp",
             standard="DNV-RP-C203",
-            standard_edition="2021",
+            standard_edition=edition,
             curve_class=cls,
             environment="seawater_cp",
             m1=p["m1"], log_a1=cp[cls],
             m2=p["m2"], log_a2=p["log_a2"],
             n_transition=ND,
             endurance_limit=round(sd_cp, 2),
-            note=f"DNV-RP-C203 Table 2-2, {cls}, seawater with cathodic protection",
+            note=(
+                f"DNV-RP-C203 {c203_sn_table('seawater_cp', edition)}, {cls}, "
+                "seawater with cathodic protection"
+            ),
         ))
         # Free corrosion (single slope, no endurance limit)
         out.append(SNCurveRecord(
             curve_id=f"DNV-RP-C203:{cls}:free_corrosion",
             standard="DNV-RP-C203",
-            standard_edition="2021",
+            standard_edition=edition,
             curve_class=cls,
             environment="free_corrosion",
             m1=p["m1"], log_a1=fc[cls],
             m2=None, log_a2=None,
             n_transition=ND,
             endurance_limit=None,
-            note=f"DNV-RP-C203 Table 2-2, {cls}, seawater free corrosion (single slope)",
+            note=(
+                f"DNV-RP-C203 {c203_sn_table('free_corrosion', edition)}, {cls}, "
+                "seawater free corrosion (single slope); "
+                "values not verified against the table (#2165)"
+            ),
         ))
     return out
 

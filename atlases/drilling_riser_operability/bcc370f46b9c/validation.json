@@ -1,0 +1,296 @@
+{
+  "metric": "max_rel_error",
+  "max_rel_error": 0.08801099175047977,
+  "threshold": 0.1,
+  "passes": true,
+  "n_holdout": 84,
+  "worst_samples": [
+    {
+      "point": {
+        "offset_pct": 5.0,
+        "current_speed_mps": 0.25,
+        "config": "rsu_a__drilling"
+      },
+      "predicted": 1.7161972439135291,
+      "actual": 1.5773712369875719,
+      "rel_error": 0.08801099175047977,
+      "in_range": true
+    },
+    {
+      "point": {
+        "offset_pct": 5.0,
+        "current_speed_mps": 0.25,
+        "config": "rsu_a__connected"
+      },
+      "predicted": 1.7161972439135291,
+      "actual": 1.5773712369875719,
+      "rel_error": 0.08801099175047977,
+      "in_range": true
+    },
+    {
+      "point": {
+        "offset_pct": 5.0,
+        "current_speed_mps": 0.25,
+        "config": "rsu_b__drilling"
+      },
+      "predicted": 1.7161972439135291,
+      "actual": 1.5780238459683005,
+      "rel_error": 0.0875610329325811,
+      "in_range": true
+    },
+    {
+      "point": {
+        "offset_pct": 5.0,
+        "current_speed_mps": 0.25,
+        "config": "rsu_b__connected"
+      },
+      "predicted": 1.7161972439135291,
+      "actual": 1.5780238459683005,
+      "rel_error": 0.0875610329325811,
+      "in_range": true
+    },
+    {
+      "point": {
+        "offset_pct": 6.5,
+        "current_speed_mps": 1.0,
+        "config": "rsu_a__hang_off"
+      },
+      "predicted": 0.276625,
+      "actual": 0.26406250000000003,
+      "rel_error": 0.04757396449704133,
+      "in_range": true
+    },
+    {
+      "point": {
+        "offset_pct": 7.5,
+        "current_speed_mps": 1.0,
+        "config": "rsu_b__hang_off"
+      },
+      "predicted": 0.37778333333333336,
+      "actual": 0.375,
+      "rel_error": 0.007422222222222293,
+      "in_range": true
+    },
+    {
+      "point": {
+        "offset_pct": 7.5,
+        "current_speed_mps": 1.0,
+        "config": "rsu_a__hang_off"
+      },
+      "predicted": 0.353125,
+      "actual": 0.3515625,
+      "rel_error": 0.004444444444444508,
+      "in_range": true
+    },
+    {
+      "point": {
+        "offset_pct": 8.5,
+        "current_speed_mps": 1.0,
+        "config": "rsu_b__hang_off"
+      },
+      "predicted": 0.4833333333333333,
+      "actual": 0.48166666666666663,
+      "rel_error": 0.0034602076124567124,
+      "in_range": true
+    },
+    {
+      "point": {
+        "offset_pct": 8.5,
+        "current_speed_mps": 1.0,
+        "config": "rsu_a__hang_off"
+      },
+      "predicted": 0.453125,
+      "actual": 0.4515625000000001,
+      "rel_error": 0.00346020761245655,
+      "in_range": true
+    },
+    {
+      "point": {
+        "offset_pct": 9.5,
+        "current_speed_mps": 1.0,
+        "config": "rsu_a__hang_off"
+      },
+      "predicted": 0.565625,
+      "actual": 0.5640625,
+      "rel_error": 0.0027700831024931143,
+      "in_range": true
+    },
+    {
+      "point": {
+        "offset_pct": 9.5,
+        "current_speed_mps": 1.0,
+        "config": "rsu_b__hang_off"
+      },
+      "predicted": 0.6033333333333333,
+      "actual": 0.6016666666666667,
+      "rel_error": 0.0027700831024929542,
+      "in_range": true
+    },
+    {
+      "point": {
+        "offset_pct": 5.0,
+        "current_speed_mps": 1.75,
+        "config": "rsu_a__hang_off"
+      },
+      "predicted": 0.25135,
+      "actual": 0.2508,
+      "rel_error": 0.0021929824561403304,
+      "in_range": true
+    },
+    {
+      "point": {
+        "offset_pct": 5.0,
+        "current_speed_mps": 1.25,
+        "config": "rsu_a__hang_off"
+      },
+      "predicted": 0.24795,
+      "actual": 0.2477,
+      "rel_error": 0.0010092854259184506,
+      "in_range": true
+    },
+    {
+      "point": {
+        "offset_pct": 5.0,
+        "current_speed_mps": 1.75,
+        "config": "rsu_b__hang_off"
+      },
+      "predicted": 0.33075,
+      "actual": 0.3306,
+      "rel_error": 0.00045372050816691915,
+      "in_range": true
+    },
+    {
+      "point": {
+        "offset_pct": 5.0,
+        "current_speed_mps": 0.75,
+        "config": "rsu_a__hang_off"
+      },
+      "predicted": 0.24680000000000002,
+      "actual": 0.2467,
+      "rel_error": 0.0004053506282935417,
+      "in_range": true
+    }
+  ],
+  "local_error_map": {
+    "rsu_a__drilling": {
+      "offset_pct": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "current_speed_mps": [
+        0.08801099175047977,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rsu_a__connected": {
+      "offset_pct": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "current_speed_mps": [
+        0.08801099175047977,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rsu_a__hang_off": {
+      "offset_pct": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.04757396449704133,
+        0.004444444444444508,
+        0.00346020761245655,
+        0.0027700831024931143
+      ],
+      "current_speed_mps": [
+        0.0,
+        0.0004053506282935417,
+        0.0010092854259184506,
+        0.0021929824561403304
+      ]
+    },
+    "rsu_b__drilling": {
+      "offset_pct": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "current_speed_mps": [
+        0.0875610329325811,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rsu_b__connected": {
+      "offset_pct": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "current_speed_mps": [
+        0.0875610329325811,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "rsu_b__hang_off": {
+      "offset_pct": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.007422222222222293,
+        0.0034602076124567124,
+        0.0027700831024929542
+      ],
+      "current_speed_mps": [
+        0.00015211439002127926,
+        0.00015206812652066452,
+        0.00030376670716902946,
+        0.00045372050816691915
+      ]
+    }
+  }
+}

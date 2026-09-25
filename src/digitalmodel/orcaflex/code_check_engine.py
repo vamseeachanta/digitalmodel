@@ -1,7 +1,8 @@
 """Automated code checks for offshore riser and mooring design.
 
 Implements:
-- API RP 2RD riser utilisation (combined tension + bending)
+- API STD 2RD riser utilisation (combined tension + bending; the check and
+  its classes keep the historical API RP 2RD names)
 - DNV-OS-F201 combined loading criteria (load-controlled & displacement-controlled)
 - API RP 2SK mooring safety factors (intact, damaged, transient)
 - Utilisation calculation along arc length
@@ -9,9 +10,11 @@ Implements:
 Does NOT require OrcFxAPI — works on load arrays directly.
 
 References:
-    - API RP 2RD (2013): Design of Risers for Floating Production Systems
-    - DNV-OS-F201 (2010): Dynamic Risers
-    - DNV-ST-F201 (2018): Dynamic Risers (replacement for DNV-OS-F201)
+    - API STD 2RD (2nd Ed., 2013): Dynamic Risers for Floating Production
+      Systems (formerly API RP 2RD)
+    - DNV-OS-F201 (2010): Dynamic Risers. The combined-loading check
+      implements this edition; its successor, DNV-ST-F201, is not the
+      basis of the values here.
     - API RP 2SK (2005): Design and Analysis of Stationkeeping Systems
 """
 
@@ -56,7 +59,7 @@ class LoadCondition(str, Enum):
 class APIRP2RDInput(BaseModel):
     """Input for API RP 2RD riser utilisation check.
 
-    Reference: API RP 2RD Section 4.3 (2013 edition).
+    Reference: API STD 2RD (2nd Ed., 2013), formerly API RP 2RD.
     """
     outer_diameter: float = Field(0.2731, gt=0.0, description="Pipe OD (m)")
     wall_thickness: float = Field(0.0254, gt=0.0, description="Pipe WT (m)")
@@ -160,7 +163,7 @@ def check_api_rp_2rd(
 class DNVOSF201Input(BaseModel):
     """Input for DNV-OS-F201 combined loading check.
 
-    Reference: DNV-OS-F201 Section 5 (2010), DNV-ST-F201 Section 5 (2018).
+    Reference: DNV-OS-F201 Section 5 (2010).
     """
     outer_diameter: float = Field(0.2731, gt=0.0, description="Pipe OD (m)")
     wall_thickness: float = Field(0.0254, gt=0.0, description="Nominal WT (m)")

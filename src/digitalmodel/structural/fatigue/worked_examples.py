@@ -50,7 +50,12 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Environment-adjusted S-N curves
 # ---------------------------------------------------------------------------
-# DNV-RP-C203 (2016) Table 2-1 (in air) and Table 2-2 (seawater+CP).
+# DNV-RP-C203 S-N classes in air, seawater+CP and free corrosion.
+# The constants used here (StandardSNCurves 'DNV' and the 0.87 / 0.72
+# A-factors below) are simplified and are not traced to a single
+# DNV-RP-C203 edition. The 2021 tables are implemented in
+# digitalmodel.fatigue.sn_library (2021 table IDs: 2-1 air, 2-2 seawater
+# with CP, 2-4 free corrosion; see digitalmodel.fatigue.c203_editions).
 # Seawater free-corrosion: same m, no fatigue limit (curve continues).
 # Reference thickness: 25 mm.
 
@@ -273,7 +278,8 @@ def pipeline_girth_weld(
             "Palmgren-Miner linear damage accumulation",
         ],
         references=[
-            "DNV-RP-C203 (2016) Table 2-2 — seawater+CP S-N curves",
+            "DNV-RP-C203 Table 2-2 — seawater+CP S-N curves (edition not established; "
+            "A-factor 0.87 is a simplified value)",
             "DNVGL-ST-F101 (2017) Cl. 6.7 — DFF for seabed pipelines",
             "ISO 13628-7 — girth weld SCF guidance",
         ],
@@ -336,7 +342,7 @@ def scr_touchdown(
             "F1 class captures the groove detail at touchdown",
         ],
         references=[
-            "DNV-RP-C203 (2016) Cl. 2.4.3 — seawater free-corrosion guidance",
+            "DNV-RP-C203 Cl. 2.4.3 — seawater free-corrosion guidance (edition not established)",
             "DNVGL-ST-F201 (2018) Cl. 5.4.4 — SCR DFF requirements",
             "OTC 20228 — SCR touchdown fatigue analysis methodology",
         ],
