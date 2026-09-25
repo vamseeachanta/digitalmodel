@@ -39,5 +39,5 @@ Or the CLI directly: `hullprod work/L02_oc4_semisub.stl --out work/out_oc4 --lre
 
 Input hulls (not copied here): `docs/domains/orcawave/examples/L01_default_vessel`, `.../L02 OC4 Semi-sub`,
 `<client-wiki>/cases/orcawave-diffraction-{fpso,hlv-a,<DS-A>}/*.gdf`,
-`worldenergydata/data/modules/vessel_hull_models/hulls/sea_cypress.obj`,
+`worldenergydata/data/modules/vessel_hull_models/hulls/<FPV-A>.obj`,
 and `tests/hydrodynamics/hull_library/conftest.py::ship_profile` through `HullMeshGenerator`.
