@@ -111,6 +111,123 @@ def test_allowing_removed_integers_still_catches_a_changed_float(repo):
     assert out.returncode == 1, out.stdout
 
 
+# Review r2 finding 1: a multiset of tokens loses which field a number
+# belongs to, skips renamed files, excuses a deleted field as a "removed
+# integer" and reads YAML's 12_000 as 1.
+
+
+def test_swapped_json_values_fail(repo):
+    base = _commit(repo, {"s.json": '{"x": 1, "y": 2}\n'})
+    head = _commit(repo, {"s.json": '{"x": 2, "y": 1}\n'})
+    out = _run(repo, base, head)
+    assert out.returncode == 1, out.stdout
+    assert "s.json" in out.stdout
+
+
+def test_swapped_yaml_values_fail(repo):
+    base = _commit(repo, {"s.yml": "x: 1.5\ny: 2.5\n"})
+    head = _commit(repo, {"s.yml": "x: 2.5\ny: 1.5\n"})
+    assert _run(repo, base, head).returncode == 1
+
+
+def test_swapped_csv_cells_fail(repo):
+    base = _commit(repo, {"s.csv": "a,b\n1,2\n3,4\n"})
+    head = _commit(repo, {"s.csv": "a,b\n3,4\n1,2\n"})
+    assert _run(repo, base, head).returncode == 1
+
+
+def test_reordered_json_keys_with_the_same_values_pass(repo):
+    base = _commit(repo, {"s.json": '{"x": 1, "y": 2.5}\n'})
+    head = _commit(repo, {"s.json": '{"y": 2.5, "x": 1}\n'})
+    out = _run(repo, base, head)
+    assert out.returncode == 0, out.stdout
+
+
+@pytest.mark.parametrize(
+    "name,before,after",
+    [
+        ("d.json", '{"x": 10, "y": 20}\n', '{"x": 10}\n'),
+        ("d.yml", "x: 10\ny: 20\n", "x: 10\n"),
+        ("d.json", '{"x": 10, "ids": [1, 2]}\n', '{"x": 10, "ids": [1]}\n'),
+        ("d.csv", "a,b\n1,2\n3,4\n", "a,b\n1,2\n"),
+    ],
+)
+def test_a_deleted_numeric_field_is_never_excused(repo, name, before, after):
+    base = _commit(repo, {name: before})
+    head = _commit(repo, {name: after})
+    out = _run(repo, base, head, "--allow-removed-integers")
+    assert out.returncode == 1, out.stdout
+
+
+def test_a_numeric_value_turned_into_text_is_never_excused(repo):
+    base = _commit(repo, {"d.yml": "id: 4711\nL: 2.5\n"})
+    head = _commit(repo, {"d.yml": "id: vessel-a\nL: 2.5\n"})
+    out = _run(repo, base, head, "--allow-removed-integers")
+    assert out.returncode == 1, out.stdout
+
+
+def test_a_yaml_integer_removed_from_a_string_can_be_allowed(repo):
+    base = _commit(repo, {"c.yml": "crane: Lifter 5000\nswl: 12.5\n"})
+    head = _commit(repo, {"c.yml": "crane: Crane-A\nswl: 12.5\n"})
+    assert _run(repo, base, head).returncode == 1
+    out = _run(repo, base, head, "--allow-removed-integers")
+    assert out.returncode == 0, out.stdout
+
+
+def test_a_decimal_removed_from_a_string_is_not_excused(repo):
+    base = _commit(repo, {"c.json": '{"note": "draft 12.5 m"}\n'})
+    head = _commit(repo, {"c.json": '{"note": "draft"}\n'})
+    assert _run(repo, base, head, "--allow-removed-integers").returncode == 1
+
+
+def _body(value: str) -> str:
+    rows = "".join(f'  "k{i}": "text line {i:03d} unchanged",\n' for i in range(20))
+    return "{\n" + rows + f'  "v": {value}\n' + "}\n"
+
+
+def test_a_renamed_file_is_compared(repo):
+    base = _commit(repo, {"old/a.json": _body("1.25")})
+    (repo / "old" / "a.json").unlink()
+    head = _commit(repo, {"new/a.json": _body("1.5")})
+    out = _run(repo, base, head)
+    assert out.returncode == 1, out.stdout
+    assert "new/a.json" in out.stdout
+
+
+def test_a_pure_rename_passes_and_is_counted(repo):
+    base = _commit(repo, {"old/a.json": _body("1.25")})
+    (repo / "old" / "a.json").unlink()
+    head = _commit(repo, {"new/a.json": _body("1.25")})
+    out = _run(repo, base, head)
+    assert out.returncode == 0, out.stdout
+    assert "1 changed data file" in out.stdout
+
+
+@pytest.mark.parametrize(
+    "before,after,code",
+    [
+        ("a: 12_000\n", "a: 13_000\n", 1),
+        ("a: 12_000\nb: 13_000\n", "a: 13_000\nb: 12_000\n", 1),
+        ("a: 12_000\n", "a: 12000\n", 0),
+        ("a: 1_000.5\n", "a: 1_000.25\n", 1),
+    ],
+)
+def test_yaml_underscore_numbers_are_read_whole(repo, before, after, code):
+    base = _commit(repo, {"u.yml": before})
+    head = _commit(repo, {"u.yml": after})
+    out = _run(repo, base, head)
+    assert out.returncode == code, out.stdout
+
+
+def test_an_unparseable_yaml_file_is_compared_in_order(repo):
+    # A template that is not valid YAML falls back to the ordered token
+    # sequence, which still catches a swap.
+    base = _commit(repo, {"t.yml": "x: {{ a }} 1.5\ny: {{ b }} 2.5\n"})
+    head = _commit(repo, {"t.yml": "x: {{ a }} 2.5\ny: {{ b }} 1.5\n"})
+    out = _run(repo, base, head)
+    assert out.returncode == 1, out.stdout
+
+
 def test_files_other_than_data_are_ignored(repo):
     base = _commit(repo, {"n.md": "value 1.0\n"})
     head = _commit(repo, {"n.md": "value 2.0\n"})

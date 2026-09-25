@@ -56,6 +56,10 @@ def gate(tmp_path):
     def run(*args, env=None):
         e = {k: v for k, v in os.environ.items() if k not in _GIT_BINDINGS}
         e.pop("DIGITALMODEL_DENY_LIST", None)
+        # The gate refuses --update-baseline under CI; a test that runs in CI
+        # sets these itself when it means to.
+        e.pop("CI", None)
+        e.pop("GITHUB_ACTIONS", None)
         e["HOME"] = str(home)
         e["USERPROFILE"] = str(home)
         if env:
@@ -170,6 +174,34 @@ class TestDigitLeadingNames:
         )
         out = gate(_file(gate, "towed by 7zzhull at dawn\n"))
         assert out.returncode == 1, out.stdout
+
+    def test_a_digit_bearing_name_after_a_digit_is_caught(self, gate):
+        # Review r2 finding 2: with a digit-first word pattern, "9zzatlas7"
+        # yielded only itself and "zzatlas" -- the letter-first token
+        # "zzatlas7" that the earlier pattern produced was lost.
+        private = gate.home / "private.txt"
+        private.write_text("zzatlas7\n", encoding="utf-8")
+        out = gate(
+            _file(gate, "berth 9zzatlas7 at dawn\n"),
+            env={"DIGITALMODEL_DENY_LIST": str(private)},
+        )
+        assert out.returncode == 1, out.stdout
+        assert "denied-name" in out.stdout
+
+    def test_a_hashed_digit_bearing_name_after_a_digit_is_caught(self, gate):
+        rules = yaml.safe_load(
+            (gate.root / ".legal-deny-list.yaml").read_text(encoding="utf-8")
+        )
+        salt = str(rules.get("salt", ""))
+        rules["hashed_names"].append(
+            hashlib.sha256(f"{salt}:zzatlas7".encode()).hexdigest()
+        )
+        (gate.root / ".legal-deny-list.yaml").write_text(
+            yaml.safe_dump(rules), encoding="utf-8"
+        )
+        for text in ("berth 9zzatlas7 at dawn\n", "berth x-9zzatlas7-b at dawn\n"):
+            out = gate(_file(gate, text))
+            assert out.returncode == 1, (text, out.stdout)
 
     def test_a_plain_number_is_not_a_name(self, gate):
         out = gate(_file(gate, "the 2000 m spread and 12345 cycles\n"))
@@ -406,6 +438,35 @@ class TestUninspectableBaseline:
         out = gate("--update-baseline", "--baseline", str(self._baseline(gate)))
         assert out.returncode not in (0, 1), out.stdout
         assert not self._baseline(gate).exists()
+
+    @pytest.mark.parametrize("var", ["CI", "GITHUB_ACTIONS"])
+    def test_update_baseline_refuses_to_run_in_ci(self, gate, var):
+        # Review r2 finding 3: in CI the update would accept any new
+        # uninspectable file unread. Regeneration is a reviewed local step.
+        path = gate.root / "a.pdf"
+        path.write_bytes(PDF)
+        out = gate(
+            str(path),
+            "--baseline",
+            str(self._baseline(gate)),
+            "--update-baseline",
+            env={var: "true"},
+        )
+        assert out.returncode == 3, out.stdout + out.stderr
+        assert "CI" in out.stderr
+        assert not self._baseline(gate).exists()
+
+    def test_a_normal_check_still_runs_in_ci(self, gate):
+        path = gate.root / "a.pdf"
+        path.write_bytes(PDF)
+        self._accept(gate, path)
+        out = gate(
+            str(path),
+            "--baseline",
+            str(self._baseline(gate)),
+            env={"CI": "true", "GITHUB_ACTIONS": "true"},
+        )
+        assert out.returncode == 0, out.stdout + out.stderr
 
     def test_the_committed_baseline_has_digests_for_every_entry(self):
         manifest = REPO / ".legal-uninspectable-baseline.txt"
