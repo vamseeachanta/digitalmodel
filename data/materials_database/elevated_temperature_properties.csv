@@ -1,0 +1,23 @@
+grade,property,temperature_c,value,unit,basis,source_id,source_page,note
+1.4404,E,20,200,GPa,typical,acidur-4404-2016,p.2,
+1.4404,E,100,194,GPa,typical,acidur-4404-2016,p.2,
+1.4404,E,200,186,GPa,typical,acidur-4404-2016,p.2,
+1.4404,E,300,179,GPa,typical,acidur-4404-2016,p.2,
+1.4404,E,400,172,GPa,typical,acidur-4404-2016,p.2,
+1.4404,Rm,100,430,MPa,minimum,outokumpu-316-legacy,Table 4c,third-party host
+1.4404,Rm,200,390,MPa,minimum,outokumpu-316-legacy,Table 4c,third-party host
+1.4404,Rm,300,380,MPa,minimum,outokumpu-316-legacy,Table 4c,third-party host
+1.4404,Rp0.2,100,165,MPa,minimum,acidur-4404-2016,p.3,
+1.4404,Rp0.2,150,150,MPa,minimum,acidur-4404-2016,p.3,
+1.4404,Rp0.2,200,137,MPa,minimum,acidur-4404-2016,p.3,
+1.4404,Rp0.2,250,127,MPa,minimum,acidur-4404-2016,p.3,
+1.4404,Rp0.2,300,119,MPa,minimum,acidur-4404-2016,p.3,
+1.4404,Rp0.2,350,113,MPa,minimum,acidur-4404-2016,p.3,
+1.4404,Rp0.2,400,108,MPa,minimum,acidur-4404-2016,p.3,
+1.4404,Rp1.0,100,200,MPa,minimum,acidur-4404-2016,p.3,
+1.4404,Rp1.0,150,180,MPa,minimum,acidur-4404-2016,p.3,
+1.4404,Rp1.0,200,165,MPa,minimum,acidur-4404-2016,p.3,
+1.4404,Rp1.0,250,153,MPa,minimum,acidur-4404-2016,p.3,
+1.4404,Rp1.0,300,145,MPa,minimum,acidur-4404-2016,p.3,
+1.4404,Rp1.0,350,139,MPa,minimum,acidur-4404-2016,p.3,
+1.4404,Rp1.0,400,135,MPa,minimum,acidur-4404-2016,p.3,

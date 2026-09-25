@@ -1,0 +1,11 @@
+generated_by: scripts/materials_database/build_tables.py
+issue: 2157
+rights_decision: 'Owner card D01 (2026-09-25): public, each row cited to the public source document it
+  was read from; only values used are included; no reproduced standard table.'
+route: public
+sources_spec: scripts/materials_database/sources.yml
+tables:
+  elevated_temperature_properties:
+    file: elevated_temperature_properties.csv
+    rows: 22
+    sha256: ca23d661eba66edb0e10b6b5f8ec349021e52631bfe9252d80c73765ee4c054c

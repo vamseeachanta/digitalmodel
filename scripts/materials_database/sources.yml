@@ -1,0 +1,53 @@
+# Seed specification for data/materials_database/ (#2157, owner card D01, 2026-09-25).
+# Mechanism lives in build_tables.py; every value lives here with its source document.
+#
+# Route: public. Owner rights decision D01 (2026-09-25): values are published cited to the
+# public manufacturer / stockist document they were read from, not to the standard. Only the
+# values used by digitalmodel analyses are included; no complete standard table is reproduced.
+# Each value was read back from the listed document page before commit.
+
+rights_decision: >-
+  Owner card D01 (2026-09-25): public, each row cited to the public source document it was read
+  from; only values used are included; no reproduced standard table.
+
+documents:
+  - id: acidur-4404-2016
+    title: "Swiss Steel / DEW Acidur 4404 technical data sheet (2016-0036, 03/06/2016)"
+    url: https://swisssteel-group.com/content-media/documents/Data-Sheets/Stainless-Steel/1.4404_en.pdf
+    sha256: daadedbc4a2bfc17fdfcf66b1b710240234f40a9f3b73424ed1bbe6c7d78884a
+    access: public manufacturer datasheet
+    archive: docs:literature/materials/stainless-steel-1.4404/swisssteel_acidur_4404_en.pdf
+  - id: outokumpu-316-legacy
+    title: "Outokumpu 316-family datasheet (undated; third-party hosted)"
+    url: https://www.stainless-lintels.co.uk/ldx2101_cat/316_datasheet.pdf
+    sha256: 20bf7cbb59ffd0004cb708f74d4b7b06c440076cc292993aaf4872403dba7c4e
+    access: public manufacturer datasheet (third-party host; cross-check before design use)
+    archive: docs:literature/materials/stainless-steel-1.4404/outokumpu_std_CrNiMo_316_datasheet_via_stainless-lintels.pdf
+
+# rows: [grade, property, temperature_c, value, unit, basis, source_id, source_page, note]
+rows:
+  # Acidur 4404 p.3: minimum proof strength at elevated temperature (sheet states "according to DIN EN 10088-3")
+  - [1.4404, Rp0.2, 100, 165, MPa, minimum, acidur-4404-2016, "p.3", ""]
+  - [1.4404, Rp0.2, 150, 150, MPa, minimum, acidur-4404-2016, "p.3", ""]
+  - [1.4404, Rp0.2, 200, 137, MPa, minimum, acidur-4404-2016, "p.3", ""]
+  - [1.4404, Rp0.2, 250, 127, MPa, minimum, acidur-4404-2016, "p.3", ""]
+  - [1.4404, Rp0.2, 300, 119, MPa, minimum, acidur-4404-2016, "p.3", ""]
+  - [1.4404, Rp0.2, 350, 113, MPa, minimum, acidur-4404-2016, "p.3", ""]
+  - [1.4404, Rp0.2, 400, 108, MPa, minimum, acidur-4404-2016, "p.3", ""]
+  - [1.4404, Rp1.0, 100, 200, MPa, minimum, acidur-4404-2016, "p.3", ""]
+  - [1.4404, Rp1.0, 150, 180, MPa, minimum, acidur-4404-2016, "p.3", ""]
+  - [1.4404, Rp1.0, 200, 165, MPa, minimum, acidur-4404-2016, "p.3", ""]
+  - [1.4404, Rp1.0, 250, 153, MPa, minimum, acidur-4404-2016, "p.3", ""]
+  - [1.4404, Rp1.0, 300, 145, MPa, minimum, acidur-4404-2016, "p.3", ""]
+  - [1.4404, Rp1.0, 350, 139, MPa, minimum, acidur-4404-2016, "p.3", ""]
+  - [1.4404, Rp1.0, 400, 135, MPa, minimum, acidur-4404-2016, "p.3", ""]
+  # Acidur 4404 p.2: Young's modulus (reference values)
+  - [1.4404, E, 20, 200, GPa, typical, acidur-4404-2016, "p.2", ""]
+  - [1.4404, E, 100, 194, GPa, typical, acidur-4404-2016, "p.2", ""]
+  - [1.4404, E, 200, 186, GPa, typical, acidur-4404-2016, "p.2", ""]
+  - [1.4404, E, 300, 179, GPa, typical, acidur-4404-2016, "p.2", ""]
+  - [1.4404, E, 400, 172, GPa, typical, acidur-4404-2016, "p.2", ""]
+  # Outokumpu legacy datasheet Table 4c: minimum tensile strength at elevated temperature
+  - [1.4404, Rm, 100, 430, MPa, minimum, outokumpu-316-legacy, "Table 4c", "third-party host"]
+  - [1.4404, Rm, 200, 390, MPa, minimum, outokumpu-316-legacy, "Table 4c", "third-party host"]
+  - [1.4404, Rm, 300, 380, MPa, minimum, outokumpu-316-legacy, "Table 4c", "third-party host"]
