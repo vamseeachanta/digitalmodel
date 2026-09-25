@@ -286,12 +286,22 @@ def test_viv_safety_factor_atlas_is_log_log_exact():
 
 
 def test_adaptive_densifies_a_coarse_seed_to_pass():
+    """The seed must straddle the S-N knee for densification to be needed.
+
+    #2165 moved the DNV-RP-C203 seawater-CP knee from 1e7 to 1e6 cycles: for
+    class D the knee stress is now 10^((11.764 - 6) / 3) = 83.43 MPa (was
+    10^((11.764 - 7) / 3) = 38.73 MPa). The old tension seed [100, 250, 450] kN
+    over 3000-9000 mm2 put the 250/3000 = 83.33 MPa corner just below the new
+    knee, so every holdout fell on the m2 segment and the seed passed as is.
+    [100, 300, 900] kN gives corner stresses 33.3 / 100 / 300 MPa at 3000 mm2,
+    which straddle 83.43 MPa.
+    """
     from digitalmodel.parametric.generate import generate_atlas_adaptive
 
     atlas = generate_atlas_adaptive(
         basename="mooring_fatigue", physics="log_log", response="damage",
         axes=[
-            Axis(name="tension_range_kN", scale="log", grid=[100, 250, 450]),
+            Axis(name="tension_range_kN", scale="log", grid=[100, 300, 900]),
             Axis(name="n_cycles", scale="log", grid=[1e4, 1e6]),
             Axis(name="area_mm2", scale="log", grid=[3000, 9000]),
             Axis(name="sn_curve", values=["D"]),
