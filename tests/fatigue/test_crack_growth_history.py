@@ -190,3 +190,63 @@ def test_cycles_to_extension():
     assert cycles_to_extension(hist, 0.6) == pytest.approx(2000.0, rel=1e-12)
     with pytest.raises(ValueError):
         cycles_to_extension(hist, 1.5)
+
+
+# --- Codex P1 review regressions (2026-09-25) -----------------------------------------
+def test_sub_threshold_dip_between_scan_nodes_is_caught():
+    # V-shaped dip centred at a = 2.1, half-width 0.15; minimum 0.5 is below 2.0,
+    # but with n_scan = 10 (spacing 0.2) every scan node reads above threshold.
+    def dk(a):
+        return 3.0 - 2.5 * max(0.0, 1.0 - abs(a - 2.1) / 0.15)
+
+    thr = Threshold(2.0, temperature_rule="none")
+    assert all(dk(1.0 + 0.2 * i) > 2.0 for i in range(11))
+    res = life(LAW, dk, 1.0, 3.0, threshold=thr, n_scan=10)
+    assert res.status == "ARRESTED"
+    assert 1.95 < res.a_arrest_mm < 2.1
+
+
+def test_tabulated_dip_is_exact_regardless_of_scan_density():
+    # A single tabulated node below threshold, narrower than any scan spacing.
+    t = TabulatedDeltaK([1.0, 1.0004, 1.0005, 1.0006, 3.0], [3.0, 3.0, 1.0, 3.0, 3.0])
+    res = life(
+        LAW, t, 1.0, 3.0, threshold=Threshold(2.0, temperature_rule="none"), n_scan=4
+    )
+    assert res.status == "ARRESTED"
+    assert res.a_arrest_mm == pytest.approx(1.0004 + 0.0001 * 0.5, abs=1e-9)
+
+
+@pytest.mark.parametrize(
+    "e_ref, e_t", [(200.0, -180.0), (0.0, 180.0), (200.0, 0.0), (float("nan"), 180.0)]
+)
+def test_threshold_rejects_invalid_moduli(e_ref, e_t):
+    with pytest.raises(ValueError):
+        Threshold(2.0, temperature_rule="e_ratio", e_ref_gpa=e_ref, e_t_gpa=e_t)
+
+
+@pytest.mark.parametrize("e_ref, e_t", [(200.0, -180.0), (0.0, 180.0), (200.0, 0.0)])
+def test_e_ratio_rejects_invalid_moduli(e_ref, e_t):
+    with pytest.raises(ValueError):
+        LAW.with_e_ratio(e_ref, e_t)
+
+
+def test_cycles_to_extension_rejects_non_chronological_history():
+    with pytest.raises(ValueError):
+        cycles_to_extension([(1000, 0.0), (0, 1.0)], 0.5)
+    with pytest.raises(ValueError):
+        cycles_to_extension([(0, 0.0), (1000, 0.6), (2000, 0.4)], 0.5)
+
+
+def test_growth_api_exported_from_fatigue_package():
+    import digitalmodel.fatigue as fat
+
+    for name in (
+        "GrowthLaw",
+        "Threshold",
+        "life",
+        "TabulatedDeltaK",
+        "dk_multiplier_to_demand",
+        "life_sqrt_closed_form",
+    ):
+        assert hasattr(fat, name), name
+        assert name in fat.__all__, name

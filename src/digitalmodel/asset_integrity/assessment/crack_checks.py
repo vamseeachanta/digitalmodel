@@ -31,6 +31,13 @@ SIGMA_RATIO_BAND: Tuple[float, float] = (0.5, 2.0)
 DEFAULT_Y_RANGE: Tuple[float, float] = (2.0 / math.pi, 1.12)
 
 
+def _positive(name: str, value: float) -> float:
+    """Return ``value`` if it is finite and > 0, else raise ValueError."""
+    if not (isinstance(value, (int, float)) and math.isfinite(value) and value > 0):
+        raise ValueError(f"{name} must be finite and > 0 (got {value!r}).")
+    return float(value)
+
+
 def mpa_sqrt_mm_to_mpa_sqrt_m(k_mpa_sqrt_mm: float) -> float:
     """Convert K from MPa*sqrt(mm) to MPa*sqrt(m)."""
     return k_mpa_sqrt_mm / math.sqrt(1000.0)
@@ -38,8 +45,9 @@ def mpa_sqrt_mm_to_mpa_sqrt_m(k_mpa_sqrt_mm: float) -> float:
 
 def implied_opening_stress(k_mpa_sqrt_m: float, a_mm: float, y: float) -> float:
     """Opening stress implied by K for crack depth ``a_mm`` and geometry factor ``y``."""
-    if a_mm <= 0 or y <= 0:
-        raise ValueError("need a_mm > 0 and y > 0.")
+    _positive("k_mpa_sqrt_m", k_mpa_sqrt_m)
+    _positive("a_mm", a_mm)
+    _positive("y", y)
     return k_mpa_sqrt_m / (y * math.sqrt(math.pi * a_mm / 1000.0))
 
 
@@ -64,6 +72,7 @@ def sigma_ref_consistency(
     The ratio ``sigma_ref / sigma_implied`` spans an interval as Y varies. The check
     passes when that interval intersects ``band``.
     """
+    _positive("sigma_ref_mpa", sigma_ref_mpa)
     lo_y, hi_y = sorted(y_range)
     r_a = sigma_ref_mpa / implied_opening_stress(k_mpa_sqrt_m, a_mm, lo_y)
     r_b = sigma_ref_mpa / implied_opening_stress(k_mpa_sqrt_m, a_mm, hi_y)
@@ -76,6 +85,9 @@ def irwin_plastic_zone_mm(
     k_mpa_sqrt_m: float, sigma_y_mpa: float, condition: str = "plane_stress"
 ) -> float:
     """Irwin plastic-zone size ``(1/2pi)(K/sigma_y)^2``, divided by 3 for plane strain."""
+    _positive("sigma_y_mpa", sigma_y_mpa)
+    if not math.isfinite(k_mpa_sqrt_m) or k_mpa_sqrt_m < 0:
+        raise ValueError("k_mpa_sqrt_m must be finite and >= 0.")
     rp = (1.0 / (2.0 * math.pi)) * (k_mpa_sqrt_m / sigma_y_mpa) ** 2 * 1000.0
     if condition == "plane_stress":
         return rp
@@ -94,12 +106,17 @@ def ssy_check(
     k_mpa_sqrt_m: float, sigma_y_mpa: float, *, ligament_mm: float, max_ratio: float
 ) -> SimpleCheck:
     """Plastic-zone size against the ligament. The limit ``max_ratio`` has no default."""
+    _positive("ligament_mm", ligament_mm)
+    _positive("max_ratio", max_ratio)
     ratio = irwin_plastic_zone_mm(k_mpa_sqrt_m, sigma_y_mpa) / ligament_mm
     return SimpleCheck(ratio <= max_ratio, ratio)
 
 
 def shakedown_check(*, elastic_range_mpa: float, sigma_y_mpa: float) -> SimpleCheck:
     """Elastic stress range against ``2 sigma_y``; passes at or below 1."""
+    _positive("sigma_y_mpa", sigma_y_mpa)
+    if not math.isfinite(elastic_range_mpa) or elastic_range_mpa < 0:
+        raise ValueError("elastic_range_mpa must be finite and >= 0.")
     ratio = elastic_range_mpa / (2.0 * sigma_y_mpa)
     return SimpleCheck(ratio <= 1.0, ratio)
 

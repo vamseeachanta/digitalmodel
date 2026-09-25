@@ -18,6 +18,21 @@ Extended with 8 additional modules (v2.0):
 from .sn_curves import get_sn_curve, DNV_CURVES
 from .damage import miner_damage, design_life_check, thickness_correction
 from .crack_growth import paris_law_life, stress_intensity_factor, inspection_interval
+from .crack_growth_history import (
+    GrowthLaw,
+    LifeResult,
+    TabulatedDeltaK,
+    Threshold,
+    back_calculate_dk,
+    convert_coefficient_n_mm_to_mpa_sqrt_m,
+    cycles_to_extension,
+    dk_envelope,
+    dk_multiplier_to_demand,
+    dk_sqrt_model,
+    life,
+    life_sqrt_closed_form,
+    threshold_margin,
+)
 from .woehler_fitting import fit_woehler_curve, design_curve
 from .rainflow import rainflow_count, stress_histogram, fatigue_life
 
@@ -95,6 +110,20 @@ __all__ = [
     "design_life_check",
     "thickness_correction",
     "paris_law_life",
+    # thresholded crack growth from a DeltaK(a) history (#2157)
+    "GrowthLaw",
+    "LifeResult",
+    "TabulatedDeltaK",
+    "Threshold",
+    "back_calculate_dk",
+    "convert_coefficient_n_mm_to_mpa_sqrt_m",
+    "cycles_to_extension",
+    "dk_envelope",
+    "dk_multiplier_to_demand",
+    "dk_sqrt_model",
+    "life",
+    "life_sqrt_closed_form",
+    "threshold_margin",
     "stress_intensity_factor",
     "inspection_interval",
     "fit_woehler_curve",

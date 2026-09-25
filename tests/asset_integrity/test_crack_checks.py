@@ -90,3 +90,30 @@ def test_mixed_mode_keq_energy_identity():
 def test_keq_rejects_bad_poisson():
     with pytest.raises(ValueError):
         keq_energy(1.0, 0.0, 0.0, 0.5)
+
+
+# --- Codex P1 review regressions (2026-09-25) -----------------------------------------
+@pytest.mark.parametrize("ligament, limit", [(-5.0, 0.2), (0.0, 0.2), (5.0, 0.0)])
+def test_ssy_check_rejects_invalid_inputs(ligament, limit):
+    with pytest.raises(ValueError):
+        ssy_check(10.0, 200.0, ligament_mm=ligament, max_ratio=limit)
+
+
+@pytest.mark.parametrize("sy", [0.0, -200.0, float("nan")])
+def test_checks_reject_non_positive_yield(sy):
+    with pytest.raises(ValueError):
+        irwin_plastic_zone_mm(10.0, sy)
+    with pytest.raises(ValueError):
+        shakedown_check(elastic_range_mpa=100.0, sigma_y_mpa=sy)
+
+
+def test_shakedown_rejects_negative_range():
+    with pytest.raises(ValueError):
+        shakedown_check(elastic_range_mpa=-10.0, sigma_y_mpa=200.0)
+
+
+def test_sigma_ref_consistency_rejects_non_positive_inputs():
+    with pytest.raises(ValueError):
+        sigma_ref_consistency(sigma_ref_mpa=-1.0, k_mpa_sqrt_m=1.0, a_mm=2.0)
+    with pytest.raises(ValueError):
+        sigma_ref_consistency(sigma_ref_mpa=100.0, k_mpa_sqrt_m=0.0, a_mm=2.0)

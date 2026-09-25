@@ -9,9 +9,11 @@ module does not call:
   quadrature (error below 1e-7 relative on smooth DeltaK(a)), not forward Euler.
 - A threshold is explicit. If DeltaK falls to or below the effective threshold
   anywhere in ``[a0, af]``, including a crossing inside the interval, the result is
-  ``ARRESTED`` with the arrest depth. A finite life is never integrated through a
-  threshold crossing, and a non-positive DeltaK without a threshold raises rather than
-  truncating silently.
+  ``ARRESTED`` with the arrest depth. Detection is exact for a
+  :class:`TabulatedDeltaK`. For a general callable it uses sampling plus refinement of
+  every sampled local minimum; a dip narrower than the sample spacing that leaves no
+  trace in the samples is the stated limit (see ``_first_arrest``). A non-positive
+  DeltaK without a threshold raises rather than truncating silently.
 - The threshold temperature rule must be stated: ``"none"`` or ``"e_ratio"``
   (threshold scaled by ``E_T / E_ref``). There is no default.
 - Growth-law constants are user inputs with a basis string. No standard-derived
@@ -29,6 +31,13 @@ from dataclasses import dataclass, replace
 from typing import Callable, List, Optional, Sequence, Tuple
 
 DeltaKModel = Callable[[float], float]
+
+
+def _require_positive(name: str, value: Optional[float]) -> float:
+    """Return ``value`` if it is a finite number > 0, else raise ValueError."""
+    if value is None or not math.isfinite(value) or value <= 0:
+        raise ValueError(f"{name} must be finite and > 0 (got {value!r}).")
+    return float(value)
 
 
 @dataclass(frozen=True)
@@ -51,6 +60,8 @@ class GrowthLaw:
 
     def with_e_ratio(self, e_ref_gpa: float, e_t_gpa: float) -> "GrowthLaw":
         """Temperature-correct A by ``(E_ref / E_T)^m``; the basis records it."""
+        _require_positive("e_ref_gpa", e_ref_gpa)
+        _require_positive("e_t_gpa", e_t_gpa)
         factor = (e_ref_gpa / e_t_gpa) ** self.m
         return replace(
             self,
@@ -79,10 +90,11 @@ class Threshold:
             raise ValueError("dk_th must be > 0.")
         if self.temperature_rule not in ("none", "e_ratio"):
             raise ValueError("temperature_rule must be 'none' or 'e_ratio'.")
-        if self.temperature_rule == "e_ratio" and (
-            self.e_ref_gpa is None or self.e_t_gpa is None
-        ):
-            raise ValueError("the 'e_ratio' rule needs e_ref_gpa and e_t_gpa.")
+        if self.temperature_rule == "e_ratio":
+            if self.e_ref_gpa is None or self.e_t_gpa is None:
+                raise ValueError("the 'e_ratio' rule needs e_ref_gpa and e_t_gpa.")
+            _require_positive("e_ref_gpa", self.e_ref_gpa)
+            _require_positive("e_t_gpa", self.e_t_gpa)
 
     @property
     def effective(self) -> float:
@@ -102,24 +114,84 @@ def _scan_points(a0: float, af: float, n: int) -> List[float]:
     return [a0 + (af - a0) * i / n for i in range(n + 1)]
 
 
+def _bisect_crossing(
+    dk_of_a: DeltaKModel, lo: float, hi: float, dk_eff: float
+) -> float:
+    """First depth in ``(lo, hi]`` with dK <= dk_eff, given dK(lo) > dk_eff >= dK(hi)."""
+    for _ in range(200):
+        mid = 0.5 * (lo + hi)
+        if dk_of_a(mid) <= dk_eff:
+            hi = mid
+        else:
+            lo = mid
+        if hi - lo < 1e-12:
+            break
+    return hi
+
+
+def _golden_min(
+    f: DeltaKModel, lo: float, hi: float, tol: float = 1e-12
+) -> Tuple[float, float]:
+    """Golden-section search for a minimum of ``f`` on ``[lo, hi]``; returns (x, f(x))."""
+    g = (math.sqrt(5.0) - 1.0) / 2.0
+    c, d = hi - g * (hi - lo), lo + g * (hi - lo)
+    fc, fd = f(c), f(d)
+    while hi - lo > tol:
+        if fc <= fd:
+            hi, d, fd = d, c, fc
+            c = hi - g * (hi - lo)
+            fc = f(c)
+        else:
+            lo, c, fc = c, d, fd
+            d = lo + g * (hi - lo)
+            fd = f(d)
+    x = 0.5 * (lo + hi)
+    return x, f(x)
+
+
+def _first_arrest_tabulated(
+    t: "TabulatedDeltaK", a0: float, af: float, dk_eff: float
+) -> Optional[float]:
+    """Exact first crossing for a piecewise-linear model: minima lie at its nodes."""
+    pts = [a0] + [a for a in t.a if a0 < a < af] + [af]
+    if t(pts[0]) <= dk_eff:
+        return pts[0]
+    for lo, hi in zip(pts, pts[1:]):
+        k_lo, k_hi = t(lo), t(hi)
+        if k_hi <= dk_eff:
+            return lo + (k_lo - dk_eff) / (k_lo - k_hi) * (hi - lo)
+    return None
+
+
 def _first_arrest(
     dk_of_a: DeltaKModel, a0: float, af: float, dk_eff: float, n_scan: int
 ) -> Optional[float]:
+    """First depth where dK <= dk_eff, or None.
+
+    For a :class:`TabulatedDeltaK` the answer is exact, because every minimum of a
+    piecewise-linear model lies at a node. For a general callable the search samples
+    ``n_scan + 1`` equally spaced depths. It also checks every sampled local minimum
+    (a sample no higher than both neighbours) with a golden-section search, so a dip
+    between samples is found if the samples show the descent into it. A sub-threshold
+    dip narrower than the sample spacing that leaves no trace in the samples cannot be
+    detected. For such a model, pass a TabulatedDeltaK or raise ``n_scan``.
+    """
+    if isinstance(dk_of_a, TabulatedDeltaK):
+        return _first_arrest_tabulated(dk_of_a, a0, af, dk_eff)
     pts = _scan_points(a0, af, n_scan)
-    if dk_of_a(pts[0]) <= dk_eff:
+    vals = [dk_of_a(a) for a in pts]
+    if vals[0] <= dk_eff:
         return pts[0]
-    for prev, cur in zip(pts, pts[1:]):
-        if dk_of_a(cur) <= dk_eff:
-            lo, hi = prev, cur
-            for _ in range(100):
-                mid = 0.5 * (lo + hi)
-                if dk_of_a(mid) <= dk_eff:
-                    hi = mid
-                else:
-                    lo = mid
-                if hi - lo < 1e-9:
-                    break
-            return hi
+    for i in range(1, len(pts)):
+        if vals[i] <= dk_eff:
+            return _bisect_crossing(dk_of_a, pts[i - 1], pts[i], dk_eff)
+        is_local_min = (
+            i < len(pts) - 1 and vals[i] < vals[i - 1] and vals[i] <= vals[i + 1]
+        )
+        if is_local_min:
+            x_min, f_min = _golden_min(dk_of_a, pts[i - 1], pts[i + 1])
+            if f_min <= dk_eff:
+                return _bisect_crossing(dk_of_a, pts[i - 1], x_min, dk_eff)
     return None
 
 
@@ -300,9 +372,19 @@ def cycles_to_extension(
 ) -> float:
     """Cycles at a target extension by linear interpolation of the history.
 
-    The result is an interpolation between recorded points, not a recorded value.
+    The result is an interpolation between recorded points, not a recorded value. The
+    history must be chronological: strictly increasing cycles and non-decreasing
+    extension, in recorded order.
     """
-    pts = sorted(history, key=lambda p: p[1])
+    pts = list(history)
+    if len(pts) < 2:
+        raise ValueError("need at least two history points.")
+    for (n1, d1), (n2, d2) in zip(pts, pts[1:]):
+        if n2 <= n1 or d2 < d1:
+            raise ValueError(
+                "history must have strictly increasing cycles and non-decreasing "
+                "extension in recorded order."
+            )
     for (n1, d1), (n2, d2) in zip(pts, pts[1:]):
         if d1 <= extension_mm <= d2:
             if d2 == d1:
