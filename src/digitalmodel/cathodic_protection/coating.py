@@ -35,6 +35,7 @@ from typing import Any, Final, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from digitalmodel.cathodic_protection import _kernels as kernel
 from digitalmodel.cathodic_protection._edition import (
     DEFAULT_EDITION,
     DEFAULT_F103_EDITION,
@@ -112,7 +113,6 @@ _UNCITED_CATEGORIES: Final[dict[CoatingCategory, str]] = {
 _BARE_STEEL_A: Final = 1.0
 _BARE_STEEL_B: Final = 0.0
 _BARE_STEEL_STANDARD: Final = "bare steel (f_c = 1.0 by definition, no coating standard)"
-_MAX_BREAKDOWN: Final = 1.0
 
 
 @dataclass(frozen=True)
@@ -361,9 +361,9 @@ def coating_breakdown_factors(
     constants = coating_constants(cat, depth_m, ed, f103_ed)
     a, b = constants.a, constants.b
 
-    fc_initial = min(a, _MAX_BREAKDOWN)
-    fc_final = min(a + b * design_life_years, _MAX_BREAKDOWN)
-    fc_mean = min(a + b * design_life_years / 2.0, _MAX_BREAKDOWN)
+    fc_initial = kernel.coating_breakdown_linear(a, b, 0.0)
+    fc_final = kernel.coating_breakdown_final(a, b, design_life_years)
+    fc_mean = kernel.coating_breakdown_mean(a, b, design_life_years)
 
     return CoatingBreakdownResult(
         coating_type=cat.value,
@@ -466,7 +466,7 @@ def effective_bare_area_coated(
     constants = _constants_for(
         CoatingCategory(coating_type), depth_m, edition, f103_edition
     )
-    fc = min(constants.a + constants.b * elapsed_years, _MAX_BREAKDOWN)
+    fc = kernel.coating_breakdown_linear(constants.a, constants.b, elapsed_years)
     return total_surface_area_m2 * fc
 
 

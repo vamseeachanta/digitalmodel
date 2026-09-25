@@ -1,25 +1,28 @@
 """Anode sizing calculator per DNV-RP-B401.
 
-Provides sacrificial anode sizing for offshore structures, pipelines, and
-marine vessels. Supports stand-off, bracelet, and flush-mount anode types
-with McCoy and Dwight resistance formulas.
+Sacrificial anode sizing for offshore structures, pipelines and marine
+vessels with stand-off, bracelet and flush-mounted anode types. Every
+formula is evaluated by :mod:`digitalmodel.cathodic_protection._kernels`;
+the anode resistance is the DNV-RP-B401 Table 10-7 form selected by the
+anode type and its length ratios, and ``design_cp_system`` runs the full
+B401 Sec. 7 loop ``N = max(N_mass, N_initial, N_final)`` (issue #2211).
 
 References
 ----------
-- DNV-RP-B401 (2017) "Cathodic Protection Design" §5-7, §10
-- DNV-RP-F103 (2016) "Cathodic Protection of Submarine Pipelines"
-- McCoy (1974) "Corrosion Control in Offshore Structures"
-- Dwight (1936) "Calculation of Resistances to Ground"
+- DNV-RP-B401 "Cathodic Protection Design" Sec. 7 and Tables 10-6 to 10-8
+- DNV-RP-F103 "Cathodic Protection of Submarine Pipelines" (bracelet
+  utilisation, see ``dnv_rp_f103`` for the pipeline design)
 """
 
 from __future__ import annotations
 
 import math
 from enum import Enum
-from typing import Any
+from typing import Any, Final
 
 from pydantic import BaseModel, Field, model_validator
 
+from digitalmodel.cathodic_protection import _kernels as kernel
 from digitalmodel.cathodic_protection._edition import (
     DEFAULT_EDITION,
     Edition,
@@ -70,6 +73,12 @@ DEFAULT_UTILIZATION_BRACELET: float = utilisation_factor(
     AnodeShape.SHORT_FLUSH_BRACELET, _TABLE_EDITION
 ).value
 
+_MA_PER_A: Final = 1000.0
+
+GOVERNING_MASS: Final = "mass"
+GOVERNING_INITIAL: Final = "initial"
+GOVERNING_FINAL: Final = "final"
+
 
 class AnodeType(str, Enum):
     """Anode installation type."""
@@ -80,16 +89,33 @@ class AnodeType(str, Enum):
 
 
 class AnodeSizingInput(BaseModel):
-    """Input parameters for CP system anode sizing."""
+    """Input parameters for CP system anode sizing.
+
+    The mean current density and breakdown factor size the anode mass; the
+    optional initial and final values drive the B401 Sec. 7.8 current-output
+    checks and default to the mean values when omitted.
+    """
 
     surface_area_m2: float = Field(
         ..., gt=0, description="Total surface area to protect [m²]"
     )
     coating_breakdown_factor: float = Field(
-        ..., ge=0.0, le=1.0, description="Coating breakdown factor (0-1)"
+        ..., ge=0.0, le=1.0, description="Mean coating breakdown factor (0-1)"
     )
     current_density_mA_m2: float = Field(
-        ..., gt=0, description="Design current density [mA/m²]"
+        ..., gt=0, description="Design mean current density [mA/m²]"
+    )
+    initial_breakdown_factor: float | None = Field(
+        default=None, ge=0.0, le=1.0, description="Initial breakdown factor (0-1)"
+    )
+    final_breakdown_factor: float | None = Field(
+        default=None, ge=0.0, le=1.0, description="Final breakdown factor (0-1)"
+    )
+    initial_current_density_mA_m2: float | None = Field(
+        default=None, gt=0, description="Design initial current density [mA/m²]"
+    )
+    final_current_density_mA_m2: float | None = Field(
+        default=None, gt=0, description="Design final current density [mA/m²]"
     )
     design_life_years: float = Field(
         ..., gt=0, description="CP system design life [years]"
@@ -101,10 +127,31 @@ class AnodeSizingInput(BaseModel):
         ..., gt=0, description="Anode length [m]"
     )
     anode_radius_m: float = Field(
-        ..., gt=0, description="Anode equivalent radius [m]"
+        ...,
+        gt=0,
+        description=(
+            "Anode equivalent radius [m] (stand-off cross-section; bracelet "
+            "outer radius; flush-mounted half-width when no width is given)"
+        ),
+    )
+    anode_width_m: float | None = Field(
+        default=None, gt=0, description="Flush-mounted anode width [m]"
+    )
+    anode_thickness_m: float | None = Field(
+        default=None, gt=0, description="Flush-mounted anode thickness [m]"
+    )
+    anode_exposed_area_m2: float | None = Field(
+        default=None,
+        gt=0,
+        description="Exposed area of a bracelet / short flush anode [m²]",
     )
     anode_net_mass_kg: float = Field(
         ..., gt=0, description="Net mass of a single anode [kg]"
+    )
+    anode_density_kg_m3: float = Field(
+        default=kernel.ANODE_DENSITY_ALZNI,
+        gt=0,
+        description="Anode alloy density [kg/m³] for the depleted-geometry check",
     )
     resistivity_ohm_m: float = Field(
         default=0.30, gt=0, description="Electrolyte resistivity [ohm-m]"
@@ -131,19 +178,44 @@ class AnodeSizingResult(BaseModel):
     """Output of CP system anode sizing design."""
 
     current_demand_A: float = Field(
-        ..., description="Total current demand [A]"
+        ..., description="Mean current demand [A]"
+    )
+    initial_current_demand_A: float = Field(
+        default=0.0, description="Initial current demand [A]"
+    )
+    final_current_demand_A: float = Field(
+        default=0.0, description="Final current demand [A]"
     )
     total_anode_mass_kg: float = Field(
         ..., description="Total required anode mass [kg]"
     )
     number_of_anodes: int = Field(
-        ..., description="Number of anodes required"
+        ..., description="Number of anodes required (max of the three cases)"
+    )
+    number_of_anodes_mass: int = Field(
+        default=0, description="Anodes required by mass (B401 Eq. 2)"
+    )
+    number_of_anodes_initial: int = Field(
+        default=0, description="Anodes required by the initial current-output check"
+    )
+    number_of_anodes_final: int = Field(
+        default=0,
+        description="Anodes required by the final (depleted anode) current-output check",
+    )
+    governing_case: str = Field(
+        default=GOVERNING_MASS, description="'mass', 'initial' or 'final'"
     )
     anode_resistance_ohm: float = Field(
-        ..., description="Individual anode resistance [ohm]"
+        ..., description="Individual anode resistance, fresh geometry [ohm]"
     )
     anode_current_output_A: float = Field(
-        ..., description="Current output per anode [A]"
+        ..., description="Current output per anode, fresh geometry [A]"
+    )
+    final_anode_resistance_ohm: float = Field(
+        default=0.0, description="Individual anode resistance, depleted geometry [ohm]"
+    )
+    final_anode_current_output_A: float = Field(
+        default=0.0, description="Current output per anode, depleted geometry [A]"
     )
     driving_voltage_V: float = Field(
         ..., description="Design driving voltage [V]"
@@ -201,7 +273,9 @@ def calculate_current_demand(
     float
         Current demand [A].
     """
-    return surface_area_m2 * coating_breakdown_factor * current_density_mA_m2 / 1000.0
+    return kernel.current_demand(
+        surface_area_m2, current_density_mA_m2 / _MA_PER_A, coating_breakdown_factor
+    )
 
 
 def calculate_anode_mass(
@@ -230,8 +304,8 @@ def calculate_anode_mass(
     float
         Required total anode mass [kg].
     """
-    return (current_demand_A * design_life_years * 8760.0) / (
-        anode_capacity_Ah_kg * utilization_factor
+    return kernel.anode_mass(
+        current_demand_A, design_life_years, anode_capacity_Ah_kg, utilization_factor
     )
 
 
@@ -240,17 +314,24 @@ def calculate_anode_resistance(
     length_m: float,
     radius_m: float,
     resistivity_ohm_m: float,
+    width_m: float | None = None,
+    thickness_m: float | None = None,
+    exposed_area_m2: float | None = None,
 ) -> float:
-    """Calculate anode-to-electrolyte resistance per McCoy/Dwight formulas.
+    """Anode-to-electrolyte resistance per DNV-RP-B401 Table 10-7.
 
-    Stand-off (McCoy/DNV-RP-B401 Table 10-7):
-        R_a = (rho / (2*pi*L)) * (ln(4*L/r) - 1)
+    Stand-off: long slender ``rho/(2 pi L) (ln(4L/r) - 1)`` when L >= 4r,
+    else the short slender stand-off formula.
 
-    Bracelet (Dwight, short cylinder approximation):
-        R_a = (rho / (2*pi*L)) * (ln(4*L/r) - 1 + r/(2*L))
+    Flush-mounted: long flush ``rho / (2 S)`` (S the mean of length and
+    width) when L >= 4 width and L >= 4 thickness, else short flush
+    ``0.315 rho / sqrt(A)``. Without an explicit width the anode is taken
+    as ``width = 2 r`` (the equivalent-cylinder diameter); the thickness
+    defaults to the width; the exposed area defaults to ``L * width``.
 
-    Flush-mount (half-space radiation):
-        R_a = (rho / (pi*L)) * (ln(2*L/r) - 0.5)
+    Bracelet: ``0.315 rho / sqrt(A)`` with ``A`` the exposed area, by
+    default the outer cylindrical surface ``2 pi r L`` for the bracelet
+    outer radius ``r``.
 
     Parameters
     ----------
@@ -259,9 +340,14 @@ def calculate_anode_resistance(
     length_m : float
         Anode length [m].
     radius_m : float
-        Anode equivalent radius [m].
+        Anode equivalent radius (stand-off), outer radius (bracelet) or
+        half-width (flush-mounted without ``width_m``) [m].
     resistivity_ohm_m : float
         Electrolyte resistivity [ohm-m].
+    width_m, thickness_m : float, optional
+        Flush-mounted anode width and thickness [m].
+    exposed_area_m2 : float, optional
+        Exposed surface area for the short flush / bracelet formula [m²].
 
     Returns
     -------
@@ -271,39 +357,70 @@ def calculate_anode_resistance(
     rho = resistivity_ohm_m
     L = length_m
     r = radius_m
+    kind = AnodeType(anode_type)
 
-    if anode_type == AnodeType.STAND_OFF:
-        # McCoy formula (DNV-RP-B401 Table 10-7)
-        R_a = (rho / (2.0 * math.pi * L)) * (
-            math.log(4.0 * L / r) - 1.0
-        )
-    elif anode_type == AnodeType.BRACELET:
-        # Dwight formula with short-cylinder correction
-        R_a = (rho / (2.0 * math.pi * L)) * (
-            math.log(4.0 * L / r) - 1.0 + r / (2.0 * L)
-        )
-    elif anode_type == AnodeType.FLUSH_MOUNT:
-        # Half-space (flush on hull) — McCoy simplified
-        R_a = (rho / (math.pi * L)) * (
-            math.log(2.0 * L / r) - 0.5
-        )
-    else:
-        # Default to stand-off
-        R_a = (rho / (2.0 * math.pi * L)) * (
-            math.log(4.0 * L / r) - 1.0
-        )
+    if kind is AnodeType.BRACELET:
+        area = exposed_area_m2 if exposed_area_m2 is not None else 2.0 * math.pi * r * L
+        return kernel.short_flush_or_bracelet(rho, area)
 
-    return R_a
+    if kind is AnodeType.FLUSH_MOUNT:
+        width = width_m if width_m is not None else 2.0 * r
+        thickness = thickness_m if thickness_m is not None else width
+        if (
+            L >= kernel.FLUSH_LENGTH_RATIO * width
+            and L >= kernel.FLUSH_LENGTH_RATIO * thickness
+        ):
+            return kernel.long_flush(rho, L, width, thickness)
+        area = exposed_area_m2 if exposed_area_m2 is not None else L * width
+        return kernel.short_flush_or_bracelet(rho, area)
+
+    return kernel.slender_standoff(rho, L, r)
+
+
+def depleted_equivalent_radius(
+    anode_net_mass_kg: float,
+    anode_length_m: float,
+    utilization_factor: float,
+    anode_density_kg_m3: float = kernel.ANODE_DENSITY_ALZNI,
+) -> float:
+    """Equivalent radius of the anode consumed to its utilisation limit.
+
+    B401 Sec. 7.8 asks for the final anode resistance with the anode
+    consumed to its utilisation factor. Assumption (issue #2211): the
+    depleted anode keeps its length and is a cylinder of the remaining
+    mass ``(1 - u) m_a``, so ``r_final = sqrt((1 - u) m_a / (pi L rho))``.
+    With ``u = 1`` nothing remains and the fresh radius is returned.
+    """
+    remaining = (1.0 - utilization_factor) * anode_net_mass_kg
+    if remaining <= 0.0:
+        return kernel.equivalent_radius_from_mass(
+            anode_net_mass_kg, anode_length_m, anode_density_kg_m3
+        )
+    return kernel.equivalent_radius_from_mass(remaining, anode_length_m, anode_density_kg_m3)
+
+
+def governing_case(n_mass: int, n_initial: int, n_final: int) -> str:
+    """Name of the case that sets ``max(n_mass, n_initial, n_final)``."""
+    n = max(n_mass, n_initial, n_final)
+    if n_mass == n:
+        return GOVERNING_MASS
+    if n_initial == n:
+        return GOVERNING_INITIAL
+    return GOVERNING_FINAL
 
 
 def design_cp_system(
     input_params: AnodeSizingInput,
     edition: Edition | None = None,
 ) -> AnodeSizingResult:
-    """Design a complete sacrificial anode CP system.
+    """Design a complete sacrificial anode CP system (DNV-RP-B401 Sec. 7).
 
-    End-to-end calculation: current demand → anode mass → anode count →
-    resistance check → current output verification.
+    Current demand → anode mass → ``N_mass``; anode resistance and current
+    output for the fresh anode → ``N_initial``; the same for the anode
+    consumed to its utilisation limit (``depleted_equivalent_radius``) →
+    ``N_final``; ``N = max(N_mass, N_initial, N_final)`` with the governing
+    case reported. Initial and final demands default to the mean demand
+    when the input gives no separate densities or breakdown factors.
 
     Parameters
     ----------
@@ -316,55 +433,85 @@ def design_cp_system(
         Complete CP system design result.
     """
     ed = normalize_edition(edition, stacklevel=3)
+    p = input_params
 
-    # Step 1: Current demand
-    i_demand = calculate_current_demand(
-        surface_area_m2=input_params.surface_area_m2,
-        coating_breakdown_factor=input_params.coating_breakdown_factor,
-        current_density_mA_m2=input_params.current_density_mA_m2,
+    # Step 1: current demands (mean sizes the mass; initial/final the output)
+    i_mean = calculate_current_demand(
+        p.surface_area_m2, p.coating_breakdown_factor, p.current_density_mA_m2
+    )
+    f_initial = (
+        p.initial_breakdown_factor
+        if p.initial_breakdown_factor is not None
+        else p.coating_breakdown_factor
+    )
+    f_final = (
+        p.final_breakdown_factor
+        if p.final_breakdown_factor is not None
+        else p.coating_breakdown_factor
+    )
+    i_initial = calculate_current_demand(
+        p.surface_area_m2,
+        f_initial,
+        p.initial_current_density_mA_m2 or p.current_density_mA_m2,
+    )
+    i_final = calculate_current_demand(
+        p.surface_area_m2,
+        f_final,
+        p.final_current_density_mA_m2 or p.current_density_mA_m2,
     )
 
-    # Step 2: Total anode mass
+    # Step 2: total anode mass and mass-based count
     total_mass = calculate_anode_mass(
-        current_demand_A=i_demand,
-        design_life_years=input_params.design_life_years,
-        utilization_factor=input_params.utilization_factor,
-        anode_capacity_Ah_kg=input_params.anode_capacity_Ah_kg,
+        i_mean, p.design_life_years, p.utilization_factor, p.anode_capacity_Ah_kg
     )
+    n_mass = kernel.anode_count(total_mass, p.anode_net_mass_kg)
 
-    # Step 3: Number of anodes (mass-based)
-    n_mass = max(1, math.ceil(total_mass / input_params.anode_net_mass_kg))
-
-    # Step 4: Anode resistance
+    # Step 3: fresh anode resistance and output → initial count
     R_a = calculate_anode_resistance(
-        anode_type=input_params.anode_type,
-        length_m=input_params.anode_length_m,
-        radius_m=input_params.anode_radius_m,
-        resistivity_ohm_m=input_params.resistivity_ohm_m,
+        p.anode_type,
+        p.anode_length_m,
+        p.anode_radius_m,
+        p.resistivity_ohm_m,
+        width_m=p.anode_width_m,
+        thickness_m=p.anode_thickness_m,
+        exposed_area_m2=p.anode_exposed_area_m2,
     )
+    i_anode = kernel.anode_current_output(p.driving_voltage_V, R_a)
+    n_initial = kernel.anodes_for_current(i_initial, i_anode)
 
-    # Step 5: Current output per anode
-    i_anode = input_params.driving_voltage_V / R_a
+    # Step 4: depleted anode (B401 7.8) → final count. The depleted geometry
+    # is derived from the mass-based equivalent radius for every anode type;
+    # explicit width / area overrides describe the fresh anode only.
+    r_final = depleted_equivalent_radius(
+        p.anode_net_mass_kg, p.anode_length_m, p.utilization_factor, p.anode_density_kg_m3
+    )
+    R_final = calculate_anode_resistance(
+        p.anode_type, p.anode_length_m, r_final, p.resistivity_ohm_m
+    )
+    i_anode_final = kernel.anode_current_output(p.driving_voltage_V, R_final)
+    n_final = kernel.anodes_for_current(i_final, i_anode_final)
 
-    # Step 6: Check if current output is sufficient
-    # Need: n_anodes * i_anode >= i_demand (final condition check)
-    n_current = max(1, math.ceil(i_demand / i_anode))
-
-    # Take the larger of mass-based and current-based anode count
-    n_anodes = max(n_mass, n_current)
-
-    # Mass check: does the anode count provide enough total mass?
-    provided_mass = n_anodes * input_params.anode_net_mass_kg
+    # Step 5: governing count
+    n_anodes = max(1, n_mass, n_initial, n_final)
+    provided_mass = n_anodes * p.anode_net_mass_kg
     mass_check_ok = provided_mass >= total_mass
 
     return AnodeSizingResult(
-        current_demand_A=round(i_demand, 4),
+        current_demand_A=round(i_mean, 4),
+        initial_current_demand_A=round(i_initial, 4),
+        final_current_demand_A=round(i_final, 4),
         total_anode_mass_kg=round(total_mass, 2),
         number_of_anodes=n_anodes,
+        number_of_anodes_mass=n_mass,
+        number_of_anodes_initial=n_initial,
+        number_of_anodes_final=n_final,
+        governing_case=governing_case(n_mass, n_initial, n_final),
         anode_resistance_ohm=round(R_a, 6),
         anode_current_output_A=round(i_anode, 4),
-        driving_voltage_V=input_params.driving_voltage_V,
-        anode_type=input_params.anode_type.value,
+        final_anode_resistance_ohm=round(R_final, 6),
+        final_anode_current_output_A=round(i_anode_final, 4),
+        driving_voltage_V=p.driving_voltage_V,
+        anode_type=p.anode_type.value,
         mass_check_ok=mass_check_ok,
         edition_used=ed,
         standard=standard_for_edition(ed),

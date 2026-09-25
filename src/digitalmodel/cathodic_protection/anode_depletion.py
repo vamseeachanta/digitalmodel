@@ -4,6 +4,13 @@ Provides tools for tracking sacrificial anode depletion over time,
 generating depletion profiles, calculating remaining anode life from
 inspection data, and recommending inspection intervals.
 
+Consumption model (issue #2211): the metal dissolved is the Faraday mass
+``I * t * 8760 / epsilon``; the utilisation factor bounds the *usable*
+mass ``M * u`` and does not divide the consumption. Remaining life is
+``(M * u - consumed) * epsilon / (I * 8760)``, an anode is depleted when
+``consumed >= M * u`` and the profile's end of life is the zero crossing
+of its usable mass.
+
 References
 ----------
 - DNV-RP-B401 (2017) "Cathodic Protection Design" §7.7, §10.8
@@ -16,6 +23,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from digitalmodel.cathodic_protection import _kernels as kernel
 from digitalmodel.cathodic_protection._edition import DEFAULT_EDITION, Edition
 from digitalmodel.cathodic_protection.b401_tables import (
     AnodeEnvironment,
@@ -107,13 +115,17 @@ class DepletionProfile(BaseModel):
         ..., description="Time points [years]"
     )
     remaining_mass_kg: list[float] = Field(
-        ..., description="Remaining mass at each time point [kg]"
+        ..., description="Remaining gross mass at each time point [kg]"
+    )
+    usable_mass_kg: list[float] = Field(
+        default_factory=list,
+        description="Remaining usable mass M * u - consumed at each time point [kg]",
     )
     depletion_percentage: list[float] = Field(
         ..., description="Depletion percentage at each time point [%]"
     )
     end_of_life_year: float = Field(
-        ..., description="Year when utilizable mass is exhausted"
+        ..., description="Year when the usable mass M * u is exhausted"
     )
 
 
@@ -137,8 +149,10 @@ def calculate_remaining_life(
 ) -> DepletionResult:
     """Calculate remaining anode life from current status.
 
-    Mass consumed = I_mean * t * 8760 / (capacity * u_f)
-    Remaining life = remaining_usable_mass * capacity * u_f / (I_mean * 8760)
+    Mass consumed = max(I_mean * t * 8760 / capacity, measured loss)
+    Usable mass = M * u_f
+    Remaining life = (M * u_f - consumed) * capacity / (I_mean * 8760)
+    Depleted when consumed >= M * u_f
 
     Parameters
     ----------
@@ -152,31 +166,33 @@ def calculate_remaining_life(
     """
     capacity = anode_status.anode_capacity_Ah_kg
     u_f = anode_status.utilization_factor
+    original = anode_status.original_mass_kg
 
-    # Mass consumed based on current draw
-    mass_consumed = (
-        anode_status.mean_current_A * anode_status.elapsed_years * 8760.0
-    ) / (capacity * u_f)
+    # Metal consumed by the current drawn (Faraday), without the utilisation
+    # factor, which bounds the usable mass instead
+    mass_consumed = kernel.mass_consumed(
+        anode_status.mean_current_A, anode_status.elapsed_years, capacity
+    )
 
-    # Use minimum of calculated consumption and actual loss
-    actual_loss = anode_status.original_mass_kg - anode_status.current_mass_kg
-    mass_consumed = max(mass_consumed, actual_loss)
+    # Use the larger of calculated consumption and measured loss
+    actual_loss = original - anode_status.current_mass_kg
+    mass_consumed = min(max(mass_consumed, actual_loss), original)
 
-    remaining = max(0.0, anode_status.original_mass_kg - mass_consumed)
-    usable_remaining = remaining * u_f
+    remaining = max(0.0, original - mass_consumed)
+    usable_mass = original * u_f
+    usable_remaining = max(0.0, usable_mass - mass_consumed)
 
-    depletion_pct = (mass_consumed / anode_status.original_mass_kg) * 100.0
-    depletion_pct = min(depletion_pct, 100.0)
+    depletion_pct = min((mass_consumed / original) * 100.0, 100.0)
 
-    # Remaining life
+    # Remaining life until the usable mass is exhausted
     if anode_status.mean_current_A > 0:
         remaining_life = (usable_remaining * capacity) / (
-            anode_status.mean_current_A * 8760.0
+            anode_status.mean_current_A * kernel.HOURS_PER_YEAR
         )
     else:
         remaining_life = float("inf")
 
-    is_depleted = depletion_pct >= (u_f * 100.0)
+    is_depleted = mass_consumed >= usable_mass
 
     return DepletionResult(
         anode_id=anode_status.anode_id,
@@ -199,7 +215,9 @@ def generate_depletion_profile(
     """Generate a time-series anode depletion profile.
 
     Creates a year-by-year projection of remaining anode mass assuming
-    constant current demand.
+    constant current demand. The consumption rate is the Faraday rate
+    ``I * 8760 / epsilon`` [kg/yr]; ``end_of_life_year`` is when the usable
+    mass ``M * u`` is consumed, the zero crossing of ``usable_mass_kg``.
 
     Parameters
     ----------
@@ -223,15 +241,11 @@ def generate_depletion_profile(
     """
     years: list[float] = []
     masses: list[float] = []
+    usable: list[float] = []
     depletions: list[float] = []
 
-    # Consumption rate [kg/year]
-    if mean_current_A > 0:
-        consumption_rate = (mean_current_A * 8760.0) / (
-            anode_capacity_Ah_kg * utilization_factor
-        )
-    else:
-        consumption_rate = 0.0
+    # Faraday consumption rate [kg/year], no utilisation factor
+    consumption_rate = kernel.mass_consumed(mean_current_A, 1.0, anode_capacity_Ah_kg)
 
     usable_mass = original_mass_kg * utilization_factor
     if consumption_rate > 0:
@@ -247,6 +261,7 @@ def generate_depletion_profile(
 
         years.append(round(t, 2))
         masses.append(round(remaining, 2))
+        usable.append(round(max(0.0, usable_mass - consumed), 2))
         depletions.append(round(depletion, 1))
 
         t += time_step_years
@@ -254,6 +269,7 @@ def generate_depletion_profile(
     return DepletionProfile(
         years=years,
         remaining_mass_kg=masses,
+        usable_mass_kg=usable,
         depletion_percentage=depletions,
         end_of_life_year=round(eol_year, 2),
     )

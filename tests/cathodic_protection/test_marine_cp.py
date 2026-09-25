@@ -12,16 +12,21 @@ Climate by surface temperature: > 20 °C tropical, 12-20 sub-tropical,
 import pytest
 
 from digitalmodel.cathodic_protection.b401_tables import DesignPhase
+import warnings
+
 from digitalmodel.cathodic_protection.marine_cp import (
     MarineCPInput,
     MarineCPResult,
     Zone,
     ZoneType,
     calculate_zone_demand,
-    design_marine_cp,
     get_seawater_current_density,
     seawater_current_density,
 )
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", DeprecationWarning)
+    from digitalmodel.cathodic_protection.marine_cp import design_marine_cp
 
 EDITION = "2010"  # edition whose tables the wiki holds; avoids the None warning
 
@@ -238,11 +243,15 @@ class TestDesignMarineCP:
         splash = [z for z in result.zone_demands if z["zone_name"] == "splash_zone"]
         assert splash[0]["current_demand_A"] == 0.0
         assert splash[0]["citation"] is None
+        # The facade delegates to marine_structure_current_demand, which
+        # cites the initial/final (Table 10-1) and mean (Table 10-2) rows.
         assert result.citations == [
+            "dnv-rp-b401 2011 Table 10-1",
             "dnv-rp-b401 2011 Table 10-2",
             "dnv-rp-b401 2011 Sec. 6.3 (buried surfaces)",
         ]
         assert result.edition == "2010"
+        assert result.governing_case == "mass"
 
     def test_tropical_monopile(self):
         """Tropical monopile: 28 °C, 25 m -> 0-30 m row mean 0.070 A/m².
@@ -275,3 +284,63 @@ class TestDesignMarineCP:
         # M = 3.68 * 30 * 8760 / (2000 * 0.90) = 537.28 kg -> 3 anodes
         assert result.total_anode_mass_kg == pytest.approx(537.28, abs=0.01)
         assert result.number_of_anodes == 3
+
+
+class TestDeprecatedFacade:
+    """marine_cp is a thin facade over marine_structure_cp (#2211)."""
+
+    def test_import_of_design_marine_cp_warns(self):
+        import importlib
+
+        import digitalmodel.cathodic_protection as cp
+        from digitalmodel.cathodic_protection import marine_cp
+
+        with pytest.warns(DeprecationWarning, match="design_marine_cp is deprecated"):
+            fn = getattr(marine_cp, "design_marine_cp")
+        assert fn is marine_cp._design_marine_cp
+        with pytest.warns(DeprecationWarning):
+            assert cp.design_marine_cp is marine_cp._design_marine_cp
+        # Importing the package itself must not warn.
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", DeprecationWarning)
+            importlib.reload(cp)
+
+    def test_facade_matches_marine_structure_cp(self):
+        """Same zones through both entry points give the same mass and count."""
+        from digitalmodel.cathodic_protection.marine_structure_cp import (
+            ExposureZone,
+            StructuralZone,
+            marine_structure_current_demand,
+        )
+
+        inp = MarineCPInput(
+            zones=[
+                Zone(name="sub", zone_type=ZoneType.SUBMERGED, surface_area_m2=3000.0,
+                     coating_breakdown_factor=0.05),
+                Zone(name="mud", zone_type=ZoneType.MUDLINE, surface_area_m2=800.0),
+            ],
+            water_temperature_c=8.0,
+            water_depth_m=100.0,
+            anode_net_mass_kg=250.0,
+            anode_length_m=1.5,
+        )
+        facade = design_marine_cp(inp, edition=EDITION)
+        direct = marine_structure_current_demand(
+            zones=[
+                StructuralZone(zone_name="sub", exposure_zone=ExposureZone.SUBMERGED,
+                               surface_area_m2=3000.0, depth_m=100.0,
+                               coating_breakdown_factor=0.05),
+                StructuralZone(zone_name="mud", exposure_zone=ExposureZone.BURIED_MUDLINE,
+                               surface_area_m2=800.0, depth_m=100.0),
+            ],
+            design_life_years=25.0,
+            anode_net_mass_kg=250.0,
+            edition=EDITION,
+            surface_temperature_c=8.0,
+            anode_length_m=1.5,
+        )
+        assert facade.total_current_demand_A == direct.total_mean_current_A
+        assert facade.total_anode_mass_kg == direct.total_anode_mass_kg
+        assert facade.number_of_anodes == direct.number_of_anodes
+        assert facade.governing_case == direct.governing_case
+        assert facade.citations == direct.citations

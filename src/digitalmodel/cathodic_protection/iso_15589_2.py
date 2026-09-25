@@ -1,14 +1,19 @@
 """ISO 15589-2 — Cathodic Protection of Pipeline Systems —
 Part 2: Offshore Pipelines (2004).
 
-Implements galvanic anode CP design for offshore/subsea pipelines
-including temperature-dependent current density, coating breakdown,
-pipeline current demand, anode resistance, and mass requirement.
+Galvanic anode CP design for offshore/subsea pipelines: temperature-
+dependent current density, coating breakdown, pipeline current demand,
+anode resistance, and mass requirement. The formulas are evaluated by
+:mod:`digitalmodel.cathodic_protection._kernels`, so the demand, mass and
+resistance agree with the DNV-RP-B401 module for the same inputs
+(issue #2211).
 """
 
 from __future__ import annotations
 
 import math
+
+from digitalmodel.cathodic_protection import _kernels as kernel
 
 # ---------------------------------------------------------------------------
 # Protection potentials vs Ag/AgCl (§5.2)
@@ -31,6 +36,8 @@ IC_WARM: float = 150.0  # initial, >15 degC
 IC_COLD: float = 200.0  # initial, <7 degC
 IM: float = 100.0  # mean
 IF: float = 130.0  # final
+
+_MA_PER_A: float = 1000.0
 
 
 def initial_current_density(T_seawater_C: float) -> float:
@@ -63,12 +70,15 @@ def coating_breakdown_factor(
 
     fc(t) = fc_i + (fc_f - fc_i) * (t / T_design)
 
+    The linear kernel ``a + b t`` with ``a = fc_i`` and
+    ``b = (fc_f - fc_i) / T_design``.
+
     Parameters
     ----------
     fc_i : float
         Initial breakdown factor (e.g. 0.10 for FBE/3LPE).
     fc_f : float
-        Final breakdown factor (e.g. 0.30).
+        Final breakdown factor (e.g. 0.30); must not be below ``fc_i``.
     t_years : float
         Elapsed time [years].
     T_design_years : float
@@ -79,7 +89,11 @@ def coating_breakdown_factor(
     float
         Coating breakdown factor at time t (dimensionless).
     """
-    return fc_i + (fc_f - fc_i) * (t_years / T_design_years)
+    if T_design_years <= 0.0:
+        raise ValueError(f"T_design_years must be positive, got {T_design_years!r}")
+    if fc_f < fc_i:
+        raise ValueError(f"fc_f must not be below fc_i (fc_i={fc_i!r}, fc_f={fc_f!r})")
+    return kernel.coating_breakdown_linear(fc_i, (fc_f - fc_i) / T_design_years, t_years)
 
 
 def pipeline_current_demand(
@@ -105,15 +119,19 @@ def pipeline_current_demand(
     float
         Protection current demand [A].
     """
-    return math.pi * D * L * fc * (ic_mA_m2 / 1000.0)
+    return kernel.current_demand(math.pi * D * L, ic_mA_m2 / _MA_PER_A, fc)
 
 
 def anode_resistance(rho: float, L_a: float, r_a: float) -> float:
-    """Simplified slender anode resistance (§8.4, Annex A).
+    """Slender stand-off anode resistance (§8.4, Annex A).
 
-    R_a = (rho / (2 * pi * L_a)) * (ln(2 * L_a / r_a) - 0.5)
+    Long slender stand-off (L_a >= 4 r_a):
+        R_a = (rho / (2 * pi * L_a)) * (ln(4 * L_a / r_a) - 1)
+    Short slender stand-off (L_a < 4 r_a): the corresponding short formula.
 
-    Accurate to within +-5% for typical L_a/r_a ratios.
+    This is the DNV-RP-B401 Table 10-7 form that ISO 15589-2 Annex A also
+    gives; the earlier ``ln(2 L / r) - 0.5`` expression was in neither
+    standard (review 2026-09-24, issue #2211).
 
     Parameters
     ----------
@@ -129,7 +147,7 @@ def anode_resistance(rho: float, L_a: float, r_a: float) -> float:
     float
         Anode-to-electrolyte resistance [ohm].
     """
-    return (rho / (2.0 * math.pi * L_a)) * (math.log(2.0 * L_a / r_a) - 0.5)
+    return kernel.slender_standoff(rho, L_a, r_a)
 
 
 def anode_output_current(
@@ -155,7 +173,7 @@ def anode_output_current(
     float
         Anode output current [A].
     """
-    return abs(E_anode_V - E_struct_V) / R_a
+    return kernel.anode_current_output(abs(E_anode_V - E_struct_V), R_a)
 
 
 def anode_mass_requirement(
@@ -184,7 +202,7 @@ def anode_mass_requirement(
     float
         Required anode mass [kg].
     """
-    return (I_mean_A * T_design_years * 8760.0) / (E_capacity * u_f)
+    return kernel.anode_mass(I_mean_A, T_design_years, E_capacity, u_f)
 
 
 def check_protection_potential(measured_V_AgAgCl: float) -> dict:

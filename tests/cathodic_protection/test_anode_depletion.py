@@ -73,10 +73,77 @@ def test_depletion_profile_consumption_rate():
         utilization_factor=0.90,
         time_step_years=1.0,
     )
-    # Consumption = 1.0 * 8760 / (2000 * 0.9) = 4.867 kg/yr
+    # Faraday consumption = 1.0 * 8760 / 2000 = 4.38 kg/yr; the utilisation
+    # factor bounds the usable mass (900 kg) and does not divide the
+    # consumption (#2211; the former 4.867 double-counted u).
     mass_at_1yr = profile.remaining_mass_kg[1]
     consumption = 1000.0 - mass_at_1yr
-    assert consumption == pytest.approx(4.867, rel=0.02)
+    assert consumption == pytest.approx(4.38, rel=1e-3)
+    assert profile.usable_mass_kg[0] == pytest.approx(900.0)
+    assert profile.usable_mass_kg[1] == pytest.approx(900.0 - 4.38, abs=0.01)
+    # End of life = 900 / 4.38 = 205.48 yr
+    assert profile.end_of_life_year == pytest.approx(205.48, abs=0.01)
+
+
+def test_end_of_life_matches_profile_usable_mass_zero_crossing():
+    """``end_of_life_year`` is where the profile's usable mass reaches zero.
+
+    200 kg, 0.5 A, 2000 Ah/kg, u = 0.90: rate = 0.5 * 8760 / 2000 = 2.19 kg/yr,
+    usable 180 kg, EOL = 180 / 2.19 = 82.19 yr. The usable-mass series is
+    positive at 82.0 yr and zero at 82.5 yr, so the zero crossing lies in
+    [82.0, 82.5] and contains the EOL. The gross remaining mass is still
+    200 - 2.19 * 82.19 = 20 kg = (1 - u) M at end of life.
+    """
+    profile = generate_depletion_profile(
+        original_mass_kg=200.0,
+        mean_current_A=0.5,
+        design_life_years=100.0,
+        anode_capacity_Ah_kg=2000.0,
+        utilization_factor=0.90,
+        time_step_years=0.5,
+    )
+    assert profile.end_of_life_year == pytest.approx(82.19, abs=0.01)
+    last_positive = max(y for y, u in zip(profile.years, profile.usable_mass_kg) if u > 0)
+    first_zero = min(y for y, u in zip(profile.years, profile.usable_mass_kg) if u == 0)
+    assert last_positive < profile.end_of_life_year <= first_zero
+    assert first_zero - last_positive == pytest.approx(0.5)
+    idx = profile.years.index(first_zero)
+    assert profile.remaining_mass_kg[idx] == pytest.approx(20.0, abs=1.5)
+
+    status = AnodeStatus(
+        anode_id="EOL",
+        original_mass_kg=200.0,
+        current_mass_kg=200.0,  # no inspection data: consumption from current
+        elapsed_years=0.0,
+        mean_current_A=0.5,
+        anode_capacity_Ah_kg=2000.0,
+        utilization_factor=0.90,
+    )
+    result = calculate_remaining_life(status)
+    assert result.remaining_life_years == pytest.approx(profile.end_of_life_year, abs=0.01)
+
+
+def test_is_depleted_when_consumed_reaches_usable_mass():
+    """Depleted when consumed >= M u, i.e. at 90 % depletion for u = 0.90."""
+    at_limit = AnodeStatus(
+        anode_id="L",
+        original_mass_kg=100.0,
+        current_mass_kg=10.0,
+        elapsed_years=1.0,
+        mean_current_A=0.01,
+        utilization_factor=0.90,
+    )
+    below = AnodeStatus(
+        anode_id="B",
+        original_mass_kg=100.0,
+        current_mass_kg=11.0,
+        elapsed_years=1.0,
+        mean_current_A=0.01,
+        utilization_factor=0.90,
+    )
+    assert calculate_remaining_life(at_limit).is_depleted
+    assert calculate_remaining_life(at_limit).remaining_life_years == 0.0
+    assert not calculate_remaining_life(below).is_depleted
 
 
 def test_inspection_recommendation_routine():
