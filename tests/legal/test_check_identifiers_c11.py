@@ -113,6 +113,10 @@ class TestEachC11CategoryIsDetected:
             ("K:" + BS + "projects" + BS + "run" + BS + "a.dat", "mapped-drive-path"),
             (BS * 2 + "fileserver" + BS + "share" + BS + "a.dat", "unc-share"),
             (BS * 4 + "fileserver" + BS * 2 + "share" + BS * 2 + "a.dat", "unc-share"),
+            # a one-character host is still a host
+            (BS * 2 + "h" + BS + "share" + BS + "a.dat", "unc-share"),
+            (BS * 4 + "h" + BS * 2 + "share" + BS * 2 + "a.dat", "unc-share"),
+            ("copy to " + BS * 2 + "h" + BS + "share", "unc-share"),
             # machine hostname
             ("# " + "Machine: " + "WORKSTATION" + "7", "solver-export-machine"),
             (
@@ -212,6 +216,10 @@ class TestUncFalsePositives:
             + BS * 2
             + "right)",
             'pattern: "^' + BS * 2 + "d+" + BS * 2 + 'd+$"',
+            # one-letter LaTeX commands and escapes next to a one-letter host
+            'latex: "' + BS * 2 + "a" + BS * 2 + "b = " + BS * 2 + 'x"',
+            "s = '" + BS * 2 + "n" + BS * 2 + "t'",
+            'latex: "' + BS * 2 + "Delta" + BS * 2 + "sigma_" + BS * 2 + 'a"',
         ],
     )
     def test_not_a_unc_share(self, gate, line):
@@ -278,28 +286,143 @@ class TestExampleSentinel:
         assert out.returncode == 1, out.stdout
 
 
-class TestWholeTreeCeiling:
-    """CI scans the whole tree. Files the gate cannot read are counted against
-    an explicit ceiling rather than silently passed or blocking forever."""
+PDF = b"%PDF-1.7\n\x00\x01\x02 binary \x00\xff"
 
-    def test_uninspectable_within_the_ceiling_passes(self, gate):
-        data = b"%PDF-1.7\n\x00\x01\x02 binary \x00\xff"
+
+class TestUninspectableBaseline:
+    """CI scans the whole tree. Files the gate cannot read are accepted only
+    when a committed manifest lists their path AND content digest. A count
+    ceiling accepted a replaced binary, or one deleted and another added, as
+    long as the number did not rise (review finding 5)."""
+
+    def _baseline(self, gate):
+        return gate.root / "baseline.txt"
+
+    def _accept(self, gate, *paths):
+        out = gate(
+            *map(str, paths), "--baseline", str(self._baseline(gate)), "--update-baseline"
+        )
+        assert out.returncode == 0, out.stdout + out.stderr
+        return out
+
+    def test_without_a_baseline_an_uninspectable_file_fails(self, gate):
         path = gate.root / "a.pdf"
-        path.write_bytes(data)
-        out = gate(str(path), "--max-uninspectable", "1")
+        path.write_bytes(PDF)
+        out = gate(str(path))
+        assert out.returncode == 2, out.stdout
+
+    def test_update_baseline_records_path_and_sha256(self, gate):
+        path = gate.root / "a.pdf"
+        path.write_bytes(PDF)
+        self._accept(gate, path)
+        text = self._baseline(gate).read_text(encoding="utf-8")
+        assert hashlib.sha256(PDF).hexdigest() in text
+        assert "a.pdf" in text
+
+    def test_a_listed_unchanged_file_passes(self, gate):
+        path = gate.root / "a.pdf"
+        path.write_bytes(PDF)
+        self._accept(gate, path)
+        out = gate(str(path), "--baseline", str(self._baseline(gate)))
         assert out.returncode == 0, out.stdout
         assert "1 uninspectable" in out.stdout
 
-    def test_uninspectable_above_the_ceiling_fails(self, gate):
-        data = b"%PDF-1.7\n\x00\x01\x02 binary \x00\xff"
+    def test_a_changed_listed_file_fails(self, gate):
         path = gate.root / "a.pdf"
-        path.write_bytes(data)
-        out = gate(str(path), "--max-uninspectable", "0")
+        path.write_bytes(PDF)
+        self._accept(gate, path)
+        path.write_bytes(PDF + b"confidential")
+        out = gate(str(path), "--baseline", str(self._baseline(gate)))
         assert out.returncode == 2, out.stdout
+        assert "changed" in out.stdout
 
-    def test_a_finding_fails_whatever_the_ceiling(self, gate):
-        out = gate(_file(gate, "see B" + "1234\n"), "--max-uninspectable", "99")
+    def test_an_unlisted_file_fails_even_when_the_count_is_unchanged(self, gate):
+        a = gate.root / "a.pdf"
+        a.write_bytes(PDF)
+        self._accept(gate, a)
+        a.unlink()
+        b = gate.root / "b.pdf"
+        b.write_bytes(PDF)
+        out = gate(str(b), "--baseline", str(self._baseline(gate)))
+        assert out.returncode == 2, out.stdout
+        assert "not in the baseline" in out.stdout
+
+    def test_a_finding_fails_whatever_the_baseline(self, gate):
+        a = gate.root / "a.pdf"
+        a.write_bytes(PDF)
+        self._accept(gate, a)
+        out = gate(
+            _file(gate, "see B" + "1234\n"),
+            str(a),
+            "--baseline",
+            str(self._baseline(gate)),
+        )
         assert out.returncode == 1, out.stdout
+
+    def test_a_named_baseline_that_is_missing_is_an_error(self, gate):
+        a = gate.root / "a.pdf"
+        a.write_bytes(PDF)
+        out = gate(str(a), "--baseline", str(gate.root / "absent.txt"))
+        assert out.returncode not in (0, 1), out.stdout
+
+    def test_update_baseline_refuses_the_staged_mode(self, gate):
+        out = gate("--update-baseline", "--baseline", str(self._baseline(gate)))
+        assert out.returncode not in (0, 1), out.stdout
+        assert not self._baseline(gate).exists()
+
+    def test_the_committed_baseline_has_digests_for_every_entry(self):
+        manifest = REPO / ".legal-uninspectable-baseline.txt"
+        assert manifest.exists()
+        rows = [
+            ln
+            for ln in manifest.read_text(encoding="utf-8").splitlines()
+            if ln and not ln.startswith("#")
+        ]
+        assert rows
+        for ln in rows:
+            digest, sep, path = ln.partition("  ")
+            assert sep and len(digest) == 64 and path, ln
+
+
+class TestPrivateListIsCoveredWithoutIt:
+    """Review finding 3: CI has no private list, so every literal name on it
+    must be caught by a public class or a salted hash. The private list is
+    read from where the operator keeps it (DIGITALMODEL_DENY_LIST, else the
+    default location); without it the test skips, so this file names none."""
+
+    @staticmethod
+    def _private_list() -> Path | None:
+        named = os.environ.get("DIGITALMODEL_DENY_LIST")
+        if named:
+            return Path(named)
+        default = (
+            Path.home() / ".config" / "digitalmodel" / "identifier-deny-list.txt"
+        )
+        return default if default.exists() else None
+
+    def test_every_literal_entry_is_caught_with_the_private_list_absent(self, gate):
+        private = self._private_list()
+        if private is None or not private.exists():
+            pytest.skip("no private deny list on this machine")
+        names = [
+            ln.strip()
+            for ln in private.read_text(encoding="utf-8-sig").splitlines()
+            if ln.strip() and not ln.strip().startswith(("#", "re:"))
+        ]
+        assert names, "the private list holds no literal entries"
+        escaped = []
+        for i, name in enumerate(names, start=1):
+            for n, text in enumerate(
+                (f"{name}\n", f"moored alongside {name} today\n"), start=1
+            ):
+                out = gate(_file(gate, text, name=f"entry{i}_{n}.md"))
+                caught = out.returncode == 1 and "denied-name" in out.stdout
+                if not caught:
+                    escaped.append(f"entry #{i} form {n}")
+        # Report positions only: a failure message reaches a CI log.
+        assert not escaped, "private-list entries CI would miss: " + ", ".join(
+            escaped
+        )
 
 
 class TestLargeStagedCommits:
@@ -369,4 +492,5 @@ class TestCiRunsTheGate:
             encoding="utf-8"
         )
         assert "scripts/legal/check_identifiers.py --all" in wf
-        assert "--max-uninspectable" in wf
+        assert "--baseline .legal-uninspectable-baseline.txt" in wf
+        assert "--max-uninspectable" not in wf
