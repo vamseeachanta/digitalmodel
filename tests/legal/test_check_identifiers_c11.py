@@ -344,7 +344,7 @@ class TestSymlinks:
         target.mkdir()
         link = gate.root / "linked"
         try:
-            os.symlink(target, link, target_is_directory=True)
+            os.symlink("somewhere", link, target_is_directory=True)
         except (OSError, NotImplementedError):
             pytest.skip("symlinks cannot be created here")
         out = gate(str(link))
