@@ -1,0 +1,9 @@
+hull,source,lref,lref_mode,I_D,I_D_plus,I_D_minus,a_flat,a_single,a_elliptic,a_saddle,watertight,components,reliability,status
+L01_vessel,L01_vessel.stl,103.35,auto_principal_span,15.122,14.72,0.402,0.426,0.204,0.255,0.115,False,2,caution,mesh_representation_sensitive
+L02_oc4_semisub,L02_oc4_semisub.stl,73.93,auto_principal_span,47.295,38.137,9.158,0.124,0.315,0.444,0.116,True,4,caution,mesh_representation_sensitive
+bokalift,bokalift.stl,231.0,auto_principal_span,20.066,18.532,1.533,0.673,0.0,0.176,0.151,False,1,caution,mesh_representation_sensitive
+dm_ship_8000_unif,dm_ship_8000_unif.stl,100.0,explicit_user,3.134,2.232,0.902,0.126,0.117,0.158,0.6,False,1,caution,mesh_representation_sensitive
+fpso,fpso.stl,258.0,auto_principal_span,10.219,8.855,1.364,0.133,0.747,0.086,0.033,False,1,caution,mesh_representation_sensitive
+noble_valiant_drillship,noble_valiant_drillship.stl,219.48,auto_principal_span,67.288,38.14,29.148,0.522,0.044,0.227,0.206,False,1,caution,mesh_representation_sensitive
+sea_cypress,sea_cypress.obj,22.95,auto_principal_span,6.64,4.553,2.086,0.0,0.002,0.214,0.784,False,25,poor,mesh_representation_sensitive
+sphere,simple_sphere.stl,2.0,auto_principal_span,4.0,4.0,0.0,0.0,0.0,1.0,0.0,True,1,good,mesh_representation_sensitive
