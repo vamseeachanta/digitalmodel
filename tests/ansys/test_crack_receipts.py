@@ -174,6 +174,31 @@ def test_uncracked_axial_reaction_equals_end_thrust(state):
 
 
 # --------------------------------------------------------------------------- #
+# Stop-rule evidence (P0b stopped at a0: guard (c) on the refinement pairs)
+# --------------------------------------------------------------------------- #
+EVIDENCE = FE_STATES / "stop_rule_evidence"
+EVIDENCE_PAIRS = ("L0L1", "L1L2")
+
+
+@pytest.mark.parametrize("pair", EVIDENCE_PAIRS)
+def test_stop_rule_evidence_is_genuine_and_fails_only_guard_c(pair):
+    """The undeclared a0 receipts that triggered the stop rule are kept as
+    evidence: schema, provenance, deck hashes and re-parsed artifacts must hold,
+    and guard (c) must be the only failing guard."""
+    base = EVIDENCE / pair
+    receipt = json.loads((base / "p0b_fullcirc_a2p35.receipt.json").read_text("utf-8"))
+    assert cint_parser.validate_receipt_schema(receipt) == []
+    assert crack_receipt.provenance_problems(receipt, REPO, []) == []
+    assert crack_receipt.artifact_problems(receipt, base) == []
+    for mesh in receipt["meshes"]:
+        current = crack_receipt.regenerate_deck_sha256(receipt, mesh["level"])
+        assert current == mesh["deck_sha256"]
+    failed = sorted(n for n, g in receipt["guards"].items() if g["status"] != "pass")
+    assert failed == ["c_contour"]
+    assert "p0b_fullcirc_a2p35" not in DECLARED
+
+
+# --------------------------------------------------------------------------- #
 # Negative fixtures: each check fails for its own reason
 # --------------------------------------------------------------------------- #
 def test_fake_commit_receipt_fails_provenance():
