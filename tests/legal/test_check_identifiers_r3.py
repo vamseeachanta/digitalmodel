@@ -75,8 +75,11 @@ def gate(tmp_path):
         if env:
             e.update(env)
         return subprocess.run(
-            [sys.executable, str(root / "scripts" / "legal" / "check_identifiers.py"),
-             *args],
+            [
+                sys.executable,
+                str(root / "scripts" / "legal" / "check_identifiers.py"),
+                *args,
+            ],
             cwd=root,
             capture_output=True,
             text=True,

@@ -97,21 +97,24 @@ VENDOR_PATH = re.compile(
 )
 
 
-def load_rules() -> dict:
-    if not os.path.isfile(RULES):
-        sys.exit(f"check_identifiers: rules file missing: {RULES}")
-    try:
-        with open(RULES, encoding="utf-8") as fh:
-            rules = yaml.safe_load(fh)
-    except Exception as exc:  # noqa: BLE001
-        sys.exit(f"check_identifiers: rules file unreadable: {exc}")
-    if not isinstance(rules, dict) or "structural" not in rules:
-        sys.exit("check_identifiers: rules file has no 'structural' section")
-    # Hashes kept under the salt they were made with, when the salt was
-    # rotated and their plaintext was not available to re-hash (C13/C16).
-    # Malformed, the block would silently match nothing: refuse instead.
-    legacy = rules.get("legacy_hashed_names")
-    if legacy is not None and not (
+def path_label(path: str) -> str:
+    """A path named by digest, for a path that carries an identifier."""
+    return "<path " + hashlib.sha256(path.encode("utf-8")).hexdigest()[:12] + ">"
+
+
+def validate_legacy(rules: dict) -> None:
+    """Refuse a present but malformed ``legacy_hashed_names`` block.
+
+    Hashes kept under the salt they were made with, when the salt was rotated
+    and their plaintext was not available to re-hash (C13/C16). An absent
+    block is allowed. A present one -- an explicit null included -- must be a
+    mapping with a salt and hashes: read as "no legacy names", it would
+    silently match nothing.
+    """
+    if "legacy_hashed_names" not in rules:
+        return
+    legacy = rules["legacy_hashed_names"]
+    if not (
         isinstance(legacy, dict)
         and isinstance(legacy.get("salt"), str)
         and legacy["salt"].strip()
@@ -124,16 +127,33 @@ def load_rules() -> dict:
     ):
         sys.exit(
             "check_identifiers: 'legacy_hashed_names' must be a mapping with a "
-            "non-empty 'salt' and a non-empty list of sha256 'hashes'"
+            "non-empty 'salt' and a non-empty list of sha256 'hashes' (omit the "
+            "block entirely when there are none; an explicit null is refused)"
         )
+
+
+def load_rules() -> dict:
+    if not os.path.isfile(RULES):
+        sys.exit(
+            f"check_identifiers: rules file missing: {os.path.basename(RULES)} "
+            f"at the repository root"
+        )
+    try:
+        with open(RULES, encoding="utf-8") as fh:
+            rules = yaml.safe_load(fh)
+    except Exception as exc:  # noqa: BLE001
+        sys.exit(f"check_identifiers: rules file unreadable: {exc}")
+    if not isinstance(rules, dict) or "structural" not in rules:
+        sys.exit("check_identifiers: rules file has no 'structural' section")
+    validate_legacy(rules)
 
     private = os.environ.get("DIGITALMODEL_DENY_LIST")
     if private:
         if not os.path.isfile(private):
+            # The path is not printed: it can carry an account or a client.
             sys.exit(
-                f"check_identifiers: DIGITALMODEL_DENY_LIST is set to "
-                f"{private!r}, which does not exist. Refusing to continue "
-                f"without the rules it names."
+                "check_identifiers: the file DIGITALMODEL_DENY_LIST names does "
+                "not exist. Refusing to continue without the rules it names."
             )
     elif os.path.isfile(DEFAULT_PRIVATE):
         # Named by nobody, so its absence is not an error -- CI has none and
@@ -226,10 +246,13 @@ def _git(args: list[str], stdin: bytes | None = None) -> bytes:
     """
     out = subprocess.run(["git", *args], cwd=ROOT, capture_output=True, input=stdin)
     if out.returncode != 0:
+        # The arguments and git's message can carry paths; quoted spans are
+        # dropped rather than risk publishing a name.
+        err = out.stderr.decode(errors="replace").strip()
+        err = re.sub(r"'[^'\n]*'|\"[^\"\n]*\"", "'<redacted>'", err)
         sys.exit(
-            f"check_identifiers: `git {' '.join(args)}` failed "
-            f"(exit {out.returncode}): "
-            f"{out.stderr.decode(errors='replace').strip()}"
+            f"check_identifiers: `git {args[0]}` failed "
+            f"(exit {out.returncode}): {err}"
         )
     return out.stdout
 
@@ -371,6 +394,11 @@ _COORD = re.compile(
 _RUN_CONTAINERS = frozenset({"p", "r", "si", "is", "sp", "txBody"})
 
 
+def _member(name: str) -> str:
+    """An office member named by digest: its name can carry an identifier."""
+    return "member " + hashlib.sha256(name.encode("utf-8")).hexdigest()[:12]
+
+
 def _office_text(blob: bytes) -> str:
     """Every text node and attribute value of every XML part, as whole words.
 
@@ -406,9 +434,11 @@ def _office_text(blob: bytes) -> str:
                     try:
                         root = ET.fromstring(data)
                     except ET.ParseError as exc:
+                        line, col = getattr(exc, "position", (0, 0))
                         raise Uninspectable(
-                            f"office part {name} is not well-formed XML: {exc}"
-                        )
+                            f"office {_member(name)} is not well-formed XML "
+                            f"(line {line}, column {col})"
+                        ) from None
                     for el in root.iter():
                         for key, value in el.attrib.items():
                             local = key.rsplit("}", 1)[-1]
@@ -423,11 +453,15 @@ def _office_text(blob: bytes) -> str:
                 ext = os.path.splitext(name)[1].lower()
                 if is_media(data, ext):
                     continue
-                raise Uninspectable(f"office member {name} is not inspectable")
+                raise Uninspectable(f"office {_member(name)} is not inspectable")
     except Uninspectable:
         raise
     except Exception as exc:  # noqa: BLE001
-        raise Uninspectable(f"office archive unreadable: {exc}") from exc
+        # The message (a bad CRC, a missing member) can quote a member name:
+        # report the kind of failure only.
+        raise Uninspectable(
+            f"office archive unreadable ({type(exc).__name__})"
+        ) from None
     return "\n".join(out)
 
 
@@ -500,13 +534,21 @@ def check(
     rules: dict,
     staged: bool = False,
     digests: dict[str, tuple[str | None, str]] | None = None,
+    show_lines: bool = False,
+    labels: dict[str, str] | None = None,
 ) -> tuple[list[str], int, list[str], list[str]]:
     """Returns findings, files scanned, media skipped, and uninspectable.
 
     ``digests``, when given, is filled for every uninspectable file with its
     repository-relative path -> (sha256 of the bytes that could not be read,
-    or None when there were none, and the reason).
+    or None when there were none, and the reason). ``labels``, when given,
+    maps the same keys to the name to print: the path itself, or its digest
+    when the path carries an identifier.
+
+    ``show_lines`` quotes offending lines and paths. It is passed per call so
+    that no earlier call can leave it on; callers refuse it in CI.
     """
+    validate_legacy(rules)
     salt = str(rules.get("salt", ""))
     hashed = {str(h).lower() for h in rules.get("hashed_names") or []}
     legacy = rules.get("legacy_hashed_names") or {}
@@ -543,7 +585,7 @@ def check(
             if rx.search(line):
                 findings.append(
                     f"{label}:{n}: [private-pattern] a pattern on "
-                    f"the private list matches here" + _excerpt(line)
+                    f"the private list matches here" + _excerpt(line, show_lines)
                 )
                 break
         structural = [] if EXAMPLE_MARK in line else compiled
@@ -558,7 +600,7 @@ def check(
                     pos = m.start() + 1
                     continue
                 findings.append(
-                    f"{label}:{n}: [{rid}] {msg.strip()}" + _excerpt(line)
+                    f"{label}:{n}: [{rid}] {msg.strip()}" + _excerpt(line, show_lines)
                 )
                 break
         if hashed or private or legacy_hashed:
@@ -571,7 +613,7 @@ def check(
                 ):
                     findings.append(
                         f"{label}:{n}: [denied-name] a name on the "
-                        f"deny list appears here" + _excerpt(line)
+                        f"deny list appears here" + _excerpt(line, show_lines)
                     )
                     break
 
@@ -591,11 +633,12 @@ def check(
         before = len(findings)
         scan(norm, "path", shown.replace("\\", "/"))
         label = norm
-        if len(findings) > before and not SHOW_LINES:
+        if len(findings) > before and not show_lines:
             # The path itself carries the identifier: name it by digest, for
-            # every finding in this file, so the log does not publish it.
-            label = "<path " + hashlib.sha256(norm.encode("utf-8")).hexdigest()[:12] + ">"
-            findings[before:] = [label + f[len(norm):] for f in findings[before:]]
+            # every finding and every diagnostic about this file, so the log
+            # does not publish it.
+            label = path_label(norm)
+            findings[before:] = [label + f[len(norm) :] for f in findings[before:]]
         ext = os.path.splitext(norm)[1].lower()
         blob: bytes | None = None
         try:
@@ -621,9 +664,12 @@ def check(
                 continue
             text = text_of(blob, ext)
         except Uninspectable as exc:
-            uninspectable.append(f"{norm}: {exc}")
+            uninspectable.append(f"{label}: {exc}")
+            key = shown.replace("\\", "/")
+            if labels is not None:
+                labels[key] = key if label == norm else label
             if digests is not None:
-                digests[shown.replace("\\", "/")] = (
+                digests[key] = (
                     hashlib.sha256(blob).hexdigest() if blob is not None else None,
                     str(exc),
                 )
@@ -636,12 +682,12 @@ def check(
 
 #: Findings name the file, line and rule only. Quoting the line would publish
 #: the identifier in the CI log of a public repository; --show-lines quotes it
-#: for a local run and is refused in CI.
-SHOW_LINES = False
+#: for a local run and is refused in CI. The policy is passed per call, never
+#: held in module state, so one call cannot leave it on for the next.
 
 
-def _excerpt(line: str) -> str:
-    return f"\n    {line.strip()[:160]}" if SHOW_LINES else ""
+def _excerpt(line: str, show_lines: bool) -> str:
+    return f"\n    {line.strip()[:160]}" if show_lines else ""
 
 
 def main() -> int:
@@ -689,12 +735,10 @@ def main() -> int:
         "where the log of a public repository is public)",
     )
     args = ap.parse_args()
-    if args.show_lines:
-        if os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"):
-            print("check_identifiers: --show-lines is refused in CI", file=sys.stderr)
-            return 3
-        global SHOW_LINES
-        SHOW_LINES = True
+    show_lines = bool(args.show_lines)
+    if show_lines and (os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS")):
+        print("check_identifiers: --show-lines is refused in CI", file=sys.stderr)
+        return 3
 
     rules = load_rules()
 
@@ -726,8 +770,8 @@ def main() -> int:
         baseline_path = os.path.abspath(args.baseline)
         if not args.update_baseline and not os.path.isfile(baseline_path):
             print(
-                f"check_identifiers: baseline {args.baseline!r} does not "
-                f"exist. Refusing to continue without the list it names.",
+                "check_identifiers: the baseline named by --baseline does not "
+                "exist. Refusing to continue without the list it names.",
                 file=sys.stderr,
             )
             return 3
@@ -744,9 +788,21 @@ def main() -> int:
         return 0
 
     digests: dict[str, tuple[str | None, str]] = {}
+    labels: dict[str, str] = {}
     findings, scanned, media, uninspectable = check(
-        paths, rules, staged=staged, digests=digests
+        paths,
+        rules,
+        staged=staged,
+        digests=digests,
+        show_lines=show_lines,
+        labels=labels,
     )
+
+    def shown(key: str) -> str:
+        # Every line that names a file goes through here: a path carrying an
+        # identifier is printed by digest unless --show-lines (local only).
+        return key if show_lines else labels.get(key, path_label(key))
+
     print(
         f"check_identifiers: scanned {scanned} file(s); "
         f"{len(media)} declared binary media not inspected; "
@@ -759,7 +815,7 @@ def main() -> int:
         if unreadable:
             print(
                 "check_identifiers: cannot baseline files whose bytes were not "
-                "read: " + ", ".join(unreadable),
+                "read: " + ", ".join(shown(k) for k in unreadable),
                 file=sys.stderr,
             )
             return 3
@@ -784,11 +840,11 @@ def main() -> int:
     accepted = 0
     for key, (sha, reason) in sorted(digests.items()):
         if sha is None:
-            failing.append(f"{key}: {reason}")
+            failing.append(f"{shown(key)}: {reason}")
         elif key not in baseline:
-            failing.append(f"{key}: {reason}; not in the baseline")
+            failing.append(f"{shown(key)}: {reason}; not in the baseline")
         elif baseline[key] != sha:
-            failing.append(f"{key}: {reason}; changed since the baseline")
+            failing.append(f"{shown(key)}: {reason}; changed since the baseline")
         else:
             accepted += 1
     if accepted:
