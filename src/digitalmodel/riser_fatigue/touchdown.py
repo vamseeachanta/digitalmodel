@@ -26,7 +26,7 @@ thickness_correction) — no S-N math is reimplemented here.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Sequence
+from typing import Optional, Sequence
 
 import numpy as np
 import pandas as pd
@@ -36,6 +36,7 @@ from digitalmodel.fatigue import (
     miner_damage,
     thickness_correction,
 )
+from digitalmodel.fatigue import c203_sn_tables as _c203
 
 __all__ = [
     "RiserSection",
@@ -94,8 +95,11 @@ class TouchdownFatigueInput:
         i.e. an annual histogram).
     thickness_ref_mm : float
         Reference thickness for the thickness correction (default 25 mm).
-    thickness_exponent : float
-        Thickness exponent k (default 0.25 for welded tubular joints).
+    thickness_exponent : float, optional
+        Thickness exponent k. ``None`` (default) takes k for ``sn_class`` from
+        DNV-RP-C203 (2011) Tables 2-1 to 2-3 via
+        :mod:`digitalmodel.fatigue.c203_sn_tables` (#2165); an explicit value
+        overrides it.
     """
 
     section: RiserSection
@@ -108,7 +112,14 @@ class TouchdownFatigueInput:
     dff: float = 10.0
     histogram_period_years: float = 1.0
     thickness_ref_mm: float = 25.0
-    thickness_exponent: float = 0.25
+    thickness_exponent: Optional[float] = None
+
+
+def _class_thickness_exponent(sn_class: str, environment: str) -> float:
+    """k for the class, from the same tables as the S-N values (#2165)."""
+    if environment == "free_corrosion":
+        return _c203.FREE_CORROSION[sn_class].k
+    return _c203.BILINEAR[sn_class].k
 
 
 @dataclass(frozen=True)
@@ -137,6 +148,7 @@ class TouchdownFatigueResult:
     standard: str = "DNV-RP-C203 (2021) + DNV-OS-F201 (DFF)"
     sn_class: str = ""
     environment: str = ""
+    thickness_exponent: float = 0.0  # k applied (class default or override)
     scf: float = 1.0
     dff: float = 10.0
     design_life_years: float = 25.0
@@ -162,17 +174,24 @@ def assess_touchdown_fatigue(
     if inp.dff <= 0:
         raise ValueError("dff must be > 0")
 
+    # 3) S-N curve first: it validates the class and environment.
+    sn_curve = get_sn_curve(inp.sn_class, inp.environment)
+    k = (
+        float(inp.thickness_exponent)
+        if inp.thickness_exponent is not None
+        else _class_thickness_exponent(inp.sn_class, inp.environment)
+    )
+
     # 1) SCF on nominal stress ranges, then 2) DNV thickness correction.
     stress_scf = stress * float(inp.scf)
     stress_corr = thickness_correction(
         stress_scf,
         t_actual=inp.section.wall_thickness_mm,
         t_ref=inp.thickness_ref_mm,
-        k=inp.thickness_exponent,
+        k=k,
     )
 
-    # 3) + 4) Allowable cycles and Palmgren-Miner damage via the core engine.
-    sn_curve = get_sn_curve(inp.sn_class, inp.environment)
+    # 4) Allowable cycles and Palmgren-Miner damage via the core engine.
     histogram = pd.DataFrame(
         {"stress_range": stress_corr, "cycles": cycles}
     )
@@ -219,6 +238,7 @@ def assess_touchdown_fatigue(
         pass_fail=pass_fail,
         sn_class=inp.sn_class,
         environment=inp.environment,
+        thickness_exponent=k,
         scf=float(inp.scf),
         dff=float(inp.dff),
         design_life_years=float(inp.design_life_years),
@@ -249,7 +269,7 @@ def report_markdown(
     lines.append(f"| SCF | {result.scf:.2f} |")
     lines.append(
         f"| Thickness correction | t_ref={inp.thickness_ref_mm:.0f} mm, "
-        f"k={inp.thickness_exponent:.2f} |"
+        f"k={result.thickness_exponent:.2f} |"
     )
     lines.append(f"| Histogram period | {inp.histogram_period_years:.2f} yr |")
     lines.append(f"| Design life | {result.design_life_years:.0f} yr |")

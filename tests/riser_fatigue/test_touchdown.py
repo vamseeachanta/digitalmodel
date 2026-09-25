@@ -188,18 +188,14 @@ def test_thickness_exponent_explicit_override_is_kept():
         ("F1", "seawater_cp", 0.25),
     ],
 )
-def test_thickness_exponent_default_per_class_and_environment(
-    sn_class, environment, k
-):
+def test_thickness_exponent_default_per_class_and_environment(sn_class, environment, k):
     """k per class from DNV-RP-C203 (2011) Tables 2-1 to 2-3, via
     fatigue.c203_sn_tables (the same source as the quick-check)."""
     res = assess_touchdown_fatigue(
         _e_class_40mm(sn_class=sn_class, environment=environment)
     )
     assert res.thickness_exponent == pytest.approx(k)
-    assert res.bins[0].stress_corrected_mpa == pytest.approx(
-        100.0 * 1.6**k, rel=1e-12
-    )
+    assert res.bins[0].stress_corrected_mpa == pytest.approx(100.0 * 1.6**k, rel=1e-12)
 
 
 def test_report_states_the_applied_thickness_exponent():

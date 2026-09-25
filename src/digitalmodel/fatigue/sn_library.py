@@ -110,7 +110,8 @@ class SNCurveRecord(BaseModel):
         states it. For DNV-RP-C203 this is the tabulated fatigue limit at
         1e7 cycles, which for seawater with CP lies on the second segment,
         below the 1e6-cycle knee. ``None`` for curves with no fatigue limit.
-        The slope change in :meth:`cycles` is at :attr:`knee_stress`, not here.
+        For DNV-RP-C203 the slope change in :meth:`cycles` is at
+        :attr:`knee_stress`, not here; other standards switch here (#2165).
     thickness_ref : float
         Reference thickness for thickness correction (mm).
     thickness_exponent : float
@@ -144,19 +145,35 @@ class SNCurveRecord(BaseModel):
             self.log_a1, self.m1, self.m2, self.log_a2, self.n_transition
         )
 
+    @property
+    def switch_stress(self) -> Optional[float]:
+        """Stress range (MPa) at which :meth:`cycles` changes segment;
+        ``None`` for a single-slope curve. See :func:`_switch_stress`."""
+        return _switch_stress(
+            self.standard,
+            self.log_a1,
+            self.m1,
+            self.m2,
+            self.log_a2,
+            self.n_transition,
+            self.endurance_limit,
+        )
+
     def cycles(self, stress_range: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
         """Return allowable cycles *N* for given *stress_range* (MPa).
 
-        Uses bi-linear log-log model with the slope change at the knee stress
-        ``S_k = 10^((log_a1 - log10(n_transition)) / m1)``::
+        Uses bi-linear log-log model with the slope change at
+        :attr:`switch_stress` ``S_s``::
 
-            if S >= S_k:  N = 10^(log_a1) · S^(-m1)
+            if S >= S_s:  N = 10^(log_a1) · S^(-m1)
             else:         N = 10^(log_a2) · S^(-m2)   (if m2 defined)
 
-        For single-slope curves, one slope is used throughout.
+        ``S_s`` is the knee stress for DNV-RP-C203 and the stated endurance
+        limit for every other standard (#2165). For single-slope curves, one
+        slope is used throughout.
         """
         return _bilinear_cycles(
-            stress_range, self.log_a1, self.m1, self.m2, self.log_a2, self.n_transition
+            stress_range, self.log_a1, self.m1, self.m2, self.log_a2, self.switch_stress
         )
 
 
@@ -173,20 +190,48 @@ def _knee_stress(
     return 10.0 ** ((log_a1 - math.log10(n_knee)) / m1)
 
 
+#: Standards whose knee is defined in cycles, so the segment switch is at the
+#: knee stress from the first segment. DNV-RP-C203 needs this: in seawater
+#: with CP the knee is at 1e6 cycles while the tabulated fatigue limit is at
+#: 1e7 cycles on the second segment (#2165).
+_KNEE_SWITCH_STANDARDS = frozenset({"DNV-RP-C203"})
+
+
+def _switch_stress(
+    standard: str,
+    log_a1: float,
+    m1: float,
+    m2: Optional[float],
+    log_a2: Optional[float],
+    n_knee: Optional[float],
+    endurance_limit: Optional[float],
+) -> Optional[float]:
+    """Stress at which a bilinear curve changes segment, or ``None``.
+
+    DNV-RP-C203 switches at the knee stress from :attr:`n_transition`. Every
+    other standard keeps its pre-#2165 rule: switch at the stated endurance
+    limit, and use a single slope when none is stated. For those standards the
+    stored endurance limit is rounded and log a1 is rounded to 3 decimals, so
+    a knee-stress switch would move the switch point by up to 0.036 MPa
+    (Eurocode 3 Cat160: 117.890 to 117.854 MPa).
+    """
+    if m2 is None or log_a2 is None:
+        return None
+    if standard in _KNEE_SWITCH_STANDARDS:
+        return _knee_stress(log_a1, m1, m2, log_a2, n_knee)
+    return endurance_limit
+
+
 def _bilinear_cycles(
     stress_range: Union[float, np.ndarray],
     log_a1: float,
     m1: float,
     m2: Optional[float],
     log_a2: Optional[float],
-    n_knee: Optional[float],
+    s_switch: Optional[float],
 ) -> Union[float, np.ndarray]:
-    """Allowable cycles; the slope changes at the knee stress (#2165).
-
-    Switching at the knee rather than at a stated fatigue limit matters where
-    the two differ: DNV-RP-C203 seawater with CP has its knee at 1e6 cycles
-    and its fatigue limit at 1e7 cycles on the second segment.
-    """
+    """Allowable cycles; m1 at and above ``s_switch``, m2 below it, and a
+    single slope when ``s_switch`` is ``None`` (see :func:`_switch_stress`)."""
     S = np.asarray(stress_range, dtype=float)
     scalar = S.ndim == 0
     S = np.atleast_1d(S)
@@ -194,10 +239,9 @@ def _bilinear_cycles(
     N = np.full_like(S, np.inf)
     mask_pos = S > 0
 
-    s_knee = _knee_stress(log_a1, m1, m2, log_a2, n_knee)
-    if s_knee is not None:
-        high = mask_pos & (S >= s_knee)
-        low = mask_pos & (S < s_knee)
+    if s_switch is not None and m2 is not None and log_a2 is not None:
+        high = mask_pos & (S >= s_switch)
+        low = mask_pos & (S < s_switch)
         N[high] = 10**log_a1 * S[high] ** (-m1)
         N[low] = 10**log_a2 * S[low] ** (-m2)
     else:

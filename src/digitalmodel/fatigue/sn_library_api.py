@@ -31,6 +31,7 @@ from pydantic import BaseModel, Field
 from .sn_library import (
     SNCurveRecord,
     _bilinear_cycles,
+    _switch_stress,
     get_library_curve,
     search_curves as _search_curves,
 )
@@ -240,10 +241,11 @@ def calculate_endurance(
 ) -> Union[float, np.ndarray]:
     """Calculate allowable cycles N for a given stress range.
 
-    Uses bi-linear log-log model with the slope change at the knee stress
-    ``S_k = 10^((log_a1 - log10(knee_point)) / m1)``::
+    Uses bi-linear log-log model with the slope change at ``S_s``: for
+    DNV-RP-C203 the knee stress ``10^((log_a1 - log10(knee_point)) / m1)``,
+    for every other standard the stated ``endurance_limit`` (#2165)::
 
-        if S >= S_k:  N = 10^(log_a1) · S^(-m1)
+        if S >= S_s:  N = 10^(log_a1) · S^(-m1)
         else:         N = 10^(log_a2) · S^(-m2)   (if m2 defined)
 
     For single-slope curves, one slope is used throughout.
@@ -265,8 +267,17 @@ def calculate_endurance(
     >>> c = get_curve("DNV-RP-C203:D:air")
     >>> calculate_endurance(c, 100.0)  # ≈ 1.46e6
     """
+    s_switch = _switch_stress(
+        curve.standard,
+        curve.log_a1,
+        curve.m1,
+        curve.m2,
+        curve.log_a2,
+        curve.knee_point,
+        curve.endurance_limit,
+    )
     return _bilinear_cycles(
-        stress_range, curve.log_a1, curve.m1, curve.m2, curve.log_a2, curve.knee_point
+        stress_range, curve.log_a1, curve.m1, curve.m2, curve.log_a2, s_switch
     )
 
 
