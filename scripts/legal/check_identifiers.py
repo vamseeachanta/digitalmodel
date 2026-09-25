@@ -54,8 +54,10 @@ import argparse
 import contextlib
 import functools
 import hashlib
+import hmac
 import os
 import re
+import secrets
 import subprocess
 import sys
 import traceback
@@ -110,9 +112,34 @@ VENDOR_PATH = re.compile(
 )
 
 
+#: Key for the labels that stand in for a path or an office member name.
+#: A bare sha256 of the name could be recomputed offline from candidate
+#: names and compared with a published log; keyed by a random salt made
+#: once per main() call, a label correlates repeat findings within one run
+#: and reveals nothing across runs. Never printed, never persisted.
+_LABEL_SALT: bytes | None = None
+
+
+def new_label_salt() -> None:
+    """Start a run: every label after this is keyed by a fresh salt."""
+    global _LABEL_SALT
+    _LABEL_SALT = secrets.token_hex(16).encode("ascii")
+
+
+def _label_digest(text: str) -> str:
+    if _LABEL_SALT is None:
+        # A library caller that never entered main() still gets a keyed
+        # label, stable for the life of the process.
+        new_label_salt()
+    assert _LABEL_SALT is not None
+    mac = hmac.new(_LABEL_SALT, text.encode("utf-8"), hashlib.sha256)
+    return mac.hexdigest()[:12]
+
+
 def path_label(path: str) -> str:
-    """A path named by digest, for a path that carries an identifier."""
-    return "<path " + hashlib.sha256(path.encode("utf-8")).hexdigest()[:12] + ">"
+    """A path named by a per-run keyed digest, for a path that carries an
+    identifier: the same within one run, unlinkable across runs."""
+    return "<path " + _label_digest(path) + ">"
 
 
 # -- the output sink ------------------------------------------------------------
@@ -593,8 +620,9 @@ _RUN_CONTAINERS = frozenset({"p", "r", "si", "is", "sp", "txBody"})
 
 
 def _member(name: str) -> str:
-    """An office member named by digest: its name can carry an identifier."""
-    return "member " + hashlib.sha256(name.encode("utf-8")).hexdigest()[:12]
+    """An office member named by a per-run keyed digest: its name can carry
+    an identifier."""
+    return "member " + _label_digest(name)
 
 
 def _office_text(blob: bytes) -> str:
@@ -904,6 +932,7 @@ def main() -> int:
         except (AttributeError, ValueError):
             pass
     _SINK.reset()
+    new_label_salt()
     try:
         return _run()
     except StageError as exc:
