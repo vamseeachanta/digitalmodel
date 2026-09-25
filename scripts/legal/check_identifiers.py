@@ -455,14 +455,23 @@ def text_of(blob: bytes, ext: str) -> str:
 
 @functools.lru_cache(maxsize=1 << 18)
 def _candidates(word: str) -> frozenset[str]:
-    """The word, and its parts either side of hyphens and digits.
+    """The word, its parts either side of hyphens and digits, and each
+    hyphen-separated piece with its leading digits removed.
 
     A denied name with a suffix attached -- ``name-archive``, ``name2`` -- is
-    one word to the tokenizer, and its hash matches nothing.
+    one word to the tokenizer, and its hash matches nothing. A name that
+    holds a digit and follows one -- ``9name2`` -- is caught by dropping the
+    leading digits, which is the letter-first token the word pattern yielded
+    before it admitted a leading digit.
     """
     low = word.lower()
     out = {low}
     out.update(p for p in re.split(r"[-\d]+", low) if len(p) >= 4)
+    for piece in [low, *low.split("-")]:
+        stripped = re.sub(r"^[\d-]+", "", piece)
+        if len(stripped) >= 4:
+            out.add(stripped)
+            out.update(p for p in re.split(r"[-\d]+", stripped) if len(p) >= 4)
     return frozenset(out)
 
 
@@ -642,6 +651,18 @@ def main() -> int:
         return 0
 
     staged = not args.paths and not args.all
+    if args.update_baseline and (
+        os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS")
+    ):
+        # An update accepts every uninspectable file it finds, unread. In CI
+        # nobody reviews that, so a new binary would pass by its own digest.
+        print(
+            "check_identifiers: --update-baseline refuses to run in CI (CI or "
+            "GITHUB_ACTIONS is set). Regenerate the baseline locally, review "
+            "the diff and commit it.",
+            file=sys.stderr,
+        )
+        return 3
     if args.update_baseline and staged:
         print(
             "check_identifiers: --update-baseline needs --all or paths; the "
