@@ -75,3 +75,14 @@ def test_ci_gate_reports_but_does_not_fail_on_a_stale_library(monkeypatch):
                         lambda b: {"stale": True, "reason": "needs licensed run"})
     assert refresh.main([]) == 0                       # report-only by default
     assert refresh.main(["--strict-libraries"]) == 1   # enforced under --strict
+
+
+def test_sn_curve_atlases_track_the_c203_sources():
+    """#2165: mooring_fatigue and riser_fatigue compute damage through
+    fatigue.sn_curves.get_sn_curve, whose DNV-RP-C203 values live in
+    fatigue.c203_sn_tables. A change to either must mark those atlases stale;
+    riser_fatigue previously tracked only its workflow module."""
+    for basename in ("mooring_fatigue", "riser_fatigue"):
+        files = refresh.SOURCE_FILES[basename]
+        assert "src/digitalmodel/fatigue/sn_curves.py" in files, basename
+        assert "src/digitalmodel/fatigue/c203_sn_tables.py" in files, basename
