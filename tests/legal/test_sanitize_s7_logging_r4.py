@@ -180,7 +180,7 @@ def test_the_filter_redacts_any_record_on_the_logger(setup, caplog):
     mod.logger.error("mapped %s", f"{PROJECT}/mapped")
     text = _logged(caplog)
     assert REAL not in text and "jdoe321" not in text and PROJECT not in text, text
-    assert "<redacted:" in text
+    assert "[redacted]" in text
 
 
 def test_the_root_handler_configured_by_main_carries_the_filter(setup):

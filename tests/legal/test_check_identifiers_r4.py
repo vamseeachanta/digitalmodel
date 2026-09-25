@@ -7,7 +7,7 @@ sites it missed: raw git stderr, exception text and tracebacks, and the
 * every line the checker writes goes through ``emit()``, which replaces any
   deny-listed name (private, hashed or legacy-hashed) and any public pattern
   class (user-profile path, UNC share, host name ...) with
-  ``<redacted:digest12>``; ``--show-lines`` (local only) disables it;
+  ``[redacted]`` (r5; was a digest); ``--show-lines`` (local only) disables it;
 * git failures print the command and exit status, never git's stderr;
 * ``main()`` catches every exception and prints its type and the stage only;
 * a static test fails if a bare ``print(`` returns to the module.
@@ -224,14 +224,14 @@ class TestEmitRedacts:
 
     def test_a_hashed_name(self, mod, capsys):
         out = self._emit(mod, capsys, f"x {TOKEN}-results y", mod.load_rules())
-        assert TOKEN not in out and "<redacted:" in out, out
+        assert TOKEN not in out and "[redacted]" in out, out
 
     def test_a_legacy_hashed_name(self, mod, capsys):
         rules = mod.load_rules()
         if "legacy_hashed_names" not in rules:
             pytest.skip("this repository carries no legacy block")
         out = self._emit(mod, capsys, f"x {LEGACY_TOKEN} y", rules)
-        assert LEGACY_TOKEN not in out and "<redacted:" in out, out
+        assert LEGACY_TOKEN not in out and "[redacted]" in out, out
 
     def test_private_names_and_phrases(self, gate, mod, capsys, monkeypatch):
         private = gate.home / "private.txt"
@@ -257,13 +257,12 @@ class TestEmitRedacts:
         out = self._emit(mod, capsys, text, rules)
         for leaked in (USER, "fileserver07", host):
             assert leaked not in out, out
-        assert "<redacted:" in out
+        assert "[redacted]" in out
 
-    def test_the_redaction_is_a_stable_digest(self, mod, capsys):
+    def test_the_redaction_is_a_constant_marker(self, mod, capsys):
+        # r5: a digest under the public salt could be tested offline.
         out = self._emit(mod, capsys, f"{TOKEN}", mod.load_rules())
-        tags = [w for w in out.split() if w.startswith("<redacted:")]
-        assert len(tags) == 2 and tags[0] == tags[1]
-        assert len(tags[0]) == len("<redacted:") + 12 + 1
+        assert out == "[redacted]\n[redacted]\n", out
 
     def test_clean_text_is_unchanged(self, mod, capsys):
         text = "check_identifiers: scanned 3 file(s); docs/readme.md:4"
