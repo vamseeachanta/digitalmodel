@@ -142,6 +142,40 @@ class TestEachC11CategoryIsDetected:
         assert "denied-name" in out.stdout
 
 
+class TestDigitLeadingNames:
+    """A name that starts with a digit (a hull number, a numbered vessel) was
+    never tokenised whole: the word pattern had to start with a letter, so
+    only the letters after the digit were hashed or looked up."""
+
+    def test_a_private_name_with_a_leading_digit_is_caught(self, gate):
+        private = gate.home / "private.txt"
+        private.write_text("7zzhull\n", encoding="utf-8")
+        out = gate(
+            _file(gate, "towed by 7zzhull at dawn\n"),
+            env={"DIGITALMODEL_DENY_LIST": str(private)},
+        )
+        assert out.returncode == 1, out.stdout
+        assert "denied-name" in out.stdout
+
+    def test_a_hashed_name_with_a_leading_digit_is_caught(self, gate):
+        rules = yaml.safe_load(
+            (gate.root / ".legal-deny-list.yaml").read_text(encoding="utf-8")
+        )
+        salt = str(rules.get("salt", ""))
+        rules["hashed_names"].append(
+            hashlib.sha256(f"{salt}:7zzhull".encode()).hexdigest()
+        )
+        (gate.root / ".legal-deny-list.yaml").write_text(
+            yaml.safe_dump(rules), encoding="utf-8"
+        )
+        out = gate(_file(gate, "towed by 7zzhull at dawn\n"))
+        assert out.returncode == 1, out.stdout
+
+    def test_a_plain_number_is_not_a_name(self, gate):
+        out = gate(_file(gate, "the 2000 m spread and 12345 cycles\n"))
+        assert out.returncode == 0, out.stdout
+
+
 class TestPlaceholdersPass:
     """The replacements the cleanup writes must not themselves be findings."""
 
