@@ -190,6 +190,7 @@ nde = [
 ]
 
 solvers = ["OrcFxAPI", "gmsh>=4.12.0,<5.0.0"]
+nastran = ["pyNastran>=1.4.1,<2.0.0"]
 # Mesh I/O and 3-D rendering. Imported lazily (inside functions / try-except) by
 # the diffraction and mesh pipelines, so they are not needed to import or use the
 # rest of the library -- moved out of [project] dependencies in #1632.
