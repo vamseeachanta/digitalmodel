@@ -214,6 +214,90 @@ def test_signal_user_bilinear_keeps_its_cut_off():
     assert math.isinf(float(c.get_allowable_cycles(np.array([39.0]))[0]))
 
 
+# -- signal_processing user-built bilinear curves (review r2) -------------------
+#
+# A = 1e12, m = 3, N_transition = 1e7: knee stress (1e12 / 1e7)^(1/3) =
+# 46.416 MPa. Legacy (continuity) second intercept A2 = 1e7 x 46.416^5 =
+# 2.15443e15, so 40 MPa -> 2.15443e15 / 40^5 = 2.15443e15 / 1.024e8 =
+# 21,039,401 cycles. With the supplied A2 = 1e16 (opt-in): 1e16 / 1.024e8 =
+# 97,656,250 cycles.
+
+_USER = dict(A=1e12, m=3.0, A2=1e16, m2=5.0, N_transition=1e7)
+N_USER_40_CONTINUITY = 21_039_401
+N_USER_40_TABULATED = 97_656_250
+
+
+def _user_curve(**kw):
+    from digitalmodel.signal_processing.signal_analysis.fatigue import SNCurve
+
+    return SNCurve("bilinear", **{**_USER, **kw})
+
+
+def test_signal_user_bilinear_default_ignores_supplied_a2():
+    """Default: the second intercept is derived for continuity at the knee and
+    the supplied A2 is ignored, as before #2165."""
+    c = _user_curve()
+    n40 = float(c.get_allowable_cycles(np.array([40.0]))[0])
+    assert n40 == pytest.approx(N_USER_40_CONTINUITY, rel=1e-7)
+    a2_cont = 1e7 * (1e12 / 1e7) ** (5.0 / 3.0)
+    assert n40 == pytest.approx(a2_cont / 40.0**5, rel=1e-12)
+
+
+def test_signal_user_bilinear_default_is_continuous_at_the_knee():
+    c = _user_curve()
+    s_knee = (1e12 / 1e7) ** (1.0 / 3.0)
+    n = c.get_allowable_cycles(np.array([s_knee * (1 - 1e-9), s_knee * (1 + 1e-9)]))
+    assert n[0] == pytest.approx(1e7, rel=1e-7)
+    assert n[1] == pytest.approx(1e7, rel=1e-7)
+
+
+def test_signal_user_bilinear_opt_in_uses_supplied_a2():
+    c = _user_curve(a2_mode="tabulated")
+    n40 = float(c.get_allowable_cycles(np.array([40.0]))[0])
+    assert n40 == pytest.approx(N_USER_40_TABULATED, rel=1e-12)
+
+
+@pytest.mark.parametrize(
+    "mode, n40",
+    [("continuity", N_USER_40_CONTINUITY), ("tabulated", N_USER_40_TABULATED)],
+)
+def test_signal_user_bilinear_inverse_matches_forward(mode, n40):
+    """get_stress_range is the inverse of get_allowable_cycles in both modes:
+    the cycles at 40 MPa map back to 40 MPa, and 1e6 cycles (first segment)
+    to (1e12 / 1e6)^(1/3) = 100 MPa."""
+    c = _user_curve(a2_mode=mode)
+    s = c.get_stress_range(np.array([float(n40), 1e6]))
+    assert s[0] == pytest.approx(40.0, rel=1e-7)
+    assert s[1] == pytest.approx(100.0, rel=1e-12)
+    for stress in (20.0, 40.0, 46.0, 60.0, 150.0):
+        n = c.get_allowable_cycles(np.array([stress]))
+        assert c.get_stress_range(n)[0] == pytest.approx(stress, rel=1e-9)
+
+
+def test_signal_user_bilinear_rejects_unknown_a2_mode():
+    with pytest.raises(ValueError, match="a2_mode"):
+        _user_curve(a2_mode="bogus").get_allowable_cycles(np.array([40.0]))
+
+
+def test_signal_user_bilinear_tabulated_needs_a2():
+    from digitalmodel.signal_processing.signal_analysis.fatigue import SNCurve
+
+    c = SNCurve("bilinear", A=1e12, m=3.0, m2=5.0, a2_mode="tabulated")
+    with pytest.raises(ValueError, match="A2"):
+        c.get_allowable_cycles(np.array([40.0]))
+
+
+def test_signal_dnv_curve_opts_in_to_the_tabulated_a2():
+    """The DNV-RP-C203 path sets the opt-in: E air at 46 MPa stays at
+    10^15.350 / 46^5 = 10,869,532 cycles, and the inverse maps it back."""
+    c = _signal_e()
+    assert c.params["a2_mode"] == "tabulated"
+    assert float(c.get_allowable_cycles(46.0)) == pytest.approx(10_869_532, rel=1e-7)
+    assert float(c.get_stress_range(np.array([N_E_AIR_46]))[0]) == pytest.approx(
+        46.0, rel=1e-12
+    )
+
+
 # -- free span (finding 3) -----------------------------------------------------
 
 

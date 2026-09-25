@@ -1018,15 +1018,24 @@ class TestISO19902CurveParameters:
 
 # ---------------------------------------------------------------------------
 # DNVGL-RP-C203 (latest) — T curve for tubular joints with SCF integration.
-# T air:  A = 10**11.764 ~ 5.808e11, m=3.0
-# T seawater CP: A = 10**11.68 ~ 4.786e11, m=3.0  (for N < 1e7)
+# The group keeps its "latest" edition label; the verified reference for these
+# values is the DNV-RP-C203 (2011) T row (#2165), whether the later edition
+# tabulates the same values is not established here:
+# T air (Table 2-1):   m1 = 3, log a1 = 12.164; m2 = 5, log a2 = 15.606;
+#                      knee at 1e7 cycles (knee stress 52.64 MPa).
+# T seawater CP (2-2): m1 = 3, log a1 = 11.764; m2 = 5, log a2 = 15.606;
+#                      knee at 1e6 cycles (knee stress 83.43 MPa).
+# The earlier air value 11.764 was the seawater-CP intercept and the earlier
+# seawater-CP value 11.68 matched no T row. No cut-off (2011 section 2.4).
 # SCF: S_hot = SCF * S_nominal
 # ---------------------------------------------------------------------------
 
-DNVGL_T_AIR_A = 10 ** 11.764   # ~ 5.808e11
+DNVGL_T_AIR_A = 10 ** 12.164   # ~ 1.459e12
 DNVGL_T_AIR_M = 3.0
-DNVGL_T_SW_CP_A = 10 ** 11.68  # ~ 4.786e11
+DNVGL_T_SW_CP_A = 10 ** 11.764  # ~ 5.808e11
 DNVGL_T_SW_CP_M = 3.0
+DNVGL_T_A2 = 10 ** 15.606
+DNVGL_T_M2 = 5.0
 
 
 class TestDNVGLRPC203CurveParameters:
@@ -1045,20 +1054,32 @@ class TestDNVGLRPC203CurveParameters:
         assert curve.A == pytest.approx(DNVGL_T_AIR_A, rel=1e-3)
 
     def test_dnvgl_t_air_known_n_at_100mpa(self):
-        """log10(N) = 11.764 - 3.0*2 = 5.764 => N ~ 5.808e5"""
-        import math
+        """100 MPa > 52.64 MPa knee: N = 10^(12.164 - 6) = 1,458,814 cycles
+        (was 580,764 from the seawater-CP intercept 11.764)."""
         curve = StandardSNCurves.get_curve("DNVGL_RP_C203", "T_AIR")
         N = curve.get_allowable_cycles(100.0)
-        expected_log_n = 11.764 - 3.0 * math.log10(100.0)
-        assert math.log10(N) == pytest.approx(expected_log_n, rel=1e-3)
+        assert N == pytest.approx(10 ** (12.164 - 6.0), rel=1e-12)
+        assert N == pytest.approx(1_458_814, rel=1e-6)
 
     def test_dnvgl_t_air_known_n_at_50mpa(self):
-        """log10(N) = 11.764 - 3.0*log10(50) ~ 7.704"""
-        import math
+        """50 MPa < 52.64 MPa knee, second segment: N = 10^15.606 / 50^5 =
+        4.0365e15 / 3.125e8 = 1.29167e7 cycles."""
         curve = StandardSNCurves.get_curve("DNVGL_RP_C203", "T_AIR")
         N = curve.get_allowable_cycles(50.0)
-        expected_log_n = 11.764 - 3.0 * math.log10(50.0)
-        assert math.log10(N) == pytest.approx(expected_log_n, rel=1e-3)
+        assert N == pytest.approx(DNVGL_T_A2 / 50.0**5, rel=1e-12)
+        assert N == pytest.approx(12_916_653, rel=1e-6)
+
+    def test_dnvgl_t_air_second_segment_and_knee(self):
+        """Knee at 1e7 cycles: stress 10^((12.164 - 7)/3) = 52.64 MPa; the
+        tabulated second segment meets it within table rounding."""
+        curve = StandardSNCurves.get_curve("DNVGL_RP_C203", "T_AIR")
+        assert curve.A2 == pytest.approx(DNVGL_T_A2, rel=1e-12)
+        assert curve.m2 == pytest.approx(DNVGL_T_M2)
+        assert curve.knee_cycles == pytest.approx(1e7)
+        assert curve.knee_stress == pytest.approx(52.642, abs=1e-3)
+        assert curve.get_allowable_cycles(52.0) == pytest.approx(
+            DNVGL_T_A2 / 52.0**5, rel=1e-12
+        )
 
     def test_dnvgl_t_sw_cp_exists(self):
         curve = StandardSNCurves.get_curve("DNVGL_RP_C203", "T_SW_CP")
@@ -1073,12 +1094,33 @@ class TestDNVGLRPC203CurveParameters:
         assert curve.A == pytest.approx(DNVGL_T_SW_CP_A, rel=1e-3)
 
     def test_dnvgl_t_sw_cp_known_n_at_100mpa(self):
-        """log10(N) = 11.68 - 3.0*2 = 5.68 => N ~ 4.786e5"""
-        import math
+        """100 MPa > 83.43 MPa knee: N = 10^(11.764 - 6) = 580,764 cycles
+        (was 10^5.68 = 478,630 from the unsupported 11.68)."""
         curve = StandardSNCurves.get_curve("DNVGL_RP_C203", "T_SW_CP")
         N = curve.get_allowable_cycles(100.0)
-        expected_log_n = 11.68 - 3.0 * math.log10(100.0)
-        assert math.log10(N) == pytest.approx(expected_log_n, rel=1e-3)
+        assert N == pytest.approx(10 ** (11.764 - 6.0), rel=1e-12)
+        assert N == pytest.approx(580_764, rel=1e-6)
+
+    def test_dnvgl_t_sw_cp_second_segment_and_knee(self):
+        """Knee at 1e6 cycles: stress 10^((11.764 - 6)/3) = 83.43 MPa; 60 MPa
+        is below it: N = 10^15.606 / 60^5 = 5,190,913 cycles."""
+        curve = StandardSNCurves.get_curve("DNVGL_RP_C203", "T_SW_CP")
+        assert curve.A2 == pytest.approx(DNVGL_T_A2, rel=1e-12)
+        assert curve.m2 == pytest.approx(DNVGL_T_M2)
+        assert curve.knee_cycles == pytest.approx(1e6)
+        assert curve.knee_stress == pytest.approx(83.432, abs=1e-3)
+        N = curve.get_allowable_cycles(60.0)
+        assert N == pytest.approx(DNVGL_T_A2 / 60.0**5, rel=1e-12)
+        assert N == pytest.approx(5_190_913, rel=1e-6)
+
+    def test_dnvgl_t_curves_have_no_cut_off(self):
+        """No cut-off (2011 section 2.4): 10 MPa gives 10^15.606 / 1e5 =
+        4.0365e10 cycles in both environments, not infinite life."""
+        for cls in ("T_AIR", "T_SW_CP"):
+            curve = StandardSNCurves.get_curve("DNVGL_RP_C203", cls)
+            assert curve.get_allowable_cycles(10.0) == pytest.approx(
+                DNVGL_T_A2 / 1e5, rel=1e-12
+            )
 
     def test_dnvgl_t_sw_cp_more_conservative_than_air(self):
         """Seawater with CP should yield fewer cycles than in-air."""
@@ -1122,15 +1164,15 @@ class TestDNVGLSCFIntegration:
         assert N_hot == pytest.approx(N_nominal, rel=1e-9)
 
     def test_scf_known_value_at_100mpa_scf2(self):
-        """S_hot = 2*100 = 200 MPa; log10(N)= 11.764 - 3.0*log10(200)"""
-        import math
+        """S_hot = 2*100 = 200 MPa > 52.64 MPa knee;
+        N = 10^12.164 / 200^3 = 182,352 cycles."""
         curve = StandardSNCurves.get_curve("DNVGL_RP_C203", "T_AIR")
         scf = 2.0
         s_nominal = 100.0
         s_hot = scf * s_nominal
         N = curve.get_allowable_cycles(s_hot)
-        expected_log_n = 11.764 - 3.0 * math.log10(s_hot)
-        assert math.log10(N) == pytest.approx(expected_log_n, rel=1e-3)
+        assert N == pytest.approx(DNVGL_T_AIR_A / s_hot**3, rel=1e-12)
+        assert N == pytest.approx(182_352, rel=1e-5)
 
 
 class TestLibraryCountAfterExpansion:
