@@ -149,9 +149,7 @@ class TestPrivatePathHelper:
         assert f"DBQ={db};" in private_paths.access_connection_string(None)
 
     @pytest.mark.parametrize("where", ["argument", "environment"])
-    def test_the_placeholder_itself_is_refused(
-        self, private_paths, monkeypatch, where
-    ):
+    def test_the_placeholder_itself_is_refused(self, private_paths, monkeypatch, where):
         value = PLACEHOLDER + "\\atlas.accdb"
         if where == "environment":
             monkeypatch.setenv("DIGITALMODEL_ACCESS_DB", value)
@@ -175,9 +173,7 @@ class TestPrivatePathHelper:
         self, private_paths, monkeypatch, tmp_path
     ):
         monkeypatch.setenv("DIGITALMODEL_PRIVATE_DATA", str(tmp_path / "env"))
-        got = private_paths.private_data_path(
-            "a.csv", configured=str(tmp_path / "cfg")
-        )
+        got = private_paths.private_data_path("a.csv", configured=str(tmp_path / "cfg"))
         assert got == tmp_path / "cfg" / "a.csv"
 
 

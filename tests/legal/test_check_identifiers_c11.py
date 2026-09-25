@@ -334,7 +334,10 @@ class TestUninspectableBaseline:
 
     def _accept(self, gate, *paths):
         out = gate(
-            *map(str, paths), "--baseline", str(self._baseline(gate)), "--update-baseline"
+            *map(str, paths),
+            "--baseline",
+            str(self._baseline(gate)),
+            "--update-baseline",
         )
         assert out.returncode == 0, out.stdout + out.stderr
         return out
@@ -429,9 +432,7 @@ class TestPrivateListIsCoveredWithoutIt:
         named = os.environ.get("DIGITALMODEL_DENY_LIST")
         if named:
             return Path(named)
-        default = (
-            Path.home() / ".config" / "digitalmodel" / "identifier-deny-list.txt"
-        )
+        default = Path.home() / ".config" / "digitalmodel" / "identifier-deny-list.txt"
         return default if default.exists() else None
 
     def test_every_literal_entry_is_caught_with_the_private_list_absent(self, gate):
@@ -454,9 +455,7 @@ class TestPrivateListIsCoveredWithoutIt:
                 if not caught:
                     escaped.append(f"entry #{i} form {n}")
         # Report positions only: a failure message reaches a CI log.
-        assert not escaped, "private-list entries CI would miss: " + ", ".join(
-            escaped
-        )
+        assert not escaped, "private-list entries CI would miss: " + ", ".join(escaped)
 
 
 class TestLargeStagedCommits:
