@@ -153,17 +153,19 @@ Note: Per-RBS surface areas: Yoke 32.4 m², Structure 60.8 m², Piping insulated
 Note: Per RBS (×4 units): 4 SO-90 + 6 FM-65 (main) + 1–2 FM-15 (yoke).
 Anode counts are for the combined 4-RBS group; governing case drives the total.
 
-**Reproduction note (this branch, `DNV_RP_B401_offshore` route, cfg below):** the route
-represents only the two CAT III seawater-exposed zones (410.1 m² with contingency); the
-insulation-coated piping and jumper have no coating category in the route and are omitted.
-The code returns a total mean / final current of 15.174 / 16.404 A (source 9.290 A total design
-current), a net anode mass of 1 993.82 kg (source 679.65 kg) and 22 SO-90 anodes on the mass
-basis (source 16 SO-90 + 24 FM-65 + 6 FM-15). The SO-90 resistance, 0.1192 Ω, matches the
-tabulated 0.119 Ω. The demand differs because the route on this branch uses the B401-2021
-Table 3-1 temperature-only density (0.040 A/m² coated at ≤7 °C) with a Category III breakdown
-of f_ci = 0.25, 0.05/yr (f_cm 0.925), where the source uses the 2017 >300 m depth density
-(0.110 A/m² mean) with CBF 0.128. The tabulated source values are left as extracted. #2207
-changes the B401 tables.
+**Reproduction note (this branch, `DNV_RP_B401_offshore` route, edition "2017", cfg below):**
+the route represents the two CAT III seawater-exposed zones (410.1 m² with contingency) at
+>300 m in the arctic climate band (3.9 °C); the insulation-coated piping and jumper have no
+coating category in the route and are omitted. The values come from DNV-RP-B401 Tables 10-1 /
+10-2 / 10-4 as of #2207: current densities 0.220 / 0.110 / 0.170 A/m² and breakdown factors
+f_ci / f_cm / f_cf = 0.020 / 0.128 / 0.236 at 27 yr, identical to the tabulated source values.
+The code returns a total initial / mean / final current of 1.804 / 5.774 / 16.453 A (source
+9.290 A total design current, which also carries the omitted insulated and bare areas), a net
+anode mass of 758.73 kg (source 679.65 kg) and 9 SO-90 anodes with `governing_case` "mass"
+(`recommended_anode_count` 9; count by final current 8), where the source distributes 16 SO-90
++ 24 FM-65 + 6 FM-15 across the anode types. The SO-90 resistance, 0.1192 Ω, matches the
+tabulated 0.119 Ω. Provenance flag for the 2017 edition: `inherited-2011-unverified`. The
+tabulated source values are left as extracted.
 
 ## CP Protection Philosophy
 
@@ -189,7 +191,7 @@ changes the B401 tables.
 from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
 
 # Router key mapping: DNVGL-RP-B401:2017 -> "DNV_RP_B401_offshore" with design_data.edition
-# = "2017". The edition key is honoured on the #2207 branch; on main the router ignores it.
+# = "2017". Requires #2207 or later.
 cfg = {
     "inputs": {
         "calculation_type": "DNV_RP_B401_offshore",
@@ -217,9 +219,9 @@ cfg = {
         # and are omitted here (see Reproduction note).
         "structure": {
             "zones": [
-                {"zone": "yoke_frame", "base_zone": "submerged",
+                {"zone": "yoke_frame", "base_zone": "submerged", "depth_m": 1710,
                  "area_m2": 142.6, "coating_category": "III"},
-                {"zone": "main_structure", "base_zone": "submerged",
+                {"zone": "main_structure", "base_zone": "submerged", "depth_m": 1710,
                  "area_m2": 267.5, "coating_category": "III"},
             ],
         },

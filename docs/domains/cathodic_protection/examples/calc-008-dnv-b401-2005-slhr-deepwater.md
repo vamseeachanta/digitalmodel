@@ -136,18 +136,20 @@ with ρMe = 2.0×10⁻⁷ Ω·m (steel resistivity)
 | Ballast Box | 11.46 | 17.38 | 29.02 | 1860 |
 | Total buried external surface (drain) | 5.00 | 5.00 | 5.00 | 535 |
 
-**Reproduction note (this branch, `DNV_RP_B401_offshore` route, cfg below):** the route
-represents the buoyancy tank (1021 m², CAT III) and the coated share of the URA (395.9 m²,
-CAT III) at 22 °C and 0.22 Ω·m; insulated, line-pipe, buried and bare shares are omitted. The
-code returns buoyancy tank I_mean / I_final = 57.18 / 71.47 A (source 24.70 / 44.92 A) and URA
-22.17 / 27.71 A (source 9.62 / 17.47 A), a net anode mass for the two zones of 8 495.35 kg
-(source 2 645 + 1 030 kg) and 72 AFA1190 anodes on the mass basis (source 24 + 10). The
-initial anode resistance from the route, 0.0724 Ω, matches the tabulated 0.072 Ω; the route
-does not apply the 1.3 stand-off factor. The demand differs because the route uses the
-B401-2021 temperature band >17 °C (0.070 A/m² coated) with Category III f_ci = 0.25,
-0.05/yr (f_cm 0.80, f_cf 1.0), where the source uses 440 / 220 / 220 mA/m² with CBF
-0.02 / 0.11 / 0.20. The tabulated source values are left as extracted. #2207 changes the B401
-tables.
+**Reproduction note (this branch, `DNV_RP_B401_offshore` route, edition "2005", cfg below):**
+the route represents the buoyancy tank (1021 m², CAT III) and the coated share of the URA
+(395.9 m², CAT III) at 22 °C (tropical band) and 0.22 Ω·m in the 0–30 m depth band (the source
+does not state the unit depths); insulated, line-pipe, buried and bare shares are omitted. The
+values come from DNV-RP-B401 Tables 10-1 / 10-2 / 10-4 as of #2207: 0.150 / 0.070 / 0.100 A/m²
+and CAT III f_ci / f_cm / f_cf = 0.020 / 0.152 / 0.284 at 22 yr, where the source applies
+440 / 220 / 220 mA/m² (project-specific, Table 4.9) with CBF 0.02 / 0.11 / 0.20. The code
+returns buoyancy tank I_initial / I_mean / I_final = 3.06 / 10.86 / 29.00 A (source 8.99 /
+24.70 / 44.92 A) and URA 1.19 / 4.21 / 11.24 A (source 3.54 / 9.62 / 17.47 A), a net anode
+mass for the two zones of 1 614.12 kg (source 2 645 + 1 030 kg) and 14 AFA1190 anodes with
+`governing_case` "mass" (`recommended_anode_count` 14; count by final current 12; source 24 +
+10). The initial anode resistance from the route, 0.0724 Ω, matches the tabulated 0.072 Ω; the
+route does not apply the 1.3 stand-off factor. Provenance flag for the 2005 edition:
+`verified-2011-tables`. The tabulated source values are left as extracted.
 
 ### Current Demand per Structural Unit (14" Water Injection Riser — Table 5.7)
 | Structural Unit | Initial (A) | Mean (A) | Final (A) | Net Mass (kg) |
@@ -189,7 +191,7 @@ Note: 30% spare is a procurement recommendation from the SLHR Spares Philosophy 
 from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
 
 # Router key mapping: DNV-RP-B401:2005 -> "DNV_RP_B401_offshore" with design_data.edition
-# = "2005". The edition key is honoured on the #2207 branch; on main the router ignores it.
+# = "2005". Requires #2207 or later.
 cfg = {
     "inputs": {
         "calculation_type": "DNV_RP_B401_offshore",

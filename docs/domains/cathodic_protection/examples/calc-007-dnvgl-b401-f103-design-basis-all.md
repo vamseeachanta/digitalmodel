@@ -166,7 +166,7 @@ Maximum spacing: L = √[2 × ΔEMe × d × (D − d) / (ρMe × D × fc × i ×
 
 ```python
 # Router key mapping: DNVGL-RP-B401:2017 -> "DNV_RP_B401_offshore" with design_data.edition
-# = "2017". The edition key is honoured on the #2207 branch; on main the router ignores it.
+# = "2017". Requires #2207 or later.
 # This design basis has no structure geometry, so the router is not called here.
 cfg = {
     "inputs": {

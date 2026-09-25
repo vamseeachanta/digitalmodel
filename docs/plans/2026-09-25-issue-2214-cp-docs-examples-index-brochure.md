@@ -31,7 +31,7 @@ Key mapping applied:
 
 | Snippet key (before) | Router key (after) | Note recorded in the doc |
 |---|---|---|
-| `DNV_RP_B401_2021`, `DNVGL_RP_B401_2017`, `DNV_RP_B401_2005` | `DNV_RP_B401_offshore` + `inputs.design_data.edition` = `"2021"` / `"2017"` / `"2005"` | `edition` is honoured on the #2207 branch; on `main` the router ignores the key |
+| `DNV_RP_B401_2021`, `DNVGL_RP_B401_2017`, `DNV_RP_B401_2005` | `DNV_RP_B401_offshore` + `inputs.design_data.edition` = `"2021"` / `"2017"` / `"2005"` | `edition` requires #2207 or later (merged into this branch as 36eddde4) |
 | `ABS_CP_SHIPS_2017` | `ABS_gn_ships_2018` | router key is misnamed: the ABS Guidance Notes are dated December 2017; key not renamed here |
 | `DNVGL_RP_F103_2016` | `DNV_RP_F103_2010` | 2016 tables are not yet in the repo |
 | `depth_salinity_resistivity` | none | snippet tagged `# not-runnable: resistivity helper pending` |
@@ -40,8 +40,9 @@ Where a cfg dict needed router-schema keys (`structure.zones`, `pipeline`, `anod
 those keys were added from the values already tabulated in the same document; zones the
 current route cannot represent (buried/sediment, insulation-coated, concrete-embedded, TSA)
 are omitted and named in a "Reproduction note". Tabulated source numbers are never edited;
-where the code's current output differs, the Reproduction note states the code value and that
-#2207 changes the B401 tables.
+where the code's output differs, the Reproduction note states the code value and that it comes
+from DNV-RP-B401 Tables 10-1 / 10-2 / 10-4 as of #2207 (follow-up after the #2207 merge:
+every note re-run and rewritten with the merged-branch values).
 
 New test `tests/cathodic_protection/test_worked_examples.py` extracts every ```python block
 from `examples/calc-0xx*.md` and `examples/example-0*.md`, executes it in a sandbox namespace

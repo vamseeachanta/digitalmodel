@@ -183,8 +183,8 @@ i_cm = 0.070 A/m² (source: 0.100 A/m² from the 2016 Table 6-2, × 1.1), f_cm /
 0.00049 / 0.00062), I_cm / I_cf = 0.039 / 0.050 A including the 1.1 design margin (Table 7-1
 gives 0.043 A final per FLET end for this line), and an anode mass of 5.6 kg (2000 Ah/kg,
 u = 0.90; Table 7-1 gives 4.0 kg usable mass per FLET). The tabulated source values are left as
-extracted. #2207 adds cited, edition-keyed B401/F103 tables; the 2016 F103 tables are not yet in
-the repo.
+extracted. As of #2207 the F103 tables in the repo are the cited 2010-edition tables; the 2016
+F103 tables are still not in the repo, so these values are unchanged after #2207.
 
 ## Protection Philosophy Summary
 

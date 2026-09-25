@@ -136,7 +136,8 @@ mass of 3682 kg (source 3 169 kg) and 127.0 anodes on the mass basis (source 109
 187 governing on the final current check — the route does not iterate the count on current
 output). Ra initial 0.3286 Ω agrees; the route reports the same value for the final stage
 because no depleted geometry is supplied. The tabulated source values are left as extracted.
-#2207 changes the DNV-RP-B401/F103 tables and does not touch this ABS route.
+The ABS ships route is not affected by the #2207 DNV-RP-B401/F103 tables; these values are
+unchanged after #2207.
 
 ### Individual Anode Current Output (initial geometry, ρ = 0.2547 Ω·m)
 | Stage | Ia per anode (A) |

@@ -170,8 +170,8 @@ I_total = 127 × 1.004 = 127.5 A
 **Reproduction note (this branch, `ABS_gn_ships_2018` route, snippet below):** the code
 returns a total anode mass of 3682.0 kg where the hand calculation above rounds to 3,679 kg
 (the difference is rounding of acc × u in the narrative); anode count 127.0, I_cm 149.94 A,
-fcm 1.030505, fcf 1.051010, Ra 0.2889 Ω and 1.004 A per anode agree. #2207 changes the
-DNV-RP-B401/F103 tables and does not touch this ABS route.
+fcm 1.030505, fcf 1.051010, Ra 0.2889 Ω and 1.004 A per anode agree. The ABS ships route is
+not affected by the #2207 DNV-RP-B401/F103 tables; these values are unchanged after #2207.
 
 ---
 

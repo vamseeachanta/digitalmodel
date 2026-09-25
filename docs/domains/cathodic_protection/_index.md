@@ -45,18 +45,20 @@ places (below); the worked examples are the contract between the two.
 | `ABS_gn_ships_2018` | ABS Guidance Notes on Cathodic Protection of Ships, December 2017 (key misnamed; not renamed) | in-file |
 | `DNV_RP_F103_2010` | DNV-RP-F103 October 2010 (2016 tables not yet in the repo) | in-file; `cp_DNV_RP_F103_2010.py` is an older standalone |
 | `ABS_gn_offshore_2018` | ABS Guidance Notes on Cathodic Protection of Offshore Structures, December 2018 | in-file |
-| `DNV_RP_B401_offshore` | DNV-RP-B401 (2021 tables on `main`; `design_data.edition` selects 2005/2017/2021 on the #2207 branch) | `cp_DNV_RP_B401_2021.py` |
+| `DNV_RP_B401_offshore` | DNV-RP-B401; `design_data.edition` selects 2005 / 2010 / 2017 / 2021 (requires #2207 or later); reports initial / mean / final demand, `governing_case`, `recommended_anode_count`, `provenance` and `citations` | `cp_DNV_RP_B401_2021.py` on `b401_tables.py` |
 
 Related: `cp_sacrificial_anode_b401.py` (shared B401 sizing equations), `cp_astm_g42.py`,
 `cp_astm_g80.py`. `digitalmodel.infrastructure.common.cathodic_protection` is a deprecated
 import shim for the same class.
 
-### Tables added by #2207 (branch `feat/cp-2207-b401-f103-tables`, not yet on `main`)
+### Tables added by #2207
 
 `src/digitalmodel/cathodic_protection/b401_tables.py` and `f103_tables.py` — cited,
-edition-keyed DNV-RP-B401 and DNV-RP-F103 table modules, wired into the package and the
-legacy B401 route. The worked-example "Reproduction notes" below record the values the
-`main`-based code returns today and flag that #2207 changes them.
+edition-keyed DNV-RP-B401 (Tables 10-1 / 10-2 by climate × depth band, Table 10-4 by
+category × depth band, Sec. 6.3 buried, Tables 10-6 / 10-7 / 10-8) and DNV-RP-F103 table
+modules, wired into the package and the legacy B401 route. Each edition carries a provenance
+flag (`verified-2011-tables` for 2005 / 2010, `inherited-2011-unverified` for 2017 / 2021). The
+worked-example "Reproduction notes" record the values the route returns with these tables.
 
 ## Worked examples (`examples/`)
 

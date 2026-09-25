@@ -154,16 +154,18 @@ Reference draft for preliminary CP calculation: 15 m (maximum surface, conservat
 | Total gross mass of anodes | 73 174.8 | kg | — |
 | Total gross mass of anodes | 73.17 | MT | — |
 
-**Reproduction note (this branch, `DNV_RP_B401_offshore` route, cfg below):** with the hull
-as one submerged Category I zone at 10 °C the code returns a mean / final current demand of
-302.5 / 571.5 A (source 322.705 / 591.626 A), a net anode mass of 62 357.99 kg (source
-66 515 kg), 2 268 anodes on the mass basis (source 2 419) and an anode resistance of 0.2288 Ω
-(Dwight formula with r = 0.067 m; source 0.379 Ω by Lloyd's formula). The route's numbers come
-from the B401-2021 Table 3-1 coated density for >7–12 °C (0.050 A/m²) and Category I
-breakdown f_ci = 0.05, 0.020/yr (f_cm 0.45, f_cf 0.85), not from the source's 200 mA/m² bare
-density with fci 0.02, 0.005/yr (fcm 0.12, fcf 0.22); the closeness of the currents is a
-coincidence of that table pair. The tabulated source values are left as extracted. #2207
-changes the B401 tables.
+**Reproduction note (this branch, `DNV_RP_B401_offshore` route, edition "2021", cfg below):**
+with the hull as one submerged Category III zone at 10 °C (temperate) in the 0–30 m band, the
+values come from DNV-RP-B401 Tables 10-1 / 10-2 / 10-4 as of #2207: 0.200 / 0.100 / 0.130 A/m²
+and f_ci / f_cm / f_cf = 0.020 / 0.260 / 0.500 at 40 yr (Table 10-4 CAT III, 0–30 m:
+a = 0.02, b = 0.012/yr), where the source uses 200 mA/m² for all three stages with fci 0.02 and
+0.005/yr (fcm 0.12, fcf 0.22). The code returns an initial current demand of 53.784 A —
+identical to the source (both 0.200 × 0.02 × 13 446.04) — and mean / final demands of 349.6 /
+874.0 A (source 322.705 / 591.626 A), a net anode mass of 72 058.12 kg (source 66 515 kg),
+2 621 anodes with `governing_case` "mass" (`recommended_anode_count` 2 621; counts by initial /
+final current 50 / 800; source 2 419) and an anode resistance of 0.2288 Ω (Dwight formula with
+r = 0.067 m; source 0.379 Ω by Lloyd's formula). Provenance flag for the 2021 edition:
+`inherited-2011-unverified`. The tabulated source values are left as extracted.
 
 ## SACP Sensitivity Results (Table 5 from source)
 | Design Life (yr) | Resistivity (ohm.m) | Salinity equiv. (ppt) | Gross Mass (kg) | No. Anodes |
@@ -193,7 +195,7 @@ This is a primary driver for ICCP system selection.
 from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
 
 # Router key mapping: DNV-RP-B401 (2021) -> "DNV_RP_B401_offshore" with design_data.edition
-# = "2021". The edition key is honoured on the #2207 branch; on main the router ignores it.
+# = "2021". Requires #2207 or later.
 cfg = {
     "inputs": {
         "calculation_type": "DNV_RP_B401_offshore",
@@ -209,12 +211,11 @@ cfg = {
             "surface_area_avg_draft": 10778.0,   # m², average draft (approx.)
             "coating_type": "glass_flake_reinforced_epoxy",
             "coating_coverage": 1.0,             # 100% coated
-            # Router zone: whole submerged hull at 15 m draft. Category I is the closest
-            # router category to the source's high-integrity coating; the router's Category I
-            # constants (f_ci 0.05, 0.020/yr) differ from the source's 0.02 and 0.005/yr
-            # (see Reproduction note).
+            # Router zone: whole submerged hull at 15 m draft, 0-30 m band. Category III
+            # (Table 10-4, 0-30 m: a = 0.02, b = 0.012/yr) is the closest router category to
+            # the source's high-integrity coating (fci 0.02, 0.005/yr); see Reproduction note.
             "zones": [
-                {"zone": "submerged", "area_m2": 13446.04, "coating_category": "I"},
+                {"zone": "submerged", "area_m2": 13446.04, "coating_category": "III"},
             ],
         },
         "environment": {
@@ -304,9 +305,8 @@ print("Anode resistance (ohm):", result["anode_resistance_ohm"])
 
 ## Gaps Found
 - **Route naming**: cathodic_protection.py has no edition-specific `DNV_RP_B401_2021` key.
-  The B401 route is `DNV_RP_B401_offshore` (this branch implements the 2021 tables in
-  `cp_DNV_RP_B401_2021.py`); the edition is selected with `design_data.edition` on the #2207
-  branch and ignored on main. The cfg above runs through that route.
+  The B401 route is `DNV_RP_B401_offshore`; the edition is selected with
+  `design_data.edition` (requires #2207 or later). The cfg above runs through that route.
 - **Current density table conflict**: The example calculation uses 200 mA/m² bare steel
   current density values from ABS GN Ships 2017, not DNV-RP-B401 2021 Table 10-1 values.
   The DNV_RP_B401_2021 route must clarify which standard's current density table applies

@@ -98,16 +98,22 @@ Note: 10% safety factor applied to surface areas to account for minor appurtenan
 Total anodes: 33 (12 suction pile + 17 buoyancy can + 4 DQ air can)
 All anodes: 29 lb net flush-mount, Galvotec CW-3 or equal
 
-**Reproduction note (this branch, `DNV_RP_B401_offshore` route, cfg below):** the route
-represents five seawater-exposed zones (645.9 m² after the 10% area factor); the buried
-suction-pile area and the TSA-coated air-can barrel are omitted, one resistivity (0.31 Ω·m)
-is used for all zones and the seawater temperature is assumed (20 °C, not stated in the
-source). The code returns a total mean / final current of 16.708 / 16.909 A over the 0.5 yr
-life, a net anode mass of 43.05 kg, 4 anodes on the mass basis and 15 on the current-output
-basis (recommended count), against the source's 33 anodes (12 + 17 + 4) governed by the initial
-polarisation current. The source gives no current values to compare (Appendix 2 was not
-recoverable). The tabulated source values are left as extracted. #2207 changes the B401
-tables.
+**Reproduction note (this branch, `DNV_RP_B401_offshore` route, edition "2005", cfg below):**
+the route represents five seawater-exposed zones (645.9 m² after the 10% area factor: suction
+pile at >300 m, cans at 100–300 m) plus the buried suction-pile steel (403.7 m²) as a `buried`
+zone; the TSA-coated air-can barrel is omitted, one resistivity (0.31 Ω·m) is used for all
+zones and the seawater temperature is taken as 25 °C (tropical region per the source; the
+value itself is not stated). The values come from DNV-RP-B401 Tables 10-1 / 10-2 / 10-4 and
+Sec. 6.3 as of #2207: 0.180 / 0.090 / 0.130 A/m² for the suction pile and 0.140 / 0.070 /
+0.090 A/m² for the cans — identical to the source's 16.7 / 8.4 / 12.1 and 13.0 / 6.5 / 8.4
+mA/ft² — buried 0.020 A/m², Cat I f_ci / f_cm / f_cf = 0.100 / 0.1125 / 0.125 (source Cat 1
+0.100 / 0.113 / 0.125) and Cat III 0.020 / 0.022 / 0.024 at 0.5 yr. The code returns total
+initial / mean / final currents of 33.173 / 21.064 / 25.863 A, a net anode mass of 54.27 kg,
+5 anodes on the mass basis, `governing_case` "initial" and `recommended_anode_count` 29
+(count by final current 23), against the source's 33 anodes (12 + 17 + 4), which the source
+also reports as governed by the initial polarisation current. The source gives no current
+values to compare (Appendix 2 was not recoverable). Provenance flag for the 2005 edition:
+`verified-2011-tables`. The tabulated source values are left as extracted.
 
 ## Python cfg dict
 
@@ -115,7 +121,7 @@ tables.
 from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
 
 # Router key mapping: DNV-RP-B401:2005 -> "DNV_RP_B401_offshore" with design_data.edition
-# = "2005". The edition key is honoured on the #2207 branch; on main the router ignores it.
+# = "2005". Requires #2207 or later.
 cfg = {
     "inputs": {
         "calculation_type": "DNV_RP_B401_offshore",
@@ -135,24 +141,26 @@ cfg = {
             "resistivity_buoyancy_ohm_m": 0.24,
             "resistivity_suction_pile_ohm_m": 0.31,
             "seawater_resistivity_ohm_m": 0.31,    # router key; single value, suction-pile (higher) case
-            "seawater_temperature_C": 20.0,        # router key; not stated in source (tropical, >17 degC band assumed)
+            "seawater_temperature_C": 25.0,        # router key; not stated in source (tropical region per source, >20 degC)
         },
         # Router zones, converted from the source ft2 areas (x 0.0929) with the 10% area
-        # safety factor applied. Cat 3 -> "III", Cat 1 -> "I", uncoated -> "bare".
-        # The buried suction-pile area (3950 ft2) and the TSA-coated DQ air can barrel
-        # (1600 ft2) have no equivalent in the current route and are omitted (see
-        # Reproduction note).
+        # safety factor applied. Cat 3 -> "III", Cat 1 -> "I", uncoated -> "bare"; depth_m
+        # places the suction pile in the >300 m band and the cans in the 100-300 m band as
+        # in the source. The TSA-coated DQ air can barrel (1600 ft2) has no equivalent in the
+        # route and is omitted (see Reproduction note).
         "structure": {
             "zones": [
-                {"zone": "suction_pile_seawater_coated", "base_zone": "submerged",
+                {"zone": "suction_pile_seawater_coated", "base_zone": "submerged", "depth_m": 400,
                  "area_m2": 30.7, "coating_category": "III"},
-                {"zone": "suction_pile_uncoated", "base_zone": "submerged",
+                {"zone": "suction_pile_uncoated", "base_zone": "submerged", "depth_m": 400,
                  "area_m2": 35.8, "coating_category": "bare"},
-                {"zone": "buoyancy_can_coated", "base_zone": "submerged",
+                {"zone": "suction_pile_buried", "base_zone": "buried", "depth_m": 400,
+                 "area_m2": 403.7, "coating_category": "bare"},
+                {"zone": "buoyancy_can_coated", "base_zone": "submerged", "depth_m": 200,
                  "area_m2": 496.6, "coating_category": "I"},
-                {"zone": "buoyancy_can_uncoated", "base_zone": "submerged",
+                {"zone": "buoyancy_can_uncoated", "base_zone": "submerged", "depth_m": 200,
                  "area_m2": 40.9, "coating_category": "bare"},
-                {"zone": "dq_aircan_uncoated", "base_zone": "submerged",
+                {"zone": "dq_aircan_uncoated", "base_zone": "submerged", "depth_m": 200,
                  "area_m2": 41.9, "coating_category": "bare"},
             ],
         },

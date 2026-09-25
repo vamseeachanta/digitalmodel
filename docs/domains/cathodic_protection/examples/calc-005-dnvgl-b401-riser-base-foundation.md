@@ -156,18 +156,21 @@ Note: Same FM-65 anode type as used on the riser base structure (calc-004).
 | FM-02 (hatch) | 16 | 16 × 2.03 = 32.5 |
 | **Total** | **104** | **5,668.0** |
 
-**Reproduction note (this branch, `DNV_RP_B401_offshore` route, cfg below):** the route
-represents only the CAT III seawater-exposed zones of the 4-RBF group (407.0 m² with
-contingency); the sediment-buried bare zone (4 × 320.5 m²) has no buried zone in the route and
-is omitted. The code returns a total mean / final current of 15.059 / 16.280 A (source 12.101 A
-main structure + 0.073 A hatch covers), a net anode mass of 2 095.15 kg (source 1 291.25 +
-3.78 kg) and 33 FM-65 anodes on the mass basis (source 88 FM-65 + 16 FM-02). The FM-65
-resistance from the route is 0.1357 Ω against the tabulated 0.273 Ω: the route applies the
-Dwight stand-off formula to `flush_mounted` anodes rather than the long-flush ρ / (2S) formula.
-The demand differs because the route uses the B401-2021 temperature-only density (0.040 A/m²
-coated at ≤7 °C) with Category III f_ci = 0.25, 0.05/yr, where the source uses the 2017
->300 m depth density with CBF 0.128. The tabulated source values are left as extracted. #2207
-changes the B401 tables.
+**Reproduction note (this branch, `DNV_RP_B401_offshore` route, edition "2017", cfg below):**
+the route represents the CAT III seawater-exposed zones of the 4-RBF group (407.0 m² with
+contingency) at >300 m, arctic band (3.9 °C), and the sediment-buried bare steel (1 410.2 m²
+with contingency) as a `buried` zone. The values come from DNV-RP-B401 Tables 10-1 / 10-2 /
+10-4 and Sec. 6.3 as of #2207: seawater densities 0.220 / 0.110 / 0.170 A/m², buried
+0.020 A/m², CAT III f_ci / f_cm / f_cf = 0.020 / 0.128 / 0.236 at 27 yr — identical to the
+tabulated source values. The code returns seawater-zone mean currents of 5.545 A (foundation)
+and 0.186 A (hatch covers), a buried-zone current of 28.204 A, totals of 29.995 / 33.935 /
+44.533 A (initial / mean / final; source 12.101 A main structure + 0.073 A hatch covers), a net
+anode mass of 4 721.3 kg (source 1 291.25 + 3.78 kg) and 74 FM-65 anodes with `governing_case`
+"mass" (`recommended_anode_count` 74; count by final current 25), against the source's 88 FM-65
++ 16 FM-02. The FM-65 resistance from the route is 0.1357 Ω against the tabulated 0.273 Ω:
+the route applies the Dwight stand-off formula to `flush_mounted` anodes rather than the
+long-flush ρ / (2S) formula. Provenance flag for the 2017 edition: `inherited-2011-unverified`.
+The tabulated source values are left as extracted.
 
 ## CP Protection Philosophy
 
@@ -193,7 +196,7 @@ changes the B401 tables.
 from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
 
 # Router key mapping: DNVGL-RP-B401:2017 -> "DNV_RP_B401_offshore" with design_data.edition
-# = "2017". The edition key is honoured on the #2207 branch; on main the router ignores it.
+# = "2017". Requires #2207 or later.
 cfg = {
     "inputs": {
         "calculation_type": "DNV_RP_B401_offshore",
@@ -217,16 +220,17 @@ cfg = {
             "seawater_temperature_C": 3.9,       # near seabed (router key)
             "seawater_resistivity_ohm_m": 0.31,  # router key
         },
-        # Router zones: seawater-exposed CAT III steel for the 4-RBF group, +10% contingency
-        # (89.5 x 4 = 358.0 -> 393.8 m2; hatch covers 1.5 x 2 x 4 = 12.0 -> 13.2 m2).
-        # The sediment-buried bare zone (320.5 x 4 m2) has no buried zone in the current
-        # route and is omitted here (see Reproduction note).
+        # Router zones for the 4-RBF group, +10% contingency: seawater-exposed CAT III steel
+        # (89.5 x 4 = 358.0 -> 393.8 m2; hatch covers 1.5 x 2 x 4 = 12.0 -> 13.2 m2) and the
+        # sediment-buried bare steel (320.5 x 4 = 1282.0 -> 1410.2 m2, B401 Sec. 6.3 buried).
         "structure": {
             "zones": [
-                {"zone": "foundation_seawater", "base_zone": "submerged",
+                {"zone": "foundation_seawater", "base_zone": "submerged", "depth_m": 1710,
                  "area_m2": 393.8, "coating_category": "III"},
-                {"zone": "hatch_covers", "base_zone": "submerged",
+                {"zone": "hatch_covers", "base_zone": "submerged", "depth_m": 1710,
                  "area_m2": 13.2, "coating_category": "III"},
+                {"zone": "foundation_buried", "base_zone": "buried", "depth_m": 1710,
+                 "area_m2": 1410.2, "coating_category": "bare"},
             ],
         },
         # Router anode (FM-65 long flush-mounted; r = cross-section perimeter / 2 pi)

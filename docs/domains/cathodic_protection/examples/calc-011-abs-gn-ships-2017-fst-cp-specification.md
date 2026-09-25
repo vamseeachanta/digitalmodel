@@ -218,8 +218,8 @@ mass on Icm with a temperature-corrected capacity of 2162 Ah/kg, giving 3682 kg 
 anodes on the mass basis (source 4 713 kg at Q = 2500 Ah/kg and 460 anodes, final current
 governing over 230 locations). Rai = 0.4194 Ω matches the tabulated 0.419 Ω; the route reports
 the same value for Raf because no depleted geometry is supplied (source 0.3807 Ω). The
-tabulated source values are left as extracted. #2207 changes the DNV-RP-B401/F103 tables and
-does not touch this ABS route.
+tabulated source values are left as extracted. The ABS ships route is not affected by the
+#2207 DNV-RP-B401/F103 tables; these values are unchanged after #2207.
 
 ## Anode Bill of Materials (Section 4.5)
 ```

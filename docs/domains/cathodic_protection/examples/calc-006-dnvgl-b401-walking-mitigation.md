@@ -91,15 +91,18 @@ Current breakdown by zone:
 Governing phase for current: initial (0.452 A)
 Governing phase for mass: mean (0.232 A)
 
-**Reproduction note (this branch, `DNV_RP_B401_offshore` route, cfg below):** the route
-represents the 2.00 m² of immersed wire rope as bare steel; the concrete-embedded zone
-(12.30 m² at 0.001 A/m²) has no equivalent in the route and is omitted. The code returns a
-per-PCM mean / final current of 0.120 / 0.120 A (source 0.232 / 0.352 A; the route's bare-steel
-density at ≤7 °C is 0.060 A/m² with f = 1, where the source uses 0.110 / 0.170 A/m²), a net
-anode mass of 16.7 kg at 2000 Ah/kg (source 43.1 kg at the buried capacity of 1500 Ah/kg) and
-1 anode per PCM on the mass basis (source 3 minimum, 4 recommended). The anode resistance from
-the route is 0.1476 Ω (Dwight formula) against the source's 0.240 Ω (ρ / 2S). The tabulated
-source values are left as extracted. #2207 changes the B401 tables.
+**Reproduction note (this branch, `DNV_RP_B401_offshore` route, edition "2021", cfg below):**
+the route represents the 2.00 m² of immersed wire rope as bare steel at >300 m in the arctic
+band (3.9 °C); the concrete-embedded zone (12.30 m² at 0.001 A/m²) has no equivalent in the
+route and is omitted. The values come from DNV-RP-B401 Tables 10-1 / 10-2 as of #2207:
+0.220 / 0.110 / 0.170 A/m² with f = 1, so the code returns per-PCM initial / mean / final
+currents of 0.440 / 0.220 / 0.340 A — identical to the seawater-zone breakdown above; the
+source totals 0.452 / 0.232 / 0.352 A add the omitted 0.012 A concrete-embedded term. The
+code returns a net anode mass of 30.61 kg at 2000 Ah/kg (source 43.1 kg at the buried capacity
+of 1500 Ah/kg) and 2 anodes per PCM with `governing_case` "mass" (`recommended_anode_count`
+2; source 3 minimum, 4 recommended). The anode resistance from the route is 0.1476 Ω (Dwight
+formula) against the source's 0.240 Ω (ρ / 2S). Provenance flag for the 2021 edition:
+`inherited-2011-unverified`. The tabulated source values are left as extracted.
 
 ## Anode Parameters (Table 6)
 
@@ -196,7 +199,7 @@ Rationale:
 from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
 
 # Router key mapping: DNV-RP-B401:2021 -> "DNV_RP_B401_offshore" with design_data.edition
-# = "2021". The edition key is honoured on the #2207 branch; on main the router ignores it.
+# = "2021". Requires #2207 or later.
 cfg = {
     "inputs": {
         "calculation_type": "DNV_RP_B401_offshore",
@@ -228,7 +231,7 @@ cfg = {
         # route and is omitted here (see Reproduction note).
         "structure": {
             "zones": [
-                {"zone": "immersed_wire_ropes", "base_zone": "submerged",
+                {"zone": "immersed_wire_ropes", "base_zone": "submerged", "depth_m": 1910,
                  "area_m2": 2.00, "coating_category": "bare"},
             ],
         },
