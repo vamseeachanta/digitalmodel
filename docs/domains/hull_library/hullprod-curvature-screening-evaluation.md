@@ -60,11 +60,11 @@ Our panel meshes are WAMIT GDF. HullProd does not read GDF, so the spike adds a 
 
 | Hull | Source | Faces | `I_D` | flat | single | elliptic | saddle | Mesh reliability |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| client drillship DS-A | `llm-wiki-acma/cases/orcawave-diffraction-<DS-A>/<DS-A>-hull.gdf` | 20 473 | 67.3 | 0.52 | 0.04 | 0.23 | 0.21 | caution (open boundary) |
+| client drillship DS-A | `<client-wiki>/cases/orcawave-diffraction-<DS-A>/<DS-A>-hull.gdf` | 20 473 | 67.3 | 0.52 | 0.04 | 0.23 | 0.21 | caution (open boundary) |
 | OC4 semi-sub | `docs/domains/orcawave/examples/L02 OC4 Semi-sub/*.gdf` | 3 540 | 47.3 | 0.12 | 0.32 | 0.44 | 0.12 | caution (4 components) |
-| client heavy-lift vessel HLV-A | `llm-wiki-acma/cases/orcawave-diffraction-<HLV-A>/<HLV-A>.gdf` | 2 928 | 20.1 | 0.67 | 0.00 | 0.18 | 0.15 | caution (open boundary) |
+| client heavy-lift vessel HLV-A | `<client-wiki>/cases/orcawave-diffraction-<HLV-A>/<HLV-A>.gdf` | 2 928 | 20.1 | 0.67 | 0.00 | 0.18 | 0.15 | caution (open boundary) |
 | L01 default vessel | `docs/domains/orcawave/examples/L01_default_vessel/L01 Vessel mesh.gdf` | 1 514 | 15.1 | 0.43 | 0.20 | 0.25 | 0.12 | caution |
-| FPSO | `llm-wiki-acma/cases/orcawave-diffraction-fpso/fpso.gdf` | 1 760 | 10.2 | 0.13 | 0.75 | 0.09 | 0.03 | caution |
+| FPSO | `<client-wiki>/cases/orcawave-diffraction-fpso/fpso.gdf` | 1 760 | 10.2 | 0.13 | 0.75 | 0.09 | 0.03 | caution |
 | Sea Cypress | `worldenergydata/.../hulls/sea_cypress.obj` (Rhino export) | 30 k | 6.6 | 0.00 | 0.00 | 0.21 | 0.78 | **poor** (slivers, 21 non-manifold edges, 25 components, valence 112) |
 | Test ship, our generator | `tests/.../conftest.py::ship_profile` via `HullMeshGenerator`, 7 225 panels | 28 900 | 3.13 | 0.13 | 0.12 | 0.16 | **0.60** | caution |
 | Unit sphere (control) | HullProd example | 80 | 4.00 | 0 | 0 | 1.00 | 0 | good |
