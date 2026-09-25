@@ -20,8 +20,11 @@ from pathlib import Path
 from typing import List, Dict
 
 # Excel file path
-EXCEL_FILE = r"<private-data>\marine_analysis_data.xlsm"
-OUTPUT_CSV = r"<private-data>\ocimf_database.csv"
+# The repository root: these defaults were absolute paths into a
+# developer checkout; they resolve the same place from any checkout.
+_REPO_ROOT = Path(__file__).resolve().parents[5]
+EXCEL_FILE = str(_REPO_ROOT.parent / "_temp" / "marine_analysis_data.xlsm")
+OUTPUT_CSV = str(_REPO_ROOT / "data" / "ocimf_database.csv")
 
 
 def extract_wind_coefficients(ws) -> pd.DataFrame:
