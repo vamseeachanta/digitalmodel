@@ -74,7 +74,7 @@ SPEC_24IN_QA = PIPELINE_24IN / "spec_qa.yml"
 
 # A01 Catenary Riser - simple model for instant validation (<10s statics)
 A01_RISER = (
-    _DOCS_ROOT / "domains/orcaflex/examples/raw/A01/A01 Catenary riser.dat"
+    _DOCS_ROOT / "domains/orcaflex/examples/raw/A01/A01 Catenary riser.yml"
 )
 
 # Additional Tier 2 fast models for library validation
