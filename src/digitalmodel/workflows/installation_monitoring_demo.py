@@ -9,11 +9,19 @@ from pathlib import Path
 
 import numpy as np
 
-from digitalmodel.workflows.installation_forecast import benchmark
+from digitalmodel.workflows.installation_forecast import benchmark, exceedance_forecast
 from digitalmodel.workflows.installation_forecast_report import _load
 
 
-def _channel_frames(arrays, spec, origins):
+def _exceedance(arrays, key, index, limit, config):
+    """Causal alert from back-tested errors before NOW; truth enters only the post-hoc score."""
+    result = exceedance_forecast(arrays['time'], arrays[key], index, limit,
+                                 quantile=config.get('quantile', 0.95),
+                                 alert_probability=config.get('alert_probability', 0.2), score=True)
+    return {**result, 'scoring': 'withheld truth used only for post-hoc scoring'}
+
+
+def _channel_frames(arrays, spec, origins, exceedance=None):
     key = spec['id']
     if key not in arrays:
         raise ValueError(f'Missing monitoring channel: {key}')
@@ -23,7 +31,10 @@ def _channel_frames(arrays, spec, origins):
         index, now = trace['origin_index'], trace['origin_time']
         history = (arrays['time'] >= now - 120) & (arrays['time'] <= now)
         metrics = benchmark(arrays['time'], arrays[key], [index])['metrics']['120']
-        frames.append({**spec, 'history': {
+        extra = {}
+        if exceedance is not None and spec.get('assumed_limit') is not None:
+            extra['exceedance'] = _exceedance(arrays, key, index, spec['assumed_limit'], exceedance)
+        frames.append({**spec, **extra, 'history': {
             'times': arrays['time'][history].tolist(), 'values': arrays[key][history].tolist()},
             'forecast': {'times': trace['times'],
                          'values': trace['predictions']['autoregression']},
@@ -34,7 +45,7 @@ def _channel_frames(arrays, spec, origins):
     return frames
 
 
-def build_frames(arrays, channels, origins=(240, 300, 360, 420, 480)):
+def build_frames(arrays, channels, origins=(240, 300, 360, 420, 480), exceedance=None):
     """Fix origins before scoring; withheld truth is never a model input."""
     time = np.asarray(arrays['time'])
     indexes = []
@@ -45,7 +56,7 @@ def build_frames(arrays, channels, origins=(240, 300, 360, 420, 480)):
         indexes.append(int(matches[0]))
     if not channels or len({c['id'] for c in channels}) != len(channels):
         raise ValueError('Unique monitoring channels are required')
-    predictions = [_channel_frames(arrays, spec, indexes) for spec in channels]
+    predictions = [_channel_frames(arrays, spec, indexes, exceedance) for spec in channels]
     return [{'now_s': float(origin), 'forecast_horizon_s': 120,
              'operational_validation': 'NOT ESTABLISHED',
              'channels': [channel[i] for channel in predictions]}
@@ -114,7 +125,7 @@ def add_wave_preview(frames, arrays):
     return frames
 
 
-def _scenario(summary, selection, channels, *, include_wave_preview=True):
+def _scenario(summary, selection, channels, *, include_wave_preview=True, exceedance=None):
     cases = [c for c in summary['cases'] if c['hs_m'] == selection['hs_m']
              and c['tp_s'] == selection['tp_s'] and c['status'] == 'VERIFIED']
     if len(cases) != 1:
@@ -129,7 +140,7 @@ def _scenario(summary, selection, channels, *, include_wave_preview=True):
         channel = metadata['channels'][spec['id']]
         if channel['units'] != spec['units'] or channel.get('selection') is not None:
             raise ValueError('Demo requires matching units and fixed channel locations')
-    frames = build_frames(arrays, channels)
+    frames = build_frames(arrays, channels, exceedance=exceedance)
     if include_wave_preview:
         frames = add_wave_preview(frames, arrays)
     return {'case_index': case['index'], **selection,
@@ -160,7 +171,8 @@ def prepare_payload(summary, criteria, demo_config):
                          for c in criteria['checks']],
             'cases': cells, 'boundaries': envelope['boundaries'],
             'envelope': envelope, 'demo': {'default_mode': demo_config['default_mode'], 'scenarios': [
-                _scenario(summary, s, channels, include_wave_preview=include_preview)
+                _scenario(summary, s, channels, include_wave_preview=include_preview,
+                          **({'exceedance': demo_config['exceedance']} if 'exceedance' in demo_config else {}))
                 for s in demo_config['scenarios']]},
             'limitations': demo_config['limitations'], 'provenance': {},
             'snapshot': demo_config['snapshot'],

@@ -274,3 +274,97 @@ def test_replay_qualifies_inherited_campaign_findings():
     prefix='Historical full-campaign context; not fresh pilot findings: '
     assert config['summary_findings']==[prefix+'Peak 151 kN'] and config['decisions']==[prefix+'D']
     assert config['supplements']==[prefix+'S'] and config['disclosures']==[prefix+'X']
+
+
+def _with_alerts(screen, outcome_override=None):
+    scenario = screen['demo']['scenarios'][0]
+    scenario['selection_basis'] = 'Selected after inspection because the window contains an exceedance'
+    load = scenario['frames'][0]['channels'][0]
+    load['truth'] = dict(times=[361, 480], values=[170.0, 180.0])
+    load['exceedance'] = dict(status='calibrated', limit=173.637, window_probability=0.12, alert=False, alert_probability=0.2,
+                              observed_exceedance=True, outcome=outcome_override or 'miss',
+                              calibration_windows=25, first_band_crossing_s=None,
+                              scoring='withheld truth used only for post-hoc scoring')
+    load['wave_preview'] = dict(times=[361, 480], values=[175.0, 150.0])
+    load['wave_preview_metrics'] = {'oracle_wave_fir': {'rmse': 5.5}, 'autoregression': {'rmse': 28.022},
+                                    'persistence': {'rmse': 55.7}, 'history_mean': {'rmse': 28.106}}
+    return screen
+
+
+def test_alert_scoring_and_conditional_benchmark_rendered():
+    html = mudmat.render_html(summary(), config={}, screening=_with_alerts(payload()))
+    for text in ('Selected after inspection', '0.120', 'miss', 'hits 0, misses 1, false alarms 0, correct negatives 0',
+                 'conditional', 'supplied future waves', '5.500', 'crosses'):
+        assert text in html
+
+
+@pytest.mark.parametrize('defect', ['outcome', 'observed', 'probability'])
+def test_inconsistent_alert_record_rejected(defect):
+    screen = _with_alerts(payload(), 'hit' if defect == 'outcome' else None)
+    alert = screen['demo']['scenarios'][0]['frames'][0]['channels'][0]['exceedance']
+    if defect == 'observed': alert['observed_exceedance'] = False; alert['outcome'] = 'correct_negative'
+    if defect == 'probability': alert['window_probability'] = 1.5
+    with pytest.raises(ValueError):
+        mudmat.render_html(summary(), config={}, screening=screen)
+
+
+def test_main_body_operating_envelope_and_allowable_table():
+    html = mudmat.render_html(summary(), config={}, screening=payload())
+    assert 'aria-label="Hs–Tp operating envelope' in html and 'Figure 5-1' in html
+    assert 'Allowable Hs (m) by Tp' in html
+    body = html[:html.index('id="appendix-a"')]
+    assert 'Combined provisional criteria' in body and 'Master-link proxy' in body
+    assert 'conditional' in body.lower()
+
+
+def test_appendix_per_cell_verdicts_are_conditional_and_complete():
+    html = mudmat.render_html(summary(), config={}, screening=payload())
+    appendix = html[html.index('id="appendix-c"'):]
+    assert appendix.count('<tr>') - 1 == 4
+    assert 'Acceptable against Master-link proxy' in appendix
+    assert 'Not acceptable against Master-link proxy' in appendix
+    assert 'Not evaluated' in appendix
+    assert 'conditional on confirmation of component capacities' in appendix
+    assert 'id="appendix-c"' in html and 'href="#appendix-c"' in html or 'Appendix C' in html
+
+
+def test_no_screening_means_no_verdicts():
+    html = mudmat.render_html(summary(), config={})
+    assert 'Acceptable against' not in html and 'id="appendix-c"' not in html
+
+
+def test_allowable_rows_shared_by_html_and_pdf():
+    rows = layout.allowable_rows(payload()['cases'], payload()['criteria'])
+    assert rows[0][0] == 'Combined provisional criteria' and rows[1][0] == 'Master-link proxy'
+    assert rows[0][1:] == ['1', 'none']
+    data, screen, raw = pdf_inputs(); stream = BytesIO()
+    render_full_pdf(data, screen, stream, dict(report_title='Mudmat installation analysis',
+                    recommendations=['Extended-period RAOs from additional diffraction analysis']), summary_bytes=raw)
+    text = ' '.join(' '.join(p.extract_text() for p in PdfReader(stream).pages).split())
+    assert 'Allowable Hs (m) by Tp' in text and 'Extended-period RAOs from additional diffraction analysis' in text
+
+
+def test_configured_recommendations_in_html_section_7():
+    html = mudmat.render_html(summary(), config={'recommendations': ['Extended-period RAOs <x>']}, screening=payload())
+    section = html[html.index('id="section-7"'):html.index('id="section-8"')]
+    assert 'Extended-period RAOs &lt;x&gt;' in section
+
+
+@pytest.mark.parametrize('defect', ['threshold', 'empty_times', 'truncated', 'misaligned'])
+def test_alert_decision_and_truth_coverage_validated(defect):
+    screen = _with_alerts(payload())
+    load = screen['demo']['scenarios'][0]['frames'][0]['channels'][0]
+    alert = load['exceedance']; alert['alert_probability'] = 0.2
+    if defect == 'threshold': alert['window_probability'] = 0.9
+    if defect == 'empty_times': load['truth']['times'] = []
+    if defect == 'truncated': load['truth'] = dict(times=[361], values=[170.0])
+    if defect == 'misaligned': load['truth']['times'] = [362, 480]
+    with pytest.raises(ValueError):
+        mudmat.render_html(summary(), config={}, screening=screen)
+
+
+def test_criterion_status_independent_of_combined_not_evaluated():
+    case = dict(index=9, hs_m=1., tp_s=8, status='NOT_EVALUATED',
+                checks=[dict(id='A', status='PASS', utilization=.5)])
+    assert layout._criterion_status(case, 'A') == 'WITHIN_ASSUMPTIONS'
+    assert layout._criterion_status(case, 'B') == 'NOT_EVALUATED'

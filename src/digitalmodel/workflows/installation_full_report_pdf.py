@@ -218,6 +218,18 @@ def _results(story, summary, payload, cases):
             for key, (case, check) in sorted(groups.items())]
     _table(story, ["Assumed check", "Utilization (-)", "Case", "Hs (m) / Tp (s)", "Governing channel"],
            rows, [148, 65, 42, 78, 174], "Table 4. Governing utilization by assumed criterion; unity is the screening threshold.")
+    from digitalmodel.workflows.vessel_capability_layout import allowable_rows
+    screened = [case for _, case in cases]
+    periods = sorted({case["tp_s"] for case in screened})
+    # Helvetica has no glyph for U+2265; the PDF uses the ASCII form.
+    allowable = [[cell.replace("≥", ">=") for cell in row]
+                 for row in allowable_rows(screened, payload.get("criteria", []))]
+    width = (507 - 118) / max(len(periods), 1)
+    _table(story, ["Allowable Hs (m) by Tp (s)"] + [f"{p:g}" for p in periods], allowable,
+           [118] + [width] * len(periods),
+           "Table 4a. Conditional operating envelope: highest contiguous passing Hs per Tp, combined and per assumed criterion. "
+           "'>=' marks passes to the top of the sampled range; 'none' means the lowest sampled Hs does not pass or is not evaluated. "
+           "Not an approved operating limit.")
     rows = []
     for env in summary.get("envelopes", []):
         if env.get("units") != "kN":
@@ -250,6 +262,8 @@ def _validation_references(story, summary, payload):
             story.append(_p(note))
     _section(story, "7. Recommendations", "The capacity register and governing edition should be confirmed. Selected governing cases should then receive rigging-stiffness, limited-compression, time-step and mesh sensitivities. Geometric slack, interference, crane off/side lead, clamp/connector forces and pipe-code checks should be completed before an operating envelope is issued.")
     story.append(_p("Additional random seeds and operation phases should be assessed near any emerging boundary. Offshore wave-preview and load-prediction performance should be measured against independent observations before near-real-time guidance is used operationally."))
+    for recommendation in payload.get("_report_config", {}).get("recommendations", []):
+        story.append(_p(recommendation))
     _section(story, "8. References and revision history", "The private retained source workbook, model manifest, simulation records and code revision form the evidence chain. Licensed standards remain at their licensed source locations.")
     for key in ["campaign_sha256", "matrix_sha256"]:
         story.append(_p(f"{key}: {summary.get(key, 'Not recorded')}", "Cell"))

@@ -96,6 +96,62 @@ def _metrics(traces, steps):
     return result
 
 
+def exceedance_forecast(times, values, origin_index, limit, *, horizon_s=120.0, order=40, ridge=1e-3,
+                        stride=10, quantile=0.95, alert_probability=0.2, min_calibration=10,
+                        score=False):
+    """Probability that ``limit`` is exceeded within the horizon after the origin, causally.
+
+    The history-only AR forecast is back-tested at earlier origins whose complete horizon ends at
+    or before the current origin. Each back-test contributes one joint error trajectory; the window
+    probability is the fraction of those trajectories that, added to the current forecast, exceed
+    the limit anywhere in the horizon. Back-test windows overlap and are not independent trials.
+    Withheld samples after the origin are read only when ``score`` is requested.
+    """
+    times, values, dt, _, counts = _sampling(times, values, (horizon_s,))
+    steps = int(counts[0])
+    origin = _positive_integer(origin_index, 'origin_index')
+    stride = _positive_integer(stride, 'stride')
+    if not np.isfinite(limit) or not 0 < quantile < 1 or not 0 < alert_probability <= 1:
+        raise ValueError('Finite limit, quantile in (0, 1) and alert probability in (0, 1] required')
+    if origin >= len(times):
+        raise ValueError('Origin outside the trace')
+    history = values[:origin + 1]
+    prediction = np.asarray(forecast(history, steps, order=order, ridge=ridge)['values'])
+    lead_times = [float(times[origin] + dt * (k + 1)) for k in range(steps)]
+    errors, last = [], None
+    for start in range(3 * order - 1, origin - steps + 1, stride):
+        fitted = np.asarray(forecast(values[:start + 1], steps, order=order, ridge=ridge)['values'])
+        errors.append(values[start + 1:start + 1 + steps] - fitted)
+        last = start + steps
+    result = {'method': 'History-only AR with empirical back-test error trajectories',
+              'limit': float(limit), 'horizon_s': float(horizon_s), 'quantile': float(quantile),
+              'alert_probability': float(alert_probability), 'calibration_windows': len(errors),
+              'calibration_last_index': last, 'origin_time': float(times[origin])}
+    if len(errors) < min_calibration:
+        result.update(status='insufficient_calibration', window_probability=None, alert=None,
+                      upper_band=None, first_band_crossing_s=None)
+    else:
+        errors = np.vstack(errors)
+        trajectories = prediction + errors
+        probability = float(np.mean(trajectories.max(axis=1) > limit))
+        upper = prediction + np.quantile(errors, quantile, axis=0)
+        crossing = np.flatnonzero(upper > limit)
+        result.update(status='calibrated', window_probability=probability,
+                      alert=bool(probability >= alert_probability),
+                      upper_band={'times': lead_times, 'values': upper.tolist()},
+                      first_band_crossing_s=float(lead_times[crossing[0]] - times[origin]) if len(crossing) else None)
+    if score:
+        truth = values[origin + 1:origin + 1 + steps]
+        observed = bool(truth.max() > limit) if len(truth) == steps else None
+        result['observed_exceedance'] = observed
+        if observed is None or result['alert'] is None:
+            result['outcome'] = 'not_scored'
+        else:
+            result['outcome'] = {(True, True): 'hit', (False, True): 'miss', (True, False): 'false_alarm',
+                                 (False, False): 'correct_negative'}[(result['alert'], observed)]
+    return result
+
+
 def benchmark(times, values, origins, leads_seconds=(30, 60, 120), order=40, ridge=1e-3):
     """Compare fixed AR and naive baselines on causally withheld future windows.
 

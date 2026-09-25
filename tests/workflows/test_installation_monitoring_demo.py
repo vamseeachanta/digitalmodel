@@ -175,3 +175,24 @@ def test_profile_scenario_preserves_metadata_identity_gate(tmp_path):
     summary['cases'][0]['channels']['profile_005']['position'] = 'End A'
     with pytest.raises(ValueError, match='identity'):
         module._scenario(summary, {'hs_m': 1., 'tp_s': 8.}, specs, include_wave_preview=False)
+
+
+def test_exceedance_probability_only_on_limit_channels_and_causal():
+    config = {'quantile': 0.95, 'alert_probability': 0.2}
+    before = traces()
+    after = {k: v.copy() for k, v in before.items()}
+    after['load'][721:] += 100
+    a = build_frames(before, channels(), origins=(360,), exceedance=config)[0]
+    b = build_frames(after, channels(), origins=(360,), exceedance=config)[0]
+    assert 'exceedance' not in a['channels'][0]
+    ea, eb = a['channels'][1]['exceedance'], b['channels'][1]['exceedance']
+    assert ea['limit'] == 30 and ea['status'] == 'calibrated'
+    for key in ('window_probability', 'alert', 'upper_band', 'calibration_windows'):
+        assert ea[key] == eb[key]
+    assert ea['observed_exceedance'] is False and eb['observed_exceedance'] is True
+    assert ea['scoring'] == 'withheld truth used only for post-hoc scoring'
+
+
+def test_exceedance_omitted_without_configuration():
+    frame = build_frames(traces(), channels(), origins=(360,))[0]
+    assert all('exceedance' not in channel for channel in frame['channels'])

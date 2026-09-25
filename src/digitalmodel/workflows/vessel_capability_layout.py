@@ -116,6 +116,34 @@ def _bind_forecast(screened,screening):
                 if metrics is not None and not all(_finite(metrics.get(k,{}).get('rmse'))
                         for k in ('autoregression','persistence','history_mean')):
                     raise ValueError('Forecast metrics require finite RMSE for all comparators')
+                if channel.get('exceedance') is not None:
+                    _bind_alert(channel,now,horizon)
+
+
+_OUTCOMES={(True,True):'hit',(False,True):'miss',(True,False):'false_alarm',(False,False):'correct_negative'}
+
+
+def _bind_alert(channel,now,horizon):
+    """Recompute the post-hoc score from withheld truth so a stored outcome cannot overstate skill."""
+    alert=channel['exceedance']
+    if alert.get('status')=='insufficient_calibration':
+        if alert.get('alert') is not None:raise ValueError('Uncalibrated alert cannot be scored')
+        return
+    probability,limit=alert.get('window_probability'),alert.get('limit')
+    if alert.get('status')!='calibrated' or not _finite(probability) or not 0<=probability<=1:
+        raise ValueError('Calibrated alert requires a probability in [0, 1]')
+    if not _finite(limit) or limit!=channel.get('assumed_limit') or type(alert.get('alert')) is not bool:
+        raise ValueError('Alert limit must match the channel criterion')
+    threshold=alert.get('alert_probability')
+    if not _finite(threshold) or not 0<threshold<=1 or alert['alert']!=(probability>=threshold):
+        raise ValueError('Alert decision must follow its declared probability threshold')
+    truth=channel.get('truth',{});times,values=truth.get('times',[]),truth.get('values',[])
+    if (not values or len(times)!=len(values) or times!=channel.get('forecast',{}).get('times')
+            or not all(_finite(v) for v in values) or any(not now<t<=now+horizon for t in times)):
+        raise ValueError('Alert scoring requires withheld truth on the full forecast grid')
+    observed=max(truth['values'])>limit
+    if alert.get('observed_exceedance')!=observed or alert.get('outcome')!=_OUTCOMES[(alert['alert'],observed)]:
+        raise ValueError('Stored alert outcome differs from withheld truth')
 
 
 def bind_screening(summary,screening):
@@ -171,6 +199,87 @@ def _screening_envelope(cases,screening):
     return text
 
 
+_COLOURS={'WITHIN_ASSUMPTIONS':'#b7d6eb','EXCEEDS_ASSUMPTIONS':'#edbd8c','NOT_EVALUATED':'#d9dfe5'}
+
+
+def _criterion_status(case,criterion):
+    # Each criterion stands on its own checks; a combined NOT_EVALUATED must not hide a criterion that was evaluated.
+    checks=[c for c in case['checks'] if c['id']==criterion and c.get('status') in ('PASS','FAIL')]
+    if not checks:return 'NOT_EVALUATED'
+    return 'EXCEEDS_ASSUMPTIONS' if any(c['status']=='FAIL' for c in checks) else 'WITHIN_ASSUMPTIONS'
+
+
+def _criterion_boundaries(cases,criterion):
+    return _boundaries([dict(c,status=_criterion_status(c,criterion)) for c in cases])
+
+
+def _envelope_svg(cases):
+    periods=sorted({c['tp_s'] for c in cases});heights=sorted({c['hs_m'] for c in cases})
+    cw,ch,left,top=52,26,58,14;width,height=left+cw*len(periods)+12,top+ch*len(heights)+52
+    y=lambda hs:top+(len(heights)-1-heights.index(hs))*ch
+    parts=[f'<rect x="{left+periods.index(c["tp_s"])*cw}" y="{y(c["hs_m"])}" width="{cw-2}" height="{ch-2}" fill="{_COLOURS[c["status"]]}"/>' for c in cases]
+    line=[]
+    for i,b in enumerate(_boundaries(cases)):
+        edge=top+len(heights)*ch if b['highest_contiguous_pass_hs_m'] is None else y(b['highest_contiguous_pass_hs_m'])
+        line+= [f'{left+i*cw},{edge}',f'{left+(i+1)*cw-2},{edge}']
+    parts.append(f'<polyline points="{" ".join(line)}" fill="none" stroke="#17384d" stroke-width="3"/>')
+    parts+= [f'<text x="{left+i*cw+cw/2-1}" y="{top+len(heights)*ch+16}" text-anchor="middle" style="font-size:12px">{p:g}</text>' for i,p in enumerate(periods)]
+    parts+= [f'<text x="{left-8}" y="{y(h)+ch/2+3}" text-anchor="end" style="font-size:12px">{h:g}</text>' for h in heights]
+    parts.append(f'<text x="{left+cw*len(periods)/2}" y="{height-10}" text-anchor="middle" style="font-size:13px">Peak period Tp (s)</text>')
+    parts.append(f'<text x="14" y="{top+len(heights)*ch/2}" transform="rotate(-90 14 {top+len(heights)*ch/2})" text-anchor="middle" style="font-size:13px">Hs (m)</text>')
+    return (f'<svg viewBox="0 0 {width} {height}" role="img" aria-label="Hs–Tp operating envelope against combined provisional criteria" '
+            f'style="width:100%;max-width:{width*1.4:.0f}px;height:auto">'+''.join(parts)+'</svg>')
+
+
+def allowable_rows(cases,criteria):
+    """Plain-text allowable Hs per Tp, combined then per criterion; shared by the HTML and PDF renderers."""
+    periods=sorted({c['tp_s'] for c in cases})
+    def cells(boundaries):
+        by={b['tp_s']:b for b in boundaries}
+        out=[]
+        for p in periods:
+            b=by[p];hs=b['highest_contiguous_pass_hs_m']
+            out.append('none' if hs is None else (f'≥ {hs:g}' if b['contiguous_upper_edge_censored'] else f'{hs:g}'))
+        return out
+    return ([['Combined provisional criteria']+cells(_boundaries(cases))]
+            +[[str(c.get('label',c['id']))]+cells(_criterion_boundaries(cases,c['id'])) for c in criteria])
+
+
+def _allowable_table(cases,screening):
+    periods=sorted({c['tp_s'] for c in cases})
+    rows=[[escape(v) for v in row] for row in allowable_rows(cases,screening['criteria'])]
+    return _table(['Allowable Hs (m) by Tp (s)']+[f'{p:g}' for p in periods],rows)
+
+
+def _operating_envelope(cases,screening):
+    text='<h4>Operating envelope (conditional)</h4><p>The figure and table give the highest sampled Hs at each Tp below which every sampled cell satisfies the '
+    text+='provisional project-assumption criteria. The envelope is conditional on confirmation of component capacities and the criteria basis; it is not an approved operating limit.</p>'
+    text+=_envelope_svg(cases)
+    text+='<p class="caption">Figure 5-1. Hs–Tp operating envelope against the combined provisional criteria. Blue: within; orange: exceeds; grey: not evaluated '
+    text+='(numerical failure or no result). The dark line follows the highest contiguous passing Hs per Tp; it is not interpolated.</p>'
+    text+=_allowable_table(cases,screening)
+    return text+('<p class="caption">Table 5-4a. Allowable Hs (m) by Tp (s), combined and per criterion. "≥" marks a column that passes to the top of the '
+                 'sampled range; "none" means the lowest sampled Hs does not pass or is not evaluated.</p>')
+
+
+def _verdict_appendix(cases,screening):
+    criteria=screening['criteria'];rows=[]
+    for case in cases:
+        cells=[]
+        for c in criteria:
+            status=_criterion_status(case,c['id']);label=escape(str(c.get('label',c['id'])))
+            util=max((x['utilization'] for x in case['checks'] if x['id']==c['id'] and _finite(x.get('utilization'))),default=None)
+            text={'WITHIN_ASSUMPTIONS':f'Acceptable against {label}','EXCEEDS_ASSUMPTIONS':f'Not acceptable against {label}',
+                  'NOT_EVALUATED':'Not evaluated'}[status]
+            cells.append(text+(f' ({util:.3f})' if util is not None else ''))
+        rows.append([f"{case['index']:03d}",f"{case['hs_m']:g}",f"{case['tp_s']:g}"]+cells)
+    text='<section id="appendix-c"><h2>Appendix C Per-cell verdicts against provisional criteria</h2>'
+    text+='<p>Each verdict is conditional on confirmation of component capacities, their load-path mapping and the criteria basis. '
+    text+='Utilization is shown in brackets; unity is the threshold. Numerical failures are Not evaluated.</p>'
+    text+=_table(['Case','Hs (m)','Tp (s)']+[escape(str(c.get('label',c['id']))) for c in criteria],rows)
+    return text+'<p class="caption">Table C-1. Conditional per-cell verdicts for every planned cell.</p></section>'
+
+
 def _screening_forecast(screening):
     rows,better,total,undefined=[],0,0,0
     for scenario in screening['demo']['scenarios']:
@@ -183,18 +292,63 @@ def _screening_forecast(screening):
                 if channel['id']!='wave_elevation':
                     if mean==0:undefined+=1
                     else:total+=1;better+=ar<mean
-                rows.append([f"{frame['now_s']:g}",escape(str(channel.get('label',channel['id']))),escape(str(channel['units'])),
-                             f'{ar:.3f}',f'{pers:.3f}',f'{mean:.3f}',ratio])
-    scenario=screening['demo']['scenarios'][0]
-    text=f"<p>The causal demonstration replays the SIMULATED reference case {scenario['case_index']:03d} (Hs {scenario['hs_m']:g} m, Tp {scenario['tp_s']:g} s). "
+                rows.append([f"{scenario['case_index']:03d}",f"{frame['now_s']:g}",escape(str(channel.get('label',channel['id']))),
+                             escape(str(channel['units'])),f'{ar:.3f}',f'{pers:.3f}',f'{mean:.3f}',ratio])
+    names='; '.join(f"case {s['case_index']:03d} (Hs {s['hs_m']:g} m, Tp {s['tp_s']:g} s)"
+                    +(f" — {escape(str(s['selection_basis']))}" if s.get('selection_basis') else '')
+                    for s in screening['demo']['scenarios'])
+    text=f"<p>The causal demonstration replays SIMULATED cases: {names}. "
     text+='At each origin a history-only autoregression predicts the next 120 s using samples at or before NOW; withheld samples are used only for scoring. '
     text+=f'For load channels, autoregression RMSE is lower than the history-mean baseline in {better} of {total} channel-origin pairs'
     text+=f' ({undefined} pairs with a zero baseline error are undefined). ' if undefined else '. '
     text+='Forecast skill over naive baselines is therefore reported as measured, not assumed. Offshore forecast validation is not established.</p>'
-    text+=_table(['NOW (s)','Channel','Units','Autoregression RMSE','Persistence RMSE','History-mean RMSE','RMSE ratio to history mean (-)'],rows)
+    text+=_table(['Case','NOW (s)','Channel','Units','Autoregression RMSE','Persistence RMSE','History-mean RMSE','RMSE ratio to history mean (-)'],rows)
     text+='<p class="caption">Table 5-8. Held-out 120 s forecast errors at the preselected origins. A ratio below 1.000 indicates lower error than the history-mean baseline.</p>'
+    text+=_alerts(screening)+_conditional(screening)
     text+=''.join('<p>'+escape(str(item))+'</p>' for item in screening.get('limitations',[]))
     return text
+
+
+def _alerts(screening):
+    rows,counts=[],{key:0 for key in _OUTCOMES.values()}
+    for scenario in screening['demo']['scenarios']:
+        for frame in scenario['frames']:
+            for channel in frame['channels']:
+                alert=channel.get('exceedance')
+                if alert is None:continue
+                calibrated=alert['status']=='calibrated'
+                if calibrated:counts[alert['outcome']]+=1
+                rows.append([f"{scenario['case_index']:03d}",f"{frame['now_s']:g}",escape(str(channel.get('label',channel['id']))),
+                    f"{alert['limit']:.3f}",f"{alert['window_probability']:.3f}" if calibrated else 'not calibrated',
+                    ('yes' if alert['alert'] else 'no') if calibrated else '-',
+                    'yes' if alert.get('observed_exceedance') else 'no',escape(alert.get('outcome','not_scored').replace('_',' '))])
+    if not rows:return ''
+    text='<h4>Causal exceedance alerts</h4><p>At each NOW the history-only forecast is back-tested at earlier origins whose full 120 s window ends before NOW. '
+    text+='The fraction of those error trajectories that carry the current forecast above the provisional limit is the window probability; an alert is raised at or above the pre-declared threshold. '
+    text+=f"Scored against withheld truth: hits {counts['hit']}, misses {counts['miss']}, false alarms {counts['false_alarm']}, correct negatives {counts['correct_negative']}. "
+    text+='Back-test windows overlap and are not independent trials; the traces are sampled at the monitoring interval, so short peaks between samples are not seen.</p>'
+    text+=_table(['Case','NOW (s)','Channel','Provisional limit (kN)','Window probability (-)','Alert','Observed exceedance','Outcome'],rows)
+    return text+'<p class="caption">Table 5-9. Causal probability-of-exceedance alerts over the next 120 s, scored post hoc.</p>'
+
+
+def _conditional(screening):
+    rows=[]
+    for scenario in screening['demo']['scenarios']:
+        for frame in scenario['frames']:
+            for channel in frame['channels']:
+                metrics,preview=channel.get('wave_preview_metrics'),channel.get('wave_preview')
+                if not metrics or not preview or channel.get('assumed_limit') is None:continue
+                limit=channel['assumed_limit']
+                crosses=max(preview['values'])>limit
+                observed=max(channel['truth']['values'])>limit if channel.get('truth',{}).get('values') else None
+                rows.append([f"{scenario['case_index']:03d}",f"{frame['now_s']:g}",escape(str(channel.get('label',channel['id']))),
+                    f"{metrics['oracle_wave_fir']['rmse']:.3f}",f"{metrics['autoregression']['rmse']:.3f}",
+                    'crosses' if crosses else 'stays below','-' if observed is None else ('yes' if observed else 'no')])
+    if not rows:return ''
+    text='<h4>Conditional wave-preview benchmark</h4><p>This comparison is conditional: a linear wave-to-load filter is given the actual '
+    text+='supplied future waves, as a radar wave preview would provide. It measures the potential value of a wave preview, not a forecast that can be made at NOW.</p>'
+    text+=_table(['Case','NOW (s)','Channel','Wave-preview RMSE (kN)','History-only RMSE (kN)','Wave-preview prediction vs limit','Observed exceedance'],rows)
+    return text+'<p class="caption">Table 5-10. Conditional wave-preview benchmark against the history-only forecast over the same 120 s windows.</p>'
 
 
 def _results(summary,screening=None):
@@ -213,7 +367,7 @@ def _results(summary,screening=None):
     text+='Post-exit tension peaks do not alone establish physical snap loads or an allowable slack distance.</p>'
     if screening is not None:
         cases=bind_screening(summary,screening)
-        text+='<h3>5.4 Provisional installation envelope</h3>'+_screening_envelope(cases,screening)
+        text+='<h3>5.4 Provisional installation envelope</h3>'+_screening_envelope(cases,screening)+_operating_envelope(cases,screening)
         text+='<h3>5.5 Two-minute forecasting</h3>'+_screening_forecast(screening)
         return _section(5,'Results — conditional screening',text)
     text+='<h3>5.4 Provisional installation envelope</h3><p><strong>Not established.</strong> A future Hs–Tp envelope requires declared criteria, '
@@ -234,6 +388,7 @@ def _validation_conclusions(summary,config,screened=False):
     conclusions+='They do not establish an approved installation envelope. Completion of source-supported size selection, '
     conclusions+='hydrodynamic/numerical checks, RAO assessment, capacity/clearance criteria and statistical coverage is recommended '
     conclusions+='before operating-window qualification. Mudmat forecasting requires a separate validated demonstration.</p>'
+    conclusions+=_metadata(config,'recommendations')
     return _section(6,'Validation status',text)+_section(7,'Conclusions and recommendations',conclusions)
 
 
@@ -269,6 +424,8 @@ def render_layout(summary,base,config,screening=None):
         '</p><p>Presentation generated UTC: '+escape(str(created))+'</p></section>')
     content=cover+_intro_summary(summary,config)+_design(summary,config)+_method(summary)+_results(summary,screening)
     content+=_validation_conclusions(summary,config,screening is not None)+_appendices(summary,base,config)
+    if screening is not None:
+        content+=_verdict_appendix(bind_screening(summary,screening),screening)
     text='<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
     text+='<title>'+escape(config['title'])+'</title><style>'+STYLE
     text+='pre{white-space:pre-wrap;overflow-wrap:anywhere}p,td,a{overflow-wrap:anywhere}</style></head><body><main>'+content
