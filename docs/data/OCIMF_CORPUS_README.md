@@ -50,7 +50,7 @@ Routing rule: [workspace-hub:.claude/rules/codes-standards-data-routing.md §4](
 | **Digitized lookup (master)** | **`/mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx`** | **17 sheets, 3 data + 14 chart; covers Annex A A5-A19** |
 | Alternative WPD digitization | `/mnt/ace/acma-codes/OCIMF 3rd ed/Digitizer/` | WebPlotDigitizer extraction for A5-A9 only — cross-validation reference |
 | Figure PDF extracts (15 files) | `/mnt/ace/acma-codes/OCIMF/Figures/` | Per-figure extracts of the published curves |
-| Project-bundled MEG4 extracts | `/mnt/ace/<project-archive>/<job-code>/ctr-7/_data/ocimf/` | 8 PDFs covering A13-A21 + worked examples |
+| Project-bundled MEG4 extracts | `<private-data>/ocimf/` | 8 PDFs covering A13-A21 + worked examples |
 | MEG4 justification commentary | `/mnt/ace/acma-codes/OCIMF (MEG 4)/Mooring Equipment Guidelines (MEG4) justification.pdf` | Update commentary for MEG3 → MEG4 transition |
 | LNG-specific wind coefficients (separate file, not in master) | `/mnt/ace/acma-codes/OCIMF 3rd ed/old & other/LNGC Coeficients.xlsx` | Supplementary LNG-focused coefficients |
 | Tandem mooring guideline | `/mnt/ace/acma-codes/OCIMF/OCIMF-Tandem Mooring and Offloading Guidelines for Conventional Tankers at FPSO Facilities.pdf` | Specialized guideline (not coefficient data) |

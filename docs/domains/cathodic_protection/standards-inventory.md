@@ -8,17 +8,17 @@
 | DNV-RP-B401-1993 | Cathodic Protection Design | 1993 | `/mnt/ace/O&G-Standards/DNV/DNV_RP_B401_(1993)_Cathodic_Protection_Design.pdf` | Available |
 | DNV-RP-B401-2005 | Cathodic Protection Design | Jan 2005 + Apr 2008 amend | `/mnt/ace/O&G-Standards/DNV/DNV_RP_B401_with_2008_amendments_(2005)_Cathodic_Protection_Design.pdf` | Available |
 | DNV-RP-B401-2011 | Cathodic Protection Design | Oct 2010 + Apr 2011 amend | `/mnt/ace/O&G-Standards/DNV/DNV_RP_B401_(2011)_Cathodic_Protection_Design.pdf` | Available |
-| DNV-RP-B401-2021 | Cathodic Protection Design | May 2021 | `/mnt/local-analysis/workspace-hub/<project-archive>/<job-code>/ctr-2/cal/DNV-RP-B401-2021.pdf` | Available |
+| DNV-RP-B401-2021 | Cathodic Protection Design | May 2021 | `<private-data>/DNV-RP-B401-2021.pdf` | Available |
 | DNV-RP-F103-2003 | CP of Submarine Pipelines by Galvanic Anodes | Oct 2003 + Apr 2008 amend | `/mnt/ace/O&G-Standards/DNV/DNV_RP_F103_(2003)_Cathodic_protection_of_submarine_pipelines_by_galvanic_anodes.pdf` | Available |
 | DNV-RP-F103-2010 | CP of Submarine Pipelines by Galvanic Anodes | Oct 2010 | `/mnt/ace/O&G-Standards/DNV/DNV_RP_F103_(2010)_Cathodic_Protection_of_Submarine_Pipelines_by_Galvanic_Anodes.pdf` | Available |
 | DNVGL-RP-F103-2016 | CP of Submarine Pipelines | Jul 2016 | Not locally available; proxied via GP 56-01-04U V4 | Proxy only |
 | DNV-RP-F112-2008 | Design of Duplex SS Subsea Equipment Exposed to CP | Oct 2008 | `/mnt/ace/O&G-Standards/DNV/DNV_RP_F112_(2008)_Stainless_steel_subsea_equipment_exposed_to_cathodic_protection.pdf` | Available |
-| ABS-GN-Ships-2017 | GN on CP of Ships | Dec 2017 | `/mnt/local-analysis/workspace-hub/<project-archive>/<job-code>/ctr-2/ref/ABS cathodic-protection-of-ships-gn-dec17.pdf` | Available |
-| ABS-GN-Offshore-2018 | GN on CP of Offshore Structures | Dec 2018 | `/mnt/local-analysis/workspace-hub/digitalmodel/docs/domains/cathodic_protection/codes/ABS cathodic-protection-offshore-gn-dec18.pdf` | Available |
+| ABS-GN-Ships-2017 | GN on CP of Ships | Dec 2017 | `<private-data>/ABS cathodic-protection-of-ships-gn-dec17.pdf` | Available |
+| ABS-GN-Offshore-2018 | GN on CP of Offshore Structures | Dec 2018 | `<private-data>/ABS cathodic-protection-offshore-gn-dec18.pdf` | Available |
 | ISO-15589-2:2004 | Petroleum and Natural Gas — CP of Pipeline Transport Systems — Part 2: Offshore Pipelines | 1st edition 2004 | `/mnt/ace/O&G-Standards/ISO/ISO15589-2-2004forOR_Cathodic_Protection.pdf` | Available |
-| SNAME-TRR21 | Fundamentals of CP for Marine Service (T&R R-21 / B7.5) | — | `/mnt/local-analysis/workspace-hub/<project-archive>/<job-code>/ctr-2/ref/SNAME T&R R-21 Cathodic Protection Marine Service.pdf` | Available |
-| EMX-GP-56-01-04U-V4 | ExxonMobil GP: CP Requirements for Offshore Pipelines | V4.0 Feb 2021 | `/mnt/local-analysis/workspace-hub/contractor/general/cp/GP 56-01-04U_4.pdf` | Available |
-| EMX-GP-56-01-08U-V1 | ExxonMobil GP: CP Requirements for Offshore Structures | V1.0 Apr 2020 | `/mnt/local-analysis/workspace-hub/contractor/general/cp/GP 56-01-08U_Rev1.0_external.pdf` | Available |
+| SNAME-TRR21 | Fundamentals of CP for Marine Service (T&R R-21 / B7.5) | — | `<private-data>/SNAME T&R R-21 Cathodic Protection Marine Service.pdf` | Available |
+| EMX-GP-56-01-04U-V4 | ExxonMobil GP: CP Requirements for Offshore Pipelines | V4.0 Feb 2021 | `<private-data>/GP 56-01-04U_4.pdf` | Available |
+| EMX-GP-56-01-08U-V1 | ExxonMobil GP: CP Requirements for Offshore Structures | V1.0 Apr 2020 | `<private-data>/GP 56-01-08U_Rev1.0_external.pdf` | Available |
 
 ---
 
@@ -147,7 +147,7 @@
 
 ## 3. Code Coverage Audit
 
-Source file: `/mnt/local-analysis/workspace-hub/digitalmodel/src/digitalmodel/infrastructure/common/cathodic_protection.py`
+Source file: `<private-data>/cathodic_protection.py`
 
 ### 3.1 Router
 
