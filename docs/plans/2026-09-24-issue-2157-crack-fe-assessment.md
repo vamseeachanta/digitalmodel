@@ -385,4 +385,35 @@ Gemini remains unavailable on this host, so the review stays at T2.
 - **R5 – assumed basis.** Every result is only as good as the assumed geometry and material (S03/S05). The report states the assumptions beside the inputs they affect and repeats the governing ones in the summary.
 - **Q-P0.** Assumed geometry and material values will be listed on follow-up cards for owner confirmation before P0 starts.
 
+## Phase card decisions (owner save 2026-09-25T11:04Z, `crack-fe-2157-decisions (4).json`)
+
+**P0 cards**
+- S02 (both): the FE-linearised σ_ref governs, and a limit-load Lr is reported as a sensitivity.
+- S03 / V02 (catalogue_plus): public manufacturer catalogue geometry. For a 6 × ½ STD weldolet, A = 19.05, B = 34.93 and C = 23.81 mm. The branch is NPS ½ Sch 40S. Bore = branch ID 15.80 mm, bevel 45°, root gap 1.6 mm and cover-fillet leg 3 mm are engineering assumptions.
+- V01 (s40s): the run pipe is NPS 6 Sch 40S (OD 168.3 mm, wall 7.11 mm).
+- V03 (both): a full-circumference root flaw is the base case, with a crotch arc (a/2c = 0.25) as a sensitivity, both from a₀ = 2.35 mm.
+- S05 / V04 (datasheet), taken from public datasheets:
+  - Rp0.2 = 127 MPa (EN 10088-3 minimum via the Acidur 4404 datasheet);
+  - E(250 °C) = 182.5 GPa (interpolated);
+  - ν = 0.3;
+  - tensile strength at 250 °C ≈ 385 MPa (interpolated);
+  - Ramberg–Osgood n = 7.
+
+  Kmat = 132 MPa√m has no public source and is listed as missing evidence.
+- B12 (assume_basis): geometry is an assumed design basis.
+
+**P1 cards**
+- R01 (fix): edition-named curves, with the `crack_fad` docstring correction.
+- R02 (closed_form): closed-form comparators.
+- B09 (cite): E(T) is taken from a cited datasheet.
+- B14 (state_both): the threshold temperature rule is explicit, and both margins are reported.
+- B15 (flag): Lr > 1 marks the growth result CONDITIONAL.
+- **B05–B08 (drop; this differs from the recommendation):** none of the published case's result values are used anywhere, including an internal cross-check. The analysis and report are self-contained, built on our own FE work and cited laws only.
+
+**Design-data convention (owner note on S05).** Every assumed input carries the riser-report convention. The input is `status_label: "ASSUMED - to be confirmed"`, with a note in the form "ASSUMED - to be confirmed: \<reason\>. Confirm with \<evidence\>." The inputs are held in a design-data register, `examples/workflows/crack-fe-weldolet/design-data-register.json`, which mirrors the riser register schema: id, parameter, value, unit, source_class, reference_ids, note, status_label.
+
+**Databases (owner note on V04 and B09).** Reusable inputs and outputs are proposed as tables in the existing `llm-wiki/data/domain-database-index.yml` domains (`materials-standards`, `structural-ffs`), on board cards D01–D04. Standard-derived values stay out of the public repository, per G05.
+
+Public sources for the P0 values are backed up at `/mnt/ace/docs/literature/materials/stainless-steel-1.4404/` and `/mnt/ace/docs/literature/piping/fittings-and-pipe-dimensions/`, each with a `SOURCES.md`.
+
 ## Complexity: T3
