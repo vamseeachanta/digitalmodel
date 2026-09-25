@@ -54,6 +54,7 @@ import json
 import logging
 import os
 import re
+import secrets
 import sys
 import time
 from dataclasses import asdict, dataclass, field
@@ -114,18 +115,20 @@ class SanitizeConfig:
         )
 
 
-def _str_map(data: dict, key: str, path: Path, required: bool) -> dict[str, str]:
+def _str_map(data: dict, key: str, required: bool) -> dict[str, str]:
+    # Messages name the key, never the file: its path can carry an account
+    # or a client, and the log is public output.
     value = data.get(key, None)
     if value is None:
         if required:
-            raise SanitizeMapError(f"{path}: '{key}' is missing")
+            raise SanitizeMapError(f"the name map: '{key}' is missing")
         return {}
     if not isinstance(value, dict) or not all(
         isinstance(k, str) and isinstance(v, str) for k, v in value.items()
     ):
-        raise SanitizeMapError(f"{path}: '{key}' must map strings to strings")
+        raise SanitizeMapError(f"the name map: '{key}' must map strings to strings")
     if required and not value:
-        raise SanitizeMapError(f"{path}: '{key}' is empty")
+        raise SanitizeMapError(f"the name map: '{key}' is empty")
     return dict(value)
 
 
@@ -143,29 +146,33 @@ def load_sanitize_config(path: str | Path | None = None) -> SanitizeConfig:
     else:
         resolved, origin = default_map_path(), "the default location"
 
+    # No message names the file or quotes its content: the path can carry an
+    # account or a client, and a JSON error quotes the text it failed on.
     if not resolved.is_file():
         raise SanitizeMapError(
-            f"private s7 name map not found at {resolved} (from {origin}); set "
-            f"{MAP_ENV_VAR} or install {default_map_path()}. Refusing to run "
-            "without it."
+            f"private s7 name map not found (from {origin}); set {MAP_ENV_VAR} "
+            f"or install ~/.config/digitalmodel/{MAP_FILE_NAME}. Refusing to "
+            "run without it."
         )
     try:
         data = json.loads(resolved.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
-        raise SanitizeMapError(f"{resolved}: cannot read the name map: {exc}") from exc
+        raise SanitizeMapError(
+            f"cannot read the name map (from {origin}): {type(exc).__name__}"
+        ) from None
     if not isinstance(data, dict):
-        raise SanitizeMapError(f"{resolved}: the name map must be a JSON object")
+        raise SanitizeMapError("the name map must be a JSON object")
 
-    sanitization = _str_map(data, "sanitization_map", resolved, required=True)
-    categories = _str_map(data, "category_map", resolved, required=False)
+    sanitization = _str_map(data, "sanitization_map", required=True)
+    categories = _str_map(data, "category_map", required=False)
     exclusions = data.get("exclusions", [])
     if not isinstance(exclusions, list) or not all(
         isinstance(e, str) for e in exclusions
     ):
-        raise SanitizeMapError(f"{resolved}: 'exclusions' must be a list of strings")
+        raise SanitizeMapError("the name map: 'exclusions' must be a list of strings")
     root = data.get("default_s7_root", "") or ""
     if not isinstance(root, str):
-        raise SanitizeMapError(f"{resolved}: 'default_s7_root' must be a string")
+        raise SanitizeMapError("the name map: 'default_s7_root' must be a string")
 
     return SanitizeConfig(
         sanitization_map=sanitization,
@@ -200,6 +207,117 @@ _ORCAFLEX_SECTION_NAMES = {
 }
 
 logger = logging.getLogger("sanitize_s7")
+
+
+# ---------------------------------------------------------------------------
+# Log redaction
+# ---------------------------------------------------------------------------
+#
+# The log is public output (a terminal, a CI log, a pasted transcript). Every
+# record passes RedactingFilter, which runs the formatted message through the
+# identifier gate's redactor (scripts/legal/check_identifiers.py): the gate's
+# deny list and public pattern classes, plus every name and source folder of
+# the private map. Identifying diagnostics are written to the private audit;
+# the log carries counts and opaque ids.
+
+_GATE = REPO_ROOT / "scripts" / "legal" / "check_identifiers.py"
+#: Per-run salt for opaque ids, so an id cannot be dictionary-matched to a path.
+_RUN_SALT = secrets.token_hex(8)
+
+
+def _gate_module():
+    """The identifier gate, loaded from this repository, or None."""
+    import importlib.util
+
+    name = "_sanitize_s7_identifier_gate"
+    if name in sys.modules:
+        return sys.modules[name]
+    try:
+        spec = importlib.util.spec_from_file_location(name, _GATE)
+        mod = importlib.util.module_from_spec(spec)
+        sys.modules[name] = mod
+        spec.loader.exec_module(mod)
+    except Exception:  # noqa: BLE001
+        sys.modules.pop(name, None)
+        return None
+    return mod
+
+
+def _literal_redactor(names):
+    """Fallback when the gate cannot be loaded: replace every whole log line
+    that holds a name, since the public pattern classes are unavailable."""
+    low_names = [n.lower() for n in names if len(n) >= 4]
+
+    def redact(text: str) -> str:
+        if any(n in text.lower() for n in low_names):
+            return "<redacted log line>"
+        return text
+
+    return redact
+
+
+def build_redactor(config: SanitizeConfig | None = None, extra=()):
+    """A text -> text redactor for the private map *config* and *extra* text."""
+    names: list[str] = [str(x) for x in extra if x]
+    if config is not None:
+        names.extend(config.sanitization_map)
+        for key in list(config.category_map) + list(config.exclusions):
+            names.append(key.replace("\\", "/").split("/")[0])
+        if config.default_s7_root:
+            names.append(config.default_s7_root)
+    gate = _gate_module()
+    if gate is None:
+        return _literal_redactor(names)
+    try:
+        rules = gate.load_rules()
+    except BaseException:  # noqa: BLE001 -- the gate exits on a bad rules file
+        rules = None
+    return gate.Redactor(rules, names=names).redact
+
+
+class RedactingFilter(logging.Filter):
+    """Redacts every record's formatted message; drops tracebacks."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.redact = build_redactor()
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        try:
+            message = record.getMessage()
+        except Exception:  # noqa: BLE001
+            message = str(record.msg)
+        record.msg = self.redact(message)
+        record.args = None
+        # A traceback quotes paths and exception text verbatim.
+        record.exc_info = None
+        record.exc_text = None
+        record.stack_info = None
+        return True
+
+
+_FILTER = RedactingFilter()
+logger.addFilter(_FILTER)
+
+
+def install_log_redaction(
+    config: SanitizeConfig | None, handlers=None, extra=()
+) -> RedactingFilter:
+    """Redact against *config* and *extra* on this module's logger and on
+    *handlers* (for the root handler the CLI configures)."""
+    _FILTER.redact = build_redactor(config, extra)
+    if _FILTER not in logger.filters:
+        logger.addFilter(_FILTER)
+    for handler in handlers or ():
+        if _FILTER not in handler.filters:
+            handler.addFilter(_FILTER)
+    return _FILTER
+
+
+def opaque_id(path: Path | str) -> str:
+    """An id for a source path, matched to it only in the private audit."""
+    digest = hashlib.sha256(f"{_RUN_SALT}:{path}".encode("utf-8")).hexdigest()
+    return "src-" + digest[:10]
 
 
 # ---------------------------------------------------------------------------
@@ -393,8 +511,12 @@ def process_yml_file(
         entry.status = "ok"
     except Exception as exc:
         entry.status = "error"
-        entry.error = str(exc)
-        logger.error("Error processing %s: %s", source, exc)
+        entry.error = str(exc)  # private: the audit keeps the detail
+        logger.error(
+            "Error processing source %s (%s); the detail is in the private audit",
+            opaque_id(source),
+            type(exc).__name__,
+        )
 
     return entry
 
@@ -448,8 +570,12 @@ def process_dat_file(
         entry.status = "ok"
     except Exception as exc:
         entry.status = "error"
-        entry.error = str(exc)
-        logger.error("Error processing %s: %s", source, exc)
+        entry.error = str(exc)  # private: the audit keeps the detail
+        logger.error(
+            "Error processing source %s (%s); the detail is in the private audit",
+            opaque_id(source),
+            type(exc).__name__,
+        )
 
     return entry
 
@@ -551,8 +677,12 @@ def run(args: argparse.Namespace) -> int:
     try:
         config = load_sanitize_config(getattr(args, "map", None))
     except SanitizeMapError as exc:
+        # The message names the key or the origin, never the path.
         logger.error("%s", exc)
         return 2
+    install_log_redaction(
+        config, extra=[x for x in (args.s7_root, config.default_s7_root) if x]
+    )
     logger.info("Name map loaded (%d entries)", len(config.sanitization_map))
 
     s7_arg = args.s7_root or config.default_s7_root
@@ -560,6 +690,7 @@ def run(args: argparse.Namespace) -> int:
         logger.error("No --s7-root given and the name map sets no default_s7_root")
         return 2
     s7_root = Path(s7_arg).resolve()
+    install_log_redaction(config, extra=[s7_arg, str(s7_root)])
     output_root = Path(args.output_root).resolve()
     dry_run: bool = args.dry_run
     skip_dat: bool = args.skip_dat
@@ -570,14 +701,21 @@ def run(args: argparse.Namespace) -> int:
         return 2
 
     if not s7_root.is_dir():
-        logger.error("S7 root directory does not exist: %s", s7_root)
+        logger.error("The s7 root directory does not exist (path not shown)")
         return 1
 
     stats = RunStats(start_time=time.time())
     audit_log: list[AuditEntry] = []
     seen_hashes: set[str] = set()
+    # Identifying diagnostics: written to the private audit, never logged.
+    diagnostics: list[dict[str, str]] = [{"kind": "source_root", "path": str(s7_root)}]
 
-    logger.info("Discovering model files in %s ...", s7_root)
+    def note(kind: str, path: Path | str) -> str:
+        ident = opaque_id(path)
+        diagnostics.append({"kind": kind, "id": ident, "path": str(path)})
+        return ident
+
+    logger.info("Discovering model files (source root in the private audit) ...")
     yml_files, dat_files, excluded_count = discover_model_files(s7_root, config)
     stats.excluded_skipped = excluded_count
     stats.total_files_found = len(yml_files) + len(dat_files)
@@ -595,7 +733,7 @@ def run(args: argparse.Namespace) -> int:
         file_hash = sha256_of_file(source)
         if file_hash in seen_hashes:
             stats.dupes_skipped += 1
-            logger.debug("Duplicate skipped: %s", source)
+            logger.debug("Duplicate skipped: source %s", note("duplicate", source))
             continue
         seen_hashes.add(file_hash)
 
@@ -603,7 +741,9 @@ def run(args: argparse.Namespace) -> int:
         category = resolve_category(rel_dir, config)
         if category is None:
             category = "uncategorized"
-            logger.warning("No category mapping for: %s", rel_dir)
+            logger.warning(
+                "No category mapping for source folder %s", note("unmapped", rel_dir)
+            )
 
         stats.categories_used.add(category)
         entry = process_yml_file(source, output_root, category, dry_run, config)
@@ -627,7 +767,7 @@ def run(args: argparse.Namespace) -> int:
             file_hash = sha256_of_file(source)
             if file_hash in seen_hashes:
                 stats.dupes_skipped += 1
-                logger.debug("Duplicate skipped: %s", source)
+                logger.debug("Duplicate skipped: source %s", note("duplicate", source))
                 continue
             seen_hashes.add(file_hash)
 
@@ -635,7 +775,10 @@ def run(args: argparse.Namespace) -> int:
             category = resolve_category(rel_dir, config)
             if category is None:
                 category = "uncategorized"
-                logger.warning("No category mapping for: %s", rel_dir)
+                logger.warning(
+                    "No category mapping for source folder %s",
+                    note("unmapped", rel_dir),
+                )
 
             stats.categories_used.add(category)
             entry = process_dat_file(source, output_root, category, dry_run, config)
@@ -666,6 +809,7 @@ def run(args: argparse.Namespace) -> int:
             "orcfx_available": HAS_ORCFX,
         },
         "entries": [asdict(e) for e in audit_log],
+        "diagnostics": diagnostics,
     }
 
     if not dry_run:
@@ -766,5 +910,8 @@ if __name__ == "__main__":
         format="%(asctime)s %(levelname)-8s %(message)s",
         datefmt="%H:%M:%S",
     )
+    # The root handler redacts too: a record from any other logger (OrcFxAPI,
+    # a library) reaches the console only through it.
+    install_log_redaction(None, handlers=logging.getLogger().handlers)
 
     sys.exit(run(args))
