@@ -112,8 +112,27 @@ def test_shakedown_rejects_negative_range():
         shakedown_check(elastic_range_mpa=-10.0, sigma_y_mpa=200.0)
 
 
-def test_sigma_ref_consistency_rejects_non_positive_inputs():
+def test_sigma_ref_consistency_rejects_negative_or_non_finite_inputs():
     with pytest.raises(ValueError):
         sigma_ref_consistency(sigma_ref_mpa=-1.0, k_mpa_sqrt_m=1.0, a_mm=2.0)
     with pytest.raises(ValueError):
-        sigma_ref_consistency(sigma_ref_mpa=100.0, k_mpa_sqrt_m=0.0, a_mm=2.0)
+        sigma_ref_consistency(sigma_ref_mpa=100.0, k_mpa_sqrt_m=-1.0, a_mm=2.0)
+    with pytest.raises(ValueError):
+        sigma_ref_consistency(sigma_ref_mpa=float("nan"), k_mpa_sqrt_m=1.0, a_mm=2.0)
+
+
+def test_sigma_ref_consistency_zero_load_states():
+    # K = 0 with sigma_ref > 0 is an inconsistent state: a failed check, not an error.
+    res = sigma_ref_consistency(sigma_ref_mpa=100.0, k_mpa_sqrt_m=0.0, a_mm=2.0)
+    assert not res.passed
+    # Both zero: an unloaded, consistent state.
+    res0 = sigma_ref_consistency(sigma_ref_mpa=0.0, k_mpa_sqrt_m=0.0, a_mm=2.0)
+    assert res0.passed
+    # sigma_ref = 0 with K > 0 is inconsistent.
+    assert not sigma_ref_consistency(
+        sigma_ref_mpa=0.0, k_mpa_sqrt_m=1.0, a_mm=2.0
+    ).passed
+
+
+def test_implied_opening_stress_zero_k():
+    assert implied_opening_stress(0.0, 2.0, y=1.12) == 0.0

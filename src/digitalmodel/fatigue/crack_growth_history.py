@@ -86,8 +86,7 @@ class Threshold:
     e_t_gpa: Optional[float] = None
 
     def __post_init__(self) -> None:
-        if self.dk_th <= 0:
-            raise ValueError("dk_th must be > 0.")
+        _require_positive("dk_th", self.dk_th)
         if self.temperature_rule not in ("none", "e_ratio"):
             raise ValueError("temperature_rule must be 'none' or 'e_ratio'.")
         if self.temperature_rule == "e_ratio":

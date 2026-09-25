@@ -250,3 +250,31 @@ def test_growth_api_exported_from_fatigue_package():
     ):
         assert hasattr(fat, name), name
         assert name in fat.__all__, name
+
+
+@pytest.mark.parametrize("bad", [float("nan"), float("inf"), float("-inf"), 0.0, -1.0])
+def test_threshold_rejects_non_finite_or_non_positive(bad):
+    with pytest.raises(ValueError):
+        Threshold(bad, temperature_rule="none")
+
+
+def test_tabulated_arrest_exactly_at_node():
+    t = TabulatedDeltaK([1.0, 2.0, 3.0], [3.0, 2.0, 3.0])
+    res = life(LAW, t, 1.0, 3.0, threshold=Threshold(2.0, temperature_rule="none"))
+    assert res.status == "ARRESTED"
+    assert res.a_arrest_mm == pytest.approx(2.0, abs=1e-12)
+
+
+def test_tabulated_equal_values_above_threshold_grow():
+    t = TabulatedDeltaK([1.0, 2.0, 3.0], [3.0, 3.0, 3.0])
+    res = life(LAW, t, 1.0, 3.0, threshold=Threshold(2.0, temperature_rule="none"))
+    assert res.status == "GROWS"
+    assert res.cycles == pytest.approx(2.0 / (LAW.A * 27.0), rel=1e-9)
+
+
+def test_tabulated_extrapolated_beyond_last_node():
+    # linear extrapolation from (2, 3) -> (3, 2.5) crosses 2.0 at a = 4
+    t = TabulatedDeltaK([2.0, 3.0], [3.0, 2.5], extrapolation="linear")
+    res = life(LAW, t, 2.0, 5.0, threshold=Threshold(2.0, temperature_rule="none"))
+    assert res.status == "ARRESTED"
+    assert res.a_arrest_mm == pytest.approx(4.0, abs=1e-9)

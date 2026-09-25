@@ -38,6 +38,13 @@ def _positive(name: str, value: float) -> float:
     return float(value)
 
 
+def _non_negative(name: str, value: float) -> float:
+    """Return ``value`` if it is finite and >= 0, else raise ValueError."""
+    if not (isinstance(value, (int, float)) and math.isfinite(value) and value >= 0):
+        raise ValueError(f"{name} must be finite and >= 0 (got {value!r}).")
+    return float(value)
+
+
 def mpa_sqrt_mm_to_mpa_sqrt_m(k_mpa_sqrt_mm: float) -> float:
     """Convert K from MPa*sqrt(mm) to MPa*sqrt(m)."""
     return k_mpa_sqrt_mm / math.sqrt(1000.0)
@@ -45,7 +52,7 @@ def mpa_sqrt_mm_to_mpa_sqrt_m(k_mpa_sqrt_mm: float) -> float:
 
 def implied_opening_stress(k_mpa_sqrt_m: float, a_mm: float, y: float) -> float:
     """Opening stress implied by K for crack depth ``a_mm`` and geometry factor ``y``."""
-    _positive("k_mpa_sqrt_m", k_mpa_sqrt_m)
+    _non_negative("k_mpa_sqrt_m", k_mpa_sqrt_m)
     _positive("a_mm", a_mm)
     _positive("y", y)
     return k_mpa_sqrt_m / (y * math.sqrt(math.pi * a_mm / 1000.0))
@@ -71,9 +78,20 @@ def sigma_ref_consistency(
 
     The ratio ``sigma_ref / sigma_implied`` spans an interval as Y varies. The check
     passes when that interval intersects ``band``.
+
+    Zero-load states: K = 0 with sigma_ref = 0 is an unloaded, consistent state and
+    passes, with a ratio reported as 1. Exactly one of the two being zero is an
+    inconsistent state and fails, with a ratio reported as infinity or 0. It is not
+    an input error.
     """
-    _positive("sigma_ref_mpa", sigma_ref_mpa)
+    _non_negative("sigma_ref_mpa", sigma_ref_mpa)
+    _non_negative("k_mpa_sqrt_m", k_mpa_sqrt_m)
+    _positive("a_mm", a_mm)
     lo_y, hi_y = sorted(y_range)
+    if k_mpa_sqrt_m == 0.0:
+        if sigma_ref_mpa == 0.0:
+            return RatioCheck(True, 1.0, 1.0, tuple(band), (lo_y, hi_y))
+        return RatioCheck(False, math.inf, math.inf, tuple(band), (lo_y, hi_y))
     r_a = sigma_ref_mpa / implied_opening_stress(k_mpa_sqrt_m, a_mm, lo_y)
     r_b = sigma_ref_mpa / implied_opening_stress(k_mpa_sqrt_m, a_mm, hi_y)
     r_min, r_max = min(r_a, r_b), max(r_a, r_b)
