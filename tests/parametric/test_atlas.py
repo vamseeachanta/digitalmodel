@@ -299,14 +299,18 @@ def test_adaptive_densifies_a_coarse_seed_to_pass():
     from digitalmodel.parametric.generate import generate_atlas_adaptive
 
     atlas = generate_atlas_adaptive(
-        basename="mooring_fatigue", physics="log_log", response="damage",
+        basename="mooring_fatigue",
+        physics="log_log",
+        response="damage",
         axes=[
             Axis(name="tension_range_kN", scale="log", grid=[100, 300, 900]),
             Axis(name="n_cycles", scale="log", grid=[1e4, 1e6]),
             Axis(name="area_mm2", scale="log", grid=[3000, 9000]),
             Axis(name="sn_curve", values=["D"]),
         ],
-        response_kwargs={"environment": "seawater_cp"}, tolerance=0.10, max_rounds=15,
+        response_kwargs={"environment": "seawater_cp"},
+        tolerance=0.10,
+        max_rounds=15,
     )
     assert atlas.validation["passes"]
     log = atlas.validation["densification_log"]

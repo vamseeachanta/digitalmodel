@@ -183,8 +183,17 @@ def test_input_validation():
 
 @pytest.mark.parametrize(
     ("weld_class", "k"),
-    [("B1", 0.0), ("B2", 0.0), ("C", 0.15), ("C1", 0.15), ("C2", 0.15),
-     ("D", 0.20), ("E", 0.20), ("F", 0.25), ("W3", 0.25)],
+    [
+        ("B1", 0.0),
+        ("B2", 0.0),
+        ("C", 0.15),
+        ("C1", 0.15),
+        ("C2", 0.15),
+        ("D", 0.20),
+        ("E", 0.20),
+        ("F", 0.25),
+        ("W3", 0.25),
+    ],
 )
 def test_thickness_exponent_per_class_matches_table_2_1(weld_class, k):
     """#2165: k per class from DNV-RP-C203 (2011) Table 2-1. E was 0.25
@@ -193,8 +202,10 @@ def test_thickness_exponent_per_class_matches_table_2_1(weld_class, k):
     E at 40 mm: factor = (40 / 25)^0.20 = 1.0986 (was (40 / 25)^0.25 = 1.1247).
     """
     res = weld_fatigue_quickcheck(
-        [StressBin(100.0, 1.0e5)], weld_class=weld_class,
-        design_life_years=1.0, thickness_mm=40.0,
+        [StressBin(100.0, 1.0e5)],
+        weld_class=weld_class,
+        design_life_years=1.0,
+        thickness_mm=40.0,
     )
     assert res.thickness_exponent == pytest.approx(k)
     assert res.bins["applied_stress_range"].iloc[0] == pytest.approx(

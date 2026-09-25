@@ -29,7 +29,22 @@ from digitalmodel.fatigue import sn_curves
 from digitalmodel.fatigue.sn_library import get_catalog, get_library_curve
 from digitalmodel.fatigue.sn_library_api import calculate_endurance, get_curve
 
-CLASSES = ["B1", "B2", "C", "C1", "C2", "D", "E", "F", "F1", "F3", "G", "W1", "W2", "W3"]
+CLASSES = [
+    "B1",
+    "B2",
+    "C",
+    "C1",
+    "C2",
+    "D",
+    "E",
+    "F",
+    "F1",
+    "F3",
+    "G",
+    "W1",
+    "W2",
+    "W3",
+]
 
 # DNV-RP-C203 (2011) Table 2-1 / 2-2: m1, log a1 (air), log a1 (CP), log a2,
 # fatigue limit at 1e7 cycles (MPa), thickness exponent k.
@@ -102,7 +117,9 @@ def test_free_corrosion_b1_hand_calc():
 def test_free_corrosion_single_slope_at_low_stress():
     """D at 20 MPa: N = 10^11.687 * 20^-3 = 10^(11.687 - 3.90309) = 6.080e7."""
     r = _rec("D", "free_corrosion")
-    assert r.cycles(20.0) == pytest.approx(10 ** (11.687 - 3 * math.log10(20.0)), rel=1e-9)
+    assert r.cycles(20.0) == pytest.approx(
+        10 ** (11.687 - 3 * math.log10(20.0)), rel=1e-9
+    )
     assert r.cycles(20.0) == pytest.approx(6.080e7, rel=1e-3)
 
 
@@ -124,10 +141,18 @@ def test_seawater_cp_matches_table_2_2(cls):
 
 @pytest.mark.parametrize("cls", CLASSES)
 def test_seawater_cp_fatigue_limit_on_m2_segment(cls):
-    """Table 2-2 fatigue limit = 10^((log a2 - 7) / 5), within table rounding."""
+    """Table 2-2 fatigue limit = 10^((log a2 - 7) / 5), within table rounding.
+
+    log a2 is printed to 3 decimals (+/- 0.0005), so the stress on the m2
+    segment is known to +/- 0.0005 / 5 in log10, i.e. about 0.023 %; B1 gives
+    10^((17.146 - 7) / 5) = 106.955 against the printed 106.97 (0.014 %).
+    """
     r = _rec(cls, "seawater_cp")
     on_m2 = 10 ** ((r.log_a2 - 7.0) / 5.0)
-    assert r.endurance_limit == pytest.approx(on_m2, abs=0.01)
+    assert r.endurance_limit == pytest.approx(on_m2, rel=5e-4)
+    # and it is not the old value from the CP log a1 at 1e7 cycles
+    on_m1_at_1e7 = 10 ** ((r.log_a1 - 7.0) / r.m1)
+    assert abs(r.endurance_limit - on_m1_at_1e7) > 1.0
 
 
 def test_seawater_cp_d_between_fatigue_limit_and_knee_uses_m2():
@@ -139,7 +164,9 @@ def test_seawater_cp_d_between_fatigue_limit_and_knee_uses_m2():
     10^11.764 * 60^-3 = 2.688e6 (half the life).
     """
     r = _rec("D", "seawater_cp")
-    assert r.cycles(60.0) == pytest.approx(10 ** (15.606 - 5 * math.log10(60.0)), rel=1e-9)
+    assert r.cycles(60.0) == pytest.approx(
+        10 ** (15.606 - 5 * math.log10(60.0)), rel=1e-9
+    )
     assert r.cycles(60.0) == pytest.approx(5.191e6, rel=1e-3)
 
 
@@ -215,7 +242,7 @@ def test_sn_curves_free_corrosion_single_slope_m3(cls):
     wc = sn_curves.get_sn_curve(cls, "free_corrosion")
     assert wc.k_1 == 3.0 and wc.k_2 == 3.0
     for s in (10.0, 50.0, 200.0):
-        assert wc.cycles(s)[0] == pytest.approx(10**log_a * s**-3.0, rel=1e-9)
+        assert float(wc.cycles(s)) == pytest.approx(10**log_a * s**-3.0, rel=1e-9)
 
 
 @pytest.mark.parametrize("cls", CLASSES)
@@ -227,7 +254,7 @@ def test_sn_curves_seawater_cp_knee_at_1e6(cls):
     assert wc.k_2 == 5.0
     # below the knee the curve follows the tabulated m2 segment
     s = 0.8 * wc.SD
-    assert wc.cycles(s)[0] == pytest.approx(10**log_a2 * s**-5.0, rel=2e-3)
+    assert float(wc.cycles(s)) == pytest.approx(10**log_a2 * s**-5.0, rel=2e-3)
 
 
 def test_sn_curves_d_cp_hand_calc():
@@ -235,8 +262,8 @@ def test_sn_curves_d_cp_hand_calc():
     log a1 (SD = 83.432 MPa at ND = 1e6): N = 1e6 * (60 / 83.432)^-5 = 5.199e6,
     within 0.2 % of the tabulated m2 segment (5.191e6; table rounding)."""
     wc = sn_curves.get_sn_curve("D", "seawater_cp")
-    assert wc.cycles(60.0)[0] == pytest.approx(5.199e6, rel=1e-3)
-    assert wc.cycles(60.0)[0] == pytest.approx(5.191e6, rel=2e-3)
+    assert float(wc.cycles(60.0)) == pytest.approx(5.199e6, rel=1e-3)
+    assert float(wc.cycles(60.0)) == pytest.approx(5.191e6, rel=2e-3)
 
 
 def test_sn_curves_w2_log_a2():
