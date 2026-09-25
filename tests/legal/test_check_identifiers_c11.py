@@ -313,7 +313,9 @@ class TestLargeStagedCommits:
         mod = importlib.util.module_from_spec(spec)
         sys.modules["ci_batch"] = mod
         spec.loader.exec_module(mod)
-        paths = [f"docs/domain_{i:05d}/a_long_file_name_for_batching.md" for i in range(3000)]
+        paths = [
+            f"docs/domain_{i:05d}/a_long_file_name_for_batching.md" for i in range(3000)
+        ]
         calls = []
         oid = "0" * 40
 

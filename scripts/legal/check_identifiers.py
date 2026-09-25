@@ -172,6 +172,23 @@ def tracked_files() -> list[str]:
     return [p for p in out.decode("utf-8", "surrogateescape").split("\0") if p]
 
 
+#: Characters of path arguments per git invocation; Windows caps a command
+#: line at 32,767.
+ARG_BUDGET = 20000
+
+
+def _batches(paths: list[str]) -> list[list[str]]:
+    out: list[list[str]] = [[]]
+    size = 0
+    for p in paths:
+        if out[-1] and size + len(p) + 1 > ARG_BUDGET:
+            out.append([])
+            size = 0
+        out[-1].append(p)
+        size += len(p) + 1
+    return out
+
+
 def index_blobs(paths: list[str]) -> dict[str, bytes | None]:
     """The staged content of each path -- what the commit will contain.
 
@@ -183,7 +200,11 @@ def index_blobs(paths: list[str]) -> dict[str, bytes | None]:
     """
     if not paths:
         return {}
-    listing = _git(["ls-files", "-s", "-z", "--", *paths])
+    # Batched: one invocation carrying every staged path overflowed the
+    # Windows command line (WinError 206) on a commit of ~1,500 files.
+    listing = b"".join(
+        _git(["ls-files", "-s", "-z", "--", *batch]) for batch in _batches(paths)
+    )
     entries: dict[str, tuple[str, str]] = {}
     for rec in listing.decode("utf-8", "surrogateescape").split("\0"):
         if not rec:
