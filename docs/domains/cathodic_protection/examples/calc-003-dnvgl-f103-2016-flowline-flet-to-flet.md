@@ -175,6 +175,17 @@ Notes:
 - Final FLET anode design (count and geometry) is specified in the FLET/PLET structural CP
   calculation, not in this flowline calculation note.
 
+**Reproduction note (this branch, `DNV_RP_F103_2010` route, cfg below):** the repo has no
+DNVGL-RP-F103:2016 route, so the snippet runs the 2010 route on the one production line with an
+exact length (1474 m). The code returns the >80–120 °C band of F103-2010 Table 5-1,
+i_cm = 0.070 A/m² (source: 0.100 A/m² from the 2016 Table 6-2, × 1.1), f_cm / f_cf =
+0.000435 / 0.00057 (linear 2010 formula with the 2016 5LPP constants over 27 yr; source
+0.00049 / 0.00062), I_cm / I_cf = 0.039 / 0.050 A including the 1.1 design margin (Table 7-1
+gives 0.043 A final per FLET end for this line), and an anode mass of 5.6 kg (2000 Ah/kg,
+u = 0.90; Table 7-1 gives 4.0 kg usable mass per FLET). The tabulated source values are left as
+extracted. #2207 adds cited, edition-keyed B401/F103 tables; the 2016 F103 tables are not yet in
+the repo.
+
 ## Protection Philosophy Summary
 
 | Item | CP Source | Notes |
@@ -206,18 +217,44 @@ Notes:
 ## Python cfg dict
 
 ```python
+from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
+
+# Router key mapping: the source uses DNVGL-RP-F103:2016. The repo implements the 2010
+# edition only (DNV_RP_F103_2010); the 2016 Table 6-2 / Table 6-4 values are not yet in
+# the repo, so the 2016 coating constants are passed explicitly as a/b overrides below.
 cfg = {
     "inputs": {
-        "calculation_type": "DNVGL_RP_F103_2016",
-        "standard": "DNVGL-RP-F103:2016",
+        "calculation_type": "DNV_RP_F103_2010",
+        "standard": "DNVGL-RP-F103:2016",     # source-document basis (documentation only)
         "co_standard": "DNVGL-RP-B401:2017",
         "co_standard_iso": "ISO-15589-2:2012",
         "design_data": {
-            "design_life": 25,           # years operational
-            "wet_storage_years": 2,      # for total 27-year design
+            "design_life": 27,           # years total (25 operational + 2 wet storage); router design life
+            "design_life_operational": 25,
+            "wet_storage_years": 2,
             "water_depth_m": [1710, 1900],
             "attenuation_method": "Gibson_non_homogeneous",
             "cp_philosophy": "FLET_to_FLET_no_bracelet",
+        },
+        # Representative line for the router: the one production flowline with an exact
+        # tabulated length (10.75 in OD, 25.4 mm WT, 5LPP, 107.2 degC, 1474 m, non-buried).
+        "pipeline": {
+            "outer_diameter_m": 0.27305,
+            "wall_thickness_m": 0.0254,
+            "length_m": 1474.0,
+            "burial_condition": "non_buried",
+            "internal_fluid_temperature_C": 107.2,
+            "coating_type": "5LPP",
+            "coating_breakdown_a": 0.0003,     # DNVGL-RP-F103:2016 Table 6-4, 5LPP (override)
+            "coating_breakdown_b": 0.00001,
+            "resistivity_ohm_m": 2.0e-7,       # pipe steel
+        },
+        "design": {"design_margin": 1.1},     # company safety factor on linepipe demand
+        "anode": {
+            "material": "aluminium",
+            "utilization_factor": 0.90,        # long stand-off (FLET bank)
+            "individual_anode_mass_kg": 300.0, # assumed; FLET anode sizing is in the structure CP calc
+            "contingency_factor": 1.0,
         },
         "environment": {
             "resistivity_seawater_ohm_m": 0.31,
@@ -295,5 +332,16 @@ cfg = {
         "electrical_continuity_max_ohm": 0.2,
     }
 }
-# Run: CathodicProtection().router(cfg)
+
+result = CathodicProtection().router(cfg)["results"]
+print("Temperature band (F103-2010 Table 5-1):", result["current_densities_mA_m2"]["temperature_band"])
+print("i_cm (A/m2):", result["current_densities_mA_m2"]["mean_current_density_A_m2"])
+print("f_cm / f_cf:", result["coating_breakdown_factors"]["mean_factor"],
+      result["coating_breakdown_factors"]["final_factor"])
+print("I_cm / I_cf (A): {:.3f} / {:.3f}".format(
+    result["current_demand_A"]["mean_current_demand_A"],
+    result["current_demand_A"]["final_current_demand_A"]))
+print("Anode mass (kg): {:.1f}".format(result["anode_requirements"]["total_anode_mass_kg"]))
+# The source (Table 7-1) is an attenuation result per FLET end, not a per-line demand;
+# see the Reproduction note under Table 7-1.
 ```

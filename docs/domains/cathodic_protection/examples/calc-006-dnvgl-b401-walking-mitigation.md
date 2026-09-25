@@ -91,6 +91,16 @@ Current breakdown by zone:
 Governing phase for current: initial (0.452 A)
 Governing phase for mass: mean (0.232 A)
 
+**Reproduction note (this branch, `DNV_RP_B401_offshore` route, cfg below):** the route
+represents the 2.00 m² of immersed wire rope as bare steel; the concrete-embedded zone
+(12.30 m² at 0.001 A/m²) has no equivalent in the route and is omitted. The code returns a
+per-PCM mean / final current of 0.120 / 0.120 A (source 0.232 / 0.352 A; the route's bare-steel
+density at ≤7 °C is 0.060 A/m² with f = 1, where the source uses 0.110 / 0.170 A/m²), a net
+anode mass of 16.7 kg at 2000 Ah/kg (source 43.1 kg at the buried capacity of 1500 Ah/kg) and
+1 anode per PCM on the mass basis (source 3 minimum, 4 recommended). The anode resistance from
+the route is 0.1476 Ω (Dwight formula) against the source's 0.240 Ω (ρ / 2S). The tabulated
+source values are left as extracted. #2207 changes the B401 tables.
+
 ## Anode Parameters (Table 6)
 
 | Parameter | Value | Unit |
@@ -183,13 +193,18 @@ Rationale:
 ## Python cfg dict
 
 ```python
+from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
+
+# Router key mapping: DNV-RP-B401:2021 -> "DNV_RP_B401_offshore" with design_data.edition
+# = "2021". The edition key is honoured on the #2207 branch; on main the router ignores it.
 cfg = {
     "inputs": {
-        "calculation_type": "DNV_RP_B401_2021",
+        "calculation_type": "DNV_RP_B401_offshore",
         "standard": "DNV-RP-B401:2021",
         "design_data": {
             "structure_type": "pipe_clamp_mattress",
             "design_life": 27,           # years
+            "edition": "2021",
             "water_depth_max_m": 1910,
             "unit_count": 77,            # total PCM units
         },
@@ -198,6 +213,8 @@ cfg = {
             "resistivity_sediment_ohm_m": 1.00,
             "min_potential_seawater_V": -0.80,   # vs SSC
             "min_potential_sediment_V": -0.90,
+            "seawater_temperature_C": 3.9,       # near seabed, from the field design basis (calc-007)
+            "seawater_resistivity_ohm_m": 0.31,  # router key
         },
         "current_density": {
             "initial_A_m2": 0.220,
@@ -205,6 +222,15 @@ cfg = {
             "final_A_m2": 0.170,
             "mud_A_m2": 0.020,
             "concrete_embedded_A_m2": 0.001,
+        },
+        # Router zones (per PCM): the immersed galvanised wire ropes as bare steel. The
+        # concrete-embedded zone (12.30 m2 at 0.001 A/m2) has no equivalent in the current
+        # route and is omitted here (see Reproduction note).
+        "structure": {
+            "zones": [
+                {"zone": "immersed_wire_ropes", "base_zone": "submerged",
+                 "area_m2": 2.00, "coating_category": "bare"},
+            ],
         },
         "pcm_surface_areas": {
             # Per PCM unit, including 15% contingency
@@ -231,20 +257,25 @@ cfg = {
             "final_A": 0.352,
         },
         "anode": {
-            "type": "long_flush_mounted",
+            "type": "flush_mounted",       # router token for the long flush-mounted anode
             "alloy": "Al_alloy",
+            "material": "aluminium",       # router material token
             "dimensions_mm": {
                 "length": 1200,
                 "base_width": 88,
                 "top_width": 78,
                 "height": 65,
             },
+            "length_m": 1.200,             # router key
+            "radius_m": 0.0487,            # router key; r = cross-section perimeter / 2 pi (88 x 65 mm)
             "net_mass_kg": 16.9,
+            "individual_anode_mass_kg": 16.9,   # router key
             "capacity_seawater_Ah_kg": 2000,
             "capacity_buried_Ah_kg": 1500,
             "ccp_seawater_V": -1.05,
             "ccp_buried_V": -1.00,
             "utilisation": 0.85,
+            "utilization_factor": 0.85,    # router key
         },
         "design_results": {
             # Per PCM
@@ -260,5 +291,11 @@ cfg = {
         },
     }
 }
-# Run: CathodicProtection().router(cfg)
+
+result = CathodicProtection().router(cfg)["results"]
+print("Per-PCM mean / final current (A): {:.3f} / {:.3f}".format(
+    result["current_demand_A"]["total_mean_A"], result["current_demand_A"]["total_final_A"]))
+print("Per-PCM net anode mass (kg):", result["anode_requirements"]["total_mass_kg"])
+print("Anodes per PCM (mass basis):", result["anode_requirements"]["anode_count"])
+print("Anode resistance (ohm):", result["anode_resistance_ohm"])
 ```

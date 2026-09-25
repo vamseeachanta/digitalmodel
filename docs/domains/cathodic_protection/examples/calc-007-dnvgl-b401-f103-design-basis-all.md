@@ -165,14 +165,18 @@ Maximum spacing: L = √[2 × ΔEMe × d × (D − d) / (ρMe × D × fc × i ×
 ## Python cfg dict
 
 ```python
+# Router key mapping: DNVGL-RP-B401:2017 -> "DNV_RP_B401_offshore" with design_data.edition
+# = "2017". The edition key is honoured on the #2207 branch; on main the router ignores it.
+# This design basis has no structure geometry, so the router is not called here.
 cfg = {
     "inputs": {
-        "calculation_type": "DNVGL_RP_B401_2017",
+        "calculation_type": "DNV_RP_B401_offshore",
         "standard": "DNVGL-RP-B401:2017",
-        "co_standard_pipeline": "DNVGL-RP-F103:2016",
+        "co_standard_pipeline": "DNVGL-RP-F103:2016",   # 2016 tables not yet in the repo
         "co_standard_iso": "ISO-15589-2:2012",
         "design_data": {
             "design_life": 25,         # years (primary)
+            "edition": "2017",
             "wet_storage_years": 2,    # additional for stored items
             "water_depth_m": [1710, 1900],   # min, max
         },
@@ -248,9 +252,8 @@ cfg = {
         },
     }
 }
-# Run: CathodicProtection().router(cfg)
-# This file is the design basis (S5); detailed calculations per structure type
-# are in calc-003 (flowlines), calc-004 (RBS), calc-005 (foundations), calc-006 (PCM).
+# Design basis only (S5): reference data, not routed. Detailed calculations per structure
+# type are in calc-003 (flowlines), calc-004 (RBS), calc-005 (foundations), calc-006 (PCM).
 ```
 
 ## Gaps Found

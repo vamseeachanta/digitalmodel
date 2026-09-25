@@ -154,15 +154,26 @@ Reference draft for preliminary CP calculation: 15 m (maximum surface, conservat
 | Total gross mass of anodes | 73 174.8 | kg | — |
 | Total gross mass of anodes | 73.17 | MT | — |
 
+**Reproduction note (this branch, `DNV_RP_B401_offshore` route, cfg below):** with the hull
+as one submerged Category I zone at 10 °C the code returns a mean / final current demand of
+302.5 / 571.5 A (source 322.705 / 591.626 A), a net anode mass of 62 357.99 kg (source
+66 515 kg), 2 268 anodes on the mass basis (source 2 419) and an anode resistance of 0.2288 Ω
+(Dwight formula with r = 0.067 m; source 0.379 Ω by Lloyd's formula). The route's numbers come
+from the B401-2021 Table 3-1 coated density for >7–12 °C (0.050 A/m²) and Category I
+breakdown f_ci = 0.05, 0.020/yr (f_cm 0.45, f_cf 0.85), not from the source's 200 mA/m² bare
+density with fci 0.02, 0.005/yr (fcm 0.12, fcf 0.22); the closeness of the currents is a
+coincidence of that table pair. The tabulated source values are left as extracted. #2207
+changes the B401 tables.
+
 ## SACP Sensitivity Results (Table 5 from source)
-| Design Life | Resistivity (ohm.m) | Salinity equiv. | Gross Mass (kg) | No. Anodes |
-|-------------|---------------------|-----------------|-----------------|------------|
-| 25 yr | 5.076 | 1 ppt | 157 027 | 5 191 |
-| 25 yr | 0.5875 | 10 ppt | 31 460 | 1 040 |
-| 25 yr | 0.21 | 31 ppt | 31 460 | 1 040 |
-| 40 yr | 5.076 | 1 ppt | 238 219 | 7 875 |
-| 40 yr | 0.5875 | 10 ppt | 73 175 | 2 419 |
-| 40 yr | 0.21 | 31 ppt | 73 175 | 2 419 |
+| Design Life (yr) | Resistivity (ohm.m) | Salinity equiv. (ppt) | Gross Mass (kg) | No. Anodes |
+|------------------|---------------------|-----------------------|-----------------|------------|
+| 25 | 5.076 | 1 | 157 027 | 5 191 |
+| 25 | 0.5875 | 10 | 31 460 | 1 040 |
+| 25 | 0.21 | 31 | 31 460 | 1 040 |
+| 40 | 5.076 | 1 | 238 219 | 7 875 |
+| 40 | 0.5875 | 10 | 73 175 | 2 419 |
+| 40 | 0.21 | 31 | 73 175 | 2 419 |
 
 Key observation: At 1 ppt salinity and 40 yr, SACP requires 7 875 anodes — impractical on hull
 surface. At 10 ppt and above, mass and count stabilise (resistivity no longer limiting factor).
@@ -179,13 +190,16 @@ This is a primary driver for ICCP system selection.
 ## Python cfg dict
 
 ```python
+from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
+
+# Router key mapping: DNV-RP-B401 (2021) -> "DNV_RP_B401_offshore" with design_data.edition
+# = "2021". The edition key is honoured on the #2207 branch; on main the router ignores it.
 cfg = {
     "inputs": {
-        "calculation_type": "DNV_RP_B401_2021",
-        # NOTE: DNV_RP_B401_2021 route is NOT yet implemented in cathodic_protection.py.
-        # See Code Validation and Gaps Found sections.
+        "calculation_type": "DNV_RP_B401_offshore",
         "design_data": {
             "design_life": 40,                   # years (primary sensitivity case)
+            "edition": "2021",
             "design_life_secondary": 25,          # years (secondary sensitivity)
             "seawater_max_temperature": 10,       # deg C
         },
@@ -195,6 +209,13 @@ cfg = {
             "surface_area_avg_draft": 10778.0,   # m², average draft (approx.)
             "coating_type": "glass_flake_reinforced_epoxy",
             "coating_coverage": 1.0,             # 100% coated
+            # Router zone: whole submerged hull at 15 m draft. Category I is the closest
+            # router category to the source's high-integrity coating; the router's Category I
+            # constants (f_ci 0.05, 0.020/yr) differ from the source's 0.02 and 0.005/yr
+            # (see Reproduction note).
+            "zones": [
+                {"zone": "submerged", "area_m2": 13446.04, "coating_category": "I"},
+            ],
         },
         "environment": {
             "seawater": {
@@ -202,6 +223,8 @@ cfg = {
             },
             "seawater_resistivity_worst": 5.076,   # ohm.m (1 ppt, near-freshwater)
             "seawater_resistivity_normal": 0.21,   # ohm.m (31 ppt, full saline)
+            "seawater_temperature_C": 10,          # router key
+            "seawater_resistivity_ohm_m": 0.5875,  # router key (design case)
         },
         "protection": {
             "protection_potential": -0.80,         # V vs Ag/AgCl
@@ -219,8 +242,12 @@ cfg = {
             # Effective with coating: initial=4 mA/m², mean=24 mA/m², final=44 mA/m²
         },
         "anode": {
-            "material": "aluminium_alloy_A3",
-            "type": "long_flush_mount",
+            "material": "aluminium",               # router material token; alloy A3
+            "type": "flush_mounted",               # router token for the long flush-mounted anode
+            "length_m": 1.400,                     # router key
+            "radius_m": 0.067,                     # router key; equivalent radius (source table)
+            "individual_anode_mass_kg": 27.5,      # router key
+            "utilization_factor": 0.85,            # router key
             "capacity": 2000,                      # A·h/kg
             "density": 2750,                       # kg/m³
             "anode_Utilisation_factor": 0.85,
@@ -237,18 +264,22 @@ cfg = {
         },
     }
 }
+
+result = CathodicProtection().router(cfg)["results"]
+print("Mean / final current demand (A): {:.1f} / {:.1f}".format(
+    result["current_demand_A"]["total_mean_A"], result["current_demand_A"]["total_final_A"]))
+print("Net anode mass (kg):", result["anode_requirements"]["total_mass_kg"])
+print("Anode count (mass basis):", result["anode_requirements"]["anode_count"])
+print("Anode resistance (ohm):", result["anode_resistance_ohm"])
 ```
 
 ## Code Validation
 
 ```python
-# Run: CathodicProtection().router(cfg)
+# Source results (Appendix 1, 40 yr, 0.5875 ohm.m, 13 446.04 m2). The router snippet above
+# runs the DNV_RP_B401_offshore route; its current values are in the Reproduction note under
+# "Calculation Results". Do not read the values below as code output.
 #
-# ROUTE NOT YET IMPLEMENTED: calculation_type "DNV_RP_B401_2021" does not exist in
-# cathodic_protection.py. The router will raise a routing error or fall through to
-# an unrecognised-type handler.
-#
-# Expected results once implemented (40-yr, 0.5875 ohm.m, 13 446.04 m²):
 #   Effective initial current density:    4 mA/m²  (200 × 0.02)
 #   Effective mean current density:      24 mA/m²  (200 × 0.12)
 #   Effective final current density:     44 mA/m²  (200 × 0.22)
@@ -272,9 +303,10 @@ cfg = {
 ```
 
 ## Gaps Found
-- **DNV_RP_B401_2021 route not implemented**: cathodic_protection.py has no route for
-  `DNV_RP_B401_2021`. This is the first B401-2021 calculation in the library. The route
-  must be added before this cfg can be executed.
+- **Route naming**: cathodic_protection.py has no edition-specific `DNV_RP_B401_2021` key.
+  The B401 route is `DNV_RP_B401_offshore` (this branch implements the 2021 tables in
+  `cp_DNV_RP_B401_2021.py`); the edition is selected with `design_data.edition` on the #2207
+  branch and ignored on main. The cfg above runs through that route.
 - **Current density table conflict**: The example calculation uses 200 mA/m² bare steel
   current density values from ABS GN Ships 2017, not DNV-RP-B401 2021 Table 10-1 values.
   The DNV_RP_B401_2021 route must clarify which standard's current density table applies

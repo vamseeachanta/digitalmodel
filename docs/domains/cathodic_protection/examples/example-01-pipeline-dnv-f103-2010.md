@@ -202,7 +202,7 @@ The code computes La = 272 m for the default coating resistivity value.
 ## Python Example
 
 ```python
-from digitalmodel.infrastructure.common.cathodic_protection import CathodicProtection
+from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
 
 cfg = {
     "inputs": {
@@ -281,3 +281,112 @@ print("Attenuation length:      {:.1f} m".format(
 5. **No safety factor:** F103-2010 does not include a built-in safety factor k in
    the current demand formula. If a company specification requires a safety factor,
    it is applied externally via the `design_margin` parameter in the `design` dict.
+
+---
+
+## Variant B — FBE-Coated 24-inch Line with Anode Spacing Check
+
+The same route on a shorter, less well-coated line, where the anode spacing limit rather
+than the mass requirement governs. (Merged from the former `example-01-pipeline-dnv-f103.md`.)
+
+### Design Inputs
+
+| Parameter | Value | Unit |
+|-----------|-------|------|
+| Pipeline outer diameter (24 inch) | 0.610 | m |
+| Wall thickness | 0.0191 | m |
+| Pipeline length | 5,000 | m |
+| Burial condition | non_buried | — |
+| Internal fluid temperature | 40 | °C |
+| Coating type | FBE | — |
+| Design life | 25 | years |
+| Anode material | aluminium | — |
+| Anode net mass | 150 | kg |
+| Utilisation factor | 0.80 | — |
+| Contingency factor | 1.0 | — |
+| Min / max anode spacing | 5 / 300 | m |
+
+### Calculation Steps
+
+```
+A_c  = π × 0.610 × 5000 = 9,582 m²
+i_cm = 0.050 A/m²                        (Table 5-1, non_buried, ≤50 °C)
+f_ci = 0.010, f_cm = 0.010 + 0.5 × 0.0003 × 25 = 0.01375, f_cf = 0.0175   (FBE: a = 0.010, b = 0.0003)
+I_cm = 9582 × 0.01375 × 0.050 = 6.588 A
+I_cf = 9582 × 0.0175  × 0.050 = 8.384 A
+Q    = 6.588 × 25 × 8760 = 1,441,740 Ah
+M    = 1,441,740 / (2000 × 0.80) = 901 kg
+N    = ceil(901 / 150 × 1.0) = 7 anodes
+spacing = 5000 / (7 − 1) = 833 m  > 300 m  → spacing criterion fails
+```
+
+### Python Example
+
+```python
+from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
+
+cfg = {
+    "inputs": {
+        "calculation_type": "DNV_RP_F103_2010",
+        "design_data": {"design_life": 25.0},
+        "pipeline": {
+            "outer_diameter_m": 0.610,
+            "wall_thickness_m": 0.0191,
+            "length_m": 5000.0,
+            "burial_condition": "non_buried",
+            "internal_fluid_temperature_C": 40.0,
+            "coating_type": "FBE",
+            "resistivity_ohm_m": 0.2e-6,
+        },
+        "environment": {},
+        "anode": {
+            "material": "aluminium",
+            "utilization_factor": 0.80,
+            "individual_anode_mass_kg": 150.0,
+            "contingency_factor": 1.0,
+            "min_spacing_m": 5.0,
+            "max_spacing_m": 300.0,
+        },
+    }
+}
+
+r = CathodicProtection().router(cfg)["results"]
+print("Pipeline surface area:  {:.1f} m²".format(r["pipeline_geometry_m"]["outer_surface_area_m2"]))
+print("Current density i_cm:   {:.3f} A/m²".format(r["current_densities_mA_m2"]["mean_current_density_A_m2"]))
+print("Coating factor f_cm:    {:.5f}".format(r["coating_breakdown_factors"]["mean_factor"]))
+print("Mean current demand:    {:.3f} A".format(r["current_demand_A"]["mean_current_demand_A"]))
+print("Final current demand:   {:.3f} A".format(r["current_demand_A"]["final_current_demand_A"]))
+print("Anode mass required:    {:.1f} kg".format(r["anode_requirements"]["total_anode_mass_kg"]))
+print("Anode count:            {}".format(r["anode_requirements"]["anode_count"]))
+print("Anode spacing:          {:.1f} m".format(r["anode_spacing_m"]["spacing_m"]))
+print("Spacing valid:          {}".format(r["anode_spacing_m"]["spacing_valid"]))
+```
+
+### Results Summary (code output on this branch)
+
+| Output | Value | Unit |
+|--------|-------|------|
+| Pipeline outer surface area | 9,581.9 | m² |
+| Mean current density (Table 5-1) | 0.050 | A/m² |
+| Initial coating factor f_ci | 0.01000 | — |
+| Mean coating factor f_cm | 0.01375 | — |
+| Final coating factor f_cf | 0.01750 | — |
+| Mean current demand I_cm | 6.588 | A |
+| Final current demand I_cf | 8.384 | A |
+| Total anode mass required | 901.7 | kg |
+| Anode count (mass-governed) | 7 | — |
+| Anode spacing (7 anodes) | 833.3 | m |
+| Spacing valid (≤300 m) | False | — |
+
+### Interpretation Notes
+
+1. **Governing criterion:** 7 anodes spaced over 5 km yields 833 m intervals, above the
+   300 m maximum, so the spacing constraint governs and roughly 17 anodes are needed at a
+   300 m pitch.
+2. **FBE vs 3LPE:** FBE (a = 0.010, b = 0.0003) breaks down an order of magnitude faster
+   than 3LPE (a = 0.001, b = 0.00003); compare I_cm = 6.588 A here against 0.839 A for the
+   longer 3LPE line above.
+3. **Non-buried vs buried:** a non-buried line takes 0.050 A/m² against 0.020 A/m² for a
+   buried one in the same temperature band.
+4. **Design life sensitivity:** at 40 years f_cm rises from 0.01375 to 0.016 and f_cf from
+   0.0175 to 0.022, raising current demand proportionally.

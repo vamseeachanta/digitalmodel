@@ -136,6 +136,19 @@ with ρMe = 2.0×10⁻⁷ Ω·m (steel resistivity)
 | Ballast Box | 11.46 | 17.38 | 29.02 | 1860 |
 | Total buried external surface (drain) | 5.00 | 5.00 | 5.00 | 535 |
 
+**Reproduction note (this branch, `DNV_RP_B401_offshore` route, cfg below):** the route
+represents the buoyancy tank (1021 m², CAT III) and the coated share of the URA (395.9 m²,
+CAT III) at 22 °C and 0.22 Ω·m; insulated, line-pipe, buried and bare shares are omitted. The
+code returns buoyancy tank I_mean / I_final = 57.18 / 71.47 A (source 24.70 / 44.92 A) and URA
+22.17 / 27.71 A (source 9.62 / 17.47 A), a net anode mass for the two zones of 8 495.35 kg
+(source 2 645 + 1 030 kg) and 72 AFA1190 anodes on the mass basis (source 24 + 10). The
+initial anode resistance from the route, 0.0724 Ω, matches the tabulated 0.072 Ω; the route
+does not apply the 1.3 stand-off factor. The demand differs because the route uses the
+B401-2021 temperature band >17 °C (0.070 A/m² coated) with Category III f_ci = 0.25,
+0.05/yr (f_cm 0.80, f_cf 1.0), where the source uses 440 / 220 / 220 mA/m² with CBF
+0.02 / 0.11 / 0.20. The tabulated source values are left as extracted. #2207 changes the B401
+tables.
+
 ### Current Demand per Structural Unit (14" Water Injection Riser — Table 5.7)
 | Structural Unit | Initial (A) | Mean (A) | Final (A) | Net Mass (kg) |
 |-----------------|------------|---------|----------|--------------|
@@ -173,13 +186,18 @@ Note: 30% spare is a procurement recommendation from the SLHR Spares Philosophy 
 ## Python cfg dict
 
 ```python
+from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
+
+# Router key mapping: DNV-RP-B401:2005 -> "DNV_RP_B401_offshore" with design_data.edition
+# = "2005". The edition key is honoured on the #2207 branch; on main the router ignores it.
 cfg = {
     "inputs": {
-        "calculation_type": "DNV_RP_B401_2005",
+        "calculation_type": "DNV_RP_B401_offshore",
         "standard": "DNV-RP-B401:2005",
         "co_standard": "DNV-RP-F103:2003",
         "design_data": {
             "design_life": 22,         # years
+            "edition": "2005",
             "structure_type": "SLHR",
         },
         "environment": {
@@ -187,6 +205,19 @@ cfg = {
             "climate_region": "Tropical",
             "resistivity_buoyancy_ura": 0.22,    # Ω·m
             "resistivity_lra_foundation": 0.32,  # Ω·m
+            "seawater_temperature_C": 22,        # router key
+            "seawater_resistivity_ohm_m": 0.22,  # router key (buoyancy tank / URA zones)
+        },
+        # Router zones: the two upper units of the representative 12 in production riser
+        # (buoyancy tank 1021 m2 CAT III; URA coated share 86% x 460.3 = 395.9 m2 CAT III).
+        # Insulated, line-pipe, buried and bare shares are omitted (see Reproduction note).
+        "structure": {
+            "zones": [
+                {"zone": "buoyancy_tank", "base_zone": "submerged",
+                 "area_m2": 1021.0, "coating_category": "III"},
+                {"zone": "ura_coated", "base_zone": "submerged",
+                 "area_m2": 395.9, "coating_category": "III"},
+            ],
         },
         "current_density": {
             # All structures above mudline (mA/m²)
@@ -225,19 +256,23 @@ cfg = {
         },
         "anode": {
             "code": "AFA1190",
-            "type": "long_slender_stand_off",
+            "type": "stand_off",       # router token for the long slender stand-off anode
             "length": 1.530,           # m (initial)
+            "length_m": 1.530,         # router key
             "length_final": 1.377,     # m (−10% per DNV-RP-B401 §7.9.4)
             "width": 0.184,            # m
             "depth": 0.159,            # m
+            "radius_m": 0.095,         # router key; initial equivalent radius (source table)
             "net_mass": 119.0,         # kg
+            "individual_anode_mass_kg": 119.0,   # router key
             "gross_mass": 126.0,       # kg
-            "material": "Al_Zn_In",
+            "material": "aluminium",   # router material token; Al-Zn-In alloy
             "density": 2750,           # kg/m³
             "current_capacity": 2000,  # A·h/kg
             "utilisation_factor": 0.90,
+            "utilization_factor": 0.90,          # router key
             "closed_circuit_potential": -1.05,  # V vs Ag/AgCl
-            "stand_off_resistance_factor": 1.3, # per §5.3 (150–300 mm stand-off)
+            "stand_off_resistance_factor": 1.3, # per §5.3 (150–300 mm stand-off); not applied by the router
         },
         "protection": {
             "min_potential": -0.800,   # V vs Ag/AgCl
@@ -282,7 +317,14 @@ cfg = {
         },
     }
 }
-# Run: CathodicProtection().router(cfg)
+
+result = CathodicProtection().router(cfg)["results"]
+for zone in ("buoyancy_tank", "ura_coated"):
+    z = result["current_demand_A"][zone]
+    print("{}: I_mean {:.2f} A, I_final {:.2f} A".format(zone, z["I_mean_A"], z["I_final_A"]))
+print("Net anode mass, both zones (kg):", result["anode_requirements"]["total_mass_kg"])
+print("AFA1190 count (mass basis):", result["anode_requirements"]["anode_count"])
+print("Anode resistance, initial (ohm):", result["anode_resistance_ohm"])
 ```
 
 ## Gaps Found
