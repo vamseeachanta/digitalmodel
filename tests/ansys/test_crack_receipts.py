@@ -183,19 +183,38 @@ EVIDENCE_PAIRS = ("L0L1", "L1L2")
 @pytest.mark.parametrize("pair", EVIDENCE_PAIRS)
 def test_stop_rule_evidence_is_genuine_and_fails_only_guard_c(pair):
     """The undeclared a0 receipts that triggered the stop rule are kept as
-    evidence: schema, provenance, deck hashes and re-parsed artifacts must hold,
-    and guard (c) must be the only failing guard."""
+    evidence. They predate owner cards G13/G14, so they are checked as
+    historical records: schema (apart from the later guard (g)), the producing
+    commit and its generator blobs, digests and re-parsed artifacts, the deck
+    hashes; under the definitions of their time guard (c) is the only failure."""
     base = EVIDENCE / pair
     receipt = json.loads((base / "p0b_fullcirc_a2p35.receipt.json").read_text("utf-8"))
-    assert cint_parser.validate_receipt_schema(receipt) == []
-    assert crack_receipt.provenance_problems(receipt, REPO, []) == []
-    assert crack_receipt.artifact_problems(receipt, base) == []
+    problems = cint_parser.validate_receipt_schema(receipt)
+    assert problems == ["guards: missing ['g_j_mesh']"]
+    assert crack_receipt.provenance_problems(receipt, REPO, [], historical=True) == []
+    assert crack_receipt.artifact_problems(receipt, base, historical=True) == []
     for mesh in receipt["meshes"]:
         current = crack_receipt.regenerate_deck_sha256(receipt, mesh["level"])
         assert current == mesh["deck_sha256"]
     failed = sorted(n for n, g in receipt["guards"].items() if g["status"] != "pass")
     assert failed == ["c_contour"]
-    assert "p0b_fullcirc_a2p35" not in DECLARED
+
+
+@pytest.mark.parametrize("pair", EVIDENCE_PAIRS)
+def test_stop_rule_evidence_under_owner_g13_g14(pair):
+    """Re-evaluated from the committed artifacts under the redefined guard (c)
+    and the new guard (g), the same a0 solves pass every gating guard; the
+    legacy metric is still the failure it was."""
+    base = EVIDENCE / pair
+    receipt = json.loads((base / "p0b_fullcirc_a2p35.receipt.json").read_text("utf-8"))
+    cint, reac = {}, {}
+    for mesh in receipt["meshes"]:
+        cint[mesh["level"]] = (base / mesh["artifacts"]["cint"]["path"]).read_text("utf-8")
+        reac[mesh["level"]] = (base / mesh["artifacts"]["reac"]["path"]).read_text("utf-8")
+    res = cint_parser.evaluate_guards(cint, reac, front_geometry={"type": "polar_z"})
+    for name in cint_parser.GUARD_NAMES:
+        assert res[name].status == "pass", (name, res[name])
+    assert res["c_contour_legacy"].status == "fail"
 
 
 # --------------------------------------------------------------------------- #

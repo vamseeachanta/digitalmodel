@@ -28,7 +28,11 @@ from pathlib import Path
 
 from digitalmodel.ansys import weldolet_crack as wc
 
-GENERATOR_FILES = ("src/digitalmodel/ansys/weldolet_limit.py", *wc.GENERATOR_FILES)
+GENERATOR_FILES = (
+    "src/digitalmodel/ansys/weldolet_limit.py",
+    "src/digitalmodel/ansys/weldolet_crotch.py",
+    *wc.GENERATOR_FILES,
+)
 
 LIMIT_LOAD_CRITERION = (
     "Elastic-perfectly-plastic (sigma_y = Rp0.2 = 127 MPa, von Mises, no hardening), "
@@ -44,16 +48,31 @@ LIMIT_LOAD_CRITERION = (
 
 @dataclass(frozen=True)
 class LimitLoadSpec:
-    """Limit-load run on the cracked model ``base`` (crack depth required)."""
+    """Limit-load run on a cracked model: the fusion-face model ``base``
+    (``plane = "fusion_face"``) or the crotch-plane model with the same crack
+    depth, crack-face pressure and mesh level (``plane = "crotch"``)."""
 
     base: wc.WeldoletSpec = wc.WeldoletSpec()
     load_factor: float = 4.0  # final load factor of the proportional ramp
     substeps: int = 16  # initial step = 1/substeps of the ramp; minimum 1/(20 x)
+    plane: str = "fusion_face"
+
+    def crotch_spec(self):
+        from digitalmodel.ansys.weldolet_crotch import CrotchSpec
+
+        geometry = wc.WeldoletSpec(**{**self.base.__dict__, "crack_depth_mm": None,
+                                      "mesh_level": 0})
+        return CrotchSpec(crack_depth_mm=self.base.crack_depth_mm,
+                          crack_face_pressure=self.base.crack_face_pressure,
+                          mesh_level=self.base.mesh_level, base=geometry)
 
     def validate(self) -> list[str]:
-        issues = self.base.validate()
+        if self.plane not in ("fusion_face", "crotch"):
+            return ["plane must be 'fusion_face' or 'crotch'"]
         if self.base.crack_depth_mm is None:
-            issues.append("the limit-load run is on the cracked model")
+            return ["the limit-load run is on the cracked model"]
+        issues = (self.crotch_spec().validate() if self.plane == "crotch"
+                  else self.base.validate())
         if self.load_factor <= 1.0 or self.substeps < 2:
             issues.append("load_factor must exceed 1 and substeps be at least 2")
         return issues
@@ -66,7 +85,8 @@ def lpl_file_name(level: int) -> str:
 def state_name(spec: LimitLoadSpec) -> str:
     tag = wc.depth_tag(spec.base.crack_depth_mm)
     cfp = "" if spec.base.crack_face_pressure else "_cfp_off"
-    return f"p0b_limit_load_{tag}{cfp}"
+    plane = "_crotch" if spec.plane == "crotch" else ""
+    return f"p0b_limit_load{plane}_{tag}{cfp}"
 
 
 def _post(spec: LimitLoadSpec):
@@ -118,25 +138,32 @@ def hooks(spec: LimitLoadSpec) -> wc.DeckHooks:
 
 def at_level(spec: LimitLoadSpec, level: int) -> LimitLoadSpec:
     base = wc.WeldoletSpec(**{**spec.base.__dict__, "mesh_level": level})
-    return LimitLoadSpec(base=base, load_factor=spec.load_factor, substeps=spec.substeps)
+    return LimitLoadSpec(base=base, load_factor=spec.load_factor, substeps=spec.substeps,
+                         plane=spec.plane)
 
 
 def generate_limit_apdl(spec: LimitLoadSpec) -> str:
     issues = spec.validate()
     if issues:
         raise ValueError("invalid limit-load spec: " + "; ".join(issues))
+    if spec.plane == "crotch":
+        from digitalmodel.ansys.weldolet_crotch import generate_crotch_apdl
+
+        return generate_crotch_apdl(spec.crotch_spec(), hooks(spec))
     return wc.generate_weldolet_apdl(spec.base, hooks(spec))
 
 
 def spec_dict(spec: LimitLoadSpec) -> dict:
     base = {k: v for k, v in asdict(spec.base).items() if k != "mesh_level"}
-    return {"base": base, "load_factor": spec.load_factor, "substeps": spec.substeps}
+    return {"base": base, "load_factor": spec.load_factor, "substeps": spec.substeps,
+            "plane": spec.plane}
 
 
 def spec_from_receipt(receipt: dict, level: int) -> LimitLoadSpec:
     s = receipt["spec"]
     base = wc.WeldoletSpec(**{**s["base"], "mesh_level": level})
-    return LimitLoadSpec(base=base, load_factor=s["load_factor"], substeps=s["substeps"])
+    return LimitLoadSpec(base=base, load_factor=s["load_factor"], substeps=s["substeps"],
+                         plane=s.get("plane", "fusion_face"))
 
 
 def deck_sha256_for_receipt(receipt: dict, level: int) -> str:
@@ -201,15 +228,29 @@ def limit_variant(spec: LimitLoadSpec) -> wc.StateVariant:
         return {"limit_load": limit_load_result(at_level(spec, level), texts["lpl"])}
 
     def mesh_info(level: int) -> dict:
-        s = at_level(spec, level).base
-        mesh = wc.build_mesh(s)
+        sl = at_level(spec, level)
+        if sl.plane == "crotch":
+            from digitalmodel.ansys import weldolet_crotch as cr
+
+            cs = sl.crotch_spec()
+            mesh = cr.build_mesh(cs)
+            par = cr.mesh_parameters(cs)
+        else:
+            mesh = wc.build_mesh(sl.base)
+            par = wc.mesh_parameters(sl.base)
         return {"n_nodes": len(mesh.nodes), "n_elements": len(mesh.elements),
-                "mesh_parameters": wc.mesh_parameters(s)}
+                "mesh_parameters": par}
 
     def top(primary: dict) -> dict:
-        return {"limit_load": primary["limit_load"],
-                "front_geometry": {"type": "polar_z"},
-                "crack": wc.crack_summary(spec.base)}
+        if spec.plane == "crotch":
+            from digitalmodel.ansys import weldolet_crotch as cr
+
+            geom = cr.front_geometry(spec.crotch_spec())
+            crack = cr.crack_summary(spec.crotch_spec())
+        else:
+            geom, crack = {"type": "polar_z"}, wc.crack_summary(spec.base)
+        return {"limit_load": primary["limit_load"], "front_geometry": geom,
+                "crack": crack, "plane": spec.plane}
 
     return wc.StateVariant(
         state=state_name(spec),

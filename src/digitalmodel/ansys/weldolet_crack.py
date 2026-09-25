@@ -74,7 +74,7 @@ import hashlib
 import json
 import math
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from itertools import pairwise
 from pathlib import Path
 
@@ -582,6 +582,8 @@ class WeldoletMesh(CrackMesh):
         self.boundary_nodes: dict[str, set[int]] = {}
         self.front_vectors: list[tuple[float, float, float]] = []
         self.path_nodes: dict[float, tuple[int, int]] = {}
+        self.area_factor = 1.0  # loaded end area / (pi r_i^2): 0.5 for a half model
+        self.crack_interior: tuple[int, int] = (0, -1)  # crotch: crack-face node ids
         self.fixed_end: list[int] = []
         self.support_nodes: dict[str, int] = {}
         self.hoop_line: list[int] = []
@@ -910,6 +912,23 @@ def path_points(spec: WeldoletSpec, theta_deg: float) -> list[tuple[float, float
     return out
 
 
+# Crotch-plane flaw (owner card G15; register F-06): semicircular, on the bore
+# surface in the plane y = 0 at the +x crotch, upper tip held CROTCH_TOP_TIP_MM
+# above the fusion line (v = 0). Its centre height at a0 fixes the crotch
+# linearisation path of the uncracked model.
+CROTCH_TOP_TIP_MM = 0.5
+
+
+def crotch_path_points(spec: WeldoletSpec) -> list[tuple[float, float, float]]:
+    """Crotch-plane depth path (uncracked model): in the plane y = 0 at the
+    height of the a0 crotch-flaw centre, from the bore (rho = C/2) radially
+    outward over the weld footprint length."""
+    geo = derived_geometry(spec)
+    rw, fp = geo["hole_radius_mm"], geo["footprint_mm"]
+    z = geo["run_outer_radius_mm"] + (CROTCH_TOP_TIP_MM - A0_MM)
+    return [(rw + fp * k / (PATH_POINTS - 1), 0.0, z) for k in range(PATH_POINTS)]
+
+
 def front_sequence(mesh: WeldoletMesh, start: int = 1) -> list[int]:
     """Front node ids in order along the closed front (corner, mid-side, ...),
     beginning at corner ``start``."""
@@ -1164,15 +1183,29 @@ def _write_reactions(w, spec, mesh, lv: int, papp: tuple[str, ...] = ()) -> None
     w("FXSUM = FXSUM + RV")
     w("*ENDDO")
     w("ALLSEL,ALL")
-    w(f"*GET,FYA,NODE,{mesh.support_nodes['uy_top']},RF,FY")
-    w(f"*GET,FYB,NODE,{mesh.support_nodes['uy_bottom']},RF,FY")
-    w(f"*GET,FZC,NODE,{mesh.support_nodes['uz_side']},RF,FZ")
-    w("FYSUM = FYA + FYB")
+    if "uy_top" in mesh.support_nodes:
+        w(f"*GET,FYA,NODE,{mesh.support_nodes['uy_top']},RF,FY")
+        w(f"*GET,FYB,NODE,{mesh.support_nodes['uy_bottom']},RF,FY")
+        w(f"*GET,FZC,NODE,{mesh.support_nodes['uz_side']},RF,FZ")
+        w("FYSUM = FYA + FYB")
+    else:
+        # half model: sum of the symmetry-plane (y = 0) reactions
+        w("NSEL,S,D,UY")
+        w("*GET,NSYM,NODE,0,COUNT")
+        w("FYSUM = 0.0")
+        w("NN = 0")
+        w("*DO,II,1,NSYM")
+        w("NN = NDNEXT(NN)")
+        w("*GET,RV,NODE,NN,RF,FY")
+        w("FYSUM = FYSUM + RV")
+        w("*ENDDO")
+        w("ALLSEL,ALL")
+        w(f"*GET,FZC,NODE,{mesh.support_nodes['uz_side']},RF,FZ")
     w(f"PAPP = {spec.pressure_mpa!r}")
     for line in papp:
         w(line)
     ri = derived_geometry(spec)["run_inner_radius_mm"]
-    w(f"AREAAPP = {math.pi * ri * ri!r}")
+    w(f"AREAAPP = {math.pi * ri * ri * mesh.area_factor!r}")
     w(f"*CFOPEN,{reaction_file_name(lv)},txt")
     w("*VWRITE")
     w("('# digitalmodel weldolet_crack reactions')")
@@ -1210,8 +1243,9 @@ def _write_paths(w, spec: WeldoletSpec, lv: int, path_nodes: dict) -> None:
       "SRR normal to the fusion face')")
     w("*VWRITE")
     w("('# columns: path theta_deg s x y z SRR SHH SAA SRH SRA')")
-    for ip, theta in enumerate(PATH_THETAS_DEG, start=1):
-        pts = path_points(spec, theta)
+    paths = [(theta, path_points(spec, theta)) for theta in PATH_THETAS_DEG]
+    paths.append((0.0, crotch_path_points(spec)))
+    for ip, (theta, pts) in enumerate(paths, start=1):
         w(f"PATH,FP{ip},{PATH_POINTS},30,{PATH_DIVISIONS}")
         for k, (x, y, z) in enumerate(pts, start=1):
             w(f"PPATH,{k},,{_fmt(x)},{_fmt(y)},{_fmt(z)},0")
@@ -1327,10 +1361,13 @@ def sigma_ref_paths(path_text: str) -> list[dict]:
     components are recorded as well.
     """
     out = []
+    n_fusion = len(PATH_THETAS_DEG)
     for ip, p in sorted(parse_path_file(path_text).items()):
         sm, sb = linearise(p["s"], p["SRR"])
+        hm, hb = linearise(p["s"], p["SHH"])
         out.append({
             "path": ip,
+            "plane": "fusion_face" if ip <= n_fusion else "crotch",
             "theta_deg": p["theta_deg"],
             "start_xyz_mm": list(p["xyz"][0]),
             "end_xyz_mm": list(p["xyz"][-1]),
@@ -1342,6 +1379,11 @@ def sigma_ref_paths(path_text: str) -> list[dict]:
             "shear_rh_membrane_mpa": linearise(p["s"], p["SRH"])[0],
             "shear_ra_membrane_mpa": linearise(p["s"], p["SRA"])[0],
             "peak_srr_mpa": max(p["SRR"], key=abs),
+            "hoop_component": "SHH (CS 11 hoop; normal to the crotch plane y = 0 "
+                              "on theta = 0 paths)",
+            "hoop_sigma_m_mpa": hm,
+            "hoop_sigma_b_mpa": hb,
+            "peak_shh_mpa": max(p["SHH"], key=abs),
         })
     return out
 
@@ -1377,9 +1419,12 @@ def hoop_check(spec: WeldoletSpec, hoop_text: str) -> dict:
 def derive_uncracked(spec: WeldoletSpec, path_text: str, hoop_text: str) -> dict:
     return {
         "sigma_ref": {
-            "basis": "FE-linearised stress normal to the fusion face, uncracked model "
-                     "(owner card B02); paths from the root (rho = C/2) to the fillet "
-                     "toe on v = 0",
+            "basis": "FE-linearised stress of the uncracked model (owner card B02). "
+                     "Fusion-face plane: stress normal to the fusion face (SRR) on "
+                     "paths 1-3, from the root (rho = C/2) to the fillet toe on v = 0. "
+                     "Crotch plane: hoop stress (SHH, normal to y = 0) on path 4, "
+                     "radially from the bore at the a0 crotch-flaw centre height, and "
+                     "on path 1 (the root line at the crotch).",
             "paths": sigma_ref_paths(path_text),
         },
         "plausibility": {"hoop": hoop_check(spec, hoop_text)},
@@ -1396,6 +1441,35 @@ def j_from_k_ratio(node: dict, spec: WeldoletSpec) -> float | None:
     k1, k2, k3 = (v * math.sqrt(1000.0) for v in k)  # back to MPa*sqrt(mm)
     j_k = (k1 * k1 + k2 * k2) * (1.0 - nu * nu) / e + k3 * k3 * (1.0 + nu) / e
     return j_k / j
+
+
+def governing_summary(front: list[dict], spec: WeldoletSpec) -> dict:
+    """Owner card G14: K_gov = sqrt(E' J) per node, the governing node (max
+    K_gov) and the interaction-integral mode mix there. E' = E/(1 - nu^2)."""
+    from digitalmodel.ansys.cint_parser import k_from_j
+
+    e, nu = spec.youngs_modulus_mpa, spec.poisson
+    k_gov = [k_from_j(n["J_reported"], e, nu) for n in front]
+    i = max(range(len(front)), key=lambda k: k_gov[k])
+    node = front[i]
+    k1max = max(front, key=lambda n: n["K1_reported"])
+    return {
+        "basis": "K_gov = sqrt(E' J), E' = E / (1 - nu^2) (plane strain), J = mean of "
+                 "the last three contours; mode mix from the interaction integral",
+        "e_prime_mpa": e / (1.0 - nu * nu),
+        "k_gov_mpa_sqrt_m": k_gov,
+        "governing_phi_deg": node["phi_deg"],
+        "governing_node": node["node"],
+        "k_gov_max_mpa_sqrt_m": k_gov[i],
+        "j_at_governing_n_per_mm": node["J_reported"],
+        "mode_mix_at_governing_mpa_sqrt_m": {
+            "K1": node["K1_reported"], "K2": node["K2_reported"], "K3": node["K3_reported"],
+        },
+        "k1_max_mpa_sqrt_m": k1max["K1_reported"],
+        "k1_max_phi_deg": k1max["phi_deg"],
+        "k2_abs_max_mpa_sqrt_m": max(abs(n["K2_reported"]) for n in front),
+        "k3_abs_max_mpa_sqrt_m": max(abs(n["K3_reported"]) for n in front),
+    }
 
 
 def depth_tag(depth_mm: float) -> str:
@@ -1452,6 +1526,7 @@ class StateVariant:
     accept_log: object = None  # callable(out text) -> bool, for a failed run
     cracked: bool = False
     meshing: dict | None = None
+    front_geometry: dict = field(default_factory=lambda: {"type": "polar_z"})
 
 
 def run_variant(
@@ -1480,7 +1555,7 @@ def run_variant(
     workdir, fe_states = Path(workdir), Path(fe_states)
     repo = repo_dir or Path(__file__).resolve().parents[3]
     state, kind = variant.state, variant.kind
-    geometry = {"type": "polar_z"}
+    geometry = variant.front_geometry
     extra = ["-smp", "-np", str(cores)]  # distributed MPI hangs after a FATAL (#2196)
     commit = git(repo, "rev-parse", "HEAD")
     clean = generator_tree_clean(repo, list(variant.generator_files))
@@ -1617,6 +1692,7 @@ def elastic_variant(spec: WeldoletSpec, sigma_ref: dict | None = None) -> StateV
         return {
             "j_from_k_ratio": [j_from_k_ratio(n, s) for n in front],
             "start_node_audit": start_node_audit(texts["sifs"]),
+            "governing": governing_summary(front, s),
         }
 
     def mesh_info(level: int) -> dict:
@@ -1628,7 +1704,8 @@ def elastic_variant(spec: WeldoletSpec, sigma_ref: dict | None = None) -> StateV
     def top(primary: dict) -> dict:
         if not cracked:
             return dict(primary["derived"])
-        extra = {"front_geometry": {"type": "polar_z"}, "crack": crack_summary(spec)}
+        extra = {"front_geometry": {"type": "polar_z"}, "crack": crack_summary(spec),
+                 "plane": "fusion_face", "governing": primary["governing"]}
         if sigma_ref is not None:
             extra["sigma_ref"] = sigma_ref
         return extra

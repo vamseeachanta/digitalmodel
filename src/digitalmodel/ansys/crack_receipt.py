@@ -35,8 +35,8 @@ from digitalmodel.ansys import cint_parser
 
 # Guards that have no meaning for a model without a crack front.
 NOT_APPLICABLE_GUARDS = {
-    "weldolet_uncracked": ("c_contour", "d_complete"),
-    "limit_load": ("b_mesh_load", "c_contour", "d_complete"),
+    "weldolet_uncracked": ("c_contour", "d_complete", "g_j_mesh"),
+    "limit_load": ("b_mesh_load", "c_contour", "d_complete", "g_j_mesh"),
 }
 _REL_TOL = 1e-12
 
@@ -135,9 +135,18 @@ def _delta_covers(deltas: list[dict], state: str, path: str, old: str, new: str)
 
 
 def provenance_problems(
-    receipt: Mapping, repo: Path, deltas: list[dict] | None = None
+    receipt: Mapping,
+    repo: Path,
+    deltas: list[dict] | None = None,
+    *,
+    historical: bool = False,
 ) -> list[str]:
-    """Why the receipt's provenance cannot be trusted (empty list = trusted)."""
+    """Why the receipt's provenance cannot be trusted (empty list = trusted).
+
+    ``historical=True`` (superseded evidence, e.g. the stop-rule receipts):
+    the producing commit and the recorded generator blobs at that commit are
+    checked, but not that the files are unchanged in the checkout.
+    """
     deltas = deltas or []
     run = receipt.get("run", {})
     state = receipt.get("state", "?")
@@ -167,6 +176,8 @@ def provenance_problems(
                 f"{state}: {path} recorded blob {recorded} but the producing commit "
                 f"has {at_sha}"
             )
+            continue
+        if historical:
             continue
         current = worktree_blob(repo, path)
         if current != recorded and not _delta_covers(deltas, state, path, recorded, current):
@@ -215,12 +226,16 @@ def _compare(recorded, derived, where: str, problems: list[str]) -> None:
         problems.append(f"{where}: receipt {recorded!r} != artifact {derived!r}")
 
 
-def artifact_problems(receipt: Mapping, base_dir: Path) -> list[str]:
+def artifact_problems(
+    receipt: Mapping, base_dir: Path, *, historical: bool = False
+) -> list[str]:
     """Check committed artifacts against the receipt (empty list = consistent).
 
     Digests first; then the receipt's reactions and front are re-derived by
     parsing the artifacts; then the guards are re-evaluated from the raw text
-    and compared with the stored verdicts.
+    and compared with the stored verdicts. ``historical=True`` (superseded
+    evidence produced under earlier guard definitions) stops after the digests
+    and the re-parsed reactions and front.
     """
     base_dir = Path(base_dir)
     state = receipt.get("state", "?")
@@ -264,8 +279,9 @@ def artifact_problems(receipt: Mapping, base_dir: Path) -> list[str]:
         if mesh.get("run", {}).get("mapdl_version") != rev:
             problems.append(f"{state} L{lvl}: run.mapdl_version differs from the artifact")
         if kind in ("weldolet_uncracked", "weldolet_crack", "limit_load"):
-            problems.extend(_weldolet_derived_problems(receipt, mesh, texts))
-    if problems or not reac_texts:
+            if not historical:
+                problems.extend(_weldolet_derived_problems(receipt, mesh, texts))
+    if problems or not reac_texts or historical:
         return problems
     guards = cint_parser.evaluate_guards(
         cint_texts, reac_texts, front_geometry=geometry, cracked=cracked
@@ -296,6 +312,17 @@ def _weldolet_derived_problems(receipt: Mapping, mesh: Mapping, texts: dict) -> 
         if lvl == receipt["primary_level"]:
             _compare(receipt.get("limit_load"), derived, f"{state} limit_load", problems)
         return problems
+    if receipt.get("plane") == "crotch":
+        from digitalmodel.ansys import weldolet_crotch
+
+        cspec = weldolet_crotch.spec_from_receipt(dict(receipt), lvl)
+        ratios = [weldolet_crack.j_from_k_ratio(n, cspec.base) for n in mesh["front"]]
+        _compare(mesh.get("j_from_k_ratio"), ratios, f"{state} L{lvl} j_from_k", problems)
+        gov = weldolet_crack.governing_summary(mesh["front"], cspec.base)
+        _compare(mesh.get("governing"), gov, f"{state} L{lvl} governing", problems)
+        if lvl == receipt["primary_level"]:
+            _compare(receipt.get("governing"), gov, f"{state} governing", problems)
+        return problems
     spec = weldolet_crack.spec_from_receipt(dict(receipt), lvl)
     if receipt["kind"] == "weldolet_uncracked":
         if "path" not in texts or "hoop" not in texts:
@@ -315,6 +342,10 @@ def _weldolet_derived_problems(receipt: Mapping, mesh: Mapping, texts: dict) -> 
         audit = weldolet_crack.start_node_audit(texts["sifs"])
         _compare(mesh.get("start_node_audit"), audit, f"{state} L{lvl} start-node audit",
                  problems)
+        gov = weldolet_crack.governing_summary(mesh["front"], spec)
+        _compare(mesh.get("governing"), gov, f"{state} L{lvl} governing", problems)
+        if lvl == receipt["primary_level"]:
+            _compare(receipt.get("governing"), gov, f"{state} governing", problems)
     return problems
 
 
@@ -347,6 +378,10 @@ def regenerate_deck_sha256(receipt: Mapping, level: int) -> str:
         from digitalmodel.ansys import weldolet_limit
 
         return weldolet_limit.deck_sha256_for_receipt(dict(receipt), level)
+    if receipt.get("plane") == "crotch":
+        from digitalmodel.ansys import weldolet_crotch
+
+        return weldolet_crotch.deck_sha256_for_receipt(dict(receipt), level)
     from digitalmodel.ansys import weldolet_crack
 
     return weldolet_crack.deck_sha256_for_receipt(dict(receipt), level)

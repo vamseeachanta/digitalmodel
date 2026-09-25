@@ -14,13 +14,22 @@ independently from that solved output (never from prescribed loads):
     within 0.5 %;
 (b) mesh independence of load: the two densities' solved reaction sums agree
     within 0.1 %;
-(c) contour independence: the spread of K_I and of J across the last three
-    contours is <= 3 % at every front node;
+(c) contour independence (owner card G13): at every front node, over the last
+    three contours, (i) the spread of each of K_I, K_II and K_III divided by
+    the maximum |K| = sqrt(K_I^2 + K_II^2 + K_III^2) along the whole front is
+    <= 3 %, and (ii) the spread of J divided by that node's mean J is <= 3 %.
+    The earlier per-node (max - min)/|mean| metric of K_I and J, undefined
+    where K_I crosses zero on the front, is still evaluated and recorded as
+    ``c_contour_legacy``; it no longer gates;
 (d) completeness: every declared front node has K_I, K_II, K_III and J for
     every declared contour;
 (e) sanitisation: no host or user tokens in the raw output or the record;
 (f) units: mm-N-MPa declared, raw K tagged MPa*sqrt(mm), and K converted to
-    MPa*sqrt(m) exactly once.
+    MPa*sqrt(m) exactly once;
+(g) mesh convergence of J (owner card G14): J at the governing node (the node
+    of maximum J, i.e. of maximum K = sqrt(E' J), among the positions present
+    on both meshes, taken on the finer mesh) changes by <= 1 % between the two
+    mesh densities.
 
 The limits are fixed by the approved plan and are not parameters of the
 guards. The parser needs no licence.
@@ -48,6 +57,7 @@ EQUILIBRIUM_TOL = 0.005
 MESH_LOAD_TOL = 0.001
 CONTOUR_SPREAD_TOL = 0.03
 LAST_CONTOURS = 3
+J_MESH_TOL = 0.01  # guard (g), owner card G14
 
 RAW_K_UNIT = "MPa*sqrt(mm)"
 K_UNIT = "MPa*sqrt(m)"
@@ -62,7 +72,9 @@ GUARD_NAMES = (
     "d_complete",
     "e_sanitised",
     "f_units",
+    "g_j_mesh",
 )
+LEGACY_GUARD = "c_contour_legacy"  # recorded, not gating (owner card G13)
 
 # Generic leakage patterns, checked everywhere (the producing host is unknown
 # to CI): key=value host/user fields, absolute drive/home paths, UNC shares.
@@ -248,17 +260,27 @@ def _polar_z_deg(x: float, y: float) -> float:
     return 0.0 if ang >= 360.0 else ang
 
 
-def front_angle(front_geometry: Mapping, x: float, y: float) -> float:
+def front_angle(
+    front_geometry: Mapping, x: float, y: float, z: float | None = None
+) -> float:
     """Front position angle for a declared front geometry.
 
     ``{"type": "ellipse", "a": .., "c": ..}``: Newman-Raju parametric angle
-    (90 = deepest); ``{"type": "polar_z"}``: angle about the z axis.
+    (90 = deepest); ``{"type": "polar_z"}``: angle about the z axis;
+    ``{"type": "crotch", "rw", "ro", "v0", "a", "c"}``: parametric angle of the
+    semi-elliptical crotch flaw in the plane y = 0 (rho = x, v = z - ro), 0 at
+    the upper surface tip, 90 at the deepest point, 180 at the lower tip.
     """
     kind = front_geometry.get("type")
     if kind == "ellipse":
         return _phi_deg(x, y, front_geometry["a"], front_geometry["c"])
     if kind == "polar_z":
         return _polar_z_deg(x, y)
+    if kind == "crotch":
+        g = front_geometry
+        depth = (x - g["rw"]) / g["a"]
+        along = (z - g["ro"] - g["v0"]) / g["c"]
+        return round(math.degrees(math.atan2(depth, along)), 9) + 0.0
     raise ValueError(f"unknown front geometry {kind!r}")
 
 
@@ -304,7 +326,7 @@ def front_records(
             )
         rec = {
             "node": node,
-            "phi_deg": front_angle(front_geometry, ref.x, ref.y),
+            "phi_deg": front_angle(front_geometry, ref.x, ref.y, ref.z),
             "x": ref.x,
             "y": ref.y,
             "z": ref.z,
@@ -431,7 +453,9 @@ def contour_spread(front: list[dict], key: str) -> float | None:
     return worst
 
 
-def guard_contour(fronts: Mapping[int, list[dict]]) -> GuardResult:
+def guard_contour_legacy(fronts: Mapping[int, list[dict]]) -> GuardResult:
+    """The pre-G13 metric: per node (max - min)/|mean| of K_I and J. Recorded
+    for the record only; undefined where K_I crosses zero on the front."""
     worst = None
     where = ""
     for lvl, front in sorted(fronts.items()):
@@ -441,7 +465,114 @@ def guard_contour(fronts: Mapping[int, list[dict]]) -> GuardResult:
                 worst, where = s, f"L{lvl} {key}"
     ok = worst is not None and worst <= CONTOUR_SPREAD_TOL
     return GuardResult(
-        _pass(ok), worst, CONTOUR_SPREAD_TOL, f"max (max-min)/mean, last 3 contours ({where})"
+        _pass(ok), worst, CONTOUR_SPREAD_TOL,
+        f"legacy, not gating (owner G13): max (max-min)/|mean| per node, last 3 "
+        f"contours ({where})",
+    )
+
+
+def _k_magnitude(node: Mapping) -> float:
+    vals = [node.get(f"K{i}_reported") for i in (1, 2, 3)]
+    return math.sqrt(sum(v * v for v in vals if v is not None))
+
+
+def k_spread_over_front_max(front: list[dict]) -> tuple[float | None, str]:
+    """G13 (i): max over nodes and modes of the last-three-contour K spread,
+    divided by the maximum |K| along the whole front."""
+    kmax = max((_k_magnitude(n) for n in front), default=0.0)
+    worst, where = None, ""
+    if kmax == 0.0:
+        return (math.inf if front else None), "zero K on the front"
+    for node in front:
+        for key in ("K1", "K2", "K3"):
+            vals = [c[key] for c in node["contours"][-LAST_CONTOURS:] if c[key] is not None]
+            if len(vals) < 2:
+                continue
+            s = (max(vals) - min(vals)) / kmax
+            if worst is None or s > worst:
+                worst, where = s, f"{key} at phi {node['phi_deg']:g}"
+    return worst, where
+
+
+def j_spread_over_node_mean(front: list[dict]) -> tuple[float | None, str]:
+    """G13 (ii): max over nodes of the last-three-contour J spread divided by
+    that node's mean J."""
+    worst, where = None, ""
+    for node in front:
+        vals = [c["J"] for c in node["contours"][-LAST_CONTOURS:] if c["J"] is not None]
+        if len(vals) < 2:
+            continue
+        s = _spread(vals)
+        if worst is None or s > worst:
+            worst, where = s, f"phi {node['phi_deg']:g}"
+    return worst, where
+
+
+def guard_contour(fronts: Mapping[int, list[dict]]) -> GuardResult:
+    """Guard (c), owner card G13: parts (i) and (ii) on every mesh density."""
+    wk = wj = None
+    where_k = where_j = ""
+    for lvl, front in sorted(fronts.items()):
+        sk, ak = k_spread_over_front_max(front)
+        sj, aj = j_spread_over_node_mean(front)
+        if sk is not None and (wk is None or sk > wk):
+            wk, where_k = sk, f"L{lvl} {ak}"
+        if sj is not None and (wj is None or sj > wj):
+            wj, where_j = sj, f"L{lvl} {aj}"
+    ok_k = wk is not None and wk <= CONTOUR_SPREAD_TOL
+    ok_j = wj is not None and wj <= CONTOUR_SPREAD_TOL
+    value = None if wk is None or wj is None else max(wk, wj)
+    detail = (
+        f"(i) {_pass(ok_k)}: K spread / max|K| on the front = {wk} ({where_k}); "
+        f"(ii) {_pass(ok_j)}: J spread / node mean J = {wj} ({where_j})"
+    )
+    return GuardResult(_pass(ok_k and ok_j), value, CONTOUR_SPREAD_TOL, detail)
+
+
+def k_from_j(j_n_per_mm: float, youngs_mpa: float, poisson: float) -> float:
+    """Governing K = sqrt(E' J), E' = E/(1 - nu^2) (plane strain), MPa*sqrt(m)."""
+    e_prime = youngs_mpa / (1.0 - poisson * poisson)
+    return math.sqrt(e_prime * j_n_per_mm) * K_RAW_TO_SI
+
+
+def _position_key(phi: float) -> float:
+    return round(phi, 6)
+
+
+def governing_node(fronts: Mapping[int, list[dict]]) -> dict | None:
+    """The governing node for guard (g): maximum J (hence maximum sqrt(E' J))
+    on the finer of the two meshes, among positions present on both."""
+    if len(fronts) != 2:
+        return None
+    (lc, coarse), (lf, fine) = sorted(fronts.items())
+    coarse_by_pos = {_position_key(n["phi_deg"]): n for n in coarse}
+    common = [n for n in fine if _position_key(n["phi_deg"]) in coarse_by_pos
+              and n.get("J_reported")]
+    if not common:
+        return None
+    gov = max(common, key=lambda n: n["J_reported"])
+    j_c = coarse_by_pos[_position_key(gov["phi_deg"])]["J_reported"]
+    return {
+        "level_coarse": lc,
+        "level_fine": lf,
+        "phi_deg": gov["phi_deg"],
+        "node_fine": gov["node"],
+        "j_fine_n_per_mm": gov["J_reported"],
+        "j_coarse_n_per_mm": j_c,
+        "j_rel_change": abs(gov["J_reported"] / j_c - 1.0) if j_c else math.inf,
+    }
+
+
+def guard_j_mesh(fronts: Mapping[int, list[dict]]) -> GuardResult:
+    """Guard (g), owner card G14."""
+    gov = governing_node(fronts)
+    if gov is None:
+        return GuardResult("fail", None, J_MESH_TOL, "no governing node on two meshes")
+    ok = gov["j_rel_change"] <= J_MESH_TOL
+    return GuardResult(
+        _pass(ok), gov["j_rel_change"], J_MESH_TOL,
+        f"|J(L{gov['level_fine']}) / J(L{gov['level_coarse']}) - 1| at the governing "
+        f"node phi {gov['phi_deg']:g} (max J on L{gov['level_fine']})",
     )
 
 
@@ -558,6 +689,8 @@ def evaluate_guards(
             "d_complete": _not_applicable(),
             "e_sanitised": guard_sanitised(list(reac_texts.values()), tokens),
             "f_units": guard_units({}, reactions, {}),
+            "g_j_mesh": _not_applicable(),
+            LEGACY_GUARD: _not_applicable(),
         }
     tables = {lvl: parse_cint_table(t) for lvl, t in cint_texts.items()}
     fronts = {
@@ -572,6 +705,8 @@ def evaluate_guards(
             list(cint_texts.values()) + list(reac_texts.values()), tokens
         ),
         "f_units": guard_units(tables, reactions, fronts),
+        "g_j_mesh": guard_j_mesh(fronts),
+        LEGACY_GUARD: guard_contour_legacy(fronts),
     }
 
 
@@ -830,4 +965,6 @@ def evaluate_receipt_guards(
             [json.dumps(receipt, sort_keys=True)], extra_tokens
         ),
         "f_units": GuardResult(_pass(unit_ok), None, None, "recorded unit tags"),
+        "g_j_mesh": guard_j_mesh(fronts) if cracked else _not_applicable(),
+        LEGACY_GUARD: guard_contour_legacy(fronts) if cracked else _not_applicable(),
     }

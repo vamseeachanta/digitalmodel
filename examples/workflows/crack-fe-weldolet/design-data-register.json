@@ -19,8 +19,8 @@
   },
   "summary_counts": {
     "public": 12,
-    "derived": 6,
-    "assumed": 8,
+    "derived": 8,
+    "assumed": 11,
     "owner_decision": 7,
     "missing_evidence": 1
   },
@@ -333,6 +333,56 @@
       "source_class": "owner_decision",
       "reference_ids": ["decision:B03", "F-03"],
       "note": "ASSUMED - to be confirmed: owner card B03; depth at which the remaining ligament reaches zero. Confirm with the assessment procedure adopted in P1.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "F-06",
+      "parameter": "Second base case (owner card G15): crotch-plane root flaw shape, a/c (semicircular surface flaw on the bore)",
+      "value": 1.0,
+      "unit": "-",
+      "source_class": "assumed",
+      "reference_ids": ["decision:G15", "G-09", "G-10"],
+      "note": "ASSUMED - to be confirmed: a root flaw in the radial-axial plane y = 0 at the +x crotch, normal to the run-pipe hoop stress, breaking the bore surface (hole wall and weld root face, rho = C/2). The bore line in the section is straight only from the run-pipe bore (v = -7.11 mm) to the root-face top (v = 1.6 mm), so the flaw must fit on 8.71 mm of free surface; a semicircle (a = c) is taken because the flaw length along the bore is not known and a semicircle is the usual assumption for a surface flaw of known depth only. Depth a is measured along rho from the bore into the attachment weld and run-pipe wall. Confirm with NDE sizing of the flaw length along the bore.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "F-07",
+      "parameter": "Crotch-plane flaw position and growth rule: upper tip held above the fusion line; self-similar growth downward and outward",
+      "value": 0.5,
+      "unit": "mm",
+      "source_class": "assumed",
+      "reference_ids": ["F-06", "G-10"],
+      "note": "ASSUMED - to be confirmed: the upper tip sits 0.5 mm above the fusion line (v = 0), so the flaw contains the weld root and the adjacent hole wall; the 0.5 mm leaves room for the crack-block tube below the root-face top (v = 1.6 mm). The flaw grows self-similarly (a = c) with the upper tip fixed, i.e. downward along the bore and radially outward; centre v = 0.5 - a, lower tip v = 0.5 - 2a. Confirm with NDE sizing and a growth assessment of the flaw shape.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "F-08",
+      "parameter": "Declared crack-depth states, crotch plane (the F-04 states that fit)",
+      "value": [2.35, 2.8, 3.2],
+      "unit": "mm",
+      "source_class": "derived",
+      "reference_ids": ["F-04", "F-07", "N-04"],
+      "note": "ASSUMED - to be confirmed: the F-04 states for which the lower tip plus the crack-block tube (0.6 mm) and a 0.3 mm margin stay above the run-pipe bore, i.e. a <= 3.355 mm; 3.6 mm and deeper leave less than 0.5 mm of ligament and are not modelled. Confirm with the owner whether the crotch plane needs states beyond 3.2 mm (a corner-crack model after break-through).",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "F-09",
+      "parameter": "Crotch-plane limit state: the lower flaw tip reaches the run-pipe bore (remaining ligament 7.61 - 2a mm)",
+      "value": 3.805,
+      "unit": "mm",
+      "source_class": "derived",
+      "reference_ids": ["F-07", "G-02", "decision:B03"],
+      "note": "ASSUMED - to be confirmed: the ligament of the crotch-plane flaw is the bore surface between its lower tip (v = 0.5 - 2a) and the run-pipe bore (v = -7.11 mm), 7.61 - 2a mm; it is exhausted (break-through to the run-pipe bore, leak path) at a = 3.805 mm, earlier than the fusion-face limit of 8.56 mm. Confirm with the assessment procedure adopted in P1.",
+      "status_label": "ASSUMED - to be confirmed"
+    },
+    {
+      "id": "N-04",
+      "parameter": "Crotch-plane crack block: tube half-size d and box depth D along rho",
+      "value": "d = 0.6 mm; D = 6.0 mm",
+      "unit": "mm",
+      "source_class": "assumed",
+      "reference_ids": ["F-06", "F-07"],
+      "note": "ASSUMED - to be confirmed: the P0a crack block (tube 0.6 mm as in P0a) is built in a box on the bore line, rho from C/2 to C/2 + 6.0 mm (inside the fillet face at the root-face top, rho = 18.865 mm), v from the run-pipe bore to the root-face top. Confirm with a mesh sensitivity if the model is reused.",
       "status_label": "ASSUMED - to be confirmed"
     },
     {

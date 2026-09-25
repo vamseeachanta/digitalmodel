@@ -22,8 +22,14 @@ GUARDS = (
     "d_complete",
     "e_sanitised",
     "f_units",
+    "g_j_mesh",
 )
 FILES = ("cint_L0.txt", "cint_L1.txt", "reac_L0.txt", "reac_L1.txt")
+
+
+def _gates(results: dict) -> dict:
+    """The gating guards only (the legacy guard (c) value is a record)."""
+    return {n: r for n, r in results.items() if n in GUARDS}
 
 
 def _load(case: str) -> tuple[dict[int, str], dict[int, str]]:
@@ -98,8 +104,8 @@ def test_centre_crack_secant_value():
 # --------------------------------------------------------------------------- #
 def test_good_fixture_passes_every_guard():
     results = _guards("good")
-    assert set(results) == set(GUARDS)
-    for name, res in results.items():
+    assert set(results) == set(GUARDS) | {"c_contour_legacy"}
+    for name, res in _gates(results).items():
         assert res.status == "pass", f"{name}: {res}"
 
 
@@ -115,7 +121,7 @@ def test_good_fixture_passes_every_guard():
     ],
 )
 def test_negative_fixture_fails_only_its_guard(case, guard):
-    results = _guards(case)
+    results = _gates(_guards(case))
     failed = sorted(n for n, r in results.items() if r.status != "pass")
     assert failed == [guard]
 
@@ -125,6 +131,8 @@ def test_guard_limits_are_the_plan_values():
     assert results["a_equilibrium"].limit == 0.005
     assert results["b_mesh_load"].limit == 0.001
     assert results["c_contour"].limit == 0.03
+    assert results["g_j_mesh"].limit == 0.01  # owner G14
+    assert results["c_contour_legacy"].limit == 0.03
 
 
 def test_host_token_scan_uses_runtime_tokens():
@@ -209,7 +217,7 @@ def test_weldolet_polar_front_angles():
 def test_weldolet_good_fixture_passes_every_guard():
     cint, reac = _load_weld("good")
     res = cint_parser.evaluate_guards(cint, reac, front_geometry=POLAR, extra_tokens=())
-    assert {n: r.status for n, r in res.items()} == dict.fromkeys(GUARDS, "pass")
+    assert {n: r.status for n, r in _gates(res).items()} == dict.fromkeys(GUARDS, "pass")
 
 
 @pytest.mark.parametrize(
@@ -217,16 +225,60 @@ def test_weldolet_good_fixture_passes_every_guard():
     [
         ("neg_a_equilibrium", "a_equilibrium"),
         ("neg_b_stale_mesh", "b_mesh_load"),
-        ("neg_c_contour", "c_contour"),
+        ("neg_c_k_front", "c_contour"),  # G13 (i): K spread / max |K| on the front
+        ("neg_c_j_node", "c_contour"),  # G13 (ii): J spread / mean J at the node
         ("neg_d_missing_field", "d_complete"),
         ("neg_e_host_token", "e_sanitised"),
         ("neg_f_wrong_unit", "f_units"),
+        ("neg_g_j_mesh", "g_j_mesh"),  # G14: J at the governing node, mesh pair
     ],
 )
 def test_weldolet_negative_fixture_fails_only_its_guard(case, guard):
     cint, reac = _load_weld(case)
-    res = cint_parser.evaluate_guards(cint, reac, front_geometry=POLAR, extra_tokens=())
+    res = _gates(
+        cint_parser.evaluate_guards(cint, reac, front_geometry=POLAR, extra_tokens=())
+    )
     assert sorted(n for n, r in res.items() if r.status != "pass") == [guard]
+
+
+def test_c_part_i_and_ii_fail_for_their_own_reason():
+    for case, part in (("neg_c_k_front", "(i)"), ("neg_c_j_node", "(ii)")):
+        cint, reac = _load_weld(case)
+        res = cint_parser.evaluate_guards(cint, reac, front_geometry=POLAR, extra_tokens=())
+        detail = res["c_contour"].detail
+        assert f"{part} fail" in detail, (case, detail)
+        other = "(ii)" if part == "(i)" else "(i)"
+        assert f"{other} pass" in detail, (case, detail)
+
+
+def test_zero_crossing_node_passes_new_c_and_fails_legacy():
+    """A K_I zero crossing on the front (tiny absolute spread, tiny mean) failed
+    the old per-node relative metric; it passes G13 and the legacy value is kept."""
+    cint, reac = _load_weld("zero_crossing")
+    res = cint_parser.evaluate_guards(cint, reac, front_geometry=POLAR, extra_tokens=())
+    assert res["c_contour"].status == "pass"
+    assert res["c_contour_legacy"].status == "fail"
+    assert res["c_contour_legacy"].value > 0.03
+
+
+def test_governing_node_is_max_j_on_the_finer_mesh():
+    cint, _ = _load_weld("neg_g_j_mesh")
+    fronts = {
+        lv: cint_parser.front_records(cint_parser.parse_cint_table(t), front_geometry=POLAR)
+        for lv, t in cint.items()
+    }
+    gov = cint_parser.governing_node(fronts)
+    assert gov["level_fine"] == 1 and gov["level_coarse"] == 0
+    assert gov["phi_deg"] in (0.0, 180.0)
+    assert gov["j_rel_change"] > 0.01
+
+
+def test_k_gov_from_j():
+    # K = sqrt(E' J), E' = E / (1 - nu^2); J in N/mm -> K in MPa*sqrt(m)
+    e, nu, j = 182_500.0, 0.3, 9.6e-3
+    expected = math.sqrt(e / (1.0 - nu * nu) * j) / math.sqrt(1000.0)
+    assert cint_parser.k_from_j(j, e, nu) == pytest.approx(expected, rel=1e-15)
+    assert cint_parser.k_from_j(j, e, nu) == pytest.approx(1.3875, abs=5e-5)
 
 
 def test_uncracked_evaluation_marks_contour_guards_not_applicable():

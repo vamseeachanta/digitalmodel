@@ -25,6 +25,19 @@ def test_limit_deck_shares_the_elastic_model():
     assert nodes_e == nodes_l
 
 
+def test_limit_deck_on_the_crotch_plane():
+    spec = wl.LimitLoadSpec(plane="crotch")
+    deck = wl.generate_limit_apdl(spec)
+    assert "! crotch-plane root flaw" in deck
+    assert "TB,BISO,1" in deck and "\nCINT," not in deck
+    assert "D,ALL,UY,0.0" in deck  # symmetry plane of the half model
+    assert wl.state_name(spec) == "p0b_limit_load_crotch_a2p35"
+    receipt = {"spec": wl.spec_dict(spec)}
+    assert wl.deck_sha256_for_receipt(receipt, 0) == wc.deck_sha256(deck)
+    with pytest.raises(ValueError, match="plane"):
+        wl.generate_limit_apdl(wl.LimitLoadSpec(plane="other"))
+
+
 def test_limit_spec_requires_a_crack():
     with pytest.raises(ValueError, match="cracked model"):
         wl.generate_limit_apdl(wl.LimitLoadSpec(base=wc.WeldoletSpec(crack_depth_mm=None)))
