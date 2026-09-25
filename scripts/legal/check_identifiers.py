@@ -543,8 +543,7 @@ def check(
             if rx.search(line):
                 findings.append(
                     f"{label}:{n}: [private-pattern] a pattern on "
-                    f"the private list matches here\n"
-                    f"    {line.strip()[:160]}"
+                    f"the private list matches here" + _excerpt(line)
                 )
                 break
         structural = [] if EXAMPLE_MARK in line else compiled
@@ -559,7 +558,7 @@ def check(
                     pos = m.start() + 1
                     continue
                 findings.append(
-                    f"{label}:{n}: [{rid}] {msg.strip()}\n" f"    {line.strip()[:160]}"
+                    f"{label}:{n}: [{rid}] {msg.strip()}" + _excerpt(line)
                 )
                 break
         if hashed or private or legacy_hashed:
@@ -572,8 +571,7 @@ def check(
                 ):
                     findings.append(
                         f"{label}:{n}: [denied-name] a name on the "
-                        f"deny list appears here\n"
-                        f"    {line.strip()[:160]}"
+                        f"deny list appears here" + _excerpt(line)
                     )
                     break
 
@@ -590,7 +588,14 @@ def check(
             shown = ".."
         if shown.startswith(".."):
             shown = os.path.basename(full)
+        before = len(findings)
         scan(norm, "path", shown.replace("\\", "/"))
+        label = norm
+        if len(findings) > before and not SHOW_LINES:
+            # The path itself carries the identifier: name it by digest, for
+            # every finding in this file, so the log does not publish it.
+            label = "<path " + hashlib.sha256(norm.encode("utf-8")).hexdigest()[:12] + ">"
+            findings[before:] = [label + f[len(norm):] for f in findings[before:]]
         ext = os.path.splitext(norm)[1].lower()
         blob: bytes | None = None
         try:
@@ -625,8 +630,18 @@ def check(
             continue
         scanned += 1
         for n, line in enumerate(text.splitlines(), start=1):
-            scan(norm, n, line)
+            scan(label, n, line)
     return findings, scanned, media_skipped, uninspectable
+
+
+#: Findings name the file, line and rule only. Quoting the line would publish
+#: the identifier in the CI log of a public repository; --show-lines quotes it
+#: for a local run and is refused in CI.
+SHOW_LINES = False
+
+
+def _excerpt(line: str) -> str:
+    return f"\n    {line.strip()[:160]}" if SHOW_LINES else ""
 
 
 def main() -> int:
@@ -667,7 +682,19 @@ def main() -> int:
         "with paths only their entries change. Review the diff before "
         "committing it: every line is content nobody has read.",
     )
+    ap.add_argument(
+        "--show-lines",
+        action="store_true",
+        help="quote each offending line (local review only; refused in CI, "
+        "where the log of a public repository is public)",
+    )
     args = ap.parse_args()
+    if args.show_lines:
+        if os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"):
+            print("check_identifiers: --show-lines is refused in CI", file=sys.stderr)
+            return 3
+        global SHOW_LINES
+        SHOW_LINES = True
 
     rules = load_rules()
 

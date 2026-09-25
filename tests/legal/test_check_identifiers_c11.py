@@ -618,7 +618,7 @@ def test_show_lines_is_refused_in_ci(gate):
 
 
 def test_a_path_finding_does_not_print_the_path(gate):
-    f = _file(gate, "nothing to see\n", name=f"reports/{TOKEN}-summary.md")
+    f = _file(gate, "nothing to see\n", name=f"{TOKEN}-summary.md")
     r = gate(f)
     assert r.returncode == 1
     out = r.stdout + r.stderr
