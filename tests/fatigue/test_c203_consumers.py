@@ -115,6 +115,29 @@ def test_structural_below_the_tabulated_limit_is_infinite():
     assert get_dnv_curve("E").fatigue_limit == pytest.approx(46.78)
 
 
+def test_structural_thickness_correction_uses_the_class_k():
+    """get_dnv_curve(D, thickness=40): k = 0.20 for D (Table 2-1), so
+    A = 10^12.164 / (40/25)^(0.20 * 3) and the limit 52.63 / 1.6^0.20.
+    The old universal k = 0.25 gave A / 1.6^0.75."""
+    from digitalmodel.structural.fatigue.sn_curves import get_dnv_curve
+
+    c = get_dnv_curve("D", thickness=40.0)
+    assert c.A == pytest.approx(10**12.164 / 1.6 ** (0.20 * 3.0), rel=1e-12)
+    assert c.fatigue_limit == pytest.approx(52.63 / 1.6**0.20, rel=1e-12)
+    b1 = get_dnv_curve("B1", thickness=40.0)  # k = 0 for B1
+    assert b1.A == pytest.approx(10**15.117, rel=1e-12)
+
+
+def test_structural_no_thickness_credit_below_t_ref():
+    """DNV-RP-C203 thickness correction applies only above t_ref (25 mm), as
+    in fatigue.damage.thickness_correction; 20 mm keeps the 25 mm curve."""
+    from digitalmodel.structural.fatigue.sn_curves import get_dnv_curve
+
+    assert get_dnv_curve("D", thickness=20.0).A == pytest.approx(
+        get_dnv_curve("D").A, rel=1e-12
+    )
+
+
 def test_yaml_holds_no_dnv_curve_copy():
     """The DNV-RP-C203 curves have one source; the YAML keeps the other
     standards and the DNV multislope entries only."""
@@ -239,6 +262,16 @@ def test_free_span_thickness_exponent_defaults_from_the_class():
     assert thick == pytest.approx(base / 1.6 ** (0.20 * 3.0), rel=1e-12)
     over = get_sn_curve("D", "air", thickness_mm=40.0, thickness_exponent=0.25)
     assert over.params.A1 == pytest.approx(base / 1.6 ** (0.25 * 3.0), rel=1e-12)
+
+
+def test_free_span_no_thickness_credit_below_t_ref():
+    """20 mm < t_ref = 25 mm: no correction (was a credit of 0.8^-k)."""
+    from digitalmodel.subsea.pipeline.free_span._bilinear_sn import get_sn_curve
+
+    base = get_sn_curve("F", "seawater_cp").params
+    thin = get_sn_curve("F", "seawater_cp", thickness_mm=20.0).params
+    assert thin.A1 == pytest.approx(base.A1, rel=1e-12)
+    assert thin.A2 == pytest.approx(base.A2, rel=1e-12)
 
 
 def _span_input(**kw):
