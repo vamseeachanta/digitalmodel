@@ -243,6 +243,8 @@ digitalmodel = [
     "marine_ops/artificial_lift/reference_data/**/*.csv",
     "marine_ops/artificial_lift/reference_data/**/*.yml",
     "reporting/assets/*.html",
+    "reporting/assets/*.j2",
+    "reporting/assets/*.css",
 ]
 
 [tool.black]
