@@ -102,11 +102,14 @@ class TestSNCurveDNVReference:
         curve = get_dnv_curve('D')
         assert abs(curve.fatigue_limit - 52.63) < 0.01
 
-    def test_below_fatigue_limit_gives_infinite_life(self):
-        """Stress below CAFL should give infinite cycles."""
+    def test_below_fatigue_limit_uses_m2(self):
+        """Below the knee (52.63 MPa) the m2 = 5 segment applies, no cut-off
+        (DNV-RP-C203 (2011) section 2.4; #2165 PR #2195 review r1 finding 2):
+        N = 10^15.606 / 40^5 = 4.0365e15 / 1.024e8 = 3.9418e7 (was infinite)."""
         curve = get_dnv_curve('D')
         N = curve.get_allowable_cycles(40.0)  # Below 52.63 MPa
-        assert np.isinf(N)
+        assert N == pytest.approx(10**15.606 / 40.0**5, rel=1e-12)
+        assert N == pytest.approx(3.9418e7, rel=1e-4)
 
     def test_all_dnv_curves_available(self):
         """All 14 DNV curve classes are accessible."""
@@ -392,9 +395,15 @@ class TestSeawaterEnvironment:
         N_sw = sw_curve.get_allowable_cycles(S)
 
         assert N_sw < N_air, "Seawater+CP should reduce allowable cycles"
-        # Factor is 0.87
+        # DNV-RP-C203 (2011) Table 2-2 (#2165; was an air x 0.87 factor).
+        # CP knee stress 10^((11.764 - 6)/3) = 83.43 MPa, so 80 MPa is on m2:
+        #   N_sw  = 10^15.606 / 80^5 = 4.0365e15 / 3.2768e9 = 1.23184e6
+        # air knee 52.63 MPa, so 80 MPa is on m1:
+        #   N_air = 10^12.164 / 80^3 = 1.45881e12 / 5.12e5 = 2.84924e6
+        # ratio = 0.43234
         ratio = N_sw / N_air
-        assert abs(ratio - 0.87) < 0.01
+        assert N_sw == pytest.approx(10**15.606 / 80.0**5, rel=1e-12)
+        assert ratio == pytest.approx(0.43234, abs=5e-5)
 
     def test_seawater_free_no_fatigue_limit(self):
         """Seawater free-corrosion curve should have zero fatigue limit."""
@@ -409,7 +418,8 @@ class TestSeawaterEnvironment:
         assert np.isfinite(N) and N > 0
 
     def test_seawater_free_factor(self):
-        """Free-corrosion factor is 0.72 vs air."""
+        """Free corrosion, DNV-RP-C203 (2011) Table 2-3 (#2165; was air x 0.72):
+        D log a = 11.687 vs 12.164 in air, ratio 10^-0.477 = 0.33343."""
         from digitalmodel.structural.fatigue.worked_examples import (
             _dnv_seawater_free,
         )
@@ -417,7 +427,8 @@ class TestSeawaterEnvironment:
         free = _dnv_seawater_free('D')
 
         ratio = free.A / air.A
-        assert abs(ratio - 0.72) < 0.001
+        assert ratio == pytest.approx(10**-0.477, rel=1e-12)
+        assert ratio == pytest.approx(0.33343, abs=5e-6)
 
 
 # -----------------------------------------------------------------------

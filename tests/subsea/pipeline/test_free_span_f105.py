@@ -300,14 +300,26 @@ class TestSpanFatigueDamage:
     def _build_with_stress(self, inp, stress_mpa, fn=0.43):
         return SpanFatigueDamage(inp, fn, stress_mpa)
 
-    def test_zero_damage_below_fatigue_limit(self, ref_input):
-        """Stress below S-N fatigue limit → zero annual damage."""
+    def test_cp_damage_below_the_air_fatigue_limit_is_finite(self, ref_input):
+        """Seawater with CP has no cut-off (#2165 PR #2195 review r1 finding 3).
+        F CP at 10 MPa, 0.43 Hz: N = 10^15.091 / 10^5 = 1.2331e10 cycles;
+        cycles/yr = 0.43 x 3.15576e7 = 1.35698e7; D/yr = 1.10046e-3; life =
+        908.71 years (was zero damage, infinite life)."""
         fat = self._build_with_stress(ref_input, stress_mpa=10.0)
-        assert fat.damage_per_year() == 0.0
+        assert fat.damage_per_year() == pytest.approx(
+            0.43 * 3.15576e7 / (10**15.091 / 10.0**5), rel=1e-12
+        )
+        assert fat.damage_per_year() == pytest.approx(1.10046e-3, rel=1e-5)
+        assert fat.fatigue_life_years() == pytest.approx(908.71, abs=5e-3)
 
-    def test_infinite_life_below_fatigue_limit(self, ref_input):
-        """Stress < fatigue limit → fatigue life = infinity."""
-        fat = self._build_with_stress(ref_input, stress_mpa=10.0)
+    def test_zero_damage_below_the_air_screening_cut_off(self, ref_input):
+        """In air the screening cut-off is the air curve's own limit (F:
+        41.52 MPa): 10 MPa gives zero damage and infinite life."""
+        from dataclasses import replace
+
+        inp_air = replace(ref_input, environment=EnvironmentType.IN_AIR)
+        fat = SpanFatigueDamage(inp_air, 0.43, 10.0)
+        assert fat.damage_per_year() == 0.0
         assert math.isinf(fat.fatigue_life_years())
 
     def test_finite_damage_above_fatigue_limit(self, ref_input):

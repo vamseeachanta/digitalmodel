@@ -296,9 +296,13 @@ def _fresh_standard_curves(monkeypatch):
 
     monkeypatch.setattr(StandardSNCurves, "_loaded_from_yaml", False)
     for attr in ("API_CURVES", "BS_CURVES", "AWS_CURVES", "CUSTOM_CURVES"):
-        monkeypatch.setattr(StandardSNCurves, attr, dict(getattr(StandardSNCurves, attr)))
+        monkeypatch.setattr(
+            StandardSNCurves, attr, dict(getattr(StandardSNCurves, attr))
+        )
     monkeypatch.setattr(
-        StandardSNCurves, "DNV_MULTISLOPE_CURVES", dict(StandardSNCurves.DNV_MULTISLOPE_CURVES)
+        StandardSNCurves,
+        "DNV_MULTISLOPE_CURVES",
+        dict(StandardSNCurves.DNV_MULTISLOPE_CURVES),
     )
     return StandardSNCurves
 
@@ -332,7 +336,9 @@ def test_yaml_dnv_curves_block_raises(tmp_path, monkeypatch, _fresh_standard_cur
     assert "register_custom_curve" in msg
 
 
-def test_yaml_custom_curve_loads_and_is_used(tmp_path, monkeypatch, _fresh_standard_curves):
+def test_yaml_custom_curve_loads_and_is_used(
+    tmp_path, monkeypatch, _fresh_standard_curves
+):
     """The same reduced curve under its own name (standards.CUSTOM.curves) loads
     and gives 1e11 / 100^3 = 100,000 cycles at 100 MPa."""
     monkeypatch.setenv(
