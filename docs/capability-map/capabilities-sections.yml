@@ -261,7 +261,6 @@ sections:
     title: "Cathodic protection"
     hrefs:
       - "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/cathodic_protection"
-      - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/workflows/cathodic-protection"
       - "../structural/cathodic-protection-explorer.html"
       - "pdf/cathodic-protection-explorer.pdf"
       - "api/cathodic-protection-explorer.html"
