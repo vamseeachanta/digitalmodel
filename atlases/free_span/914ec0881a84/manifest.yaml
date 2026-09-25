@@ -1,0 +1,53 @@
+atlas_id: 914ec0881a84
+basename: free_span
+physics: utilization_threshold
+response: span_utilisation
+axes:
+- name: span_length_m
+  scale: linear
+  grid:
+  - 10.0
+  - 20.0
+  - 30.0
+  - 40.0
+  - 50.0
+  - 60.0
+  - 70.0
+- name: od_m
+  scale: linear
+  grid:
+  - 0.2
+  - 0.3
+  - 0.4
+  - 0.5
+  - 0.6
+- name: wt_m
+  scale: linear
+  grid:
+  - 0.012
+  - 0.018
+  - 0.024
+  - 0.03
+- name: current_velocity_ms
+  scale: linear
+  grid:
+  - 0.2
+  - 0.5
+  - 0.8
+  - 1.1
+  - 1.4
+validation:
+  metric: max_rel_error
+  max_rel_error: 0.040825273575313556
+  threshold: 0.1
+  passes: true
+provenance:
+  basename: free_span
+  code_version: 571ecdcb
+  standards:
+  - id: DNV-RP-F105
+    edition: 2017-06
+  response_kwargs: {}
+  workflow_id: free-span-f105
+  content_fingerprint: 914ec0881a84db7d9357b836d8854cf7911eed616bef317338f0b74ee8bc80d1
+  input_template_sha256: 66eff5cf59b0cbe6b3c624056bc6c09a015c7a79530911c912fa1d7dccdaf1fa
