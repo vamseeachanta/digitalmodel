@@ -1,6 +1,6 @@
-# FFS Offering Catalog — Industry Lookup Tables (2026-09-25, r1.1)
+# FFS Offering Catalog — Industry Lookup Tables (2026-09-25, r1.3)
 
-**Epic:** #1057 Phase 4 · **Data:** `src/digitalmodel/asset_integrity/data/ffs_offering_catalog.yml` (single source; this page mirrors it and `tests/asset_integrity/test_offering_catalog.py` checks the summary counts)
+**Epic:** #1057 Phase 4 · **Data:** `src/digitalmodel/asset_integrity/data/ffs_offering_catalog.yml` (FFS verdicts) and `ffs_design_screen_catalog.yml` (design screens, owner decision D5); this page mirrors both and `tests/asset_integrity/test_offering_catalog.py` checks the summary counts
 **Companion notes:** `ffs-readiness-review-2026-09-25.md` and `level3-and-part9-program-2026-09-25.md` (PR #2186), plan `docs/plans/2026-09-25-issue-1057-ffs-offering-program.md`
 
 ## How to read these tables
@@ -12,7 +12,7 @@
 
 ## 1. Pipelines (onshore and offshore transmission, gathering, hazardous liquid)
 
-Frameworks: ASME B31.8S (22 root causes in 9 threat categories), API RP 1160, API RP 1176 (cracking), NACE SP0502 / SP0206 (direct assessment). Defect taxonomy cross-checked against PDAM: defect-free pipe, corrosion, gouges, plain and kinked dents, dents on welds, dent-gouge, manufacturing defects, girth and seam weld defects, cracking, environmental cracking, defect interaction, fittings, leak-vs-rupture.
+Frameworks: ASME B31.8S (22 root causes in 9 threat categories), API RP 1160, API RP 1176 (cracking), NACE SP0502 / SP0206 (direct assessment). Subsea design screens (free span, on-bottom stability, global buckling) are in section 9, not here. Defect taxonomy cross-checked against PDAM: defect-free pipe, corrosion, gouges, plain and kinked dents, dents on welds, dent-gouge, manufacturing defects, girth and seam weld defects, cracking, environmental cracking, defect interaction, fittings, leak-vs-rupture.
 
 | Defect / mechanism | Governing codes | Engine(s) | Tier | Status |
 |---|---|---|---|---|
@@ -32,9 +32,6 @@ Frameworks: ASME B31.8S (22 root causes in 9 threat categories), API RP 1160, AP
 | ECDA / ICDA region and indication ranking | NACE SP0502, SP0206 | — | T1 | none |
 | Composite repair behind a REPAIR verdict | ASME PCC-2, ISO 24817 | composite_repair | T2 | engine (#2185) |
 | Re-inspection interval, remaining life | B31.8S, API RP 1160 | inspection_planning | T1 | routed (no validation record; #2180) |
-| Subsea: free spans (VIV onset screen) | DNV-RP-F105 | free-span-f105 workflow | T2 | routed (design screen, not FFS) |
-| Subsea: upheaval / lateral buckling | DNV-RP-F110 | — | T2 | none (base configs only) |
-| Subsea: on-bottom stability | DNV-RP-F109 | on-bottom-stability-f109 workflow | T1 | routed (design check, not FFS) |
 
 ## 2. Refining and petrochemical fixed equipment
 
@@ -140,19 +137,29 @@ Frameworks: IACS CSR Ch 13 renewal criteria (wastage allowance, substantial-corr
 | Thermal fatigue, creep-fatigue | Pt 14, Pt 10 | — | T2 | planned (#2203) |
 | Crack-like flaws in headers, nozzles | Pt 9, BS 7910 | crack_fad | T2, T3 | engine |
 
+## 9. Design screens reusable in an integrity review (separate catalog, not FFS verdicts)
+
+Data: `ffs_design_screen_catalog.yml` (owner decision D5, 2026-09-25). These are routed design checks a pipeline integrity review reuses; they never produce a fitness-for-service verdict and are not counted in the coverage summary below.
+
+| Screen | Governing codes | Engine(s) | Tier | Status |
+|---|---|---|---|---|
+| Free spans (VIV onset) | DNV-RP-F105 | free-span-f105 workflow | T2 | routed |
+| Upheaval / lateral buckling | DNV-RP-F110 | — (base configs only) | T2 | none |
+| On-bottom stability | DNV-RP-F109 | on-bottom-stability-f109 workflow | T1 | routed |
+
 ## Coverage summary
 
 | Status | Rows |
 |---|---|
 | live | 0 |
-| routed | 5 |
+| routed | 3 |
 | validated | 6 |
 | engine | 31 |
 | planned | 25 |
-| none | 14 |
-| total | 81 |
+| none | 13 |
+| total | 78 |
 
-No row is `live` today: the five routed workflows lack validation records and the six validated engines lack routes. Closing that gap is Wave 0/1 of the plan. The `none` rows are the roadmap beyond the filed issues: pipeline manufacturing defects, geohazards and direct assessment, exchanger and fired-heater tubes, tank roofs, conductors and caissons, wire rope and anchors, wellhead fatigue, wind grouted connections, bolts and lifetime extension.
+No row is `live` today: the three routed workflows lack validation records and the six validated engines lack routes. Closing that gap is Wave 0/1 of the plan. The `none` rows are the roadmap beyond the filed issues: pipeline manufacturing defects, geohazards and direct assessment, exchanger and fired-heater tubes, tank roofs, conductors and caissons, wire rope and anchors, wellhead fatigue, wind grouted connections, bolts and lifetime extension.
 
 ## Sources (public overviews consulted 2026-09-25)
 

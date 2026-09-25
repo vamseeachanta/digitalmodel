@@ -17,6 +17,7 @@
 # Rights: publisher identifiers and public overviews only. No clause text, tables, figures, formulas or
 # licensed numeric thresholds; thresholds live in each issue's rights card as user inputs with public defaults.
 # Enforced by tests/asset_integrity/test_offering_catalog.py.
+# Design screens that are not FFS verdicts (owner decision D5, 2026-09-25) live in ffs_design_screen_catalog.yml.
 
 schema_version: 2
 generated: 2026-09-25
@@ -99,8 +100,6 @@ engines:
   inspection-planning: {module: asset_integrity.inspection_planning, status: routed, workflow: inspection-planning, route: true, issue: 2180, note: "no validation record"}
   riser-joint-ffs: {module: asset_integrity.riser_joint_ffs, status: engine, issue: 2183, note: "real anonymized C-scan fixtures (#1293)"}
   plate-panel-buckling: {module: infrastructure.base_solvers.structural.plate_buckling, status: routed, workflow: plate-buckling, route: true, note: "DNV-RP-C201 usage-factor check; plate metal-loss FFS reuses it by reducing thickness"}
-  free-span: {module: subsea.pipeline, status: routed, workflow: free-span-f105, route: true, note: "design screen (VIV onset), not an FFS verdict"}
-  on-bottom-stability: {module: subsea.on_bottom_stability, status: routed, workflow: on-bottom-stability-f109, route: true, note: "design check, not an FFS verdict"}
   jacket-member-joint: {module: structural.jacket_topside, status: engine, note: "API RP 2A design checks; no damaged-member capacity"}
   mooring-screen: {module: mooring_resilience.screening, status: engine, note: "DNV-OS-E301 factors; GREEN/AMBER/RED vocabulary; no chain degradation"}
   mooring-fatigue: {module: mooring_fatigue, status: engine}
@@ -152,11 +151,6 @@ industries:
           - {mechanism: direct-assessment programme support (ECDA / ICDA region and indication ranking), codes: [nace-sp0502, nace-sp0206], engines: [], tiers: [T1], status: none}
           - {mechanism: composite repair selection behind a REPAIR verdict, codes: [asme-pcc-2, iso-24817], engines: [composite-repair], tiers: [T2], status: engine}
           - {mechanism: re-inspection interval / remaining life, codes: [asme-b31-8s, api-rp-1160], engines: [inspection-planning], tiers: [T1], status: routed}
-      - asset: subsea pipeline / flowline (design screens reusable in an integrity review; not FFS verdicts)
-        defects:
-          - {mechanism: free spans (VIV onset screening), codes: [dnv-rp-f105], engines: [free-span], tiers: [T2], status: routed}
-          - {mechanism: upheaval / lateral buckling, codes: [dnv-rp-f110], engines: [], tiers: [T2], status: none, note: "base configs exist; no engine with a verdict"}
-          - {mechanism: on-bottom stability, codes: [dnv-rp-f109], engines: [on-bottom-stability], tiers: [T1], status: routed}
 
   - id: downstream-fixed-equipment
     title: Refining and petrochemical fixed equipment

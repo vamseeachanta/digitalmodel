@@ -20,6 +20,7 @@ import yaml
 
 REPO = Path(__file__).resolve().parents[2]
 CATALOG = REPO / "src" / "digitalmodel" / "asset_integrity" / "data" / "ffs_offering_catalog.yml"
+DESIGN_CATALOG = REPO / "src" / "digitalmodel" / "asset_integrity" / "data" / "ffs_design_screen_catalog.yml"
 PAGE = REPO / "docs" / "domains" / "asset-integrity" / "ffs-offering-catalog.md"
 REGISTRY = REPO / "docs" / "registry" / "workflows.yaml"
 DECKHAND_PATHS = REPO.parent / "deckhand" / "config" / "deckhand" / "routing" / "paths.yaml"
@@ -134,6 +135,35 @@ def test_no_licensed_numeric_thresholds_in_catalog():
     text = CATALOG.read_text(encoding="utf-8")
     suspicious = re.findall(r"(?:<|>|≥|≤)\s?\d+\s?(?:%|mm)", text)
     assert not suspicious, f"threshold-looking values in catalog: {suspicious}"
+
+
+def test_design_screen_catalog_is_consistent(catalog, registry_ids):
+    """Design screens (owner decision D5) live apart from FFS verdicts but obey the same rules."""
+    d = yaml.safe_load(DESIGN_CATALOG.read_text(encoding="utf-8"))
+    assert d["source_catalog"] == "ffs_offering_catalog.yml"
+    ffs_engine_keys = set(catalog["engines"])
+    for key, eng in d["engines"].items():
+        assert key not in ffs_engine_keys, f"{key}: engine listed in both catalogs"
+        assert eng["status"] in STATUSES, key
+        if eng["status"] in ENGINE_STATUSES_NEEDING_MODULE:
+            importlib.import_module(f"digitalmodel.{eng['module']}")
+        if eng["status"] in {"live", "routed"}:
+            assert eng.get("workflow") in registry_ids and eng.get("route") is True, key
+    for screen in d["screens"]:
+        for r in screen["rows"]:
+            assert r["status"] in STATUSES and set(r["tiers"]) <= TIERS, r["mechanism"]
+            for c in r["codes"]:
+                assert c in catalog["codes"], f"{r['mechanism']}: unknown code {c}"
+            for e in r["engines"]:
+                assert e in d["engines"], f"{r['mechanism']}: unknown engine {e}"
+            if r["status"] == "none":
+                assert r["engines"] == [], r["mechanism"]
+            else:
+                assert r["engines"] and ORDER[r["status"]] <= max(ORDER[d["engines"][e]["status"]] for e in r["engines"]), r["mechanism"]
+    # the FFS catalog must not still carry the design screens as FFS rows
+    ffs_text = CATALOG.read_text(encoding="utf-8")
+    for token in ("free-span", "on-bottom-stability"):
+        assert token not in ffs_text, f"{token} still in the FFS catalog"
 
 
 def test_page_summary_matches_catalog(rows):
