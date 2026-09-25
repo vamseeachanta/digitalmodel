@@ -30,7 +30,7 @@ from pydantic import BaseModel, Field
 
 from .sn_library import (
     SNCurveRecord,
-    get_catalog,
+    _bilinear_cycles,
     get_library_curve,
     search_curves as _search_curves,
 )
@@ -88,10 +88,12 @@ class SNCurve(BaseModel):
         Slope of second segment (beyond knee). None for single-slope.
     log_a2 : float | None
         Intercept of second segment.
-    knee_point : float
-        Cycle count at slope change (N_D).
+    knee_point : float | None
+        Cycle count at slope change (N_D); ``None`` for a single-slope
+        curve with no knee.
     endurance_limit : float | None
-        CAFL in MPa at the knee.
+        CAFL in MPa as the standard states it (DNV-RP-C203: the fatigue
+        limit at 1e7 cycles). Not the slope-change stress.
     thickness_ref : float
         Reference thickness for correction (mm).
     thickness_exponent : float
@@ -108,7 +110,7 @@ class SNCurve(BaseModel):
     log_a1: float
     m2: Optional[float] = None
     log_a2: Optional[float] = None
-    knee_point: float = 1e7
+    knee_point: Optional[float] = 1e7
     endurance_limit: Optional[float] = None
     thickness_ref: float = 25.0
     thickness_exponent: float = 0.25
@@ -238,10 +240,11 @@ def calculate_endurance(
 ) -> Union[float, np.ndarray]:
     """Calculate allowable cycles N for a given stress range.
 
-    Uses bi-linear log-log model::
+    Uses bi-linear log-log model with the slope change at the knee stress
+    ``S_k = 10^((log_a1 - log10(knee_point)) / m1)``::
 
-        if S > S_D:  N = 10^(log_a1) · S^(-m1)
-        else:        N = 10^(log_a2) · S^(-m2)   (if m2 defined)
+        if S >= S_k:  N = 10^(log_a1) · S^(-m1)
+        else:         N = 10^(log_a2) · S^(-m2)   (if m2 defined)
 
     For single-slope curves, one slope is used throughout.
 
@@ -262,22 +265,9 @@ def calculate_endurance(
     >>> c = get_curve("DNV-RP-C203:D:air")
     >>> calculate_endurance(c, 100.0)  # ≈ 1.46e6
     """
-    S = np.asarray(stress_range, dtype=float)
-    scalar = S.ndim == 0
-    S = np.atleast_1d(S)
-
-    N = np.full_like(S, np.inf, dtype=float)
-    mask_pos = S > 0
-
-    if curve.endurance_limit is not None and curve.m2 is not None and curve.log_a2 is not None:
-        high = mask_pos & (S >= curve.endurance_limit)
-        low = mask_pos & (S < curve.endurance_limit)
-        N[high] = 10 ** curve.log_a1 * S[high] ** (-curve.m1)
-        N[low] = 10 ** curve.log_a2 * S[low] ** (-curve.m2)
-    else:
-        N[mask_pos] = 10 ** curve.log_a1 * S[mask_pos] ** (-curve.m1)
-
-    return float(N[0]) if scalar else N
+    return _bilinear_cycles(
+        stress_range, curve.log_a1, curve.m1, curve.m2, curve.log_a2, curve.knee_point
+    )
 
 
 def compare_curves(
