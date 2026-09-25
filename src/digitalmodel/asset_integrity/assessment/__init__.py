@@ -19,6 +19,20 @@ from .crack_fad import (
     newman_raju_k,
     reference_stress_surface_flaw,
 )
+from .crack_checks import (
+    growth_validity,
+    keq_energy,
+    shakedown_check,
+    sigma_ref_consistency,
+    ssy_check,
+)
+from .fad_curves import (
+    LrMax,
+    api579_2016_level2,
+    bs7910_2013_option1,
+    envelope_margin,
+    lr_max,
+)
 from .ffs_decision import FFSDecision
 from .ffs_report import FFSReport
 from .ffs_router import FFSRouter
@@ -61,4 +75,14 @@ __all__ = [
     "assess_pitting_level2_equivalent_lta",
     "characterize_pit_field",
     "screen_pitting_level1",
+    "LrMax",
+    "api579_2016_level2",
+    "bs7910_2013_option1",
+    "envelope_margin",
+    "lr_max",
+    "growth_validity",
+    "keq_energy",
+    "shakedown_check",
+    "sigma_ref_consistency",
+    "ssy_check",
 ]

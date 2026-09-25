@@ -1,12 +1,19 @@
-# ABOUTME: Level-2 FAD assessment of crack-like flaws — BS 7910 Option 1 /
-# ABOUTME: API 579-1 Part 9 Level 2: Kr-Lr point vs the failure envelope.
+# ABOUTME: Level-2 FAD assessment of crack-like flaws on the BS 7910:2013 Option 1
+# ABOUTME: curve: Kr-Lr point vs the failure envelope (not the API 579 L2 curve).
 """Crack-like flaw assessment on the Failure Assessment Diagram (#1270).
 
 Activates the fracture tier behind :mod:`level3_escalation`: a surface
 (semi-elliptical) flaw in a plate-like section is assessed as a single point
-``(Lr, Kr)`` against the BS 7910:2013 **Option 1** failure-assessment curve
-(equivalent to the API 579-1 Part 9 Level 2 FAD; the Level 2A ≡ Level 2
-equivalence is the published cross-standard result).
+``(Lr, Kr)`` against the BS 7910:2013 **Option 1** failure-assessment curve.
+
+Correction (#2157): an earlier version of this docstring called the curve below
+equivalent to the API 579-1 Part 9 Level 2 FAD. That is wrong for the 2013 form
+implemented here. API 579-1:2016 Level 2 uses ``(1 - 0.14 Lr^2)(0.3 + 0.7
+exp(-0.65 Lr^6))``, the older BS 7910 Level 2A / R6 Option 1 curve. The
+"Level 2A == Level 2" equivalence refers to that older curve. The two forms differ
+numerically (for example 0.1756 against 0.1684 at Lr = 1.72). Use
+:func:`digitalmodel.asset_integrity.assessment.fad_curves.api579_2016_level2` for the
+API curve.
 
 Pieces, each anchored to its published source:
 
@@ -40,7 +47,7 @@ from typing import Optional
 
 
 # ---------------------------------------------------------------------------
-# FAD curve — BS 7910:2013 Option 1 (== API 579-1 Part 9 Level 2)
+# FAD curve — BS 7910:2013 Option 1 (not the API 579-1:2016 Level 2 curve)
 # ---------------------------------------------------------------------------
 def lr_max(sigma_y_mpa: float, sigma_u_mpa: float) -> float:
     """Plastic-collapse cutoff Lr_max = flow/yield (BS 7910 Cl. 7.3.2)."""
