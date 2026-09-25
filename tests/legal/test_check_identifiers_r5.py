@@ -65,20 +65,18 @@ def _visible(out: str) -> bool:
 
 class TestPhraseMatching:
     def test_dotted_capital_i_before_the_phrase_does_not_shift_it(self, mod):
-        text = "İ" * 50 + " " + PHRASE + " tail"
+        text = "\u0130" * 50 + " " + PHRASE + " tail"
         out = _redactor(mod).redact(text)
         assert not _visible(out), out
-        assert out.startswith("İ" * 50), out
+        assert out.startswith("\u0130" * 50), out
         assert out.endswith(" tail"), out
 
     def test_mixed_case_after_expanding_characters(self, mod):
-        text = "İxİ " + PHRASE.upper() + " and " + PHRASE.lower()
+        text = "\u0130x\u0130 " + PHRASE.upper() + " and " + PHRASE.lower()
         out = _redactor(mod).redact(text)
         assert not _visible(out), out
 
-    @pytest.mark.parametrize(
-        "sep", ["\n", " ", "  ", "\t", " \r\n "], ids=repr
-    )
+    @pytest.mark.parametrize("sep", ["\n", "\u00a0", "  ", "\t", " \r\n "], ids=repr)
     def test_the_phrase_split_by_other_whitespace(self, mod, sep):
         text = "before " + sep.join(PHRASE_WORDS) + " after"
         out = _redactor(mod).redact(text)
@@ -86,7 +84,7 @@ class TestPhraseMatching:
         assert out.startswith("before ") and out.endswith(" after"), repr(out)
 
     def test_a_phrase_with_irregular_whitespace_in_the_list(self, mod):
-        red = mod.Redactor({}, names=["  " + " \n".join(PHRASE_WORDS) + " "])
+        red = mod.Redactor({}, names=["  " + "\u00a0\n".join(PHRASE_WORDS) + " "])
         out = red.redact("x " + PHRASE + " y")
         assert not _visible(out), out
 

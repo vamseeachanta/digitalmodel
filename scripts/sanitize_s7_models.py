@@ -39,6 +39,32 @@ source path, which is the name map again. It is written to private storage:
 A location inside this repository or inside the output tree is refused before
 any model is read. Public output carries counts only.
 
+The console is public output
+----------------------------
+The redacting log filter is installed before the arguments are parsed.
+argparse's usage and error text is written through the same redactor, with
+every argument the caller typed redacted as a phrase, so an unknown option or
+a stray path is never echoed. Any exception is reported by its type and the
+stage the run was at, with exit status 4 and no traceback; ``--debug-traceback``
+adds the traceback on a local run and is refused in CI.
+
+Known limits
+------------
+This is a local-only tool, and its redaction is a heuristic.
+
+* Log filtering depends on the logger and handler topology. The filter sits
+  on this module's ``sanitize_s7`` logger and on the root handlers present
+  when the CLI starts. A library logger with its own handler, a handler added
+  later, a logger that does not propagate, or a child logger (a parent's
+  filter does not run for a child's records) can emit a record the filter
+  never sees.
+* The identifier gate's redactor widens a public pattern match to the
+  whitespace-delimited token around it, so a path containing a space keeps
+  the part after the space visible unless the private map names it.
+
+Public CI does not run this script and has no private map; the identifier
+gate, which fails closed on any finding, is the control for committed output.
+
 Usage:
     uv run python scripts/sanitize_s7_models.py
     uv run python scripts/sanitize_s7_models.py --dry-run
@@ -668,12 +694,23 @@ def resolve_audit_path(
 # Main orchestration
 # ---------------------------------------------------------------------------
 
+#: Exit status for an exception the run did not anticipate.
+EXIT_INTERNAL = 4
+#: The stage the run is at, named in the report of an unexpected exception.
+_STAGE = ["starting"]
+
+
+def _at(stage: str) -> None:
+    _STAGE[0] = stage
+
+
 def run(args: argparse.Namespace) -> int:
     """Main entry point.  Returns exit code (0 = success).
 
     Stops with exit code 2, before reading or writing any model, when the
     private name map cannot be loaded.
     """
+    _at("loading the name map")
     try:
         config = load_sanitize_config(getattr(args, "map", None))
     except SanitizeMapError as exc:
@@ -691,6 +728,7 @@ def run(args: argparse.Namespace) -> int:
         return 2
     s7_root = Path(s7_arg).resolve()
     install_log_redaction(config, extra=[s7_arg, str(s7_root)])
+    _at("resolving the output and audit locations")
     output_root = Path(args.output_root).resolve()
     dry_run: bool = args.dry_run
     skip_dat: bool = args.skip_dat
@@ -715,6 +753,7 @@ def run(args: argparse.Namespace) -> int:
         diagnostics.append({"kind": kind, "id": ident, "path": str(path)})
         return ident
 
+    _at("discovering model files")
     logger.info("Discovering model files (source root in the private audit) ...")
     yml_files, dat_files, excluded_count = discover_model_files(s7_root, config)
     stats.excluded_skipped = excluded_count
@@ -730,6 +769,7 @@ def run(args: argparse.Namespace) -> int:
     # --- Phase 1: .yml files (text-based sanitization) ---
     logger.info("--- Phase 1: Sanitizing .yml files ---")
     for source in yml_files:
+        _at("hashing a source")
         file_hash = sha256_of_file(source)
         if file_hash in seen_hashes:
             stats.dupes_skipped += 1
@@ -746,6 +786,7 @@ def run(args: argparse.Namespace) -> int:
             )
 
         stats.categories_used.add(category)
+        _at("processing a source")
         entry = process_yml_file(source, output_root, category, dry_run, config)
         audit_log.append(entry)
 
@@ -764,6 +805,7 @@ def run(args: argparse.Namespace) -> int:
     else:
         logger.info("--- Phase 2: Converting .dat files via OrcFxAPI ---")
         for source in dat_files:
+            _at("hashing a source")
             file_hash = sha256_of_file(source)
             if file_hash in seen_hashes:
                 stats.dupes_skipped += 1
@@ -781,6 +823,7 @@ def run(args: argparse.Namespace) -> int:
                 )
 
             stats.categories_used.add(category)
+            _at("processing a source")
             entry = process_dat_file(source, output_root, category, dry_run, config)
             audit_log.append(entry)
 
@@ -812,6 +855,7 @@ def run(args: argparse.Namespace) -> int:
         "diagnostics": diagnostics,
     }
 
+    _at("writing the private audit")
     if not dry_run:
         audit_path.parent.mkdir(parents=True, exist_ok=True)
         with open(audit_path, "w", encoding="utf-8") as f:
@@ -821,6 +865,7 @@ def run(args: argparse.Namespace) -> int:
         logger.info("DRY RUN: private audit log not written")
 
     # --- Print summary ---
+    _at("printing the summary")
     _print_summary(stats, dry_run)
 
     return 0 if stats.errors == 0 else 1
@@ -849,8 +894,52 @@ def _print_summary(stats: RunStats, dry_run: bool) -> None:
 # CLI
 # ---------------------------------------------------------------------------
 
+def _in_ci() -> bool:
+    return bool(os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS"))
+
+
+def _cli_write(message: str, *, err: bool = True, redact=None) -> None:
+    """Write one console message through the redactor (the log filter's
+    unless *redact* is given): the console is public output."""
+    text = (redact or _FILTER.redact)(str(message))
+    stream = sys.stderr if err else sys.stdout
+    stream.write(text + "\n")
+    stream.flush()
+
+
+class _Parser(argparse.ArgumentParser):
+    """argparse echoes an unknown option or a stray argument in its error;
+    every message it writes goes through the redactor instead, with each
+    argument the caller typed (other than a known option name) redacted."""
+
+    redact = None
+
+    def _print_message(self, message, file=None):
+        if message:
+            _cli_write(
+                message.rstrip("\n"), err=file is not sys.stdout, redact=self.redact
+            )
+
+
+def _typed_arguments(parser: argparse.ArgumentParser, argv: list[str]) -> list[str]:
+    """Every argument in *argv* that is not a known option name, and the value
+    of a known ``--option=value``: the text argparse may echo."""
+    known = set(parser._option_string_actions)
+    typed: list[str] = []
+    for token in argv:
+        if token in known:
+            continue
+        head, eq, value = token.partition("=")
+        if eq and head in known:
+            typed.append(value)
+        else:
+            typed.append(token)
+    return [t for t in typed if t.strip()]
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
+    argv = sys.argv[1:] if argv is None else list(argv)
+    parser = _Parser(
         description="Sanitize and organize OrcaFlex models from s7/ into "
         "the digitalmodel library.",
     )
@@ -899,19 +988,61 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Enable debug logging",
     )
+    parser.add_argument(
+        "--debug-traceback",
+        action="store_true",
+        help="On an unexpected error, print the full traceback (local runs "
+        "only: it can quote names and paths; refused in CI)",
+    )
+    parser.redact = build_redactor(None, extra=_typed_arguments(parser, argv))
     return parser.parse_args(argv)
 
 
-if __name__ == "__main__":
-    args = parse_args()
-
+def main(argv: list[str] | None = None) -> int:
+    """The CLI. Every exception is reported by its type and the stage the run
+    was at, with exit status 4: an exception message or a traceback can quote
+    a source path or a name. ``--debug-traceback`` adds the traceback on a
+    local run and is refused in CI."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
     logging.basicConfig(
-        level=logging.DEBUG if args.verbose else logging.INFO,
+        level=logging.INFO,
         format="%(asctime)s %(levelname)-8s %(message)s",
         datefmt="%H:%M:%S",
     )
-    # The root handler redacts too: a record from any other logger (OrcFxAPI,
-    # a library) reaches the console only through it.
+    # Before the arguments are parsed: the root handler redacts too, since a
+    # record from any other logger (OrcFxAPI, a library) reaches the console
+    # only through it.
     install_log_redaction(None, handlers=logging.getLogger().handlers)
+    _at("parsing arguments")
+    args = parse_args(argv)
+    debug = bool(args.debug_traceback)
+    if debug and _in_ci():
+        _cli_write(
+            "sanitize_s7_models: --debug-traceback is refused in CI (CI or "
+            "GITHUB_ACTIONS is set): a traceback can quote names and paths"
+        )
+        return 2
+    if args.verbose:
+        logging.getLogger().setLevel(logging.DEBUG)
+    _at("starting")
+    try:
+        return run(args)
+    except Exception as exc:  # noqa: BLE001 -- the boundary of the CLI
+        _cli_write(
+            f"sanitize_s7_models: failed while {_STAGE[0]} "
+            f"({type(exc).__name__}); the detail is not printed because it can "
+            "quote a source path or a name (--debug-traceback shows it locally)"
+        )
+        if debug:
+            import traceback
 
-    sys.exit(run(args))
+            sys.stderr.write("".join(traceback.format_exception(exc)))
+        return EXIT_INTERNAL
+
+
+if __name__ == "__main__":
+    sys.exit(main())

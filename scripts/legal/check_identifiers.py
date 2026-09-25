@@ -35,6 +35,17 @@ manifest ``.legal-uninspectable-baseline.txt`` lists their path with the same
 sha256. After reviewing new or changed content, accept it with::
 
     python scripts/legal/check_identifiers.py --all --update-baseline
+
+Known limits
+------------
+The output redactor is a heuristic; the gate's findings fail closed whatever
+it misses. A public pattern match is widened to the whitespace-delimited token
+around it, so a path containing a space (``/home/First Last/...``) keeps the
+part after the space visible unless another rule catches it, and the widening
+can also swallow adjacent diagnostic text such as ``source=``. It is not a
+complete path redactor. Public CI runs without the private list, so its log
+can show only what the committed hashed names and public classes miss, and
+the gate fails on any finding regardless.
 """
 
 from __future__ import annotations
@@ -133,12 +144,20 @@ _RUN_END = frozenset(" \t\r\n'\"<>()[]{},;|`")
 
 
 class Redactor:
-    """Replaces every identifier the gate knows with ``<redacted:digest12>``.
+    """Replaces every identifier the gate knows with ``[redacted]``.
 
     Matched: a deny-listed name, tokenised and hashed exactly as the gate
     does (hashed, legacy-hashed, private plain names); a private pattern; a
-    private or extra name as a literal phrase, case-insensitively; and the
-    public pattern classes -- built in, plus the rules' structural patterns.
+    private or extra name as a phrase -- case-insensitively, with any run of
+    whitespace (space, tab, newline, no-break space) between its words; and
+    the public pattern classes -- built in, plus the rules' structural
+    patterns.
+
+    The marker is a constant. A digest of the matched text, even salted,
+    lets anyone holding the public salt test candidate names offline against
+    a published log. Phrases are matched on the original text with
+    ``re.IGNORECASE``: offsets found in ``text.lower()`` drift when lowering
+    changes a character's length (U+0130), which left a phrase visible.
     """
 
     def __init__(self, rules: dict | None = None, names=()) -> None:
@@ -150,8 +169,14 @@ class Redactor:
         self.legacy_salt = str(legacy.get("salt", ""))
         self.legacy = {str(h).lower() for h in legacy.get("hashes") or []}
         self.private = {str(n).lower() for n in rules.get("_private_names") or []}
-        phrases = self.private | {str(n).strip().lower() for n in names}
-        self.phrases = sorted((p for p in phrases if len(p) >= 4), key=len)[::-1]
+        phrases = self.private | {str(n).lower() for n in names}
+        # Whitespace inside a phrase matches any whitespace run: a name split
+        # by a newline or a no-break space is still the name.
+        words = {tuple(p.split()) for p in phrases if len(" ".join(p.split())) >= 4}
+        self.phrases = [
+            re.compile(r"\s+".join(re.escape(w) for w in ws), re.IGNORECASE)
+            for ws in sorted(words, key=lambda ws: len(" ".join(ws)), reverse=True)
+        ]
         self.patterns = list(REDACT_PUBLIC)
         for rule in rules.get("structural") or []:
             try:
@@ -168,9 +193,9 @@ class Redactor:
             for c in _candidates(word)
         )
 
-    def _tag(self, text: str) -> str:
-        digest = hashlib.sha256(f"{self.salt}:redact:{text}".encode("utf-8"))
-        return "<redacted:" + digest.hexdigest()[:12] + ">"
+    #: The replacement for every redacted run. Constant, so a published log
+    #: cannot be tested against candidate names.
+    MARKER = "[redacted]"
 
     def redact(self, text: str) -> str:
         spans: list[tuple[int, int]] = []
@@ -187,12 +212,8 @@ class Redactor:
         for m in WORD.finditer(text):
             if self._denied(m.group(0)):
                 spans.append(m.span())
-        low = text.lower()
         for phrase in self.phrases:
-            start = low.find(phrase)
-            while start >= 0:
-                spans.append((start, start + len(phrase)))
-                start = low.find(phrase, start + 1)
+            spans.extend(m.span() for m in phrase.finditer(text))
         if not spans:
             return text
         spans.sort()
@@ -205,7 +226,7 @@ class Redactor:
         out, pos = [], 0
         for s, e in merged:
             out.append(text[pos:s])
-            out.append(self._tag(text[s:e]))
+            out.append(self.MARKER)
             pos = e
         out.append(text[pos:])
         return "".join(out)

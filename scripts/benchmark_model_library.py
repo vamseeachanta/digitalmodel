@@ -479,28 +479,37 @@ def compute_convergence(levels: dict[str, MeshLevel]) -> list[MeshConvergence]:
 #: A text model saved by OrcaFlex carries this header near the start of its
 #: content; a batch config or a preserved record of a lost .sim file does not,
 #: and is not a model.
-_MODEL_HEADER = re.compile(r"^(?:#\s*Type:\s*Model\b|General\s*:)", re.MULTILINE)
+_MODEL_HEADER = re.compile(r"""^(?:General|"General"|'General')\s*:""", re.MULTILINE)
 _MODEL_TYPE_COMMENT = re.compile(r"#\s*Type:\s*Model\b")
+#: A YAML document marker, bare or followed by a comment (``--- # doc``).
+_DOC_MARKER = re.compile(r"(?:---|\.\.\.)(?:\s+#.*)?")
 #: Characters of content, from its first line, searched for the header.
 _CONTENT_WINDOW = 4096
 
 
 def _is_model_yml(path: Path) -> bool:
     """Stream past the preamble -- comments, blank lines, YAML directives and
-    document markers, of any length -- then search the header in the content
-    that follows. ``utf-8-sig`` drops a byte-order mark, which otherwise sits
-    before an initial ``General:`` and defeats the anchored match; a fixed
-    window from the start of the file let a long preamble hide the header."""
+    document markers (``---`` or ``...``, optionally followed by a comment),
+    of any length -- then decide on the content that follows.
+
+    A ``# Type: Model`` comment in that leading block marks a model, but only
+    when a content line follows it: a comment-only file is not a model, and
+    as a ``.yml`` it would displace a valid same-stem ``.dat``. Otherwise the
+    ``General:`` key, bare or quoted, is searched in the content.
+    ``utf-8-sig`` drops a byte-order mark, which otherwise sits before an
+    initial ``General:`` and defeats the anchored match."""
+    typed = False
     try:
         with open(path, encoding="utf-8-sig", errors="replace") as fh:
             for raw in fh:
                 line = raw.strip()
-                if not line or line.startswith("%") or line in ("---", "..."):
+                if not line or line.startswith("%") or _DOC_MARKER.fullmatch(line):
                     continue
                 if line.startswith("#"):
-                    if _MODEL_TYPE_COMMENT.match(line):
-                        return True
+                    typed = typed or bool(_MODEL_TYPE_COMMENT.match(line))
                     continue
+                if typed:
+                    return True
                 return bool(_MODEL_HEADER.search(raw + fh.read(_CONTENT_WINDOW)))
     except OSError:
         return False
