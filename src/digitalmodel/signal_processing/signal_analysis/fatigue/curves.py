@@ -40,6 +40,7 @@ class SNCurve:
             "fatigue_limit": p.fatigue_limit_mpa,
             "N_transition": _c203.N_KNEE_AIR,
             "cutoff": False,
+            "a2_mode": "tabulated",
         }
         for name, p in _c203.BILINEAR.items()
     }
@@ -66,13 +67,31 @@ class SNCurve:
     def __init__(self, curve_type: str = 'power_law', **params):
         """
         Initialize S-N curve
-        
+
         Parameters
         ----------
         curve_type : str
             Type of curve: 'power_law', 'bilinear', 'basquin', 'standard'
         **params
             Curve parameters or standard curve name
+
+        Notes
+        -----
+        Bilinear curves take ``A``, ``m``, ``m2``, ``N_transition`` and
+        optionally ``fatigue_limit``, ``cutoff`` and ``A2``. How the second
+        intercept is chosen is set by ``a2_mode``:
+
+        * ``"continuity"`` (default): the second intercept is derived so that
+          the two segments meet at ``N_transition``,
+          ``A2 = N_transition * S_transition**m2``; a supplied ``A2`` is
+          ignored. This is the behaviour of every user-built curve before
+          #2165.
+        * ``"tabulated"`` (opt-in): the supplied ``A2`` is used as given, so
+          the curve follows a published table; it need not be continuous at
+          the knee. ``A2`` is then required. The DNV-RP-C203 standard curves
+          set this mode.
+
+        The same rule applies to the inverse, :meth:`get_stress_range`.
         """
         self.curve_type = curve_type
         self.params = params
@@ -206,19 +225,36 @@ class SNCurve:
 
         # Medium stress regime (high cycle)
         medium_stress = (S <= S_transition) & (S > fatigue_limit)
-        if "A2" in self.params:
-            N[medium_stress] = self.params["A2"] * (S[medium_stress] ** (-m2))
-        elif m2 != m:
-            # Calculate A2 to ensure continuity
-            A2 = N_transition * (S_transition ** m2)
-            N[medium_stress] = A2 * (S[medium_stress] ** (-m2))
-        else:
-            N[medium_stress] = A * (S[medium_stress] ** (-m))
+        A2, m2 = self._second_segment(A, m, m2, N_transition, S_transition)
+        N[medium_stress] = A2 * (S[medium_stress] ** (-m2))
 
         # Below fatigue limit
         N[S <= fatigue_limit] = np.inf
 
         return N
+
+    def _second_segment(
+        self, A: float, m: float, m2: float, N_transition: float, S_transition: float
+    ) -> Tuple[float, float]:
+        """Intercept and slope of the bilinear second segment per ``a2_mode``.
+
+        ``"continuity"`` (default) derives the intercept for continuity at the
+        knee and ignores a supplied ``A2``; ``"tabulated"`` uses the supplied
+        ``A2`` (required).
+        """
+        mode = self.params.get("a2_mode", "continuity")
+        if mode == "tabulated":
+            if "A2" not in self.params:
+                raise ValueError("a2_mode='tabulated' needs A2")
+            return self.params["A2"], m2
+        if mode != "continuity":
+            raise ValueError(
+                f"Unknown a2_mode: {mode!r} (use 'continuity' or 'tabulated')"
+            )
+        if m2 != m:
+            # Calculate A2 to ensure continuity
+            return N_transition * (S_transition**m2), m2
+        return A, m
 
     def _basquin(self, S: np.ndarray) -> np.ndarray:
         """
@@ -278,13 +314,8 @@ class SNCurve:
 
             # High cycle regime
             high_cycle = n_cycles > N_transition
-            if "A2" in self.params:
-                S[high_cycle] = (self.params["A2"] / n_cycles[high_cycle]) ** (1 / m2)
-            elif m2 != m:
-                A2 = N_transition * (S_transition ** m2)
-                S[high_cycle] = (A2 / n_cycles[high_cycle]) ** (1 / m2)
-            else:
-                S[high_cycle] = (A / n_cycles[high_cycle]) ** (1 / m)
+            A2, m2 = self._second_segment(A, m, m2, N_transition, S_transition)
+            S[high_cycle] = (A2 / n_cycles[high_cycle]) ** (1 / m2)
 
         elif self.curve_type == 'basquin':
             sigma_f = self.params.get('sigma_f', 1000)

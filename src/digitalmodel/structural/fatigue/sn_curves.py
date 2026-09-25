@@ -406,15 +406,34 @@ class StandardSNCurves:
                      'cutoff_cycles': 1e8},
     }
 
-    # DNVGL-RP-C203 (latest) — T curve for tubular joints with SCF integration
-    # T_AIR:   log10(N) = 11.764 - 3.0 * log10(S)  [S in MPa]
-    # T_SW_CP: log10(N) = 11.68  - 3.0 * log10(S)  for N < 1e7 (seawater with CP)
+    # DNVGL-RP-C203 (latest) — T curve for tubular joints with SCF integration.
+    # The group keeps its "latest" label; the values are verified against the
+    # DNV-RP-C203 (2011) T rows (#2165). Whether the later edition tabulates
+    # the same values is not established here. Both segments, no cut-off
+    # (2011 section 2.4), fatigue limit at 1e7 cycles kept for reporting:
+    # T_AIR   (Table 2-1): log N = 12.164 - 3 log S above the 1e7 knee,
+    #                      log N = 15.606 - 5 log S below it  [S in MPa]
+    # T_SW_CP (Table 2-2): log N = 11.764 - 3 log S above the 1e6 knee,
+    #                      log N = 15.606 - 5 log S below it
+    # The thickness exponent (0.25, or 0.30 for SCF > 10.0) is not applied.
     # S_hot = SCF * S_nominal (apply at call site before passing to get_allowable_cycles)
     DNVGL_RP_C203_CURVES = {
-        'T_AIR': {'A': 10 ** 11.764, 'm': 3.0, 'fatigue_limit': 0.0,
-                  'cutoff_cycles': 1e7},
-        'T_SW_CP': {'A': 10 ** 11.68, 'm': 3.0, 'fatigue_limit': 0.0,
-                    'cutoff_cycles': 1e7},
+        "T_AIR": {
+            "A": 10**12.164,
+            "m": 3.0,
+            "A2": 10**15.606,
+            "m2": 5.0,
+            "knee_cycles": 1e7,
+            "fatigue_limit": 52.63,
+        },
+        "T_SW_CP": {
+            "A": 10**11.764,
+            "m": 3.0,
+            "A2": 10**15.606,
+            "m2": 5.0,
+            "knee_cycles": 1e6,
+            "fatigue_limit": 52.63,
+        },
     }
 
     _loaded_from_yaml: bool = False

@@ -1030,11 +1030,11 @@ class TestISO19902CurveParameters:
 # SCF: S_hot = SCF * S_nominal
 # ---------------------------------------------------------------------------
 
-DNVGL_T_AIR_A = 10 ** 12.164   # ~ 1.459e12
+DNVGL_T_AIR_A = 10**12.164  # ~ 1.459e12
 DNVGL_T_AIR_M = 3.0
-DNVGL_T_SW_CP_A = 10 ** 11.764  # ~ 5.808e11
+DNVGL_T_SW_CP_A = 10**11.764  # ~ 5.808e11
 DNVGL_T_SW_CP_M = 3.0
-DNVGL_T_A2 = 10 ** 15.606
+DNVGL_T_A2 = 10**15.606
 DNVGL_T_M2 = 5.0
 
 
