@@ -52,12 +52,18 @@ References
 
 import math
 from enum import Enum
-from typing import Dict, List, Optional, Sequence, Union
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 from pydantic import BaseModel, Field
 
-from .c203_editions import DNV_RP_C203_IMPLEMENTED_EDITION, c203_sn_table
+from . import c203_sn_tables as c203
+from .c203_editions import (
+    DNV_RP_C203_IMPLEMENTED_EDITION,
+    DNV_RP_C203_VERIFIED_EDITION,
+    c203_label,
+    c203_sn_table,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -96,15 +102,20 @@ class SNCurveRecord(BaseModel):
         the curve has a single slope (e.g. free-corrosion).
     log_a2 : float | None
         Intercept of the second segment.
-    n_transition : float
-        Cycle count at the slope change (knee point).
+    n_transition : float | None
+        Cycle count at the slope change (knee point). ``None`` for a
+        single-slope curve with no knee (DNV-RP-C203 free corrosion).
     endurance_limit : float | None
-        Constant amplitude fatigue limit (CAFL) in MPa at the knee.
-        ``None`` for single-slope curves with no endurance limit.
+        Constant amplitude fatigue limit (CAFL) in MPa, as the standard
+        states it. For DNV-RP-C203 this is the tabulated fatigue limit at
+        1e7 cycles, which for seawater with CP lies on the second segment,
+        below the 1e6-cycle knee. ``None`` for curves with no fatigue limit.
+        For DNV-RP-C203 the slope change in :meth:`cycles` is at
+        :attr:`knee_stress`, not here; other standards switch here (#2165).
     thickness_ref : float
         Reference thickness for thickness correction (mm).
     thickness_exponent : float
-        Thickness correction exponent *k*.
+        Thickness correction exponent *k* (per class for DNV-RP-C203).
     note : str
         Free-text note (e.g. "butt weld, ground flush").
     """
@@ -118,7 +129,7 @@ class SNCurveRecord(BaseModel):
     log_a1: float
     m2: Optional[float] = None
     log_a2: Optional[float] = None
-    n_transition: float = 1e7
+    n_transition: Optional[float] = 1e7
     endurance_limit: Optional[float] = None
     thickness_ref: float = 25.0
     thickness_exponent: float = 0.25
@@ -126,33 +137,117 @@ class SNCurveRecord(BaseModel):
 
     # Convenience helpers ------------------------------------------------
 
+    @property
+    def knee_stress(self) -> Optional[float]:
+        """Stress range (MPa) at the knee, from the first segment at
+        :attr:`n_transition`; ``None`` for a single-slope curve."""
+        return _knee_stress(
+            self.log_a1, self.m1, self.m2, self.log_a2, self.n_transition
+        )
+
+    @property
+    def switch_stress(self) -> Optional[float]:
+        """Stress range (MPa) at which :meth:`cycles` changes segment;
+        ``None`` for a single-slope curve. See :func:`_switch_stress`."""
+        return _switch_stress(
+            self.standard,
+            self.log_a1,
+            self.m1,
+            self.m2,
+            self.log_a2,
+            self.n_transition,
+            self.endurance_limit,
+        )
+
     def cycles(self, stress_range: Union[float, np.ndarray]) -> Union[float, np.ndarray]:
         """Return allowable cycles *N* for given *stress_range* (MPa).
 
-        Uses bi-linear log-log model::
+        Uses bi-linear log-log model with the slope change at
+        :attr:`switch_stress` ``S_s``::
 
-            if S >= S_D:  N = 10^(log_a1) · S^(-m1)
+            if S >= S_s:  N = 10^(log_a1) · S^(-m1)
             else:         N = 10^(log_a2) · S^(-m2)   (if m2 defined)
 
-        For single-slope curves, one slope is used throughout.
+        ``S_s`` is the knee stress for DNV-RP-C203 and the stated endurance
+        limit for every other standard (#2165). For single-slope curves, one
+        slope is used throughout.
         """
-        S = np.asarray(stress_range, dtype=float)
-        scalar = S.ndim == 0
-        S = np.atleast_1d(S)
+        return _bilinear_cycles(
+            stress_range, self.log_a1, self.m1, self.m2, self.log_a2, self.switch_stress
+        )
 
-        N = np.full_like(S, np.inf)
-        mask_pos = S > 0
 
-        if self.endurance_limit is not None and self.m2 is not None:
-            high = mask_pos & (S >= self.endurance_limit)
-            low = mask_pos & (S < self.endurance_limit)
-            N[high] = 10 ** self.log_a1 * S[high] ** (-self.m1)
-            if self.log_a2 is not None:
-                N[low] = 10 ** self.log_a2 * S[low] ** (-self.m2)
-        else:
-            N[mask_pos] = 10 ** self.log_a1 * S[mask_pos] ** (-self.m1)
+def _knee_stress(
+    log_a1: float,
+    m1: float,
+    m2: Optional[float],
+    log_a2: Optional[float],
+    n_knee: Optional[float],
+) -> Optional[float]:
+    """Knee stress of a bilinear curve, or ``None`` when it is single slope."""
+    if m2 is None or log_a2 is None or n_knee is None:
+        return None
+    return 10.0 ** ((log_a1 - math.log10(n_knee)) / m1)
 
-        return float(N[0]) if scalar else N
+
+#: Standards whose knee is defined in cycles, so the segment switch is at the
+#: knee stress from the first segment. DNV-RP-C203 needs this: in seawater
+#: with CP the knee is at 1e6 cycles while the tabulated fatigue limit is at
+#: 1e7 cycles on the second segment (#2165).
+_KNEE_SWITCH_STANDARDS = frozenset({"DNV-RP-C203"})
+
+
+def _switch_stress(
+    standard: str,
+    log_a1: float,
+    m1: float,
+    m2: Optional[float],
+    log_a2: Optional[float],
+    n_knee: Optional[float],
+    endurance_limit: Optional[float],
+) -> Optional[float]:
+    """Stress at which a bilinear curve changes segment, or ``None``.
+
+    DNV-RP-C203 switches at the knee stress from :attr:`n_transition`. Every
+    other standard keeps its pre-#2165 rule: switch at the stated endurance
+    limit, and use a single slope when none is stated. For those standards the
+    stored endurance limit is rounded and log a1 is rounded to 3 decimals, so
+    a knee-stress switch would move the switch point by up to 0.036 MPa
+    (Eurocode 3 Cat160: 117.890 to 117.854 MPa).
+    """
+    if m2 is None or log_a2 is None:
+        return None
+    if standard in _KNEE_SWITCH_STANDARDS:
+        return _knee_stress(log_a1, m1, m2, log_a2, n_knee)
+    return endurance_limit
+
+
+def _bilinear_cycles(
+    stress_range: Union[float, np.ndarray],
+    log_a1: float,
+    m1: float,
+    m2: Optional[float],
+    log_a2: Optional[float],
+    s_switch: Optional[float],
+) -> Union[float, np.ndarray]:
+    """Allowable cycles; m1 at and above ``s_switch``, m2 below it, and a
+    single slope when ``s_switch`` is ``None`` (see :func:`_switch_stress`)."""
+    S = np.asarray(stress_range, dtype=float)
+    scalar = S.ndim == 0
+    S = np.atleast_1d(S)
+
+    N = np.full_like(S, np.inf)
+    mask_pos = S > 0
+
+    if s_switch is not None and m2 is not None and log_a2 is not None:
+        high = mask_pos & (S >= s_switch)
+        low = mask_pos & (S < s_switch)
+        N[high] = 10**log_a1 * S[high] ** (-m1)
+        N[low] = 10**log_a2 * S[low] ** (-m2)
+    else:
+        N[mask_pos] = 10**log_a1 * S[mask_pos] ** (-m1)
+
+    return float(N[0]) if scalar else N
 
 
 class SNCatalog(BaseModel):
@@ -199,84 +294,90 @@ def _build_dnv_curves() -> List[SNCurveRecord]:
     """DNV-RP-C203 (2021) — 14 classes × 3 environments = 42 curves.
 
     Table 2-1 (in air), Table 2-2 (seawater with CP), Table 2-4 (free
-    corrosion); table IDs come from :mod:`.c203_editions`.
+    corrosion); table IDs come from :mod:`.c203_editions`. Values come from
+    :mod:`.c203_sn_tables`, verified against the 2011 edition (#2165):
+
+    * air: knee at 1e7 cycles;
+    * seawater with CP: knee at 1e6 cycles; the tabulated fatigue limit at
+      1e7 cycles lies on the m2 segment;
+    * free corrosion: m = 3.0 for every class, single slope, no knee and no
+      fatigue limit;
+    * thickness exponent k per class.
     """
     edition = DNV_RP_C203_IMPLEMENTED_EDITION
-    ND = 1e7
-    raw = {
-        "B1": {"m1": 4.0, "log_a1": 15.117, "m2": 5.0, "log_a2": 17.146},
-        "B2": {"m1": 4.0, "log_a1": 14.885, "m2": 5.0, "log_a2": 16.856},
-        "C":  {"m1": 3.0, "log_a1": 12.592, "m2": 5.0, "log_a2": 16.320},
-        "C1": {"m1": 3.0, "log_a1": 12.449, "m2": 5.0, "log_a2": 16.081},
-        "C2": {"m1": 3.0, "log_a1": 12.301, "m2": 5.0, "log_a2": 15.835},
-        "D":  {"m1": 3.0, "log_a1": 12.164, "m2": 5.0, "log_a2": 15.606},
-        "E":  {"m1": 3.0, "log_a1": 12.010, "m2": 5.0, "log_a2": 15.350},
-        "F":  {"m1": 3.0, "log_a1": 11.855, "m2": 5.0, "log_a2": 15.091},
-        "F1": {"m1": 3.0, "log_a1": 11.699, "m2": 5.0, "log_a2": 14.832},
-        "F3": {"m1": 3.0, "log_a1": 11.546, "m2": 5.0, "log_a2": 14.576},
-        "G":  {"m1": 3.0, "log_a1": 11.398, "m2": 5.0, "log_a2": 14.330},
-        "W1": {"m1": 3.0, "log_a1": 11.261, "m2": 5.0, "log_a2": 14.101},
-        "W2": {"m1": 3.0, "log_a1": 11.107, "m2": 5.0, "log_a2": 13.855},
-        "W3": {"m1": 3.0, "log_a1": 10.970, "m2": 5.0, "log_a2": 13.617},
-    }
-    cp = {
-        "B1": 14.917, "B2": 14.685, "C": 12.192, "C1": 12.049,
-        "C2": 11.901, "D": 11.764, "E": 11.610, "F": 11.455,
-        "F1": 11.299, "F3": 11.146, "G": 10.998, "W1": 10.861,
-        "W2": 10.707, "W3": 10.570,
-    }
-    fc = dict(cp)  # same intercepts but single-slope
+    verified = DNV_RP_C203_VERIFIED_EDITION
+
+    def _verified(environment: str) -> str:
+        return f"values verified against {c203_label(verified)} " + c203_sn_table(
+            environment, verified
+        )
 
     out: List[SNCurveRecord] = []
-    for cls, p in raw.items():
-        sd_air = _sd(p["log_a1"], p["m1"], ND)
-        # In-air (bilinear)
-        out.append(SNCurveRecord(
-            curve_id=f"DNV-RP-C203:{cls}:air",
+    for cls, p in c203.BILINEAR.items():
+        common = dict(
             standard="DNV-RP-C203",
             standard_edition=edition,
             curve_class=cls,
-            environment="air",
-            m1=p["m1"], log_a1=p["log_a1"],
-            m2=p["m2"], log_a2=p["log_a2"],
-            n_transition=ND,
-            endurance_limit=round(sd_air, 2),
-            note=f"DNV-RP-C203 {c203_sn_table('air', edition)}, detail category {cls}, in air",
-        ))
-        # Seawater with CP (bilinear, reduced intercepts)
-        sd_cp = _sd(cp[cls], p["m1"], ND)
-        out.append(SNCurveRecord(
-            curve_id=f"DNV-RP-C203:{cls}:seawater_cp",
-            standard="DNV-RP-C203",
-            standard_edition=edition,
-            curve_class=cls,
-            environment="seawater_cp",
-            m1=p["m1"], log_a1=cp[cls],
-            m2=p["m2"], log_a2=p["log_a2"],
-            n_transition=ND,
-            endurance_limit=round(sd_cp, 2),
-            note=(
-                f"DNV-RP-C203 {c203_sn_table('seawater_cp', edition)}, {cls}, "
-                "seawater with cathodic protection"
-            ),
-        ))
-        # Free corrosion (single slope, no endurance limit)
-        out.append(SNCurveRecord(
-            curve_id=f"DNV-RP-C203:{cls}:free_corrosion",
-            standard="DNV-RP-C203",
-            standard_edition=edition,
-            curve_class=cls,
-            environment="free_corrosion",
-            m1=p["m1"], log_a1=fc[cls],
-            m2=None, log_a2=None,
-            n_transition=ND,
-            endurance_limit=None,
-            note=(
-                f"DNV-RP-C203 {c203_sn_table('free_corrosion', edition)}, {cls}, "
-                "seawater free corrosion (single slope); "
-                "values not verified against the table (#2165)"
-            ),
-        ))
+            thickness_ref=c203.T_REF_WELDED_MM,
+        )
+        # In air (bilinear, knee at 1e7)
+        out.append(
+            SNCurveRecord(
+                curve_id=f"DNV-RP-C203:{cls}:air",
+                environment="air",
+                m1=p.m1,
+                log_a1=p.log_a1_air,
+                m2=p.m2,
+                log_a2=p.log_a2,
+                n_transition=c203.N_KNEE_AIR,
+                endurance_limit=p.fatigue_limit_mpa,
+                thickness_exponent=p.k,
+                note=(
+                    f"DNV-RP-C203 {c203_sn_table('air', edition)}, detail category {cls}, "
+                    f"in air; {_verified('air')}"
+                ),
+                **common,
+            )
+        )
+        # Seawater with CP (bilinear, knee at 1e6, same m2 segment as air)
+        out.append(
+            SNCurveRecord(
+                curve_id=f"DNV-RP-C203:{cls}:seawater_cp",
+                environment="seawater_cp",
+                m1=p.m1,
+                log_a1=p.log_a1_cp,
+                m2=p.m2,
+                log_a2=p.log_a2,
+                n_transition=c203.N_KNEE_SEAWATER_CP,
+                endurance_limit=p.fatigue_limit_mpa,
+                thickness_exponent=p.k,
+                note=(
+                    f"DNV-RP-C203 {c203_sn_table('seawater_cp', edition)}, {cls}, "
+                    f"seawater with cathodic protection; {_verified('seawater_cp')}"
+                ),
+                **common,
+            )
+        )
+        # Free corrosion (single slope m = 3, no knee, no fatigue limit)
+        fc = c203.FREE_CORROSION[cls]
+        out.append(
+            SNCurveRecord(
+                curve_id=f"DNV-RP-C203:{cls}:free_corrosion",
+                environment="free_corrosion",
+                m1=c203.M_FREE_CORROSION,
+                log_a1=fc.log_a,
+                m2=None,
+                log_a2=None,
+                n_transition=None,
+                endurance_limit=None,
+                thickness_exponent=fc.k,
+                note=(
+                    f"DNV-RP-C203 {c203_sn_table('free_corrosion', edition)}, {cls}, "
+                    f"seawater free corrosion (single slope); {_verified('free_corrosion')}"
+                ),
+                **common,
+            )
+        )
     return out
 
 

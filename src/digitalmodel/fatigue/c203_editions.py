@@ -18,9 +18,12 @@ layouts.
 
 :data:`DNV_RP_C203_IMPLEMENTED_EDITION` is the edition whose tables the
 S-N library in :mod:`digitalmodel.fatigue.sn_library` and
-:mod:`digitalmodel.fatigue.sn_curves` follows for table numbering. The
-numeric correspondence of the stored values to that edition is not
-verified here; the free-corrosion values are known to differ (#2165).
+:mod:`digitalmodel.fatigue.sn_curves` follows for table numbering.
+
+:data:`DNV_RP_C203_VERIFIED_EDITION` is the edition the stored values in
+:mod:`digitalmodel.fatigue.c203_sn_tables` are verified against (Tables 2-1
+to 2-3, #2165). Whether the implemented edition tabulates the same values is
+not established here.
 """
 
 from __future__ import annotations
@@ -29,6 +32,9 @@ from typing import Final, Mapping
 
 #: Edition whose S-N tables the fatigue package implements.
 DNV_RP_C203_IMPLEMENTED_EDITION: Final[str] = "2021"
+
+#: Edition the stored S-N values are verified against (#2165).
+DNV_RP_C203_VERIFIED_EDITION: Final[str] = "2011"
 
 _LAYOUT_2019: Final[Mapping[str, str]] = {
     "air": "Table 2-1",

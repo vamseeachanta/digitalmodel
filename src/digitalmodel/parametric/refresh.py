@@ -58,6 +58,7 @@ STANDARDS: dict[str, list[dict[str, str]]] = {
 SOURCE_FILES: dict[str, list[str]] = {
     "mooring_fatigue": [
         "src/digitalmodel/fatigue/sn_curves.py",
+        "src/digitalmodel/fatigue/c203_sn_tables.py",
         "src/digitalmodel/fatigue/damage.py",
     ],
     # response is a replicated T-N formula; track the workflow so divergence
@@ -108,8 +109,14 @@ SOURCE_FILES: dict[str, list[str]] = {
     "inspection_planning": [
         "src/digitalmodel/asset_integrity/inspection_planning.py",
     ],
+    # the response runs get_sn_curve, so the S-N source and its values count;
+    # the wave damage runs through touchdown.assess_touchdown_fatigue (#2165)
     "riser_fatigue": [
         "src/digitalmodel/riser_fatigue/workflow.py",
+        "src/digitalmodel/riser_fatigue/touchdown.py",
+        "src/digitalmodel/fatigue/sn_curves.py",
+        "src/digitalmodel/fatigue/c203_sn_tables.py",
+        "src/digitalmodel/fatigue/damage.py",
     ],
     "pile_capacity": ["src/digitalmodel/geotechnical/pile_capacity.py"],
     "anchor_capacity": ["src/digitalmodel/geotechnical/anchors.py"],
