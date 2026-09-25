@@ -85,8 +85,10 @@ structural:
     # ("results\\plots\\"), a registry key or LaTeX (\\log, \\Delta\\sigma),
     # and the old rule '\\\\[A-Za-z0-9._-]+\\+' flagged all three. The share
     # must not follow a word character, a backslash, a colon or a dot, which
-    # also rules out the inside of C:\\Users\\... and ..\\..\\ (C11).
-    pattern: '(?<![\w\\:.])(?:\\\\[A-Za-z0-9][A-Za-z0-9._-]+\\(?=[\w$.-])|\\\\\\\\[A-Za-z0-9][A-Za-z0-9._-]+\\\\(?=[\w$.-]))'
+    # also rules out the inside of C:\\Users\\... and ..\\..\\ (C11). A host may be
+    # one character (\\h\share); the separator rule, not the host length, is
+    # what keeps LaTeX out.
+    pattern: '(?<![\w\\:.])(?:\\\\[A-Za-z0-9][A-Za-z0-9._-]*\\(?=[\w$.-])|\\\\\\\\[A-Za-z0-9][A-Za-z0-9._-]*\\\\(?=[\w$.-]))'
     severity: block
     message: >-
       UNC share path. Names an internal server.
@@ -185,6 +187,10 @@ hashed_names:
   - 903e4d041949f0094e46fb0d338b433afb63e0a408eaf30e1c05e743de2e41ca
   - ab3f5d38f73e4cee65570b1ce0c6e238d2b873729e52bc43324eaf481348362b
   - 0d551627c099756a246279c42b8d46a4f6b027ac2d4da54eebd4b2d7e65114fd
+  - df4d95c5863d4213f4361298f540646e408dd46ea82c0773ce4e16ba34155ccc
+  - 47e52e3cd420c4044b0f9ad7a88c09e30dd802c8cbc06761162819f4287c2298
+  - 44bc392be1b12eabc77b67c881319d51ec0c97324b4c144617675e1fdff5af22
+  - 796fa11253880348388d5540d103ef3a7308809a468e4126a5051a82da108ceb
 
 # ---------------------------------------------------------------------------
 # Binary types that carry no inspectable text. Files of these types are
@@ -218,6 +224,12 @@ exclusions:
     reason: the checker's own tests and messages quote example shapes
   # --- Owner decision C11 (2026-09-24): reported, not edited. Each is listed in
   # the C11 PR as needing an owner decision (move private, delete or keep).
+  #
+  # PENDING OWNER DECISION C13. The whole-file exclusions below for confidential
+  # content -- the ANSYS Workbench project and its files, the de-identification
+  # script, and the other files reported but not edited -- stay as they are
+  # until card C13 decides their disposition. A whole-file exclusion skips
+  # every line of the file, so each one is temporary, not an accepted state.
   - path: 'data/vessels/COVERAGE.md'
     reason: >-
       C11 reported: public-source vessel register; vessel and owner names are the join key with the worldenergydata fleet. Owner decision pending.

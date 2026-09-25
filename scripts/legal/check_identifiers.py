@@ -29,6 +29,12 @@ Usage::
     python scripts/legal/check_identifiers.py [paths...]   # default: staged
     python scripts/legal/check_identifiers.py --all        # whole tracked tree
     python scripts/legal/check_identifiers.py --hash TOKEN # to extend the list
+
+Files the gate cannot read (a PDF, a solver binary) fail unless the committed
+manifest ``.legal-uninspectable-baseline.txt`` lists their path with the same
+sha256. After reviewing new or changed content, accept it with::
+
+    python scripts/legal/check_identifiers.py --all --update-baseline
 """
 
 from __future__ import annotations
@@ -49,10 +55,30 @@ except ImportError:  # pragma: no cover
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 RULES = os.path.join(ROOT, ".legal-deny-list.yaml")
+#: Uninspectable files accepted by path AND content digest. A count ceiling
+#: accepted a replaced binary, or one deleted and another added.
+DEFAULT_BASELINE = os.path.join(ROOT, ".legal-uninspectable-baseline.txt")
+BASELINE_HEADER = """\
+# Uninspectable files accepted by the identifier gate, by content digest.
+# Format: sha256, two spaces, repository-relative path (as sha256sum prints).
+#
+# scripts/legal/check_identifiers.py cannot read these files (binary content,
+# an office archive it cannot parse). A file passes only while its path is
+# listed here with the same digest: a new file, a changed one or an unlisted
+# one fails. Regenerate after reviewing the content, never to silence a failure:
+#
+#   python scripts/legal/check_identifiers.py --all --update-baseline
+#
+# Every line is content nobody has read; review the diff before committing it.
+"""
+_BASELINE_ROW = re.compile(r"([0-9a-f]{64})  (\S.*)")
 #: Text is read up to this size. Above it the file is uninspectable, which
 #: fails: GitHub refuses files over 100 MB, so this bounds nothing real.
 MAX_BYTES = 64 * 1024 * 1024
-WORD = re.compile(r"[A-Za-z][A-Za-z0-9-]{3,}")
+#: A candidate name: four or more letters, digits or hyphens holding at least
+#: one letter. It may start with a digit -- a numbered vessel or hull -- which
+#: a letter-first pattern tokenised without the digit, so it never matched.
+WORD = re.compile(r"(?=[0-9-]*[A-Za-z])[A-Za-z0-9][A-Za-z0-9-]{3,}")
 
 #: Read when present and DIGITALMODEL_DENY_LIST is unset. One entry per line:
 #: a name, or ``re:<pattern>`` for a pattern that must itself stay private.
@@ -118,6 +144,32 @@ def load_rules() -> dict:
     rules["_private_names"] = names
     rules["_private_patterns"] = patterns
     return rules
+
+
+def read_baseline(path: str) -> dict[str, str] | None:
+    """Path -> sha256 from a baseline manifest, or None if it is malformed."""
+    out: dict[str, str] = {}
+    with open(path, encoding="utf-8") as fh:
+        for n, raw in enumerate(fh, start=1):
+            ln = raw.rstrip("\r\n")
+            if not ln.strip() or ln.startswith("#"):
+                continue
+            m = _BASELINE_ROW.fullmatch(ln)
+            if not m:
+                print(
+                    f"check_identifiers: baseline line {n} is not "
+                    f"'<sha256>  <path>'. Refusing to continue.",
+                    file=sys.stderr,
+                )
+                return None
+            out[m.group(2)] = m.group(1)
+    return out
+
+
+def write_baseline(path: str, entries: dict[str, str]) -> None:
+    rows = "".join(f"{sha}  {p}\n" for p, sha in sorted(entries.items()))
+    with open(path, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(BASELINE_HEADER + rows)
 
 
 @functools.lru_cache(maxsize=1 << 18)
@@ -415,9 +467,17 @@ def _candidates(word: str) -> frozenset[str]:
 
 
 def check(
-    paths: list[str], rules: dict, staged: bool = False
+    paths: list[str],
+    rules: dict,
+    staged: bool = False,
+    digests: dict[str, tuple[str | None, str]] | None = None,
 ) -> tuple[list[str], int, list[str], list[str]]:
-    """Returns findings, files scanned, media skipped, and uninspectable."""
+    """Returns findings, files scanned, media skipped, and uninspectable.
+
+    ``digests``, when given, is filled for every uninspectable file with its
+    repository-relative path -> (sha256 of the bytes that could not be read,
+    or None when there were none, and the reason).
+    """
     salt = str(rules.get("salt", ""))
     hashed = {str(h).lower() for h in rules.get("hashed_names") or []}
     private = set(rules.get("_private_names") or [])
@@ -498,6 +558,7 @@ def check(
             shown = os.path.basename(full)
         scan(norm, "path", shown.replace("\\", "/"))
         ext = os.path.splitext(norm)[1].lower()
+        blob: bytes | None = None
         try:
             if staged:
                 blob = blobs.get(rel)
@@ -522,6 +583,11 @@ def check(
             text = text_of(blob, ext)
         except Uninspectable as exc:
             uninspectable.append(f"{norm}: {exc}")
+            if digests is not None:
+                digests[shown.replace("\\", "/")] = (
+                    hashlib.sha256(blob).hexdigest() if blob is not None else None,
+                    str(exc),
+                )
             continue
         scanned += 1
         for n, line in enumerate(text.splitlines(), start=1):
@@ -551,12 +617,21 @@ def main() -> int:
         help="print the salted hash of TOKEN, to extend the list",
     )
     ap.add_argument(
-        "--max-uninspectable",
-        type=int,
-        metavar="N",
+        "--baseline",
+        metavar="FILE",
         default=None,
-        help="accept up to N files the gate cannot read (they are "
-        "still listed); above N, or with no N, they fail",
+        help="manifest of accepted uninspectable files (sha256, two spaces, "
+        f"path); default {os.path.basename(DEFAULT_BASELINE)} at the "
+        "repository root when present. A file the gate cannot read passes "
+        "only if it is listed with the same digest.",
+    )
+    ap.add_argument(
+        "--update-baseline",
+        action="store_true",
+        help="write the uninspectable files of this scan into the baseline "
+        "and accept them. With --all the manifest becomes exactly this set; "
+        "with paths only their entries change. Review the diff before "
+        "committing it: every line is content nobody has read.",
     )
     args = ap.parse_args()
 
@@ -567,38 +642,108 @@ def main() -> int:
         return 0
 
     staged = not args.paths and not args.all
+    if args.update_baseline and staged:
+        print(
+            "check_identifiers: --update-baseline needs --all or paths; the "
+            "staged mode scans a partial set and would drop entries.",
+            file=sys.stderr,
+        )
+        return 3
+    if args.baseline:
+        baseline_path = os.path.abspath(args.baseline)
+        if not args.update_baseline and not os.path.isfile(baseline_path):
+            print(
+                f"check_identifiers: baseline {args.baseline!r} does not "
+                f"exist. Refusing to continue without the list it names.",
+                file=sys.stderr,
+            )
+            return 3
+    else:
+        baseline_path = DEFAULT_BASELINE
+    baseline = read_baseline(baseline_path) if os.path.isfile(baseline_path) else {}
+    if baseline is None:
+        return 3
+
     paths = args.paths or (tracked_files() if args.all else staged_files())
     if not paths:
         # Enumeration succeeded (a failure exits above) and found nothing.
         print("check_identifiers: nothing to scan")
         return 0
 
-    findings, scanned, media, uninspectable = check(paths, rules, staged=staged)
+    digests: dict[str, tuple[str | None, str]] = {}
+    findings, scanned, media, uninspectable = check(
+        paths, rules, staged=staged, digests=digests
+    )
     print(
         f"check_identifiers: scanned {scanned} file(s); "
         f"{len(media)} declared binary media not inspected; "
         f"{len(uninspectable)} uninspectable"
     )
     status = 0
-    ceiling = args.max_uninspectable
-    if uninspectable:
-        if ceiling is None or len(uninspectable) > ceiling:
-            status = 2
-        else:
+
+    if args.update_baseline:
+        unreadable = [k for k, (sha, _) in digests.items() if sha is None]
+        if unreadable:
             print(
-                f"check_identifiers: {len(uninspectable)} uninspectable "
-                f"file(s) within the declared ceiling of {ceiling}"
+                "check_identifiers: cannot baseline files whose bytes were not "
+                "read: " + ", ".join(unreadable),
+                file=sys.stderr,
             )
+            return 3
+        new = {} if args.all else dict(baseline)
+        if not args.all:
+            for p in paths:
+                full = os.path.join(ROOT, p.replace("/", os.sep))
+                try:
+                    key = os.path.relpath(full, ROOT).replace("\\", "/")
+                except ValueError:
+                    key = p
+                new.pop(key, None)
+        new.update({k: sha for k, (sha, _) in digests.items()})
+        write_baseline(baseline_path, new)
+        print(
+            f"check_identifiers: baseline {os.path.basename(baseline_path)} "
+            f"now lists {len(new)} uninspectable file(s)"
+        )
+        baseline = new
+
+    failing: list[str] = []
+    accepted = 0
+    for key, (sha, reason) in sorted(digests.items()):
+        if sha is None:
+            failing.append(f"{key}: {reason}")
+        elif key not in baseline:
+            failing.append(f"{key}: {reason}; not in the baseline")
+        elif baseline[key] != sha:
+            failing.append(f"{key}: {reason}; changed since the baseline")
+        else:
+            accepted += 1
+    if accepted:
+        print(
+            f"check_identifiers: {accepted} uninspectable file(s) match the "
+            f"baseline by path and sha256"
+        )
+    if args.all and baseline:
+        stale = sorted(set(baseline) - set(digests))
+        if stale:
+            print(
+                f"check_identifiers: {len(stale)} baseline entr(y/ies) no longer "
+                f"uninspectable; --update-baseline drops them"
+            )
+    if failing:
+        status = 2
         print()
         print(
-            f"check_identifiers: {len(uninspectable)} file(s) could not be "
-            f"inspected — content that was not read has not passed:"
+            f"check_identifiers: {len(failing)} file(s) could not be "
+            f"inspected and are not accepted — content that was not read has "
+            f"not passed:"
         )
-        for u in uninspectable:
+        for u in failing:
             print(f"  {u}")
         print(
-            "  Convert to text, remove the file, or declare its type in "
-            "binary_media_extensions with a reason."
+            "  Convert to text, remove the file, declare its type in "
+            "binary_media_extensions with a reason, or -- after reviewing the "
+            "content -- accept it with --update-baseline."
         )
     if findings:
         status = 1
