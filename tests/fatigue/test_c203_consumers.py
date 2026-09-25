@@ -23,7 +23,22 @@ from dataclasses import replace
 
 import pytest
 
-CLASSES = ["B1", "B2", "C", "C1", "C2", "D", "E", "F", "F1", "F3", "G", "W1", "W2", "W3"]
+CLASSES = [
+    "B1",
+    "B2",
+    "C",
+    "C1",
+    "C2",
+    "D",
+    "E",
+    "F",
+    "F1",
+    "F3",
+    "G",
+    "W1",
+    "W2",
+    "W3",
+]
 
 # DNV-RP-C203 (2011) Tables 2-1 / 2-2: m1, log a1 (air), log a1 (CP), m2,
 # log a2, fatigue limit at 1e7 cycles (MPa), k.
@@ -164,7 +179,9 @@ def test_yaml_dnv_curves_are_ignored_if_present(tmp_path, monkeypatch):
     )
     monkeypatch.setenv("DIGITALMODEL_DATA_DIR", str(tmp_path))
     monkeypatch.setattr(StandardSNCurves, "_loaded_from_yaml", False)
-    monkeypatch.setattr(StandardSNCurves, "DNV_CURVES", dict(StandardSNCurves.DNV_CURVES))
+    monkeypatch.setattr(
+        StandardSNCurves, "DNV_CURVES", dict(StandardSNCurves.DNV_CURVES)
+    )
     c = StandardSNCurves.get_curve("DNV", "D")
     assert math.log10(c.A) == pytest.approx(12.164, abs=1e-9)
 
@@ -234,9 +251,9 @@ def test_free_span_b1_cp_200_mpa_hand_calc():
     Before #2165 (single slope, A = 2.3431e15): 1.464e6 (2.84x)."""
     from digitalmodel.subsea.pipeline.free_span._bilinear_sn import get_sn_curve
 
-    assert get_sn_curve("B1", "seawater_cp").get_allowable_cycles(200.0) == pytest.approx(
-        516_274, rel=1e-5
-    )
+    assert get_sn_curve("B1", "seawater_cp").get_allowable_cycles(
+        200.0
+    ) == pytest.approx(516_274, rel=1e-5)
 
 
 def test_free_span_d_cp_60_mpa_uses_m2_below_the_1e6_knee():

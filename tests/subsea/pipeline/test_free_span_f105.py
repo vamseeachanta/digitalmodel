@@ -377,7 +377,7 @@ class TestSpanFatigueDamage:
         inp_air = replace(ref_input, environment=EnvironmentType.IN_AIR)
         fat = SpanFatigueDamage(inp_air, 0.43, 100.0)  # 100 MPa, in air
         N = fat.allowable_cycles(100.0)
-        expected_N = 10**11.855 * 100.0**(-3.0)
+        expected_N = 10**11.855 * 100.0 ** (-3.0)
         assert abs(expected_N - 716_143) / 716_143 < 1e-6
         assert abs(N - expected_N) / expected_N < 0.01, (
             f"N={N:.1f} vs expected {expected_N:.1f} — check DNV F-class wiring"

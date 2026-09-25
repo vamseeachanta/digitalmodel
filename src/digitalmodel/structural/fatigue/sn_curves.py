@@ -281,23 +281,14 @@ class StandardSNCurves:
     Enhanced with multi-slope capabilities and legacy curve data integration.
     """
 
-    # DNV-RP-C203 Curves (in air, T=16-25mm)
-    DNV_CURVES = {
-        'B1': {'A': 4.22e15, 'm': 4.0, 'fatigue_limit': 106.97},
-        'B2': {'A': 1.01e15, 'm': 3.5, 'fatigue_limit': 93.59},
-        'C': {'A': 1.08e12, 'm': 3.0, 'fatigue_limit': 73.1},
-        'C1': {'A': 4.23e11, 'm': 3.0, 'fatigue_limit': 65.5},
-        'C2': {'A': 1.08e11, 'm': 3.0, 'fatigue_limit': 46.78},
-        'D': {'A': 5.73e11, 'm': 3.0, 'fatigue_limit': 52.63},
-        'E': {'A': 3.29e11, 'm': 3.0, 'fatigue_limit': 45.54},
-        'F': {'A': 1.73e11, 'm': 3.0, 'fatigue_limit': 36.84},
-        'F1': {'A': 1.08e11, 'm': 3.0, 'fatigue_limit': 36.58},
-        'F3': {'A': 5.73e10, 'm': 3.0, 'fatigue_limit': 29.64},
-        'G': {'A': 2.82e10, 'm': 3.0, 'fatigue_limit': 23.44},
-        'W1': {'A': 2.15e10, 'm': 3.0, 'fatigue_limit': 21.34},
-        'W2': {'A': 1.08e10, 'm': 3.0, 'fatigue_limit': 16.92},
-        'W3': {'A': 5.3e9, 'm': 3.0, 'fatigue_limit': 13.35},
-    }
+    # DNV-RP-C203 curves, in air: the first segment (A = 10^log a1, m = m1) and
+    # the tabulated fatigue limit at 1e7 cycles, which is also the in-air knee,
+    # as the constant-amplitude cut-off. Filled at the end of this module from
+    # digitalmodel.fatigue.c203_sn_tables, verified against DNV-RP-C203 (2011)
+    # Table 2-1 (#2165). The m2 = 5 segment below the limit is not represented
+    # by PowerLawSNCurve; for variable-amplitude damage use
+    # digitalmodel.fatigue.get_sn_curve or digitalmodel.fatigue.sn_library.
+    DNV_CURVES: Dict[str, Dict[str, float]] = {}
 
     # Multi-slope DNV curves (based on legacy data structure)
     DNV_MULTISLOPE_CURVES = {
@@ -412,8 +403,8 @@ class StandardSNCurves:
             with open(yaml_path) as f:
                 data = yaml.safe_load(f)
             standards = data.get('standards', {})
-            if 'DNV' in standards and 'curves' in standards['DNV']:
-                cls.DNV_CURVES = standards['DNV']['curves']
+            # DNV-RP-C203 curves always come from fatigue.c203_sn_tables; a
+            # 'DNV: curves' block in the YAML is ignored (#2165).
             if 'API' in standards and 'curves' in standards['API']:
                 cls.API_CURVES = standards['API']['curves']
             if 'BS' in standards and 'curves' in standards['BS']:
@@ -854,11 +845,20 @@ def plot_sn_curve(curve: SNCurveBase,
 # Convenience functions for common use cases
 def get_dnv_curve(curve_class: str,
                   thickness: Optional[float] = None) -> PowerLawSNCurve:
-    """Get DNV curve with optional thickness correction"""
+    """Get a DNV-RP-C203 in-air curve with optional thickness correction.
+
+    The thickness correction uses the class exponent k from DNV-RP-C203
+    Table 2-1 and applies only above the 25 mm reference thickness (#2165).
+    """
     curve = StandardSNCurves.get_curve('DNV', curve_class)
 
-    if thickness and thickness != 25.0:
-        curve = ThicknessCorrection.apply_thickness_effect(curve, thickness)
+    if thickness and thickness > _c203.T_REF_WELDED_MM:
+        curve = ThicknessCorrection.apply_thickness_effect(
+            curve,
+            thickness,
+            reference_thickness=_c203.T_REF_WELDED_MM,
+            thickness_exponent=_c203.BILINEAR[curve_class].k,
+        )
 
     return curve
 
@@ -871,6 +871,28 @@ def get_api_curve(curve_class: str) -> PowerLawSNCurve:
 def get_bs_curve(curve_class: str) -> PowerLawSNCurve:
     """Get BS 7608 curve"""
     return StandardSNCurves.get_curve('BS', curve_class)
+
+
+# DNV-RP-C203 values come from the verified tables (#2165). Imported here, after
+# every class above is defined, because digitalmodel.fatigue imports this module
+# back (a top-of-module import is circular).
+from digitalmodel.fatigue import c203_sn_tables as _c203  # noqa: E402
+
+
+def _dnv_curves_from_c203() -> Dict[str, Dict[str, float]]:
+    """DNV-RP-C203 (2011) Table 2-1, in air: A = 10^log a1, m = m1, and the
+    tabulated fatigue limit at 1e7 cycles."""
+    return {
+        name: {
+            "A": 10.0**p.log_a1_air,
+            "m": p.m1,
+            "fatigue_limit": p.fatigue_limit_mpa,
+        }
+        for name, p in _c203.BILINEAR.items()
+    }
+
+
+StandardSNCurves.DNV_CURVES = _dnv_curves_from_c203()
 
 
 if __name__ == "__main__":

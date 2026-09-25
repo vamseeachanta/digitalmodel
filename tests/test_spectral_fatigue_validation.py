@@ -78,7 +78,7 @@ class TestSNCurveDNVReference:
         = 1,458,814 (#2165; was 5.73e11 / 1e6 = 573,000)."""
         curve = get_dnv_curve('D')
         N = curve.get_allowable_cycles(100.0)
-        expected = 10**12.164 / (100.0 ** 3.0)
+        expected = 10**12.164 / (100.0**3.0)
         assert abs(N - 1_458_814) / 1_458_814 < 1e-6
         assert abs(N - expected) / expected < 1e-6
 
@@ -87,7 +87,7 @@ class TestSNCurveDNVReference:
         (#2165; was 5.73e11 / 8e6 = 71,625)."""
         curve = get_dnv_curve('D')
         N = curve.get_allowable_cycles(200.0)
-        expected = 10**12.164 / (200.0 ** 3.0)
+        expected = 10**12.164 / (200.0**3.0)
         assert abs(N - 182_352) / 182_352 < 1e-5
         assert abs(N - expected) / expected < 1e-6
 
@@ -201,7 +201,7 @@ class TestMinersDamage:
         # S = 80 MPa -> N = 10^12.164 / 80^3 = 1.45881e12 / 512000 = 2,849,247
         # n = 10000 -> D = 10000 / 2,849,247 = 0.0035097
         # (#2165; was 5.73e11 / 80^3 = 1,119,141 and D = 0.008936)
-        N_80 = 10**12.164 / (80.0 ** 3)
+        N_80 = 10**12.164 / (80.0**3)
         assert abs(10000.0 / N_80 - 0.0035097) < 1e-7
         expected = 10000.0 / N_80
 

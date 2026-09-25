@@ -1,21 +1,20 @@
 """
 DNV RP F105 Section 7.3 + DNV-RP-C203 — Fatigue damage accumulation.
 
-Uses the built-in bilinear S-N curve from ``_bilinear_sn`` which provides
-the complete DNV-RP-C203 Table 2-1 (14 weld classes × 2 environments).
+Uses the bilinear S-N curve from ``_bilinear_sn``, whose parameters come from
+``digitalmodel.fatigue.c203_sn_tables``: DNV-RP-C203 (2011) Tables 2-1 (in air,
+knee at 1e7 cycles) and 2-2 (seawater with CP, knee at 1e6 cycles), 14 classes
+(#2165).
 
-DNV-RP-C203 F-class parameters (in air, first slope):
-    A1 = 1.73×10¹¹, m1 = 3.0, CAFL = 36.84 MPa
-    Second slope: A2 = 6.33×10¹⁴, m2 = 5.0 (N > 10⁷)
+DNV-RP-C203 F class, for example:
+    in air:           log a1 = 11.855, m1 = 3.0; log a2 = 15.091, m2 = 5.0
+    seawater with CP: log a1 = 11.455, m1 = 3.0; the same second segment
+    fatigue limit at 1e7 cycles: 41.52 MPa (the same in both tables)
 
-Seawater with CP:
-    A1 = 8.51×10¹⁰, m1 = 3.0 (reduced)
-    A2 = 1.76×10¹⁴, m2 = 5.0
-
-This screening implementation retains the in-air CAFL as a low-stress cutoff
-before applying the seawater-with-CP curve above the cutoff. That preserves
-the module's historical "below fatigue limit → zero damage" behavior while
-still making seawater-with-CP more damaging for finite-stress checks.
+This screening implementation retains the in-air fatigue limit as a
+low-stress cutoff before applying the seawater-with-CP curve above the cutoff.
+That preserves the module's historical "below fatigue limit → zero damage"
+behavior; the tabulated limit is the same in Tables 2-1 and 2-2.
 
 Palmgren-Miner rule (F105 Eq 7.3-1):
     D_annual = f_n × T_year / N(Δσ)
@@ -23,6 +22,7 @@ Palmgren-Miner rule (F105 Eq 7.3-1):
 
 Fatigue life = 1 / D_annual  [years]
 """
+
 from __future__ import annotations
 
 import math
