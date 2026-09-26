@@ -22,16 +22,16 @@ Louise
 
  
 T :  +44(0)1229 584742
-E :  orcina@orcina.com
+E :  [email removed]
 W:  www.orcina.com
  
 
 
 ________________________________________
-From: Vamsee Achanta <vamseea@acma-inc.com>
+From: Vamsee Achanta [email removed]
 Sent: 11 February 2025 16:30
-To: Orcina <orcina@orcina.com>
-Cc: Scott McClure <scottm@acma-inc.com>; sivakumar.pabolu@gmail.com <sivakumar.pabolu@gmail.com>; Bram Weisman <bramw@acma-inc.com>
+To: Orcina [email removed]
+Cc: Scott McClure [email removed]; [email removed] [email removed]; Bram Weisman [email removed]
 Subject: RE: Vessel Loads | In Vessel Coordinate System 
  
 Louise,
@@ -47,10 +47,10 @@ Thank you,
 Vamsee
  
  
-From: Orcina <orcina@orcina.com>
+From: Orcina [email removed]
 Sent: Tuesday, February 11, 2025 8:16 AM
-To: Vamsee Achanta <vamseea@acma-inc.com>
-Cc: Scott McClure <scottm@acma-inc.com>; sivakumar.pabolu@gmail.com; Bram Weisman <bramw@acma-inc.com>
+To: Vamsee Achanta [email removed]
+Cc: Scott McClure [email removed]; [email removed]; Bram Weisman [email removed]
 Subject: Re: Vessel Loads | In Vessel Coordinate System
  
 Dear Vamsee,
@@ -64,14 +64,14 @@ Louise
  
  
 T :  +44(0)1229 584742
-E :  orcina@orcina.com
+E :  [email removed]
 W:  www.orcina.com
  
 ________________________________________
-From: Vamsee Achanta <vamseea@acma-inc.com>
+From: Vamsee Achanta [email removed]
 Sent: 11 February 2025 09:06
-To: Orcina <orcina@orcina.com>
-Cc: Scott McClure <scottm@acma-inc.com>; sivakumar.pabolu@gmail.com <sivakumar.pabolu@gmail.com>; Bram Weisman <bramw@acma-inc.com>
+To: Orcina [email removed]
+Cc: Scott McClure [email removed]; [email removed] [email removed]; Bram Weisman [email removed]
 Subject: RE: Vessel Loads | In Vessel Coordinate System
  
 Dear Louise,
@@ -95,10 +95,10 @@ Why is there a difference between line tension and Resultant? Any insight will b
 Thank you,
 Vamsee
  
-From: Orcina <orcina@orcina.com>
+From: Orcina [email removed]
 Sent: Tuesday, November 26, 2024 5:31 AM
-To: Vamsee Achanta <vamseea@acma-inc.com>
-Cc: Scott McClure <scottm@acma-inc.com>; sivakumar.pabolu@gmail.com
+To: Vamsee Achanta [email removed]
+Cc: Scott McClure [email removed]; [email removed]
 Subject: Re: Vessel Loads | In Vessel Coordinate System
  
 Dear Vamsee,
@@ -120,16 +120,16 @@ Louise Wilkin
  
  
 T :  +44(0)1229 584742
-E :  orcina@orcina.com
+E :  [email removed]
 W:  www.orcina.com
  
  
  
 ________________________________________
-From: Vamsee Achanta <vamseea@acma-inc.com>
+From: Vamsee Achanta [email removed]
 Sent: 25 November 2024 20:00
-To: Orcina <orcina@orcina.com>
-Cc: Scott McClure <scottm@acma-inc.com>; sivakumar.pabolu@gmail.com <sivakumar.pabolu@gmail.com>
+To: Orcina [email removed]
+Cc: Scott McClure [email removed]; [email removed] [email removed]
 Subject: Vessel Loads | In Vessel Coordinate System
  
 Dear Support Representative,

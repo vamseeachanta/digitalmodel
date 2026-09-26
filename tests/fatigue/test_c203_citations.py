@@ -201,12 +201,16 @@ def test_c203_label_fails_closed_for_unmapped_edition():
         ce.c203_label("2099")
 
 
-def test_free_corrosion_notes_disclose_unverified_values():
+def test_free_corrosion_notes_state_verified_values():
+    """#2165 replaced the free-corrosion values with DNV-RP-C203 (2011) Table 2-3,
+    so the r1 "values not verified" disclosure is removed and the note names
+    the verified table instead."""
     fc = [
         r
         for r in get_catalog().curves
         if r.standard == "DNV-RP-C203" and r.environment == "free_corrosion"
     ]
-    assert fc
+    assert len(fc) == 14
     for r in fc:
-        assert "values not verified" in r.note and "#2165" in r.note, r.note
+        assert "not verified" not in r.note, r.note
+        assert "verified against DNV-RP-C203 (2011) Table 2-3" in r.note, r.note

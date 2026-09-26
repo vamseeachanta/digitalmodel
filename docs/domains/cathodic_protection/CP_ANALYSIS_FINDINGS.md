@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-The cathodic protection system implements **two major industry standards** (DNV RP-F103 for pipelines, ABS for ships) with comprehensive calculation capabilities. Current test coverage includes **3 pipeline configurations** (Saipem 24" baseline, Deepwater 36", and Excellent/Poor Coating sensitivity tests) but has significant gaps in environmental variations, average coating scenario, and ship configurations.
+The cathodic protection system implements **two major industry standards** (DNV RP-F103 for pipelines, ABS for ships) with comprehensive calculation capabilities. Current test coverage includes **3 pipeline configurations** (Contractor 24" baseline, Deepwater 36", and Excellent/Poor Coating sensitivity tests) but has significant gaps in environmental variations, average coating scenario, and ship configurations.
 
 **Key Finding:** System is production-ready for pipeline calculations. Tests 1.1 (excellent coating) and 1.2 (poor coating) completed successfully, validating coating quality sensitivity with 53.3% reduction (excellent) and 146.8% increase (poor) in current demand vs baseline. Additional test configurations required for edge cases and diverse operating conditions.
 
@@ -27,7 +27,7 @@ The cathodic protection system implements **two major industry standards** (DNV 
 ### B. Structure Coverage
 
 **Pipelines (Well Tested):**
-- ✅ 24-inch standard pipeline (Saipem config)
+- ✅ 24-inch standard pipeline (Contractor config)
 - ✅ 36-inch deepwater pipeline
 - ✅ 10-25 km length range
 - ✅ Submarine and buried conditions
@@ -71,7 +71,7 @@ The cathodic protection system implements **two major industry standards** (DNV 
 **Test Category:** coating_quality_variation
 
 **Test Objective:**
-Validate 60-70% reduction in current demand with excellent coating vs good coating baseline (Saipem 24-inch).
+Validate 60-70% reduction in current demand with excellent coating vs good coating baseline (Contractor 24-inch).
 
 **Test Parameters:**
 - Pipeline: 24-inch (0.610m OD), 10km length, 25-year design life
@@ -136,7 +136,7 @@ Validate 60-70% reduction in current demand with excellent coating vs good coati
 **Test Category:** coating_quality_variation
 
 **Test Objective:**
-Validate ~150% increase in current demand with poor coating vs good coating baseline (Saipem 24-inch).
+Validate ~150% increase in current demand with poor coating vs good coating baseline (Contractor 24-inch).
 
 **Test Parameters:**
 - Pipeline: 24-inch (0.610m OD), 10km length, 25-year design life
@@ -196,7 +196,7 @@ Validate ~150% increase in current demand with poor coating vs good coating base
 **Test Category:** coating_quality_variation
 
 **Test Objective:**
-Validate ~50% increase in current demand with average coating vs good coating baseline (Saipem 24-inch).
+Validate ~50% increase in current demand with average coating vs good coating baseline (Contractor 24-inch).
 
 **Test Parameters:**
 - Pipeline: 24-inch (0.610m OD), 10km length, 25-year design life
@@ -253,7 +253,7 @@ Validate ~50% increase in current demand with average coating vs good coating ba
 
 ### Current Test Configurations
 
-#### Config 1: Saipem Standard Pipeline ✅
+#### Config 1: Contractor Standard Pipeline ✅
 
 **Configuration:**
 ```yaml
@@ -505,13 +505,13 @@ expected_impact:
 ```yaml
 name: "excellent-coating-24in-pipeline"
 purpose: "Validate coating quality impact on current demand"
-base: Saipem config
+base: Contractor config
 changes:
   coating_quality: "excellent"
   expected_current_reduction: "60-70%"
   expected_anode_reduction: "60-70%"
 validation:
-  - Compare vs Saipem baseline
+  - Compare vs Contractor baseline
   - Verify attenuation length increase
   - Confirm cost-benefit ratio
 ```
@@ -520,7 +520,7 @@ validation:
 ```yaml
 name: "poor-coating-24in-pipeline"
 purpose: "Validate worst-case coating scenario"
-base: Saipem config
+base: Contractor config
 changes:
   coating_quality: "poor"
   expected_current_increase: "150%"
@@ -561,7 +561,7 @@ validation:
 ```yaml
 name: "brackish-water-estuary-pipeline"
 purpose: "Validate low-salinity performance"
-base: Saipem config
+base: Contractor config
 changes:
   seawater_resistivity: 100 Ω·cm
   expected_impacts:
@@ -574,7 +574,7 @@ changes:
 ```yaml
 name: "tropical-pipeline-28C"
 purpose: "Validate temperature capacity correction"
-base: Saipem config
+base: Contractor config
 changes:
   temperature: 28°C
   expected_capacity: 1784 Ah/kg (11% reduction)
@@ -614,7 +614,7 @@ purpose: "Validate large diameter + long length"
 #### Test 3.3: Zero Wet Storage Baseline
 ```yaml
 name: "immediate-install-no-storage"
-base: Saipem config
+base: Contractor config
 changes:
   wet_storage_years: 0
 purpose: "Quantify wet storage impact vs baseline"
@@ -974,7 +974,7 @@ test_name: "descriptive-name-hyphenated"
 test_purpose: "Clear statement of what this tests"
 test_category: "coating|environment|geometry|lifecycle"
 
-base_configuration: "saipem|deepwater|custom"
+base_configuration: "contractor|deepwater|custom"
 modifications:
   - parameter: coating_quality
     old_value: good
@@ -1032,7 +1032,7 @@ validation_criteria:
     operator: "=="
     value: true
 
-comparison_baseline: "saipem-standard-24in"
+comparison_baseline: "contractor-standard-24in"
 reference_data: "DNV RP-F103 Table 5-2 (excellent coating)"
 
 notes: |

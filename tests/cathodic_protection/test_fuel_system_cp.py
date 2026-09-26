@@ -6,12 +6,11 @@ import math
 
 import pytest
 
+from digitalmodel.cathodic_protection._experimental import ExperimentalModelError
 from digitalmodel.cathodic_protection.fuel_system_cp import (
     COATING_BREAKDOWN_FACTOR,
     CoatingType,
     FuelPipeSegment,
-    ImpressedCurrentGroundBed,
-    RectifierOutput,
     check_protection,
     current_demand_segment,
     design_ground_bed,
@@ -236,19 +235,23 @@ class TestDesignRectifier:
 
 
 class TestCheckProtection:
-    def test_adequate_protection(self):
+    """check_protection is quarantined (issue #2209): -0.55 - I*R is not physical."""
+
+    def test_is_quarantined(self):
         gb = design_ground_bed(0.5, soil_resistivity_ohm_m=50.0)
         rect = design_rectifier(0.5, gb, structure_resistance_ohm=0.5)
-        result = check_protection(rect, gb, structure_resistance_ohm=0.5)
+        with pytest.raises(ExperimentalModelError, match="NACE SP0169"):
+            check_protection(rect, gb, structure_resistance_ohm=0.5)
+
+    def test_experimental_smoke(self):
+        gb = design_ground_bed(0.5, soil_resistivity_ohm_m=50.0)
+        rect = design_rectifier(0.5, gb, structure_resistance_ohm=0.5)
+        result = check_protection(
+            rect, gb, structure_resistance_ohm=0.5, experimental=True
+        )
         assert "pass" in result
         assert "potential_v_cse" in result
         assert isinstance(result["pass"], bool)
-
-    def test_protection_criterion_value(self):
-        """Criterion must be -0.85 V CSE."""
-        gb = design_ground_bed(0.5, soil_resistivity_ohm_m=50.0)
-        rect = design_rectifier(0.5, gb, structure_resistance_ohm=0.5)
-        result = check_protection(rect, gb, structure_resistance_ohm=0.5)
         assert result["criterion_v_cse"] == pytest.approx(-0.85, rel=1e-6)
 
 
@@ -284,5 +287,9 @@ class TestEndToEnd:
         assert rect.dc_voltage_v > 0
         assert rect.power_w > 0
 
-        result = check_protection(rect, gb, structure_resistance_ohm=0.5)
+        with pytest.raises(ExperimentalModelError):
+            check_protection(rect, gb, structure_resistance_ohm=0.5)
+        result = check_protection(
+            rect, gb, structure_resistance_ohm=0.5, experimental=True
+        )
         assert isinstance(result["pass"], bool)

@@ -19,7 +19,9 @@ from digitalmodel.hydrodynamics.hull_library.profile_schema import HullType
 
 # Path to the generated catalog and panel files
 REPO_ROOT = Path(__file__).resolve().parents[3]
-CATALOG_YAML = REPO_ROOT / "data" / "hull_library" / "catalog" / "hull_panel_catalog.yaml"
+CATALOG_YAML = (
+    REPO_ROOT / "data" / "hull_library" / "catalog" / "hull_panel_catalog.yaml"
+)
 CATALOG_CSV = REPO_ROOT / "data" / "hull_library" / "catalog" / "hull_panel_catalog.csv"
 PANELS_DIR = REPO_ROOT / "data" / "hull_library" / "panels"
 
@@ -55,31 +57,21 @@ class TestCatalogYaml:
 
 
 class TestGdfEntries:
-    def test_all_gdf_entries_have_panel_count(
-        self, catalog: PanelCatalog
-    ) -> None:
+    def test_all_gdf_entries_have_panel_count(self, catalog: PanelCatalog) -> None:
         """Every GDF entry has non-null panel_count."""
-        gdf_entries = [
-            e for e in catalog.entries
-            if e.panel_format == PanelFormat.GDF
-        ]
+        gdf_entries = [e for e in catalog.entries if e.panel_format == PanelFormat.GDF]
         assert len(gdf_entries) > 0
         for entry in gdf_entries:
-            assert entry.panel_count is not None, (
-                f"{entry.hull_id} has null panel_count"
-            )
-            assert entry.panel_count > 0, (
-                f"{entry.hull_id} has panel_count={entry.panel_count}"
-            )
+            assert (
+                entry.panel_count is not None
+            ), f"{entry.hull_id} has null panel_count"
+            assert (
+                entry.panel_count > 0
+            ), f"{entry.hull_id} has panel_count={entry.panel_count}"
 
-    def test_all_gdf_entries_have_vertex_count(
-        self, catalog: PanelCatalog
-    ) -> None:
+    def test_all_gdf_entries_have_vertex_count(self, catalog: PanelCatalog) -> None:
         """Every GDF entry has non-null vertex_count."""
-        gdf_entries = [
-            e for e in catalog.entries
-            if e.panel_format == PanelFormat.GDF
-        ]
+        gdf_entries = [e for e in catalog.entries if e.panel_format == PanelFormat.GDF]
         for entry in gdf_entries:
             assert entry.vertex_count is not None
             assert entry.vertex_count > 0
@@ -90,7 +82,10 @@ class TestCopiedFiles:
         """Every entry pointing to panels/ has a real file."""
         panels_str = str(PANELS_DIR)
         for entry in catalog.entries:
-            if panels_str in entry.file_path or "data/hull_library/panels" in entry.file_path:
+            if (
+                panels_str in entry.file_path
+                or "data/hull_library/panels" in entry.file_path
+            ):
                 # Resolve both absolute and relative paths
                 p = Path(entry.file_path)
                 if not p.is_absolute():
@@ -117,13 +112,11 @@ class TestCatalogQuality:
     def test_catalog_hull_ids_unique(self, catalog: PanelCatalog) -> None:
         """No duplicate hull_ids."""
         ids = [e.hull_id for e in catalog.entries]
-        assert len(ids) == len(set(ids)), (
-            f"Duplicate hull_ids: {[x for x in ids if ids.count(x) > 1]}"
-        )
+        assert len(ids) == len(
+            set(ids)
+        ), f"Duplicate hull_ids: {[x for x in ids if ids.count(x) > 1]}"
 
-    def test_at_least_one_hull_per_major_type(
-        self, catalog: PanelCatalog
-    ) -> None:
+    def test_at_least_one_hull_per_major_type(self, catalog: PanelCatalog) -> None:
         """Catalog covers barge, spar, semi_pontoon, ship."""
         types_present = {e.hull_type for e in catalog.entries}
         for required in [
@@ -132,27 +125,45 @@ class TestCatalogQuality:
             HullType.SEMI_PONTOON,
             HullType.SHIP,
         ]:
-            assert required in types_present, (
-                f"Missing hull type: {required.value}"
-            )
+            assert required in types_present, f"Missing hull type: {required.value}"
 
     def test_at_least_11_entries(self, catalog: PanelCatalog) -> None:
         """Catalog has at least the 11 copied GDF files."""
         assert len(catalog.entries) >= 11
 
     def test_no_legal_violations(self, catalog: PanelCatalog) -> None:
-        """No deny-listed terms in catalog YAML."""
+        """No deny-listed terms in catalog YAML.
+
+        Client names and job codes are checked by the repository's identifier
+        gate, which matches names by salted hash, so this test does not have
+        to spell them out.
+        """
+        import subprocess
+        import sys
+
+        gate = REPO_ROOT / "scripts" / "legal" / "check_identifiers.py"
+        out = subprocess.run(
+            [sys.executable, str(gate), str(CATALOG_YAML)],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+        assert out.returncode == 0, out.stdout + out.stderr
+
         with open(CATALOG_YAML) as f:
             content = f.read().lower()
 
-        # These terms must never appear in the catalog
+        # Further terms that must never appear in the catalog
         deny_terms = [
-            "yellowtail", "b1522", "ctr-7", "0113", "orc dr",
+            "ctr-7",
+            "0113",
+            "orc dr",
         ]
         for term in deny_terms:
-            assert term not in content, (
-                f"Legal violation: '{term}' found in catalog YAML"
-            )
+            assert (
+                term not in content
+            ), f"Legal violation: '{term}' found in catalog YAML"
 
 
 class TestCsvOutput:

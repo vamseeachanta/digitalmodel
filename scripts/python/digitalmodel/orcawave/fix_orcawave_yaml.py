@@ -57,8 +57,8 @@ Bodies:
     print("[OK] Created: orcawave_minimal_working.yml")
     return "orcawave_minimal_working.yml"
 
-def create_sea_cypress_working():
-    """Create a working Sea Cypress configuration"""
+def create_tug_30m_1_working():
+    """Create a working tug_30m_1 configuration"""
     
     config_content = """UnitsSystem: SI
 SolveType: Potentials only
@@ -94,8 +94,8 @@ WaveHeading:
   - 180
 
 Bodies:
-  - BodyName: SeaCypress
-    BodyMeshFileName: D:/github/digitalmodel/specs/modules/orcawave/diffraction-analysis/inputs/geometry/sea_cypress_corrected.gdf
+  - BodyName: Tug30m1
+    BodyMeshFileName: D:/github/digitalmodel/specs/modules/orcawave/diffraction-analysis/inputs/geometry/tug_30m_1_corrected.gdf
     BodyMeshFormat: Wamit gdf
     BodyMeshLengthUnits: m
     BodyMeshSymmetry: None
@@ -121,11 +121,11 @@ Bodies:
     BodyOrcaFlexImportSymmetry: Use global mesh symmetry
 """
     
-    with open("sea_cypress_working.yml", "w") as f:
+    with open("tug_30m_1_working.yml", "w") as f:
         f.write(config_content)
     
-    print("[OK] Created: sea_cypress_working.yml")
-    return "sea_cypress_working.yml"
+    print("[OK] Created: tug_30m_1_working.yml")
+    return "tug_30m_1_working.yml"
 
 def create_simplest_test():
     """Create the absolute simplest possible test"""
@@ -173,7 +173,7 @@ def main():
     # Create all versions
     simplest = create_simplest_test()
     minimal = create_orcawave_minimal_config()
-    sea_cypress = create_sea_cypress_working()
+    tug_30m_1 = create_tug_30m_1_working()
     
     print()
     print("="*60)
@@ -192,8 +192,8 @@ def main():
     print("   - 3 periods, 3 headings")
     print("   - Basic but complete configuration")
     print()
-    print("3. SEA CYPRESS WORKING:")
-    print(f"   {sea_cypress}")
+    print("3. TUG_30M_1 WORKING:")
+    print(f"   {tug_30m_1}")
     print("   - Your actual vessel")
     print("   - All parameters properly set")
     print()

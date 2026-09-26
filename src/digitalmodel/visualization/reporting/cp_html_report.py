@@ -393,7 +393,7 @@ class CPHTMLReportGenerator:
 
         Args:
             results_2010: DNV RP-F103:2010 results
-            results_2016: DNV RP-F103:2016 (Enhanced Saipem) results
+            results_2016: DNV RP-F103:2016 (Enhanced contractor) results
             title: Report title
 
         Returns:

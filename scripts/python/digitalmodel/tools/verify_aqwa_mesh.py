@@ -200,8 +200,8 @@ def main():
     
     # Check both the GMsh optimized version and the original trimesh version
     files_to_check = [
-        geometry_dir / "sea_cypress_gmsh_optimized.dat",
-        geometry_dir / "sea_cypress_trimesh.gdf"  # If it's actually in DAT format
+        geometry_dir / "tug_30m_1_gmsh_optimized.dat",
+        geometry_dir / "tug_30m_1_trimesh.gdf"  # If it's actually in DAT format
     ]
     
     for dat_file in files_to_check:
@@ -226,13 +226,13 @@ def main():
                     print("⚠ Poor mesh quality - consider remeshing with smaller elements")
                 
                 if metrics['volume'] > 300 and metrics['volume'] < 600:
-                    print("✓ Reasonable volume estimate for Sea Cypress vessel")
+                    print("✓ Reasonable volume estimate for tug_30m_1 vessel")
                 else:
                     print(f"⚠ Volume estimate {metrics['volume']:.1f} m³ - verify mesh is watertight")
                 
                 length, beam, height = metrics['dimensions']
                 if 25 < length < 35 and 8 < beam < 12:
-                    print("✓ Dimensions consistent with Sea Cypress specifications")
+                    print("✓ Dimensions consistent with tug_30m_1 specifications")
                 else:
                     print("⚠ Check vessel dimensions - may need coordinate transformation")
                     

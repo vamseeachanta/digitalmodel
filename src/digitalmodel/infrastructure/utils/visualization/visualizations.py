@@ -891,8 +891,13 @@ class Visualization:
 if __name__ == "__main__":
     import pandas as pd
 
+    import sys
+
+    from digitalmodel.infrastructure.utils.private_paths import private_data_path
+
+    timeline = sys.argv[1] if len(sys.argv) > 1 else private_data_path("TimeLine.csv")
     data = pd.read_csv(
-        r"C:\Users\achantv\Documents\Utilities\aceengineer\data_manager\TimeLine.csv",
+        timeline,
         parse_dates=True,
         index_col=0,
     )

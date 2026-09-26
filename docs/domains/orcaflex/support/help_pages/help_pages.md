@@ -2,25 +2,25 @@ I am able to open the help page directly. You may need to reopen the application
 
  
 
-From: Vamsee Achanta <vamseea@acma-inc.com> 
+From: Vamsee Achanta [email removed] 
 Sent: Thursday, February 13, 2025 11:36 AM
-To: Adam Rivera <arivera@rockit-consulting.com>; Scott McClure <scottm@acma-inc.com>
+To: Adam Rivera [email removed]; Scott McClure [email removed]
 Subject: RE: [EXT]Blockage of Java-script on ANSYS03 and ANSYS04 servers
 
 Adam, Tried on ANSYS04. No luck.
 
-From: Adam Rivera <arivera@rockit-consulting.com> 
+From: Adam Rivera [email removed] 
 Sent: Thursday, February 13, 2025 11:32 AM
-To: Scott McClure <scottm@acma-inc.com>
-Cc: Vamsee Achanta <vamseea@acma-inc.com>
+To: Scott McClure [email removed]
+Cc: Vamsee Achanta [email removed]
 Subject: RE: [EXT]Blockage of Java-script on ANSYS03 and ANSYS04 servers
 
 Ah, that would make sense. It’s using IE. I turned off the enhanced security that is on by default on servers. Please try again.
 
-From: Scott McClure <scottm@acma-inc.com> 
+From: Scott McClure [email removed] 
 Sent: Thursday, February 13, 2025 11:17 AM
-To: Adam Rivera <arivera@rockit-consulting.com>
-Cc: Vamsee Achanta <vamseea@acma-inc.com>
+To: Adam Rivera [email removed]
+Cc: Vamsee Achanta [email removed]
 Subject: [EXT]Blockage of Java-script on ANSYS03 and ANSYS04 servers
 
 Adam,
@@ -48,7 +48,7 @@ President
 Houston, TX  77042
 O) 713 789 1840
 C) 832 419 4068
-scottm@acma-inc.com 
+[email removed] 
 
 
 Dear Vamsee,
@@ -64,26 +64,26 @@ Regards,
 Colin Lewis.
  
 T :  +44(0)1229 584742
-E :  orcina@orcina.com
+E :  [email removed]
 W:  www.orcina.com
      
 
 
 
-From: Vamsee Achanta <vamseea@acma-inc.com> 
+From: Vamsee Achanta [email removed] 
 Sent: 13 February 2025 17:00
-To: Orcina <orcina@orcina.com>
-Cc: Scott McClure <scottm@acma-inc.com>; Adam Rivera <arivera@rockit-consulting.com>; Dusty Hardin <dustyh@acma-inc.com>
+To: Orcina [email removed]
+Cc: Scott McClure [email removed]; Adam Rivera [email removed]; Dusty Hardin [email removed]
 Subject: RE: Orcina | Help Website Access on Analysis Servers | OLE error 80020101
 
 Yes, I am able to access the default web help start file. So, the F1 does not work from the GUI.
 
 Any further thoughts?
 
-From: Orcina <orcina@orcina.com> 
+From: Orcina [email removed] 
 Sent: Thursday, February 13, 2025 10:34 AM
-To: Vamsee Achanta <vamseea@acma-inc.com>
-Cc: Scott McClure <scottm@acma-inc.com>; Adam Rivera <arivera@rockit-consulting.com>; Dusty Hardin <dustyh@acma-inc.com>
+To: Vamsee Achanta [email removed]
+Cc: Scott McClure [email removed]; Adam Rivera [email removed]; Dusty Hardin [email removed]
 Subject: RE: Orcina | Help Website Access on Analysis Servers | OLE error 80020101
 
 Dear Vamsee,
@@ -101,16 +101,16 @@ Regards,
 Colin Lewis.
  
 T :  +44(0)1229 584742
-E :  orcina@orcina.com
+E :  [email removed]
 W:  www.orcina.com
      
 
 
 
-From: Vamsee Achanta <vamseea@acma-inc.com> 
+From: Vamsee Achanta [email removed] 
 Sent: 13 February 2025 15:55
-To: Orcina <orcina@orcina.com>
-Cc: Scott McClure <scottm@acma-inc.com>; Adam Rivera <arivera@rockit-consulting.com>; Dusty Hardin <dustyh@acma-inc.com>
+To: Orcina [email removed]
+Cc: Scott McClure [email removed]; Adam Rivera [email removed]; Dusty Hardin [email removed]
 Subject: Orcina | Help Website Access on Analysis Servers | OLE error 80020101
 
 Dear Support Representative,
@@ -124,8 +124,8 @@ Vamsee
 
 From: Vamsee Achanta 
 Sent: Wednesday, February 12, 2025 11:16 PM
-To: Dusty Hardin <dustyh@acma-inc.com>
-Cc: Scott McClure <scottm@acma-inc.com>
+To: Dusty Hardin [email removed]
+Cc: Scott McClure [email removed]
 Subject: Orcina | Help Website Access on Analysis Servers
 
 Dusty,

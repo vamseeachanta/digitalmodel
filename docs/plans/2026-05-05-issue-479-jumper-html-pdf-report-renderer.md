@@ -35,9 +35,9 @@
 6. **Tests.** New `tests/solvers/orcaflex/reporting/test_jumper_renderer.py`:
    - `test_jumper_renderer_emits_all_11_sections` — assert every required section ID present in HTML
    - `test_jumper_renderer_includes_go_no_go_table` — render with mocked `GoNoGoDecision`, assert PASS/FAIL labels in HTML
-   - `test_jumper_pipeline_writes_html` — full pipeline against `ballymore_mf_plet/spec.yml` (skip PDF on environments without weasyprint via `pytest.importorskip`)
+   - `test_jumper_pipeline_writes_html` — full pipeline against `gom_tieback_mf_plet/spec.yml` (skip PDF on environments without weasyprint via `pytest.importorskip`)
 
-7. **Smoke check.** `uv run python -m digitalmodel.marine_ops.installation.jumper_installation docs/domains/orcaflex/subsea/jumper/installation/ballymore_mf_plet/spec.yml --output-dir /tmp/jumper-report` produces `/tmp/jumper-report/ballymore_mf_plet_jumper_report.html`. Open in browser, verify Plotly charts render, no broken section anchors.
+7. **Smoke check.** `uv run python -m digitalmodel.marine_ops.installation.jumper_installation docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_mf_plet/spec.yml --output-dir /tmp/jumper-report` produces `/tmp/jumper-report/gom_tieback_mf_plet_jumper_report.html`. Open in browser, verify Plotly charts render, no broken section anchors.
 
 ## Acceptance Criteria
 

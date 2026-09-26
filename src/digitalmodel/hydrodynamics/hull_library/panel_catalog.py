@@ -16,6 +16,7 @@ from typing import Optional
 import yaml
 from pydantic import BaseModel, Field, model_validator
 
+from .curvature_screen import CurvatureSignature
 from .profile_schema import HullType
 
 
@@ -78,6 +79,13 @@ class PanelCatalogEntry(BaseModel):
     tags: list[str] = Field(default_factory=list, description="Searchable tags")
     raos: Optional[list[RaoReference]] = Field(
         None, description="Linked RAO datasets for this hull"
+    )
+    curvature_signature: Optional[CurvatureSignature] = Field(
+        None,
+        description=(
+            "HullProd curvature signature of the panel file (#2170 D2); "
+            "None until screened with the optional curvature extra"
+        ),
     )
 
 
@@ -145,6 +153,9 @@ class PanelCatalog(BaseModel):
                 raos=[RaoReference(**r) for r in e["raos"]]
                 if e.get("raos")
                 else None,
+                curvature_signature=CurvatureSignature(**e["curvature_signature"])
+                if e.get("curvature_signature")
+                else None,
             )
             for e in data.get("entries", [])
         ]
@@ -208,6 +219,8 @@ def _entry_to_yaml_dict(entry: PanelCatalogEntry) -> dict:
         d["tags"] = entry.tags
     if entry.raos:
         d["raos"] = [r.to_dict() for r in entry.raos]
+    if entry.curvature_signature is not None:
+        d["curvature_signature"] = entry.curvature_signature.model_dump(mode="json")
     return d
 
 

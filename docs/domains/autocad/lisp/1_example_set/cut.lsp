@@ -7,7 +7,7 @@
 ;;This program is an enhansment of:
 ;;SECTION Release1.0
 ;;Copyright (C) 1996, Bob Jones
-;;Email: bcjones@io.com
+;;Email: [email removed]
 ;;WWW: http://www.io.com/~bcjones
 
 ;;Permission to use, copy, modify, and distribute this software for any purpose
