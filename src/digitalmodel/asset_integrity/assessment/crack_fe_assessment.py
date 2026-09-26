@@ -457,16 +457,25 @@ def _spec_value(receipt: Mapping, key: str):
     return spec.get("base", {}).get(key)
 
 
-def run(
-    case: Mapping,
-    *,
-    receipt_validator: Optional[Validator] = None,
-) -> CrackAssessmentResult:
-    """Assess the case and return a :class:`CrackAssessmentResult`."""
+def run(case: Mapping) -> CrackAssessmentResult:
+    """Assess the case and return a :class:`CrackAssessmentResult`.
+
+    The production path always validates every FE receipt with :func:`receipt_problems`
+    (schema, provenance, deck hash, gating guards). No caller can substitute a validator
+    here, so ``passes`` cannot be reached with unvalidated receipts (Codex P3 review).
+    """
+    return _assess(case, receipt_problems)
+
+
+def _assess(case: Mapping, validator: Validator) -> CrackAssessmentResult:
+    """Internal: the assessment with an explicit receipt validator.
+
+    Tests use this to keep numeric checks fast. Workflow and database routes call
+    :func:`run` only.
+    """
     from digitalmodel.ansys.crack_receipt import text_sha256
     from digitalmodel.citations.registry import get_api579_reference, get_bs7910_reference
 
-    validator = receipt_validator or receipt_problems
     repo = Path(case.get("_repo_root") or find_repo_root(Path(__file__)))
     reg_path = repo / case["design_data_register"]
     register_doc = json.loads(reg_path.read_text("utf-8"))
@@ -754,10 +763,13 @@ def run(
     sens_life["cycles"] = min(fin) if fin else None
     sens_life["margin_on_demand"] = (sens_life["cycles"] / demand) if fin else None
     sens_life["by_rule"] = by_rule
-    for d in depths:
-        d["extrapolated_life_to_limit_cycles"] = (
-            remaining(d["a_mm"], lim_gov, tab_lin)
-            if d["status"] == "established" else None)
+    # Extrapolated remaining lives stay inside the labelled sensitivity; base depth rows
+    # carry no extrapolated value (Codex P3 review).
+    sens_life["remaining_by_depth"] = [
+        {"a_mm": d["a_mm"], "cycles": remaining(d["a_mm"], lim_gov, tab_lin)}
+        for d in depths
+        if d["status"] == "established"
+    ]
 
     growth = {
         "law": {"A_input": float(g["law"]["A"]), "A_input_units": g["law"].get("A_units", ""),

@@ -149,10 +149,23 @@ def result_rows(case: dict, result: dict) -> list[dict]:
             "envelope_margin": _c(m["factor"]), "margin_mode": m["mode"],
             "fad_inside": d["fad_inside"],
             "remaining_life_to_last_fe_cycles": _c(d["remaining_life_to_last_fe_cycles"]),
-            "extrapolated_life_to_limit_cycles": _c(d["extrapolated_life_to_limit_cycles"]),
             "disposition": d["disposition"],
         })
     sens = result["sensitivities"]
+    # Extrapolated life appears only on labelled SENSITIVITY rows (Codex P3 review).
+    ext = sens["life_to_ligament_exhaustion"]
+    by_a = {round(d["a_mm"], 6): d for d in result["depths"]}
+    for item in ext.get("remaining_by_depth", []):
+        d = by_a[round(item["a_mm"], 6)]
+        rows.append({
+            **common, "case": "sensitivity_life_to_ligament_exhaustion",
+            "a_mm": item["a_mm"], "depth_status": "SENSITIVITY",
+            "governing_plane": d["governing_plane"], "governing_state": d["governing_state"],
+            "governing_receipt_sha256": _receipt_sha(fe_states, d["governing_state"]),
+            "k_gov_mpa_sqrt_m": d["k_gov_mpa_sqrt_m"],
+            "extrapolated_life_to_limit_cycles": _c(item["cycles"]),
+            "disposition": f"SENSITIVITY: {ext['basis']}",
+        })
     ll = sens["limit_load_lr"]
     base0 = rows[0]
     rows.append({

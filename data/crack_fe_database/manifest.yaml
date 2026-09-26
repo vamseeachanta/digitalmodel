@@ -38,5 +38,5 @@ tables:
     sha256: 270e583c8e64bf1f81225e46dad0d37dfdc0054ebb9f54a336e2a2450d071df7
   crack_results:
     file: crack_results.csv
-    rows: 7
-    sha256: 2ccc196d8fbc02c6ac54d360a46ca56e6c60acbf278fe48b660cdb638470915c
+    rows: 10
+    sha256: 8974cbe2e20f79585cd282950210ccbf0567fdd5f9bd28a556c13eb99d54dbf7

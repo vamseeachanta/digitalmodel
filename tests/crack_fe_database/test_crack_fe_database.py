@@ -143,3 +143,22 @@ def test_every_result_row_traces_to_a_committed_receipt():
     for r in base:
         if r["depth_status"] != "established":
             assert r["remaining_life_to_last_fe_cycles"] == "n/a"
+
+
+def test_extrapolated_life_only_on_sensitivity_rows():
+    # Codex P3 review: extrapolated life must never appear as base result data.
+    import csv as _csv
+
+    path = Path(__file__).resolve().parents[2] / "data" / "crack_fe_database" / "crack_results.csv"
+    with open(path, newline="", encoding="utf-8") as fh:
+        rows = list(_csv.DictReader(fh))
+    ext = [r for r in rows if r["extrapolated_life_to_limit_cycles"] not in ("", "n/a")]
+    assert ext, "the sensitivity rows must exist"
+    for r in ext:
+        assert r["case"] == "sensitivity_life_to_ligament_exhaustion"
+        assert r["depth_status"] == "SENSITIVITY"
+    assert all(
+        r["extrapolated_life_to_limit_cycles"] in ("", "n/a")
+        for r in rows
+        if r["case"] == "base"
+    )

@@ -63,7 +63,7 @@ def case() -> dict:
 
 @pytest.fixture(scope="module")
 def result(case) -> CrackAssessmentResult:
-    return run(case, receipt_validator=_trust_all)
+    return cfa._assess(case, _trust_all)
 
 
 def _depth(result, a):
@@ -442,7 +442,7 @@ def _completed_case(case: dict) -> dict:
 
 
 def test_complete_case_passes_only_with_every_basis(case):
-    res = run(_completed_case(case), receipt_validator=_trust_all)
+    res = cfa._assess(_completed_case(case), _trust_all)
     assert res.evidence_status == "COMPLETE"
     assert res.missing_evidence == []
     assert res.passes is (res.verdict in ("ACCEPT", "MONITOR"))
@@ -455,7 +455,7 @@ def test_complete_case_passes_only_with_every_basis(case):
 def test_assumed_basis_does_not_establish_evidence(case):
     c = _completed_case(case)
     c["partial_safety_factors"]["source_class"] = "assumed"
-    res = run(c, receipt_validator=_trust_all)
+    res = cfa._assess(c, _trust_all)
     assert res.missing_evidence == ["psf_basis"]
     assert res.passes is False
 
@@ -464,7 +464,7 @@ def test_receipt_problem_makes_evidence_incomplete(case):
     def one_bad(receipt, *_a, **_k):
         return ["tampered"] if receipt["state"] == "p0b_crotch_a2p80" else []
 
-    res = run(_completed_case(case), receipt_validator=one_bad)
+    res = cfa._assess(_completed_case(case), one_bad)
     assert res.missing_evidence == ["fe_receipts"]
     assert "p0b_crotch_a2p80" in res.evidence["fe_receipts"]["basis"]
     assert res.passes is False
@@ -498,3 +498,38 @@ def test_missing_declared_receipt_is_a_problem(tmp_path, case):
         "utf-8")
     problems = cfa.declared_receipt_problems(tmp_path, REPO, validator=_trust_all)
     assert problems == {"not_solved": ["declared state not_solved has no receipt"]}
+
+
+# --------------------------------------------------------------------------- #
+# Codex P3 review regressions
+# --------------------------------------------------------------------------- #
+def test_public_run_cannot_take_a_validator():
+    import inspect
+
+    assert list(inspect.signature(run).parameters) == ["case"]
+
+
+def test_public_run_rejects_a_tampered_receipt(case, tmp_path):
+    import shutil
+
+    fe_copy = tmp_path / "fe_states"
+    shutil.copytree(FE_STATES, fe_copy)
+    target = fe_copy / "p0b_crotch_a2p80.receipt.json"
+    rec = json.loads(target.read_text("utf-8"))
+    guard = next(iter(rec["guards"]))
+    rec["guards"][guard]["status"] = "fail"
+    target.write_text(json.dumps(rec, indent=2), encoding="utf-8")
+    c = _completed_case(case)
+    c["fe_states_dir"] = str(fe_copy)
+    res = run(c)
+    assert res.evidence_status == "INCOMPLETE"
+    assert "fe_receipts" in res.missing_evidence
+    assert res.passes is False
+
+
+def test_base_depth_rows_carry_no_extrapolated_life(result):
+    for d in result.depths:
+        assert "extrapolated_life_to_limit_cycles" not in d
+    sens = result.sensitivities["life_to_ligament_exhaustion"]
+    assert sens["label"] == "SENSITIVITY"
+    assert [x["a_mm"] for x in sens["remaining_by_depth"]] == pytest.approx([2.35, 2.8, 3.2])

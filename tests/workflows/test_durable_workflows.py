@@ -1674,7 +1674,9 @@ def test_workflow_registry(workflow, monkeypatch):
         ]
         assert result["evidence"]["fe_receipts"]["established"] is True
         assert result["passes"] is False
-        assert result["verdict"] in ("ACCEPT", "MONITOR", "REPAIR")
+        # the current disposition is pinned: inside the envelope, life above demand,
+        # small-scale-yielding check failing at 2.80 and 3.20 mm -> MONITOR (Codex P3)
+        assert result["verdict"] == "MONITOR"
         assert {c["code_id"] for c in result["citations"]} == {
             "api-std-579-asme-ffs-1", "bs-7910",
         }
