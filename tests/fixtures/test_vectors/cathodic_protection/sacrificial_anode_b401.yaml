@@ -1,25 +1,28 @@
-source_type: standard
-source_description: "DNV-RP-B401 sacrificial anode design workflow including net/gross mass, bracelet resistance, and driving voltage"
+source_type: python
+source_description: "DNV-RP-B401 sacrificial anode design workflow: net mass, anode count, bracelet resistance, driving voltage and current output"
 extracted_date: "2026-03-16"
+revised_date: "2026-09-25"
+revision_note: >-
+  #2213: two examples were deleted as unmappable: "Gross mass from net mass
+  (m_gross = m_net / u)" and the integration workflow built on it. DNV-RP-B401
+  Eq. 2 already divides by the utilisation factor, and the gross mass of the
+  standard is net mass plus core / insert (Sec. 7.7), so m_net / u is not a B401
+  relation and no package function computes it. The "Dwight ln(2L/r) - 1" equation
+  listed earlier is in neither B401 nor the package and is removed. The integration
+  example is re-derived on the net mass (18 anodes, not 22).
 legal_scan_passed: true
 category: "cathodic_protection"
 subcategory: "sacrificial_anode_design"
 equations:
   - name: "Net Anode Mass"
     latex: "m_{net} = \\frac{I_c \\cdot T \\cdot 8760}{u \\cdot \\varepsilon}"
-    description: "Net anode mass requirement per DNV-RP-B401"
-  - name: "Gross Anode Mass"
-    latex: "m_{gross} = \\frac{m_{net}}{u}"
-    description: "Gross anode mass including non-consumable insert"
+    description: "Net anode mass requirement per DNV-RP-B401 Sec. 7.7.1, Eq. 2"
   - name: "Bracelet Anode Resistance"
     latex: "R_a = \\frac{0.315 \\cdot \\rho}{\\sqrt{A}}"
-    description: "Modified bracelet anode resistance formula"
-  - name: "Dwight Flush Anode Resistance"
-    latex: "R_a = \\frac{\\rho}{2\\pi L} \\left( \\ln\\frac{2L}{r} - 1 \\right)"
-    description: "Flush/stand-off anode resistance using Dwight ln(2L/r)-1 variant"
+    description: "Short flush-mounted / bracelet anode resistance per DNV-RP-B401 Table 10-7"
   - name: "Anode Current Output"
     latex: "I_a = \\frac{E_c - E_a}{R_a}"
-    description: "Galvanic anode current output via Ohm's law"
+    description: "Galvanic anode current output via Ohm's law (Sec. 7.8)"
 inputs:
   - name: "Protective current demand"
     symbol: "I_c"
@@ -45,6 +48,7 @@ outputs:
     tolerance: 0.01
 worked_examples:
   - description: "Net mass zinc anode (I_c=10 A, T=25 yr, u=0.8, epsilon=780 Ah/kg)"
+    derivation: "10 * 25 * 8760 / (0.8 * 780) = 3509.615 kg"
     inputs:
       I_c: 10.0
       T: 25.0
@@ -52,8 +56,10 @@ worked_examples:
       epsilon: 780.0
     outputs:
       net_mass_kg: 3509.615
+    tolerance: 0.01
     use_as_test: true
   - description: "Net mass aluminium anode (I_c=5 A, T=25 yr, u=0.8, epsilon=2000 Ah/kg)"
+    derivation: "5 * 25 * 8760 / (0.8 * 2000) = 684.375 kg"
     inputs:
       I_c: 5.0
       T: 25.0
@@ -61,58 +67,65 @@ worked_examples:
       epsilon: 2000.0
     outputs:
       net_mass_kg: 684.375
+    tolerance: 0.01
     use_as_test: true
-  - description: "Gross mass from net mass (m_net=1000 kg, u=0.8)"
+  - description: "Anode count exact division (m_total=1000 kg, m_anode=200 kg)"
     inputs:
-      m_net: 1000.0
-      u: 0.8
-    outputs:
-      gross_mass_kg: 1250.0
-    use_as_test: true
-  - description: "Anode count exact division (m_gross=1000 kg, m_anode=200 kg)"
-    inputs:
-      m_gross: 1000.0
+      m_total: 1000.0
       m_anode: 200.0
     outputs:
       anode_count: 5
+    tolerance: 0
     use_as_test: true
-  - description: "Anode count rounds up (m_gross=201 kg, m_anode=200 kg)"
+  - description: "Anode count rounds up (m_total=201 kg, m_anode=200 kg)"
     inputs:
-      m_gross: 201.0
+      m_total: 201.0
       m_anode: 200.0
     outputs:
       anode_count: 2
+    tolerance: 0
     use_as_test: true
   - description: "Bracelet anode resistance (rho=0.3 ohm-m, A=0.5 m2)"
+    derivation: "0.315 * 0.3 / sqrt(0.5) = 0.13364 ohm"
     inputs:
       rho: 0.3
       A: 0.5
     outputs:
-      resistance_ohm: 0.1336
+      resistance_ohm: 0.13364
+    tolerance: 0.0001
     use_as_test: true
-  - description: "Driving voltage standard aluminium (E_c=-0.80V, E_a=-1.05V)"
+  - description: "Driving voltage aluminium in seawater (E_c=-0.80 V, E_a=-1.05 V; Table 10-6 with Sec. 5)"
+    source: "DNV-RP-B401 Table 10-6 (Al-based, seawater, -1.05 V) and Sec. 5 protective potential -0.80 V"
     inputs:
-      E_c: -0.80
-      E_a: -1.05
+      material: "Al-based"
+      environment: "seawater"
+      edition: "2021"
     outputs:
       driving_voltage_V: 0.25
+    tolerance: 0.0005
     use_as_test: true
-  - description: "Driving voltage zinc (E_c=-0.80V, E_a=-1.00V)"
+  - description: "Driving voltage zinc in seawater (E_c=-0.80 V, E_a=-1.00 V)"
+    source: "DNV-RP-B401 Table 10-6 (Zn-based, seawater, -1.00 V)"
     inputs:
-      E_c: -0.80
-      E_a: -1.00
+      material: "Zn-based"
+      environment: "seawater"
+      edition: "2021"
     outputs:
       driving_voltage_V: 0.20
+    tolerance: 0.0005
     use_as_test: true
-  - description: "Current output Ohms law (E_c=-0.80V, E_a=-1.05V, R_a=0.05 ohm)"
+  - description: "Current output Ohm's law (E_c=-0.80 V, E_a=-1.05 V, R_a=0.05 ohm)"
+    derivation: "0.25 / 0.05 = 5.0 A"
     inputs:
       E_c: -0.80
       E_a: -1.05
       R_a: 0.05
     outputs:
       current_output_A: 5.0
+    tolerance: 0.0001
     use_as_test: true
-  - description: "Integration workflow: 22 bracelet anodes for 15 A demand (zinc, 25 yr)"
+  - description: "Integration workflow: zinc bracelets for 15 A over 25 yr (re-derived on net mass)"
+    derivation: "m_net = 15 * 25 * 8760 / (0.8 * 780) = 5264.423 kg; N = ceil(5264.423 / 300) = 18; R_a = 0.315 * 0.30 / sqrt(0.25) = 0.189 ohm; I_a = (-0.80 - (-1.00)) / 0.189 = 1.0582 A"
     inputs:
       I_c: 15.0
       T: 25.0
@@ -125,17 +138,17 @@ worked_examples:
       E_a: -1.00
     outputs:
       net_mass_kg: 5264.423
-      gross_mass_kg: 6580.529
-      anode_count: 22
+      anode_count: 18
       bracelet_resistance_ohm: 0.189
-      current_per_anode_A: 1.058
+      current_per_anode_A: 1.0582
+    tolerance: 0.001
     use_as_test: true
 assumptions:
-  - "Zinc electrochemical capacity 780 A-h/kg (ASTM B418 Type II)"
-  - "Aluminium electrochemical capacity 2000 A-h/kg"
+  - "Zinc electrochemical capacity 780 A-h/kg (DNV-RP-B401 Table 10-6, seawater)"
+  - "Aluminium electrochemical capacity 2000 A-h/kg (Table 10-6, seawater)"
   - "8760 hours per year conversion"
-  - "Bracelet formula coefficient 0.315 per DNV-RP-B401"
+  - "Bracelet formula coefficient 0.315 per DNV-RP-B401 Table 10-7"
 references:
-  - "DNV-RP-B401 (2005/2017)"
+  - "DNV-RP-B401 (2005/2017/2021), Sec. 7.7.1 Eq. 2 and Sec. 7.8"
   - "DNV-RP-B401, Table 10-6 (anode properties)"
   - "DNV-RP-B401, Table 10-7 (anode resistance formulas)"

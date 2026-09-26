@@ -228,10 +228,30 @@ class TestBuriedAndGeometry:
 
 
 class TestProtectedLength:
+    """Eq. 14 against the calc-008 attenuation table (moved from the B401 doc-verified file, #2213).
+
+    Source: ``docs/domains/cathodic_protection/examples/calc-008-dnv-b401-2005-slhr-deepwater.md``,
+    "Attenuation Analysis (DNV-RP-F103 §5.6.7)": rho_me = 2.0e-7 ohm-m,
+    delta_E_me = 0.15 V, insulating line-pipe coating f_cf = 0.0042.
+    """
+
     def test_doc_verified_12in_riser(self):
-        """D 0.329, WT 0.022, f_cf 0.0042, i_cm 0.250: PL = 3829 m."""
+        """12 in production upper pipe: D 0.329, WT 0.022, i_cm 0.250.
+
+        PL = sqrt(0.15 * 0.022 * 0.307 / (2e-7 * 0.329 * 0.0042 * 0.250))
+           = sqrt(1.0131e-3 / 6.9090e-11) = 3829.3 m (calc-008: 3829 m).
+        """
         PL = protected_length(0.15, 0.022, 0.329, STEEL_RESISTIVITY, 0.0042, 0.250, edition=EDITION)
-        assert PL == pytest.approx(3829, rel=0.02)
+        assert PL == pytest.approx(3829.3, abs=0.5)
+
+    def test_doc_verified_8in_gas_lift_riser(self):
+        """8 in gas-lift upper pipe: D 0.219, WT 0.0239, i_cm 0.235 (MDT 65 °C).
+
+        PL = sqrt(0.15 * 0.0239 * 0.1951 / (2e-7 * 0.219 * 0.0042 * 0.235))
+           = sqrt(6.9944e-4 / 4.3222e-11) = 4022.3 m (calc-008: 4022 m).
+        """
+        PL = protected_length(0.15, 0.0239, 0.219, STEEL_RESISTIVITY, 0.0042, 0.235, edition=EDITION)
+        assert PL == pytest.approx(4022.3, abs=0.5)
 
     def test_b401_wrapper_is_the_same_function(self):
         from digitalmodel.cathodic_protection.dnv_rp_b401 import (
