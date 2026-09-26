@@ -19,9 +19,10 @@ References
 from __future__ import annotations
 
 import math
-from typing import Optional
 
 from pydantic import BaseModel, Field
+
+from digitalmodel.cathodic_protection._experimental import require_experimental
 
 
 class CO2CorrosionInput(BaseModel):
@@ -104,13 +105,58 @@ GALVANIC_POTENTIAL: dict[str, float] = {
     "graphite": +0.25,
 }
 
-# Faraday's constant / equivalent weight for common metals [mm/yr per mA/m²]
+# Faraday penetration-rate factors [mm/yr per mA/m²].
+#
+# Derivation (issue #2209 — the previous hard-coded values were 10x too high):
+#     rate [mm/yr per mA/m²]
+#       = (M / (z * F)) [g/C]          mass per coulomb
+#       * 1e-3 [A/m² per mA/m²]        one milliampere per square metre
+#       * SECONDS_PER_YEAR [s/yr]
+#       / (rho * 1e3) [g/m³]           density, kg/m³ -> g/m³
+#       * 1e3 [mm/m]
+#       = M * SECONDS_PER_YEAR * 1e-3 / (z * F * rho)
+#
+#   Fe : M = 55.85 g/mol, z = 2, rho = 7870 kg/m³ -> 0.0011605
+#   Al : M = 26.98,       z = 3, rho = 2700       -> 0.0010894
+#   Cu : M = 63.55,       z = 2, rho = 8960       -> 0.0011599
+#   Zn : M = 65.38,       z = 2, rho = 7140       -> 0.0014975
+#   Cast iron is treated as Fe here (this module does not carry a separate
+#   cast-iron density; with rho = 7200 the factor would be 0.0012685).
+FARADAY_C_PER_MOL: float = 96485.33212
+SECONDS_PER_YEAR: float = 3.15576e7  # Julian year, 365.25 d
+
+
+def faraday_rate_factor(molar_mass_g_mol: float, valence: int, density_kg_m3: float) -> float:
+    """Penetration rate [mm/yr] produced by 1 mA/m² of anodic current (Faraday).
+
+    Parameters
+    ----------
+    molar_mass_g_mol : float
+        Atomic/molar mass M [g/mol].
+    valence : int
+        Electrons per dissolved atom z.
+    density_kg_m3 : float
+        Metal density rho [kg/m³].
+
+    Returns
+    -------
+    float
+        Rate factor [mm/yr per mA/m²].
+    """
+    return (
+        molar_mass_g_mol
+        * SECONDS_PER_YEAR
+        * 1e-3
+        / (valence * FARADAY_C_PER_MOL * density_kg_m3)
+    )
+
+
 CORROSION_RATE_FACTOR: dict[str, float] = {
-    "carbon_steel": 0.0116,  # mm/yr per mA/m² (Fe, M=55.85, z=2)
-    "cast_iron": 0.0116,
-    "aluminum_alloy": 0.0110,
-    "copper": 0.0117,
-    "zinc": 0.0152,
+    "carbon_steel": faraday_rate_factor(55.85, 2, 7870.0),  # 0.0011605
+    "cast_iron": faraday_rate_factor(55.85, 2, 7870.0),  # as Fe (see note above)
+    "aluminum_alloy": faraday_rate_factor(26.98, 3, 2700.0),  # 0.0010894
+    "copper": faraday_rate_factor(63.55, 2, 8960.0),  # 0.0011599
+    "zinc": faraday_rate_factor(65.38, 2, 7140.0),  # 0.0014975
 }
 
 
@@ -239,6 +285,8 @@ def norsok_m506_co2(
 
 def galvanic_corrosion(
     input_params: GalvanicCorrosionInput,
+    *,
+    experimental: bool = False,
 ) -> GalvanicCorrosionResult:
     """Predict galvanic corrosion rate from dissimilar metal coupling.
 
@@ -250,18 +298,53 @@ def galvanic_corrosion(
 
     where d_eff is an effective electrolyte path length.
 
+    Experimental
+    ------------
+    Quarantined (issue #2209): the model is ohmic-only — it divides the
+    open-circuit potential difference by an assumed 0.1 m electrolyte path
+    and ignores anodic/cathodic polarisation, so it overstates the coupling
+    current by orders of magnitude for real couples. A re-model must follow
+    BS PD 6484 (galvanic corrosion guidance: mixed-potential / polarisation
+    based coupling). Calling without ``experimental=True`` raises
+    :class:`~digitalmodel.cathodic_protection._experimental.ExperimentalModelError`.
+
     Parameters
     ----------
     input_params : GalvanicCorrosionInput
-        Material, area, and electrolyte data.
+        Material, area, and electrolyte data. Both materials must be keys of
+        ``GALVANIC_POTENTIAL``; unknown names raise ``ValueError``.
+    experimental : bool
+        Acknowledge the quarantine and run the model anyway.
 
     Returns
     -------
     GalvanicCorrosionResult
         Galvanic corrosion current density, rate, and risk level.
+
+    Raises
+    ------
+    ExperimentalModelError
+        If ``experimental`` is false.
+    ValueError
+        If either material is not in ``GALVANIC_POTENTIAL``.
     """
-    e_anode = GALVANIC_POTENTIAL.get(input_params.anode_material, -0.65)
-    e_cathode = GALVANIC_POTENTIAL.get(input_params.cathode_material, -0.08)
+    require_experimental(
+        experimental,
+        model="corrosion_rate.galvanic_corrosion",
+        reason="ohmic-only coupling with an assumed 0.1 m path and no polarisation",
+        standard="BS PD 6484",
+    )
+    for label, material in (
+        ("anode_material", input_params.anode_material),
+        ("cathode_material", input_params.cathode_material),
+    ):
+        if material not in GALVANIC_POTENTIAL:
+            raise ValueError(
+                f"unknown {label} {material!r}; expected one of "
+                f"{sorted(GALVANIC_POTENTIAL)}"
+            )
+    e_anode = GALVANIC_POTENTIAL[input_params.anode_material]
+    e_cathode = GALVANIC_POTENTIAL[input_params.cathode_material]
 
     delta_e = abs(e_cathode - e_anode)
     area_ratio = input_params.cathode_area_m2 / input_params.anode_area_m2
@@ -274,7 +357,9 @@ def galvanic_corrosion(
     i_galv_mA = i_galv * 1000.0  # convert to mA/m²
 
     # Corrosion rate from Faraday's law
-    cr_factor = CORROSION_RATE_FACTOR.get(input_params.anode_material, 0.0116)
+    cr_factor = CORROSION_RATE_FACTOR.get(
+        input_params.anode_material, CORROSION_RATE_FACTOR["carbon_steel"]
+    )
     corrosion_rate = i_galv_mA * cr_factor
 
     # Risk classification
