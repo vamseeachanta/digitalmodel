@@ -465,4 +465,19 @@ The limit-load receipt is written only on corroborated collapse. A run that comp
 
 The thresholds are set from these arguments, not from the earlier run's values.
 
+## P2 card decisions (owner save 2026-09-26T10:39Z, `crack-fe-2157-decisions (8).json`; all as recommended)
+
+- **B10 (require):** the Lr cut-off needs σu or a fixed-value basis. It is satisfied on our basis: Rm(250 °C) ≈ 385 MPa from the public datasheet gives the flow-rule Lr_max = 2.016.
+- **B11 (three_bounds):** residual stress is reported as three screening bounds (relaxed σy, σy and flow magnitude), labelled `screening`, never as the disposition itself.
+- **B13 (assume):** K_eq is accepted as stated. The governing crotch plane is pure mode I.
+- **G01 (rho):**
+  - the BS 7910 ρ method is implemented as a user-supplied ρ ≥ 0 with a basis, and the method is named explicitly;
+  - the API Φ form is provided as a separate, user-supplied Φ ≥ 1 with a basis;
+  - there is no built-in default, and no computed ρ/Φ procedure ships (G05).
+- **G02 (uniform_user):**
+  - residual profiles are uniform, or a user polynomial whose influence coefficients the user supplies with a basis;
+  - a relaxation factor in (0, 1] is a user input with a basis;
+  - no Annex 9D content ships.
+- **G03 (inputs):** partial safety factors are inputs with a basis. An assessment without them is INCOMPLETE evidence (P3).
+
 ## Complexity: T3
