@@ -1,0 +1,382 @@
+{
+ "schema": "digitalmodel.crack_fe.receipt/v2",
+ "state": "p0b_limit_load_crotch_a2p35",
+ "kind": "limit_load",
+ "issue": 2157,
+ "spec": {
+  "base": {
+   "run_od_mm": 168.3,
+   "run_wall_mm": 7.11,
+   "branch_od_mm": 21.34,
+   "branch_wall_mm": 2.77,
+   "weldolet_a_mm": 19.05,
+   "weldolet_b_mm": 34.93,
+   "weldolet_c_mm": 23.81,
+   "root_gap_mm": 1.6,
+   "bevel_deg": 45.0,
+   "fillet_leg_mm": 3.0,
+   "run_half_length_mm": 200.0,
+   "branch_length_mm": 40.0,
+   "pressure_mpa": 4.7,
+   "youngs_modulus_mpa": 182500.0,
+   "poisson": 0.3,
+   "yield_mpa": 127.0,
+   "crack_depth_mm": 2.35,
+   "crack_face_pressure": true,
+   "tube_radius_mm": 0.8
+  },
+  "load_factor": 4.0,
+  "substeps": 16,
+  "plane": "crotch"
+ },
+ "design_basis": "examples/workflows/crack-fe-weldolet/design-data-register.json",
+ "units": {
+  "length": "mm",
+  "force": "N",
+  "stress": "MPa",
+  "k": "MPa*sqrt(m)",
+  "k_raw": "MPa*sqrt(mm)",
+  "k_conversion_factor": 0.03162277660168379,
+  "j": "N/mm"
+ },
+ "meshing": {
+  "approach": "Structured 20-node hexahedral mesh (SOLID186) generated in Python and written as N/E commands. In the (rho, v) section a square tube of half-size d around the crack front carries a 360 deg spider-web of rings, the innermost ring collapsed onto the tip (degenerate prism) with quarter-point mid-side nodes, with separate upper and lower crack-face nodes (the P0a crack block extended from 180 to 360 deg); tensor blocks in the run-pipe wall and a column-fraction block following the weld/weldolet contour; the section swept through 360 deg about the branch axis (closed crack front, no end nodes); an O-block and a tensor mesh for the rest of the run pipe. CINT crack-extension directions per front node (CINT,CENC) in the fusion face, normal to the front.",
+  "element": "SOLID186 (20-node, full integration)",
+  "modelling_route": "global structured crack-block model (no submodel)",
+  "material": "elastic-perfectly-plastic, TB,BISO with zero tangent modulus"
+ },
+ "run": {
+  "producing_commit": "073c11f788cb2b07d85ca3e2db55acc24e9030c4",
+  "generator_tree_clean": true,
+  "generator_files": {
+   "src/digitalmodel/ansys/weldolet_limit.py": "c8dd32b4b43fbe791618b5572ae9a5a6bc90a01a",
+   "src/digitalmodel/ansys/weldolet_crotch.py": "0d93cabcdc84cfb437b2a1a2d1f7e6b27632db53",
+   "src/digitalmodel/ansys/weldolet_crack.py": "2918496726ec453d04c67f00d58df1e888c027f9",
+   "src/digitalmodel/ansys/crack_verification.py": "aefde929d711884b55ac317cbe3208265114cd63",
+   "src/digitalmodel/ansys/cint_parser.py": "8bca50cc7d21c16f9de0206bf8c5afc41a81a77f"
+  },
+  "mapdl_version": "26.1",
+  "mapdl_release": "2026 R1",
+  "cores": 4,
+  "platform": "windows",
+  "solver_wrapper": "digitalmodel.ansys fail-closed MAPDL subprocess (#940)"
+ },
+ "meshes": [
+  {
+   "level": 0,
+   "deck_sha256": "6660c5f4cad52162bfb4364e8a136889cb9ccb22fb3e6dff1c72396ce6471bb4",
+   "run": {
+    "argv": [
+     "MAPDL.exe",
+     "-b",
+     "-i",
+     "p0b_limit_load_crotch_a2p35_L0.inp",
+     "-o",
+     "p0b_limit_load_crotch_a2p35_L0.out",
+     "-smp",
+     "-np",
+     "4"
+    ],
+    "mapdl_version": "26.1",
+    "solve_seconds": 7767.9
+   },
+   "artifacts": {
+    "lpl": {
+     "path": "solved/p0b_limit_load_crotch_a2p35/weldolet_lpl_L0.txt",
+     "sha256": "470d7753a6230ff2a10d570805f3a719d2dfb64e4476ee80ee200427b33f48e8"
+    },
+    "reacset": {
+     "path": "solved/p0b_limit_load_crotch_a2p35/weldolet_reacset_L0.txt",
+     "sha256": "2a067b4ba98e5130767ed3dc070fd93010605cd4578bbaac80441a9bc89fe13c"
+    },
+    "conv": {
+     "path": "solved/p0b_limit_load_crotch_a2p35/weldolet_conv_L0.txt",
+     "sha256": "dd0d5ca127e33dcbe802f8774a1cc4f473213364d1fc1e072471ab2b176a1cfc"
+    },
+    "logev": {
+     "path": "solved/p0b_limit_load_crotch_a2p35/weldolet_logev_L0.txt",
+     "sha256": "dc608a09c511edeaf1f3cf4a9e35a96dd298af476fc5c0eb0d9d8fb485b46215"
+    },
+    "reac": {
+     "path": "solved/p0b_limit_load_crotch_a2p35/weldolet_reac_L0.txt",
+     "sha256": "74d53f9fe35f78eb20df7a8b64753b0a7b1774181e9cf063472ca6f9d8402af8"
+    }
+   },
+   "n_nodes": 145939,
+   "n_elements": 33451,
+   "mesh_parameters": {
+    "level": 0,
+    "front_divisions_quarter": 12,
+    "first_ring_mm": 0.0235,
+    "ring_ratio_target": 1.35,
+    "tube_side_divisions": 3,
+    "core_radial_divisions": 4,
+    "tube_radius_mm": 0.6,
+    "box_depth_mm": 6.0
+   },
+   "declared_front_nodes": 0,
+   "declared_contours": 0,
+   "reactions": {
+    "stress_mpa": 12.24218322,
+    "loaded_area_mm2": 9322.93004,
+    "reaction_sum_n": -114132.5618,
+    "fz_ligament_n": null,
+    "fx_symmetry_n": null,
+    "fy_point_n": null,
+    "n_ligament_nodes": null,
+    "extras": {
+     "converged_set": 41.0
+    }
+   },
+   "front": [],
+   "limit_load": {
+    "criterion": "Elastic-perfectly-plastic (sigma_y = Rp0.2 = 127 MPa, von Mises, no hardening), small displacement, all pressure loads (bore, crack faces, end thrusts) scaled proportionally. P_L is the pressure at the last converged substep when the Newton solution fails to converge with automatic bisection down to 1/20 of the initial load step (the limit of an EPP small-displacement model, where the deflection becomes unbounded). Converged substeps are those of the solver's monitor record, cross-checked with the solver log. Collapse is accepted only when corroborated: T1 bisection exhausted; T2 twice-elastic-slope pressure within 10 % below P_L; T3 last tangent stiffness <= 2 % of elastic; T4 >= 3 converged substeps, no solver pivot warning, no unconstrained indicator, and the net-section-yielding diagnostic with any NCNV divergence.",
+    "n_converged_substeps": 41,
+    "converged_sets": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     34,
+     35,
+     36,
+     37,
+     38,
+     39,
+     40,
+     41
+    ],
+    "rejected_sets": [
+     {
+      "set": 42,
+      "load_factor": 4.0
+     }
+    ],
+    "final_load_factor_requested": 4.0,
+    "last_load_increment_mpa": 0.05874999999999986,
+    "min_load_increment_allowed_mpa": 0.058750000000000004,
+    "p_limit_mpa": 12.24218322,
+    "p_tes_mpa": 12.018212340121751,
+    "tes_gap": 0.018295011261745195,
+    "tangent_over_elastic_stiffness_last": 0.0002900202050576087,
+    "design_pressure_mpa": 4.7,
+    "lr_design": 0.38391844947408005,
+    "lr_design_tes": 0.39107313691816387,
+    "reached_nonconvergence": true,
+    "collapse": {
+     "accepted": true,
+     "checks": {
+      "log_gate_nonconvergence_only": true,
+      "below_requested_load": true,
+      "t1_bisection_exhausted": true,
+      "t2_tes_consistent": true,
+      "t3_tangent_plateau": true,
+      "t4_min_substeps": true,
+      "t4_no_pivot_warning": true,
+      "t4_no_unconstrained_text": true,
+      "t4_net_section_diagnostic": true
+     },
+     "thresholds": {
+      "tes_gap_max": 0.1,
+      "tangent_ratio_max": 0.02,
+      "min_converged_substeps": 3,
+      "bisection_exhausted_factor": 1.001
+     },
+     "problems": []
+    }
+   }
+  }
+ ],
+ "primary_level": 0,
+ "guards": {
+  "a_equilibrium": {
+   "status": "pass",
+   "value": 3.994435012067648e-06,
+   "limit": 0.005,
+   "detail": "|sum RF_z + sigma*A| / sigma*A"
+  },
+  "b_mesh_load": {
+   "status": "not_applicable",
+   "value": null,
+   "limit": null,
+   "detail": "not applicable: single mesh density (limit-load sensitivity run)"
+  },
+  "c_contour": {
+   "status": "not_applicable",
+   "value": null,
+   "limit": null,
+   "detail": "not applicable: the model has no crack front"
+  },
+  "d_complete": {
+   "status": "not_applicable",
+   "value": null,
+   "limit": null,
+   "detail": "not applicable: the model has no crack front"
+  },
+  "e_sanitised": {
+   "status": "pass",
+   "value": 0.0,
+   "limit": 0.0,
+   "detail": ""
+  },
+  "f_units": {
+   "status": "pass",
+   "value": 0.0,
+   "limit": 0.0,
+   "detail": ""
+  },
+  "g_j_mesh": {
+   "status": "not_applicable",
+   "value": null,
+   "limit": null,
+   "detail": "not applicable: the model has no crack front"
+  },
+  "c_contour_legacy": {
+   "status": "not_applicable",
+   "value": null,
+   "limit": null,
+   "detail": "not applicable: the model has no crack front"
+  },
+  "g_end_nodes_record": {
+   "status": "not_applicable",
+   "value": null,
+   "limit": null,
+   "detail": "not applicable: the model has no crack front"
+  }
+ },
+ "limit_load": {
+  "criterion": "Elastic-perfectly-plastic (sigma_y = Rp0.2 = 127 MPa, von Mises, no hardening), small displacement, all pressure loads (bore, crack faces, end thrusts) scaled proportionally. P_L is the pressure at the last converged substep when the Newton solution fails to converge with automatic bisection down to 1/20 of the initial load step (the limit of an EPP small-displacement model, where the deflection becomes unbounded). Converged substeps are those of the solver's monitor record, cross-checked with the solver log. Collapse is accepted only when corroborated: T1 bisection exhausted; T2 twice-elastic-slope pressure within 10 % below P_L; T3 last tangent stiffness <= 2 % of elastic; T4 >= 3 converged substeps, no solver pivot warning, no unconstrained indicator, and the net-section-yielding diagnostic with any NCNV divergence.",
+  "n_converged_substeps": 41,
+  "converged_sets": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26,
+   27,
+   28,
+   29,
+   30,
+   31,
+   32,
+   33,
+   34,
+   35,
+   36,
+   37,
+   38,
+   39,
+   40,
+   41
+  ],
+  "rejected_sets": [
+   {
+    "set": 42,
+    "load_factor": 4.0
+   }
+  ],
+  "final_load_factor_requested": 4.0,
+  "last_load_increment_mpa": 0.05874999999999986,
+  "min_load_increment_allowed_mpa": 0.058750000000000004,
+  "p_limit_mpa": 12.24218322,
+  "p_tes_mpa": 12.018212340121751,
+  "tes_gap": 0.018295011261745195,
+  "tangent_over_elastic_stiffness_last": 0.0002900202050576087,
+  "design_pressure_mpa": 4.7,
+  "lr_design": 0.38391844947408005,
+  "lr_design_tes": 0.39107313691816387,
+  "reached_nonconvergence": true,
+  "collapse": {
+   "accepted": true,
+   "checks": {
+    "log_gate_nonconvergence_only": true,
+    "below_requested_load": true,
+    "t1_bisection_exhausted": true,
+    "t2_tes_consistent": true,
+    "t3_tangent_plateau": true,
+    "t4_min_substeps": true,
+    "t4_no_pivot_warning": true,
+    "t4_no_unconstrained_text": true,
+    "t4_net_section_diagnostic": true
+   },
+   "thresholds": {
+    "tes_gap_max": 0.1,
+    "tangent_ratio_max": 0.02,
+    "min_converged_substeps": 3,
+    "bisection_exhausted_factor": 1.001
+   },
+   "problems": []
+  }
+ },
+ "front_geometry": {
+  "type": "crotch",
+  "rw": 11.905,
+  "ro": 84.15,
+  "v0": -1.85,
+  "a": 2.35,
+  "c": 2.35
+ },
+ "crack": {
+  "type": "semicircular crotch-plane root flaw on the bore surface (y = 0, +x crotch), normal to the run-pipe hoop stress",
+  "depth_mm": 2.35,
+  "half_length_mm": 2.35,
+  "aspect_a_over_c": 1.0,
+  "centre_v_mm": -1.85,
+  "top_tip_v_mm": 0.5,
+  "bottom_tip_v_mm": -4.2,
+  "remaining_ligament_mm": 2.91,
+  "ligament_definition": "lower flaw tip to the run-pipe bore along the bore surface; exhausted at a = 3.805 mm",
+  "crack_face_pressure": true
+ },
+ "plane": "crotch"
+}

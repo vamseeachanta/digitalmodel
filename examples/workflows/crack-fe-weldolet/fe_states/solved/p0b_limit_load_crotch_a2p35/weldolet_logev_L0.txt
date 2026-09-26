@@ -1,0 +1,13 @@
+# digitalmodel weldolet_limit solver-log evidence (host-free counts and flags extracted from the MAPDL output)
+completed_substeps 41
+last_completed_time 0.65118
+nonconvergence_errors 1
+ncnv_displacement_limit 1
+net_section_yield_diagnostic 1
+other_errors 0
+fatal_errors 0
+pivot_warnings_before_first_substep 0
+pivot_warnings_on_converged_attempts 0
+pivot_warnings_on_failed_attempts 0
+nonconvergence_before_first_substep 0
+unconstrained_outside_ncnv 0
