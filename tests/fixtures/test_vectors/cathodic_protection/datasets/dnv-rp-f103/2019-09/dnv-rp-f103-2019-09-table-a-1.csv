@@ -1,0 +1,17 @@
+Table A-1 Recommendations for constants a and b to be used for calculation of coating breakdown factors associated with specific linepipe coating systems as defined in DNVGL-RP-F106,,,,,
+Linepipe coating type,"DNVGL-RP-F106
+CDS","Concrete
+weight coating","Max.
+temperature [°C]",a,b
+Glass fibre reinforced asphalt enamel,No. 4,yes,70,0.01,0.0003
+FBE,No. 1,yes,90,0.030,0.0003
+FBE,No. 1,no,90,0.030,0.0010
+3-layer FBE/PE,No. 2,yes,80,0.001,0.00003
+3-layer FBE/PE,No. 2,no,80,0.001,0.00003
+3-layer FBE/PP,No. 3,yes,110,0.001,0.00003
+3-layer FBE/PP,No. 3,no,110,0.001,0.00003
+FBE/PP thermally insulating coating,"No. 3
+(innermost 3LPP layer)",no,140,0.0003,0.00001
+FBE/PU thermally insulating coating,"No. 1
+(innermost FBE layer)",no,70,0.01,0.003
+Polychloroprene,No. 5,no,90,0.010,0.001

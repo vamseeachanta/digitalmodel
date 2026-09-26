@@ -112,7 +112,7 @@ def test_design_cp_system_result_carries_explicit_edition_metadata():
     result = design_cp_system(_sample_anode_sizing_input(), edition="2017")
 
     assert result.edition_used == "2017"
-    assert result.standard == "DNVGL-RP-B401 (2017)"
+    assert result.standard == "DNVGL-RP-B401 (June 2017)"
 
 
 def test_design_cp_system_missing_edition_warns_and_defaults_metadata():
@@ -123,11 +123,20 @@ def test_design_cp_system_missing_edition_warns_and_defaults_metadata():
 
     assert Path(warnings[0].filename).name == "test_edition_api_foundation.py"
     assert result.edition_used == "2021"
-    assert result.standard == "DNV-RP-B401 (2021)"
+    assert result.standard == "DNV-RP-B401 (May 2021)"
 
 
-def test_design_cp_system_explicit_edition_preserves_p1_numerics():
+def test_design_cp_system_2017_and_2021_agree_for_user_supplied_anode_data():
+    """The sizing input carries capacity, driving voltage and utilisation, so
+    no edition table is consulted and 2017 == 2021 numerically. The anode
+    tables themselves differ (#2208): Zn seawater is -1.00 V in 2017
+    (Table A-6) and -1.030 V in 2021 (Table 8-6)."""
     from digitalmodel.cathodic_protection.anode_sizing import design_cp_system
+    from digitalmodel.cathodic_protection.b401_tables import (
+        AnodeEnvironment,
+        AnodeMaterial,
+        anode_closed_circuit_potential,
+    )
 
     legacy = design_cp_system(_sample_anode_sizing_input(), edition="2017")
     current = design_cp_system(_sample_anode_sizing_input(), edition="2021")
@@ -136,6 +145,11 @@ def test_design_cp_system_explicit_edition_preserves_p1_numerics():
     assert current.total_anode_mass_kg == pytest.approx(legacy.total_anode_mass_kg)
     assert current.number_of_anodes == legacy.number_of_anodes
     assert current.anode_resistance_ohm == pytest.approx(legacy.anode_resistance_ohm)
+
+    zn_2017 = anode_closed_circuit_potential(AnodeMaterial.ZINC, AnodeEnvironment.SEAWATER, "2017")
+    zn_2021 = anode_closed_circuit_potential(AnodeMaterial.ZINC, AnodeEnvironment.SEAWATER, "2021")
+    assert (zn_2017.value, zn_2021.value) == (-1.00, -1.030)
+    assert (zn_2017.citation.section, zn_2021.citation.section) == ("Table A-6", "Table 8-6")
 
 
 def test_design_cp_system_explicit_edition_emits_no_missing_edition_warning():
@@ -175,7 +189,7 @@ def test_anode_sizing_result_defaults_metadata_for_legacy_dicts():
     result = AnodeSizingResult(**_legacy_anode_sizing_result_data())
 
     assert result.edition_used == "2021"
-    assert result.standard == "DNV-RP-B401 (2021)"
+    assert result.standard == "DNV-RP-B401 (May 2021)"
 
 
 def test_anode_sizing_result_treats_none_metadata_as_legacy_missing():
@@ -186,7 +200,7 @@ def test_anode_sizing_result_treats_none_metadata_as_legacy_missing():
     )
 
     assert result.edition_used == "2021"
-    assert result.standard == "DNV-RP-B401 (2021)"
+    assert result.standard == "DNV-RP-B401 (May 2021)"
 
 
 def test_anode_sizing_result_rejects_invalid_metadata_with_validation_error():
@@ -223,7 +237,7 @@ def test_coating_breakdown_result_carries_explicit_edition_metadata():
     result = coating_breakdown_factors(CoatingCategory.PAINT_III, edition="2017")
 
     assert result.edition_used == "2017"
-    assert result.standard == "DNVGL-RP-B401 (2017)"
+    assert result.standard == "DNVGL-RP-B401 (June 2017)"
 
     # Linepipe coatings are F103 Table A.1 rows (#2207): the B401 edition is
     # recorded, but ``standard`` agrees with the F103 citation.
@@ -247,7 +261,7 @@ def test_coating_breakdown_missing_edition_warns_and_defaults_metadata():
 
     assert Path(warnings[0].filename).name == "test_edition_api_foundation.py"
     assert result.edition_used == "2021"
-    assert result.standard == "DNV-RP-B401 (2021)"
+    assert result.standard == "DNV-RP-B401 (May 2021)"
 
     with pytest.warns(UserWarning, match="defaulting to DNV-RP-F103 2010") as warnings:
         result = coating_breakdown_factors(CoatingCategory.FBE, edition="2021")
@@ -257,18 +271,37 @@ def test_coating_breakdown_missing_edition_warns_and_defaults_metadata():
     assert result.standard == "DNV-RP-F103 (October 2010)"
 
 
-def test_coating_breakdown_explicit_edition_preserves_p1_numerics():
+def test_coating_breakdown_b401_edition_does_not_change_linepipe_or_cat_i_iii():
+    """FBE is an F103 row (the B401 edition is only recorded), and paint
+    categories I-III are identical in Table A-4 (2017) and Table 8-4 (2021);
+    category IV is the 2021-only difference (#2208)."""
+    from digitalmodel.cathodic_protection.b401_tables import (
+        DepthBand,
+        PaintCategory,
+        coating_breakdown_constants,
+    )
     from digitalmodel.cathodic_protection.coating import (
         CoatingCategory,
         coating_breakdown_factors,
     )
 
-    legacy = coating_breakdown_factors(CoatingCategory.FBE, edition="2017")
-    current = coating_breakdown_factors(CoatingCategory.FBE, edition="2021")
+    legacy = coating_breakdown_factors(CoatingCategory.FBE, edition="2017", f103_edition="2010")
+    current = coating_breakdown_factors(CoatingCategory.FBE, edition="2021", f103_edition="2010")
 
     assert current.initial_factor == pytest.approx(legacy.initial_factor)
     assert current.mean_factor == pytest.approx(legacy.mean_factor)
     assert current.final_factor == pytest.approx(legacy.final_factor)
+
+    paint_2017 = coating_breakdown_factors(CoatingCategory.PAINT_III, edition="2017")
+    paint_2021 = coating_breakdown_factors(CoatingCategory.PAINT_III, edition="2021")
+    assert paint_2021.final_factor == pytest.approx(paint_2017.final_factor)
+    assert paint_2017.citations == ["dnv-rp-b401 2017-06 Table A-4"]
+    assert paint_2021.citations == ["dnv-rp-b401 2021-05 Table 8-4"]
+
+    a, b = coating_breakdown_constants(PaintCategory.IV, DepthBand.M0_30, edition="2021")
+    assert (a.value, b.value) == (0.02, 0.008)
+    with pytest.raises(ValueError, match="category IV"):
+        coating_breakdown_constants(PaintCategory.IV, DepthBand.M0_30, edition="2017")
 
 
 def test_coating_breakdown_result_defaults_metadata_for_legacy_dicts():
@@ -283,7 +316,7 @@ def test_coating_breakdown_result_defaults_metadata_for_legacy_dicts():
     )
 
     assert result.edition_used == "2021"
-    assert result.standard == "DNV-RP-B401 (2021)"
+    assert result.standard == "DNV-RP-B401 (May 2021)"
 
 
 def test_coating_breakdown_result_rejects_invalid_metadata_with_validation_error():
@@ -355,7 +388,7 @@ def test_design_marine_cp_result_carries_explicit_edition_metadata():
     result = design_marine_cp(_sample_marine_cp_input(), edition="2017")
 
     assert result.edition_used == "2017"
-    assert result.standard == "DNVGL-RP-B401 (2017)"
+    assert result.standard == "DNVGL-RP-B401 (June 2017)"
 
 
 def test_design_marine_cp_missing_edition_warns_and_defaults_metadata():
@@ -366,10 +399,12 @@ def test_design_marine_cp_missing_edition_warns_and_defaults_metadata():
 
     assert Path(warnings[0].filename).name == "test_edition_api_foundation.py"
     assert result.edition_used == "2021"
-    assert result.standard == "DNV-RP-B401 (2021)"
+    assert result.standard == "DNV-RP-B401 (May 2021)"
 
 
-def test_design_marine_cp_explicit_edition_preserves_p1_numerics():
+def test_design_marine_cp_2017_and_2021_current_densities_identical():
+    """Table A-1/A-2 (2017) and Table 8-1/8-2 (2021) hold the same design
+    current densities, so the demand and mass agree (#2208)."""
     from digitalmodel.cathodic_protection.marine_cp import design_marine_cp
 
     legacy = design_marine_cp(_sample_marine_cp_input(), edition="2017")
@@ -380,7 +415,7 @@ def test_design_marine_cp_explicit_edition_preserves_p1_numerics():
     )
     assert current.total_anode_mass_kg == pytest.approx(legacy.total_anode_mass_kg)
     assert current.number_of_anodes == legacy.number_of_anodes
-    assert current.zone_demands == legacy.zone_demands
+    assert len(current.zone_demands) == len(legacy.zone_demands)
 
 
 def test_marine_cp_result_defaults_metadata_for_legacy_dicts():
@@ -396,7 +431,7 @@ def test_marine_cp_result_defaults_metadata_for_legacy_dicts():
     )
 
     assert result.edition_used == "2021"
-    assert result.standard == "DNV-RP-B401 (2021)"
+    assert result.standard == "DNV-RP-B401 (May 2021)"
 
 
 def test_marine_cp_result_rejects_invalid_metadata_with_validation_error():
@@ -466,7 +501,7 @@ def test_marine_structure_result_carries_explicit_edition_metadata():
     )
 
     assert result.edition_used == "2017"
-    assert result.standard == "DNVGL-RP-B401 (2017)"
+    assert result.standard == "DNVGL-RP-B401 (June 2017)"
 
 
 def test_marine_structure_missing_edition_warns_and_defaults_metadata():
@@ -479,10 +514,12 @@ def test_marine_structure_missing_edition_warns_and_defaults_metadata():
 
     assert Path(warnings[0].filename).name == "test_edition_api_foundation.py"
     assert result.edition_used == "2021"
-    assert result.standard == "DNV-RP-B401 (2021)"
+    assert result.standard == "DNV-RP-B401 (May 2021)"
 
 
-def test_marine_structure_explicit_edition_preserves_p1_numerics():
+def test_marine_structure_2017_and_2021_current_densities_identical():
+    """Identical design current densities (Table A-1/A-2 vs 8-1/8-2); the
+    zone rows differ only in their citation labels (#2208)."""
     from digitalmodel.cathodic_protection.marine_structure_cp import (
         marine_structure_current_demand,
     )
@@ -500,7 +537,17 @@ def test_marine_structure_explicit_edition_preserves_p1_numerics():
     assert current.total_mean_current_A == pytest.approx(legacy.total_mean_current_A)
     assert current.total_final_current_A == pytest.approx(legacy.total_final_current_A)
     assert current.total_anode_mass_kg == pytest.approx(legacy.total_anode_mass_kg)
-    assert current.zone_details == legacy.zone_details
+    for row_2021, row_2017 in zip(current.zone_details, legacy.zone_details):
+        numeric_2021 = {k: v for k, v in row_2021.items() if k != "citations"}
+        numeric_2017 = {k: v for k, v in row_2017.items() if k != "citations"}
+        assert numeric_2021 == numeric_2017
+        relabelled = [
+            c.replace("2021-05 Table 8-", "2017-06 Table A-").replace(
+                "2021-05 [3.3.8]", "2017-06 [6.3.8]"
+            )
+            for c in row_2021["citations"]
+        ]
+        assert relabelled == row_2017["citations"]
 
 
 def test_marine_structure_result_defaults_metadata_for_legacy_dicts():
@@ -516,7 +563,7 @@ def test_marine_structure_result_defaults_metadata_for_legacy_dicts():
     )
 
     assert result.edition_used == "2021"
-    assert result.standard == "DNV-RP-B401 (2021)"
+    assert result.standard == "DNV-RP-B401 (May 2021)"
 
 
 def test_marine_structure_result_rejects_invalid_metadata_with_validation_error():

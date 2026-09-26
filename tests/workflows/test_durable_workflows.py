@@ -79,7 +79,7 @@ def test_workflow_registry(workflow, monkeypatch):
         # M = 85.0 * 25 * 8760 / (2000 * 0.85) = 10950 kg -> 55 x 200 kg anodes
         # Splash/atmospheric zones draw no CP current.
         results = cfg["results"]
-        assert results["standard"] == "DNV-RP-B401 (2021)"
+        assert results["standard"] == "DNV-RP-B401 (May 2021)"
         assert results["current_demand_A"]["total_mean_A"] == pytest.approx(85.0)
         assert results["current_demand_A"]["total_final_A"] == pytest.approx(208.0)
         assert results["anode_requirements"]["total_mass_kg"] == pytest.approx(10950.0)
@@ -135,7 +135,7 @@ def test_workflow_registry(workflow, monkeypatch):
     elif workflow["id"] == "cathodic-protection-manifold":
         # #2207: Table 10-1/10-2/10-4 values (Cat III, 850 m2 submerged).
         results = cfg["results"]
-        assert results["standard"] == "DNV-RP-B401 (2021)"
+        assert results["standard"] == "DNV-RP-B401 (May 2021)"
         assert results["current_demand_A"]["total_mean_A"] == pytest.approx(17.34)
         assert results["anode_requirements"]["total_mass_kg"] == pytest.approx(2233.8)
         assert results["anode_requirements"]["anode_count"] == 28
@@ -146,7 +146,7 @@ def test_workflow_registry(workflow, monkeypatch):
     elif workflow["id"] == "cathodic-protection-monopile":
         # #2207: Table 10-1/10-2/10-4 values (Cat III, 1200 m2 submerged).
         results = cfg["results"]
-        assert results["standard"] == "DNV-RP-B401 (2021)"
+        assert results["standard"] == "DNV-RP-B401 (May 2021)"
         assert results["current_demand_A"]["total_mean_A"] == pytest.approx(24.0)
         assert results["anode_requirements"]["total_mass_kg"] == pytest.approx(3710.12)
         assert results["anode_requirements"]["anode_count"] == 25

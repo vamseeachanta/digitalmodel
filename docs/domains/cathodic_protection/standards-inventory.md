@@ -8,10 +8,12 @@
 | DNV-RP-B401-1993 | Cathodic Protection Design | 1993 | `/mnt/ace/O&G-Standards/DNV/DNV_RP_B401_(1993)_Cathodic_Protection_Design.pdf` | Available |
 | DNV-RP-B401-2005 | Cathodic Protection Design | Jan 2005 + Apr 2008 amend | `/mnt/ace/O&G-Standards/DNV/DNV_RP_B401_with_2008_amendments_(2005)_Cathodic_Protection_Design.pdf` | Available |
 | DNV-RP-B401-2011 | Cathodic Protection Design | Oct 2010 + Apr 2011 amend | `/mnt/ace/O&G-Standards/DNV/DNV_RP_B401_(2011)_Cathodic_Protection_Design.pdf` | Available |
+| DNVGL-RP-B401-2017 | Cathodic Protection Design | Jun 2017 | `/mnt/ace/O&G-Standards/DNV/DNVGL_RP_B401_(2017)_Cathodic_Protection_Design.pdf` | Available (#2208) |
 | DNV-RP-B401-2021 | Cathodic Protection Design | May 2021 | `/mnt/local-analysis/workspace-hub/acma-projects/B1522/ctr-2/cal/DNV-RP-B401-2021.pdf` | Available |
 | DNV-RP-F103-2003 | CP of Submarine Pipelines by Galvanic Anodes | Oct 2003 + Apr 2008 amend | `/mnt/ace/O&G-Standards/DNV/DNV_RP_F103_(2003)_Cathodic_protection_of_submarine_pipelines_by_galvanic_anodes.pdf` | Available |
 | DNV-RP-F103-2010 | CP of Submarine Pipelines by Galvanic Anodes | Oct 2010 | `/mnt/ace/O&G-Standards/DNV/DNV_RP_F103_(2010)_Cathodic_Protection_of_Submarine_Pipelines_by_Galvanic_Anodes.pdf` | Available |
-| DNVGL-RP-F103-2016 | CP of Submarine Pipelines | Jul 2016 | Not locally available; proxied via GP 56-01-04U V4 | Proxy only |
+| DNVGL-RP-F103-2016 | CP of Submarine Pipelines | Jul 2016 | Not locally available as its own print; the September 2019 print below republishes it with unchanged content | Superseded by 2019 |
+| DNVGL-RP-F103-2019 (amended May 2021) | CP of Submarine Pipelines | Sep 2019 / May 2021 | `/mnt/ace/O&G-Standards/DNV/DNVGL_RP_F103_(2019)_*.pdf` and `DNV_RP_F103_(2019_amended_2021)_*.pdf` | Available (#2208) |
 | DNV-RP-F112-2008 | Design of Duplex SS Subsea Equipment Exposed to CP | Oct 2008 | `/mnt/ace/O&G-Standards/DNV/DNV_RP_F112_(2008)_Stainless_steel_subsea_equipment_exposed_to_cathodic_protection.pdf` | Available |
 | ABS-GN-Ships-2017 | GN on CP of Ships | Dec 2017 | `/mnt/local-analysis/workspace-hub/acma-projects/B1522/ctr-2/ref/ABS cathodic-protection-of-ships-gn-dec17.pdf` | Available |
 | ABS-GN-Offshore-2018 | GN on CP of Offshore Structures | Dec 2018 | `/mnt/local-analysis/workspace-hub/digitalmodel/docs/domains/cathodic_protection/codes/ABS cathodic-protection-offshore-gn-dec18.pdf` | Available |
@@ -276,20 +278,16 @@ Before Phase 2 work on the DNV route:
 
 ---
 
-## 7. F103-2016/2019 Assessment — Implementation Deferred
+## 7. F103-2016/2019 Assessment — Tables Implemented (#2208)
 
-**F103-2016 standalone PDF:** Not available locally. Proxied via EMX GP 56-01-04U V4 only — table numbers, formula numbering, and specific section text not verifiable without the original PDF.
+**F103-2016 standalone PDF:** Not available locally. The September 2019 DNVGL print states that it republishes the July 2016 edition with no content changes, so the 2016 edition is covered by the 2019 tables; the edition token `"2016"` normalises to `"2019"` with a `UserWarning` (owner D3: keep the option).
 
-**F103-2019 amended 2021 edition:** Present at `doris/codes/DNV-RP-F103 2019 amended 2021...pdf` (filename to be confirmed).
+**F103-2019 (amended May 2021):** On file at `/mnt/ace/O&G-Standards/DNV/` (both prints; the May 2021 amendment is editorial: DNV naming and FJC system names). Implemented 2026-09-26 as edition `"2019"` (alias `"2021"`) of `digitalmodel.cathodic_protection.f103_tables` and `dnv_rp_f103.design_bracelet_cp`: Table 6-2 (five fluid-temperature bands), Table 6-3 (anode design values by anode surface temperature), Table A-1 (linepipe coatings with the concrete-weight-coating split), Table A-2 (field-joint coatings with the DNVGL-RP-F102 (2011) ids, `FieldJointCoating2019`), bracelet utilisation 0.80 [6.4.2] and protective potential -0.80 V [6.7.11]. Fixture CSVs: `tests/fixtures/test_vectors/cathodic_protection/datasets/dnv-rp-f103/2019-09/`. `DEFAULT_F103_EDITION` stays `"2010"` so existing results do not change unless the edition is requested.
 
-**Key deltas from F103-2010 (based on proxy via EMX GP and B401 changelog):**
+**Formula-level 2016/2019 items still open** (previously listed from the EMX GP proxy; not part of the cited-table path):
 - Wet storage period concept — CP design accounts for pre-installation storage time
 - Maximum anode spacing reduced 300 m → 200 m
 - Polarization resistance attenuation model (enhanced α formula)
-- Safety factor k = 1.1 introduced (mandatory in ExxonMobil GP)
+- Safety factor k = 1.1 (mandatory in ExxonMobil GP)
 
-**Recommendation:** Create a separate WRK item for `DNV_RP_F103_2019` route once:
-1. DNVGL-RP-F103 July 2016 PDF is obtained (required for formula verification), OR
-2. F103-2019 amended 2021 PDF at `doris/codes/` is confirmed as the applicable edition
-
-**Status:** Deferred — WRK-272 (2026-02-20). No code implemented for 2016/2019 route.
+**Status:** Tables and bracelet design per edition implemented (#2208, 2026-09-26); the formula-level items above remain a separate work item (was WRK-272).

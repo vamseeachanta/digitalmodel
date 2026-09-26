@@ -46,6 +46,7 @@ from digitalmodel.cathodic_protection.anode_sizing import (
     governing_case,
 )
 from digitalmodel.cathodic_protection.b401_tables import (
+    AMBIENT_ANODE_TEMPERATURE_C,
     AnodeMaterial,
     Climate,
     DepthBand,
@@ -428,6 +429,7 @@ def marine_structure_current_demand(
     seawater_resistivity_ohm_m: float = DEFAULT_SEAWATER_RESISTIVITY_OHM_M,
     anode_density_kg_m3: float = kernel.ANODE_DENSITY_ALZNI,
     driving_voltage_V: float | None = None,
+    anode_surface_temperature_c: float = AMBIENT_ANODE_TEMPERATURE_C,
 ) -> MarineCPResult:
     """Calculate current demand and anode requirements for an offshore structure.
 
@@ -466,8 +468,13 @@ def marine_structure_current_demand(
     anode_density_kg_m3 : float
         Alloy density for the mass-based equivalent radius [kg/m3].
     driving_voltage_V : float, optional
-        Design driving voltage [V]; default the Table 10-6 value for an
-        Al-based anode in seawater (0.25 V), cited in the result.
+        Design driving voltage [V]; default the edition's anode-table value
+        (Table 10-6 / A-6 / 8-6) for an Al-based anode in seawater (0.25 V
+        at ambient temperature), cited in the result.
+    anode_surface_temperature_c : float, optional
+        Anode surface temperature [°C] for the default driving voltage,
+        default 30. Only the 2021 edition (Table 8-6) tabulates rows above
+        30 °C; earlier editions raise for a higher value.
 
     Returns
     -------
@@ -539,7 +546,11 @@ def marine_structure_current_demand(
         )
 
     if driving_voltage_V is None:
-        cited_voltage = design_driving_voltage(AnodeMaterial.ALUMINIUM, ed)
+        cited_voltage = design_driving_voltage(
+            AnodeMaterial.ALUMINIUM,
+            ed,
+            anode_surface_temperature_c=anode_surface_temperature_c,
+        )
         driving_voltage_V = cited_voltage.value
         label = citation_label(cited_voltage.citation)
         if label not in citations:

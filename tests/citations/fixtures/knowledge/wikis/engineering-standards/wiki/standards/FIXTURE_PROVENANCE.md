@@ -137,3 +137,43 @@ same commit, then rerun:
 ```bash
 .venv/bin/python -m pytest tests/riser_database/ tests/drilling_riser/ -q
 ```
+
+---
+
+# Fixture Provenance - `dnv-rp-b401-2017.md`, `dnv-rp-b401-2021.md`, `dnv-rp-f103-2019.md` (#2208)
+
+Vendored for the edition-keyed cathodic-protection table lookups
+(`src/digitalmodel/cathodic_protection/b401_tables.py`, `f103_tables.py`).
+Same contract as the fixtures above: resolver frontmatter and a short
+description only; no standard text, tables, formulas or licensed source
+material.
+
+## Canonical sources
+
+- **Repo:** `vamseeachanta/llm-wiki`
+- `wikis/engineering-standards/wiki/standards/dnv-rp-b401-2017.md` —
+  `code_id: dnv-rp-b401`, `publisher: DNV`, `revision: "2017-06"`
+- `wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md` —
+  `code_id: dnv-rp-b401`, `publisher: DNV`, `revision: "2021-05"`
+- `wikis/engineering-standards/wiki/standards/dnv-rp-f103-2019.md` —
+  `code_id: dnv-rp-f103`, `publisher: DNV`, `revision: "2019-09"`
+- The canonical pages are created in parallel with these fixtures
+  (2026-09-26) with the same frontmatter; record their SHAs here once the
+  llm-wiki change lands.
+
+## Vendored copies
+
+- **Vendored on:** 2026-09-26
+- **Used by:** `tests/cathodic_protection/test_b401_tables.py`,
+  `tests/cathodic_protection/test_f103_tables.py`,
+  `tests/cathodic_protection/test_edition_crosswalk.py`
+
+## Freshness contract
+
+Review monthly. If a canonical page's frontmatter changes, update the fixture,
+the `_SOURCE_BY_EDITION` records in `b401_tables.py` / `f103_tables.py`, and
+this provenance file in the same commit, then rerun:
+
+```bash
+.venv/bin/python -m pytest tests/cathodic_protection/ tests/citations/ -q
+```
