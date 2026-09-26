@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.5e
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\mooring\buoy\spm-proj-2\1Yr\CALMBuoy_1YR_FM_FUL_R1_D3.yml
+# File: docs/domains/orcaflex/mooring/buoy/spm-proj-2/.yml/CALMBuoy_1YR_FM_FUL_R1_D3.yml
 # Created: 10:30 AM on 10/22/2025
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units

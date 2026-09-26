@@ -38,7 +38,7 @@ class GoMField:
     Attributes
     ----------
     name : str
-        Field name (e.g. 'Perdido').
+        Field name (e.g. 'GoM-UD-Spar').
     operator : str
         Operating company (e.g. 'Shell', 'BP', 'LLOG').
     water_depth_m : float

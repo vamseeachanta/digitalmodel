@@ -26,8 +26,8 @@ from typing import Any, Dict, List, Optional
 _REPO = Path(__file__).resolve().parents[2]
 _OUT = _REPO / "docs" / "api" / "cfd" / "sloshing-compute.json"
 
-# Machine this study ran on (a-l-2 / dev-secondary).
-MACHINE = {"host": "dev-secondary (ace-linux-2)", "cores": 32, "ram_gb": 31,
+# Machine this study ran on (dev-secondary).
+MACHINE = {"host": "dev-secondary", "cores": 32, "ram_gb": 31,
            "solver": "interFoam (VOF), OpenFOAM ESI v2312 — single-threaded per case"}
 
 # Per-case uncontended baseline wall time (s) for the forced 60x60 case, measured

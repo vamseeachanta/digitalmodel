@@ -9,7 +9,7 @@ body of an unrelated legacy issue. The tell-tale signs are:
      followed by the generated `**Status:** ... | **Priority:** ...` line.
   2. The WRK id embedded in the body does not correspond to the issue's title
      (title/body mismatch), or the body references foreign repos
-     (assethold, acma-projects, ...) that don't match the issue.
+     (assethold, <project-archive>, ...) that don't match the issue.
 
 Read-only: only `gh api` GET calls. Exits non-zero if any drift is found, so it
 can gate CI.
@@ -36,7 +36,7 @@ WRK_HEADER = re.compile(r"^\s*##\s*(WRK-?\d+)\s*:", re.IGNORECASE)
 # Signature 2: the generated metadata line the template always emits.
 TEMPLATE_META = re.compile(r"\*\*Status:\*\*.*\|\s*\*\*Priority:\*\*", re.IGNORECASE)
 # Foreign-repo leakage seen in #690 (WRK->issue mapping wrote to wrong target).
-FOREIGN_REPOS = ("assethold", "acma-projects")
+FOREIGN_REPOS = ("assethold", "<project-archive>")
 
 
 def gh_api(path: str) -> dict | list:

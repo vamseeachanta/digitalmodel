@@ -14,7 +14,7 @@
 ;; *TrueGear LISP software
 ;;  Copyright (C) 2002 by Eugeny Kalney
 ;;
-;;  e-mail: kalneyed@hotmail.com
+;;  e-mail: [email removed]
 ;;
 ;; internationalization fixes by AAC Solutions - www.aac-solutions.cz
 ;;

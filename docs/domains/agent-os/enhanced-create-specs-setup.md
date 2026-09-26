@@ -198,7 +198,7 @@ default_sections:
 # Custom variables
 custom_variables:
   organization: "Your Organization"
-  contact_email: "developer@yourorg.com"
+  contact_email: "[email removed]"
   project_type: "web_application"  # web_application, mobile_app, api_service, data_pipeline
 
 # Performance settings
@@ -528,7 +528,7 @@ jobs:
 # .agent-os/organization-standards.yaml
 organization:
   name: "Your Organization"
-  contact: "devops@yourorg.com"
+  contact: "[email removed]"
   
 standards:
   spec_templates:

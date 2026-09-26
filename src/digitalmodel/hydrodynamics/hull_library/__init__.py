@@ -39,6 +39,14 @@ from .mesh_refiner import (
 )
 from .lookup import HullLookupTarget, HullMatch, HullLookup, get_hull_form
 from .parametric_hull import ParametricRange, HullParametricSpace
+from .curvature_screen import (
+    CurvatureSignature,
+    CurvatureScreenResult,
+    hullprod_available,
+    saddle_warning_threshold,
+    screen_panel_mesh,
+    screen_profile,
+)
 from .rao_database import RAODatabaseEntry, RAODatabase
 from .rao_lookup_plots import (
     per_hull_rao_plot,
@@ -96,6 +104,13 @@ __all__ = [
     # Parametric hull (WRK-043 Phase 1)
     "ParametricRange",
     "HullParametricSpace",
+    # Curvature screening (HullProd, optional extra)
+    "CurvatureSignature",
+    "CurvatureScreenResult",
+    "hullprod_available",
+    "saddle_warning_threshold",
+    "screen_panel_mesh",
+    "screen_profile",
     # RAO database (WRK-043 Phase 3)
     "RAODatabaseEntry",
     "RAODatabase",

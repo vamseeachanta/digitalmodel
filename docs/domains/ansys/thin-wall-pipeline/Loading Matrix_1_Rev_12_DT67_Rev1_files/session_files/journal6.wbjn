@@ -1,9 +1,0 @@
-﻿# encoding: utf-8
-# Release 16.0
-SetScriptVersion(Version="16.0.361")
-Archive(
-    FilePath="D:/31290/Loading Matrix_1_Rev_12_DT67.wbpz",
-    IncludeExternalImportedFiles=True)
-system1 = GetSystem(Name="SYS 2")
-system1.DisplayText = "D/t = 67"
-Save(Overwrite=True)

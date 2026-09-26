@@ -48,7 +48,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
       - LineType: Hook.Nautilus22te
         Length: 0.68
         ExpansionFactor: ~
@@ -57,7 +57,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
       - LineType: Soft_sling_MBL20
         Length: 3
         ExpansionFactor: ~
@@ -66,7 +66,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
       - LineType: Masterlink1.5in
         Length: 0.2
         ExpansionFactor: ~
@@ -75,7 +75,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
     Attachments: []
     DecoupleLateralAndAxialSeabedFriction: No
     ResistanceProfiles: []

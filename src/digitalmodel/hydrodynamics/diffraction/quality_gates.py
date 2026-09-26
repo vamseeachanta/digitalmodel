@@ -48,6 +48,7 @@ class QualityGateResult:
     blocking: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     report: GeometryQualityReport | None = None
+    curvature: dict | None = None
 
     def to_dict(self) -> dict:
         data = {
@@ -59,7 +60,49 @@ class QualityGateResult:
         }
         if self.report is not None:
             data["report"] = asdict(self.report)
+        if self.curvature is not None:
+            data["curvature"] = self.curvature
         return data
+
+
+def curvature_gate_issues(
+    mesh, hull_type: str | None = None, lref: float | None = None
+) -> tuple[list[str], list[str], dict | None]:
+    """HullProd curvature gate (#2170 D4): returns (blocking, warnings, signature).
+
+    Blocking: HullProd mesh curvature reliability ``poor`` (sliver triangles,
+    non-manifold edges, disconnected components, extreme valence) -- these make
+    a panel mesh unusable for diffraction as surely as inverted normals.
+    Warning only: monohull saddle area fraction above the hull-type threshold.
+    No-op (empty lists, None) when the optional ``hullprod`` extra is absent or
+    the screen itself fails; the gate never blocks on its own errors.
+    """
+    from digitalmodel.hydrodynamics.hull_library.curvature_screen import (
+        hullprod_available,
+        screen_panel_mesh,
+    )
+
+    if not hullprod_available():
+        return [], [], None
+    try:
+        result = screen_panel_mesh(
+            mesh, lref=lref, hull_type=hull_type, keep_fields=False
+        )
+    except Exception as exc:  # noqa: BLE001 - advisory gate must not block on itself
+        return [], [f"curvature screen skipped: {exc}"], None
+
+    sig = result.signature
+    blocking: list[str] = []
+    warnings: list[str] = []
+    if sig.reliability == "poor":
+        blocking.append(
+            "curvature reliability POOR (HullProd mesh diagnostics: slivers, "
+            "non-manifold edges or disconnected components); repair the mesh"
+        )
+    saddle = sig.saddle_warning()
+    if saddle:
+        warnings.append(saddle)
+    return blocking, warnings, sig.model_dump(mode="json")
 
 
 def _gdf_structural_issues(mesh_path: Path) -> list[str]:
@@ -117,11 +160,24 @@ def _collect_issues(report: GeometryQualityReport) -> list[str]:
     )
 
 
-def run_mesh_quality_gate(mesh_path: Path, label: str = "mesh") -> QualityGateResult:
+def run_mesh_quality_gate(
+    mesh_path: Path,
+    label: str = "mesh",
+    *,
+    curvature: bool = True,
+    hull_type: str | None = None,
+    lref: float | None = None,
+) -> QualityGateResult:
     """Run the geometry quality checks on one mesh file.
 
     Non-panel formats are SKIPPED. The checker's console narration is
     suppressed; callers present the result themselves.
+
+    With ``curvature=True`` (default) and the optional ``hullprod`` extra
+    installed, the HullProd curvature gate (#2170 D4) also runs: POOR mesh
+    reliability blocks, a monohull saddle fraction above the hull-type
+    threshold warns. ``hull_type`` enables the saddle threshold; ``lref``
+    (typically Lpp) makes the stored signature comparable across hulls.
     """
     mesh_path = Path(mesh_path)
     if mesh_path.suffix.lower() not in _CHECKABLE_EXTENSIONS:
@@ -152,21 +208,37 @@ def run_mesh_quality_gate(mesh_path: Path, label: str = "mesh") -> QualityGateRe
         )
 
     issues = _collect_issues(report)
-    if report.overall_status == "FAIL":
+    curv_blocking: list[str] = []
+    curv_warnings: list[str] = []
+    signature: dict | None = None
+    if curvature:
+        curv_blocking, curv_warnings, signature = curvature_gate_issues(
+            mesh, hull_type=hull_type, lref=lref
+        )
+
+    if report.overall_status == "FAIL" or curv_blocking:
         return QualityGateResult(
             label=label,
             mesh=mesh_path.name,
             status="FAIL",
-            blocking=issues,
+            blocking=(issues if report.overall_status == "FAIL" else [])
+            + curv_blocking,
+            warnings=curv_warnings,
             report=report,
+            curvature=signature,
         )
     warnings = issues if report.overall_status == "WARNING" else []
+    warnings = warnings + curv_warnings
+    status = report.overall_status
+    if status == "PASS" and curv_warnings:
+        status = "WARNING"
     return QualityGateResult(
         label=label,
         mesh=mesh_path.name,
-        status=report.overall_status,
+        status=status,
         warnings=warnings,
         report=report,
+        curvature=signature,
     )
 
 

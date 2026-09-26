@@ -7,69 +7,50 @@ with environment adjustments for seawater with cathodic protection
 2021 edition; see :mod:`digitalmodel.fatigue.c203_editions` for the
 2011 layout (free corrosion in Table 2-3).
 
-Uses pyLife's WoehlerCurve for cycle calculations.
+Values come from :mod:`digitalmodel.fatigue.c203_sn_tables`, verified
+against the 2011 edition, Tables 2-1 to 2-3 (#2165):
+
+* in air: knee at ND = 1e7 cycles, m2 = 5 beyond it;
+* seawater with CP: knee at ND = 1e6 cycles, m2 = 5 beyond it;
+* free corrosion: single slope m = 3.0 for every class (B1 and B2 included),
+  no knee and no fatigue limit.
+
+Uses pyLife's WoehlerCurve for cycle calculations. pyLife anchors both
+segments at the knee stress SD = 10^((log_a1 - log10(ND)) / k_1); the second
+segment then matches the tabulated log a2 within table rounding.
 """
 
 import math
 
-import numpy as np
 import pandas as pd
 from pylife.materiallaws.woehlercurve import WoehlerCurve
+
+from . import c203_sn_tables as _c203
 
 # ── DNV-RP-C203 Table 2-1: In-Air S-N Curves ──────────────────────
 # Each entry: k_1, log_a1 (for N <= ND), k_2, log_a2 (for N > ND), ND
 # SD is computed as 10^((log_a1 - log10(ND)) / k_1)
 
-_ND = 1e7  # Knee point for all curves (in-air)
+_ND = _c203.N_KNEE_AIR  # Knee point, in air
+_ND_SEAWATER_CP = _c203.N_KNEE_SEAWATER_CP  # Knee point, seawater with CP
 
 _RAW_CURVES = {
-    "B1": {"k_1": 4.0, "log_a1": 15.117, "k_2": 5.0, "log_a2": 17.146},
-    "B2": {"k_1": 4.0, "log_a1": 14.885, "k_2": 5.0, "log_a2": 16.856},
-    "C":  {"k_1": 3.0, "log_a1": 12.592, "k_2": 5.0, "log_a2": 16.320},
-    "C1": {"k_1": 3.0, "log_a1": 12.449, "k_2": 5.0, "log_a2": 16.081},
-    "C2": {"k_1": 3.0, "log_a1": 12.301, "k_2": 5.0, "log_a2": 15.835},
-    "D":  {"k_1": 3.0, "log_a1": 12.164, "k_2": 5.0, "log_a2": 15.606},
-    "E":  {"k_1": 3.0, "log_a1": 12.010, "k_2": 5.0, "log_a2": 15.350},
-    "F":  {"k_1": 3.0, "log_a1": 11.855, "k_2": 5.0, "log_a2": 15.091},
-    "F1": {"k_1": 3.0, "log_a1": 11.699, "k_2": 5.0, "log_a2": 14.832},
-    "F3": {"k_1": 3.0, "log_a1": 11.546, "k_2": 5.0, "log_a2": 14.576},
-    "G":  {"k_1": 3.0, "log_a1": 11.398, "k_2": 5.0, "log_a2": 14.330},
-    "W1": {"k_1": 3.0, "log_a1": 11.261, "k_2": 5.0, "log_a2": 14.101},
-    "W2": {"k_1": 3.0, "log_a1": 11.107, "k_2": 5.0, "log_a2": 13.855},
-    "W3": {"k_1": 3.0, "log_a1": 10.970, "k_2": 5.0, "log_a2": 13.617},
+    name: {"k_1": p.m1, "log_a1": p.log_a1_air, "k_2": p.m2, "log_a2": p.log_a2}
+    for name, p in _c203.BILINEAR.items()
 }
 
 # ── Seawater with Cathodic Protection (DNV-RP-C203 Table 2-2) ─────
-# Same slopes, but log_a values are reduced. ND shifts to 1e6 for
-# the knee point in some interpretations; here we use the DNV table
-# values directly. For seawater_cp the curves keep a bi-linear form
-# but with reduced intercepts.
+# Same slopes and second segment as in air; reduced first-segment intercept
+# and the knee at 1e6 cycles.
 _SEAWATER_CP_ADJUSTMENTS = {
-    "B1": {"log_a1": 14.917, "log_a2": 17.146},
-    "B2": {"log_a1": 14.685, "log_a2": 16.856},
-    "C":  {"log_a1": 12.192, "log_a2": 16.320},
-    "C1": {"log_a1": 12.049, "log_a2": 16.081},
-    "C2": {"log_a1": 11.901, "log_a2": 15.835},
-    "D":  {"log_a1": 11.764, "log_a2": 15.606},
-    "E":  {"log_a1": 11.610, "log_a2": 15.350},
-    "F":  {"log_a1": 11.455, "log_a2": 15.091},
-    "F1": {"log_a1": 11.299, "log_a2": 14.832},
-    "F3": {"log_a1": 11.146, "log_a2": 14.576},
-    "G":  {"log_a1": 10.998, "log_a2": 14.330},
-    "W1": {"log_a1": 10.861, "log_a2": 14.101},
-    "W2": {"log_a1": 10.707, "log_a2": 13.855},
-    "W3": {"log_a1": 10.570, "log_a2": 13.617},
+    name: {"log_a1": p.log_a1_cp, "log_a2": p.log_a2}
+    for name, p in _c203.BILINEAR.items()
 }
 
-# ── Free Corrosion (DNV-RP-C203 Table 2-4, 2021 edition) ──────────
-# Single slope (no endurance limit): k_2 = k_1, log_a2 = log_a1
-_FREE_CORROSION_LOG_A = {
-    "B1": 14.917, "B2": 14.685,
-    "C":  12.192, "C1": 12.049, "C2": 11.901,
-    "D":  11.764, "E":  11.610, "F":  11.455,
-    "F1": 11.299, "F3": 11.146, "G":  10.998,
-    "W1": 10.861, "W2": 10.707, "W3": 10.570,
-}
+# ── Free Corrosion (DNV-RP-C203 Table 2-4, 2021 layout; values verified
+# against 2011 Table 2-3) ─────────────────────────────────────────
+# Single slope m = 3.0 for every class: k_2 = k_1, no endurance limit.
+_FREE_CORROSION_LOG_A = {name: fc.log_a for name, fc in _c203.FREE_CORROSION.items()}
 
 
 def _compute_sd(log_a1: float, k_1: float, nd: float) -> float:
@@ -119,20 +100,23 @@ def get_sn_curve(name: str, environment: str = "air") -> WoehlerCurve:
         )
 
     base = _RAW_CURVES[name]
-    k_1 = base["k_1"]
-    nd = _ND
 
     if environment == "air":
+        k_1 = base["k_1"]
         log_a1 = base["log_a1"]
         k_2 = base["k_2"]
+        nd = _ND
     elif environment == "seawater_cp":
-        adj = _SEAWATER_CP_ADJUSTMENTS[name]
-        log_a1 = adj["log_a1"]
+        k_1 = base["k_1"]
+        log_a1 = _SEAWATER_CP_ADJUSTMENTS[name]["log_a1"]
         k_2 = base["k_2"]
+        nd = _ND_SEAWATER_CP
     elif environment == "free_corrosion":
+        # Single slope m = 3 throughout; ND is only pyLife's reference point.
+        k_1 = _c203.M_FREE_CORROSION
         log_a1 = _FREE_CORROSION_LOG_A[name]
-        # No endurance limit: single slope throughout
         k_2 = k_1
+        nd = _ND
     else:
         raise ValueError(
             f"Unknown environment '{environment}'. "

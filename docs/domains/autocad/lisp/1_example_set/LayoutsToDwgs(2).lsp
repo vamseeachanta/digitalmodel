@@ -5,7 +5,7 @@
 ;;; By Jimmy Bergmark
 ;;; Copyright (C) 1997-2006 JTB World, All Rights Reserved
 ;;; Website: www.jtbworld.com
-;;; E-mail: info@jtbworld.com
+;;; E-mail: [email removed]
 ;;;
 ;;; 2003-12-12 Sets UCS to world in model space to avoid problem with wblock
 ;;;

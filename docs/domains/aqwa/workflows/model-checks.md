@@ -44,16 +44,16 @@ To run AQWA analysis, basic model checks need to be done to help confirm a good 
 
 - Change of version:
   - Check between 18.2, 2022R2 and 2024R1 for multiple runs
-  - B1516 (Diffraction, Equilibrium and Wind etc.)
-  - B1522 (Diffraction, Equilibrium, Dynamic analysis)
+  - <job-code> (Diffraction, Equilibrium and Wind etc.)
+  - <job-code> (Diffraction, Equilibrium, Dynamic analysis)
 
 - Cut geoemtry vs No-cut geoemtry for all versions
   - Check between 18.2, 2022R2 and 2024R1
 
 - Unit definition sensitivity. SI vs US Custmary units. See below run for details
-  - K:\b1516\rev2\runs\ld_100MPH000WD_09moors.dat
+  - <private-data>\ld_100MPH000WD_09moors.dat
     - * Hydrodynamic Solver Unit System : U.S. Customary: lb, ft [pdl]
-  - K:\b1516\rev2\equilibrium\LIBR_NE.dat
+  - <private-data>\LIBR_NE.dat
     - * Hydrodynamic Solver Unit System : Metric: kg, m [N]
 
 - How to restart AQWA runs in most efficient manner

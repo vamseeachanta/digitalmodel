@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\examples\raw\A01\A01 Steep wave riser.yml
+# File: docs/domains/orcaflex/library/tier2_fast/a01_steep_wave_riser/monolithic/A01 Steep wave riser.yml
 # Created: 2:37 PM on 2/9/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units

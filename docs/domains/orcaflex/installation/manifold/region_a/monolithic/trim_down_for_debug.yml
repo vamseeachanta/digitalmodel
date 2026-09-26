@@ -1,7 +1,7 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_b\anl\manifold\01-SZ-00deg\w_shielding\seastateRAOs\trim_down_for_debug.yml
+# File: docs/domains/orcaflex/installation/manifold/region_a/monolithic/trim_down_for_debug.yml
 # Created: 5:58 PM on 9/6/2023
 # User: 
 # Machine: 
@@ -108,7 +108,7 @@ Environment:
   WindSpeed: 0
   WindDirection: 0
 VesselTypes:
-  - Name: C13_EndLay_SSRAO_MadDog2
+  - Name: C13_EndLay_SSRAO
     Length: 151.1
     # Conventions
     RAOResponseUnits: degrees
@@ -3102,7 +3102,7 @@ VesselTypes:
           - [150, -0.6, 0.4, 0, 0, 0, 0.08]
           - [180, -0.8, 0, 0, 0, 0, 0]
 Shapes:
-  - Name: SSRAOs_MadDog_Pos
+  - Name: SSRAOs_Pos
     ShapeType: Drawing
     Shape: Block
     Connection: Fixed
@@ -3116,7 +3116,7 @@ Shapes:
     ShadedDrawingCullingMode: Anticlockwise
 Groups:
   Structure:
-    SSRAOs_MadDog_Pos: Model
+    SSRAOs_Pos: Model
   State:
     Collapsed:
       - Variable data
