@@ -1,8 +1,8 @@
 # Plan for #1057: Fitness-For-Service Offering Program
 
 **Issue:** [#1057](https://github.com/vamseeachanta/digitalmodel/issues/1057) (epic), Phase 4 and readiness demonstrators
-**Date:** 2026-09-25 · **Revision:** r1.3 (r1.2 plus the owner's decisions D1, D2, D4, D5, D6 recorded on #1057; D3 resolved on secondary sources, see *Owner Decisions*)
-**Status:** owner chose *Approve r1.2 as is* on the decision page, and also chose D6 = wait for the Gemini artifact. The label `status:plan-approved` is not applied until the owner resolves that conflict; this plan never self-applies it.
+**Date:** 2026-09-25 · **Revision:** r1.4 (2026-09-26: approval-gate decisions G1–G6 applied; approved by the owner)
+**Status:** **approved by the owner on 2026-09-26** (approval-gate record on #1057; `status:plan-approved` applied by the owner's instruction). Owner note recorded with the approval: heavy planning is no longer wanted across the repo ecosystem; rely on model judgement and cross-review where necessary. Per-issue work therefore uses short plan-lites (G6 A), not full plan documents.
 **Evidence locality:** the program note and readiness review cited below are in this branch (cherry-picked from PR #2186, which is superseded by this PR). The #2157 crack FE plan is external (PR #2194, open). Deckhand `report_url` is a target contract (deckhand #498/#499), not current behaviour.
 **Objective (owner's words):** be able to offer fitness-for-service (FFS) services for a wide variety of assets via available codes and standards.
 
@@ -77,11 +77,11 @@ Recorded from the decision page (`docs/plans/assets/2026-09-25-issue-1057-owner-
 |---|---|---|---|
 | D1 | Verdict vocabulary across asset classes | **A** one shared vocabulary with a per-class action map | #2205 is a Wave 0 serialization point ahead of every Wave 2 verdict |
 | D2 | Unlicensed Level 3 solver | **A** spike first (#2178), then choose | #2178 runs before #2173 scales; #2174 waits on its verdict |
-| D3 | API 579 2016 Level 2 FAD equation | **Resolved on secondary sources** (owner asked for a check; result below) | #2175 and #2157 implement the Level 2A form; the 2016 viewer check becomes a verification item, not a blocker |
+| D3 | API 579 2016 Level 2 FAD equation | **Resolved by literature; viewer check optional** (G1 A, 2026-09-26) | #2175 and #2157 implement the Level 2A form; #2157 card R01 becomes a verification item, not a blocker |
 | D4 | Wave 2 asset-class order | **#2198 platforms → #2202 hulls → #2201 casing → #2172 tanks → #2199 moorings → #2200 flexible pipe** | Wave 2 list reordered; platforms and hulls start first in parallel |
 | D5 | Subsea design screens in the FFS catalog | **B** move to a separate design-screen catalog | `ffs_design_screen_catalog.yml` created; FFS catalog is 78 rows; #2197 renders both |
-| D6 | Review coverage | **A** re-run Gemini before approval | Re-run done 2026-09-25: UNAVAILABLE (empty provider output). Owner now chooses: run Gemini on ace-linux-1 from their own shell, or accept the two-provider review |
-| Gate | Plan approval | **Approve r1.2 as is** | conflicts with D6; label withheld until the owner says which wins |
+| D6 | Review coverage | **A** then, after two Gemini failures, **G2 A: two-provider review accepted, exception recorded** (2026-09-26) | review table carries the exception row |
+| Gate | Plan approval | **G3 APPROVE r1.3** (2026-09-26); **G4 A** squash-merge PR #2204; **G5** Wave 0 = #1094, #2160, #2171, #2180, #2197, #2205; **G6 A** plan-lites first, batch approval, parallel worktrees | label applied; PR merged; plan-lites posted on each Wave 0 issue |
 
 **D3 check (2026-09-25).** The #2157 plan (PR #2194, board card R01, 2026-09-24) already settled the equation form on secondary sources: an open-access peer-reviewed paper (*Materials* 19 (2026) 465, CC BY 4.0) states that API 579-1/ASME FFS-1 2016 Level 2 uses the BS 7910 Level 2A generic curve, (1 − 0.14 Lr²)(0.3 + 0.7 e^(−0.65 Lr⁶)); the licensed BS 7910:2013 text confirms that its Option 1 is the different (1 + 0.5 Lr²)^−½ form that `crack_fad` implements today; and owner card G10 declared the Level 2 curve form committable (it is also the original R6 Option 1 curve in the open literature). The 2007 API 579 text held in llm-wiki refers to Figure 9.20 for the curve, and that figure is an image the extraction did not capture, so it neither confirms nor contradicts. What remains open is only a primary-source read of the 2016 PDF, which is FileOpen-protected; treat it as verification, not a gate. Recommendation for D3: record as *resolved by literature; viewer check optional*.
 
@@ -164,6 +164,7 @@ Parallelism: Wave 0 items are disjoint and can run concurrently on separate work
 | r1.1 | Codex confirming pass | MAJOR, 7 findings | all applied in r1.2 (below) |
 | r1.1 | Gemini (`plan-review-fanout.sh --providers=gemini`, CLI 0.61.0 installed) | no verdict: the run was stopped by the host under memory pressure after producing empty artifacts (`2026-09-25-plan-1057-gemini.md`, `.err`, 0 bytes) | owner chose D6 = A; re-run requested 2026-09-25 |
 | r1.3 | owner decisions | D1 A, D2 A, D4 order, D5 B, D6 A applied; D3 resolved on secondary sources | catalog split, Wave 2 reordered, serialization updated |
+| r1.4 | owner (approval gate, 2026-09-26) | **Exception accepted by owner:** two-provider review (Claude + Codex) suffices for this plan after two Gemini failures on the host | plan approved |
 | r1.3 | Gemini re-run (D6 A, `plan-review-fanout.sh --providers=gemini`, 2026-09-25 11:19) | UNAVAILABLE: the CLI exited rc=0 with empty provider output; fanout wrote a no-signal artifact (`review-gemini2/2026-09-25-plan-1057-gemini.md`) | Gemini has now failed twice on this host (memory kill, then empty output); a third attempt needs a different host (ace-linux-1) from the owner's shell, or the owner accepts the two-provider review |
 
 **r1.1 → r1.2 (Codex confirming pass):**
@@ -189,7 +190,7 @@ Parallelism: Wave 0 items are disjoint and can run concurrently on separate work
 9. Coverage gaps: added exchanger and fired-heater tubes, conductors/caissons, wellhead fatigue, wire and fibre rope, anchors, geohazards, ECDA/ICDA, wind lifetime extension as rows.
 10. Acceptance #2 now names its evidence (durable test id + route line + Deckhand API contract) instead of asserting behaviour the repo cannot show.
 
-Next: owner confirms the D3 reading, decides how to close D6 (Gemini on another host, or accept two providers), and the approval gate follows; then `status:plan-approved` and Wave 0 starts.
+Next: Wave 0 plan-lites on #1094, #2160, #2171, #2180, #2197, #2205; owner batch-approves; implementation in parallel worktrees.
 
 ## Risks and Open Questions
 
