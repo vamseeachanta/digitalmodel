@@ -31,7 +31,9 @@ effort, a PDF derivative. Domains never write HTML.
 - `provenance: Provenance` (from `reporting/provenance.py`) — at least one `DataSource` is required at render time (`ProvenanceError` otherwise).
 - `manifest: dict` — when non-empty, validated against `MANIFEST_REQUIRED_FIELDS` (the report-layer contract).
 - `input_echo: dict` — flattened to dotted keys and rendered as a collapsible table.
-- `appendices: list[Section]` — lettered A, B, C.
+- `appendices: list[Section]` — lettered A, B, C by position, unless a
+  `Section.label` (e.g. `"Appendix D"`) is set; `report_pack` sets it so an
+  explicit YAML letter survives.
 - `tool_version: str` — defaults to `digitalmodel.__version__`.
 
 Section keys and figure ids must be unique across sections and appendices.
@@ -86,5 +88,10 @@ print. No new installs are required.
 
 - `reporting.calc_report` (house calculation report) supplies the CSS and print
   CSS this engine reuses, so calc and design reports look identical.
-- `report_pack` (YAML-driven document packs) already imports the PDF chain and
-  document constants from here; delegating its HTML rendering to the engine is PR3.
+- `report_pack` (YAML-driven document packs) is a front end of this engine
+  (#2212 part 3): `report_pack.workflow.build_report_spec` maps the validated
+  YAML onto a `ReportSpec` and the pack's HTML is `render_html(spec)`, its PDF
+  `render_pdf(...)`. The pack keeps its own markdown body, citations sidecar
+  and manifests. See [standard-report-pack.md](standard-report-pack.md).
+- `examples/reporting/cp-anode-design-dnv-rp-b401.{html,yaml}` (a CDN KaTeX
+  calc sheet with no generator) was removed; CP reports come from the engine.

@@ -1,5 +1,5 @@
 # ABOUTME: Routed workflow that renders a standard marine engineering report pack
-# ABOUTME: (md + self-contained html + optional pdf + citations + provenance manifest).
+# ABOUTME: (md + engine-rendered html + optional pdf + citations + provenance manifest).
 """Durable workflow: standard marine engineering report pack.
 
 Renders a complete engineering report pack following the standard marine
@@ -8,6 +8,12 @@ title/revision block with prepared/checked/approved rows, a fixed section
 skeleton (introduction/scope -> references -> design basis -> methodology &
 assumptions -> results -> conclusions & limitations), capital-lettered
 appendices, a citation sidecar, and a report-layer provenance manifest.
+
+This module is the YAML front end of the standard report engine (#2212): it
+validates the config, builds a :class:`~digitalmodel.reporting.spec.ReportSpec`
+(:func:`build_report_spec`) and lets :func:`digitalmodel.reporting.engine.render_html`
+and :func:`digitalmodel.reporting.pdf.render_pdf` produce the HTML and PDF.
+Only the markdown body and the two manifests are written here.
 
 Config schema (YAML basename ``report_pack``)::
 
@@ -36,9 +42,13 @@ Config schema (YAML basename ``report_pack``)::
         tables:
           - title: Per-sea-state damage
             csv: data/results.csv    # relative to the config file
+            units_row: true          # optional: second CSV row holds the units
+          - title: Summary
+            csv: data/summary.csv
+            units: [-, t]            # optional: inline units, one per column
         figures:
           - title: Damage histogram
-            path: data/figure.png    # embedded as data URI in HTML
+            path: data/figure.svg    # .svg inlined; png/jpg/gif embedded as data URI
       appendices:                    # optional; lettered A, B, C ... (or explicit letter)
         - title: References
           content: ...
@@ -46,8 +56,8 @@ Config schema (YAML basename ``report_pack``)::
           title: Calculation Records
           files: [data/results.csv]  # listed as appendix contents
       citations:                     # optional; emitted to <stem>_citations.json
-        - code_id: DNV-RP-C203
-          publisher: DNV
+        - code_id: DNV-RP-C203       # each distinct code_id also becomes a
+          publisher: DNV             # standard/edition chip in the HTML header
           revision: "2019"
           section: S-N curves in air, Table 2-1
           wiki_path: wikis/marine-engineering/wiki/standards/dnv-rp-c203.md
@@ -68,12 +78,13 @@ Config schema (YAML basename ``report_pack``)::
       output_dir: results
 
 Outputs (all under ``output_dir``): ``<stem>_report.md``, ``<stem>_report.html``
-(self-contained -- no CDN scripts), ``<stem>_report.pdf`` (best-effort, see
-below), ``<stem>_citations.json``, ``<stem>_manifest.json`` (file manifest) and
-``report-layer-manifest.json`` (provenance manifest, required-field validated).
+(self-contained -- rendered by the standard report engine, no CDN scripts),
+``<stem>_report.pdf`` (best-effort, see below), ``<stem>_citations.json``,
+``<stem>_manifest.json`` (file manifest) and ``report-layer-manifest.json``
+(provenance manifest, required-field validated).
 
-PDF rendering is optional by design (``pdf: auto``): the workflow tries, in
-order, Playwright/Chromium, Microsoft Edge headless (``msedge --headless
+PDF rendering is optional by design (``pdf: auto``): the engine's chain tries,
+in order, Playwright/Chromium, Microsoft Edge headless (``msedge --headless
 --print-to-pdf`` -- the documented Windows fallback), then Chrome/Chromium
 headless. If no renderer is available the pack is still emitted and
 ``pdf_status`` carries a clear message; ``pdf: require`` turns that into an
@@ -85,23 +96,30 @@ config -- so re-running the same config produces byte-identical md/html/json.
 
 from __future__ import annotations
 
-import base64
 import csv
-import html as _html
+import hashlib
 import json
 import re
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, cast
 
 from digitalmodel.citations.schema import Citation, CitationValidationError
-from digitalmodel.reporting.pdf import (  # noqa: F401 - re-exported for callers
-    _EDGE_DEFAULT_PATHS,
-    _pdf_via_browser_cli,
-    _pdf_via_playwright,
-    _render_pdf,
+from digitalmodel.reporting.engine import render_html
+from digitalmodel.reporting.pdf import PDF_MODES, PdfMode, render_pdf
+from digitalmodel.reporting.provenance import Provenance
+from digitalmodel.reporting.spec import (
+    DOC_NUMBER_RE,
+    MANIFEST_REQUIRED_FIELDS,
+    DocumentMeta,
+    FigureBlock,
+    ReportSpec,
+    RevisionRow,
+    Section,
+    StandardLabel,
+    TableBlock,
+    TextBlock,
 )
-from digitalmodel.reporting.spec import DOC_NUMBER_RE, MANIFEST_REQUIRED_FIELDS
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -117,29 +135,10 @@ APPENDIX_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 #: Optional caller-supplied manifest fields carried through when present.
 MANIFEST_OPTIONAL_FIELDS = ("parent_issue", "source_artifacts")
 
-PDF_MODES = ("auto", "off", "require")
+#: Figure formats a pack may declare; ``.svg`` is inlined, the rest embedded.
+FIGURE_SUFFIXES = (".png", ".jpg", ".jpeg", ".svg", ".gif")
 
-_CSS = """
-body { margin: 0; background: #eef2f7; color: #172033;
-       font-family: 'Segoe UI', system-ui, sans-serif; line-height: 1.55; }
-.report-shell { max-width: 1080px; margin: 0 auto; padding: 34px 16px 50px; }
-.report-page { background: #fff; border: 1px solid #d7dee8; border-radius: 10px;
-               padding: 36px 44px; }
-h1 { margin: 0 0 10px; font-size: 1.7rem; }
-h2 { margin: 28px 0 10px; font-size: 1.2rem; border-bottom: 1px solid #d7dee8;
-     padding-bottom: 4px; }
-h3 { margin: 18px 0 8px; font-size: 1.02rem; }
-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: .92rem; }
-th, td { border: 1px solid #d7dee8; padding: 7px 10px; text-align: left;
-         vertical-align: top; }
-th { background: #f2f6fb; }
-pre { background: #f8fafc; border: 1px solid #d7dee8; border-radius: 6px;
-      padding: 12px 14px; overflow-x: auto; }
-.titleblock td:first-child { font-weight: 700; width: 220px; background: #f2f6fb; }
-figure { margin: 16px 0; }
-figure img { max-width: 100%; border: 1px solid #d7dee8; }
-figcaption { color: #607085; font-size: .88rem; margin-top: 4px; }
-""".strip()
+_SVG_PROLOG_RE = re.compile(r"^\s*(<\?xml[^>]*\?>\s*)?(<!DOCTYPE[^>]*>\s*)?", re.S)
 
 
 class ReportPackConfigError(ValueError):
@@ -150,28 +149,35 @@ class ReportPackManifestError(ValueError):
     """Raised when the report-layer manifest inputs fail schema validation."""
 
 
+@dataclass(frozen=True)
+class ReportPack:
+    """The validated content of one ``report_pack`` config (see :func:`load_pack`)."""
+
+    stem: str
+    config_dir: Path
+    output_dir: Path
+    document: dict[str, Any]
+    sections: list[dict[str, str]]
+    results: dict[str, Any]
+    appendices: list[dict[str, Any]]
+    citations: list[Citation]
+    manifest_inputs: dict[str, Any]
+    pdf_mode: PdfMode
+
+
 # ---------------------------------------------------------------------------
 # Router
 # ---------------------------------------------------------------------------
 
 
 def router(cfg: dict) -> dict:
-    settings = cfg.get("report_pack") or {}
-    if not isinstance(settings, dict) or not settings:
-        raise ReportPackConfigError("report_pack settings block is required")
+    pack = load_pack(cfg)
+    settings = cfg["report_pack"]
+    spec = build_report_spec(pack)
 
-    config_dir = _config_dir(cfg)
-    document = _validate_document(settings)
-    sections = _validate_sections(settings, config_dir)
-    results = _load_results(settings, config_dir)
-    appendices = _validate_appendices(settings, config_dir)
-    citations = _validate_citations(settings)
-    manifest_inputs = _validate_manifest_inputs(settings)
-    pdf_mode = _pdf_mode(settings)
-
-    stem = _input_stem(cfg)
-    out_dir = _output_dir(cfg, settings)
+    out_dir = pack.output_dir
     out_dir.mkdir(parents=True, exist_ok=True)
+    stem = pack.stem
 
     md_path = out_dir / f"{stem}_report.md"
     html_path = out_dir / f"{stem}_report.html"
@@ -180,15 +186,16 @@ def router(cfg: dict) -> dict:
     file_manifest_path = out_dir / f"{stem}_manifest.json"
     layer_manifest_path = out_dir / "report-layer-manifest.json"
 
-    markdown = render_markdown(document, sections, results, appendices, citations)
-    html_doc = render_html(document, sections, results, appendices, citations)
+    markdown = render_markdown(
+        pack.document, pack.sections, pack.results, pack.appendices, pack.citations
+    )
     md_path.write_text(markdown, encoding="utf-8", newline="\n")
-    html_path.write_text(html_doc, encoding="utf-8", newline="\n")
+    html_path.write_text(render_html(spec), encoding="utf-8", newline="\n")
 
-    pdf_written, pdf_status = _render_pdf(html_path, pdf_path, pdf_mode)
+    pdf_status = render_pdf(html_path, pdf_path, pack.pdf_mode)
+    pdf_written = pdf_status.rendered
 
-    citations_payload = {"citations": [asdict(c) for c in citations]}
-    _write_json(citations_path, citations_payload)
+    _write_json(citations_path, {"citations": spec.citations})
 
     emitted = [md_path, html_path, citations_path]
     if pdf_written:
@@ -200,7 +207,7 @@ def router(cfg: dict) -> dict:
         "markdown_report": md_path.name,
         "html_report": html_path.name,
         "pdf_report": pdf_path.name if pdf_written else None,
-        "pdf_status": pdf_status,
+        "pdf_status": pdf_status.message,
         "citation_sidecar": citations_path.name,
         "report_layer_manifest": layer_manifest_path.name,
     }
@@ -208,7 +215,7 @@ def router(cfg: dict) -> dict:
     emitted.append(file_manifest_path)
 
     layer_manifest = build_report_layer_manifest(
-        manifest_inputs,
+        pack.manifest_inputs,
         citation_evidence_manifest=citations_path.name,
         generated_manifest=file_manifest_path.name,
         files=sorted(p.name for p in emitted) + ["report-layer-manifest.json"],
@@ -217,16 +224,36 @@ def router(cfg: dict) -> dict:
 
     cfg["report_pack"] = {
         **settings,
-        "document_number": document["number"],
+        "document_number": pack.document["number"],
         "markdown_report": _display_path(md_path),
         "html_report": _display_path(html_path),
         "pdf_report": _display_path(pdf_path) if pdf_written else None,
-        "pdf_status": pdf_status,
+        "pdf_status": pdf_status.message,
         "citations_json": _display_path(citations_path),
         "file_manifest": _display_path(file_manifest_path),
         "report_layer_manifest": _display_path(layer_manifest_path),
     }
     return cfg
+
+
+def load_pack(cfg: dict) -> ReportPack:
+    """Validate the routed config and resolve every file it references."""
+    settings = cfg.get("report_pack") or {}
+    if not isinstance(settings, dict) or not settings:
+        raise ReportPackConfigError("report_pack settings block is required")
+    config_dir = _config_dir(cfg)
+    return ReportPack(
+        stem=_input_stem(cfg),
+        config_dir=config_dir,
+        output_dir=_output_dir(cfg, settings),
+        document=_validate_document(settings),
+        sections=_validate_sections(settings, config_dir),
+        results=_load_results(settings, config_dir),
+        appendices=_validate_appendices(settings, config_dir),
+        citations=_validate_citations(settings),
+        manifest_inputs=_validate_manifest_inputs(settings),
+        pdf_mode=_pdf_mode(settings),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -385,46 +412,108 @@ def _load_results(settings: dict[str, Any], config_dir: Path) -> dict[str, Any]:
         raise ReportPackConfigError("report_pack.results must be a mapping")
     tables = []
     for index, entry in enumerate(raw.get("tables") or [], start=1):
+        label = f"report_pack.results.tables[{index}]"
         if not isinstance(entry, dict) or not entry.get("csv"):
-            raise ReportPackConfigError(
-                f"report_pack.results.tables[{index}] needs a csv path"
-            )
+            raise ReportPackConfigError(f"{label} needs a csv path")
         title = str(entry.get("title", f"Results table {index}")).strip()
-        csv_path = Path(entry["csv"])
-        if not csv_path.is_absolute():
-            csv_path = config_dir / csv_path
-        if not csv_path.is_file():
-            raise ReportPackConfigError(
-                f"report_pack.results.tables[{index}].csv not found: {csv_path}"
-            )
+        csv_path = _resolve_file(entry["csv"], config_dir, f"{label}.csv")
         with csv_path.open(newline="", encoding="utf-8") as stream:
             rows = list(csv.reader(stream))
+        units, rows = _table_units(entry, rows, label)
         if len(rows) < 2:
-            raise ReportPackConfigError(
-                f"report_pack.results.tables[{index}].csv has no data rows: {csv_path}"
-            )
-        tables.append({"title": title, "header": rows[0], "rows": rows[1:],
-                       "source": csv_path.name})
+            raise ReportPackConfigError(f"{label}.csv has no data rows: {csv_path}")
+        tables.append(
+            {
+                "title": title,
+                "header": rows[0],
+                "units": units,
+                "rows": rows[1:],
+                "source": csv_path.name,
+                "identifier": _pack_relative(csv_path, config_dir),
+                "digest": _content_digest(csv_path),
+            }
+        )
     figures = []
     for index, entry in enumerate(raw.get("figures") or [], start=1):
+        label = f"report_pack.results.figures[{index}]"
         if not isinstance(entry, dict) or not entry.get("path"):
+            raise ReportPackConfigError(f"{label} needs a path")
+        fig_path = _resolve_file(entry["path"], config_dir, f"{label}.path")
+        if fig_path.suffix.lower() not in FIGURE_SUFFIXES:
             raise ReportPackConfigError(
-                f"report_pack.results.figures[{index}] needs a path"
-            )
-        fig_path = Path(entry["path"])
-        if not fig_path.is_absolute():
-            fig_path = config_dir / fig_path
-        if not fig_path.is_file():
-            raise ReportPackConfigError(
-                f"report_pack.results.figures[{index}].path not found: {fig_path}"
+                f"unsupported figure format {fig_path.suffix!r} "
+                f"(use png/jpg/svg/gif): {fig_path}"
             )
         figures.append(
             {
                 "title": str(entry.get("title", f"Figure {index}")).strip(),
                 "path": fig_path,
+                "svg": _inline_svg(fig_path, label)
+                if fig_path.suffix.lower() == ".svg"
+                else None,
+                "identifier": _pack_relative(fig_path, config_dir),
+                "digest": _content_digest(fig_path),
             }
         )
     return {"tables": tables, "figures": figures}
+
+
+def _table_units(
+    entry: dict[str, Any], rows: list[list[str]], label: str
+) -> tuple[Optional[list[str]], list[list[str]]]:
+    """Resolve the optional units row: ``units_row: true`` (second CSV row) or
+    an inline ``units:`` list. Returns ``(units, rows_without_units_row)``."""
+    units_row = entry.get("units_row", False)
+    inline = entry.get("units")
+    if units_row and inline is not None:
+        raise ReportPackConfigError(f"{label}: give units_row or units, not both")
+    if units_row:
+        if len(rows) < 2:
+            raise ReportPackConfigError(f"{label}.csv has no units row")
+        return [str(u) for u in rows[1]], [rows[0], *rows[2:]]
+    if inline is not None:
+        if not isinstance(inline, list) or not rows or len(inline) != len(rows[0]):
+            raise ReportPackConfigError(
+                f"{label}.units must be a list with one entry per column"
+            )
+        return [str(u) for u in inline], rows
+    return None, rows
+
+
+def _inline_svg(path: Path, label: str) -> str:
+    """Read an SVG file for inline embedding (XML prolog dropped, no scripts)."""
+    text = path.read_text(encoding="utf-8")
+    body = _SVG_PROLOG_RE.sub("", text, count=1).strip()
+    if not body.startswith("<svg"):
+        raise ReportPackConfigError(f"{label}.path is not an SVG document: {path}")
+    if "<script" in body.lower():
+        raise ReportPackConfigError(
+            f"{label}.path: SVG figures must not contain scripts: {path}"
+        )
+    return body
+
+
+def _resolve_file(value: Any, config_dir: Path, label: str) -> Path:
+    path = Path(str(value))
+    if not path.is_absolute():
+        path = config_dir / path
+    if not path.is_file():
+        raise ReportPackConfigError(f"{label} not found: {path}")
+    return path
+
+
+def _pack_relative(path: Path, config_dir: Path) -> str:
+    """Portable identifier: relative to the config dir when inside it, else the name."""
+    try:
+        return path.resolve().relative_to(config_dir.resolve()).as_posix()
+    except ValueError:
+        return path.name
+
+
+def _content_digest(path: Path) -> str:
+    """sha256 of the file with CRLF normalised, so checkouts agree."""
+    payload = path.read_bytes().replace(b"\r\n", b"\n")
+    return "sha256:" + hashlib.sha256(payload).hexdigest()
 
 
 def _validate_citations(settings: dict[str, Any]) -> list[Citation]:
@@ -472,13 +561,13 @@ def _validate_manifest_inputs(settings: dict[str, Any]) -> dict[str, Any]:
     return manifest
 
 
-def _pdf_mode(settings: dict[str, Any]) -> str:
+def _pdf_mode(settings: dict[str, Any]) -> PdfMode:
     mode = str(settings.get("pdf", "auto")).strip().lower()
     if mode not in PDF_MODES:
         raise ReportPackConfigError(
             f"report_pack.pdf must be one of {PDF_MODES}: got {mode!r}"
         )
-    return mode
+    return cast(PdfMode, mode)
 
 
 def build_report_layer_manifest(
@@ -522,6 +611,175 @@ def build_report_layer_manifest(
         }
     )
     return manifest
+
+
+# ---------------------------------------------------------------------------
+# Spec assembly (the engine renders the HTML/PDF from this)
+# ---------------------------------------------------------------------------
+
+
+def build_report_spec(pack: ReportPack) -> ReportSpec:
+    """Map the validated pack onto the standard report engine's contract.
+
+    ``document`` -> :class:`DocumentMeta`; each distinct cited ``code_id`` ->
+    a :class:`StandardLabel` (edition = citation revision, provenance = wiki
+    path); sections -> :class:`TextBlock` plus, in every section whose title
+    contains "result", one :class:`TableBlock` per CSV and one
+    :class:`FigureBlock` per figure (SVG inlined, rasters embedded); appendices
+    keep their explicit letters. Provenance is declared from the manifest's
+    input source IDs and source-artifact pointers plus every CSV/figure read
+    (with a content digest); the engine refuses to render without one.
+    """
+    document = pack.document
+    meta = DocumentMeta(
+        number=document["number"],
+        revision=document["revision"],
+        title=str(document["title"]).strip(),
+        project=str(document["project"]).strip(),
+        client=str(document["client"]).strip(),
+        date=str(document["date"]) if document.get("date") else None,
+        prepared_by=str(document.get("prepared_by") or ""),
+        checked_by=str(document.get("checked_by") or ""),
+        approved_by=str(document.get("approved_by") or ""),
+        revision_history=[
+            RevisionRow(
+                rev=str(row.get("rev", "")),
+                date=str(row.get("date") or ""),
+                description=str(row.get("description") or ""),
+                prepared=str(row.get("prepared") or ""),
+                checked=str(row.get("checked") or ""),
+                approved=str(row.get("approved") or ""),
+            )
+            for row in document["revision_history"]
+        ],
+    )
+
+    result_blocks = _result_blocks(pack.results)
+    sections: list[Section] = []
+    for number, section in enumerate(pack.sections, start=1):
+        blocks: list[Any] = [TextBlock(markdown=section["content"])]
+        if _is_results_section(section["title"]):
+            blocks.extend(result_blocks)
+        sections.append(
+            Section(key=f"section-{number}", title=section["title"], blocks=blocks)
+        )
+
+    appendices: list[Section] = []
+    for appendix in pack.appendices:
+        blocks = []
+        if appendix["content"]:
+            blocks.append(TextBlock(markdown=appendix["content"]))
+        if appendix["files"]:
+            blocks.append(
+                TextBlock(markdown="\n".join(f"- `{item}`" for item in appendix["files"]))
+            )
+        appendices.append(
+            Section(
+                key=f"appendix-{appendix['letter'].lower()}",
+                title=appendix["title"],
+                label=f"Appendix {appendix['letter']}",
+                blocks=blocks,
+            )
+        )
+
+    return ReportSpec(
+        document=meta,
+        standards=_standards_from_citations(pack.citations),
+        citations=[asdict(citation) for citation in pack.citations],
+        sections=sections,
+        provenance=_provenance(pack),
+        manifest=dict(pack.manifest_inputs),
+        input_echo=_input_echo(pack),
+        appendices=appendices,
+    )
+
+
+def _result_blocks(results: dict[str, Any]) -> list[Any]:
+    blocks: list[Any] = []
+    for table in results["tables"]:
+        blocks.append(
+            TableBlock(
+                title=table["title"],
+                columns=list(table["header"]),
+                units=table["units"],
+                rows=[list(row) for row in table["rows"]],
+                source=table["source"],
+            )
+        )
+    for index, figure in enumerate(results["figures"], start=1):
+        if figure["svg"] is not None:
+            blocks.append(
+                FigureBlock(
+                    title=figure["title"], figure_id=f"figure-{index}", svg=figure["svg"]
+                )
+            )
+        else:
+            blocks.append(
+                FigureBlock(
+                    title=figure["title"],
+                    figure_id=f"figure-{index}",
+                    image_path=str(figure["path"]),
+                )
+            )
+    return blocks
+
+
+def _standards_from_citations(citations: list[Citation]) -> list[StandardLabel]:
+    """One header/footer chip per distinct cited code, first citation wins."""
+    labels: list[StandardLabel] = []
+    seen: set[str] = set()
+    for citation in citations:
+        if citation.code_id in seen:
+            continue
+        seen.add(citation.code_id)
+        labels.append(
+            StandardLabel(
+                code_id=citation.code_id,
+                edition=citation.revision,
+                provenance=citation.wiki_path,
+            )
+        )
+    return labels
+
+
+def _provenance(pack: ReportPack) -> Provenance:
+    provenance = Provenance()
+    for source_id in pack.manifest_inputs["input_source_ids"]:
+        provenance.add(
+            "input_source", source_id, description="report_pack.manifest.input_source_ids"
+        )
+    for name, pointer in (pack.manifest_inputs.get("source_artifacts") or {}).items():
+        provenance.add("source_artifact", str(pointer), description=str(name))
+    for table in pack.results["tables"]:
+        provenance.add(
+            "csv", table["identifier"], digest=table["digest"], description=table["title"]
+        )
+    for figure in pack.results["figures"]:
+        provenance.add(
+            "figure",
+            figure["identifier"],
+            digest=figure["digest"],
+            description=figure["title"],
+        )
+    return provenance
+
+
+def _input_echo(pack: ReportPack) -> dict[str, Any]:
+    """What the pack was built from (portable identifiers only, no host paths)."""
+    manifest = pack.manifest_inputs
+    return {
+        "pdf": pack.pdf_mode,
+        "results": {
+            "tables": [t["identifier"] for t in pack.results["tables"]],
+            "figures": [f["identifier"] for f in pack.results["figures"]],
+        },
+        "manifest": {
+            "input_source_ids": list(manifest["input_source_ids"]),
+            "source_artifacts": dict(manifest.get("source_artifacts") or {}),
+            "raw_output_path": manifest["raw_output_path"],
+            "final_output_path": manifest["final_output_path"],
+        },
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -611,6 +869,8 @@ def _markdown_results(results: dict[str, Any]) -> list[str]:
         lines.append("")
         lines.append("| " + " | ".join(table["header"]) + " |")
         lines.append("|" + "---|" * len(table["header"]))
+        if table["units"]:
+            lines.append("| " + " | ".join(table["units"]) + " |")
         for row in table["rows"]:
             lines.append("| " + " | ".join(row) + " |")
         lines.append("")
@@ -624,211 +884,6 @@ def _markdown_results(results: dict[str, Any]) -> list[str]:
 
 def _is_results_section(title: str) -> bool:
     return "result" in title.lower()
-
-
-# ---------------------------------------------------------------------------
-# HTML rendering (self-contained; no external scripts or stylesheets)
-# ---------------------------------------------------------------------------
-
-
-def render_html(
-    document: dict[str, Any],
-    sections: list[dict[str, str]],
-    results: dict[str, Any],
-    appendices: list[dict[str, Any]],
-    citations: list[Citation],
-) -> str:
-    esc = _html.escape
-    body: list[str] = []
-    body.append(f"<h1>{esc(document['title'])}</h1>")
-    body.append('<h2 id="title-block">Title and revision block</h2>')
-    rows = [
-        ("Document number", document["number"]),
-        ("Revision", document["revision"]),
-        ("Title", document["title"]),
-        ("Project", document["project"]),
-        ("Client", document["client"]),
-    ]
-    if document.get("date"):
-        rows.append(("Date", document["date"]))
-    for role, key in (
-        ("Prepared by", "prepared_by"),
-        ("Checked by", "checked_by"),
-        ("Approved by", "approved_by"),
-    ):
-        if document.get(key):
-            rows.append((role, document[key]))
-    body.append('<table class="titleblock"><tbody>')
-    for label, value in rows:
-        body.append(f"<tr><td>{esc(label)}</td><td>{esc(str(value))}</td></tr>")
-    body.append("</tbody></table>")
-    body.append("<h3>Revision history</h3>")
-    body.append(
-        "<table><thead><tr><th>Rev</th><th>Date</th><th>Description</th>"
-        "<th>Prepared</th><th>Checked</th><th>Approved</th></tr></thead><tbody>"
-    )
-    for row in document["revision_history"]:
-        body.append(
-            "<tr>"
-            + "".join(
-                f"<td>{esc(str(row.get(key, '')))}</td>"
-                for key in ("rev", "date", "description", "prepared", "checked", "approved")
-            )
-            + "</tr>"
-        )
-    body.append("</tbody></table>")
-    for number, section in enumerate(sections, start=1):
-        body.append(f'<h2 id="section-{number}">{number}. {esc(section["title"])}</h2>')
-        body.append(_markdown_to_html(section["content"]))
-        if _is_results_section(section["title"]):
-            body.extend(_html_results(results))
-    if citations:
-        body.append('<h2 id="references-cited">References cited</h2>')
-        body.append("<ol>")
-        for citation in citations:
-            note = f" {esc(citation.note)}" if citation.note else ""
-            body.append(
-                f"<li><strong>{esc(citation.code_id)}</strong> — "
-                f"{esc(citation.publisher)}, {esc(citation.revision)}, "
-                f"{esc(citation.section)}.{note}</li>"
-            )
-        body.append("</ol>")
-    for appendix in appendices:
-        body.append(
-            f'<h2 id="appendix-{appendix["letter"].lower()}">'
-            f"Appendix {appendix['letter']} — {esc(appendix['title'])}</h2>"
-        )
-        if appendix["content"]:
-            body.append(_markdown_to_html(appendix["content"]))
-        if appendix["files"]:
-            body.append("<ul>")
-            for item in appendix["files"]:
-                body.append(f"<li><code>{esc(item)}</code></li>")
-            body.append("</ul>")
-    body_html = "\n".join(body)
-    return (
-        "<!DOCTYPE html>\n"
-        '<html lang="en">\n'
-        "<head>\n"
-        '<meta charset="utf-8">\n'
-        '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        f"<title>{esc(document['number'])} — {esc(document['title'])}</title>\n"
-        f"<style>\n{_CSS}\n</style>\n"
-        "</head>\n"
-        "<body>\n"
-        '<div class="report-shell"><div class="report-page">\n'
-        f"{body_html}\n"
-        "</div></div>\n"
-        "</body>\n"
-        "</html>\n"
-    )
-
-
-def _html_results(results: dict[str, Any]) -> list[str]:
-    esc = _html.escape
-    parts: list[str] = []
-    for table in results["tables"]:
-        parts.append(f"<h3>{esc(table['title'])}</h3>")
-        parts.append(
-            "<table><thead><tr>"
-            + "".join(f"<th>{esc(col)}</th>" for col in table["header"])
-            + "</tr></thead><tbody>"
-        )
-        for row in table["rows"]:
-            parts.append(
-                "<tr>" + "".join(f"<td>{esc(cell)}</td>" for cell in row) + "</tr>"
-            )
-        parts.append("</tbody></table>")
-        parts.append(f"<p>Source: <code>{esc(table['source'])}</code></p>")
-    for figure in results["figures"]:
-        data_uri = _figure_data_uri(figure["path"])
-        parts.append(
-            "<figure>"
-            f'<img src="{data_uri}" alt="{esc(figure["title"])}">'
-            f"<figcaption>{esc(figure['title'])}</figcaption>"
-            "</figure>"
-        )
-    return parts
-
-
-_FIGURE_MIME = {
-    ".png": "image/png",
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".svg": "image/svg+xml",
-    ".gif": "image/gif",
-}
-
-
-def _figure_data_uri(path: Path) -> str:
-    mime = _FIGURE_MIME.get(path.suffix.lower())
-    if mime is None:
-        raise ReportPackConfigError(
-            f"unsupported figure format {path.suffix!r} (use png/jpg/svg/gif): {path}"
-        )
-    payload = base64.b64encode(path.read_bytes()).decode("ascii")
-    return f"data:{mime};base64,{payload}"
-
-
-def _markdown_to_html(markdown: str) -> str:
-    """Minimal, deterministic markdown-to-HTML for section bodies.
-
-    Supports paragraphs, unordered lists (``- ``), fenced code blocks,
-    ``**bold**``, ``*italic*`` and `` `code` `` spans. Section headings come
-    from the config (section titles), not from the body, so heading syntax in
-    the body is intentionally rendered as text.
-    """
-    esc = _html.escape
-    blocks: list[str] = []
-    lines = markdown.splitlines()
-    index = 0
-    while index < len(lines):
-        line = lines[index]
-        if not line.strip():
-            index += 1
-            continue
-        if line.strip().startswith("```"):
-            code: list[str] = []
-            index += 1
-            while index < len(lines) and not lines[index].strip().startswith("```"):
-                code.append(lines[index])
-                index += 1
-            index += 1  # closing fence
-            blocks.append(f"<pre>{esc(chr(10).join(code))}</pre>")
-            continue
-        if line.lstrip().startswith("- "):
-            items: list[str] = []
-            while index < len(lines) and lines[index].lstrip().startswith("- "):
-                items.append(
-                    f"<li>{_inline_md(lines[index].lstrip()[2:].strip())}</li>"
-                )
-                index += 1
-            blocks.append("<ul>" + "".join(items) + "</ul>")
-            continue
-        paragraph: list[str] = []
-        while index < len(lines) and lines[index].strip() and not (
-            lines[index].lstrip().startswith("- ")
-            or lines[index].strip().startswith("```")
-        ):
-            paragraph.append(lines[index].strip())
-            index += 1
-        blocks.append(f"<p>{_inline_md(' '.join(paragraph))}</p>")
-    return "\n".join(blocks)
-
-
-def _inline_md(text: str) -> str:
-    escaped = _html.escape(text)
-    escaped = re.sub(r"`([^`]+)`", r"<code>\1</code>", escaped)
-    escaped = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", escaped)
-    escaped = re.sub(r"(?<!\*)\*([^*]+)\*(?!\*)", r"<em>\1</em>", escaped)
-    return escaped
-
-
-# ---------------------------------------------------------------------------
-# PDF rendering — best-effort renderer chain, fail-soft by default
-# ---------------------------------------------------------------------------
-# The chain lives in ``digitalmodel.reporting.pdf`` (#2212); re-exported here so
-# the workflow's behaviour and its tests are unchanged.
 
 
 # ---------------------------------------------------------------------------
@@ -871,3 +926,23 @@ def _write_json(path: Path, payload: Any) -> None:
         encoding="utf-8",
         newline="\n",
     )
+
+
+__all__ = [
+    "APPENDIX_LETTERS",
+    "DOC_NUMBER_RE",
+    "EXECUTION_TOOL",
+    "FIGURE_SUFFIXES",
+    "MANIFEST_OPTIONAL_FIELDS",
+    "MANIFEST_REQUIRED_FIELDS",
+    "PDF_MODES",
+    "ReportPack",
+    "ReportPackConfigError",
+    "ReportPackManifestError",
+    "build_report_layer_manifest",
+    "build_report_spec",
+    "load_pack",
+    "render_markdown",
+    "render_pdf",
+    "router",
+]

@@ -1,4 +1,5 @@
 basename: cathodic_protection
+# Regression input for tests/cathodic_protection/test_engine_adapter.py (#2210).
 
 # FPSO hull (floating offshore structure) — sacrificial-anode CP per
 # ABS Guidance Notes on Cathodic Protection of Offshore Structures (Dec 2018).

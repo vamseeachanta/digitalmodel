@@ -290,3 +290,17 @@ def test_markdown_subset_escapes_and_structures():
         "<ul><li>one</li><li>two</li></ul>",
         "<pre><code>code &lt;x&gt;</code></pre>",
     ]
+
+
+def test_markdown_wrapped_list_items_continue_on_indented_lines():
+    # YAML `content: |` bodies wrap bullets onto indented lines; those lines
+    # belong to the item, not to a stray paragraph (#2212 part 3).
+    html = markdown_to_html(
+        "- first item\n  continues here\n- second\n\n1. one\n   more\n2. two"
+    )
+    assert html.split("\n") == [
+        "<ul><li>first item continues here</li><li>second</li></ul>",
+        "<ol><li>one more</li><li>two</li></ol>",
+    ]
+    # an unindented non-marker line still makes the block a paragraph
+    assert markdown_to_html("- a\nb").startswith("<p>")

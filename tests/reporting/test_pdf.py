@@ -55,10 +55,12 @@ def _browser_available() -> bool:
     )
 
 
-def test_report_pack_imports_the_moved_chain():
-    assert report_pack_workflow._render_pdf is pdf_module._render_pdf
-    assert report_pack_workflow._pdf_via_browser_cli is pdf_module._pdf_via_browser_cli
-    assert report_pack_workflow._pdf_via_playwright is pdf_module._pdf_via_playwright
+def test_report_pack_uses_the_engine_chain():
+    # #2212 part 3: report_pack delegates to the public render_pdf (no private
+    # re-exports of the moved chain remain).
+    assert report_pack_workflow.render_pdf is pdf_module.render_pdf
+    assert report_pack_workflow.PDF_MODES is pdf_module.PDF_MODES
+    assert not hasattr(report_pack_workflow, "_render_pdf")
 
 
 def test_mode_off_is_disabled_without_touching_the_host(tmp_path, no_browser):

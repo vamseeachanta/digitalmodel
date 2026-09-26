@@ -232,6 +232,11 @@ class Section(_Strict):
     key: str
     title: str
     subtitle: str = ""
+    label: str = Field(
+        default="",
+        description="Explicit appendix label (e.g. 'Appendix D'); when empty an "
+        "appendix is lettered by position (A, B, C ...). Ignored for sections.",
+    )
     blocks: list[Block]
 
     @field_validator("key")
