@@ -1,4 +1,5 @@
 basename: cathodic_protection
+# Regression input for tests/cathodic_protection/test_engine_adapter.py (#2210).
 
 # Fixed steel jacket / offshore platform — sacrificial-anode CP per DNV-RP-B401 (2021).
 # Three exposure zones (submerged / splash / atmospheric) with stand-off anodes.

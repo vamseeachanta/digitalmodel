@@ -22,9 +22,13 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#benchmarks
   - module: cathodic_protection
     entry_point: src/digitalmodel/cathodic_protection/
+    engine_entry: src/digitalmodel/cathodic_protection/engine_adapter.py  # basename cathodic_protection (#2210)
+    calculation_types: [DNV_RP_B401_offshore, DNV_RP_F103_2010, ABS_gn_ships_2018, ABS_gn_offshore_2018]
+    deprecated_calculation_types: [DNV_RP_B401_offshore_legacy, DNV_RP_F103_2010_legacy]  # legacy solver, DeprecationWarning
+    demo_workflows: []  # retired 2026-09-25 (owner decision D5); regression inputs in tests/fixtures/cathodic_protection/workflow_inputs/
     maturity: beta
     owner_wiki: docs/domains/cathodic_protection/
-    key_tests: [tests/cathodic_protection/]
+    key_tests: [tests/cathodic_protection/, tests/specialized/cathodic_protection/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#cathodic_protection
   - module: citations
     entry_point: src/digitalmodel/citations/

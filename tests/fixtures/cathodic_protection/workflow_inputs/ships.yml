@@ -1,4 +1,5 @@
 basename: cathodic_protection
+# Regression input for tests/cathodic_protection/test_engine_adapter.py (#2210).
 
 inputs:
   calculation_type: ABS_gn_ships_2018

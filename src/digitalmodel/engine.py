@@ -10,9 +10,7 @@ from assetutilities.common.yml_utilities import WorkingWithYAML
 
 # Reader imports
 from digitalmodel.hydrodynamics.aqwa import Aqwa
-from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import (
-    CathodicProtection,
-)
+from digitalmodel.cathodic_protection.engine_adapter import run_cathodic_protection
 from digitalmodel.infrastructure.base_solvers.hydrodynamics.code_dnvrph103_hydrodynamics_circular import (
     DNVRPH103_hydrodynamics_circular,
 )
@@ -393,8 +391,9 @@ def engine(
 
         cfg_base = pipelay(cfg_base)
     elif basename == "cathodic_protection":
-        cp = CathodicProtection()
-        cfg_base = cp.router(cfg_base)
+        # #2210: adapter onto the cathodic_protection package (DNV-RP-B401 /
+        # DNV-RP-F103); ABS routes and the *_legacy keys wrap the legacy solver.
+        cfg_base = run_cathodic_protection(cfg_base)
     elif basename == "transformation":
         trans = Transformation()
         cfg_base = trans.router(cfg_base)
