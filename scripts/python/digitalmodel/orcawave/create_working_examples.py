@@ -7,6 +7,11 @@ Based on the examples directory format
 import yaml
 from pathlib import Path
 
+#: This repository's OrcaWave examples (the meshes were absolute paths).
+EXAMPLES = Path(__file__).resolve().parents[4] / "docs" / "domains" / "orcawave" / "examples"
+L01_MESH = str(EXAMPLES / "L01_default_vessel" / "L01 Vessel mesh.gdf")
+L02_MESH = str(EXAMPLES / "L02 OC4 Semi-sub" / "L02 OC4 Semi-sub mesh.gdf")
+
 def create_simple_vessel_config():
     """Create a simple vessel configuration using L01 Default vessel as template"""
     
@@ -57,7 +62,7 @@ def create_simple_vessel_config():
             'BodyIncludedInAnalysis': True,
             
             # Using the actual L01 mesh file from examples
-            'BodyMeshFileName': 'D:\\github\\digitalmodel\\docs\\modules\\orcawave\\examples\\L01_default_vessel\\L01 Vessel mesh.gdf',
+            'BodyMeshFileName': L01_MESH,
             'BodyMeshFormat': 'Wamit gdf',
             'BodyMeshLengthUnits': 'm',
             'BodyMeshSymmetry': 'xz plane',  # From L01 example
@@ -186,7 +191,7 @@ def create_oc4_semisub_config():
             'BodyIncludedInAnalysis': True,
             
             # Using the actual L02 mesh file from examples
-            'BodyMeshFileName': 'D:\\github\\digitalmodel\\docs\\modules\\orcawave\\examples\\L02 OC4 Semi-sub\\L02 OC4 Semi-sub mesh.gdf',
+            'BodyMeshFileName': L02_MESH,
             'BodyMeshFormat': 'Wamit gdf',
             'BodyMeshLengthUnits': 'm',
             'BodyMeshSymmetry': 'xz plane',
@@ -287,7 +292,7 @@ def create_minimal_test_config():
         # Single body using L01 vessel
         'Bodies': [{
             'BodyName': 'TestBody',
-            'BodyMeshFileName': 'D:\\github\\digitalmodel\\docs\\modules\\orcawave\\examples\\L01_default_vessel\\L01 Vessel mesh.gdf',
+            'BodyMeshFileName': L01_MESH,
             'BodyMeshFormat': 'Wamit gdf',
             'BodyMeshLengthUnits': 'm',
             'BodyMeshPosition': [0, 0, 0],
@@ -338,8 +343,8 @@ def verify_gdf_paths():
     print("="*60)
     
     gdf_files = [
-        "D:\\github\\digitalmodel\\docs\\modules\\orcawave\\examples\\L01_default_vessel\\L01 Vessel mesh.gdf",
-        "D:\\github\\digitalmodel\\docs\\modules\\orcawave\\examples\\L02 OC4 Semi-sub\\L02 OC4 Semi-sub mesh.gdf"
+        L01_MESH,
+        L02_MESH,
     ]
     
     for gdf_path in gdf_files:

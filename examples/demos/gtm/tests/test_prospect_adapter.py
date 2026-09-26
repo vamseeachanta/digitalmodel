@@ -47,7 +47,7 @@ def test_valid_yaml_passes_schema() -> None:
     assert prospect.vessel_shape == "csv_hlv"
     assert prospect.structure_kind == "rigid_jumper"
     assert prospect.company == "Acme Marine Contractors"
-    assert prospect.contact == "jane.doe@acme.example"
+    assert prospect.contact == "redacted@example.com"
 
 
 def test_missing_vessel_body_fails() -> None:

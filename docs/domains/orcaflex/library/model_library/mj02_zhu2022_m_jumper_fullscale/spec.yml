@@ -13,7 +13,7 @@
 #   bend radius R = 2D = 0.54 m
 # Corner-to-corner chain: 4 | 3 | 6 | 10 | 6 | 3 | 4 (36 m); centerline arc
 # length with 6 x 90 deg bends = 36 - 6*(2*0.54) + 6*(pi/2*0.54) = 34.609 m.
-# Pipe size near-identical to Ballymore 10.75in jumpers (OD 0.273 m).
+# Pipe size near-identical to GoM tieback 10.75in jumpers (OD 0.273 m).
 #
 # Validation targets (computed, two-way FSI): fundamental out-of-plane
 # f1 ~ 1.464 Hz; FIV response locked to 2.5 Hz slug frequency; max structural

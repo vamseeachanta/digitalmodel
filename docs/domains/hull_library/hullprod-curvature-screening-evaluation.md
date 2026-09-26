@@ -65,7 +65,7 @@ Our panel meshes are WAMIT GDF. HullProd does not read GDF, so the spike adds a 
 | client heavy-lift vessel HLV-A | `<client-wiki>/cases/orcawave-diffraction-<HLV-A>/<HLV-A>.gdf` | 2 928 | 20.1 | 0.67 | 0.00 | 0.18 | 0.15 | caution (open boundary) |
 | L01 default vessel | `docs/domains/orcawave/examples/L01_default_vessel/L01 Vessel mesh.gdf` | 1 514 | 15.1 | 0.43 | 0.20 | 0.25 | 0.12 | caution |
 | FPSO | `<client-wiki>/cases/orcawave-diffraction-fpso/fpso.gdf` | 1 760 | 10.2 | 0.13 | 0.75 | 0.09 | 0.03 | caution |
-| Sea Cypress | `worldenergydata/.../hulls/sea_cypress.obj` (Rhino export) | 30 k | 6.6 | 0.00 | 0.00 | 0.21 | 0.78 | **poor** (slivers, 21 non-manifold edges, 25 components, valence 112) |
+| floating production vessel FPV-A | `worldenergydata/.../hulls/<FPV-A>.obj` (Rhino export) | 30 k | 6.6 | 0.00 | 0.00 | 0.21 | 0.78 | **poor** (slivers, 21 non-manifold edges, 25 components, valence 112) |
 | Test ship, our generator | `tests/.../conftest.py::ship_profile` via `HullMeshGenerator`, 7 225 panels | 28 900 | 3.13 | 0.13 | 0.12 | 0.16 | **0.60** | caution |
 | Unit sphere (control) | HullProd example | 80 | 4.00 | 0 | 0 | 1.00 | 0 | good |
 
@@ -118,7 +118,7 @@ The sphere control is exact: `K = 1`, `L_ref = 2`, so `I_D = 4`.
    under-reads `I_D` by 10 to 15 %. Comparisons between hulls must therefore be made at matched
    panel density, or on the STEP BRep.
 
-6. **The mesh-quality gate is worth adopting on its own.** HullProd rejected `sea_cypress.obj`
+6. **The mesh-quality gate is worth adopting on its own.** HullProd rejected `<FPV-A>.obj`
    for slivers, non-manifold edges and 25 disconnected components. Our `MeshQuality` and
    `quality_gates.py` would not have caught the non-manifold edges or the component count.
 

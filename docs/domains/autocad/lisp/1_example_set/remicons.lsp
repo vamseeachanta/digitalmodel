@@ -1,7 +1,7 @@
 ;;; By Jimmy Bergmark
 ;;; Copyright (C) 1997-2006 JTB World, All Rights Reserved
 ;;; Website: www.jtbworld.com
-;;; E-mail: info@jtbworld.com
+;;; E-mail: [email removed]
 ;;; This program is created for AutoCAD 2002, AutoCAD 2004 and vertical products
 ;;; Removes the icons Buzzsaw, RedSpark, Point A and FTP in Open dialog box
 ;;;

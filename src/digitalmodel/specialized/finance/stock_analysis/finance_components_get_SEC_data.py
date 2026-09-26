@@ -18,7 +18,7 @@ SEC_EDGAR_RATE_LIMIT_SLEEP_INTERVAL = 0.2
 read_string = ReadDataFromString()
 
 sec_http_user_agent = {
-    'User-Agent': 'Vamsee Achanta support@aceengineer.com',
+    'User-Agent': 'Vamsee Achanta support@example.com',
     'Accept-Encoding': 'gzip, deflate',
     'Host': 'www.sec.gov'
 }

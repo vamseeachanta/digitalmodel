@@ -1,7 +1,7 @@
 [
   {
     "file_name": "ship_rao",
-    "file_path": "D:\\workspace-hub\\digitalmodel\\specs\\modules\\aqwa\\ship-analysis\\go-by-ship-raos\\001_SHIP_RAOS_REV3.LIS",
+    "file_path": "<private-data>\\001_SHIP_RAOS_REV3.LIS",
     "timestamp": "2025-10-03T06:49:54.757266",
     "routes": {
       "unified_v2": {
@@ -11,7 +11,7 @@
           "acceleration"
         ],
         "metadata": {
-          "source_file": "D:\\workspace-hub\\digitalmodel\\specs\\modules\\aqwa\\ship-analysis\\go-by-ship-raos\\001_SHIP_RAOS_REV3.LIS",
+          "source_file": "<private-data>\\001_SHIP_RAOS_REV3.LIS",
           "vessel_name": "Unknown Vessel",
           "format": "aqwa_lis"
         },
@@ -210,7 +210,7 @@
           "acceleration"
         ],
         "metadata": {
-          "source_file": "D:\\workspace-hub\\digitalmodel\\specs\\modules\\aqwa\\ship-analysis\\go-by-ship-raos\\001_SHIP_RAOS_REV3.LIS",
+          "source_file": "<private-data>\\001_SHIP_RAOS_REV3.LIS",
           "vessel_name": "Unknown Vessel",
           "format": "aqwa_lis"
         },
@@ -332,7 +332,7 @@
   },
   {
     "file_name": "fst_hwl",
-    "file_path": "D:\\workspace-hub\\digitalmodel\\specs\\modules\\aqwa_to_orcaflex\\input\\FST2L015_FST1L015_HWL.LIS",
+    "file_path": "<private-data>\\FST2L015_FST1L015_HWL.LIS",
     "timestamp": "2025-10-03T06:49:55.264220",
     "routes": {
       "unified_v2": {
@@ -342,7 +342,7 @@
           "acceleration"
         ],
         "metadata": {
-          "source_file": "D:\\workspace-hub\\digitalmodel\\specs\\modules\\aqwa_to_orcaflex\\input\\FST2L015_FST1L015_HWL.LIS",
+          "source_file": "<private-data>\\FST2L015_FST1L015_HWL.LIS",
           "vessel_name": "Unknown Vessel",
           "format": "aqwa_lis"
         },
@@ -608,7 +608,7 @@
           "acceleration"
         ],
         "metadata": {
-          "source_file": "D:\\workspace-hub\\digitalmodel\\specs\\modules\\aqwa_to_orcaflex\\input\\FST2L015_FST1L015_HWL.LIS",
+          "source_file": "<private-data>\\FST2L015_FST1L015_HWL.LIS",
           "vessel_name": "Unknown Vessel",
           "format": "aqwa_lis"
         },

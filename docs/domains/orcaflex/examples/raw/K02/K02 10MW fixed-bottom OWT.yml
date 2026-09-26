@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\examples\raw\K02\K02 10MW fixed-bottom OWT.yml
+# File: docs/domains/orcaflex/examples/raw/K02/K02 10MW fixed-bottom OWT.yml
 # Created: 7:53 PM on 2/10/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units

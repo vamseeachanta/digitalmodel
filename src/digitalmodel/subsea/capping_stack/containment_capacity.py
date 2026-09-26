@@ -4,7 +4,7 @@ This module encodes the *central* deterministic safety check for a subsea
 capping stack: can the stack's rated working pressure (RWP) contain the
 maximum pressure the un-controlled well can present at the wellhead?
 
-After Macondo, a capping stack (API 17W) is the primary source-control
+After the 2010 GoM blowout, a capping stack (API 17W) is the primary source-control
 device lowered onto a flowing wellhead to shut in / cap the well.  The
 governing acceptance check is a pressure-containment comparison:
 

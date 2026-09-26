@@ -1,4 +1,4 @@
-"""Convert Ballymore jumper domain specs into generator-ready ProjectInputSpec data.
+"""Convert GoM tieback jumper domain specs into generator-ready ProjectInputSpec data.
 
 Bridges the jumper calculation layer (jumper_lift) to the OrcaFlex modular
 model generator (issue #602, parent #471/#478):
@@ -6,7 +6,7 @@ model generator (issue #602, parent #471/#478):
     domain spec.yml -> run_jumper_analysis() -> build_modular_spec()
         -> ProjectInputSpec(**data) -> ModularModelGenerator -> master.yml
 
-Line-type property shapes mirror the real Ballymore SZ model as extracted in
+Line-type property shapes mirror the real GoM tieback SZ model as extracted in
 ``docs/domains/orcaflex/jumper/plet_to_plem/spec.yml`` (Homogeneous pipe with
 coating for the jumper pipe; General with explicit mass for the OCS 200-V
 connector). Where the real model uses arc-length VariableData for the
@@ -207,7 +207,7 @@ def walk_m_profile(
 
 
 def build_modular_spec(spec_path: str) -> Dict[str, Any]:
-    """Convert a Ballymore jumper domain spec.yml into ProjectInputSpec data.
+    """Convert a GoM tieback jumper domain spec.yml into ProjectInputSpec data.
 
     Returns a dict accepted by ``ProjectInputSpec(**data)`` (generic track)
     containing the full 27-section jumper line, the four jumper line types,
@@ -295,7 +295,7 @@ def build_modular_spec(spec_path: str) -> Dict[str, Any]:
             ),
             "structure": "jumper",
             "operation": "generic",
-            "project": meta_in.get("project", "ballymore"),
+            "project": meta_in.get("project", "gom_tieback"),
         },
         "environment": {
             "water": {

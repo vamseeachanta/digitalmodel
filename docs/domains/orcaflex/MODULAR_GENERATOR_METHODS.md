@@ -37,7 +37,7 @@ Exported directly from the OrcaFlex GUI or via `OrcFxAPI.SaveData()`.
 
 ```
  ┌─────────────────────────────┐
- │  A01 Pliant wave riser.dat  │  <-- 2114 lines, all properties
+ │  A01 Pliant wave riser.yml  │  <-- 2114 lines, all properties
  │  (or .yml export)           │      in one flat file
  └─────────────┬───────────────┘
                │

@@ -1,13 +1,13 @@
 # Handoff — digitalmodel: issue 701 Linux-first dependency repair
 
-**Session:** codex-acma-hou-rds02-701b  •  **UTC:** 2026-07-09T23:36:06Z  •  **Tracking issue:** #701
+**Session:** codex-ace-win-1-701b  •  **UTC:** 2026-07-09T23:36:06Z  •  **Tracking issue:** #701
 
 ## Goal
 
 On a Linux ecosystem host, remove the unused root `cx-Oracle==6.3.1` and
 `hiredis==2.2.3` dependencies, make the CI/clean-install dependency graph
 reproducible, restore Windows workflow coverage, and raise a reviewed PR; use
-ACMA-HOU-RDS02 only for post-push Windows/licensed verification.
+ace-win-1 only for post-push Windows/licensed verification.
 
 ## Current state
 
@@ -17,7 +17,7 @@ ACMA-HOU-RDS02 only for post-push Windows/licensed verification.
 - `digitalmodel/main` and `origin/main` are both
   `4ab92d9063e698147bc8e63bbdef139bf868bc32`.
 - No tracked file was changed, no branch/commit was created, and no PR was
-  opened from ACMA-HOU-RDS02.
+  opened from ace-win-1.
 - Windows reproduction with uv 0.11.25 and Python 3.12.13 reaches
   `cx-Oracle==6.3.1`, which requires MSVC; an independent probe shows the next
   obsolete root pin, `hiredis==2.2.3`, also requires compilation on Python 3.12.
@@ -25,7 +25,7 @@ ACMA-HOU-RDS02 only for post-push Windows/licensed verification.
   dashboard Docker requirements retain their separate hiredis pin and are out
   of root-project scope.
 - A local, uncommitted plan and review scratch set exists only on
-  ACMA-HOU-RDS02. Round-10 Claude returned MINOR; Codex returned MAJOR. These
+  ace-win-1. Round-10 Claude returned MINOR; Codex returned MAJOR. These
   files were deliberately not published because the owner redirected all issue
   resolution to Linux.
 
@@ -49,7 +49,7 @@ ACMA-HOU-RDS02 only for post-push Windows/licensed verification.
 5. Implement with TDD on Linux, generate the dependency artifacts there, run
    Linux validation, commit/push every resumable file and this handoff, and open
    the draft PR. Verify remote HEAD before releasing the claim.
-6. Only after the Linux branch is pushed, use ACMA-HOU-RDS02 to fetch the exact
+6. Only after the Linux branch is pushed, use ace-win-1 to fetch the exact
    remote commit and run Windows Python 3.11/3.12 clean-install/workflow tests,
    locked solver sync, `digitalmodel --help`, and OrcFxAPI import. Do not start
    or enable Deckhand; its scheduled task must stay Disabled.
@@ -83,7 +83,7 @@ ACMA-HOU-RDS02 only for post-push Windows/licensed verification.
 
 ## Open claims to release
 
-- `issue/digitalmodel/701`, session `codex-acma-hou-rds02-701b`: released in the
+- `issue/digitalmodel/701`, session `codex-ace-win-1-701b`: released in the
   issue thread when this handoff was posted.
 
 ## How to resume

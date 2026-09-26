@@ -705,7 +705,7 @@ with open('orcaflex_mooring.json', 'w') as f:
 ### Resources
 - **GitHub Issues:** [Report bugs]
 - **Documentation:** `docs/` directory
-- **Email:** vamsee.achanta@aceengineer.com
+- **Email:** [email removed]
 
 ### Contribution
 Pull requests welcome! See `CONTRIBUTING.md` for guidelines.

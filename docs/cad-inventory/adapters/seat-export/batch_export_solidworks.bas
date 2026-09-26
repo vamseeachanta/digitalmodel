@@ -20,7 +20,7 @@ Dim swApp As Object
 
 Const LIST_FILE As String = "C:\step-export\batch_list.txt"   ' <-- one source path per line
 Const OUT_ROOT  As String = "C:\step-export\out"              ' <-- mirror output here
-Const SRC_ROOT  As String = "Z:\"                             ' <-- drive mapping to the share root (e.g. \\ace-linux-1\ace)
+Const SRC_ROOT  As String = "Z:\"                             ' <-- drive mapping to the share root (e.g. <private-data>\ace)
 Const STEP_AP   As Long   = 214                               ' 214 or 242
 
 Sub main()

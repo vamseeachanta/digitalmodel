@@ -128,7 +128,7 @@ Successfully upgraded the DigitalModel mission document from a basic product des
 - Content Sources (rock-oil-field)
 - Complementary Tools (worldenergydata)
 - Development Infrastructure (workspace-hub)
-- Future Integration Candidates (frontierdeepwater, doris, saipem)
+- Future Integration Candidates (frontierdeepwater, doris, contractor)
 
 **Impact:** 🔥 Shows ecosystem thinking, cross-repository value
 

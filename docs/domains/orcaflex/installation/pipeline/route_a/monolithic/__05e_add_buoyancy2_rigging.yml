@@ -1,7 +1,7 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\1.ini\src\__05e_add_buoyancy2_rigging.yml
+# File: docs/domains/orcaflex/installation/pipeline/route_a/monolithic/__05e_add_buoyancy2_rigging.yml
 # Created: 1:24 PM on 9/19/2023
 # User: 
 # Machine: 
@@ -54,7 +54,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
       - LineType: Hook.Nautilus22te
         Length: 0.68
         ExpansionFactor: ~
@@ -63,7 +63,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
       - LineType: Soft_sling_MBL20
         Length: 3
         ExpansionFactor: ~
@@ -72,7 +72,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
       - LineType: Masterlink1.5in
         Length: 0.2
         ExpansionFactor: ~
@@ -81,7 +81,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
     Attachments: []
     DecoupleLateralAndAxialSeabedFriction: No
     ResistanceProfiles: []

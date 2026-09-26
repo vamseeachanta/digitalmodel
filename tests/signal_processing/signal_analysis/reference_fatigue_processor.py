@@ -12,7 +12,9 @@ import matplotlib.pyplot as plt
 import logging
 
 # Add the project root to path
-sys.path.insert(0, r'D:\github\digitalmodel\src')
+sys.path.insert(
+    0, os.path.join(os.path.dirname(os.path.abspath(__file__)), *[os.pardir] * 3, "src")
+)
 
 from digitalmodel.signal_processing.signal_analysis.orcaflex import TimeSeriesAnalyzer
 

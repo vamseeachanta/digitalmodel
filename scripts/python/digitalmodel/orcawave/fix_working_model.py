@@ -31,8 +31,8 @@ def fix_working_model():
     
     # List of GDF files to try in order of preference
     gdf_files = [
-        "sea_cypress_corrected.gdf",
-        "sea_cypress_orcawave.gdf", 
+        "tug_30m_1_corrected.gdf",
+        "tug_30m_1_orcawave.gdf", 
         "small_box_test.gdf",
         "waterline_test_box.gdf"
     ]
@@ -74,7 +74,7 @@ def fix_working_model():
     config['WaveHeading'] = [0, 45, 90, 135, 180]
     
     # FIX 4: Update body name
-    config['Bodies'][0]['BodyName'] = 'SeaCypressTest'
+    config['Bodies'][0]['BodyName'] = 'Tug30m1Test'
     
     # Save the fixed configuration
     output_file = "working_model_fixed.yml"
@@ -127,20 +127,22 @@ def create_simple_gdf():
     12 4  1 4 3 2
 """
     
-    output_file = "test_box.gdf"
+    # One absolute path, written and then referenced, so the model points at
+    # this mesh wherever the script is run from.
+    output_file = str(Path("test_box.gdf").resolve())
     with open(output_file, 'w') as f:
         f.write(gdf_content)
-    
+
     print(f"[OK] Created simple GDF: {output_file}")
-    
+
     # Also create a minimal working model using this GDF
-    create_minimal_with_test_box()
-    
+    create_minimal_with_test_box(output_file)
+
     return output_file
 
-def create_minimal_with_test_box():
-    """Create minimal config with the test box"""
-    
+def create_minimal_with_test_box(mesh_path):
+    """Create minimal config with the test box mesh at ``mesh_path``"""
+
     config = {
         'UnitsSystem': 'SI',
         'SolveType': 'Potential formulation only',
@@ -152,7 +154,7 @@ def create_minimal_with_test_box():
         'WaveHeading': [0],
         'Bodies': [{
             'BodyName': 'TestBox',
-            'BodyMeshFileName': 'D:\\github\\digitalmodel\\test_box.gdf',
+            'BodyMeshFileName': str(Path(mesh_path).resolve()),
             'BodyMeshFormat': 'Wamit gdf',
             'BodyMeshLengthUnits': 'm',
             'BodyMeshPosition': [0, 0, 0],

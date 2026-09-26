@@ -22,7 +22,7 @@
 			)
 		)
 	)
-	(alert (strcat "\nProgram Developed by ESurveying Softech (India) Pvt. Ltd." "\nContact: +91 9449599709" "\nEmail: info@ESurveying.net" "\nWebSite: www.esurveying.net"))
+	(alert (strcat "\nProgram Developed by ESurveying Softech (India) Pvt. Ltd." "\nContact: +91 9449599709" "\nEmail: [email removed]" "\nWebSite: www.esurveying.net"))
 	(princ)
 )
 (princ "\nType \"ArtL\" to Split Arc or Circles as Series of Lines.") (princ)

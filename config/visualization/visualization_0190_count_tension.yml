@@ -51,7 +51,7 @@ plot_multiple:
     file_name_extension: BM
     nrows: 1
     ncols: 1
-    suptitle: Yellowtail Well, Noble Bob Douglas
+    suptitle: Deepwater well, drillship
     sets:
     -
       title: Bending Moment

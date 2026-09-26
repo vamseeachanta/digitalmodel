@@ -57,7 +57,7 @@ plot_multiple:
     file_name_extension: event_2019_24_10_0300H
     nrows: 2
     ncols: 1
-    suptitle: Yellowtail Well, Noble Bob Douglas, 2019-10-24 03:00:00
+    suptitle: Deepwater well, drillship, 2019-10-24 03:00:00
     sets:
       -
         df: input_data_bm

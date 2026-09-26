@@ -5,5 +5,5 @@ client_hlv_a,client_hlv_a.stl,231.0,auto_principal_span,20.066,18.532,1.533,0.67
 dm_ship_8000_unif,dm_ship_8000_unif.stl,100.0,explicit_user,3.134,2.232,0.902,0.126,0.117,0.158,0.6,False,1,caution,mesh_representation_sensitive
 fpso,fpso.stl,258.0,auto_principal_span,10.219,8.855,1.364,0.133,0.747,0.086,0.033,False,1,caution,mesh_representation_sensitive
 client_drillship_a,client_drillship_a.stl,219.48,auto_principal_span,67.288,38.14,29.148,0.522,0.044,0.227,0.206,False,1,caution,mesh_representation_sensitive
-sea_cypress,sea_cypress.obj,22.95,auto_principal_span,6.64,4.553,2.086,0.0,0.002,0.214,0.784,False,25,poor,mesh_representation_sensitive
+fpv_a,fpv_a.obj,22.95,auto_principal_span,6.64,4.553,2.086,0.0,0.002,0.214,0.784,False,25,poor,mesh_representation_sensitive
 sphere,simple_sphere.stl,2.0,auto_principal_span,4.0,4.0,0.0,0.0,0.0,1.0,0.0,True,1,good,mesh_representation_sensitive

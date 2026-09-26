@@ -41,7 +41,7 @@ data:
   type: csv
   groups:
     - label: All intact
-      file_name: output/b1516_cog.csv
+      file_name: output/mooring_cog.csv
       filter:
         - column: Moorings
           value: All intact
@@ -53,7 +53,7 @@ data:
           value: False
           contains: NULL
     - label: Bollard 6 Loss
-      file_name: output/b1516_cog.csv
+      file_name: output/mooring_cog.csv
       filter:
         - column: Moorings
           value: Line 6 Gone

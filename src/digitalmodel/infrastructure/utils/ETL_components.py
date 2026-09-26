@@ -29,14 +29,30 @@ class ETL_components:
                 )
 
             df_label = self.cfg["transform"]["df_row_to_array"]["df_label"]
+            # Folder of the saved models: configuration key
+            # transform.df_row_to_array.name_folder, else DIGITALMODEL_PRIVATE_DATA.
+            import os
+
+            from digitalmodel.infrastructure.utils.private_paths import (
+                private_data_path,
+            )
+
+            name_folder = str(
+                private_data_path(
+                    configured=self.cfg["transform"]["df_row_to_array"].get(
+                        "name_folder"
+                    )
+                )
+            )
             # TODO Refactor so all of these can be set from the configuration file
             self.cfg[df_label] = []
             for row_index in range(0, len(df_array[file_index])):
                 row_items = {}
                 row_items.update(
                     {
-                        "Name": "K:\\0182\\Rev6\\Extreme\\"
-                        + df_array[file_index].loc[row_index, "SaveData"]
+                        "Name": os.path.join(
+                            name_folder, df_array[file_index].loc[row_index, "SaveData"]
+                        )
                     }
                 )
                 row_items.update(

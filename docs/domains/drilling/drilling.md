@@ -108,12 +108,12 @@ Drilling Automation & Human Factors Shashi Talya Verification & Validation of Au
 9:50 - 10:00 Closing remarks
 Link to Teams meeting - https://lnkd.in/gbXs7YYQ
 
-dimitrious.pirovolou@weatherford.com
+[email removed]
 
 Robert Wylie
 John Macpherson
 John de Wardt
-dimitrios.pirovolou@weatherford.com
+[email removed]
 
 ## Drillers Dichotomy
 

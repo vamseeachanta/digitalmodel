@@ -6,7 +6,7 @@
     "note": "Derived compute characterization; case trees are not committed."
   },
   "machine": {
-    "host": "dev-secondary (ace-linux-2)",
+    "host": "dev-secondary",
     "cores": 32,
     "ram_gb": 31,
     "solver": "interFoam (VOF), OpenFOAM ESI v2312 — single-threaded per case"

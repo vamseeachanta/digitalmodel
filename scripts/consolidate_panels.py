@@ -156,11 +156,11 @@ def build_catalog() -> PanelCatalog:
         "orcaflex_dirs": [],
         "metadata_dirs": [
             {
-                "path": str(WORKSPACE / "acma-projects/_hulls"),
+                "path": str(WORKSPACE / "<project-archive>/_hulls"),
                 "source_id": "hull_collection",
             },
             {
-                "path": str(WORKSPACE / "rock-oil-field/s7/analysis_general/ssRAOs_toolkit/SevenSeasParisMesh"),
+                "path": str(WORKSPACE / "rock-oil-field/s7/analysis_general/ssRAOs_toolkit/iv03ParisMesh"),
                 "source_id": "rock_oil_field",
             },
         ],
@@ -188,7 +188,7 @@ def _build_manual_entries() -> list:
 
     # Source e: FPSO from OrcaFlex YAML (nested structure)
     # Note: source path uses env var or relative reference to avoid client identifiers
-    _fpso_candidates = list((WORKSPACE / "saipem").glob("*/code/rev2/03_Vessels_host/03_fpso_vessel_type.yml"))
+    _fpso_candidates = list((WORKSPACE / "contractor").glob("*/code/rev2/03_Vessels_host/03_fpso_vessel_type.yml"))
     fpso_yml = _fpso_candidates[0] if _fpso_candidates else None
     if fpso_yml and fpso_yml.exists():
         try:

@@ -11,7 +11,9 @@ import pandas as pd
 import logging
 
 # Add the project root to path
-sys.path.insert(0, r'D:\github\digitalmodel\src')
+sys.path.insert(
+    0, os.path.join(os.path.dirname(os.path.abspath(__file__)), *[os.pardir] * 4, "src")
+)
 
 from digitalmodel.modules.signal_analysis.orcaflex import TimeSeriesAnalyzer
 

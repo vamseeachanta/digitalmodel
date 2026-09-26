@@ -1,7 +1,7 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: \\ushousfs01\EngrDataSIM\IAT\SURF\Talos_Venice\02-ANALYSIS\01-UMB\02-StaticUmb\02-DETAILED\3.NL\seven_arctic_stern_chute.yml
+# File: <private-data>/iv02_stern_chute.yml
 # Created: 2:43 PM on 5/2/2023
 # User: 
 # Machine: 
@@ -27,7 +27,7 @@ SupportTypes:
   Tensioner Support1:
     Locked: No
     BuoyType: Lumped buoy
-    Connection: SevenArctic
+    Connection: iv02
     DampingRelativeTo: Earth
     DisturbanceVessel: (none)
     WaveCalculationMethod: Specified by environment
@@ -125,7 +125,7 @@ SupportTypes:
   ChuteSupport1:
     Locked: No
     BuoyType: Lumped buoy
-    Connection: SevenArctic
+    Connection: iv02
     DampingRelativeTo: Earth
     DisturbanceVessel: (none)
     WaveCalculationMethod: Specified by environment

@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: C:\Users\ss7a2365\Documents\train\hulls\NeptuneBatchTestCase.yml
+# File: docs/domains/orcawave/hull_forms/NeptuneBatchTestCase.yml
 # Created: 5:55 PM on 11/25/2023
-# User: SS7A2365
-# Machine: USNGL23LR3
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   Comments: ! "SkandiNeptune Model\r\nPrepared by\t: Tommy Andresen (13.08.2006)\r\nVerified by\t: \r\n\r\n\r\nVessel drawing

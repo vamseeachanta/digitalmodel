@@ -18,8 +18,11 @@ from collections import defaultdict, Counter
 class ContentCategorizer:
     """Analyzes and categorizes documentation content for reorganization."""
     
-    def __init__(self, docs_root: str = "K:\\github\\digitalmodel\\docs"):
+    def __init__(self, docs_root: str | None = None):
         """Initialize with docs root directory."""
+        # Default: this checkout's docs folder (was an absolute path).
+        if docs_root is None:
+            docs_root = Path(__file__).resolve().parents[4] / "docs"
         self.docs_root = Path(docs_root)
         self.analysis_results = {}
         self.content_mapping = {}

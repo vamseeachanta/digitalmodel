@@ -43,7 +43,7 @@ So the work is (a) add Hs splash-zone criterion, (b) ensure `evaluate_go_no_go` 
    - `test_evaluate_go_no_go_against_mf_plet_real_results` (integration, fixture-loaded)
    - `test_evaluate_go_no_go_against_plet_plem_real_results`
 
-7. **Smoke check.** `uv run pytest tests/marine_ops/installation/test_go_no_go.py -v` and `uv run python -c "from digitalmodel.marine_ops.installation.jumper_installation import run_pipeline; out = run_pipeline('docs/domains/orcaflex/subsea/jumper/installation/ballymore_mf_plet/spec.yml', output_dir='/tmp/g'); print(out.go_no_go.overall_state.value)"`. Should print `GO`, `MARGINAL`, or `NO_GO`.
+7. **Smoke check.** `uv run pytest tests/marine_ops/installation/test_go_no_go.py -v` and `uv run python -c "from digitalmodel.marine_ops.installation.jumper_installation import run_pipeline; out = run_pipeline('docs/domains/orcaflex/subsea/jumper/installation/gom_tieback_mf_plet/spec.yml', output_dir='/tmp/g'); print(out.go_no_go.overall_state.value)"`. Should print `GO`, `MARGINAL`, or `NO_GO`.
 
 ## Acceptance Criteria
 
@@ -51,7 +51,7 @@ So the work is (a) add Hs splash-zone criterion, (b) ensure `evaluate_go_no_go` 
 - [ ] Splash-zone Hs criterion added and pulled from `splash_zone_assessment`
 - [ ] Aggregator: PASS-only → GO; any WARNING → MARGINAL; any FAIL → NO_GO; missing input data → FAIL with reason
 - [ ] `tests/marine_ops/installation/test_go_no_go.py` ≥ 6 new tests, all passing
-- [ ] Pipeline produces a non-null `GoNoGoDecision` for both Ballymore configs
+- [ ] Pipeline produces a non-null `GoNoGoDecision` for both GoM tieback configs
 
 ## Open Questions
 

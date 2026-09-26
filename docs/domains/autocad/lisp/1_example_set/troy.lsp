@@ -1,6 +1,6 @@
 ;-------------------------------------------------------------------------------
 ; Program Name: Troy.lsp [Troy R5] - Asteroids AutoLISP game
-; Created By:   Terry Miller (Email: terrycadd@yahoo.com)
+; Created By:   Terry Miller (Email: [email removed])
 ;               (URL: http://web2.airmail.net/terrycad)
 ; Globalization by XANADU (www.xanadu.cz) 27.9.2006
 ; Date Created: 1-20-06

@@ -1,9 +1,9 @@
 
 
-From: Orcina <orcina@orcina.com>
+From: Orcina [email removed]
 Sent: Tuesday, November 26, 2024 3:38 AM
-To: Vamsee Achanta <vamseea@acma-inc.com>
-Cc: Scott McClure <scottm@acma-inc.com>; <sivakumar.pabolu@gmail.com>
+To: Vamsee Achanta [email removed]
+Cc: Scott McClure [email removed]; [email removed]
 Subject: RE: OrcaFlex | Startup Scripts
 
 Dear Vamsee,
@@ -24,13 +24,13 @@ Regards,
 Colin Lewis.
 
 T :  +44(0)1229 584742
-E :  <orcina@orcina.com>
+E :  [email removed]
 W:  <www.orcina.com>
 
-From: Vamsee Achanta <vamseea@acma-inc.com>
+From: Vamsee Achanta [email removed]
 Sent: 26 November 2024 03:50
-To: Orcina <orcina@orcina.com>
-Cc: Scott McClure <scottm@acma-inc.com>; <sivakumar.pabolu@gmail.com>
+To: Orcina [email removed]
+Cc: Scott McClure [email removed]; [email removed]
 Subject: OrcaFlex | Startup Scripts
 
 Dear Support Representative,

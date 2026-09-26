@@ -67,7 +67,7 @@ def plot_gulf_of_mexico_bathymetry():
     # Offshore platform / field locations (approximate)
     platforms = {
         "Thunder Horse": (-89.0, 28.2),
-        "Perdido": (-94.9, 26.1),
+        "GoM-UD-Spar": (-94.9, 26.1),
         "Mars-Ursa": (-89.7, 28.6),
         "Na Kika": (-89.6, 28.0),
         "Atlantis": (-90.0, 27.2),

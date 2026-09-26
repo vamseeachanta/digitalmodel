@@ -28,7 +28,7 @@ human-authored body with the generated `## WRK-NNN` template. There was:
 
 Result: 7 legacy bodies (#13, #18, #19, #20, #23, #28, #29) were replaced with
 unrelated WRK content; several even referenced foreign repos (assethold,
-acma-projects) confirming the WRK→issue mapping wrote to wrong targets.
+<project-archive>) confirming the WRK→issue mapping wrote to wrong targets.
 
 ## The fix (non-destructive guard)
 

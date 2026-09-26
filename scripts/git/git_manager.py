@@ -32,11 +32,11 @@ class GitManager:
         repos = [
             "doris", "aceengineer-admin", "aceengineer-website", 
             "aceengineercode", "achantas-data", "achantas-media",
-            "acma-projects", "ai-native-traditional-eng", "assethold",
+            "<project-archive>", "ai-native-traditional-eng", "assethold",
             "assetutilities", "client_projects", "digitalmodel",
             "energy", "frontierdeepwater", "hobbies", "investments",
             "OGManufacturing", "pyproject-starter", "rock-oil-field",
-            "sabithaandkrishnaestates", "saipem", "sd-work",
+            "sabithaandkrishnaestates", "contractor", "sd-work",
             "seanation", "teamresumes", "worldenergydata"
         ]
         return [r for r in repos if (self.base_path / r).exists()]
@@ -96,7 +96,7 @@ class GitManager:
             return result
         
         # Commit with message
-        commit_msg = message or f"{DEFAULT_COMMIT_MESSAGE}\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>"
+        commit_msg = message or f"{DEFAULT_COMMIT_MESSAGE}\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@example.com>"
         commit_cmd = f'git commit -m "{commit_msg}"'
         success, output = self.run_command(commit_cmd, repo_path)
         

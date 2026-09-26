@@ -45,7 +45,7 @@ Total Tests: 1210
 - **Added dependencies:** seaborn, tqdm
 
 ### 2. Assetutilities Integration
-- **Linked from workspace-hub:** `-e D:\workspace-hub\assetutilities`
+- **Linked from workspace-hub:** `-e <private-data>\assetutilities`
 - **Removed problematic deps:** trio, playwright, selenium (Windows cffi issues)
 - **Fixed packaging issue:** Manually copied path_resolver.py and cli_parser.py
 

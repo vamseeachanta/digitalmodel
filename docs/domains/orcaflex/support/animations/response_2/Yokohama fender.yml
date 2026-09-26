@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.5b
-# File: K:\github\digitalmodel\docs\pkg_orcaflex\support\animations\response_2\Yokohama fender.yml
+# File: docs/domains/orcaflex/support/animations/response_2/Yokohama fender.yml
 # Created: 7:35 PM on 2/4/2025
-# User: vamseea
-# Machine: ACMA-ANSYS04
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units

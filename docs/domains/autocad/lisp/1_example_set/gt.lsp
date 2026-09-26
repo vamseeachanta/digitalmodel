@@ -1,5 +1,5 @@
 ;GT.LSP V.2.1 10/18/99
-;Provided "AS IS" by Bill DeShawn. bdeshawn@prodigy.net
+;Provided "AS IS" by Bill DeShawn. [email removed]
 ;Permission granted to change or distrubute
 ;Bill DeShawn will not be held liable for any damages as a result of this code.
 ;Use this code at your own risk.

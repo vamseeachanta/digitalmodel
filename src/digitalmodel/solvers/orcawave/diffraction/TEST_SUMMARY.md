@@ -10,7 +10,7 @@
 |------|--------|-------------|
 | Module Structure | ✅ PASS | All directories and key files present |
 | Geometry Files | ✅ PASS | All 3 geometry files found in specs location |
-| Vessel Configuration | ✅ PASS | Sea Cypress config loads correctly |
+| Vessel Configuration | ✅ PASS | tug_30m_1 config loads correctly |
 | Orchestrator Init | ✅ PASS | Orchestrator initializes with vessel config |
 | Geometry Validation | ✅ PASS | Validation script imports successfully |
 | OrcaFlex Converter | ⚠️ FAIL | Missing h5py dependency (non-critical) |
@@ -32,7 +32,7 @@
    - Configuration templates working
 
 2. **Geometry Integration**: 
-   - Files successfully located in `specs/modules/orcawave/sea-cypress-diffraction-analysis/inputs/geometry/`
+   - Files successfully located in `specs/modules/orcawave/tug-30m-1-diffraction-analysis/inputs/geometry/`
    - All three formats available (Binary STL, ASCII STL, OBJ)
    - Path resolution working correctly
 
@@ -105,13 +105,13 @@ python tests/domains/orcawave/test_diffraction_integration.py
 
 # Validate geometry
 python src/modules/orcawave/diffraction/scripts/validate_geometry.py \
-    --path specs/modules/orcawave/sea-cypress-diffraction-analysis/inputs/geometry
+    --path specs/modules/orcawave/tug-30m-1-diffraction-analysis/inputs/geometry
 ```
 
 ### Dry Run Execution
 ```bash
 # Full dry run
-python src/modules/orcawave/diffraction/orchestrator.py --vessel sea_cypress --dry-run
+python src/modules/orcawave/diffraction/orchestrator.py --vessel tug_30m_1 --dry-run
 
 # List available vessels
 python src/modules/orcawave/diffraction/orchestrator.py --list-vessels

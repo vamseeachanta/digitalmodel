@@ -651,15 +651,15 @@ class TestDNVOrchestration:
 
 class TestDNVPhase1Enhancements:
     """
-    Compatibility tests for historical Phase 1/Saipem inputs under F103:2010.
+    Compatibility tests for historical Phase 1/Contractor inputs under F103:2010.
     """
 
     @pytest.fixture
-    def saipem_test_config(self):
+    def contractor_test_config(self):
         """
-        Saipem test configuration with Phase 1 enhancements.
+        Contractor test configuration with Phase 1 enhancements.
 
-        Configuration aligns with Saipem example from comparison analysis:
+        Configuration aligns with Contractor example from comparison analysis:
         - 10km x 0.61m (24-inch) pipeline
         - 25-year design life + 2-year wet storage
         - DNV 2016 enhanced calculations
@@ -671,7 +671,7 @@ class TestDNVPhase1Enhancements:
                     "outer_diameter_m": 0.610,
                     "wall_thickness_m": 0.025,
                     "length_m": 10000.0,
-                    "coating_initial_breakdown_pct": 0.005,  # Excellent coating (Saipem-like)
+                    "coating_initial_breakdown_pct": 0.005,  # Excellent coating (Contractor-like)
                     "coating_yearly_breakdown_pct": 0.002,   # Very slow degradation
                     "coating_quality": "good",
                     "wet_storage_years": 2.0,  # NEW: Wet storage period
@@ -701,9 +701,9 @@ class TestDNVPhase1Enhancements:
             }
         }
 
-    def test_wet_storage_input_does_not_change_f103_2010_breakdown(self, cp_calculator, saipem_test_config):
+    def test_wet_storage_input_does_not_change_f103_2010_breakdown(self, cp_calculator, contractor_test_config):
         """F103:2010 Annex 1 uses design life only; wet storage is not a separate field."""
-        inputs = saipem_test_config["inputs"]
+        inputs = contractor_test_config["inputs"]
         design_life = inputs["design_data"]["design_life"]
 
         # Test WITH wet storage
@@ -720,9 +720,9 @@ class TestDNVPhase1Enhancements:
         assert result_with_storage == result_no_storage
         assert result_with_storage["final_factor"] == pytest.approx(0.0175, abs=1e-6)
 
-    def test_longitudinal_resistance_calculation(self, cp_calculator, saipem_test_config):
+    def test_longitudinal_resistance_calculation(self, cp_calculator, contractor_test_config):
         """Test longitudinal resistance calculation in pipeline geometry."""
-        inputs = saipem_test_config["inputs"]
+        inputs = contractor_test_config["inputs"]
 
         result = cp_calculator._dnv_pipeline_geometry(inputs)
 
@@ -743,14 +743,14 @@ class TestDNVPhase1Enhancements:
         # Verify calculated value matches expected
         assert result["longitudinal_resistance_ohm_per_m"] == pytest.approx(expected_rl, rel=0.01)
 
-        # Verify magnitude (per Saipem comparison: RL ≈ 1.012×10⁻⁵ Ω/m)
+        # Verify magnitude (per Contractor comparison: RL ≈ 1.012×10⁻⁵ Ω/m)
         assert result["longitudinal_resistance_ohm_per_m"] > 1e-6
         assert result["longitudinal_resistance_ohm_per_m"] < 1e-4
 
-    def test_polarization_resistance_calculation(self, cp_calculator, saipem_test_config):
+    def test_polarization_resistance_calculation(self, cp_calculator, contractor_test_config):
         """Test polarization resistance in enhanced attenuation."""
         # Run complete workflow to get all required data
-        full_result = cp_calculator.DNV_RP_F103_2010(saipem_test_config)
+        full_result = cp_calculator.DNV_RP_F103_2010(contractor_test_config)
 
         attenuation = full_result["results"]["attenuation_analysis"]
 
@@ -765,9 +765,9 @@ class TestDNVPhase1Enhancements:
 
         assert attenuation["polarization_resistance_ohm_m2"] == pytest.approx(16.0, abs=1e-6)
 
-    def test_enhanced_attenuation_factor(self, cp_calculator, saipem_test_config):
+    def test_enhanced_attenuation_factor(self, cp_calculator, contractor_test_config):
         """Test enhanced attenuation factor calculation."""
-        full_result = cp_calculator.DNV_RP_F103_2010(saipem_test_config)
+        full_result = cp_calculator.DNV_RP_F103_2010(contractor_test_config)
 
         attenuation = full_result["results"]["attenuation_analysis"]
 
@@ -778,9 +778,9 @@ class TestDNVPhase1Enhancements:
         # because final_factor is already a bare-area fraction below 1.0.
         assert attenuation["attenuation_factor_enhanced_per_m"] == pytest.approx(0.0, abs=1e-12)
 
-    def test_backward_compatibility_dnv_2010(self, cp_calculator, saipem_test_config):
+    def test_backward_compatibility_dnv_2010(self, cp_calculator, contractor_test_config):
         """Test that DNV 2010 attenuation length is still calculated."""
-        full_result = cp_calculator.DNV_RP_F103_2010(saipem_test_config)
+        full_result = cp_calculator.DNV_RP_F103_2010(contractor_test_config)
 
         attenuation = full_result["results"]["attenuation_analysis"]
 
@@ -792,9 +792,9 @@ class TestDNVPhase1Enhancements:
         assert attenuation["attenuation_length_m"] > 0.0
         assert attenuation["attenuation_factor_enhanced_per_m"] == pytest.approx(0.0, abs=1e-12)
 
-    def test_complete_phase1_workflow(self, cp_calculator, saipem_test_config):
+    def test_complete_phase1_workflow(self, cp_calculator, contractor_test_config):
         """Test complete workflow with all Phase 1 enhancements."""
-        result = cp_calculator.DNV_RP_F103_2010(saipem_test_config)
+        result = cp_calculator.DNV_RP_F103_2010(contractor_test_config)
 
         # Verify all major sections present
         assert "results" in result

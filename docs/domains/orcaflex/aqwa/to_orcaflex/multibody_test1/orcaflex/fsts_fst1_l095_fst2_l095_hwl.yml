@@ -1,4 +1,4 @@
-﻿BaseFile: template_fsts.dat
+﻿BaseFile: template_fsts.yml
 
 VesselTypes:
   Strt1_FST2type:

@@ -56,7 +56,7 @@ def extract_line_results(model: OrcFxAPI.Model, line_name: str) -> dict:
 def main() -> int:
     """Extract validation results from A01 Catenary Riser."""
     library_dir = Path("docs/domains/orcaflex/library/tier2_fast/a01_catenary_riser")
-    monolithic_path = library_dir / "monolithic" / "A01 Catenary riser.dat"
+    monolithic_path = library_dir / "monolithic" / "A01 Catenary riser.yml"
     output_path = library_dir / "validation" / "results.json"
 
     if not monolithic_path.exists():

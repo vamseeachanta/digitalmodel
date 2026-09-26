@@ -16,7 +16,7 @@ Waiting on response from Inaki
 
 ### UI Tab-General
 
-\\ACMA-ANSYS03\Data\1522\<CTR>\aqwa\benchmark\fsts\AL_FST2F_FST1F_LWL.dat
+<private-data>\<CTR>\aqwa\benchmark\fsts\AL_FST2F_FST1F_LWL.dat
 
 
 Choose the folder location.

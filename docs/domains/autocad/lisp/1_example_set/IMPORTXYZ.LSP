@@ -531,7 +531,7 @@
         " "
         " ---------------------------------------------------------------------------"
         " " 
-        " If you still need help, please email jps@jefferypsanders.com with any"
+        " If you still need help, please email [email removed] with any"
         " questions."
         " "
         " "

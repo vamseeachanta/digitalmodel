@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Macro Begin: C:\Users\CHINNI\AppData\Roaming\FreeCAD\Macro\Twisted part.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++
+# Macro Begin: <private-data>\Twisted part.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++
 # Third party imports
 import FreeCAD
 import Sketcher
@@ -1619,4 +1619,4 @@ App.getDocument('Unnamed').getObject('AdditiveLoft').Visibility = False
 App.getDocument('Unnamed').getObject('Sketch009').Visibility = False
 # Gui.Selection.addSelection('Unnamed','Sketch008')
 # Gui.runCommand('Std_ToggleVisibility',0)
-# Macro End: C:\Users\CHINNI\AppData\Roaming\FreeCAD\Macro\Twisted part.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++
+# Macro End: <private-data>\Twisted part.FCMacro +++++++++++++++++++++++++++++++++++++++++++++++++

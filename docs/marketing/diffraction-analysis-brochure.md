@@ -323,7 +323,7 @@ dm plot-raos --input vessel_data.yml --output raos.html
 
 | | |
 |---|---|
-| **Email** | [contact@yourcompany.com] |
+| **Email** | [[email removed]] |
 | **Web** | [www.yourcompany.com/diffraction] |
 | **Technical Documentation** | Available upon request |
 

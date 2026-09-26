@@ -456,7 +456,7 @@ python -m digitalmodel.marine_ops.marine_analysis visualize --type integration
 
 - **Technical Issues:** GitHub Issues
 - **Feature Requests:** GitHub Discussions
-- **Security Concerns:** security@company.com
+- **Security Concerns:** [email removed]
 
 ### References
 

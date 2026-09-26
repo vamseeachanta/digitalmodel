@@ -119,7 +119,7 @@ Issues:
 
 **Pipelay Vessels:**
 - Market value: USD 3.00 billion (2024) → USD 7.22 billion (2034 projected)
-- Major operators: Allseas, TechnipFMC, McDermott
+- Major operators: Allseas, TechnipFMC, and others
 - ~100+ vessels globally (per Dixon Marine database)
 
 ---
@@ -206,7 +206,7 @@ WebDriverWait(driver, 10).until(
 **Systematically collect data from multiple free sources:**
 
 **Sources to compile:**
-- Company fleet lists (Allseas, TechnipFMC, McDermott, etc.)
+- Company fleet lists (Allseas, TechnipFMC, and others, etc.)
 - Industry reports (partial data from press releases)
 - Academic papers (often include vessel lists in appendices)
 - LinkedIn/company websites (individual vessel specifications)

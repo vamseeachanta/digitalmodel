@@ -58,9 +58,9 @@ You can close this ticket for now.
 Thank you,
 Vamsee
 
-From: Alex Austin <aaustin@drd.com>
+From: Alex Austin [email removed]
 Sent: Friday, May 10, 2024 10:11 AM
-To: Vamsee Achanta <vamseea@none.com>
+To: Vamsee Achanta [email removed]
 Subject: RE: ANSYS AQWA | External Force Calculation Python2 vs. Python 3
 
 Well, you are running an old version of the software. ?? R18.1 is considered old at this point? not quite ancient but getting there. ??
@@ -70,9 +70,9 @@ DRD Technology
 Technical Support: 918.743.3013 x 1
 Office: 918.743.3013 x 612
 
-From: Vamsee Achanta <vamseea@none.com>
+From: Vamsee Achanta [email removed]
 Sent: Friday, May 10, 2024 10:10 AM
-To: Alex Austin <aaustin@drd.com>
+To: Alex Austin [email removed]
 Subject: RE: ANSYS AQWA | External Force Calculation Python2 vs. Python 3
 
 The print statements in the AqwaServerMgr.py are my cue. I will try running today/Monday and will reach out for any help.
@@ -81,9 +81,9 @@ Programming in Py3 is relatively easier as I am well versed with the syntax. Py2
 
 Vamsee
 
-From: Alex Austin <aaustin@drd.com>
+From: Alex Austin [email removed]
 Sent: Thursday, May 9, 2024 2:07 PM
-To: Vamsee Achanta <vamseea@none.com>
+To: Vamsee Achanta [email removed]
 Subject: RE: ANSYS AQWA | External Force Calculation Python2 vs. Python 3
 
 Vamsee,
@@ -99,9 +99,9 @@ DRD Technology
 Technical Support: 918.743.3013 x 1
 Office: 918.743.3013 x 612
 
-From: Vamsee Achanta <vamseea@none.com>
+From: Vamsee Achanta [email removed]
 Sent: Thursday, May 9, 2024 1:03 PM
-To: support <support@drd.com>
+To: support [email removed]
 Subject: ANSYS AQWA | External Force Calculation Python2 vs. Python 3
 
 Dear Support Representative,

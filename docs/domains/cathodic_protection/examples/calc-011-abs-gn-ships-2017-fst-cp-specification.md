@@ -31,7 +31,7 @@ The primary calculation is in Section 4.4 (anode calculations, ABS method) and S
 from DNV-RP-B401 (Oct 2010 amended Apr 2011) Annex A Figure 10-1 (seawater resistivity vs
 temperature for 30–40 ppt salinity) — this cross-standard usage is noted in Gaps Found.
 
-Appendix D of the source document is titled "CTR2-CP Calculation RB1" and contains the
+Appendix D of the source document is titled "<contract>-CP Calculation RB1" and contains the
 same ABS calculation spreadsheet (4 pages). This is the same calculation as E1/E2 Excel
 workbooks already abstracted in calc-001-abs-gn-ships-2017-fst-hull.md. The Appendix D
 values are identical to Section 4.4 results. Do not re-abstract Appendix D; see calc-001
@@ -229,7 +229,7 @@ QTY    DESCRIPTION                                             TOTAL WEIGHT
 - Monitoring requirements per ABS GN Ships 2017 guidelines
 
 ## Linkage to calc-001
-Appendix D of the source document ("CTR2-CP Calculation RB1") contains the same ABS
+Appendix D of the source document ("<contract>-CP Calculation RB1") contains the same ABS
 aluminium anode spreadsheet. The basic design data (T=14°C, S=24.5 ppt, psw=0.325 ohm.m,
 Ac=10 778 m², tf=5 yr) matches this section 4.4 exactly. calc-001 was abstracted from the
 same underlying Excel workbook (E1/E2 pair). The only numeric difference between calc-001
@@ -341,5 +341,5 @@ cfg = {
 - Anode placement drawings (separate deliverables) contain the final anode distribution map;
   the 6–8 m spacing rule from ABS §3 §5.2 is applied but exact positions are not reproduced
   here.
-- Appendix D (CTR2-CP Calculation RB1) is identical to the E1/E2 Excel workbooks abstracted
+- Appendix D (<contract>-CP Calculation RB1) is identical to the E1/E2 Excel workbooks abstracted
   in calc-001. No additional engineering values found in Appendix D beyond Section 4.4.

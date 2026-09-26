@@ -1,7 +1,7 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\1.ini\src\__01c_stern_chute_bottom_work_platform.yml
+# File: docs/domains/orcaflex/installation/pipeline/route_a/monolithic/__01c_stern_chute_bottom_work_platform.yml
 # Created: 3:41 PM on 10/19/2023
 # User: 
 # Machine: 
@@ -62,7 +62,7 @@ SupportTypes:
   workplatform:
     Locked: No
     BuoyType: Lumped buoy
-    Connection: SevenArctic
+    Connection: iv02
     DampingRelativeTo: Earth
     DisturbanceVessel: (none)
     WaveCalculationMethod: Specified by environment

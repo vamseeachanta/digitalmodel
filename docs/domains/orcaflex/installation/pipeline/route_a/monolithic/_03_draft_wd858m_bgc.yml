@@ -1,7 +1,7 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: S:\IAT\SURF\Talos_Venice\02-ANALYSIS\01-UMB\02-StaticUmb\02-DETAILED\3.NL\2-DYN\C000\02_draft_wd925m.yml
+# File: <private-data>/02_draft_wd925m.yml
 # Created: 3:35 PM on 5/18/2023
 # User: 
 # Machine: 
@@ -55,7 +55,7 @@ Environment:
   CurrentFactor[14]: 0
   CurrentRotation[14]: 0
 Vessels:
-  SevenArctic:
+  iv02:
     VesselType: C13_EndLaying_ARTempty
     Draught: 7.09m
 ...

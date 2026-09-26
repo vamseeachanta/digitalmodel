@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-Based on testing with the Sea Cypress geometry, **Trimesh** library provides the most reliable and efficient STL to GDF conversion for OrcaWave analysis.
+Based on testing with the tug_30m_1 geometry, **Trimesh** library provides the most reliable and efficient STL to GDF conversion for OrcaWave analysis.
 
 ## Test Results
 
@@ -39,7 +39,7 @@ import trimesh
 import numpy as np
 
 # Load STL
-mesh = trimesh.load('Sea_Cypress_0.25_Mesh_Binary.stl')
+mesh = trimesh.load('tug_30m_1_0.25_Mesh_Binary.stl')
 
 # Ensure correct normals
 mesh.fix_normals()
@@ -67,7 +67,7 @@ When environment issues are resolved:
 ```python
 import capytaine as cpt
 
-mesh = cpt.load_mesh('Sea_Cypress.stl', file_format='stl')
+mesh = cpt.load_mesh('tug_30m_1.stl', file_format='stl')
 mesh.export('output.gdf', file_format='GDF')
 ```
 
@@ -77,7 +77,7 @@ If remeshing is needed:
 import gmsh
 
 gmsh.initialize()
-gmsh.merge('Sea_Cypress.stl')
+gmsh.merge('tug_30m_1.stl')
 gmsh.model.mesh.generate(2)
 # Export to GDF format
 ```
@@ -135,15 +135,15 @@ pip install meshmagick  # May require older Python version
 ### Input Geometries
 ```
 specs/modules/orcawave/diffraction-analysis/inputs/geometry/
-├── Sea Cypress_0.25 Mesh_Binary.stl  (RECOMMENDED)
-├── Sea Cypress_0.25 Mesh_Ascii.stl
-└── Sea Cypress_0.25 Mesh_Binary.obj
+├── tug_30m_1_0.25 Mesh_Binary.stl  (RECOMMENDED)
+├── tug_30m_1_0.25 Mesh_Ascii.stl
+└── tug_30m_1_0.25 Mesh_Binary.obj
 ```
 
 ### Output Files
 ```
 src/modules/orcawave/gdf_outputs/
-├── sea_cypress_trimesh.gdf           (Ready for OrcaWave)
+├── tug_30m_1_trimesh.gdf           (Ready for OrcaWave)
 └── conversion_comparison_results.json (Detailed metrics)
 ```
 
@@ -154,7 +154,7 @@ scripts/python/digitalmodel/analysis/check_stl_to_gdf_converters.py
 
 ## Next Steps
 
-1. **Import to OrcaWave**: Use `sea_cypress_trimesh.gdf` directly
+1. **Import to OrcaWave**: Use `tug_30m_1_trimesh.gdf` directly
 2. **Configure Analysis**: Reference example YAML in inputs folder
 3. **Run Diffraction Analysis**: Execute with OrcaWave license
 4. **Validate Results**: Compare with benchmarks if available
@@ -183,4 +183,4 @@ The Trimesh-based converter successfully produces OrcaWave-compatible GDF files 
 - ✅ Fast conversion (< 0.2 seconds total)
 - ✅ Validated GDF format output
 
-The Sea Cypress geometry is ready for OrcaWave diffraction analysis.
+The tug_30m_1 geometry is ready for OrcaWave diffraction analysis.

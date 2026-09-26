@@ -26,8 +26,11 @@ plt.style.use('seaborn-v0_8-darkgrid')
 sns.set_palette("husl")
 
 # Paths
-CSV_FILE = r"D:\workspace-hub\digitalmodel\data\ocimf_database.csv"
-OUTPUT_DIR = r"D:\workspace-hub\digitalmodel\docs\charts\phase2\ocimf"
+# The repository root: these defaults were absolute paths into a
+# developer checkout; they resolve the same place from any checkout.
+_REPO_ROOT = Path(__file__).resolve().parents[4]
+CSV_FILE = str(_REPO_ROOT / "data" / "ocimf_database.csv")
+OUTPUT_DIR = str(_REPO_ROOT / "docs" / "charts" / "phase2" / "ocimf")
 
 # Create output directory
 Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)

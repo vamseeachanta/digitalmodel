@@ -5,7 +5,7 @@
 ;;; By Jimmy Bergmark
 ;;; Copyright (C) 1997-2007 JTB World, All Rights Reserved
 ;;; Website: www.jtbworld.com
-;;; E-mail: info@jtbworld.com
+;;; E-mail: [email removed]
 ;;;
 ;;; 1998-03-31 - First release
 ;;; 2000-05-11 - Fixed for LWPOLYLINES and for A2k

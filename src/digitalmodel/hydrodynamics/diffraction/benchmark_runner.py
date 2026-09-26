@@ -65,7 +65,7 @@ class PinnedNullDumper(yaml.Dumper):
     its golden test compares LINES, so an ambient style difference reads as
     177 lines of drift.
 
-    That is not hypothetical: the #1633 closeout on acma-hou-rds02 failed
+    That is not hypothetical: the #1633 closeout on ace-win-1 failed
     exactly this way, on a file where no hydrodynamic number had moved. The
     committed evidence uses ``null``, so pinning to ``null`` keeps it valid
     and makes the round-trip reproducible on any host.

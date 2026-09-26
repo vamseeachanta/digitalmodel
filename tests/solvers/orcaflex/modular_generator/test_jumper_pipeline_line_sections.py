@@ -24,9 +24,9 @@ from digitalmodel.marine_ops.installation.jumper_lift import run_jumper_analysis
 REPO_ROOT = Path(__file__).resolve().parents[4]
 SPEC_DIR = REPO_ROOT / "docs/domains/orcaflex/subsea/jumper/installation"
 
-BALLYMORE_SPECS = [
-    SPEC_DIR / "ballymore_mf_plet" / "spec.yml",
-    SPEC_DIR / "ballymore_plet_plem" / "spec.yml",
+GOM_TIEBACK_SPECS = [
+    SPEC_DIR / "gom_tieback_mf_plet" / "spec.yml",
+    SPEC_DIR / "gom_tieback_plet_plem" / "spec.yml",
 ]
 
 EXPECTED_SECTION_COUNT = 27
@@ -56,7 +56,7 @@ def test_stage_4_yaml_parses_with_expected_sections():
 
 
 @pytest.mark.parametrize(
-    "spec_path", BALLYMORE_SPECS, ids=[p.parent.name for p in BALLYMORE_SPECS]
+    "spec_path", GOM_TIEBACK_SPECS, ids=[p.parent.name for p in GOM_TIEBACK_SPECS]
 )
 def test_pipeline_writes_line_sections_yml(spec_path, tmp_path):
     """run_pipeline(..., run_go_no_go=False) persists line_sections.yml."""

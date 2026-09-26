@@ -524,7 +524,7 @@ S = spectrum.compute_spectrum()
 
 ### Issue Reporting
 - **GitHub Issues:** [Report bugs or request features]
-- **Email:** vamsee.achanta@aceengineer.com
+- **Email:** [email removed]
 - **Documentation:** See troubleshooting sections
 
 ### Contributing

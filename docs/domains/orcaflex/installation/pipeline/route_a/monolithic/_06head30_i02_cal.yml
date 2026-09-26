@@ -1,14 +1,14 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\1.ini\src\vessel_rotation\_06head30_i02_cal.yml
+# File: docs/domains/orcaflex/installation/pipeline/route_a/monolithic/_06head30_i02_cal.yml
 # Created: 2:31 PM on 10/26/2023
 # User: 
 # Machine: 
 ---
 BaseFile: _06head30_i01_struc_el_-0900m_l0910m.yml
 Vessels:
-  SevenArctic:
+  iv02:
     InitialHeading: 29.999999999999996
 6DBuoys:
   UTA:

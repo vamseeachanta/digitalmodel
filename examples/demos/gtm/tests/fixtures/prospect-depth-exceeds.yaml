@@ -4,7 +4,7 @@
 # the third cross-field gate (numeric sanity).
 prospect:
   company: "Ultra Deep Ventures"
-  contact: "ops@ultradeep.example"
+  contact: "redacted@example.com"
   nda_in_place: true
   target_demo: "demo_05"
   delivery_deadline_utc: "2026-04-22T17:00:00Z"

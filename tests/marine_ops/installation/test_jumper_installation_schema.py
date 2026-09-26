@@ -26,8 +26,8 @@ PASSING_SHIP_SPEC = (
 )
 
 JUMPER_SPECS = [
-    JUMPER_DIR / "ballymore_mf_plet" / "spec.yml",
-    JUMPER_DIR / "ballymore_plet_plem" / "spec.yml",
+    JUMPER_DIR / "gom_tieback_mf_plet" / "spec.yml",
+    JUMPER_DIR / "gom_tieback_plet_plem" / "spec.yml",
 ]
 
 

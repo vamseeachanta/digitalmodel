@@ -431,7 +431,7 @@ generic:
       - 1
       - Solid
       - Olive
-  - name: LimeRock_4.9in
+  - name: RouteB_4.9in
     category: General
     outer_diameter: 0.1251
     inner_diameter: 0
@@ -6828,8 +6828,7 @@ generic:
       - - 119
         - 120
         - ~
-      ShadedDrawingFileName: Q:\S7EN-SUT PIPELINES\S7EN-SUT-Project Support\Sutton
-        Engineering\Installation Analysis\Vessels\installation_vessel_02\09 Misc\01 Shaded graphic\arctic\arctic_no_lay_tower.X
+      ShadedDrawingFileName: <private-data>\iv02_no_lay_tower.X
       ShadedDrawingCullingMode: Anticlockwise
       ShadedDrawingOrigin:
       - -78
@@ -6840,7 +6839,7 @@ generic:
       - 0
       - -90
   vessels:
-  - name: SevenArctic
+  - name: iv02
     vessel_type: C13_EndLaying_ARTempty
     length: ~
     connection: Free
@@ -6918,40 +6917,40 @@ generic:
       - - Armor Pot
         - 0.4999999999999999
         - 0.30000000000000004
-      - - LimeRock_4.9in
+      - - RouteB_4.9in
         - 5.714999999999999
         - 0.30000000000000004
-      - - LimeRock_4.9in
+      - - RouteB_4.9in
         - 39.99999999999999
         - 0.4999999999999999
-      - - LimeRock_4.9in
+      - - RouteB_4.9in
         - 9.999999999999998
         - 0.9999999999999998
-      - - LimeRock_4.9in
+      - - RouteB_4.9in
         - 159.99999999999997
         - 1.9999999999999996
-      - - LimeRock_4.9in
+      - - RouteB_4.9in
         - 369
         - 4.999999999999999
-      - - LimeRock_4.9in
+      - - RouteB_4.9in
         - 500
         - 1.9999999999999996
-      - - LimeRock_4.9in
+      - - RouteB_4.9in
         - 9.999999999999998
         - 0.9999999999999998
-      - - LimeRock_4.9in
+      - - RouteB_4.9in
         - 34.99999999999999
         - 0.4999999999999999
-      - - LimeRock_4.9in
+      - - RouteB_4.9in
         - 50
         - 0.24999999999999994
-      - - LimeRock_4.9in
+      - - RouteB_4.9in
         - 4.999999999999999
         - 0.4999999999999999
-      - - LimeRock_4.9in
+      - - RouteB_4.9in
         - 9.999999999999998
         - 0.9999999999999998
-      - - LimeRock_4.9in
+      - - RouteB_4.9in
         - 248.99999999999997
         - 1.9999999999999996
       AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo, AttachmentName:
@@ -9819,7 +9818,7 @@ generic:
       WaveCalculationMethod: Specified by environment
       ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
         ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
-      : - - SevenArctic
+      : - - iv02
           - 7.9500000000000455
           - 0
           - 54.35
@@ -10606,7 +10605,7 @@ generic:
   - name: Moonpool_stern
     shape_type: Elastic solid
     shape: Block
-    connection: SevenArctic
+    connection: iv02
     origin:
     - 4.45
     - -3.599999999999999
@@ -10632,7 +10631,7 @@ generic:
   - name: Moonpool_bow
     shape_type: Elastic solid
     shape: Block
-    connection: SevenArctic
+    connection: iv02
     origin:
     - 13.2
     - -3.599999999999999
@@ -10657,7 +10656,7 @@ generic:
   - name: Moonpool_starboard
     shape_type: Elastic solid
     shape: Block
-    connection: SevenArctic
+    connection: iv02
     origin:
     - 13.2
     - -3.599999999999999
@@ -10682,7 +10681,7 @@ generic:
   - name: Moonpool_portside
     shape_type: Elastic solid
     shape: Block
-    connection: SevenArctic
+    connection: iv02
     origin:
     - 13.2
     - 3.599999999999999
@@ -10708,7 +10707,7 @@ generic:
   - name: Moonpool_stern_hull
     shape_type: Elastic solid
     shape: Curved plate
-    connection: SevenArctic
+    connection: iv02
     origin:
     - 2.3499999999999943
     - -3.599999999999999
@@ -10739,7 +10738,7 @@ generic:
   - name: Moonpool_bow_hull
     shape_type: Elastic solid
     shape: Curved plate
-    connection: SevenArctic
+    connection: iv02
     origin:
     - 15.3
     - -3.599999999999999
@@ -10770,7 +10769,7 @@ generic:
   - name: Hang-Off
     shape_type: Elastic solid
     shape: Cylinder
-    connection: SevenArctic
+    connection: iv02
     origin:
     - 7.95
     - 2.562649989210456e-19
@@ -10792,7 +10791,7 @@ generic:
   - name: 900TeMainCranePedestal
     shape_type: Elastic solid
     shape: Cylinder
-    connection: SevenArctic
+    connection: iv02
     origin:
     - -32.65
     - 12.137499999999998
@@ -10815,7 +10814,7 @@ generic:
   - name: 900TeMainCranePedestalTop
     shape_type: Elastic solid
     shape: Cylinder
-    connection: SevenArctic
+    connection: iv02
     origin:
     - -32.65
     - 12.137499999999998
@@ -10838,7 +10837,7 @@ generic:
   - name: 900TeMainCraneRadius
     shape_type: Elastic solid
     shape: Cylinder
-    connection: SevenArctic
+    connection: iv02
     origin:
     - -32.65
     - 12.137499999999998
@@ -10861,7 +10860,7 @@ generic:
   - name: 900TeMainCraneMast
     shape_type: Drawing
     shape: Cylinder
-    connection: SevenArctic
+    connection: iv02
     origin:
     - -32.65
     - 12.137499999999998
@@ -10883,7 +10882,7 @@ generic:
   - name: AP
     shape_type: Elastic solid
     shape: Cylinder
-    connection: SevenArctic
+    connection: iv02
     origin:
     - -78.14999999999999
     - 0
@@ -10905,7 +10904,7 @@ generic:
   - name: CoG - StartLay
     shape_type: Elastic solid
     shape: Cylinder
-    connection: SevenArctic
+    connection: iv02
     origin:
     - -7.8999999999999995
     - 0
@@ -10927,7 +10926,7 @@ generic:
   - name: CoG - CraneLoad
     shape_type: Elastic solid
     shape: Cylinder
-    connection: SevenArctic
+    connection: iv02
     origin:
     - -7.829999999999999
     - 0
@@ -10949,7 +10948,7 @@ generic:
   - name: CoG - EndLay
     shape_type: Elastic solid
     shape: Cylinder
-    connection: SevenArctic
+    connection: iv02
     origin:
     - -6.97
     - 0
@@ -10971,7 +10970,7 @@ generic:
   - name: FP
     shape_type: Elastic solid
     shape: Cylinder
-    connection: SevenArctic
+    connection: iv02
     origin:
     - 73.05
     - 0
@@ -10993,7 +10992,7 @@ generic:
   - name: Trapped Water
     shape_type: Drawing
     shape: Block
-    connection: SevenArctic
+    connection: iv02
     origin:
     - 4.45
     - -3.599999999999999
@@ -11017,7 +11016,7 @@ generic:
   - name: Moonpool_starboard_hull
     shape_type: Elastic solid
     shape: Curved plate
-    connection: SevenArctic
+    connection: iv02
     origin:
     - 4.45
     - -5.699999999999999
@@ -11048,7 +11047,7 @@ generic:
   - name: Moonpool_port_hull
     shape_type: Elastic solid
     shape: Curved plate
-    connection: SevenArctic
+    connection: iv02
     origin:
     - 13.2
     - 5.699999999999999
@@ -11080,7 +11079,7 @@ generic:
   - name: HyundaiFlare
     shape_type: Elastic solid
     shape: Curved plate
-    connection: SevenArctic
+    connection: iv02
     origin:
     - 7.95
     - 0
@@ -11132,7 +11131,7 @@ generic:
   - name: A&RSheave
     shape_type: Drawing
     shape: Cylinder
-    connection: SevenArctic
+    connection: iv02
     origin:
     - 7.950000000000005
     - 0
@@ -11153,7 +11152,7 @@ generic:
   - name: Hang-Off Top
     shape_type: Drawing
     shape: Cylinder
-    connection: SevenArctic
+    connection: iv02
     origin:
     - 7.95
     - 2.562649989210456e-19
@@ -11173,7 +11172,7 @@ generic:
   - name: 100TeAuxCranePedestal
     shape_type: Elastic solid
     shape: Cylinder
-    connection: SevenArctic
+    connection: iv02
     origin:
     - -8.849999999999866
     - -13.95
@@ -11195,7 +11194,7 @@ generic:
   - name: 100TeAuxCranePedestalTop
     shape_type: Elastic solid
     shape: Cylinder
-    connection: SevenArctic
+    connection: iv02
     origin:
     - -8.849999999999866
     - -13.95
@@ -11217,7 +11216,7 @@ generic:
   - name: 100TeAuxCraneRadius
     shape_type: Drawing
     shape: Cylinder
-    connection: SevenArctic
+    connection: iv02
     origin:
     - -8.849999999999866
     - -13.95
@@ -11237,7 +11236,7 @@ generic:
   - name: 100TeAuxCraneMast
     shape_type: Drawing
     shape: Cylinder
-    connection: SevenArctic
+    connection: iv02
     origin:
     - -8.849999999999866
     - -13.95
@@ -11258,7 +11257,7 @@ generic:
   - name: Lower A&R centralizer
     shape_type: Drawing
     shape: Cylinder
-    connection: SevenArctic
+    connection: iv02
     origin:
     - 7.95
     - 0
@@ -11279,7 +11278,7 @@ generic:
   - name: Upper A&R centralizer
     shape_type: Drawing
     shape: Cylinder
-    connection: SevenArctic
+    connection: iv02
     origin:
     - 7.95
     - 0
@@ -11433,7 +11432,7 @@ generic:
     data:
       Structure:
         Vessel: Model
-        SevenArctic: Vessel
+        iv02: Vessel
         Umbilical: Model
         Positions: Model
         Hang-Off: Positions

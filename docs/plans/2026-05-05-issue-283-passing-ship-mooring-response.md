@@ -10,7 +10,7 @@ Issue #283 (WRK-131) extends the existing passing-ship force calculator (already
 
 What is **not yet built** (from the unchecked acceptance bullets): the mooring-response coupling (line tensions, vessel motions under passing-ship force time histories), the cross-product parametric matrix (speed × distance × wind × passing angle), 5–7 reproducible historical benchmarks with sanitized `spec.yml` artifacts, and a standardized HTML report aligned with WRK-129 conventions.
 
-**Stale-flag:** Not stale. This is in-flight work with a clear remaining scope; the issue is `blocked` only because external resources (`G:\ACMA Tool\` and `R:\Archive - Drive J\`) live on a Windows machine. Plan must accommodate the resource-access dependency.
+**Stale-flag:** Not stale. This is in-flight work with a clear remaining scope; the issue is `blocked` only because external resources (`<private-data>\` and `<private-data>\`) live on a Windows machine. Plan must accommodate the resource-access dependency.
 
 ## Plan
 
@@ -21,7 +21,7 @@ Add a `MooringResponseRunner` in `src/digitalmodel/hydrodynamics/passing_ship/mo
 Extend `passing_ship_sweep.py` to consume the matrix axes (passing-ship speed × lateral distance × wind on/off × passing angle) declared in `PassingShipSpec.analysis_matrix`. Cartesian-product the axes; persist each case's results YAML to a run directory; write a manifest `cases.yaml` keyed by case-id.
 
 ### Task 3 — Historical benchmark reproduction (5–7 cases)
-Reproduce 5–7 archived projects from `R:\Archive - Drive J\`. For each, sanitize inputs (vessel name → "Vessel-A", project codes redacted), produce a `spec.yml` under `docs/domains/orcaflex/passing_ship/benchmarks/<case-id>/`, run the new pipeline, and capture original-vs-new tension envelopes with explicit pass/fail tolerance (target ±10% peak-line-tension; widen to ±20% if the historical run lacks documented sea-state). Drive this from `acma-ansys05` (the only machine with archive access).
+Reproduce 5–7 archived projects from `<private-data>\`. For each, sanitize inputs (vessel name → "Vessel-A", project codes redacted), produce a `spec.yml` under `docs/domains/orcaflex/passing_ship/benchmarks/<case-id>/`, run the new pipeline, and capture original-vs-new tension envelopes with explicit pass/fail tolerance (target ±10% peak-line-tension; widen to ±20% if the historical run lacks documented sea-state). Drive this from `ace-win-1` (the only machine with archive access).
 
 ### Task 4 — HTML report aligned with WRK-129
 Add an `html_report` exporter to `src/digitalmodel/hydrodynamics/passing_ship/exporters.py` (or a new `report.py`) producing the WRK-129 layout: force time-history plots, mooring-tension envelopes per line group, vessel-motion (surge/sway/yaw) traces, and a parametric-summary table. Reuse the visualization helpers already in `visualization.py`.
@@ -31,11 +31,11 @@ Add unit tests in `tests/hydrodynamics/passing_ship/test_mooring_response.py` (s
 
 ## Acceptance Criteria
 
-- [ ] `MooringResponseRunner` runs end-to-end on a small synthetic case (no license) and an `acma-ansys05`-licensed case (OrcaFlex or AQWA).
+- [ ] `MooringResponseRunner` runs end-to-end on a small synthetic case (no license) and an `ace-win-1`-licensed case (OrcaFlex or AQWA).
 - [ ] Parametric driver produces a results manifest for a 3×3×2×2 = 36-case matrix in <30 minutes on the licensed machine.
 - [ ] 5–7 sanitized benchmark `spec.yml` files committed under `docs/domains/orcaflex/passing_ship/benchmarks/`; each reproduces original peak line tensions within the documented tolerance band.
 - [ ] HTML report renders with all four section types (forces, tensions, motions, parametric summary).
-- [ ] `uv run pytest tests/hydrodynamics/passing_ship/ -v` passes on dev-primary; license-marked tests pass on `acma-ansys05`.
+- [ ] `uv run pytest tests/hydrodynamics/passing_ship/ -v` passes on dev-primary; license-marked tests pass on `ace-win-1`.
 - [ ] No raw client identifiers in any committed file; sanitization checked by an explicit grep gate.
 
 ## Open questions

@@ -1,8 +1,8 @@
 ;***    TEXTOUT.LSP
 ;***    Written by Don J. Buschert (c) 1996
 ;
-;    Email:    don.buschert@sait.ab.ca
-;        buschert@spots.ab.ca
+;    Email:    [email removed]
+;        [email removed]
 ;    AutoCAD Page:    http://www.spots.ab.ca/~buschert/autocad/main.htm 
 ;
 ;    Disclaimer:

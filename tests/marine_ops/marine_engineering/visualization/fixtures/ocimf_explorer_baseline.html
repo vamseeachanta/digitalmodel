@@ -198,7 +198,7 @@ code { background: var(--soft); padding: 1px 5px; border-radius: 3px; font-size:
 <tr><td><b>OCIMF Coef.xlsx (this explorer's data source)</b></td><td class="path">/mnt/ace/acma-codes/OCIMF/OCIMF Coef.xlsx</td><td>Digitized Annex A coefficient lookup tables (Figures A5–A19)</td></tr>
 <tr><td>WebPlotDigitizer alt extraction (A5–A9 only)</td><td class="path">/mnt/ace/acma-codes/OCIMF 3rd ed/Digitizer/</td><td>Independent re-digitization for cross-validation</td></tr>
 <tr><td>Figure PDFs (15 files)</td><td class="path">/mnt/ace/acma-codes/OCIMF/Figures/</td><td>Per-figure extract PDFs</td></tr>
-<tr><td>Project-bundled MEG4 extracts</td><td class="path">/mnt/ace/acma-projects/B1522/ctr-7/_data/ocimf/</td><td>Project-specific bundle (Fig. A13–A21 + worked examples)</td></tr>
+<tr><td>Project-bundled MEG4 extracts</td><td class="path">/mnt/ace/<project-archive>/<job-code>/ctr-7/_data/ocimf/</td><td>Project-specific bundle (Fig. A13–A21 + worked examples)</td></tr>
 </table>
 <div class="callout">
 <p><b>Citation contract:</b> Per <code>.claude/rules/calc-citation-contract.md</code>, any digitalmodel calc module emitting a coefficient from this data must produce a <code>Citation</code> sidecar binding to <code>wiki/standards/ocimf-meg3.md</code> or <code>wiki/standards/ocimf-meg4.md</code>. Those wiki pages are tracked at <a href="https://github.com/vamseeachanta/workspace-hub/issues/2284">workspace-hub#2284</a>. Precedent: DNV-OS-E301 pilot at <code>digitalmodel/src/digitalmodel/orcaflex/mooring_design.py::check_mbl_with_safety_factor</code>.</p>

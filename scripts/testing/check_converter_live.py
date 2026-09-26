@@ -18,7 +18,9 @@ converter = OrcaFlexConverterEnhanced(
     use_mock=True  # Use mock since we don't have OrcaFlex license
 )
 
-input_file = Path("docs/domains/orcaflex/examples/raw/A01/A01 Catenary riser.dat")
+# The A01 .dat files were removed from the public tree (C13); their proven
+# .yml twins remain, so this check converts the .yml.
+input_file = Path("docs/domains/orcaflex/examples/raw/A01/A01 Catenary riser.yml")
 
 if input_file.exists():
     print(f"Input:  {input_file}")
@@ -49,7 +51,7 @@ converter_batch = OrcaFlexConverterEnhanced(
     parallel=False
 )
 
-results = converter_batch.convert_batch(pattern='*.dat')
+results = converter_batch.convert_batch(pattern='*.yml')
 stats = results['statistics']
 
 print(f"Total files:    {stats['total_files']}")

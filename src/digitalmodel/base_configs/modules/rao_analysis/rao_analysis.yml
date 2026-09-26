@@ -29,7 +29,7 @@ rao_plot:
 Files:
 - Label: seastate_raos
   Name: my_ss_raos.yml
-  vessel_name: SevenArctic
+  vessel_name: iv02
   draughts: []
 
 qa_criteria:

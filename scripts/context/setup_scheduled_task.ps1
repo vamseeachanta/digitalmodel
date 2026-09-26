@@ -4,7 +4,11 @@
 $TaskName = "ContextManagementDaily"
 $TaskPath = "\Claude\"
 $Description = "Daily context file health check and improvement suggestions"
-$WorkspaceRoot = "D:\workspace-hub"
+$WorkspaceRoot = $env:WORKSPACE_ROOT
+if (-not $WorkspaceRoot) {
+    Write-Host "Set WORKSPACE_ROOT to the workspace-hub checkout" -ForegroundColor Red
+    exit 1
+}
 $ScriptPath = "$WorkspaceRoot\scripts\context\daily_context_check.bat"
 
 # Check if running as admin

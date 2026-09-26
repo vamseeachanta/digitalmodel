@@ -39,14 +39,14 @@ def _write(tmp_path, body):
 
 
 def test_rejects_caution_above_limit(tmp_path):
-    body = ("criteria:\n  x:\n    label: X\n    governing: crane_tip_vertical_velocity\n"
+    body = ("criteria:\n  x:\n    label: X\n    governing: crane_tip_vertical_velocity\n"  # identifier-gate: example
             "    caution: 0.6\n    limit: 0.4\n    unit: m/s\n    poi_offset: [0,0,0]\n")
     with pytest.raises(ValueError, match="caution"):
         load_criteria(_write(tmp_path, body))
 
 
 def test_rejects_unknown_governing(tmp_path):
-    body = ("criteria:\n  x:\n    label: X\n    governing: bogus\n"
+    body = ("criteria:\n  x:\n    label: X\n    governing: bogus\n"  # identifier-gate: example
             "    caution: 0.2\n    limit: 0.4\n    unit: m/s\n    poi_offset: [0,0,0]\n")
     with pytest.raises(ValueError, match="unknown governing"):
         load_criteria(_write(tmp_path, body))
@@ -58,14 +58,14 @@ def test_rejects_empty(tmp_path):
 
 
 def test_rejects_nonpositive_caution(tmp_path):
-    body = ("criteria:\n  x:\n    label: X\n    governing: crane_tip_vertical_velocity\n"
+    body = ("criteria:\n  x:\n    label: X\n    governing: crane_tip_vertical_velocity\n"  # identifier-gate: example
             "    caution: 0.0\n    limit: 0.4\n    unit: m/s\n    poi_offset: [0,0,0]\n")
     with pytest.raises(ValueError, match="caution"):
         load_criteria(_write(tmp_path, body))
 
 
 def test_rejects_missing_key(tmp_path):
-    body = ("criteria:\n  x:\n    label: X\n    governing: crane_tip_vertical_velocity\n"
+    body = ("criteria:\n  x:\n    label: X\n    governing: crane_tip_vertical_velocity\n"  # identifier-gate: example
             "    caution: 0.2\n    unit: m/s\n    poi_offset: [0,0,0]\n")  # no limit
     with pytest.raises(ValueError, match="malformed"):
         load_criteria(_write(tmp_path, body))

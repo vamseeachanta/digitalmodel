@@ -192,8 +192,8 @@ class TestEstimateCapexScaling:
 # ---------------------------------------------------------------------------
 
 class TestEstimateCapexBenchmarks:
-    def test_perdido_spar_capex_in_range(self):
-        """Perdido Spar (2438 m, 100k bopd) — expect ~$3-7B."""
+    def test_gom_ud_spar_spar_capex_in_range(self):
+        """GoM-UD-Spar Spar (2438 m, 100k bopd) — expect ~$3-7B."""
         est = estimate_capex(
             host_type=HostType.SPAR,
             production_capacity_bopd=100_000,
