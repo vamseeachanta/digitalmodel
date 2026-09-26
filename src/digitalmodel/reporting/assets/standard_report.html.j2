@@ -80,7 +80,7 @@
       <li><a href="#data-sources">Data sources</a></li>
       <li><a href="#input-echo">Input echo</a></li>
 {%- for section in appendices %}
-      <li><a href="#{{ section.key }}">Appendix {{ letters[loop.index0] }} &mdash; {{ section.title }}</a></li>
+      <li><a href="#{{ section.key }}">{{ section.label or ('Appendix ' ~ letters[loop.index0]) }} &mdash; {{ section.title }}</a></li>
 {%- endfor %}
     </ol>
   </nav>
@@ -208,7 +208,7 @@
     </section>
 {%- for section in appendices %}
     <section id="{{ section.key }}">
-      <div class="l1head"><span class="secnum applabel">Appendix {{ letters[loop.index0] }}</span><h2>{{ section.title }}</h2></div>
+      <div class="l1head"><span class="secnum applabel">{{ section.label or ('Appendix ' ~ letters[loop.index0]) }}</span><h2>{{ section.title }}</h2></div>
 {%- if section.subtitle %}
       <p class="l1sub">{{ section.subtitle }}</p>
 {%- endif %}
