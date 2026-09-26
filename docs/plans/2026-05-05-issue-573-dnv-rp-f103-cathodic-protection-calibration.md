@@ -1,7 +1,8 @@
 # Plan: digitalmodel #573 — DNV-RP-F103 calibration drift in `test_cathodic_protection_dnv.py`
 
 **Issue:** https://github.com/vamseeachanta/digitalmodel/issues/573
-**Status:** plan-review
+**Status:** done
+Closed 2026-09-25; fixed by f1a1b05f
 **Tier:** T2 (calibration: 16 tests across 6 classes; involves DNV-RP-F103 standard reconciliation + Citation emission)
 
 ## Root cause

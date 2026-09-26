@@ -36,11 +36,11 @@ Hatch covers are treated as a separate sub-calculation.
 
 ## Design Life
 
-| Item | Design Life |
-|------|-------------|
-| Operational | 25 years |
-| Wet storage (pre-installation) | 2 years |
-| Total | 27 years |
+| Item | Design Life (years) |
+|------|---------------------|
+| Operational | 25 |
+| Wet storage (pre-installation) | 2 |
+| Total | 27 |
 
 ## Coating Systems
 
@@ -156,6 +156,22 @@ Note: Same FM-65 anode type as used on the riser base structure (calc-004).
 | FM-02 (hatch) | 16 | 16 × 2.03 = 32.5 |
 | **Total** | **104** | **5,668.0** |
 
+**Reproduction note (this branch, `DNV_RP_B401_offshore` route, edition "2017", cfg below):**
+the route represents the CAT III seawater-exposed zones of the 4-RBF group (407.0 m² with
+contingency) at >300 m, arctic band (3.9 °C), and the sediment-buried bare steel (1 410.2 m²
+with contingency) as a `buried` zone. The values come from DNV-RP-B401 Tables 10-1 / 10-2 /
+10-4 and Sec. 6.3 as of #2207: seawater densities 0.220 / 0.110 / 0.170 A/m², buried
+0.020 A/m², CAT III f_ci / f_cm / f_cf = 0.020 / 0.128 / 0.236 at 27 yr — identical to the
+tabulated source values. The code returns seawater-zone mean currents of 5.545 A (foundation)
+and 0.186 A (hatch covers), a buried-zone current of 28.204 A, totals of 29.995 / 33.935 /
+44.533 A (initial / mean / final; source 12.101 A main structure + 0.073 A hatch covers), a net
+anode mass of 4 721.3 kg (source 1 291.25 + 3.78 kg) and 74 FM-65 anodes with `governing_case`
+"mass" (`recommended_anode_count` 74; count by final current 25), against the source's 88 FM-65
++ 16 FM-02. The FM-65 resistance from the route is 0.1357 Ω against the tabulated 0.273 Ω:
+the route applies the Dwight stand-off formula to `flush_mounted` anodes rather than the
+long-flush ρ / (2S) formula. Provenance flag for the 2017 edition: `inherited-2011-unverified`.
+The tabulated source values are left as extracted.
+
 ## CP Protection Philosophy
 
 - Foundation lower section (sediment-buried) uses bare steel with buried current density (0.020 A/m²)
@@ -177,13 +193,19 @@ Note: Same FM-65 anode type as used on the riser base structure (calc-004).
 ## Python cfg dict
 
 ```python
+from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
+
+# Router key mapping: DNVGL-RP-B401:2017 -> "DNV_RP_B401_offshore" with design_data.edition
+# = "2017". Requires #2207 or later.
 cfg = {
     "inputs": {
-        "calculation_type": "DNVGL_RP_B401_2017",
+        "calculation_type": "DNV_RP_B401_offshore",
         "standard": "DNVGL-RP-B401:2017",
         "design_data": {
             "structure_type": "riser_base_foundation",
-            "design_life_total": 27,         # years
+            "design_life": 27,               # years, router design life
+            "edition": "2017",
+            "design_life_total": 27,
             "design_life_operational": 25,
             "wet_storage_years": 2,
             "water_depth_m": [1710, 1900],
@@ -195,6 +217,30 @@ cfg = {
             "resistivity_sediment_ohm_m": 1.00,
             "min_potential_seawater_V": -0.800,
             "min_potential_sediment_V": -0.900,
+            "seawater_temperature_C": 3.9,       # near seabed (router key)
+            "seawater_resistivity_ohm_m": 0.31,  # router key
+        },
+        # Router zones for the 4-RBF group, +10% contingency: seawater-exposed CAT III steel
+        # (89.5 x 4 = 358.0 -> 393.8 m2; hatch covers 1.5 x 2 x 4 = 12.0 -> 13.2 m2) and the
+        # sediment-buried bare steel (320.5 x 4 = 1282.0 -> 1410.2 m2, B401 Sec. 6.3 buried).
+        "structure": {
+            "zones": [
+                {"zone": "foundation_seawater", "base_zone": "submerged", "depth_m": 1710,
+                 "area_m2": 393.8, "coating_category": "III"},
+                {"zone": "hatch_covers", "base_zone": "submerged", "depth_m": 1710,
+                 "area_m2": 13.2, "coating_category": "III"},
+                {"zone": "foundation_buried", "base_zone": "buried", "depth_m": 1710,
+                 "area_m2": 1410.2, "coating_category": "bare"},
+            ],
+        },
+        # Router anode (FM-65 long flush-mounted; r = cross-section perimeter / 2 pi)
+        "anode": {
+            "type": "flush_mounted",
+            "length_m": 0.950,
+            "radius_m": 0.1025,
+            "material": "aluminium",
+            "utilization_factor": 0.85,
+            "individual_anode_mass_kg": 64.04,
         },
         "current_density": {
             "initial_A_m2": 0.220,
@@ -263,5 +309,11 @@ cfg = {
         },
     }
 }
-# Run: CathodicProtection().router(cfg)
+
+result = CathodicProtection().router(cfg)["results"]
+print("Total mean / final current (A): {:.3f} / {:.3f}".format(
+    result["current_demand_A"]["total_mean_A"], result["current_demand_A"]["total_final_A"]))
+print("Net anode mass (kg):", result["anode_requirements"]["total_mass_kg"])
+print("FM-65 count (mass basis):", result["anode_requirements"]["anode_count"])
+print("FM-65 resistance (ohm):", result["anode_resistance_ohm"])
 ```

@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cathodic protection review: human decisions</title>
+<style>
+body{margin:0;background:#f5f7f8;color:#20343c;font:16px/1.6 system-ui,sans-serif}
+main{max-width:1160px;margin:auto;padding:36px}
+h1{line-height:1.2}h2{margin-top:32px}h3{margin-top:22px}
+a{color:#086d70;overflow-wrap:anywhere}
+table{width:100%;border-collapse:collapse;background:white;font-size:14px}
+td,th{padding:10px;border:1px solid #ccdce0;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+th{background:#e7eef4}
+caption{caption-side:bottom;text-align:left;color:#536b76;padding:8px}
+code,pre{font-size:13px;overflow-wrap:anywhere}
+pre{white-space:pre-wrap;background:white;padding:18px;border:1px solid #ccdce0}
+.notice{background:white;border-left:4px solid #086d70;padding:18px;margin:18px 0}
+.muted{color:#536b76}
+.tag{display:inline-block;padding:1px 8px;border-radius:4px;font-size:12px;font-weight:600;white-space:nowrap}
+table td:first-child{white-space:nowrap}
+.pass{background:#dcefe3;color:#166534}.warn{background:#fdebd3;color:#b45309}.fail{background:#fadadd;color:#b91c1c}.pend{background:#e7eef4;color:#536b76}
+.decision td:first-child{white-space:nowrap;font-weight:600}
+.decision th{white-space:nowrap}.decision td:nth-child(3){min-width:7em}
+.dbox{margin-top:6px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.dbox label{margin-right:6px;font-size:13px}
+.dbox textarea{width:100%;min-height:44px;font:13px/1.4 system-ui,sans-serif;border:1px solid #ccdce0;padding:6px}
+button{font:14px system-ui,sans-serif;padding:8px 14px;border:1px solid #086d70;background:#086d70;color:white;border-radius:4px;cursor:pointer}
+button.secondary{background:white;color:#086d70}
+#record{display:none}
+@media print{.dbox,button,#toolbar{display:none}}
+</style></head>
+<body><main>
+<p class="muted">25 September 2026 · Draft for human decision · Client: N/A · Source: <code>docs/domains/cathodic_protection/technical-quality-review-2026-09-24.md</code> · Baseline: origin/main <code>c7b5766d</code> (CP paths identical to local <code>87d56cac</code>)</p>
+<h1>Cathodic protection: technical quality review and the decisions it requires</h1>
+
+<div class="notice"><b>Decision boundary.</b> This page records what the 24 September review established, what it could not establish, and the twelve decisions that only the repository owner can take. It launches nothing, files no issues, changes no code and grants no approval. Decisions recorded on this page are a local note until the owner restates them in the GitHub issue or plan that governs the work.</div>
+
+<h2>1. Verdict and what the evidence supports</h2>
+<p>The cathodic protection domain is <b>not release-grade</b>. The test suite is green and the newer package is well structured, but the numbers it produces cannot yet be handed to a client. Four independent adversarial reviewers covered the B401 anode modules, the pipeline/ICCP/corrosion modules, the workflows and legacy solver, and the tests and documentation. Every blocker below was re-checked by the orchestrating session against the code and, for DNV-RP-B401 constants, against the repository's own dataset CSVs in <code>llm-wiki/wikis/engineering-standards/wiki/datasets/dnv-rp-b401/</code>.</p>
+<ul>
+<li>DNV-RP-B401 Table 10-1 final current densities and Table 10-4 coating constants are wrong in the new package and inverted in the legacy solver; tests lock the wrong values in.</li>
+<li>The <code>edition</code> argument ("2017"/"2021") is accepted everywhere and changes no value anywhere.</li>
+<li>The YAML engine routes every CP workflow to the legacy solver; the new package is unreachable from <code>python -m digitalmodel</code>. Four of six shipped demos return <code>adequate: false</code> and exit 0.</li>
+<li>Eight physics or unit errors of blocker class exist in the corrosion-rate, onshore pipeline, ICCP, fuel-system and stray-current modules.</li>
+<li>Sound and edition-stable: the B401 core relations, F103 Eq. 14 protected length, the Dwight rod formula, NACE SP0169 criteria, and <code>dnv_rp_f106.py</code>, which is the one module that meets the full repository bar.</li>
+</ul>
+
+<h2>2. Evidence</h2>
+<table>
+<thead><tr><th>Gate or standard</th><th>Result</th><th>Evidence</th></tr></thead>
+<tbody>
+<tr><td>tests-cathodic-protection (both roots, #1923)</td><td><span class="tag pass">PASS</span></td><td>480 passed in 10 s locally; 549 on origin/main; 0 skips</td></tr>
+<tr><td>Coverage (fail &lt; 60 %, warn &lt; 80 %)</td><td><span class="tag warn">WARN</span></td><td>New package 67–100 % per module; legacy solver 62.5 %; uncalled legacy F103 file 9.6 %</td></tr>
+<tr><td>ruff check (blocking gate)</td><td><span class="tag fail">FAIL</span></td><td>10 findings: 6 unused imports, 2 unused variables, 2 ambiguous names</td></tr>
+<tr><td>Complexity C901</td><td><span class="tag warn">WARN</span></td><td><code>cp_reporting.generate_assessment_report</code> = 11</td></tr>
+<tr><td>mypy</td><td><span class="tag fail">FAIL</span></td><td>2 errors in <code>pipeline_cp.py</code> (missing named argument; Any return)</td></tr>
+<tr><td>Citation registry</td><td><span class="tag warn">PARTIAL</span></td><td>2 of 19 modules emit <code>Citation</code>; the rest cite by docstring string</td></tr>
+<tr><td>Doc-verified tests</td><td><span class="tag warn">PARTIAL</span></td><td>~120 of 549 trace to a table or abstracted calc; ~225 recompute the formula inline; ~140 are range or metadata checks</td></tr>
+<tr><td>Fixture consumption</td><td><span class="tag fail">FAIL</span></td><td>10 YAML test vectors are read by nothing</td></tr>
+<tr><td>HTML reporting standard</td><td><span class="tag fail">FAIL</span></td><td>Plotly from CDN, no header/footer/source blocks, calc-sheet HTML has no interactive plot</td></tr>
+<tr><td>Public hygiene (#2155, #2167)</td><td><span class="tag fail">FAIL</span></td><td>Operator and contractor names, a named project, contractor document numbers and 14 private paths in five docs; PR #2167 does not touch them</td></tr>
+</tbody>
+<caption>Table 1. Gate status against the repository engineering standards as of 24 September 2026; the ruff and mypy findings are in the new package, not the legacy solver.</caption>
+</table>
+
+<table style="margin-top:22px">
+<thead><tr><th>ID</th><th>Location</th><th>Defect</th><th>How verified</th></tr></thead>
+<tbody>
+<tr><td>B1</td><td><code>marine_structure_cp.py:52-73</code></td><td>Table 10-1 final densities 90/100/120/150 mA/m² vs standard 100/110/130/170; depth bands beyond 30 m missing; invented tidal row</td><td>Orchestrator vs wiki CSV table-001</td></tr>
+<tr><td>B2</td><td><code>coating.py:52-62, 400-436</code></td><td>Coating a/b match neither B401 Table 10-4 nor F103, yet carry a B401 citation; temperature and depth corrections cite a clause that does not exist</td><td>Orchestrator vs wiki CSV table-004</td></tr>
+<tr><td>B3</td><td>legacy <code>cp_DNV_RP_B401_2021.py:14-35</code></td><td>Coated/bare density split B401 does not have; an atmospheric-zone CP current; coating categories inverted (Cat I a=0.05, Cat III a=0.25 vs 0.10 and 0.02); cites tables that do not exist; 59 tests lock it in</td><td>Orchestrator vs wiki CSV; jacket demo run</td></tr>
+<tr><td>B4</td><td><code>_edition.py</code> and every B401 caller</td><td><code>edition</code> is normalised and discarded; a test asserts 2017 == 2021; result objects carry two different revisions at once</td><td>Orchestrator, code read</td></tr>
+<tr><td>B5</td><td><code>corrosion_rate.py:108-114</code></td><td>Faraday factors 10× too high (0.0116 vs 0.00116 mm/yr per mA/m²)</td><td>Orchestrator hand calc</td></tr>
+<tr><td>B6</td><td><code>api_rp_1632.py:33</code></td><td>Mg H-1 capacity 500 A·h/kg is the per-pound figure (≈1100 A·h/kg)</td><td>Orchestrator, code read</td></tr>
+<tr><td>B7</td><td><code>pipeline_cp.py:195-226</code></td><td>Holiday-test voltage 20× low for FBE (100 V vs SP0490 ≈ 2083 V); contradicts <code>dnv_rp_f106</code></td><td>Orchestrator, code read + hand calc</td></tr>
+<tr><td>B8</td><td><code>iccp_design.py:153-164</code></td><td>Rectifier sizing silently caps at 120 V / 200 A</td><td>Orchestrator, code read</td></tr>
+<tr><td>B9</td><td><code>iccp_design.py:222-263</code></td><td>Cast-iron density for all anode materials; mislabelled Sunde formula; uncited factors</td><td>Reviewer probe</td></tr>
+<tr><td>B10</td><td><code>stray_current.py:163-240</code></td><td>DC and AC interference models not physical (always critical; negative voltages; V/R × circumference called a density)</td><td>Reviewer probe</td></tr>
+<tr><td>B11</td><td><code>fuel_system_cp.py:173-189</code></td><td>"Protection check" passes at −5.55 V CSE</td><td>Reviewer probe</td></tr>
+<tr><td>B12</td><td><code>corrosion_rate.py:263-278</code></td><td>Galvanic model ohmic only, no polarisation; unknown materials default silently</td><td>Reviewer probe</td></tr>
+<tr><td>B13</td><td><code>engine.py:13, 395</code></td><td>Engine dispatches only to the legacy solver</td><td>Orchestrator; six demo runs</td></tr>
+<tr><td>B14</td><td>legacy solver</td><td>Anode count returned as float; failing adequacy never fails the run</td><td>Six demo runs</td></tr>
+</tbody>
+<caption>Table 2. Blocker register. "Reviewer probe" rows were demonstrated by a reviewer's scratch script and not re-run by the orchestrator; the standard PDFs were not consulted in this review.</caption>
+</table>
+
+<h2>3. Decisions requested</h2>
+<p>Each row is a question only the owner can answer. Claude's recommendation is stated so that disagreement is explicit. A decision left pending keeps the current state, which for D1 means the domain remains presented as usable.</p>
+<div id="toolbar" class="dbox"><button type="button" onclick="exportRecord()">Copy decision record</button><button type="button" class="secondary" onclick="clearRecord()">Clear saved answers</button><span class="muted" id="savedNote"></span></div>
+<table class="decision">
+<thead><tr><th>ID</th><th>Question</th><th>Evidence</th><th>Options</th><th>Claude recommendation</th><th>Decision</th></tr></thead>
+<tbody>
+<tr><td>D1</td><td>Is the domain held at beta and blocked from client-facing use until B1–B4 and B13–B14 are closed?</td><td>Table 2</td><td>Hold · Keep as is · Other</td><td>Hold. The brochure and capability page currently present it as validated.</td><td data-id="D1"></td></tr>
+<tr><td>D2</td><td>Do B401 and F103 constants move to edition-keyed table modules generated from, and tested against, the llm-wiki dataset CSVs, with each value carrying a Citation?</td><td>B1–B3</td><td>Yes · Fix constants in place · Other</td><td>Yes. This is the prerequisite for every other fix; in-place edits will drift again.</td><td data-id="D2"></td></tr>
+<tr><td>D3</td><td>Does <code>edition</code> become functional (per-edition tables and citation sections, including 2005/2010 which the wiki holds) or is it removed?</td><td>B4</td><td>Functional · Remove · Other</td><td>Functional. The dataset already holds the 2005/2008 tables; the crosswalk is a selling point once true.</td><td data-id="D3"></td></tr>
+<tr><td>D4</td><td>Is the engine re-routed to the new package through a thin adapter, with the legacy solver kept only behind <code>*_legacy</code> keys and the uncalled legacy F103 file deleted?</td><td>B13, duplication map</td><td>Adapter · Fix legacy tables only · Other</td><td>Adapter. Fixing the legacy tables alone leaves seven implementations of each formula.</td><td data-id="D4"></td></tr>
+<tr><td>D5</td><td>Do the six demo workflows become passing designs, with adequacy a PASS/FAIL status that fails the run and that the durable-workflow tests assert?</td><td>B14</td><td>Yes · Leave demos · Other</td><td>Yes. A demo that ships a failing design with exit 0 is worse than no demo.</td><td data-id="D5"></td></tr>
+<tr><td>D6</td><td>Are the 59 legacy B401 tests and the locked new-package values re-baselined from the standard tables rather than from current output?</td><td>Table 2, §5 of the report</td><td>Re-baseline from tables · Snapshot current · Other</td><td>Re-baseline from tables, parametrised from the CSVs.</td><td data-id="D6"></td></tr>
+<tr><td>D7</td><td>For B5–B12: fix the four arithmetic errors now (Faraday, Mg capacity, holiday voltage, rectifier cap) and quarantine the four non-physical models (stray current, fuel-system check, galvanic, ICCP anode life) behind an experimental flag until re-modelled?</td><td>B5–B12</td><td>Fix four, quarantine four · Fix all now · Remove all eight · Other</td><td>Fix four, quarantine four. The quarantined models need new formulations, not patches.</td><td data-id="D7"></td></tr>
+<tr><td>D8</td><td>Are the five documents carrying operator, contractor, project and private-path identifiers redacted or moved out of the public tree under #2155?</td><td>Table 1, hygiene row</td><td>Redact under #2155 · Move out of tree · Leave</td><td>Redact under #2155; the four analysis notes are 2026-01 working notes, not reference docs.</td><td data-id="D8"></td></tr>
+<tr><td>D9</td><td>Does CP receive the report-pack treatment (CSV results, offline Plotly HTML, citations and edition in header/footer) after D4 lands?</td><td>HTML reporting row</td><td>Yes, after D4 · Not now · Other</td><td>Yes, after D4. Doing it before D4 reports legacy numbers.</td><td data-id="D9"></td></tr>
+<tr><td>D10</td><td>Are the ten issues in §9 of the report filed under one epic linked to #1834 and #1845, and which new structure types are sequenced first?</td><td>§8, §9 of the report</td><td>File all ten · File a subset · Do not file</td><td>File all ten. Sequence offshore-wind monopile internals and hull ICCP first; both reuse existing demos.</td><td data-id="D10"></td></tr>
+<tr><td>D11</td><td>Are the brochure claims ("validated against worked examples", "full test coverage, traceable to standards") softened now, before the fixes land?</td><td>§6 of the report</td><td>Soften now · After fixes · Leave</td><td>Soften now.</td><td data-id="D11"></td></tr>
+<tr><td>D12</td><td>Is #573 closed with reference to commit f1a1b05f, and its plan marked done?</td><td>§5 of the report</td><td>Close · Keep open</td><td>Close.</td><td data-id="D12"></td></tr>
+</tbody>
+<caption>Table 3. Decision register. Answers entered on this page are stored only in this browser (localStorage) and can be copied out as a text record; nothing is transmitted.</caption>
+</table>
+<pre id="record"></pre>
+
+<h2>4. Claude discussion and limitations</h2>
+<p>The review did not open the DNV-RP-B401, DNV-RP-F103, ISO 15589 or NACE PDFs; constants were checked against the repository's own B401 dataset CSVs (2005 with 2008 amendments) and the reviewers' recollection of later editions. Three items therefore remain to be confirmed against the PDFs before they are treated as defects: the 2021 edition date carried in <code>_edition.py</code> ("May 2021"; reviewers recall September 2021), the legacy F103 Table 5-1 temperature bands, and the FBE breakdown constant (code 0.010, reviewers recall 0.030).</p>
+<p>Rows marked "reviewer probe" in Table 2 were demonstrated by one reviewer's scratch script and read by the orchestrator, but not re-executed. The doc-verified tally in Table 1 is an estimate from reading the test files, not a tool count. The local checkout is 181 commits behind origin/main; every CP path was confirmed byte-identical, but the local quality-gate file and pytest collection rules are older than the ones on main.</p>
+<p>No comparison was made with the rds02 machine's copies of these files; SSH from this session was blocked by a known-hosts permission error in the sandbox. Nothing in this review was committed, pushed, or filed as an issue.</p>
+
+<h2>5. Recorded disposition and follow-up ownership</h2>
+<p><b>Owner instruction, 25 September 2026 (answers recorded 14:09–14:14 UTC, record copied 16:15 UTC):</b> hold the domain at beta; research to keep as many options open for clients as possible; constants, edition switch, engine adapter, test re-baseline, the fix-four-quarantine-four split, redaction under #2155, and closure of #573 approved as recommended. Two recommendations were replaced: no more demo workflows, since end deliverables become HTML/PDF reports (D5); and reporting is to be one comprehensive code/HTML that handles client reporting in a standard way rather than a CP-only report pack (D9). Brochure claims are to be removed, not softened (D11). The epic and children were filed the same day.</p>
+<table>
+<thead><tr><th>ID</th><th>Owner decision</th><th>Owner note</th><th>Tracked in</th></tr></thead>
+<tbody>
+<tr><td>D1</td><td><span class="tag pass">Approved</span> hold at beta</td><td>Research to keep as many options for clients as possible</td><td>#2206 epic</td></tr>
+<tr><td>D2</td><td><span class="tag pass">Approved</span> CSV-backed, cited table modules</td><td>Same note</td><td>#2207</td></tr>
+<tr><td>D3</td><td><span class="tag pass">Approved</span> edition functional incl. 2005/2010</td><td>Same note</td><td>#2208</td></tr>
+<tr><td>D4</td><td><span class="tag pass">Approved</span> engine adapter, legacy behind <code>*_legacy</code></td><td></td><td>#2210</td></tr>
+<tr><td>D5</td><td><span class="tag warn">Different option</span> retire demos</td><td>No more demos needed; end deliverables become HTML/PDF</td><td>#2210, #2212</td></tr>
+<tr><td>D6</td><td><span class="tag pass">Approved</span> re-baseline from tables</td><td></td><td>#2207, #2213</td></tr>
+<tr><td>D7</td><td><span class="tag pass">Approved</span> fix four, quarantine four</td><td></td><td>#2209</td></tr>
+<tr><td>D8</td><td><span class="tag pass">Approved</span> redact under #2155</td><td></td><td>#2155 (comment posted)</td></tr>
+<tr><td>D9</td><td><span class="tag warn">Different option</span> standard reporting engine</td><td>A comprehensive code/HTML that handles reporting in a standard way</td><td>#2212</td></tr>
+<tr><td>D10</td><td><span class="tag pass">Approved</span> file epic and children</td><td>See demo notes</td><td>#2206 with #2207–#2214</td></tr>
+<tr><td>D11</td><td><span class="tag pass">Approved</span> remove brochure claims</td><td>Feel free to remove; only the end technical result and correctness matter</td><td>#2214</td></tr>
+<tr><td>D12</td><td><span class="tag pass">Approved</span> close #573</td><td></td><td>#573 closed 2026-09-25</td></tr>
+</tbody>
+<caption>Table 4. Owner decisions as recorded from this page and restated in GitHub epic #2206; the interactive controls in Table 3 remain for later changes but the epic is the authority.</caption>
+</table>
+<table style="margin-top:22px">
+<thead><tr><th>Follow-up</th><th>Owner</th><th>Status at the 25 September 2026 evening checkpoint</th></tr></thead>
+<tbody>
+<tr><td>Constants table modules and CSV-backed tests (#2207)</td><td>Claude CP lane</td><td><span class="tag pass">In review</span> PR #2216, 30 checks green: 182 CSV-backed tests; new package and legacy solver wired; 779 CP tests</td></tr>
+<tr><td>Arithmetic fixes and quarantine (#2209)</td><td>Claude CP lane</td><td><span class="tag pass">In review</span> PR #2215, green</td></tr>
+<tr><td>F103 module and kernel, full Sec. 7 loop (#2211)</td><td>Claude CP lane</td><td><span class="tag pass">In review</span> PR #2217, stacked on #2216; 859 CP tests</td></tr>
+<tr><td>Engine adapter, PASS/FAIL status, demos retired (#2210)</td><td>Claude CP lane</td><td><span class="tag pass">In review</span> PR #2220, stacked on #2217; six demo inputs kept as regression fixtures</td></tr>
+<tr><td>Tests and gates (#2213)</td><td>Claude CP lane</td><td><span class="tag pass">In review</span> PR #2221, stacked on #2217; 1018 CP tests</td></tr>
+<tr><td>Docs, worked examples, brochure removed, review record committed (#2214)</td><td>Claude CP lane</td><td><span class="tag pass">In review</span> PR #2218, stacked on #2216</td></tr>
+<tr><td>Standard reporting engine (#2212)</td><td>Claude CP lane; owner scope decision</td><td><span class="tag warn">Part 1 in review</span> PR #2219, green (engine, offline Plotly, Edge PDF). Option A/B posted on the issue, B recommended; parts 2 (CP adapters) and 3 (report_pack delegation) wait on the answer and on #2220</td></tr>
+<tr><td>Edition switch beyond the provenance flag (#2208)</td><td>Repository owner (source access)</td><td><span class="tag fail">Blocked</span>: the wiki holds only B401 2005/2008 and 2011 and F103 2003/2010; 2017, 2021 and F103 2016 values inherit with <code>provenance=inherited-…-unverified</code> until the PDFs or matching wiki pages exist</td></tr>
+<tr><td>Redaction of identifier-bearing CP docs</td><td>#2155 lane</td><td><span class="tag pend">Pending</span>; file list posted on #2155</td></tr>
+<tr><td>Merge and retarget</td><td>Repository owner</td><td><span class="tag pend">Pending</span>: merge #2215, #2216, then #2217, #2218, #2220, #2221 (retarget each stacked PR to main as its base merges), and #2219 independently; remove worktrees <code>wt-digitalmodel-cp22xx</code> afterwards</td></tr>
+</tbody>
+<caption>Table 5. Follow-up register reconciled with the pull requests opened on 25 September 2026.</caption>
+</table>
+<h3>Decision-by-decision review against outcomes</h3>
+<ul>
+<li><b>D1 hold at beta:</b> honoured. Nothing merged; the capability page and index now describe the domain as beta and no client-facing claim remains after D11.</li>
+<li><b>D2 CSV-backed cited tables:</b> delivered in #2216. One reviewer recollection was corrected by the CSV: F103 Table A.1 FBE is a = 0.010, b = 0.0003, not 0.030; the code and the A3 hand calculation now use the table value.</li>
+<li><b>D3 edition functional:</b> partly delivered. Edition tokens 2005/2010/2017/2021 (and F103 2010/2016) are accepted and every value carries an edition-specific provenance flag; real per-edition tables for 2017/2021/2016 need source data (#2208 blocked). Your research note is honoured: no edition was dropped.</li>
+<li><b>D4 engine adapter:</b> delivered in #2220; legacy paths remain under <code>*_legacy</code> keys with a deprecation warning.</li>
+<li><b>D5 no more demos, HTML/PDF deliverables:</b> demos retired in #2220 (inputs kept as regression fixtures); the HTML/PDF deliverable path is the #2212 engine, part 1 in #2219.</li>
+<li><b>D6 re-baseline from tables:</b> delivered in #2216 (59 legacy tests) and #2221 (vectors, doc-verified provenance).</li>
+<li><b>D7 fix four, quarantine four:</b> delivered in #2215 exactly as approved.</li>
+<li><b>D8 redact under #2155:</b> file list posted; redaction itself not done here.</li>
+<li><b>D9 standard reporting engine:</b> plan and part 1 delivered; your option A/B answer is needed on #2212 before parts 2 and 3.</li>
+<li><b>D10 file the epic and children:</b> done (#2206 with #2207 to #2214). Structure-type sequencing by deliverable demand is recorded in the epic; no new structure type was started, by design, until the constants landed.</li>
+<li><b>D11 remove brochure claims:</b> the brochure file is deleted in #2218.</li>
+<li><b>D12 close #573:</b> closed 2026-09-25; its plan marked done in #2218.</li>
+</ul>
+<p>One numerical consequence to be aware of: with the depleted-anode final check of B401 Sec. 7.8 now implemented (#2217, #2220), the retired jacket case's recommended count moved from 135 to 173 anodes. The demo geometry was never adequate; the count only became visible once the check existed.</p>
+
+<h2>6. Next discriminating checks for the owner</h2>
+<p>Two of the three PDF-dependent items were settled by the wiki CSVs during #2207: F103 Table 5-1 bands are ≤50 / 50–80 / 80–120 / >120 °C and the FBE constants are a = 0.010, b = 0.0003 (the reviewer's recollection of 0.030 was wrong). The B401 2021 edition date remains unconfirmed; <code>_edition.py</code> now labels that edition without a month. The blocking gates have run in CI on the pull requests (ruff, mypy and the two-root CP test gate are green on #2216 and #2219). What remains for the owner is source access: the DNV-RP-B401 2017 and 2021 and DNV-RP-F103 2016 PDFs, or wiki pages with matching <code>revision</code> frontmatter, unblock #2208 and turn the "inherited-unverified" provenance flags into verified tables. None of this is started by this page.</p>
+
+<script>
+(function(){
+  var KEY='cp-review-decisions-2026-09-25';
+  var opts=['Approve recommendation','Different option (note)','Defer','Reject'];
+  var state={};
+  try{state=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){state={}}
+  var cells=document.querySelectorAll('td[data-id]');
+  cells.forEach(function(td){
+    var id=td.getAttribute('data-id'); var cur=state[id]||{};
+    var box=document.createElement('div'); box.className='dbox';
+    opts.forEach(function(o,i){
+      var l=document.createElement('label');
+      var r=document.createElement('input'); r.type='radio'; r.name='dec-'+id; r.value=o; r.checked=(cur.choice===o);
+      r.addEventListener('change',function(){save(id,'choice',o)});
+      l.appendChild(r); l.appendChild(document.createTextNode(' '+o)); box.appendChild(l);
+    });
+    var ta=document.createElement('textarea'); ta.placeholder='Owner note (optional)'; ta.value=cur.note||'';
+    ta.addEventListener('input',function(){save(id,'note',ta.value)});
+    var status=document.createElement('div'); status.className='muted'; status.id='st-'+id;
+    td.appendChild(status); td.appendChild(box); td.appendChild(ta); render(id);
+  });
+  function save(id,k,v){state[id]=state[id]||{}; state[id][k]=v; state[id].at=new Date().toISOString();
+    try{localStorage.setItem(KEY,JSON.stringify(state)); note('Saved locally '+state[id].at)}catch(e){note('Browser storage unavailable; copy the record before closing')}
+    render(id)}
+  function render(id){var s=state[id]||{}; var el=document.getElementById('st-'+id); if(el) el.innerHTML=s.choice?('<span class="tag pass">'+s.choice+'</span> '+(s.at?s.at.slice(0,16).replace('T',' ')+' UTC':'')):'<span class="tag pend">Pending</span>'}
+  function note(t){var n=document.getElementById('savedNote'); if(n) n.textContent=t}
+  window.exportRecord=function(){
+    var lines=['# Cathodic protection review: owner decision record','','Recorded from technical-quality-review-2026-09-25-human-decisions.html on '+new Date().toISOString(),''];
+    document.querySelectorAll('tr').forEach(function(tr){var td=tr.querySelector('td[data-id]'); if(!td) return; var id=td.getAttribute('data-id'); var q=tr.children[1].textContent.trim(); var s=state[id]||{};
+      lines.push('- '+id+': '+(s.choice||'Pending')+(s.at?' ('+s.at+')':'')); lines.push('  Question: '+q); if(s.note) lines.push('  Note: '+s.note)});
+    var txt=lines.join('\n'); var pre=document.getElementById('record'); pre.textContent=txt; pre.style.display='block';
+    if(navigator.clipboard){navigator.clipboard.writeText(txt).then(function(){note('Decision record copied to clipboard and shown below')},function(){note('Record shown below; copy it manually')})}else{note('Record shown below; copy it manually')}
+  };
+  window.clearRecord=function(){if(!confirm('Clear all saved answers on this page?')) return; state={}; try{localStorage.removeItem(KEY)}catch(e){} location.reload()};
+})();
+</script>
+</main></body></html>

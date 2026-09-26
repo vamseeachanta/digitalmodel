@@ -35,11 +35,11 @@ Note: Surface areas and totals are given per-group (all 4 RBS combined) unless s
 
 ## Design Life
 
-| Item | Design Life |
-|------|-------------|
-| Operational | 25 years |
-| Wet storage (pre-installation) | 2 years |
-| Total | 27 years |
+| Item | Design Life (years) |
+|------|---------------------|
+| Operational | 25 |
+| Wet storage (pre-installation) | 2 |
+| Total | 27 |
 
 ## Coating Systems
 
@@ -153,6 +153,20 @@ Note: Per-RBS surface areas: Yoke 32.4 m², Structure 60.8 m², Piping insulated
 Note: Per RBS (×4 units): 4 SO-90 + 6 FM-65 (main) + 1–2 FM-15 (yoke).
 Anode counts are for the combined 4-RBS group; governing case drives the total.
 
+**Reproduction note (this branch, `DNV_RP_B401_offshore` route, edition "2017", cfg below):**
+the route represents the two CAT III seawater-exposed zones (410.1 m² with contingency) at
+>300 m in the arctic climate band (3.9 °C); the insulation-coated piping and jumper have no
+coating category in the route and are omitted. The values come from DNV-RP-B401 Tables 10-1 /
+10-2 / 10-4 as of #2207: current densities 0.220 / 0.110 / 0.170 A/m² and breakdown factors
+f_ci / f_cm / f_cf = 0.020 / 0.128 / 0.236 at 27 yr, identical to the tabulated source values.
+The code returns a total initial / mean / final current of 1.804 / 5.774 / 16.453 A (source
+9.290 A total design current, which also carries the omitted insulated and bare areas), a net
+anode mass of 758.73 kg (source 679.65 kg) and 9 SO-90 anodes with `governing_case` "mass"
+(`recommended_anode_count` 9; count by final current 8), where the source distributes 16 SO-90
++ 24 FM-65 + 6 FM-15 across the anode types. The SO-90 resistance, 0.1192 Ω, matches the
+tabulated 0.119 Ω. Provenance flag for the 2017 edition: `inherited-2011-unverified`. The
+tabulated source values are left as extracted.
+
 ## CP Protection Philosophy
 
 - No anodes mounted on piping — all piping is insulation-coated; incidental CP from structure anodes
@@ -174,13 +188,19 @@ Anode counts are for the combined 4-RBS group; governing case drives the total.
 ## Python cfg dict
 
 ```python
+from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
+
+# Router key mapping: DNVGL-RP-B401:2017 -> "DNV_RP_B401_offshore" with design_data.edition
+# = "2017". Requires #2207 or later.
 cfg = {
     "inputs": {
-        "calculation_type": "DNVGL_RP_B401_2017",
+        "calculation_type": "DNV_RP_B401_offshore",
         "standard": "DNVGL-RP-B401:2017",
         "design_data": {
             "structure_type": "riser_base_structure",
-            "design_life_total": 27,         # years (25 operational + 2 wet storage)
+            "design_life": 27,               # years, router design life (25 operational + 2 wet storage)
+            "edition": "2017",
+            "design_life_total": 27,
             "design_life_operational": 25,
             "wet_storage_years": 2,
             "water_depth_m": [1710, 1900],
@@ -191,6 +211,28 @@ cfg = {
             "resistivity_sediment_ohm_m": 1.00,
             "min_potential_seawater_V": -0.800,
             "min_potential_sediment_V": -0.900,
+            "seawater_temperature_C": 3.9,       # near seabed (router key)
+            "seawater_resistivity_ohm_m": 0.31,  # router key
+        },
+        # Router zones: seawater-exposed structural steel with the +10% contingency applied.
+        # Insulation-coated piping and jumper have no coating category in the current route
+        # and are omitted here (see Reproduction note).
+        "structure": {
+            "zones": [
+                {"zone": "yoke_frame", "base_zone": "submerged", "depth_m": 1710,
+                 "area_m2": 142.6, "coating_category": "III"},
+                {"zone": "main_structure", "base_zone": "submerged", "depth_m": 1710,
+                 "area_m2": 267.5, "coating_category": "III"},
+            ],
+        },
+        # Router anode (SO-90 stand-off drives the sizing; r = cross-section perimeter / 2 pi)
+        "anode": {
+            "type": "stand_off",
+            "length_m": 1.080,
+            "radius_m": 0.117,
+            "material": "aluminium",
+            "utilization_factor": 0.90,
+            "individual_anode_mass_kg": 91.44,
         },
         "current_density": {
             # Seawater-exposed structures >300 m
@@ -257,5 +299,11 @@ cfg = {
         "electrical_continuity_max_ohm": 0.2,
     }
 }
-# Run: CathodicProtection().router(cfg)
+
+result = CathodicProtection().router(cfg)["results"]
+print("Total mean / final current (A): {:.3f} / {:.3f}".format(
+    result["current_demand_A"]["total_mean_A"], result["current_demand_A"]["total_final_A"]))
+print("Net anode mass (kg):", result["anode_requirements"]["total_mass_kg"])
+print("SO-90 count (mass basis):", result["anode_requirements"]["anode_count"])
+print("SO-90 resistance (ohm):", result["anode_resistance_ohm"])
 ```
