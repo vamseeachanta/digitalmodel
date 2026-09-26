@@ -1,0 +1,11 @@
+# Packaged base config for the `crack_fe_ffs` engine basename (#2157 P3).
+# Minimal skeleton -- the durable example fixture (examples/workflows/crack-fe-weldolet/
+# input.yml) supplies the `crack_fe_assessment` case, which deep-merges over this base
+# (custom wins).
+basename: crack_fe_ffs
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

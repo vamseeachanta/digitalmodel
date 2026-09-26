@@ -1662,6 +1662,26 @@ def test_workflow_registry(workflow, monkeypatch):
             "rsf_a", "folias_factor", "remaining_life_yr", "verdict",
             "rerated_pressure_psi", "sufficiency_status", "passes", "code_reference",
         }
+    elif workflow["id"] == "crack-fe-ffs":
+        # #2157 P3: crack-like-flaw FFS from our own FE crack receipts. The benchmark's
+        # toughness has no public source and no residual-stress or PSF basis is supplied,
+        # so the evidence is INCOMPLETE and `passes` is false whatever the verdict.
+        result = cfg["crack_fe_ffs"]
+        assert result["assessment_type"] == "CRACK"
+        assert result["evidence_status"] == "INCOMPLETE"
+        assert result["missing_evidence"] == [
+            "kmat_basis", "residual_stress_basis", "psf_basis",
+        ]
+        assert result["evidence"]["fe_receipts"]["established"] is True
+        assert result["passes"] is False
+        assert result["verdict"] in ("ACCEPT", "MONITOR", "REPAIR")
+        assert {c["code_id"] for c in result["citations"]} == {
+            "api-std-579-asme-ffs-1", "bs-7910",
+        }
+        governing = [d for d in result["depths"] if d["status"] == "established"]
+        assert [d["a_mm"] for d in governing] == pytest.approx([2.35, 2.8, 3.2])
+        assert all(d["governing_plane"] == "crotch" for d in governing)
+        assert result["sensitivities"]["limit_load_lr"]["lr"] == pytest.approx(0.384, abs=5e-4)
     elif workflow["id"] == "buckling-parametric":
         # workflow-API adoption row (workspace-hub#3285-OWNED): the
         # buckling_parametric route writes a byte-stable results.json.

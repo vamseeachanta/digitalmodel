@@ -1,0 +1,138 @@
+basename: crack_fe_ffs
+
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+
+# Crack-like-flaw FFS of the weldolet attachment-weld root flaw from our own FE crack
+# parameters (#2157 P3). The whole design basis is ASSUMED - to be confirmed: the
+# geometry, material and load come from design-data-register.json, and the inputs below
+# that are not in the register carry their own basis and status label. No value from a
+# published case is used (owner cards S04, B05-B08).
+#
+# Paths are relative to the repository root. Every input carries a register id or a
+# basis string. Missing evidence is stated, never filled in: the fracture toughness has
+# no public source (register M-06) and no residual-stress or partial-safety-factor basis
+# is supplied, so the evidence status comes out INCOMPLETE and `passes` is false.
+crack_fe_assessment:
+  component_id: WELDOLET-6X0.5-STD-ROOT-FLAW
+  design_data_register: examples/workflows/crack-fe-weldolet/design-data-register.json
+  fe_states_dir: examples/workflows/crack-fe-weldolet/fe_states
+
+  states:
+    uncracked: p0b_uncracked
+    limit_load: p0b_limit_load_crotch_a2p35
+    planes:
+      # base cases (owner cards V03, G15); the governing plane at a depth is the one with
+      # the larger K_gov
+      crotch: [p0b_crotch_a2p35, p0b_crotch_a2p80, p0b_crotch_a3p20]
+      fusion_face:
+        [p0b_fullcirc_a2p35, p0b_fullcirc_a2p80, p0b_fullcirc_a3p20,
+         p0b_fullcirc_a3p60, p0b_fullcirc_a4p00]
+    sensitivities:
+      crack_face_pressure_off: p0b_crotch_a2p35_cfp_off
+
+  plane_limits:
+    crotch:
+      limit_state: {register_id: F-09}       # ligament exhausted at 3.805 mm
+      max_modelled_depth_mm: 3.355           # F-08: lower tip + tube + margin above the bore
+      max_modelled_depth_basis: "register F-08 (crack block fits for a <= 3.355 mm)"
+      sigma_ref_paths: [1, 4]
+      sigma_ref_component: hoop
+    fusion_face:
+      limit_state: {register_id: F-05}       # ligament exhausted at 8.56 mm
+      max_modelled_depth_mm: 6.0             # N-03: deepest state the crack block fits
+      max_modelled_depth_basis: "register N-03 (crack block fits for a <= 6.0 mm)"
+      sigma_ref_paths: [1, 2, 3]
+      sigma_ref_component: normal
+
+  material:
+    sigma_y: {register_id: M-03}
+    sigma_u: {register_id: M-04}
+    youngs_modulus: {register_id: M-01}
+    poisson: {register_id: M-02}
+    kmat: {register_id: M-06}
+
+  lr_max: {rule: flow}                       # (sigma_y + sigma_u) / (2 sigma_y), owner B10
+
+  growth:
+    law:
+      A: 5.21e-13
+      A_units: "mm/cycle with DeltaK in N/mm^1.5"
+      m: 3.0
+      source_class: assumed
+      status_label: ASSUMED - to be confirmed
+      basis: >-
+        ASSUMED - to be confirmed: single-slope Paris law for steel in a non-aggressive
+        environment, supplied by the user for this benchmark (BS 7910 law family, see the
+        citations; owner card G05: the constant is a user input, not shipped). Confirm with
+        the edition-specific constant and its applicability to austenitic weld metal at
+        250 degC.
+    e_ratio:
+      e_ref_gpa: 200.0
+      e_t: {register_id: M-01}
+      source_class: assumed
+      status_label: ASSUMED - to be confirmed
+      basis: >-
+        ASSUMED - to be confirmed: the law is taken to refer to E = 200 GPa, and A is
+        scaled by (E_ref / E_T)^m to the design temperature. Confirm with the reference
+        modulus of the adopted law.
+    r_ratio:
+      value: 0.0
+      source_class: assumed
+      status_label: ASSUMED - to be confirmed
+      basis: >-
+        ASSUMED - to be confirmed: pressure cycles from zero to the design pressure, so
+        DeltaK = K_gov. Confirm with the operating pressure history.
+    threshold:
+      dk_th: 2.0
+      rules: [none, e_ratio]                 # owner card B14: both margins reported
+      source_class: assumed
+      status_label: ASSUMED - to be confirmed
+      basis: >-
+        ASSUMED - to be confirmed: threshold DeltaK_th = 2.0 MPa*sqrt(m) at R = 0 supplied
+        by the user. Confirm with the adopted law and weld-metal threshold data.
+    demand_cycles:
+      value: 20000
+      source_class: assumed
+      status_label: ASSUMED - to be confirmed
+      basis: >-
+        ASSUMED - to be confirmed: design number of full pressure cycles. Confirm with the
+        process design basis (start-ups, shut-downs and pressure excursions).
+
+  checks:
+    ssy_max_ratio:
+      value: 0.2
+      source_class: assumed
+      status_label: ASSUMED - to be confirmed
+      basis: >-
+        ASSUMED - to be confirmed: Irwin plane-stress plastic-zone size no more than 20 %
+        of the remaining ligament, an engineering limit for K-dominance. Confirm with an
+        elastic-plastic (J) assessment of the deeper states.
+
+  # Not supplied: no residual-stress profile or plasticity-interaction method with a basis
+  # (owner cards G01, G02) and no partial safety factors with a basis (owner card G03).
+  residual_stress: null
+  partial_safety_factors: null
+
+  residual_screening:
+    y: 1.12
+    relaxation: 0.5
+    rho: 0.0
+    source_class: assumed
+    status_label: ASSUMED - to be confirmed
+    basis: >-
+      ASSUMED - to be confirmed: screening only (owner card B11). Uniform residual stress
+      over the flaw depth with the edge-crack factor Y = 1.12; a relaxation factor of 0.5
+      for the relaxed-yield bound; plasticity interaction rho = 0 stated, not computed.
+      Confirm with a residual-stress measurement or a cited profile.
+
+  citations:
+    - getter: api579
+      section: "Part 9 (crack-like flaws), Level 2 failure assessment diagram"
+      note: "procedure followed; metadata-only citation, no clause text"
+    - getter: bs7910
+      section: "fatigue crack growth law and plasticity-interaction (rho) method family"
+      note: "source family of the user-supplied growth law; metadata-only citation"

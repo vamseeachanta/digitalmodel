@@ -1261,6 +1261,17 @@ workflows:
     result:
       kind: in_memory
       key: ffs                          # cfg["ffs"] = FFSAssessmentResult.to_dict() (16-key indexed shape)
+  - id: crack-fe-ffs                    # #2157 P3; NEW basename `crack_fe_ffs` (sibling of `ffs`, owner card G11)
+    basename: crack_fe_ffs
+    title: API 579-1 (2016) Part 9 crack-like-flaw FFS from own FE crack receipts (FAD, growth, evidence completeness)
+    input: examples/workflows/crack-fe-weldolet/input.yml
+    outputs:
+      - examples/workflows/crack-fe-weldolet/results/input.yml   # save_cfg dump carrying cfg["crack_fe_ffs"] = CrackAssessmentResult.to_dict()
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[crack-fe-ffs]
+    runtime: offline
+    result:
+      kind: in_memory
+      key: crack_fe_ffs                 # cfg["crack_fe_ffs"] = CrackAssessmentResult.to_dict() (depths, growth, checks, evidence, findings, citations)
   - id: buckling-parametric             # #3285-OWNED; bare in-repo id; #3283 references golden illustratively
     basename: buckling_parametric
     title: DNV-RP-C201 plate-buckling parametric sweep (results.json + O(1) index)

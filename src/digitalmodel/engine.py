@@ -800,6 +800,13 @@ def engine(
         from digitalmodel.asset_integrity.assessment.ffs_workflow import FFSWorkflow
 
         cfg_base = FFSWorkflow().router(cfg_base)
+    elif basename == "crack_fe_ffs":
+        # #2157 P3: crack-like-flaw FFS from own FE crack receipts (CrackAssessmentResult).
+        from digitalmodel.asset_integrity.assessment.crack_fe_workflow import (
+            CrackFEWorkflow,
+        )
+
+        cfg_base = CrackFEWorkflow().router(cfg_base)
     elif basename == "riser_joint_ffs":
         # #1292: drilling-riser joint FFS — Level-1 envelopes, placement, rollup.
         from digitalmodel.asset_integrity.riser_joint_ffs import (
