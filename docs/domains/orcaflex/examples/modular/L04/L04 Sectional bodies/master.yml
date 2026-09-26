@@ -1,10 +1,10 @@
 %YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\examples\raw\L04\L04 Sectional bodies.yml
+# File: <private-data>/L04 Sectional bodies.yml
 # Created: 3:30 AM on 1/14/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 # Input Parameters (for parametric analysis)
 # See inputs/parameters.yml for extracted values:

@@ -17,7 +17,7 @@ diffraction/
 ├── configs/
 │   ├── base_diffraction_config.yml    # Base template
 │   ├── vessels/                       # Vessel-specific configs
-│   │   └── sea_cypress.yml           # Example vessel config
+│   │   └── tug_30m_1.yml           # Example vessel config
 │   └── [generated configs]            # Auto-generated from templates
 ├── scripts/
 │   ├── orchestrator.py               # Main workflow controller
@@ -42,13 +42,13 @@ uv run python src/modules/orcawave/diffraction/orchestrator.py --list-vessels
 ### Run Analysis for Specific Vessel
 ```bash
 # Using predefined vessel configuration
-uv run python src/modules/orcawave/diffraction/orchestrator.py --vessel sea_cypress
+uv run python src/modules/orcawave/diffraction/orchestrator.py --vessel tug_30m_1
 
 # Dry run to validate configuration
-uv run python src/modules/orcawave/diffraction/orchestrator.py --vessel sea_cypress --dry-run
+uv run python src/modules/orcawave/diffraction/orchestrator.py --vessel tug_30m_1 --dry-run
 
 # Run specific phase only
-uv run python src/modules/orcawave/diffraction/orchestrator.py --vessel sea_cypress --phase setup
+uv run python src/modules/orcawave/diffraction/orchestrator.py --vessel tug_30m_1 --phase setup
 ```
 
 ### Use Custom Configuration
@@ -179,23 +179,23 @@ Geometry validation uses parallel processing:
 
 ## Examples
 
-### Sea Cypress Analysis
+### tug_30m_1 Analysis
 ```bash
 # Full workflow
-uv run python src/modules/orcawave/diffraction/orchestrator.py --vessel sea_cypress
+uv run python src/modules/orcawave/diffraction/orchestrator.py --vessel tug_30m_1
 
 # Validation only
-uv run python src/modules/orcawave/diffraction/orchestrator.py --vessel sea_cypress --phase setup
+uv run python src/modules/orcawave/diffraction/orchestrator.py --vessel tug_30m_1 --phase setup
 
 # Results processing only (after manual OrcaWave run)
-uv run python src/modules/orcawave/diffraction/orchestrator.py --vessel sea_cypress --phase process
+uv run python src/modules/orcawave/diffraction/orchestrator.py --vessel tug_30m_1 --phase process
 ```
 
 ### Batch Processing Multiple Vessels
 ```python
 import subprocess
 
-vessels = ['sea_cypress', 'fpso_1', 'semi_sub']
+vessels = ['tug_30m_1', 'fpso_1', 'semi_sub']
 for vessel in vessels:
     subprocess.run([
         'python', 

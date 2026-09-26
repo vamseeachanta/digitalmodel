@@ -1,7 +1,7 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\5.ld\_107_def_01_at_seabed_min_force.yml
+# File: docs/domains/orcaflex/installation/pipeline/route_a/monolithic/_107_def_01_at_seabed_min_force.yml
 # Created: 11:43 AM on 7/13/2023
 # User: 
 # Machine: 
@@ -11,7 +11,7 @@ General:
   StaticsMinDamping: 1
   StaticsMaxDamping: 5
 Vessels:
-  SevenArctic:
+  iv02:
     InitialX: 670
 6DBuoys:
   uth2-deep:

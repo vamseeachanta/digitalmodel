@@ -75,7 +75,7 @@ plot_settings:
     xlabel: Date
     ylabel: BOP Accelerations
     suptitle: BOP Accelerations. Yellow Pod
-    title: Yellowtail Well, Noble Bob Douglas
+    title: Deepwater well, drillship
     xticklabels: NULL
     grid: True
     legend: True
@@ -99,7 +99,7 @@ plot_settings:
     xlabel: Date
     ylabel: Maximum Bending Moment (ft-kips)
     suptitle: Wellhead Measured Data
-    title: Yellowtail Well, Noble Bob Douglas
+    title: Deepwater well, drillship
     xticklabels: NULL
     grid: True
     legend: True
@@ -122,7 +122,7 @@ plot_settings:
     xlabel: Date
     ylabel: Maximum Bending Moment (ft-kips)
     suptitle: Wellhead Measured Data
-    title: Yellowtail Well, Noble Bob Douglas
+    title: Deepwater well, drillship
     xticklabels: NULL
     grid: True
     legend: True
@@ -147,7 +147,7 @@ plot_settings:
     xlabel: Date
     ylabel: Maximum Bending Moment (ft-kips)
     suptitle: Wellhead Measured Data
-    title: Yellowtail Well, Noble Bob Douglas
+    title: Deepwater well, drillship
     xticklabels: NULL
     grid: True
     legend: True
@@ -170,7 +170,7 @@ plot_settings:
     xlabel: Date
     ylabel: Vessel Motions
     suptitle: Vessel Position
-    title: Yellowtail Well, Noble Bob Douglas
+    title: Deepwater well, drillship
     xticklabels: NULL
     grid: True
     legend: True
@@ -193,7 +193,7 @@ plot_settings:
     xlabel: Date
     ylabel: Vessel Motions
     suptitle: Vessel Motions
-    title: Yellowtail Well, Noble Bob Douglas
+    title: Deepwater well, drillship
     xticklabels: NULL
     grid: True
     legend: True
@@ -216,7 +216,7 @@ plot_settings:
     xlabel: Date
     ylabel: Vessel Heading
     suptitle: Vessel Motions
-    title: Yellowtail Well, Noble Bob Douglas
+    title: Deepwater well, drillship
     xticklabels: NULL
     grid: True
     legend: True
@@ -241,7 +241,7 @@ plot_settings:
     xlabel: Date
     ylabel: Bending Moment Mean Orientation (deg from Global N)
     suptitle: Wellhead Measured Data
-    title: Yellowtail Well, Noble Bob Douglas
+    title: Deepwater well, drillship
     xticklabels: NULL
     grid: True
     legend: True
@@ -262,7 +262,7 @@ plot_settings:
     xlabel: Date
     ylabel: BOP Accelerations
     suptitle: BOP Accelerations. Blue Pod
-    title: Yellowtail Well, Noble Bob Douglas
+    title: Deepwater well, drillship
     xticklabels: NULL
     grid: True
     legend: True

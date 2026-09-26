@@ -27,14 +27,14 @@ Examples:
   python diffraction_cli.py aqwa --method raos --folder C:/AQWA/Vessel --name vessel
 
   # OrcaWave analysis
-  python diffraction_cli.py orcawave --vessel sea_cypress
+  python diffraction_cli.py orcawave --vessel tug_30m_1
 
   # Use configuration file
   python diffraction_cli.py aqwa --config analysis.yml
   python diffraction_cli.py orcawave --config diffraction.yml
 
   # Dry run (validation only)
-  python diffraction_cli.py orcawave --vessel sea_cypress --dry-run
+  python diffraction_cli.py orcawave --vessel tug_30m_1 --dry-run
         """
     )
 

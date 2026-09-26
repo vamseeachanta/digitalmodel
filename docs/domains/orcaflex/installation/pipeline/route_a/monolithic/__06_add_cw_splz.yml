@@ -1,12 +1,12 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\1.ini\STAT\__06_add_cw_splz.yml
+# File: docs/domains/orcaflex/installation/pipeline/route_a/monolithic/__06_add_cw_splz.yml
 # Created: 3:13 PM on 7/11/2023
 # User: 
 # Machine: 
 ---
-BaseFile: __05_car_uth1_splz.yml
+BaseFile: __05_umba_uth1_splz.yml
 LineTypes:
   New:
     - Soft_sling_basketMBL40
@@ -901,7 +901,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
       - LineType: Soft_sling_basketMBL40
         Length: 4
         ExpansionFactor: ~
@@ -910,7 +910,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
       - LineType: Shackle_Bolt_Type_25TeWLL
         Length: 0.313
         ExpansionFactor: ~
@@ -919,7 +919,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
     Attachments: []
     DecoupleLateralAndAxialSeabedFriction: No
     ResistanceProfiles: []

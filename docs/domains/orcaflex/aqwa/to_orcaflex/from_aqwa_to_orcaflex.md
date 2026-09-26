@@ -81,10 +81,10 @@ Thank you for the important reminder. I am also setting the vessel local Origin 
 Thank you again for the attention.
 Vamsee
 
-From: Orcina <orcina@orcina.com> 
+From: Orcina [email removed] 
 Sent: Thursday, March 20, 2025 9:23 AM
-To: Vamsee Achanta <vamseea@acma-inc.com>
-Cc: Scott McClure <scottm@acma-inc.com>
+To: Vamsee Achanta [email removed]
+Cc: Scott McClure [email removed]
 Subject: RE: OrcaFlex Vessel Data | AQWA vs. OrcaWave Interface
 
 Dear Vamsee,

@@ -83,7 +83,7 @@ histogram:
 
   wave:
     flag: True
-    io: K:\Dropbox\Dropbox\Engineering\0185 ECS FFS Engineering\COD\results\app_orcaflex_analysis_app_ETL_ETL_histogram_test_histograms.xlsx
+    io: <private-data>\app_orcaflex_analysis_app_ETL_ETL_histogram_test_histograms.xlsx
     sheet_name: cummulative_histograms
     skiprows: 0
     skipfooter: 0

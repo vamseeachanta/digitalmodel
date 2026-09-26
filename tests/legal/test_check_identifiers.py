@@ -167,11 +167,14 @@ class TestTheExistingBacklog:
     #: more completely. Not a regression; the earlier figure undercounted.
     #: Re-measured 2026-09-23 after review round 3 at 21,786: file names are now
     #: scanned too, and spreadsheet cell coordinates no longer count.
-    BASELINE_FINDINGS = 21786
+    #: Owner decision C11 (2026-09-24) cleared the current tree: 0, with the
+    #: files reported to the owner listed as exclusions in the rules file. CI
+    #: now scans the whole tree on every push (quality-gates.yml).
+    BASELINE_FINDINGS = 0
     #: Files the gate cannot read (binary, not declared media). Same logic:
     #: this may fall, it must not rise. 507 once solver results and array
-    #: formats stopped being exempt by extension.
-    BASELINE_UNINSPECTABLE = 507
+    #: formats stopped being exempt by extension; 469 at C11.
+    BASELINE_UNINSPECTABLE = 469
 
     @pytest.mark.slow
     def test_the_backlog_has_not_grown(self):

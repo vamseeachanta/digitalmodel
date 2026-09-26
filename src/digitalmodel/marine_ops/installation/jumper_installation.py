@@ -10,7 +10,7 @@ End-to-end workflow:
   7. Output delivery (PDF/HTML reports, data tables, Go/No-Go decisions)
 
 Supports multiple jumper configurations from a single spec:
-  • SZ (static) – Saipem crane, no active heave compensation
+  • SZ (static) – Contractor crane, no active heave compensation
   • DZ + AHCon – DZ configuration with active heave compensation ON
   • DZ + AHCoff – DZ configuration with active heave compensation OFF
 
@@ -137,7 +137,7 @@ def parse_jumper_config(spec: Dict) -> JumperConfig:
             fields — a silently-dropped override would make the spec a no-op.
     """
     jumper_data = spec.get("jumper", {})
-    config_name = jumper_data.get("config_name", "ballymore_mf_plet")
+    config_name = jumper_data.get("config_name", "gom_tieback_mf_plet")
 
     base = KNOWN_JUMPER_CONFIGS.get(config_name, JumperConfig())
     unknown = sorted(
@@ -186,7 +186,7 @@ def extract_metocean_conditions(spec: Dict) -> Dict:
 
     Maps ``environment.metocean.wave.significant`` (m) onto the ``hs_m`` key
     consumed by :func:`evaluate_go_no_go` for the DNV-ST-N001 splash-zone Hs
-    criterion. Specs without a metocean block (e.g. ballymore_plet_plem,
+    criterion. Specs without a metocean block (e.g. gom_tieback_plet_plem,
     pending workbook data) return an empty dict, keeping the benign default.
 
     Args:
@@ -347,7 +347,7 @@ def run_pipeline(spec_path: str, output_dir: str = "./output",
       7. (Optional) Generate HTML/PDF reports
     
     Args:
-        spec_path: Path to jumper spec.yml (ballymore_mf_plet or ballymore_plet_plem).
+        spec_path: Path to jumper spec.yml (gom_tieback_mf_plet or gom_tieback_plet_plem).
         output_dir: Directory for all output files.
         run_orcaflex: Whether to run OrcaFlex solver.
         generate_report: Whether to generate reports.

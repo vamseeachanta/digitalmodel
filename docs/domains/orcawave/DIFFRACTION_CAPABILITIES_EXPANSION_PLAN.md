@@ -111,7 +111,7 @@ This plan expands diffraction analysis capabilities for AQWA and OrcaWave in a f
 
 ## Working Examples and Assets
 
-- OrcaWave Sea Cypress go-by: `specs/modules/orcawave/diffraction-analysis/`
+- OrcaWave tug_30m_1 go-by: `specs/modules/orcawave/diffraction-analysis/`
 - AQWA ship RAO examples: `docs/domains/aqwa/examples/001_ship_raos.md`
 - AQWA restart example: `docs/domains/aqwa/examples/102_restart/`
 - OrcaWave AQWA benchmark assets: `docs/domains/orcawave/L01_aqwa_benchmark/`

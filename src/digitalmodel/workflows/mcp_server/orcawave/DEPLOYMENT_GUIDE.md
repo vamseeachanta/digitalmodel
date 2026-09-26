@@ -161,8 +161,8 @@ nssm install OrcaWaveMCP
 
 # Configure service
 Application: C:\Python311\python.exe
-Arguments: D:\digitalmodel\mcp\orcawave\run_server.py --config config.local.yml
-Startup directory: D:\digitalmodel
+Arguments: <private-data>\run_server.py --config config.local.yml
+Startup directory: <private-data>\digitalmodel
 ```
 
 ### Option 4: Docker Container
@@ -472,9 +472,9 @@ python mcp/orcawave/run_server.py --debug
    - System information
 
 ### Contact
-- Internal Support: support@company.com
-- Orcina Support: support@orcina.com
-- Development Team: dev-team@company.com
+- Internal Support: [email removed]
+- Orcina Support: [email removed]
+- Development Team: [email removed]
 
 ## Appendix
 
@@ -512,8 +512,8 @@ async def process_files():
 ```powershell
 # backup.ps1
 $date = Get-Date -Format "yyyyMMdd"
-$source = "D:\digitalmodel\mcp\orcawave"
-$destination = "D:\backups\orcawave-mcp-$date.zip"
+$source = "<private-data>\orcawave"
+$destination = "<private-data>\orcawave-mcp-$date.zip"
 
 Compress-Archive -Path $source -DestinationPath $destination
 ```

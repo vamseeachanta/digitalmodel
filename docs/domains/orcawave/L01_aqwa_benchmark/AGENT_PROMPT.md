@@ -4,7 +4,7 @@
 Make `tests/solver/smoke_test.py` L01 test pass by driving `.yml → .owr → .xlsx` via OrcFxAPI (not subprocess).
 
 ## Repo
-`D:\workspace-hub\digitalmodel` (or `/d/workspace-hub/digitalmodel` in bash)
+`<private-data>\digitalmodel` (or `/d/workspace-hub/digitalmodel` in bash)
 
 ## Context
 

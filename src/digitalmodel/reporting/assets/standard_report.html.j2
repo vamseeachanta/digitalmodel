@@ -1,0 +1,259 @@
+{#- ABOUTME: Jinja2 template for the standard HTML/PDF report engine (#2212). -#}
+{#- ABOUTME: Header chips, title block, typed blocks, references, provenance, echo, footer. -#}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ doc.number }} Rev {{ doc.revision }} - {{ doc.title }}</title>
+<meta name="description" content="{{ doc.title }} ({{ doc.number }} Rev {{ doc.revision }}) - {{ doc.project }} / {{ doc.client }}">
+{%- if plotlyjs %}
+<script type="text/javascript">{{ plotlyjs|safe }}</script>
+{%- endif %}
+{{ house_css|safe }}
+<style>
+{{ engine_css|safe }}
+</style>
+</head>
+<body class="doc">
+<header class="masthead" id="report-header">
+  <div class="wrap">
+    <span class="brand">{{ brand }}</span>
+    <span class="docno num"><b>{{ doc.number }}</b> &middot; Rev {{ doc.revision }}</span>
+    <div class="mh-legend chips" id="header-standards">
+{%- for std in standards %}
+      <span class="chip std">{{ std.code_id }}<span class="ed">{{ std.edition }}</span><span class="prov">{{ std.provenance }}</span></span>
+{%- endfor %}
+    </div>
+  </div>
+</header>
+
+<div class="hero" id="title-block">
+  <div class="wrap">
+    <div class="kicker"><span class="dot"></span><span>Engineering report</span></div>
+    <h1>{{ doc.title }}</h1>
+    <div class="titleblock">
+      <div class="kv">
+        <div class="cap">Document</div>
+        <table>
+          <tr><td>Document number</td><td>{{ doc.number }}</td></tr>
+          <tr><td>Revision</td><td>{{ doc.revision }}</td></tr>
+          <tr><td>Project</td><td>{{ doc.project }}</td></tr>
+          <tr><td>Client</td><td>{{ doc.client }}</td></tr>
+{%- if doc.date %}
+          <tr><td>Date</td><td>{{ doc.date }}</td></tr>
+{%- endif %}
+        </table>
+      </div>
+      <div class="kv">
+        <div class="cap">Sign-off</div>
+        <table>
+          <tr><td>Prepared by</td><td>{{ doc.prepared_by or '&mdash;'|safe }}</td></tr>
+          <tr><td>Checked by</td><td>{{ doc.checked_by or '&mdash;'|safe }}</td></tr>
+          <tr><td>Approved by</td><td>{{ doc.approved_by or '&mdash;'|safe }}</td></tr>
+          <tr><td>Standards</td><td>{% for std in standards %}{{ std.code_id }} ({{ std.edition }}){% if not loop.last %}; {% endif %}{% else %}&mdash;{% endfor %}</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="kv revhist">
+      <div class="cap">Revision history</div>
+      <table>
+        <thead><tr><th>Rev</th><th>Date</th><th>Description</th><th>Prepared</th><th>Checked</th><th>Approved</th></tr></thead>
+        <tbody>
+{%- for row in doc.revision_history %}
+          <tr><td>{{ row.rev }}</td><td>{{ row.date }}</td><td>{{ row.description }}</td><td>{{ row.prepared }}</td><td>{{ row.checked }}</td><td>{{ row.approved }}</td></tr>
+{%- endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="wrap shell">
+  <nav class="toc" aria-label="Contents">
+    <p class="tt">Contents</p>
+    <ol>
+{%- for section in sections %}
+      <li><a href="#{{ section.key }}">{{ section.title }}</a></li>
+{%- endfor %}
+      <li><a href="#references-cited">References cited</a></li>
+      <li><a href="#data-sources">Data sources</a></li>
+      <li><a href="#input-echo">Input echo</a></li>
+{%- for section in appendices %}
+      <li><a href="#{{ section.key }}">Appendix {{ letters[loop.index0] }} &mdash; {{ section.title }}</a></li>
+{%- endfor %}
+    </ol>
+  </nav>
+  <main class="main">
+{%- set fig = namespace(n=0) %}
+{%- set tbl = namespace(n=0) %}
+{%- macro render_blocks(section) %}
+{%- for block in section.blocks %}
+{%- if block.kind == 'text' %}
+    <div class="prose">
+{{ block.markdown|md }}
+    </div>
+{%- elif block.kind == 'table' %}
+{%- set tbl.n = tbl.n + 1 %}
+    <div class="tbl" id="table-{{ tbl.n }}">
+      <div class="cap">Table {{ tbl.n }}. {{ block.title }}</div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>{% for col in block.columns %}<th>{{ col }}</th>{% endfor %}</tr>
+{%- if block.units %}
+            <tr class="units">{% for unit in block.units %}<th>{{ unit }}</th>{% endfor %}</tr>
+{%- endif %}
+          </thead>
+          <tbody>
+{%- for row in block.rows %}
+            <tr>{% for cell in row %}<td>{{ cell|cell }}</td>{% endfor %}</tr>
+{%- endfor %}
+          </tbody>
+        </table>
+      </div>
+{%- if block.source %}
+      <p class="src">Source: {{ block.source }}</p>
+{%- endif %}
+    </div>
+{%- elif block.kind == 'figure' %}
+{%- set fig.n = fig.n + 1 %}
+    <figure class="card" id="{{ block.figure_id }}-figure">
+      <div class="chart-title">Figure {{ fig.n }}. {{ block.title }}</div>
+{%- if block.plotly is not none %}
+      {{ figure_html[block.figure_id]|safe }}
+{%- elif block.svg is not none %}
+      {{ block.svg|safe }}
+{%- else %}
+      <img id="{{ block.figure_id }}" src="{{ figure_html[block.figure_id] }}" alt="{{ block.title }}">
+{%- endif %}
+{%- if block.caption %}
+      <figcaption class="fig-cap">{{ block.caption }}</figcaption>
+{%- endif %}
+    </figure>
+{%- elif block.kind == 'status' %}
+    <div class="status">
+      <div class="st {{ 'ok' if block.status == 'PASS' else 'fail' }}">
+        <span class="icon">{{ '&#10003;'|safe if block.status == 'PASS' else '&#10007;'|safe }}</span>
+        <div>
+          <div class="lab">{{ block.label }}</div>
+          <div class="sub">{% if block.governing_case %}<b>Governing case:</b> {{ block.governing_case }}{% if block.detail %} &middot; {% endif %}{% endif %}{{ block.detail }}</div>
+        </div>
+        <span class="pill">{{ block.status }}</span>
+      </div>
+    </div>
+{%- endif %}
+{%- endfor %}
+{%- endmacro %}
+{%- for section in sections %}
+    <section id="{{ section.key }}">
+      <div class="l1head"><span class="secnum"></span><h2>{{ section.title }}</h2></div>
+{%- if section.subtitle %}
+      <p class="l1sub">{{ section.subtitle }}</p>
+{%- endif %}
+{{ render_blocks(section) }}
+    </section>
+{%- endfor %}
+    <section id="references-cited">
+      <div class="l1head"><span class="secnum"></span><h2>References cited</h2></div>
+{%- if citations %}
+      <div class="tbl-wrap">
+        <table class="refs-table">
+          <thead><tr><th>#</th><th>Code</th><th>Revision</th><th>Section</th><th>Wiki path</th><th>Note</th></tr></thead>
+          <tbody>
+{%- for c in citations %}
+            <tr><td>{{ loop.index }}</td><td>{{ c.code_id }}</td><td>{{ c.revision }}</td><td>{{ c.section }}</td><td class="path">{{ c.wiki_path }}</td><td>{{ c.note }}</td></tr>
+{%- endfor %}
+          </tbody>
+        </table>
+      </div>
+{%- else %}
+      <p class="prose">No external references cited.</p>
+{%- endif %}
+    </section>
+    <section id="data-sources">
+      <div class="l1head"><span class="secnum"></span><h2>Data sources</h2></div>
+      <p class="l1sub">This report is a view over the sources below; values are read from them, not copied in.</p>
+      <div class="tbl-wrap">
+        <table class="sources">
+          <thead><tr><th>Kind</th><th>Identifier</th><th>Digest</th><th>Retrieved</th><th>Description</th></tr></thead>
+          <tbody>
+{%- for src in provenance.sources %}
+            <tr><td>{{ src.kind }}</td><td>{{ src.identifier }}</td><td>{{ src.digest or '' }}</td><td>{{ src.retrieved_at or '' }}</td><td>{{ src.description or '' }}</td></tr>
+{%- endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section id="input-echo">
+      <div class="l1head"><span class="secnum"></span><h2>Input echo</h2></div>
+      <p class="l1sub">Every input as received by the calculation, so the result can be reproduced.</p>
+{%- if input_echo %}
+      <details class="input-echo" open>
+        <summary>{{ input_echo|length }} input value{{ 's' if input_echo|length != 1 else '' }}</summary>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Key</th><th>Value</th></tr></thead>
+            <tbody>
+{%- for key, value in input_echo %}
+              <tr><td>{{ key }}</td><td>{{ value }}</td></tr>
+{%- endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+{%- else %}
+      <p class="prose">No inputs echoed.</p>
+{%- endif %}
+    </section>
+{%- for section in appendices %}
+    <section id="{{ section.key }}">
+      <div class="l1head"><span class="secnum applabel">Appendix {{ letters[loop.index0] }}</span><h2>{{ section.title }}</h2></div>
+{%- if section.subtitle %}
+      <p class="l1sub">{{ section.subtitle }}</p>
+{%- endif %}
+{{ render_blocks(section) }}
+    </section>
+{%- endfor %}
+  </main>
+</div>
+
+<footer id="report-footer">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h3>Document</h3>
+        <ul>
+          <li><span class="k">Number</span> {{ doc.number }} &middot; Rev {{ doc.revision }}</li>
+          <li><span class="k">Project</span> {{ doc.project }}</li>
+          <li><span class="k">Client</span> {{ doc.client }}</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Standards</h3>
+        <div class="chips" id="footer-standards">
+{%- for std in standards %}
+          <span class="chip std">{{ std.code_id }}<span class="ed">{{ std.edition }}</span><span class="prov">{{ std.provenance }}</span></span>
+{%- else %}
+          <span class="chip">none declared</span>
+{%- endfor %}
+        </div>
+      </div>
+      <div>
+        <h3>Generation</h3>
+        <ul>
+          <li><span class="k">Engine</span> {{ execution_tool }}</li>
+          <li><span class="k">Tool version</span> {{ tool_version }}</li>
+          <li><span class="k">Sources</span> {{ provenance.sources|length }} declared</li>
+          <li><span class="k">Citations</span> {{ citations|length }}</li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bar">
+      <span>{{ doc.number }} Rev {{ doc.revision }} &middot; {{ doc.title }}</span>
+      <span class="pdf" id="pdf-status">PDF: {{ pdf_status }}</span>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

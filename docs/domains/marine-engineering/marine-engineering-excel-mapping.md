@@ -1,7 +1,7 @@
 # Marine Engineering Excel to Spec Module Mapping
 
 **Analysis Date:** 2025-10-02
-**Source File:** `D:\workspace-hub\_temp\marine_analysis_data.xlsm`
+**Source File:** `<private-data>\marine_analysis_data.xlsm`
 **Purpose:** Map Excel engineering features to existing/new spec modules
 
 ---
