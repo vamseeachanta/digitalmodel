@@ -417,7 +417,7 @@ __all__ = [
     "Zone",
     "ZoneType",
     "calculate_zone_demand",
-    "design_marine_cp",
+    "design_marine_cp",  # noqa: F822 (lazy via module __getattr__, deprecated)
     "get_seawater_current_density",
     "seawater_current_density",
     "zone_current_density",

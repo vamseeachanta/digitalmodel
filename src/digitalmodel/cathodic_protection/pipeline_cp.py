@@ -23,9 +23,9 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 from digitalmodel.cathodic_protection import _kernels as kernel
+from digitalmodel.cathodic_protection import dnv_rp_f106
 
 _MA_PER_A: float = 1000.0
-from digitalmodel.cathodic_protection import dnv_rp_f106
 
 
 class PipelineEnvironment(str, Enum):
