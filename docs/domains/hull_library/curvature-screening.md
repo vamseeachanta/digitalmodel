@@ -86,3 +86,71 @@ vertex positions shift slightly; record before/after signatures when re-baselini
 
 Serani, A. and Maki, K. J. (2026). Geometry-Based Metrics for Early-Stage Hull-Form
 Producibility Screening. arXiv:2609.27544. Software: https://github.com/cnr-inm-mao/hullprod
+
+## BRep route
+
+For a signature independent of panel discretization, fit the profile offsets to a
+C2 B-spline surface using the OpenCascade bindings bundled with HullProd. FreeCAD is
+not required. The mesh route remains the default.
+
+```python
+from digitalmodel.hydrodynamics.hull_library import profile_to_step, screen_step
+
+path = profile_to_step(profile, "hull.step")
+brep = screen_step(path, lref=profile.length_bp)
+both = screen_profile(profile, representation="both")
+both.provenance["brep_signature"]
+both.provenance["representation_delta"]
+catalog.screen_hull(profile.name, representation="both")
+# entry.curvature_signature: mesh; entry.curvature_signature_brep: BRep
+```
+
+`representation="brep"` returns only the BRep result; `"both"` returns the mesh
+result with the BRep signature and seven comparison values in provenance. Existing
+YAML signatures without a representation load as `"mesh"`. BRep results carry
+`reliability="not_applicable"`, native metric validity, no per-vertex fields, and
+zero mesh panel/vertex counts. Native face counts remain in provenance. Source
+identifiers contain only the file name.
+
+All public geometry coordinates, fitting tolerances and reference lengths are in
+metres. STEP export declares metres and preserves physical dimensions. HullProd
+1.0.1 imports STEP and IGES into millimetres: `screen_step` converts the reference
+length by 1,000 for assessment and returns the original metre reference in the
+signature. Raw HullProd provenance bounds/reference lengths remain in millimetres.
+Direct `hullprod.assess` calls must supply a reference length in its import units.
+Persistent HullProd caching and display tessellation are disabled for this scalar
+route. The accepted `workdir` controls temporary profile exports; direct
+`screen_step` writes no work files.
+
+The orchestrator's Wigley spike (100 × 10 × 6.25, 41 × 11 samples) reported
+`I_D=4.3094`, `I_D_plus=2.1545`, `I_D_minus=2.1549`,
+`a_elliptic=0.6263`, `a_saddle=0.3737`, with native status `valid`.
+The test comparator independently integrates the analytic Gaussian curvature
+and area element; sphere and cylinder controls check exact values.
+
+Comparison requires the same reference length and represented surface. Deltas are
+`abs(mesh - brep)`, with relative delta divided by `abs(brep)`: zero when both
+vanish, null when a nonzero mesh value is compared to zero. Unavailable native
+metrics retain their validity status and are represented by NaN in the signature;
+their absolute and relative deltas are null.
+
+The default fit samples at least 41 × 11 points (or the number of input stations
+and offsets, when larger), using the mesh generator's shape-preserving interpolation.
+Explicit `n_x` and `n_z` override those counts. Mesh independence does **not**
+remove fitting sensitivity: the fixture ship gives BRep `I_D=5.7746` and mesh
+`I_D=3.8280` at 7,225 half-hull panels, a **33.71%** relative gap. The planned
+15% expectation remains a strict expected-failure test. A 161 × 41 fit gives
+`I_D=4.4389`; an 81 × 21 fit is `quadrature_unconverged`. The coarse profile's
+PCHIP joins and subsequent C2 approximation change second derivatives; increasing
+fit density alone does not guarantee stable curvature. Check native validity and
+fit sensitivity before using the signature as a reference.
+
+A planar bottom is included by default when the keel has nonzero breadth; zero-area
+bottoms are omitted. It follows the sampled keel polygon. For curved keel edges,
+that polygon may not sew to the fitted side within tolerance: the returned shape
+can contain disconnected faces, although both surfaces are assessed. Self-touching
+bottom polygons are rejected. No end caps or waterplane are added.
+Use `bottom=False` to omit the bottom explicitly. Omitting nonzero bottom area
+changes **all** area-normalized values, including the three `I_D` values, not only
+`a_flat`. This corrects the narrower comparability claim in the original plan.
+GDF/panel inventories have no BRep surface and continue to use the mesh route.

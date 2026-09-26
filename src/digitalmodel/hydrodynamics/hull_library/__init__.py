@@ -46,6 +46,16 @@ from .curvature_screen import (
     saddle_warning_threshold,
     screen_panel_mesh,
     screen_profile,
+    screen_step,
+    representation_delta,
+)
+from .hull_surface_brep import (
+    profile_point_grid,
+    bspline_face_from_grid,
+    mirror_and_sew,
+    flat_bottom_face,
+    export_step,
+    profile_to_step,
 )
 from .rao_database import RAODatabaseEntry, RAODatabase
 from .rao_lookup_plots import (
@@ -111,6 +121,14 @@ __all__ = [
     "saddle_warning_threshold",
     "screen_panel_mesh",
     "screen_profile",
+    "screen_step",
+    "representation_delta",
+    "profile_point_grid",
+    "bspline_face_from_grid",
+    "mirror_and_sew",
+    "flat_bottom_face",
+    "export_step",
+    "profile_to_step",
     # RAO database (WRK-043 Phase 3)
     "RAODatabaseEntry",
     "RAODatabase",
