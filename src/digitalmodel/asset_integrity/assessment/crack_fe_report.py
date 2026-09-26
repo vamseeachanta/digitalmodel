@@ -442,17 +442,26 @@ class _Report:
                 c["code_id"], c["code_id"])
             add(c["code_id"], f"{c['publisher']}, {name} ({c['revision']}), {c['section']}. "
                 f"Cited for the procedure only ({c['note']}).")
-        add("newman_raju", "J. C. Newman Jr. and I. S. Raju, An empirical stress-intensity "
-            "factor equation for the surface crack, NASA TM-83200, 1981 (US Government work). "
-            "Verification comparator, evaluated by crack_fad.newman_raju_k.")
+        add("newman_raju", "J. C. Newman Jr. and I. S. Raju, Stress-intensity factor equations "
+            "for cracks in three-dimensional finite bodies, NASA TM-83200, NASA Langley Research "
+            "Center, August 1981 (US Government work). Verification comparator, evaluated by "
+            "crack_fad.newman_raju_k.", "https://ntrs.nasa.gov/citations/19810023035")
         _, m06 = self.reg_items["M-06"]
         lit = next((x for x in m06.get("reference_ids", []) if x.startswith("docs:literature")),
                    "docs:literature")
-        add("nureg_6428", "U.S. Nuclear Regulatory Commission, NUREG/CR-6428 Rev. 1: lower-bound "
-            "J_Ic of austenitic stainless SA/SMA weld metal (PDF p.54), the basis of the Kmat "
-            f"input (register M-06). Archived copy: {lit}.")
-        add("nureg_7185", "U.S. Nuclear Regulatory Commission, NUREG/CR-7185, Eq. 46: the same "
-            "lower bound, recorded as a cross-reference in register M-06.")
+        add("nureg_6428", "U.S. Nuclear Regulatory Commission, NUREG/CR-6428 Rev. 1 (ANL/EVS-17/3), "
+            "Effects of Thermal Aging on Fracture Toughness and Charpy-Impact Strength of "
+            "Stainless Steel Pipe Welds (US Government work): lower-bound J_Ic of austenitic "
+            "stainless SA/SMA weld metal (PDF p.54), the basis of the Kmat input (register "
+            f"M-06). Archived copy: {lit}.",
+            "https://www.govinfo.gov/content/pkg/GOVPUB-Y3_N88-PURL-gpo152202/pdf/"
+            "GOVPUB-Y3_N88-PURL-gpo152202.pdf")
+        add("nureg_7185", "U.S. Nuclear Regulatory Commission, NUREG/CR-7185 (ANL-14/10), Effect of "
+            "Thermal Aging and Neutron Irradiation on Crack Growth Rate and Fracture Toughness of "
+            "Cast Stainless Steels and Austenitic Stainless Steel Welds (US Government work), "
+            "Eq. 46: the same lower bound, recorded as a cross-reference in register M-06.",
+            "https://www.govinfo.gov/content/pkg/GOVPUB-Y3_N88-PURL-gpo59687/pdf/"
+            "GOVPUB-Y3_N88-PURL-gpo59687.pdf")
         for ref in self.reg.get("references", []):
             add(ref["id"], f"{ref['citation']}. Archived copy: {ref['source']}; SHA-256 "
                 f"{ref['sha256']}; retrieved {ref['retrieved']}.", ref.get("url"))

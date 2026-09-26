@@ -906,7 +906,7 @@ def _assess(case: Mapping, validator: Validator) -> CrackAssessmentResult:
         p_face = float(limit_rec["limit_load"]["design_pressure_mpa"])
         y_val = (d0["k_gov_mpa_sqrt_m"] - k_off) / (
             p_face * math.sqrt(math.pi * d0["a_mm"] / 1000.0))
-        y_basis = (f"derived from our own crack-face pressure pair at a0: "
+        y_basis = (f"derived from the model's own crack-face pressure pair at a0: "
                    f"Y = (K_on - K_off)/(p sqrt(pi a)) = ({d0['k_gov_mpa_sqrt_m']:.4g} - "
                    f"{k_off:.4g})/({p_face:g} x sqrt(pi x {d0['a_mm']:g} mm)), governing node "
                    f"(receipt {y_spec['off_state']}); ASSUMED - to be confirmed")
@@ -1018,7 +1018,7 @@ def _assess(case: Mapping, validator: Validator) -> CrackAssessmentResult:
         "fe_receipts": EvidenceItem(
             "fe_receipts", not bad,
             ("; ".join(f"{s}: {len(p)} problem(s), first: {p[0]}" for s, p in sorted(bad.items()))
-             if bad else f"{len(per_state)} of {len(per_state)} declared FE states validated "
+             if bad else f"{len(per_state)} of {len(per_state)} declared FE states verified "
                          "(schema, provenance, artifacts, deck hash, gating guards)")),
     }
     status, missing = evidence_status(items)
