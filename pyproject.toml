@@ -126,6 +126,8 @@ dev = [
     "mutmut>=2.4.0,<3.0.0",
 ]
 test = [
+    # Run curvature screening regressions in CI (Python 3.10-3.12).
+    "hullprod>=1.0.1,<2",
     # The full set CI needs (#1632). Domain gates run
     #   uv run ... --with-editable '.[test]' python -m pytest ...
     # so every pytest PLUGIN must be listed here: plugins are loaded by pytest,
