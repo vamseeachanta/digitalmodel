@@ -83,7 +83,7 @@ codes:
 # Engine registry. `workflow` ids must exist in docs/registry/workflows.yaml; `route: true` means a
 # `digitalmodel:<workflow>` entry exists in ../deckhand/config/deckhand/routing/paths.yaml.
 engines:
-  ffs-metal-loss: {module: asset_integrity.assessment.ffs_coordinator, status: validated, workflow: ffs-metal-loss, route: false, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md, note: "canonical L1/L2 GML/LML coordinator; route pending #2180"}
+  ffs-metal-loss: {module: asset_integrity.assessment.ffs_coordinator, status: live, workflow: ffs-metal-loss, route: true, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md, note: "canonical L1/L2 GML/LML coordinator; Deckhand asset-integrity screen entrypoint (#2180)"}
   api579-legacy: {module: asset_integrity.API579, status: routed, workflow: api579-pipe-ffs-b314, route: true, note: "no validation record; superseded path kept as canary"}
   corroded-pipe: {module: asset_integrity.corroded_pipe, status: validated, validation: docs/domains/asset-integrity/b31g-validation-2026-06-27.md, issue: 2181}
   rstreng-2d: {module: asset_integrity.rstreng_2d, status: validated, validation: docs/domains/rstreng-2d-validation-2026-06-29.md, issue: 2181}
@@ -94,7 +94,7 @@ engines:
   crack-fad: {module: asset_integrity.assessment.crack_fad, status: engine, issue: 2184, caveat: "BS 7910:2013 Option 1 curve (single implementation, #2160) plus the API 579 Level 2 / BS 7910 Level 2A generic curve; Part 9 Level 2 workflow from inspection data is #2175"}
   crack-growth: {module: fatigue.crack_growth, status: engine, issue: 2177}
   level3-handoff: {module: asset_integrity.assessment.level3_escalation, status: engine, issue: 2184}
-  measurement-sufficiency: {module: asset_integrity.assessment.measurement_sufficiency, status: engine, workflow: ffs-metal-loss, route: false, note: "mentioned in the 2026-06-27 record only; own record pending #2185"}
+  measurement-sufficiency: {module: asset_integrity.assessment.measurement_sufficiency, status: routed, workflow: ffs-metal-loss, route: true, note: "routed inside the ffs-metal-loss workflow (#2180); mentioned in the 2026-06-27 record only; own record pending #2185"}
   rbi: {module: asset_integrity.rbi_screening, status: engine, issue: 2185}
   composite-repair: {module: asset_integrity.composite_repair, status: engine, issue: 2185}
   inspection-planning: {module: asset_integrity.inspection_planning, status: routed, workflow: inspection-planning, route: true, issue: 2180, note: "no validation record"}
@@ -136,7 +136,7 @@ industries:
     assets:
       - asset: steel pipeline body
         defects:
-          - {mechanism: "general / local metal loss (external, internal corrosion)", codes: [asme-b31g, dnv-rp-f101, api-579-1], parts: [4, 5], engines: [corroded-pipe, rstreng-2d, dnv-f101, ffs-metal-loss], tiers: [T1, T2], status: validated}
+          - {mechanism: "general / local metal loss (external, internal corrosion)", codes: [asme-b31g, dnv-rp-f101, api-579-1], parts: [4, 5], engines: [corroded-pipe, rstreng-2d, dnv-f101, ffs-metal-loss], tiers: [T1, T2], status: live}
           - {mechanism: river-bottom profile metal loss, codes: [asme-b31g, dnv-rp-f101], engines: [rstreng-2d], tiers: [T2], status: validated}
           - {mechanism: circumferential metal loss / net-section, codes: [api-579-1, dnv-rp-f101], parts: [5], engines: [circumferential], tiers: [T2], status: validated, caveat: "F101 combined-loading factor stubbed (#1146)"}
           - {mechanism: interacting defect colonies, codes: [dnv-rp-f101, api-579-1], parts: [4], engines: [dnv-f101], tiers: [T2], status: engine, caveat: "#1094 finding 1"}
@@ -162,7 +162,7 @@ industries:
     assets:
       - asset: pressure vessel (API 510 -> API 579)
         defects:
-          - {mechanism: general / local metal loss, codes: [api-579-1, api-510], parts: [4, 5], engines: [ffs-metal-loss], tiers: [T1, T2], status: validated, note: "L1 t_min includes ASME VIII"}
+          - {mechanism: general / local metal loss, codes: [api-579-1, api-510], parts: [4, 5], engines: [ffs-metal-loss], tiers: [T1, T2], status: live, note: "L1 t_min includes ASME VIII"}
           - {mechanism: pitting, codes: [api-579-1], parts: [6], engines: [pitting], tiers: [T1, T2], status: engine}
           - {mechanism: hydrogen blisters / HIC / SOHIC, codes: [api-579-1], parts: [7], engines: [parts-3-7-10], tiers: [T1, T2], status: planned}
           - {mechanism: brittle fracture susceptibility (MAT), codes: [api-579-1], parts: [3], engines: [parts-3-7-10], tiers: [T1, T2], status: planned}
@@ -171,10 +171,10 @@ industries:
           - {mechanism: creep / creep-fatigue, codes: [api-579-1], parts: [10], engines: [parts-3-7-10], tiers: [T2, T3], status: planned}
           - {mechanism: fire damage, codes: [api-579-1], parts: [11], engines: [parts-8-11-13-14], tiers: [T1, T2], status: planned}
           - {mechanism: "fatigue (crack initiation, cyclic-service screen)", codes: [api-579-1], parts: [14], engines: [parts-8-11-13-14, sn-fatigue], tiers: [T1, T2], status: planned, caveat: "S-N library exists; Part 14 screening not wired"}
-          - {mechanism: re-rate / MAWP reduction, codes: [api-579-1, api-510], parts: [4, 5], engines: [ffs-metal-loss], tiers: [T2], status: validated}
+          - {mechanism: re-rate / MAWP reduction, codes: [api-579-1, api-510], parts: [4, 5], engines: [ffs-metal-loss], tiers: [T2], status: live}
       - asset: process piping (API 570 -> API 579)
         defects:
-          - {mechanism: "CUI, injection point, deadleg, soil-to-air, mixing point, erosion thinning", codes: [api-570, api-579-1], parts: [4, 5], engines: [ffs-metal-loss], tiers: [T1, T2], status: validated}
+          - {mechanism: "CUI, injection point, deadleg, soil-to-air, mixing point, erosion thinning", codes: [api-570, api-579-1], parts: [4, 5], engines: [ffs-metal-loss], tiers: [T1, T2], status: live}
           - {mechanism: pitting, codes: [api-579-1], parts: [6], engines: [pitting], tiers: [T1, T2], status: engine}
           - {mechanism: crack-like flaws at branch / weldolet welds, codes: [api-579-1, bs-7910], parts: [9], engines: [crack-fad, part9-level2], tiers: [T2, T3], status: engine, note: "weldolet FE benchmark in plan #2157 / PR #2194"}
           - {mechanism: composite repair, codes: [asme-pcc-2, iso-24817], engines: [composite-repair], tiers: [T2], status: engine}

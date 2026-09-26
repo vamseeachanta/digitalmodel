@@ -17,7 +17,7 @@ Frameworks: ASME B31.8S (22 root causes in 9 threat categories), API RP 1160, AP
 
 | Defect / mechanism | Governing codes | Engine(s) | Tier | Status |
 |---|---|---|---|---|
-| General / local metal loss (external, internal corrosion) | ASME B31G, DNV-RP-F101, API 579 Pt 4/5 | corroded-pipe, rstreng-2d, dnv-f101, ffs-metal-loss | T1, T2 | validated |
+| General / local metal loss (external, internal corrosion) | ASME B31G, DNV-RP-F101, API 579 Pt 4/5 | corroded-pipe, rstreng-2d, dnv-f101, ffs-metal-loss | T1, T2 | live |
 | River-bottom profile metal loss | ASME B31G, DNV-RP-F101 | rstreng-2d | T2 | validated |
 | Circumferential metal loss / net-section | API 579 Pt 5, DNV-RP-F101 | circumferential | T2 | validated (F101 combined-loading factor stubbed (#1146)) |
 | Interacting defect colonies | DNV-RP-F101, API 579 Pt 4 | dnv-f101 | T2 | engine (#1094 finding 1) |
@@ -40,7 +40,7 @@ Inspection codes: API 510 (vessels), API 570 (piping), API 653 (tanks), API 660 
 
 | Asset | Defect / mechanism | Governing codes | Engine(s) | Tier | Status |
 |---|---|---|---|---|---|
-| Pressure vessel (API 510 -> API 579) | General / local metal loss | API 579 Pt 4/5, API 510 | ffs-metal-loss | T1, T2 | validated (L1 t_min includes ASME VIII) |
+| Pressure vessel (API 510 -> API 579) | General / local metal loss | API 579 Pt 4/5, API 510 | ffs-metal-loss | T1, T2 | live (L1 t_min includes ASME VIII) |
 | Pressure vessel (API 510 -> API 579) | Pitting | API 579 Pt 6 | pitting | T1, T2 | engine |
 | Pressure vessel (API 510 -> API 579) | Hydrogen blisters / HIC / SOHIC | API 579 Pt 7 | parts-3-7-10 (#1274) | T1, T2 | planned |
 | Pressure vessel (API 510 -> API 579) | Brittle fracture susceptibility (MAT) | API 579 Pt 3 | parts-3-7-10 (#1274) | T1, T2 | planned |
@@ -49,8 +49,8 @@ Inspection codes: API 510 (vessels), API 570 (piping), API 653 (tanks), API 660 
 | Pressure vessel (API 510 -> API 579) | Creep / creep-fatigue | API 579 Pt 10 | parts-3-7-10 (#1274) | T2, T3 | planned |
 | Pressure vessel (API 510 -> API 579) | Fire damage | API 579 Pt 11 | parts-8-11-13-14 (#2203) | T1, T2 | planned |
 | Pressure vessel (API 510 -> API 579) | Fatigue (crack initiation, cyclic-service screen) | API 579 Pt 14 | parts-8-11-13-14 (#2203), sn-fatigue | T1, T2 | planned (S-N library exists; Part 14 screening not wired) |
-| Pressure vessel (API 510 -> API 579) | Re-rate / MAWP reduction | API 579 Pt 4/5, API 510 | ffs-metal-loss | T2 | validated |
-| Process piping (API 570 -> API 579) | CUI, injection point, deadleg, soil-to-air, mixing point, erosion thinning | API 570, API 579 Pt 4/5 | ffs-metal-loss | T1, T2 | validated |
+| Pressure vessel (API 510 -> API 579) | Re-rate / MAWP reduction | API 579 Pt 4/5, API 510 | ffs-metal-loss | T2 | live |
+| Process piping (API 570 -> API 579) | CUI, injection point, deadleg, soil-to-air, mixing point, erosion thinning | API 570, API 579 Pt 4/5 | ffs-metal-loss | T1, T2 | live |
 | Process piping (API 570 -> API 579) | Pitting | API 579 Pt 6 | pitting | T1, T2 | engine |
 | Process piping (API 570 -> API 579) | Crack-like flaws at branch / weldolet welds | API 579 Pt 9, BS 7910 | crack-fad, part9-level2 (#2175) | T2, T3 | engine (weldolet FE benchmark in plan #2157 / PR #2194) |
 | Process piping (API 570 -> API 579) | Composite repair | ASME PCC-2, ISO 24817 | composite-repair | T2 | engine |
@@ -153,15 +153,15 @@ Data: `ffs_design_screen_catalog.yml` (owner decision D5, 2026-09-25). These are
 
 | Status | Rows |
 |---|---|
-| live | 0 |
+| live | 4 |
 | routed | 3 |
-| validated | 6 |
+| validated | 2 |
 | engine | 31 |
 | planned | 25 |
 | none | 13 |
 | total | 78 |
 
-No row is `live` today: the 3 `routed` rows lack validation records and the 6 `validated` rows lack routes. The 13 `none` rows are the roadmap beyond the filed issues: **pipelines-midstream**: manufacturing defects in pipe body, geohazard / ground-movement strain demand, direct-assessment programme support (ECDA / ICDA region and indication ranking); **downstream-fixed-equipment**: exchanger tube bundle thinning / pitting / tube plugging limits, fired-heater tube creep, bulging, carburization, floating roof / seal / appurtenance damage; **upstream-offshore-fixed**: conductor / caisson wall loss, guide wear, fatigue; **upstream-offshore-floating**: wire rope broken wires / corrosion / diameter loss, anchor holding capacity after seabed change / drag, wellhead / conductor fatigue from riser loads; **offshore-wind**: grouted connection slippage / cracking, bolted flange preload loss, lifetime extension assessment (remaining fatigue life, load re-evaluation).
+4 of 78 rows are `live` today. The 13 `none` rows are the roadmap beyond the filed issues: **pipelines-midstream**: manufacturing defects in pipe body, geohazard / ground-movement strain demand, direct-assessment programme support (ECDA / ICDA region and indication ranking); **downstream-fixed-equipment**: exchanger tube bundle thinning / pitting / tube plugging limits, fired-heater tube creep, bulging, carburization, floating roof / seal / appurtenance damage; **upstream-offshore-fixed**: conductor / caisson wall loss, guide wear, fatigue; **upstream-offshore-floating**: wire rope broken wires / corrosion / diameter loss, anchor holding capacity after seabed change / drag, wellhead / conductor fatigue from riser loads; **offshore-wind**: grouted connection slippage / cracking, bolted flange preload loss, lifetime extension assessment (remaining fatigue life, load re-evaluation).
 
 ## Sources (public overviews consulted 2026-09-25)
 

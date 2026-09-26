@@ -43,7 +43,7 @@ sections:
 # Format: engines.<section id>.<engine key>: {status, module?, workflow?, validation?, issue?}
 engines:
   ffs:
-    ffs-metal-loss: {status: validated, module: asset_integrity.assessment.ffs_coordinator, workflow: ffs-metal-loss, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md}
+    ffs-metal-loss: {status: live, module: asset_integrity.assessment.ffs_coordinator, workflow: ffs-metal-loss, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md}
     api579-legacy: {status: routed, module: asset_integrity.API579, workflow: api579-pipe-ffs-b314}
     corroded-pipe: {status: validated, module: asset_integrity.corroded_pipe, validation: docs/domains/asset-integrity/b31g-validation-2026-06-27.md, issue: 2181}
     rstreng-2d: {status: validated, module: asset_integrity.rstreng_2d, validation: docs/domains/rstreng-2d-validation-2026-06-29.md, issue: 2181}
@@ -54,7 +54,7 @@ engines:
     crack-fad: {status: engine, module: asset_integrity.assessment.crack_fad, issue: 2184}
     crack-growth: {status: engine, module: fatigue.crack_growth, issue: 2177}
     level3-handoff: {status: engine, module: asset_integrity.assessment.level3_escalation, issue: 2184}
-    measurement-sufficiency: {status: engine, module: asset_integrity.assessment.measurement_sufficiency, workflow: ffs-metal-loss}
+    measurement-sufficiency: {status: routed, module: asset_integrity.assessment.measurement_sufficiency, workflow: ffs-metal-loss}
     rbi: {status: engine, module: asset_integrity.rbi_screening, issue: 2185}
     composite-repair: {status: engine, module: asset_integrity.composite_repair, issue: 2185}
     inspection-planning: {status: routed, module: asset_integrity.inspection_planning, workflow: inspection-planning, issue: 2180}
