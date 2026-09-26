@@ -80,6 +80,18 @@ def tensioner_vertical_sum_n(model) -> float:
     return total
 
 
+def ring_vertical_residual_n(model, ring_weight_n: float) -> float:
+    """Vertical force balance of the tension ring (N); ~0 on a physical static solution.
+
+    tensioner verticals + inner-barrel end tension (the inner barrel rises from the ring, so
+    tension pulls the ring up) - ring weight - riser top effective tension.
+    """
+    ofx = _api()
+    te_riser = model["Riser"].StaticResult("Effective tension", ofx.oeEndA) * KN
+    te_ib = model["InnerBarrel"].StaticResult("Effective tension", ofx.oeEndB) * KN
+    return tensioner_vertical_sum_n(model) + te_ib - ring_weight_n - te_riser
+
+
 def _dof_shares(details: dict, modes, line_name: str) -> tuple[float, float, float]:
     shape = details.shapeWrtGlobal
     sx = sy = sz = 0.0

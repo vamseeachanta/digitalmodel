@@ -93,7 +93,20 @@ def test_topology_ring_riser_stack(spec):
     assert stack_ends[0][3] == pytest.approx(spec.wellhead_datum_z_m)
     ib_ends = lines["InnerBarrel"]["properties"][conn]
     assert ib_ends[0][0] == "Vessel" and ib_ends[0][3] == pytest.approx(spec.upper_flex_joint.pivot_z_m)
-    assert ib_ends[1][0] == "TensionRing"
+    assert ib_ends[1][0] == "SlipJoint"
+
+
+def test_slip_joint_is_a_constraint_free_only_along_z(spec):
+    # The telescopic joint passes shear and moment into the tension ring but no axial load.
+    gen = build_generic_spec(spec)
+    (c,) = gen["generic"]["constraints"]
+    assert c["name"] == "SlipJoint" and c["in_frame_connection"] == "TensionRing"
+    assert c["constraint_type"] == "Calculated DOFs"
+    rows = c["properties"]["DOFFree, DOFInitialValue"]
+    assert [r[0] for r in rows] == [False, False, True, False, False, False]
+    assert rows[2][1] == pytest.approx(-(spec.tension_ring.z_static_m - spec.ring_z_geometric_m))
+    # a small axial spring keeps statics on the physical branch; it carries ~k x stretch (kN/m in the model)
+    assert c["properties"]["TranslationalStiffness"] == pytest.approx(spec.slip_joint_axial_stiffness_n_per_m / 1000.0)
 
 
 def test_flex_joint_stiffness_in_kn_m_per_degree(spec):
@@ -160,3 +173,10 @@ def test_stack_has_no_seabed_contact(spec):
         assert lts[s.name]["properties"]["OuterContactDiameter"] == pytest.approx(1.0e-3)
     for s in spec.riser:
         assert lts[s.name]["properties"].get("OuterContactDiameter") is None
+
+def test_initial_state_is_the_expected_tensioned_state(spec):
+    # Statics starts from the ring at its expected tensioned elevation and the inner-barrel end
+    # at its unstretched position (constraint DOF = -ring rise), so no line starts overstretched.
+    gen = build_generic_spec(spec)
+    (ring,) = gen["generic"]["buoys_6d"]
+    assert ring["initial_position"][2] == pytest.approx(spec.tension_ring.z_static_m)

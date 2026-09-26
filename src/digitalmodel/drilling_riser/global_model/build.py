@@ -22,6 +22,7 @@ STIFF_KEY = "ConnectionxBendingStiffness, ConnectionyBendingStiffness"
 SECTIONS_KEY = "LineType, Length, TargetSegmentLength"
 WINCH_CONN_KEY = "Connection, ConnectionX, ConnectionY, ConnectionZ"
 STAGES_S = [10.0, 100.0]
+SLIP = "SlipJoint"
 
 
 def hydrodynamic_od_m(displaced_volume_per_m_m3: float) -> float:
@@ -127,7 +128,7 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
     lines = [
         _line("InnerBarrel",
               [[vessel, 0, 0, spec.upper_flex_joint.pivot_z_m, 0, 180, 0, None, None],
-               [ring, 0, 0, 0, 0, 180, 0, None, None]],
+               [SLIP, 0, 0, 0, 0, 180, 0, None, None]],
               [[_per_deg(spec.upper_flex_joint.rotational_stiffness_nm_per_rad), None], [inf, None]],
               spec.inner_barrel, rho_c, ref_z),
         _line("Riser",
@@ -160,6 +161,20 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
             },
         })
     r = spec.tension_ring
+    # Telescopic joint: the inner-barrel end rides in the ring frame, free only along z, so the
+    # joint passes shear and moment into the ring but no axial load. The initial DOF value is the
+    # expected ring rise under tension (statics converges from there).
+    slip = {
+        "name": SLIP, "in_frame_connection": ring, "constraint_type": "Calculated DOFs",
+        "properties": {
+            "InFrameInitialPosition": [0, 0, 0], "InFrameInitialAttitude": [0, 0, 0],
+            "DOFFree, DOFInitialValue": [[False], [False],
+                                         [True, -(r.z_static_m - ring_z)],
+                                         [False], [False], [False]],
+            "StiffnessAndDampingMethod": "Coefficients",
+            "TranslationalStiffness": spec.slip_joint_axial_stiffness_n_per_m / 1000.0,
+        },
+    }
     generic = {
         "line_types": [*(_line_type(s) for s in (*spec.inner_barrel, *spec.riser)),
                        # The stack stands on the wellhead datum at the mudline: seabed contact on
@@ -175,11 +190,12 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
         "lines": lines,
         "buoys_6d": [{
             "name": ring, "buoy_type": "Lumped buoy", "connection": "Free",
-            "initial_position": [0, 0, ring_z], "mass": r.mass_kg / 1000.0, "volume": r.volume_m3,
+            "initial_position": [0, 0, r.z_static_m], "mass": r.mass_kg / 1000.0, "volume": r.volume_m3,
             "properties": {"DegreesOfFreedomInStatics": "All", "InitialAttitude": [0, 0, 0],
                            "MomentsOfInertia": [m / 1000.0 for m in r.moments_of_inertia_kgm2],
                            "CentreOfMass": [0, 0, 0], "Height": 1.0, "CentreOfVolume": [0, 0, 0]},
         }],
+        "constraints": [slip],
         "winches": winches,
     }
     return {

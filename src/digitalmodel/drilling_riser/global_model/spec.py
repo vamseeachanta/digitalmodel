@@ -4,9 +4,9 @@ All quantities are SI (m, kg, N, Pa). Elevations are global z, positive up, MSL 
 The model topology is fixed:
 
 * ``inner_barrel``: sections from the upper flex-joint pivot (connected to the vessel
-  with the upper flex-joint rotational stiffness) down to the tension ring. The last
-  section is normally a slip section with near-zero axial stiffness, so the telescopic
-  joint carries no axial load into the ring.
+  with the upper flex-joint rotational stiffness) down to the tension ring. Its lower end
+  rides in the ring on a constraint free along z (the telescopic joint), so it passes
+  shear and moment into the ring but no axial load beyond a small stabilising spring.
 * ``riser``: sections from the tension ring down to the lower flex-joint pivot.
 * ``stack``: sections from the lower flex-joint pivot down to the wellhead datum,
   where the stack is fixed.
@@ -118,6 +118,9 @@ class RiserGlobalModelSpec(BaseModel):
     stack: list[LineSection] = Field(..., min_length=1)
     wellhead_datum_z_m: float
     vessel_name: str = "Vessel"
+    slip_joint_axial_stiffness_n_per_m: float = Field(
+        1.0e3, ge=0, description="axial spring on the telescopic-joint constraint; a small value keeps "
+                                 "statics on the physical branch and carries only k x ring rise")
     provenance: dict[str, Any] = Field(default_factory=dict)
 
     @property

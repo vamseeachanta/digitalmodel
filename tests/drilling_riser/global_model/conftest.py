@@ -44,12 +44,8 @@ def synthetic_spec() -> RiserGlobalModelSpec:
     ufj_z = 20.0
     ib = [
         _rigid("UFJ lower body", 2.0, mass=2000.0, vol=0.0, drag_m=1.1),
-        _tube("Inner barrel", 10.0, 46.0, 1.0, mass=520.0, vol=math.pi / 4 * (46 * 0.0254) ** 2,
+        _tube("Inner barrel", 12.0, 46.0, 1.0, mass=520.0, vol=math.pi / 4 * (46 * 0.0254) ** 2,
               drag_in=46.0, seg=1.0),
-        LineSection(name="Slip", length_m=2.0, segment_length_m=2.0, mass_per_m_kg=0.1,
-                    displaced_volume_per_m_m3=0.0, bore_id_m=0.0,
-                    ei_nm2=tube_section(od_m=46 * 0.0254, wall_m=0.0254, youngs_modulus_pa=E)["ei_nm2"],
-                    ea_n=1.0e3, drag_diameter_m=0.0, cd_normal=0.0, ca_normal=0.0),
     ]
     ring_z = ufj_z - sum(s.length_m for s in ib)  # 6.0 m above MSL
     riser = [

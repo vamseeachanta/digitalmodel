@@ -24,6 +24,7 @@ def test_statics_tension_and_modes_agree_with_hand_checks(tmp_path: Path, spec):
         end_effective_tensions,
         load_and_solve_statics,
         riser_modal_periods,
+        ring_vertical_residual_n,
         tensioner_vertical_sum_n,
     )
 
@@ -32,6 +33,7 @@ def test_statics_tension_and_modes_agree_with_hand_checks(tmp_path: Path, spec):
     te = end_effective_tensions(model)
     ref = tension_references(spec)
     assert tensioner_vertical_sum_n(model) == pytest.approx(spec.tensioners.total_vertical_tension_n, rel=2e-3)
+    assert abs(ring_vertical_residual_n(model, ref["ring_weight_n"])) < 1e-3 * spec.tensioners.total_vertical_tension_n
     assert te["riser_top_n"] == pytest.approx(ref["riser_top_n"], rel=5e-3)
     assert te["riser_bottom_n"] == pytest.approx(ref["riser_bottom_n"], rel=5e-3)
     assert te["riser_top_n"] - te["stack_bottom_n"] == pytest.approx(ref["submerged_weight_n"], rel=5e-3)
