@@ -257,6 +257,22 @@ def artifact_problems(
             if text_sha256(text) != art["sha256"]:
                 problems.append(f"{state} L{lvl}: artifact {art['path']} sha256 mismatch")
             texts[name] = text
+        if kind == "limit_load":
+            # guard (a) is taken at the last solver-confirmed converged set: the
+            # committed reaction text must equal the one re-derived from the
+            # committed per-set reactions and convergence records
+            from digitalmodel.ansys import weldolet_limit
+
+            lspec = weldolet_limit.spec_from_receipt(dict(receipt), lvl)
+            try:
+                rederived = weldolet_limit.receipt_reac_text(lspec, texts, lvl)
+            except (KeyError, ValueError) as exc:
+                problems.append(f"{state} L{lvl}: no converged reaction state ({exc})")
+                continue
+            if texts.get("reac") != rederived:
+                problems.append(f"{state} L{lvl}: reaction text is not the one at the last "
+                                "solver-confirmed converged set")
+                continue
         if "reac" not in texts or (cracked and "cint" not in texts):
             problems.append(f"{state} L{lvl}: required artifact missing")
             continue
@@ -304,10 +320,15 @@ def _weldolet_derived_problems(receipt: Mapping, mesh: Mapping, texts: dict) -> 
     state, lvl = receipt.get("state", "?"), mesh["level"]
     problems: list[str] = []
     if receipt["kind"] == "limit_load":
-        if "lpl" not in texts:
-            return [f"{state} L{lvl}: load-deflection artifact missing"]
+        missing = [k for k in ("lpl", "conv", "logev") if k not in texts]
+        if missing:
+            return [f"{state} L{lvl}: limit-load artifacts missing: {missing}"]
         lspec = weldolet_limit.spec_from_receipt(dict(receipt), lvl)
-        derived = weldolet_limit.limit_load_result(lspec, texts["lpl"])
+        derived = weldolet_limit.limit_load_result(lspec, texts["lpl"], texts["conv"],
+                                                   texts["logev"])
+        if derived["collapse"]["accepted"] is not True:
+            problems.append(f"{state} L{lvl}: collapse not corroborated by the committed "
+                            f"records: {derived['collapse']['problems']}")
         _compare(mesh.get("limit_load"), derived, f"{state} L{lvl} limit_load", problems)
         if lvl == receipt["primary_level"]:
             _compare(receipt.get("limit_load"), derived, f"{state} limit_load", problems)
@@ -346,6 +367,25 @@ def _weldolet_derived_problems(receipt: Mapping, mesh: Mapping, texts: dict) -> 
         _compare(mesh.get("governing"), gov, f"{state} L{lvl} governing", problems)
         if lvl == receipt["primary_level"]:
             _compare(receipt.get("governing"), gov, f"{state} governing", problems)
+    return problems
+
+
+def limit_load_problems(receipt: Mapping) -> list[str]:
+    """A limit-load receipt must carry corroborated collapse evidence."""
+    if receipt.get("kind") != "limit_load":
+        return []
+    ll = receipt.get("limit_load") or {}
+    collapse = ll.get("collapse") or {}
+    problems = []
+    if collapse.get("accepted") is not True:
+        problems.append("limit load without corroborated collapse (collapse.accepted is "
+                        "not true)")
+    if ll.get("reached_nonconvergence") is not True:
+        problems.append("limit load without non-convergence below the requested load")
+    for mesh in receipt.get("meshes", []):
+        for name in ("lpl", "reacset", "conv", "logev", "reac"):
+            if name not in mesh.get("artifacts", {}):
+                problems.append(f"L{mesh.get('level')}: limit-load artifact '{name}' missing")
     return problems
 
 

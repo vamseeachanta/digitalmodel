@@ -444,4 +444,25 @@ Fixed before any further FE run. For fronts that end on a free surface:
 
 The reason is that free-surface end nodes carry a non-square-root singularity, so their extracted J does not converge like the interior field. On the crotch plane at a₀ it oscillated +1.28 % then −1.10 % while every interior node converged within 0.04 %. Taking the end-node value as governing keeps the result conservative: 7.57 MPa√m against an interior maximum of 7.16 MPa√m. Each receipt reports the end-node J spread for the record. Closed fronts (the fusion-face ring) have no end nodes and are unaffected.
 
+## Limit-load collapse corroboration (Codex P0b review, MAJOR; fixed before the re-run)
+
+The limit-load receipt is written only on corroborated collapse. A run that completes the ramp, or fails any check below, produces no receipt (fail-closed); the receipt schema also refuses a limit load whose `collapse.accepted` is not true.
+
+- **Converged substeps** come from the solver: the MAPDL monitor file (one row per converged substep), cross-checked with the substeps the solver log reports completed. Result sets are matched to them in order; any other set is rejected, and a converged set after a rejected one fails. The reactions for guard (a) are taken at the last solver-confirmed set. Both records are committed in host-free form.
+- **Collapse checks** (all must pass):
+  - the solver log shows only non-convergence errors (Newton non-convergence or the NCNV displacement-limit divergence) and no fatal error, and the ramp stopped below the requested load;
+  - T1: bisection exhausted, i.e. the last converged increment is at most 1.001 × the minimum step (1/(20 n) of the ramp). A failure at a large step is not evidence of a limit.
+  - T2: the twice-elastic-slope pressure exists, lies at or below P_L, and (P_L − p_TES)/P_L ≤ 10 %. On a plateau the TES point sits on the knee just before it; a curve still rising by more than a tenth of the load beyond TES has not reached a plateau.
+  - T3: the last tangent stiffness is ≤ 2 % of the elastic stiffness. At 2 % a 1 % load increase needs fifty times the elastic displacement increment, i.e. unrestricted plastic flow; a rigid-body failure shows normal stiffness up to a sudden jump.
+  - T4, no rigid-body or unconstrained indicator. This requires:
+    - at least 3 converged substeps (an unconstrained model fails in the first substeps);
+    - no equation-solver pivot warning or divergence before the first converged substep;
+    - no pivot warning on an attempt that converged;
+    - no "unconstrained" text outside the NCNV message template;
+    - MAPDL's net-section-yielding continuation on every NCNV divergence.
+
+    A probe of MAPDL's own output shows that failed bisection attempts during plastic flow emit a "small equation solver pivot" warning together with the NCNV divergence. That is the zero-tangent signature, so pivot warnings on failed attempts are not indicators, and the informational "Sparse solver … pivot =" lines are not warnings.
+
+The thresholds are set from these arguments, not from the earlier run's values.
+
 ## Complexity: T3

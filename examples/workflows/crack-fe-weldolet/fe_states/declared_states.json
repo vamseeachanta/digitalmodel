@@ -11,7 +11,6 @@
     {"state": "p0b_fullcirc_a2p80", "kind": "weldolet_crack"},
     {"state": "p0b_fullcirc_a3p20", "kind": "weldolet_crack"},
     {"state": "p0b_fullcirc_a3p60", "kind": "weldolet_crack"},
-    {"state": "p0b_fullcirc_a4p00", "kind": "weldolet_crack"},
-    {"state": "p0b_limit_load_crotch_a2p35", "kind": "limit_load"}
+    {"state": "p0b_fullcirc_a4p00", "kind": "weldolet_crack"}
   ]
 }

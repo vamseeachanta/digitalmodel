@@ -177,6 +177,21 @@ def test_k_gov_is_the_maximum_over_all_front_nodes(state):
         assert receipt["guards"]["g_end_nodes_record"]["status"] == "not_applicable"
 
 
+LIMIT = [s for s, k in _kinds().items() if k == "limit_load"]
+
+
+@pytest.mark.parametrize("state", LIMIT)
+def test_limit_load_receipt_has_corroborated_collapse(state):
+    """Codex P0b review: a limit-load receipt exists only on corroborated
+    collapse, re-derived from the committed solver records (artifact test)."""
+    receipt = _receipt(state)
+    assert crack_receipt.limit_load_problems(receipt) == []
+    ll = receipt["limit_load"]
+    assert ll["collapse"]["accepted"] is True
+    assert all(ll["collapse"]["checks"].values())
+    assert ll["p_limit_mpa"] < ll["design_pressure_mpa"] * ll["final_load_factor_requested"]
+
+
 @pytest.mark.parametrize("state", UNCRACKED)
 def test_uncracked_axial_reaction_equals_end_thrust(state):
     receipt = _receipt(state)
