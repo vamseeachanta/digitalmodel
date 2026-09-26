@@ -21,4 +21,4 @@ foreach ($d in $dir) {
 
 Set-Location -Path $dir
 
-cd K:\python\acma-projects\dev_tools
+cd K:\python\<project-archive>\dev_tools

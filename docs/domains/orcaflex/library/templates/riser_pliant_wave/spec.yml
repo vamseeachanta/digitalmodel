@@ -2,7 +2,7 @@
 # Riser - Pliant Wave Configuration
 #
 # Model Type: Riser (pliant wave configuration)
-# Source: OrcaFlex Examples - A01 Pliant wave riser.dat
+# Source: OrcaFlex Examples - A01 Pliant wave riser.yml
 # Template Version: 1.0
 #
 # The pliant wave configuration uses a subsea buoy (modeled as a clamp

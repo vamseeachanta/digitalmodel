@@ -144,7 +144,7 @@ python -m pytest tests/ -x --tb=short -q
 
 ## Contributing
 
-Lead developer: Vamsee Achanta (vamsee.achanta@aceengineer.com)
+Lead developer: Vamsee Achanta ([email removed])
 
 ## License
 

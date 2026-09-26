@@ -6,7 +6,7 @@
 ;		Southern Pines, NC 28387
 ;
 ;	http://www.pinehurst.net/~pfrancis
-;	e-mail hfrancis@pinehurst.net
+;	e-mail [email removed]
 ;	All rights reserved.
 ;
 (defun c:ssln ( / );nentla entla vwtwst line1 clayr

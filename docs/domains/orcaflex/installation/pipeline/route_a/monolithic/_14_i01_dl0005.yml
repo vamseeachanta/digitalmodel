@@ -1,7 +1,7 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\5.ld\src\_12_i01_dl0030.yml
+# File: <private-data>/_12_i01_dl0030.yml
 # Created: 9:25 PM on 9/22/2023
 # User: 
 # Machine: 
@@ -14,7 +14,7 @@ General:
   StaticsMaxDamping: 80
 
 Vessels:
-  SevenArctic:
+  iv02:
     InitialX: 691.14
 
 6DBuoys:

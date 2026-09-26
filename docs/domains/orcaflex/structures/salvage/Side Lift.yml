@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\structures\salvage\Side Lift.yml
+# File: docs/domains/orcaflex/structures/salvage/Side Lift.yml
 # Created: 10:09 PM on 1/17/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units
@@ -2345,7 +2345,7 @@ Vessels:
       - [3, 7, ~]
       - [4, 8, ~]
     # Shaded drawing
-    ShadedDrawingFileName: C:\Users\William\Dropbox\SEWOL SALVAGE PHILIP\Korea1\07=24-15 MOF files\Sewol Rhino.x
+    ShadedDrawingFileName: <private-data>\Sewol Rhino.x
     ShadedDrawingCullingMode: Anticlockwise
     ShadedDrawingOrigin: [70, 7.5, 0]
     ShadedDrawingOrientation: [0, -90, 90]

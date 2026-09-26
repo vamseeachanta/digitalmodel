@@ -2,7 +2,7 @@
 
 (setvar "cmdecho" 0)
 
-(prompt "\nNoor AutoLISP Products.... contact at noor_rahman@hotmail.com\n")
+(prompt "\nNoor AutoLISP Products.... contact at [email removed]\n")
 
 (setq of(open (getfiled "" "" "" 2) "r"))
 

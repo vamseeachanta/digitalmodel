@@ -1,7 +1,7 @@
 ;;; By Jimmy Bergmark
 ;;; Copyright (C) 1997-2006 JTB World, All Rights Reserved
 ;;; Website: www.jtbworld.com
-;;; E-mail: info@jtbworld.com
+;;; E-mail: [email removed]
 (vl-load-com)
 ;;; (loadLinetype (vla-get-activedocument (vlax-get-acad-object)) "Divide" "acadiso.lin")
 ;;; returns: T if loaded else nil

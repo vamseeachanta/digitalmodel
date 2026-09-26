@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.5e
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\mooring\buoy\C05 Single Point Mooring\C05 Single Point Mooring.yml
+# File: docs/domains/orcaflex/mooring/buoy/C05 Single Point Mooring/C05 Single Point Mooring.yml
 # Created: 10:13 AM on 10/22/2025
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   # Units
