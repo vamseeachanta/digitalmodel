@@ -31,11 +31,81 @@ def _value(x: Any) -> float | None:
     return None if abs(x) > 1e300 else x
 
 
+def load_model(master_path: Path):
+    return _api().Model(str(master_path))
+
+
 def load_and_solve_statics(master_path: Path):
-    ofx = _api()
-    model = ofx.Model(str(master_path))
+    model = load_model(master_path)
     model.CalculateStatics()
     return model
+
+
+# ---------------------------------------------------------------- dynamics (G4 sensitivity)
+def set_time_step(model, dt_s: float) -> None:
+    """Implicit constant time step (s); the log interval is raised to the step if smaller."""
+    g = model.general
+    g.ImplicitUseVariableTimeStep = "No"
+    g.ImplicitConstantTimeStep = dt_s
+
+
+def set_log_interval(model, dt_s: float) -> None:
+    model.general.TargetLogSampleInterval = dt_s
+
+
+def apply_rayleigh_damping(model, *, ratio_percent: float, period_s: float, name: str = "Structural") -> None:
+    """Stiffness-proportional Rayleigh damping, ``ratio_percent`` of critical at ``period_s``, on
+    every line type (applied to the geometric stiffness too): classical coefficients, mass 0 and
+    stiffness beta = 2 zeta / omega, so zeta(T) = ratio x period_s / T (less at longer periods)."""
+    ofx = _api()
+    r = model.CreateObject(ofx.ObjectType.RayleighDampingCoefficients, name)
+    r.Mode = "Coefficients (classical)"
+    r.MassCoefficient = 0.0
+    r.StiffnessCoefficient = 2.0 * ratio_percent / 100.0 / (2.0 * math.pi / period_s)
+    r.ApplyToGeometricStiffness = "Yes"
+    for o in model.objects:
+        if o.typeName == "Line type":
+            o.RayleighDampingCoefficients = name
+
+
+def run_dynamics(model) -> None:
+    model.RunSimulation()
+
+
+def _stressed_arc_range(model, spec) -> tuple[float, float]:
+    """Arc length on line Riser covering the sections that carry stress diameters."""
+    arc, lo, hi = 0.0, None, None
+    for s in spec.riser:
+        if s.stress_od_m is not None:
+            lo = arc if lo is None else lo
+            hi = arc + s.length_m
+        arc += s.length_m
+    if lo is None:
+        raise ValueError("no riser section carries a stress diameter")
+    return lo, hi
+
+
+def governing_responses(model, spec, period=None) -> dict[str, float]:
+    """G4 governing responses over the last stage (default): maximum flex-joint angles (line-end
+    Ez-angle, i.e. rotation relative to the connection), maximum von Mises stress in the stressed
+    riser sections, and the extreme effective tensions below the ring and at the lower flex joint."""
+    ofx = _api()
+    if period is None:
+        period = ofx.Period(1)  # stage 1 = the main stage after the build-up
+    ib, riser = model["InnerBarrel"], model["Riser"]
+    ufj = ib.TimeHistory("Ez-Angle", period, ofx.oeEndA)
+    lfj = riser.TimeHistory("Ez-Angle", period, ofx.oeEndB)
+    te_a = riser.TimeHistory("Effective tension", period, ofx.oeEndA)
+    te_b = riser.TimeHistory("Effective tension", period, ofx.oeEndB)
+    lo, hi = _stressed_arc_range(model, spec)
+    vm = riser.RangeGraph("Max von Mises stress", period, arclengthRange=ofx.arSpecifiedArclengths(lo, hi))
+    return {
+        "ufj_angle_max_deg": float(max(abs(x) for x in ufj)),
+        "lfj_angle_max_deg": float(max(abs(x) for x in lfj)),
+        "riser_von_mises_max_pa": float(max(vm.Max)) * KN,
+        "te_top_max_n": float(max(te_a)) * KN, "te_top_min_n": float(min(te_a)) * KN,
+        "te_bottom_max_n": float(max(te_b)) * KN, "te_bottom_min_n": float(min(te_b)) * KN,
+    }
 
 
 def model_files_sha256(master_path: Path) -> dict[str, Any]:

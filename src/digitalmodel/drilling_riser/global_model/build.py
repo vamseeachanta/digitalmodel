@@ -13,7 +13,8 @@ from typing import Any
 
 import yaml
 
-from .spec import LineSection, RiserGlobalModelSpec
+from .foundation import interpolate_py, spring_stations, spring_table_kn
+from .spec import FlexJoint, LineSection, RiserGlobalModelSpec, VesselMotion
 
 MIN_OD_M = 1.0e-3  # sections with no displaced volume (e.g. a slip section) still need an OD
 CONN_KEY = ("Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, "
@@ -47,6 +48,50 @@ def winch_tension_n(spec: RiserGlobalModelSpec) -> float:
 
 def _per_deg(k_nm_per_rad: float) -> float:
     return k_nm_per_rad * math.pi / 180.0 / 1000.0  # kN.m/deg
+
+
+def _fj_stiffness(fj: FlexJoint, name: str, var_data: list[dict[str, Any]]) -> float | str:
+    """Numeric kN.m/deg for a linear joint; a Bendingconnectionstiffness variable-data name
+    (rotation deg -> moment kN.m) for a nonlinear one."""
+    if fj.moment_rotation_deg_nm is None:
+        return _per_deg(fj.rotational_stiffness_nm_per_rad)
+    var_data.append({"name": name, "data_type": "Bendingconnectionstiffness",
+                     "entries": [[float(a), m / 1000.0] for a, m in fj.moment_rotation_deg_nm]})
+    return name
+
+
+RAO_KEY = ("RAOPeriodOrFrequency, RAOSurgeAmp, RAOSurgePhase, RAOSwayAmp, RAOSwayPhase, RAOHeaveAmp, "
+           "RAOHeavePhase, RAORollAmp, RAORollPhase, RAOPitchAmp, RAOPitchPhase, RAOYawAmp, RAOYawPhase")
+
+
+def _vessel_type(vm: VesselMotion | None, fallback: str) -> dict[str, Any]:
+    if vm is None:
+        return {"name": fallback, "properties": {}}
+    r = vm.raos
+    tables = []
+    for i, d in enumerate(r.directions_deg):
+        rows = []
+        for j, f in enumerate(r.frequencies_rad_s):
+            row = [f]
+            for k in range(6):
+                row += [r.amplitude[i][j][k], r.phase_deg[i][j][k]]
+            rows.append(row)
+        tables.append({"RAODirection": d, RAO_KEY: rows})
+    half = min(r.directions_deg) >= 0.0 and max(r.directions_deg) <= 180.0
+    return {"name": vm.class_id, "properties": {
+        "RAOResponseUnits": "degrees",
+        "RAOWaveUnit": "amplitude",
+        "WavesReferredToBy": "frequency (rad/s)",
+        "RAOPhaseConvention": r.phase_convention,
+        "RAOPhaseUnitsConvention": "degrees",
+        "RAOPhaseRelativeToConvention": "crest",
+        "SurgePositive": "forward", "SwayPositive": "port", "HeavePositive": "up",
+        "RollPositiveStarboard": "down", "PitchPositiveBow": "down", "YawPositiveBow": "port",
+        "Symmetry": "xz plane" if half else "None",
+        "Draughts": [{"Name": "Operating", "DisplacementRAOs": {
+            "RAOOrigin": [float(x) for x in vm.rao_origin_m], "PhaseOrigin": [None, None, None],
+            "RAOs": tables}}],
+    }}
 
 
 def _line_type(s: LineSection, *, contact_diameter_m: float | None = None) -> dict[str, Any]:
@@ -125,23 +170,47 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
     ref_z = spec.contents.pressure_ref_z_m
     ring_z = spec.ring_z_geometric_m
     inf = "Infinity"
+    var_data: list[dict[str, Any]] = []
+    k_ufj = _fj_stiffness(spec.upper_flex_joint, "UFJ stiffness", var_data)
+    k_lfj = _fj_stiffness(spec.lower_flex_joint, "LFJ stiffness", var_data)
+    f = spec.foundation
+    stack_base = (["Conductor", 0, 0, 0, 0, 0, 0, None, "End B"] if f is not None
+                  else ["Fixed", 0, 0, spec.wellhead_datum_z_m, 0, 0, 0, None, None])
     lines = [
         _line("InnerBarrel",
               [[vessel, 0, 0, spec.upper_flex_joint.pivot_z_m, 0, 180, 0, None, None],
                [SLIP, 0, 0, 0, 0, 180, 0, None, None]],
-              [[_per_deg(spec.upper_flex_joint.rotational_stiffness_nm_per_rad), None], [inf, None]],
+              [[k_ufj, None], [inf, None]],
               spec.inner_barrel, rho_c, ref_z),
         _line("Riser",
               [[ring, 0, 0, 0, 0, 180, 0, None, None],
                ["Stack", 0, 0, 0, 0, 180, 0, None, "End B"]],
-              [[inf, None], [_per_deg(spec.lower_flex_joint.rotational_stiffness_nm_per_rad), None]],
+              [[inf, None], [k_lfj, None]],
               spec.riser, rho_c, ref_z),
         _line("Stack",
-              [["Fixed", 0, 0, spec.wellhead_datum_z_m, 0, 0, 0, None, None],
+              [stack_base,
                ["Free", 0, 0, spec.lower_flex_joint.pivot_z_m, 0, 0, 0, None, None]],
               [[inf, None], []],  # a free end takes no connection stiffness
               list(reversed(spec.stack)), 0, ref_z),  # the stack line runs up from the datum
     ]
+    links: list[dict[str, Any]] = []
+    if f is not None:
+        # conductor/casing: fixed at its base, runs up to the wellhead datum; p-y spring links
+        lines.append(_line("Conductor",
+                           [["Fixed", 0, 0, spec.wellhead_datum_z_m - f.depth_m, 0, 0, 0, None, None],
+                            ["Free", 0, 0, spec.wellhead_datum_z_m, 0, 0, 0, None, None]],
+                           [[inf, None], []], list(reversed(f.sections)), 0, ref_z))
+        for i, st in enumerate(spring_stations(f)):
+            curve = interpolate_py(f.py_curves, st["depth_m"])
+            table = spring_table_kn(curve, st["tributary_m"], f.anchor_offset_m, f.far_extension_m)
+            z = spec.wellhead_datum_z_m - st["depth_m"]
+            for axis, (ax, ay) in (("x", (f.anchor_offset_m, 0.0)), ("y", (0.0, f.anchor_offset_m))):
+                links.append({"name": f"PY{i + 1:03d}{axis}", "link_type": "Spring/damper", "properties": {
+                    "Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo": [
+                        ["Conductor", 0, 0, st["arc_from_base_m"], "End A"], ["Fixed", ax, ay, z]],
+                    "LinearSpring": "No",
+                    "SpringLength, SpringTension": table,
+                }})
     t = spec.tensioners
     tension_kn = winch_tension_n(spec) / 1000.0
     winches = []
@@ -175,17 +244,21 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
             "TranslationalStiffness": spec.slip_joint_axial_stiffness_n_per_m / 1000.0,
         },
     }
+    vt = _vessel_type(spec.vessel_motion, f"{vessel} type")
+    below = [] if f is None else f.sections
     generic = {
         "line_types": [*(_line_type(s) for s in (*spec.inner_barrel, *spec.riser)),
                        # The stack stands on the wellhead datum at the mudline: seabed contact on
                        # its nodes is not physical and would carry part of its weight into the seabed.
-                       *(_line_type(s, contact_diameter_m=MIN_OD_M) for s in spec.stack)],
-        "vessel_types": [{"name": f"{vessel} type", "properties": {}}],
+                       *(_line_type(s, contact_diameter_m=MIN_OD_M) for s in (*spec.stack, *below))],
+        "vessel_types": [vt],
         "vessels": [{
-            "name": vessel, "vessel_type": f"{vessel} type", "connection": "Free",
+            "name": vessel, "vessel_type": vt["name"], "connection": "Free",
             "initial_position": [0, 0, 0],
             "properties": {"Orientation": [0, 0, 0], "IncludedInStatics": "None",
-                           "PrimaryMotion": "None", "SuperimposedMotion": "None"},
+                           "PrimaryMotion": "None",
+                           **({"SuperimposedMotion": "RAOs + harmonics", "Draught": "Operating"}
+                              if spec.vessel_motion else {"SuperimposedMotion": "None"})},
         }],
         "lines": lines,
         "buoys_6d": [{
@@ -198,16 +271,31 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
         "constraints": [slip],
         "winches": winches,
     }
+    if links:
+        generic["links"] = links
+    if var_data:
+        generic["variable_data_sources"] = var_data
+    # with a foundation the conductor runs below the mudline: its soil reaction is the p-y links,
+    # so seabed contact is switched off (no other line reaches the seabed)
+    seabed = ({"normal": 0.0, "shear": 0.0} if f is not None else
+              {"normal": spec.environment.seabed_normal_stiffness_kn_m_m2,
+               "shear": spec.environment.seabed_shear_stiffness_kn_m_m2})
+    env: dict[str, Any] = {
+        "water": {"depth": spec.environment.water_depth_m,
+                  "density": spec.environment.water_density_kg_m3 / 1000.0},
+        "seabed": {"stiffness": seabed},
+    }
+    if spec.regular_wave is not None:
+        w = spec.regular_wave
+        env["waves"] = {"type": "airy", "height": w.height_m, "period": w.period_s, "direction": w.direction_deg}
+    dyn = spec.dynamics
+    sim = ({"time_step": dyn.time_step_s, "stages": [dyn.build_up_s, dyn.duration_s]} if dyn is not None
+           else {"time_step": 0.1, "stages": STAGES_S})
     return {
         "metadata": {"name": spec.name, "description": spec.description or spec.name,
                      "structure": "riser", "operation": "drilling"},
-        "environment": {
-            "water": {"depth": spec.environment.water_depth_m,
-                      "density": spec.environment.water_density_kg_m3 / 1000.0},
-            "seabed": {"stiffness": {"normal": spec.environment.seabed_normal_stiffness_kn_m_m2,
-                                     "shear": spec.environment.seabed_shear_stiffness_kn_m_m2}},
-        },
-        "simulation": {"time_step": 0.1, "stages": STAGES_S},
+        "environment": env,
+        "simulation": sim,
         "generic": generic,
     }
 

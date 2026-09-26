@@ -71,8 +71,41 @@ class LineSection(BaseModel):
 
 
 class FlexJoint(BaseModel):
+    """Flex-joint hinge at a pivot.
+
+    ``rotational_stiffness_nm_per_rad`` is the small-rotation stiffness (used by the hand checks
+    and, for a linear joint, by the model). ``moment_rotation_deg_nm`` makes the joint nonlinear:
+    points (rotation in degrees, moment in N.m) from (0, 0), both strictly increasing; its first
+    segment slope must equal the small-rotation stiffness. OrcaFlex extrapolates the last segment.
+    """
+
     pivot_z_m: float
     rotational_stiffness_nm_per_rad: float = Field(..., gt=0)
+    moment_rotation_deg_nm: list[tuple[float, float]] | None = None
+
+    @model_validator(mode="after")
+    def _curve(self) -> "FlexJoint":
+        c = self.moment_rotation_deg_nm
+        if c is None:
+            return self
+        if len(c) < 2 or tuple(c[0]) != (0.0, 0.0):
+            raise ValueError("flex-joint moment-rotation curve must start at (0, 0) and have two or more points")
+        for (a0, m0), (a1, m1) in zip(c, c[1:]):
+            if not (a1 > a0 and m1 > m0):
+                raise ValueError("flex-joint moment-rotation curve must be strictly increasing in rotation and moment")
+        k0 = c[1][1] / c[1][0] * 180.0 / math.pi
+        if abs(k0 - self.rotational_stiffness_nm_per_rad) > 1e-6 * k0:
+            raise ValueError(
+                f"small-rotation stiffness {self.rotational_stiffness_nm_per_rad:.6g} N.m/rad is not the first "
+                f"segment slope of the curve ({k0:.6g} N.m/rad)")
+        return self
+
+
+def flex_joint_from_secants(*, pivot_z_m: float, secants_nm_per_deg: list[tuple[float, float]]) -> FlexJoint:
+    """Nonlinear flex joint from secant stiffnesses (N.m/deg) stated at rotations (deg)."""
+    pts = [(0.0, 0.0)] + [(float(a), float(a) * float(k)) for a, k in sorted(secants_nm_per_deg)]
+    k0 = pts[1][1] / pts[1][0] * 180.0 / math.pi
+    return FlexJoint(pivot_z_m=pivot_z_m, rotational_stiffness_nm_per_rad=k0, moment_rotation_deg_nm=pts)
 
 
 class TensionRing(BaseModel):
@@ -90,6 +123,9 @@ class Tensioners(BaseModel):
     total_vertical_tension_n: float = Field(..., gt=0)
     first_azimuth_deg: float = 0.0
     wire_stiffness_n: float = Field(1.0e9, gt=0, description="winch wire EA (OrcaFlex 'Stiffness')")
+    rated_tension_n_each: float | None = Field(
+        None, gt=0, description="rated (dynamic tension limit) capacity per tensioner; recorded for capacity "
+                                "checks and checked against the applied line tension")
 
 
 class Contents(BaseModel):
@@ -102,6 +138,109 @@ class GlobalEnvironment(BaseModel):
     water_density_kg_m3: float = Field(..., gt=0)
     seabed_normal_stiffness_kn_m_m2: float = 100.0
     seabed_shear_stiffness_kn_m_m2: float = 100.0
+
+
+DOFS = ("surge", "sway", "heave", "roll", "pitch", "yaw")
+
+
+class DisplacementRAOs(BaseModel):
+    """Vessel displacement RAOs per unit wave amplitude (m/m for surge, sway, heave; deg/m for
+    roll, pitch, yaw), phases in degrees relative to the wave crest at the RAO origin.
+
+    Conventions are those of the model's vessel axes (x forward, y port, z up; roll positive
+    starboard down, pitch positive bow down, yaw positive bow to port). ``directions_deg`` are wave
+    propagation directions relative to the vessel x axis (0 = waves travelling bow-ward).
+    ``amplitude[i][j]`` and ``phase_deg[i][j]`` are the six DOF values at direction i, frequency j.
+    """
+
+    phase_convention: str = Field(..., pattern="^(leads|lags)$")
+    directions_deg: list[float] = Field(..., min_length=1)
+    frequencies_rad_s: list[float] = Field(..., min_length=2)
+    amplitude: list[list[list[float]]]
+    phase_deg: list[list[list[float]]]
+
+    @model_validator(mode="after")
+    def _shape(self) -> "DisplacementRAOs":
+        nd, nf = len(self.directions_deg), len(self.frequencies_rad_s)
+        if sorted(set(self.directions_deg)) != self.directions_deg:
+            raise ValueError("RAO directions must be unique and ascending")
+        if any(b <= a for a, b in zip(self.frequencies_rad_s, self.frequencies_rad_s[1:])):
+            raise ValueError("RAO frequencies must be strictly increasing")
+        for name, arr in (("amplitude", self.amplitude), ("phase_deg", self.phase_deg)):
+            if len(arr) != nd or any(len(r) != nf or any(len(v) != 6 for v in r) for r in arr):
+                raise ValueError(f"RAO {name} must be [direction][frequency][6]")
+        return self
+
+
+class VesselMotion(BaseModel):
+    """First-order vessel motion from displacement RAOs (the vessel type is named by its class id only)."""
+
+    class_id: str = Field(..., min_length=1, description="vessel_db class id; never a vessel name")
+    rao_origin_m: tuple[float, float, float] = Field(..., description="RAO origin in vessel axes (m)")
+    raos: DisplacementRAOs
+    provenance: dict[str, Any] = Field(default_factory=dict)
+
+
+class RegularWave(BaseModel):
+    height_m: float = Field(..., gt=0)
+    period_s: float = Field(..., gt=0)
+    direction_deg: float = 0.0
+
+
+class Dynamics(BaseModel):
+    time_step_s: float = Field(0.1, gt=0)
+    build_up_s: float = Field(..., gt=0)
+    duration_s: float = Field(..., gt=0)
+
+
+class PYCurve(BaseModel):
+    """Lateral soil resistance p (N/m) against displacement y (m) at a depth below the mudline."""
+
+    depth_m: float = Field(..., ge=0)
+    y_m: list[float] = Field(..., min_length=2)
+    p_n_per_m: list[float] = Field(..., min_length=2)
+
+    @model_validator(mode="after")
+    def _curve(self) -> "PYCurve":
+        if len(self.y_m) != len(self.p_n_per_m):
+            raise ValueError("p-y curve: y and p must have the same length")
+        if self.y_m[0] != 0.0 or self.p_n_per_m[0] != 0.0:
+            raise ValueError("p-y curve must start at (0, 0)")
+        if any(b <= a for a, b in zip(self.y_m, self.y_m[1:])):
+            raise ValueError("p-y curve: y must be strictly increasing")
+        if any(b < a for a, b in zip(self.p_n_per_m, self.p_n_per_m[1:])):
+            raise ValueError("p-y curve: p must not decrease")
+        return self
+
+
+class Foundation(BaseModel):
+    """Conductor/casing below the wellhead datum with lateral p-y springs; fixed at its base.
+
+    ``sections`` run top (datum) to bottom. Springs sit at every node except the fixed base, with
+    the tributary length of each node; each is a pair of horizontal spring links (x and y) to a
+    fixed anchor ``anchor_offset_m`` away, long enough that lateral motion does not rotate them.
+    """
+
+    sections: list[LineSection] = Field(..., min_length=1)
+    py_curves: list[PYCurve] = Field(..., min_length=1)
+    anchor_offset_m: float = Field(100.0, gt=0)
+    far_extension_m: float = Field(10.0, gt=0, description="p held flat to this extra displacement")
+    provenance: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _mesh(self) -> "Foundation":
+        for s in self.sections:
+            n = s.length_m / s.segment_length_m
+            if abs(n - round(n)) > 1e-6:
+                raise ValueError(f"foundation section {s.name!r}: length must be a whole number of segments")
+        d = [c.depth_m for c in self.py_curves]
+        if any(b < a for a, b in zip(d, d[1:])):
+            raise ValueError("p-y curves must be ordered by depth")
+        return self
+
+    @property
+    def depth_m(self) -> float:
+        return sum(s.length_m for s in self.sections)
 
 
 class RiserGlobalModelSpec(BaseModel):
@@ -121,6 +260,10 @@ class RiserGlobalModelSpec(BaseModel):
     slip_joint_axial_stiffness_n_per_m: float = Field(
         1.0e3, ge=0, description="axial spring on the telescopic-joint constraint; a small value keeps "
                                  "statics on the physical branch and carries only k x ring rise")
+    vessel_motion: VesselMotion | None = None
+    regular_wave: RegularWave | None = None
+    dynamics: Dynamics | None = None
+    foundation: Foundation | None = None
     provenance: dict[str, Any] = Field(default_factory=dict)
 
     @property
@@ -148,4 +291,11 @@ class RiserGlobalModelSpec(BaseModel):
             raise ValueError("wellhead datum is below the seabed")
         if self.tensioners.sheave_z_m <= self.tension_ring.z_static_m:
             raise ValueError("tensioner sheaves must be above the tension ring")
+        t = self.tensioners
+        if t.rated_tension_n_each is not None:
+            dx = t.sheave_radius_m - t.ring_attach_radius_m
+            dz = t.sheave_z_m - self.tension_ring.z_static_m
+            per_line = t.total_vertical_tension_n / (t.count * dz / math.hypot(dx, dz))
+            if per_line > t.rated_tension_n_each:
+                raise ValueError(f"tensioner line tension {per_line:.4g} N exceeds the rated {t.rated_tension_n_each:.4g} N")
         return self
