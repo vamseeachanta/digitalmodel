@@ -4,6 +4,7 @@
 # ABOUTME: so recency is frozen PR evidence, maintained by hand on each merge.
 #
 # Format: sections.<id>: {date: YYYY-MM-DD, pr: NNNN} | "unknown"
+#         engines.<id>.<engine>: generated block (see marker at the end of the file)
 # Entries without evidence stay "unknown" (rendered honestly, never dated).
 
 schema_version: "1.0"
@@ -21,8 +22,10 @@ sections:
   drilling-engineering: {date: "2026-07-04", pr: 1396}
   field-development: {date: "2026-07-04", pr: 1396}
   cfd: {date: "2026-07-06", pr: 1442}
+  # ffs: recency = the FFS offering-catalog PR (#2204, merged 2026-09-26); per-engine detail
+  # is the generated `engines.ffs` block at the end of this file (issue #2197)
+  ffs: {date: "2026-09-26", pr: 2204}
   # pre-slim sections — no recoverable evidence (history truncated)
-  ffs: unknown
   structural: unknown
   hydro: unknown
   risers: unknown
@@ -34,3 +37,49 @@ sections:
   well: unknown
   corrosion-production: unknown
   validation: unknown
+
+# --- GENERATED below this line by `python -m digitalmodel.asset_integrity.offering_catalog render`
+# --- from src/digitalmodel/asset_integrity/data/ffs_offering_catalog.yml (issue #2197). Do not edit by hand.
+# Format: engines.<section id>.<engine key>: {status, module?, workflow?, validation?, issue?}
+engines:
+  ffs:
+    ffs-metal-loss: {status: validated, module: asset_integrity.assessment.ffs_coordinator, workflow: ffs-metal-loss, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md}
+    api579-legacy: {status: routed, module: asset_integrity.API579, workflow: api579-pipe-ffs-b314}
+    corroded-pipe: {status: validated, module: asset_integrity.corroded_pipe, validation: docs/domains/asset-integrity/b31g-validation-2026-06-27.md, issue: 2181}
+    rstreng-2d: {status: validated, module: asset_integrity.rstreng_2d, validation: docs/domains/rstreng-2d-validation-2026-06-29.md, issue: 2181}
+    dnv-f101: {status: validated, module: asset_integrity.dnv_rp_f101, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md, issue: 2181}
+    circumferential: {status: validated, module: asset_integrity.circumferential_defect, validation: docs/domains/circumferential-defect-validation-2026-06-29.md, issue: 2181}
+    pitting: {status: engine, module: asset_integrity.assessment.pitting, issue: 2182}
+    dents: {status: engine, module: asset_integrity.dent_assessment, issue: 2182}
+    crack-fad: {status: engine, module: asset_integrity.assessment.crack_fad, issue: 2184}
+    crack-growth: {status: engine, module: fatigue.crack_growth, issue: 2177}
+    level3-handoff: {status: engine, module: asset_integrity.assessment.level3_escalation, issue: 2184}
+    measurement-sufficiency: {status: engine, module: asset_integrity.assessment.measurement_sufficiency, workflow: ffs-metal-loss}
+    rbi: {status: engine, module: asset_integrity.rbi_screening, issue: 2185}
+    composite-repair: {status: engine, module: asset_integrity.composite_repair, issue: 2185}
+    inspection-planning: {status: routed, module: asset_integrity.inspection_planning, workflow: inspection-planning, issue: 2180}
+    riser-joint-ffs: {status: engine, module: asset_integrity.riser_joint_ffs, issue: 2183}
+    plate-panel-buckling: {status: routed, module: infrastructure.base_solvers.structural.plate_buckling, workflow: plate-buckling}
+    jacket-member-joint: {status: engine, module: structural.jacket_topside}
+    mooring-screen: {status: engine, module: mooring_resilience.screening}
+    mooring-fatigue: {status: engine, module: mooring_fatigue}
+    synthetic-rope-fatigue: {status: engine, module: synthetic_rope_mooring_fatigue}
+    riser-fatigue: {status: routed, module: riser_fatigue, workflow: riser-fatigue}
+    hull-girder: {status: engine, module: hull_girder_screening}
+    sn-fatigue: {status: engine, module: structural.fatigue}
+    scour: {status: engine, module: geotechnical.scour}
+    structural-health: {status: engine, module: structural.offshore_resilience.structural_health}
+    tank-settlement-screen: {status: planned, issue: 2172}
+    tank-level3: {status: planned, issue: 2174}
+    part9-level2: {status: planned, issue: 2175}
+    part9-level1: {status: planned, issue: 2176}
+    annex-f-material: {status: planned, issue: 2171}
+    calculix-nonlinear: {status: planned, issue: 2173}
+    parts-3-7-10: {status: planned, issue: 1274}
+    parts-8-11-13-14: {status: planned, issue: 2203}
+    platform-damaged-member: {status: planned, issue: 2198}
+    mooring-chain-degradation: {status: planned, issue: 2199}
+    flexible-pipe-screen: {status: planned, issue: 2200}
+    casing-capacity: {status: planned, issue: 2201}
+    hull-wastage: {status: planned, issue: 2202}
+    offering-catalog: {status: planned, issue: 2197}
