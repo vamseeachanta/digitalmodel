@@ -76,25 +76,40 @@ class TestPipelineCurrentDemand:
 
 class TestAnodeResistance:
     def test_benchmark_case(self):
-        """rho=0.25, L_a=0.25, r_a=0.015.
+        """rho=0.25, L_a=0.25, r_a=0.015 (L >= 4r: long slender stand-off).
 
-        R_a = (0.25/(2*pi*0.25)) * (ln(2*0.25/0.015) - 0.5)
-             = 0.1592 * (3.5066 - 0.5) = 0.1592 * 3.0066 = 0.4787 ohm.
+        Re-baselined for #2211 to the DNV-RP-B401 Table 10-7 form that
+        ISO 15589-2 Annex A also gives:
+        R_a = (0.25/(2*pi*0.25)) * (ln(4*0.25/0.015) - 1)
+             = 0.15915 * (4.1997 - 1) = 0.15915 * 3.1997 = 0.5092 ohm.
+        (The former ln(2L/r) - 0.5 expression, 0.4787 ohm, is in neither
+        standard.)
         """
         result = anode_resistance(0.25, 0.25, 0.015)
         expected = (0.25 / (2 * math.pi * 0.25)) * (
-            math.log(2 * 0.25 / 0.015) - 0.5
+            math.log(4 * 0.25 / 0.015) - 1.0
         )
         assert result == pytest.approx(expected, rel=1e-6)
-        assert result == pytest.approx(0.4787, abs=0.005)
+        assert result == pytest.approx(0.5092, abs=0.0005)
+
+    def test_matches_dnv_rp_b401(self):
+        """The ISO and B401 modules share the kernel formula."""
+        from digitalmodel.cathodic_protection.dnv_rp_b401 import (
+            anode_resistance_slender_standoff,
+        )
+
+        assert anode_resistance(0.25, 0.25, 0.015) == pytest.approx(
+            anode_resistance_slender_standoff(0.25, 0.25, 0.015, edition="2021"),
+            rel=1e-12,
+        )
 
 
 class TestAnodeOutputCurrent:
     def test_benchmark_case(self):
-        """I = |(-1.050) - (-0.800)| / 0.4787 = 0.250 / 0.4787 = 0.5223 A."""
+        """I = |(-1.050) - (-0.800)| / 0.5092 = 0.250 / 0.5092 = 0.4909 A."""
         r_a = anode_resistance(0.25, 0.25, 0.015)
         result = anode_output_current(r_a)
-        assert result == pytest.approx(0.5223, abs=0.01)
+        assert result == pytest.approx(0.4909, abs=0.001)
 
     def test_custom_potentials(self):
         """Verify with explicit potential values."""

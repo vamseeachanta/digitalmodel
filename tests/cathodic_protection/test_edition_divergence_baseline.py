@@ -70,8 +70,15 @@ def test_baseline_submerged_density_agrees_across_paths():
     assert legacy["i_final_A_m2"] == pytest.approx(0.130)
 
 
-def test_baseline_flush_anode_resistance_ratio_geometry_dependent():
-    """McCoy flush (half-space) and Dwight stand-off formulas differ by 1.8702 at L=2 m, r=0.15 m."""
+def test_baseline_flush_anode_resistance_is_table_10_7_short_flush():
+    """The flush wrapper is B401 Table 10-7 short flush (0.315 rho / sqrt(A)), not McCoy.
+
+    Re-baselined for #2211: at L = 2 m, W = 0.3 m (A = 0.6 m2) and
+    rho = 0.30 ohm-m, R_flush = 0.315 * 0.30 / sqrt(0.6) = 0.12200 ohm, and
+    the stand-off Dwight value at r = 0.15 m is 0.07106 ohm (ratio 1.717).
+    The former 1.8702 ratio was the half-space slender-body expression the
+    review found in neither standard.
+    """
     from digitalmodel.cathodic_protection.dnv_rp_b401 import (
         anode_resistance_slender_standoff,
         flush_anode_resistance,
@@ -80,29 +87,27 @@ def test_baseline_flush_anode_resistance_ratio_geometry_dependent():
     rho_ohm_m = 0.30
     length_m = 2.0
     radius_m = 0.15
+    width_m = 0.30
     inch = 0.0254
 
     r_dwight = anode_resistance_slender_standoff(rho_ohm_m, length_m, radius_m, edition=_EDITION)
-    r_mccoy = flush_anode_resistance(
-        rho_ohm_m * 100.0,  # ohm-m -> ohm-cm
-        length_m / inch,
-        1.0,  # width: unused, folded into r_eq
-        1.0,  # height: unused, folded into r_eq
-        radius_m / inch,
-        edition=_EDITION,
-    )
+    with pytest.warns(DeprecationWarning):
+        r_flush = flush_anode_resistance(
+            rho_ohm_m * 100.0,  # ohm-m -> ohm-cm
+            length_m / inch,
+            width_m / inch,
+            1.0,  # height: not used by the Table 10-7 short flush form
+            radius_m / inch,  # equivalent radius: not used
+            edition=_EDITION,
+        )
 
     # Dwight: rho/(2 pi L) * (ln(4L/r) - 1) = 0.023873 * 2.9766 = 0.07106 ohm
     assert r_dwight == pytest.approx(
         (rho_ohm_m / (2.0 * math.pi * length_m)) * (math.log(4.0 * length_m / radius_m) - 1.0)
     )
-    # McCoy: rho/(pi L) * (ln(2L/r) - 0.5) = 0.047746 * 2.7834 = 0.13289 ohm
-    assert r_mccoy == pytest.approx(
-        (rho_ohm_m / (math.pi * length_m)) * (math.log(2.0 * length_m / radius_m) - 0.5),
-        rel=1e-9,
-    )
-    assert r_mccoy / r_dwight == pytest.approx(1.8702, rel=1e-3)
-    assert 1.5 < r_mccoy / r_dwight < 2.0
+    # Table 10-7 short flush: 0.315 * 0.30 / sqrt(2.0 * 0.3) = 0.12200 ohm
+    assert r_flush == pytest.approx(0.315 * rho_ohm_m / math.sqrt(length_m * width_m), rel=1e-9)
+    assert r_flush / r_dwight == pytest.approx(1.717, rel=1e-3)
 
 
 def test_baseline_internal_router_dwight_divergence():

@@ -4,6 +4,8 @@ TDD: These tests were written BEFORE the implementation.
 """
 
 
+import math
+
 import pytest
 
 from digitalmodel.cathodic_protection.anode_sizing import (
@@ -266,3 +268,72 @@ class TestDesignCPSystem:
 
         # Driving voltage = |E_cathode - E_anode| = |(-0.800) - (-1.050)| = 0.25 V
         assert result.driving_voltage_V == pytest.approx(0.25, rel=0.01)
+
+    def test_full_b401_loop_reproduces_review_a2(self):
+        """design_cp_system runs N = max(N_mass, N_initial, N_final) (#2211).
+
+        Review Appendix A2: 8000 m2 bare, mean 100 / initial 200 / final
+        130 mA/m2, 25 yr, 200 kg anodes L = 2.0 m (r_eq = 0.1076 m),
+        rho = 0.30: N_mass 487, N_initial 506 (R_a 0.0790 ohm, I_a 3.16 A),
+        N_final 443 (depleted r = 0.0340 m, R_f 0.1065 ohm, I_f 2.348 A);
+        governing 'initial'.
+        """
+        from digitalmodel.cathodic_protection._kernels import equivalent_radius_from_mass
+
+        inp = AnodeSizingInput(
+            surface_area_m2=8000.0,
+            coating_breakdown_factor=1.0,
+            current_density_mA_m2=100.0,
+            initial_current_density_mA_m2=200.0,
+            final_current_density_mA_m2=130.0,
+            design_life_years=25.0,
+            anode_type=AnodeType.STAND_OFF,
+            anode_length_m=2.0,
+            anode_radius_m=equivalent_radius_from_mass(200.0, 2.0, 2750.0),
+            anode_net_mass_kg=200.0,
+            resistivity_ohm_m=0.30,
+            anode_capacity_Ah_kg=2000.0,
+            utilization_factor=0.90,
+        )
+        result = design_cp_system(inp, edition="2010")
+        assert result.current_demand_A == pytest.approx(800.0)
+        assert result.initial_current_demand_A == pytest.approx(1600.0)
+        assert result.final_current_demand_A == pytest.approx(1040.0)
+        assert result.total_anode_mass_kg == pytest.approx(97333.33, abs=0.01)
+        assert result.anode_resistance_ohm == pytest.approx(0.0790, abs=1e-4)
+        assert result.anode_current_output_A == pytest.approx(3.165, abs=1e-3)
+        assert result.final_anode_resistance_ohm == pytest.approx(0.10648, abs=1e-5)
+        assert result.final_anode_current_output_A == pytest.approx(2.348, abs=1e-3)
+        assert (
+            result.number_of_anodes_mass,
+            result.number_of_anodes_initial,
+            result.number_of_anodes_final,
+        ) == (487, 506, 443)
+        assert result.number_of_anodes == 506
+        assert result.governing_case == "initial"
+        assert result.mass_check_ok
+
+    def test_short_standoff_anode_uses_short_form(self):
+        """L < 4r selects the Table 10-7 short slender stand-off formula."""
+        from digitalmodel.cathodic_protection._kernels import short_slender_standoff
+
+        r = calculate_anode_resistance(AnodeType.STAND_OFF, 0.30, 0.10, 0.30)
+        assert r == pytest.approx(short_slender_standoff(0.30, 0.30, 0.10), rel=1e-12)
+
+    def test_flush_and_bracelet_are_table_10_7(self):
+        """Flush long form rho/(2S) and bracelet 0.315 rho / sqrt(2 pi r L)."""
+        # L = 1.0 m, width = 2 r = 0.16 m -> long flush: S = 0.58, R = 0.30 / 1.16
+        flush = calculate_anode_resistance(AnodeType.FLUSH_MOUNT, 1.0, 0.08, 0.30)
+        assert flush == pytest.approx(0.30 / (2.0 * 0.58), rel=1e-12)
+        # short flush when L < 4 width: 0.315 rho / sqrt(L * width)
+        short = calculate_anode_resistance(AnodeType.FLUSH_MOUNT, 0.5, 0.08, 0.30)
+        assert short == pytest.approx(0.315 * 0.30 / math.sqrt(0.5 * 0.16), rel=1e-12)
+        # bracelet: exposed area 2 pi r L
+        bracelet = calculate_anode_resistance(AnodeType.BRACELET, 0.3, 0.20, 0.30)
+        assert bracelet == pytest.approx(
+            0.315 * 0.30 / math.sqrt(2.0 * math.pi * 0.20 * 0.3), rel=1e-12
+        )
+        # explicit exposed area overrides the default
+        assert calculate_anode_resistance(
+            AnodeType.BRACELET, 0.3, 0.20, 0.30, exposed_area_m2=0.5
+        ) == pytest.approx(0.315 * 0.30 / math.sqrt(0.5), rel=1e-12)

@@ -15,6 +15,7 @@ from digitalmodel.cathodic_protection.b401_tables import (
     DepthBand,
     DesignPhase,
 )
+from digitalmodel.cathodic_protection import _kernels as kernel
 from digitalmodel.cathodic_protection.marine_structure_cp import (
     ClimateRegion,
     ExposureZone,
@@ -22,6 +23,7 @@ from digitalmodel.cathodic_protection.marine_structure_cp import (
     anode_distribution,
     marine_structure_current_demand,
     retrofit_assessment,
+    standoff_anode_design_loop,
     zone_current_density,
 )
 
@@ -101,8 +103,105 @@ def test_review_appendix_a2_jacket_hand_calc():
     assert result.total_initial_current_A == pytest.approx(1600.0, abs=1e-6)
     assert result.total_final_current_A == pytest.approx(1040.0, abs=1e-6)
     assert result.total_anode_mass_kg == pytest.approx(97333.33, abs=0.01)
+    # Without anode geometry the count is mass-only and says so.
     assert result.number_of_anodes == 487
     assert result.number_of_anodes == math.ceil(97333.33 / 200.0)
+    assert result.number_of_anodes_mass == 487
+    assert result.governing_case == "mass"
+    assert result.current_output_checked is False
+    assert result.number_of_anodes_initial is None
+
+
+def test_review_appendix_a2_full_b401_design_loop():
+    """Review Appendix A2 with the B401 Sec. 7 loop (#2211): initial governs.
+
+    Mass: N_mass = ceil(97 333 / 200) = 487.
+    Initial (fresh anode, L = 2.0 m, rho = 0.30 ohm-m, 2750 kg/m3):
+    r_eq = sqrt(200 / (pi * 2 * 2750)) = 0.1076 m;
+    R_a = 0.30 / (2 pi 2.0) * (ln(8 / 0.1076) - 1) = 0.0790 ohm;
+    I_a = 0.25 / 0.0790 = 3.16 A; N_initial = ceil(1600 / 3.16) = 506.
+    Final (anode consumed to u = 0.90: remaining mass 20 kg, same length):
+    r_f = sqrt(20 / (pi * 2 * 2750)) = 0.03402 m (L >= 4 r_f, long form);
+    R_f = 0.30 / (2 pi 2.0) * (ln(8 / 0.03402) - 1) = 0.10648 ohm;
+    I_f = 0.25 / 0.10648 = 2.348 A; N_final = ceil(1040 / 2.348) = 443.
+    N = max(487, 506, 443) = 506, governing case "initial".
+    """
+    zones = [
+        StructuralZone(
+            zone_name="jacket",
+            exposure_zone=ExposureZone.SUBMERGED,
+            surface_area_m2=8000.0,
+            depth_m=20.0,
+        ),
+    ]
+    result = marine_structure_current_demand(
+        zones=zones,
+        climate_region=ClimateRegion.TEMPERATE,
+        design_life_years=25.0,
+        anode_net_mass_kg=200.0,
+        anode_capacity_Ah_kg=2000.0,
+        utilization_factor=0.90,
+        edition=EDITION,
+        anode_length_m=2.0,
+        seawater_resistivity_ohm_m=0.30,
+    )
+    assert result.current_output_checked is True
+    assert result.number_of_anodes_mass == 487
+    assert result.anode_resistance_initial_ohm == pytest.approx(0.0790, abs=0.0001)
+    assert result.anode_current_output_initial_A == pytest.approx(3.16, abs=0.01)
+    assert result.number_of_anodes_initial == 506
+    assert result.number_of_anodes_initial == math.ceil(1600.0 / (0.25 / 0.07899))
+
+    # Final case computed from the depleted geometry in the test itself.
+    r_final = kernel.equivalent_radius_from_mass((1.0 - 0.90) * 200.0, 2.0, 2750.0)
+    assert r_final == pytest.approx(0.03402, abs=1e-5)
+    assert 2.0 >= 4.0 * r_final
+    R_final = kernel.long_slender_standoff(0.30, 2.0, r_final)
+    assert R_final == pytest.approx(0.10648, abs=1e-5)
+    n_final = math.ceil(1040.0 / (0.25 / R_final))
+    assert n_final == 443
+    assert result.anode_resistance_final_ohm == pytest.approx(R_final, rel=1e-9)
+    assert result.number_of_anodes_final == n_final
+
+    assert result.number_of_anodes == max(487, 506, n_final) == 506
+    assert result.governing_case == "initial"
+    assert "dnv-rp-b401 2011 Table 10-6 with Sec. 5 (structure-to-electrolyte potential criteria)" in result.citations
+
+    # The standalone loop reproduces the same per-case counts.
+    loop = standoff_anode_design_loop(
+        total_mass_kg=97333.333,
+        initial_current_A=1600.0,
+        final_current_A=1040.0,
+        anode_net_mass_kg=200.0,
+        anode_length_m=2.0,
+        utilization_factor=0.90,
+        seawater_resistivity_ohm_m=0.30,
+    )
+    assert (loop.number_of_anodes_mass, loop.number_of_anodes_initial, loop.number_of_anodes_final) == (487, 506, 443)
+    assert loop.governing_case == "initial"
+
+
+def test_final_case_governs_when_final_demand_dominates():
+    """A structure whose final demand exceeds the depleted output governs on 'final'.
+
+    Same anodes as A2 (I_f = 2.348 A depleted) with initial 1000 A,
+    mean 500 A over 5 yr (M = 12 167 kg, N_mass = 61), final 1040 A:
+    N_initial = ceil(1000 / 3.165) = 316, N_final = ceil(1040 / 2.348) = 443.
+    """
+    loop = standoff_anode_design_loop(
+        total_mass_kg=12166.7,
+        initial_current_A=1000.0,
+        final_current_A=1040.0,
+        anode_net_mass_kg=200.0,
+        anode_length_m=2.0,
+        utilization_factor=0.90,
+        seawater_resistivity_ohm_m=0.30,
+    )
+    assert loop.number_of_anodes_mass == 61
+    assert loop.number_of_anodes_initial == 316
+    assert loop.number_of_anodes_final == 443
+    assert loop.number_of_anodes == 443
+    assert loop.governing_case == "final"
 
 
 def test_zero_breakdown_is_perfect_coating_and_none_is_bare():
@@ -285,8 +384,9 @@ def test_retrofit_assessment_adequate():
         mean_current_A=20.0,
         measured_potential_V=-0.900,  # well protected
     )
-    # 20 A * 12 yr * 8760 / (2000 * 0.9) = 1168 kg consumed
-    assert result.remaining_anode_life_years > 0
+    # Faraday: 20 A * 12 yr * 8760 / 2000 = 1051 kg consumed; usable
+    # 9000 kg -> 7949 kg left -> 90.7 yr remaining (#2211)
+    assert result.remaining_anode_life_years == pytest.approx(90.74, abs=0.05)
     assert not result.is_retrofit_needed or result.additional_anodes_needed == 0
 
 

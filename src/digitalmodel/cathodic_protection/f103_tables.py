@@ -240,6 +240,15 @@ _TABLE_A2: Final[dict[FieldJointCoating, FieldJointCoatingRow]] = {
 }
 
 
+def b401_edition_for_f103(edition: F103Edition) -> Edition:
+    """Companion DNV-RP-B401 edition an F103 edition defers to (Table 10-6/10-8).
+
+    F103 (2010) references DNV-RP-B401 (2010); DNVGL-RP-F103 (2016) precedes
+    DNVGL-RP-B401 (2017), the edition it is used alongside.
+    """
+    return _B401_EDITION_FOR_F103[normalize_f103_edition(edition, stacklevel=3)]
+
+
 def edition_provenance(edition: F103Edition | str | None = None) -> str:
     """Return the provenance flag for an F103 edition token.
 
