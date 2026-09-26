@@ -1,0 +1,21 @@
+# ABOUTME: Design-screen catalog — routed design checks that an integrity review reuses but that are
+# ABOUTME: NOT fitness-for-service verdicts. Split from ffs_offering_catalog.yml per owner decision D5 (2026-09-25).
+# Same status/tier vocabulary as ffs_offering_catalog.yml; same tests apply (tests/asset_integrity/test_offering_catalog.py).
+schema_version: 1
+generated: 2026-09-25
+epic: "vamseeachanta/digitalmodel#1057"
+source_catalog: ffs_offering_catalog.yml
+
+engines:
+  free-span: {module: subsea.pipeline, status: routed, workflow: free-span-f105, route: true, note: "DNV-RP-F105 VIV onset screen"}
+  on-bottom-stability: {module: subsea.on_bottom_stability, status: routed, workflow: on-bottom-stability-f109, route: true, note: "DNV-RP-F109 lateral stability check"}
+  lateral-buckling: {status: none, note: "DNV-RP-F110 base configs exist; no engine with a verdict"}
+
+screens:
+  - id: subsea-pipelines
+    title: Subsea pipeline / flowline design screens reusable in an integrity review
+    codes: [dnv-rp-f105, dnv-rp-f109, dnv-rp-f110]
+    rows:
+      - {mechanism: free spans (VIV onset screening), codes: [dnv-rp-f105], engines: [free-span], tiers: [T2], status: routed}
+      - {mechanism: upheaval / lateral buckling, codes: [dnv-rp-f110], engines: [], tiers: [T2], status: none}
+      - {mechanism: on-bottom stability, codes: [dnv-rp-f109], engines: [on-bottom-stability], tiers: [T1], status: routed}
