@@ -15,13 +15,12 @@ from datetime import datetime
 import traceback
 
 from digitalmodel.solvers.orcaflex.run_state import check_simulation, check_statics
+from digitalmodel.solvers.orcaflex.dynamics_progress import dynamics_progress
 
-try:
-    import OrcFxAPI
-    ORCAFLEX_AVAILABLE = True
-except ImportError:
-    ORCAFLEX_AVAILABLE = False
-    print("Warning: OrcFxAPI not available. Running in mock mode.")
+from digitalmodel.solvers.orcaflex import orcaflex_api
+
+OrcFxAPI = orcaflex_api.lazy_api()
+ORCAFLEX_AVAILABLE = orcaflex_api.available()
 
 # Configure logging for multiprocessing
 logging.basicConfig(
@@ -80,6 +79,7 @@ class OrcaFlexParallelAnalysis:
             'error': None,
             'output_files': []
         }
+        result['solver_threads_requested'] = config.get('solver_threads')
         
         try:
             # Check if OrcFxAPI is available
@@ -87,11 +87,19 @@ class OrcaFlexParallelAnalysis:
                 raise ImportError("OrcFxAPI module not available")
             
             # Create model
-            model = OrcFxAPI.Model()
+            solver_threads = config.get('solver_threads')
+            if solver_threads is not None and (type(solver_threads) is not int or solver_threads < 1):
+                raise ValueError('solver_threads must be a positive integer')
+            model = OrcFxAPI.Model(**({'threadCount': solver_threads} if solver_threads is not None else {}))
             
             # Load the file
             logger.info(f"Loading: {file_path}")
             model.LoadData(str(file_path))
+            if solver_threads is not None:
+                if model.threadCount != solver_threads:
+                    raise ValueError('Native solver thread count differs from requested budget')
+                result['solver_threads'] = model.threadCount
+                logger.info('Native solver threads: %s', model.threadCount)
             
             # Determine what analyses to run
             run_static = config.get('static', True)
@@ -116,7 +124,8 @@ class OrcaFlexParallelAnalysis:
             # Run dynamic simulation
             if run_dynamic:
                 logger.info(f"Running dynamic simulation: {file_path}")
-                model.RunSimulation()
+                with dynamics_progress(model, config.get('progress_interval_seconds'), logger, str(file_path)):
+                    model.RunSimulation()
                 check_simulation(model, context=str(file_path))
                 result['dynamic_complete'] = True
             

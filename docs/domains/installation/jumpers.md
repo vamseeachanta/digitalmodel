@@ -1,3 +1,4 @@
+[Short-horizon installation decision-support notes](short-horizon-installation-decision-support.html) — proposed wave-by-wave task-window workflow, evidence gaps and validation approach following the September 2026 source review.
 
 https://www.linkedin.com/posts/ahmedbassiounymohamed_subsea-offshore-oilandgas-activity-7321526069415555073-7qb-?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAFdG9kB103ydcFGign1_8EYQx7YwiUPV4k
 

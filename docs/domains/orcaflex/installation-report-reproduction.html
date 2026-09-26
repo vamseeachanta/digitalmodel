@@ -1,0 +1,35 @@
+<!doctype html><html lang="en"><meta charset="utf-8">
+<title>Installation report reproduction</title>
+<style>body{font:16px/1.6 system-ui;max-width:1000px;margin:3rem auto}pre{padding:1rem;background:#eef3f6;overflow:auto}</style>
+<h1>Installation report reproduction</h1>
+<p>Reusable code and tests are owned by digitalmodel. Private solver evidence, source configurations, generated reports and dataset manifests are owned by digitalmodel-data. The owning dataset manifest identifies the code revision, source digests and intended-use status.</p>
+<h2>Inputs and environment</h2>
+<p>The full report consumes a verified demand-summary JSON file, an assessed envelope/monitoring payload JSON file, and a report-configuration JSON file. The payload pins the exact demand-summary bytes by SHA-256. Retain those original bytes; reserialising equivalent JSON changes its identity.</p>
+<p>For source summaries containing legacy machine paths, configure <code>dataset_root</code> relative to the report directory and <code>case_run_dirs</code> as a complete mapping from string case index to dataset-relative run directory. Rendering relocates appendix links from that mapping without changing the pinned source summary. Retain the private dataset directory layout when moving the checkout.</p>
+<p>Use the repository Python environment with <code>src</code> on PYTHONPATH. The retained report environment uses Python 3.12.13, reportlab 5.0.1 and pypdf 6.19.0; PyMuPDF 1.28.2 supports visual QA. Rendering requires no native solver licence. Re-running native simulations requires the matching solver version, licence, model and campaign inputs retained by the private dataset.</p>
+<h2>Generate HTML, sidecar and PDF</h2>
+<p>Set source paths to the files identified in the dataset manifest. Use a new output basename; the HTML generator rejects existing destinations. The PDF renderer accepts a path or byte stream, so the caller should reject an existing PDF before invocation.</p>
+<pre>from pathlib import Path
+import json
+from digitalmodel.workflows.installation_full_report import generate_report
+from digitalmodel.workflows.installation_full_report_pdf import render_full_pdf
+
+summary = Path('demand-summary.json')
+payload = Path('report-payload.json')
+config = Path('report-config.json')
+output = Path('installation-report.html')
+pdf = output.with_suffix('.pdf')
+if pdf.exists():
+    raise FileExistsError(pdf)
+generate_report(summary, payload, output, config=config)
+render_full_pdf(json.loads(summary.read_bytes()),
+                json.loads(payload.read_bytes()), pdf,
+                json.loads(config.read_bytes()),
+                summary_bytes=summary.read_bytes())</pre>
+<h2>Verification</h2>
+<pre>python -m pytest tests/workflows/test_installation_full_report.py tests/workflows/test_installation_full_report_pdf.py tests/workflows/test_installation_envelope_dashboard.py tests/workflows/test_installation_envelope_pdf.py -q</pre>
+<p>The tests check source identity, case correspondence, rejected invalid dispositions, retained configuration, report sections and embedded monitoring. Verify all output hashes after generation, inspect PDF pages, and check HTML controls and links. Generated timestamps and PDF metadata can change file hashes; identical input results do not imply byte-identical regenerated documents.</p>
+<h2>Analysis and monitoring boundaries</h2>
+<p>The report composes existing installation_assumed_envelope, installation_monitoring_demo, installation_wave_assisted, installation_envelope_dashboard and installation_envelope_pdf workflows. Report generation does not rerun simulations or independently qualify source engineering.</p>
+<p>Assumed-criteria screening is distinct from operational acceptance. A passing upper grid edge is censored unless a failure boundary has been established. Supplied future simulated waves constitute conditional load-preview input; they do not establish offshore wave-forecast skill. Keep unresolved qualification checks and the simulated designation in every issued derivative.</p>
+<p>Tracking: <a href="https://github.com/vamseeachanta/digitalmodel/issues/1836">Installation analysis workflow</a>.</p></html>
