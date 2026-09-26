@@ -91,6 +91,23 @@ def _md_blocks(text: str) -> Iterator[list[str]]:
         yield block
 
 
+def _list_items(block: list[str], marker: re.Pattern[str]) -> list[str] | None:
+    """Split a block into list items, or None when it is not a list.
+
+    An indented line that does not carry the marker continues the previous
+    item (the wrapped bullets a YAML ``content: |`` block naturally produces).
+    """
+    items: list[str] = []
+    for line in block:
+        if marker.match(line):
+            items.append(marker.sub("", line).strip())
+        elif items and line[:1].isspace():
+            items[-1] += " " + line.strip()
+        else:
+            return None
+    return items
+
+
 def markdown_to_html(text: str) -> str:
     """Render the Markdown subset used by :class:`TextBlock` (escaped)."""
     parts: list[str] = []
@@ -99,22 +116,20 @@ def markdown_to_html(text: str) -> str:
         if first.startswith("```"):
             body = "\n".join(block[1:-1] if block[-1].startswith("```") else block[1:])
             parts.append(f"<pre><code>{_html.escape(body)}</code></pre>")
-        elif _HEADING_RE.match(first):
+            continue
+        if _HEADING_RE.match(first):
             level = min(len(first) - len(first.lstrip("#")), 2) + 2
             parts.append(
                 f"<h{level}>{_inline_md(first.lstrip('#').strip())}</h{level}>"
             )
-        elif all(_BULLET_RE.match(line) for line in block):
-            items = "".join(
-                "<li>" + _inline_md(_BULLET_RE.sub("", line)) + "</li>"
-                for line in block
-            )
+            continue
+        bullets = _list_items(block, _BULLET_RE)
+        numbered = None if bullets is not None else _list_items(block, _NUMBERED_RE)
+        if bullets is not None:
+            items = "".join(f"<li>{_inline_md(item)}</li>" for item in bullets)
             parts.append(f"<ul>{items}</ul>")
-        elif all(_NUMBERED_RE.match(line) for line in block):
-            items = "".join(
-                "<li>" + _inline_md(_NUMBERED_RE.sub("", line)) + "</li>"
-                for line in block
-            )
+        elif numbered is not None:
+            items = "".join(f"<li>{_inline_md(item)}</li>" for item in numbered)
             parts.append(f"<ol>{items}</ol>")
         else:
             parts.append(f"<p>{_inline_md(' '.join(s.strip() for s in block))}</p>")
