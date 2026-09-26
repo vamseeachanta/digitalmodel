@@ -124,7 +124,7 @@
       },
       "cluster": "structures-ffs",
       "explorers": [
-        "docs\\api\\ffs\\riser-joint-acceptance-explorer.html"
+        "docs/api/ffs/riser-joint-acceptance-explorer.html"
       ],
       "id": "ffs",
       "pdf": "docs/api/capabilities/pdf/sec-ffs.pdf",
@@ -153,7 +153,7 @@
       "added": "unknown",
       "cluster": "hydro-naval",
       "explorers": [
-        "docs\\api\\hydro\\ocimf-coefficient-explorer.html"
+        "docs/api/hydro/ocimf-coefficient-explorer.html"
       ],
       "id": "hydro",
       "pdf": "docs/api/capabilities/pdf/sec-hydro.pdf",
@@ -176,7 +176,7 @@
       "added": "unknown",
       "cluster": "pipelines-risers",
       "explorers": [
-        "docs\\api\\drilling\\drilling-riser-operability-explorer.html"
+        "docs/api/drilling/drilling-riser-operability-explorer.html"
       ],
       "id": "risers",
       "pdf": "docs/api/capabilities/pdf/sec-risers.pdf",
@@ -189,7 +189,7 @@
       },
       "cluster": "pipelines-risers",
       "explorers": [
-        "docs\\api\\structural\\wall-thickness-explorer.html"
+        "docs/api/structural/wall-thickness-explorer.html"
       ],
       "id": "wall-thickness",
       "pdf": "docs/api/capabilities/pdf/sec-wall-thickness.pdf",
@@ -210,7 +210,7 @@
       },
       "cluster": "pipelines-risers",
       "explorers": [
-        "docs\\api\\structural\\viv-explorer.html"
+        "docs/api/structural/viv-explorer.html"
       ],
       "id": "viv",
       "pdf": "docs/api/capabilities/pdf/sec-viv.pdf",
@@ -239,7 +239,7 @@
       },
       "cluster": "field-dev-economics",
       "explorers": [
-        "docs\\api\\structural\\field-economics-explorer.html"
+        "docs/api/structural/field-economics-explorer.html"
       ],
       "id": "field-development",
       "pdf": "docs/api/capabilities/pdf/sec-field-development.pdf",
@@ -249,8 +249,7 @@
       "added": "unknown",
       "cluster": "hydro-naval",
       "explorers": [
-        "docs\\api\\capabilities\\api\\rudder-explorer.html",
-        "docs\\api\\hydro\\rudder-maneuvering-explorer.html"
+        "docs/api/hydro/rudder-maneuvering-explorer.html"
       ],
       "id": "manoeuvring",
       "pdf": "docs/api/capabilities/pdf/sec-manoeuvring.pdf",
@@ -263,7 +262,7 @@
       },
       "cluster": "hydro-naval",
       "explorers": [
-        "docs\\api\\structural\\ship-resistance-explorer.html"
+        "docs/api/structural/ship-resistance-explorer.html"
       ],
       "id": "naval-architecture",
       "pdf": "docs/api/capabilities/pdf/sec-naval-architecture.pdf",
@@ -276,7 +275,7 @@
       },
       "cluster": "moorings-stationkeeping",
       "explorers": [
-        "docs\\api\\structural\\anchor-holding-explorer.html"
+        "docs/api/structural/anchor-holding-explorer.html"
       ],
       "id": "geotechnical",
       "pdf": "docs/api/capabilities/pdf/sec-geotechnical.pdf",
@@ -297,7 +296,7 @@
       },
       "cluster": "wells-drilling-production",
       "explorers": [
-        "docs\\api\\structural\\ipr-explorer.html"
+        "docs/api/structural/ipr-explorer.html"
       ],
       "id": "production-engineering",
       "pdf": "docs/api/capabilities/pdf/sec-production-engineering.pdf",
@@ -307,7 +306,7 @@
       "added": "unknown",
       "cluster": "wells-drilling-production",
       "explorers": [
-        "docs\\api\\well\\casing-design-explorer.html"
+        "docs/api/well/casing-design-explorer.html"
       ],
       "id": "well",
       "pdf": "docs/api/capabilities/pdf/sec-well.pdf",
@@ -320,7 +319,7 @@
       },
       "cluster": "wells-drilling-production",
       "explorers": [
-        "docs\\api\\structural\\pore-pressure-explorer.html"
+        "docs/api/structural/pore-pressure-explorer.html"
       ],
       "id": "drilling-engineering",
       "pdf": "docs/api/capabilities/pdf/sec-drilling-engineering.pdf",
@@ -333,7 +332,7 @@
       },
       "cluster": "structures-ffs",
       "explorers": [
-        "docs\\api\\structural\\cathodic-protection-explorer.html"
+        "docs/api/structural/cathodic-protection-explorer.html"
       ],
       "id": "cathodic",
       "pdf": "docs/api/capabilities/pdf/sec-cathodic.pdf",
@@ -343,9 +342,8 @@
       "added": "unknown",
       "cluster": "wells-drilling-production",
       "explorers": [
-        "docs\\api\\capabilities\\api\\galvanic-explorer.html",
-        "docs\\api\\corrosion\\galvanic-compatibility-explorer.html",
-        "docs\\api\\production\\scale-si-explorer.html"
+        "docs/api/corrosion/galvanic-compatibility-explorer.html",
+        "docs/api/production/scale-si-explorer.html"
       ],
       "id": "corrosion-production",
       "pdf": "docs/api/capabilities/pdf/sec-corrosion-production.pdf",
@@ -362,11 +360,6 @@
   ],
   "source": "docs/capability-map/capabilities-sections.yml",
   "unlinked_explorers": [
-    "docs\\api\\capabilities\\api\\cathodic-protection-explorer.html",
-    "docs\\api\\capabilities\\api\\scale-si-explorer.html",
-    "docs\\api\\capabilities\\api\\sloshing-explorer.html",
-    "docs\\api\\capabilities\\api\\wall-thickness-explorer.html",
-    "docs\\api\\structural\\sloshing-explorer.html",
-    "docs\\api\\structural\\wall-thickness-3d-explorer.html"
+    "docs/api/structural/wall-thickness-3d-explorer.html"
   ]
 }
