@@ -2,9 +2,10 @@
 """Domain registration for the standard report engine.
 
 ABOUTME: A domain declares ``@report_adapter("<basename>.<kind>")`` on a
-function that turns its results dict into a :class:`ReportSpec`; the engine
-hook :func:`maybe_render_report` renders when a routed config carries a
-``report:`` mapping. Nothing here is wired into the router yet (#2212 PR2).
+function that turns the routed cfg (inputs + results) into a
+:class:`ReportSpec`; the engine hook :func:`maybe_render_report` renders when
+a routed config carries a ``report:`` mapping with a ``kind``. The router
+(``digitalmodel.engine``) calls the hook after every domain arm (#2212 PR2).
 
 Config shape the hook understands::
 
@@ -15,10 +16,15 @@ Config shape the hook understands::
       pdf: auto                     # auto | off | require
       output_dir: results           # relative to the config file
       stem: my_report               # optional; defaults to the basename
+
+Adapters are discovered lazily: when ``"<basename>.<kind>"`` is not yet
+registered the hook imports ``digitalmodel.<basename>.report_adapters`` (the
+convention for domain adapters) before looking again.
 """
 
 from __future__ import annotations
 
+import importlib
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
@@ -30,6 +36,9 @@ AdapterFn = Callable[[dict[str, Any]], ReportSpec]
 
 #: Registry: ``"<basename>.<kind>"`` -> adapter function.
 ADAPTERS: dict[str, AdapterFn] = {}
+
+#: Module a domain's adapters live in, formatted with the basename.
+DOMAIN_ADAPTER_MODULE = "digitalmodel.{basename}.report_adapters"
 
 
 class AdapterError(ValueError):
@@ -50,8 +59,32 @@ def report_adapter(key: str) -> Callable[[AdapterFn], AdapterFn]:
     return _register
 
 
-def build_spec(key: str, results: dict[str, Any]) -> ReportSpec:
-    """Run the registered adapter for ``key`` over ``results``."""
+def import_domain_adapters(basename: str) -> bool:
+    """Import ``digitalmodel.<basename>.report_adapters`` if it exists.
+
+    Returns True when the module was imported (registering its adapters as a
+    side effect), False when no such module exists. Other import errors
+    propagate: a broken adapter module must not be mistaken for a missing one.
+    """
+    name = DOMAIN_ADAPTER_MODULE.format(basename=basename)
+    try:
+        importlib.import_module(name)
+    except ModuleNotFoundError as exc:
+        if exc.name and (name == exc.name or name.startswith(exc.name + ".")):
+            return False
+        raise
+    return True
+
+
+def build_spec(key: str, cfg: dict[str, Any]) -> ReportSpec:
+    """Run the registered adapter for ``key`` over the routed ``cfg``.
+
+    The adapter sees the whole cfg (``inputs``, the domain's results block,
+    ``report``, ``_config_file_path`` ...), so it can echo inputs, name the
+    input file in its provenance and read document control itself.
+    """
+    if key not in ADAPTERS:
+        import_domain_adapters(key.split(".", 1)[0])
     try:
         adapter = ADAPTERS[key]
     except KeyError:
@@ -59,7 +92,7 @@ def build_spec(key: str, results: dict[str, Any]) -> ReportSpec:
         raise AdapterError(
             f"no report adapter registered for {key!r} (known: {known})"
         ) from None
-    spec = adapter(results)
+    spec = adapter(cfg)
     if not isinstance(spec, ReportSpec):
         raise AdapterError(
             f"report adapter {key!r} returned {type(spec).__name__}, not ReportSpec"
@@ -70,10 +103,10 @@ def build_spec(key: str, results: dict[str, Any]) -> ReportSpec:
 def maybe_render_report(cfg: dict[str, Any], basename: str) -> ReportArtifacts | None:
     """Render a report when ``cfg["report"]`` is a mapping; otherwise no-op.
 
-    The adapter builds the content from ``cfg[basename]`` (the domain's
-    results block); ``report.document`` and ``report.manifest`` override the
-    document control and report-layer manifest so YAML owns document
-    numbering. Artifact names are recorded under ``cfg["report"]["artifacts"]``.
+    The adapter builds the content from the routed ``cfg``; ``report.document``
+    and ``report.manifest`` override the document control and report-layer
+    manifest so YAML owns document numbering. Artifact names are recorded
+    under ``cfg["report"]["artifacts"]``.
     """
     report = cfg.get("report")
     if not isinstance(report, Mapping):
@@ -85,11 +118,7 @@ def maybe_render_report(cfg: dict[str, Any], basename: str) -> ReportArtifacts |
     if pdf not in PDF_MODES:
         raise AdapterError(f"report.pdf must be one of {PDF_MODES}: got {pdf!r}")
 
-    results = cfg.get(basename)
-    spec = build_spec(
-        f"{basename}.{kind.strip()}",
-        dict(results) if isinstance(results, Mapping) else {},
-    )
+    spec = build_spec(f"{basename}.{kind.strip()}", cfg)
     updates: dict[str, Any] = {}
     if report.get("document"):
         updates["document"] = DocumentMeta.model_validate(report["document"])
@@ -121,9 +150,11 @@ def maybe_render_report(cfg: dict[str, Any], basename: str) -> ReportArtifacts |
 
 __all__ = [
     "ADAPTERS",
+    "DOMAIN_ADAPTER_MODULE",
     "AdapterError",
     "AdapterFn",
     "build_spec",
+    "import_domain_adapters",
     "maybe_render_report",
     "report_adapter",
 ]

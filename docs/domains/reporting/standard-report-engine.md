@@ -44,17 +44,84 @@ Section keys and figure ids must be unique across sections and appendices.
 from digitalmodel.reporting import ReportSpec, report_adapter
 
 @report_adapter("cathodic_protection.anode_design")   # "<basename>.<kind>"
-def anode_design_report(results: dict) -> ReportSpec:
-    ...  # build sections/tables/figures from the results dict
+def anode_design_report(cfg: dict) -> ReportSpec:
+    ...  # build sections/tables/figures from cfg["inputs"] / cfg["results"]
 ```
 
-`build_spec("cathodic_protection.anode_design", results)` runs the adapter.
+An adapter receives the whole routed cfg (`inputs`, the domain's results
+block, `report`, `_config_file_path` ...) so it can echo inputs, name the
+input file in its provenance and read document control itself.
+`build_spec("cathodic_protection.anode_design", cfg)` runs the adapter;
+when the key is not registered yet it first imports
+`digitalmodel.<basename>.report_adapters` (the convention for where a
+domain's adapters live).
+
 `maybe_render_report(cfg, basename)` is the engine hook: it is a no-op unless
-`cfg["report"]` is a mapping with `kind`; then it builds the spec from
-`cfg[basename]`, applies `report.document` / `report.manifest` (YAML owns
-document control), and writes the pack to `report.output_dir` (relative to
-the config file) using `report.pdf` and `report.stem`. Wiring the hook into
-the router is PR2.
+`cfg["report"]` is a mapping; then it builds the spec from the cfg, applies
+`report.document` / `report.manifest` (YAML owns document control), and
+writes the pack to `report.output_dir` (relative to the config file) using
+`report.pdf` and `report.stem`. `digitalmodel.engine` calls it after every
+domain arm when the routed cfg carries `report: {kind: ...}` (#2212 part 2);
+legacy `report:` blocks without `kind` (for example the `artificial_lift`
+example's `report: {html: true}`) are left to their domains.
+
+## CP consumer (`digitalmodel.cathodic_protection.report_adapters`)
+
+The first registered domain. Add a `report:` mapping to any
+`basename: cathodic_protection` input and the engine writes the HTML/PDF pack,
+citations sidecar and manifest beside the results:
+
+```yaml
+basename: cathodic_protection
+inputs:
+  calculation_type: DNV_RP_B401_offshore   # or DNV_RP_F103_2010, ABS_gn_ships_2018, ABS_gn_offshore_2018
+  ...                                       # the route's inputs (see tests/fixtures/cathodic_protection/workflow_inputs/)
+report:
+  kind: anode_design                        # adapter "cathodic_protection.anode_design"
+  document:                                 # optional; placeholder X0000-CP-000-00 rev 00 when absent
+    number: B0000-RPT-042-01
+    revision: "01"
+    title: Jacket CP anode design
+    project: B0000
+    client: Client
+  pdf: auto                                 # auto | off | require
+  output_dir: results                       # relative to this YAML
+  stem: jacket_cp                           # optional; defaults to the basename
+```
+
+`cathodic_protection.anode_design` works for every engine-adapter route and lays out:
+
+| Section | B401 offshore | F103 bracelet | ABS ships / offshore |
+|---|---|---|---|
+| Design basis | design data + zones table (areas, coating category, depth band, climate, a, b) | pipeline geometry, coating, exposure, temperature band, anode data | the route's design data and coating factors |
+| Current demand | per-zone initial/mean/final densities and demands + `I(t) = A x i_mean x (a + b t)` line figure (`fig-cp-demand-vs-time`) | coating breakdown (linepipe + field joints) and mean/final demand | densities and demand by surface / phase |
+| Anode requirements | mass, N_mass / N_initial / N_final / recommended + bar figure (`fig-cp-anode-counts`) | mass, N_mass / N_final / N, spacing, protected length + bar figure | mass and count |
+| Adequacy | status (governing case + reason), fresh vs depleted R / I table, checks | route status + `spacing <= 2 x protected length` status, R / I table | status (+ fresh vs depleted R / I for ships) |
+| References | where each cited table was used; citation records go to *References cited* | same | note that the legacy solver carries no cited tables |
+
+Standards chips come from the route's `standard` / `edition` / `provenance`;
+citation records are rebuilt from the `code_id revision section` labels the
+route emits (DNV-RP-B401 and DNV-RP-F103 wiki pages). Provenance names the
+input YAML (config-dir relative, sha256) and the results mapping digest, so a
+report is always a view over its inputs.
+
+`cathodic_protection.assessment` takes a `CPAssessmentReport`
+(`cp_reporting`) plus optional CIS survey points / `CISAnalysisResult` and a
+`DepletionProfile`: summary + overall compliance status, compliance table
+with `standard_reference`, potential-vs-distance figure
+(`fig-cp-potential-vs-distance`) when survey points are given,
+remaining-life table and remaining-mass-vs-years figure
+(`fig-cp-remaining-mass`) when a profile is given, recommendations table.
+`build_assessment_spec(report, cis_points=..., cis_result=..., depletion=...)`
+is the typed entry; the registered adapter reads the same objects (or their
+mappings) from `cfg["assessment"]`.
+
+Goldens: `tests/reporting/golden/cp_anode_design_jacket.html` (plotly.js
+stripped) from `tests/fixtures/reporting/cp_anode_design_result.json`, the
+routed jacket cfg; `tests/cathodic_protection/test_report_adapters.py` checks
+the fixture against a fresh run. The former
+`visualization/reporting/cp_html_report.py` (CDN Plotly, fabricated
+attenuation length, no importers) was deleted.
 
 Figures: `figure_from_columns("line"|"bar", x, {"series": ys}, title=..., x_label=..., y_label=...)`
 returns a plain Plotly figure dict, so adapters need no plotly import.

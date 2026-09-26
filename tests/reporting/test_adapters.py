@@ -5,6 +5,9 @@
 from __future__ import annotations
 
 import json
+import sys
+from collections.abc import Iterator
+from pathlib import Path
 
 import pytest
 
@@ -21,10 +24,11 @@ from digitalmodel.reporting import (
     maybe_render_report,
     report_adapter,
 )
+from digitalmodel.reporting.adapters import import_domain_adapters
 
 
 @pytest.fixture(autouse=True)
-def clean_registry():
+def clean_registry() -> Iterator[None]:
     saved = dict(ADAPTERS)
     ADAPTERS.clear()
     yield
@@ -32,7 +36,10 @@ def clean_registry():
     ADAPTERS.update(saved)
 
 
-def _dummy(results: dict) -> ReportSpec:
+def _dummy(cfg: dict) -> ReportSpec:
+    # Adapters receive the whole routed cfg (#2212 part 2); this one reads
+    # its domain block only.
+    results = cfg.get("dummy", {})
     return ReportSpec(
         document=DocumentMeta(number="B0000-RPT-001-00", revision="00",
                               title="Adapter default", project="B0000", client="C"),
@@ -52,53 +59,67 @@ def _dummy(results: dict) -> ReportSpec:
     )
 
 
-def test_register_and_build_spec():
+def test_register_and_build_spec() -> None:
     report_adapter("dummy.design")(_dummy)
     assert ADAPTERS["dummy.design"] is _dummy
-    spec = build_spec("dummy.design", {"mass": 42})
+    spec = build_spec("dummy.design", {"dummy": {"mass": 42}})
     assert spec.sections[0].blocks[0].markdown == "Mass 42 kg."
 
 
-def test_registration_validates_key_and_duplicates():
+def test_build_spec_imports_domain_adapters_on_demand() -> None:
+    # "cathodic_protection.anode_design" lives in
+    # digitalmodel.cathodic_protection.report_adapters; the registry was
+    # cleared by the fixture, so build_spec must import it (a fresh import
+    # registers only when the module is not cached).
+    assert "cathodic_protection.anode_design" not in ADAPTERS
+    sys.modules.pop("digitalmodel.cathodic_protection.report_adapters", None)
+    with pytest.raises(ValueError, match="cfg\['results'\]"):
+        build_spec("cathodic_protection.anode_design", {"inputs": {}})
+    assert "cathodic_protection.anode_design" in ADAPTERS
+    assert "cathodic_protection.assessment" in ADAPTERS
+    assert import_domain_adapters("no_such_domain_xyz") is False
+
+
+def test_registration_validates_key_and_duplicates() -> None:
     with pytest.raises(AdapterError, match="<basename>.<kind>"):
         report_adapter("nodot")
     report_adapter("dummy.design")(_dummy)
     report_adapter("dummy.design")(_dummy)  # same function is idempotent
 
-    def other(results: dict) -> ReportSpec:  # pragma: no cover - never called
-        return _dummy(results)
+    def other(cfg: dict) -> ReportSpec:  # pragma: no cover - never called
+        return _dummy(cfg)
 
     with pytest.raises(AdapterError, match="already registered"):
         report_adapter("dummy.design")(other)
 
 
-def test_build_spec_unknown_key_lists_known():
+def test_build_spec_unknown_key_lists_known() -> None:
     report_adapter("dummy.design")(_dummy)
     with pytest.raises(AdapterError, match="known: dummy.design"):
         build_spec("dummy.other", {})
 
 
-def test_build_spec_rejects_non_spec_return():
-    report_adapter("dummy.bad")(lambda results: {"not": "a spec"})  # type: ignore[arg-type]
+def test_build_spec_rejects_non_spec_return() -> None:
+    report_adapter("dummy.bad")(lambda cfg: {"not": "a spec"})  # type: ignore[arg-type]
     with pytest.raises(AdapterError, match="not ReportSpec"):
         build_spec("dummy.bad", {})
 
 
-def test_maybe_render_report_noop_without_report_block(tmp_path):
+def test_maybe_render_report_noop_without_report_block(tmp_path: Path) -> None:
     cfg = {"basename": "dummy", "dummy": {"mass": 1}}
     assert maybe_render_report(cfg, "dummy") is None
     assert cfg == {"basename": "dummy", "dummy": {"mass": 1}}
     assert not list(tmp_path.iterdir())
 
 
-def test_maybe_render_report_requires_kind_and_valid_pdf_mode(tmp_path):
+def test_maybe_render_report_requires_kind_and_valid_pdf_mode(tmp_path: Path) -> None:
     with pytest.raises(AdapterError, match="report.kind"):
         maybe_render_report({"report": {}}, "dummy")
     with pytest.raises(AdapterError, match="report.pdf"):
         maybe_render_report({"report": {"kind": "design", "pdf": "maybe"}}, "dummy")
 
 
-def test_maybe_render_report_renders_with_yaml_document_control(tmp_path):
+def test_maybe_render_report_renders_with_yaml_document_control(tmp_path: Path) -> None:
     report_adapter("dummy.design")(_dummy)
     cfg = {
         "basename": "dummy",
@@ -148,7 +169,7 @@ def test_maybe_render_report_renders_with_yaml_document_control(tmp_path):
     assert "disabled" in cfg["report"]["pdf_status"]
 
 
-def test_maybe_render_report_invalid_document_rejected(tmp_path):
+def test_maybe_render_report_invalid_document_rejected(tmp_path: Path) -> None:
     report_adapter("dummy.design")(_dummy)
     cfg = {
         "dummy": {},

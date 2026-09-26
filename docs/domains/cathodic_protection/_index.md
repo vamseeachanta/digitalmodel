@@ -24,6 +24,7 @@ places (below); the worked examples are the contract between the two.
 | `corrosion_rate.py` | CO2 / H2S / galvanic corrosion-rate models (de Waard-Milliams, Norsok M-506) |
 | `cp_monitoring.py` | Reference electrodes, data loggers, remote monitoring and alarm thresholds |
 | `cp_reporting.py` | CP assessment report generation: compliance checks, survey comparison, recommendations |
+| `report_adapters.py` | `report:` consumers of the standard HTML/PDF engine (`anode_design` for every engine-adapter route, `assessment` for `CPAssessmentReport`); see [reporting/standard-report-engine.md](../reporting/standard-report-engine.md) (CP consumer section) |
 | `cp_survey.py` | Survey data interpretation: potential mapping, attenuation curves, DCVG/ACVG, CIS |
 | `dnv_rp_b401.py` | DNV-RP-B401 (2005/2017) sacrificial anode design chain incl. F103 protected length |
 | `dnv_rp_f106.py` | DNV-RP-F106 factory-applied external pipeline coating selection and inspection subset |

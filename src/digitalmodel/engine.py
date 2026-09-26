@@ -847,6 +847,17 @@ def engine(
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
 
+    # #2212 part 2: standard report engine hook. A domain YAML that carries
+    # `report: {kind: ...}` renders HTML/PDF beside its results through the
+    # "<basename>.<kind>" adapter (digitalmodel.<basename>.report_adapters is
+    # imported on demand). `report:` blocks without `kind` are legacy,
+    # domain-owned settings and are left alone.
+    report_block = cfg_base.get("report") if isinstance(cfg_base, dict) else None
+    if isinstance(report_block, dict) and "kind" in report_block:
+        from digitalmodel.reporting.adapters import maybe_render_report
+
+        maybe_render_report(cfg_base, basename)
+
     logger.debug(f"{basename}, application ... END")
     app_manager.save_cfg(cfg_base=cfg_base)
 
