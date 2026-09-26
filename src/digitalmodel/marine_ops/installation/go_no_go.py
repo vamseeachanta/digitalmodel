@@ -146,7 +146,7 @@ def evaluate_go_no_go(
     elif hasattr(wc, "grand_total_kg"):
         total_weight_kg = wc.grand_total_kg
     else:
-        total_weight_kg = 46_032  # Fallback to Ballymore baseline
+        total_weight_kg = 46_032  # Fallback to GoM tieback baseline
 
     total_weight_te = total_weight_kg / 1000.0
 
@@ -270,7 +270,7 @@ def evaluate_go_no_go(
         value=bend_radius_m, limit=min_bend_radius_m, unit="m",
         above_is_safe=True,
         description=f"Bend radius {bend_radius_m:.4f} m vs minimum 1.270 m (50 in)",
-        reference="DNV-ST-N001 Section 5, Ballymore jumper specification",
+        reference="DNV-ST-N001 Section 5, GoM tieback jumper specification",
     ))
 
     # 7b. Minimum Bend Radius as multiple of OD (issue #472: >= 50 x OD)
@@ -303,7 +303,7 @@ def evaluate_go_no_go(
     ))
 
     # 8. Vessel Deck Payload Utilisation
-    vessel_deck_capacity_te = 14_000.0  # Saipem 7000 deck capacity
+    vessel_deck_capacity_te = 14_000.0  # SSCV-A deck capacity
     deck_utilisation = total_weight_te / vessel_deck_capacity_te
 
     criteria.append(_check_criterion(
@@ -324,7 +324,7 @@ def evaluate_go_no_go(
     ))
 
     # 10. Spreader Bar Adequacy
-    spreader_bar_length_m = 33.528  # 110 ft from Ballymore rigging data
+    spreader_bar_length_m = 33.528  # 110 ft from GoM tieback rigging data
     spreader_ratio = spreader_bar_length_m / total_length_m if total_length_m > 0 else 0
 
     criteria.append(_check_criterion(

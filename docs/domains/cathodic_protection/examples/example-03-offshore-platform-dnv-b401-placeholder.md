@@ -13,7 +13,7 @@ covers the design of cathodic protection systems for offshore structures includi
 fixed jackets, gravity-based structures (GBS), and associated subsea equipment.
 
 The 2021 edition PDF is available at:
-`acma-projects/B1522/ctr-2/cal/DNV-RP-B401-2021.pdf`
+`<project-archive>/<job-code>/ctr-2/cal/DNV-RP-B401-2021.pdf`
 
 Key differences from DNV-RP-F103 (pipelines):
 - B401 covers fixed structures; F103 covers submarine pipelines
@@ -147,7 +147,7 @@ cfg = {
    The target implementation is B401:2021. Previous editions used different table values;
    the implementation must use the 2021 PDF tables.
 
-3. **B401 source document:** `acma-projects/B1522/ctr-2/cal/DNV-RP-B401-2021.pdf` is
+3. **B401 source document:** `<project-archive>/<job-code>/ctr-2/cal/DNV-RP-B401-2021.pdf` is
    the canonical reference for this implementation.
 
 4. **Scope boundary:** This placeholder covers the jacket submerged zone. Splash zone

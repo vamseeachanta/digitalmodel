@@ -18,7 +18,7 @@ This CSV is generator output from `OCIMFDatabase.create_sample_database()` —
   `docs/domains/charts/phase2/ocimf/PROMPT_TEMPLATE.md`
 - **Figure PDF extracts**:
   `/mnt/ace/acma-codes/OCIMF/Figures/` and
-  `/mnt/ace/acma-projects/B1522/ctr-7/_data/ocimf/`
+  `/mnt/ace/<project-archive>/<job-code>/ctr-7/_data/ocimf/`
 - **Full standard PDFs**:
   - MEG3 — `/mnt/ace/acma-codes/OCIMF/OCIMF - 2008 - Mooring Equipment Guidelines.pdf`
   - MEG4 — `/mnt/ace/acma-codes/OCIMF (MEG 4)/Mooring Equipment Guidelines - MEG4.pdf`

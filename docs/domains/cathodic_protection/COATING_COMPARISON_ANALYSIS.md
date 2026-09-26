@@ -1,7 +1,7 @@
 # Coating Quality Sensitivity Analysis Report
 
 **Date:** 2026-01-07
-**Project:** Saipem 24-inch Submarine Pipeline CP Analysis
+**Project:** Contractor 24-inch Submarine Pipeline CP Analysis
 **Analysis Type:** Complete Coating Quality Spectrum Comparison
 **Standard:** DNV RP-F103:2010 Table 5-2
 
@@ -22,7 +22,7 @@ This report presents a comprehensive sensitivity analysis of coating quality imp
 | Coating Quality | Test ID | Status | Confidence |
 |----------------|---------|--------|------------|
 | Excellent | Test 1.1 | ✅ Validated | ⭐⭐⭐⭐ (4/5) |
-| Good (baseline) | Saipem Standard | ✅ Validated | ⭐⭐⭐⭐⭐ (5/5) |
+| Good (baseline) | Contractor Standard | ✅ Validated | ⭐⭐⭐⭐⭐ (5/5) |
 | Average | Test 1.3 | ✅ Validated | ⭐⭐⭐⭐⭐ (5/5) |
 | Poor | Test 1.2 | ✅ Validated | ⭐⭐⭐⭐⭐ (5/5) |
 

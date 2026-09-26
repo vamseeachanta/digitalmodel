@@ -53,7 +53,7 @@ def test_setup():
         print(f"   {script}: {status}")
     
     # Check geometry path
-    geometry_path = repo_root / "specs" / "modules" / "orcawave" / "sea-cypress-diffraction-analysis" / "inputs" / "geometry"
+    geometry_path = repo_root / "specs" / "modules" / "orcawave" / "tug-30m-1-diffraction-analysis" / "inputs" / "geometry"
     print(f"\n4. Geometry Path: {geometry_path}")
     print(f"   Exists: {geometry_path.exists()}")
     

@@ -13,6 +13,8 @@ Public API:
   * ``ReportSection``    — a keyed builder with a render mode.
   * ``ReportBackbone``   — ordered sections -> list[str] of section HTML.
   * ``ReportRenderer``   — wrap sections in an HTML document + write to disk.
+  * ``ReportSpec`` / ``render_html`` / ``write_report`` — the standard
+    HTML/PDF report engine (#2212); ``report_adapter`` registers a domain.
 """
 
 from __future__ import annotations
@@ -45,6 +47,38 @@ from digitalmodel.reporting.calc_report import (
     WayForwardStage,
 )
 from digitalmodel.reporting.brief import Brief, BriefSection, Callout
+from digitalmodel.reporting.spec import (
+    DOC_NUMBER_RE,
+    MANIFEST_REQUIRED_FIELDS,
+    DocumentMeta,
+    FigureBlock,
+    ReportSpec,
+    RevisionRow,
+    Section,
+    StandardLabel,
+    StatusBlock,
+    TableBlock,
+    TextBlock,
+)
+from digitalmodel.reporting.engine import (
+    ReportArtifacts,
+    markdown_to_html,
+    render_html,
+    write_report,
+)
+from digitalmodel.reporting.figures import (
+    figure_from_columns,
+    inline_plotlyjs,
+    plotly_div,
+)
+from digitalmodel.reporting.pdf import PdfRenderError, PdfStatus, render_pdf
+from digitalmodel.reporting.adapters import (
+    ADAPTERS,
+    AdapterError,
+    build_spec,
+    maybe_render_report,
+    report_adapter,
+)
 from digitalmodel.reporting.skeleton import (
     BlockSpec,
     Completeness,
@@ -91,4 +125,31 @@ __all__ = [
     "Brief",
     "BriefSection",
     "Callout",
+    # standard report engine (#2212)
+    "DOC_NUMBER_RE",
+    "MANIFEST_REQUIRED_FIELDS",
+    "DocumentMeta",
+    "FigureBlock",
+    "ReportSpec",
+    "RevisionRow",
+    "Section",
+    "StandardLabel",
+    "StatusBlock",
+    "TableBlock",
+    "TextBlock",
+    "ReportArtifacts",
+    "markdown_to_html",
+    "render_html",
+    "write_report",
+    "figure_from_columns",
+    "inline_plotlyjs",
+    "plotly_div",
+    "PdfRenderError",
+    "PdfStatus",
+    "render_pdf",
+    "ADAPTERS",
+    "AdapterError",
+    "build_spec",
+    "maybe_render_report",
+    "report_adapter",
 ]

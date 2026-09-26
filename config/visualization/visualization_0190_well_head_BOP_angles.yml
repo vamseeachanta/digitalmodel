@@ -75,7 +75,7 @@ plot_settings:
     xlabel: Date
     ylabel: BOP Accelerations
     suptitle: BOP Accelerations. Yellow Pod
-    title: Yellowtail Well, Noble Bob Douglas
+    title: Deepwater well, drillship
     xticklabels: NULL
     grid: True
     legend: True
@@ -96,7 +96,7 @@ plot_settings:
     xlabel: Date
     ylabel: BOP Accelerations
     suptitle: BOP Accelerations. Blue Pod
-    title: Yellowtail Well, Noble Bob Douglas
+    title: Deepwater well, drillship
     xticklabels: NULL
     grid: True
     legend: True

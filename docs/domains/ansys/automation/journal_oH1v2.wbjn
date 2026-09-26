@@ -38,7 +38,7 @@ modelComponent1.Refresh()
 model1 = system1.GetContainer(ComponentName="Model")
 model1.Edit()
 
-cmd1=open('D:\\Cosimulation\\automation\\mehacnial_for_mesh.py').read()
+cmd1=open('<private-data>\\mehacnial_for_mesh.py').read()
 
 model1.SendCommand(Language="Python", Command=cmd1)
 
@@ -51,13 +51,13 @@ string1 = geometry2.GetGeometryFileAndSaveData()
 model2 = system2.GetContainer(ComponentName="Model")
 model2.Edit()
 
-rezaScript = r"D:\Cosimulation\automation\addAQWAobjects.js"
-#rezaScript = r"D:\Cosimulation\Wrapper1.py"
+rezaScript = r"<private-data>\addAQWAobjects.js"
+#rezaScript = r"<private-data>\Wrapper1.py"
 
 AQWA.RunScript(FilePath=rezaScript);
 #model2.SendCommand(AQWA.RunScript(FilePath=rezaScript))
 
-#cmd1=open('D:\\Cosimulation\\Wrapper1.py').read()
+#cmd1=open('<private-data>\\Wrapper1.py').read()
 #model2.SendCommand(Language="Python", Command=cmd1)
 
 model2.Exit()
@@ -66,6 +66,6 @@ Update()
 
 #model2.Edit()
 
-#rezaScript = r"D:\Cosimulation\addAQWAobjects_post.js"
+#rezaScript = r"<private-data>\addAQWAobjects_post.js"
 
 Save(FilePath="Aqwa_Cosimulation.wbpj",Overwrite=True)

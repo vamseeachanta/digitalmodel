@@ -11,12 +11,12 @@
 - outputs - output files
 - py - python scripts
   - load_dxf_layer.py : Load dxf as a layer in QGIS
-  - load_lakach_lines.py : Load all dxf liens of the project in QGIS
+  - load_field_lines.py : Load all dxf liens of the project in QGIS
 
 ## QGIS Files
 
 
 | File Name | Description | Comments |
 | --- | --- | --- |
-| 2024_12_11_Lakach_TIN.qgz | QGIS project file with all lines loaded |  |
+| 2024_12_11_Field_TIN.qgz | QGIS project file with all lines loaded |  |
 | layer_board.csv | Board layer |  Contains all reference input files|

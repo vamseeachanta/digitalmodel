@@ -280,7 +280,7 @@ See also: FFS assessment capability — `docs/marketing/` (Fitness for Service b
 
 | | |
 |---|---|
-| **Email** | [contact@aceengineer.com] |
+| **Email** | [[email removed]] |
 | **Web** | [www.aceengineer.com] |
 | **Technical queries** | Available to discuss project scope and standard applicability |
 

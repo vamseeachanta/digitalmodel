@@ -366,8 +366,11 @@ class TestExemptFilesCarryNoValues:
         import re
 
         rules = yaml.safe_load(RULES.read_text(encoding="utf-8"))
-        salt = str(rules.get("salt", ""))
-        hashed = set(rules.get("hashed_names") or [])
+        # Each hash list is compared under its own salt (C13/C16 rotation).
+        sets = [(str(rules.get("salt", "")), set(rules.get("hashed_names") or []))]
+        legacy = rules.get("legacy_hashed_names") or {}
+        if legacy:
+            sets.append((str(legacy.get("salt", "")), set(legacy.get("hashes") or [])))
         job = next(r for r in rules["structural"] if r["id"] == "job-code")
         job_rx = re.compile(job["pattern"])
         word = re.compile(r"[A-Za-z][A-Za-z0-9-]{3,}")
@@ -383,8 +386,9 @@ class TestExemptFilesCarryNoValues:
                     pytest.fail(f"{rel}:{n}: job code in an exempt file")
             for w in word.findall(line):
                 for c in {w.lower(), *re.split(r"[-\d]+", w.lower())}:
-                    if len(c) >= 4 and hashlib.sha256(
-                            f"{salt}:{c}".encode()).hexdigest() in hashed:
+                    if len(c) >= 4 and any(
+                            hashlib.sha256(f"{salt}:{c}".encode()).hexdigest() in hashed
+                            for salt, hashed in sets):
                         pytest.fail(f"{rel}:{n}: denied name in an exempt file")
 
 

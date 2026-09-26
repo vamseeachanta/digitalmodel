@@ -253,26 +253,24 @@ class Database():
             logging.info("  ******DATABASE******")
             logging.info("Attempt to connect to Server: {0}, user: {1}, password:not displayed, database: {2}".format(
                 None, None, self.database))
-            try:
-                # Could not get this working
-                from pathlib import Path, PureWindowsPath
+            # The database is the caller's (configuration key "database"), else
+            # DIGITALMODEL_ACCESS_DB. A fixed private path used to overwrite it
+            # here. Resolved before the driver import and outside the try, so a
+            # missing location is reported instead of ending in sys.exit().
+            from digitalmodel.infrastructure.utils.private_paths import (
+                access_connection_string,
+            )
 
+            connection_string_generic = access_connection_string(self.database)
+            try:
                 import pyodbc
-                dbq = r"DBQ={0}".format(PureWindowsPath(self.database))
-                # below not working
-                connection_string_generic = r"Driver={Microsoft Access Driver (*.mdb, *.accdb)};" + dbq + ";"
-                connection_string_generic = r"Driver={Microsoft Access Driver (*.mdb, *.accdb)};" + r"Dbq=C:\Users\achantv\Documents\Utilities\aceengineer\data_manager\data\bsee\2018_Atlas_Update.accdb;"
+
                 print(connection_string_generic)
                 self.conn = pyodbc.connect(connection_string_generic)
 
                 import pypyodbc
+
                 pypyodbc.lowercase = False
-                from pathlib import Path, PureWindowsPath
-                dbq = r"DBQ={0}".format(PureWindowsPath(self.database))
-                # below not working
-                connection_string_generic = r"Driver={Microsoft Access Driver (*.mdb, *.accdb)};" + dbq + ";"
-                connection_string_generic = r"Driver={Microsoft Access Driver (*.mdb, *.accdb)};" + r"Dbq=C:\Users\achantv\Documents\Utilities\aceengineer\data_manager\data\bsee\2018_Atlas_Update.accdb;"
-                print(connection_string_generic)
                 self.conn = pypyodbc.connect(connection_string_generic)
 
             except Exception as e:
