@@ -808,7 +808,11 @@ def _assess(case: Mapping, validator: Validator) -> CrackAssessmentResult:
         ssy_chk[key] = {"passed": sc.passed, "ratio": sc.ratio,
                         "max_ratio": float(ssy_in.value),
                         "plastic_zone": "Irwin, plane stress",
-                        "ligament_mm": d["ligament_mm"]}
+                        "ligament_mm": d["ligament_mm"],
+                        # owner card J03 "add meaning": the cyclic plastic zone governing
+                        # fatigue growth is (dK / 2 sigma_y)^2, i.e. 1/4 of the monotonic
+                        # zone at R = 0; reported for meaning, it does not gate.
+                        "cyclic_ratio": sc.ratio / 4.0}
     sref0 = planes[gov_plane0]["sigma_ref"]
     if sref0["peak_mpa"] is not None:
         rng = (1.0 - r_ratio) * sref0["peak_mpa"]
@@ -824,11 +828,65 @@ def _assess(case: Mapping, validator: Validator) -> CrackAssessmentResult:
     else:
         shakedown = {"status": "Not Evaluated",
                      "reason": "the uncracked receipt gives no elastic peak on the plane"}
+    # Owner card J03: report the life to the last small-scale-yielding-valid depth as
+    # well as to the last FE state. The limit is linearly crossed between the last
+    # passing and the first failing depth (the limit itself is not changed).
+    ssy_keys = [f"{d['a_mm']:.2f}" for d in est]
+    first_fail = next((i for i, k in enumerate(ssy_keys) if not ssy_chk[k]["passed"]), None)
+    lim_ssy = float(ssy_in.value)
+    if first_fail is None:
+        a_star = a_last
+    elif first_fail == 0:
+        a_star = a0
+    else:
+        k_ok, k_bad = ssy_keys[first_fail - 1], ssy_keys[first_fail]
+        a_ok, a_bad = est[first_fail - 1]["a_mm"], est[first_fail]["a_mm"]
+        r_ok, r_bad = ssy_chk[k_ok]["ratio"], ssy_chk[k_bad]["ratio"]
+        a_star = a_ok + (lim_ssy - r_ok) / (r_bad - r_ok) * (a_bad - a_ok)
+    n_star = remaining(a0, a_star, tab) if a_star > a0 else 0.0
+    growth["life_to_last_ssy_valid"] = {
+        "a_mm": a_star,
+        "cycles": n_star,
+        "margin_on_demand": (n_star / demand) if n_star else 0.0,
+        "basis": (f"depth where the Irwin plane-stress r_p/ligament reaches the stated limit "
+                  f"{lim_ssy:g} (ASSUMED - to be confirmed), by linear interpolation between "
+                  "the last passing and first failing FE depths (owner card J03); beyond it, "
+                  "linear-elastic K and Paris growth lose validity"),
+    }
+    # Meaning only (does not gate): the same crossing on the cyclic plastic zone.
+    cyc = [ssy_chk[k]["cyclic_ratio"] for k in ssy_keys]
+    cfail = next((i for i, r in enumerate(cyc) if r > lim_ssy), None)
+    if cfail is None:
+        a_cyc = a_last
+    elif cfail == 0:
+        a_cyc = a0
+    else:
+        a_lo, a_hi = est[cfail - 1]["a_mm"], est[cfail]["a_mm"]
+        a_cyc = a_lo + (lim_ssy - cyc[cfail - 1]) / (cyc[cfail] - cyc[cfail - 1]) * (a_hi - a_lo)
+    n_cyc = remaining(a0, a_cyc, tab) if a_cyc > a0 else 0.0
+    growth["life_to_last_cyclic_ssy_valid"] = {
+        "a_mm": a_cyc, "cycles": n_cyc, "label": "MEANING (not gating)",
+        "basis": (f"same crossing on the cyclic plastic zone (dK / 2 sigma_y)^2 = r_p/4 at "
+                  f"R = 0 against the same limit {lim_ssy:g}; reported for meaning (owner "
+                  "card J03)"),
+    }
+    ssy_meaning = (
+        "Meaning (owner card J03): the monotonic plastic zone grows from "
+        + ", ".join(f"{ssy_chk[k]['ratio']:.0%} at a = {k} mm" for k in ssy_keys)
+        + " of the remaining ligament. The static FAD already accounts for plasticity "
+        "through Lr, so this check bears mainly on the growth life. The cyclic plastic "
+        "zone that governs fatigue growth, (dK / 2 sigma_y)^2, is a quarter of the "
+        "monotonic zone at R = 0: "
+        + ", ".join(f"{ssy_chk[k]['cyclic_ratio']:.0%}" for k in ssy_keys)
+        + ". Growth near ligament exhaustion is therefore outside linear-elastic validity, "
+        "and the life beyond the last SSY-valid depth is reported separately."
+    )
     gv = crack_checks.growth_validity([d["lr"] for d in est])
     checks = {
         "sigma_ref_consistency": sref_chk,
         "ssy": ssy_chk,
         "ssy_basis": ssy_in.basis,
+        "ssy_meaning": ssy_meaning,
         "shakedown": shakedown,
         "growth_validity": {"status": gv.status, "reason": gv.reason,
                             "lr_max_seen": gv.lr_max_seen},
@@ -836,22 +894,48 @@ def _assess(case: Mapping, validator: Validator) -> CrackAssessmentResult:
 
     # ---- residual screening bounds (owner card B11) ------------------------
     scr = case["residual_screening"]
-    scr_in = resolve_input("residual_screening", {**scr, "value": scr["y"]}, {})
-    inputs["residual_screening"] = scr_in
     d0 = est[0]
+    # Owner card J05: derive Y and the relaxation factor from our own model rather than
+    # choosing them. Y comes from the crack-face-pressure pair at a0: by superposition,
+    # a uniform crack-face traction p gives the same K as a uniform residual stress p on
+    # the crack plane, so Y = (K_on - K_off) / (p sqrt(pi a)).
+    y_spec, rel_spec = scr["y"], scr["relaxation"]
+    if isinstance(y_spec, Mapping) and y_spec.get("derive") == "crack_face_pressure":
+        off_rec = load(str(y_spec["off_state"]))
+        k_off = float(off_rec["governing"]["k_gov_max_mpa_sqrt_m"])
+        p_face = float(limit_rec["limit_load"]["design_pressure_mpa"])
+        y_val = (d0["k_gov_mpa_sqrt_m"] - k_off) / (
+            p_face * math.sqrt(math.pi * d0["a_mm"] / 1000.0))
+        y_basis = (f"derived from our own crack-face pressure pair at a0: "
+                   f"Y = (K_on - K_off)/(p sqrt(pi a)) = ({d0['k_gov_mpa_sqrt_m']:.4g} - "
+                   f"{k_off:.4g})/({p_face:g} x sqrt(pi x {d0['a_mm']:g} mm)), governing node "
+                   f"(receipt {y_spec['off_state']}); ASSUMED - to be confirmed")
+    else:
+        y_val, y_basis = float(y_spec), "stated input (ASSUMED - to be confirmed)"
+    if isinstance(rel_spec, Mapping) and rel_spec.get("derive") == "linear_cap":
+        flow = 0.5 * (sigma_y + sigma_u)
+        rel_val = min(1.0, max(0.0, float(rel_spec["intercept"]) - d0["sigma_ref_mpa"] / flow))
+        rel_basis = (f"derived: min(1, max(0, {float(rel_spec['intercept']):g} - "
+                     f"sigma_ref/sigma_f)) with sigma_ref = {d0['sigma_ref_mpa']:.4g} MPa and "
+                     f"sigma_f = {flow:.4g} MPa; rule stated in the input, ASSUMED - to be "
+                     "confirmed")
+    else:
+        rel_val, rel_basis = float(rel_spec), "stated input (ASSUMED - to be confirmed)"
+    scr_in = resolve_input("residual_screening", {**scr, "value": y_val}, {})
+    inputs["residual_screening"] = scr_in
     kr_p0 = d0["k_gov_mpa_sqrt_m"] / kmat
     bounds = []
     for b in secondary_stress.residual_screening_bounds(
-            k_primary=d0["k_gov_mpa_sqrt_m"], kmat=kmat, a_mm=d0["a_mm"], y=float(scr["y"]),
-            sigma_y_mpa=sigma_y, sigma_u_mpa=sigma_u, relaxation=float(scr["relaxation"]),
+            k_primary=d0["k_gov_mpa_sqrt_m"], kmat=kmat, a_mm=d0["a_mm"], y=y_val,
+            sigma_y_mpa=sigma_y, sigma_u_mpa=sigma_u, relaxation=rel_val,
             basis=scr_in.basis, rho=float(scr["rho"])):
         mb = envelope_margin(d0["lr"], kr_p0, curve=curve, lr_cut=lr_cut,
                              kr_secondary=b.kr - kr_p0)
         bounds.append({"label": b.label, "kind": b.kind, "sigma_r_mpa": b.sigma_r_mpa,
                        "k_secondary": b.k_secondary, "kr": b.kr,
                        "envelope_margin": _margin_dict(mb)})
-    screening = {"a_mm": d0["a_mm"], "rho": float(scr["rho"]), "y": float(scr["y"]),
-                 "relaxation": float(scr["relaxation"]),
+    screening = {"a_mm": d0["a_mm"], "rho": float(scr["rho"]), "y": y_val,
+                 "y_basis": y_basis, "relaxation": rel_val, "relaxation_basis": rel_basis,
                  "basis": (f"rho = {float(scr['rho']):g} (stated, not computed); "
                            "screening bounds are sensitivities and never the disposition. "
                            f"Input: {scr_in.basis}"),
@@ -874,6 +958,28 @@ def _assess(case: Mapping, validator: Validator) -> CrackAssessmentResult:
         },
         "life_to_ligament_exhaustion": sens_life,
     }
+    # Owner card J02: an indicative partial-factor sensitivity, NOT a code PSF. Factors
+    # are user inputs with a basis; the evidence gate still needs a code PSF basis.
+    psf_s = case.get("psf_sensitivity")
+    if psf_s:
+        f_s, f_k = float(psf_s["stress_factor"]), float(psf_s["kmat_factor"])
+        if f_s < 1.0 or f_k < 1.0:
+            raise ValueError("indicative factors must be >= 1.")
+        rows_psf = []
+        for d in est:
+            lr_f = f_s * d["lr"]
+            kr_f = f_s * d["k_gov_mpa_sqrt_m"] / (kmat / f_k)
+            m_f = envelope_margin(lr_f, kr_f, curve=curve, lr_cut=lr_cut)
+            rows_psf.append({"a_mm": d["a_mm"], "lr": lr_f, "kr": kr_f,
+                             "envelope_margin": _margin_dict(m_f),
+                             "fad_inside": m_f.factor > 1.0})
+        sensitivities["psf_indicative"] = {
+            "label": "SENSITIVITY", "stress_factor": f_s, "kmat_factor": f_k,
+            "depths": rows_psf,
+            "basis": (f"indicative factors {f_s:g} on stress and {f_k:g} on Kmat "
+                      f"({psf_s['basis']}); not code partial safety factors, so the "
+                      "evidence gate is unchanged"),
+        }
     for label, state in sens_states.items():
         rec = _state_record(state, receipts_used[state])
         plane = receipts_used[state].get("plane")
@@ -958,6 +1064,20 @@ def _assess(case: Mapping, validator: Validator) -> CrackAssessmentResult:
             f"MPa*sqrt(m) over [{a0}, {a_last}] mm (rule {rule})", 0.0, tm["margin"],
             "DeltaK above the threshold at every depth; growth predicted"
             if tm["margin"] > 0 else "DeltaK at or below the threshold; arrest predicted"))
+    sv = growth["life_to_last_ssy_valid"]
+    cv = growth.get("life_to_last_cyclic_ssy_valid", {})
+    findings.append(_finding(
+        "life.within_ssy_validity",
+        f"cycles from a0 = {a0} mm to the last small-scale-yielding-valid depth "
+        f"({sv['a_mm']:.3f} mm, monotonic r_p/ligament limit {lim_ssy:g}) at least the demand",
+        demand, sv["cycles"],
+        (f"BELOW the demand (factor {sv['margin_on_demand']:.3f}): the linear-elastic growth "
+         f"life is not established beyond a = {sv['a_mm']:.3f} mm under the stated monotonic "
+         f"limit. On the cyclic plastic zone (meaning only, not gating) validity extends to "
+         f"a = {cv.get('a_mm', float('nan')):.3f} mm, {cv.get('cycles', float('nan')):.0f} "
+         "cycles. An elastic-plastic (J-based) growth assessment is needed to close this")
+        if sv["cycles"] < demand else
+        f"meets the demand by a factor {sv['margin_on_demand']:.3f}"))
     for k, v in sref_chk.items():
         findings.append(_finding(
             f"check.sigma_ref_consistency.{k}",

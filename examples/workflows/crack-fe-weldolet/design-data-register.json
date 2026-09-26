@@ -238,11 +238,14 @@
     {
       "id": "M-06",
       "parameter": "Fracture toughness Kmat",
-      "value": 132.0,
+      "value": 89.6,
       "unit": "MPa*sqrt(m)",
-      "source_class": "missing_evidence",
-      "reference_ids": ["decision:S05"],
-      "note": "ASSUMED - to be confirmed: no public source was found; the value is listed so the gap is visible and it is not used in P0b. Confirm with fracture-toughness tests of the weld metal and HAZ at 250 degC.",
+      "source_class": "public",
+      "reference_ids": [
+        "decision:J01",
+        "docs:literature/fracture-mechanics/fitness-for-service/NUREG-CR-6428-Rev1-govinfo.pdf"
+      ],
+      "note": "ASSUMED - to be confirmed: public lower bound for austenitic stainless SA/SMA (flux) weld metal at reactor temperatures, J_Ic = 40 kJ/m2 (NUREG/CR-6428 Rev.1, PDF p.54, 'can be as low as 40 kJ/m2'; lower-bound J-R Eqs. 21/22; also NUREG/CR-7185 Eq. 46), converted K = sqrt(E' J) with E' = E/(1-nu^2) = 200549 MPa (E 182.5 GPa at 250 degC, nu 0.3) -> 89.6 MPa*sqrt(m). Assumes a flux-welded root (the governing case); a confirmed unaged GTAW root would support 121.3. Air data: the same reports note environment can reduce toughness. Confirm with weld-metal and HAZ toughness tests at 250 degC.",
       "status_label": "ASSUMED - to be confirmed"
     },
     {

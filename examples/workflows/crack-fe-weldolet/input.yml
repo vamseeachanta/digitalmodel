@@ -13,9 +13,10 @@ default:
 # published case is used (owner cards S04, B05-B08).
 #
 # Paths are relative to the repository root. Every input carries a register id or a
-# basis string. Missing evidence is stated, never filled in: the fracture toughness has
-# no public source (register M-06) and no residual-stress or partial-safety-factor basis
-# is supplied, so the evidence status comes out INCOMPLETE and `passes` is false.
+# basis string. Missing evidence is stated, never filled in: the fracture toughness is a
+# cited public lower bound (register M-06, NUREG/CR-6428 Rev.1; owner card J01), but no
+# residual-stress or partial-safety-factor basis is supplied, so the evidence status
+# comes out INCOMPLETE and `passes` is false.
 crack_fe_assessment:
   component_id: WELDOLET-6X0.5-STD-ROOT-FLAW
   design_data_register: examples/workflows/crack-fe-weldolet/design-data-register.json
@@ -118,16 +119,28 @@ crack_fe_assessment:
   partial_safety_factors: null
 
   residual_screening:
-    y: 1.12
-    relaxation: 0.5
+    # owner card J05: Y and the relaxation factor are derived from our own model
+    y: {derive: crack_face_pressure, off_state: p0b_crotch_a2p35_cfp_off}
+    relaxation: {derive: linear_cap, intercept: 1.4}
     rho: 0.0
     source_class: assumed
     status_label: ASSUMED - to be confirmed
     basis: >-
-      ASSUMED - to be confirmed: screening only (owner card B11). Uniform residual stress
-      over the flaw depth with the edge-crack factor Y = 1.12; a relaxation factor of 0.5
+      ASSUMED - to be confirmed: screening only (owner cards B11, J05). Uniform residual
+      stress over the flaw depth; Y derived from the crack-face pressure pair at a0 (by
+      superposition, a uniform crack-face traction gives the same K as a uniform residual
+      stress on the crack plane); relaxation factor min(1, max(0, 1.4 - sigma_ref/sigma_f))
       for the relaxed-yield bound; plasticity interaction rho = 0 stated, not computed.
       Confirm with a residual-stress measurement or a cited profile.
+
+  # owner card J02: indicative factors, NOT code partial safety factors
+  psf_sensitivity:
+    stress_factor: 1.2
+    kmat_factor: 1.2
+    basis: >-
+      ASSUMED - to be confirmed: indicative factors of 1.2 on stress and 1.2 on Kmat to show
+      the distance from the envelope under a plausible factoring. They are not code PSFs;
+      the evidence remains INCOMPLETE until code partial safety factors are supplied.
 
   citations:
     - getter: api579

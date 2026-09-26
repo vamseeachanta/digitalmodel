@@ -1664,13 +1664,13 @@ def test_workflow_registry(workflow, monkeypatch):
         }
     elif workflow["id"] == "crack-fe-ffs":
         # #2157 P3: crack-like-flaw FFS from our own FE crack receipts. The benchmark's
-        # toughness has no public source and no residual-stress or PSF basis is supplied,
+        # toughness is a cited public lower bound (J01); no residual-stress or PSF basis is supplied,
         # so the evidence is INCOMPLETE and `passes` is false whatever the verdict.
         result = cfg["crack_fe_ffs"]
         assert result["assessment_type"] == "CRACK"
         assert result["evidence_status"] == "INCOMPLETE"
         assert result["missing_evidence"] == [
-            "kmat_basis", "residual_stress_basis", "psf_basis",
+            "residual_stress_basis", "psf_basis",
         ]
         assert result["evidence"]["fe_receipts"]["established"] is True
         assert result["passes"] is False

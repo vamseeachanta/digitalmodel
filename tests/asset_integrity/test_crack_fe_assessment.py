@@ -44,7 +44,9 @@ EXAMPLE = REPO / "examples" / "workflows" / "crack-fe-weldolet"
 FE_STATES = EXAMPLE / "fe_states"
 INPUT = EXAMPLE / "input.yml"
 
-SIGMA_Y, SIGMA_U, KMAT, E_T = 127.0, 385.0, 132.0, 182.5
+SIGMA_Y, SIGMA_U, E_T = 127.0, 385.0, 182.5
+# owner card J01: Kmat is the cited public lower bound held in register item M-06
+KMAT = next(i["value"] for i in json.loads((EXAMPLE / "design-data-register.json").read_text("utf-8"))["design_data"] if i["id"] == "M-06")
 A_N_MM, M, E_REF, DK_TH, DEMAND = 5.21e-13, 3.0, 200.0, 2.0, 20_000.0
 
 
@@ -365,12 +367,14 @@ def test_residual_screening_bounds_at_a0(result):
     assert "rho = 0" in result.screening["basis"]
     k_p = _receipt("p0b_crotch_a2p35")["governing"]["k_gov_max_mpa_sqrt_m"]
     root = math.sqrt(math.pi * 2.35 / 1000.0)
-    expected = {"relaxed_yield": 0.5 * SIGMA_Y, "yield": SIGMA_Y,
+    # owner card J05: Y and relaxation are derived (their derivation is tested separately)
+    y, relax = result.screening["y"], result.screening["relaxation"]
+    expected = {"relaxed_yield": relax * SIGMA_Y, "yield": SIGMA_Y,
                 "flow": 0.5 * (SIGMA_Y + SIGMA_U)}
     assert [b["label"] for b in sb] == list(expected)
     for b in sb:
         assert b["kind"] == "screening"
-        ks = 1.12 * expected[b["label"]] * root
+        ks = y * expected[b["label"]] * root
         assert b["k_secondary"] == pytest.approx(ks, rel=1e-12)
         assert b["kr"] == pytest.approx((k_p + ks) / KMAT, rel=1e-12)
 
@@ -389,7 +393,9 @@ def test_payload_contains_citations(result):
 # --------------------------------------------------------------------------- #
 def test_benchmark_evidence_is_incomplete_with_named_items(result):
     assert result.evidence_status == "INCOMPLETE"
-    assert result.missing_evidence == ["kmat_basis", "residual_stress_basis", "psf_basis"]
+    # owner card J01: Kmat now has a cited public basis (NUREG/CR-6428 Rev.1 lower bound)
+    assert result.missing_evidence == ["residual_stress_basis", "psf_basis"]
+    assert result.evidence["kmat_basis"]["established"] is True
     assert "M-06" in result.evidence["kmat_basis"]["basis"]
     assert result.evidence["lr_max_basis"]["established"] is True
     assert result.evidence["geometry_validity"]["established"] is True
@@ -449,7 +455,7 @@ def test_complete_case_passes_only_with_every_basis(case):
     # residual stress now enters Kr through the named method
     d = next(d for d in res.depths if d["a_mm"] == pytest.approx(2.35))
     ks = 1.12 * 10.0 * math.sqrt(math.pi * 2.35 / 1000.0)
-    assert d["kr"] == pytest.approx((d["k_gov_mpa_sqrt_m"] + ks) / KMAT, rel=1e-12)
+    assert d["kr"] == pytest.approx((d["k_gov_mpa_sqrt_m"] + ks) / 132.0, rel=1e-12)
 
 
 def test_assumed_basis_does_not_establish_evidence(case):
@@ -533,3 +539,62 @@ def test_base_depth_rows_carry_no_extrapolated_life(result):
     sens = result.sensitivities["life_to_ligament_exhaustion"]
     assert sens["label"] == "SENSITIVITY"
     assert [x["a_mm"] for x in sens["remaining_by_depth"]] == pytest.approx([2.35, 2.8, 3.2])
+
+
+# --------------------------------------------------------------------------- #
+# Owner cards J02, J03, J05 (2026-09-26)
+# --------------------------------------------------------------------------- #
+def test_j03_life_to_last_ssy_valid_depth(result):
+    g = result.growth["life_to_last_ssy_valid"]
+    ssy = result.checks["ssy"]
+    # SSY passes at 2.35 and fails at 2.80: the valid limit lies between them,
+    # at the linear crossing of the ratio with the stated limit.
+    r1, r2 = ssy["2.35"]["ratio"], ssy["2.80"]["ratio"]
+    lim = ssy["2.35"]["max_ratio"]
+    a_star = 2.35 + (lim - r1) / (r2 - r1) * (2.80 - 2.35)
+    assert g["a_mm"] == pytest.approx(a_star, rel=1e-9)
+    assert 0 < g["cycles"] < result.growth["governing_life_cycles"]
+    assert "ASSUMED" in g["basis"] or "assumed" in g["basis"]
+
+
+def test_j03_cyclic_plastic_zone_reported_as_meaning(result):
+    for key, rec in result.checks["ssy"].items():
+        assert rec["cyclic_ratio"] == pytest.approx(rec["ratio"] / 4.0, rel=1e-12)
+    assert "cyclic" in result.checks["ssy_meaning"].lower()
+
+
+def test_j02_psf_indicative_sensitivity(result):
+    s = result.sensitivities["psf_indicative"]
+    assert s["label"] == "SENSITIVITY"
+    assert s["stress_factor"] == 1.2 and s["kmat_factor"] == 1.2
+    assert "ASSUMED" in s["basis"]
+    for row, d in zip(s["depths"], [d for d in result.depths if d["status"] == "established"]):
+        assert row["lr"] == pytest.approx(1.2 * d["lr"], rel=1e-12)
+        assert row["kr"] == pytest.approx(1.2 * d["k_gov_mpa_sqrt_m"] / (KMAT / 1.2), rel=1e-12)
+    # evidence stays incomplete: an indicative factor is not a code PSF
+    assert "psf_basis" in result.missing_evidence
+
+
+def test_j05_screening_inputs_derived_from_own_model(result):
+    scr = result.screening
+    on = _receipt("p0b_crotch_a2p35")["governing"]["k_gov_max_mpa_sqrt_m"]
+    off = _receipt("p0b_crotch_a2p35_cfp_off")["governing"]["k_gov_max_mpa_sqrt_m"]
+    p = 4.7
+    y = (on - off) / (p * math.sqrt(math.pi * 2.35 / 1000.0))
+    assert scr["y"] == pytest.approx(y, rel=1e-12)
+    assert "crack-face pressure" in scr["y_basis"]
+    sref = next(d for d in result.depths if d["a_mm"] == pytest.approx(2.35))["sigma_ref_mpa"]
+    flow = 0.5 * (SIGMA_Y + SIGMA_U)
+    assert scr["relaxation"] == pytest.approx(min(1.0, max(0.0, 1.4 - sref / flow)), rel=1e-12)
+
+
+def test_j03_finding_names_ssy_valid_life_against_demand(result):
+    f = next(x for x in result.findings if x["id"] == "life.within_ssy_validity")
+    sv = result.growth["life_to_last_ssy_valid"]
+    assert f["value"] == pytest.approx(sv["cycles"])
+    assert f["comparator"] == DEMAND
+    if sv["cycles"] < DEMAND:
+        assert f["disposition"].startswith("BELOW the demand")
+    cv = result.growth["life_to_last_cyclic_ssy_valid"]
+    assert cv["label"].startswith("MEANING")
+    assert sv["a_mm"] <= cv["a_mm"] <= 3.2

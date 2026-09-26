@@ -5,9 +5,9 @@ evidence_status: INCOMPLETE
 generated_by: scripts/crack_fe_database/build_tables.py
 inputs:
   case: examples/workflows/crack-fe-weldolet/input.yml
-  case_sha256: 308859625dd5a4ce41edd27c78073d37cd06bfbd371fa5688b80d50c8cdd159c
+  case_sha256: d119e71ebe0afd3f5946eeb1191a727fba91662ee5b7ee3d9fbb84a331cd6341
   design_data_register: examples/workflows/crack-fe-weldolet/design-data-register.json
-  design_data_register_sha256: acce329682299431443b6a5df3662d86c2d7aec8eccb1fedc5246bb619c56fc9
+  design_data_register_sha256: 66c37d53f515b93e7338d73045138dfc87838d3980d5c48502b0f7422fcb304e
   receipts:
     p0a_verification: 7fbe4aef7eb43b560d1695a1e77edf83c198fa1f82f34d55103cfedea12b5b3c
     p0b_crotch_a2p35: aab127665d3ac3893966532348192f4e6ce619f7c97f8bcdf3e79dc064d87319
@@ -23,7 +23,6 @@ inputs:
     p0b_uncracked: e9f71f68a496be243a02cc29cf663fe21d2c14e8d738a9401b460b8591d4d00a
 issue: 2157
 missing_evidence:
-- kmat_basis
 - residual_stress_basis
 - psf_basis
 rights_decision: 'Our own computed results: FE crack-state values read from the committed receipts of
@@ -39,4 +38,4 @@ tables:
   crack_results:
     file: crack_results.csv
     rows: 10
-    sha256: 8974cbe2e20f79585cd282950210ccbf0567fdd5f9bd28a556c13eb99d54dbf7
+    sha256: 56c068b710b556a82f836bdd6ce158dc5ce714eb36956e44b583f7ea513ff1b2

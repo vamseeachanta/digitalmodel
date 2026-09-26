@@ -480,4 +480,19 @@ The thresholds are set from these arguments, not from the earlier run's values.
   - no Annex 9D content ships.
 - **G03 (inputs):** partial safety factors are inputs with a basis. An assessment without them is INCOMPLETE evidence (P3).
 
+## P3 result and P4 card decisions (owner save 2026-09-26T11:50Z, `crack-fe-2157-decisions (10).json`; all as recommended)
+
+- **J01 (lit_lower):** Kmat = 89.6 MPa√m is the cited public lower bound for austenitic stainless SA/SMA weld metal at reactor temperatures: J_Ic = 40 kJ/m² (NUREG/CR-6428 Rev.1, PDF p.54, verified in the text; also NUREG/CR-7185 Eq. 46), with K = √(E′J) and E′ = 200,549 MPa.
+  - Register M-06 now has source class public and remains "ASSUMED - to be confirmed", because the root is assumed to be flux-welded.
+  - Both reports are archived under `/mnt/ace/docs/literature/fracture-mechanics/fitness-for-service/`.
+- **J02 (unity_sensitivity), with the owner note "add note of assumed for input data":** indicative factors of 1.2 on stress and 1.2 on Kmat are reported as a labelled sensitivity (load factor to the envelope 1.47–1.69). They are not code PSFs, so the evidence stays INCOMPLETE.
+- **J03 (keep_report), with the owner note "add meaning; highlight the conclusions":** the monotonic SSY limit stays at 0.2, as a stated assumption. Two lives are reported:
+  - to the last SSY-valid depth: a = 2.369 mm, 1,980 cycles, **below the 20,000-cycle demand**;
+  - to the last FE state: 3.20 mm, 59,339 cycles.
+
+  For meaning, the cyclic plastic zone (a quarter of the monotonic zone at R = 0) keeps validity to 3.13 mm, 56,479 cycles. A named finding states that an elastic-plastic (J-based) growth assessment is needed to close this.
+- **J04 (accept_rule):** a failed consistency check turns ACCEPT into MONITOR. The benchmark verdict is MONITOR, with `passes` False.
+- **J05 (derive):** Y = 0.713 comes from our own crack-face-pressure pair, by superposition. The relaxation factor is min(1, max(0, 1.4 − σ_ref/σ_f)) = 1.0 at σ_ref/σ_f = 0.37.
+- **R06 (calcreport), with the owner note "ensure we do not lose technical robustness":** the P4 report is built on `CalcReport`. Every number is drawn from the result record, and the report keeps every check, finding, limitation and sensitivity, with the conclusions highlighted.
+
 ## Complexity: T3
