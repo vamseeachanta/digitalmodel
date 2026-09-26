@@ -69,7 +69,7 @@ Module IDs reference `docs/registry/module-routing.yaml`. Maturity levels (produ
 ### Asset Integrity / API 579
 
 **Current state:** Stable maturity. API 579-1/ASME FFS-1 Level 1/2 assessments, remaining strength factor (RSF), BS 7910 fracture mechanics (FAD diagrams, critical flaw size).
-**Key gap:** Level 3 assessment (elastic-plastic fracture) not automated. Creep damage (Part 10), fire damage, and dent assessment not implemented.
+**Key gap:** Level 3 assessment (elastic-plastic, buckling, crack driving force) not automated; API 579 Part 9 Level 1 curves, Annex C/E/F data and API 653 tank settlement absent; only one legacy Deckhand route is live. Program + readiness review: `docs/domains/asset-integrity/level3-and-part9-program-2026-09-25.md`, `ffs-readiness-review-2026-09-25.md` (epic #1057 Phase 4). Creep (Part 10) and fire damage not implemented.
 **Calculator potential:** Medium -- FFS screening could work as a calculator but requires significant input complexity.
 
 ### Geotechnical -- Soil Models, Anchors, Scour
