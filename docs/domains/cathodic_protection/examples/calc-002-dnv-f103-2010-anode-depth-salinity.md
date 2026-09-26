@@ -158,9 +158,12 @@ Key outputs used in calc-001:
 ## Python cfg dict
 
 ```python
+# not-runnable: resistivity helper pending
+# There is no router route for a depth/salinity resistivity profile. This cfg is
+# reference data for calc-001 until a resistivity helper is added to the repo.
 cfg = {
     "inputs": {
-        "calculation_type": "depth_salinity_resistivity",
+        "calculation_type": "depth_salinity_resistivity",   # no router route (see above)
         "standard": "DNV-RP-F103:2010",
         "design_data": {
             "structure_type": "floating_storage_tanker_hull",
@@ -209,6 +212,5 @@ cfg = {
         },
     }
 }
-# Run: CathodicProtection().router(cfg)
 # This is a supplementary calculation; results feed into calc-001 (FST hull main CP calc).
 ```

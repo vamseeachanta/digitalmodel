@@ -127,6 +127,18 @@ standard; the actual FST hull calculations follow ABS methodology.
 | Governing anode count | 187 | # |
 | Total gross mass | ~5.6 | MT |
 
+**Reproduction note (this branch, `ABS_gn_ships_2018` route, cfg below):** the code returns
+Ici / Icm / Icf = 145.5 / 149.9 / 152.9 A (source 145.5 / 149.2 / 152.9 A; the route's mean
+factor is (f_yearly + fcf) / 2 = 1.0305, the same as the source, but its mean current density
+is 13.912 mA/m² against the source's 13.844), a temperature-corrected anode capacity of
+2162 Ah/kg (2000 − 27 × (14 − 20)) where the source uses Q = 2500 Ah/kg, hence a net anode
+mass of 3682 kg (source 3 169 kg) and 127.0 anodes on the mass basis (source 109 by mass,
+187 governing on the final current check — the route does not iterate the count on current
+output). Ra initial 0.3286 Ω agrees; the route reports the same value for the final stage
+because no depleted geometry is supplied. The tabulated source values are left as extracted.
+The ABS ships route is not affected by the #2207 DNV-RP-B401/F103 tables; these values are
+unchanged after #2207.
+
 ### Individual Anode Current Output (initial geometry, ρ = 0.2547 Ω·m)
 | Stage | Ia per anode (A) |
 |-------|-----------------|
@@ -134,70 +146,68 @@ standard; the actual FST hull calculations follow ABS methodology.
 | Final (depleted) | 0.821 |
 
 ### Summary Table — Sensitivity Cases (Gross anode mass, MT)
-| Design Life | Low Durability | High Durability |
-|-------------|---------------|-----------------|
-| 5 yr | 6.04 | 5.59 |
-| 15 yr | 12.12 | 10.36 |
-| 25 yr | 24.40 | 18.24 |
+| Design Life (yr) | Low Durability (MT) | High Durability (MT) |
+|------------------|---------------------|----------------------|
+| 5 | 6.04 | 5.59 |
+| 15 | 12.12 | 10.36 |
+| 25 | 24.40 | 18.24 |
 
 ## Python cfg dict
 
 ```python
+from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
+
 cfg = {
     "inputs": {
-        "calculation_type": "ABS_CP_SHIPS_2017",
-        # NOTE: Source uses ABS Cathodic Protection of Ships (Dec 2017), NOT DNV-RP-F103.
-        # Closest implemented route is DNV_RP_F103_2010 for pipeline section geometry;
-        # hull/structure route would require ABS-specific breakdown factor formula.
+        # Router key. The source standard is the ABS Guidance Notes on Cathodic Protection
+        # of Ships, December 2017. The router key "ABS_gn_ships_2018" is misnamed for that
+        # edition; it is the only ABS ships route and is not renamed here.
+        "calculation_type": "ABS_gn_ships_2018",
         "design_data": {
-            "design_life": 5,          # years (primary case)
-            "coating_assumption": "deterioration",   # not disbonding
-        },
-        "structure": {
-            "surface_area": 10778,     # m², average wetted area
-            "coating_coverage": 1.0,   # 100%
-            "coating_durability": "high",
+            "design_life": 5,                    # years (primary case)
+            "seawater_max_temperature": 14,      # deg C
+            "coating_assumption": "deterioration",   # not disbonding (documentation only)
         },
         "environment": {
-            "temperature": 14,         # °C
-            "salinity": 25,            # ppt
-            "seawater_resistivity": 0.2547,   # Ω·m
+            "seawater": {"resistivity": {"input": 0.2547}},   # ohm.m at 25 ppt
+            "salinity_ppt": 25,
         },
-        "coating_breakdown": {
-            "fc_initial": 0.010,       # 1.0% (High durability)
-            "fc_initial_duration": 2,  # years
-            "fc_per_year": 0.010,      # 1.0%/yr (High durability)
-            # Derived: fcm(5yr)=1.0305, fcf(5yr)=1.0510
+        "structure": {
+            "steel_total_area": 10778.0,         # m2, average wetted area
+            "area_coverage": 100.0,              # % coated
+            "coating_initial_breakdown_factor": 1.0,    # % (High durability, ABS Table 4)
+            "coating_initial_breakdown_duration": 2.0,  # years
+            "coating_yearly_breakdown_factor": 1.0,     # %/yr (High durability)
+            "coating_breakdown_factor_max": 2.0,
+            # Source-derived factors: fcm(5 yr) = 1.0305, fcf(5 yr) = 1.0510
         },
-        "current_density": {
-            "initial": 0.0135,         # A/m² (coated steel, tidal, V≤1 kn)
-            "bare_steel": 0.200,       # A/m²
+        "design_current": {
+            "coated_steel_mA_m2": 13.5,          # ABS Table 5, coated steel, tidal, V <= 1 kn
+            "uncoated_steel_mA_m2": 200.0,
         },
         "anode": {
-            "material": "Al_alloy",
-            "type": "long_flush_mount",
-            "length": 0.65,            # m
-            "width": 0.125,            # m
-            "height": 0.13,            # m
-            "net_weight": 29.0,        # kg
-            "gross_weight": 30.0,      # kg
-            "current_capacity": 2500,  # A·h/kg
-            "utilisation_factor": 0.825,
-            "closed_circuit_potential": -1.09,   # V vs Ag/AgCl
-        },
-        "protection": {
-            "min_potential": -0.800,   # V vs Ag/AgCl
-            "max_potential": -1.100,   # V vs Ag/AgCl
+            "material": "aluminium",             # Al alloy, Option A box (flush) anode
+            "protection_potential": 0.8,         # V (magnitude, vs Ag/AgCl)
+            "closed_circuit_anode_potential": -1.09,   # V vs Ag/AgCl
+            "anode_Utilisation_factor": 0.825,
+            "physical_properties": {"net_weight": 29.0, "gross_weight": 30.0},   # kg
+            "geometry": {"type": "long_flush", "length_m": 0.65, "width_m": 0.125},
         },
     }
 }
-# Run: CathodicProtection().router(cfg)
-# Expected primary results (5-yr, High Durability):
-#   Initial current demand: 145.5 A
-#   Mean current demand:    149.2 A
-#   Final current demand:   152.9 A
-#   Required anode count:   ~187 (final current governs)
-#   Total gross mass:       ~5.6 MT
+
+result = CathodicProtection().router(cfg)["cathodic_protection"]
+demand = result["current_demand_A"]["totals"]
+print("Ici / Icm / Icf (A): {:.1f} / {:.1f} / {:.1f}".format(
+    demand["initial"], demand["mean"], demand["final"]))
+print("Anode capacity (Ah/kg):", result["anode_current_capacity"])
+print("Total net anode mass (kg): {:.0f}".format(result["anode_requirements"]["total_mass_kg"]))
+print("Anode count (mass basis): {:.1f}".format(result["anode_requirements"]["anode_count"]))
+print("Ra initial / final (ohm): {:.4f} / {:.4f}".format(
+    result["anode_performance"]["resistance_ohm"]["initial"],
+    result["anode_performance"]["resistance_ohm"]["final"]))
+# Source primary results (5 yr, High durability) are tabulated above:
+#   Ici 145.5 A, Icm 149.2 A, Icf 152.9 A, 187 anodes (final current governs), ~5.6 MT gross.
 ```
 
 ## Gaps Found
