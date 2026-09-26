@@ -19,7 +19,11 @@ DERATE       Screening fails but a reduced rating (pressure, tension limit,
 REPAIR       Screening fails and de-rating is not viable; physical repair.
 REPLACE      Margin is below the de-rating floor.
 ESCALATE     Margin cannot be evaluated by screening (non-finite) — hand off
-             to a higher assessment level.
+             to a higher assessment level.  Also issued when an applicability
+             flag was raised by a strength method (the defect lies outside
+             the method's calibrated range, #1094): no numeric verdict is
+             issued, the margin is echoed for reference only and a Level 3 /
+             engineering review is required.
 
 Per-class action map (report wording)
 -------------------------------------
@@ -50,10 +54,11 @@ References:
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Callable, Mapping, Optional, Union
 
+from digitalmodel.asset_integrity.applicability import Applicability
 from digitalmodel.units import Q_, ureg
 
 Number = Union[int, float]
@@ -299,9 +304,14 @@ class Decision:
     remaining_life_yr: float
     governing_criterion: str
     derated: Optional["ureg.Quantity"] = None
+    applicability: Applicability = field(default_factory=Applicability)
 
     def to_dict(self) -> dict:
-        """Legacy-shaped, JSON-friendly payload (``verdict`` is the shared word)."""
+        """Legacy-shaped, JSON-friendly payload (``verdict`` is the shared word).
+
+        ``applicability`` echoes the ``{ok, flags, notes}`` validity record
+        (all-clear when none was supplied, #1094).
+        """
         rerated_psi = None
         derated_mag = derated_units = None
         if self.derated is not None:
@@ -322,6 +332,7 @@ class Decision:
             "rerated_mawp_psi": rerated_psi,
             "derated": derated_mag,
             "derated_units": derated_units,
+            "applicability": self.applicability.to_dict(),
         }
 
 
@@ -334,6 +345,7 @@ def decide(
     derate: Optional[DerateFn] = None,
     bands: Optional[DecisionBands] = None,
     screening_pass: Optional[bool] = None,
+    applicability: Optional[Applicability] = None,
 ) -> Decision:
     """Shared FFS decision tree for any asset class.
 
@@ -351,8 +363,13 @@ def decide(
         screening_pass: Whether the primary screening passed.  ``None``
             derives it as ``margin >= allowable and remaining_life > 0``; the
             legacy wrapper passes the Level 1/Level 2 outcome explicitly.
+        applicability: Validity record from the strength method(s) (#1094).
+            When any flag is raised the verdict is ESCALATE and the numeric
+            tree is bypassed; the margin is still echoed for reference.
+            ``None`` means "no flags" so existing callers are unaffected.
     """
     policy = _policy(asset_class)
+    app = applicability if applicability is not None else Applicability()
     b = bands or policy.bands
     m = _dimensionless(margin, "margin")
     m_a = _dimensionless(margin_allowable, "margin_allowable")
@@ -372,6 +389,18 @@ def decide(
             remaining_life_yr=life,
             governing_criterion=criterion,
             derated=derating.value if derating is not None else None,
+            applicability=app,
+        )
+
+    # Outside a method's calibrated range: no numeric verdict (#1094).
+    if not app.ok:
+        flags = ", ".join(app.flags)
+        notes = "; ".join(app.notes)
+        return _make(
+            Verdict.ESCALATE,
+            f"Applicability flag(s) raised [{flags}]: {notes}.  Margin "
+            f"{lbl}={m:.3f} is reported for reference only; a Level 3 / "
+            "engineering review is required before a fitness verdict.",
         )
 
     if not math.isfinite(m):
@@ -456,6 +485,7 @@ class FFSDecision:
         t_min_in: float,
         corrosion_rate_in_per_yr: float,
         design_pressure_psi: float | None = None,
+        applicability: Optional[Applicability] = None,
     ) -> dict:
         """Determine the final FFS action verdict (legacy inch / psi signature).
 
@@ -463,6 +493,41 @@ class FFSDecision:
         inputs are unit-tagged internally.  Returns the legacy dict (``verdict``
         is the pressure wording, so ``RE_RATE`` not ``DERATE``) plus ``action``
         and ``asset_class``.
+
+        Args:
+            level1_verdict: ``'ACCEPT'`` or ``'FAIL_LEVEL_1'``.
+            level2_verdict: ``'ACCEPT'`` or ``'FAIL_LEVEL_2'``.
+            rsf: Computed remaining strength factor from Level 2 engine.
+            rsf_a: Allowable remaining strength factor threshold.
+            t_mm_in: Minimum measured wall thickness (inches).
+            t_min_in: Code-required minimum wall thickness (inches).
+            corrosion_rate_in_per_yr: Future corrosion rate (inches/year).
+                Use 0.0 for no further degradation.
+            design_pressure_psi: Design pressure / MAWP.  When supplied, the
+                RSF-based re-rated pressure MAWP_r = MAWP * min(1, RSF/RSFa)
+                (API 579-1 §2.4.2.2) is computed and reported on every
+                verdict; the RE_RATE criterion quotes it explicitly.
+            applicability: validity record from the strength method(s).
+                When any flag is raised the verdict is ``ESCALATE`` and the
+                numeric tree is bypassed (#1094).  ``None`` means "no flags"
+                so existing callers are unaffected.
+
+        Returns:
+            dict with keys:
+                verdict (str): One of ACCEPT, MONITOR, RE_RATE, REPAIR,
+                    REPLACE, ESCALATE (pressure wording).
+                action (str): Same as ``verdict`` for the pressure class.
+                asset_class (str): ``"pressure"``.
+                remaining_life_yr (float): Estimated remaining service life.
+                    ``float('inf')`` when corrosion_rate_in_per_yr == 0.
+                governing_criterion (str): Human-readable description of the
+                    governing assessment criterion.
+                rsf / margin (float): Echoed input RSF.
+                rsf_a / margin_allowable (float): Echoed input RSFa.
+                rerated_mawp_psi (float | None): MAWP_r when
+                    design_pressure_psi was supplied, else None.
+                applicability (dict): ``{ok, flags, notes}`` echo of the
+                    validity record (all-clear when none was supplied).
         """
         life = remaining_life(
             Q_(t_mm_in, "inch"), Q_(t_min_in, "inch"),
@@ -475,6 +540,7 @@ class FFSDecision:
         d = decide(
             rsf, rsf_a, life, "pressure", derate=derate,
             screening_pass=(level1_verdict == "ACCEPT" and level2_verdict == "ACCEPT"),
+            applicability=applicability,
         )
         out = d.to_dict()
         out["verdict"] = d.action
