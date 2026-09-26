@@ -131,19 +131,37 @@ button.secondary{background:white;color:#086d70}
 <caption>Table 4. Owner decisions as recorded from this page and restated in GitHub epic #2206; the interactive controls in Table 3 remain for later changes but the epic is the authority.</caption>
 </table>
 <table style="margin-top:22px">
-<thead><tr><th>Follow-up</th><th>Owner</th><th>Current status</th></tr></thead>
+<thead><tr><th>Follow-up</th><th>Owner</th><th>Status at the 25 September 2026 evening checkpoint</th></tr></thead>
 <tbody>
-<tr><td>Confirm three PDF-dependent items (§4)</td><td>Claude CP lane, with PDF access</td><td><span class="tag pend">Pending</span>; scoped into #2207; requires the standards PDFs, not in this checkout</td></tr>
-<tr><td>Constants table modules and CSV-backed tests (#2207)</td><td>Claude CP lane</td><td><span class="tag pend">Pending</span> plan and explicit approval before implementation per repo gates; first in order</td></tr>
-<tr><td>Arithmetic fixes and quarantine (#2209)</td><td>Claude CP lane</td><td><span class="tag pend">Pending</span> plan; independent of #2207, can run in parallel</td></tr>
-<tr><td>Edition switch (#2208), F103 module and kernel (#2211), engine adapter (#2210)</td><td>Claude CP lane</td><td><span class="tag pend">Pending</span>; ordered after #2207</td></tr>
-<tr><td>Standard reporting engine (#2212)</td><td>Claude CP lane; scope decision on <code>report_pack</code> at plan stage</td><td><span class="tag pend">Pending</span> plan; implement after #2210</td></tr>
-<tr><td>Tests and gates (#2213), docs and brochure (#2214)</td><td>Claude CP lane</td><td><span class="tag pend">Pending</span>; can run alongside</td></tr>
+<tr><td>Constants table modules and CSV-backed tests (#2207)</td><td>Claude CP lane</td><td><span class="tag pass">In review</span> PR #2216, 30 checks green: 182 CSV-backed tests; new package and legacy solver wired; 779 CP tests</td></tr>
+<tr><td>Arithmetic fixes and quarantine (#2209)</td><td>Claude CP lane</td><td><span class="tag pass">In review</span> PR #2215, green</td></tr>
+<tr><td>F103 module and kernel, full Sec. 7 loop (#2211)</td><td>Claude CP lane</td><td><span class="tag pass">In review</span> PR #2217, stacked on #2216; 859 CP tests</td></tr>
+<tr><td>Engine adapter, PASS/FAIL status, demos retired (#2210)</td><td>Claude CP lane</td><td><span class="tag pass">In review</span> PR #2220, stacked on #2217; six demo inputs kept as regression fixtures</td></tr>
+<tr><td>Tests and gates (#2213)</td><td>Claude CP lane</td><td><span class="tag pass">In review</span> PR #2221, stacked on #2217; 1018 CP tests</td></tr>
+<tr><td>Docs, worked examples, brochure removed, review record committed (#2214)</td><td>Claude CP lane</td><td><span class="tag pass">In review</span> PR #2218, stacked on #2216</td></tr>
+<tr><td>Standard reporting engine (#2212)</td><td>Claude CP lane; owner scope decision</td><td><span class="tag warn">Part 1 in review</span> PR #2219, green (engine, offline Plotly, Edge PDF). Option A/B posted on the issue, B recommended; parts 2 (CP adapters) and 3 (report_pack delegation) wait on the answer and on #2220</td></tr>
+<tr><td>Edition switch beyond the provenance flag (#2208)</td><td>Repository owner (source access)</td><td><span class="tag fail">Blocked</span>: the wiki holds only B401 2005/2008 and 2011 and F103 2003/2010; 2017, 2021 and F103 2016 values inherit with <code>provenance=inherited-…-unverified</code> until the PDFs or matching wiki pages exist</td></tr>
 <tr><td>Redaction of identifier-bearing CP docs</td><td>#2155 lane</td><td><span class="tag pend">Pending</span>; file list posted on #2155</td></tr>
-<tr><td>Commit the two review files with the first child PR; local checkout catch-up (<code>git pull</code>)</td><td>Repository owner</td><td>Routine; both files are untracked and survive a fast-forward</td></tr>
+<tr><td>Merge and retarget</td><td>Repository owner</td><td><span class="tag pend">Pending</span>: merge #2215, #2216, then #2217, #2218, #2220, #2221 (retarget each stacked PR to main as its base merges), and #2219 independently; remove worktrees <code>wt-digitalmodel-cp22xx</code> afterwards</td></tr>
 </tbody>
-<caption>Table 5. Follow-up register after the owner decisions; statuses describe the 25 September 2026 checkpoint.</caption>
+<caption>Table 5. Follow-up register reconciled with the pull requests opened on 25 September 2026.</caption>
 </table>
+<h3>Decision-by-decision review against outcomes</h3>
+<ul>
+<li><b>D1 hold at beta:</b> honoured. Nothing merged; the capability page and index now describe the domain as beta and no client-facing claim remains after D11.</li>
+<li><b>D2 CSV-backed cited tables:</b> delivered in #2216. One reviewer recollection was corrected by the CSV: F103 Table A.1 FBE is a = 0.010, b = 0.0003, not 0.030; the code and the A3 hand calculation now use the table value.</li>
+<li><b>D3 edition functional:</b> partly delivered. Edition tokens 2005/2010/2017/2021 (and F103 2010/2016) are accepted and every value carries an edition-specific provenance flag; real per-edition tables for 2017/2021/2016 need source data (#2208 blocked). Your research note is honoured: no edition was dropped.</li>
+<li><b>D4 engine adapter:</b> delivered in #2220; legacy paths remain under <code>*_legacy</code> keys with a deprecation warning.</li>
+<li><b>D5 no more demos, HTML/PDF deliverables:</b> demos retired in #2220 (inputs kept as regression fixtures); the HTML/PDF deliverable path is the #2212 engine, part 1 in #2219.</li>
+<li><b>D6 re-baseline from tables:</b> delivered in #2216 (59 legacy tests) and #2221 (vectors, doc-verified provenance).</li>
+<li><b>D7 fix four, quarantine four:</b> delivered in #2215 exactly as approved.</li>
+<li><b>D8 redact under #2155:</b> file list posted; redaction itself not done here.</li>
+<li><b>D9 standard reporting engine:</b> plan and part 1 delivered; your option A/B answer is needed on #2212 before parts 2 and 3.</li>
+<li><b>D10 file the epic and children:</b> done (#2206 with #2207 to #2214). Structure-type sequencing by deliverable demand is recorded in the epic; no new structure type was started, by design, until the constants landed.</li>
+<li><b>D11 remove brochure claims:</b> the brochure file is deleted in #2218.</li>
+<li><b>D12 close #573:</b> closed 2026-09-25; its plan marked done in #2218.</li>
+</ul>
+<p>One numerical consequence to be aware of: with the depleted-anode final check of B401 Sec. 7.8 now implemented (#2217, #2220), the retired jacket case's recommended count moved from 135 to 173 anodes. The demo geometry was never adequate; the count only became visible once the check existed.</p>
 
 <h2>6. Next discriminating checks for the owner</h2>
 <p>Open the B401 2021 PDF and confirm the edition date and the Section 6 table numbering, so that <code>_edition.py</code> and every citation string can be corrected in one pass. Open the F103 2010 and 2016 PDFs and confirm Table 5-1 bands and the FBE a/b pair before re-baselining the legacy F103 tests. Run the three blocking gates on origin/main (<code>ruff check src/digitalmodel/cathodic_protection</code>, mypy on the same path, and the two-root CP test gate) to confirm the local findings hold there. None of these checks changes code, and none is started by this page.</p>
