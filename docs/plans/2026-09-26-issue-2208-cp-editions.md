@@ -9,7 +9,7 @@
 edition returned the 2010/2011 numbers; 2017/2021 (B401) and 2016 (F103) were
 flagged `inherited-*-unverified`. The 2017 and 2021 B401 prints and the 2019
 F103 print (republished July 2016 edition, amended May 2021) are now on file
-(`/mnt/ace/O&G-Standards/DNV/`, pdftotext text layer, hand-verified
+(the private standards archive on the analysis host, path withheld; pdftotext text layer, hand-verified
 2026-09-26), so every edition can be table-real and cited to its own wiki page
 revision.
 

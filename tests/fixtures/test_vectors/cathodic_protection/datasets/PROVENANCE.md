@@ -78,7 +78,7 @@ record the copy check here.
 |---|---|
 | Transcription date | 2026-09-26 |
 | Method | `pdftotext` text layer, hand-verified 2026-09-26 |
-| Source PDFs (licensed, off-repo, on `ace-linux-1`) | `/mnt/ace/O&G-Standards/DNV/DNVGL_RP_B401_(2017)_Cathodic_Protection_Design.pdf`; `/mnt/ace/O&G-Standards/DNV/DNV_RP_B401_(2021)_Cathodic_Protection_Design.pdf`; `/mnt/ace/O&G-Standards/DNV/DNVGL_RP_F103_(2019)_*.pdf` (September 2019) and `/mnt/ace/O&G-Standards/DNV/DNV_RP_F103_(2019_amended_2021)_*.pdf` |
+| Source PDFs (licensed, off-repo, on `ace-linux-1`) | `DNVGL_RP_B401_(2017)_Cathodic_Protection_Design.pdf` (private standards archive, path withheld); `DNV_RP_B401_(2021)_Cathodic_Protection_Design.pdf` (private standards archive, path withheld); `DNVGL_RP_F103_(2019)_*.pdf` (private standards archive, path withheld) (September 2019) and `DNV_RP_F103_(2019_amended_2021)_*.pdf` (private standards archive, path withheld) |
 | Licence note | licensed local reference; raw PDFs remain off-repo; per-user watermark lines are not reproduced |
 
 ## DNVGL-RP-B401 June 2017 (`dnv-rp-b401/2017-06/`)
