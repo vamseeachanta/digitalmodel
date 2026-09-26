@@ -121,7 +121,7 @@ section.export pre{margin:0;background:var(--surface-2);border:1px solid var(--l
 
     <section class="decision" id="G2" data-id="G2">
       <div class="dhead"><span class="id">G2</span><h2>How does D6 close?</h2><span class="state">open</span></div>
-      <p class="context"><b>State.</b> Claude r1 MAJOR, Codex r1 MAJOR and Codex r1.1 MAJOR were all applied. Gemini failed twice on ACMA-WS014: killed under memory pressure, then an empty response with a clean exit. The routing policy defaults to three providers; the CLI is installed on ace-linux-1 as well.</p>
+      <p class="context"><b>State.</b> Claude r1 MAJOR, Codex r1 MAJOR and Codex r1.1 MAJOR were all applied. Gemini failed twice on the dev-primary Windows host: killed under memory pressure, then an empty response with a clean exit. The routing policy defaults to three providers; the CLI is installed on ace-linux-1 as well.</p>
       <div class="opts">
         <label class="opt"><input type="radio" name="G2" value="A"><span><span class="lab">Accept the two-provider review and record the exception</span><span class="rec">recommended</span><br><span class="why">Two independent MAJOR-then-applied rounds already exist. Exception noted on #1057 and in the plan's review table.</span></span></label>
         <label class="opt"><input type="radio" name="G2" value="B"><span><span class="lab">I will run Gemini on ace-linux-1 from my shell and attach the artifact</span><br><span class="why">Command below is included in the export. Approval waits for the artifact path.</span></span></label>
@@ -175,7 +175,7 @@ section.export pre{margin:0;background:var(--surface-2);border:1px solid var(--l
       <div class="dhead"><span class="id">G6</span><h2>How is Wave 0 executed?</h2><span class="state">open</span></div>
       <p class="context"><b>Per-issue protocol</b> is fixed by the plan: plan-lite, adversarial review, your <code>status:plan-approved</code> on each issue, TDD, worktree, PR with cross-review. The choice here is how much runs at once and where.</p>
       <div class="opts">
-        <label class="opt"><input type="radio" name="G6" value="A"><span><span class="lab">Plan-lites for all selected issues first, then implement after you approve each</span><span class="rec">recommended</span><br><span class="why">Six short plans land as issue comments in one pass; you approve them in a batch; implementation runs in parallel worktrees on ACMA-WS014.</span></span></label>
+        <label class="opt"><input type="radio" name="G6" value="A"><span><span class="lab">Plan-lites for all selected issues first, then implement after you approve each</span><span class="rec">recommended</span><br><span class="why">Six short plans land as issue comments in one pass; you approve them in a batch; implementation runs in parallel worktrees on the dev-primary Windows host.</span></span></label>
         <label class="opt"><input type="radio" name="G6" value="B"><span><span class="lab">One issue end to end at a time, in the order listed</span><br><span class="why">Plan, approve, implement, PR, then the next. Slowest, easiest to follow.</span></span></label>
         <label class="opt"><input type="radio" name="G6" value="C"><span><span class="lab">Parallel subagents, each owning one issue from plan-lite to PR</span><br><span class="why">Fastest wall clock; you approve six plan-lites and review six PRs close together. Memory pressure on this host is a known risk.</span></span></label>
       </div>

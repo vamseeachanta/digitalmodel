@@ -71,7 +71,7 @@ application track buries it.
 
 ## Access notes
 
-- The weldolet analysis (#2157) lives on the licensed host ACMA-HOU-RDS02; its
+- The weldolet analysis (#2157) lives on the licensed Windows host (ace-win-1); its
   plan (`docs/plans/2026-09-24-issue-2157-crack-fe-assessment.md`) is
   uncommitted there. Review trail: Codex r1 MAJOR, Claude r1 MAJOR, Codex r2
   MAJOR, Codex r2.1 MINOR; r2.2 awaits `status:plan-approved`.

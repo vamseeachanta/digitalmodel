@@ -44,7 +44,7 @@ A capability is *demonstrable* at R3 or better. Today only the legacy API 579 pi
 
 **Fixtures.** Four anonymized riser UT C-scan grids with GML and flaw registers (#1293) live under `tests/asset_integrity/test_data/real_inspection/`. They are the strongest readiness asset in the module and are used by tests only.
 
-**Weldolet / Part 9 FE work.** Nothing on any digitalmodel branch. The work is planned on #2157 (plan r2.2, ANSYS MAPDL CINT, licensed host ACMA-HOU-RDS02, plan document uncommitted there). It is not yet part of the demonstrable surface.
+**Weldolet / Part 9 FE work.** Nothing on any digitalmodel branch. The work is planned on #2157 (plan r2.2, ANSYS MAPDL CINT, licensed Windows host (ace-win-1), plan document uncommitted there). It is not yet part of the demonstrable surface.
 
 ## Findings
 

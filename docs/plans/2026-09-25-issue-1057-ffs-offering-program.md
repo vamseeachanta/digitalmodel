@@ -27,7 +27,7 @@ Held as full text in llm-wiki: API 579-1 2007 (all parts and Annexes B1, C, D, E
 
 ### Private Evidence Consulted
 
-None. The #2157 weldolet MAPDL model lives on ACMA-HOU-RDS02 and was not accessible from this session; its plan is now public as PR #2194.
+None. The #2157 weldolet MAPDL model lives on the licensed Windows host (ace-win-1) and was not accessible from this session; its plan is now public as PR #2194.
 
 ### Documents Consulted
 
@@ -122,7 +122,7 @@ wiki  llm-wiki #913 (API 653 pointers, 2007->2021 crosswalk, Part 9 dataset audi
 
 1. **Plan-lite** on the issue (scope, sources, files, tests, acceptance); adversarial review per `../workspace-hub/docs/standards/AI_REVIEW_ROUTING_POLICY.md` (workspace-hub repo; Claude + Codex + Gemini by default, any provider shortfall recorded with its artifact); owner applies `status:plan-approved`.
 2. **TDD**: golden test from a published example first; applicability-limit tests (flags, never silent extrapolation); negative fixtures for guards.
-3. **Implement** in an isolated worktree on the lane's host (`machine:dev-primary` for closed-form work; `machine:licensed-win-1` / RDS02 for ANSYS; Linux host for CalculiX). Use `uv run`.
+3. **Implement** in an isolated worktree on the lane's host (`machine:dev-primary` for closed-form work; `machine:licensed-win-1` (ace-win-1) for ANSYS; Linux host for CalculiX). Use `uv run`.
 4. **Wire**: registry row + `examples/workflows/<id>/` with committed results + durable test + Deckhand route (deckhand repo PR) + `ffs_report` output + catalog status update; `test_offering_catalog.py` fails if a `live`/`routed` row lacks a registry id or route, or a `live`/`validated` row lacks a validation record.
 5. **Validate**: validation record under `docs/domains/asset-integrity/` with reference case, our value, difference, limits; the record's numbers asserted by a test.
 6. **Land** via PR with cross-review; never `git merge` on main in-session (use `gh pr merge`); write a handoff before stopping.
