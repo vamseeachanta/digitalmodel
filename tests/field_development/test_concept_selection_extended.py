@@ -54,8 +54,8 @@ class TestGoMReferenceBenchmarks:
     """Cross-check against all 10 GoM reference fields from SubseaIQ scan."""
 
     @pytest.mark.parametrize("name,depth,reservoir,distance,fluid,expected_top", [
-        # Perdido — ultra-deep Spar (Shell, 2438 m)
-        ("Perdido", 2438, 100, 80, "oil", {"Spar", "Semi"}),
+        # GoM-UD-Spar — ultra-deep Spar (Shell, 2438 m)
+        ("GoM-UD-Spar", 2438, 100, 80, "oil", {"Spar", "Semi"}),
         # Mars — mid-depth TLP (Shell, 896 m)
         ("Mars", 896, 100, 50, "oil", {"TLP"}),
         # Atlantis — deep Semi-sub (BP, 2150 m)
@@ -88,7 +88,7 @@ class TestGoMReferenceBenchmarks:
         )
 
     @pytest.mark.parametrize("name,depth,reservoir,distance,fluid", [
-        ("Perdido", 2438, 100, 80, "oil"),
+        ("GoM-UD-Spar", 2438, 100, 80, "oil"),
         ("Mars", 896, 100, 50, "oil"),
         ("Atlantis", 2150, 200, 70, "oil"),
         ("Thunder_Horse", 1844, 500, 60, "oil"),
@@ -109,7 +109,7 @@ class TestGoMReferenceBenchmarks:
         assert types_seen == set(LEGACY_HOST_TYPES)
 
     @pytest.mark.parametrize("name,depth,reservoir,distance,fluid", [
-        ("Perdido", 2438, 100, 80, "oil"),
+        ("GoM-UD-Spar", 2438, 100, 80, "oil"),
         ("Mars", 896, 100, 50, "oil"),
         ("Stones", 2900, 20, 90, "oil"),
     ])

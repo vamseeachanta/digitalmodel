@@ -135,12 +135,12 @@ uv run python scripts/validate_cross_repo_setup.py
 
 **Discovered:** 8 repositories with tests
 
-1. acma-projects
+1. <project-archive>
 2. assethold
 3. assetutilities
 4. coordination
 5. digitalmodel
-6. saipem
+6. contractor
 7. teamresumes
 8. worldenergydata
 

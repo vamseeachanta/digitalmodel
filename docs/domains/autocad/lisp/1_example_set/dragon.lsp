@@ -11,7 +11,7 @@
 ;;;                    New York, NY:   PH (212) 725-4617                    ;;;
 ;;;                    Cambridge, MA:  PH (617) 492-1148                    ;;;
 ;;;                    MCI-Mail:       GSI-NY   344-4003                    ;;;
-;;;                    Arpanet:        olasov@cs.columbia.edu               ;;;
+;;;                    Arpanet:        [email removed]               ;;;
 ;;;                                                                         ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

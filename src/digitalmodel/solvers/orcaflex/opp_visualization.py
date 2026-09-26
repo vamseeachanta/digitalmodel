@@ -103,7 +103,7 @@ class OPPVisualization:
         model.general.NorthDirectionDefined = "No"
 
         # TODO for vessel settings
-        # vessel = model["SevenArctic"]
+        # vessel = model["iv02"]
         # x_value = vessel.InitialX
         # y_value = vessel.InitialY
         # heading = vessel.InitialHeading

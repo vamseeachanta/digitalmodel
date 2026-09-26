@@ -39,9 +39,9 @@ Either positions can be
 
 #### Communications - Shared Topology Usage
 
-From: Alex Austin <aaustin@drd.com>
+From: Alex Austin [email removed]
 Sent: Thursday, May 9, 2024 1:27 PM
-To: Bram Weisman <bramw@none.com>; Vamsee Achanta <vamseea@none.com>
+To: Bram Weisman [email removed]; Vamsee Achanta [email removed]
 Subject: RE: ANSYS AQWA | Ship Pier Tutorial
 
 Aqwa does not have this Prime Mesh method functionality.
@@ -53,9 +53,9 @@ DRD Technology
 Technical Support: 918.743.3013 x 1
 Office: 918.743.3013 x 612
 
-From: Bram Weisman <bramw@none.com>
+From: Bram Weisman [email removed]
 Sent: Thursday, May 9, 2024 1:13 PM
-To: Vamsee Achanta <vamseea@none.com>; Alex Austin <aaustin@drd.com>
+To: Vamsee Achanta [email removed]; Alex Austin [email removed]
 Subject: RE: ANSYS AQWA | Ship Pier Tutorial
 
 Vamsee,
@@ -70,19 +70,19 @@ Thanks,
 
 Bram
 
-From: Vamsee Achanta <vamseea@none.com>
+From: Vamsee Achanta [email removed]
 Sent: Thursday, May 9, 2024 1:07 PM
-To: Alex Austin <aaustin@drd.com>
-Cc: Bram Weisman <bramw@none.com>
+To: Alex Austin [email removed]
+Cc: Bram Weisman [email removed]
 Subject: RE: ANSYS AQWA | Ship Pier Tutorial
 
 Thank you ? like the confidence of the single line answer.
 
 What does Share Topology really mean? Where do we get these high-level lessons from a  physics/fundamental point of view from SpaceClaim geometry. Was thinking SpaceClaim is a pure geometry thing but some physics is already happening there.
 
-From: Alex Austin <aaustin@drd.com>
+From: Alex Austin [email removed]
 Sent: Thursday, May 9, 2024 1:04 PM
-To: Vamsee Achanta <vamseea@none.com>
+To: Vamsee Achanta [email removed]
 Subject: RE: ANSYS AQWA | Ship Pier Tutorial
 
 In the pier component entity in SpaceClaim, go to the properties panel and set Share Topology to Share. I will be in meetings through 2:30.
@@ -92,9 +92,9 @@ DRD Technology
 Technical Support: 918.743.3013 x 1
 Office: 918.743.3013 x 612
 
-From: Vamsee Achanta <vamseea@none.com>
+From: Vamsee Achanta [email removed]
 Sent: Thursday, May 9, 2024 1:02 PM
-To: Alex Austin <aaustin@drd.com>
+To: Alex Austin [email removed]
 Subject: RE: ANSYS AQWA | Ship Pier Tutorial
 
 Alex,
@@ -106,9 +106,9 @@ Please can you share the .dat file or workbench file for the recreated tutorial?
 Thank you,
 Vamsee
 
-From: Alex Austin <aaustin@drd.com>
+From: Alex Austin [email removed]
 Sent: Thursday, May 9, 2024 11:49 AM
-To: Vamsee Achanta <vamseea@none.com>
+To: Vamsee Achanta [email removed]
 Subject: RE: ANSYS AQWA | Ship Pier Tutorial
 
 Vamsee,
@@ -127,9 +127,9 @@ This is the exact information I was looking for. Thank you again for the taking 
 
 Vamsee
 
-From: Alex Austin <aaustin@drd.com>
+From: Alex Austin [email removed]
 Sent: Friday, May 10, 2024 8:32 AM
-To: Vamsee Achanta <vamseea@none.com>
+To: Vamsee Achanta [email removed]
 Subject: RE: ANSYS AQWA | Ship Pier Tutorial
 
 Vamsee,

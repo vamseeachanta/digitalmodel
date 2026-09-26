@@ -10,18 +10,18 @@ src\digitalmodel\solvers\ghs\contracts.py SHA256 9e68b82cd9db608b088327f8f1451c1
 
 src\digitalmodel\solvers\ghs\runner.py SHA256 364c67969ad59d4b19d81f3c07f3d416bb2b516c2c9161a52e381ef20d75981b
 
-COMMAND ['C:\\Users\\vamseea\\.local\\bin\\uv.exe', 'venv', '--python', '3.11', 'C:\\Users\\vamseea\\AppData\\Local\\Temp\\dm2089-windows-r3-56ek5hsr\\venv']
+COMMAND ['<private-data>\\uv.exe', 'venv', '--python', '3.11', '<private-data>\\venv']
 
 Using CPython 3.11.15
-Creating virtual environment at: C:\Users\vamseea\AppData\Local\Temp\dm2089-windows-r3-56ek5hsr\venv
-Activate with: C:\Users\vamseea\AppData\Local\Temp\dm2089-windows-r3-56ek5hsr\venv\Scripts\activate
+Creating virtual environment at: <private-data>\venv
+Activate with: <private-data>\activate
 
 
 EXIT 0
 
-COMMAND ['C:\\Users\\vamseea\\.local\\bin\\uv.exe', 'pip', 'install', '--python', 'C:\\Users\\vamseea\\AppData\\Local\\Temp\\dm2089-windows-r3-56ek5hsr\\venv\\Scripts\\python.exe', 'pytest==8.4.2', 'numpy==2.4.4', 'scipy==1.17.1', 'PyYAML==6.0.3', 'loguru==0.7.3']
+COMMAND ['<private-data>\\uv.exe', 'pip', 'install', '--python', '<private-data>\\python.exe', 'pytest==8.4.2', 'numpy==2.4.4', 'scipy==1.17.1', 'PyYAML==6.0.3', 'loguru==0.7.3']
 
-Using Python 3.11.15 environment at: C:\Users\vamseea\AppData\Local\Temp\dm2089-windows-r3-56ek5hsr\venv
+Using Python 3.11.15 environment at: <private-data>\venv
 Resolved 11 packages in 97ms
 Installed 11 packages in 274ms
  + colorama==0.4.6
@@ -39,7 +39,7 @@ Installed 11 packages in 274ms
 
 EXIT 0
 
-COMMAND ['C:\\Users\\vamseea\\AppData\\Local\\Temp\\dm2089-windows-r3-56ek5hsr\\venv\\Scripts\\python.exe', '-c', 'import sys; import digitalmodel.solvers.ghs.contracts; import digitalmodel.solvers.ghs.runner; print(sys.version); print("Standalone actual parent-package import passed")']
+COMMAND ['<private-data>\\python.exe', '-c', 'import sys; import digitalmodel.solvers.ghs.contracts; import digitalmodel.solvers.ghs.runner; print(sys.version); print("Standalone actual parent-package import passed")']
 
 3.11.15 (main, Mar 24 2026, 22:57:51) [MSC v.1944 64 bit (AMD64)]
 Standalone actual parent-package import passed
@@ -47,7 +47,7 @@ Standalone actual parent-package import passed
 
 EXIT 0
 
-COMMAND ['C:\\Users\\vamseea\\AppData\\Local\\Temp\\dm2089-windows-r3-56ek5hsr\\venv\\Scripts\\python.exe', '-m', 'pytest', 'tests/solvers/ghs', '--confcutdir=tests/solvers/ghs', '--import-mode=importlib', '-q', '-rs', '-p', 'no:cacheprovider', '--override-ini', 'addopts=', '--basetemp', 'C:\\Users\\vamseea\\AppData\\Local\\Temp\\dm2089-windows-r3-56ek5hsr\\pytest']
+COMMAND ['<private-data>\\python.exe', '-m', 'pytest', 'tests/solvers/ghs', '--confcutdir=tests/solvers/ghs', '--import-mode=importlib', '-q', '-rs', '-p', 'no:cacheprovider', '--override-ini', 'addopts=', '--basetemp', '<private-data>\\pytest']
 
 ........................................................................ [ 83%]
 ..............                                                           [100%]

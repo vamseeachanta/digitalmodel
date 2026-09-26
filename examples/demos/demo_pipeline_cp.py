@@ -453,7 +453,7 @@ def main():
     print("  ║  ACE Engineer — Automated CP design from pipeline specs to anode    ║")
     print("  ║  sizing, depletion profiles, and compliance reports.                ║")
     print("  ║                                                                    ║")
-    print("  ║  Contact: vamsee.achanta@aceengineer.com | aceengineer.com          ║")
+    print("  ║  Contact: redacted@example.com | aceengineer.com          ║")
     print("  ╚══════════════════════════════════════════════════════════════════════╝")
     print()
 

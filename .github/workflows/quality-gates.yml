@@ -207,3 +207,39 @@ jobs:
       - name: Restate the stage
         if: always()
         run: echo "UNAUTHENTICATED -- Stage 1 only. Stage 2 remains blocked."
+
+  # ------------------------------------------------------------------------ #
+  # Client identifier gate over the WHOLE tracked tree (owner decision C11).
+  #
+  # pre-commit runs the same checker on staged files, but pre-commit is
+  # optional and a direct push or a web edit skips it. This job makes every
+  # identifier category -- operator/client, field/project, vessel, person or
+  # Windows user, private path, machine hostname -- fail CI wherever it sits.
+  # Names come from the salted-hash list in .legal-deny-list.yaml; CI has no
+  # private list and relies on the public pattern classes for everything else.
+  #
+  # Files the gate cannot read (PDFs, solver binaries) pass only when the
+  # committed manifest .legal-uninspectable-baseline.txt lists their path with
+  # the same sha256: a new, changed or unlisted binary fails. After reviewing
+  # the content, accept it with
+  #   python scripts/legal/check_identifiers.py --all --update-baseline
+  # and commit the manifest diff. A finding always fails.
+  # ------------------------------------------------------------------------ #
+  identifier-gate:
+    name: Client identifier gate (whole tree)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PyYAML
+        run: python -m pip install --quiet pyyaml
+
+      - name: Scan the tracked tree
+        run: python scripts/legal/check_identifiers.py --all --baseline .legal-uninspectable-baseline.txt
