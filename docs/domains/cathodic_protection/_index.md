@@ -96,9 +96,9 @@ are skipped.
 | `cp_ship_typical_design_currents.PNG`, `sa_slender_anode.png`, `image.png` | Figures referenced by the notes |
 | `references/` | Reference figures |
 
-## Analysis notes (being redacted under #2155 — filenames only)
+## Analysis notes (identifiers redacted under #2155 and #2167)
 
-- [`saipem_cp_comparison_analysis.md`](saipem_cp_comparison_analysis.md)
+- Contractor CP comparison note: removed from the public tree under #2167 (a private copy is kept)
 - [`COATING_COMPARISON_ANALYSIS.md`](COATING_COMPARISON_ANALYSIS.md)
 - [`CP_ANALYSIS_FINDINGS.md`](CP_ANALYSIS_FINDINGS.md)
 - [`cp_bug_fixes_summary.md`](cp_bug_fixes_summary.md)

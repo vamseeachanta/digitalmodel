@@ -17,7 +17,7 @@ documentation under `docs/domains/cathodic_protection/` was not reproducible fro
 it describes. This plan closes those findings without touching any solver.
 
 Out of scope (owned elsewhere): the five analysis notes being redacted under #2155
-(`saipem_cp_comparison_analysis.md`, `COATING_COMPARISON_ANALYSIS.md`,
+(the contractor comparison note, since removed under #2167; `COATING_COMPARISON_ANALYSIS.md`,
 `CP_ANALYSIS_FINDINGS.md`, `cp_bug_fixes_summary.md`, `standards-inventory.md`); the
 edition-keyed DNV-RP-B401 / DNV-RP-F103 table modules (#2207); the F103 kernel (#2211).
 
