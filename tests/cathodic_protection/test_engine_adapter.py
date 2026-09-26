@@ -147,7 +147,7 @@ def test_jacket_b401_sec7_loop() -> None:
     # Depleted (u 0.85 -> r_f = 0.05 sqrt(0.15) = 0.019365 m): R_f = 0.20677 ohm,
     # I_a = 1.209 A -> N_final = ceil(208 / 1.209) = 173 -> final governs, FAIL.
     results = _run("jacket")["results"]
-    assert results["standard"] == "DNV-RP-B401 (2021)"
+    assert results["standard"] == "DNV-RP-B401 (May 2021)"
     assert results["edition"] == "2021"
     demand = results["current_demand_A"]
     assert demand["total_initial_A"] == pytest.approx(20.0)
@@ -180,7 +180,7 @@ def test_jacket_b401_sec7_loop() -> None:
     assert status["result"] == STATUS_FAIL
     assert status["governing_case"] == "final"
     assert "173" in status["reason"]
-    assert "dnv-rp-b401 2011 Table 10-4" in results["citations"]
+    assert "dnv-rp-b401 2021-05 Table 8-4" in results["citations"]
 
 
 def test_manifold_b401_sec7_loop() -> None:
@@ -263,7 +263,7 @@ def test_b401_rejects_unknown_zone_and_coating() -> None:
     with pytest.raises(ValueError, match="zone"):
         run_cathodic_protection(cfg)
     cfg = _load("manifold")
-    cfg["inputs"]["structure"]["zones"][0]["coating_category"] = "IV"
+    cfg["inputs"]["structure"]["zones"][0]["coating_category"] = "V"
     with pytest.raises(ValueError, match="coating_category"):
         run_cathodic_protection(cfg)
 

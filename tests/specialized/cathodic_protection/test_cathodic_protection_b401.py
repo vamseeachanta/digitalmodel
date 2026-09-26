@@ -128,7 +128,7 @@ class TestB401CoatingBreakdown:
     def test_coating_breakdown_cites_table_10_4(self, b401_base_config):
         inputs = b401_base_config["inputs"]
         result = _b401_coating_breakdown(inputs, 25.0)
-        assert result["submerged"]["citations"] == ["dnv-rp-b401 2011 Table 10-4"]
+        assert result["submerged"]["citations"] == ["dnv-rp-b401 2021-05 Table 8-4"]
 
     def test_coating_breakdown_per_zone(self, b401_base_config):
         inputs = b401_base_config["inputs"]
@@ -207,7 +207,7 @@ class TestB401CurrentDensities:
         assert z["i_initial_A_m2"] == pytest.approx(0.020)
         assert z["i_mean_A_m2"] == pytest.approx(0.020)
         assert z["i_final_A_m2"] == pytest.approx(0.020)
-        assert z["citations"] == ["dnv-rp-b401 2011 Sec. 6.3 (buried surfaces)"]
+        assert z["citations"] == ["dnv-rp-b401 2021-05 [3.3.8] (buried surfaces)"]
 
     def test_current_density_subtropical_submerged(self, b401_base_config):
         inputs = b401_base_config["inputs"]
@@ -247,8 +247,8 @@ class TestB401CurrentDensities:
         inputs = b401_base_config["inputs"]
         result = _b401_current_densities(inputs)
         assert result["submerged"]["citations"] == [
-            "dnv-rp-b401 2011 Table 10-1",
-            "dnv-rp-b401 2011 Table 10-2",
+            "dnv-rp-b401 2021-05 Table 8-1",
+            "dnv-rp-b401 2021-05 Table 8-2",
         ]
 
     def test_negative_depth_raises(self, b401_base_config):
@@ -384,7 +384,7 @@ class TestB401AnodeRequirements:
         assert result["total_mass_kg"] == pytest.approx(64411.76, abs=0.01)
         assert result["anode_count"] == 323
         assert result["utilization_factor_source"] == "input"
-        assert result["citations"] == ["dnv-rp-b401 2011 Table 10-6"]
+        assert result["citations"] == ["dnv-rp-b401 2021-05 Table 8-6"]
 
     def test_zinc_capacity_from_table_10_6(self, b401_base_config):
         inputs = b401_base_config["inputs"]
@@ -409,8 +409,8 @@ class TestB401AnodeRequirements:
         demand = _pipeline(inputs)
         result = _b401_anode_requirements(inputs, demand)
         assert result["utilization_factor"] == pytest.approx(expected_u)
-        assert result["utilization_factor_source"].startswith("Table 10-8")
-        assert "dnv-rp-b401 2011 Table 10-8" in result["citations"]
+        assert result["utilization_factor_source"].startswith("Table 8-8")
+        assert "dnv-rp-b401 2021-05 Table 8-8" in result["citations"]
 
     def test_explicit_utilisation_overrides_table(self, b401_base_config):
         inputs = b401_base_config["inputs"]
@@ -470,9 +470,10 @@ class TestB401VerifyCurrentOutput:
         assert result["initial_meets_demand"] is True
         assert result["final_meets_demand"] is False
         assert result["adequate"] is False
+        # sorted labels: "Table 8-6" sorts before "[2.4.2]"
         assert result["citations"] == [
-            "dnv-rp-b401 2011 Sec. 5 (structure-to-electrolyte potential criteria)",
-            "dnv-rp-b401 2011 Table 10-6",
+            "dnv-rp-b401 2021-05 Table 8-6",
+            "dnv-rp-b401 2021-05 [2.4.2] (design protective potential)",
         ]
 
     def test_verification_initial_governs_for_bare_steel(self):
@@ -584,11 +585,11 @@ class TestB401Integration:
     def test_results_standard_edition_and_provenance(self, cp_calculator, b401_base_config):
         cfg = b401_base_config
         cp_calculator.router(cfg)
-        # No edition key -> default 2021, whose tables are inherited from the
-        # 2010/2011 print without a verified 2021 source in this checkout
-        assert cfg["results"]["standard"] == "DNV-RP-B401 (2021)"
+        # No edition key -> default 2021 (DNV-RP-B401 May 2021, Sec. 8 tables,
+        # verified against the print; #2208)
+        assert cfg["results"]["standard"] == "DNV-RP-B401 (May 2021)"
         assert cfg["results"]["edition"] == "2021"
-        assert cfg["results"]["provenance"] == "inherited-2011-unverified"
+        assert cfg["results"]["provenance"] == "verified-2021-tables"
 
     def test_results_explicit_edition_2010(self, cp_calculator, b401_base_config):
         cfg = b401_base_config
@@ -596,7 +597,7 @@ class TestB401Integration:
         cp_calculator.router(cfg)
         assert cfg["results"]["standard"] == "DNV-RP-B401 (October 2010)"
         assert cfg["results"]["edition"] == "2010"
-        assert cfg["results"]["provenance"] == "verified-2011-tables"
+        assert cfg["results"]["provenance"] == "verified-2010-tables"
         # Tables 10-1/10-2/10-4/10-6 are identical across editions
         assert cfg["results"]["current_demand_A"]["total_mean_A"] == pytest.approx(500.0)
 
@@ -609,11 +610,11 @@ class TestB401Integration:
         cfg = b401_base_config
         cp_calculator.router(cfg)
         assert cfg["results"]["citations"] == [
-            "dnv-rp-b401 2011 Sec. 5 (structure-to-electrolyte potential criteria)",
-            "dnv-rp-b401 2011 Table 10-1",
-            "dnv-rp-b401 2011 Table 10-2",
-            "dnv-rp-b401 2011 Table 10-4",
-            "dnv-rp-b401 2011 Table 10-6",
+            "dnv-rp-b401 2021-05 Table 8-1",
+            "dnv-rp-b401 2021-05 Table 8-2",
+            "dnv-rp-b401 2021-05 Table 8-4",
+            "dnv-rp-b401 2021-05 Table 8-6",
+            "dnv-rp-b401 2021-05 [2.4.2] (design protective potential)",
         ]
 
     def test_results_design_life(self, cp_calculator, b401_base_config):

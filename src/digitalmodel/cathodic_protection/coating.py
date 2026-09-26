@@ -21,8 +21,11 @@ no temperature or depth correction beyond the Table 10-4 depth row.
 
 References
 ----------
-- DNV-RP-B401 (October 2010, wiki revision "2011") Table 10-4
-- DNV-RP-F103 (October 2010) Table A.1
+- DNV-RP-B401 Table 10-4 (October 2010, wiki revision "2011"), Table A-4
+  (June 2017) or Table 8-4 (May 2021, adds category IV via
+  ``b401_tables.PaintCategory.IV``)
+- DNV-RP-F103 Table A.1 (October 2010) or Table A-1 (September 2019, with
+  the concrete-weight-coating split; coal tar enamel is absent in 2019)
 - DNV-RP-F106 (2003) "Factory Applied External Pipeline Coatings" Sec. 5,
   for external coating family selection and inspection data sheets
 """
@@ -135,6 +138,7 @@ def coating_constants(
     depth_m: float = 0.0,
     edition: Edition | None = None,
     f103_edition: F103Edition | None = None,
+    concrete_weight_coating: bool = False,
 ) -> CoatingConstants:
     """Cited breakdown constants ``a`` and ``b`` for a coating category.
 
@@ -151,6 +155,10 @@ def coating_constants(
     f103_edition : F103Edition, optional
         DNV-RP-F103 edition token for linepipe coatings; ``None`` warns and
         defaults to 2010.
+    concrete_weight_coating : bool, optional
+        Concrete weight coating over a linepipe coating; selects the row
+        where the F103 (2019) Table A-1 splits (FBE). Ignored by the 2010
+        Table A.1 and by paint categories.
 
     Returns
     -------
@@ -183,7 +191,9 @@ def coating_constants(
         )
         return CoatingConstants(a.value, b.value, b.citation, standard_for_edition(ed))
     f103_ed = normalize_f103_edition(f103_edition, stacklevel=3)
-    a, b = linepipe_coating_constants(_F103_BY_CATEGORY[cat], f103_ed)
+    a, b = linepipe_coating_constants(
+        _F103_BY_CATEGORY[cat], f103_ed, concrete_weight_coating=concrete_weight_coating
+    )
     return CoatingConstants(
         a.value, b.value, b.citation, f103_standard_for_edition(f103_ed)
     )
@@ -314,6 +324,7 @@ def coating_breakdown_factors(
     temperature_c: float = 20.0,
     edition: Edition | None = None,
     f103_edition: F103Edition | None = None,
+    concrete_weight_coating: bool = False,
 ) -> CoatingBreakdownResult:
     """Calculate initial, mean, and final coating breakdown factors.
 
@@ -341,6 +352,9 @@ def coating_breakdown_factors(
     f103_edition : F103Edition, optional
         DNV-RP-F103 edition token for linepipe coatings; ``None`` warns and
         defaults to 2010.
+    concrete_weight_coating : bool, optional
+        Concrete weight coating flag for the F103 (2019) Table A-1 split
+        rows; see ``coating_constants``.
 
     Returns
     -------
@@ -358,7 +372,7 @@ def coating_breakdown_factors(
     f103_ed: F103Edition | None = None
     if cat in _F103_BY_CATEGORY:
         f103_ed = normalize_f103_edition(f103_edition, stacklevel=3)
-    constants = coating_constants(cat, depth_m, ed, f103_ed)
+    constants = coating_constants(cat, depth_m, ed, f103_ed, concrete_weight_coating)
     a, b = constants.a, constants.b
 
     fc_initial = kernel.coating_breakdown_linear(a, b, 0.0)
@@ -438,6 +452,7 @@ def effective_bare_area_coated(
     depth_m: float = 0.0,
     edition: Edition | None = None,
     f103_edition: F103Edition | None = None,
+    concrete_weight_coating: bool = False,
 ) -> float:
     """Calculate effective bare area of a coated structure at a given time.
 
@@ -457,6 +472,9 @@ def effective_bare_area_coated(
         DNV-RP-B401 edition token; ``None`` warns and defaults to 2021.
     f103_edition : F103Edition, optional
         DNV-RP-F103 edition token; ``None`` warns and defaults to 2010.
+    concrete_weight_coating : bool, optional
+        Concrete weight coating flag for the F103 (2019) Table A-1 split
+        rows; see ``coating_constants``.
 
     Returns
     -------
@@ -464,7 +482,11 @@ def effective_bare_area_coated(
         Effective bare area [m²].
     """
     constants = _constants_for(
-        CoatingCategory(coating_type), depth_m, edition, f103_edition
+        CoatingCategory(coating_type),
+        depth_m,
+        edition,
+        f103_edition,
+        concrete_weight_coating,
     )
     fc = kernel.coating_breakdown_linear(constants.a, constants.b, elapsed_years)
     return total_surface_area_m2 * fc
@@ -475,6 +497,7 @@ def _constants_for(
     depth_m: float,
     edition: Edition | None,
     f103_edition: F103Edition | None,
+    concrete_weight_coating: bool = False,
 ) -> CoatingConstants:
     """Normalize only the edition the category needs, then look up."""
     if cat in _PAINT_BY_CATEGORY:
@@ -484,5 +507,6 @@ def _constants_for(
             cat,
             depth_m,
             f103_edition=normalize_f103_edition(f103_edition, stacklevel=4),
+            concrete_weight_coating=concrete_weight_coating,
         )
     return coating_constants(cat, depth_m)

@@ -1,21 +1,25 @@
 """DNV-RP-F103 — Cathodic Protection of Submarine Pipelines by Galvanic Anodes.
 
 Bracelet-anode CP design for a coated submarine pipeline (editions ``"2010"``
-and ``"2016"`` via :func:`~digitalmodel.cathodic_protection._edition.normalize_f103_edition`):
+and ``"2019"`` via :func:`~digitalmodel.cathodic_protection._edition.normalize_f103_edition`;
+``"2021"`` is an alias of ``"2019"``, the May 2021 amended print):
 
 1. surface area ``A = pi * D * L`` split into linepipe and field-joint areas;
-2. design mean current density from Table 5-1 (exposure, fluid temperature);
+2. design mean current density from Table 5-1 (2010) or Table 6-2 (2019)
+   by exposure and fluid temperature;
 3. mean and final coating breakdown factors ``f_cm = a + b * t_f / 2`` and
-   ``f_cf = a + b * t_f`` from the Table A.1 (linepipe) and Table A.2
-   (field-joint) constants;
+   ``f_cf = a + b * t_f`` from the Table A.1 / A-1 (linepipe, with the 2019
+   concrete-weight-coating split) and Table A.2 / A-2 (field-joint)
+   constants;
 4. mean and final current demand ``I_cm = A * i_cm * f_cm`` and
    ``I_cf = A * i_cm * f_cf`` (F103 uses the mean current density for both);
 5. total net anode mass ``M = I_cm * t_f * 8760 / (u * epsilon)`` with the
-   bracelet utilisation factor (B401 Table 10-8, 0.80) and the alloy capacity
-   (B401 Table 10-6);
+   bracelet utilisation factor 0.80 (B401 Table 10-8 for 2010, F103 [6.4.2]
+   for 2019) and the alloy capacity (B401 Table 10-6 for 2010; F103
+   Table 6-3 by anode surface temperature for 2019);
 6. anode count ``N = max(N_mass, N_final)`` where the final current-output
    check uses the bracelet resistance ``R_a = 0.315 rho / sqrt(A)`` (B401
-   Table 10-7) and the design driving voltage (B401 Table 10-6);
+   Table 10-7) and the design driving voltage of the same anode table;
 7. anode spacing ``L / N`` checked against twice the protected length of
    Eq. 14 (Sec. 5.6.7), so that every point on the pipe lies within one
    protected length of an anode.
@@ -39,18 +43,19 @@ from digitalmodel.cathodic_protection._edition import (
     normalize_f103_edition,
 )
 from digitalmodel.cathodic_protection.b401_tables import (
+    AMBIENT_ANODE_TEMPERATURE_C,
     AnodeEnvironment,
     AnodeMaterial,
-    anode_capacity,
     citation_label,
-    design_driving_voltage,
 )
 from digitalmodel.cathodic_protection.f103_tables import (
     Exposure,
     FieldJointCoating,
+    FieldJointCoating2019,
     LinepipeCoating,
-    b401_edition_for_f103,
+    anode_capacity,
     bracelet_utilisation_factor,
+    design_driving_voltage,
     edition_provenance,
     field_joint_coating_constants,
     linepipe_coating_constants,
@@ -78,11 +83,23 @@ class BraceletDesignInput(BaseModel):
     wall_thickness_m: float = Field(..., gt=0, description="Pipe wall thickness WT [m]")
     length_m: float = Field(..., gt=0, description="Pipeline length to protect [m]")
     linepipe_coating: LinepipeCoating = Field(
-        ..., description="Linepipe coating system (Table A.1 row)"
+        ..., description="Linepipe coating system (Table A.1 / A-1 row)"
     )
-    field_joint_coating: FieldJointCoating = Field(
+    concrete_weight_coating: bool = Field(
+        default=False,
+        description=(
+            "Concrete weight coating over the linepipe coating; selects the "
+            "row where the 2019 Table A-1 splits (FBE). Ignored by the 2010 "
+            "Table A.1"
+        ),
+    )
+    field_joint_coating: FieldJointCoating | FieldJointCoating2019 = Field(
         default=FieldJointCoating.NONE,
-        description="Field-joint coating system (Table A.2 row)",
+        description=(
+            "Field-joint coating system (2010 Table A.2 id, or a "
+            "FieldJointCoating2019 id for the 2019 Table A-2; NONE maps to "
+            "the 2019 bare-steel row)"
+        ),
     )
     field_joint_area_fraction: float | None = Field(
         default=None,
@@ -104,10 +121,10 @@ class BraceletDesignInput(BaseModel):
         description="Axial length of one coated field joint [m] (with a joint count)",
     )
     exposure: Exposure = Field(
-        default=Exposure.NON_BURIED, description="Table 5-1 exposure condition"
+        default=Exposure.NON_BURIED, description="Table 5-1 / 6-2 exposure condition"
     )
     fluid_temperature_c: float = Field(
-        ..., description="Internal fluid temperature [°C] (Table 5-1 column)"
+        ..., description="Internal fluid temperature [°C] (Table 5-1 / 6-2 column)"
     )
     design_life_years: float = Field(..., gt=0, description="Design life t_f [years]")
     seawater_resistivity_ohm_m: float = Field(
@@ -119,12 +136,22 @@ class BraceletDesignInput(BaseModel):
         default=STEEL_RESISTIVITY, gt=0, description="Pipe steel resistivity [ohm-m]"
     )
     anode_material: AnodeMaterial = Field(
-        default=AnodeMaterial.ALUMINIUM, description="Anode alloy (B401 Table 10-6)"
+        default=AnodeMaterial.ALUMINIUM,
+        description="Anode alloy (B401 Table 10-6 for 2010, F103 Table 6-3 for 2019)",
+    )
+    anode_surface_temperature_c: float = Field(
+        default=AMBIENT_ANODE_TEMPERATURE_C,
+        description=(
+            "Anode surface temperature [°C] selecting the 2019 Table 6-3 row "
+            "(ambient seawater for non-buried anodes; the fluid temperature is "
+            "a conservative estimate for buried anodes, F103 2019 [6.4.4]). "
+            "The 2010 edition has ambient-temperature values only"
+        ),
     )
     anode_environment: AnodeEnvironment | None = Field(
         default=None,
         description=(
-            "Anode exposure for the Table 10-6 capacity; None derives it from "
+            "Anode exposure for the anode capacity table; None derives it from "
             "the pipeline exposure (buried -> sediments, else seawater)"
         ),
     )
@@ -210,7 +237,7 @@ class BraceletDesignResult(BaseModel):
     linepipe_area_m2: float = Field(..., description="Linepipe-coated area [m2]")
     field_joint_area_m2: float = Field(..., description="Field-joint area [m2]")
     mean_current_density_A_m2: float = Field(
-        ..., description="Design mean current density i_cm (Table 5-1) [A/m2]"
+        ..., description="Design mean current density i_cm (Table 5-1 / 6-2) [A/m2]"
     )
     f_cm_linepipe: float = Field(..., description="Mean breakdown factor, linepipe")
     f_cf_linepipe: float = Field(..., description="Final breakdown factor, linepipe")
@@ -218,8 +245,8 @@ class BraceletDesignResult(BaseModel):
     f_cf_field_joint: float = Field(..., description="Final breakdown factor, field joint")
     mean_current_demand_A: float = Field(..., description="I_cm [A]")
     final_current_demand_A: float = Field(..., description="I_cf [A]")
-    anode_capacity_Ah_kg: float = Field(..., description="Alloy capacity (Table 10-6)")
-    utilisation_factor: float = Field(..., description="Bracelet utilisation (Table 10-8)")
+    anode_capacity_Ah_kg: float = Field(..., description="Alloy capacity (B401 Table 10-6 / F103 Table 6-3)")
+    utilisation_factor: float = Field(..., description="Bracelet utilisation (B401 Table 10-8 / F103 [6.4.2])")
     driving_voltage_V: float = Field(..., description="Design driving voltage [V]")
     total_net_mass_kg: float = Field(..., description="Required net anode mass [kg]")
     number_of_anodes: int = Field(..., description="Anodes required, max of the cases")
@@ -285,7 +312,7 @@ def protected_length(
         Design mean current density [A/m2].
     edition : F103Edition, optional
         F103 edition token; ``None`` warns and defaults to 2010. Eq. 14 is
-        the same in both editions.
+        the same in both editions (Equation (14) of the 2019 print, [6.7]).
 
     Returns
     -------
@@ -333,7 +360,6 @@ def design_bracelet_cp(
         Demands, mass, count, spacing, protected length and checks.
     """
     ed = normalize_f103_edition(edition, stacklevel=3)
-    b401_ed = b401_edition_for_f103(ed)
     citations: list[str] = []
 
     area = inp.surface_area_m2
@@ -344,7 +370,9 @@ def design_bracelet_cp(
     i_cm = mean_current_density(inp.exposure, inp.fluid_temperature_c, ed)
     _add_citation(citations, i_cm)
 
-    a_lp, b_lp = linepipe_coating_constants(inp.linepipe_coating, ed)
+    a_lp, b_lp = linepipe_coating_constants(
+        inp.linepipe_coating, ed, concrete_weight_coating=inp.concrete_weight_coating
+    )
     _add_citation(citations, a_lp)
     f_cm_lp = kernel.coating_breakdown_mean(a_lp.value, b_lp.value, inp.design_life_years)
     f_cf_lp = kernel.coating_breakdown_final(a_lp.value, b_lp.value, inp.design_life_years)
@@ -365,9 +393,19 @@ def design_bracelet_cp(
     env = inp.resolved_anode_environment
     u = bracelet_utilisation_factor(ed)
     _add_citation(citations, u)
-    eps = anode_capacity(inp.anode_material, env, b401_ed)
+    eps = anode_capacity(
+        inp.anode_material,
+        env,
+        ed,
+        anode_surface_temperature_c=inp.anode_surface_temperature_c,
+    )
     _add_citation(citations, eps)
-    delta_E = design_driving_voltage(inp.anode_material, b401_ed, env)
+    delta_E = design_driving_voltage(
+        inp.anode_material,
+        ed,
+        env,
+        anode_surface_temperature_c=inp.anode_surface_temperature_c,
+    )
     _add_citation(citations, delta_E)
 
     total_mass = kernel.anode_mass(I_cm, inp.design_life_years, eps.value, u.value)

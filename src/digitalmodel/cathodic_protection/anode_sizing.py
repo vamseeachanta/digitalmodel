@@ -43,8 +43,9 @@ from digitalmodel.cathodic_protection.b401_tables import (
 
 # ---------------------------------------------------------------------------
 # Constants derived from the cited DNV-RP-B401 table lookups (issue #2207).
-# The values are identical across all supported editions, so the package
-# default edition is used here without a warning.
+# The Al-based seawater values at ambient anode temperature and the
+# utilisation factors are identical across all supported editions (#2208), so
+# the package default edition is used here without a warning.
 # ---------------------------------------------------------------------------
 _TABLE_EDITION: Edition = DEFAULT_EDITION
 

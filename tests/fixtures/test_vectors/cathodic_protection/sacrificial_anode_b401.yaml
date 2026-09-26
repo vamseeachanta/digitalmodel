@@ -109,7 +109,7 @@ worked_examples:
     inputs:
       material: "Zn-based"
       environment: "seawater"
-      edition: "2021"
+      edition: "2010"  # Table 10-6 (2010): Zn -1.00 V; the 2021 Table 8-6 gives -1.030 V -> 0.23 V
     outputs:
       driving_voltage_V: 0.20
     tolerance: 0.0005

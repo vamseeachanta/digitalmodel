@@ -40,9 +40,11 @@ from digitalmodel.cathodic_protection.dnv_rp_f103 import (
 )
 
 # Module constants are derived from the cited B401 table lookups at import
-# time (issue #2207). The values are identical across all supported editions,
-# so the package default edition is used here without a warning; callers that
-# need the citation call the ``b401_tables`` lookup with their own edition.
+# time (issue #2207). The Al-based seawater values at ambient anode
+# temperature and the utilisation factors are identical across all supported
+# editions (#2208), so the package default edition is used here without a
+# warning; callers that need the citation, another edition, or the 2021
+# anode-surface-temperature rows call the ``b401_tables`` lookup directly.
 _TABLE_EDITION: Edition = DEFAULT_EDITION
 
 # ---------------------------------------------------------------------------
@@ -86,12 +88,13 @@ STEEL_RESISTIVITY: float = _F103_STEEL_RESISTIVITY  # ohm-m
 
 # Companion DNV-RP-F103 edition for a B401 edition (inverse of the map in
 # ``f103_tables``): the 2005 and 2010 B401 editions pair with F103 (2010),
-# the DNVGL 2017 and DNV 2021 editions with DNVGL-RP-F103 (2016).
+# the DNVGL 2017 and DNV 2021 editions with DNVGL-RP-F103 (September 2019,
+# the republished 2016 edition, amended May 2021).
 _F103_EDITION_FOR_B401: Final[dict[Edition, F103Edition]] = {
     "2005": "2010",
     "2010": "2010",
-    "2017": "2016",
-    "2021": "2016",
+    "2017": "2019",
+    "2021": "2019",
 }
 
 _INCH_M: Final = 0.0254
@@ -337,7 +340,7 @@ def protected_length(
     Compatibility wrapper for
     :func:`digitalmodel.cathodic_protection.dnv_rp_f103.protected_length`;
     the B401 ``edition`` is mapped to its companion F103 edition
-    (2005/2010 -> 2010, 2017/2021 -> 2016).
+    (2005/2010 -> 2010, 2017/2021 -> 2019).
 
     PL = sqrt((delta_E_me * WT * (D - WT)) / (rho_me * D * f_cf * i_cm))
 

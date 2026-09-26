@@ -8,6 +8,7 @@ reviewer recalled.
 from __future__ import annotations
 
 import math
+from typing import Any
 
 import pytest
 
@@ -27,8 +28,8 @@ from digitalmodel.cathodic_protection.f103_tables import (
 EDITION = "2010"
 
 
-def _a3_input(**overrides) -> BraceletDesignInput:
-    base = dict(
+def _a3_input(**overrides: Any) -> BraceletDesignInput:
+    base: dict[str, Any] = dict(
         outer_diameter_m=0.3239,
         wall_thickness_m=0.0127,
         length_m=10000.0,
@@ -119,13 +120,23 @@ class TestReviewAppendixA3:
         assert result.standard == "DNV-RP-F103 (October 2010)"
         assert result.provenance == "verified-2010-tables"
 
-    def test_2016_edition_inherits_tables(self):
+    def test_2019_edition_uses_its_own_tables(self):
+        """A3 at 20 °C under 2019: i_cm 0.050 (Table 6-2, <=25), FBE a = 0.030,
+        b = 0.0010 without concrete (Table A-1); more anodes than 2010."""
         r10 = design_bracelet_cp(_a3_input(), edition="2010")
-        r16 = design_bracelet_cp(_a3_input(), edition="2016")
-        assert r16.number_of_anodes == r10.number_of_anodes
-        assert r16.total_net_mass_kg == pytest.approx(r10.total_net_mass_kg)
-        assert r16.standard == "DNVGL-RP-F103 (2016)"
-        assert r16.provenance == "inherited-2010-unverified"
+        r19 = design_bracelet_cp(_a3_input(), edition="2019")
+        assert r19.mean_current_density_A_m2 == r10.mean_current_density_A_m2 == 0.050
+        assert r19.f_cm_linepipe == pytest.approx(0.030 + 0.0010 * 12.5)
+        assert r19.number_of_anodes > r10.number_of_anodes
+        assert r19.standard == "DNVGL-RP-F103 (September 2019, amended May 2021)"
+        assert r19.provenance == "verified-2019-tables"
+        assert r19.citations[0] == "dnv-rp-f103 2019-09 Table 6-2"
+
+    def test_2016_edition_warns_and_uses_2019_tables(self):
+        with pytest.warns(UserWarning, match="July 2016 print is not on file"):
+            r16 = design_bracelet_cp(_a3_input(), edition="2016")
+        assert r16.edition_used == "2019"
+        assert r16.model_dump() == design_bracelet_cp(_a3_input(), edition="2019").model_dump()
 
     def test_missing_edition_warns_and_defaults_to_2010(self):
         with pytest.warns(UserWarning, match="DNV-RP-F103"):
