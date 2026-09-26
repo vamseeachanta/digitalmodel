@@ -11,6 +11,24 @@ Working examples for the `digitalmodel.asset_integrity` fitness-for-service modu
 | `example_api579_gml.py` | API 579 Part 4 General Metal Loss assessment for a 16" gas pipeline. Uses simulated wall-thickness grids. Demonstrates Level 1 screening and Level 2 assessment length calculation. |
 | `example_api579_lml.py` | API 579 Part 5 Local Metal Loss assessment. Shows how to define a Local Thin Area (LTA) by grid indices, Folias factor interpolation, and MAWP reduction workflow. |
 
+## Crack-like flaw assessment report (#2157)
+
+The API 579-1 Part 9 crack-like-flaw assessment of the weldolet root flaw
+(`examples/workflows/crack-fe-weldolet/input.yml`) renders as a self-contained
+house-style HTML report with one command:
+
+```bash
+python -m digitalmodel.asset_integrity.assessment.crack_fe_report \
+    examples/workflows/crack-fe-weldolet/input.yml \
+    -o <output-dir>/crack-fe-weldolet-report.html --date YYYY-MM-DD
+```
+
+The command re-runs the assessment (every FE receipt is re-verified, about a minute)
+and writes the page. Every table number carries a `data-src` path into the result
+record, the design-data register or the receipt metadata. The design basis is assumed
+throughout and every assumed input is labelled "ASSUMED - to be confirmed". The
+generated report goes to local owner review first and is not committed (owner card G04).
+
 ## Running the Examples
 
 Each example is self-contained and prints configuration summaries and calculation walkthroughs:
