@@ -456,7 +456,7 @@ def main():
     print("  ║  ACE Engineer — Automated pressure vessel FEA from design input     ║")
     print("  ║  to ANSYS scripts, parametric studies, and engineering reports.      ║")
     print("  ║                                                                    ║")
-    print("  ║  Contact: vamsee.achanta@aceengineer.com | aceengineer.com          ║")
+    print("  ║  Contact: redacted@example.com | aceengineer.com          ║")
     print("  ╚══════════════════════════════════════════════════════════════════════╝")
     print()
 

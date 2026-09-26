@@ -79,7 +79,7 @@ class TestSubseaProjectTimelineFields:
     def test_existing_fields_unaffected(self):
         """Ensure existing SubseaProject fields still work after timeline addition."""
         p = SubseaProject(
-            name="Perdido",
+            name="GoM-UD-Spar",
             operator="Shell",
             water_depth_m=2438.0,
             concept_type="Spar",

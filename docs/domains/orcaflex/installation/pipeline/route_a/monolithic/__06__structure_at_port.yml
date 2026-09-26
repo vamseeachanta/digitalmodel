@@ -1,7 +1,7 @@
 ﻿BaseFile: __04__structure_crane_interface.yml
 
 Vessels:
-  SevenArctic:
+  iv02:
     InitialY: 32.65
     InitialHeading: 90
 

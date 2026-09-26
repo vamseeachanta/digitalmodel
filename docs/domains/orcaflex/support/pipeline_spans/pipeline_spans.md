@@ -16,9 +16,9 @@ Kind regards,
 Max Nicholson
 =======================
 
-From: Vamsee Achanta <vamseea@acma-inc.com>
+From: Vamsee Achanta [email removed]
 Sent: 29 October 2024 11:22
-To: Orcina <orcina@orcina.com>
+To: Orcina [email removed]
 Subject: OrcaFlex | Pipeline Analysis Capabilities
 
 Dear Support Representative,

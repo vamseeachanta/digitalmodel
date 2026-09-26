@@ -10,7 +10,7 @@
 ;;; By Jimmy Bergmark
 ;;; Copyright (C) 1997-2008 JTB World, All Rights Reserved
 ;;; Website: www.jtbworld.com
-;;; E-mail: info@jtbworld.com
+;;; E-mail: [email removed]
 ;;;
 ;;; 2000-06-27
 ;;;

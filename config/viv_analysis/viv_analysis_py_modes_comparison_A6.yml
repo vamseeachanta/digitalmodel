@@ -52,7 +52,7 @@ modal_plots:
     plt_kind: line
     xlabel: Mode Number (#)
     ylabel: Frequency (Hz)
-    suptitle: Horn Mountain TTR VIV Analysis
+    suptitle: GoM spar TTR VIV Analysis
     title: Frequency with Mode Number
     xticklabels: NULL
     grid: True
@@ -74,7 +74,7 @@ modal_plots:
     plt_kind: line
     xlabel: Mode Number (#)
     ylabel: curvature (1/unit length)
-    suptitle: Horn Mountain TTR VIV Analysis
+    suptitle: GoM spar TTR VIV Analysis
     title: Curvature with Mode Number
     xticklabels: NULL
     grid: True
@@ -96,7 +96,7 @@ modal_plots:
     plt_kind: line
     xlabel: Frequency (Hz)
     ylabel: curvature (1/unit length)
-    suptitle: Horn Mountain TTR VIV Analysis
+    suptitle: GoM spar TTR VIV Analysis
     title: Curvature with Frequency
     xticklabels: NULL
     grid: True
@@ -120,7 +120,7 @@ mode_shape_plots:
       plt_kind: line
       ylabel: Elevation Above Mudline (ft)
       xlabel: Mode Shape, Normalized to unit length
-      suptitle: Horn Mountain TTR VIV Analysis
+      suptitle: GoM spar TTR VIV Analysis
       title: Mode Shapes
       xticklabels: NULL
       grid: True
@@ -141,7 +141,7 @@ mode_shape_plots:
 #      plt_kind: scatter
 #      xlabel: Elevation Above Mudline (ft)
 #      ylabel: Mode Slope, Shape normalized to unit length
-#      suptitle: Horn Mountain TTR VIV Analysis
+#      suptitle: GoM spar TTR VIV Analysis
 #      title: Mode Slope
 #      xticklabels: NULL
 #      grid: True
@@ -162,7 +162,7 @@ mode_shape_plots:
       plt_kind: line
       ylabel: Elevation Above Mudline (ft)
       xlabel: Mode Curvature
-      suptitle: Horn Mountain TTR VIV Analysis
+      suptitle: GoM spar TTR VIV Analysis
       title: Mode Curvature
       xticklabels: NULL
       grid: True
@@ -185,7 +185,7 @@ mode_shape_plots:
       plt_kind: line
       ylabel: Elevation Above Mudline (ft)
       xlabel: Mode Shape, Normalized to unit length
-      suptitle: Horn Mountain TTR VIV Analysis
+      suptitle: GoM spar TTR VIV Analysis
       title: Mode Shapes
       xticklabels: NULL
       grid: True
@@ -206,7 +206,7 @@ mode_shape_plots:
       plt_kind: line
       ylabel: Elevation Above Mudline (ft)
       xlabel: Mode Shape, Normalized to unit length
-      suptitle: Horn Mountain TTR VIV Analysis
+      suptitle: GoM spar TTR VIV Analysis
       title: Mode Shapes
       xticklabels: NULL
       grid: True
@@ -236,7 +236,7 @@ mode_shape_plots:
       plt_kind: scatter
       ylabel: Elevation Above Mudline (ft)
       xlabel: Mode Curvature (1/ unit length)
-      suptitle: Horn Mountain TTR VIV Analysis
+      suptitle: GoM spar TTR VIV Analysis
       title: Mode Curvature
       xticklabels: NULL
       grid: True
@@ -257,7 +257,7 @@ mode_shape_plots:
       plt_kind: scatter
       ylabel: Elevation Above Mudline (ft)
       xlabel: Mode Curvature (1/ unit length)
-      suptitle: Horn Mountain TTR VIV Analysis
+      suptitle: GoM spar TTR VIV Analysis
       title: Mode Curvature
       xticklabels: NULL
       grid: True
@@ -288,7 +288,7 @@ mode_shape_plots:
       plt_kind: scatter
       ylabel: Elevation Above Mudline (ft)
       xlabel: Mode Curvature (1/ unit length)
-      suptitle: Horn Mountain TTR VIV Analysis
+      suptitle: GoM spar TTR VIV Analysis
       title: Mode Curvature
       xticklabels: NULL
       grid: True

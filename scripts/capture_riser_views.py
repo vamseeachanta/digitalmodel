@@ -87,10 +87,11 @@ def process_model(model_name: str) -> dict:
 
     result = {"model_name": model_name, "monolithic": {}, "modular": {}}
 
-    # Find monolithic .dat file
-    dat_files = list(mono_dir.glob("*.dat"))
+    # Find the monolithic model: a .dat where one is kept, else its .yml twin
+    # (a .dat with a proven .yml twin was removed from the public tree, C13).
+    dat_files = sorted(mono_dir.glob("*.dat")) or sorted(mono_dir.glob("*.yml"))
     if not dat_files:
-        print(f"  ERROR: No .dat file in {mono_dir}")
+        print(f"  ERROR: No .dat or .yml model in {mono_dir}")
         return result
 
     # --- Monolithic ---

@@ -35,8 +35,8 @@ installation:
     reference_file: 03_fpso_vessel.yml
     reference_location: [168.4, 8.9, 30]
     key_chain:
-      InitialPosition: [Yellowtail FPSO, InitialPosition]
-      Orientation: [Yellowtail FPSO, Orientation]
+      InitialPosition: [Host FPSO, InitialPosition]
+      Orientation: [Host FPSO, Orientation]
   installation_vessel:
     reference_file: 04b_Vessels_scon.yml
     reference_location: [82.75, 0, 1]
@@ -47,11 +47,11 @@ installation:
   phase:
     - name: pih
       step:
-        - name: yellowtail/code/src/modular/__pih_step01_def
+        - name: guyana_deepwater/code/src/modular/__pih_step01_def
           includefile: __07_config00_pih_ups_wire.yml
           target:
             - type: line_length
-              reference_file: yellowtail/code/src/modular/_common/06_07_Product/config00_pih_ups_wire.yml
+              reference_file: guyana_deepwater/code/src/modular/_common/06_07_Product/config00_pih_ups_wire.yml
               Lines: [product_installation_side, product_host_side]
               LineType: [oceanmax35]
               value: 550
@@ -61,11 +61,11 @@ installation:
               value: 90
               keychain_target_vessel: [Vessels, Constellation]
               keychain_target_line: [Lines, product_installation_side]
-        - name: yellowtail/code/src/modular/__pih_step02_def
+        - name: guyana_deepwater/code/src/modular/__pih_step02_def
           includefile: 07_config01_pih_umbilical_section1_install_side.yml
           target:
             - type: line_length
-              reference_file: yellowtail/code/src/modular/_common/06_07_Product/config01_pih_umbilical_section1_install_side.yml
+              reference_file: guyana_deepwater/code/src/modular/_common/06_07_Product/config01_pih_umbilical_section1_install_side.yml
               Lines: [product_host_side]
               LineType: [oceanmax35]
               value: 550

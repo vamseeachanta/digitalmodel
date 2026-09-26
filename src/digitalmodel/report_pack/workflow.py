@@ -90,34 +90,30 @@ import csv
 import html as _html
 import json
 import re
-import shutil
-import subprocess
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
 from digitalmodel.citations.schema import Citation, CitationValidationError
+from digitalmodel.reporting.pdf import (  # noqa: F401 - re-exported for callers
+    _EDGE_DEFAULT_PATHS,
+    _pdf_via_browser_cli,
+    _pdf_via_playwright,
+    _render_pdf,
+)
+from digitalmodel.reporting.spec import DOC_NUMBER_RE, MANIFEST_REQUIRED_FIELDS
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 EXECUTION_TOOL = "digitalmodel.report_pack.workflow"
 
 #: JOB-DOCTYPE-SEQ-REV, doctype optional (e.g. B0000-001-00 or B0000-RPT-001-00).
-DOC_NUMBER_RE = re.compile(r"^[A-Z]\d{3,4}(-[A-Z0-9]{1,8})?-\d{3}-\d{2}$")
+#: Defined once in ``digitalmodel.reporting.spec``; re-exported here.
 
 APPENDIX_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 #: Report-layer manifest fields the caller must supply (provenance contract).
-MANIFEST_REQUIRED_FIELDS = (
-    "issue",
-    "project",
-    "artifact_class",
-    "privacy_classification",
-    "publishability_decision",
-    "input_source_ids",
-    "raw_output_path",
-    "final_output_path",
-)
+#: Defined once in ``digitalmodel.reporting.spec``; re-exported here.
 #: Optional caller-supplied manifest fields carried through when present.
 MANIFEST_OPTIONAL_FIELDS = ("parent_issue", "source_artifacts")
 
@@ -831,104 +827,8 @@ def _inline_md(text: str) -> str:
 # ---------------------------------------------------------------------------
 # PDF rendering — best-effort renderer chain, fail-soft by default
 # ---------------------------------------------------------------------------
-
-
-def _render_pdf(html_path: Path, pdf_path: Path, mode: str) -> tuple[bool, str]:
-    """Render ``html_path`` to ``pdf_path`` using the first available renderer.
-
-    Renderer chain: Playwright/Chromium, then Microsoft Edge headless (the
-    documented Windows fallback: ``msedge --headless --print-to-pdf=...``),
-    then Chrome/Chromium headless. Returns ``(written, status_message)``.
-    ``mode='off'`` skips entirely; ``mode='require'`` raises if every renderer
-    is unavailable or fails; ``mode='auto'`` fails soft with a clear message.
-    """
-    if mode == "off":
-        return False, "pdf rendering disabled (report_pack.pdf: off)"
-
-    attempts: list[str] = []
-
-    written = _pdf_via_playwright(html_path, pdf_path, attempts)
-    if not written:
-        written = _pdf_via_browser_cli(html_path, pdf_path, attempts)
-
-    if written:
-        return True, f"pdf rendered via {attempts[-1]}"
-    message = (
-        "PDF not rendered — no PDF renderer available on this host. "
-        "Tried: " + "; ".join(attempts) + ". "
-        "Install Playwright (pip install playwright && playwright install chromium) "
-        "or ensure Microsoft Edge / Chrome is on PATH "
-        "(Windows fallback: msedge --headless --print-to-pdf). "
-        "The md/html pack is complete; PDFs are limited derivatives of the "
-        "approved HTML source."
-    )
-    if mode == "require":
-        raise RuntimeError(message)
-    return False, message
-
-
-def _pdf_via_playwright(html_path: Path, pdf_path: Path, attempts: list[str]) -> bool:
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError:
-        attempts.append("playwright (not installed)")
-        return False
-    try:
-        with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(headless=True)
-            page = browser.new_page()
-            page.goto(html_path.resolve().as_uri(), wait_until="networkidle")
-            page.emulate_media(media="print")
-            page.pdf(path=str(pdf_path), format="A4", print_background=True)
-            browser.close()
-    except Exception as exc:  # pragma: no cover - browser availability varies
-        attempts.append(f"playwright (failed: {exc})")
-        return False
-    attempts.append("playwright/chromium")
-    return pdf_path.is_file()
-
-
-_EDGE_DEFAULT_PATHS = (
-    r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
-    r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
-)
-
-
-def _pdf_via_browser_cli(html_path: Path, pdf_path: Path, attempts: list[str]) -> bool:
-    candidates: list[tuple[str, str]] = []
-    for name in ("msedge", "microsoft-edge", "chrome", "google-chrome", "chromium",
-                 "chromium-browser"):
-        located = shutil.which(name)
-        if located:
-            candidates.append((name, located))
-    for default in _EDGE_DEFAULT_PATHS:
-        if Path(default).is_file():
-            candidates.append(("msedge", default))
-            break
-    if not candidates:
-        attempts.append("edge/chrome headless (no browser executable found)")
-        return False
-    for name, executable in candidates:
-        command = [
-            executable,
-            "--headless",
-            "--disable-gpu",
-            "--no-sandbox",
-            f"--print-to-pdf={pdf_path.resolve()}",
-            html_path.resolve().as_uri(),
-        ]
-        try:
-            completed = subprocess.run(
-                command, capture_output=True, timeout=120, check=False
-            )
-        except (OSError, subprocess.TimeoutExpired) as exc:
-            attempts.append(f"{name} headless (failed: {exc})")
-            continue
-        if completed.returncode == 0 and pdf_path.is_file():
-            attempts.append(f"{name} headless --print-to-pdf")
-            return True
-        attempts.append(f"{name} headless (exit {completed.returncode})")
-    return False
+# The chain lives in ``digitalmodel.reporting.pdf`` (#2212); re-exported here so
+# the workflow's behaviour and its tests are unchanged.
 
 
 # ---------------------------------------------------------------------------

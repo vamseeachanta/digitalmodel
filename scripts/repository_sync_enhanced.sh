@@ -297,7 +297,7 @@ commit_sync_changes() {
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>" >> "$LOG_FILE" 2>&1 || {
+Co-Authored-By: Claude Sonnet 4.5 <noreply@example.com>" >> "$LOG_FILE" 2>&1 || {
         log_warning "Commit failed or no changes staged in $repo_name"
     }
 

@@ -40,7 +40,7 @@ output_files:
         fields: NULL
     repeat_patterns:
       -
-        text: LoadData M:\0185\WaveFatigue\Rev1\2500ft_WT_0875_64ppg.yml
+        text: LoadData <private-data>\2500ft_WT_0875_64ppg.yml
         fields: NULL
       -
         text: Select General
@@ -136,7 +136,7 @@ output_files:
         text: WaveDirection= 0
         fields: NULL
       -
-        text: SaveData M:\0185\WaveFatigue\Rev1\lid02_{:03d}_2500ft_WT_0875_64ppg_Dr000_Hs{:05.2f}m_Tp{:05.2f}s.dat
+        text: SaveData <private-data>\lid02_{:03d}_2500ft_WT_0875_64ppg_Dr000_Hs{:05.2f}m_Tp{:05.2f}s.dat
         fields:
           -
             from_range:
@@ -219,7 +219,7 @@ output_files:
         text: "-"
         fields: NULL
       -
-        text: "  LoadCaseFileName: M:\\0185\\WaveFatigue\\Rev2\\lid02_{:03d}_2500ft_WT0750_064pcf_Dr000_Hs{:05.2f}m_Tp{:05.2f}s.sim"
+        text: "  LoadCaseFileName: <private-data>\\lid02_{:03d}_2500ft_WT0750_064pcf_Dr000_Hs{:05.2f}m_Tp{:05.2f}s.sim"
         fields:
           -
             from_range:
@@ -377,7 +377,7 @@ output_files:
                 column: Tp
                 loop_level: 0
       -
-        text: "  Name: M:\\0185\\WaveFatigue\\Rev2\\lid02_{:03d}_2500ft_WT0750_064pcf_Dr000_Hs{:05.2f}m_Tp{:05.2f}s.dat"
+        text: "  Name: <private-data>\\lid02_{:03d}_2500ft_WT0750_064pcf_Dr000_Hs{:05.2f}m_Tp{:05.2f}s.dat"
         fields:
           -
             from_range:

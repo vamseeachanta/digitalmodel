@@ -22,4 +22,4 @@ def test_list_vessels_finds_configs_from_any_cwd(tmp_path, monkeypatch, capsys):
     diffraction_cli.run_orcawave(_args())
     out = capsys.readouterr().out
     assert "No vessel configurations found" not in out
-    assert "sea_cypress" in out  # shipped vessel config must be discoverable
+    assert "tug_30m_1" in out  # shipped vessel config must be discoverable

@@ -1,10 +1,10 @@
 %YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.5e
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\mooring\buoy\C06 CALM Buoy\C06 Discretised CALM Buoy.yml
+# File: <private-data>/C06 Discretised CALM Buoy.yml
 # Created: 10:13 AM on 10/22/2025
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 # Input Parameters (for parametric analysis)
 _inputs:
