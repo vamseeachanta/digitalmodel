@@ -16,25 +16,25 @@ python src/modules/orcawave/diffraction/orchestrator.py --list-vessels
 
 ### 2. Validate Geometry Files
 ```bash
-# Validate Sea Cypress geometry
+# Validate tug_30m_1 geometry
 python src/modules/orcawave/diffraction/scripts/validate_geometry.py \
     --path specs/modules/orcawave/diffraction-analysis/inputs/geometry \
-    --vessel sea_cypress
+    --vessel tug_30m_1
 ```
 
 ### 3. Run Complete Analysis
 ```bash
-# Run full workflow for Sea Cypress
-python src/modules/orcawave/diffraction/orchestrator.py --vessel sea_cypress
+# Run full workflow for tug_30m_1
+python src/modules/orcawave/diffraction/orchestrator.py --vessel tug_30m_1
 
 # Dry run (validation only)
-python src/modules/orcawave/diffraction/orchestrator.py --vessel sea_cypress --dry-run
+python src/modules/orcawave/diffraction/orchestrator.py --vessel tug_30m_1 --dry-run
 ```
 
 ### 4. Run Specific Phase
 ```bash
 # Setup and validation only
-python src/modules/orcawave/diffraction/orchestrator.py --vessel sea_cypress --phase setup
+python src/modules/orcawave/diffraction/orchestrator.py --vessel tug_30m_1 --phase setup
 
 # Available phases: setup, execute, process, qa, package
 ```
@@ -47,7 +47,7 @@ src/modules/orcawave/diffraction/
 ├── configs/
 │   ├── base_diffraction_config.yml
 │   └── vessels/
-│       └── sea_cypress.yml     # Vessel configuration
+│       └── tug_30m_1.yml     # Vessel configuration
 ├── scripts/
 │   ├── validate_geometry.py    # Geometry validation
 │   ├── convert_to_orcaflex.py  # Results converter
@@ -58,16 +58,16 @@ src/modules/orcawave/diffraction/
 specs/modules/orcawave/diffraction-analysis/
 └── inputs/
     └── geometry/               # Geometry files location
-        ├── Sea Cypress_0.25 Mesh_Binary.stl
-        ├── Sea Cypress_0.25 Mesh_Ascii.stl
-        └── Sea Cypress_0.25 Mesh_Binary.obj
+        ├── tug_30m_1_0.25 Mesh_Binary.stl
+        ├── tug_30m_1_0.25 Mesh_Ascii.stl
+        └── tug_30m_1_0.25 Mesh_Binary.obj
 ```
 
 ## Configuration
 
-The Sea Cypress vessel configuration (`configs/vessels/sea_cypress.yml`) is configured to use:
+The tug_30m_1 vessel configuration (`configs/vessels/tug_30m_1.yml`) is configured to use:
 - **Geometry path**: `specs/modules/orcawave/diffraction-analysis/inputs/geometry`
-- **Primary file**: `Sea Cypress_0.25 Mesh_Binary.stl`
+- **Primary file**: `tug_30m_1_0.25 Mesh_Binary.stl`
 - **Panel size**: 0.25 meters
 - **Water depth**: 100 meters
 
@@ -92,7 +92,7 @@ Results are saved in `results/[vessel_name]/`:
 
 ### Geometry Path Not Found
 - The module now uses relative paths from repository root
-- Geometry files are in: `specs/modules/orcawave/sea-cypress-diffraction-analysis/inputs/geometry/`
+- Geometry files are in: `specs/modules/orcawave/tug-30m-1-diffraction-analysis/inputs/geometry/`
 - Configuration automatically resolves relative paths
 
 ### Missing Dependencies
@@ -108,4 +108,4 @@ Results are saved in `results/[vessel_name]/`:
 1. Run geometry validation to ensure files are accessible
 2. Execute dry run to validate configuration
 3. Run full analysis with OrcaWave license
-4. Review results in `results/sea_cypress/` directory
+4. Review results in `results/tug_30m_1/` directory

@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.6b
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\examples\raw\L02\L02 OC4 Semi-sub.yml
+# File: docs/domains/orcaflex/examples/raw/L02/L02 OC4 Semi-sub.yml
 # Created: 7:53 PM on 2/10/2026
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   Comments: ! 'Note: The properties applied in these examples are based on our interpretation of the data provided in the

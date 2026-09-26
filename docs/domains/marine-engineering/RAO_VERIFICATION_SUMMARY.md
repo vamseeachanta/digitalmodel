@@ -24,7 +24,7 @@
 
 ### Test 1: Ship RAOs (001_SHIP_RAOS_REV3.LIS)
 
-**File**: `D:\workspace-hub\digitalmodel\specs\modules\aqwa\ship-analysis\go-by-ship-raos\001_SHIP_RAOS_REV3.LIS`
+**File**: `<private-data>\001_SHIP_RAOS_REV3.LIS`
 
 #### Route 1: Unified Reader (v2.0) - ✅ SUCCESS
 
@@ -65,7 +65,7 @@ Same results as Route 1 (uses Unified Reader internally)
 
 ### Test 2: FST RAOs (FST2L015_FST1L015_HWL.LIS)
 
-**File**: `D:\workspace-hub\digitalmodel\specs\modules\aqwa_to_orcaflex\input\FST2L015_FST1L015_HWL.LIS`
+**File**: `<private-data>\FST2L015_FST1L015_HWL.LIS`
 
 #### All Routes: ✅ SUCCESS
 

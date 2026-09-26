@@ -253,7 +253,7 @@ This project uses Semantic Versioning (MAJOR.MINOR.PATCH):
 
 ## Contributors
 
-**Lead Developer:** Vamsee Achanta (vamsee.achanta@aceengineer.com)
+**Lead Developer:** Vamsee Achanta ([email removed])
 
 **Dedication:** Mark Cerkovnik - Chief Engineer, mentor, and inspiration
 

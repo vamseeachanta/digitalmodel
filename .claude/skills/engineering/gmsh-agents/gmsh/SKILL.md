@@ -300,7 +300,7 @@ pytest --cov=agents.gmsh tests/
 
 ### Contact
 - GitHub Issues: [Create Issue](../../issues)
-- Email: support@digitalmodel.com
+- Email: [email removed]
 
 ## License
 This agent is part of the DigitalModel repository and follows the same licensing terms.

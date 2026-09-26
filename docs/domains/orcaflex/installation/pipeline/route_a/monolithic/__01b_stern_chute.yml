@@ -1,12 +1,12 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\1.ini\STAT\_02_stern_chute.yml
+# File: <private-data>/_02_stern_chute.yml
 # Created: 9:41 PM on 6/11/2023
 # User: 
 # Machine: 
 ---
-BaseFile: __01a_Seven_Arctic_v11.yml
+BaseFile: __01a_iv02_v11.yml
 SupportTypes:
   New:
     - Chute SupportType_w1.2m
@@ -40,7 +40,7 @@ SupportTypes:
   Tensioner Support1:
     Locked: No
     BuoyType: Lumped buoy
-    Connection: SevenArctic
+    Connection: iv02
     DampingRelativeTo: Earth
     DisturbanceVessel: (none)
     WaveCalculationMethod: Specified by environment
@@ -138,7 +138,7 @@ SupportTypes:
   ChuteSupport1:
     Locked: No
     BuoyType: Lumped buoy
-    Connection: SevenArctic
+    Connection: iv02
     DampingRelativeTo: Earth
     DisturbanceVessel: (none)
     WaveCalculationMethod: Specified by environment

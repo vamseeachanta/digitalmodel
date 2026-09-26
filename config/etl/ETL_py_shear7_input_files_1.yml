@@ -16,7 +16,7 @@ default:
   load: NULL
 
 Analysis:
-  custom_folder: C:\Users\achantv\Desktop\S7
+  custom_folder: <private-data>\S7
 
 output_files:
   -
@@ -144,10 +144,10 @@ output_files:
 
     header:
       -
-        text: COPY data_manager\data\orcaflex\common.mds C:\Users\achantv\Desktop\S7\common.mds
+        text: COPY data_manager\data\orcaflex\common.mds <private-data>\common.mds
         fields: NULL
       -
-        text: CD C:\Users\achantv\Desktop\S7\
+        text: CD <private-data>\
         fields: NULL
     repeat_patterns:
       -
@@ -160,7 +160,7 @@ output_files:
 
     footer:
       -
-        text: DELETE C:\Users\achantv\Desktop\S7\common.mds
+        text: DELETE <private-data>\common.mds
         fields: NULL
 
   -
@@ -192,7 +192,7 @@ output_files:
 
     repeat_patterns:
       -
-        text: "Files: C:\\Users\\achantv\\Desktop\\S7\\lid02_cp{:02d}_2500ft_WT0750_064pcf"
+        text: "Files: <private-data>\\lid02_cp{:02d}_2500ft_WT0750_064pcf"
         fields:
           -
             from_range:

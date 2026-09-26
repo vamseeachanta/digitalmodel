@@ -12,7 +12,7 @@
 ;then two points to define the line after that direction of spiral right or left
 ;then interval between points (please check the attached drawing to see parametre)
 ;to use the program load it then enter at the command line: kloto
-;for any inquiry please don't hesitate e.mail motee@albawaba.com or tel:0096341437033(syria)
+;for any inquiry please don't hesitate e.mail [email removed] or tel:0096341437033(syria)
 
 (defun c:kloto ()
  

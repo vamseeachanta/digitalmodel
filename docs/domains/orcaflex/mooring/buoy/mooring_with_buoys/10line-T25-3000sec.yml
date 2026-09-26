@@ -1,10 +1,10 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.5e
-# File: D:\workspace-hub\digitalmodel\docs\modules\orcaflex\mooring\buoy\10line-T25-3000sec.yml
+# File: docs/domains/orcaflex/mooring/buoy/mooring_with_buoys/10line-T25-3000sec.yml
 # Created: 10:13 AM on 10/22/2025
-# User: ansystech
-# Machine: ACMA-ANSYS05
+# User: (removed)
+# Machine: (removed)
 ---
 General:
   Comments: ! "\r\n\r\nThe CALM buoy is modelled using a Spar Buoy."

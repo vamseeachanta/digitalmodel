@@ -31,7 +31,7 @@ def _make_repo(tmp_path: Path) -> Path:
     root = tmp_path / "digitalmodel"
     root.mkdir()
     _git(root, "init", "-q", "-b", "main")
-    _git(root, "config", "user.email", "t@e.com")
+    _git(root, "config", "user.email", "t@example.com")
     _git(root, "config", "user.name", "T")
     _git(root, "config", "commit.gpgsign", "false")
     (root / "README.md").write_text("# dm\n")

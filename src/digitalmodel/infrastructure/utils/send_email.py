@@ -5,9 +5,9 @@ import urllib3
 
 BaseProtocol.HTTP_ADAPTER_CLS = NoVerifyHTTPAdapter
 urllib3.disable_warnings()
-credentials = Credentials("sender_email@oxy.com", "password")
+credentials = Credentials("sender_email@example.com", "password")
 account = Account(
-    primary_smtp_address="sender_email@oxy.com",
+    primary_smtp_address="sender_email@example.com",
     credentials=credentials,
     config=Configuration(server="smtp.office365.com", credentials=credentials),
     autodiscover=False,
@@ -17,8 +17,8 @@ m = Message(
     account=account,
     subject="This is the email subject",
     body="This is the body of the email message.",
-    to_recipients=["alexander_lach@oxy.com"],
-    cc_recipients=["other_person@oxy.com"],
+    to_recipients=["redacted@example.com"],
+    cc_recipients=["other_person@example.com"],
 )
 
 with open("test_attachment.txt", "rb") as f:

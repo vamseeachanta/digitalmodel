@@ -41,7 +41,7 @@ from digitalmodel.marine_ops.installation.jumper_to_modular_spec import (
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 SPEC_DIR = REPO_ROOT / "docs/domains/orcaflex/subsea/jumper/installation"
-MF_PLET_SPEC = SPEC_DIR / "ballymore_mf_plet" / "spec.yml"
+MF_PLET_SPEC = SPEC_DIR / "gom_tieback_mf_plet" / "spec.yml"
 
 
 # ---------------------------------------------------------------------------
@@ -55,7 +55,7 @@ class TestPipeOverridesPropagate:
         must NOT produce the 10.75\"/50\" default pipe."""
         spec = {
             "jumper": {
-                "config_name": "ballymore_mf_plet",
+                "config_name": "gom_tieback_mf_plet",
                 "pipe_od_inch": 12.75,
                 "pipe_bend_radius_inch": 60.0,
             }
@@ -84,7 +84,7 @@ class TestPipeOverridesPropagate:
     def test_buoyancy_and_clamp_overrides_reach_results(self):
         spec = {
             "jumper": {
-                "config_name": "ballymore_mf_plet",
+                "config_name": "gom_tieback_mf_plet",
                 "buoyancy_dry_lbs": 1500.0,
                 "clamp_weight_kg": 300.0,
             }
@@ -97,7 +97,7 @@ class TestPipeOverridesPropagate:
     def test_connector_length_override_reaches_sections(self):
         spec = {
             "jumper": {
-                "config_name": "ballymore_mf_plet",
+                "config_name": "gom_tieback_mf_plet",
                 "connector_length_m": 2.0,
             }
         }
@@ -183,7 +183,7 @@ class TestParseJumperConfig:
         filter because JumperConfig lacked them."""
         spec = {
             "jumper": {
-                "config_name": "ballymore_mf_plet",
+                "config_name": "gom_tieback_mf_plet",
                 "num_strakes": 3,
                 "clamp_ocs_offset_m": 1.5,
             }
@@ -196,12 +196,12 @@ class TestParseJumperConfig:
         assert wc["num_strake_modules"] == 3
 
     def test_unknown_jumper_key_fails_loud(self):
-        spec = {"jumper": {"config_name": "ballymore_mf_plet", "not_a_field": 1.0}}
+        spec = {"jumper": {"config_name": "gom_tieback_mf_plet", "not_a_field": 1.0}}
         with pytest.raises(ValueError, match="not_a_field"):
             parse_jumper_config(spec)
 
     def test_shipped_specs_parse_clean(self):
-        for name in ("ballymore_mf_plet", "ballymore_plet_plem"):
+        for name in ("gom_tieback_mf_plet", "gom_tieback_plet_plem"):
             raw = yaml.safe_load((SPEC_DIR / name / "spec.yml").read_text())
             config = parse_jumper_config(raw)
             assert config.name == name
@@ -220,7 +220,7 @@ class TestPipelineMetoceanConditions:
         assert extract_metocean_conditions({}) == {}
 
     def test_pipeline_evaluates_splash_zone_at_spec_hs(self, tmp_path):
-        """ballymore_mf_plet carries Hs 4.0 m (4x the DNV-ST-N001 1.0 m
+        """gom_tieback_mf_plet carries Hs 4.0 m (4x the DNV-ST-N001 1.0 m
         limit): the splash-zone criterion must be evaluated at 4.0 m and
         FAIL, driving an overall NO_GO — not report 0.00 m PASS."""
         output = run_pipeline(
