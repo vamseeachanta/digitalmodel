@@ -135,6 +135,47 @@ def get_anchor_safety_factor(*, repo_root: Optional[Path] = None) -> CitedValue:
     return CitedValue(value=value, citation=citation, units="dimensionless")
 
 
+_API_579_CITATION_TEMPLATE: Final = {
+    "code_id": "api-std-579-asme-ffs-1",
+    "publisher": "API + ASME (joint)",
+    "revision": "2016",
+    "wiki_path": "wikis/engineering-standards/wiki/standards/api-std-579.md",
+}
+
+_BS_7910_CITATION_TEMPLATE: Final = {
+    "code_id": "bs-7910",
+    "publisher": "BSI",
+    "revision": "2013",
+    "wiki_path": "wikis/engineering-standards/wiki/standards/bs-7910.md",
+}
+
+
+def get_api579_reference(
+    section: str, *, note: str = "", repo_root: Optional[Path] = None
+) -> CitedValue:
+    """Return a validated API 579-1/ASME FFS-1 (2016) reference citation (#2157).
+
+    Metadata-only: the value is a sentinel and the citation is the payload. Fail-closed
+    when the cited page is missing or its frontmatter no longer matches.
+    """
+    citation = Citation(section=section, note=note, **_API_579_CITATION_TEMPLATE)
+    validate_citation(citation, repo_root=repo_root)
+    return CitedValue(value=1.0, citation=citation, units="reference")
+
+
+def get_bs7910_reference(
+    section: str, *, note: str = "", repo_root: Optional[Path] = None
+) -> CitedValue:
+    """Return a validated BS 7910 (2013) reference citation (#2157).
+
+    Metadata-only: the value is a sentinel and the citation is the payload. Fail-closed
+    when the cited page is missing or its frontmatter no longer matches.
+    """
+    citation = Citation(section=section, note=note, **_BS_7910_CITATION_TEMPLATE)
+    validate_citation(citation, repo_root=repo_root)
+    return CitedValue(value=1.0, citation=citation, units="reference")
+
+
 def get_dnv_f103_reference(
     section: str, *, note: str = "", repo_root: Optional[Path] = None
 ) -> CitedValue:

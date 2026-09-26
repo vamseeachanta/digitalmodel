@@ -131,3 +131,11 @@ same commit, then rerun:
 ```bash
 .venv/bin/python -m pytest tests/riser_database/ tests/drilling_riser/ -q
 ```
+
+
+## `api-std-579.md` and `bs-7910.md` (digitalmodel#2157, 2026-09-26)
+
+Metadata-only stubs for the crack-like-flaw capability: code_id, publisher and revision
+(API 579-1/ASME FFS-1 "2016"; BS 7910 "2013"), with no standard text, tables, formulas
+or worked examples (owner cards E01, E02, G09, G10). The same stubs sit in the repo
+overlay `knowledge/wikis/engineering-standards/wiki/standards/`.

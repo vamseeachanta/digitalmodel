@@ -217,10 +217,11 @@ def escalate_to_level3(
     # --- Recommended analyses, selected from the active triggers -------------
     recommended_analysis: list = []
     if has_crack_like_flaw:
-        # Crack-like flaw -> BS 7910 FAD via the fracture-mechanics router.
+        # Crack-like flaw -> FAD assessment on the canonical crack path (#2157 R04).
         recommended_analysis.append(
-            "BS7910 FAD fracture assessment (crack-like flaw) — via "
-            "digitalmodel.asset_integrity.fracture_mechanics.fracture_mechanics"
+            "crack-like flaw FAD assessment (API 579-1 Part 9 / BS 7910) — via "
+            "digitalmodel.asset_integrity.assessment.fad_curves and "
+            "digitalmodel.asset_integrity.assessment.crack_fad"
         )
     if interacting_defects:
         recommended_analysis.append(

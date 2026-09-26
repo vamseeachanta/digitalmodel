@@ -158,3 +158,14 @@ def test_handoff_not_triggered_empty_analysis_but_complete_record():
     # Even when not triggered, the package is a complete record.
     for key in ("geometry", "loads", "material", "level1_result", "level2_result"):
         assert key in handoff.data_package
+
+
+def test_crack_like_flaw_points_to_canonical_crack_modules():
+    # #2157 R04: the recommendation must name the canonical crack path, not the
+    # legacy fracture_mechanics router (broken under the pinned pandas, see #2160).
+    handoff = escalate_to_level3(
+        geom(), loads(), material(), l1(), l2(), has_crack_like_flaw=True
+    )
+    text = " ".join(handoff.recommended_analysis)
+    assert "fad_curves" in text and "crack_fad" in text
+    assert "fracture_mechanics.fracture_mechanics" not in text
