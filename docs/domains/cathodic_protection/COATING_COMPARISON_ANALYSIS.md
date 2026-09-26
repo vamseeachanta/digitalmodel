@@ -1,5 +1,7 @@
 # Coating Quality Sensitivity Analysis Report
 
+Historical analysis note (2026-01); identifiers redacted under #2155 on 2026-09-26.
+
 **Date:** 2026-01-07
 **Project:** Contractor 24-inch Submarine Pipeline CP Analysis
 **Analysis Type:** Complete Coating Quality Spectrum Comparison
