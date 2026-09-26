@@ -26,26 +26,49 @@ from digitalmodel.cathodic_protection._edition import (
     normalize_edition,
     standard_for_edition,
 )
+from digitalmodel.cathodic_protection.b401_tables import (
+    AnodeEnvironment,
+    AnodeMaterial,
+    AnodeShape,
+    anode_capacity,
+    anode_closed_circuit_potential,
+    design_driving_voltage,
+    protection_potential,
+    utilisation_factor,
+)
 
 
 # ---------------------------------------------------------------------------
-# Constants (DNV-RP-B401)
+# Constants derived from the cited DNV-RP-B401 table lookups (issue #2207).
+# The values are identical across all supported editions, so the package
+# default edition is used here without a warning.
 # ---------------------------------------------------------------------------
+_TABLE_EDITION: Edition = DEFAULT_EDITION
 
-# Protection potentials vs Ag/AgCl (DNV-RP-B401 §5.4.1)
-PROTECTION_POTENTIAL_AGAGCL: float = -0.800  # V vs Ag/AgCl
-ANODE_CLOSED_CIRCUIT_POTENTIAL: float = -1.050  # V vs Ag/AgCl (Al-Zn-In)
+# Protection potentials vs Ag/AgCl (B401 Sec. 5 and Table 10-6)
+PROTECTION_POTENTIAL_AGAGCL: float = protection_potential(_TABLE_EDITION).value
+ANODE_CLOSED_CIRCUIT_POTENTIAL: float = anode_closed_circuit_potential(
+    AnodeMaterial.ALUMINIUM, AnodeEnvironment.SEAWATER, _TABLE_EDITION
+).value  # V vs Ag/AgCl, Al-based anode in seawater
 
-# Design driving voltage
-DESIGN_DRIVING_VOLTAGE: float = abs(
-    PROTECTION_POTENTIAL_AGAGCL - ANODE_CLOSED_CIRCUIT_POTENTIAL
-)  # 0.25 V
+# Design driving voltage E_c - E_a (0.25 V for Al in seawater)
+DESIGN_DRIVING_VOLTAGE: float = design_driving_voltage(
+    AnodeMaterial.ALUMINIUM, _TABLE_EDITION
+).value
 
-# Al-Zn-In anode properties (DNV-RP-B401 Table 10-6)
-DEFAULT_ANODE_CAPACITY: float = 2000.0  # A-h/kg
-DEFAULT_UTILIZATION_STANDOFF: float = 0.90
-DEFAULT_UTILIZATION_FLUSH: float = 0.85
-DEFAULT_UTILIZATION_BRACELET: float = 0.80
+# Al-based anode capacity (Table 10-6) and utilisation factors (Table 10-8)
+DEFAULT_ANODE_CAPACITY: float = anode_capacity(
+    AnodeMaterial.ALUMINIUM, AnodeEnvironment.SEAWATER, _TABLE_EDITION
+).value  # A-h/kg
+DEFAULT_UTILIZATION_STANDOFF: float = utilisation_factor(
+    AnodeShape.LONG_SLENDER_STANDOFF, _TABLE_EDITION
+).value
+DEFAULT_UTILIZATION_FLUSH: float = utilisation_factor(
+    AnodeShape.LONG_FLUSH, _TABLE_EDITION
+).value
+DEFAULT_UTILIZATION_BRACELET: float = utilisation_factor(
+    AnodeShape.SHORT_FLUSH_BRACELET, _TABLE_EDITION
+).value
 
 
 class AnodeType(str, Enum):

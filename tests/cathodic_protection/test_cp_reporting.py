@@ -1,9 +1,7 @@
 """Tests for CP assessment report generation."""
 
-import pytest
 
 from digitalmodel.cathodic_protection.cp_reporting import (
-    ComplianceCheck,
     ComplianceStatus,
     RecommendationPriority,
     compliance_check_potential,

@@ -14,19 +14,41 @@ References
 
 from __future__ import annotations
 
-import math
-from typing import Optional
-
 from pydantic import BaseModel, Field
 
+from digitalmodel.cathodic_protection._edition import DEFAULT_EDITION, Edition
+from digitalmodel.cathodic_protection.b401_tables import (
+    AnodeEnvironment,
+    AnodeMaterial,
+    AnodeShape,
+    anode_capacity,
+    utilisation_factor,
+)
 
-# Standard anode properties
-ANODE_CAPACITY_ALZNI: float = 2000.0  # A-h/kg (Al-Zn-In)
-ANODE_CAPACITY_ZN: float = 780.0  # A-h/kg (Zinc)
-ANODE_CAPACITY_MG: float = 500.0  # A-h/kg (Magnesium H-1)
-UTILIZATION_FACTOR_STANDOFF: float = 0.90
-UTILIZATION_FACTOR_FLUSH: float = 0.85
-UTILIZATION_FACTOR_BRACELET: float = 0.80
+# Anode properties derived from the cited DNV-RP-B401 table lookups at import
+# time (issue #2207). Values are identical across all supported editions, so
+# the package default edition is used here without a warning.
+_TABLE_EDITION: Edition = DEFAULT_EDITION
+
+ANODE_CAPACITY_ALZNI: float = anode_capacity(
+    AnodeMaterial.ALUMINIUM, AnodeEnvironment.SEAWATER, _TABLE_EDITION
+).value  # A-h/kg, Table 10-6 Al-based in seawater
+ANODE_CAPACITY_ZN: float = anode_capacity(
+    AnodeMaterial.ZINC, AnodeEnvironment.SEAWATER, _TABLE_EDITION
+).value  # A-h/kg, Table 10-6 Zn-based in seawater
+# Not a B401 value (Table 10-6 has no magnesium row): API RP 1632 practical
+# Mg H-1 capacity, ~500 A-h/lb = 1100 A-h/kg (the earlier 500 was the
+# per-pound figure; #2209 fixed the same slip in api_rp_1632).
+ANODE_CAPACITY_MG: float = 1100.0  # A-h/kg (Magnesium H-1)
+UTILIZATION_FACTOR_STANDOFF: float = utilisation_factor(
+    AnodeShape.LONG_SLENDER_STANDOFF, _TABLE_EDITION
+).value  # Table 10-8, long slender stand-off
+UTILIZATION_FACTOR_FLUSH: float = utilisation_factor(
+    AnodeShape.LONG_FLUSH, _TABLE_EDITION
+).value  # Table 10-8, long flush-mounted
+UTILIZATION_FACTOR_BRACELET: float = utilisation_factor(
+    AnodeShape.SHORT_FLUSH_BRACELET, _TABLE_EDITION
+).value  # Table 10-8, short flush-mounted, bracelet and other types
 
 
 class AnodeStatus(BaseModel):
@@ -266,7 +288,7 @@ def recommend_inspection_interval(
     """
     pct = depletion_result.depletion_percentage
     remaining_life = depletion_result.remaining_life_years
-    remaining_design = design_life_years - elapsed_years
+    del design_life_years, elapsed_years  # thresholds depend on depletion only
 
     if depletion_result.is_depleted or pct >= 90.0:
         return InspectionRecommendation(

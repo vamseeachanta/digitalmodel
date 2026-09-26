@@ -44,7 +44,7 @@ def test_normalize_edition_rejects_unknown_values():
     from digitalmodel.cathodic_protection import normalize_edition
 
     with pytest.raises(ValueError, match="Unsupported DNV-RP-B401 edition"):
-        normalize_edition("2011")
+        normalize_edition("1993")
 
 
 @pytest.mark.parametrize(
@@ -112,7 +112,7 @@ def test_design_cp_system_result_carries_explicit_edition_metadata():
     result = design_cp_system(_sample_anode_sizing_input(), edition="2017")
 
     assert result.edition_used == "2017"
-    assert result.standard == "DNV-RP-B401 (Oct 2017)"
+    assert result.standard == "DNVGL-RP-B401 (2017)"
 
 
 def test_design_cp_system_missing_edition_warns_and_defaults_metadata():
@@ -123,7 +123,7 @@ def test_design_cp_system_missing_edition_warns_and_defaults_metadata():
 
     assert Path(warnings[0].filename).name == "test_edition_api_foundation.py"
     assert result.edition_used == "2021"
-    assert result.standard == "DNV-RP-B401 (May 2021)"
+    assert result.standard == "DNV-RP-B401 (2021)"
 
 
 def test_design_cp_system_explicit_edition_preserves_p1_numerics():
@@ -175,7 +175,7 @@ def test_anode_sizing_result_defaults_metadata_for_legacy_dicts():
     result = AnodeSizingResult(**_legacy_anode_sizing_result_data())
 
     assert result.edition_used == "2021"
-    assert result.standard == "DNV-RP-B401 (May 2021)"
+    assert result.standard == "DNV-RP-B401 (2021)"
 
 
 def test_anode_sizing_result_treats_none_metadata_as_legacy_missing():
@@ -186,7 +186,7 @@ def test_anode_sizing_result_treats_none_metadata_as_legacy_missing():
     )
 
     assert result.edition_used == "2021"
-    assert result.standard == "DNV-RP-B401 (May 2021)"
+    assert result.standard == "DNV-RP-B401 (2021)"
 
 
 def test_anode_sizing_result_rejects_invalid_metadata_with_validation_error():
@@ -219,10 +219,21 @@ def test_coating_breakdown_result_carries_explicit_edition_metadata():
         coating_breakdown_factors,
     )
 
-    result = coating_breakdown_factors(CoatingCategory.FBE, edition="2017")
+    # Paint categories are B401 Table 10-4 rows: standard follows the edition.
+    result = coating_breakdown_factors(CoatingCategory.PAINT_III, edition="2017")
 
     assert result.edition_used == "2017"
-    assert result.standard == "DNV-RP-B401 (Oct 2017)"
+    assert result.standard == "DNVGL-RP-B401 (2017)"
+
+    # Linepipe coatings are F103 Table A.1 rows (#2207): the B401 edition is
+    # recorded, but ``standard`` agrees with the F103 citation.
+    result = coating_breakdown_factors(
+        CoatingCategory.FBE, edition="2017", f103_edition="2010"
+    )
+
+    assert result.edition_used == "2017"
+    assert result.f103_edition_used == "2010"
+    assert result.standard == "DNV-RP-F103 (October 2010)"
 
 
 def test_coating_breakdown_missing_edition_warns_and_defaults_metadata():
@@ -232,11 +243,18 @@ def test_coating_breakdown_missing_edition_warns_and_defaults_metadata():
     )
 
     with pytest.warns(UserWarning, match="defaulting to DNV-RP-B401 2021") as warnings:
-        result = coating_breakdown_factors(CoatingCategory.FBE)
+        result = coating_breakdown_factors(CoatingCategory.PAINT_III)
 
     assert Path(warnings[0].filename).name == "test_edition_api_foundation.py"
     assert result.edition_used == "2021"
-    assert result.standard == "DNV-RP-B401 (May 2021)"
+    assert result.standard == "DNV-RP-B401 (2021)"
+
+    with pytest.warns(UserWarning, match="defaulting to DNV-RP-F103 2010") as warnings:
+        result = coating_breakdown_factors(CoatingCategory.FBE, edition="2021")
+
+    assert Path(warnings[0].filename).name == "test_edition_api_foundation.py"
+    assert result.f103_edition_used == "2010"
+    assert result.standard == "DNV-RP-F103 (October 2010)"
 
 
 def test_coating_breakdown_explicit_edition_preserves_p1_numerics():
@@ -265,7 +283,7 @@ def test_coating_breakdown_result_defaults_metadata_for_legacy_dicts():
     )
 
     assert result.edition_used == "2021"
-    assert result.standard == "DNV-RP-B401 (May 2021)"
+    assert result.standard == "DNV-RP-B401 (2021)"
 
 
 def test_coating_breakdown_result_rejects_invalid_metadata_with_validation_error():
@@ -337,7 +355,7 @@ def test_design_marine_cp_result_carries_explicit_edition_metadata():
     result = design_marine_cp(_sample_marine_cp_input(), edition="2017")
 
     assert result.edition_used == "2017"
-    assert result.standard == "DNV-RP-B401 (Oct 2017)"
+    assert result.standard == "DNVGL-RP-B401 (2017)"
 
 
 def test_design_marine_cp_missing_edition_warns_and_defaults_metadata():
@@ -348,7 +366,7 @@ def test_design_marine_cp_missing_edition_warns_and_defaults_metadata():
 
     assert Path(warnings[0].filename).name == "test_edition_api_foundation.py"
     assert result.edition_used == "2021"
-    assert result.standard == "DNV-RP-B401 (May 2021)"
+    assert result.standard == "DNV-RP-B401 (2021)"
 
 
 def test_design_marine_cp_explicit_edition_preserves_p1_numerics():
@@ -378,7 +396,7 @@ def test_marine_cp_result_defaults_metadata_for_legacy_dicts():
     )
 
     assert result.edition_used == "2021"
-    assert result.standard == "DNV-RP-B401 (May 2021)"
+    assert result.standard == "DNV-RP-B401 (2021)"
 
 
 def test_marine_cp_result_rejects_invalid_metadata_with_validation_error():
@@ -448,7 +466,7 @@ def test_marine_structure_result_carries_explicit_edition_metadata():
     )
 
     assert result.edition_used == "2017"
-    assert result.standard == "DNV-RP-B401 (Oct 2017)"
+    assert result.standard == "DNVGL-RP-B401 (2017)"
 
 
 def test_marine_structure_missing_edition_warns_and_defaults_metadata():
@@ -461,7 +479,7 @@ def test_marine_structure_missing_edition_warns_and_defaults_metadata():
 
     assert Path(warnings[0].filename).name == "test_edition_api_foundation.py"
     assert result.edition_used == "2021"
-    assert result.standard == "DNV-RP-B401 (May 2021)"
+    assert result.standard == "DNV-RP-B401 (2021)"
 
 
 def test_marine_structure_explicit_edition_preserves_p1_numerics():
@@ -498,7 +516,7 @@ def test_marine_structure_result_defaults_metadata_for_legacy_dicts():
     )
 
     assert result.edition_used == "2021"
-    assert result.standard == "DNV-RP-B401 (May 2021)"
+    assert result.standard == "DNV-RP-B401 (2021)"
 
 
 def test_marine_structure_result_rejects_invalid_metadata_with_validation_error():

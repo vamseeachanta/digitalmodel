@@ -2,6 +2,7 @@
 
 import pytest
 
+
 from digitalmodel.cathodic_protection._experimental import ExperimentalModelError
 from digitalmodel.cathodic_protection.stray_current import (
     InterferenceType,

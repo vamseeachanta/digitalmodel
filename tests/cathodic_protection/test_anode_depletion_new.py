@@ -5,7 +5,10 @@ import pytest
 
 from digitalmodel.cathodic_protection.anode_depletion import (
     ANODE_CAPACITY_ALZNI,
+    ANODE_CAPACITY_MG,
     ANODE_CAPACITY_ZN,
+    UTILIZATION_FACTOR_BRACELET,
+    UTILIZATION_FACTOR_FLUSH,
     UTILIZATION_FACTOR_STANDOFF,
     AnodeStatus,
 )
@@ -77,3 +80,15 @@ class TestAnodeConstants:
 
     def test_standoff_utilization(self):
         assert 0.8 < UTILIZATION_FACTOR_STANDOFF <= 1.0
+
+    def test_constants_match_b401_tables(self):
+        """Table 10-6 seawater capacities and Table 10-8 utilisation factors."""
+        assert ANODE_CAPACITY_ALZNI == 2000.0  # Al-based, seawater
+        assert ANODE_CAPACITY_ZN == 780.0  # Zn-based, seawater
+        assert UTILIZATION_FACTOR_STANDOFF == 0.90  # long slender stand-off
+        assert UTILIZATION_FACTOR_FLUSH == 0.85  # long flush-mounted
+        assert UTILIZATION_FACTOR_BRACELET == 0.80  # short flush / bracelet
+
+    def test_magnesium_capacity_is_per_kg(self):
+        """Not a B401 value: API RP 1632 practical Mg H-1, 1100 A-h/kg."""
+        assert ANODE_CAPACITY_MG == 1100.0

@@ -1,4 +1,4 @@
-"""DNV-RP-B401 — Cathodic Protection Design (2005/2017).
+"""DNV-RP-B401 — Cathodic Protection Design (editions 2005 to 2021).
 
 Implements sacrificial anode CP design for offshore structures including
 current demand, coating breakdown, anode mass requirements, anode
@@ -10,32 +10,61 @@ from __future__ import annotations
 
 import math
 
-from digitalmodel.cathodic_protection._edition import Edition, normalize_edition
+from digitalmodel.cathodic_protection._edition import (
+    DEFAULT_EDITION,
+    Edition,
+    normalize_edition,
+)
+from digitalmodel.cathodic_protection.b401_tables import (
+    AnodeEnvironment,
+    AnodeMaterial,
+    AnodeShape,
+    anode_capacity,
+    anode_closed_circuit_potential,
+    design_driving_voltage,
+    protection_potential,
+    utilisation_factor,
+)
+
+# Module constants are derived from the cited B401 table lookups at import
+# time (issue #2207). The values are identical across all supported editions,
+# so the package default edition is used here without a warning; callers that
+# need the citation call the ``b401_tables`` lookup with their own edition.
+_TABLE_EDITION: Edition = DEFAULT_EDITION
 
 # ---------------------------------------------------------------------------
-# Protection potentials vs Ag/AgCl (DNV-RP-B401 §5.4.1)
+# Protection potentials vs Ag/AgCl (DNV-RP-B401 Sec. 5 and Table 10-6)
 # ---------------------------------------------------------------------------
-PROTECTION_POTENTIAL_AGAGCL: float = -0.800  # V vs Ag/AgCl
-ANODE_CLOSED_CIRCUIT_POTENTIAL: float = -1.050  # V vs Ag/AgCl (Al-Zn-In)
+PROTECTION_POTENTIAL_AGAGCL: float = protection_potential(_TABLE_EDITION).value
+ANODE_CLOSED_CIRCUIT_POTENTIAL: float = anode_closed_circuit_potential(
+    AnodeMaterial.ALUMINIUM, AnodeEnvironment.SEAWATER, _TABLE_EDITION
+).value  # V vs Ag/AgCl, Al-based anode in seawater
 
 # ---------------------------------------------------------------------------
-# Design driving voltage (DNV-RP-B401 §5.4.1)
+# Design driving voltage E_c - E_a (Table 10-6 with Sec. 5): 0.25 V for Al
 # ---------------------------------------------------------------------------
-DESIGN_DRIVING_VOLTAGE: float = abs(
-    PROTECTION_POTENTIAL_AGAGCL - ANODE_CLOSED_CIRCUIT_POTENTIAL
-)  # 0.25 V
+DESIGN_DRIVING_VOLTAGE: float = design_driving_voltage(
+    AnodeMaterial.ALUMINIUM, _TABLE_EDITION
+).value
 
 # ---------------------------------------------------------------------------
-# Al-Zn-In anode properties (DNV-RP-B401 Table 10-6)
+# Al-based anode properties (DNV-RP-B401 Table 10-6)
 # ---------------------------------------------------------------------------
-ANODE_CAPACITY_ALZNI: float = 2000.0  # A-h/kg electrochemical capacity
-ANODE_DENSITY_ALZNI: float = 2750.0  # kg/m³
+ANODE_CAPACITY_ALZNI: float = anode_capacity(
+    AnodeMaterial.ALUMINIUM, AnodeEnvironment.SEAWATER, _TABLE_EDITION
+).value  # A-h/kg electrochemical capacity, seawater
+# Alloy density is not tabulated in B401; typical Al-Zn-In value.
+ANODE_DENSITY_ALZNI: float = 2750.0  # kg/m3
 
 # ---------------------------------------------------------------------------
-# Utilization factors (DNV-RP-B401 Table 10-8)
+# Utilisation factors (DNV-RP-B401 Table 10-8)
 # ---------------------------------------------------------------------------
-UTILIZATION_FACTOR_STANDOFF: float = 0.90  # stand-off structural anodes
-UTILIZATION_FACTOR_FLUSH: float = 0.85  # flush-mount hull anodes
+UTILIZATION_FACTOR_STANDOFF: float = utilisation_factor(
+    AnodeShape.LONG_SLENDER_STANDOFF, _TABLE_EDITION
+).value  # long slender stand-off, L >= 4r
+UTILIZATION_FACTOR_FLUSH: float = utilisation_factor(
+    AnodeShape.LONG_FLUSH, _TABLE_EDITION
+).value  # long flush-mounted, L >= 4 width and thickness
 
 # ---------------------------------------------------------------------------
 # Steel resistivity (DNV-RP-F103 §5.6.10)

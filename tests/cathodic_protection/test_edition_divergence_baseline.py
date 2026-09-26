@@ -1,8 +1,9 @@
-"""Baseline tests for current B401 edition divergence.
+"""Baseline tests for B401 behaviour shared by the legacy solver and the new package.
 
-These tests intentionally capture today's split behavior before the edition
-merge changes source code. They should keep passing through the merge unless a
-slice deliberately updates the expected cross-edition contract.
+Re-baselined for #2207: both code paths now draw their numbers from the cited
+``b401_tables`` / ``f103_tables`` modules, so these tests pin the agreed
+cross-path contract (splash 0 A/m2, Table 10-4 Cat I, F103 Table A.1 FBE) and
+the resistance formulas that intentionally still differ.
 """
 
 from __future__ import annotations
@@ -11,79 +12,161 @@ import math
 
 import pytest
 
+_EDITION = "2021"
 
-def test_baseline_splash_zone_divergence():
-    """2017 functional splash-zone demand is zero; 2021 router demand is not."""
-    from digitalmodel.cathodic_protection.marine_structure_cp import (
-        ClimateRegion,
-        ExposureZone,
-        ZONE_CURRENT_DENSITY,
-    )
+
+def _legacy_densities(zone: str, temperature_c: float = 10.0) -> dict:
     from digitalmodel.infrastructure.base_solvers.hydrodynamics.cp_DNV_RP_B401_2021 import (
-        _B401_2021_CURRENT_DENSITIES,
+        _b401_current_densities,
     )
 
-    assert ZONE_CURRENT_DENSITY[
-        (ExposureZone.SPLASH, ClimateRegion.TEMPERATE)
-    ] == (0.0, 0.0, 0.0)
-    assert _B401_2021_CURRENT_DENSITIES["splash"]["coated"] == 0.100
-    assert _B401_2021_CURRENT_DENSITIES["splash"]["bare"] == 0.200
+    inputs = {
+        "design_data": {"edition": _EDITION},
+        "structure": {"zones": [{"zone": zone, "area_m2": 100.0, "coating_category": "I"}]},
+        "environment": {"seawater_temperature_C": temperature_c},
+    }
+    return _b401_current_densities(inputs)[zone]
+
+
+def test_baseline_splash_zone_zero_in_both_paths():
+    """Legacy router and functional package both give the splash zone 0 A/m2."""
+    from digitalmodel.cathodic_protection.b401_tables import Climate, DesignPhase
+    from digitalmodel.cathodic_protection.marine_structure_cp import (
+        ExposureZone,
+        zone_current_density,
+    )
+
+    for phase in DesignPhase:
+        assert (
+            zone_current_density(ExposureZone.SPLASH, Climate.TEMPERATE, 0.0, phase, _EDITION)
+            is None
+        )
+    legacy = _legacy_densities("splash")
+    assert legacy["i_initial_A_m2"] == 0.0
+    assert legacy["i_mean_A_m2"] == 0.0
+    assert legacy["i_final_A_m2"] == 0.0
+
+
+def test_baseline_submerged_density_agrees_across_paths():
+    """Legacy router submerged densities equal the cited Table 10-1 / 10-2 values."""
+    from digitalmodel.cathodic_protection.b401_tables import Climate, DesignPhase
+    from digitalmodel.cathodic_protection.marine_structure_cp import (
+        ExposureZone,
+        zone_current_density,
+    )
+
+    legacy = _legacy_densities("submerged", temperature_c=10.0)
+    for phase, key in (
+        (DesignPhase.INITIAL, "i_initial_A_m2"),
+        (DesignPhase.MEAN, "i_mean_A_m2"),
+        (DesignPhase.FINAL, "i_final_A_m2"),
+    ):
+        cited = zone_current_density(ExposureZone.SUBMERGED, Climate.TEMPERATE, 0.0, phase, _EDITION)
+        assert cited is not None
+        assert legacy[key] == pytest.approx(cited.value)
+    # temperate 0-30 m: 0.200 / 0.100 / 0.130
+    assert legacy["i_initial_A_m2"] == pytest.approx(0.200)
+    assert legacy["i_mean_A_m2"] == pytest.approx(0.100)
+    assert legacy["i_final_A_m2"] == pytest.approx(0.130)
 
 
 def test_baseline_flush_anode_resistance_ratio_geometry_dependent():
-    """McCoy and Dwight flush formulas differ by about 1.8702 at L=2m, r=0.15m."""
+    """McCoy flush (half-space) and Dwight stand-off formulas differ by 1.8702 at L=2 m, r=0.15 m."""
+    from digitalmodel.cathodic_protection.dnv_rp_b401 import (
+        anode_resistance_slender_standoff,
+        flush_anode_resistance,
+    )
+
+    rho_ohm_m = 0.30
     length_m = 2.0
     radius_m = 0.15
+    inch = 0.0254
 
-    r_mccoy = (1.0 / (math.pi * length_m)) * (
-        math.log(2.0 * length_m / radius_m) - 0.5
-    )
-    r_dwight = (1.0 / (2.0 * math.pi * length_m)) * (
-        math.log(4.0 * length_m / radius_m) - 1.0
+    r_dwight = anode_resistance_slender_standoff(rho_ohm_m, length_m, radius_m, edition=_EDITION)
+    r_mccoy = flush_anode_resistance(
+        rho_ohm_m * 100.0,  # ohm-m -> ohm-cm
+        length_m / inch,
+        1.0,  # width: unused, folded into r_eq
+        1.0,  # height: unused, folded into r_eq
+        radius_m / inch,
+        edition=_EDITION,
     )
 
+    # Dwight: rho/(2 pi L) * (ln(4L/r) - 1) = 0.023873 * 2.9766 = 0.07106 ohm
+    assert r_dwight == pytest.approx(
+        (rho_ohm_m / (2.0 * math.pi * length_m)) * (math.log(4.0 * length_m / radius_m) - 1.0)
+    )
+    # McCoy: rho/(pi L) * (ln(2L/r) - 0.5) = 0.047746 * 2.7834 = 0.13289 ohm
+    assert r_mccoy == pytest.approx(
+        (rho_ohm_m / (math.pi * length_m)) * (math.log(2.0 * length_m / radius_m) - 0.5),
+        rel=1e-9,
+    )
     assert r_mccoy / r_dwight == pytest.approx(1.8702, rel=1e-3)
     assert 1.5 < r_mccoy / r_dwight < 2.0
 
 
 def test_baseline_internal_router_dwight_divergence():
-    """Router B401 and sacrificial-anode helpers use different Dwight log arguments."""
+    """Legacy router equals the package Dwight formula; the sacrificial helper still diverges."""
+    from digitalmodel.cathodic_protection.dnv_rp_b401 import anode_resistance_slender_standoff
+    from digitalmodel.infrastructure.base_solvers.hydrodynamics.cp_DNV_RP_B401_2021 import (
+        _b401_anode_resistance,
+    )
+    from digitalmodel.infrastructure.base_solvers.hydrodynamics.cp_sacrificial_anode_b401 import (
+        anode_resistance_flush,
+    )
+
+    rho_ohm_m = 0.30
     length_m = 2.0
     radius_m = 0.15
 
-    r_b401 = (1.0 / (2.0 * math.pi * length_m)) * (
-        math.log(4.0 * length_m / radius_m) - 1.0
+    r_package = anode_resistance_slender_standoff(rho_ohm_m, length_m, radius_m, edition=_EDITION)
+    r_router = _b401_anode_resistance(
+        {
+            "environment": {"seawater_resistivity_ohm_m": rho_ohm_m},
+            "anode": {"type": "stand_off", "length_m": length_m, "radius_m": radius_m},
+        }
     )
-    r_sacrificial = (1.0 / (2.0 * math.pi * length_m)) * (
-        math.log(2.0 * length_m / radius_m) - 1.0
-    )
+    r_sacrificial = anode_resistance_flush(rho=rho_ohm_m, L=length_m, r=radius_m)
 
-    assert r_b401 / r_sacrificial == pytest.approx(1.303, rel=5e-3)
+    # Same Table 10-7 long slender stand-off formula: ln(4L/r) - 1
+    assert r_router == pytest.approx(r_package, rel=1e-12)
+    # Sacrificial helper uses ln(2L/r) - 1: (ln 53.33 - 1) / (ln 26.67 - 1) = 1.3036
+    assert r_router / r_sacrificial == pytest.approx(1.303, rel=5e-3)
 
 
 def test_baseline_coating_category_schema_divergence():
-    """Functional 2017 has 9 coating categories; router 2021 has 4."""
+    """Functional package has 12 coating categories; router accepts 4 keys."""
     from digitalmodel.cathodic_protection.coating import CoatingCategory
     from digitalmodel.infrastructure.base_solvers.hydrodynamics.cp_DNV_RP_B401_2021 import (
         _B401_2021_COATING_CATEGORIES,
     )
 
-    assert len(list(CoatingCategory)) == 9
-    assert len(_B401_2021_COATING_CATEGORIES) == 4
+    assert len(list(CoatingCategory)) == 12
+    assert sorted(_B401_2021_COATING_CATEGORIES) == ["I", "II", "III", "bare"]
 
 
 def test_baseline_coating_breakdown_a_b_constants():
-    """FBE 2017 and Cat I 2021 use materially different breakdown constants."""
+    """FBE (F103 Table A.1) and Cat I (B401 Table 10-4) constants in both paths."""
     from digitalmodel.cathodic_protection.coating import (
         COATING_CONSTANTS,
         CoatingCategory,
     )
     from digitalmodel.infrastructure.base_solvers.hydrodynamics.cp_DNV_RP_B401_2021 import (
-        _B401_2021_COATING_CATEGORIES,
+        _b401_coating_breakdown,
     )
 
-    assert COATING_CONSTANTS[CoatingCategory.FBE] == (0.02, 0.003)
-    assert _B401_2021_COATING_CATEGORIES["I"] == {"f_ci": 0.05, "k": 0.020}
+    # F103 Table A.1, CDS No. 1 single/dual layer FBE: a = 0.010, b = 0.0003
+    assert COATING_CONSTANTS[CoatingCategory.FBE] == (0.01, 0.0003)
+    # B401 Table 10-4 Cat I, row 0-30 m: a = 0.10, b = 0.10/yr in both paths
+    assert COATING_CONSTANTS[CoatingCategory.PAINT_I] == (0.10, 0.10)
+    legacy = _b401_coating_breakdown(
+        {
+            "design_data": {"edition": _EDITION},
+            "structure": {"zones": [{"zone": "submerged", "area_m2": 100.0, "coating_category": "I"}]},
+        },
+        25.0,
+    )["submerged"]
+    assert (legacy["a"], legacy["b_per_yr"]) == (0.10, 0.10)
 
 
 @pytest.mark.parametrize("calculation_type", ["DNV_rp_b401_2011", "DNV_rp_b401_2021_05"])
