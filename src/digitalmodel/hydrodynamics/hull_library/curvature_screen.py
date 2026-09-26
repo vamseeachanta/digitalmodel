@@ -139,6 +139,8 @@ class CurvatureSignature(BaseModel):
         ..., description="Vertices assessed after symmetry expansion"
     )
     hullprod_version: str
+    representation: str = "mesh"
+    source: str | None = None
     hull_type: str | None = None
     crease_dominated: bool = Field(
         False,
@@ -377,17 +379,181 @@ def screen_panel_mesh(
     )
 
 
+def screen_step(
+    path: str | Path,
+    *,
+    lref: float,
+    hull_type: HullType | str | None = None,
+    workdir: str | Path | None = None,
+) -> CurvatureScreenResult:
+    """Screen STEP/IGES using an explicit reference length in metres.
+
+    HullProd imports CAD into millimetres; its raw provenance retains those units.
+    No fields or report files are produced; workdir is accepted for API symmetry.
+    """
+    if not np.isfinite(lref) or lref <= 0:
+        raise ValueError("lref must be finite and positive (metres)")
+    path = Path(path)
+    if path.suffix.lower() not in {".step", ".stp", ".iges", ".igs"}:
+        raise ValueError("screen_step requires a STEP or IGES file")
+    hullprod = require_hullprod()
+    from .hull_surface_brep import _step_settings
+
+    from hullprod.types import ProducibilityConfig
+
+    config = ProducibilityConfig(brep_cache=False, brep_display_mesh=False)
+    with _step_settings("M"):
+        result = hullprod.assess(path, lref=float(lref) * 1000.0, config=config)
+    md = dict(result.metadata)
+    signature = _brep_signature(result, hullprod, path, lref, hull_type)
+    provenance = {k: v for k, v in md.items() if not isinstance(v, np.ndarray)}
+    for key, path_key in (("input_geometry", "path"), ("brep_import", "source_path")):
+        if isinstance(provenance.get(key), dict):
+            provenance[key] = {**provenance[key], path_key: path.name}
+    provenance["citation"] = HULLPROD_CITATION
+    provenance["lref_input_unit"] = "metre"
+    return CurvatureScreenResult(signature, None, provenance)
+
+
+def _brep_signature(result, hullprod, path, lref, hull_type):
+    sig, md = result.signature, dict(result.metadata)
+    values = {
+        key: float(sig[key]) if sig[key] is not None else float("nan")
+        for key in ("I_D", "I_D_plus", "I_D_minus")
+    }
+    try:
+        resolved_type = HullType(hull_type) if hull_type is not None else None
+    except ValueError:
+        resolved_type = None
+    return CurvatureSignature(
+        **values,
+        **{
+            f"a_{key}": float(sig["a_C"][key])
+            for key in ("flat", "single", "elliptic", "saddle")
+        },
+        lref=float(lref),
+        lref_mode=str(md.get("reference_length", {}).get("mode", "explicit_user")),
+        reliability="not_applicable",
+        status=_metric_status(md),
+        valid_area_fraction=float(
+            md.get("curvature_valid_area_fraction", float("nan"))
+        ),
+        panel_count=0,
+        vertex_count=0,
+        hullprod_version=str(
+            md.get("hullprod_version", getattr(hullprod, "__version__", ""))
+        ),
+        hull_type=resolved_type.value if resolved_type else None,
+        representation="brep",
+        source=path.name,
+    )
+
+
+def representation_delta(
+    brep: CurvatureSignature, mesh: CurvatureSignature
+) -> dict[str, dict[str, float | None]]:
+    """Absolute differences and relative differences against the BRep reference.
+
+    Relative delta is zero when both values vanish, None for a nonzero difference
+    against zero. Both signatures must use the same finite, positive lref.
+    """
+    if (
+        not np.isfinite([brep.lref, mesh.lref]).all()
+        or min(brep.lref, mesh.lref) <= 0
+        or not np.isclose(brep.lref, mesh.lref, rtol=1e-12, atol=0)
+    ):
+        raise ValueError("signatures must have the same positive reference length")
+    names = (
+        "I_D",
+        "I_D_plus",
+        "I_D_minus",
+        "a_flat",
+        "a_single",
+        "a_elliptic",
+        "a_saddle",
+    )
+    deltas = {}
+    for name in names:
+        reference, value = getattr(brep, name), getattr(mesh, name)
+        if not np.isfinite([reference, value]).all():
+            deltas[name] = {"absolute": None, "relative": None}
+            continue
+        absolute = abs(value - reference)
+        relative = (
+            absolute / abs(reference) if reference else (0.0 if absolute == 0 else None)
+        )
+        deltas[name] = {"absolute": absolute, "relative": relative}
+    return deltas
+
+
+def _screen_profile_brep(
+    profile, *, workdir=None, n_x=None, n_z=None, mirror=True, bottom=True
+):
+    from .hull_surface_brep import profile_to_step
+
+    with tempfile.TemporaryDirectory(dir=workdir) as tmp:
+        path = profile_to_step(
+            profile,
+            Path(tmp) / "hull.step",
+            mirror=mirror,
+            bottom=bottom,
+            n_x=n_x,
+            n_z=n_z,
+        )
+        result = screen_step(
+            path, lref=float(profile.length_bp), hull_type=profile.hull_type
+        )
+    result.provenance["profile_surface"] = {
+        "mirror": mirror,
+        "bottom": bottom,
+        "n_x": n_x,
+        "n_z": n_z,
+    }
+    if not bottom:
+        result.signature.notes.append(
+            "bottom omitted: all area-normalized values may differ from meshes with bottom panels"
+        )
+    return result
+
+
 def screen_profile(
     profile: HullProfile,
     config: Any = None,
     *,
     keep_fields: bool = False,
+    representation: str = "mesh",
+    workdir: str | Path | None = None,
+    n_x: int | None = None,
+    n_z: int | None = None,
+    mirror: bool = True,
+    bottom: bool = True,
 ) -> CurvatureScreenResult:
     """Generate the profile's mesh with ``HullMeshGenerator`` and screen it.
 
     ``lref`` is ``profile.length_bp`` so signatures of catalog hulls and parametric
     variants are comparable.
     """
+    if representation not in ("mesh", "brep", "both"):
+        raise ValueError("representation must be mesh, brep or both")
+    if representation != "mesh":
+        brep = _screen_profile_brep(
+            profile,
+            workdir=workdir,
+            n_x=n_x,
+            n_z=n_z,
+            mirror=mirror,
+            bottom=bottom,
+        )
+        if representation == "brep":
+            return brep
+        mesh_result = screen_profile(
+            profile, config, keep_fields=keep_fields, workdir=workdir
+        )
+        mesh_result.provenance["brep_signature"] = brep.signature.model_dump()
+        mesh_result.provenance["representation_delta"] = representation_delta(
+            brep.signature, mesh_result.signature
+        )
+        return mesh_result
     from .mesh_generator import HullMeshGenerator
 
     mesh = HullMeshGenerator().generate(profile, config)
@@ -396,6 +562,7 @@ def screen_profile(
         lref=float(profile.length_bp),
         hull_type=profile.hull_type,
         keep_fields=keep_fields,
+        workdir=workdir,
     )
 
 
@@ -412,5 +579,7 @@ __all__ = [
     "saddle_warning_threshold",
     "screen_panel_mesh",
     "screen_profile",
+    "screen_step",
+    "representation_delta",
     "screen_trimesh",
 ]
