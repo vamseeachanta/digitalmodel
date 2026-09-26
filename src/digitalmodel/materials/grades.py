@@ -11,6 +11,9 @@ Sources:
   * API 5L (46th ed.) / ISO 3183 — line-pipe grade strengths (Tables 4/5).
   * IACS UR W11 (Rev.) — Normal & Higher-Strength Hull Structural Steels.
   * EN 10025-2 — hot-rolled structural steel (t <= 16 mm class).
+  * ASTM A312/A312M — austenitic stainless steel pipe (TP304/304L/316/316L/321).
+  * ASTM A790/A790M — ferritic/austenitic (duplex) stainless steel pipe
+    (UNS S31803, S32205).
 """
 from __future__ import annotations
 
@@ -25,8 +28,12 @@ MPA_PER_PSI = 1.0 / PSI_PER_MPA
 _E_LINE_PIPE = 207_000.0   # API 5L line pipe (207 GPa)
 _E_MARINE = 206_000.0      # IACS hull steel (206 GPa)
 _E_STRUCTURAL = 210_000.0  # EN 10025 structural (210 GPa)
+_E_AUSTENITIC = 193_000.0  # austenitic stainless (193 GPa)
+_E_DUPLEX = 200_000.0      # duplex stainless (200 GPa)
 _NU = 0.30
 _RHO = 7850.0
+_RHO_AUSTENITIC = 8000.0
+_RHO_DUPLEX = 7800.0
 
 
 @dataclass(frozen=True)
@@ -50,6 +57,9 @@ class MaterialGrade:
             differs from PSL2; ``None`` for non-API or PSL2-only grades.
         source: Citation for the strength values.
         notes: Free-form reconciliation notes.
+        material_class: Metallurgical class used by the FFS material library
+            to gate toughness correlations: ``"ferritic"`` (carbon, C-Mn and
+            low-alloy steels), ``"austenitic"`` or ``"duplex"``.
     """
 
     name: str
@@ -65,6 +75,7 @@ class MaterialGrade:
     smts_psl1_mpa: Optional[float] = None
     source: str = ""
     notes: str = ""
+    material_class: str = "ferritic"
 
     @property
     def smys_psi(self) -> float:
@@ -102,6 +113,25 @@ def _en(name, smys, smts):
     return MaterialGrade(
         name=name, standard="EN 10025-2", smys_mpa=smys, smts_mpa=smts,
         E_mpa=_E_STRUCTURAL, source=_EN_SRC)
+
+
+_A312_SRC = "ASTM A312/A312M, austenitic stainless steel pipe, tensile requirements"
+_A790_SRC = "ASTM A790/A790M, duplex stainless steel pipe, tensile requirements"
+
+
+def _austenitic(name, ksi_y, smys, smts, uns, *, note=""):
+    return MaterialGrade(
+        name=name, standard="ASTM A312", smys_mpa=smys, smts_mpa=smts,
+        E_mpa=_E_AUSTENITIC, rho_kg_m3=_RHO_AUSTENITIC, designation=uns,
+        grade_ksi=ksi_y, source=_A312_SRC, notes=note,
+        material_class="austenitic")
+
+
+def _duplex(name, ksi_y, smys, smts, uns, *, note=""):
+    return MaterialGrade(
+        name=name, standard="ASTM A790", smys_mpa=smys, smts_mpa=smts,
+        E_mpa=_E_DUPLEX, rho_kg_m3=_RHO_DUPLEX, designation=uns,
+        grade_ksi=ksi_y, source=_A790_SRC, notes=note, material_class="duplex")
 
 
 # API 5L / ISO 3183 — SMYS = ISO L-grade (MPa); SMTS = PSL2 min, PSL1 in 5th col.
@@ -154,16 +184,38 @@ _EN_GRADES = [
     _en("S420", 420.0, 520.0),
 ]
 
+# ASTM A312/A312M austenitic stainless pipe — minimum yield (0.2 % offset) and
+# tensile; the "L" (low-carbon) grades sit at 170 / 485 MPa, the straight
+# grades at 205 / 515 MPa.  ``grade_ksi`` carries the US-customary yield.
+_AUSTENITIC = [
+    _austenitic("TP304", 30, 205.0, 515.0, "S30400"),
+    _austenitic("TP304L", 25, 170.0, 485.0, "S30403", note="Low-carbon grade."),
+    _austenitic("TP316", 30, 205.0, 515.0, "S31600"),
+    _austenitic("TP316L", 25, 170.0, 485.0, "S31603", note="Low-carbon grade."),
+    _austenitic("TP321", 30, 205.0, 515.0, "S32100", note="Ti-stabilised."),
+]
+
+# ASTM A790/A790M duplex stainless pipe — 22Cr duplex, S32205 has the higher
+# tensile minimum.
+_DUPLEX = [
+    _duplex("S31803", 65, 450.0, 620.0, "2205", note="22Cr duplex (UNS S31803)."),
+    _duplex("S32205", 65, 450.0, 655.0, None,
+            note="22Cr duplex (UNS S32205), tighter N; higher tensile minimum."),
+]
+
 #: The canonical registry, keyed by :attr:`MaterialGrade.name`.
 GRADES: dict[str, MaterialGrade] = {
-    g.name: g for g in (_API_5L + _HULL_NS + _HULL_HS + _EN_GRADES)
+    g.name: g
+    for g in (_API_5L + _HULL_NS + _HULL_HS + _EN_GRADES + _AUSTENITIC + _DUPLEX)
 }
 
-# Alias map (ISO L-grade -> canonical name) for forgiving lookup.
+# Alias map (ISO L-grade / UNS number -> canonical name) for forgiving lookup.
 _ALIASES: dict[str, str] = {
     g.designation.upper(): g.name
     for g in GRADES.values() if g.designation
 }
+# Stainless short forms ("316L" -> "TP316L").
+_ALIASES.update({g.name[2:].upper(): g.name for g in _AUSTENITIC})
 
 
 # ---------------------------------------------------------------------------
