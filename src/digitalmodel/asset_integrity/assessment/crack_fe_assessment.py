@@ -419,7 +419,7 @@ def _margin_dict(m) -> dict:
     }
 
 
-def _plane_sigma_ref(uncracked: Mapping, paths: list, component: str) -> dict:
+def plane_sigma_ref(uncracked: Mapping, paths: list, component: str) -> dict:
     f_m, f_b, f_peak = _COMPONENT_FIELDS[component]
     rows = [p for p in uncracked["sigma_ref"]["paths"] if p["path"] in paths]
     if not rows:
@@ -590,7 +590,7 @@ def run(
     for plane, states in planes_cfg.items():
         pl = plane_limits[plane]
         lim = use(f"limit_state_{plane}", pl["limit_state"])
-        sref = _plane_sigma_ref(uncracked, pl["sigma_ref_paths"], pl["sigma_ref_component"])
+        sref = plane_sigma_ref(uncracked, pl["sigma_ref_paths"], pl["sigma_ref_component"])
         recs = sorted((_state_record(s, receipts_used[s]) for s in states),
                       key=lambda r: r["a_mm"])
         for r in recs:

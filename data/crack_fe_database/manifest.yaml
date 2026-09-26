@@ -1,0 +1,42 @@
+distribution: repository ecosystem only (digitalmodel data/); not published to Hugging Face (owner card
+  D03)
+domain: structural-ffs
+evidence_status: INCOMPLETE
+generated_by: scripts/crack_fe_database/build_tables.py
+inputs:
+  case: examples/workflows/crack-fe-weldolet/input.yml
+  case_sha256: 308859625dd5a4ce41edd27c78073d37cd06bfbd371fa5688b80d50c8cdd159c
+  design_data_register: examples/workflows/crack-fe-weldolet/design-data-register.json
+  design_data_register_sha256: acce329682299431443b6a5df3662d86c2d7aec8eccb1fedc5246bb619c56fc9
+  receipts:
+    p0a_verification: 7fbe4aef7eb43b560d1695a1e77edf83c198fa1f82f34d55103cfedea12b5b3c
+    p0b_crotch_a2p35: aab127665d3ac3893966532348192f4e6ce619f7c97f8bcdf3e79dc064d87319
+    p0b_crotch_a2p35_cfp_off: 5e841b2b17a3cd2d9fed084c3df091b1e1672ec48021b644cba9f5811299ddd0
+    p0b_crotch_a2p80: 1932a86a5faae7e08a00377a1916bb6246ace74bd5367ac94bd06627191b9889
+    p0b_crotch_a3p20: 28db03333ec8ed33dc42f7198c33498b741db1d9d2b2896fb848d37e516dd529
+    p0b_fullcirc_a2p35: 8ad94141aa01c8a7070e480984b39c05d68b2f8f5d12ebc2ebacccd4fbdd17eb
+    p0b_fullcirc_a2p80: c9079ef7ba989dbcf9a66cbed06d3959163e67c167d2475a7ec2e6beb956d8dc
+    p0b_fullcirc_a3p20: 412d9e7560935537938de816ed27d90fc2747c4b3a769c3542fa40c77ebaa7a2
+    p0b_fullcirc_a3p60: 65b63b44d3e54d14a4cff4f79a706adfd3df0f84ac14b2afddc308bb0f005aeb
+    p0b_fullcirc_a4p00: 3567bfeb2f76d7296908f525103dfdf6ba34e8287d632835a033108141243264
+    p0b_limit_load_crotch_a2p35: e4194bc33c5fdc8ce7cba8571f5222bddecd827aede6ea30a85793c946b7fec0
+    p0b_uncracked: e9f71f68a496be243a02cc29cf663fe21d2c14e8d738a9401b460b8591d4d00a
+issue: 2157
+missing_evidence:
+- kmat_basis
+- residual_stress_basis
+- psf_basis
+rights_decision: 'Our own computed results: FE crack-state values read from the committed receipts of
+  our own MAPDL model on an assumed design basis, and assessment results computed by crack_fe_assessment
+  from them. No standard-derived table, clause text or published-case value (owner cards D03, D04, G05,
+  S04).'
+route: public
+tables:
+  crack_fe_states:
+    file: crack_fe_states.csv
+    rows: 13
+    sha256: 270e583c8e64bf1f81225e46dad0d37dfdc0054ebb9f54a336e2a2450d071df7
+  crack_results:
+    file: crack_results.csv
+    rows: 7
+    sha256: 2ccc196d8fbc02c6ac54d360a46ca56e6c60acbf278fe48b660cdb638470915c

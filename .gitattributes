@@ -34,3 +34,4 @@ tests/drilling_riser/stackup_drawing/fixtures/*.svg -text
 
 # Hash-checked dataset files: store and check out byte-for-byte (manifest SHA-256 in CI, #2157)
 data/materials_database/** -text
+data/crack_fe_database/** -text
