@@ -225,66 +225,92 @@ class TestAnodeCurrentOutput:
         assert I_shielded < I_open
 
     def test_flush_mount_suction_pile_initial(self):
-        """Flush-mount 29lb anode on suction pile: R_a_init=0.4209 ohm.
+        """Flush-mount 29lb anode on suction pile, B401 Table 10-7 short flush.
 
-        From riser modification CP calc (Appendix 2):
-        I_a = 0.25 / 0.4209 = 0.59 A (manual formula for flush geometry)
+        Re-baselined for #2211: the deprecated wrapper now evaluates
+        R_a = 0.315 rho / sqrt(L W) in SI. rho = 0.31 ohm-m,
+        A = 24 in x 5 in = 0.07742 m2, R_a = 0.3510 ohm,
+        I_a = 0.25 / 0.3510 = 0.712 A. (The riser modification CP calc's
+        0.59 A came from a half-space slender-body spreadsheet formula
+        that is not in B401.)
         """
-        R_a = flush_anode_resistance(
-            rho_ohm_cm=31.0, L_a_in=24.0, W_in=5.0, H_in=2.5, r_eq_in=2.39
-        )
+        with pytest.warns(DeprecationWarning):
+            R_a = flush_anode_resistance(
+                rho_ohm_cm=31.0, L_a_in=24.0, W_in=5.0, H_in=2.5, r_eq_in=2.39
+            )
         I_a = 0.25 / R_a
-        assert I_a == pytest.approx(0.59, abs=0.05)
+        assert I_a == pytest.approx(0.712, abs=0.005)
 
     def test_flush_mount_buoyancy_can_initial(self):
-        """Flush-mount 29lb anode on buoyancy can: rho=24 ohm-cm.
+        """Flush-mount 29lb anode on buoyancy can: rho = 24 ohm-cm.
 
-        From riser modification CP calc (Appendix 2):
-        R_a_init = 0.3258, I_a = 0.25/0.3258 = 0.77 A
+        Re-baselined for #2211 (Table 10-7 short flush, A = L W):
+        R_a = 0.315 * 0.24 / sqrt(0.07742) = 0.2717 ohm,
+        I_a = 0.25 / 0.2717 = 0.920 A.
         """
-        R_a = flush_anode_resistance(
-            rho_ohm_cm=24.0, L_a_in=24.0, W_in=5.0, H_in=2.5, r_eq_in=2.39
-        )
+        with pytest.warns(DeprecationWarning):
+            R_a = flush_anode_resistance(
+                rho_ohm_cm=24.0, L_a_in=24.0, W_in=5.0, H_in=2.5, r_eq_in=2.39
+            )
         I_a = 0.25 / R_a
-        assert I_a == pytest.approx(0.77, abs=0.05)
+        assert I_a == pytest.approx(0.920, abs=0.005)
 
 
 class TestFlushAnodeResistance:
-    """Verify flush-mount anode resistance calculations."""
+    """Deprecated ``flush_anode_resistance`` = Table 10-7 short flush in SI.
+
+    Re-baselined for #2211. The earlier expected values (0.4209 / 0.3258 /
+    0.5114 ohm) were a half-space slender-body spreadsheet formula that
+    ignored the width and height; B401 Table 10-7 gives
+    R_a = 0.315 rho / sqrt(A) with A the exposed area, here L x W.
+    """
 
     def test_suction_pile_initial(self):
-        """Suction pile: rho=31 ohm-cm, L=24in, r_eq=2.39in.
+        """Suction pile: rho = 31 ohm-cm = 0.31 ohm-m, L = 24 in, W = 5 in.
 
-        R_a = 0.4209 ohm (from riser modification CP calc).
-        Sunde half-space formula matches within 5% (shape correction).
+        A = 24 * 5 * 0.0254^2 = 0.077419 m2; sqrt(A) = 0.27824 m;
+        R_a = 0.315 * 0.31 / 0.27824 = 0.35095 ohm.
         """
-        R_a = flush_anode_resistance(
-            rho_ohm_cm=31.0, L_a_in=24.0, W_in=5.0, H_in=2.5, r_eq_in=2.39
-        )
-        assert R_a == pytest.approx(0.4209, rel=0.05)
+        with pytest.warns(DeprecationWarning):
+            R_a = flush_anode_resistance(
+                rho_ohm_cm=31.0, L_a_in=24.0, W_in=5.0, H_in=2.5, r_eq_in=2.39
+            )
+        assert R_a == pytest.approx(0.35095, rel=1e-4)
 
     def test_buoyancy_can_initial(self):
-        """Buoyancy can: rho=24 ohm-cm, L=24in, r_eq=2.39in.
+        """Buoyancy can: rho = 0.24 ohm-m, same 24 in x 5 in face.
 
-        R_a = 0.3258 ohm (from riser modification CP calc).
-        Sunde half-space formula matches within 5% (shape correction).
+        R_a = 0.315 * 0.24 / 0.27824 = 0.27170 ohm.
         """
-        R_a = flush_anode_resistance(
-            rho_ohm_cm=24.0, L_a_in=24.0, W_in=5.0, H_in=2.5, r_eq_in=2.39
-        )
-        assert R_a == pytest.approx(0.3258, rel=0.05)
+        with pytest.warns(DeprecationWarning):
+            R_a = flush_anode_resistance(
+                rho_ohm_cm=24.0, L_a_in=24.0, W_in=5.0, H_in=2.5, r_eq_in=2.39
+            )
+        assert R_a == pytest.approx(0.27170, rel=1e-4)
 
-    def test_suction_pile_final(self):
-        """Suction pile final: depleted r=0.90in.
+    def test_suction_pile_final_ignores_equivalent_radius(self):
+        """The short flush form depends on the exposed area only.
 
-        R_a_final = 0.5114 ohm, I_a_final = 0.49 A
-        Sunde half-space formula matches within 12% at depleted radius
-        (depleted irregular geometry reduces slender-body accuracy).
+        ``r_eq_in`` (and ``H_in``) are accepted for signature compatibility
+        and do not change the result: the depleted 0.90 in radius gives the
+        same 0.35095 ohm as the fresh 2.39 in. A depleted flush anode is
+        modelled by passing its reduced exposed face.
         """
-        R_a = flush_anode_resistance(
-            rho_ohm_cm=31.0, L_a_in=24.0, W_in=5.0, H_in=2.5, r_eq_in=0.90
+        with pytest.warns(DeprecationWarning):
+            R_a = flush_anode_resistance(
+                rho_ohm_cm=31.0, L_a_in=24.0, W_in=5.0, H_in=2.5, r_eq_in=0.90
+            )
+        assert R_a == pytest.approx(0.35095, rel=1e-4)
+
+    def test_matches_kernel_short_flush(self):
+        """The wrapper is the kernel formula after the unit conversion."""
+        from digitalmodel.cathodic_protection._kernels import short_flush_or_bracelet
+
+        with pytest.warns(DeprecationWarning):
+            R_a = flush_anode_resistance(31.0, 24.0, 5.0, 2.5, 2.39)
+        assert R_a == pytest.approx(
+            short_flush_or_bracelet(0.31, 24.0 * 0.0254 * 5.0 * 0.0254), rel=1e-12
         )
-        assert R_a == pytest.approx(0.5114, rel=0.12)
 
 
 class TestEquivalentRadius:
@@ -321,10 +347,25 @@ class TestNumberOfAnodes:
         assert number_of_anodes(1030.0, 119.0) == 9
         assert number_of_anodes(1030.0, 119.0, round_to_even=True) == 10
 
-    def test_zero_mass_raises_or_returns_zero(self):
-        """Division by zero protection."""
-        with pytest.raises((ZeroDivisionError, ValueError)):
+    def test_zero_mass_raises_value_error(self):
+        """A zero anode mass raises ValueError naming the parameter (#2211)."""
+        with pytest.raises(ValueError, match="anode_net_mass_kg"):
             number_of_anodes(100.0, 0.0)
+
+    def test_short_standoff_uses_table_10_7_short_form(self):
+        """L < 4r selects the Table 10-7 short slender stand-off formula."""
+        from digitalmodel.cathodic_protection._kernels import short_slender_standoff
+
+        R = anode_resistance_slender_standoff(0.30, 0.30, 0.10)
+        assert R == pytest.approx(short_slender_standoff(0.30, 0.30, 0.10), rel=1e-12)
+        assert R > 0.0
+
+    def test_negative_resistance_impossible(self):
+        """r_a > 4 L / e used to give a negative resistance silently."""
+        with pytest.raises(ValueError):
+            anode_resistance_slender_standoff(0.30, 1.0, -0.5)
+        with pytest.raises(ValueError):
+            anode_current_output(0.30, 0.0, 0.05)
 
 
 class TestProtectedLength:

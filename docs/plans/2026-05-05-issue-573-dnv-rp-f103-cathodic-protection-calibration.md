@@ -26,7 +26,7 @@ uv run pytest tests/marine_ops/marine_engineering/test_cathodic_protection_dnv.p
 Capture verbatim top error from one representative failing test in each of the 6 classes.
 
 ### Task 2 — Reconcile against DNV-RP-F103 (Oct 2010)
-Reference PDF on the Elements drive: `/mnt/ace/O&G-Standards/DNV/DNV_RP_F103_(2010)_Cathodic_Protection_of_Submarine_Pipelines_by_Galvanic_Anodes.pdf`. Wiki page: `knowledge/wikis/engineering-standards/wiki/standards/dnv-rp-f103.md` (workspace-hub).
+Reference PDF: private archive, path withheld. Wiki page: `wikis/engineering-standards/wiki/standards/dnv-rp-f103.md` (llm-wiki; mirrored under `knowledge/` in workspace-hub).
 
 For each failing test, classify:
 - **Source drifted from standard** → fix source value in `cathodic_protection.py`.

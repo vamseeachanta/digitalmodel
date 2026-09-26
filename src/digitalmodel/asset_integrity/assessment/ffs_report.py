@@ -33,6 +33,8 @@ _VERDICT_COLORS = {
     "ACCEPT": "#2e7d32",  # green
     "MONITOR": "#f57c00",  # amber
     "RE_RATE": "#e65100",  # deep orange
+    "DERATE": "#e65100",  # shared-vocabulary name for RE_RATE (#2205)
+    "ESCALATE": "#e53e3e",
     "REPAIR": "#c62828",  # red
     "REPLACE": "#4a148c",  # purple
     "FAIL_LEVEL_1": "#c62828",
@@ -110,6 +112,8 @@ class FFSReport:
         )
 
         verdict = decision.get("verdict", "UNKNOWN")
+        # asset-class wording for the report (#2205); falls back to the verdict
+        verdict_label = str(decision.get("action") or verdict)
         rsf = decision.get("rsf", float("nan"))
         rsf_a = decision.get("rsf_a", 0.9)
         remaining_life = decision.get("remaining_life_yr", float("nan"))
@@ -140,6 +144,7 @@ class FFSReport:
                 rsf,
                 rsf_a,
                 rerated_mawp_psi=decision.get("rerated_mawp_psi"),
+                verdict_label=verdict_label,
             ),
             FFSReport._section_component_data(
                 component_id,
@@ -316,7 +321,9 @@ class FFSReport:
         rsf: float,
         rsf_a: float,
         rerated_mawp_psi: float | None = None,
+        verdict_label: str | None = None,
     ) -> str:
+        label = verdict_label or verdict
         rl_str = (
             f"{remaining_life:.1f} yr"
             if math.isfinite(remaining_life)
@@ -327,21 +334,21 @@ class FFSReport:
             "<div class='section'>\n"
             "<h2>1. Executive Summary</h2>\n"
             f"<p><span class='verdict-badge' style='background-color:{verdict_color}'>"
-            f"{html.escape(verdict)}</span></p>\n"
+            f"{html.escape(label)}</span></p>\n"
             "<table>\n"
             "<tr><th>Parameter</th><th>Value</th></tr>\n"
             f"<tr><td>Component ID</td><td>{html.escape(component_id)}</td></tr>\n"
             f"<tr><td>Assessment Date</td><td>{html.escape(date)}</td></tr>\n"
             f"<tr><td>Design Code</td><td>{html.escape(design_code)}</td></tr>\n"
             f"<tr><td>Governing Standard</td><td>API 579-1/ASME FFS-1 2021 Edition</td></tr>\n"
-            f"<tr><td>Assessment Verdict</td><td><strong>{html.escape(verdict)}</strong></td></tr>\n"
+            f"<tr><td>Assessment Verdict</td><td><strong>{html.escape(label)}</strong></td></tr>\n"
             f"<tr><td>Remaining Strength Factor (RSF)</td><td>{rsf_str}</td></tr>\n"
             f"<tr><td>Allowable RSF (RSFa)</td><td>{rsf_a:.2f}</td></tr>\n"
             f"<tr><td>Estimated Remaining Life</td><td>{rl_str}</td></tr>\n"
             + (
                 f"<tr><td>Re-rated MAWP (MAWP_r = MAWP &times; RSF/RSFa, "
                 f"&sect;2.4.2.2)</td><td>{rerated_mawp_psi:.0f} psi</td></tr>\n"
-                if verdict == "RE_RATE" and rerated_mawp_psi is not None
+                if verdict in ("RE_RATE", "DERATE") and rerated_mawp_psi is not None
                 else ""
             )
             + f"<tr><td>Governing Criterion</td><td>{html.escape(criterion)}</td></tr>\n"

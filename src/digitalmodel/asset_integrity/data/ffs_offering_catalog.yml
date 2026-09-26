@@ -91,7 +91,7 @@ engines:
   circumferential: {module: asset_integrity.circumferential_defect, status: validated, validation: docs/domains/circumferential-defect-validation-2026-06-29.md, issue: 2181}
   pitting: {module: asset_integrity.assessment.pitting, status: engine, issue: 2182, caveat: "Part 6 charts not transcribed; equivalent-LTA bound"}
   dents: {module: asset_integrity.dent_assessment, status: engine, issue: 2182}
-  crack-fad: {module: asset_integrity.assessment.crack_fad, status: engine, issue: 2184, caveat: "BS 7910 Option 1 curve; API 579 Level 2 curve is #2175"}
+  crack-fad: {module: asset_integrity.assessment.crack_fad, status: engine, issue: 2184, caveat: "BS 7910:2013 Option 1 curve (single implementation, #2160) plus the API 579 Level 2 / BS 7910 Level 2A generic curve; Part 9 Level 2 workflow from inspection data is #2175"}
   crack-growth: {module: fatigue.crack_growth, status: engine, issue: 2177}
   level3-handoff: {module: asset_integrity.assessment.level3_escalation, status: engine, issue: 2184}
   measurement-sufficiency: {module: asset_integrity.assessment.measurement_sufficiency, status: engine, workflow: ffs-metal-loss, route: false, note: "mentioned in the 2026-06-27 record only; own record pending #2185"}

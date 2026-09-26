@@ -9,6 +9,15 @@ Design current densities come from the cited DNV-RP-B401 table lookups in
 keyed by climatic region and depth band; every result carries the rendered
 citations it used (issue #2207).
 
+Anode count follows the full B401 Sec. 7 loop (issue #2211):
+``N = max(N_mass, N_initial, N_final)`` where ``N_mass`` comes from the
+mean demand and Eq. 2, ``N_initial`` from the initial demand and the fresh
+stand-off anode output (Table 10-7 resistance, Table 10-6 driving voltage)
+and ``N_final`` from the final demand and the anode consumed to its
+utilisation limit (``anode_sizing.depleted_equivalent_radius``). The
+current-output checks run when the anode length is given; otherwise the
+count is mass based and ``current_output_checked`` is False.
+
 References
 ----------
 - DNV-RP-B401 "Cathodic Protection Design", Tables 10-1, 10-2, Sec. 6.3
@@ -19,19 +28,25 @@ References
 
 from __future__ import annotations
 
-import math
 from enum import Enum
-from typing import Any, Final
+from typing import Any, Final, NamedTuple
 
 from pydantic import BaseModel, Field, model_validator
 
+from digitalmodel.cathodic_protection import _kernels as kernel
 from digitalmodel.cathodic_protection._edition import (
     DEFAULT_EDITION,
     Edition,
     normalize_edition,
     standard_for_edition,
 )
+from digitalmodel.cathodic_protection.anode_sizing import (
+    GOVERNING_MASS,
+    depleted_equivalent_radius,
+    governing_case,
+)
 from digitalmodel.cathodic_protection.b401_tables import (
+    AnodeMaterial,
     Climate,
     DepthBand,
     DesignPhase,
@@ -40,6 +55,7 @@ from digitalmodel.cathodic_protection.b401_tables import (
     climate_from_temperature,
     depth_band,
     design_current_density,
+    design_driving_voltage,
 )
 from digitalmodel.citations import CitedValue
 
@@ -81,7 +97,104 @@ _PHASES: Final[tuple[DesignPhase, ...]] = (
 # Bare steel: an omitted coating breakdown factor means f_c = 1.0.
 _BARE_STEEL_BREAKDOWN: Final = 1.0
 
-_HOURS_PER_YEAR: Final = 8760.0
+_HOURS_PER_YEAR: Final = kernel.HOURS_PER_YEAR
+
+# Default seawater resistivity [ohm-m] for the anode resistance.
+DEFAULT_SEAWATER_RESISTIVITY_OHM_M: Final = 0.30
+
+
+class DesignLoopResult(NamedTuple):
+    """Outcome of the B401 Sec. 7 anode-count loop for stand-off anodes."""
+
+    number_of_anodes: int
+    number_of_anodes_mass: int
+    number_of_anodes_initial: int
+    number_of_anodes_final: int
+    governing_case: str
+    anode_resistance_initial_ohm: float
+    anode_current_output_initial_A: float
+    anode_resistance_final_ohm: float
+    anode_current_output_final_A: float
+    equivalent_radius_initial_m: float
+    equivalent_radius_final_m: float
+
+
+def standoff_anode_design_loop(
+    total_mass_kg: float,
+    initial_current_A: float,
+    final_current_A: float,
+    anode_net_mass_kg: float,
+    anode_length_m: float,
+    utilization_factor: float,
+    seawater_resistivity_ohm_m: float = DEFAULT_SEAWATER_RESISTIVITY_OHM_M,
+    anode_density_kg_m3: float = kernel.ANODE_DENSITY_ALZNI,
+    driving_voltage_V: float | None = None,
+) -> DesignLoopResult:
+    """B401 Sec. 7 anode count for slender stand-off anodes.
+
+    ``N_mass = ceil(M / m_a)``; ``N_initial = ceil(I_initial / I_a)`` with
+    the fresh anode (equivalent radius from ``m_a``, length ``L``);
+    ``N_final = ceil(I_final / I_a,final)`` with the anode consumed to its
+    utilisation limit: remaining mass ``(1 - u) m_a`` at the same length
+    and the mass-based equivalent radius (assumption documented in
+    ``anode_sizing.depleted_equivalent_radius``; B401 Sec. 7.8 asks for the
+    final resistance of the depleted anode). The Table 10-7 long or short
+    slender form is selected from the length ratio of each geometry.
+
+    Parameters
+    ----------
+    total_mass_kg : float
+        Net anode mass requirement M [kg].
+    initial_current_A, final_current_A : float
+        Initial and final current demands [A].
+    anode_net_mass_kg : float
+        Net mass of one anode [kg].
+    anode_length_m : float
+        Anode length [m].
+    utilization_factor : float
+        Utilisation factor u.
+    seawater_resistivity_ohm_m : float
+        Seawater resistivity [ohm-m].
+    anode_density_kg_m3 : float
+        Alloy density for the equivalent radius [kg/m3].
+    driving_voltage_V : float, optional
+        Design driving voltage [V]; default the Table 10-6 value for an
+        Al-based anode in seawater (0.25 V).
+    """
+    if driving_voltage_V is None:
+        driving_voltage_V = design_driving_voltage(
+            AnodeMaterial.ALUMINIUM, DEFAULT_EDITION
+        ).value
+
+    n_mass = kernel.anode_count(total_mass_kg, anode_net_mass_kg)
+
+    r_initial = kernel.equivalent_radius_from_mass(
+        anode_net_mass_kg, anode_length_m, anode_density_kg_m3
+    )
+    R_initial = kernel.slender_standoff(seawater_resistivity_ohm_m, anode_length_m, r_initial)
+    I_initial = kernel.anode_current_output(driving_voltage_V, R_initial)
+    n_initial = kernel.anodes_for_current(initial_current_A, I_initial)
+
+    r_final = depleted_equivalent_radius(
+        anode_net_mass_kg, anode_length_m, utilization_factor, anode_density_kg_m3
+    )
+    R_final = kernel.slender_standoff(seawater_resistivity_ohm_m, anode_length_m, r_final)
+    I_final = kernel.anode_current_output(driving_voltage_V, R_final)
+    n_final = kernel.anodes_for_current(final_current_A, I_final)
+
+    return DesignLoopResult(
+        number_of_anodes=max(1, n_mass, n_initial, n_final),
+        number_of_anodes_mass=n_mass,
+        number_of_anodes_initial=n_initial,
+        number_of_anodes_final=n_final,
+        governing_case=governing_case(n_mass, n_initial, n_final),
+        anode_resistance_initial_ohm=R_initial,
+        anode_current_output_initial_A=I_initial,
+        anode_resistance_final_ohm=R_final,
+        anode_current_output_final_A=I_final,
+        equivalent_radius_initial_m=r_initial,
+        equivalent_radius_final_m=r_final,
+    )
 
 
 class StructuralZone(BaseModel):
@@ -132,7 +245,37 @@ class MarineCPResult(BaseModel):
         ..., description="Total anode mass requirement [kg]"
     )
     number_of_anodes: int = Field(
-        ..., description="Total number of anodes required"
+        ..., description="Total number of anodes required (max of the cases)"
+    )
+    number_of_anodes_mass: int = Field(
+        default=0, description="Anodes required by mass (B401 Eq. 2)"
+    )
+    number_of_anodes_initial: int | None = Field(
+        default=None,
+        description="Anodes required by the initial current-output check (None if not run)",
+    )
+    number_of_anodes_final: int | None = Field(
+        default=None,
+        description="Anodes required by the final (depleted) current-output check",
+    )
+    governing_case: str = Field(
+        default=GOVERNING_MASS, description="'mass', 'initial' or 'final'"
+    )
+    current_output_checked: bool = Field(
+        default=False,
+        description="Whether the Sec. 7.8 current-output checks ran (anode length given)",
+    )
+    anode_resistance_initial_ohm: float | None = Field(
+        default=None, description="Fresh stand-off anode resistance [ohm]"
+    )
+    anode_current_output_initial_A: float | None = Field(
+        default=None, description="Fresh stand-off anode current output [A]"
+    )
+    anode_resistance_final_ohm: float | None = Field(
+        default=None, description="Depleted stand-off anode resistance [ohm]"
+    )
+    anode_current_output_final_A: float | None = Field(
+        default=None, description="Depleted stand-off anode current output [A]"
     )
     zone_details: list[dict] = Field(
         default_factory=list,
@@ -281,12 +424,18 @@ def marine_structure_current_demand(
     utilization_factor: float = 0.90,
     edition: Edition | None = None,
     surface_temperature_c: float | None = None,
+    anode_length_m: float | None = None,
+    seawater_resistivity_ohm_m: float = DEFAULT_SEAWATER_RESISTIVITY_OHM_M,
+    anode_density_kg_m3: float = kernel.ANODE_DENSITY_ALZNI,
+    driving_voltage_V: float | None = None,
 ) -> MarineCPResult:
     """Calculate current demand and anode requirements for an offshore structure.
 
     Sums current demand across all exposure zones using the DNV-RP-B401
     Table 10-1 (initial, final) and Table 10-2 (mean) current densities by
-    climate and depth band, and each zone's coating breakdown factor.
+    climate and depth band, and each zone's coating breakdown factor, then
+    sizes the anodes with the B401 Sec. 7 loop
+    (``standoff_anode_design_loop``) when ``anode_length_m`` is given.
 
     Parameters
     ----------
@@ -308,11 +457,23 @@ def marine_structure_current_demand(
     surface_temperature_c : float, optional
         Surface water temperature [°C]; when given it selects the climatic
         region via ``b401_tables.climate_from_temperature``.
+    anode_length_m : float, optional
+        Stand-off anode length [m]; enables the initial / final
+        current-output checks (B401 Sec. 7.8). ``None`` gives a mass-based
+        count with ``current_output_checked = False``.
+    seawater_resistivity_ohm_m : float
+        Seawater resistivity at the anodes [ohm-m].
+    anode_density_kg_m3 : float
+        Alloy density for the mass-based equivalent radius [kg/m3].
+    driving_voltage_V : float, optional
+        Design driving voltage [V]; default the Table 10-6 value for an
+        Al-based anode in seawater (0.25 V), cited in the result.
 
     Returns
     -------
     MarineCPResult
-        Total current demand, anode mass, number of anodes and citations.
+        Total current demand, anode mass, number of anodes per case,
+        governing case and citations.
     """
     ed = normalize_edition(edition, stacklevel=3)
     climate = _resolve_climate(climate_region, surface_temperature_c)
@@ -356,18 +517,61 @@ def marine_structure_current_demand(
         })
 
     # Anode mass from mean current demand (DNV-RP-B401 §7.7.1, Eq 2)
-    total_mass = (total_mean * design_life_years * _HOURS_PER_YEAR) / (
-        anode_capacity_Ah_kg * utilization_factor
+    total_mass = kernel.anode_mass(
+        total_mean, design_life_years, anode_capacity_Ah_kg, utilization_factor
     )
+    n_mass = kernel.anode_count(total_mass, anode_net_mass_kg)
 
-    n_anodes = max(1, math.ceil(total_mass / anode_net_mass_kg))
+    if anode_length_m is None:
+        return MarineCPResult(
+            total_initial_current_A=round(total_initial, 4),
+            total_mean_current_A=round(total_mean, 4),
+            total_final_current_A=round(total_final, 4),
+            total_anode_mass_kg=round(total_mass, 2),
+            number_of_anodes=max(1, n_mass),
+            number_of_anodes_mass=n_mass,
+            governing_case=GOVERNING_MASS,
+            current_output_checked=False,
+            zone_details=zone_details,
+            edition_used=ed,
+            standard=standard_for_edition(ed),
+            citations=citations,
+        )
+
+    if driving_voltage_V is None:
+        cited_voltage = design_driving_voltage(AnodeMaterial.ALUMINIUM, ed)
+        driving_voltage_V = cited_voltage.value
+        label = citation_label(cited_voltage.citation)
+        if label not in citations:
+            citations.append(label)
+
+    loop = standoff_anode_design_loop(
+        total_mass_kg=total_mass,
+        initial_current_A=total_initial,
+        final_current_A=total_final,
+        anode_net_mass_kg=anode_net_mass_kg,
+        anode_length_m=anode_length_m,
+        utilization_factor=utilization_factor,
+        seawater_resistivity_ohm_m=seawater_resistivity_ohm_m,
+        anode_density_kg_m3=anode_density_kg_m3,
+        driving_voltage_V=driving_voltage_V,
+    )
 
     return MarineCPResult(
         total_initial_current_A=round(total_initial, 4),
         total_mean_current_A=round(total_mean, 4),
         total_final_current_A=round(total_final, 4),
         total_anode_mass_kg=round(total_mass, 2),
-        number_of_anodes=n_anodes,
+        number_of_anodes=loop.number_of_anodes,
+        number_of_anodes_mass=loop.number_of_anodes_mass,
+        number_of_anodes_initial=loop.number_of_anodes_initial,
+        number_of_anodes_final=loop.number_of_anodes_final,
+        governing_case=loop.governing_case,
+        current_output_checked=True,
+        anode_resistance_initial_ohm=loop.anode_resistance_initial_ohm,
+        anode_current_output_initial_A=loop.anode_current_output_initial_A,
+        anode_resistance_final_ohm=loop.anode_resistance_final_ohm,
+        anode_current_output_final_A=loop.anode_current_output_final_A,
         zone_details=zone_details,
         edition_used=ed,
         standard=standard_for_edition(ed),
@@ -454,7 +658,10 @@ def retrofit_assessment(
     """Assess whether a marine structure CP system needs retrofitting.
 
     Compares consumed anode mass vs original mass to estimate remaining life,
-    and checks measured potential against protection criteria.
+    and checks measured potential against protection criteria. The metal
+    consumed is the Faraday mass ``I * t * 8760 / epsilon``; the usable
+    mass is ``M * u``; the additional mass for a shortfall is the Eq. 2
+    requirement (issue #2211).
 
     Parameters
     ----------
@@ -482,15 +689,15 @@ def retrofit_assessment(
     RetrofitAssessment
         Assessment of remaining life and retrofit needs.
     """
-    # Mass consumed so far
-    mass_consumed = (mean_current_A * elapsed_years * _HOURS_PER_YEAR) / (
-        anode_capacity_Ah_kg * utilization_factor
+    # Metal consumed so far (Faraday) and the usable mass still available
+    mass_consumed = kernel.mass_consumed(mean_current_A, elapsed_years, anode_capacity_Ah_kg)
+    usable_remaining = max(
+        0.0, original_anode_mass_kg * utilization_factor - mass_consumed
     )
-    remaining_mass = max(0, original_anode_mass_kg - mass_consumed)
 
-    # Remaining life from mass
+    # Remaining life from the usable mass
     if mean_current_A > 0:
-        remaining_life = (remaining_mass * anode_capacity_Ah_kg * utilization_factor) / (
+        remaining_life = (usable_remaining * anode_capacity_Ah_kg) / (
             mean_current_A * _HOURS_PER_YEAR
         )
     else:
@@ -499,14 +706,14 @@ def retrofit_assessment(
     remaining_design = design_life_years - elapsed_years
     shortfall_years = max(0, remaining_design - remaining_life)
 
-    # Additional mass needed for remaining design life
+    # Additional mass needed for remaining design life (Eq. 2 requirement)
     additional_mass = 0.0
     if shortfall_years > 0:
-        additional_mass = (mean_current_A * shortfall_years * _HOURS_PER_YEAR) / (
-            anode_capacity_Ah_kg * utilization_factor
+        additional_mass = kernel.anode_mass(
+            mean_current_A, shortfall_years, anode_capacity_Ah_kg, utilization_factor
         )
 
-    additional_anodes = max(0, math.ceil(additional_mass / anode_net_mass_kg))
+    additional_anodes = kernel.anode_count(additional_mass, anode_net_mass_kg)
 
     # Protection check
     potential_ok = measured_potential_V <= protection_threshold_V

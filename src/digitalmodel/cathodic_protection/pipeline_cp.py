@@ -22,7 +22,10 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+from digitalmodel.cathodic_protection import _kernels as kernel
 from digitalmodel.cathodic_protection import dnv_rp_f106
+
+_MA_PER_A: float = 1000.0
 
 
 class PipelineEnvironment(str, Enum):
@@ -95,7 +98,7 @@ class PipelineCPResult(BaseModel):
         ..., description="Total current demand [A]"
     )
     recommended_anode_spacing_m: Optional[float] = Field(
-        None, description="Recommended anode spacing [m]"
+        default=None, description="Recommended anode spacing [m]"
     )
 
 
@@ -133,7 +136,9 @@ def pipeline_current_demand(
 
     total_area = math.pi * input_params.outer_diameter_m * input_params.length_m
     effective_bare = total_area * input_params.coating_breakdown_factor
-    current_demand = effective_bare * bare_density / 1000.0  # mA to A
+    current_demand = kernel.current_demand(
+        total_area, bare_density / _MA_PER_A, input_params.coating_breakdown_factor
+    )
 
     return PipelineCPResult(
         current_density_mA_m2=bare_density,
@@ -337,9 +342,10 @@ def calculate_pipeline_current_demand(
     """
     bare_density, _ = CURRENT_DENSITY_TABLE[input_params.environment]
     total_area = math.pi * input_params.outer_diameter_m * input_params.length_m
-    effective_bare = total_area * input_params.coating_breakdown_factor
     k_soil = soil_resistivity_correction(input_params.soil_resistivity_ohm_m)
-    return effective_bare * bare_density * k_soil / 1000.0
+    return kernel.current_demand(
+        total_area, bare_density * k_soil / _MA_PER_A, input_params.coating_breakdown_factor
+    )
 
 
 def calculate_anode_spacing(

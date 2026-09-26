@@ -1,18 +1,25 @@
 """DNV-RP-B401 — Cathodic Protection Design (editions 2005 to 2021).
 
-Implements sacrificial anode CP design for offshore structures including
-current demand, coating breakdown, anode mass requirements, anode
-resistance for slender stand-off anodes, anode current output, and
-protected length estimation per DNV-RP-F103.
+Sacrificial anode CP design for offshore structures: current demand,
+coating breakdown, anode mass requirement, Table 10-7 anode resistance,
+anode current output and anode count. Every formula is evaluated by
+:mod:`digitalmodel.cathodic_protection._kernels`; the functions here keep
+the public names, signatures and ``edition`` arguments as thin wrappers
+(issue #2211). The DNV-RP-F103 protected length lives in
+:mod:`digitalmodel.cathodic_protection.dnv_rp_f103`; ``protected_length``
+here is a compatibility wrapper.
 """
 
 from __future__ import annotations
 
-import math
+import warnings
+from typing import Final
 
+from digitalmodel.cathodic_protection import _kernels as kernel
 from digitalmodel.cathodic_protection._edition import (
     DEFAULT_EDITION,
     Edition,
+    F103Edition,
     normalize_edition,
 )
 from digitalmodel.cathodic_protection.b401_tables import (
@@ -24,6 +31,12 @@ from digitalmodel.cathodic_protection.b401_tables import (
     design_driving_voltage,
     protection_potential,
     utilisation_factor,
+)
+from digitalmodel.cathodic_protection.dnv_rp_f103 import (
+    STEEL_RESISTIVITY as _F103_STEEL_RESISTIVITY,
+)
+from digitalmodel.cathodic_protection.dnv_rp_f103 import (
+    protected_length as _f103_protected_length,
 )
 
 # Module constants are derived from the cited B401 table lookups at import
@@ -54,7 +67,7 @@ ANODE_CAPACITY_ALZNI: float = anode_capacity(
     AnodeMaterial.ALUMINIUM, AnodeEnvironment.SEAWATER, _TABLE_EDITION
 ).value  # A-h/kg electrochemical capacity, seawater
 # Alloy density is not tabulated in B401; typical Al-Zn-In value.
-ANODE_DENSITY_ALZNI: float = 2750.0  # kg/m3
+ANODE_DENSITY_ALZNI: float = kernel.ANODE_DENSITY_ALZNI  # kg/m3
 
 # ---------------------------------------------------------------------------
 # Utilisation factors (DNV-RP-B401 Table 10-8)
@@ -69,7 +82,20 @@ UTILIZATION_FACTOR_FLUSH: float = utilisation_factor(
 # ---------------------------------------------------------------------------
 # Steel resistivity (DNV-RP-F103 §5.6.10)
 # ---------------------------------------------------------------------------
-STEEL_RESISTIVITY: float = 2.0e-7  # ohm-m
+STEEL_RESISTIVITY: float = _F103_STEEL_RESISTIVITY  # ohm-m
+
+# Companion DNV-RP-F103 edition for a B401 edition (inverse of the map in
+# ``f103_tables``): the 2005 and 2010 B401 editions pair with F103 (2010),
+# the DNVGL 2017 and DNV 2021 editions with DNVGL-RP-F103 (2016).
+_F103_EDITION_FOR_B401: Final[dict[Edition, F103Edition]] = {
+    "2005": "2010",
+    "2010": "2010",
+    "2017": "2016",
+    "2021": "2016",
+}
+
+_INCH_M: Final = 0.0254
+_OHM_CM_TO_OHM_M: Final = 0.01
 
 
 def current_demand(
@@ -97,7 +123,7 @@ def current_demand(
         Current demand [A].
     """
     _ = normalize_edition(edition, stacklevel=3)
-    return surface_area_m2 * current_density_A_m2 * breakdown_factor
+    return kernel.current_demand(surface_area_m2, current_density_A_m2, breakdown_factor)
 
 
 def anode_mass_requirement(
@@ -128,7 +154,7 @@ def anode_mass_requirement(
         Required net anode mass [kg].
     """
     _ = normalize_edition(edition, stacklevel=3)
-    return (I_mean_A * T_design_years * 8760.0) / (E_capacity * u_f)
+    return kernel.anode_mass(I_mean_A, T_design_years, E_capacity, u_f)
 
 
 def coating_breakdown_factor(
@@ -139,7 +165,7 @@ def coating_breakdown_factor(
 ) -> float:
     """Coating breakdown factor at time t (DNV-RP-B401 Table 10-4).
 
-    f_c = a + b * t
+    f_c = a + b * t, capped at 1.0 (bare steel).
 
     Parameters
     ----------
@@ -156,7 +182,7 @@ def coating_breakdown_factor(
         Coating breakdown factor at time t (dimensionless).
     """
     _ = normalize_edition(edition, stacklevel=3)
-    return a + b * t_years
+    return kernel.coating_breakdown_linear(a, b, t_years)
 
 
 def anode_resistance_slender_standoff(
@@ -166,9 +192,14 @@ def anode_resistance_slender_standoff(
     proximity_factor: float = 1.0,
     edition: Edition | None = None,
 ) -> float:
-    """Anode resistance for long slender stand-off anode (DNV-RP-B401 Table 10-7).
+    """Anode resistance for a slender stand-off anode (DNV-RP-B401 Table 10-7).
 
-    R_a = (rho / (2 * pi * L_a)) * (ln(4 * L_a / r_a) - 1)
+    Long slender stand-off (L_a >= 4 r_a):
+        R_a = (rho / (2 * pi * L_a)) * (ln(4 * L_a / r_a) - 1)
+    Short slender stand-off (L_a < 4 r_a): the Table 10-7 short formula
+    (``_kernels.short_slender_standoff``). The form is selected from the
+    L_a / r_a ratio, so a stubby or depleted anode no longer receives the
+    long formula outside its validity range.
 
     Parameters
     ----------
@@ -179,8 +210,9 @@ def anode_resistance_slender_standoff(
     r_a : float
         Anode equivalent radius [m].
     proximity_factor : float
-        Proximity/shielding factor applied to R_a (e.g. 1.3 for
-        anode-to-structure distances of 150-300mm per DNV-RP-B401).
+        Proximity/shielding factor applied to R_a (1.3 for anode-to-structure
+        distances of 150-300 mm, Table 10-7 note 1; see
+        ``_kernels.resistance_proximity_factor``).
 
     Returns
     -------
@@ -188,10 +220,9 @@ def anode_resistance_slender_standoff(
         Anode-to-electrolyte resistance [ohm].
     """
     _ = normalize_edition(edition, stacklevel=3)
-    R_a = (rho / (2.0 * math.pi * L_a)) * (
-        math.log(4.0 * L_a / r_a) - 1.0
-    )
-    return R_a * proximity_factor
+    if proximity_factor <= 0.0:
+        raise ValueError(f"proximity_factor must be positive, got {proximity_factor!r}")
+    return kernel.slender_standoff(rho, L_a, r_a) * proximity_factor
 
 
 def anode_current_output(
@@ -202,7 +233,7 @@ def anode_current_output(
     proximity_factor: float = 1.0,
     edition: Edition | None = None,
 ) -> float:
-    """Anode current output (DNV-RP-B401 §5.3.2).
+    """Anode current output of a slender stand-off anode (DNV-RP-B401 §7.8).
 
     I_a = delta_E / R_a
 
@@ -225,10 +256,8 @@ def anode_current_output(
         Anode current output [A].
     """
     ed = normalize_edition(edition, stacklevel=3)
-    R_a = anode_resistance_slender_standoff(
-        rho, L_a, r_a, proximity_factor, edition=ed
-    )
-    return delta_E / R_a
+    R_a = anode_resistance_slender_standoff(rho, L_a, r_a, proximity_factor, edition=ed)
+    return kernel.anode_current_output(delta_E, R_a)
 
 
 def equivalent_radius_from_mass(
@@ -259,7 +288,7 @@ def equivalent_radius_from_mass(
         Equivalent radius [m].
     """
     _ = normalize_edition(edition, stacklevel=3)
-    return math.sqrt(net_mass_kg / (math.pi * L_a * density))
+    return kernel.equivalent_radius_from_mass(net_mass_kg, L_a, density)
 
 
 def number_of_anodes(
@@ -275,7 +304,7 @@ def number_of_anodes(
     total_mass_kg : float
         Total net anode mass requirement [kg].
     anode_net_mass_kg : float
-        Net mass of one anode [kg].
+        Net mass of one anode [kg]; must be positive.
     round_to_even : bool, optional
         Round up to the next even integer for symmetric placement.
         Default False (mathematical ceiling only).
@@ -284,12 +313,14 @@ def number_of_anodes(
     -------
     int
         Number of anodes (rounded up to nearest integer or even integer).
+
+    Raises
+    ------
+    ValueError
+        If ``anode_net_mass_kg`` is not positive.
     """
     _ = normalize_edition(edition, stacklevel=3)
-    n = math.ceil(total_mass_kg / anode_net_mass_kg)
-    if round_to_even and n % 2 != 0:
-        n += 1
-    return n
+    return kernel.anode_count(total_mass_kg, anode_net_mass_kg, round_to_even)
 
 
 def protected_length(
@@ -302,6 +333,11 @@ def protected_length(
     edition: Edition | None = None,
 ) -> float:
     """Protected length of rigid riser line pipe (DNV-RP-F103 §5.6.7, Eq 14).
+
+    Compatibility wrapper for
+    :func:`digitalmodel.cathodic_protection.dnv_rp_f103.protected_length`;
+    the B401 ``edition`` is mapped to its companion F103 edition
+    (2005/2010 -> 2010, 2017/2021 -> 2016).
 
     PL = sqrt((delta_E_me * WT * (D - WT)) / (rho_me * D * f_cf * i_cm))
 
@@ -325,9 +361,9 @@ def protected_length(
     float
         Protected length [m].
     """
-    _ = normalize_edition(edition, stacklevel=3)
-    return math.sqrt(
-        (delta_E_me * WT * (D - WT)) / (rho_me * D * f_cf * i_cm)
+    ed = normalize_edition(edition, stacklevel=3)
+    return _f103_protected_length(
+        delta_E_me, WT, D, rho_me, f_cf, i_cm, edition=_F103_EDITION_FOR_B401[ed]
     )
 
 
@@ -339,13 +375,17 @@ def flush_anode_resistance(
     r_eq_in: float,
     edition: Edition | None = None,
 ) -> float:
-    """Anode resistance for flush-mount hull anode (McCoy method).
+    """Flush-mounted anode resistance in spreadsheet units (deprecated).
 
-    Uses the simplified slender-body formula with equivalent radius
-    and dimensions in inches, resistivity in ohm-cm (Imperial units
-    as used in standard CP design spreadsheets).
-
-    R_a = (rho / (2 * pi * L_cm)) * (ln(2 * L_cm / r_cm) - 0.5)
+    .. deprecated:: #2211
+        Use ``_kernels.short_flush_or_bracelet`` (SI units) or
+        ``anode_sizing.calculate_anode_resistance``. This wrapper converts
+        inches and ohm-cm to SI and evaluates the DNV-RP-B401 Table 10-7
+        short flush-mounted formula ``R_a = 0.315 rho / sqrt(A)`` with the
+        exposed area ``A = L * W``. The earlier implementation ignored
+        ``W_in`` and ``H_in`` and evaluated a half-space slender-body
+        expression mis-attributed to McCoy; ``W_in`` is now used, ``H_in``
+        and ``r_eq_in`` are accepted for signature compatibility only.
 
     Parameters
     ----------
@@ -354,29 +394,28 @@ def flush_anode_resistance(
     L_a_in : float
         Anode length [inches].
     W_in : float
-        Anode width [inches]. Accepted for API compatibility with
-        design spreadsheets; not used in the slender-body approximation
-        (width/height are folded into r_eq_in).
+        Anode width [inches]; with the length it gives the exposed area.
     H_in : float
-        Anode height [inches]. Same note as W_in.
+        Anode height [inches]; unused (the Table 10-7 short flush formula
+        depends on the exposed area only).
     r_eq_in : float
-        Anode equivalent radius [inches].
+        Anode equivalent radius [inches]; unused.
 
     Returns
     -------
     float
         Anode-to-electrolyte resistance [ohm].
     """
-    _ = normalize_edition(edition, stacklevel=3)
-    # W_in and H_in are accepted for compatibility with standard CP
-    # spreadsheet call signatures; the slender-body formula only needs
-    # L and r_eq (all cross-section information is collapsed into r_eq).
-    # Convert inches to cm for McCoy/Sunde half-space formula.
-    # Flush-mount anodes radiate into a half-space (mounted on hull),
-    # giving a factor of 1/(pi*L) instead of 1/(2*pi*L).
-    _ = W_in, H_in  # explicitly unused — folded into r_eq_in
-    L_cm = L_a_in * 2.54
-    r_cm = r_eq_in * 2.54
-    return (rho_ohm_cm / (math.pi * L_cm)) * (
-        math.log(2.0 * L_cm / r_cm) - 0.5
+    warnings.warn(
+        "flush_anode_resistance is deprecated: it now evaluates the DNV-RP-B401 "
+        "Table 10-7 short flush-mounted formula 0.315 rho / sqrt(L * W) in SI; "
+        "call _kernels.short_flush_or_bracelet or "
+        "anode_sizing.calculate_anode_resistance instead.",
+        DeprecationWarning,
+        stacklevel=2,
     )
+    _ = normalize_edition(edition, stacklevel=3)
+    _ = H_in, r_eq_in  # accepted for signature compatibility, not used
+    rho = rho_ohm_cm * _OHM_CM_TO_OHM_M
+    exposed_area_m2 = (L_a_in * _INCH_M) * (W_in * _INCH_M)
+    return kernel.short_flush_or_bracelet(rho, exposed_area_m2)
