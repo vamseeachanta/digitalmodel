@@ -208,7 +208,14 @@ def beam_model(spec: RiserGlobalModelSpec, *, max_element_m: float = 1.0):
 
 
 def reference_periods(spec: RiserGlobalModelSpec, n_modes: int = 5, *, max_element_m: float = 1.0) -> list[float]:
-    """G3 reference: tensioned-beam periods between the flex-joint pivots (stack rigid)."""
+    """G3 reference: tensioned-beam periods between the flex-joint pivots (stack rigid).
+
+    Only for the ``lines`` tensioner representation: the beam carries self-weight tension in the inner
+    barrel and a tensioner lateral spring at the ring, which the equivalent string (``vertical_force``:
+    top tension through the inner barrel, no ring tensioners) does not have."""
+    if spec.tensioners.representation != "lines":
+        raise ValueError("reference_periods supports the 'lines' tensioner representation only; the "
+                         "equivalent string ('vertical_force') has no G3 hand reference")
     segs, ring_node = beam_model(spec, max_element_m=max_element_m)
     return tensioned_beam_periods(
         segs, n_modes,

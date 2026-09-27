@@ -155,16 +155,16 @@ def ring_static_z_m(model) -> float:
 def tensioner_vertical_sum_n(model) -> float:
     """Sum of the vertical components of the tensioner-line tensions at the ring (winches ending on the ring;
     the equivalent-string top winch of the ``vertical_force`` representation is not a ring tensioner)."""
+    ofx = _api()
     total = 0.0
-    ring = model["TensionRing"]
-    rx, ry, rz = (ring.StaticResult(c) for c in ("X", "Y", "Z"))
     for obj in model.objects:
         if obj.typeName != "Winch" or obj.GetData("Connection", 1) != "TensionRing":
             continue
         tension = obj.StaticResult("Tension") * KN
-        xs, ys, zs = (obj.GetData(f"Connection{c}", 0) for c in "XYZ")
-        xa, ya, za = (obj.GetData(f"Connection{c}", 1) for c in "XYZ")
-        dx, dy, dz = xs - (rx + xa), ys - (ry + ya), zs - (rz + za)
+        # global positions of the sheave (point 1, vessel frame) and the ring attachment (point 2, ring frame)
+        xs, ys, zs = (obj.StaticResult(c, ofx.oeWinch(1)) for c in ("X", "Y", "Z"))
+        xa, ya, za = (obj.StaticResult(c, ofx.oeWinch(2)) for c in ("X", "Y", "Z"))
+        dx, dy, dz = xs - xa, ys - ya, zs - za
         total += tension * dz / math.sqrt(dx * dx + dy * dy + dz * dz)
     return total
 

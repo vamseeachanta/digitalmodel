@@ -84,6 +84,16 @@ def test_equivalent_string_restrains_ring_yaw_through_riser_torsion():
     assert _line(gen, "InnerBarrel")["IncludeTorsion"] is False
 
 
+def test_g3_hand_reference_rejects_the_equivalent_string():
+    """The tensioned-beam reference models the lines representation (inner barrel under self-weight only, a
+    tensioner spring at the ring); it must not silently return periods for the equivalent string."""
+    from digitalmodel.drilling_riser.global_model.hand_checks import reference_periods
+
+    assert len(reference_periods(synthetic_spec(), n_modes=3)) == 3
+    with pytest.raises(ValueError, match="lines"):
+        reference_periods(_vertical(), n_modes=3)
+
+
 def test_unknown_representation_is_rejected():
     t = synthetic_spec().tensioners.model_dump()
     t["representation"] = "cylinders"
@@ -99,6 +109,22 @@ def test_vertical_force_rating_check_uses_the_vertical_share_per_tensioner():
         RiserGlobalModelSpec.model_validate(d)
     d["tensioners"]["rated_tension_each_n"] = 3.0e6 / 6 * 1.01
     RiserGlobalModelSpec.model_validate(d)
+
+
+@pytest.mark.solver
+@pytest.mark.skipif(not orcaflex_api.available(), reason="OrcFxAPI not available")
+def test_tensioner_vertical_sum_is_invariant_to_a_vessel_offset(tmp_path: Path):
+    """Sheave (vessel frame) and ring attachment (ring frame) positions are taken in global coordinates:
+    offsetting the vessel does not change the vertical sum (a local/global mix-up gave -18 % at 10 m)."""
+    from digitalmodel.drilling_riser.global_model.build import write_model
+    from digitalmodel.drilling_riser.global_model.orcaflex_run import load_and_solve_statics, tensioner_vertical_sum_n
+
+    for off in (0.0, 10.0):
+        d = synthetic_spec().model_dump()
+        d["vessel_offset_m"] = (off, 0.0)
+        s = RiserGlobalModelSpec.model_validate(d)
+        m = load_and_solve_statics(write_model(s, tmp_path / f"o{off:g}") / "master.yml")
+        assert tensioner_vertical_sum_n(m) == pytest.approx(3.0e6, rel=5e-3), off
 
 
 @pytest.mark.solver
