@@ -192,11 +192,11 @@ def test_the_last_successful_path_of_a_variant_is_tried_first(base_spec, monkeyp
     spec = _spec(base_spec, offset_pct_wd=2.0)
     m1 = _FakeModel(speed=0.0, fail=lambda m: m.environment.RefCurrentSpeed > 0)  # the aiding current diverges
     m1.environment.RefCurrentDirection = 0.0
-    assert cp.robust_statics(m1, spec, {}, reload=_reloader(m1, 0.0))["strategy"] == "tension_ramp"
+    assert cp.robust_statics(m1, spec, {}, reload=_reloader(m1, 0.0))["strategy"] == "direct_at_target"
     m2 = _FakeModel(speed=0.0, fail=lambda m: m.environment.RefCurrentSpeed > 0)
     m2.environment.RefCurrentDirection = 0.0
     info = cp.robust_statics(m2, spec, {}, reload=_reloader(m2, 0.0))
-    assert info["strategy"] == "tension_ramp" and info["attempts"] == [] and m2.reloads == 0
+    assert info["strategy"] == "direct_at_target" and info["attempts"] == [] and m2.reloads == 0
     # another mud weight is another variant
     other = _spec(base_spec, offset_pct_wd=2.0, mud_density_kg_m3=1400.0)
     m3 = _FakeModel(speed=0.0)
@@ -205,12 +205,12 @@ def test_the_last_successful_path_of_a_variant_is_tried_first(base_spec, monkeyp
 
 
 def test_path_orders(base_spec):
-    assert cp.statics_paths(current=True) == ["current_at_seed", "tension_ramp", "ramp_at_seed", "ramp_at_target",
-                                              "fine_steps", "direct_at_target"]
+    assert cp.statics_paths(current=True) == ["current_at_seed", "direct_at_target", "neighbour_walk", "tension_ramp",
+                                              "ramp_at_seed", "ramp_at_target", "fine_steps"]
     # still water: the aiding current first (stage A: the plain seeded path failed on every 12.5 ppg case after the
     # full iteration budget, about 8 min per case at 57 workers, before the aiding current converged in two solves)
-    assert cp.statics_paths(current=False) == ["aid_current", "tension_ramp", "current_at_seed", "direct_at_target",
-                                               "fine_steps"]
+    assert cp.statics_paths(current=False) == ["aid_current", "direct_at_target", "neighbour_walk", "tension_ramp",
+                                               "current_at_seed", "fine_steps"]
 
 
 def test_tension_ramp_solves_at_a_higher_line_tension_then_steps_down_to_the_case_value(base_spec, monkeypatch):
@@ -228,7 +228,7 @@ def test_tension_ramp_solves_at_a_higher_line_tension_then_steps_down_to_the_cas
 
     m.CalculateStatics = rec
     monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
-    info = cp.robust_statics(m, spec, {}, reload=_reloader(m, 0.6))
+    info = cp.robust_statics(m, spec, {"statics_paths": ["current_at_seed", "tension_ramp"]}, reload=_reloader(m, 0.6))
     assert info["strategy"] == "tension_ramp"
     ramp = seen[1:]
     assert ramp[0][2] == pytest.approx(100.0 * cp.TENSION_RAMP[0]) and ramp[0][0] == pytest.approx(-0.02 * wd)
@@ -319,3 +319,27 @@ def test_calibration_case_then_a_case_with_the_calibrated_tension(base_spec, tmp
     ad.prepare(m2, use)
     ad.statics(m2, use)
     assert orun.tensioner_vertical_sum_n(m2) == pytest.approx(2.6e6, rel=1e-5)
+
+
+def test_neighbour_walk_starts_at_the_nearest_converging_offset_and_walks_in_quarter_steps(base_spec, monkeypatch):
+    """Stage A: at 12.5 ppg in the 1-yr current whole offsets (-7..-5, -3, -2, +3 % WD) fail on every path from the
+    straight start while their neighbours converge; a converged neighbour walked in 0.25 % steps reaches them."""
+    spec = _spec(base_spec, offset_pct_wd=-2.0, current=CURRENT)
+    wd = spec.environment.water_depth_m
+    bad = {round(-0.02 * wd, 6), round(-0.01 * wd, 6)}  # the target and its first neighbour fail from a straight start
+
+    def fail(m):
+        straight = len(m.calls) == 1 or m.fresh
+        m.fresh = False
+        return straight and round(m["Vessel"].InitialX, 6) in bad
+
+    m = _FakeModel(fail=fail)
+    m.fresh = True
+    orig_ucp = m.UseCalculatedPositions
+    m.UseCalculatedPositions = lambda v: orig_ucp(v)
+    monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
+    info = cp.robust_statics(m, spec, {"statics_paths": ["neighbour_walk"]}, reload=_reloader(m, 0.6))
+    assert info["strategy"] == "neighbour_walk"
+    xs = [round(x / wd * 100, 4) for x, _ in m.calls]
+    assert xs[:2] == [-1.0, -3.0]  # +1 % failed from a straight start, -1 % (i.e. -3 % WD) converged
+    assert xs[2:] == [-2.75, -2.5, -2.25, -2.0]
