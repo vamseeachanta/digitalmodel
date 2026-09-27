@@ -31,6 +31,7 @@ from typing import Any, Mapping, Optional, Union
 import numpy as np
 import pandas as pd
 
+from digitalmodel.asset_integrity.applicability import Applicability, merge
 from digitalmodel.asset_integrity.composite_repair import (
     CompositeRepairParameters,
     recommend_from_ffs_result,
@@ -83,7 +84,7 @@ class FFSAssessmentResult:
     rsf_a: float
     folias_factor: float
     remaining_life_yr: float
-    verdict: str  # ACCEPT/MONITOR/RE_RATE/REPAIR/REPLACE
+    verdict: str  # ACCEPT/MONITOR/RE_RATE/REPAIR/REPLACE/ESCALATE
     rerated_pressure_psi: float  # screening re-rate = P_design * min(1, rsf/rsf_a)
     sufficiency_status: str  # SUFFICIENT/TAKE_MORE/ESCALATE
     repair_recommendation: Optional[dict[str, Any]] = None
@@ -93,6 +94,10 @@ class FFSAssessmentResult:
     decision: dict = field(default_factory=dict)
     details: dict = field(default_factory=dict)
     code_reference: str = API_579.label  # governing FFS code
+    # Validity record merged from the strength methods (#1094).  Defaults to
+    # all-clear so existing constructors are unaffected; any raised flag has
+    # already turned ``verdict`` into ESCALATE.
+    applicability: Applicability = field(default_factory=Applicability)
 
     @property
     def passes(self) -> bool:
@@ -122,6 +127,10 @@ class FFSAssessmentResult:
         }
         if self.repair_recommendation is not None:
             payload["repair_recommendation"] = self.repair_recommendation
+        if not self.applicability.ok:
+            # Added only when raised so the indexed 16-key surface (#1066)
+            # is unchanged for every in-range assessment.
+            payload["applicability"] = self.applicability.to_dict()
         return payload
 
 
@@ -195,6 +204,10 @@ def assess_component(
             rsf_a=component.rsf_a,
         ).evaluate(df)
 
+    # Applicability flags raised by the Level 2 engine (Folias lambda cap);
+    # any flag makes the decision ESCALATE instead of a numeric verdict.
+    applicability = merge(l1.get("applicability"), l2.get("applicability"))
+
     decision = FFSDecision.decide(
         level1_verdict=l1["verdict"],
         level2_verdict=l2["verdict"],
@@ -204,6 +217,7 @@ def assess_component(
         t_min_in=t_min,
         corrosion_rate_in_per_yr=component.corrosion_rate_in_per_yr,
         design_pressure_psi=component.design_pressure_psi,
+        applicability=applicability,
     )
 
     sufficiency = MeasurementSufficiency().evaluate(
@@ -240,6 +254,7 @@ def assess_component(
         level1=l1,
         level2=l2,
         decision=decision,
+        applicability=applicability,
         details={
             "router": route,
             "design_code": component.design_code,

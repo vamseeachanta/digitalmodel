@@ -35,13 +35,38 @@ from typing import Optional, Sequence
 
 import numpy as np
 
+from digitalmodel.asset_integrity.applicability import (
+    B31G_RELATIVE_DEPTH_FLAG,
+    Applicability,
+    check_upper_limit,
+)
 from digitalmodel.codes import ASME_B31G
 from digitalmodel.materials import legacy_smys_psi_dict
 
 # Flow-stress adder for Modified B31G / RSTRENG: SMYS + 10 ksi (= 68.95 MPa).
 _FLOW_ADDER_PSI = 10_000.0
-# Default safety factor applied to predicted failure pressure (B31G practice).
-_DEFAULT_SAFETY_FACTOR = 1.39
+# ---------------------------------------------------------------------------
+# Safety factor on the predicted failure pressure (finding #1094-7).
+#
+# The customary B31G safe pressure is P_safe = P_f / 1.39, and 1.39 is simply
+# 1 / 0.72 (rounded as in B31G practice), where 0.72 is the ASME B31.8
+# LOCATION-CLASS-1 DESIGN FACTOR for onshore gas transmission pipelines.  It
+# is not a B31G-derived margin: it couples the safe pressure to an assumed
+# 72 %-of-SMYS design basis.  Pipelines designed to location class 2/3/4
+# (F = 0.60 / 0.50 / 0.40) should pass ``safety_factor=1/F`` (see
+# :func:`safety_factor_for_location_class`); the class-1 value is kept as the
+# default only so every validated golden reproduces unchanged.
+# ---------------------------------------------------------------------------
+ASME_B318_DESIGN_FACTOR_BY_LOCATION_CLASS = {1: 0.72, 2: 0.60, 3: 0.50, 4: 0.40}
+ASME_B318_CLASS1_DESIGN_FACTOR = ASME_B318_DESIGN_FACTOR_BY_LOCATION_CLASS[1]
+# 1 / 0.72 = 1.3889, quoted as 1.39 throughout B31G practice.
+ASME_B318_CLASS1_SAFETY_FACTOR = 1.39
+_SAFETY_FACTOR_BASIS = (
+    "1/F with F = 0.72 (ASME B31.8 location-class-1 design factor); "
+    "not a DNV or B31G-calibrated margin"
+)
+# Module default: the ASME B31.8 class-1 value, by name.
+_DEFAULT_SAFETY_FACTOR = ASME_B318_CLASS1_SAFETY_FACTOR
 # ASME B31G / Modified B31G validity limit on relative defect depth.  The
 # methods are calibrated for d/t up to 0.80; deeper defects fall outside the
 # qualified range and should be assessed by repair/replace criteria.
@@ -68,6 +93,9 @@ class CorrodedPipeResult:
     acceptable: Optional[bool] = None   # safe_pressure >= MAOP (if given)
     details: dict = field(default_factory=dict)
     code_reference: str = ""            # governing code, e.g. "ASME B31G (2012)"
+    # Validity record (#1094): ok=False with a flag when d/t exceeds 0.80.  The
+    # numbers above are still computed; the flag travels next to them.
+    applicability: Applicability = field(default_factory=Applicability)
 
 
 # ---------------------------------------------------------------------------
@@ -96,14 +124,19 @@ def _failure_pressure(flow: float, t: float, D: float, ar: float, M: float) -> f
 def _finalise(method, pf, intact, flow, M, ar, *, maop_psi, safety_factor, details,
               d_over_t=None):
     safe = pf / safety_factor
+    applicability = Applicability()
     if d_over_t is not None:
-        within = d_over_t <= _B31G_MAX_DT
-        details = {**details,
-                   "within_applicability": bool(within),
-                   "applicability_note": (
-                       None if within else
-                       f"d/t={d_over_t:.3f} exceeds B31G validity limit "
-                       f"{_B31G_MAX_DT:.2f}; assess by repair/replace criteria")}
+        applicability = check_upper_limit(
+            d_over_t, _B31G_MAX_DT, flag=B31G_RELATIVE_DEPTH_FLAG,
+            quantity="d/t", method="ASME B31G")
+        # legacy keys kept in step with the dataclass record
+        details = {**details, **applicability.legacy_details()}
+    details = {**details,
+               "safety_factor": safety_factor,
+               "safety_factor_basis": (
+                   _SAFETY_FACTOR_BASIS
+                   if safety_factor == ASME_B318_CLASS1_SAFETY_FACTOR
+                   else "caller-supplied")}
     return CorrodedPipeResult(
         method=method,
         failure_pressure_psi=pf,
@@ -116,7 +149,24 @@ def _finalise(method, pf, intact, flow, M, ar, *, maop_psi, safety_factor, detai
         acceptable=(None if maop_psi is None else bool(safe >= maop_psi)),
         details=details,
         code_reference=ASME_B31G.label,
+        applicability=applicability,
     )
+
+
+def safety_factor_for_location_class(location_class: int) -> float:
+    """Safety factor ``1/F`` for an ASME B31.8 location class (1-4).
+
+    Class 1 returns the customary 1.39 (1/0.72 as quoted in B31G practice);
+    classes 2/3/4 return 1/0.60, 1/0.50, 1/0.40.
+    """
+    if location_class == 1:
+        return ASME_B318_CLASS1_SAFETY_FACTOR
+    try:
+        return 1.0 / ASME_B318_DESIGN_FACTOR_BY_LOCATION_CLASS[location_class]
+    except KeyError:
+        raise ValueError(
+            f"location_class must be 1-4 (ASME B31.8), got {location_class!r}."
+        ) from None
 
 
 # ---------------------------------------------------------------------------
