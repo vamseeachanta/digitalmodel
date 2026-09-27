@@ -153,7 +153,7 @@ def test_all_paths_failing_is_statics_diverged(base_spec, monkeypatch):
     with pytest.raises(pr.CaseFailed) as e:
         cp.robust_statics(m, spec, {}, reload=_reloader(m, 0.6))
     assert e.value.status == "statics_diverged"
-    for s in cp.STATICS_PATHS:
+    for s in cp.statics_paths(current=True):
         assert s in str(e.value)
 
 

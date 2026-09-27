@@ -150,8 +150,16 @@ CALIBRATION_TOL = 1.0e-6
 # statics paths, tried in order (W4 batch-1 probes, 2026-09-27): the static state is path-independent but the solver
 # is not - a full-current start diverges for some model variants, a still-water continuation flips the ring to the
 # yawed branch at large offsets for others
-STATICS_PATHS = ("current_at_seed", "ramp_at_seed", "ramp_at_target", "fine_steps")
-_RAMP_PATHS = ("ramp_at_seed", "ramp_at_target")
+STATICS_PATHS = ("current_at_seed", "ramp_at_seed", "ramp_at_target", "fine_steps", "direct_at_target",
+                 "aid_current")
+AID_CURRENT_M_S = 0.05  # solver aid for still-water cases (removed before the final solve)
+
+
+def statics_paths(*, current: bool) -> list[str]:
+    """Statics paths in the order tried, for a case with or without current."""
+    if current:
+        return ["current_at_seed", "ramp_at_seed", "ramp_at_target", "fine_steps", "direct_at_target"]
+    return ["current_at_seed", "aid_current", "direct_at_target", "fine_steps"]
 
 
 class _PathFailed(RuntimeError):
@@ -198,7 +206,8 @@ def _ring_yaw_deg(model) -> float:
     return (float(model["TensionRing"].StaticResult("Rotation 3")) + 180.0) % 360.0 - 180.0
 
 
-def _statics_path(model, spec: RiserGlobalModelSpec, path: str, *, speed: float, step: float, solve) -> None:
+def _statics_path(model, spec: RiserGlobalModelSpec, path: str, *, speed: float, step: float, solve,
+                  heading_deg: float = 0.0) -> None:
     wd = spec.environment.water_depth_m
     seed = (SEED_PCT / 100.0 * wd, 0.0)
     env = model.environment
@@ -225,6 +234,19 @@ def _statics_path(model, spec: RiserGlobalModelSpec, path: str, *, speed: float,
         env.RefCurrentSpeed = 0.0
         seeded_statics(model, spec, step_pct=step, start=seed, solve=solve)
         ramp()
+    elif path == "direct_at_target":
+        env.RefCurrentSpeed = speed
+        x, y = spec.vessel_offset_m
+        for name in ("Vessel", "TensionRing"):
+            model[name].InitialX, model[name].InitialY = x, y
+        solve()
+    elif path == "aid_current":
+        env.RefCurrentSpeed = AID_CURRENT_M_S
+        env.RefCurrentDirection = heading_deg
+        seeded_statics(model, spec, step_pct=step, start=seed, solve=solve)
+        model.UseCalculatedPositions(True)
+        env.RefCurrentSpeed = 0.0
+        solve()
     else:
         raise ValueError(f"unknown statics path {path!r}")
 
@@ -256,7 +278,7 @@ def robust_statics(model, spec: RiserGlobalModelSpec, params: dict, *, reload=No
         if abs(yaw) > RING_YAW_MAX_DEG:
             raise _PathFailed(f"ring yaw {yaw:.1f} deg at vessel x {model['Vessel'].InitialX:.2f} m")
 
-    paths = [p for p in params.get("statics_paths", STATICS_PATHS) if speed or p not in _RAMP_PATHS]
+    paths = list(params.get("statics_paths") or statics_paths(current=bool(speed)))
     attempts: list[dict[str, str]] = []
     chosen = None
     path_start = 0
@@ -267,7 +289,8 @@ def robust_statics(model, spec: RiserGlobalModelSpec, params: dict, *, reload=No
             reload()
         path_start = n_calls[0]
         try:
-            _statics_path(model, spec, path, speed=speed, step=step, solve=solve)
+            _statics_path(model, spec, path, speed=speed, step=step, solve=solve,
+                          heading_deg=float(params.get("heading_deg", 0.0)))
             chosen = path
             break
         except Exception as exc:  # noqa: BLE001 - a path failure is recorded and the next path tried
