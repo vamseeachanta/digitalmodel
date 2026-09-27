@@ -25,6 +25,15 @@ with the (private) matrix, not here:
                       (``f`` defaults to 1.02 x (riser effective weight + ring weight) / tensioner
                       vertical force, a crude instantaneous anti-recoil response).
 
+Open-water (C2) riser base specs (``kind: open_water``, :class:`OpenWaterRiserSpec`) take the same params, plus:
+
+``contents_pressure_pa`` bore gauge pressure at the contents reference level (flowing / shut-in / test states)
+``edp_release``       ``{"anti_recoil_factor": f}`` - an EDP disconnect case: the EDP / LRP interface releases at
+                      the start of the main stage and the tensioner tension steps to ``f`` (default 1.02) x the
+                      released submerged weight. This is a modelled event, not a timing proxy.
+
+Their statics are checked by the frame balance and the rotary continuity (no tension ring).
+
 Use with :func:`digitalmodel.solvers.orcaflex.parallel_runner.run_cases` and
 ``adapter="digitalmodel.drilling_riser.campaign:ADAPTER"``.
 """
@@ -37,6 +46,7 @@ from typing import Any
 
 import yaml
 
+from .global_model.open_water import OpenWaterRiserSpec
 from .global_model.spec import RiserGlobalModelSpec
 
 SEED_PCT = -2.0
@@ -46,9 +56,15 @@ RING_YAW_MAX_DEG = 1.0
 KN = 1000.0
 
 
-def load_base_spec(path: str | Path) -> RiserGlobalModelSpec:
+def _spec_class(d: dict):
+    return OpenWaterRiserSpec if d.get("kind") == "open_water" else RiserGlobalModelSpec
+
+
+def load_base_spec(path: str | Path) -> RiserGlobalModelSpec | OpenWaterRiserSpec:
+    """A drilling-riser or an open-water (``kind: open_water``) model spec."""
     doc = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
-    return RiserGlobalModelSpec.model_validate(doc["model"] if "model" in doc else doc)
+    d = doc["model"] if "model" in doc else doc
+    return _spec_class(d).model_validate(d)
 
 
 def offset_xy_m(spec: RiserGlobalModelSpec, pct_wd: float, heading_deg: float) -> tuple[float, float]:
@@ -77,8 +93,18 @@ def case_spec(case: dict) -> RiserGlobalModelSpec:
         d["irregular_wave"] = {**p["irregular_wave"], "direction_deg": heading}
     if case["analysis"] == "dynamics":
         d["dynamics"] = dict(p["dynamics"])
+    if p.get("contents_pressure_pa") is not None:
+        d["contents"]["pressure_pa"] = float(p["contents_pressure_pa"])
     d["name"] = f"{base.name}:{case['case_id']}"
-    return RiserGlobalModelSpec.model_validate(d)
+    cls = _spec_class(d)
+    if p.get("edp_release") is not None:
+        if cls is not OpenWaterRiserSpec:
+            raise ValueError("edp_release applies to open-water riser specs only")
+        from .global_model.open_water import tension_references
+
+        f = float(p["edp_release"].get("anti_recoil_factor", 1.02))
+        d["edp_release"] = {"anti_recoil_tension_n": f * tension_references(cls.model_validate(d))["released_weight_n"]}
+    return cls.model_validate(d)
 
 
 def seeded_statics(model, spec: RiserGlobalModelSpec, *, seed_pct: float = SEED_PCT,
@@ -93,7 +119,7 @@ def seeded_statics(model, spec: RiserGlobalModelSpec, *, seed_pct: float = SEED_
     for i in range(n + 1):
         f = i / n
         x, y = x0 + f * (x1 - x0), y0 + f * (y1 - y0)
-        for name in ("Vessel", "TensionRing"):
+        for name in ("Vessel", "TensionFrame" if isinstance(spec, OpenWaterRiserSpec) else "TensionRing"):
             model[name].InitialX, model[name].InitialY = x, y
         model.CalculateStatics()
         if i < n:
@@ -130,6 +156,14 @@ def physical_state_checks(model, spec: RiserGlobalModelSpec) -> dict[str, Any]:
 
     from .global_model.hand_checks import tension_references
 
+    if isinstance(spec, OpenWaterRiserSpec):
+        from .global_model import orcaflex_run as orun
+
+        chk = orun.open_water_physical_checks(model, spec, rel_tol=RESIDUAL_REL)
+        if not chk["physical"]:
+            raise CaseFailed("nonphysical_static", f"non-physical static state: frame balance "
+                             f"{chk['frame_balance_n'] / KN:.1f} kN, rotary vertical {chk['rotary_vertical_n'] / KN:.1f} kN")
+        return chk
     target = spec.tensioners.total_vertical_tension_n
     tol = RESIDUAL_REL * target
     yaw = float(model["TensionRing"].StaticResult("Rotation 3"))
@@ -196,6 +230,8 @@ class RiserCampaignAdapter:
         if not proxy:
             return
         spec = self.spec(case)
+        if isinstance(spec, OpenWaterRiserSpec) and proxy["kind"] == "disconnect":
+            raise ValueError("open-water riser: model the EDP disconnect with params 'edp_release', not a proxy")
         if proxy["kind"] == "drift_off":
             v = model["Vessel"]
             v.PrimaryMotion = "Prescribed"
@@ -232,6 +268,8 @@ class RiserCampaignAdapter:
 
         spec = self.spec(case)
         ofx = orun._api()
+        if isinstance(spec, OpenWaterRiserSpec):
+            return self._extract_open_water(model, case, spec)
         if case["analysis"] == "statics":
             out: dict[str, Any] = {**orun.static_responses(model, spec), **orun.end_effective_tensions(model),
                                    "ring_z_m": orun.ring_static_z_m(model)}
@@ -251,6 +289,30 @@ class RiserCampaignAdapter:
             "vessel_x_m": _stats(model["Vessel"].TimeHistory("X", period)),
         }
         out["sample_count"] = len(riser.TimeHistory("Effective tension", period, ofx.oeEndA))
+        return out
+
+    @staticmethod
+    def _extract_open_water(model, case: dict, spec: OpenWaterRiserSpec) -> dict[str, Any]:
+        from .global_model import orcaflex_run as orun
+
+        ofx = orun._api()
+        if case["analysis"] == "statics":
+            out: dict[str, Any] = orun.open_water_static_responses(model, spec)
+            n = case.get("params", {}).get("modal_modes")
+            if n:
+                out["modes"] = orun.riser_modal_periods(model, n_modes=int(n))
+            return out
+        out = dict(orun.open_water_governing_responses(model, spec))
+        period = ofx.Period(1)
+        up, riser = model["Upper"], model["Riser"]
+        out["series"] = {
+            "te_top_kn": _stats(up.TimeHistory("Effective tension", period, ofx.oeEndA)),
+            "te_edp_kn": _stats(riser.TimeHistory("Effective tension", period, ofx.oeEndB)),
+            "frame_z_m": _stats(model["TensionFrame"].TimeHistory("Z", period)),
+            "edp_z_m": _stats(riser.TimeHistory("Z", period, ofx.oeEndB)),
+            "vessel_x_m": _stats(model["Vessel"].TimeHistory("X", period)),
+        }
+        out["sample_count"] = len(up.TimeHistory("Effective tension", period, ofx.oeEndA))
         return out
 
 

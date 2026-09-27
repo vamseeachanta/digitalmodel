@@ -278,3 +278,104 @@ def as_analysed_sections(model, line_names: tuple[str, ...] = ("InnerBarrel", "R
             })
             arc += length
     return rows
+
+
+# ---------------------------------------------------------------- open-water riser (open_water.OpenWaterRiserSpec)
+def open_water_end_tensions(model) -> dict[str, float]:
+    """Static effective tensions (N) of the open-water riser: below the frame, either side of the rotary, at the
+    EDP / LRP interface and at the wellhead datum."""
+    ofx = _api()
+    up, riser, stack = model["Upper"], model["Riser"], model["Stack"]
+    return {
+        "upper_top_n": up.StaticResult("Effective tension", ofx.oeEndA) * KN,
+        "upper_bottom_n": up.StaticResult("Effective tension", ofx.oeEndB) * KN,
+        "riser_top_n": riser.StaticResult("Effective tension", ofx.oeEndA) * KN,
+        "edp_bottom_n": riser.StaticResult("Effective tension", ofx.oeEndB) * KN,
+        "stack_bottom_n": stack.StaticResult("Effective tension", ofx.oeEndA) * KN,
+        "upper_top_wall_n": up.StaticResult("Wall tension", ofx.oeEndA) * KN,
+        "edp_bottom_wall_n": riser.StaticResult("Wall tension", ofx.oeEndB) * KN,
+    }
+
+
+def open_water_physical_checks(model, spec, rel_tol: float = 1.0e-3) -> dict[str, Any]:
+    """Static-state checks, each within ``rel_tol`` of the tensioner tension: the tension-frame vertical balance
+    (tensioner vertical - frame weight + global vertical end force of line Upper at end A, the line pulling the
+    frame down) and the rotary vertical reaction (the constraint's global vertical force; the rotary is free along
+    z). Global forces keep both exact at an offset."""
+    from .open_water import TOP_WINCH, frame_weight_n
+
+    ofx = _api()
+    w = model[TOP_WINCH]
+    tension = w.StaticResult("Tension") * KN
+    xs, ys, zs = (w.StaticResult(c, ofx.oeWinch(1)) for c in ("X", "Y", "Z"))
+    xa, ya, za = (w.StaticResult(c, ofx.oeWinch(2)) for c in ("X", "Y", "Z"))
+    dx, dy, dz = xs - xa, ys - ya, zs - za
+    vertical = tension * dz / math.sqrt(dx * dx + dy * dy + dz * dz)
+    balance = vertical - frame_weight_n(spec) + model["Upper"].StaticResult("End GZ force", ofx.oeEndA) * KN
+    rotary = model["Rotary"].StaticResult("In-frame connection GZ force") * KN
+    tol = rel_tol * spec.tensioners.total_vertical_tension_n
+    return {"tensioner_vertical_n": vertical, "frame_balance_n": balance, "rotary_vertical_n": rotary,
+            "physical": abs(balance) <= tol and abs(rotary) <= tol}
+
+
+def open_water_static_responses(model, spec) -> dict[str, float]:
+    """Static effective tensions, stress-joint base bending moment (EDP top), maximum von Mises stress over the
+    stressed riser sections and the tension-frame elevation."""
+    ofx = _api()
+    riser = model["Riser"]
+    lo, hi = _stressed_arc_range(model, spec)
+    vm = riser.RangeGraph("Max von Mises stress", ofx.Period(ofx.pnStaticState),
+                          arclengthRange=ofx.arSpecifiedArclengths(lo, hi))
+    sj = ofx.oeArcLength(spec.stress_joint_base_arc_m)
+    return {**open_water_end_tensions(model),
+            "sj_base_bending_moment_nm": abs(float(riser.StaticResult("Bend moment", sj))) * KN,
+            "riser_von_mises_max_pa": float(max(vm.Mean)) * KN,
+            "frame_z_m": float(model["TensionFrame"].StaticResult("Z"))}
+
+
+def open_water_governing_responses(model, spec, period=None) -> dict[str, float]:
+    """Dynamic extremes over the main stage: effective tension below the frame and at the EDP / LRP interface,
+    stress-joint base bending moment, maximum von Mises stress, and the tension-frame vertical excursion (the
+    tension-joint stroke demand)."""
+    ofx = _api()
+    if period is None:
+        period = ofx.Period(1)
+    up, riser = model["Upper"], model["Riser"]
+    te_a = up.TimeHistory("Effective tension", period, ofx.oeEndA)
+    te_b = riser.TimeHistory("Effective tension", period, ofx.oeEndB)
+    bm = riser.TimeHistory("Bend moment", period, ofx.oeArcLength(spec.stress_joint_base_arc_m))
+    fz = model["TensionFrame"].TimeHistory("Z", period)
+    lo, hi = _stressed_arc_range(model, spec)
+    vm = riser.RangeGraph("Max von Mises stress", period, arclengthRange=ofx.arSpecifiedArclengths(lo, hi))
+    return {
+        "te_top_max_n": float(max(te_a)) * KN, "te_top_min_n": float(min(te_a)) * KN,
+        "te_edp_max_n": float(max(te_b)) * KN, "te_edp_min_n": float(min(te_b)) * KN,
+        "sj_base_bending_moment_max_nm": float(max(abs(x) for x in bm)) * KN,
+        "riser_von_mises_max_pa": float(max(vm.Max)) * KN,
+        "frame_z_max_m": float(max(fz)), "frame_z_min_m": float(min(fz)),
+    }
+
+
+def edp_release_history(model) -> dict[str, list[float]]:
+    """Main-stage histories after an EDP release (time from the release): EDP end (Riser end B) elevation and
+    vertical velocity, tension-frame elevation, and the effective tension below the frame."""
+    ofx = _api()
+    period = ofx.Period(1)
+    riser = model["Riser"]
+    t = [float(x) for x in model.SampleTimes(period)]
+    t0 = t[0]
+    return {
+        "t_s": [x - t0 for x in t],
+        "edp_z_m": [float(x) for x in riser.TimeHistory("Z", period, ofx.oeEndB)],
+        "edp_vz_m_s": [float(x) for x in riser.TimeHistory("GZ-Velocity", period, ofx.oeEndB)],
+        "frame_z_m": [float(x) for x in model["TensionFrame"].TimeHistory("Z", period)],
+        "te_top_n": [float(x) * KN for x in model["Upper"].TimeHistory("Effective tension", period, ofx.oeEndA)],
+    }
+
+
+def window_mean(t: list[float], y: list[float], centre: float, half_width: float) -> float:
+    """Mean of ``y`` over the samples with |t - centre| <= half_width."""
+    vals = [v for s, v in zip(t, y) if abs(s - centre) <= half_width + 1e-9]
+    if not vals:
+        raise ValueError(f"no samples within {half_width} s of t = {centre} s")
+    return sum(vals) / len(vals)

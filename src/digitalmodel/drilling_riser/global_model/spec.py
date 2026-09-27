@@ -143,6 +143,8 @@ class Tensioners(BaseModel):
 class Contents(BaseModel):
     density_kg_m3: float = Field(..., ge=0)
     pressure_ref_z_m: float = Field(..., description="z of the free surface of the contents (gauge 0)")
+    pressure_pa: float = Field(0.0, ge=0, description="gauge pressure of the contents at pressure_ref_z_m (surface "
+                                                      "pressure of a shut-in or pressure-tested bore)")
 
 
 class GlobalEnvironment(BaseModel):
