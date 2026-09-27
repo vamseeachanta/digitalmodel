@@ -300,7 +300,56 @@ def _other_results(story, summary):
     story.append(_p("Unstretched length minus endpoint span is a geometric diagnostic, not a universal allowable slack value. Span rate and signed line response support investigation of re-tension events; they do not replace resolved snap-load and interference assessment."))
 
 
-def _appendix(story, cases):
+def _trace_drawing(trace, limit, stop):
+    from reportlab.graphics.shapes import Drawing, Line, PolyLine, String
+    from digitalmodel.workflows.vessel_capability_layout import validate_trace
+    times, master, sling = validate_trace(trace, stop)
+    width, height, left, bottom = 500, 170, 36, 18
+    top = max(max(master), limit) * 1.05
+    x = lambda t: left + (t - times[0]) / (times[-1] - times[0]) * (width - left - 6)
+    y = lambda v: bottom + v / top * (height - bottom - 8)
+    drawing = Drawing(width, height)
+    drawing.add(Line(left, bottom, width - 6, bottom, strokeColor=colors.HexColor("#536c7e")))
+    drawing.add(Line(left, bottom, left, height - 8, strokeColor=colors.HexColor("#536c7e")))
+    drawing.add(Line(left, y(limit), width - 6, y(limit), strokeColor=colors.HexColor("#b5462f"), strokeDashArray=[4, 3]))
+    for values, colour in ((master, "#17384d"), (sling, "#c47f1a")):
+        points = [coord for t, v in zip(times, values) for coord in (x(t), y(v))]
+        drawing.add(PolyLine(points, strokeColor=colors.HexColor(colour), strokeWidth=1))
+    drawing.add(String(left, 4, f"{times[0]:g} s", fontSize=7))
+    drawing.add(String(width - 60, 4, f"{times[-1]:g} s (stop)", fontSize=7))
+    drawing.add(String(2, height - 14, f"{top:.0f} kN", fontSize=7))
+    return drawing
+
+
+def _sensitivity(story, sensitivity):
+    case = sensitivity["case_135"]
+    if case.get("verdict") != "not_implausible":
+        raise ValueError("A mechanism without a not_implausible verdict belongs on a human review page, not in the report")
+    story.append(PageBreak())
+    _section(story, "Appendix D. Time-step and seed sensitivity", f"{sensitivity.get('judgement', '')} Engineering acceptance: NOT EVALUATED.")
+    rows = [[str(k), f"{v['hs_m']:g} / {v['tp_s']:g}", f"{v['master_link_utilization']['0.05']:.3f}",
+             f"{v['master_link_utilization']['0.025']:.3f}", f"{v['sling3_end_b_peak_kN']['0.05']:.1f}",
+             f"{v['sling3_end_b_peak_kN']['0.025']:.1f}"] for k, v in sensitivity["time_step"].items()]
+    _table(story, ["Case", "Hs (m) / Tp (s)", "Master-link util. 0.05 s (-)", "0.025 s (-)", "Sling#3 End B 0.05 s (kN)", "0.025 s (kN)"],
+           rows, [40, 70, 95, 70, 120, 112], "Table D-1. Same model and seed; only the implicit time step differs.")
+    rows = [[str(k), f"{v['hs_m']:g} / {v['tp_s']:g}", f"{v['baseline_utilization_0_05']:.3f}", f"{v['minimum']:.3f}", f"{v['maximum']:.3f}",
+             ", ".join(f"{u:.3f}" for u in v["seed_utilization_0_025"].values())] for k, v in sensitivity["seeds"].items()]
+    _table(story, ["Case", "Hs (m) / Tp (s)", "Baseline seed 0.05 s (-)", "Min, seeds 0.025 s (-)", "Max (-)", "All seeds (-)"],
+           rows, [40, 70, 95, 90, 55, 157], "Table D-2. Master-link proxy utilization for additional wave seeds; unity is the provisional threshold.")
+    story.append(_trace_drawing(case["trace"], sensitivity["master_link_limit_kN"], case["stop_time_s"]))
+    span = case["trace"]["time"]
+    story.append(_p(f"Figure D-1. Line-end tension from {span[0]:g} s to {span[-1]:g} s, ending at the instability: the rigging goes slack and "
+                    "snaps taut on each wave. Dark: master-link proxy; orange: Sling#3 End B; dashed: provisional limit."))
+    story.append(_p(f"Case 135 (Hs {case['hs_m']:g} m, Tp {case['tp_s']:g} s) stops unstable at {case['stop_time_s']:.3f} s at "
+                    f"{case['time_step_s']:g} s and completes at {case['completes_at_time_step_s']:g} s. Master-link mean "
+                    f"{case['master_link_mean_kN']:.1f} kN against a payload submerged weight of {case['payload_submerged_weight_kN']:.1f} kN; "
+                    f"below 10 kN for {100 * case['slack_fraction_master_link_below_10kN']:.0f} % of the analysis interval."))
+    _table(story, ["Physical expectation", "Comparator class", "Verdict", "Basis"],
+           [[case["physical_expectation"], case["comparator_class"], case["verdict"], case["verdict_basis"]]],
+           [150, 80, 62, 215], "Table D-3. Realism verdict for the indicated slack and snap re-tension mechanism.")
+
+
+def _appendix(story, cases, sensitivity=None):
     story.append(PageBreak())
     _section(story, "Appendix A. Detailed case results", "Every source case appears below. W = within assumptions, E = exceeds assumptions, N = not evaluated. Classification does not constitute engineering acceptance. Peak tension is the maximum across the recorded source tension channels.")
     labels = {"WITHIN_ASSUMPTIONS": "W", "EXCEEDS_ASSUMPTIONS": "E", "NOT_EVALUATED": "N"}
@@ -313,6 +362,8 @@ def _appendix(story, cases):
                      case.get("governing_check", "Not recorded"), labels[case["status"]]])
     _table(story, ["Case", "Hs (m)", "Tp (s)", "Peak (kN)", "Max util. (-)", "Governing assumed criterion", "Screen"],
            rows, [63, 43, 43, 65, 65, 180, 48], "Table A1. Complete case register, linked by stable case index to the retained simulation evidence.")
+    if sensitivity is not None:
+        _sensitivity(story, sensitivity)
     story.extend([Spacer(1, 15), _p("Appendix B. Integrated envelope and monitoring snapshot", "Heading1"),
                   _p("The following three pages contain the same payload-derived Hs-Tp envelope, simulated irregular-wave preview and conditional load response as the interactive report. Global report pagination applies.")])
 
@@ -352,9 +403,15 @@ def _verify_summary_source(summary, payload, raw):
             raise ValueError("Source bytes differ from supplied summary")
 
 
-def render_full_pdf(summary, payload, output, config=None, *, summary_bytes=None):
+def render_full_pdf(summary, payload, output, config=None, *, summary_bytes=None, sensitivity=None,
+                    sensitivity_bytes=None):
     """Render the full report without modifying source payloads or simulations."""
     _verify_summary_source(summary, payload, summary_bytes)
+    sensitivity_sha256 = None
+    if sensitivity is not None:
+        if sensitivity_bytes is None or json.loads(sensitivity_bytes) != sensitivity:
+            raise ValueError("Sensitivity evidence must match its pinned bytes")
+        sensitivity_sha256 = hashlib.sha256(sensitivity_bytes).hexdigest()
     payload = deepcopy(payload)
     payload["_report_config"] = config or {}
     if config:
@@ -368,7 +425,7 @@ def render_full_pdf(summary, payload, output, config=None, *, summary_bytes=None
     _results(story, summary, payload, cases)
     _other_results(story, summary)
     _validation_references(story, summary, payload)
-    _appendix(story, cases)
+    _appendix(story, cases, sensitivity)
     body, snapshot = BytesIO(), BytesIO()
     document = SimpleDocTemplate(body, pagesize=A4, leftMargin=44, rightMargin=44,
                                  topMargin=44, bottomMargin=49,
@@ -378,4 +435,7 @@ def render_full_pdf(summary, payload, output, config=None, *, summary_bytes=None
     identity = render_pdf(payload, snapshot, **{key: reference[key] for key in ("hs_m", "tp_s", "now_s") if key in reference})
     pages = _number_pages(body, snapshot, output, (config or {}).get("revision", "r7"),
                           (config or {}).get("report_title", "Jumper installation analysis"))
-    return {"pages": pages, "cases": len(cases), "snapshot": identity}
+    result = {"pages": pages, "cases": len(cases), "snapshot": identity}
+    if sensitivity_sha256:
+        result["sensitivity_sha256"] = sensitivity_sha256
+    return result

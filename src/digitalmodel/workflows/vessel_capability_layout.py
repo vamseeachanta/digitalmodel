@@ -262,7 +262,81 @@ def _operating_envelope(cases,screening):
                  'sampled range; "none" means the lowest sampled Hs does not pass or is not evaluated.</p>')
 
 
-def _verdict_appendix(cases,screening):
+def _step_flags(summary):
+    """Cells solved at a time step other than the campaign default, keyed by index."""
+    return {row['index']:row['solved_time_step_s'] for row in summary['cases'] if 'solved_time_step_s' in row}
+
+
+def _flag_note(flags):
+    if not flags:return ''
+    items=', '.join(f'case {i:03d} solved at {step:g} s' for i,step in sorted(flags.items()))
+    return ('<p class="caption">Cells solved at a different time step from the campaign default: '+escape(items)+
+            '. The substitution is recorded in the composite summary and Appendix D.</p>')
+
+
+def validate_trace(trace,stop=None):
+    """A mechanism figure must show real, aligned, finite samples in time order."""
+    times,master,sling=trace.get('time',[]),trace.get('master_link_kN',[]),trace.get('sling3_end_b_kN',[])
+    if len(times)<2 or not len(times)==len(master)==len(sling):
+        raise ValueError('Mechanism trace needs at least two aligned samples per channel')
+    if not all(_finite(v) for v in [*times,*master,*sling]):
+        raise ValueError('Mechanism trace contains non-finite values')
+    if any(b<=a for a,b in zip(times,times[1:])):
+        raise ValueError('Mechanism trace times must increase')
+    if stop is not None and abs(times[-1]-stop)>2*(times[1]-times[0]):
+        raise ValueError('Mechanism trace does not end at the declared stop time')
+    return times,master,sling
+
+
+def _trace_svg(trace,limit,stop):
+    times,master,sling=validate_trace(trace,stop)
+    w,h,l,t0=860,240,56,12;x0,x1=times[0],times[-1];top=max(max(master),limit)*1.05
+    x=lambda v:l+(v-x0)/(x1-x0 or 1)*(w-l-12);y=lambda v:t0+(1-v/top)*(h-t0-34)
+    path=lambda vs,colour:f'<polyline fill="none" stroke="{colour}" stroke-width="1.6" points="'+' '.join(f'{x(a):.1f},{y(b):.1f}' for a,b in zip(times,vs))+'"/>'
+    parts=[f'<line x1="{l}" x2="{w-12}" y1="{y(limit):.1f}" y2="{y(limit):.1f}" stroke="#b5462f" stroke-dasharray="6 4"/>',
+           f'<text x="{w-14}" y="{y(limit)-4:.1f}" text-anchor="end" style="font-size:11px">provisional master-link limit {limit:.1f} kN</text>',
+           path(master,'#17384d'),path(sling,'#c47f1a'),
+           f'<line x1="{l}" x2="{l}" y1="{t0}" y2="{h-34}" stroke="#536c7e"/><line x1="{l}" x2="{w-12}" y1="{h-34}" y2="{h-34}" stroke="#536c7e"/>',
+           f'<text x="{l}" y="{h-16}" style="font-size:11px">{x0:g} s</text><text x="{w-12}" y="{h-16}" text-anchor="end" style="font-size:11px">{x1:g} s (stop)</text>',
+           f'<text x="{l-6}" y="{t0+10}" text-anchor="end" style="font-size:11px">{top:.0f}</text><text x="{l-6}" y="{h-34}" text-anchor="end" style="font-size:11px">0</text>',
+           f'<text x="{l+8}" y="{t0+12}" style="font-size:11px;fill:#17384d">master-link proxy (kN)</text>',
+           f'<text x="{l+8}" y="{t0+26}" style="font-size:11px;fill:#c47f1a">Sling#3 End B (kN)</text>']
+    return (f'<svg viewBox="0 0 {w} {h}" role="img" aria-label="Case 135 line-end tension before the instability" '
+            f'style="width:100%;max-width:{w*1.3:.0f}px;height:auto">'+''.join(parts)+'</svg>')
+
+
+def _sensitivity_appendix(sensitivity):
+    case=sensitivity['case_135']
+    if case.get('verdict')!='not_implausible':
+        raise ValueError('A mechanism without a not_implausible verdict belongs on a human review page, not in the report')
+    fmt=lambda v:f'{v:.3f}'
+    text='<section id="appendix-d"><h2>Appendix D Time-step and seed sensitivity</h2>'
+    text+='<p>'+escape(str(sensitivity.get('judgement','')))+' Engineering acceptance: NOT EVALUATED.</p>'
+    rows=[[escape(str(k)),f"{v['hs_m']:g}",f"{v['tp_s']:g}",fmt(v['master_link_utilization']['0.05']),fmt(v['master_link_utilization']['0.025']),
+           f"{v['sling3_end_b_peak_kN']['0.05']:.1f}",f"{v['sling3_end_b_peak_kN']['0.025']:.1f}"] for k,v in sensitivity['time_step'].items()]
+    text+=_table(['Case','Hs (m)','Tp (s)','Master-link utilization, 0.05 s (-)','0.025 s (-)','Sling#3 End B peak, 0.05 s (kN)','0.025 s (kN)'],rows)
+    text+='<p class="caption">Table D-1. Same model and seed; only the implicit time step differs. Short re-tension peaks are the most sensitive.</p>'
+    seeds=sorted({s for v in sensitivity['seeds'].values() for s in v['seed_utilization_0_025']})
+    rows=[[escape(str(k)),f"{v['hs_m']:g}",f"{v['tp_s']:g}",fmt(v['baseline_utilization_0_05'])]+
+          [fmt(v['seed_utilization_0_025'][s]) if s in v['seed_utilization_0_025'] else '-' for s in seeds]+[fmt(v['minimum']),fmt(v['maximum'])]
+          for k,v in sensitivity['seeds'].items()]
+    text+=_table(['Case','Hs (m)','Tp (s)','Baseline seed, 0.05 s (-)']+[f'Seed {escape(s)} (-)' for s in seeds]+['Minimum (-)','Maximum (-)'],rows)
+    text+='<p class="caption">Table D-2. Master-link proxy utilization at 0.025 s for additional wave seeds. Unity is the provisional threshold.</p>'
+    text+='<h3>D.3 Case 135: slack and snap re-tension</h3>'
+    text+=(f"<p>Case 135 (Hs {case['hs_m']:g} m, Tp {case['tp_s']:g} s) stops with an unstable solver state at {case['stop_time_s']:.3f} s at "
+           f"{case['time_step_s']:g} s and completes at {case['completes_at_time_step_s']:g} s. The master-link proxy mean is "
+           f"{case['master_link_mean_kN']:.1f} kN against a payload submerged weight of {case['payload_submerged_weight_kN']:.1f} kN; "
+           f"it is below 10 kN for {100*case['slack_fraction_master_link_below_10kN']:.0f} % of the analysis interval.</p>")
+    text+=_trace_svg(case['trace'],sensitivity['master_link_limit_kN'],case['stop_time_s'])
+    span=case['trace']['time']
+    text+=(f'<p class="caption">Figure D-1. Line-end tension from {span[0]:g} s to {span[-1]:g} s, ending at the instability: '
+           'the rigging goes slack and snaps taut on each wave.</p>')
+    text+=_table(['Physical expectation','Comparator class','Verdict','Basis'],[[escape(case['physical_expectation']),escape(case['comparator_class']),
+          escape(case['verdict']),escape(case['verdict_basis'])]])
+    return text+'<p class="caption">Table D-3. Realism verdict for the indicated mechanism.</p></section>'
+
+
+def _verdict_appendix(cases,screening,flags=None):
     criteria=screening['criteria'];rows=[]
     for case in cases:
         cells=[]
@@ -272,7 +346,8 @@ def _verdict_appendix(cases,screening):
             text={'WITHIN_ASSUMPTIONS':f'Acceptable against {label}','EXCEEDS_ASSUMPTIONS':f'Not acceptable against {label}',
                   'NOT_EVALUATED':'Not evaluated'}[status]
             cells.append(text+(f' ({util:.3f})' if util is not None else ''))
-        rows.append([f"{case['index']:03d}",f"{case['hs_m']:g}",f"{case['tp_s']:g}"]+cells)
+        label=f"{case['index']:03d}"+(f" (solved at {flags[case['index']]:g} s)" if flags and case['index'] in flags else '')
+        rows.append([label,f"{case['hs_m']:g}",f"{case['tp_s']:g}"]+cells)
     text='<section id="appendix-c"><h2>Appendix C Per-cell verdicts against provisional criteria</h2>'
     text+='<p>Each verdict is conditional on confirmation of component capacities, their load-path mapping and the criteria basis. '
     text+='Utilization is shown in brackets; unity is the threshold. Numerical failures are Not evaluated.</p>'
@@ -367,7 +442,8 @@ def _results(summary,screening=None):
     text+='Post-exit tension peaks do not alone establish physical snap loads or an allowable slack distance.</p>'
     if screening is not None:
         cases=bind_screening(summary,screening)
-        text+='<h3>5.4 Provisional installation envelope</h3>'+_screening_envelope(cases,screening)+_operating_envelope(cases,screening)
+        text+=('<h3>5.4 Provisional installation envelope</h3>'+_screening_envelope(cases,screening)
+               +_operating_envelope(cases,screening)+_flag_note(_step_flags(summary)))
         text+='<h3>5.5 Two-minute forecasting</h3>'+_screening_forecast(screening)
         return _section(5,'Results — conditional screening',text)
     text+='<h3>5.4 Provisional installation envelope</h3><p><strong>Not established.</strong> A future Hs–Tp envelope requires declared criteria, '
@@ -413,7 +489,7 @@ def _appendices(summary,base,config):
     return text+escape(json.dumps(provenance,indent=2,allow_nan=False))+'</pre></section>'
 
 
-def render_layout(summary,base,config,screening=None):
+def render_layout(summary,base,config,screening=None,sensitivity=None):
     config=dict(config)
     config.setdefault('title','Vessel capability for mudmat installation')
     config.setdefault('document_id','Structure installation engineering assessment')
@@ -425,7 +501,9 @@ def render_layout(summary,base,config,screening=None):
     content=cover+_intro_summary(summary,config)+_design(summary,config)+_method(summary)+_results(summary,screening)
     content+=_validation_conclusions(summary,config,screening is not None)+_appendices(summary,base,config)
     if screening is not None:
-        content+=_verdict_appendix(bind_screening(summary,screening),screening)
+        content+=_verdict_appendix(bind_screening(summary,screening),screening,_step_flags(summary))
+    if sensitivity is not None:
+        content+=_sensitivity_appendix(sensitivity)
     text='<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
     text+='<title>'+escape(config['title'])+'</title><style>'+STYLE
     text+='pre{white-space:pre-wrap;overflow-wrap:anywhere}p,td,a{overflow-wrap:anywhere}</style></head><body><main>'+content

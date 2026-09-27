@@ -82,10 +82,10 @@ def _pending(basis, campaign=None, sensitivity=None, screened=False):
     return _table(['Assessment', 'Current evidence / placeholder'], rows)
 
 
-def render_html(summary, base=Path('.'), config=None, screening=None):
+def render_html(summary, base=Path('.'), config=None, screening=None, sensitivity=None):
     """Render pinned findings without changing their numerical evidence."""
     from digitalmodel.workflows.vessel_capability_layout import render_layout
-    return render_layout(summary, base, config or {}, screening)
+    return render_layout(summary, base, config or {}, screening, sensitivity)
 
 
 def _audit_profile(row):
