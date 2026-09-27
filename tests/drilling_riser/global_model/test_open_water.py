@@ -105,6 +105,8 @@ def test_generic_spec_objects(ow):
     g = build_open_water_generic_spec(ow)["generic"]
     assert [ln["name"] for ln in g["lines"]] == ["Upper", "Riser", "Stack"]
     assert [b["name"] for b in g["buoys_3d"]] == ["TensionFrame"]
+    body = g["buoys_6d"][0]
+    assert body["name"] == "RotaryBody" and body["connection"] == "Rotary" and body["mass"] == pytest.approx(0.01)
     rot = next(c for c in g["constraints"] if c["name"] == "Rotary")
     assert rot["properties"]["DOFFree, DOFInitialValue"] == [[False], [False], [True, 0.0], [True, 0.0], [True, 0.0], [False]]
     w = next(x for x in g["winches"] if x["name"] == "TopTensioner")
@@ -154,6 +156,7 @@ def test_tension_references_close_form(ow):
         wet_vol += s.displaced_volume_per_m_m3 * max(0.0, min(0.0, top) - bot)
         z = bot
     w -= RHO_W * wet_vol * G
+    w += ow.rotary_mass_kg * G  # the small rotary body rides on the string (free along z)
     assert ref["edp_bottom_n"] == pytest.approx(ref["upper_top_n"] - w, rel=1e-12)
     assert ref["released_weight_n"] == pytest.approx(ref["frame_weight_n"] + w, rel=1e-12)
 

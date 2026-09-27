@@ -43,6 +43,7 @@ from .spec import (
 G = 9.80665
 FRAME = "TensionFrame"
 ROTARY = "Rotary"
+ROTARY_BODY = "RotaryBody"
 TOP_WINCH = "TopTensioner"
 
 
@@ -79,6 +80,9 @@ class OpenWaterRiserSpec(BaseModel):
     tension_frame: TensionFrame
     tensioners: TopTension
     rotary_z_m: float
+    rotary_mass_kg: float = Field(10.0, gt=0, description="small lumped body on the rotary constraint (numerical: "
+                                  "gives its free rotations inertia; without it the implicit solution is unstable)")
+    rotary_inertia_kgm2: float = Field(10.0, gt=0)
     upper: list[LineSection] = Field(..., min_length=1)
     riser: list[LineSection] = Field(..., min_length=2)
     stack: list[LineSection] = Field(..., min_length=1)
@@ -180,6 +184,13 @@ def build_open_water_generic_spec(spec: OpenWaterRiserSpec) -> dict[str, Any]:
     generic: dict[str, Any] = {
         "line_types": line_types, "vessel_types": [vt], "vessels": [b._vessel(spec, vt)], "lines": lines,
         "buoys_3d": [frame], "constraints": [rotary], "winches": [winch],
+        # a free rotation of a constraint carries no inertia of its own: a small lumped body on the rotary gives it
+        # some (without it the C2 model went unstable in calm water at time steps above 0.005 s)
+        "buoys_6d": [{"name": ROTARY_BODY, "buoy_type": "Lumped buoy", "connection": ROTARY,
+                      "initial_position": [0, 0, 0], "mass": spec.rotary_mass_kg / 1000.0, "volume": 0.0,
+                      "properties": {"InitialAttitude": [0, 0, 0], "CentreOfMass": [0, 0, 0], "Height": 1.0,
+                                     "CentreOfVolume": [0, 0, 0],
+                                     "MomentsOfInertia": [spec.rotary_inertia_kgm2 / 1000.0] * 3}}],
     }
     if links:
         generic["links"] = links
@@ -203,7 +214,8 @@ def tension_references(spec: OpenWaterRiserSpec) -> dict[str, Any]:
     top = spec.tensioners.total_vertical_tension_n - wf
     upper = effective_tension_chain(spec.upper, top_z_m=spec.tension_frame.z_m, top_tension_n=top,
                                     rho_water=rho_w, rho_contents=rho_c)
-    riser = effective_tension_chain(spec.riser, top_z_m=spec.rotary_z_m, top_tension_n=upper[-1]["te_bottom_n"],
+    w_rot = spec.rotary_mass_kg * G  # carried through the rotary (free along z) by the string
+    riser = effective_tension_chain(spec.riser, top_z_m=spec.rotary_z_m, top_tension_n=upper[-1]["te_bottom_n"] - w_rot,
                                     rho_water=rho_w, rho_contents=rho_c)
     stack = effective_tension_chain(spec.stack, top_z_m=spec.edp_interface_z_m, top_tension_n=riser[-1]["te_bottom_n"],
                                     rho_water=rho_w, rho_contents=rho_c)
@@ -281,7 +293,7 @@ def release_reference(spec: OpenWaterRiserSpec) -> dict[str, Any]:
     rho_w, rho_c = spec.environment.water_density_kg_m3, spec.contents.density_kg_m3
     ref = tension_references(spec)
     t_ar = spec.edp_release.anti_recoil_tension_n or spec.tensioners.total_vertical_tension_n
-    m = spec.tension_frame.mass_kg
+    m = spec.tension_frame.mass_kg + spec.rotary_mass_kg
     z = spec.tension_frame.z_m
     for s in (*spec.upper, *spec.riser):
         wet = submerged_length_m(z, s.length_m)
