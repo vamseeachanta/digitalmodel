@@ -55,7 +55,7 @@ def test_register_items_follow_the_riser_schema_and_label():
         assert item["source_class"] in reg["source_class_values"], item["id"]
         for ref in item["reference_ids"]:
             assert ref in ref_ids or ref in item_ids or ref.startswith("decision:"), ref
-    counts: dict[str, int] = {}
+    counts: dict[str, int] = {cls: 0 for cls in reg["source_class_values"]}
     for item in reg["design_data"]:
         counts[item["source_class"]] = counts.get(item["source_class"], 0) + 1
     assert counts == reg["summary_counts"]

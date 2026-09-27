@@ -7,7 +7,7 @@ inputs:
   case: examples/workflows/crack-fe-weldolet/input.yml
   case_sha256: d119e71ebe0afd3f5946eeb1191a727fba91662ee5b7ee3d9fbb84a331cd6341
   design_data_register: examples/workflows/crack-fe-weldolet/design-data-register.json
-  design_data_register_sha256: 66c37d53f515b93e7338d73045138dfc87838d3980d5c48502b0f7422fcb304e
+  design_data_register_sha256: 1776c1482993e7c7038fd7a8338c0f940eac6bc549e589461d122ce96ba4871a
   receipts:
     p0a_verification: 7fbe4aef7eb43b560d1695a1e77edf83c198fa1f82f34d55103cfedea12b5b3c
     p0b_crotch_a2p35: aab127665d3ac3893966532348192f4e6ce619f7c97f8bcdf3e79dc064d87319

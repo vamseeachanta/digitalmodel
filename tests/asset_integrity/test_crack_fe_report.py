@@ -718,12 +718,14 @@ def test_conclusions_state_criterion_and_disposition(html_doc):
 
 
 def test_deterministic_apart_from_date(result, register, meta, figures):
-    a = cfr.build_report(result, register, meta, issue_date=DATE, figures=figures)
-    b = cfr.build_report(result, register, meta, issue_date=DATE, figures=figures)
-    c = cfr.build_report(result, register, meta, issue_date="2027-01-02", figures=figures)
+    # issue dates chosen so they cannot collide with dates in the content (e.g. retrieval dates)
+    d1, d2 = "2031-01-01", "2031-02-02"
+    a = cfr.build_report(result, register, meta, issue_date=d1, figures=figures)
+    b = cfr.build_report(result, register, meta, issue_date=d1, figures=figures)
+    c = cfr.build_report(result, register, meta, issue_date=d2, figures=figures)
     assert a == b
     assert a != c
-    assert a.replace(DATE, "<date>") == c.replace("2027-01-02", "<date>")
+    assert a.replace(d1, "<date>") == c.replace(d2, "<date>")
 
 
 def test_build_accepts_result_object(register, meta, figures):

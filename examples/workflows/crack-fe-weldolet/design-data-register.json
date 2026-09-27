@@ -18,11 +18,11 @@
     "coordinates": "run-pipe axis = global X, branch axis = global Z, crown of the run pipe at z = R_o; rho = distance from the branch axis; v = height above the run-pipe outer surface (v < 0 inside the run-pipe wall)"
   },
   "summary_counts": {
-    "public": 12,
+    "public": 13,
     "derived": 8,
     "assumed": 11,
     "owner_decision": 7,
-    "missing_evidence": 1
+    "missing_evidence": 0
   },
   "design_data": [
     {
@@ -243,7 +243,8 @@
       "source_class": "public",
       "reference_ids": [
         "decision:J01",
-        "docs:literature/fracture-mechanics/fitness-for-service/NUREG-CR-6428-Rev1-govinfo.pdf"
+        "R07",
+        "R08"
       ],
       "note": "ASSUMED - to be confirmed: public lower bound for austenitic stainless SA/SMA (flux) weld metal at reactor temperatures, J_Ic = 40 kJ/m2 (NUREG/CR-6428 Rev.1, PDF p.54, 'can be as low as 40 kJ/m2'; lower-bound J-R Eqs. 21/22; also NUREG/CR-7185 Eq. 46), converted K = sqrt(E' J) with E' = E/(1-nu^2) = 200549 MPa (E 182.5 GPa at 250 degC, nu 0.3) -> 89.6 MPa*sqrt(m). Assumes a flux-welded root (the governing case); a confirmed unaged GTAW root would support 121.3. Air data: the same reports note environment can reduce toughness. Confirm with weld-metal and HAZ toughness tests at 250 degC.",
       "status_label": "ASSUMED - to be confirmed"
@@ -467,6 +468,22 @@
       "url": "https://www.stainless-lintels.co.uk/ldx2101_cat/316_datasheet.pdf",
       "sha256": "20bf7cbb59ffd0004cb708f74d4b7b06c440076cc292993aaf4872403dba7c4e",
       "retrieved": "2026-09-25"
+    },
+    {
+      "id": "R07",
+      "citation": "U.S. Nuclear Regulatory Commission, NUREG/CR-6428 Rev. 1 (ANL/EVS-17/3), Effects of Thermal Aging on Fracture Toughness and Charpy-Impact Strength of Stainless Steel Pipe Welds (US Government work, public domain); PDF p.54: J_Ic of unaged and aged SA/SMA welds 'can be as low as 40 kJ/m2' at reactor temperatures, file NUREG-CR-6428-Rev1-govinfo.pdf",
+      "source": "docs:literature/fracture-mechanics/fitness-for-service/SOURCES.md",
+      "url": "https://www.govinfo.gov/content/pkg/GOVPUB-Y3_N88-PURL-gpo152202/pdf/GOVPUB-Y3_N88-PURL-gpo152202.pdf",
+      "sha256": "e20d4a7e82357ffd6615c7ea73cf23c7aa7df29248b02adba09241fc46c257cf",
+      "retrieved": "2026-09-26"
+    },
+    {
+      "id": "R08",
+      "citation": "U.S. Nuclear Regulatory Commission, NUREG/CR-7185 (ANL-14/10), Effect of Thermal Aging and Neutron Irradiation on Crack Growth Rate and Fracture Toughness of Cast Stainless Steels and Austenitic Stainless Steel Welds (US Government work, public domain); Eq. 46 lower-bound J-R for aged SA/SMA welds, file NUREG-CR-7185-govinfo.pdf",
+      "source": "docs:literature/fracture-mechanics/fitness-for-service/SOURCES.md",
+      "url": "https://www.govinfo.gov/content/pkg/GOVPUB-Y3_N88-PURL-gpo59687/pdf/GOVPUB-Y3_N88-PURL-gpo59687.pdf",
+      "sha256": "5ca8f94029d46214a1df6ab8df5f81b248b6b0f37e08787ee2f6f2e6cdb4f0be",
+      "retrieved": "2026-09-26"
     }
   ]
 }
