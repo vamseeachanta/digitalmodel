@@ -354,10 +354,11 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
         env["waves"] = {"type": "airy", "height": w.height_m, "period": w.period_s, "direction": w.direction_deg}
     if spec.irregular_wave is not None:
         w = spec.irregular_wave
-        env["waves"] = {"type": "jonswap", "height": w.hs_m, "period": w.tp_s, "direction": w.direction_deg,
-                        "gamma": w.gamma}
+        env["waves"] = {"type": "jonswap", "height": w.hs_m, "period": w.tp_s, "direction": w.direction_deg}
         # the environment builder takes the raw train as its base layer (key order kept) and, with WaveTp
-        # present and no WaveTz, writes the period as Tp; the seed is user-specified so each seed is reproducible
+        # present and no WaveTz, writes the period as Tp; gamma is carried by the raw train only (the generator
+        # schema rejects gamma = 1, the Pierson-Moskowitz limit, and keeps a raw WaveGamma it was not given);
+        # the seed is user-specified so each seed is reproducible
         env["raw_properties"] = {"UserSpecifiedRandomWaveSeeds": "Yes", "WaveTrains": [{
             "Name": "Wave1", "WaveType": "JONSWAP", "WaveDirection": w.direction_deg, "WaveOrigin": [0, 0],
             "WaveTimeOrigin": 0, "WaveNumberOfSpectralDirections": 1,

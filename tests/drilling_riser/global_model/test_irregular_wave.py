@@ -36,6 +36,15 @@ def test_irregular_wave_emits_a_jonswap_train_with_tp_gamma_and_seed():
     assert env["waves"]["type"] == "jonswap"
 
 
+def test_gamma_one_pierson_moskowitz_limit_builds(tmp_path: Path):
+    """gamma = 1 (the lower end of the 2MET winter-storm range) must reach the text model unchanged."""
+    from digitalmodel.drilling_riser.global_model.build import write_model
+
+    master = write_model(_with(irregular_wave={**IRR, "gamma": 1.0}), tmp_path) / "master.yml"
+    text = "".join(p.read_text(encoding="utf-8") for p in master.parent.rglob("*.yml"))
+    assert "WaveGamma: 1.0" in text or "WaveGamma: 1\n" in text
+
+
 def test_regular_and_irregular_waves_are_exclusive():
     with pytest.raises(ValidationError):
         _with(irregular_wave=IRR, regular_wave={"height_m": 3.0, "period_s": 9.0})
