@@ -38,9 +38,6 @@ DESIGN_CATALOG = (
 )
 PAGE = REPO / "docs" / "domains" / "asset-integrity" / "ffs-offering-catalog.md"
 REGISTRY = REPO / "docs" / "registry" / "workflows.yaml"
-DECKHAND_PATHS = (
-    REPO.parent / "deckhand" / "config" / "deckhand" / "routing" / "paths.yaml"
-)
 
 STATUSES = oc.STATUSES
 TIERS = oc.TIERS
@@ -82,9 +79,16 @@ def test_engine_entries_are_consistent(cat, registry_ids):
     assert oc.check_engines(cat, registry_ids=registry_ids, import_modules=True) == []
 
 
-@pytest.mark.skipif(not DECKHAND_PATHS.exists(), reason="deckhand checkout not present")
-def test_routes_exist_in_deckhand(cat):
-    assert oc.check_routes(cat, DECKHAND_PATHS.read_text(encoding="utf-8")) == []
+def test_live_and_workflow_engines_need_a_registered_workflow_with_example(registry_ids):
+    """``live``/``workflow`` mean a registered durable workflow with a committed example; no route field."""
+    ok = {"module": "asset_integrity.corroded_pipe", "status": "workflow", "workflow": "ffs-metal-loss"}
+    kw = dict(registry_ids=registry_ids, import_modules=False, repo=REPO)
+    assert oc._check_engine("ok", ok, **kw) == []
+    assert oc._check_engine("no-wf", {**ok, "workflow": None}, **kw)
+    assert oc._check_engine("unknown-wf", {**ok, "workflow": "no-such-workflow"}, **kw)
+    assert oc._check_engine("route", {**ok, "route": True}, **kw)
+    live = {**ok, "status": "live"}
+    assert oc._check_engine("live-no-record", live, **kw)  # live also needs a validation record
 
 
 def test_defect_rows_resolve(cat):

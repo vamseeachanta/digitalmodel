@@ -56,6 +56,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from digitalmodel.cathodic_protection.iccp_design import (
     AnodeBedType,
     AnodeMaterial,
+    IccpEnvironment,
     RectifierSizingInput,
     anode_bed_design,
     cable_sizing,
@@ -125,16 +126,19 @@ CURRENT_DENSITIES: List[Dict[str, Any]] = [
 ]
 
 # Anode material -> representative anode bed type and physical anode geometry.
+# All three are modelled as vertical arrays: iccp_design has no cited formula
+# for distributed beds, and deep-well / horizontal beds need backfill-column
+# geometry this sweep does not carry (issue #2247). Spacing is a demo input.
 ANODE_OPTIONS: List[Dict[str, Any]] = [
     {"id": "AN-mmo", "material": AnodeMaterial.MIXED_METAL_OXIDE,
-     "bed_type": AnodeBedType.DISTRIBUTED, "label": "MMO (distributed)",
-     "anode_length_m": 1.0, "anode_diameter_m": 0.025},
+     "bed_type": AnodeBedType.SHALLOW_VERTICAL, "label": "MMO (vertical array)",
+     "anode_length_m": 1.0, "anode_diameter_m": 0.025, "anode_spacing_m": 5.0},
     {"id": "AN-fesi", "material": AnodeMaterial.HIGH_SILICON_CAST_IRON,
-     "bed_type": AnodeBedType.DEEP_WELL, "label": "Si-Fe (deep well)",
-     "anode_length_m": 1.5, "anode_diameter_m": 0.075},
+     "bed_type": AnodeBedType.SHALLOW_VERTICAL, "label": "Si-Fe (vertical array)",
+     "anode_length_m": 1.5, "anode_diameter_m": 0.075, "anode_spacing_m": 5.0},
     {"id": "AN-pt", "material": AnodeMaterial.PLATINIZED_TITANIUM,
-     "bed_type": AnodeBedType.SHALLOW_HORIZONTAL, "label": "Pt-Ti (shallow)",
-     "anode_length_m": 1.2, "anode_diameter_m": 0.025},
+     "bed_type": AnodeBedType.SHALLOW_VERTICAL, "label": "Pt-Ti (vertical array)",
+     "anode_length_m": 1.2, "anode_diameter_m": 0.025, "anode_spacing_m": 5.0},
 ]
 
 # Cable-run lengths (one-way, anode bed -> rectifier) [m].
@@ -178,6 +182,8 @@ def run_single_case(
         anode_material=anode["material"],
         anode_length_m=anode["anode_length_m"],
         anode_diameter_m=anode["anode_diameter_m"],
+        environment=IccpEnvironment(structure["environment"]),
+        anode_spacing_m=anode["anode_spacing_m"],
     )
 
     # 2) Cable sizing (cross-section + cable resistance for V-drop).
@@ -212,9 +218,9 @@ def run_single_case(
     else:
         status = "OK"
 
-    # The mass-based anode life model is quarantined (#2209): it uses a
-    # cast-iron density for every material. Until re-modelled, the demo
-    # reports the life as unavailable rather than passing a non-physical number.
+    # Anode life is provisional literature data behind experimental=True
+    # (#2209, #2247); the demo reports it as unavailable rather than passing
+    # an unverified number.
     life_ok = (
         bed.estimated_life_years is not None
         and bed.estimated_life_years >= DESIGN_LIFE_YEARS
@@ -524,11 +530,11 @@ def build_report(
     ({CURRENT_DENSITIES[2]['j_a_per_m2']:g} A/m&sup2;), a DNV-RP-B401 style range.</p>
 
     <h3>Step 2: Anode Ground-Bed Design (<code>anode_bed_design</code>)</h3>
-    <p>Sizes the number of anodes from the per-anode current capacity and the
-    consumption/life constraint, then computes the bed resistance via the Dwight
-    single-anode equation with a parallel/interference adjustment (deep-well beds
-    get a depth resistance reduction). Anode life is checked against the
-    {DESIGN_LIFE_YEARS:g}-year design life.</p>
+    <p>Sizes the number of anodes from the per-anode current capacity (provisional
+    per-material current-density limits from open literature), then computes the
+    bed resistance of the vertical array with the multi-anode equation
+    &rho;/(2&pi;NL)[ln(8L/d) &minus; 1 + (2L/S) ln(0.656N)] (DoD TSEWG TP-16, 2017).
+    Anode life is provisional and not reported (experimental only, issue #2247).</p>
 
     <h3>Step 3: Cable Sizing (<code>cable_sizing</code>)</h3>
     <p>Selects the minimum standard copper cross-section so the round-trip
@@ -608,8 +614,8 @@ def build_report(
         "(rectifier_sizing, anode_bed_design, cable_sizing) — the demo is a sweep/report layer",
         "Total current demand = surface area x design current density; demand profiles "
         "(0.02 / 0.06 / 0.11 A/m2) bracket well-coated mean to bare-steel final per DNV-RP-B401",
-        f"Anode design life = {DESIGN_LIFE_YEARS:g} years; bed resistance via the Dwight equation "
-        "with a parallel/interference factor (deep-well beds get a depth reduction)",
+        f"Anode design life = {DESIGN_LIFE_YEARS:g} years (life not reported: provisional, #2247); "
+        "bed resistance via the DoD TSEWG TP-16 multi-anode equation, 5 m spacing",
         f"Cable sized for a max round-trip voltage drop of {MAX_VOLTAGE_DROP_V:g} V over the "
         "one-way run length, copper resistivity at 20 C",
         f"Rectifier driving voltage uses a {SAFETY_FACTOR:g} safety factor and a "

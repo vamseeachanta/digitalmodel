@@ -2,6 +2,16 @@
 
 Extends API RP 1632 galvanic anode calculations to impressed current systems,
 sizing ground beds and rectifiers for buried fuel supply and return piping.
+
+Protection verification
+-----------------------
+This module sizes the system; it does not predict whether the pipe is
+protected. The former ``check_protection`` (``-0.55 - I*R`` compared with
+-0.85 V CSE) was not a polarisation model and was deleted (issue #2247,
+blocker B11). Verify protection from measured, IR-free potentials with
+:mod:`digitalmodel.cathodic_protection.cp_survey`
+(``check_potential_criteria``, ``analyze_cis_survey``), i.e. by survey
+against the NACE SP0169 section 6 criteria.
 """
 
 from __future__ import annotations
@@ -10,10 +20,8 @@ import math
 from dataclasses import dataclass
 from enum import Enum
 
-from digitalmodel.cathodic_protection._experimental import require_experimental
 from digitalmodel.cathodic_protection.api_rp_1632 import (
     CURRENT_DENSITY_BARE,
-    PROTECTION_POTENTIAL_CSE,
     anode_resistance_vertical_rod,
 )
 
@@ -169,62 +177,3 @@ def design_rectifier(
         dc_current_a=total_current_a,
         power_w=power,
     )
-
-
-def check_protection(
-    rectifier: RectifierOutput,
-    ground_bed: ImpressedCurrentGroundBed,
-    structure_resistance_ohm: float,
-    *,
-    experimental: bool = False,
-) -> dict:
-    """Evaluate whether the impressed current system meets -0.85 V CSE criterion.
-
-    Estimates pipe-to-soil potential from the IR drop across the structure
-    resistance and compares against the API RP 1632 protection criterion.
-
-    Experimental
-    ------------
-    Quarantined (issue #2209): ``-0.55 - I*R`` is not a physical model of
-    polarisation -- it makes any rectifier current look protective (a 10 A,
-    0.5 ohm case "passes" at -5.55 V CSE, deep in overprotection). A
-    re-model must follow NACE SP0169 section 6 (protection criteria on
-    IR-free / instant-off potentials). Calling without ``experimental=True``
-    raises
-    :class:`~digitalmodel.cathodic_protection._experimental.ExperimentalModelError`.
-
-    Parameters
-    ----------
-    rectifier : RectifierOutput
-        Sized rectifier.
-    ground_bed : ImpressedCurrentGroundBed
-        Ground-bed design (unused by the current model; kept for API shape).
-    structure_resistance_ohm : float
-        Structure-to-electrolyte resistance [ohm].
-    experimental : bool
-        Acknowledge the quarantine and run the model anyway.
-
-    Raises
-    ------
-    ExperimentalModelError
-        If ``experimental`` is false.
-    """
-    require_experimental(
-        experimental,
-        model="fuel_system_cp.check_protection",
-        reason="-0.55 - I*R is not a polarisation model and passes at -5.55 V CSE",
-        standard="NACE SP0169 section 6",
-    )
-    ir_drop = rectifier.dc_current_a * structure_resistance_ohm
-    # More negative potential = more protected; natural potential ~-0.55 V
-    natural_potential = -0.55
-    estimated_potential = natural_potential - ir_drop
-
-    is_protected = estimated_potential <= PROTECTION_POTENTIAL_CSE
-
-    return {
-        "pass": is_protected,
-        "potential_v_cse": estimated_potential,
-        "criterion_v_cse": PROTECTION_POTENTIAL_CSE,
-        "ir_drop_v": ir_drop,
-    }

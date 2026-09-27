@@ -163,6 +163,24 @@ button.secondary{background:white;color:#086d70}
 </ul>
 <p>One numerical consequence to be aware of: with the depleted-anode final check of B401 Sec. 7.8 now implemented (#2217, #2220), the retired jacket case's recommended count moved from 135 to 173 anodes. The demo geometry was never adequate; the count only became visible once the check existed.</p>
 
+<h3>Owner decisions, second round (27 September 2026, interactive review)</h3>
+<table>
+<thead><tr><th>Decision</th><th>Owner answer</th><th>Outcome</th></tr></thead>
+<tbody>
+<tr><td>D1 revisited: domain status</td><td>Client use with engineer-of-record check on the B401 offshore and F103 bracelet routes</td><td>#2246 merged; every route status and every CP report carries <code>use_status</code>. ABS routes: legacy, uncited, independent check required. Benchmark #1852 on the first real job.</td></tr>
+<tr><td>F103 default edition</td><td>2019 (latest on file)</td><td>#2246 merged. Pipeline fixture 218 kg / 9 bracelets &rarr; 846 kg / 34; <code>edition="2010"</code> reproduces earlier results.</td></tr>
+<tr><td>F103 route key</td><td>Neutral <code>DNV_RP_F103</code>; old key kept as alias</td><td>#2250 merged; <code>DNV_RP_F103_2010</code> warns and pins edition 2010.</td></tr>
+<tr><td>D3 source data</td><td>Search ace-linux-1, then online</td><td>B401 2017/2021 and F103 2019 PDFs found and copied to the standards store; #2228 and llm-wiki #921 merged. B401 2021 is dated May 2021.</td></tr>
+<tr><td>D9 scope</td><td>Option B</td><td>#2219, #2237, #2238 merged; <code>report:</code> block writes HTML/PDF.</td></tr>
+<tr><td>D8 redaction</td><td>Do it now</td><td>#2236 merged.</td></tr>
+<tr><td>Quarantined models</td><td>Re-model from open literature, provisional, experimental</td><td>#2248 (stray current) and #2251 (galvanic, ICCP life, fuel-system check removed) merged; #2247 closed. Standards not on file: EN 50162, ISO 18086, ISO 15589-1, NACE SP0169/SP0572.</td></tr>
+<tr><td>Galvanic reverse-reaction term</td><td>Keep, flag as assumption</td><td>Docstring, result <code>model_assumptions</code>, first on the checklist.</td></tr>
+<tr><td>Sourced ranges</td><td>Conservative end, store both ends</td><td>e.g. HSCI current-density limit 10 A/m&sup2; (range 10&ndash;50); utilisation 0.80.</td></tr>
+<tr><td>EN 50162 middle band</td><td>Accept 1.5&middot;&rho; mV provisionally</td><td>First on the stray-current checklist.</td></tr>
+<tr><td>Merge authority</td><td>Claude merges when CI green, within recorded decisions</td><td>Applied; epic #2206 closed.</td></tr>
+</tbody>
+<caption>Table 6. Second-round owner decisions and their outcomes; all listed pull requests are merged to main.</caption>
+</table>
 <h2>6. Next discriminating checks for the owner</h2>
 <p>Two of the three PDF-dependent items were settled by the wiki CSVs during #2207: F103 Table 5-1 bands are ≤50 / 50–80 / 80–120 / >120 °C and the FBE constants are a = 0.010, b = 0.0003 (the reviewer's recollection of 0.030 was wrong). The B401 2021 edition date remains unconfirmed; <code>_edition.py</code> now labels that edition without a month. The blocking gates have run in CI on the pull requests (ruff, mypy and the two-root CP test gate are green on #2216 and #2219). What remains for the owner is source access: the DNV-RP-B401 2017 and 2021 and DNV-RP-F103 2016 PDFs, or wiki pages with matching <code>revision</code> frontmatter, unblock #2208 and turn the "inherited-unverified" provenance flags into verified tables. None of this is started by this page.</p>
 

@@ -7,7 +7,7 @@ fail-closed guarantee call ``validate_citation(result.citation)``.
 
 Editions and their sources (issue #2208):
 
-``"2010"`` (default, so existing results do not change)
+``"2010"`` (pass explicitly to reproduce results from before the 2019 default)
     DNV-RP-F103 October 2010. Wiki page ``standards/dnv-rp-f103.md``
     (revision ``"2010"``), dataset CSVs ``datasets/dnv-rp-f103/2010/``:
     Table 5-1 (design mean current density, four fluid-temperature bands),
@@ -16,7 +16,7 @@ Editions and their sources (issue #2208):
     the dicts hold the printed numbers and the lookups divide by 100. Anode
     design values and the bracelet utilisation factor defer to DNV-RP-B401
     (2010) Tables 10-6 and 10-8.
-``"2019"`` (alias ``"2021"`` for the May 2021 amended print, same tables;
+``"2019"`` (default; alias ``"2021"`` for the May 2021 amended print, same tables;
 ``"2016"`` also maps here with a warning since the 2016 print is not on file)
     DNVGL-RP-F103 September 2019, a republication of the July 2016 edition.
     Wiki page ``standards/dnv-rp-f103-2019.md`` (revision ``"2019-09"``).
@@ -631,7 +631,7 @@ def edition_provenance(edition: F103Edition | str | None = None) -> str:
     ----------
     edition : F103Edition or str or None
         Edition token or alias accepted by ``normalize_f103_edition``;
-        ``None`` warns and defaults to 2010.
+        ``None`` warns and defaults to 2019.
 
     Returns
     -------
@@ -677,7 +677,7 @@ def fluid_temperature_band(
     fluid_temp_c : float
         Internal fluid temperature [°C].
     edition : F103Edition, optional
-        F103 edition token; ``None`` warns and defaults to 2010.
+        F103 edition token; ``None`` warns and defaults to 2019.
 
     Returns
     -------
@@ -705,7 +705,7 @@ def mean_current_density(
     fluid_temp_c : float
         Internal fluid temperature [°C] (see ``fluid_temperature_band``).
     edition : F103Edition, optional
-        F103 edition token; ``None`` warns and defaults to 2010.
+        F103 edition token; ``None`` warns and defaults to 2019.
 
     Returns
     -------
@@ -775,7 +775,7 @@ def linepipe_coating_row(
     coating : LinepipeCoating
         Linepipe coating system.
     edition : F103Edition, optional
-        F103 edition token; ``None`` warns and defaults to 2010.
+        F103 edition token; ``None`` warns and defaults to 2019.
     concrete_weight_coating : bool, optional
         Whether a concrete weight coating is applied over the linepipe
         coating. Selects the row where the 2019 Table A-1 splits (FBE:
@@ -818,7 +818,7 @@ def linepipe_coating_constants(
     coating : LinepipeCoating
         Linepipe coating system.
     edition : F103Edition, optional
-        F103 edition token; ``None`` warns and defaults to 2010.
+        F103 edition token; ``None`` warns and defaults to 2019.
     concrete_weight_coating : bool, optional
         Concrete weight coating flag; see ``linepipe_coating_row``. Default
         ``False`` selects the larger ``b`` where the 2019 table splits.
@@ -898,7 +898,7 @@ def field_joint_coating_constants(
         Field-joint coating system (DNV-RP-F102 numbering of the edition;
         see ``field_joint_coating_row`` for the accepted crosswalk).
     edition : F103Edition, optional
-        F103 edition token; ``None`` warns and defaults to 2010.
+        F103 edition token; ``None`` warns and defaults to 2019.
 
     Returns
     -------
@@ -935,7 +935,7 @@ def bracelet_utilisation_factor(edition: F103Edition | None = None) -> CitedValu
     Parameters
     ----------
     edition : F103Edition, optional
-        F103 edition token; ``None`` warns and defaults to 2010.
+        F103 edition token; ``None`` warns and defaults to 2019.
 
     Returns
     -------
@@ -1003,7 +1003,7 @@ def anode_capacity(
     environment : AnodeEnvironment
         Seawater (non-buried) or sediment (buried) exposure.
     edition : F103Edition, optional
-        F103 edition token; ``None`` warns and defaults to 2010.
+        F103 edition token; ``None`` warns and defaults to 2019.
     anode_surface_temperature_c : float, optional
         Anode surface temperature [°C], default 30. F103 (2019) [6.4.4]: the
         ambient seawater temperature for non-buried anodes; for buried

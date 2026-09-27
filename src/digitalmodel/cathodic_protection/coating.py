@@ -41,7 +41,6 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from digitalmodel.cathodic_protection import _kernels as kernel
 from digitalmodel.cathodic_protection._edition import (
     DEFAULT_EDITION,
-    DEFAULT_F103_EDITION,
     Edition,
     F103Edition,
     f103_standard_for_edition,
@@ -154,7 +153,7 @@ def coating_constants(
         defaults to 2021.
     f103_edition : F103Edition, optional
         DNV-RP-F103 edition token for linepipe coatings; ``None`` warns and
-        defaults to 2010.
+        defaults to 2019.
     concrete_weight_coating : bool, optional
         Concrete weight coating over a linepipe coating; selects the row
         where the F103 (2019) Table A-1 splits (FBE). Ignored by the 2010
@@ -199,8 +198,17 @@ def coating_constants(
     )
 
 
+_SNAPSHOT_F103_EDITION: Final[F103Edition] = "2010"
+
+
 def _snapshot_constants() -> dict[CoatingCategory, tuple[float, float]]:
-    """(a, b) per category at 0-30 m depth, for backward-compatible callers."""
+    """(a, b) per category at 0-30 m depth, for backward-compatible callers.
+
+    Linepipe rows stay pinned to DNV-RP-F103 (2010) Table A.1: this snapshot
+    predates the 2019 default (2026-09-27) and the 2019 Table A-1 cannot fill
+    it (no coal tar enamel row; FBE splits on concrete weight coating). Use
+    ``coating_constants(..., f103_edition=...)`` for edition-aware values.
+    """
     snapshot: dict[CoatingCategory, tuple[float, float]] = {}
     for cat in CoatingCategory:
         if cat in _UNCITED_CATEGORIES:
@@ -209,7 +217,7 @@ def _snapshot_constants() -> dict[CoatingCategory, tuple[float, float]]:
             cat,
             depth_m=0.0,
             edition=DEFAULT_EDITION,
-            f103_edition=DEFAULT_F103_EDITION,
+            f103_edition=_SNAPSHOT_F103_EDITION,
         )
         snapshot[cat] = (c.a, c.b)
     return snapshot
@@ -351,7 +359,7 @@ def coating_breakdown_factors(
         DNV-RP-B401 edition token; ``None`` warns and defaults to 2021.
     f103_edition : F103Edition, optional
         DNV-RP-F103 edition token for linepipe coatings; ``None`` warns and
-        defaults to 2010.
+        defaults to 2019.
     concrete_weight_coating : bool, optional
         Concrete weight coating flag for the F103 (2019) Table A-1 split
         rows; see ``coating_constants``.
@@ -417,7 +425,7 @@ def coating_life_estimate(
     edition : Edition, optional
         DNV-RP-B401 edition token; ``None`` warns and defaults to 2021.
     f103_edition : F103Edition, optional
-        DNV-RP-F103 edition token; ``None`` warns and defaults to 2010.
+        DNV-RP-F103 edition token; ``None`` warns and defaults to 2019.
 
     Returns
     -------
@@ -471,7 +479,7 @@ def effective_bare_area_coated(
     edition : Edition, optional
         DNV-RP-B401 edition token; ``None`` warns and defaults to 2021.
     f103_edition : F103Edition, optional
-        DNV-RP-F103 edition token; ``None`` warns and defaults to 2010.
+        DNV-RP-F103 edition token; ``None`` warns and defaults to 2019.
     concrete_weight_coating : bool, optional
         Concrete weight coating flag for the F103 (2019) Table A-1 split
         rows; see ``coating_constants``.

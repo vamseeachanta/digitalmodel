@@ -12,9 +12,17 @@ It dispatches on ``cfg["inputs"]["calculation_type"]``:
     and the full B401 Sec. 7 loop ``N = max(N_mass, N_initial, N_final)`` with
     the Table 10-7 resistance from
     :func:`~digitalmodel.cathodic_protection.anode_sizing.calculate_anode_resistance`.
-``DNV_RP_F103_2010``
+``DNV_RP_F103``
     :func:`~digitalmodel.cathodic_protection.dnv_rp_f103.design_bracelet_cp`
-    mapped from the pipeline YAML schema.
+    mapped from the pipeline YAML schema, for the edition given in
+    ``inputs.design_data.edition`` or, when absent, the DNV-RP-F103 default
+    edition (``"2019"`` since 2026-09-27).
+``DNV_RP_F103_2010``
+    Deprecated alias of ``DNV_RP_F103`` pinned to edition ``"2010"`` (owner
+    decision 2026-09-27), so YAMLs written before the default moved to 2019
+    reproduce their earlier results exactly. It emits a
+    :class:`DeprecationWarning` naming ``DNV_RP_F103``; a
+    ``design_data.edition`` other than 2010 raises :class:`ValueError`.
 ``ABS_gn_ships_2018`` / ``ABS_gn_offshore_2018``
     The legacy implementation (no new-package equivalent), wrapped so anode
     counts are integers (``ceil``) and a ``status`` block is derived from the
@@ -24,7 +32,16 @@ It dispatches on ``cfg["inputs"]["calculation_type"]``:
 
 Every route writes ``cfg["results"]["status"]``::
 
-    {"result": "PASS" | "FAIL", "governing_case": ..., "reason": ..., "checks": {...}}
+    {"result": "PASS" | "FAIL", "governing_case": ..., "reason": ..., "checks": {...},
+     "use_status": ...}
+
+``use_status`` records the owner's approval level for the route (decision
+2026-09-27, epic #2206; see ``docs/domains/cathodic_protection/_index.md``,
+"Use status"): ``"client-use-with-eor-check"`` for ``DNV_RP_B401_offshore``
+and ``DNV_RP_F103`` / ``DNV_RP_F103_2010`` (client use subject to an
+engineer-of-record check of every deliverable); ``"legacy-uncited-independent-check-required"`` for
+the ABS routes and the ``*_legacy`` keys (legacy solver, uncited tables, not
+for client use without an independent check).
 
 A ``FAIL`` is logged as a warning through the engine's logger (loguru) and
 never raises: the run completes so the report can show the failing design.
@@ -92,7 +109,10 @@ from digitalmodel.cathodic_protection.marine_structure_cp import (
 from digitalmodel.citations import CitedValue
 
 KEY_B401: Final = "DNV_RP_B401_offshore"
-KEY_F103: Final = "DNV_RP_F103_2010"
+KEY_F103: Final = "DNV_RP_F103"
+# Deprecated alias of KEY_F103 pinned to DNV-RP-F103 2010 (owner decision 2026-09-27).
+KEY_F103_2010: Final = "DNV_RP_F103_2010"
+F103_2010_PINNED_EDITION: Final[F103Edition] = "2010"
 KEY_ABS_SHIPS: Final = "ABS_gn_ships_2018"
 KEY_ABS_OFFSHORE: Final = "ABS_gn_offshore_2018"
 KEY_B401_LEGACY: Final = "DNV_RP_B401_offshore_legacy"
@@ -101,14 +121,36 @@ KEY_F103_LEGACY: Final = "DNV_RP_F103_2010_legacy"
 CALCULATION_TYPES: Final[tuple[str, ...]] = (
     KEY_B401,
     KEY_F103,
+    KEY_F103_2010,
     KEY_ABS_SHIPS,
     KEY_ABS_OFFSHORE,
     KEY_B401_LEGACY,
     KEY_F103_LEGACY,
 )
 
+# Accepted but deprecated keys (each emits a DeprecationWarning).
+DEPRECATED_CALCULATION_TYPES: Final[tuple[str, ...]] = (
+    KEY_F103_2010,
+    KEY_B401_LEGACY,
+    KEY_F103_LEGACY,
+)
+
 STATUS_PASS: Final = "PASS"
 STATUS_FAIL: Final = "FAIL"
+
+# Owner decision 2026-09-27 (epic #2206): approval level per route, carried
+# into every deliverable through ``results["status"]["use_status"]``.
+USE_STATUS_CLIENT_EOR: Final = "client-use-with-eor-check"
+USE_STATUS_LEGACY_UNCITED: Final = "legacy-uncited-independent-check-required"
+USE_STATUS_BY_KEY: Final[dict[str, str]] = {
+    KEY_B401: USE_STATUS_CLIENT_EOR,
+    KEY_F103: USE_STATUS_CLIENT_EOR,
+    KEY_F103_2010: USE_STATUS_CLIENT_EOR,
+    KEY_ABS_SHIPS: USE_STATUS_LEGACY_UNCITED,
+    KEY_ABS_OFFSHORE: USE_STATUS_LEGACY_UNCITED,
+    KEY_B401_LEGACY: USE_STATUS_LEGACY_UNCITED,
+    KEY_F103_LEGACY: USE_STATUS_LEGACY_UNCITED,
+}
 
 # YAML zone names -> exposure zone of the new package. "buried" is the
 # legacy spelling of the mudline zone.
@@ -217,14 +259,15 @@ def _set_status(
     checks: Mapping[str, Any],
 ) -> None:
     """Write ``results["status"]`` and warn through the engine logger on FAIL."""
+    calc = _section(cfg, "inputs").get("calculation_type")
     status = {
         "result": STATUS_PASS if passed else STATUS_FAIL,
         "governing_case": governing,
         "reason": reason,
         "checks": dict(checks),
+        "use_status": USE_STATUS_BY_KEY.get(str(calc), USE_STATUS_LEGACY_UNCITED),
     }
     results["status"] = status
-    calc = _section(cfg, "inputs").get("calculation_type")
     if passed:
         logger.info(f"cathodic_protection [{calc}] status PASS ({governing}): {reason}")
     else:
@@ -595,7 +638,9 @@ def _run_b401(cfg: dict[str, Any]) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def _f103_input(cfg: dict[str, Any]) -> tuple[BraceletDesignInput, F103Edition, dict[str, str]]:
+def _f103_input(
+    cfg: dict[str, Any], pinned_edition: F103Edition | None = None
+) -> tuple[BraceletDesignInput, F103Edition, dict[str, str]]:
     inputs = _section(cfg, "inputs")
     design_data = _section(inputs, "design_data")
     pipeline = _section(inputs, "pipeline")
@@ -603,9 +648,19 @@ def _f103_input(cfg: dict[str, Any]) -> tuple[BraceletDesignInput, F103Edition, 
     anode = _section(inputs, "anode")
     design = _section(inputs, "design")
 
-    edition = normalize_f103_edition(
-        str(design_data.get("edition", DEFAULT_F103_EDITION)), stacklevel=3
-    )
+    if pinned_edition is None:
+        edition = normalize_f103_edition(
+            str(design_data.get("edition", DEFAULT_F103_EDITION)), stacklevel=3
+        )
+    else:
+        edition = pinned_edition
+        requested = design_data.get("edition")
+        if requested is not None and normalize_f103_edition(str(requested)) != pinned_edition:
+            raise ValueError(
+                f"calculation_type {KEY_F103_2010!r} pins DNV-RP-F103 edition "
+                f"{pinned_edition!r} but inputs.design_data.edition is {requested!r}; "
+                f"use calculation_type {KEY_F103!r} to run another edition"
+            )
     coating_name = str(pipeline.get("coating_type", "FBE"))
     exposure_name = str(pipeline.get("burial_condition", "non_buried"))
     material_name = str(anode.get("material", "aluminium"))
@@ -679,7 +734,9 @@ def _f103_results(
             "burial_condition": names["burial_condition"],
             "exposure": inp.exposure.value,
             "internal_fluid_temperature_C": inp.fluid_temperature_c,
-            "temperature_band": fluid_temperature_band(inp.fluid_temperature_c).value,
+            "temperature_band": fluid_temperature_band(
+                inp.fluid_temperature_c, edition=res.edition_used
+            ).value,
         },
         "current_demand_A": {
             "mean_current_demand_A": round(res.mean_current_demand_A, 4),
@@ -716,8 +773,8 @@ def _f103_results(
     }
 
 
-def _run_f103(cfg: dict[str, Any]) -> dict[str, Any]:
-    inp, edition, names = _f103_input(cfg)
+def _run_f103(cfg: dict[str, Any], pinned_edition: F103Edition | None = None) -> dict[str, Any]:
+    inp, edition, names = _f103_input(cfg, pinned_edition)
     anode = _section(cfg, "inputs", "anode")
     res = design_bracelet_cp(inp, edition=edition)
     u_in = anode.get("utilization_factor")
@@ -874,6 +931,11 @@ def _run_legacy(cfg: dict[str, Any], key: str) -> dict[str, Any]:
         solver.DNV_RP_B401_offshore_platform(cfg)
     else:
         solver.DNV_RP_F103_2010(cfg)
+    # The legacy solvers derive no PASS/FAIL verdict; the status block carries
+    # only the use status so the deliverable still states it.
+    results = cfg.setdefault("results", {})
+    status = results.setdefault("status", {})
+    status["use_status"] = USE_STATUS_BY_KEY[key]
     return cfg
 
 
@@ -896,12 +958,15 @@ def run_cathodic_protection(cfg: dict[str, Any]) -> dict[str, Any]:
     dict
         The same ``cfg`` with ``cfg["results"]`` (and, for the ABS ships
         route, ``cfg["cathodic_protection"]``) populated, always carrying a
-        ``status`` block for the new and ABS routes.
+        ``status`` block with ``use_status``; the new and ABS routes add the
+        PASS/FAIL verdict (``result``, ``governing_case``, ``reason``,
+        ``checks``), the ``*_legacy`` keys carry ``use_status`` only.
 
     Raises
     ------
     ValueError
-        Unknown ``calculation_type`` or invalid inputs.
+        Unknown ``calculation_type``, invalid inputs, or ``DNV_RP_F103_2010``
+        with a ``design_data.edition`` other than 2010.
     """
     inputs = _section(cfg, "inputs")
     key = inputs.get("calculation_type")
@@ -909,27 +974,43 @@ def run_cathodic_protection(cfg: dict[str, Any]) -> dict[str, Any]:
         return _run_b401(cfg)
     if key == KEY_F103:
         return _run_f103(cfg)
+    if key == KEY_F103_2010:
+        warnings.warn(
+            f"calculation_type {KEY_F103_2010!r} is deprecated; it pins DNV-RP-F103 "
+            f"edition {F103_2010_PINNED_EDITION!r}. Use {KEY_F103!r} with "
+            f"inputs.design_data.edition (default {DEFAULT_F103_EDITION!r}).",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return _run_f103(cfg, F103_2010_PINNED_EDITION)
     if key == KEY_ABS_SHIPS:
         return _run_abs_ships(cfg)
     if key == KEY_ABS_OFFSHORE:
         return _run_abs_offshore(cfg)
     if key in (KEY_B401_LEGACY, KEY_F103_LEGACY):
         return _run_legacy(cfg, str(key))
+    current = [k for k in CALCULATION_TYPES if k not in DEPRECATED_CALCULATION_TYPES]
     raise ValueError(
         f"inputs.calculation_type {key!r} is not implemented; accepted keys: "
-        f"{list(CALCULATION_TYPES)}"
+        f"{current}; deprecated keys (still accepted): {list(DEPRECATED_CALCULATION_TYPES)}"
     )
 
 
 __all__ = [
     "CALCULATION_TYPES",
+    "DEPRECATED_CALCULATION_TYPES",
     "KEY_ABS_OFFSHORE",
     "KEY_ABS_SHIPS",
     "KEY_B401",
     "KEY_B401_LEGACY",
+    "F103_2010_PINNED_EDITION",
     "KEY_F103",
+    "KEY_F103_2010",
     "KEY_F103_LEGACY",
     "STATUS_FAIL",
     "STATUS_PASS",
+    "USE_STATUS_BY_KEY",
+    "USE_STATUS_CLIENT_EOR",
+    "USE_STATUS_LEGACY_UNCITED",
     "run_cathodic_protection",
 ]

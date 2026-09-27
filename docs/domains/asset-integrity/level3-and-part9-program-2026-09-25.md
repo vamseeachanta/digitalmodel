@@ -31,9 +31,9 @@ open-source chain.
 | Layer | Have | Do not have |
 |---|---|---|
 | Knowledge (llm-wiki) | API 579-1 2007 full text incl. Annex B1 (stress analysis), C (K solutions), D (reference stress), E (residual stress), F (material); API 650 2007 full text; BS 7910:2013 full text; 606 extracted API 579 tables | API 653 clause pointers (page is metadata-only, 3rd ed 2001 copy); 2007→2016/2021 annex crosswalk; verification status of the Annex C/E tables |
-| Code (digitalmodel) | Level 1/2 metal loss (Parts 4/5/6), Part 12 dents, B31G/ModB31G/RSTRENG, DNV-RP-F101, Level 2 FAD tracer (`crack_fad.py`), legacy BS 7910 Annex M/P module, Paris-law growth, riser-joint Level 1 envelopes, Level 3 handoff, `ffs_decision`/`ffs_report`, two registered API 579 pipe workflows with Deckhand routes | API 579 Level 2 curve + PSFs, Part 9 Level 1 curves, Annex C cylinder K, Annex E residual, Annex F material model, growth threshold/LBB, any storage-tank model, API 653 Annex B, nonlinear/shell/buckling CalculiX, Level 3 acceptance checks |
+| Code (digitalmodel) | Level 1/2 metal loss (Parts 4/5/6), Part 12 dents, B31G/ModB31G/RSTRENG, DNV-RP-F101, Level 2 FAD tracer (`crack_fad.py`), legacy BS 7910 Annex M/P module, Paris-law growth, riser-joint Level 1 envelopes, Level 3 handoff, `ffs_decision`/`ffs_report`, two registered API 579 pipe workflows | API 579 Level 2 curve + PSFs, Part 9 Level 1 curves, Annex C cylinder K, Annex E residual, Annex F material model, growth threshold/LBB, any storage-tank model, API 653 Annex B, nonlinear/shell/buckling CalculiX, Level 3 acceptance checks |
 | Solvers | gmsh (venv), CalculiX writer/parser (linear static, solids), ANSYS APDL generators (licensed host), in-house beam eigen-buckling | ccx on Windows hosts; shell/plastic/buckle/Riks in the INP writer; crack driving force in any unlicensed solver |
-| Delivery | `docs/registry/workflows.yaml` + `examples/workflows/<id>/` + durable test + Deckhand `digitalmodel:<id>` route returning a report URL | — |
+| Delivery | `docs/registry/workflows.yaml` + `examples/workflows/<id>/` + durable test + the report the registered workflow writes | — |
 
 ## Program (child issues of #1057)
 

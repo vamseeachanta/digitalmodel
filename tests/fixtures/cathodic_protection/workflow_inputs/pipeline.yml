@@ -1,10 +1,12 @@
 basename: cathodic_protection
 
-# Subsea export pipeline — external sacrificial-anode CP per DNV-RP-F103 (2010).
+# Subsea export pipeline — external sacrificial-anode CP per DNV-RP-F103.
 # Coated, on-seabed (non-buried) carbon-steel line with distributed bracelet anodes.
 # Regression input for tests/cathodic_protection/test_engine_adapter.py (#2210).
+# No design_data.edition: runs the F103 default edition (2019 since 2026-09-27,
+# was 2010). The deprecated alias DNV_RP_F103_2010 pins edition 2010.
 inputs:
-  calculation_type: DNV_RP_F103_2010
+  calculation_type: DNV_RP_F103
 
   design_data:
     design_life: 30 # yr
@@ -22,7 +24,7 @@ inputs:
 
   anode:
     material: aluminium
-    utilization_factor: 0.80        # DNV-RP-B401 Table 10-8 bracelet value
+    utilization_factor: 0.80        # bracelet value: F103 (2019) [6.4.2]; B401 (2010) Table 10-8
     individual_anode_mass_kg: 25.0  # net alloy mass of one bracelet
     length_m: 0.2                   # bracelet axial length
     thickness_m: 0.04               # bracelet radial thickness (sets the exposed area)

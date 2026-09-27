@@ -18,6 +18,11 @@ renders HTML/PDF. No HTML is written here.
   (route status + spacing <= 2 x protected length status), References.
 * ABS ships / offshore: the tables the legacy route exposes, plus the status.
 
+Every Adequacy section opens with the route's use status
+(``results["status"]["use_status"]``, owner decision 2026-09-27, epic #2206)
+and the route's StatusBlock detail repeats it, so each HTML/PDF deliverable
+states whether it may go to a client and on what condition.
+
 ``assessment`` takes a :class:`CPAssessmentReport` (plus optional CIS survey
 points/analysis and a :class:`DepletionProfile`) and lays out compliance,
 potential-vs-distance, remaining-mass-vs-years and recommendations.
@@ -48,7 +53,10 @@ from digitalmodel.cathodic_protection.engine_adapter import (
     KEY_ABS_SHIPS,
     KEY_B401,
     KEY_F103,
+    KEY_F103_2010,
     STATUS_PASS,
+    USE_STATUS_CLIENT_EOR,
+    USE_STATUS_LEGACY_UNCITED,
 )
 from digitalmodel.cathodic_protection.f103_tables import F103_WIKI_PATH
 from digitalmodel.citations.schema import Citation
@@ -217,7 +225,9 @@ def _standards(results: Mapping[str, Any], calc_type: str) -> list[StandardLabel
     elif calc_type in _ABS_STANDARDS:
         code, edition = _ABS_STANDARDS[calc_type]
         labels.append(StandardLabel(code_id=code, edition=edition, provenance=_ABS_PROVENANCE))
-    main = {lbl.code_id.lower() for lbl in labels}
+    # "DNVGL-RP-F103" (2019) and "DNVGL-RP-B401" (2017) are cited as
+    # "dnv-rp-..."; fold the prefix so the route standard is not listed twice.
+    main = {re.sub(r"^dnvgl-", "dnv-", lbl.code_id.lower()) for lbl in labels}
     extra: dict[str, str] = {}
     for raw in results.get("citations") or []:
         parsed = _parse_label(str(raw))
@@ -243,6 +253,31 @@ def _kv_table(title: str, rows: Sequence[Row], source: str | None = None) -> Tab
     )
 
 
+#: Report wording per ``results["status"]["use_status"]`` token.
+_USE_STATUS_TEXT: dict[str, str] = {
+    USE_STATUS_CLIENT_EOR: (
+        "Use status: approved for client use subject to an engineer-of-record "
+        "check of this deliverable."
+    ),
+    USE_STATUS_LEGACY_UNCITED: (
+        "Use status: legacy solver with uncited tables; not for client use "
+        "without an independent check."
+    ),
+}
+_USE_STATUS_MISSING = (
+    "Use status: not recorded; not for client use without an independent check."
+)
+
+
+def _use_status_text(status: Mapping[str, Any]) -> str:
+    token = str(status.get("use_status") or "")
+    return _USE_STATUS_TEXT.get(token, _USE_STATUS_MISSING)
+
+
+def _use_status_block(status: Mapping[str, Any]) -> TextBlock:
+    return TextBlock(markdown=_use_status_text(status))
+
+
 def _status_block(status: Mapping[str, Any], label: str) -> StatusBlock:
     result: Literal["PASS", "FAIL"] = (
         "PASS" if str(status.get("result", "")).upper() == STATUS_PASS else "FAIL"
@@ -250,11 +285,12 @@ def _status_block(status: Mapping[str, Any], label: str) -> StatusBlock:
     governing = str(status.get("governing_case") or "").strip() or None
     if result == "FAIL" and not governing:
         governing = "not stated"
+    reason = str(status.get("reason") or "").strip()
     return StatusBlock(
         label=label,
         status=result,
         governing_case=governing,
-        detail=str(status.get("reason") or ""),
+        detail="; ".join(part for part in (reason, _use_status_text(status)) if part),
     )
 
 
@@ -522,6 +558,7 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
         title="Adequacy",
         subtitle="DNV-RP-B401 Sec. 7.8 current-output verification (Table 10-7 resistance)",
         blocks=[
+            _use_status_block(status),
             _status_block(status, "Anode design adequacy"),
             TableBlock(
                 title=f"Anode resistance and current output, {n_verified} anodes, fresh vs depleted",
@@ -662,6 +699,7 @@ def _f103_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
         title="Adequacy",
         subtitle="Route status, spacing check and current output",
         blocks=[
+            _use_status_block(status),
             _status_block(status, "Bracelet CP design adequacy"),
             StatusBlock(
                 label="Anode spacing <= 2 x protected length",
@@ -782,7 +820,10 @@ def _abs_ships_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -
             ],
         ),
     ]
-    adequacy_blocks: list[Block] = [_status_block(status, "Hull CP design adequacy")]
+    adequacy_blocks: list[Block] = [
+        _use_status_block(status),
+        _status_block(status, "Hull CP design adequacy"),
+    ]
     if perf:
         resist = _mapping(perf.get("resistance_ohm"))
         out = _mapping(perf.get("current_output_A"))
@@ -889,7 +930,11 @@ def _abs_offshore_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]
         Section(
             key="adequacy",
             title="Adequacy",
-            blocks=[_status_block(status, "Offshore structure CP design adequacy"), _checks_table(status)],
+            blocks=[
+                _use_status_block(status),
+                _status_block(status, "Offshore structure CP design adequacy"),
+                _checks_table(status),
+            ],
         ),
         _references_section(results, []),
     ]
@@ -903,6 +948,7 @@ def _abs_offshore_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]
 _SECTION_BUILDERS = {
     KEY_B401: _b401_sections,
     KEY_F103: _f103_sections,
+    KEY_F103_2010: _f103_sections,
     KEY_ABS_SHIPS: _abs_ships_sections,
     KEY_ABS_OFFSHORE: _abs_offshore_sections,
 }

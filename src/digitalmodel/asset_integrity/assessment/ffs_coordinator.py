@@ -8,7 +8,7 @@ assessment. It chains the validated Phase-1 modules in one call:
     GridParser -> FFSRouter -> Level1Screener -> Level2Engine
                 -> FFSDecision -> MeasurementSufficiency
 
-so callers (engine, reports, dashboards, the Deckhand API) get one
+so callers (engine, reports, dashboards, lookup/query layers) get one
 `FFSAssessmentResult` instead of having to wire six modules and remember each
 field name. No assessment physics is implemented here — every number comes from
 the modules that already have golden tests; this layer only orchestrates and
@@ -105,7 +105,7 @@ class FFSAssessmentResult:
         return self.verdict in ("ACCEPT", "MONITOR")
 
     def to_dict(self) -> dict:
-        """JSON-serialisable summary (for lookup tables / the Deckhand API)."""
+        """JSON-serialisable summary (for lookup tables / query layers)."""
         payload = {
             "component_id": self.component_id,
             "assessment_type": self.assessment_type,

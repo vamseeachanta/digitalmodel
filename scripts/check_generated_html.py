@@ -51,7 +51,6 @@ class Generator:
     outputs: tuple[str, ...] = ()
     arguments: tuple[str, ...] = ()
     output_glob: str | None = None
-    onepagers: bool = False
     redirect_module_outputs: bool = False
     # Scripts producing a gitignored intermediate this generator reads. They run
     # first, in order, inside the shadow tree. A page whose input is not
@@ -88,11 +87,6 @@ GENERATORS = (
     Generator(
         "scripts/capabilities/build_ipr_explorer.py",
         ("docs/api/structural/ipr-explorer.html",),
-    ),
-    Generator(
-        "scripts/capabilities/build_onepagers.py",
-        output_glob="docs/api/capabilities/api/*.html",
-        onepagers=True,
     ),
     Generator(
         "scripts/capabilities/build_pore_pressure_explorer.py",
@@ -151,20 +145,6 @@ GENERATORS = (
         ("docs/api/production/scale-si-explorer.html",),
     ),
 )
-
-ONEPAGER_DRIVER = r"""
-import importlib.util
-import sys
-
-script = sys.argv[1]
-spec = importlib.util.spec_from_file_location("generated_html_onepagers", script)
-module = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(module)
-module._CHROME = "drift-check-no-browser"
-module._to_pdf = lambda *_args, **_kwargs: None
-sys.argv = [script]
-module.main()
-"""
 
 REDIRECT_DRIVER = r"""
 import importlib.util
@@ -313,9 +293,7 @@ def run_generator(shadow: Path, entry: Generator) -> str | None:
         str(script),
         *(str(shadow / argument) for argument in entry.arguments),
     ]
-    if entry.onepagers:
-        command = [sys.executable, "-c", ONEPAGER_DRIVER, str(script)]
-    elif entry.redirect_module_outputs:
+    if entry.redirect_module_outputs:
         command = [
             sys.executable,
             "-c",

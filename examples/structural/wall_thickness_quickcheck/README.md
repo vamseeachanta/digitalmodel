@@ -5,9 +5,8 @@ case through a wall-thickness sweep for **two design codes** (DNV-ST-F101 and
 API RP 1111) and emits a short text verdict plus a self-contained interactive
 HTML report.
 
-This is the EXECUTE artifact for a Deckhand "quick calc" path (deckhand#170).
-A downstream allowlist references exactly one stable command (below) and scrapes
-the printed `ARTIFACT:` line for the report attachment.
+It exposes exactly one stable command (below) and prints an `ARTIFACT:` line
+naming the report file, so a caller can pick up the report without parsing logs.
 
 It wraps the existing `digitalmodel` wall-thickness engine
 (`digitalmodel.structural.analysis.wall_thickness`) for live calculation. The
