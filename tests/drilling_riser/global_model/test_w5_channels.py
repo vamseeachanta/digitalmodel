@@ -99,6 +99,14 @@ def test_campaign_extraction_carries_the_w5_channel_set(base_spec, tmp_path):
         assert d["schema"] == w5.SCHEMA
         assert w5.missing_channels(d, foundation=False) == [], k
     st, rg = docs["ST"], docs["RG"]
+    # a stack connector sits on a node: OrcaFlex reports the tension of the segment below it; the segment above is
+    # recorded too (the interface tension lies between them; closed-form check W226)
+    inner = [k for k in st["points"] if k.startswith("stack:") and "|" in k]
+    assert inner
+    for k in inner:
+        s = st["points"][k]["static"]
+        assert s["te_above"] > s["te"] and s["tw_above"] != s["tw"]
+    assert all("te_above" in rg["points"][k]["stats"] for k in inner)
     # statics: static values; the LFJ angle is non-zero at an offset with current
     assert st["points"]["lfj"]["static"]["ez_angle_deg"] > 0.01
     assert st["points"]["riser_top"]["static"]["te"] > st["points"]["lfj"]["static"]["te"]

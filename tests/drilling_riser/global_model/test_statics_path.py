@@ -228,6 +228,7 @@ class _Obj:
 
 @pytest.mark.parametrize(("tv_factor", "wet_m3", "ok"), [
     (1.005, 0.0, True),         # physical deviation at an offset (tensioner lines inclined)
+    (1 - 0.013, 0.0, True),     # probe: TT-MIN, one failed, 10-yr loop current, -10 % WD (ring not yawed)
     (5682 / 6026, 0.0, False),  # the yawed branch
     (1.0, 1.2, True),           # the ring set down to MSL: its wetted volume is in the balance
 ])
