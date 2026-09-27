@@ -169,12 +169,36 @@ def test_licence_error_is_not_swallowed(base_spec):
         cp.robust_statics(m, spec, {}, reload=_reloader(m, 0.6))
 
 
-def test_without_current_the_ramp_paths_are_skipped(base_spec, monkeypatch):
+def test_without_current_an_aiding_current_is_used_then_removed(base_spec, monkeypatch):
     spec = _spec(base_spec, offset_pct_wd=2.0)
+    wd = spec.environment.water_depth_m
     m = _FakeModel(speed=0.0, fail=lambda m: m.reloads == 0)
+    m.environment.RefCurrentDirection = 0.0
     monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
     info = cp.robust_statics(m, spec, {}, reload=_reloader(m, 0.0))
-    assert info["strategy"] == "fine_steps" and m.reloads == 1
+    assert info["strategy"] == "aid_current" and m.reloads == 1
+    second = m.calls[1:]
+    assert second[0] == (pytest.approx(-0.02 * wd), cp.AID_CURRENT_M_S)
+    assert second[-2] == (pytest.approx(0.02 * wd), cp.AID_CURRENT_M_S)
+    assert second[-1] == (pytest.approx(0.02 * wd), 0.0)  # the final state is in still water
+    assert m.environment.RefCurrentSpeed == 0.0
+
+
+def test_path_orders(base_spec):
+    assert cp.statics_paths(current=True) == ["current_at_seed", "ramp_at_seed", "ramp_at_target", "fine_steps",
+                                              "direct_at_target"]
+    assert cp.statics_paths(current=False) == ["current_at_seed", "aid_current", "direct_at_target", "fine_steps"]
+
+
+def test_direct_path_solves_once_at_the_target(base_spec, monkeypatch):
+    spec = _spec(base_spec, offset_pct_wd=3.0)
+    wd = spec.environment.water_depth_m
+    m = _FakeModel(speed=0.0, fail=lambda m: m.reloads < 2)
+    m.environment.RefCurrentDirection = 0.0
+    monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
+    info = cp.robust_statics(m, spec, {}, reload=_reloader(m, 0.0))
+    assert info["strategy"] == "direct_at_target" and info["steps"] == 1
+    assert m.calls[-1] == (pytest.approx(0.03 * wd), 0.0)
 
 
 def test_calibration_scales_every_line_to_the_vertical_target(base_spec, monkeypatch):
