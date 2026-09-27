@@ -53,6 +53,7 @@ from digitalmodel.cathodic_protection.engine_adapter import (
     KEY_ABS_SHIPS,
     KEY_B401,
     KEY_F103,
+    KEY_F103_2010,
     STATUS_PASS,
     USE_STATUS_CLIENT_EOR,
     USE_STATUS_LEGACY_UNCITED,
@@ -947,6 +948,7 @@ def _abs_offshore_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]
 _SECTION_BUILDERS = {
     KEY_B401: _b401_sections,
     KEY_F103: _f103_sections,
+    KEY_F103_2010: _f103_sections,
     KEY_ABS_SHIPS: _abs_ships_sections,
     KEY_ABS_OFFSHORE: _abs_offshore_sections,
 }

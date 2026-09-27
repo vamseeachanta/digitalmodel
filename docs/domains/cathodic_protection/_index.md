@@ -21,7 +21,8 @@ job.
 | Route / model | Status | Basis |
 |---------------|--------|-------|
 | `DNV_RP_B401_offshore` (engine adapter) | Client use with EOR check | Cited, edition-keyed B401 tables (`b401_tables.py`); full Sec. 7 initial / mean / final loop |
-| `DNV_RP_F103_2010` (engine adapter; runs the requested F103 edition, default 2019) | Client use with EOR check | Cited, edition-keyed F103 tables (`f103_tables.py`); Eq. 14 protected-length check |
+| `DNV_RP_F103` (engine adapter; runs `design_data.edition`, default 2019) | Client use with EOR check | Cited, edition-keyed F103 tables (`f103_tables.py`); Eq. 14 protected-length check |
+| `DNV_RP_F103_2010` (engine adapter; deprecated alias of `DNV_RP_F103` pinned to edition 2010, `DeprecationWarning`; a different `design_data.edition` raises) | Client use with EOR check | As `DNV_RP_F103`, edition 2010; reproduces results from before the 2019 default |
 | `ABS_gn_ships_2018`, `ABS_gn_offshore_2018` | Legacy, uncited: not for client use without an independent check | Legacy solver (`base_solvers/hydrodynamics/cathodic_protection.py`), tables not cited |
 | `DNV_RP_B401_offshore_legacy`, `DNV_RP_F103_2010_legacy` | Legacy, uncited: not for client use without an independent check | Deprecated legacy solver paths |
 | Stray current (`stray_current.assess_stray_current` / `design_drainage_bond`), fuel-system protection check (`fuel_system_cp.check_protection`), galvanic corrosion (`corrosion_rate.galvanic_corrosion`), ICCP anode life (`iccp_design.anode_bed_design` `estimated_life_years`) | Experimental | Quarantined (#2209): the first three raise `ExperimentalModelError` and the ICCP life is `None` unless called with `experimental=True` |
@@ -68,7 +69,7 @@ has no "client use with conditions" value).
 | Router key | Standard | Helper module |
 |------------|----------|---------------|
 | `ABS_gn_ships_2018` | ABS Guidance Notes on Cathodic Protection of Ships, December 2017 (key misnamed; not renamed) | in-file |
-| `DNV_RP_F103_2010` | DNV-RP-F103 October 2010 (2016 tables not yet in the repo) | in-file; `cp_DNV_RP_F103_2010.py` is an older standalone |
+| `DNV_RP_F103_2010` | DNV-RP-F103 October 2010 (2016 tables not yet in the repo); legacy-router key only, the engine-adapter key is `DNV_RP_F103` | in-file; `cp_DNV_RP_F103_2010.py` is an older standalone |
 | `ABS_gn_offshore_2018` | ABS Guidance Notes on Cathodic Protection of Offshore Structures, December 2018 | in-file |
 | `DNV_RP_B401_offshore` | DNV-RP-B401; `design_data.edition` selects 2005 / 2010 / 2017 / 2021 (requires #2207 or later); reports initial / mean / final demand, `governing_case`, `recommended_anode_count`, `provenance` and `citations` | `cp_DNV_RP_B401_2021.py` on `b401_tables.py` |
 

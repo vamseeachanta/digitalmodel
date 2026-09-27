@@ -4,9 +4,9 @@ basename: cathodic_protection
 # Coated, on-seabed (non-buried) carbon-steel line with distributed bracelet anodes.
 # Regression input for tests/cathodic_protection/test_engine_adapter.py (#2210).
 # No design_data.edition: runs the F103 default edition (2019 since 2026-09-27,
-# was 2010). The key name DNV_RP_F103_2010 is historical and does not pin 2010.
+# was 2010). The deprecated alias DNV_RP_F103_2010 pins edition 2010.
 inputs:
-  calculation_type: DNV_RP_F103_2010
+  calculation_type: DNV_RP_F103
 
   design_data:
     design_life: 30 # yr

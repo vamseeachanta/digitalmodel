@@ -256,6 +256,23 @@ def test_pipeline_f103_spec_passes_with_spacing_check() -> None:
     assert fj[:2] == ["Field joints", "none"]
 
 
+def test_pipeline_f103_2010_alias_key_is_laid_out_as_f103() -> None:
+    with (INPUT_DIR / "pipeline.yml").open(encoding="utf-8") as stream:
+        cfg: dict[str, Any] = yaml.safe_load(stream)
+    cfg["inputs"]["calculation_type"] = "DNV_RP_F103_2010"
+    with pytest.warns(DeprecationWarning):
+        run_cathodic_protection(cfg)
+    spec = anode_design_report(cfg)
+    assert [s.key for s in spec.sections] == SECTION_KEYS
+    # Edition 2010 defers the anode values to DNV-RP-B401, so B401 is cited too.
+    assert [(s.code_id, s.edition) for s in spec.standards] == [
+        ("DNV-RP-F103", "October 2010"),
+        ("DNV-RP-B401", "2011"),
+    ]
+    counts = dict(row[:2] for row in _tables(spec)["Anode mass, count and spacing"].rows)
+    assert counts["Bracelets installed (N)"] == 9
+
+
 def test_abs_routes_expose_tables_and_status() -> None:
     ships = anode_design_report(_run("ships"))
     assert [s.key for s in ships.sections] == SECTION_KEYS
