@@ -184,6 +184,26 @@ def test_without_current_an_aiding_current_is_used_then_removed(base_spec, monke
     assert m.environment.RefCurrentSpeed == 0.0
 
 
+def test_the_last_successful_path_of_a_variant_is_tried_first(base_spec, monkeypatch):
+    """Stage A: the path that converges depends on the variant (12.5 ppg: aiding current; 14.0 ppg: plain seeded);
+    a failed attempt costs the full iteration budget, so a worker tries the variant's last successful path first."""
+    monkeypatch.setattr(cp, "_LAST_OK", {})
+    monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
+    spec = _spec(base_spec, offset_pct_wd=2.0)
+    m1 = _FakeModel(speed=0.0, fail=lambda m: m.environment.RefCurrentSpeed > 0)  # the aiding current diverges
+    m1.environment.RefCurrentDirection = 0.0
+    assert cp.robust_statics(m1, spec, {}, reload=_reloader(m1, 0.0))["strategy"] == "current_at_seed"
+    m2 = _FakeModel(speed=0.0, fail=lambda m: m.environment.RefCurrentSpeed > 0)
+    m2.environment.RefCurrentDirection = 0.0
+    info = cp.robust_statics(m2, spec, {}, reload=_reloader(m2, 0.0))
+    assert info["strategy"] == "current_at_seed" and info["attempts"] == [] and m2.reloads == 0
+    # another mud weight is another variant
+    other = _spec(base_spec, offset_pct_wd=2.0, mud_density_kg_m3=1400.0)
+    m3 = _FakeModel(speed=0.0)
+    m3.environment.RefCurrentDirection = 0.0
+    assert cp.robust_statics(m3, other, {}, reload=_reloader(m3, 0.0))["strategy"] == "aid_current"
+
+
 def test_path_orders(base_spec):
     assert cp.statics_paths(current=True) == ["current_at_seed", "ramp_at_seed", "ramp_at_target", "fine_steps",
                                               "direct_at_target"]
