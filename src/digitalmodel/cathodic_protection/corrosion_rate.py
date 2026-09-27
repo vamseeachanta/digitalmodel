@@ -4,7 +4,7 @@ Implements industry-standard corrosion rate prediction including:
 - de Waard-Milliams CO2 corrosion model
 - Norsok M-506 CO2 corrosion model (simplified)
 - H2S corrosion / sour service assessment
-- Galvanic corrosion prediction
+- Galvanic corrosion by mixed-potential theory (provisional, issue #2247)
 - Pitting rate estimation
 
 References
@@ -14,13 +14,19 @@ References
 - NORSOK M-506 (2005) "CO2 Corrosion Rate Calculation Model"
 - NACE MR0175 / ISO 15156 "Materials for Use in H2S-Containing Environments"
 - DNV-RP-B101 "Corrosion Protection of Floating Production and Storage Units"
+- Dunn, D.S. & Cragnolino, G.A. "An Analysis of Galvanic Coupling Effects on
+  the Performance of High-Level Nuclear Waste Container Materials",
+  CNWRA 97-010, US NRC, 1997 (mixed-potential galvanic model)
 """
 
 from __future__ import annotations
 
 import math
 
-from pydantic import BaseModel, Field
+from typing import Optional
+
+from pydantic import BaseModel, Field, model_validator
+from scipy.optimize import brentq
 
 from digitalmodel.cathodic_protection._experimental import require_experimental
 
@@ -54,56 +60,6 @@ class CO2CorrosionResult(BaseModel):
         default=1.0, description="CO2 fugacity correction factor"
     )
 
-
-class GalvanicCorrosionInput(BaseModel):
-    """Input for galvanic corrosion prediction."""
-
-    anode_material: str = Field(
-        default="carbon_steel", description="Anodic (corroding) material"
-    )
-    cathode_material: str = Field(
-        default="stainless_steel", description="Cathodic (noble) material"
-    )
-    anode_area_m2: float = Field(..., gt=0, description="Anode surface area [m²]")
-    cathode_area_m2: float = Field(..., gt=0, description="Cathode surface area [m²]")
-    electrolyte_resistivity_ohm_m: float = Field(
-        default=0.25, gt=0, description="Electrolyte resistivity [ohm-m]"
-    )
-
-
-class GalvanicCorrosionResult(BaseModel):
-    """Result of galvanic corrosion prediction."""
-
-    galvanic_current_density_mA_m2: float = Field(
-        ..., description="Galvanic corrosion current density [mA/m²]"
-    )
-    corrosion_rate_mm_yr: float = Field(
-        ..., description="Predicted galvanic corrosion rate [mm/year]"
-    )
-    area_ratio: float = Field(
-        ..., description="Cathode-to-anode area ratio"
-    )
-    risk_level: str = Field(
-        ..., description="Risk classification (low/moderate/high/very_high)"
-    )
-
-
-# Galvanic series potentials in seawater [V vs Ag/AgCl]
-GALVANIC_POTENTIAL: dict[str, float] = {
-    "magnesium": -1.60,
-    "zinc": -1.03,
-    "aluminum_alloy": -0.87,
-    "carbon_steel": -0.65,
-    "cast_iron": -0.61,
-    "stainless_steel_304": -0.08,
-    "stainless_steel_316": -0.05,
-    "copper": -0.20,
-    "bronze": -0.24,
-    "titanium": -0.05,
-    "hastelloy": -0.04,
-    "platinum": +0.22,
-    "graphite": +0.25,
-}
 
 # Faraday penetration-rate factors [mm/yr per mA/m²].
 #
@@ -283,100 +239,373 @@ def norsok_m506_co2(
     )
 
 
+class GalvanicCorrosionInput(BaseModel):
+    """Input for the mixed-potential (Evans diagram) galvanic model.
+
+    All polarisation parameters are explicit inputs; there is no default
+    table (issue #2247: no open-literature source was found that gives a
+    complete, citable parameter set per material pair). Potentials must be
+    on one reference scale (any, e.g. V vs Ag/AgCl/seawater). Current
+    densities are in A/m² and Tafel slopes in V/decade.
+    """
+
+    anode_corrosion_potential_V: float = Field(
+        ..., description="Free corrosion potential of the anode metal E_corr,a [V]"
+    )
+    anode_corrosion_current_density_A_m2: float = Field(
+        ...,
+        gt=0,
+        description="Anodic Tafel intercept at E_corr,a, i_corr,a [A/m²]",
+    )
+    anode_tafel_slope_V: float = Field(
+        ..., gt=0, description="Anodic Tafel slope beta_a [V/decade]"
+    )
+    cathode_corrosion_potential_V: float = Field(
+        ..., description="Free corrosion potential of the cathode metal E_corr,c [V]"
+    )
+    cathode_corrosion_current_density_A_m2: float = Field(
+        ...,
+        gt=0,
+        description="Cathodic (O2 reduction) Tafel intercept at E_corr,c, i_corr,c [A/m²]",
+    )
+    cathode_tafel_slope_V: float = Field(
+        ..., gt=0, description="Cathodic Tafel slope beta_c [V/decade] (magnitude)"
+    )
+    cathode_limiting_current_density_A_m2: float = Field(
+        ...,
+        gt=0,
+        description=(
+            "Oxygen-diffusion limiting current density on the cathode i_L [A/m²] "
+            "(see oxygen_limiting_current_density); math.inf = activation control only"
+        ),
+    )
+    anode_area_m2: float = Field(..., gt=0, description="Anode wetted area A_a [m²]")
+    cathode_area_m2: float = Field(..., gt=0, description="Cathode wetted area A_c [m²]")
+    solution_resistance_ohm: float = Field(
+        default=0.0,
+        ge=0,
+        description="Electrolyte (couple) resistance between anode and cathode R_s [ohm]",
+    )
+    anode_material: Optional[str] = Field(
+        default=None,
+        description=(
+            "Key of CORROSION_RATE_FACTOR for the Faraday conversion (unknown keys "
+            "raise); alternatively give molar mass, valence and density"
+        ),
+    )
+    anode_molar_mass_g_mol: Optional[float] = Field(default=None, gt=0)
+    anode_valence: Optional[int] = Field(default=None, gt=0)
+    anode_density_kg_m3: Optional[float] = Field(default=None, gt=0)
+
+    @model_validator(mode="after")
+    def _check(self) -> "GalvanicCorrosionInput":
+        if self.cathode_corrosion_potential_V <= self.anode_corrosion_potential_V:
+            raise ValueError(
+                "cathode_corrosion_potential_V must be more positive (noble) than "
+                "anode_corrosion_potential_V; swap the metals"
+            )
+        if self.anode_material is not None:
+            if self.anode_material not in CORROSION_RATE_FACTOR:
+                raise ValueError(
+                    f"unknown anode_material {self.anode_material!r}; expected one of "
+                    f"{sorted(CORROSION_RATE_FACTOR)} or explicit molar mass, "
+                    "valence and density"
+                )
+        elif (
+            self.anode_molar_mass_g_mol is None
+            or self.anode_valence is None
+            or self.anode_density_kg_m3 is None
+        ):
+            raise ValueError(
+                "give anode_material or all of anode_molar_mass_g_mol, "
+                "anode_valence and anode_density_kg_m3"
+            )
+        return self
+
+    def rate_factor(self) -> float:
+        """Faraday penetration factor [mm/yr per mA/m²] for the anode metal."""
+        if self.anode_material is not None:
+            return CORROSION_RATE_FACTOR[self.anode_material]
+        if (
+            self.anode_molar_mass_g_mol is None
+            or self.anode_valence is None
+            or self.anode_density_kg_m3 is None
+        ):  # pragma: no cover - guarded by the validator
+            raise ValueError("anode Faraday data missing")
+        return faraday_rate_factor(
+            self.anode_molar_mass_g_mol, self.anode_valence, self.anode_density_kg_m3
+        )
+
+
+#: Assumptions of :func:`galvanic_corrosion` that are NOT from the cited
+#: source (owner decision 2026-09-27: keep, but flag them).
+GALVANIC_MODEL_ASSUMPTIONS: tuple[str, ...] = (
+    "MODELLING ASSUMPTION, not from the cited source (CNWRA 97-010): "
+    "reverse-reaction ('-1') terms. The anode's own cathodic reaction is held "
+    "potential-independent at i_corr,a, so I/A_a = i_corr,a*(10**((E-E_corr,a)/beta_a) - 1); "
+    "the cathode's own anodic (passive) current is held at i_O2(E_corr,c), so "
+    "I/A_c = i_O2(E) - i_O2(E_corr,c). This keeps the couple potential between "
+    "the two free potentials.",
+    "Anode dissolution follows a single Tafel line (no passivation or "
+    "concentration effects on the anode).",
+)
+
+
+class GalvanicCorrosionResult(BaseModel):
+    """Result of the mixed-potential galvanic model."""
+
+    couple_potential_V: float = Field(
+        ...,
+        description=(
+            "Potential of the anode surface in the couple [V]; equals the cathode "
+            "potential when solution_resistance_ohm = 0"
+        ),
+    )
+    anode_potential_V: float = Field(..., description="Polarised anode potential [V]")
+    cathode_potential_V: float = Field(..., description="Polarised cathode potential [V]")
+    galvanic_current_A: float = Field(..., description="Net galvanic current I_g [A]")
+    galvanic_current_density_A_m2: float = Field(
+        ..., description="Net galvanic current density on the anode I_g/A_a [A/m²]"
+    )
+    anodic_current_density_A_m2: float = Field(
+        ...,
+        description=(
+            "Total anodic dissolution current density on the anode "
+            "i_corr,a + I_g/A_a [A/m²]"
+        ),
+    )
+    cathodic_current_density_A_m2: float = Field(
+        ..., description="Net cathodic current density on the cathode I_g/A_c [A/m²]"
+    )
+    diffusion_fraction: float = Field(
+        ...,
+        description="O2-reduction current / i_L on the cathode (1 = fully diffusion limited)",
+    )
+    corrosion_rate_mm_yr: float = Field(
+        ...,
+        description="Anode penetration rate from the total anodic current density [mm/yr]",
+    )
+    galvanic_corrosion_rate_mm_yr: float = Field(
+        ..., description="Part of the rate caused by the coupling, from I_g/A_a [mm/yr]"
+    )
+    area_ratio: float = Field(..., description="Cathode-to-anode area ratio A_c/A_a")
+    converged: bool = Field(..., description="Bracketed root finder converged")
+    residual_V: float = Field(..., description="Potential-balance residual at the root [V]")
+    model_assumptions: list[str] = Field(
+        default_factory=lambda: list(GALVANIC_MODEL_ASSUMPTIONS),
+        description="Modelling assumptions not taken from the cited source",
+    )
+
+
+def oxygen_limiting_current_density(
+    diffusion_coefficient_m2_s: float,
+    bulk_concentration_mol_m3: float,
+    diffusion_layer_thickness_m: float,
+    electrons: int = 4,
+) -> float:
+    """Oxygen-diffusion limiting current density i_L = n F D C_bulk / delta [A/m²].
+
+    The limiting term of Dunn & Cragnolino (1997), CNWRA 97-010 eq. 2-26
+    (n = 4 electrons per O2). All inputs are required physical data; this
+    module carries no default dissolved-oxygen or diffusion-layer value.
+    """
+    for name, v in (
+        ("diffusion_coefficient_m2_s", diffusion_coefficient_m2_s),
+        ("bulk_concentration_mol_m3", bulk_concentration_mol_m3),
+        ("diffusion_layer_thickness_m", diffusion_layer_thickness_m),
+    ):
+        if not v > 0:
+            raise ValueError(f"{name} must be positive")
+    return (
+        electrons
+        * FARADAY_C_PER_MOL
+        * diffusion_coefficient_m2_s
+        * bulk_concentration_mol_m3
+        / diffusion_layer_thickness_m
+    )
+
+
+def _o2_reduction_density(p: GalvanicCorrosionInput, potential_V: float) -> float:
+    """O2 reduction on the cathode: Tafel with diffusion limit (eq. 2-26).
+
+    ``i_act = i_corr,c * 10**(-(E - E_corr,c)/beta_c)``;
+    ``i_O2 = i_act / (1 + i_act/i_L)``, i.e. ``1/i_O2 = 1/i_act + 1/i_L``.
+    """
+    i_act: float = p.cathode_corrosion_current_density_A_m2 * math.pow(
+        10.0, -(potential_V - p.cathode_corrosion_potential_V) / p.cathode_tafel_slope_V
+    )
+    i_lim = p.cathode_limiting_current_density_A_m2
+    return i_act if math.isinf(i_lim) else i_act / (1.0 + i_act / i_lim)
+
+
+def _anode_potential(p: GalvanicCorrosionInput, current_A: float) -> float:
+    """E_a(I): invert ``I/A_a = i_corr,a * (10**((E-E_corr,a)/beta_a) - 1)``."""
+    return p.anode_corrosion_potential_V + p.anode_tafel_slope_V * math.log10(
+        1.0 + current_A / (p.anode_area_m2 * p.anode_corrosion_current_density_A_m2)
+    )
+
+
+def _cathode_potential(p: GalvanicCorrosionInput, current_A: float) -> float:
+    """E_c(I): invert ``I/A_c = i_O2(E) - i_O2(E_corr,c)`` (net cathodic current)."""
+    i_lim = p.cathode_limiting_current_density_A_m2
+    i_o2 = current_A / p.cathode_area_m2 + _o2_reduction_density(
+        p, p.cathode_corrosion_potential_V
+    )
+    if math.isinf(i_lim):
+        i_act = i_o2
+    else:
+        if i_o2 >= i_lim:
+            return -math.inf
+        i_act = i_o2 * i_lim / (i_lim - i_o2)
+    return p.cathode_corrosion_potential_V - p.cathode_tafel_slope_V * math.log10(
+        i_act / p.cathode_corrosion_current_density_A_m2
+    )
+
+
+_LN10 = math.log(10.0)
+
+
+
 def galvanic_corrosion(
     input_params: GalvanicCorrosionInput,
     *,
     experimental: bool = False,
 ) -> GalvanicCorrosionResult:
-    """Predict galvanic corrosion rate from dissimilar metal coupling.
+    """Galvanic coupling by mixed-potential theory (Evans diagram).
 
-    Uses the galvanic series potential difference and cathode-to-anode
-    area ratio to estimate the driving force and corrosion current density.
+    Kinetics (Dunn & Cragnolino 1997, CNWRA 97-010, eqs. 2-2, 2-3, 2-26 and
+    Fig. 2-4; Wagner-Traud mixed-potential hypothesis), decadic Tafel form:
 
-    The galvanic current density on the anode is:
-        i_galv = (E_cathode - E_anode) / (rho * d_eff) * (A_cathode / A_anode)
+    * anode, net anodic current density (self-corrosion cathodic reaction
+      taken as potential-independent, i.e. oxygen-diffusion controlled, at
+      ``i_corr,a`` -- see the modelling assumption below):
+      ``I/A_a = i_corr,a * (10**((E_a - E_corr,a)/beta_a) - 1)``
+    * cathode, O2 reduction with diffusion limit, net of the cathode's own
+      (potential-independent, passive) anodic current that balances it at
+      ``E_corr,c``:
+      ``i_O2(E) = i_act/(1 + i_act/i_L)``,
+      ``i_act = i_corr,c * 10**(-(E - E_corr,c)/beta_c)``,
+      ``I/A_c = i_O2(E_c) - i_O2(E_corr,c)``
+    * ohmic drop: ``E_c(I) - E_a(I) - I*R_s = 0``
 
-    where d_eff is an effective electrolyte path length.
+    The balance falls strictly from ``E_corr,c - E_corr,a > 0`` at I = 0 to
+    -inf (the cathode diffusion plateau, or I -> inf without a limit), so
+    the root is unique and lies with ``E_corr,a < E_a <= E_c < E_corr,c``.
+    It is bracketed in ln(I) and solved with Brent's method.
+
+    Corrosion rate = total anodic density ``i_corr,a + I/A_a`` [mA/m²] x
+    :func:`faraday_rate_factor`; the galvanic part alone is reported too.
+
+    Modelling assumption (not from the cited source)
+    ------------------------------------------------
+    The reverse-reaction ("-1") terms above are this module's assumption:
+    CNWRA 97-010 gives the Tafel and diffusion-limit expressions, not this
+    closure. The anode's cathodic partial reaction is fixed at
+    ``i_corr,a`` and the cathode's passive anodic current at
+    ``i_O2(E_corr,c)``, both independent of potential. The result lists it
+    in ``model_assumptions`` (:data:`GALVANIC_MODEL_ASSUMPTIONS`).
 
     Experimental
     ------------
-    Quarantined (issue #2209): the model is ohmic-only — it divides the
-    open-circuit potential difference by an assumed 0.1 m electrolyte path
-    and ignores anodic/cathodic polarisation, so it overstates the coupling
-    current by orders of magnitude for real couples. A re-model must follow
-    BS PD 6484 (galvanic corrosion guidance: mixed-potential / polarisation
-    based coupling). Calling without ``experimental=True`` raises
+    Provisional literature model (issue #2247). BS PD 6484 is not on
+    file, so the model stays behind ``experimental=True``; calling without
+    it raises
     :class:`~digitalmodel.cathodic_protection._experimental.ExperimentalModelError`.
-
-    Parameters
-    ----------
-    input_params : GalvanicCorrosionInput
-        Material, area, and electrolyte data. Both materials must be keys of
-        ``GALVANIC_POTENTIAL``; unknown names raise ``ValueError``.
-    experimental : bool
-        Acknowledge the quarantine and run the model anyway.
-
-    Returns
-    -------
-    GalvanicCorrosionResult
-        Galvanic corrosion current density, rate, and risk level.
 
     Raises
     ------
     ExperimentalModelError
         If ``experimental`` is false.
-    ValueError
-        If either material is not in ``GALVANIC_POTENTIAL``.
     """
     require_experimental(
         experimental,
         model="corrosion_rate.galvanic_corrosion",
-        reason="ohmic-only coupling with an assumed 0.1 m path and no polarisation",
+        reason=(
+            "mixed-potential model built from open literature (CNWRA 97-010); "
+            "method and parameters not yet checked against a standard"
+        ),
         standard="BS PD 6484",
     )
-    for label, material in (
-        ("anode_material", input_params.anode_material),
-        ("cathode_material", input_params.cathode_material),
-    ):
-        if material not in GALVANIC_POTENTIAL:
-            raise ValueError(
-                f"unknown {label} {material!r}; expected one of "
-                f"{sorted(GALVANIC_POTENTIAL)}"
-            )
-    e_anode = GALVANIC_POTENTIAL[input_params.anode_material]
-    e_cathode = GALVANIC_POTENTIAL[input_params.cathode_material]
+    p = input_params
 
-    delta_e = abs(e_cathode - e_anode)
-    area_ratio = input_params.cathode_area_m2 / input_params.anode_area_m2
+    def balance(ln_current: float) -> float:
+        current = math.exp(ln_current)
+        return (
+            _cathode_potential(p, current)
+            - _anode_potential(p, current)
+            - current * p.solution_resistance_ohm
+        )
 
-    # Effective path length (simplified)
-    d_eff = 0.1  # m, typical for close-coupled dissimilar metals
+    # Lower bracket: a current far below both Tafel-intercept currents.
+    lo = math.log(
+        min(
+            p.anode_corrosion_current_density_A_m2 * p.anode_area_m2,
+            p.cathode_corrosion_current_density_A_m2 * p.cathode_area_m2,
+        )
+    ) - 12.0 * _LN10
+    while balance(lo) <= 0.0:  # pragma: no cover - balance(0+) = E_c0 - E_a0 > 0
+        lo -= _LN10
 
-    # Galvanic current density on the anode [A/m²]
-    i_galv = (delta_e / (input_params.electrolyte_resistivity_ohm_m * d_eff)) * area_ratio
-    i_galv_mA = i_galv * 1000.0  # convert to mA/m²
-
-    # Corrosion rate from Faraday's law
-    cr_factor = CORROSION_RATE_FACTOR.get(
-        input_params.anode_material, CORROSION_RATE_FACTOR["carbon_steel"]
-    )
-    corrosion_rate = i_galv_mA * cr_factor
-
-    # Risk classification
-    if corrosion_rate < 0.1:
-        risk = "low"
-    elif corrosion_rate < 0.5:
-        risk = "moderate"
-    elif corrosion_rate < 2.0:
-        risk = "high"
+    # Upper bracket: grow (no limit) or approach the diffusion plateau.
+    if math.isinf(p.cathode_limiting_current_density_A_m2):
+        i_cap = math.inf
     else:
-        risk = "very_high"
+        i_cap = p.cathode_area_m2 * (
+            p.cathode_limiting_current_density_A_m2
+            - _o2_reduction_density(p, p.cathode_corrosion_potential_V)
+        )
+    hi: Optional[float] = None
+    if math.isinf(i_cap):
+        candidate = lo
+        for _ in range(400):
+            candidate += _LN10
+            if balance(candidate) < 0.0:
+                hi = candidate
+                break
+    else:
+        for k in range(1, 16):
+            candidate = math.log(i_cap * (1.0 - 10.0 ** (-k)))
+            if candidate > lo and balance(candidate) < 0.0:
+                hi = candidate
+                break
+
+    if hi is not None:
+        ln_root, info = brentq(
+            balance, lo, hi, xtol=1e-13, rtol=1e-13, maxiter=200, full_output=True
+        )
+        converged = bool(info.converged)
+        current = math.exp(ln_root)
+    else:
+        # Balance still positive within 1e-15 of the plateau: diffusion limited.
+        converged = False
+        current = i_cap * (1.0 - 1e-15)
+
+    e_a = _anode_potential(p, current)
+    e_c = _cathode_potential(p, current)
+    residual = e_c - e_a - current * p.solution_resistance_ohm
+    i_galv = current / p.anode_area_m2
+    i_anodic = p.anode_corrosion_current_density_A_m2 + i_galv
+    diffusion_fraction = (
+        0.0
+        if math.isinf(p.cathode_limiting_current_density_A_m2)
+        else _o2_reduction_density(p, e_c) / p.cathode_limiting_current_density_A_m2
+    )
+    factor = p.rate_factor()
 
     return GalvanicCorrosionResult(
-        galvanic_current_density_mA_m2=round(i_galv_mA, 2),
-        corrosion_rate_mm_yr=round(corrosion_rate, 4),
-        area_ratio=round(area_ratio, 3),
-        risk_level=risk,
+        couple_potential_V=e_a,
+        anode_potential_V=e_a,
+        cathode_potential_V=e_c,
+        galvanic_current_A=current,
+        galvanic_current_density_A_m2=i_galv,
+        anodic_current_density_A_m2=i_anodic,
+        cathodic_current_density_A_m2=current / p.cathode_area_m2,
+        diffusion_fraction=diffusion_fraction,
+        corrosion_rate_mm_yr=i_anodic * 1000.0 * factor,
+        galvanic_corrosion_rate_mm_yr=i_galv * 1000.0 * factor,
+        area_ratio=p.cathode_area_m2 / p.anode_area_m2,
+        converged=converged,
+        residual_V=residual,
     )
 
 

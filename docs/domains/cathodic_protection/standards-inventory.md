@@ -329,3 +329,78 @@ Before Phase 2 work on the DNV route:
 - Pipeline attenuation `alpha = sqrt(r' g')`, `r' = rho_s / (pi t (D - t))`, `g' = pi D / R_c`; resistance drainage bonds: A. W. Peabody, *Peabody's Control of Pipeline Corrosion*, 2nd ed., NACE, 2001, ISBN 1-57590-092-0.
 - Coupon AC density `i_ac = 8 V_ac / (rho pi d)`: Brenna, Beretta & Ormellese, *Materials* 13(9):2158, 2020, doi:10.3390/ma13092158; disk spread resistance `R = rho / (2 d)`: J. Newman, *J. Electrochem. Soc.* 113:501, 1966, doi:10.1149/1.2424003.
 - Lynch (2016): C. Lynch, "dc Stray Currents — Current Practices for Corrosion Protection", CEOCOR Congress 2016, Ljubljana, https://ceocor.lu/download/2016_slovenia/2016-LYNCH-DC-Stray-Current.pdf.
+
+---
+
+## Galvanic and ICCP provisional values — standards verification checklist (#2247)
+
+Owner direction 2026-09-27: NACE SP0572, NACE SP0169, ISO 15589-1 and BS PD 6484 are **not on file**. The galvanic-corrosion and ICCP anode-life models were rebuilt from openly published literature. Every default is a `ProvisionalValue` (`src/digitalmodel/cathodic_protection/_provisional.py`, shared with the stray-current lane) with `provisional=True`, a literature source and the standard it is waiting on. Where a source gives a range, the record stores both ends (`range_low`, `range_high`) and the design uses the **conservative end** (`conservative_end`). That means the highest consumption rate, the lowest current-density limit, and for any other value the end that shortens life or lowers capacity. `corrosion_rate.galvanic_corrosion` and the ICCP life figure (`iccp_design.iccp_anode_life`, `anode_bed_design(...).estimated_life_years`) stay behind `experimental=True` until each row below is checked.
+
+### Modelling assumption (listed first)
+
+| Item | Status | Where |
+|------|--------|-------|
+| Galvanic reverse-reaction ("−1") terms. The anode's own cathodic reaction is fixed at `i_corr,a`: `I/A_a = i_corr,a(10^((E−E_corr,a)/β_a) − 1)`. The cathode's passive anodic current is fixed at `i_O2(E_corr,c)`: `I/A_c = i_O2(E) − i_O2(E_corr,c)`. | **Modelling assumption, not from the cited source** (CNWRA 97-010 gives the Tafel and diffusion-limit terms, not this closure). Kept by owner decision 2026-09-27. It keeps the couple potential between the two free potentials. | `galvanic_corrosion` docstring; `GalvanicCorrosionResult.model_assumptions[0]`; `GALVANIC_MODEL_ASSUMPTIONS` |
+
+### Literature sources
+
+| Key | Source |
+|-----|--------|
+| TP-16 | U.S. DoD Tri-Service Electrical Working Group, *Electrical Technical Paper 16: Impressed Current Anode Material Selection and Design Considerations (non-mandatory)*, March 2017. <https://nibs-s3-wbdg3-production.s3.us-east-1.amazonaws.com/FFC/DOD/STC/tsewg_tp16.pdf> |
+| USNA | U.S. Naval Academy EN380 course notes, *Appendix: Cathodic Protection Design* (after G. Swain class notes, 1996), Table 7.1, n.d. <https://www.usna.edu/NAOE/_files/documents/Courses/EN380/Course_Notes/zAppendix_A_Cathodic_Protection_Design.pdf> |
+| GCP | German Cathodic Protection, *Impressed Current Anodes: Silicon iron anodes*, datasheet 04-200-R1, n.d. <https://www.gcp.de/wp-content/uploads/04-200-Silicon-iron-anodes.pdf> |
+| CPC | Cathodic Protection Co. Ltd, *Datasheet 2.2.1: Mixed Metal Oxide Tubular Anodes*, Rev. 0, July 2020. <https://www.cathodic.co.uk/wp-content/uploads/2.2.1-Mixed-Metal-Oxide-Tubular-Anodes-Rev.0-July-2020.pdf> |
+| CNWRA | D.S. Dunn and G.A. Cragnolino, *An Analysis of Galvanic Coupling Effects on the Performance of High-Level Nuclear Waste Container Materials*, CNWRA 97-010 (US NRC), August 1997. <https://www.nrc.gov/docs/ML0402/ML040200062.pdf> |
+
+### Galvanic corrosion (`corrosion_rate.galvanic_corrosion`)
+
+| Item | Current basis | Source | Verify against | Changes when verified |
+|------|---------------|--------|----------------|-----------------------|
+| Mixed-potential method: anodic Tafel; cathodic Tafel with `1/i = 1/i_act + 1/i_L`; ohmic drop `I·R_s` | Method only | CNWRA eqs. 2-2, 2-3, 2-26, Fig. 2-4 | BS PD 6484 | The method, or the standard's tabulated or area-ratio approach added alongside it |
+| Reverse-reaction ("−1") closure | Modelling assumption (see above) | none | BS PD 6484 | Possibly the full four-reaction model |
+| `E_corr`, `i_corr`, Tafel slopes, `i_L`, `R_s` | **Required inputs**: no open source gave a complete, citable set per material pair | none | BS PD 6484 / client data | A cited default table per material pair could be added |
+| Uncited galvanic-series table `GALVANIC_POTENTIAL`, risk bands 0.1/0.5/2.0 mm/yr, assumed 0.1 m path | **Removed** | none | none | none |
+
+### ICCP anode material data (`iccp_design.ICCP_ANODE_RECORDS`)
+
+| Material | Quantity | Source range | Design value (end) | Source | Verify against |
+|----------|----------|--------------|--------------------|--------|----------------|
+| HSCI | density | single value | 7000 kg/m³ | GCP (TP-16 Table 5: SG 7) | NACE SP0572 |
+| HSCI | consumption, soil / fresh / sea | single values | 0.30 / 0.15 / 0.50 kg/(A·yr) | GCP (TP-16 §1.2 gives ~1 lb/A·yr = 0.45 for soil) | NACE SP0572 / ISO 15589-1 |
+| HSCI | max current density, soil / fresh / sea | 10–30 / 10–30 / 10–50 A/m² | **10 / 10 / 10 A/m² (low)** | GCP | NACE SP0572 |
+| Graphite | density | "99.84 lb/ft³ max"; no lower bound given | 1599 kg/m³ | TP-16 Table 1 | NACE SP0572 |
+| Graphite | consumption, soil / fresh | single value, ~2.5 lb/A·yr | 1.134 kg/(A·yr) | TP-16 §1.1.4.3 | NACE SP0572 |
+| Graphite | consumption, sea | 1.6–2.5 lb/A·yr (0.726–1.134 kg) | 1.134 kg/(A·yr) (high) | TP-16 §1.1.4.3 | NACE SP0572 |
+| Graphite | max current density, soil / fresh / sea | single values: 1 / 0.25 / 3.75 A/ft² | 10.76 / 2.69 / 40.36 A/m² | TP-16 Table 3 | NACE SP0572 |
+| Scrap steel | consumption | single value, ~20 lb/A·yr (USNA gives 0.2–9 kg) | 9.07 kg/(A·yr) (Faraday Fe²⁺: 9.13) | TP-16 §1.0 | NACE SP0572 |
+| Scrap steel | density / max current density | none ("varies") | **Required inputs**: `anode_mass_kg`, `max_current_density_A_m2` | none | none |
+| Magnetite | consumption | single value | 0.040 kg/(A·yr) | USNA Table 7.1 | NACE SP0572 |
+| Magnetite | max current density | 10–500 A/m² | **10 A/m² (low)** | USNA Table 7.1 | NACE SP0572 |
+| Magnetite | density | none | **Required input**: `anode_mass_kg` | none | none |
+| MMO | coating consumption | 0.5–4.0 mg/(A·yr) | 4.0 mg/(A·yr) (high) | CPC | NACE SP0572 / ISO 15589-1 |
+| MMO | max current density, soil / fresh / sea | single rows: carbonaceous backfill 50 (calcined coke 100) / 100 / 600 A/m² | 50 / 100 / 600 A/m² | CPC | NACE SP0572 / ISO 15589-1 |
+| MMO, Pt/Ti, Pt/Nb | coating loading | none | **Required input**: `coating_loading_kg_m2` | none | Supplier data / standard |
+| Pt/Ti | Pt consumption | single value | 0.01 g/(A·yr) | USNA Table 7.1 | NACE SP0572 |
+| Pt/Ti | max current density | 250–700 A/m² | **250 A/m² (low)** | USNA Table 7.1 | NACE SP0572 |
+| Pt/Nb | Pt consumption | 0.01 g/(A·yr) (USNA); TP-16 §1.6 gives 4.5 mg for Pt | 0.01 g/(A·yr), the higher of the two | USNA Table 7.1 ("platinized columbium") | NACE SP0572 |
+| Pt/Nb | max current density | 500–1000 A/m² | **500 A/m² (low)** | USNA Table 7.1 | NACE SP0572 |
+| All consumable | utilisation factor | 0.80–0.85 across the TP-16 worked examples | **0.80 (low)** | TP-16 §5 | NACE SP0572 |
+
+Bold marks a design value that changed when the conservative-end rule was adopted (2026-09-27). The previous values were HSCI 30/30/50, magnetite 500, Pt/Ti 700, Pt/Nb 1000 A/m², and utilisation 0.85.
+
+### ICCP life and ground-bed equations (`iccp_design`)
+
+| Equation | Current basis | Source | Verify against |
+|----------|---------------|--------|----------------|
+| Consumable life `L = N·m·u / (C·I)` | Method | TP-16 §5 | NACE SP0572 |
+| Coating-wear life `L = N·w·πdL / (C·I)`, with N sized so that `I/(N·πdL) ≤ J_max` | Method | Consumption rates from USNA and CPC | NACE SP0572 / ISO 15589-1 |
+| Single vertical anode `R = ρ/(2πL)[ln(8L/d) − 1]` | Method | TP-16 §5 (Dwight form) | NACE SP0572 |
+| N vertical anodes `R = ρ/(2πNL)[ln(8L/d) − 1 + (2L/S) ln(0.656N)]` | Method; attribution to Sunde (1949) not checked | TP-16 §5 worked examples (reproduced in tests) | NACE SP0572 |
+| Deep well: the active backfill column as one vertical electrode | Method; **replaces the uncited ×0.6 factor** | TP-16 §5 deep-well examples | NACE SP0572 |
+| Horizontal column `R = ρ/(2πL)[ln(4L/d) + ln(L/h) − 2 + 2h/L]` | Method; SI form of TP-16's mixed-unit equation. **Differs from other published Dwight horizontal forms; check this first** | TP-16 §5 | NACE SP0572 |
+| Distributed beds | **No cited formula; raises** | none | NACE SP0572 |
+| Anode spacing (vertical arrays), backfill column length and diameter, burial depth | **Required inputs** (the former uncited `max(3, 3L)` / `max(3, 5L)` spacing rules are removed) | none | none |
+
+### Removed
+
+- `fuel_system_cp.check_protection` (B11): `−0.55 − I·R` was not a polarisation model. Protection is verified by survey through `cp_survey`, against the NACE SP0169 §6 criteria.

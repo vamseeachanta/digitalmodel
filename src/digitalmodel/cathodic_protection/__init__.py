@@ -300,11 +300,12 @@ from digitalmodel.cathodic_protection.pipeline_cp import (
     soil_resistivity_correction,
 )
 
-# Quarantined models (issue #2209) are deliberately NOT re-exported here:
-# stray_current.assess_stray_current / design_drainage_bond,
-# fuel_system_cp.check_protection, corrosion_rate.galvanic_corrosion.
-# They remain importable from their own modules and raise
-# ExperimentalModelError unless called with experimental=True.
+# Experimental models (issues #2209, #2247) are deliberately NOT re-exported
+# here: stray_current.assess_stray_current / design_drainage_bond,
+# corrosion_rate.galvanic_corrosion and iccp_design.iccp_anode_life. They are
+# importable from their own modules and raise ExperimentalModelError unless
+# called with experimental=True. fuel_system_cp.check_protection was deleted
+# (#2247); verify protection by survey with cp_survey.
 
 __all__ = [
     "DEFAULT_EDITION",
