@@ -169,6 +169,9 @@ class _PathFailed(RuntimeError):
     pass
 
 
+_LAST_OK: dict[tuple, str] = {}  # per worker process: (mud density, current, tensioner model) -> last successful path
+
+
 def _ring_tensioners(model) -> list:
     return [o for o in model.objects if o.typeName == "Winch" and o.name.startswith("Tensioner")]
 
@@ -282,6 +285,11 @@ def robust_statics(model, spec: RiserGlobalModelSpec, params: dict, *, reload=No
             raise _PathFailed(f"ring yaw {yaw:.1f} deg at vessel x {model['Vessel'].InitialX:.2f} m")
 
     paths = list(params.get("statics_paths") or statics_paths(current=bool(speed)))
+    # the path that converges depends on the model variant and a failed attempt costs the full iteration budget:
+    # try the last path that succeeded for this variant in this worker first (the static state is path-independent)
+    variant = (round(spec.contents.density_kg_m3, 6), bool(speed), spec.tensioners.representation)
+    if _LAST_OK.get(variant) in paths:
+        paths.insert(0, paths.pop(paths.index(_LAST_OK[variant])))
     attempts: list[dict[str, str]] = []
     chosen = None
     path_start = 0
@@ -300,6 +308,8 @@ def robust_statics(model, spec: RiserGlobalModelSpec, params: dict, *, reload=No
             if "licen" in str(exc).lower():
                 raise
             attempts.append({"strategy": path, "error": str(exc).strip().splitlines()[-1][:200]})
+    if chosen is not None:
+        _LAST_OK[variant] = chosen
     if chosen is None:
         raise CaseFailed("statics_diverged", "no statics path converged: "
                                              + "; ".join(f"{a['strategy']}: {a['error']}" for a in attempts))
