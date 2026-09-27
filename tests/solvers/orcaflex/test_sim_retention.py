@@ -115,10 +115,23 @@ def test_marked_sim_that_changes_before_deletion_is_kept(tmp_path):
     assert _events(run)[-1]["event"] == "kept_changed"
 
 
+def test_loop_ends_when_no_marked_sim_is_left_even_with_an_unverifiable_one(tmp_path, monkeypatch):
+    run, sim = _run(tmp_path)
+    other = tmp_path / "other"
+    _run(other, channels={"old": 1})  # never markable
+    clock = iter([T0, T0 + dt.timedelta(hours=73), T0 + dt.timedelta(hours=74)])
+    monkeypatch.setattr(sr, "_now", lambda: next(clock))
+    monkeypatch.setattr(sr.time, "sleep", lambda s: None)
+    assert sr.main(["loop", "--root", str(tmp_path), "--until-empty", "--interval-min", "0"]) == 0
+    assert not sim.exists() and (other / "run" / "work" / "C-1" / "C-1.sim").exists()
+
+
 def test_cycle_finds_run_dirs_and_reports_totals(tmp_path):
     run, sim = _run(tmp_path)
     s1 = sr.cycle([tmp_path], now=T0)
     assert s1["marked"] == 1 and s1["deleted"] == 0 and s1["pending_bytes"] == len(b"SIMDATA")
+    assert s1["marked_pending_bytes"] == len(b"SIMDATA")
     s2 = sr.cycle([tmp_path], now=T0 + dt.timedelta(hours=73))
     assert s2["deleted"] == 1 and s2["freed_bytes"] == len(b"SIMDATA") and s2["pending_bytes"] == 0
+    assert s2["marked_pending_bytes"] == 0
     assert not sim.exists()
