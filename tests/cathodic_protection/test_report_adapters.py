@@ -4,8 +4,10 @@
 
 The jacket fixture JSON is the routed cfg returned by
 ``run_cathodic_protection`` for ``workflow_inputs/jacket.yml`` (sorted keys);
-``test_fixture_is_fresh`` fails when the adapter's numbers drift. Regenerate
-the golden after an intentional layout change with::
+``test_fixture_is_fresh`` fails when the adapter's numbers drift (rewrite the
+JSON from a fresh run, ``json.dumps(cfg, sort_keys=True, indent=2)``, when the
+drift is intended). Regenerate the golden after an intentional layout change
+with::
 
     UPDATE_GOLDENS=1 pytest tests/cathodic_protection/test_report_adapters.py
 """
@@ -32,7 +34,11 @@ from digitalmodel.cathodic_protection.cp_reporting import (
     RemainingLifeSummary,
 )
 from digitalmodel.cathodic_protection.cp_survey import CISAnalysisResult, CISSurveyPoint
-from digitalmodel.cathodic_protection.engine_adapter import run_cathodic_protection
+from digitalmodel.cathodic_protection.engine_adapter import (
+    USE_STATUS_CLIENT_EOR,
+    USE_STATUS_LEGACY_UNCITED,
+    run_cathodic_protection,
+)
 from digitalmodel.cathodic_protection.report_adapters import (
     FIG_ANODE_COUNTS,
     FIG_DEMAND_VS_TIME,
@@ -50,6 +56,7 @@ from digitalmodel.reporting import (
     ReportSpec,
     StatusBlock,
     TableBlock,
+    TextBlock,
     build_spec,
     render_html,
 )
@@ -121,11 +128,11 @@ def test_jacket_spec_layout_and_fail_status() -> None:
     assert "N_final=173" in status[0].detail
 
     assert [(s.code_id, s.edition, s.provenance) for s in spec.standards] == [
-        ("DNV-RP-B401", "2021", "inherited-2011-unverified")
+        ("DNV-RP-B401", "May 2021", "verified-2021-tables")
     ]
     sections = {c["section"] for c in spec.citations}
-    assert {"Table 10-1", "Table 10-2", "Table 10-4", "Table 10-6"} <= sections
-    assert all(c["code_id"] == "dnv-rp-b401" and c["revision"] == "2011" for c in spec.citations)
+    assert {"Table 8-1", "Table 8-2", "Table 8-4", "Table 8-6"} <= sections
+    assert all(c["code_id"] == "dnv-rp-b401" and c["revision"] == "2021-05" for c in spec.citations)
     assert all(c["wiki_path"].startswith("wikis/") for c in spec.citations)
 
     # placeholder document control, said so in the input echo
@@ -166,7 +173,7 @@ def test_jacket_tables_carry_the_route_numbers() -> None:
     assert checks == {"final current output": "FAIL", "initial current output": "PASS", "mass": "PASS"}
 
     used = dict(tables["Where each cited table was used"].rows)
-    assert "Table 10-1" in used["submerged: design current density"]
+    assert "Table 8-1" in used["submerged: design current density"]
     assert used["atmospheric: design current density"] == "none"
 
 
@@ -231,18 +238,20 @@ def test_pipeline_f103_spec_passes_with_spacing_check() -> None:
     status = _statuses(spec)
     assert [(b.status, b.governing_case) for b in status] == [("PASS", "mass"), ("PASS", None)]
     assert status[1].label.startswith("Anode spacing")
-    assert "166.667 m vs 6307.782 m" in status[1].detail
+    # F103 default edition 2019 (test_engine_adapter.test_pipeline_f103_bracelet_design derives
+    # these): spacing 1500 / 34 = 44.118 m vs 2 PL = 2 x 1587.424 m. The anode values come from
+    # F103 (2019) Table 6-3 itself, so no DNV-RP-B401 table is cited (2010 deferred to B401).
+    assert "44.118 m vs 3174.847 m" in status[1].detail
     assert [(s.code_id, s.edition) for s in spec.standards] == [
-        ("DNV-RP-F103", "October 2010"),
-        ("DNV-RP-B401", "2011"),
+        ("DNVGL-RP-F103", "September 2019, amended May 2021"),
     ]
-    assert {c["code_id"] for c in spec.citations} == {"dnv-rp-f103", "dnv-rp-b401"}
+    assert {c["code_id"] for c in spec.citations} == {"dnv-rp-f103"}
     tables = _tables(spec)
     counts = dict(row[:2] for row in tables["Anode mass, count and spacing"].rows)
-    assert counts["Bracelets by mass (N_mass)"] == 9
-    assert counts["Bracelets by final current output (N_final)"] == 2
-    assert counts["Bracelets installed (N)"] == 9
-    assert counts["Protected length (attenuation)"] == 3153.891
+    assert counts["Bracelets by mass (N_mass)"] == 34
+    assert counts["Bracelets by final current output (N_final)"] == 6
+    assert counts["Bracelets installed (N)"] == 34
+    assert counts["Protected length (attenuation)"] == 1587.424
     fj = tables["Coating breakdown factors"].rows[1]
     assert fj[:2] == ["Field joints", "none"]
 
@@ -268,6 +277,38 @@ def test_abs_routes_expose_tables_and_status() -> None:
     checks = dict(_tables(fpso)["Adequacy checks"].rows)
     assert checks == {"current output": "not run", "mass": "PASS"}
     assert dict(row[:2] for row in _tables(fpso)["Anode mass and count"].rows)["Anode count"] == 79
+
+
+@pytest.mark.parametrize(
+    ("name", "use_status", "wording"),
+    [
+        ("jacket", USE_STATUS_CLIENT_EOR, "engineer-of-record check"),
+        ("pipeline", USE_STATUS_CLIENT_EOR, "engineer-of-record check"),
+        ("ships", USE_STATUS_LEGACY_UNCITED, "not for client use without an independent check"),
+        ("fpso", USE_STATUS_LEGACY_UNCITED, "not for client use without an independent check"),
+    ],
+)
+def test_use_status_is_stated_in_adequacy_and_status_detail(
+    name: str, use_status: str, wording: str
+) -> None:
+    """Owner decision 2026-09-27 (epic #2206): every deliverable states its use status."""
+    cfg = _run(name)
+    assert cfg["results"]["status"]["use_status"] == use_status
+    spec = anode_design_report(cfg)
+    adequacy = next(s for s in spec.sections if s.key == "adequacy")
+    first = adequacy.blocks[0]
+    assert isinstance(first, TextBlock)
+    assert first.markdown.startswith("Use status:") and wording in first.markdown
+    route_status = _statuses(spec)[0]
+    assert route_status.detail.endswith(first.markdown)
+    assert wording in render_html(spec)
+
+
+def test_missing_use_status_renders_as_not_for_client_use() -> None:
+    cfg = _load_fixture()
+    del cfg["results"]["status"]["use_status"]
+    spec = anode_design_report(cfg)
+    assert "Use status: not recorded; not for client use" in _statuses(spec)[0].detail
 
 
 def test_anode_design_rejects_missing_results_and_unknown_route() -> None:
