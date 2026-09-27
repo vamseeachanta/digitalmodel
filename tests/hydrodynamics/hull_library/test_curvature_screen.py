@@ -108,22 +108,22 @@ class TestPolicy:
         assert saddle_warning_threshold("not-a-type") is None
 
     def test_saddle_warning_message(self):
-        kwargs = dict(
-            I_D=1.0,
-            I_D_plus=0.5,
-            I_D_minus=0.5,
-            a_flat=0.1,
-            a_single=0.1,
-            a_elliptic=0.2,
-            lref=100.0,
-            lref_mode="explicit_user",
-            reliability="caution",
-            status="mesh_representation_sensitive",
-            valid_area_fraction=0.95,
-            panel_count=10,
-            vertex_count=8,
-            hullprod_version="1.0.1",
-        )
+        kwargs = {
+            "I_D": 1.0,
+            "I_D_plus": 0.5,
+            "I_D_minus": 0.5,
+            "a_flat": 0.1,
+            "a_single": 0.1,
+            "a_elliptic": 0.2,
+            "lref": 100.0,
+            "lref_mode": "explicit_user",
+            "reliability": "caution",
+            "status": "mesh_representation_sensitive",
+            "valid_area_fraction": 0.95,
+            "panel_count": 10,
+            "vertex_count": 8,
+            "hullprod_version": "1.0.1",
+        }
         assert CurvatureSignature(
             a_saddle=0.6, hull_type="ship", **kwargs
         ).saddle_warning()
@@ -423,3 +423,268 @@ class TestQualityGate:
         ungated = run_mesh_quality_gate(path, "cone", curvature=False)
         assert ungated.curvature is None
         assert not any("POOR" in b for b in ungated.blocking)
+
+
+# Issue 2253: diagonal choice must not manufacture curvature on analytic vertices.
+def _wigley_quads(nx=425, nz=17):
+    reference = _wigley(length=100, breadth=20, draft=8, nx=nx, nz=nz)
+    row = nz + 1
+    panels = [
+        [i * row + j, (i + 1) * row + j, (i + 1) * row + j + 1, i * row + j + 1]
+        for i in range(nx)
+        for j in range(nz)
+    ]
+    return (
+        PanelMesh(
+            vertices=reference.vertices.copy(),
+            panels=np.asarray(panels, dtype=np.int32),
+        ),
+        reference,
+    )
+
+
+@pytest.mark.parametrize("split", ["shortest", "alternate"])
+@needs_hullprod
+def test_analytic_quad_wigley_matches_triangle_and_brep(split):
+    mesh, reference = _wigley_quads()
+    actual = screen_panel_mesh(mesh, lref=100, quad_split=split, keep_fields=False)
+    triangle = screen_trimesh(reference, lref=100, keep_fields=False)
+    assert actual.signature.I_D == pytest.approx(triangle.signature.I_D, rel=0.10)
+    assert actual.signature.I_D == pytest.approx(7.1197, rel=0.15)
+    assert actual.signature.quad_split == split
+    assert actual.provenance["quad_split"] == split
+    assert triangle.signature.quad_split is None
+    assert triangle.provenance["quad_split"] is None
+
+
+@needs_hullprod
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="Plan fixed>25 premise: consistent analytic quads measure 6.617684; generated winding inflates curvature",
+)
+def test_fixed_quad_wigley_documents_inflation():
+    mesh, _ = _wigley_quads()
+    result = screen_panel_mesh(mesh, lref=100, quad_split="fixed", keep_fields=False)
+    assert result.signature.I_D > 25
+    assert result.signature.quad_split == "fixed"
+
+
+@pytest.mark.parametrize("split", ["shortest", "alternate"])
+def test_even_width_structured_grid_uses_checkerboard_ties(split):
+    pytest.importorskip("trimesh")
+    vertices = np.array([[i, j, 0] for i in range(3) for j in range(3)], float)
+    panels = np.array(
+        [[0, 3, 4, 1], [1, 4, 5, 2], [3, 6, 7, 4], [4, 7, 8, 5]], np.int32
+    )
+    tri = panel_mesh_to_trimesh(PanelMesh(vertices, panels), quad_split=split)
+    edges = [set(map(tuple, tri.vertices[face])) for face in tri.faces]
+    diagonals = [
+        set(map(tuple, vertices[pair])) for pair in ([0, 4], [4, 2], [6, 4], [4, 8])
+    ]
+    assert all(sum(diagonal <= edge for edge in edges) == 2 for diagonal in diagonals)
+    assert np.all(tri.face_normals[:, 2] > 0)
+
+
+def test_unstructured_ties_alternate_by_panel_index():
+    pytest.importorskip("trimesh")
+    vertices = np.array(
+        [
+            [x, y, 0]
+            for offset in (0, 3)
+            for x, y in ((offset, 0), (offset + 1, 0), (offset + 1, 1), (offset, 1))
+        ],
+        float,
+    )
+    mesh = PanelMesh(vertices, np.arange(8, dtype=np.int32).reshape(2, 4))
+    tri = panel_mesh_to_trimesh(mesh)
+    triangles = [set(map(tuple, tri.vertices[face])) for face in tri.faces]
+    for pair in ([0, 2], [5, 7]):
+        diagonal = set(map(tuple, vertices[pair]))
+        assert sum(diagonal <= face for face in triangles) == 2
+
+
+@pytest.mark.parametrize("scale", [1e-6, 1, 1e6])
+def test_shortest_uses_three_dimensional_diagonal(scale):
+    pytest.importorskip("trimesh")
+    vertices = scale * np.array([[0, 0, 0], [2, 0, 0], [1, 1, 3], [0, 1, 0]], float)
+    mesh = PanelMesh(vertices, np.array([[0, 1, 2, 3]], np.int32))
+    tri = panel_mesh_to_trimesh(mesh)
+    diagonal = set(map(tuple, vertices[[1, 3]]))
+    assert all(diagonal <= set(map(tuple, tri.vertices[f])) for f in tri.faces)
+
+
+@pytest.mark.parametrize("panels", [[[0, 1, 2]], [[0, 1, 2, -1]], [[0, 1, 2, 2]]])
+@needs_hullprod
+def test_triangle_encodings_have_no_quad_split(panels):
+    sphere = pytest.importorskip("trimesh").creation.icosphere(subdivisions=2)
+    if len(panels[0]) == 3:
+        faces = sphere.faces
+    elif panels[0][-1] == -1:
+        faces = np.column_stack((sphere.faces, np.full(len(sphere.faces), -1)))
+    else:
+        faces = np.column_stack((sphere.faces, sphere.faces[:, -1]))
+    result = screen_panel_mesh(PanelMesh(sphere.vertices, faces), lref=2)
+    assert result.signature.quad_split is None
+    assert result.provenance["quad_split"] is None
+    assert result.signature.I_D == pytest.approx(4, rel=0.01)
+
+
+def test_invalid_quad_split_rejected():
+    mesh, _ = _wigley_quads(nx=2, nz=2)
+    with pytest.raises(ValueError, match="quad_split"):
+        panel_mesh_to_trimesh(mesh, quad_split="invalid")
+
+
+@needs_hullprod
+def test_synthetic_semisub_cylinder_component_stays_developable():
+    trimesh = pytest.importorskip("trimesh")
+    cylinder = _cylinder()
+    # Convert the cylinder's triangle pairs back to their original quad panels.
+    quads = np.column_stack((cylinder.faces[::2], cylinder.faces[1::2, 2]))
+    column = panel_mesh_to_trimesh(PanelMesh(cylinder.vertices, quads))
+    box = trimesh.creation.box(extents=[20, 5, 4])
+    box.apply_translation([30, 0, -15])
+    fixture = trimesh.util.concatenate([column, box])
+    result = screen_trimesh(fixture, lref=12, hull_type=HullType.SEMI_PONTOON)
+    assert result.signature.crease_dominated
+    component = fixture.submesh(
+        [np.arange(len(column.faces))], append=True, repair=False
+    )
+    signature = screen_trimesh(component, lref=12).signature
+    assert signature.a_single == pytest.approx(1)
+    assert signature.I_D == pytest.approx(0, abs=1e-9)
+
+
+@pytest.mark.parametrize("representation", ["mesh", "both"])
+def test_profile_forwards_quad_split(monkeypatch, ship_profile, representation):
+    from types import SimpleNamespace
+
+    from digitalmodel.hydrodynamics.hull_library import curvature_screen as module
+
+    sig = SimpleNamespace(model_dump=dict)
+    result = SimpleNamespace(signature=sig, provenance={})
+    seen = []
+    monkeypatch.setattr(module, "_screen_profile_brep", lambda *a, **kw: result)
+    monkeypatch.setattr(module, "representation_delta", lambda *a: {})
+
+    def capture(mesh, **kwargs):
+        seen.append(kwargs["quad_split"])
+        return result
+
+    monkeypatch.setattr(module, "screen_panel_mesh", capture)
+    screen_profile(
+        ship_profile,
+        MeshGeneratorConfig(target_panels=100),
+        representation=representation,
+        quad_split="alternate",
+    )
+    assert seen == ["alternate"]
+
+
+@needs_hullprod
+def test_fixed_inflation_with_generated_winding_on_exact_vertices():
+    mesh, _ = _wigley_quads()
+    mesh.panels = mesh.panels[:, [0, 3, 2, 1]]
+    mesh._compute_normals()
+    HullMeshGenerator()._orient_normals_outward(mesh)
+    # The existing centroid heuristic flips only part of this open half hull.
+    assert np.any(mesh.normals[:, 1] < 0) and np.any(mesh.normals[:, 1] > 0)
+    result = screen_panel_mesh(mesh, lref=100, quad_split="fixed")
+    assert result.signature.I_D > 25
+
+
+def test_fixed_reproduces_legacy_triangles():
+    trimesh = pytest.importorskip("trimesh")
+    mesh, _ = _wigley_quads(nx=4, nz=4)
+    faces = [face for a, b, c, d in mesh.panels for face in ([a, b, c], [a, c, d])]
+    legacy = trimesh.Trimesh(mesh.vertices, faces, process=True)
+    legacy.merge_vertices()
+    legacy.update_faces(legacy.nondegenerate_faces())
+    actual = panel_mesh_to_trimesh(mesh, quad_split="fixed")
+    assert np.array_equal(actual.vertices, legacy.vertices)
+    assert np.array_equal(actual.faces, legacy.faces)
+
+
+@pytest.mark.parametrize(
+    "rotation,reverse", [(0, True), (1, False), (1, True), (2, False)]
+)
+def test_structured_ties_preserve_physical_diagonal_under_winding(rotation, reverse):
+    pytest.importorskip("trimesh")
+    vertices = np.array([[i, j, 0] for i in range(3) for j in range(3)], float)
+    panels = np.array(
+        [[0, 3, 4, 1], [1, 4, 5, 2], [3, 6, 7, 4], [4, 7, 8, 5]], np.int32
+    )
+    before = panel_mesh_to_trimesh(PanelMesh(vertices, panels))
+    panels = np.roll(panels, rotation, axis=1)
+    if reverse:
+        panels = panels[:, ::-1]
+    after = panel_mesh_to_trimesh(PanelMesh(vertices, panels))
+    assert {tuple(sorted(f)) for f in before.faces} == {
+        tuple(sorted(f)) for f in after.faces
+    }
+    assert np.all(after.face_normals[:, 2] == (-1 if reverse else 1))
+
+
+def test_mixed_panels_and_sparse_index_fallback():
+    pytest.importorskip("trimesh")
+    vertices = np.zeros((10002, 3))
+    vertices[[0, 1, 10000, 10001]] = [[0, 0, 0], [1, 0, 0], [0, 1, 0], [1, 1, 0]]
+    panels = np.array(
+        [[0, 1, 10001, 10000], [0, 1, 10001, -1], [0, 0, 10001, 10000]], np.int32
+    )
+    tri = panel_mesh_to_trimesh(PanelMesh(vertices, panels))
+    assert len(tri.faces) == 4
+    assert tri.metadata["quad_split"] == "shortest"
+
+
+def test_spike_shortest_diagonal_and_ties_match_adapter():
+    import runpy
+
+    pytest.importorskip("trimesh")
+    script = (
+        Path(__file__).parents[3]
+        / "docs/spikes/2026-09-25-hullprod-curvature-screening/gdf_to_stl.py"
+    )
+    converter = runpy.run_path(str(script))["quads_to_mesh"]
+    quads = np.array(
+        [
+            [[0, 0, 0], [2, 0, 0], [1, 1, 3], [0, 1, 0]],
+            [[4, 0, 0], [5, 0, 0], [5, 1, 0], [4, 1, 0]],
+            [[7, 0, 0], [8, 0, 0], [8, 1, 0], [8, 1, 0]],
+        ],
+        float,
+    )
+    actual = converter(quads)
+    expected = panel_mesh_to_trimesh(
+        PanelMesh(quads.reshape(-1, 3), np.arange(12, dtype=np.int32).reshape(-1, 4))
+    )
+    assert np.array_equal(actual.vertices, expected.vertices)
+    assert np.array_equal(actual.faces, expected.faces)
+
+
+@pytest.mark.parametrize("isx,isy", [(0, 1), (1, 0), (1, 1)])
+def test_spike_mirrors_selected_diagonal(isx, isy):
+    import runpy
+
+    pytest.importorskip("trimesh")
+    script = (
+        Path(__file__).parents[3]
+        / "docs/spikes/2026-09-25-hullprod-curvature-screening/gdf_to_stl.py"
+    )
+    converter = runpy.run_path(str(script))
+    quads = np.array(
+        [[[x, 2, 0], [x + 1, 2, 1], [x + 1, 3, 0], [x, 3, 1]] for x in (2, 5)], float
+    )
+    actual = converter["mirror_mesh"](converter["quads_to_mesh"](quads), isx, isy)
+    mesh = PanelMesh(
+        quads.reshape(-1, 3),
+        np.arange(8, dtype=np.int32).reshape(2, 4),
+        symmetry_plane=("x" if isx else "") + ("y" if isy else ""),
+    )
+    expected = panel_mesh_to_trimesh(mesh)
+
+    def triangles(tri):
+        return {tuple(sorted(map(tuple, tri.vertices[f]))) for f in tri.faces}
+
+    assert triangles(actual) == triangles(expected)

@@ -31,7 +31,7 @@ import importlib.util
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
@@ -60,8 +60,8 @@ CREASE_DOMINATED_HULL_TYPES: frozenset[HullType] = frozenset(
 )
 
 #: Monohull saddle-fraction warning thresholds (decision D4, warn-only). Seeded from the
-#: 2026-09-25 evaluation table: FPSO 0.03, L01 vessel 0.12, Bokalift 0.15, drillship 0.21
-#: on coarse BEM meshes. A generator artefact (ruled lofting) read 0.60.
+#: Historical 2026-09-25 fixed-split coarse BEM evaluation (superseded 2026-09-27).
+#: Thresholds remain warn-only; triangulation and winding affect the measured fractions.
 _SADDLE_WARNING_THRESHOLDS: dict[HullType, float] = {
     HullType.TANKER: 0.35,
     HullType.SHIP: 0.35,
@@ -140,6 +140,7 @@ class CurvatureSignature(BaseModel):
     )
     hullprod_version: str
     representation: str = "mesh"
+    quad_split: str | None = None
     source: str | None = None
     hull_type: str | None = None
     crease_dominated: bool = Field(
@@ -197,29 +198,66 @@ class CurvatureScreenResult:
 # ---------------------------------------------------------------------------
 
 
-def _triangles_from_panels(panels: NDArray[np.int32]) -> list[list[int]]:
-    """Split quads into two triangles; collapsed quads and -1 padded panels become one."""
+def _alternate_diagonals(panels: NDArray[np.int32]) -> NDArray[np.bool_]:
+    """Use checkerboard parity for a complete row-major index grid, else row parity."""
+    alternate = np.arange(len(panels)) % 2 == 1
+    if panels.ndim != 2 or panels.shape[1] != 4 or not len(panels):
+        return alternate
+    ordered = np.sort(panels, axis=1)
+    stride = int(ordered[0, 2] - ordered[0, 0])
+    if stride < 2 or not np.all(ordered == ordered[:, :1] + [0, 1, stride, stride + 1]):
+        return alternate
+    nx, remainder = divmod(len(panels), stride - 1)
+    if remainder or nx == 0:
+        return alternate
+    starts = (np.arange(nx)[:, None] * stride + np.arange(stride - 1)).ravel()
+    if not np.array_equal(np.sort(ordered[:, 0]), starts):
+        return alternate
+    i, j = np.divmod(ordered[:, 0], stride)
+    # Account for cyclically rotated panel winding: canonical 0-2 may be 1-3.
+    return (i + j + np.argmin(panels, axis=1)) % 2 == 1
+
+
+def _triangles_from_panels(
+    panels: NDArray[np.int32], vertices: NDArray[np.float64], quad_split: str
+) -> list[list[int]]:
+    """Split quads without changing winding; padded/collapsed triangles stay single."""
+    alternate = _alternate_diagonals(panels)
     faces: list[list[int]] = []
-    for panel in np.asarray(panels):
-        idx = [int(i) for i in panel if int(i) >= 0]
-        if len(idx) == 4 and idx[2] != idx[3]:
-            faces.append([idx[0], idx[1], idx[2]])
-            faces.append([idx[0], idx[2], idx[3]])
-        elif len(idx) >= 3:
-            faces.append(idx[:3])
+    for number, panel in enumerate(np.asarray(panels)):
+        idx = list(dict.fromkeys(int(i) for i in panel if int(i) >= 0))
+        if len(idx) == 4:
+            a, b, c, d = idx
+            other = bool(alternate[number]) if quad_split != "fixed" else False
+            if quad_split == "shortest":
+                d02 = float(np.sum((vertices[a] - vertices[c]) ** 2))
+                d13 = float(np.sum((vertices[b] - vertices[d]) ** 2))
+                if not np.isclose(d02, d13, rtol=1e-12, atol=0):
+                    other = d13 < d02
+            faces.extend(([a, b, d], [b, c, d]) if other else ([a, b, c], [a, c, d]))
+        elif len(idx) == 3:
+            faces.append(idx)
     return faces
 
 
-def panel_mesh_to_trimesh(mesh: PanelMesh, *, expand_symmetry: bool = True) -> Any:
+def panel_mesh_to_trimesh(
+    mesh: PanelMesh, *, expand_symmetry: bool = True, quad_split: str = "shortest"
+) -> Any:
     """Convert a ``PanelMesh`` to a merged ``trimesh.Trimesh``.
 
     ``symmetry_plane`` letters name mirrored axes in the WAMIT ISX/ISY sense (``'y'`` is
     the half hull with y >= 0, as ``HullMeshGenerator`` produces). Mirrored copies get
-    reversed winding so normals stay outward.
+    reversed winding so normals stay outward. ``quad_split`` chooses the shorter
+    3-D diagonal, checkerboard/index alternation, or the legacy fixed diagonal.
+    Equal lengths use alternation (relative tolerance 1e-12, no absolute floor).
     """
+    if quad_split not in {"shortest", "alternate", "fixed"}:
+        raise ValueError("quad_split must be shortest, alternate or fixed")
     trimesh = importlib.import_module("trimesh")
     vertices = np.asarray(mesh.vertices, dtype=float)
-    faces = np.asarray(_triangles_from_panels(mesh.panels), dtype=np.int64)
+    faces = np.asarray(
+        _triangles_from_panels(mesh.panels, vertices, quad_split), dtype=np.int64
+    )
     if len(faces) == 0:
         raise ValueError("PanelMesh has no usable panels for curvature screening")
 
@@ -235,6 +273,10 @@ def panel_mesh_to_trimesh(mesh: PanelMesh, *, expand_symmetry: bool = True) -> A
     tri = trimesh.Trimesh(vertices, faces, process=True)
     tri.merge_vertices()
     tri.update_faces(tri.nondegenerate_faces())
+    has_quads = any(
+        len({int(i) for i in panel if i >= 0}) == 4 for panel in mesh.panels
+    )
+    tri.metadata["quad_split"] = quad_split if has_quads else None
     return tri
 
 
@@ -342,6 +384,7 @@ def screen_trimesh(
             md.get("hullprod_version", getattr(hullprod, "__version__", ""))
         ),
         hull_type=resolved_type.value if resolved_type else None,
+        quad_split=tri.metadata.get("quad_split"),
         crease_dominated=crease,
         notes=notes,
     )
@@ -349,6 +392,7 @@ def screen_trimesh(
     # Arrays are large and already surfaced through ``fields``.
     provenance = {k: v for k, v in md.items() if not isinstance(v, np.ndarray)}
     provenance["citation"] = HULLPROD_CITATION
+    provenance["quad_split"] = signature.quad_split
     return CurvatureScreenResult(
         signature=signature, fields=fields, provenance=provenance
     )
@@ -361,6 +405,7 @@ def screen_panel_mesh(
     hull_type: HullType | str | None = None,
     keep_fields: bool = True,
     expand_symmetry: bool = True,
+    quad_split: str = "shortest",
     workdir: str | Path | None = None,
 ) -> CurvatureScreenResult:
     """Screen a ``PanelMesh`` (quads or triangles, optional symmetry) with HullProd.
@@ -371,9 +416,12 @@ def screen_panel_mesh(
         hull_type: Drives the crease-dominated annotation and saddle threshold.
         keep_fields: Keep per-vertex K, H, class and validity arrays.
         expand_symmetry: Mirror the mesh across its ``symmetry_plane`` first.
+        quad_split: Shortest 3-D diagonal (default), alternate, or legacy fixed.
         workdir: Directory for the temporary OBJ handed to HullProd.
     """
-    tri = panel_mesh_to_trimesh(mesh, expand_symmetry=expand_symmetry)
+    tri = panel_mesh_to_trimesh(
+        mesh, expand_symmetry=expand_symmetry, quad_split=quad_split
+    )
     return screen_trimesh(
         tri, lref=lref, hull_type=hull_type, keep_fields=keep_fields, workdir=workdir
     )
@@ -397,9 +445,9 @@ def screen_step(
     if path.suffix.lower() not in {".step", ".stp", ".iges", ".igs"}:
         raise ValueError("screen_step requires a STEP or IGES file")
     hullprod = require_hullprod()
-    from .hull_surface_brep import _step_settings
-
     from hullprod.types import ProducibilityConfig
+
+    from .hull_surface_brep import _step_settings
 
     config = ProducibilityConfig(brep_cache=False, brep_display_mesh=False)
     with _step_settings("M"):
@@ -412,6 +460,7 @@ def screen_step(
             provenance[key] = {**provenance[key], path_key: path.name}
     provenance["citation"] = HULLPROD_CITATION
     provenance["lref_input_unit"] = "metre"
+    provenance["quad_split"] = None
     return CurvatureScreenResult(signature, None, provenance)
 
 
@@ -522,6 +571,7 @@ def screen_profile(
     *,
     keep_fields: bool = False,
     representation: str = "mesh",
+    quad_split: str = "shortest",
     workdir: str | Path | None = None,
     n_x: int | None = None,
     n_z: int | None = None,
@@ -547,7 +597,11 @@ def screen_profile(
         if representation == "brep":
             return brep
         mesh_result = screen_profile(
-            profile, config, keep_fields=keep_fields, workdir=workdir
+            profile,
+            config,
+            keep_fields=keep_fields,
+            workdir=workdir,
+            quad_split=quad_split,
         )
         mesh_result.provenance["brep_signature"] = brep.signature.model_dump()
         mesh_result.provenance["representation_delta"] = representation_delta(
@@ -562,6 +616,7 @@ def screen_profile(
         lref=float(profile.length_bp),
         hull_type=profile.hull_type,
         keep_fields=keep_fields,
+        quad_split=quad_split,
         workdir=workdir,
     )
 
@@ -575,11 +630,11 @@ __all__ = [
     "CurvatureSignature",
     "hullprod_available",
     "panel_mesh_to_trimesh",
+    "representation_delta",
     "require_hullprod",
     "saddle_warning_threshold",
     "screen_panel_mesh",
     "screen_profile",
     "screen_step",
-    "representation_delta",
     "screen_trimesh",
 ]
