@@ -4,8 +4,7 @@ Screen candidate onshore drilling rigs against a well/field program and rank the
 survivors on a weighted capability fit. Rule-based, deterministic, public-data —
 no network, no licensed solver, no downhole physics.
 
-Issue: digitalmodel#821. Full design + public data registry:
-`deckhand/docs/deckhand/workflows/rig-capability-assessment.md`.
+Issue: digitalmodel#821. Engine: `src/digitalmodel/field_development/rig_capability.py`.
 
 ## Run
 

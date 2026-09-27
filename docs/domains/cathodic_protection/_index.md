@@ -9,6 +9,30 @@ ISO 15589-2 and API RP 1632. This directory holds the domain notes, the worked e
 run through the code, the analysis notes and the technical reviews. The code lives in two
 places (below); the worked examples are the contract between the two.
 
+## Use status
+
+Owner decision 2026-09-27 (epic #2206, D1 revisited). The domain is approved for client
+use on the DNV-RP-B401 offshore and DNV-RP-F103 bracelet routes only, and only subject to
+an engineer-of-record (EOR) check of every client deliverable. The four quarantined models
+stay experimental. The two ABS routes run the legacy solver with uncited tables and are not
+for client use without an independent check. Benchmark issue #1852 runs on the first real
+job.
+
+| Route / model | Status | Basis |
+|---------------|--------|-------|
+| `DNV_RP_B401_offshore` (engine adapter) | Client use with EOR check | Cited, edition-keyed B401 tables (`b401_tables.py`); full Sec. 7 initial / mean / final loop |
+| `DNV_RP_F103_2010` (engine adapter; runs the requested F103 edition, default 2019) | Client use with EOR check | Cited, edition-keyed F103 tables (`f103_tables.py`); Eq. 14 protected-length check |
+| `ABS_gn_ships_2018`, `ABS_gn_offshore_2018` | Legacy, uncited: not for client use without an independent check | Legacy solver (`base_solvers/hydrodynamics/cathodic_protection.py`), tables not cited |
+| `DNV_RP_B401_offshore_legacy`, `DNV_RP_F103_2010_legacy` | Legacy, uncited: not for client use without an independent check | Deprecated legacy solver paths |
+| Stray current (`stray_current.assess_stray_current` / `design_drainage_bond`), fuel-system protection check (`fuel_system_cp.check_protection`), galvanic corrosion (`corrosion_rate.galvanic_corrosion`), ICCP anode life (`iccp_design.anode_bed_design` `estimated_life_years`) | Experimental | Quarantined (#2209): the first three raise `ExperimentalModelError` and the ICCP life is `None` unless called with `experimental=True` |
+
+The status is machine-visible: every engine-adapter route writes
+`results["status"]["use_status"]` (`client-use-with-eor-check` or
+`legacy-uncited-independent-check-required`), and the `cathodic_protection.anode_design`
+report states it in the Adequacy section and in the route's status detail, so every HTML/PDF
+deliverable carries it. `docs/registry/module-routing.yaml` keeps `maturity: beta` (its scale
+has no "client use with conditions" value).
+
 ## Module map
 
 ### `src/digitalmodel/cathodic_protection/` (package)
@@ -16,7 +40,7 @@ places (below); the worked examples are the contract between the two.
 | Module | One line |
 |--------|----------|
 | `__init__.py` | Package entry; re-exports the edition helpers and the calculators below |
-| `_edition.py` | DNV-RP-B401 edition normalisation (`"2017"`, `"2021"`; default 2021) |
+| `_edition.py` | DNV-RP-B401 (default 2021) and DNV-RP-F103 (`"2010"`, `"2019"`; default 2019 since 2026-09-27, was 2010) edition normalisation |
 | `anode_depletion.py` | Anode consumption tracking, remaining-life and inspection-interval estimates |
 | `anode_sizing.py` | Sacrificial anode sizing per DNV-RP-B401: stand-off, bracelet, flush-mount; McCoy and Dwight resistance |
 | `api_rp_1632.py` | API RP 1632 galvanic CP of underground tanks and piping |

@@ -1,8 +1,8 @@
-# ABOUTME: Tests the wall-thickness quick-check example (deckhand#170/#227).
+# ABOUTME: Tests the wall-thickness quick-check example.
 # ABOUTME: Exercises sweep cache, arrestor branch selection, and offline HTML artifact.
 """Tests for the wall-thickness quick-check example.
 
-Verifies the Deckhand "quick calc" EXECUTE artifact at
+Verifies the "quick calc" example artifact at
 ``examples/structural/wall_thickness_quickcheck/quick_check.py``:
 
 - ``--from-cache`` runs with no engine call and no network (offline determinism).

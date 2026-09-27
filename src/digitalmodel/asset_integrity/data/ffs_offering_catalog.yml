@@ -2,9 +2,9 @@
 # ABOUTME: codes x digitalmodel engine status. Data only; no clause text. Epic #1057 Phase 4.
 #
 # Status vocabulary (readiness review 2026-09-25, docs/domains/asset-integrity/ffs-readiness-review-2026-09-25.md, PR #2186):
-#   live       engine + tests + validation record + registered workflow + Deckhand route
-#   routed     engine + tests + registered workflow + Deckhand route, but NO validation record
-#   validated  engine + tests + validation record, no workflow/route yet
+#   live       engine + tests + validation record + registered durable workflow with a committed example
+#   workflow   engine + tests + registered durable workflow with a committed example, but NO validation record
+#   validated  engine + tests + validation record, no registered workflow yet
 #   engine     engine + tests, no validation record
 #   planned    GitHub issue exists, no engine
 #   none       no engine, no issue (candidate for the offering roadmap)
@@ -80,11 +80,11 @@ codes:
   nbic: {short: "NBIC", title: "NBIC (NB-23) National Board Inspection Code"}
   asme-i: {short: "ASME I", title: "ASME BPVC Section I Power Boilers"}
 
-# Engine registry. `workflow` ids must exist in docs/registry/workflows.yaml; `route: true` means a
-# `digitalmodel:<workflow>` entry exists in ../deckhand/config/deckhand/routing/paths.yaml.
+# Engine registry. `workflow` ids must exist in docs/registry/workflows.yaml, and the registered row's
+# example input (examples/workflows/<id>/input.yml) must be committed; the workflow run writes the report.
 engines:
-  ffs-metal-loss: {module: asset_integrity.assessment.ffs_coordinator, status: validated, workflow: ffs-metal-loss, route: false, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md, note: "canonical L1/L2 GML/LML coordinator; route pending #2180"}
-  api579-legacy: {module: asset_integrity.API579, status: routed, workflow: api579-pipe-ffs-b314, route: true, note: "no validation record; superseded path kept as canary"}
+  ffs-metal-loss: {module: asset_integrity.assessment.ffs_coordinator, status: live, workflow: ffs-metal-loss, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md, note: "canonical L1/L2 GML/LML coordinator"}
+  api579-legacy: {module: asset_integrity.API579, status: workflow, workflow: api579-pipe-ffs-b314, note: "no validation record; superseded by ffs-metal-loss (#1075), kept as a regression reference"}
   corroded-pipe: {module: asset_integrity.corroded_pipe, status: validated, validation: docs/domains/asset-integrity/b31g-validation-2026-06-27.md, issue: 2181}
   rstreng-2d: {module: asset_integrity.rstreng_2d, status: validated, validation: docs/domains/rstreng-2d-validation-2026-06-29.md, issue: 2181}
   dnv-f101: {module: asset_integrity.dnv_rp_f101, status: validated, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md, issue: 2181, caveat: "interacting-defect method and PSF tables per #1094"}
@@ -94,17 +94,17 @@ engines:
   crack-fad: {module: asset_integrity.assessment.crack_fad, status: engine, issue: 2184, caveat: "BS 7910:2013 Option 1 curve (single implementation, #2160) plus the API 579 Level 2 / BS 7910 Level 2A generic curve; Part 9 Level 2 workflow from inspection data is #2175"}
   crack-growth: {module: fatigue.crack_growth, status: engine, issue: 2177}
   level3-handoff: {module: asset_integrity.assessment.level3_escalation, status: engine, issue: 2184}
-  measurement-sufficiency: {module: asset_integrity.assessment.measurement_sufficiency, status: engine, workflow: ffs-metal-loss, route: false, note: "mentioned in the 2026-06-27 record only; own record pending #2185"}
+  measurement-sufficiency: {module: asset_integrity.assessment.measurement_sufficiency, status: engine, workflow: ffs-metal-loss, note: "mentioned in the 2026-06-27 record only; own record pending #2185"}
   rbi: {module: asset_integrity.rbi_screening, status: engine, issue: 2185}
   composite-repair: {module: asset_integrity.composite_repair, status: engine, issue: 2185}
-  inspection-planning: {module: asset_integrity.inspection_planning, status: routed, workflow: inspection-planning, route: true, issue: 2180, note: "no validation record"}
+  inspection-planning: {module: asset_integrity.inspection_planning, status: workflow, workflow: inspection-planning, issue: 2180, note: "no validation record"}
   riser-joint-ffs: {module: asset_integrity.riser_joint_ffs, status: engine, issue: 2183, note: "real anonymized C-scan fixtures (#1293)"}
-  plate-panel-buckling: {module: infrastructure.base_solvers.structural.plate_buckling, status: routed, workflow: plate-buckling, route: true, note: "DNV-RP-C201 usage-factor check; plate metal-loss FFS reuses it by reducing thickness"}
+  plate-panel-buckling: {module: infrastructure.base_solvers.structural.plate_buckling, status: workflow, workflow: plate-buckling, note: "DNV-RP-C201 usage-factor check; plate metal-loss FFS reuses it by reducing thickness"}
   jacket-member-joint: {module: structural.jacket_topside, status: engine, note: "API RP 2A design checks; no damaged-member capacity"}
   mooring-screen: {module: mooring_resilience.screening, status: engine, note: "DNV-OS-E301 factors; GREEN/AMBER/RED vocabulary; no chain degradation"}
   mooring-fatigue: {module: mooring_fatigue, status: engine}
   synthetic-rope-fatigue: {module: synthetic_rope_mooring_fatigue, status: engine}
-  riser-fatigue: {module: riser_fatigue, status: routed, workflow: riser-fatigue, route: true, note: "no validation record under docs/domains"}
+  riser-fatigue: {module: riser_fatigue, status: workflow, workflow: riser-fatigue, note: "no validation record under docs/domains"}
   hull-girder: {module: hull_girder_screening, status: engine}
   sn-fatigue: {module: structural.fatigue, status: engine, note: "221 S-N curves, 17 standards; library, not a verdict"}
   scour: {module: geotechnical.scour, status: engine}
@@ -151,7 +151,7 @@ industries:
           - {mechanism: geohazard / ground-movement strain demand, codes: [api-rp-1133], engines: [], tiers: [T2], status: none}
           - {mechanism: direct-assessment programme support (ECDA / ICDA region and indication ranking), codes: [nace-sp0502, nace-sp0206], engines: [], tiers: [T1], status: none}
           - {mechanism: composite repair selection behind a REPAIR verdict, codes: [asme-pcc-2, iso-24817], engines: [composite-repair], tiers: [T2], status: engine}
-          - {mechanism: re-inspection interval / remaining life, codes: [asme-b31-8s, api-rp-1160], engines: [inspection-planning], tiers: [T1], status: routed}
+          - {mechanism: re-inspection interval / remaining life, codes: [asme-b31-8s, api-rp-1160], engines: [inspection-planning], tiers: [T1], status: workflow}
 
   - id: downstream-fixed-equipment
     title: Refining and petrochemical fixed equipment
@@ -232,7 +232,7 @@ industries:
       - asset: steel catenary / top-tensioned production risers
         defects:
           - {mechanism: "metal loss, pitting, cracks", codes: [api-std-2rd, dnv-st-f201, api-579-1, bs-7910], parts: [4, 5, 6, 9], engines: [ffs-metal-loss, crack-fad], tiers: [T1, T2], status: engine}
-          - {mechanism: "fatigue (wave, VIV)", codes: [dnv-st-f201, dnv-rp-c203], engines: [riser-fatigue], tiers: [T2], status: routed}
+          - {mechanism: "fatigue (wave, VIV)", codes: [dnv-st-f201, dnv-rp-c203], engines: [riser-fatigue], tiers: [T2], status: workflow}
       - asset: drilling / completion riser joints and wellhead fatigue
         defects:
           - {mechanism: metal loss / weld flaws / collapse-limited depth, codes: [asme-b31g, dnv-rp-f101, bs-7910], engines: [riser-joint-ffs], tiers: [T1, T2], status: engine, note: "real C-scan fixtures; workflow #2183"}
@@ -273,7 +273,7 @@ industries:
       - asset: hull plating and stiffeners
         defects:
           - {mechanism: "thickness diminution vs renewal thickness (wastage allowance, substantial-corrosion band)", codes: [iacs-csr], engines: [hull-wastage], tiers: [T1], status: planned}
-          - {mechanism: buckling of thinned plates / panels, codes: [iacs-csr, dnv-rp-c201], engines: [plate-panel-buckling], tiers: [T2], status: routed, note: "plate metal-loss FFS on the capabilities page"}
+          - {mechanism: buckling of thinned plates / panels, codes: [iacs-csr, dnv-rp-c201], engines: [plate-panel-buckling], tiers: [T2], status: workflow, note: "plate metal-loss FFS on the capabilities page"}
           - {mechanism: pitting intensity on plating, codes: [iacs-rec-84], engines: [pitting], tiers: [T1], status: engine}
           - {mechanism: hull girder section modulus loss against class limits, codes: [iacs-csr], engines: [hull-girder, hull-wastage], tiers: [T2], status: engine}
           - {mechanism: fatigue cracks at details, codes: [iacs-csr, bs-7910], engines: [sn-fatigue, crack-fad], tiers: [T2], status: engine}

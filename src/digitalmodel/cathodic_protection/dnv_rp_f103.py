@@ -37,7 +37,6 @@ from pydantic import BaseModel, Field, model_validator
 
 from digitalmodel.cathodic_protection import _kernels as kernel
 from digitalmodel.cathodic_protection._edition import (
-    DEFAULT_F103_EDITION,
     F103Edition,
     f103_standard_for_edition,
     normalize_f103_edition,
@@ -74,6 +73,9 @@ DEFAULT_SEAWATER_RESISTIVITY_OHM_M: Final = 0.30
 
 GOVERNING_MASS: Final = "mass"
 GOVERNING_FINAL: Final = "final"
+
+# Edition label for result dicts that predate ``edition_used`` (2010 tables).
+_LEGACY_RESULT_EDITION: Final[F103Edition] = "2010"
 
 
 class BraceletDesignInput(BaseModel):
@@ -276,7 +278,10 @@ class BraceletDesignResult(BaseModel):
         if not isinstance(data, dict):
             return data
         values = dict(data)
-        edition = values.get("edition_used") or DEFAULT_F103_EDITION
+        # A result without ``edition_used`` predates edition support and was
+        # computed with the 2010 tables, so it is labelled 2010 regardless of
+        # the current default (2019 since 2026-09-27).
+        edition = values.get("edition_used") or _LEGACY_RESULT_EDITION
         values["edition_used"] = edition
         values.setdefault("standard", f103_standard_for_edition(edition))
         values.setdefault("provenance", edition_provenance(edition))
@@ -311,7 +316,7 @@ def protected_length(
     i_cm : float
         Design mean current density [A/m2].
     edition : F103Edition, optional
-        F103 edition token; ``None`` warns and defaults to 2010. Eq. 14 is
+        F103 edition token; ``None`` warns and defaults to 2019. Eq. 14 is
         the same in both editions (Equation (14) of the 2019 print, [6.7]).
 
     Returns
@@ -352,7 +357,7 @@ def design_bracelet_cp(
     inp : BraceletDesignInput
         Pipeline, coating, environment and bracelet data.
     edition : F103Edition, optional
-        F103 edition token; ``None`` warns and defaults to 2010.
+        F103 edition token; ``None`` warns and defaults to 2019.
 
     Returns
     -------

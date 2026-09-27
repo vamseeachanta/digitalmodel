@@ -76,7 +76,7 @@ _ALIASES: dict[str, Edition] = {
 
 
 F103Edition = Literal["2010", "2019"]
-DEFAULT_F103_EDITION: F103Edition = "2010"
+DEFAULT_F103_EDITION: F103Edition = "2019"
 F103_STANDARD_BY_EDITION: dict[F103Edition, str] = {
     "2010": "DNV-RP-F103 (October 2010)",
     "2019": "DNVGL-RP-F103 (September 2019, amended May 2021)",
@@ -157,8 +157,9 @@ def standard_for_edition(edition: Edition) -> str:
 def normalize_f103_edition(edition: str | None, *, stacklevel: int = 2) -> F103Edition:
     """Return the canonical DNV-RP-F103 edition token.
 
-    ``None`` warns and defaults to DNV-RP-F103 2010, the edition whose tables
-    were held first and whose results existing callers rely on. ``"2021"``
+    ``None`` warns and defaults to DNV-RP-F103 2019, the latest edition on
+    file (owner decision 2026-09-27, epic #2206; it was 2010 before, pass
+    ``"2010"`` to reproduce earlier results). ``"2021"``
     normalizes to ``"2019"`` (the May 2021 amended print of the September
     2019 edition). ``"2016"`` warns and normalizes to ``"2019"``: the July
     2016 DNVGL print is not on file and the 2019 print republishes it with
@@ -166,7 +167,7 @@ def normalize_f103_edition(edition: str | None, *, stacklevel: int = 2) -> F103E
     """
     if edition is None:
         warnings.warn(
-            "No DNV-RP-F103 edition supplied; defaulting to DNV-RP-F103 2010.",
+            "No DNV-RP-F103 edition supplied; defaulting to DNV-RP-F103 2019.",
             UserWarning,
             stacklevel=stacklevel,
         )
