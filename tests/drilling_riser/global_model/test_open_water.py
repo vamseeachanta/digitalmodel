@@ -321,3 +321,15 @@ def test_campaign_adapter_statics_and_extraction_on_open_water(tmp_path):
     assert info["physical"] and info["steps"] == 11  # -2 % -> +3 % WD in 0.5 % steps
     out = cp.ADAPTER.extract(m, case)
     assert out["edp_bottom_n"] > 0 and out["sj_base_bending_moment_nm"] > 0 and len(out["modes"]) == 3
+
+
+@pytest.mark.solver
+@pytest.mark.skipif(not orcaflex_api.available(), reason="OrcFxAPI not available")
+def test_campaign_open_water_statics_default_to_direct(tmp_path):
+    from digitalmodel.drilling_riser import campaign as cp
+    from digitalmodel.drilling_riser.global_model import orcaflex_run as orun
+
+    case = _ow_case(tmp_path, heading_deg=0.0)
+    m = orun.load_model(cp.ADAPTER.build(case, tmp_path / "d"))
+    info = cp.ADAPTER.statics(m, case)
+    assert info["method"] == "direct" and info["physical"]

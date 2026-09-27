@@ -32,7 +32,8 @@ Open-water (C2) riser base specs (``kind: open_water``, :class:`OpenWaterRiserSp
                       the start of the main stage and the tensioner tension steps to ``f`` (default 1.02) x the
                       released submerged weight. This is a modelled event, not a timing proxy.
 
-Their statics are checked by the frame balance and the rotary continuity (no tension ring).
+Their statics default to ``"direct"`` (no tension ring, so no yawed-ring branch) and are checked by the frame
+balance and the rotary vertical reaction.
 
 Use with :func:`digitalmodel.solvers.orcaflex.parallel_runner.run_cases` and
 ``adapter="digitalmodel.drilling_riser.campaign:ADAPTER"``.
@@ -256,7 +257,10 @@ class RiserCampaignAdapter:
         p = case.get("params", {})
         settings = apply_statics_settings(model, p)
         spec = self.spec(case)
-        if p.get("statics", "seeded") == "seeded":
+        # the seeded route exists for the tension-ring yaw branch of the drilling riser; the open-water riser has no
+        # ring and converges from its straight start (its default is direct statics)
+        default = "direct" if isinstance(spec, OpenWaterRiserSpec) else "seeded"
+        if p.get("statics", default) == "seeded":
             info = seeded_statics(model, spec, step_pct=float(p.get("statics_step_pct", STEP_PCT)))
         else:
             model.CalculateStatics()
