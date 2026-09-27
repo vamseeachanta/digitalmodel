@@ -1,5 +1,13 @@
-"""Campaign statics path (W4 batch-1 probe findings): line-tension calibration at the zero-offset still-water state,
-offset continuation from there, current ramp; ring buoyancy in the balance; tensioner-vertical branch tolerance."""
+"""Campaign statics (W4 batch-1 probe findings, 2026-09-27):
+
+* the static state is path-independent but the solver is not: a full-current start diverges for some variants, a
+  still-water continuation flips the ring to the yawed branch at large offsets for others. The adapter therefore
+  tries statics paths in order (reloading the model between attempts) and rejects a path whose ring yaw leaves
+  1 deg at any step;
+* the tensioner line tension is calibrated in a separate still-water, zero-offset solve per model variant (the
+  tensioner setting) and passed to the cases as ``tensioner_line_tension_n``;
+* the ring balance carries the buoyancy of the wetted ring; the tensioner vertical check is a 1 % branch detector.
+"""
 
 from __future__ import annotations
 
@@ -29,8 +37,12 @@ def _case(base, **params):
     return {"case_id": "C-1", "analysis": "statics", "params": {"base_spec": base, **params}}
 
 
+CURRENT = {"depth_speed_m_s": [[0, 0.6], [300, 0.1]]}
+
+
 class _Env:
-    RefCurrentSpeed = 0.6
+    def __init__(self, speed):
+        self.RefCurrentSpeed = speed
 
 
 class _Winch:
@@ -49,73 +61,137 @@ class _Winch:
         self.t[i] = v
 
 
-class _Pos:
-    InitialX = InitialY = 0.0
+class _Body:
+    def __init__(self, model):
+        self.InitialX = self.InitialY = 0.0
+        self._m = model
+
+    def StaticResult(self, name, *args):
+        return {"Rotation 3": self._m.yaw, "Wetted volume": 0.0}[name]
 
 
 class _FakeModel(dict):
-    """Records every statics call: (vessel x, vessel y, current speed, line tension)."""
+    """Records every statics call (vessel x, current speed); ``fail(model)`` decides whether a call diverges."""
 
-    def __init__(self, vertical_of_tension):
-        super().__init__(Vessel=_Pos(), TensionRing=_Pos())
-        self.environment = _Env()
+    def __init__(self, speed=0.6, fail=lambda m: False, vertical=None):
+        super().__init__()
+        self["Vessel"], self["TensionRing"] = _Body(self), _Body(self)
+        self.environment = _Env(speed)
         self.winches = [_Winch(f"Tensioner{i}", 100.0) for i in range(1, 7)]
         self.objects = self.winches
-        self.calls = []
-        self.vertical_of_tension = vertical_of_tension
+        self.calls, self.reloads, self.fail, self.yaw = [], 0, fail, 0.0
+        self.vertical = vertical
 
     def CalculateStatics(self):
-        self.calls.append((self["Vessel"].InitialX, self["Vessel"].InitialY, self.environment.RefCurrentSpeed,
-                           self.winches[0].t[-1]))
+        self.calls.append((self["Vessel"].InitialX, self.environment.RefCurrentSpeed))
+        if self.fail(self):
+            raise RuntimeError("Static calculation failed (Whole system statics: Not converged.)")
 
     def UseCalculatedPositions(self, _):
         pass
 
 
-def test_statics_path_calibrates_in_still_water_then_offsets_then_ramps_the_current(base_spec, monkeypatch):
-    c = _case(base_spec, heading_deg=0.0, offset_pct_wd=2.0, current={"depth_speed_m_s": [[0, 0.6], [300, 0.1]]})
-    ad = cp.RiserCampaignAdapter()
-    spec = ad.spec(c)
-    target = cp.tensioner_vertical_target_n(spec)
-    # the vertical delivered is 0.98 x the target per unit of the specified line tension ratio
-    m = _FakeModel(lambda t: 0.98 * target * t / 100.0)
-    monkeypatch.setattr(cp, "_tensioner_vertical_n", lambda model: model.vertical_of_tension(model.winches[0].t[-1]))
+def _reloader(m, speed):
+    def reload():
+        m.reloads += 1
+        m.environment.RefCurrentSpeed = speed
+        m.yaw = 0.0
+        for n in ("Vessel", "TensionRing"):
+            m[n].InitialX = m[n].InitialY = 0.0
+    return reload
+
+
+def _spec(base_spec, **kw):
+    return cp.RiserCampaignAdapter().spec(_case(base_spec, heading_deg=0.0, **kw))
+
+
+def test_first_path_is_the_full_current_continuation_from_the_seed(base_spec, monkeypatch):
+    spec = _spec(base_spec, offset_pct_wd=2.0, current=CURRENT)
+    m = _FakeModel()
     monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
-    info = cp.robust_statics(m, spec, c["params"])
+    info = cp.robust_statics(m, spec, {}, reload=_reloader(m, 0.6))
     wd = spec.environment.water_depth_m
-    xs = [x for x, _, _, _ in m.calls]
-    speeds = [s for _, _, s, _ in m.calls]
-    # 1) still water from the -2 % seed to zero offset, 2) calibration, 3) offset in 0.5 % steps, 4) current ramp
-    assert xs[0] == pytest.approx(-0.02 * wd) and speeds[0] == 0.0
-    i_cal = info["calibration"]["statics_calls"]
-    assert all(s == 0.0 for s in speeds[: info["offset_steps_end"]])
-    assert info["calibration"]["factor"] == pytest.approx(1 / 0.98, rel=1e-9)
-    assert m.winches[3].t == [pytest.approx(100.0 / 0.98)] * 3  # every stage row scaled
-    assert xs[-1] == pytest.approx(0.02 * wd)
-    assert speeds[-4:] == pytest.approx([0.15, 0.3, 0.45, 0.6])
+    assert info["strategy"] == "current_at_seed" and m.reloads == 0 and info["attempts"] == []
+    assert m.calls[0] == (pytest.approx(-0.02 * wd), 0.6) and m.calls[-1][0] == pytest.approx(0.02 * wd)
+    assert all(s == 0.6 for _, s in m.calls)
+
+
+def test_fallback_ramps_the_current_at_the_seed_after_a_divergence(base_spec, monkeypatch):
+    spec = _spec(base_spec, offset_pct_wd=2.0, current=CURRENT)
+    wd = spec.environment.water_depth_m
+    # full current at the seed from the straight start diverges; everything else converges
+    m = _FakeModel(fail=lambda m: len(m.calls) == 1)
+    monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
+    info = cp.robust_statics(m, spec, {}, reload=_reloader(m, 0.6))
+    assert info["strategy"] == "ramp_at_seed" and m.reloads == 1
+    assert info["attempts"][0]["strategy"] == "current_at_seed" and "Not converged" in info["attempts"][0]["error"]
+    second = m.calls[1:]
+    assert second[0] == (pytest.approx(-0.02 * wd), 0.0)  # still water at the seed
+    assert [s for _, s in second[1:5]] == pytest.approx([0.15, 0.3, 0.45, 0.6])  # ramp at the seed
+    assert second[-1] == (pytest.approx(0.02 * wd), 0.6)  # then to the target in full current
     assert m.environment.RefCurrentSpeed == 0.6
-    assert info["current_ramp"] == [0.25, 0.5, 0.75, 1.0] and i_cal >= 1
 
 
-def test_ramp_failure_is_statics_diverged_with_the_fraction_reached(base_spec, monkeypatch):
-    c = _case(base_spec, heading_deg=0.0, offset_pct_wd=0.0, current={"depth_speed_m_s": [[0, 2.0], [300, 0.2]]})
-    ad = cp.RiserCampaignAdapter()
-    spec = ad.spec(c)
-    target = cp.tensioner_vertical_target_n(spec)
-    m = _FakeModel(lambda t: target * t / 100.0)
-    m.environment.RefCurrentSpeed = 2.0  # the model's reference current speed (the case's 2.0 m/s surface value)
-    orig = m.CalculateStatics
+def test_a_yaw_flip_rejects_the_path(base_spec, monkeypatch):
+    spec = _spec(base_spec, offset_pct_wd=4.0, current=CURRENT)
 
-    def fail_at_full():
-        if m.environment.RefCurrentSpeed > 1.6:
-            raise RuntimeError("Static calculation failed (Whole system statics: Not converged.)")
-        orig()
+    def flip(m):  # the first path flips the ring at its third step
+        if m.reloads == 0 and len(m.calls) == 3:
+            m.yaw = 180.0
+        return False
 
-    m.CalculateStatics = fail_at_full
-    monkeypatch.setattr(cp, "_tensioner_vertical_n", lambda model: model.vertical_of_tension(model.winches[0].t[-1]))
+    m = _FakeModel(fail=flip)
+    monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
+    info = cp.robust_statics(m, spec, {}, reload=_reloader(m, 0.6))
+    assert info["attempts"][0]["strategy"] == "current_at_seed" and "yaw" in info["attempts"][0]["error"]
+    assert info["strategy"] == "ramp_at_seed"
+
+
+def test_all_paths_failing_is_statics_diverged(base_spec, monkeypatch):
+    spec = _spec(base_spec, offset_pct_wd=2.0, current=CURRENT)
+    m = _FakeModel(fail=lambda m: True)
     with pytest.raises(pr.CaseFailed) as e:
-        cp.robust_statics(m, spec, c["params"])
-    assert e.value.status == "statics_diverged" and "0.75" in str(e.value)
+        cp.robust_statics(m, spec, {}, reload=_reloader(m, 0.6))
+    assert e.value.status == "statics_diverged"
+    for s in cp.STATICS_PATHS:
+        assert s in str(e.value)
+
+
+def test_licence_error_is_not_swallowed(base_spec):
+    spec = _spec(base_spec, offset_pct_wd=2.0, current=CURRENT)
+    m = _FakeModel()
+
+    def lic():
+        raise RuntimeError("Licence error: no licence available")
+
+    m.CalculateStatics = lic
+    with pytest.raises(RuntimeError, match="Licence"):
+        cp.robust_statics(m, spec, {}, reload=_reloader(m, 0.6))
+
+
+def test_without_current_the_ramp_paths_are_skipped(base_spec, monkeypatch):
+    spec = _spec(base_spec, offset_pct_wd=2.0)
+    m = _FakeModel(speed=0.0, fail=lambda m: m.reloads == 0)
+    monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
+    info = cp.robust_statics(m, spec, {}, reload=_reloader(m, 0.0))
+    assert info["strategy"] == "fine_steps" and m.reloads == 1
+
+
+def test_calibration_scales_every_line_to_the_vertical_target(base_spec, monkeypatch):
+    spec = _spec(base_spec)
+    target = cp.tensioner_vertical_target_n(spec)
+    m = _FakeModel(speed=0.0)
+    monkeypatch.setattr(cp, "_tensioner_vertical_n", lambda model: 0.98 * target * model.winches[0].t[-1] / 100.0)
+    info = cp.calibrate_line_tension(m, spec, solve=m.CalculateStatics)
+    assert info["factor"] == pytest.approx(1 / 0.98, rel=1e-9)
+    assert info["line_tension_n"] == pytest.approx(100.0 / 0.98 * 1000.0)
+    assert all(w.t == [pytest.approx(100.0 / 0.98)] * 3 for w in m.winches)
+
+
+def test_explicit_line_tension_is_applied_in_prepare(base_spec):
+    m = _FakeModel(speed=0.0)
+    cp.RiserCampaignAdapter().prepare(m, _case(base_spec, tensioner_line_tension_n=123456.0))
+    assert all(w.t == [pytest.approx(123.456)] * 3 for w in m.winches)
 
 
 class _Obj:
@@ -127,9 +203,9 @@ class _Obj:
 
 
 @pytest.mark.parametrize(("tv_factor", "wet_m3", "ok"), [
-    (1.005, 0.0, True),     # physical deviation at an offset (tensioner lines inclined)
+    (1.005, 0.0, True),         # physical deviation at an offset (tensioner lines inclined)
     (5682 / 6026, 0.0, False),  # the yawed branch
-    (1.0, 1.2, True),       # the ring set down to MSL: its wetted volume is in the balance
+    (1.0, 1.2, True),           # the ring set down to MSL: its wetted volume is in the balance
 ])
 def test_branch_tolerance_and_ring_buoyancy(base_spec, monkeypatch, tv_factor, wet_m3, ok):
     from digitalmodel.drilling_riser.global_model.hand_checks import tension_references
@@ -152,12 +228,20 @@ def test_branch_tolerance_and_ring_buoyancy(base_spec, monkeypatch, tv_factor, w
 
 @pytest.mark.solver
 @pytest.mark.skipif(not orcaflex_api.available(), reason="OrcFxAPI not available")
-def test_calibrated_line_tension_delivers_the_target_in_still_water(base_spec, tmp_path):
+def test_calibration_case_then_a_case_with_the_calibrated_tension(base_spec, tmp_path):
     from digitalmodel.drilling_riser.global_model import orcaflex_run as orun
 
-    c = _case(base_spec, heading_deg=0.0, offset_pct_wd=0.0, top_tension_n=2.6e6)  # ring sits below z_static
     ad = cp.RiserCampaignAdapter()
-    m = orun.load_model(ad.build(c, tmp_path / "m"))
-    info = ad.statics(m, c)
+    cal = _case(base_spec, heading_deg=0.0, top_tension_n=2.6e6, calibrate_tension=True)  # ring below z_static
+    m = orun.load_model(ad.build(cal, tmp_path / "cal"))
+    ad.prepare(m, cal)
+    info = ad.statics(m, cal)
     assert info["calibration"]["factor"] != pytest.approx(1.0, abs=1e-6)
     assert orun.tensioner_vertical_sum_n(m) == pytest.approx(2.6e6, rel=1e-6)
+    use = _case(base_spec, heading_deg=0.0, top_tension_n=2.6e6,
+                tensioner_line_tension_n=info["calibration"]["line_tension_n"])
+    use["case_id"] = "C-2"
+    m2 = orun.load_model(ad.build(use, tmp_path / "use"))
+    ad.prepare(m2, use)
+    ad.statics(m2, use)
+    assert orun.tensioner_vertical_sum_n(m2) == pytest.approx(2.6e6, rel=1e-5)
