@@ -260,6 +260,10 @@ class Foundation(BaseModel):
     anchor_offset_m: float = Field(100.0, gt=0)
     far_displacement_m: float = Field(10.0, gt=0, validation_alias=AliasChoices("far_displacement_m", "far_extension_m"),
                                       description="p held flat to this extra displacement")
+    flooded_density_kg_m3: float | None = Field(
+        None, gt=0, description="flooded conductor: fluid of this density fills the section bores (bore_id_m) at "
+                                "hydrostatic pressure from the sea surface; None = no contents (bore fluid, if any, "
+                                "lumped in the mass and no internal pressure in the stress recovery)")
     provenance: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")

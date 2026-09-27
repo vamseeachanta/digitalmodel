@@ -135,6 +135,22 @@ def test_static_offset_and_current_rotate_the_flex_joints(tmp_path: Path):
     assert r0["te_top_n"] > r0["te_bottom_n"] > 0
 
 
+# ------------------------------------------------------------------ flooded conductor
+def test_flooded_foundation_gives_the_conductor_seawater_contents_from_the_sea_surface():
+    """A flooded conductor carries seawater at hydrostatic pressure in its bore, so the stress
+    recovery sees equal internal and external pressure (no spurious collapse hoop stress)."""
+    from .test_nonlinear_vessel_foundation import _foundation
+
+    f = _foundation().model_dump()
+    f["flooded_density_kg_m3"] = 1025.0
+    gen = build_generic_spec(_spec(foundation=f))
+    cond = next(ln for ln in gen["generic"]["lines"] if ln["name"] == "Conductor")
+    assert cond["properties"]["ContentsDensity"] == pytest.approx(1.025)
+    assert cond["properties"]["ContentsPressureRefZ"] == 0.0
+    dry = build_generic_spec(_spec(foundation=_foundation()))
+    assert next(ln for ln in dry["generic"]["lines"] if ln["name"] == "Conductor")["properties"]["ContentsDensity"] == 0
+
+
 # ------------------------------------------------------------------ unit-suffixed names (force-units contract)
 def test_force_class_names_carry_a_unit_suffix_and_legacy_names_still_load():
     from digitalmodel.drilling_riser.global_model.spec import Foundation, Tensioners

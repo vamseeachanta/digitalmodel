@@ -199,7 +199,9 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
         lines.append(_line("Conductor",
                            [["Fixed", 0, 0, spec.wellhead_datum_z_m - f.depth_m, 0, 0, 0, None, None],
                             ["Free", 0, 0, spec.wellhead_datum_z_m, 0, 0, 0, None, None]],
-                           [[inf, None], []], list(reversed(f.sections)), 0, ref_z))
+                           [[inf, None], []], list(reversed(f.sections)),
+                           f.flooded_density_kg_m3 / 1000.0 if f.flooded_density_kg_m3 else 0,
+                           0.0 if f.flooded_density_kg_m3 else ref_z))
         for i, st in enumerate(spring_stations(f)):
             curve = interpolate_py(f.py_curves, st["depth_m"])
             table = spring_table_kn(curve, st["tributary_m"], f.anchor_offset_m, f.far_displacement_m)
