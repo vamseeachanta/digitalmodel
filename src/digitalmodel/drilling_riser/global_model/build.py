@@ -25,6 +25,18 @@ WINCH_CONN_KEY = "Connection, ConnectionX, ConnectionY, ConnectionZ"
 STAGES_S = [10.0, 100.0]
 SLIP = "SlipJoint"
 TORSION_KN_M_PER_DEG = 1.0e6  # lower flex-joint twisting stiffness when the riser carries torsion
+TOP = "StringTop"  # equivalent-string top slider on the vessel (tensioner representation 'vertical_force')
+TOP_WINCH_HEIGHT_M = 1000.0  # anchor of the vertical top-tension winch above the UFJ pivot, vessel frame
+G = 9.80665
+
+
+def equivalent_string_top_tension_n(spec: RiserGlobalModelSpec) -> float:
+    """Top tension of the equivalent string: the tensioner vertical force plus the in-air weight of the
+    inner-barrel sections and their contents, which the vessel carries through the UFJ in the lines
+    representation - so the tension below the ring is the same in both representations."""
+    w_ib = sum((s.mass_per_m_kg + spec.contents.density_kg_m3 * math.pi / 4 * s.bore_id_m ** 2) * s.length_m
+               for s in spec.inner_barrel) * G
+    return spec.tensioners.total_vertical_tension_n + w_ib
 
 
 def hydrodynamic_od_m(displaced_volume_per_m_m3: float) -> float:
@@ -177,9 +189,12 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
     f = spec.foundation
     stack_base = (["Conductor", 0, 0, 0, 0, 0, 0, None, "End B"] if f is not None
                   else ["Fixed", 0, 0, spec.wellhead_datum_z_m, 0, 0, 0, None, None])
+    vertical_only = spec.tensioners.representation == "vertical_force"
+    top_end = ([TOP, 0, 0, 0, 0, 180, 0, None, None] if vertical_only
+               else [vessel, 0, 0, spec.upper_flex_joint.pivot_z_m, 0, 180, 0, None, None])
     lines = [
         _line("InnerBarrel",
-              [[vessel, 0, 0, spec.upper_flex_joint.pivot_z_m, 0, 180, 0, None, None],
+              [top_end,
                [SLIP, 0, 0, 0, 0, 180, 0, None, None]],
               [[k_ufj, None], [inf, None]],
               spec.inner_barrel, rho_c, ref_z),
@@ -194,9 +209,9 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
               [[inf, None], []],  # a free end takes no connection stiffness
               list(reversed(spec.stack)), 0, ref_z),  # the stack line runs up from the datum
     ]
-    if spec.tensioners.representation == "vertical_force":
+    if vertical_only:
         # without tensioner lines nothing restrains the ring about z (the lines exclude torsion):
-        # the riser carries torsion so the ring yaw is held by the riser down to the fixed stack
+        # the riser carries torsion so the ring yaw is held by the riser down to the stack
         # (OrcaFlex then needs a twisting stiffness at the finite-stiffness lower flex-joint end:
         # a stiff finite value, so the flex joint passes torsion as the stack below it does)
         rp = lines[1]["properties"]
@@ -226,7 +241,6 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
     t = spec.tensioners
     tension_kn = winch_tension_n(spec) / 1000.0
     winches = []
-    vertical_only = t.representation == "vertical_force"
     for i in range(0 if vertical_only else t.count):
         az = math.radians(t.first_azimuth_deg + 360.0 * i / t.count)
         c, s_ = math.cos(az), math.sin(az)
@@ -245,26 +259,40 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
     r = spec.tension_ring
     # Telescopic joint: the inner-barrel end rides in the ring frame, free only along z, so the
     # joint passes shear and moment into the ring but no axial load. The initial DOF value is the
-    # expected ring rise under tension (statics converges from there).
+    # expected ring rise under tension (statics converges from there). In the equivalent string
+    # (vertical_force) the joint is locked: the string is continuous and carries the top tension.
     slip = {
         "name": SLIP, "in_frame_connection": ring, "constraint_type": "Calculated DOFs",
         "properties": {
             "InFrameInitialPosition": [0, 0, 0], "InFrameInitialAttitude": [0, 0, 0],
             "DOFFree, DOFInitialValue": [[False], [False],
-                                         [True, -(r.z_static_m - ring_z)],
+                                         [False] if vertical_only else [True, -(r.z_static_m - ring_z)],
                                          [False], [False], [False]],
             "StiffnessAndDampingMethod": "Coefficients",
             "TranslationalStiffness": spec.slip_joint_axial_stiffness_n_per_m / 1000.0,
         },
     }
+    constraints = [slip]
+    if vertical_only:
+        # equivalent string: the string top (UFJ pivot) is pinned laterally to the vessel but free along z,
+        # and a vertical constant-tension winch (anchored far above in the vessel frame) applies the top
+        # tension there - the tensioner force follows the vessel with no lateral tie at the ring
+        constraints.append({
+            "name": TOP, "in_frame_connection": vessel, "constraint_type": "Calculated DOFs",
+            "properties": {"InFrameInitialPosition": [0, 0, spec.upper_flex_joint.pivot_z_m],
+                           "InFrameInitialAttitude": [0, 0, 0],
+                           "DOFFree, DOFInitialValue": [[False], [False], [True, 0.0], [False], [False], [False]],
+                           "StiffnessAndDampingMethod": "Coefficients", "TranslationalStiffness": 0.0}})
+        winches.append({"name": "TopTensioner", "properties": {
+            "WinchType": "Simple",
+            WINCH_CONN_KEY: [[vessel, 0, 0, spec.upper_flex_joint.pivot_z_m + TOP_WINCH_HEIGHT_M], [TOP, 0, 0, 0]],
+            "Stiffness": t.wire_stiffness_n / 1000.0, "Damping": 0, "WinchControlType": "By stage",
+            "StageMode, StageValue": [["Specified tension", equivalent_string_top_tension_n(spec) / 1000.0]]
+                                     * (len(STAGES_S) + 1)}})
     ring_props: dict[str, Any] = {
         "DegreesOfFreedomInStatics": "All", "InitialAttitude": [0, 0, 0],
         "MomentsOfInertia": [m / 1000.0 for m in r.moments_of_inertia_kgm2],
         "CentreOfMass": [0, 0, 0], "Height": 1.0, "CentreOfVolume": [0, 0, 0]}
-    if vertical_only:
-        # earth-fixed vertical tensioner force at the ring centre: no lateral tie to the vessel
-        ring_props["GlobalAppliedLoads"] = [{"Origin": [0, 0, 0], "Force": [0, 0, t.total_vertical_tension_n / 1000.0],
-                                             "Moment": [0, 0, 0]}]
     vt = _vessel_type(spec.vessel_motion, f"{vessel} type")
     below = [] if f is None else f.sections
     line_types = [*(_line_type(s) for s in (*spec.inner_barrel, *spec.riser)),
@@ -290,21 +318,14 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
         "lines": lines,
         "buoys_6d": [{
             "name": ring, "buoy_type": "Lumped buoy", "connection": "Free",
-            # the ring hangs from the vessel's tensioners: start it under the (offset) vessel. With a
-            # vertical tensioner force (no lateral tie) the riser tension draws it towards the well, so
-            # it starts at the well centre.
-            "initial_position": [0 if vertical_only else ox, 0 if vertical_only else oy, r.z_static_m], "mass": r.mass_kg / 1000.0, "volume": r.volume_m3,
+            # the ring hangs from the vessel's tensioners (or, in the equivalent string, rides on the string
+            # below the vessel): start it under the (offset) vessel
+            "initial_position": [ox, oy, r.z_static_m], "mass": r.mass_kg / 1000.0, "volume": r.volume_m3,
             "properties": ring_props,
         }],
-        "constraints": [slip],
+        "constraints": constraints,
+        "winches": winches,
     }
-    if winches:
-        generic["winches"] = winches
-    else:
-        # no lateral tie: the ring position is set by the riser and inner barrel alone, so whole-system
-        # statics needs more damping (large offsets may still need continuation from a smaller one)
-        generic["general_properties"] = {"StaticsMaxIterations": 2000, "StaticsMinDamping": 5,
-                                         "StaticsMaxDamping": 50}
     if links:
         generic["links"] = links
     if var_data:

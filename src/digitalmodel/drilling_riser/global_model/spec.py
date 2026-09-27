@@ -120,9 +120,11 @@ class Tensioners(BaseModel):
 
     ``representation``: ``"lines"`` - ``count`` constant-tension lines from sheaves on the vessel to
     the ring (their inclination and the pendulum stiffness T/L tie the ring laterally to the vessel);
-    ``"vertical_force"`` - one earth-fixed vertical force ``total_vertical_tension_n`` on the ring and
-    no lateral tie (the equivalent-string practice; the sheave geometry is then unused). The two bound
-    the split of rotation between the upper and lower flex joints.
+    ``"vertical_force"`` - the equivalent string: the telescopic joint is locked, the string top (UFJ
+    pivot) is pinned laterally to the vessel and free along z, and a vertical constant tension (the
+    tensioner force plus the inner-barrel weight) acts there, so there is no tensioner tie at the ring
+    (the sheave geometry is unused; the ring is tied only through the string tension over the inner
+    barrel). The two bound the split of rotation between the upper and lower flex joints.
     """
 
     representation: Literal["lines", "vertical_force"] = "lines"
