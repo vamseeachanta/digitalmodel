@@ -52,11 +52,11 @@ def spring_stations(f: Foundation) -> list[dict[str, Any]]:
     return out
 
 
-def spring_table_kn(curve: PYCurve, tributary_m: float, length0_m: float, far_extension_m: float) -> list[list[float]]:
+def spring_table_kn(curve: PYCurve, tributary_m: float, length0_m: float, far_displacement_m: float) -> list[list[float]]:
     """Symmetric link spring table (length m, tension kN) about the unstretched length: tension is
     +p x tributary when the node moves away from the anchor (the link lengthens), and the reverse
     when it moves towards it; p is held flat beyond the last y point."""
-    ys = list(curve.y_m) + [curve.y_m[-1] + far_extension_m]
+    ys = list(curve.y_m) + [curve.y_m[-1] + far_displacement_m]
     ps = list(curve.p_n_per_m) + [curve.p_n_per_m[-1]]
     rows = [[length0_m - y, -p * tributary_m / 1000.0] for y, p in zip(reversed(ys[1:]), reversed(ps[1:]))]
     rows.append([length0_m, 0.0])

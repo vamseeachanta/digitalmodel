@@ -22,7 +22,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import AliasChoices, BaseModel, Field, model_validator
 
 LENGTH_TOL_M = 1.0e-3
 
@@ -123,8 +123,8 @@ class Tensioners(BaseModel):
     total_vertical_tension_n: float = Field(..., gt=0)
     first_azimuth_deg: float = 0.0
     wire_stiffness_n: float = Field(1.0e9, gt=0, description="winch wire EA (OrcaFlex 'Stiffness')")
-    rated_tension_n_each: float | None = Field(
-        None, gt=0, description="rated (dynamic tension limit) capacity per tensioner; recorded for capacity "
+    rated_tension_each_n: float | None = Field(
+        None, gt=0, validation_alias=AliasChoices("rated_tension_each_n", "rated_tension_n_each"), description="rated (dynamic tension limit) capacity per tensioner; recorded for capacity "
                                 "checks and checked against the applied line tension")
 
 
@@ -258,7 +258,8 @@ class Foundation(BaseModel):
     sections: list[LineSection] = Field(..., min_length=1)
     py_curves: list[PYCurve] = Field(..., min_length=1)
     anchor_offset_m: float = Field(100.0, gt=0)
-    far_extension_m: float = Field(10.0, gt=0, description="p held flat to this extra displacement")
+    far_displacement_m: float = Field(10.0, gt=0, validation_alias=AliasChoices("far_displacement_m", "far_extension_m"),
+                                      description="p held flat to this extra displacement")
     provenance: dict[str, Any] = Field(default_factory=dict)
 
     @model_validator(mode="after")
@@ -331,10 +332,10 @@ class RiserGlobalModelSpec(BaseModel):
         if self.tensioners.sheave_z_m <= self.tension_ring.z_static_m:
             raise ValueError("tensioner sheaves must be above the tension ring")
         t = self.tensioners
-        if t.rated_tension_n_each is not None:
+        if t.rated_tension_each_n is not None:
             dx = t.sheave_radius_m - t.ring_attach_radius_m
             dz = t.sheave_z_m - self.tension_ring.z_static_m
             per_line = t.total_vertical_tension_n / (t.count * dz / math.hypot(dx, dz))
-            if per_line > t.rated_tension_n_each:
-                raise ValueError(f"tensioner line tension {per_line:.4g} N exceeds the rated {t.rated_tension_n_each:.4g} N")
+            if per_line > t.rated_tension_each_n:
+                raise ValueError(f"tensioner line tension {per_line:.4g} N exceeds the rated {t.rated_tension_each_n:.4g} N")
         return self

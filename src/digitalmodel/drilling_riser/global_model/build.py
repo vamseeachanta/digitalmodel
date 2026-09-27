@@ -202,7 +202,7 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
                            [[inf, None], []], list(reversed(f.sections)), 0, ref_z))
         for i, st in enumerate(spring_stations(f)):
             curve = interpolate_py(f.py_curves, st["depth_m"])
-            table = spring_table_kn(curve, st["tributary_m"], f.anchor_offset_m, f.far_extension_m)
+            table = spring_table_kn(curve, st["tributary_m"], f.anchor_offset_m, f.far_displacement_m)
             z = spec.wellhead_datum_z_m - st["depth_m"]
             for axis, (ax, ay) in (("x", (f.anchor_offset_m, 0.0)), ("y", (0.0, f.anchor_offset_m))):
                 links.append({"name": f"PY{i + 1:03d}{axis}", "link_type": "Spring/damper", "properties": {

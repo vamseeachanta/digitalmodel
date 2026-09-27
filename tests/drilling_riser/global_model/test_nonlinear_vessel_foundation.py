@@ -74,10 +74,10 @@ def test_nonlinear_flex_joints_emit_bending_connection_stiffness_variable_data()
 # ------------------------------------------------------------------ tensioners
 def test_tensioner_rating_is_recorded_and_checked():
     d = synthetic_spec().model_dump()
-    d["tensioners"]["rated_tension_n_each"] = 2.5e6
+    d["tensioners"]["rated_tension_each_n"] = 2.5e6
     spec = RiserGlobalModelSpec.model_validate(d)
-    assert winch_tension_n(spec) < spec.tensioners.rated_tension_n_each
-    d["tensioners"]["rated_tension_n_each"] = 0.4e6
+    assert winch_tension_n(spec) < spec.tensioners.rated_tension_each_n
+    d["tensioners"]["rated_tension_each_n"] = 0.4e6
     with pytest.raises(ValueError, match="rated"):
         RiserGlobalModelSpec.model_validate(d)
 

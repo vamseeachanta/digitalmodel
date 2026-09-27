@@ -133,3 +133,15 @@ def test_static_offset_and_current_rotate_the_flex_joints(tmp_path: Path):
     assert r2["lfj_angle_deg"] > 0.1
     assert r1["riser_von_mises_max_pa"] > r0["riser_von_mises_max_pa"] > 0
     assert r0["te_top_n"] > r0["te_bottom_n"] > 0
+
+
+# ------------------------------------------------------------------ unit-suffixed names (force-units contract)
+def test_force_class_names_carry_a_unit_suffix_and_legacy_names_still_load():
+    from digitalmodel.drilling_riser.global_model.spec import Foundation, Tensioners
+
+    assert "rated_tension_each_n" in Tensioners.model_fields and "far_displacement_m" in Foundation.model_fields
+    d = synthetic_spec().model_dump()
+    t = dict(d["tensioners"])
+    t.pop("rated_tension_each_n", None)
+    t["rated_tension_n_each"] = 2.5e6  # name written by specs generated before the rename
+    assert Tensioners.model_validate(t).rated_tension_each_n == 2.5e6
