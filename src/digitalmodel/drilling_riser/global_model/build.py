@@ -246,15 +246,21 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
     }
     vt = _vessel_type(spec.vessel_motion, f"{vessel} type")
     below = [] if f is None else f.sections
+    line_types = [*(_line_type(s) for s in (*spec.inner_barrel, *spec.riser)),
+                  # The stack stands on the wellhead datum at the mudline: seabed contact on
+                  # its nodes is not physical and would carry part of its weight into the seabed.
+                  *(_line_type(s, contact_diameter_m=MIN_OD_M) for s in (*spec.stack, *below))]
+    sd = spec.structural_damping
+    if sd is not None:
+        for lt in line_types:
+            lt["properties"]["RayleighDampingCoefficients"] = sd.name
+    ox, oy = spec.vessel_offset_m
     generic = {
-        "line_types": [*(_line_type(s) for s in (*spec.inner_barrel, *spec.riser)),
-                       # The stack stands on the wellhead datum at the mudline: seabed contact on
-                       # its nodes is not physical and would carry part of its weight into the seabed.
-                       *(_line_type(s, contact_diameter_m=MIN_OD_M) for s in (*spec.stack, *below))],
+        "line_types": line_types,
         "vessel_types": [vt],
         "vessels": [{
             "name": vessel, "vessel_type": vt["name"], "connection": "Free",
-            "initial_position": [0, 0, 0],
+            "initial_position": [ox, oy, 0] if (ox or oy) else [0, 0, 0],
             "properties": {"Orientation": [0, 0, 0], "IncludedInStatics": "None",
                            "PrimaryMotion": "None",
                            **({"SuperimposedMotion": "RAOs + harmonics", "Draught": "Operating"}
@@ -275,6 +281,10 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
         generic["links"] = links
     if var_data:
         generic["variable_data_sources"] = var_data
+    if sd is not None:
+        generic["rayleigh_damping"] = {"data": [{
+            "Name": sd.name, "Mode": "Coefficients (classical)", "MassCoefficient": 0.0,
+            "StiffnessCoefficient": sd.stiffness_coefficient_s, "ApplyToGeometricStiffness": "Yes"}]}
     # with a foundation the conductor runs below the mudline: its soil reaction is the p-y links,
     # so seabed contact is switched off (no other line reaches the seabed)
     seabed = ({"normal": 0.0, "shear": 0.0} if f is not None else
@@ -285,6 +295,11 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
                   "density": spec.environment.water_density_kg_m3 / 1000.0},
         "seabed": {"stiffness": seabed},
     }
+    if spec.current is not None:
+        pts = spec.current.depth_speed_m_s
+        ref = max(v for _, v in pts)
+        env["current"] = {"speed": ref, "direction": spec.current.direction_deg,
+                          "profile": [[float(d), v / ref] for d, v in pts]}
     if spec.regular_wave is not None:
         w = spec.regular_wave
         env["waves"] = {"type": "airy", "height": w.height_m, "period": w.period_s, "direction": w.direction_deg}

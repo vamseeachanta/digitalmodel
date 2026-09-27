@@ -108,6 +108,24 @@ def governing_responses(model, spec, period=None) -> dict[str, float]:
     }
 
 
+def static_responses(model, spec) -> dict[str, float]:
+    """Static-state governing responses (after ``CalculateStatics``): flex-joint angles (line-end
+    Ez-angle, rotation relative to the connection), maximum von Mises stress over the stressed riser
+    sections, and the effective tensions below the ring and at the lower flex joint."""
+    ofx = _api()
+    ib, riser = model["InnerBarrel"], model["Riser"]
+    lo, hi = _stressed_arc_range(model, spec)
+    vm = riser.RangeGraph("Max von Mises stress", ofx.Period(ofx.pnStaticState),
+                          arclengthRange=ofx.arSpecifiedArclengths(lo, hi))
+    return {
+        "ufj_angle_deg": abs(float(ib.StaticResult("Ez-Angle", ofx.oeEndA))),
+        "lfj_angle_deg": abs(float(riser.StaticResult("Ez-Angle", ofx.oeEndB))),
+        "riser_von_mises_max_pa": float(max(vm.Mean)) * KN,
+        "te_top_n": float(riser.StaticResult("Effective tension", ofx.oeEndA)) * KN,
+        "te_bottom_n": float(riser.StaticResult("Effective tension", ofx.oeEndB)) * KN,
+    }
+
+
 def model_files_sha256(master_path: Path) -> dict[str, Any]:
     """SHA-256 of master.yml and every include, plus one digest over all of them."""
     master_path = Path(master_path)

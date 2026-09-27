@@ -187,6 +187,40 @@ class RegularWave(BaseModel):
     direction_deg: float = 0.0
 
 
+class StructuralDamping(BaseModel):
+    """Stiffness-proportional Rayleigh damping on every line type, ``ratio_percent`` of critical at
+    ``period_s`` (classical coefficients: mass 0, stiffness beta = 2 zeta / omega, applied to the
+    geometric stiffness too), so zeta(T) = ratio x period_s / T: less at longer periods."""
+
+    ratio_percent: float = Field(..., gt=0)
+    period_s: float = Field(..., gt=0)
+    name: str = Field("Structural", min_length=1)
+
+    @property
+    def stiffness_coefficient_s(self) -> float:
+        return 2.0 * self.ratio_percent / 100.0 / (2.0 * math.pi / self.period_s)
+
+
+class CurrentProfile(BaseModel):
+    """Depth-varying current: (depth below MSL in m, speed in m/s) pairs, depth increasing; the
+    speed is held beyond the last depth. ``direction_deg`` is the direction the current flows
+    towards, measured from the global x axis."""
+
+    direction_deg: float = 0.0
+    depth_speed_m_s: list[tuple[float, float]] = Field(..., min_length=2)
+
+    @model_validator(mode="after")
+    def _profile(self) -> "CurrentProfile":
+        d = [p[0] for p in self.depth_speed_m_s]
+        if d[0] < 0 or any(b <= a for a, b in zip(d, d[1:])):
+            raise ValueError("current profile depths must be >= 0 and strictly increasing")
+        if any(p[1] < 0 for p in self.depth_speed_m_s):
+            raise ValueError("current speeds must be >= 0")
+        if max(p[1] for p in self.depth_speed_m_s) <= 0:
+            raise ValueError("current profile has no non-zero speed")
+        return self
+
+
 class Dynamics(BaseModel):
     time_step_s: float = Field(0.1, gt=0)
     build_up_s: float = Field(..., gt=0)
@@ -261,6 +295,11 @@ class RiserGlobalModelSpec(BaseModel):
         1.0e3, ge=0, description="axial spring on the telescopic-joint constraint; a small value keeps "
                                  "statics on the physical branch and carries only k x ring rise")
     vessel_motion: VesselMotion | None = None
+    vessel_offset_m: tuple[float, float] = Field(
+        (0.0, 0.0), description="static vessel offset (x, y) from the well centre, m; the vessel is not in "
+                                "statics, so it holds this position")
+    current: CurrentProfile | None = None
+    structural_damping: StructuralDamping | None = None
     regular_wave: RegularWave | None = None
     dynamics: Dynamics | None = None
     foundation: Foundation | None = None
