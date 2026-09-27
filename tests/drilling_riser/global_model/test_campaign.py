@@ -76,6 +76,26 @@ def test_seeded_statics_matches_direct_statics_on_the_fixed_base_model(base_spec
 
 @pytest.mark.solver
 @pytest.mark.skipif(not orcaflex_api.available(), reason="OrcFxAPI not available")
+def test_statics_settings_change_the_path_not_the_static_state(base_spec, tmp_path):
+    from digitalmodel.drilling_riser.global_model import orcaflex_run as orun
+    from digitalmodel.drilling_riser.global_model.build import write_model
+
+    plain = _case(base_spec, heading_deg=0.0, offset_pct_wd=1.0, statics="seeded")
+    tuned = _case(base_spec, heading_deg=0.0, offset_pct_wd=1.0, statics="seeded", statics_max_iterations=1000,
+                  statics_damping=[5, 50], statics_step_pct=0.25)
+    ad = cp.RiserCampaignAdapter()
+    te = []
+    for i, c in enumerate((plain, tuned)):
+        m = orun.load_model(ad.build(c, tmp_path / str(i)))
+        info = ad.statics(m, c)
+        te.append(orun.end_effective_tensions(m)["riser_bottom_n"])
+    assert info["statics_max_iterations"] == 1000 and info["statics_damping"] == [5.0, 50.0]
+    assert info["steps"] == 13  # -2 % -> +1 % WD in 0.25 % steps
+    assert te[1] == pytest.approx(te[0], rel=1e-5)
+
+
+@pytest.mark.solver
+@pytest.mark.skipif(not orcaflex_api.available(), reason="OrcFxAPI not available")
 def test_runner_with_campaign_adapter_statics_modal_regular_and_proxies(base_spec, tmp_path):
     dyn = {"time_step_s": 0.1, "build_up_s": 9.0, "duration_s": 18.0}
     cases = [

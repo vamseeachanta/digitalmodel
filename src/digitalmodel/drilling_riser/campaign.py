@@ -14,6 +14,8 @@ with the (private) matrix, not here:
 ``dynamics``          ``{"time_step_s", "build_up_s", "duration_s"}`` (dynamics only)
 ``statics``           ``"seeded"`` (continuation from -2 % WD in <= 0.5 % WD steps with the tension-ring
                       vertical balance checked - needed by the conductor-founded model) or ``"direct"``
+``statics_max_iterations``, ``statics_damping`` ([min, max]), ``statics_step_pct``
+                      solver-path settings for large offsets (optional; the converged state is unchanged)
 ``modal_modes``       number of transverse riser modes to extract (statics cases), optional
 ``proxy``             TIMING PROXIES only, not design cases:
                       ``{"kind": "drift_off", "speed_change_m_s": v}`` - the vessel accelerates uniformly
@@ -113,6 +115,21 @@ def seeded_statics(model, spec: RiserGlobalModelSpec, *, seed_pct: float = SEED_
             "ring_yaw_deg": yaw}
 
 
+def apply_statics_settings(model, params: dict) -> dict[str, Any]:
+    """Optional solver-path settings (``statics_max_iterations``, ``statics_damping`` = [min, max]). They change
+    the iteration path to the static state, not the converged state; recorded in the results."""
+    g = model.general
+    out: dict[str, Any] = {}
+    if params.get("statics_max_iterations"):
+        g.StaticsMaxIterations = int(params["statics_max_iterations"])
+        out["statics_max_iterations"] = g.StaticsMaxIterations
+    if params.get("statics_damping"):
+        lo, hi = (float(x) for x in params["statics_damping"])
+        g.StaticsMinDamping, g.StaticsMaxDamping = lo, hi
+        out["statics_damping"] = [g.StaticsMinDamping, g.StaticsMaxDamping]
+    return out
+
+
 def _stats(values) -> dict[str, float]:
     v = [float(x) for x in values]
     m = sum(v) / len(v)
@@ -163,10 +180,13 @@ class RiserCampaignAdapter:
             raise ValueError(f"unknown proxy {proxy['kind']!r}")
 
     def statics(self, model, case: dict) -> dict[str, Any]:
-        if case.get("params", {}).get("statics", "seeded") == "seeded":
-            return seeded_statics(model, self.spec(case))
+        p = case.get("params", {})
+        settings = apply_statics_settings(model, p)
+        if p.get("statics", "seeded") == "seeded":
+            return {**seeded_statics(model, self.spec(case), step_pct=float(p.get("statics_step_pct", STEP_PCT))),
+                    **settings}
         model.CalculateStatics()
-        return {"method": "direct"}
+        return {"method": "direct", **settings}
 
     def extract(self, model, case: dict) -> dict[str, Any]:
         from .global_model import orcaflex_run as orun
