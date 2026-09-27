@@ -133,6 +133,7 @@ are skipped.
 ## Reviews
 
 - [`technical-quality-review-2026-09-24.md`](technical-quality-review-2026-09-24.md) — technical-quality review of the CP code and docs
+- [`session-handoff-2026-09-27.md`](session-handoff-2026-09-27.md) — what the 2026-09 review and remediation delivered, current use status, open items
   (section 6 is the source of the #2214 documentation work)
 - [`technical-quality-review-2026-09-25-human-decisions.html`](technical-quality-review-2026-09-25-human-decisions.html) — owner decisions D1–D12 on that
   review (D11: brochure removed; D12: examples/index rework)
