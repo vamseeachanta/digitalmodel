@@ -17,8 +17,9 @@ OrcaFlex DLL version, so the case can be re-solved exactly. Per run directory (o
     python -m digitalmodel.solvers.orcaflex.sim_retention cycle --root RUNS [--window-hours 72]
     python -m digitalmodel.solvers.orcaflex.sim_retention loop  --root RUNS --interval-min 60 --until-empty
 
-``loop`` repeats the cycle until no kept ``.sim`` is left (``--until-empty``) or forever. The events file is the
-state, so a loop that stops (host restart) is resumed by starting it again.
+``loop`` repeats the cycle until no marked ``.sim`` waits for its window (``--until-empty``; start it after the
+batch, and an unverifiable file never keeps it running) or forever. The events file is the state, so a loop that
+stops (host restart) is resumed by starting it again.
 """
 
 from __future__ import annotations
@@ -189,11 +190,21 @@ def pending_bytes(run_dir: Path) -> int:
     return total
 
 
+def _now() -> dt.datetime:
+    return dt.datetime.now(dt.timezone.utc)
+
+
+def marked_pending_bytes(run_dir: Path) -> int:
+    """Bytes of marked .sim files still on disk (waiting for their window)."""
+    return sum((run_dir / s).stat().st_size for s, ev in _state(run_dir).items()
+               if ev["event"] == "marked" and (run_dir / s).exists())
+
+
 def cycle(roots: Iterable[Path | str], *, now: dt.datetime | None = None, window_h: float = DEFAULT_WINDOW_H,
           required: Iterable[str] = DEFAULT_REQUIRED) -> dict:
     """Mark, then sweep, every run directory below ``roots``; returns totals and the unmarkable files."""
-    now = now or dt.datetime.now(dt.timezone.utc)
-    marked = deleted = freed = pend = 0
+    now = now or _now()
+    marked = deleted = freed = pend = mpend = 0
     blocked = []
     for d in run_dirs(roots):
         marked += len(mark(d, now=now, window_h=window_h, required=required))
@@ -201,9 +212,10 @@ def cycle(roots: Iterable[Path | str], *, now: dt.datetime | None = None, window
         deleted += len(gone)
         freed += sum(g["bytes"] for g in gone)
         pend += pending_bytes(d)
+        mpend += marked_pending_bytes(d)
         blocked += [{"run_dir": str(d), **b} for b in check(d, required=required)]
     return {"at_utc": _utc(now), "marked": marked, "deleted": deleted, "freed_bytes": freed,
-            "pending_bytes": pend, "blocked": blocked}
+            "pending_bytes": pend, "marked_pending_bytes": mpend, "blocked": blocked}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -220,9 +232,10 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps([c for d in run_dirs(a.root) for c in check(d, required=req)], indent=1))
         return 0
     while True:
-        s = cycle(a.root, window_h=a.window_hours, required=req)
+        s = cycle(a.root, now=_now(), window_h=a.window_hours, required=req)
         print(json.dumps({k: v for k, v in s.items() if k != "blocked"} | {"blocked": len(s["blocked"])}), flush=True)
-        if a.command == "cycle" or (a.until_empty and s["pending_bytes"] == 0):
+        # --until-empty: stop once no marked file waits for its window (an unverifiable file never keeps it running)
+        if a.command == "cycle" or (a.until_empty and s["marked_pending_bytes"] == 0):
             return 0
         time.sleep(a.interval_min * 60.0)
 
