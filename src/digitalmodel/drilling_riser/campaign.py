@@ -1,0 +1,198 @@
+"""Riser campaign cases for the native parallel OrcaFlex runner (W4).
+
+A case is a JSON object (``case_id``, ``analysis`` = ``statics`` | ``dynamics``, ``params``). The
+params hold physical, SI values only - the mapping from a load-case matrix row to these values lives
+with the (private) matrix, not here:
+
+``base_spec``         path to a model-spec file whose ``model`` key is a :class:`RiserGlobalModelSpec`
+``heading_deg``       direction the waves and current travel towards, from global x (vessel heading 0)
+``offset_pct_wd``     static vessel offset, % of water depth, along ``heading_deg`` (+ = downstream)
+``mud_density_kg_m3`` riser contents density (optional; the base value otherwise)
+``top_tension_n``     tensioner total vertical tension (optional)
+``current``           ``{"depth_speed_m_s": [[depth, speed], ...]}`` (direction = heading), optional
+``regular_wave``      ``{"height_m", "period_s"}`` or ``irregular_wave`` ``{"hs_m", "tp_s", "gamma", "seed"}``
+``dynamics``          ``{"time_step_s", "build_up_s", "duration_s"}`` (dynamics only)
+``statics``           ``"seeded"`` (continuation from -2 % WD in <= 0.5 % WD steps with the tension-ring
+                      vertical balance checked - needed by the conductor-founded model) or ``"direct"``
+``modal_modes``       number of transverse riser modes to extract (statics cases), optional
+``proxy``             TIMING PROXIES only, not design cases:
+                      ``{"kind": "drift_off", "speed_change_m_s": v}`` - the vessel accelerates uniformly
+                      along ``heading_deg`` over the main stage, reaching ``v`` at its end;
+                      ``{"kind": "disconnect", "tension_factor": f}`` - the riser lower end releases at
+                      the start of the main stage and the tensioner tension drops to ``f`` x its value
+                      (``f`` defaults to 1.02 x (riser effective weight + ring weight) / tensioner
+                      vertical force, a crude instantaneous anti-recoil response).
+
+Use with :func:`digitalmodel.solvers.orcaflex.parallel_runner.run_cases` and
+``adapter="digitalmodel.drilling_riser.campaign:ADAPTER"``.
+"""
+
+from __future__ import annotations
+
+import math
+from pathlib import Path
+from typing import Any
+
+import yaml
+
+from .global_model.spec import RiserGlobalModelSpec
+
+SEED_PCT = -2.0
+STEP_PCT = 0.5
+RESIDUAL_REL = 1.0e-3
+RING_YAW_MAX_DEG = 1.0
+KN = 1000.0
+
+
+def load_base_spec(path: str | Path) -> RiserGlobalModelSpec:
+    doc = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
+    return RiserGlobalModelSpec.model_validate(doc["model"] if "model" in doc else doc)
+
+
+def offset_xy_m(spec: RiserGlobalModelSpec, pct_wd: float, heading_deg: float) -> tuple[float, float]:
+    r = pct_wd / 100.0 * spec.environment.water_depth_m
+    h = math.radians(heading_deg)
+    return (r * math.cos(h), r * math.sin(h))
+
+
+def case_spec(case: dict) -> RiserGlobalModelSpec:
+    """The model spec of one case: the base spec with the case's environment, offset and settings."""
+    p = case.get("params", {})
+    base = load_base_spec(p["base_spec"])
+    d = base.model_dump()
+    heading = float(p.get("heading_deg", 0.0))
+    if p.get("mud_density_kg_m3") is not None:
+        d["contents"]["density_kg_m3"] = float(p["mud_density_kg_m3"])
+    if p.get("top_tension_n") is not None:
+        d["tensioners"]["total_vertical_tension_n"] = float(p["top_tension_n"])
+    d["vessel_offset_m"] = offset_xy_m(base, float(p.get("offset_pct_wd", 0.0)), heading)
+    d["current"] = ({"direction_deg": heading, "depth_speed_m_s": p["current"]["depth_speed_m_s"]}
+                    if p.get("current") else None)
+    d["regular_wave"] = d["irregular_wave"] = None
+    if p.get("regular_wave"):
+        d["regular_wave"] = {**p["regular_wave"], "direction_deg": heading}
+    if p.get("irregular_wave"):
+        d["irregular_wave"] = {**p["irregular_wave"], "direction_deg": heading}
+    if case["analysis"] == "dynamics":
+        d["dynamics"] = dict(p["dynamics"])
+    d["name"] = f"{base.name}:{case['case_id']}"
+    return RiserGlobalModelSpec.model_validate(d)
+
+
+def seeded_statics(model, spec: RiserGlobalModelSpec, *, seed_pct: float = SEED_PCT,
+                   step_pct: float = STEP_PCT) -> dict[str, Any]:
+    """Statics by continuation from a -2 % WD seed (along x) to the spec's vessel offset, in steps of at
+    most ``step_pct`` % WD, then the non-physical-state checks: tension-ring yaw within 1 deg, and at zero
+    offset the ring vertical balance. From a straight start the conductor-founded model can converge to a
+    non-physical state (ring yawed 180 deg, ring vertical residual about 345 kN); the seed avoids it."""
+    from .global_model import orcaflex_run as orun
+    from .global_model.hand_checks import tension_references
+
+    wd = spec.environment.water_depth_m
+    x0, y0 = seed_pct / 100.0 * wd, 0.0
+    x1, y1 = spec.vessel_offset_m
+    n = max(1, math.ceil(math.hypot(x1 - x0, y1 - y0) / (step_pct / 100.0 * wd) - 1e-9))
+    for i in range(n + 1):
+        f = i / n
+        x, y = x0 + f * (x1 - x0), y0 + f * (y1 - y0)
+        for name in ("Vessel", "TensionRing"):
+            model[name].InitialX, model[name].InitialY = x, y
+        model.CalculateStatics()
+        if i < n:
+            model.UseCalculatedPositions(True)
+    residual = orun.ring_vertical_residual_n(model, tension_references(spec)["ring_weight_n"])
+    yaw = model["TensionRing"].StaticResult("Rotation 3")
+    yaw = (yaw + 180.0) % 360.0 - 180.0
+    if abs(yaw) > RING_YAW_MAX_DEG:
+        raise RuntimeError(f"non-physical static solution: tension ring yawed {yaw:.1f} deg")
+    # the vertical balance uses the end effective tensions as vertical forces, so it is exact only with the
+    # string vertical (zero offset); at an offset it is recorded, not checked
+    if (x1, y1) == (0.0, 0.0) and abs(residual) > RESIDUAL_REL * spec.tensioners.total_vertical_tension_n:
+        raise RuntimeError(f"non-physical static solution: ring vertical residual {residual / KN:.1f} kN")
+    return {"method": "seeded continuation", "steps": n + 1, "ring_vertical_residual_n": residual,
+            "ring_yaw_deg": yaw}
+
+
+def _stats(values) -> dict[str, float]:
+    v = [float(x) for x in values]
+    m = sum(v) / len(v)
+    return {"min": min(v), "max": max(v), "mean": m,
+            "std": math.sqrt(sum((x - m) ** 2 for x in v) / len(v))}
+
+
+class RiserCampaignAdapter:
+    """Adapter for :mod:`digitalmodel.solvers.orcaflex.parallel_runner`."""
+
+    def __init__(self) -> None:
+        self._specs: dict[str, RiserGlobalModelSpec] = {}
+
+    def spec(self, case: dict) -> RiserGlobalModelSpec:
+        if case["case_id"] not in self._specs:
+            self._specs[case["case_id"]] = case_spec(case)
+        return self._specs[case["case_id"]]
+
+    def build(self, case: dict, model_dir: Path) -> Path:
+        from .global_model.build import write_model
+
+        self._specs.pop(case["case_id"], None)
+        return write_model(self.spec(case), model_dir) / "master.yml"
+
+    def prepare(self, model, case: dict) -> None:
+        proxy = case.get("params", {}).get("proxy")
+        if not proxy:
+            return
+        spec = self.spec(case)
+        if proxy["kind"] == "drift_off":
+            v = model["Vessel"]
+            v.PrimaryMotion = "Prescribed"
+            last = v.GetDataRowCount("PrescribedMotionMode") - 1
+            v.SetData("PrescribedMotionSpeedValue", last, float(proxy["speed_change_m_s"]))
+            v.SetData("PrescribedMotionDirectionValue", last, float(case["params"].get("heading_deg", 0.0)))
+        elif proxy["kind"] == "disconnect":
+            from .global_model.hand_checks import tension_references
+
+            ref = tension_references(spec)
+            held = ref["riser_top_n"] - ref["riser_bottom_n"] + ref["ring_weight_n"]  # ring + riser after release
+            f = proxy.get("tension_factor") or 1.02 * held / (ref["riser_top_n"] + ref["ring_weight_n"])
+            model["Riser"].SetData("ConnectionReleaseStage", 1, 1)  # End B released at the start of stage 1
+            for o in model.objects:
+                if o.typeName == "Winch":
+                    last = o.GetDataRowCount("StageValue") - 1
+                    o.SetData("StageValue", last, o.GetData("StageValue", last) * f)
+        else:
+            raise ValueError(f"unknown proxy {proxy['kind']!r}")
+
+    def statics(self, model, case: dict) -> dict[str, Any]:
+        if case.get("params", {}).get("statics", "seeded") == "seeded":
+            return seeded_statics(model, self.spec(case))
+        model.CalculateStatics()
+        return {"method": "direct"}
+
+    def extract(self, model, case: dict) -> dict[str, Any]:
+        from .global_model import orcaflex_run as orun
+
+        spec = self.spec(case)
+        ofx = orun._api()
+        if case["analysis"] == "statics":
+            out: dict[str, Any] = {**orun.static_responses(model, spec), **orun.end_effective_tensions(model),
+                                   "ring_z_m": orun.ring_static_z_m(model)}
+            n = case.get("params", {}).get("modal_modes")
+            if n:
+                out["modes"] = orun.riser_modal_periods(model, n_modes=int(n))
+            return out
+        out = dict(orun.governing_responses(model, spec))
+        period = ofx.Period(1)
+        ib, riser, ring = model["InnerBarrel"], model["Riser"], model["TensionRing"]
+        out["series"] = {
+            "ufj_angle_deg": _stats(ib.TimeHistory("Ez-Angle", period, ofx.oeEndA)),
+            "lfj_angle_deg": _stats(riser.TimeHistory("Ez-Angle", period, ofx.oeEndB)),
+            "te_top_kn": _stats(riser.TimeHistory("Effective tension", period, ofx.oeEndA)),
+            "te_bottom_kn": _stats(riser.TimeHistory("Effective tension", period, ofx.oeEndB)),
+            "ring_z_m": _stats(ring.TimeHistory("Z", period)),
+            "vessel_x_m": _stats(model["Vessel"].TimeHistory("X", period)),
+        }
+        out["sample_count"] = len(riser.TimeHistory("Effective tension", period, ofx.oeEndA))
+        return out
+
+
+ADAPTER = RiserCampaignAdapter()

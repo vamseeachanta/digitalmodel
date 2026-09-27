@@ -352,6 +352,20 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
     if spec.regular_wave is not None:
         w = spec.regular_wave
         env["waves"] = {"type": "airy", "height": w.height_m, "period": w.period_s, "direction": w.direction_deg}
+    if spec.irregular_wave is not None:
+        w = spec.irregular_wave
+        env["waves"] = {"type": "jonswap", "height": w.hs_m, "period": w.tp_s, "direction": w.direction_deg,
+                        "gamma": w.gamma}
+        # the environment builder takes the raw train as its base layer (key order kept) and, with WaveTp
+        # present and no WaveTz, writes the period as Tp; the seed is user-specified so each seed is reproducible
+        env["raw_properties"] = {"UserSpecifiedRandomWaveSeeds": "Yes", "WaveTrains": [{
+            "Name": "Wave1", "WaveType": "JONSWAP", "WaveDirection": w.direction_deg, "WaveOrigin": [0, 0],
+            "WaveTimeOrigin": 0, "WaveNumberOfSpectralDirections": 1,
+            # gamma before Tp: OrcaFlex keeps Tz when gamma changes, so a later gamma would move Tp
+            "WaveJONSWAPParameters": "Partially specified", "WaveGamma": w.gamma, "WaveHs": w.hs_m,
+            "WaveTp": w.tp_s, "WaveSeed": w.seed, "WaveNumberOfComponents": w.number_of_components,
+            "WaveSpectrumMinRelFrequency": 0.5, "WaveSpectrumMaxRelFrequency": 10,
+            "WaveSpectrumMaxComponentFrequencyRange": 0.05}]}
     dyn = spec.dynamics
     sim = ({"time_step": dyn.time_step_s, "stages": [dyn.build_up_s, dyn.duration_s]} if dyn is not None
            else {"time_step": 0.1, "stages": STAGES_S})

@@ -199,6 +199,18 @@ class RegularWave(BaseModel):
     direction_deg: float = 0.0
 
 
+class IrregularWave(BaseModel):
+    """JONSWAP sea state (OrcaFlex 'Partially specified': Hs, Tp and gamma) with a fixed random seed,
+    so each seed of a multi-seed case is a reproducible text model."""
+
+    hs_m: float = Field(..., gt=0)
+    tp_s: float = Field(..., gt=0)
+    gamma: float = Field(..., ge=1.0, le=7.0)
+    direction_deg: float = 0.0
+    seed: int = Field(..., ge=0)
+    number_of_components: int = Field(200, ge=10)
+
+
 class StructuralDamping(BaseModel):
     """Stiffness-proportional Rayleigh damping on every line type, ``ratio_percent`` of critical at
     ``period_s`` (classical coefficients: mass 0, stiffness beta = 2 zeta / omega, applied to the
@@ -318,6 +330,7 @@ class RiserGlobalModelSpec(BaseModel):
     current: CurrentProfile | None = None
     structural_damping: StructuralDamping | None = None
     regular_wave: RegularWave | None = None
+    irregular_wave: IrregularWave | None = None
     dynamics: Dynamics | None = None
     foundation: Foundation | None = None
     provenance: dict[str, Any] = Field(default_factory=dict)
@@ -345,6 +358,8 @@ class RiserGlobalModelSpec(BaseModel):
                 f"{self.wellhead_datum_z_m:.4f} m")
         if self.wellhead_datum_z_m < -self.environment.water_depth_m - LENGTH_TOL_M:
             raise ValueError("wellhead datum is below the seabed")
+        if self.regular_wave is not None and self.irregular_wave is not None:
+            raise ValueError("give a regular wave or an irregular wave, not both")
         if self.tensioners.sheave_z_m <= self.tension_ring.z_static_m:
             raise ValueError("tensioner sheaves must be above the tension ring")
         t = self.tensioners
