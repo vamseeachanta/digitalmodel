@@ -82,6 +82,9 @@ DISCOVERY_FALSE_POSITIVES = {
     "docs/api/cfd/report_build/house.py": (
         "shared HTML rendering helpers; it does not write a page"
     ),
+    "scripts/capabilities/build_onepagers.py": (
+        "writes one-pager PDFs under docs/api/capabilities/pdf, not HTML pages"
+    ),
 }
 
 # Active generators which cannot run from repository-owned deterministic inputs.
