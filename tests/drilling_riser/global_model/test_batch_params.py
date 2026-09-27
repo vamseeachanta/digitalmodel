@@ -81,7 +81,7 @@ def test_physical_checks_use_the_remaining_tensioners(base_spec, monkeypatch, tv
     spec = cp.case_spec(_case(base_spec, tensioners_failed=1))
     t = spec.tensioners.total_vertical_tension_n * tv_factor
     w = tension_references(spec)["ring_weight_n"]
-    m = {"TensionRing": _Obj(**{"Rotation 3": 0.0}), "Riser": _Obj(**{"End GZ force": (w - t) / 1000.0}),
+    m = {"TensionRing": _Obj(**{"Rotation 3": 0.0, "Wetted volume": 0.0}), "Riser": _Obj(**{"End GZ force": (w - t) / 1000.0}),
          "InnerBarrel": _Obj(**{"End GZ force": 0.0})}
     monkeypatch.setattr(cp, "_tensioner_vertical_n", lambda model: t)
     monkeypatch.setattr(cp, "_end_gz_n", lambda model, line, end: model[line].StaticResult("End GZ force") * 1000.0)

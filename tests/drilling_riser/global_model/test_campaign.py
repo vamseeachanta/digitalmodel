@@ -69,7 +69,7 @@ def _fake(base_spec, *, yaw=0.0, tv_factor=1.0, balance_n=0.0):
     spec = cp.case_spec(_case(base_spec))
     t = spec.tensioners.total_vertical_tension_n * tv_factor
     w = tension_references(spec)["ring_weight_n"]
-    m = _Model(TensionRing=_Obj(**{"Rotation 3": yaw}),
+    m = _Model(TensionRing=_Obj(**{"Rotation 3": yaw, "Wetted volume": 0.0}),
                # balance = tensioner vertical - ring weight + riser end-A GZ force - inner-barrel end-B GZ force
                Riser=_Obj(**{"End GZ force": (w - t + balance_n) / 1000.0}),
                InnerBarrel=_Obj(**{"End GZ force": 0.0}))
