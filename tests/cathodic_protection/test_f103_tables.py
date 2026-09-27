@@ -574,11 +574,18 @@ def test_2016_aliases_to_2019_with_a_warning(token):
     assert "DNVGL-RP-F103 (September 2019, amended May 2021)" in result.citation.note
 
 
-def test_edition_none_warns_and_defaults_to_2010():
-    with pytest.warns(UserWarning, match="defaulting to DNV-RP-F103 2010"):
+def test_edition_none_warns_and_defaults_to_2019():
+    """The default moved to 2019 (owner decision 2026-09-27, epic #2206).
+
+    Buried at 25 C falls in the 2019 Table 6-2 "<= 25" column: 0.020 A/m2
+    (the 2010 Table 5-1 "<= 50" column also gives 0.020, so only the
+    citation distinguishes the editions here).
+    """
+    with pytest.warns(UserWarning, match="defaulting to DNV-RP-F103 2019"):
         result = tbl.mean_current_density(Exposure.BURIED, 25.0)
-    assert "edition=2010" in result.citation.note
-    assert "provenance=verified-2010-tables" in result.citation.note
+    assert result.value == pytest.approx(0.020)
+    assert "edition=2019" in result.citation.note
+    assert "provenance=verified-2019-tables" in result.citation.note
 
 
 def test_2021_alias_gives_the_2019_tables():
