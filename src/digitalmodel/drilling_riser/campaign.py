@@ -160,7 +160,9 @@ def statics_paths(*, current: bool) -> list[str]:
     """Statics paths in the order tried, for a case with or without current."""
     if current:
         return ["current_at_seed", "ramp_at_seed", "ramp_at_target", "fine_steps", "direct_at_target"]
-    return ["current_at_seed", "aid_current", "direct_at_target", "fine_steps"]
+    # still water: the aiding current first - the plain seeded path fails on every 12.5 ppg variant only after the full
+    # iteration budget (stage A, 2026-09-27: about 8 min per case at 57 workers)
+    return ["aid_current", "current_at_seed", "direct_at_target", "fine_steps"]
 
 
 class _PathFailed(RuntimeError):
