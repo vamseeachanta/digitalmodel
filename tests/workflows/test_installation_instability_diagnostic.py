@@ -33,6 +33,7 @@ class Model:
         self.defaultViewParameters = NS(ViewSize=0, Width=0, Height=0, ViewAzimuth=0, ViewElevation=0, FileFormat=None)
 
     def LoadData(self, path): pass
+    def LoadSimulation(self, path): pass
     def RunSimulation(self):
         if self.raise_run: raise RuntimeError('solver error')
     def SaveSimulation(self, path): open(path, 'wb').write(b'sim')
@@ -48,7 +49,8 @@ def fake(monkeypatch, tmp_path):
     def factory(state='SimulationStoppedUnstable', stop=4.0, raise_run=False):
         def model(**kw):
             kwargs.append(kw); made.append(Model(state, stop, raise_run)); return made[-1]
-        return NS(Model=model, oeEndA='A', oeEndB='B', pnWholeSimulation='whole', BitmapFileFormat=NS(PNG=PNG))
+        return NS(Model=model, oeEndA='A', oeEndB='B', pnWholeSimulation='whole', BitmapFileFormat=NS(PNG=PNG),
+                  SpecifiedPeriod=lambda start, end: ('period', start, end))
     monkeypatch.setattr(diag, '_state', lambda model: model.state_name)
     monkeypatch.setattr(diag, '_pin', lambda cpus: list(cpus))
     model = tmp_path / 'model.yml'
@@ -67,7 +69,7 @@ def test_unstable_run_keeps_partial_simulation_views_and_histories(fake, tmp_pat
     assert set(record['views']) == {'elevation', 'plan', 'perspective'}
     sling = record['line_ends']['Sling2']['End A']
     assert sling['maximum'] == 8 and sling['time_of_maximum_s'] == 4.0 and sling['samples'] == 9
-    assert ('Sling2', 'Effective tension', 'whole', 'A') in made[0].calls
+    assert ('Sling2', 'Effective tension', ('period', -80.0, 4.0), 'A') in made[0].calls
     assert 'history Crane|End B' in record['stage_errors']
     arrays = np.load(out / 'line_end_tension.npz')
     assert 'Crane|End B' not in arrays and list(arrays['time']) == list(np.arange(9) * 0.5)
@@ -128,3 +130,33 @@ def test_model_removed_during_run_still_writes_manifest(fake, tmp_path, monkeypa
     record = diag.run_case(model, tmp_path / 'g', cpus=[60], api=factory())
     assert 'model_integrity' in record['stage_errors']
     assert (tmp_path / 'g' / 'diagnostic.json').exists()
+
+
+def test_incomplete_run_uses_period_up_to_stop(fake, tmp_path):
+    factory, made, _, model = fake
+    api = factory()
+    api.SpecifiedPeriod = lambda start, end: ('period', start, end)
+    record = diag.run_case(model, tmp_path / 'p', cpus=[60], api=api)
+    assert ('Sling2', 'Effective tension', ('period', -80.0, 4.0), 'A') in made[0].calls
+    assert 'line_ends' not in record['stage_errors'] and record['line_ends']['Sling2']
+
+
+def test_extract_histories_from_saved_partial_simulation(fake, tmp_path):
+    factory, made, _, _ = fake
+    api = factory()
+    api.SpecifiedPeriod = lambda start, end: ('period', start, end)
+    sim = tmp_path / 'unstable.sim'
+    sim.write_bytes(b'sim')
+    record = diag.extract_histories(sim, tmp_path / 'hx', cpus=[60], api=api)
+    assert record['source_simulation_sha256'] and record['stop_time_s'] == 4.0
+    assert (tmp_path / 'hx' / 'line_end_tension.npz').exists()
+    assert json.loads((tmp_path / 'hx' / 'histories.json').read_text()) == record
+
+
+def test_extract_setup_failure_recorded(fake, tmp_path, monkeypatch):
+    factory, _, _, _ = fake
+    monkeypatch.setattr(Model, 'LoadSimulation', lambda self, p: (_ for _ in ()).throw(RuntimeError('corrupt')))
+    sim = tmp_path / 'bad.sim'; sim.write_bytes(b'x')
+    with pytest.raises(RuntimeError):
+        diag.extract_histories(sim, tmp_path / 'e', cpus=[60], api=factory())
+    assert 'corrupt' in json.loads((tmp_path / 'e' / 'histories.json').read_text())['stage_errors']['setup']

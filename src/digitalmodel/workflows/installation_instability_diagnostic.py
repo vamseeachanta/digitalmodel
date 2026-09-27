@@ -77,8 +77,17 @@ def _views(api, model, out, view_size):
     return saved, errors
 
 
-def _line_ends(api, model, out, record):
-    times = np.asarray(model.SampleTimes(api.pnWholeSimulation), dtype=float)
+def _period(api, model, stop):
+    """Whole-simulation periods are rejected on incomplete runs; read from build-up start to the stop."""
+    stages = list(model.general.StageDuration)
+    if stop is None or not stages:
+        return api.pnWholeSimulation
+    return api.SpecifiedPeriod(-float(stages[0]), float(stop))
+
+
+def _line_ends(api, model, out, record, period=None):
+    period = api.pnWholeSimulation if period is None else period
+    times = np.asarray(model.SampleTimes(period), dtype=float)
     arrays, summary = {'time': times}, {}
     for obj in model.objects:
         if getattr(obj, 'typeName', None) != 'Line':
@@ -86,7 +95,7 @@ def _line_ends(api, model, out, record):
         for label, extra in (('End A', api.oeEndA), ('End B', api.oeEndB)):
             key = f'{obj.name}|{label}'
             try:
-                values = np.asarray(obj.TimeHistory('Effective tension', api.pnWholeSimulation, objectExtra=extra), dtype=float)
+                values = np.asarray(obj.TimeHistory('Effective tension', period, objectExtra=extra), dtype=float)
                 if not len(values) or len(values) != len(times):
                     raise ValueError(f'history has {len(values)} samples for {len(times)} sample times')
             except Exception as error:
@@ -141,7 +150,9 @@ def run_case(model_path, output_dir, *, cpus, api=None, time_step=None, view_siz
             record['simulation'] = name
         views = _stage(record, 'views', lambda: _views(api, model, out, view_size)) or ({}, {})
         record['views'], record['view_errors'] = views
-        record['line_ends'] = _stage(record, 'line_ends', lambda: _line_ends(api, model, out, record)) or {}
+        period = None if record['outcome'] == 'completed' else _stage(
+            record, 'period', lambda: _period(api, model, record['stop_time_s']))
+        record['line_ends'] = _stage(record, 'line_ends', lambda: _line_ends(api, model, out, record, period)) or {}
     finally:
         try:
             if sha256(model_path.read_bytes()).hexdigest() != model_sha:
@@ -149,6 +160,36 @@ def run_case(model_path, output_dir, *, cpus, api=None, time_step=None, view_siz
         except Exception as error:
             record['stage_errors']['model_integrity'] = f'{type(error).__name__}: {error}'
         (out / 'diagnostic.json').write_text(json.dumps(record, indent=2), encoding='utf-8')
+    return record
+
+
+def extract_histories(simulation, output_dir, *, cpus, api=None):
+    """Read line-end tension histories from an existing (possibly partial) simulation file."""
+    simulation, out = Path(simulation).resolve(), Path(output_dir).resolve()
+    if out.exists():
+        raise FileExistsError('Extraction output must be new')
+    if not cpus:
+        raise ValueError('Explicit CPU set required')
+    observed = _pin(cpus)
+    if api is None:
+        import OrcFxAPI as api  # noqa: N813
+    digest = sha256(simulation.read_bytes()).hexdigest()
+    out.mkdir(parents=True)
+    record = dict(schema_version=1, source_simulation=str(simulation), source_simulation_sha256=digest,
+                  cpu_affinity=list(observed), stage_errors={}, engineering_acceptance='NOT EVALUATED')
+    try:
+        try:
+            model = api.Model(threadCount=1)
+            model.LoadSimulation(str(simulation))
+        except Exception as error:
+            record['stage_errors']['setup'] = f'{type(error).__name__}: {error}'
+            raise
+        record['state'] = _stage(record, 'state', lambda: _state(model))
+        record['stop_time_s'] = _stage(record, 'stop_time', lambda: float(model.simulationTimeStatus.CurrentTime))
+        period = _stage(record, 'period', lambda: _period(api, model, record['stop_time_s']))
+        record['line_ends'] = _stage(record, 'line_ends', lambda: _line_ends(api, model, out, record, period)) or {}
+    finally:
+        (out / 'histories.json').write_text(json.dumps(record, indent=2), encoding='utf-8')
     return record
 
 
