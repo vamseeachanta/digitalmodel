@@ -205,11 +205,37 @@ def test_the_last_successful_path_of_a_variant_is_tried_first(base_spec, monkeyp
 
 
 def test_path_orders(base_spec):
-    assert cp.statics_paths(current=True) == ["current_at_seed", "ramp_at_seed", "ramp_at_target", "fine_steps",
-                                              "direct_at_target"]
+    assert cp.statics_paths(current=True) == ["current_at_seed", "tension_ramp", "ramp_at_seed", "ramp_at_target",
+                                              "fine_steps", "direct_at_target"]
     # still water: the aiding current first (stage A: the plain seeded path failed on every 12.5 ppg case after the
     # full iteration budget, about 8 min per case at 57 workers, before the aiding current converged in two solves)
-    assert cp.statics_paths(current=False) == ["aid_current", "current_at_seed", "direct_at_target", "fine_steps"]
+    assert cp.statics_paths(current=False) == ["aid_current", "tension_ramp", "current_at_seed", "direct_at_target",
+                                               "fine_steps"]
+
+
+def test_tension_ramp_solves_at_a_higher_line_tension_then_steps_down_to_the_case_value(base_spec, monkeypatch):
+    """Stage A: the TT-MIN, one-tensioner-failed cases (LFJ tension about 60 kips at 12.5 ppg) failed every path; the
+    tension continuation starts from 1.5 x the case line tension and steps down to it at the case offset."""
+    spec = _spec(base_spec, offset_pct_wd=2.0, current=CURRENT)
+    wd = spec.environment.water_depth_m
+    m = _FakeModel(fail=lambda m: m.reloads == 0)  # the first path fails
+    seen = []
+    orig = m.CalculateStatics
+
+    def rec():
+        seen.append((m["Vessel"].InitialX, m.environment.RefCurrentSpeed, m.winches[1].t[-1]))
+        orig()
+
+    m.CalculateStatics = rec
+    monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
+    info = cp.robust_statics(m, spec, {}, reload=_reloader(m, 0.6))
+    assert info["strategy"] == "tension_ramp"
+    ramp = seen[1:]
+    assert ramp[0][2] == pytest.approx(100.0 * cp.TENSION_RAMP[0]) and ramp[0][0] == pytest.approx(-0.02 * wd)
+    tail = [t for x, s, t in ramp if x == pytest.approx(0.02 * wd)]
+    assert tail[-len(cp.TENSION_RAMP):] == pytest.approx([100.0 * f for f in cp.TENSION_RAMP])
+    assert all(w.t == [pytest.approx(100.0)] * 3 for w in m.winches)  # the case setting at the end
+    assert all(s == 0.6 for _, s, _ in ramp)
 
 
 def test_direct_path_solves_once_at_the_target(base_spec, monkeypatch):
