@@ -291,3 +291,41 @@ Before Phase 2 work on the DNV route:
 - Safety factor k = 1.1 (mandatory in the operator's GP)
 
 **Status:** Tables and bracelet design per edition implemented (#2208, 2026-09-26); the formula-level items above remain a separate work item (was WRK-272).
+
+---
+
+## 8. Standards Verification Checklist — Stray Current (#2247)
+
+**Status (2026-09-27):** EN 50162, ISO 18086, ISO 15589-1 and NACE SP0169 are **not on file**. `stray_current.py` was re-modelled from open literature (owner direction 2026-09-27); every default below is a `ProvisionalValue` (`cathodic_protection/_provisional.py`) carrying its literature source, and every public calculation stays behind `experimental=True`. None of these numbers has been read from the standard itself. When the standard is obtained, check each row against the named clause, correct the value if needed, set `provisional=False`, and lift the experimental gate only when all rows of that standard are confirmed.
+
+### Provisional values
+
+| Constant (`stray_current.py`) | Value | Literature source | Standard clause that must confirm it |
+|---|---|---|---|
+| `DC_RHO_BAND_LOW_OHM_M` | 15 ohm·m | Lynch (2016), CEOCOR Ljubljana, slide 12 | EN 50162:2004 Table 1 — resistivity band edge (and whether the band is `< 15` or `<= 15`) |
+| `DC_RHO_BAND_HIGH_OHM_M` | 200 ohm·m | Lynch (2016), slide 12 | EN 50162:2004 Table 1 — resistivity band edge |
+| `DC_SHIFT_LIMIT_LOW_RHO_MV` | 20 mV (incl. IR) | Lynch (2016), slide 12 | EN 50162:2004 Table 1 — steel in soil, rho < 15 ohm·m |
+| `DC_SHIFT_SLOPE_MV_PER_OHM_M` | 1.5 mV per ohm·m (limit = 1.5·rho, incl. IR) | Lynch (2016), slide 12; the rho symbol is lost in the slide text and was read as rho from continuity with 300 mV at 200 ohm·m | EN 50162:2004 Table 1 — steel in soil, 15–200 ohm·m (confirm the expression, and the step 20 → 22.5 mV at 15 ohm·m) |
+| `DC_SHIFT_LIMIT_HIGH_RHO_MV` | 300 mV (incl. IR) | Lynch (2016), slide 12 | EN 50162:2004 Table 1 — steel in soil, rho >= 200 ohm·m |
+| `DC_SHIFT_LIMIT_IR_FREE_MV` | 20 mV (excl. IR) | Lynch (2016), slide 12 | EN 50162:2004 Table 1 — IR-free column; also confirm Table 1 applies to structures **without** CP only |
+| `AC_VOLTAGE_TARGET_V` | 15 V rms | Brenna, Beretta & Ormellese (2020), reporting ISO 18086 | ISO 18086:2019 AC-corrosion protection criteria clause (first step, AC voltage) |
+| `AC_CURRENT_DENSITY_LIMIT_A_M2` | 30 A/m² | Brenna et al. (2020) | ISO 18086:2019 criteria clause (i_ac, representative period) |
+| `DC_CURRENT_DENSITY_LIMIT_A_M2` | 1 A/m² | Brenna et al. (2020) | ISO 18086:2019 criteria clause (i_dc alternative when i_ac > 30 A/m²) |
+| `AC_DC_RATIO_LIMIT` | 3 | Brenna et al. (2020) | ISO 18086:2019 criteria clause (i_ac/i_dc ratio) |
+| `COUPON_AREA_M2` | 1 cm² | Brenna et al. (2020) | ISO 18086:2019 coupon/probe clause |
+| `STEEL_RESISTIVITY_OHM_M` | 2.0e-7 ohm·m | DNV-RP-F103 (2010) Sec. 5.6.10 (on file) | project linepipe specification |
+
+### Required inputs (no default, because no open source gives a value)
+
+| Input | Why it is required | Standard clause to consult |
+|---|---|---|
+| `allowable_shift_mV` for a cathodically protected structure | Open literature (Lynch 2016, slides 5 and 11) describes the acceptance as "protection criterion still met under interference", case by case — no tabulated shift | EN 50162:2004 (criteria for structures with CP); ISO 15589-1:2015 protection criteria |
+| `ac_voltage_V` | No open, citable simplified induction model was adopted; the previous Carson-based shortcut was withdrawn (review B10) | ISO 18086:2019 (measurement); EN 50443 / CIGRE for induction studies |
+| `required_drainage_current_A`, `driving_voltage_V` (drainage bond) | Come from an interference survey or current-requirement test | EN 50162:2004 drainage clauses |
+
+### Equation sources (not standard values; listed for completeness)
+
+- Point-source earth potential `V_e = rho I / (2 pi r)` and buried-conductor response in an imposed earth potential: E. D. Sunde, *Earth Conduction Effects in Transmission Systems*, Dover, 1968.
+- Pipeline attenuation `alpha = sqrt(r' g')`, `r' = rho_s / (pi t (D - t))`, `g' = pi D / R_c`; resistance drainage bonds: A. W. Peabody, *Peabody's Control of Pipeline Corrosion*, 2nd ed., NACE, 2001, ISBN 1-57590-092-0.
+- Coupon AC density `i_ac = 8 V_ac / (rho pi d)`: Brenna, Beretta & Ormellese, *Materials* 13(9):2158, 2020, doi:10.3390/ma13092158; disk spread resistance `R = rho / (2 d)`: J. Newman, *J. Electrochem. Soc.* 113:501, 1966, doi:10.1149/1.2424003.
+- Lynch (2016): C. Lynch, "dc Stray Currents — Current Practices for Corrosion Protection", CEOCOR Congress 2016, Ljubljana, https://ceocor.lu/download/2016_slovenia/2016-LYNCH-DC-Stray-Current.pdf.
