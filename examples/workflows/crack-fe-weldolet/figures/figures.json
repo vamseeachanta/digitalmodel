@@ -1,0 +1,122 @@
+{
+  "figures": {
+    "crotch_mesh_face": {
+      "file": "crotch_mesh_face.png",
+      "generator": "digitalmodel.ansys.weldolet_crotch",
+      "height_px": 1459,
+      "level": 0,
+      "mapdl_release": "2026 R1",
+      "mapdl_version": "26.1",
+      "receipt_deck_sha256": "b8c41361a629361bb6938a5c673760bd6015890f75b382e6f676f2787e3478ca",
+      "sha256": "d7ff521bd6a8c4e9e5895eb2fe6c6f25c0637f6f5d299ad1cc6ca4ef33b4efb0",
+      "state": "p0b_crotch_a2p35",
+      "view": "symmetry plane y = 0 viewed from -y: crack face and crack block around the semicircular front",
+      "width_px": 1200
+    },
+    "crotch_mesh_global": {
+      "file": "crotch_mesh_global.png",
+      "generator": "digitalmodel.ansys.weldolet_crotch",
+      "height_px": 865,
+      "level": 0,
+      "mapdl_release": "2026 R1",
+      "mapdl_version": "26.1",
+      "receipt_deck_sha256": "b8c41361a629361bb6938a5c673760bd6015890f75b382e6f676f2787e3478ca",
+      "sha256": "9c33f78f699c14396601e0b2a0b379cf46f00ba7ccf9cc9429a1a3d0136e50c1",
+      "state": "p0b_crotch_a2p35",
+      "view": "isometric view of the half model (y >= 0) with element edges",
+      "width_px": 1200
+    },
+    "crotch_mesh_spider": {
+      "file": "crotch_mesh_spider.png",
+      "generator": "digitalmodel.ansys.weldolet_crotch",
+      "height_px": 556,
+      "level": 0,
+      "mapdl_release": "2026 R1",
+      "mapdl_version": "26.1",
+      "receipt_deck_sha256": "b8c41361a629361bb6938a5c673760bd6015890f75b382e6f676f2787e3478ca",
+      "sha256": "7404e1d6c59e5177480e858accbe960d72d003554bc4eb8ca66ae8781b1fe8bc",
+      "state": "p0b_crotch_a2p35",
+      "view": "elements below the surface through the deepest front point, viewed from +z: the spider-web crack tube",
+      "width_px": 1200
+    },
+    "crotch_sy_face": {
+      "file": "crotch_sy_face.png",
+      "generator": "digitalmodel.ansys.weldolet_crotch",
+      "height_px": 893,
+      "level": 0,
+      "mapdl_release": "2026 R1",
+      "mapdl_version": "26.1",
+      "receipt_deck_sha256": "b8c41361a629361bb6938a5c673760bd6015890f75b382e6f676f2787e3478ca",
+      "sha256": "f182de92aa19dae05b8ba933b7bf30e0c68e179158b3058f65863b91ad217863",
+      "state": "p0b_crotch_a2p35",
+      "view": "stress normal to the crack plane (SY) on the symmetry plane, viewed from -y; contour range 0 to 250 MPa",
+      "width_px": 1200
+    },
+    "hoop_iso": {
+      "file": "hoop_iso.png",
+      "generator": "digitalmodel.ansys.weldolet_crack",
+      "height_px": 893,
+      "level": 0,
+      "mapdl_release": "2026 R1",
+      "mapdl_version": "26.1",
+      "receipt_deck_sha256": "da68ba67caedc72114f917a299d5da827324014e3cc8883253dc67007c8b5581",
+      "sha256": "a1bebded903b52aab501eaf18e96a7b144c17de776523bc6097763892529dce5",
+      "state": "p0b_uncracked",
+      "view": "hoop stress (cylindrical system about the run-pipe axis) on the weldolet region, isometric view",
+      "width_px": 1200
+    },
+    "hoop_section": {
+      "file": "hoop_section.png",
+      "generator": "digitalmodel.ansys.weldolet_crack",
+      "height_px": 893,
+      "level": 0,
+      "mapdl_release": "2026 R1",
+      "mapdl_version": "26.1",
+      "receipt_deck_sha256": "da68ba67caedc72114f917a299d5da827324014e3cc8883253dc67007c8b5581",
+      "sha256": "ce3dff165a31292e21aae04e7b90ad2046ba5b91a131aad53aab8f55dbfc3dba",
+      "state": "p0b_uncracked",
+      "view": "hoop stress on the section y = 0 through the branch axis, viewed from -y, +x crotch region (elements within 3 mm of the section)",
+      "width_px": 1200
+    },
+    "mesh_global": {
+      "file": "mesh_global.png",
+      "generator": "digitalmodel.ansys.weldolet_crack",
+      "height_px": 777,
+      "level": 0,
+      "mapdl_release": "2026 R1",
+      "mapdl_version": "26.1",
+      "receipt_deck_sha256": "da68ba67caedc72114f917a299d5da827324014e3cc8883253dc67007c8b5581",
+      "sha256": "5275cbb4ce20c6b96b0c6846ff976968d10a707d62949986b3dad256fe0fae6f",
+      "state": "p0b_uncracked",
+      "view": "isometric view of the whole model with element edges",
+      "width_px": 1200
+    },
+    "mesh_weldolet": {
+      "file": "mesh_weldolet.png",
+      "generator": "digitalmodel.ansys.weldolet_crack",
+      "height_px": 861,
+      "level": 0,
+      "mapdl_release": "2026 R1",
+      "mapdl_version": "26.1",
+      "receipt_deck_sha256": "da68ba67caedc72114f917a299d5da827324014e3cc8883253dc67007c8b5581",
+      "sha256": "340efc4123d7184d0da08019409d08a5382ddf2f48c870dd6bf440482be55a1e",
+      "state": "p0b_uncracked",
+      "view": "isometric view of the weldolet region (elements with centroid within 45 mm of the branch axis) with element edges",
+      "width_px": 1200
+    },
+    "model_iso": {
+      "file": "model_iso.png",
+      "generator": "digitalmodel.ansys.weldolet_crack",
+      "height_px": 778,
+      "level": 0,
+      "mapdl_release": "2026 R1",
+      "mapdl_version": "26.1",
+      "receipt_deck_sha256": "da68ba67caedc72114f917a299d5da827324014e3cc8883253dc67007c8b5581",
+      "sha256": "899571d69928ab42042ccfdef169d4110b1ff3cdb8b2c1fd3fdbaba95c85b10b",
+      "state": "p0b_uncracked",
+      "view": "isometric view of the whole model, feature edges only",
+      "width_px": 1200
+    }
+  },
+  "note": "Visualisation decks: the receipt deck of each state (hash-checked) plus an appended plotting block; receipts are unchanged."
+}
