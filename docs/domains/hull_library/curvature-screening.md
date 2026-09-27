@@ -154,3 +154,10 @@ Use `bottom=False` to omit the bottom explicitly. Omitting nonzero bottom area
 changes **all** area-normalized values, including the three `I_D` values, not only
 `a_flat`. This corrects the narrower comparability claim in the original plan.
 GDF/panel inventories have no BRep surface and continue to use the mesh route.
+
+## Parametric forms
+
+[Parametric monohull forms](parametric-form.md) generate dense synthetic profiles
+from section, fullness, Cb and LCB targets. Use `sweep_forms(..., screen=True)`
+for mesh signatures. The worked example and generated mesh/BRep comparison record
+attainment, representation sensitivity and native validity limitations.
