@@ -9,7 +9,6 @@ Run with:
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import demo_08_iccp_design as demo
 
@@ -33,7 +32,8 @@ def test_single_case_sane_outputs():
     # Ground-bed: at least one anode and a positive resistance.
     assert r["number_of_anodes"] >= 1
     assert r["bed_resistance_ohm"] > 0
-    assert r["anode_life_years"] > 0
+    # Anode life is provisional and gated behind experimental=True (#2247).
+    assert r["anode_life_years"] is None
     # Cable sized within the voltage-drop limit.
     assert r["cable_area_mm2"] > 0
     assert r["cable_voltage_drop_V"] <= demo.MAX_VOLTAGE_DROP_V + 1e-6

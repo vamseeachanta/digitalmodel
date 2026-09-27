@@ -38,9 +38,12 @@ from digitalmodel.cathodic_protection.b401_tables import (
 from digitalmodel.cathodic_protection.dnv_rp_f103 import (
     protected_length as f103_protected_length,
 )
+# fuel_system_cp no longer re-exports the criterion (#2247: check_protection deleted).
+from digitalmodel.cathodic_protection.api_rp_1632 import (
+    PROTECTION_POTENTIAL_CSE as FUEL_PROTECTION_POTENTIAL_CSE,
+)
 from digitalmodel.cathodic_protection.fuel_system_cp import (
     COATING_BREAKDOWN_FACTOR,
-    PROTECTION_POTENTIAL_CSE as FUEL_PROTECTION_POTENTIAL_CSE,
     CoatingType,
     FuelPipeSegment,
     effective_bare_area,
