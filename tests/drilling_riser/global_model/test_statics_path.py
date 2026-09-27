@@ -172,12 +172,12 @@ def test_licence_error_is_not_swallowed(base_spec):
 def test_without_current_an_aiding_current_is_used_then_removed(base_spec, monkeypatch):
     spec = _spec(base_spec, offset_pct_wd=2.0)
     wd = spec.environment.water_depth_m
-    m = _FakeModel(speed=0.0, fail=lambda m: m.reloads == 0)
+    m = _FakeModel(speed=0.0)
     m.environment.RefCurrentDirection = 0.0
     monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
     info = cp.robust_statics(m, spec, {}, reload=_reloader(m, 0.0))
-    assert info["strategy"] == "aid_current" and m.reloads == 1
-    second = m.calls[1:]
+    assert info["strategy"] == "aid_current" and m.reloads == 0
+    second = m.calls
     assert second[0] == (pytest.approx(-0.02 * wd), cp.AID_CURRENT_M_S)
     assert second[-2] == (pytest.approx(0.02 * wd), cp.AID_CURRENT_M_S)
     assert second[-1] == (pytest.approx(0.02 * wd), 0.0)  # the final state is in still water
@@ -187,7 +187,9 @@ def test_without_current_an_aiding_current_is_used_then_removed(base_spec, monke
 def test_path_orders(base_spec):
     assert cp.statics_paths(current=True) == ["current_at_seed", "ramp_at_seed", "ramp_at_target", "fine_steps",
                                               "direct_at_target"]
-    assert cp.statics_paths(current=False) == ["current_at_seed", "aid_current", "direct_at_target", "fine_steps"]
+    # still water: the aiding current first (stage A: the plain seeded path failed on every 12.5 ppg case after the
+    # full iteration budget, about 8 min per case at 57 workers, before the aiding current converged in two solves)
+    assert cp.statics_paths(current=False) == ["aid_current", "current_at_seed", "direct_at_target", "fine_steps"]
 
 
 def test_direct_path_solves_once_at_the_target(base_spec, monkeypatch):
