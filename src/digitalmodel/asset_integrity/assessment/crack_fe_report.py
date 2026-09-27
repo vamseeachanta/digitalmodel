@@ -44,13 +44,22 @@ No published case or article is referenced (owner cards S04, B05-B08).
 from __future__ import annotations
 
 import argparse
+import base64
 import datetime as _dt
+import hashlib
 import html
 import json
+import re
 from pathlib import Path
 from typing import Any, Mapping, Optional, Sequence
 
 from digitalmodel.asset_integrity.assessment.fad_curves import api579_2016_level2
+from digitalmodel.fatigue.crack_growth_history import (
+    GrowthLaw,
+    TabulatedDeltaK,
+    Threshold,
+    life,
+)
 from digitalmodel.reporting.calc_report import (
     _DEFAULT_TEMPLATE,
     KPI,
@@ -70,12 +79,107 @@ TITLE = "Crack-like flaw assessment of a weldolet attachment-weld root flaw"
 DISCIPLINE = "Asset integrity"
 ORGANISATION = "AceEngineer"
 PREPARED_BY = "crack_fe_report (generated from the result record)"
+REVISION = "Rev B"
+REVISION_PURPOSE = "issued for owner review"
+REV_A_DATE = "26 Sep 2026"
+REV_B_SECTIONS = ("Front matter added; 1–9 and A restructured to the standard outline; "
+                  "2, 3 and 5 carry new figures")
+REV_B_DESCRIPTION = ("Owner review comments 1–3 incorporated: abbreviations table, and the "
+                     "small-scale-yielding limitation stated in practical terms and classified "
+                     "as a method limitation; standard section outline with the model, mesh "
+                     "and result pictures; failure assessment diagram and growth chart in the "
+                     "summary with the conclusions read against them. Issued for owner review.")
+TOC_ITEMS = (("s1", "Introduction"), ("s2", "Summary and conclusions"), ("s3", "Design basis"),
+             ("s4", "Methodology"), ("s5", "Results"), ("s6", "Verification"),
+             ("s7", "Conclusions"), ("s8", "Recommendations"), ("s9", "References"))
 GUARDS = ("a_equilibrium", "b_mesh_load", "c_contour", "d_complete", "e_sanitised",
           "f_units", "g_j_mesh")
 RECORD_GUARDS = ("c_contour_legacy", "g_end_nodes_record")
 _RECORD_WORDING = (
     ("declared FE states validated", "declared FE states verified"),
     ("our own", "the model's own"),
+)
+
+# Abbreviations and symbols used anywhere on the page (the tests check coverage).
+ABBREVIATIONS: tuple[tuple[str, str], ...] = (
+    ("a, a0, c", "flaw depth, initial flaw depth and flaw half-length (mm)"),
+    ("ANL", "Argonne National Laboratory (report numbers ANL/...)"),
+    ("ANSYS", "the FE software product of Ansys, Inc."),
+    ("APDL", "ANSYS Parametric Design Language, the input language of MAPDL decks"),
+    ("API", "American Petroleum Institute"),
+    ("ASME", "American Society of Mechanical Engineers"),
+    ("BS", "British Standard"),
+    ("BSI", "British Standards Institution"),
+    ("CTNC, NORM, SYMM", "CINT options: crack-tip node component, crack-plane normal, "
+                         "symmetry about the crack plane"),
+    ("DEW", "Deutsche Edelstahlwerke (steel producer; public datasheet source)"),
+    ("DIN, EN", "German standards institute; European standard (as in DIN EN 10088-3)"),
+    ("CINT", "MAPDL contour-integral command: J-integral and interaction-integral "
+             "extraction of K_I, K_II and K_III on rings of elements around the crack front"),
+    ("CS 11", "cylindrical coordinate system about the run-pipe axis used for hoop stress"),
+    ("E, E′, ν", "Young's modulus, plane-strain modulus E / (1 − ν²) and Poisson's ratio"),
+    ("EPFM", "elastic-plastic fracture mechanics"),
+    ("EPP", "elastic-perfectly-plastic (material model of the limit-load run)"),
+    ("F", "load factor to the FAD envelope: the factor on the primary loads that brings "
+          "the assessment point onto the envelope"),
+    ("FAD", "failure assessment diagram"),
+    ("FE, FEA", "finite element, finite-element analysis"),
+    ("FFS", "fitness for service"),
+    ("GTA, GTAW", "gas tungsten arc (welding)"),
+    ("HAZ", "heat-affected zone"),
+    ("ID, OD", "inside diameter, outside diameter"),
+    ("J", "J-integral, the energy release rate of the crack front (N/mm)"),
+    ("K", "stress intensity factor (MPa√m)"),
+    ("K_I, K_II, K_III", "stress intensity factors in opening, sliding and tearing modes"),
+    ("K_gov", "governing crack driving force, √(E′J) maximised over the front nodes"),
+    ("K_S", "secondary (residual-stress) stress intensity factor"),
+    ("Kmat", "fracture toughness of the material at the crack front"),
+    ("Kr", "toughness ratio K_gov / Kmat (FAD ordinate)"),
+    ("L0, L1, L2", "FE mesh refinement levels (each level halves the crack-front element "
+                   "size)"),
+    ("LEFM", "linear-elastic fracture mechanics"),
+    ("LL", "limit load (superscript in Lr^LL = p / P_L)"),
+    ("Lr", "load ratio σ_ref / σ_y (FAD abscissa)"),
+    ("Lr_max", "plastic-collapse cut-off of the FAD, (σ_y + σ_u) / (2 σ_y)"),
+    ("JP Steel", "stainless pipe distributor (source of a public pipe chart)"),
+    ("MAPDL", "ANSYS Mechanical APDL, the FE solver"),
+    ("MSS SP-97", "Manufacturers Standardization Society standard practice for integrally "
+                  "reinforced branch outlet fittings"),
+    ("NCNV", "MAPDL key that ends a nonlinear solution on divergence"),
+    ("N", "number of load cycles"),
+    ("NASA", "National Aeronautics and Space Administration"),
+    ("NDE", "non-destructive examination"),
+    ("NPS", "nominal pipe size"),
+    ("NUREG, NUREG/CR", "U.S. Nuclear Regulatory Commission report series (CR: contractor "
+                        "report)"),
+    ("P_L, p", "limit pressure and design pressure (MPa)"),
+    ("PDF", "portable document format"),
+    ("PNG", "portable network graphics (image format of the FE pictures)"),
+    ("PSF", "partial safety factor"),
+    ("R", "stress ratio, minimum over maximum stress of the load cycle"),
+    ("r_p, r_p,cyc", "Irwin plastic-zone size (monotonic) and cyclic plastic-zone size (mm)"),
+    ("R6", "the R6 structural-integrity assessment procedure (origin of the Option 1 curve)"),
+    ("SA, SMA", "submerged arc and shielded metal arc (flux-shielded welding processes)"),
+    ("SCI", "Steel Construction Institute"),
+    ("SHA-256", "secure hash algorithm, 256-bit digest used to identify files"),
+    ("SIF", "stress intensity factor"),
+    ("SIFS, JINT", "CINT extraction types: stress intensity factors and J-integral"),
+    ("SOLID186", "MAPDL 20-node quadratic hexahedral solid element"),
+    ("SSY", "small-scale yielding: the crack-tip plastic zone is small relative to the "
+            "remaining ligament and the flaw size, so that linear-elastic K governs"),
+    ("STD", "standard wall thickness"),
+    ("SY", "stress component in the global y direction (normal to the crotch crack plane)"),
+    ("TES", "twice-elastic-slope (collapse criterion of the limit-load run)"),
+    ("TM", "technical memorandum"),
+    ("UC", "utilisation: demand divided by capacity"),
+    ("US, U.S.", "United States"),
+    ("UX, UY, UZ", "nodal displacements in the global x, y and z directions"),
+    ("WPS", "welding procedure specification"),
+    ("Y", "geometry factor in K = Y σ √(πa)"),
+    ("ΔK", "stress intensity factor range over a load cycle, (1 − R) K_gov"),
+    ("ΔK_th", "fatigue-crack-growth threshold; ΔK_th,eff after the threshold temperature rule"),
+    ("σ_ref, σ_y, σ_u", "reference stress, 0.2 % proof strength and tensile strength (MPa)"),
+    ("σ_m, σ_b", "linearised membrane and bending stress (MPa)"),
 )
 
 
@@ -148,6 +252,17 @@ def receipts_meta(fe_states_dir: Path) -> dict:
                                      "j_at_governing_n_per_mm", "basis") if k in gov
             },
         }
+        if rec["kind"] == "weldolet_uncracked":
+            states[name]["spec"] = dict(spec)
+        if rec.get("plane") == "crotch":
+            prim = next((m for m in rec.get("meshes", [])
+                         if m["level"] == rec.get("primary_level")), None)
+            if prim is not None and prim.get("front"):
+                states[name]["front_profile"] = {
+                    "level": prim["level"],
+                    "phi_deg": [n["phi_deg"] for n in prim["front"]],
+                    "k_gov_mpa_sqrt_m": list(prim["governing"]["k_gov_mpa_sqrt_m"]),
+                }
         if rec["kind"] == "verification" and "verification" not in top:
             top["verification"] = {"state": name, "spec": dict(spec),
                                    "comparator": rec.get("comparator", {})}
@@ -171,6 +286,50 @@ def receipts_meta(fe_states_dir: Path) -> dict:
         "states": states,
         **top,
     }
+
+
+def load_figures(figures_dir: Path) -> dict:
+    """The committed FE figures (``figures.json`` manifest and base64 PNG data).
+
+    Fail-closed: a file whose SHA-256 differs from the manifest raises ``ValueError``.
+    """
+    figures_dir = Path(figures_dir)
+    manifest = json.loads((figures_dir / "figures.json").read_text("utf-8"))
+    images = {}
+    for fid, rec in manifest["figures"].items():
+        blob = (figures_dir / rec["file"]).read_bytes()
+        if hashlib.sha256(blob).hexdigest() != rec["sha256"]:
+            raise ValueError(f"figure {fid}: file digest differs from figures.json")
+        images[fid] = base64.b64encode(blob).decode("ascii")
+    return {"manifest": manifest["figures"], "images": images,
+            "dir": _repo_relative(figures_dir)}
+
+
+def _default_figures() -> dict:
+    from digitalmodel.asset_integrity.assessment.crack_fe_assessment import find_repo_root
+
+    root = find_repo_root(Path(__file__).resolve())
+    return load_figures(root / "examples" / "workflows" / "crack-fe-weldolet" / "figures")
+
+
+def growth_curve(result: Mapping, n_points: int = 48) -> list[tuple[float, float]]:
+    """(cycles, depth) of the governing growth curve from a0 to the last FE state.
+
+    Re-integrated from the record's own law (A after the E-ratio, m), its tabulated
+    Delta K(a) and the effective threshold of the governing rule, with the same
+    ``life`` routine as the assessment; the last point is the record's life to the last FE
+    state (the tests compare both).
+    """
+    g = result["growth"]
+    law = GrowthLaw(A=g["law"]["A_mpa_sqrt_m"], m=g["law"]["m"], basis="report curve")
+    tab = TabulatedDeltaK(g["table"]["a_mm"], g["table"]["delta_k_mpa_sqrt_m"])
+    th = Threshold(g["threshold_margin"][g["governing_rule"]]["dk_th_effective"], "none")
+    a0, a1 = g["a0_mm"], g["a_last_fe_mm"]
+    pts = [(0.0, a0)]
+    for k in range(1, n_points + 1):
+        a = a0 + (a1 - a0) * k / n_points
+        pts.append((life(law, tab, a0, a, threshold=th).cycles, a))
+    return pts
 
 
 # --------------------------------------------------------------------------- #
@@ -328,15 +487,42 @@ _EXTRA_CSS = """
   .doc .fblock svg .pt-sens{fill:var(--proj);stroke:var(--proj)}
   .doc .fblock svg .pt-scr{fill:var(--surface);stroke:var(--proj);stroke-width:2}
   .doc .fblock svg .leg{fill:var(--ink-2);font-family:var(--sans);font-size:12px}
+  .doc .fblock svg .ln-ssy{stroke:var(--ro);stroke-width:1.6;fill:none;stroke-dasharray:7 4}
+  .doc .fblock svg .ln-dem{stroke:var(--proj);stroke-width:1.8;fill:none;stroke-dasharray:3 3}
+  .doc .fblock svg .zone{fill:var(--ro-soft);stroke:none}
+  .doc .fblock svg .sec-el{fill:var(--surface-2);stroke:var(--ink-muted);stroke-width:.35}
+  .doc .fblock svg .flaw-c{fill:none;stroke:var(--ro);stroke-width:2}
+  .doc .fblock svg .flaw-f{stroke:var(--cfd);stroke-width:3.2;fill:none}
+  .doc .fblock svg .dim{stroke:var(--ink-2);stroke-width:1;fill:none}
+  .doc .fblock svg .note{fill:var(--ink);font-family:var(--sans);font-size:12.5px;font-weight:600}
+  .doc .fe-img{display:block;width:100%;height:auto;background:#fff;border:1px solid var(--hairline);
+    border-radius:8px}
+  .doc .panels{display:grid;gap:14px;margin-top:14px}
+  .doc .panels.n2{grid-template-columns:1fr 1fr}
+  .doc .panels.n1{grid-template-columns:1fr;max-width:760px}
+  .doc .panel .plabel{display:block;font-size:13px;color:var(--ink-2);margin-top:6px}
+  @media (max-width:760px){.doc .panels.n2{grid-template-columns:1fr}}
+  .doc .fblock .flow svg{max-width:100%;height:auto}
+  .doc .fm h3{font-size:18px;margin:26px 0 8px}
+  .doc .fm .lists li{margin:2px 0;font-size:14px}
+  .doc .status-within{color:var(--cfd);font-weight:700}
+  .doc .status-exceeds{color:var(--ro);font-weight:700}
+  .doc .status-ne{color:var(--proj);font-weight:700}
+  .doc .bold-line{font-weight:700;border-left:4px solid var(--ro);padding:8px 14px;
+    background:var(--ro-soft);border-radius:8px}
 </style>"""
 
 
 class _Report:
-    def __init__(self, result: Mapping, register: Mapping, meta: Mapping, issue_date: str):
+    def __init__(self, result: Mapping, register: Mapping, meta: Mapping, issue_date: str,
+                 figures: Mapping):
         self.r = result
         self.reg = register
         self.m = meta
+        self.fig = figures
         self.date = issue_date
+        self.labels: dict[str, str] = {}
+        self.captions: list[tuple[str, str, str, str]] = []  # kind, number, text, anchor
         self.roots = {"result": result, "register": register, "receipts": meta}
         self.sec = ""
         self.ntab = 0
@@ -381,29 +567,77 @@ class _Report:
     def begin(self, label: str) -> None:
         self.sec, self.ntab, self.nfig, self.nsub = label, 0, 0, 0
 
+    def _num(self, n: int) -> str:
+        return f"{self.sec}.{n}" if self.sec.isdigit() else f"{self.sec}-{n}"
+
     def table(self, heads: Sequence[str], rows: Sequence[str], caption: str,
-              cls: str = "", intro: str = "") -> str:
+              cls: str = "", intro: str = "", key: str = "") -> str:
         self.ntab += 1
+        num = self._num(self.ntab)
+        anchor = f"tab-{num.replace('.', '-')}"
+        if key:
+            self.labels[key] = f"Table {num}"
+        self.captions.append(("Table", num, caption, anchor))
         th = "".join(f"<th>{h}</th>" for h in heads)
         c = f' class="{cls}"' if cls else ""
         pre = f'<p class="prose">{intro}</p>' if intro else ""
-        return (f'{pre}<div class="tblock"><div class="tbl-wrap"><table{c}><thead><tr>{th}'
-                f'</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
-                f'<p class="caption">Table {self.sec}.{self.ntab} – {caption}</p></div>')
+        return (f'{pre}<div class="tblock" id="{anchor}"><div class="tbl-wrap"><table{c}>'
+                f'<thead><tr>{th}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
+                f'<p class="caption">Table {num} – {caption}</p></div>')
 
-    def figure(self, svg: str, caption: str) -> str:
+    def figure(self, body: str, caption: str, key: str = "") -> str:
         self.nfig += 1
-        return (f'<div class="fblock"><div class="flow">{svg}</div>'
-                f'<p class="caption">Figure {self.sec}.{self.nfig} – {caption}</p></div>')
+        num = self._num(self.nfig)
+        anchor = f"fig-{num.replace('.', '-')}"
+        if key:
+            self.labels[key] = f"Figure {num}"
+        self.captions.append(("Figure", num, caption, anchor))
+        dk = f' data-figure="{key}"' if key else ""
+        return (f'<div class="fblock" id="{anchor}"{dk}><div class="flow">{body}</div>'
+                f'<p class="caption">Figure {num} – {caption}</p></div>')
+
+    def img(self, fid: str, alt: str) -> str:
+        # own line with the per-line lint sentinel: the line carries image data, no prose
+        # single-quoted attributes: the lint pairs double quotes across lines before it
+        # honours the sentinel, so the image line carries none
+        return (f"\n<!-- register-lint: ignore --><img class='fe-img' "
+                f"src='data:image/png;base64,{self.fig['images'][fid]}' alt='{_attr(alt)}'>\n")
+
+    def panels(self, *items: tuple[str, str]) -> str:
+        """Side-by-side images with (a), (b) labels: items are (figure id, label text)."""
+        cells = "".join(
+            f'<div class="panel">{self.img(fid, text)}<span class="plabel">'
+            f"({chr(97 + k)}) {html.escape(text)}</span></div>"
+            for k, (fid, text) in enumerate(items))
+        return f'<div class="panels n{len(items)}">{cells}</div>'
+
+    def fe_source(self, *fids: str) -> str:
+        """Caption source text for MAPDL pictures (generator, state, level, release)."""
+        parts = []
+        for fid in fids:
+            rec = self.fig["manifest"][fid]
+            parts.append(f"{rec['state']} level {rec['level']}")
+        rec = self.fig["manifest"][fids[0]]
+        gen = rec["generator"].rsplit(".", 1)[-1]
+        states = "; ".join(dict.fromkeys(parts))
+        return (f"Source: ANSYS MAPDL {rec['mapdl_release']} plot of the receipt model "
+                f"regenerated by the generator {gen} (state {states}; deck SHA-256 checked "
+                f"against the receipt) with an appended plotting block "
+                f"(weldolet_figures; {self.fig['dir']})")
+
+    def ref(self, key: str) -> str:
+        """Placeholder for a label (table, figure or subsection) resolved after rendering."""
+        return f"⟦{key}⟧"
 
     def next_table(self) -> str:
-        return f"Table {self.sec}.{self.ntab + 1}"
+        return f"Table {self._num(self.ntab + 1)}"
 
     def next_figure(self) -> str:
-        return f"Figure {self.sec}.{self.nfig + 1}"
+        return f"Figure {self._num(self.nfig + 1)}"
 
     def sub(self, key: str, title: str, body: str) -> str:
         self.nsub += 1
+        self.labels[key] = f"{self.sec}.{self.nsub}"
         return (f'<div class="l2" id="{key}"><div class="l2head"><span class="n"></span>'
                 f"<h3>{title}</h3></div>{body}</div>")
 
@@ -500,26 +734,7 @@ class _Report:
     # Cover
     # ======================================================================= #
     def cover(self) -> str:
-        r = self.r
-        self.begin("F")
-        info = [
-            f"<tr>{self.t('Document number')}{self.t(REPORT_ID)}</tr>",
-            f"<tr>{self.t('Revision')}{self.t('Rev A — issued for owner review')}</tr>",
-            f"<tr>{self.t('Date')}{self.t(self.date)}</tr>",
-            f"<tr>{self.t('Component')}{self.v('result:/component_id', tag='td', cls='txt')}</tr>",
-            f"<tr>{self.t('Procedure')}{self.v('result:/code_reference', tag='td', cls='txt')}</tr>",
-            f"<tr>{self.t('Design basis')}"
-            f"{self.v('result:/design_basis_status', tag='td', cls='txt wrapcell')}</tr>",
-            f"<tr>{self.t('Distribution')}{self.t('Local owner review before any issue')}</tr>",
-        ]
-        infotab = self.table(["Item", "Entry"], info, "Document control")
-        rev = RevisionEntry(revision="A", date=self.date,
-                            description="Issued for owner review", by=PREPARED_BY)
-        rows = [f'<tr>{self.t(rev.revision)}{self.t(rev.date)}{self.t(rev.description)}'
-                f'{self.t(rev.by)}<td class="blank"></td><td class="blank"></td></tr>']
-        revtab = self.table(["Rev", "Date", "Description", "Prepared", "Checked", "Approved"],
-                            rows, "Revision and approval record", cls="revhist")
-        g = r["growth"]
+        g = self.r["growth"]
         kpis = [
             KPI(value=self.v("result:/verdict", cls=""), caption="Verdict (engineering criteria "
                 "met; a consistency check failed)", confidence=Confidence.ANALYTICAL),
@@ -529,162 +744,174 @@ class _Report:
                 caption="Minimum load factor to the FAD envelope (criterion F > 1)",
                 confidence=Confidence.ANALYTICAL),
             KPI(value=self.v("result:/growth/life_to_last_ssy_valid/cycles", "int", cls=""),
-                unit="cycles", caption="Growth life within the stated SSY validity (demand "
-                + fmt(g["demand_cycles"], "int") + " cycles)"),
+                unit="cycles", caption="Growth life established by the linear-elastic method "
+                "(demand " + fmt(g["demand_cycles"], "int") + " cycles); beyond a = "
+                + fmt(g["life_to_last_ssy_valid"]["a_mm"], "f3") + " mm the method does not "
+                "apply"),
         ]
         return (
             '<div class="hero" id="cover"><div class="wrap" style="max-width:1240px">'
             f'<div class="kicker"><span class="dot"></span><span>Engineering assessment report '
-            f'&middot; {REPORT_ID} &middot; Rev A &middot; {html.escape(self.date)}</span></div>'
+            f'&middot; {REPORT_ID} &middot; {REVISION} &middot; {html.escape(self.date)}</span></div>'
             f"<h1>{html.escape(TITLE)}</h1>"
             '<p class="lede">Fitness-for-service assessment of an assumed weld-root flaw by the '
             "API 579-1/ASME FFS-1 (2016) Part 9 Level 2 failure assessment diagram, from crack "
             "driving forces computed with the assessment's own finite-element model, followed by "
             "fatigue crack growth to the last solved crack depth. The whole design basis is "
-            f"assumed: every input carries the label <b>{ASSUMED}</b>.</p>"
+            f"assumed: every input carries the label <b>{ASSUMED}</b>. {REVISION} is "
+            f"{REVISION_PURPOSE}.</p>"
             f'<div class="kpis">{"".join(k.render() for k in kpis)}</div>'
-            f'<div class="coverblock">{infotab}{revtab}</div>'
             "</div></div>"
         )
 
     # ======================================================================= #
-    # 1 Executive summary
+    # Front matter
     # ======================================================================= #
-    def summary(self) -> str:
-        r, g = self.r, self.r["growth"]
-        self.begin("1")
-        imin, imax = self.i_fmin, self.i_fmax
-        rule = g["governing_rule"]
-        ssy_key = max(r["checks"]["ssy"], key=lambda k: r["checks"]["ssy"][k]["ratio"])
-        box = (
-            '<div class="conclusions-box"><h3>Governing result and disposition</h3><ul>'
-            "<li><b>Governing plane.</b> At every established crack depth ("
-            + ", ".join(self.a(i) for i in self.est) + " mm) the crotch radial–axial root flaw "
-            "(plane <i>" + self.v(self.dref(self.est[0], "governing_plane"), cls="") + "</i>, "
-            "normal to the run-pipe hoop stress) governs: K_gov = "
-            + self.v(self.dref(self.est[-1], "k_gov_mpa_sqrt_m"), "f2") + " MPa√m at a = "
-            + self.a(self.est[-1]) + " mm against "
-            + self.v(self.dref(self.est[-1], "planes/fusion_face/k_gov_mpa_sqrt_m"), "f2")
-            + " MPa√m on the fusion-face plane.</li>"
-            "<li><b>Fracture and collapse (FAD).</b> Every established depth lies inside the "
-            "API 579-1:2016 Level 2 envelope. The load factor to the envelope is F = "
-            + self.v(self.dref(imin, "envelope_margin/factor"), "f2") + " (a = " + self.a(imin)
-            + " mm) to " + self.v(self.dref(imax, "envelope_margin/factor"), "f2") + " (a = "
-            + self.a(imax) + " mm), against the criterion F &gt; "
-            + self.v(self.fad_cmp, "f1") + ", at Lr = "
-            + self.v(self.dref(imin, "lr"), "f3") + " below the cut-off Lr_max = "
-            + self.v("result:/basis/lr_max/value", "f3") + ".</li>"
-            "<li><b>Fatigue life to the last FE state.</b> Growth from a0 = "
-            + self.v("result:/growth/a0_mm", "f2") + " mm to a = "
-            + self.v("result:/growth/a_last_fe_mm", "f2") + " mm takes "
-            + self.v("result:/growth/governing_life_cycles", "int") + " cycles, "
-            + self.v(f"result:/growth/life_to_last_fe_state/{rule}/margin_on_demand", "f2")
-            + " times the demand of " + self.v("result:/growth/demand_cycles", "int")
-            + " cycles (threshold rule <i>" + self.v("result:/growth/governing_rule", cls="")
-            + "</i> governs).</li>"
-            "<li><b>Headline limitation.</b> Only " + self.v("result:/growth/life_to_last_ssy_valid/cycles", "int")
-            + " cycles, to a = " + self.v("result:/growth/life_to_last_ssy_valid/a_mm", "f3")
-            + " mm, lie within the stated small-scale-yielding validity (Irwin r_p / ligament at "
-            "most " + self.v("result:/inputs/ssy_max_ratio/value", "f1") + ", " + ASSUMED
-            + "): " + self.v("result:/growth/life_to_last_ssy_valid/margin_on_demand", "f3")
-            + " times the demand, <b>below the demand</b>. Meaning: the cyclic plastic zone that "
-            "governs growth is a quarter of the monotonic zone at R = 0, and on it the validity "
-            "extends to a = " + self.v("result:/growth/life_to_last_cyclic_ssy_valid/a_mm", "f2")
-            + " mm, " + self.v("result:/growth/life_to_last_cyclic_ssy_valid/cycles", "int")
-            + " cycles (reported for meaning, not gating). The linear-elastic growth life beyond "
-            "a = " + self.v("result:/growth/life_to_last_ssy_valid/a_mm", "f3") + " mm is not "
-            "established; an elastic-plastic (J-based) growth assessment is needed to close "
-            "it.</li>"
-            "<li><b>Disposition.</b> Verdict <b>" + self.v("result:/verdict", cls="") + "</b>: "
-            "the envelope and life criteria are met, and the failed small-scale-yielding check ("
-            + self.v("result:/engineering/failed_checks") + ") downgrades ACCEPT to MONITOR. "
-            "Evidence <b>" + self.v("result:/evidence_status", cls="") + "</b>, missing: "
-            + self.v("result:/missing_evidence", cls="") + " (no residual-stress basis and no "
-            "partial-safety-factor basis is supplied). passes = "
-            + str(bool(r["passes"])).lower() + ". This result is not a fitness-for-service "
-            "acceptance.</li></ul></div>"
-        )
-        rows = [
-            f"<tr>{self.t('Load factor to the envelope F, minimum over established depths')}"
-            f"{self.td(self.dref(imin, 'envelope_margin/factor'))}{self.t('-')}"
-            f"{self.td(self.fad_cmp, 'f1')}"
-            f"{self.t('inside the envelope at a = ' + self.a(imin) + ' mm', 'txt wrapcell', raw=True)}</tr>",
-            f"<tr>{self.t('Load factor to the envelope F, maximum over established depths')}"
-            f"{self.td(self.dref(imax, 'envelope_margin/factor'))}{self.t('-')}"
-            f"{self.td(self.fad_cmp, 'f1')}"
-            f"{self.t('inside the envelope at a = ' + self.a(imax) + ' mm', 'txt wrapcell', raw=True)}</tr>",
-            f"<tr>{self.t('Growth life to the last FE state')}"
-            f"{self.td('result:/growth/governing_life_cycles', 'int')}{self.t('cycles')}"
-            f"{self.td('result:/growth/demand_cycles', 'int')}"
-            f"{self.t('exceeds the demand', 'txt wrapcell')}</tr>",
-            f"<tr>{self.t('Growth life within the stated SSY validity')}"
-            f"{self.td('result:/growth/life_to_last_ssy_valid/cycles', 'int')}{self.t('cycles')}"
-            f"{self.td('result:/growth/demand_cycles', 'int')}"
-            f"{self.t('below the demand: growth life not established beyond a = ' + self.v('result:/growth/life_to_last_ssy_valid/a_mm', 'f3') + ' mm', 'txt wrapcell', raw=True)}</tr>",
-            f"<tr>{self.t('Growth life within cyclic-zone validity (meaning, not gating)')}"
-            f"{self.td('result:/growth/life_to_last_cyclic_ssy_valid/cycles', 'int')}{self.t('cycles')}"
-            f"{self.td('result:/growth/demand_cycles', 'int')}"
-            f"{self.t('reported for meaning only', 'txt wrapcell')}</tr>",
-            f"<tr>{self.t('Largest Irwin r_p / ligament over established depths')}"
-            f"{self.td(f'result:/checks/ssy/{ssy_key}/ratio')}{self.t('-')}"
-            f"{self.td(f'result:/checks/ssy/{ssy_key}/max_ratio', 'f1')}"
-            f"{self.t('exceeds the assumed limit (' + self.v('result:/engineering/failed_checks', cls='') + ')', 'txt wrapcell', raw=True)}</tr>",
+    def _holds(self) -> list[tuple]:
+        """Holds and assumptions register rows:
+        (item, value cell, unit, basis, section key, effect if changed, status)."""
+        st_a = ASSUMED
+        return [
+            ("Design basis: geometry, material and loads (register, 39 items)",
+             self.t("register values"), "-", "ASSUMED (no client data)", "s3-reg",
+             "Every result is conditional on confirmation of the register items.", st_a),
+            ("Small-scale-yielding limit, Irwin r_p / remaining ligament",
+             self.td("result:/inputs/ssy_max_ratio/value", "f1"), "-",
+             "ASSUMED limit of the linear-elastic method", "s5-checks",
+             "Sets the depth to which the linear-elastic growth life holds (a = "
+             + self.v("result:/growth/life_to_last_ssy_valid/a_mm", "f3") + " mm).",
+             "Open: method limitation"),
+            ("Weld residual stress", self.t("Not Evaluated"), "MPa",
+             "HOLD: no residual-stress basis supplied", "s5-screen",
+             "Adds a secondary Kr term; enters only as screening bounds.", "HOLD"),
+            ("Partial safety factors", self.t("none"), "-",
+             "HOLD: no code PSF basis supplied", "s5-sens",
+             "Factored Kr and Lr; indicative factors are a sensitivity only.", "HOLD"),
+            ("Fracture toughness Kmat (flux-welded root lower bound)",
+             self.td("result:/inputs/kmat/value", "f1"), "MPa√m",
+             "public lower bound; root process ASSUMED (register M-06)", "s5-fad",
+             "Scales Kr at every depth.", st_a),
+            ("Growth-law coefficient A (input) and exponent m",
+             self.td("result:/growth/law/A_input", "e3"), "mm/cycle, ΔK in N/mm^1.5",
+             "ASSUMED user input, m = " + self.v("result:/growth/law/m", "f1"), "s5-growth",
+             "The life scales with 1/A.", st_a),
+            ("Stress ratio R (pressure cycles from zero)",
+             self.td("result:/growth/r_ratio", "f1"), "-", "ASSUMED", "s5-growth",
+             "Changes ΔK = (1 − R) K_gov.", st_a),
+            ("Cycle demand", self.td("result:/inputs/demand_cycles/value", "int"), "cycles",
+             "ASSUMED", "s5-growth", "The life criterion.", st_a),
+            ("Growth threshold ΔK_th", self.td("result:/inputs/threshold/value", "f1"),
+             "MPa√m", "ASSUMED", "s5-growth", "Arrest on the fusion-face plane.", st_a),
+            ("Crotch flaw shape a/c (semicircle); crotch-arc a/2c not modelled",
+             self.td(f"register:/design_data/{self.reg_items['F-06'][0]}/value", "g"), "-",
+             "ASSUMED (register F-06)", "s1-3",
+             "The effect of a longer flaw on K_gov is Not Evaluated.", st_a),
+            ("Crotch limit state (ligament exhaustion)",
+             self.td("result:/inputs/limit_state_crotch/value", "f3"), "mm",
+             "derived, ASSUMED (register F-09)", "s5-growth",
+             "No FE state between 3.20 mm and this depth; life to it Not Evaluated.", st_a),
+            ("Crack-face pressure ON in the base case (register L-03)", self.t("ON"), "-",
+             "ASSUMED", "s5-sens", "OFF is run as a sensitivity.", st_a),
+            ("σ_ref without net-section amplification", self.t("method choice"), "-",
+             "owner card B02", "s4", "Lr is the same at every depth of a plane.",
+             "Stated"),
         ]
-        tab = self.table(["Quantity", "Value", "Unit", "Comparator", "Disposition"], rows,
-                         "Governing results, criteria and dispositions")
-        lim = (
-            "<ul>"
-            "<li>The design basis is assumed: " + self.v("result:/design_basis_status", cls="")
-            + ". Every result is conditional on confirmation of those items (Section 3).</li>"
-            "<li>The growth life is established only to a = "
-            + self.v("result:/growth/life_to_last_ssy_valid/a_mm", "f3") + " mm under the "
-            "stated small-scale-yielding limit (Sections 8.5 and 9.2).</li>"
-            "<li>No residual-stress basis is supplied; residual stress appears only as screening "
-            "bounds, which are not the disposition (Section 8.7).</li>"
-            "<li>No code partial safety factors are supplied; indicative factors of "
-            + self.v("result:/sensitivities/psf_indicative/stress_factor", "f1") + " on stress and "
-            + self.v("result:/sensitivities/psf_indicative/kmat_factor", "f1") + " on Kmat are a "
-            "labelled sensitivity only (Section 8.6).</li>"
-            "<li>Kmat = " + self.v("result:/basis/kmat_mpa_sqrt_m", "f1") + " MPa√m is a cited "
-            "public lower bound that assumes a flux-welded root " + self.cite("nureg_6428")
-            + "; the weld-root process is not confirmed.</li>"
-            "<li>The growth law is a user-supplied steel law applied to austenitic weld metal "
-            "at the design temperature; its applicability is not confirmed.</li>"
-            "</ul>"
+
+    def front_matter(self) -> str:
+        self.begin("F")
+        info = [
+            f"<tr>{self.t('Document')}{self.t(REPORT_ID + ' — ' + TITLE, 'txt wrapcell')}</tr>",
+            f"<tr>{self.t('Revision')}{self.t(REVISION + ' — ' + REVISION_PURPOSE)}</tr>",
+            f"<tr>{self.t('Issue purpose')}{self.t('Owner review before any issue')}</tr>",
+            f"<tr>{self.t('Analysis maturity')}{self.t('Assumed design basis; FE receipts verified; evidence INCOMPLETE', 'txt wrapcell')}</tr>",
+            f"<tr>{self.t('Date')}{self.t(self.date)}</tr>",
+            f"<tr>{self.t('Component')}{self.v('result:/component_id', tag='td', cls='txt')}</tr>",
+            f"<tr>{self.t('Procedure')}{self.v('result:/code_reference', tag='td', cls='txt')}</tr>",
+            f"<tr>{self.t('Design basis')}"
+            f"{self.v('result:/design_basis_status', tag='td', cls='txt wrapcell')}</tr>",
+            f"<tr>{self.t('Prepared by')}{self.t(PREPARED_BY)}</tr>",
+            f"<tr>{self.t('Checked by')}{self.t('Not assigned')}</tr>",
+            f"<tr>{self.t('Approved by')}{self.t('Not assigned')}</tr>",
+            f"<tr>{self.t('Distribution')}{self.t('Local owner review before any issue')}</tr>",
+        ]
+        doc = self.table(["Control field", "Entry"], info,
+                         "Document control (no signatures are recorded in this revision)")
+        revs = [
+            RevisionEntry(revision="A", date=REV_A_DATE,
+                          description="Issued for owner review", by=PREPARED_BY),
+            RevisionEntry(revision="B", date=self.date, description=REV_B_DESCRIPTION,
+                          by=PREPARED_BY),
+        ]
+        sections = {"A": "All (new document)", "B": REV_B_SECTIONS}
+        rows = [f'<tr>{self.t(rv.revision)}{self.t(sections[rv.revision], "txt wrapcell")}'
+                f'{self.t(rv.description, "txt wrapcell")}{self.t(rv.date)}{self.t(rv.by)}'
+                f'<td class="blank"></td><td class="blank"></td></tr>' for rv in revs]
+        rev = self.table(["Rev", "Sections", "Description", "Date", "Prepared", "Checked",
+                          "Approved"], rows, "Revision history (section level)",
+                         cls="revhist")
+        rows = [f"<tr>{self.t(a)}{self.t(d, 'txt wrapcell')}</tr>" for a, d in ABBREVIATIONS]
+        abbr = self.table(["Abbreviation", "Definition"], rows,
+                          "Abbreviations and symbols", cls="abbrev")
+        rows = []
+        for k, (item, value, unit, basis, sec, effect, status) in enumerate(self._holds(), 1):
+            st_cls = "txt assumed-label" if status == ASSUMED else "txt"
+            rows.append(f"<tr>{self.t(f'H-{k:02d}')}{self.t(item, 'txt wrapcell', raw=True)}"
+                        f"{value}{self.t(unit)}{self.t(basis, 'txt wrapcell', raw=True)}"
+                        f"{self.t('Section ' + self.ref(sec))}"
+                        f"{self.t(effect, 'txt wrapcell', raw=True)}{self.t(status, st_cls)}</tr>")
+        holds = self.table(["ID", "Item", "Value used", "Unit", "Basis", "Section",
+                            "Effect if changed", "Status"], rows,
+                           "Holds and assumptions register (HOLD: evidence missing; "
+                           f"{ASSUMED}: value in use pending confirmation)", cls="holds", key="t-holds")
+        toc = "".join(f'<li><a href="#{k}">{v}</a></li>' for k, v in TOC_ITEMS)
+        return (
+            '<div class="wrap fm" id="front-matter" style="max-width:1240px">'
+            f"<h3>Document control</h3>{doc}"
+            f"<h3>Revision history</h3>{rev}"
+            f"<h3>Abbreviations</h3>{abbr}"
+            "<h3>Holds and assumptions register</h3>"
+            + self.p("Every held or assumed item is listed once here with the section where it "
+                     "is used; the same label appears beside the affected input or result.")
+            + holds
+            + f'<h3>Contents</h3><ol class="lists">{toc}</ol><p class="prose"><a '
+            'href="#appendix-a">Appendix A – Reproducibility data</a></p>'
+            '<h3>List of tables</h3><ul class="lists" id="list-of-tables">⟦LOT⟧</ul>'
+            '<h3>List of figures</h3><ul class="lists" id="list-of-figures">⟦LOF⟧</ul>'
+            "</div>"
         )
-        body = (
-            self.p("The governing numbers and the disposition are stated first. Every number on "
-                   "this page is drawn from the assessment result record, the design-data "
-                   "register or the FE receipt record, and each carries its source path.")
-            + box + tab
-            + self.sub("s1-lim", "Governing limitations", lim)
-        )
-        return self.section("s1", "Executive summary",
-                            "Governing result, disposition and governing limitations.", body)
 
     # ======================================================================= #
-    # 2 Introduction
+    # 1 Introduction
     # ======================================================================= #
     def introduction(self) -> str:
-        self.begin("2")
-        _, f02 = self.reg_items["F-02"]
+        self.begin("1")
         obj = self.p(
             "The objective is to assess an assumed crack-like root flaw in the attachment weld "
-            "of a 6 × ½ STD weldolet on an NPS 6 Sch 40S run pipe of 1.4404 stainless steel at "
+            "of a 6 × ½ weldolet on an NPS 6 Sch 40S run pipe of 1.4404 stainless steel at "
             + self.reg_ref("M-07") + " °C under internal pressure of " + self.reg_ref("L-01")
-            + " MPa, by the API 579-1/ASME FFS-1 (2016) Part 9 Level 2 failure assessment "
-            "diagram " + self.cite("api-std-579-asme-ffs-1") + ", and to estimate the fatigue "
-            "crack growth life under pressure cycling against a demand of "
-            + self.v("result:/growth/demand_cycles", "int") + " cycles. The crack driving "
-            "forces are computed with the assessment's own finite-element model; no external "
-            "result is used.")
+            + " MPa, by the fitness-for-service procedure of API 579-1/ASME FFS-1 (2016) Part 9 "
+            "Level 2 " + self.cite("api-std-579-asme-ffs-1") + ". That procedure places the "
+            "flaw on a failure assessment diagram (FAD), which combines fracture, through the "
+            "toughness ratio Kr, with plastic collapse, through the load ratio Lr. The crack "
+            "driving forces are computed with the assessment's own finite-element (FE) model "
+            "in ANSYS Mechanical APDL (MAPDL); no external result is used.")
+        obj += self.p(
+            "The fatigue crack growth life under pressure cycling is then estimated against a "
+            "demand of " + self.v("result:/growth/demand_cycles", "int") + " cycles. The "
+            "growth estimate uses linear-elastic fracture mechanics (LEFM): the stress "
+            "intensity factor (SIF) range ΔK drives the growth law. That holds only under "
+            "small-scale yielding (SSY), where the crack-tip plastic zone stays small relative "
+            "to the remaining ligament. Where the zone grows too large, an elastic-plastic "
+            "fracture mechanics (EPFM) treatment based on J is needed instead. No code partial "
+            "safety factor (PSF) and no non-destructive examination (NDE) sizing of the flaw is "
+            "available for this assessment.")
         scope = (
             "<ul>"
             "<li>Two base-case crack planes from a0 = " + self.v("result:/growth/a0_mm", "f2")
             + " mm: a full-circumference lack-of-fusion flaw on the run-pipe fusion face, and a "
             "semicircular root flaw in the radial–axial plane at the crotch, normal to the "
-            "run-pipe hoop stress. The governing plane at each depth is the one with the larger "
-            "K_gov.</li>"
+            "run-pipe hoop stress (both drawn in " + self.ref("section") + "). The "
+            "governing plane at each depth is the one with the larger K_gov.</li>"
             "<li>Solved crack depths: crotch plane "
             + ", ".join(self.a(i) for i in range(len(self.depths)) if "crotch" in self.depths[i]["planes"])
             + " mm; fusion-face plane " + ", ".join(self.a(i) for i in range(len(self.depths)))
@@ -713,17 +940,396 @@ class _Report:
             "than the two modelled planes (register G-15).</li>"
             "<li>Weld residual stress as a disposition input; environmental effects on "
             "toughness and growth rate; the FE-derived Option 3 FAD curve.</li>"
-            "</ul>")
-        body = (self.sub("s2-1", "Objective", obj) + self.sub("s2-2", "Scope", scope)
-                + self.sub("s2-3", "Exclusions", excl))
-        return self.section("s2", "Introduction", "Objective, scope and exclusions.", body)
+            "</ul>"
+            + self.p("These are work-scope exclusions. The small-scale-yielding limit on the "
+                     "growth life (Section " + self.ref("s2-lim") + ") is not one of them: it "
+                     "is a limitation of the linear-elastic method, stated with the results."))
+        body = (self.sub("s1-1", "Objective", obj) + self.sub("s1-2", "Scope", scope)
+                + self.sub("s1-3", "Exclusions", excl))
+        return self.section("s1", "Introduction", "Objective, scope and exclusions.", body)
+
+    # ======================================================================= #
+    # 2 Summary and conclusions
+    # ======================================================================= #
+    def uc(self, num: str, den: str, spec: str = "f3") -> str:
+        val = float(self.get(num)) / float(self.get(den))
+        return (f'<td data-src-num="{_attr(num)}" data-src-den="{_attr(den)}">'
+                f"{fmt(val, spec)}</td>")
+
+    @staticmethod
+    def status(passed: Optional[bool]) -> str:
+        if passed is None:
+            return '<td class="txt status-ne">NOT_EVALUATED</td>'
+        if passed:
+            return '<td class="txt status-within">WITHIN_CRITERION</td>'
+        return '<td class="txt status-exceeds">EXCEEDS_CRITERION</td>'
+
+    def ssy_plain(self) -> str:
+        """SSY limitation in practical engineering terms (owner comment 1)."""
+        lim = "result:/growth/life_to_last_ssy_valid/a_mm"
+        return (
+            "<b>Small-scale yielding (SSY)</b>: the crack-tip plastic zone must stay small "
+            "relative to the remaining ligament for linear-elastic fracture mechanics to hold. "
+            "Beyond a = " + self.v(lim, "f3") + " mm the zone exceeds the stated "
+            + self.v("result:/inputs/ssy_max_ratio/value", "f0", scale=100.0) + " % limit, so "
+            "the linear-elastic life beyond that depth is not established by this method. "
+            "<b>Class: method limitation</b> of the linear-elastic crack-growth approach. It is "
+            "not a code restriction (API 579-1 permits an elastic-plastic assessment) and not a "
+            "work-scope exclusion (the depths beyond it are modelled and solved). Closing it "
+            "needs <b>further analysis</b>: an elastic-plastic, J-based growth assessment of the "
+            "solved states beyond a = " + self.v(lim, "f3") + " mm. <b>Further data</b> would "
+            "sharpen that analysis but is optional: the confirmed weld-root geometry (which "
+            "sets the remaining ligament) and the weld-metal toughness (which sets Kmat).")
+
+    def summary(self) -> str:
+        r, g = self.r, self.r["growth"]
+        self.begin("2")
+        imin, imax = self.i_fmin, self.i_fmax
+        rule = g["governing_rule"]
+        ssy_key = max(r["checks"]["ssy"], key=lambda k: r["checks"]["ssy"][k]["ratio"])
+        f_fad = self.figure(self._fad_svg(),
+                            "Failure assessment diagram: API 579-1:2016 Level 2 curve with the "
+                            "cut-off Lr_max, the assessment points of the three established "
+                            "depths, sensitivities and screening bounds; the dashed ray shows "
+                            "the load factor F at the minimum-F depth. Source: result record "
+                            "(depths, sensitivities, screening)", key="fad")
+        f_growth = self.figure(self._growth_svg(),
+                               "Fatigue crack growth on the governing crotch plane: depth "
+                               "against cycles from a0 to the last FE state, re-integrated "
+                               "from the record's growth law and ΔK table; the shaded band is "
+                               "beyond the SSY-valid depth, where the linear-elastic curve is "
+                               "not established; the vertical line is the cycle demand. "
+                               "Source: result record (growth)", key="growth")
+        box = (
+            '<div class="conclusions-box"><h3>Conclusions, read against the charts</h3><ul>'
+            "<li><b>Fracture and collapse (" + self.ref("fad") + ").</b> On the FE crack "
+            "driving forces of the governing crotch plane and Kmat = "
+            + self.v("result:/basis/kmat_mpa_sqrt_m", "f1") + " MPa√m, all three established "
+            "crack depths (" + ", ".join(self.a(i) for i in self.est) + " mm) sit well inside "
+            "the FAD curve, low on the diagram (Kr below 0.1). The dashed ray from the origin "
+            "through the worst point, a = " + self.a(imin) + " mm, meets the curve at a load "
+            "factor F = " + self.v(self.dref(imin, "envelope_margin/factor"), "f2")
+            + "; F rises to " + self.v(self.dref(imax, "envelope_margin/factor"), "f2")
+            + " at a = " + self.a(imax) + " mm. Against the API 579-1:2016 Level 2 criterion F "
+            "&gt; " + self.v(self.fad_cmp, "f1") + ", with Lr = "
+            + self.v(self.dref(imin, "lr"), "f3") + " left of the cut-off Lr_max = "
+            + self.v("result:/basis/lr_max/value", "f3") + " (vertical dashed line): the "
+            "flaw is inside the envelope at every established depth (load factor "
+            + self.v(self.dref(imin, "envelope_margin/factor"), "f2") + "–"
+            + self.v(self.dref(imax, "envelope_margin/factor"), "f2") + ").</li>"
+            "<li><b>Fatigue growth (" + self.ref("growth") + ").</b> With the user-supplied "
+            "growth law and R = " + self.v("result:/growth/r_ratio", "f1") + ", the curve "
+            "starts at a0 = " + self.v("result:/growth/a0_mm", "f2") + " mm and crosses the "
+            "SSY-valid depth a = " + self.v("result:/growth/life_to_last_ssy_valid/a_mm", "f3")
+            + " mm (red dashed line) at " + self.v("result:/growth/life_to_last_ssy_valid/cycles", "int")
+            + " cycles, far short of the " + self.v("result:/growth/demand_cycles", "int")
+            + "-cycle demand (vertical dashed line): "
+            + self.v("result:/growth/life_to_last_ssy_valid/margin_on_demand", "f3")
+            + " times the demand, <b>below the demand</b>. The full linear-elastic curve "
+            "reaches the last FE state a = " + self.v("result:/growth/a_last_fe_mm", "f2")
+            + " mm at " + self.v("result:/growth/governing_life_cycles", "int") + " cycles, "
+            + self.v(f"result:/growth/life_to_last_fe_state/{rule}/margin_on_demand", "f2")
+            + " times the demand (threshold rule <i>" + self.v("result:/growth/governing_rule", cls="")
+            + "</i>), but everything in the shaded band lies outside the method's validity. "
+            "On the cyclic plastic zone, a quarter of the monotonic zone at R = 0, the validity "
+            "would extend to a = " + self.v("result:/growth/life_to_last_cyclic_ssy_valid/a_mm", "f2")
+            + " mm, " + self.v("result:/growth/life_to_last_cyclic_ssy_valid/cycles", "int")
+            + " cycles (open marker; reported for meaning, not gating).</li>"
+            "<li><b>What the limitation is.</b> " + self.ssy_plain() + "</li>"
+            "<li><b>Governing plane.</b> At every established depth the crotch radial–axial "
+            "root flaw (plane <i>" + self.v(self.dref(self.est[0], "governing_plane"), cls="")
+            + "</i>, normal to the run-pipe hoop stress) governs: K_gov = "
+            + self.v(self.dref(self.est[-1], "k_gov_mpa_sqrt_m"), "f2") + " MPa√m at a = "
+            + self.a(self.est[-1]) + " mm against "
+            + self.v(self.dref(self.est[-1], "planes/fusion_face/k_gov_mpa_sqrt_m"), "f2")
+            + " MPa√m on the fusion-face plane (" + self.ref("kgov") + ").</li>"
+            "<li><b>Disposition.</b> Verdict <b>" + self.v("result:/verdict", cls="") + "</b>: "
+            "the envelope and life criteria are met, and the failed small-scale-yielding check ("
+            + self.v("result:/engineering/failed_checks") + ") downgrades ACCEPT to MONITOR. "
+            "Evidence <b>" + self.v("result:/evidence_status", cls="") + "</b>, missing: "
+            + self.v("result:/missing_evidence", cls="") + " (no residual-stress basis and no "
+            "partial-safety-factor basis is supplied). passes = "
+            + str(bool(r["passes"])).lower() + ". This result is not a fitness-for-service "
+            "acceptance.</li></ul></div>"
+        )
+        ssy = r["checks"]["ssy"][ssy_key]
+        ff = g["non_governing_planes"]["fusion_face"][rule]
+        sh = r["checks"]["shakedown"]
+        gv = r["checks"]["growth_validity"]
+        ff_ok = ff["status"] == "ARRESTED"
+        lim_a = self.v("result:/growth/life_to_last_ssy_valid/a_mm", "f3")
+        rows = [
+            ("fad", "Fracture and plastic collapse (FAD)",
+             "API 579-1:2016 Part 9 Level 2: point inside the envelope, F &gt; 1 "
+             + self.cite("api-std-579-asme-ffs-1"),
+             self.td(self.fad_cmp, "f3"), self.td(self.dref(imin, "envelope_margin/factor")),
+             self.uc(self.fad_cmp, self.dref(imin, "envelope_margin/factor")),
+             "crotch plane, a = " + self.a(imin) + " mm", self.status(True)),
+            ("lr", "Plastic-collapse cut-off", "Lr ≤ Lr_max, flow rule (σ_y + σ_u) / (2 σ_y)",
+             self.td(self.dref(imin, "lr")), self.td("result:/basis/lr_max/value"),
+             self.uc(self.dref(imin, "lr"), "result:/basis/lr_max/value"),
+             "crotch plane, every established depth", self.status(True)),
+            ("life_fe", "Fatigue life to the last FE state (linear-elastic)",
+             "life ≥ demand (cycles)", self.td("result:/growth/demand_cycles", "int"),
+             self.td("result:/growth/governing_life_cycles", "int"),
+             self.uc("result:/growth/demand_cycles", "result:/growth/governing_life_cycles"),
+             "a = " + self.v("result:/growth/a0_mm", "f2") + " to "
+             + self.v("result:/growth/a_last_fe_mm", "f2") + " mm; linear-elastic basis holds "
+             "only to a = " + lim_a + " mm (next row)", self.status(True)),
+            ("growth_within_ssy", "Fatigue life within SSY validity",
+             "life ≥ demand, within r_p / ligament ≤ "
+             + self.v("result:/inputs/ssy_max_ratio/value", "f1"),
+             self.td("result:/growth/demand_cycles", "int"),
+             self.td("result:/growth/life_to_last_ssy_valid/cycles", "int"), self.t("-"),
+             "capacity is the life to a = " + lim_a + " mm only; beyond it the life is not "
+             "established: <b>method limitation</b> of the linear-elastic growth approach (not "
+             "a code restriction, not a work-scope exclusion); further analysis (J-based growth) "
+             "needed", self.status(None)),
+            ("ssy", "Small-scale yielding at the established depths",
+             "Irwin r_p / remaining ligament ≤ limit (" + ASSUMED + ")",
+             self.td(f"result:/checks/ssy/{ssy_key}/ratio"),
+             self.td(f"result:/checks/ssy/{ssy_key}/max_ratio", "f1"),
+             self.uc(f"result:/checks/ssy/{ssy_key}/ratio",
+                     f"result:/checks/ssy/{ssy_key}/max_ratio"),
+             "crotch plane, a = " + self.a(self.depth_index(ssy_key)) + " mm ("
+             + self.v("result:/engineering/failed_checks", cls="") + ")",
+             self.status(bool(ssy["passed"]))),
+            ("threshold_ff", "Growth on the fusion-face plane",
+             "largest ΔK below ΔK_th,eff: no growth (MPa√m)",
+             self.td(f"result:/growth/non_governing_planes/fusion_face/{rule}/k_gov_max_mpa_sqrt_m"),
+             self.td(f"result:/growth/threshold_margin/{rule}/dk_th_effective"),
+             self.uc(f"result:/growth/non_governing_planes/fusion_face/{rule}/k_gov_max_mpa_sqrt_m",
+                     f"result:/growth/threshold_margin/{rule}/dk_th_effective"),
+             "fusion-face plane, every solved depth (" + _e(ff["status"]) + ")",
+             self.status(ff_ok)),
+            ("shakedown", "Shakedown at the crotch",
+             "elastic stress range ≤ 2 σ_y (MPa), stress-component basis",
+             self.td("result:/checks/shakedown/elastic_range_mpa", "f1"),
+             self.td("result:/checks/shakedown/limit_mpa", "f1"),
+             self.uc("result:/checks/shakedown/elastic_range_mpa",
+                     "result:/checks/shakedown/limit_mpa"),
+             "uncracked model, crotch-plane paths", self.status(bool(sh.get("passed")))),
+            ("growth_validity", "Growth validity", "Lr ≤ 1 at every established depth",
+             self.td("result:/checks/growth_validity/lr_max_seen"), self.td(self.gv_cmp, "f1"),
+             self.uc("result:/checks/growth_validity/lr_max_seen", self.gv_cmp),
+             "crotch plane, every established depth", self.status(gv["status"] == "VALID")),
+            ("evidence", "Evidence completeness", "every evidence item established",
+             self.t("-"), self.t("-"), self.t("-"),
+             "missing: " + self.v("result:/missing_evidence", cls=""), self.status(None)),
+        ]
+        body_rows = [
+            f'<tr data-check-row="{key}">{self.t(check, "txt wrapcell")}'
+            f'{self.t(crit, "txt wrapcell", raw=True)}{dem}{cap}{uc}'
+            f'{self.t(case, "txt wrapcell", raw=True)}{st}</tr>'
+            for key, check, crit, dem, cap, uc, case, st in rows]
+        counts = {s: sum(s in row[-1] for row in rows)
+                  for s in ("WITHIN_CRITERION", "EXCEEDS_CRITERION", "NOT_EVALUATED")}
+        tab = self.table(["Check", "Criterion", "Demand", "Capacity", "UC (demand / capacity)",
+                          "Governing case", "Status"], body_rows,
+                         "Results summary: check, criterion, demand, capacity, utilisation, "
+                         "governing case and status (UC to three decimals; Demand and Capacity "
+                         "in the units of the criterion)", cls="results-summary", key="t-summary")
+        count_line = self.p(
+            f"Status counts: {counts['WITHIN_CRITERION']} WITHIN_CRITERION, "
+            f"{counts['EXCEEDS_CRITERION']} EXCEEDS_CRITERION, "
+            f"{counts['NOT_EVALUATED']} NOT_EVALUATED.")
+        bold = ('<p class="bold-line">Fitness-for-service acceptance is NOT established: the '
+                "growth life within the linear-elastic method's validity is below the demand, "
+                "and the evidence is INCOMPLETE (no residual-stress basis, no partial-safety-"
+                "factor basis).</p>")
+        lim = (
+            "<ul>"
+            "<li>The design basis is assumed: " + self.v("result:/design_basis_status", cls="")
+            + ". Every result is conditional on confirmation of those items (Section "
+            + self.ref("s3-reg") + ").</li>"
+            "<li><b>Growth life beyond a = " + lim_a + " mm: method limitation.</b> The "
+            "linear-elastic growth life is established only to that depth, "
+            + self.v("result:/growth/life_to_last_ssy_valid/cycles", "int") + " cycles. It is "
+            "not a code restriction and not a work-scope exclusion; closing it needs further "
+            "analysis (an elastic-plastic, J-based growth assessment) and, optionally, further "
+            "data (weld-root geometry and weld-metal toughness) (Sections "
+            + self.ref("s5-growth") + " and " + self.ref("s5-checks") + ").</li>"
+            "<li>No residual-stress basis is supplied; residual stress appears only as screening "
+            "bounds, which are not the disposition (Section " + self.ref("s5-screen") + ").</li>"
+            "<li>No code partial safety factors are supplied; indicative factors of "
+            + self.v("result:/sensitivities/psf_indicative/stress_factor", "f1") + " on stress and "
+            + self.v("result:/sensitivities/psf_indicative/kmat_factor", "f1") + " on Kmat are a "
+            "labelled sensitivity only (Section " + self.ref("s5-sens") + ").</li>"
+            "<li>Kmat = " + self.v("result:/basis/kmat_mpa_sqrt_m", "f1") + " MPa√m is a cited "
+            "public lower bound that assumes a flux-welded root " + self.cite("nureg_6428")
+            + "; the weld-root process is not confirmed.</li>"
+            "<li>The growth law is a user-supplied steel law applied to austenitic weld metal "
+            "at the design temperature; its applicability is not confirmed.</li>"
+            "</ul>"
+        )
+        body = (
+            self.p("The two governing results are shown first as charts: the failure "
+                   "assessment diagram (" + self.ref("fad") + ") and the growth curve ("
+                   + self.ref("growth") + "). Each conclusion below states what the chart "
+                   "shows, against its criterion. Every number carries its source path in the "
+                   "result record, the design-data register or the FE receipt record.")
+            + f_fad + f_growth + box
+            + self.sub("s2-results", "Results summary", tab + count_line + bold)
+            + self.sub("s2-lim", "Governing limitations", lim)
+        )
+        return self.section("s2", "Summary and conclusions",
+                            "Governing results as charts, the conclusions read against them, "
+                            "and the results summary.", body)
 
     # ======================================================================= #
     # 3 Design basis
     # ======================================================================= #
+    def _section_svg(self) -> str:
+        """Section through the branch axis (plane y = 0) from the generator's section mesh,
+        with the flaw planes marked: (a) whole section, (b) weld-root zoom."""
+        from digitalmodel.ansys import weldolet_crack as wc
+
+        spec = wc.WeldoletSpec(**self.m["states"]["p0b_uncracked"]["spec"])
+        geo = wc.derived_geometry(spec)
+        sec, _ = wc._build_section(spec, geo, wc.mesh_parameters(spec))
+        pts, quads = sec.pts, [q[:4] for q in sec.quads]
+        rw, t_run = geo["hole_radius_mm"], spec.run_wall_mm
+        w_svg, h_svg = 700, 520
+        out = []
+
+        def panel(x0, y0, r0, r1, v0, v1, scale, clip):
+            def X(r):
+                return x0 + (r - r0) * scale
+
+            def Y(v):
+                return y0 + (v1 - v) * scale
+
+            for q in quads:
+                cs = [pts[i] for i in q]
+                if clip and not all(r0 <= r <= r1 and v0 <= v <= v1 for r, v in cs):
+                    continue
+                pp = " ".join(f"{X(r):.1f},{Y(v):.1f}" for r, v in cs)
+                out.append(f'<polygon class="sec-el" points="{pp}"/>')
+            return X, Y
+
+        # (a) whole section
+        ra0, ra1, va0, va1 = 7.0, 37.0, -8.0, 60.0
+        sa = 6.8
+        Xa, Ya = panel(40, 22, ra0, ra1, va0, va1, sa, False)
+        # (b) weld-root zoom
+        rb0, rb1, vb0, vb1 = 10.5, 23.5, -7.6, 4.2
+        sb = 29.0
+        Xb, Yb = panel(318, 60, rb0, rb1, vb0, vb1, sb, True)
+        out.append(f'<rect class="dim" x="{Xa(rb0):.1f}" y="{Ya(vb1):.1f}" '
+                   f'width="{(rb1 - rb0) * sa:.1f}" height="{(vb1 - vb0) * sa:.1f}"/>')
+        out.append(f'<rect class="dim" x="{Xb(rb0):.1f}" y="{Yb(vb1):.1f}" '
+                   f'width="{(rb1 - rb0) * sb:.1f}" height="{(vb1 - vb0) * sb:.1f}"/>')
+        # flaws in the zoom: crotch semicircles (plane y = 0) and the fusion-face flaw
+        crotch = [d for d in self.depths if "crotch" in d["planes"]]
+        for d in crotch:
+            a = d["a_mm"]
+            top, bot = 0.5, 0.5 - 2.0 * a
+            out.append(f'<path class="flaw-c" d="M {Xb(rw):.1f} {Yb(top):.1f} A {a * sb:.1f} '
+                       f'{a * sb:.1f} 0 0 1 {Xb(rw):.1f} {Yb(bot):.1f}"/>')
+        a0 = self.depths[0]["a_mm"]
+        a_ff = max(d["a_mm"] for d in self.depths)
+        out.append(f'<line class="flaw-f" x1="{Xb(rw):.1f}" y1="{Yb(0):.1f}" '
+                   f'x2="{Xb(rw + a0):.1f}" y2="{Yb(0):.1f}"/>')
+        out.append(f'<line class="flaw-f" x1="{Xb(rw + a0):.1f}" y1="{Yb(0):.1f}" '
+                   f'x2="{Xb(rw + a_ff):.1f}" y2="{Yb(0):.1f}" stroke-dasharray="5 4"/>')
+        big = crotch[-1]["a_mm"]
+
+        def note(x, y, text, anchor="start"):
+            out.append(f'<text class="note" x="{x:.1f}" y="{y:.1f}" '
+                       f'text-anchor="{anchor}">{text}</text>')
+
+        def leader(x1, y1, x2, y2):
+            out.append(f'<line class="dim" x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" '
+                       f'y2="{y2:.1f}"/>')
+
+        note(Xb(rw + big) + 8, Yb(0.5 - big) + 4, "crotch-plane flaw,")
+        note(Xb(rw + big) + 8, Yb(0.5 - big) + 20, "a = " + ", ".join(
+            fmt(d["a_mm"], "f2") for d in crotch) + " mm")
+        note(Xb(rw + a_ff) + 6, Yb(0) - 8, "fusion-face flaw (full circumference),")
+        note(Xb(rw + a_ff) + 6, Yb(0) + 8, "a = " + fmt(a0, "f2") + " to "
+             + fmt(a_ff, "f2") + " mm")
+        note(Xb(rb0) + 4, Yb(-t_run) + 16, "run-pipe bore")
+        note(Xb(rw) - 4, Yb(vb1) - 6, "hole wall (C/2)", "middle")
+        # labels on the whole section
+        for (r, v, text, lx) in ((28.0, -3.5, "run pipe", 262), (15.0, 3.0, "attachment weld", 262),
+                                 (15.5, 12.0, "weldolet", 262), (9.3, 45.0, "branch pipe", 262)):
+            leader(Xa(r), Ya(v), lx, Ya(v))
+            note(lx + 3, Ya(v) + 4, text)
+        note(Xa(ra0), 16, "(a) section y = 0, whole height")
+        note(Xb(rb0), 50, "(b) weld root, flaw planes")
+        out.append(f'<text class="tick" x="{Xb(rb0):.1f}" y="{Yb(vb0) + 18:.1f}">'
+                   f"box: ρ {fmt(rb0, 'f1')}–{fmt(rb1, 'f1')} mm from the branch axis, "
+                   f"v {fmt(vb0, 'f1')}–{fmt(vb1, 'f1')} mm from the run-pipe outer surface</text>")
+        return (f'<svg viewBox="0 0 {w_svg} {h_svg}" width="{w_svg}" height="{h_svg}" role="img" '
+                'aria-label="Section through the branch axis with the flaw planes" '
+                'xmlns="http://www.w3.org/2000/svg">' + "".join(out) + "</svg>")
+
     def design_basis(self) -> str:
         self.begin("3")
         reg = self.reg
+        fig_model = self.figure(
+            self.panels(("model_iso", "whole model: run pipe, weldolet and branch pipe, "
+                                      "feature edges"),
+                        ("mesh_weldolet", "weldolet region with the element edges")),
+            "What was modelled: the run pipe (NPS 6 Sch 40S, "
+            + fmt(2 * self.m["states"]["p0b_uncracked"]["spec"]["run_half_length_mm"], "int")
+            + " mm long), the weldolet and its attachment weld, and the branch pipe. "
+            + self.fe_source("model_iso", "mesh_weldolet"), key="model")
+        fig_section = self.figure(
+            self._section_svg(),
+            "Section through the branch axis at the +x crotch (plane y = 0), drawn from the "
+            "generator's own section mesh (weldolet_crack._build_section, geometry of state "
+            "p0b_uncracked, level 0): (a) the whole height, (b) the weld root with both flaw "
+            "planes. The crotch-plane flaw lies in this plane (semicircles, red); the "
+            "fusion-face flaw is a full-circumference flaw on the fusion line v = 0 (blue; "
+            "dashed beyond a0). Dimensions in mm", key="section")
+        fig_mesh = self.figure(
+            self.panels(("mesh_global", "full model (crack-free and fusion-face states)"),
+                        ("crotch_mesh_global", "half model y ≥ 0 (crotch-plane states)")),
+            "Global meshes: structured 20-node hexahedral elements (SOLID186); the half model "
+            "uses the symmetry of geometry and load about y = 0. "
+            + self.fe_source("mesh_global", "crotch_mesh_global"), key="mesh-global")
+        fig_crack = self.figure(
+            self.panels(("crotch_mesh_face", "crack plane y = 0: crack face and the crack "
+                                             "block around the semicircular front"),
+                        ("crotch_mesh_spider", "surface through the deepest front point: the "
+                                               "spider-web tube around the front")),
+            "Crack-front mesh of the crotch-plane flaw at a0: rings of elements about the "
+            "front, the innermost ring collapsed onto the front with quarter-point mid-side "
+            "nodes. The fusion-face states use the same tube construction around the "
+            "circumferential front (not pictured). "
+            + self.fe_source("crotch_mesh_face", "crotch_mesh_spider"), key="mesh-crack")
+        rows = []
+        m = self.m
+        for name, st in m["states"].items():
+            ms = {mm["level"]: (k, mm) for k, mm in enumerate(st["meshes"])}
+            cells = []
+            for level in (0, 1):
+                if level in ms:
+                    k = ms[level][0]
+                    cells.append(self.td(f"receipts:/states/{name}/meshes/{k}/n_nodes", "int")
+                                 + self.td(f"receipts:/states/{name}/meshes/{k}/n_elements", "int"))
+                else:
+                    cells.append(self.t("-") + self.t("-"))
+            a_cell = (self.td(f"receipts:/states/{name}/a_mm", "f2") if st["a_mm"] is not None
+                      else self.t("n/a"))
+            rows.append(f"<tr>{self.t(name)}{self.t(st['kind'])}{self.t(st['plane'] or '-')}"
+                        f"{a_cell}{''.join(cells)}{self.t(st['modelling_route'] or '-', 'txt wrapcell')}</tr>")
+        meshes = self.table(["State", "Kind", "Plane", "a (mm)", "L0 nodes", "L0 elements",
+                             "L1 nodes", "L1 elements", "Modelling route"], rows,
+                            "FE states, mesh sizes and modelling route", key="t-meshes")
+        model_text = self.p(
+            "The model is shown in " + self.ref("model") + " and in section in "
+            + self.ref("section") + ". The run pipe, weldolet, attachment weld and branch "
+            "pipe are one continuous solid of the assumed 1.4404 material at the design "
+            "temperature; internal pressure acts on every wetted surface, with the closed-end "
+            "thrust applied as an equivalent end pressure. The two flaw planes are the crotch "
+            "radial–axial plane (normal to the run-pipe hoop stress) and the fusion face "
+            "between the weld and the run pipe.")
+        mesh_text = self.p(
+            "The global meshes are shown in " + self.ref("mesh-global") + " and the crack-front "
+            "mesh in " + self.ref("mesh-crack") + ". Each state is solved at two mesh "
+            "densities, L0 and L1 (" + self.ref("t-meshes") + "); the pictures show L0.")
         conv = self.p(
             "The design basis is held in a design-data register (schema <i>"
             + self.v("register:/schema", cls="") + "</i>, generated "
@@ -751,7 +1357,7 @@ class _Report:
                 f'{self.t(it["note"], "txt wrapcell")}'
                 f'{self.t(self.reg_refs(it.get("reference_ids", [])), "txt wrapcell")}</tr>')
         full = self.table(["Id", "Parameter", "Value", "Unit", "Source class", "Status", "Note",
-                           "Sources"], rows, "Design-data register (all items)",
+                           "Sources"], rows, "Design-data register (all items)", key="t-register",
                           intro="The full register follows. Each assumed item shows its label "
                           "and its confirmation route beside the value.")
         rows = []
@@ -766,84 +1372,15 @@ class _Report:
                              "Basis"], rows, "Resolved assessment inputs",
                             intro="The assessment resolves the following inputs from the "
                             "register or from the input file, each with its basis.")
-        body = (conv + counts
-                + self.sub("s3-reg", "Design-data register", full)
-                + self.sub("s3-inputs", "Resolved assessment inputs", inputs)
-                + self.sub("s3-sources", "Cited public sources", self.p(
-                    "Material properties are read from public datasheets and dimensions from a "
-                    "public manufacturer catalogue and distributor charts "
-                    + self.cite(*[x["id"] for x in reg.get("references", [])]) + "; archived "
-                    "copies are held under docs:literature with their SHA-256 digests. The "
-                    "toughness lower bound is cited to NUREG/CR-6428 Rev. 1 "
-                    + self.cite("nureg_6428", "nureg_7185") + ".")))
-        return self.section("s3", "Design basis and source register",
-                            "Assumed design basis, source classes and the resolved inputs.", body)
-
-    # ======================================================================= #
-    # 4 Assumptions and limitations
-    # ======================================================================= #
-    def assumptions(self) -> str:
-        self.begin("4")
-        items = [
-            ("Assumed design basis", "all geometry, material and load inputs",
-             "Every result is conditional on confirmation of the register items.",
-             "Sections 3, 8"),
-            ("Small-scale-yielding limit r_p / ligament ≤ "
-             + self.v("result:/inputs/ssy_max_ratio/value", "f1"),
-             "growth life beyond a = " + self.v("result:/growth/life_to_last_ssy_valid/a_mm", "f3")
-             + " mm",
-             "Growth life established only to "
-             + self.v("result:/growth/life_to_last_ssy_valid/cycles", "int")
-             + " cycles, below the demand.",
-             "Sections 8.5, 9.2"),
-            ("No residual-stress basis", "Kr (secondary term)",
-             "Evidence INCOMPLETE; residual stress enters only as screening bounds.",
-             "Sections 8.7, 8.8"),
-            ("No code partial safety factors", "Kr and Lr",
-             "Evidence INCOMPLETE; indicative factors are a sensitivity only.",
-             "Sections 8.6, 8.8"),
-            ("Kmat lower bound for a flux-welded root", "Kr at every depth",
-             "A different root process changes Kmat (register M-06 note).", "Section 8.1"),
-            ("User-supplied steel growth law and E-ratio", "growth life",
-             "Applicability to austenitic weld metal at the design temperature is not "
-             "confirmed.", "Section 8.5"),
-            ("R = 0 pressure cycling and the cycle demand", "ΔK and the life criterion",
-             "A different pressure history changes ΔK and the demand.", "Section 8.5"),
-            ("Semicircular crotch flaw (register F-06); crotch-arc a/2c = "
-             + self.reg_ref("F-02") + " not modelled",
-             "K_gov on the governing plane", "The effect of a longer flaw is Not Evaluated.",
-             "Section 2.3"),
-            ("σ_ref without net-section amplification", "Lr at every depth",
-             "Lr is the same at every depth of a plane; the limit-load Lr is a sensitivity.",
-             "Sections 6.4, 8.6"),
-            ("Shakedown on a stress-component range", "shakedown check",
-             "Not an equivalent-stress range.", "Section 9.3"),
-            ("No FE state between 3.2 mm and the crotch limit state", "life to the limit state",
-             "Not Evaluated in the base result; extrapolated life is a sensitivity.",
-             "Section 8.6"),
-            ("Crack-face pressure ON as the base case (register L-03)", "K_gov",
-             "OFF is run as a sensitivity.", "Section 8.6"),
-        ]
-        rows = [f"<tr>{self.t('L' + str(n))}{self.t(a, 'txt wrapcell', raw=True)}"
-                f"{self.t(b, 'txt wrapcell', raw=True)}{self.t(c, 'txt wrapcell', raw=True)}"
-                f"{self.t(d)}</tr>"
-                for n, (a, b, c, d) in enumerate(items, 1)]
-        tab = self.table(["No.", "Assumption or limitation", "Affects", "Consequence",
-                          "Carried in"], rows, "Assumptions and limitations, with the input or "
-                         "result each affects")
-        body = self.p(
-            "Each assumption is stated beside the input it affects (Section 3, and the notes "
-            f"marked {ASSUMED} beside the results in Sections 8 and 9). The governing ones are "
-            "repeated in the executive summary. The table below collects them with their "
-            "consequence.") + tab
-        return self.section("s4", "Assumptions and limitations",
-                            "What is assumed, what it affects and what follows.", body)
-
-    # ======================================================================= #
-    # 5 Acceptance criteria
-    # ======================================================================= #
-    def criteria(self) -> str:
-        self.begin("5")
+        assum = self.p(
+            "Each assumption is stated beside the input it affects (" + self.ref("t-register")
+            + " and the notes marked " + ASSUMED + " beside the results in Section "
+            + self.ref("s5") + "). The holds and assumptions register in the front matter "
+            "(" + self.ref("t-holds") + ") collects them once with their effect. Two limitations are of a "
+            "different kind and are named as such: the small-scale-yielding limit on the growth "
+            "life is a <b>method limitation</b> of linear-elastic growth (Section "
+            + self.ref("s2-lim") + "), and the unmodelled flaw shapes and depths are "
+            "<b>work-scope exclusions</b> (Section " + self.ref("s1-3") + ").")
         rows = [
             f"<tr>{self.t('FAD envelope')}{self.t('assessment point inside the API 579-1:2016 Level 2 curve; load factor to the envelope F &gt; 1', 'txt wrapcell', raw=True)}"
             f"{self.td(self.fad_cmp, 'f1')}{self.t('API 579-1 Part 9 Level 2 ' + self.cite('api-std-579-asme-ffs-1'), 'txt wrapcell')}</tr>",
@@ -853,7 +1390,7 @@ class _Report:
             f"{self.td('result:/growth/demand_cycles', 'int')}{self.t('demand, ' + ASSUMED, 'txt wrapcell')}</tr>",
             f"<tr>{self.t('Growth threshold')}{self.t('ΔK above ΔK_th,eff at every depth means growth is predicted (rule none)', 'txt wrapcell')}"
             f"{self.td('result:/growth/threshold_margin/none/dk_th_effective', 'f3')}{self.t('MPa√m; ' + ASSUMED, 'txt wrapcell')}</tr>",
-            f"<tr>{self.t('Small-scale yielding')}{self.t('Irwin plane-stress r_p / remaining ligament at most the limit', 'txt wrapcell')}"
+            f"<tr>{self.t('Small-scale yielding')}{self.t('Irwin plane-stress r_p / remaining ligament at most the limit (validity of the linear-elastic method)', 'txt wrapcell')}"
             f"{self.td('result:/checks/ssy/2.35/max_ratio', 'f1')}{self.t(self.r['checks']['ssy_basis'], 'txt wrapcell')}</tr>",
             f"<tr>{self.t('σ_ref consistency')}{self.t('σ_ref / σ_implied interval intersects the band', 'txt wrapcell')}"
             f"{self.td('result:/checks/sigma_ref_consistency/2.35/band', 'f1')}{self.t('band fixed in the plan before any run', 'txt wrapcell')}</tr>",
@@ -862,24 +1399,62 @@ class _Report:
             f"<tr>{self.t('Growth validity')}{self.t('Lr at most 1 at every established depth, else the growth result is CONDITIONAL', 'txt wrapcell')}"
             f"{self.td(self.gv_cmp, 'f1')}{self.t('owner card B15', 'txt wrapcell')}</tr>",
         ]
-        tab = self.table(["Check", "Criterion", "Limit", "Basis"], rows,
-                         "Acceptance criteria and check limits")
-        body = tab + self.p(
+        crit = self.table(["Check", "Criterion", "Limit", "Basis"], rows,
+                          "Acceptance criteria and check limits")
+        crit += self.p(
             "Verdict logic: " + self.v("result:/engineering/criteria", cls="") + ". "
             "Independently, <i>passes</i> is true only when the verdict is ACCEPT or MONITOR "
             "<b>and</b> the evidence status is COMPLETE, which requires a Kmat basis, an "
             "Lr_max basis, a residual-stress basis, a partial-safety-factor basis, geometry "
             "validity and a verified receipt for every FE state.")
-        return self.section("s5", "Acceptance criteria",
-                            "Criteria, limits and the verdict logic, stated before the results.",
-                            body)
+        body = (self.sub("s3-model", "Geometry: what was modelled", model_text + fig_model
+                         + fig_section)
+                + self.sub("s3-mesh", "Finite-element model and mesh used", mesh_text
+                           + fig_mesh + fig_crack + meshes)
+                + self.sub("s3-reg", "Design-data register", conv + counts + full)
+                + self.sub("s3-inputs", "Resolved assessment inputs", inputs)
+                + self.sub("s3-assum", "Assumptions and limitations", assum)
+                + self.sub("s3-crit", "Acceptance criteria", crit)
+                + self.sub("s3-sources", "Cited public sources", self.p(
+                    "Material properties are read from public datasheets and dimensions from a "
+                    "public manufacturer catalogue and distributor charts "
+                    + self.cite(*[x["id"] for x in reg.get("references", [])]) + "; archived "
+                    "copies are held under docs:literature with their SHA-256 digests. The "
+                    "toughness lower bound is cited to NUREG/CR-6428 Rev. 1 "
+                    + self.cite("nureg_6428", "nureg_7185") + ".")))
+        return self.section("s3", "Design basis",
+                            "What was modelled, the mesh used, the design data, assumptions "
+                            "and acceptance criteria.", body)
 
     # ======================================================================= #
     # 6 Methodology
     # ======================================================================= #
     def methodology(self) -> str:
-        self.begin("6")
+        self.begin("4")
         m = self.m
+        commits = sorted({st["producing_commit"] for st in m["states"].values()
+                          if st.get("producing_commit")})
+        rows = [
+            f"<tr>{self.t('ANSYS Mechanical APDL (MAPDL)')}"
+            f"{self.v('receipts:/solver/mapdl_release', tag='td', cls='txt')}"
+            f"{self.v('receipts:/solver/mapdl_version', tag='td', cls='txt')}"
+            f"{self.t('FE solution of every declared state; CINT J and K extraction; '
+                      'limit-load run; the pictures of Sections 3 and 5 (visualisation decks)', 'txt wrapcell')}</tr>",
+            f"<tr>{self.t('digitalmodel.ansys generators')}{self.t('weldolet_crack, weldolet_crotch, weldolet_limit, crack_verification')}"
+            f"{self.t('producing commits ' + ', '.join(c[:12] for c in commits), 'txt wrapcell')}"
+            f"{self.t('deterministic APDL decks; deck SHA-256 recorded in each receipt (Appendix A)', 'txt wrapcell')}</tr>",
+            f"<tr>{self.t('digitalmodel.ansys.weldolet_figures')}{self.t('this revision')}"
+            f"{self.t('figure digests in figures.json')}"
+            f"{self.t('visualisation decks: the receipt deck, hash-checked, plus a plotting block; host-free PNG', 'txt wrapcell')}</tr>",
+            f"<tr>{self.t('digitalmodel.asset_integrity.assessment')}{self.t('crack_fe_assessment, fad_curves, crack_checks')}"
+            f"{self.t('-')}{self.t('FAD, growth integration, checks, evidence status and verdict', 'txt wrapcell')}</tr>",
+            f"<tr>{self.t('digitalmodel.fatigue.crack_growth_history')}{self.t('life, TabulatedDeltaK')}"
+            f"{self.t('-')}{self.t('fatigue-crack-growth integration (composite Simpson) and threshold arrest', 'txt wrapcell')}</tr>",
+            f"<tr>{self.t('crack_fe_report')}{self.t('this revision')}{self.t('-')}"
+            f"{self.t('this page, generated from the result record, the register and the receipts', 'txt wrapcell')}</tr>",
+        ]
+        soft = self.table(["Software", "Version", "Build / SHA-256", "Use"], rows,
+                          "Software and versions", key="t-software")
         crotch = m["states"]["p0b_crotch_a2p35"]
         guard_def = {
             "a_equilibrium": "Equilibrium: the solved axial reaction sum on the constrained end "
@@ -915,7 +1490,7 @@ class _Report:
                         f"{self.t(what, 'txt wrapcell')}</tr>")
         guard_tab = self.table(["Guard", "Definition", "Limit", "Evaluated quantity"], rows,
                                "Conservation and extraction guards (a)–(g), evaluated on "
-                               "solved output")
+                               "solved output", key="t-guards")
         fe = MethodBlock(
             heading="Finite-element model",
             prose=(
@@ -998,7 +1573,7 @@ class _Report:
                 + " %; T4 at least "
                 + self.v("receipts:/limit_load/collapse/thresholds/min_converged_substeps", "g")
                 + " converged substeps. A run that fails any check produces no receipt, and "
-                "every check passed for the receipt used here (Table 8.8)."),
+                "every check passed for the receipt used here (" + self.ref("t-ll") + ")."),
             equations=[Equation(markup="<var>L</var><sub>r</sub><sup>LL</sup> = <span class=\"frac\">"
                                        "<span class=\"n\"><var>p</var></span><span class=\"d\"><var>P</var>"
                                        "<sub>L</sub></span></span>")],
@@ -1063,27 +1638,30 @@ class _Report:
                    "relaxed-yield bound (owner card J05); plasticity interaction ρ = 0 is "
                    "stated, not computed."),
         )
-        parts = []
+        parts = [self.sub("s4-soft", "Software and versions", self.p(
+            "The software used and its versions are listed below; the solver release is read "
+            "from the FE receipts.") + soft)]
         for blk in (fe, kgov, fad, limit, growth, checks, screen):
             rendered, self.neq = blk.render(self.nsub + 1, self.neq)
             self.nsub += 1
             parts.append(rendered)
             if blk is fe:
-                parts.append(self.sub("s6-guards", "Guards (a)–(g)", self.p(
+                parts.append(self.sub("s4-guards", "Guards (a)–(g)", self.p(
                     "Each guard is evaluated independently from the solved output, never from "
                     "the prescribed loads, and each has a negative fixture in the test suite that "
                     "makes that guard alone fail. Guards (c) and (g) were redefined or added by "
                     "owner decisions before the runs they govern; the superseded forms are kept "
-                    "as records (Section 7.4).") + guard_tab))
-        return self.section("s6", "Analysis methodology",
-                            "FE model, guards, driving force, FAD, limit load, growth and checks.",
+                    "as records (Section " + self.ref("s6-4") + ").") + guard_tab))
+        return self.section("s4", "Methodology",
+                            "Software, FE model, guards, driving force, FAD, limit load, growth "
+                            "and checks.",
                             "".join(parts))
 
     # ======================================================================= #
     # 7 FE model and verification
     # ======================================================================= #
     def verification(self) -> str:
-        self.begin("7")
+        self.begin("6")
         m = self.m
         ver = m["verification"]
         rows = []
@@ -1142,7 +1720,7 @@ class _Report:
         guards = self.table(heads, rows, "Guard values per FE state (n/a: the guard does not "
                             "apply to a model without a crack front or with one mesh density)",
                             intro=("Every guard value per state follows. Limits are those of "
-                                   "Table 6.1 (" + ", ".join(
+                                   + self.ref("t-guards") + " (" + ", ".join(
                                        f"({gname[0]}) " + self.v(f"{lim}/{gname}/limit", "g")
                                        for gname in GUARDS) + ")."))
         rows = []
@@ -1170,24 +1748,6 @@ class _Report:
                                     "where K_I passes through zero and the per-node ratio is "
                                     "undefined; that failure is the reason guard (c) was "
                                     "redefined, and it is kept here as evidence."))
-        rows = []
-        for name, st in m["states"].items():
-            ms = {mm["level"]: (k, mm) for k, mm in enumerate(st["meshes"])}
-            cells = []
-            for level in (0, 1):
-                if level in ms:
-                    k = ms[level][0]
-                    cells.append(self.td(f"receipts:/states/{name}/meshes/{k}/n_nodes", "int")
-                                 + self.td(f"receipts:/states/{name}/meshes/{k}/n_elements", "int"))
-                else:
-                    cells.append(self.t("-") + self.t("-"))
-            a_cell = (self.td(f"receipts:/states/{name}/a_mm", "f2") if st["a_mm"] is not None
-                      else self.t("n/a"))
-            rows.append(f"<tr>{self.t(name)}{self.t(st['kind'])}{self.t(st['plane'] or '-')}"
-                        f"{a_cell}{''.join(cells)}{self.t(st['modelling_route'] or '-', 'txt wrapcell')}</tr>")
-        meshes = self.table(["State", "Kind", "Plane", "a (mm)", "L0 nodes", "L0 elements",
-                             "L1 nodes", "L1 elements", "Modelling route"], rows,
-                            "FE states, mesh sizes and modelling route")
         n = len(self.r["receipts"])
         n_ok = sum(1 for x in self.r["receipts"].values() if x["validated"])
         prov = self.p(
@@ -1199,13 +1759,15 @@ class _Report:
             "the repository's continuous-integration test suite without a solver licence, and "
             "a missing or stale receipt fails that suite rather than being skipped. Receipt "
             "digests are listed in Appendix A.")
-        body = (self.sub("s7-1", "Verification against Newman–Raju", nr)
-                + self.sub("s7-2", "Uncracked far-field hoop check", hoop)
-                + self.sub("s7-3", "Guard values per state", guards)
-                + self.sub("s7-4", "Record-only guards", records)
-                + self.sub("s7-5", "States and meshes", meshes)
-                + self.sub("s7-6", "Provenance", prov))
-        return self.section("s7", "FE model and verification",
+        body = (self.p("The FE model and mesh are described in Section " + self.ref("s3-mesh")
+                       + " and the states and mesh sizes are listed in " + self.ref("t-meshes")
+                       + ".")
+                + self.sub("s6-1", "Verification against Newman–Raju", nr)
+                + self.sub("s6-2", "Uncracked far-field hoop check", hoop)
+                + self.sub("s6-3", "Guard values per state", guards)
+                + self.sub("s6-4", "Record-only guards", records)
+                + self.sub("s6-5", "Provenance", prov))
+        return self.section("s6", "Verification",
                             "Extraction verification, conservation guards and provenance.", body)
 
     # ======================================================================= #
@@ -1265,6 +1827,67 @@ class _Report:
                     f'text-anchor="end">Lr_max = {fmt(lr_cut, "f3")}</text>')
         return ax.svg(body, "Failure assessment diagram with the assessment points")
 
+    def _growth_svg(self) -> str:
+        g = self.r["growth"]
+        curve = growth_curve(self.r)
+        n_end = curve[-1][0]
+        xmax = 10000.0 * (int(max(n_end, g["demand_cycles"]) / 10000.0) + 1)
+        y0 = 0.1 * int(g["a0_mm"] / 0.1 - 0.5)
+        y1 = 0.1 * (int(g["a_last_fe_mm"] / 0.1) + 1)
+        ax = _Axes(0.0, xmax, y0, y1, left=70)
+        body = []
+        s_ref = "result:/growth/life_to_last_ssy_valid"
+        a_s, n_s = g["life_to_last_ssy_valid"]["a_mm"], g["life_to_last_ssy_valid"]["cycles"]
+        body.append(f'<rect class="zone" x="{ax.x(0):.1f}" y="{ax.y(y1):.1f}" '
+                    f'width="{ax.x(xmax) - ax.x(0):.1f}" height="{ax.y(a_s) - ax.y(y1):.1f}"/>')
+        body += ax.frame(_ticks(0, xmax, 10000), _ticks(y0, y1, 0.1), "load cycles N",
+                         "crack depth a (mm)", xfmt="{:,.0f}", yfmt="{:.1f}")
+        body.append(f'<line class="ln-ssy" x1="{ax.x(0):.1f}" y1="{ax.y(a_s):.1f}" '
+                    f'x2="{ax.x(xmax):.1f}" y2="{ax.y(a_s):.1f}" data-src-y="{s_ref}/a_mm"/>')
+        dem = g["demand_cycles"]
+        body.append(f'<line class="ln-dem" x1="{ax.x(dem):.1f}" y1="{ax.y(y0):.1f}" '
+                    f'x2="{ax.x(dem):.1f}" y2="{ax.y(y1):.1f}" '
+                    f'data-src-x="result:/growth/demand_cycles"/>')
+        pts = " ".join(f"{ax.x(n):.1f},{ax.y(a):.1f}" for n, a in curve)
+        body.append(f'<polyline class="curve" points="{pts}"/>')
+        # established FE depths on the curve (cycles = life to last FE state - remaining)
+        for i in self.est:
+            d = self.depths[i]
+            n_i = n_end - (d["remaining_life_to_last_fe_cycles"] or 0.0)
+            body.append(f'<circle class="pt-ff" cx="{ax.x(n_i):.1f}" cy="{ax.y(d["a_mm"]):.1f}" '
+                        'r="4"/>')
+
+        def circ(xref, yref, cls, rad=5.5):
+            return (f'<circle class="{cls}" cx="{ax.x(self.get(xref)):.1f}" '
+                    f'cy="{ax.y(self.get(yref)):.1f}" r="{rad}" data-src-x="{xref}" '
+                    f'data-src-y="{yref}"/>')
+
+        body.append(circ(f"{s_ref}/cycles", f"{s_ref}/a_mm", "pt-gov"))
+        body.append(circ("result:/growth/governing_life_cycles", "result:/growth/a_last_fe_mm",
+                         "pt-gov"))
+        body.append(circ("result:/growth/life_to_last_cyclic_ssy_valid/cycles",
+                         "result:/growth/life_to_last_cyclic_ssy_valid/a_mm", "pt-rec", 4.5))
+
+        def label(x, y, text, anchor="start"):
+            body.append(f'<text class="leg" x="{x:.1f}" y="{y:.1f}" '
+                        f'text-anchor="{anchor}">{text}</text>')
+
+        label(ax.x(0) + 8, ax.y(a_s) - 8, "SSY-valid depth a = " + fmt(a_s, "f3")
+              + " mm: " + fmt(n_s, "int") + " cycles")
+        label(ax.x(0) + 8, ax.y(y1) + 18, "beyond SSY validity: linear-elastic life "
+              "not established (method limitation)")
+        label(ax.x(dem) + 6, ax.y(y0) - 10, "demand " + fmt(dem, "int") + " cycles")
+        label(ax.x(n_end) - 8, ax.y(g["a_last_fe_mm"]) + 20, fmt(n_end, "int")
+              + " cycles at a = " + fmt(g["a_last_fe_mm"], "f2") + " mm (last FE state)", "end")
+        lx, ly = ax.x(xmax * 0.52), ax.y(y0) - 58
+        for k, (cls, text) in enumerate((("pt-gov", "SSY crossing and last FE state"),
+                                          ("pt-ff", "established FE depths"),
+                                          ("pt-rec", "cyclic-zone validity (meaning, not "
+                                                     "gating)"))):
+            body.append(f'<circle class="{cls}" cx="{lx:.1f}" cy="{ly - 18 * k:.1f}" r="4.5"/>')
+            label(lx + 10, ly - 18 * k + 4, text)
+        return ax.svg(body, "Fatigue crack growth curve with the SSY-valid depth and the demand")
+
     def _k_svg(self) -> str:
         g = self.r["growth"]
         ax = _Axes(2.2, 4.2, 0.0, 12.0)
@@ -1302,9 +1925,72 @@ class _Report:
                     f'(rules none and e_ratio)</text>')
         return ax.svg(body, "Governing crack driving force against crack depth")
 
+    def _kfront_svg(self) -> str:
+        crotch = [(n, st) for n, st in self.m["states"].items()
+                  if st.get("front_profile") and n.startswith("p0b_crotch_")
+                  and not n.endswith("_cfp_off")]
+        crotch.sort(key=lambda x: x[1]["a_mm"])
+        ymax = max(max(st["front_profile"]["k_gov_mpa_sqrt_m"]) for _, st in crotch)
+        ytop = 2.0 * (int(ymax / 2.0) + 1)
+        ax = _Axes(0.0, 180.0, 0.0, ytop)
+        body = ax.frame(_ticks(0, 180, 20), _ticks(0, ytop, 2), "position on the front, "
+                        "φ (deg, 0 = upper tip at the weld root, 180 = lower tip)",
+                        "K_gov (MPa√m)", xfmt="{:.0f}", yfmt="{:.0f}")
+        styles = (("ln-ff", "pt-ff"), ("ln-th", "pt-scr"), ("ln-gov", "pt-gov"))
+        for (name, st), (lcls, pcls) in zip(crotch, styles):
+            prof = st["front_profile"]
+            pts = " ".join(f"{ax.x(ph):.1f},{ax.y(k):.1f}"
+                           for ph, k in zip(prof["phi_deg"], prof["k_gov_mpa_sqrt_m"]))
+            body.append(f'<polyline class="{lcls}" points="{pts}"/>')
+            base = f"receipts:/states/{name}/front_profile"
+            for i in range(0, len(prof["phi_deg"]), 4):
+                body.append(f'<circle class="{pcls}" cx="{ax.x(prof["phi_deg"][i]):.1f}" '
+                            f'cy="{ax.y(prof["k_gov_mpa_sqrt_m"][i]):.1f}" r="3.5" '
+                            f'data-src-x="{base}/phi_deg/{i}" '
+                            f'data-src-y="{base}/k_gov_mpa_sqrt_m/{i}"/>')
+        lx, ly = ax.x(62), ax.y(ytop * 0.93)
+        for k, ((name, st), (_, pcls)) in enumerate(zip(crotch, styles)):
+            body.append(f'<circle class="{pcls}" cx="{lx:.1f}" cy="{ly + 18 * k:.1f}" r="4.5"/>')
+            body.append(f'<text class="leg" x="{lx + 10:.1f}" y="{ly + 18 * k + 4:.1f}">'
+                        f'a = {fmt(st["a_mm"], "f2")} mm ({name}, level '
+                        f'{st["front_profile"]["level"]})</text>')
+        return ax.svg(body, "Governing crack driving force along the crotch-plane front")
+
     def results(self) -> str:
-        self.begin("8")
+        self.begin("5")
         r, g = self.r, self.r["growth"]
+        fig_hoop = self.figure(
+            self.panels(("hoop_iso", "weldolet region, isometric view"),
+                        ("hoop_section", "section y = 0 through the branch axis at the +x "
+                                         "crotch")),
+            "End result of the uncracked model at the design pressure: hoop stress (cylindrical "
+            "system about the run-pipe axis). The hoop stress concentrates at the crotch on the "
+            "bore side of the hole wall, where the crotch-plane flaw is placed; the legend of "
+            "each picture gives the plotted range. "
+            + self.fe_source("hoop_iso", "hoop_section"), key="result-hoop")
+        fig_crack = self.figure(
+            self.panels(("crotch_sy_face", "crack plane y = 0 viewed from -y")),
+            "End result of the cracked crotch model at a0: stress normal to the crack plane "
+            "(SY) on the symmetry plane, range 0–250 MPa. The crack face (grey, below 0 MPa, "
+            "loaded by the crack-face pressure) is bounded by the semicircular front, where the "
+            "stress concentrates (red band); K_gov along that front is plotted in "
+            + self.ref("k-front") + ". " + self.fe_source("crotch_sy_face"),
+            key="result-crack")
+        fig_kfront = self.figure(
+            self._kfront_svg(),
+            "K_gov = √(E′J) along the crotch-plane front at the three solved depths (every "
+            "front node drawn; every fourth marked with its source path). Source: FE receipts "
+            "of the crotch states, primary mesh level (front records, governing K_gov)",
+            key="k-front")
+        end_text = self.p(
+            "The results are those of the model and mesh shown in Section "
+            + self.ref("s3-model") + " (" + self.ref("model") + ", " + self.ref("section")
+            + ") and Section " + self.ref("s3-mesh") + " (" + self.ref("mesh-global") + ", "
+            + self.ref("mesh-crack") + "). " + self.ref("result-hoop") + " shows the "
+            "uncracked stress field that loads the flaw, " + self.ref("result-crack")
+            + " the cracked crotch model near the front, and " + self.ref("k-front")
+            + " the driving force along the front, which is the input to the FAD and to "
+            "the growth assessment.")
         # 8.1 FAD table
         rows = []
         for i, d in enumerate(self.depths):
@@ -1332,10 +2018,9 @@ class _Report:
             + "; Lr uses σ_y = " + self.v("result:/inputs/sigma_y/value", "f1") + " MPa, the "
             "datasheet minimum (register M-03). Kr and Lr are unfactored; no code partial "
             "safety factors are supplied.")
-        fad_fig = self.figure(self._fad_svg(),
-                              "Failure assessment diagram: API 579-1:2016 Level 2 curve with the "
-                              "cut-off, assessment points, sensitivities and screening bounds; "
-                              "the dashed ray shows the load factor at the minimum-F depth")
+        fad_fig = self.p("The assessment points are plotted on the failure assessment "
+                         "diagram in " + self.ref("fad") + " (Section " + self.ref("s2")
+                         + ").")
         # 8.3 K(a)
         rows = []
         for i, d in enumerate(self.depths):
@@ -1360,7 +2045,8 @@ class _Report:
                            "governing node")
         k_fig = self.figure(self._k_svg(), "K_gov against crack depth on both planes, with the "
                             "effective thresholds, the SSY-valid and cyclic-zone depths and the "
-                            "crotch limit state")
+                            "crotch limit state. Source: result record (depths, growth)",
+                            key="kgov")
         # 8.5 growth
         law = g["law"]
         rows = [
@@ -1460,7 +2146,7 @@ class _Report:
                              "p_TES (MPa)", "TES gap (%)", "Tangent / elastic", "Converged substeps"],
                             rows, "SENSITIVITY: limit-load Lr (collapse corroborated: "
                             + ", ".join(k for k, v in self.m["limit_load"]["collapse"]["checks"].items() if v)
-                            + ")")
+                            + ")", key="t-ll")
         cf = sens["crack_face_pressure_off"]
         rows = [f"<tr>{self.td('result:/sensitivities/crack_face_pressure_off/a_mm', 'f2')}{self.t(cf['plane'])}"
                 f"{self.td(self.dref(0, 'k_gov_mpa_sqrt_m'), 'f3')}"
@@ -1535,6 +2221,7 @@ class _Report:
                                    + ", ρ = " + self.v("result:/screening/rho", "f1") + ". Records: "
                                    + _e(sc["y_basis"]) + "; " + _e(sc["relaxation_basis"]) + "."))
         sc_note = self.assumed_note("Record: " + _e(sc["basis"]))
+        checks = self.checks_parts()
         # 8.8 evidence
         rows = []
         for name, ev in r["evidence"].items():
@@ -1543,30 +2230,34 @@ class _Report:
                         f'{self.t(ev["basis"], "txt wrapcell")}</tr>')
         ev_tab = self.table(["Evidence item", "Status", "Basis"], rows,
                             "Evidence completeness (status: " + _e(r["evidence_status"]) + ")")
+        findings = self.findings_table()
         body = (
-            self.sub("s8-1", "FAD assessment per depth", fad_tab + fad_note)
-            + self.sub("s8-2", "Failure assessment diagram", fad_fig)
-            + self.sub("s8-3", "Crack driving force on both planes", k_tab + k_fig)
-            + self.sub("s8-4", "Governing plane", self.p(
+            self.sub("s5-end", "Model, mesh and end result", end_text + fig_hoop + fig_crack
+                     + fig_kfront)
+            + self.sub("s5-fad", "FAD assessment per depth", fad_tab + fad_note + fad_fig)
+            + self.sub("s5-k", "Crack driving force on both planes", k_tab + k_fig)
+            + self.sub("s5-gov", "Governing plane", self.p(
                 "The crotch plane governs at every established depth: its K_gov exceeds that of "
                 "the fusion-face plane at each depth (" + k_label + "), and the fusion-face K_gov "
                 "stays below the growth threshold, so that plane is ARRESTED (" + non_label
                 + ")."))
-            + self.sub("s8-5", "Fatigue crack growth", law_tab + law_note + dk_tab + life_tab
+            + self.sub("s5-growth", "Fatigue crack growth", law_tab + law_note + dk_tab + life_tab
                        + ssy_tab + ssy_meaning + non_tab + limit_state)
-            + self.sub("s8-6", "Sensitivities", sens_html)
-            + self.sub("s8-7", "Residual-stress screening", sc_tab + sc_note)
-            + self.sub("s8-8", "Evidence completeness", ev_tab)
+            + self.sub("s5-sens", "Sensitivities", sens_html)
+            + self.sub("s5-screen", "Residual-stress screening", sc_tab + sc_note)
+            + self.sub("s5-checks", "Consistency checks", checks)
+            + self.sub("s5-evidence", "Evidence completeness", ev_tab)
+            + self.sub("s5-findings", "Findings record", findings)
         )
-        return self.section("s8", "Results by governing case",
-                            "FAD, driving force, growth, sensitivities, screening and evidence.",
-                            body)
+        return self.section("s5", "Results",
+                            "Model, mesh and end result; FAD, driving force, growth, "
+                            "sensitivities, screening, checks, evidence and findings.", body)
 
     # ======================================================================= #
     # 9 Checks
     # ======================================================================= #
-    def checks(self) -> str:
-        self.begin("9")
+    def checks_parts(self) -> str:
+        """Consistency-check tables (placed in Section 5)."""
         c = self.r["checks"]
         rows = []
         for key, rec in c["sigma_ref_consistency"].items():
@@ -1590,7 +2281,9 @@ class _Report:
                             "Limit", "Plastic zone", "Result"], rows,
                            "Small-scale yielding: plastic zone against the remaining ligament")
               + self.assumed_note("Record: " + _e(c["ssy_basis"]))
-              + f'<div class="meaning">{_e(c["ssy_meaning"])}</div></div>')
+              + f'<div class="meaning">{_e(c["ssy_meaning"])}</div>'
+              + '<div class="meaning"><b>In practical terms.</b> ' + self.ssy_plain()
+              + "</div></div>")
         sh = c["shakedown"]
         rows = [f"<tr>{self.t(sh['status'])}{self.td('result:/checks/shakedown/elastic_range_mpa', 'f2')}"
                 f"{self.td('result:/checks/shakedown/limit_mpa', 'f1')}{self.td('result:/checks/shakedown/ratio', 'f3')}"
@@ -1604,6 +2297,10 @@ class _Report:
         t4 = ('<div data-check="growth_validity">'
               + self.table(["Status", "Largest Lr", "Limit", "Reason"], rows,
                            "Growth validity (Lr at most 1, owner card B15)") + "</div>")
+        return ("<h4>σ_ref consistency</h4>" + t1 + "<h4>Small-scale yielding</h4>" + t2
+                + "<h4>Shakedown</h4>" + t3 + "<h4>Growth validity</h4>" + t4)
+
+    def findings_table(self) -> str:
         rows = []
         for k, f in enumerate(self.r["findings"]):
             base = f"result:/findings/{k}"
@@ -1623,13 +2320,7 @@ class _Report:
                         "Findings record: every finding of the result, as recorded",
                         intro="The complete findings record of the result follows; no finding "
                         "is omitted.")
-        body = (self.sub("s9-1", "σ_ref consistency", t1)
-                + self.sub("s9-2", "Small-scale yielding", t2)
-                + self.sub("s9-3", "Shakedown", t3)
-                + self.sub("s9-4", "Growth validity", t4)
-                + self.sub("s9-5", "Findings record", t5))
-        return self.section("s9", "Checks", "Consistency checks and the complete findings record.",
-                            body)
+        return t5
 
     # ======================================================================= #
     # 10 Conclusions, 11 Recommendations
@@ -1643,7 +2334,7 @@ class _Report:
                 f'<span data-part="disposition"><b>{disposition}</b></span></li>')
 
     def conclusions(self) -> str:
-        self.begin("10")
+        self.begin("7")
         r, g = self.r, self.r["growth"]
         imin, imax = self.i_fmin, self.i_fmax
         ff = g["non_governing_planes"]["fusion_face"]["none"]
@@ -1658,7 +2349,7 @@ class _Report:
                 + self.a(imax) + " mm,",
                 "against the API 579-1:2016 Level 2 criterion F &gt; "
                 + self.v(self.fad_cmp, "f1") + ":",
-                "every established depth is inside the envelope."),
+                "every established depth is inside the envelope (" + self.ref("fad") + ")."),
             self.concl(
                 "With the user-supplied growth law and R = " + self.v("result:/growth/r_ratio", "f1") + ",",
                 "the growth life from a0 = " + self.v("result:/growth/a0_mm", "f2") + " mm to the "
@@ -1675,9 +2366,11 @@ class _Report:
                 + self.v("result:/growth/life_to_last_ssy_valid/a_mm", "f3") + " mm, "
                 + self.v("result:/growth/life_to_last_ssy_valid/cycles", "int") + " cycles,",
                 "against the demand of " + self.v("result:/growth/demand_cycles", "int") + " cycles:",
-                "below the demand; the growth life beyond a = "
+                "below the demand (" + self.ref("growth") + "); the growth life beyond a = "
                 + self.v("result:/growth/life_to_last_ssy_valid/a_mm", "f3") + " mm is not "
-                "established. On the cyclic plastic zone (meaning, not gating) validity extends "
+                "established by the linear-elastic method. This is a method limitation, not a "
+                "code restriction and not a work-scope exclusion; closing it needs further "
+                "analysis (an elastic-plastic, J-based growth assessment). On the cyclic plastic zone (meaning, not gating) validity extends "
                 "to " + self.v("result:/growth/life_to_last_cyclic_ssy_valid/a_mm", "f2") + " mm, "
                 + self.v("result:/growth/life_to_last_cyclic_ssy_valid/cycles", "int") + " cycles."),
             self.concl(
@@ -1704,18 +2397,19 @@ class _Report:
                 "for service on this assessment."),
         ]
         body = (self.p("Each conclusion states its basis, the governing result, the criterion "
-                       "and the disposition. Recommendations follow separately in Section 11.")
+                       "and the disposition. Recommendations follow separately in Section 8.")
                 + f'<div class="concl"><ul>{"".join(items)}</ul></div>')
-        return self.section("s10", "Conclusions",
+        return self.section("s7", "Conclusions",
                             "Basis, governing result, criterion and disposition.", body)
 
     def recommendations(self) -> str:
-        self.begin("11")
+        self.begin("8")
         recs = [
             ("Elastic-plastic growth.", "A J-based (elastic-plastic) fatigue growth assessment "
              "of the states beyond a = "
              + self.v("result:/growth/life_to_last_ssy_valid/a_mm", "f3")
-             + " mm is recommended; it is needed to establish the growth life against the demand."),
+             + " mm is recommended; it is the further analysis that closes the method "
+             "limitation and establishes the growth life against the demand."),
             ("Code partial safety factors.", "Partial safety factors with a basis should be "
              "supplied so that the evidence item psf_basis can be established."),
             ("Residual stress.", "A residual-stress measurement at the weld root, or a cited "
@@ -1733,13 +2427,13 @@ class _Report:
         items = "".join(f'<li class="recommendation"><b>{h}</b> {t}</li>' for h, t in recs)
         body = self.p("The following actions are recommended to close the limitations that "
                       "govern the disposition.") + f"<ol>{items}</ol>"
-        return self.section("s11", "Recommendations", "Actions that close the limitations.", body)
+        return self.section("s8", "Recommendations", "Actions that close the limitations.", body)
 
     # ======================================================================= #
     # 12 References, Appendix A
     # ======================================================================= #
     def references(self) -> str:
-        self.begin("12")
+        self.begin("9")
         items = []
         for n, (_, ref) in enumerate(self.refs, 1):
             text = _e(ref.text)
@@ -1749,7 +2443,7 @@ class _Report:
             items.append(f'<li><span class="rn">[{n}]</span><span>{text}</span></li>')
         body = (self.p("Only the procedures, laws and public data sources used are cited.")
                 + f'<ol class="refs">{"".join(items)}</ol>')
-        return self.section("s12", "References", "Cited procedures, methods and data sources.",
+        return self.section("s9", "References", "Cited procedures, methods and data sources.",
                             body)
 
     def appendix(self) -> str:
@@ -1797,23 +2491,21 @@ class _Report:
     # Page
     # ======================================================================= #
     def render(self) -> str:
+        for n, (key, _) in enumerate(TOC_ITEMS, 1):
+            self.labels[key] = str(n)
         cover = self.cover()
-        sections = [self.summary(), self.introduction(), self.design_basis(), self.assumptions(),
-                    self.criteria(), self.methodology(), self.verification(), self.results(),
-                    self.checks(), self.conclusions(), self.recommendations(), self.references(),
+        front = self.front_matter()
+        sections = [self.introduction(), self.summary(), self.design_basis(),
+                    self.methodology(), self.results(), self.verification(),
+                    self.conclusions(), self.recommendations(), self.references(),
                     self.appendix()]
-        toc_items = [("s1", "Executive summary"), ("s2", "Introduction"),
-                     ("s3", "Design basis and source register"),
-                     ("s4", "Assumptions and limitations"), ("s5", "Acceptance criteria"),
-                     ("s6", "Analysis methodology"), ("s7", "FE model and verification"),
-                     ("s8", "Results by governing case"), ("s9", "Checks"),
-                     ("s10", "Conclusions"), ("s11", "Recommendations"), ("s12", "References")]
         toc = ('<nav class="toc" aria-label="Contents"><p class="tt">Contents</p><ol>'
-               + "".join(f'<li><a href="#{k}">{v}</a></li>' for k, v in toc_items)
-               + '</ol><p class="tt" style="margin-top:14px"><a href="#appendix-a">Appendix A '
+               + "".join(f'<li><a href="#{k}">{v}</a></li>' for k, v in TOC_ITEMS)
+               + '</ol><p class="tt" style="margin-top:14px"><a href="#front-matter">Front '
+               'matter</a></p><p class="tt"><a href="#appendix-a">Appendix A '
                "– Reproducibility data</a></p></nav>")
         style, script = _template_parts(_DEFAULT_TEMPLATE)
-        return f"""<!DOCTYPE html>
+        page = f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{html.escape(TITLE)} &middot; {REPORT_ID}</title>
@@ -1822,20 +2514,22 @@ class _Report:
 <div class="doc" id="top">
   <header class="masthead"><div class="wrap" style="max-width:1240px">
     <div class="brand">{_wordmark(ORGANISATION)} &middot; {DISCIPLINE}</div>
-    <div class="mh-legend"><span class="lg">{REPORT_ID} &middot; Rev A &middot; {html.escape(self.date)}</span></div>
+    <div class="mh-legend"><span class="lg">{REPORT_ID} &middot; {REVISION} &middot; {html.escape(self.date)}</span></div>
   </div></header>
   {cover}
+  {front}
   <div class="shell">
     {toc}
     <main class="main">{"".join(sections)}</main>
   </div>
   <footer><div class="wrap" style="max-width:1240px">
     <div class="foot-grid">
-      <div><h3>{REPORT_ID} &middot; Rev A</h3>
-        <p>Issued for owner review, {html.escape(self.date)}. Design basis assumed throughout.</p></div>
+      <div><h3>{REPORT_ID} &middot; {REVISION}</h3>
+        <p>{REVISION_PURPOSE.capitalize()}, {html.escape(self.date)}. Design basis assumed throughout.</p></div>
       <div><h3>Provenance</h3><ul>
         <li>Numbers carry their source path (data-src).</li>
-        <li>FE receipts verified by schema, deck-hash and guard checks.</li></ul></div>
+        <li>FE receipts verified by schema, deck-hash and guard checks.</li>
+        <li>FE pictures drawn from the receipt decks (hash-checked).</li></ul></div>
     </div>
     <div class="foot-bar"><span>{ORGANISATION} &middot; {DISCIPLINE}</span>
       <span>House calculation report format (CalcReport engine)</span></div>
@@ -1843,10 +2537,25 @@ class _Report:
 </div>
 {script}
 </body></html>"""
+        lot = "".join(f'<li><a href="#{anc}">Table {num} – {html.escape(_strip_tags(text))}</a></li>'
+                      for kind, num, text, anc in self.captions if kind == "Table")
+        lof = "".join(f'<li><a href="#{anc}">Figure {num} – {html.escape(_strip_tags(text))}</a></li>'
+                      for kind, num, text, anc in self.captions if kind == "Figure")
+        page = page.replace("\u27e6LOT\u27e7", lot).replace("\u27e6LOF\u27e7", lof)
+        for key, label in self.labels.items():
+            page = page.replace(f"\u27e6{key}\u27e7", label)
+        if "\u27e6" in page:
+            left = sorted(set(re.findall("\u27e6([^\u27e7]*)\u27e7", page)))
+            raise ValueError(f"unresolved report labels: {left}")
+        return page
+
+
+def _strip_tags(text: str) -> str:
+    return re.sub(r"<[^>]+>", "", html.unescape(text))
 
 
 def build_report(result: Any, register: Mapping, receipts_meta: Mapping, *,
-                 issue_date: Optional[str] = None) -> str:
+                 issue_date: Optional[str] = None, figures: Optional[Mapping] = None) -> str:
     """The report HTML for a crack assessment result (object or ``to_dict()``).
 
     ``issue_date`` (ISO date) is the only non-deterministic input; it defaults to today.
@@ -1854,7 +2563,8 @@ def build_report(result: Any, register: Mapping, receipts_meta: Mapping, *,
     record = result.to_dict() if hasattr(result, "to_dict") else dict(result)
     record = json.loads(json.dumps(record))  # plain JSON types, as the data-src paths see them
     date = issue_date or _dt.date.today().isoformat()
-    return _Report(record, register, receipts_meta, date).render()
+    figs = figures if figures is not None else _default_figures()
+    return _Report(record, register, receipts_meta, date, figs).render()
 
 
 def _run_case(case: Mapping) -> dict:
@@ -1873,8 +2583,10 @@ def generate(input_path: Path, out_path: Path, *, issue_date: Optional[str] = No
     if result is None:
         result = _run_case(case)
     register = json.loads((repo / case["design_data_register"]).read_text("utf-8"))
-    meta = receipts_meta(repo / case["fe_states_dir"])
-    page = build_report(result, register, meta, issue_date=issue_date)
+    fe_dir = repo / case["fe_states_dir"]
+    meta = receipts_meta(fe_dir)
+    figures = load_figures(fe_dir.parent / "figures")
+    page = build_report(result, register, meta, issue_date=issue_date, figures=figures)
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(page, encoding="utf-8")
