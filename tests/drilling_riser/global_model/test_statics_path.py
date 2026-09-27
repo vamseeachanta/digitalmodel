@@ -103,6 +103,7 @@ def test_ramp_failure_is_statics_diverged_with_the_fraction_reached(base_spec, m
     spec = ad.spec(c)
     target = cp.tensioner_vertical_target_n(spec)
     m = _FakeModel(lambda t: target * t / 100.0)
+    m.environment.RefCurrentSpeed = 2.0  # the model's reference current speed (the case's 2.0 m/s surface value)
     orig = m.CalculateStatics
 
     def fail_at_full():

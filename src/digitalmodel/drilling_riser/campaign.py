@@ -48,9 +48,14 @@ from .global_model.spec import RiserGlobalModelSpec
 
 SEED_PCT = -2.0
 STEP_PCT = 0.5
-RESIDUAL_REL = 1.0e-3
+RESIDUAL_REL = 1.0e-3  # ring vertical balance (equilibrium): 1e-3 of the target
+# tensioner vertical sum: a branch detector. The lines are calibrated to the target at zero offset in still water;
+# at an offset or in current the sum follows the line geometry (probe: +3.6e-3 at +10 % WD in the 10-yr loop
+# current). The non-physical yawed branch sits at -5.7 %; 1 % separates the two.
+TENSIONER_VERTICAL_REL = 1.0e-2
 RING_YAW_MAX_DEG = 1.0
 KN = 1000.0
+G = 9.80665
 
 
 def load_base_spec(path: str | Path) -> RiserGlobalModelSpec:
@@ -113,23 +118,110 @@ def case_spec(case: dict) -> RiserGlobalModelSpec:
 
 
 def seeded_statics(model, spec: RiserGlobalModelSpec, *, seed_pct: float = SEED_PCT,
-                   step_pct: float = STEP_PCT) -> dict[str, Any]:
-    """Statics by continuation from a -2 % WD seed (along x) to the spec's vessel offset, in steps of at
-    most ``step_pct`` % WD. From a straight start the conductor-founded model can converge to a non-physical
-    branch (ring yawed 180 deg); the seed avoids it, and :func:`physical_state_checks` confirms it."""
+                   step_pct: float = STEP_PCT, start: tuple[float, float] | None = None,
+                   target: tuple[float, float] | None = None, solve=None) -> dict[str, Any]:
+    """Statics by continuation from a -2 % WD seed (along x) - or from ``start`` - to the spec's vessel offset
+    (or ``target``), in steps of at most ``step_pct`` % WD. From a straight start the conductor-founded model can
+    converge to a non-physical branch (ring yawed 180 deg); the seed avoids it, and :func:`physical_state_checks`
+    confirms it."""
     wd = spec.environment.water_depth_m
-    x0, y0 = seed_pct / 100.0 * wd, 0.0
-    x1, y1 = spec.vessel_offset_m
+    x0, y0 = start if start is not None else (seed_pct / 100.0 * wd, 0.0)
+    x1, y1 = target if target is not None else spec.vessel_offset_m
+    solve = solve or model.CalculateStatics
     n = max(1, math.ceil(math.hypot(x1 - x0, y1 - y0) / (step_pct / 100.0 * wd) - 1e-9))
     for i in range(n + 1):
         f = i / n
         x, y = x0 + f * (x1 - x0), y0 + f * (y1 - y0)
         for name in ("Vessel", "TensionRing"):
             model[name].InitialX, model[name].InitialY = x, y
-        model.CalculateStatics()
+        solve()
         if i < n:
             model.UseCalculatedPositions(True)
     return {"method": "seeded continuation", "steps": n + 1}
+
+
+CURRENT_RAMP = (0.25, 0.5, 0.75, 1.0)
+CALIBRATION_TOL = 1.0e-6
+
+
+def _ring_tensioners(model) -> list:
+    return [o for o in model.objects if o.typeName == "Winch" and o.name.startswith("Tensioner")]
+
+
+def calibrate_line_tension(model, spec: RiserGlobalModelSpec, *, solve, tol: float = CALIBRATION_TOL,
+                           max_iter: int = 6) -> dict[str, Any]:
+    """Scale the tensioner line tension until the vertical sum equals the target in the current static state
+    (called at zero offset in still water: the tensioners are set at the spaced-out position; at an offset or in
+    current the vertical sum then follows the line geometry, as with a real tensioner setting)."""
+    target = tensioner_vertical_target_n(spec)
+    factor, calls = 1.0, 0
+    for _ in range(max_iter):
+        f = target / _tensioner_vertical_n(model)  # read in the static state
+        if abs(f - 1.0) < tol:
+            break
+        model.UseCalculatedPositions(True)  # before any data change (both reset the model)
+        for w in _ring_tensioners(model):
+            for i in range(w.GetDataRowCount("StageValue")):
+                w.SetData("StageValue", i, w.GetData("StageValue", i) * f)
+        factor *= f
+        solve()
+        calls += 1
+    else:
+        raise RuntimeError(f"tensioner line tension calibration did not converge ({max_iter} iterations)")
+    return {"factor": factor, "statics_calls": calls, "target_n": target}
+
+
+def robust_statics(model, spec: RiserGlobalModelSpec, params: dict) -> dict[str, Any]:
+    """Campaign statics path (W4 batch-1 probe, 2026-09-27):
+
+    1. current off: seeded continuation from the -2 % WD seed to zero offset;
+    2. ``lines`` tensioners: line tension calibrated so the vertical sum equals the target there;
+    3. continuation from zero offset to the case offset in <= ``statics_step_pct`` % WD steps;
+    4. current ramped in at 25, 50, 75 and 100 % of its speed.
+
+    The static state is unchanged by the path; the path avoids the non-physical branch and the divergence of a
+    full-current start. A failure in the ramp is ``statics_diverged`` with the fraction of the current reached.
+    """
+    from digitalmodel.solvers.orcaflex.parallel_runner import CaseFailed
+
+    step = float(params.get("statics_step_pct", STEP_PCT))
+    env = model.environment
+    speed = float(env.RefCurrentSpeed) if spec.current is not None else 0.0
+    n_calls = [0]
+
+    def solve():
+        model.CalculateStatics()
+        n_calls[0] += 1
+
+    info: dict[str, Any] = {"method": "still-water calibration, offset continuation, current ramp"}
+    if speed:
+        env.RefCurrentSpeed = 0.0
+    a = seeded_statics(model, spec, step_pct=step, target=(0.0, 0.0), solve=solve)
+    if spec.tensioners.representation == "lines" and params.get("tension_calibration", True):
+        info["calibration"] = calibrate_line_tension(model, spec, solve=solve)
+    if any(abs(v) > 1e-9 for v in spec.vessel_offset_m):
+        model.UseCalculatedPositions(True)
+        b = seeded_statics(model, spec, step_pct=step, start=(0.0, 0.0), solve=solve)
+    else:
+        b = {"steps": 0}
+    info["steps"] = a["steps"] + b["steps"]
+    info["offset_steps_end"] = n_calls[0]
+    info["current_ramp"] = []
+    if speed:
+        reached = 0.0
+        for f in CURRENT_RAMP:
+            model.UseCalculatedPositions(True)  # before the data change (both reset the model)
+            env.RefCurrentSpeed = f * speed
+            try:
+                solve()
+            except Exception as exc:  # noqa: BLE001 - a definite statics failure with the fraction reached
+                env.RefCurrentSpeed = speed
+                raise CaseFailed("statics_diverged", f"statics did not converge at {f:g} of the current "
+                                                     f"(converged at {reached:g}): {str(exc).strip()[-200:]}") from exc
+            reached = f
+            info["current_ramp"].append(f)
+    info["statics_calls"] = n_calls[0]
+    return {**info, **physical_state_checks(model, spec)}
 
 
 def _tensioner_vertical_n(model) -> float:
@@ -145,6 +237,11 @@ def _end_gz_n(model, line: str, end: str) -> float:
     return model[line].StaticResult("End GZ force", ofx.oeEndA if end == "A" else ofx.oeEndB) * KN
 
 
+def _ring_buoyancy_n(model, spec: RiserGlobalModelSpec) -> float:
+    """Buoyancy of the wetted part of the tension ring (the ring sets down towards MSL at large offsets)."""
+    return spec.environment.water_density_kg_m3 * G * float(model["TensionRing"].StaticResult("Wetted volume"))
+
+
 def tensioner_vertical_target_n(spec: RiserGlobalModelSpec) -> float:
     """Vertical tensioner force the lines should deliver: the total, less the failed tensioners' share."""
     t = spec.tensioners
@@ -158,10 +255,12 @@ def physical_state_checks(model, spec: RiserGlobalModelSpec) -> dict[str, Any]:
     against 6,026 kN, LMRP-base tension 758 kN against 1,102 kN). Accepted only with
 
     * tension-ring yaw within 1 deg;
-    * tensioner vertical sum (global winch end points) within 1e-3 of the target (``lines`` tensioners);
-    * ring vertical balance within 1e-3 of the target: tensioner vertical - ring weight + global vertical end
-      force of the riser at end A - that of the inner barrel at end B. The global end forces keep the balance
-      exact at an offset, where the effective-tension form of ``ring_vertical_residual_n`` is not.
+    * tensioner vertical sum (global winch end points) within 1 % of the target (``lines`` tensioners; the
+      branch sits at -5.7 %, the physical line-geometry change at an offset is a few 1e-3);
+    * ring vertical balance within 1e-3 of the target: tensioner vertical - ring weight + buoyancy of the wetted
+      ring + global vertical end force of the riser at end A - that of the inner barrel at end B. The global end
+      forces keep the balance exact at an offset, where the effective-tension form of ``ring_vertical_residual_n``
+      is not.
     """
     from digitalmodel.solvers.orcaflex.parallel_runner import CaseFailed
 
@@ -169,6 +268,7 @@ def physical_state_checks(model, spec: RiserGlobalModelSpec) -> dict[str, Any]:
 
     target = tensioner_vertical_target_n(spec)
     tol = RESIDUAL_REL * target
+    tol_tv = TENSIONER_VERTICAL_REL * target
     yaw = float(model["TensionRing"].StaticResult("Rotation 3"))
     yaw = (yaw + 180.0) % 360.0 - 180.0
     out: dict[str, Any] = {"ring_yaw_deg": yaw}
@@ -177,10 +277,11 @@ def physical_state_checks(model, spec: RiserGlobalModelSpec) -> dict[str, Any]:
         bad.append(f"tension ring yaw {yaw:.2f} deg")
     if spec.tensioners.representation == "lines":
         tv = _tensioner_vertical_n(model)
-        bal = (tv - tension_references(spec)["ring_weight_n"] + _end_gz_n(model, "Riser", "A")
+        buoy = _ring_buoyancy_n(model, spec)
+        bal = (tv - tension_references(spec)["ring_weight_n"] + buoy + _end_gz_n(model, "Riser", "A")
                - _end_gz_n(model, "InnerBarrel", "B"))
-        out.update(tensioner_vertical_n=tv, ring_balance_n=bal)
-        if abs(tv - target) > tol:
+        out.update(tensioner_vertical_n=tv, ring_balance_n=bal, ring_buoyancy_n=buoy)
+        if abs(tv - target) > tol_tv:
             bad.append(f"tensioner vertical {tv / KN:.1f} kN against {target / KN:.1f} kN")
         if abs(bal) > tol:
             bad.append(f"ring balance {bal / KN:.1f} kN")
@@ -258,11 +359,9 @@ class RiserCampaignAdapter:
         settings = apply_statics_settings(model, p)
         spec = self.spec(case)
         if p.get("statics", "seeded") == "seeded":
-            info = seeded_statics(model, spec, step_pct=float(p.get("statics_step_pct", STEP_PCT)))
-        else:
-            model.CalculateStatics()
-            info = {"method": "direct"}
-        return {**info, **settings, **physical_state_checks(model, spec)}
+            return {**robust_statics(model, spec, p), **settings}
+        model.CalculateStatics()
+        return {"method": "direct", **settings, **physical_state_checks(model, spec)}
 
     def extract(self, model, case: dict) -> dict[str, Any]:
         from .global_model import orcaflex_run as orun
