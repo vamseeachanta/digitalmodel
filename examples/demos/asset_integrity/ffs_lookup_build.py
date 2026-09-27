@@ -1,10 +1,10 @@
 # ABOUTME: Builds a representative indexed FFS lookup (ffs_results.json +
-# ABOUTME: ffs_cases.csv) across pipe + plate domains for the Deckhand API.
+# ABOUTME: ffs_cases.csv) across pipe + plate domains for point queries.
 """Build the FFS indexed lookup artifact.
 
 Sweeps representative corroded-pipe and plate-metal-loss scenarios through the
 uniform query router and writes ``ffs_results.json`` (meta/lookup/index) +
-``ffs_cases.csv`` — the O(1) lookup table a downstream API (Deckhand) queries.
+``ffs_cases.csv`` — the O(1) lookup table a downstream query layer reads.
 
 Run:
     .venv/bin/python examples/demos/asset_integrity/ffs_lookup_build.py

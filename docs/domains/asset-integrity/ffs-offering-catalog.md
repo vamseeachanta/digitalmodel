@@ -7,7 +7,7 @@
 ## How to read these tables
 
 - **Tier**: T1 field screen (Level 1 / code screening rule); T2 office Level 2 (closed-form); T3 Level 3 (numerical).
-- **Status**: `live` (engine, tests, validation record, registered workflow, Deckhand route) · `routed` (workflow and route exist, no validation record) · `validated` (engine + tests + validation record, no workflow) · `engine` (engine + tests only) · `planned` (issue filed) · `none` (roadmap candidate, no issue yet). A row is never stronger than the strongest engine it depends on; `none` rows list no engines.
+- **Status**: `live` (engine, tests, validation record, registered durable workflow with example) · `workflow` (registered durable workflow with example, no validation record) · `validated` (engine + tests + validation record, no registered workflow) · `engine` (engine + tests only) · `planned` (issue filed) · `none` (roadmap candidate, no issue yet). A row is never stronger than the strongest engine it depends on; `none` rows list no engines.
 - Codes are cited as publisher identifiers only. Clause text, tables, figures and licensed numeric thresholds stay out of this repo; thresholds are user inputs whose public defaults are recorded on the implementing issue.
 - API 579-1 parts: 3 brittle fracture · 4 general metal loss · 5 local metal loss · 6 pitting · 7 hydrogen blisters / HIC / SOHIC · 8 weld misalignment and shell distortion · 9 crack-like flaws · 10 creep · 11 fire damage · 12 dents and gouges · 13 laminations · 14 fatigue (2016+). API RP 571 supplies the damage-mechanism taxonomy that routes a finding to a part (`ffs_damage_mechanism_crosswalk.yml`).
 
@@ -32,7 +32,7 @@ Frameworks: ASME B31.8S (22 root causes in 9 threat categories), API RP 1160, AP
 | Geohazard / ground-movement strain demand | API RP 1133 | — | T2 | none |
 | Direct-assessment programme support (ECDA / ICDA region and indication ranking) | NACE SP0502, NACE SP0206 | — | T1 | none |
 | Composite repair selection behind a REPAIR verdict | ASME PCC-2, ISO 24817 | composite-repair | T2 | engine |
-| Re-inspection interval / remaining life | ASME B31.8S, API RP 1160 | inspection-planning | T1 | routed |
+| Re-inspection interval / remaining life | ASME B31.8S, API RP 1160 | inspection-planning | T1 | workflow |
 
 ## 2. Refining and petrochemical fixed equipment
 
@@ -94,7 +94,7 @@ Frameworks: API RP 2MIM, API RP 2FSIM, API RP 2I, DNV-OS-E301, DNV-OS-E303. Chai
 | Mooring chain, wire and fibre rope, connectors | Fibre rope creep, abrasion, particle ingress | DNV-OS-E303 | synthetic-rope-fatigue | T1, T2 | engine (fatigue only; no condition-based discard) |
 | Mooring chain, wire and fibre rope, connectors | Anchor holding capacity after seabed change / drag | DNV-OS-E301 | — | T2 | none |
 | Steel catenary / top-tensioned production risers | Metal loss, pitting, cracks | API STD 2RD, DNV-ST-F201, API 579 Pt 4/5/6/9, BS 7910 | ffs-metal-loss, crack-fad | T1, T2 | engine |
-| Steel catenary / top-tensioned production risers | Fatigue (wave, VIV) | DNV-ST-F201, DNV-RP-C203 | riser-fatigue | T2 | routed |
+| Steel catenary / top-tensioned production risers | Fatigue (wave, VIV) | DNV-ST-F201, DNV-RP-C203 | riser-fatigue | T2 | workflow |
 | Drilling / completion riser joints and wellhead fatigue | Metal loss / weld flaws / collapse-limited depth | ASME B31G, DNV-RP-F101, BS 7910 | riser-joint-ffs | T1, T2 | engine (real C-scan fixtures; workflow #2183) |
 | Drilling / completion riser joints and wellhead fatigue | Wellhead / conductor fatigue from riser loads | API RP 17G, DNV-RP-C203 | — | T2 | none |
 | Unbonded flexible pipe | Outer sheath damage / annulus flooding | API RP 17B | flexible-pipe-screen (#2200) | T1 | planned |
@@ -125,7 +125,7 @@ Frameworks: IACS CSR Ch 13 renewal criteria (wastage allowance, substantial-corr
 | Defect / mechanism | Governing codes | Engine(s) | Tier | Status |
 |---|---|---|---|---|
 | Thickness diminution vs renewal thickness (wastage allowance, substantial-corrosion band) | IACS CSR Ch 13 | hull-wastage (#2202) | T1 | planned |
-| Buckling of thinned plates / panels | IACS CSR Ch 13, DNV-RP-C201 | plate-panel-buckling | T2 | routed (plate metal-loss FFS on the capabilities page) |
+| Buckling of thinned plates / panels | IACS CSR Ch 13, DNV-RP-C201 | plate-panel-buckling | T2 | workflow (plate metal-loss FFS on the capabilities page) |
 | Pitting intensity on plating | IACS Rec. 84 | pitting | T1 | engine |
 | Hull girder section modulus loss against class limits | IACS CSR Ch 13 | hull-girder, hull-wastage (#2202) | T2 | engine |
 | Fatigue cracks at details | IACS CSR Ch 13, BS 7910 | sn-fatigue, crack-fad | T2 | engine |
@@ -141,27 +141,27 @@ Frameworks: IACS CSR Ch 13 renewal criteria (wastage allowance, substantial-corr
 
 ## 9. Subsea pipeline / flowline design screens reusable in an integrity review
 
-Data: `ffs_design_screen_catalog.yml` (owner decision D5, 2026-09-25). These are routed design checks a pipeline integrity review reuses; they never produce a fitness-for-service verdict and are not counted in the coverage summary below.
+Data: `ffs_design_screen_catalog.yml` (owner decision D5, 2026-09-25). These are registered design-check workflows a pipeline integrity review reuses; they never produce a fitness-for-service verdict and are not counted in the coverage summary below.
 
 | Screen | Governing codes | Engine(s) | Tier | Status |
 |---|---|---|---|---|
-| Free spans (VIV onset screening) | DNV-RP-F105 | free-span | T2 | routed |
+| Free spans (VIV onset screening) | DNV-RP-F105 | free-span | T2 | workflow |
 | Upheaval / lateral buckling | DNV-RP-F110 | — | T2 | none |
-| On-bottom stability | DNV-RP-F109 | on-bottom-stability | T1 | routed |
+| On-bottom stability | DNV-RP-F109 | on-bottom-stability | T1 | workflow |
 
 ## Coverage summary
 
 | Status | Rows |
 |---|---|
 | live | 0 |
-| routed | 3 |
+| workflow | 3 |
 | validated | 6 |
 | engine | 31 |
 | planned | 25 |
 | none | 13 |
 | total | 78 |
 
-No row is `live` today: the 3 `routed` rows lack validation records and the 6 `validated` rows lack routes. The 13 `none` rows are the roadmap beyond the filed issues: **pipelines-midstream**: manufacturing defects in pipe body, geohazard / ground-movement strain demand, direct-assessment programme support (ECDA / ICDA region and indication ranking); **downstream-fixed-equipment**: exchanger tube bundle thinning / pitting / tube plugging limits, fired-heater tube creep, bulging, carburization, floating roof / seal / appurtenance damage; **upstream-offshore-fixed**: conductor / caisson wall loss, guide wear, fatigue; **upstream-offshore-floating**: wire rope broken wires / corrosion / diameter loss, anchor holding capacity after seabed change / drag, wellhead / conductor fatigue from riser loads; **offshore-wind**: grouted connection slippage / cracking, bolted flange preload loss, lifetime extension assessment (remaining fatigue life, load re-evaluation).
+No row is `live` today: the 3 `workflow` rows lack validation records and the 6 `validated` rows lack a registered workflow. The 13 `none` rows are the roadmap beyond the filed issues: **pipelines-midstream**: manufacturing defects in pipe body, geohazard / ground-movement strain demand, direct-assessment programme support (ECDA / ICDA region and indication ranking); **downstream-fixed-equipment**: exchanger tube bundle thinning / pitting / tube plugging limits, fired-heater tube creep, bulging, carburization, floating roof / seal / appurtenance damage; **upstream-offshore-fixed**: conductor / caisson wall loss, guide wear, fatigue; **upstream-offshore-floating**: wire rope broken wires / corrosion / diameter loss, anchor holding capacity after seabed change / drag, wellhead / conductor fatigue from riser loads; **offshore-wind**: grouted connection slippage / cracking, bolted flange preload loss, lifetime extension assessment (remaining fatigue life, load re-evaluation).
 
 ## Sources (public overviews consulted 2026-09-25)
 

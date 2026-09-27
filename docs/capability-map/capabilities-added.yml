@@ -43,8 +43,8 @@ sections:
 # Format: engines.<section id>.<engine key>: {status, module?, workflow?, validation?, issue?}
 engines:
   ffs:
-    ffs-metal-loss: {status: validated, module: asset_integrity.assessment.ffs_coordinator, workflow: ffs-metal-loss, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md}
-    api579-legacy: {status: routed, module: asset_integrity.API579, workflow: api579-pipe-ffs-b314}
+    ffs-metal-loss: {status: live, module: asset_integrity.assessment.ffs_coordinator, workflow: ffs-metal-loss, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md}
+    api579-legacy: {status: workflow, module: asset_integrity.API579, workflow: api579-pipe-ffs-b314}
     corroded-pipe: {status: validated, module: asset_integrity.corroded_pipe, validation: docs/domains/asset-integrity/b31g-validation-2026-06-27.md, issue: 2181}
     rstreng-2d: {status: validated, module: asset_integrity.rstreng_2d, validation: docs/domains/rstreng-2d-validation-2026-06-29.md, issue: 2181}
     dnv-f101: {status: validated, module: asset_integrity.dnv_rp_f101, validation: docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md, issue: 2181}
@@ -57,14 +57,14 @@ engines:
     measurement-sufficiency: {status: engine, module: asset_integrity.assessment.measurement_sufficiency, workflow: ffs-metal-loss}
     rbi: {status: engine, module: asset_integrity.rbi_screening, issue: 2185}
     composite-repair: {status: engine, module: asset_integrity.composite_repair, issue: 2185}
-    inspection-planning: {status: routed, module: asset_integrity.inspection_planning, workflow: inspection-planning, issue: 2180}
+    inspection-planning: {status: workflow, module: asset_integrity.inspection_planning, workflow: inspection-planning, issue: 2180}
     riser-joint-ffs: {status: engine, module: asset_integrity.riser_joint_ffs, issue: 2183}
-    plate-panel-buckling: {status: routed, module: infrastructure.base_solvers.structural.plate_buckling, workflow: plate-buckling}
+    plate-panel-buckling: {status: workflow, module: infrastructure.base_solvers.structural.plate_buckling, workflow: plate-buckling}
     jacket-member-joint: {status: engine, module: structural.jacket_topside}
     mooring-screen: {status: engine, module: mooring_resilience.screening}
     mooring-fatigue: {status: engine, module: mooring_fatigue}
     synthetic-rope-fatigue: {status: engine, module: synthetic_rope_mooring_fatigue}
-    riser-fatigue: {status: routed, module: riser_fatigue, workflow: riser-fatigue}
+    riser-fatigue: {status: workflow, module: riser_fatigue, workflow: riser-fatigue}
     hull-girder: {status: engine, module: hull_girder_screening}
     sn-fatigue: {status: engine, module: structural.fatigue}
     scour: {status: engine, module: geotechnical.scour}

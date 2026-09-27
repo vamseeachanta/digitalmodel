@@ -4,12 +4,14 @@
 **Scope:** every fitness-for-service engine in `digitalmodel.asset_integrity` plus `fatigue/crack_growth`, scored on what a prospect can *run and see*, not on what exists in source.
 **Companion notes:** `ffs-architecture.md`, `ffs-validation-record-2026-06-27.md`, `level3-and-part9-program-2026-09-25.md`
 
+**Amendment 2026-09-27:** the delivery channel is a registered durable workflow + report (owner directive 2026-09-27; no external routing layer). The R4 definition below is restated accordingly; the "Route" column records the 2026-09-25 state and is historical.
+
 ## Readiness scale
 
 | Score | Meaning |
 |---|---|
-| R4 | Engine + tests + validation record + registered workflow with example + Deckhand route + public page |
-| R3 | Engine + tests + validation record + workflow, but no route or page |
+| R4 | Engine + tests + validation record + registered durable workflow with example + committed report + public page |
+| R3 | Engine + tests + validation record + workflow, but no committed report or page |
 | R2 | Engine + tests + validation record, no workflow |
 | R1 | Engine + tests, no validation record |
 | R0 | Engine only, or tests that cannot fail |
@@ -48,7 +50,7 @@ A capability is *demonstrable* at R3 or better. Today only the legacy API 579 pi
 
 ## Findings
 
-1. **The demonstrable surface is one legacy route.** Nineteen engines, one Deckhand entry point, and it is the path the canonical coordinator replaced in #1075.
+1. **The demonstrable surface is one legacy workflow.** Nineteen engines, one demonstrable end-to-end workflow, and it is the path the canonical coordinator replaced in #1075.
 2. **Validation records stop at metal loss.** Pitting, dents, cracks, RBI, composite repair, riser joints and crack growth have tests but no record against a published example, which the epic's validation gate requires before release.
 3. **Real data is not shown.** The #1293 C-scan fixtures never reach a workflow, example or page.
 4. **The field-to-office story is not wired end to end.** Sufficiency, RBI, repair selection and interval exist as separate engines with no single example that chains them.
@@ -58,7 +60,7 @@ A capability is *demonstrable* at R3 or better. Today only the legacy API 579 pi
 
 | Issue | Demonstrator | Lifts to |
 |---|---|---|
-| #2180 | Route the canonical `ffs-metal-loss` and `inspection-planning` workflows in Deckhand; commit the `ffs-metal-loss` results; retire b314 as entry point | R4 for the coordinator and interval |
+| #2180 | Make the canonical `ffs-metal-loss` and `inspection-planning` registered workflows the entry points; commit the `ffs-metal-loss` results and report; retire b314 as entry point | R4 for the coordinator and interval |
 | #2181 | `pipeline-corroded-defect-screen`: one river-bottom UT grid through B31G / Mod B31G / RSTRENG / RSTRENG-2D / DNV-F101 / circumferential, side by side, with the existing validation records as goldens | R4 for five engines |
 | #2182 | `api579-pitting-screen` and `api579-dent-screen` workflows with validation records against published Part 6 / Part 12 examples | R1 → R4 |
 | #2183 | `riser-joint-ffs` registered on the #1293 real C-scan fixtures: acceptance envelopes, string placement, fleet roll-up, report | R1 → R4, real data shown |
