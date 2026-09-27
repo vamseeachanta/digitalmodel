@@ -97,8 +97,12 @@ from digitalmodel.cathodic_protection.dnv_rp_f103 import (
 from digitalmodel.cathodic_protection.f103_tables import (
     Exposure,
     FieldJointCoating,
+    FieldJointCoating2019,
     LinepipeCoating,
+    field_joint_coating_constants,
+    field_joint_coating_row,
     fluid_temperature_band,
+    resolve_field_joint_coating_2019,
 )
 from digitalmodel.cathodic_protection.marine_structure_cp import (
     DEFAULT_SEAWATER_RESISTIVITY_OHM_M,
@@ -638,6 +642,32 @@ def _run_b401(cfg: dict[str, Any]) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+def _f103_field_joint_coating(
+    fj_name: Any, infill: Any, edition: F103Edition
+) -> FieldJointCoating | FieldJointCoating2019:
+    """Map ``pipeline.field_joint_coating`` (+ ``field_joint_infill``) for the edition.
+
+    The edition is resolved first: 2010 uses the Table A.2 ids of
+    :class:`FieldJointCoating`; 2019 uses the DNVGL-RP-F102 (2011) ids of the
+    Table A-2 (:func:`resolve_field_joint_coating_2019`), where an id whose
+    row splits by infill (3A FBE) requires ``field_joint_infill``. No
+    ``field_joint_coating`` keeps the bare-steel ``none`` row of either edition.
+    """
+    if fj_name is None:
+        return FieldJointCoating.NONE
+    name = str(fj_name)
+    if edition == "2019":
+        return resolve_field_joint_coating_2019(name, None if infill is None else str(infill))
+    try:
+        return FieldJointCoating(name)
+    except ValueError:
+        valid = [m.value for m in FieldJointCoating]
+        raise ValueError(
+            f"Unknown field-joint coating {name!r} for DNV-RP-F103 (2010) Table A.2; "
+            f"valid ids: {valid}"
+        ) from None
+
+
 def _f103_input(
     cfg: dict[str, Any], pinned_edition: F103Edition | None = None
 ) -> tuple[BraceletDesignInput, F103Edition, dict[str, str]]:
@@ -672,8 +702,9 @@ def _f103_input(
     else:
         rho = DEFAULT_SEAWATER_RESISTIVITY_OHM_M
 
-    fj_name = pipeline.get("field_joint_coating")
-    fjc = FieldJointCoating.NONE if fj_name is None else FieldJointCoating(str(fj_name))
+    fjc = _f103_field_joint_coating(
+        pipeline.get("field_joint_coating"), pipeline.get("field_joint_infill"), edition
+    )
     kwargs: dict[str, Any] = {}
     for key in ("field_joint_area_fraction", "field_joint_count", "field_joint_length_m"):
         if pipeline.get(key) is not None:
@@ -706,6 +737,8 @@ def _f103_input(
 def _f103_results(
     inp: BraceletDesignInput, res: BraceletDesignResult, names: Mapping[str, str], u_source: str
 ) -> dict[str, Any]:
+    _, fj_row = field_joint_coating_row(inp.field_joint_coating, res.edition_used)
+    fj_a, fj_b = field_joint_coating_constants(inp.field_joint_coating, res.edition_used)
     return {
         "standard": res.standard,
         "edition": res.edition_used,
@@ -723,6 +756,9 @@ def _f103_results(
         "coating_breakdown_factors": {
             "linepipe_coating": names["coating_type"],
             "field_joint_coating": inp.field_joint_coating.value,
+            "field_joint_infill": fj_row.infill,
+            "field_joint_a": fj_a.value,
+            "field_joint_b_per_yr": fj_b.value,
             "design_life_years": inp.design_life_years,
             "mean_factor": round(res.f_cm_linepipe, 6),
             "final_factor": round(res.f_cf_linepipe, 6),

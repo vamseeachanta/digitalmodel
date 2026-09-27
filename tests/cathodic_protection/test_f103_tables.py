@@ -254,6 +254,40 @@ def test_table_a2_covers_every_field_joint_coating():
     assert set(table_a2_2019()) == set(FieldJointCoating2019)
 
 
+@pytest.mark.parametrize(("tokens", "member"), list(_FJC_2019_BY_TOKENS.items()))
+def test_resolve_2019_field_joint_id_with_infill_matches_table_a2(tokens, member):
+    # Issue #2256: every printed (FJC id, infill) pair of Table A-2 resolves to its row;
+    # the "NA" rows are addressed by their infill id (5C(1) / 5C(2)).
+    fjc_id, infill = tokens
+    if fjc_id == "NA":
+        fjc_id = infill
+    assert tbl.resolve_field_joint_coating_2019(fjc_id, infill) is member
+    assert infill in tbl.field_joint_infill_choices_2019(member)
+
+
+@pytest.mark.parametrize("member", list(FieldJointCoating2019))
+def test_resolve_2019_field_joint_amended_name(member):
+    amended = tbl._TABLE_A2_2019[member].amended_2021_id
+    infill = "none" if amended == "17A" else None
+    assert tbl.resolve_field_joint_coating_2019(amended.upper(), infill) is member
+
+
+def test_resolve_2019_field_joint_3a_requires_infill():
+    with pytest.raises(ValueError, match=r"splits this row by infill.*\['none', '4E\(2\)'\]"):
+        tbl.resolve_field_joint_coating_2019("3A")
+    assert tbl.resolve_field_joint_coating_2019("3A+4E(2)") is FieldJointCoating2019.FJC_3A_FBE_4E2_INFILL
+
+
+def test_resolve_2019_field_joint_unknown_id_lists_valid_ids():
+    with pytest.raises(ValueError, match=r"valid DNVGL-RP-F102 \(2011\) ids: \['none', '1D/2A'"):
+        tbl.resolve_field_joint_coating_2019("3B")
+
+
+def test_2010_field_joint_id_under_2019_still_raises_clearly():
+    with pytest.raises(ValueError, match=r"FieldJointCoating.FJC_3A_FBE is a DNV-RP-F103 \(2010\)"):
+        tbl.field_joint_coating_constants(FieldJointCoating.FJC_3A_FBE, "2019")
+
+
 def test_table_6_3_equals_b401_2021_table_8_6():
     from tests.cathodic_protection.test_b401_tables import table_8_6
 
