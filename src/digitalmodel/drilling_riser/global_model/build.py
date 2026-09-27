@@ -24,6 +24,7 @@ SECTIONS_KEY = "LineType, Length, TargetSegmentLength"
 WINCH_CONN_KEY = "Connection, ConnectionX, ConnectionY, ConnectionZ"
 STAGES_S = [10.0, 100.0]
 SLIP = "SlipJoint"
+TORSION_KN_M_PER_DEG = 1.0e6  # lower flex-joint twisting stiffness when the riser carries torsion
 
 
 def hydrodynamic_od_m(displaced_volume_per_m_m3: float) -> float:
@@ -193,6 +194,15 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
               [[inf, None], []],  # a free end takes no connection stiffness
               list(reversed(spec.stack)), 0, ref_z),  # the stack line runs up from the datum
     ]
+    if spec.tensioners.representation == "vertical_force":
+        # without tensioner lines nothing restrains the ring about z (the lines exclude torsion):
+        # the riser carries torsion so the ring yaw is held by the riser down to the fixed stack
+        # (OrcaFlex then needs a twisting stiffness at the finite-stiffness lower flex-joint end:
+        # a stiff finite value, so the flex joint passes torsion as the stack below it does)
+        rp = lines[1]["properties"]
+        rp["IncludeTorsion"] = True
+        rp.pop(STIFF_KEY)
+        rp[STIFF_KEY + ", ConnectionTwistingStiffness"] = [[inf, None, inf], [k_lfj, None, TORSION_KN_M_PER_DEG]]
     links: list[dict[str, Any]] = []
     if f is not None:
         # conductor/casing: fixed at its base, runs up to the wellhead datum; p-y spring links
@@ -216,7 +226,8 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
     t = spec.tensioners
     tension_kn = winch_tension_n(spec) / 1000.0
     winches = []
-    for i in range(t.count):
+    vertical_only = t.representation == "vertical_force"
+    for i in range(0 if vertical_only else t.count):
         az = math.radians(t.first_azimuth_deg + 360.0 * i / t.count)
         c, s_ = math.cos(az), math.sin(az)
         winches.append({
@@ -246,6 +257,14 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
             "TranslationalStiffness": spec.slip_joint_axial_stiffness_n_per_m / 1000.0,
         },
     }
+    ring_props: dict[str, Any] = {
+        "DegreesOfFreedomInStatics": "All", "InitialAttitude": [0, 0, 0],
+        "MomentsOfInertia": [m / 1000.0 for m in r.moments_of_inertia_kgm2],
+        "CentreOfMass": [0, 0, 0], "Height": 1.0, "CentreOfVolume": [0, 0, 0]}
+    if vertical_only:
+        # earth-fixed vertical tensioner force at the ring centre: no lateral tie to the vessel
+        ring_props["GlobalAppliedLoads"] = [{"Origin": [0, 0, 0], "Force": [0, 0, t.total_vertical_tension_n / 1000.0],
+                                             "Moment": [0, 0, 0]}]
     vt = _vessel_type(spec.vessel_motion, f"{vessel} type")
     below = [] if f is None else f.sections
     line_types = [*(_line_type(s) for s in (*spec.inner_barrel, *spec.riser)),
@@ -271,15 +290,21 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
         "lines": lines,
         "buoys_6d": [{
             "name": ring, "buoy_type": "Lumped buoy", "connection": "Free",
-            # the ring hangs from the vessel's tensioners: start it under the (offset) vessel
-            "initial_position": [ox, oy, r.z_static_m], "mass": r.mass_kg / 1000.0, "volume": r.volume_m3,
-            "properties": {"DegreesOfFreedomInStatics": "All", "InitialAttitude": [0, 0, 0],
-                           "MomentsOfInertia": [m / 1000.0 for m in r.moments_of_inertia_kgm2],
-                           "CentreOfMass": [0, 0, 0], "Height": 1.0, "CentreOfVolume": [0, 0, 0]},
+            # the ring hangs from the vessel's tensioners: start it under the (offset) vessel. With a
+            # vertical tensioner force (no lateral tie) the riser tension draws it towards the well, so
+            # it starts at the well centre.
+            "initial_position": [0 if vertical_only else ox, 0 if vertical_only else oy, r.z_static_m], "mass": r.mass_kg / 1000.0, "volume": r.volume_m3,
+            "properties": ring_props,
         }],
         "constraints": [slip],
-        "winches": winches,
     }
+    if winches:
+        generic["winches"] = winches
+    else:
+        # no lateral tie: the ring position is set by the riser and inner barrel alone, so whole-system
+        # statics needs more damping (large offsets may still need continuation from a smaller one)
+        generic["general_properties"] = {"StaticsMaxIterations": 2000, "StaticsMinDamping": 5,
+                                         "StaticsMaxDamping": 50}
     if links:
         generic["links"] = links
     if var_data:

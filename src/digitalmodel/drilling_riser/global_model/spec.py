@@ -20,7 +20,7 @@ diameter), independently of the drag diameter.
 from __future__ import annotations
 
 import math
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import AliasChoices, BaseModel, Field, model_validator
 
@@ -116,6 +116,16 @@ class TensionRing(BaseModel):
 
 
 class Tensioners(BaseModel):
+    """Riser tensioners.
+
+    ``representation``: ``"lines"`` - ``count`` constant-tension lines from sheaves on the vessel to
+    the ring (their inclination and the pendulum stiffness T/L tie the ring laterally to the vessel);
+    ``"vertical_force"`` - one earth-fixed vertical force ``total_vertical_tension_n`` on the ring and
+    no lateral tie (the equivalent-string practice; the sheave geometry is then unused). The two bound
+    the split of rotation between the upper and lower flex joints.
+    """
+
+    representation: Literal["lines", "vertical_force"] = "lines"
     count: int = Field(..., ge=1)
     sheave_radius_m: float = Field(..., gt=0)
     sheave_z_m: float
@@ -337,9 +347,12 @@ class RiserGlobalModelSpec(BaseModel):
             raise ValueError("tensioner sheaves must be above the tension ring")
         t = self.tensioners
         if t.rated_tension_each_n is not None:
-            dx = t.sheave_radius_m - t.ring_attach_radius_m
-            dz = t.sheave_z_m - self.tension_ring.z_static_m
-            per_line = t.total_vertical_tension_n / (t.count * dz / math.hypot(dx, dz))
+            if t.representation == "vertical_force":
+                per_line = t.total_vertical_tension_n / t.count
+            else:
+                dx = t.sheave_radius_m - t.ring_attach_radius_m
+                dz = t.sheave_z_m - self.tension_ring.z_static_m
+                per_line = t.total_vertical_tension_n / (t.count * dz / math.hypot(dx, dz))
             if per_line > t.rated_tension_each_n:
                 raise ValueError(f"tensioner line tension {per_line:.4g} N exceeds the rated {t.rated_tension_each_n:.4g} N")
         return self
