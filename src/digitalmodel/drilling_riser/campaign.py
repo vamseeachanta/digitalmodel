@@ -152,17 +152,22 @@ CALIBRATION_TOL = 1.0e-6
 # is not - a full-current start diverges for some model variants, a still-water continuation flips the ring to the
 # yawed branch at large offsets for others
 STATICS_PATHS = ("current_at_seed", "ramp_at_seed", "ramp_at_target", "fine_steps", "direct_at_target",
-                 "aid_current")
+                 "aid_current", "tension_ramp")
 AID_CURRENT_M_S = 0.05  # solver aid for still-water cases (removed before the final solve)
 
 
 def statics_paths(*, current: bool) -> list[str]:
     """Statics paths in the order tried, for a case with or without current."""
     if current:
-        return ["current_at_seed", "ramp_at_seed", "ramp_at_target", "fine_steps", "direct_at_target"]
+        return ["current_at_seed", "tension_ramp", "ramp_at_seed", "ramp_at_target", "fine_steps", "direct_at_target"]
     # still water: the aiding current first - the plain seeded path fails on every 12.5 ppg variant only after the full
     # iteration budget (stage A, 2026-09-27: about 8 min per case at 57 workers)
-    return ["aid_current", "current_at_seed", "direct_at_target", "fine_steps"]
+    return ["aid_current", "tension_ramp", "current_at_seed", "direct_at_target", "fine_steps"]
+
+
+# tension continuation (stage A: TT-MIN with a failed tensioner, LFJ tension about 60 kips at 12.5 ppg, diverged on
+# every other path): solve at 1.5 x the case line tension, then step down to it at the case offset
+TENSION_RAMP = (1.5, 1.3, 1.15, 1.05, 1.0)
 
 
 class _PathFailed(RuntimeError):
@@ -240,6 +245,22 @@ def _statics_path(model, spec: RiserGlobalModelSpec, path: str, *, speed: float,
         env.RefCurrentSpeed = 0.0
         seeded_statics(model, spec, step_pct=step, start=seed, solve=solve)
         ramp()
+    elif path == "tension_ramp":
+        wins = _ring_tensioners(model)
+        base = [[w.GetData("StageValue", i) for i in range(w.GetDataRowCount("StageValue"))] for w in wins]
+
+        def set_factor(f):
+            for w, rows in zip(wins, base):
+                for i, v in enumerate(rows):
+                    w.SetData("StageValue", i, v * f)
+
+        env.RefCurrentSpeed = speed
+        set_factor(TENSION_RAMP[0])
+        seeded_statics(model, spec, step_pct=step, start=seed, solve=solve)
+        for f in TENSION_RAMP[1:]:
+            model.UseCalculatedPositions(True)  # before the data change (both reset the model)
+            set_factor(f)
+            solve()
     elif path == "direct_at_target":
         env.RefCurrentSpeed = speed
         x, y = spec.vessel_offset_m

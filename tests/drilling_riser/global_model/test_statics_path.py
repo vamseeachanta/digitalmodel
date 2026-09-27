@@ -122,7 +122,7 @@ def test_fallback_ramps_the_current_at_the_seed_after_a_divergence(base_spec, mo
     # full current at the seed from the straight start diverges; everything else converges
     m = _FakeModel(fail=lambda m: len(m.calls) == 1)
     monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
-    info = cp.robust_statics(m, spec, {}, reload=_reloader(m, 0.6))
+    info = cp.robust_statics(m, spec, {"statics_paths": ["current_at_seed", "ramp_at_seed"]}, reload=_reloader(m, 0.6))
     assert info["strategy"] == "ramp_at_seed" and m.reloads == 1
     assert info["attempts"][0]["strategy"] == "current_at_seed" and "Not converged" in info["attempts"][0]["error"]
     second = m.calls[1:]
@@ -142,7 +142,7 @@ def test_a_yaw_flip_rejects_the_path(base_spec, monkeypatch):
 
     m = _FakeModel(fail=flip)
     monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
-    info = cp.robust_statics(m, spec, {}, reload=_reloader(m, 0.6))
+    info = cp.robust_statics(m, spec, {"statics_paths": ["current_at_seed", "ramp_at_seed"]}, reload=_reloader(m, 0.6))
     assert info["attempts"][0]["strategy"] == "current_at_seed" and "yaw" in info["attempts"][0]["error"]
     assert info["strategy"] == "ramp_at_seed"
 
@@ -192,11 +192,11 @@ def test_the_last_successful_path_of_a_variant_is_tried_first(base_spec, monkeyp
     spec = _spec(base_spec, offset_pct_wd=2.0)
     m1 = _FakeModel(speed=0.0, fail=lambda m: m.environment.RefCurrentSpeed > 0)  # the aiding current diverges
     m1.environment.RefCurrentDirection = 0.0
-    assert cp.robust_statics(m1, spec, {}, reload=_reloader(m1, 0.0))["strategy"] == "current_at_seed"
+    assert cp.robust_statics(m1, spec, {}, reload=_reloader(m1, 0.0))["strategy"] == "tension_ramp"
     m2 = _FakeModel(speed=0.0, fail=lambda m: m.environment.RefCurrentSpeed > 0)
     m2.environment.RefCurrentDirection = 0.0
     info = cp.robust_statics(m2, spec, {}, reload=_reloader(m2, 0.0))
-    assert info["strategy"] == "current_at_seed" and info["attempts"] == [] and m2.reloads == 0
+    assert info["strategy"] == "tension_ramp" and info["attempts"] == [] and m2.reloads == 0
     # another mud weight is another variant
     other = _spec(base_spec, offset_pct_wd=2.0, mud_density_kg_m3=1400.0)
     m3 = _FakeModel(speed=0.0)
@@ -244,7 +244,8 @@ def test_direct_path_solves_once_at_the_target(base_spec, monkeypatch):
     m = _FakeModel(speed=0.0, fail=lambda m: m.reloads < 2)
     m.environment.RefCurrentDirection = 0.0
     monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
-    info = cp.robust_statics(m, spec, {}, reload=_reloader(m, 0.0))
+    paths = {"statics_paths": ["aid_current", "current_at_seed", "direct_at_target"]}
+    info = cp.robust_statics(m, spec, paths, reload=_reloader(m, 0.0))
     assert info["strategy"] == "direct_at_target" and info["steps"] == 1
     assert m.calls[-1] == (pytest.approx(0.03 * wd), 0.0)
 
