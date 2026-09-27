@@ -29,56 +29,56 @@ tiers:
   T3: Level 3 (numerical)
 
 codes:
-  api-579-1: {title: "API 579-1/ASME FFS-1 Fitness-For-Service", edition_held: "2007 (2nd) full text in llm-wiki; 2016/2021 numbering cited via crosswalk (llm-wiki #913)", parts: {3: brittle fracture, 4: general metal loss, 5: local metal loss, 6: pitting, 7: hydrogen blisters / HIC / SOHIC, 8: weld misalignment and shell distortion, 9: crack-like flaws, 10: creep, 11: fire damage, 12: dents and gouges, 13: laminations, 14: fatigue (2016+)}}
-  api-rp-571: {title: "API RP 571 Damage Mechanisms Affecting Fixed Equipment in the Refining Industry", edition_held: "3rd ed 2020 (metadata)", note: "60+ mechanisms; the damage-mechanism taxonomy that routes a finding to an API 579 part"}
-  api-510: {title: "API 510 Pressure Vessel Inspection Code"}
-  api-570: {title: "API 570 Piping Inspection Code"}
-  api-653: {title: "API 653 Tank Inspection, Repair, Alteration, and Reconstruction", edition_held: "3rd ed 2001 (metadata); 6th ed 2024 current"}
-  api-560: {title: "API 560 Fired Heaters for General Refinery Service"}
-  api-573: {title: "API RP 573 Inspection of Fired Boilers and Heaters"}
-  api-660: {title: "API 660 Shell-and-tube Heat Exchangers"}
-  tema: {title: "TEMA Standards of the Tubular Exchanger Manufacturers Association"}
-  api-rp-580: {title: "API RP 580 Risk-Based Inspection"}
-  api-rp-581: {title: "API RP 581 RBI Methodology"}
-  asme-b31g: {title: "ASME B31G-2012 Remaining Strength of Corroded Pipelines"}
-  asme-b31-8: {title: "ASME B31.8 Gas Transmission and Distribution Piping Systems (Appendix R dent strain)"}
-  asme-b31-8s: {title: "ASME B31.8S Managing System Integrity of Gas Pipelines", note: "22 root causes in 9 threat categories"}
-  api-rp-1160: {title: "API RP 1160 Managing System Integrity for Hazardous Liquid Pipelines"}
-  api-rp-1176: {title: "API RP 1176 Assessment and Management of Cracking in Pipelines"}
-  api-rp-1133: {title: "API RP 1133 Managing Hydrotechnical Hazards for Pipelines"}
-  nace-sp0502: {title: "NACE SP0502 Pipeline External Corrosion Direct Assessment (ECDA)"}
-  nace-sp0206: {title: "NACE SP0206 Internal Corrosion Direct Assessment (ICDA)"}
-  dnv-rp-f101: {title: "DNV-RP-F101 Corroded Pipelines"}
-  dnv-rp-f105: {title: "DNV-RP-F105 Free Spanning Pipelines"}
-  dnv-rp-f109: {title: "DNV-RP-F109 On-bottom Stability Design of Submarine Pipelines"}
-  dnv-rp-f110: {title: "DNV-RP-F110 Global Buckling of Submarine Pipelines"}
-  pdam: {title: "Pipeline Defect Assessment Manual (Penspen JIP)", note: "defect-free pipe, corrosion, gouges, plain/kinked dents, dents on welds, dent-gouge, manufacturing defects, girth/seam weld defects, cracking, environmental cracking, interaction, fittings, leak/rupture"}
-  bs-7910: {title: "BS 7910:2013+A1:2015 Guide to methods for assessing the acceptability of flaws in metallic structures", edition_held: "2013 full text in llm-wiki"}
-  asme-pcc-2: {title: "ASME PCC-2 Repair of Pressure Equipment and Piping"}
-  iso-24817: {title: "ISO 24817 Composite repairs for pipework"}
-  api-rp-2sim: {title: "API RP 2SIM Structural Integrity Management of Fixed Offshore Structures"}
-  api-rp-2fsim: {title: "API RP 2FSIM Floating Systems Integrity Management"}
-  iso-19902: {title: "ISO 19902 Fixed steel offshore structures", note: "assessment of existing structures is one clause"}
-  norsok-n-006: {title: "NORSOK N-006 Assessment of structural integrity for existing offshore load-bearing structures"}
-  api-rp-2a: {title: "API RP 2A-WSD Planning, Designing and Constructing Fixed Offshore Platforms"}
-  api-rp-2mim: {title: "API RP 2MIM Mooring Integrity Management"}
-  api-rp-2i: {title: "API RP 2I In-service Inspection of Mooring Hardware for Floating Structures"}
-  chain-fears-jip: {title: "Chain FEARS joint industry project (pitting-corroded mooring chain discard guidance)", note: "public overview only; class boundaries are inputs in #2199"}
-  dnv-os-e301: {title: "DNV-OS-E301 Position Mooring"}
-  dnv-os-e303: {title: "DNV-OS-E303 Offshore Fibre Ropes"}
-  api-rp-17b: {title: "API RP 17B Recommended Practice for Flexible Pipe"}
-  api-rp-17g: {title: "API RP 17G Design and Operation of Completion/Workover Riser Systems"}
-  api-std-2rd: {title: "API STD 2RD Dynamic Risers for Floating Production Systems (supersedes API RP 2RD)"}
-  dnv-st-f201: {title: "DNV-ST-F201 Riser systems"}
-  api-tr-5c3: {title: "API TR 5C3 / ISO 10400 Casing, tubing and line pipe performance properties"}
-  dnv-st-0126: {title: "DNV-ST-0126 Support structures for wind turbines"}
-  dnv-st-0262: {title: "DNV-ST-0262 Lifetime extension of wind turbines"}
-  dnv-rp-c201: {title: "DNV-RP-C201 Buckling Strength of Plated Structures"}
-  dnv-rp-c203: {title: "DNV-RP-C203 Fatigue design of offshore steel structures"}
-  iacs-csr: {title: "IACS Common Structural Rules, Ch 13 Ships in Operation, Renewal Criteria", note: "wastage allowance, substantial-corrosion band and hull girder section modulus limits; values are inputs in #2202"}
-  iacs-rec-84: {title: "IACS Rec. 84 Container Ships: Guidelines for Surveys, Assessment and Repair of Hull Structures"}
-  nbic: {title: "NBIC (NB-23) National Board Inspection Code"}
-  asme-i: {title: "ASME BPVC Section I Power Boilers"}
+  api-579-1: {short: "API 579", title: "API 579-1/ASME FFS-1 Fitness-For-Service", edition_held: "2007 (2nd) full text in llm-wiki; 2016/2021 numbering cited via crosswalk (llm-wiki #913)", parts: {3: brittle fracture, 4: general metal loss, 5: local metal loss, 6: pitting, 7: hydrogen blisters / HIC / SOHIC, 8: weld misalignment and shell distortion, 9: crack-like flaws, 10: creep, 11: fire damage, 12: dents and gouges, 13: laminations, 14: fatigue (2016+)}}
+  api-rp-571: {short: "API RP 571", title: "API RP 571 Damage Mechanisms Affecting Fixed Equipment in the Refining Industry", edition_held: "3rd ed 2020 (metadata)", note: "60+ mechanisms; the damage-mechanism taxonomy that routes a finding to an API 579 part"}
+  api-510: {short: "API 510", title: "API 510 Pressure Vessel Inspection Code"}
+  api-570: {short: "API 570", title: "API 570 Piping Inspection Code"}
+  api-653: {short: "API 653", title: "API 653 Tank Inspection, Repair, Alteration, and Reconstruction", edition_held: "3rd ed 2001 (metadata); 6th ed 2024 current"}
+  api-560: {short: "API 560", title: "API 560 Fired Heaters for General Refinery Service"}
+  api-573: {short: "API RP 573", title: "API RP 573 Inspection of Fired Boilers and Heaters"}
+  api-660: {short: "API 660", title: "API 660 Shell-and-tube Heat Exchangers"}
+  tema: {short: "TEMA", title: "TEMA Standards of the Tubular Exchanger Manufacturers Association"}
+  api-rp-580: {short: "API RP 580", title: "API RP 580 Risk-Based Inspection"}
+  api-rp-581: {short: "API RP 581", title: "API RP 581 RBI Methodology"}
+  asme-b31g: {short: "ASME B31G", title: "ASME B31G-2012 Remaining Strength of Corroded Pipelines"}
+  asme-b31-8: {short: "ASME B31.8 App R", title: "ASME B31.8 Gas Transmission and Distribution Piping Systems (Appendix R dent strain)"}
+  asme-b31-8s: {short: "ASME B31.8S", title: "ASME B31.8S Managing System Integrity of Gas Pipelines", note: "22 root causes in 9 threat categories"}
+  api-rp-1160: {short: "API RP 1160", title: "API RP 1160 Managing System Integrity for Hazardous Liquid Pipelines"}
+  api-rp-1176: {short: "API RP 1176", title: "API RP 1176 Assessment and Management of Cracking in Pipelines"}
+  api-rp-1133: {short: "API RP 1133", title: "API RP 1133 Managing Hydrotechnical Hazards for Pipelines"}
+  nace-sp0502: {short: "NACE SP0502", title: "NACE SP0502 Pipeline External Corrosion Direct Assessment (ECDA)"}
+  nace-sp0206: {short: "NACE SP0206", title: "NACE SP0206 Internal Corrosion Direct Assessment (ICDA)"}
+  dnv-rp-f101: {short: "DNV-RP-F101", title: "DNV-RP-F101 Corroded Pipelines"}
+  dnv-rp-f105: {short: "DNV-RP-F105", title: "DNV-RP-F105 Free Spanning Pipelines"}
+  dnv-rp-f109: {short: "DNV-RP-F109", title: "DNV-RP-F109 On-bottom Stability Design of Submarine Pipelines"}
+  dnv-rp-f110: {short: "DNV-RP-F110", title: "DNV-RP-F110 Global Buckling of Submarine Pipelines"}
+  pdam: {short: "PDAM", title: "Pipeline Defect Assessment Manual (Penspen JIP)", note: "defect-free pipe, corrosion, gouges, plain/kinked dents, dents on welds, dent-gouge, manufacturing defects, girth/seam weld defects, cracking, environmental cracking, interaction, fittings, leak/rupture"}
+  bs-7910: {short: "BS 7910", title: "BS 7910:2013+A1:2015 Guide to methods for assessing the acceptability of flaws in metallic structures", edition_held: "2013 full text in llm-wiki"}
+  asme-pcc-2: {short: "ASME PCC-2", title: "ASME PCC-2 Repair of Pressure Equipment and Piping"}
+  iso-24817: {short: "ISO 24817", title: "ISO 24817 Composite repairs for pipework"}
+  api-rp-2sim: {short: "API RP 2SIM", title: "API RP 2SIM Structural Integrity Management of Fixed Offshore Structures"}
+  api-rp-2fsim: {short: "API RP 2FSIM", title: "API RP 2FSIM Floating Systems Integrity Management"}
+  iso-19902: {short: "ISO 19902", title: "ISO 19902 Fixed steel offshore structures", note: "assessment of existing structures is one clause"}
+  norsok-n-006: {short: "NORSOK N-006", title: "NORSOK N-006 Assessment of structural integrity for existing offshore load-bearing structures"}
+  api-rp-2a: {short: "API RP 2A", title: "API RP 2A-WSD Planning, Designing and Constructing Fixed Offshore Platforms"}
+  api-rp-2mim: {short: "API RP 2MIM", title: "API RP 2MIM Mooring Integrity Management"}
+  api-rp-2i: {short: "API RP 2I", title: "API RP 2I In-service Inspection of Mooring Hardware for Floating Structures"}
+  chain-fears-jip: {short: "Chain FEARS", title: "Chain FEARS joint industry project (pitting-corroded mooring chain discard guidance)", note: "public overview only; class boundaries are inputs in #2199"}
+  dnv-os-e301: {short: "DNV-OS-E301", title: "DNV-OS-E301 Position Mooring"}
+  dnv-os-e303: {short: "DNV-OS-E303", title: "DNV-OS-E303 Offshore Fibre Ropes"}
+  api-rp-17b: {short: "API RP 17B", title: "API RP 17B Recommended Practice for Flexible Pipe"}
+  api-rp-17g: {short: "API RP 17G", title: "API RP 17G Design and Operation of Completion/Workover Riser Systems"}
+  api-std-2rd: {short: "API STD 2RD", title: "API STD 2RD Dynamic Risers for Floating Production Systems (supersedes API RP 2RD)"}
+  dnv-st-f201: {short: "DNV-ST-F201", title: "DNV-ST-F201 Riser systems"}
+  api-tr-5c3: {short: "API TR 5C3 / ISO 10400", title: "API TR 5C3 / ISO 10400 Casing, tubing and line pipe performance properties"}
+  dnv-st-0126: {short: "DNV-ST-0126", title: "DNV-ST-0126 Support structures for wind turbines"}
+  dnv-st-0262: {short: "DNV-ST-0262", title: "DNV-ST-0262 Lifetime extension of wind turbines"}
+  dnv-rp-c201: {short: "DNV-RP-C201", title: "DNV-RP-C201 Buckling Strength of Plated Structures"}
+  dnv-rp-c203: {short: "DNV-RP-C203", title: "DNV-RP-C203 Fatigue design of offshore steel structures"}
+  iacs-csr: {short: "IACS CSR Ch 13", title: "IACS Common Structural Rules, Ch 13 Ships in Operation, Renewal Criteria", note: "wastage allowance, substantial-corrosion band and hull girder section modulus limits; values are inputs in #2202"}
+  iacs-rec-84: {short: "IACS Rec. 84", title: "IACS Rec. 84 Container Ships: Guidelines for Surveys, Assessment and Repair of Hull Structures"}
+  nbic: {short: "NBIC", title: "NBIC (NB-23) National Board Inspection Code"}
+  asme-i: {short: "ASME I", title: "ASME BPVC Section I Power Boilers"}
 
 # Engine registry. `workflow` ids must exist in docs/registry/workflows.yaml; `route: true` means a
 # `digitalmodel:<workflow>` entry exists in ../deckhand/config/deckhand/routing/paths.yaml.
@@ -131,21 +131,22 @@ industries:
 
   - id: pipelines-midstream
     title: Pipelines (onshore and offshore transmission, gathering, hazardous liquid)
+    intro: "Frameworks: ASME B31.8S (22 root causes in 9 threat categories), API RP 1160, API RP 1176 (cracking), NACE SP0502 / SP0206 (direct assessment). Subsea design screens (free span, on-bottom stability, global buckling) are in the design-screen section, not here. Defect taxonomy cross-checked against PDAM: defect-free pipe, corrosion, gouges, plain and kinked dents, dents on welds, dent-gouge, manufacturing defects, girth and seam weld defects, cracking, environmental cracking, defect interaction, fittings, leak-vs-rupture."
     inspection_codes: [asme-b31-8s, api-rp-1160, api-rp-1176, nace-sp0502, nace-sp0206]
     assets:
       - asset: steel pipeline body
         defects:
-          - {mechanism: general / local metal loss (external, internal corrosion), codes: [asme-b31g, dnv-rp-f101, api-579-1], parts: [4, 5], engines: [corroded-pipe, rstreng-2d, dnv-f101, ffs-metal-loss], tiers: [T1, T2], status: validated}
+          - {mechanism: "general / local metal loss (external, internal corrosion)", codes: [asme-b31g, dnv-rp-f101, api-579-1], parts: [4, 5], engines: [corroded-pipe, rstreng-2d, dnv-f101, ffs-metal-loss], tiers: [T1, T2], status: validated}
           - {mechanism: river-bottom profile metal loss, codes: [asme-b31g, dnv-rp-f101], engines: [rstreng-2d], tiers: [T2], status: validated}
           - {mechanism: circumferential metal loss / net-section, codes: [api-579-1, dnv-rp-f101], parts: [5], engines: [circumferential], tiers: [T2], status: validated, caveat: "F101 combined-loading factor stubbed (#1146)"}
           - {mechanism: interacting defect colonies, codes: [dnv-rp-f101, api-579-1], parts: [4], engines: [dnv-f101], tiers: [T2], status: engine, caveat: "#1094 finding 1"}
           - {mechanism: pitting, codes: [api-579-1], parts: [6], engines: [pitting], tiers: [T1, T2], status: engine}
           - {mechanism: plain dents / dent on weld, codes: [api-579-1, pdam, asme-b31-8], parts: [12], engines: [dents], tiers: [T1, T2], status: engine}
           - {mechanism: dent-gouge / gouges, codes: [api-579-1, pdam], parts: [12], engines: [dents], tiers: [T1, T2], status: engine, caveat: "gouge-only PDAM path not implemented"}
-          - {mechanism: crack-like flaws (SCC, seam weld, girth weld, fatigue cracks, hook cracks), codes: [api-579-1, bs-7910, api-rp-1176], parts: [9], engines: [crack-fad, part9-level2, part9-level1], tiers: [T1, T2, T3], status: engine}
+          - {mechanism: "crack-like flaws (SCC, seam weld, girth weld, fatigue cracks, hook cracks)", codes: [api-579-1, bs-7910, api-rp-1176], parts: [9], engines: [crack-fad, part9-level2, part9-level1], tiers: [T1, T2, T3], status: engine}
           - {mechanism: fatigue crack growth / remaining life / leak-before-break, codes: [bs-7910, api-579-1], parts: [9], engines: [crack-growth], tiers: [T2], status: engine, issue: 2177}
           - {mechanism: laminations / inclusions, codes: [api-579-1], parts: [13], engines: [parts-8-11-13-14], tiers: [T1, T2], status: planned}
-          - {mechanism: wrinkles, buckles, ovality, ripples, codes: [api-579-1], parts: [8], engines: [parts-8-11-13-14], tiers: [T2, T3], status: planned}
+          - {mechanism: "wrinkles, buckles, ovality, ripples", codes: [api-579-1], parts: [8], engines: [parts-8-11-13-14], tiers: [T2, T3], status: planned}
           - {mechanism: manufacturing defects in pipe body, codes: [pdam], engines: [], tiers: [T2], status: none}
           - {mechanism: geohazard / ground-movement strain demand, codes: [api-rp-1133], engines: [], tiers: [T2], status: none}
           - {mechanism: direct-assessment programme support (ECDA / ICDA region and indication ranking), codes: [nace-sp0502, nace-sp0206], engines: [], tiers: [T1], status: none}
@@ -154,6 +155,8 @@ industries:
 
   - id: downstream-fixed-equipment
     title: Refining and petrochemical fixed equipment
+    intro: "Inspection codes: API 510 (vessels), API 570 (piping), API 653 (tanks), API 660 / TEMA (exchangers), API 560 / RP 573 (fired heaters); risk: API RP 580/581; damage taxonomy: API RP 571 (crosswalk data in ffs_damage_mechanism_crosswalk.yml)."
+    asset_column: true
     inspection_codes: [api-510, api-570, api-653, api-rp-580, api-rp-581]
     damage_taxonomy: api-rp-571
     assets:
@@ -163,29 +166,29 @@ industries:
           - {mechanism: pitting, codes: [api-579-1], parts: [6], engines: [pitting], tiers: [T1, T2], status: engine}
           - {mechanism: hydrogen blisters / HIC / SOHIC, codes: [api-579-1], parts: [7], engines: [parts-3-7-10], tiers: [T1, T2], status: planned}
           - {mechanism: brittle fracture susceptibility (MAT), codes: [api-579-1], parts: [3], engines: [parts-3-7-10], tiers: [T1, T2], status: planned}
-          - {mechanism: weld misalignment, out-of-roundness, bulges, codes: [api-579-1], parts: [8], engines: [parts-8-11-13-14], tiers: [T2, T3], status: planned}
-          - {mechanism: crack-like flaws (weld cracks, SCC, fatigue), codes: [api-579-1, bs-7910], parts: [9], engines: [crack-fad, part9-level2], tiers: [T2, T3], status: engine}
+          - {mechanism: "weld misalignment, out-of-roundness, bulges", codes: [api-579-1], parts: [8], engines: [parts-8-11-13-14], tiers: [T2, T3], status: planned}
+          - {mechanism: "crack-like flaws (weld cracks, SCC, fatigue)", codes: [api-579-1, bs-7910], parts: [9], engines: [crack-fad, part9-level2], tiers: [T2, T3], status: engine}
           - {mechanism: creep / creep-fatigue, codes: [api-579-1], parts: [10], engines: [parts-3-7-10], tiers: [T2, T3], status: planned}
           - {mechanism: fire damage, codes: [api-579-1], parts: [11], engines: [parts-8-11-13-14], tiers: [T1, T2], status: planned}
-          - {mechanism: fatigue (crack initiation, cyclic-service screen), codes: [api-579-1], parts: [14], engines: [parts-8-11-13-14, sn-fatigue], tiers: [T1, T2], status: planned, caveat: "S-N library exists; Part 14 screening not wired"}
+          - {mechanism: "fatigue (crack initiation, cyclic-service screen)", codes: [api-579-1], parts: [14], engines: [parts-8-11-13-14, sn-fatigue], tiers: [T1, T2], status: planned, caveat: "S-N library exists; Part 14 screening not wired"}
           - {mechanism: re-rate / MAWP reduction, codes: [api-579-1, api-510], parts: [4, 5], engines: [ffs-metal-loss], tiers: [T2], status: validated}
       - asset: process piping (API 570 -> API 579)
         defects:
-          - {mechanism: CUI, injection point, deadleg, soil-to-air, mixing point, erosion thinning, codes: [api-570, api-579-1], parts: [4, 5], engines: [ffs-metal-loss], tiers: [T1, T2], status: validated}
+          - {mechanism: "CUI, injection point, deadleg, soil-to-air, mixing point, erosion thinning", codes: [api-570, api-579-1], parts: [4, 5], engines: [ffs-metal-loss], tiers: [T1, T2], status: validated}
           - {mechanism: pitting, codes: [api-579-1], parts: [6], engines: [pitting], tiers: [T1, T2], status: engine}
           - {mechanism: crack-like flaws at branch / weldolet welds, codes: [api-579-1, bs-7910], parts: [9], engines: [crack-fad, part9-level2], tiers: [T2, T3], status: engine, note: "weldolet FE benchmark in plan #2157 / PR #2194"}
           - {mechanism: composite repair, codes: [asme-pcc-2, iso-24817], engines: [composite-repair], tiers: [T2], status: engine}
       - asset: heat exchangers and fired heaters
         defects:
           - {mechanism: exchanger tube bundle thinning / pitting / tube plugging limits, codes: [api-660, tema, api-579-1], parts: [4, 5, 6], engines: [], tiers: [T1, T2], status: none}
-          - {mechanism: fired-heater tube creep, bulging, carburization, codes: [api-560, api-573, api-579-1], parts: [10, 8], engines: [], tiers: [T2, T3], status: none}
+          - {mechanism: "fired-heater tube creep, bulging, carburization", codes: [api-560, api-573, api-579-1], parts: [10, 8], engines: [], tiers: [T2, T3], status: none}
       - asset: atmospheric storage tank (API 653 -> API 579)
         defects:
-          - {mechanism: bottom plate underside / topside corrosion, critical zone, codes: [api-653, api-579-1], parts: [4, 5, 6], engines: [ffs-metal-loss, pitting], tiers: [T1, T2], status: engine, caveat: "no tank-specific t_min rules"}
+          - {mechanism: "bottom plate underside / topside corrosion, critical zone", codes: [api-653, api-579-1], parts: [4, 5, 6], engines: [ffs-metal-loss, pitting], tiers: [T1, T2], status: engine, caveat: "no tank-specific t_min rules"}
           - {mechanism: shell course thinning / fill-height re-rate, codes: [api-653, api-579-1], parts: [4, 5], engines: [ffs-metal-loss], tiers: [T1, T2], status: engine, caveat: "API 650 one-foot method not wired"}
-          - {mechanism: settlement (planar tilt, out-of-plane differential, edge, bottom), codes: [api-653], engines: [tank-settlement-screen], tiers: [T1], status: planned, issue: 2172}
-          - {mechanism: settlement beyond Annex B limits (strain limit, buckling, collapse), codes: [api-579-1], engines: [tank-level3, calculix-nonlinear, annex-f-material], tiers: [T3], status: planned, issue: 2174, note: "Annex B1 (2007) / Annex 2D (2016+)"}
-          - {mechanism: shell distortion (buckling, flat spots, peaking, out-of-roundness), codes: [api-579-1, api-653], parts: [8], engines: [parts-8-11-13-14], tiers: [T2, T3], status: planned}
+          - {mechanism: "settlement (planar tilt, out-of-plane differential, edge, bottom)", codes: [api-653], engines: [tank-settlement-screen], tiers: [T1], status: planned, issue: 2172}
+          - {mechanism: "settlement beyond Annex B limits (strain limit, buckling, collapse)", codes: [api-579-1], engines: [tank-level3, calculix-nonlinear, annex-f-material], tiers: [T3], status: planned, issue: 2174, note: "Annex B1 (2007) / Annex 2D (2016+)"}
+          - {mechanism: "shell distortion (buckling, flat spots, peaking, out-of-roundness)", codes: [api-579-1, api-653], parts: [8], engines: [parts-8-11-13-14], tiers: [T2, T3], status: planned}
           - {mechanism: floating roof / seal / appurtenance damage, codes: [api-653], engines: [], tiers: [T1], status: none}
       - asset: any fixed equipment
         defects:
@@ -194,22 +197,26 @@ industries:
 
   - id: upstream-offshore-fixed
     title: Fixed offshore platforms (jackets, topsides, conductors, caissons)
+    intro: "Frameworks: API RP 2SIM, ISO 19902, NORSOK N-006. Typical findings: member dents and bows, corrosion wastage, joint cracks, missing or flooded members, scour, subsidence, marine growth, conductor and caisson wall loss."
+    asset_column: false
     inspection_codes: [api-rp-2sim, iso-19902, norsok-n-006]
     assets:
       - asset: jacket members and joints
         defects:
-          - {mechanism: member dents / bows / holes (boat impact, dropped objects), codes: [api-rp-2sim, iso-19902], engines: [platform-damaged-member, jacket-member-joint], tiers: [T2, T3], status: planned, caveat: "design checks exist; damaged-member capacity does not"}
-          - {mechanism: corrosion wastage (splash zone, atmospheric), codes: [api-rp-2sim, api-rp-2a], engines: [jacket-member-joint], tiers: [T1, T2], status: engine, note: "thickness-reduced re-check possible"}
+          - {mechanism: "member dents / bows / holes (boat impact, dropped objects)", codes: [api-rp-2sim, iso-19902], engines: [platform-damaged-member, jacket-member-joint], tiers: [T2, T3], status: planned, caveat: "design checks exist; damaged-member capacity does not"}
+          - {mechanism: "corrosion wastage (splash zone, atmospheric)", codes: [api-rp-2sim, api-rp-2a], engines: [jacket-member-joint], tiers: [T1, T2], status: engine, note: "thickness-reduced re-check possible"}
           - {mechanism: fatigue cracks at tubular joints, codes: [api-rp-2sim, bs-7910, dnv-rp-c203], engines: [crack-fad, sn-fatigue], tiers: [T2, T3], status: engine}
-          - {mechanism: missing / severed / flooded members (pushover, RSR), codes: [api-rp-2sim, iso-19902], engines: [platform-damaged-member, calculix-nonlinear], tiers: [T3], status: planned}
-          - {mechanism: scour, subsidence, marine growth beyond design, codes: [api-rp-2sim], engines: [scour], tiers: [T1], status: engine, note: "scour capacity only; no SIM verdict"}
+          - {mechanism: "missing / severed / flooded members (pushover, RSR)", codes: [api-rp-2sim, iso-19902], engines: [platform-damaged-member, calculix-nonlinear], tiers: [T3], status: planned}
+          - {mechanism: "scour, subsidence, marine growth beyond design", codes: [api-rp-2sim], engines: [scour], tiers: [T1], status: engine, note: "scour capacity only; no SIM verdict"}
           - {mechanism: structural health monitoring alerts, codes: [api-rp-2sim, dnv-st-0126], engines: [structural-health], tiers: [T1], status: engine}
       - asset: conductors, caissons, boat landings, risers guards
         defects:
-          - {mechanism: conductor / caisson wall loss, guide wear, fatigue, codes: [api-rp-2sim, api-rp-17g, dnv-rp-c203], engines: [], tiers: [T1, T2], status: none}
+          - {mechanism: "conductor / caisson wall loss, guide wear, fatigue", codes: [api-rp-2sim, api-rp-17g, dnv-rp-c203], engines: [], tiers: [T1, T2], status: none}
 
   - id: upstream-offshore-floating
     title: Floating production systems (FPSO, semi, TLP, spar) and their moorings and risers
+    intro: "Frameworks: API RP 2MIM, API RP 2FSIM, API RP 2I, DNV-OS-E301, DNV-OS-E303. Chain pitting is classed small / medium / mega in industry practice (Chain FEARS); class boundaries are inputs on #2199 with their public source."
+    asset_column: true
     inspection_codes: [api-rp-2mim, api-rp-2fsim, api-rp-2i, dnv-os-e301]
     assets:
       - asset: mooring chain, wire and fibre rope, connectors
@@ -217,15 +224,15 @@ industries:
           - {mechanism: general corrosion (uniform diameter loss) against discard criterion, codes: [api-rp-2mim, dnv-os-e301], engines: [mooring-chain-degradation, mooring-screen], tiers: [T1, T2], status: planned}
           - {mechanism: pitting classes (small / medium / mega) and discard guidance, codes: [api-rp-2mim, chain-fears-jip], engines: [mooring-chain-degradation], tiers: [T1, T2], status: planned}
           - {mechanism: wear at interlink / fairlead, codes: [api-rp-2mim, api-rp-2i, dnv-os-e301], engines: [mooring-chain-degradation], tiers: [T1], status: planned}
-          - {mechanism: chain fatigue (tension-tension, out-of-plane bending), codes: [api-rp-2mim, dnv-os-e301, dnv-rp-c203], engines: [mooring-fatigue, sn-fatigue], tiers: [T2], status: engine}
+          - {mechanism: "chain fatigue (tension-tension, out-of-plane bending)", codes: [api-rp-2mim, dnv-os-e301, dnv-rp-c203], engines: [mooring-fatigue, sn-fatigue], tiers: [T2], status: engine}
           - {mechanism: link ovalization / loose studs / cracks, codes: [api-rp-2mim, api-rp-2i], engines: [mooring-chain-degradation], tiers: [T1], status: planned}
           - {mechanism: wire rope broken wires / corrosion / diameter loss, codes: [api-rp-2i], engines: [], tiers: [T1], status: none}
-          - {mechanism: fibre rope creep, abrasion, particle ingress, codes: [dnv-os-e303], engines: [synthetic-rope-fatigue], tiers: [T1, T2], status: engine, caveat: "fatigue only; no condition-based discard"}
+          - {mechanism: "fibre rope creep, abrasion, particle ingress", codes: [dnv-os-e303], engines: [synthetic-rope-fatigue], tiers: [T1, T2], status: engine, caveat: "fatigue only; no condition-based discard"}
           - {mechanism: anchor holding capacity after seabed change / drag, codes: [dnv-os-e301], engines: [], tiers: [T2], status: none}
       - asset: steel catenary / top-tensioned production risers
         defects:
-          - {mechanism: metal loss, pitting, cracks, codes: [api-std-2rd, dnv-st-f201, api-579-1, bs-7910], parts: [4, 5, 6, 9], engines: [ffs-metal-loss, crack-fad], tiers: [T1, T2], status: engine}
-          - {mechanism: fatigue (wave, VIV), codes: [dnv-st-f201, dnv-rp-c203], engines: [riser-fatigue], tiers: [T2], status: routed}
+          - {mechanism: "metal loss, pitting, cracks", codes: [api-std-2rd, dnv-st-f201, api-579-1, bs-7910], parts: [4, 5, 6, 9], engines: [ffs-metal-loss, crack-fad], tiers: [T1, T2], status: engine}
+          - {mechanism: "fatigue (wave, VIV)", codes: [dnv-st-f201, dnv-rp-c203], engines: [riser-fatigue], tiers: [T2], status: routed}
       - asset: drilling / completion riser joints and wellhead fatigue
         defects:
           - {mechanism: metal loss / weld flaws / collapse-limited depth, codes: [asme-b31g, dnv-rp-f101, bs-7910], engines: [riser-joint-ffs], tiers: [T1, T2], status: engine, note: "real C-scan fixtures; workflow #2183"}
@@ -234,15 +241,16 @@ industries:
         defects:
           - {mechanism: outer sheath damage / annulus flooding, codes: [api-rp-17b], engines: [flexible-pipe-screen], tiers: [T1], status: planned}
           - {mechanism: tensile armour wire corrosion / rupture (end-fitting fatigue), codes: [api-rp-17b], engines: [flexible-pipe-screen], tiers: [T2], status: planned}
-          - {mechanism: carcass collapse, pressure sheath creep / rupture, codes: [api-rp-17b], engines: [flexible-pipe-screen], tiers: [T2], status: planned}
+          - {mechanism: "carcass collapse, pressure sheath creep / rupture", codes: [api-rp-17b], engines: [flexible-pipe-screen], tiers: [T2], status: planned}
 
   - id: wells
     title: Well tubulars
+    asset_column: true
     inspection_codes: [api-tr-5c3]
     assets:
       - asset: casing and tubing
         defects:
-          - {mechanism: casing wear (drillstring contact) and corrosion, remaining collapse / burst with ovality, codes: [api-tr-5c3], engines: [casing-capacity], tiers: [T2], status: planned}
+          - {mechanism: "casing wear (drillstring contact) and corrosion, remaining collapse / burst with ovality", codes: [api-tr-5c3], engines: [casing-capacity], tiers: [T2], status: planned}
 
   - id: offshore-wind
     title: Offshore wind support structures
@@ -255,15 +263,16 @@ industries:
           - {mechanism: grouted connection slippage / cracking, codes: [dnv-st-0126], engines: [], tiers: [T2], status: none}
           - {mechanism: bolted flange preload loss, codes: [dnv-st-0126], engines: [], tiers: [T1], status: none}
           - {mechanism: scour, codes: [dnv-st-0126], engines: [scour], tiers: [T1], status: engine}
-          - {mechanism: lifetime extension assessment (remaining fatigue life, load re-evaluation), codes: [dnv-st-0262, dnv-rp-c203], engines: [], tiers: [T2], status: none, note: "S-N library exists but no lifetime-extension engine"}
+          - {mechanism: "lifetime extension assessment (remaining fatigue life, load re-evaluation)", codes: [dnv-st-0262, dnv-rp-c203], engines: [], tiers: [T2], status: none, note: "S-N library exists but no lifetime-extension engine"}
 
   - id: marine-ships
     title: Ships and floating hulls (class rules)
+    intro: "Frameworks: IACS CSR Ch 13 renewal criteria (wastage allowance, substantial-corrosion band, hull girder section modulus limits; values are inputs on #2202), IACS Rec. 84."
     inspection_codes: [iacs-csr, iacs-rec-84]
     assets:
       - asset: hull plating and stiffeners
         defects:
-          - {mechanism: thickness diminution vs renewal thickness (wastage allowance, substantial-corrosion band), codes: [iacs-csr], engines: [hull-wastage], tiers: [T1], status: planned}
+          - {mechanism: "thickness diminution vs renewal thickness (wastage allowance, substantial-corrosion band)", codes: [iacs-csr], engines: [hull-wastage], tiers: [T1], status: planned}
           - {mechanism: buckling of thinned plates / panels, codes: [iacs-csr, dnv-rp-c201], engines: [plate-panel-buckling], tiers: [T2], status: routed, note: "plate metal-loss FFS on the capabilities page"}
           - {mechanism: pitting intensity on plating, codes: [iacs-rec-84], engines: [pitting], tiers: [T1], status: engine}
           - {mechanism: hull girder section modulus loss against class limits, codes: [iacs-csr], engines: [hull-girder, hull-wastage], tiers: [T2], status: engine}
@@ -275,7 +284,67 @@ industries:
     assets:
       - asset: headers, tubes, steam piping
         defects:
-          - {mechanism: tube / header wall thinning (erosion, fireside corrosion), codes: [api-579-1, nbic], parts: [4, 5], engines: [ffs-metal-loss], tiers: [T1, T2], status: engine, caveat: "2026-06-27 record covers pipe/vessel t_min, not ASME I / NBIC tube rules"}
-          - {mechanism: creep damage / remaining life (Larson-Miller, Omega), codes: [api-579-1], parts: [10], engines: [parts-3-7-10], tiers: [T2, T3], status: planned}
+          - {mechanism: "tube / header wall thinning (erosion, fireside corrosion)", codes: [api-579-1, nbic], parts: [4, 5], engines: [ffs-metal-loss], tiers: [T1, T2], status: engine, caveat: "2026-06-27 record covers pipe/vessel t_min, not ASME I / NBIC tube rules"}
+          - {mechanism: "creep damage / remaining life (Larson-Miller, Omega)", codes: [api-579-1], parts: [10], engines: [parts-3-7-10], tiers: [T2, T3], status: planned}
           - {mechanism: thermal fatigue / creep-fatigue, codes: [api-579-1], parts: [14, 10], engines: [parts-8-11-13-14], tiers: [T2], status: planned}
           - {mechanism: crack-like flaws in headers / nozzles, codes: [api-579-1, bs-7910], parts: [9], engines: [crack-fad], tiers: [T2, T3], status: engine}
+
+# Public overviews consulted for the catalog page's Sources block. Rendered by
+# digitalmodel.asset_integrity.offering_catalog.render_markdown (issue #2197).
+sources:
+  consulted: 2026-09-25
+  items:
+    - topic: "API 579-1/ASME FFS-1 2021 parts and Part 14 fatigue"
+      links:
+        - {label: "ANSI blog", url: "https://blog.ansi.org/ansi/fitness-for-service-api-579-asme-ffs-1-2021/"}
+        - {label: "CADE overview", url: "https://cadeengineering.com/asme-api-579-1-asme-ffs-1-new-edition-2021/"}
+        - {label: "ASME PVP 2016 Part 14 summary", url: "https://asmedigitalcollection.asme.org/PVP/proceedings-abstract/PVP2016/50350/V01AT01A002/285035"}
+    - topic: "API RP 571 scope"
+      links:
+        - {label: "Inspectioneering", url: "https://inspectioneering.com/tag/api+rp+571"}
+        - {label: "API RP 571 3rd edition release", url: "https://inspectioneering.com/news/2020-04-01/9137/api-publishes-new-edition-of-rp-571---damage-mechanisms-affecting-fixed-equipmen"}
+    - topic: "PDAM defect list"
+      links:
+        - {label: "Penspen PDAM overview", url: "https://penspen.com/wp-content/uploads/2014/09/pdam-overview.pdf"}
+        - {label: "Penspen PDAM", url: "https://www.penspen.com/our-services/digital-solutions-and-tools/pdam/"}
+    - topic: "ASME B31.8S threats"
+      links:
+        - {label: "ASME B31.8S", url: "https://www.asme.org/codes-standards/find-codes-standards/b31-8s-managing-system-integrity-gas-pipelines"}
+        - {label: "49 CFR 192.917", url: "https://www.ecfr.gov/current/title-49/subtitle-B/chapter-I/subchapter-D/part-192/subpart-O/section-192.917"}
+    - topic: "API 570 damage locations"
+      links:
+        - {label: "API 570 overview", url: "https://ifluids.com/standard/api-570-piping-inspection-code/"}
+        - {label: "InServe API 570 guide", url: "https://inservemechanical.com/services/asset-management/api-570-process-piping-inspection/"}
+    - topic: "API 653 damage types and settlement"
+      links:
+        - {label: "API 653 5th ed public announcement", url: "https://www.api.org/~/media/files/publications/whats%20new/653_e5%20pa.pdf"}
+        - {label: "settlement calculation guide", url: "https://armorshieldlining.com/feeds/blog/api-653-settlement-calculation"}
+        - {label: "CommTank", url: "https://www.commtank.com/tank-articles/what-happens-during-an-api-653-tank-inspection/"}
+    - topic: "API RP 2SIM scope"
+      links:
+        - {label: "OTC-20675", url: "https://onepetro.org/OTCONF/proceedings-abstract/10OTC/10OTC/OTC-20675-MS/36386"}
+        - {label: "GlobalSpec", url: "https://standards.globalspec.com/std/14364931/API%20RP%202SIM"}
+        - {label: "BSEE 2SIM briefing", url: "https://www.bsee.gov/sites/bsee.gov/files/bsee-interim-document/reports/7-structures-hugh-westlake.pdf"}
+    - topic: "API RP 2MIM and chain pitting classes"
+      links:
+        - {label: "BSEE TAP 730", url: "https://www.bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program/730-aa.pdf"}
+        - {label: "GlobalSpec", url: "https://standards.globalspec.com/std/13448200/api-rp-2mim"}
+    - topic: "Flexible pipe failure modes"
+      links:
+        - {label: "API RP 17B public announcement", url: "https://www.api.org/~/media/files/publications/whats%20new/17b%20e5%20pa.pdf"}
+        - {label: "flexible riser integrity review", url: "https://www.osti.gov/etdeweb/servlets/purl/21157881"}
+    - topic: "Offshore wind substructure failure modes"
+      links:
+        - {label: "ORE Catapult substructure report", url: "https://cms.ore.catapult.org.uk/wp-content/uploads/2018/01/Offshore-wind-farm-substructure-monitoring-and-inspection-report-.pdf"}
+    - topic: "Ship renewal criteria"
+      links:
+        - {label: "IACS CSR Ch 13 (ClassNK copy)", url: "https://www.classnk.com/hp/pdf/rules/amendments/e-Amendments/06.03.20/CSR-B/17_Chapter13.pdf"}
+        - {label: "IACS Rec. 84", url: "https://iacs.s3.af-south-1.amazonaws.com/wp-content/uploads/2022/05/20152627/rec84rev1.pdf"}
+    - topic: "Boiler creep FFS"
+      links:
+        - {label: "Springer life assessment chapter", url: "https://link.springer.com/chapter/10.1007/978-981-92-0998-9_21"}
+        - {label: "ASME Power Boilers guide ch. 14", url: "https://asmedigitalcollection.asme.org/ebooks/book/chapter-pdf/2797412/859674_ch14.pdf"}
+    - topic: "Casing wear / collapse"
+      links:
+        - {label: "API 5C3 vs ISO 10400 reliability", url: "https://www.researchgate.net/publication/327701418_Reliability_Analysis_of_Vertical_Well_Casing_Comparison_of_API_5C3_and_ISO_10400"}
+        - {label: "casing defects with wear and corrosion", url: "https://www.researchgate.net/publication/292187078_Evaluation_of_Casing_Integrity_Defects_Considering_Wear_and_Corrosion_-_Application_to_Casing_Design"}

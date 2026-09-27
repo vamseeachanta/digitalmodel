@@ -14,6 +14,7 @@ engines:
 screens:
   - id: subsea-pipelines
     title: Subsea pipeline / flowline design screens reusable in an integrity review
+    intro: "Data: `ffs_design_screen_catalog.yml` (owner decision D5, 2026-09-25). These are routed design checks a pipeline integrity review reuses; they never produce a fitness-for-service verdict and are not counted in the coverage summary below."
     codes: [dnv-rp-f105, dnv-rp-f109, dnv-rp-f110]
     rows:
       - {mechanism: free spans (VIV onset screening), codes: [dnv-rp-f105], engines: [free-span], tiers: [T2], status: routed}
