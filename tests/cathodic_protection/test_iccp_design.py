@@ -5,7 +5,7 @@ import math
 import pytest
 
 from digitalmodel.cathodic_protection._experimental import ExperimentalModelError
-from digitalmodel.cathodic_protection._provisional_galvanic import ProvisionalValue
+from digitalmodel.cathodic_protection._provisional import ProvisionalValue
 from digitalmodel.cathodic_protection.iccp_design import (
     DEFAULT_UTILISATION_FACTOR,
     ICCP_ANODE_RECORDS,
@@ -179,21 +179,21 @@ def test_anode_bed_missing_inputs_raise():
 
 
 def test_anode_bed_count_from_current_density_limit():
-    """HSCI in soil: J_max = 30 A/m2 (GCP 04-200-R1). Area = pi*0.075*1.5 = 0.35343 m2;
+    """HSCI in soil: J_max = 10 A/m2 (conservative low end of GCP 04-200-R1's 10-30).
 
-    100 A / (0.35343 * 30) = 9.43 -> 10 anodes.
+    Area = pi*0.075*1.5 = 0.353429 m2; 100 A / (0.353429 * 10) = 28.29 -> 29 anodes.
     """
     result = anode_bed_design(100.0, 50.0, anode_spacing_m=5.0)
-    assert result.number_of_anodes == 10
-    assert result.max_current_density_A_m2 == 30.0
-    assert result.anode_current_density_A_m2 <= 30.0
+    assert result.number_of_anodes == 29
+    assert result.max_current_density_A_m2 == 10.0
+    assert result.anode_current_density_A_m2 <= 10.0
     assert result.bed_resistance_ohm == pytest.approx(
-        multiple_vertical_anode_resistance(50.0, 1.5, 0.075, 10, 5.0), abs=1e-4
+        multiple_vertical_anode_resistance(50.0, 1.5, 0.075, 29, 5.0), abs=1e-4
     )
 
 
 def test_anode_bed_mmo_fewer_anodes():
-    """MMO (50 A/m2 in carbonaceous backfill) needs no more anodes than HSCI (30 A/m2)."""
+    """MMO (50 A/m2 in carbonaceous backfill) needs no more anodes than HSCI (10 A/m2)."""
     hsci = anode_bed_design(100.0, 50.0, anode_spacing_m=5.0)
     mmo = anode_bed_design(
         100.0, 50.0, anode_material=AnodeMaterial.MIXED_METAL_OXIDE, anode_spacing_m=5.0
@@ -239,9 +239,10 @@ def test_anode_life_tp16_worked_example():
 
 
 def test_anode_life_hsci_from_cited_density_hand_value():
-    """HSCI in soil, cited values: rho = 7000 kg/m3, C = 0.30 kg/(A yr), u = 0.85.
+    """HSCI in soil, cited values: rho = 7000 kg/m3, C = 0.30 kg/(A yr), u = 0.80.
 
-    m = 7000 * pi * 0.0375**2 * 1.5 = 46.388 kg; life = 4 * 46.388 * 0.85 / (0.30 * 10) = 52.57 yr.
+    u is the conservative low end of TP-16's 0.80-0.85.
+    m = 7000 * pi * 0.0375**2 * 1.5 = 46.388 kg; life = 4 * 46.388 * 0.80 / (0.30 * 10) = 49.48 yr.
     """
     m = 7000.0 * math.pi * 0.0375**2 * 1.5
     life = iccp_anode_life(
@@ -252,8 +253,8 @@ def test_anode_life_hsci_from_cited_density_hand_value():
         anode_diameter_m=0.075,
         experimental=True,
     )
-    assert life == pytest.approx(4 * m * 0.85 / (0.30 * 10.0), rel=1e-12)
-    assert life == pytest.approx(52.57, abs=0.01)
+    assert life == pytest.approx(4 * m * 0.80 / (0.30 * 10.0), rel=1e-12)
+    assert life == pytest.approx(49.48, abs=0.01)
 
 
 def test_anode_life_linear_in_mass_inverse_in_current():
@@ -337,6 +338,53 @@ def test_every_iccp_default_is_provisional_and_sourced():
         assert v.source.strip()
         assert v.pending_standard.strip()
         assert v.value > 0
+
+
+def test_ranged_defaults_use_the_conservative_end():
+    """Owner decision 2026-09-27: highest consumption, lowest current-density limit,
+    life-shortening end otherwise; both ends stored."""
+    ranged = 0
+    for rec in ICCP_ANODE_RECORDS.values():
+        for v in rec.consumption_rate.values():
+            if v.range_low is not None:
+                ranged += 1
+                assert v.conservative_end == "high" and v.value == v.range_high
+        for v in rec.max_current_density.values():
+            if v.range_low is not None:
+                ranged += 1
+                assert v.conservative_end == "low" and v.value == v.range_low
+    assert ranged > 0
+    u = DEFAULT_UTILISATION_FACTOR
+    assert (u.range_low, u.range_high, u.conservative_end, u.value) == (0.80, 0.85, "low", 0.80)
+
+
+@pytest.mark.parametrize(
+    "material, env, expected",
+    [
+        (AnodeMaterial.HIGH_SILICON_CAST_IRON, IccpEnvironment.SOIL, 10.0),
+        (AnodeMaterial.HIGH_SILICON_CAST_IRON, IccpEnvironment.SEAWATER, 10.0),
+        (AnodeMaterial.MAGNETITE, IccpEnvironment.SOIL, 10.0),
+        (AnodeMaterial.PLATINIZED_TITANIUM, IccpEnvironment.SEAWATER, 250.0),
+        (AnodeMaterial.PLATINIZED_NIOBIUM, IccpEnvironment.SEAWATER, 500.0),
+    ],
+)
+def test_current_density_limits_are_low_end(material, env, expected):
+    assert ICCP_ANODE_RECORDS[material].max_current_density[env].value == expected
+
+
+def test_provisional_range_validation():
+    with pytest.raises(ValueError, match="both range_low and range_high"):
+        ProvisionalValue(1.0, "-", "src", pending_standard="x", range_low=1.0)
+    with pytest.raises(ValueError, match="conservative"):
+        ProvisionalValue(
+            2.0, "-", "src", pending_standard="x", range_low=1.0, range_high=2.0,
+            conservative_end="low",
+        )
+    ok = ProvisionalValue(
+        1.0, "-", "src", pending_standard="x", range_low=1.0, range_high=2.0,
+        conservative_end="low",
+    )
+    assert ok.range_text == "1-2 (conservative: low)"
 
 
 def test_provisional_value_requires_source():

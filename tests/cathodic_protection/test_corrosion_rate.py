@@ -167,6 +167,9 @@ def test_galvanic_symmetric_couple_exact_hand_value():
     assert res.galvanic_corrosion_rate_mm_yr == pytest.approx(
         9.99e3 * faraday_rate_factor(55.85, 2, 7870.0), rel=1e-9
     )
+    # The reverse-reaction ("-1") closure is flagged as a modelling assumption.
+    assert res.model_assumptions
+    assert res.model_assumptions[0].startswith("MODELLING ASSUMPTION, not from the cited source")
 
 
 def test_galvanic_tafel_intersection_hand_value():

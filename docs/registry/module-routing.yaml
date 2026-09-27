@@ -26,7 +26,7 @@ modules:
     calculation_types: [DNV_RP_B401_offshore, DNV_RP_F103_2010, ABS_gn_ships_2018, ABS_gn_offshore_2018]
     deprecated_calculation_types: [DNV_RP_B401_offshore_legacy, DNV_RP_F103_2010_legacy]  # legacy solver, DeprecationWarning
     demo_workflows: []  # retired 2026-09-25 (owner decision D5); regression inputs in tests/fixtures/cathodic_protection/workflow_inputs/
-    maturity: beta
+    maturity: beta  # client use with EOR check on B401 offshore + F103 only (2026-09-27, #2206); scale has no such value, see docs/domains/cathodic_protection/_index.md#use-status
     owner_wiki: docs/domains/cathodic_protection/
     key_tests: [tests/cathodic_protection/, tests/specialized/cathodic_protection/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#cathodic_protection

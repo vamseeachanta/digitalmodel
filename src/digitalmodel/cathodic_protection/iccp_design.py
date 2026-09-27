@@ -8,8 +8,9 @@ and marine structures.
 Issue #2247 (owner direction 2026-09-27): the governing standards (NACE
 SP0169 / SP0572, ISO 15589-1) are not on file. Anode material data and the
 ground-bed resistance formulas are taken from openly published literature
-and carried as :class:`~digitalmodel.cathodic_protection._provisional_galvanic.ProvisionalValue`
-records with ``provisional=True``. The anode-life figure stays behind
+and carried as :class:`~digitalmodel.cathodic_protection._provisional.ProvisionalValue`
+records with ``provisional=True``; where a source gives a range both ends
+are stored and the conservative end is used. The anode-life figure stays behind
 ``experimental=True``.
 
 References
@@ -36,15 +37,36 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 from digitalmodel.cathodic_protection._experimental import require_experimental
-from digitalmodel.cathodic_protection._provisional_galvanic import (
-    FT2_TO_M2,
-    LB_TO_KG,
-    SRC_CPC_MMO,
-    SRC_DOD_TP16,
-    SRC_GCP_HSCI,
-    SRC_USNA_EN380,
-    ProvisionalValue,
+from digitalmodel.cathodic_protection._provisional import ProvisionalValue
+
+# --- Literature sources (author, title, year, URL) ---------------------------
+
+SRC_DOD_TP16 = (
+    "U.S. DoD Tri-Service Electrical Working Group (TSEWG), 'Electrical "
+    "Technical Paper 16: Impressed Current Anode Material Selection and Design "
+    "Considerations (non-mandatory)', March 2017, "
+    "https://nibs-s3-wbdg3-production.s3.us-east-1.amazonaws.com/FFC/DOD/STC/tsewg_tp16.pdf"
 )
+SRC_USNA_EN380 = (
+    "U.S. Naval Academy, EN380 course notes, 'Appendix: Cathodic Protection "
+    "Design' (after G. Swain class notes, 1996), Table 7.1, n.d., "
+    "https://www.usna.edu/NAOE/_files/documents/Courses/EN380/Course_Notes/"
+    "zAppendix_A_Cathodic_Protection_Design.pdf"
+)
+SRC_GCP_HSCI = (
+    "German Cathodic Protection (GCP), 'Impressed Current Anodes - Silicon iron "
+    "anodes', datasheet 04-200-R1, n.d., "
+    "https://www.gcp.de/wp-content/uploads/04-200-Silicon-iron-anodes.pdf"
+)
+SRC_CPC_MMO = (
+    "Cathodic Protection Co. Ltd, 'Datasheet 2.2.1 - Mixed Metal Oxide Tubular "
+    "Anodes', Rev. 0, July 2020, "
+    "https://www.cathodic.co.uk/wp-content/uploads/"
+    "2.2.1-Mixed-Metal-Oxide-Tubular-Anodes-Rev.0-July-2020.pdf"
+)
+
+LB_TO_KG = 0.45359237
+FT2_TO_M2 = 0.09290304
 
 
 class AnodeBedType(str, Enum):
@@ -85,16 +107,39 @@ class AnodeLifeBasis(str, Enum):
 
 _PENDING = "NACE SP0169 / NACE SP0572 / ISO 15589-1 (not on file)"
 _LB_FT3_TO_KG_M3 = LB_TO_KG / 0.028316846592  # 16.018463 kg/m³ per lb/ft³
+_PER_FT2 = 1.0 / FT2_TO_M2  # A/ft² -> A/m²
 
 
 def _pv(value: float, units: str, source: str, note: str) -> ProvisionalValue:
+    """A single-valued provisional constant (the source gives no range)."""
     return ProvisionalValue(
         value=value, units=units, source=source, note=note, pending_standard=_PENDING
     )
 
 
-def _per_env(value: float, units: str, source: str, note: str) -> dict[IccpEnvironment, ProvisionalValue]:
-    return {env: _pv(value, units, source, note) for env in IccpEnvironment}
+def _pv_range(
+    low: float, high: float, conservative_end: str, units: str, source: str, note: str
+) -> ProvisionalValue:
+    """A ranged constant: both ends stored, the design value is the conservative end.
+
+    Owner decision 2026-09-27: the conservative end is the highest consumption
+    rate, the lowest current-density limit, and for any other quantity the end
+    that shortens life or lowers capacity.
+    """
+    return ProvisionalValue(
+        value=low if conservative_end == "low" else high,
+        units=units,
+        source=source,
+        note=note,
+        pending_standard=_PENDING,
+        range_low=low,
+        range_high=high,
+        conservative_end=conservative_end,
+    )
+
+
+def _per_env(pv: ProvisionalValue) -> dict[IccpEnvironment, ProvisionalValue]:
+    return {env: pv for env in IccpEnvironment}
 
 
 @dataclass(frozen=True)
@@ -126,9 +171,15 @@ ICCP_ANODE_RECORDS: dict[AnodeMaterial, IccpAnodeMaterialRecord] = {
             ),
         },
         max_current_density={
-            IccpEnvironment.FRESHWATER: _pv(30.0, "A/m2", SRC_GCP_HSCI, "upper end of 10-30"),
-            IccpEnvironment.SEAWATER: _pv(50.0, "A/m2", SRC_GCP_HSCI, "upper end of 10-50"),
-            IccpEnvironment.SOIL: _pv(30.0, "A/m2", SRC_GCP_HSCI, "upper end of 10-30"),
+            IccpEnvironment.FRESHWATER: _pv_range(
+                10.0, 30.0, "low", "A/m2", SRC_GCP_HSCI, "freshwater row 10-30"
+            ),
+            IccpEnvironment.SEAWATER: _pv_range(
+                10.0, 50.0, "low", "A/m2", SRC_GCP_HSCI, "saltwater row 10-50"
+            ),
+            IccpEnvironment.SOIL: _pv_range(
+                10.0, 30.0, "low", "A/m2", SRC_GCP_HSCI, "soil row 10-30"
+            ),
         },
     ),
     AnodeMaterial.GRAPHITE: IccpAnodeMaterialRecord(
@@ -138,7 +189,7 @@ ICCP_ANODE_RECORDS: dict[AnodeMaterial, IccpAnodeMaterialRecord] = {
             99.84 * _LB_FT3_TO_KG_M3,
             "kg/m3",
             SRC_DOD_TP16,
-            "Table 1: 99.84 lb/ft3 max (= 1599 kg/m3)",
+            "Table 1: 99.84 lb/ft3 max (= 1599 kg/m3); no lower bound given",
         ),
         consumption_rate={
             IccpEnvironment.SOIL: _pv(
@@ -147,33 +198,35 @@ ICCP_ANODE_RECORDS: dict[AnodeMaterial, IccpAnodeMaterialRecord] = {
             IccpEnvironment.FRESHWATER: _pv(
                 2.5 * LB_TO_KG, "kg/(A*yr)", SRC_DOD_TP16, "s.1.1.4.3: ~2.5 lb/A-yr fresh water"
             ),
-            IccpEnvironment.SEAWATER: _pv(
+            IccpEnvironment.SEAWATER: _pv_range(
+                1.6 * LB_TO_KG,
                 2.5 * LB_TO_KG,
+                "high",
                 "kg/(A*yr)",
                 SRC_DOD_TP16,
-                "s.1.1.4.3: 1.6-2.5 lb/A-yr in seawater; upper end taken",
+                "s.1.1.4.3: 1.6-2.5 lb/A-yr in seawater",
             ),
         },
         max_current_density={
             IccpEnvironment.SEAWATER: _pv(
-                3.75 * (1.0 / FT2_TO_M2), "A/m2", SRC_DOD_TP16, "Table 3: 3.75 A/ft2"
+                3.75 * _PER_FT2, "A/m2", SRC_DOD_TP16, "Table 3: 3.75 A/ft2"
             ),
             IccpEnvironment.FRESHWATER: _pv(
-                0.25 * (1.0 / FT2_TO_M2), "A/m2", SRC_DOD_TP16, "Table 3: 0.25 A/ft2"
+                0.25 * _PER_FT2, "A/m2", SRC_DOD_TP16, "Table 3: 0.25 A/ft2"
             ),
-            IccpEnvironment.SOIL: _pv(
-                1.0 * (1.0 / FT2_TO_M2), "A/m2", SRC_DOD_TP16, "Table 3: 1 A/ft2"
-            ),
+            IccpEnvironment.SOIL: _pv(1.0 * _PER_FT2, "A/m2", SRC_DOD_TP16, "Table 3: 1 A/ft2"),
         },
     ),
     AnodeMaterial.SCRAP_STEEL: IccpAnodeMaterialRecord(
         material=AnodeMaterial.SCRAP_STEEL,
         life_basis=AnodeLifeBasis.MASS,
         consumption_rate=_per_env(
-            20.0 * LB_TO_KG,
-            "kg/(A*yr)",
-            SRC_DOD_TP16,
-            "s.1.0: ~20 lb/A-yr (Faraday for Fe2+ gives 9.1 kg/A-yr)",
+            _pv(
+                20.0 * LB_TO_KG,
+                "kg/(A*yr)",
+                SRC_DOD_TP16,
+                "s.1.0: ~20 lb/A-yr (Faraday for Fe2+ gives 9.1 kg/A-yr)",
+            )
         ),
         # No density (scrap geometry is irregular: supply anode_mass_kg) and no
         # current-density limit (USNA Table 7.1: "varies"; supply the limit).
@@ -182,10 +235,10 @@ ICCP_ANODE_RECORDS: dict[AnodeMaterial, IccpAnodeMaterialRecord] = {
         material=AnodeMaterial.MAGNETITE,
         life_basis=AnodeLifeBasis.MASS,
         consumption_rate=_per_env(
-            0.040, "kg/(A*yr)", SRC_USNA_EN380, "Table 7.1: 40 g/A-yr"
+            _pv(0.040, "kg/(A*yr)", SRC_USNA_EN380, "Table 7.1: 40 g/A-yr")
         ),
         max_current_density=_per_env(
-            500.0, "A/m2", SRC_USNA_EN380, "Table 7.1: upper end of 10-500"
+            _pv_range(10.0, 500.0, "low", "A/m2", SRC_USNA_EN380, "Table 7.1: 10-500")
         ),
         # No open density value found: supply anode_mass_kg.
     ),
@@ -193,14 +246,21 @@ ICCP_ANODE_RECORDS: dict[AnodeMaterial, IccpAnodeMaterialRecord] = {
         material=AnodeMaterial.MIXED_METAL_OXIDE,
         life_basis=AnodeLifeBasis.COATING_WEAR,
         consumption_rate=_per_env(
-            4.0e-6,
-            "kg/(A*yr)",
-            SRC_CPC_MMO,
-            "0.5-4.0 mg/A/yr depending on conditions; upper end taken",
+            _pv_range(
+                0.5e-6,
+                4.0e-6,
+                "high",
+                "kg/(A*yr)",
+                SRC_CPC_MMO,
+                "0.5-4.0 mg/A/yr depending on CP application conditions",
+            )
         ),
         max_current_density={
             IccpEnvironment.SOIL: _pv(
-                50.0, "A/m2", SRC_CPC_MMO, "carbonaceous backfill row (coke: 100)"
+                50.0,
+                "A/m2",
+                SRC_CPC_MMO,
+                "carbonaceous backfill row (calcined coke row: 100; lower row taken)",
             ),
             IccpEnvironment.FRESHWATER: _pv(100.0, "A/m2", SRC_CPC_MMO, "freshwater row"),
             IccpEnvironment.SEAWATER: _pv(600.0, "A/m2", SRC_CPC_MMO, "seawater row"),
@@ -210,33 +270,40 @@ ICCP_ANODE_RECORDS: dict[AnodeMaterial, IccpAnodeMaterialRecord] = {
         material=AnodeMaterial.PLATINIZED_TITANIUM,
         life_basis=AnodeLifeBasis.COATING_WEAR,
         consumption_rate=_per_env(
-            1.0e-5, "kg/(A*yr)", SRC_USNA_EN380, "Table 7.1: 0.01 g/A-yr (Pt)"
+            _pv(1.0e-5, "kg/(A*yr)", SRC_USNA_EN380, "Table 7.1: 0.01 g/A-yr (Pt)")
         ),
         max_current_density=_per_env(
-            700.0, "A/m2", SRC_USNA_EN380, "Table 7.1: upper end of 250-700; 9 V max"
+            _pv_range(250.0, 700.0, "low", "A/m2", SRC_USNA_EN380, "Table 7.1: 250-700; 9 V max")
         ),
     ),
     AnodeMaterial.PLATINIZED_NIOBIUM: IccpAnodeMaterialRecord(
         material=AnodeMaterial.PLATINIZED_NIOBIUM,
         life_basis=AnodeLifeBasis.COATING_WEAR,
         consumption_rate=_per_env(
-            1.0e-5,
-            "kg/(A*yr)",
-            SRC_USNA_EN380,
-            "Table 7.1 'platinized columbium': 0.01 g/A-yr (TP16 s.1.6: 1e-5 lb/A-yr for Pt)",
+            _pv(
+                1.0e-5,
+                "kg/(A*yr)",
+                SRC_USNA_EN380,
+                "Table 7.1 'platinized columbium': 0.01 g/A-yr "
+                "(TP16 s.1.6 gives 1e-5 lb/A-yr = 4.5 mg for Pt; the higher rate is used)",
+            )
         ),
         max_current_density=_per_env(
-            1000.0, "A/m2", SRC_USNA_EN380, "Table 7.1: upper end of 500-1000; 100 V max"
+            _pv_range(
+                500.0, 1000.0, "low", "A/m2", SRC_USNA_EN380, "Table 7.1: 500-1000; 100 V max"
+            )
         ),
     ),
 }
 
-DEFAULT_UTILISATION_FACTOR = ProvisionalValue(
-    value=0.85,
-    units="-",
-    source=SRC_DOD_TP16,
-    note="s.5 worked example: 'anode utilization factor - usually 85%' (other examples use 0.8)",
-    pending_standard=_PENDING,
+DEFAULT_UTILISATION_FACTOR = _pv_range(
+    0.80,
+    0.85,
+    "low",
+    "dimensionless",
+    SRC_DOD_TP16,
+    "s.5 worked examples: 'usually 85%' in one, U = 0.8 in two others; "
+    "the lower (life-shortening) value is used",
 )
 
 # Copper cable resistivity [ohm-mm²/m] at 20°C
@@ -521,7 +588,7 @@ def iccp_anode_life(
       ``life = N * m * u / (C * I)`` (DoD TSEWG TP-16 s.5 ``L = N W u / (S I)``),
       with m the mass of one anode (``anode_mass_kg``, or solid-rod mass
       ``rho * pi d^2/4 * L`` from the cited density), u the utilisation
-      factor (default 0.85, TP-16) and C the cited consumption rate
+      factor (default 0.80, the low end of TP-16's 0.80-0.85) and C the cited consumption rate
       (``consumption_rate_kg_A_yr`` overrides it, e.g. with a supplier value).
     * Coated, dimensionally stable anodes (MMO, Pt/Ti, Pt/Nb):
       ``life = N * w * A / (C * I)``, with w the active coating loading

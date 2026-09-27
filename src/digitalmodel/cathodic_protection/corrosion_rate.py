@@ -337,6 +337,20 @@ class GalvanicCorrosionInput(BaseModel):
         )
 
 
+#: Assumptions of :func:`galvanic_corrosion` that are NOT from the cited
+#: source (owner decision 2026-09-27: keep, but flag them).
+GALVANIC_MODEL_ASSUMPTIONS: tuple[str, ...] = (
+    "MODELLING ASSUMPTION, not from the cited source (CNWRA 97-010): "
+    "reverse-reaction ('-1') terms. The anode's own cathodic reaction is held "
+    "potential-independent at i_corr,a, so I/A_a = i_corr,a*(10**((E-E_corr,a)/beta_a) - 1); "
+    "the cathode's own anodic (passive) current is held at i_O2(E_corr,c), so "
+    "I/A_c = i_O2(E) - i_O2(E_corr,c). This keeps the couple potential between "
+    "the two free potentials.",
+    "Anode dissolution follows a single Tafel line (no passivation or "
+    "concentration effects on the anode).",
+)
+
+
 class GalvanicCorrosionResult(BaseModel):
     """Result of the mixed-potential galvanic model."""
 
@@ -377,6 +391,10 @@ class GalvanicCorrosionResult(BaseModel):
     area_ratio: float = Field(..., description="Cathode-to-anode area ratio A_c/A_a")
     converged: bool = Field(..., description="Bracketed root finder converged")
     residual_V: float = Field(..., description="Potential-balance residual at the root [V]")
+    model_assumptions: list[str] = Field(
+        default_factory=lambda: list(GALVANIC_MODEL_ASSUMPTIONS),
+        description="Modelling assumptions not taken from the cited source",
+    )
 
 
 def oxygen_limiting_current_density(
@@ -447,6 +465,7 @@ def _cathode_potential(p: GalvanicCorrosionInput, current_A: float) -> float:
 _LN10 = math.log(10.0)
 
 
+
 def galvanic_corrosion(
     input_params: GalvanicCorrosionInput,
     *,
@@ -459,7 +478,7 @@ def galvanic_corrosion(
 
     * anode, net anodic current density (self-corrosion cathodic reaction
       taken as potential-independent, i.e. oxygen-diffusion controlled, at
-      ``i_corr,a``):
+      ``i_corr,a`` -- see the modelling assumption below):
       ``I/A_a = i_corr,a * (10**((E_a - E_corr,a)/beta_a) - 1)``
     * cathode, O2 reduction with diffusion limit, net of the cathode's own
       (potential-independent, passive) anodic current that balances it at
@@ -476,6 +495,15 @@ def galvanic_corrosion(
 
     Corrosion rate = total anodic density ``i_corr,a + I/A_a`` [mA/m²] x
     :func:`faraday_rate_factor`; the galvanic part alone is reported too.
+
+    Modelling assumption (not from the cited source)
+    ------------------------------------------------
+    The reverse-reaction ("-1") terms above are this module's assumption:
+    CNWRA 97-010 gives the Tafel and diffusion-limit expressions, not this
+    closure. The anode's cathodic partial reaction is fixed at
+    ``i_corr,a`` and the cathode's passive anodic current at
+    ``i_O2(E_corr,c)``, both independent of potential. The result lists it
+    in ``model_assumptions`` (:data:`GALVANIC_MODEL_ASSUMPTIONS`).
 
     Experimental
     ------------
