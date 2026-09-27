@@ -152,17 +152,41 @@ CALIBRATION_TOL = 1.0e-6
 # is not - a full-current start diverges for some model variants, a still-water continuation flips the ring to the
 # yawed branch at large offsets for others
 STATICS_PATHS = ("current_at_seed", "ramp_at_seed", "ramp_at_target", "fine_steps", "direct_at_target",
-                 "aid_current", "tension_ramp")
+                 "aid_current", "tension_ramp", "neighbour_walk")
 AID_CURRENT_M_S = 0.05  # solver aid for still-water cases (removed before the final solve)
 
 
 def statics_paths(*, current: bool) -> list[str]:
     """Statics paths in the order tried, for a case with or without current."""
+    # stage A (2026-09-27): at 12.5 ppg whole offsets fail from the straight start on every seeded path while their
+    # neighbours converge directly - the direct solve and the neighbour walk come next
     if current:
-        return ["current_at_seed", "tension_ramp", "ramp_at_seed", "ramp_at_target", "fine_steps", "direct_at_target"]
+        return ["current_at_seed", "direct_at_target", "neighbour_walk", "tension_ramp", "ramp_at_seed",
+                "ramp_at_target", "fine_steps"]
     # still water: the aiding current first - the plain seeded path fails on every 12.5 ppg variant only after the full
     # iteration budget (stage A, 2026-09-27: about 8 min per case at 57 workers)
-    return ["aid_current", "tension_ramp", "current_at_seed", "direct_at_target", "fine_steps"]
+    return ["aid_current", "direct_at_target", "neighbour_walk", "tension_ramp", "current_at_seed", "fine_steps"]
+
+
+NEIGHBOUR_STARTS_PCT = (1.0, -1.0, 2.0, -2.0, 3.0, -3.0)  # % WD from the case offset, tried in order
+WALK_STEP_PCT = 0.25
+# a straight-start probe that converges needs about 50-100 iterations (3-6 s); one that fails runs the full budget
+PROBE_ITERATIONS = 300
+
+
+def _probe(model, solve) -> None:
+    """A straight-start solve under a reduced iteration cap; on success the positions are kept, the cap restored and
+    the state confirmed by one more solve (a data change resets the static state)."""
+    g = getattr(model, "general", None)
+    if g is None:
+        solve()
+        return
+    cap = g.StaticsMaxIterations
+    g.StaticsMaxIterations = min(cap, PROBE_ITERATIONS)
+    solve()  # a failure propagates; the reduced cap is undone by the next reload or restored below
+    model.UseCalculatedPositions(True)
+    g.StaticsMaxIterations = cap
+    solve()
 
 
 # tension continuation (stage A: TT-MIN with a failed tensioner, LFJ tension about 60 kips at 12.5 ppg, diverged on
@@ -245,6 +269,41 @@ def _statics_path(model, spec: RiserGlobalModelSpec, path: str, *, speed: float,
         env.RefCurrentSpeed = 0.0
         seeded_statics(model, spec, step_pct=step, start=seed, solve=solve)
         ramp()
+    elif path == "neighbour_walk":
+        env.RefCurrentSpeed = speed
+        h = math.radians(heading_deg)
+        x1, y1 = spec.vessel_offset_m
+        p = math.hypot(x1, y1) / wd * 100.0 * (1.0 if (x1 * math.cos(h) + y1 * math.sin(h)) >= 0 else -1.0)
+
+        def place(pct):
+            r = pct / 100.0 * wd
+            for name in ("Vessel", "TensionRing"):
+                model[name].InitialX, model[name].InitialY = r * math.cos(h), r * math.sin(h)
+
+        start = None
+        g = getattr(model, "general", None)
+        cap = g.StaticsMaxIterations if g is not None else None
+        for d in NEIGHBOUR_STARTS_PCT:
+            place(p + d)
+            try:
+                if g is not None:
+                    g.StaticsMaxIterations = min(cap, PROBE_ITERATIONS)
+                solve()
+            except Exception as exc:  # noqa: BLE001 - try the next neighbour (a licence fault propagates)
+                if "licen" in str(exc).lower():
+                    raise
+                continue
+            start = p + d
+            break
+        if start is None:
+            raise _PathFailed("no neighbouring offset converged")
+        k = max(1, math.ceil(abs(p - start) / WALK_STEP_PCT - 1e-9))
+        for i in range(1, k + 1):
+            model.UseCalculatedPositions(True)
+            if g is not None:
+                g.StaticsMaxIterations = cap  # the walk steps keep the full budget
+            place(start + (p - start) * i / k)
+            solve()
     elif path == "tension_ramp":
         wins = _ring_tensioners(model)
         base = [[w.GetData("StageValue", i) for i in range(w.GetDataRowCount("StageValue"))] for w in wins]
@@ -266,7 +325,7 @@ def _statics_path(model, spec: RiserGlobalModelSpec, path: str, *, speed: float,
         x, y = spec.vessel_offset_m
         for name in ("Vessel", "TensionRing"):
             model[name].InitialX, model[name].InitialY = x, y
-        solve()
+        _probe(model, solve)
     elif path == "aid_current":
         env.RefCurrentSpeed = AID_CURRENT_M_S
         env.RefCurrentDirection = heading_deg
