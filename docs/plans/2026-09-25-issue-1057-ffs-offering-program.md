@@ -3,7 +3,9 @@
 **Issue:** [#1057](https://github.com/vamseeachanta/digitalmodel/issues/1057) (epic), Phase 4 and readiness demonstrators
 **Date:** 2026-09-25 · **Revision:** r1.4 (2026-09-26: approval-gate decisions G1–G6 applied; approved by the owner)
 **Status:** **approved by the owner on 2026-09-26** (approval-gate record on #1057; `status:plan-approved` applied by the owner's instruction). Owner note recorded with the approval: heavy planning is no longer wanted across the repo ecosystem; rely on model judgement and cross-review where necessary. Per-issue work therefore uses short plan-lites (G6 A), not full plan documents.
-**Evidence locality:** the program note and readiness review cited below are in this branch (cherry-picked from PR #2186, which is superseded by this PR). The #2157 crack FE plan is external (PR #2194, open). Deckhand `report_url` is a target contract (deckhand #498/#499), not current behaviour.
+**Evidence locality:** the program note and readiness review cited below are in this branch (cherry-picked from PR #2186, which is superseded by this PR). The #2157 crack FE plan is external (PR #2194, open).
+
+**Amendment 2026-09-27 (owner directive: no Deckhand/bot delivery channel):** delivery of an offering is a registered durable workflow in `docs/registry/workflows.yaml` with a committed example under `examples/workflows/<id>/` and the report it writes. The catalog status `routed` is replaced by `workflow` (registered workflow with example, no validation record); `live` is engine + tests + validation record + registered workflow with example. Catalog `route:` keys and the Deckhand route test were removed. Review-history entries below that mention routes, route lines or `report_url` are kept as a record of the review and are superseded by this amendment.
 **Objective (owner's words):** be able to offer fitness-for-service (FFS) services for a wide variety of assets via available codes and standards.
 
 ## Resource Intelligence Summary
@@ -18,7 +20,7 @@
 | Decision layer | `ffs_decision` (pressure-equipment vocabulary: ACCEPT / MONITOR / RE_RATE / REPAIR / REPLACE, inch/psi), RBI screen, composite repair selector, inspection planning, acceptance curves + lookup | `assessment/ffs_decision.py`, `rbi_screening.py`, `composite_repair.py`, `inspection_planning.py`, `ffs_acceptance_curves.py`, `ffs_lookup.py` |
 | Asset engines reusable for FFS | Plate/panel buckling (DNV-RP-C201), hull girder screening, jacket member/joint checks, mooring screening (GREEN/AMBER/RED) + fatigue, synthetic-rope fatigue, riser fatigue, S-N library (221 curves), scour, SHM templates | `infrastructure/base_solvers/structural`, `hull_girder_screening`, `structural/jacket_topside`, `mooring_resilience`, `mooring_fatigue`, `synthetic_rope_mooring_fatigue`, `riser_fatigue`, `structural/fatigue`, `geotechnical/scour.py`, `structural/offshore_resilience` |
 | Solvers | gmsh meshing, CalculiX linear static chain, ANSYS APDL generators (licensed host), in-house beam eigen-buckling | `solvers/gmsh_meshing`, `solvers/calculix`, `ansys/`, `structural/fe` |
-| Delivery | Workflow registry + examples + durable test + Deckhand route + report URL; capability pages | `docs/registry/workflows.yaml`, `examples/workflows/`, `tests/workflows/test_durable_workflows.py`, deckhand repo `config/deckhand/routing/paths.yaml` and `domain-workflows.yaml` (sibling checkout `../deckhand`), `docs/api/ffs/` |
+| Delivery | Registered durable workflow + committed example + durable test + report; capability pages | `docs/registry/workflows.yaml`, `examples/workflows/`, `tests/workflows/test_durable_workflows.py`, `docs/api/ffs/` |
 | Real data | Anonymized riser UT C-scan grids + registers (#1293) | `tests/asset_integrity/test_data/real_inspection/` |
 
 ### Standards
@@ -42,9 +44,9 @@ From the offering catalog (`src/digitalmodel/asset_integrity/data/ffs_offering_c
 
 | Status | Rows | Meaning for the offering |
 |---|---|---|
-| live | 0 | nothing is both validated and routed today |
-| routed | 3 | run link exists, no validation record: inspection interval, riser fatigue, plate buckling (the legacy API 579 pipe engine is also routed but no row depends on it; the two subsea design screens moved to `ffs_design_screen_catalog.yml` per D5) |
-| validated | 6 | defensible numbers, no run link |
+| live | 0 | no row yet leans only on engines that are validated and registered as workflows |
+| workflow | 3 | registered workflow with example, no validation record: inspection interval, riser fatigue, plate buckling (the legacy API 579 pipe engine is also a registered workflow but no row depends on it; the two subsea design screens moved to `ffs_design_screen_catalog.yml` per D5) |
+| validated | 6 | defensible numbers, no registered workflow |
 | engine | 31 | code exists, no validation record or run link |
 | planned | 25 | issue filed |
 | none | 13 | roadmap candidates with no issue |
@@ -54,7 +56,7 @@ Structural gaps: no Level 3 numerical path in the unlicensed chain; three duplic
 ### Evidence
 
 - Readiness matrix and per-module test counts: `docs/domains/asset-integrity/ffs-readiness-review-2026-09-25.md` (this branch).
-- Catalog validation: `tests/asset_integrity/test_offering_catalog.py` (7 tests: shape, engine entries incl. module import and workflow ids, Deckhand routes when the sibling checkout exists, row references, status semantics (none ⇒ no engines; row ≤ strongest engine; live ⇒ only live/validated engines), no threshold-like numerics, page summary equals data). Run locally with the repo venv (`.venv/Scripts/python.exe -m pytest tests/asset_integrity/test_offering_catalog.py`) because `uv run` re-syncs the lock and fails building `cx-oracle` / `pyyaml` wheels on this Windows host; the CI job `tests-asset-integrity` on PR #2204 is the arbiter.
+- Catalog validation: `tests/asset_integrity/test_offering_catalog.py` (7 tests: shape, engine entries incl. module import and workflow ids, live/workflow ⇒ registered workflow with committed example input, row references, status semantics (none ⇒ no engines; row ≤ strongest engine; live ⇒ only live/validated engines), no threshold-like numerics, page summary equals data). Run locally with the repo venv (`.venv/Scripts/python.exe -m pytest tests/asset_integrity/test_offering_catalog.py`) because `uv run` re-syncs the lock and fails building `cx-oracle` / `pyyaml` wheels on this Windows host; the CI job `tests-asset-integrity` on PR #2204 is the arbiter.
 - #2157 review trail: Codex r1 MAJOR, Claude r1 MAJOR, Codex r2 MAJOR, Codex r2.1 MINOR; r2.2 pending owner approval.
 
 ## Offering Model
@@ -63,7 +65,7 @@ Three service tiers, every asset class offered at the highest tier its engines a
 
 | Tier | Deliverable | Who consumes | Gate |
 |---|---|---|---|
-| T1 field screen | ACCEPT / MONITOR / take-more-measurements / ESCALATE within the mobilization | inspector, MI coordinator | Level 1 rule or code screening rule, validation record, workflow + route |
+| T1 field screen | ACCEPT / MONITOR / take-more-measurements / ESCALATE within the mobilization | inspector, MI coordinator | Level 1 rule or code screening rule, validation record, registered workflow + report |
 | T2 office Level 2 | closed-form report with RSF / MAWP / FAD point / remaining life, clause-cited | integrity engineer, owner-user | Level 2 engine, published-example golden test, cross-review |
 | T3 Level 3 | numerical assessment package (strain limit, buckling, collapse, crack driving force) | specialist, class / regulator | FEA chain (#2173) or licensed host, verification receipts, engineer sign-off |
 
@@ -112,9 +114,9 @@ wiki  llm-wiki #913 (API 653 pointers, 2007->2021 crosswalk, Part 9 dataset audi
 
 | Milestone | Definition of done | Catalog effect (rows) |
 |---|---|---|
-| M1 Foundations | Wave 0 merged; one FAD; material library; decision engine generalized; catalog page generated in CI; canonical routes live | live 0 → 2 (metal-loss coordinator, inspection planning) |
-| M2 Sellable core | Wave 1 merged; every existing engine has a validation record and a run link | engine 31 → ≤ 10; routed 5 → 0 |
-| M3 Multi-asset T1/T2 | Wave 2 merged in D4 order; platforms, hulls, casing, tanks, moorings, flexible pipe each have a routed, validated screen | planned 25 → ≤ 12 |
+| M1 Foundations | Wave 0 merged; one FAD; material library; decision engine generalized; catalog page generated in CI; canonical workflows registered with committed results | live 0 → 2 (metal-loss coordinator, inspection planning) |
+| M2 Sellable core | Wave 1 merged; every existing engine has a validation record and a registered workflow | engine 31 → ≤ 10; workflow 5 → 0 |
+| M3 Multi-asset T1/T2 | Wave 2 merged in D4 order; platforms, hulls, casing, tanks, moorings, flexible pipe each have a registered, validated screen workflow | planned 25 → ≤ 12 |
 | M4 Level 3 | Wave 3 merged; tank Level 3 runs on the solver host; crack Level 3 go/no-go recorded | T3 offered for tanks |
 | M5 Part completion | Wave 4 merged; every API 579 part has an engine or a dated plan; every remaining `none` row has a deferral note | none 13 → 0 undocumented |
 
@@ -123,7 +125,7 @@ wiki  llm-wiki #913 (API 653 pointers, 2007->2021 crosswalk, Part 9 dataset audi
 1. **Plan-lite** on the issue (scope, sources, files, tests, acceptance); adversarial review per `../workspace-hub/docs/standards/AI_REVIEW_ROUTING_POLICY.md` (workspace-hub repo; Claude + Codex + Gemini by default, any provider shortfall recorded with its artifact); owner applies `status:plan-approved`.
 2. **TDD**: golden test from a published example first; applicability-limit tests (flags, never silent extrapolation); negative fixtures for guards.
 3. **Implement** in an isolated worktree on the lane's host (`machine:dev-primary` for closed-form work; `machine:licensed-win-1` (ace-win-1) for ANSYS; Linux host for CalculiX). Use `uv run`.
-4. **Wire**: registry row + `examples/workflows/<id>/` with committed results + durable test + Deckhand route (deckhand repo PR) + `ffs_report` output + catalog status update; `test_offering_catalog.py` fails if a `live`/`routed` row lacks a registry id or route, or a `live`/`validated` row lacks a validation record.
+4. **Wire**: registry row + `examples/workflows/<id>/` with committed results + durable test + `ffs_report` output + catalog status update; `test_offering_catalog.py` fails if a `live`/`workflow` engine lacks a registry id or a committed example input, or a `live`/`validated` row lacks a validation record.
 5. **Validate**: validation record under `docs/domains/asset-integrity/` with reference case, our value, difference, limits; the record's numbers asserted by a test.
 6. **Land** via PR with cross-review; never `git merge` on main in-session (use `gh pr merge`); write a handoff before stopping.
 
@@ -137,19 +139,19 @@ Parallelism: Wave 0 items are disjoint and can run concurrently on separate work
 - `src/digitalmodel/asset_integrity/{tank_settlement,mooring_chain,platform_member,hull_wastage,casing_capacity,flexible_pipe}.py` (Wave 2)
 - `src/digitalmodel/solvers/calculix/{inp_writer,result_parser,fem_chain}.py` (#2173)
 - `src/digitalmodel/materials/ffs_material_library.py` (#2171)
-- `docs/registry/workflows.yaml`, `examples/workflows/<id>/`, deckhand `config/deckhand/routing/paths.yaml` and `domain-workflows.yaml` (every wired issue)
+- `docs/registry/workflows.yaml`, `examples/workflows/<id>/` (every wired issue)
 - `docs/domains/asset-integrity/*-validation-*.md`, `docs/api/ffs/ffs-readiness.html` (#2185), `docs/capability-map/capabilities-added.yml` (#2197)
 
 ## TDD Test List (program level)
 
-- `tests/asset_integrity/test_offering_catalog.py` (in this PR): shape; engine entries import, workflow ids exist, `live`/`routed` ⇒ route, `live`/`validated` ⇒ existing validation record, `planned` ⇒ issue; Deckhand route presence when `../deckhand` exists; row references resolve; row status ≤ engines' status; no threshold-like numerics; page summary counts equal data.
+- `tests/asset_integrity/test_offering_catalog.py` (in this PR): shape; engine entries import, workflow ids exist, `live`/`workflow` ⇒ registered workflow with committed example input, `live`/`validated` ⇒ existing validation record, `planned` ⇒ issue; no `route` field; row references resolve; row status ≤ engines' status; no threshold-like numerics; page summary counts equal data.
 - Per engine: published-example golden test; applicability flag tests; negative guard fixtures; `test_durable_workflows[<id>]` parametrized row.
 - Per validation record: the numbers in the record are asserted by a test (no record without a test).
 
 ## Acceptance Criteria (program)
 
 1. Catalog is the single source; the page is generated (#2197) and its counts are enforced now; CI enforces status semantics.
-2. Every `live` row has a registered workflow whose durable test passes and a `digitalmodel:<id>` Deckhand route. Evidence per row: the durable test id and the route line in deckhand `config/deckhand/routing/paths.yaml`. A report URL from `POST /api/run` becomes part of the evidence only once deckhand #498/#499 land (today `docs/deckhand/API.md` calls `report_url` a target contract); until then the report is the committed `examples/workflows/<id>/results/` output.
+2. Every `live` row has a registered durable workflow with a committed example whose durable test passes. Evidence per row: the durable test id and the report the workflow writes under `examples/workflows/<id>/results/`.
 3. No standards clause text, table, figure, formula or licensed threshold in the repo; rights card recorded per issue.
 4. Every engine that reaches `validated` has a validation record with a published comparator and a test asserting the record's numbers.
 5. Level 3 offerings state the solver, receipts and sign-off requirement in the report.
@@ -202,6 +204,6 @@ Next: Wave 0 plan-lites on #1094, #2160, #2171, #2180, #2197, #2205; owner batch
 | Scope breadth: 14 `none` rows after triage | Waves ordered by demand; catalog makes deferrals explicit and dated |
 | Duplicate implementations recur | #2160 first; catalog CI checks one engine per (code, mechanism) once #2197 lands |
 | #2157 depends on a licensed machine | Its plan is public (PR #2194); receipts are committed before #2178 compares against them; program does not block on it |
-| Deckhand `report_url` not implemented (deckhand #498/#499) | Acceptance #2 uses committed results + route line until it lands; `live` never claims a report URL before then |
+| Committed example results drift from the engine | Acceptance #2 uses the durable test, which re-runs the example and checks its outputs |
 
 ## Complexity: T4 (program of ~27 issues across five waves; individual issues T2–T3)

@@ -3,7 +3,7 @@
 """FFS offering catalog: one loader for the three YAML data files under ``asset_integrity/data``.
 
 * ``ffs_offering_catalog.yml``  -- industries x assets x damage mechanisms x codes x engine status
-* ``ffs_design_screen_catalog.yml`` -- routed design screens that are not FFS verdicts (owner decision D5)
+* ``ffs_design_screen_catalog.yml`` -- registered design-screen workflows that are not FFS verdicts (owner decision D5)
 * ``ffs_damage_mechanism_crosswalk.yml`` -- API RP 571 mechanism names -> API 579 part numbers
 
 The validator here is the single home of the schema rules; ``tests/asset_integrity/test_offering_catalog.py``
@@ -43,14 +43,14 @@ PAGE = REPO_ROOT / "docs" / "domains" / "asset-integrity" / "ffs-offering-catalo
 CAPABILITY_MAP = REPO_ROOT / "docs" / "capability-map" / "capabilities-added.yml"
 WORKFLOW_REGISTRY = REPO_ROOT / "docs" / "registry" / "workflows.yaml"
 
-STATUSES = frozenset({"live", "routed", "validated", "engine", "planned", "none"})
+STATUSES = frozenset({"live", "workflow", "validated", "engine", "planned", "none"})
 TIERS = frozenset({"T1", "T2", "T3"})
-ENGINE_STATUSES_NEEDING_MODULE = frozenset({"live", "routed", "validated", "engine"})
-ORDER = {"none": 0, "planned": 1, "engine": 2, "routed": 3, "validated": 3, "live": 4}
+ENGINE_STATUSES_NEEDING_MODULE = frozenset({"live", "workflow", "validated", "engine"})
+ORDER = {"none": 0, "planned": 1, "engine": 2, "workflow": 3, "validated": 3, "live": 4}
 STATUS_DOC = {
-    "live": "engine, tests, validation record, registered workflow, Deckhand route",
-    "routed": "workflow and route exist, no validation record",
-    "validated": "engine + tests + validation record, no workflow",
+    "live": "engine, tests, validation record, registered durable workflow with example",
+    "workflow": "registered durable workflow with example, no validation record",
+    "validated": "engine + tests + validation record, no registered workflow",
     "engine": "engine + tests only",
     "planned": "issue filed",
     "none": "roadmap candidate, no issue yet",
@@ -278,11 +278,21 @@ def _check_engine(
                 )
     if eng["status"] == "planned" and not isinstance(eng.get("issue"), int):
         out.append(f"{key}: planned needs an issue")
-    if eng["status"] in {"live", "routed"}:
-        if registry_ids is not None and eng.get("workflow") not in registry_ids:
-            out.append(f"{key}: workflow id not in registry")
-        if eng.get("route") is not True:
-            out.append(f"{key}: live/routed requires route: true")
+    if eng["status"] in {"live", "workflow"}:
+        wf = eng.get("workflow")
+        if not wf:
+            out.append(f"{key}: live/workflow requires a registered workflow")
+        else:
+            if registry_ids is not None and wf not in registry_ids:
+                out.append(f"{key}: workflow id not in registry")
+            if not (repo / "examples" / "workflows" / wf / "input.yml").exists():
+                out.append(
+                    f"{key}: live/workflow needs a committed example examples/workflows/{wf}/input.yml"
+                )
+    if "route" in eng:
+        out.append(
+            f"{key}: 'route' is not a catalog field (delivery is the registered workflow)"
+        )
     if eng["status"] in {"live", "validated"}:
         rec = eng.get("validation")
         if not rec or not (repo / rec).exists():
@@ -303,8 +313,8 @@ def check_engines(
     import_modules: bool = False,
     repo: Path = REPO_ROOT,
 ) -> list[str]:
-    """Engine registry rules: module present/importable, planned has an issue, routed has workflow + route,
-    validated has an existing record, every workflow id is registered."""
+    """Engine registry rules: module present/importable, planned has an issue, live/workflow have a registered
+    workflow with a committed example, live/validated have an existing record, every workflow id is registered."""
     out: list[str] = []
     for key, eng in cat.ffs["engines"].items():
         out += _check_engine(
@@ -315,16 +325,6 @@ def check_engines(
             repo=repo,
         )
     return out
-
-
-def check_routes(cat: Catalog, deckhand_paths_text: str) -> list[str]:
-    """Every ``route: true`` engine has a ``digitalmodel:<workflow>`` entry in Deckhand's routing paths."""
-    return [
-        f"{key}: no deckhand route"
-        for key, eng in cat.engines.items()
-        if eng.get("route") is True
-        and f"digitalmodel:{eng.get('workflow')}" not in deckhand_paths_text
-    ]
 
 
 def _check_row_keys(cat: Catalog, design: bool) -> list[str]:
@@ -479,7 +479,6 @@ def validate(
     *,
     registry_ids: set[str] | None = None,
     import_modules: bool = False,
-    deckhand_paths_text: str | None = None,
     repo: Path = REPO_ROOT,
 ) -> list[str]:
     """Run every rule; return the list of problems (empty means the catalogs are consistent)."""
@@ -493,8 +492,6 @@ def validate(
         cat, registry_ids=registry_ids, import_modules=import_modules, repo=repo
     )
     problems += check_crosswalk(cat)
-    if deckhand_paths_text is not None:
-        problems += check_routes(cat, deckhand_paths_text)
     return problems
 
 
@@ -573,7 +570,7 @@ def _how_to_read(cat: Catalog) -> list[str]:
     tiers = "; ".join(f"{k} {v}" for k, v in cat.ffs["tiers"].items())
     statuses = " · ".join(
         f"`{s}` ({STATUS_DOC[s]})"
-        for s in ("live", "routed", "validated", "engine", "planned", "none")
+        for s in ("live", "workflow", "validated", "engine", "planned", "none")
     )
     parts = " · ".join(
         f"{n} {name}" for n, name in cat.ffs["codes"]["api-579-1"]["parts"].items()
@@ -598,13 +595,13 @@ def _summary_block(cat: Catalog) -> list[str]:
     out = ["## Coverage summary", "", "| Status | Rows |", "|---|---|"]
     out += [
         f"| {st} | {s[st]} |"
-        for st in ("live", "routed", "validated", "engine", "planned", "none")
+        for st in ("live", "workflow", "validated", "engine", "planned", "none")
     ]
     out += [f"| total | {s['total']} |", ""]
     if s["live"] == 0:
         lead = (
-            f"No row is `live` today: the {s['routed']} `routed` rows lack validation records and the "
-            f"{s['validated']} `validated` rows lack routes."
+            f"No row is `live` today: the {s['workflow']} `workflow` rows lack validation records and the "
+            f"{s['validated']} `validated` rows lack a registered workflow."
         )
     else:
         lead = f"{s['live']} of {s['total']} rows are `live` today."

@@ -24,7 +24,7 @@ for [#1564](https://github.com/vamseeachanta/digitalmodel/issues/1564) and
 [#2051](https://github.com/vamseeachanta/digitalmodel/issues/2051). Keep schema validity,
 native load/run proof, numerical qualification and engineering approval separate.
 Resolve issues using their full repository-qualified URL; solver code remains here,
-execution transport in Deckhand, and cross-repository deployment in workspace-hub.
+licensed execution transport outside this repo, and cross-repository deployment in workspace-hub.
 
 ## Source / Tests / Docs Routing
 
