@@ -139,7 +139,8 @@ def test_statics_settings_change_the_path_not_the_static_state(base_spec, tmp_pa
         info = ad.statics(m, c)
         te.append(orun.end_effective_tensions(m)["riser_bottom_n"])
     assert info["statics_max_iterations"] == 1000 and info["statics_damping"] == [5.0, 50.0]
-    assert info["steps"] == 13  # -2 % -> +1 % WD in 0.25 % steps (first statics path)
+    # still water: aiding current -2 % -> +1 % WD in 0.25 % steps (13 solves), then the current removed (1 solve)
+    assert info["steps"] == 14 and info["strategy"] == "aid_current"
     assert te[1] == pytest.approx(te[0], rel=1e-5)
 
 
