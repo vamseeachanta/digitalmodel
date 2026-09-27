@@ -25,6 +25,8 @@ from digitalmodel.cathodic_protection import engine_adapter
 from digitalmodel.cathodic_protection.engine_adapter import (
     CALCULATION_TYPES,
     KEY_B401_LEGACY,
+    KEY_F103,
+    KEY_F103_2010,
     KEY_F103_LEGACY,
     STATUS_FAIL,
     STATUS_PASS,
@@ -349,7 +351,10 @@ def test_pipeline_f103_explicit_2010_edition_reproduces_earlier_results() -> Non
     # M = 1.328 * 30 * 8760 / (2000 * 0.80) = 218.1 kg -> 9 x 25 kg; spacing 166.7 m.
     cfg = _load("pipeline")
     cfg["inputs"]["design_data"]["edition"] = "2010"
-    results = run_cathodic_protection(cfg)["results"]
+    _assert_f103_2010_pipeline(run_cathodic_protection(cfg)["results"])
+
+
+def _assert_f103_2010_pipeline(results: dict[str, Any]) -> None:
     assert results["standard"] == "DNV-RP-F103 (October 2010)"
     assert results["edition"] == "2010"
     assert results["current_densities_A_m2"]["mean_current_density_A_m2"] == pytest.approx(0.06)
@@ -363,6 +368,50 @@ def test_pipeline_f103_explicit_2010_edition_reproduces_earlier_results() -> Non
     assert results["anode_spacing_m"]["spacing_m"] == pytest.approx(1500.0 / 9.0, abs=1e-3)
     assert "dnv-rp-f103 2010 Table 5-1" in results["citations"]
     assert "dnv-rp-f103 2010 Table A.1" in results["citations"]
+
+
+def test_neutral_f103_key_without_edition_runs_the_2019_default() -> None:
+    cfg = _load("pipeline")
+    assert cfg["inputs"]["calculation_type"] == KEY_F103 == "DNV_RP_F103"
+    assert "edition" not in cfg["inputs"]["design_data"]
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        results = run_cathodic_protection(cfg)["results"]
+    assert results["edition"] == "2019"
+    assert results["standard"] == "DNVGL-RP-F103 (September 2019, amended May 2021)"
+    assert results["current_densities_A_m2"]["mean_current_density_A_m2"] == pytest.approx(0.075)
+    assert results["anode_requirements"]["anode_count"] == 34
+    assert results["status"]["use_status"] == USE_STATUS_CLIENT_EOR
+
+
+def test_f103_2010_alias_pins_2010_with_deprecation() -> None:
+    # Owner decision 2026-09-27: the historical key reproduces its pre-2019-default
+    # results exactly (the pinned 2010 numbers above) and points at DNV_RP_F103.
+    cfg = _load("pipeline")
+    cfg["inputs"]["calculation_type"] = KEY_F103_2010
+    with pytest.warns(DeprecationWarning, match="'DNV_RP_F103'"):
+        results = run_cathodic_protection(cfg)["results"]
+    _assert_f103_2010_pipeline(results)
+    assert results["status"]["use_status"] == USE_STATUS_CLIENT_EOR
+
+
+@pytest.mark.parametrize("edition", ["2010", "f103-2010"])
+def test_f103_2010_alias_accepts_a_matching_edition(edition: str) -> None:
+    cfg = _load("pipeline")
+    cfg["inputs"]["calculation_type"] = KEY_F103_2010
+    cfg["inputs"]["design_data"]["edition"] = edition
+    with pytest.warns(DeprecationWarning):
+        results = run_cathodic_protection(cfg)["results"]
+    _assert_f103_2010_pipeline(results)
+
+
+@pytest.mark.parametrize("edition", ["2019", "2021"])
+def test_f103_2010_alias_rejects_a_conflicting_edition(edition: str) -> None:
+    cfg = _load("pipeline")
+    cfg["inputs"]["calculation_type"] = KEY_F103_2010
+    cfg["inputs"]["design_data"]["edition"] = edition
+    with pytest.warns(DeprecationWarning), pytest.raises(ValueError, match="use calculation_type 'DNV_RP_F103'"):
+        run_cathodic_protection(cfg)
 
 
 def test_pipeline_temperature_band_follows_the_edition() -> None:

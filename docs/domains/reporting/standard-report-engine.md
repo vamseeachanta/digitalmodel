@@ -74,7 +74,7 @@ citations sidecar and manifest beside the results:
 ```yaml
 basename: cathodic_protection
 inputs:
-  calculation_type: DNV_RP_B401_offshore   # or DNV_RP_F103_2010, ABS_gn_ships_2018, ABS_gn_offshore_2018
+  calculation_type: DNV_RP_B401_offshore   # or DNV_RP_F103, ABS_gn_ships_2018, ABS_gn_offshore_2018
   ...                                       # the route's inputs (see tests/fixtures/cathodic_protection/workflow_inputs/)
 report:
   kind: anode_design                        # adapter "cathodic_protection.anode_design"
