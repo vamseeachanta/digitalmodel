@@ -170,13 +170,26 @@ def _stack_points(spec) -> list[tuple[str, float]]:
     return out
 
 
-def _points(spec, ofx) -> list[tuple[str, str, Any, bool]]:
-    """(name, line, objectExtra, has flex-joint angle)."""
-    pts = [("ufj", "InnerBarrel", ofx.oeEndA, True), ("riser_top", "Riser", ofx.oeEndA, False),
-           ("lfj", "Riser", ofx.oeEndB, True)]
-    pts += [(n, "Stack", ofx.oeArcLength(a), False) for n, a in _stack_points(spec)]
+ABOVE_M = 1.0e-3  # arc-length step into the segment above a stack connector node
+
+
+def _points(spec, ofx) -> list[tuple[str, str, Any, bool, Any]]:
+    """(name, line, objectExtra, has flex-joint angle, objectExtra of the segment above a connector node or None).
+
+    A stack connector sits on a node, where the segment tension jumps by the lumped node weight and the value OrcaFlex
+    reports exactly at the node depends on the rounding of the arc length. The point is therefore read 1 mm below the
+    node (the load vector, ``te``/``tw`` of the segment below) and 1 mm above (``te_above``/``tw_above``, the segment
+    above); the interface tension lies between the two.
+    """
+    pts = [("ufj", "InnerBarrel", ofx.oeEndA, True, None), ("riser_top", "Riser", ofx.oeEndA, False, None),
+           ("lfj", "Riser", ofx.oeEndB, True, None)]
+    for n, a in _stack_points(spec):
+        if "|" in n:
+            pts.append((n, "Stack", ofx.oeArcLength(a - ABOVE_M), False, ofx.oeArcLength(a + ABOVE_M)))
+        else:
+            pts.append((n, "Stack", ofx.oeEndA if n == "stack:datum" else ofx.oeEndB, False, None))
     if spec.foundation is not None:
-        pts.append(("conductor:top", "Conductor", ofx.oeEndB, False))
+        pts.append(("conductor:top", "Conductor", ofx.oeEndB, False, None))
     return pts
 
 
@@ -242,8 +255,13 @@ def extract(model, spec, analysis: str, ofx) -> dict[str, Any]:
     t = None if static else [float(x) for x in model.SampleTimes(period)]
     if t is not None:
         doc["time"] = {"start_s": t[0], "end_s": t[-1], "samples": len(t), "dt_s": (t[-1] - t[0]) / max(1, len(t) - 1)}
-    for name, line_name, extra, angle in _points(spec, ofx):
-        vals = _line_vars(model[line_name], extra, period, angle=angle, static=static, ofx=ofx)
+    for name, line_name, extra, angle, above in _points(spec, ofx):
+        line = model[line_name]
+        vals = _line_vars(line, extra, period, angle=angle, static=static, ofx=ofx)
+        if above is not None:
+            for key, var in (("te_above", "Effective tension"), ("tw_above", "Wall tension")):
+                vals[key] = (float(line.StaticResult(var, above)) if static
+                             else [float(x) for x in line.TimeHistory(var, period, above)])
         if static:
             doc["points"][name] = {"line": line_name, "static": vals}
             continue

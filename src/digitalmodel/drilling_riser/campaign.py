@@ -49,10 +49,11 @@ from .global_model.spec import RiserGlobalModelSpec
 SEED_PCT = -2.0
 STEP_PCT = 0.5
 RESIDUAL_REL = 1.0e-3  # ring vertical balance (equilibrium): 1e-3 of the target
-# tensioner vertical sum: a branch detector. The lines are calibrated to the target at zero offset in still water;
-# at an offset or in current the sum follows the line geometry (probe: +3.6e-3 at +10 % WD in the 10-yr loop
-# current). The non-physical yawed branch sits at -5.7 %; 1 % separates the two.
-TENSIONER_VERTICAL_REL = 1.0e-2
+# tensioner vertical sum: a secondary branch detector (the ring yaw is the primary one). The lines are calibrated to
+# the target at zero offset in still water; at an offset or in current the sum follows the line geometry (batch-1
+# probes: up to -1.3 % at TT-MIN with one tensioner failed, 10-yr loop current, -10 % WD). The non-physical yawed
+# branch sits at -5.7 %; 3 % separates the two.
+TENSIONER_VERTICAL_REL = 3.0e-2
 RING_YAW_MAX_DEG = 1.0
 KN = 1000.0
 G = 9.80665
@@ -339,7 +340,7 @@ def physical_state_checks(model, spec: RiserGlobalModelSpec) -> dict[str, Any]:
     against 6,026 kN, LMRP-base tension 758 kN against 1,102 kN). Accepted only with
 
     * tension-ring yaw within 1 deg;
-    * tensioner vertical sum (global winch end points) within 1 % of the target (``lines`` tensioners; the
+    * tensioner vertical sum (global winch end points) within 3 % of the target (``lines`` tensioners; the
       branch sits at -5.7 %, the physical line-geometry change at an offset is a few 1e-3);
     * ring vertical balance within 1e-3 of the target: tensioner vertical - ring weight + buoyancy of the wetted
       ring + global vertical end force of the riser at end A - that of the inner barrel at end B. The global end
