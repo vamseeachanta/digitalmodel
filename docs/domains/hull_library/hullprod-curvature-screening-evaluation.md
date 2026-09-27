@@ -69,6 +69,17 @@ Our panel meshes are WAMIT GDF. HullProd does not read GDF, so the spike adds a 
 | Test ship, our generator | `tests/.../conftest.py::ship_profile` via `HullMeshGenerator`, 7 225 panels | 28 900 | 3.13 | 0.13 | 0.12 | 0.16 | **0.60** | caution |
 | Unit sphere (control) | HullProd example | 80 | 4.00 | 0 | 0 | 1.00 | 0 | good |
 
+## Correction 2026-09-27
+
+All GDF-derived rows above used the fixed quad diagonal split. Diagonal choice can
+change discrete curvature and inflate the reported signature; those rows must not
+be treated as current baselines. Repo-local hulls have been re-baselined with the
+shortest 3-D diagonal in the [inventory table](curvature-signature-table.md).
+Client-hull rows (including DS-A and HLV-A) are superseded and will be recomputed
+outside the public repository. The original table values are retained as the
+historical record; triangle controls and the BRep route are unaffected. See
+[issue 2253](https://github.com/vamseeachanta/digitalmodel/issues/2253).
+
 The sphere control is exact: `K = 1`, `L_ref = 2`, so `I_D = 4`.
 
 ### 3.2 Analytical convergence controls

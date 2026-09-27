@@ -43,6 +43,54 @@ for vid, prof, sig in space.generate_signatures(catalog):
 vertex counts, `hullprod_version`, `hull_type`, `crease_dominated` and `notes`.
 `PanelCatalogEntry.curvature_signature` serialises to YAML with the catalog.
 
+## Quad triangulation correction (2026-09-27)
+
+`panel_mesh_to_trimesh`, `screen_panel_mesh`, and `screen_profile` accept the
+keyword `quad_split="shortest"` (the default). It chooses the shorter 3-D
+diagonal independently for each quad. Equal squared lengths within relative
+tolerance `1e-12` use the `alternate` rule; there is no absolute tie tolerance.
+`quad_split="alternate"` uses `(i+j)` checkerboard parity when connectivity
+identifies a complete row-major vertex grid, including cyclic/reversed winding.
+Other meshes alternate by source panel index. `quad_split="fixed"` preserves
+the historical `[0,1,2]`, `[0,2,3]` split for reproduction. Splitting precedes
+symmetry expansion, so each mirrored triangle retains the reflected diagonal
+and source winding under reflection.
+
+The selected policy is recorded in `CurvatureSignature.quad_split` and
+`result.provenance["quad_split"]`. Triangle-only meshes (including padded or
+repeated-index triangles) and BRep results record `None`; legacy signatures
+without the field also load as `None`. The option is forwarded to the mesh
+component of `representation="both"`. The BRep calculation is unchanged.
+
+The [issue 2253 plan](../../plans/2026-09-27-issue-2253-quad-triangulation.md)
+identified sensitivity to diagonal choice. Reproduction also isolated a winding
+condition: exact analytic Wigley vertices, L=100, B=20, T=8, 425 x 17 quads,
+with consistent winding give `I_D=6.617684` fixed, `6.599658` alternate, and
+`6.620524` shortest. The independently built alternating triangle reference
+gives `6.599658`; BRep gives `7.125773` (analytic integral `7.1197`). Both new
+policies meet the 10% triangle / 15% integral tolerances on consistent quads.
+
+Applying the existing generator centroid-orientation heuristic flips 65 panels
+and changes those exact-vertex results to `38.315703`, `32.063764`, and
+`7.910414`, respectively. Thus the plan's fixed `>25` criterion does not hold
+for consistently wound analytic quads; a strict xfail records that unmet
+criterion, and a separate passing regression reproduces the inflation with
+generator winding. This is a general mesh-orientation defect class: a centroid
+heuristic on an open or concave surface can reverse only some panels. Follow-up
+work on [issue 2241](https://github.com/vamseeachanta/digitalmodel/issues/2241)
+should check adjacent-face winding consistency before interpreting curvature.
+The generator and HullProd estimator are outside this change.
+
+For the generated, interpolated Wigley, shortest gives `I_D=7.914447` versus
+triangle `6.599658` (19.9% difference), and end share `0.360858` versus the
+`0.20` limit. Both existing acceptance cases remain strict xfails with measured
+reasons. Diagonal choice alone does not resolve those residual errors.
+
+Historical GDF-derived evaluation rows are explicitly superseded; use the
+[re-baselined inventory](curvature-signature-table.md). Client-hull recomputation
+will occur outside this repository. Historical triangle controls and BRep
+results remain applicable.
+
 ## Reading the values
 
 | Symbol | Meaning |
@@ -51,9 +99,9 @@ vertex counts, `hullprod_version`, `hull_type`, `crease_dominated` and `notes`.
 | `I_D_plus` / `I_D_minus` | elliptic (synclastic) and saddle (anticlastic) parts of `I_D` |
 | `a_flat`, `a_single`, `a_elliptic`, `a_saddle` | area fractions by curvature class, sum to 1 |
 
-Reference values from the 2026-09-25 evaluation (coarse BEM meshes, mesh backend):
-FPSO `a_single` 0.75; drillship `a_flat` 0.52, `a_elliptic` 0.23, `a_saddle` 0.21;
-unit sphere `I_D` 4.00 exactly; cylinder `a_single` 1.00 exactly.
+Analytic triangle controls: unit sphere `I_D` 4.00 exactly; cylinder
+`a_single` 1.00 exactly. The 2026-09-25 GDF-derived fractions are historical
+fixed-diagonal results and are superseded by the correction above.
 
 ## Rules of use
 
@@ -137,7 +185,8 @@ their absolute and relative deltas are null.
 The default fit samples at least 41 × 11 points (or the number of input stations
 and offsets, when larger), using the mesh generator's shape-preserving interpolation.
 Explicit `n_x` and `n_z` override those counts. Mesh independence does **not**
-remove fitting sensitivity: the fixture ship gives BRep `I_D=5.7746` and mesh
+remove fitting sensitivity: the historical fixed-split comparison gave BRep
+`I_D=5.7746` and mesh
 `I_D=3.8280` at 7,225 half-hull panels, a **33.71%** relative gap. The planned
 15% expectation remains a strict expected-failure test. A 161 × 41 fit gives
 `I_D=4.4389`; an 81 × 21 fit is `quadrature_unconverged`. The coarse profile's
