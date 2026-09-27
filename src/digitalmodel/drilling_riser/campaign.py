@@ -128,7 +128,12 @@ def seeded_statics(model, spec: RiserGlobalModelSpec, *, seed_pct: float = SEED_
     x0, y0 = start if start is not None else (seed_pct / 100.0 * wd, 0.0)
     x1, y1 = target if target is not None else spec.vessel_offset_m
     solve = solve or model.CalculateStatics
-    n = max(1, math.ceil(math.hypot(x1 - x0, y1 - y0) / (step_pct / 100.0 * wd) - 1e-9))
+    n = math.ceil(math.hypot(x1 - x0, y1 - y0) / (step_pct / 100.0 * wd) - 1e-9)
+    if n <= 0:  # start == target: one solve there
+        for name in ("Vessel", "TensionRing"):
+            model[name].InitialX, model[name].InitialY = x0, y0
+        solve()
+        return {"method": "seeded continuation", "steps": 1}
     for i in range(n + 1):
         f = i / n
         x, y = x0 + f * (x1 - x0), y0 + f * (y1 - y0)
@@ -142,17 +147,33 @@ def seeded_statics(model, spec: RiserGlobalModelSpec, *, seed_pct: float = SEED_
 
 CURRENT_RAMP = (0.25, 0.5, 0.75, 1.0)
 CALIBRATION_TOL = 1.0e-6
+# statics paths, tried in order (W4 batch-1 probes, 2026-09-27): the static state is path-independent but the solver
+# is not - a full-current start diverges for some model variants, a still-water continuation flips the ring to the
+# yawed branch at large offsets for others
+STATICS_PATHS = ("current_at_seed", "ramp_at_seed", "ramp_at_target", "fine_steps")
+_RAMP_PATHS = ("ramp_at_seed", "ramp_at_target")
+
+
+class _PathFailed(RuntimeError):
+    pass
 
 
 def _ring_tensioners(model) -> list:
     return [o for o in model.objects if o.typeName == "Winch" and o.name.startswith("Tensioner")]
 
 
+def set_line_tension(model, tension_n: float) -> None:
+    """Set every tensioner line (all winch stages) to ``tension_n``."""
+    for w in _ring_tensioners(model):
+        for i in range(w.GetDataRowCount("StageValue")):
+            w.SetData("StageValue", i, tension_n / KN)
+
+
 def calibrate_line_tension(model, spec: RiserGlobalModelSpec, *, solve, tol: float = CALIBRATION_TOL,
                            max_iter: int = 6) -> dict[str, Any]:
-    """Scale the tensioner line tension until the vertical sum equals the target in the current static state
-    (called at zero offset in still water: the tensioners are set at the spaced-out position; at an offset or in
-    current the vertical sum then follows the line geometry, as with a real tensioner setting)."""
+    """Scale the tensioner line tension until the vertical sum equals the target in the current static state. Run at
+    zero offset in still water it gives the tensioner setting (the vertical target at the spaced-out position); at an
+    offset or in current the vertical sum then follows the line geometry, as with a real tensioner setting."""
     target = tensioner_vertical_target_n(spec)
     factor, calls = 1.0, 0
     for _ in range(max_iter):
@@ -168,61 +189,101 @@ def calibrate_line_tension(model, spec: RiserGlobalModelSpec, *, solve, tol: flo
         calls += 1
     else:
         raise RuntimeError(f"tensioner line tension calibration did not converge ({max_iter} iterations)")
-    return {"factor": factor, "statics_calls": calls, "target_n": target}
+    line = _ring_tensioners(model)[0]
+    return {"factor": factor, "statics_calls": calls, "target_n": target,
+            "line_tension_n": line.GetData("StageValue", line.GetDataRowCount("StageValue") - 1) * KN}
 
 
-def robust_statics(model, spec: RiserGlobalModelSpec, params: dict) -> dict[str, Any]:
-    """Campaign statics path (W4 batch-1 probe, 2026-09-27):
+def _ring_yaw_deg(model) -> float:
+    return (float(model["TensionRing"].StaticResult("Rotation 3")) + 180.0) % 360.0 - 180.0
 
-    1. current off: seeded continuation from the -2 % WD seed to zero offset;
-    2. ``lines`` tensioners: line tension calibrated so the vertical sum equals the target there;
-    3. continuation from zero offset to the case offset in <= ``statics_step_pct`` % WD steps;
-    4. current ramped in at 25, 50, 75 and 100 % of its speed.
 
-    The static state is unchanged by the path; the path avoids the non-physical branch and the divergence of a
-    full-current start. A failure in the ramp is ``statics_diverged`` with the fraction of the current reached.
+def _statics_path(model, spec: RiserGlobalModelSpec, path: str, *, speed: float, step: float, solve) -> None:
+    wd = spec.environment.water_depth_m
+    seed = (SEED_PCT / 100.0 * wd, 0.0)
+    env = model.environment
+
+    def ramp():
+        for f in CURRENT_RAMP:
+            model.UseCalculatedPositions(True)  # before the data change (both reset the model)
+            env.RefCurrentSpeed = f * speed
+            solve()
+
+    if path == "current_at_seed":
+        env.RefCurrentSpeed = speed
+        seeded_statics(model, spec, step_pct=step, start=seed, solve=solve)
+    elif path == "fine_steps":
+        env.RefCurrentSpeed = speed
+        seeded_statics(model, spec, step_pct=step / 2.0, start=seed, solve=solve)
+    elif path == "ramp_at_seed":
+        env.RefCurrentSpeed = 0.0
+        seeded_statics(model, spec, step_pct=step, start=seed, target=seed, solve=solve)
+        ramp()
+        model.UseCalculatedPositions(True)
+        seeded_statics(model, spec, step_pct=step, start=seed, solve=solve)
+    elif path == "ramp_at_target":
+        env.RefCurrentSpeed = 0.0
+        seeded_statics(model, spec, step_pct=step, start=seed, solve=solve)
+        ramp()
+    else:
+        raise ValueError(f"unknown statics path {path!r}")
+
+
+def robust_statics(model, spec: RiserGlobalModelSpec, params: dict, *, reload=None) -> dict[str, Any]:
+    """Statics by the first of ``STATICS_PATHS`` that converges with the ring on the physical branch (yaw within
+    1 deg after every solve); ``reload()`` restores the loaded model between attempts. Paths:
+
+    * ``current_at_seed`` - the W2 path: full current, continuation from the -2 % WD seed to the case offset in
+      <= ``statics_step_pct`` % WD steps;
+    * ``ramp_at_seed`` - still water at the seed, current ramped in 25 % steps there, then the continuation;
+    * ``ramp_at_target`` - still-water continuation to the case offset, then the current ramp;
+    * ``fine_steps`` - as the first with half steps.
+
+    Without current the ramp paths are skipped. Licence faults propagate (the runner retries them); when every path
+    fails the case is ``statics_diverged`` with each path's error. ``calibrate_tension`` (zero-offset still-water
+    cases only) then scales the line tension to the vertical target and returns it (the tensioner setting).
     """
     from digitalmodel.solvers.orcaflex.parallel_runner import CaseFailed
 
     step = float(params.get("statics_step_pct", STEP_PCT))
-    env = model.environment
-    speed = float(env.RefCurrentSpeed) if spec.current is not None else 0.0
+    speed = float(model.environment.RefCurrentSpeed) if spec.current is not None else 0.0
     n_calls = [0]
 
     def solve():
         model.CalculateStatics()
         n_calls[0] += 1
+        yaw = _ring_yaw_deg(model)
+        if abs(yaw) > RING_YAW_MAX_DEG:
+            raise _PathFailed(f"ring yaw {yaw:.1f} deg at vessel x {model['Vessel'].InitialX:.2f} m")
 
-    info: dict[str, Any] = {"method": "still-water calibration, offset continuation, current ramp"}
-    if speed:
-        env.RefCurrentSpeed = 0.0
-    a = seeded_statics(model, spec, step_pct=step, target=(0.0, 0.0), solve=solve)
-    if spec.tensioners.representation == "lines" and params.get("tension_calibration", True):
+    paths = [p for p in params.get("statics_paths", STATICS_PATHS) if speed or p not in _RAMP_PATHS]
+    attempts: list[dict[str, str]] = []
+    chosen = None
+    path_start = 0
+    for k, path in enumerate(paths):
+        if k:
+            if reload is None:
+                break
+            reload()
+        path_start = n_calls[0]
+        try:
+            _statics_path(model, spec, path, speed=speed, step=step, solve=solve)
+            chosen = path
+            break
+        except Exception as exc:  # noqa: BLE001 - a path failure is recorded and the next path tried
+            if "licen" in str(exc).lower():
+                raise
+            attempts.append({"strategy": path, "error": str(exc).strip().splitlines()[-1][:200]})
+    if chosen is None:
+        raise CaseFailed("statics_diverged", "no statics path converged: "
+                                             + "; ".join(f"{a['strategy']}: {a['error']}" for a in attempts))
+    info: dict[str, Any] = {"method": "seeded continuation", "strategy": chosen, "attempts": attempts,
+                            "steps": n_calls[0] - path_start, "statics_calls": n_calls[0]}
+    if params.get("calibrate_tension"):
+        if any(abs(v) > 1e-9 for v in spec.vessel_offset_m) or spec.current is not None:
+            raise ValueError("calibrate_tension needs a zero-offset, still-water case")
         info["calibration"] = calibrate_line_tension(model, spec, solve=solve)
-    if any(abs(v) > 1e-9 for v in spec.vessel_offset_m):
-        model.UseCalculatedPositions(True)
-        b = seeded_statics(model, spec, step_pct=step, start=(0.0, 0.0), solve=solve)
-    else:
-        b = {"steps": 0}
-    info["steps"] = a["steps"] + b["steps"]
-    info["offset_steps_end"] = n_calls[0]
-    info["current_ramp"] = []
-    if speed:
-        reached = 0.0
-        for f in CURRENT_RAMP:
-            model.UseCalculatedPositions(True)  # before the data change (both reset the model)
-            env.RefCurrentSpeed = f * speed
-            try:
-                solve()
-            except Exception as exc:  # noqa: BLE001 - a definite statics failure with the fraction reached
-                env.RefCurrentSpeed = speed
-                raise CaseFailed("statics_diverged", f"statics did not converge at {f:g} of the current "
-                                                     f"(converged at {reached:g}): {str(exc).strip()[-200:]}") from exc
-            reached = f
-            info["current_ramp"].append(f)
-    info["statics_calls"] = n_calls[0]
     return {**info, **physical_state_checks(model, spec)}
-
 
 def _tensioner_vertical_n(model) -> float:
     from .global_model import orcaflex_run as orun
@@ -317,6 +378,7 @@ class RiserCampaignAdapter:
 
     def __init__(self) -> None:
         self._specs: dict[str, RiserGlobalModelSpec] = {}
+        self._masters: dict[str, Path] = {}
 
     def spec(self, case: dict) -> RiserGlobalModelSpec:
         if case["case_id"] not in self._specs:
@@ -327,9 +389,14 @@ class RiserCampaignAdapter:
         from .global_model.build import write_model
 
         self._specs.pop(case["case_id"], None)
-        return write_model(self.spec(case), model_dir) / "master.yml"
+        master = write_model(self.spec(case), model_dir) / "master.yml"
+        self._masters[case["case_id"]] = master
+        return master
 
     def prepare(self, model, case: dict) -> None:
+        t = case.get("params", {}).get("tensioner_line_tension_n")
+        if t:
+            set_line_tension(model, float(t))  # the calibrated tensioner setting of this model variant
         proxy = case.get("params", {}).get("proxy")
         if not proxy:
             return
@@ -359,7 +426,16 @@ class RiserCampaignAdapter:
         settings = apply_statics_settings(model, p)
         spec = self.spec(case)
         if p.get("statics", "seeded") == "seeded":
-            return {**robust_statics(model, spec, p), **settings}
+            master = self._masters.get(case["case_id"])
+
+            def reload():
+                threads = model.threadCount
+                model.LoadData(str(master))
+                model.threadCount = threads
+                self.prepare(model, case)
+                apply_statics_settings(model, p)
+
+            return {**robust_statics(model, spec, p, reload=reload if master else None), **settings}
         model.CalculateStatics()
         return {"method": "direct", **settings, **physical_state_checks(model, spec)}
 
