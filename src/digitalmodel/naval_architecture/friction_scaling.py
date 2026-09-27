@@ -98,7 +98,11 @@ def _check_re(re: float) -> float:
 
 
 def ittc57_cf(re: float) -> float:
-    """ITTC-1957 correlation line C_F = 0.075 / (log10 Re - 2)^2, validated input."""
+    """ITTC-1957 correlation line C_F = 0.075 / (log10 Re - 2)^2, validated input.
+
+    Scalar, no citation sidecar (same value as the legacy ``resistance.ittc_1957_cf``). Use
+    :func:`ittc57_cf_cited` where the value is reported; the transfer functions cite by default.
+    """
     return _resistance.ittc_1957_cf(_check_re(re))
 
 
@@ -123,6 +127,34 @@ class AllowanceTerm:
 
 
 @dataclass(frozen=True)
+class UnresolvedCitation:
+    """A standards reference that the citations registry cannot resolve.
+
+    Carried explicitly (never as a fabricated registry entry) so that the gap is visible in
+    every result. ``status`` is ``"unresolved-in-registry"``.
+    """
+
+    source_id: str
+    publisher: str
+    title: str
+    clause: str
+    status: str = "unresolved-in-registry"
+    note: str = ""
+
+
+# ITTC 7.5-02-03-01.4 has no entry in digitalmodel.citations.registry and no wiki target
+# known to the resolver (checked 2026-09-27). Open item on #2239: add a registry getter and
+# wiki page with #2471 frontmatter, then replace this record by a resolved Citation.
+ITTC_TRANSFER_UNRESOLVED = UnresolvedCitation(
+    source_id="ITTC-7.5-02-03-01.4",
+    publisher="ITTC",
+    title="ITTC Recommended Procedure 7.5-02-03-01.4, 1978 ITTC Performance Prediction Method",
+    clause="simplified resistance transfer (form-factor approach): C_R conserved at equal Fn",
+    note="no registry getter or wiki page exists; open item on digitalmodel#2239",
+)
+
+
+@dataclass(frozen=True)
 class TransferResult:
     ct_model: float
     ct_ship: float
@@ -139,6 +171,8 @@ class TransferResult:
     omitted_corrections: tuple
     procedure: str = ITTC_TRANSFER_PROCEDURE
     citations: list = field(default_factory=list)
+    unresolved_citations: tuple = (ITTC_TRANSFER_UNRESOLVED,)
+    cited: bool = True
 
 
 _ASSUMPTIONS = (
@@ -211,6 +245,8 @@ def _common_inputs(
         for n, t in allowances.items()
         if not t.declared
     ]
+    if not cite:
+        omitted.append("citation sidecar not emitted (caller passed cite=False)")
     return k, fn_m, fn_s, cf_m, cf_s, allowances, tuple(omitted), citations
 
 
@@ -226,14 +262,19 @@ def transfer_model_to_ship(
     ca_ship: Optional[float] = None,
     delta_cf: Optional[float] = None,
     fn_rel_tolerance: float = 1e-3,
-    cite: bool = False,
+    cite: bool = True,
     repo_root: Optional[Path] = None,
 ) -> TransferResult:
     """Transfer a model total-resistance coefficient to ship scale (ITTC 7.5-02-03-01.4).
 
     Refuses (ValueError) when the Froude numbers differ beyond ``fn_rel_tolerance``,
     for invalid Reynolds numbers, a negative/non-finite form factor or a non-positive C_T,m.
-    ``cite=True`` attaches the EN400 ITTC-57 citation sidecar via the existing wrapper.
+    The EN400 ITTC-57 citation sidecar is emitted by default through the existing
+    fail-closed wrapper (``resistance.ittc_1957_cf_cited``): a configured wiki without the
+    page raises ``CitationResolutionError``; an unconfigured resolver degrades with a one-shot
+    RuntimeWarning and an empty ``citations`` list. ``cite=False`` opts out and is recorded
+    in ``omitted_corrections``. The ITTC 7.5-02-03-01.4 procedure is carried as an explicit
+    :class:`UnresolvedCitation` in ``unresolved_citations``.
     """
     ct_m = _positive("model total resistance coefficient ct_model", ct_model)
     k, fn_m, fn_s, cf_m, cf_s, allow, omitted, citations = _common_inputs(
@@ -246,7 +287,7 @@ def transfer_model_to_ship(
         ct_model=ct_m, ct_ship=ct_s, cr=cr, cf_model=cf_m, cf_ship=cf_s, form_factor_k=k,
         re_model=float(re_model), re_ship=float(re_ship), fn_model=fn_m, fn_ship=fn_s,
         allowances=allow, assumptions=_ASSUMPTIONS, omitted_corrections=omitted,
-        citations=citations,
+        citations=citations, cited=bool(cite),
     )
 
 
@@ -262,10 +303,10 @@ def transfer_ship_to_model(
     ca_ship: Optional[float] = None,
     delta_cf: Optional[float] = None,
     fn_rel_tolerance: float = 1e-3,
-    cite: bool = False,
+    cite: bool = True,
     repo_root: Optional[Path] = None,
 ) -> TransferResult:
-    """Inverse of :func:`transfer_model_to_ship` (same conserved C_R)."""
+    """Inverse of :func:`transfer_model_to_ship` (same conserved C_R and citation behaviour)."""
     ct_s = _positive("ship total resistance coefficient ct_ship", ct_ship)
     k, fn_m, fn_s, cf_m, cf_s, allow, omitted, citations = _common_inputs(
         re_model, re_ship, form_factor_k, fn_model, fn_ship, fn_rel_tolerance,
@@ -277,7 +318,7 @@ def transfer_ship_to_model(
         ct_model=ct_m, ct_ship=ct_s, cr=cr, cf_model=cf_m, cf_ship=cf_s, form_factor_k=k,
         re_model=float(re_model), re_ship=float(re_ship), fn_model=fn_m, fn_ship=fn_s,
         allowances=allow, assumptions=_ASSUMPTIONS, omitted_corrections=omitted,
-        citations=citations,
+        citations=citations, cited=bool(cite),
     )
 
 
@@ -293,6 +334,10 @@ class ProhaskaFit:
     condition_number: float
     n_points: int
     fn_window: tuple = (PROHASKA_FN_MIN, PROHASKA_FN_MAX)
+    error_model: str = (
+        "y = C_T/C_F = (1+k) + c Fn^4/C_F + e, e independent, homoscedastic and additive on "
+        "y (ordinary least squares); CI from Student's t with n-2 dof"
+    )
 
 
 def prohaska_form_factor(
@@ -302,9 +347,16 @@ def prohaska_form_factor(
 
     Admissible data: every point within Fn 0.10-0.20 (points outside are refused, not
     dropped), at least 6 points. Refuses a design matrix whose 2-norm condition number
-    exceeds 1e6. The 95 % confidence interval on k uses Student's t with n-2 dof.
+    exceeds 1e6.
+
+    Error model: the residuals of y = C_T/C_F are independent, homoscedastic and additive
+    (ordinary least squares). The parameter covariance is s^2 (R^T R)^-1 from a QR
+    factorisation of the design matrix (normal equations are not formed); the 95 %
+    confidence interval on k uses Student's t with n-2 dof. Multiplicative (relative) noise
+    on C_T is only approximately covered by this model.
     """
     from scipy import stats
+    from scipy.linalg import solve_triangular
 
     fn_a = np.asarray(fn, dtype=float)
     ct_a = np.asarray(ct, dtype=float)
@@ -332,11 +384,13 @@ def prohaska_form_factor(
         raise ValueError(
             f"Prohaska design matrix condition number {cond:.3g} exceeds {PROHASKA_MAX_CONDITION:g}"
         )
-    coef, *_ = np.linalg.lstsq(a_mat, y, rcond=None)
+    q_mat, r_mat = np.linalg.qr(a_mat)
+    coef = solve_triangular(r_mat, q_mat.T @ y)
     resid = y - a_mat @ coef
     dof = n - 2
     s2 = float(resid @ resid) / dof
-    cov = s2 * np.linalg.inv(a_mat.T @ a_mat)
+    r_inv = solve_triangular(r_mat, np.eye(2))
+    cov = s2 * (r_inv @ r_inv.T)
     se_a = math.sqrt(max(cov[0, 0], 0.0))
     t = float(stats.t.ppf(0.975, dof))
     k = float(coef[0] - 1.0)

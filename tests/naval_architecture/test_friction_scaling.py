@@ -6,6 +6,7 @@ analytical-resistance-methods.md). All inputs are dimensionless or synthetic.
 from __future__ import annotations
 
 import math
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -21,6 +22,9 @@ from digitalmodel.naval_architecture.friction_scaling import (
     transfer_ship_to_model,
 )
 from digitalmodel.naval_architecture.resistance import ittc_1957_cf
+
+# Vendored citation fixtures (shared with tests/citations/ and test_resistance_citations.py)
+CIT_ROOT = Path(__file__).resolve().parent.parent / "citations" / "fixtures"
 
 CF_1E9 = 0.075 / 49.0  # (log10(1e9) - 2)^2 = 49
 CF_1E7 = 0.075 / 25.0  # = 0.003
@@ -82,7 +86,7 @@ def test_reynolds_and_froude_si_with_fluid_parameter():
 def _forward(k, **kw):
     return transfer_model_to_ship(
         ct_model=4.0e-3, re_model=1e7, re_ship=1e9, form_factor_k=k,
-        fn_model=0.25, fn_ship=0.25, **kw,
+        fn_model=0.25, fn_ship=0.25, repo_root=CIT_ROOT, **kw,
     )
 
 
@@ -127,7 +131,7 @@ def test_transfer_metadata_lists_assumptions():
 
 def test_transfer_roundtrip_identity():
     kw = dict(re_model=1e7, re_ship=1e9, form_factor_k=0.17, fn_model=0.22, fn_ship=0.22,
-              ca_model=5e-5, ca_ship=3.5e-4, delta_cf=1.1e-4)
+              ca_model=5e-5, ca_ship=3.5e-4, delta_cf=1.1e-4, repo_root=CIT_ROOT)
     fwd = transfer_model_to_ship(ct_model=4.3e-3, **kw)
     back = transfer_ship_to_model(ct_ship=fwd.ct_ship, **kw)
     assert back.ct_model == pytest.approx(4.3e-3, abs=1e-12)
@@ -155,19 +159,21 @@ def test_transfer_refuses_invalid_ct():
 # ---------------------------------------------------------------- Prohaska
 
 
-def _synthetic_prohaska(k, c, n, noise, seed):
-    rng = np.random.default_rng(seed)
+def _synthetic_prohaska(k, c, n, sigma, rng):
+    """Synthetic data under the fit's error model: y = C_T/C_F = (1+k) + c Fn^4/C_F + e,
+    e ~ N(0, sigma^2) homoscedastic and additive on y."""
     fn = np.linspace(0.10, 0.20, n)
     g, lm, nu = 9.81, 5.0, 1.1386e-6  # synthetic 5 m model in caller-declared fresh water
     re = fn * np.sqrt(g * lm) * lm / nu
     cf = np.array([ittc57_cf(r) for r in re])
-    ct = (1.0 + k) * cf + c * fn**4
-    ct = ct * (1.0 + noise * rng.standard_normal(n))
-    return fn, ct, cf
+    y = (1.0 + k) + c * fn**4 / cf
+    if sigma:
+        y = y + sigma * rng.standard_normal(n)
+    return fn, y * cf, cf
 
 
 def test_prohaska_recovers_k_exact_data():
-    fn, ct, cf = _synthetic_prohaska(0.15, 0.5, 8, 0.0, 0)
+    fn, ct, cf = _synthetic_prohaska(0.15, 0.5, 8, 0.0, None)
     fit = prohaska_form_factor(fn, ct, cf)
     assert fit.k == pytest.approx(0.15, abs=1e-10)
     assert fit.c == pytest.approx(0.5, abs=1e-8)
@@ -175,10 +181,9 @@ def test_prohaska_recovers_k_exact_data():
 
 
 def test_prohaska_recovers_k_with_noise():
-    # A single draw misses a 95 % CI about 1 time in 20 by construction (seed 2239 is such a
-    # draw). The fixed seed below is one realisation; the statistical claim itself is tested
-    # by test_prohaska_ci_coverage_is_nominal over 400 draws.
-    fn, ct, cf = _synthetic_prohaska(0.15, 0.5, 8, 0.01, 0)
+    # One realisation of the error model; a single draw misses a 95 % CI about 1 time in 20
+    # by construction, so the statistical claim is tested by the coverage test below.
+    fn, ct, cf = _synthetic_prohaska(0.15, 0.5, 8, 0.01, np.random.default_rng(0))
     fit = prohaska_form_factor(fn, ct, cf)
     lo, hi = fit.k_ci95
     assert lo < 0.15 < hi
@@ -186,27 +191,43 @@ def test_prohaska_recovers_k_with_noise():
     assert fit.n_points == 8
     assert np.isfinite(fit.condition_number) and fit.condition_number <= 1e6
     assert fit.residual_rms > 0.0
+    assert "homoscedastic" in fit.error_model
+
+
+def test_prohaska_ci_matches_independent_regression():
+    """Intercept standard error cross-checked against scipy.stats.linregress."""
+    from scipy import stats
+
+    fn, ct, cf = _synthetic_prohaska(0.15, 0.5, 9, 0.01, np.random.default_rng(7))
+    fit = prohaska_form_factor(fn, ct, cf)
+    lr = stats.linregress(fn**4 / cf, ct / cf)
+    half = stats.t.ppf(0.975, 9 - 2) * lr.intercept_stderr
+    assert fit.k == pytest.approx(lr.intercept - 1.0, abs=1e-12)
+    assert fit.k_ci95[1] - fit.k == pytest.approx(half, rel=1e-9)
+    assert fit.k - fit.k_ci95[0] == pytest.approx(half, rel=1e-9)
 
 
 def test_prohaska_ci_coverage_is_nominal():
-    """The reported 95 % CI should cover the true k at close to its nominal rate."""
-    hits = 0
+    """Under the stated error model the 95 % CI covers the true k at its nominal rate.
+    400 draws from one fixed-seed generator: binomial s.d. ~1.1 %, band 0.91-0.99."""
+    rng = np.random.default_rng(2239)
     trials = 400
-    for seed in range(trials):
-        fn, ct, cf = _synthetic_prohaska(0.15, 0.5, 8, 0.01, seed)
+    hits = 0
+    for _ in range(trials):
+        fn, ct, cf = _synthetic_prohaska(0.15, 0.5, 8, 0.01, rng)
         lo, hi = prohaska_form_factor(fn, ct, cf).k_ci95
         hits += lo < 0.15 < hi
-    assert 0.90 <= hits / trials <= 0.99
+    assert 0.91 <= hits / trials <= 0.99
 
 
 def test_prohaska_refuses_few_points():
-    fn, ct, cf = _synthetic_prohaska(0.15, 0.5, 4, 0.0, 0)
+    fn, ct, cf = _synthetic_prohaska(0.15, 0.5, 4, 0.0, None)
     with pytest.raises(ValueError, match="6"):
         prohaska_form_factor(fn, ct, cf)
 
 
 def test_prohaska_refuses_outside_fn_window():
-    fn, ct, cf = _synthetic_prohaska(0.15, 0.5, 8, 0.0, 0)
+    fn, ct, cf = _synthetic_prohaska(0.15, 0.5, 8, 0.0, None)
     fn = fn.copy()
     fn[-1] = 0.25
     with pytest.raises(ValueError, match="0.10"):
@@ -219,3 +240,60 @@ def test_prohaska_refuses_ill_conditioned():
     ct = np.full(8, 4e-3)
     with pytest.raises(ValueError, match="condition"):
         prohaska_form_factor(fn, ct, cf)
+
+
+# ---------------------------------------------------------------- review r1: citations
+
+
+def test_transfer_emits_citation_sidecar_by_default():
+    r = transfer_model_to_ship(ct_model=4.0e-3, re_model=1e7, re_ship=1e9, form_factor_k=0.2,
+                               fn_model=0.25, fn_ship=0.25, repo_root=CIT_ROOT)
+    assert len(r.citations) == 1
+    assert r.citations[0].code_id == "EN400"
+    assert r.citations[0].source_sibling == "generic"
+
+
+def test_transfer_procedure_citation_is_explicitly_unresolved():
+    r = _forward(0.2)
+    rec = [u for u in r.unresolved_citations if u.source_id == "ITTC-7.5-02-03-01.4"]
+    assert len(rec) == 1
+    assert rec[0].status == "unresolved-in-registry"
+    assert rec[0].publisher == "ITTC"
+    assert rec[0].clause
+
+
+def test_transfer_citation_fail_closed_on_missing_page(tmp_path):
+    from digitalmodel.citations import CitationResolutionError
+
+    with pytest.raises(CitationResolutionError) as exc:
+        transfer_model_to_ship(ct_model=4.0e-3, re_model=1e7, re_ship=1e9, form_factor_k=0.2,
+                               fn_model=0.25, fn_ship=0.25, repo_root=tmp_path)
+    assert exc.value.code_id == "EN400" and exc.value.reason == "page_missing"
+    with pytest.raises(CitationResolutionError):
+        transfer_ship_to_model(ct_ship=2.2e-3, re_model=1e7, re_ship=1e9, form_factor_k=0.2,
+                               fn_model=0.25, fn_ship=0.25, repo_root=tmp_path)
+
+
+def test_transfer_citation_standalone_degrades_with_warning(monkeypatch):
+    from digitalmodel.citations.schema import CitationResolutionError as _CRE
+    from digitalmodel.naval_architecture import resistance as res
+
+    def _unconfigured(*_a, **_k):
+        raise _CRE(code_id="EN400", wiki_path="wikis/...", reason="resolver_unconfigured:test")
+
+    monkeypatch.setattr(res, "get_en400_reference", _unconfigured, raising=False)
+    monkeypatch.setattr(res, "_EN400_STANDALONE_WARNED", False)
+    with pytest.warns(RuntimeWarning, match="standalone"):
+        r = transfer_model_to_ship(ct_model=4.0e-3, re_model=1e7, re_ship=1e9,
+                                   form_factor_k=0.2, fn_model=0.25, fn_ship=0.25)
+    assert r.citations == []
+    assert r.ct_ship == pytest.approx(2.236735e-3, abs=5e-10)
+    assert any(u.status == "unresolved-in-registry" for u in r.unresolved_citations)
+
+
+def test_transfer_explicit_opt_out_is_recorded():
+    r = transfer_model_to_ship(ct_model=4.0e-3, re_model=1e7, re_ship=1e9, form_factor_k=0.2,
+                               fn_model=0.25, fn_ship=0.25, cite=False)
+    assert r.citations == []
+    assert r.cited is False
+    assert any("citation" in s.lower() for s in r.omitted_corrections)
