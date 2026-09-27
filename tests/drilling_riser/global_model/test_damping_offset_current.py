@@ -63,6 +63,15 @@ def test_vessel_offset_moves_the_vessel_in_statics():
     assert v["initial_position"] == [12.5, -3.0, 0]
 
 
+def test_tension_ring_starts_under_the_offset_vessel():
+    """The ring hangs from the vessel's tensioners: statics must start it under the vessel, not at the
+    well centre (a 100 m+ offset otherwise starts with the tensioner lines and inner barrel stretched
+    diagonally and whole-system statics does not converge)."""
+    gen = build_generic_spec(_spec(vessel_offset_m=(12.5, -3.0)))
+    ring = gen["generic"]["buoys_6d"][0]
+    assert ring["initial_position"][:2] == [12.5, -3.0]
+
+
 def test_default_vessel_offset_is_zero():
     assert build_generic_spec(synthetic_spec())["generic"]["vessels"][0]["initial_position"] == [0, 0, 0]
 

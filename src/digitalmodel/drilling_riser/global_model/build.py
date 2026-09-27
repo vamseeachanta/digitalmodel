@@ -269,7 +269,8 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
         "lines": lines,
         "buoys_6d": [{
             "name": ring, "buoy_type": "Lumped buoy", "connection": "Free",
-            "initial_position": [0, 0, r.z_static_m], "mass": r.mass_kg / 1000.0, "volume": r.volume_m3,
+            # the ring hangs from the vessel's tensioners: start it under the (offset) vessel
+            "initial_position": [ox, oy, r.z_static_m], "mass": r.mass_kg / 1000.0, "volume": r.volume_m3,
             "properties": {"DegreesOfFreedomInStatics": "All", "InitialAttitude": [0, 0, 0],
                            "MomentsOfInertia": [m / 1000.0 for m in r.moments_of_inertia_kgm2],
                            "CentreOfMass": [0, 0, 0], "Height": 1.0, "CentreOfVolume": [0, 0, 0]},
