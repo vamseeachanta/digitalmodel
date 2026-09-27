@@ -387,6 +387,7 @@ def test_abbreviations_table_covers_every_acronym(html_doc):
     assert REQUIRED_ABBREVIATIONS <= keys, REQUIRED_ABBREVIATIONS - keys
     assert all(len(d) > 3 for d in table.values())
     body = re.sub(r"<(script|style)\b.*?</\1>", " ", html_doc, flags=re.S | re.I)
+    body = re.sub(r"<wbr\s*/?>", "", body)                  # a line-break hint, not a boundary
     text = html.unescape(re.sub(r"<[^>]+>", " ", body))   # element boundaries as spaces
     tokens = set(re.findall(r"(?<![\w/.-])([A-Z][A-Z0-9]*[A-Z](?:-\d+)?)(?![\w-])", text))
     defined = set(table)

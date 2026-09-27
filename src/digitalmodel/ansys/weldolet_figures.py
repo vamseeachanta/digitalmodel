@@ -211,8 +211,8 @@ def _crop(blob: bytes, margin: int = 16) -> bytes:
     bg = Image.new("RGB", img.size, (255, 255, 255))
     box = ImageChops.difference(img, bg).getbbox()
     if box:
-        l, t, r, b = box
-        img = img.crop((max(l - margin, 0), max(t - margin, 0),
+        left, t, r, b = box
+        img = img.crop((max(left - margin, 0), max(t - margin, 0),
                         min(r + margin, img.width), min(b + margin, img.height)))
     if img.width > 1200:
         img = img.resize((1200, round(img.height * 1200 / img.width)), Image.BOX)

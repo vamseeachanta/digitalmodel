@@ -14,12 +14,20 @@ Engine (owner card R06). The page is built on the ``CalcReport`` engine in
 :mod:`digitalmodel.reporting.calc_report`: its vendored house stylesheet and scrollspy,
 its section, subsection and equation-card markup (:class:`MethodBlock`,
 :class:`Equation`), its KPI strip and its revision and reference models. The fixed
-seven-section ``CalcReport.render_html`` layout is not used, because the house report
-skeleton for an assessment (executive summary, introduction, design basis, assumptions
-and limitations, acceptance criteria, methodology, verification, results, checks,
-conclusions, recommendations, references, appendices) does not fit it, its design-data
+seven-section ``CalcReport.render_html`` layout is not used, because the standard report
+outline (Rev B, owner review: front matter with document control, section-level revision
+history, abbreviations, holds and assumptions register, contents and lists of tables and
+figures; then introduction, summary and conclusions with the results summary table and
+the FAD and growth charts, design basis with the model and mesh pictures, methodology
+with the software table, results with the end-result pictures, verification,
+conclusions, recommendations, references, appendix) does not fit it, its design-data
 tables put the caption above the table, and its masthead legend carries a
 "validated" confidence level that this report may not use without a named referent.
+
+Figures (Rev B). The model, mesh and result pictures are MAPDL plots of the receipt decks
+(:mod:`digitalmodel.ansys.weldolet_figures`, committed with ``figures.json``), embedded
+as data URIs; the section drawing, the FAD, the growth curve and the K charts are
+inline SVG drawn from the generator's section mesh, the result record and the receipts.
 
 Robustness (owner note on R06):
 
@@ -505,6 +513,7 @@ _EXTRA_CSS = """
   .doc .fblock .flow svg{max-width:100%;height:auto}
   .doc .fm h3{font-size:18px;margin:26px 0 8px}
   .doc .fm .lists li{margin:2px 0;font-size:14px}
+  .doc table.results-summary td{font-size:13.5px}
   .doc .status-within{color:var(--cfd);font-weight:700}
   .doc .status-exceeds{color:var(--ro);font-weight:700}
   .doc .status-ne{color:var(--proj);font-weight:700}
@@ -959,10 +968,10 @@ class _Report:
     @staticmethod
     def status(passed: Optional[bool]) -> str:
         if passed is None:
-            return '<td class="txt status-ne">NOT_EVALUATED</td>'
+            return '<td class="txt status-ne">NOT_<wbr>EVALUATED</td>'
         if passed:
-            return '<td class="txt status-within">WITHIN_CRITERION</td>'
-        return '<td class="txt status-exceeds">EXCEEDS_CRITERION</td>'
+            return '<td class="txt status-within">WITHIN_<wbr>CRITERION</td>'
+        return '<td class="txt status-exceeds">EXCEEDS_<wbr>CRITERION</td>'
 
     def ssy_plain(self) -> str:
         """SSY limitation in practical engineering terms (owner comment 1)."""
@@ -996,9 +1005,10 @@ class _Report:
         f_growth = self.figure(self._growth_svg(),
                                "Fatigue crack growth on the governing crotch plane: depth "
                                "against cycles from a0 to the last FE state, re-integrated "
-                               "from the record's growth law and ΔK table; the shaded band is "
-                               "beyond the SSY-valid depth, where the linear-elastic curve is "
-                               "not established; the vertical line is the cycle demand. "
+                               "from the record's growth law and ΔK table; the horizontal dashed "
+                               "line is the SSY-valid depth and the shaded band above it is "
+                               "where the linear-elastic curve is not established; the "
+                               "vertical dotted line is the cycle demand. "
                                "Source: result record (growth)", key="growth")
         box = (
             '<div class="conclusions-box"><h3>Conclusions, read against the charts</h3><ul>'
@@ -1006,7 +1016,8 @@ class _Report:
             "driving forces of the governing crotch plane and Kmat = "
             + self.v("result:/basis/kmat_mpa_sqrt_m", "f1") + " MPa√m, all three established "
             "crack depths (" + ", ".join(self.a(i) for i in self.est) + " mm) sit well inside "
-            "the FAD curve, low on the diagram (Kr below 0.1). The dashed ray from the origin "
+            "the FAD curve, low on the diagram (Kr = " + self.v(self.dref(imax, "kr"), "f3")
+            + " to " + self.v(self.dref(imin, "kr"), "f3") + "). The dashed ray from the origin "
             "through the worst point, a = " + self.a(imin) + " mm, meets the curve at a load "
             "factor F = " + self.v(self.dref(imin, "envelope_margin/factor"), "f2")
             + "; F rises to " + self.v(self.dref(imax, "envelope_margin/factor"), "f2")
@@ -1021,9 +1032,9 @@ class _Report:
             "growth law and R = " + self.v("result:/growth/r_ratio", "f1") + ", the curve "
             "starts at a0 = " + self.v("result:/growth/a0_mm", "f2") + " mm and crosses the "
             "SSY-valid depth a = " + self.v("result:/growth/life_to_last_ssy_valid/a_mm", "f3")
-            + " mm (red dashed line) at " + self.v("result:/growth/life_to_last_ssy_valid/cycles", "int")
+            + " mm (horizontal dashed line) at " + self.v("result:/growth/life_to_last_ssy_valid/cycles", "int")
             + " cycles, far short of the " + self.v("result:/growth/demand_cycles", "int")
-            + "-cycle demand (vertical dashed line): "
+            + "-cycle demand (vertical dotted line): "
             + self.v("result:/growth/life_to_last_ssy_valid/margin_on_demand", "f3")
             + " times the demand, <b>below the demand</b>. The full linear-elastic curve "
             "reaches the last FE state a = " + self.v("result:/growth/a_last_fe_mm", "f2")
@@ -1122,7 +1133,7 @@ class _Report:
             f'{self.t(crit, "txt wrapcell", raw=True)}{dem}{cap}{uc}'
             f'{self.t(case, "txt wrapcell", raw=True)}{st}</tr>'
             for key, check, crit, dem, cap, uc, case, st in rows]
-        counts = {s: sum(s in row[-1] for row in rows)
+        counts = {s: sum(s in row[-1].replace("<wbr>", "") for row in rows)
                   for s in ("WITHIN_CRITERION", "EXCEEDS_CRITERION", "NOT_EVALUATED")}
         tab = self.table(["Check", "Criterion", "Demand", "Capacity", "UC (demand / capacity)",
                           "Governing case", "Status"], body_rows,
@@ -1189,7 +1200,7 @@ class _Report:
         sec, _ = wc._build_section(spec, geo, wc.mesh_parameters(spec))
         pts, quads = sec.pts, [q[:4] for q in sec.quads]
         rw, t_run = geo["hole_radius_mm"], spec.run_wall_mm
-        w_svg, h_svg = 700, 520
+        w_svg, h_svg = 760, 520
         out = []
 
         def panel(x0, y0, r0, r1, v0, v1, scale, clip):
@@ -1213,8 +1224,8 @@ class _Report:
         Xa, Ya = panel(40, 22, ra0, ra1, va0, va1, sa, False)
         # (b) weld-root zoom
         rb0, rb1, vb0, vb1 = 10.5, 23.5, -7.6, 4.2
-        sb = 29.0
-        Xb, Yb = panel(318, 60, rb0, rb1, vb0, vb1, sb, True)
+        sb = 27.0
+        Xb, Yb = panel(350, 60, rb0, rb1, vb0, vb1, sb, True)
         out.append(f'<rect class="dim" x="{Xa(rb0):.1f}" y="{Ya(vb1):.1f}" '
                    f'width="{(rb1 - rb0) * sa:.1f}" height="{(vb1 - vb0) * sa:.1f}"/>')
         out.append(f'<rect class="dim" x="{Xb(rb0):.1f}" y="{Yb(vb1):.1f}" '
@@ -1234,7 +1245,12 @@ class _Report:
                    f'x2="{Xb(rw + a_ff):.1f}" y2="{Yb(0):.1f}" stroke-dasharray="5 4"/>')
         big = crotch[-1]["a_mm"]
 
-        def note(x, y, text, anchor="start"):
+        def note(x, y, text, anchor="start", bg=False):
+            if bg:
+                wd = 6.9 * len(text)
+                x0 = x - wd if anchor == "end" else x
+                out.append(f'<rect x="{x0 - 2:.1f}" y="{y - 12:.1f}" width="{wd + 4:.1f}" '
+                           'height="16" fill="#ffffff" stroke="none"/>')
             out.append(f'<text class="note" x="{x:.1f}" y="{y:.1f}" '
                        f'text-anchor="{anchor}">{text}</text>')
 
@@ -1242,23 +1258,25 @@ class _Report:
             out.append(f'<line class="dim" x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" '
                        f'y2="{y2:.1f}"/>')
 
-        note(Xb(rw + big) + 8, Yb(0.5 - big) + 4, "crotch-plane flaw,")
-        note(Xb(rw + big) + 8, Yb(0.5 - big) + 20, "a = " + ", ".join(
-            fmt(d["a_mm"], "f2") for d in crotch) + " mm")
-        note(Xb(rw + a_ff) + 6, Yb(0) - 8, "fusion-face flaw (full circumference),")
-        note(Xb(rw + a_ff) + 6, Yb(0) + 8, "a = " + fmt(a0, "f2") + " to "
-             + fmt(a_ff, "f2") + " mm")
-        note(Xb(rb0) + 4, Yb(-t_run) + 16, "run-pipe bore")
-        note(Xb(rw) - 4, Yb(vb1) - 6, "hole wall (C/2)", "middle")
+        note(Xb(rw + big) + 8, Yb(0.5 - big) + 4, "crotch-plane flaw", bg=True)
+        note(Xb(rw + big) + 8, Yb(0.5 - big) + 20, "(semicircles), a = " + ", ".join(
+            fmt(d["a_mm"], "f2") for d in crotch) + " mm", bg=True)
+        note(Xb(rw + a_ff) + 6, Yb(0) - 10, "fusion-face flaw", bg=True)
+        note(Xb(rw + a_ff) + 6, Yb(0) + 8, "(full circumference, on v = 0),", bg=True)
+        note(Xb(rw + a_ff) + 6, Yb(0) + 24, "a = " + fmt(a0, "f2") + " to "
+             + fmt(a_ff, "f2") + " mm", bg=True)
+        note(Xb(rb1) - 6, Yb(-t_run) - 6, "run-pipe bore", "end", bg=True)
+        note(Xb(rw), Yb(vb0) + 18, "↑ hole wall ρ = C/2 (flaw mouth)")
         # labels on the whole section
-        for (r, v, text, lx) in ((28.0, -3.5, "run pipe", 262), (15.0, 3.0, "attachment weld", 262),
-                                 (15.5, 12.0, "weldolet", 262), (9.3, 45.0, "branch pipe", 262)):
+        for (r, v, text, lx) in ((28.0, -3.5, "run pipe", 240), (15.0, 3.0, "attachment weld", 240),
+                                 (15.5, 12.0, "weldolet", 240), (9.3, 45.0, "branch pipe", 240)):
             leader(Xa(r), Ya(v), lx, Ya(v))
             note(lx + 3, Ya(v) + 4, text)
         note(Xa(ra0), 16, "(a) section y = 0, whole height")
-        note(Xb(rb0), 50, "(b) weld root, flaw planes")
-        out.append(f'<text class="tick" x="{Xb(rb0):.1f}" y="{Yb(vb0) + 18:.1f}">'
-                   f"box: ρ {fmt(rb0, 'f1')}–{fmt(rb1, 'f1')} mm from the branch axis, "
+        note(Xb(rb0), 48, "(b) weld root, flaw planes")
+        out.append(f'<text class="tick" x="{Xb(rb0) + 10:.1f}" y="{Yb(vb0) + 38:.1f}">'
+                   f"zoom box: ρ {fmt(rb0, 'f1')}–{fmt(rb1, 'f1')} mm from the branch axis,</text>")
+        out.append(f'<text class="tick" x="{Xb(rb0) + 10:.1f}" y="{Yb(vb0) + 54:.1f}">'
                    f"v {fmt(vb0, 'f1')}–{fmt(vb1, 'f1')} mm from the run-pipe outer surface</text>")
         return (f'<svg viewBox="0 0 {w_svg} {h_svg}" width="{w_svg}" height="{h_svg}" role="img" '
                 'aria-label="Section through the branch axis with the flaw planes" '
@@ -1280,9 +1298,9 @@ class _Report:
             "Section through the branch axis at the +x crotch (plane y = 0), drawn from the "
             "generator's own section mesh (weldolet_crack._build_section, geometry of state "
             "p0b_uncracked, level 0): (a) the whole height, (b) the weld root with both flaw "
-            "planes. The crotch-plane flaw lies in this plane (semicircles, red); the "
-            "fusion-face flaw is a full-circumference flaw on the fusion line v = 0 (blue; "
-            "dashed beyond a0). Dimensions in mm", key="section")
+            "planes. The crotch-plane flaw lies in this plane (semicircles, one per solved "
+            "depth); the fusion-face flaw is a full-circumference flaw on the fusion line "
+            "v = 0 (thick line, dashed beyond a0). Dimensions in mm", key="section")
         fig_mesh = self.figure(
             self.panels(("mesh_global", "full model (crack-free and fusion-face states)"),
                         ("crotch_mesh_global", "half model y ≥ 0 (crotch-plane states)")),
@@ -1833,8 +1851,8 @@ class _Report:
         n_end = curve[-1][0]
         xmax = 10000.0 * (int(max(n_end, g["demand_cycles"]) / 10000.0) + 1)
         y0 = 0.1 * int(g["a0_mm"] / 0.1 - 0.5)
-        y1 = 0.1 * (int(g["a_last_fe_mm"] / 0.1) + 1)
-        ax = _Axes(0.0, xmax, y0, y1, left=70)
+        y1 = 0.1 * (int(g["a_last_fe_mm"] / 0.1 + 1e-9) + 2)
+        ax = _Axes(0.0, xmax, y0, y1, left=70, right=44)
         body = []
         s_ref = "result:/growth/life_to_last_ssy_valid"
         a_s, n_s = g["life_to_last_ssy_valid"]["a_mm"], g["life_to_last_ssy_valid"]["cycles"]
@@ -1872,12 +1890,13 @@ class _Report:
             body.append(f'<text class="leg" x="{x:.1f}" y="{y:.1f}" '
                         f'text-anchor="{anchor}">{text}</text>')
 
-        label(ax.x(0) + 8, ax.y(a_s) - 8, "SSY-valid depth a = " + fmt(a_s, "f3")
-              + " mm: " + fmt(n_s, "int") + " cycles")
-        label(ax.x(0) + 8, ax.y(y1) + 18, "beyond SSY validity: linear-elastic life "
-              "not established (method limitation)")
+        label(ax.x(xmax) - 8, ax.y(a_s) - 8, "SSY-valid depth a = " + fmt(a_s, "f3")
+              + " mm, reached at " + fmt(n_s, "int") + " cycles", "end")
+        label(ax.x(dem) + 8, ax.y(y1) + 18, "shaded: beyond SSY validity, linear-elastic "
+              "life not established")
+        label(ax.x(dem) + 8, ax.y(y1) + 34, "(method limitation)")
         label(ax.x(dem) + 6, ax.y(y0) - 10, "demand " + fmt(dem, "int") + " cycles")
-        label(ax.x(n_end) - 8, ax.y(g["a_last_fe_mm"]) + 20, fmt(n_end, "int")
+        label(ax.x(n_end), ax.y(g["a_last_fe_mm"]) - 12, fmt(n_end, "int")
               + " cycles at a = " + fmt(g["a_last_fe_mm"], "f2") + " mm (last FE state)", "end")
         lx, ly = ax.x(xmax * 0.52), ax.y(y0) - 58
         for k, (cls, text) in enumerate((("pt-gov", "SSY crossing and last FE state"),
@@ -1964,9 +1983,9 @@ class _Report:
                         ("hoop_section", "section y = 0 through the branch axis at the +x "
                                          "crotch")),
             "End result of the uncracked model at the design pressure: hoop stress (cylindrical "
-            "system about the run-pipe axis). The hoop stress concentrates at the crotch on the "
-            "bore side of the hole wall, where the crotch-plane flaw is placed; the legend of "
-            "each picture gives the plotted range. "
+            "system about the run-pipe axis). At the crotch the hoop stress rises along the hole "
+            "wall towards the run-pipe bore; the crotch-plane flaw lies on that wall. The legend "
+            "of each picture gives the plotted range. "
             + self.fe_source("hoop_iso", "hoop_section"), key="result-hoop")
         fig_crack = self.figure(
             self.panels(("crotch_sy_face", "crack plane y = 0 viewed from -y")),
