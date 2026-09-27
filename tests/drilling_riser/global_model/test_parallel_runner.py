@@ -137,3 +137,23 @@ def test_runner_round_trip_two_workers(tmp_path: Path):
     assert d["channels"]["te_top_max_n"] >= d["channels"]["te_top_min_n"] > 0
     assert by["D-1"]["timings_s"]["dynamics"] > 0
     assert not list(tmp_path.rglob("*.sim"))
+
+
+@solver
+@pytest.mark.solver
+def test_reextract_a_kept_sim_appends_a_ledger_record_and_refuses_a_changed_file(tmp_path: Path):
+    from digitalmodel.solvers.orcaflex import sim_retention as sr
+
+    adapter = "tests.drilling_riser.global_model.runner_adapter:ADAPTER"
+    case = {"case_id": "S-2", "analysis": "statics", "params": {}}
+    out = pr.run_cases([case], adapter=adapter, out_dir=tmp_path, max_workers=1, keep_sim=True)
+    rec = out["results"][0]
+    assert rec["status"] == "ok" and (tmp_path / rec["sim_kept"]).exists()
+    re = pr.reextract(case, adapter=adapter, out_dir=tmp_path, ledger_record=rec)
+    assert re["status"] == "ok", re["message"]
+    assert re["results_path"] == "results/S-2.reextract.json"
+    assert re["input_sha256"] == rec["input_sha256"] and re["sim_sha256"] == rec["sim_sha256"]
+    assert sr.latest_ok(tmp_path)["S-2"]["results_path"] == "results/S-2.reextract.json"
+    (tmp_path / rec["sim_kept"]).write_bytes(b"changed")
+    bad = pr.reextract(case, adapter=adapter, out_dir=tmp_path, ledger_record=rec, tag="again")
+    assert bad["status"] == "extraction_failed" and "digest" in bad["message"]

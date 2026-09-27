@@ -167,8 +167,9 @@ def _api(pin: str, expected_dll: str):
     from digitalmodel.solvers.orcaflex import orcaflex_api
 
     if not _WORKER.get("configured"):
-        orcaflex_api.configure(pin)
-        _WORKER["configured"] = True
+        if not orcaflex_api.is_configured():
+            orcaflex_api.configure(pin)
+        _WORKER["configured"] = True  # an already-configured process keeps its pin; the DLL check below decides
     ofx = orcaflex_api.api()
     return ofx, ofx.DLLVersion()
 
@@ -298,6 +299,46 @@ def run_one(case: dict, *, adapter: str, out_dir: str, attempt: int = 1, pin: st
         rec["finished_utc"] = _utc()
         if not keep_sim or rec.get("status") != "ok":
             shutil.rmtree(work / "model", ignore_errors=True)
+    return rec
+
+
+def reextract(case: dict, *, adapter: str, out_dir: str | Path, ledger_record: dict, pin: str = "11.6",
+              expected_dll: str = "11.6c", tag: str = "reextract") -> dict:
+    """Extract a kept ``.sim`` again with the adapter's current ``extract`` (no re-solve).
+
+    The ``.sim`` must still carry the digest of ``ledger_record`` and the DLL must equal the recorded one. The new
+    results go to ``results/<case>.<tag>.json`` and a successful ledger record (``event`` = ``tag``, with the original
+    input digest and solver version) is appended, so the latest ok record points at the new results."""
+    out = Path(out_dir)
+    cid = case["case_id"]
+    rec = {k: ledger_record.get(k) for k in ("case_id", "attempt", "analysis", "input_sha256", "orcaflex_dll",
+                                              "sim_sha256", "sim_bytes", "sim_kept", "threads")}
+    rec.update(event=tag, started_utc=_utc(), results_path=None, results_sha256=None, message="")
+    t0 = time.perf_counter()
+    try:
+        sim = out / ledger_record["sim_kept"]
+        if sha256_file(sim) != ledger_record["sim_sha256"]:
+            raise RuntimeError("sim digest differs from the ledger record")
+        ofx, dll = _api(pin, expected_dll)
+        if dll != ledger_record["orcaflex_dll"]:
+            raise RuntimeError(f"DLL {dll} != recorded {ledger_record['orcaflex_dll']}")
+        model = ofx.Model(str(sim))
+        _verify(ofx, model, case["analysis"])
+        channels = _adapter(adapter).extract(model, case)
+        del model
+        res = out / "results" / f"{cid}.{tag}.json"
+        prev = json.loads((out / ledger_record["results_path"]).read_text(encoding="utf-8")) \
+            if ledger_record.get("results_path") and (out / ledger_record["results_path"]).exists() else {}
+        res.write_text(json.dumps({"case_id": cid, "input_sha256": rec["input_sha256"], "sim_sha256": rec["sim_sha256"],
+                                   "statics_info": prev.get("statics_info"), "channels": channels},
+                                  indent=1, sort_keys=True), encoding="utf-8")
+        rec.update(status="ok", results_path=res.relative_to(out).as_posix(), results_sha256=sha256_file(res))
+    except Exception as exc:  # noqa: BLE001 - recorded, never raised
+        rec.update(status="extraction_failed", message=f"{type(exc).__name__}: {exc}"[:2000])
+    rec["timings_s"] = {"reextract": round(time.perf_counter() - t0, 3)}
+    rec["finished_utc"] = _utc()
+    with (out / "ledger.jsonl").open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(rec, sort_keys=True) + "\n")
     return rec
 
 

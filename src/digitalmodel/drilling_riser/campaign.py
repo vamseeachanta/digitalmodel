@@ -17,6 +17,13 @@ with the (private) matrix, not here:
 ``statics_max_iterations``, ``statics_damping`` ([min, max]), ``statics_step_pct``
                       solver-path settings for large offsets (optional; the converged state is unchanged)
 ``modal_modes``       number of transverse riser modes to extract (statics cases), optional
+``tensioners_failed`` failed tensioners (API RP 16Q n; the first lines from the first azimuth are removed and the
+                      others keep the intact line tension), optional
+``tensioner_representation`` ``"lines"`` (base) or ``"vertical_force"`` (equivalent string, no lateral tie)
+``section_stiffness_factors`` ``{section name: factor}`` on EI and EA (stack-stiffness sensitivity)
+``rao_origin_dx_m``   fore-aft shift of the RAO origin (riser position in the moonpool sensitivity)
+``flex_joint_curves`` ``{"upper" | "lower": [[deg, N.m], ...]}`` from (0, 0): replaces a flex-joint curve
+                      (flex-joint stiffness sensitivity)
 ``proxy``             TIMING PROXIES only, not design cases:
                       ``{"kind": "drift_off", "speed_change_m_s": v}`` - the vessel accelerates uniformly
                       along ``heading_deg`` over the main stage, reaching ``v`` at its end;
@@ -67,6 +74,30 @@ def case_spec(case: dict) -> RiserGlobalModelSpec:
         d["contents"]["density_kg_m3"] = float(p["mud_density_kg_m3"])
     if p.get("top_tension_n") is not None:
         d["tensioners"]["total_vertical_tension_n"] = float(p["top_tension_n"])
+    if p.get("tensioners_failed"):
+        d["tensioners"]["failed_count"] = int(p["tensioners_failed"])
+    if p.get("tensioner_representation"):
+        d["tensioners"]["representation"] = p["tensioner_representation"]
+        if d["tensioners"]["representation"] != "lines" and d["tensioners"].get("failed_count"):
+            raise ValueError("a failed tensioner needs the 'lines' tensioner representation")
+    for name, f in (p.get("section_stiffness_factors") or {}).items():
+        hits = [s for key in ("inner_barrel", "riser", "stack") for s in d[key] if s["name"] == name]
+        if not hits:
+            raise ValueError(f"section_stiffness_factors: no section named {name!r}")
+        for s in hits:
+            s["ei_nm2"] *= float(f)
+            s["ea_n"] *= float(f)
+    if p.get("rao_origin_dx_m"):
+        if not d.get("vessel_motion"):
+            raise ValueError("rao_origin_dx_m needs vessel motion (RAOs) in the base spec")
+        o = d["vessel_motion"]["rao_origin_m"]
+        d["vessel_motion"]["rao_origin_m"] = (o[0] + float(p["rao_origin_dx_m"]), o[1], o[2])
+    for side, curve in (p.get("flex_joint_curves") or {}).items():
+        key = {"upper": "upper_flex_joint", "lower": "lower_flex_joint"}[side]
+        pts = [(float(a), float(m)) for a, m in curve]
+        k0 = pts[1][1] / pts[1][0] * 180.0 / math.pi
+        d[key] = {"pivot_z_m": d[key]["pivot_z_m"], "rotational_stiffness_nm_per_rad": k0,
+                  "moment_rotation_deg_nm": pts}
     d["vessel_offset_m"] = offset_xy_m(base, float(p.get("offset_pct_wd", 0.0)), heading)
     d["current"] = ({"direction_deg": heading, "depth_speed_m_s": p["current"]["depth_speed_m_s"]}
                     if p.get("current") else None)
@@ -114,6 +145,12 @@ def _end_gz_n(model, line: str, end: str) -> float:
     return model[line].StaticResult("End GZ force", ofx.oeEndA if end == "A" else ofx.oeEndB) * KN
 
 
+def tensioner_vertical_target_n(spec: RiserGlobalModelSpec) -> float:
+    """Vertical tensioner force the lines should deliver: the total, less the failed tensioners' share."""
+    t = spec.tensioners
+    return t.total_vertical_tension_n * (t.count - t.failed_count) / t.count
+
+
 def physical_state_checks(model, spec: RiserGlobalModelSpec) -> dict[str, Any]:
     """The W2 milestone-4 checks of the static state, run on every case (raises ``CaseFailed``, status
     ``nonphysical_static``, never retried). The conductor-founded model has a non-physical branch: the ring
@@ -130,7 +167,7 @@ def physical_state_checks(model, spec: RiserGlobalModelSpec) -> dict[str, Any]:
 
     from .global_model.hand_checks import tension_references
 
-    target = spec.tensioners.total_vertical_tension_n
+    target = tensioner_vertical_target_n(spec)
     tol = RESIDUAL_REL * target
     yaw = float(model["TensionRing"].StaticResult("Rotation 3"))
     yaw = (yaw + 180.0) % 360.0 - 180.0
@@ -230,11 +267,14 @@ class RiserCampaignAdapter:
     def extract(self, model, case: dict) -> dict[str, Any]:
         from .global_model import orcaflex_run as orun
 
+        from .global_model import w5_channels
+
         spec = self.spec(case)
         ofx = orun._api()
+        w5 = w5_channels.extract(model, spec, case["analysis"], ofx)
         if case["analysis"] == "statics":
             out: dict[str, Any] = {**orun.static_responses(model, spec), **orun.end_effective_tensions(model),
-                                   "ring_z_m": orun.ring_static_z_m(model)}
+                                   "ring_z_m": orun.ring_static_z_m(model), "w5": w5}
             n = case.get("params", {}).get("modal_modes")
             if n:
                 out["modes"] = orun.riser_modal_periods(model, n_modes=int(n))
@@ -251,6 +291,7 @@ class RiserCampaignAdapter:
             "vessel_x_m": _stats(model["Vessel"].TimeHistory("X", period)),
         }
         out["sample_count"] = len(riser.TimeHistory("Effective tension", period, ofx.oeEndA))
+        out["w5"] = w5
         return out
 
 

@@ -241,7 +241,8 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
     t = spec.tensioners
     tension_kn = winch_tension_n(spec) / 1000.0
     winches = []
-    for i in range(0 if vertical_only else t.count):
+    # a failed tensioner (API RP 16Q n) is removed; the remaining lines keep the intact line tension
+    for i in range(0 if vertical_only else t.failed_count, 0 if vertical_only else t.count):
         az = math.radians(t.first_azimuth_deg + 360.0 * i / t.count)
         c, s_ = math.cos(az), math.sin(az)
         winches.append({

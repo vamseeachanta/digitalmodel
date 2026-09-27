@@ -51,9 +51,9 @@ def test_tm_hull_rows_contain_the_extremes_and_all_vector_components():
     mx = [200.0 * math.cos(2 * math.pi * i / 50) for i in range(n)]
     my = [0.0] * n
     rows = w5.tm_hull_rows(t, {"te": te, "tw": tw, "mx": mx, "my": my, "pi": [1.0] * n, "po": [2.0] * n})
-    ts = {r["t"] for r in rows}
-    i_max = max(range(n), key=te.__getitem__)
-    assert t[i_max] in ts
+    # the periodic signal repeats its maximum; one of the equal samples is a hull vertex
+    assert max(r["te"] for r in rows) == pytest.approx(max(te))
+    assert max(r["mx"] for r in rows) == pytest.approx(max(mx))
     assert all(set(r) >= {"t", "te", "tw", "mx", "my", "m", "pi", "po"} for r in rows)
     assert len(rows) < n / 2  # the hull is a small subset of the samples
 
@@ -103,7 +103,9 @@ def test_campaign_extraction_carries_the_w5_channel_set(base_spec, tmp_path):
     assert st["points"]["lfj"]["static"]["ez_angle_deg"] > 0.01
     assert st["points"]["riser_top"]["static"]["te"] > st["points"]["lfj"]["static"]["te"]
     rr = st["range_graphs"]["Riser"]
-    assert len(rr["arc_m"]) == len(rr["te"]) == len(rr["vm_max"]) > 10
+    # statics: static values, no _min/_max; every array has the length of its own arc-length grid
+    for k in ("te", "tw", "m", "vm", "z_m"):
+        assert len(rr[rr["axis_of"][k]]) == len(rr[k]) > 10
     # dynamics: statistics and coincident rows, T-M hull at the stack connectors
     p = rg["points"]["lfj"]
     assert p["stats"]["te"]["max"] >= p["stats"]["te"]["mean"] >= p["stats"]["te"]["min"]
