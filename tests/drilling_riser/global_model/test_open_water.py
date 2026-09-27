@@ -216,6 +216,9 @@ def test_statics_match_hand_tensions_and_frame_balances(ow, tmp_path):
     assert te["upper_top_n"] - te["stack_bottom_n"] == pytest.approx(ref["submerged_weight_n"], rel=5e-3)
     chk = orun.open_water_physical_checks(m, ow)
     assert chk["physical"], chk
+    import json
+
+    json.dumps(chk)  # plain Python types (the runner writes the statics info as JSON)
 
 
 @pytest.mark.solver

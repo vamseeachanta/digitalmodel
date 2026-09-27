@@ -314,8 +314,8 @@ def open_water_physical_checks(model, spec, rel_tol: float = 1.0e-3) -> dict[str
     balance = vertical - frame_weight_n(spec) + model["Upper"].StaticResult("End GZ force", ofx.oeEndA) * KN
     rotary = model["Rotary"].StaticResult("In-frame connection GZ force") * KN
     tol = rel_tol * spec.tensioners.total_vertical_tension_n
-    return {"tensioner_vertical_n": vertical, "frame_balance_n": balance, "rotary_vertical_n": rotary,
-            "physical": abs(balance) <= tol and abs(rotary) <= tol}
+    return {"tensioner_vertical_n": float(vertical), "frame_balance_n": float(balance), "rotary_vertical_n": float(rotary),
+            "physical": bool(abs(balance) <= tol and abs(rotary) <= tol)}
 
 
 def open_water_static_responses(model, spec) -> dict[str, float]:
