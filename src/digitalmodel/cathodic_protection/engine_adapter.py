@@ -22,9 +22,22 @@ It dispatches on ``cfg["inputs"]["calculation_type"]``:
 ``DNV_RP_B401_offshore_legacy`` / ``DNV_RP_F103_2010_legacy``
     The old code paths unchanged, with a :class:`DeprecationWarning`.
 
+The ``DNV_RP_F103_2010`` key name predates edition support: the route runs
+the edition given in ``inputs.design_data.edition`` or, when absent, the
+DNV-RP-F103 default edition (``"2019"`` since 2026-09-27).
+
 Every route writes ``cfg["results"]["status"]``::
 
-    {"result": "PASS" | "FAIL", "governing_case": ..., "reason": ..., "checks": {...}}
+    {"result": "PASS" | "FAIL", "governing_case": ..., "reason": ..., "checks": {...},
+     "use_status": ...}
+
+``use_status`` records the owner's approval level for the route (decision
+2026-09-27, epic #2206; see ``docs/domains/cathodic_protection/_index.md``,
+"Use status"): ``"client-use-with-eor-check"`` for ``DNV_RP_B401_offshore``
+and ``DNV_RP_F103_2010`` (client use subject to an engineer-of-record check
+of every deliverable); ``"legacy-uncited-independent-check-required"`` for
+the ABS routes and the ``*_legacy`` keys (legacy solver, uncited tables, not
+for client use without an independent check).
 
 A ``FAIL`` is logged as a warning through the engine's logger (loguru) and
 never raises: the run completes so the report can show the failing design.
@@ -109,6 +122,19 @@ CALCULATION_TYPES: Final[tuple[str, ...]] = (
 
 STATUS_PASS: Final = "PASS"
 STATUS_FAIL: Final = "FAIL"
+
+# Owner decision 2026-09-27 (epic #2206): approval level per route, carried
+# into every deliverable through ``results["status"]["use_status"]``.
+USE_STATUS_CLIENT_EOR: Final = "client-use-with-eor-check"
+USE_STATUS_LEGACY_UNCITED: Final = "legacy-uncited-independent-check-required"
+USE_STATUS_BY_KEY: Final[dict[str, str]] = {
+    KEY_B401: USE_STATUS_CLIENT_EOR,
+    KEY_F103: USE_STATUS_CLIENT_EOR,
+    KEY_ABS_SHIPS: USE_STATUS_LEGACY_UNCITED,
+    KEY_ABS_OFFSHORE: USE_STATUS_LEGACY_UNCITED,
+    KEY_B401_LEGACY: USE_STATUS_LEGACY_UNCITED,
+    KEY_F103_LEGACY: USE_STATUS_LEGACY_UNCITED,
+}
 
 # YAML zone names -> exposure zone of the new package. "buried" is the
 # legacy spelling of the mudline zone.
@@ -217,14 +243,15 @@ def _set_status(
     checks: Mapping[str, Any],
 ) -> None:
     """Write ``results["status"]`` and warn through the engine logger on FAIL."""
+    calc = _section(cfg, "inputs").get("calculation_type")
     status = {
         "result": STATUS_PASS if passed else STATUS_FAIL,
         "governing_case": governing,
         "reason": reason,
         "checks": dict(checks),
+        "use_status": USE_STATUS_BY_KEY.get(str(calc), USE_STATUS_LEGACY_UNCITED),
     }
     results["status"] = status
-    calc = _section(cfg, "inputs").get("calculation_type")
     if passed:
         logger.info(f"cathodic_protection [{calc}] status PASS ({governing}): {reason}")
     else:
@@ -679,7 +706,9 @@ def _f103_results(
             "burial_condition": names["burial_condition"],
             "exposure": inp.exposure.value,
             "internal_fluid_temperature_C": inp.fluid_temperature_c,
-            "temperature_band": fluid_temperature_band(inp.fluid_temperature_c).value,
+            "temperature_band": fluid_temperature_band(
+                inp.fluid_temperature_c, edition=res.edition_used
+            ).value,
         },
         "current_demand_A": {
             "mean_current_demand_A": round(res.mean_current_demand_A, 4),
@@ -874,6 +903,11 @@ def _run_legacy(cfg: dict[str, Any], key: str) -> dict[str, Any]:
         solver.DNV_RP_B401_offshore_platform(cfg)
     else:
         solver.DNV_RP_F103_2010(cfg)
+    # The legacy solvers derive no PASS/FAIL verdict; the status block carries
+    # only the use status so the deliverable still states it.
+    results = cfg.setdefault("results", {})
+    status = results.setdefault("status", {})
+    status["use_status"] = USE_STATUS_BY_KEY[key]
     return cfg
 
 
@@ -896,7 +930,9 @@ def run_cathodic_protection(cfg: dict[str, Any]) -> dict[str, Any]:
     dict
         The same ``cfg`` with ``cfg["results"]`` (and, for the ABS ships
         route, ``cfg["cathodic_protection"]``) populated, always carrying a
-        ``status`` block for the new and ABS routes.
+        ``status`` block with ``use_status``; the new and ABS routes add the
+        PASS/FAIL verdict (``result``, ``governing_case``, ``reason``,
+        ``checks``), the ``*_legacy`` keys carry ``use_status`` only.
 
     Raises
     ------
@@ -931,5 +967,8 @@ __all__ = [
     "KEY_F103_LEGACY",
     "STATUS_FAIL",
     "STATUS_PASS",
+    "USE_STATUS_BY_KEY",
+    "USE_STATUS_CLIENT_EOR",
+    "USE_STATUS_LEGACY_UNCITED",
     "run_cathodic_protection",
 ]

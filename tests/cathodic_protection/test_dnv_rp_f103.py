@@ -138,10 +138,11 @@ class TestReviewAppendixA3:
         assert r16.edition_used == "2019"
         assert r16.model_dump() == design_bracelet_cp(_a3_input(), edition="2019").model_dump()
 
-    def test_missing_edition_warns_and_defaults_to_2010(self):
-        with pytest.warns(UserWarning, match="DNV-RP-F103"):
+    def test_missing_edition_warns_and_defaults_to_2019(self):
+        with pytest.warns(UserWarning, match="defaulting to DNV-RP-F103 2019"):
             result = design_bracelet_cp(_a3_input())
-        assert result.edition_used == "2010"
+        assert result.edition_used == "2019"
+        assert result.model_dump() == design_bracelet_cp(_a3_input(), edition="2019").model_dump()
 
 
 class TestFieldJoints:
