@@ -50,6 +50,52 @@ def test_case_sets_environment_tension_and_mud(base_spec):
     assert s.dynamics.duration_s == 20.0
 
 
+class _Obj:
+    def __init__(self, typ="", **res):
+        self.typeName, self._res = typ, res
+
+    def StaticResult(self, name, *args):
+        return self._res[name]
+
+
+class _Model(dict):
+    objects: list = []
+
+
+def _fake(base_spec, *, yaw=0.0, tv_factor=1.0, balance_n=0.0):
+    """A solved-model stand-in: ring yaw, tensioner vertical (factor on the target) and the ring balance."""
+    from digitalmodel.drilling_riser.global_model.hand_checks import tension_references
+
+    spec = cp.case_spec(_case(base_spec))
+    t = spec.tensioners.total_vertical_tension_n * tv_factor
+    w = tension_references(spec)["ring_weight_n"]
+    m = _Model(TensionRing=_Obj(**{"Rotation 3": yaw}),
+               # balance = tensioner vertical - ring weight + riser end-A GZ force - inner-barrel end-B GZ force
+               Riser=_Obj(**{"End GZ force": (w - t + balance_n) / 1000.0}),
+               InnerBarrel=_Obj(**{"End GZ force": 0.0}))
+    return m, spec, t
+
+
+@pytest.mark.parametrize(("kw", "trips"), [
+    ({}, None),
+    ({"yaw": 180.0}, "yaw"),
+    ({"yaw": -359.6}, None),
+    ({"tv_factor": 5682.0 / 6026.0}, "tensioner vertical"),
+    ({"balance_n": 345e3}, "balance"),
+])
+def test_physical_state_checks_trip_on_the_yawed_branch(base_spec, monkeypatch, kw, trips):
+    m, spec, t = _fake(base_spec, **kw)
+    monkeypatch.setattr(cp, "_tensioner_vertical_n", lambda model: t)
+    monkeypatch.setattr(cp, "_end_gz_n", lambda model, line, end: model[line].StaticResult("End GZ force") * 1000.0)
+    if trips is None:
+        info = cp.physical_state_checks(m, spec)
+        assert abs(info["ring_yaw_deg"]) < 1.0
+    else:
+        with pytest.raises(pr.CaseFailed) as e:
+            cp.physical_state_checks(m, spec)
+        assert e.value.status == "nonphysical_static" and trips in str(e.value)
+
+
 def test_statics_case_carries_no_wave_or_dynamics_from_the_case(base_spec):
     s = cp.case_spec(_case(base_spec))
     assert s.regular_wave is None and s.irregular_wave is None and s.current is None
@@ -69,6 +115,9 @@ def test_seeded_statics_matches_direct_statics_on_the_fixed_base_model(base_spec
     m2 = orun.load_model(write_model(spec, tmp_path / "b") / "master.yml")
     info = cp.seeded_statics(m2, spec)
     assert info["steps"] == 7  # -2 % -> +1 % WD in 0.5 % steps
+    # the global-force ring balance closes at an offset (the effective-tension form does not)
+    chk = cp.physical_state_checks(m2, spec)
+    assert abs(chk["ring_balance_n"]) < 1e-4 * spec.tensioners.total_vertical_tension_n
     assert orun.end_effective_tensions(m2)["riser_top_n"] == pytest.approx(
         orun.end_effective_tensions(m1)["riser_top_n"], rel=1e-5)
     assert m2["Vessel"].InitialX == pytest.approx(0.01 * spec.environment.water_depth_m)

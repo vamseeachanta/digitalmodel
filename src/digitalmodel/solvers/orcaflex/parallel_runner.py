@@ -19,7 +19,8 @@ The ``.sim`` file is kept locally (referenced by its digest) or deleted after ve
 
 Retry policy (owner decision W306): at most ``max_attempts`` per case, and only for infrastructure
 faults (licence, file I/O, a result that will not reopen); never for statics divergence, a failed or
-unstable simulation, a verification or extraction failure, or a model-build error. A batch stops
+unstable simulation, a verification or extraction failure, a model-build error, or an adapter's
+``CaseFailed`` (a definite failure with its own status, e.g. a non-physical static state). A batch stops
 (pending cases are cancelled, running ones finish) on solver version drift, two consecutive licence
 faults, or when more than 5 % of the batch has failed.
 
@@ -47,6 +48,15 @@ CASE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 RETRYABLE = {"licence_fault", "infra_fault"}
 
 # --------------------------------------------------------------------------- policy
+
+
+class CaseFailed(RuntimeError):
+    """Raised by an adapter for a definite, non-retryable case failure with its own status (for example a
+    non-physical static state). The runner records ``status`` and never retries it."""
+
+    def __init__(self, status: str, message: str):
+        super().__init__(message)
+        self.status = status
 
 
 def fault_class(phase: str, *, licensing: bool, io_error: bool) -> tuple[str, bool]:
@@ -274,9 +284,12 @@ def run_one(case: dict, *, adapter: str, out_dir: str, attempt: int = 1, pin: st
             sim.unlink()
         rec.update(status="ok", retry=False)
     except Exception as exc:  # noqa: BLE001 - every failure becomes a ledger record
-        lic = ofx is not None and _is_licensing(ofx, exc)
-        io = ofx is not None and _is_io(ofx, exc)
-        status, retry = fault_class(phase, licensing=lic, io_error=io)
+        if isinstance(exc, CaseFailed):
+            status, retry = exc.status, False
+        else:
+            lic = ofx is not None and _is_licensing(ofx, exc)
+            io = ofx is not None and _is_io(ofx, exc)
+            status, retry = fault_class(phase, licensing=lic, io_error=io)
         rec.update(status=status, retry=retry, phase=phase, message=f"{type(exc).__name__}: {exc}"[:2000])
     finally:
         timings["total"] = time.perf_counter() - t_all

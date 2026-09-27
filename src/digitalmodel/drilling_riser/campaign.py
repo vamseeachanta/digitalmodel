@@ -84,12 +84,8 @@ def case_spec(case: dict) -> RiserGlobalModelSpec:
 def seeded_statics(model, spec: RiserGlobalModelSpec, *, seed_pct: float = SEED_PCT,
                    step_pct: float = STEP_PCT) -> dict[str, Any]:
     """Statics by continuation from a -2 % WD seed (along x) to the spec's vessel offset, in steps of at
-    most ``step_pct`` % WD, then the non-physical-state checks: tension-ring yaw within 1 deg, and at zero
-    offset the ring vertical balance. From a straight start the conductor-founded model can converge to a
-    non-physical state (ring yawed 180 deg, ring vertical residual about 345 kN); the seed avoids it."""
-    from .global_model import orcaflex_run as orun
-    from .global_model.hand_checks import tension_references
-
+    most ``step_pct`` % WD. From a straight start the conductor-founded model can converge to a non-physical
+    branch (ring yawed 180 deg); the seed avoids it, and :func:`physical_state_checks` confirms it."""
     wd = spec.environment.water_depth_m
     x0, y0 = seed_pct / 100.0 * wd, 0.0
     x1, y1 = spec.vessel_offset_m
@@ -102,17 +98,58 @@ def seeded_statics(model, spec: RiserGlobalModelSpec, *, seed_pct: float = SEED_
         model.CalculateStatics()
         if i < n:
             model.UseCalculatedPositions(True)
-    residual = orun.ring_vertical_residual_n(model, tension_references(spec)["ring_weight_n"])
-    yaw = model["TensionRing"].StaticResult("Rotation 3")
+    return {"method": "seeded continuation", "steps": n + 1}
+
+
+def _tensioner_vertical_n(model) -> float:
+    from .global_model import orcaflex_run as orun
+
+    return orun.tensioner_vertical_sum_n(model)
+
+
+def _end_gz_n(model, line: str, end: str) -> float:
+    from .global_model import orcaflex_run as orun
+
+    ofx = orun._api()
+    return model[line].StaticResult("End GZ force", ofx.oeEndA if end == "A" else ofx.oeEndB) * KN
+
+
+def physical_state_checks(model, spec: RiserGlobalModelSpec) -> dict[str, Any]:
+    """The W2 milestone-4 checks of the static state, run on every case (raises ``CaseFailed``, status
+    ``nonphysical_static``, never retried). The conductor-founded model has a non-physical branch: the ring
+    yawed 180 deg with each tensioner line crossed to the opposite attachment (tensioner vertical 5,682 kN
+    against 6,026 kN, LMRP-base tension 758 kN against 1,102 kN). Accepted only with
+
+    * tension-ring yaw within 1 deg;
+    * tensioner vertical sum (global winch end points) within 1e-3 of the target (``lines`` tensioners);
+    * ring vertical balance within 1e-3 of the target: tensioner vertical - ring weight + global vertical end
+      force of the riser at end A - that of the inner barrel at end B. The global end forces keep the balance
+      exact at an offset, where the effective-tension form of ``ring_vertical_residual_n`` is not.
+    """
+    from digitalmodel.solvers.orcaflex.parallel_runner import CaseFailed
+
+    from .global_model.hand_checks import tension_references
+
+    target = spec.tensioners.total_vertical_tension_n
+    tol = RESIDUAL_REL * target
+    yaw = float(model["TensionRing"].StaticResult("Rotation 3"))
     yaw = (yaw + 180.0) % 360.0 - 180.0
+    out: dict[str, Any] = {"ring_yaw_deg": yaw}
+    bad = []
     if abs(yaw) > RING_YAW_MAX_DEG:
-        raise RuntimeError(f"non-physical static solution: tension ring yawed {yaw:.1f} deg")
-    # the vertical balance uses the end effective tensions as vertical forces, so it is exact only with the
-    # string vertical (zero offset); at an offset it is recorded, not checked
-    if (x1, y1) == (0.0, 0.0) and abs(residual) > RESIDUAL_REL * spec.tensioners.total_vertical_tension_n:
-        raise RuntimeError(f"non-physical static solution: ring vertical residual {residual / KN:.1f} kN")
-    return {"method": "seeded continuation", "steps": n + 1, "ring_vertical_residual_n": residual,
-            "ring_yaw_deg": yaw}
+        bad.append(f"tension ring yaw {yaw:.2f} deg")
+    if spec.tensioners.representation == "lines":
+        tv = _tensioner_vertical_n(model)
+        bal = (tv - tension_references(spec)["ring_weight_n"] + _end_gz_n(model, "Riser", "A")
+               - _end_gz_n(model, "InnerBarrel", "B"))
+        out.update(tensioner_vertical_n=tv, ring_balance_n=bal)
+        if abs(tv - target) > tol:
+            bad.append(f"tensioner vertical {tv / KN:.1f} kN against {target / KN:.1f} kN")
+        if abs(bal) > tol:
+            bad.append(f"ring balance {bal / KN:.1f} kN")
+    if bad:
+        raise CaseFailed("nonphysical_static", "non-physical static state: " + "; ".join(bad))
+    return out
 
 
 def apply_statics_settings(model, params: dict) -> dict[str, Any]:
@@ -182,11 +219,13 @@ class RiserCampaignAdapter:
     def statics(self, model, case: dict) -> dict[str, Any]:
         p = case.get("params", {})
         settings = apply_statics_settings(model, p)
+        spec = self.spec(case)
         if p.get("statics", "seeded") == "seeded":
-            return {**seeded_statics(model, self.spec(case), step_pct=float(p.get("statics_step_pct", STEP_PCT))),
-                    **settings}
-        model.CalculateStatics()
-        return {"method": "direct", **settings}
+            info = seeded_statics(model, spec, step_pct=float(p.get("statics_step_pct", STEP_PCT)))
+        else:
+            model.CalculateStatics()
+            info = {"method": "direct"}
+        return {**info, **settings, **physical_state_checks(model, spec)}
 
     def extract(self, model, case: dict) -> dict[str, Any]:
         from .global_model import orcaflex_run as orun

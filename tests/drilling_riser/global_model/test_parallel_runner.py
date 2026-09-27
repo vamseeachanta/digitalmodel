@@ -35,6 +35,11 @@ def test_unstable_simulation_is_not_retried():
     assert pr.fault_class("dynamics", licensing=False, io_error=False)[1] is False
 
 
+def test_case_failed_carries_its_status_and_is_never_retried():
+    e = pr.CaseFailed("nonphysical_static", "ring yawed 180 deg")
+    assert e.status == "nonphysical_static" and "yawed" in str(e)
+
+
 # --------------------------------------------------------------------------- batch stop rules
 
 
@@ -117,8 +122,11 @@ def test_runner_round_trip_two_workers(tmp_path: Path):
     bad = pr.run_cases([{"case_id": "BAD-1", "analysis": "statics", "params": {"break_build": True}}],
                        adapter=adapter, out_dir=tmp_path, max_workers=1)
     assert bad["results"][0]["status"] == "build_failed" and bad["results"][0]["attempt"] == 1  # no retry
+    odd = pr.run_cases([{"case_id": "ODD-1", "analysis": "statics", "params": {"nonphysical": True}}],
+                       adapter=adapter, out_dir=tmp_path, max_workers=1)
+    assert odd["results"][0]["status"] == "nonphysical_static" and odd["results"][0]["retry"] is False
     ledger = [json.loads(x) for x in (tmp_path / "ledger.jsonl").read_text(encoding="utf-8").splitlines()]
-    assert sorted(r["case_id"] for r in ledger) == ["BAD-1", "D-1", "S-1"]
+    assert sorted(r["case_id"] for r in ledger) == ["BAD-1", "D-1", "ODD-1", "S-1"]
     for r in (by["S-1"], by["D-1"]):
         res = tmp_path / r["results_path"]
         assert pr.sha256_file(res) == r["results_sha256"]

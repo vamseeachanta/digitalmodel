@@ -24,6 +24,13 @@ class SyntheticRiserAdapter:
         spec = RiserGlobalModelSpec.model_validate(d)
         return write_model(spec, model_dir) / "master.yml"
 
+    def statics(self, model, case: dict) -> None:
+        from digitalmodel.solvers.orcaflex.parallel_runner import CaseFailed
+
+        model.CalculateStatics()
+        if case.get("params", {}).get("nonphysical"):
+            raise CaseFailed("nonphysical_static", "deliberately flagged static state")
+
     def extract(self, model, case: dict) -> dict:
         from digitalmodel.drilling_riser.global_model import orcaflex_run as orun
 
