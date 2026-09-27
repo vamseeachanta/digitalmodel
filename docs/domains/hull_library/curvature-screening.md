@@ -91,6 +91,20 @@ triangle `6.599658` (19.9% difference), and end share `0.360858` versus the
 `0.20` limit. Both existing acceptance cases remain strict xfails with measured
 reasons. Diagonal choice alone does not resolve those residual errors.
 
+Winding correction ([issue 2241 item 6](https://github.com/vamseeachanta/digitalmodel/issues/2241),
+2026-09-27) supersedes the generated-mesh winding findings above:
+`HullMeshGenerator` now propagates shared-edge winding by breadth-first search
+and chooses one area-weighted outward sign per connected component. The
+interpolated 7,225-panel Wigley has zero fold edges and zero panel reversals
+from its natural grid winding, versus 67 folds and 65 reversals before;
+shortest-split `I_D` falls from `7.914447` to `6.624849`, within 0.4% of
+the alternating-triangle reference `6.599658`. Its signature acceptance now
+passes; end-cap share falls from `0.360858` to `0.287569` but still exceeds
+`0.20`, so that case remains a strict xfail. Mesh metadata records
+`winding = {"components": n, "flipped_panels": k, "method": "adjacency_bfs"}`,
+where `k` counts net reversals from input winding. GDF inventory meshes bypass
+the generator, so their persisted signatures are unchanged.
+
 Historical GDF-derived evaluation rows are explicitly superseded; use the
 [re-baselined inventory](curvature-signature-table.md). Client-hull recomputation
 will occur outside this repository. Historical triangle controls and BRep
