@@ -355,3 +355,265 @@ def test_outputs_tagged_with_input_hash():
     d = r1.to_dict()
     assert d["schema"].startswith("mesh_hydrostatics/")
     assert d["quantities"]["V"]["provenance"] == "computed"
+
+
+# ============================================================ review r1 regressions
+# Codex code-stage review of PR #2254 (r1): findings 1-4, 6, 7, 9.
+
+AXES = ("forward", "port", "up")
+
+
+def _voxel_hull(cells, depth, dx=1.0, dy=1.0):
+    """Closed single-layer prism over unit (dx x dy) waterplane cells (i, j): x in
+    [i dx, (i+1) dx], y in [j dy, (j+1) dy], z in [0, depth]. Shared grid vertices make it
+    watertight; each quad is oriented outward by construction."""
+    cells = set(cells)
+    index, pts, tris = {}, [], []
+
+    def vid(i, j, k):
+        if (i, j, k) not in index:
+            index[(i, j, k)] = len(pts)
+            pts.append((i * dx, j * dy, k * depth))
+        return index[(i, j, k)]
+
+    def quad(corners, outward):
+        ids = [vid(*c) for c in corners]
+        p = np.array([pts[i] for i in ids])
+        n = np.cross(p[1] - p[0], p[2] - p[0])
+        if n @ np.asarray(outward, float) < 0:
+            ids = ids[::-1]
+        tris.append((ids[0], ids[1], ids[2]))
+        tris.append((ids[0], ids[2], ids[3]))
+
+    for (i, j) in cells:
+        quad([(i, j, 0), (i + 1, j, 0), (i + 1, j + 1, 0), (i, j + 1, 0)], (0, 0, -1))
+        quad([(i, j, 1), (i + 1, j, 1), (i + 1, j + 1, 1), (i, j + 1, 1)], (0, 0, 1))
+        if (i - 1, j) not in cells:
+            quad([(i, j, 0), (i, j + 1, 0), (i, j + 1, 1), (i, j, 1)], (-1, 0, 0))
+        if (i + 1, j) not in cells:
+            quad([(i + 1, j, 0), (i + 1, j + 1, 0), (i + 1, j + 1, 1), (i + 1, j, 1)], (1, 0, 0))
+        if (i, j - 1) not in cells:
+            quad([(i, j, 0), (i + 1, j, 0), (i + 1, j, 1), (i, j, 1)], (0, -1, 0))
+        if (i, j + 1) not in cells:
+            quad([(i, j + 1, 0), (i + 1, j + 1, 0), (i + 1, j + 1, 1), (i, j + 1, 1)], (0, 1, 0))
+    return np.asarray(pts, float), np.asarray(tris, np.int64)
+
+
+def _cells(xs, ys):
+    return {(i, j) for i in xs for j in ys}
+
+
+def _two_boxes(offset, *, reverse_second=False, merge_vertex=None):
+    v, f = box_mesh(L_B, B_B, D_B)
+    v2 = v + np.asarray(offset, float)
+    f2 = f + len(v)
+    if reverse_second:
+        f2 = f2[:, ::-1]
+    faces = np.vstack([f, f2])
+    if merge_vertex is not None:  # (index in box 1, index in box 2) that coincide
+        a, b = merge_vertex
+        faces = np.where(faces == b + len(v), a, faces)
+    return np.vstack([v, v2]), faces
+
+
+# ---- finding 1: endpoint stations
+
+
+def test_endpoint_sections_box_exact():
+    mesh = _box()
+    r = compute_hydrostatics(mesh, draft=T_B, transom_station=-L_B / 2, bulb_station=L_B / 2)
+    assert r["A_T"].value == pytest.approx(B_B * T_B, rel=1e-12)
+    assert r["A_BT"].value == pytest.approx(B_B * T_B, rel=1e-12)
+    trimmed = compute_hydrostatics(mesh, draft=T_B, trim=-1.0,
+                                   transom_station=-L_B / 2, bulb_station=L_B / 2)
+    assert trimmed["A_T"].value == pytest.approx(B_B * (T_B + 0.5), rel=1e-12)
+    assert trimmed["A_BT"].value == pytest.approx(B_B * (T_B - 0.5), rel=1e-12)
+
+
+def test_endpoint_sections_tapered_hull():
+    v, f = _tapered_hull()  # 3 m beam at the transom, 5 m at the bow, linear taper
+    mesh = TriMesh(v, f, units="m", axes=AXES)
+    r = compute_hydrostatics(mesh, draft=T_B, transom_station=-L_B / 2, bulb_station=L_B / 2)
+    assert r["A_T"].value == pytest.approx(3.0 * T_B, rel=1e-12)
+    assert r["A_BT"].value == pytest.approx(5.0 * T_B, rel=1e-12)
+    mid = compute_hydrostatics(mesh, draft=T_B, transom_station=-L_B / 4)
+    assert mid["A_T"].value == pytest.approx(3.5 * T_B, rel=1e-12)
+
+
+# ---- finding 2: topology
+
+
+def test_vertex_only_contact_refused():
+    # box 2 sits on box 1's forward-port-deck corner (index 7) with its own aft-stbd-keel
+    # corner (index 0): every edge is used twice, but vertex 7 joins two separate fans.
+    v, f = _two_boxes((L_B, B_B, D_B), merge_vertex=(7, 0))
+    with pytest.raises(MeshContractError, match="non-manifold vertex"):
+        TriMesh(v, f, units="m", axes=AXES)
+
+
+def test_mixed_orientation_components_refused():
+    v, f = box_mesh(L_B, B_B, D_B)
+    small, fs = box_mesh(2.0, 1.0, 1.0)
+    verts = np.vstack([v, small + np.array([50.0, 0.0, 0.0])])
+    faces = np.vstack([f, (fs + len(v))[:, ::-1]])  # disjoint second shell, inward
+    assert volume_divergence(verts, faces) > 0  # aggregate volume alone would accept it
+    with pytest.raises(MeshContractError, match="inward"):
+        TriMesh(verts, faces, units="m", axes=AXES)
+
+
+def test_nested_inward_shell_refused():
+    v, f = box_mesh(L_B, B_B, D_B)
+    small, fs = box_mesh(2.0, 1.0, 1.0)
+    verts = np.vstack([v, small + np.array([0.0, 0.0, 1.0])])
+    faces = np.vstack([f, (fs + len(v))[:, ::-1]])  # internal cavity
+    with pytest.raises(MeshContractError, match="inward"):
+        TriMesh(verts, faces, units="m", axes=AXES)
+
+
+def test_overlapping_shells_refused():
+    v, f = _two_boxes((5.0, 1.0, 0.0))
+    with pytest.raises(MeshContractError, match="overlap"):
+        TriMesh(v, f, units="m", axes=AXES)
+    v, f = box_mesh(L_B, B_B, D_B)
+    small, fs = box_mesh(2.0, 1.0, 1.0)  # nested, both outward: double-counted volume
+    with pytest.raises(MeshContractError, match="overlap"):
+        TriMesh(np.vstack([v, small + np.array([0.0, 0.0, 1.0])]),
+                np.vstack([f, fs + len(v)]), units="m", axes=AXES)
+
+
+def test_disjoint_outward_components_accepted():
+    v, f = _voxel_hull(_cells(range(0, 4), (-1, 0)) | _cells(range(6, 10), (-1, 0)), depth=2.0)
+    r = compute_hydrostatics(TriMesh(v, f, units="m", axes=AXES), draft=1.0)
+    assert r["V"].value == pytest.approx(2 * 4 * 2 * 1.0, rel=1e-12)
+
+
+# ---- finding 3: physical-only section boundaries
+
+
+def test_concave_waterplane_half_breadth_ignores_cap():
+    # L-shaped waterplane: narrow aft part y in [-1, 1], wide forward part y in [-1, 7]
+    cells = _cells(range(0, 4), (-1, 0)) | _cells(range(4, 8), range(-1, 7))
+    v, f = _voxel_hull(cells, depth=2.0)
+    mesh = TriMesh(v, f, units="m", axes=AXES)
+    r = compute_hydrostatics(mesh, draft=1.0, grid_stations=[1.5, 2.5], grid_waterlines=[0.5, 1.0],
+                             transom_station=1.5)
+    assert np.allclose(np.asarray(r["half_breadth"].value), 1.0, atol=1e-12)
+    assert r["A_T"].value == pytest.approx(2.0, rel=1e-12)
+    assert r["V"].value == pytest.approx((4 * 2 + 4 * 8) * 1.0, rel=1e-12)
+    clipped = clip_at_waterline(mesh, draft=1.0)
+    assert volume_divergence(clipped.vertices, clipped.faces) == pytest.approx(
+        volume_tetra(clipped.vertices, clipped.faces), rel=1e-9)
+
+
+def test_tandem_twin_station_through_gap():
+    cells = _cells(range(0, 4), (-1, 0)) | _cells(range(6, 10), (-1, 0))
+    v, f = _voxel_hull(cells, depth=2.0)
+    mesh = TriMesh(v, f, units="m", axes=AXES)
+    r = compute_hydrostatics(mesh, draft=1.0, grid_stations=[1.5, 5.0, 8.5],
+                             grid_waterlines=[0.5, 1.0])
+    grid = np.asarray(r["half_breadth"].value)
+    assert np.allclose(grid[[0, 2]], 1.0, atol=1e-12)
+    assert np.allclose(grid[1], 0.0, atol=1e-12)
+    # default midship (x = 5) lies in the gap: the midship section is dry
+    assert r["A_M"].value == pytest.approx(0.0, abs=1e-12)
+    for name in ("C_M", "C_P"):
+        assert r[name].value is None and r[name].provenance == "not_computed"
+        assert "midship section" in r[name].reason
+    assert r["C_B"].value is not None
+
+
+def test_side_by_side_twin_half_breadth():
+    cells = _cells(range(0, 8), (-4, -3)) | _cells(range(0, 8), (2, 3))
+    v, f = _voxel_hull(cells, depth=2.0)
+    r = compute_hydrostatics(TriMesh(v, f, units="m", axes=AXES), draft=1.0,
+                             grid_stations=[3.5], grid_waterlines=[0.5, 1.0])
+    assert np.allclose(np.asarray(r["half_breadth"].value), 4.0, atol=1e-12)
+    assert r["B_wl"].value == pytest.approx(8.0)
+    assert r["A_M"].value == pytest.approx(4.0 * 1.0, rel=1e-12)
+
+
+# ---- finding 4: immutability
+
+
+def test_mesh_arrays_are_read_only_and_hash_is_stable():
+    v, f = box_mesh(L_B, B_B, D_B)
+    mesh = TriMesh(v, f, units="m", axes=AXES)
+    digest = mesh.source_digest
+    with pytest.raises(ValueError):
+        mesh.vertices[0, 0] = 99.0
+    with pytest.raises(ValueError):
+        mesh.faces[0, 0] = 1
+    v[0, 0] = 99.0  # mutating the caller's array must not reach the validated mesh
+    f[0] = f[0][::-1]
+    assert mesh.vertices[0, 0] == -L_B / 2
+    assert mesh.source_digest == digest
+    assert compute_hydrostatics(mesh, draft=T_B)["V"].value == pytest.approx(L_B * B_B * T_B)
+
+
+# ---- finding 6: denominators and midship
+
+
+def test_out_of_range_midship_refused():
+    with pytest.raises(MeshContractError, match="midship"):
+        compute_hydrostatics(_box(), draft=T_B, x_midship=100.0)
+
+
+def test_near_degenerate_waterplane_refused():
+    # V-section prism, keel line on the baseline: at a draft of 1e-10 m the waterplane
+    # beam is ~1e-10 m and the coefficients are not meaningful.
+    L, B, D = 20.0, 4.0, 3.0
+    v = np.array([[-L / 2, 0, 0], [L / 2, 0, 0], [-L / 2, B / 2, D], [L / 2, B / 2, D],
+                  [-L / 2, -B / 2, D], [L / 2, -B / 2, D]], float)
+    f = np.array([[0, 1, 3], [0, 3, 2], [0, 4, 5], [0, 5, 1], [2, 3, 5], [2, 5, 4],
+                  [0, 2, 4], [1, 5, 3]], np.int64)
+    if volume_divergence(v, f) < 0:
+        f = f[:, ::-1].copy()
+    mesh = TriMesh(v, f, units="m", axes=AXES)
+    assert compute_hydrostatics(mesh, draft=1.0)["C_B"].value == pytest.approx(0.5, rel=1e-12)
+    with pytest.raises(MeshContractError, match="degenerate"):
+        compute_hydrostatics(mesh, draft=1e-10)
+
+
+# ---- finding 7: cuts through and near vertices
+
+
+@pytest.mark.parametrize("delta", [0.0, 1e-13, -1e-13, 1e-9, -1e-9, 1e-6, -1e-6])
+def test_cut_through_and_near_vertices(delta):
+    # aft draft T + 1 = D: the trimmed waterline runs through the aft deck edge
+    mesh = _box()
+    trim = -2.0 * (D_B - T_B) + delta
+    clipped = clip_at_waterline(mesh, draft=T_B, trim=trim)
+    v1 = volume_divergence(clipped.vertices, clipped.faces)
+    assert v1 == pytest.approx(volume_tetra(clipped.vertices, clipped.faces), rel=1e-9)
+    assert v1 == pytest.approx(L_B * B_B * T_B, rel=1e-9)
+    assert np.all(clipped.face_areas()[~clipped.artificial] > 0)
+
+
+@pytest.mark.parametrize("delta", [0.0, 1e-13, -1e-13, 1e-7, -1e-7])
+def test_cut_through_wigley_grid_row(delta):
+    v, f = wigley_mesh(L_W, B_W, T_W, nx=40, nz=10)
+    mesh = TriMesh(v, f, units="m", axes=AXES)
+    draft = 0.6 * T_W + delta  # grid row j = 6 of 10
+    clipped = clip_at_waterline(mesh, draft=draft)
+    v1 = volume_divergence(clipped.vertices, clipped.faces)
+    assert v1 == pytest.approx(volume_tetra(clipped.vertices, clipped.faces), rel=1e-9)
+    base = compute_hydrostatics(mesh, draft=0.6 * T_W)["V"].value
+    assert v1 == pytest.approx(base, rel=1e-6)
+
+
+# ---- finding 9: large mesh smoke test
+
+
+def test_large_mesh_section_grid_runtime():
+    import time
+
+    v, f = wigley_mesh(L_W, B_W, T_W, nx=400, nz=120)
+    assert len(f) >= 100_000
+    t0 = time.perf_counter()
+    mesh = TriMesh(v, f, units="m", axes=AXES)
+    r = compute_hydrostatics(mesh, draft=T_W, grid_stations=np.linspace(-45, 45, 10),
+                             grid_waterlines=[1.0, 3.0, T_W])
+    elapsed = time.perf_counter() - t0
+    print(f"\n[large-mesh smoke] faces={len(f)} validate+hydrostatics+10 stations: {elapsed:.2f} s")
+    assert elapsed < 30.0
+    assert r["V"].value == pytest.approx(V_W, rel=1e-4)

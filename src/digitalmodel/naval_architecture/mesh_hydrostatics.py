@@ -12,25 +12,50 @@ Geometry contract (violations are refused with :class:`MeshContractError`, never
 * Units are declared, ``"m"`` or ``"mm"``; an undeclared mesh is refused. All outputs are SI.
   Condition inputs (draft, trim, stations) are always metres in the canonical frame.
 * The draft datum is the baseline (keel) at canonical z = 0: the lowest vertex must lie on it.
-* The mesh is watertight and manifold (every edge used by exactly two faces), consistently
-  oriented (each directed edge used once), outward-facing (signed volume > 0; a reversed mesh
-  is refused unless ``flip_normals=True`` is passed explicitly) and has no degenerate or
-  non-finite faces.
+* Topology and orientation policy:
+
+  - every edge is used by exactly two faces (watertight, no non-manifold edges);
+  - each directed edge is used once (consistent orientation);
+  - every vertex has a single fan of faces around it (no non-manifold vertices, e.g. two
+    shells touching at one shared vertex);
+  - the mesh may have several connected components (e.g. twin hulls), but **every component
+    must enclose positive signed volume** (outward normals; inward shells such as cavities
+    or reversed bodies are refused) and **component axis-aligned bounding boxes must be
+    pairwise disjoint** (overlap > 1e-9 of the mesh diagonal is refused; this also refuses
+    nested shells). Triangle-triangle intersection *within* a component is not tested.
+  - no degenerate (zero-area / repeated-index) or non-finite faces.
+
+  A mesh reversed as a whole is refused unless ``flip_normals=True`` is passed explicitly.
+* The validated vertex and face arrays are private read-only copies; the digest is computed
+  from the validated canonical geometry.
 * Trim is T_fwd - T_aft (negative by the stern) over ``l_pp`` and is applied about the midship
-  waterline point (x_midship, T_mean), so the mean draft is preserved.
+  waterline point (x_midship, T_mean), so the mean draft is preserved. ``x_midship`` must lie
+  within the waterline extent.
 * The waterline cut is capped; **cap faces are tagged artificial**: they count toward volume
-  and centroid, never toward wetted area.
+  and centroid integrals, never toward wetted area, and never toward any geometric extent
+  (L_wl, B_wl, half-breadths come from physical faces only). The cap is a signed fan, exact
+  for integrals over concave or multi-loop waterplanes. Signed distances within 1e-12 of the
+  mesh diagonal are snapped and the vertex is projected onto the cutting plane; after the
+  cut the body is checked closed and its two independent volume integrals must agree to
+  1e-9 relative.
 * LCB is positive forward of midship, measured along the waterplane from the midship
   waterline point and reported as a percentage of L_wl.
-* A_BT and A_T are submerged transverse section areas at caller-declared bulb and transom
-  stations; without a declared station they are not computed and carry the reason.
-* The half-breadth grid y(x_i, z_j) (max |y| of the submerged body, z from baseline) is given
-  only on caller-declared stations and waterlines.
+* Sections are transverse planes normal to hull-frame x. A station may lie anywhere in the
+  closed hull x-range **including its end points**: the section is taken as the boundary of
+  the part of the body on the side of the station that contains midship, so at an end
+  station it is the (physical) end face itself, e.g. an immersed transom.
+  A_BT and A_T are submerged section areas at caller-declared bulb and transom stations;
+  without a declared station they are not computed and carry the reason.
+* The half-breadth grid y(x_i, z_j) (max |y| of the physical submerged section, z from
+  baseline; symmetric hull assumed) is given only on caller-declared stations and waterlines.
+* Denominators are checked: V, L_wl and B_wl at or below 1e-12 diag^3 / 1e-8 diag are refused
+  as degenerate; a dry midship section (A_M ~ 0, e.g. between tandem bodies) makes C_M and
+  C_P ``not_computed`` with the reason.
 
 Two independent volume integrations are exposed for verification: :func:`volume_divergence`
 (divergence theorem with F = (0, 0, z)) and :func:`volume_tetra` (signed tetrahedra to an
-origin). :func:`wigley_mesh` generates independent tessellations of the analytic Wigley hull
-and :func:`wigley_wetted_area_reference` integrates its exact surface by adaptive quadrature.
+origin). Analytic fixtures (box, Wigley, Wigley wetted-area quadrature) live in
+:mod:`digitalmodel.naval_architecture.hull_fixtures` and are re-exported here.
 """
 
 from __future__ import annotations
@@ -44,7 +69,14 @@ from typing import Iterator, Optional, Sequence
 
 import numpy as np
 
-SCHEMA_VERSION = "mesh_hydrostatics/1"
+from digitalmodel.naval_architecture.hull_fixtures import (  # noqa: F401  (re-exported API)
+    box_mesh,
+    wigley_half_breadth,
+    wigley_mesh,
+    wigley_wetted_area_reference,
+)
+
+SCHEMA_VERSION = "mesh_hydrostatics/2"
 
 UNIT_SCALE = {"m": 1.0, "mm": 1e-3}
 
@@ -63,6 +95,10 @@ CANONICAL_AXES = ("forward", "port", "up")
 _DEGENERATE_AREA_REL = 1e-12
 _SNAP_REL = 1e-12
 _BASELINE_REL = 1e-9
+_OVERLAP_REL = 1e-9
+_LENGTH_DEGENERATE_REL = 1e-8
+_VOLUME_DEGENERATE_REL = 1e-12
+_CLOSURE_VOLUME_REL = 1e-9
 
 
 class MeshContractError(ValueError):
@@ -79,9 +115,7 @@ def _axes_matrix(axes: Optional[Sequence[str]]) -> np.ndarray:
         )
     axes = tuple(axes)
     if len(axes) != 3 or any(a not in _AXIS_UNIT for a in axes):
-        raise MeshContractError(
-            f"axes must be three of {sorted(_AXIS_UNIT)}, got {axes!r}"
-        )
+        raise MeshContractError(f"axes must be three of {sorted(_AXIS_UNIT)}, got {axes!r}")
     r = np.column_stack([_AXIS_UNIT[a] for a in axes])
     if not np.allclose(np.abs(r).sum(axis=0), 1.0) or not np.allclose(np.abs(r).sum(axis=1), 1.0):
         raise MeshContractError(f"axes {axes!r} do not form a permutation of the canonical axes")
@@ -97,11 +131,18 @@ def _face_area_vectors(vertices: np.ndarray, faces: np.ndarray) -> np.ndarray:
     return 0.5 * np.cross(vertices[faces[:, 1]] - a, vertices[faces[:, 2]] - a)
 
 
+def _read_only(a: np.ndarray) -> np.ndarray:
+    a = np.array(a, copy=True)
+    a.flags.writeable = False
+    return a
+
+
 class TriMesh:
     """Closed, oriented triangle mesh in the canonical SI frame after contract checks.
 
     ``vertices`` (N, 3) and ``faces`` (M, 3) are given in the caller's declared ``units`` and
-    ``axes``; ``self.vertices`` holds them converted to metres in the canonical frame.
+    ``axes``; ``self.vertices`` / ``self.faces`` are read-only copies in metres in the
+    canonical frame.
     """
 
     def __init__(
@@ -118,8 +159,8 @@ class TriMesh:
                 f"units must be declared as one of {sorted(UNIT_SCALE)}, got {units!r}"
             )
         r = _axes_matrix(axes)
-        v = np.asarray(vertices, dtype=float)
-        f = np.asarray(faces)
+        v = np.array(vertices, dtype=float, copy=True)
+        f = np.array(faces, copy=True)
         if v.ndim != 2 or v.shape[1] != 3 or v.shape[0] < 4:
             raise MeshContractError(f"vertices must be an (N>=4, 3) array, got shape {v.shape}")
         if f.ndim != 2 or f.shape[1] != 3 or f.shape[0] < 4:
@@ -129,15 +170,9 @@ class TriMesh:
         f = f.astype(np.int64)
         if f.min() < 0 or f.max() >= v.shape[0]:
             raise MeshContractError("face vertex index out of range")
-
-        digest = hashlib.sha256()
-        digest.update(np.ascontiguousarray(v).tobytes())
-        digest.update(np.ascontiguousarray(f).tobytes())
-        digest.update(json.dumps([units, list(axes), bool(flip_normals)]).encode())
-        self.source_digest = digest.hexdigest()
-
         if not np.all(np.isfinite(v)):
             raise MeshContractError("mesh has non-finite vertex coordinates")
+
         canon = (v @ r.T) * UNIT_SCALE[units]
         used = np.unique(f)
         extent = canon[used].max(axis=0) - canon[used].min(axis=0)
@@ -156,29 +191,36 @@ class TriMesh:
 
         if flip_normals:
             f = f[:, ::-1].copy()
-        _check_edges(f)
+        _check_topology(canon, f, diag)
 
-        vol = volume_divergence(canon, f)
-        if vol <= 0:
-            raise MeshContractError(
-                "mesh normals point inward (signed volume <= 0); pass flip_normals=True to flip "
-                "explicitly"
-            )
         zmin = float(canon[used, 2].min())
         if abs(zmin) > _BASELINE_REL * diag:
             raise MeshContractError(
                 f"baseline (lowest vertex) must be at canonical z = 0 (draft datum); found z = {zmin!r} m"
             )
 
-        self.vertices = canon
-        self.faces = f
+        digest = hashlib.sha256()
+        digest.update(np.ascontiguousarray(canon).tobytes())
+        digest.update(np.ascontiguousarray(f).tobytes())
+        digest.update(json.dumps([units, list(axes), bool(flip_normals)]).encode())
+        self._vertices = _read_only(canon)
+        self._faces = _read_only(f)
+        self.source_digest = digest.hexdigest()
         self.units = units
         self.axes = tuple(axes)
         self.scale_diag = diag
 
     @property
+    def vertices(self) -> np.ndarray:
+        return self._vertices
+
+    @property
+    def faces(self) -> np.ndarray:
+        return self._faces
+
+    @property
     def bounds(self) -> tuple[np.ndarray, np.ndarray]:
-        used = self.vertices[np.unique(self.faces)]
+        used = self._vertices[np.unique(self._faces)]
         return used.min(axis=0), used.max(axis=0)
 
 
@@ -201,13 +243,76 @@ def _check_edges(faces: np.ndarray) -> None:
         )
 
 
+def _check_topology(canon: np.ndarray, faces: np.ndarray, diag: float) -> None:
+    """Edge, vertex-fan, per-component orientation and component-overlap checks."""
+    from scipy.sparse import coo_matrix
+    from scipy.sparse.csgraph import connected_components
+
+    _check_edges(faces)
+    m = faces.shape[0]
+    n = np.int64(canon.shape[0])
+    directed = faces[:, [0, 1, 1, 2, 2, 0]].reshape(-1, 2)
+    key = directed[:, 0] * n + directed[:, 1]
+    rkey = directed[:, 1] * n + directed[:, 0]
+    order = np.argsort(key)
+    twin = order[np.searchsorted(key[order], rkey)]  # every reverse exists exactly once here
+
+    e = np.arange(3 * m)
+    face_e, k_e = e // 3, e % 3
+    face_t, k_t = twin // 3, twin % 3
+    # edge (a -> b) of face f and its twin (b -> a) of face g are neighbours in the fan of a
+    # and in the fan of b: link the corresponding corners (corner id = 3 * face + slot).
+    rows = np.concatenate([3 * face_e + k_e, 3 * face_e + (k_e + 1) % 3])
+    cols = np.concatenate([3 * face_t + (k_t + 1) % 3, 3 * face_t + k_t])
+    graph = coo_matrix((np.ones(rows.size), (rows, cols)), shape=(3 * m, 3 * m))
+    _, labels = connected_components(graph, directed=False)
+    pairs = np.unique(np.column_stack([faces.ravel(), labels]), axis=0)
+    fans = np.bincount(pairs[:, 0])
+    if np.any(fans > 1):
+        bad = np.nonzero(fans > 1)[0]
+        raise MeshContractError(
+            f"mesh has {bad.size} non-manifold vertex/vertices (several face fans meet at one "
+            f"vertex), first at index {int(bad[0])}"
+        )
+
+    fgraph = coo_matrix((np.ones(3 * m), (face_e, face_t)), shape=(m, m))
+    ncomp, flabels = connected_components(fgraph, directed=False)
+    av = _face_area_vectors(canon, faces)
+    zc = canon[faces][:, :, 2].mean(axis=1)
+    vols = np.bincount(flabels, weights=av[:, 2] * zc, minlength=ncomp)
+    if np.any(vols <= 0):
+        raise MeshContractError(
+            f"{int((vols <= 0).sum())} of {ncomp} mesh component(s) have inward normals "
+            "(signed volume <= 0: reversed body or internal cavity); pass flip_normals=True only "
+            "if the whole mesh is reversed"
+        )
+    if ncomp > 1:
+        lo = np.full((ncomp, 3), np.inf)
+        hi = np.full((ncomp, 3), -np.inf)
+        pts = canon[faces]  # (m, 3, 3)
+        np.minimum.at(lo, flabels, pts.min(axis=1))
+        np.maximum.at(hi, flabels, pts.max(axis=1))
+        tol = _OVERLAP_REL * diag
+        for i in range(ncomp):
+            ov = np.minimum(hi[i], hi[i + 1:]) - np.maximum(lo[i], lo[i + 1:])
+            clash = np.all(ov > tol, axis=1)
+            if np.any(clash):
+                j = i + 1 + int(np.nonzero(clash)[0][0])
+                raise MeshContractError(
+                    f"mesh components {i} and {j} have overlapping bounding boxes (overlapping or "
+                    "nested shells are refused)"
+                )
+
+
 # ---------------------------------------------------------------- integrations
 
 
 def volume_divergence(vertices: np.ndarray, faces: np.ndarray) -> float:
     """Enclosed volume by the divergence theorem with F = (0, 0, z): V = sum A_z * z_centroid."""
-    av = _face_area_vectors(np.asarray(vertices, float), np.asarray(faces))
-    zc = np.asarray(vertices, float)[np.asarray(faces)][:, :, 2].mean(axis=1)
+    vertices = np.asarray(vertices, float)
+    faces = np.asarray(faces)
+    av = _face_area_vectors(vertices, faces)
+    zc = vertices[faces][:, :, 2].mean(axis=1)
     return float((av[:, 2] * zc).sum())
 
 
@@ -244,11 +349,16 @@ def _clip_keep_below(
 ):
     """Keep the part of each face with normal.p - offset <= 0.
 
-    Returns (vertices, faces, artificial, boundary_edges) where boundary_edges are the
-    directed edges of the kept surface with no reverse partner (they lie on the plane).
-    Faces entirely on the plane are dropped (the cap replaces them).
+    Vertices within ``eps`` of the plane are snapped: their distance is set to zero and the
+    vertex is projected onto the plane. Faces entirely on the plane are dropped.
+    Returns (vertices, faces, artificial, boundary_edges, boundary_artificial) where the
+    boundary edges are the directed edges of the kept surface with no reverse partner.
     """
     d = vertices @ normal - offset
+    snap = (np.abs(d) <= eps) & (d != 0.0)
+    verts = np.array(vertices, dtype=float, copy=True)
+    if np.any(snap):
+        verts[snap] -= d[snap, None] * normal[None, :]
     d = np.where(np.abs(d) <= eps, 0.0, d)
     df = d[faces]
     on_plane = np.all(df == 0.0, axis=1)
@@ -258,9 +368,7 @@ def _clip_keep_below(
 
     new_pts: list = []
     cache: dict = {}
-    n0 = vertices.shape[0]
-    out_faces = [faces[keep_all]]
-    out_art = [artificial[keep_all]]
+    n0 = verts.shape[0]
     extra_faces = []
     extra_art = []
     for fi in np.nonzero(mixed)[0]:
@@ -277,7 +385,9 @@ def _clip_keep_below(
                 if idx is None:
                     i, j = key
                     t = d[i] / (d[i] - d[j])
-                    new_pts.append(vertices[i] + t * (vertices[j] - vertices[i]))
+                    p = verts[i] + t * (verts[j] - verts[i])
+                    p = p - (p @ normal - offset) * normal  # exactly on the plane
+                    new_pts.append(p)
                     idx = n0 + len(new_pts) - 1
                     cache[key] = idx
                 poly.append(idx)
@@ -286,21 +396,24 @@ def _clip_keep_below(
             if len(set(t3)) == 3:
                 extra_faces.append(t3)
                 extra_art.append(bool(artificial[fi]))
+    out_faces = [faces[keep_all]]
+    out_art = [artificial[keep_all]]
     if extra_faces:
         out_faces.append(np.asarray(extra_faces, dtype=np.int64))
         out_art.append(np.asarray(extra_art, dtype=bool))
-    verts = np.vstack([vertices, np.asarray(new_pts).reshape(-1, 3)]) if new_pts else vertices.copy()
-    kept = np.vstack(out_faces) if out_faces else np.zeros((0, 3), np.int64)
-    art = np.concatenate(out_art) if out_art else np.zeros(0, bool)
+    if new_pts:
+        verts = np.vstack([verts, np.asarray(new_pts)])
+    kept = np.vstack(out_faces)
+    art = np.concatenate(out_art)
 
     if kept.shape[0] == 0:
-        return verts, kept, art, np.zeros((0, 2), np.int64)
+        return verts, kept, art, np.zeros((0, 2), np.int64), np.zeros(0, bool)
     directed = kept[:, [0, 1, 1, 2, 2, 0]].reshape(-1, 2)
     n = np.int64(verts.shape[0])
     keys = directed[:, 0] * n + directed[:, 1]
     rev = directed[:, 1] * n + directed[:, 0]
-    boundary = directed[~np.isin(rev, keys)]
-    return verts, kept, art, boundary
+    is_boundary = ~np.isin(rev, keys)
+    return verts, kept, art, directed[is_boundary], np.repeat(art, 3)[is_boundary]
 
 
 def _cap_area_vector(vertices: np.ndarray, boundary: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -350,6 +463,21 @@ def _condition_geometry(mesh: TriMesh, draft, trim, x_midship, l_pp):
     return draft, trim, xm, xm_declared, lpp, lpp_declared, normal, ex, point
 
 
+def _closure_check(verts: np.ndarray, faces: np.ndarray) -> None:
+    n = np.int64(verts.shape[0])
+    directed = faces[:, [0, 1, 1, 2, 2, 0]].reshape(-1, 2)
+    keys = np.sort(directed[:, 0] * n + directed[:, 1])
+    rev = np.sort(directed[:, 1] * n + directed[:, 0])
+    if not np.array_equal(keys, rev):
+        raise MeshContractError("post-clip check failed: the capped submerged body is not closed")
+    v1 = volume_divergence(verts, faces)
+    v2 = volume_tetra(verts, faces)
+    if not abs(v1 - v2) <= _CLOSURE_VOLUME_REL * max(abs(v1), abs(v2)):
+        raise MeshContractError(
+            f"post-clip check failed: volume integrals disagree ({v1!r} vs {v2!r})"
+        )
+
+
 def clip_at_waterline(
     mesh: TriMesh,
     draft: float,
@@ -361,11 +489,12 @@ def clip_at_waterline(
     """Cut the mesh at the (trimmed) waterline and cap it with artificial faces.
 
     The waterplane passes through (x_midship, 0, draft) and rises forward by
-    trim / l_pp (trim = T_fwd - T_aft). Refuses a dry or fully submerged hull.
+    trim / l_pp (trim = T_fwd - T_aft). Refuses a dry or fully submerged hull, and a cut
+    that fails the post-clip closure / two-way volume check.
     """
     _, _, _, _, _, _, normal, ex, point = _condition_geometry(mesh, draft, trim, x_midship, l_pp)
     eps = _SNAP_REL * mesh.scale_diag
-    verts, faces, art, boundary = _clip_keep_below(
+    verts, faces, art, boundary, _ = _clip_keep_below(
         mesh.vertices, mesh.faces, np.zeros(mesh.faces.shape[0], bool), normal,
         float(normal @ point), eps,
     )
@@ -379,21 +508,42 @@ def clip_at_waterline(
     cap = np.column_stack([np.full(boundary.shape[0], ci), boundary[:, 1], boundary[:, 0]])
     faces = np.vstack([faces, cap])
     art = np.concatenate([art, np.ones(cap.shape[0], bool)])
+    _closure_check(verts, faces)
     wl = verts[np.unique(boundary)]
     return ClippedHull(verts, faces, art, wl, point, normal, ex)
 
 
-def _section(clipped: ClippedHull, x_station: float, eps: float):
-    """Submerged transverse section at hull-frame x: (area, boundary segments (K, 2, 3))."""
-    verts, _, _, boundary = _clip_keep_below(
-        clipped.vertices, clipped.faces, clipped.artificial,
-        np.array([1.0, 0.0, 0.0]), float(x_station), eps,
+def _section(clipped: ClippedHull, x_station: float, x_keep_side: float, eps: float):
+    """Submerged transverse section at hull-frame x.
+
+    The body is clipped to the side of the station that contains ``x_keep_side`` (midship),
+    so that at an end station the section is the end face. Only faces whose x-range spans the
+    station are clipped. Returns (area, physical boundary segments (K, 2, 3)); the area uses
+    the signed fan over all boundary edges (exact integral), the segments exclude edges of
+    artificial (cap) faces.
+    """
+    s = float(x_station)
+    if x_keep_side >= s:
+        normal, offset = np.array([-1.0, 0.0, 0.0]), -s  # keep x >= s
+    else:
+        normal, offset = np.array([1.0, 0.0, 0.0]), s  # keep x <= s
+    fx = clipped.vertices[clipped.faces][:, :, 0]
+    cand = (fx.min(axis=1) <= s + eps) & (fx.max(axis=1) >= s - eps)
+    if not np.any(cand):
+        return 0.0, np.zeros((0, 2, 3))
+    verts, _, _, boundary, b_art = _clip_keep_below(
+        clipped.vertices, clipped.faces[cand], clipped.artificial[cand], normal, offset, eps
     )
+    if boundary.shape[0]:
+        on = (np.abs(verts[boundary[:, 0], 0] - s) <= eps) & (np.abs(verts[boundary[:, 1], 0] - s) <= eps)
+        boundary, b_art = boundary[on], b_art[on]
     if boundary.shape[0] == 0:
         return 0.0, np.zeros((0, 2, 3))
     _, av = _cap_area_vector(verts, boundary)
-    segs = np.stack([verts[boundary[:, 0]], verts[boundary[:, 1]]], axis=1)
-    return float(av[0]), segs
+    area = float(av @ normal)
+    phys = boundary[~b_art]
+    segs = np.stack([verts[phys[:, 0]], verts[phys[:, 1]]], axis=1)
+    return area, segs
 
 
 def _half_breadth(segs: np.ndarray, z: float, tol: float) -> float:
@@ -459,18 +609,19 @@ _CONVENTIONS = {
     "trim": "T_fwd - T_aft over l_pp, negative by the stern, about the midship waterline point",
     "LCB": "percent of L_wl, positive forward of midship, along the waterplane",
     "S": "physical (non-cap) submerged faces only",
-    "sections": "transverse planes normal to hull-frame x",
-    "half_breadth": "max |y| of the submerged body at (station x_i, height z_j above baseline)",
+    "extents": "L_wl, B_wl and half-breadths from physical faces only",
+    "sections": "transverse planes normal to hull-frame x; end stations give the end face",
+    "half_breadth": "max |y| of the physical submerged section at (x_i, height z_j above baseline)",
 }
 
 
-def _check_station(name: str, x: float, lo: np.ndarray, hi: np.ndarray) -> float:
+def _check_station(name: str, x: float, lo: np.ndarray, hi: np.ndarray, tol: float) -> float:
     x = float(x)
-    if not math.isfinite(x) or not (lo[0] < x < hi[0]):
+    if not math.isfinite(x) or not (lo[0] - tol <= x <= hi[0] + tol):
         raise MeshContractError(
-            f"{name} station x = {x!r} m lies outside the hull ({lo[0]!r}, {hi[0]!r})"
+            f"{name} station x = {x!r} m lies outside the hull [{lo[0]!r}, {hi[0]!r}]"
         )
-    return x
+    return min(max(x, float(lo[0])), float(hi[0]))
 
 
 def compute_hydrostatics(
@@ -488,22 +639,24 @@ def compute_hydrostatics(
     """Hydrostatics of the mesh at mean draft ``draft`` (m) and trim (m) in the canonical frame.
 
     ``x_midship`` defaults to the mid-point of the mesh x-extent and ``l_pp`` to that extent
-    (both then tagged ``computed``). Stations are hull-frame x in metres.
+    (both then tagged ``computed``). Stations are hull-frame x in metres, end points included.
     """
     draft, trim, xm, xm_decl, lpp, lpp_decl, normal, ex, point = _condition_geometry(
         mesh, draft, trim, x_midship, l_pp
     )
     lo, hi = mesh.bounds
-    bulb = None if bulb_station is None else _check_station("bulb", bulb_station, lo, hi)
-    transom = None if transom_station is None else _check_station("transom", transom_station, lo, hi)
+    diag = mesh.scale_diag
+    eps = _SNAP_REL * diag
+    tol = 1e-9 * diag
+    bulb = None if bulb_station is None else _check_station("bulb", bulb_station, lo, hi, eps)
+    transom = None if transom_station is None else _check_station("transom", transom_station, lo, hi, eps)
     grid_decl = grid_stations is not None and grid_waterlines is not None
     if grid_decl:
         gx = np.asarray(grid_stations, dtype=float).ravel()
         gz = np.asarray(grid_waterlines, dtype=float).ravel()
         if gx.size == 0 or gz.size == 0 or not (np.all(np.isfinite(gx)) and np.all(np.isfinite(gz))):
             raise MeshContractError("grid stations and waterlines must be finite, non-empty")
-        for x in gx:
-            _check_station("half-breadth grid", x, lo, hi)
+        gx = np.array([_check_station("half-breadth grid", x, lo, hi, eps) for x in gx])
         if np.any(gz < 0):
             raise MeshContractError("grid waterlines are heights above baseline and must be >= 0")
 
@@ -522,25 +675,32 @@ def compute_hydrostatics(
     h = hashlib.sha256(payload.encode()).hexdigest()
 
     clipped = clip_at_waterline(mesh, draft, trim, x_midship=x_midship, l_pp=l_pp)
-    eps = _SNAP_REL * mesh.scale_diag
-    tol = 1e-9 * mesh.scale_diag
+    wl = clipped.waterline_points
+    if not (wl[:, 0].min() - eps <= xm <= wl[:, 0].max() + eps):
+        raise MeshContractError(
+            f"x_midship = {xm!r} m lies outside the waterline extent "
+            f"[{wl[:, 0].min()!r}, {wl[:, 0].max()!r}] m"
+        )
 
     vol, centroid = _tetra_moments(clipped.vertices, clipped.faces, None)
+    if vol <= _VOLUME_DEGENERATE_REL * diag**3:
+        raise MeshContractError(f"degenerate submerged volume V = {vol!r} m^3")
     areas = clipped.face_areas()
     s_wet = float(areas[~clipped.artificial].sum())
     cap_av = _face_area_vectors(clipped.vertices, clipped.faces[clipped.artificial]).sum(axis=0)
     a_wp = float(cap_av @ normal)
 
-    wl = clipped.waterline_points
     xw = (wl - point) @ ex
     l_wl = float(xw.max() - xw.min())
     b_wl = float(wl[:, 1].max() - wl[:, 1].min())
+    if l_wl <= _LENGTH_DEGENERATE_REL * diag or b_wl <= _LENGTH_DEGENERATE_REL * diag:
+        raise MeshContractError(
+            f"degenerate waterplane: L_wl = {l_wl!r} m, B_wl = {b_wl!r} m"
+        )
     lcb_m = float((centroid - point) @ ex)
 
-    a_m, _ = _section(clipped, xm, eps)
+    a_m, _ = _section(clipped, xm, xm, eps)
     c_b = vol / (l_wl * b_wl * draft)
-    c_m = a_m / (b_wl * draft)
-    c_p = vol / (a_m * l_wl)
     c_wp = a_wp / (l_wl * b_wl)
 
     def comp(v, u):
@@ -563,22 +723,29 @@ def compute_hydrostatics(
         "A_WP": comp(a_wp, "m^2"),
         "A_M": comp(a_m, "m^2"),
         "C_B": comp(c_b, "-"),
-        "C_P": comp(c_p, "-"),
-        "C_M": comp(c_m, "-"),
         "C_WP": comp(c_wp, "-"),
         "LCB": comp(100.0 * lcb_m / l_wl, "% L_wl"),
     }
+    if a_m <= _DEGENERATE_AREA_REL * diag**2:
+        reason = (f"midship section at x = {xm!r} m is dry (A_M = {a_m!r} m^2); "
+                  "C_M and C_P are undefined")
+        q["A_M"] = comp(0.0, "m^2")
+        q["C_M"] = Quantity(None, "-", "not_computed", h, reason)
+        q["C_P"] = Quantity(None, "-", "not_computed", h, reason)
+    else:
+        q["C_M"] = comp(a_m / (b_wl * draft), "-")
+        q["C_P"] = comp(vol / (a_m * l_wl), "-")
     for key, station in (("A_BT", bulb), ("A_T", transom)):
         if station is None:
             q[key] = Quantity(None, "m^2", "not_computed", h,
                               f"no {('bulb' if key == 'A_BT' else 'transom')} station declared; "
                               "the adapter does not infer feature stations")
         else:
-            q[key] = comp(_section(clipped, station, eps)[0], "m^2")
+            q[key] = comp(_section(clipped, station, xm, eps)[0], "m^2")
     if grid_decl:
         grid = np.zeros((gx.size, gz.size))
         for i, x in enumerate(gx):
-            _, segs = _section(clipped, x, eps)
+            _, segs = _section(clipped, x, xm, eps)
             for j, z in enumerate(gz):
                 grid[i, j] = _half_breadth(segs, float(z), tol)
         q["half_breadth"] = Quantity(grid.tolist(), "m", "computed", h,
@@ -587,144 +754,3 @@ def compute_hydrostatics(
         q["half_breadth"] = Quantity(None, "m", "not_computed", h,
                                      "no grid stations/waterlines declared")
     return HydrostaticsResult(q, h, dict(_CONVENTIONS))
-
-
-# ---------------------------------------------------------------- analytic geometry
-
-
-def box_mesh(length: float, beam: float, depth: float) -> tuple[np.ndarray, np.ndarray]:
-    """Closed outward box: x in [-L/2, L/2], y in [-B/2, B/2], z in [0, D] (12 faces).
-
-    Vertex index = ix + 2 iy + 4 iz.
-    """
-    xs = (-length / 2, length / 2)
-    ys = (-beam / 2, beam / 2)
-    zs = (0.0, depth)
-    v = np.array([[xs[i & 1], ys[(i >> 1) & 1], zs[(i >> 2) & 1]] for i in range(8)], float)
-    f = np.array(
-        [
-            [0, 2, 3], [0, 3, 1],  # bottom
-            [4, 5, 7], [4, 7, 6],  # deck
-            [0, 1, 5], [0, 5, 4],  # starboard side (y = -B/2)
-            [2, 6, 7], [2, 7, 3],  # port side (y = +B/2)
-            [0, 4, 6], [0, 6, 2],  # aft end
-            [1, 3, 7], [1, 7, 5],  # forward end
-        ],
-        dtype=np.int64,
-    )
-    return v, f
-
-
-def wigley_half_breadth(x, z_baseline, length: float, beam: float, draft: float):
-    """Wigley y = (B/2)(1-(2x/L)^2)(1-(z/T)^2), z from the waterline (= z_baseline - T)."""
-    xi = 2.0 * np.asarray(x, float) / length
-    zeta = (np.asarray(z_baseline, float) - draft) / draft
-    return 0.5 * beam * (1.0 - xi**2) * (1.0 - zeta**2)
-
-
-def wigley_mesh(
-    length: float,
-    beam: float,
-    draft: float,
-    *,
-    depth: Optional[float] = None,
-    nx: int = 40,
-    nz: int = 12,
-    n_topside: int = 2,
-    spacing: str = "uniform",
-    diagonal: str = "ac",
-) -> tuple[np.ndarray, np.ndarray]:
-    """Closed Wigley hull (metres, canonical axes, baseline z = 0, midship at x = 0).
-
-    Below the waterline the surface is the analytic Wigley form sampled on an (nx x nz)
-    parametric grid (``spacing`` "uniform" or "cosine"); above it, vertical topsides with the
-    waterline half-breadth rise to ``depth`` (default 1.5 T) and a flat deck closes the body.
-    ``diagonal`` ("ac", "bd", "alternate") selects the quad split. Different grids give
-    independent tessellations, not subdivisions of one mesh.
-    """
-    depth = 1.5 * draft if depth is None else float(depth)
-    if depth <= draft or nx < 2 or nz < 1 or n_topside < 1:
-        raise ValueError("wigley_mesh needs depth > draft, nx >= 2, nz >= 1, n_topside >= 1")
-    if spacing == "uniform":
-        u = np.linspace(-1.0, 1.0, nx + 1)
-        v = np.linspace(0.0, 1.0, nz + 1)
-    elif spacing == "cosine":
-        u = -np.cos(np.pi * np.arange(nx + 1) / nx)
-        v = 0.5 * (1.0 - np.cos(np.pi * np.arange(nz + 1) / nz))
-        u[0], u[-1], v[0], v[-1] = -1.0, 1.0, 0.0, 1.0
-    else:
-        raise ValueError(f"unknown spacing {spacing!r}")
-    if diagonal not in ("ac", "bd", "alternate"):
-        raise ValueError(f"unknown diagonal {diagonal!r}")
-    x = u * length / 2.0
-    z_rows = np.concatenate([v * draft, draft + (depth - draft) * np.arange(1, n_topside + 1) / n_topside])
-    nr = z_rows.size
-
-    def half_breadth(i: int, j: int) -> float:
-        if j <= nz:
-            return float(wigley_half_breadth(x[i], z_rows[j], length, beam, draft))
-        return float(0.5 * beam * (1.0 - u[i] ** 2))
-
-    def on_centre(i: int, j: int) -> bool:
-        return j == 0 or i == 0 or i == nx
-
-    index: dict = {}
-    pts: list = []
-
-    def vid(side: str, i: int, j: int) -> int:
-        key = ("c", i, j) if on_centre(i, j) else (side, i, j)
-        if key not in index:
-            y = 0.0 if key[0] == "c" else half_breadth(i, j) * (1.0 if side == "p" else -1.0)
-            index[key] = len(pts)
-            pts.append((x[i], y, z_rows[j]))
-        return index[key]
-
-    tris: list = []
-
-    def centre_only(t) -> bool:
-        return all(on_centre(i, j) for (i, j) in t)
-
-    for j in range(nr - 1):
-        for i in range(nx):
-            a, b, c, d = (i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1)
-            split_ac = [(a, d, c), (a, c, b)]
-            split_bd = [(a, d, b), (b, d, c)]
-            prefer_ac = diagonal == "ac" or (diagonal == "alternate" and (i + j) % 2 == 0)
-            first, second = (split_ac, split_bd) if prefer_ac else (split_bd, split_ac)
-            chosen = second if any(centre_only(t) for t in first) else first
-            for t in chosen:
-                port = tuple(vid("p", *p) for p in t)
-                stbd = tuple(vid("s", *p) for p in t)[::-1]
-                for tri in (port, stbd):
-                    if len(set(tri)) == 3:
-                        tris.append(tri)
-    jt = nr - 1
-    for i in range(nx):
-        p0, p1 = vid("p", i, jt), vid("p", i + 1, jt)
-        s0, s1 = vid("s", i, jt), vid("s", i + 1, jt)
-        for tri in ((p0, s1, p1), (p0, s0, s1)):
-            if len(set(tri)) == 3:
-                tris.append(tri)
-    verts = np.asarray(pts, float)
-    faces = np.asarray(tris, np.int64)
-    if volume_divergence(verts, faces) < 0:  # generator-internal orientation guard
-        faces = faces[:, ::-1].copy()
-    return verts, faces
-
-
-def wigley_wetted_area_reference(length: float, beam: float, draft: float, *, epsrel: float = 1e-12) -> float:
-    """Wetted area of the analytic Wigley hull at its design draft by adaptive quadrature.
-
-    S = 2 * integral over x in [-L/2, L/2], z in [0, T] of sqrt(1 + y_x^2 + y_z^2).
-    """
-    from scipy import integrate
-
-    def integrand(z, x):
-        xi = 2.0 * x / length
-        zeta = (z - draft) / draft
-        y_x = 0.5 * beam * (-4.0 * xi / length) * (1.0 - zeta**2)
-        y_z = 0.5 * beam * (1.0 - xi**2) * (-2.0 * zeta / draft)
-        return math.sqrt(1.0 + y_x * y_x + y_z * y_z)
-
-    half, _ = integrate.dblquad(integrand, 0.0, length / 2.0, 0.0, draft, epsabs=0.0, epsrel=epsrel)
-    return 4.0 * half
