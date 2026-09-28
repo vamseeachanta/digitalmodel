@@ -112,6 +112,10 @@ def case_spec(case: dict) -> RiserGlobalModelSpec:
             raise ValueError(f"stack_segment_m must be > 0, got {cap}")
         for s in d["stack"]:
             s["segment_length_m"] = min(s["segment_length_m"], cap)
+    if p.get("structural_damping_pct") is not None:
+        if not d.get("structural_damping"):
+            raise ValueError("structural_damping_pct needs structural damping in the base spec (its period is kept)")
+        d["structural_damping"]["ratio_percent"] = float(p["structural_damping_pct"])
     d["vessel_offset_m"] = offset_xy_m(base, float(p.get("offset_pct_wd", 0.0)), heading)
     d["current"] = ({"direction_deg": heading, "depth_speed_m_s": p["current"]["depth_speed_m_s"]}
                     if p.get("current") else None)
@@ -123,7 +127,21 @@ def case_spec(case: dict) -> RiserGlobalModelSpec:
     if case["analysis"] == "dynamics":
         d["dynamics"] = dict(p["dynamics"])
     d["name"] = f"{base.name}:{case['case_id']}"
-    return RiserGlobalModelSpec.model_validate(d)
+    spec = RiserGlobalModelSpec.model_validate(d)
+    if p.get("hang_off") or p.get("running"):
+        from .global_model import hang_off as hom
+
+        if p.get("tensioners_failed") or p.get("tensioner_representation") or p.get("tensioner_line_tension_n"):
+            raise ValueError("a hang-off or running case has no tensioner lines (no failed tensioner, representation "
+                             "or line tension)")
+        if p.get("running"):
+            r = p["running"]
+            return hom.running_spec(spec, deployed_pct_wd=float(r["deployed_pct_wd"]), payload=r["payload"])
+        h = p["hang_off"]
+        return hom.hang_off_spec(spec, h["mode"], with_lmrp=bool(h.get("with_lmrp", True)),
+                                 stiffness_fraction=float(h.get("stiffness_fraction", hom.DEFAULT_STIFFNESS_FRACTION)),
+                                 half_stroke_m=float(h.get("half_stroke_m", hom.DEFAULT_HALF_STROKE_M)))
+    return spec
 
 
 def seeded_statics(model, spec: RiserGlobalModelSpec, *, seed_pct: float = SEED_PCT,
@@ -517,6 +535,49 @@ def robust_statics(model, spec: RiserGlobalModelSpec, params: dict, *, reload=No
         info["calibration"] = calibrate_line_tension(model, spec, solve=solve)
     return {**info, **physical_state_checks(model, spec)}
 
+HANG_OFF_RAMP = (0.25, 0.5, 0.75, 1.0)
+HANG_OFF_RAMP_FINE = tuple(i / 10.0 for i in range(1, 11))
+
+
+def hang_off_statics(model, spec: RiserGlobalModelSpec, params: dict, *, reload=None) -> dict[str, Any]:
+    """Statics of a hang-off or running case (no tensioner lines, a free string end): a direct solve, then - with
+    current - a current ramp in 25 % steps and in 10 % steps, each step starting from the last converged state. The
+    ring yaw is checked after every solve. Licence faults propagate."""
+    from digitalmodel.solvers.orcaflex.parallel_runner import CaseFailed
+
+    speed = float(model.environment.RefCurrentSpeed) if spec.current is not None else 0.0
+    routes = [("direct", None)] + ([("current_ramp", HANG_OFF_RAMP), ("current_ramp_fine", HANG_OFF_RAMP_FINE)]
+                                   if speed else [])
+    attempts: list[dict[str, str]] = []
+    for k, (name, ramp) in enumerate(routes):
+        if k:
+            if reload is None:
+                break
+            reload()
+        try:
+            n = 0
+            for f in ramp or (1.0,):
+                if ramp:
+                    model.environment.RefCurrentSpeed = f * speed
+                model.CalculateStatics()
+                n += 1
+                yaw = _ring_yaw_deg(model)
+                if abs(yaw) > RING_YAW_MAX_DEG:
+                    raise _PathFailed(f"ring yaw {yaw:.1f} deg")
+                if f < 1.0:
+                    model.UseCalculatedPositions(True)
+            return {"method": "hang-off statics", "strategy": name, "attempts": attempts, "statics_calls": n,
+                    **physical_state_checks(model, spec)}
+        except CaseFailed:
+            raise
+        except Exception as exc:  # noqa: BLE001 - a route failure is recorded and the next route tried
+            if "licen" in str(exc).lower():
+                raise
+            attempts.append({"strategy": name, "error": str(exc).strip().splitlines()[-1][:200]})
+    raise CaseFailed("statics_diverged", "no hang-off statics route converged: "
+                     + "; ".join(f"{a['strategy']}: {a['error']}" for a in attempts))
+
+
 def _tensioner_vertical_n(model) -> float:
     from .global_model import orcaflex_run as orun
 
@@ -559,6 +620,11 @@ def physical_state_checks(model, spec: RiserGlobalModelSpec) -> dict[str, Any]:
 
     from .global_model.hand_checks import tension_references
 
+    if spec.hang_off is not None:  # no tensioner lines: the ring yaw is the branch check
+        yaw = (float(model["TensionRing"].StaticResult("Rotation 3")) + 180.0) % 360.0 - 180.0
+        if abs(yaw) > RING_YAW_MAX_DEG:
+            raise CaseFailed("nonphysical_static", f"non-physical static state: tension ring yaw {yaw:.2f} deg")
+        return {"ring_yaw_deg": yaw, "physical": True}
     target = tensioner_vertical_target_n(spec)
     tol = RESIDUAL_REL * target
     tol_tv = TENSIONER_VERTICAL_REL * target
@@ -657,6 +723,17 @@ class RiserCampaignAdapter:
         p = case.get("params", {})
         settings = apply_statics_settings(model, p)
         spec = self.spec(case)
+        if spec.hang_off is not None:
+            master = self._masters.get(case["case_id"])
+
+            def reload_ho():
+                threads = model.threadCount
+                model.LoadData(str(master))
+                model.threadCount = threads
+                self.prepare(model, case)
+                apply_statics_settings(model, p)
+
+            return {**hang_off_statics(model, spec, p, reload=reload_ho if master else None), **settings}
         if p.get("statics", "seeded") == "seeded":
             master = self._masters.get(case["case_id"])
 
@@ -678,6 +755,9 @@ class RiserCampaignAdapter:
 
         spec = self.spec(case)
         ofx = orun._api()
+        if spec.hang_off is not None:
+            return {"w5": w5_channels.extract_hang_off(model, spec, case["analysis"], ofx),
+                    **w5_channels.hang_off_summary(model, spec, case["analysis"], ofx)}
         w5 = w5_channels.extract(model, spec, case["analysis"], ofx)
         if case["analysis"] == "statics":
             out: dict[str, Any] = {**orun.static_responses(model, spec), **orun.end_effective_tensions(model),

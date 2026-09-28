@@ -53,16 +53,20 @@ def test_soft_hang_off_spring_carries_the_hung_weight_at_mid_stroke():
 
 
 def test_running_string_trims_the_upper_joints_to_the_deployed_length():
+    """Deployed length = the fraction of the riser joints run (the upper joints are run last); the outer barrel and
+    the lower flex-joint body stay; the payload hangs below the lower flex joint."""
     s = synthetic_spec()
-    wd = s.environment.water_depth_m
+    mid = sum(x.length_m for x in s.riser[1:-1])
     r = ho.running_spec(s, deployed_pct_wd=50, payload="BOP + LMRP")
     assert [x.name for x in r.stack] == ["LMRP", "BOP"]
-    assert r.wellhead_datum_z_m == pytest.approx(-0.5 * wd)
     assert r.riser[0].name == s.riser[0].name and r.riser[-1].name == s.riser[-1].name  # outer barrel, LFJ body kept
-    assert sum(x.length_m for x in r.riser) < sum(x.length_m for x in s.riser)
+    assert sum(x.length_m for x in r.riser[1:-1]) == pytest.approx(0.5 * mid)
+    assert [x.name for x in r.riser[1:-1]][-1] == s.riser[-2].name  # the lowest joints are deployed first
+    assert r.wellhead_datum_z_m == pytest.approx(r.lower_flex_joint.pivot_z_m - s.stack[0].length_m - s.stack[1].length_m)
     assert r.hang_off.mode == "hard" and r.hang_off.with_lmrp
     lm = ho.running_spec(s, deployed_pct_wd=100, payload="LMRP only")
-    assert [x.name for x in lm.stack] == ["LMRP"] and lm.wellhead_datum_z_m == pytest.approx(-wd)
+    assert [x.name for x in lm.stack] == ["LMRP"]
+    assert lm.lower_flex_joint.pivot_z_m == pytest.approx(s.lower_flex_joint.pivot_z_m)
     with pytest.raises(ValueError, match="deployed"):
         ho.running_spec(s, deployed_pct_wd=150, payload="LMRP only")
 
@@ -117,7 +121,7 @@ def test_campaign_case_builds_hang_off_and_running_and_damping(tmp_path):
     s = cp.case_spec(_case(tmp_path, hang_off={"mode": "soft", "with_lmrp": True}, mud_density_kg_m3=1025.0))
     assert s.hang_off.mode == "soft" and s.contents.density_kg_m3 == 1025.0
     r = cp.case_spec(_case(tmp_path, running={"deployed_pct_wd": 25, "payload": "LMRP only"}))
-    assert r.hang_off.mode == "hard" and r.wellhead_datum_z_m == pytest.approx(-0.25 * r.environment.water_depth_m)
+    assert r.hang_off.mode == "hard" and r.wellhead_datum_z_m == pytest.approx(r.lower_flex_joint.pivot_z_m - r.stack[0].length_m)
     base = synthetic_spec()
     d = base.model_dump()
     d["structural_damping"] = {"ratio_percent": 0.3, "period_s": 10.0}
