@@ -210,6 +210,17 @@ Note: fcf formula: (1 + 0.01/100)^2 × (1 + 0.01)^(5-2) = 1.0001^2 × 1.01^3 ≈
 | Total gross weight of anodes | 14.4 | mt | — |
 | Anode life (calculated) | 7.1 | yr | > 5 yr design life: pass |
 
+**Reproduction note (this branch, `ABS_gn_ships_2018` route, cfg below):** the code returns
+Ici / Icm / Icf = 145.5 / 149.9 / 152.9 A (source 146 / 222 / 298 A). The route's compound
+model gives fcf = 1.0510, a 5.1 % rise on the coated density, where the source applies
+fcf = 2.05 % as a fraction of the uncoated density (icf = 27.7 mA/m²). The route sizes the
+mass on Icm with a temperature-corrected capacity of 2162 Ah/kg, giving 3682 kg and 127.0
+anodes on the mass basis (source 4 713 kg at Q = 2500 Ah/kg and 460 anodes, final current
+governing over 230 locations). Rai = 0.4194 Ω matches the tabulated 0.419 Ω; the route reports
+the same value for Raf because no depleted geometry is supplied (source 0.3807 Ω). The
+tabulated source values are left as extracted. The ABS ships route is not affected by the
+#2207 DNV-RP-B401/F103 tables; these values are unchanged after #2207.
+
 ## Anode Bill of Materials (Section 4.5)
 ```
 QTY    DESCRIPTION                                             TOTAL WEIGHT
@@ -239,12 +250,14 @@ here the design resistivity is 0.325 ohm.m (24.5 ppt at 14°C from DNV B401 Fig 
 ## Python cfg dict
 
 ```python
+from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
+
 cfg = {
     "inputs": {
         "calculation_type": "ABS_gn_ships_2018",
-        # ABS_gn_ships_2018 is the existing route in cathodic_protection.py.
-        # Source standard is ABS GN Ships December 2017; route name reflects 2018 offshore
-        # publication which uses the same methodology.
+        # ABS_gn_ships_2018 is the existing ABS ships route in cathodic_protection.py.
+        # The source standard is the ABS Guidance Notes on Cathodic Protection of Ships,
+        # December 2017; the router key is misnamed for that edition and is not renamed here.
         "design_data": {
             "design_life": 5,                    # years
             "seawater_max_temperature": 14,      # deg C (max observed)
@@ -282,15 +295,25 @@ cfg = {
         },
     }
 }
+
+result = CathodicProtection().router(cfg)["cathodic_protection"]
+demand = result["current_demand_A"]["totals"]
+print("Ici / Icm / Icf (A): {:.1f} / {:.1f} / {:.1f}".format(
+    demand["initial"], demand["mean"], demand["final"]))
+print("Total net anode mass (kg): {:.0f}".format(result["anode_requirements"]["total_mass_kg"]))
+print("Anode count (mass basis): {:.1f}".format(result["anode_requirements"]["anode_count"]))
+print("Rai / Raf (ohm): {:.4f} / {:.4f}".format(
+    result["anode_performance"]["resistance_ohm"]["initial"],
+    result["anode_performance"]["resistance_ohm"]["final"]))
 ```
 
 ## Code Validation
 
 ```python
-# Run: CathodicProtection().router(cfg)
-# Route: ABS_gn_ships_2018 (existing)
+# Route: ABS_gn_ships_2018 (existing). The snippet above runs it; the code's current values
+# are in the Reproduction note under "Calculation Results".
 #
-# Expected results (5-yr, 0.325 ohm.m, 10 778 m², High durability coating):
+# Source results (5-yr, 0.325 ohm.m, 10 778 m², High durability coating):
 #   Initial coating breakdown factor (fci):     1.0%
 #   Final coating breakdown factor (fcf):       2.05%
 #   Mean coating breakdown factor (fcm):        ~1.53%
@@ -313,9 +336,6 @@ cfg = {
 #   Anode resistance (final, Raf):              0.3807 ohm
 #   Individual anode output final (Iaof):       0.788 A
 #   Total final current output (460 anodes):    329 A  (> 298 A: pass)
-#
-# NOTE: The cfg key names above must match the ABS_gn_ships_2018() method signature
-# in cathodic_protection.py. Cross-check against test_abs_cathodic_protection_calcs.py.
 ```
 
 ## Gaps Found

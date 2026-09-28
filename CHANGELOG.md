@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Changed
+
+- cathodic_protection: DNV-RP-F103 default edition is now 2019 (was 2010). Results for fluids above 25 °C and for FBE coatings increase; pass edition='2010' to reproduce earlier results.
+- cathodic_protection: new engine key `DNV_RP_F103` runs `design_data.edition` (default 2019); `DNV_RP_F103_2010` is now a deprecated alias pinned to edition 2010 (DeprecationWarning; a conflicting `design_data.edition` raises) so existing YAMLs reproduce their earlier results.
+- cathodic_protection: client use approved on the DNV-RP-B401 offshore and DNV-RP-F103 bracelet routes only, subject to an engineer-of-record check of every deliverable; every route's `status` block now carries `use_status` (`client-use-with-eor-check` / `legacy-uncited-independent-check-required` for the ABS and `*_legacy` routes) and the CP anode-design report states it (owner decision 2026-09-27, #2206).
+
 ## [2.1.0] - 2026-03-26
 
 ### Phase 1 GSD Sprint -- New Calculation Modules

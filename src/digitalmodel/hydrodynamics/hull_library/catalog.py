@@ -109,6 +109,7 @@ class MotionResponse(BaseModel):
 class HullCatalogEntry(BaseModel):
     """A hull in the catalog with its profile and variations."""
 
+    curvature_signature_brep: CurvatureSignature | None = None
     hull_id: str
     profile: HullProfile
     variations: list[HullVariation] = Field(default_factory=list)
@@ -213,6 +214,7 @@ class HullCatalog:
         self,
         hull_id: str,
         config: Optional[MeshGeneratorConfig] = None,
+        representation: str = "mesh",
     ) -> CurvatureSignature:
         """Compute and store the HullProd curvature signature for a hull (#2170 D2).
 
@@ -223,6 +225,21 @@ class HullCatalog:
             KeyError: If *hull_id* is not registered.
             ImportError: If the optional ``hullprod`` dependency is missing.
         """
+        if representation not in ("mesh", "brep", "both"):
+            raise ValueError("representation must be mesh, brep or both")
+        if representation != "mesh":
+            from .curvature_screen import screen_profile
+
+            entry = self.get_hull(hull_id)
+            result = screen_profile(entry.profile, config, representation=representation)
+            if representation == "brep":
+                entry.curvature_signature_brep = result.signature
+            else:
+                entry.curvature_signature = result.signature
+                entry.curvature_signature_brep = CurvatureSignature.model_validate(
+                    result.provenance["brep_signature"]
+                )
+            return result.signature
         from .curvature_screen import screen_panel_mesh
 
         entry = self.get_hull(hull_id)

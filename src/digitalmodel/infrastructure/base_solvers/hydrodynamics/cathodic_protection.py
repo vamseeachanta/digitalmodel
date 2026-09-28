@@ -1,17 +1,12 @@
 from dataclasses import asdict
 import math
 from pathlib import Path
+from typing import Any
 
 from digitalmodel.citations.registry import get_dnv_f103_reference
 
 from digitalmodel.infrastructure.base_solvers.hydrodynamics.cp_DNV_RP_B401_2021 import (
-    _b401_anode_requirements,
-    _b401_anode_resistance,
-    _b401_coating_breakdown,
-    _b401_current_demand,
-    _b401_current_densities,
-    _b401_surface_areas,
-    _b401_verify_current_output,
+    _b401_offshore_platform,
 )
 
 
@@ -738,42 +733,24 @@ class CathodicProtection:
         }
 
     # -----------------------------------------------------------------------
-    # DNV-RP-B401-2021: Cathodic Protection of Offshore Fixed Platforms
+    # DNV-RP-B401: Cathodic Protection of Offshore Fixed Platforms
     # -----------------------------------------------------------------------
 
-    def DNV_RP_B401_offshore_platform(self, cfg):
-        """Cathodic protection for offshore fixed platforms per DNV-RP-B401 (2021).
+    def DNV_RP_B401_offshore_platform(self, cfg: dict[str, Any]) -> dict[str, Any]:
+        """Cathodic protection for offshore fixed platforms per DNV-RP-B401.
 
-        Covers jacket structures, gravity-based structures, and topsides steel.
-        Zones: submerged, splash, atmospheric.
+        Covers jacket structures, gravity-based structures, subsea structures
+        and topsides steel. Zones: submerged, buried, splash, atmospheric.
 
-        Standard: DNV-RP-B401 May 2021
-        Sections: 3.3 (current densities), 3.4 (coating breakdown), 4.9 (anode resistance)
+        Edition: ``inputs.design_data.edition`` (default "2021"). Tables:
+        10-1 / 10-2 (design current densities), Sec. 6.3 (buried), 10-4
+        (coating breakdown), 10-6 (anode capacity, potential), 10-7 (anode
+        resistance), 10-8 (utilisation); Sec. 7 design loop with initial and
+        final current-output checks. See ``cp_DNV_RP_B401_2021`` for the
+        results schema (``standard``, ``edition``, ``provenance``,
+        ``citations`` are edition-derived).
         """
-        inputs = cfg.get("inputs", {})
-        design_data = inputs.get("design_data", {})
-        design_life = design_data.get("design_life", 25.0)
-
-        areas = _b401_surface_areas(inputs)
-        breakdown = _b401_coating_breakdown(inputs, design_life)
-        densities = _b401_current_densities(inputs)
-        current_demand = _b401_current_demand(inputs, areas, densities, breakdown)
-        resistance = _b401_anode_resistance(inputs)
-        anode_req = _b401_anode_requirements(inputs, current_demand)
-        verification = _b401_verify_current_output(inputs, anode_req, resistance, current_demand)
-
-        cfg["results"] = {
-            "standard": "DNV-RP-B401-2021",
-            "design_life_years": design_life,
-            "surface_areas_m2": areas,
-            "coating_breakdown": breakdown,
-            "current_densities_A_m2": densities,
-            "current_demand_A": current_demand,
-            "anode_resistance_ohm": round(resistance, 6),
-            "anode_requirements": anode_req,
-            "current_output_verification": verification,
-        }
-        return cfg
+        return _b401_offshore_platform(cfg)
 
     # -----------------------------------------------------------------------
     # ABS Guidance Notes on Cathodic Protection of Offshore Structures (Dec 2018)

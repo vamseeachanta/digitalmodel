@@ -3,22 +3,24 @@
 
 ## 1. Standards Table
 
-| ID | Title | Edition | File (local path) | Status |
+| ID | Title | Edition | Reference | Status |
 |----|-------|---------|-------------------|--------|
-| DNV-RP-B401-1993 | Cathodic Protection Design | 1993 | `/mnt/ace/O&G-Standards/DNV/DNV_RP_B401_(1993)_Cathodic_Protection_Design.pdf` | Available |
-| DNV-RP-B401-2005 | Cathodic Protection Design | Jan 2005 + Apr 2008 amend | `/mnt/ace/O&G-Standards/DNV/DNV_RP_B401_with_2008_amendments_(2005)_Cathodic_Protection_Design.pdf` | Available |
-| DNV-RP-B401-2011 | Cathodic Protection Design | Oct 2010 + Apr 2011 amend | `/mnt/ace/O&G-Standards/DNV/DNV_RP_B401_(2011)_Cathodic_Protection_Design.pdf` | Available |
-| DNV-RP-B401-2021 | Cathodic Protection Design | May 2021 | `<private-data>/DNV-RP-B401-2021.pdf` | Available |
-| DNV-RP-F103-2003 | CP of Submarine Pipelines by Galvanic Anodes | Oct 2003 + Apr 2008 amend | `/mnt/ace/O&G-Standards/DNV/DNV_RP_F103_(2003)_Cathodic_protection_of_submarine_pipelines_by_galvanic_anodes.pdf` | Available |
-| DNV-RP-F103-2010 | CP of Submarine Pipelines by Galvanic Anodes | Oct 2010 | `/mnt/ace/O&G-Standards/DNV/DNV_RP_F103_(2010)_Cathodic_Protection_of_Submarine_Pipelines_by_Galvanic_Anodes.pdf` | Available |
-| DNVGL-RP-F103-2016 | CP of Submarine Pipelines | Jul 2016 | Not locally available; proxied via GP 56-01-04U V4 | Proxy only |
-| DNV-RP-F112-2008 | Design of Duplex SS Subsea Equipment Exposed to CP | Oct 2008 | `/mnt/ace/O&G-Standards/DNV/DNV_RP_F112_(2008)_Stainless_steel_subsea_equipment_exposed_to_cathodic_protection.pdf` | Available |
-| ABS-GN-Ships-2017 | GN on CP of Ships | Dec 2017 | `<private-data>/ABS cathodic-protection-of-ships-gn-dec17.pdf` | Available |
-| ABS-GN-Offshore-2018 | GN on CP of Offshore Structures | Dec 2018 | `<private-data>/ABS cathodic-protection-offshore-gn-dec18.pdf` | Available |
-| ISO-15589-2:2004 | Petroleum and Natural Gas — CP of Pipeline Transport Systems — Part 2: Offshore Pipelines | 1st edition 2004 | `/mnt/ace/O&G-Standards/ISO/ISO15589-2-2004forOR_Cathodic_Protection.pdf` | Available |
-| SNAME-TRR21 | Fundamentals of CP for Marine Service (T&R R-21 / B7.5) | — | `<private-data>/SNAME T&R R-21 Cathodic Protection Marine Service.pdf` | Available |
-| EMX-GP-56-01-04U-V4 | ExxonMobil GP: CP Requirements for Offshore Pipelines | V4.0 Feb 2021 | `<private-data>/GP 56-01-04U_4.pdf` | Available |
-| EMX-GP-56-01-08U-V1 | ExxonMobil GP: CP Requirements for Offshore Structures | V1.0 Apr 2020 | `<private-data>/GP 56-01-08U_Rev1.0_external.pdf` | Available |
+| DNV-RP-B401-1993 | Cathodic Protection Design | 1993 | `wikis/engineering-standards/wiki/standards/dnv-rp-b401.md` | Available |
+| DNV-RP-B401-2005 | Cathodic Protection Design | Jan 2005 + Apr 2008 amend | `wikis/engineering-standards/wiki/standards/dnv-rp-b401.md` | Available |
+| DNV-RP-B401-2011 | Cathodic Protection Design | Oct 2010 + Apr 2011 amend | `wikis/engineering-standards/wiki/standards/dnv-rp-b401.md` | Available |
+| DNVGL-RP-B401-2017 | Cathodic Protection Design | Jun 2017 | `wikis/engineering-standards/wiki/standards/dnv-rp-b401-2017.md` | Available (#2208) |
+| DNV-RP-B401-2021 | Cathodic Protection Design | May 2021 | `wikis/engineering-standards/wiki/standards/dnv-rp-b401-2021.md` | Available (#2208) |
+| DNV-RP-F103-2003 | CP of Submarine Pipelines by Galvanic Anodes | Oct 2003 + Apr 2008 amend | `wikis/engineering-standards/wiki/standards/dnv-rp-f103.md` | Available |
+| DNV-RP-F103-2010 | CP of Submarine Pipelines by Galvanic Anodes | Oct 2010 | `wikis/engineering-standards/wiki/standards/dnv-rp-f103.md` | Available |
+| DNVGL-RP-F103-2016 | CP of Submarine Pipelines | Jul 2016 | Not available as its own print; the September 2019 print republishes it with unchanged content | Superseded by 2019 |
+| DNVGL-RP-F103-2019 (amended May 2021) | CP of Submarine Pipelines | Sep 2019 / May 2021 | `wikis/engineering-standards/wiki/standards/dnv-rp-f103-2019.md` | Available (#2208) |
+| DNV-RP-F112-2008 | Design of Duplex SS Subsea Equipment Exposed to CP | Oct 2008 | `wikis/engineering-standards/wiki/standards/dnv-rp-f112.md` | Available |
+| ABS-GN-Ships-2017 | GN on CP of Ships | Dec 2017 | (private archive, path withheld) | Available |
+| ABS-GN-Offshore-2018 | GN on CP of Offshore Structures | Dec 2018 | `wikis/engineering-standards/wiki/standards/abs-gn-239-cathodic-protection-offshore.md` | Available |
+| ISO-15589-2:2004 | Petroleum and Natural Gas — CP of Pipeline Transport Systems — Part 2: Offshore Pipelines | 1st edition 2004 | (private archive, path withheld) | Available |
+| SNAME-TRR21 | Fundamentals of CP for Marine Service (T&R R-21 / B7.5) | — | (private archive, path withheld) | Available |
+| OPR-GP-PIPELINES-V4 | The operator's GP: CP Requirements for Offshore Pipelines | V4.0 Feb 2021 | [operator document, ref withheld] | Available |
+| OPR-GP-STRUCTURES-V1 | The operator's GP: CP Requirements for Offshore Structures | V1.0 Apr 2020 | [operator document, ref withheld] | Available |
 
 ---
 
@@ -94,9 +96,9 @@
 - Metallic resistivity: CMn-steel = 0.2×10⁻⁶ Ω·m; 13Cr = 0.8×10⁻⁶; 22/25Cr = 1.0×10⁻⁶
 - RL formula: Eq.8 R_Me = L·ρ_Me / (π·d·(D−d))
 
-#### 2016 Edition (proxied via EMX-GP-56-01-04U V4)
+#### 2016 Edition (proxied via the operator's pipeline GP, V4)
 **vs 2010:**
-- Design safety factor k = 1.1 introduced (ExxonMobil applies this as mandatory)
+- Design safety factor k = 1.1 introduced (the operator applies this as mandatory)
 - Maximum anode distance reduced to 200 m (vs 300 m in 2010)
 - Wet storage period concept introduced — CP design accounts for pre-installation storage time
 - Enhanced attenuation formula using polarization resistance and axial current flow
@@ -125,9 +127,9 @@
 - Normative annexes: A (GACP design procedures), B (performance testing), C (monitoring)
 - DNV-RP-F103-2010 is explicitly based on this standard
 
-### 2.5 ExxonMobil Global Practices
+### 2.5 The operator's Global Practices (GP)
 
-#### GP 56-01-04U V4 (Feb 2021) — Pipeline CP
+#### Operator pipeline GP, V4 (Feb 2021) — Pipeline CP [operator document, ref withheld]
 - Parent standard: DNVGL-RP-F103 July 2016
 - Design safety factor k = 1.1 mandatory
 - Max anode distance: 200 m (stricter than F103-2010's 300 m)
@@ -135,7 +137,7 @@
 - Continuity: pin brazing or Cadwelding only (no doubler plates)
 - Company-specific current density Table 6-2
 
-#### GP 56-01-08U V1 (Apr 2020) — Offshore Structure CP
+#### Operator structures GP, V1 (Apr 2020) — Offshore Structure CP [operator document, ref withheld]
 - Parent standard: DNVGL-RP-B401 June 2017
 - ICCP prohibited for new construction
 - Systems >500 A require Boundary Element Method (BEM) modelling
@@ -147,7 +149,7 @@
 
 ## 3. Code Coverage Audit
 
-Source file: `<private-data>/cathodic_protection.py`
+Source file: `src/digitalmodel/infrastructure/common/cathodic_protection.py`
 
 ### 3.1 Router
 
@@ -162,7 +164,7 @@ Source file: `<private-data>/cathodic_protection.py`
 | `_dnv_pipeline_geometry` | "DNV RP-F103 2016 / Contractor approach" | A_ext = π·D·L; A_s = π/4·((D)²−(d)²); RL = ρ_Me / A_s | F103-2016 (Eq.8 variant) | Longitudinal resistance RL = ρ_Me/A_s is 2016 feature; 2010 uses Eq.8 R_Me = L·ρ_Me/(π·d·(D−d)) |
 | `_dnv_coating_breakdown` | "DNV RP-F103 2016 / Contractor approach" | compound exponential; includes `wet_storage_years` | F103-2016 hybrid | Wet storage period is 2016 feature; 2010 uses linear f_cm = a + 0.5·b·t_f (Annex 1) — formula is non-standard |
 | `_dnv_current_densities` | references "Table 4-1" and "Table 4-2" | coating-quality lookup (excellent/good/average/poor) + Arrhenius temperature correction + soil resistivity factor | INCORRECT — table numbers do not exist in F103-2010 or F103-2016 | F103-2010 uses Table 5-1 (burial + internal fluid temp). Coating quality categories are non-standard. Temperature Arrhenius correction not in any F103 edition. Table references are fabricated. |
-| `_dnv_current_demand` | — | I = A · i_design · CBF · design_margin | F103-2010 Eq.1/Eq.3 (correct form) | Design margin factor not in F103-2010 (is in EMX GP k=1.1) |
+| `_dnv_current_demand` | — | I = A · i_design · CBF · design_margin | F103-2010 Eq.1/Eq.3 (correct form) | Design margin factor not in F103-2010 (is in the operator's GP, k=1.1) |
 | `_dnv_anode_requirements` | — | M = I_total · t_f · 8760 / (u · ε) | F103-2010 Eq.5 (correct) | Capacity ε and utilization u must match standard values |
 | `_dnv_anode_spacing` | — | uniform distribution via np.linspace; validates against min/max spacing | F103-2010 Sec.5.10 (default ≤300 m) | Spacing validation present; max spacing constant should be checked against configured value |
 | `_dnv_attenuation` | "DNV RP-F103 2016 / Contractor approach" | simplified 2010: La = sqrt(D·t·ρ_coating / (4·ρ_steel·ln(D/d))); enhanced 2016: α = sqrt(π·D·RL·CBFf·P/8) where P = (Ecorr−Ea)/i_mean | Both F103-2010 Sec.5.11 and F103-2016 enhanced formula | Two paths present; 2016 path uses polarization resistance P — correct conceptually for 2016 |
@@ -213,7 +215,7 @@ Note: These standalone methods are NOT called from `router()`. They appear to be
 |---|----------|-------|
 | V-1 | Class `DNV_RP_F103_2010` | The class name claims 2010 but three private methods (`_dnv_pipeline_geometry`, `_dnv_coating_breakdown`, `_dnv_attenuation`) explicitly document "DNV RP-F103 2016 / Contractor approach". The implementation is a hybrid of 2010 and 2016, not a clean 2010 implementation. |
 | V-2 | `_dnv_attenuation` | The enhanced attenuation path using polarization resistance P = (Ecorr−Ea)/i_mean is from F103-2016. Selecting the correct code path depends on configuration; misapplication will produce incorrect results. |
-| V-3 | `_dnv_current_demand` | Design margin factor (k) is from EMX GP 56-01-04U (k=1.1) and not present in F103-2010. Applying it when calculating to F103-2010 adds an undocumented safety factor. |
+| V-3 | `_dnv_current_demand` | Design margin factor (k) is from the operator's pipeline GP (k=1.1) and not present in F103-2010. Applying it when calculating to F103-2010 adds an undocumented safety factor. |
 
 ### 4.3 Missing Standard Implementations
 
@@ -229,8 +231,8 @@ Note: These standalone methods are NOT called from `router()`. They appear to be
 
 | Standard | Notes |
 |----------|-------|
-| DNVGL-RP-F103 July 2016 | Not present locally; proxied by EMX GP 56-01-04U V4. Table numbering, formula numbering, and specific section text not verifiable without the original. |
-| DNVGL-RP-B401 June 2017 | Not present locally; proxied by EMX GP 56-01-08U V1 and B401-2021 changelog. |
+| DNVGL-RP-F103 July 2016 | Not present locally; proxied by the operator's pipeline GP (V4). Table numbering, formula numbering, and specific section text not verifiable without the original. |
+| DNVGL-RP-B401 June 2017 | Not present locally; proxied by the operator's structures GP (V1) and the B401-2021 changelog. |
 | NACE SP0169, SP0176 | Not available — referenced in SNAME R-21 and ABS documents |
 | NORSOK M-501 | Not available — referenced in B401-2005 |
 
@@ -268,7 +270,7 @@ Before Phase 2 work on the DNV route:
 | Standard | Priority | Reason |
 |----------|----------|--------|
 | DNVGL-RP-F103 July 2016 | High | Needed to verify 2016-specific formulas currently hybrid-implemented in `_dnv_coating_breakdown`, `_dnv_pipeline_geometry`, `_dnv_attenuation`. Without it, the 2016 code path cannot be audited. |
-| DNVGL-RP-B401 June 2017 | Medium | Needed to implement B401 route; 2021 is available but 2017 is required if project specifications reference it (ExxonMobil GP 56-01-08U is 2017-based). |
+| DNVGL-RP-B401 June 2017 | Medium | Needed to implement B401 route; 2021 is available but 2017 is required if project specifications reference it (the operator's structures GP is 2017-based). |
 | NACE SP0169 | Medium | Onshore pipeline CP; commonly cross-referenced; needed if scope expands to onshore |
 | NACE SP0176 | Low | Offshore platform CP; provides NACE perspective vs DNV/ABS |
 | NORSOK M-501 | Low | Surface preparation and coating; referenced in B401-2005 coating categories |
@@ -276,20 +278,129 @@ Before Phase 2 work on the DNV route:
 
 ---
 
-## 7. F103-2016/2019 Assessment — Implementation Deferred
+## 7. F103-2016/2019 Assessment — Tables Implemented (#2208)
 
-**F103-2016 standalone PDF:** Not available locally. Proxied via EMX GP 56-01-04U V4 only — table numbers, formula numbering, and specific section text not verifiable without the original PDF.
+**F103-2016 standalone PDF:** Not available locally. The September 2019 DNVGL print states that it republishes the July 2016 edition with no content changes, so the 2016 edition is covered by the 2019 tables; the edition token `"2016"` normalises to `"2019"` with a `UserWarning` (owner D3: keep the option).
 
-**F103-2019 amended 2021 edition:** Present at `doris/codes/DNV-RP-F103 2019 amended 2021...pdf` (filename to be confirmed).
+**F103-2019 (amended May 2021):** On file in the private archive (both prints, paths withheld; the May 2021 amendment is editorial: DNV naming and FJC system names). Implemented 2026-09-26 as edition `"2019"` (alias `"2021"`) of `digitalmodel.cathodic_protection.f103_tables` and `dnv_rp_f103.design_bracelet_cp`: Table 6-2 (five fluid-temperature bands), Table 6-3 (anode design values by anode surface temperature), Table A-1 (linepipe coatings with the concrete-weight-coating split), Table A-2 (field-joint coatings with the DNVGL-RP-F102 (2011) ids, `FieldJointCoating2019`), bracelet utilisation 0.80 [6.4.2] and protective potential -0.80 V [6.7.11]. Fixture CSVs: `tests/fixtures/test_vectors/cathodic_protection/datasets/dnv-rp-f103/2019-09/`. `DEFAULT_F103_EDITION` was `"2010"` at implementation; it is `"2019"` (the latest edition on file) since the owner decision of 2026-09-27 (epic #2206). Pass `edition="2010"` to reproduce earlier results; fluids above 25 °C and FBE coatings give higher demand under 2019.
 
-**Key deltas from F103-2010 (based on proxy via EMX GP and B401 changelog):**
+**Formula-level 2016/2019 items still open** (previously listed from the operator's GP proxy; not part of the cited-table path):
 - Wet storage period concept — CP design accounts for pre-installation storage time
 - Maximum anode spacing reduced 300 m → 200 m
 - Polarization resistance attenuation model (enhanced α formula)
-- Safety factor k = 1.1 introduced (mandatory in ExxonMobil GP)
+- Safety factor k = 1.1 (mandatory in the operator's GP)
 
-**Recommendation:** Create a separate WRK item for `DNV_RP_F103_2019` route once:
-1. DNVGL-RP-F103 July 2016 PDF is obtained (required for formula verification), OR
-2. F103-2019 amended 2021 PDF at `doris/codes/` is confirmed as the applicable edition
+**Status:** Tables and bracelet design per edition implemented (#2208, 2026-09-26); the formula-level items above remain a separate work item (was WRK-272).
 
-**Status:** Deferred — WRK-272 (2026-02-20). No code implemented for 2016/2019 route.
+---
+
+## 8. Standards Verification Checklist — Stray Current (#2247)
+
+**Status (2026-09-27):** EN 50162, ISO 18086, ISO 15589-1 and NACE SP0169 are **not on file**. `stray_current.py` was re-modelled from open literature (owner direction 2026-09-27); every default below is a `ProvisionalValue` (`cathodic_protection/_provisional.py`) carrying its literature source, and every public calculation stays behind `experimental=True`. None of these numbers has been read from the standard itself. When the standard is obtained, check each row against the named clause, correct the value if needed, set `provisional=False`, and lift the experimental gate only when all rows of that standard are confirmed.
+
+### Provisional values
+
+| Constant (`stray_current.py`) | Value | Literature source | Standard clause that must confirm it |
+|---|---|---|---|
+| `DC_RHO_BAND_LOW_OHM_M` | 15 ohm·m | Lynch (2016), CEOCOR Ljubljana, slide 12 | EN 50162:2004 Table 1 — resistivity band edge (and whether the band is `< 15` or `<= 15`) |
+| `DC_RHO_BAND_HIGH_OHM_M` | 200 ohm·m | Lynch (2016), slide 12 | EN 50162:2004 Table 1 — resistivity band edge |
+| `DC_SHIFT_LIMIT_LOW_RHO_MV` | 20 mV (incl. IR) | Lynch (2016), slide 12 | EN 50162:2004 Table 1 — steel in soil, rho < 15 ohm·m |
+| `DC_SHIFT_SLOPE_MV_PER_OHM_M` | 1.5 mV per ohm·m (limit = 1.5·rho, incl. IR) | Lynch (2016), slide 12; the rho symbol is lost in the slide text and was read as rho from continuity with 300 mV at 200 ohm·m | EN 50162:2004 Table 1 — steel in soil, 15–200 ohm·m (confirm the expression, and the step 20 → 22.5 mV at 15 ohm·m) |
+| `DC_SHIFT_LIMIT_HIGH_RHO_MV` | 300 mV (incl. IR) | Lynch (2016), slide 12 | EN 50162:2004 Table 1 — steel in soil, rho >= 200 ohm·m |
+| `DC_SHIFT_LIMIT_IR_FREE_MV` | 20 mV (excl. IR) | Lynch (2016), slide 12 | EN 50162:2004 Table 1 — IR-free column; also confirm Table 1 applies to structures **without** CP only |
+| `AC_VOLTAGE_TARGET_V` | 15 V rms | Brenna, Beretta & Ormellese (2020), reporting ISO 18086 | ISO 18086:2019 AC-corrosion protection criteria clause (first step, AC voltage) |
+| `AC_CURRENT_DENSITY_LIMIT_A_M2` | 30 A/m² | Brenna et al. (2020) | ISO 18086:2019 criteria clause (i_ac, representative period) |
+| `DC_CURRENT_DENSITY_LIMIT_A_M2` | 1 A/m² | Brenna et al. (2020) | ISO 18086:2019 criteria clause (i_dc alternative when i_ac > 30 A/m²) |
+| `AC_DC_RATIO_LIMIT` | 3 | Brenna et al. (2020) | ISO 18086:2019 criteria clause (i_ac/i_dc ratio) |
+| `COUPON_AREA_M2` | 1 cm² | Brenna et al. (2020) | ISO 18086:2019 coupon/probe clause |
+| `STEEL_RESISTIVITY_OHM_M` | 2.0e-7 ohm·m | DNV-RP-F103 (2010) Sec. 5.6.10 (on file) | project linepipe specification |
+
+### Required inputs (no default, because no open source gives a value)
+
+| Input | Why it is required | Standard clause to consult |
+|---|---|---|
+| `allowable_shift_mV` for a cathodically protected structure | Open literature (Lynch 2016, slides 5 and 11) describes the acceptance as "protection criterion still met under interference", case by case — no tabulated shift | EN 50162:2004 (criteria for structures with CP); ISO 15589-1:2015 protection criteria |
+| `ac_voltage_V` | No open, citable simplified induction model was adopted; the previous Carson-based shortcut was withdrawn (review B10) | ISO 18086:2019 (measurement); EN 50443 / CIGRE for induction studies |
+| `required_drainage_current_A`, `driving_voltage_V` (drainage bond) | Come from an interference survey or current-requirement test | EN 50162:2004 drainage clauses |
+
+### Equation sources (not standard values; listed for completeness)
+
+- Point-source earth potential `V_e = rho I / (2 pi r)` and buried-conductor response in an imposed earth potential: E. D. Sunde, *Earth Conduction Effects in Transmission Systems*, Dover, 1968.
+- Pipeline attenuation `alpha = sqrt(r' g')`, `r' = rho_s / (pi t (D - t))`, `g' = pi D / R_c`; resistance drainage bonds: A. W. Peabody, *Peabody's Control of Pipeline Corrosion*, 2nd ed., NACE, 2001, ISBN 1-57590-092-0.
+- Coupon AC density `i_ac = 8 V_ac / (rho pi d)`: Brenna, Beretta & Ormellese, *Materials* 13(9):2158, 2020, doi:10.3390/ma13092158; disk spread resistance `R = rho / (2 d)`: J. Newman, *J. Electrochem. Soc.* 113:501, 1966, doi:10.1149/1.2424003.
+- Lynch (2016): C. Lynch, "dc Stray Currents — Current Practices for Corrosion Protection", CEOCOR Congress 2016, Ljubljana, https://ceocor.lu/download/2016_slovenia/2016-LYNCH-DC-Stray-Current.pdf.
+
+---
+
+## Galvanic and ICCP provisional values — standards verification checklist (#2247)
+
+Owner direction 2026-09-27: NACE SP0572, NACE SP0169, ISO 15589-1 and BS PD 6484 are **not on file**. The galvanic-corrosion and ICCP anode-life models were rebuilt from openly published literature. Every default is a `ProvisionalValue` (`src/digitalmodel/cathodic_protection/_provisional.py`, shared with the stray-current lane) with `provisional=True`, a literature source and the standard it is waiting on. Where a source gives a range, the record stores both ends (`range_low`, `range_high`) and the design uses the **conservative end** (`conservative_end`). That means the highest consumption rate, the lowest current-density limit, and for any other value the end that shortens life or lowers capacity. `corrosion_rate.galvanic_corrosion` and the ICCP life figure (`iccp_design.iccp_anode_life`, `anode_bed_design(...).estimated_life_years`) stay behind `experimental=True` until each row below is checked.
+
+### Modelling assumption (listed first)
+
+| Item | Status | Where |
+|------|--------|-------|
+| Galvanic reverse-reaction ("−1") terms. The anode's own cathodic reaction is fixed at `i_corr,a`: `I/A_a = i_corr,a(10^((E−E_corr,a)/β_a) − 1)`. The cathode's passive anodic current is fixed at `i_O2(E_corr,c)`: `I/A_c = i_O2(E) − i_O2(E_corr,c)`. | **Modelling assumption, not from the cited source** (CNWRA 97-010 gives the Tafel and diffusion-limit terms, not this closure). Kept by owner decision 2026-09-27. It keeps the couple potential between the two free potentials. | `galvanic_corrosion` docstring; `GalvanicCorrosionResult.model_assumptions[0]`; `GALVANIC_MODEL_ASSUMPTIONS` |
+
+### Literature sources
+
+| Key | Source |
+|-----|--------|
+| TP-16 | U.S. DoD Tri-Service Electrical Working Group, *Electrical Technical Paper 16: Impressed Current Anode Material Selection and Design Considerations (non-mandatory)*, March 2017. <https://nibs-s3-wbdg3-production.s3.us-east-1.amazonaws.com/FFC/DOD/STC/tsewg_tp16.pdf> |
+| USNA | U.S. Naval Academy EN380 course notes, *Appendix: Cathodic Protection Design* (after G. Swain class notes, 1996), Table 7.1, n.d. <https://www.usna.edu/NAOE/_files/documents/Courses/EN380/Course_Notes/zAppendix_A_Cathodic_Protection_Design.pdf> |
+| GCP | German Cathodic Protection, *Impressed Current Anodes: Silicon iron anodes*, datasheet 04-200-R1, n.d. <https://www.gcp.de/wp-content/uploads/04-200-Silicon-iron-anodes.pdf> |
+| CPC | Cathodic Protection Co. Ltd, *Datasheet 2.2.1: Mixed Metal Oxide Tubular Anodes*, Rev. 0, July 2020. <https://www.cathodic.co.uk/wp-content/uploads/2.2.1-Mixed-Metal-Oxide-Tubular-Anodes-Rev.0-July-2020.pdf> |
+| CNWRA | D.S. Dunn and G.A. Cragnolino, *An Analysis of Galvanic Coupling Effects on the Performance of High-Level Nuclear Waste Container Materials*, CNWRA 97-010 (US NRC), August 1997. <https://www.nrc.gov/docs/ML0402/ML040200062.pdf> |
+
+### Galvanic corrosion (`corrosion_rate.galvanic_corrosion`)
+
+| Item | Current basis | Source | Verify against | Changes when verified |
+|------|---------------|--------|----------------|-----------------------|
+| Mixed-potential method: anodic Tafel; cathodic Tafel with `1/i = 1/i_act + 1/i_L`; ohmic drop `I·R_s` | Method only | CNWRA eqs. 2-2, 2-3, 2-26, Fig. 2-4 | BS PD 6484 | The method, or the standard's tabulated or area-ratio approach added alongside it |
+| Reverse-reaction ("−1") closure | Modelling assumption (see above) | none | BS PD 6484 | Possibly the full four-reaction model |
+| `E_corr`, `i_corr`, Tafel slopes, `i_L`, `R_s` | **Required inputs**: no open source gave a complete, citable set per material pair | none | BS PD 6484 / client data | A cited default table per material pair could be added |
+| Uncited galvanic-series table `GALVANIC_POTENTIAL`, risk bands 0.1/0.5/2.0 mm/yr, assumed 0.1 m path | **Removed** | none | none | none |
+
+### ICCP anode material data (`iccp_design.ICCP_ANODE_RECORDS`)
+
+| Material | Quantity | Source range | Design value (end) | Source | Verify against |
+|----------|----------|--------------|--------------------|--------|----------------|
+| HSCI | density | single value | 7000 kg/m³ | GCP (TP-16 Table 5: SG 7) | NACE SP0572 |
+| HSCI | consumption, soil / fresh / sea | single values | 0.30 / 0.15 / 0.50 kg/(A·yr) | GCP (TP-16 §1.2 gives ~1 lb/A·yr = 0.45 for soil) | NACE SP0572 / ISO 15589-1 |
+| HSCI | max current density, soil / fresh / sea | 10–30 / 10–30 / 10–50 A/m² | **10 / 10 / 10 A/m² (low)** | GCP | NACE SP0572 |
+| Graphite | density | "99.84 lb/ft³ max"; no lower bound given | 1599 kg/m³ | TP-16 Table 1 | NACE SP0572 |
+| Graphite | consumption, soil / fresh | single value, ~2.5 lb/A·yr | 1.134 kg/(A·yr) | TP-16 §1.1.4.3 | NACE SP0572 |
+| Graphite | consumption, sea | 1.6–2.5 lb/A·yr (0.726–1.134 kg) | 1.134 kg/(A·yr) (high) | TP-16 §1.1.4.3 | NACE SP0572 |
+| Graphite | max current density, soil / fresh / sea | single values: 1 / 0.25 / 3.75 A/ft² | 10.76 / 2.69 / 40.36 A/m² | TP-16 Table 3 | NACE SP0572 |
+| Scrap steel | consumption | single value, ~20 lb/A·yr (USNA gives 0.2–9 kg) | 9.07 kg/(A·yr) (Faraday Fe²⁺: 9.13) | TP-16 §1.0 | NACE SP0572 |
+| Scrap steel | density / max current density | none ("varies") | **Required inputs**: `anode_mass_kg`, `max_current_density_A_m2` | none | none |
+| Magnetite | consumption | single value | 0.040 kg/(A·yr) | USNA Table 7.1 | NACE SP0572 |
+| Magnetite | max current density | 10–500 A/m² | **10 A/m² (low)** | USNA Table 7.1 | NACE SP0572 |
+| Magnetite | density | none | **Required input**: `anode_mass_kg` | none | none |
+| MMO | coating consumption | 0.5–4.0 mg/(A·yr) | 4.0 mg/(A·yr) (high) | CPC | NACE SP0572 / ISO 15589-1 |
+| MMO | max current density, soil / fresh / sea | single rows: carbonaceous backfill 50 (calcined coke 100) / 100 / 600 A/m² | 50 / 100 / 600 A/m² | CPC | NACE SP0572 / ISO 15589-1 |
+| MMO, Pt/Ti, Pt/Nb | coating loading | none | **Required input**: `coating_loading_kg_m2` | none | Supplier data / standard |
+| Pt/Ti | Pt consumption | single value | 0.01 g/(A·yr) | USNA Table 7.1 | NACE SP0572 |
+| Pt/Ti | max current density | 250–700 A/m² | **250 A/m² (low)** | USNA Table 7.1 | NACE SP0572 |
+| Pt/Nb | Pt consumption | 0.01 g/(A·yr) (USNA); TP-16 §1.6 gives 4.5 mg for Pt | 0.01 g/(A·yr), the higher of the two | USNA Table 7.1 ("platinized columbium") | NACE SP0572 |
+| Pt/Nb | max current density | 500–1000 A/m² | **500 A/m² (low)** | USNA Table 7.1 | NACE SP0572 |
+| All consumable | utilisation factor | 0.80–0.85 across the TP-16 worked examples | **0.80 (low)** | TP-16 §5 | NACE SP0572 |
+
+Bold marks a design value that changed when the conservative-end rule was adopted (2026-09-27). The previous values were HSCI 30/30/50, magnetite 500, Pt/Ti 700, Pt/Nb 1000 A/m², and utilisation 0.85.
+
+### ICCP life and ground-bed equations (`iccp_design`)
+
+| Equation | Current basis | Source | Verify against |
+|----------|---------------|--------|----------------|
+| Consumable life `L = N·m·u / (C·I)` | Method | TP-16 §5 | NACE SP0572 |
+| Coating-wear life `L = N·w·πdL / (C·I)`, with N sized so that `I/(N·πdL) ≤ J_max` | Method | Consumption rates from USNA and CPC | NACE SP0572 / ISO 15589-1 |
+| Single vertical anode `R = ρ/(2πL)[ln(8L/d) − 1]` | Method | TP-16 §5 (Dwight form) | NACE SP0572 |
+| N vertical anodes `R = ρ/(2πNL)[ln(8L/d) − 1 + (2L/S) ln(0.656N)]` | Method; attribution to Sunde (1949) not checked | TP-16 §5 worked examples (reproduced in tests) | NACE SP0572 |
+| Deep well: the active backfill column as one vertical electrode | Method; **replaces the uncited ×0.6 factor** | TP-16 §5 deep-well examples | NACE SP0572 |
+| Horizontal column `R = ρ/(2πL)[ln(4L/d) + ln(L/h) − 2 + 2h/L]` | Method; SI form of TP-16's mixed-unit equation. **Differs from other published Dwight horizontal forms; check this first** | TP-16 §5 | NACE SP0572 |
+| Distributed beds | **No cited formula; raises** | none | NACE SP0572 |
+| Anode spacing (vertical arrays), backfill column length and diameter, burial depth | **Required inputs** (the former uncited `max(3, 3L)` / `max(3, 5L)` spacing rules are removed) | none | none |
+
+### Removed
+
+- `fuel_system_cp.check_protection` (B11): `−0.55 − I·R` was not a polarisation model. Protection is verified by survey through `cp_survey`, against the NACE SP0169 §6 criteria.

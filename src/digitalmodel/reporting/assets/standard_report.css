@@ -1,0 +1,81 @@
+/* ABOUTME: Engine-specific additions to the house calc-report CSS (#2212). */
+/* ABOUTME: Title block, standard chips, status rows, input echo, Plotly print. */
+
+/* masthead: document number + standard chips */
+.masthead .docno{font-family:var(--mono);font-size:13px;color:var(--ink-2);white-space:nowrap}
+.masthead .docno b{color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip.std{background:var(--cfd-soft);border-color:color-mix(in srgb,var(--cfd) 35%,transparent);color:var(--ink)}
+.chip.std .ed{color:var(--cfd);font-weight:700;margin-left:6px}
+.chip.std .prov{color:var(--ink-muted);margin-left:6px}
+.masthead .mh-legend{margin-left:auto}
+
+/* title block */
+.titleblock{margin-top:26px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:760px){.titleblock{grid-template-columns:1fr}}
+.titleblock .kv table{min-width:0}
+.titleblock .kv td:first-child{width:38%;white-space:normal}
+.revhist{margin-top:18px}
+.revhist table{min-width:0;font-size:13px}
+.revhist th,.revhist td{text-align:left;white-space:normal}
+
+/* tables */
+.tbl{margin-top:22px}
+.tbl .cap{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:8px}
+.tbl thead tr.units th{font-family:var(--mono);font-size:10.5px;text-transform:none;letter-spacing:0;color:var(--ink-muted);
+  background:var(--surface);border-top:none;padding-top:0}
+.tbl .src{font-size:12.5px;color:var(--ink-muted);margin:8px 0 0;font-family:var(--mono)}
+
+/* figures */
+figure{margin:22px 0 0}
+figure .chart-title{margin-bottom:8px}
+figure figcaption.fig-cap{display:block}
+figure img,figure svg{max-width:100%;height:auto;display:block}
+.plotly-graph-div{width:100%}
+.js-plotly-plot{break-inside:avoid;page-break-inside:avoid;height:420px}
+
+/* status: PASS / FAIL */
+.status{margin-top:18px}
+.st.ok .icon,.st.ok .pill{background:var(--cfd-soft);color:var(--cfd)}
+.st.fail .icon,.st.fail .pill{background:rgba(220,38,38,.12);color:#b91c1c}
+.st .sub b{color:var(--ink-2);font-weight:600}
+
+/* prose blocks */
+.prose h3{font-size:18px;margin:18px 0 8px}
+.prose h4{font-size:15px;margin:14px 0 6px}
+.prose ul,.prose ol{margin:0 0 16px;padding-left:22px}
+.prose li{margin:4px 0}
+.prose pre{font-family:var(--mono);font-size:13px;background:var(--surface-2);border:1px solid var(--hairline);
+  border-radius:10px;padding:12px 14px;overflow-x:auto}
+.prose code{font-family:var(--mono);font-size:.9em;background:var(--surface-2);padding:1px 5px;border-radius:5px}
+.prose pre code{background:none;padding:0}
+
+/* references / data sources / input echo */
+.refs-table th,.refs-table td{text-align:left;white-space:normal}
+.refs-table td.path{font-family:var(--mono);font-size:12px}
+.sources th,.sources td{text-align:left;white-space:normal}
+.input-echo{margin-top:8px}
+.input-echo summary{cursor:pointer;font-family:var(--mono);font-size:13px;color:var(--ink-2);padding:10px 0}
+.input-echo table{min-width:0;font-size:13px}
+.input-echo td:first-child{font-family:var(--mono);font-size:12px;color:var(--ink-2)}
+.input-echo td:last-child{text-align:left;white-space:normal;font-family:var(--mono);font-size:12px;overflow-wrap:anywhere}
+
+/* appendix section labels */
+.secnum.applabel::after{content:none}
+.secnum.applabel{font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+
+/* footer PDF status */
+.foot-bar .pdf{font-family:var(--mono)}
+
+@media print{
+  .masthead{position:static}
+  .titleblock{display:block}
+  .titleblock .kv{margin-bottom:10px;break-inside:avoid}
+  .input-echo{display:block}
+  .input-echo[open] summary,.input-echo summary{list-style:none}
+  details.input-echo:not([open])>*:not(summary){display:block}
+  figure,.tbl{break-inside:avoid;page-break-inside:avoid}
+  .st{break-inside:avoid}
+  .chips{gap:6px}
+  a{color:inherit;text-decoration:none}
+}

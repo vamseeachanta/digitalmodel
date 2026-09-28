@@ -1,0 +1,12 @@
+"Table 10-2 Recommended mean design current densities (A/m2) for seawater exposed bare metal surfaces, as a function of depth
+and ‘climatic region’ based on surface water temperature (ref. 6.3).",,,,
+"Depth
+(m)","‘Tropical’
+(> 20 °C)","‘Sub-Tropical’
+(12- 20 °C)","‘Temperate’
+(7-12 °C)","‘Arctic’
+(< 7 °C)"
+0-30,0.070,0.080,0.100,0.120
+>30-100,0.060,0.070,0.080,0.100
+>100-300,0.070,0.080,0.090,0.110
+>300,0.090,0.100,0.110,0.110

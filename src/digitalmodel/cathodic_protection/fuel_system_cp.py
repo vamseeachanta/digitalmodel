@@ -2,6 +2,16 @@
 
 Extends API RP 1632 galvanic anode calculations to impressed current systems,
 sizing ground beds and rectifiers for buried fuel supply and return piping.
+
+Protection verification
+-----------------------
+This module sizes the system; it does not predict whether the pipe is
+protected. The former ``check_protection`` (``-0.55 - I*R`` compared with
+-0.85 V CSE) was not a polarisation model and was deleted (issue #2247,
+blocker B11). Verify protection from measured, IR-free potentials with
+:mod:`digitalmodel.cathodic_protection.cp_survey`
+(``check_potential_criteria``, ``analyze_cis_survey``), i.e. by survey
+against the NACE SP0169 section 6 criteria.
 """
 
 from __future__ import annotations
@@ -12,7 +22,6 @@ from enum import Enum
 
 from digitalmodel.cathodic_protection.api_rp_1632 import (
     CURRENT_DENSITY_BARE,
-    PROTECTION_POTENTIAL_CSE,
     anode_resistance_vertical_rod,
 )
 
@@ -168,28 +177,3 @@ def design_rectifier(
         dc_current_a=total_current_a,
         power_w=power,
     )
-
-
-def check_protection(
-    rectifier: RectifierOutput,
-    ground_bed: ImpressedCurrentGroundBed,
-    structure_resistance_ohm: float,
-) -> dict:
-    """Evaluate whether the impressed current system meets -0.85 V CSE criterion.
-
-    Estimates pipe-to-soil potential from the IR drop across the structure
-    resistance and compares against the API RP 1632 protection criterion.
-    """
-    ir_drop = rectifier.dc_current_a * structure_resistance_ohm
-    # More negative potential = more protected; natural potential ~-0.55 V
-    natural_potential = -0.55
-    estimated_potential = natural_potential - ir_drop
-
-    is_protected = estimated_potential <= PROTECTION_POTENTIAL_CSE
-
-    return {
-        "pass": is_protected,
-        "potential_v_cse": estimated_potential,
-        "criterion_v_cse": PROTECTION_POTENTIAL_CSE,
-        "ir_drop_v": ir_drop,
-    }
