@@ -153,10 +153,38 @@ def _missing_open_water(doc: dict, *, foundation: bool) -> list[str]:
     return miss
 
 
+HO_REQUIRED_POINTS = ("ufj", "riser_top", "riser_bottom")
+
+
+def _missing_hang_off(doc: dict) -> list[str]:
+    miss = []
+    pts = doc.get("points", {})
+    for p in HO_REQUIRED_POINTS:
+        if p not in pts:
+            miss.append(f"points.{p}")
+    lmrp = bool(doc.get("with_lmrp"))
+    if lmrp and not any(k.startswith("stack:") for k in pts):
+        miss.append("points.stack:*")
+    if doc.get("analysis") == "dynamics":
+        for k, p in pts.items():
+            if (k.startswith("stack:") or k in ("ufj", "riser_bottom")) and not p.get("tm_hull"):
+                miss.append(f"points.{k}.tm_hull")
+    rg = doc.get("range_graphs", {})
+    for line in ("InnerBarrel", "Riser") + (("Stack",) if lmrp else ()):
+        if line not in rg:
+            miss.append(f"range_graphs.{line}")
+    for k in ("stroke", "ring", "top_load"):
+        if k not in doc:
+            miss.append(k)
+    return miss
+
+
 def missing_channels(doc: dict, *, foundation: bool) -> list[str]:
     """Required W5 keys absent from an extraction document (empty list = complete)."""
     if doc.get("riser_kind") == "open_water":
         return _missing_open_water(doc, foundation=foundation)
+    if doc.get("riser_kind") == "hang_off":
+        return _missing_hang_off(doc)
     miss = []
     pts = doc.get("points", {})
     for p in REQUIRED_POINTS:
@@ -409,3 +437,107 @@ def extract_open_water(model, spec, analysis: str, ofx) -> dict[str, Any]:
         doc["vessel"] = {"stats": {"x": stats(vessel.TimeHistory("X", period)), "y": stats(vessel.TimeHistory("Y", period))}}
     doc["contents"] = {"density_kg_m3": spec.contents.density_kg_m3, "pressure_ref_z_m": spec.contents.pressure_ref_z_m}
     return compact(doc)
+
+
+# --------------------------------------------------------------------------- hang-off / running
+
+
+def _hang_off_points(spec, ofx) -> list[tuple[str, str, Any, bool, Any]]:
+    pts = [("ufj", "InnerBarrel", ofx.oeEndA, True, None), ("riser_top", "Riser", ofx.oeEndA, False, None),
+           ("riser_bottom", "Riser", ofx.oeEndB, True, None)]
+    if spec.hang_off.with_lmrp:
+        for n, a in _stack_points(spec):
+            if "|" in n:
+                pts.append((n, "Stack", ofx.oeArcLength(a - ABOVE_M), False, ofx.oeArcLength(a + ABOVE_M)))
+            else:
+                pts.append((n, "Stack", ofx.oeEndA if n == "stack:datum" else ofx.oeEndB, False, None))
+    return pts
+
+
+def _top_load_series(model, spec, period, ofx, *, static: bool):
+    """Vertical load on the vessel (N-sign: positive down on the vessel = the hung load): the upper flex-joint
+    vertical reaction plus, in a soft hang-off, the spring tension; and the spring tension alone."""
+    from .build import HANG_OFF_SPRING
+
+    ib = model["InnerBarrel"]
+    soft = spec.hang_off.mode == "soft"
+    if static:
+        ufj = -float(ib.StaticResult("End GZ force", ofx.oeEndA))
+        spring = float(model[HANG_OFF_SPRING].StaticResult("Tension")) if soft else 0.0
+        return ufj, spring
+    ufj = [-float(x) for x in ib.TimeHistory("End GZ force", period, ofx.oeEndA)]
+    spring = [float(x) for x in model[HANG_OFF_SPRING].TimeHistory("Tension", period)] if soft else [0.0] * len(ufj)
+    return ufj, spring
+
+
+def extract_hang_off(model, spec, analysis: str, ofx) -> dict[str, Any]:
+    """W5 channel set of a hang-off or running case: the upper flex joint, the riser top and bottom (the lower
+    flex joint with the LMRP), the hanging stack bodies, range graphs, stroke, ring and the load on the vessel."""
+    static = analysis == "statics"
+    sp = ofx.Period(ofx.pnStaticState)
+    period = sp if static else ofx.Period(1)
+    ho = spec.hang_off
+    doc: dict[str, Any] = {"schema": SCHEMA, "riser_kind": "hang_off", "mode": ho.mode, "with_lmrp": ho.with_lmrp,
+                           "running": ho.running, "analysis": analysis, "units": UNITS, "points": {},
+                           "range_graphs": {}}
+    t = None if static else [float(x) for x in model.SampleTimes(period)]
+    if t is not None:
+        doc["time"] = {"start_s": t[0], "end_s": t[-1], "samples": len(t), "dt_s": (t[-1] - t[0]) / max(1, len(t) - 1)}
+    for name, line_name, extra, angle, above in _hang_off_points(spec, ofx):
+        line = model[line_name]
+        vals = _line_vars(line, extra, period, angle=angle, static=static, ofx=ofx)
+        if above is not None:
+            for key, var in (("te_above", "Effective tension"), ("tw_above", "Wall tension")):
+                vals[key] = (float(line.StaticResult(var, above)) if static
+                             else [float(x) for x in line.TimeHistory(var, period, above)])
+        if static:
+            doc["points"][name] = {"line": line_name, "static": vals}
+            continue
+        pt = {"line": line_name, "stats": {k: stats(v) for k, v in vals.items()}, "extremes": extreme_rows(t, vals)}
+        if name.startswith("stack:") or name in ("ufj", "riser_bottom"):
+            pt["tm_hull"] = tm_hull_rows(t, vals)
+        doc["points"][name] = pt
+    for ln in ("InnerBarrel", "Riser") + (("Stack",) if ho.with_lmrp else ()):
+        doc["range_graphs"][ln] = _range_graph(model[ln], period, sp, static=static, rows=RANGE[ln])
+    slip, ring = model["SlipJoint"], model["TensionRing"]
+    ufj, spring = _top_load_series(model, spec, period, ofx, static=static)
+    if static:
+        doc["stroke"] = {"static": float(slip.StaticResult("z"))}
+        doc["ring"] = {"static": {k: float(ring.StaticResult(v)) for k, v in
+                                  (("x", "X"), ("y", "Y"), ("z", "Z"), ("yaw_deg", "Rotation 3"))}}
+        doc["top_load"] = {"static": {"total": ufj + spring, "ufj": ufj, "spring": spring}}
+        v = model[spec.vessel_name]
+        doc["vessel"] = {"static": {"x": float(v.InitialX), "y": float(v.InitialY)}}
+    else:
+        doc["stroke"] = {"stats": stats(slip.TimeHistory("z", period))}
+        doc["ring"] = {"stats": {k: stats(ring.TimeHistory(v, period)) for k, v in
+                                 (("x", "X"), ("y", "Y"), ("z", "Z"), ("yaw_deg", "Rotation 3"))}}
+        doc["top_load"] = {"stats": {"total": stats([a + b for a, b in zip(ufj, spring)]), "ufj": stats(ufj),
+                                     "spring": stats(spring)}}
+        v = model[spec.vessel_name]
+        doc["vessel"] = {"stats": {"x": stats(v.TimeHistory("X", period)), "y": stats(v.TimeHistory("Y", period))}}
+    doc["contents"] = {"density_kg_m3": spec.contents.density_kg_m3, "pressure_ref_z_m": spec.contents.pressure_ref_z_m}
+    return compact(doc)
+
+
+def hang_off_summary(model, spec, analysis: str, ofx) -> dict[str, float]:
+    """Screening responses of a hang-off case (SI: deg, Pa, N, m): upper flex-joint and riser-bottom angles, riser
+    von Mises maximum, load on the vessel (max / min) and telescopic-joint stroke."""
+    static = analysis == "statics"
+    period = ofx.Period(ofx.pnStaticState) if static else ofx.Period(1)
+    ib, riser = model["InnerBarrel"], model["Riser"]
+    ufj, spring = _top_load_series(model, spec, period, ofx, static=static)
+    if static:
+        vm = max(float(x) for x in riser.RangeGraph("Max von Mises stress", period).Mean)
+        return {"ufj_angle_deg": abs(float(ib.StaticResult("Ez angle", ofx.oeEndA))),
+                "riser_bottom_angle_deg": abs(float(riser.StaticResult("Ez angle", ofx.oeEndB))),
+                "riser_von_mises_max_pa": vm * 1000.0, "top_load_n": (ufj + spring) * 1000.0,
+                "stroke_m": float(model["SlipJoint"].StaticResult("z"))}
+    a = [abs(float(x)) for x in ib.TimeHistory("Ez angle", period, ofx.oeEndA)]
+    b = [abs(float(x)) for x in riser.TimeHistory("Ez angle", period, ofx.oeEndB)]
+    vm = max(float(x) for x in riser.RangeGraph("Max von Mises stress", period).Max)
+    tot = [x + y for x, y in zip(ufj, spring)]
+    z = [float(x) for x in model["SlipJoint"].TimeHistory("z", period)]
+    return {"ufj_angle_max_deg": max(a), "riser_bottom_angle_max_deg": max(b), "riser_von_mises_max_pa": vm * 1000.0,
+            "top_load_max_n": max(tot) * 1000.0, "top_load_min_n": min(tot) * 1000.0,
+            "stroke_max_m": max(z), "stroke_min_m": min(z), "stroke_static_m": float(model["SlipJoint"].StaticResult("z"))}

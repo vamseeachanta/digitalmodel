@@ -317,6 +317,26 @@ class Foundation(BaseModel):
         return sum(s.length_m for s in self.sections)
 
 
+class HangOff(BaseModel):
+    """The riser disconnected at the LMRP connector and hung off (``hang_off.hang_off_spec``): ``hard`` - telescopic
+    joint locked, no tensioners, the string on the vessel at the upper flex joint; ``soft`` - the string on a vertical
+    gas spring at the ring (``spring_*``) with the telescopic joint stroking. ``with_lmrp``: the stack line (the LMRP,
+    or the running payload) hangs free below the lower flex joint; without it the riser end is free."""
+
+    mode: Literal["hard", "soft"]
+    with_lmrp: bool = True
+    spring_tension_n: float | None = Field(None, gt=0, description="soft: spring force at the static ring position")
+    spring_stiffness_n_per_m: float | None = Field(None, gt=0)
+    stiffness_basis: str = ""
+    running: dict[str, Any] | None = None
+
+    @model_validator(mode="after")
+    def _soft(self) -> "HangOff":
+        if self.mode == "soft" and (self.spring_tension_n is None or self.spring_stiffness_n_per_m is None):
+            raise ValueError("a soft hang-off needs spring_tension_n and spring_stiffness_n_per_m")
+        return self
+
+
 class RiserGlobalModelSpec(BaseModel):
     name: str = Field(..., min_length=1)
     description: str = ""
@@ -344,6 +364,7 @@ class RiserGlobalModelSpec(BaseModel):
     irregular_wave: IrregularWave | None = None
     dynamics: Dynamics | None = None
     foundation: Foundation | None = None
+    hang_off: HangOff | None = None
     provenance: dict[str, Any] = Field(default_factory=dict)
 
     @property

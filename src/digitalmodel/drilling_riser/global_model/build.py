@@ -28,6 +28,8 @@ TORSION_KN_M_PER_DEG = 1.0e6  # lower flex-joint twisting stiffness when the ris
 TOP = "StringTop"  # equivalent-string top slider on the vessel (tensioner representation 'vertical_force')
 TOP_WINCH_HEIGHT_M = 1000.0  # anchor of the vertical top-tension winch above the UFJ pivot, vessel frame
 G = 9.80665
+HANG_OFF_SPRING = "HangOffSpring"  # soft hang-off: the tensioners as one vertical gas spring at the ring
+SPRING_ANCHOR_HEIGHT_M = 1000.0  # its anchor above the static ring in the vessel frame (the force stays vertical)
 
 
 def equivalent_string_top_tension_n(spec: RiserGlobalModelSpec) -> float:
@@ -209,6 +211,24 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
               [[inf, None], []],  # a free end takes no connection stiffness
               list(reversed(spec.stack)), 0, ref_z),  # the stack line runs up from the datum
     ]
+    ho = spec.hang_off
+    if ho is not None:
+        if vertical_only:
+            raise ValueError("a hang-off model uses the 'lines' tensioner representation (the tensioners are removed)")
+        # no tensioner lines: the ring yaw is held from the vessel through the inner barrel (torsion on, twisting
+        # stiffness at the upper flex joint) and the telescopic-joint constraint, which fixes the ring rotations
+        ip = lines[0]["properties"]
+        ip["IncludeTorsion"] = True
+        ip.pop(STIFF_KEY)
+        ip[STIFF_KEY + ", ConnectionTwistingStiffness"] = [[k_ufj, None, TORSION_KN_M_PER_DEG], [inf, None, inf]]
+        if ho.with_lmrp:  # the LMRP (or the running payload) hangs free below the lower flex joint
+            lines[2]["properties"][CONN_KEY][0] = _trim(["Free", 0, 0, spec.wellhead_datum_z_m, 0, 0, 0, None, None])
+            lines[2]["properties"][STIFF_KEY] = [[], []]
+        else:  # the string ends at the riser adaptor
+            lines = lines[:2]
+            lines[1]["properties"][CONN_KEY][1] = _trim(["Free", 0, 0, spec.lower_flex_joint.pivot_z_m, 0, 0, 0,
+                                                         None, None])
+            lines[1]["properties"][STIFF_KEY] = [[inf, None], []]
     if vertical_only:
         # without tensioner lines nothing restrains the ring about z (the lines exclude torsion):
         # the riser carries torsion so the ring yaw is held by the riser down to the stack
@@ -224,7 +244,8 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
     tension_kn = winch_tension_n(spec) / 1000.0
     winches = []
     # a failed tensioner (API RP 16Q n) is removed; the remaining lines keep the intact line tension
-    for i in range(0 if vertical_only else t.failed_count, 0 if vertical_only else t.count):
+    n_lines = 0 if (vertical_only or ho is not None) else t.count
+    for i in range(0 if n_lines == 0 else t.failed_count, n_lines):
         az = math.radians(t.first_azimuth_deg + 360.0 * i / t.count)
         c, s_ = math.cos(az), math.sin(az)
         winches.append({
@@ -249,13 +270,26 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
         "properties": {
             "InFrameInitialPosition": [0, 0, 0], "InFrameInitialAttitude": [0, 0, 0],
             "DOFFree, DOFInitialValue": [[False], [False],
-                                         [False] if vertical_only else [True, -(r.z_static_m - ring_z)],
+                                         [False] if vertical_only or (ho is not None and ho.mode == "hard")
+                                         else [True, -(r.z_static_m - ring_z)],
                                          [False], [False], [False]],
             "StiffnessAndDampingMethod": "Coefficients",
             "TranslationalStiffness": spec.slip_joint_axial_stiffness_n_per_m / 1000.0,
         },
     }
     constraints = [slip]
+    if ho is not None and ho.mode == "soft":
+        # soft hang-off: one vertical spring/damper from the vessel far above the ring, carrying the hung weight at
+        # the static ring elevation (spring force = k (L - L0), L = the anchor height at the static position)
+        k = ho.spring_stiffness_n_per_m / 1000.0
+        l0 = SPRING_ANCHOR_HEIGHT_M - ho.spring_tension_n / 1000.0 / k
+        l1 = 2.0 * SPRING_ANCHOR_HEIGHT_M
+        links.append({"name": HANG_OFF_SPRING, "link_type": "Spring/damper", "properties": {
+            "Connection, ConnectionX, ConnectionY, ConnectionZ": [
+                [vessel, 0, 0, r.z_static_m + SPRING_ANCHOR_HEIGHT_M], [ring, 0, 0, 0]],
+            "LinearSpring": "No",
+            "SpringLength, SpringTension": [[l0, 0.0], [l1, k * (l1 - l0)]],
+        }})
     if vertical_only:
         # equivalent string: the string top (UFJ pivot) is pinned laterally to the vessel but free along z,
         # and a vertical constant-tension winch (anchored far above in the vessel frame) applies the top
