@@ -301,6 +301,22 @@ def test_campaign_case_spec_loads_open_water_and_sets_the_edp_release(tmp_path):
     assert s.edp_release.anti_recoil_tension_n == pytest.approx(1.05 * tension_references(s)["released_weight_n"])
 
 
+def test_edp_release_default_steps_below_the_released_weight_and_the_gate_factor_is_kept(tmp_path):
+    """Owner decision W2B2 (2026-09-28): a C2 EDP disconnect case steps the tension to 0.98 x the released weight (the
+    string settles back under control); 1.02 x stays only in the release qualification gate."""
+    from digitalmodel.drilling_riser import campaign as cp
+    from digitalmodel.drilling_riser.global_model.open_water import tension_references
+
+    assert cp.EDP_ANTI_RECOIL_FACTOR == 0.98 and cp.EDP_RELEASE_GATE_FACTOR == 1.02
+    dyn = {"time_step_s": 0.02, "build_up_s": 10.0, "duration_s": 30.0}
+    s = cp.case_spec(_ow_case(tmp_path, analysis="dynamics", edp_release={}, dynamics=dyn))
+    w = tension_references(s)["released_weight_n"]
+    assert s.edp_release.anti_recoil_tension_n == pytest.approx(0.98 * w)
+    g = cp.case_spec(_ow_case(tmp_path, analysis="dynamics", dynamics=dyn,
+                              edp_release={"anti_recoil_factor": cp.EDP_RELEASE_GATE_FACTOR}))
+    assert g.edp_release.anti_recoil_tension_n == pytest.approx(1.02 * w)
+
+
 def test_campaign_rejects_the_drilling_disconnect_proxy_on_open_water(tmp_path):
     from digitalmodel.drilling_riser import campaign as cp
 
