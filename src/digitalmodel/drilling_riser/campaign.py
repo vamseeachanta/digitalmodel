@@ -117,7 +117,8 @@ def case_spec(case: dict) -> RiserGlobalModelSpec:
             raise ValueError("structural_damping_pct needs structural damping in the base spec (its period is kept)")
         d["structural_damping"]["ratio_percent"] = float(p["structural_damping_pct"])
     d["vessel_offset_m"] = offset_xy_m(base, float(p.get("offset_pct_wd", 0.0)), heading)
-    d["current"] = ({"direction_deg": heading, "depth_speed_m_s": p["current"]["depth_speed_m_s"]}
+    d["current"] = ({"direction_deg": float(p.get("current_direction_deg", heading)),
+                     "depth_speed_m_s": p["current"]["depth_speed_m_s"]}
                     if p.get("current") else None)
     d["regular_wave"] = d["irregular_wave"] = None
     if p.get("regular_wave"):
