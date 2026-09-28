@@ -581,6 +581,63 @@
           "access_date": "2026-06-18"
         }
       ]
+    },
+    {
+      "name": "GustoMSC PRD12000-class DP drillship (class-level record)",
+      "vessel_db_id": "drill_gustoprd12000_1",
+      "record_level": "class",
+      "vessel_type": "Drillship (GustoMSC PRD12000 design, dynamically positioned)",
+      "owner_operator": "gap",
+      "year_built": "gap",
+      "vessel_id": "class-level record: no individual vessel, owner or operator",
+      "fields": {
+        "LOA_m": 187.45,
+        "LBP_m": "gap",
+        "beam_m": 39.01,
+        "depth_m": "gap",
+        "draft_operating_m": 9.91,
+        "draft_transit_m": "gap",
+        "displacement_t": "gap",
+        "moonpool": "11.2 m x 9.8 m, just aft of midship (design description)"
+      },
+      "gaps": [
+        "LBP",
+        "depth",
+        "transit draft",
+        "displacement range (not published for this class)",
+        "mass properties"
+      ],
+      "citations": [
+        {
+          "fields": [
+            "LOA_m",
+            "beam_m"
+          ],
+          "source": "worldenergydata vessel_fleet curated drilling_rigs.csv, columns LOA_M / BEAM_M, DATA_SOURCE bsee_war (BSEE well activity reports), row for a hull of this design class; LOA 187.45 m is the hull value, the curated rig table gives 615 ft deck length",
+          "url": "https://github.com/vamseeachanta/worldenergydata/blob/main/packages/worldenergydata-vessel_fleet/src/worldenergydata/vessel_fleet/_data/curated/drilling_rigs.csv",
+          "access": "public-dataset",
+          "access_date": "2026-09-26"
+        },
+        {
+          "fields": [
+            "draft_operating_m"
+          ],
+          "source": "worldenergydata offshore_assets curated drilling_rigs.csv, columns LENGTH_FT 615 / WIDTH_FT 128 / OPERATING_DRAFT_FT 32.5, VESSEL_DESIGN 'Gusto MSC ... PRD' (upstream source not recorded in that file); 32.5 ft = 9.91 m; 128 ft = 39.01 m",
+          "url": "https://github.com/vamseeachanta/worldenergydata/blob/main/data/modules/offshore_assets/curated/drilling_rigs.csv",
+          "access": "public-dataset",
+          "access_date": "2026-09-26"
+        },
+        {
+          "fields": [
+            "vessel_type",
+            "moonpool"
+          ],
+          "source": "Offshore Magazine, 'Downsized drillship allows operations in wider depth range' (GustoMSC PRD12,000 design description; names no individual rig)",
+          "url": "https://www.offshore-mag.com/vessels/article/16754249/downsized-drillship-allows-operations-in-wider-depth-range",
+          "access": "public",
+          "access_date": "2026-09-26"
+        }
+      ]
     }
   ],
   "collected": "2026-06-18",
