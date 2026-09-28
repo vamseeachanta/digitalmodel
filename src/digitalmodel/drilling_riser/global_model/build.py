@@ -211,6 +211,18 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
               [[inf, None], []],  # a free end takes no connection stiffness
               list(reversed(spec.stack)), 0, ref_z),  # the stack line runs up from the datum
     ]
+    if spec.recoil is not None:
+        from .events import LMRP_LINE
+
+        lmrp = spec.stack[0]
+        z_bop_top = spec.lower_flex_joint.pivot_z_m - lmrp.length_m
+        lines[2] = _line("Stack", [stack_base, ["Free", 0, 0, z_bop_top, 0, 0, 0, None, None]], [[inf, None], []],
+                         list(reversed(spec.stack[1:])), 0, ref_z)
+        # the LMRP latched to the BOP top (released at the start of stage 1) and carrying the lower flex joint
+        lines.insert(2, _line(LMRP_LINE, [["Stack", 0, 0, 0, 0, 0, 0, 1, "End B"],
+                                          ["Free", 0, 0, spec.lower_flex_joint.pivot_z_m, 0, 0, 0, None, None]],
+                              [[inf, None], []], [lmrp], 0, ref_z))
+        lines[1]["properties"][CONN_KEY][1] = _trim([LMRP_LINE, 0, 0, 0, 0, 180, 0, None, "End B"])
     ho = spec.hang_off
     if ho is not None:
         if vertical_only:
@@ -243,6 +255,11 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
     t = spec.tensioners
     tension_kn = winch_tension_n(spec) / 1000.0
     winches = []
+    n_stages = len(_stages(spec))
+    factors = [1.0] * (n_stages + 1)  # statics row + one row per stage
+    if spec.recoil is not None:  # anti-recoil: stage k >= 1 carries the schedule's total tension
+        for k, st in enumerate(spec.recoil.stages):
+            factors[2 + k] = st["tension_n"] / t.total_vertical_tension_n
     # a failed tensioner (API RP 16Q n) is removed; the remaining lines keep the intact line tension
     n_lines = 0 if (vertical_only or ho is not None) else t.count
     for i in range(0 if n_lines == 0 else t.failed_count, n_lines):
@@ -257,7 +274,7 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
                 "Stiffness": t.wire_stiffness_n / 1000.0,
                 "Damping": 0,
                 "WinchControlType": "By stage",
-                "StageMode, StageValue": [["Specified tension", tension_kn]] * (len(STAGES_S) + 1),
+                "StageMode, StageValue": [["Specified tension", tension_kn * f] for f in factors],
             },
         })
     r = spec.tension_ring
@@ -304,8 +321,8 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
             "WinchType": "Simple",
             WINCH_CONN_KEY: [[vessel, 0, 0, spec.upper_flex_joint.pivot_z_m + TOP_WINCH_HEIGHT_M], [TOP, 0, 0, 0]],
             "Stiffness": t.wire_stiffness_n / 1000.0, "Damping": 0, "WinchControlType": "By stage",
-            "StageMode, StageValue": [["Specified tension", equivalent_string_top_tension_n(spec) / 1000.0]]
-                                     * (len(STAGES_S) + 1)}})
+            "StageMode, StageValue": [["Specified tension", equivalent_string_top_tension_n(spec) / 1000.0 * f]
+                                      for f in factors]}})
     ring_props: dict[str, Any] = {
         "DegreesOfFreedomInStatics": "All", "InitialAttitude": [0, 0, 0],
         "MomentsOfInertia": [m / 1000.0 for m in r.moments_of_inertia_kgm2],
@@ -353,15 +370,27 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
 
 
 def _vessel(spec: Any, vt: dict[str, Any]) -> dict[str, Any]:
-    """The vessel object (not in statics; first-order RAO motion when the spec has vessel motion)."""
+    """The vessel object (not in statics; first-order RAO motion when the spec has vessel motion; a prescribed
+    low-frequency track when the spec has a vessel trajectory)."""
     ox, oy = spec.vessel_offset_m
+    vprops: dict[str, Any] = {"Orientation": [0, 0, 0], "IncludedInStatics": "None", "PrimaryMotion": "None",
+                              **({"SuperimposedMotion": "RAOs + harmonics", "Draught": "Operating"}
+                                 if spec.vessel_motion else {"SuperimposedMotion": "None"})}
+    tr = getattr(spec, "vessel_trajectory", None)
+    if tr is not None:  # drift-off / drive-off: the low-frequency track, held at the offset through the build-up
+        from .events import TIME_HISTORY_KEY
+
+        b0 = -(spec.dynamics.build_up_s if spec.dynamics is not None else STAGES_S[0])
+        rows = [[b0, ox, oy, 0, 0, 0, 0]] + [[t_, ox + x_, oy + y_, 0, 0, 0, 0]
+                                             for t_, x_, y_ in zip(tr.t_s, tr.x_m, tr.y_m)]
+        vprops.update({"PrimaryMotion": "Time history", "PrimaryMotionIsTreatedAs": "Low frequency",
+                       "PrimaryTimeHistoryDataSource": "Internal", "PrimaryTimeHistoryInterpolation": "Linear",
+                       "PrimaryTimeHistoryTimeOrigin": 0, "PrimaryTimeHistoryDatumPoint": [0, 0, 0],
+                       "PrimaryTimeHistoryMinSampleInterval": 0, TIME_HISTORY_KEY: rows})
     return {
         "name": spec.vessel_name, "vessel_type": vt["name"], "connection": "Free",
         "initial_position": [ox, oy, 0] if (ox or oy) else [0, 0, 0],
-        "properties": {"Orientation": [0, 0, 0], "IncludedInStatics": "None",
-                       "PrimaryMotion": "None",
-                       **({"SuperimposedMotion": "RAOs + harmonics", "Draught": "Operating"}
-                          if spec.vessel_motion else {"SuperimposedMotion": "None"})},
+        "properties": vprops,
     }
 
 
@@ -418,6 +447,10 @@ def _environment_and_simulation(spec: Any) -> tuple[dict[str, Any], dict[str, An
     if spec.regular_wave is not None:
         w = spec.regular_wave
         env["waves"] = {"type": "airy", "height": w.height_m, "period": w.period_s, "direction": w.direction_deg}
+        if getattr(spec, "wave_time_origin_s", 0.0):  # the wave phase at the event (drift-off / recoil PH5)
+            env["raw_properties"] = {"WaveTrains": [{
+                "Name": "Wave1", "WaveType": "Airy", "WaveDirection": w.direction_deg, "WaveHeight": w.height_m,
+                "WavePeriod": w.period_s, "WaveOrigin": [0, 0], "WaveTimeOrigin": spec.wave_time_origin_s}]}
     if spec.irregular_wave is not None:
         w = spec.irregular_wave
         env["waves"] = {"type": "jonswap", "height": w.hs_m, "period": w.tp_s, "direction": w.direction_deg}
@@ -433,9 +466,8 @@ def _environment_and_simulation(spec: Any) -> tuple[dict[str, Any], dict[str, An
             "WaveTp": w.tp_s, "WaveSeed": w.seed, "WaveNumberOfComponents": w.number_of_components,
             "WaveSpectrumMinRelFrequency": 0.5, "WaveSpectrumMaxRelFrequency": 10,
             "WaveSpectrumMaxComponentFrequencyRange": 0.05}]}
-    dyn = spec.dynamics
-    sim = ({"time_step": dyn.time_step_s, "stages": [dyn.build_up_s, dyn.duration_s]} if dyn is not None
-           else {"time_step": 0.1, "stages": STAGES_S})
+    sim = {"time_step": spec.dynamics.time_step_s if spec.dynamics is not None else 0.1,
+           "stages": _stages(spec)}
     return env, sim
 
 
@@ -458,3 +490,18 @@ def write_model(spec: Any, out_dir: Path) -> Path:
         yaml.safe_dump(spec.model_dump(mode="json"), sort_keys=False, allow_unicode=True),
         encoding="utf-8")
     return out_dir
+
+
+def _stages(spec: RiserGlobalModelSpec) -> list[float]:
+    """Simulation stage durations: build-up and main stage; a recoil case splits the main stage into the anti-recoil
+    steps and the rest."""
+    dyn = spec.dynamics
+    if dyn is None:
+        return list(STAGES_S)
+    if getattr(spec, "recoil", None) is None:
+        return [dyn.build_up_s, dyn.duration_s]
+    steps = [float(s["duration_s"]) for s in spec.recoil.stages if s.get("duration_s")]
+    rest = dyn.duration_s - sum(steps)
+    if rest <= 0:
+        raise ValueError("the recoil steps exceed the main stage")
+    return [dyn.build_up_s, *steps, rest]

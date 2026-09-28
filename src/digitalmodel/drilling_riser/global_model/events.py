@@ -32,6 +32,10 @@ import math
 from dataclasses import dataclass
 from typing import Any
 
+TIME_HISTORY_KEY = ("PrimaryTimeHistoryDataTime, PrimaryTimeHistoryDataX, PrimaryTimeHistoryDataY, "
+                    "PrimaryTimeHistoryDataZ, PrimaryTimeHistoryDataR1, PrimaryTimeHistoryDataR2, "
+                    "PrimaryTimeHistoryDataR3")
+LMRP_LINE = "LMRPLine"  # recoil model: the LMRP as its own line (OrcaFlex names are case-insensitive and shared with the line types)
 RHO_AIR = 1.225
 RHO_W = 1025.0
 G = 9.80665
@@ -122,3 +126,13 @@ def anti_recoil_stages(*, t0_n: float, hold_n: float, closure_s: float = 2.5, st
         out.append({"duration_s": closure_s / n, "tension_n": (1 - open_fraction) * closed + open_fraction * t0_n})
     out.append({"duration_s": None, "tension_n": (1 - open_fraction) * hold_n + open_fraction * t0_n})
     return out
+
+
+def recoil_hold_tension_n(spec) -> float:
+    """Anti-recoil hold tension: the submerged weight released at the LMRP connector (tension ring, riser and LMRP),
+    so the tensioners hold the disconnected string once the valves have closed."""
+    from .hand_checks import tension_references
+
+    ref = tension_references(spec)
+    lmrp = ref["stack_chain"][0]
+    return ref["riser_top_n"] - ref["riser_bottom_n"] + ref["ring_weight_n"] + lmrp["submerged_weight_n"]

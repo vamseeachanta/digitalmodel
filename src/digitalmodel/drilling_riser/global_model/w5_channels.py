@@ -239,11 +239,17 @@ def _points(spec, ofx) -> list[tuple[str, str, Any, bool, Any]]:
     """
     pts = [("ufj", "InnerBarrel", ofx.oeEndA, True, None), ("riser_top", "Riser", ofx.oeEndA, False, None),
            ("lfj", "Riser", ofx.oeEndB, True, None)]
-    for n, a in _stack_points(spec):
+    # recoil model: the LMRP is its own line on the BOP top, the stack line ends at the BOP top
+    stack_spec = spec if spec.recoil is None else spec.model_copy(update={"stack": spec.stack[1:]})
+    for n, a in _stack_points(stack_spec):
         if "|" in n:
             pts.append((n, "Stack", ofx.oeArcLength(a - ABOVE_M), False, ofx.oeArcLength(a + ABOVE_M)))
         else:
             pts.append((n, "Stack", ofx.oeEndA if n == "stack:datum" else ofx.oeEndB, False, None))
+    if spec.recoil is not None:
+        from .events import LMRP_LINE
+
+        pts += [("lmrp:bottom", LMRP_LINE, ofx.oeEndA, False, None), ("lmrp:top", LMRP_LINE, ofx.oeEndB, False, None)]
     if spec.foundation is not None:
         pts.append(("conductor:top", "Conductor", ofx.oeEndB, False, None))
     return pts
@@ -347,6 +353,10 @@ def extract(model, spec, analysis: str, ofx) -> dict[str, Any]:
         v = model[spec.vessel_name]
         doc["vessel"] = {"stats": {"x": stats(v.TimeHistory("X", period)), "y": stats(v.TimeHistory("Y", period))}}
     doc["contents"] = {"density_kg_m3": spec.contents.density_kg_m3, "pressure_ref_z_m": spec.contents.pressure_ref_z_m}
+    if not static and (spec.vessel_trajectory is not None or spec.recoil is not None):
+        doc["event_series"] = event_series(model, spec, ofx)
+    if not static and spec.recoil is not None:
+        doc["recoil"] = recoil_summary(model, spec, ofx)
     return compact(doc)
 
 
@@ -437,6 +447,61 @@ def extract_open_water(model, spec, analysis: str, ofx) -> dict[str, Any]:
         doc["vessel"] = {"stats": {"x": stats(vessel.TimeHistory("X", period)), "y": stats(vessel.TimeHistory("Y", period))}}
     doc["contents"] = {"density_kg_m3": spec.contents.density_kg_m3, "pressure_ref_z_m": spec.contents.pressure_ref_z_m}
     return compact(doc)
+
+
+# --------------------------------------------------------------------------- events (drift-off, recoil)
+
+EVENT_SERIES_DT_S = 1.0
+
+
+def _downsample(t: Sequence[float], v: Sequence[float], dt: float) -> list[float]:
+    out, nxt = [], t[0]
+    for a, b in zip(t, v):
+        if a >= nxt - 1e-9:
+            out.append(float(b))
+            nxt += dt
+    return out
+
+
+def event_series(model, spec, ofx, *, dt_s: float = EVENT_SERIES_DT_S) -> dict[str, Any]:
+    """Event runs: downsampled histories (every ``dt_s`` over the main stage) of the vessel offset and the
+    responses that set the watch circles and the recoil checks - the W5 red-offset search reads them."""
+    period = ofx.Period(1)
+    t = [float(x) for x in model.SampleTimes(period)]
+    v, ib, riser = model[spec.vessel_name], model["InnerBarrel"], model["Riser"]
+    ch = {"vessel_x": v.TimeHistory("X", period), "vessel_y": v.TimeHistory("Y", period),
+          "ufj_angle_deg": ib.TimeHistory("Ez angle", period, ofx.oeEndA),
+          "lfj_angle_deg": riser.TimeHistory("Ez angle", period, ofx.oeEndB),
+          "stroke_m": model["SlipJoint"].TimeHistory("z", period),
+          "ring_z_m": model["TensionRing"].TimeHistory("Z", period),
+          "riser_top_te_kn": riser.TimeHistory("Effective tension", period, ofx.oeEndA),
+          "lfj_te_kn": riser.TimeHistory("Effective tension", period, ofx.oeEndB)}
+    stack = model["Stack"]
+    ch["datum_m_knm"] = stack.TimeHistory("Bend moment", period, ofx.oeEndA)
+    ch["datum_te_kn"] = stack.TimeHistory("Effective tension", period, ofx.oeEndA)
+    out = {"dt_s": dt_s, "t": _downsample(t, t, dt_s)}
+    for k, s in ch.items():
+        out[k] = _downsample(t, [float(x) for x in s], dt_s)
+    return out
+
+
+def recoil_summary(model, spec, ofx) -> dict[str, Any]:
+    """Recoil checks after the release at the start of stage 1: LMRP lift off the BOP top (CR-33 against the minimum
+    lift), the smallest clearance after the release and whether the LMRP falls back (re-contact)."""
+    from .events import LMRP_LINE
+
+    period = ofx.Period(1)
+    t = [float(x) for x in model.SampleTimes(period)]
+    lm = [float(x) for x in model[LMRP_LINE].TimeHistory("Z", period, ofx.oeEndA)]
+    bop = [float(x) for x in model["Stack"].TimeHistory("Z", period, ofx.oeEndB)]
+    z0 = lm[0]
+    lift = [a - z0 for a in lm]
+    gap = [a - b for a, b in zip(lm, bop)]
+    i_max = max(range(len(lift)), key=lift.__getitem__)
+    after = gap[i_max:]
+    return {"lmrp_lift_max_m": max(lift), "t_lift_max_s": t[i_max], "clearance_min_after_release_m": min(gap),
+            "clearance_min_after_peak_m": min(after), "ring_z_range_m": max(model["TensionRing"].TimeHistory("Z", period))
+            - min(model["TensionRing"].TimeHistory("Z", period)), "stages": spec.recoil.stages}
 
 
 # --------------------------------------------------------------------------- hang-off / running

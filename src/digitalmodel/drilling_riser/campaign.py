@@ -153,6 +153,12 @@ def case_spec(case: dict) -> RiserGlobalModelSpec:
         d["dynamics"] = dict(p["dynamics"])
     if p.get("contents_pressure_pa") is not None:
         d["contents"]["pressure_pa"] = float(p["contents_pressure_pa"])
+    if p.get("vessel_trajectory"):
+        d["vessel_trajectory"] = p["vessel_trajectory"]
+    if p.get("wave_phase_deg") is not None:
+        if not p.get("regular_wave"):
+            raise ValueError("wave_phase_deg applies to a regular wave")
+        d["wave_time_origin_s"] = float(p["wave_phase_deg"]) / 360.0 * float(p["regular_wave"]["period_s"])
     d["name"] = f"{base.name}:{case['case_id']}"
     cls = _spec_class(d)
     if p.get("edp_release") is not None:
@@ -163,6 +169,21 @@ def case_spec(case: dict) -> RiserGlobalModelSpec:
         f = float(p["edp_release"].get("anti_recoil_factor", EDP_ANTI_RECOIL_FACTOR))
         d["edp_release"] = {"anti_recoil_tension_n": f * tension_references(cls.model_validate(d))["released_weight_n"]}
     spec = cls.model_validate(d)
+    if p.get("recoil"):
+        if cls is OpenWaterRiserSpec:
+            raise ValueError("recoil applies to the drilling riser; the C2 disconnect is edp_release")
+        from .global_model import events as ev
+
+        r = p["recoil"]
+        t0 = spec.tensioners.total_vertical_tension_n
+        stages = ev.anti_recoil_stages(t0_n=t0, hold_n=float(r.get("hold_factor", 1.0)) * ev.recoil_hold_tension_n(spec),
+                                       closure_s=float(r.get("closure_s", 2.5)), step_s=float(r.get("step_s", 0.5)),
+                                       open_fraction=float(r.get("open_fraction", 0.0)))
+        d["recoil"] = {"stages": stages, "basis": "anti-recoil valve closure (D-93 class value, ASSUMED) from the "
+                                                  "pre-disconnect tension to the released weight"
+                                                  + (f"; {r['open_fraction']:.3g} of the tensioners open (D-94)"
+                                                     if r.get("open_fraction") else "")}
+        spec = RiserGlobalModelSpec.model_validate(d)
     if p.get("hang_off") or p.get("running"):
         from .global_model import hang_off as hom
 
