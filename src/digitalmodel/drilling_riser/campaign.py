@@ -778,6 +778,13 @@ class RiserCampaignAdapter:
             "vessel_x_m": _stats(model["Vessel"].TimeHistory("X", period)),
         }
         out["sample_count"] = len(riser.TimeHistory("Effective tension", period, ofx.oeEndA))
+        fat = case.get("params", {}).get("fatigue")
+        if fat:  # wave-fatigue window: rainflow histograms of the wall stress (W5 damage path)
+            from .global_model import fatigue_channels as fc
+
+            w5["fatigue"] = w5_channels.compact(fc.extract(
+                model, spec, ofx, spacing_m=float(fat.get("spacing_m", fc.DEFAULT_SPACING_M)),
+                n_bins=int(fat.get("n_bins", fc.DEFAULT_BINS))))
         out["w5"] = w5
         return out
 
