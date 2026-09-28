@@ -10,7 +10,6 @@ import pytest
 
 from digitalmodel.cathodic_protection.api_rp_1632 import (
     ANODE_CAPACITY,
-    ANODE_OC_POTENTIAL,
     PROTECTION_POTENTIAL_CSE,
     anode_driving_voltage,
     anode_life_years,
@@ -111,6 +110,32 @@ class TestAnodeLifeYears:
         life1 = anode_life_years(1.0, "zinc", i_a)
         life2 = anode_life_years(2.0, "zinc", i_a)
         assert life2 == pytest.approx(2.0 * life1, rel=1e-6)
+
+    def test_magnesium_h1_capacity_is_per_kg(self):
+        """Mg H-1: 2200 A-h/kg theoretical x 50 % = 1100 A-h/kg.
+
+        The commonly quoted 500 A-h/lb is 500 / 0.45359 = 1102 A-h/kg; the
+        table used to hold 500 as if it were per kg (issue #2209).
+        """
+        assert ANODE_CAPACITY["magnesium_h1"] == pytest.approx(1100.0)
+        assert ANODE_CAPACITY["magnesium_h1"] == pytest.approx(
+            500.0 / 0.45359, rel=0.01
+        )
+
+    def test_magnesium_h1_life_scales_with_capacity(self):
+        """Life = W * 1100 / (I * 8760): 5 kg at 0.1 A -> 6.28 yr.
+
+        5 * 1100 / (0.1 * 8760) = 5500 / 876 = 6.279 yr; with the old
+        500 A-h/kg it was 2.85 yr, i.e. 2.2x shorter.
+        """
+        life = anode_life_years(5.0, "magnesium_h1", 0.1)
+        assert life == pytest.approx(6.279, abs=0.005)
+        assert life == pytest.approx(
+            5.0 * ANODE_CAPACITY["magnesium_h1"] / (0.1 * 8760.0), rel=1e-9
+        )
+        # Ratio to zinc at the same mass/current equals the capacity ratio.
+        life_zn = anode_life_years(5.0, "zinc", 0.1)
+        assert life / life_zn == pytest.approx(1100.0 / 780.0, rel=1e-9)
 
 
 class TestCheckProtectionPotential:

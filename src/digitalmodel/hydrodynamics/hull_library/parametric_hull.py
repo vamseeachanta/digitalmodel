@@ -271,3 +271,14 @@ __all__ = [
     "ParametricRange",
     "HullParametricSpace",
 ]
+
+
+def form_space_profiles(base, ranges) -> Iterator[tuple[str, Any]]:
+    """Yield named form variants through the same interface as scaled hulls."""
+    from .parametric_form import _form_combinations, generate_profile
+
+    for idx, (combo, params) in enumerate(_form_combinations(base, ranges)):
+        variation_id = _make_variation_id(
+            f"parametric_monohull_{idx:04d}", idx, combo
+        )
+        yield variation_id, generate_profile(params, name=variation_id)

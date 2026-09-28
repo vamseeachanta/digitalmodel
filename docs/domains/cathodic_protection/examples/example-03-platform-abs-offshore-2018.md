@@ -127,7 +127,7 @@ Installed anode mass = 20 × 100 = 2,000 kg.
 ## 3. Python Code Block
 
 ```python
-from digitalmodel.infrastructure.common.cathodic_protection import CathodicProtection
+from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
 
 cfg = {
     "inputs": {
@@ -229,3 +229,7 @@ print("Anode mass required:   {:.1f} kg".format(r["anode_mass_kg"]))
 5. **Saline mud alternative:** Steel piles embedded in seabed mud would use
    zone="saline_mud" with fixed densities i_ci=25, i_cm=i_cf=20 mA/m² and a
    coating factor of 1.0 (no coating benefit in mud contact).
+
+6. **DNV-RP-B401 route:** the same structure type under DNV-RP-B401 is worked in
+   [example-03-platform-dnv-b401-offshore.md](example-03-platform-dnv-b401-offshore.md)
+   (`DNV_RP_B401_offshore` route, temperate 0–30 m jacket, Category III coating, 25 years).
