@@ -24,6 +24,8 @@ with the (private) matrix, not here:
 ``rao_origin_dx_m``   fore-aft shift of the RAO origin (riser position in the moonpool sensitivity)
 ``flex_joint_curves`` ``{"upper" | "lower": [[deg, N.m], ...]}`` from (0, 0): replaces a flex-joint curve
                       (flex-joint stiffness sensitivity)
+``stack_segment_m``   upper limit on the stack segment lengths (m): the connectors sit on nodes, where the
+                      effective tension jumps by half of each adjacent segment's weight (W405)
 ``proxy``             TIMING PROXIES only, not design cases:
                       ``{"kind": "drift_off", "speed_change_m_s": v}`` - the vessel accelerates uniformly
                       along ``heading_deg`` over the main stage, reaching ``v`` at its end;
@@ -104,6 +106,12 @@ def case_spec(case: dict) -> RiserGlobalModelSpec:
         k0 = pts[1][1] / pts[1][0] * 180.0 / math.pi
         d[key] = {"pivot_z_m": d[key]["pivot_z_m"], "rotational_stiffness_nm_per_rad": k0,
                   "moment_rotation_deg_nm": pts}
+    if p.get("stack_segment_m") is not None:
+        cap = float(p["stack_segment_m"])
+        if not cap > 0:
+            raise ValueError(f"stack_segment_m must be > 0, got {cap}")
+        for s in d["stack"]:
+            s["segment_length_m"] = min(s["segment_length_m"], cap)
     d["vessel_offset_m"] = offset_xy_m(base, float(p.get("offset_pct_wd", 0.0)), heading)
     d["current"] = ({"direction_deg": heading, "depth_speed_m_s": p["current"]["depth_speed_m_s"]}
                     if p.get("current") else None)
@@ -152,20 +160,34 @@ CALIBRATION_TOL = 1.0e-6
 # is not - a full-current start diverges for some model variants, a still-water continuation flips the ring to the
 # yawed branch at large offsets for others
 STATICS_PATHS = ("current_at_seed", "ramp_at_seed", "ramp_at_target", "fine_steps", "direct_at_target",
-                 "aid_current", "tension_ramp", "neighbour_walk")
+                 "aid_current", "tension_ramp", "neighbour_walk", "heading_walk", "mud_walk", "tension_walk")
 AID_CURRENT_M_S = 0.05  # solver aid for still-water cases (removed before the final solve)
 
 
 def statics_paths(*, current: bool) -> list[str]:
     """Statics paths in the order tried, for a case with or without current."""
     # stage A (2026-09-27): at 12.5 ppg whole offsets fail from the straight start on every seeded path while their
-    # neighbours converge directly - the direct solve and the neighbour walk come next
+    # neighbours converge directly - the direct solve and the neighbour walk come next.
+    # W408 (2026-09-28): the batch-1 divergences oscillate in the ring rotation and the inner barrel next to the slip
+    # joint from any straight start near the case; a continuation in heading (from a heading that converges) or in the
+    # contents density (from heavier contents) reaches the same regular state in 2-10 s per step
     if current:
-        return ["current_at_seed", "direct_at_target", "neighbour_walk", "tension_ramp", "ramp_at_seed",
-                "ramp_at_target", "fine_steps"]
+        return ["current_at_seed", "direct_at_target", "heading_walk", "mud_walk", "neighbour_walk", "tension_ramp",
+                "tension_walk", "ramp_at_seed", "ramp_at_target", "fine_steps"]
     # still water: the aiding current first - the plain seeded path fails on every 12.5 ppg variant only after the full
     # iteration budget (stage A, 2026-09-27: about 8 min per case at 57 workers)
-    return ["aid_current", "direct_at_target", "neighbour_walk", "tension_ramp", "current_at_seed", "fine_steps"]
+    return ["aid_current", "direct_at_target", "neighbour_walk", "tension_ramp", "tension_walk", "mud_walk",
+            "current_at_seed", "fine_steps"]
+
+
+# W408 continuation paths
+HEADING_WALK_STARTS_DEG = (90.0, 0.0, 180.0, 135.0)  # tried in order (the case heading is skipped)
+HEADING_WALK_STEPS_DEG = (5.0, 2.5)  # the step of the turn: 5 deg for every start heading, then 2.5 deg
+MUD_WALK_FACTOR = 1.12  # contents density at the start of the mud walk / case density (about 14.0 / 12.5 ppg)
+MUD_WALK_STEPS = 6
+MUD_WALK_LINES = ("InnerBarrel", "Riser")  # the lines that carry the bore contents (the stack lumps its own)
+TENSION_WALK_START = 1.10  # line tension at the start of the tension walk / case setting
+TENSION_WALK_STEP = 0.01
 
 
 NEIGHBOUR_STARTS_PCT = (1.0, -1.0, 2.0, -2.0, 3.0, -3.0)  # % WD from the case offset, tried in order
@@ -187,6 +209,24 @@ def _probe(model, solve) -> None:
     model.UseCalculatedPositions(True)
     g.StaticsMaxIterations = cap
     solve()
+
+
+def _capped_probe(model, solve) -> None:
+    """:func:`_probe` that restores the full iteration budget when the probe fails as well."""
+    g = getattr(model, "general", None)
+    cap = g.StaticsMaxIterations if g is not None else None
+    try:
+        _probe(model, solve)
+    finally:
+        if g is not None:
+            g.StaticsMaxIterations = cap
+
+
+def _place(model, wd: float, pct: float, heading_deg: float) -> None:
+    """Vessel and ring at ``pct`` % WD along ``heading_deg``."""
+    r, h = pct / 100.0 * wd, math.radians(heading_deg)
+    for name in ("Vessel", "TensionRing"):
+        model[name].InitialX, model[name].InitialY = r * math.cos(h), r * math.sin(h)
 
 
 # tension continuation (stage A: TT-MIN with a failed tensioner, LFJ tension about 60 kips at 12.5 ppg, diverged on
@@ -320,6 +360,78 @@ def _statics_path(model, spec: RiserGlobalModelSpec, path: str, *, speed: float,
             model.UseCalculatedPositions(True)  # before the data change (both reset the model)
             set_factor(f)
             solve()
+    elif path == "heading_walk":
+        x1, y1 = spec.vessel_offset_m
+        h = math.radians(heading_deg)
+        p = math.hypot(x1, y1) / wd * 100.0 * (1.0 if (x1 * math.cos(h) + y1 * math.sin(h)) >= 0 else -1.0)
+        if abs(p) < 1e-9 and not speed:
+            raise _PathFailed("the heading walk needs an offset or a current")
+        env.RefCurrentSpeed = speed
+        errors = []
+        # each start heading in turn, first with 5 deg steps then 2.5 deg: a walk can flip the ring to the yawed branch
+        # at an intermediate heading (one tensioner failed, W408 re-run), and another start avoids it
+        for step_deg in HEADING_WALK_STEPS_DEG:
+            for h0 in HEADING_WALK_STARTS_DEG:
+                if abs((h0 - heading_deg + 180.0) % 360.0 - 180.0) < 1e-9:
+                    continue
+                try:
+                    env.RefCurrentDirection = h0
+                    _place(model, wd, p, h0)
+                    _capped_probe(model, solve)
+                    turn = (heading_deg - h0 + 180.0) % 360.0 - 180.0
+                    k = max(1, math.ceil(abs(turn) / step_deg - 1e-9))
+                    for i in range(1, k + 1):
+                        model.UseCalculatedPositions(True)  # before the data change (both reset the model)
+                        hh = h0 + turn * i / k
+                        env.RefCurrentDirection = hh
+                        _place(model, wd, p, hh)
+                        solve()
+                    return
+                except Exception as exc:  # noqa: BLE001 - the next start heading (a licence fault propagates)
+                    if "licen" in str(exc).lower():
+                        raise
+                    errors.append(f"{h0:g} deg/{step_deg:g}: {str(exc).strip().splitlines()[-1][:80]}")
+        raise _PathFailed("no start heading walked to the case: " + "; ".join(errors))
+    elif path == "mud_walk":
+        lines = [model[n] for n in MUD_WALK_LINES]
+        rho = spec.contents.density_kg_m3 / 1000.0  # te/m^3
+        env.RefCurrentSpeed = speed
+        x, y = spec.vessel_offset_m
+        for name in ("Vessel", "TensionRing"):
+            model[name].InitialX, model[name].InitialY = x, y
+        for ln in lines:
+            ln.ContentsDensity = MUD_WALK_FACTOR * rho
+        _capped_probe(model, solve)
+        for i in range(1, MUD_WALK_STEPS + 1):
+            model.UseCalculatedPositions(True)
+            for ln in lines:
+                ln.ContentsDensity = rho * (MUD_WALK_FACTOR + (1.0 - MUD_WALK_FACTOR) * i / MUD_WALK_STEPS)
+            solve()
+    elif path == "tension_walk":
+        wins = _ring_tensioners(model)
+        base = [[w.GetData("StageValue", i) for i in range(w.GetDataRowCount("StageValue"))] for w in wins]
+
+        def scale(f):
+            for w, rows in zip(wins, base):
+                for i, v in enumerate(rows):
+                    w.SetData("StageValue", i, v * f)
+
+        scale(TENSION_WALK_START)
+        # the case offset at the start tension by the seeded continuation (in still water with the aiding current,
+        # removed at the end): a straight start at 1.10 x diverged or reached the yawed branch (W408 diagnosis)
+        env.RefCurrentSpeed = speed if speed else AID_CURRENT_M_S
+        if not speed:
+            env.RefCurrentDirection = heading_deg
+        seeded_statics(model, spec, step_pct=step, start=seed, solve=solve)
+        if not speed:
+            model.UseCalculatedPositions(True)
+            env.RefCurrentSpeed = 0.0
+            solve()
+        k = max(1, math.ceil((TENSION_WALK_START - 1.0) / TENSION_WALK_STEP - 1e-9))
+        for i in range(1, k + 1):
+            model.UseCalculatedPositions(True)
+            scale(TENSION_WALK_START + (1.0 - TENSION_WALK_START) * i / k)
+            solve()
     elif path == "direct_at_target":
         env.RefCurrentSpeed = speed
         x, y = spec.vessel_offset_m
@@ -345,7 +457,11 @@ def robust_statics(model, spec: RiserGlobalModelSpec, params: dict, *, reload=No
       <= ``statics_step_pct`` % WD steps;
     * ``ramp_at_seed`` - still water at the seed, current ramped in 25 % steps there, then the continuation;
     * ``ramp_at_target`` - still-water continuation to the case offset, then the current ramp;
-    * ``fine_steps`` - as the first with half steps.
+    * ``fine_steps`` - as the first with half steps;
+    * ``heading_walk`` - a straight start at the case offset along another heading (``HEADING_WALK_STARTS_DEG``),
+      then offset and current turned to the case heading in <= 5 deg steps (W408);
+    * ``mud_walk`` - a straight start with the bore contents at 1.12 x the case density, stepped down in six steps;
+    * ``tension_walk`` - a solve at 1.10 x the line tension at the case offset, stepped down in 1 % steps.
 
     Without current the ramp paths are skipped. Licence faults propagate (the runner retries them); when every path
     fails the case is ``statics_diverged`` with each path's error. ``calibrate_tension`` (zero-offset still-water
