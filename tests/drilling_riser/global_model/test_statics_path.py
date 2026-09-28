@@ -205,12 +205,15 @@ def test_the_last_successful_path_of_a_variant_is_tried_first(base_spec, monkeyp
 
 
 def test_path_orders(base_spec):
-    assert cp.statics_paths(current=True) == ["current_at_seed", "direct_at_target", "neighbour_walk", "tension_ramp",
-                                              "ramp_at_seed", "ramp_at_target", "fine_steps"]
+    # W408 (2026-09-28): the heading walk and the mud walk reach the states no batch-1 path reached; they follow the
+    # direct solve (the cheap paths first) and precede the neighbour walk
+    assert cp.statics_paths(current=True) == ["current_at_seed", "direct_at_target", "heading_walk", "mud_walk",
+                                              "neighbour_walk", "tension_ramp", "tension_walk", "ramp_at_seed",
+                                              "ramp_at_target", "fine_steps"]
     # still water: the aiding current first (stage A: the plain seeded path failed on every 12.5 ppg case after the
     # full iteration budget, about 8 min per case at 57 workers, before the aiding current converged in two solves)
     assert cp.statics_paths(current=False) == ["aid_current", "direct_at_target", "neighbour_walk", "tension_ramp",
-                                               "current_at_seed", "fine_steps"]
+                                               "tension_walk", "mud_walk", "current_at_seed", "fine_steps"]
 
 
 def test_tension_ramp_solves_at_a_higher_line_tension_then_steps_down_to_the_case_value(base_spec, monkeypatch):
@@ -343,3 +346,108 @@ def test_neighbour_walk_starts_at_the_nearest_converging_offset_and_walks_in_qua
     xs = [round(x / wd * 100, 4) for x, _ in m.calls]
     assert xs[:2] == [-1.0, -3.0]  # +1 % failed from a straight start, -1 % (i.e. -3 % WD) converged
     assert xs[2:] == [-2.75, -2.5, -2.25, -2.0]
+
+# ----------------------------------------------------------------------------- W408 (2026-09-28) continuation paths
+
+
+class _General:
+    def __init__(self):
+        self.StaticsMaxIterations = 1000
+
+
+class _Line:
+    typeName = "Line"
+
+    def __init__(self, name, rho_te):
+        self.name, self.ContentsDensity = name, rho_te
+
+
+def _walk_model(fail, speed=0.6, heading=45.0):
+    m = _FakeModel(speed=speed, fail=fail)
+    m.environment.RefCurrentDirection = heading
+    m.general = _General()
+    m["InnerBarrel"], m["Riser"] = _Line("InnerBarrel", 1.5), _Line("Riser", 1.5)
+    orig = m.CalculateStatics
+    m.log = []
+
+    def rec():
+        m.log.append({"x": m["Vessel"].InitialX, "y": m["Vessel"].InitialY, "dir": m.environment.RefCurrentDirection,
+                      "rho": m["Riser"].ContentsDensity, "cap": m.general.StaticsMaxIterations,
+                      "t": m.winches[0].t[-1]})
+        orig()
+
+    m.CalculateStatics = rec
+    return m
+
+
+def test_heading_walk_starts_at_a_converging_heading_and_turns_offset_and_current_to_the_case_heading(
+        base_spec, monkeypatch):
+    """W408: at 12.5 ppg, 45 deg, -6..-2 % WD in the 1-yr storm every batch-1 path failed (the iteration oscillated in
+    the ring rotation and the inner barrel next to the slip joint); the same offset converges directly at 90 deg, and
+    turning the offset and the current to 45 deg in 5 deg steps reaches the case state (diagnosis, 2 s per step)."""
+    import math
+
+    spec = cp.RiserCampaignAdapter().spec(_case(base_spec, heading_deg=45.0, offset_pct_wd=-6.0, current=CURRENT))
+    wd = spec.environment.water_depth_m
+    # a straight start (the reduced-cap probe) converges only at 90 deg
+    m = _walk_model(lambda m: m.log[-1]["cap"] == cp.PROBE_ITERATIONS and abs(m.log[-1]["dir"] - 90.0) > 1e-9)
+    monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
+    info = cp.robust_statics(m, spec, {"statics_paths": ["heading_walk"], "heading_deg": 45.0},
+                             reload=_reloader(m, 0.6))
+    assert info["strategy"] == "heading_walk"
+    first = m.log[0]
+    assert first["dir"] == 90.0 and first["cap"] == cp.PROBE_ITERATIONS
+    assert (first["x"], first["y"]) == (pytest.approx(0.0, abs=1e-9), pytest.approx(-0.06 * wd))
+    walk = [e for e in m.log[1:] if e["cap"] == 1000]
+    dirs = [e["dir"] for e in walk]
+    assert dirs[0] == 90.0 and dirs[-9:] == pytest.approx([85, 80, 75, 70, 65, 60, 55, 50, 45])
+    end = walk[-1]
+    r = -0.06 * wd
+    assert (end["x"], end["y"]) == (pytest.approx(r * math.cos(math.radians(45))),
+                                     pytest.approx(r * math.sin(math.radians(45))))
+    assert m.environment.RefCurrentDirection == 45.0 and m.general.StaticsMaxIterations == 1000
+
+
+def test_heading_walk_needs_an_offset_or_a_current(base_spec, monkeypatch):
+    spec = _spec(base_spec, offset_pct_wd=0.0)
+    m = _walk_model(lambda m: False, speed=0.0, heading=0.0)
+    monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
+    with pytest.raises(pr.CaseFailed, match="heading_walk"):
+        cp.robust_statics(m, spec, {"statics_paths": ["heading_walk"]}, reload=_reloader(m, 0.0))
+
+
+def test_mud_walk_solves_with_heavier_contents_then_steps_down_to_the_case_density(base_spec, monkeypatch):
+    """W408: CON-S1 at 12.5 ppg, TT-MIN in the 10-yr loop current failed every batch-1 path; with the contents at
+    1.12 x the case density (about 14.0 ppg) the same offset converges, and six steps down reach the case state."""
+    spec = _spec(base_spec, offset_pct_wd=-2.0, current=CURRENT)
+    rho = spec.contents.density_kg_m3 / 1000.0
+    m = _walk_model(lambda m: m.log[-1]["rho"] == pytest.approx(rho) and len(m.log) == 1, heading=0.0)
+    m["InnerBarrel"].ContentsDensity = m["Riser"].ContentsDensity = rho
+    monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
+    info = cp.robust_statics(m, spec, {"statics_paths": ["mud_walk"]}, reload=_reloader(m, 0.6))
+    assert info["strategy"] == "mud_walk"
+    rhos = [e["rho"] for e in m.log]
+    assert rhos[0] == pytest.approx(cp.MUD_WALK_FACTOR * rho)
+    steps = [e["rho"] for e in m.log if e["cap"] == 1000]
+    assert steps[-cp.MUD_WALK_STEPS:] == pytest.approx(
+        [rho * (cp.MUD_WALK_FACTOR + (1 - cp.MUD_WALK_FACTOR) * i / cp.MUD_WALK_STEPS)
+         for i in range(1, cp.MUD_WALK_STEPS + 1)])
+    assert m["InnerBarrel"].ContentsDensity == pytest.approx(rho) and m["Riser"].ContentsDensity == pytest.approx(rho)
+    assert all(e["x"] == pytest.approx(-0.02 * spec.environment.water_depth_m) for e in m.log)
+
+
+def test_tension_walk_steps_down_in_one_percent_steps_at_the_case_offset(base_spec, monkeypatch):
+    """W408: STR-CS at 0.60 x TT-MIN (LFJ in effective compression) failed every batch-1 path, the tension ramp
+    included (its last step, 1.05 to 1.00, was too coarse); a direct solve at 1.10 x and 1 % steps reach it."""
+    spec = _spec(base_spec, offset_pct_wd=0.0)
+    m = _walk_model(lambda m: False, speed=0.0, heading=0.0)
+    monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
+    info = cp.robust_statics(m, spec, {"statics_paths": ["tension_walk"]}, reload=_reloader(m, 0.0))
+    assert info["strategy"] == "tension_walk"
+    ts = [e["t"] for e in m.log]
+    assert ts[0] == pytest.approx(100.0 * cp.TENSION_WALK_START)
+    assert ts[-1] == pytest.approx(100.0)
+    steps = [a - b for a, b in zip(ts, ts[1:])]
+    assert max(steps) <= 100.0 * cp.TENSION_WALK_STEP + 1e-9 and len(ts) == 11
+    assert all(w.t == [pytest.approx(100.0)] * 3 for w in m.winches)
+    assert all(e["x"] == 0.0 for e in m.log)

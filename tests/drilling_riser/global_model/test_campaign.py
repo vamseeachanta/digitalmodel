@@ -175,3 +175,15 @@ def test_runner_with_campaign_adapter_statics_modal_regular_and_proxies(base_spe
     # disconnect proxy: the released riser rises
     assert ch["RC"]["series"]["ring_z_m"]["max"] > ch["RC"]["series"]["ring_z_m"]["min"]
     assert all(math.isfinite(r["timings_s"]["total"]) for r in by.values())
+
+
+def test_stack_segment_refinement_caps_every_stack_segment(base_spec):
+    """W405 (owner, 2026-09-28): the stack connectors sit on nodes, where the effective tension jumps by half of each
+    adjacent segment's weight; from batch 2 the stack segments are at most 0.1 m. Only the stack is refined."""
+    base = cp.case_spec(_case(base_spec))
+    ref = cp.case_spec(_case(base_spec, stack_segment_m=0.1))
+    assert all(s.segment_length_m == pytest.approx(min(0.1, b.segment_length_m)) for s, b in zip(ref.stack, base.stack))
+    assert [s.segment_length_m for s in ref.riser] == [s.segment_length_m for s in base.riser]
+    assert [s.segment_length_m for s in ref.inner_barrel] == [s.segment_length_m for s in base.inner_barrel]
+    with pytest.raises(ValueError, match="stack_segment_m"):
+        cp.case_spec(_case(base_spec, stack_segment_m=0.0))
