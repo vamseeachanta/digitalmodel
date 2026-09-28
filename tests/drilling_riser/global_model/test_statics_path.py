@@ -438,16 +438,48 @@ def test_mud_walk_solves_with_heavier_contents_then_steps_down_to_the_case_densi
 
 def test_tension_walk_steps_down_in_one_percent_steps_at_the_case_offset(base_spec, monkeypatch):
     """W408: STR-CS at 0.60 x TT-MIN (LFJ in effective compression) failed every batch-1 path, the tension ramp
-    included (its last step, 1.05 to 1.00, was too coarse); a direct solve at 1.10 x and 1 % steps reach it."""
+    included (its last step, 1.05 to 1.00, was too coarse). The tension walk reaches the case offset at 1.10 x the line
+    tension by the aiding-current continuation (a straight start at 1.10 x diverges or lands on the yawed branch),
+    then steps down in 1 % steps in still water."""
     spec = _spec(base_spec, offset_pct_wd=0.0)
+    wd = spec.environment.water_depth_m
     m = _walk_model(lambda m: False, speed=0.0, heading=0.0)
+    speeds = []
+    orig = m.CalculateStatics
+    m.CalculateStatics = lambda: (speeds.append(m.environment.RefCurrentSpeed), orig())
     monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
     info = cp.robust_statics(m, spec, {"statics_paths": ["tension_walk"]}, reload=_reloader(m, 0.0))
     assert info["strategy"] == "tension_walk"
     ts = [e["t"] for e in m.log]
-    assert ts[0] == pytest.approx(100.0 * cp.TENSION_WALK_START)
-    assert ts[-1] == pytest.approx(100.0)
+    assert m.log[0]["x"] == pytest.approx(-0.02 * wd) and ts[0] == pytest.approx(100.0 * cp.TENSION_WALK_START)
+    assert speeds[0] == cp.AID_CURRENT_M_S
+    walk = [(e["t"], s) for e, s in zip(m.log, speeds) if e["t"] < 100.0 * cp.TENSION_WALK_START - 1e-9]
+    assert all(s == 0.0 for _, s in walk)  # the steps down are in still water
+    assert ts[-1] == pytest.approx(100.0) and len(walk) == 10
     steps = [a - b for a, b in zip(ts, ts[1:])]
-    assert max(steps) <= 100.0 * cp.TENSION_WALK_STEP + 1e-9 and len(ts) == 11
+    assert max(steps) <= 100.0 * cp.TENSION_WALK_STEP + 1e-9
     assert all(w.t == [pytest.approx(100.0)] * 3 for w in m.winches)
-    assert all(e["x"] == 0.0 for e in m.log)
+    assert m.log[-1]["x"] == pytest.approx(0.0, abs=1e-9)
+
+
+def test_heading_walk_moves_to_the_next_start_heading_when_a_walk_step_fails(base_spec, monkeypatch):
+    """W408 re-run check: in CON-TF-00009 (one tensioner failed) the walk from 90 deg flipped the ring to the yawed
+    branch at 50 deg; the path then starts again from the next start heading (and then with 2.5 deg steps)."""
+    spec = cp.RiserCampaignAdapter().spec(_case(base_spec, heading_deg=45.0, offset_pct_wd=-4.0, current=CURRENT))
+
+    def fail(m):
+        e = m.log[-1]
+        started_at_90 = any(abs(x["dir"] - 90.0) < 1e-9 for x in m.log) and not any(
+            abs(x["dir"]) < 1e-9 for x in m.log)
+        # the walk from 90 deg flips the ring at 50 deg; every other solve lands on the physical branch
+        m.yaw = 180.0 if started_at_90 and abs(e["dir"] - 50.0) < 1e-9 else 0.0
+        return False
+
+    m = _walk_model(fail)
+    monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {})
+    info = cp.robust_statics(m, spec, {"statics_paths": ["heading_walk"], "heading_deg": 45.0},
+                             reload=_reloader(m, 0.6))
+    assert info["strategy"] == "heading_walk"
+    probes = [e["dir"] for e in m.log if e["cap"] == cp.PROBE_ITERATIONS]
+    assert probes[:2] == [90.0, 0.0]  # 90 deg first; after its walk failed, 0 deg
+    assert m.log[-1]["dir"] == pytest.approx(45.0) and abs(m.yaw) < 1.0
