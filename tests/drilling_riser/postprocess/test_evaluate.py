@@ -216,8 +216,8 @@ def test_a_missing_channel_is_reported_as_such():
     del doc["channels"]["w5"]["range_graphs"]["Riser"]["vm"]
     r = evaluate_case({None: doc}, ROW_VM, CTX)
     assert r.status == "NOT_EVALUATED" and r.missing_channel == "range_graphs.Riser.vm"
-    r = evaluate_case({None: static_doc()}, ROW_DSR, CTX)
-    assert r.missing_channel and r.status == "NOT_EVALUATED"
+    r = evaluate_case({None: dyn_doc()}, ROW_DSR, CTX)
+    assert r.missing_channel == "range_graphs.Riser.zz_range_max" and r.status == "NOT_EVALUATED"
 
 
 def test_unknown_check_key_is_not_evaluated_without_failing_the_step():
