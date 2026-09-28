@@ -127,8 +127,27 @@ def case_spec(case: dict) -> RiserGlobalModelSpec:
         d["irregular_wave"] = {**p["irregular_wave"], "direction_deg": heading}
     if case["analysis"] == "dynamics":
         d["dynamics"] = dict(p["dynamics"])
+    if p.get("vessel_trajectory"):
+        d["vessel_trajectory"] = p["vessel_trajectory"]
+    if p.get("wave_phase_deg") is not None:
+        if not p.get("regular_wave"):
+            raise ValueError("wave_phase_deg applies to a regular wave")
+        d["wave_time_origin_s"] = float(p["wave_phase_deg"]) / 360.0 * float(p["regular_wave"]["period_s"])
     d["name"] = f"{base.name}:{case['case_id']}"
     spec = RiserGlobalModelSpec.model_validate(d)
+    if p.get("recoil"):
+        from .global_model import events as ev
+
+        r = p["recoil"]
+        t0 = spec.tensioners.total_vertical_tension_n
+        stages = ev.anti_recoil_stages(t0_n=t0, hold_n=ev.recoil_hold_tension_n(spec),
+                                       closure_s=float(r.get("closure_s", 2.5)), step_s=float(r.get("step_s", 0.5)),
+                                       open_fraction=float(r.get("open_fraction", 0.0)))
+        d["recoil"] = {"stages": stages, "basis": "anti-recoil valve closure (D-93 class value, ASSUMED) from the "
+                                                  "pre-disconnect tension to the released weight"
+                                                  + (f"; {r['open_fraction']:.3g} of the tensioners open (D-94)"
+                                                     if r.get("open_fraction") else "")}
+        spec = RiserGlobalModelSpec.model_validate(d)
     if p.get("hang_off") or p.get("running"):
         from .global_model import hang_off as hom
 

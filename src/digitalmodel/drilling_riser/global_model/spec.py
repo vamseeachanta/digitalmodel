@@ -335,6 +335,32 @@ class HangOff(BaseModel):
         return self
 
 
+class VesselTrajectory(BaseModel):
+    """Prescribed low-frequency vessel motion from the start of the main stage (drift-off / drive-off): positions
+    relative to the static offset; held at the offset through the build-up. First-order RAO motion is superimposed."""
+
+    t_s: list[float] = Field(..., min_length=2)
+    x_m: list[float] = Field(..., min_length=2)
+    y_m: list[float] = Field(..., min_length=2)
+
+    @model_validator(mode="after")
+    def _rows(self) -> "VesselTrajectory":
+        if not (len(self.t_s) == len(self.x_m) == len(self.y_m)):
+            raise ValueError("t_s, x_m and y_m must have the same length")
+        if any(b <= a for a, b in zip(self.t_s, self.t_s[1:])) or self.t_s[0] != 0.0:
+            raise ValueError("t_s must start at 0 and increase")
+        return self
+
+
+class Recoil(BaseModel):
+    """EDS disconnect at the LMRP connector at the start of stage 1: the LMRP (the top stack section) is its own line,
+    released from the BOP top; the tensioner total vertical tension follows ``stages`` (duration, tension; the last
+    stage open-ended), the anti-recoil schedule (``events.anti_recoil_stages``)."""
+
+    stages: list[dict[str, Any]] = Field(..., min_length=1)
+    basis: str = ""
+
+
 class RiserGlobalModelSpec(BaseModel):
     name: str = Field(..., min_length=1)
     description: str = ""
@@ -363,6 +389,9 @@ class RiserGlobalModelSpec(BaseModel):
     dynamics: Dynamics | None = None
     foundation: Foundation | None = None
     hang_off: HangOff | None = None
+    vessel_trajectory: VesselTrajectory | None = None
+    recoil: Recoil | None = None
+    wave_time_origin_s: float = Field(0.0, description="regular wave time origin (the wave phase at t = 0)")
     provenance: dict[str, Any] = Field(default_factory=dict)
 
     @property
