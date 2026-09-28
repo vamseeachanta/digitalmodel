@@ -209,3 +209,14 @@ def test_hang_off_case_through_the_adapter_extracts_a_complete_w5_set(tmp_path, 
     out = cp.ADAPTER.extract(m, case)
     assert w5.missing_channels(out["w5"], foundation=False) == []
     assert out["w5"]["riser_kind"] == "hang_off"
+
+
+def test_current_direction_can_differ_from_the_wave_heading(tmp_path):
+    """Wave fatigue (FAT-W): the background current at 45 deg to the waves (BG-FAT)."""
+    from digitalmodel.drilling_riser import campaign as cp
+
+    cur = {"depth_speed_m_s": [[0.0, 0.08], [300.0, 0.08]]}
+    s = cp.case_spec(_case(tmp_path, heading_deg=90.0, current=cur, current_direction_deg=135.0))
+    assert s.current.direction_deg == 135.0
+    s = cp.case_spec(_case(tmp_path, heading_deg=90.0, current=cur))
+    assert s.current.direction_deg == 90.0
