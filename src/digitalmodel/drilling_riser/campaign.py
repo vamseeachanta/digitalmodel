@@ -113,7 +113,7 @@ def case_spec(case: dict) -> RiserGlobalModelSpec:
         if d["tensioners"]["representation"] != "lines" and d["tensioners"].get("failed_count"):
             raise ValueError("a failed tensioner needs the 'lines' tensioner representation")
     for name, f in (p.get("section_stiffness_factors") or {}).items():
-        hits = [s for key in ("inner_barrel", "riser", "stack") for s in d[key] if s["name"] == name]
+        hits = [s for key in ("upper", "inner_barrel", "riser", "stack") for s in d.get(key) or [] if s["name"] == name]
         if not hits:
             raise ValueError(f"section_stiffness_factors: no section named {name!r}")
         for s in hits:
@@ -172,15 +172,16 @@ def seeded_statics(model, spec: RiserGlobalModelSpec, *, seed_pct: float = SEED_
     x1, y1 = target if target is not None else spec.vessel_offset_m
     solve = solve or model.CalculateStatics
     n = math.ceil(math.hypot(x1 - x0, y1 - y0) / (step_pct / 100.0 * wd) - 1e-9)
+    top = "TensionFrame" if isinstance(spec, OpenWaterRiserSpec) else "TensionRing"
     if n <= 0:  # start == target: one solve there
-        for name in ("Vessel", "TensionRing"):
+        for name in ("Vessel", top):
             model[name].InitialX, model[name].InitialY = x0, y0
         solve()
         return {"method": "seeded continuation", "steps": 1}
     for i in range(n + 1):
         f = i / n
         x, y = x0 + f * (x1 - x0), y0 + f * (y1 - y0)
-        for name in ("Vessel", "TensionFrame" if isinstance(spec, OpenWaterRiserSpec) else "TensionRing"):
+        for name in ("Vessel", top):
             model[name].InitialX, model[name].InitialY = x, y
         solve()
         if i < n:
@@ -551,6 +552,42 @@ def robust_statics(model, spec: RiserGlobalModelSpec, params: dict, *, reload=No
         info["calibration"] = calibrate_line_tension(model, spec, solve=solve)
     return {**info, **physical_state_checks(model, spec)}
 
+def open_water_statics(model, spec: OpenWaterRiserSpec, params: dict, *, reload=None) -> dict[str, Any]:
+    """Statics of an open-water (C2) case. No tension ring, so no yawed branch: a direct solve from the straight
+    start first (the C2 default). If it does not converge, the model is reloaded and the case offset reached by a
+    continuation from the straight zero-offset start (``frame_continuation``), then with half steps
+    (``frame_continuation_fine``). ``statics: seeded`` asks for the continuation from the -2 % WD seed directly.
+    Licence faults propagate; the physical-state checks run on the state reached."""
+    from digitalmodel.solvers.orcaflex.parallel_runner import CaseFailed
+
+    step = float(params.get("statics_step_pct", STEP_PCT))
+    if params.get("statics") == "seeded":
+        return {**seeded_statics(model, spec, step_pct=step), **physical_state_checks(model, spec)}
+    routes = [("direct", None), ("frame_continuation", step), ("frame_continuation_fine", step / 2.0)]
+    attempts: list[dict[str, str]] = []
+    for k, (name, st) in enumerate(routes):
+        if k:
+            if reload is None:
+                break
+            reload()
+        try:
+            if st is None:
+                model.CalculateStatics()
+                info: dict[str, Any] = {"method": "direct"}
+            else:
+                info = seeded_statics(model, spec, start=(0.0, 0.0), step_pct=st)
+            info.update(strategy=name, attempts=attempts)
+            return {**info, **physical_state_checks(model, spec)}
+        except CaseFailed:
+            raise
+        except Exception as exc:  # noqa: BLE001 - a route failure is recorded and the next route tried
+            if "licen" in str(exc).lower():
+                raise
+            attempts.append({"strategy": name, "error": str(exc).strip().splitlines()[-1][:200]})
+    raise CaseFailed("statics_diverged", "no statics route converged: "
+                     + "; ".join(f"{a['strategy']}: {a['error']}" for a in attempts))
+
+
 def _tensioner_vertical_n(model) -> float:
     from .global_model import orcaflex_run as orun
 
@@ -701,19 +738,20 @@ class RiserCampaignAdapter:
         p = case.get("params", {})
         settings = apply_statics_settings(model, p)
         spec = self.spec(case)
-        # the seeded route exists for the tension-ring yaw branch of the drilling riser; the open-water riser has no
-        # ring and converges from its straight start (its default is direct statics)
-        default = "direct" if isinstance(spec, OpenWaterRiserSpec) else "seeded"
-        if p.get("statics", default) == "seeded":
-            master = self._masters.get(case["case_id"])
+        master = self._masters.get(case["case_id"])
 
-            def reload():
-                threads = model.threadCount
-                model.LoadData(str(master))
-                model.threadCount = threads
-                self.prepare(model, case)
-                apply_statics_settings(model, p)
+        def reload():
+            threads = model.threadCount
+            model.LoadData(str(master))
+            model.threadCount = threads
+            self.prepare(model, case)
+            apply_statics_settings(model, p)
 
+        # the seeded paths exist for the tension-ring yaw branch of the drilling riser; the open-water riser has no
+        # ring and converges from its straight start (direct statics, with a frame continuation as the fallback)
+        if isinstance(spec, OpenWaterRiserSpec):
+            return {**open_water_statics(model, spec, p, reload=reload if master else None), **settings}
+        if p.get("statics", "seeded") == "seeded":
             return {**robust_statics(model, spec, p, reload=reload if master else None), **settings}
         model.CalculateStatics()
         return {"method": "direct", **settings, **physical_state_checks(model, spec)}
@@ -755,13 +793,17 @@ class RiserCampaignAdapter:
         from .global_model import orcaflex_run as orun
 
         ofx = orun._api()
+        from .global_model import w5_channels
+
+        w5 = w5_channels.extract_open_water(model, spec, case["analysis"], ofx)
         if case["analysis"] == "statics":
-            out: dict[str, Any] = orun.open_water_static_responses(model, spec)
+            out: dict[str, Any] = {**orun.open_water_static_responses(model, spec), "w5": w5}
             n = case.get("params", {}).get("modal_modes")
             if n:
                 out["modes"] = orun.riser_modal_periods(model, n_modes=int(n))
             return out
         out = dict(orun.open_water_governing_responses(model, spec))
+        out["w5"] = w5
         period = ofx.Period(1)
         up, riser = model["Upper"], model["Riser"]
         out["series"] = {
