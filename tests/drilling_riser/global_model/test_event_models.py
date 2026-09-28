@@ -122,3 +122,12 @@ def test_recoil_lifts_the_lmrp_off_the_bop(tmp_path):
     rc = out["w5"]["recoil"]
     assert rc["lmrp_lift_max_m"] > 0.0  # a failed valve leaves net upward force: the LMRP lifts off
     assert "clearance_min_after_release_m" in rc
+
+
+def test_recoil_hold_factor_scales_the_hold_tension(tmp_path):
+    """A hold below the released weight (0.98 x, as the C2 EDP W2B2) lets the string settle; the model has no orifice
+    damping, so at exactly the released weight it would coast upward."""
+    from digitalmodel.drilling_riser import campaign as cp
+
+    s = cp.case_spec(_case(tmp_path, recoil={"hold_factor": 0.98}, dynamics=DYN))
+    assert s.recoil.stages[-1]["tension_n"] == pytest.approx(0.98 * ev.recoil_hold_tension_n(s))
