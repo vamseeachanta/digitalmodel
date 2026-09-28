@@ -35,7 +35,7 @@ from typing import Any
 TIME_HISTORY_KEY = ("PrimaryTimeHistoryDataTime, PrimaryTimeHistoryDataX, PrimaryTimeHistoryDataY, "
                     "PrimaryTimeHistoryDataZ, PrimaryTimeHistoryDataR1, PrimaryTimeHistoryDataR2, "
                     "PrimaryTimeHistoryDataR3")
-LMRP_LINE = "Lmrp"  # recoil model: the LMRP as its own line, latched to the BOP top until the EDS release
+LMRP_LINE = "LMRPLine"  # recoil model: the LMRP as its own line (OrcaFlex names are case-insensitive and shared with the line types)
 RHO_AIR = 1.225
 RHO_W = 1025.0
 G = 9.80665
