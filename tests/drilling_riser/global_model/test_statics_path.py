@@ -483,3 +483,31 @@ def test_heading_walk_moves_to_the_next_start_heading_when_a_walk_step_fails(bas
     probes = [e["dir"] for e in m.log if e["cap"] == cp.PROBE_ITERATIONS]
     assert probes[:2] == [90.0, 0.0]  # 90 deg first; after its walk failed, 0 deg
     assert m.log[-1]["dir"] == pytest.approx(45.0) and abs(m.yaw) < 1.0
+
+
+@pytest.mark.solver
+@pytest.mark.skipif(not orcaflex_api.available(), reason="OrcFxAPI not available")
+@pytest.mark.parametrize("path", ["heading_walk", "mud_walk", "tension_walk"])
+def test_continuation_paths_reach_the_directly_solved_state(base_spec, tmp_path, path):
+    """The static state does not depend on the path: each W408 continuation path ends on the state a direct solve
+    reaches on the synthetic riser (offset and current at 45 deg)."""
+    from digitalmodel.drilling_riser.global_model import orcaflex_run as orun
+
+    ad = cp.RiserCampaignAdapter()
+    params = {"heading_deg": 45.0, "offset_pct_wd": -3.0, "current": CURRENT}
+    ref_case = _case(base_spec, statics_paths=["direct_at_target"], **params)
+    m0 = orun.load_model(ad.build(ref_case, tmp_path / "ref"))
+    ad.prepare(m0, ref_case)
+    ad.statics(m0, ref_case)
+    te0 = orun.end_effective_tensions(m0)
+    case = _case(base_spec, statics_paths=[path], **params)
+    case["case_id"] = "C-2"
+    m1 = orun.load_model(ad.build(case, tmp_path / path))
+    ad.prepare(m1, case)
+    info = ad.statics(m1, case)
+    assert info["strategy"] == path
+    te1 = orun.end_effective_tensions(m1)
+    for k in ("riser_top_n", "riser_bottom_n", "stack_bottom_n"):
+        assert te1[k] == pytest.approx(te0[k], rel=1e-5, abs=10.0)
+    assert m1.environment.RefCurrentDirection == pytest.approx(45.0)
+    assert m1["Riser"].ContentsDensity == pytest.approx(m0["Riser"].ContentsDensity)
