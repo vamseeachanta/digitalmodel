@@ -37,7 +37,8 @@ ROW_DSR = {"id": "CR-10", "check_key": "dyn_stress_range", "limit": {"value_if_s
 
 CTX = {"t_min_kips": 813.5, "top_tension_kips": 1149.9, "tj_datum_m": 9.855, "connector_level": "operational",
        "connectors": {"stack:A|B": "lmrp"}, "interface_offset_kn": {"stack:A|B": 100.0}, "rho_water_kg_m3": 1025.0,
-       "wellhead_point": "stack:datum", "conductor_capacity": ["conductor_lower", "My"]}
+       "wellhead_point": "stack:datum",
+       "conductor_sections": [{"name": "lower", "arc_from_m": 0.0, "arc_to_m": 10.0, "capacity_ft_kips": 4558.6}]}
 
 
 def _row(te=1000.0, m=500.0, po=9500.0, t=None, **kw):
@@ -189,8 +190,25 @@ def test_connector_tension_outside_the_chart_is_not_evaluated():
 def test_conductor_bending_takes_the_larger_of_wellhead_and_conductor():
     r = evaluate_case({None: static_doc(cond_m=4558.6 * FT_KIP_KNM * 0.6, wh_m=5250.0 * FT_KIP_KNM * 0.3)},
                       ROW_COND, CTX)
-    assert r.u == pytest.approx(0.6) and r.location == "Conductor arc 0.0 m"
+    assert r.u == pytest.approx(0.6) and r.location == "Conductor arc 0.0 m (lower)"
     assert r.detail["by_location"]["stack:datum"] == pytest.approx(0.3)
+
+
+def test_conductor_capacity_follows_the_section_at_each_arc_length():
+    # range graph: arc 0 m (section 'lower', 4,558.6) moment m0; arc 5 m (section 'upper', 9,000) moment 2 m0
+    m0 = 4558.6 * FT_KIP_KNM * 0.5
+    r = evaluate_case({None: static_doc(cond_m=m0)}, ROW_COND,
+                      {**CTX, "conductor_sections": [{"name": "lower", "arc_from_m": 0.0, "arc_to_m": 2.5,
+                                                      "capacity_ft_kips": 4558.6},
+                                                     {"name": "upper", "arc_from_m": 2.5, "arc_to_m": 5.0,
+                                                      "capacity_ft_kips": 9000.0}]})
+    assert r.u == pytest.approx(0.5) and r.location == "Conductor arc 0.0 m (lower)"
+    doc = static_doc(cond_m=m0)
+    doc["channels"]["w5"]["range_graphs"]["Conductor"]["m"] = [m0, 2.2 * m0]
+    r = evaluate_case({None: doc}, ROW_COND, {**CTX, "conductor_sections": [
+        {"name": "lower", "arc_from_m": 0.0, "arc_to_m": 2.5, "capacity_ft_kips": 4558.6},
+        {"name": "upper", "arc_from_m": 2.5, "arc_to_m": 5.0, "capacity_ft_kips": 9000.0}]})
+    assert r.u == pytest.approx(2.2 * 0.5 * 4558.6 / 9000.0) and r.location == "Conductor arc 5.0 m (upper)"
 
 
 def test_a_missing_channel_is_reported_as_such():
