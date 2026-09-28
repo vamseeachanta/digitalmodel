@@ -28,6 +28,9 @@ from digitalmodel.drilling_riser.postprocess.channels import (
     range_series,
     stroke_range,
 )
+from digitalmodel.drilling_riser.postprocess.pressure import REFERENCE as PRESSURE_REFERENCE
+from digitalmodel.drilling_riser.postprocess.pressure import burst_pressure_mpa, collapse_pressure_mpa
+from digitalmodel.drilling_riser.postprocess.stress_range import stress_range_limit_ksi
 
 G = 9.80665
 KIP_KN = 4.4482216152605  # 1 kip in kN
@@ -235,7 +238,67 @@ def conductor_bending(w, row, ctx) -> CheckValue:
 
 
 def dyn_stress_range(w, row, ctx) -> CheckValue:
-    raise MissingChannel("range_graphs.Riser.stress_range (dynamic stress range at the girth and coupling welds)")
+    """CR-10: outer-fibre axial stress range (double amplitude) along the riser against the allowable range of each
+    weld detail (10 ksi if SAF <= 1.5, else 15/SAF ksi); the detail with the largest utilisation governs."""
+    if not is_dynamic(w):
+        raise NotEvaluated("static case: no dynamic stress range")
+    line = ctx.get("stress_line", "Riser")
+    v, arc = range_extreme(w, line, "zz_range", "max")
+    mpa = v / 1000.0
+    saf = row["limit"].get("saf") or {}
+    limits = ({d: stress_range_limit_ksi(float(s)) * KSI_KPA / 1000.0 for d, s in saf.items()}
+              or {"nominal (SAF <= 1.5)": float(row["limit"]["value_if_saf_le_1_5"])})
+    by = {d: mpa / cap for d, cap in limits.items()}
+    gov = max(by, key=by.get)
+    return CheckValue(demand=mpa, capacity=limits[gov], unit="MPa", u=by[gov], location=f"{line} arc {arc:.1f} m ({gov})",
+                      detail={"by_detail": by, "saf": saf})
+
+
+def _pressure_rows(w, ctx):
+    for p in ctx.get("pressure_points", ["riser_top", "lfj"]):
+        for r in point_rows(w, p):
+            yield p, r
+
+
+def _pipe_capacity(ctx, kind: str) -> float:
+    p = ctx["pipe"]
+    if kind == "burst":
+        return burst_pressure_mpa(p["od_m"], p["t_min_m"], p["smys_mpa"], p["smts_mpa"])
+    return collapse_pressure_mpa(p["od_m"], p["t_min_m"], p["smys_mpa"], p.get("e_mpa", 207000.0),
+                                 p.get("poisson", 0.3))
+
+
+def _pressure_check(w, row, ctx, sign: float, kind: str) -> CheckValue:
+    cap = float(row["limit"]["factor"]) * _pipe_capacity(ctx, kind)
+    best = None
+    for p, r in _pressure_rows(w, ctx):
+        d = sign * (float(r["pi"]) - float(r["po"])) / 1000.0
+        if best is None or d > best[0]:
+            best = (d, p, r.get("t"))
+    d, p, t = best
+    return CheckValue(demand=d, capacity=cap, unit="MPa", u=max(d, 0.0) / cap, location=p, time_s=t,
+                      detail={"capacity_basis": f"{row['limit']['factor']} x p_{kind[0]} ({PRESSURE_REFERENCE})"})
+
+
+def burst(w, row, ctx) -> CheckValue:
+    """CR-23: internal overpressure p_i - p_e against F_D p_b along the riser pressure points."""
+    return _pressure_check(w, row, ctx, 1.0, "burst")
+
+
+def collapse(w, row, ctx) -> CheckValue:
+    """CR-25: net external pressure p_e - p_i against F_D p_c (a negative demand has no collapse load)."""
+    return _pressure_check(w, row, ctx, -1.0, "collapse")
+
+
+def moonpool_clearance(w, row, ctx) -> CheckValue:
+    """CR-21: largest upper flex-joint angle against the smallest limiting clearance angle (context
+    ``clearance_limit_deg``: obstruction -> angle, from :mod:`clearance`)."""
+    lims = {k: float(v) for k, v in ctx["clearance_limit_deg"].items()}
+    v, t = _fj_max_at(w, "ufj")
+    by = {k: v / lim for k, lim in lims.items()}
+    gov = max(by, key=by.get)
+    return CheckValue(demand=v, capacity=lims[gov], unit="deg", u=by[gov], location=f"ufj ({gov})", time_s=t,
+                      detail={"by_obstruction": by, "limit_deg": lims})
 
 
 CHECKS: dict[str, tuple[Callable[..., CheckValue], str]] = {
@@ -252,6 +315,9 @@ CHECKS: dict[str, tuple[Callable[..., CheckValue], str]] = {
     "connector_tmp": (connector_tmp, "max"),
     "conductor_bending": (conductor_bending, "max"),
     "dyn_stress_range": (dyn_stress_range, "max"),
+    "burst": (burst, "max"),
+    "collapse": (collapse, "max"),
+    "moonpool_clearance": (moonpool_clearance, "max"),
 }
 
 
