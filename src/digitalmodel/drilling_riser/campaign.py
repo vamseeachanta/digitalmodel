@@ -29,8 +29,10 @@ Open-water (C2) riser base specs (``kind: open_water``, :class:`OpenWaterRiserSp
 
 ``contents_pressure_pa`` bore gauge pressure at the contents reference level (flowing / shut-in / test states)
 ``edp_release``       ``{"anti_recoil_factor": f}`` - an EDP disconnect case: the EDP / LRP interface releases at
-                      the start of the main stage and the tensioner tension steps to ``f`` (default 1.02) x the
-                      released submerged weight. This is a modelled event, not a timing proxy.
+                      the start of the main stage and the tensioner tension steps to ``f`` x the released submerged
+                      weight: default ``EDP_ANTI_RECOIL_FACTOR`` 0.98 (owner decision W2B2: the string settles back
+                      under control); ``EDP_RELEASE_GATE_FACTOR`` 1.02 only in the release qualification gate.
+                      This is a modelled event, not a timing proxy.
 
 Their statics default to ``"direct"`` (no tension ring, so no yawed-ring branch) and are checked by the frame
 balance and the rotary vertical reaction.
@@ -51,6 +53,11 @@ from .global_model.open_water import OpenWaterRiserSpec
 from .global_model.spec import RiserGlobalModelSpec
 
 SEED_PCT = -2.0
+# C2 EDP disconnect (owner decision W2B2, 2026-09-28): the tension steps to 0.98 x the released submerged weight in the
+# design cases (a 1.02 x step lifts the released string past the stroke within about 10 s); 1.02 x only in the release
+# qualification gate (momentum / energy check)
+EDP_ANTI_RECOIL_FACTOR = 0.98
+EDP_RELEASE_GATE_FACTOR = 1.02
 STEP_PCT = 0.5
 RESIDUAL_REL = 1.0e-3
 RING_YAW_MAX_DEG = 1.0
@@ -103,7 +110,7 @@ def case_spec(case: dict) -> RiserGlobalModelSpec:
             raise ValueError("edp_release applies to open-water riser specs only")
         from .global_model.open_water import tension_references
 
-        f = float(p["edp_release"].get("anti_recoil_factor", 1.02))
+        f = float(p["edp_release"].get("anti_recoil_factor", EDP_ANTI_RECOIL_FACTOR))
         d["edp_release"] = {"anti_recoil_tension_n": f * tension_references(cls.model_validate(d))["released_weight_n"]}
     return cls.model_validate(d)
 
