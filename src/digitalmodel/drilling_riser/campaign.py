@@ -140,7 +140,7 @@ def case_spec(case: dict) -> RiserGlobalModelSpec:
 
         r = p["recoil"]
         t0 = spec.tensioners.total_vertical_tension_n
-        stages = ev.anti_recoil_stages(t0_n=t0, hold_n=ev.recoil_hold_tension_n(spec),
+        stages = ev.anti_recoil_stages(t0_n=t0, hold_n=float(r.get("hold_factor", 1.0)) * ev.recoil_hold_tension_n(spec),
                                        closure_s=float(r.get("closure_s", 2.5)), step_s=float(r.get("step_s", 0.5)),
                                        open_fraction=float(r.get("open_fraction", 0.0)))
         d["recoil"] = {"stages": stages, "basis": "anti-recoil valve closure (D-93 class value, ASSUMED) from the "
