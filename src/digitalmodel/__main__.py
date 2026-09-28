@@ -79,8 +79,8 @@ def main():
             sys.exit(entry_point.load()())
     # #1631: the engine contract had no failure exit path. engine() returns
     # cfg_base and its value was discarded here, so this command exited 0
-    # whatever the run concluded -- on any host, licensed or not. Deckhand is a
-    # thin subprocess.run wrapper, so this status is the whole success signal.
+    # whatever the run concluded -- on any host, licensed or not. A caller that runs
+    # this command as a subprocess sees only this status as its success signal.
     cfg = engine()
     verdict = run_contract.from_cfg(cfg)
     if verdict is None:

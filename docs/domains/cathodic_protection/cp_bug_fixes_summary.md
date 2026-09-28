@@ -1,7 +1,9 @@
 # Cathodic Protection Bug Fixes Summary
 
+Historical analysis note (2026-01); identifiers redacted under #2155 on 2026-09-26.
+
 **Date:** 2026-01-05
-**File:** `/mnt/github/workspace-hub/digitalmodel/src/digitalmodel/common/cathodic_protection.py`
+**File:** `src/digitalmodel/common/cathodic_protection.py` (repository path at the time; now `src/digitalmodel/infrastructure/common/cathodic_protection.py`)
 
 ## Bugs Fixed
 
@@ -269,7 +271,7 @@ inputs:
 ## Additional Notes
 
 ### Contractor CP Calculations
-**Search Result:** The requested directory `/mnt/github/workspace-hub/contractor/general/cp` was empty or doesn't exist. No additional CP calculation methods were found for incorporation.
+**Search Result:** The requested contractor directory (private archive, path withheld) was empty or doesn't exist. No additional CP calculation methods were found for incorporation.
 
 ### Two DNV RP-F103 Implementations
 The codebase has two separate DNV RP-F103 implementations:
@@ -483,7 +485,7 @@ Workaround: Use `--no-cov` flag for test execution.
 
 ## Files Modified
 
-- `/mnt/github/workspace-hub/digitalmodel/src/digitalmodel/common/cathodic_protection.py`
+- `src/digitalmodel/common/cathodic_protection.py` (repository path at the time; now `src/digitalmodel/infrastructure/common/cathodic_protection.py`)
   - Lines 502-504: Fixed configuration key (anodes → anode)
   - Line 343: Removed unused utilization_factor extraction
   - Line 369: Updated clarifying comment

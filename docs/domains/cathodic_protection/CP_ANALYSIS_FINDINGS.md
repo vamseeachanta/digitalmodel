@@ -1,5 +1,7 @@
 # Cathodic Protection Analysis - Findings & Recommendations
 
+Historical analysis note (2026-01); identifiers redacted under #2155 on 2026-09-26.
+
 > **Document Purpose:** Comprehensive analysis of implemented CP calculations, test coverage, and recommendations for future configurations
 > **Date:** 2026-01-06
 > **Version:** 1.0.0

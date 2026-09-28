@@ -2,7 +2,7 @@
 
 Each workflow row MAY carry an optional algorithm-version triple
 (``version`` / ``status`` / ``latest``); absence means v1 / stable / latest.
-These invariants guard the multi-version case so Deckhand can resolve a pinned
+These invariants guard the multi-version case so a caller can resolve a pinned
 ``<repo>:<id>@N`` or the latest-stable default unambiguously.
 """
 

@@ -69,7 +69,7 @@ def _fake(base_spec, *, yaw=0.0, tv_factor=1.0, balance_n=0.0):
     spec = cp.case_spec(_case(base_spec))
     t = spec.tensioners.total_vertical_tension_n * tv_factor
     w = tension_references(spec)["ring_weight_n"]
-    m = _Model(TensionRing=_Obj(**{"Rotation 3": yaw}),
+    m = _Model(TensionRing=_Obj(**{"Rotation 3": yaw, "Wetted volume": 0.0}),
                # balance = tensioner vertical - ring weight + riser end-A GZ force - inner-barrel end-B GZ force
                Riser=_Obj(**{"End GZ force": (w - t + balance_n) / 1000.0}),
                InnerBarrel=_Obj(**{"End GZ force": 0.0}))
@@ -139,7 +139,8 @@ def test_statics_settings_change_the_path_not_the_static_state(base_spec, tmp_pa
         info = ad.statics(m, c)
         te.append(orun.end_effective_tensions(m)["riser_bottom_n"])
     assert info["statics_max_iterations"] == 1000 and info["statics_damping"] == [5.0, 50.0]
-    assert info["steps"] == 13  # -2 % -> +1 % WD in 0.25 % steps
+    # still water: aiding current -2 % -> +1 % WD in 0.25 % steps (13 solves), then the current removed (1 solve)
+    assert info["steps"] == 14 and info["strategy"] == "aid_current"
     assert te[1] == pytest.approx(te[0], rel=1e-5)
 
 
@@ -174,3 +175,15 @@ def test_runner_with_campaign_adapter_statics_modal_regular_and_proxies(base_spe
     # disconnect proxy: the released riser rises
     assert ch["RC"]["series"]["ring_z_m"]["max"] > ch["RC"]["series"]["ring_z_m"]["min"]
     assert all(math.isfinite(r["timings_s"]["total"]) for r in by.values())
+
+
+def test_stack_segment_refinement_caps_every_stack_segment(base_spec):
+    """W405 (owner, 2026-09-28): the stack connectors sit on nodes, where the effective tension jumps by half of each
+    adjacent segment's weight; from batch 2 the stack segments are at most 0.1 m. Only the stack is refined."""
+    base = cp.case_spec(_case(base_spec))
+    ref = cp.case_spec(_case(base_spec, stack_segment_m=0.1))
+    assert all(s.segment_length_m == pytest.approx(min(0.1, b.segment_length_m)) for s, b in zip(ref.stack, base.stack))
+    assert [s.segment_length_m for s in ref.riser] == [s.segment_length_m for s in base.riser]
+    assert [s.segment_length_m for s in ref.inner_barrel] == [s.segment_length_m for s in base.inner_barrel]
+    with pytest.raises(ValueError, match="stack_segment_m"):
+        cp.case_spec(_case(base_spec, stack_segment_m=0.0))

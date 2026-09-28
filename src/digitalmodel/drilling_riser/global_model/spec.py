@@ -134,10 +134,19 @@ class Tensioners(BaseModel):
     ring_attach_radius_m: float = Field(..., ge=0)
     total_vertical_tension_n: float = Field(..., gt=0)
     first_azimuth_deg: float = 0.0
+    failed_count: int = Field(0, ge=0, description="failed tensioners (API RP 16Q n): the first ``failed_count`` lines "
+                                                   "from ``first_azimuth_deg`` are removed; the others keep the intact "
+                                                   "line tension, so the vertical force is (count - n) / count of the total")
     wire_stiffness_n: float = Field(1.0e9, gt=0, description="winch wire EA (OrcaFlex 'Stiffness')")
     rated_tension_each_n: float | None = Field(
         None, gt=0, validation_alias=AliasChoices("rated_tension_each_n", "rated_tension_n_each"), description="rated (dynamic tension limit) capacity per tensioner; recorded for capacity "
                                 "checks and checked against the applied line tension")
+
+    @model_validator(mode="after")
+    def _failed(self) -> "Tensioners":
+        if self.failed_count >= self.count:
+            raise ValueError(f"failed_count {self.failed_count} must leave at least one of {self.count} tensioners")
+        return self
 
 
 class Contents(BaseModel):
