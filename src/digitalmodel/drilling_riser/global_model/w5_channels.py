@@ -423,4 +423,4 @@ def hang_off_summary(model, spec, analysis: str, ofx) -> dict[str, float]:
     z = [float(x) for x in model["SlipJoint"].TimeHistory("z", period)]
     return {"ufj_angle_max_deg": max(a), "riser_bottom_angle_max_deg": max(b), "riser_von_mises_max_pa": vm * 1000.0,
             "top_load_max_n": max(tot) * 1000.0, "top_load_min_n": min(tot) * 1000.0,
-            "stroke_max_m": max(z), "stroke_min_m": min(z)}
+            "stroke_max_m": max(z), "stroke_min_m": min(z), "stroke_static_m": float(model["SlipJoint"].StaticResult("z"))}
