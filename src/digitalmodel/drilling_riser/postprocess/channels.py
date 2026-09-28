@@ -78,9 +78,9 @@ def extreme_row(w: dict[str, Any], point: str, driver: str, kind: str) -> dict[s
     return None
 
 
-def range_extreme(w: dict[str, Any], line: str, var: str, kind: str) -> tuple[float, float | None]:
-    """(value, arc length) of the largest (``kind`` = max) or smallest range-graph value along ``line``.
-    Dynamics read ``<var>_max`` / ``<var>_min``; statics read ``<var>``."""
+def range_series(w: dict[str, Any], line: str, var: str, kind: str) -> list[tuple[float | None, float]]:
+    """(arc length, value) pairs of a range graph along ``line``: dynamics read ``<var>_max`` / ``<var>_min``
+    (envelope over the main stage), statics read ``<var>``."""
     try:
         rg = w["range_graphs"][line]
     except KeyError:
@@ -88,11 +88,15 @@ def range_extreme(w: dict[str, Any], line: str, var: str, kind: str) -> tuple[fl
     key = f"{var}_{kind}" if is_dynamic(w) else var
     if key not in rg:
         raise MissingChannel(f"range_graphs.{line}.{key}")
-    vals = rg[key]
     axis = rg.get((rg.get("axis_of") or {}).get(key, "arc1_m")) or rg.get("arc1_m") or []
-    i = max(range(len(vals)), key=lambda j: vals[j]) if kind == "max" else min(range(len(vals)),
-                                                                               key=lambda j: vals[j])
-    return float(vals[i]), (float(axis[i]) if i < len(axis) else None)
+    return [(float(axis[i]) if i < len(axis) else None, float(v)) for i, v in enumerate(rg[key])]
+
+
+def range_extreme(w: dict[str, Any], line: str, var: str, kind: str) -> tuple[float, float | None]:
+    """(value, arc length) of the largest (``kind`` = max) or smallest range-graph value along ``line``."""
+    s = range_series(w, line, var, kind)
+    arc, v = max(s, key=lambda p: p[1]) if kind == "max" else min(s, key=lambda p: p[1])
+    return v, arc
 
 
 def stroke_range(w: dict[str, Any]) -> tuple[float, float, float]:

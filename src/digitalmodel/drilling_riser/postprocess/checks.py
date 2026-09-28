@@ -25,6 +25,7 @@ from digitalmodel.drilling_riser.postprocess.channels import (
     point_rows,
     point_value,
     range_extreme,
+    range_series,
     stroke_range,
 )
 
@@ -216,12 +217,18 @@ def conductor_bending(w, row, ctx) -> CheckValue:
     wr = extreme_row(w, wh_point, "m", "max")
     wh = CheckValue(demand=wh_m / FT_KIP_KNM, capacity=wh_cap, unit="ft-kips", u=wh_m / FT_KIP_KNM / wh_cap,
                     location=wh_point, time_s=(wr or {}).get("t"))
-    cap = lim["conductor_casing_kip_ft"]
-    for k in ctx["conductor_capacity"]:
-        cap = cap[k]
-    cm, arc = range_extreme(w, "Conductor", "m", "max")
-    cd = CheckValue(demand=cm / FT_KIP_KNM, capacity=float(cap), unit="ft-kips", u=cm / FT_KIP_KNM / float(cap),
-                    location=f"Conductor arc {arc:.1f} m")
+    # conductor: every range-graph point against the capacity of the section at its arc length
+    cd = None
+    for arc, m in range_series(w, "Conductor", "m", "max"):
+        sec = next((s for s in ctx["conductor_sections"]
+                    if arc is not None and s["arc_from_m"] - 1e-6 <= arc <= s["arc_to_m"] + 1e-6), None)
+        if sec is None:
+            raise NotEvaluated(f"conductor arc {arc} m is outside the section map")
+        cap = float(sec["capacity_ft_kips"])
+        u = abs(m) / FT_KIP_KNM / cap
+        if cd is None or u > cd.u:
+            cd = CheckValue(demand=abs(m) / FT_KIP_KNM, capacity=cap, unit="ft-kips", u=u,
+                            location=f"Conductor arc {arc:.1f} m ({sec['name']})")
     best = cd if cd.u >= wh.u else wh
     best.detail["by_location"] = {wh_point: wh.u, "Conductor": cd.u}
     return best
