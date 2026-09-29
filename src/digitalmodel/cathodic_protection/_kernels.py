@@ -152,7 +152,26 @@ def anode_mass(
     _require_positive("life_years", life_years)
     _require_positive("capacity_Ah_kg", capacity_Ah_kg)
     _require_fraction("utilisation", utilisation)
-    return (I_mean_A * life_years * HOURS_PER_YEAR) / (capacity_Ah_kg * utilisation)
+    return anode_mass_from_current_years(
+        I_mean_A * life_years, capacity_Ah_kg, utilisation
+    )
+
+
+def anode_mass_from_current_years(
+    current_years_A_year: float,
+    capacity_Ah_kg: float,
+    utilisation: float,
+) -> float:
+    """Net mass from integrated mean-current exposure (B401 Sec. 7.7, Eq. 2).
+
+    ``M_a = sum(I_cm * t_f) * 8760 / (u * epsilon)`` permits one physical
+    anode family to protect components with different design lives without
+    replacing those lives by an undocumented maximum or average.
+    """
+    _require_non_negative("current_years_A_year", current_years_A_year)
+    _require_positive("capacity_Ah_kg", capacity_Ah_kg)
+    _require_fraction("utilisation", utilisation)
+    return current_years_A_year * HOURS_PER_YEAR / (capacity_Ah_kg * utilisation)
 
 
 def mass_consumed(I_mean_A: float, elapsed_years: float, capacity_Ah_kg: float) -> float:
@@ -408,6 +427,7 @@ __all__ = [
     "anode_count",
     "anode_current_output",
     "anode_mass",
+    "anode_mass_from_current_years",
     "anodes_for_current",
     "coating_breakdown_final",
     "coating_breakdown_linear",

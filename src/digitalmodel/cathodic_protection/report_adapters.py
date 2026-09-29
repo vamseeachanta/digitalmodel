@@ -366,6 +366,12 @@ def _references_section(results: Mapping[str, Any], usage: Sequence[tuple[str, S
 
 
 def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> list[Section]:
+    if results.get("mode") == "b401_components":
+        from digitalmodel.cathodic_protection.b401_component_report import (
+            build_b401_component_sections,
+        )
+
+        return build_b401_component_sections(inputs, results)
     if results.get("anode_families"):
         from digitalmodel.cathodic_protection.b401_family_report import (
             build_b401_family_sections,

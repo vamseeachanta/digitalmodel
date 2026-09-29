@@ -22,7 +22,7 @@ uncited and not for client use without an independent check.
 
 | Route / model | Status | Basis |
 |---------------|--------|-------|
-| `DNV_RP_B401_offshore` (engine adapter) | Client use with EOR check | Cited, edition-keyed B401 tables; seawater, buried and concrete-reinforcement zones; independent seawater/sediment anode families; Sec. 7 initial / mean / final checks per family |
+| `DNV_RP_B401_offshore` (engine adapter) | Client use with EOR check | Cited, edition-keyed B401 tables; seawater, buried and concrete-reinforcement zones; independent seawater/sediment anode families; optional multi-component riser extension; Sec. 7 initial / mean / final checks per component allocation and family |
 | `DNV_RP_F103` (engine adapter; runs `design_data.edition`, default 2019) | Client use with EOR check | Cited, edition-keyed F103 tables (`f103_tables.py`); Eq. 14 protected-length check |
 | `DNV_RP_F103_2010` (engine adapter; deprecated alias of `DNV_RP_F103` pinned to edition 2010, `DeprecationWarning`; a different `design_data.edition` raises) | Client use with EOR check | As `DNV_RP_F103`, edition 2010; reproduces results from before the 2019 default |
 | `ABS_gn_ships_2018` (engine adapter) | Experimental, known understatement; not for design use | Raises `ExperimentalModelError` unless `inputs.design_data.experimental: true` (Boolean); opt-in preserves the legacy calculation. Benchmark 2026-09-27: mean demand about a third low, final about half low ([#2259](https://github.com/vamseeachanta/digitalmodel/issues/2259), [#1852](https://github.com/vamseeachanta/digitalmodel/issues/1852)) |
@@ -56,6 +56,11 @@ record remaining gaps per value. These observations do not qualify experimental 
 | `b401_anode_families.py` | Independent B401 anode-family mass, resistance and initial/final output checks using each family's environment and electrolyte |
 | `b401_family_route.py` | Engine mapping for named zone-to-family assignments, validation and overall governing margin |
 | `b401_family_report.py` | Report tables for explicit zone area basis and per-family electrochemistry/checks |
+| `b401_component_route.py` | Multi-component riser demand, electrical-continuity resolution, component allocations and governing checks |
+| `b401_component_allocations.py` | Reciprocal allocation validation and component-level mass/current-output adequacy checks |
+| `b401_component_connectivity.py` | Component-local environment validation and life-filtered electrical-continuity paths |
+| `b401_component_report.py` | Component demand, hosted-family, allocation, continuity, reconciliation and citation report tables |
+| `b401_component_zones.py` | Component-zone demand and fail-closed edition-specific F103 coating applicability |
 | `api_rp_1632.py` | API RP 1632 galvanic CP of underground tanks and piping |
 | `coating.py` | Coating breakdown factors (initial, mean, final) and coating-life estimates per DNV-RP-B401 |
 | `corrosion_rate.py` | CO2 / H2S / galvanic corrosion-rate models (de Waard-Milliams, Norsok M-506) |
@@ -99,6 +104,26 @@ demand holds the single Table x-3 mean density constant across the three sizing 
 the table does not provide separate initial/final values. Named anode families select the
 Table x-6 capacity and closed-circuit potential by seawater/sediment environment and, for
 2021, by anode surface temperature.
+
+### Multi-component riser extension
+
+`DNV_RP_B401_offshore` selects component mode when `inputs.components[]` is present.
+Each component supplies its own `zones[]`, `environment` and `design_life_years`.
+`inputs.anode_families[]` names the physical host through
+`installed_on_component`; `inputs.allocations[]` assigns every protected component a
+positive capacity fraction, normalized to one per family; and
+`inputs.electrical_continuity[]` states each available connection and duration. Flat
+`structure`, top-level `environment` and component inputs are mutually exclusive.
+
+Coated riser joints may set a zone `coating.basis` to `f103_linepipe` or
+`f103_field_joint`, with an explicit F103 `edition`; the result and report retain the
+edition-specific table citation. Linepipe use is restricted to riser-pipe-joint
+components and validates the requested concrete flag against the actual cited row.
+Field-joint rows remain `NOT_EVALUATED` because the tabulated prose compatibility is not
+yet a qualified linepipe-pair model. Component mode returns `results.mode =
+"b401_components"`, per-component demand and allocation checks, physical family totals,
+overall reconciliation, and the governing component/family/case. The standard
+`cathodic_protection.anode_design` report renders those records.
 
 ## Worked examples (`examples/`)
 
@@ -157,6 +182,7 @@ are skipped.
 | Location | Covers |
 |----------|--------|
 | `tests/cathodic_protection/` | Package modules (one `test_<module>.py` each), B401 edition foundation and divergence baseline, `test_worked_examples.py` (this directory's examples) |
+| `tests/fixtures/cathodic_protection/workflow_inputs/multi_component_riser.yml` | De-identified, rounded hybrid/free-standing riser component contract with stand-off, flush and bracelet families |
 | `tests/specialized/cathodic_protection/` | Legacy router: ABS ships and ABS offshore 2018 calculations; `conftest.py` fixtures |
 | `tests/marine_ops/marine_engineering/test_cathodic_protection_dnv.py` | Legacy router: DNV-RP-F103:2010 (calibrated by `f1a1b05f`, #573) |
 | `tests/benchmarks/test_cp_benchmarks.py` | CP benchmarks |
