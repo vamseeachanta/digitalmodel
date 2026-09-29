@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- cathodic_protection: the `DNV_RP_B401_offshore` route now supports concrete-embedded reinforcement zones and named seawater/sediment anode families, with cited per-family electrochemistry, mass/count/current-output checks, and family plus overall governing cases (#2262).
 - cathodic_protection: record evidence class/source without lifting experimental gates; include 200 ohm-m in the EN middle band, require measured graphite mass for life, and expose evidence in provisional report text ([#2264](https://github.com/vamseeachanta/digitalmodel/issues/2264)).
 
 - cathodic_protection: `ABS_gn_ships_2018` now raises `ExperimentalModelError` unless `inputs.design_data.experimental: true` (Boolean). Opt-in preserves the calculation and sets `status.use_status` to `experimental-known-understatement`; reports warn that mean demand is about a third low and final demand about half low per the 2026-09-27 benchmark ([#2259](https://github.com/vamseeachanta/digitalmodel/issues/2259), [#1852](https://github.com/vamseeachanta/digitalmodel/issues/1852)). `ABS_gn_offshore_2018` is unchanged.

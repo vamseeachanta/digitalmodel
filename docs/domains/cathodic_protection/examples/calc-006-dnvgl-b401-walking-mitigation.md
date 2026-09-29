@@ -1,304 +1,151 @@
 ---
 standard: DNV-RP-B401:2021
 edition: "2021"
-structure_type: pipe_clamp_mattress_walking_mitigation
-source_type: abstracted_client_calculation
+structure_type: walking_mitigation_mattress_pipe_clamp
+source_type: deidentified_engineering_example
 discipline: cathodic_protection
 ---
 
-# Pipe Clamp Mattress (PCM) Walking Mitigation — DNV-RP-B401:2021 CP Design
+# Walking-Mitigation Mattress and Pipe Clamp — Mixed-Zone B401 Design
 
-## Source
-Standard: DNV-RP-B401 (2021)
-Structure type: Pipe Clamp Mattress (PCM) — walking mitigation anchor system
-Designer: Vendor subcontractor (specialist CP design house)
-Project scope: 77 PCM units on deepwater subsea flowlines
-Design life: 27 years
-Water depth (max): 1910 m
+This synthetic example shows how one walking-mitigation assembly is composed from
+three electrically continuous steel zones and two anode families. Dimensions and
+areas are rounded teaching values. They are not a project design or a regression
+oracle.
 
-## Scope
+The zones are a seawater-exposed pipe clamp and lifting frame, reinforcing steel
+embedded in the concrete mattress, and a buried steel frame below the mudline. The
+concrete zone area is the exposed surface area of the steel reinforcement, not the
+gross concrete mattress area. DNV-RP-B401 Table 8-3 gives current density on that
+reinforcement-steel basis.
 
-77 PCM units; each PCM consists of:
-- Fibre-reinforced concrete mattress body
-- Galvanised hinge wire ropes (connecting mattress halves)
-- Galvanised lift wire ropes (installation and retrieval)
-- N16 carbon steel rebar (concrete embedded)
-- Carbon steel structural inserts (pipe clamp hardware)
+## Design basis
 
-Note: The PCM galvanised wire ropes and rebar are the primary CP-eligible steel surfaces.
-Concrete provides partial shielding; only the exposed portions of embedded steel receive CP.
+| Item | Value | Unit | Source |
+|---|---:|---|---|
+| Edition | 2021 | - | DNV-RP-B401 |
+| Design life | 25 | yr | Example assumption |
+| Surface temperature | 5 | °C | Arctic Table 8-1/8-2/8-3 column |
+| Representative depth | 1000 | m | >300 m / >100 m rows |
+| Seawater electrolyte resistivity | 0.30 | ohm.m | Example input |
+| Sediment electrolyte resistivity | 1.00 | ohm.m | Example input |
 
-## Environment
+Table 1. Rounded design inputs and their basis.
 
-| Parameter | Value | Unit |
-|-----------|-------|------|
-| Maximum water depth | 1910 | m |
-| Design life | 27 | years |
-| Seawater resistivity | 0.31 | Ω·m |
-| Sediment resistivity | 1.00 | Ω·m |
-| Min protection potential (seawater) | −0.80 | V vs SSC |
-| Min protection potential (sediment) | −0.90 | V vs SSC |
+Both families use aluminium long flush-mounted anodes and the Table 8-8
+utilisation factor of 0.85. The seawater family uses Table 8-6 values of
+2000 Ah/kg and -1.05 V. The sediment family uses 1500 Ah/kg and -1.00 V at no
+more than 30 °C. Fresh and final flush dimensions are explicit so both Table 8-7
+resistance checks use physical rectangular geometry.
 
-## Design Criteria (Table 2)
+## Hand calculation
 
-| Parameter | Symbol | Value | Unit |
-|-----------|--------|-------|------|
-| Design life | tf | 27 | years |
-| Protective potential (seawater) | Ec° | −0.80 | V vs SSC |
-| Seawater resistivity | ρsea | 0.31 | Ω·m |
-| Sediment resistivity | ρmud | 1.00 | Ω·m |
-| Current density — initial | ii | 0.220 | A/m² |
-| Current density — mean | im | 0.110 | A/m² |
-| Current density — final | if | 0.170 | A/m² |
-| Current density — concrete embedded | i_concrete | 0.001 | A/m² |
-| Current density — mud buried | i_mud | 0.020 | A/m² |
+At 5 °C and 1000 m depth:
 
-## PCM Structural Description and Surface Areas (Table 3)
+- seawater-exposed steel: `2.0 × (0.220, 0.110, 0.170)` =
+  `(0.440, 0.220, 0.340)` A for initial, mean and final;
+- buried steel: `8.0 × 0.020` = `0.160` A for every phase; and
+- concrete reinforcement: `12.0 × 0.0006` = `0.0072` A for every phase,
+  using Table 8-3 on reinforcement-steel area.
 
-### Wire Rope Specifications
+The sediment-family demand is `0.1672` A for every phase. B401 Eq. 2 gives:
 
-| Component | Designation | Diameter (mm) | Construction | Function |
-|-----------|-------------|---------------|--------------|----------|
-| Hinge wire ropes | — | 26 | 6×36 IWRC EIPS galvanised | Connect mattress halves |
-| Lift wire ropes | — | 18 | 7×19 IWRC EIPS galvanised | Installation / retrieval |
-
-Wire rope CP area calculation:
-- 6×36 IWRC: 60% of outer wires exposed; 10 outer wires per strand
-- 7×19 IWRC: 60% of outer wires exposed; 8 outer wires per strand
-- N16 rebar (concrete embedded): full circumference exposed within concrete void fraction
-
-### Surface Areas per PCM (Table 3)
-
-| Surface | Bare Area | Area Factor | Design Area (m²) |
-|---------|-----------|-------------|-----------------|
-| Immersed wire ropes (seawater) | — | +15% contingency | 2.00 |
-| Concrete embedded (wire ropes + rebar + concrete) | — | +15% contingency | 12.30 |
-
-Note: The 15% contingency is applied to all surfaces per DNV-RP-B401 clause 7.3 recommended practice.
-
-## Current Demand per PCM (Table 5)
-
-| Phase | Current (A) |
-|-------|-------------|
-| Initial | 0.452 |
-| Mean | 0.232 |
-| Final | 0.352 |
-
-Current breakdown by zone:
-- Seawater-exposed zone (2.00 m²): ii×2.00 = 0.440 A initial; im×2.00 = 0.220 A mean; if×2.00 = 0.340 A final
-- Concrete embedded zone (12.30 m²): i_concrete×12.30 = 0.012 A (constant)
-
-Governing phase for current: initial (0.452 A)
-Governing phase for mass: mean (0.232 A)
-
-**Reproduction note (this branch, `DNV_RP_B401_offshore` route, edition "2021", cfg below):**
-the route represents the 2.00 m² of immersed wire rope as bare steel at >300 m in the arctic
-band (3.9 °C); the concrete-embedded zone (12.30 m² at 0.001 A/m²) has no equivalent in the
-route and is omitted. The values come from DNV-RP-B401 Tables 10-1 / 10-2 as of #2207:
-0.220 / 0.110 / 0.170 A/m² with f = 1, so the code returns per-PCM initial / mean / final
-currents of 0.440 / 0.220 / 0.340 A — identical to the seawater-zone breakdown above; the
-source totals 0.452 / 0.232 / 0.352 A add the omitted 0.012 A concrete-embedded term. The
-code returns a net anode mass of 30.61 kg at 2000 Ah/kg (source 43.1 kg at the buried capacity
-of 1500 Ah/kg) and 2 anodes per PCM with `governing_case` "mass" (`recommended_anode_count`
-2; source 3 minimum, 4 recommended). The anode resistance from the route is 0.1476 Ω (Dwight
-formula) against the source's 0.240 Ω (ρ / 2S). Provenance flag for the 2021 edition:
-`inherited-2011-unverified`. The tabulated source values are left as extracted.
-
-## Anode Parameters (Table 6)
-
-| Parameter | Value | Unit |
-|-----------|-------|------|
-| Type | Long flush-mounted | — |
-| Alloy | Aluminium (Al alloy) | — |
-| Length | 1200 | mm |
-| Base width | 88 | mm |
-| Top width | 78 | mm |
-| Height | 65 | mm |
-| Net mass (per anode) | 16.9 | kg |
-| Electrochemical capacity — seawater | 2000 | A·h/kg |
-| Electrochemical capacity — buried | 1500 | A·h/kg |
-| Closed-circuit potential — seawater | −1.05 | V vs SSC |
-| Closed-circuit potential — buried | −1.00 | V vs SSC |
-| Utilisation factor (long flush-mounted) | u = 0.85 | — |
-
-## Anode Mass and Number Calculation per PCM
-
-### Mass Requirement
-
-Using mean current demand and buried capacity (conservative — all PCMs may be partially buried):
-
-```
-W = (Im × tf × 8760) / (ε × u)
-W = (0.232 × 27 × 8760) / (1500 × 0.85)
-W = 54,800.64 / 1275
-W = 43.0 kg  (≈ 43.1 kg per PCM)
+```text
+seawater: 0.220 × 25 × 8760 / (2000 × 0.85) = 28.341 kg -> 2 × 17 kg
+sediment: 0.1672 × 25 × 8760 / (1500 × 0.85) = 28.719 kg -> 2 × 17 kg
 ```
 
-### Number of Anodes by Mass
+For a long flush-mounted anode, Table 8-7 gives `R = rho / (2S)` with
+`S = (length + width) / 2`. Each family is checked independently with its own
+resistivity and driving voltage. Overall status is the conjunction of the family
+checks; overall governing family/case is the largest raw adequacy ratio.
 
-```
-Nw = W / Wa = 43.1 / 16.9 = 2.55  →  round up to 3 anodes minimum
-```
-
-### Number of Anodes by Current
-
-Using long flush-mounted resistance formula:
-Ra = ρ / (2 × S)   where S = arithmetic mean of anode length and width
-
-At final condition (ρsea = 0.31 Ω·m), anode consumed to utilisation:
-S = (1.200 + 0.088) / 2 = 0.644 m
-Ra_final ≈ 0.31 / (2 × 0.644) = 0.240 Ω
-
-Individual anode current at final:
-Ia = (Ec° − Ea°) / Ra = (−0.800 − (−1.05)) / 0.240 = 0.250 / 0.240 = 1.04 A
-
-Number by current:
-Na = If / Ia = 0.352 / 1.04 = 0.34  →  round up to 1 minimum
-
-Governing: mass requirement — minimum 3 anodes per PCM
-
-### Recommended Design
-
-**4 anodes per PCM** (2 per side — symmetrical placement)
-
-Rationale:
-- Mass requirement drives: 3 minimum for life
-- 4 anodes selected for symmetrical geometry (2 per side of concrete mattress)
-- Provides 30% mass margin above minimum (4 × 16.9 = 67.6 kg vs 43.1 kg required)
-
-## Fleet Summary
-
-| Parameter | Value |
-|-----------|-------|
-| Total PCM units | 77 |
-| Anodes per PCM | 4 |
-| Total anodes (fleet) | 308 |
-| Total anode mass (fleet) | 308 × 16.9 = 5,205.2 kg |
-
-## CP Protection Philosophy
-
-- PCM anodes protect the galvanised wire ropes and embedded rebar only
-- Galvanised coating provides primary corrosion barrier; CP acts as backup (secondary protection)
-- No electrical continuity requirement between PCM and parent flowline (PCM is not bonded to pipeline CP)
-- Anode placement: 2 anodes per side, flush-mounted on concrete body faces
-- Concrete matrix provides incidental shielding; embedded steel current density reduced to 0.001 A/m²
-
-## Gaps Found
-
-- S4 is a vendor subcontractor document; the parent project CP documents (S1–S3) do not cross-reference
-  PCM anode counts. The 77-unit fleet count and per-PCM design are taken at face value from the vendor calc.
-- The exact exposed wire rope area derivation (strand geometry calculations) is internal to the vendor's
-  spreadsheet; the resulting 2.00 m² and 12.30 m² design areas are taken from Table 3 of the source document.
-- The vendor uses buried electrochemical capacity (1500 A·h/kg) as conservative basis for all 77 PCMs
-  even though some PCMs may remain fully seawater-exposed throughout life. This is noted as a deliberate
-  conservatism in the vendor calculation.
-
-## Python cfg dict
+## Runnable engine-adapter input
 
 ```python
-from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import CathodicProtection
+from digitalmodel.cathodic_protection.engine_adapter import run_cathodic_protection
 
-# Router key mapping: DNV-RP-B401:2021 -> "DNV_RP_B401_offshore" with design_data.edition
-# = "2021". Requires #2207 or later.
 cfg = {
+    "basename": "cathodic_protection",
     "inputs": {
         "calculation_type": "DNV_RP_B401_offshore",
-        "standard": "DNV-RP-B401:2021",
         "design_data": {
-            "structure_type": "pipe_clamp_mattress",
-            "design_life": 27,           # years
             "edition": "2021",
-            "water_depth_max_m": 1910,
-            "unit_count": 77,            # total PCM units
+            "design_life": 25.0,
+            "structure_type": "walking_mitigation_mattress_pipe_clamp",
         },
-        "environment": {
-            "resistivity_seawater_ohm_m": 0.31,
-            "resistivity_sediment_ohm_m": 1.00,
-            "min_potential_seawater_V": -0.80,   # vs SSC
-            "min_potential_sediment_V": -0.90,
-            "seawater_temperature_C": 3.9,       # near seabed, from the field design basis (calc-007)
-            "seawater_resistivity_ohm_m": 0.31,  # router key
-        },
-        "current_density": {
-            "initial_A_m2": 0.220,
-            "mean_A_m2": 0.110,
-            "final_A_m2": 0.170,
-            "mud_A_m2": 0.020,
-            "concrete_embedded_A_m2": 0.001,
-        },
-        # Router zones (per PCM): the immersed galvanised wire ropes as bare steel. The
-        # concrete-embedded zone (12.30 m2 at 0.001 A/m2) has no equivalent in the current
-        # route and is omitted here (see Reproduction note).
+        "environment": {"seawater_temperature_C": 5.0},
         "structure": {
             "zones": [
-                {"zone": "immersed_wire_ropes", "base_zone": "submerged", "depth_m": 1910,
-                 "area_m2": 2.00, "coating_category": "bare"},
-            ],
+                {
+                    "zone": "pipe_clamp_steel",
+                    "base_zone": "submerged",
+                    "depth_m": 1000.0,
+                    "area_m2": 2.0,
+                    "coating_category": "bare",
+                    "anode_family": "seawater_anodes",
+                },
+                {
+                    "zone": "mattress_reinforcement",
+                    "base_zone": "concrete_embedded",
+                    "depth_m": 1000.0,
+                    "reinforcement_area_m2": 12.0,
+                    "anode_family": "sediment_anodes",
+                },
+                {
+                    "zone": "buried_frame",
+                    "base_zone": "buried",
+                    "area_m2": 8.0,
+                    "coating_category": "bare",
+                    "anode_family": "sediment_anodes",
+                },
+            ]
         },
-        "pcm_surface_areas": {
-            # Per PCM unit, including 15% contingency
-            "immersed_wire_ropes_m2": 2.00,      # seawater-exposed
-            "concrete_embedded_m2": 12.30,       # wire ropes + rebar + concrete
-        },
-        "wire_rope_specs": {
-            "hinge": {
-                "diameter_mm": 26,
-                "construction": "6x36_IWRC_EIPS_galvanised",
-                "outer_wire_exposure_fraction": 0.60,
-                "outer_wires_per_strand": 10,
+        "anode_families": [
+            {
+                "name": "seawater_anodes",
+                "environment": "seawater",
+                "material": "aluminium",
+                "type": "flush_mounted",
+                "individual_anode_mass_kg": 17.0,
+                "length_m": 1.20,
+                "width_m": 0.09,
+                "thickness_m": 0.07,
+                "final_length_m": 1.00,
+                "final_width_m": 0.06,
+                "final_thickness_m": 0.05,
+                "electrolyte_resistivity_ohm_m": 0.30,
             },
-            "lift": {
-                "diameter_mm": 18,
-                "construction": "7x19_IWRC_EIPS_galvanised",
-                "outer_wire_exposure_fraction": 0.60,
-                "outer_wires_per_strand": 8,
+            {
+                "name": "sediment_anodes",
+                "environment": "sediments",
+                "material": "aluminium",
+                "type": "flush_mounted",
+                "individual_anode_mass_kg": 17.0,
+                "length_m": 1.20,
+                "width_m": 0.09,
+                "thickness_m": 0.07,
+                "final_length_m": 1.00,
+                "final_width_m": 0.06,
+                "final_thickness_m": 0.05,
+                "electrolyte_resistivity_ohm_m": 1.00,
             },
-        },
-        "current_demand_per_pcm": {
-            "initial_A": 0.452,
-            "mean_A": 0.232,
-            "final_A": 0.352,
-        },
-        "anode": {
-            "type": "flush_mounted",       # router token for the long flush-mounted anode
-            "alloy": "Al_alloy",
-            "material": "aluminium",       # router material token
-            "dimensions_mm": {
-                "length": 1200,
-                "base_width": 88,
-                "top_width": 78,
-                "height": 65,
-            },
-            "length_m": 1.200,             # router key
-            "radius_m": 0.0487,            # router key; r = cross-section perimeter / 2 pi (88 x 65 mm)
-            "net_mass_kg": 16.9,
-            "individual_anode_mass_kg": 16.9,   # router key
-            "capacity_seawater_Ah_kg": 2000,
-            "capacity_buried_Ah_kg": 1500,
-            "ccp_seawater_V": -1.05,
-            "ccp_buried_V": -1.00,
-            "utilisation": 0.85,
-            "utilization_factor": 0.85,    # router key
-        },
-        "design_results": {
-            # Per PCM
-            "mass_required_kg": 43.1,
-            "n_by_mass": 3,              # minimum (round up from 2.55)
-            "n_by_current": 1,           # minimum (round up from 0.34)
-            "n_recommended": 4,          # 2 per side, symmetric
-            # Fleet
-            "total_pcm_units": 77,
-            "anodes_per_pcm": 4,
-            "total_anodes_fleet": 308,
-            "total_anode_mass_kg": 5205.2,
-        },
-    }
+        ],
+    },
 }
 
-result = CathodicProtection().router(cfg)["results"]
-print("Per-PCM mean / final current (A): {:.3f} / {:.3f}".format(
-    result["current_demand_A"]["total_mean_A"], result["current_demand_A"]["total_final_A"]))
-print("Per-PCM net anode mass (kg):", result["anode_requirements"]["total_mass_kg"])
-print("Anodes per PCM (mass basis):", result["anode_requirements"]["anode_count"])
-print("Anode resistance (ohm):", result["anode_resistance_ohm"])
+cfg = run_cathodic_protection(cfg)
+assert cfg["results"]["current_demand_A"]["mattress_reinforcement"]["area_basis"] == "reinforcement_steel"
+assert cfg["results"]["anode_families"]["seawater_anodes"]["capacity_Ah_kg"] == 2000.0
+assert cfg["results"]["anode_families"]["sediment_anodes"]["capacity_Ah_kg"] == 1500.0
+assert cfg["results"]["anode_families"]["seawater_anodes"]["count_by_mass"] == 2
+assert cfg["results"]["anode_families"]["sediment_anodes"]["count_by_mass"] == 2
+assert cfg["results"]["status"]["result"] == "PASS"
 ```
+
+## Interpretation
+
+A concrete-embedded zone uses reinforcement current density, while its assigned
+anodes may sit in sediment and therefore use sediment capacity, closed-circuit
+potential and electrolyte resistivity. Each family remains independently auditable
+in the calculation result and report.
