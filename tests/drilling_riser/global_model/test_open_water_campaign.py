@@ -146,3 +146,40 @@ def test_open_water_case_extracts_a_complete_w5_channel_set(tmp_path, analysis):
     assert (te_edp if analysis == "statics" else te_edp["mean"]) > 0
     if analysis == "dynamics":
         assert doc["points"]["edp"]["tm_hull"] and doc["stroke"]["stats"]["n"] > 10
+
+
+def test_open_water_zero_offset_statics_fall_back_to_the_seeded_continuation(monkeypatch, tmp_path):
+    """Batch 4: at zero offset the straight start is the target, so the frame continuation from (0, 0) is the direct
+    solve again; C2-R1 flowing cases at 0 % WD failed every route. The continuation from the -2 % WD seed converges."""
+    from digitalmodel.drilling_riser import campaign as cp
+
+    calls = []
+
+    class Fake:
+        threadCount = 1
+
+        def __init__(self):
+            self.general = type("G", (), {})()
+
+        def LoadData(self, path):
+            calls.append(("load",))
+
+        def CalculateStatics(self):
+            calls.append(("statics",))
+            raise RuntimeError("Whole system statics: Not converged.")
+
+    def seeded(model, spec, **kw):
+        calls.append(("seeded", kw))
+        if "start" in kw:  # the continuation from the straight start at (0, 0) is the failing direct solve
+            raise RuntimeError("Whole system statics: Not converged.")
+        return {"method": "seeded continuation", "steps": 5}
+
+    monkeypatch.setattr(cp, "physical_state_checks", lambda model, spec: {"physical": True})
+    monkeypatch.setattr(cp, "seeded_statics", seeded)
+    case = _ow_case(tmp_path, heading_deg=0.0, offset_pct_wd=0.0)
+    ad = cp.RiserCampaignAdapter()
+    ad.build(case, tmp_path / "m")
+    info = ad.statics(Fake(), case)
+    assert info["strategy"] == "seed_continuation" and info["physical"]
+    seeded_calls = [c for c in calls if c[0] == "seeded"]
+    assert "start" not in seeded_calls[-1][1]
