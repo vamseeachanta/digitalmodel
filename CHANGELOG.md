@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- cathodic_protection: terminal `DNV_RP_F103_anode_bank` route calculates pipeline-plus-structure demand, grouped stand-off-anode resistance, conservative F103 terminal attenuation, protected length, far-end potential and governing PASS/FAIL status.
+
 ### Changed
 
 - cathodic_protection: add B401 riser-base/foundation/mudmat/hatch-cover compositions, sequential temporary and wet-storage consumption, retrofit additional-anode sizing, and explicit fail-preserving accepted-output-shortfall records ([#2263](https://github.com/vamseeachanta/digitalmodel/issues/2263)).

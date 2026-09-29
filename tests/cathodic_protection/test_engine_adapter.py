@@ -28,13 +28,23 @@ from digitalmodel.cathodic_protection.engine_adapter import (
     KEY_B401_LEGACY,
     KEY_F103,
     KEY_F103_2010,
+    KEY_F103_ANODE_BANK,
     KEY_F103_LEGACY,
     STATUS_FAIL,
     STATUS_PASS,
     USE_STATUS_CLIENT_EOR,
+    USE_STATUS_ENGINEERING_VALIDATION,
     USE_STATUS_LEGACY_UNCITED,
     run_cathodic_protection,
 )
+
+
+def test_anode_bank_route_has_distinct_validation_status() -> None:
+    cfg = _run("anode_bank")
+    assert cfg["results"]["status"]["result"] == STATUS_PASS
+    assert cfg["results"]["status"]["use_status"] == USE_STATUS_ENGINEERING_VALIDATION
+    assert KEY_F103_ANODE_BANK in CALCULATION_TYPES
+    assert cfg["results"]["banks"][0]["sides"][0]["protection_ok"] is True
 
 FIXTURE_DIR = (
     Path(__file__).resolve().parents[1] / "fixtures" / "cathodic_protection" / "workflow_inputs"

@@ -86,6 +86,11 @@ from digitalmodel.cathodic_protection._kernels import (
     long_flush as kernel_long_flush,
     long_slender_standoff as kernel_long_slender_standoff,
     mass_consumed as kernel_mass_consumed,
+    pipeline_steel_area as kernel_pipeline_steel_area,
+    longitudinal_resistance_per_m as kernel_longitudinal_resistance_per_m,
+    parallel_resistance as kernel_parallel_resistance,
+    conservative_metallic_drop as kernel_conservative_metallic_drop,
+    positive_quadratic_root as kernel_positive_quadratic_root,
     resistance_proximity_factor as kernel_resistance_proximity_factor,
     short_flush_or_bracelet as kernel_short_flush_or_bracelet,
     short_slender_standoff as kernel_short_slender_standoff,
@@ -179,6 +184,15 @@ from digitalmodel.cathodic_protection.pipeline_cp import (
     pipeline_current_demand as pipeline_cp_current_demand,
     anode_spacing as pipeline_anode_spacing,
     holiday_detection_voltage,
+)
+from digitalmodel.cathodic_protection.pipeline_anode_bank import (
+    AnodeBankDesignInput,
+    AnodeBankDesignResult,
+    BankAnodeInput,
+    BankInput,
+    PipelineSideInput,
+    StructureDemandInput,
+    design_anode_bank_cp,
 )
 
 from digitalmodel.cathodic_protection.marine_structure_cp import (
@@ -377,6 +391,11 @@ __all__ = [
     "kernel_long_flush",
     "kernel_long_slender_standoff",
     "kernel_mass_consumed",
+    "kernel_pipeline_steel_area",
+    "kernel_longitudinal_resistance_per_m",
+    "kernel_parallel_resistance",
+    "kernel_conservative_metallic_drop",
+    "kernel_positive_quadratic_root",
     "kernel_resistance_proximity_factor",
     "kernel_short_flush_or_bracelet",
     "kernel_short_slender_standoff",
@@ -541,6 +560,14 @@ __all__ = [
     "check_potential_criteria",
     "design_pipeline_cp",
     "soil_resistivity_correction",
+    # pipeline_anode_bank
+    "AnodeBankDesignInput",
+    "AnodeBankDesignResult",
+    "BankAnodeInput",
+    "BankInput",
+    "PipelineSideInput",
+    "StructureDemandInput",
+    "design_anode_bank_cp",
 ]
 
 

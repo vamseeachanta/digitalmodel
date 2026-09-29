@@ -10,6 +10,39 @@ import math
 import pytest
 
 from digitalmodel.cathodic_protection import _kernels as k
+from digitalmodel import cathodic_protection as cp
+
+
+def test_pipeline_attenuation_kernels_match_f103_equations() -> None:
+    # F103:2019 Eq. (12): A=pi*d*(D-d)=pi*0.025*(0.5-0.025).
+    assert k.pipeline_steel_area(0.5, 0.025) == pytest.approx(0.0373064127614)
+    # R'=rho/A=2e-7/0.0373064127614 ohm/m.
+    resistance = k.longitudinal_resistance_per_m(2.0e-7, 0.5, 0.025)
+    assert resistance == pytest.approx(5.36100860941e-6)
+    # Eq. (15): q=pi*0.5*0.036*0.06=0.00339292006588 A/m;
+    # dE=R'*q*100^2=0.000181894736842 V.
+    assert k.conservative_metallic_drop(
+        resistance, 0.00339292006588, 100.0
+    ) == pytest.approx(0.000181894736842)
+
+
+def test_parallel_bank_and_f103_eq20_root() -> None:
+    # Ten identical 0.2-ohm branches: 1/R=sum(1/0.2)=50, hence R=0.02 ohm.
+    assert k.parallel_resistance([0.2] * 10) == pytest.approx(0.02)
+    # Eq. (20): A=R'q, B=2*0.1*q, C=-0.25; root=364.8461285 m.
+    assert k.positive_quadratic_root(
+        5.36100860941e-6 * 0.00339292006588,
+        2.0 * 0.1 * 0.00339292006588,
+        -0.25,
+    ) == pytest.approx(364.846128533)
+
+
+def test_pipeline_bank_kernels_are_public_package_aliases() -> None:
+    assert cp.kernel_pipeline_steel_area is k.pipeline_steel_area
+    assert cp.kernel_longitudinal_resistance_per_m is k.longitudinal_resistance_per_m
+    assert cp.kernel_parallel_resistance is k.parallel_resistance
+    assert cp.kernel_conservative_metallic_drop is k.conservative_metallic_drop
+    assert cp.kernel_positive_quadratic_root is k.positive_quadratic_root
 
 
 class TestDemandMassBreakdown:

@@ -25,6 +25,7 @@ uncited and not for client use without an independent check.
 | `DNV_RP_B401_offshore` (engine adapter) | Client use with EOR check | Cited, edition-keyed B401 tables; seawater, buried and concrete-reinforcement zones; independent seawater/sediment anode families; riser-base component compositions; sequential temporary, wet-storage, operating and retrofit assessments; initial / mean / final checks per family |
 | `DNV_RP_F103` (engine adapter; runs `design_data.edition`, default 2019) | Client use with EOR check | Cited, edition-keyed F103 tables (`f103_tables.py`); Eq. 14 protected-length check |
 | `DNV_RP_F103_2010` (engine adapter; deprecated alias of `DNV_RP_F103` pinned to edition 2010, `DeprecationWarning`; a different `design_data.edition` raises) | Client use with EOR check | As `DNV_RP_F103`, edition 2010; reproduces results from before the 2019 default |
+| `DNV_RP_F103_anode_bank` | Engineering validation required; not for client use | Independent terminal banks; F103:2019 Sec. 6.7 Eq. (9)-(20) and Appendix D.8.5-D.8.10, or the 2010 Sec. 5.6 counterparts; B401 individual-anode resistance |
 | `ABS_gn_ships_2018` (engine adapter) | Experimental, known understatement; not for design use | Raises `ExperimentalModelError` unless `inputs.design_data.experimental: true` (Boolean); opt-in preserves the legacy calculation. Benchmark 2026-09-27: mean demand about a third low, final about half low ([#2259](https://github.com/vamseeachanta/digitalmodel/issues/2259), [#1852](https://github.com/vamseeachanta/digitalmodel/issues/1852)) |
 | `ABS_gn_offshore_2018` | Legacy, uncited: not for client use without an independent check | Legacy solver (`base_solvers/hydrodynamics/cathodic_protection.py`), tables not cited |
 | `DNV_RP_B401_offshore_legacy`, `DNV_RP_F103_2010_legacy` | Legacy, uncited: not for client use without an independent check | Deprecated legacy solver paths |
@@ -32,7 +33,8 @@ uncited and not for client use without an independent check.
 
 The status is machine-visible: every engine-adapter route writes
 `results["status"]["use_status"]` (`client-use-with-eor-check`,
-`legacy-uncited-independent-check-required`, or `experimental-known-understatement`), and the `cathodic_protection.anode_design`
+`engineering-validation-required`, `legacy-uncited-independent-check-required`,
+or `experimental-known-understatement`), and the `cathodic_protection.anode_design`
 report states it in the Adequacy section and in the route's status detail, so every HTML/PDF
 deliverable carries it. `docs/registry/module-routing.yaml` keeps `maturity: beta` (its scale
 has no "client use with conditions" value).
@@ -86,6 +88,7 @@ record remaining gaps per value. These observations do not qualify experimental 
 | `marine_cp.py` | Multi-zone marine CP: current density by temperature and depth, calcareous correction |
 | `marine_structure_cp.py` | Zone-based CP for platforms, jackets, monopiles and subsea structures; retrofit assessment |
 | `pipeline_cp.py` | Pipeline CP per NACE SP0169 / ISO 15589-1: current density, anode spacing, interference |
+| `pipeline_anode_bank.py` | Typed F103 terminal-bank design: grouped resistance, pipeline plus structure demand, Eq. (15) conservative attenuation envelope, Eq. (20) protected length and far-end potential check |
 | `stray_current.py` | AC/DC interference assessment and mitigation (drainage bonds, polarisation cells) |
 
 ### Legacy solver (router used by the worked examples)
