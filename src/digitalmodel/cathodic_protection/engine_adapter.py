@@ -28,11 +28,13 @@ It dispatches on ``cfg["inputs"]["calculation_type"]``:
     reproduce their earlier results exactly. It emits a
     :class:`DeprecationWarning` naming ``DNV_RP_F103``; a
     ``design_data.edition`` other than 2010 raises :class:`ValueError`.
-``ABS_gn_ships_2018`` / ``ABS_gn_offshore_2018``
-    The legacy implementation (no new-package equivalent), wrapped so anode
-    counts are integers (``ceil``) and a ``status`` block is derived from the
-    route's own adequacy checks. Ships requires the Boolean opt-in
-    ``inputs.design_data.experimental: true`` because its demand is understated.
+``ABS_gn_ships_2018`` / ``ABS_gn_ships_2018_legacy``
+    The rebuilt December 2017 ship-hull route and its deprecated legacy alias.
+    The public key retains its historical date misnomer. The rebuilt route uses
+    cited tables and shared kernels; its selected mean coating-factor time law is
+    marked ``cited-pending-review``.
+``ABS_gn_offshore_2018``
+    The legacy offshore implementation, wrapped with integer counts and status.
 ``DNV_RP_B401_offshore_legacy`` / ``DNV_RP_F103_2010_legacy``
     The old code paths unchanged, with a :class:`DeprecationWarning`.
 
@@ -47,8 +49,8 @@ Every route writes ``cfg["results"]["status"]``::
 and ``DNV_RP_F103`` / ``DNV_RP_F103_2010`` (client use subject to an
 engineer-of-record check of every deliverable); ``"legacy-uncited-independent-check-required"`` for
 ABS offshore and the ``*_legacy`` keys (legacy solver, uncited tables, not
-for client use without an independent check); ``"experimental-known-understatement"``
-for ABS ships (not for design use; benchmark 2026-09-27, #2259 / #1852).
+for client use without an independent check); and ``"cited-pending-review"``
+for the rebuilt ABS ships route pending review of the mean-factor time law and wiki target.
 
 A ``FAIL`` is logged as a warning through the engine's logger (loguru) and
 never raises: the run completes so the report can show the failing design.
@@ -73,7 +75,7 @@ from digitalmodel.cathodic_protection._edition import (
     normalize_f103_edition,
     standard_for_edition,
 )
-from digitalmodel.cathodic_protection._experimental import ExperimentalModelError
+from digitalmodel.cathodic_protection.abs_ships import design_abs_ships
 from digitalmodel.cathodic_protection.anode_sizing import (
     AnodeType,
     calculate_anode_resistance,
@@ -131,6 +133,7 @@ KEY_F103_ANODE_BANK: Final = "DNV_RP_F103_anode_bank"
 KEY_F103_2010: Final = "DNV_RP_F103_2010"
 F103_2010_PINNED_EDITION: Final[F103Edition] = "2010"
 KEY_ABS_SHIPS: Final = "ABS_gn_ships_2018"
+KEY_ABS_SHIPS_LEGACY: Final = "ABS_gn_ships_2018_legacy"
 KEY_ABS_OFFSHORE: Final = "ABS_gn_offshore_2018"
 KEY_B401_LEGACY: Final = "DNV_RP_B401_offshore_legacy"
 KEY_F103_LEGACY: Final = "DNV_RP_F103_2010_legacy"
@@ -141,6 +144,7 @@ CALCULATION_TYPES: Final[tuple[str, ...]] = (
     KEY_F103_ANODE_BANK,
     KEY_F103_2010,
     KEY_ABS_SHIPS,
+    KEY_ABS_SHIPS_LEGACY,
     KEY_ABS_OFFSHORE,
     KEY_B401_LEGACY,
     KEY_F103_LEGACY,
@@ -149,6 +153,7 @@ CALCULATION_TYPES: Final[tuple[str, ...]] = (
 # Accepted but deprecated keys (each emits a DeprecationWarning).
 DEPRECATED_CALCULATION_TYPES: Final[tuple[str, ...]] = (
     KEY_F103_2010,
+    KEY_ABS_SHIPS_LEGACY,
     KEY_B401_LEGACY,
     KEY_F103_LEGACY,
 )
@@ -162,12 +167,14 @@ USE_STATUS_CLIENT_EOR: Final = "client-use-with-eor-check"
 USE_STATUS_LEGACY_UNCITED: Final = "legacy-uncited-independent-check-required"
 USE_STATUS_ENGINEERING_VALIDATION: Final = "engineering-validation-required"
 USE_STATUS_EXPERIMENTAL: Final = "experimental-known-understatement"
+USE_STATUS_CITED_PENDING_REVIEW: Final = "cited-pending-review"
 USE_STATUS_BY_KEY: Final[dict[str, str]] = {
     KEY_B401: USE_STATUS_CLIENT_EOR,
     KEY_F103: USE_STATUS_CLIENT_EOR,
     KEY_F103_ANODE_BANK: USE_STATUS_ENGINEERING_VALIDATION,
     KEY_F103_2010: USE_STATUS_CLIENT_EOR,
-    KEY_ABS_SHIPS: USE_STATUS_EXPERIMENTAL,
+    KEY_ABS_SHIPS: USE_STATUS_CITED_PENDING_REVIEW,
+    KEY_ABS_SHIPS_LEGACY: USE_STATUS_LEGACY_UNCITED,
     KEY_ABS_OFFSHORE: USE_STATUS_LEGACY_UNCITED,
     KEY_B401_LEGACY: USE_STATUS_LEGACY_UNCITED,
     KEY_F103_LEGACY: USE_STATUS_LEGACY_UNCITED,
@@ -1029,14 +1036,20 @@ def _legacy_solver() -> Any:
 
 
 def _run_abs_ships(cfg: dict[str, Any]) -> dict[str, Any]:
-    if _section(cfg, "inputs", "design_data").get("experimental") is not True:
-        raise ExperimentalModelError(
-            KEY_ABS_SHIPS,
-            "understates mean demand by about a third and final demand by about half "
-            "per the 2026-09-27 benchmark (#2259, #1852); "
-            "set inputs.design_data.experimental: true to opt in",
-            "ABS Guidance Notes on Cathodic Protection of Ships (December 2017)",
-        )
+    block = design_abs_ships(_section(cfg, "inputs"))
+    cfg["results"] = block
+    cfg["cathodic_protection"] = block
+    if block["status"]["result"] == STATUS_FAIL:
+        logger.warning("ABS ships design FAIL: {}", block["status"]["reason"])
+    return cfg
+
+
+def _run_abs_ships_legacy(cfg: dict[str, Any]) -> dict[str, Any]:
+    warnings.warn(
+        f"calculation_type {KEY_ABS_SHIPS_LEGACY!r} is deprecated; use {KEY_ABS_SHIPS!r}",
+        DeprecationWarning,
+        stacklevel=3,
+    )
     _legacy_solver().ABS_gn_ships_2018(cfg)
     block: dict[str, Any] = cfg["cathodic_protection"]
     req = block["anode_requirements"]
@@ -1048,31 +1061,25 @@ def _run_abs_ships(cfg: dict[str, Any]) -> dict[str, Any]:
     checks = perf.get("checks")
     cfg["results"] = block
     if not checks:
-        reason = (
-            "ABS GN Ships 2018: anode current-output check not run "
-            f"({perf.get('status', 'no anode geometry / resistivity')})"
+        _set_status(
+            cfg,
+            block,
+            False,
+            "mass",
+            "legacy ABS ships current-output check was not run",
+            {"current_output": None},
         )
-        _set_status(cfg, block, False, "mass", reason, {"current_output": None})
         return cfg
     initial_ok = bool(checks.get("initial_meets_demand"))
     final_ok = bool(checks.get("final_meets_demand"))
     passed = initial_ok and final_ok
     governing = "mass" if passed else ("final" if not final_ok else "initial")
-    n = req["anode_count"]
-    out = perf.get("current_output_A", {})
-    reason = (
-        f"{n} anodes ({req['total_mass_kg']:.0f} kg by mass): initial output "
-        f"{out.get('initial_total', 0.0):.1f} A vs demand "
-        f"{block['current_demand_A']['totals']['initial']:.1f} A (ok={initial_ok}); final output "
-        f"{out.get('final_total', 0.0):.1f} A vs demand "
-        f"{block['current_demand_A']['totals']['final']:.1f} A (ok={final_ok})"
-    )
     _set_status(
         cfg,
         block,
         passed,
         governing,
-        reason,
+        "deprecated legacy ABS ships mass-basis count and output checks",
         {"initial_current_output": initial_ok, "final_current_output": final_ok},
     )
     return cfg
@@ -1169,8 +1176,6 @@ def run_cathodic_protection(cfg: dict[str, Any]) -> dict[str, Any]:
 
     Raises
     ------
-    ExperimentalModelError
-        ABS ships without Boolean ``inputs.design_data.experimental: true``.
     ValueError
         Unknown ``calculation_type``, invalid inputs, or ``DNV_RP_F103_2010``
         with a ``design_data.edition`` other than 2010.
@@ -1194,6 +1199,8 @@ def run_cathodic_protection(cfg: dict[str, Any]) -> dict[str, Any]:
         return _run_f103(cfg, F103_2010_PINNED_EDITION)
     if key == KEY_ABS_SHIPS:
         return _run_abs_ships(cfg)
+    if key == KEY_ABS_SHIPS_LEGACY:
+        return _run_abs_ships_legacy(cfg)
     if key == KEY_ABS_OFFSHORE:
         return _run_abs_offshore(cfg)
     if key in (KEY_B401_LEGACY, KEY_F103_LEGACY):
@@ -1210,6 +1217,7 @@ __all__ = [
     "DEPRECATED_CALCULATION_TYPES",
     "KEY_ABS_OFFSHORE",
     "KEY_ABS_SHIPS",
+    "KEY_ABS_SHIPS_LEGACY",
     "KEY_B401",
     "KEY_B401_LEGACY",
     "F103_2010_PINNED_EDITION",
@@ -1221,6 +1229,7 @@ __all__ = [
     "STATUS_PASS",
     "USE_STATUS_BY_KEY",
     "USE_STATUS_CLIENT_EOR",
+    "USE_STATUS_CITED_PENDING_REVIEW",
     "USE_STATUS_ENGINEERING_VALIDATION",
     "USE_STATUS_EXPERIMENTAL",
     "USE_STATUS_LEGACY_UNCITED",

@@ -32,6 +32,7 @@ ROUTER_KEY = re.compile(r'cfg\["inputs"\]\["calculation_type"\]\s*==\s*"([^"]+)"
 
 EXPECTED_ROUTER_KEYS = {
     "ABS_gn_ships_2018",
+    "ABS_gn_ships_2018_legacy",
     "DNV_RP_F103_2010",
     "ABS_gn_offshore_2018",
     "DNV_RP_B401_offshore",

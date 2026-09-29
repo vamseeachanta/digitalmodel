@@ -12,7 +12,6 @@ inputs:
         csv_filename: null
 
   design_data:
-    experimental: true  # Known demand understatement; not for design use (#2259).
     design_life: 5
     biofouling:
       type: aerobic
@@ -28,6 +27,7 @@ inputs:
       mean_length: 1.4
       width: 0.15
       height: 0.06
+      core_cross_section_m2: 0.009
       volume: 0.0126
       net_weight: 27.5
       ratio_of_gross_to_net_weight: 1.1
@@ -47,7 +47,6 @@ inputs:
   structure:
     coating: true
     area_coverage: 100
-    coating_yearly_breakdown_factor: 3
     coating_initial_breakdown_factor: 2
     coating_initial_breakdown_duration: 2
     coating_breakdown_factor_max: 2.0
@@ -57,8 +56,21 @@ inputs:
   design_current:
     input: fixed
     csv_filename: null
+    dynamic_bare_steel_mA_m2: 675
+    static_bare_steel_mA_m2: 675
+    dynamic_time_fraction: 0.5
     coated_steel_mA_m2: 13.5
     uncoated_steel_mA_m2: 200
+
+  layout:
+    actual_max_spacing_m: 8
+    selected_locations: 200
+    anodes_per_location: 2
+    high_current_or_low_resistivity: false
+    mechanical_damage_risk: false
+    uniform_distribution_confirmed: true
+    bilge_damage_avoided: true
+    bilge_keel_fitted: false
 
 ABS_gn_ships_2018:
   v_ssc:

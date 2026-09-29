@@ -67,7 +67,13 @@ FIXTURE_JSON = TESTS_DIR / "fixtures" / "reporting" / "cp_anode_design_result.js
 INPUT_DIR = TESTS_DIR / "fixtures" / "cathodic_protection" / "workflow_inputs"
 GOLDEN = TESTS_DIR / "reporting" / "golden" / "cp_anode_design_jacket.html"
 _PLOTLY_SCRIPT_RE = re.compile(r'<script type="text/javascript">.*?</script>\n', re.S)
-SECTION_KEYS = ["design-basis", "current-demand", "anode-requirements", "adequacy", "references"]
+SECTION_KEYS = [
+    "design-basis",
+    "current-demand",
+    "anode-requirements",
+    "adequacy",
+    "references",
+]
 DOCUMENT = {
     "number": "B0000-RPT-042-01",
     "revision": "01",
@@ -99,13 +105,19 @@ def test_anode_bank_report_has_standard_sections_and_envelope_figure() -> None:
     cfg = _run("anode_bank")
     spec = anode_design_report(cfg)
     assert [section.key for section in spec.sections] == [
-        "design-basis", "current-demand", "bank-resistance",
-        "attenuation", "adequacy", "references",
+        "design-basis",
+        "current-demand",
+        "bank-resistance",
+        "attenuation",
+        "adequacy",
+        "references",
     ]
     figures = [b for s in spec.sections for b in s.blocks if isinstance(b, FigureBlock)]
     assert figures and "envelope" in figures[0].title.lower()
     assert cfg["results"]["status"]["use_status"] == USE_STATUS_ENGINEERING_VALIDATION
-    assert any("not for client use" in status.detail.lower() for status in _statuses(spec))
+    assert any(
+        "not for client use" in status.detail.lower() for status in _statuses(spec)
+    )
 
 
 def test_anode_bank_report_preserves_unequal_sides_and_names_both_lengths() -> None:
@@ -130,12 +142,20 @@ def test_anode_bank_report_preserves_edition_specific_citation_paths() -> None:
     assert "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2017.md" in paths
     topology = _tables(spec)["Bank sizing and topology"]
     labels = {row[1] for row in topology.rows}
-    assert {"Installed count", "Recommended count", "Interaction factor",
-            "Cable resistance", "Group formula", "Count-search outcome"} <= labels
+    assert {
+        "Installed count",
+        "Recommended count",
+        "Interaction factor",
+        "Cable resistance",
+        "Group formula",
+        "Count-search outcome",
+    } <= labels
 
 
 def _tables(spec: ReportSpec) -> dict[str, TableBlock]:
-    return {b.title: b for s in spec.sections for b in s.blocks if isinstance(b, TableBlock)}
+    return {
+        b.title: b for s in spec.sections for b in s.blocks if isinstance(b, TableBlock)
+    }
 
 
 # --- fixture ---------------------------------------------------------------
@@ -158,7 +178,10 @@ def test_adapters_are_registered_on_import() -> None:
 def test_jacket_spec_layout_and_fail_status() -> None:
     spec = build_spec("cathodic_protection.anode_design", _load_fixture())
     assert [s.key for s in spec.sections] == SECTION_KEYS
-    assert [f.figure_id for f in spec.figure_blocks()] == [FIG_DEMAND_VS_TIME, FIG_ANODE_COUNTS]
+    assert [f.figure_id for f in spec.figure_blocks()] == [
+        FIG_DEMAND_VS_TIME,
+        FIG_ANODE_COUNTS,
+    ]
     assert spec.has_plotly()
 
     status = _statuses(spec)
@@ -172,7 +195,10 @@ def test_jacket_spec_layout_and_fail_status() -> None:
     ]
     sections = {c["section"] for c in spec.citations}
     assert {"Table 8-1", "Table 8-2", "Table 8-4", "Table 8-6"} <= sections
-    assert all(c["code_id"] == "dnv-rp-b401" and c["revision"] == "2021-05" for c in spec.citations)
+    assert all(
+        c["code_id"] == "dnv-rp-b401" and c["revision"] == "2021-05"
+        for c in spec.citations
+    )
     assert all(c["wiki_path"].startswith("wikis/") for c in spec.citations)
 
     # placeholder document control, said so in the input echo
@@ -205,12 +231,19 @@ def test_jacket_tables_carry_the_route_numbers() -> None:
     assert counts["Recommended anode count"] == 173
 
     ri = tables["Anode resistance and current output, 55 anodes, fresh vs depleted"]
-    assert [row[0] for row in ri.rows] == ["Initial (fresh anode)", "Final (depleted anode)"]
+    assert [row[0] for row in ri.rows] == [
+        "Initial (fresh anode)",
+        "Final (depleted anode)",
+    ]
     assert ri.rows[0][2] == 0.16148 and ri.rows[1][2] == 0.20677
     assert ri.rows[0][-1] is True and ri.rows[1][-1] is False
 
     checks = dict(tables["Adequacy checks"].rows)
-    assert checks == {"final current output": "FAIL", "initial current output": "PASS", "mass": "PASS"}
+    assert checks == {
+        "final current output": "FAIL",
+        "initial current output": "PASS",
+        "mass": "PASS",
+    }
 
     used = dict(tables["Where each cited table was used"].rows)
     assert "Table 8-1" in used["submerged: design current density"]
@@ -265,7 +298,9 @@ def test_jacket_html_matches_golden() -> None:
     if os.environ.get("UPDATE_GOLDENS"):
         GOLDEN.write_text(stripped, encoding="utf-8", newline="\n")
     expected = GOLDEN.read_text(encoding="utf-8").replace("\r\n", "\n")
-    assert stripped.replace("\r\n", "\n") == expected, "golden differs; UPDATE_GOLDENS=1 to accept"
+    assert stripped.replace("\r\n", "\n") == expected, (
+        "golden differs; UPDATE_GOLDENS=1 to accept"
+    )
 
 
 # --- anode_design: other routes ---------------------------------------------
@@ -276,7 +311,10 @@ def test_pipeline_f103_spec_passes_with_spacing_check() -> None:
     assert [s.key for s in spec.sections] == SECTION_KEYS
     assert [f.figure_id for f in spec.figure_blocks()] == [FIG_ANODE_COUNTS]
     status = _statuses(spec)
-    assert [(b.status, b.governing_case) for b in status] == [("PASS", "mass"), ("PASS", None)]
+    assert [(b.status, b.governing_case) for b in status] == [
+        ("PASS", "mass"),
+        ("PASS", None),
+    ]
     assert status[1].label.startswith("Anode spacing")
     # F103 default edition 2019 (test_engine_adapter.test_pipeline_f103_bracelet_design derives
     # these): spacing 1500 / 34 = 44.118 m vs 2 PL = 2 x 1587.424 m. The anode values come from
@@ -307,7 +345,9 @@ def test_pipeline_f103_design_basis_shows_field_joint_system_and_infill() -> Non
         field_joint_length_m=0.4,
     )
     run_cathodic_protection(cfg)
-    rows = {row[0]: row[1] for row in _tables(anode_design_report(cfg))["Design data"].rows}
+    rows = {
+        row[0]: row[1] for row in _tables(anode_design_report(cfg))["Design data"].rows
+    }
     assert rows["Field joint coating (system id)"] == "3A+4E(2)"
     assert rows["Field joint infill"] == "4E(2) moulded PU on top"
 
@@ -325,7 +365,9 @@ def test_pipeline_f103_2010_alias_key_is_laid_out_as_f103() -> None:
         ("DNV-RP-F103", "October 2010"),
         ("DNV-RP-B401", "2011"),
     ]
-    counts = dict(row[:2] for row in _tables(spec)["Anode mass, count and spacing"].rows)
+    counts = dict(
+        row[:2] for row in _tables(spec)["Anode mass, count and spacing"].rows
+    )
     assert counts["Bracelets installed (N)"] == 9
 
 
@@ -334,14 +376,35 @@ def test_abs_routes_expose_tables_and_status() -> None:
     assert [s.key for s in ships.sections] == SECTION_KEYS
     assert ships.figure_blocks() == []
     assert not ships.has_plotly()
-    assert ships.citations == []
+    assert {citation["code_id"] for citation in ships.citations} == {"abs-gn-ships"}
     assert ships.standards[0].code_id.startswith("ABS GN")
     ships_status = _statuses(ships)
-    assert (ships_status[0].status, ships_status[0].governing_case) == ("FAIL", "final")
+    assert (ships_status[0].status, ships_status[0].governing_case) == (
+        "PASS",
+        "mean_current_output",
+    )
     tables = _tables(ships)
     assert "Anode resistance and current output, fresh vs depleted" in tables
-    demand = {row[0]: row[1:] for row in tables["Current demand by surface and phase"].rows}
+    assert "Layout and spacing" in tables
+    assert "Depleted long-flush geometry" in tables
+    assert "Pending engineering review limitations" in tables
+    assert "Project bare-current basis (Table 3 comparator only)" in tables
+    bare_basis = dict(
+        row[:2]
+        for row in tables["Project bare-current basis (Table 3 comparator only)"].rows
+    )
+    assert bare_basis["Dynamic bare density"] == pytest.approx(675.0)
+    assert bare_basis["Static bare density"] == pytest.approx(675.0)
+    counts = dict(row[:2] for row in tables["Anode mass and count"].rows)
+    assert counts["Selected anode count"] == 400
+    assert counts["Recommended minimum count"] > 0
+    demand = {
+        row[0]: row[1:] for row in tables["Current demand by surface and phase"].rows
+    }
     assert demand["totals"][0] == pytest.approx(181.52154)
+    output_rows = tables["Anode resistance and current output, fresh vs depleted"].rows
+    assert output_rows[0][-1] is True
+    assert output_rows[1][-1] is True
 
     fpso = anode_design_report(_run("fpso"))
     assert [s.key for s in fpso.sections] == SECTION_KEYS
@@ -349,7 +412,12 @@ def test_abs_routes_expose_tables_and_status() -> None:
     assert (fpso_status[0].status, fpso_status[0].governing_case) == ("PASS", "mass")
     checks = dict(_tables(fpso)["Adequacy checks"].rows)
     assert checks == {"current output": "not run", "mass": "PASS"}
-    assert dict(row[:2] for row in _tables(fpso)["Anode mass and count"].rows)["Anode count"] == 79
+    assert (
+        dict(row[:2] for row in _tables(fpso)["Anode mass and count"].rows)[
+            "Anode count"
+        ]
+        == 79
+    )
 
 
 @pytest.mark.parametrize(
@@ -357,8 +425,12 @@ def test_abs_routes_expose_tables_and_status() -> None:
     [
         ("jacket", USE_STATUS_CLIENT_EOR, "engineer-of-record check"),
         ("pipeline", USE_STATUS_CLIENT_EOR, "engineer-of-record check"),
-        ("ships", "experimental-known-understatement", "not for design use"),
-        ("fpso", USE_STATUS_LEGACY_UNCITED, "not for client use without an independent check"),
+        ("ships", "cited-pending-review", "engineering review"),
+        (
+            "fpso",
+            USE_STATUS_LEGACY_UNCITED,
+            "not for client use without an independent check",
+        ),
     ],
 )
 def test_use_status_is_stated_in_adequacy_and_status_detail(
@@ -377,20 +449,16 @@ def test_use_status_is_stated_in_adequacy_and_status_detail(
     assert wording in render_html(spec)
 
 
-def test_ships_report_warns_of_known_understatement() -> None:
+def test_ships_report_states_pending_review_limit() -> None:
     spec = anode_design_report(_run("ships"))
     adequacy = next(s for s in spec.sections if s.key == "adequacy")
     first = adequacy.blocks[0]
     assert isinstance(first, TextBlock)
     html = render_html(spec)
     for wording in (
-        "experimental",
-        "mean demand by about a third",
-        "final demand by about half",
-        "2026-09-27",
-        "#2259",
-        "#1852",
-        "not for design use",
+        "cited-pending-review",
+        "coating deterioration",
+        "engineering review",
     ):
         assert wording in first.markdown
         assert wording in _statuses(spec)[0].detail
@@ -408,13 +476,17 @@ def test_anode_design_rejects_missing_results_and_unknown_route() -> None:
     with pytest.raises(ValueError, match="cfg\\['results'\\]"):
         anode_design_report({"inputs": {"calculation_type": "DNV_RP_B401_offshore"}})
     with pytest.raises(ValueError, match="no layout for calculation_type 'legacy'"):
-        anode_design_report({"inputs": {"calculation_type": "legacy"}, "results": {"x": 1}})
+        anode_design_report(
+            {"inputs": {"calculation_type": "legacy"}, "results": {"x": 1}}
+        )
 
 
 # --- assessment --------------------------------------------------------------
 
 
-def _assessment(overall: ComplianceStatus = ComplianceStatus.NON_COMPLIANT) -> CPAssessmentReport:
+def _assessment(
+    overall: ComplianceStatus = ComplianceStatus.NON_COMPLIANT,
+) -> CPAssessmentReport:
     return CPAssessmentReport(
         report_title="Pipeline CP assessment",
         report_date="2026-09-01",
@@ -466,7 +538,12 @@ def _assessment(overall: ComplianceStatus = ComplianceStatus.NON_COMPLIANT) -> C
 
 def test_assessment_minimal_report_builds_fail_spec_without_figures() -> None:
     spec = build_assessment_spec(_assessment())
-    assert [s.key for s in spec.sections] == ["summary", "compliance", "remaining-life", "recommendations"]
+    assert [s.key for s in spec.sections] == [
+        "summary",
+        "compliance",
+        "remaining-life",
+        "recommendations",
+    ]
     assert spec.figure_blocks() == []
     status = _statuses(spec)[0]
     assert (status.status, status.governing_case) == ("FAIL", "POT-1")
@@ -488,29 +565,55 @@ def test_assessment_with_survey_and_depletion_adds_figures() -> None:
         CISSurveyPoint(distance_m=100.0, on_potential_V=-1.00, off_potential_V=-0.91),
     ]
     cis = CISAnalysisResult(
-        total_points=3, protected_points=2, underprotected_points=1, overprotected_points=0,
-        protection_percentage=66.7, min_potential_V=-0.91, max_potential_V=-0.79,
-        mean_potential_V=-0.86, deficiency_locations=[50.0],
+        total_points=3,
+        protected_points=2,
+        underprotected_points=1,
+        overprotected_points=0,
+        protection_percentage=66.7,
+        min_potential_V=-0.91,
+        max_potential_V=-0.79,
+        mean_potential_V=-0.86,
+        deficiency_locations=[50.0],
     )
     profile = DepletionProfile(
-        years=[0, 5, 10, 15], remaining_mass_kg=[100, 80, 60, 40],
-        usable_mass_kg=[80, 60, 40, 20], depletion_percentage=[0, 20, 40, 60],
+        years=[0, 5, 10, 15],
+        remaining_mass_kg=[100, 80, 60, 40],
+        usable_mass_kg=[80, 60, 40, 20],
+        depletion_percentage=[0, 20, 40, 60],
         end_of_life_year=20,
     )
     spec = build_assessment_spec(
-        _assessment(ComplianceStatus.COMPLIANT), cis_points=points, cis_result=cis, depletion=profile,
+        _assessment(ComplianceStatus.COMPLIANT),
+        cis_points=points,
+        cis_result=cis,
+        depletion=profile,
     )
     assert [s.key for s in spec.sections] == [
-        "summary", "compliance", "survey", "remaining-life", "recommendations",
+        "summary",
+        "compliance",
+        "survey",
+        "remaining-life",
+        "recommendations",
     ]
-    assert [f.figure_id for f in spec.figure_blocks()] == [FIG_POTENTIAL_VS_DISTANCE, FIG_REMAINING_MASS]
+    assert [f.figure_id for f in spec.figure_blocks()] == [
+        FIG_POTENTIAL_VS_DISTANCE,
+        FIG_REMAINING_MASS,
+    ]
     potential = spec.figure_blocks()[0]
     assert isinstance(potential, FigureBlock) and potential.plotly is not None
-    assert [t["name"] for t in potential.plotly["data"]] == ["ON potential", "OFF potential"]
+    assert [t["name"] for t in potential.plotly["data"]] == [
+        "ON potential",
+        "OFF potential",
+    ]
     mass = spec.figure_blocks()[1].plotly
     assert mass is not None and mass["data"][1]["y"] == [80, 60, 40, 20]
     assert _statuses(spec)[0].status == "PASS"
-    assert dict(row[:2] for row in _tables(spec)["CIS analysis"].rows)["Deficiency locations"] == "50"
+    assert (
+        dict(row[:2] for row in _tables(spec)["CIS analysis"].rows)[
+            "Deficiency locations"
+        ]
+        == "50"
+    )
     assert len(spec.provenance.sources) == 4  # report, CIS result, depletion, points
 
 
