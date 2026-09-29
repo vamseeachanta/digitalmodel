@@ -57,6 +57,7 @@ from digitalmodel.cathodic_protection.engine_adapter import (
     KEY_F103_2010,
     STATUS_PASS,
     USE_STATUS_CLIENT_EOR,
+    USE_STATUS_EXPERIMENTAL,
     USE_STATUS_LEGACY_UNCITED,
 )
 from digitalmodel.cathodic_protection.f103_tables import F103_WIKI_PATH
@@ -259,6 +260,11 @@ _USE_STATUS_TEXT: dict[str, str] = {
     USE_STATUS_CLIENT_EOR: (
         "Use status: approved for client use subject to an engineer-of-record "
         "check of this deliverable."
+    ),
+    USE_STATUS_EXPERIMENTAL: (
+        "Use status: experimental-known-understatement; not for design use. "
+        "Understates mean demand by about a third and final demand by about half "
+        "per the 2026-09-27 benchmark (#2259, #1852)."
     ),
     USE_STATUS_LEGACY_UNCITED: (
         "Use status: legacy solver with uncited tables; not for client use "
@@ -622,7 +628,8 @@ def _f103_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
         ["Length", geom.get("length_m", ""), "m"],
         ["Outer surface area", geom.get("outer_surface_area_m2", ""), "m2"],
         ["Linepipe coating", fc.get("linepipe_coating", ""), "-"],
-        ["Field joint coating", fc.get("field_joint_coating", ""), "-"],
+        ["Field joint coating (system id)", fc.get("field_joint_coating", ""), "-"],
+        ["Field joint infill", fc.get("field_joint_infill", ""), "-"],
         ["Field joint area", geom.get("field_joint_area_m2", ""), "m2"],
         ["Burial condition", dens.get("burial_condition", ""), "-"],
         ["Internal fluid temperature", dens.get("internal_fluid_temperature_C", ""), "degC"],

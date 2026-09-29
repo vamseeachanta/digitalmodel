@@ -59,6 +59,11 @@ class ProvisionalValue:
     range_low, range_high : float, optional
         Both ends of the range the source gives, when it gives a range
         (owner decision 2026-09-27: store both ends).
+    evidence_class : str
+        Confidence in the evidence, independent of provisional/model status.
+        Defaults to "none" for compatibility with existing callers.
+    evidence_source : str
+        Evidence title, URL and page/section (explicitly unverified if unknown).
     conservative_end : {"low", "high"}, optional
         Which end ``value`` is: the design uses the conservative end (the
         one that shortens life or lowers capacity). Required with a range.
@@ -73,6 +78,8 @@ class ProvisionalValue:
     range_low: Optional[float] = None
     range_high: Optional[float] = None
     conservative_end: Optional[str] = None
+    evidence_class: str = "none"
+    evidence_source: str = ""
 
     def __post_init__(self) -> None:
         if isinstance(self.value, bool) or not isinstance(self.value, (int, float)):
@@ -87,7 +94,20 @@ class ProvisionalValue:
             raise ProvisionalValueError(
                 "a provisional value must name the pending_standard clause that will confirm it"
             )
+        self._check_evidence()
         self._check_range()
+
+    def _check_evidence(self) -> None:
+        classes = (
+            "confirmed-by-official-preview", "quoted-by-regulation",
+            "reproduced-by-secondary", "inferred", "none",
+        )
+        if self.evidence_class not in classes:
+            raise ProvisionalValueError("invalid evidence_class")
+        if not isinstance(self.evidence_source, str) or (
+            self.evidence_class != "none" and not self.evidence_source.strip()
+        ):
+            raise ProvisionalValueError("evidence_source must locate the evidence")
 
     def _check_range(self) -> None:
         ends = (self.range_low, self.range_high)
@@ -132,6 +152,9 @@ def render_provisional(pv: ProvisionalValue, name: str | None = None) -> str:
     head = f"{name} = " if name else ""
     status = "PROVISIONAL" if pv.provisional else "confirmed"
     parts = [f"{head}{pv.value:g} {pv.units} [{status}; source: {pv.source}"]
+    parts.append(f"evidence class: {pv.evidence_class}")
+    if pv.evidence_source:
+        parts.append(f"evidence source: {pv.evidence_source}")
     if pv.range_text:
         parts.append(f"range: {pv.range_text}")
     if pv.note:
@@ -144,11 +167,12 @@ def render_provisional(pv: ProvisionalValue, name: str | None = None) -> str:
 def render_provisional_table(values: Mapping[str, ProvisionalValue]) -> str:
     """Render a mapping of provisional values as a Markdown table."""
     lines = [
-        "| Name | Value | Units | Source | Confirm against |",
-        "|------|-------|-------|--------|-----------------|",
+        "| Name | Value | Units | Source | Evidence class | Evidence source | Confirm against |",
+        "|------|-------|-------|--------|----------------|-----------------|-----------------|",
     ]
     for key, pv in values.items():
         lines.append(
-            f"| `{key}` | {pv.value:g} | {pv.units} | {pv.source} | {pv.pending_standard or '-'} |"
+            f"| `{key}` | {pv.value:g} | {pv.units} | {pv.source} | "
+            f"{pv.evidence_class} | {pv.evidence_source or '-'} | {pv.pending_standard or '-'} |"
         )
     return "\n".join(lines)

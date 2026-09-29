@@ -22,6 +22,7 @@ import yaml  # type: ignore[import-untyped]
 from loguru import logger
 
 from digitalmodel.cathodic_protection import engine_adapter
+from digitalmodel.cathodic_protection._experimental import ExperimentalModelError
 from digitalmodel.cathodic_protection.engine_adapter import (
     CALCULATION_TYPES,
     KEY_B401_LEGACY,
@@ -40,13 +41,14 @@ FIXTURE_DIR = (
 )
 FIXTURES = ("jacket", "manifold", "monopile", "pipeline", "ships", "fpso")
 # Owner decision 2026-09-27 (epic #2206): B401 offshore and F103 bracelet are
-# for client use with an engineer-of-record check; the ABS routes are legacy.
+# for client use with an engineer-of-record check; ABS offshore remains legacy.
+# Benchmark 2026-09-27 (#2259): ABS ships requires experimental opt-in.
 EXPECTED_USE_STATUS = {
     "jacket": USE_STATUS_CLIENT_EOR,
     "manifold": USE_STATUS_CLIENT_EOR,
     "monopile": USE_STATUS_CLIENT_EOR,
     "pipeline": USE_STATUS_CLIENT_EOR,
-    "ships": USE_STATUS_LEGACY_UNCITED,
+    "ships": "experimental-known-understatement",
     "fpso": USE_STATUS_LEGACY_UNCITED,
 }
 
@@ -455,9 +457,148 @@ def test_pipeline_f103_requires_bracelet_dimensions() -> None:
         run_cathodic_protection(cfg)
 
 
+
+# Issue #2256: 2019 field-joint coating ids (DNVGL-RP-F102 (2011) numbering).
+# De-identified benchmark shape: F103 2019, FBE linepipe, 245 field joints of
+# 0.4 m, FBE field joints (3A) with and without 4E(2) moulded PU infill.
+FJC_JOINTS = 245
+FJC_JOINT_LENGTH_M = 0.4
+
+
+def _f103_2019_field_joint_cfg(fjc: str | None, infill: str | None) -> dict[str, Any]:
+    cfg = _load("pipeline")
+    cfg["inputs"]["design_data"]["edition"] = "2019"
+    pipeline = cfg["inputs"]["pipeline"]
+    pipeline.update(
+        length_m=3000.0,
+        field_joint_count=FJC_JOINTS,
+        field_joint_length_m=FJC_JOINT_LENGTH_M,
+    )
+    if fjc is not None:
+        pipeline["field_joint_coating"] = fjc
+    if infill is not None:
+        pipeline["field_joint_infill"] = infill
+    return cfg
+
+
+@pytest.mark.parametrize(
+    ("fjc", "infill", "a", "b", "member", "infill_row"),
+    [
+        # Table A-2 (2019) row "3A FBE", infill none: a = 0.10, b = 0.010.
+        ("3A", "none", 0.10, 0.010, "3A", "none"),
+        # Same row with 4E(2) moulded PU on top: a = 0.03, b = 0.003.
+        ("3A", "4E(2)", 0.03, 0.003, "3A+4E(2)", "4E(2) moulded PU on top"),
+        # Case/whitespace-insensitive, and the May 2021 amended name.
+        (" 3a ", "None", 0.10, 0.010, "3A", "none"),
+        ("17A", "4e(2)", 0.03, 0.003, "3A+4E(2)", "4E(2) moulded PU on top"),
+    ],
+)
+def test_f103_2019_fbe_field_joints_resolve_by_infill(
+    fjc: str, infill: str, a: float, b: float, member: str, infill_row: str
+) -> None:
+    results = run_cathodic_protection(_f103_2019_field_joint_cfg(fjc, infill))["results"]
+    assert results["edition"] == "2019"
+    coating = results["coating_breakdown_factors"]
+    assert coating["field_joint_coating"] == member
+    assert coating["field_joint_infill"] == infill_row
+    assert coating["field_joint_a"] == pytest.approx(a)
+    assert coating["field_joint_b_per_yr"] == pytest.approx(b)
+    # T = 30 yr: f_cm = a + b * 15, f_cf = a + b * 30.
+    assert coating["mean_factor_field_joint"] == pytest.approx(a + b * 15.0)
+    assert coating["final_factor_field_joint"] == pytest.approx(a + b * 30.0)
+    area = results["pipeline_geometry_m"]["field_joint_area_m2"]
+    assert area == pytest.approx(math.pi * 0.3239 * FJC_JOINTS * FJC_JOINT_LENGTH_M, abs=1e-3)
+    assert "dnv-rp-f103 2019-09 Table A-2" in results["citations"]
+    assert isinstance(results["anode_requirements"]["anode_count"], int)
+    _assert_status(results["status"])
+
+
+@pytest.mark.parametrize("fjc", ["2B(1)", "2c(2)", "5A/B/C(1)", "14B_LE"])
+def test_f103_2019_accepts_other_f102_ids_without_infill(fjc: str) -> None:
+    results = run_cathodic_protection(_f103_2019_field_joint_cfg(fjc, None))["results"]
+    assert results["coating_breakdown_factors"]["field_joint_a"] > 0.0
+
+
+def test_f103_2019_3a_without_infill_is_ambiguous() -> None:
+    cfg = _f103_2019_field_joint_cfg("3A", None)
+    with pytest.raises(ValueError, match=r"field_joint_infill.*\['none', '4E\(2\)'\]"):
+        run_cathodic_protection(cfg)
+
+
+def test_f103_2019_rejects_an_invalid_infill() -> None:
+    cfg = _f103_2019_field_joint_cfg("2C(2)", "4E(2)")
+    with pytest.raises(ValueError, match=r"valid choices: \['none'\]"):
+        run_cathodic_protection(cfg)
+
+
+def test_f103_2019_unknown_field_joint_id_lists_valid_ids() -> None:
+    cfg = _f103_2019_field_joint_cfg("3Z", "none")
+    with pytest.raises(ValueError, match=r"Unknown field-joint coating '3Z'.*'2B\(1\)'.*'5A/B/C\(1\)'"):
+        run_cathodic_protection(cfg)
+
+
+def test_f103_2010_field_joint_ids_unchanged() -> None:
+    # 2010 Table A.2 row "3A FBE": a = 3/100 = 0.03, b = 0.3/100 = 0.003.
+    cfg = _f103_2019_field_joint_cfg("3A", None)
+    cfg["inputs"]["design_data"]["edition"] = "2010"
+    coating = run_cathodic_protection(cfg)["results"]["coating_breakdown_factors"]
+    assert coating["field_joint_coating"] == "3A"
+    assert coating["field_joint_infill"] == "none"
+    assert coating["field_joint_a"] == pytest.approx(0.03)
+    assert coating["field_joint_b_per_yr"] == pytest.approx(0.003)
+    assert coating["mean_factor_field_joint"] == pytest.approx(0.03 + 0.003 * 15.0)
+    cfg["inputs"]["pipeline"]["field_joint_coating"] = "2B(1)"
+    with pytest.raises(ValueError, match=r"DNV-RP-F103 \(2010\) Table A.2; valid ids"):
+        run_cathodic_protection(cfg)
+
+
 # ---------------------------------------------------------------------------
 # ABS routes (legacy implementation, wrapped)
 # ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("flag", [None, False, "true", "false", 1, [], {}])
+def test_ships_requires_explicit_experimental_boolean(
+    flag: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    cfg = _load("ships")
+    cfg["inputs"]["design_data"]["experimental"] = flag
+    before = copy.deepcopy(cfg)
+
+    def forbidden_solver() -> Any:
+        pytest.fail("quarantined ships route must reject before constructing the solver")
+
+    monkeypatch.setattr(engine_adapter, "_legacy_solver", forbidden_solver)
+    with pytest.raises(ExperimentalModelError) as caught:
+        run_cathodic_protection(cfg)
+    message = str(caught.value)
+    for wording in (
+        "ABS_gn_ships_2018",
+        "mean demand by about a third",
+        "final demand by about half",
+        "2026-09-27",
+        "#2259",
+        "#1852",
+        "inputs.design_data.experimental",
+    ):
+        assert wording in message
+    assert cfg == before
+
+
+@pytest.mark.parametrize("design_data", [{}, None, "invalid"])
+def test_ships_without_design_data_is_quarantined(design_data: Any) -> None:
+    cfg = {"inputs": {"calculation_type": "ABS_gn_ships_2018"}}
+    if design_data is not None:
+        cfg["inputs"]["design_data"] = design_data
+    with pytest.raises(ExperimentalModelError):
+        run_cathodic_protection(cfg)
+
+
+def test_ships_without_experimental_flag_is_quarantined() -> None:
+    cfg = _load("ships")
+    cfg["inputs"]["design_data"].pop("experimental", None)
+    with pytest.raises(ExperimentalModelError):
+        run_cathodic_protection(cfg)
 
 
 def test_ships_abs_2018_wrapped_with_int_count_and_status() -> None:
@@ -475,7 +616,7 @@ def test_ships_abs_2018_wrapped_with_int_count_and_status() -> None:
     status = cp["status"]
     assert status["result"] == STATUS_FAIL
     assert status["governing_case"] == "final"
-    assert status["use_status"] == USE_STATUS_LEGACY_UNCITED
+    assert status["use_status"] == "experimental-known-understatement"
     assert status["checks"] == {
         "initial_current_output": False,
         "final_current_output": False,

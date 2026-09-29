@@ -12,9 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - cathodic_protection: the `DNV_RP_B401_offshore` route now supports concrete-embedded reinforcement zones and named seawater/sediment anode families, with cited per-family electrochemistry, mass/count/current-output checks, and family plus overall governing cases (#2262).
+- cathodic_protection: record evidence class/source without lifting experimental gates; include 200 ohm-m in the EN middle band, require measured graphite mass for life, and expose evidence in provisional report text ([#2264](https://github.com/vamseeachanta/digitalmodel/issues/2264)).
+
+- cathodic_protection: `ABS_gn_ships_2018` now raises `ExperimentalModelError` unless `inputs.design_data.experimental: true` (Boolean). Opt-in preserves the calculation and sets `status.use_status` to `experimental-known-understatement`; reports warn that mean demand is about a third low and final demand about half low per the 2026-09-27 benchmark ([#2259](https://github.com/vamseeachanta/digitalmodel/issues/2259), [#1852](https://github.com/vamseeachanta/digitalmodel/issues/1852)). `ABS_gn_offshore_2018` is unchanged.
+
 - cathodic_protection: DNV-RP-F103 default edition is now 2019 (was 2010). Results for fluids above 25 °C and for FBE coatings increase; pass edition='2010' to reproduce earlier results.
 - cathodic_protection: new engine key `DNV_RP_F103` runs `design_data.edition` (default 2019); `DNV_RP_F103_2010` is now a deprecated alias pinned to edition 2010 (DeprecationWarning; a conflicting `design_data.edition` raises) so existing YAMLs reproduce their earlier results.
 - cathodic_protection: client use approved on the DNV-RP-B401 offshore and DNV-RP-F103 bracelet routes only, subject to an engineer-of-record check of every deliverable; every route's `status` block now carries `use_status` (`client-use-with-eor-check` / `legacy-uncited-independent-check-required` for the ABS and `*_legacy` routes) and the CP anode-design report states it (owner decision 2026-09-27, #2206).
+
+### Fixed
+
+- cathodic_protection: the `DNV_RP_F103` route maps `pipeline.field_joint_coating` for the resolved edition, so 2019 runs accept the DNVGL-RP-F102 (2011) Table A-2 ids (e.g. `3A`, `2B(1)`, `5A/B/C(1)`) and May 2021 names; the new `pipeline.field_joint_infill` selects the 3A FBE row (none 0.10/0.010, 4E(2) PU 0.03/0.003) and is required for it (#2256).
 
 ## [2.1.0] - 2026-03-26
 

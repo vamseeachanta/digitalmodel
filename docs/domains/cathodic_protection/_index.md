@@ -14,25 +14,34 @@ places (below); the worked examples are the contract between the two.
 Owner decision 2026-09-27 (epic #2206, D1 revisited). The domain is approved for client
 use on the DNV-RP-B401 offshore and DNV-RP-F103 bracelet routes only, and only subject to
 an engineer-of-record (EOR) check of every client deliverable. The four quarantined models
-stay experimental. The two ABS routes run the legacy solver with uncited tables and are not
-for client use without an independent check. Benchmark issue #1852 runs on the first real
-job.
+stay experimental. ABS ships is blocked by default after the 2026-09-27 benchmark
+([#2259](https://github.com/vamseeachanta/digitalmodel/issues/2259),
+[#1852](https://github.com/vamseeachanta/digitalmodel/issues/1852)) found mean demand
+understated by about a third and final demand by about half. ABS offshore remains legacy,
+uncited and not for client use without an independent check.
 
 | Route / model | Status | Basis |
 |---------------|--------|-------|
 | `DNV_RP_B401_offshore` (engine adapter) | Client use with EOR check | Cited, edition-keyed B401 tables; seawater, buried and concrete-reinforcement zones; independent seawater/sediment anode families; Sec. 7 initial / mean / final checks per family |
 | `DNV_RP_F103` (engine adapter; runs `design_data.edition`, default 2019) | Client use with EOR check | Cited, edition-keyed F103 tables (`f103_tables.py`); Eq. 14 protected-length check |
 | `DNV_RP_F103_2010` (engine adapter; deprecated alias of `DNV_RP_F103` pinned to edition 2010, `DeprecationWarning`; a different `design_data.edition` raises) | Client use with EOR check | As `DNV_RP_F103`, edition 2010; reproduces results from before the 2019 default |
-| `ABS_gn_ships_2018`, `ABS_gn_offshore_2018` | Legacy, uncited: not for client use without an independent check | Legacy solver (`base_solvers/hydrodynamics/cathodic_protection.py`), tables not cited |
+| `ABS_gn_ships_2018` (engine adapter) | Experimental, known understatement; not for design use | Raises `ExperimentalModelError` unless `inputs.design_data.experimental: true` (Boolean); opt-in preserves the legacy calculation. Benchmark 2026-09-27: mean demand about a third low, final about half low ([#2259](https://github.com/vamseeachanta/digitalmodel/issues/2259), [#1852](https://github.com/vamseeachanta/digitalmodel/issues/1852)) |
+| `ABS_gn_offshore_2018` | Legacy, uncited: not for client use without an independent check | Legacy solver (`base_solvers/hydrodynamics/cathodic_protection.py`), tables not cited |
 | `DNV_RP_B401_offshore_legacy`, `DNV_RP_F103_2010_legacy` | Legacy, uncited: not for client use without an independent check | Deprecated legacy solver paths |
 | Stray current (`stray_current.assess_stray_current` / `design_drainage_bond`), fuel-system protection check (`fuel_system_cp.check_protection`), galvanic corrosion (`corrosion_rate.galvanic_corrosion`), ICCP anode life (`iccp_design.anode_bed_design` `estimated_life_years`) | Experimental | Quarantined (#2209): the first three raise `ExperimentalModelError` and the ICCP life is `None` unless called with `experimental=True` |
 
 The status is machine-visible: every engine-adapter route writes
-`results["status"]["use_status"]` (`client-use-with-eor-check` or
-`legacy-uncited-independent-check-required`), and the `cathodic_protection.anode_design`
+`results["status"]["use_status"]` (`client-use-with-eor-check`,
+`legacy-uncited-independent-check-required`, or `experimental-known-understatement`), and the `cathodic_protection.anode_design`
 report states it in the Adequacy section and in the route's status detail, so every HTML/PDF
 deliverable carries it. `docs/registry/module-routing.yaml` keeps `maturity: beta` (its scale
 has no "client use with conditions" value).
+
+Evidence application (2026-09-29, [#2264](https://github.com/vamseeachanta/digitalmodel/issues/2264)):
+provisional records and report provenance now show evidence class and source. EN 50162's
+middle resistivity band includes 200 ohm-m; graphite lifetime requires measured mass.
+The [verification checklists](standards-inventory.md#8-standards-verification-checklist--evidence-application)
+record remaining gaps per value. These observations do not qualify experimental models.
 
 ## Module map
 
