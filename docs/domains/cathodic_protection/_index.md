@@ -37,6 +37,12 @@ report states it in the Adequacy section and in the route's status detail, so ev
 deliverable carries it. `docs/registry/module-routing.yaml` keeps `maturity: beta` (its scale
 has no "client use with conditions" value).
 
+Evidence application (2026-09-29, [#2264](https://github.com/vamseeachanta/digitalmodel/issues/2264)):
+provisional records and report provenance now show evidence class and source. EN 50162's
+middle resistivity band includes 200 ohm-m; graphite lifetime requires measured mass.
+The [verification checklists](standards-inventory.md#8-standards-verification-checklist--evidence-application)
+record remaining gaps per value. These observations do not qualify experimental models.
+
 ## Module map
 
 ### `src/digitalmodel/cathodic_protection/` (package)

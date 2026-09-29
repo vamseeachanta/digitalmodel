@@ -36,8 +36,9 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+from digitalmodel.cathodic_protection._evidence import iccp_evidence
 from digitalmodel.cathodic_protection._experimental import require_experimental
-from digitalmodel.cathodic_protection._provisional import ProvisionalValue
+from digitalmodel.cathodic_protection._provisional import ProvisionalValue, render_provisional
 
 # --- Literature sources (author, title, year, URL) ---------------------------
 
@@ -106,14 +107,15 @@ class AnodeLifeBasis(str, Enum):
 
 
 _PENDING = "NACE SP0169 / NACE SP0572 / ISO 15589-1 (not on file)"
-_LB_FT3_TO_KG_M3 = LB_TO_KG / 0.028316846592  # 16.018463 kg/m³ per lb/ft³
 _PER_FT2 = 1.0 / FT2_TO_M2  # A/ft² -> A/m²
 
 
 def _pv(value: float, units: str, source: str, note: str) -> ProvisionalValue:
     """A single-valued provisional constant (the source gives no range)."""
+    evidence_class, evidence_source = iccp_evidence(source, note)
     return ProvisionalValue(
-        value=value, units=units, source=source, note=note, pending_standard=_PENDING
+        value=value, units=units, source=source, note=note, pending_standard=_PENDING,
+        evidence_class=evidence_class, evidence_source=evidence_source,
     )
 
 
@@ -126,6 +128,7 @@ def _pv_range(
     rate, the lowest current-density limit, and for any other quantity the end
     that shortens life or lowers capacity.
     """
+    evidence_class, evidence_source = iccp_evidence(source, note)
     return ProvisionalValue(
         value=low if conservative_end == "low" else high,
         units=units,
@@ -135,6 +138,7 @@ def _pv_range(
         range_low=low,
         range_high=high,
         conservative_end=conservative_end,
+        evidence_class=evidence_class, evidence_source=evidence_source,
     )
 
 
@@ -185,12 +189,8 @@ ICCP_ANODE_RECORDS: dict[AnodeMaterial, IccpAnodeMaterialRecord] = {
     AnodeMaterial.GRAPHITE: IccpAnodeMaterialRecord(
         material=AnodeMaterial.GRAPHITE,
         life_basis=AnodeLifeBasis.MASS,
-        density=_pv(
-            99.84 * _LB_FT3_TO_KG_M3,
-            "kg/m3",
-            SRC_DOD_TP16,
-            "Table 1: 99.84 lb/ft3 max (= 1599 kg/m3); no lower bound given",
-        ),
+        # TP-16 Table 1 p2 gives only a maximum density, not nominal mass.
+        # Lifetime therefore requires measured anode_mass_kg (issue #2264).
         consumption_rate={
             IccpEnvironment.SOIL: _pv(
                 2.5 * LB_TO_KG, "kg/(A*yr)", SRC_DOD_TP16, "s.1.1.4.3: ~2.5 lb/A-yr soil"
@@ -551,7 +551,8 @@ def horizontal_column_resistance(
 
     SI form of DoD TSEWG TP-16 (2017) s.5
     ``RS = 1.64 rho / (pi L) [ln(48L/d) + ln(L/h) - 2 + 2h/L]`` (rho in
-    ohm-m, L and h in feet, d in inches; 1.64 = 1/(2 x 0.3048) and
+    ohm-m, L and h in feet, d in inches; 1.64 x 0.3048 = 0.499872,
+    approximated here by 0.5, and
     48 L_ft/d_in = 4 L/d). Provisional (#2247): the form differs from other
     published Dwight horizontal-conductor expressions and is flagged in
     the standards-verification checklist.
@@ -587,7 +588,9 @@ def iccp_anode_life(
     * Consumable anodes (HSCI, graphite, magnetite, scrap steel):
       ``life = N * m * u / (C * I)`` (DoD TSEWG TP-16 s.5 ``L = N W u / (S I)``),
       with m the mass of one anode (``anode_mass_kg``, or solid-rod mass
-      ``rho * pi d^2/4 * L`` from the cited density), u the utilisation
+      ``rho * pi d^2/4 * L`` from the cited density for HSCI only).
+      Graphite requires measured mass: TP-16 Table 1 p2 is a maximum density.
+      Here u is the utilisation
       factor (default 0.80, the low end of TP-16's 0.80-0.85) and C the cited consumption rate
       (``consumption_rate_kg_A_yr`` overrides it, e.g. with a supplier value).
     * Coated, dimensionally stable anodes (MMO, Pt/Ti, Pt/Nb):
@@ -624,7 +627,7 @@ def iccp_anode_life(
         if anode_mass_kg is None:
             if rec.density is None:
                 raise ValueError(
-                    f"no open-literature density for {rec.material.value}; "
+                    f"no qualified nominal density for {rec.material.value}; "
                     "supply anode_mass_kg"
                 )
             if anode_length_m is None or anode_diameter_m is None:
@@ -730,8 +733,8 @@ def anode_bed_design(
     bed = AnodeBedType(bed_type)
     rec = ICCP_ANODE_RECORDS[material]
     sources: set[str] = set()
-    if consumption_rate_kg_A_yr is None:
-        sources.add(rec.consumption_rate[env].source)
+    if experimental and consumption_rate_kg_A_yr is None:
+        sources.add(render_provisional(rec.consumption_rate[env], "consumption_rate"))
 
     if max_current_density_A_m2 is None:
         cited = rec.max_current_density.get(env)
@@ -741,7 +744,7 @@ def anode_bed_design(
                 f"{env.value}; supply max_current_density_A_m2"
             )
         j_max = cited.value
-        sources.add(cited.source)
+        sources.add(render_provisional(cited, "max_current_density"))
     else:
         j_max = max_current_density_A_m2
 
@@ -821,7 +824,9 @@ def anode_bed_design(
             1,
         )
         if rec.density is not None and anode_mass_kg is None:
-            sources.add(rec.density.source)
+            sources.add(render_provisional(rec.density, "density"))
+        if rec.life_basis is AnodeLifeBasis.MASS and utilisation_factor is None:
+            sources.add(render_provisional(DEFAULT_UTILISATION_FACTOR, "utilisation_factor"))
 
     return AnodeBedResult(
         bed_type=bed.value,
