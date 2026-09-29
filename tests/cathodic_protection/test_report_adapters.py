@@ -317,7 +317,7 @@ def test_abs_routes_expose_tables_and_status() -> None:
     [
         ("jacket", USE_STATUS_CLIENT_EOR, "engineer-of-record check"),
         ("pipeline", USE_STATUS_CLIENT_EOR, "engineer-of-record check"),
-        ("ships", USE_STATUS_LEGACY_UNCITED, "not for client use without an independent check"),
+        ("ships", "experimental-known-understatement", "not for design use"),
         ("fpso", USE_STATUS_LEGACY_UNCITED, "not for client use without an independent check"),
     ],
 )
@@ -335,6 +335,26 @@ def test_use_status_is_stated_in_adequacy_and_status_detail(
     route_status = _statuses(spec)[0]
     assert route_status.detail.endswith(first.markdown)
     assert wording in render_html(spec)
+
+
+def test_ships_report_warns_of_known_understatement() -> None:
+    spec = anode_design_report(_run("ships"))
+    adequacy = next(s for s in spec.sections if s.key == "adequacy")
+    first = adequacy.blocks[0]
+    assert isinstance(first, TextBlock)
+    html = render_html(spec)
+    for wording in (
+        "experimental",
+        "mean demand by about a third",
+        "final demand by about half",
+        "2026-09-27",
+        "#2259",
+        "#1852",
+        "not for design use",
+    ):
+        assert wording in first.markdown
+        assert wording in _statuses(spec)[0].detail
+        assert wording in html
 
 
 def test_missing_use_status_renders_as_not_for_client_use() -> None:

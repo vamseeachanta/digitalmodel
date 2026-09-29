@@ -22,6 +22,7 @@ import yaml  # type: ignore[import-untyped]
 from loguru import logger
 
 from digitalmodel.cathodic_protection import engine_adapter
+from digitalmodel.cathodic_protection._experimental import ExperimentalModelError
 from digitalmodel.cathodic_protection.engine_adapter import (
     CALCULATION_TYPES,
     KEY_B401_LEGACY,
@@ -40,13 +41,14 @@ FIXTURE_DIR = (
 )
 FIXTURES = ("jacket", "manifold", "monopile", "pipeline", "ships", "fpso")
 # Owner decision 2026-09-27 (epic #2206): B401 offshore and F103 bracelet are
-# for client use with an engineer-of-record check; the ABS routes are legacy.
+# for client use with an engineer-of-record check; ABS offshore remains legacy.
+# Benchmark 2026-09-27 (#2259): ABS ships requires experimental opt-in.
 EXPECTED_USE_STATUS = {
     "jacket": USE_STATUS_CLIENT_EOR,
     "manifold": USE_STATUS_CLIENT_EOR,
     "monopile": USE_STATUS_CLIENT_EOR,
     "pipeline": USE_STATUS_CLIENT_EOR,
-    "ships": USE_STATUS_LEGACY_UNCITED,
+    "ships": "experimental-known-understatement",
     "fpso": USE_STATUS_LEGACY_UNCITED,
 }
 
@@ -555,6 +557,50 @@ def test_f103_2010_field_joint_ids_unchanged() -> None:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.parametrize("flag", [None, False, "true", "false", 1, [], {}])
+def test_ships_requires_explicit_experimental_boolean(
+    flag: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    cfg = _load("ships")
+    cfg["inputs"]["design_data"]["experimental"] = flag
+    before = copy.deepcopy(cfg)
+
+    def forbidden_solver() -> Any:
+        pytest.fail("quarantined ships route must reject before constructing the solver")
+
+    monkeypatch.setattr(engine_adapter, "_legacy_solver", forbidden_solver)
+    with pytest.raises(ExperimentalModelError) as caught:
+        run_cathodic_protection(cfg)
+    message = str(caught.value)
+    for wording in (
+        "ABS_gn_ships_2018",
+        "mean demand by about a third",
+        "final demand by about half",
+        "2026-09-27",
+        "#2259",
+        "#1852",
+        "inputs.design_data.experimental",
+    ):
+        assert wording in message
+    assert cfg == before
+
+
+@pytest.mark.parametrize("design_data", [{}, None, "invalid"])
+def test_ships_without_design_data_is_quarantined(design_data: Any) -> None:
+    cfg = {"inputs": {"calculation_type": "ABS_gn_ships_2018"}}
+    if design_data is not None:
+        cfg["inputs"]["design_data"] = design_data
+    with pytest.raises(ExperimentalModelError):
+        run_cathodic_protection(cfg)
+
+
+def test_ships_without_experimental_flag_is_quarantined() -> None:
+    cfg = _load("ships")
+    cfg["inputs"]["design_data"].pop("experimental", None)
+    with pytest.raises(ExperimentalModelError):
+        run_cathodic_protection(cfg)
+
+
 def test_ships_abs_2018_wrapped_with_int_count_and_status() -> None:
     cfg = _run("ships")
     cp = cfg["cathodic_protection"]
@@ -570,7 +616,7 @@ def test_ships_abs_2018_wrapped_with_int_count_and_status() -> None:
     status = cp["status"]
     assert status["result"] == STATUS_FAIL
     assert status["governing_case"] == "final"
-    assert status["use_status"] == USE_STATUS_LEGACY_UNCITED
+    assert status["use_status"] == "experimental-known-understatement"
     assert status["checks"] == {
         "initial_current_output": False,
         "final_current_output": False,
