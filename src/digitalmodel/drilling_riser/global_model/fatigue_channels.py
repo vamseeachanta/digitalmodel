@@ -80,7 +80,9 @@ def stations(spec, *, spacing_m: float = DEFAULT_SPACING_M) -> list[tuple[str, f
 
 
 def extract(model, spec, ofx, *, spacing_m: float = DEFAULT_SPACING_M, n_bins: int = DEFAULT_BINS) -> dict[str, Any]:
-    period = ofx.Period(1)
+    from .orcaflex_run import main_period
+
+    period = main_period(model, spec)
     doc: dict[str, Any] = {"variable": VARIABLE, "radial_position": "outer", "thetas_deg": list(THETAS_DEG),
                            "units": "kPa", "counts": "half cycles (weight 0.5 in the damage sum)",
                            "binning": "equal bins over [0, observed maximum], last bin closed", "stations": []}
