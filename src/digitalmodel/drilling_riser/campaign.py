@@ -284,10 +284,12 @@ def _ring_tensioners(model) -> list:
 
 
 def set_line_tension(model, tension_n: float) -> None:
-    """Set every tensioner line (all winch stages) to ``tension_n``."""
+    """Set every tensioner line to ``tension_n`` (the statics row and the stages at the set tension): every stage
+    scales by the same factor, so a stage schedule (the recoil model's anti-recoil steps) keeps its ratio to it."""
     for w in _ring_tensioners(model):
+        f = tension_n / KN / float(w.GetData("StageValue", 0))
         for i in range(w.GetDataRowCount("StageValue")):
-            w.SetData("StageValue", i, tension_n / KN)
+            w.SetData("StageValue", i, float(w.GetData("StageValue", i)) * f)
 
 
 def calibrate_line_tension(model, spec: RiserGlobalModelSpec, *, solve, tol: float = CALIBRATION_TOL,
