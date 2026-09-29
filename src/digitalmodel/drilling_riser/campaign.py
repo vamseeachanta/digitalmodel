@@ -594,6 +594,15 @@ def robust_statics(model, spec: RiserGlobalModelSpec, params: dict, *, reload=No
         info["calibration"] = calibrate_line_tension(model, spec, solve=solve)
     return {**info, **physical_state_checks(model, spec)}
 
+FRAME_BRANCH_M = 10.0  # tension-frame elevation change that marks the collapsed branch (batch 4: 90-106 m; stroke 7.12 m)
+
+
+def _frame_branch_check(model, spec) -> None:
+    z = float(model["TensionFrame"].StaticResult("Z"))
+    if abs(z - spec.tension_frame.z_m) > FRAME_BRANCH_M:
+        raise _PathFailed(f"collapsed branch: tension frame at z {z:.1f} m against {spec.tension_frame.z_m:.1f} m")
+
+
 def open_water_statics(model, spec: OpenWaterRiserSpec, params: dict, *, reload=None) -> dict[str, Any]:
     """Statics of an open-water (C2) case. No tension ring, so no yawed branch: a direct solve from the straight
     start first (the C2 default). If it does not converge, the model is reloaded and the case offset reached by a
@@ -604,7 +613,9 @@ def open_water_statics(model, spec: OpenWaterRiserSpec, params: dict, *, reload=
 
     step = float(params.get("statics_step_pct", STEP_PCT))
     if params.get("statics") == "seeded":
-        return {**seeded_statics(model, spec, step_pct=step), **physical_state_checks(model, spec)}
+        info = seeded_statics(model, spec, step_pct=step)
+        _frame_branch_check(model, spec)
+        return {**info, **physical_state_checks(model, spec)}
     # at zero offset the frame continuation from (0, 0) is the direct solve again: the continuation from the -2 % WD
     # seed follows it (batch 4: C2-R1 flowing cases at 0 % WD)
     routes = [("direct", None), ("frame_continuation", step), ("frame_continuation_fine", step / 2.0),
@@ -622,6 +633,7 @@ def open_water_statics(model, spec: OpenWaterRiserSpec, params: dict, *, reload=
             else:
                 info = (seeded_statics(model, spec, step_pct=st) if name == "seed_continuation"
                         else seeded_statics(model, spec, start=(0.0, 0.0), step_pct=st))
+            _frame_branch_check(model, spec)
             info.update(strategy=name, attempts=attempts)
             return {**info, **physical_state_checks(model, spec)}
         except CaseFailed:

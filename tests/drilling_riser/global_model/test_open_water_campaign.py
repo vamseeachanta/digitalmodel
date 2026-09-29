@@ -91,6 +91,7 @@ def test_open_water_statics_falls_back_to_frame_continuation(monkeypatch, tmp_pa
                 raise RuntimeError("Whole system statics: 1000 (latest error = 12.3)")
 
     monkeypatch.setattr(cp, "physical_state_checks", lambda model, spec: {"physical": True})
+    monkeypatch.setattr(cp, "_frame_branch_check", lambda model, spec: None)  # routing only
     monkeypatch.setattr(cp, "seeded_statics", lambda model, spec, **kw: calls.append(("seeded", kw)) or
                         {"method": "seeded continuation", "steps": 3})
     case = _ow_case(tmp_path, heading_deg=0.0, offset_pct_wd=4.0)
@@ -107,6 +108,7 @@ def test_open_water_seeded_statics_request_uses_the_frame_continuation(monkeypat
     from digitalmodel.drilling_riser import campaign as cp
 
     monkeypatch.setattr(cp, "physical_state_checks", lambda model, spec: {"physical": True})
+    monkeypatch.setattr(cp, "_frame_branch_check", lambda model, spec: None)  # routing only
     seen = []
     monkeypatch.setattr(cp, "seeded_statics", lambda model, spec, **kw: seen.append(kw) or {"method": "seeded continuation",
                                                                                           "steps": 11})
@@ -175,6 +177,7 @@ def test_open_water_zero_offset_statics_fall_back_to_the_seeded_continuation(mon
         return {"method": "seeded continuation", "steps": 5}
 
     monkeypatch.setattr(cp, "physical_state_checks", lambda model, spec: {"physical": True})
+    monkeypatch.setattr(cp, "_frame_branch_check", lambda model, spec: None)  # routing only
     monkeypatch.setattr(cp, "seeded_statics", seeded)
     case = _ow_case(tmp_path, heading_deg=0.0, offset_pct_wd=0.0)
     ad = cp.RiserCampaignAdapter()
