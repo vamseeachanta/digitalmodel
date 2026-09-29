@@ -54,7 +54,7 @@ from __future__ import annotations
 import math
 import warnings
 from collections.abc import Mapping
-from typing import Any, Final, NamedTuple
+from typing import Any, Final, NamedTuple, cast
 
 from loguru import logger
 
@@ -475,6 +475,12 @@ def _b401_anode_geometry(
 
 def _run_b401(cfg: dict[str, Any]) -> dict[str, Any]:
     inputs = _section(cfg, "inputs")
+    if inputs.get("riser_base_assessment") is not None:
+        from digitalmodel.cathodic_protection.b401_structures_phases import (
+            run_b401_structures_phases,
+        )
+
+        return cast(dict[str, Any], run_b401_structures_phases(cfg))
     design_data = _section(inputs, "design_data")
     environment = _section(inputs, "environment")
     anode = _section(inputs, "anode")
@@ -487,7 +493,7 @@ def _run_b401(cfg: dict[str, Any]) -> dict[str, Any]:
             )
         from digitalmodel.cathodic_protection.b401_family_route import run_b401_families
 
-        return run_b401_families(cfg)
+        return cast(dict[str, Any], run_b401_families(cfg))
 
     zones = _b401_zones(structure)
     assigned = [zone.zone_name for _, _, _, zone in zones if zone.anode_family]
