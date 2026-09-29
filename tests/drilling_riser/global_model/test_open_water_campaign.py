@@ -183,3 +183,42 @@ def test_open_water_zero_offset_statics_fall_back_to_the_seeded_continuation(mon
     assert info["strategy"] == "seed_continuation" and info["physical"]
     seeded_calls = [c for c in calls if c[0] == "seeded"]
     assert "start" not in seeded_calls[-1][1]
+
+
+def test_open_water_collapsed_frame_branch_is_rejected_and_the_next_route_tried(monkeypatch, tmp_path):
+    """Batch 4: 11 C2-S1 statics converged on a collapsed branch - the tension frame 90-106 m below its elevation, the
+    string pulled down through the rotary (EDP compression, von Mises 5-10 GPa) - and passed the balance checks. A
+    frame more than FRAME_BRANCH_M off its elevation is a failed route; the next route runs."""
+    from digitalmodel.drilling_riser import campaign as cp
+
+    z_frames = iter([-99.4, 28.9])
+
+    class Frame:
+        def StaticResult(self, var):
+            assert var == "Z"
+            return next(z_frames)
+
+    class Fake:
+        threadCount = 1
+
+        def __init__(self):
+            self.general = type("G", (), {})()
+
+        def __getitem__(self, name):
+            assert name == "TensionFrame"
+            return Frame()
+
+        def LoadData(self, path):
+            pass
+
+        def CalculateStatics(self):
+            pass
+
+    monkeypatch.setattr(cp, "physical_state_checks", lambda model, spec: {"physical": True})
+    monkeypatch.setattr(cp, "seeded_statics", lambda model, spec, **kw: {"method": "seeded continuation", "steps": 3})
+    case = _ow_case(tmp_path, heading_deg=0.0, offset_pct_wd=0.0)
+    ad = cp.RiserCampaignAdapter()
+    ad.build(case, tmp_path / "m")
+    info = ad.statics(Fake(), case)
+    assert info["strategy"] == "frame_continuation"
+    assert "collapsed" in info["attempts"][0]["error"] and cp.FRAME_BRANCH_M == 10.0
