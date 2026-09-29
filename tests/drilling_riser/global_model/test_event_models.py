@@ -119,6 +119,9 @@ def test_recoil_lifts_the_lmrp_off_the_bop(tmp_path):
     cp.ADAPTER.statics(m, case)
     orun.run_dynamics(m)
     out = cp.ADAPTER.extract(m, case)
+    es = out["w5"]["event_series"]
+    assert es["t"][0] == 0.0 and es["t"][-1] == 15.0  # the whole main stage, over every anti-recoil stage
+    assert out["w5"]["time"]["end_s"] == 15.0
     rc = out["w5"]["recoil"]
     assert rc["lmrp_lift_max_m"] > 0.0  # a failed valve leaves net upward force: the LMRP lifts off
     assert "clearance_min_after_release_m" in rc
