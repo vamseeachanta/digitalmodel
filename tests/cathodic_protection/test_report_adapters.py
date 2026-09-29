@@ -36,6 +36,7 @@ from digitalmodel.cathodic_protection.cp_reporting import (
 from digitalmodel.cathodic_protection.cp_survey import CISAnalysisResult, CISSurveyPoint
 from digitalmodel.cathodic_protection.engine_adapter import (
     USE_STATUS_CLIENT_EOR,
+    USE_STATUS_ENGINEERING_VALIDATION,
     USE_STATUS_LEGACY_UNCITED,
     run_cathodic_protection,
 )
@@ -92,6 +93,45 @@ def _run(name: str) -> dict[str, Any]:
 
 def _statuses(spec: ReportSpec) -> list[StatusBlock]:
     return [b for s in spec.sections for b in s.blocks if isinstance(b, StatusBlock)]
+
+
+def test_anode_bank_report_has_standard_sections_and_envelope_figure() -> None:
+    cfg = _run("anode_bank")
+    spec = anode_design_report(cfg)
+    assert [section.key for section in spec.sections] == [
+        "design-basis", "current-demand", "bank-resistance",
+        "attenuation", "adequacy", "references",
+    ]
+    figures = [b for s in spec.sections for b in s.blocks if isinstance(b, FigureBlock)]
+    assert figures and "envelope" in figures[0].title.lower()
+    assert cfg["results"]["status"]["use_status"] == USE_STATUS_ENGINEERING_VALIDATION
+    assert any("not for client use" in status.detail.lower() for status in _statuses(spec))
+
+
+def test_anode_bank_report_preserves_unequal_sides_and_names_both_lengths() -> None:
+    cfg = _run("anode_bank")
+    raw = cfg["inputs"]["banks"][0]["sides"][0]
+    second = dict(raw, side_id="flowline-west", length_m=200)
+    cfg["inputs"]["banks"][0]["sides"].append(second)
+    cfg = run_cathodic_protection(cfg)
+    spec = anode_design_report(cfg)
+    figures = [b for s in spec.sections for b in s.blocks if isinstance(b, FigureBlock)]
+    assert len(figures) == 2
+    table = _tables(spec)["Protected length and far-end potential"]
+    assert "F103 Eq. (20) length" in table.columns
+    assert "Fixed-load extension length" in table.columns
+    assert len(table.rows) == 2
+
+
+def test_anode_bank_report_preserves_edition_specific_citation_paths() -> None:
+    spec = anode_design_report(_run("anode_bank"))
+    paths = {citation["wiki_path"] for citation in spec.citations}
+    assert "wikis/engineering-standards/wiki/standards/dnv-rp-f103-2019.md" in paths
+    assert "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2017.md" in paths
+    topology = _tables(spec)["Bank sizing and topology"]
+    labels = {row[1] for row in topology.rows}
+    assert {"Installed count", "Recommended count", "Interaction factor",
+            "Cable resistance", "Group formula", "Count-search outcome"} <= labels
 
 
 def _tables(spec: ReportSpec) -> dict[str, TableBlock]:

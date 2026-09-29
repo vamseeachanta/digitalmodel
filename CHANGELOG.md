@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- cathodic_protection: terminal `DNV_RP_F103_anode_bank` route calculates pipeline-plus-structure demand, grouped stand-off-anode resistance, conservative F103 terminal attenuation, protected length, far-end potential and governing PASS/FAIL status.
+
 ### Changed
 
 - cathodic_protection: DNV-RP-F103 default edition is now 2019 (was 2010). Results for fluids above 25 °C and for FBE coatings increase; pass edition='2010' to reproduce earlier results.

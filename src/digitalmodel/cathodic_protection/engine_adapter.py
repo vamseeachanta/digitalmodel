@@ -106,10 +106,15 @@ from digitalmodel.cathodic_protection.marine_structure_cp import (
     StructuralZone,
     zone_current_density,
 )
+from digitalmodel.cathodic_protection.pipeline_anode_bank import (
+    AnodeBankDesignInput,
+    design_anode_bank_cp,
+)
 from digitalmodel.citations import CitedValue
 
 KEY_B401: Final = "DNV_RP_B401_offshore"
 KEY_F103: Final = "DNV_RP_F103"
+KEY_F103_ANODE_BANK: Final = "DNV_RP_F103_anode_bank"
 # Deprecated alias of KEY_F103 pinned to DNV-RP-F103 2010 (owner decision 2026-09-27).
 KEY_F103_2010: Final = "DNV_RP_F103_2010"
 F103_2010_PINNED_EDITION: Final[F103Edition] = "2010"
@@ -121,6 +126,7 @@ KEY_F103_LEGACY: Final = "DNV_RP_F103_2010_legacy"
 CALCULATION_TYPES: Final[tuple[str, ...]] = (
     KEY_B401,
     KEY_F103,
+    KEY_F103_ANODE_BANK,
     KEY_F103_2010,
     KEY_ABS_SHIPS,
     KEY_ABS_OFFSHORE,
@@ -142,9 +148,11 @@ STATUS_FAIL: Final = "FAIL"
 # into every deliverable through ``results["status"]["use_status"]``.
 USE_STATUS_CLIENT_EOR: Final = "client-use-with-eor-check"
 USE_STATUS_LEGACY_UNCITED: Final = "legacy-uncited-independent-check-required"
+USE_STATUS_ENGINEERING_VALIDATION: Final = "engineering-validation-required"
 USE_STATUS_BY_KEY: Final[dict[str, str]] = {
     KEY_B401: USE_STATUS_CLIENT_EOR,
     KEY_F103: USE_STATUS_CLIENT_EOR,
+    KEY_F103_ANODE_BANK: USE_STATUS_ENGINEERING_VALIDATION,
     KEY_F103_2010: USE_STATUS_CLIENT_EOR,
     KEY_ABS_SHIPS: USE_STATUS_LEGACY_UNCITED,
     KEY_ABS_OFFSHORE: USE_STATUS_LEGACY_UNCITED,
@@ -939,6 +947,20 @@ def _run_legacy(cfg: dict[str, Any], key: str) -> dict[str, Any]:
     return cfg
 
 
+def _run_f103_anode_bank(cfg: dict[str, Any]) -> dict[str, Any]:
+    """Map the terminal-bank YAML schema to the typed F103 design API."""
+    inputs = _section(cfg, "inputs")
+    design_data = dict(_section(inputs, "design_data"))
+    design_data["banks"] = inputs.get("banks")
+    model = AnodeBankDesignInput.model_validate(design_data)
+    results = design_anode_bank_cp(model).model_dump(mode="json")
+    results["status"]["use_status"] = USE_STATUS_ENGINEERING_VALIDATION
+    cfg["results"] = results
+    if results["status"]["result"] == STATUS_FAIL:
+        logger.warning("F103 terminal-bank design FAIL: {}", results["status"]["reason"])
+    return cfg
+
+
 # ---------------------------------------------------------------------------
 # Entry
 # ---------------------------------------------------------------------------
@@ -974,6 +996,8 @@ def run_cathodic_protection(cfg: dict[str, Any]) -> dict[str, Any]:
         return _run_b401(cfg)
     if key == KEY_F103:
         return _run_f103(cfg)
+    if key == KEY_F103_ANODE_BANK:
+        return _run_f103_anode_bank(cfg)
     if key == KEY_F103_2010:
         warnings.warn(
             f"calculation_type {KEY_F103_2010!r} is deprecated; it pins DNV-RP-F103 "
@@ -1005,12 +1029,14 @@ __all__ = [
     "KEY_B401_LEGACY",
     "F103_2010_PINNED_EDITION",
     "KEY_F103",
+    "KEY_F103_ANODE_BANK",
     "KEY_F103_2010",
     "KEY_F103_LEGACY",
     "STATUS_FAIL",
     "STATUS_PASS",
     "USE_STATUS_BY_KEY",
     "USE_STATUS_CLIENT_EOR",
+    "USE_STATUS_ENGINEERING_VALIDATION",
     "USE_STATUS_LEGACY_UNCITED",
     "run_cathodic_protection",
 ]
