@@ -9,10 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- cathodic_protection: terminal `DNV_RP_F103_anode_bank` route calculates pipeline-plus-structure demand, grouped stand-off-anode resistance, conservative F103 terminal attenuation, protected length, far-end potential and governing PASS/FAIL status.
+
 ### Changed
 
 - cathodic_protection: `DNV_RP_B401_offshore` now accepts a mutually exclusive `inputs.components[]` extension for hybrid and free-standing risers, with component-local zones, coatings, environment and life; explicit electrical continuity and family allocations; stand-off, flush and bracelet anodes; and component, family and overall demand/mass/count/output checks and reports ([#2261](https://github.com/vamseeachanta/digitalmodel/issues/2261)).
 - cathodic_protection: the `DNV_RP_B401_offshore` route now supports concrete-embedded reinforcement zones and named seawater/sediment anode families, with cited per-family electrochemistry, mass/count/current-output checks, and family plus overall governing cases ([#2262](https://github.com/vamseeachanta/digitalmodel/issues/2262)).
+- cathodic_protection: add B401 riser-base/foundation/mudmat/hatch-cover compositions, sequential temporary and wet-storage consumption, retrofit additional-anode sizing, and explicit fail-preserving accepted-output-shortfall records ([#2263](https://github.com/vamseeachanta/digitalmodel/issues/2263)).
 - cathodic_protection: record evidence class/source without lifting experimental gates; include 200 ohm-m in the EN middle band, require measured graphite mass for life, and expose evidence in provisional report text ([#2264](https://github.com/vamseeachanta/digitalmodel/issues/2264)).
 
 - cathodic_protection: `ABS_gn_ships_2018` now raises `ExperimentalModelError` unless `inputs.design_data.experimental: true` (Boolean). Opt-in preserves the calculation and sets `status.use_status` to `experimental-known-understatement`; reports warn that mean demand is about a third low and final demand about half low per the 2026-09-27 benchmark ([#2259](https://github.com/vamseeachanta/digitalmodel/issues/2259), [#1852](https://github.com/vamseeachanta/digitalmodel/issues/1852)). `ABS_gn_offshore_2018` is unchanged.

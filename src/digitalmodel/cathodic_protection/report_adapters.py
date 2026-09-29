@@ -38,12 +38,16 @@ import json
 import re
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Literal, Mapping, Sequence
+from typing import Any, Literal, Mapping, Sequence, cast
 
 from digitalmodel.cathodic_protection import _kernels as kernel
 from digitalmodel.cathodic_protection._edition import normalize_edition
 from digitalmodel.cathodic_protection.anode_depletion import DepletionProfile
-from digitalmodel.cathodic_protection.b401_tables import B401_WIKI_PATH, table_label
+from digitalmodel.cathodic_protection.b401_tables import (
+    B401_WIKI_PATH,
+    B401_WIKI_PATH_2017,
+    table_label,
+)
 from digitalmodel.cathodic_protection.cp_reporting import (
     ComplianceStatus,
     CPAssessmentReport,
@@ -55,12 +59,14 @@ from digitalmodel.cathodic_protection.engine_adapter import (
     KEY_B401,
     KEY_F103,
     KEY_F103_2010,
+    KEY_F103_ANODE_BANK,
     STATUS_PASS,
     USE_STATUS_CLIENT_EOR,
+    USE_STATUS_ENGINEERING_VALIDATION,
     USE_STATUS_EXPERIMENTAL,
     USE_STATUS_LEGACY_UNCITED,
 )
-from digitalmodel.cathodic_protection.f103_tables import F103_WIKI_PATH
+from digitalmodel.cathodic_protection.f103_tables import F103_WIKI_PATH, F103_WIKI_PATH_2019
 from digitalmodel.citations.schema import Citation
 from digitalmodel.reporting.adapters import report_adapter
 from digitalmodel.reporting.figures import figure_from_columns
@@ -87,6 +93,7 @@ PLACEHOLDER_REVISION = "00"
 FIG_DEMAND_VS_TIME = "fig-cp-demand-vs-time"
 FIG_ANODE_COUNTS = "fig-cp-anode-counts"
 FIG_POTENTIAL_VS_DISTANCE = "fig-cp-potential-vs-distance"
+FIG_BANK_POTENTIAL_ENVELOPE = "fig-cp-bank-potential-envelope"
 FIG_REMAINING_MASS = "fig-cp-remaining-mass"
 
 #: Number of time samples for the ``I(t)`` curve (0 .. design life inclusive).
@@ -95,6 +102,10 @@ DEMAND_CURVE_SAMPLES = 11
 _WIKI_BY_CODE: dict[str, str] = {
     "dnv-rp-b401": B401_WIKI_PATH,
     "dnv-rp-f103": F103_WIKI_PATH,
+}
+_WIKI_BY_REVISION: dict[tuple[str, str], str] = {
+    ("dnv-rp-b401", "2017-06"): B401_WIKI_PATH_2017,
+    ("dnv-rp-f103", "2019-09"): F103_WIKI_PATH_2019,
 }
 _PUBLISHER_BY_CODE: dict[str, str] = {"dnv-rp-b401": "DNV", "dnv-rp-f103": "DNV"}
 _STANDARD_RE = re.compile(r"^(?P<code>.+?)\s*\((?P<edition>[^()]+)\)\s*$")
@@ -199,7 +210,7 @@ def _citations_from_labels(labels: Sequence[Any], note: str) -> list[Citation]:
                 publisher=_PUBLISHER_BY_CODE[code],
                 revision=revision,
                 section=section,
-                wiki_path=_WIKI_BY_CODE[code],
+                wiki_path=_WIKI_BY_REVISION.get((code, revision), _WIKI_BY_CODE[code]),
                 note=note,
             )
         key = f"{candidate.code_id} {candidate.revision} {candidate.section}"
@@ -269,6 +280,10 @@ _USE_STATUS_TEXT: dict[str, str] = {
     USE_STATUS_LEGACY_UNCITED: (
         "Use status: legacy solver with uncited tables; not for client use "
         "without an independent check."
+    ),
+    USE_STATUS_ENGINEERING_VALIDATION: (
+        "Use status: engineering validation required; not for client use pending "
+        "an independent engineering validation."
     ),
 }
 _USE_STATUS_MISSING = (
@@ -372,12 +387,20 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
         )
 
         return build_b401_component_sections(inputs, results)
+    if results.get("riser_base_assessment"):
+        from digitalmodel.cathodic_protection.b401_structures_phases_report import (
+            build_b401_structures_phases_sections,
+        )
+
+        return cast(
+            list[Section], build_b401_structures_phases_sections(inputs, results)
+        )
     if results.get("anode_families"):
         from digitalmodel.cathodic_protection.b401_family_report import (
             build_b401_family_sections,
         )
 
-        return build_b401_family_sections(inputs, results)
+        return cast(list[Section], build_b401_family_sections(inputs, results))
     areas = _mapping(results.get("surface_areas_m2"))
     breakdown = _mapping(results.get("coating_breakdown"))
     densities = _mapping(results.get("current_densities_A_m2"))
@@ -972,10 +995,126 @@ def _abs_offshore_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]
 # Registered adapters
 # ---------------------------------------------------------------------------
 
+
+def _bank_report_rows(
+    results: Mapping[str, Any],
+) -> tuple[list[Row], list[Row], list[Row], list[tuple[str, list[Any], list[Any]]]]:
+    """Flatten terminal-bank results into report rows and figure columns."""
+    demand_rows: list[Row] = []
+    resistance_rows: list[Row] = []
+    attenuation_rows: list[Row] = []
+    envelopes: list[tuple[str, list[Any], list[Any]]] = []
+    for value in results.get("banks", []):
+        bank = _mapping(value)
+        bank_id = str(bank.get("bank_id", ""))
+        demand = _mapping(bank.get("current_demand_A"))
+        for component in ("structure", "pipeline", "total"):
+            phases = _mapping(demand.get(component))
+            demand_rows.append([bank_id, component, phases.get("initial", ""),
+                                phases.get("mean", ""), phases.get("final", "")])
+        resistance = _mapping(bank.get("anode_resistance_ohm"))
+        for phase in ("initial", "final"):
+            resistance_rows.append([
+                bank_id, phase, _mapping(resistance.get("individual")).get(phase, ""),
+                _mapping(resistance.get("parallel")).get(phase, ""),
+                _mapping(resistance.get("total")).get(phase, ""),
+            ])
+        for side_value in bank.get("sides", []):
+            side = _mapping(side_value)
+            attenuation_rows.append([
+                bank_id, side.get("side_id", ""),
+                _mapping(side.get("geometry_m")).get("length", ""),
+                side.get("f103_eq20_protected_length_m", ""),
+                side.get("extended_protected_length_m", ""), side.get("far_potential_V", ""),
+                side.get("protection_margin_V", ""), side.get("protection_ok", ""),
+            ])
+            envelope = _mapping(side.get("potential_envelope"))
+            distances = list(envelope.get("distance_m", []))
+            potentials = list(envelope.get("potential_V", []))
+            envelopes.append((f"{bank_id}/{side.get('side_id', '')}", distances, potentials))
+    return demand_rows, resistance_rows, attenuation_rows, envelopes
+
+
+def _bank_envelope_figure(
+    label: str, x_values: list[Any], potentials: list[Any], index: int
+) -> FigureBlock:
+    """Build one conservative figure so unequal side grids remain visible."""
+    return FigureBlock(
+        title="Conservative potential attenuation envelope",
+        caption=("F103 Eq. (15) voltage-drop envelope; this is not a "
+                 "distributed-current potential profile."),
+        figure_id=f"{FIG_BANK_POTENTIAL_ENVELOPE}-{index}",
+        plotly=figure_from_columns("line", x_values, {label: potentials},
+                                   title="Potential envelope from terminal bank",
+                                   x_label="distance from bank (m)", y_label="potential (V)"),
+    )
+
+
+def _bank_requirement_rows(results: Mapping[str, Any]) -> list[Row]:
+    """Expose the sizing comparators and bank-topology assumptions."""
+    rows: list[Row] = []
+    for value in results.get("banks", []):
+        bank = _mapping(value)
+        bank_id = str(bank.get("bank_id", ""))
+        requirement = _mapping(bank.get("anode_requirements"))
+        resistance = _mapping(bank.get("anode_resistance_ohm"))
+        fields = (
+            ("required_mass_kg", "Required mass", "kg"),
+            ("installed_mass_kg", "Installed mass", "kg"),
+            ("count_by_mass", "Count by mass", "-"),
+            ("count_by_initial_output", "Count by initial output", "-"),
+            ("count_by_final_output", "Count by final output", "-"),
+            ("count_by_attenuation", "Count by attenuation", "-"),
+            ("recommended_anode_count", "Recommended count", "-"),
+            ("installed_anode_count", "Installed count", "-"),
+            ("search_outcome", "Count-search outcome", "-"),
+        )
+        rows.extend([[bank_id, label, requirement.get(key, ""), unit]
+                     for key, label, unit in fields])
+        rows.extend([
+            [bank_id, "Interaction factor", resistance.get("interaction_factor", ""), "-"],
+            [bank_id, "Cable resistance", resistance.get("cable", ""), "ohm"],
+            [bank_id, "Group formula", resistance.get("group_formula", ""), "-"],
+        ])
+    return rows
+
+
+def _f103_anode_bank_sections(
+    inputs: Mapping[str, Any], results: Mapping[str, Any]
+) -> list[Section]:
+    """Standard layout for independently assessed terminal anode banks."""
+    demand, resistance, attenuation, envelopes = _bank_report_rows(results)
+    requirements = _bank_requirement_rows(results)
+    figures = [_bank_envelope_figure(label, distances, potentials, index)
+               for index, (label, distances, potentials) in enumerate(envelopes, 1)]
+    status = _mapping(results.get("status"))
+    return [
+        Section(key="design-basis", title="Design basis", blocks=[_kv_table(
+            "Terminal-bank basis", [["Standard", results.get("standard", ""), "-"],
+                                     ["Edition", results.get("edition", ""), "-"],
+                                     ["Design life", results.get("design_life_years", ""), "years"]])]),
+        Section(key="current-demand", title="Current demand", blocks=[TableBlock(
+            title="Pipeline and structure current demand", columns=["Bank", "Component",
+            "Initial", "Mean", "Final"], units=["-", "-", "A", "A", "A"], rows=demand)]),
+        Section(key="bank-resistance", title="Bank resistance", blocks=[TableBlock(
+            title="Individual and group resistance", columns=["Bank", "Case", "Individual",
+            "Parallel", "Total"], units=["-", "-", "ohm", "ohm", "ohm"], rows=resistance),
+            TableBlock(title="Bank sizing and topology", columns=["Bank", "Item", "Value", "Unit"],
+                       rows=requirements)]),
+        Section(key="attenuation", title="Flowline attenuation", blocks=[TableBlock(
+            title="Protected length and far-end potential", columns=["Bank", "Side", "Length",
+            "F103 Eq. (20) length", "Fixed-load extension length", "Far potential", "Margin", "Pass"],
+            units=["-", "-", "m", "m", "m", "V", "V", "-"], rows=attenuation), *figures]),
+        Section(key="adequacy", title="Adequacy", blocks=[_use_status_block(status),
+            _status_block(status, "Terminal-bank and far-end adequacy"), _checks_table(status)]),
+        _references_section(results, []),
+    ]
+
 _SECTION_BUILDERS = {
     KEY_B401: _b401_sections,
     KEY_F103: _f103_sections,
     KEY_F103_2010: _f103_sections,
+    KEY_F103_ANODE_BANK: _f103_anode_bank_sections,
     KEY_ABS_SHIPS: _abs_ships_sections,
     KEY_ABS_OFFSHORE: _abs_offshore_sections,
 }
@@ -1276,6 +1415,7 @@ def assessment_report(cfg: Mapping[str, Any]) -> ReportSpec:
 __all__ = [
     "DEMAND_CURVE_SAMPLES",
     "FIG_ANODE_COUNTS",
+    "FIG_BANK_POTENTIAL_ENVELOPE",
     "FIG_DEMAND_VS_TIME",
     "FIG_POTENTIAL_VS_DISTANCE",
     "FIG_REMAINING_MASS",

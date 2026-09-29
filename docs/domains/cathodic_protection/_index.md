@@ -22,9 +22,10 @@ uncited and not for client use without an independent check.
 
 | Route / model | Status | Basis |
 |---------------|--------|-------|
-| `DNV_RP_B401_offshore` (engine adapter) | Client use with EOR check | Cited, edition-keyed B401 tables; seawater, buried and concrete-reinforcement zones; independent seawater/sediment anode families; optional multi-component riser extension; Sec. 7 initial / mean / final checks per component allocation and family |
+| `DNV_RP_B401_offshore` (engine adapter) | Client use with EOR check | Cited, edition-keyed B401 tables; seawater, buried and concrete-reinforcement zones; independent seawater/sediment anode families; mutually exclusive multi-component riser or phased riser-base modes; Sec. 7 initial / mean / final checks per component allocation and family; sequential temporary, wet-storage, operating and retrofit assessments |
 | `DNV_RP_F103` (engine adapter; runs `design_data.edition`, default 2019) | Client use with EOR check | Cited, edition-keyed F103 tables (`f103_tables.py`); Eq. 14 protected-length check |
 | `DNV_RP_F103_2010` (engine adapter; deprecated alias of `DNV_RP_F103` pinned to edition 2010, `DeprecationWarning`; a different `design_data.edition` raises) | Client use with EOR check | As `DNV_RP_F103`, edition 2010; reproduces results from before the 2019 default |
+| `DNV_RP_F103_anode_bank` | Engineering validation required; not for client use | Independent terminal banks; F103:2019 Sec. 6.7 Eq. (9)-(20) and Appendix D.8.5-D.8.10, or the 2010 Sec. 5.6 counterparts; B401 individual-anode resistance |
 | `ABS_gn_ships_2018` (engine adapter) | Experimental, known understatement; not for design use | Raises `ExperimentalModelError` unless `inputs.design_data.experimental: true` (Boolean); opt-in preserves the legacy calculation. Benchmark 2026-09-27: mean demand about a third low, final about half low ([#2259](https://github.com/vamseeachanta/digitalmodel/issues/2259), [#1852](https://github.com/vamseeachanta/digitalmodel/issues/1852)) |
 | `ABS_gn_offshore_2018` | Legacy, uncited: not for client use without an independent check | Legacy solver (`base_solvers/hydrodynamics/cathodic_protection.py`), tables not cited |
 | `DNV_RP_B401_offshore_legacy`, `DNV_RP_F103_2010_legacy` | Legacy, uncited: not for client use without an independent check | Deprecated legacy solver paths |
@@ -32,10 +33,24 @@ uncited and not for client use without an independent check.
 
 The status is machine-visible: every engine-adapter route writes
 `results["status"]["use_status"]` (`client-use-with-eor-check`,
-`legacy-uncited-independent-check-required`, or `experimental-known-understatement`), and the `cathodic_protection.anode_design`
+`engineering-validation-required`, `legacy-uncited-independent-check-required`,
+or `experimental-known-understatement`), and the `cathodic_protection.anode_design`
 report states it in the Adequacy section and in the route's status detail, so every HTML/PDF
 deliverable carries it. `docs/registry/module-routing.yaml` keeps `maturity: beta` (its scale
 has no "client use with conditions" value).
+
+For a phased riser-base assessment, add
+`inputs.riser_base_assessment` to the existing `DNV_RP_B401_offshore` input.
+Its `components[]` flatten to the same cited B401 zones and named anode families
+as the ordinary route. `phases[]` consume each installed family's mass in order;
+wet-storage consumption therefore reduces the usable mass entering operation.
+`retrofit` reports remaining physical/usable mass and additional counts governed
+by mass and initial/final output. Component grouping, phase duration/demand,
+retrofit inference and an owner-accepted output shortfall are project-practice
+inputs with non-empty reasons. Acceptance records never convert the engineering
+result from `FAIL` to `PASS`.
+Top-level `inputs.components[]` and `inputs.riser_base_assessment` select distinct
+calculation modes and are mutually exclusive; combining them raises `ValueError`.
 
 Evidence application (2026-09-29, [#2264](https://github.com/vamseeachanta/digitalmodel/issues/2264)):
 provisional records and report provenance now show evidence class and source. EN 50162's
@@ -61,6 +76,10 @@ record remaining gaps per value. These observations do not qualify experimental 
 | `b401_component_connectivity.py` | Component-local environment validation and life-filtered electrical-continuity paths |
 | `b401_component_report.py` | Component demand, hosted-family, allocation, continuity, reconciliation and citation report tables |
 | `b401_component_zones.py` | Component-zone demand and fail-closed edition-specific F103 coating applicability |
+| `b401_structures_phases.py` | Sequential installed-mass ledgers for temporary, wet-storage and operating phases, retrofit sizing, and fail-preserving accepted-shortfall records |
+| `b401_structures_phases_retrofit.py` | Existing-system remaining-mass, depleted-output and combined existing-plus-proposed retrofit checks |
+| `b401_structures_phases_schema.py` | Riser-base, foundation, mudmat and hatch-cover composition validation plus edition-specific B401 rule citations |
+| `b401_structures_phases_report.py` | Report tables for component composition, phase balances, retrofit results and owner shortfall dispositions |
 | `api_rp_1632.py` | API RP 1632 galvanic CP of underground tanks and piping |
 | `coating.py` | Coating breakdown factors (initial, mean, final) and coating-life estimates per DNV-RP-B401 |
 | `corrosion_rate.py` | CO2 / H2S / galvanic corrosion-rate models (de Waard-Milliams, Norsok M-506) |
@@ -76,6 +95,7 @@ record remaining gaps per value. These observations do not qualify experimental 
 | `marine_cp.py` | Multi-zone marine CP: current density by temperature and depth, calcareous correction |
 | `marine_structure_cp.py` | Zone-based CP for platforms, jackets, monopiles and subsea structures; retrofit assessment |
 | `pipeline_cp.py` | Pipeline CP per NACE SP0169 / ISO 15589-1: current density, anode spacing, interference |
+| `pipeline_anode_bank.py` | Typed F103 terminal-bank design: grouped resistance, pipeline plus structure demand, Eq. (15) conservative attenuation envelope, Eq. (20) protected length and far-end potential check |
 | `stray_current.py` | AC/DC interference assessment and mitigation (drainage bonds, polarisation cells) |
 
 ### Legacy solver (router used by the worked examples)
@@ -181,8 +201,9 @@ are skipped.
 
 | Location | Covers |
 |----------|--------|
-| `tests/cathodic_protection/` | Package modules (one `test_<module>.py` each), B401 edition foundation and divergence baseline, `test_worked_examples.py` (this directory's examples) |
+| `tests/cathodic_protection/` | Package modules (one `test_<module>.py` each), B401 edition foundation and divergence baseline, multi-component and phased/retrofit route tests, `test_worked_examples.py` (this directory's examples) |
 | `tests/fixtures/cathodic_protection/workflow_inputs/multi_component_riser.yml` | De-identified, rounded hybrid/free-standing riser component contract with stand-off, flush and bracelet families |
+| `tests/fixtures/cathodic_protection/workflow_inputs/riser_base_phased.yml` | De-identified riser-base component, sequential phase and retrofit assessment contract |
 | `tests/specialized/cathodic_protection/` | Legacy router: ABS ships and ABS offshore 2018 calculations; `conftest.py` fixtures |
 | `tests/marine_ops/marine_engineering/test_cathodic_protection_dnv.py` | Legacy router: DNV-RP-F103:2010 (calibrated by `f1a1b05f`, #573) |
 | `tests/benchmarks/test_cp_benchmarks.py` | CP benchmarks |
