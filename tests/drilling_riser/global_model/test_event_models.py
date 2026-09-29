@@ -134,3 +134,28 @@ def test_recoil_hold_factor_scales_the_hold_tension(tmp_path):
 
     s = cp.case_spec(_case(tmp_path, recoil={"hold_factor": 0.98}, dynamics=DYN))
     assert s.recoil.stages[-1]["tension_n"] == pytest.approx(0.98 * ev.recoil_hold_tension_n(s))
+
+
+def test_calibrated_line_tension_keeps_the_anti_recoil_schedule(monkeypatch):
+    """The tensioner setting of a model variant (calibration) scales every stage; the recoil stages keep their ratio
+    to the pre-disconnect tension (event gate G-RC1 found the schedule overwritten: ring rise at twice the closed form)."""
+    from digitalmodel.drilling_riser import campaign as cp
+
+    class W:
+        def __init__(self, vals):
+            self.vals = list(vals)
+
+        def GetDataRowCount(self, name):
+            return len(self.vals)
+
+        def GetData(self, name, i):
+            return self.vals[i]
+
+        def SetData(self, name, i, v):
+            self.vals[i] = v
+
+    ws = [W([100.0, 100.0, 90.0, 80.0]), W([100.0, 100.0, 90.0, 80.0])]
+    monkeypatch.setattr(cp, "_ring_tensioners", lambda model: ws)
+    cp.set_line_tension(None, 150.0e3)
+    for w in ws:
+        assert w.vals == pytest.approx([150.0, 150.0, 135.0, 120.0])
