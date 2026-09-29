@@ -663,6 +663,26 @@ def _cite(section: str, note: str, edition: F103Edition) -> Citation:
     )
 
 
+def anode_bank_formula_citations(
+    edition: F103Edition | str | None = None,
+) -> tuple[Citation, ...]:
+    """Citations for terminal-bank metallic drop and protected-length formulas."""
+    ed = normalize_f103_edition(edition, stacklevel=3)
+    locations: tuple[tuple[str, str], ...]
+    if ed == "2010":
+        locations = (
+            ("Sec. 5.6 Eq. (8)-(14)", "current demand and metallic voltage drop"),
+            ("Sec. 5.6 Eq. (16)-(17)", "combined voltage drop and protected length"),
+        )
+    else:
+        locations = (
+            ("Sec. 6.7 Eq. (9)-(16)", "current demand and metallic voltage drop"),
+            ("Sec. 6.7 Eq. (18)/(20)", "combined voltage drop and protected length"),
+            ("Appendix D.8.5-D.8.10", "isolated anode-bank arrangement guidance"),
+        )
+    return tuple(_cite(section, note, ed) for section, note in locations)
+
+
 def fluid_temperature_band(
     fluid_temp_c: float, edition: F103Edition | None = None
 ) -> FluidTemperatureBand:
