@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - cathodic_protection: new engine key `DNV_RP_F103` runs `design_data.edition` (default 2019); `DNV_RP_F103_2010` is now a deprecated alias pinned to edition 2010 (DeprecationWarning; a conflicting `design_data.edition` raises) so existing YAMLs reproduce their earlier results.
 - cathodic_protection: client use approved on the DNV-RP-B401 offshore and DNV-RP-F103 bracelet routes only, subject to an engineer-of-record check of every deliverable; every route's `status` block now carries `use_status` (`client-use-with-eor-check` / `legacy-uncited-independent-check-required` for the ABS and `*_legacy` routes) and the CP anode-design report states it (owner decision 2026-09-27, #2206).
 
+### Fixed
+
+- cathodic_protection: the `DNV_RP_F103` route maps `pipeline.field_joint_coating` for the resolved edition, so 2019 runs accept the DNVGL-RP-F102 (2011) Table A-2 ids (e.g. `3A`, `2B(1)`, `5A/B/C(1)`) and May 2021 names; the new `pipeline.field_joint_infill` selects the 3A FBE row (none 0.10/0.010, 4E(2) PU 0.03/0.003) and is required for it (#2256).
+
 ## [2.1.0] - 2026-03-26
 
 ### Phase 1 GSD Sprint -- New Calculation Modules

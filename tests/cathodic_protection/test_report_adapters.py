@@ -256,6 +256,22 @@ def test_pipeline_f103_spec_passes_with_spacing_check() -> None:
     assert fj[:2] == ["Field joints", "none"]
 
 
+def test_pipeline_f103_design_basis_shows_field_joint_system_and_infill() -> None:
+    # Issue #2256: 2019 FBE field joints (3A) with 4E(2) moulded PU infill.
+    with (INPUT_DIR / "pipeline.yml").open(encoding="utf-8") as stream:
+        cfg: dict[str, Any] = yaml.safe_load(stream)
+    cfg["inputs"]["pipeline"].update(
+        field_joint_coating="3A",
+        field_joint_infill="4E(2)",
+        field_joint_count=100,
+        field_joint_length_m=0.4,
+    )
+    run_cathodic_protection(cfg)
+    rows = {row[0]: row[1] for row in _tables(anode_design_report(cfg))["Design data"].rows}
+    assert rows["Field joint coating (system id)"] == "3A+4E(2)"
+    assert rows["Field joint infill"] == "4E(2) moulded PU on top"
+
+
 def test_pipeline_f103_2010_alias_key_is_laid_out_as_f103() -> None:
     with (INPUT_DIR / "pipeline.yml").open(encoding="utf-8") as stream:
         cfg: dict[str, Any] = yaml.safe_load(stream)
