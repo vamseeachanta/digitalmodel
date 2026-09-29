@@ -22,7 +22,7 @@ uncited and not for client use without an independent check.
 
 | Route / model | Status | Basis |
 |---------------|--------|-------|
-| `DNV_RP_B401_offshore` (engine adapter) | Client use with EOR check | Cited, edition-keyed B401 tables (`b401_tables.py`); full Sec. 7 initial / mean / final loop |
+| `DNV_RP_B401_offshore` (engine adapter) | Client use with EOR check | Cited, edition-keyed B401 tables; seawater, buried and concrete-reinforcement zones; independent seawater/sediment anode families; Sec. 7 initial / mean / final checks per family |
 | `DNV_RP_F103` (engine adapter; runs `design_data.edition`, default 2019) | Client use with EOR check | Cited, edition-keyed F103 tables (`f103_tables.py`); Eq. 14 protected-length check |
 | `DNV_RP_F103_2010` (engine adapter; deprecated alias of `DNV_RP_F103` pinned to edition 2010, `DeprecationWarning`; a different `design_data.edition` raises) | Client use with EOR check | As `DNV_RP_F103`, edition 2010; reproduces results from before the 2019 default |
 | `ABS_gn_ships_2018` (engine adapter) | Experimental, known understatement; not for design use | Raises `ExperimentalModelError` unless `inputs.design_data.experimental: true` (Boolean); opt-in preserves the legacy calculation. Benchmark 2026-09-27: mean demand about a third low, final about half low ([#2259](https://github.com/vamseeachanta/digitalmodel/issues/2259), [#1852](https://github.com/vamseeachanta/digitalmodel/issues/1852)) |
@@ -53,6 +53,9 @@ record remaining gaps per value. These observations do not qualify experimental 
 | `_edition.py` | DNV-RP-B401 (default 2021) and DNV-RP-F103 (`"2010"`, `"2019"`; default 2019 since 2026-09-27, was 2010) edition normalisation |
 | `anode_depletion.py` | Anode consumption tracking, remaining-life and inspection-interval estimates |
 | `anode_sizing.py` | Sacrificial anode sizing per DNV-RP-B401: stand-off, bracelet, flush-mount; McCoy and Dwight resistance |
+| `b401_anode_families.py` | Independent B401 anode-family mass, resistance and initial/final output checks using each family's environment and electrolyte |
+| `b401_family_route.py` | Engine mapping for named zone-to-family assignments, validation and overall governing margin |
+| `b401_family_report.py` | Report tables for explicit zone area basis and per-family electrochemistry/checks |
 | `api_rp_1632.py` | API RP 1632 galvanic CP of underground tanks and piping |
 | `coating.py` | Coating breakdown factors (initial, mean, final) and coating-life estimates per DNV-RP-B401 |
 | `corrosion_rate.py` | CO2 / H2S / galvanic corrosion-rate models (de Waard-Milliams, Norsok M-506) |
@@ -89,11 +92,13 @@ import shim for the same class.
 ### Tables added by #2207
 
 `src/digitalmodel/cathodic_protection/b401_tables.py` and `f103_tables.py` — cited,
-edition-keyed DNV-RP-B401 (Tables 10-1 / 10-2 by climate × depth band, Table 10-4 by
-category × depth band, Sec. 6.3 buried, Tables 10-6 / 10-7 / 10-8) and DNV-RP-F103 table
-modules, wired into the package and the legacy B401 route. Each edition carries a provenance
-flag (`verified-2011-tables` for 2005 / 2010, `inherited-2011-unverified` for 2017 / 2021). The
-worked-example "Reproduction notes" record the values the route returns with these tables.
+edition-keyed DNV-RP-B401 (Tables 10-1 / 10-2 by climate × depth band, Table 10-3 / A-3 /
+8-3 by reinforcement-steel area, Table 10-4 by category × depth band, Sec. 6.3 buried,
+and Tables 10-6 / 10-7 / 10-8) and DNV-RP-F103 table modules. Concrete reinforcement
+demand holds the single Table x-3 mean density constant across the three sizing phases;
+the table does not provide separate initial/final values. Named anode families select the
+Table x-6 capacity and closed-circuit potential by seawater/sediment environment and, for
+2021, by anode surface temperature.
 
 ## Worked examples (`examples/`)
 
@@ -112,7 +117,7 @@ are skipped.
 | [`calc-003-dnvgl-f103-2016-flowline-flet-to-flet.md`](examples/calc-003-dnvgl-f103-2016-flowline-flet-to-flet.md) | Deepwater flowlines protected from FLET anode banks, DNVGL-RP-F103:2016 (routed through the 2010 route) |
 | [`calc-004-dnvgl-b401-subsea-riser-base.md`](examples/calc-004-dnvgl-b401-subsea-riser-base.md) | Subsea riser base structures, DNVGL-RP-B401:2017, 27 yr |
 | [`calc-005-dnvgl-b401-riser-base-foundation.md`](examples/calc-005-dnvgl-b401-riser-base-foundation.md) | Riser base foundations (mud mat + hatch covers), DNVGL-RP-B401:2017 |
-| [`calc-006-dnvgl-b401-walking-mitigation.md`](examples/calc-006-dnvgl-b401-walking-mitigation.md) | Pipe clamp mattress anodes for walking mitigation, DNV-RP-B401:2021 |
+| [`calc-006-dnvgl-b401-walking-mitigation.md`](examples/calc-006-dnvgl-b401-walking-mitigation.md) | Runnable de-identified mattress/pipe-clamp composition with seawater, reinforcement and buried zones plus separate seawater/sediment anode families |
 | [`calc-007-dnvgl-b401-f103-design-basis-all.md`](examples/calc-007-dnvgl-b401-f103-design-basis-all.md) | Field CP design basis (B401:2017 + F103:2016 + ISO 15589-2); reference data, not routed |
 | [`calc-008-dnv-b401-2005-slhr-deepwater.md`](examples/calc-008-dnv-b401-2005-slhr-deepwater.md) | Single-leg hybrid risers, DNV-RP-B401:2005, 22 yr, tropical |
 | [`calc-009-dnv-b401-2005-fsr-temporary.md`](examples/calc-009-dnv-b401-2005-fsr-temporary.md) | Temporary free-standing riser, 6-month life, DNV-RP-B401:2005 / NACE SP0176 |

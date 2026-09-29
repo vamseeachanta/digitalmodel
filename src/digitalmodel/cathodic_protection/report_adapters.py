@@ -41,8 +41,9 @@ from pathlib import Path
 from typing import Any, Literal, Mapping, Sequence
 
 from digitalmodel.cathodic_protection import _kernels as kernel
+from digitalmodel.cathodic_protection._edition import normalize_edition
 from digitalmodel.cathodic_protection.anode_depletion import DepletionProfile
-from digitalmodel.cathodic_protection.b401_tables import B401_WIKI_PATH
+from digitalmodel.cathodic_protection.b401_tables import B401_WIKI_PATH, table_label
 from digitalmodel.cathodic_protection.cp_reporting import (
     ComplianceStatus,
     CPAssessmentReport,
@@ -365,6 +366,12 @@ def _references_section(results: Mapping[str, Any], usage: Sequence[tuple[str, S
 
 
 def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> list[Section]:
+    if results.get("anode_families"):
+        from digitalmodel.cathodic_protection.b401_family_report import (
+            build_b401_family_sections,
+        )
+
+        return build_b401_family_sections(inputs, results)
     areas = _mapping(results.get("surface_areas_m2"))
     breakdown = _mapping(results.get("coating_breakdown"))
     densities = _mapping(results.get("current_densities_A_m2"))
@@ -373,6 +380,9 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
     ver = _mapping(results.get("current_output_verification"))
     status = _mapping(results.get("status"))
     design_life = float(results.get("design_life_years") or 0.0)
+    edition = normalize_edition(str(results.get("edition")))
+    coating_table = table_label(edition, 4)
+    resistance_table = table_label(edition, 7)
     zones = [z for z in areas if z != "total_m2"]
     environment = _mapping(inputs.get("environment"))
     anode = _mapping(inputs.get("anode"))
@@ -394,6 +404,7 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
         ["Utilisation factor source", req.get("utilization_factor_source", ""), "-"],
         ["Electrochemical capacity", req.get("electrochemical_capacity_Ah_kg", ""), "Ah/kg"],
     ]
+    has_area_basis = any("area_basis" in _mapping(demand.get(z)) for z in zones)
     zone_rows: list[Row] = []
     for z in zones:
         fc = _mapping(breakdown.get(z))
@@ -403,6 +414,7 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
                 z,
                 dz.get("exposure_zone", dz.get("base_zone", "")),
                 areas.get(z, ""),
+                *([_mapping(demand.get(z)).get("area_basis", "steel_surface")] if has_area_basis else []),
                 fc.get("coating_category", ""),
                 dz.get("depth_band", ""),
                 dz.get("climate", ""),
@@ -417,9 +429,9 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
         blocks=[
             _kv_table("Design data", design_rows, source="cfg[inputs], cfg[results]"),
             TableBlock(
-                title="Zones and coating breakdown constants (Table 10-4)",
-                columns=["Zone", "Exposure", "Area", "Coating", "Depth band", "Climate", "a", "b"],
-                units=["-", "-", "m2", "category", "m", "-", "-", "1/yr"],
+                title=f"Zones and coating breakdown constants ({coating_table})",
+                columns=["Zone", "Exposure", "Area"] + (["Area basis"] if has_area_basis else []) + ["Coating", "Depth band", "Climate", "a", "b"],
+                units=["-", "-", "m2"] + (["-"] if has_area_basis else []) + ["category", "m", "-", "-", "1/yr"],
                 rows=zone_rows,
                 source="cfg[results][coating_breakdown], cfg[results][current_densities_A_m2]",
             ),
@@ -434,6 +446,7 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
             [
                 z,
                 d.get("area_m2", ""),
+                *([d.get("area_basis", "steel_surface")] if has_area_basis else []),
                 d.get("i_initial_A_m2", ""),
                 d.get("i_mean_A_m2", ""),
                 d.get("i_final_A_m2", ""),
@@ -449,6 +462,7 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
         [
             "Total",
             areas.get("total_m2", ""),
+            *([""] if has_area_basis else []),
             "", "", "", "", "", "",
             round(float(demand.get("total_initial_A", 0.0)), 4),
             round(float(demand.get("total_mean_A", 0.0)), 4),
@@ -476,17 +490,17 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
             TableBlock(
                 title="Current density, coating breakdown and demand by zone",
                 columns=[
-                    "Zone", "Area", "i initial", "i mean", "i final",
+                    "Zone", "Area", *(["Area basis"] if has_area_basis else []), "i initial", "i mean", "i final",
                     "f_ci", "f_cm", "f_cf", "I initial", "I mean", "I final",
                 ],
-                units=["-", "m2", "A/m2", "A/m2", "A/m2", "-", "-", "-", "A", "A", "A"],
+                units=["-", "m2"] + (["-"] if has_area_basis else []) + ["A/m2", "A/m2", "A/m2", "-", "-", "-", "A", "A", "A"],
                 rows=demand_rows,
                 source="cfg[results][current_demand_A]",
             ),
             FigureBlock(
                 title="Maintenance current demand over the design life",
                 caption=(
-                    "I(t) = A x i_mean x min(1, a + b t) per zone with the Table 10-4 "
+                    f"I(t) = A x i_mean x min(1, a + b t) per zone with {coating_table} "
                     "breakdown constants; the initial and final design cases use the "
                     "phase densities tabulated above (i_initial with f_ci, i_final with f_cf)."
                 ),
@@ -562,7 +576,7 @@ def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> lis
     adequacy = Section(
         key="adequacy",
         title="Adequacy",
-        subtitle="DNV-RP-B401 Sec. 7.8 current-output verification (Table 10-7 resistance)",
+        subtitle=f"DNV-RP-B401 Sec. 7.8 current-output verification ({resistance_table} resistance)",
         blocks=[
             _use_status_block(status),
             _status_block(status, "Anode design adequacy"),
