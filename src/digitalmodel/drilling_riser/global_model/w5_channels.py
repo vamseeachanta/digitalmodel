@@ -39,6 +39,12 @@ REQUIRED_POINTS = ("ufj", "riser_top", "lfj")
 REQUIRED_LINES = ("InnerBarrel", "Riser", "Stack")
 
 
+def _main(model, spec):
+    from .orcaflex_run import main_period
+
+    return main_period(model, spec)
+
+
 # --------------------------------------------------------------------------- pure helpers
 
 
@@ -284,7 +290,7 @@ def extract(model, spec, analysis: str, ofx) -> dict[str, Any]:
     """The W5 channel set of a solved (reopened) model: ``analysis`` = ``statics`` or ``dynamics``."""
     static = analysis == "statics"
     sp = ofx.Period(ofx.pnStaticState)
-    period = sp if static else ofx.Period(1)  # stage 1 = the main stage after the build-up
+    period = sp if static else _main(model, spec)  # the main stage after the build-up
     doc: dict[str, Any] = {"schema": SCHEMA, "analysis": analysis, "units": UNITS, "points": {}, "range_graphs": {}}
     t = None if static else [float(x) for x in model.SampleTimes(period)]
     if t is not None:
@@ -349,7 +355,7 @@ def _downsample(t: Sequence[float], v: Sequence[float], dt: float) -> list[float
 def event_series(model, spec, ofx, *, dt_s: float = EVENT_SERIES_DT_S) -> dict[str, Any]:
     """Event runs: downsampled histories (every ``dt_s`` over the main stage) of the vessel offset and the
     responses that set the watch circles and the recoil checks - the W5 red-offset search reads them."""
-    period = ofx.Period(1)
+    period = _main(model, spec)
     t = [float(x) for x in model.SampleTimes(period)]
     v, ib, riser = model[spec.vessel_name], model["InnerBarrel"], model["Riser"]
     ch = {"vessel_x": v.TimeHistory("X", period), "vessel_y": v.TimeHistory("Y", period),
@@ -373,7 +379,7 @@ def recoil_summary(model, spec, ofx) -> dict[str, Any]:
     lift), the smallest clearance after the release and whether the LMRP falls back (re-contact)."""
     from .events import LMRP_LINE
 
-    period = ofx.Period(1)
+    period = _main(model, spec)
     t = [float(x) for x in model.SampleTimes(period)]
     lm = [float(x) for x in model[LMRP_LINE].TimeHistory("Z", period, ofx.oeEndA)]
     bop = [float(x) for x in model["Stack"].TimeHistory("Z", period, ofx.oeEndB)]
@@ -423,7 +429,7 @@ def extract_hang_off(model, spec, analysis: str, ofx) -> dict[str, Any]:
     flex joint with the LMRP), the hanging stack bodies, range graphs, stroke, ring and the load on the vessel."""
     static = analysis == "statics"
     sp = ofx.Period(ofx.pnStaticState)
-    period = sp if static else ofx.Period(1)
+    period = sp if static else _main(model, spec)
     ho = spec.hang_off
     doc: dict[str, Any] = {"schema": SCHEMA, "riser_kind": "hang_off", "mode": ho.mode, "with_lmrp": ho.with_lmrp,
                            "running": ho.running, "analysis": analysis, "units": UNITS, "points": {},
@@ -472,7 +478,7 @@ def hang_off_summary(model, spec, analysis: str, ofx) -> dict[str, float]:
     """Screening responses of a hang-off case (SI: deg, Pa, N, m): upper flex-joint and riser-bottom angles, riser
     von Mises maximum, load on the vessel (max / min) and telescopic-joint stroke."""
     static = analysis == "statics"
-    period = ofx.Period(ofx.pnStaticState) if static else ofx.Period(1)
+    period = ofx.Period(ofx.pnStaticState) if static else _main(model, spec)
     ib, riser = model["InnerBarrel"], model["Riser"]
     ufj, spring = _top_load_series(model, spec, period, ofx, static=static)
     if static:

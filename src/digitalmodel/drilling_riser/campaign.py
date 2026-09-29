@@ -787,7 +787,7 @@ class RiserCampaignAdapter:
                 out["modes"] = orun.riser_modal_periods(model, n_modes=int(n))
             return out
         out = dict(orun.governing_responses(model, spec))
-        period = ofx.Period(1)
+        period = orun.main_period(model, spec)
         ib, riser, ring = model["InnerBarrel"], model["Riser"], model["TensionRing"]
         out["series"] = {
             "ufj_angle_deg": _stats(ib.TimeHistory("Ez-Angle", period, ofx.oeEndA)),
