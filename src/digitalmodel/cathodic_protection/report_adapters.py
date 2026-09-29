@@ -38,7 +38,7 @@ import json
 import re
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Literal, Mapping, Sequence
+from typing import Any, Literal, Mapping, Sequence, cast
 
 from digitalmodel.cathodic_protection import _kernels as kernel
 from digitalmodel.cathodic_protection._edition import normalize_edition
@@ -366,12 +366,20 @@ def _references_section(results: Mapping[str, Any], usage: Sequence[tuple[str, S
 
 
 def _b401_sections(inputs: Mapping[str, Any], results: Mapping[str, Any]) -> list[Section]:
+    if results.get("riser_base_assessment"):
+        from digitalmodel.cathodic_protection.b401_structures_phases_report import (
+            build_b401_structures_phases_sections,
+        )
+
+        return cast(
+            list[Section], build_b401_structures_phases_sections(inputs, results)
+        )
     if results.get("anode_families"):
         from digitalmodel.cathodic_protection.b401_family_report import (
             build_b401_family_sections,
         )
 
-        return build_b401_family_sections(inputs, results)
+        return cast(list[Section], build_b401_family_sections(inputs, results))
     areas = _mapping(results.get("surface_areas_m2"))
     breakdown = _mapping(results.get("coating_breakdown"))
     densities = _mapping(results.get("current_densities_A_m2"))
