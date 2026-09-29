@@ -698,6 +698,16 @@ def test_adapter_returns_same_cfg_object() -> None:
     assert cfg["inputs"] == snapshot
 
 
+def test_b401_component_and_riser_base_modes_are_mutually_exclusive() -> None:
+    cfg = _load("riser_base_phased")
+    cfg["inputs"]["components"] = _load("multi_component_riser")["inputs"][
+        "components"
+    ]
+
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        run_cathodic_protection(cfg)
+
+
 def test_engine_dispatches_cathodic_protection_to_adapter(monkeypatch: pytest.MonkeyPatch) -> None:
     from digitalmodel import engine as engine_module
 

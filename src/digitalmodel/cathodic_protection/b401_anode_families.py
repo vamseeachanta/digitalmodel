@@ -181,9 +181,15 @@ def _verification(
     capacity_ah_kg: float,
     driving_voltage_v: float,
     utilization: float,
+    mean_current_years_A_year: float | None = None,
 ) -> dict[str, Any]:
-    required_mass = kernel.anode_mass(
-        demand.mean, design_life_years, capacity_ah_kg, utilization
+    current_years = (
+        demand.mean * design_life_years
+        if mean_current_years_A_year is None
+        else mean_current_years_A_year
+    )
+    required_mass = kernel.anode_mass_from_current_years(
+        current_years, capacity_ah_kg, utilization
     )
     radii = _radii(family, utilization)
     resistance_initial, resistance_final = _resistances(family, *radii)
@@ -204,6 +210,7 @@ def _verification(
     governing_case, governing_ratio = _governing(ratios)
     return {
         "required_mass_kg": required_mass,
+        "mean_current_years_A_year": current_years,
         "count_by_mass": counts["mass"],
         "count_by_initial_current": counts["initial"],
         "count_by_final_current": counts["final"],
@@ -230,6 +237,8 @@ def design_anode_family(
     demand: FamilyDemand,
     design_life_years: float,
     edition: Edition,
+    *,
+    mean_current_years_A_year: float | None = None,
 ) -> dict[str, Any]:
     """Size and verify one family with its own cited electrochemistry."""
     capacity = anode_capacity(
@@ -270,6 +279,7 @@ def design_anode_family(
             capacity.value,
             voltage.value,
             utilization,
+            mean_current_years_A_year,
         )
     )
     return result

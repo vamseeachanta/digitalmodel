@@ -12,6 +12,11 @@ It dispatches on ``cfg["inputs"]["calculation_type"]``:
     and the full B401 Sec. 7 loop ``N = max(N_mass, N_initial, N_final)`` with
     the Table 10-7 resistance from
     :func:`~digitalmodel.cathodic_protection.anode_sizing.calculate_anode_resistance`.
+    ``inputs.components[]`` selects the multi-component riser extension, with
+    component-local zones, life and environment, explicitly allocated physical
+    anode families and stated electrical-continuity paths.
+    ``inputs.riser_base_assessment`` selects phased riser-base assessment. It
+    is mutually exclusive with the top-level ``inputs.components[]`` mode.
 ``DNV_RP_F103``
     :func:`~digitalmodel.cathodic_protection.dnv_rp_f103.design_bracelet_cp`
     mapped from the pipeline YAML schema, for the edition given in
@@ -475,6 +480,13 @@ def _b401_anode_geometry(
 
 def _run_b401(cfg: dict[str, Any]) -> dict[str, Any]:
     inputs = _section(cfg, "inputs")
+    if (
+        inputs.get("components") is not None
+        and inputs.get("riser_base_assessment") is not None
+    ):
+        raise ValueError(
+            "inputs.components and inputs.riser_base_assessment are mutually exclusive"
+        )
     if inputs.get("riser_base_assessment") is not None:
         from digitalmodel.cathodic_protection.b401_structures_phases import (
             run_b401_structures_phases,
@@ -485,6 +497,13 @@ def _run_b401(cfg: dict[str, Any]) -> dict[str, Any]:
     environment = _section(inputs, "environment")
     anode = _section(inputs, "anode")
     structure = _section(inputs, "structure")
+
+    if inputs.get("components") is not None:
+        from digitalmodel.cathodic_protection.b401_component_route import (
+            run_b401_components,
+        )
+
+        return run_b401_components(cfg)
 
     if inputs.get("anode_families") is not None:
         if inputs.get("anode"):
