@@ -26,7 +26,8 @@ It dispatches on ``cfg["inputs"]["calculation_type"]``:
 ``ABS_gn_ships_2018`` / ``ABS_gn_offshore_2018``
     The legacy implementation (no new-package equivalent), wrapped so anode
     counts are integers (``ceil``) and a ``status`` block is derived from the
-    route's own adequacy checks.
+    route's own adequacy checks. Ships requires the Boolean opt-in
+    ``inputs.design_data.experimental: true`` because its demand is understated.
 ``DNV_RP_B401_offshore_legacy`` / ``DNV_RP_F103_2010_legacy``
     The old code paths unchanged, with a :class:`DeprecationWarning`.
 
@@ -40,8 +41,9 @@ Every route writes ``cfg["results"]["status"]``::
 "Use status"): ``"client-use-with-eor-check"`` for ``DNV_RP_B401_offshore``
 and ``DNV_RP_F103`` / ``DNV_RP_F103_2010`` (client use subject to an
 engineer-of-record check of every deliverable); ``"legacy-uncited-independent-check-required"`` for
-the ABS routes and the ``*_legacy`` keys (legacy solver, uncited tables, not
-for client use without an independent check).
+ABS offshore and the ``*_legacy`` keys (legacy solver, uncited tables, not
+for client use without an independent check); ``"experimental-known-understatement"``
+for ABS ships (not for design use; benchmark 2026-09-27, #2259 / #1852).
 
 A ``FAIL`` is logged as a warning through the engine's logger (loguru) and
 never raises: the run completes so the report can show the failing design.
@@ -66,6 +68,7 @@ from digitalmodel.cathodic_protection._edition import (
     normalize_f103_edition,
     standard_for_edition,
 )
+from digitalmodel.cathodic_protection._experimental import ExperimentalModelError
 from digitalmodel.cathodic_protection.anode_sizing import (
     AnodeType,
     calculate_anode_resistance,
@@ -142,11 +145,12 @@ STATUS_FAIL: Final = "FAIL"
 # into every deliverable through ``results["status"]["use_status"]``.
 USE_STATUS_CLIENT_EOR: Final = "client-use-with-eor-check"
 USE_STATUS_LEGACY_UNCITED: Final = "legacy-uncited-independent-check-required"
+USE_STATUS_EXPERIMENTAL: Final = "experimental-known-understatement"
 USE_STATUS_BY_KEY: Final[dict[str, str]] = {
     KEY_B401: USE_STATUS_CLIENT_EOR,
     KEY_F103: USE_STATUS_CLIENT_EOR,
     KEY_F103_2010: USE_STATUS_CLIENT_EOR,
-    KEY_ABS_SHIPS: USE_STATUS_LEGACY_UNCITED,
+    KEY_ABS_SHIPS: USE_STATUS_EXPERIMENTAL,
     KEY_ABS_OFFSHORE: USE_STATUS_LEGACY_UNCITED,
     KEY_B401_LEGACY: USE_STATUS_LEGACY_UNCITED,
     KEY_F103_LEGACY: USE_STATUS_LEGACY_UNCITED,
@@ -848,6 +852,14 @@ def _legacy_solver() -> Any:
 
 
 def _run_abs_ships(cfg: dict[str, Any]) -> dict[str, Any]:
+    if _section(cfg, "inputs", "design_data").get("experimental") is not True:
+        raise ExperimentalModelError(
+            KEY_ABS_SHIPS,
+            "understates mean demand by about a third and final demand by about half "
+            "per the 2026-09-27 benchmark (#2259, #1852); "
+            "set inputs.design_data.experimental: true to opt in",
+            "ABS Guidance Notes on Cathodic Protection of Ships (December 2017)",
+        )
     _legacy_solver().ABS_gn_ships_2018(cfg)
     block: dict[str, Any] = cfg["cathodic_protection"]
     req = block["anode_requirements"]
@@ -964,6 +976,8 @@ def run_cathodic_protection(cfg: dict[str, Any]) -> dict[str, Any]:
 
     Raises
     ------
+    ExperimentalModelError
+        ABS ships without Boolean ``inputs.design_data.experimental: true``.
     ValueError
         Unknown ``calculation_type``, invalid inputs, or ``DNV_RP_F103_2010``
         with a ``design_data.edition`` other than 2010.
@@ -1011,6 +1025,7 @@ __all__ = [
     "STATUS_PASS",
     "USE_STATUS_BY_KEY",
     "USE_STATUS_CLIENT_EOR",
+    "USE_STATUS_EXPERIMENTAL",
     "USE_STATUS_LEGACY_UNCITED",
     "run_cathodic_protection",
 ]

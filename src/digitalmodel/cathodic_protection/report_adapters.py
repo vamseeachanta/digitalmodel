@@ -56,6 +56,7 @@ from digitalmodel.cathodic_protection.engine_adapter import (
     KEY_F103_2010,
     STATUS_PASS,
     USE_STATUS_CLIENT_EOR,
+    USE_STATUS_EXPERIMENTAL,
     USE_STATUS_LEGACY_UNCITED,
 )
 from digitalmodel.cathodic_protection.f103_tables import F103_WIKI_PATH
@@ -258,6 +259,11 @@ _USE_STATUS_TEXT: dict[str, str] = {
     USE_STATUS_CLIENT_EOR: (
         "Use status: approved for client use subject to an engineer-of-record "
         "check of this deliverable."
+    ),
+    USE_STATUS_EXPERIMENTAL: (
+        "Use status: experimental-known-understatement; not for design use. "
+        "Understates mean demand by about a third and final demand by about half "
+        "per the 2026-09-27 benchmark (#2259, #1852)."
     ),
     USE_STATUS_LEGACY_UNCITED: (
         "Use status: legacy solver with uncited tables; not for client use "
