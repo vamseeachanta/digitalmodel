@@ -605,7 +605,10 @@ def open_water_statics(model, spec: OpenWaterRiserSpec, params: dict, *, reload=
     step = float(params.get("statics_step_pct", STEP_PCT))
     if params.get("statics") == "seeded":
         return {**seeded_statics(model, spec, step_pct=step), **physical_state_checks(model, spec)}
-    routes = [("direct", None), ("frame_continuation", step), ("frame_continuation_fine", step / 2.0)]
+    # at zero offset the frame continuation from (0, 0) is the direct solve again: the continuation from the -2 % WD
+    # seed follows it (batch 4: C2-R1 flowing cases at 0 % WD)
+    routes = [("direct", None), ("frame_continuation", step), ("frame_continuation_fine", step / 2.0),
+              ("seed_continuation", step)]
     attempts: list[dict[str, str]] = []
     for k, (name, st) in enumerate(routes):
         if k:
@@ -617,7 +620,8 @@ def open_water_statics(model, spec: OpenWaterRiserSpec, params: dict, *, reload=
                 model.CalculateStatics()
                 info: dict[str, Any] = {"method": "direct"}
             else:
-                info = seeded_statics(model, spec, start=(0.0, 0.0), step_pct=st)
+                info = (seeded_statics(model, spec, step_pct=st) if name == "seed_continuation"
+                        else seeded_statics(model, spec, start=(0.0, 0.0), step_pct=st))
             info.update(strategy=name, attempts=attempts)
             return {**info, **physical_state_checks(model, spec)}
         except CaseFailed:
