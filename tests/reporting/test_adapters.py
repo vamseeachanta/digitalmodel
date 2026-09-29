@@ -73,7 +73,7 @@ def test_build_spec_imports_domain_adapters_on_demand() -> None:
     # registers only when the module is not cached).
     assert "cathodic_protection.anode_design" not in ADAPTERS
     sys.modules.pop("digitalmodel.cathodic_protection.report_adapters", None)
-    with pytest.raises(ValueError, match="cfg\['results'\]"):
+    with pytest.raises(ValueError, match=r"cfg\['results'\]"):
         build_spec("cathodic_protection.anode_design", {"inputs": {}})
     assert "cathodic_protection.anode_design" in ADAPTERS
     assert "cathodic_protection.assessment" in ADAPTERS

@@ -161,6 +161,7 @@ _ZONE_BY_NAME: Final[dict[str, ExposureZone]] = {
     "atmospheric": ExposureZone.ATMOSPHERIC,
     "buried": ExposureZone.BURIED_MUDLINE,
     "buried_mudline": ExposureZone.BURIED_MUDLINE,
+    "concrete_embedded": ExposureZone.CONCRETE_EMBEDDED,
 }
 
 _BARE_COATING: Final = "bare"
@@ -271,7 +272,9 @@ def _set_status(
     if passed:
         logger.info(f"cathodic_protection [{calc}] status PASS ({governing}): {reason}")
     else:
-        logger.warning(f"cathodic_protection [{calc}] status FAIL ({governing}): {reason}")
+        logger.warning(
+            f"cathodic_protection [{calc}] status FAIL ({governing}): {reason}"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -279,7 +282,9 @@ def _set_status(
 # ---------------------------------------------------------------------------
 
 
-def _b401_zones(structure: Mapping[str, Any]) -> list[tuple[str, str, str, StructuralZone]]:
+def _b401_zones(
+    structure: Mapping[str, Any],
+) -> list[tuple[str, str, str, StructuralZone]]:
     """``(zone_id, base_zone, coating_category, StructuralZone)`` per YAML zone."""
     raw_zones = structure.get("zones") or []
     if not raw_zones:
@@ -289,16 +294,34 @@ def _b401_zones(structure: Mapping[str, Any]) -> list[tuple[str, str, str, Struc
     for z in raw_zones:
         zone_id = str(_require(z, "zone", "structure.zones[]"))
         if zone_id in seen:
-            raise ValueError(f"duplicate zone id {zone_id!r}; use base_zone for segments")
+            raise ValueError(
+                f"duplicate zone id {zone_id!r}; use base_zone for segments"
+            )
         seen.add(zone_id)
         base_zone = str(z.get("base_zone", zone_id))
         exposure = _lookup(_ZONE_BY_NAME, base_zone, "zone")
         category = str(z.get("coating_category", _DEFAULT_COATING))
+        area_kwargs: dict[str, Any]
+        if exposure is ExposureZone.CONCRETE_EMBEDDED:
+            area_kwargs = {
+                "surface_area_m2": z.get("area_m2"),
+                "reinforcement_area_m2": float(
+                    _require(z, "reinforcement_area_m2", f"structure.zones[{zone_id}]")
+                )
+            }
+        else:
+            area_kwargs = {
+                "surface_area_m2": float(
+                    _require(z, "area_m2", f"structure.zones[{zone_id}]")
+                ),
+                "reinforcement_area_m2": z.get("reinforcement_area_m2"),
+            }
         zone = StructuralZone(
             zone_name=zone_id,
             exposure_zone=exposure,
-            surface_area_m2=float(_require(z, "area_m2", f"structure.zones[{zone_id}]")),
             depth_m=float(z.get("depth_m", 0.0)),
+            anode_family=z.get("anode_family"),
+            **area_kwargs,
         )
         zones.append((zone_id, base_zone, category, zone))
     return zones
@@ -308,9 +331,14 @@ def _b401_breakdown(
     category: str, zone: StructuralZone, design_life: float, edition: Edition
 ) -> tuple[dict[str, Any], list[CitedValue]]:
     band = depth_band(zone.depth_m)
-    if category.strip().lower() == _BARE_COATING:
+    cited: list[CitedValue]
+    if zone.exposure_zone is ExposureZone.CONCRETE_EMBEDDED:
         a, b = 1.0, 0.0
-        cited: list[CitedValue] = []
+        category = "not_applicable"
+        cited = []
+    elif category.strip().lower() == _BARE_COATING:
+        a, b = 1.0, 0.0
+        cited = []
     else:
         try:
             paint = PaintCategory(category.strip().upper())
@@ -344,7 +372,9 @@ def _b401_densities(
     values: dict[DesignPhase, float] = {}
     cited: list[CitedValue] = []
     for phase in (DesignPhase.INITIAL, DesignPhase.MEAN, DesignPhase.FINAL):
-        cv = zone_current_density(zone.exposure_zone, climate, zone.depth_m, phase, edition)
+        cv = zone_current_density(
+            zone.exposure_zone, climate, zone.depth_m, phase, edition
+        )
         if cv is None:
             values[phase] = 0.0
         else:
@@ -381,7 +411,9 @@ class _AnodeGeometry(NamedTuple):
     exposed_area_m2: float | None
 
 
-def _b401_anode_geometry(anode: Mapping[str, Any], utilization: float) -> _AnodeGeometry:
+def _b401_anode_geometry(
+    anode: Mapping[str, Any], utilization: float
+) -> _AnodeGeometry:
     """Anode geometry from ``inputs.anode``.
 
     ``length_m`` is required. With ``radius_m`` given, it is the fresh
@@ -395,7 +427,9 @@ def _b401_anode_geometry(anode: Mapping[str, Any], utilization: float) -> _Anode
         _require(anode, "individual_anode_mass_kg", "anode"),
         "inputs.anode.individual_anode_mass_kg",
     )
-    density = _positive(anode.get("density_kg_m3", kernel.ANODE_DENSITY_ALZNI), "density")
+    density = _positive(
+        anode.get("density_kg_m3", kernel.ANODE_DENSITY_ALZNI), "density"
+    )
     radius_in = anode.get("radius_m")
     if radius_in is not None:
         r_initial = _positive(radius_in, "inputs.anode.radius_m")
@@ -430,11 +464,34 @@ def _run_b401(cfg: dict[str, Any]) -> dict[str, Any]:
     anode = _section(inputs, "anode")
     structure = _section(inputs, "structure")
 
-    edition = normalize_edition(str(design_data.get("edition", DEFAULT_EDITION)), stacklevel=3)
-    design_life = _positive(design_data.get("design_life", 25.0), "design_data.design_life")
+    if inputs.get("anode_families") is not None:
+        if inputs.get("anode"):
+            raise ValueError(
+                "mixed inputs.anode and inputs.anode_families are not allowed"
+            )
+        from digitalmodel.cathodic_protection.b401_family_route import run_b401_families
+
+        return run_b401_families(cfg)
+
+    zones = _b401_zones(structure)
+    assigned = [zone.zone_name for _, _, _, zone in zones if zone.anode_family]
+    if assigned:
+        raise ValueError(
+            "zone anode_family assignments require inputs.anode_families; "
+            f"assigned zones: {assigned}"
+        )
+
+    edition = normalize_edition(
+        str(design_data.get("edition", DEFAULT_EDITION)), stacklevel=3
+    )
+    design_life = _positive(
+        design_data.get("design_life", 25.0), "design_data.design_life"
+    )
     temp_c = float(environment.get("seawater_temperature_C", 10.0))
     rho = _positive(
-        environment.get("seawater_resistivity_ohm_m", DEFAULT_SEAWATER_RESISTIVITY_OHM_M),
+        environment.get(
+            "seawater_resistivity_ohm_m", DEFAULT_SEAWATER_RESISTIVITY_OHM_M
+        ),
         "inputs.environment.seawater_resistivity_ohm_m",
     )
 
@@ -451,8 +508,8 @@ def _run_b401(cfg: dict[str, Any]) -> dict[str, Any]:
     densities: dict[str, Any] = {}
     demand: dict[str, Any] = {}
     total_initial = total_mean = total_final = 0.0
-    for zone_id, base_zone, category, zone in _b401_zones(structure):
-        areas[zone_id] = zone.surface_area_m2
+    for zone_id, base_zone, category, zone in zones:
+        areas[zone_id] = zone.design_area_m2
         fc, fc_cited = _b401_breakdown(category, zone, design_life, edition)
         dens, dens_cited = _b401_densities(zone, base_zone, temp_c, edition)
         fc["citations"] = sorted(citation_label(cv.citation) for cv in fc_cited)
@@ -460,11 +517,17 @@ def _run_b401(cfg: dict[str, Any]) -> dict[str, Any]:
         _cite(citations, *fc_cited, *dens_cited)
         breakdown[zone_id] = fc
         densities[zone_id] = dens
-        I_initial = kernel.current_demand(zone.surface_area_m2, dens["i_initial_A_m2"], fc["f_ci"])
-        I_mean = kernel.current_demand(zone.surface_area_m2, dens["i_mean_A_m2"], fc["f_cm"])
-        I_final = kernel.current_demand(zone.surface_area_m2, dens["i_final_A_m2"], fc["f_cf"])
+        I_initial = kernel.current_demand(
+            zone.design_area_m2, dens["i_initial_A_m2"], fc["f_ci"]
+        )
+        I_mean = kernel.current_demand(
+            zone.design_area_m2, dens["i_mean_A_m2"], fc["f_cm"]
+        )
+        I_final = kernel.current_demand(
+            zone.design_area_m2, dens["i_final_A_m2"], fc["f_cf"]
+        )
         demand[zone_id] = {
-            "area_m2": zone.surface_area_m2,
+            "area_m2": zone.design_area_m2,
             "i_initial_A_m2": dens["i_initial_A_m2"],
             "i_mean_A_m2": dens["i_mean_A_m2"],
             "i_final_A_m2": dens["i_final_A_m2"],
@@ -475,6 +538,8 @@ def _run_b401(cfg: dict[str, Any]) -> dict[str, Any]:
             "I_mean_A": round(I_mean, 4),
             "I_final_A": round(I_final, 4),
         }
+        if zone.exposure_zone is ExposureZone.CONCRETE_EMBEDDED:
+            demand[zone_id]["area_basis"] = zone.area_basis
         total_initial += I_initial
         total_mean += I_mean
         total_final += I_final
@@ -500,7 +565,9 @@ def _run_b401(cfg: dict[str, Any]) -> dict[str, Any]:
     else:
         u = float(u_in)
         if not 0.0 < u <= 1.0:
-            raise ValueError(f"inputs.anode.utilization_factor must be in (0, 1], got {u}")
+            raise ValueError(
+                f"inputs.anode.utilization_factor must be in (0, 1], got {u}"
+            )
         u_source = "input"
     _cite(citations, *req_cited)
     geometry = _b401_anode_geometry(anode, u)
@@ -628,7 +695,11 @@ def _run_b401(cfg: dict[str, Any]) -> dict[str, Any]:
         adequate,
         governing,
         reason,
-        {"mass": mass_ok, "initial_current_output": initial_ok, "final_current_output": final_ok},
+        {
+            "mass": mass_ok,
+            "initial_current_output": initial_ok,
+            "final_current_output": final_ok,
+        },
     )
     return cfg
 
@@ -655,7 +726,10 @@ def _f103_input(
     else:
         edition = pinned_edition
         requested = design_data.get("edition")
-        if requested is not None and normalize_f103_edition(str(requested)) != pinned_edition:
+        if (
+            requested is not None
+            and normalize_f103_edition(str(requested)) != pinned_edition
+        ):
             raise ValueError(
                 f"calculation_type {KEY_F103_2010!r} pins DNV-RP-F103 edition "
                 f"{pinned_edition!r} but inputs.design_data.edition is {requested!r}; "
@@ -675,10 +749,17 @@ def _f103_input(
     fj_name = pipeline.get("field_joint_coating")
     fjc = FieldJointCoating.NONE if fj_name is None else FieldJointCoating(str(fj_name))
     kwargs: dict[str, Any] = {}
-    for key in ("field_joint_area_fraction", "field_joint_count", "field_joint_length_m"):
+    for key in (
+        "field_joint_area_fraction",
+        "field_joint_count",
+        "field_joint_length_m",
+    ):
         if pipeline.get(key) is not None:
             kwargs[key] = pipeline[key]
-    for src, dst in (("thickness_m", "bracelet_thickness_m"), ("exposed_area_m2", "bracelet_exposed_area_m2")):
+    for src, dst in (
+        ("thickness_m", "bracelet_thickness_m"),
+        ("exposed_area_m2", "bracelet_exposed_area_m2"),
+    ):
         if anode.get(src) is not None:
             kwargs[dst] = anode[src]
 
@@ -686,25 +767,42 @@ def _f103_input(
         outer_diameter_m=_require(pipeline, "outer_diameter_m", "pipeline"),
         wall_thickness_m=_require(pipeline, "wall_thickness_m", "pipeline"),
         length_m=_require(pipeline, "length_m", "pipeline"),
-        linepipe_coating=_lookup(_LINEPIPE_COATING_BY_NAME, coating_name, "coating_type"),
+        linepipe_coating=_lookup(
+            _LINEPIPE_COATING_BY_NAME, coating_name, "coating_type"
+        ),
         field_joint_coating=fjc,
         exposure=_lookup(_EXPOSURE_BY_NAME, exposure_name, "burial_condition"),
-        fluid_temperature_c=_require(pipeline, "internal_fluid_temperature_C", "pipeline"),
-        design_life_years=_positive(design_data.get("design_life", 25.0), "design_life"),
+        fluid_temperature_c=_require(
+            pipeline, "internal_fluid_temperature_C", "pipeline"
+        ),
+        design_life_years=_positive(
+            design_data.get("design_life", 25.0), "design_life"
+        ),
         seawater_resistivity_ohm_m=rho,
-        steel_resistivity_ohm_m=float(pipeline.get("resistivity_ohm_m", STEEL_RESISTIVITY)),
+        steel_resistivity_ohm_m=float(
+            pipeline.get("resistivity_ohm_m", STEEL_RESISTIVITY)
+        ),
         anode_material=_lookup(_MATERIAL_BY_NAME, material_name, "anode material"),
         bracelet_net_mass_kg=_require(anode, "individual_anode_mass_kg", "anode"),
         bracelet_length_m=_require(anode, "length_m", "anode"),
-        delta_E_me_V=float(design.get("metallic_voltage_drop_V", DEFAULT_METALLIC_VOLTAGE_DROP_V)),
+        delta_E_me_V=float(
+            design.get("metallic_voltage_drop_V", DEFAULT_METALLIC_VOLTAGE_DROP_V)
+        ),
         **kwargs,
     )
-    names = {"coating_type": coating_name, "burial_condition": exposure_name, "material": material_name}
+    names = {
+        "coating_type": coating_name,
+        "burial_condition": exposure_name,
+        "material": material_name,
+    }
     return inp, edition, names
 
 
 def _f103_results(
-    inp: BraceletDesignInput, res: BraceletDesignResult, names: Mapping[str, str], u_source: str
+    inp: BraceletDesignInput,
+    res: BraceletDesignResult,
+    names: Mapping[str, str],
+    u_source: str,
 ) -> dict[str, Any]:
     return {
         "standard": res.standard,
@@ -773,7 +871,9 @@ def _f103_results(
     }
 
 
-def _run_f103(cfg: dict[str, Any], pinned_edition: F103Edition | None = None) -> dict[str, Any]:
+def _run_f103(
+    cfg: dict[str, Any], pinned_edition: F103Edition | None = None
+) -> dict[str, Any]:
     inp, edition, names = _f103_input(cfg, pinned_edition)
     anode = _section(cfg, "inputs", "anode")
     res = design_bracelet_cp(inp, edition=edition)
@@ -784,9 +884,14 @@ def _run_f103(cfg: dict[str, Any], pinned_edition: F103Edition | None = None) ->
         # explicit input re-sizes the mass and the mass-based count.
         u = float(u_in)
         if not 0.0 < u <= 1.0:
-            raise ValueError(f"inputs.anode.utilization_factor must be in (0, 1], got {u}")
+            raise ValueError(
+                f"inputs.anode.utilization_factor must be in (0, 1], got {u}"
+            )
         total_mass = kernel.anode_mass(
-            res.mean_current_demand_A, inp.design_life_years, res.anode_capacity_Ah_kg, u
+            res.mean_current_demand_A,
+            inp.design_life_years,
+            res.anode_capacity_Ah_kg,
+            u,
         )
         n_mass = kernel.anode_count(total_mass, inp.bracelet_net_mass_kg)
         n = max(1, n_mass, res.number_of_anodes_final)
@@ -798,10 +903,13 @@ def _run_f103(cfg: dict[str, Any], pinned_edition: F103Edition | None = None) ->
                 "total_net_mass_kg": total_mass,
                 "number_of_anodes_mass": n_mass,
                 "number_of_anodes": n,
-                "governing_case": "mass" if n_mass >= res.number_of_anodes_final else "final",
+                "governing_case": "mass"
+                if n_mass >= res.number_of_anodes_final
+                else "final",
                 "anode_spacing_m": spacing,
                 "spacing_ok": spacing <= 2.0 * res.protected_length_m,
-                "current_output_ok": n * res.anode_current_output_A >= res.final_current_demand_A,
+                "current_output_ok": n * res.anode_current_output_A
+                >= res.final_current_demand_A,
             }
         )
         u_source = "input"
@@ -914,7 +1022,9 @@ def _run_abs_offshore(cfg: dict[str, Any]) -> dict[str, Any]:
             f"{mass_kg:.0f} kg anode mass required (no individual anode mass given, "
             "no count); ABS GN Offshore 2018 route has no current-output check"
         )
-    _set_status(cfg, results, True, "mass", reason, {"mass": True, "current_output": None})
+    _set_status(
+        cfg, results, True, "mass", reason, {"mass": True, "current_output": None}
+    )
     return cfg
 
 
