@@ -942,6 +942,149 @@ def field_joint_coating_constants(
     )
 
 
+# --- 2019 field-joint id resolution (YAML / engine-adapter inputs) ----------
+#
+# Accepted spellings of each Table A-2 (2019) member, besides its enum value
+# and the ``amended_2021_id`` recorded on its row. Matching ignores case and
+# whitespace. ``3A`` / ``17A`` are not listed: Table A-2 splits the 3A FBE
+# row by infill, so they resolve through ``_FJC_2019_INFILL_SPLIT``.
+_FJC_2019_EXTRA_ALIASES: Final[dict[FieldJointCoating2019, tuple[str, ...]]] = {
+    FieldJointCoating2019.NONE_4E1_PU: ("none",),
+    FieldJointCoating2019.FJC_1D_2A_MASTIC: (
+        "1D",
+        "2A(1)",
+        "2A(2)",
+        "2A(1)/2A(2)",
+        "1D/2A(1)/2A(2)",
+    ),
+    FieldJointCoating2019.FJC_5D1_5E_FBE_PE: ("5D(1)", "5E"),
+    FieldJointCoating2019.FJC_8A_POLYCHLOROPRENE: ("8A polychloroprene",),
+}
+
+# Infill choices (``field_joint_infill``) valid for each member.
+_FJC_2019_INFILL_CHOICES: Final[dict[FieldJointCoating2019, tuple[str, ...]]] = {
+    FieldJointCoating2019.NONE_4E1_PU: ("4E(1)",),
+    FieldJointCoating2019.FJC_1D_2A_MASTIC: ("4E(2)",),
+    FieldJointCoating2019.FJC_2B1_HSS_PE: ("none", "4E(2)"),
+    FieldJointCoating2019.FJC_2C1_HSS_PP: ("none", "4E(2)"),
+    FieldJointCoating2019.FJC_3A_FBE: ("none",),
+    FieldJointCoating2019.FJC_3A_FBE_4E2_INFILL: ("4E(2)",),
+    FieldJointCoating2019.FJC_2B2_FBE_PE_HSS: ("none", "4E(2)"),
+    FieldJointCoating2019.FJC_5D1_5E_FBE_PE: ("none",),
+    FieldJointCoating2019.FJC_2C2_FBE_PP_HSS: ("none",),
+    FieldJointCoating2019.FJC_5ABC1_FBE_PP: ("none",),
+    FieldJointCoating2019.FJC_5C1_PE_ON_FBE: ("5C(1)",),
+    FieldJointCoating2019.FJC_5C2_PP_ON_FBE: ("5C(2)",),
+    FieldJointCoating2019.FJC_8A_POLYCHLOROPRENE: ("none",),
+}
+
+# Ids whose Table A-2 (2019) row splits by infill into members with different
+# ``a``/``b``: id -> {infill choice: member}.
+_FJC_2019_INFILL_SPLIT: Final[dict[str, dict[str, FieldJointCoating2019]]] = {
+    "3A": {
+        "none": FieldJointCoating2019.FJC_3A_FBE,
+        "4E(2)": FieldJointCoating2019.FJC_3A_FBE_4E2_INFILL,
+    },
+    "17A": {
+        "none": FieldJointCoating2019.FJC_3A_FBE,
+        "4E(2)": FieldJointCoating2019.FJC_3A_FBE_4E2_INFILL,
+    },
+    "3A FBE": {
+        "none": FieldJointCoating2019.FJC_3A_FBE,
+        "4E(2)": FieldJointCoating2019.FJC_3A_FBE_4E2_INFILL,
+    },
+}
+
+
+def _fjc_key(text: str) -> str:
+    """Case- and whitespace-insensitive matching key for FJC / infill ids."""
+    return "".join(text.split()).lower()
+
+
+def _build_fjc_2019_aliases() -> dict[str, FieldJointCoating2019]:
+    aliases: dict[str, FieldJointCoating2019] = {}
+    split_keys = {_fjc_key(k) for k in _FJC_2019_INFILL_SPLIT}
+    for member in FieldJointCoating2019:
+        row = _TABLE_A2_2019[member]
+        spellings = (member.value, row.amended_2021_id, *_FJC_2019_EXTRA_ALIASES.get(member, ()))
+        for spelling in spellings:
+            key = _fjc_key(spelling)
+            if key in split_keys:
+                continue
+            other = aliases.setdefault(key, member)
+            if other is not member:  # pragma: no cover - table integrity guard
+                raise RuntimeError(f"FJC alias {spelling!r} maps to {other.name} and {member.name}")
+    return aliases
+
+
+_FJC_2019_ALIASES: Final[dict[str, FieldJointCoating2019]] = _build_fjc_2019_aliases()
+
+
+def field_joint_coating_2019_ids() -> tuple[str, ...]:
+    """Primary DNVGL-RP-F102 (2011) FJC ids accepted for the 2019 Table A-2."""
+    ids = [m.value for m in FieldJointCoating2019 if m is not FieldJointCoating2019.FJC_3A_FBE_4E2_INFILL]
+    return tuple("none" if i == FieldJointCoating2019.NONE_4E1_PU.value else i for i in ids)
+
+
+def field_joint_infill_choices_2019(fjc: FieldJointCoating2019) -> tuple[str, ...]:
+    """Valid ``field_joint_infill`` values for a 2019 Table A-2 member."""
+    return _FJC_2019_INFILL_CHOICES[fjc]
+
+
+def resolve_field_joint_coating_2019(
+    fjc_id: str, infill: str | None = None
+) -> FieldJointCoating2019:
+    """Map a YAML field-joint id (and optional infill) to a 2019 Table A-2 member.
+
+    Accepts the DNVGL-RP-F102 (2011) ids as printed in the 2019 Table A-2
+    (``"3A"``, ``"2B(1)"``, ``"2C(2)"``, ``"5A/B/C(1)"``, ``"none"`` ...) and
+    the May 2021 amended names (``"17A"``, ``"14B_LE"`` ...), ignoring case
+    and whitespace.
+
+    Raises
+    ------
+    ValueError
+        Unknown id (lists the valid ids); an id whose row splits by infill
+        (``3A``: none 0.10/0.010, 4E(2) moulded PU 0.03/0.003) given without
+        ``infill``; or an infill not valid for the resolved row.
+    """
+    key = _fjc_key(fjc_id)
+    infill_key = None if infill is None else _fjc_key(infill)
+    for split_id, by_infill in _FJC_2019_INFILL_SPLIT.items():
+        if _fjc_key(split_id) != key:
+            continue
+        choices = tuple(by_infill)
+        if infill_key is None:
+            raise ValueError(
+                f"field-joint coating {fjc_id!r}: DNVGL-RP-F103 (2019) Table A-2 "
+                "splits this row by infill with different a/b; set "
+                f"pipeline.field_joint_infill to one of {list(choices)}"
+            )
+        for choice, split_member in by_infill.items():
+            if _fjc_key(choice) == infill_key:
+                return split_member
+        raise ValueError(
+            f"field_joint_infill {infill!r} is not valid for field-joint coating "
+            f"{fjc_id!r} under DNVGL-RP-F103 (2019); valid choices: {list(choices)}"
+        )
+    member = _FJC_2019_ALIASES.get(key)
+    if member is None:
+        raise ValueError(
+            f"Unknown field-joint coating {fjc_id!r} for DNVGL-RP-F103 (2019) "
+            "Table A-2; valid DNVGL-RP-F102 (2011) ids: "
+            f"{list(field_joint_coating_2019_ids())} (the May 2021 amended names, "
+            "e.g. '17A', '14B_LE', are also accepted)"
+        )
+    if infill_key is not None:
+        choices = _FJC_2019_INFILL_CHOICES[member]
+        if infill_key not in {_fjc_key(c) for c in choices}:
+            raise ValueError(
+                f"field_joint_infill {infill!r} is not valid for field-joint coating "
+                f"{fjc_id!r} under DNVGL-RP-F103 (2019); valid choices: {list(choices)}"
+            )
+    return member
+
+
 def bracelet_utilisation_factor(edition: F103Edition | None = None) -> CitedValue:
     """Bracelet anode utilisation factor (0.80).
 

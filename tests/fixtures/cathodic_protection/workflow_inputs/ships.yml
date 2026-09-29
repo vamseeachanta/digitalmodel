@@ -12,6 +12,7 @@ inputs:
         csv_filename: null
 
   design_data:
+    experimental: true  # Known demand understatement; not for design use (#2259).
     design_life: 5
     biofouling:
       type: aerobic

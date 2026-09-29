@@ -296,6 +296,22 @@ def test_pipeline_f103_spec_passes_with_spacing_check() -> None:
     assert fj[:2] == ["Field joints", "none"]
 
 
+def test_pipeline_f103_design_basis_shows_field_joint_system_and_infill() -> None:
+    # Issue #2256: 2019 FBE field joints (3A) with 4E(2) moulded PU infill.
+    with (INPUT_DIR / "pipeline.yml").open(encoding="utf-8") as stream:
+        cfg: dict[str, Any] = yaml.safe_load(stream)
+    cfg["inputs"]["pipeline"].update(
+        field_joint_coating="3A",
+        field_joint_infill="4E(2)",
+        field_joint_count=100,
+        field_joint_length_m=0.4,
+    )
+    run_cathodic_protection(cfg)
+    rows = {row[0]: row[1] for row in _tables(anode_design_report(cfg))["Design data"].rows}
+    assert rows["Field joint coating (system id)"] == "3A+4E(2)"
+    assert rows["Field joint infill"] == "4E(2) moulded PU on top"
+
+
 def test_pipeline_f103_2010_alias_key_is_laid_out_as_f103() -> None:
     with (INPUT_DIR / "pipeline.yml").open(encoding="utf-8") as stream:
         cfg: dict[str, Any] = yaml.safe_load(stream)
@@ -341,7 +357,7 @@ def test_abs_routes_expose_tables_and_status() -> None:
     [
         ("jacket", USE_STATUS_CLIENT_EOR, "engineer-of-record check"),
         ("pipeline", USE_STATUS_CLIENT_EOR, "engineer-of-record check"),
-        ("ships", USE_STATUS_LEGACY_UNCITED, "not for client use without an independent check"),
+        ("ships", "experimental-known-understatement", "not for design use"),
         ("fpso", USE_STATUS_LEGACY_UNCITED, "not for client use without an independent check"),
     ],
 )
@@ -359,6 +375,26 @@ def test_use_status_is_stated_in_adequacy_and_status_detail(
     route_status = _statuses(spec)[0]
     assert route_status.detail.endswith(first.markdown)
     assert wording in render_html(spec)
+
+
+def test_ships_report_warns_of_known_understatement() -> None:
+    spec = anode_design_report(_run("ships"))
+    adequacy = next(s for s in spec.sections if s.key == "adequacy")
+    first = adequacy.blocks[0]
+    assert isinstance(first, TextBlock)
+    html = render_html(spec)
+    for wording in (
+        "experimental",
+        "mean demand by about a third",
+        "final demand by about half",
+        "2026-09-27",
+        "#2259",
+        "#1852",
+        "not for design use",
+    ):
+        assert wording in first.markdown
+        assert wording in _statuses(spec)[0].detail
+        assert wording in html
 
 
 def test_missing_use_status_renders_as_not_for_client_use() -> None:
