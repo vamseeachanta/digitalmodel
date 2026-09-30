@@ -152,7 +152,7 @@ def _trim(row: list[Any]) -> list[Any]:
 
 
 def _line(name: str, ends: list[list[Any]], stiffness: list[list[Any]], sections: list[LineSection],
-          contents_density: float, contents_ref_z: float) -> dict[str, Any]:
+          contents_density: float, contents_ref_z: float, *, pressure_kpa: float = 0.0) -> dict[str, Any]:
     ends = [_trim(e) for e in ends]
     return {
         "name": name,
@@ -168,7 +168,7 @@ def _line(name: str, ends: list[list[Any]], stiffness: list[list[Any]], sections
             "ContentsMethod": "Uniform",
             "ContentsDensity": contents_density,
             "ContentsPressureRefZ": contents_ref_z,
-            "ContentsPressure": 0,
+            "ContentsPressure": pressure_kpa,
             "ContentsFlowRate": 0,
             "IncludedInStatics": True,
             "StaticsStep1": "Catenary",
@@ -199,12 +199,12 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
               [top_end,
                [SLIP, 0, 0, 0, 0, 180, 0, None, None]],
               [[k_ufj, None], [inf, None]],
-              spec.inner_barrel, rho_c, ref_z),
+              spec.inner_barrel, rho_c, ref_z, pressure_kpa=spec.contents.pressure_pa / 1000.0),
         _line("Riser",
               [[ring, 0, 0, 0, 0, 180, 0, None, None],
                ["Stack", 0, 0, 0, 0, 180, 0, None, "End B"]],
               [[inf, None], [k_lfj, None]],
-              spec.riser, rho_c, ref_z),
+              spec.riser, rho_c, ref_z, pressure_kpa=spec.contents.pressure_pa / 1000.0),
         _line("Stack",
               [stack_base,
                ["Free", 0, 0, spec.lower_flex_joint.pivot_z_m, 0, 0, 0, None, None]],
@@ -250,26 +250,8 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
         rp["IncludeTorsion"] = True
         rp.pop(STIFF_KEY)
         rp[STIFF_KEY + ", ConnectionTwistingStiffness"] = [[inf, None, inf], [k_lfj, None, TORSION_KN_M_PER_DEG]]
-    links: list[dict[str, Any]] = []
-    if f is not None:
-        # conductor/casing: fixed at its base, runs up to the wellhead datum; p-y spring links
-        lines.append(_line("Conductor",
-                           [["Fixed", 0, 0, spec.wellhead_datum_z_m - f.depth_m, 0, 0, 0, None, None],
-                            ["Free", 0, 0, spec.wellhead_datum_z_m, 0, 0, 0, None, None]],
-                           [[inf, None], []], list(reversed(f.sections)),
-                           f.flooded_density_kg_m3 / 1000.0 if f.flooded_density_kg_m3 else 0,
-                           0.0 if f.flooded_density_kg_m3 else ref_z))
-        for i, st in enumerate(spring_stations(f)):
-            curve = interpolate_py(f.py_curves, st["depth_m"])
-            table = spring_table_kn(curve, st["tributary_m"], f.anchor_offset_m, f.far_displacement_m)
-            z = spec.wellhead_datum_z_m - st["depth_m"]
-            for axis, (ax, ay) in (("x", (f.anchor_offset_m, 0.0)), ("y", (0.0, f.anchor_offset_m))):
-                links.append({"name": f"PY{i + 1:03d}{axis}", "link_type": "Spring/damper", "properties": {
-                    "Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo": [
-                        ["Conductor", 0, 0, st["arc_from_base_m"], "End A"], ["Fixed", ax, ay, z]],
-                    "LinearSpring": "No",
-                    "SpringLength, SpringTension": table,
-                }})
+    extra_lines, links = _foundation_objects(spec, ref_z)
+    lines += extra_lines
     t = spec.tensioners
     tension_kn = winch_tension_n(spec) / 1000.0
     winches = []
@@ -356,28 +338,10 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
         for lt in line_types:
             lt["properties"]["RayleighDampingCoefficients"] = sd.name
     ox, oy = spec.vessel_offset_m
-    vprops: dict[str, Any] = {"Orientation": [0, 0, 0], "IncludedInStatics": "None", "PrimaryMotion": "None",
-                              **({"SuperimposedMotion": "RAOs + harmonics", "Draught": "Operating"}
-                                 if spec.vessel_motion else {"SuperimposedMotion": "None"})}
-    tr = spec.vessel_trajectory
-    if tr is not None:  # drift-off / drive-off: the low-frequency track, held at the offset through the build-up
-        from .events import TIME_HISTORY_KEY
-
-        b0 = -(spec.dynamics.build_up_s if spec.dynamics is not None else STAGES_S[0])
-        rows = [[b0, ox, oy, 0, 0, 0, 0]] + [[t_, ox + x_, oy + y_, 0, 0, 0, 0]
-                                             for t_, x_, y_ in zip(tr.t_s, tr.x_m, tr.y_m)]
-        vprops.update({"PrimaryMotion": "Time history", "PrimaryMotionIsTreatedAs": "Low frequency",
-                       "PrimaryTimeHistoryDataSource": "Internal", "PrimaryTimeHistoryInterpolation": "Linear",
-                       "PrimaryTimeHistoryTimeOrigin": 0, "PrimaryTimeHistoryDatumPoint": [0, 0, 0],
-                       "PrimaryTimeHistoryMinSampleInterval": 0, TIME_HISTORY_KEY: rows})
     generic = {
         "line_types": line_types,
         "vessel_types": [vt],
-        "vessels": [{
-            "name": vessel, "vessel_type": vt["name"], "connection": "Free",
-            "initial_position": [ox, oy, 0] if (ox or oy) else [0, 0, 0],
-            "properties": vprops,
-        }],
+        "vessels": [_vessel(spec, vt)],
         "lines": lines,
         "buoys_6d": [{
             "name": ring, "buoy_type": "Lumped buoy", "connection": "Free",
@@ -394,12 +358,80 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
     if var_data:
         generic["variable_data_sources"] = var_data
     if sd is not None:
-        generic["rayleigh_damping"] = {"data": [{
-            "Name": sd.name, "Mode": "Coefficients (classical)", "MassCoefficient": 0.0,
-            "StiffnessCoefficient": sd.stiffness_coefficient_s, "ApplyToGeometricStiffness": "Yes"}]}
+        generic["rayleigh_damping"] = _rayleigh(sd)
+    env, sim = _environment_and_simulation(spec)
+    return {
+        "metadata": {"name": spec.name, "description": spec.description or spec.name,
+                     "structure": "riser", "operation": "drilling"},
+        "environment": env,
+        "simulation": sim,
+        "generic": generic,
+    }
+
+
+def _vessel(spec: Any, vt: dict[str, Any]) -> dict[str, Any]:
+    """The vessel object (not in statics; first-order RAO motion when the spec has vessel motion; a prescribed
+    low-frequency track when the spec has a vessel trajectory)."""
+    ox, oy = spec.vessel_offset_m
+    vprops: dict[str, Any] = {"Orientation": [0, 0, 0], "IncludedInStatics": "None", "PrimaryMotion": "None",
+                              **({"SuperimposedMotion": "RAOs + harmonics", "Draught": "Operating"}
+                                 if spec.vessel_motion else {"SuperimposedMotion": "None"})}
+    tr = getattr(spec, "vessel_trajectory", None)
+    if tr is not None:  # drift-off / drive-off: the low-frequency track, held at the offset through the build-up
+        from .events import TIME_HISTORY_KEY
+
+        b0 = -(spec.dynamics.build_up_s if spec.dynamics is not None else STAGES_S[0])
+        rows = [[b0, ox, oy, 0, 0, 0, 0]] + [[t_, ox + x_, oy + y_, 0, 0, 0, 0]
+                                             for t_, x_, y_ in zip(tr.t_s, tr.x_m, tr.y_m)]
+        vprops.update({"PrimaryMotion": "Time history", "PrimaryMotionIsTreatedAs": "Low frequency",
+                       "PrimaryTimeHistoryDataSource": "Internal", "PrimaryTimeHistoryInterpolation": "Linear",
+                       "PrimaryTimeHistoryTimeOrigin": 0, "PrimaryTimeHistoryDatumPoint": [0, 0, 0],
+                       "PrimaryTimeHistoryMinSampleInterval": 0, TIME_HISTORY_KEY: rows})
+    return {
+        "name": spec.vessel_name, "vessel_type": vt["name"], "connection": "Free",
+        "initial_position": [ox, oy, 0] if (ox or oy) else [0, 0, 0],
+        "properties": vprops,
+    }
+
+
+def _foundation_objects(spec: Any, ref_z: float) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Conductor/casing line (fixed at its base, up to the wellhead datum) and its p-y spring links."""
+    f = spec.foundation
+    if f is None:
+        return [], []
+    inf = "Infinity"
+    lines = [_line("Conductor",
+                   [["Fixed", 0, 0, spec.wellhead_datum_z_m - f.depth_m, 0, 0, 0, None, None],
+                    ["Free", 0, 0, spec.wellhead_datum_z_m, 0, 0, 0, None, None]],
+                   [[inf, None], []], list(reversed(f.sections)),
+                   f.flooded_density_kg_m3 / 1000.0 if f.flooded_density_kg_m3 else 0,
+                   0.0 if f.flooded_density_kg_m3 else ref_z)]
+    links: list[dict[str, Any]] = []
+    for i, st in enumerate(spring_stations(f)):
+        curve = interpolate_py(f.py_curves, st["depth_m"])
+        table = spring_table_kn(curve, st["tributary_m"], f.anchor_offset_m, f.far_displacement_m)
+        z = spec.wellhead_datum_z_m - st["depth_m"]
+        for axis, (ax, ay) in (("x", (f.anchor_offset_m, 0.0)), ("y", (0.0, f.anchor_offset_m))):
+            links.append({"name": f"PY{i + 1:03d}{axis}", "link_type": "Spring/damper", "properties": {
+                "Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo": [
+                    ["Conductor", 0, 0, st["arc_from_base_m"], "End A"], ["Fixed", ax, ay, z]],
+                "LinearSpring": "No",
+                "SpringLength, SpringTension": table,
+            }})
+    return lines, links
+
+
+def _rayleigh(sd: Any) -> dict[str, Any]:
+    return {"data": [{
+        "Name": sd.name, "Mode": "Coefficients (classical)", "MassCoefficient": 0.0,
+        "StiffnessCoefficient": sd.stiffness_coefficient_s, "ApplyToGeometricStiffness": "Yes"}]}
+
+
+def _environment_and_simulation(spec: Any) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Environment (water, seabed, current, regular or JONSWAP wave) and simulation stages of a riser spec."""
     # with a foundation the conductor runs below the mudline: its soil reaction is the p-y links,
     # so seabed contact is switched off (no other line reaches the seabed)
-    seabed = ({"normal": 0.0, "shear": 0.0} if f is not None else
+    seabed = ({"normal": 0.0, "shear": 0.0} if spec.foundation is not None else
               {"normal": spec.environment.seabed_normal_stiffness_kn_m_m2,
                "shear": spec.environment.seabed_shear_stiffness_kn_m_m2})
     env: dict[str, Any] = {
@@ -415,7 +447,7 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
     if spec.regular_wave is not None:
         w = spec.regular_wave
         env["waves"] = {"type": "airy", "height": w.height_m, "period": w.period_s, "direction": w.direction_deg}
-        if spec.wave_time_origin_s:  # the wave phase at the event (drift-off / recoil PH5)
+        if getattr(spec, "wave_time_origin_s", 0.0):  # the wave phase at the event (drift-off / recoil PH5)
             env["raw_properties"] = {"WaveTrains": [{
                 "Name": "Wave1", "WaveType": "Airy", "WaveDirection": w.direction_deg, "WaveHeight": w.height_m,
                 "WavePeriod": w.period_s, "WaveOrigin": [0, 0], "WaveTimeOrigin": spec.wave_time_origin_s}]}
@@ -434,24 +466,25 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
             "WaveTp": w.tp_s, "WaveSeed": w.seed, "WaveNumberOfComponents": w.number_of_components,
             "WaveSpectrumMinRelFrequency": 0.5, "WaveSpectrumMaxRelFrequency": 10,
             "WaveSpectrumMaxComponentFrequencyRange": 0.05}]}
-    sim = {"time_step": spec.dynamics.time_step_s if spec.dynamics is not None else 0.1, "stages": _stages(spec)}
-    return {
-        "metadata": {"name": spec.name, "description": spec.description or spec.name,
-                     "structure": "riser", "operation": "drilling"},
-        "environment": env,
-        "simulation": sim,
-        "generic": generic,
-    }
+    sim = {"time_step": spec.dynamics.time_step_s if spec.dynamics is not None else 0.1,
+           "stages": _stages(spec)}
+    return env, sim
 
 
-def write_model(spec: RiserGlobalModelSpec, out_dir: Path) -> Path:
-    """Write the OrcaFlex text model (``master.yml`` + ``includes/``) and the input spec."""
+
+def write_model(spec: Any, out_dir: Path) -> Path:
+    """Write the OrcaFlex text model (``master.yml`` + ``includes/``) and the input spec: a drilling riser
+    (:class:`RiserGlobalModelSpec`) or an open-water riser (``open_water.OpenWaterRiserSpec``)."""
     from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
     from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
 
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
-    project = ProjectInputSpec.model_validate(build_generic_spec(spec))
+    from .open_water import OpenWaterRiserSpec, build_open_water_generic_spec
+
+    generic = (build_open_water_generic_spec(spec) if isinstance(spec, OpenWaterRiserSpec)
+               else build_generic_spec(spec))
+    project = ProjectInputSpec.model_validate(generic)
     ModularModelGenerator.from_spec(project).generate(out_dir)
     (out_dir / "riser-global-spec.yml").write_text(
         yaml.safe_dump(spec.model_dump(mode="json"), sort_keys=False, allow_unicode=True),
@@ -465,7 +498,7 @@ def _stages(spec: RiserGlobalModelSpec) -> list[float]:
     dyn = spec.dynamics
     if dyn is None:
         return list(STAGES_S)
-    if spec.recoil is None:
+    if getattr(spec, "recoil", None) is None:
         return [dyn.build_up_s, dyn.duration_s]
     steps = [float(s["duration_s"]) for s in spec.recoil.stages if s.get("duration_s")]
     rest = dyn.duration_s - sum(steps)

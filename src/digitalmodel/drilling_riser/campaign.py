@@ -34,6 +34,18 @@ with the (private) matrix, not here:
                       (``f`` defaults to 1.02 x (riser effective weight + ring weight) / tensioner
                       vertical force, a crude instantaneous anti-recoil response).
 
+Open-water (C2) riser base specs (``kind: open_water``, :class:`OpenWaterRiserSpec`) take the same params, plus:
+
+``contents_pressure_pa`` bore gauge pressure at the contents reference level (flowing / shut-in / test states)
+``edp_release``       ``{"anti_recoil_factor": f}`` - an EDP disconnect case: the EDP / LRP interface releases at
+                      the start of the main stage and the tensioner tension steps to ``f`` x the released submerged
+                      weight: default ``EDP_ANTI_RECOIL_FACTOR`` 0.98 (owner decision W2B2: the string settles back
+                      under control); ``EDP_RELEASE_GATE_FACTOR`` 1.02 only in the release qualification gate.
+                      This is a modelled event, not a timing proxy.
+
+Their statics default to ``"direct"`` (no tension ring, so no yawed-ring branch) and are checked by the frame
+balance and the rotary vertical reaction.
+
 Use with :func:`digitalmodel.solvers.orcaflex.parallel_runner.run_cases` and
 ``adapter="digitalmodel.drilling_riser.campaign:ADAPTER"``.
 """
@@ -46,9 +58,15 @@ from typing import Any
 
 import yaml
 
+from .global_model.open_water import OpenWaterRiserSpec
 from .global_model.spec import RiserGlobalModelSpec
 
 SEED_PCT = -2.0
+# C2 EDP disconnect (owner decision W2B2, 2026-09-28): the tension steps to 0.98 x the released submerged weight in the
+# design cases (a 1.02 x step lifts the released string past the stroke within about 10 s); 1.02 x only in the release
+# qualification gate (momentum / energy check)
+EDP_ANTI_RECOIL_FACTOR = 0.98
+EDP_RELEASE_GATE_FACTOR = 1.02
 STEP_PCT = 0.5
 RESIDUAL_REL = 1.0e-3  # ring vertical balance (equilibrium): 1e-3 of the target
 # tensioner vertical sum: a secondary branch detector (the ring yaw is the primary one). The lines are calibrated to
@@ -61,9 +79,15 @@ KN = 1000.0
 G = 9.80665
 
 
-def load_base_spec(path: str | Path) -> RiserGlobalModelSpec:
+def _spec_class(d: dict):
+    return OpenWaterRiserSpec if d.get("kind") == "open_water" else RiserGlobalModelSpec
+
+
+def load_base_spec(path: str | Path) -> RiserGlobalModelSpec | OpenWaterRiserSpec:
+    """A drilling-riser or an open-water (``kind: open_water``) model spec."""
     doc = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
-    return RiserGlobalModelSpec.model_validate(doc["model"] if "model" in doc else doc)
+    d = doc["model"] if "model" in doc else doc
+    return _spec_class(d).model_validate(d)
 
 
 def offset_xy_m(spec: RiserGlobalModelSpec, pct_wd: float, heading_deg: float) -> tuple[float, float]:
@@ -89,7 +113,7 @@ def case_spec(case: dict) -> RiserGlobalModelSpec:
         if d["tensioners"]["representation"] != "lines" and d["tensioners"].get("failed_count"):
             raise ValueError("a failed tensioner needs the 'lines' tensioner representation")
     for name, f in (p.get("section_stiffness_factors") or {}).items():
-        hits = [s for key in ("inner_barrel", "riser", "stack") for s in d[key] if s["name"] == name]
+        hits = [s for key in ("upper", "inner_barrel", "riser", "stack") for s in d.get(key) or [] if s["name"] == name]
         if not hits:
             raise ValueError(f"section_stiffness_factors: no section named {name!r}")
         for s in hits:
@@ -127,6 +151,8 @@ def case_spec(case: dict) -> RiserGlobalModelSpec:
         d["irregular_wave"] = {**p["irregular_wave"], "direction_deg": heading}
     if case["analysis"] == "dynamics":
         d["dynamics"] = dict(p["dynamics"])
+    if p.get("contents_pressure_pa") is not None:
+        d["contents"]["pressure_pa"] = float(p["contents_pressure_pa"])
     if p.get("vessel_trajectory"):
         d["vessel_trajectory"] = p["vessel_trajectory"]
     if p.get("wave_phase_deg") is not None:
@@ -134,8 +160,18 @@ def case_spec(case: dict) -> RiserGlobalModelSpec:
             raise ValueError("wave_phase_deg applies to a regular wave")
         d["wave_time_origin_s"] = float(p["wave_phase_deg"]) / 360.0 * float(p["regular_wave"]["period_s"])
     d["name"] = f"{base.name}:{case['case_id']}"
-    spec = RiserGlobalModelSpec.model_validate(d)
+    cls = _spec_class(d)
+    if p.get("edp_release") is not None:
+        if cls is not OpenWaterRiserSpec:
+            raise ValueError("edp_release applies to open-water riser specs only")
+        from .global_model.open_water import tension_references
+
+        f = float(p["edp_release"].get("anti_recoil_factor", EDP_ANTI_RECOIL_FACTOR))
+        d["edp_release"] = {"anti_recoil_tension_n": f * tension_references(cls.model_validate(d))["released_weight_n"]}
+    spec = cls.model_validate(d)
     if p.get("recoil"):
+        if cls is OpenWaterRiserSpec:
+            raise ValueError("recoil applies to the drilling riser; the C2 disconnect is edp_release")
         from .global_model import events as ev
 
         r = p["recoil"]
@@ -151,6 +187,8 @@ def case_spec(case: dict) -> RiserGlobalModelSpec:
     if p.get("hang_off") or p.get("running"):
         from .global_model import hang_off as hom
 
+        if cls is OpenWaterRiserSpec:
+            raise ValueError("hang_off / running apply to the drilling riser; the C2 hang-off is a separate model")
         if p.get("tensioners_failed") or p.get("tensioner_representation") or p.get("tensioner_line_tension_n"):
             raise ValueError("a hang-off or running case has no tensioner lines (no failed tensioner, representation "
                              "or line tension)")
@@ -176,15 +214,16 @@ def seeded_statics(model, spec: RiserGlobalModelSpec, *, seed_pct: float = SEED_
     x1, y1 = target if target is not None else spec.vessel_offset_m
     solve = solve or model.CalculateStatics
     n = math.ceil(math.hypot(x1 - x0, y1 - y0) / (step_pct / 100.0 * wd) - 1e-9)
+    top = "TensionFrame" if isinstance(spec, OpenWaterRiserSpec) else "TensionRing"
     if n <= 0:  # start == target: one solve there
-        for name in ("Vessel", "TensionRing"):
+        for name in ("Vessel", top):
             model[name].InitialX, model[name].InitialY = x0, y0
         solve()
         return {"method": "seeded continuation", "steps": 1}
     for i in range(n + 1):
         f = i / n
         x, y = x0 + f * (x1 - x0), y0 + f * (y1 - y0)
-        for name in ("Vessel", "TensionRing"):
+        for name in ("Vessel", top):
             model[name].InitialX, model[name].InitialY = x, y
         solve()
         if i < n:
@@ -557,6 +596,58 @@ def robust_statics(model, spec: RiserGlobalModelSpec, params: dict, *, reload=No
         info["calibration"] = calibrate_line_tension(model, spec, solve=solve)
     return {**info, **physical_state_checks(model, spec)}
 
+FRAME_BRANCH_M = 10.0  # tension-frame elevation change that marks the collapsed branch (batch 4: 90-106 m; stroke 7.12 m)
+
+
+def _frame_branch_check(model, spec) -> None:
+    z = float(model["TensionFrame"].StaticResult("Z"))
+    if abs(z - spec.tension_frame.z_m) > FRAME_BRANCH_M:
+        raise _PathFailed(f"collapsed branch: tension frame at z {z:.1f} m against {spec.tension_frame.z_m:.1f} m")
+
+
+def open_water_statics(model, spec: OpenWaterRiserSpec, params: dict, *, reload=None) -> dict[str, Any]:
+    """Statics of an open-water (C2) case. No tension ring, so no yawed branch: a direct solve from the straight
+    start first (the C2 default). If it does not converge, the model is reloaded and the case offset reached by a
+    continuation from the straight zero-offset start (``frame_continuation``), then with half steps
+    (``frame_continuation_fine``). ``statics: seeded`` asks for the continuation from the -2 % WD seed directly.
+    Licence faults propagate; the physical-state checks run on the state reached."""
+    from digitalmodel.solvers.orcaflex.parallel_runner import CaseFailed
+
+    step = float(params.get("statics_step_pct", STEP_PCT))
+    if params.get("statics") == "seeded":
+        info = seeded_statics(model, spec, step_pct=step)
+        _frame_branch_check(model, spec)
+        return {**info, **physical_state_checks(model, spec)}
+    # at zero offset the frame continuation from (0, 0) is the direct solve again: the continuation from the -2 % WD
+    # seed follows it (batch 4: C2-R1 flowing cases at 0 % WD)
+    routes = [("direct", None), ("frame_continuation", step), ("frame_continuation_fine", step / 2.0),
+              ("seed_continuation", step)]
+    attempts: list[dict[str, str]] = []
+    for k, (name, st) in enumerate(routes):
+        if k:
+            if reload is None:
+                break
+            reload()
+        try:
+            if st is None:
+                model.CalculateStatics()
+                info: dict[str, Any] = {"method": "direct"}
+            else:
+                info = (seeded_statics(model, spec, step_pct=st) if name == "seed_continuation"
+                        else seeded_statics(model, spec, start=(0.0, 0.0), step_pct=st))
+            _frame_branch_check(model, spec)
+            info.update(strategy=name, attempts=attempts)
+            return {**info, **physical_state_checks(model, spec)}
+        except CaseFailed:
+            raise
+        except Exception as exc:  # noqa: BLE001 - a route failure is recorded and the next route tried
+            if "licen" in str(exc).lower():
+                raise
+            attempts.append({"strategy": name, "error": str(exc).strip().splitlines()[-1][:200]})
+    raise CaseFailed("statics_diverged", "no statics route converged: "
+                     + "; ".join(f"{a['strategy']}: {a['error']}" for a in attempts))
+
+
 HANG_OFF_RAMP = (0.25, 0.5, 0.75, 1.0)
 # hang-off: the string inclines far in current and the ring's third Euler rotation reads a few degrees without twist;
 # only the flipped (180 deg) branch is non-physical
@@ -645,6 +736,14 @@ def physical_state_checks(model, spec: RiserGlobalModelSpec) -> dict[str, Any]:
 
     from .global_model.hand_checks import tension_references
 
+    if isinstance(spec, OpenWaterRiserSpec):
+        from .global_model import orcaflex_run as orun
+
+        chk = orun.open_water_physical_checks(model, spec, rel_tol=RESIDUAL_REL)
+        if not chk["physical"]:
+            raise CaseFailed("nonphysical_static", f"non-physical static state: frame balance "
+                             f"{chk['frame_balance_n'] / KN:.1f} kN, rotary vertical {chk['rotary_vertical_n'] / KN:.1f} kN")
+        return chk
     if spec.hang_off is not None:  # no tensioner lines: the ring yaw is the branch check
         yaw = (float(model["TensionRing"].StaticResult("Rotation 3")) + 180.0) % 360.0 - 180.0
         if abs(yaw) > HANG_OFF_YAW_MAX_DEG:
@@ -724,6 +823,8 @@ class RiserCampaignAdapter:
         if not proxy:
             return
         spec = self.spec(case)
+        if isinstance(spec, OpenWaterRiserSpec) and proxy["kind"] == "disconnect":
+            raise ValueError("open-water riser: model the EDP disconnect with params 'edp_release', not a proxy")
         if proxy["kind"] == "drift_off":
             v = model["Vessel"]
             v.PrimaryMotion = "Prescribed"
@@ -748,27 +849,22 @@ class RiserCampaignAdapter:
         p = case.get("params", {})
         settings = apply_statics_settings(model, p)
         spec = self.spec(case)
+        master = self._masters.get(case["case_id"])
+
+        def reload():
+            threads = model.threadCount
+            model.LoadData(str(master))
+            model.threadCount = threads
+            self.prepare(model, case)
+            apply_statics_settings(model, p)
+
+        # the seeded paths exist for the tension-ring yaw branch of the drilling riser; the open-water riser has no
+        # ring and converges from its straight start (direct statics, with a frame continuation as the fallback)
+        if isinstance(spec, OpenWaterRiserSpec):
+            return {**open_water_statics(model, spec, p, reload=reload if master else None), **settings}
         if spec.hang_off is not None:
-            master = self._masters.get(case["case_id"])
-
-            def reload_ho():
-                threads = model.threadCount
-                model.LoadData(str(master))
-                model.threadCount = threads
-                self.prepare(model, case)
-                apply_statics_settings(model, p)
-
-            return {**hang_off_statics(model, spec, p, reload=reload_ho if master else None), **settings}
+            return {**hang_off_statics(model, spec, p, reload=reload if master else None), **settings}
         if p.get("statics", "seeded") == "seeded":
-            master = self._masters.get(case["case_id"])
-
-            def reload():
-                threads = model.threadCount
-                model.LoadData(str(master))
-                model.threadCount = threads
-                self.prepare(model, case)
-                apply_statics_settings(model, p)
-
             return {**robust_statics(model, spec, p, reload=reload if master else None), **settings}
         model.CalculateStatics()
         return {"method": "direct", **settings, **physical_state_checks(model, spec)}
@@ -780,6 +876,8 @@ class RiserCampaignAdapter:
 
         spec = self.spec(case)
         ofx = orun._api()
+        if isinstance(spec, OpenWaterRiserSpec):
+            return self._extract_open_water(model, case, spec)
         if spec.hang_off is not None:
             return {"w5": w5_channels.extract_hang_off(model, spec, case["analysis"], ofx),
                     **w5_channels.hang_off_summary(model, spec, case["analysis"], ofx)}
@@ -811,6 +909,41 @@ class RiserCampaignAdapter:
                 model, spec, ofx, spacing_m=float(fat.get("spacing_m", fc.DEFAULT_SPACING_M)),
                 n_bins=int(fat.get("n_bins", fc.DEFAULT_BINS))))
         out["w5"] = w5
+        return out
+
+    @staticmethod
+    def _extract_open_water(model, case: dict, spec: OpenWaterRiserSpec) -> dict[str, Any]:
+        from .global_model import orcaflex_run as orun
+
+        ofx = orun._api()
+        from .global_model import w5_channels
+
+        w5 = w5_channels.extract_open_water(model, spec, case["analysis"], ofx)
+        if case["analysis"] == "statics":
+            out: dict[str, Any] = {**orun.open_water_static_responses(model, spec), "w5": w5}
+            n = case.get("params", {}).get("modal_modes")
+            if n:
+                out["modes"] = orun.riser_modal_periods(model, n_modes=int(n))
+            return out
+        out = dict(orun.open_water_governing_responses(model, spec))
+        fat = case.get("params", {}).get("fatigue")
+        if fat:  # wave-fatigue window: rainflow histograms of the wall stress (W5 damage path)
+            from .global_model import fatigue_channels as fc
+
+            w5["fatigue"] = w5_channels.compact(fc.extract(
+                model, spec, ofx, spacing_m=float(fat.get("spacing_m", fc.DEFAULT_SPACING_M)),
+                n_bins=int(fat.get("n_bins", fc.DEFAULT_BINS))))
+        out["w5"] = w5
+        period = ofx.Period(1)
+        up, riser = model["Upper"], model["Riser"]
+        out["series"] = {
+            "te_top_kn": _stats(up.TimeHistory("Effective tension", period, ofx.oeEndA)),
+            "te_edp_kn": _stats(riser.TimeHistory("Effective tension", period, ofx.oeEndB)),
+            "frame_z_m": _stats(model["TensionFrame"].TimeHistory("Z", period)),
+            "edp_z_m": _stats(riser.TimeHistory("Z", period, ofx.oeEndB)),
+            "vessel_x_m": _stats(model["Vessel"].TimeHistory("X", period)),
+        }
+        out["sample_count"] = len(up.TimeHistory("Effective tension", period, ofx.oeEndA))
         return out
 
 
