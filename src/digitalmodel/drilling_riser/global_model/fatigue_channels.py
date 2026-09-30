@@ -1,7 +1,10 @@
 """Wave-fatigue channels of one solved window (the plan's damage path, W5/W7 input).
 
 At each station and at 8 points around the wall (outer fibre, ``THETAS_DEG``) the axial wall stress ``ZZ stress``
-is rainflow counted by OrcaFlex (``RainflowHalfCycles`` over the main stage). The half-cycle ranges are binned on a
+history of the main stage is rainflow counted by a conforming counter of ``fatigue/counting_contract.py``
+(``digitalmodel.fatigue.rainflow.rainflow_count``: pyLife four-point, the residue counted as half cycles). OrcaFlex
+``RainflowHalfCycles`` is kept for information: batch 7 found it 4-9 % short of the history span at 7 of about 70,000
+points (``orcaflex_max_range``, ``orcaflex_invariant_ok``). The half-cycle ranges are binned on a
 range derived from the observed maximum - bin width = max / ``n_bins``, the maximum in the last (closed) bin - so no
 half-cycle is out of range (the defect the plan fixes in ``opp_time_series.py``, which clipped to a configured range).
 Each point also carries the peak-to-valley invariant: the largest half-cycle must equal the span (max - min) of the
@@ -42,6 +45,25 @@ def half_cycle_histogram(half_cycles: Iterable[float], *, n_bins: int = DEFAULT_
             "out_of_range": out}
 
 
+COUNTER = "digitalmodel.fatigue.rainflow:rainflow_count (pyLife four-point, residue as half cycles)"
+
+
+def half_cycles(series) -> list[float]:
+    """Half-cycle ranges of ``series`` by the conforming counter (a full cycle is two half cycles)."""
+    import numpy as np
+
+    from digitalmodel.fatigue.rainflow import rainflow_count
+
+    s = np.asarray(series, dtype=float)
+    if s.size < 2:
+        return []
+    df = rainflow_count(s)
+    out: list[float] = []
+    for r, c in zip(df["stress_range"].to_numpy(dtype=float), df["cycles"].to_numpy(dtype=float)):
+        out.extend([float(r)] * int(round(2.0 * c)))
+    return out
+
+
 def peak_to_valley_ok(half_cycles: Sequence[float], series: Sequence[float], *, rtol: float = INVARIANT_RTOL) -> bool:
     """The largest half-cycle range equals the span of the history (residuals retained as half cycles)."""
     if not series:
@@ -79,22 +101,28 @@ def stations(spec, *, spacing_m: float = DEFAULT_SPACING_M) -> list[tuple[str, f
     return out
 
 
-def extract(model, spec, ofx, *, spacing_m: float = DEFAULT_SPACING_M, n_bins: int = DEFAULT_BINS) -> dict[str, Any]:
-    from .orcaflex_run import main_period
+def extract(model, spec, ofx, *, spacing_m: float = DEFAULT_SPACING_M, n_bins: int = DEFAULT_BINS,
+            period=None) -> dict[str, Any]:
+    if period is None:
+        from .orcaflex_run import main_period
 
-    period = main_period(model, spec)
+        period = main_period(model, spec)
     doc: dict[str, Any] = {"variable": VARIABLE, "radial_position": "outer", "thetas_deg": list(THETAS_DEG),
-                           "units": "kPa", "counts": "half cycles (weight 0.5 in the damage sum)",
+                           "units": "kPa", "counts": "half cycles (weight 0.5 in the damage sum)", "counter": COUNTER,
                            "binning": "equal bins over [0, observed maximum], last bin closed", "stations": []}
-    fails = out_total = 0
+    fails = out_total = ofx_fails = 0
     for line_name, arc, label in stations(spec, spacing_m=spacing_m):
         line = model[line_name]
         pts = []
         for th in THETAS_DEG:
             ex = ofx.oeLine(ArcLength=arc, RadialPos=1, Theta=th)
-            hc = [float(x) for x in line.RainflowHalfCycles(VARIABLE, period, objectExtra=ex)]
             series = [float(x) for x in line.TimeHistory(VARIABLE, period, ex)]
+            hc = half_cycles(series)
+            ofx_hc = [float(x) for x in line.RainflowHalfCycles(VARIABLE, period, objectExtra=ex)]
             h = half_cycle_histogram(hc, n_bins=n_bins)
+            h["orcaflex_max_range"] = max(ofx_hc) if ofx_hc else 0.0
+            h["orcaflex_invariant_ok"] = peak_to_valley_ok(ofx_hc, series)
+            ofx_fails += not h["orcaflex_invariant_ok"]
             h["theta_deg"] = th
             h["span"] = (max(series) - min(series)) if series else 0.0
             h["mean_stress"] = sum(series) / len(series) if series else 0.0
@@ -105,4 +133,5 @@ def extract(model, spec, ofx, *, spacing_m: float = DEFAULT_SPACING_M, n_bins: i
         doc["stations"].append({"line": line_name, "arc_m": arc, "label": label, "points": pts})
     doc["invariant_failures"] = fails
     doc["out_of_range"] = out_total
+    doc["orcaflex_invariant_failures"] = ofx_fails  # information: the OrcaFlex count is not used
     return doc
