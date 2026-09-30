@@ -649,6 +649,9 @@ def open_water_statics(model, spec: OpenWaterRiserSpec, params: dict, *, reload=
 
 
 HANG_OFF_RAMP = (0.25, 0.5, 0.75, 1.0)
+# hang-off: the string inclines far in current and the ring's third Euler rotation reads a few degrees without twist;
+# only the flipped (180 deg) branch is non-physical
+HANG_OFF_YAW_MAX_DEG = 90.0
 HANG_OFF_RAMP_FINE = tuple(i / 10.0 for i in range(1, 11))
 
 
@@ -675,7 +678,7 @@ def hang_off_statics(model, spec: RiserGlobalModelSpec, params: dict, *, reload=
                 model.CalculateStatics()
                 n += 1
                 yaw = _ring_yaw_deg(model)
-                if abs(yaw) > RING_YAW_MAX_DEG:
+                if abs(yaw) > HANG_OFF_YAW_MAX_DEG:
                     raise _PathFailed(f"ring yaw {yaw:.1f} deg")
                 if f < 1.0:
                     model.UseCalculatedPositions(True)
@@ -743,7 +746,7 @@ def physical_state_checks(model, spec: RiserGlobalModelSpec) -> dict[str, Any]:
         return chk
     if spec.hang_off is not None:  # no tensioner lines: the ring yaw is the branch check
         yaw = (float(model["TensionRing"].StaticResult("Rotation 3")) + 180.0) % 360.0 - 180.0
-        if abs(yaw) > RING_YAW_MAX_DEG:
+        if abs(yaw) > HANG_OFF_YAW_MAX_DEG:
             raise CaseFailed("nonphysical_static", f"non-physical static state: tension ring yaw {yaw:.2f} deg")
         return {"ring_yaw_deg": yaw, "physical": True}
     target = tensioner_vertical_target_n(spec)

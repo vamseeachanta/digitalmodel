@@ -220,3 +220,30 @@ def test_current_direction_can_differ_from_the_wave_heading(tmp_path):
     assert s.current.direction_deg == 135.0
     s = cp.case_spec(_case(tmp_path, heading_deg=90.0, current=cur))
     assert s.current.direction_deg == 90.0
+
+
+def test_hang_off_statics_accept_an_inclined_ring_and_reject_the_flipped_branch(monkeypatch, tmp_path):
+    """Batch 6: in the full loop current the hung-off string inclines far, and the ring's third Euler rotation reads
+    1-6 deg without any twist (the angle decomposition of a large inclination); only the 180 deg flipped branch is
+    non-physical in hang-off, so the hang-off check is HANG_OFF_YAW_MAX_DEG (90 deg), not the connected 1 deg."""
+    from digitalmodel.drilling_riser import campaign as cp
+
+    class Env:
+        RefCurrentSpeed = 0.0
+
+    class M:
+        environment = Env()
+        general = type("G", (), {})()
+
+        def CalculateStatics(self):
+            pass
+
+    case = _case(tmp_path, hang_off={"mode": "hard", "with_lmrp": False}, mud_density_kg_m3=1025.0)
+    spec = cp.case_spec(case)
+    assert cp.HANG_OFF_YAW_MAX_DEG == 90.0
+    monkeypatch.setattr(cp, "_ring_yaw_deg", lambda model: 6.2)
+    monkeypatch.setattr(cp, "physical_state_checks", lambda model, s: {"physical": True})
+    assert cp.hang_off_statics(M(), spec, case["params"])["strategy"] == "direct"
+    monkeypatch.setattr(cp, "_ring_yaw_deg", lambda model: 179.0)
+    with pytest.raises(Exception, match="no hang-off statics route converged"):
+        cp.hang_off_statics(M(), spec, case["params"])
