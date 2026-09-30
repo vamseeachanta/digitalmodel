@@ -71,3 +71,49 @@ def test_fatigue_channels_of_a_short_irregular_window(tmp_path):
     pts = fat["stations"]
     assert len(pts) >= 5 and all(len(s["points"]) == 8 for s in pts)
     assert any(p["max_range"] > 0 for s in pts for p in s["points"])
+
+
+def test_half_cycles_hold_the_counting_contract_on_its_signals():
+    """The histogram counts come from a conforming counter (fatigue/counting_contract.py, pyLife four-point with the
+    residue as half cycles): batch 7 found OrcaFlex RainflowHalfCycles 4-9 % short of the history span at 7 of
+    ~70,000 points."""
+    import numpy as np
+
+    from digitalmodel.fatigue import counting_contract as cc
+
+    for name, sig in cc.CONTRACT_SIGNALS.items():
+        hc = fc.half_cycles(np.asarray(sig, dtype=float))
+        span = float(np.max(sig) - np.min(sig))
+        assert max(hc) == pytest.approx(span, rel=1e-6), name
+        assert fc.peak_to_valley_ok(hc, list(sig)), name
+
+
+def test_extract_counts_the_time_history_and_keeps_the_orcaflex_count_for_information():
+    """A short OrcaFlex count (the non-conservative case) no longer sets the histogram."""
+    import numpy as np
+
+    series = [0.0, 5.0, -1.0, 3.0, -4.0, 6.0, 0.0]
+
+    class Line:
+        def RainflowHalfCycles(self, var, period, objectExtra=None):
+            return np.array([4.0, 6.0, 7.0])  # misses the 10.0 span
+
+        def TimeHistory(self, var, period, extra):
+            return np.array(series)
+
+    class Ofx:
+        @staticmethod
+        def oeLine(**kw):
+            return kw
+
+    class Model:
+        def __getitem__(self, name):
+            return Line()
+
+    spec = synthetic_spec()
+    doc = fc.extract(Model(), spec, Ofx(), spacing_m=1e9, n_bins=10, period=object())
+    p = doc["stations"][0]["points"][0]
+    assert p["max_range"] == pytest.approx(10.0) and p["invariant_ok"]
+    assert p["orcaflex_max_range"] == pytest.approx(7.0) and not p["orcaflex_invariant_ok"]
+    assert doc["invariant_failures"] == 0 and doc["orcaflex_invariant_failures"] > 0
+    assert doc["counter"].startswith("digitalmodel.fatigue.rainflow")
