@@ -15,16 +15,13 @@ Engine (owner card R06). The page is built on the ``CalcReport`` engine in
 its section, subsection and equation-card markup (:class:`MethodBlock`,
 :class:`Equation`), its KPI strip and its revision and reference models. The fixed
 seven-section ``CalcReport.render_html`` layout is not used, because the standard report
-outline (Rev B, owner review: front matter with document control, section-level revision
-history, abbreviations, holds and assumptions register, contents and lists of tables and
-figures; then introduction, summary and conclusions with the results summary table and
-the FAD and growth charts, design basis with the model and mesh pictures, methodology
-with the software table, results with the end-result pictures, verification,
-conclusions, recommendations, references, appendix) does not fit it, its design-data
-tables put the caption above the table, and its masthead legend carries a
-"validated" confidence level that this report may not use without a named referent.
+outline (Rev C: front matter; executive summary, introduction, design data,
+methodology, detailed results, key findings, limitations, recommendations,
+references and acronyms; verification and sensitivity appendices) does not fit it.
+Captions appear below objects, with supporting details in numbered notes.
 
-Figures (Rev B). The model, mesh and result pictures are MAPDL plots of the receipt decks
+
+Figures. The model, mesh and result pictures are MAPDL plots of the receipt decks
 (:mod:`digitalmodel.ansys.weldolet_figures`, committed with ``figures.json``), embedded
 as data URIs; the section drawing, the FAD, the growth curve and the K charts are
 inline SVG drawn from the generator's section mesh, the result record and the receipts.
@@ -62,6 +59,7 @@ from pathlib import Path
 from typing import Any, Mapping, Optional, Sequence
 
 from digitalmodel.asset_integrity.assessment.fad_curves import api579_2016_level2
+from digitalmodel.asset_integrity.assessment.crack_fe_report_presentation import polish
 from digitalmodel.fatigue.crack_growth_history import (
     GrowthLaw,
     TabulatedDeltaK,
@@ -86,8 +84,9 @@ REPORT_ID = "DM-FFS-2157-01"
 TITLE = "Crack-like flaw assessment of a weldolet attachment-weld root flaw"
 DISCIPLINE = "Asset integrity"
 ORGANISATION = "AceEngineer"
-PREPARED_BY = "crack_fe_report (generated from the result record)"
-REVISION = "Rev B"
+PREPARED_BY = "AceEngineer (automated draft)"
+REVISION = "Rev C"
+REV_B_DATE = "2026-09-27"
 REVISION_PURPOSE = "issued for owner review"
 REV_A_DATE = "26 Sep 2026"
 REV_B_SECTIONS = ("Front matter added; 1–9 and A restructured to the standard outline; "
@@ -97,9 +96,12 @@ REV_B_DESCRIPTION = ("Owner review comments 1–3 incorporated: abbreviations ta
                      "as a method limitation; standard section outline with the model, mesh "
                      "and result pictures; failure assessment diagram and growth chart in the "
                      "summary with the conclusions read against them. Issued for owner review.")
-TOC_ITEMS = (("s1", "Introduction"), ("s2", "Summary and conclusions"), ("s3", "Design basis"),
-             ("s4", "Methodology"), ("s5", "Results"), ("s6", "Verification"),
-             ("s7", "Conclusions"), ("s8", "Recommendations"), ("s9", "References"))
+TOC_ITEMS = (("s2", "Executive Summary"), ("s1", "Introduction"), ("s3", "Design Data"),
+             ("s4", "Analysis Methodology"), ("s5", "Detailed Results"),
+             ("s7", "Key Findings"), ("limitations", "Limitations"),
+             ("s8", "Recommendations"), ("s9", "References"),
+             ("acronyms", "Acronyms and Symbols"))
+
 GUARDS = ("a_equilibrium", "b_mesh_load", "c_contour", "d_complete", "e_sanitised",
           "f_units", "g_j_mesh")
 RECORD_GUARDS = ("c_contour_legacy", "g_end_nodes_record")
@@ -459,6 +461,13 @@ _EXTRA_CSS = """
   .doc .wrapcell{white-space:normal;text-align:left;min-width:22ch;max-width:60ch}
   .doc td.txt{text-align:left}
   .doc .caption{font-size:13.5px;color:var(--ink-muted);margin:8px 0 22px;font-weight:600}
+  .doc .l1head .secnum::after,.doc .l2head .n::after{content:none}
+  .doc .object-notes{font-size:13px;color:var(--ink-muted);margin-top:-12px}
+  .doc .eqs,.doc .tbl-wrap{max-width:100%;overflow-x:auto}
+  @media print{.doc .shell{display:block}.doc .toc{display:none}
+    .doc .tbl-wrap{overflow:visible}.doc table{font-size:8pt;table-layout:auto}
+    .doc td,.doc th{white-space:normal;overflow-wrap:anywhere}
+    .doc .wrapcell{min-width:0}.doc .fblock{break-inside:avoid}}
   .doc .tblock .tbl-wrap{margin-top:14px}
   .doc .fblock .flow{margin-top:14px}
   .doc .conclusions-box{border:2px solid var(--proj);background:var(--proj-soft);border-radius:14px;
@@ -577,7 +586,34 @@ class _Report:
         self.sec, self.ntab, self.nfig, self.nsub = label, 0, 0, 0
 
     def _num(self, n: int) -> str:
-        return f"{self.sec}.{n}" if self.sec.isdigit() else f"{self.sec}-{n}"
+        return f"{self.sec}.{n}"
+
+    @staticmethod
+    def caption_parts(caption: str, kind: str, key: str = "") -> tuple[str, str]:
+        titles = {
+            "fad": "Failure assessment diagram", "growth": "Governing crack-growth life",
+            "model": "Run pipe, weldolet and branch model",
+            "section": "Branch-axis section and flaw planes",
+            "mesh-global": "Global finite-element meshes",
+            "mesh-crack": "Crotch crack-front mesh",
+            "result-hoop": "Uncracked hoop-stress field",
+            "result-crack": "Cracked-model stress field",
+            "k-front": "Crack-front driving force",
+        }
+        plain = _strip_tags(caption)
+        short = titles.get(key, re.split(r"[;(]", plain, maxsplit=1)[0].strip())
+        if len(short) > 95:
+            short = " ".join(short[:95].split()[:-1])
+        return short, caption if short != caption else ""
+
+    @staticmethod
+    def object_caption(kind: str, num: str, short: str, note: str, anchor: str) -> str:
+        marker = f' <a href="#{anchor}-note-1">[1]</a>' if note else ""
+        body = f'<p class="caption">{kind} {num} – {short}{marker}</p>'
+        if note:
+            body += (f'<ol class="object-notes" aria-label="Notes for {kind} {num}">'
+                     f'<li id="{anchor}-note-1">{note}</li></ol>')
+        return body
 
     def table(self, heads: Sequence[str], rows: Sequence[str], caption: str,
               cls: str = "", intro: str = "", key: str = "") -> str:
@@ -586,13 +622,14 @@ class _Report:
         anchor = f"tab-{num.replace('.', '-')}"
         if key:
             self.labels[key] = f"Table {num}"
-        self.captions.append(("Table", num, caption, anchor))
+        short, note = self.caption_parts(caption, "Table", key)
+        self.captions.append(("Table", num, short, anchor))
         th = "".join(f"<th>{h}</th>" for h in heads)
         c = f' class="{cls}"' if cls else ""
-        pre = f'<p class="prose">{intro}</p>' if intro else ""
+        pre = self.p(intro or f"{short} are presented in Table {num}.")
         return (f'{pre}<div class="tblock" id="{anchor}"><div class="tbl-wrap"><table{c}>'
                 f'<thead><tr>{th}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
-                f'<p class="caption">Table {num} – {caption}</p></div>')
+                + self.object_caption("Table", num, short, note, anchor) + '</div>')
 
     def figure(self, body: str, caption: str, key: str = "") -> str:
         self.nfig += 1
@@ -600,10 +637,12 @@ class _Report:
         anchor = f"fig-{num.replace('.', '-')}"
         if key:
             self.labels[key] = f"Figure {num}"
-        self.captions.append(("Figure", num, caption, anchor))
+        short, note = self.caption_parts(caption, "Figure", key)
+        self.captions.append(("Figure", num, short, anchor))
         dk = f' data-figure="{key}"' if key else ""
-        return (f'<div class="fblock" id="{anchor}"{dk}><div class="flow">{body}</div>'
-                f'<p class="caption">Figure {num} – {caption}</p></div>')
+        return (self.p(f"{short} is shown in Figure {num}.")
+                + f'<div class="fblock" id="{anchor}"{dk}><div class="flow">{body}</div>'
+                + self.object_caption("Figure", num, short, note, anchor) + '</div>')
 
     def img(self, fid: str, alt: str) -> str:
         # own line with the per-line lint sentinel: the line carries image data, no prose
@@ -629,10 +668,8 @@ class _Report:
         rec = self.fig["manifest"][fids[0]]
         gen = rec["generator"].rsplit(".", 1)[-1]
         states = "; ".join(dict.fromkeys(parts))
-        return (f"Source: ANSYS MAPDL {rec['mapdl_release']} plot of the receipt model "
-                f"regenerated by the generator {gen} (state {states}; deck SHA-256 checked "
-                f"against the receipt) with an appended plotting block "
-                f"(weldolet_figures; {self.fig['dir']})")
+        return (f"Source: ANSYS MAPDL {rec['mapdl_release']} model plots, mesh level L0. "
+                "Model and plotting records: [I3].")
 
     def ref(self, key: str) -> str:
         """Placeholder for a label (table, figure or subsection) resolved after rendering."""
@@ -647,12 +684,13 @@ class _Report:
     def sub(self, key: str, title: str, body: str) -> str:
         self.nsub += 1
         self.labels[key] = f"{self.sec}.{self.nsub}"
-        return (f'<div class="l2" id="{key}"><div class="l2head"><span class="n"></span>'
+        return (f'<div class="l2" id="{key}"><div class="l2head"><span class="n">{self.sec}.{self.nsub}</span>'
                 f"<h3>{title}</h3></div>{body}</div>")
 
     @staticmethod
     def section(key: str, title: str, subtitle: str, body: str, numbered: bool = True) -> str:
-        num = '<span class="secnum"></span>' if numbered else ""
+        number = next((i for i, (anchor, _) in enumerate(TOC_ITEMS, 1) if anchor == key), "")
+        num = f'<span class="secnum">{number}</span>' if numbered else ""
         return (f'<section id="{key}"><div class="l1head">{num}<h2>{title}</h2></div>'
                 f'<p class="l1sub">{subtitle}</p>{body}'
                 f'<a class="backtop" href="#top">↑ contents</a></section>')
@@ -666,7 +704,7 @@ class _Report:
         return f'<p class="note-assumed"><span class="assumed-label">{ASSUMED}</span> {text}</p>'
 
     def cite(self, *keys: str) -> str:
-        return "".join(f"[{self.ref_no[k]}]" for k in keys)
+        return "".join(f"⟦cite-{self.ref_no[k]}⟧" for k in keys)
 
     def reg_ref(self, rid: str, field: str = "value", spec: str = "g") -> str:
         k, _ = self.reg_items[rid]
@@ -687,11 +725,10 @@ class _Report:
                 f"Cited for the procedure only ({c['note']}).")
         add("newman_raju", "J. C. Newman Jr. and I. S. Raju, Stress-intensity factor equations "
             "for cracks in three-dimensional finite bodies, NASA TM-83200, NASA Langley Research "
-            "Center, August 1981 (US Government work). Verification comparator, evaluated by "
-            "crack_fad.newman_raju_k.", "https://ntrs.nasa.gov/citations/19810023035")
+            "Center, August 1981 (US Government work). Analytical verification comparator.",
+            "https://ntrs.nasa.gov/citations/19810023035")
         for ref in self.reg.get("references", []):
-            add(ref["id"], f"{ref['citation']}. Archived copy: {ref['source']}; SHA-256 "
-                f"{ref['sha256']}; retrieved {ref['retrieved']}.", ref.get("url"))
+            add(ref["id"], f"{ref['citation']}. Retrieved {ref['retrieved']}.", ref.get("url"))
         # The NUREG Kmat sources are register references R07/R08 (owner card J01); the
         # report's narrative cites them by these aliases, so each is listed once.
         for alias, rid in (("nureg_6428", "R07"), ("nureg_7185", "R08")):
@@ -701,7 +738,7 @@ class _Report:
         out = []
         for rid in ids:
             if rid in self.ref_no:
-                out.append(f"[{self.ref_no[rid]}]")
+                out.append(f"⟦cite-{self.ref_no[rid]}⟧")
             elif rid.startswith("decision:"):
                 out.append(f"owner decision {rid.split(':', 1)[1]}")
             else:
@@ -834,19 +871,21 @@ class _Report:
         revs = [
             RevisionEntry(revision="A", date=REV_A_DATE,
                           description="Issued for owner review", by=PREPARED_BY),
-            RevisionEntry(revision="B", date=self.date, description=REV_B_DESCRIPTION,
+            RevisionEntry(revision="B", date=REV_B_DATE, description=REV_B_DESCRIPTION,
                           by=PREPARED_BY),
         ]
-        sections = {"A": "All (new document)", "B": REV_B_SECTIONS}
+        revs.append(RevisionEntry(revision="C", date=self.date,
+                                  description="Reporting conventions P3: structure, captions, "
+                                  "references and presentation updated for owner review; "
+                                  "assessment values unchanged.", by=PREPARED_BY))
+        sections = {"A": "All (new document)", "B": REV_B_SECTIONS,
+                    "C": "Front matter; 1–10; Appendices A–B"}
         rows = [f'<tr>{self.t(rv.revision)}{self.t(sections[rv.revision], "txt wrapcell")}'
                 f'{self.t(rv.description, "txt wrapcell")}{self.t(rv.date)}{self.t(rv.by)}'
                 f'<td class="blank"></td><td class="blank"></td></tr>' for rv in revs]
         rev = self.table(["Rev", "Sections", "Description", "Date", "Prepared", "Checked",
                           "Approved"], rows, "Revision history (section level)",
                          cls="revhist")
-        rows = [f"<tr>{self.t(a)}{self.t(d, 'txt wrapcell')}</tr>" for a, d in ABBREVIATIONS]
-        abbr = self.table(["Abbreviation", "Definition"], rows,
-                          "Abbreviations and symbols", cls="abbrev")
         rows = []
         for k, (item, value, unit, basis, sec, effect, status) in enumerate(self._holds(), 1):
             st_cls = "txt assumed-label" if status == ASSUMED else "txt"
@@ -863,13 +902,12 @@ class _Report:
             '<div class="wrap fm" id="front-matter" style="max-width:1240px">'
             f"<h3>Document control</h3>{doc}"
             f"<h3>Revision history</h3>{rev}"
-            f"<h3>Abbreviations</h3>{abbr}"
             "<h3>Holds and assumptions register</h3>"
             + self.p("Every held or assumed item is listed once here with the section where it "
                      "is used; the same label appears beside the affected input or result.")
             + holds
             + f'<h3>Contents</h3><ol class="lists">{toc}</ol><p class="prose"><a '
-            'href="#appendix-a">Appendix A – Reproducibility data</a></p>'
+            'href="#s6">Appendix A – Verification</a>; <a href="#appendix-b">Appendix B – Sensitivities and screening</a></p>'
             '<h3>List of tables</h3><ul class="lists" id="list-of-tables">⟦LOT⟧</ul>'
             '<h3>List of figures</h3><ul class="lists" id="list-of-figures">⟦LOF⟧</ul>'
             "</div>"
@@ -879,7 +917,7 @@ class _Report:
     # 1 Introduction
     # ======================================================================= #
     def introduction(self) -> str:
-        self.begin("1")
+        self.begin("2")
         obj = self.p(
             "The objective is to assess an assumed crack-like root flaw in the attachment weld "
             "of a 6 × ½ weldolet on an NPS 6 Sch 40S run pipe of 1.4404 stainless steel at "
@@ -978,7 +1016,7 @@ class _Report:
 
     def summary(self) -> str:
         r, g = self.r, self.r["growth"]
-        self.begin("2")
+        self.begin("1")
         imin, imax = self.i_fmin, self.i_fmax
         rule = g["governing_rule"]
         ssy_key = max(r["checks"]["ssy"], key=lambda k: r["checks"]["ssy"][k]["ratio"])
@@ -1160,16 +1198,19 @@ class _Report:
             "</ul>"
         )
         body = (
-            self.p("The two governing results are shown first as charts: the failure "
+            self.p("The assumed weldolet weld-root flaw is assessed using finite-element (FE) "
+                   "crack driving forces. The failure assessment diagram (FAD) and small-scale "
+                   "yielding (SSY) limit govern fracture and growth-life interpretation.")
+            + self.p("The two governing results are shown first as charts: the failure "
                    "assessment diagram (" + self.ref("fad") + ") and the growth curve ("
                    + self.ref("growth") + "). Each conclusion below states what the chart "
-                   "shows, against its criterion. Every number carries its source path in the "
-                   "result record, the design-data register or the FE receipt record.")
+                   "shows, against its criterion. An elastic-plastic growth assessment is "
+                   "recommended before service acceptance can be established.")
             + f_fad + f_growth + box
             + self.sub("s2-results", "Results summary", tab + count_line + bold)
             + self.sub("s2-lim", "Governing limitations", lim)
         )
-        return self.section("s2", "Summary and conclusions",
+        return self.section("s2", "Executive Summary",
                             "Governing results as charts, the conclusions read against them, "
                             "and the results summary.", body)
 
@@ -1282,8 +1323,8 @@ class _Report:
         fig_section = self.figure(
             self._section_svg(),
             "Section through the branch axis at the +x crotch (plane y = 0), drawn from the "
-            "generator's own section mesh (weldolet_crack._build_section, geometry of state "
-            "p0b_uncracked, level 0): (a) the whole height, (b) the weld root with both flaw "
+            "uncracked model section at mesh level L0 [I3]: (a) the whole height, "
+            "(b) the weld root with both flaw "
             "planes. The crotch-plane flaw lies in this plane (semicircles, one per solved "
             "depth); the fusion-face flaw is a full-circumference flaw on the fusion line "
             "v = 0 (thick line, dashed beyond a0). Dimensions in mm", key="section")
@@ -1335,12 +1376,11 @@ class _Report:
             "mesh in " + self.ref("mesh-crack") + ". Each state is solved at two mesh "
             "densities, L0 and L1 (" + self.ref("t-meshes") + "); the pictures show L0.")
         conv = self.p(
-            "The design basis is held in a design-data register (schema <i>"
-            + self.v("register:/schema", cls="") + "</i>, generated "
-            + self.v("register:/generated", cls="") + "). Every item carries a source class "
-            "and a status label; an assumed item reads <span class=\"assumed-label\">" + ASSUMED
-            + "</span> with a note stating the reason and the evidence that would confirm it. "
-            "Units: " + _e(reg["conventions"]["units"]) + ". Coordinates: "
+            "The design-data register distinguishes supplied, assumed and derived inputs. "
+            "Register IDs identify individual source entries; they are traceability labels, "
+            "not physical case names. Each assumed item reads "
+            + ASSUMED + " with the evidence needed for confirmation. Units: "
+            + _e(reg["conventions"]["units"]) + ". Coordinates: "
             + _e(reg["conventions"]["coordinates"]) + ".")
         rows = []
         for cls_name, meaning in reg["source_class_values"].items():
@@ -1355,7 +1395,7 @@ class _Report:
             rows.append(
                 f'<tr data-register-id="{_attr(it["id"])}">{self.t(it["id"])}'
                 f'{self.t(it["parameter"], "txt wrapcell")}'
-                f'{self.td(f"register:/design_data/{k}/value", "g", cls="txt wrapcell")}'
+                f'{self.td(f"register:/design_data/{k}/value", "f3" if "thickness" in it["parameter"].lower() or "corrosion allowance" in it["parameter"].lower() else "g", cls="txt wrapcell")}'
                 f'{self.t(it["unit"])}{self.t(it["source_class"])}'
                 f'{self.t(label, "txt", raw=True)}'
                 f'{self.t(it["note"], "txt wrapcell")}'
@@ -1423,10 +1463,10 @@ class _Report:
                     "Material properties are read from public datasheets and dimensions from a "
                     "public manufacturer catalogue and distributor charts "
                     + self.cite(*[x["id"] for x in reg.get("references", [])]) + "; archived "
-                    "copies are held under docs:literature with their SHA-256 digests. The "
+                    "source details are listed in Section 9.2. The "
                     "toughness lower bound is cited to NUREG/CR-6428 Rev. 1 "
                     + self.cite("nureg_6428", "nureg_7185") + ".")))
-        return self.section("s3", "Design basis",
+        return self.section("s3", "Design Data",
                             "What was modelled, the mesh used, the design data, assumptions "
                             "and acceptance criteria.", body)
 
@@ -1444,18 +1484,8 @@ class _Report:
             f"{self.v('receipts:/solver/mapdl_version', tag='td', cls='txt')}"
             f"{self.t('FE solution of every declared state; CINT J and K extraction; '
                       'limit-load run; the pictures of Sections 3 and 5 (visualisation decks)', 'txt wrapcell')}</tr>",
-            f"<tr>{self.t('digitalmodel.ansys generators')}{self.t('weldolet_crack, weldolet_crotch, weldolet_limit, crack_verification')}"
-            f"{self.t('producing commits ' + ', '.join(c[:12] for c in commits), 'txt wrapcell')}"
-            f"{self.t('deterministic APDL decks; deck SHA-256 recorded in each receipt (Appendix A)', 'txt wrapcell')}</tr>",
-            f"<tr>{self.t('digitalmodel.ansys.weldolet_figures')}{self.t('this revision')}"
-            f"{self.t('figure digests in figures.json')}"
-            f"{self.t('visualisation decks: the receipt deck, hash-checked, plus a plotting block; host-free PNG', 'txt wrapcell')}</tr>",
-            f"<tr>{self.t('digitalmodel.asset_integrity.assessment')}{self.t('crack_fe_assessment, fad_curves, crack_checks')}"
-            f"{self.t('-')}{self.t('FAD, growth integration, checks, evidence status and verdict', 'txt wrapcell')}</tr>",
-            f"<tr>{self.t('digitalmodel.fatigue.crack_growth_history')}{self.t('life, TabulatedDeltaK')}"
-            f"{self.t('-')}{self.t('fatigue-crack-growth integration (composite Simpson) and threshold arrest', 'txt wrapcell')}</tr>",
-            f"<tr>{self.t('crack_fe_report')}{self.t('this revision')}{self.t('-')}"
-            f"{self.t('this page, generated from the result record, the register and the receipts', 'txt wrapcell')}</tr>",
+            f"<tr>{self.t('Assessment and model programs')}{self.t('Model-specific revision')}"
+            f"{self.t('[I2], [I3]')}{self.t('Model generation, FAD calculation, growth integration and numerical checks', 'txt wrapcell')}</tr>",
         ]
         soft = self.table(["Software", "Version", "Build / SHA-256", "Use"], rows,
                           "Software and versions", key="t-software")
@@ -1505,7 +1535,7 @@ class _Report:
                 + ". Modelling route: " + _e(crotch["modelling_route"]) + ". Mesh: "
                 "a structured crack block around the front (spider-web rings of elements "
                 "about a focused crack-tip tube) embedded in the component mesh; the recorded "
-                "meshing statement is quoted in Appendix A. J and K_I, K_II, K_III are "
+                "meshing statement is quoted in Section 9.2. J and K_I, K_II, K_III are "
                 "extracted by the CINT contour integral and interaction integral on six "
                 "contours, and the reported value is the "
                 + _e(crotch["k_reported"]) + ". Each state is solved at two mesh densities "
@@ -1648,6 +1678,8 @@ class _Report:
         for blk in (fe, kgov, fad, limit, growth, checks, screen):
             rendered, self.neq = blk.render(self.nsub + 1, self.neq)
             self.nsub += 1
+            rendered = rendered.replace('<span class="n"></span>',
+                                        f'<span class="n">4.{self.nsub}</span>', 1)
             parts.append(rendered)
             if blk is fe:
                 parts.append(self.sub("s4-guards", "Guards (a)–(g)", self.p(
@@ -1656,7 +1688,7 @@ class _Report:
                     "makes that guard alone fail. Guards (c) and (g) were redefined or added by "
                     "owner decisions before the runs they govern; the superseded forms are kept "
                     "as records (Section " + self.ref("s6-4") + ").") + guard_tab))
-        return self.section("s4", "Methodology",
+        return self.section("s4", "Analysis Methodology",
                             "Software, FE model, guards, driving force, FAD, limit load, growth "
                             "and checks.",
                             "".join(parts))
@@ -1665,7 +1697,7 @@ class _Report:
     # 7 FE model and verification
     # ======================================================================= #
     def verification(self) -> str:
-        self.begin("6")
+        self.begin("A")
         m = self.m
         ver = m["verification"]
         rows = []
@@ -1762,7 +1794,7 @@ class _Report:
             + _e(self.r["evidence"]["fe_receipts"]["basis"]) + ". The same checks run in "
             "the repository's continuous-integration test suite without a solver licence, and "
             "a missing or stale receipt fails that suite rather than being skipped. Receipt "
-            "digests are listed in Appendix A.")
+            "digests are listed in Section 9.2.")
         body = (self.p("The FE model and mesh are described in Section " + self.ref("s3-mesh")
                        + " and the states and mesh sizes are listed in " + self.ref("t-meshes")
                        + ".")
@@ -1771,8 +1803,8 @@ class _Report:
                 + self.sub("s6-3", "Guard values per state", guards)
                 + self.sub("s6-4", "Record-only guards", records)
                 + self.sub("s6-5", "Provenance", prov))
-        return self.section("s6", "Verification",
-                            "Extraction verification, conservation guards and provenance.", body)
+        return self.section("s6", "Appendix A – Verification",
+                            "Extraction checks and numerical verification evidence.", body, numbered=False)
 
     # ======================================================================= #
     # 8 Results
@@ -2134,7 +2166,9 @@ class _Report:
         lls = g["life_to_limit_state"]
         limit_state = self.p("Life to the limit state: <b>" + _e(lls["status"]) + "</b> — "
                              + _e(lls["reason"]) + ".")
-        # 8.6 sensitivities
+        # Detailed investigations retain their own appendix numbering.
+        results_counters = (self.sec, self.ntab, self.nfig, self.nsub)
+        self.begin("B")
         sens = r["sensitivities"]
         ll = sens["limit_load_lr"]
         rows = [f"<tr>{self.td('result:/sensitivities/limit_load_lr/a_mm', 'f2')}{self.t(ll['plane'])}"
@@ -2226,6 +2260,13 @@ class _Report:
                                    + ", ρ = " + self.v("result:/screening/rho", "f1") + ". Records: "
                                    + _e(sc["y_basis"]) + "; " + _e(sc["relaxation_basis"]) + "."))
         sc_note = self.assumed_note("Record: " + _e(sc["basis"]))
+        self.sensitivity_appendix = self.section(
+            "appendix-b", "Appendix B – Sensitivities and screening",
+            "Changes in modelling assumptions and residual-stress bounds are presented here.",
+            self.sub("s5-sens", "Sensitivity investigations", sens_html)
+            + self.sub("s5-screen", "Residual-stress screening", sc_tab + sc_note),
+            numbered=False)
+        self.sec, self.ntab, self.nfig, self.nsub = results_counters
         checks = self.checks_parts()
         # 8.8 evidence
         rows = []
@@ -2248,15 +2289,18 @@ class _Report:
                 + ")."))
             + self.sub("s5-growth", "Fatigue crack growth", law_tab + law_note + dk_tab + life_tab
                        + ssy_tab + ssy_meaning + non_tab + limit_state)
-            + self.sub("s5-sens", "Sensitivities", sens_html)
-            + self.sub("s5-screen", "Residual-stress screening", sc_tab + sc_note)
+            + self.sub("s5-sensitivity-summary", "Sensitivity implications", self.p(
+                "The limit-load, crack-face-pressure, indicative-factor and extrapolated-life "
+                "investigations are presented in Appendix B. None changes the base verdict; "
+                "residual-stress bounds are screening only and do not establish the missing "
+                "residual-stress basis."))
             + self.sub("s5-checks", "Consistency checks", checks)
             + self.sub("s5-evidence", "Evidence completeness", ev_tab)
             + self.sub("s5-findings", "Findings record", findings)
         )
-        return self.section("s5", "Results",
+        return self.section("s5", "Detailed Results",
                             "Model, mesh and end result; FAD, driving force, growth, "
-                            "sensitivities, screening, checks, evidence and findings.", body)
+                            "checks, evidence and findings; detailed sensitivities are in Appendix B.", body)
 
     # ======================================================================= #
     # 9 Checks
@@ -2302,8 +2346,8 @@ class _Report:
         t4 = ('<div data-check="growth_validity">'
               + self.table(["Status", "Largest Lr", "Limit", "Reason"], rows,
                            "Growth validity (Lr at most 1, owner card B15)") + "</div>")
-        return ("<h4>σ_ref consistency</h4>" + t1 + "<h4>Small-scale yielding</h4>" + t2
-                + "<h4>Shakedown</h4>" + t3 + "<h4>Growth validity</h4>" + t4)
+        return ("<p class='check-title'>σ_ref consistency</p>" + t1 + "<p class='check-title'>Small-scale yielding</p>" + t2
+                + "<p class='check-title'>Shakedown</p>" + t3 + "<p class='check-title'>Growth validity</p>" + t4)
 
     def findings_table(self) -> str:
         rows = []
@@ -2318,7 +2362,9 @@ class _Report:
                     return self.td(f"{base}/{field}", "int")
                 return self.td(f"{base}/{field}", "f4" if isinstance(val, float) or isinstance(val, list) else "g")
 
-            rows.append(f'<tr data-finding="{_attr(f["id"])}">{self.t(f["id"])}'
+            rows.append(f'<tr data-finding="{_attr(f["id"])}" '
+                        f'data-criterion="{_attr(f["criterion"])}" '
+                        f'data-disposition="{_attr(f["disposition"])}">{self.t(f["id"])}'
                         f'{self.t(f["criterion"], "txt wrapcell")}{cell("comparator")}{cell("value")}'
                         f'{self.t(f["disposition"], "txt wrapcell")}</tr>')
         t5 = self.table(["Finding", "Criterion", "Comparator", "Value", "Disposition"], rows,
@@ -2339,7 +2385,7 @@ class _Report:
                 f'<span data-part="disposition"><b>{disposition}</b></span></li>')
 
     def conclusions(self) -> str:
-        self.begin("7")
+        self.begin("6")
         r, g = self.r, self.r["growth"]
         imin, imax = self.i_fmin, self.i_fmax
         ff = g["non_governing_planes"]["fusion_face"]["none"]
@@ -2403,9 +2449,57 @@ class _Report:
         ]
         body = (self.p("Each conclusion states its basis, the governing result, the criterion "
                        "and the disposition. Recommendations follow separately in Section 8.")
-                + f'<div class="concl"><ul>{"".join(items)}</ul></div>')
-        return self.section("s7", "Conclusions",
+                + "".join(self.sub(f"finding-{i}", title,
+                                    f'<div class="concl"><ul>{item}</ul></div>')
+                          for i, (title, item) in enumerate(zip((
+                              "Fracture and collapse", "Conditional growth life",
+                              "Linear-elastic validity", "Fusion-face growth",
+                              "Shakedown", "Assessment disposition"), items), 1)))
+        return self.section("s7", "Key Findings",
                             "Basis, governing result, criterion and disposition.", body)
+
+    def limitations(self) -> str:
+        self.begin("7")
+        method = self.p(
+            "Method restriction. Linear-elastic growth is established to a = "
+            + self.v("result:/growth/life_to_last_ssy_valid/a_mm", "f3") + " mm, or "
+            + self.v("result:/growth/life_to_last_ssy_valid/cycles", "int")
+            + " cycles against a demand of " + self.v("result:/growth/demand_cycles", "int")
+            + " cycles. Beyond that depth, the plastic zone exceeds the stated validity "
+            "criterion; an elastic-plastic growth assessment is needed (" + self.ref("growth") + ").")
+        data = self.p(
+            "Data needed. The geometry, flaw sizing, loading, growth law and material basis "
+            "remain ASSUMED - to be confirmed; residual-stress and code partial-safety-factor "
+            "bases are missing. Their effect on service acceptance cannot be bounded from "
+            "the supplied evidence; the sensitivities in Appendix B do not replace those bases.")
+        scope = self.p(
+            "Scope exclusion. The longer crotch-arc flaw, other propagation paths, "
+            "environmental degradation and the deeper unsolved crotch states are excluded. "
+            "Growth beyond the last solved crotch state at "
+            + self.v("result:/growth/a_last_fe_mm", "f2")
+            + " mm is not established by the base assessment (Section " + self.ref("s1-3") + ").")
+        validation = self.p(
+            "Data needed. Numerical checks against the analytical comparator and equilibrium "
+            "criteria are reported in Appendix A. Measurement-based physical validation and "
+            "a numerical bound on modelling error are not established.")
+        body = (self.p("The method limits, missing evidence and excluded configurations "
+                       "below govern the conditions for service acceptance.")
+                + self.sub("limit-method", "Linear-elastic growth validity", method)
+                + self.sub("limit-data", "Design and material evidence", data)
+                + self.sub("limit-scope", "Unassessed configurations", scope)
+                + self.sub("limit-validation", "Physical validation", validation))
+        return self.section("limitations", "Limitations",
+                            "Conditions affecting the assessment disposition.", body)
+
+    def acronyms(self) -> str:
+        self.begin("10")
+        rows = [f"<tr>{self.t(a)}{self.t(d, 'txt wrapcell')}</tr>" for a, d in ABBREVIATIONS]
+        body = self.table(["Abbreviation", "Definition"], rows,
+                          "Acronyms and symbols", cls="abbrev",
+                          intro="The abbreviations and symbols used in the assessment are "
+                          "defined below; applicable units are included in the definitions.")
+        return self.section("acronyms", "Acronyms and Symbols",
+                            "Definitions for the assessment quantities and methods.", body)
 
     def recommendations(self) -> str:
         self.begin("8")
@@ -2445,14 +2539,21 @@ class _Report:
             if ref.url and ref.url.startswith(("http://", "https://")):
                 text = (f'<a href="{_attr(ref.url)}" rel="noopener noreferrer" '
                         f'target="_blank">{text}</a>')
-            items.append(f'<li><span class="rn">[{n}]</span><span>{text}</span></li>')
-        body = (self.p("Only the procedures, laws and public data sources used are cited.")
-                + f'<ol class="refs">{"".join(items)}</ol>')
+            items.append(f'<li id="reference-{n}"><span class="rn">[{n}]</span><span>{text}</span></li>')
+        body = (self.p("The published engineering basis and internal model records are listed separately.")
+                + self.sub("published-references", "Published references",
+                           self.p("Standards and methods, followed by material and geometry sources, "
+                                  "define the assessment basis.")
+                           + f'<ol class="refs">{"".join(items)}</ol>')
+                + self.sub("internal-references", "Internal references",
+                           self.p("The model, data and program records below support numerical "
+                                  "reproduction; receipt checks do not establish physical validation.")
+                           + self.appendix()
+                           + "<!-- REPORT_PRESENTATION_INTERNAL_REFERENCES -->"))
         return self.section("s9", "References", "Cited procedures, methods and data sources.",
                             body)
 
     def appendix(self) -> str:
-        self.begin("A")
         m = self.m
         rows = []
         for state, rec in self.r["receipts"].items():
@@ -2470,14 +2571,14 @@ class _Report:
                              "FE receipts with digests")
         crotch = m["states"]["p0b_crotch_a2p35"]
         body = (
-            '<div class="l2" id="sA-1"><h3>A.1 Receipts</h3>'
+            '<div class="l2" id="sA-1"><p id="internal-receipts">Model and data receipts [I1]</p>'
             + self.p("Receipts are held in the repository under "
                      + self.v("receipts:/fe_states_dir", cls="") + ". Solver: "
                      + self.v("receipts:/solver/program", cls="") + " "
                      + self.v("receipts:/solver/mapdl_release", cls="") + " (version "
                      + self.v("receipts:/solver/mapdl_version", cls="") + ").")
             + rec_tab + "</div>"
-            '<div class="l2" id="sA-2"><h3>A.2 Regeneration</h3>'
+            '<div class="l2" id="sA-2"><p id="internal-program">Program and regeneration [I2]</p>'
             + self.p("The report is regenerated from the input file with one command: "
                      "<code>python -m digitalmodel.asset_integrity.assessment.crack_fe_report "
                      "examples/workflows/crack-fe-weldolet/input.yml -o "
@@ -2485,12 +2586,53 @@ class _Report:
                      "assessment, which re-verifies every receipt, and renders this page; apart "
                      "from the issue date the output is deterministic.")
             + "</div>"
-            '<div class="l2" id="sA-3"><h3>A.3 Meshing statement (as recorded)</h3>'
+            '<div class="l2" id="sA-3"><p>Model meshing record [I3]</p>'
             + self.p(_e(crotch["approach"])) + "</div>"
         )
-        return self.section("appendix-a", "Appendix A – Reproducibility data",
-                            "Receipt digests, solver version and the regeneration command.",
-                            body, numbered=False)
+        sources = [f'<li>{_e(ref["id"])}: {_e(ref["source"])}; SHA-256 '
+                   f'{_e(ref["sha256"])}</li>' for ref in self.reg.get("references", [])]
+        body += (self.p("Published-source archive locators and digests:")
+                 + '<ul>' + ''.join(sources) + '</ul>'
+                 + self.p("Figure generation: digitalmodel.ansys.weldolet_figures; "
+                          "section geometry: weldolet_crack._build_section. Figure manifest: "
+                          + _e(self.fig["dir"]) + ".")
+                 + self.p('Assessment scope: <a href="https://github.com/vamseeachanta/'
+                          'digitalmodel/issues/2157">digitalmodel issue 2157</a>.'))
+        return body
+
+    def presentation_aliases(self) -> dict[str, str]:
+        aliases = {}
+        for name, state in self.m["states"].items():
+            physical = (state.get("plane") or state["kind"]).replace("_", " ")
+            depth = state.get("a_mm")
+            if depth is not None:
+                physical += f', depth {depth:g} mm'
+            if "off" in name:
+                physical += ", crack-face pressure off"
+            aliases[name] = physical
+        for group in (self.r["inputs"], self.r["evidence"]):
+            for name in group:
+                if "_" in name:
+                    aliases[name] = name.replace("_", " ")
+        for finding in self.r["findings"]:
+            if "." in finding["id"] or "_" in finding["id"]:
+                aliases[finding["id"]] = re.sub(
+                    r"(?<!\d)\.|\.(?!\d)", " ", finding["id"].replace("_", " "))
+        aliases["docs:literature"] = "published-source archive"
+        aliases.update({
+            "weldolet_uncracked": "uncracked weldolet model",
+            "weldolet_crack": "cracked weldolet model",
+            "fusion_face": "fusion face", "limit_load": "limit-load model",
+            "owner_decision": "specified assumption",
+            "missing_evidence": "missing evidence",
+            "e_ratio": "modulus-ratio threshold rule",
+            "relaxed_yield": "relaxed yield", "peak_shh_mpa": "peak hoop stress",
+            "barlow_id_hoop_mpa": "Barlow hoop stress on the inside diameter",
+            "sensitivities.life_to_ligament_exhaustion": "Appendix B extrapolated-life investigation",
+        })
+        for name in self.m["limit_load"]["collapse"]["checks"]:
+            aliases[name] = re.sub(r"^t\d_", "", name).replace("_", " ")
+        return aliases
 
     # ======================================================================= #
     # Page
@@ -2500,15 +2642,15 @@ class _Report:
             self.labels[key] = str(n)
         cover = self.cover()
         front = self.front_matter()
-        sections = [self.introduction(), self.summary(), self.design_basis(),
-                    self.methodology(), self.results(), self.verification(),
-                    self.conclusions(), self.recommendations(), self.references(),
-                    self.appendix()]
+        sections = [self.summary(), self.introduction(), self.design_basis(),
+                    self.methodology(), self.results(), self.conclusions(), self.limitations(),
+                    self.recommendations(), self.references(), self.acronyms(),
+                    self.verification(), self.sensitivity_appendix]
         toc = ('<nav class="toc" aria-label="Contents"><p class="tt">Contents</p><ol>'
                + "".join(f'<li><a href="#{k}">{v}</a></li>' for k, v in TOC_ITEMS)
                + '</ol><p class="tt" style="margin-top:14px"><a href="#front-matter">Front '
-               'matter</a></p><p class="tt"><a href="#appendix-a">Appendix A '
-               "– Reproducibility data</a></p></nav>")
+               'matter</a></p><p class="tt"><a href="#s6">Appendix A '
+               "– Verification</a></p><p><a href=\"#appendix-b\">Appendix B – Sensitivities</a></p></nav>")
         style, script = _template_parts(_DEFAULT_TEMPLATE)
         page = f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
@@ -2531,10 +2673,8 @@ class _Report:
     <div class="foot-grid">
       <div><h3>{REPORT_ID} &middot; {REVISION}</h3>
         <p>{REVISION_PURPOSE.capitalize()}, {html.escape(self.date)}. Design basis assumed throughout.</p></div>
-      <div><h3>Provenance</h3><ul>
-        <li>Numbers carry their source path (data-src).</li>
-        <li>FE receipts verified by schema, deck-hash and guard checks.</li>
-        <li>FE pictures drawn from the receipt decks (hash-checked).</li></ul></div>
+      <div><h3>Assessment status</h3><p>Evidence remains INCOMPLETE.
+        Service acceptance is not established. Supporting records: Section 9.2.</p></div>
     </div>
     <div class="foot-bar"><span>{ORGANISATION} &middot; {DISCIPLINE}</span>
       <span>House calculation report format (CalcReport engine)</span></div>
@@ -2542,17 +2682,30 @@ class _Report:
 </div>
 {script}
 </body></html>"""
+        section_order = {label: i for i, label in enumerate(
+            ["F", *map(str, range(1, 11)), "A", "B"])}
+        captions = sorted(self.captions, key=lambda item: (
+            section_order[item[1].split(".")[0]], int(item[1].split(".")[1])))
         lot = "".join(f'<li><a href="#{anc}">Table {num} – {html.escape(_strip_tags(text))}</a></li>'
-                      for kind, num, text, anc in self.captions if kind == "Table")
+                      for kind, num, text, anc in captions if kind == "Table")
         lof = "".join(f'<li><a href="#{anc}">Figure {num} – {html.escape(_strip_tags(text))}</a></li>'
-                      for kind, num, text, anc in self.captions if kind == "Figure")
+                      for kind, num, text, anc in captions if kind == "Figure")
         page = page.replace("\u27e6LOT\u27e7", lot).replace("\u27e6LOF\u27e7", lof)
         for key, label in self.labels.items():
             page = page.replace(f"\u27e6{key}\u27e7", label)
+        for n in set(self.ref_no.values()):
+            page = page.replace(f"⟦cite-{n}⟧", f'<a href="#reference-{n}">[{n}]</a>')
         if "\u27e6" in page:
             left = sorted(set(re.findall("\u27e6([^\u27e7]*)\u27e7", page)))
             raise ValueError(f"unresolved report labels: {left}")
-        return page
+        targets = {f"Section {label}": key for key, label in self.labels.items()
+                   if re.fullmatch(r"(?:\d+|[AB])(?:\.\d+)?", label)}
+        targets.update({"Appendix A": "s6", "Appendix B": "appendix-b",
+                        "Section 9.2": "internal-references",
+                        "[I1]": "internal-receipts", "[I2]": "internal-program",
+                        "[I3]": "sA-3"})
+        return polish(page, reference_targets=targets,
+                      narrative_aliases=self.presentation_aliases())
 
 
 def _strip_tags(text: str) -> str:

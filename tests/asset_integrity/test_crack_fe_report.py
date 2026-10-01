@@ -220,18 +220,20 @@ def _png_chunks(blob: bytes) -> list[bytes]:
 # Skeleton, front matter and document control (owner comment 2)
 # --------------------------------------------------------------------------- #
 SKELETON = [
+    "Executive Summary",
     "Introduction",
-    "Summary and conclusions",
-    "Design basis",
-    "Methodology",
-    "Results",
-    "Verification",
-    "Conclusions",
+    "Design Data",
+    "Analysis Methodology",
+    "Detailed Results",
+    "Key Findings",
+    "Limitations",
     "Recommendations",
     "References",
+    "Acronyms and Symbols",
     "Appendix A",
+    "Appendix B",
 ]
-FRONT_MATTER = ["Document control", "Revision history", "Abbreviations",
+FRONT_MATTER = ["Document control", "Revision history",
                 "Holds and assumptions register", "Contents", "List of tables",
                 "List of figures"]
 
@@ -289,7 +291,7 @@ def test_cover_title_block(html_doc):
     root = _tree(html_doc)
     cover = next(n for n in root.iter() if n.attrs.get("id") == "cover")
     text = re.sub(r"\s+", " ", cover.text())
-    assert "Rev B" in text and "issued for owner review" in text
+    assert "Rev C" in text and "issued for owner review" in text
     assert DATE in text
     fm = next(n for n in root.iter() if n.attrs.get("id") == "front-matter")
     rev = next(n for n in fm.iter() if n.tag == "table" and "revhist" in n.classes())
@@ -297,7 +299,7 @@ def test_cover_title_block(html_doc):
     assert heads[:3] == ["Rev", "Sections", "Description"]
     assert heads[-3:] == ["Prepared", "Checked", "Approved"]
     rows = [tr for tr in rev.iter() if tr.tag == "tr" and tr.elements()[0].tag == "td"]
-    assert [r.elements()[0].text().strip() for r in rows] == ["A", "B"]
+    assert [r.elements()[0].text().strip() for r in rows] == ["A", "B", "C"]
     cells = rows[-1].elements()
     assert cells[-3].text().strip(), "Prepared is filled"
     assert cells[-2].text().strip() == "" and cells[-1].text().strip() == ""
@@ -311,8 +313,9 @@ def test_report_captions_below(html_doc):
     for b in blocks:
         kids = b.elements()
         kind = "Table" if "tblock" in b.classes() else "Figure"
-        assert kids and kids[-1].tag == "p" and "caption" in kids[-1].classes(), kind
-        assert kids[-1].text().strip().startswith(kind)
+        cap = next(k for k in kids if "caption" in k.classes())
+        assert cap.tag == "p", kind
+        assert cap.text().strip().startswith(kind)
         objects = [k for k in b.iter() if k.tag in ("table", "svg", "img")]
         assert objects, "block without an object"
         if kind == "Table":
@@ -451,7 +454,7 @@ def _fblocks(node: _Node) -> list:
 
 
 def _caption(block: _Node) -> str:
-    return re.sub(r"\s+", " ", block.elements()[-1].text())
+    return re.sub(r"\s+", " ", next(k for k in block.elements() if "caption" in k.classes()).text())
 
 
 def test_design_section_has_model_and_mesh_pictures(html_doc):
@@ -459,11 +462,11 @@ def test_design_section_has_model_and_mesh_pictures(html_doc):
     for fid in ("model", "section", "mesh-global", "mesh-crack"):
         assert fid in blocks, (fid, list(blocks))
     for fid in ("model", "mesh-global", "mesh-crack"):
-        cap = _caption(blocks[fid])
+        cap = blocks[fid].text()
         assert any(k.tag == "img" for k in blocks[fid].iter()), fid
-        assert "MAPDL" in cap and "2026 R1" in cap and "generator" in cap.lower(), cap
-        assert "p0b_" in cap, cap
-    assert "_build_section" in _caption(blocks["section"])
+        assert "MAPDL" in cap and "2026 R1" in cap , cap
+        assert "[I3]" in cap, cap
+    assert "[I3]" in blocks["section"].text()
     sec_svg = next(k for k in blocks["section"].iter() if k.tag == "svg")
     labels = sec_svg.text().lower()
     assert "crotch" in labels and "fusion" in labels
@@ -474,10 +477,10 @@ def test_results_section_has_end_result_pictures(html_doc):
     for fid in ("result-hoop", "result-crack", "k-front"):
         assert fid in blocks, (fid, list(blocks))
     for fid in ("result-hoop", "result-crack"):
-        cap = _caption(blocks[fid])
+        cap = blocks[fid].text()
         assert any(k.tag == "img" for k in blocks[fid].iter())
-        assert "MAPDL" in cap and "2026 R1" in cap and "p0b_" in cap
-    assert "receipt" in _caption(blocks["k-front"]).lower()
+        assert "MAPDL" in cap and "2026 R1" in cap and "[I3]" in cap
+    assert "receipt" in blocks["k-front"].text().lower()
     # the results section refers back to the model and mesh figures
     text = _section(html_doc, "s5").text()
     assert "Figure 3." in text
@@ -487,14 +490,14 @@ def test_executive_summary_charts_and_conclusions(html_doc):
     s2 = _section(html_doc, "s2")
     blocks = {b.attrs.get("data-figure"): b for b in _fblocks(s2)}
     assert "fad" in blocks and "growth" in blocks
-    assert _caption(blocks["fad"]).startswith("Figure 2.1")
-    assert _caption(blocks["growth"]).startswith("Figure 2.2")
+    assert _caption(blocks["fad"]).startswith("Figure 1.1")
+    assert _caption(blocks["growth"]).startswith("Figure 1.2")
     box = next(n for n in s2.iter() if "conclusions-box" in n.classes())
     items = [re.sub(r"\s+", " ", li.text()) for li in box.iter() if li.tag == "li"]
-    assert any("Figure 2.1" in t for t in items) and any("Figure 2.2" in t for t in items)
-    fad_item = next(t for t in items if "Figure 2.1" in t)
+    assert any("Figure 1.1" in t for t in items) and any("Figure 1.2" in t for t in items)
+    fad_item = next(t for t in items if "Figure 1.1" in t)
     assert "1.89" in fad_item and "2.21" in fad_item
-    g_item = next(t for t in items if "Figure 2.2" in t)
+    g_item = next(t for t in items if "Figure 1.2" in t)
     for s in ("1,980", "20,000", "59,339", "3.20"):
         assert s in g_item, s
 
@@ -544,7 +547,7 @@ def test_report_table_cells_trace_to_result(html_doc, result, register, meta):
             continue
         value = _resolve(roots, ref)
         scale = float(node.attrs.get("data-scale", 1))
-        assert _matches(value, node.text(), scale), (ref, value, node.text())
+        assert _matches(value, node.attrs.get("data-raw", node.text()), scale), (ref, value, node.text())
         traced += 1
     assert traced >= 400, traced
 
@@ -584,8 +587,11 @@ def test_every_finding_appears(html_doc, result):
     rows = {n.attrs["data-finding"]: n for n in _tree(html_doc).iter() if "data-finding" in n.attrs}
     for f in result["findings"]:
         assert f["id"] in rows, f["id"]
-        assert f["id"] in rows[f["id"]].text()
-        assert f["disposition"][:40] in re.sub(r"\s+", " ", rows[f["id"]].text())
+        text = re.sub(r" \[I\d+\]", "", rows[f["id"]].text())
+        for field in ("criterion", "disposition"):
+            assert rows[f["id"]].attrs[f"data-{field}"] == f[field]
+            expected = f[field].replace("_", " ")[:28]
+            assert expected in re.sub(r"\s+", " ", text.replace("_", " "))
 
 
 def test_no_check_sensitivity_or_evidence_dropped(html_doc, result):
@@ -608,7 +614,8 @@ def test_no_check_sensitivity_or_evidence_dropped(html_doc, result):
     for state in result["receipts"]:
         assert f'data-receipt="{state}"' in html_doc, state
     # the J03 meaning text and the SSY life basis are carried
-    assert result["checks"]["ssy_meaning"][:60] in text
+    assert "the monotonic plastic zone grows" in text
+    assert "small-scale-yielding" in text
     assert result["growth"]["life_to_limit_state"]["status"] in text
 
 
@@ -622,7 +629,9 @@ def test_every_assumed_register_row_is_labelled(html_doc, register):
         if item["status_label"] == ASSUMED:
             label = [c for c in rows[item["id"]].iter() if "assumed-label" in c.classes()]
             assert label and label[0].text().strip() == ASSUMED, item["id"]
-        assert item["note"][:50] in text
+        expected = re.sub(r"owner card [A-Z]\d{2}", "", item["note"])
+        visible = re.sub(r"\[I\d+\]", "", text)
+        assert re.sub(r"\s+", " ", expected)[:50] in re.sub(r"\s+", " ", visible)
 
 
 def test_holds_register_rows(html_doc):
@@ -652,7 +661,8 @@ def test_report_does_not_reference_source(html_doc):
 def test_register_vocabulary(html_doc):
     """No unqualified 'validated'; no 'safe', 'conservative' or 'acceptable' at all."""
     text = _visible_text(html_doc)
-    assert not re.search(r"\bvalidat", text, flags=re.I)
+    assert "physical validation and a numerical bound on modelling error are not established" in text
+    assert not re.search(r"\bvalidated\b", text, flags=re.I)
     for word in ("safe", "conservative", "acceptable", "acceptably"):
         assert not re.search(rf"\b{word}\b", text, flags=re.I), word
 
@@ -751,3 +761,32 @@ def test_generate_and_cli(tmp_path, monkeypatch, result):
     out2 = tmp_path / "cli.html"
     assert cfr.main([str(INPUT), "-o", str(out2), "--date", DATE]) == 0
     assert out2.read_text("utf-8") == out.read_text("utf-8")
+
+
+def test_p3_navigation_and_body_contract(html_doc):
+    root = _tree(html_doc)
+    ids = [n.attrs["id"] for n in root.iter() if "id" in n.attrs]
+    assert len(ids) == len(set(ids)), "duplicate navigation targets"
+    for node in root.iter():
+        href = node.attrs.get("href", "")
+        if href.startswith("#"):
+            assert href[1:] in ids, href
+    assert not [n for n in root.iter() if n.tag in ("h4", "h5", "h6", "b", "strong")]
+    refs = _section(html_doc, "s9")
+    headings = [n.text() for n in refs.iter() if n.tag == "h3"]
+    assert "Published references" in headings and "Internal references" in headings
+    limits = _section(html_doc, "limitations").text().lower()
+    for label in ("method restriction", "scope exclusion", "data needed"):
+        assert label in limits
+    assert "1,980" in limits and "20,000" in limits
+    assert len([n for n in _section(html_doc, "s7").iter() if n.tag == "h3"]) == 6
+    assert "2026-09-27" in html_doc
+    for node in root.iter():
+        if "caption" in node.classes():
+            assert len(node.text()) <= 150, node.text()
+
+
+def test_methodology_subsections_have_visible_numbers(html_doc):
+    method = _section(html_doc, "s4")
+    numbers = [n.text() for n in method.iter() if n.tag == "span" and "n" in n.classes() and "l2head" in n.parent.classes()]
+    assert numbers == [f"4.{i}" for i in range(1, len(numbers) + 1)]
