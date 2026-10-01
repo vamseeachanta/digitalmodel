@@ -389,6 +389,10 @@ def test_abs_ship_variant_router_output_structure():
     """
     cp = CathodicProtection()
     cfg = _make_abs_ship_cfg()
+    # #2259: ABS_gn_ships_2018 now routes to the rebuilt, cited implementation
+    # (requires the project dynamic bare-steel density); this test covers the
+    # legacy output schema, so it names the legacy key explicitly.
+    cfg["inputs"]["calculation_type"] = "ABS_gn_ships_2018_legacy"
     result = cp.router(cfg)
 
     assert "cathodic_protection" in result
