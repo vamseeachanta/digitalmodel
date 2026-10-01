@@ -61,3 +61,21 @@ representation comparisons, not independent cross-solver validation.
 
 Known limitations: the generator winding correction is a subsequent branch;
 the four strict xfails remain visible; no private geometry was processed.
+
+## CI prerequisite: synthetic benchmark fixture
+
+Issue: https://github.com/vamseeachanta/digitalmodel/issues/2278
+
+The first PR CI run exposed an existing main-branch failure in the ABS ships
+benchmark after the input-schema rebuild. A separate isolated lane reproduced
+the failure before changing only `tests/benchmarks/test_cp_benchmarks.py`.
+It added explicit synthetic inputs and the existing citation fixture root to a
+deep copy of the ships configuration; the shared offshore/B401 inputs are intact.
+No calculation implementation, standards coefficients or acceptance assertions
+changed. Benchmark completion is not engineering design acceptance.
+
+Main-session T1 adversarial review verified the diff, fixture isolation, explicit
+synthetic labeling and bounded scope. Verdict: APPROVE. The isolated lane passed
+all four benchmarks with timing disabled and the ships case with normal timing;
+the main integration checkout independently reran all four: **4 passed**.
+Ruff, whitespace checks and the lane's verified-target legal scan pass.
