@@ -22,6 +22,11 @@ its GDF-derived rows are not current curvature baselines. Triangle controls and
 BRep results are unaffected. See
 [issue 2253](https://github.com/vamseeachanta/digitalmodel/issues/2253).
 
+**Clarification 2026-10-01:** the large generated-Wigley inflation also requires
+inconsistent panel winding. The fixed split alone does not reproduce it on
+consistently wound quads. Inventory changes can go in either direction; see the
+controlled comparisons in [screening guidance](../../domains/hull_library/curvature-screening.md#quad-triangulation-correction-2026-09-27).
+
 ## Reproduce
 
 ```bash

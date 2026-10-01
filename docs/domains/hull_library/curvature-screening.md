@@ -50,8 +50,13 @@ keyword `quad_split="shortest"` (the default). It chooses the shorter 3-D
 diagonal independently for each quad. Equal squared lengths within relative
 tolerance `1e-12` use the `alternate` rule; there is no absolute tie tolerance.
 `quad_split="alternate"` uses `(i+j)` checkerboard parity when connectivity
-identifies a complete row-major vertex grid, including cyclic/reversed winding.
-Other meshes alternate by source panel index. `quad_split="fixed"` preserves
+identifies a complete row-major vertex grid, including rotations or reversals
+of each panel's vertex order. Periodic grids and grids with missing or collapsed
+panels use source-panel-index parity instead; this can produce stripes rather
+than a checkerboard. Rounded input coordinates can break theoretically equal
+diagonals outside the tight tie tolerance, so input precision can affect results.
+Provenance records the requested policy, not which tie-rule fallback was used.
+`quad_split="fixed"` preserves
 the historical `[0,1,2]`, `[0,2,3]` split for reproduction. Splitting precedes
 symmetry expansion, so each mirrored triangle retains the reflected diagonal
 and source winding under reflection.

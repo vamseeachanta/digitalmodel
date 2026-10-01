@@ -442,7 +442,7 @@ def _analytic_wigley(length, breadth, draft, nx=425, nz=17):
     raises=AssertionError,
     reason=(
         "Shortest split: I_D=7.914447 vs triangle 6.599658 (19.9%); "
-        "end share=0.360858 > 0.20; residual generated-mesh sensitivity (issue 2253)"
+        "end share=0.360858 > 0.20; generator winding unresolved (issue 2241 item 6)"
     ),
 )
 def test_wigley_mesh_signature_and_end_share(metric):

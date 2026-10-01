@@ -199,7 +199,7 @@ class CurvatureScreenResult:
 
 
 def _alternate_diagonals(panels: NDArray[np.int32]) -> NDArray[np.bool_]:
-    """Use checkerboard parity for a complete row-major index grid, else row parity."""
+    """Use checkerboard parity on complete grids, else source-panel-index parity."""
     alternate = np.arange(len(panels)) % 2 == 1
     if panels.ndim != 2 or panels.shape[1] != 4 or not len(panels):
         return alternate
