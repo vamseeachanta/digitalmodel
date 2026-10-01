@@ -19,6 +19,7 @@ end at the design waterline, not the deck.
 | `deadrise_deg` | 0; 0–30 |
 | `flare_deg` | 0; -15–30; negative means tumblehome |
 | `bow_fullness`, `stern_fullness` | 2; 1–4, beta end-shape controls described below |
+| `entrance_angle_deg`, `run_angle_deg` | Derived when omitted or None; finite half-angles, 5–60 degrees |
 | `transom_fraction` | 0; 0–0.95, stern waterline half-breadth / midship half-breadth |
 | `n_stations`, `n_waterlines` | 41, 21; odd integers, at least 9 and 5 |
 | `box`, `wigley` | False; mutually exclusive analytic comparator modes |
@@ -39,48 +40,80 @@ The bottom is the deadrise line z = y tan(deadrise). A circle of radius
 that closed form; `midship_area(params)` integrates its line/arc pieces
 analytically. A zero-angle bottom includes its flat breadth at z=0.
 
-**Necessary departure from the original plan:** fixed power-law exponents and a
-fixed parallel length leave one run/entrance split for two independent constraints.
-For equal exponents and pointed ends, changing that split does not change volume.
-The implementation therefore uses beta-CDF ends with an algebraically calibrated
-second shape parameter. This adds the missing degree of freedom without adding an
-optimization loop. Requested fullness values are shape controls, not literal
-power-law exponents. The verbatim original plan is retained separately.
-
-Let P be parallel length / L, R be run length / L, E=1-P-R, f the transom
-fraction, t=f², Am the analytic midship area, and C=Cb*B*T/Am. The normalized
-mean of each end curve is
+The SAC retains three segments: run, parallel body, and entrance. Let P be
+parallel length / L, R be run length / L, E=1-P-R, f the transom fraction,
+t=f², Am the analytic midship area, and C=Cb*B*T/Am. The normalized mean
+of each end curve is still calibrated algebraically:
 
 `c = (C - P - R*t) / (1 - P - R*t)`.
 
-For each end, set b=fullness+1 and a=b(1-c)/c. The normalized curve is the
-regularized incomplete beta function F(s)=I_s(a,b), from the end (s=0) to the
-parallel segment (s=1). It has integral c. The stern is t+(1-t)F(x/RL);
-the bow is F((L-x)/EL). The middle equals one. Their dimensional areas are
-multiplied by Am. The first moment of F is
+The end helper mixes a power curve and a beta CDF:
+`F(s) = w[1-(1-s)^q] + (1-w) I_s(a,b)`, for distance s from the end
+normalized by its run or entrance length. Set d to the required normalized
+area slope, q=max(b,4d/c), w=d/q, b=max(fullness+1,2c/(1-c)), and solve
+`a=b(1-c_beta)/c_beta`, where `c_beta=(c-w*q/(q+1))/(1-w)`.
+Both terms are monotone, a>1 and b>=2, so F(0)=0, F'(0)=d, F(1)=1,
+and F'(1)=0. Its first moment is
 
-`j = [1 - a(a+1)/((a+b)(a+b+1))] / 2`.
+`j = w[1/2-1/((q+1)(q+2))] + (1-w)[1-a(a+1)/((a+b)(a+b+1))]/2`.
 
-These exact moments give the SAC centroid. One cached `scipy.optimize.brentq`
-solve adjusts R to meet LCB; c is recalculated algebraically for each candidate.
-Only c in (0,1) and a split whose parallel region contains midships are accepted.
-Because b >= 2, the end curves meet the parallel region with zero first derivative.
-Extreme calibrations can still have sharp end behavior; dense offsets do not prove
-curvature convergence.
+These exact moments feed a cached scalar Brent solve for R to meet LCB.
+The stern SAC is t+(1-t)F(x/RL), the bow is F((L-x)/EL), and the
+parallel segment is one, all multiplied by Am. The parallel segment must
+contain midships. Fullness remains a shape control, not a literal exponent.
 
-Stations and waterlines use cosine spacing to resolve the ends and bilges. Bow
-sections blend toward a V shape with a smoothstep over the entrance; pointed stern
-sections retain their U shape. This is a section-shape blend rather than the
-original plan's interpolated section exponent. Breadths are normalized using
-sampled sectional areas. For a nonzero transom, width is sqrt(local area / Am),
-and a vertical shape blend provides the remaining area reduction: stern width is
-f times midship width and stern area is approximately f² Am at sampling precision.
+Pointed sections scale the midship shape by local area/Am. This removes the
+old bow V-shape blend, whose area renormalization changed waterline tangency.
+For a transom, width is sqrt(local area/Am); the existing vertical shape blend
+supplies the remaining area reduction. At the stern its width is f times
+midship width and sampled area is approximately f² Am. For the transom curve,
+d includes the factor 2f/(1-f²), so the waterline slope is still tan(run angle).
 
-Pointed ends use continuous regularization
-`sqrt((0.005*y_mid)^2 + (1-0.005^2)*y_raw^2)`. It retains the requested 0.5%
-end breadth, preserves midship offsets, and avoids pinched interior stations that
-an endpoint-only replacement produces. It slightly increases achieved volume;
-reports always integrate the emitted offsets, including this effect.
+## End closure
+
+The former 0.5% breadth floor and square-root regularization displaced the
+pointed tips from the centreline and distorted the Wigley control. Raw cosine
+station spacing also put the first interior sample only 0.154 m from the end
+on a 100 m, 41-station form. Both treatments have been removed.
+
+Pointed ends now have exactly zero breadth at every waterline. Design-waterline
+slope is +tan(run_angle_deg) at the stern and -tan(entrance_angle_deg) at the
+bow, joining the parallel body with zero first derivative. Interior waterlines
+inherit the midship section's scaled tangent. Transoms retain finite breadth.
+Both parameters accept 5–60 degrees. When omitted or None, ordinary forms use
+`degrees(atan(fullness * B / ((1-P)*L)))`, clipped to that range: bow_fullness
+for entrance and stern_fullness for run. Both defaults are 33.69006753 degrees
+for L=100, B=20, P=0.4 and fullness=2. Sweeps recompute implicit defaults while
+preserving explicit numeric overrides.
+
+Wigley fixes both angles to `degrees(atan(2B/L))`: 21.80140949 degrees for
+L=100/B=20, or 11.30993247 degrees for L=100/B=10. Conflicting explicit angles,
+or Wigley dimensions that require an angle outside 5–60 degrees, are rejected.
+Box geometry overrides longitudinal shape controls; its end angles are unused.
+
+Station coordinates use `x/L=0.25*t+0.75*(1-cos(pi*t))/2`, with evenly
+spaced t in [0,1]. The first interior station is at least L/(4*n_stations)
+from either end; adjacent spacing ratios stay below 2. End spacing remains
+smaller than midship spacing (0.74060 m versus about 3.57 m at L=100, n=41).
+Waterlines retain cosine spacing to resolve bilges. Existing schema and mesh
+consumers accept all-zero end stations; neither consumer needed modification.
+
+**Acceptance limitation:** exact offsets and BRep now agree with the matching
+closed-form Wigley, but production mesh signature thresholds remain blocked.
+At 7,225 half-hull panels, L=100/B=20/T=8, the consumer's fixed triangle
+diagonals produce mesh I_D=38.39900 with 85.603% end share, versus I_D=6.59966
+for direct analytic sampling with alternating diagonals. Even exact analytic
+vertices with fixed diagonals give I_D=38.31570 and 85.594% end share. These
+measurements isolate a triangulation-sensitive consumer issue outside this
+lane's permitted changes. The <10% signature difference and <20% end share
+remain strict expected failures, not satisfied acceptance criteria.
+
+The BRep is valid with I_D=7.12577, within 5% of the matching closed-form
+7.119738. The plan's 4.31 target belongs to L=100/B=10/T=6.25, a separate
+canonical Wigley also covered by the BRep regression. The verbatim plan is
+preserved in [the issue plan](../../plans/2026-09-27-issue-2241-end-closure.md).
+The geometry and triangulation used for comparisons must both be recorded;
+a dimensionless curvature index still depends on hull aspect ratios.
 
 Requested sampling can be inadequate even when the analytic SAC is feasible.
 Generation rejects sampled Cb errors above 0.5%, LCB errors above 0.002 L, or a
@@ -112,8 +145,7 @@ When present, it is the mesh `CurvatureSignature` from `screen_profile`.
 - Rectangular prism: `box=True, cb=1, bilge_radius_fraction=0` gives
   Cb=Cp=Cm=Cwp=1 to 1e-6. The box flag explicitly permits Cb=1.
 - Wigley comparator: `wigley=True, cb=4/9, bilge_radius_fraction=0` uses
-  `y=(B/2)[1-(2x/L-1)^2][1-(1-z/T)^2]` before the small pointed-end
-  regularization. Analytic Cm=Cwp=2/3 and Cb=4/9; sampled Cb is checked within 1%.
+  `y=(B/2)[1-(2x/L-1)^2][1-(1-z/T)^2]` exactly at every emitted offset. Analytic Cm=Cwp=2/3 and Cb=4/9; sampled Cb is checked within 1%.
 - Semicircular section: radius=B/2=T, zero angles, gives analytic Cm=pi/4
   to 1e-6. Numerical section quadrature is checked independently.
 
@@ -123,8 +155,7 @@ controls, not validation against a measured vessel.
 
 The 3 × 3 acceptance grid uses L=100, B=20, T=10, D=14 and other defaults,
 with Cb in {0.55,0.70,0.85} and LCB in {-0.02,0,0.02}. All nine meet
-0.5% relative Cb and 0.002 absolute LCB tolerances. The maximum measured
-hydrostatics cross-check difference is 0.236%.
+0.5% relative Cb and 0.002 absolute LCB tolerances. The maximum measured hydrostatics cross-check difference is 0.1978%.
 
 ## Worked drillship-like example
 
@@ -148,30 +179,36 @@ config = MeshGeneratorConfig(target_panels=7225, waterline_refinement=2.125)
 signature = screen_profile(profile, config).signature
 ```
 
-Achieved Cb=0.72060327, Cp=0.72833981, Cm=0.98937785,
-Cwp=0.74994590, LCB=-0.09960465. Simpson volume=11529.65237 m³;
-hydrostatics volume=11520.10023 m³. Stern half-breadth is exactly 9 m.
-HullProd 1.0.1 at 7,225 half-hull quad panels (28,900 expanded triangles), Lref=100:
+Updated example measurements and the before/after Wigley comparison are recorded
+below. Signature statuses remain essential: successful STEP export alone does
+not imply converged curvature.
 
-| I_D | I_D_plus | I_D_minus | a_flat | a_single | a_elliptic | a_saddle |
-|---:|---:|---:|---:|---:|---:|---:|
-| 18.87238784 | 9.76817589 | 9.10421195 | 0.12016369 | 0.34359069 | 0.23946998 | 0.29677564 |
+The transom example now achieves Cb=0.71999941, Cp=0.72772946,
+Cm=0.98937785, Cwp=0.74542715 and LCB=-0.10006745. Simpson volume is
+11519.99053 m³ and hydrostatics volume is 11510.68376 m³; stern half-breadth
+remains exactly 9 m. Its default BRep status remains `quadrature_unconverged`
+with no finite I_D. The rounded Cb=0.70 form remains
+`geometric_singularity_nonintegrable`, also with no finite I_D. These results
+do not close [issue #2241 item 2](https://github.com/vamseeachanta/digitalmodel/issues/2241).
 
-Mesh reliability is `caution`, native status `mesh_representation_sensitive`,
-valid area fraction 0.98055578. Its default BRep fit exports successfully but has
-`quadrature_unconverged` status and no finite I_D; no delta is inferred from NaN.
-The ordinary Cb=0.7 generated rounded form likewise produced native
-`geometric_singularity_nonintegrable` status at the default fit.
+The generated Wigley L=100/B=20/T=8 uses 41 stations, 21 waterlines and
+`MeshGeneratorConfig(target_panels=8000)`, producing 7,225 half-hull quads.
+End share sums |K| over finite, valid vertices with x/L<0.05 or x/L>0.95;
+Lref² cancels from the ratio.
 
-For a finite representation comparison, the generated Wigley control with
-L=100, B=20, T=8, D=12, 41 stations and 21 waterlines uses
-`MeshGeneratorConfig(target_panels=8000)`, which produces exactly 7,225
-half-hull side panels (no nonzero bottom). Mesh I_D=28.94569329, BRep
-I_D=7.06772470 (native `valid`), absolute delta=21.87796859,
-relative delta=309.54754934%. No threshold is asserted. This large gap and the
-rounded-form validity failures show that dense stations alone do not establish a
-canonical curvature signature; use fit and mesh convergence checks before
-interpreting curvature magnitudes.
+| Screening geometry | Before mesh I_D | After mesh I_D | Before end share | After end share | Before BRep | After BRep |
+|---|---:|---:|---:|---:|---|---|
+| Default expanded symmetry | 28.94569 | 44.00308 | 74.750% | 83.544% | valid / 7.06772 | valid / 7.12577 |
+| Open half hull | 25.41117 | 38.39900 | 78.040% | 85.603% | same profile | same profile |
+
+The mesh metrics regress despite exact offset closure; they are an unresolved
+consumer limitation, not a successful end-cap signature acceptance. The canonical
+L=100/B=10/T=6.25 generated Wigley BRep is valid / 4.31926, within 5% of 4.31.
+
+The full hull-library and diffraction quality-gate suite reports 582 passed,
+42 skipped and 3 expected failures. Two expected failures preserve the blocked
+mesh thresholds above; the third is the existing BRep representation regression.
+The curvature-screen and BRep suites are unchanged (21 and 26 collected tests).
 
 The regression comparing Cb=0.85/P=0.5 against Cb=0.55/P=0.1 verifies the
 larger developable-area fraction at equal mesh settings. The bilge-radius
