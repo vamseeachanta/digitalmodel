@@ -31,3 +31,6 @@ tests/drilling_riser/stackup_drawing/fixtures/*.svg -text
 
 # OrcaWave solver artifacts
 *.owr binary
+
+# Preserve the byte identity used by the reproducible installation example.
+docs/domains/orcaflex/jumper/manifold_to_plet/monolithic/DZ_AHCoff.yml text eol=lf
