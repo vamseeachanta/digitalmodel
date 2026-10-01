@@ -7,12 +7,30 @@ from typing import Any, Mapping
 from digitalmodel.cathodic_protection.abs_ships_tables import citation_label
 from digitalmodel.citations import CitedValue
 
+_MODEL_ASSUMPTIONS = [
+    (
+        "owner decision 2026-10-01: coating deterioration uses the arithmetic "
+        "mean of the project initial and maximum breakdown factors"
+    ),
+    (
+        "owner decision 2026-10-01: depleted long-flush resistance uses the "
+        "depleted length plus equivalent width in the long-flush expression"
+    ),
+    (
+        "owner decision 2026-10-01: dynamic bare-steel current density is an "
+        "explicit required project input where the guide leaves a choice"
+    ),
+]
+_CITATION_RESOLUTION = (
+    "generic wiki target available: "
+    "wikis/engineering-standards/wiki/standards/"
+    "abs-gn-ships-cathodic-protection-2017.md"
+)
+
 _LIMITATIONS = [
     "Project bare-steel current densities are not constrained to Table 3 ranges.",
-    "Initial/maximum coating percentages and their arithmetic mean are project choices; Table 4 gives no time law.",
-    "The depleted core area and long-flush resistance interpretation require engineering review.",
+    "The depleted core area remains a required project input.",
     "Special stern, propeller and opening geometry checks remain not evaluated unless separately supplied.",
-    "The ABS-specific generic-wiki citation target is not present.",
 ]
 
 
@@ -70,7 +88,7 @@ def _status(governing: str, checks: Mapping[str, bool]) -> dict[str, Any]:
             "special stern, propeller and opening geometry remains not evaluated"
         ),
         "checks": dict(checks),
-        "use_status": "cited-pending-review",
+        "use_status": "client-use-with-eor-check",
     }
 
 
@@ -98,7 +116,7 @@ def build_result(
     return {
         "standard": "ABS GN Ships (2017-12)",
         "edition": "2017-12",
-        "provenance": "guide table/equation locators; wiki target pending",
+        "provenance": "guide table/equation locators; generic wiki citation target",
         "design_life": life,
         "anode_current_capacity": capacity.value,
         "coating_breakdown_factors": {
@@ -117,8 +135,9 @@ def build_result(
             outputs, initial_r, final_r, depleted, selected, delta_e, checks
         ),
         "layout": dict(layout),
+        "model_assumptions": list(_MODEL_ASSUMPTIONS),
         "citations": list(dict.fromkeys(citation_label(value) for value in cited)),
-        "citation_resolution": "PENDING: ABS generic-wiki target is absent",
+        "citation_resolution": _CITATION_RESOLUTION,
         "limitations": _LIMITATIONS,
         "status": _status(governing, checks),
     }

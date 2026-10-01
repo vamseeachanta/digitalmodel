@@ -1,9 +1,17 @@
-"""External ship-hull galvanic CP design per ABS GN Ships (December 2017)."""
+"""External ship-hull galvanic CP design per ABS GN Ships (December 2017).
+
+The owner decision 2026-10-01 accepts three explicit project interpretations:
+the coating-deterioration factor uses the arithmetic mean of the project initial
+and maximum factors; depleted long-flush resistance uses the depleted length plus
+equivalent width in the long-flush expression; and dynamic bare-steel current
+density is a required project input where the guide leaves a choice.
+"""
 
 from __future__ import annotations
 
 import math
 from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Any, Mapping
 
 from digitalmodel.cathodic_protection import _kernels as kernel
@@ -15,9 +23,9 @@ from digitalmodel.cathodic_protection.abs_ships_tables import (
 )
 from digitalmodel.cathodic_protection.abs_ships_result import build_result
 from digitalmodel.cathodic_protection.abs_ships_layout import evaluate_layout
-from digitalmodel.citations import CitedValue
+from digitalmodel.citations import CitedValue, validate_citation
 
-USE_STATUS = "cited-pending-review"
+USE_STATUS = "client-use-with-eor-check"
 
 
 def _mapping(value: Any) -> Mapping[str, Any]:
@@ -281,6 +289,24 @@ def _citation_values(
     ]
 
 
+def _validate_citations(
+    cited: list[CitedValue], citation_repo_root: str | Path | None
+) -> None:
+    seen: set[tuple[str, str, str, str]] = set()
+    root = Path(citation_repo_root) if citation_repo_root is not None else None
+    for value in cited:
+        citation = value.citation
+        key = (
+            citation.code_id,
+            citation.publisher,
+            citation.revision,
+            citation.wiki_path,
+        )
+        if key not in seen:
+            validate_citation(citation, repo_root=root)
+            seen.add(key)
+
+
 def _checks(
     selected: int,
     counts: Mapping[str, int],
@@ -295,7 +321,9 @@ def _checks(
     }
 
 
-def design_abs_ships(inputs: Mapping[str, Any]) -> dict[str, Any]:
+def design_abs_ships(
+    inputs: Mapping[str, Any], *, citation_repo_root: str | Path | None = None
+) -> dict[str, Any]:
     """Return hull demand, mass, output, layout, governing case and checks."""
     demand, coating = _demand(inputs)
     design = _mapping(inputs.get("design_data"))
@@ -320,6 +348,7 @@ def design_abs_ships(inputs: Mapping[str, Any]) -> dict[str, Any]:
     )
     checks = _checks(selected, counts, layout)
     cited = _citation_values(potential, capacity, protection)
+    _validate_citations(cited, citation_repo_root)
     return build_result(
         demand,
         coating,

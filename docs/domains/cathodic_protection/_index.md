@@ -11,11 +11,11 @@ places (below); the worked examples are the contract between the two.
 
 ## Use status
 
-Owner decision 2026-09-27 (epic #2206, D1 revisited). The domain is approved for client
-use on the DNV-RP-B401 offshore and DNV-RP-F103 bracelet routes only, and only subject to
-an engineer-of-record (EOR) check of every client deliverable. The four quarantined models
-stay experimental. The rebuilt ABS ships route is cited but remains pending engineering
-review; its deprecated legacy alias retains the demand understatement identified by the
+Owner decisions 2026-09-27 (epic #2206, D1 revisited) and 2026-10-01 ([#2259](https://github.com/vamseeachanta/digitalmodel/issues/2259)).
+The domain is approved for client use on the DNV-RP-B401 offshore, DNV-RP-F103 bracelet,
+and rebuilt ABS ships routes, and only subject to an engineer-of-record (EOR) check of
+every client deliverable. The four quarantined models stay experimental. The deprecated
+ABS ships legacy alias retains the demand understatement identified by the
 2026-09-27 benchmark ([#2259](https://github.com/vamseeachanta/digitalmodel/issues/2259),
 [#1852](https://github.com/vamseeachanta/digitalmodel/issues/1852)). ABS offshore remains
 legacy, uncited and not for client use without an independent check.
@@ -26,14 +26,14 @@ legacy, uncited and not for client use without an independent check.
 | `DNV_RP_F103` (engine adapter; runs `design_data.edition`, default 2019) | Client use with EOR check | Cited, edition-keyed F103 tables (`f103_tables.py`); Eq. 14 protected-length check |
 | `DNV_RP_F103_2010` (engine adapter; deprecated alias of `DNV_RP_F103` pinned to edition 2010, `DeprecationWarning`; a different `design_data.edition` raises) | Client use with EOR check | As `DNV_RP_F103`, edition 2010; reproduces results from before the 2019 default |
 | `DNV_RP_F103_anode_bank` | Engineering validation required; not for client use | Independent terminal banks; F103:2019 Sec. 6.7 Eq. (9)-(20) and Appendix D.8.5-D.8.10, or the 2010 Sec. 5.6 counterparts; B401 individual-anode resistance |
-| `ABS_gn_ships_2018` (engine adapter; key is a documented date misnomer) | Cited, pending engineering review | New-package December 2017 ABS route converts coating percentages to fractional `fc`, uses cited alloy/current tables, depleted long-flush geometry, and output/layout checks. Table 4 does not prescribe the selected mean-factor time law and the wiki target is pending ([#2259](https://github.com/vamseeachanta/digitalmodel/issues/2259)). |
+| `ABS_gn_ships_2018` (engine adapter; key is a documented date misnomer) | Client use with EOR check | New-package December 2017 ABS route converts coating percentages to fractional `fc`, uses cited alloy/current tables, depleted long-flush geometry, and output/layout checks. Owner decision 2026-10-01 accepts the arithmetic-mean coating treatment, depleted long-flush resistance reading, and explicit project dynamic bare-steel current-density input ([#2259](https://github.com/vamseeachanta/digitalmodel/issues/2259)). |
 | `ABS_gn_offshore_2018` | Legacy, uncited: not for client use without an independent check | Legacy solver (`base_solvers/hydrodynamics/cathodic_protection.py`), tables not cited |
 | `ABS_gn_ships_2018_legacy`, `DNV_RP_B401_offshore_legacy`, `DNV_RP_F103_2010_legacy` | Legacy, uncited: not for client use without an independent check | Deprecated legacy solver paths |
 | Stray current (`stray_current.assess_stray_current` / `design_drainage_bond`), fuel-system protection check (`fuel_system_cp.check_protection`), galvanic corrosion (`corrosion_rate.galvanic_corrosion`), ICCP anode life (`iccp_design.anode_bed_design` `estimated_life_years`) | Experimental | Quarantined (#2209): the first three raise `ExperimentalModelError` and the ICCP life is `None` unless called with `experimental=True` |
 
 The status is machine-visible: every engine-adapter route writes
 `results["status"]["use_status"]` (`client-use-with-eor-check`,
-`engineering-validation-required`, `cited-pending-review`,
+`engineering-validation-required`,
 or `legacy-uncited-independent-check-required`), and the `cathodic_protection.anode_design`
 report states it in the Adequacy section and in the route's status detail, so every HTML/PDF
 deliverable carries it. `docs/registry/module-routing.yaml` keeps `maturity: beta` (its scale

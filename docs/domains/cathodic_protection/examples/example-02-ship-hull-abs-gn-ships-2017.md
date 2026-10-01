@@ -2,7 +2,8 @@
 
 > The hand calculations below preserve historical source/legacy arithmetic and are not
 > the rebuilt route's verified output. The executable blocks identify project current
-> densities outside Table 3 and return `cited-pending-review`.
+> densities outside Table 3 and return `client-use-with-eor-check` under owner decision
+> 2026-10-01.
 
 **Standard:** ABS Guidance Notes on Cathodic Protection of Ships (December 2017)
 **Structure type:** Floating Storage Terminal (FST) hull — submerged zone
@@ -175,8 +176,8 @@ I_total = 127 × 1.004 = 127.5 A
 
 **Historical-source note:** the values above describe the retired legacy calculation, not
 the rebuilt route. The executable block below supplies explicit project initial/maximum
-percentages and bare-current inputs. Its report is the controlling output and remains
-`cited-pending-review` for the limitations listed there.
+percentages and bare-current inputs. Its report is the controlling output and carries
+`client-use-with-eor-check` for the limitations listed there.
 
 ---
 

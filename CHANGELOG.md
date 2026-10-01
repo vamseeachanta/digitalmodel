@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- cathodic_protection: rebuild `ABS_gn_ships_2018` on shared kernels with fractional ABS coating breakdown, depleted long-flush geometry, mass/output/layout checks, and cited December 2017 guide values; the old solver remains as deprecated `ABS_gn_ships_2018_legacy`. The route is `cited-pending-review` because Table 4 does not prescribe the selected mean-factor time law and the wiki target is pending ([#2259](https://github.com/vamseeachanta/digitalmodel/issues/2259)).
+- cathodic_protection: rebuild `ABS_gn_ships_2018` on shared kernels with fractional ABS coating breakdown, depleted long-flush geometry, mass/output/layout checks, and cited December 2017 guide values; the old solver remains as deprecated `ABS_gn_ships_2018_legacy`. Owner decision 2026-10-01 accepts the arithmetic-mean coating treatment, depleted long-flush resistance reading, and explicit project dynamic bare-steel current-density input; the rebuilt route is now `client-use-with-eor-check` ([#2259](https://github.com/vamseeachanta/digitalmodel/issues/2259)).
 
 ### Added
 

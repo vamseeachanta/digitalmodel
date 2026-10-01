@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from digitalmodel.cathodic_protection.abs_ships_tables import (
+    ABS_WIKI_PATH,
     aluminium_properties,
     average_coated_current_density,
     coating_breakdown_range,
@@ -18,6 +19,7 @@ from digitalmodel.cathodic_protection.abs_ships_tables import (
     zinc_properties,
 )
 from digitalmodel.cathodic_protection.engine_adapter import run_cathodic_protection
+from digitalmodel.citations import CitationResolutionError
 from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import (
     CathodicProtection,
 )
@@ -26,6 +28,7 @@ DATASET = (
     Path(__file__).resolve().parents[1]
     / "fixtures/test_vectors/cathodic_protection/datasets/abs-gn-ships/2017-12"
 )
+CITATION_FIXTURES = Path(__file__).resolve().parents[1] / "citations/fixtures"
 
 
 def _csv_rows(name: str) -> list[dict[str, str]]:
@@ -35,6 +38,7 @@ def _csv_rows(name: str) -> list[dict[str, str]]:
 
 def _cfg() -> dict:
     return {
+        "citation_repo_root": str(CITATION_FIXTURES),
         "inputs": {
             "calculation_type": "ABS_gn_ships_2018",
             "design_data": {"design_life": 5},
@@ -102,6 +106,31 @@ def test_abs_table_values_are_cited() -> None:
     assert (z4_potential.value, z4_capacity.value) == pytest.approx((-0.97, 690.0))
 
 
+def _write_citation_page(root: Path, *, revision: str) -> None:
+    page = root / ABS_WIKI_PATH
+    page.parent.mkdir(parents=True)
+    page.write_text(
+        "---\ncode_id: abs-gn-ships\npublisher: ABS\n"
+        f"revision: {revision}\n---\n",
+        encoding="utf-8",
+    )
+
+
+def test_abs_route_fails_closed_when_wiki_page_is_missing(tmp_path: Path) -> None:
+    cfg = _cfg()
+    cfg["citation_repo_root"] = str(tmp_path)
+    with pytest.raises(CitationResolutionError, match="page_missing"):
+        run_cathodic_protection(cfg)
+
+
+def test_abs_route_fails_closed_on_wiki_frontmatter_mismatch(tmp_path: Path) -> None:
+    _write_citation_page(tmp_path, revision="wrong-revision")
+    cfg = _cfg()
+    cfg["citation_repo_root"] = str(tmp_path)
+    with pytest.raises(CitationResolutionError, match="frontmatter_mismatch:revision"):
+        run_cathodic_protection(cfg)
+
+
 def test_abs_rebuild_hand_derived_demand_mass_and_count() -> None:
     out = run_cathodic_protection(_cfg())
     result = out["results"]
@@ -115,7 +144,26 @@ def test_abs_rebuild_hand_derived_demand_mass_and_count() -> None:
     assert result["anode_requirements"]["mass_count"] == math.ceil(4372.036364 / 29.0)
     assert result["coating_breakdown_factors"]["initial"] == pytest.approx(0.01)
     assert result["layout"]["selected_locations"] == 200
-    assert result["status"]["use_status"] == "cited-pending-review"
+    assert result["status"]["use_status"] == "client-use-with-eor-check"
+    assert result["citation_resolution"] == (
+        "generic wiki target available: "
+        "wikis/engineering-standards/wiki/standards/"
+        "abs-gn-ships-cathodic-protection-2017.md"
+    )
+    assert result["model_assumptions"] == [
+        (
+            "owner decision 2026-10-01: coating deterioration uses the arithmetic "
+            "mean of the project initial and maximum breakdown factors"
+        ),
+        (
+            "owner decision 2026-10-01: depleted long-flush resistance uses the "
+            "depleted length plus equivalent width in the long-flush expression"
+        ),
+        (
+            "owner decision 2026-10-01: dynamic bare-steel current density is an "
+            "explicit required project input where the guide leaves a choice"
+        ),
+    ]
     assert result["status"]["result"] == "PASS"
     assert result["status"]["governing_case"] == "final_current_output"
     assert result["anode_requirements"]["recommended_anode_count"] == 364
@@ -277,12 +325,20 @@ def test_abs_layout_requires_explicit_bilge_keel_applicability() -> None:
 
 
 @pytest.mark.parametrize(
-    "missing", ["static_bare_steel_mA_m2", "dynamic_time_fraction"]
+    "missing",
+    [
+        "dynamic_bare_steel_mA_m2",
+        "static_bare_steel_mA_m2",
+        "dynamic_time_fraction",
+    ],
 )
 def test_abs_eq7_inputs_are_required(missing: str) -> None:
     cfg = _cfg()
     del cfg["inputs"]["design_current"][missing]
-    with pytest.raises(ValueError, match="static bare density|dynamic time fraction"):
+    with pytest.raises(
+        ValueError,
+        match="dynamic_bare_steel_mA_m2|required|static bare density|dynamic time fraction",
+    ):
         run_cathodic_protection(cfg)
 
 

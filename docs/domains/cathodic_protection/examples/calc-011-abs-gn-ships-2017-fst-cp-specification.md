@@ -10,7 +10,8 @@ discipline: cathodic_protection
 
 > The narrative tables retain the abstracted source calculation record. The executable
 > block identifies the 1,350 mA/m2 bare-equivalent density as a project value outside
-> Table 3; the rebuilt result remains `cited-pending-review`.
+> Table 3. Owner decision 2026-10-01 accepts the route's three recorded interpretations;
+> the rebuilt result is `client-use-with-eor-check`.
 
 ## Source
 Standard: ABS, Guidance Notes on Cathodic Protection of Ships, December 2017 (primary);
@@ -218,8 +219,9 @@ Note: fcf formula: (1 + 0.01/100)^2 × (1 + 0.01)^(5-2) = 1.0001^2 × 1.01^3 ≈
 bare-equivalent density and layout inputs, the code returns 145.5 / 221.9 / 298.3 A,
 4 712.2 kg required mass, 0.4194 / 0.3808 ohm initial/final resistance, and 460 selected
 anodes. These reproduce the displayed source values within rounding. The 1,350 mA/m2
-bare-equivalent density is outside Table 3, and the coating mean, derived core area, and
-depleted long-flush resistance branch remain pending engineering review.
+bare-equivalent density is outside Table 3. Owner decision 2026-10-01 accepts the
+arithmetic-mean coating treatment and depleted long-flush resistance reading. The derived
+core area remains a required project input subject to the deliverable's EOR check.
 
 ## Anode Bill of Materials (Section 4.5)
 ```
@@ -357,8 +359,9 @@ print("Rai / Raf (ohm): {:.4f} / {:.4f}".format(
   is 2 500 A·h/kg per ABS Section 3/4.3, Table 4. The existing test uses an
   implicit value via the ABS table look-up; confirm cathodic_protection.py uses 2 500 A·h/kg
   for aluminium alloy (not 2 000 A·h/kg used in the DNV B401 example calc).
-- ABS Table 4 gives initial and annual percentages but no time-development equation. The
-  selected initial/mean/maximum factors are project inputs pending engineering review.
+- ABS Table 4 gives initial and annual percentages but no time-development equation. Owner
+  decision 2026-10-01 accepts the arithmetic mean of the selected project initial and
+  maximum factors for this route.
 - Anode current capacity (Q = 2 500 A·h/kg) is referenced to ABS §3/4.3, Table 4, but the
   exact alloy composition (Al-Zn-In-Cd) is not in the ABS table — it matches the generic
   aluminium alloy capacity. Confirm with supplier datasheet if a non-standard value applies.

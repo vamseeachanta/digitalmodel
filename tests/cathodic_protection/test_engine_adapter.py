@@ -51,13 +51,14 @@ FIXTURE_DIR = (
 FIXTURES = ("jacket", "manifold", "monopile", "pipeline", "ships", "fpso")
 # Owner decision 2026-09-27 (epic #2206): B401 offshore and F103 bracelet are
 # for client use with an engineer-of-record check; ABS offshore remains legacy.
-# Benchmark 2026-09-27 (#2259): ABS ships requires experimental opt-in.
+# Owner decision 2026-10-01 (#2259): rebuilt ABS ships has the same conditional
+# client-use status as the B401 and F103 routes.
 EXPECTED_USE_STATUS = {
     "jacket": USE_STATUS_CLIENT_EOR,
     "manifold": USE_STATUS_CLIENT_EOR,
     "monopile": USE_STATUS_CLIENT_EOR,
     "pipeline": USE_STATUS_CLIENT_EOR,
-    "ships": "cited-pending-review",
+    "ships": USE_STATUS_CLIENT_EOR,
     "fpso": USE_STATUS_LEGACY_UNCITED,
 }
 
@@ -97,6 +98,10 @@ def _load(name: str) -> dict[str, Any]:
     with (FIXTURE_DIR / f"{name}.yml").open(encoding="utf-8") as stream:
         cfg: dict[str, Any] = yaml.safe_load(stream)
     assert cfg["basename"] == "cathodic_protection"
+    if name == "ships":
+        cfg["citation_repo_root"] = str(
+            Path(__file__).resolve().parents[1] / "citations/fixtures"
+        )
     return cfg
 
 
@@ -579,7 +584,7 @@ def test_ships_ignores_retired_experimental_flag(flag: Any) -> None:
     cfg = _load("ships")
     cfg["inputs"]["design_data"]["experimental"] = flag
     assert run_cathodic_protection(cfg)["results"]["status"]["use_status"] == (
-        "cited-pending-review"
+        USE_STATUS_CLIENT_EOR
     )
 
 
@@ -601,7 +606,7 @@ def test_ships_abs_2018_new_route_has_int_count_and_status() -> None:
     assert isinstance(req["recommended_anode_count"], int)
     status = cp["status"]
     assert status["result"] == STATUS_PASS
-    assert status["use_status"] == "cited-pending-review"
+    assert status["use_status"] == USE_STATUS_CLIENT_EOR
 
 
 def test_fpso_abs_offshore_2018_wrapped_mass_only() -> None:

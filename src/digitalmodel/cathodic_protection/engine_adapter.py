@@ -31,8 +31,9 @@ It dispatches on ``cfg["inputs"]["calculation_type"]``:
 ``ABS_gn_ships_2018`` / ``ABS_gn_ships_2018_legacy``
     The rebuilt December 2017 ship-hull route and its deprecated legacy alias.
     The public key retains its historical date misnomer. The rebuilt route uses
-    cited tables and shared kernels; its selected mean coating-factor time law is
-    marked ``cited-pending-review``.
+    cited tables and shared kernels. The owner decision 2026-10-01 accepts its
+    arithmetic-mean coating deterioration, depleted long-flush resistance, and
+    explicit project dynamic bare-steel current-density interpretations.
 ``ABS_gn_offshore_2018``
     The legacy offshore implementation, wrapped with integer counts and status.
 ``DNV_RP_B401_offshore_legacy`` / ``DNV_RP_F103_2010_legacy``
@@ -46,11 +47,10 @@ Every route writes ``cfg["results"]["status"]``::
 ``use_status`` records the owner's approval level for the route (decision
 2026-09-27, epic #2206; see ``docs/domains/cathodic_protection/_index.md``,
 "Use status"): ``"client-use-with-eor-check"`` for ``DNV_RP_B401_offshore``
-and ``DNV_RP_F103`` / ``DNV_RP_F103_2010`` (client use subject to an
+and ``DNV_RP_F103`` / ``DNV_RP_F103_2010`` / ``ABS_gn_ships_2018`` (client use subject to an
 engineer-of-record check of every deliverable); ``"legacy-uncited-independent-check-required"`` for
 ABS offshore and the ``*_legacy`` keys (legacy solver, uncited tables, not
-for client use without an independent check); and ``"cited-pending-review"``
-for the rebuilt ABS ships route pending review of the mean-factor time law and wiki target.
+for client use without an independent check).
 
 A ``FAIL`` is logged as a warning through the engine's logger (loguru) and
 never raises: the run completes so the report can show the failing design.
@@ -161,7 +161,8 @@ DEPRECATED_CALCULATION_TYPES: Final[tuple[str, ...]] = (
 STATUS_PASS: Final = "PASS"
 STATUS_FAIL: Final = "FAIL"
 
-# Owner decision 2026-09-27 (epic #2206): approval level per route, carried
+# Owner decisions 2026-09-27 (epic #2206) and 2026-10-01 (#2259): approval
+# level per route, carried
 # into every deliverable through ``results["status"]["use_status"]``.
 USE_STATUS_CLIENT_EOR: Final = "client-use-with-eor-check"
 USE_STATUS_LEGACY_UNCITED: Final = "legacy-uncited-independent-check-required"
@@ -173,7 +174,7 @@ USE_STATUS_BY_KEY: Final[dict[str, str]] = {
     KEY_F103: USE_STATUS_CLIENT_EOR,
     KEY_F103_ANODE_BANK: USE_STATUS_ENGINEERING_VALIDATION,
     KEY_F103_2010: USE_STATUS_CLIENT_EOR,
-    KEY_ABS_SHIPS: USE_STATUS_CITED_PENDING_REVIEW,
+    KEY_ABS_SHIPS: USE_STATUS_CLIENT_EOR,
     KEY_ABS_SHIPS_LEGACY: USE_STATUS_LEGACY_UNCITED,
     KEY_ABS_OFFSHORE: USE_STATUS_LEGACY_UNCITED,
     KEY_B401_LEGACY: USE_STATUS_LEGACY_UNCITED,
@@ -1036,7 +1037,12 @@ def _legacy_solver() -> Any:
 
 
 def _run_abs_ships(cfg: dict[str, Any]) -> dict[str, Any]:
-    block = design_abs_ships(_section(cfg, "inputs"))
+    citation_root = cfg.get("citation_repo_root") or _section(cfg, "inputs").get(
+        "citation_repo_root"
+    )
+    block = design_abs_ships(
+        _section(cfg, "inputs"), citation_repo_root=citation_root
+    )
     cfg["results"] = block
     cfg["cathodic_protection"] = block
     if block["status"]["result"] == STATUS_FAIL:

@@ -10,8 +10,9 @@ discipline: cathodic_protection
 
 > The narrative tables retain the abstracted source/legacy calculation record. The
 > executable block uses the rebuilt route: coating entries are percentages, the
-> 1,350 mA/m2 bare-equivalent density is an explicit project value outside Table 3,
-> and the result remains `cited-pending-review`.
+> 1,350 mA/m2 bare-equivalent density is an explicit project value outside Table 3.
+> Owner decision 2026-10-01 accepts the route's three recorded interpretations;
+> the result is `client-use-with-eor-check`.
 
 ## Source
 Standard: ABS Guidance Notes on Cathodic Protection of Ships (December 2017) / ABS Guidance Notes on Cathodic Protection of Offshore Structures (2018)
@@ -135,7 +136,7 @@ standard; the actual FST hull calculations follow ABS methodology.
 **Historical-source note:** the values above preserve the retired legacy/source arithmetic,
 not the rebuilt route. The executable block below supplies explicit project coating and
 bare-current inputs, depleted geometry, and layout evidence. Its report is the controlling
-output and remains `cited-pending-review`.
+output and carries `client-use-with-eor-check` under owner decision 2026-10-01.
 
 ### Individual Anode Current Output (initial geometry, ρ = 0.2547 Ω·m)
 | Stage | Ia per anode (A) |

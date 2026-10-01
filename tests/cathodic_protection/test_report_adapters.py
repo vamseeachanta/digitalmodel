@@ -92,6 +92,8 @@ def _load_fixture() -> dict[str, Any]:
 def _run(name: str) -> dict[str, Any]:
     with (INPUT_DIR / f"{name}.yml").open(encoding="utf-8") as stream:
         cfg: dict[str, Any] = yaml.safe_load(stream)
+    if name == "ships":
+        cfg["citation_repo_root"] = str(TESTS_DIR / "citations/fixtures")
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         return run_cathodic_protection(cfg)
@@ -387,7 +389,8 @@ def test_abs_routes_expose_tables_and_status() -> None:
     assert "Anode resistance and current output, fresh vs depleted" in tables
     assert "Layout and spacing" in tables
     assert "Depleted long-flush geometry" in tables
-    assert "Pending engineering review limitations" in tables
+    assert "Accepted model assumptions" in tables
+    assert "Design limitations" in tables
     assert "Project bare-current basis (Table 3 comparator only)" in tables
     bare_basis = dict(
         row[:2]
@@ -425,7 +428,7 @@ def test_abs_routes_expose_tables_and_status() -> None:
     [
         ("jacket", USE_STATUS_CLIENT_EOR, "engineer-of-record check"),
         ("pipeline", USE_STATUS_CLIENT_EOR, "engineer-of-record check"),
-        ("ships", "cited-pending-review", "engineering review"),
+        ("ships", USE_STATUS_CLIENT_EOR, "engineer-of-record check"),
         (
             "fpso",
             USE_STATUS_LEGACY_UNCITED,
@@ -449,19 +452,22 @@ def test_use_status_is_stated_in_adequacy_and_status_detail(
     assert wording in render_html(spec)
 
 
-def test_ships_report_states_pending_review_limit() -> None:
+def test_ships_report_states_owner_accepted_interpretations() -> None:
     spec = anode_design_report(_run("ships"))
     adequacy = next(s for s in spec.sections if s.key == "adequacy")
     first = adequacy.blocks[0]
     assert isinstance(first, TextBlock)
     html = render_html(spec)
+    assert "engineer-of-record check" in first.markdown
+    assumptions = _tables(spec)["Accepted model assumptions"]
+    rendered = " | ".join(str(row[0]) for row in assumptions.rows)
     for wording in (
-        "cited-pending-review",
-        "coating deterioration",
-        "engineering review",
+        "owner decision 2026-10-01",
+        "arithmetic mean",
+        "depleted long-flush resistance",
+        "dynamic bare-steel current density",
     ):
-        assert wording in first.markdown
-        assert wording in _statuses(spec)[0].detail
+        assert wording in rendered
         assert wording in html
 
 

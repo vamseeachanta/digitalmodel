@@ -1181,9 +1181,18 @@ def _abs_ships_sections(
                 )
             )
     limitations = results.get("limitations") or []
+    assumptions = results.get("model_assumptions") or []
     adequacy_blocks.append(
         TableBlock(
-            title="Pending engineering review limitations",
+            title="Accepted model assumptions",
+            columns=["Interpretation"],
+            rows=[[item] for item in assumptions],
+            source="cfg[results][model_assumptions]",
+        )
+    )
+    adequacy_blocks.append(
+        TableBlock(
+            title="Design limitations",
             columns=["Item"],
             rows=[[item] for item in limitations],
             source="cfg[results][limitations], cfg[results][citation_resolution]",

@@ -7,4 +7,4 @@
 - Scope: table identifiers, captions, units, and numeric records only
 - Licensed original committed: no
 - Raw copy allowed: false
-- Intended use: regression evidence for cited table lookups; engineering status remains cited-pending-review
+- Intended use: regression evidence for cited table lookups; route status is client-use-with-eor-check under owner decision 2026-10-01
