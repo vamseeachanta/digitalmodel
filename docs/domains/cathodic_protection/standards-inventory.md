@@ -112,9 +112,11 @@
 #### ABS GN Ships Dec 2017
 - Six sections: General, Design Criteria, Galvanic Anode System, ICCP System, Commissioning, Documentation
 - Three anode resistance formulas: slender-offset (Dwight formula, standoff ≥0.3 m), long-flush (L≥4W), short-flat-plate (L<4W)
-- Coating breakdown: compound exponential model
+- Rebuilt route coating breakdown: project initial and maximum percentages converted to fractions; their arithmetic mean is used for mean demand
 - Design current densities from Table 3 (bare steel), Table 5 (coated hull averages)
-- Electrochemical capacity: Zn = 780 Ah/kg; Al = temperature-dependent (2000 − 27·(T−20))
+- The project dynamic bare-steel current density is required explicitly where the guide leaves a choice
+- Depleted long-flush resistance uses the depleted length plus equivalent width in the long-flush expression
+- The three interpretations above were accepted by owner decision 2026-10-01; route status is `client-use-with-eor-check`
 
 #### ABS GN Offshore Dec 2018
 - Covers FPSOs, TLPs, DDCVs, fixed jackets
@@ -243,10 +245,10 @@ Note: These standalone methods are NOT called from `router()`. They appear to be
 **Recommendation: CONDITIONAL GO — DNV F103 route requires critical fixes before Phase 2 expansion**
 
 ### Go conditions (ABS Ships route)
-- The `ABS_gn_ships_2018` route and all `_abs_*` private methods correctly implement ABS GN Ships Dec 2017 formulas.
-- Anode resistance geometry cases (slender_offset, short_flush, long_flush) match ABS Sec.3.3.
-- Mass formula, coating breakdown model, and current density model are consistent with ABS GN Ships Dec 2017.
-- Status: **GO for ABS Ships route** — suitable for production after test coverage verification.
+- The rebuilt `ABS_gn_ships_2018` engine-adapter route uses cited tables and shared kernels; the old solver remains available only through `ABS_gn_ships_2018_legacy`.
+- Mass, fresh/depleted output, layout, and selected-count checks are exercised by the cathodic-protection and reporting suites.
+- Owner decision 2026-10-01 accepts the arithmetic-mean coating-deterioration treatment, depleted long-flush resistance reading, and explicit project dynamic bare-steel current-density input.
+- Status: **client use with engineer-of-record check**, the same use-status class as the B401 and F103 routes.
 
 ### No-Go conditions (DNV F103 route — must fix first)
 Three critical defects (G-1, G-2, G-3) make the `_dnv_current_densities` method produce results that cannot be traced to any recognized standard. The fabricated table references and non-standard coating-quality lookup mean calculation outputs are unauditable. G-4 (wrong coating breakdown formula) compounds this — mean CBF will be wrong for any certified pipe coating.

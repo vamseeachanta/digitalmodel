@@ -8,6 +8,12 @@ discipline: cathodic_protection
 
 # Floating Storage Terminal Hull — ABS Sacrificial Anode Design
 
+> The narrative tables retain the abstracted source/legacy calculation record. The
+> executable block uses the rebuilt route: coating entries are percentages, the
+> 1,350 mA/m2 bare-equivalent density is an explicit project value outside Table 3.
+> Owner decision 2026-10-01 accepts the route's three recorded interpretations;
+> the result is `client-use-with-eor-check`.
+
 ## Source
 Standard: ABS Guidance Notes on Cathodic Protection of Ships (December 2017) / ABS Guidance Notes on Cathodic Protection of Offshore Structures (2018)
 Structure type: Floating Storage Terminal (FST) hull, tidal and submerged zones
@@ -127,17 +133,10 @@ standard; the actual FST hull calculations follow ABS methodology.
 | Governing anode count | 187 | # |
 | Total gross mass | ~5.6 | MT |
 
-**Reproduction note (this branch, `ABS_gn_ships_2018` route, cfg below):** the code returns
-Ici / Icm / Icf = 145.5 / 149.9 / 152.9 A (source 145.5 / 149.2 / 152.9 A; the route's mean
-factor is (f_yearly + fcf) / 2 = 1.0305, the same as the source, but its mean current density
-is 13.912 mA/m² against the source's 13.844), a temperature-corrected anode capacity of
-2162 Ah/kg (2000 − 27 × (14 − 20)) where the source uses Q = 2500 Ah/kg, hence a net anode
-mass of 3682 kg (source 3 169 kg) and 127.0 anodes on the mass basis (source 109 by mass,
-187 governing on the final current check — the route does not iterate the count on current
-output). Ra initial 0.3286 Ω agrees; the route reports the same value for the final stage
-because no depleted geometry is supplied. The tabulated source values are left as extracted.
-The ABS ships route is not affected by the #2207 DNV-RP-B401/F103 tables; these values are
-unchanged after #2207.
+**Historical-source note:** the values above preserve the retired legacy/source arithmetic,
+not the rebuilt route. The executable block below supplies explicit project coating and
+bare-current inputs, depleted geometry, and layout evidence. Its report is the controlling
+output and carries `client-use-with-eor-check` under owner decision 2026-10-01.
 
 ### Individual Anode Current Output (initial geometry, ρ = 0.2547 Ω·m)
 | Stage | Ia per anode (A) |
@@ -177,12 +176,14 @@ cfg = {
             "area_coverage": 100.0,              # % coated
             "coating_initial_breakdown_factor": 1.0,    # % (High durability, ABS Table 4)
             "coating_initial_breakdown_duration": 2.0,  # years
-            "coating_yearly_breakdown_factor": 1.0,     # %/yr (High durability)
             "coating_breakdown_factor_max": 2.0,
             # Source-derived factors: fcm(5 yr) = 1.0305, fcf(5 yr) = 1.0510
         },
         "design_current": {
-            "coated_steel_mA_m2": 13.5,          # ABS Table 5, coated steel, tidal, V <= 1 kn
+            "dynamic_bare_steel_mA_m2": 1350.0,  # project value; outside Table 3
+            "static_bare_steel_mA_m2": 1350.0,
+            "dynamic_time_fraction": 0.5,
+            "coated_steel_mA_m2": 13.5,          # project initial coated density
             "uncoated_steel_mA_m2": 200.0,
         },
         "anode": {
@@ -190,8 +191,18 @@ cfg = {
             "protection_potential": 0.8,         # V (magnitude, vs Ag/AgCl)
             "closed_circuit_anode_potential": -1.09,   # V vs Ag/AgCl
             "anode_Utilisation_factor": 0.825,
-            "physical_properties": {"net_weight": 29.0, "gross_weight": 30.0},   # kg
+            "anode_density": 2750.0,
+            "physical_properties": {
+                "net_weight": 29.0, "gross_weight": 30.0,
+                "core_cross_section_m2": 0.01625,
+            },
             "geometry": {"type": "long_flush", "length_m": 0.65, "width_m": 0.125},
+        },
+        "layout": {
+            "actual_max_spacing_m": 8.0, "selected_locations": 230,
+            "anodes_per_location": 2, "high_current_or_low_resistivity": False,
+            "mechanical_damage_risk": False, "uniform_distribution_confirmed": True,
+            "bilge_damage_avoided": True, "bilge_keel_fitted": False,
         },
     }
 }
@@ -211,10 +222,9 @@ print("Ra initial / final (ohm): {:.4f} / {:.4f}".format(
 ```
 
 ## Gaps Found
-- Source uses ABS Cathodic Protection of Ships 2017, not DNV-RP-F103 or DNV-RP-B401. The
-  ABS breakdown factor formula is a multiplicative annual-rate model (fc = fc_initial × (1 + fc_per_year)^t)
-  rather than the linear DNV formula. Code must implement ABS Section 2.4.4 Table 4 formula to
-  replicate results exactly.
+- Source uses ABS Cathodic Protection of Ships 2017, not DNV-RP-F103 or DNV-RP-B401.
+  ABS Table 4 gives coating percentages but no time-development equation; the source's
+  multiplicative model is historical project arithmetic, not an ABS-prescribed formula.
 - ABS Table 5 current densities apply to hull/tidal conditions; DNV-RP-F103 tables are for submarine
   pipelines — the structures are conceptually different.
 - Source also computed a sensitivity for disbonding assumption (vs. deterioration) — disbonding

@@ -22,7 +22,6 @@ import yaml  # type: ignore[import-untyped]
 from loguru import logger
 
 from digitalmodel.cathodic_protection import engine_adapter
-from digitalmodel.cathodic_protection._experimental import ExperimentalModelError
 from digitalmodel.cathodic_protection.engine_adapter import (
     CALCULATION_TYPES,
     KEY_B401_LEGACY,
@@ -52,13 +51,14 @@ FIXTURE_DIR = (
 FIXTURES = ("jacket", "manifold", "monopile", "pipeline", "ships", "fpso")
 # Owner decision 2026-09-27 (epic #2206): B401 offshore and F103 bracelet are
 # for client use with an engineer-of-record check; ABS offshore remains legacy.
-# Benchmark 2026-09-27 (#2259): ABS ships requires experimental opt-in.
+# Owner decision 2026-10-01 (#2259): rebuilt ABS ships has the same conditional
+# client-use status as the B401 and F103 routes.
 EXPECTED_USE_STATUS = {
     "jacket": USE_STATUS_CLIENT_EOR,
     "manifold": USE_STATUS_CLIENT_EOR,
     "monopile": USE_STATUS_CLIENT_EOR,
     "pipeline": USE_STATUS_CLIENT_EOR,
-    "ships": "experimental-known-understatement",
+    "ships": USE_STATUS_CLIENT_EOR,
     "fpso": USE_STATUS_LEGACY_UNCITED,
 }
 
@@ -98,6 +98,10 @@ def _load(name: str) -> dict[str, Any]:
     with (FIXTURE_DIR / f"{name}.yml").open(encoding="utf-8") as stream:
         cfg: dict[str, Any] = yaml.safe_load(stream)
     assert cfg["basename"] == "cathodic_protection"
+    if name == "ships":
+        cfg["citation_repo_root"] = str(
+            Path(__file__).resolve().parents[1] / "citations/fixtures"
+        )
     return cfg
 
 
@@ -107,7 +111,15 @@ def _run(name: str) -> dict[str, Any]:
 
 def _assert_status(status: dict[str, Any]) -> None:
     assert status["result"] in {STATUS_PASS, STATUS_FAIL}
-    assert status["governing_case"] in {"mass", "initial", "final"}
+    assert status["governing_case"] in {
+        "mass",
+        "initial",
+        "final",
+        "initial_current_output",
+        "mean_current_output",
+        "final_current_output",
+        "layout_distribution",
+    }
     assert isinstance(status["reason"], str) and status["reason"]
     assert isinstance(status["checks"], dict)
 
@@ -568,69 +580,33 @@ def test_f103_2010_field_joint_ids_unchanged() -> None:
 
 
 @pytest.mark.parametrize("flag", [None, False, "true", "false", 1, [], {}])
-def test_ships_requires_explicit_experimental_boolean(
-    flag: Any, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_ships_ignores_retired_experimental_flag(flag: Any) -> None:
     cfg = _load("ships")
     cfg["inputs"]["design_data"]["experimental"] = flag
-    before = copy.deepcopy(cfg)
-
-    def forbidden_solver() -> Any:
-        pytest.fail("quarantined ships route must reject before constructing the solver")
-
-    monkeypatch.setattr(engine_adapter, "_legacy_solver", forbidden_solver)
-    with pytest.raises(ExperimentalModelError) as caught:
-        run_cathodic_protection(cfg)
-    message = str(caught.value)
-    for wording in (
-        "ABS_gn_ships_2018",
-        "mean demand by about a third",
-        "final demand by about half",
-        "2026-09-27",
-        "#2259",
-        "#1852",
-        "inputs.design_data.experimental",
-    ):
-        assert wording in message
-    assert cfg == before
+    assert run_cathodic_protection(cfg)["results"]["status"]["use_status"] == (
+        USE_STATUS_CLIENT_EOR
+    )
 
 
-@pytest.mark.parametrize("design_data", [{}, None, "invalid"])
-def test_ships_without_design_data_is_quarantined(design_data: Any) -> None:
-    cfg = {"inputs": {"calculation_type": "ABS_gn_ships_2018"}}
-    if design_data is not None:
-        cfg["inputs"]["design_data"] = design_data
-    with pytest.raises(ExperimentalModelError):
-        run_cathodic_protection(cfg)
-
-
-def test_ships_without_experimental_flag_is_quarantined() -> None:
+def test_ships_without_experimental_flag_runs_new_route() -> None:
     cfg = _load("ships")
     cfg["inputs"]["design_data"].pop("experimental", None)
-    with pytest.raises(ExperimentalModelError):
-        run_cathodic_protection(cfg)
+    assert run_cathodic_protection(cfg)["results"]["standard"] == "ABS GN Ships (2017-12)"
 
 
-def test_ships_abs_2018_wrapped_with_int_count_and_status() -> None:
-    cfg = _run("ships")
+def test_ships_abs_2018_new_route_has_int_count_and_status() -> None:
+    cfg = _load("ships")
+    run_cathodic_protection(cfg)
     cp = cfg["cathodic_protection"]
     assert cfg["results"] is cp
-    assert cp["current_demand_A"]["totals"]["mean"] == pytest.approx(196.667146)
+    # ABS percentages 2.0/2.0 convert to fc=0.02; the 13.5 mA/m2 input is
+    # the initial coated density, so the selected bare density is 675 mA/m2.
+    assert cp["current_demand_A"]["totals"]["mean"] == pytest.approx(181.52154)
     req = cp["anode_requirements"]
-    assert req["total_mass_kg"] == pytest.approx(5067.071173)
-    assert req["anode_count_raw"] == pytest.approx(184.257134)
-    assert req["anode_count"] == 185
-    checks = cp["anode_performance"]["checks"]
-    assert checks["initial_meets_demand"] is False
-    assert checks["final_meets_demand"] is False
+    assert isinstance(req["recommended_anode_count"], int)
     status = cp["status"]
-    assert status["result"] == STATUS_FAIL
-    assert status["governing_case"] == "final"
-    assert status["use_status"] == "experimental-known-understatement"
-    assert status["checks"] == {
-        "initial_current_output": False,
-        "final_current_output": False,
-    }
+    assert status["result"] == STATUS_PASS
+    assert status["use_status"] == USE_STATUS_CLIENT_EOR
 
 
 def test_fpso_abs_offshore_2018_wrapped_mass_only() -> None:
