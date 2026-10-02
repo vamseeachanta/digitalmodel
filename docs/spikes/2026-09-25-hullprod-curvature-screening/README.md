@@ -7,6 +7,26 @@ HullProd (Serani & Maki, CNR-INM, BSD-3-Clause) computes a Gaussian/mean-curvatu
 surface: `I_D`, `I_D_plus`, `I_D_minus` and area fractions flat / single / elliptic / saddle.
 This spike runs it on our own GDF, OBJ and generator-produced meshes and on analytical controls.
 
+## Correction 2026-09-27
+
+All GDF-derived signatures from this spike used the fixed quad diagonal split.
+The converter now chooses the shortest 3-D diagonal, alternating by panel index
+on equal-length ties. Triangulation occurs before symmetry reflection, keeping
+the same physical diagonals on both halves. Repo-local hulls are re-baselined in the
+[inventory table](../../domains/hull_library/curvature-signature-table.md).
+Client-hull rows, including DS-A and HLV-A, are superseded and will be recomputed
+outside the public repository. Original evaluation values are retained.
+
+**Superseded:** `results/signatures.csv` is the unchanged historical record;
+its GDF-derived rows are not current curvature baselines. Triangle controls and
+BRep results are unaffected. See
+[issue 2253](https://github.com/vamseeachanta/digitalmodel/issues/2253).
+
+**Clarification 2026-10-01:** the large generated-Wigley inflation also requires
+inconsistent panel winding. The fixed split alone does not reproduce it on
+consistently wound quads. Inventory changes can go in either direction; see the
+controlled comparisons in [screening guidance](../../domains/hull_library/curvature-screening.md#quad-triangulation-correction-2026-09-27).
+
 ## Reproduce
 
 ```bash

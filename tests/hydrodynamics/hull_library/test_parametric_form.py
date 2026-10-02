@@ -440,7 +440,10 @@ def _analytic_wigley(length, breadth, draft, nx=425, nz=17):
 @pytest.mark.xfail(
     strict=True,
     raises=AssertionError,
-    reason="Fixed-diagonal consumer inflates even exact analytic Wigley curvature; consumer changes out of scope",
+    reason=(
+        "Shortest split: I_D=7.914447 vs triangle 6.599658 (19.9%); "
+        "end share=0.360858 > 0.20; generator winding unresolved (issue 2241 item 6)"
+    ),
 )
 def test_wigley_mesh_signature_and_end_share(metric):
     params = parameters(wigley=True, cb=4 / 9, bilge_radius_fraction=0, draft=8)
