@@ -98,11 +98,21 @@ and chooses one area-weighted outward sign per connected component. The
 interpolated 7,225-panel Wigley has zero fold edges and zero panel reversals
 from its natural grid winding, versus 67 folds and 65 reversals before;
 shortest-split `I_D` falls from `7.914447` to `6.624849`, within 0.4% of
-the alternating-triangle reference `6.599658`. Its signature acceptance now
+the alternating-triangle reference `6.599658` using the same estimator. This is
+representation consistency, not independent physical validation. The archived-run
+BRep comparison `7.125773` leaves a roughly 7% lower mesh result. These numerical
+before/after values are archived-run comparators; adjacency checks are conservation
+checks. Its signature acceptance now
 passes; end-cap share falls from `0.360858` to `0.287569` but still exceeds
 `0.20`, so that case remains a strict xfail. Mesh metadata records
 `winding = {"components": n, "flipped_panels": k, "method": "adjacency_bfs"}`,
-where `k` counts net reversals from input winding. GDF inventory meshes bypass
+where `k` counts net reversals from input winding, not every panel-array rewrite:
+collapsed triangle encodings can be normalized without a reversal. The generator
+rejects non-manifold or non-orientable topology. In particular, consecutive
+zero-breadth stations can create coincident centerplane panels when mirrored;
+these overlapping panels now raise `ValueError` instead of returning an invalid
+mesh. This rejection and the positive-y orientation of the Wigley half hull are
+covered by explicit regressions. GDF inventory meshes bypass
 the generator, so their persisted signatures are unchanged.
 
 Historical GDF-derived evaluation rows are explicitly superseded; use the

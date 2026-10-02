@@ -454,12 +454,45 @@ class TestWindingConsistency:
         assert mesh.n_panels == 7225
         _assert_no_fold_edges(mesh)
         flipped = np.count_nonzero(np.any(mesh.panels != entry_panels[0], axis=1))
-        assert flipped in (0, mesh.n_panels)
+        assert flipped == 0
+        assert np.all(mesh.normals[:, 1] > 0)
         assert mesh.metadata["winding"] == {
             "components": 1,
             "flipped_panels": flipped,
             "method": "adjacency_bfs",
         }
+
+    def test_rejects_coincident_mirrored_centerplane_panels(self):
+        from digitalmodel.hydrodynamics.hull_library.mesh_generator import (
+            HullMeshGenerator,
+            MeshGeneratorConfig,
+        )
+        from digitalmodel.hydrodynamics.hull_library.profile_schema import (
+            HullProfile,
+            HullStation,
+            HullType,
+        )
+
+        profile = HullProfile(
+            name="synthetic_zero_width_interval",
+            source="synthetic_regression",
+            hull_type=HullType.SHIP,
+            length_bp=100,
+            beam=20,
+            draft=8,
+            depth=12,
+            stations=[
+                HullStation(
+                    x_position=x,
+                    waterline_offsets=[(0, breadth), (8, breadth)],
+                )
+                for x, breadth in [(0, 0), (25, 0), (100, 10)]
+            ],
+        )
+        with pytest.raises(ValueError, match="non-manifold"):
+            HullMeshGenerator().generate(
+                profile, MeshGeneratorConfig(target_panels=200, symmetry=False)
+            )
 
     def test_repairs_scrambled_quads_and_is_idempotent(self, ship_profile):
         from digitalmodel.hydrodynamics.hull_library.mesh_generator import (
