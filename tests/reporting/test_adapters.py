@@ -66,13 +66,17 @@ def test_register_and_build_spec() -> None:
     assert spec.sections[0].blocks[0].markdown == "Mass 42 kg."
 
 
-def test_build_spec_imports_domain_adapters_on_demand() -> None:
+def test_build_spec_imports_domain_adapters_on_demand(monkeypatch: pytest.MonkeyPatch) -> None:
     # "cathodic_protection.anode_design" lives in
     # digitalmodel.cathodic_protection.report_adapters; the registry was
     # cleared by the fixture, so build_spec must import it (a fresh import
     # registers only when the module is not cached).
     assert "cathodic_protection.anode_design" not in ADAPTERS
-    sys.modules.pop("digitalmodel.cathodic_protection.report_adapters", None)
+    module_name = "digitalmodel.cathodic_protection.report_adapters"
+    # Track even an initially absent module so teardown removes the fresh import
+    # along with clean_registry restoring the previous registry.
+    monkeypatch.setitem(sys.modules, module_name, None)
+    monkeypatch.delitem(sys.modules, module_name)
     with pytest.raises(ValueError, match=r"cfg\['results'\]"):
         build_spec("cathodic_protection.anode_design", {"inputs": {}})
     assert "cathodic_protection.anode_design" in ADAPTERS
