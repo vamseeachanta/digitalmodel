@@ -15,6 +15,9 @@
   an analytic shape. Sparse interpolation error is not a fitting regression.
 - Bound density/refinement experiments and preserve invalid outcomes. A diagnostic
   report or strict xfail is not evidence that a geometry defect is repaired.
+- Preserve executable counterexamples alongside published geometry evidence;
+  summary JSON alone is insufficient if the committed diagnostic cannot reproduce
+  the claimed sampling method. Distinguish boundary from interior violations.
 
 Evidence: [issue 2241](https://github.com/vamseeachanta/digitalmodel/issues/2241),
 `scripts/review/results/2026-10-01-2241-brep-plan-main-r3.md`.
