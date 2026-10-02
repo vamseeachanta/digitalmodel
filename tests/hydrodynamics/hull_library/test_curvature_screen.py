@@ -583,15 +583,23 @@ def test_profile_forwards_quad_split(monkeypatch, ship_profile, representation):
 
 
 @needs_hullprod
-def test_fixed_inflation_with_generated_winding_on_exact_vertices():
+def test_generator_orientation_keeps_exact_vertices_consistent_and_uninflated():
+    """#2241 item 6: the generator's orientation pass must not fold an open half hull.
+
+    Before the adjacency-BFS fix the per-panel centroid heuristic flipped 65 of 7 225
+    panels and the fixed split read I_D 38.3 (#2253). With consistent winding every
+    split stays near the alternating-triangle reference (6.6; BRep 7.13).
+    """
     mesh, _ = _wigley_quads()
     mesh.panels = mesh.panels[:, [0, 3, 2, 1]]
     mesh._compute_normals()
     HullMeshGenerator()._orient_normals_outward(mesh)
-    # The existing centroid heuristic flips only part of this open half hull.
-    assert np.any(mesh.normals[:, 1] < 0) and np.any(mesh.normals[:, 1] > 0)
-    result = screen_panel_mesh(mesh, lref=100, quad_split="fixed")
-    assert result.signature.I_D > 25
+    signs = np.sign(mesh.normals[:, 1])
+    assert np.all(signs == signs[0]), "orientation pass left mixed winding"
+    fixed = screen_panel_mesh(mesh, lref=100, quad_split="fixed").signature.I_D
+    shortest = screen_panel_mesh(mesh, lref=100, quad_split="shortest").signature.I_D
+    assert fixed < 10 and shortest < 10
+    assert abs(shortest - 6.6) / 6.6 < 0.10
 
 
 def test_fixed_reproduces_legacy_triangles():
