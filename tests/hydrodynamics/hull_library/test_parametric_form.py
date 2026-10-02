@@ -436,14 +436,22 @@ def _analytic_wigley(length, breadth, draft, nx=425, nz=17):
 
 
 @needs_hullprod
-@pytest.mark.parametrize("metric", ["signature", "end_share"])
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason=(
-        "Shortest split: I_D=7.914447 vs triangle 6.599658 (19.9%); "
-        "end share=0.360858 > 0.20; generator winding unresolved (issue 2241 item 6)"
-    ),
+@pytest.mark.parametrize(
+    "metric",
+    [
+        "signature",
+        pytest.param(
+            "end_share",
+            marks=pytest.mark.xfail(
+                strict=True,
+                raises=AssertionError,
+                reason=(
+                    "Consistent winding: end share=0.287569 > 0.20; "
+                    "I_D=6.624849 now meets triangle tolerance (issue 2241 item 6)"
+                ),
+            ),
+        ),
+    ],
 )
 def test_wigley_mesh_signature_and_end_share(metric):
     params = parameters(wigley=True, cb=4 / 9, bilge_radius_fraction=0, draft=8)
