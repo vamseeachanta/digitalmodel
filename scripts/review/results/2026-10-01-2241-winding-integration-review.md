@@ -44,7 +44,16 @@ changed during this review; changes add assertions and clarify documentation.
 - Ruff reports the same three pre-existing diagnostics in the existing test file
   as at its prior HEAD; no new diagnostic introduced. Existing style retained.
 - `git diff --check` passes.
-- Final rebased integration suite and legal scan: pending before publication.
+- Final rebase onto `45379ccc7cf8a3d9de2f7a97662b641405658068` resolved only
+  the prior xfail-explanation conflict, retaining the active signature assertion
+  and strict end-share xfail. Range-diff preserves the implementation patch.
+- Full hull-library plus diffraction quality-gate suite: **660 passed, 42 skipped,
+  3 xfailed** in 84.79 seconds, including the merged DXF tests and new rejection case.
+- Black 24.10.0 and Ruff pass on the curvature-screen and parametric-form tests;
+  surrounding existing mesh-generator style remains unchanged.
+- Verified exact-checkout legal scan: PASS, zero blocking violations and 11
+  advisory matches. The direct-root route avoids the named-repository scanner
+  defect tracked at https://github.com/vamseeachanta/workspace-hub/issues/3804.
 
 Comparator classes: fold-edge/orientation checks are conservation checks;
 historical signature deltas are archived-run representation comparisons. They do
