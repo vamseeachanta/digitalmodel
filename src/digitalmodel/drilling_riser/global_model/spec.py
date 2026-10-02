@@ -134,10 +134,19 @@ class Tensioners(BaseModel):
     ring_attach_radius_m: float = Field(..., ge=0)
     total_vertical_tension_n: float = Field(..., gt=0)
     first_azimuth_deg: float = 0.0
+    failed_count: int = Field(0, ge=0, description="failed tensioners (API RP 16Q n): the first ``failed_count`` lines "
+                                                   "from ``first_azimuth_deg`` are removed; the others keep the intact "
+                                                   "line tension, so the vertical force is (count - n) / count of the total")
     wire_stiffness_n: float = Field(1.0e9, gt=0, description="winch wire EA (OrcaFlex 'Stiffness')")
     rated_tension_each_n: float | None = Field(
         None, gt=0, validation_alias=AliasChoices("rated_tension_each_n", "rated_tension_n_each"), description="rated (dynamic tension limit) capacity per tensioner; recorded for capacity "
                                 "checks and checked against the applied line tension")
+
+    @model_validator(mode="after")
+    def _failed(self) -> "Tensioners":
+        if self.failed_count >= self.count:
+            raise ValueError(f"failed_count {self.failed_count} must leave at least one of {self.count} tensioners")
+        return self
 
 
 class Contents(BaseModel):
@@ -197,6 +206,18 @@ class RegularWave(BaseModel):
     height_m: float = Field(..., gt=0)
     period_s: float = Field(..., gt=0)
     direction_deg: float = 0.0
+
+
+class IrregularWave(BaseModel):
+    """JONSWAP sea state (OrcaFlex 'Partially specified': Hs, Tp and gamma) with a fixed random seed,
+    so each seed of a multi-seed case is a reproducible text model."""
+
+    hs_m: float = Field(..., gt=0)
+    tp_s: float = Field(..., gt=0)
+    gamma: float = Field(..., ge=1.0, le=7.0)
+    direction_deg: float = 0.0
+    seed: int = Field(..., ge=0)
+    number_of_components: int = Field(200, ge=10)
 
 
 class StructuralDamping(BaseModel):
@@ -294,6 +315,52 @@ class Foundation(BaseModel):
         return sum(s.length_m for s in self.sections)
 
 
+class HangOff(BaseModel):
+    """The riser disconnected at the LMRP connector and hung off (``hang_off.hang_off_spec``): ``hard`` - telescopic
+    joint locked, no tensioners, the string on the vessel at the upper flex joint; ``soft`` - the string on a vertical
+    gas spring at the ring (``spring_*``) with the telescopic joint stroking. ``with_lmrp``: the stack line (the LMRP,
+    or the running payload) hangs free below the lower flex joint; without it the riser end is free."""
+
+    mode: Literal["hard", "soft"]
+    with_lmrp: bool = True
+    spring_tension_n: float | None = Field(None, gt=0, description="soft: spring force at the static ring position")
+    spring_stiffness_n_per_m: float | None = Field(None, gt=0)
+    stiffness_basis: str = ""
+    running: dict[str, Any] | None = None
+
+    @model_validator(mode="after")
+    def _soft(self) -> "HangOff":
+        if self.mode == "soft" and (self.spring_tension_n is None or self.spring_stiffness_n_per_m is None):
+            raise ValueError("a soft hang-off needs spring_tension_n and spring_stiffness_n_per_m")
+        return self
+
+
+class VesselTrajectory(BaseModel):
+    """Prescribed low-frequency vessel motion from the start of the main stage (drift-off / drive-off): positions
+    relative to the static offset; held at the offset through the build-up. First-order RAO motion is superimposed."""
+
+    t_s: list[float] = Field(..., min_length=2)
+    x_m: list[float] = Field(..., min_length=2)
+    y_m: list[float] = Field(..., min_length=2)
+
+    @model_validator(mode="after")
+    def _rows(self) -> "VesselTrajectory":
+        if not (len(self.t_s) == len(self.x_m) == len(self.y_m)):
+            raise ValueError("t_s, x_m and y_m must have the same length")
+        if any(b <= a for a, b in zip(self.t_s, self.t_s[1:])) or self.t_s[0] != 0.0:
+            raise ValueError("t_s must start at 0 and increase")
+        return self
+
+
+class Recoil(BaseModel):
+    """EDS disconnect at the LMRP connector at the start of stage 1: the LMRP (the top stack section) is its own line,
+    released from the BOP top; the tensioner total vertical tension follows ``stages`` (duration, tension; the last
+    stage open-ended), the anti-recoil schedule (``events.anti_recoil_stages``)."""
+
+    stages: list[dict[str, Any]] = Field(..., min_length=1)
+    basis: str = ""
+
+
 class RiserGlobalModelSpec(BaseModel):
     name: str = Field(..., min_length=1)
     description: str = ""
@@ -318,8 +385,13 @@ class RiserGlobalModelSpec(BaseModel):
     current: CurrentProfile | None = None
     structural_damping: StructuralDamping | None = None
     regular_wave: RegularWave | None = None
+    irregular_wave: IrregularWave | None = None
     dynamics: Dynamics | None = None
     foundation: Foundation | None = None
+    hang_off: HangOff | None = None
+    vessel_trajectory: VesselTrajectory | None = None
+    recoil: Recoil | None = None
+    wave_time_origin_s: float = Field(0.0, description="regular wave time origin (the wave phase at t = 0)")
     provenance: dict[str, Any] = Field(default_factory=dict)
 
     @property
@@ -345,6 +417,8 @@ class RiserGlobalModelSpec(BaseModel):
                 f"{self.wellhead_datum_z_m:.4f} m")
         if self.wellhead_datum_z_m < -self.environment.water_depth_m - LENGTH_TOL_M:
             raise ValueError("wellhead datum is below the seabed")
+        if self.regular_wave is not None and self.irregular_wave is not None:
+            raise ValueError("give a regular wave or an irregular wave, not both")
         if self.tensioners.sheave_z_m <= self.tension_ring.z_static_m:
             raise ValueError("tensioner sheaves must be above the tension ring")
         t = self.tensioners
