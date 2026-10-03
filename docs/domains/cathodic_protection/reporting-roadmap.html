@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cathodic protection — report review roadmap</title>
+<style>
+:root{color-scheme:light}body{font:16px/1.6 system-ui,sans-serif;color:#183345;background:#f2f5f6;margin:0}
+main{max-width:1120px;margin:auto;padding:30px;box-sizing:border-box;background:white}
+h1,h2{line-height:1.25}h1{font-size:32px}h2{border-top:1px solid #c2d0d6;padding-top:22px}
+a{color:#05677e}p,li,td{overflow-wrap:anywhere}.status{padding:15px;background:#fff2d4;border-left:4px solid #b17d27}
+.scroll{max-width:100%;overflow:auto}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:10px;text-align:left;vertical-align:top;border:1px solid #c4d2d8}th{background:#e8f0f3}
+@media(max-width:650px){main{padding:18px}h1{font-size:26px}table{min-width:650px}}
+@media print{body{background:white}main{padding:0}table{min-width:0;font-size:9pt}thead{display:table-header-group}tr{break-inside:avoid}}
+</style></head>
+<body><main>
+<p>Digitalmodel · Cathodic protection · 3 October 2026</p>
+<h1>Reports for every supported CP structure and benchmark</h1>
+<p class="status">Proposed roadmap: implementation will await owner approval of
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/2281">issue 2281</a>.
+“Final for review” will mean a complete evidence package. It will not mean an issued
+design, a passing calculation, or engineer-of-record approval.</p>
+<p>The portfolio will bring both de-identified regression reports and allowed
+benchmark comparison reports into the digitalmodel repository. Original client
+documents and licensed standards will remain in private custody. Source-rights or
+de-identification failures will block the affected report.</p>
+<p><a href="../../plans/2026-10-03-issue-2281-cp-review-report-portfolio.md">Executable issue plan</a> ·
+<a href="_index.md">CP module map and use status</a> ·
+<a href="../reporting/standard-report-engine.md">Existing report engine</a> ·
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/1834">CP delivery epic</a> ·
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/1852">Benchmark work</a></p>
+
+<h2>1. Closeout and review boundary</h2>
+<p>The roadmap will build on the merged ABS ships route and citation dependency:
+<a href="https://github.com/vamseeachanta/digitalmodel/pull/2271">digitalmodel PR 2271</a>
+and <a href="https://github.com/vamseeachanta/llm-wiki/pull/926">wiki PR 926</a>.
+It will migrate the preserved jacket Draft B after a fresh fidelity and privacy check.</p>
+<p>The owner's comprehensive desktop/mobile/print and review-control check will occur
+later. The index will retain “owner visual review deferred,” independently of automated
+checks and engineering status. Local browser restrictions will not be bypassed.
+The jacket's assessed 55-anode FAIL and its unverified 173-anode recommendation will
+remain distinct. Cleanup archives will remain preserved evidence, not active worktrees.</p>
+
+<h2>2. Required report inventory</h2>
+<div class="scroll"><table><thead><tr><th>ID</th><th>Review report</th><th>Planned input/evidence</th><th>Required qualification</th></tr></thead><tbody>
+<tr><td>S01</td><td>Jacket</td><td>Existing jacket workflow fixture; migrated Draft B</td><td>FAIL will remain visible; EOR review will remain pending</td></tr>
+<tr><td>S02</td><td>Monopile</td><td>Existing monopile fixture</td><td>Actual result and route eligibility will remain separate</td></tr>
+<tr><td>S03</td><td>Subsea manifold</td><td>Existing manifold fixture</td><td>Actual result and route eligibility will remain separate</td></tr>
+<tr><td>S04</td><td>Ship hull</td><td>Rebuilt ABS ships fixture</td><td>Accepted interpretations and required project current density will be stated</td></tr>
+<tr><td>S05</td><td>Floating offshore structure</td><td>Existing offshore fixture</td><td>Legacy/uncited status will require independent check</td></tr>
+<tr><td>S06</td><td>Bracelet pipeline</td><td>Existing F103 fixture</td><td>Edition and coating-compatibility limits will remain visible</td></tr>
+<tr><td>S07</td><td>Terminal-bank flowline</td><td>Existing anode-bank fixture</td><td>Engineering-validation-required status will remain visible</td></tr>
+<tr><td>S08</td><td>Multi-component riser</td><td>Existing component fixture</td><td>Allocation, continuity and unevaluated compatibility will be explicit</td></tr>
+<tr><td>S09</td><td>Riser base, foundation, mudmat, hatch; wet storage, operation, retrofit</td><td>Existing phased fixture plus any missing child inputs</td><td>Every component and phase will have an exact section/input/result reference</td></tr>
+<tr><td>S10</td><td>Temporary service</td><td>Dedicated fixture from existing phase regression</td><td>Duration and phase assumptions will be explicit</td></tr>
+<tr><td>S11</td><td>Concrete reinforcement/mattress and buried/seawater families</td><td>Dedicated fixture from existing family regression</td><td>Steel area, electrolyte and separate anode-family checks will be explicit</td></tr>
+<tr><td>A</td><td>Hybrid-riser benchmark</td><td>Private source inventory; allowed derivative</td><td>Route applicability and comparator evidence will be verified</td></tr>
+<tr><td>B</td><td>Temporary-riser benchmark</td><td>Private source inventory; allowed derivative</td><td>Historical F103 acceptance will not be inferred</td></tr>
+<tr><td>C</td><td>Benchmark C</td><td>Mapping will be verified privately</td><td>No identity, expected result or source-rights decision will be invented</td></tr>
+<tr><td>D</td><td>Mattress benchmark</td><td>Private source inventory; allowed derivative</td><td>Concrete/sediment basis will be explicit</td></tr>
+<tr><td>E</td><td>Benchmark E</td><td>Mapping will be verified privately</td><td>No identity, expected result or source-rights decision will be invented</td></tr>
+</tbody></table></div>
+<p>Sixteen required rows will form the initial denominator. S09 will also carry a
+mandatory child manifest. Missing evidence or a placeholder will not count as a
+completed report. Deprecated aliases will be compatibility entries; unsupported
+legacy and experimental models will carry explicit exclusions, not fabricated designs.</p>
+
+<h2>3. Delivery sequence</h2>
+<p>Private benchmark release will use a field-and-value allowlist, including numerical
+vectors and embedded plot data. Removing names alone will not authorize publication.
+Synthetic public counterparts will be labelled synthetic and will not claim to reproduce
+confidential designs. All packs will explicitly override default document history with
+review-only status and pending signoffs. Composite children will have row-level evidence
+anchors, not only a shared section link.</p>
+<p>M1 will require owner-approved internal review document identities in a repo-owned
+register. Missing entries will block generation; no client/job identity or undocumented
+numbering convention will be invented to satisfy the renderer.</p>
+<ol>
+<li><strong>M1 — Inventory and jacket pilot.</strong> The work will freeze source rights,
+benchmark mappings, coverage and negative tests, then migrate the jacket pack.</li>
+<li><strong>M2 — Supported structures.</strong> The work will generate S01–S11 and all
+S09 children through the existing calculators and report builders.</li>
+<li><strong>M3 — Benchmarks.</strong> The work will compare A–E on the private host,
+then bring permitted de-identified derivatives and comparison evidence into the repo.</li>
+<li><strong>M4 — Review portfolio.</strong> The work will build the index from verified
+receipts, complete automated/adversarial checks, and submit a review-ready PR while
+retaining the owner's deferred visual review and all engineering acceptance gates.</li>
+</ol>
+
+<h2>4. Repo-owned deliverables</h2>
+<p>The review landing page will live at <code>docs/domains/cathodic_protection/reports/index.html</code>.
+Each case will include portable HTML, de-identified input, computed result JSON,
+citations, comment JSON, file digests, source revision and unresolved engineering
+limitations. Benchmark comparisons will live under the same report tree. A coverage
+manifest will record route/mode, standard edition, computed PASS/FAIL, use_status,
+automated verification, source-rights disposition and reviewer status independently.</p>
+<p>The implementation will reuse the existing report engine. Portfolio-only
+presentation work will not change shared templates, numerical kernels, standards
+interpretations or global reporting conventions. A source-rights block or new solver
+requirement will return to the owner before the scope changes.</p>
+
+<h2>5. Completion criteria</h2>
+<ul><li>Every required case and child will have its complete pack and resolvable index entry.</li>
+<li>Numerical/citation fidelity, de-identification, portable assets, JSON binding,
+comment round trips and deterministic rebuild checks will pass.</li>
+<li>Scoped tests, touched-file lint/type checks, legal/identifier/path scans and
+adversarial review will pass against the actual artifact set.</li>
+<li>Outstanding human checks will be explicit; no elapsed time, AI recommendation,
+calculated PASS or generated report will imply acceptance.</li>
+<li>The first-real-job benchmark condition will remain separate from portfolio completion.</li></ul>
+</main></body></html>

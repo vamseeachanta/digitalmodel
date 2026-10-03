@@ -1,5 +1,14 @@
 # Cathodic Protection
 
+## Report portfolio roadmap
+
+The [proposed reporting roadmap](reporting-roadmap.html) and
+[issue plan](../../plans/2026-10-03-issue-2281-cp-review-report-portfolio.md)
+will bring supported structure/mode reports and allowed benchmark A–E derivatives
+into this repository under [#2281](https://github.com/vamseeachanta/digitalmodel/issues/2281).
+Implementation will await owner approval. Comprehensive human visual review will
+remain deferred and distinct from engineering acceptance.
+
 ## Purpose
 
 Design and assessment of galvanic (sacrificial anode) and impressed-current cathodic
