@@ -68,6 +68,10 @@ control review remains deferred, and EOR acceptance remains pending.
 ## Private benchmark review
 
 A separate agent independently reviewed the private source-backed diagnostics.
+A's conditional component-demand comparison is supported for its represented
+source subset only. Its families remain local; recommended counts do not establish
+historical installed adequacy. Omitted components and temperature assumptions
+remain limitations, and full-case validation remains false.
 D's concrete-demand diagnostic is supported but does not establish buried-family
 layout adequacy. E's unresolved infill correctly fails closed. A design continuity
 requirement is not field verification; B's excluded assemblies must stay outside
