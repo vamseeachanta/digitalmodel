@@ -81,3 +81,21 @@ assumptions remain critical decisions, not administrative permission gates.
 
 The shared B401 edition-citation defect is tracked in
 [#2284](https://github.com/vamseeachanta/digitalmodel/issues/2284).
+
+## Subsequent private evidence checkpoint
+
+C's exact earlier executed input was recovered from retained execution evidence
+and rerun on the pinned merged engine against a matching isolated wiki checkout.
+Earlier demand/resistance outputs reproduce, but the current layout validation
+returns FAIL / NOT_EVALUATED without an explicit bilge-keel applicability input.
+No value was invented. A private HTML, bound comment JSON, input/result, citation,
+comparison and checksum pack was generated; main independently verified the
+report/sidecar binding and its preserved FAIL. This is not a released repo pack.
+
+Further B/D geometry recovery found source dimensions and residual-volume evidence,
+but not a unique supported depleted cross-section. E's explicit source coefficients
+can support a conditional method comparison without proving installed infill.
+The independent decision review supports retaining these distinctions and rejects
+arbitrary geometry or physical qualification inferred from coefficient matching.
+Reviewed text/OCR is not claimed to exhaust all graphical or referenced evidence.
+Comprehensive human visual review remains deferred.
