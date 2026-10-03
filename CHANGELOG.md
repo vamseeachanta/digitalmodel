@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- cathodic_protection: propose a repo-owned structure/benchmark report roadmap with explicit privacy, review-only document control and owner-approval gates ([#2281](https://github.com/vamseeachanta/digitalmodel/issues/2281)); portfolio implementation remains pending.
+- cathodic_protection: add eleven repository-owned structure/mode review packs, offline comment sidecars, fixed component/phase coverage and exact-artifact publication checks ([#2281](https://github.com/vamseeachanta/digitalmodel/issues/2281)); benchmark A–E packs remain explicitly blocked and the overall portfolio incomplete. Shared engines/templates and numerical results are unchanged.
 - cathodic_protection: rebuild `ABS_gn_ships_2018` on shared kernels with fractional ABS coating breakdown, depleted long-flush geometry, mass/output/layout checks, and cited December 2017 guide values; the old solver remains as deprecated `ABS_gn_ships_2018_legacy`. Owner decision 2026-10-01 accepts the arithmetic-mean coating treatment, depleted long-flush resistance reading, and explicit project dynamic bare-steel current-density input; the rebuilt route is now `client-use-with-eor-check` ([#2259](https://github.com/vamseeachanta/digitalmodel/issues/2259)).
 
 ### Added

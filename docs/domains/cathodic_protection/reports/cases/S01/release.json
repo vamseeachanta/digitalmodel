@@ -1,0 +1,6 @@
+{
+  "input_fixture": "jacket.yml",
+  "input_sha256": "0cc963b13c98335bcfda30ae2176f7927ce1f9da6852895a70d732c3c18ead94",
+  "private_benchmark_data": false,
+  "source_class": "repository_regression"
+}

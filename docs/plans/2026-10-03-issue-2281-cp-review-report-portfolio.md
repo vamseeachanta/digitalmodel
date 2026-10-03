@@ -1,6 +1,6 @@
 # Plan for [#2281](https://github.com/vamseeachanta/digitalmodel/issues/2281): CP review-report portfolio
 
-> **Status:** adversarial-reviewed (documented Codex fallback) — owner approval will precede implementation
+> **Status:** implementation authorized by the owner's 2026-10-03 instruction to proceed with constructive work; critical decisions will receive agent review first
 > **Complexity:** T2
 > **Date:** 2026-10-03
 > **Client:** N/A — public artifacts will contain de-identified module evidence only
@@ -20,7 +20,10 @@ The owner will perform a comprehensive visual/UI/print review later. The portfol
 will record that review as deferred, not passed. The implementation will preserve
 the proposed reporting standard's review status and will not adopt it globally.
 It will not modify numerical kernels, the shared reporting engine, or its templates.
-The agent will not apply `status:plan-approved`; the owner will approve this scope.
+The agent will not apply `status:plan-approved`. The owner's subsequent instruction
+will authorize constructive implementation within this reviewed scope without
+repeated permission requests; critical engineering or private-data-release decisions
+will receive agent review before presentation to the owner.
 
 ## Resource Intelligence Summary
 
@@ -141,9 +144,11 @@ fingerprints and metadata, in addition to automated identifier/number/path scans
 Each pack will set explicit module document control, date/revision and a non-empty
 revision history with purpose “Internal review draft”; reviewer/approver decisions
 will start pending. It will not rely on DocumentMeta's default Issued history or
-the adapter's placeholder document. M1 will require an owner-approved repo-internal
+the adapter's placeholder document. M1 will establish a repo-internal
 review identity register with a valid JOB-DOCTYPE-SEQ-REV number, revision and nonempty
-neutral project/client fields for each pack. No existing CP document register will
+neutral project/client fields for each pack under the owner's constructive-work
+authorization. These identities will not represent a client job or issuance.
+No existing CP document register will
 be assumed. Missing register entries will block generation, not be passed as empty
 values to DocumentMeta or replaced by invented client/job identities. The register
 will be versioned at `docs/domains/cathodic_protection/reports/document-register.json`.

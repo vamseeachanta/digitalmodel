@@ -2,12 +2,15 @@
 
 ## Report portfolio roadmap
 
-The [proposed reporting roadmap](reporting-roadmap.html) and
+The [report review index](reports/index.html), [reporting roadmap](reporting-roadmap.html) and
 [issue plan](../../plans/2026-10-03-issue-2281-cp-review-report-portfolio.md)
 will bring supported structure/mode reports and allowed benchmark A–E derivatives
 into this repository under [#2281](https://github.com/vamseeachanta/digitalmodel/issues/2281).
-Implementation will await owner approval. Comprehensive human visual review will
-remain deferred and distinct from engineering acceptance.
+Constructive implementation was authorized on 2026-10-03. Eleven structure/mode
+packs are available as internal drafts; all five private benchmark packs remain
+incomplete. Comprehensive human visual review remains deferred and distinct from
+engineering acceptance. Reproduction and review constraints are in the
+[portfolio guide](report-portfolio-guide.html).
 
 ## Purpose
 
