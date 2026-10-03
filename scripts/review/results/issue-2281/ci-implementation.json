@@ -1,0 +1,68 @@
+{
+  "commit": "649c90d3d7e3326b84513eb46706a1138e568643",
+  "all_checks_passed": true,
+  "checks": [
+    {
+      "workflow": "Build API Docs",
+      "name": "docs",
+      "conclusion": "SUCCESS",
+      "url": "https://github.com/vamseeachanta/digitalmodel/actions/runs/37123785924/job/111204924040"
+    },
+    {
+      "workflow": "Parametric atlas drift",
+      "name": "Atlas staleness check",
+      "conclusion": "SUCCESS",
+      "url": "https://github.com/vamseeachanta/digitalmodel/actions/runs/37123785860/job/111204923853"
+    },
+    {
+      "workflow": "Quality Gates",
+      "name": "Run Quality Gates",
+      "conclusion": "SUCCESS",
+      "url": "https://github.com/vamseeachanta/digitalmodel/actions/runs/37123785907/job/111204924122"
+    },
+    {
+      "workflow": "Quality Gates by Domain",
+      "name": "Detect touched test domains",
+      "conclusion": "SUCCESS",
+      "url": "https://github.com/vamseeachanta/digitalmodel/actions/runs/37123785872/job/111204923811"
+    },
+    {
+      "workflow": "Quality Gates",
+      "name": "Protected surface (Stage 1, UNAUTHENTICATED)",
+      "conclusion": "SUCCESS",
+      "url": "https://github.com/vamseeachanta/digitalmodel/actions/runs/37123785907/job/111204923985"
+    },
+    {
+      "workflow": "Quality Gates by Domain",
+      "name": "CI harness and compliance tests",
+      "conclusion": "SUCCESS",
+      "url": "https://github.com/vamseeachanta/digitalmodel/actions/runs/37123785872/job/111205176190"
+    },
+    {
+      "workflow": "Quality Gates",
+      "name": "Client identifier gate (whole tree)",
+      "conclusion": "SUCCESS",
+      "url": "https://github.com/vamseeachanta/digitalmodel/actions/runs/37123785907/job/111204924148"
+    },
+    {
+      "workflow": "Quality Gates by Domain",
+      "name": "tests-infrastructure-other",
+      "conclusion": "SUCCESS",
+      "url": "https://github.com/vamseeachanta/digitalmodel/actions/runs/37123785872/job/111205176232"
+    },
+    {
+      "workflow": "Quality Gates by Domain",
+      "name": "Domain test aggregate",
+      "conclusion": "SUCCESS",
+      "url": "https://github.com/vamseeachanta/digitalmodel/actions/runs/37123785872/job/111205802183"
+    },
+    {
+      "workflow": "",
+      "name": "GitGuardian Security Checks",
+      "conclusion": "SUCCESS",
+      "url": "https://dashboard.gitguardian.com"
+    }
+  ],
+  "portfolio_complete": false,
+  "review_stage": "partial regression portfolio; benchmark work continuing"
+}
