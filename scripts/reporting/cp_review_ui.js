@@ -66,15 +66,15 @@
 
   function merge(incoming) {
     if (!state) { state = incoming; return; }
-    const prior = {...state, prior_rounds: []};
-    const other = {...incoming, prior_rounds: []};
+    const prior = JSON.parse(JSON.stringify({...state, prior_rounds: []}));
+    const other = JSON.parse(JSON.stringify({...incoming, prior_rounds: []}));
     const queue = [...state.prior_rounds, ...incoming.prior_rounds, prior, other];
     const flattened = [];
     for (let i = 0; i < queue.length; i++) {
       const round = queue[i];
       if (!round || typeof round !== 'object') continue;
       if (Array.isArray(round.prior_rounds)) queue.push(...round.prior_rounds);
-      flattened.push({...round, prior_rounds: []});
+      flattened.push(JSON.parse(JSON.stringify({...round, prior_rounds: []})));
     }
     for (const row of state.results) {
       const next = incoming.results.find(r => r.id === row.id);

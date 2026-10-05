@@ -13,7 +13,13 @@ Nothing here constitutes client issuance, field validation or engineer-of-record
 Automated JavaScript tests exercise binding, stale-file rejection, Save/Load/Copy and conflict retention; these do not substitute for visual review.</p>
 <h2>Reproduce the reports</h2><p>Use the repository Python environment, repository <code>src</code> on the import path,
 and <code>LLM_WIKI_PATH</code> pointing to an authorized wiki checkout containing the matching standards metadata.
-No new paid standard is downloaded. The numerical source baseline is <code>bf638ed1f6ad0b3fba12f0e6caf8eb4f5f004dd4</code>.</p>
+No new paid standard is downloaded. The original released packs retain their historical numerical source baseline
+<code>bf638ed1f6ad0b3fba12f0e6caf8eb4f5f004dd4</code>. New builds record the full commit of the clean checkout actually executed;
+dirty checkouts and missing Git provenance are rejected before calculation. Known lazy routes are preloaded and checked;
+imported <code>digitalmodel</code> and CP reporting-helper module origins and committed source bytes are checked before and after report-file output. One source revision is pinned
+for the whole build; direct calls without the internal CLI revision pin reject preloaded implementation code. These checks cover repository source,
+not Python environment injection, ignored resources (including stale bytecode) or the private citation wiki's revision. Tracked non-Python resources are covered by the clean-checkout check; hidden-index flags are rejected under <code>src</code> and <code>scripts/reporting</code>, and frozen input fixtures have separate SHA-256 checks.
+These guards do not qualify a new engineering input or authorize a new numerical run.</p>
 <p>Run <code>PYTHONPATH=src python scripts/reporting/build_cp_review_portfolio.py --output outputs/cp-review-candidate</code>
 with a new empty output directory. Windows environments whose editable installation shadows a worktree must run with the worktree source first and the conflicting editable finder removed.</p>
 <p>The frozen input and document registers live beside the builder. Changed input bytes fail closed.
@@ -26,11 +32,14 @@ the explicit <code>--partial-review</code> option. Publication revalidates the m
 Existing changes or unlisted files stop replacement. Prior generations are preserved for recovery.</p>
 <h2>Private benchmark roadmap</h2>
 <table><tr><th>Case</th><th>Current evidence and remaining work</th></tr>
-<tr><td>A — hybrid riser</td><td>A conditional source-subset component-demand diagnostic has run on the current engine and received bounded independent agent review. Local families do not share capacity; recommended counts do not prove historical installed adequacy. Omitted components, temperature assumptions and installed continuity remain limitations.</td></tr>
+<tr><td>A — hybrid riser</td><td>A conditional source-subset component-demand diagnostic has run on the current engine and received bounded independent agent review. The private report requires correction of recommendation-derived quantities labeled as installed; that correction remains pending. Local families do not share capacity; recommended counts do not prove historical installed adequacy. Omitted components, temperature assumptions and installed continuity remain limitations.</td></tr>
 <tr><td>B — temporary riser</td><td>Some assemblies are deliberately outside the protected network. Preserve those exclusions when mapping the current component/phase route.</td></tr>
 <tr><td>C — floating-storage hull</td><td>The recovered accepted-run input reproduces prior demand/resistance results. A private HTML/comments/evidence pack now records current FAIL / layout NOT_EVALUATED because explicit bilge-keel applicability is absent. Physical applicability and publication rights are separate unresolved matters; exact inputs/results have not been released into this portfolio.</td></tr>
 <tr><td>D — mattress</td><td>Source-backed embedded-steel current-demand diagnostic ran on the current engine and received independent bounded agent review. It does not validate the full buried-family layout.</td></tr>
-<tr><td>E — bracelet pipeline</td><td>Current execution fails closed on unresolved field-joint infill. Owned-source OCR and native-worksheet review have not established that qualification.</td></tr></table>
+<tr><td>E — bracelet pipeline</td><td>A private artifact passed bounded source-method review. Installed field-joint infill remains unresolved and numerical acceptance was not evaluated; the current execution gate remains closed.</td></tr></table>
+<p>The <a href="https://github.com/vamseeachanta/digitalmodel/issues/2281#issuecomment-6002874483">post-merge handoff</a>
+records private A/C/E artifacts separately from the eleven released packs. B/D depleted geometry, C bilge-keel applicability,
+E infill, private source ownership and original retention remain unresolved. No private benchmark is counted as complete.</p>
 <p>Client originals, exact private input vectors, mappings, diagnostic outputs and source hashes remain private.
 Only previously released generic descriptions are included here. The first-real-job condition in
 <a href="https://github.com/vamseeachanta/digitalmodel/issues/1852">issue 1852</a> remains independent and open.</p>
