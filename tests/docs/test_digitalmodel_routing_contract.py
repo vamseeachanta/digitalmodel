@@ -141,3 +141,20 @@ def test_no_tracked_source_hygiene_violations() -> None:
     tracked = result.stdout.splitlines()
     forbidden_pattern = re.compile(r"(\.bak$|\.orig$|__pycache__/|\.pytest_cache/|\.ruff_cache/)")
     assert not [path for path in tracked if forbidden_pattern.search(path)]
+
+
+def test_ffs_preliminary_evidence_has_pinned_owner_and_qualification() -> None:
+    data = yaml.safe_load(REGISTRY.read_text(encoding="utf-8"))
+    entry = next(row for row in data["modules"] if row["module"] == "asset_integrity")
+    evidence = entry["screening_study"]["canonical_preliminary_results"]
+    assert evidence["owner_repo"] == "vamseeachanta/digitalmodel-data"
+    assert re.fullmatch(r"[0-9a-f]{40}", evidence["revision"])
+    for field in ("manifest_sha256", "publication_receipt_sha256"):
+        assert re.fullmatch(r"[0-9a-f]{64}", evidence[field])
+    for field in ("manifest", "plot", "csv", "json"):
+        assert f"/blob/{evidence['revision']}/data/{evidence['dataset_id']}/" in evidence[field]
+    assert re.search(r"/blob/[0-9a-f]{40}/reports/", evidence["publication_receipt"])
+    assert evidence["run_id"]
+    assert evidence["engineering_qualified"] is False
+    assert evidence["api579_allowable_remaining_wall_in"] is None
+    assert evidence["asset_acceptance"] is None

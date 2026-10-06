@@ -171,3 +171,27 @@ PR 2289 CI observed after preparation head 5332123b: 26 successful checks and
 four running, no reported failures at that observation. New documentation-only
 continuation updates the PR; retain latest-head CI status separately from this
 prior-head observation. Issue remains open awaiting source qualification.
+
+## Durable preliminary results (2026-10-06)
+
+The exact reviewed synthetic PNG/CSV/JSON are now in private digitalmodel-data,
+dataset `uniform-local-loss-screening`, archive run
+`preliminary-pressure-20261006T030939Z-3c238c26`. Dataset commit
+`795b35099bf29cdfc59e6e2184cbdc0da76131be` and manifest SHA256
+`428196dd032899e91bb823dbd46e3a09715767778a85eadd43e6168d4e65f807`
+pin one canonical copy. All eight files were freshly read through the
+authenticated GitHub tree/blob API and matched exact bytes, sizes and hashes.
+The external publication receipt is pinned at
+`2b91fcfb9a6412ae17ec640f2f0f009953df4d6f`, with committed-byte SHA256
+`ba13d25485030f4dd3a3e38697467b047abcce3aab79313dc6150ee5bbf5c4d2`.
+Receipt remote bytes were separately verified; checkout line endings differ
+from this tracked LF receipt. Dataset payloads are protected by `data/** -text`.
+
+Existing asset_integrity registry metadata links manifest, PNG, CSV, JSON and
+receipt. Private results [draft PR 46](https://github.com/vamseeachanta/digitalmodel-data/pull/46)
+records retention; source [draft PR 2289](https://github.com/vamseeachanta/digitalmodel/pull/2289)
+records methods/spec/discovery. No rerun or FEA occurred in retention, no client
+or licensed originals were copied, and no parallel catalog was introduced.
+Engineering qualification remains false and API 579/asset acceptance remain
+null. Earlier source revision `3c238c26` had 31 successful CI checks; the
+new metadata routing contract has 10 passing tests.

@@ -27,7 +27,23 @@ modules:
       status: unqualified-preparation
       diagnostic: src/digitalmodel/asset_integrity/uniform_loss_diagnostic.py
       results_owner: digitalmodel-data
-      note: No qualified allowable-wall envelope; diagnostic output stays task-local.
+      note: No qualified API 579 envelope; exact synthetic pressure-study outputs retained privately with verified hashes.
+      canonical_preliminary_results:
+        owner_repo: vamseeachanta/digitalmodel-data
+        dataset_id: uniform-local-loss-screening
+        run_id: preliminary-pressure-20261006T030939Z-3c238c26
+        revision: 795b35099bf29cdfc59e6e2184cbdc0da76131be
+        manifest_sha256: 428196dd032899e91bb823dbd46e3a09715767778a85eadd43e6168d4e65f807
+        manifest: https://github.com/vamseeachanta/digitalmodel-data/blob/795b35099bf29cdfc59e6e2184cbdc0da76131be/data/uniform-local-loss-screening/manifest.json
+        plot: https://github.com/vamseeachanta/digitalmodel-data/blob/795b35099bf29cdfc59e6e2184cbdc0da76131be/data/uniform-local-loss-screening/derived/r1/preliminary-pressure-curves.png
+        csv: https://github.com/vamseeachanta/digitalmodel-data/blob/795b35099bf29cdfc59e6e2184cbdc0da76131be/data/uniform-local-loss-screening/derived/r1/preliminary-pressure-summary.csv
+        json: https://github.com/vamseeachanta/digitalmodel-data/blob/795b35099bf29cdfc59e6e2184cbdc0da76131be/data/uniform-local-loss-screening/derived/r1/preliminary-pressure-results.json
+        publication_receipt: https://github.com/vamseeachanta/digitalmodel-data/blob/2b91fcfb9a6412ae17ec640f2f0f009953df4d6f/reports/uniform-local-loss-screening-r1-publication.json
+        publication_receipt_sha256: ba13d25485030f4dd3a3e38697467b047abcce3aab79313dc6150ee5bbf5c4d2
+        publication_receipt_hash_scope: Exact committed LF bytes verified by fresh remote readback; working checkout line endings may differ.
+        engineering_qualified: false
+        api579_allowable_remaining_wall_in: null
+        asset_acceptance: null
   - module: benchmarks
     entry_point: src/digitalmodel/benchmarks/
     maturity: beta

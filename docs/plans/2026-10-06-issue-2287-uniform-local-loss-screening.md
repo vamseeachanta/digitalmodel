@@ -116,10 +116,21 @@ The bounded review sweep produced 42 solved model thresholds and 42 censored
 cells at demand = 70% of the F=0.72 reference pressure; none is engineering
 acceptance at full design pressure. Original B31G long-flaw transition can
 produce jumps along length; connecting plot lines are only sample guides.
-Numeric JSON and plot remain task-local; reusable methods and this record
-stay in common Git. Source hashes/runtime/revision accompany the JSON.
+The exact numeric JSON, summary CSV and plot are retained in private
+digitalmodel-data, with one canonical dataset and no numerical rerun:
+[immutable manifest](https://github.com/vamseeachanta/digitalmodel-data/blob/795b35099bf29cdfc59e6e2184cbdc0da76131be/data/uniform-local-loss-screening/manifest.json).
+Its SHA256 is `428196dd032899e91bb823dbd46e3a09715767778a85eadd43e6168d4e65f807`.
+The [publication receipt](https://github.com/vamseeachanta/digitalmodel-data/blob/2b91fcfb9a6412ae17ec640f2f0f009953df4d6f/reports/uniform-local-loss-screening-r1-publication.json)
+records fresh authenticated remote byte readback of all eight dataset files.
+Run ID `preliminary-pressure-20261006T030939Z-3c238c26` is an explicitly
+owner-assigned archive identifier, not a native FEA run ID. Source revision,
+runtime and source-file hashes accompany the exact JSON. The existing
+asset_integrity registry row links each artifact; task copies are working
+replicas. Generic methods and discovery metadata remain in common Git.
+Private retention does not confer engineering qualification or public
+payload sharing rights. Results PR 46 remains draft pending integration.
 
-Run existing L1/L2 routines in a small reproducible diagnostic sweep to characterize implementation behavior, not to deliver allowable walls. Add tests before runner implementation: no qualified outputs, correct physical extent, width omission visible, long-flaw flags override raw verdict, finite input validation, provenance and reproducible case counts. Numerical diagnostic files stay task-local; reusable runner/spec and links enter digitalmodel. No change to production physics until exact source verification supports it.
+Run existing L1/L2 routines in a small reproducible diagnostic sweep to characterize implementation behavior, not to deliver allowable walls. Add tests before runner implementation: no qualified outputs, correct physical extent, width omission visible, long-flaw flags override raw verdict, finite input validation, provenance and reproducible case counts. The original unqualified L1/L2 diagnostic files stay task-local; reusable runner/spec and links enter digitalmodel. No change to production physics until exact source verification supports it.
 
 ## Level 3 concrete compute proposal (execution not authorized here)
 
