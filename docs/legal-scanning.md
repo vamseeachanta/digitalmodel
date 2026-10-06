@@ -1,5 +1,15 @@
 # Legal Scanning — CP Stream Repos
 
+> **Retired as a repository gate on 2026-10-03.** Under the owner's decision in
+> [workspace-hub issue 3936](https://github.com/vamseeachanta/workspace-hub/issues/3936),
+> legal/identifier scans and the supporting census no longer run in pre-commit
+> or CI. The historical gate instructions below are superseded. Existing scanner
+> modules remain available to preserve sanitizer redaction consumers and tests;
+> they are not a required commit, ingestion, or release check.
+> Final-report review is manual and advisory, with unresolved findings disclosed.
+> Secret scanning, access controls, source rights, and security checks remain in
+> force. This retirement grants no new source rights or publication permissions.
+
 > WRK-278 | Updated: 2026-02-20
 
 ## Deny List Files
