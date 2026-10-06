@@ -12,6 +12,12 @@ incomplete. Comprehensive human visual review remains deferred and distinct from
 engineering acceptance. Reproduction and review constraints are in the
 [portfolio guide](report-portfolio-guide.html).
 
+## Benchmark evidence research
+
+[Methodology, source inventory and applicability limits](research/benchmark-methodology.md)
+retain evidence criteria for the five incomplete private benchmark packs.
+They do not supply missing installed facts or release rights.
+
 ## Purpose
 
 Design and assessment of galvanic (sacrificial anode) and impressed-current cathodic
