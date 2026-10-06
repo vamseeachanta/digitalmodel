@@ -14,6 +14,20 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/asset_integrity/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#asset_integrity
+    report_navigation:
+      - docs/domains/asset-integrity/ffs-architecture.md
+      - docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md
+      - docs/domains/circumferential-defect-validation-2026-06-29.md
+      - docs/domains/asset-integrity/ffs-readiness-review-2026-09-25.md
+      - docs/domains/asset-integrity/uniform-loss-source-audit-2026-10-06.md
+      - src/digitalmodel/asset_integrity/assessment/ffs_report.py
+    screening_study:
+      issue: https://github.com/vamseeachanta/digitalmodel/issues/2287
+      spec: docs/plans/2026-10-06-issue-2287-uniform-local-loss-screening.md
+      status: unqualified-preparation
+      diagnostic: src/digitalmodel/asset_integrity/uniform_loss_diagnostic.py
+      results_owner: digitalmodel-data
+      note: No qualified allowable-wall envelope; diagnostic output stays task-local.
   - module: benchmarks
     entry_point: src/digitalmodel/benchmarks/
     maturity: beta

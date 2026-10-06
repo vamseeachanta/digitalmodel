@@ -43,6 +43,15 @@ def test_required_routing_surfaces_exist() -> None:
     assert REGISTRY.is_file()
 
 
+def test_ffs_report_navigation_is_linked_and_qualification_is_explicit() -> None:
+    data = yaml.safe_load(REGISTRY.read_text(encoding="utf-8"))
+    entry = next(row for row in data['modules'] if row['module'] == 'asset_integrity')
+    assert entry['screening_study']['status'] == 'unqualified-preparation'
+    for path in entry['report_navigation'] + [entry['screening_study']['spec'],
+                                             entry['screening_study']['diagnostic']]:
+        assert (ROOT / path).is_file(), path
+
+
 def test_docs_readme_links_required_surfaces_and_boundaries() -> None:
     text = DOCS_README.read_text(encoding="utf-8")
     for required in (
