@@ -10,9 +10,14 @@ import copy
 import hashlib
 import html
 import json
+import os
+import subprocess
+import sys
 from importlib.metadata import version
+from importlib import import_module
 from pathlib import Path
 from typing import Any
+from types import ModuleType
 
 import yaml  # type: ignore[import-untyped]
 
@@ -23,7 +28,6 @@ from cp_portfolio_contract import (
 ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = ROOT / "tests/fixtures/cathodic_protection/workflow_inputs"
 DESTINATION = ROOT / "docs/domains/cathodic_protection/reports"
-SOURCE_REVISION = "bf638ed1"
 CASES = (
     ("S01", "Jacket", "jacket.yml"),
     ("S02", "Monopile", "monopile.yml"),
@@ -44,6 +48,80 @@ BENCHMARKS = (
     ("D", "Walking-mitigation mattress", "Current private comparison required"),
     ("E", "Bracelet pipeline", "Field-joint infill evidence missing; acceptance unverified"),
 )
+
+
+def git_source(root: Path, *args: str) -> str:
+    """Resolve the explicit checkout, independent of inherited Git bindings."""
+    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    try:
+        result = subprocess.run(
+            ["git", "--no-optional-locks", "-C", str(root), *args],
+            env=env, capture_output=True, text=True, check=True,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+    except (OSError, subprocess.CalledProcessError) as error:
+        raise ValueError("Git source provenance cannot be verified") from error
+    return result.stdout.strip()
+
+
+def checkout_revision(root: Path) -> str:
+    """Reject uncommitted source rather than attributing it to a historical commit."""
+    if Path(git_source(root, "rev-parse", "--show-toplevel")).resolve() != root.resolve():
+        raise ValueError("source checkout root differs from builder root")
+    revision = git_source(root, "rev-parse", "HEAD")
+    if git_source(root, "status", "--porcelain", "--untracked-files=all"):
+        raise ValueError("source checkout is dirty; commit or preserve changes before building")
+    flags = git_source(root, "ls-files", "-v", "--", "src", "scripts/reporting")
+    if any(line and (line[0].islower() or line[0] == "S") for line in flags.splitlines()):
+        raise ValueError("source checkout has hidden index flags; source provenance cannot be verified")
+    return revision
+
+
+def validate_import_origins(root: Path, modules: dict[str, ModuleType] | None = None) -> None:
+    """Reject editable-install shadowing, including preloaded implementation modules."""
+    for name, module in list((sys.modules if modules is None else modules).items()):
+        if name == "digitalmodel" or name.startswith("digitalmodel."):
+            source = root.resolve() / "src"
+        elif name.startswith("cp_portfolio_") or name == "cp_review_document":
+            source = root.resolve() / "scripts/reporting"
+        else:
+            continue
+        origin = getattr(module, "__file__", None)
+        if not origin:
+            # Namespace packages have no executable body; children are checked separately.
+            continue
+        path = Path(origin).resolve()
+        if not path.is_relative_to(source):
+            raise ValueError(f"executed import is outside source checkout: {name}")
+        relative = path.relative_to(root.resolve()).as_posix()
+        try:
+            git_source(root, "ls-files", "--error-unmatch", "--", relative)
+        except ValueError as error:
+            raise ValueError(f"executed import is not tracked: {name}") from error
+        committed = git_source(root, "rev-parse", f"HEAD:{relative}")
+        observed = git_source(root, "hash-object", f"--path={relative}", str(path))
+        if committed != observed:
+            raise ValueError(f"executed import bytes differ from committed source: {name}")
+
+
+def implementation_loaded() -> bool:
+    """A direct caller cannot establish the revision of already loaded Python code."""
+    return any(name == "digitalmodel" or name.startswith("digitalmodel.") for name in sys.modules)
+
+
+def prepare_execution_source(root: Path) -> None:
+    """Load supported lazy routes before origin validation, without running solvers."""
+    for name in (
+        "cp_review_document", "cp_portfolio_coverage",
+        "digitalmodel.cathodic_protection.engine_adapter",
+        "digitalmodel.cathodic_protection.report_adapters",
+        "digitalmodel.cathodic_protection.b401_structures_phases",
+        "digitalmodel.cathodic_protection.b401_component_route",
+        "digitalmodel.cathodic_protection.b401_family_route",
+        "digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection",
+    ):
+        import_module(name)
+    validate_import_origins(root)
 
 
 def write_json(path: Path, value: Any) -> None:
@@ -150,7 +228,17 @@ def append_children(spec: Any, children: list[dict[str, str]], results: Any) -> 
 
 
 def build_case(case: tuple[str, str, str], destination: Path,
-               register: dict[str, Any]) -> dict[str, Any]:
+               register: dict[str, Any], *, source_revision: str | None = None) -> dict[str, Any]:
+    """Build a pack; the explicit revision pin is reserved for this module's CLI loop."""
+    observed_revision = checkout_revision(ROOT)
+    if source_revision is None:
+        if implementation_loaded():
+            raise ValueError("preloaded implementation has unknown import-time revision; use a fresh build process")
+        source_revision = observed_revision
+    elif observed_revision != source_revision:
+        raise ValueError("source revision changed between portfolio cases")
+    validate_import_origins(ROOT)
+    prepare_execution_source(ROOT)
     from digitalmodel.cathodic_protection.engine_adapter import run_cathodic_protection
     from digitalmodel.cathodic_protection.report_adapters import anode_design_report
     from digitalmodel.citations import Citation, validate_citation
@@ -161,6 +249,9 @@ def build_case(case: tuple[str, str, str], destination: Path,
     cfg = load_fixture(filename)
     cfg["report"] = {"document": register[case_id]}
     original = copy.deepcopy(cfg)
+    validate_import_origins(ROOT)
+    if checkout_revision(ROOT) != source_revision:
+        raise ValueError("source revision changed before execution")
     routed = run_cathodic_protection(cfg)
     validate_mode_coverage(case_id, routed)
     spec = anode_design_report(routed)
@@ -172,6 +263,9 @@ def build_case(case: tuple[str, str, str], destination: Path,
         raise ValueError(f"missing citations for {case_id}")
     children = child_evidence(routed)
     append_children(spec, children, routed["results"])
+    if checkout_revision(ROOT) != source_revision:
+        raise ValueError("source revision changed during execution")
+    validate_import_origins(ROOT)
     folder = destination / "cases" / case_id
     check_existing_pack(folder)
     folder.mkdir(parents=True, exist_ok=True)
@@ -188,13 +282,16 @@ def build_case(case: tuple[str, str, str], destination: Path,
     for child in children:
         resolve_pointer(routed["inputs"], child["input_pointer"])
         validate_child(child, routed["results"], page)
-    row = case_receipt(case, routed, children)
+    row = case_receipt(case, routed, children, source_revision=source_revision)
     write_json(folder / "verification.json", row)
     write_json(folder / "release.json", {"source_class": "repository_regression",
                "input_fixture": filename, "input_sha256": digest(FIXTURES / filename),
                "private_benchmark_data": False})
     write_receipt(folder)
     verify_pack(folder)
+    validate_import_origins(ROOT)
+    if checkout_revision(ROOT) != source_revision:
+        raise ValueError("source revision changed during report output")
     return row
 
 
@@ -212,7 +309,8 @@ def write_changes(folder: Path) -> None:
         '<a href="https://github.com/vamseeachanta/digitalmodel/issues/2284">Shared citation defect</a>.</p></html>', encoding="utf-8")
 
 
-def case_receipt(case: tuple[str, str, str], cfg: Any, children: Any) -> dict[str, Any]:
+def case_receipt(case: tuple[str, str, str], cfg: Any, children: Any,
+                 *, source_revision: str) -> dict[str, Any]:
     case_id, title, filename = case
     status = cfg["results"]["status"]
     return {"id": case_id, "title": title, "fixture": filename,
@@ -222,7 +320,7 @@ def case_receipt(case: tuple[str, str, str], cfg: Any, children: Any) -> dict[st
             "pack_state": "verified", "verification": {"passed": True,
                 "scope": "citation resolution, comment binding, child links and file checksums"},
             "engineering_review": "pending", "visual_review": "deferred_by_owner",
-            "source_revision": SOURCE_REVISION,
+            "source_revision": source_revision,
             "source_class": "synthetic_repository_regression"}
 
 
@@ -286,15 +384,25 @@ def main() -> None:
         parser.error("Build to a new --output candidate directory before review/publication")
     if args.output.exists() and any(args.output.iterdir()):
         parser.error("Candidate destination is not empty; existing work will not be overwritten")
+    source_revision = checkout_revision(ROOT)
+    if implementation_loaded():
+        raise ValueError("preloaded implementation has unknown import-time revision; use a fresh build process")
+    validate_import_origins(ROOT)
+    prepare_execution_source(ROOT)
+    if checkout_revision(ROOT) != source_revision:
+        raise ValueError("source revision changed during import")
     args.output.mkdir(parents=True, exist_ok=True)
     register = json.loads(Path(__file__).with_name("cp_portfolio_documents.json").read_text("utf-8"))
     write_json(args.output / "document-register.json", register)
     write_json(args.output / "build-environment.json", {
         package: version(package) for package in ("plotly", "jinja2", "pydantic", "PyYAML")
     })
-    rows = [build_case(case, args.output, register) for case in CASES]
+    rows = [build_case(case, args.output, register, source_revision=source_revision) for case in CASES]
     rows += benchmark_rows(args.output)
     write_index(args.output, rows)
+    validate_import_origins(ROOT)
+    if checkout_revision(ROOT) != source_revision:
+        raise ValueError("source revision changed during portfolio output")
     print(json.dumps(coverage_summary(rows)))
 
 

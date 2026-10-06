@@ -189,7 +189,38 @@ vm.runInThisContext(fs.readFileSync(process.argv[2],'utf8'));
  getFile:async()=>({text:async()=>saved})})};
  await get('cp-save').onclick();assert.equal(JSON.parse(saved).comments.length,1);
  assert(get('cp-message').textContent.includes('read back successfully'));
+ // A pending round must remain pending when a later round accepts it.
+ const snapshotSeed={...state,report_id:'S01',results:[{id:'review-1',decision:'pending'}],
+ comments:[],prior_rounds:[],decision_conflicts:[]};
+ // Reload a new UI instance to isolate the initial pending round.
+ vm.runInThisContext(fs.readFileSync(process.argv[2],'utf8'));
+ get('cp-html').files=[{arrayBuffer:async()=>data}];await get('cp-html').onchange();
+ get('cp-load').files=[{size:100,text:async()=>JSON.stringify(snapshotSeed)}];
+ await get('cp-load').onchange();
+ const accepted={...snapshotSeed,results:[{id:'review-1',decision:'accept'}]};
+ get('cp-load').files=[{size:100,text:async()=>JSON.stringify(accepted)}];
+ await get('cp-load').onchange();
+ const firstMerge=JSON.parse(get('cp-preview').textContent);
+ assert.equal(firstMerge.results[0].decision,'accept');
+ assert.equal(firstMerge.prior_rounds[0].results[0].decision,'pending');
+ assert.equal(firstMerge.prior_rounds[0].decision_conflicts.length,0);
+ const archived=JSON.stringify(firstMerge.prior_rounds);
+ get('cp-comment').value='A later conflicting review';get('cp-decision').value='reject';
+ get('cp-add').onclick();
+ const edited=JSON.parse(get('cp-preview').textContent);
+ assert.equal(edited.decision_conflicts.length,1);
+ assert.equal(JSON.stringify(edited.prior_rounds),archived);
+ const rejected={...snapshotSeed,results:[{id:'review-1',decision:'reject'}]};
+ get('cp-load').files=[{size:100,text:async()=>JSON.stringify(rejected)}];
+ await get('cp-load').onchange();
+ const nextMerge=JSON.parse(get('cp-preview').textContent);
+ assert.equal(JSON.stringify(nextMerge.prior_rounds.slice(0,firstMerge.prior_rounds.length)),archived);
+ // Restore the earlier harness state for its saved-file reload checks.
+ vm.runInThisContext(fs.readFileSync(process.argv[2],'utf8'));
+ get('cp-html').files=[{arrayBuffer:async()=>data}];await get('cp-html').onchange();
  get('cp-load').files=[{size:saved.length,text:async()=>saved}];
+ await get('cp-load').onchange();
+ // Reload into a live session as well, retaining the original merge/de-duplication check.
  await get('cp-load').onchange();
  assert.equal(JSON.parse(get('cp-preview').textContent).comments.length,1);
  get('cp-html').files=[{arrayBuffer:async()=>Buffer.from('edited HTML')}];
