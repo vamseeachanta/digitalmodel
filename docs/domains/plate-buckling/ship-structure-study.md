@@ -94,7 +94,15 @@ Final Codex artifact review passes and independently reran 40 tests. Claude
 artifact review approved with limitations; its minor input/evidence corrections
 were applied and rereviewed by Codex. Source schema and source relationships pass;
 schema is a staging contract, not a complete engineering readiness validator.
-Results must still be committed and remote head/hash verified for retention.
+Result retention is verified in private digitalmodel-data draft PR44, commit
+95ddcd3a4ce34378309339e2a191484b372f0a98, owner-relative
+docs/reviews/ship-plate-study/manifest.json. Run identity
+ship-plate-synthetic-43aa52bfd6b78cc4; precomputed.json SHA256
+43aa52bfd6b78cc42c01ce5550ddc1e4a16634d8a7a49ae0a7f59989c06b5c23.
+All nine remote evidence blobs match retained bytes; JSON and HTML digests match
+the manifest. Published workflow095312dd source blobs match the executed code
+after Git line-ending normalization; exact executed byte hashes remain recorded.
+Draft PR2290 owns public methods/schema/tests; no merge or engineering acceptance.
 This issue stays open for catalog rights/current-edition
 audit, discrete stock coverage, qualified panel/local-damage thresholds and richer
 independent lookup controls. No source catalog readiness or asset acceptance.
