@@ -20,6 +20,7 @@ Source pointers:
 - British Steel: https://www.britishsteel.co.uk/wp-content/uploads/2026/07/bulb-flats-brochure-20-07-26.pdf
 - DNV: https://www.dnv.com/energy/standards-guidelines/dnv-rp-c201-buckling-strength-of-plated-structures/
 - IACS: https://iacs.org.uk/resolutions/common-structural-rules/csr-for-bulk-carriers-and-oil-tankers
+- Ovako: https://www.ovako.com/globalassets/downloads/products/dimensions_hot-rolled-flat-bar_2025.pdf
 
 [Structured source pointers](source_metadata.yml) are authored discovery metadata,
 not a replacement central catalog. [Method audit and results](../../docs/domains/plate-buckling/ship-structure-study.md)
@@ -37,3 +38,11 @@ plate width/length combinations, material heat/certification, bulb axis mapping,
 current IACS edition and source-specific publication rights need qualification.
 Welded tees are fabricated from selected web/flange plates, not universal stock.
 No ready database or engineering-acceptance claim is made.
+
+Latest internal staging holds six sources, three products and four catalog
+sections. Ovako's flat-bar sheet supplies a graphical width/thickness production
+envelope, without discrete stock, grade, length or properties. Its boundaries are
+not digitized or treated as a Cartesian matrix; no ideal rectangle properties or
+marine certification are substituted. The numerical200x10 study fixture remains
+authored geometry. Temporary inspection copies of this public sheet are removed
+after review; no source PDF is retained or published.

@@ -204,3 +204,12 @@ ship-local-diagnostic-a30c6daa794e7cf8. Result SHA256
 a30c6daa794e7cf8be81ae775be67034779d474632cfa86818360e52f3745036;
 published code10bbc73af131f6cb85ff477ec7dca350d0882dae. Original40-case owner
 and result hashes remain unchanged. Private draftPR44 carries both runs.
+
+Latest source continuation: Ovako's official flat-bar dimension sheet was inspected
+as a rendered graphical production envelope. It supplies no discrete stock table,
+grade, length or section properties; graph boundaries are not digitized and no
+rectangle properties or marine grade are inferred. The filename year2025 is not
+an established printed edition. Internal staging now contains six sources, three
+products and four sections, with this gap explicitly recorded. Temporary public
+PDF/PNG inspection files are removed after review; source originals are not
+retained in either draft. This source does not qualify the authored200x10 fixture.

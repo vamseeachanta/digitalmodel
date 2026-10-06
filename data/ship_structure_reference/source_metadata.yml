@@ -4,6 +4,11 @@ discovery_authority: llm-wiki:data/data-source-catalog.yml and domain-database-i
 observed_on: '2026-10-06'
 research_records: source_research.yml (local-only; not published; pending rights)
 sources:
+  - key: ovako-flat-bar-envelope
+    issuer: Ovako
+    url: https://www.ovako.com/globalassets/downloads/products/dimensions_hot-rolled-flat-bar_2025.pdf
+    edition: printed_date_unconfirmed_filename_year_not_governing_edition
+    coverage: graphical_production_envelope_no_discrete_stock_grade_or_section_properties
   - key: ssab-hs-observation
     issuer: SSAB
     url: https://www.ssab.com/en/brands-and-products/ssab-multisteel/product-offer/ssab-multisteel-hs
