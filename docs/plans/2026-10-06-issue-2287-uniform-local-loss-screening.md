@@ -20,6 +20,16 @@ The canonical path is assessment/ffs_coordinator.py (architecture record 2026-06
 
 ## Governing basis and source gate
 
+This gate is specific to qualified API 579-2021 Part 5 envelopes, not all
+analysis. Direction-specific pressure methods may legitimately omit a width
+term; omission alone is not proof of a defective equation. The source audit's
+[loading/code matrix](../domains/asset-integrity/uniform-loss-source-audit-2026-10-06.md#loading-direction-and-supported-alternatives-2026-10-06)
+identifies executable B31G/Modified B31G/RSTRENG and DNV pressure alternatives,
+their evidence limits, and the separate axial-stress/combined-load routes.
+Those alternatives retain their own method names and never become API 579
+levels. Loading direction, flaw orientation and adopted code/edition determine
+which assessment is appropriate.
+
 Target API 579-1/ASME FFS-1 2021 Part 5 for a single, blunt, locally uniform rectangular LTA in straight cylindrical pipe; Part 2 overall procedure and Part 3 brittle-fracture suitability remain prerequisites. Part 4 only for genuinely general thinning. No cracks, pits, weld flaws, interacting defects, creep, fatigue, dents, branches, elbows, supports, external-pressure collapse or nonpressure loads in the initial envelope.
 
 Publisher ASME catalog confirms FFS-1 2021: https://www.asme.org/codes-standards/find-codes-standards/fitness-for-service . Local private wiki metadata states 2021 is not on disk, with older 2016/2007 records. Source IDs api-standards and ace-codes-standards-library remain the authority; metadata or passing self-consistency tests do not qualify equations. Obtain authorized exact 2021 clause/errata access, record edition, source digest/access evidence privately, verify permitted use, then independently audit Part 5 L1/L2 equations, Folias form, Tc/FCA, minimum-thickness limits, length/width, weld-efficiency limits, applicability and rerating rules. Do not copy licensed originals or tables to common Git. Resolve conflicting Folias implementations before publishing allowable walls.

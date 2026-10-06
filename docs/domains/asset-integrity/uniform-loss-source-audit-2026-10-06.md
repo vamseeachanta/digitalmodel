@@ -23,6 +23,68 @@ promoted as an allowable-wall screening result.
 
 Table 1. Existing-method coverage and limits on use.
 
+## Loading direction and supported alternatives (2026-10-06)
+
+The exact 2021 Part 5 qualification gap is not a blanket block on all analysis.
+A direction-specific internal-pressure burst method need not contain a width
+term in its capacity equation. Width omission alone does not prove that method
+incorrect: its permitted geometry, orientation and applicability still require
+the governing source. Here it prevents using the current coordinator alone as
+the requested complete width-dependent Part 5 assessment. The independent
+reference-wall, extent, source and procedure issues remain unresolved.
+
+For pipe geometry, L or s means axial length; c means circumferential arc width.
+Internal pressure produces hoop stress and, with closed ends, axial tension.
+The pressure-burst methods below calculate hoop-controlled containment; they
+do not separately assess axial membrane capacity. Do not exchange L and c to
+simulate a circumferential flaw or rotate the loading without a verified method.
+
+| Method / code basis | Load and damage direction actually calculated | Existing evidence and permitted study use | Boundary / missing qualification |
+|---|---|---|---|
+| `Level1Screener`, B31.4/B31.8-2022 or VIII-1-2023 labels | Internal-pressure required wall compared with minimum remaining wall; no defect length | Executable pressure-thickness arithmetic; useful preliminary containment check with explicit factors | Neither complete API 579 Part 4 nor Part 5 L1; no full averaging/applicability, axial load or discontinuity check. VIII allowable must be established; default SMYS/3.5 is a heuristic |
+| Canonical GML L2, API 579 Part 4 label | Grid mean divided by pressure-required wall, clipped at 1 | Area-average diagnostic | No inspected exact-edition Part 4 source binding or complete local-minimum/extent/procedure validation; not a qualified general-thinning acceptance route |
+| Canonical LML L2 / longitudinal RSF helper, API 579 Part 5 label | Axial flaw length modifies pressure/longitudinal-section RSF for hoop containment | Existing-code sensitivity only | 2021 source gap, competing Folias definitions, reference-wall/extent issues and incomplete applicability; no complete axial-stress assessment |
+| Original B31G, Modified B31G, 1D RSTRENG; B31G-2012 label | Blunt longitudinal metal loss under internal pressure; axial length or axial river-bottom profile | Existing hand-calculation regressions; original B31G historical 2012 allowable-length table anchors. Named bounded preliminary pressure curves can reuse `corroded_pipe` and `ffs_acceptance_curves` | Study evidence is not a new full edition-specific compliance audit. Respect applicability flags (implemented d/t limit 0.80), material/flow-stress basis and actual safety factor; default 1.39 embeds B31.8 class-1 assumptions. No API 579 level relabeling or arbitrary-width/axial-load claim |
+| `rstreng_2d`, same underlying 1D method | Each axial station projected from circumferential columns, then axial effective-area burst search | MAX projection is executable and bounds the measured depth at each station; useful input reduction within the underlying pressure-method domain | No full 2D circumferential interaction or combined-stress assessment. Area-weighted projection is sensitivity only; do not claim its diluted depth safely represents isolated deep loss |
+| DNV single-defect / PSF / axial interacting routines | Internal-pressure burst of longitudinal metal loss; axial grouping only in the local interaction helper | Hand-calculation, intact-limit, monotonicity and factor-table regressions support bounded algorithm comparisons | Source comments cite 2015/2017, output reference labels 2021; exact adopted-edition binding not established here. Default allowable factor 0.72 is B31.8 class 1, not DNV safety class. PSF requires actual class/sizing/factors and source verification; implemented d/t limit 0.85. No complete circumferential interaction claim |
+| Circumferential net-section helper, API 579 Part 5 label | Circumferential loss fraction reduces axial membrane section; c is arc width | Net-section arithmetic sensitivity; separate from hoop Folias calculation | Not qualified 2021 Part 5 acceptance. Does not combine axial demand, bending, torsion, pressure or instability into a complete criterion |
+| `dnv_f101_combined_loading` | Intended internal pressure plus superimposed longitudinal compression | Explicit `NotImplementedError`; no usable combined-load result | Standard domain exists; local H1 implementation is absent. Pure-pressure result must not substitute for compression interaction |
+| External pressure, bending, torsion, buckling or crack-like flaws | Different limit states / stress directions | Separate design-collapse and crack/FAD helpers exist, but their qualification was not audited in this study | None of the above pressure-burst curves accepts these cases. Intact/uniform minimum-wall collapse is not verified local-patch collapse; a separate code/load/geometry assessment is required |
+
+Table 5. Method/load/orientation matrix; executable arithmetic is distinguished
+from normative engineering acceptance. An applicability flag overrides a raw
+acceptance boolean. The inspected curve and lookup wrappers do not retain the
+underlying applicability record: a bounded preliminary study must prevalidate
+each case with the underlying method and preserve its flags separately. The
+curve defaults sample d/t=0.10 through 0.80; user-supplied depths can exceed
+that range, so defaults are not an enforcement gate. The lookup also supplies
+an assumed Barlow MAOP when none is supplied; use the actual assessment demand.
+`pipe_acceptance_curve` does not expose the underlying safety/usage factor;
+the lookup exposes the B31G safety factor but not DNV usage factor. Use raw
+methods with explicit factors and preserve applicability, or adapt and validate
+the wrapper first; do not treat a fixed-factor convenience curve as a general
+code-compliant acceptance result.
+
+Primary publisher scope evidence: [ASME B31G](https://www.asme.org/codes-standards/find-codes-standards/b31g-manual-determining-remaining-strength-corroded-pipelines)
+addresses metal loss in pressurized B31 pipelines. It does not validate this
+repository's 2012 implementation merely because the current catalog exists.
+[DNV RP-F101](https://www.dnv.com/energy/standards-guidelines/dnv-rp-f101-corroded-pipelines/)
+expressly covers internal pressure alone and pressure plus longitudinal
+compression; its current public listing is 2019-09 amended 2025-09, distinct
+from local source comments and output labels. The public [DNV Sesam manual](https://sesam.dnv.com/download/userdocumentation/rp-f101-user-manual.pdf)
+(2015) independently identifies longitudinal combined-loading and axial plus
+circumferential interaction routes in DNV software; their existence does not
+establish that the simplified local helpers implement all those routes.
+
+Before selecting an alternative, state the asset/design code and adopted
+edition, pressure differential and end conditions, axial force/bending/torque,
+temperature/material/factors, and flaw axial length, arc width, depth/profile,
+orientation and interaction. If the intended screen is only hoop-controlled
+pressure containment, a named B31G/Modified B31G/RSTRENG preliminary study can
+proceed within its audited scope. If axial stress or instability can govern,
+retain the separate directional/code assessment rather than using a burst
+curve as a general acceptance envelope.
+
 The ASME [publisher catalog](https://www.asme.org/codes-standards/find-codes-standards/fitness-for-service)
 identifies FFS-1 2021. Private wiki metadata inspected on 2026-10-06 identifies
 older 2007 extracted content and a 2016 licensed original, but reports no 2021
