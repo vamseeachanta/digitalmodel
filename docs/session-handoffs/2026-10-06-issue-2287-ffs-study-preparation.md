@@ -75,3 +75,25 @@ temporary trees and uv cache are expected execution evidence. Isolated worktree
 is preserved for draft review. Canonical digitalmodel finance change was
 pre-existing and untouched. No worktree deletion or source migration occurs.
 Release ASCP issue-2287 claim `ffs/uniform-loss-study` before exit.
+
+## Final receipt and review disposition
+
+Clean executing revision: `f22659abd28bbf5ad2a11184f5c19d5481c8bbf8`.
+Diagnostic run UTC: `2026-10-06T01:12:36.983200+00:00`.
+Working tree dirty at run: false. Final output SHA-256:
+`0d1471109e40e547702975d9ad5b20eb31723df1b6ee766cf25ea2229128b1d9`.
+Final integrated checks: 131 passed in 4.70 s. Full strict JSON serialization
+and runtime receipt are tested. 784 cases: 768 UNQUALIFIED, 16 INAPPLICABLE;
+224 have inferred-length mismatch. Raw L1 counts: ACCEPT 392, FAIL_LEVEL_1 392.
+Raw L2 counts: ACCEPT 572, FAIL_LEVEL_2 212. These raw counts do not establish
+normative PASS/FAIL; all 784 allowable-wall fields remain null.
+
+Claude review B1 navigation evidence was covered by passing routing tests and
+independent Codex verification. B2 receipt is above. B3 all source bytes and
+explicit checkout/config scope are retained. B4 serialization and all-case
+null/status checks pass. P1/P2 applicability/routing limitations, P3 pressure
+roles, P4 monotonicity rule, P5 width-convention source audit, P6 proposed Annex
+basis, P7 discovery roles and P8 UTC date are explicit in the revised spec.
+Fixture-anchor provenance is not upgraded to normative status. Independent
+Codex final disposition reviewed f22659ab and found no remaining blocking
+preparation findings; qualified curves and Level 3 remain blocked.
