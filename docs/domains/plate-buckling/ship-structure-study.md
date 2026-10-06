@@ -75,7 +75,8 @@ remain fixed visibly; no arbitrary new parameter combination is computed.
 
 ## Execution, ownership and remaining gates
 
-Actual host ACMA-WS014, Windows, Python3.11.15. Linux2 registry identifies a
+Execution used a Windows workstation, Python3.11.15; exact host is in the private
+owner manifest. Linux2 registry identifies a
 sim-worker, but strict SSH probe failed for absent trusted host key. Trust remains
 unchanged. No GPU/licensed/heavy job ran. Lightweight Windows work was retained.
 
@@ -106,3 +107,87 @@ Draft PR2290 owns public methods/schema/tests; no merge or engineering acceptanc
 This issue stays open for catalog rights/current-edition
 audit, discrete stock coverage, qualified panel/local-damage thresholds and richer
 independent lookup controls. No source catalog readiness or asset acceptance.
+
+## Continuation: numerical evidence and local-loss diagnostics
+
+The eight plate rows are **numerically verified screens of the implemented k=4
+idealization**, not engineering-qualified cases. The exact screen is longitudinal
+compression only, zero shear/transverse stress, actual simply-supported full-field
+geometry, uniform loss, assumed AH36, E=206000 MPa, nu=0.3, fy=355 MPa, gamma=1.15,
+FCA=0, nominal thickness12 mm, and fixed applied stress50/100 MPa. The eight rows
+are the Cartesian product L600/1200, b400/600 and stress50/100. At every crossing,
+gamma*sigma_x is 57.5 or115 MPa, below fy/2=177.5 MPa, so the crossing lies on the
+elastic branch. Independent solution:
+
+`t_cross = b * sqrt(gamma*sigma_x * 12*(1-nu^2) / (4*pi^2*E))`.
+
+This gives b400:3.5147/4.9706 mm and b600:5.2721/7.4559 mm, for either saved span.
+The adapter independently checks this formula, thickness-squared scaling, JO
+continuity, pass-side threshold crossing and explicit unsupported-input rejection.
+The original 40-case result digest remains43aa52bfd6b78cc42c01ce5550ddc1e4a16634d8a7a49ae0a7f59989c06b5c23.
+The32 panel rows have null minimum_remaining_thickness_mm because the combined
+panel threshold has no equivalent independent benchmark; full effective width,
+torsional restraint assumptions, mode switches and excluded pressure/interaction
+remain unresolved. Their separate illustrative_threshold_mm must not be promoted.
+
+A separate18-row/54-point diagnostic now retrieves the **existing**
+assess_plate_local_loss wrapper for patches300/600/1200 mm long and150/300/600 mm
+wide, parent1200x600x12 mm, stress50/100 MPa, losses0/4/8 mm. No new mechanics is
+implemented. Every row explicitly has acceptance_status=inapplicable_unvalidated_local_patch
+and null minimum_remaining_thickness_mm/maximum_accepted_loss_mm. Wrapper passes,
+Level2 framing, max acceptable loss and conservatism claims are not projected.
+The data-only HTML compares the isolated artificially-supported patch response
+with uniform thinning of the full parent; neither is an embedded-damage solution
+or a proven bound. Missing saved patch combinations display UNCOMPUTED.
+
+The full-sized patch reproduces uniform thinning, which verifies orchestration
+only. At zero loss a smaller named patch already changes the returned utilization
+although the physical parent is unchanged: parent modes are omitted. An elastic
+limit check using parent1200x600x2 mm and patch600x300 mm gives patch utilization
+one quarter of parent utilization. This is a reproducible failure of the wrapper
+as a complete parent-panel assessment, not proof of a measured capacity benefit
+or a general safety bound. Nine diagnostic tests pass, including the limiting
+checks and invalid/nonfinite/oversized input rejection. The original40 calculations
+were not rerun or overwritten.
+
+Local-damage acceptance requires a validated variable-thickness parent-field
+method preserving real edge supports, damage location/shape, membrane-load
+redistribution and governing global/local modes; independent limiting-case and
+published/mesh-converged benchmarks; and a governing class-edition criterion.
+The inspected ecosystem contains no such verified route. New heavy/licensed FE
+jobs remain outside this authorization; additional ordinary wrapper runs cannot
+resolve this missing model. Patch position and measured thickness map are also
+required for any later project assessment. No asset inputs have been invented.
+
+Source staging is extended to five sources, two supply records and four sections:
+two equal-angle rows are sourced to British Steel's printed CEAD:ENG:072026
+identifier with publisher x/y and principal u/v axes distinguished. Marine-grade
+and actual heat certification are unknown; angle solver eccentricity qualification
+is still absent. SSAB's inspected Delivery Conditions now resolves the previously
+unknown typical product condition while keeping individual delivered condition
+unknown. [Structured source pointers](../../../data/ship_structure_reference/source_metadata.yml)
+provide discoverability without publishing the excluded numeric source records or
+introducing a replacement registry. Existing corrugated_bulkhead.py was also found;
+it is PRELIMINARY and requires a combined CSR benchmark, so remains outside this
+flat-plate study. Flat-bar/rolled-tee stock matrices, plate width/length tables,
+IACS governing edition, bulb axes and source-specific distribution rights remain
+precise database gates.
+
+The separate diagnostic manifest records UTC with +00:00. The preserved original
+manifest's executed_utc string has offset-05:00; it denotes2026-10-06T01:19:43Z,
+and is not a naive UTC timestamp. No original run record was rewritten.
+
+Continuation readback also exercised the existing DataCatalog.load_catalog/load
+methods by loading their existing module file directly. Both local research and
+the unchanged AISC YAML datasets loaded successfully. This avoids the legacy
+package initializer, not the existing data pipeline; no replacement loader or
+mocked dependency was written. Optional pyarrow ABI warnings persist. This verifies
+the YAML catalog route only, not package initialization, Parquet or database readiness.
+
+Independent Codex and Claude artifact reviews passed: both reran nine tests;
+Claude independently reproduced all54 diagnostic points from k and JO equations.
+Gemini remains unavailable; no authentication or trust configuration changed.
+Browser checks verified saved-patch, full-size-patch and UNCOMPUTED retrieval.
+The previous public CI client scan rejected a physical hostname in this document;
+it is replaced with a generic workstation label while exact private provenance
+is retained. No deny pattern, exclusion, baseline or security configuration changed.

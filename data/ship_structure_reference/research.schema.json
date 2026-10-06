@@ -41,7 +41,7 @@
         "Zy_mm3": {"type": "number", "exclusiveMinimum": 0},
         "J_mm4": {"type": "number", "exclusiveMinimum": 0},
         "material_grade": {"$ref": "#/$defs/unknown"},
-        "solver_eligibility": {"const": "inapplicable_existing_panel_solver_has_no_bulb_geometry"}
+        "solver_eligibility": {"enum": ["inapplicable_existing_panel_solver_has_no_bulb_geometry", "inapplicable_existing_angle_route_lacks_lateral_eccentricity_qualification"]}
       }
     }
   }
