@@ -1,5 +1,23 @@
 # Cathodic Protection
 
+## Report portfolio roadmap
+
+The [report review index](reports/index.html), [reporting roadmap](reporting-roadmap.html) and
+[issue plan](../../plans/2026-10-03-issue-2281-cp-review-report-portfolio.md)
+will bring supported structure/mode reports and allowed benchmark A–E derivatives
+into this repository under [#2281](https://github.com/vamseeachanta/digitalmodel/issues/2281).
+Constructive implementation was authorized on 2026-10-03. Eleven structure/mode
+packs are available as internal drafts; all five private benchmark packs remain
+incomplete. Comprehensive human visual review remains deferred and distinct from
+engineering acceptance. Reproduction and review constraints are in the
+[portfolio guide](report-portfolio-guide.html).
+
+## Benchmark evidence research
+
+[Methodology, source inventory and applicability limits](research/benchmark-methodology.md)
+retain evidence criteria for the five incomplete private benchmark packs.
+They do not supply missing installed facts or release rights.
+
 ## Purpose
 
 Design and assessment of galvanic (sacrificial anode) and impressed-current cathodic
