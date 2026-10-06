@@ -191,3 +191,16 @@ Browser checks verified saved-patch, full-size-patch and UNCOMPUTED retrieval.
 The previous public CI client scan rejected a physical hostname in this document;
 it is replaced with a generic workstation label while exact private provenance
 is retained. No deny pattern, exclusion, baseline or security configuration changed.
+
+Diagnostic length sensitivity is specifically limited: k=4 whenever patch length
+is at least its breadth. Only the300x600 mm patch in this grid uses the shorter-field
+branch, k=6.25. These artificial-support effects are not measured corrosion-length
+benefits. Patch position is absent from the wrapper.
+
+The diagnostic owner is private digitalmodel-data commit
+4754b1cea1590f06c00e8e6f7956a3fd0eb2646a, path
+docs/reviews/ship-plate-study/local-loss-diagnostic/manifest.json, run
+ship-local-diagnostic-a30c6daa794e7cf8. Result SHA256
+a30c6daa794e7cf8be81ae775be67034779d474632cfa86818360e52f3745036;
+published code10bbc73af131f6cb85ff477ec7dca350d0882dae. Original40-case owner
+and result hashes remain unchanged. Private draftPR44 carries both runs.
