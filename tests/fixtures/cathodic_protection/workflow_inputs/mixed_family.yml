@@ -1,0 +1,50 @@
+# Synthetic mixed-zone regression; not a private benchmark.
+basename: cathodic_protection
+inputs:
+  calculation_type: DNV_RP_B401_offshore
+  design_data:
+    edition: '2021'
+    design_life: 20.0
+  environment:
+    seawater_temperature_C: 5.0
+  structure:
+    zones:
+    - zone: clamp_steel
+      base_zone: submerged
+      depth_m: 1000.0
+      area_m2: 10.0
+      coating_category: bare
+      anode_family: sea
+    - zone: buried_frame
+      base_zone: buried
+      area_m2: 20.0
+      coating_category: bare
+      anode_family: mud
+    - zone: mattress_reinforcement
+      base_zone: concrete_embedded
+      depth_m: 1000.0
+      reinforcement_area_m2: 100.0
+      anode_family: mud
+  anode_families:
+  - name: sea
+    environment: seawater
+    material: aluminium
+    type: stand_off
+    individual_anode_mass_kg: 50.0
+    length_m: 2.0
+    electrolyte_resistivity_ohm_m: 0.3
+    utilization_factor: 0.85
+  - name: mud
+    environment: sediments
+    material: aluminium
+    type: flush_mounted
+    individual_anode_mass_kg: 25.0
+    length_m: 1.2
+    width_m: 0.09
+    thickness_m: 0.07
+    final_length_m: 1.0
+    final_width_m: 0.06
+    final_thickness_m: 0.05
+    electrolyte_resistivity_ohm_m: 1.0
+    anode_surface_temperature_C: 60.0
+    utilization_factor: 0.85

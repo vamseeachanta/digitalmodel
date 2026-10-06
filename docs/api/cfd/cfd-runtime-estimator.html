@@ -84,7 +84,7 @@ validation panel. Use it to scope and review new CFD work before committing the 
 <code>docs/api/cfd/sloshing-compute.json</code>. &mdash; <a href="sloshing-cfd-study.html">CFD study &amp; provenance &rarr;</a></p>
 
 <script>
-const DATA = {"machine":{"host":"dev-secondary (ace-linux-2)","cores":32,"ram_gb":31,"solver":"interFoam (VOF), OpenFOAM ESI v2312 \u2014 single-threaded per case"},"profiles":[{"label":"backbone (forced roll, 60x60)","rate_us":27.847,"cells":3600,"timesteps":7175,"runtime_s":719,"concurrency":14},{"label":"forced roll (60x60)","rate_us":22.316,"cells":3600,"timesteps":6810,"runtime_s":547,"concurrency":16},{"label":"free-decay (80x80)","rate_us":12.25,"cells":6400,"timesteps":6000,"runtime_s":470,"concurrency":16}]};
+const DATA = {"machine":{"host":"dev-secondary","cores":32,"ram_gb":31,"solver":"interFoam (VOF), OpenFOAM ESI v2312 \u2014 single-threaded per case"},"profiles":[{"label":"backbone (forced roll, 60x60)","rate_us":27.847,"cells":3600,"timesteps":7175,"runtime_s":719,"concurrency":14},{"label":"forced roll (60x60)","rate_us":22.316,"cells":3600,"timesteps":6810,"runtime_s":547,"concurrency":16},{"label":"free-decay (80x80)","rate_us":12.25,"cells":6400,"timesteps":6000,"runtime_s":470,"concurrency":16}]};
 const M = DATA.machine, PROF = DATA.profiles;
 document.getElementById('machine').innerHTML =
   `<div><span>Host</span><b>${M.host||'—'}</b></div>`+

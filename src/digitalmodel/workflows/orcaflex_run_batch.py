@@ -49,7 +49,7 @@ MOCK_SIM_CONTENT = "mock OrcaFlex simulation (orcaflex_run_batch mock mode)\n"
 LICENSE_ERROR_MESSAGE = (
     "OrcaFlex license / OrcFxAPI is not available on this host. "
     "orcaflex_run_batch is a requires-license workflow: dispatch it to a "
-    "licensed host (deckhand licensed-run lane) or set run_batch.mock: true "
+    "licensed host (licensed-run lane) or set run_batch.mock: true "
     "for a license-free dry run."
 )
 

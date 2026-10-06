@@ -58,7 +58,7 @@ https://marp.app/
 
 | Task           | Name | Address-Physical | Address-Website | Phone Number | Email | Comments |
 |--------|--------------------|---------------|----------------|-----------| -----------|-----------|
-| Website  | Elizabeth's Hair Salon | 3901 C. Bellaire Blvd, Inside My Salon Suite <br> Ste 117, Houston, Tx 77025 | https://www.hairbylizbellaire.com/ | Mobile:713-240-2440 | E-mail: hairbyliz00@yahoo.com | Review for consistency
+| Website  | Elizabeth's Hair Salon | 3901 C. Bellaire Blvd, Inside My Salon Suite <br> Ste 117, Houston, Tx 77025 | https://www.hairbylizbellaire.com/ | Mobile:713-240-2440 | E-mail: [email removed] | Review for consistency
 | Google Maps  | <span style="color:red">Elizabeth Hair Salon</span> | <span style="color:red">5004 Bissonnet St, Bellaire, TX 77401</span> | <span style="color:red">None</span> | +17132402440 | n/a | Review for consistency <br> Is map showing right? <br> No website shown. Submitted for update on 2023-01-11 <br>  Address? <br> Photos are old
 | Business Registration | ?  | ? | ? | ? | ? | Review for consistency. <br> Need Tax ID to search [mycpa texas](https://mycpa.cpa.state.tx.us/coa/)
 

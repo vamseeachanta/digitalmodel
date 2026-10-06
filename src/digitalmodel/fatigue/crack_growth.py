@@ -1,13 +1,5 @@
-# This module uses py-fatigue (GPL-3.0) for crack growth analysis.
-# License implications: any code linking this module inherits GPL-3.0.
-# For commercial use, consider reimplementing Paris' law directly.
-#
-# NOTE: py-fatigue's crack_growth module requires numba jitclass and is
-# tightly coupled to its CycleCount/ParisCurve/geometry classes. Due to
-# NumPy 2.x incompatibility at time of writing, Paris' law is implemented
-# directly using numpy. The math is identical:
-#   da/dN = C * (DeltaK)^m
-#   DeltaK = Y * Delta_sigma * sqrt(pi * a)
+# ABOUTME: Paris-law crack growth (da/dN = C DeltaK^m) integrated directly with
+# ABOUTME: numpy: SIF with geometry factors, inspection intervals, growth plots.
 """
 Crack growth analysis using Paris' law.
 

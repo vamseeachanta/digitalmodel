@@ -10,9 +10,7 @@ from assetutilities.common.yml_utilities import WorkingWithYAML
 
 # Reader imports
 from digitalmodel.hydrodynamics.aqwa import Aqwa
-from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import (
-    CathodicProtection,
-)
+from digitalmodel.cathodic_protection.engine_adapter import run_cathodic_protection
 from digitalmodel.infrastructure.base_solvers.hydrodynamics.code_dnvrph103_hydrodynamics_circular import (
     DNVRPH103_hydrodynamics_circular,
 )
@@ -393,8 +391,9 @@ def engine(
 
         cfg_base = pipelay(cfg_base)
     elif basename == "cathodic_protection":
-        cp = CathodicProtection()
-        cfg_base = cp.router(cfg_base)
+        # #2210: adapter onto the cathodic_protection package (DNV-RP-B401 /
+        # DNV-RP-F103); ABS routes and the *_legacy keys wrap the legacy solver.
+        cfg_base = run_cathodic_protection(cfg_base)
     elif basename == "transformation":
         trans = Transformation()
         cfg_base = trans.router(cfg_base)
@@ -456,6 +455,13 @@ def engine(
         from digitalmodel.drilling_riser.tsj_workflow import router as tsj_sizing
 
         cfg_base = tsj_sizing(cfg_base)
+    elif basename == "riser_stackup_drawing":
+        # #2152: data-driven stack-up SVG + reconcile report. NEW basename.
+        from digitalmodel.drilling_riser.stackup_drawing.workflow import (
+            router as riser_stackup_drawing,
+        )
+
+        cfg_base = riser_stackup_drawing(cfg_base)
     elif basename == "sn_curve":
         from digitalmodel.fatigue.workflow import router as sn_curve
 
@@ -840,6 +846,17 @@ def engine(
         cfg_base = SolverSmokeTestWorkflow().router(cfg_base)
     else:
         raise (Exception(f"Analysis for basename: {basename} not found. ... FAIL"))
+
+    # #2212 part 2: standard report engine hook. A domain YAML that carries
+    # `report: {kind: ...}` renders HTML/PDF beside its results through the
+    # "<basename>.<kind>" adapter (digitalmodel.<basename>.report_adapters is
+    # imported on demand). `report:` blocks without `kind` are legacy,
+    # domain-owned settings and are left alone.
+    report_block = cfg_base.get("report") if isinstance(cfg_base, dict) else None
+    if isinstance(report_block, dict) and "kind" in report_block:
+        from digitalmodel.reporting.adapters import maybe_render_report
+
+        maybe_render_report(cfg_base, basename)
 
     logger.debug(f"{basename}, application ... END")
     app_manager.save_cfg(cfg_base=cfg_base)

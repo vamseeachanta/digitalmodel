@@ -5,7 +5,7 @@
 ;;; By Jimmy Bergmark
 ;;; Copyright (C) 1997-2006 JTB World, All Rights Reserved
 ;;; Website: www.jtbworld.com
-;;; E-mail: info@jtbworld.com
+;;; E-mail: [email removed]
 ;;; 2000-05-03 - First release
 ;;; 2000-05-09 - Detects perspective view
 ;;; Tested on AutoCAD 2000

@@ -6,7 +6,10 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from digitalmodel.hydrodynamics.diffraction.output_schemas import DiffractionResults
+from digitalmodel.hydrodynamics.diffraction.output_schemas import (
+    DiffractionResults,
+    DOF,
+)
 from digitalmodel.hydrodynamics.diffraction.polars_exporter import (
     POLARS_AVAILABLE,
     PolarsExporter,
@@ -140,4 +143,6 @@ class TestPandasFallback:
         exporter = PolarsExporter(mock_diffraction_results)
         df = exporter.raos_to_pandas()
         assert isinstance(df, pd.DataFrame)
-        assert len(df) == 10 * 5 * 6
+        frequency_count = mock_diffraction_results.raos.surge.frequencies.count
+        heading_count = mock_diffraction_results.raos.surge.headings.count
+        assert len(df) == frequency_count * heading_count * len(DOF)

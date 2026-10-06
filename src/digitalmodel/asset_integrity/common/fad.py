@@ -1,7 +1,11 @@
 """Failure Assessment Diagram (FAD) construction and evaluation.
 
-Per BS 7910 (Guide to methods for assessing the acceptability of flaws in
-metallic structures) — the Level 2/3 FAD failure-assessment curve.
+Per BS 7910:2013 (Guide to methods for assessing the acceptability of flaws
+in metallic structures) — builds the legacy Lr/Kr table of the Option 1
+failure-assessment curve.  Since #2160 every ordinate comes from the single
+canonical implementation,
+:func:`digitalmodel.asset_integrity.assessment.crack_fad.fad_curve_option1`;
+this module only owns the legacy grid and DataFrame shape.
 """
 
 class FAD():
@@ -18,34 +22,37 @@ class FAD():
         return self.FAD
 
     def BS7910_2013_option_1(self):
+        """Lr/Kr table of the BS 7910:2013 Option 1 curve (legacy shape).
+
+        Every ordinate is the canonical
+        :func:`digitalmodel.asset_integrity.assessment.crack_fad.fad_curve_option1`
+        (#2160).  This method owns only the legacy grid — 101 points on
+        0 <= Lr <= 1, 99 points on 1 < Lr < Lr_max — and the plot-convention
+        closing row ``(Lr_max, 0)``.  E and SMYS may be in any consistent
+        unit; only their ratio enters the curve.
+        """
         import logging
-        import math
 
         import pandas as pd
-        df = pd.DataFrame(columns = ['L_r', 'K_r'])
 
+        from digitalmodel.asset_integrity.assessment.crack_fad import (
+            fad_curve_option1,
+        )
+
+        smys = self.material_grade_properties['SMYS']
+        smus = self.material_grade_properties['SMUS']
+        E = self.material_properties['E']
         plastic_collapse_load_ratio_limit = self.get_plastic_collapse_load_ratio_limit()
         logging.info("Plastic collapse load ratio limit : {}" .format(plastic_collapse_load_ratio_limit))
-        mue = min(0.001*self.material_properties['E']/self.material_grade_properties['SMYS'], 0.6)
-        N = 0.3*(1- self.material_grade_properties['SMYS']/self.material_grade_properties['SMUS'])
 
         n_divisions = 100
-        for Lr_index in range(0, n_divisions+1, 1):
-            Lr_value = Lr_index * 1/n_divisions
-            Fr_value = ((1 + 0.5*Lr_value**2)**(-0.5))*(0.3 + 0.7*math.exp(-mue * Lr_value**6))
-            df.loc[len(df)] = [Lr_value, Fr_value]
-
-        f_1 = Fr_value
-        n_divisions = 100
-        for Lr_index in range(1, n_divisions, 1):
-            Lr_value = 1+ Lr_index * (plastic_collapse_load_ratio_limit-1)/n_divisions
-            Fr_value = f_1 * (Lr_value)**((N-1)/2/N)
-            df.loc[len(df)] = [Lr_value, Fr_value]
-
-        Lr_value = plastic_collapse_load_ratio_limit
-        Fr_value = 0
-        df.loc[len(df)] = [Lr_value, Fr_value]
-        self.FAD['option_1'] = df
+        Lr_values = [Lr_index * 1/n_divisions for Lr_index in range(0, n_divisions+1, 1)]
+        Lr_values += [1 + Lr_index * (plastic_collapse_load_ratio_limit-1)/n_divisions
+                      for Lr_index in range(1, n_divisions, 1)]
+        rows = [[Lr_value, fad_curve_option1(Lr_value, smys, smus, E)]
+                for Lr_value in Lr_values]
+        rows.append([plastic_collapse_load_ratio_limit, 0.0])
+        self.FAD['option_1'] = pd.DataFrame(rows, columns=['L_r', 'K_r'])
 
     def BS7910_2013_option_2(self):
         self.FAD.update({'option_2': None})

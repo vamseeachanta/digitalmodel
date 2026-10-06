@@ -10,7 +10,7 @@ a/ Working directory higher in relative path hierarchy
 working directory: fsts\damaged
 
 Absolute reference:
-                includefile: X:\orcaflex\00-Common\Wind_Ext_FST2L.yml
+                includefile: <private-data>\Wind_Ext_FST2L.yml
 
 relative reference:
                 includefile: ..\..\00-Common\Wind_Ext_FST2L.yml
@@ -20,7 +20,7 @@ b/ Working directory lower in relative path hierarchy
 working directory: fsts\damaged
 
 Absolute reference:
-                includefile: X:\orcaflex\00-Common\Wind_Ext_FST2L.yml
+                includefile: <private-data>\Wind_Ext_FST2L.yml
 
 relative reference:
                 includefile: ..\..\00-Common\Wind_Ext_FST2L.yml

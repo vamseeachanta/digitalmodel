@@ -1,0 +1,47 @@
+# Pre-existing test failures — baseline for digitalmodel#1633
+#
+# Captured 2026-08-03 on ace-win-1 (Windows), worktree /d/ws/_worktrees/dm-1633-baseline
+#   commit:  e6610663 (origin/main)
+#   python:  .venv/Scripts/python.exe — numpy 1.26.4, scipy 1.15.3, pytest 8.4.2
+#   command: python -m pytest tests/hydrodynamics/diffraction/ -q --no-header --tb=no \
+#              -p no:cacheprovider \
+#              --ignore=tests/hydrodynamics/diffraction/test_validate_owd_vs_spec_semantics.py
+#   result:  23 failed, 1796 passed, 13 skipped, 2 xfailed
+#
+# WHY the --ignore: on origin/main, importing scripts/benchmark/validate_owd_vs_spec.py
+# rebinds sys.stdout/sys.stderr, whose wrappers close the underlying buffers when
+# collected. The suite then dies in capture teardown ("lost sys.stderr") and CANNOT
+# COMPLETE — so no baseline was obtainable at all until that was fixed on this branch.
+# Excluding the one offending file makes origin/main comparable for everything else.
+#
+# Verified against the branch with the same --ignore: 23 vs 23, and `comm` reports
+# ZERO new and ZERO fixed node IDs. The sets are identical.
+#
+# The 12 test_cli_integration.py entries match the count recorded as pre-existing in
+# digitalmodel#1550's closing comment (PR #1636), corroborating this list independently.
+#
+# Use: diff future runs against this file node-ID by node-ID. Raw pass/fail COUNTS are
+# meaningless here — the repo has ~20,241 collected tests.
+tests/hydrodynamics/diffraction/test_batch_processor.py::TestExportReport::test_export_creates_json
+tests/hydrodynamics/diffraction/test_cli_integration.py::TestCLIBatch::test_batch_help
+tests/hydrodynamics/diffraction/test_cli_integration.py::TestCLIBatch::test_batch_processing
+tests/hydrodynamics/diffraction/test_cli_integration.py::TestCLIConvertAQWA::test_convert_aqwa_basic
+tests/hydrodynamics/diffraction/test_cli_integration.py::TestCLIConvertAQWA::test_convert_aqwa_help
+tests/hydrodynamics/diffraction/test_cli_integration.py::TestCLIConvertAQWA::test_convert_aqwa_selective_formats
+tests/hydrodynamics/diffraction/test_cli_integration.py::TestCLIConvertAQWA::test_convert_aqwa_validation
+tests/hydrodynamics/diffraction/test_cli_integration.py::TestCLIErrorHandling::test_invalid_water_depth
+tests/hydrodynamics/diffraction/test_cli_integration.py::TestCLIErrorHandling::test_missing_analysis_folder
+tests/hydrodynamics/diffraction/test_cli_integration.py::TestCLIErrorHandling::test_missing_required_argument
+tests/hydrodynamics/diffraction/test_cli_integration.py::TestCLIGeneral::test_cli_help
+tests/hydrodynamics/diffraction/test_cli_integration.py::TestCLIGeneral::test_cli_invalid_command
+tests/hydrodynamics/diffraction/test_cli_integration.py::TestCLIGeneral::test_cli_version
+tests/hydrodynamics/diffraction/test_orcawave_doctor.py::TestCliExitPolicy::test_default_exit_zero_on_dry_run_host
+tests/hydrodynamics/diffraction/test_orcawave_doctor.py::TestCliExitPolicy::test_require_solver_exits_nonzero_on_dry_run_host
+tests/hydrodynamics/diffraction/test_orcawave_doctor.py::TestRunDoctorUnlicensedHost::test_capability_check_mentions_dry_run
+tests/hydrodynamics/diffraction/test_orcawave_doctor.py::TestRunDoctorUnlicensedHost::test_no_stack_trace_and_dry_run_capability
+tests/hydrodynamics/diffraction/test_orcawave_doctor.py::TestRunDoctorUnlicensedHost::test_orcawave_path_env_reported
+tests/hydrodynamics/diffraction/test_solver_orcawave_converter.py::TestFindVessel::test_find_vessel_auto_detect
+tests/hydrodynamics/diffraction/test_solver_orcawave_converter.py::TestLoadModel::test_load_model_stores_model
+tests/hydrodynamics/diffraction/test_spec_author.py::test_author_spec_end_to_end_with_cli_runner
+tests/hydrodynamics/diffraction/test_spec_author.py::test_claude_cli_author_parses_fenced_json
+tests/hydrodynamics/diffraction/test_spec_converter_mesh_preflight.py::TestPathResolution::test_absolute_mesh_path_is_used_as_is

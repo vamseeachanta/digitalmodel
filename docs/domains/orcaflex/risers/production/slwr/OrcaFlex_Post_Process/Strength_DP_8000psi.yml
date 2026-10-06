@@ -6,11 +6,11 @@ default:
 
 Files: 
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\DesignPressure_8000Psi\SLWR_16OD_SE1200_HE1500_8000psi_No Load, No Offset.sim
+    Name: ..\DesignPressure_8000Psi\SLWR_16OD_SE1200_HE1500_8000psi_No Load, No Offset.sim
     Label: No Load No Offset,8000psi
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\DesignPressure_8000Psi\SLWR_16OD_SE1200_HE1500_8000psi.sim
+    Name: ..\DesignPressure_8000Psi\SLWR_16OD_SE1200_HE1500_8000psi.sim
     Label: Design Pressure 8000psi
     ObjectName: SLWR
 

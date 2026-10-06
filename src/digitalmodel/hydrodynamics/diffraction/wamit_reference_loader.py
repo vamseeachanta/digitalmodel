@@ -625,6 +625,7 @@ def _build_matrix_list(
                     frequency=float(entry["frequency"]),
                     matrix_type=matrix_type,
                     units=_default_units(matrix_type),
+                    source="solver",
                 )
             )
         return matrices
@@ -636,6 +637,7 @@ def _build_matrix_list(
             frequency=float(f),
             matrix_type=matrix_type,
             units=_default_units(matrix_type),
+            source="placeholder",
         )
         for f in freq_arr
     ]

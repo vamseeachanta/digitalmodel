@@ -41,6 +41,7 @@ dependencies = [
     "imageio>=2.25.0,<3.0.0",
     "imgkit>=1.2.0,<2.0.0",
     "jinja2>=3.1.0,<4.0.0",
+    "markupsafe>=2.1.0",
     "jsonschema>=4.20.0,<5.0.0",
     "loguru>=0.7.0,<1.0.0",
     "lxml==4.9.3",
@@ -100,11 +101,17 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+drawings = ["ezdxf>=1.3,<2"]
 gis-imagery = [
     # Optional Earth Engine support for the gis.imagery timelapse pipeline.
     # Not required: the pipeline falls back to public Planetary Computer STAC.
     "earthengine-api>=0.1.370,<1.0.0",
     "planetary-computer>=0.5.0,<2.0.0",
+]
+curvature = [
+    # HullProd curvature / fairness screening for hull_library meshes (#2170, #2187).
+    # Optional: bundles OpenCascade (~150 MB installed); Python 3.10-3.12 only.
+    "hullprod>=1.0.1,<2",
 ]
 dev = [
     # Linting / typing / release tooling. Invoked as executables, never imported
@@ -123,6 +130,9 @@ dev = [
     "mutmut>=2.4.0,<3.0.0",
 ]
 test = [
+    "ezdxf>=1.3,<2",
+    # Run curvature screening regressions in CI (Python 3.10-3.12).
+    "hullprod>=1.0.1,<2",
     # The full set CI needs (#1632). Domain gates run
     #   uv run ... --with-editable '.[test]' python -m pytest ...
     # so every pytest PLUGIN must be listed here: plugins are loaded by pytest,
@@ -187,6 +197,7 @@ nde = [
 ]
 
 solvers = ["OrcFxAPI", "gmsh>=4.12.0,<5.0.0"]
+nastran = ["pyNastran>=1.4.1,<2.0.0"]
 # Mesh I/O and 3-D rendering. Imported lazily (inside functions / try-except) by
 # the diffraction and mesh pipelines, so they are not needed to import or use the
 # rest of the library -- moved out of [project] dependencies in #1632.
@@ -245,6 +256,9 @@ digitalmodel = [
     "marine_ops/artificial_lift/reference_data/**/*.csv",
     "marine_ops/artificial_lift/reference_data/**/*.yml",
     "reporting/assets/*.html",
+    "reporting/assets/*.j2",
+    "reporting/assets/*.css",
+    "asset_integrity/data/*.yml",
 ]
 
 [tool.black]

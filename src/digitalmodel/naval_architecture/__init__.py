@@ -37,27 +37,6 @@ from digitalmodel.naval_architecture.ship_dimensions import (
     merge_template_into_registry,
     validate_vessel_entry,
 )
-from digitalmodel.naval_architecture.b1528_sirocco_yaw_report import (
-    load_packaged_b1528_yaw_config,
-    run_b1528_static_yaw_report,
-    write_b1528_static_yaw_report,
-)
-from digitalmodel.naval_architecture.b1528_sirocco_time_trace import (
-    load_packaged_b1528_time_trace_config,
-    run_b1528_time_trace_report,
-    simulate_b1528_time_trace,
-    write_b1528_time_trace_report,
-)
-from digitalmodel.naval_architecture.b1528_sirocco_moored_current_report import (
-    load_packaged_b1528_moored_current_config,
-    run_b1528_moored_current_report,
-    write_b1528_moored_current_report,
-)
-from digitalmodel.naval_architecture.b1528_sirocco_current_heading_rudder_report import (
-    load_packaged_b1528_current_heading_rudder_config,
-    run_b1528_current_heading_rudder_report,
-    write_b1528_current_heading_rudder_report,
-)
 from digitalmodel.naval_architecture.rudder_stock_torque import (
     load_packaged_rudder_stock_torque_yaml,
     run_rudder_stock_torque_sweep,
@@ -90,10 +69,6 @@ __all__ = [
     "hull_weight_groups",
     "list_ships",
     "load_dimension_template",
-    "load_packaged_b1528_current_heading_rudder_config",
-    "load_packaged_b1528_moored_current_config",
-    "load_packaged_b1528_time_trace_config",
-    "load_packaged_b1528_yaw_config",
     "load_packaged_rudder_stock_torque_yaml",
     "load_packaged_turning_circle_yaml",
     "load_packaged_typical_ship_yaml",
@@ -107,24 +82,15 @@ __all__ = [
     "register_fleet_vessels",
     "rig_type_to_hull_form",
     "rudder_yaw_moment",
-    "run_b1528_static_yaw_report",
-    "run_b1528_current_heading_rudder_report",
-    "run_b1528_moored_current_report",
-    "run_b1528_time_trace_report",
     "run_rudder_stock_torque_sweep",
     "run_turning_circle_sweep",
     "run_yaw_moment_sweep",
-    "simulate_b1528_time_trace",
     "simulate_nomoto_turning_circle",
     "stability_curve_estimate",
     "summarize_drilling_rig_hull_validation",
     "validate_drilling_rig_fleet",
     "validate_drilling_rig_hull_form",
     "validate_vessel_entry",
-    "write_b1528_static_yaw_report",
-    "write_b1528_current_heading_rudder_report",
-    "write_b1528_moored_current_report",
-    "write_b1528_time_trace_report",
     "write_turning_circle_results",
     "write_yaw_moment_results",
 ]

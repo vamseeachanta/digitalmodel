@@ -6,11 +6,11 @@ default:
 
 Files: 
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\SLWR_Extreme\Static\SLWR_16OD_SE1200_HE1500_1LC_GA2_Driving.sim
+    Name: ..\SLWR_Extreme\Static\SLWR_16OD_SE1200_HE1500_1LC_GA2_Driving.sim
     Label: Far Direction 750psi
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\DesignPressure_8000Psi\SLWR_16OD_SE1200_HE1500_8000psi.sim
+    Name: ..\DesignPressure_8000Psi\SLWR_16OD_SE1200_HE1500_8000psi.sim
     Label: Far Direction 8000psi
     ObjectName: SLWR
 

@@ -2,7 +2,10 @@ import xlrd
 import numpy as np
 import math
 
-workbook = xlrd.open_workbook('C:/Users/AceEngineer/Dropbox/0119 Programming/007 Stack-Up/Rev2/testData/riserStackup.xlsx')  # Open Excel file 
+from digitalmodel.infrastructure.utils.private_paths import private_data_path
+
+# Workbook in, drawing script and picture out: DIGITALMODEL_PRIVATE_DATA.
+workbook = xlrd.open_workbook(str(private_data_path("riserStackup.xlsx")))  # Open Excel file 
 sheet = workbook.sheet_by_name(u'Design Data')   # Read Sheet
 
 youngsModulus = 2.12E+08 # young's Modulus of Riser
@@ -153,7 +156,8 @@ def StackUpDiagram():
         print("        pygame.draw.line(DISPLAY,aceColors.black,(500,90),(430,250),5) # Left-Side",file=stackup)
         print("        pygame.draw.line(DISPLAY,aceColors.black,(505,90),(435,250),5) # Left-Side",file=stackup)
         print("        pygame.display.flip()", file=stackup)
-        print('        pygame.image.save(DISPLAY, "C:/Users/AceEngineer/Dropbox/0119 Programming/007 Stack-Up/Rev2/testData/Riser Stack-up_3000ft.png")', file=stackup)
+        png = str(private_data_path("Riser Stack-up_3000ft.png"))
+        print(f'        pygame.image.save(DISPLAY, {png!r})', file=stackup)
                         
                         
         print("stackUpLength : ",stackUpLength)
@@ -175,12 +179,12 @@ def StackUpDiagram():
                 
         print(fromMLArray)
                 
-with open('C:/Users/AceEngineer/Dropbox/0119 Programming/007 Stack-Up/Rev2/stackUpDrawing.py','w') as stackup:
+with open(private_data_path('stackUpDrawing.py'),'w') as stackup:
     StackUpDiagram()
 
 stackup.close()
 
-with open('C:/Users/AceEngineer/Dropbox/0119 Programming/007 Stack-Up/Rev2/stackUpDrawing.py','a') as stackup:
+with open(private_data_path('stackUpDrawing.py'),'a') as stackup:
     print('import os', file=stackup)
     print('import xlrd', file=stackup)
     print('import pygame, sys', file=stackup)

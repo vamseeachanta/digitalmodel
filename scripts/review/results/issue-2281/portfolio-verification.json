@@ -1,0 +1,77 @@
+{
+  "candidate": "CP portfolio revision00",
+  "rows": [
+    {
+      "id": "S01",
+      "exact_result_match": true,
+      "preserved_source_tables": 13,
+      "preserved_plot_payloads": 2
+    },
+    {
+      "id": "S02",
+      "exact_result_match": true,
+      "preserved_source_tables": 13,
+      "preserved_plot_payloads": 2
+    },
+    {
+      "id": "S03",
+      "exact_result_match": true,
+      "preserved_source_tables": 13,
+      "preserved_plot_payloads": 2
+    },
+    {
+      "id": "S04",
+      "exact_result_match": true,
+      "preserved_source_tables": 19,
+      "preserved_plot_payloads": 0
+    },
+    {
+      "id": "S05",
+      "exact_result_match": true,
+      "preserved_source_tables": 10,
+      "preserved_plot_payloads": 0
+    },
+    {
+      "id": "S06",
+      "exact_result_match": true,
+      "preserved_source_tables": 13,
+      "preserved_plot_payloads": 1
+    },
+    {
+      "id": "S07",
+      "exact_result_match": true,
+      "preserved_source_tables": 12,
+      "preserved_plot_payloads": 1
+    },
+    {
+      "id": "S08",
+      "exact_result_match": true,
+      "preserved_source_tables": 12,
+      "preserved_plot_payloads": 0
+    },
+    {
+      "id": "S09",
+      "exact_result_match": true,
+      "preserved_source_tables": 16,
+      "preserved_plot_payloads": 1
+    },
+    {
+      "id": "S10",
+      "exact_result_match": true,
+      "preserved_source_tables": 16,
+      "preserved_plot_payloads": 1
+    },
+    {
+      "id": "S11",
+      "exact_result_match": true,
+      "preserved_source_tables": 12,
+      "preserved_plot_payloads": 1
+    }
+  ],
+  "deterministic_rebuild_all_files": true,
+  "jacket_matches_preserved_original_results": true,
+  "identifier_scan_files": 129,
+  "identifier_scan_findings": 0,
+  "manual_visual_review": "deferred_by_owner",
+  "complete": false
+}

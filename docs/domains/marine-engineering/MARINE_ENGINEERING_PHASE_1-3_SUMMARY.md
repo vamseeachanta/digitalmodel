@@ -773,7 +773,7 @@ python scripts/generate_integration_charts.py
 
 ### Issue Reporting
 - GitHub Issues: [Report bugs or request features]
-- Email: vamsee.achanta@aceengineer.com
+- Email: [email removed]
 - Documentation: See `docs/` for troubleshooting
 
 ---

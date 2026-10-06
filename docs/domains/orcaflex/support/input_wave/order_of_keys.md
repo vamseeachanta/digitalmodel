@@ -21,10 +21,10 @@ Best regards,
 
 David Heffernan
 
-From: Vamsee Achanta <vamseea@acma-inc.com> 
+From: Vamsee Achanta [email removed] 
 Sent: 23 December 2024 10:02
-To: Orcina <orcina@orcina.com>
-Cc: Scott McClure <scottm@acma-inc.com>
+To: Orcina [email removed]
+Cc: Scott McClure [email removed]
 Subject: OrcaFlex | Tp | not reading accurately?
 
 Dear Support Representative,

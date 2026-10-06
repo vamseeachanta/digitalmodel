@@ -135,9 +135,9 @@ def test_explorer_discovery_excludes_frozen_dupes():
     assert found, "no explorers discovered"
     assert all("capabilities/api" not in p for p in found)
     live = {
-        str(p.relative_to(REPO))
+        p.relative_to(REPO).as_posix()  # posix on every OS, like discover_explorers
         for p in (REPO / "docs" / "api").rglob("*-explorer.html")
-        if "capabilities/api" not in str(p)
+        if "capabilities/api" not in p.as_posix()
     }
     assert set(found) == live
 

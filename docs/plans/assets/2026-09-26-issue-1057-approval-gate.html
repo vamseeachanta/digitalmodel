@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FFS Approval Gate</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F5F6F4; --surface:#FFFFFF; --surface-2:#EDF0EE; --ink:#1E2A38; --muted:#5F6B79; --line:#D5DAD6;
+  --accent:#2C6E9C; --accent-ink:#FFFFFF; --ok:#2C7A57; --warn:#A6710F;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#131920; --surface:#1B232D; --surface-2:#222C38; --ink:#E4E9EE; --muted:#9AA6B3; --line:#33404D;
+    --accent:#5FA3D6; --accent-ink:#0F1720; --ok:#5DBA8E; --warn:#D9A441; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131920; --surface:#1B232D; --surface-2:#222C38; --ink:#E4E9EE; --muted:#9AA6B3; --line:#33404D;
+  --accent:#5FA3D6; --accent-ink:#0F1720; --ok:#5DBA8E; --warn:#D9A441; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
+body{padding-block:0 6rem}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.92em}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px;display:grid;grid-template-columns:240px minmax(0,1fr);gap:28px}
+header.top{grid-column:1/-1;padding-block:28px 8px;border-bottom:1px solid var(--line)}
+header.top h1{margin:0 0 6px;font-size:1.65rem;font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+header.top p{margin:0;color:var(--muted);max-width:72ch}
+.eyebrow{font-family:var(--mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.recorded{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.recorded div{background:var(--surface-2);border-radius:6px;padding:8px 10px;font-size:.85rem}
+.recorded b{display:block;font-family:var(--mono);font-weight:500;color:var(--ok);font-size:.78rem}
+nav.rail{position:sticky;top:16px;align-self:start;display:flex;flex-direction:column;gap:4px}
+nav.rail a{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;text-decoration:none;color:var(--ink);font-size:.92rem}
+nav.rail a:hover{background:var(--surface-2)}
+nav.rail .dot{width:10px;height:10px;border-radius:50%;background:var(--line);flex:none}
+nav.rail a.done .dot{background:var(--ok)}
+nav.rail .progress{margin-top:10px;padding:10px;border-top:1px solid var(--line);font-size:.85rem;color:var(--muted)}
+main{display:flex;flex-direction:column;gap:22px;min-width:0}
+section.decision{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:20px 22px;display:grid;gap:14px}
+section.decision.done{border-color:var(--ok)}
+.dhead{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.dhead .id{font-family:var(--mono);font-weight:500;color:var(--accent)}
+.dhead h2{margin:0;font-size:1.15rem;font-weight:600;text-wrap:balance}
+.dhead .state{margin-left:auto;font-size:.78rem;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+section.done .dhead .state{border-color:var(--ok);color:var(--ok)}
+.context{color:var(--muted);margin:0;max-width:78ch}
+.context b{color:var(--ink);font-weight:500}
+.opts{display:grid;gap:8px}
+.opt{display:grid;grid-template-columns:20px 1fr;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;cursor:pointer;background:var(--surface)}
+.opt:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+.opt input{margin:4px 0 0}
+.opt .lab{font-weight:500}
+.opt .why{color:var(--muted);font-size:.9rem}
+.opt .rec{font-family:var(--mono);font-size:.72rem;color:var(--ok);margin-left:6px;letter-spacing:.04em}
+.opt .issue{font-family:var(--mono);font-size:.85rem;color:var(--muted)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+label.small{font-size:.85rem;color:var(--muted)}
+textarea,input[type=text],input[type=date]{font:inherit;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+textarea{width:100%;min-height:64px;resize:vertical}
+input[type=text].wide{width:100%}
+.consequence{font-size:.9rem;color:var(--muted);border-left:3px solid var(--line);padding:4px 10px;margin:0}
+.consequence b{color:var(--ink);font-weight:500}
+button{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;padding:6px 12px;cursor:pointer}
+button:hover{background:var(--surface-2)}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button:focus-visible,.opt:focus-within,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+.bar .in{max-width:1180px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bar .status{color:var(--muted);font-size:.9rem;margin-right:auto}
+.bar .toast{font-size:.85rem;color:var(--ok)}
+section.export pre{margin:0;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:12px;overflow:auto;font-family:var(--mono);font-size:.82rem;line-height:1.45;max-height:460px}
+@media (max-width:820px){.wrap{grid-template-columns:1fr}nav.rail{position:static;flex-direction:row;flex-wrap:wrap}nav.rail .progress{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">digitalmodel · epic #1057 · plan r1.3 · PR #2204 · 2026-09-26</div>
+    <h1>FFS Approval Gate</h1>
+    <p>What remains after your first round of decisions: confirm the D3 finding, close D6, approve the plan, decide how PR #2204 lands, and choose how Wave 0 starts. Export the record when done; it carries the exact commands.</p>
+  </header>
+
+  <div class="recorded" aria-label="Already decided">
+    <div><b>D1 A</b>one shared vocabulary (#2205)</div>
+    <div><b>D2 A</b>solver spike first (#2178)</div>
+    <div><b>D4</b>#2198 → #2202 → #2201 → #2172 → #2199 → #2200</div>
+    <div><b>D5 B</b>design screens split out</div>
+    <div><b>D6 A</b>Gemini re-run: no output, twice</div>
+  </div>
+
+  <nav class="rail" id="rail" aria-label="Decisions">
+    <a href="#G1" data-nav="G1"><span>G1 D3 finding</span><span class="dot"></span></a>
+    <a href="#G2" data-nav="G2"><span>G2 Close D6</span><span class="dot"></span></a>
+    <a href="#G3" data-nav="G3"><span>G3 Approve plan</span><span class="dot"></span></a>
+    <a href="#G4" data-nav="G4"><span>G4 Land PR #2204</span><span class="dot"></span></a>
+    <a href="#G5" data-nav="G5"><span>G5 Wave 0 scope</span><span class="dot"></span></a>
+    <a href="#G6" data-nav="G6"><span>G6 Wave 0 mode</span><span class="dot"></span></a>
+    <div class="progress" id="progress">0 of 6 decided</div>
+  </nav>
+
+  <main>
+    <section class="decision" id="G1" data-id="G1">
+      <div class="dhead"><span class="id">G1</span><h2>Accept the D3 finding?</h2><span class="state">open</span></div>
+      <p class="context"><b>Finding.</b> The #2157 plan (PR #2194, card R01) settled the API 579 2016 Level 2 FAD form on secondary sources: an open-access peer-reviewed paper says Level 2 uses the BS 7910 Level 2A generic curve; the licensed BS 7910:2013 text confirms Option 1 is a different form (the one <code>crack_fad</code> implements today); your card G10 declared the Level 2 form committable. The 2007 text we hold points to Figure 9.20, an image the extraction did not capture. Only a primary read of the DRM-protected 2016 PDF remains.</p>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="G1" value="A"><span><span class="lab">Resolved by literature; viewer check optional</span><span class="rec">recommended</span><br><span class="why">#2175 and #2157 implement the Level 2A form with the open-literature citation. The viewer check becomes a verification item on #2157.</span></span></label>
+        <label class="opt"><input type="radio" name="G1" value="B"><span><span class="lab">Resolved, and I will do the viewer check by a date</span><br><span class="why">Same as A, plus a dated primary-source confirmation recorded on #2157 card R01.</span></span></label>
+        <label class="opt"><input type="radio" name="G1" value="C"><span><span class="lab">Not resolved; keep the BS 7910 Option 1 label</span><br><span class="why">Part 9 workflows ship as BS 7910 assessments until a primary read exists.</span></span></label>
+      </div>
+      <div class="row"><label class="small" for="G1-date">Viewer-check date (option B)</label><input type="date" id="G1-date" data-extra></div>
+      <p class="consequence" data-conseq></p>
+      <label class="small" for="G1-note">Note (optional)</label><textarea id="G1-note" data-note></textarea>
+    </section>
+
+    <section class="decision" id="G2" data-id="G2">
+      <div class="dhead"><span class="id">G2</span><h2>How does D6 close?</h2><span class="state">open</span></div>
+      <p class="context"><b>State.</b> Claude r1 MAJOR, Codex r1 MAJOR and Codex r1.1 MAJOR were all applied. Gemini failed twice on the dev-primary Windows host: killed under memory pressure, then an empty response with a clean exit. The routing policy defaults to three providers; the CLI is installed on ace-linux-1 as well.</p>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="G2" value="A"><span><span class="lab">Accept the two-provider review and record the exception</span><span class="rec">recommended</span><br><span class="why">Two independent MAJOR-then-applied rounds already exist. Exception noted on #1057 and in the plan's review table.</span></span></label>
+        <label class="opt"><input type="radio" name="G2" value="B"><span><span class="lab">I will run Gemini on ace-linux-1 from my shell and attach the artifact</span><br><span class="why">Command below is included in the export. Approval waits for the artifact path.</span></span></label>
+        <label class="opt"><input type="radio" name="G2" value="C"><span><span class="lab">Approve now; Gemini pass required before Wave 1 starts</span><br><span class="why">Wave 0 hygiene proceeds; the third review lands before new offerings are wired.</span></span></label>
+      </div>
+      <div class="row"><label class="small" for="G2-artifact">Artifact path (option B, when done)</label><input type="text" class="wide" id="G2-artifact" data-extra placeholder="e.g. scripts/review/results/2026-09-26-plan-1057-gemini.md"></div>
+      <p class="consequence" data-conseq></p>
+      <label class="small" for="G2-note">Note (optional)</label><textarea id="G2-note" data-note></textarea>
+    </section>
+
+    <section class="decision" id="G3" data-id="G3">
+      <div class="dhead"><span class="id">G3</span><h2>Approve plan r1.3?</h2><span class="state">open</span></div>
+      <p class="context"><b>Gate.</b> Only the owner applies <code>status:plan-approved</code>. r1.3 carries your D1, D2, D4, D5 and D6 choices, the D3 finding, the design-screen split, the catalog test (8 passing) and CI green on the completed jobs.</p>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="G3" value="APPROVE"><span><span class="lab">Approve r1.3</span><br><span class="why">Export includes the label swap.</span></span></label>
+        <label class="opt"><input type="radio" name="G3" value="CHANGES"><span><span class="lab">Approve with the changes noted below</span><br><span class="why">Folded into r1.4 first; label after.</span></span></label>
+        <label class="opt"><input type="radio" name="G3" value="HOLD"><span><span class="lab">Hold</span><br><span class="why">Say what is missing.</span></span></label>
+      </div>
+      <label class="small" for="G3-note">Changes required or reasons to hold</label><textarea id="G3-note" data-note></textarea>
+    </section>
+
+    <section class="decision" id="G4" data-id="G4">
+      <div class="dhead"><span class="id">G4</span><h2>How does PR #2204 land?</h2><span class="state">open</span></div>
+      <p class="context"><b>Contents.</b> Plan r1.3, both catalog files, the catalog test, the lookup-table page, the two program notes (from the closed PR #2186), the ROADMAP gap line, and both decision pages. Docs and data only, no engine code. Branch protection blocks in-session merges to main; the export uses <code>gh pr merge</code>.</p>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="G4" value="A"><span><span class="lab">Squash-merge once approved</span><span class="rec">recommended</span><br><span class="why">One commit on main; branch deleted; worktree removed.</span></span></label>
+        <label class="opt"><input type="radio" name="G4" value="B"><span><span class="lab">Merge commit, keep the review history</span><br><span class="why">Five commits (r1, r1.1, r1.2, r1.3, Gemini note) stay visible on main.</span></span></label>
+        <label class="opt"><input type="radio" name="G4" value="C"><span><span class="lab">Keep the PR open; iterate the plan there</span><br><span class="why">Wave 0 branches base on main and cite the PR.</span></span></label>
+      </div>
+      <p class="consequence" data-conseq></p>
+      <label class="small" for="G4-note">Note (optional)</label><textarea id="G4-note" data-note></textarea>
+    </section>
+
+    <section class="decision" id="G5" data-id="G5">
+      <div class="dhead"><span class="id">G5</span><h2>Which Wave 0 issues start now?</h2><span class="state">open</span></div>
+      <p class="context"><b>Wave 0</b> is hygiene and foundations with no new physics. All six are disjoint. Untick anything you want to hold.</p>
+      <div class="opts" id="G5-opts">
+        <label class="opt"><input type="checkbox" name="G5" value="2160" checked><span><span class="lab">Consolidate the three FAD implementations; real BS 7910 tests</span> <span class="issue">#2160</span><br><span class="why">Unblocks #2175, #2176, #2184.</span></span></label>
+        <label class="opt"><input type="checkbox" name="G5" value="2171" checked><span><span class="lab">Annex F material library (toughness + true stress-strain)</span> <span class="issue">#2171</span><br><span class="why">Unblocks #2173, #2174, #2175.</span></span></label>
+        <label class="opt"><input type="checkbox" name="G5" value="1094" checked><span><span class="lab">Applicability-limit layer (flags, not silent numbers)</span> <span class="issue">#1094</span><br><span class="why">Adversarial findings on B31G / F101 / Folias.</span></span></label>
+        <label class="opt"><input type="checkbox" name="G5" value="2205" checked><span><span class="lab">Generalize ffs_decision for non-pressure assets</span> <span class="issue">#2205</span><br><span class="why">Your D1. Gates every Wave 2 verdict.</span></span></label>
+        <label class="opt"><input type="checkbox" name="G5" value="2197" checked><span><span class="lab">Catalog loader, renderer, API RP 571 crosswalk, capability map</span> <span class="issue">#2197</span><br><span class="why">Covers both catalog files after your D5.</span></span></label>
+        <label class="opt"><input type="checkbox" name="G5" value="2180" checked><span><span class="lab">Route canonical ffs-metal-loss and inspection-planning in Deckhand</span> <span class="issue">#2180</span><br><span class="why">Cross-repo: needs a deckhand PR. First two rows to reach live.</span></span></label>
+      </div>
+      <div class="row"><button type="button" class="primary" id="G5-confirm">Confirm selection</button></div>
+      <p class="consequence" data-conseq></p>
+      <label class="small" for="G5-note">Note (optional)</label><textarea id="G5-note" data-note></textarea>
+    </section>
+
+    <section class="decision" id="G6" data-id="G6">
+      <div class="dhead"><span class="id">G6</span><h2>How is Wave 0 executed?</h2><span class="state">open</span></div>
+      <p class="context"><b>Per-issue protocol</b> is fixed by the plan: plan-lite, adversarial review, your <code>status:plan-approved</code> on each issue, TDD, worktree, PR with cross-review. The choice here is how much runs at once and where.</p>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="G6" value="A"><span><span class="lab">Plan-lites for all selected issues first, then implement after you approve each</span><span class="rec">recommended</span><br><span class="why">Six short plans land as issue comments in one pass; you approve them in a batch; implementation runs in parallel worktrees on the dev-primary Windows host.</span></span></label>
+        <label class="opt"><input type="radio" name="G6" value="B"><span><span class="lab">One issue end to end at a time, in the order listed</span><br><span class="why">Plan, approve, implement, PR, then the next. Slowest, easiest to follow.</span></span></label>
+        <label class="opt"><input type="radio" name="G6" value="C"><span><span class="lab">Parallel subagents, each owning one issue from plan-lite to PR</span><br><span class="why">Fastest wall clock; you approve six plan-lites and review six PRs close together. Memory pressure on this host is a known risk.</span></span></label>
+      </div>
+      <p class="consequence" data-conseq></p>
+      <label class="small" for="G6-note">Note (optional)</label><textarea id="G6-note" data-note></textarea>
+    </section>
+
+    <section class="decision export" id="EXPORT">
+      <div class="dhead"><span class="id">OUT</span><h2>Decision record</h2></div>
+      <p class="context">Paste this back to me, or save it as <code>gate.md</code> and run the commands at the end.</p>
+      <pre id="preview" aria-live="polite"></pre>
+      <div class="row">
+        <button type="button" class="primary" id="copy">Copy Markdown</button>
+        <button type="button" id="download-md">Download .md</button>
+        <button type="button" id="download-json">Download .json</button>
+        <label class="small" for="import-json">Load a saved .json</label><input type="file" id="import-json" accept="application/json">
+        <button type="button" id="clear">Clear all choices</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="bar"><div class="in">
+  <span class="status" id="barstatus">0 of 6 decided</span>
+  <span class="toast" id="toast" aria-live="polite"></span>
+  <button type="button" class="primary" id="copy2">Copy Markdown</button>
+</div></div>
+
+<script>
+(function(){
+  const KEY='ffs-1057-gate-v1';
+  const IDS=['G1','G2','G3','G4','G5','G6'];
+  const TITLES={G1:'D3 finding',G2:'D6 closure',G3:'Plan r1.3 approval',G4:'PR #2204 landing',G5:'Wave 0 scope',G6:'Wave 0 execution mode'};
+  const LABELS={
+    G1:{A:'Resolved by literature; viewer check optional',B:'Resolved; owner does the viewer check by the date given',C:'Not resolved; keep the BS 7910 Option 1 label'},
+    G2:{A:'Accept the two-provider review; exception recorded',B:'Owner runs Gemini on ace-linux-1 and attaches the artifact',C:'Approve now; Gemini pass required before Wave 1'},
+    G3:{APPROVE:'Approve r1.3',CHANGES:'Approve with changes',HOLD:'Hold'},
+    G4:{A:'Squash-merge once approved',B:'Merge commit, keep review history',C:'Keep the PR open'},
+    G6:{A:'Plan-lites first for all selected issues, batch approval, then parallel worktrees',B:'One issue end to end at a time',C:'Parallel subagents, one issue each, plan-lite to PR'}
+  };
+  const CONSEQ={
+    G1:{A:'#2175 and #2157 implement the Level 2A form; card R01 becomes a verification item.',B:'Same as A; the date is recorded on #2157 card R01.',C:'#2175 ships as a BS 7910 workflow; catalog rows say so.'},
+    G2:{A:'Plan review table gains an "exception accepted by owner" row; approval may proceed.',B:'Approval waits for the artifact path; the export includes the command.',C:'Wave 0 starts on approval; Wave 1 issues gain a Gemini-pass prerequisite.'},
+    G4:{A:'gh pr merge --squash --delete-branch; worktree removed after.',B:'gh pr merge --merge --delete-branch.',C:'PR stays open; Wave 0 branches cite it.'},
+    G6:{A:'Six plan-lite comments in one pass; implementation waits for your batch approval.',B:'Sequential; expect one PR per cycle.',C:'Six subagents in worktrees; watch host memory.'}
+  };
+  const W0={'2160':'FAD consolidation','2171':'Annex F material library','1094':'applicability-limit layer','2205':'ffs_decision generalization','2197':'catalog loader + renderer + 571 crosswalk','2180':'Deckhand routes for canonical workflows'};
+  let state={choices:{},notes:{},extra:{},w0:Object.keys(W0),w0Confirmed:false};
+  function load(){try{const s=localStorage.getItem(KEY);if(s)state=Object.assign(state,JSON.parse(s));}catch(e){}}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+  function decided(id){return id==='G5'?state.w0Confirmed:!!state.choices[id];}
+  function markdown(){
+    const today=new Date().toISOString().slice(0,10);
+    let md=`## Approval-gate decisions on plan r1.3 (${today})\n\nPlan: \`docs/plans/2026-09-25-issue-1057-ffs-offering-program.md\` (PR #2204). From \`docs/plans/assets/2026-09-26-issue-1057-approval-gate.html\`.\n\n`;
+    IDS.forEach(id=>{
+      const t=TITLES[id];
+      if(id==='G5'){ md+=`**G5 ${t}:** `+(state.w0Confirmed?(state.w0.length?state.w0.map(x=>`#${x}`).join(', '):'none selected'):'_undecided_')+'\n'; }
+      else{
+        const c=state.choices[id];
+        md+=`**${id} ${t}:** `+(c?`${c} — ${LABELS[id][c]}`:'_undecided_');
+        if(id==='G1'&&c==='B'&&state.extra['G1-date']) md+=` (by ${state.extra['G1-date']})`;
+        if(id==='G2'&&c==='B'&&state.extra['G2-artifact']) md+=` (artifact: ${state.extra['G2-artifact']})`;
+        md+='\n';
+        if(c&&CONSEQ[id]&&CONSEQ[id][c]) md+=`  - consequence: ${CONSEQ[id][c]}\n`;
+      }
+      if(state.notes[id]&&state.notes[id].trim()) md+=`  - note: ${state.notes[id].trim().replace(/\n+/g,' ')}\n`;
+    });
+    const n=IDS.filter(decided).length;
+    md+=`\n_${n} of ${IDS.length} decided._\n\n`;
+    md+='```bash\n# 1. post this record on the epic (save as gate.md first)\ngh issue comment 1057 -R vamseeachanta/digitalmodel -F gate.md\n';
+    if(state.choices.G2==='B') md+='# 2. Gemini on ace-linux-1 (your shell), then paste the artifact path into G2\nssh ace-linux-1 "cd ~/ws/workspace-hub && bash scripts/review/plan-review-fanout.sh ../digitalmodel/docs/plans/2026-09-25-issue-1057-ffs-offering-program.md --providers=gemini"\n';
+    const canApprove = state.choices.G3==='APPROVE' && state.choices.G2 && (state.choices.G2!=='B' || !!state.extra['G2-artifact']);
+    if(canApprove){
+      md+='# 3. approval label\ngh issue edit 1057 -R vamseeachanta/digitalmodel --remove-label status:plan-review --add-label status:plan-approved\n';
+      if(state.choices.G4==='A') md+='# 4. land the plan PR\ngh pr merge 2204 -R vamseeachanta/digitalmodel --squash --delete-branch\n';
+      if(state.choices.G4==='B') md+='# 4. land the plan PR\ngh pr merge 2204 -R vamseeachanta/digitalmodel --merge --delete-branch\n';
+    } else if(state.choices.G3==='APPROVE'){
+      md+='# approval label withheld: G2 not closed (choose A or C, or attach the Gemini artifact for B)\n';
+    } else if(state.choices.G3==='CHANGES'){ md+='# label after r1.4 lands with the changes above\n'; }
+    md+='```\n';
+    return md;
+  }
+  function render(){
+    let n=0;
+    IDS.forEach(id=>{
+      const sec=document.getElementById(id); const d=decided(id); if(d)n++;
+      sec.classList.toggle('done',d); sec.querySelector('.state').textContent=d?'decided':'open';
+      document.querySelector(`[data-nav="${id}"]`).classList.toggle('done',d);
+      const cq=sec.querySelector('[data-conseq]');
+      if(cq){ let html=''; if(id==='G5'){ if(state.w0Confirmed) html=`<b>Consequence:</b> ${state.w0.length} plan-lites; first live rows come from #2180.`; } else { const c=state.choices[id]; if(c&&CONSEQ[id]&&CONSEQ[id][c]) html=`<b>Consequence:</b> ${CONSEQ[id][c]}`; } cq.innerHTML=html; cq.hidden=!html; }
+    });
+    const txt=`${n} of ${IDS.length} decided`;
+    document.getElementById('progress').textContent=txt; document.getElementById('barstatus').textContent=txt;
+    document.getElementById('preview').textContent=markdown();
+  }
+  function hydrate(){
+    Object.entries(state.choices).forEach(([id,v])=>{const el=document.querySelector(`input[name="${id}"][value="${v}"]`); if(el)el.checked=true;});
+    Object.entries(state.notes).forEach(([id,v])=>{const el=document.getElementById(`${id}-note`); if(el)el.value=v;});
+    Object.entries(state.extra).forEach(([id,v])=>{const el=document.getElementById(id); if(el)el.value=v;});
+    document.querySelectorAll('input[name="G5"]').forEach(cb=>cb.checked=state.w0.includes(cb.value));
+    render();
+  }
+  function toast(m){const t=document.getElementById('toast');t.textContent=m;setTimeout(()=>{if(t.textContent===m)t.textContent='';},2500);}
+  function download(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);}
+  async function copy(){const md=markdown();try{await navigator.clipboard.writeText(md);toast('Markdown copied');}catch(e){const pre=document.getElementById('preview');const r=document.createRange();r.selectNodeContents(pre);const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Select-all done; press Ctrl+C');}}
+  document.addEventListener('change',e=>{const t=e.target;
+    if(t.matches('input[type=radio]')){state.choices[t.name]=t.value;save();render();}
+    if(t.matches('input[name="G5"]')){state.w0=[...document.querySelectorAll('input[name="G5"]:checked')].map(x=>x.value);state.w0Confirmed=false;save();render();}
+    if(t.matches('[data-extra]')){state.extra[t.id]=t.value;save();render();}
+  });
+  document.addEventListener('input',e=>{const t=e.target; if(t.matches('[data-note]')){state.notes[t.id.replace('-note','')]=t.value;save();render();} if(t.matches('[data-extra]')){state.extra[t.id]=t.value;save();render();}});
+  document.getElementById('G5-confirm').onclick=()=>{state.w0Confirmed=true;save();render();toast('Wave 0 selection confirmed');};
+  document.getElementById('copy').onclick=copy; document.getElementById('copy2').onclick=copy;
+  document.getElementById('download-md').onclick=()=>download('gate.md',markdown(),'text/markdown');
+  document.getElementById('download-json').onclick=()=>download('ffs-1057-gate.json',JSON.stringify(state,null,2),'application/json');
+  document.getElementById('import-json').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{state=Object.assign(state,JSON.parse(r.result));save();document.querySelectorAll('input[type=radio]').forEach(x=>x.checked=false);hydrate();toast('Loaded');}catch(err){toast('That file is not a saved decision record');}};r.readAsText(f);};
+  document.getElementById('clear').onclick=()=>{state={choices:{},notes:{},extra:{},w0:Object.keys(W0),w0Confirmed:false};save();document.querySelectorAll('input[type=radio]').forEach(x=>x.checked=false);document.querySelectorAll('[data-note],[data-extra]').forEach(x=>x.value='');hydrate();toast('Cleared');};
+  load(); hydrate();
+})();
+</script>
+</body>
+</html>

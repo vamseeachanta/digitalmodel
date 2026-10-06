@@ -1,70 +1,102 @@
 source_type: standard
-source_description: "DNV-RP-B401 anode resistance calculations for slender stand-off and flush-mount anodes"
+source_description: "DNV-RP-B401 Table 10-7 anode resistance: long slender stand-off (calc-008 AFA1190) and short flush-mounted (calc-009 29 lb hull anode)"
 extracted_date: "2026-03-16"
+revised_date: "2026-09-25"
+revision_note: >-
+  #2213: the three former expected values (0.4209 / 0.3258 / 0.5114 ohm) came from a
+  Sunde half-space slender-body formula that is not in DNV-RP-B401 and traced to a
+  "riser modification CP calculation, Appendix 2" that is not in the repo (calc-009's
+  Appendix 2 is scanned and unextractable). They are replaced by values derived from
+  the Table 10-7 formulas with the calc-008 / calc-009 inputs; each example carries
+  its derivation.
 legal_scan_passed: true
 category: "cathodic_protection"
 subcategory: "anode_resistance"
 equations:
-  - name: "Slender Stand-off Anode Resistance"
+  - name: "Long Slender Stand-off Anode Resistance"
     latex: "R_a = \\frac{\\rho}{2\\pi L_a} \\left( \\ln\\frac{4L_a}{r_a} - 1 \\right) \\cdot k_{prox}"
-    description: "Anode-to-electrolyte resistance for long slender stand-off anodes per DNV-RP-B401 Table 10-7"
-  - name: "Flush-mount Anode Resistance (Sunde half-space)"
-    latex: "R_a = \\frac{\\rho}{\\pi L} \\left( \\ln\\frac{2L}{r} - 0.5 \\right)"
-    description: "Resistance for flush-mount hull anodes using Sunde half-space formula"
+    description: "Long slender stand-off anode (L >= 4r) per DNV-RP-B401 Table 10-7; k_prox = 1.3 for 0.15-0.30 m stand-off (Table 10-7 note 1)"
+  - name: "Short Flush-mounted Anode Resistance"
+    latex: "R_a = \\frac{0.315 \\rho}{\\sqrt{A}}"
+    description: "Short flush-mounted, bracelet and other anode types per DNV-RP-B401 Table 10-7; A is the exposed surface area"
 inputs:
   - name: "Seawater resistivity"
     symbol: "rho"
-    unit: "ohm-cm"
-    test_value: 31.0
+    unit: "ohm-m"
+    test_value: 0.22
   - name: "Anode length"
     symbol: "L_a"
-    unit: "inches"
-    test_value: 24.0
+    unit: "m"
+    test_value: 1.530
   - name: "Equivalent radius"
-    symbol: "r_eq"
-    unit: "inches"
-    test_value: 2.39
+    symbol: "r_a"
+    unit: "m"
+    test_value: 0.09488
 outputs:
   - name: "Anode resistance"
     symbol: "R_a"
     unit: "ohm"
-    test_expected: 0.4209
-    tolerance: 0.021
+    test_expected: 0.07247
+    tolerance: 0.0001
 worked_examples:
-  - description: "Flush-mount 29lb anode on suction pile (rho=31 ohm-cm, L=24 in, r_eq=2.39 in)"
+  - description: "AFA1190 long slender stand-off, rho=0.22 ohm-m (calc-008 buoyancy tank / URA)"
+    source: "docs/domains/cathodic_protection/examples/calc-008-dnv-b401-2005-slhr-deepwater.md, 'Anode Resistance and Current Output' (Initial, 0.22 ohm-m: Ra = 0.072 ohm)"
+    derivation: "r = sqrt(119 / (pi * 1.530 * 2750)) = 0.09488 m; R_a = 0.22 / (2 pi 1.530) * (ln(4 * 1.530 / 0.09488) - 1) = 0.022885 * 3.1666 = 0.07247 ohm"
     inputs:
-      rho_ohm_cm: 31.0
-      L_a_in: 24.0
-      W_in: 5.0
-      H_in: 2.5
-      r_eq_in: 2.39
+      rho: 0.22
+      L_a: 1.530
+      r_a: 0.09488
     outputs:
-      resistance_ohm: 0.4209
+      resistance_ohm: 0.07247
+    tolerance: 0.0001
     use_as_test: true
-  - description: "Flush-mount 29lb anode on buoyancy can (rho=24 ohm-cm, L=24 in, r_eq=2.39 in)"
+  - description: "AFA1190 long slender stand-off, rho=0.32 ohm-m (calc-008 LRA / foundation)"
+    source: "calc-008, 'Anode Resistance and Current Output' (Initial, 0.32 ohm-m: Ra = 0.105 ohm)"
+    derivation: "same geometry scaled by rho: 0.07247 * 0.32 / 0.22 = 0.10541 ohm"
     inputs:
-      rho_ohm_cm: 24.0
-      L_a_in: 24.0
-      W_in: 5.0
-      H_in: 2.5
-      r_eq_in: 2.39
+      rho: 0.32
+      L_a: 1.530
+      r_a: 0.09488
     outputs:
-      resistance_ohm: 0.3258
+      resistance_ohm: 0.10541
+    tolerance: 0.0001
     use_as_test: true
-  - description: "Flush-mount depleted anode on suction pile (rho=31 ohm-cm, L=24 in, r_eq=0.90 in)"
+  - description: "AFA1190 with the Table 10-7 note 1 proximity factor 1.3 (calc-008 Section 5.3 stand-off 150-300 mm)"
+    source: "calc-008 note 'resistance multiplied by factor 1.3 per Section 5.3'; 24 buoyancy-tank anodes give 63.7 A = 2.65 A each = 0.25 / (1.3 * 0.07247)"
+    derivation: "1.3 * 0.07247 = 0.09421 ohm"
     inputs:
-      rho_ohm_cm: 31.0
-      L_a_in: 24.0
-      W_in: 5.0
-      H_in: 2.5
-      r_eq_in: 0.90
+      rho: 0.22
+      L_a: 1.530
+      r_a: 0.09488
+      proximity_factor: 1.3
     outputs:
-      resistance_ohm: 0.5114
+      resistance_ohm: 0.09421
+    tolerance: 0.0001
+    use_as_test: true
+  - description: "Flush-mount 29 lb hull anode on suction pile, rho=31 ohm-cm (calc-009)"
+    source: "docs/domains/cathodic_protection/examples/calc-009-dnv-b401-2005-fsr-temporary.md, 'Anode Specification' (24 in x 5 in x 2.5 in) and 'Environment' (31 ohm-cm suction pile)"
+    derivation: "A = 24 * 5 * 0.0254^2 = 0.077419 m2; R_a = 0.315 * 0.31 / sqrt(0.077419) = 0.35095 ohm (Table 10-7 short flush-mounted)"
+    inputs:
+      rho: 0.31
+      exposed_area_m2: 0.077419
+    outputs:
+      resistance_ohm: 0.35095
+    tolerance: 0.0001
+    use_as_test: true
+  - description: "Flush-mount 29 lb hull anode on buoyancy can, rho=24 ohm-cm (calc-009)"
+    source: "calc-009, 'Environment' (24 ohm-cm buoyancy cans)"
+    derivation: "R_a = 0.315 * 0.24 / sqrt(0.077419) = 0.27170 ohm"
+    inputs:
+      rho: 0.24
+      exposed_area_m2: 0.077419
+    outputs:
+      resistance_ohm: 0.27170
+    tolerance: 0.0001
     use_as_test: true
 assumptions:
-  - "Sunde half-space formula for flush-mount hull anodes"
-  - "Cross-section information collapsed into equivalent radius r_eq"
-  - "Imperial units (ohm-cm, inches) per standard CP design spreadsheet convention"
+  - "AFA1190 modelled as a cylinder of equal net mass (119 kg) and length (1.530 m) at 2750 kg/m3"
+  - "Short flush-mounted formula depends on the exposed face area only (the former r_eq input is not a Table 10-7 parameter)"
 references:
-  - "DNV-RP-B401 (2005/2017), Table 10-7"
-  - "Riser modification CP calculation, Appendix 2"
+  - "DNV-RP-B401 (2005/2010/2017/2021), Table 10-7"
+  - "docs/domains/cathodic_protection/examples/calc-008-dnv-b401-2005-slhr-deepwater.md"
+  - "docs/domains/cathodic_protection/examples/calc-009-dnv-b401-2005-fsr-temporary.md"

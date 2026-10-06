@@ -127,13 +127,13 @@ python aqwa_cli.py --list-methods
 python diffraction_cli.py aqwa --method raos --folder <path>
 
 # OrcaWave analysis
-python diffraction_cli.py orcawave --vessel sea_cypress
+python diffraction_cli.py orcawave --vessel tug_30m_1
 
 # List tools
 python diffraction_cli.py --list-tools
 
 # Dry run validation
-python diffraction_cli.py orcawave --vessel sea_cypress --dry-run
+python diffraction_cli.py orcawave --vessel tug_30m_1 --dry-run
 ```
 
 ### Code Enhancements
@@ -196,14 +196,14 @@ results = analyzer.analysis_router(cfg)
 **Command Line**:
 ```bash
 python src/digitalmodel/modules/diffraction_cli.py orcawave \
-    --vessel sea_cypress \
+    --vessel tug_30m_1 \
     --verbose
 ```
 
 **Validation Only**:
 ```bash
 python src/digitalmodel/modules/diffraction_cli.py orcawave \
-    --vessel sea_cypress \
+    --vessel tug_30m_1 \
     --dry-run
 ```
 
