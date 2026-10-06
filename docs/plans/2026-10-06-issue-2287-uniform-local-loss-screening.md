@@ -81,6 +81,44 @@ not predetermined engineering acceptance criteria.
 
 ## Authorized constructive preparation
 
+### Bounded preliminary pressure-method results
+
+The authorized continuation adds `pipe_pressure_wall_screen` to the existing
+`ffs_acceptance_curves` module, reusing raw B31G/Modified B31G/RSTRENG engines;
+existing convenience APIs are unchanged. The existing diagnostic runner offers
+`--preliminary-pressure --output PATH --plot PNG_PATH`. Four geometries and
+seven axial lengths produce 84 method/geometry/length cells. This is a named
+preliminary hoop-containment study, not an API 579 replacement or asset verdict.
+
+Inputs reuse synthetic X52, pressure 0.70 of intact B31.8 F=0.72 reference,
+ambient conditions and FCA=0. Safety factor is explicitly 1/0.72, distinct
+from historical rounded 1.39. Depth is bounded at 0.80 nominal wall. RSTRENG
+uses the actual rectangular two-point axial profile; original and Modified
+B31G retain their own method area approximations. No width slice is produced
+or certified. Closed-end axial capacity and other loads remain unassessed.
+
+Each cell retains all 101 wall-sample applicability records, fixed-geometry
+monotonicity basis, pressure margins and passing/failing brackets; bisection
+wall tolerance is 0.000001 in. Unsupported load/orientation/depth bounds are
+INAPPLICABLE. A lower-bound pressure pass is LOWER_BOUND_CENSORED with no solved
+threshold; a nominal-wall pressure failure is NO_PRESSURE_SOLUTION. Solved
+values use PRELIMINARY_THRESHOLD and a separate preliminary field. Every
+API579 allowable-wall and asset-acceptance field remains null. Absent raw depth
+flags is not proof of full code applicability. Exact adopted-code review is
+required before field use.
+
+These preliminary states are a separate vocabulary from the future qualified
+API 579 contract. Samples are constructed on a linear depth grid with exact
+zero-depth nominal endpoint and downward correction of construction roundoff
+at the depth bound only; genuinely unsupported depth bounds are rejected.
+
+The bounded review sweep produced 42 solved model thresholds and 42 censored
+cells at demand = 70% of the F=0.72 reference pressure; none is engineering
+acceptance at full design pressure. Original B31G long-flaw transition can
+produce jumps along length; connecting plot lines are only sample guides.
+Numeric JSON and plot remain task-local; reusable methods and this record
+stay in common Git. Source hashes/runtime/revision accompany the JSON.
+
 Run existing L1/L2 routines in a small reproducible diagnostic sweep to characterize implementation behavior, not to deliver allowable walls. Add tests before runner implementation: no qualified outputs, correct physical extent, width omission visible, long-flaw flags override raw verdict, finite input validation, provenance and reproducible case counts. Numerical diagnostic files stay task-local; reusable runner/spec and links enter digitalmodel. No change to production physics until exact source verification supports it.
 
 ## Level 3 concrete compute proposal (execution not authorized here)

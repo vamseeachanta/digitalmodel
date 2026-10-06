@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 
 from .assessment.ffs_coordinator import FFSComponent, assess_component
+from .corroded_pipe import SMYS_PSI
 
 BASE_REVISION = '2a52374d401e2f445d4baf435322f2cf18346c98'
 GEOMETRIES = ((12.75, 0.375), (16.0, 0.625), (20.0, 0.5), (30.0, 0.375))
@@ -43,7 +44,8 @@ def diagnose_case(*, od_in: float, nominal_wall_in: float,
         raise ValueError('Inputs must be finite and positive')
     if 2 * nominal_wall_in >= od_in or width_fraction > 1 or remaining_fraction > 1:
         raise ValueError('Invalid pipe geometry or fraction')
-    pressure = 0.70 * 2 * 52000.0 * 0.72 * nominal_wall_in / od_in
+    smys = SMYS_PSI['X52']
+    pressure = 0.70 * 2 * smys * 0.72 * nominal_wall_in / od_in
     wall = remaining_fraction * nominal_wall_in
     arc = width_fraction * math.pi * (od_in - nominal_wall_in)
     dx, dy = axial_length_in / 16, arc / 8
@@ -53,7 +55,7 @@ def diagnose_case(*, od_in: float, nominal_wall_in: float,
     component = FFSComponent(
         component_id='synthetic-uniform-loss-diagnostic', design_code='B31.8',
         nominal_od_in=od_in, nominal_wt_in=nominal_wall_in,
-        design_pressure_psi=pressure, smys_psi=52000.0,
+        design_pressure_psi=pressure, smys_psi=smys,
         fca_in=0.0, corrosion_rate_in_per_yr=0.0, rsf_a=0.9)
     result = assess_component(component, grid, force_type='LML')
     raw_l2 = dict(result.level2)
@@ -79,7 +81,7 @@ def diagnose_case(*, od_in: float, nominal_wall_in: float,
                        remaining_wall_in=wall, axial_length_in=axial_length_in,
                        width_fraction=width_fraction, width_arc_in=arc,
                        width_angle_deg=360 * width_fraction,
-                       pressure_psi=pressure, smys_psi=52000.0,
+                       pressure_psi=pressure, smys_psi=smys,
                        design_factor=0.72, pressure_fraction=0.70,
                        temperature_c=20.0, end_condition='closed',
                        superimposed_axial_force_lbf=0.0,
@@ -125,25 +127,109 @@ def run_study() -> dict:
     }, 'cases': cases}
 
 
+def run_preliminary_pressure_study() -> dict:
+    """84 named pressure-only thresholds, separate from API 579 diagnostics."""
+    from .ffs_acceptance_curves import pipe_pressure_wall_screen
+    cases = [pipe_pressure_wall_screen(
+        diameter, wall, 'X52', method, axial_length_in=length,
+        pressure_psi=.70*2*SMYS_PSI['X52']*.72*wall/diameter, safety_factor=1/.72)
+        for diameter, wall in GEOMETRIES for method in
+        ('b31g', 'modified_b31g', 'rstreng') for length in LENGTHS]
+    root = Path(__file__).parents[1]
+    hashes = {str(path.relative_to(root)).replace('\\', '/'):
+              hashlib.sha256(path.read_bytes()).hexdigest()
+              for path in sorted(root.rglob('*.py'))}
+    return {'meta': {
+        'issue': 'https://github.com/vamseeachanta/digitalmodel/issues/2287',
+        'purpose': 'preliminary hoop-controlled pressure-demand thresholds only',
+        'evidence_status': 'PRELIMINARY_ARITHMETIC_ONLY', 'qualified_cases': 0,
+        'source_sha256': hashes,
+        'source_hash_scope': 'all digitalmodel Python source files; raw checkout bytes',
+        'config_basis': 'fixed hashed-runner constants; no external config',
+        'units': {'length': 'in', 'pressure': 'psi', 'stress': 'psi'},
+        'data_origin': 'synthetic; four geometry-only ecosystem precedents',
+        'assumptions': ['X52 common assumed grade', 'ambient 20 degC',
+                        'external blunt longitudinal loss; no width classification',
+                        'nominal=sound wall; FCA=0; mill tolerance=0',
+                        'pressure demand=.70*intact B31.8 F=.72 E=T=1 reference',
+                        'explicit pressure safety factor=1/.72, not historical 1.39',
+                        'closed ends; separate axial tension capacity unassessed',
+                        'no superimposed axial force, bending, torque or external pressure',
+                        'implemented depth bound=.80; full code applicability not qualified'],
+        'api579_allowable_remaining_wall_in': None, 'asset_acceptance': None,
+    }, 'cases': cases}
+
+
+def plot_preliminary_pressure_study(result: dict, output: Path) -> None:
+    """Static scientific plot, with censoring gaps and explicit limited scope."""
+    if any(row['status'] not in {'PRELIMINARY_THRESHOLD', 'LOWER_BOUND_CENSORED'}
+           for row in result['cases']):
+        raise ValueError('Plot supports threshold/censored cells only; inspect other dispositions in JSON')
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    fig, axes = plt.subplots(2, 2, figsize=(12, 8), sharex=True)
+    for ax, (diameter, wall) in zip(axes.flat, GEOMETRIES):
+        for method in ('b31g', 'modified_b31g', 'rstreng'):
+            rows = [row for row in result['cases']
+                    if row['inputs']['od_in'] == diameter and row['method'] == method]
+            line, = ax.plot([r['inputs']['axial_length_in'] for r in rows],
+                    [r['preliminary_remaining_wall_in']
+                     if r['status'] == 'PRELIMINARY_THRESHOLD' else float('nan')
+                     for r in rows], marker='o', label=method)
+            censored = [r for r in rows if r['status'] == 'LOWER_BOUND_CENSORED']
+            ax.scatter([r['inputs']['axial_length_in'] for r in censored],
+                       [r['passing_bracket']['remaining_wall_in'] for r in censored],
+                       marker='v', facecolors='none', edgecolors=line.get_color())
+        demand = rows[0]['inputs']['pressure_psi']
+        ax.set_title(f'OD {diameter:g} in x wall {wall:g} in; demand {demand:.1f} psi')
+        ax.set_xscale('log', base=2)
+        ax.set_xticks(LENGTHS, [f'{length:g}' for length in LENGTHS])
+        ax.set_xlabel('Axial blunt-loss length (in)')
+        ax.set_ylabel('Model remaining-wall threshold (in)')
+        ax.grid(alpha=.3)
+        ax.legend(fontsize=8)
+    fig.suptitle('Preliminary pressure-demand thresholds: B31G / Modified B31G / RSTRENG')
+    fig.text(.5, .015, 'Synthetic X52; demand = 70% of F=0.72 reference pressure; '
+             'safety factor 1/0.72.\nHoop containment only; not API 579 or asset acceptance. '
+             'Open triangles: lower study bound meets demand '
+             '(threshold unresolved). Width and axial capacity unassessed.\n'
+             'Lines guide between seven sampled lengths; no qualified interpolation.', ha='center', fontsize=9)
+    fig.tight_layout(rect=(0, .065, 1, .95))
+    output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output, dpi=160)
+    plt.close(fig)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--preliminary-pressure', action='store_true')
+    parser.add_argument('--plot', type=Path)
     args = parser.parse_args()
+    if args.plot and not args.preliminary_pressure:
+        parser.error('--plot requires --preliminary-pressure')
     repo = Path(__file__).resolve().parents[3]
-    executing_revision = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=repo,
-                                        check=True, text=True, capture_output=True).stdout.strip()
-    dirty = subprocess.run(['git', 'status', '--porcelain'], cwd=repo,
-                           check=True, text=True, capture_output=True).stdout.strip()
-    result = run_study()
+    try:
+        executing_revision = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=repo,
+                                            check=True, text=True, capture_output=True).stdout.strip()
+        dirty = bool(subprocess.run(['git', 'status', '--porcelain'], cwd=repo,
+                                   check=True, text=True, capture_output=True).stdout.strip())
+        revision_status = 'GIT_CHECKOUT'
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        executing_revision, dirty, revision_status = None, None, 'GIT_PROVENANCE_UNAVAILABLE'
+    result = run_preliminary_pressure_study() if args.preliminary_pressure else run_study()
     result['meta']['runtime'] = dict(python=platform.python_version(),
                                    numpy=np.__version__, pandas=pd.__version__,
-                                   host=platform.node(), executing_revision=executing_revision,
-                                   working_tree_dirty=bool(dirty),
+                                   execution_platform=platform.system(), executing_revision=executing_revision,
+                                   working_tree_dirty=dirty, revision_status=revision_status,
                                    run_utc=datetime.now(timezone.utc).isoformat())
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2, allow_nan=False) + '\n',
                            encoding='utf-8')
-    print(f'{len(result["cases"])} diagnostic cases; 0 qualified allowable-wall cases')
+    if args.plot:
+        plot_preliminary_pressure_study(result, args.plot)
+    print(f'{len(result["cases"])} cases; 0 qualified allowable-wall cases')
 
 
 if __name__ == '__main__':

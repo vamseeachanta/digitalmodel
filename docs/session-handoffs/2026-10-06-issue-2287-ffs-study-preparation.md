@@ -76,6 +76,46 @@ is preserved for draft review. Canonical digitalmodel finance change was
 pre-existing and untouched. No worktree deletion or source migration occurs.
 Release ASCP issue-2287 claim `ffs/uniform-loss-study` before exit.
 
+## Continuation: bounded preliminary pressure methods
+
+The parent authorized useful preliminary B31G/Modified B31G/RSTRENG curves
+within internal-pressure hoop-controlled longitudinal blunt-loss scope. The
+existing curve module gained a bounded wall screen that calls raw engines
+with explicit safety factor 1/0.72 and retains applicability, sample pressures,
+brackets, margins and censoring. Existing curve/lookup APIs remain unchanged.
+The existing diagnostic CLI gained `--preliminary-pressure` and optional
+`--plot`; API 579 outputs and asset acceptance remain null in this mode too.
+
+Four original synthetic geometries, seven axial lengths and three methods
+produce 84 cells: 42 solved model pressure thresholds and 42 lower-bound
+censored cells in the review run. Width response, axial stress, bending,
+torsion, external pressure and instability are not assessed. Raw engines have
+historical arithmetic/table evidence, not a new full code/edition compliance
+audit. Unsupported direction/load/depth bounds return INAPPLICABLE/null.
+
+Tests were observed red for the absent helper, then passed after implementation.
+Full selected regression set: 148 passed, including 26 new pressure-study tests,
+the 784-case API 579 diagnostic and existing curves/raw methods/routing tests.
+Strict JSON uses null with reason for original B31G infinite-length Folias,
+not Infinity. Plot visually checked for axes/units/caption and censored markers;
+sample connecting lines explicitly carry no qualified interpolation claim.
+Independent Codex plan and code reviews approved this bounded scope; direct
+raw RSTRENG re-evaluation and endpoint regression suggestions were incorporated.
+Gemini CLI was unavailable because no authentication method is configured;
+no trust, credential or auth settings were changed. Claude plan/code review
+returned REQUEST CHANGES. Boundary rounding, runtime host removal, branch
+coverage, grade/SMYS provenance, demand labeling, unsupported plot outcomes
+and CLI provenance findings were addressed. Independent final Codex review
+disposition found no remaining blocking findings; this is not Claude approval.
+Documentation head `763892b6` reached 31 successful CI checks before pushing
+the preliminary numerical continuation.
+
+Task-local JSON/PNG, execution logs, provider-review logs and pytest temporary
+trees are intentional evidence; no numeric result or private source migration.
+Exact clean-run receipt and latest-head CI disposition are recorded in issue
+2287 at closeout. Preserve the load/code matrix and the source-qualified API
+579/Level 3 dependencies for subsequent engineering review.
+
 ## Final receipt and review disposition
 
 Clean executing revision: `f22659abd28bbf5ad2a11184f5c19d5481c8bbf8`.
