@@ -10,6 +10,15 @@ cited per row.
 
 ## Validation summary
 
+**Part 5 qualification correction (2026-10-06, issue 2287):** the Level 1/2
+rows below establish existing implementation checks, not edition-matched 2021
+Part 5 qualification for an axial-length/circumferential-width envelope. The
+canonical simplified Folias helper, circumferential polynomial helper and
+legacy fixture anchors disagree; L1 omits damage extent and L2 omits width.
+See [the source audit](uniform-loss-source-audit-2026-10-06.md) for exact record
+coverage, unresolved clause requests and conditional fixes/tests. Other method
+rows retain their existing independent validation scopes.
+
 | # | Method / module | Reference | Check | Result | Test |
 |---|---|---|---|---|---|
 | 1 | **Folias bulging factor** (`level2_engine._folias_factor`) | API 579-1/ASME FFS-1 Table 4.4 (M_t = √(1+0.48λ²)) | λ=1 / 2 / 5 | M_t = 1.217 / 1.709 / 3.606 ✓ | `test_ffs_validation::test_folias_factor_matches_api579_table_4_4` |

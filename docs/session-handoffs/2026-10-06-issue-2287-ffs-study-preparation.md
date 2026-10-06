@@ -97,3 +97,37 @@ basis, P7 discovery roles and P8 UTC date are explicit in the revised spec.
 Fixture-anchor provenance is not upgraded to normative status. Independent
 Codex final disposition reviewed f22659ab and found no remaining blocking
 preparation findings; qualified curves and Level 3 remain blocked.
+
+## Continuation: source qualification investigation
+
+The parent requested continued exact-source discovery after the preparation
+PR. The existing issue claim was checked and reacquired before writes. The
+write lane was extended only to qualification annotations in the two existing
+FFS validation records; no production physics or catalog-conversion edits.
+
+Exact source coverage is now recorded in the source audit: api-579-1 combines
+2021 header metadata with 2007 extracts; api-579-1-asme-ffs-1 contains one
+metadata page; api-std-579-asme-ffs-1 reports the 2016 original as encrypted,
+metadata-only and provisional-unverified. Ledger 2016-API579-PART5 has empty
+source paths/modules despite done processing status. No 2021 clause record,
+errata set, source digest or permitted implementation-use evidence was located
+in these surfaces. Local Linux index artifact is absent; ACE_SHARE_ROOT unset.
+
+Strict read-only Linux SSH probe failed host-key verification; no security,
+trust or credential change followed. Parent relay to the established standards
+coordinator requests exact owned 2021 source and the Folias/Tc/FCA/L1/L2
+applicability/profile/rerating clauses. The 2016 source-owner parser failure is
+not bypassed, and historical fragments are not substituted for 2021.
+
+Existing-code arithmetic verified lambda 1/2 helper discrepancies, and the
+source audit now contains conditional correction/test candidates and exact
+unverified implementation clause claims. Original validation records now
+explicitly qualify the scope of their historical arithmetic goldens. Independent
+Codex documentation review approved this continuation without blocking findings.
+Documentation routing checks: 9 passed. Whitespace checks passed. No additional
+study simulation or allowable-wall computation was performed.
+
+PR 2289 CI observed after preparation head 5332123b: 26 successful checks and
+four running, no reported failures at that observation. New documentation-only
+continuation updates the PR; retain latest-head CI status separately from this
+prior-head observation. Issue remains open awaiting source qualification.
