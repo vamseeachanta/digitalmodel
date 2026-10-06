@@ -23,11 +23,12 @@ def inputs():
     channel = dict(id="wave", label="Simulated wave", units="m",
                    history=dict(times=[240, 360], values=[0, 1]),
                    forecast=dict(times=[361, 480], values=[1, 0]),
-                   fit_status="fitted", assumed_limit=None)
-    demo = dict(scenarios=[dict(case_index=97, hs_m=2, tp_s=10,
-                              source_label="SIMULATED", frames=[dict(now_s=360, channels=[channel])])])
+                   fit_status="fitted", assumed_limit=None, training_end_s=360)
+    demo = dict(default_mode="history_only", scenarios=[dict(case_index=97, hs_m=2, tp_s=10,
+                              source_label="SIMULATED", frames=[dict(now_s=360, forecast_horizon_s=120, channels=[channel])])])
     payload = dict(title="Jumper installation analysis", created_utc="2026-09-18",
-                   cases=cases, criteria=[], demo=demo, limitations=[], provenance={})
+                   cases=cases, criteria=[], demo=demo, limitations=[], provenance={},
+                   engineering_acceptance="NOT EVALUATED")
     summary = dict(cases=source, counts={"VERIFIED": 156}, envelopes=[],
                    campaign_snapshot={"master_sha256": "a" * 64},
                    engineering_acceptance="NOT EVALUATED", matrix_sha256="b" * 64)

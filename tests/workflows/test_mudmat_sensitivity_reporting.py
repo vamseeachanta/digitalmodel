@@ -18,8 +18,10 @@ import tests.workflows.test_vessel_capability_screening as screening_fixture
 def _row(index, status, hs, tp, peak=50.0, step=0.05):
     row = dict(index=index, status=status, hs_m=hs, tp_s=tp, seed=7)
     if status == 'VERIFIED':
-        row.update(settings=dict(duration_s=600, fixed_time_step_s=step), peak_tension_kN=peak, maximum_low_tension_duration_s=1.0, run_dir='run', simulation_sha256='a',
-                   trace_sha256='b', channels={'load': dict(position='End A', units='kN', minimum=0., maximum=peak,
+        row.update(settings=dict(duration_s=600, fixed_time_step_s=step, hs_m=hs, tp_s=tp, seed=7,
+                                 buildup_s=80, sample_interval_s=.1, gamma=3.3, components=200, max_time_step_s=.1),
+                   peak_tension_kN=peak, maximum_low_tension_duration_s=1.0, run_dir='run', simulation_sha256='a',
+                   trace_sha256='b', metadata_sha256='d', channels={'load': dict(position='End A', units='kN', minimum=0., maximum=peak,
                                                             variable='Effective tension', object='Sling')})
     return row
 
@@ -31,14 +33,22 @@ def _summaries(tmp_path):
                                                                    dict(index=1, hs_m=1., tp_s=10, seed=7, status='FAILED')]},
                 cases=[_row(0, 'VERIFIED', 1., 8), _row(1, 'FAILED', 1., 10)], counts={'VERIFIED': 1, 'FAILED': 1})
     base['campaign_snapshot']['master_sha256'] = 'M0'
-    base['cases'][1]['settings'] = dict(duration_s=600, fixed_time_step_s=0.05)
+    base['cases'][1]['settings'] = copy.deepcopy(base['cases'][0]['settings'])
+    base['cases'][1]['settings']['tp_s'] = 10
     supplement = copy.deepcopy(base)
     supplement['campaign_snapshot']['master_sha256'] = 'M1'
     supplement['cases'] = [_row(0, 'MISSING', 1., 8), _row(1, 'VERIFIED', 1., 10, peak=60.0, step=0.0125)]
     supplement['campaign_snapshot']['cases'][1] = dict(index=1, hs_m=1., tp_s=10, seed=7, status='COMPLETED', run_dir='quarter')
     supplement['counts'] = {'MISSING': 1, 'VERIFIED': 1}
+    supplement['cases'][1]['run_dir'] = 'quarter'
+    for data in (base, supplement):
+        data['campaign_snapshot']['matrix_sha256'] = data['matrix_sha256']
+        data['event_audits'] = [dict(index=row['index'], status='VERIFIED', errors=[], channels_verified=16,
+                                    trace_sha256=row['trace_sha256'], metadata_sha256=row['metadata_sha256'])
+                                for row in data['cases'] if row['status'] == 'VERIFIED']
     paths = {}
     variant = dict(source_master_sha256='M0', master_sha256='M1', seed=None,
+                   source_matrix_sha256=base['matrix_sha256'], matrix_sha256=supplement['matrix_sha256'],
                    master_deltas={'General.ImplicitConstantTimeStep': {'before': 0.05, 'after': 0.0125}})
     for name, data in (('base', base), ('supplement', supplement), ('variant', variant)):
         paths[name] = tmp_path / f'{name}.json'

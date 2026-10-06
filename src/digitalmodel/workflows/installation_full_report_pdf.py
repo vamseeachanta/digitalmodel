@@ -18,7 +18,7 @@ from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer, PageBreak,
                                LongTable, TableStyle, KeepTogether)
 
 from digitalmodel.workflows.installation_envelope_pdf import render_pdf
-
+from digitalmodel.workflows.installation_pdf_appendices import validate_pdf_screening, render_trailing_appendices
 PAGE_WIDTH, PAGE_HEIGHT = A4
 STYLES = getSampleStyleSheet()
 STYLES.add(ParagraphStyle("Engineering", fontName="Helvetica", fontSize=9,
@@ -349,7 +349,7 @@ def _sensitivity(story, sensitivity):
            [150, 80, 62, 215], "Table D-3. Realism verdict for the indicated slack and snap re-tension mechanism.")
 
 
-def _appendix(story, cases, sensitivity=None):
+def _appendix(story, cases):
     story.append(PageBreak())
     _section(story, "Appendix A. Detailed case results", "Every source case appears below. W = within assumptions, E = exceeds assumptions, N = not evaluated. Classification does not constitute engineering acceptance. Peak tension is the maximum across the recorded source tension channels.")
     labels = {"WITHIN_ASSUMPTIONS": "W", "EXCEEDS_ASSUMPTIONS": "E", "NOT_EVALUATED": "N"}
@@ -362,15 +362,13 @@ def _appendix(story, cases, sensitivity=None):
                      case.get("governing_check", "Not recorded"), labels[case["status"]]])
     _table(story, ["Case", "Hs (m)", "Tp (s)", "Peak (kN)", "Max util. (-)", "Governing assumed criterion", "Screen"],
            rows, [63, 43, 43, 65, 65, 180, 48], "Table A1. Complete case register, linked by stable case index to the retained simulation evidence.")
-    if sensitivity is not None:
-        _sensitivity(story, sensitivity)
     story.extend([Spacer(1, 15), _p("Appendix B. Integrated envelope and monitoring snapshot", "Heading1"),
                   _p("The following three pages contain the same payload-derived Hs-Tp envelope, simulated irregular-wave preview and conditional load response as the interactive report. Global report pagination applies.")])
 
 
-def _number_pages(body, snapshot, output, revision, title="Jumper installation analysis"):
+def _number_pages(body, snapshot, output, revision, title="Jumper installation analysis", *, tail=None):
     writer = PdfWriter()
-    for stream in [body, snapshot]:
+    for stream in [body, snapshot] + ([tail] if tail is not None else []):
         writer.append(PdfReader(stream))
     total = len(writer.pages)
     for number, page in enumerate(writer.pages, 1):
@@ -407,6 +405,7 @@ def render_full_pdf(summary, payload, output, config=None, *, summary_bytes=None
                     sensitivity_bytes=None):
     """Render the full report without modifying source payloads or simulations."""
     _verify_summary_source(summary, payload, summary_bytes)
+    screened_cases = validate_pdf_screening(summary, payload)
     sensitivity_sha256 = None
     if sensitivity is not None:
         if sensitivity_bytes is None or json.loads(sensitivity_bytes) != sensitivity:
@@ -425,7 +424,7 @@ def render_full_pdf(summary, payload, output, config=None, *, summary_bytes=None
     _results(story, summary, payload, cases)
     _other_results(story, summary)
     _validation_references(story, summary, payload)
-    _appendix(story, cases, sensitivity)
+    _appendix(story, cases)
     body, snapshot = BytesIO(), BytesIO()
     document = SimpleDocTemplate(body, pagesize=A4, leftMargin=44, rightMargin=44,
                                  topMargin=44, bottomMargin=49,
@@ -433,8 +432,9 @@ def render_full_pdf(summary, payload, output, config=None, *, summary_bytes=None
     document.build(story)
     reference = payload.get("snapshot") or {}
     identity = render_pdf(payload, snapshot, **{key: reference[key] for key in ("hs_m", "tp_s", "now_s") if key in reference})
+    tail = render_trailing_appendices(screened_cases, payload, sensitivity)
     pages = _number_pages(body, snapshot, output, (config or {}).get("revision", "r7"),
-                          (config or {}).get("report_title", "Jumper installation analysis"))
+                          (config or {}).get("report_title", "Jumper installation analysis"), tail=tail)
     result = {"pages": pages, "cases": len(cases), "snapshot": identity}
     if sensitivity_sha256:
         result["sensitivity_sha256"] = sensitivity_sha256

@@ -65,11 +65,15 @@ def test_successful_replay_renders_inherited_findings_as_historical(tmp_path, mo
         (tmp_path / name).write_text('x')
     channel = dict(id='load', label='Load', units='kN', assumed_limit=None,
                    history=dict(times=[240, 360], values=[0, 1]),
-                   forecast=dict(times=[361, 480], values=[1, 0]), fit_status='fitted')
-    payload = dict(created_utc='now', criteria=[], limitations=[],
-                   cases=[dict(index=0, hs_m=2, tp_s=10, status='NOT_EVALUATED', checks=[])],
-                   demo=dict(scenarios=[dict(case_index=0, hs_m=2, tp_s=10, source_label='SIMULATED',
-                                             frames=[dict(now_s=360, channels=[channel])])]))
+                   forecast=dict(times=[361, 480], values=[1, 0]), fit_status='fitted', training_end_s=360)
+    payload = dict(created_utc='now', criteria=[dict(id='load', label='Synthetic load criterion',
+                   limit=200, units='kN', status='project_assumption')], limitations=[],
+                   cases=[dict(index=0, hs_m=2, tp_s=10, status='WITHIN_ASSUMPTIONS',
+                               checks=[dict(id='load', status='PASS', utilization=.5,
+                                            governing_channel='load')])],
+                   engineering_acceptance='NOT EVALUATED',
+                   demo=dict(default_mode='history_only', scenarios=[dict(case_index=0, hs_m=2, tp_s=10, source_label='SIMULATED',
+                                             frames=[dict(now_s=360, forecast_horizon_s=120, channels=[channel])])]))
     monkeypatch.setattr(reports, '_summary', lambda *args: fresh)
     monkeypatch.setattr(reports, 'prepare_payload', lambda *args: copy.deepcopy(payload))
     def fake_html(summary, payload_path, output, config_path):

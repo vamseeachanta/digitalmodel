@@ -5,7 +5,7 @@ import math
 import re
 
 from digitalmodel.workflows.installation_partial_report import STYLE, _table, _grid, _envelope_table, _case_details
-from digitalmodel.workflows.installation_report_layout import report_cover
+from digitalmodel.workflows.installation_report_layout import report_cover, appendix_labels
 
 
 def _section(number,title,content):
@@ -146,11 +146,12 @@ def _bind_alert(channel,now,horizon):
         raise ValueError('Stored alert outcome differs from withheld truth')
 
 
-def bind_screening(summary,screening):
+def bind_screening(summary,screening,*,allow_wave_preview=False):
     """Reject screening evidence that is not case-for-case bound to the source snapshot."""
     if screening.get('engineering_acceptance')!='NOT EVALUATED':
         raise ValueError('Screening payload must retain engineering acceptance NOT EVALUATED')
-    if screening.get('demo',{}).get('default_mode')!='history_only':
+    mode=screening.get('demo',{}).get('default_mode')
+    if mode!='history_only' and not (allow_wave_preview and mode=='wave_preview'):
         raise ValueError('Screening forecast must be causal history-only')
     source={row['index']:row for row in summary['cases']};screened={row['index']:row for row in screening['cases']}
     if len(source)!=len(summary['cases']) or len(screened)!=len(screening['cases']) or not source or set(source)!=set(screened):
@@ -271,7 +272,7 @@ def _flag_note(flags):
     if not flags:return ''
     items=', '.join(f'case {i:03d} solved at {step:g} s' for i,step in sorted(flags.items()))
     return ('<p class="caption">Cells solved at a different time step from the campaign default: '+escape(items)+
-            '. The substitution is recorded in the composite summary and Appendix D.</p>')
+            '. The substitution is recorded in the composite summary.</p>')
 
 
 def validate_trace(trace,stop=None):
@@ -496,7 +497,7 @@ def render_layout(summary,base,config,screening=None,sensitivity=None):
     config.setdefault('revision','Not recorded')
     config.setdefault('subtitle','Retained simulated irregular-wave demand; qualification and forecasting pending')
     created=config.get('rendered_utc',summary['created_utc'])
-    cover=(report_cover(config,created)+'<section><p>Source snapshot UTC: '+escape(summary['created_utc'])+
+    cover=(report_cover(config,created,appendices=appendix_labels(screening,sensitivity))+'<section><p>Source snapshot UTC: '+escape(summary['created_utc'])+
         '</p><p>Presentation generated UTC: '+escape(str(created))+'</p></section>')
     content=cover+_intro_summary(summary,config)+_design(summary,config)+_method(summary)+_results(summary,screening)
     content+=_validation_conclusions(summary,config,screening is not None)+_appendices(summary,base,config)
