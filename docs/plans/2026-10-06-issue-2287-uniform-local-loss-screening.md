@@ -86,7 +86,7 @@ rights and nonlinear damaged-pipe criterion were not verified; no values copied
 or reused as Part 5 Level 3 results. This prevents needless rerunning of an
 existing intact benchmark while preserving its actual validation scope.
 
-Routing: the small diagnostic ran locally on ACMA-WS014; no remote dispatch was
+Routing: the small diagnostic ran locally on a Windows workstation; no remote dispatch was
 made. Existing hub fleet metadata declares ace-linux-2 as an SSH alias, but that
 file is for fleet configuration fan-out, not verified solver readiness.
 Preference for sustained generic computation is ace-linux-1/ace-linux-2;

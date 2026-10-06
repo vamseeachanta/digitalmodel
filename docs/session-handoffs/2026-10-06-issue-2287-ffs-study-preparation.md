@@ -15,7 +15,7 @@ source audit, bounded synthetic diagnostic through the canonical coordinator,
 in the existing asset_integrity routing row. No production physics changed.
 No private measurements, client reports or licensed originals copied.
 
-Execution: orchestration and numerical diagnostic both ran on ACMA-WS014.
+Execution: orchestration and numerical diagnostic both ran on a Windows workstation.
 784 cases, 768 UNQUALIFIED, 16 INAPPLICABLE, zero allowable-wall ordinates.
 Runtime Python 3.11.15, NumPy 2.4.6, pandas 2.3.3. The runtime's optional
 pyarrow extension printed a NumPy ABI mismatch; pandas numerical operations

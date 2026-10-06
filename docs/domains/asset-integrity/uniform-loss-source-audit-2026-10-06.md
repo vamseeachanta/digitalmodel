@@ -154,3 +154,12 @@ through the publication's amendment record. The publisher announcement locator
 in existing metadata was inaccessible through the web tool on this check;
 the available publisher catalog confirms edition metadata, not Part 5 equations
 or the applicable errata set. No conclusion of "no errata" is drawn.
+
+The parent relayed the standards owner's bounded lookup on 2026-10-06:
+no authoritative owned 2021 Part 5 source binding, applicable errata record or
+implementation-use evidence was located. The private receipt identifier is
+`api579-2021-owned-source-lookup-20261006.json`; its contents were not read
+independently in this Windows task. This reports the bounded owner's finding,
+not global source absence. The encrypted 2016 record remains unverified.
+Issue 2287 retains these dependencies; allowable-wall outputs remain null
+until exact-edition source review and independent regressions qualify them.
