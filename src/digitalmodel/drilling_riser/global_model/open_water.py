@@ -12,7 +12,9 @@ Topology (global z up, MSL = 0; all SI):
   riser joints, the stress joint and, as its last section, the EDP body. End B connects rigidly to the stack; an
   EDP release (``edp_release``) frees it at the start of the main stage.
 * line ``Stack`` - sections from the interface down to the wellhead datum (LRP, tree, spool, wellhead housing),
-  written bottom-up and fixed at the datum, or on the conductor p-y foundation (``foundation``).
+  written bottom-up and fixed at the datum, or on the conductor p-y foundation (``foundation``). The well bore is
+  continuous through the stack: a section with a nonzero ``bore_id_m`` carries the riser contents (density and
+  pressure) in the solver exactly as the hand checks (``tension_references``, ``beam_model``) count them.
 
 The vertical tensioner force follows the vessel with no lateral tie at the frame (only the anchor-height pendulum
 stiffness T / h); the lateral tie of the string to the vessel is the rotary.
@@ -126,8 +128,14 @@ class OpenWaterRiserSpec(BaseModel):
         if self.regular_wave is not None and self.irregular_wave is not None:
             raise ValueError("give a regular wave or an irregular wave, not both")
         t = self.tensioners
-        if t.rated_total_n is not None and t.total_vertical_tension_n > t.rated_total_n:
-            raise ValueError(f"top tension {t.total_vertical_tension_n:.4g} N exceeds the rated {t.rated_total_n:.4g} N")
+        if t.rated_total_n is not None:
+            # every commanded tension: the initial (all stages) and the EDP release (anti-recoil) step
+            commanded = [("top tension", t.total_vertical_tension_n)]
+            if self.edp_release is not None and self.edp_release.anti_recoil_tension_n is not None:
+                commanded.append(("EDP release (anti-recoil) tension", self.edp_release.anti_recoil_tension_n))
+            for label, value in commanded:
+                if value > t.rated_total_n:
+                    raise ValueError(f"{label} {value:.4g} N exceeds the rated {t.rated_total_n:.4g} N")
         return self
 
 
@@ -151,7 +159,7 @@ def build_open_water_generic_spec(spec: OpenWaterRiserSpec) -> dict[str, Any]:
         b._line("Riser", [[ROTARY, 0, 0, 0, 0, 180, 0, None, None], ["Stack", 0, 0, 0, 0, 180, 0, release, "End B"]],
                 [[inf, None], [inf, None]], spec.riser, rho_c, ref_z, pressure_kpa=p_kpa),
         b._line("Stack", [stack_base, ["Free", 0, 0, spec.edp_interface_z_m, 0, 0, 0, None, None]],
-                [[inf, None], []], list(reversed(spec.stack)), 0, ref_z),
+                [[inf, None], []], list(reversed(spec.stack)), rho_c, ref_z, pressure_kpa=p_kpa),
     ]
     extra_lines, links = b._foundation_objects(spec, ref_z)
     lines += extra_lines

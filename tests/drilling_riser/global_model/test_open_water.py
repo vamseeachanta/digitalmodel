@@ -98,6 +98,29 @@ def test_tension_above_the_rating_is_rejected():
                                                                       "rated_total_n": 1.0e6}))
 
 
+def test_release_tension_above_the_rating_is_rejected():
+    """r1: every commanded tension is checked against the rating, the EDP anti-recoil step included."""
+    from digitalmodel.drilling_riser.global_model.open_water import OpenWaterRiserSpec
+
+    rated = {"total_vertical_tension_n": 1.2e6, "rated_total_n": 1.3e6}
+    with pytest.raises(ValueError, match="anti-recoil.*rated"):
+        OpenWaterRiserSpec.model_validate(open_water_dict(tensioners=rated,
+                                                          edp_release={"anti_recoil_tension_n": 2.0e6}))
+    ok = OpenWaterRiserSpec.model_validate(open_water_dict(tensioners=rated,
+                                                           edp_release={"anti_recoil_tension_n": 1.25e6}))
+    assert ok.edp_release.anti_recoil_tension_n == 1.25e6
+    # no rating declared: nothing to check against
+    OpenWaterRiserSpec.model_validate(open_water_dict(edp_release={"anti_recoil_tension_n": 2.0e6}))
+
+
+def _hollow_stack_dict(**over) -> dict:
+    """The synthetic riser with a 7-1/16 in well bore through the LRP and the tree."""
+    d = open_water_dict(**over)
+    for s in d["stack"]:
+        s["bore_id_m"] = 7.0625 * IN
+    return d
+
+
 # ---------------------------------------------------------------- text model
 def test_generic_spec_objects(ow):
     from digitalmodel.drilling_riser.global_model.open_water import build_open_water_generic_spec
@@ -129,6 +152,30 @@ def test_edp_release_sets_release_stage_and_anti_recoil_tension(ow):
     w = next(x for x in g["winches"] if x["name"] == "TopTensioner")
     vals = [v[1] for v in w["properties"]["StageMode, StageValue"]]
     assert vals[:-1] == [pytest.approx(1.2e3)] * (len(vals) - 1) and vals[-1] == pytest.approx(0.9e3)
+
+
+def test_stack_line_carries_the_contents_like_the_hand_checks():
+    """r1: the Stack line carries the riser contents (density and pressure) through a nonzero bore, as
+    tension_references and beam_model count them; a zero-bore stack section adds nothing either way."""
+    from digitalmodel.drilling_riser.global_model.open_water import OpenWaterRiserSpec, build_open_water_generic_spec
+
+    s = OpenWaterRiserSpec.model_validate(_hollow_stack_dict(
+        contents=Contents(density_kg_m3=RHO_C, pressure_ref_z_m=24.0, pressure_pa=5.0e6).model_dump()))
+    lines = {ln["name"]: ln["properties"] for ln in build_open_water_generic_spec(s)["generic"]["lines"]}
+    for name in ("Upper", "Riser", "Stack"):
+        assert lines[name]["ContentsDensity"] == pytest.approx(RHO_C / 1000.0)
+        assert lines[name]["ContentsPressure"] == pytest.approx(5.0e3)
+        assert lines[name]["ContentsPressureRefZ"] == pytest.approx(24.0)
+
+
+def test_hollow_stack_contents_enter_the_stack_bottom_reference():
+    from digitalmodel.drilling_riser.global_model.open_water import OpenWaterRiserSpec, tension_references
+
+    solid = tension_references(OpenWaterRiserSpec.model_validate(open_water_dict()))
+    hollow = tension_references(OpenWaterRiserSpec.model_validate(_hollow_stack_dict()))
+    contents_w = RHO_C * G * math.pi / 4 * (7.0625 * IN) ** 2 * 7.0  # LRP 3 m + tree 4 m
+    assert hollow["edp_bottom_n"] == pytest.approx(solid["edp_bottom_n"])
+    assert solid["stack_bottom_n"] - hollow["stack_bottom_n"] == pytest.approx(contents_w, rel=1e-9)
 
 
 def test_write_model_dispatches_on_the_spec_type(ow, tmp_path):
@@ -231,8 +278,36 @@ def test_modes_match_the_beam_reference(ow, tmp_path):
     m = orun.load_and_solve_statics(write_model(ow, tmp_path / "m") / "master.yml")
     modes = orun.riser_modal_periods(m, n_modes=3)
     ref = reference_periods(ow, n_modes=3)
+    assert len(modes) == len(ref) == 3  # r1: an empty or short solver result must not pass the zip
     for got, exp in zip(modes, ref):
         assert got["period_s"] == pytest.approx(exp, rel=0.05)
+
+
+@pytest.mark.solver
+@pytest.mark.skipif(not orcaflex_api.available(), reason="OrcFxAPI not available")
+def test_hollow_stack_statics_and_modes_match_the_references(tmp_path):
+    """r1: a nonzero stack bore - solver and hand checks carry the same contents (stack-bottom tension, periods)."""
+    from digitalmodel.drilling_riser.global_model import orcaflex_run as orun
+    from digitalmodel.drilling_riser.global_model.build import write_model
+    from digitalmodel.drilling_riser.global_model.open_water import (
+        OpenWaterRiserSpec,
+        reference_periods,
+        tension_references,
+    )
+
+    s = OpenWaterRiserSpec.model_validate(_hollow_stack_dict(
+        contents=Contents(density_kg_m3=RHO_C, pressure_ref_z_m=24.0, pressure_pa=5.0e6).model_dump()))
+    m = orun.load_and_solve_statics(write_model(s, tmp_path / "hs") / "master.yml")
+    te = orun.open_water_end_tensions(m)
+    ref = tension_references(s)
+    contents_w = RHO_C * G * math.pi / 4 * (7.0625 * IN) ** 2 * 7.0
+    assert te["stack_bottom_n"] == pytest.approx(ref["stack_bottom_n"], abs=0.05 * contents_w)
+    assert te["upper_top_n"] - te["stack_bottom_n"] == pytest.approx(ref["submerged_weight_n"], rel=1e-3)
+    modes = orun.riser_modal_periods(m, n_modes=3)
+    exp = reference_periods(s, n_modes=3)
+    assert len(modes) == len(exp) == 3
+    for got, e in zip(modes, exp):
+        assert got["period_s"] == pytest.approx(e, rel=0.05)
 
 
 @pytest.mark.solver
@@ -352,3 +427,59 @@ def test_campaign_open_water_statics_default_to_direct(tmp_path):
     m = orun.load_model(cp.ADAPTER.build(case, tmp_path / "d"))
     info = cp.ADAPTER.statics(m, case)
     assert info["method"] == "direct" and info["physical"]
+
+
+# ---------------------------------------------------------------- stress benchmark (r1)
+def _hand_von_mises_max_pa(spec, step_m: float = 0.25) -> float:
+    """Independent tube benchmark of the vertical static string: Lame thick-wall hoop and radial stresses from the
+    internal (contents) and external (sea) pressures, axial wall stress from the closed-form effective tension
+    (Tw = Te + p_i A_i - p_o A_o), no bending; von Mises maximum over the inner and outer fibres and over the
+    stressed riser sections."""
+    from digitalmodel.drilling_riser.global_model.open_water import tension_references
+
+    ref = tension_references(spec)
+    p_ref, ref_z = spec.contents.pressure_pa, spec.contents.pressure_ref_z_m
+    worst, z_top = 0.0, spec.rotary_z_m
+    for s, link in zip(spec.riser, ref["riser_chain"]):
+        if s.stress_od_m is not None:
+            ro, ri = s.stress_od_m / 2, s.stress_id_m / 2
+            n = max(1, round(s.length_m / step_m))
+            for k in range(n + 1):
+                f = k / n
+                z = z_top - f * s.length_m
+                te = link["te_top_n"] + f * (link["te_bottom_n"] - link["te_top_n"])
+                p_i = p_ref + RHO_C * G * (ref_z - z)
+                p_o = RHO_W * G * max(0.0, -z)
+                a_i, a_o = math.pi * ri ** 2, math.pi * ro ** 2
+                s_a = (te + p_i * a_i - p_o * a_o) / (a_o - a_i)
+                c1 = (p_i * ri ** 2 - p_o * ro ** 2) / (ro ** 2 - ri ** 2)
+                c2 = (p_i - p_o) * ri ** 2 * ro ** 2 / (ro ** 2 - ri ** 2)
+                for r in (ri, ro):
+                    s_h, s_r = c1 + c2 / r ** 2, c1 - c2 / r ** 2
+                    worst = max(worst, math.sqrt(0.5 * ((s_a - s_h) ** 2 + (s_h - s_r) ** 2 + (s_r - s_a) ** 2)))
+        z_top -= s.length_m
+    return worst
+
+
+@pytest.mark.solver
+@pytest.mark.skipif(not orcaflex_api.available(), reason="OrcFxAPI not available")
+@pytest.mark.parametrize("pressure_pa", [0.0, 30.0e6])
+def test_von_mises_static_and_dynamic_extraction_match_the_tube_benchmark(tmp_path, pressure_pa):
+    """r1: the reported von Mises stress (static and dynamic extraction, kPa -> Pa) against an independent tube
+    benchmark, with and without a contents pressure large enough to dominate the hoop stress."""
+    from digitalmodel.drilling_riser.global_model import orcaflex_run as orun
+    from digitalmodel.drilling_riser.global_model.build import write_model
+    from digitalmodel.drilling_riser.global_model.open_water import OpenWaterRiserSpec
+
+    d = open_water_dict(contents=Contents(density_kg_m3=RHO_C, pressure_ref_z_m=24.0,
+                                          pressure_pa=pressure_pa).model_dump(),
+                        dynamics={"time_step_s": 0.02, "build_up_s": 2.0, "duration_s": 4.0})
+    s = OpenWaterRiserSpec.model_validate(d)
+    hand = _hand_von_mises_max_pa(s)
+    m = orun.load_model(write_model(s, tmp_path / f"vm{int(pressure_pa)}") / "master.yml")
+    m.CalculateStatics()
+    static = orun.open_water_static_responses(m, s)["riser_von_mises_max_pa"]
+    assert static == pytest.approx(hand, rel=0.01)
+    m.RunSimulation()  # calm water, no vessel motion: the dynamic maximum stays at the static value
+    dyn = orun.open_water_governing_responses(m, s)["riser_von_mises_max_pa"]
+    assert dyn == pytest.approx(hand, rel=0.01)
