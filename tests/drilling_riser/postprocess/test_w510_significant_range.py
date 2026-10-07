@@ -148,6 +148,17 @@ def test_stations_exclude_the_outer_barrel_and_flag_the_first_pup_hot_spot():
     assert kinds[9] == "body" and kinds[10] == "coupling" and kinds[11] == "coupling"
 
 
+def test_components_below_the_last_joint_are_excluded():
+    # adaptor 1.351 m and flex-joint body 1.599 m below the last joint (end of joints at 170.688 m)
+    secs = SECTIONS + [1.351, 1.599]
+    end = sum(SECTIONS)
+    arcs = [18.796, 144.0, 160.0, 170.0, 171.2, 172.9]
+    kinds = classify_stations(arcs, sections_m=secs, joint_length_m=JOINT, exclude_below_m=18.288,
+                              exclude_above_m=end, hot_spot_m=18.796)
+    # 144.0 is the nearest point above the coupling at 143.256 m; 170.0 the nearest below the last joint end
+    assert kinds == ["hot_spot", "coupling", "body", "coupling", "excluded", "excluded"]
+
+
 def test_a_hot_spot_off_the_result_grid_is_refused():
     with pytest.raises(ValueError):
         classify_stations([17.78, 25.0, 40.0], **STATIONS)  # nearest kept point 25.0 m is 6 m from 18.796 m

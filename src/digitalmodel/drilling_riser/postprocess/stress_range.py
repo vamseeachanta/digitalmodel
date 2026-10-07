@@ -191,11 +191,12 @@ def coupling_positions(sections_m: Sequence[float], joint_length_m: float = JOIN
 
 
 def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joint_length_m: float = JOINT_LENGTH_M,
-                      exclude_below_m: float, hot_spot_m: float | None = None,
-                      hot_spot_tol_m: float = 1.0) -> list[str]:
+                      exclude_below_m: float, exclude_above_m: float | None = None,
+                      hot_spot_m: float | None = None, hot_spot_tol_m: float = 1.0) -> list[str]:
     """Kind of each result point for CR-10 (``STATION_KINDS``), in this order of precedence:
 
-    ``excluded`` - arc below ``exclude_below_m`` (the tension-ring / telescopic-joint section);
+    ``excluded`` - arc below ``exclude_below_m`` (the tension-ring / telescopic-joint section) or above
+    ``exclude_above_m`` (components below the last riser joint, e.g. riser adaptor and flex-joint body);
     ``hot_spot`` - the result point nearest ``hot_spot_m`` (the first-pup point, a W7 fatigue hot spot reported
     beside CR-10, never governing; ``ValueError`` if no point lies within ``hot_spot_tol_m``);
     ``coupling`` - the nearest result point on each side of a coupling (:func:`coupling_positions`);
@@ -204,7 +205,7 @@ def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joi
     a = [float(x) for x in arcs]
     kinds = ["body"] * len(a)
     for i, x in enumerate(a):
-        if x < exclude_below_m - _ARC_TOL:
+        if x < exclude_below_m - _ARC_TOL or (exclude_above_m is not None and x > exclude_above_m + _ARC_TOL):
             kinds[i] = "excluded"
     if hot_spot_m is not None:
         cand = [i for i in range(len(a)) if kinds[i] != "excluded"]
