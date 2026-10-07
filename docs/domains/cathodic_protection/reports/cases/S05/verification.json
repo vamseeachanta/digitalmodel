@@ -1,0 +1,19 @@
+{
+  "calculation_result": "PASS",
+  "children": [],
+  "engineering_review": "pending",
+  "fixture": "fpso.yml",
+  "id": "S05",
+  "pack_state": "verified",
+  "report": "cases/S05/report.html",
+  "route": "ABS_gn_offshore_2018",
+  "source_class": "synthetic_repository_regression",
+  "source_revision": "bf638ed1",
+  "title": "Floating offshore structure",
+  "use_status": "legacy-uncited-independent-check-required",
+  "verification": {
+    "passed": true,
+    "scope": "citation resolution, comment binding, child links and file checksums"
+  },
+  "visual_review": "deferred_by_owner"
+}

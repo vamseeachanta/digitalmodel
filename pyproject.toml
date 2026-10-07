@@ -99,6 +99,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+drawings = ["ezdxf>=1.3,<2"]
 gis-imagery = [
     # Optional Earth Engine support for the gis.imagery timelapse pipeline.
     # Not required: the pipeline falls back to public Planetary Computer STAC.
@@ -127,6 +128,7 @@ dev = [
     "mutmut>=2.4.0,<3.0.0",
 ]
 test = [
+    "ezdxf>=1.3,<2",
     # Run curvature screening regressions in CI (Python 3.10-3.12).
     "hullprod>=1.0.1,<2",
     # The full set CI needs (#1632). Domain gates run

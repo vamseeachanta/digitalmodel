@@ -6,6 +6,7 @@ Run with:
         tests/benchmarks/test_cp_benchmarks.py --benchmark-only -q
 """
 
+from copy import deepcopy
 from pathlib import Path
 
 from digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection import (
@@ -39,7 +40,7 @@ def _citation_fixture_root() -> Path:
     return Path(__file__).resolve().parents[1] / "citations" / "fixtures"
 
 
-def _abs_ships_cfg():
+def _abs_base_cfg():
     return {
         "inputs": {
             "calculation_type": "ABS_gn_ships_2018",
@@ -50,6 +51,26 @@ def _abs_ships_cfg():
             "anode": _ANODE_LONG_FLUSH,
         }
     }
+
+
+def _abs_ships_cfg():
+    cfg = deepcopy(_abs_base_cfg())
+    cfg["citation_repo_root"] = str(_citation_fixture_root())
+    # Synthetic benchmark inputs, not standards-derived design recommendations.
+    cfg["inputs"]["design_current"].update({
+        "dynamic_bare_steel_mA_m2": 400.0,
+        "static_bare_steel_mA_m2": 100.0,
+        "dynamic_time_fraction": 0.5,
+    })
+    anode = cfg["inputs"]["anode"]
+    anode["anode_density"] = 2700.0
+    anode["physical_properties"].update({
+        "mean_length": 0.65,
+        "width": 0.125,
+        "height": 0.13,
+        "core_cross_section_m2": 0.01625,
+    })
+    return cfg
 
 
 def test_bench_cp_abs_gn_ships(benchmark):
@@ -94,7 +115,7 @@ def test_bench_cp_dnv_rp_f103(benchmark):
 
 def test_bench_cp_abs_gn_offshore(benchmark):
     """Benchmark ABS_gn_offshore_2018 cathodic protection route."""
-    cfg = _abs_ships_cfg()
+    cfg = _abs_base_cfg()
     cfg["inputs"]["calculation_type"] = "ABS_gn_offshore_2018"
     cp = CathodicProtection()
     result = benchmark(lambda: cp.router(cfg))

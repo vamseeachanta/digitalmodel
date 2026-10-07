@@ -1,0 +1,6 @@
+{
+  "input_fixture": "anode_bank.yml",
+  "input_sha256": "e08957b15305281b1e6a53a24e2dbd7be5d691cabdde17c1b3441b91a67cf28a",
+  "private_benchmark_data": false,
+  "source_class": "repository_regression"
+}

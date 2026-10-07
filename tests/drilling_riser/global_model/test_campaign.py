@@ -187,3 +187,59 @@ def test_stack_segment_refinement_caps_every_stack_segment(base_spec):
     assert [s.segment_length_m for s in ref.inner_barrel] == [s.segment_length_m for s in base.inner_barrel]
     with pytest.raises(ValueError, match="stack_segment_m"):
         cp.case_spec(_case(base_spec, stack_segment_m=0.0))
+
+
+class _FakeObj:
+    def __init__(self, type_name: str, stages=()):
+        self.typeName = type_name
+        self.stages = list(stages)
+        self.set_calls: list[tuple] = []
+
+    def GetDataRowCount(self, name):  # noqa: N802 - OrcFxAPI spelling
+        return len(self.stages)
+
+    def GetData(self, name, row):  # noqa: N802
+        return self.stages[row]
+
+    def SetData(self, name, row, value):  # noqa: N802
+        self.set_calls.append((name, row, value))
+        if name == "StageValue":
+            self.stages[row] = value
+
+
+class _FakeModel:
+    def __init__(self):
+        self.riser = _FakeObj("Line")
+        self.winches = [_FakeObj("Winch", [1.0e6, 2.0e6]), _FakeObj("Winch", [3.0e6])]
+        self.objects = [self.riser, *self.winches]
+
+    def __getitem__(self, name):
+        assert name == "Riser"
+        return self.riser
+
+
+def _disconnect(monkeypatch, proxy):
+    from digitalmodel.drilling_riser.global_model import hand_checks
+
+    monkeypatch.setattr(hand_checks, "tension_references",
+                        lambda spec: {"riser_top_n": 4.0e6, "riser_bottom_n": 1.0e6, "ring_weight_n": 1.0e6})
+    ad = cp.RiserCampaignAdapter()
+    case = {"case_id": "RC", "analysis": "dynamics", "params": {"proxy": proxy}}
+    ad._specs["RC"] = object()  # the fake references above do not read the spec
+    m = _FakeModel()
+    ad.prepare(m, case)
+    return m
+
+
+def test_disconnect_tension_factor_zero_is_honoured_not_defaulted(monkeypatch):
+    m = _disconnect(monkeypatch, {"kind": "disconnect", "tension_factor": 0.0})
+    assert [w.stages[-1] for w in m.winches] == [0.0, 0.0]
+    assert m.winches[0].stages[0] == 1.0e6  # only the last stage is scaled
+    assert ("ConnectionReleaseStage", 1, 1) in m.riser.set_calls
+
+
+def test_disconnect_tension_factor_default_when_absent(monkeypatch):
+    m = _disconnect(monkeypatch, {"kind": "disconnect"})
+    f = 1.02 * (4.0e6 - 1.0e6 + 1.0e6) / (4.0e6 + 1.0e6)
+    assert m.winches[0].stages[-1] == pytest.approx(2.0e6 * f)
+    assert m.winches[1].stages[-1] == pytest.approx(3.0e6 * f)

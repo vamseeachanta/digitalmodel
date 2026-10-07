@@ -19,8 +19,8 @@
 | #2247 | #2248, #2251 | Stray current, galvanic and ICCP life re-modelled from open literature (provisional, experimental); fuel-system check removed |
 
 ## Current status
-- **Client use** (with engineer-of-record check): DNV-RP-B401 offshore, DNV-RP-F103 bracelet.
-- **Legacy, uncited, independent check required:** ABS ships and ABS offshore routes.
+- **Client use** (with engineer-of-record check): DNV-RP-B401 offshore, DNV-RP-F103 bracelet, and rebuilt ABS ships route.
+- **Legacy, uncited, independent check required:** ABS ships legacy alias and ABS offshore route.
 - **Experimental** (`experimental=True`): stray current, galvanic, ICCP anode life.
 - Defaults: B401 edition 2021, F103 edition 2019.
 
@@ -29,7 +29,7 @@
 2. Run benchmark #1852 on the first real CP job (condition of the client-use approval).
 3. New structure types (offshore-wind monopile internals, hull ICCP, retrofit sleds, flexible risers and mooring chain, quay walls, tank internals, concrete CP, AC interference) sequenced by client demand; see section 8 of the review.
 4. The worked examples still call the old hydrodynamics router with `DNV_RP_F103_2010`; migrate them to the engine adapter when that router is retired.
-5. ABS routes: cite their tables (ABS guidance notes are on file) to lift the independent-check condition.
+5. ABS offshore: cite its tables (the guidance notes are on file) to lift the independent-check condition. The rebuilt ABS ships route was promoted by owner decision 2026-10-01 after acceptance of its three recorded project interpretations and addition of its generic-wiki citation page.
 
 ## Working notes for the next session
 - Worktree tests: the main checkout's editable install shadows worktree sources; run pytest through a runner that strips the editable finder and prepends the worktree `src/`.

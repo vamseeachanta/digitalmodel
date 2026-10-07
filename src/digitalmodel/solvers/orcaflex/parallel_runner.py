@@ -21,7 +21,7 @@ Retry policy (owner decision W306): at most ``max_attempts`` per case, and only 
 faults (licence, file I/O, a result that will not reopen); never for statics divergence, a failed or
 unstable simulation, a verification or extraction failure, a model-build error, or an adapter's
 ``CaseFailed`` (a definite failure with its own status, e.g. a non-physical static state). A batch stops
-(pending cases are cancelled, running ones finish) on solver version drift, two consecutive licence
+(cases not yet submitted become ``not_run``, running ones finish) on solver version drift, two consecutive licence
 faults, or when more than 5 % of the batch has failed.
 
 Every attempt is appended to ``<out_dir>/ledger.jsonl``.
@@ -38,7 +38,9 @@ import os
 import re
 import shutil
 import time
+from collections import deque
 from concurrent.futures import FIRST_COMPLETED, Future, ProcessPoolExecutor, wait
+from concurrent.futures.process import BrokenProcessPool
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -46,6 +48,8 @@ DEFAULT_MAX_WORKERS = 57  # owner decision W325: 90 % of the 64 cores of the lic
 ANALYSES = ("statics", "dynamics")
 CASE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 RETRYABLE = {"licence_fault", "infra_fault"}
+MAX_POOL_RESTARTS = 3  # a worker pool that breaks more often than this ends the batch cleanly
+_make_pool = ProcessPoolExecutor  # executor factory; tests inject a thread pool
 
 # --------------------------------------------------------------------------- policy
 
@@ -134,12 +138,13 @@ def sha256_file(path: Path) -> str:
 
 
 def input_digest(master: Path, case: dict) -> str:
-    """SHA-256 over every file of the text model (master.yml and all files below its folder, sorted by
-    relative path) and the canonical JSON of the case."""
+    """SHA-256 over every file of the text model (master.yml and all files below its folder, whatever their
+    type - YAML, CSV data, external-function or hydrodynamic files - sorted by relative path) and the canonical
+    JSON of the case."""
     master = Path(master)
     root = master.parent
     h = hashlib.sha256()
-    for p in sorted((q for q in root.rglob("*") if q.is_file() and q.suffix in (".yml", ".yaml")),
+    for p in sorted((q for q in root.rglob("*") if q.is_file()),
                     key=lambda q: q.relative_to(root).as_posix()):
         h.update(f"{p.relative_to(root).as_posix()}:{sha256_file(p)}\n".encode())
     h.update(json.dumps(case, sort_keys=True, separators=(",", ":")).encode())
@@ -299,6 +304,11 @@ def run_one(case: dict, *, adapter: str, out_dir: str, attempt: int = 1, pin: st
         rec["finished_utc"] = _utc()
         if not keep_sim or rec.get("status") != "ok":
             shutil.rmtree(work / "model", ignore_errors=True)
+        if not keep_sim and rec.get("status") != "ok":  # a .sim saved before a later phase failed is not kept
+            try:
+                (work / f"{cid}.sim").unlink(missing_ok=True)
+            except OSError:
+                pass
     return rec
 
 
@@ -348,7 +358,13 @@ def reextract(case: dict, *, adapter: str, out_dir: str | Path, ledger_record: d
 def run_cases(cases: Iterable[dict], *, adapter: str, out_dir: Path | str, max_workers: int = DEFAULT_MAX_WORKERS,
               max_attempts: int = 3, keep_sim: bool = False, pin: str = "11.6", expected_dll: str = "11.6c",
               threads: int = 1, on_record=None) -> dict:
-    """Run ``cases`` on ``max_workers`` processes; returns the final record per case and the stop reason."""
+    """Run ``cases`` on ``max_workers`` processes; returns the final record per case and the stop reason.
+
+    At most ``max_workers`` cases are in flight: a case is submitted only when a worker slot is free, so a stop
+    rule that trips leaves every case not yet submitted as ``not_run`` (running cases finish and are recorded).
+    A retry joins the back of the queue. If the worker pool breaks (a worker process died), its in-flight cases
+    are recorded as ``infra_fault`` attempts (retried within ``max_attempts``), nothing more is submitted to it,
+    and a new pool is started once they are drained; after ``MAX_POOL_RESTARTS`` restarts the batch stops."""
     cases = check_cases(cases)
     workers = check_workers(min(max_workers, max(1, len(cases))))
     out = Path(out_dir)
@@ -359,9 +375,34 @@ def run_cases(cases: Iterable[dict], *, adapter: str, out_dir: Path | str, max_w
     kw = dict(adapter=adapter, out_dir=str(out), pin=pin, expected_dll=expected_dll, threads=threads,
               keep_sim=keep_sim)
     t0 = time.perf_counter()
-    with ProcessPoolExecutor(max_workers=workers) as pool:
-        pending: dict[Future, tuple[dict, int]] = {pool.submit(run_one, c, attempt=1, **kw): (c, 1) for c in cases}
-        while pending:
+    queue: deque[tuple[dict, int]] = deque((c, 1) for c in cases)
+    pending: dict[Future, tuple[dict, int]] = {}
+    restarts = 0
+    broken = False
+    pool = _make_pool(max_workers=workers)
+    try:
+        while queue or pending:
+            if guard.stop_reason:
+                while queue:
+                    c, a = queue.popleft()
+                    final[c["case_id"]] = {"case_id": c["case_id"], "attempt": a - 1, "status": "not_run",
+                                           "message": f"batch stopped: {guard.stop_reason}"}
+            elif broken and not pending:
+                pool.shutdown(wait=False, cancel_futures=True)
+                restarts += 1
+                if restarts > MAX_POOL_RESTARTS:
+                    guard.stop_reason = f"worker pool broken {restarts} times"
+                    continue
+                pool, broken = _make_pool(max_workers=workers), False
+            while queue and not broken and guard.stop_reason is None and len(pending) < workers:
+                c, a = queue.popleft()
+                try:
+                    pending[pool.submit(run_one, c, attempt=a, **kw)] = (c, a)
+                except BrokenProcessPool:
+                    queue.appendleft((c, a))
+                    broken = True
+            if not pending:
+                continue
             done, _ = wait(pending, return_when=FIRST_COMPLETED)
             for fut in done:
                 case, attempt = pending.pop(fut)
@@ -370,6 +411,7 @@ def run_cases(cases: Iterable[dict], *, adapter: str, out_dir: Path | str, max_w
                 try:
                     rec = fut.result()
                 except Exception as exc:  # a worker process died
+                    broken = broken or isinstance(exc, BrokenProcessPool)
                     rec = {"case_id": case["case_id"], "attempt": attempt, "status": "infra_fault", "retry": True,
                            "message": f"worker lost: {type(exc).__name__}: {exc}", "finished_utc": _utc()}
                 again = rec.get("retry") and attempt < max_attempts and guard.stop_reason is None
@@ -379,15 +421,11 @@ def run_cases(cases: Iterable[dict], *, adapter: str, out_dir: Path | str, max_w
                 if on_record is not None:
                     on_record(rec)
                 if again and guard.stop_reason is None:
-                    pending[pool.submit(run_one, case, attempt=attempt + 1, **kw)] = (case, attempt + 1)
+                    queue.append((case, attempt + 1))
                 else:
                     final[case["case_id"]] = rec
-            if guard.stop_reason:
-                for f in list(pending):
-                    if f.cancel():
-                        c, a = pending.pop(f)
-                        final[c["case_id"]] = {"case_id": c["case_id"], "attempt": a - 1, "status": "not_run",
-                                               "message": f"batch stopped: {guard.stop_reason}"}
+    finally:
+        pool.shutdown(wait=not broken, cancel_futures=True)
     results = [final[c["case_id"]] for c in cases if c["case_id"] in final]
     return {"results": results, "stop_reason": guard.stop_reason, "workers": workers,
             "wall_s": round(time.perf_counter() - t0, 3)}

@@ -13,7 +13,7 @@ convention; wind, waves and current collinear, ASSUMED):
   beam in surge, the length in sway), reduced for long waves by ``R = 1 / (1 + (lambda_p / 2B)^2)`` (lambda_p the
   deep-water wavelength at Tp). Class-typical and ASSUMED (owner decision W326) until the diffraction coefficients
   arrive;
-* thrust - zero after a drift-off; a drive-off thrust ramped linearly to ``thrust_n`` over ``thrust_ramp_s`` along the
+* thrust - zero after a drift-off; a drive-off thrust ramped linearly to ``thrust_n`` over ``drive_off_ramp_s`` along the
   environment direction (the adverse case).
 
 Masses: displacement x (1 + added mass) per direction. The riser's own restoring force on the vessel is neglected
@@ -78,7 +78,7 @@ def wave_drift_force_n(v: DriftVessel, *, hs_m: float, tp_s: float, heading_deg:
 
 
 def drift_trajectory(v: DriftVessel, env: DriftEnvironment, *, duration_s: float, dt_s: float = 0.05,
-                     thrust_n: float = 0.0, thrust_ramp_s: float = 15.0, initial_speed_m_s: float = 0.0) -> dict[str, Any]:
+                     thrust_n: float = 0.0, drive_off_ramp_s: float = 15.0, initial_speed_m_s: float = 0.0) -> dict[str, Any]:
     """Vessel position and velocity (global x, y from the start position) after the DP loss at t = 0."""
     c, s = math.cos(math.radians(env.heading_deg)), math.sin(math.radians(env.heading_deg))
     mx = v.displacement_t * 1000.0 * (1.0 + v.added_mass_surge)
@@ -95,7 +95,7 @@ def drift_trajectory(v: DriftVessel, env: DriftEnvironment, *, duration_s: float
     for i in range(1, n + 1):
         t = (i - 1) * dt_s
         # thrust at the step midpoint (exact for the linear ramp in the closed-form check)
-        th = thrust_n * min(1.0, (t + 0.5 * dt_s) / thrust_ramp_s) if thrust_n else 0.0
+        th = thrust_n * min(1.0, (t + 0.5 * dt_s) / drive_off_ramp_s) if thrust_n else 0.0
         rx, ry = ucx - vx, ucy - vy
         fx = fwx + fdx + ax_c * abs(rx) * rx + th * c
         fy = fwy + fdy + ay_c * abs(ry) * ry + th * s

@@ -52,7 +52,7 @@ def test_wave_drift_force_is_the_reflection_limit_in_short_waves_and_falls_in_lo
 
 def test_drive_off_thrust_ramps_then_holds():
     env = ev.DriftEnvironment(heading_deg=0.0)
-    tr = ev.drift_trajectory(FREE, env, duration_s=30.0, dt_s=0.01, thrust_n=4.05e6, thrust_ramp_s=15.0)
+    tr = ev.drift_trajectory(FREE, env, duration_s=30.0, dt_s=0.01, thrust_n=4.05e6, drive_off_ramp_s=15.0)
     m = 50000.0e3 * 1.05
     # x(15) = F t^3 / (6 M T_r) during the ramp
     i = tr["t"].index(15.0)

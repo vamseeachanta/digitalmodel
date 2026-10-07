@@ -1,0 +1,31 @@
+{
+  "artifacts": {
+    "citations": "report_citations.json",
+    "html": "report.html",
+    "manifest": "report_manifest.json",
+    "pdf": null
+  },
+  "citations_count": 0,
+  "document": {
+    "client": "Internal module review - no client issuance",
+    "number": "R2281-CP-005-00",
+    "project": "Digitalmodel CP regression portfolio",
+    "revision": "00",
+    "title": "CP module review: Floating offshore structure"
+  },
+  "execution_tool": "digitalmodel.reporting.engine",
+  "pdf": {
+    "engine": null,
+    "message": "pdf rendering disabled (pdf: off)",
+    "rendered": false
+  },
+  "report_layer": null,
+  "standards": [
+    {
+      "code_id": "ABS GN Cathodic Protection of Offshore Structures",
+      "edition": "December 2018",
+      "provenance": "legacy solver; table values not cited"
+    }
+  ],
+  "tool_version": "0.0.9"
+}

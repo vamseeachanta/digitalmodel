@@ -836,7 +836,10 @@ class RiserCampaignAdapter:
 
             ref = tension_references(spec)
             held = ref["riser_top_n"] - ref["riser_bottom_n"] + ref["ring_weight_n"]  # ring + riser after release
-            f = proxy.get("tension_factor") or 1.02 * held / (ref["riser_top_n"] + ref["ring_weight_n"])
+            f = proxy.get("tension_factor")
+            if f is None:  # an explicit 0.0 is a valid request (all tension removed), not "use the default"
+                f = 1.02 * held / (ref["riser_top_n"] + ref["ring_weight_n"])
+            f = float(f)
             model["Riser"].SetData("ConnectionReleaseStage", 1, 1)  # End B released at the start of stage 1
             for o in model.objects:
                 if o.typeName == "Winch":
