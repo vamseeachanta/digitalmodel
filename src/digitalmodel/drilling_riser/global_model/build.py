@@ -28,6 +28,8 @@ TORSION_KN_M_PER_DEG = 1.0e6  # lower flex-joint twisting stiffness when the ris
 TOP = "StringTop"  # equivalent-string top slider on the vessel (tensioner representation 'vertical_force')
 TOP_WINCH_HEIGHT_M = 1000.0  # anchor of the vertical top-tension winch above the UFJ pivot, vessel frame
 G = 9.80665
+HANG_OFF_SPRING = "HangOffSpring"  # soft hang-off: the tensioners as one vertical gas spring at the ring
+SPRING_ANCHOR_HEIGHT_M = 1000.0  # its anchor above the static ring in the vessel frame (the force stays vertical)
 
 
 def equivalent_string_top_tension_n(spec: RiserGlobalModelSpec) -> float:
@@ -209,6 +211,36 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
               [[inf, None], []],  # a free end takes no connection stiffness
               list(reversed(spec.stack)), 0, ref_z),  # the stack line runs up from the datum
     ]
+    if spec.recoil is not None:
+        from .events import LMRP_LINE
+
+        lmrp = spec.stack[0]
+        z_bop_top = spec.lower_flex_joint.pivot_z_m - lmrp.length_m
+        lines[2] = _line("Stack", [stack_base, ["Free", 0, 0, z_bop_top, 0, 0, 0, None, None]], [[inf, None], []],
+                         list(reversed(spec.stack[1:])), 0, ref_z)
+        # the LMRP latched to the BOP top (released at the start of stage 1) and carrying the lower flex joint
+        lines.insert(2, _line(LMRP_LINE, [["Stack", 0, 0, 0, 0, 0, 0, 1, "End B"],
+                                          ["Free", 0, 0, spec.lower_flex_joint.pivot_z_m, 0, 0, 0, None, None]],
+                              [[inf, None], []], [lmrp], 0, ref_z))
+        lines[1]["properties"][CONN_KEY][1] = _trim([LMRP_LINE, 0, 0, 0, 0, 180, 0, None, "End B"])
+    ho = spec.hang_off
+    if ho is not None:
+        if vertical_only:
+            raise ValueError("a hang-off model uses the 'lines' tensioner representation (the tensioners are removed)")
+        # no tensioner lines: the ring yaw is held from the vessel through the inner barrel (torsion on, twisting
+        # stiffness at the upper flex joint) and the telescopic-joint constraint, which fixes the ring rotations
+        ip = lines[0]["properties"]
+        ip["IncludeTorsion"] = True
+        ip.pop(STIFF_KEY)
+        ip[STIFF_KEY + ", ConnectionTwistingStiffness"] = [[k_ufj, None, TORSION_KN_M_PER_DEG], [inf, None, inf]]
+        if ho.with_lmrp:  # the LMRP (or the running payload) hangs free below the lower flex joint
+            lines[2]["properties"][CONN_KEY][0] = _trim(["Free", 0, 0, spec.wellhead_datum_z_m, 0, 0, 0, None, None])
+            lines[2]["properties"][STIFF_KEY] = [[], []]
+        else:  # the string ends at the riser adaptor
+            lines = lines[:2]
+            lines[1]["properties"][CONN_KEY][1] = _trim(["Free", 0, 0, spec.lower_flex_joint.pivot_z_m, 0, 0, 0,
+                                                         None, None])
+            lines[1]["properties"][STIFF_KEY] = [[inf, None], []]
     if vertical_only:
         # without tensioner lines nothing restrains the ring about z (the lines exclude torsion):
         # the riser carries torsion so the ring yaw is held by the riser down to the stack
@@ -241,7 +273,14 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
     t = spec.tensioners
     tension_kn = winch_tension_n(spec) / 1000.0
     winches = []
-    for i in range(0 if vertical_only else t.count):
+    n_stages = len(_stages(spec))
+    factors = [1.0] * (n_stages + 1)  # statics row + one row per stage
+    if spec.recoil is not None:  # anti-recoil: stage k >= 1 carries the schedule's total tension
+        for k, st in enumerate(spec.recoil.stages):
+            factors[2 + k] = st["tension_n"] / t.total_vertical_tension_n
+    # a failed tensioner (API RP 16Q n) is removed; the remaining lines keep the intact line tension
+    n_lines = 0 if (vertical_only or ho is not None) else t.count
+    for i in range(0 if n_lines == 0 else t.failed_count, n_lines):
         az = math.radians(t.first_azimuth_deg + 360.0 * i / t.count)
         c, s_ = math.cos(az), math.sin(az)
         winches.append({
@@ -253,7 +292,7 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
                 "Stiffness": t.wire_stiffness_n / 1000.0,
                 "Damping": 0,
                 "WinchControlType": "By stage",
-                "StageMode, StageValue": [["Specified tension", tension_kn]] * (len(STAGES_S) + 1),
+                "StageMode, StageValue": [["Specified tension", tension_kn * f] for f in factors],
             },
         })
     r = spec.tension_ring
@@ -266,13 +305,26 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
         "properties": {
             "InFrameInitialPosition": [0, 0, 0], "InFrameInitialAttitude": [0, 0, 0],
             "DOFFree, DOFInitialValue": [[False], [False],
-                                         [False] if vertical_only else [True, -(r.z_static_m - ring_z)],
+                                         [False] if vertical_only or (ho is not None and ho.mode == "hard")
+                                         else [True, -(r.z_static_m - ring_z)],
                                          [False], [False], [False]],
             "StiffnessAndDampingMethod": "Coefficients",
             "TranslationalStiffness": spec.slip_joint_axial_stiffness_n_per_m / 1000.0,
         },
     }
     constraints = [slip]
+    if ho is not None and ho.mode == "soft":
+        # soft hang-off: one vertical spring/damper from the vessel far above the ring, carrying the hung weight at
+        # the static ring elevation (spring force = k (L - L0), L = the anchor height at the static position)
+        k = ho.spring_stiffness_n_per_m / 1000.0
+        l0 = SPRING_ANCHOR_HEIGHT_M - ho.spring_tension_n / 1000.0 / k
+        l1 = 2.0 * SPRING_ANCHOR_HEIGHT_M
+        links.append({"name": HANG_OFF_SPRING, "link_type": "Spring/damper", "properties": {
+            "Connection, ConnectionX, ConnectionY, ConnectionZ": [
+                [vessel, 0, 0, r.z_static_m + SPRING_ANCHOR_HEIGHT_M], [ring, 0, 0, 0]],
+            "LinearSpring": "No",
+            "SpringLength, SpringTension": [[l0, 0.0], [l1, k * (l1 - l0)]],
+        }})
     if vertical_only:
         # equivalent string: the string top (UFJ pivot) is pinned laterally to the vessel but free along z,
         # and a vertical constant-tension winch (anchored far above in the vessel frame) applies the top
@@ -287,8 +339,8 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
             "WinchType": "Simple",
             WINCH_CONN_KEY: [[vessel, 0, 0, spec.upper_flex_joint.pivot_z_m + TOP_WINCH_HEIGHT_M], [TOP, 0, 0, 0]],
             "Stiffness": t.wire_stiffness_n / 1000.0, "Damping": 0, "WinchControlType": "By stage",
-            "StageMode, StageValue": [["Specified tension", equivalent_string_top_tension_n(spec) / 1000.0]]
-                                     * (len(STAGES_S) + 1)}})
+            "StageMode, StageValue": [["Specified tension", equivalent_string_top_tension_n(spec) / 1000.0 * f]
+                                      for f in factors]}})
     ring_props: dict[str, Any] = {
         "DegreesOfFreedomInStatics": "All", "InitialAttitude": [0, 0, 0],
         "MomentsOfInertia": [m / 1000.0 for m in r.moments_of_inertia_kgm2],
@@ -304,16 +356,27 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
         for lt in line_types:
             lt["properties"]["RayleighDampingCoefficients"] = sd.name
     ox, oy = spec.vessel_offset_m
+    vprops: dict[str, Any] = {"Orientation": [0, 0, 0], "IncludedInStatics": "None", "PrimaryMotion": "None",
+                              **({"SuperimposedMotion": "RAOs + harmonics", "Draught": "Operating"}
+                                 if spec.vessel_motion else {"SuperimposedMotion": "None"})}
+    tr = spec.vessel_trajectory
+    if tr is not None:  # drift-off / drive-off: the low-frequency track, held at the offset through the build-up
+        from .events import TIME_HISTORY_KEY
+
+        b0 = -(spec.dynamics.build_up_s if spec.dynamics is not None else STAGES_S[0])
+        rows = [[b0, ox, oy, 0, 0, 0, 0]] + [[t_, ox + x_, oy + y_, 0, 0, 0, 0]
+                                             for t_, x_, y_ in zip(tr.t_s, tr.x_m, tr.y_m)]
+        vprops.update({"PrimaryMotion": "Time history", "PrimaryMotionIsTreatedAs": "Low frequency",
+                       "PrimaryTimeHistoryDataSource": "Internal", "PrimaryTimeHistoryInterpolation": "Linear",
+                       "PrimaryTimeHistoryTimeOrigin": 0, "PrimaryTimeHistoryDatumPoint": [0, 0, 0],
+                       "PrimaryTimeHistoryMinSampleInterval": 0, TIME_HISTORY_KEY: rows})
     generic = {
         "line_types": line_types,
         "vessel_types": [vt],
         "vessels": [{
             "name": vessel, "vessel_type": vt["name"], "connection": "Free",
             "initial_position": [ox, oy, 0] if (ox or oy) else [0, 0, 0],
-            "properties": {"Orientation": [0, 0, 0], "IncludedInStatics": "None",
-                           "PrimaryMotion": "None",
-                           **({"SuperimposedMotion": "RAOs + harmonics", "Draught": "Operating"}
-                              if spec.vessel_motion else {"SuperimposedMotion": "None"})},
+            "properties": vprops,
         }],
         "lines": lines,
         "buoys_6d": [{
@@ -352,9 +415,26 @@ def build_generic_spec(spec: RiserGlobalModelSpec) -> dict[str, Any]:
     if spec.regular_wave is not None:
         w = spec.regular_wave
         env["waves"] = {"type": "airy", "height": w.height_m, "period": w.period_s, "direction": w.direction_deg}
-    dyn = spec.dynamics
-    sim = ({"time_step": dyn.time_step_s, "stages": [dyn.build_up_s, dyn.duration_s]} if dyn is not None
-           else {"time_step": 0.1, "stages": STAGES_S})
+        if spec.wave_time_origin_s:  # the wave phase at the event (drift-off / recoil PH5)
+            env["raw_properties"] = {"WaveTrains": [{
+                "Name": "Wave1", "WaveType": "Airy", "WaveDirection": w.direction_deg, "WaveHeight": w.height_m,
+                "WavePeriod": w.period_s, "WaveOrigin": [0, 0], "WaveTimeOrigin": spec.wave_time_origin_s}]}
+    if spec.irregular_wave is not None:
+        w = spec.irregular_wave
+        env["waves"] = {"type": "jonswap", "height": w.hs_m, "period": w.tp_s, "direction": w.direction_deg}
+        # the environment builder takes the raw train as its base layer (key order kept) and, with WaveTp
+        # present and no WaveTz, writes the period as Tp; gamma is carried by the raw train only (the generator
+        # schema rejects gamma = 1, the Pierson-Moskowitz limit, and keeps a raw WaveGamma it was not given);
+        # the seed is user-specified so each seed is reproducible
+        env["raw_properties"] = {"UserSpecifiedRandomWaveSeeds": "Yes", "WaveTrains": [{
+            "Name": "Wave1", "WaveType": "JONSWAP", "WaveDirection": w.direction_deg, "WaveOrigin": [0, 0],
+            "WaveTimeOrigin": 0, "WaveNumberOfSpectralDirections": 1,
+            # gamma before Tp: OrcaFlex keeps Tz when gamma changes, so a later gamma would move Tp
+            "WaveJONSWAPParameters": "Partially specified", "WaveGamma": w.gamma, "WaveHs": w.hs_m,
+            "WaveTp": w.tp_s, "WaveSeed": w.seed, "WaveNumberOfComponents": w.number_of_components,
+            "WaveSpectrumMinRelFrequency": 0.5, "WaveSpectrumMaxRelFrequency": 10,
+            "WaveSpectrumMaxComponentFrequencyRange": 0.05}]}
+    sim = {"time_step": spec.dynamics.time_step_s if spec.dynamics is not None else 0.1, "stages": _stages(spec)}
     return {
         "metadata": {"name": spec.name, "description": spec.description or spec.name,
                      "structure": "riser", "operation": "drilling"},
@@ -377,3 +457,18 @@ def write_model(spec: RiserGlobalModelSpec, out_dir: Path) -> Path:
         yaml.safe_dump(spec.model_dump(mode="json"), sort_keys=False, allow_unicode=True),
         encoding="utf-8")
     return out_dir
+
+
+def _stages(spec: RiserGlobalModelSpec) -> list[float]:
+    """Simulation stage durations: build-up and main stage; a recoil case splits the main stage into the anti-recoil
+    steps and the rest."""
+    dyn = spec.dynamics
+    if dyn is None:
+        return list(STAGES_S)
+    if spec.recoil is None:
+        return [dyn.build_up_s, dyn.duration_s]
+    steps = [float(s["duration_s"]) for s in spec.recoil.stages if s.get("duration_s")]
+    rest = dyn.duration_s - sum(steps)
+    if rest <= 0:
+        raise ValueError("the recoil steps exceed the main stage")
+    return [dyn.build_up_s, *steps, rest]

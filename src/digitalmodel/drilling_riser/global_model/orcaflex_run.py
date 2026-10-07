@@ -68,6 +68,15 @@ def apply_rayleigh_damping(model, *, ratio_percent: float, period_s: float, name
             o.RayleighDampingCoefficients = name
 
 
+def main_period(model, spec=None):
+    """The main stage after the build-up: stage 1 of a two-stage simulation; from t = 0 to the end when the main
+    stage is split into several stages (the recoil model's anti-recoil steps)."""
+    ofx = _api()
+    if spec is not None and getattr(spec, "recoil", None) is not None:
+        return ofx.SpecifiedPeriod(0.0, float(model.simulationStopTime))
+    return ofx.Period(1)
+
+
 def run_dynamics(model) -> None:
     model.RunSimulation()
 
@@ -91,7 +100,7 @@ def governing_responses(model, spec, period=None) -> dict[str, float]:
     riser sections, and the extreme effective tensions below the ring and at the lower flex joint."""
     ofx = _api()
     if period is None:
-        period = ofx.Period(1)  # stage 1 = the main stage after the build-up
+        period = main_period(model, spec)  # the main stage after the build-up
     ib, riser = model["InnerBarrel"], model["Riser"]
     ufj = ib.TimeHistory("Ez-Angle", period, ofx.oeEndA)
     lfj = riser.TimeHistory("Ez-Angle", period, ofx.oeEndB)
