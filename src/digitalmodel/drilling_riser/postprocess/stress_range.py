@@ -192,11 +192,16 @@ def coupling_positions(sections_m: Sequence[float], joint_length_m: float = JOIN
 
 def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joint_length_m: float = JOINT_LENGTH_M,
                       exclude_below_m: float, exclude_above_m: float | None = None,
-                      hot_spot_m: float | None = None, hot_spot_tol_m: float = 1.0) -> list[str]:
+                      hot_spot_m: float | None = None, hot_spot_tol_m: float = 1.0,
+                      pup_side_couplings_m: Sequence[float] = (), pup_side_tol_m: float = 1.0) -> list[str]:
     """Kind of each result point for CR-10 (``STATION_KINDS``), in this order of precedence:
 
     ``excluded`` - arc below ``exclude_below_m`` (the tension-ring / telescopic-joint section) or above
     ``exclude_above_m`` (components below the last riser joint, e.g. riser adaptor and flex-joint body);
+    ``coupling`` (pup side, W04 owner decision 2026-10-07) - for each coupling in ``pup_side_couplings_m`` whose
+    other side is excluded (the outer barrel to first pup coupling), the nearest kept result point is the
+    coupling's station, even when it is the hot-spot point (``ValueError`` if the arc is not a coupling or no kept
+    point lies within ``pup_side_tol_m``);
     ``hot_spot`` - the result point nearest ``hot_spot_m`` (the first-pup point, a W7 fatigue hot spot reported
     beside CR-10, never governing; ``ValueError`` if no point lies within ``hot_spot_tol_m``);
     ``coupling`` - the nearest result point on each side of a coupling (:func:`coupling_positions`);
@@ -213,13 +218,22 @@ def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joi
         if near is None or abs(a[near] - hot_spot_m) > hot_spot_tol_m:
             raise ValueError(f"no result point within {hot_spot_tol_m} m of the hot spot at {hot_spot_m} m")
         kinds[near] = "hot_spot"
-    for c in coupling_positions(sections_m, joint_length_m):
+    couplings = coupling_positions(sections_m, joint_length_m)
+    for c in couplings:
         below = [i for i, x in enumerate(a) if x <= c + _ARC_TOL]
         above = [i for i, x in enumerate(a) if x >= c - _ARC_TOL]
         for idx in ((max(below, key=lambda i: a[i]),) if below else ()) + \
                    ((min(above, key=lambda i: a[i]),) if above else ()):
             if kinds[idx] == "body":
                 kinds[idx] = "coupling"
+    for c in (float(v) for v in pup_side_couplings_m):
+        if not any(abs(c - p) <= 1e-3 for p in couplings):
+            raise ValueError(f"pup-side station at {c} m: no coupling at that arc length")
+        kept = [i for i in range(len(a)) if kinds[i] != "excluded"]
+        near = min(kept, key=lambda i: abs(a[i] - c)) if kept else None
+        if near is None or abs(a[near] - c) > pup_side_tol_m:
+            raise ValueError(f"no kept result point within {pup_side_tol_m} m of the coupling at {c} m")
+        kinds[near] = "coupling"
     return kinds
 
 

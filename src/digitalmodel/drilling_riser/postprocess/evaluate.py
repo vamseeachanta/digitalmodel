@@ -14,11 +14,19 @@ W510 / R02). A missing channel is recorded in ``missing_channel``; the caller fa
 
 from __future__ import annotations
 
+import math
 from dataclasses import asdict, dataclass, field
 from typing import Any, Iterable
 
 from digitalmodel.drilling_riser.postprocess.channels import MissingChannel, w5
-from digitalmodel.drilling_riser.postprocess.checks import CHECKS, U_TOL, CheckValue, NotEvaluated, evaluate_doc
+from digitalmodel.drilling_riser.postprocess.checks import (
+    CHECKS,
+    U_TOL,
+    CheckValue,
+    NotEvaluated,
+    cr10_station_mean,
+    evaluate_doc,
+)
 from digitalmodel.drilling_riser.postprocess.extremes import gumbel_fit
 
 STATUSES = ("PASS", "FAIL", "NOT_EVALUATED", "SCREENING")
@@ -101,7 +109,29 @@ def evaluate_case(docs: dict[int | None, dict], row: dict, ctx: dict, *, seeds_e
         return _screening(row, values)
     if list(values) == [None]:
         return _single(row, values[None])
+    if any(v.combine == "station_mean" for v in values.values()):
+        try:
+            return _station_mean(row, values)
+        except NotEvaluated as e:
+            return CaseCheck(rid, "NOT_EVALUATED", str(e))
     return _combine(row, values)
+
+
+def _station_mean(row: dict, values: dict[int, CheckValue]) -> CaseCheck:
+    """W03: CR-10 on the significant range - seed mean at each station (:func:`checks.cr10_station_mean`)."""
+    v = cr10_station_mean(values)
+    us = [float(u) for u in v.detail["seed_values"].values()]
+    n = len(us)
+    mean = sum(us) / n
+    sd = math.sqrt(sum((u - mean) ** 2 for u in us) / (n - 1)) if n > 1 else 0.0
+    passed = bool(v.passed)
+    reason = _reason(v, passed, v.unit, prefix=f"seed mean over {n} seeds: ") + \
+        f"; seed U at the governing station {min(us):.3f}-{max(us):.3f}"
+    return CaseCheck(row_id=row["id"], status="PASS" if passed else "FAIL", reason=reason, u=v.u, demand=v.demand,
+                     allowable=v.allowable, unit=v.unit, location=v.location, seed=None, time_s=None,
+                     stats={"estimator": "seed mean", "n": n, "u_mean": mean, "u_sd": sd, "u_min": min(us),
+                            "u_max": max(us)},
+                     detail=v.detail)
 
 
 def _screening(row: dict, values: dict[int | None, CheckValue]) -> CaseCheck:

@@ -242,3 +242,95 @@ def test_legacy_call_without_wave_kind_is_unchanged():
     # no wave_kind: whole-line max - min against the worst SAF (the W501 path kept for comparison)
     r = evaluate_case({None: _doc(ARCS, mx=[1.0, 20e3, 1.0, 1.0, 1.0])}, ROW, {"stress_line": "Riser"})
     assert r.u == pytest.approx(20.0 / COUPLING_MPA) and "18.8" in r.location
+
+
+def test_legacy_seeds_still_combine_by_gumbel():
+    seeds = {s: _doc(ARCS, mx=[1.0, 20e3 * (1 + 0.01 * s), 1.0, 1.0, 1.0]) for s in range(1, 11)}
+    r = evaluate_case(seeds, ROW, {"stress_line": "Riser"}, seeds_expected=10)
+    assert r.reason.startswith("Gumbel MPM over 10 seeds")
+
+
+# ---------------------------------------------------------------- W03: seed mean of the significant range
+
+
+def test_significant_range_combines_seeds_by_the_mean_at_each_station():
+    # station 20.828 (coupling) and 19.812 (body): seed s scales the coupling by (1 + 0.02 s)
+    seeds = {s: _doc(ARCS, sig=[1.0, 1.0, 40e3, 20e3 * (1 + 0.02 * s), 10e3]) for s in range(1, 11)}
+    r = evaluate_case(seeds, ROW, IRR, seeds_expected=10)
+    mean = 20.0 * (1 + 0.02 * 5.5)  # MPa, mean over seeds 1..10
+    assert r.demand == pytest.approx(mean) and r.allowable == pytest.approx(COUPLING_MPA)
+    assert r.u == pytest.approx(mean / COUPLING_MPA)
+    assert r.reason.startswith("seed mean over 10 seeds") and "Gumbel" not in r.reason
+    assert r.seed is None and r.stats["n"] == 10 and r.stats["estimator"] == "seed mean"
+    assert r.stats["u_max"] == pytest.approx(20.0 * 1.2 / COUPLING_MPA)
+    assert r.detail["seed_values"]["10"] == pytest.approx(20.0 * 1.2 / COUPLING_MPA)
+    assert r.detail["by_kind"]["body"]["u"] == pytest.approx(40.0 / BODY_MPA)
+
+
+def test_seed_mean_is_taken_per_station_before_the_maximum():
+    # seeds alternate the larger value between two couplings: mean per station (25) < mean of seed maxima (30)
+    def sig(s):
+        hi, lo = (30e3, 20e3) if s % 2 else (20e3, 30e3)
+        return [1.0, 1.0, 1.0, hi, lo]
+    seeds = {s: _doc(ARCS, sig=sig(s)) for s in range(1, 11)}
+    r = evaluate_case(seeds, ROW, IRR, seeds_expected=10)
+    assert r.demand == pytest.approx(25.0)
+
+
+def test_seed_mean_fails_on_the_mean_not_on_one_seed():
+    # nine seeds at U 0.9, one at 1.5: mean 0.96 -> PASS (a Gumbel MPM over seed maxima would exceed 1)
+    vals = [0.9] * 9 + [1.5]
+    seeds = {s: _doc(ARCS, sig=[1.0, 1.0, 1.0, v * COUPLING_MPA * 1e3, 1.0]) for s, v in enumerate(vals, 1)}
+    r = evaluate_case(seeds, ROW, IRR, seeds_expected=10)
+    assert r.status == "PASS" and r.u == pytest.approx(0.96)
+
+
+def test_seed_mean_refuses_different_station_grids():
+    seeds = {s: _doc(ARCS, sig=[1.0, 1.0, 1.0, 10e3, 1.0]) for s in range(1, 3)}
+    seeds[2] = _doc([17.78, 18.796, 19.812, 20.5, 45.0], sig=[1.0, 1.0, 1.0, 10e3, 1.0])
+    r = evaluate_case(seeds, ROW, IRR, seeds_expected=2)
+    assert r.status == "NOT_EVALUATED" and "station" in r.reason
+
+
+def test_seed_mean_applies_without_a_station_map():
+    seeds = {s: _doc(ARCS, sig=[1.0, 1.0, 1.0, 10e3 * s, 1.0]) for s in range(1, 5)}
+    r = evaluate_case(seeds, ROW, {"stress_line": "Riser", "wave_kind": "irregular"}, seeds_expected=4)
+    assert r.demand == pytest.approx(25.0) and r.allowable == pytest.approx(COUPLING_MPA)
+    assert r.stats["estimator"] == "seed mean"
+
+
+def test_seed_mean_reports_the_hot_spot_mean():
+    seeds = {s: _doc(ARCS, sig=[1.0, 100e3 + 10e3 * s, 1.0, 1.0, 1.0]) for s in range(1, 5)}
+    r = evaluate_case(seeds, ROW, IRR, seeds_expected=4)
+    assert r.detail["hot_spot"]["demand"] == pytest.approx(125.0)
+
+
+# ---------------------------------------------------------------- W04: pup-side station of the 18.288 m coupling
+
+PUP = {**STATIONS, "pup_side_couplings_m": [18.288]}
+
+
+def test_pup_side_station_takes_the_nearest_result_point_above_the_barrel_coupling():
+    arcs = [0.508, 17.78, 18.796, 19.812, 20.828, 22.352]
+    kinds = classify_stations(arcs, **PUP)
+    # barrel side stays excluded; the first pup-side point becomes the coupling station (it is also the hot spot)
+    assert kinds == ["excluded", "excluded", "coupling", "body", "coupling", "coupling"]
+
+
+def test_pup_side_station_must_be_a_coupling_and_on_the_grid():
+    with pytest.raises(ValueError):
+        classify_stations([18.796, 19.812, 25.0], **{**STATIONS, "pup_side_couplings_m": [19.0]})
+    with pytest.raises(ValueError):  # nearest kept point 25.0 m is 6.7 m from the coupling
+        classify_stations([17.78, 25.0, 40.0], **{**STATIONS, "hot_spot_m": None, "pup_side_couplings_m": [18.288]})
+
+
+def test_pup_side_station_governs_with_the_coupling_saf_and_the_hot_spot_is_still_reported():
+    sig = [900e3, 76e3, 5e3, 62e3, 5e3]
+    r = evaluate_case({None: _doc(ARCS, sig=sig)}, ROW, {**IRR, "cr10_stations": PUP})
+    assert r.status == "FAIL" and r.u == pytest.approx(76.0 / COUPLING_MPA)
+    assert "18.8" in r.location and "coupling" in r.location
+    hs = r.detail["hot_spot"]
+    assert hs["arc_m"] == pytest.approx(18.796) and hs["cr10_station"] == "coupling"
+    # without the pup-side station the hot spot does not govern (W510 behaviour unchanged)
+    r0 = evaluate_case({None: _doc(ARCS, sig=sig)}, ROW, IRR)
+    assert r0.u == pytest.approx(62.0 / COUPLING_MPA) and r0.detail["hot_spot"]["cr10_station"] is None

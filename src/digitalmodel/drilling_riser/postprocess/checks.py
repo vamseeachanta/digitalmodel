@@ -10,7 +10,10 @@ value in ``unit``, and the pair always satisfies ``u = |demand| / allowable``.
 
 ``combine`` (per check) says how the seeds of an irregular case combine: ``max`` - Gumbel fit over the seed
 maxima of the utilisation; ``min`` - Gumbel fit over the seed minima of the demand; ``mean`` - mean of the seed
-values; ``same`` - a setting identical in every seed.
+values; ``same`` - a setting identical in every seed. A :class:`CheckValue` may override the rule: CR-10 on the
+significant range of an irregular sea sets ``combine = "station_mean"`` (W03, owner decision 2026-10-07: the seed
+mean at each station, :func:`cr10_station_mean`), because H1/3 is a statistic of the whole sea state, not an
+extreme.
 """
 
 from __future__ import annotations
@@ -62,6 +65,7 @@ class CheckValue:
     passed: bool | None = None
     detail: dict[str, Any] = field(default_factory=dict)
     screening: bool = False  # reported for information only, not part of the verdict (status SCREENING)
+    combine: str | None = None  # seed combination overriding the check's ``combine`` rule (``station_mean``)
 
     def __post_init__(self) -> None:
         if self.screening:
@@ -269,6 +273,67 @@ def _cr10_limits(row) -> dict[str, float]:
             or {"nominal (SAF <= 1.5)": float(row["limit"]["value_if_saf_le_1_5"])})
 
 
+def _cr10_hot_spot(series, kinds, hot_spot_m, cap_of) -> dict[str, Any] | None:
+    """The W7 hot-spot report: the kept result point nearest ``hot_spot_m``. ``cr10_station`` names its CR-10
+    kind when it is also a CR-10 station (the pup-side station of the barrel coupling, W04), else None."""
+    if hot_spot_m is None:
+        return None
+    kept = [i for i, k in enumerate(kinds) if k != "excluded"]
+    if not kept:
+        return None
+    i = min(kept, key=lambda j: abs(series[j][0] - float(hot_spot_m)))
+    arc, v = series[i]
+    mpa = v / 1000.0
+    station = kinds[i] if kinds[i] in cap_of else None
+    return {"arc_m": arc, "demand": mpa, "unit": "MPa", "cr10_station": station,
+            "use": "W7 fatigue hot spot" + ("; also the CR-10 station of its coupling" if station
+                                            else "; not used for CR-10"),
+            "allowable_mpa": dict(cap_of), **{f"u_{kk}": mpa / cap for kk, cap in cap_of.items()}}
+
+
+def _cr10_governing(stations: list[dict], line: str, detail: dict, *, screening: bool,
+                    combine: str | None) -> CheckValue:
+    """The station with the largest utilisation, with the largest per kind in ``detail["by_kind"]``."""
+    by_kind: dict[str, dict] = {}
+    for s in stations:
+        if s["kind"] not in by_kind or s["u"] > by_kind[s["kind"]]["u"]:
+            by_kind[s["kind"]] = {"u": s["u"], "demand": s["demand"], "arc_m": s["arc_m"]}
+    g = max(stations, key=lambda s: s["u"])
+    detail = {**detail, "by_kind": by_kind}
+    return CheckValue(demand=g["demand"], allowable=g["allowable"], unit="MPa", u=g["u"],
+                      location=f"{line} arc {g['arc_m']:.1f} m ({g['kind']}, {g['detail']})", detail=detail,
+                      screening=screening, combine=combine)
+
+
+def cr10_station_mean(values: dict) -> CheckValue:
+    """W03 (owner decision 2026-10-07): the significant range of an irregular sea combines over the seeds by the
+    seed MEAN at each station, then the station with the largest mean utilisation governs (the extremes keep the
+    Gumbel fit). Every seed must hold the same stations (``NotEvaluated`` otherwise)."""
+    seeds = list(values)
+    grids = {tuple((round(s["arc_m"], 6), s["kind"]) for s in values[k].detail["station_values"]) for k in seeds}
+    if len(grids) != 1:
+        raise NotEvaluated("CR-10 seed mean: the seeds do not hold the same stations")
+    first = values[seeds[0]]
+    n = len(seeds)
+    stations = []
+    for j, s0 in enumerate(first.detail["station_values"]):
+        d = sum(values[k].detail["station_values"][j]["demand"] for k in seeds) / n
+        stations.append({**s0, "demand": d, "u": d / s0["allowable"]})
+    line = first.detail["channel"].split(".")[1]
+    detail = {k: v for k, v in first.detail.items() if k not in ("station_values", "by_kind", "hot_spot")}
+    hots = [values[k].detail.get("hot_spot") for k in seeds]
+    if all(hots):
+        hd = sum(h["demand"] for h in hots) / n
+        detail["hot_spot"] = {**hots[0], "demand": hd, "combine": "seed mean",
+                              **{f"u_{k}": hd / cap for k, cap in hots[0]["allowable_mpa"].items()}}
+    v = _cr10_governing(stations, line, detail, screening=False, combine=None)
+    j = max(range(len(stations)), key=lambda i: stations[i]["u"])
+    seed_u = {str(k): values[k].detail["station_values"][j]["u"] for k in seeds}
+    v.detail.update({"combine": "seed mean per station", "seed_values": seed_u,
+                     "station_values": stations})
+    return v
+
+
 def _dyn_stress_range_joints(w, row, ctx, wave: str) -> CheckValue:
     """W510 (owner decisions 2026-10-07). R02: irregular seas (CON-I1) evaluate CR-10 on the significant range;
     regular waves (CON-R1) give a screening value on the max - min range that takes no part in the verdict.
@@ -295,34 +360,21 @@ def _dyn_stress_range_joints(w, row, ctx, wave: str) -> CheckValue:
         cap_of = {k: limits[d] for k, d in detail_of.items() if d in limits}
         if not cap_of:
             raise NotEvaluated(f"no SAF in the register row for the station kinds {sorted(detail_of)}")
-        best, by_kind, hot = None, {}, None
-        for (arc, v), k in zip(series, kinds):
-            mpa = v / 1000.0
-            if k == "hot_spot":
-                hot = {"arc_m": arc, "demand": mpa, "unit": "MPa", "use": "W7 fatigue hot spot; not used for CR-10",
-                       **{f"u_{kk}": mpa / cap for kk, cap in cap_of.items()}}
-                continue
-            if k not in cap_of:  # excluded
-                continue
-            u = mpa / cap_of[k]
-            if k not in by_kind or u > by_kind[k]["u"]:
-                by_kind[k] = {"u": u, "demand": mpa, "arc_m": arc}
-            if best is None or u > best[0]:
-                best = (u, mpa, arc, k)
-        if best is None:
+        stations = [{"arc_m": arc, "kind": k, "detail": detail_of[k], "demand": v / 1000.0, "allowable": cap_of[k],
+                     "u": v / 1000.0 / cap_of[k]} for (arc, v), k in zip(series, kinds) if k in cap_of]
+        if not stations:
             raise NotEvaluated("no riser-joint station on the stress-range axis")
-        u, mpa, arc, k = best
-        detail.update({"by_kind": by_kind, "hot_spot": hot, "stations": st})
-        return CheckValue(demand=mpa, allowable=cap_of[k], unit="MPa", u=u,
-                          location=f"{line} arc {arc:.1f} m ({k}, {detail_of[k]})", detail=detail,
-                          screening=wave == "regular")
-    arc, v = max(series, key=lambda p: p[1])
-    mpa = v / 1000.0
-    by = {d: mpa / cap for d, cap in limits.items()}
-    gov = max(by, key=by.get)
-    detail["by_detail"] = by
-    return CheckValue(demand=mpa, allowable=limits[gov], unit="MPa", u=by[gov],
-                      location=f"{line} arc {arc:.1f} m ({gov})", detail=detail, screening=wave == "regular")
+        hot = _cr10_hot_spot(series, kinds, st.get("hot_spot_m"), cap_of)
+        detail.update({"hot_spot": hot, "stations": st, "station_values": stations})
+        return _cr10_governing(stations, line, detail, screening=wave == "regular",
+                               combine="station_mean" if wave == "irregular" else None)
+    gov = min(limits, key=limits.get)  # one demand per point: the lowest allowable governs
+    stations = [{"arc_m": arc, "kind": "whole line", "detail": gov, "demand": v / 1000.0, "allowable": limits[gov],
+                 "u": v / 1000.0 / limits[gov]} for arc, v in series]
+    peak = max(stations, key=lambda s: s["demand"])["demand"]
+    detail.update({"by_detail": {d: peak / cap for d, cap in limits.items()}, "station_values": stations})
+    return _cr10_governing(stations, line, detail, screening=wave == "regular",
+                           combine="station_mean" if wave == "irregular" else None)
 
 
 def dyn_stress_range(w, row, ctx) -> CheckValue:
