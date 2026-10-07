@@ -43,4 +43,4 @@ The most interesting failure mode this plan risks isn't a Windows API bug — it
 `─────────────────────────────────────────────────`
 
 Given findings 1, 2, and 6 touch the core safety and correctness claims (GHS non-enablement enforcement, the exact orphan-window scenario this plan is built to prove, and crash/readiness completeness), this needs another revision pass before implementation approval.
-Ignoring 19 permissions.allow entries from .claude/settings.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/mnt/ace/ws/digitalmodel"].hasTrustDialogAccepted: true in /home/vamsee/.claude.json.
+Ignoring 19 permissions.allow entries from .claude/settings.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/mnt/ace/ws/digitalmodel"].hasTrustDialogAccepted: true in /home/<user>/.claude.json.

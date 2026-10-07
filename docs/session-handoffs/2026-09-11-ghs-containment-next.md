@@ -32,7 +32,7 @@ No GHS, Part Maker or other vendor execution occurred. No native retry, marker c
 CLEAN: task worktree before this handoff edit; no task stash; prior cooperative claim released; subagents completed.
 EXPECTED: this handoff will be committed and pushed; task branch/worktree retained for continuation. Private failed-attempt evidence, marker and temporary checkout remain required recovery evidence.
 EXPECTED: Windows digitalmodel main remains at 87d56cac637f971ca3ed57d8ca98c16a845ff0f7. Its seven pre-existing docs/benchmarks/unit_box edits blocked fast-forward and remain untouched. No stash/reset was used.
-Windows llm-wiki and llm-wiki-acma working trees were clean at exit. Canonical Linux checkout and sibling worktrees will remain outside this exit operation.
+Windows llm-wiki and the private client wiki working trees were clean at exit. Canonical Linux checkout and sibling worktrees will remain outside this exit operation.
 Cleanup scope is the task worktree and named preserved locations, not an ecosystem-wide deletion or process audit.
 
 Exit handoff review: independent Codex read-only review approved the documentation; its minor request to make the private operator-disposition record explicit was incorporated. GitHub state and CI totals were verified by the main session. Legal scan passed against the resolved task worktree.

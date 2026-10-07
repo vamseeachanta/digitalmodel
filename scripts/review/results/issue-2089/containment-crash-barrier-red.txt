@@ -3,7 +3,7 @@
 _ test_crash_barrier_closes_observer_job_before_controller_termination[False] __
 
 monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7b58deeff310>
-tmp_path = PosixPath('/tmp/pytest-of-vamsee/pytest-65/test_crash_barrier_closes_obse0')
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-65/test_crash_barrier_closes_obse0')
 before = False
 
     @pytest.mark.parametrize('before',[False,True])
@@ -34,7 +34,7 @@ tests/solvers/ghs/test_windows_launch.py:99:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 name = 'controller_after_readiness'
-root = PosixPath('/tmp/pytest-of-vamsee/pytest-65/test_crash_barrier_closes_obse0')
+root = PosixPath('/tmp/pytest-of-<user>/pytest-65/test_crash_barrier_closes_obse0')
 r = namespace(start=<function test_crash_barrier_closes_observer_job_before_controller_termination.<locals>.<lambda> at 0x...in=<function test_crash_barrier_closes_observer_job_before_controller_termination.<locals>.<lambda> at 0x7b58def04220>)
 
     def crash(name,root,r):

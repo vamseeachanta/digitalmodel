@@ -17,7 +17,7 @@ tests/solvers/ghs/test_qualification.py:98: AssertionError
 ______________ test_non_breakaway_parent_requires_observed_child _______________
 
 monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x73a8f055df50>
-tmp_path = PosixPath('/tmp/pytest-of-vamsee/pytest-62/test_non_breakaway_parent_requ0')
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-62/test_non_breakaway_parent_requ0')
 
     def test_non_breakaway_parent_requires_observed_child(monkeypatch,tmp_path):
         from digitalmodel.solvers.ghs import _qualification_scenarios as scenarios

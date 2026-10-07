@@ -2,7 +2,7 @@ F                                                                        [100%]
 =================================== FAILURES ===================================
 _______ test_failed_scenario_diagnostics_survive_work_directory_cleanup ________
 
-tmp_path = PosixPath('/tmp/pytest-of-vamsee/pytest-68/test_failed_scenario_diagnosti0')
+tmp_path = PosixPath('/tmp/pytest-of-<user>/pytest-68/test_failed_scenario_diagnosti0')
 
     def test_failed_scenario_diagnostics_survive_work_directory_cleanup(tmp_path):
         directory=tmp_path/'scenario';directory.mkdir()
