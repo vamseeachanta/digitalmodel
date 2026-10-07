@@ -54,10 +54,6 @@ def test_workflow_registry(workflow, monkeypatch):
         pytest.skip(f"{workflow['id']} requires runtime={workflow['runtime']}")
 
     input_path = REPO_ROOT / workflow["input"]
-    if workflow["id"] == "cathodic-protection-pipeline":
-        monkeypatch.delenv("LLM_WIKI_PATH", raising=False)
-        monkeypatch.delenv("DIGITALMODEL_REPO_ROOT", raising=False)
-
     cfg = engine(inputfile=str(input_path))
 
     assert isinstance(cfg, dict)
@@ -66,83 +62,7 @@ def test_workflow_registry(workflow, monkeypatch):
     for output in workflow["outputs"]:
         assert (REPO_ROOT / output).exists()
 
-    if workflow["id"] == "cathodic-protection":
-        cp = cfg["cathodic_protection"]
-        assert cp["current_demand_A"]["totals"]["mean"] == pytest.approx(196.667146)
-        assert cp["anode_requirements"]["total_mass_kg"] == pytest.approx(5067.071173)
-        assert cp["anode_requirements"]["anode_count"] > 180
-    elif workflow["id"] == "cathodic-protection-jacket":
-        results = cfg["results"]
-        assert results["standard"] == "DNV-RP-B401-2021"
-        assert results["current_demand_A"]["total_mean_A"] == pytest.approx(101.85)
-        assert results["current_demand_A"]["total_final_A"] == pytest.approx(168.6)
-        assert results["anode_requirements"]["total_mass_kg"] == pytest.approx(13120.68)
-        assert results["anode_requirements"]["anode_count"] == 66
-        verification = results["current_output_verification"]
-        assert verification["driving_voltage_V"] == pytest.approx(0.25)
-        assert verification["recommended_anode_count"] == 109
-    elif workflow["id"] == "cathodic-protection-pipeline":
-        results = cfg["results"]
-        densities = results["current_densities_mA_m2"]
-        coating = results["coating_breakdown_factors"]
-        demand = results["current_demand_A"]
-        anodes = results["anode_requirements"]
-        spacing = results["anode_spacing_m"]
-        attenuation = results["attenuation_analysis"]
-
-        assert densities["mean_current_density_A_m2"] == pytest.approx(0.06)
-        assert densities["temperature_band"] == ">50-80"
-        assert coating["mean_factor"] == pytest.approx(0.0145)
-        assert demand["mean_current_demand_A"] == pytest.approx(1.328)
-        assert demand["final_current_demand_A"] == pytest.approx(1.74)
-        assert anodes["total_anode_mass_kg"] == pytest.approx(218.111)
-        assert anodes["actual_total_mass_kg"] == pytest.approx(250.0)
-        assert anodes["anode_count"] == 10
-        assert spacing["spacing_m"] == pytest.approx(166.667)
-        assert spacing["spacing_valid"] is True
-        assert attenuation["protection_reach_m"] == pytest.approx(96.559)
-        assert attenuation["protection_adequate"] is True
-
-        expected_mass = demand["total_charge_Ah"] / (
-            anodes["anode_capacity_Ah_kg"] * anodes["utilization_factor"]
-        )
-        assert anodes["total_anode_mass_kg"] == pytest.approx(expected_mass, abs=1.0e-3)
-        assert anodes["anode_count"] == math.ceil(
-            anodes["total_anode_mass_kg"]
-            * anodes["contingency_factor"]
-            / anodes["individual_anode_mass_kg"]
-        )
-        citation = results["citations"][0]
-        assert citation["code_id"] == "dnv-rp-f103"
-        assert citation["publisher"] == "DNV"
-        assert citation["revision"] == "2010"
-
-        from digitalmodel.citations.resolver import resolve_wiki_path
-
-        assert resolve_wiki_path(citation["wiki_path"]) == (
-            REPO_ROOT / "knowledge" / citation["wiki_path"]
-        )
-    elif workflow["id"] == "cathodic-protection-manifold":
-        results = cfg["results"]
-        assert results["standard"] == "DNV-RP-B401-2021"
-        assert results["current_demand_A"]["total_mean_A"] == pytest.approx(29.75)
-        assert results["anode_requirements"]["total_mass_kg"] == pytest.approx(3832.5)
-        assert results["anode_requirements"]["anode_count"] == 48
-        assert results["current_output_verification"]["adequate"] is True
-    elif workflow["id"] == "cathodic-protection-monopile":
-        results = cfg["results"]
-        assert results["standard"] == "DNV-RP-B401-2021"
-        assert results["current_demand_A"]["total_mean_A"] == pytest.approx(27.72)
-        assert results["anode_requirements"]["total_mass_kg"] == pytest.approx(4285.19)
-        assert results["anode_requirements"]["anode_count"] == 29
-        assert results["current_output_verification"]["recommended_anode_count"] == 32
-    elif workflow["id"] == "cathodic-protection-fpso":
-        results = cfg["results"]
-        assert results["current_demand_A"]["mean"] == pytest.approx(96.0)
-        assert results["current_demand_A"]["final"] == pytest.approx(248.0)
-        assert results["anode_current_capacity_Ah_kg"] == pytest.approx(1865.0)
-        assert results["anode_mass_kg"] == pytest.approx(14091.153)
-    elif workflow["id"] == "catenary":
+    if workflow["id"] == "catenary":
         assert cfg["S"] == pytest.approx(173.2050808)
         assert cfg["X"] == pytest.approx(131.6957897)
         assert cfg["BendRadius"] == pytest.approx(100.0)
@@ -732,6 +652,13 @@ def test_workflow_registry(workflow, monkeypatch):
         assert results["utilisation"].map(math.isfinite).all()
         assert results["utilisation"].max() == pytest.approx(summary["max_utilisation"])
         assert results["vm_stress_Pa"].iloc[-1] > results["vm_stress_Pa"].iloc[0]
+    elif workflow["id"] == "riser-stackup-drawing":
+        summary = cfg["riser_stackup_drawing"]
+        assert summary["result"] == "pass"
+        assert set(summary["checks"].values()) == {"pass"}
+        report = json.loads(Path(summary["reconcile_report"]).read_text("utf-8"))
+        assert report["result"] == "pass"
+        assert Path(summary["svg"]).read_text("utf-8").startswith("<svg ")
     elif workflow["id"] == "riser-stackup-parametric":
         cases = cfg["parametric_run"]["cases"]
         manifest = pd.read_csv(

@@ -67,7 +67,7 @@ plot_multiple:
     file_name_extension: NULL
     nrows: 4
     ncols: 1
-    suptitle: Well Easting, Noble Bob Douglas
+    suptitle: Well Easting, drillship
     sets:
 
     -

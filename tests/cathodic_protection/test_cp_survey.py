@@ -1,6 +1,5 @@
 """Tests for CP survey data analysis."""
 
-import math
 
 import pytest
 

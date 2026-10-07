@@ -1,12 +1,14 @@
-# Rudder & low-speed manoeuvring reference — B1528 SIROCCO
+# Rudder & low-speed manoeuvring reference
 
 Screening-level reference for rudder selection and low-speed ship controllability,
-worked on the SIROCCO (B1528) **Panamax/LR1 single-screw tanker** (LBP 225.5 m,
-B 32.26 m, T 12.2 m laden, Cb ≈ 0.82, rudder area 44.94 m², span 9.0 m).
+worked on a **Panamax/LR1 single-screw tanker** (`tanker_225m_1`: LBP 225.5 m,
+B 32.26 m, T 12.2 m laden, Cb ≈ 0.82 — main particulars from public register data)
+fitted with a **generic rudder**: the DNV minimum area for that hull, 41.6 m², at a
+geometric aspect ratio of 1.80 (span 8.65 m). The rudder is not the ship's own.
 
-> All numbers below were produced by an adversarially-verified research sweep and
-> reproduced by unit tests in `tests/test_maneuvering_envelope.py`. This is **not**
-> a class/IMO compliance proof or a full MMG/6-DOF manoeuvring model.
+> The numbers below are reproduced by unit tests in `tests/test_maneuvering_envelope.py`,
+> where the rudder-dependent ones are also computed by hand from the stated formulas.
+> This is **not** a class/IMO compliance proof or a full MMG/6-DOF manoeuvring model.
 
 Live tool: [`docs/api/hydro/rudder-maneuvering-explorer.html`](../api/hydro/rudder-maneuvering-explorer.html) ·
 Code: [`naval_architecture/maneuvering_envelope.py`](../../src/digitalmodel/naval_architecture/maneuvering_envelope.py) ·
@@ -14,23 +16,17 @@ Data: [`data/rudder_database.yml`](../../src/digitalmodel/naval_architecture/dat
 
 ---
 
-## 0 · Review of the existing rudder calculation
-
-The prior B1528 work is **sound but narrow**:
+## 0 · Building blocks
 
 - `hydrodynamics/propeller_rudder.py` — Söding/Brix + actuator-disk slipstream rudder
-  forces (engine-on capable; correctly guarded for engine-off and braking quadrants).
-- `naval_architecture/b1528_sirocco_current_heading_rudder*` — the ACMA deliverable:
-  the rudder-induced **current-heading force component** for a **moored** vessel
-  (SOG = 0, engine off). Explicitly excludes hull current loads, turning, propeller race.
-- Reusable building blocks already present: `maneuverability.py` (Whicker-Fehlner lift,
-  Nomoto K/T, steady radius, directional stability), `turning_circle.py` (Nomoto
-  turning-circle simulation → advance/transfer/tactical diameter), `yaw_moment.py`,
-  `rudder_stock_torque.py`.
+  forces (engine-on capable; guarded for engine-off and braking quadrants).
+- `maneuverability.py` (Whicker-Fehlner lift, Nomoto K/T, steady radius, directional
+  stability), `turning_circle.py` (Nomoto turning-circle simulation → advance/transfer/
+  tactical diameter), `yaw_moment.py`, `rudder_stock_torque.py`.
 
-**Gap filled here:** a rudder-type database, a low-speed turning/threshold-speed layer,
-and an engine-on current-balance ("hold heading/position") layer — all composing the
-existing physics, parameterised by loading condition.
+This layer adds a rudder-type database, a low-speed turning/threshold-speed layer and an
+engine-on current-balance ("hold heading/position") layer, all composing the existing
+physics and parameterised by loading condition.
 
 ---
 
@@ -41,10 +37,10 @@ Schilling, fishtail, Kort nozzle, twisted leading-edge, gate) with area ratio
 A_R/(L·T), geometric aspect ratio, max normal-force coefficient, stall behaviour, and
 applications. See `rudder_database.yml`.
 
-**SIROCCO classification:** conventional semi-balanced horn / balanced spade. A_R/(L·T) =
-**1.63 %** laden — upper-normal for a full-form tanker (1.5–2.0 %). DNV minimum area
-A = (L·T/100)(1+25(B/L)²) = **41.6 m²**, so 44.94 m² is compliant with ~8 % margin.
-Geometric AR 1.80, effective AR ≈ 3.60 → lift slope **a = 3.77 / rad**.
+**Worked hull:** DNV minimum area A = (L·T/100)(1+25(B/L)²) = **41.6 m²**, giving
+A_R/(L·T) = **1.51 %** laden — at the lower end of the 1.5–2.0 % range usual for a
+full-form tanker. Geometric AR 1.80, effective AR ≈ 3.60 (hull mirror) → lift slope
+**a = 6.13·3.60/(3.60+2.25) = 3.77 / rad** (2.72 / rad without the mirror).
 
 ---
 
@@ -55,7 +51,7 @@ the circle (in ship-lengths) is the same from sea speed down to the steerage thr
 lower speed only makes the turn *slower*, not *larger*. Tactical diameter TD/L ≈ 2·R/L,
 with K′ calibrated to the Lyster & Knights (1979) sea-trial regression.
 
-| Quantity | SIROCCO (35° helm) | IMO MSC.137(76) limit | Verdict |
+| Quantity | worked hull (35° helm, K′ = 1.02) | IMO MSC.137(76) limit | Verdict |
 |---|---:|---:|:--:|
 | Tactical diameter | 3.2·L ≈ 720 m | ≤ 5·L = 1128 m | PASS |
 | Advance | ≈ 3.2·L ≈ 720 m | ≤ 4.5·L = 1015 m | PASS |
@@ -76,9 +72,9 @@ Minimum steerage speed from a rudder-vs-beam-wind balance:
 
 | Condition | A_L | A_Re | U_min @ 20 kn beam wind |
 |---|---:|---:|---:|
-| Laden, coasting | 2200 m² | 44.94 m² | ≈ **2.9 kn** |
-| Ballast, coasting | 3500 m² | 35 m² | ≈ **4.1 kn** |
-| Ballast, kick-ahead | 3500 m² | 35 m² | ≈ **2.7 kn** |
+| Laden, coasting | 2200 m² | 41.6 m² | ≈ **2.97 kn** |
+| Ballast, coasting (estimated immersion) | 3500 m² | 35 m² | ≈ **4.1 kn** |
+| Ballast, kick-ahead (estimated immersion) | 3500 m² | 35 m² | ≈ **2.7 kn** |
 
 Below U_min the ship "won't answer the helm" — tug/thruster assist required. Ballast is the
 governing low-speed case (reduced rudder immersion + higher windage).
@@ -97,7 +93,7 @@ current-limited; **engine-on** the Söding/Brix slipstream scales the rudder sid
 
 The slipstream bracket runs from ~2 (light loading) to ~1 (bollard); the large near-bollard
 force comes from large F_prop, not the bracket. Worked: a near-head 3 kn current
-(N ≈ 9 MN·m) is held with ≈ 8° of carried helm at modest thrust. Beam-on, N climbs toward
+(N ≈ 9.1 MN·m) is held with ≈ 7.6° of carried helm at modest thrust. Beam-on, N climbs toward
 ~38 MN·m (3 kn) / ~105 MN·m (5 kn) and exceeds rudder authority — a tug is then required,
 because the rudder adds yaw but not bollard-grade sway.
 
@@ -110,4 +106,5 @@ authority is also degraded by emergence/ventilation, so ballast is not automatic
 
 Molland & Turnock (2007); Bertram (2012); Brix (1993); Clarke, Gedling & Hine (1983);
 Nomoto et al. (1957); Whicker & Fehlner (1958); Soeding (1982); Lyster & Knights (1979);
-OCIMF *Prediction of Wind and Current Loads on VLCCs* (1994) / MEG4; IMO Res. MSC.137(76) (2002).
+OCIMF *Prediction of Wind and Current Loads on VLCCs* (1994) / MEG4; IMO Res. MSC.137(76) (2002);
+DNV Rules for Ships, minimum rudder area.

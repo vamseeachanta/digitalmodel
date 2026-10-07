@@ -41,7 +41,7 @@ Ranked by curated-CAD density × reuse potential.
 | 1 | **P1** | `…/misc/projects/2100_*_slor_design` | Subsea risers — **SLOR** (single-line offset riser) design | Deepwater operator (de-id) | Heavy SolidWorks part/assembly modeling | ~26,120 | ✅ live |
 | 2 | **P2** | `…/drilling/projects/3824_*_containment_riser_analysis` | Drilling / **containment-riser** analysis | Major operator (de-id) | Mixed CAD + OrcaFlex; large drawing set | ~9,251 | ✅ live |
 | 3 | **F** | a private tensioner-program family (tensioner-cart FE, airgap, support, animation) | **Drilling-riser tensioner** equipment & FE | Private deepwater **appraisal program** (de-id) | SolidWorks equipment + FE; the epic's tensioner assemblies | ~1,100 | ✅ live (private) |
-| 4 | **L1** | `acma-projects/B15xx` (LNG terminal) | **LNG terminal / structural** (Ansys FEA) | LNG terminal owner (de-id) | SolidWorks + FEA; structural fabrication | ~480 (+3,230 archived twin) | ✅ live (`acma-projects`); 🗄️ dedup `.preexisting` |
+| 4 | **L1** | `<project-archive>/B15xx` (LNG terminal) | **LNG terminal / structural** (Ansys FEA) | LNG terminal owner (de-id) | SolidWorks + FEA; structural fabrication | ~480 (+3,230 archived twin) | ✅ live (`<project-archive>`); 🗄️ dedup `.preexisting` |
 | 5 | **O** | `…/drilling/projects/{31057,31098,...}` | Drilling-riser & subsea-structure analysis | Several international operators (de-id) | Per-job riser analysis; some CAD | ~1,400 | ✅ live |
 | 6 | **S1** | `seanation/0122_ct_drilling/reference/design` | **Coiled-tubing drilling** design | CT-drilling client (de-id) | ~700 SolidWorks design refs | 225 live (+481 archived) | ✅ live (`seanation`); 🗄️ dedup `.preexisting` |
 | 7 | **E1** | `epc-partner/‹field›` | Deepwater field development (EPC support) | EPC contractor / deepwater dev (de-id) | OrcaFlex-dominant (`general/engg`, modular YAML) | 317 (archive only) | ⚠️ `.preexisting` only — **kept as canonical** (no live twin) |
@@ -68,7 +68,7 @@ Ranked by curated-CAD density × reuse potential.
 | Live folder | Archived twin | Decision |
 |---|---|---|
 | `client_projects` (815) | `client_projects.preexisting…` (4,522) | **Live = canonical**, archive = dedup 🗄️ |
-| `acma-projects` (474) | `acma-projects.preexisting…` (3,230) | **Live = canonical**, archive = dedup 🗄️ |
+| `<project-archive>` (474) | `<project-archive>.preexisting…` (3,230) | **Live = canonical**, archive = dedup 🗄️ |
 | `eng-partner` (18) | `eng-partner.preexisting…` (502) | **Live = canonical** (but thin — archive holds most history; spot-check before deleting) |
 | `seanation` (225) | `seanation.preexisting…` (481) | **Live = canonical**, archive = dedup 🗄️ |
 | — (no live) | `epc-partner.preexisting…` (317) | **Archive IS canonical** — keep |

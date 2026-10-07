@@ -859,7 +859,15 @@ class TestAH1Option:
         lines = output.read_text().splitlines()
         ah1_idx = next(i for i, l in enumerate(lines) if "OPTIONS AHD1" in l)
         restart_idx = next(i for i, l in enumerate(lines) if "RESTART" in l)
+        end_idx = next(i for i, l in enumerate(lines)
+                       if l.startswith("OPTIONS") and l.rstrip().endswith("END"))
         assert ah1_idx < restart_idx
+        # Ordering alone is too weak: the defective deck also satisfied it.
+        # END closes the options list, so AHD1 must precede that card, and
+        # AQWA requires RESTART to follow the REST option with nothing
+        # between, failing the preliminary data check otherwise.
+        assert ah1_idx < end_idx
+        assert restart_idx == end_idx + 1
 
     def test_ah1_option_via_deck0_builder(self, default_spec):
         from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend

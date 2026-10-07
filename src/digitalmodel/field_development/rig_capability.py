@@ -1,5 +1,5 @@
 # ABOUTME: Rig Capability Assessment workflow (stages 1-4) — onshore rig screen + scoring.
-# ABOUTME: Issue #821 — rule-based, public-data, no network/solver. See deckhand rig-capability-assessment.md.
+# ABOUTME: Issue #821 — rule-based, public-data, no network/solver. See examples/workflows/rig-capability-assessment/.
 """Onshore drilling-rig capability assessment for field development.
 
 Pure-python, deterministic, explainable. Given a well/field program and a set of

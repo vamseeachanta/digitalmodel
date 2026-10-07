@@ -4,7 +4,7 @@
 ;;; By Jimmy Bergmark
 ;;; Copyright (C) 1997-2008 JTB World, All Rights Reserved
 ;;; Website: www.jtbworld.com
-;;; E-mail: info@jtbworld.com
+;;; E-mail: [email removed]
 ;;; 2000-02-12 - First release
 ;;; 2000-03-27 - Counterclockwise arc's and ellipse's fixed
 ;;;              Objects created joined to lwpolyline if possible

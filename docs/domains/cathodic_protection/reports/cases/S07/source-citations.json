@@ -1,0 +1,82 @@
+[
+  {
+    "code_id": "dnv-rp-f103",
+    "note": "DNV-RP-F103: verified-2019-tables",
+    "publisher": "DNV",
+    "revision": "2019-09",
+    "section": "[6.7.11] (design protective potential)",
+    "source_project": null,
+    "source_sibling": "generic",
+    "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-f103-2019.md"
+  },
+  {
+    "code_id": "dnv-rp-b401",
+    "note": "DNV-RP-F103: verified-2019-tables",
+    "publisher": "DNV",
+    "revision": "2017-06",
+    "section": "Table A-7",
+    "source_project": null,
+    "source_sibling": "generic",
+    "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-b401-2017.md"
+  },
+  {
+    "code_id": "dnv-rp-f103",
+    "note": "DNV-RP-F103: verified-2019-tables",
+    "publisher": "DNV",
+    "revision": "2019-09",
+    "section": "Sec. 6.7 Eq. (9)-(16)",
+    "source_project": null,
+    "source_sibling": "generic",
+    "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-f103-2019.md"
+  },
+  {
+    "code_id": "dnv-rp-f103",
+    "note": "DNV-RP-F103: verified-2019-tables",
+    "publisher": "DNV",
+    "revision": "2019-09",
+    "section": "Sec. 6.7 Eq. (18)/(20)",
+    "source_project": null,
+    "source_sibling": "generic",
+    "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-f103-2019.md"
+  },
+  {
+    "code_id": "dnv-rp-f103",
+    "note": "DNV-RP-F103: verified-2019-tables",
+    "publisher": "DNV",
+    "revision": "2019-09",
+    "section": "Appendix D.8.5-D.8.10",
+    "source_project": null,
+    "source_sibling": "generic",
+    "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-f103-2019.md"
+  },
+  {
+    "code_id": "dnv-rp-f103",
+    "note": "DNV-RP-F103: verified-2019-tables",
+    "publisher": "DNV",
+    "revision": "2019-09",
+    "section": "Table 6-3",
+    "source_project": null,
+    "source_sibling": "generic",
+    "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-f103-2019.md"
+  },
+  {
+    "code_id": "dnv-rp-f103",
+    "note": "DNV-RP-F103: verified-2019-tables",
+    "publisher": "DNV",
+    "revision": "2019-09",
+    "section": "Table 6-2",
+    "source_project": null,
+    "source_sibling": "generic",
+    "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-f103-2019.md"
+  },
+  {
+    "code_id": "dnv-rp-f103",
+    "note": "DNV-RP-F103: verified-2019-tables",
+    "publisher": "DNV",
+    "revision": "2019-09",
+    "section": "Table A-1",
+    "source_project": null,
+    "source_sibling": "generic",
+    "wiki_path": "wikis/engineering-standards/wiki/standards/dnv-rp-f103-2019.md"
+  }
+]

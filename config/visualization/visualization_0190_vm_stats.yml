@@ -73,7 +73,7 @@ plot_settings: []
 plot_multiple:
   -
     file_name_extension: vm_stats
-    suptitle: Vessel Motions, Noble Bob Douglas
+    suptitle: Vessel Motions, drillship
     sets:
 
     -
@@ -348,7 +348,7 @@ plot_multiple:
 
   -
     file_name_extension: vm_stats_range1
-    suptitle: Vessel Motions, Noble Bob Douglas
+    suptitle: Vessel Motions, drillship
     sets:
 
     -
@@ -626,7 +626,7 @@ plot_multiple:
 
   -
     file_name_extension: vm_stats_range2
-    suptitle: Vessel Motions, Noble Bob Douglas
+    suptitle: Vessel Motions, drillship
     sets:
 
     -
@@ -907,7 +907,7 @@ plot_multiple:
 
   -
     file_name_extension: vm_stats_range3
-    suptitle: Vessel Motions, Noble Bob Douglas
+    suptitle: Vessel Motions, drillship
     sets:
 
     -
@@ -1188,7 +1188,7 @@ plot_multiple:
 
   -
     file_name_extension: vm_rms
-    suptitle: Vessel Motions, Noble Bob Douglas
+    suptitle: Vessel Motions, drillship
     sets:
 
     -
@@ -1307,7 +1307,7 @@ plot_multiple:
 
   -
     file_name_extension: vm_rms_range1
-    suptitle: Vessel Motions, Noble Bob Douglas
+    suptitle: Vessel Motions, drillship
     sets:
 
     -

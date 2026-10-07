@@ -1,10 +1,10 @@
 # Vessel DB — Provenance & Estimation Report
 
-- particulars rows: 41
+- particulars rows: 42
 - crane summary rows: 11
 - RAO datasets: 26
 - metocean regions: 7
-- gyradii estimated: 105
+- gyradii estimated: 108
 - provenance violations: 0
 
 ## Provenance integrity
@@ -38,6 +38,9 @@ Gyradii are rarely public; these were filled from documented relations (see `gyr
 - FSRU Independence: kxx <- estimated:kxx=0.35*beam
 - FSRU Independence: kyy <- estimated:kyy=0.25*length_bp
 - FSRU Independence: kzz <- estimated:kzz=0.26*length_bp
+- GustoMSC PRD12000-class DP drillship (class-level record): kxx <- estimated:kxx=0.35*beam
+- GustoMSC PRD12000-class DP drillship (class-level record): kyy <- estimated:kyy=0.25*length_bp
+- GustoMSC PRD12000-class DP drillship (class-level record): kzz <- estimated:kzz=0.26*length_bp
 - SSCV Sleipnir: kxx <- estimated:kxx=0.35*beam
 - SSCV Sleipnir: kyy <- estimated:kyy=0.25*length_bp
 - SSCV Sleipnir: kzz <- estimated:kzz=0.26*length_bp

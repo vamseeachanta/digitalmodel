@@ -49,10 +49,10 @@ def _amjig_repo_root() -> Path:
         / "engineering-standards"
         / "wiki"
         / "standards"
-        / "amjig-1997.md"
+        / "amjig-2000.md"
     )
     if not page.is_file():
-        pytest.skip("amjig-1997 wiki criteria page not available")
+        pytest.skip("amjig-2000 wiki criteria page not available")
     return root
 
 

@@ -26,9 +26,9 @@ fi
 # Determine repository tier
 WORK_TIER1="workspace-hub|digitalmodel|energy|frontierdeepwater"
 WORK_TIER2="aceengineercode|assetutilities|worldenergydata|rock-oil-field|teamresumes"
-WORK_TIER3="doris|saipem|OGManufacturing|seanation"
+WORK_TIER3="doris|contractor|OGManufacturing|seanation"
 PERSONAL_ACTIVE="aceengineer-admin|aceengineer-website"
-PERSONAL_EXPERIMENTAL="hobbies|sd-work|acma-projects|achantas-data"
+PERSONAL_EXPERIMENTAL="hobbies|sd-work|<project-archive>|achantas-data"
 
 # Complexity indicators
 OPUS_KEYWORDS="architecture|refactor|design|security|complex|multi-file|algorithm|optimization|strategy|planning|cross-repository|performance|migration"

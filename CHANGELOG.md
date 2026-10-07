@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+- cathodic_protection: add eleven repository-owned structure/mode review packs, offline comment sidecars, fixed component/phase coverage and exact-artifact publication checks ([#2281](https://github.com/vamseeachanta/digitalmodel/issues/2281)); benchmark A–E packs remain explicitly blocked and the overall portfolio incomplete. Shared engines/templates and numerical results are unchanged.
+- cathodic_protection: rebuild `ABS_gn_ships_2018` on shared kernels with fractional ABS coating breakdown, depleted long-flush geometry, mass/output/layout checks, and cited December 2017 guide values; the old solver remains as deprecated `ABS_gn_ships_2018_legacy`. Owner decision 2026-10-01 accepts the arithmetic-mean coating treatment, depleted long-flush resistance reading, and explicit project dynamic bare-steel current-density input; the rebuilt route is now `client-use-with-eor-check` ([#2259](https://github.com/vamseeachanta/digitalmodel/issues/2259)).
+
+### Added
+
+- cathodic_protection: terminal `DNV_RP_F103_anode_bank` route calculates pipeline-plus-structure demand, grouped stand-off-anode resistance, conservative F103 terminal attenuation, protected length, far-end potential and governing PASS/FAIL status.
+
+### Changed
+
+- cathodic_protection: `DNV_RP_B401_offshore` now accepts a mutually exclusive `inputs.components[]` extension for hybrid and free-standing risers, with component-local zones, coatings, environment and life; explicit electrical continuity and family allocations; stand-off, flush and bracelet anodes; and component, family and overall demand/mass/count/output checks and reports ([#2261](https://github.com/vamseeachanta/digitalmodel/issues/2261)).
+- cathodic_protection: the `DNV_RP_B401_offshore` route now supports concrete-embedded reinforcement zones and named seawater/sediment anode families, with cited per-family electrochemistry, mass/count/current-output checks, and family plus overall governing cases ([#2262](https://github.com/vamseeachanta/digitalmodel/issues/2262)).
+- cathodic_protection: add B401 riser-base/foundation/mudmat/hatch-cover compositions, sequential temporary and wet-storage consumption, retrofit additional-anode sizing, and explicit fail-preserving accepted-output-shortfall records ([#2263](https://github.com/vamseeachanta/digitalmodel/issues/2263)).
+- cathodic_protection: record evidence class/source without lifting experimental gates; include 200 ohm-m in the EN middle band, require measured graphite mass for life, and expose evidence in provisional report text ([#2264](https://github.com/vamseeachanta/digitalmodel/issues/2264)).
+
+- cathodic_protection: `ABS_gn_ships_2018` now raises `ExperimentalModelError` unless `inputs.design_data.experimental: true` (Boolean). Opt-in preserves the calculation and sets `status.use_status` to `experimental-known-understatement`; reports warn that mean demand is about a third low and final demand about half low per the 2026-09-27 benchmark ([#2259](https://github.com/vamseeachanta/digitalmodel/issues/2259), [#1852](https://github.com/vamseeachanta/digitalmodel/issues/1852)). `ABS_gn_offshore_2018` is unchanged.
+
+- cathodic_protection: DNV-RP-F103 default edition is now 2019 (was 2010). Results for fluids above 25 °C and for FBE coatings increase; pass edition='2010' to reproduce earlier results.
+- cathodic_protection: new engine key `DNV_RP_F103` runs `design_data.edition` (default 2019); `DNV_RP_F103_2010` is now a deprecated alias pinned to edition 2010 (DeprecationWarning; a conflicting `design_data.edition` raises) so existing YAMLs reproduce their earlier results.
+- cathodic_protection: client use approved on the DNV-RP-B401 offshore and DNV-RP-F103 bracelet routes only, subject to an engineer-of-record check of every deliverable; every route's `status` block now carries `use_status` (`client-use-with-eor-check` / `legacy-uncited-independent-check-required` for the ABS and `*_legacy` routes) and the CP anode-design report states it (owner decision 2026-09-27, #2206).
+
+### Fixed
+
+- cathodic_protection: the `DNV_RP_F103` route maps `pipeline.field_joint_coating` for the resolved edition, so 2019 runs accept the DNVGL-RP-F102 (2011) Table A-2 ids (e.g. `3A`, `2B(1)`, `5A/B/C(1)`) and May 2021 names; the new `pipeline.field_joint_infill` selects the 3A FBE row (none 0.10/0.010, 4E(2) PU 0.03/0.003) and is required for it (#2256).
+
 ## [2.1.0] - 2026-03-26
 
 ### Phase 1 GSD Sprint -- New Calculation Modules
@@ -253,7 +279,7 @@ This project uses Semantic Versioning (MAJOR.MINOR.PATCH):
 
 ## Contributors
 
-**Lead Developer:** Vamsee Achanta (vamsee.achanta@aceengineer.com)
+**Lead Developer:** Vamsee Achanta ([email removed])
 
 **Dedication:** Mark Cerkovnik - Chief Engineer, mentor, and inspiration
 

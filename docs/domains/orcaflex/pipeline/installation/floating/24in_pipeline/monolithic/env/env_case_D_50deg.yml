@@ -1,0 +1,13 @@
+﻿Environment:
+  KinematicStretchingMethod: Vertical stretching
+  WaveTrains:
+    Wave1:
+      WaveType: Cnoidal
+      WaveHeight: 1.16
+      WavePeriod: 10.6
+      WaveDirection: 50
+      WaveCurrentSpeedInWaveDirectionAtMeanWaterLevel: 0.8
+  RefCurrentSpeed: 0.8
+  RefCurrentDirection: 50
+  WindSpeed: 7.45
+  WindDirection: 50

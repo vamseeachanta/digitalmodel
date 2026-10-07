@@ -134,7 +134,7 @@ mode_shape_plots:
 #      plt_kind: scatter
 #      xlabel: Elevation Above Mudline (ft)
 #      ylabel: Mode Slope, Shape normalized to unit length
-#      suptitle: Horn Mountain TTR VIV Analysis
+#      suptitle: GoM spar TTR VIV Analysis
 #      title: Mode Slope
 #      xticklabels: NULL
 #      grid: True

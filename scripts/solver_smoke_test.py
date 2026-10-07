@@ -8,10 +8,10 @@ check that proves the licence is reachable and can be checked out, which is the
 failure mode that matters on a licensed run host.
 
 The probes themselves live in ``digitalmodel.solvers.smoke.probes`` so this CLI
-and the engine arm (``basename: solver_smoke_test``, used by the deckhand
+and the engine arm (``basename: solver_smoke_test``, used by the
 licensed-run lane) run exactly the same checks.
 
-Designed to be run unattended (scheduled task, SSH, deckhand preflight):
+Designed to be run unattended (scheduled task, SSH, licensed-run preflight):
 no prompts, machine-readable ``--json``, and an exit code that means
 "this host can solve".
 
@@ -26,7 +26,7 @@ Exit codes: ``0`` every selected solver solved; ``1`` at least one failed.
 Running this remotely over SSH
 ------------------------------
 The Windows licensed host answers SSH with Git bash (MSYS), so use POSIX-style
-paths -- ``D:\\ws\\...`` backslashes are escape characters there::
+paths -- ``<drive>:\\ws\\...`` backslashes are escape characters there::
 
     ssh <user>@<licensed-host> \\
       '/d/ws/digitalmodel/.venv/Scripts/python.exe \\
@@ -42,7 +42,7 @@ service. Error 21", even though the environment, the ``ORCINA_LICENSE_FILE``
 registry value and TCP reachability to the licence server are byte-identical to
 a working interactive session -- the key-auth logon token simply cannot
 complete the checkout. Route remote OrcaFlex work through an executor that owns
-a credentialed logon (the deckhand licensed-run lane's ``solver-smoke-test``
+a credentialed logon (the licensed-run lane's ``solver-smoke-test``
 workflow, or a scheduled task) rather than running it in the SSH session.
 """
 

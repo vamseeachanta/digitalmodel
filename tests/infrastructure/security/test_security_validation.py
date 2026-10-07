@@ -212,7 +212,7 @@ class TestDataProtection:
                 data = re.sub(r'\b\d{3}-\d{2}-\d{4}\b', 'XXX-XX-XXXX', data)
                 # Mask email
                 data = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
-                             'email@masked.com', data)
+                             'email@example.com', data)
                 # Mask passwords in config strings like: password="value" or password: value
                 if 'password' in data.lower():
                     data = re.sub(r'(password["\']?\s*[:=]\s*["\']?)([^"\'\s]+)',
@@ -236,7 +236,7 @@ class TestDataProtection:
 
         masked_data = mask_sensitive_data(sensitive_data)
 
-        assert masked_data["user"] == "email@masked.com"
+        assert masked_data["user"] == "email@example.com"
         assert masked_data["credit_card"] == "XXXX-XXXX-XXXX-XXXX"
         assert masked_data["ssn"] == "XXX-XX-XXXX"
         assert "secret123" not in str(masked_data)

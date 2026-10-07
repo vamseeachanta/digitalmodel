@@ -100,7 +100,7 @@ class TestSectionsAndContent:
     @pytest.mark.parametrize(
         ("standard", "expected_reference"),
         [
-            ("DNV-RP-C203", "DNV-RP-C203 (2016) including 2019 amendments"),
+            ("DNV-RP-C203", "not traced to a single DNV-RP-C203 edition"),
             ("BS 7608", "BS 7608:2014+A1:2015"),
             ("API RP 2A", "API RP 2A-WSD 22nd Edition"),
             ("IIW", "XIII-2460-13"),

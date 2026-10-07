@@ -18,14 +18,14 @@ Max Nicholson
 
  
 T :  +44(0)1229 584742
-E :  orcina@orcina.com
+E :  [email removed]
 W:  www.orcina.com
      
 
 
-From: Vamsee Achanta <vamseea@acma-inc.com> 
+From: Vamsee Achanta [email removed] 
 Sent: 17 December 2024 03:06
-To: Orcina <orcina@orcina.com>
+To: Orcina [email removed]
 Subject: OrcFXAPI | V11.5 | Ref Current Speed
 
 Dear Support Representative,

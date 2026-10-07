@@ -1,0 +1,6 @@
+{
+  "input_fixture": "pipeline.yml",
+  "input_sha256": "d51b3798999dac9d18c7151cd97281a9dea395dfcdc5085618c06cc5e6e326d7",
+  "private_benchmark_data": false,
+  "source_class": "repository_regression"
+}
