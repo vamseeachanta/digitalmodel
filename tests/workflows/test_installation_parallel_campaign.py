@@ -1,6 +1,7 @@
 """Bounded campaign ownership, resource and evidence contracts."""
 import copy
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -206,6 +207,7 @@ def test_misordered_source_rows_rejected(setup):
     assert not setup['calls']
 
 
+@pytest.mark.skipif(sys.platform != 'win32', reason='Windows spawn semantics: forked POSIX children inherit the test fakes')
 def test_windows_spawn_transports_failed_receipts_without_loading_solver(setup, monkeypatch):
     """Real child processes reject incomplete evidence before native API loading."""
     monkeypatch.setattr(parallel.psutil, 'Process', _REAL_PROCESS)
