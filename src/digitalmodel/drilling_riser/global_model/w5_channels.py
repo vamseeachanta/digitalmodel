@@ -133,6 +133,32 @@ def tm_hull_rows(t: Sequence[float], series: dict[str, Sequence[float]]) -> list
     return [_row(t, s, i) for i in sorted(keep)]
 
 
+OW_REQUIRED_POINTS = ("frame", "rotary", "edp")
+OW_REQUIRED_LINES = ("Upper", "Riser", "Stack")
+
+
+def _missing_open_water(doc: dict, *, foundation: bool) -> list[str]:
+    miss = []
+    pts = doc.get("points", {})
+    for p in OW_REQUIRED_POINTS:
+        if p not in pts:
+            miss.append(f"points.{p}")
+    if not any(k.startswith("stack:") for k in pts):
+        miss.append("points.stack:*")
+    if doc.get("analysis") == "dynamics":
+        for k, p in pts.items():
+            if (k.startswith("stack:") or k == "edp") and not p.get("tm_hull"):
+                miss.append(f"points.{k}.tm_hull")
+    rg = doc.get("range_graphs", {})
+    for line in OW_REQUIRED_LINES + (("Conductor",) if foundation else ()):
+        if line not in rg:
+            miss.append(f"range_graphs.{line}")
+    for k in ("frame", "top_tension", "stroke"):
+        if k not in doc:
+            miss.append(k)
+    return miss
+
+
 HO_REQUIRED_POINTS = ("ufj", "riser_top", "riser_bottom")
 
 
@@ -161,6 +187,8 @@ def _missing_hang_off(doc: dict) -> list[str]:
 
 def missing_channels(doc: dict, *, foundation: bool) -> list[str]:
     """Required W5 keys absent from an extraction document (empty list = complete)."""
+    if doc.get("riser_kind") == "open_water":
+        return _missing_open_water(doc, foundation=foundation)
     if doc.get("riser_kind") == "hang_off":
         return _missing_hang_off(doc)
     miss = []
@@ -335,6 +363,95 @@ def extract(model, spec, analysis: str, ofx) -> dict[str, Any]:
         doc["event_series"] = event_series(model, spec, ofx)
     if not static and spec.recoil is not None:
         doc["recoil"] = recoil_summary(model, spec, ofx)
+    return compact(doc)
+
+
+# --------------------------------------------------------------------------- open-water (C2) riser
+
+OW_RANGE = {
+    "Upper": (("te", "Effective tension", "minmax"), ("tw", "Wall tension", "minmax"), ("m", "Bend moment", "max"),
+              ("vm", "Max von Mises stress", "max")),
+    "Riser": RANGE["Riser"],
+    "Stack": RANGE["Stack"],
+    "Conductor": RANGE["Conductor"],
+}
+
+
+def open_water_points(spec) -> list[tuple[str, str, Any, bool, Any]]:
+    """(name, line, where, has angle, arc of the segment above or None) of the open-water W5 points; ``where`` is
+    ``"A"``/``"B"`` (line end) or an arc length. Points: the string top below the frame (``frame``), the rotary
+    (``rotary``), every riser section boundary (``riser:<upper>|<lower>``, the stress-joint base among them), the EDP /
+    LRP interface (``edp``), the stack boundaries as the drilling riser, and the conductor top."""
+    pts: list[tuple[str, str, Any, bool, Any]] = [("frame", "Upper", "A", True, None), ("rotary", "Riser", "A", True, None)]
+    arc = 0.0
+    for hi, lo in zip(spec.riser, spec.riser[1:]):
+        arc += hi.length_m
+        pts.append((f"riser:{hi.name}|{lo.name}", "Riser", arc, True, None))
+    pts.append(("edp", "Riser", "B", True, None))
+    for n, a in _stack_points(spec):
+        if "|" in n:
+            pts.append((n, "Stack", a - ABOVE_M, False, a + ABOVE_M))
+        else:
+            pts.append((n, "Stack", "A" if n == "stack:datum" else "B", False, None))
+    if spec.foundation is not None:
+        pts.append(("conductor:top", "Conductor", "B", False, None))
+    return pts
+
+
+def _extra(where, ofx):
+    if where == "A":
+        return ofx.oeEndA
+    if where == "B":
+        return ofx.oeEndB
+    return ofx.oeArcLength(float(where))
+
+
+def extract_open_water(model, spec, analysis: str, ofx) -> dict[str, Any]:
+    """The W5 channel set of a solved open-water (C2) riser case - the drilling-riser set with the tension frame,
+    rotary, riser boundaries and EDP in place of the flex joints and ring. ``stroke`` is the tension-frame elevation
+    relative to the vessel point at the frame (the tensioner / tension-joint stroke, CR-59)."""
+    static = analysis == "statics"
+    sp = ofx.Period(ofx.pnStaticState)
+    period = sp if static else ofx.Period(1)
+    doc: dict[str, Any] = {"schema": SCHEMA, "riser_kind": "open_water", "analysis": analysis, "units": UNITS,
+                           "points": {}, "range_graphs": {}}
+    t = None if static else [float(x) for x in model.SampleTimes(period)]
+    if t is not None:
+        doc["time"] = {"start_s": t[0], "end_s": t[-1], "samples": len(t), "dt_s": (t[-1] - t[0]) / max(1, len(t) - 1)}
+    for name, line_name, where, angle, above in open_water_points(spec):
+        line = model[line_name]
+        vals = _line_vars(line, _extra(where, ofx), period, angle=angle, static=static, ofx=ofx)
+        if above is not None:
+            ex = ofx.oeArcLength(above)
+            for key, var in (("te_above", "Effective tension"), ("tw_above", "Wall tension")):
+                vals[key] = (float(line.StaticResult(var, ex)) if static
+                             else [float(x) for x in line.TimeHistory(var, period, ex)])
+        if static:
+            doc["points"][name] = {"line": line_name, "static": vals}
+            continue
+        pt = {"line": line_name, "stats": {k: stats(v) for k, v in vals.items()}, "extremes": extreme_rows(t, vals)}
+        if name.startswith(("stack:", "riser:")) or name in ("frame", "rotary", "edp", "conductor:top"):
+            pt["tm_hull"] = tm_hull_rows(t, vals)
+        doc["points"][name] = pt
+    lines = list(OW_REQUIRED_LINES) + (["Conductor"] if spec.foundation is not None else [])
+    for ln in lines:
+        doc["range_graphs"][ln] = _range_graph(model[ln], period, sp, static=static, rows=OW_RANGE[ln])
+    frame, vessel, winch = model["TensionFrame"], model[spec.vessel_name], model["TopTensioner"]
+    at_frame = ofx.oeVessel((0.0, 0.0, spec.tension_frame.z_m))
+    if static:
+        fz = float(frame.StaticResult("Z"))
+        doc["frame"] = {"static": {k: float(frame.StaticResult(v)) for k, v in (("x", "X"), ("y", "Y"), ("z", "Z"))}}
+        doc["stroke"] = {"static": fz - float(vessel.StaticResult("Z", at_frame))}
+        doc["top_tension"] = {"static": float(winch.StaticResult("Tension"))}
+        doc["vessel"] = {"static": {"x": float(vessel.InitialX), "y": float(vessel.InitialY)}}
+    else:
+        fz = [float(x) for x in frame.TimeHistory("Z", period)]
+        vz = [float(x) for x in vessel.TimeHistory("Z", period, at_frame)]
+        doc["frame"] = {"stats": {k: stats(frame.TimeHistory(v, period)) for k, v in (("x", "X"), ("y", "Y"), ("z", "Z"))}}
+        doc["stroke"] = {"stats": stats([a - b for a, b in zip(fz, vz)])}
+        doc["top_tension"] = {"stats": stats(winch.TimeHistory("Tension", period))}
+        doc["vessel"] = {"stats": {"x": stats(vessel.TimeHistory("X", period)), "y": stats(vessel.TimeHistory("Y", period))}}
+    doc["contents"] = {"density_kg_m3": spec.contents.density_kg_m3, "pressure_ref_z_m": spec.contents.pressure_ref_z_m}
     return compact(doc)
 
 
