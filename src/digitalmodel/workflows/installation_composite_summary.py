@@ -15,6 +15,7 @@ import math
 from pathlib import Path
 
 from digitalmodel.workflows.installation_partial_report import component_envelopes
+from digitalmodel.workflows.vessel_capability_layout import event_audit_coverage_errors
 from digitalmodel.workflows.vessel_capability_report import critical_periods
 
 
@@ -76,6 +77,8 @@ def _supplemental_audit(other, row):
     count = audit.get('channels_verified')
     if audit.get('status') != 'VERIFIED' or audit.get('errors') != [] or isinstance(count, bool) or not isinstance(count, int) or count <= 0:
         raise ValueError('Supplemental event audit is not verified')
+    if count != len(row.get('channels') or {}):
+        raise ValueError('Supplemental event audit does not cover every result channel')
     for key in ('trace_sha256', 'metadata_sha256'):
         if not row.get(key) or audit.get(key) != row[key]:
             raise ValueError('Supplemental event audit does not bind result trace and metadata')
@@ -99,6 +102,8 @@ def _apply_substitution(summary, frozen_base, sub):
     variant = _verify_variant(sub, frozen_base, other, step)
     reference = _reference_settings(sub, frozen_base, current, rows[0])
     before = reference.pop('fixed_time_step_s', None)
+    if isinstance(before, bool) or not isinstance(before, (int, float)) or not math.isfinite(before):
+        raise ValueError('Variant time-step proof requires a finite base time step')
     if variant['master_deltas']['General.ImplicitConstantTimeStep'].get('before') != before:
         raise ValueError('Variant time-step proof does not bind frozen base settings')
     if settings != reference:
@@ -120,7 +125,10 @@ def _apply_substitution(summary, frozen_base, sub):
                       replaced_status=current['status'], variant=str(sub['variant']), variant_sha256=sub['variant_sha256'])
     summary['cases'][index] = dict(copy.deepcopy(rows[0]), solved_time_step_s=float(step), substituted_from=provenance)
     snapshot_rows = summary['campaign_snapshot']['cases']
-    position = next(i for i, r in enumerate(snapshot_rows) if r['index'] == index)
+    positions = [i for i, r in enumerate(snapshot_rows) if r.get('index') == index]
+    if len(positions) != 1:
+        raise ValueError(f'Base campaign snapshot must hold exactly one row for cell {index}')
+    position = positions[0]
     snapshot_rows[position] = dict(copy.deepcopy(planned[0]), solved_time_step_s=float(step), substituted_from=provenance)
     return dict(index=index, time_step_s=float(step), reason=sub['reason'],
                 summary=str(sub['summary']), sha256=sub['sha256'], replaced_status=current['status'])
@@ -141,6 +149,9 @@ def build_composite(base, base_sha256, substitutions):
         seen.add(index)
         applied.append(_apply_substitution(summary, frozen_base, sub))
     summary['counts'] = dict(Counter(row['status'] for row in summary['cases']))
+    coverage = event_audit_coverage_errors(summary)
+    if coverage:
+        raise ValueError('Composite event audit coverage incomplete: ' + '; '.join(coverage))
     summary['envelopes'] = component_envelopes(summary['cases'])
     summary['critical_periods'] = critical_periods(summary['cases'])
     summary['composite'] = dict(base=str(base), base_sha256=base_sha256, substitutions=applied,

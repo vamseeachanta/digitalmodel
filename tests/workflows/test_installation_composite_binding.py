@@ -138,6 +138,67 @@ def test_seven_failed_cells_use_frozen_base_and_gain_audits(tmp_path):
     assert json.loads(paths['base'].read_bytes()) == base
 
 
+@pytest.mark.parametrize('defect', ['emptied', 'trace', 'metadata', 'duplicate', 'failed'])
+def test_every_verified_case_needs_one_bound_audit_after_substitution(tmp_path, defect):
+    """Base audits for cells that were not substituted are checked as strictly as substituted ones."""
+    paths = _summaries(tmp_path)
+    base = json.loads(paths['base'].read_bytes())
+    audit = base['event_audits'][0]
+    if defect == 'emptied': base['event_audits'] = []
+    if defect == 'trace': audit['trace_sha256'] = 'old-trace'
+    if defect == 'metadata': audit['metadata_sha256'] = 'old-metadata'
+    if defect == 'duplicate': base['event_audits'].append(copy.deepcopy(audit))
+    if defect == 'failed': audit['status'] = 'FAILED'
+    _save(paths['base'], base)
+    with pytest.raises(ValueError, match='audit'):
+        _compose(paths)
+
+
+@pytest.mark.parametrize('defect', ['missing_both', 'missing_variant', 'nan', 'boolean'])
+def test_time_step_before_proof_requires_finite_number(tmp_path, defect):
+    """None == None (or a non-number) must not satisfy the variant time-step proof."""
+    paths = _summaries(tmp_path)
+    variant = json.loads(paths['variant'].read_bytes())
+    delta = variant['master_deltas']['General.ImplicitConstantTimeStep']
+    if defect in ('missing_both', 'missing_variant'):
+        delta.pop('before')
+    if defect == 'missing_both':
+        base = json.loads(paths['base'].read_bytes())
+        base['cases'][1]['settings'].pop('fixed_time_step_s')
+        _save(paths['base'], base)
+    if defect == 'nan':
+        delta['before'] = float('nan')
+        base = json.loads(paths['base'].read_bytes())
+        base['cases'][1]['settings']['fixed_time_step_s'] = float('nan')
+        _save(paths['base'], base)
+    if defect == 'boolean':
+        delta['before'] = True
+        base = json.loads(paths['base'].read_bytes())
+        base['cases'][1]['settings']['fixed_time_step_s'] = True
+        _save(paths['base'], base)
+    _save(paths['variant'], variant)
+    with pytest.raises(ValueError, match='time-step'):
+        _compose(paths)
+
+
+def test_supplemental_audit_must_cover_every_channel(tmp_path):
+    paths = _summaries(tmp_path)
+    other = json.loads(paths['supplement'].read_bytes())
+    other['event_audits'][0]['channels_verified'] = len(other['cases'][1]['channels']) + 15
+    _save(paths['supplement'], other)
+    with pytest.raises(ValueError, match='audit'):
+        _compose(paths)
+
+
+def test_missing_snapshot_row_raises_value_error(tmp_path):
+    paths = _summaries(tmp_path)
+    base = json.loads(paths['base'].read_bytes())
+    base['campaign_snapshot']['cases'] = [r for r in base['campaign_snapshot']['cases'] if r['index'] != 1]
+    _save(paths['base'], base)
+    with pytest.raises(ValueError, match='campaign snapshot'):
+        _compose(paths)
+
+
 @pytest.mark.parametrize('target', ['base', 'supplement'])
 def test_campaign_matrix_hash_must_match_summary(tmp_path, target):
     paths = _summaries(tmp_path)

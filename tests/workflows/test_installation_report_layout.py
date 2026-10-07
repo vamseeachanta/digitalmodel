@@ -109,8 +109,31 @@ def test_audit_claims_and_unlinked_design_context_explicit():
     assert 'report-author interpretations' in html
     assert 'over the 600 s record' not in html and 'recorded analysis interval' in html
     assert '6.1 Subsequent review context' not in html
-    data=summary();data['event_audits']=[{'status':'VERIFIED'}]
+    data=audited_summary()
     assert 'source audit records' in mudmat.render_html(data)
+
+
+def audited_summary():
+    data=summary()
+    data['cases']=[dict(index=0,status='VERIFIED',hs_m=1.,tp_s=8.,run_dir='run',simulation_sha256='a',
+        trace_sha256='b',metadata_sha256='d',channels={'load':dict(position='End A',units='kN',minimum=0.,maximum=1.)})]
+    data['counts']={'VERIFIED':1}
+    data['event_audits']=[dict(index=0,status='VERIFIED',errors=[],channels_verified=1,trace_sha256='b',metadata_sha256='d')]
+    return data
+
+
+@pytest.mark.parametrize('defect',['unbound','partial','trace','failed','counts'])
+def test_audit_claim_requires_full_verified_coverage(defect):
+    data=audited_summary() if defect!='unbound' else summary()
+    if defect=='unbound':data['event_audits']=[{'status':'VERIFIED'}]
+    if defect=='partial':
+        data['cases'].append(dict(data['cases'][0],index=1,trace_sha256='e',metadata_sha256='f'));data['counts']={'VERIFIED':2}
+    if defect=='trace':data['event_audits'][0]['trace_sha256']='old'
+    if defect=='failed':data['event_audits'][0]['status']='FAILED'
+    if defect=='counts':data['counts']={'VERIFIED':61}
+    html=mudmat.render_html(data)
+    assert 'source audit records' not in html
+    assert 'source event audit is not established' in html
 
 
 def mixed_cases():

@@ -57,10 +57,30 @@ def _intro_summary(summary,config):
     return _section(1,'Introduction',intro)+_section(2,'Summary and conclusions',findings)
 
 
+def event_audit_coverage_errors(summary):
+    """Return why the event audits do not give exactly one bound VERIFIED audit per VERIFIED case (empty when complete)."""
+    verified=[row for row in summary.get('cases',[]) if row.get('status')=='VERIFIED']
+    audits=summary.get('event_audits') or []
+    errors=[]
+    if not verified:errors.append('no VERIFIED case is available to bind an event audit')
+    declared=summary.get('counts',{}).get('VERIFIED',len(verified))
+    if declared!=len(verified):errors.append(f'counts declare {declared} VERIFIED cases but {len(verified)} are listed')
+    for row in verified:
+        matches=[a for a in audits if isinstance(a,dict) and a.get('index')==row.get('index')]
+        if len(matches)!=1:
+            errors.append(f"case {row.get('index')} has {len(matches)} event audits; exactly one is required");continue
+        audit=matches[0]
+        if audit.get('status')!='VERIFIED' or audit.get('errors')!=[]:
+            errors.append(f"case {row.get('index')} event audit is not VERIFIED")
+        if any(not row.get(k) or audit.get(k)!=row[k] for k in ('trace_sha256','metadata_sha256')):
+            errors.append(f"case {row.get('index')} event audit does not bind trace and metadata")
+    return errors
+
+
 def _method(summary):
     diagram=_workflow()
     audit=('The source audit records completed generation, model, simulation and trace checks and recomputed tension-event durations. '
-        if summary.get('event_audits') else 'Verification by a source event audit is not established in the supplied snapshot. ')
+        if summary.get('event_audits') and not event_audit_coverage_errors(summary) else 'Verification by a source event audit is not established in the supplied snapshot. ')
     return _section(4,'Analysis methodology','<p>The retained source report contains the campaign snapshot and numerical demand. '+audit+
         'This presentation reuses that snapshot and does not repeat the audit or invoke a solver.</p>'+diagram+
         '<p class="caption">Figure 4-1. Evidence workflow; qualification remains separate from recorded demand.</p>'

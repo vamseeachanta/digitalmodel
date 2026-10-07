@@ -43,7 +43,7 @@ def _summaries(tmp_path):
     supplement['cases'][1]['run_dir'] = 'quarter'
     for data in (base, supplement):
         data['campaign_snapshot']['matrix_sha256'] = data['matrix_sha256']
-        data['event_audits'] = [dict(index=row['index'], status='VERIFIED', errors=[], channels_verified=16,
+        data['event_audits'] = [dict(index=row['index'], status='VERIFIED', errors=[], channels_verified=len(row['channels']),
                                     trace_sha256=row['trace_sha256'], metadata_sha256=row['metadata_sha256'])
                                 for row in data['cases'] if row['status'] == 'VERIFIED']
     paths = {}
