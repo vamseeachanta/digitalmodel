@@ -97,3 +97,23 @@ def test_case_key_groups_by_mode_configuration_metocean_heading_offset_mud_tensi
     assert k == {"mode": "connected drilling; connected non-drilling", "configuration": "cfg-a", "metocean": "MET-A",
                  "heading_deg": 45, "offset_pct_wd": -6, "mud_weight_ppg": 12.5, "top_tension": "TT-A",
                  "tensioner": "intact"}
+
+
+def test_declared_cases_without_a_ledger_record_are_reported_missing(tmp_path):
+    """Codex P1: a case declared in run.json that never reached any ledger is reported, never dropped."""
+    a = _run(tmp_path, "p1", [_case("G-00001"), _case("G-00002"), _case("G-00003")],
+             [{"case_id": "G-00001", "status": "ok", "finished_utc": "2026-01-01T00:00:00Z"}])
+    b = _run(tmp_path, "p2", [_case("G-00003")],
+             [{"case_id": "G-00003", "status": "ok", "finished_utc": "2026-01-02T00:00:00Z"}])
+    recs, issues = collect([a, b])
+    assert sorted(recs) == ["G-00001", "G-00003"]  # G-00003 ran in the re-run: not missing
+    assert issues == [{"case_id": "G-00002", "status": "missing", "run": "p1",
+                       "message": "declared in run.json but no ledger record in any run (never attempted)"}]
+
+
+def test_a_run_interrupted_before_its_ledger_was_written_reports_every_case_missing(tmp_path):
+    a = _run(tmp_path, "p1", [_case("G-00001"), _case("G-00002")], [])
+    (a / "ledger.jsonl").unlink()
+    recs, issues = collect([a])
+    assert recs == {} and [(i["case_id"], i["status"]) for i in issues] == [("G-00001", "missing"),
+                                                                            ("G-00002", "missing")]

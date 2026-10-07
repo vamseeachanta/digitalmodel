@@ -3,8 +3,10 @@
 Each function reads one results document (``riser-w5-channels/1``), the register row (its limit) and a case
 context (values set per case by the caller: tension setting, T_min at the case mud weight, stroke datum,
 connector map, interface offsets) and returns a :class:`CheckValue` for that document (one static case, one
-regular-wave case or one seed). Utilisation is demand / capacity; a sign criterion (effective tension > 0)
-has no utilisation and passes on the sign.
+regular-wave case or one seed). Utilisation is demand / allowable; a sign criterion (effective tension > 0)
+has no utilisation and passes on the sign. ``demand`` and ``allowable`` are in the check's own ``unit`` (deg, m,
+MPa, kips, ft-kips - it differs per check), which is why neither carries a unit suffix: the unit travels with the
+value in ``unit``, and the pair always satisfies ``u = |demand| / allowable``.
 
 ``combine`` (per check) says how the seeds of an irregular case combine: ``max`` - Gumbel fit over the seed
 maxima of the utilisation; ``min`` - Gumbel fit over the seed minima of the demand; ``mean`` - mean of the seed
@@ -26,6 +28,7 @@ from digitalmodel.drilling_riser.postprocess.channels import (
     point_value,
     range_extreme,
     range_series,
+    row_value,
     stroke_range,
 )
 from digitalmodel.drilling_riser.postprocess.pressure import REFERENCE as PRESSURE_REFERENCE
@@ -47,7 +50,7 @@ class NotEvaluated(Exception):
 @dataclass
 class CheckValue:
     demand: float
-    capacity: float | None
+    allowable: float | None  # in ``unit`` (per check), the denominator of ``u``
     unit: str
     u: float | None
     location: str = ""
@@ -89,8 +92,8 @@ def zero_crossing(xs: list[float], ys: list[float]) -> float | None:
     return None
 
 
-def _ratio(demand: float, capacity: float, unit: str, **kw) -> CheckValue:
-    return CheckValue(demand=demand, capacity=capacity, unit=unit, u=abs(demand) / capacity, **kw)
+def _ratio(demand: float, allowable: float, unit: str, **kw) -> CheckValue:
+    return CheckValue(demand=demand, allowable=allowable, unit=unit, u=abs(demand) / allowable, **kw)
 
 
 def _fj_points(row: dict) -> list[str]:
@@ -152,12 +155,12 @@ def coupling_rating(w, row, ctx) -> CheckValue:
 
 def t_eff_min(w, row, ctx) -> CheckValue:
     v, arc = range_extreme(w, "Riser", "te", "min")
-    return CheckValue(demand=v, capacity=0.0, unit="kN", u=None, location=f"Riser arc {arc:.1f} m", passed=v > 0.0)
+    return CheckValue(demand=v, allowable=0.0, unit="kN", u=None, location=f"Riser arc {arc:.1f} m", passed=v > 0.0)
 
 
 def t_min(w, row, ctx) -> CheckValue:
     return _ratio(float(ctx["t_min_kips"]), float(ctx["top_tension_kips"]), "kips", location="tension setting",
-                  detail={"note": "demand = T_min at the case mud weight; capacity = the case top-tension setting"})
+                  detail={"note": "demand = T_min at the case mud weight; allowable = the case top-tension setting"})
 
 
 def tension_setting_max(w, row, ctx) -> CheckValue:
@@ -165,13 +168,20 @@ def tension_setting_max(w, row, ctx) -> CheckValue:
 
 
 def tj_stroke(w, row, ctx) -> CheckValue:
+    """Telescopic-joint stroke: the excursion from the datum stroke against the travel available in that direction
+    (demand and allowable are the excursion and the travel, so u = demand / allowable; the absolute stroke
+    positions are in ``detail``)."""
     lo, hi = (float(v) for v in row["limit"]["usable_m"])
     s0 = float(ctx["tj_datum_m"])
     smin, smax, _ = stroke_range(w)
-    u_ext, u_col = smax / (hi - s0), -smin / (s0 - lo)
+    ext_m, col_m = max(smax, 0.0), max(-smin, 0.0)
+    u_ext, u_col = ext_m / (hi - s0), col_m / (s0 - lo)
+    detail = {"datum_m": s0, "usable_m": [lo, hi], "stroke_max_m": s0 + smax, "stroke_min_m": s0 + smin}
     if u_ext >= u_col:
-        return CheckValue(demand=s0 + smax, capacity=hi, unit="m", u=u_ext, location="telescopic joint, extension")
-    return CheckValue(demand=s0 + smin, capacity=lo, unit="m", u=u_col, location="telescopic joint, collapse")
+        return CheckValue(demand=ext_m, allowable=hi - s0, unit="m", u=u_ext, location="telescopic joint, extension",
+                          detail=detail)
+    return CheckValue(demand=col_m, allowable=s0 - lo, unit="m", u=u_col, location="telescopic joint, collapse",
+                      detail=detail)
 
 
 def tensioner_stroke(w, row, ctx) -> CheckValue:
@@ -192,21 +202,26 @@ def connector_tmp(w, row, ctx) -> CheckValue:
         t_rated = float(env["tension_kips"])
         caps = env[f"{level}_ft_kips"]
         off = float(ctx["interface_offset_kn"][point])
+        p_chart = env["bore_pressure_ksi"]
         for r in point_rows(w, point):
-            te_if = float(r["te"]) + off
+            te_below = row_value(r, point, "te")
+            te_if = te_below + off
             if abs(te_if) / KIP_KN > t_rated + 1e-9:
                 raise NotEvaluated(f"{point}: interface tension {te_if / KIP_KN:,.0f} kips at t = {r.get('t')} s is "
                                    f"outside the capacity chart ({t_rated:,.0f} kips)")
-            dp = bore_differential_kpa(float(r["po"]), rho_contents=float(c["density_kg_m3"]),
+            dp = bore_differential_kpa(row_value(r, point, "po"), rho_contents=float(c["density_kg_m3"]),
                                        z_ref_m=float(c["pressure_ref_z_m"]), rho_water=rho_w)
             p_ksi = max(dp, 0.0) / KSI_KPA
-            cap = envelope_min_capacity(p_ksi, env["bore_pressure_ksi"], caps)
-            m = abs(float(r["m"])) / FT_KIP_KNM
+            if not p_chart[0] - 1e-12 <= p_ksi <= p_chart[-1] + 1e-12:
+                raise NotEvaluated(f"{point}: bore differential {p_ksi:,.3f} ksi at t = {r.get('t')} s is outside the "
+                                   f"capacity chart ({p_chart[0]:g}-{p_chart[-1]:g} ksi)")
+            cap = envelope_min_capacity(p_ksi, p_chart, caps)
+            m = abs(row_value(r, point, "m")) / FT_KIP_KNM
             u = m / cap
             by[point] = max(by.get(point, 0.0), u)
             if best is None or u > best.u:
-                best = CheckValue(demand=m, capacity=cap, unit="ft-kips", u=u, location=point, time_s=r.get("t"),
-                                  detail={"te_interface_kn": te_if, "te_below_kn": float(r["te"]),
+                best = CheckValue(demand=m, allowable=cap, unit="ft-kips", u=u, location=point, time_s=r.get("t"),
+                                  detail={"te_interface_kn": te_if, "te_below_kn": te_below,
                                           "bore_differential_ksi": p_ksi, "level": level, "envelope": env_name})
     best.detail["by_location"] = by
     return best
@@ -218,7 +233,7 @@ def conductor_bending(w, row, ctx) -> CheckValue:
     wh_cap = float(lim["wellhead_system_ft_kips"])
     wh_m = max(abs(point_value(w, wh_point, "m", "max")), abs(point_value(w, wh_point, "m", "min")))
     wr = extreme_row(w, wh_point, "m", "max")
-    wh = CheckValue(demand=wh_m / FT_KIP_KNM, capacity=wh_cap, unit="ft-kips", u=wh_m / FT_KIP_KNM / wh_cap,
+    wh = CheckValue(demand=wh_m / FT_KIP_KNM, allowable=wh_cap, unit="ft-kips", u=wh_m / FT_KIP_KNM / wh_cap,
                     location=wh_point, time_s=(wr or {}).get("t"))
     # conductor: every range-graph point against the capacity of the section at its arc length
     cd = None
@@ -230,7 +245,7 @@ def conductor_bending(w, row, ctx) -> CheckValue:
         cap = float(sec["capacity_ft_kips"])
         u = abs(m) / FT_KIP_KNM / cap
         if cd is None or u > cd.u:
-            cd = CheckValue(demand=abs(m) / FT_KIP_KNM, capacity=cap, unit="ft-kips", u=u,
+            cd = CheckValue(demand=abs(m) / FT_KIP_KNM, allowable=cap, unit="ft-kips", u=u,
                             location=f"Conductor arc {arc:.1f} m ({sec['name']})")
     best = cd if cd.u >= wh.u else wh
     best.detail["by_location"] = {wh_point: wh.u, "Conductor": cd.u}
@@ -250,7 +265,7 @@ def dyn_stress_range(w, row, ctx) -> CheckValue:
               or {"nominal (SAF <= 1.5)": float(row["limit"]["value_if_saf_le_1_5"])})
     by = {d: mpa / cap for d, cap in limits.items()}
     gov = max(by, key=by.get)
-    return CheckValue(demand=mpa, capacity=limits[gov], unit="MPa", u=by[gov], location=f"{line} arc {arc:.1f} m ({gov})",
+    return CheckValue(demand=mpa, allowable=limits[gov], unit="MPa", u=by[gov], location=f"{line} arc {arc:.1f} m ({gov})",
                       detail={"by_detail": by, "saf": saf})
 
 
@@ -272,11 +287,11 @@ def _pressure_check(w, row, ctx, sign: float, kind: str) -> CheckValue:
     cap = float(row["limit"]["factor"]) * _pipe_capacity(ctx, kind)
     best = None
     for p, r in _pressure_rows(w, ctx):
-        d = sign * (float(r["pi"]) - float(r["po"])) / 1000.0
+        d = sign * (row_value(r, p, "pi") - row_value(r, p, "po")) / 1000.0
         if best is None or d > best[0]:
             best = (d, p, r.get("t"))
     d, p, t = best
-    return CheckValue(demand=d, capacity=cap, unit="MPa", u=max(d, 0.0) / cap, location=p, time_s=t,
+    return CheckValue(demand=d, allowable=cap, unit="MPa", u=max(d, 0.0) / cap, location=p, time_s=t,
                       detail={"capacity_basis": f"{row['limit']['factor']} x p_{kind[0]} ({PRESSURE_REFERENCE})"})
 
 
@@ -297,7 +312,7 @@ def moonpool_clearance(w, row, ctx) -> CheckValue:
     v, t = _fj_max_at(w, "ufj")
     by = {k: v / lim for k, lim in lims.items()}
     gov = max(by, key=by.get)
-    return CheckValue(demand=v, capacity=lims[gov], unit="deg", u=by[gov], location=f"ufj ({gov})", time_s=t,
+    return CheckValue(demand=v, allowable=lims[gov], unit="deg", u=by[gov], location=f"ufj ({gov})", time_s=t,
                       detail={"by_obstruction": by, "limit_deg": lims})
 
 

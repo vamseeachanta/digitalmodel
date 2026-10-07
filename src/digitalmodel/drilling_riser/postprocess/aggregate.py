@@ -3,7 +3,9 @@
 A run directory holds ``run.json`` (the case list: ``case_id``, ``matrix_case``, ``params``), ``ledger.jsonl``
 (one record per attempt: ``case_id``, ``status``, ``finished_utc``, ``results_path``, ``results_sha256``) and
 ``results/<case>.json``. Several runs may hold the same case (re-runs); the record with the latest
-``finished_utc`` is the case's final record. A case whose final record is not ``ok`` has no result.
+``finished_utc`` is the case's final record. A case whose final record is not ``ok`` has no result, and a case
+declared in a ``run.json`` with no ledger record in any run (never attempted: the campaign was interrupted before
+it, or its ledger is absent) is reported with status ``missing`` - it is never dropped silently.
 """
 
 from __future__ import annotations
@@ -57,22 +59,34 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
+MISSING = "missing"
+
+
 def _ledger(run_dir: Path) -> list[dict[str, Any]]:
     out = []
-    for line in (run_dir / "ledger.jsonl").read_text(encoding="utf-8").splitlines():
+    path = run_dir / "ledger.jsonl"
+    if not path.exists():  # interrupted before the first case finished: every declared case is missing
+        return out
+    for line in path.read_text(encoding="utf-8").splitlines():
         if line.strip():
             out.append(json.loads(line))
     return out
 
 
 def collect(run_dirs: Iterable[Path]) -> tuple[dict[str, CaseRecord], list[dict[str, Any]]]:
-    """Final record per case over ``run_dirs``. Returns (ok records by case id, cases without a result)."""
+    """Final record per case over ``run_dirs``. Returns (ok records by case id, cases without a result).
+
+    Cases without a result are those whose final ledger record is not ``ok`` and those declared in a ``run.json``
+    that no ledger records at all (status ``missing``)."""
     latest: dict[str, tuple[str, int, Path, dict, dict]] = {}
+    declared: dict[str, Path] = {}
     order = 0
     for run_dir in run_dirs:
         run_dir = Path(run_dir)
         run = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
         cases = {c["case_id"]: c for c in run.get("cases", [])}
+        for cid in cases:
+            declared.setdefault(cid, run_dir)
         for rec in _ledger(run_dir):
             order += 1
             key = (rec.get("finished_utc") or "", order)
@@ -91,6 +105,9 @@ def collect(run_dirs: Iterable[Path]) -> tuple[dict[str, CaseRecord], list[dict[
                                   matrix_case=case.get("matrix_case", {}), params=case.get("params", {}),
                                   analysis=case.get("analysis", rec.get("analysis", "")),
                                   run_type=case.get("run_type", ""))
+    for cid in sorted(set(declared) - set(latest)):
+        issues.append({"case_id": cid, "status": MISSING, "run": declared[cid].name,
+                       "message": "declared in run.json but no ledger record in any run (never attempted)"})
     return records, issues
 
 

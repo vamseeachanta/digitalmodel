@@ -68,6 +68,19 @@ def point_rows(w: dict[str, Any], point: str) -> list[dict[str, Any]]:
     return list(p["extremes"]) + list(p.get("tm_hull") or [])
 
 
+def row_value(row: dict[str, Any], point: str, var: str) -> float:
+    """A variable of one coincident row (from :func:`point_rows`); raises :class:`MissingChannel` naming the point,
+    the row (its driver / kind, or ``static``) and the variable when the row does not carry it."""
+    try:
+        return float(row[var])
+    except KeyError:
+        if row.get("driver"):
+            tag = f"{row.get('driver')}.{row.get('kind')}"
+        else:
+            tag = "static" if row.get("t") is None else f"t={row.get('t')}"
+        raise MissingChannel(f"points.{point}.{tag}.{var}") from None
+
+
 def extreme_row(w: dict[str, Any], point: str, driver: str, kind: str) -> dict[str, Any] | None:
     """The coincident row at the extreme of ``driver`` (dynamics), or None."""
     if not is_dynamic(w):

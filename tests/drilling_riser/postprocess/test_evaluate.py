@@ -132,7 +132,7 @@ def test_point_rows_static_and_dynamic():
 
 def test_flex_joint_checks_static_and_regular():
     r = evaluate_case({None: static_doc(ufj=3.0)}, ROW_FJ_MAX, CTX)
-    assert (r.status, r.u, r.demand, r.capacity, r.location) == ("PASS", 0.75, 3.0, 4.0, "ufj")
+    assert (r.status, r.u, r.demand, r.allowable, r.location) == ("PASS", 0.75, 3.0, 4.0, "ufj")
     r = evaluate_case({None: dyn_doc(ufj_max=5.0)}, ROW_FJ_MAX, CTX)
     assert (r.status, r.u, r.time_s) == ("FAIL", 1.25, 123.4)
     assert "exceeds" in r.reason and "4" in r.reason
@@ -270,3 +270,49 @@ def test_summary_per_row_governing_case_and_counts():
     assert s["CR-02"]["governing"]["u"] == pytest.approx(1.25)
     assert s["CR-02"]["status"] == "FAIL"
     assert math.isclose(s["CR-02"]["max_u"], 1.25)
+
+
+# ---------------------------------------------------------------- PR #2257 review fixes
+
+
+def test_stroke_demand_and_allowable_are_the_excursion_and_the_available_travel():
+    """P2: demand / allowable reproduce u (the reason reads consistently); absolute positions go to detail."""
+    r = evaluate_case({None: dyn_doc(s_min=-4.6775, s_max=0.1)}, ROW_TJ, CTX)
+    assert r.status == "PASS" and r.location == "telescopic joint, collapse"
+    assert r.demand == pytest.approx(4.6775) and r.allowable == pytest.approx(9.855 - 0.5)
+    assert r.u == pytest.approx(r.demand / r.allowable)
+    assert r.detail["stroke_min_m"] == pytest.approx(9.855 - 4.6775)
+    assert "demand 4.678 m within the allowable 9.355 m" in r.reason
+    e = evaluate_case({None: dyn_doc(s_min=-0.5, s_max=10.0)}, ROW_TJ, CTX)
+    assert e.status == "FAIL" and e.demand == pytest.approx(10.0) and e.allowable == pytest.approx(19.312 - 9.855)
+    assert e.u == pytest.approx(e.demand / e.allowable)
+
+
+def test_connector_pressure_outside_the_chart_is_not_evaluated():
+    """P2: a bore differential above the chart's pressure range is NOT_EVALUATED, not an uncaught ValueError."""
+    doc = static_doc()
+    doc["channels"]["w5"]["points"]["stack:A|B"]["static"]["po"] = 250000.0  # dp ~ 16.9 ksi > 15 ksi
+    r = evaluate_case({None: doc}, ROW_TMP, CTX)
+    assert r.status == "NOT_EVALUATED" and "bore differential" in r.reason and "0-15 ksi" in r.reason
+
+
+@pytest.mark.parametrize("var", ["te", "po", "m"])
+def test_connector_row_without_a_coincident_variable_is_a_missing_channel(var):
+    """P2: a coincident row lacking te / po / m is recorded as a missing channel, not a raw KeyError."""
+    doc = dyn_doc()
+    for r in doc["channels"]["w5"]["points"]["stack:A|B"]["extremes"]:
+        r.pop(var)
+    c = evaluate_case({None: doc}, ROW_TMP, CTX)
+    assert c.status == "NOT_EVALUATED" and c.missing_channel == f"points.stack:A|B.m.max.{var}"
+
+
+def test_irregular_seed_ids_must_match_the_expected_set():
+    """P2: seeds 1-9 plus 11 do not stand in for seeds 1-10."""
+    seeds = {s: dyn_doc() for s in [*range(1, 10), 11]}
+    r = evaluate_case(seeds, ROW_FJ_MAX, CTX, seeds_expected=10)
+    assert r.status == "NOT_EVALUATED" and r.stats is None
+    assert "9 of 10 seeds" in r.reason and r.detail == {"missing_seeds": [10], "unexpected_seeds": [11]}
+    extra = evaluate_case({s: dyn_doc() for s in range(1, 12)}, ROW_FJ_MAX, CTX, seeds_expected=10)
+    assert extra.status == "NOT_EVALUATED" and extra.detail["unexpected_seeds"] == [11]
+    named = evaluate_case({s: dyn_doc() for s in (3, 5, 7)}, ROW_FJ_MAX, CTX, seed_ids=[3, 5, 7])
+    assert named.status == "PASS" and named.stats["n"] == 3

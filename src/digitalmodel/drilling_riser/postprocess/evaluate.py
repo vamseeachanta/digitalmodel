@@ -29,7 +29,7 @@ class CaseCheck:
     reason: str
     u: float | None = None
     demand: float | None = None
-    capacity: float | None = None
+    allowable: float | None = None  # in ``unit`` (per check; see :mod:`checks`)
     unit: str = ""
     location: str = ""
     seed: int | None = None
@@ -49,27 +49,44 @@ def _fmt(v: float | None) -> str:
 def _reason(v: CheckValue, passed: bool, unit: str, prefix: str = "") -> str:
     if v.u is None:
         rel = "above" if passed else "not above"
-        return f"{prefix}demand {_fmt(v.demand)} {unit} {rel} the limit {_fmt(v.capacity)} {unit}"
+        return f"{prefix}demand {_fmt(v.demand)} {unit} {rel} the limit {_fmt(v.allowable)} {unit}"
     rel = "within" if passed else "exceeds"
-    return (f"{prefix}demand {_fmt(v.demand)} {unit} {rel} the capacity {_fmt(v.capacity)} {unit} "
+    return (f"{prefix}demand {_fmt(v.demand)} {unit} {rel} the allowable {_fmt(v.allowable)} {unit} "
             f"(U = {v.u:.3f})")
 
 
 def _single(row: dict, value: CheckValue, seed: int | None = None) -> CaseCheck:
     status = "PASS" if value.passed else "FAIL"
     return CaseCheck(row_id=row["id"], status=status, reason=_reason(value, bool(value.passed), value.unit),
-                     u=value.u, demand=value.demand, capacity=value.capacity, unit=value.unit,
+                     u=value.u, demand=value.demand, allowable=value.allowable, unit=value.unit,
                      location=value.location, seed=seed, time_s=value.time_s, detail=value.detail)
 
 
-def evaluate_case(docs: dict[int | None, dict], row: dict, ctx: dict, *, seeds_expected: int | None = None) -> CaseCheck:
-    """``docs`` maps seed -> results document; a static or regular case has the single key None."""
+def evaluate_case(docs: dict[int | None, dict], row: dict, ctx: dict, *, seeds_expected: int | None = None,
+                  seed_ids: Iterable[int] | None = None) -> CaseCheck:
+    """``docs`` maps seed -> results document; a static or regular case has the single key None.
+
+    An irregular case names its seeds by ``seed_ids`` (or ``seeds_expected``, meaning seeds 1..n): the documents
+    must hold exactly those seeds - a missing seed, or a seed outside the set standing in for it, leaves the case
+    NOT_EVALUATED rather than fitting the Gumbel distribution to the wrong sample."""
     rid = row["id"]
     if row.get("check_key") not in CHECKS:
         return CaseCheck(rid, "NOT_EVALUATED", f"no demand function for check_key {row.get('check_key')!r}")
-    if seeds_expected and len(docs) < seeds_expected:
-        return CaseCheck(rid, "NOT_EVALUATED", f"{len(docs)} of {seeds_expected} seeds hold results; the Gumbel fit "
-                                               f"needs every seed")
+    if seed_ids is None and seeds_expected:
+        seed_ids = range(1, int(seeds_expected) + 1)
+    if seed_ids is not None:
+        want, have = {int(s) for s in seed_ids}, set(docs)
+        if have != want:
+            missing = sorted(want - have)
+            extra = sorted((s for s in have - want), key=lambda s: (s is None, s))
+            held = len(have & want)
+            parts = [f"{held} of {len(want)} seeds hold results"]
+            if missing:
+                parts.append(f"missing seeds {missing}")
+            if extra:
+                parts.append(f"unexpected seeds {extra}")
+            return CaseCheck(rid, "NOT_EVALUATED", "; ".join(parts) + "; the Gumbel fit needs every seed",
+                             detail={"missing_seeds": missing, "unexpected_seeds": extra})
     values: dict[int | None, CheckValue] = {}
     for seed, doc in sorted(docs.items(), key=lambda kv: (kv[0] is None, kv[0])):
         try:
@@ -91,8 +108,8 @@ def _combine(row: dict, values: dict[int, CheckValue]) -> CaseCheck:
         return _single(row, first, seed=None)
     if how == "mean":
         d = sum(v.demand for v in values.values()) / len(values)
-        v = CheckValue(demand=d, capacity=first.capacity, unit=first.unit,
-                       u=None if first.capacity is None else abs(d) / first.capacity, location=first.location,
+        v = CheckValue(demand=d, allowable=first.allowable, unit=first.unit,
+                       u=None if first.allowable is None else abs(d) / first.allowable, location=first.location,
                        detail={"seeds": len(values)})
         c = _single(row, v)
         c.reason = f"mean over {len(values)} seeds: " + c.reason
@@ -102,10 +119,10 @@ def _combine(row: dict, values: dict[int, CheckValue]) -> CaseCheck:
         fit = gumbel_fit(us, kind="max")
         gov = max(seeds, key=lambda s: values[s].u)
         g = values[gov]
-        cap = g.capacity
+        cap = g.allowable
         demand = fit.mpm * cap if cap is not None else None
         passed = fit.mpm <= 1.0 + U_TOL
-        v = CheckValue(demand=demand, capacity=cap, unit=g.unit, u=fit.mpm, passed=passed)
+        v = CheckValue(demand=demand, allowable=cap, unit=g.unit, u=fit.mpm, passed=passed)
         reason = _reason(v, passed, g.unit, prefix=f"Gumbel MPM over {fit.n} seeds: ") + \
             f"; 90 % CI of U {fit.ci_low:.3f}-{fit.ci_high:.3f}"
     else:  # min
@@ -113,12 +130,12 @@ def _combine(row: dict, values: dict[int, CheckValue]) -> CaseCheck:
         fit = gumbel_fit(ds, kind="min")
         gov = min(seeds, key=lambda s: values[s].demand)
         g = values[gov]
-        passed = fit.mpm > g.capacity
-        v = CheckValue(demand=fit.mpm, capacity=g.capacity, unit=g.unit, u=None, passed=passed)
+        passed = fit.mpm > g.allowable
+        v = CheckValue(demand=fit.mpm, allowable=g.allowable, unit=g.unit, u=None, passed=passed)
         reason = _reason(v, passed, g.unit, prefix=f"Gumbel MPM of the minimum over {fit.n} seeds: ") + \
             f"; 90 % CI {fit.ci_low:,.4g}-{fit.ci_high:,.4g} {g.unit}"
     return CaseCheck(row_id=row["id"], status="PASS" if passed else "FAIL", reason=reason, u=v.u, demand=v.demand,
-                     capacity=v.capacity, unit=g.unit, location=g.location, seed=gov, time_s=g.time_s,
+                     allowable=v.allowable, unit=g.unit, location=g.location, seed=gov, time_s=g.time_s,
                      stats=fit.as_dict(),
                      detail={**g.detail, "governing_seed_u": g.u, "governing_seed_demand": g.demand,
                              "seed_values": {str(s): (values[s].u if how == "max" else values[s].demand)
@@ -128,8 +145,8 @@ def _combine(row: dict, values: dict[int, CheckValue]) -> CaseCheck:
 def _order_key(c: CaseCheck) -> float:
     if c.u is not None:
         return c.u
-    if c.demand is not None and c.capacity is not None:  # sign criterion: the smallest margin governs
-        return -(c.demand - c.capacity)
+    if c.demand is not None and c.allowable is not None:  # sign criterion: the smallest margin governs
+        return -(c.demand - c.allowable)
     return float("-inf")
 
 

@@ -108,7 +108,7 @@ def test_cr10_governed_by_the_detail_with_the_lowest_allowable_range():
     five_ksi_mpa = 5.0 * KSI_KPA / 1000.0
     assert r.status == "PASS"
     assert r.u == pytest.approx(20.0 / five_ksi_mpa)
-    assert r.capacity == pytest.approx(five_ksi_mpa) and r.demand == pytest.approx(20.0)
+    assert r.allowable == pytest.approx(five_ksi_mpa) and r.demand == pytest.approx(20.0)
     assert "arc 5.0 m" in r.location and "coupling" in r.location
     assert r.detail["by_detail"]["riser girth weld"] == pytest.approx(20.0 / (10.0 * KSI_KPA / 1000.0))
 
@@ -156,7 +156,7 @@ def test_cr23_burst_takes_the_largest_internal_overpressure_on_the_riser():
     r = evaluate_case({None: static_doc(pi_lfj=12000.0, po_lfj=9500.0)}, ROW_BURST, ctx)
     pb = burst_pressure_mpa(PIPE["od_m"], PIPE["t_min_m"], 555.0, 625.0)
     assert r.status == "PASS" and r.location == "lfj"
-    assert r.demand == pytest.approx(2.5) and r.capacity == pytest.approx(0.6 * pb)
+    assert r.demand == pytest.approx(2.5) and r.allowable == pytest.approx(0.6 * pb)
     assert r.u == pytest.approx(2.5 / (0.6 * pb))
 
 
@@ -196,3 +196,11 @@ def test_cr21_compares_the_largest_ufj_angle_with_the_smallest_limiting_angle():
     assert r.status == "FAIL" and r.detail["by_obstruction"]["moonpool"] == pytest.approx(5.0 / 8.3)
     r = evaluate_case({None: static_doc(ufj=-2.1)}, ROW_CLEAR, ctx)
     assert r.u == pytest.approx(0.5)
+
+
+def test_burst_row_without_pi_is_a_missing_channel():
+    """PR #2257 P2: a pressure row lacking pi / po is a missing channel (NOT_EVALUATED), not a raw KeyError."""
+    doc = dyn_doc()
+    doc["channels"]["w5"]["points"]["lfj"]["extremes"][0].pop("pi")
+    r = evaluate_case({None: doc}, ROW_BURST, {"pipe": PIPE, "pressure_points": ["riser_top", "lfj"]})
+    assert r.status == "NOT_EVALUATED" and r.missing_channel == "points.lfj.te.max.pi"
