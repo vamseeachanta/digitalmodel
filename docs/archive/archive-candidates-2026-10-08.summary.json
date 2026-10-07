@@ -1,0 +1,121 @@
+{
+  "generated": "2026-10-08",
+  "base_commit": "7665afc373957acdae816cf7b1cccc446642fcfd",
+  "rule": {
+    "extensions_any_size": [
+      "bmp",
+      "dat",
+      "doc",
+      "docx",
+      "dwg",
+      "dxf",
+      "engd",
+      "gif",
+      "gz",
+      "html",
+      "igs",
+      "jfif",
+      "jpeg",
+      "jpg",
+      "lis",
+      "owr",
+      "pdf",
+      "png",
+      "ppt",
+      "pptx",
+      "qtf",
+      "scdoc",
+      "sim",
+      "stl",
+      "svg",
+      "tif",
+      "tiff",
+      "webp",
+      "xls",
+      "xlsx"
+    ],
+    "extensions_size_gated": [
+      "csv",
+      "yaml",
+      "yml"
+    ],
+    "size_gate_bytes_exclusive": 1000000,
+    "excluded_prefixes": [
+      "src/",
+      "tests/",
+      "docs/api/",
+      "assets/logo/"
+    ],
+    "scope": "git ls-files (tracked only); extension match case-insensitive; size gate on git blob size",
+    "source": "recovered from PR #2146 (head 48ff7b64) against its merge base 7e71d6b2"
+  },
+  "lfs_tracked_files": 0,
+  "totals": {
+    "files": 1414,
+    "size_bytes": 1952163371,
+    "blob_size_bytes": 1942772294
+  },
+  "referenced": {
+    "any": 707,
+    "by_non_candidate": 697
+  },
+  "by_top_level": {
+    "docs": {
+      "files": 1314,
+      "size_bytes": 1897074675,
+      "blob_size_bytes": 1887708314
+    },
+    "examples": {
+      "files": 91,
+      "size_bytes": 53029193,
+      "blob_size_bytes": 53004729
+    },
+    "scripts": {
+      "files": 2,
+      "size_bytes": 1165388,
+      "blob_size_bytes": 1165388
+    },
+    "config": {
+      "files": 3,
+      "size_bytes": 657140,
+      "blob_size_bytes": 657140
+    },
+    "references": {
+      "files": 4,
+      "size_bytes": 236975,
+      "blob_size_bytes": 236723
+    }
+  },
+  "by_class": {
+    "solver-inputs": {
+      "files": 351,
+      "size_bytes": 959662232,
+      "blob_size_bytes": 950417078
+    },
+    "html-report-renders": {
+      "files": 426,
+      "size_bytes": 678767591,
+      "blob_size_bytes": 678623192
+    },
+    "documentation-images": {
+      "files": 586,
+      "size_bytes": 221207598,
+      "blob_size_bytes": 221206074
+    },
+    "office-documents": {
+      "files": 51,
+      "size_bytes": 92525950,
+      "blob_size_bytes": 92525950
+    }
+  },
+  "comparison_with_pr2146": {
+    "pr2146_deleted_paths": 2299,
+    "candidates_also_in_pr2146": 1374,
+    "candidates_new_since_pr2146": 40,
+    "pr2146_paths_not_candidates": 925,
+    "pr2146_not_candidates_breakdown": {
+      "under_src_or_tests": 164,
+      "absent_from_current_main": 761
+    }
+  }
+}
