@@ -1,0 +1,6 @@
+{
+  "input_fixture": "manifold.yml",
+  "input_sha256": "098ddcee3041607917d356af7a6c8ba470dbb864d73e034dc27120eb2906a673",
+  "private_benchmark_data": false,
+  "source_class": "repository_regression"
+}

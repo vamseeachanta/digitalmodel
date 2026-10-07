@@ -1,0 +1,31 @@
+basename: cathodic_protection
+inputs:
+  calculation_type: DNV_RP_F103_anode_bank
+  design_data: {edition: "2019", design_life_years: 20, max_anode_count: 100}
+  banks:
+    - bank_id: terminal-a
+      installed_anode_count: 1
+      structure:
+        area_m2: 10
+        initial_current_density_A_m2: 0.15
+        mean_current_density_A_m2: 0.10
+        final_current_density_A_m2: 0.12
+        initial_breakdown_factor: 0.10
+        mean_breakdown_factor: 0.20
+        final_breakdown_factor: 0.30
+      anode:
+        material: aluminium
+        net_mass_kg: 100
+        length_m: 1
+        density_kg_m3: 2750
+        utilisation_factor: 0.90
+        electrolyte_resistivity_ohm_m: 0.30
+      sides:
+        - side_id: flowline-east
+          outer_diameter_m: 0.50
+          wall_thickness_m: 0.025
+          length_m: 100
+          linepipe_coating: single_or_dual_layer_fbe
+          concrete_weight_coating: true
+          exposure: Non-Buried
+          fluid_temperature_c: 40

@@ -253,6 +253,8 @@ node_modules/
 /output/
 /results/
 reports/
+!docs/domains/cathodic_protection/reports/
+!docs/domains/cathodic_protection/reports/**
 
 # ==========================================
 # Project-Specific: Agent/AI Runtime

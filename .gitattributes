@@ -31,3 +31,7 @@ tests/drilling_riser/stackup_drawing/fixtures/*.svg -text
 
 # OrcaWave solver artifacts
 *.owr binary
+
+# CP review receipts bind exact UTF-8/LF artifacts across Windows and Linux.
+docs/domains/cathodic_protection/reports/** text eol=lf
+tests/fixtures/cathodic_protection/workflow_inputs/*.yml text eol=lf

@@ -48,6 +48,7 @@ from typing import Callable, Final, Optional
 from pydantic import BaseModel, Field
 from scipy import integrate, optimize
 
+from digitalmodel.cathodic_protection._evidence import BRENNA, CROSSWALK, EN_TABLE_1, PATERLINI
 from digitalmodel.cathodic_protection._experimental import require_experimental
 from digitalmodel.cathodic_protection._provisional import (
     ProvisionalValue,
@@ -99,65 +100,82 @@ DC_RHO_BAND_LOW_OHM_M: Final = ProvisionalValue(
     15.0, "ohm-m", SRC_LYNCH_2016,
     note="lower soil-resistivity band edge ('< 15' / '15 - 200')",
     pending_standard=_PENDING_EN50162_T1,
+    evidence_class="confirmed-by-official-preview", evidence_source=EN_TABLE_1,
 )
 DC_RHO_BAND_HIGH_OHM_M: Final = ProvisionalValue(
     200.0, "ohm-m", SRC_LYNCH_2016,
-    note="upper soil-resistivity band edge ('15 - 200' / '200')",
+    note="middle band includes 200; upper band is strictly above 200 ohm-m",
     pending_standard=_PENDING_EN50162_T1,
+    evidence_class="confirmed-by-official-preview", evidence_source=EN_TABLE_1,
 )
 DC_SHIFT_LIMIT_LOW_RHO_MV: Final = ProvisionalValue(
     20.0, "mV", SRC_LYNCH_2016,
     note="max positive shift including IR drop, rho < 15 ohm-m",
     pending_standard=_PENDING_EN50162_T1,
+    evidence_class="confirmed-by-official-preview", evidence_source=EN_TABLE_1,
 )
 DC_SHIFT_SLOPE_MV_PER_OHM_M: Final = ProvisionalValue(
     1.5, "mV/(ohm-m)", SRC_LYNCH_2016,
     note=(
-        "max positive shift including IR drop = 1.5 x rho for 15 <= rho < 200 ohm-m; "
-        "the rho symbol is lost in the slide text, read as rho from continuity "
-        "with the 300 mV value at 200 ohm-m"
+        "max positive shift including IR drop = 1.5 x rho for 15 <= rho <= 200 ohm-m; "
+        "official-preview observation, without-CP scope; extraction rights and "
+        "full-edition applicability remain unresolved"
     ),
     pending_standard=_PENDING_EN50162_T1,
+    evidence_class="confirmed-by-official-preview", evidence_source=EN_TABLE_1,
 )
 DC_SHIFT_LIMIT_HIGH_RHO_MV: Final = ProvisionalValue(
     300.0, "mV", SRC_LYNCH_2016,
-    note="max positive shift including IR drop, rho >= 200 ohm-m",
+    note="max positive shift including IR drop, rho > 200 ohm-m",
     pending_standard=_PENDING_EN50162_T1,
+    evidence_class="confirmed-by-official-preview", evidence_source=EN_TABLE_1,
 )
 DC_SHIFT_LIMIT_IR_FREE_MV: Final = ProvisionalValue(
     20.0, "mV", SRC_LYNCH_2016,
     note="max positive shift excluding IR drop, all resistivity bands",
     pending_standard=_PENDING_EN50162_T1,
+    evidence_class="confirmed-by-official-preview", evidence_source=EN_TABLE_1,
 )
 AC_VOLTAGE_TARGET_V: Final = ProvisionalValue(
     15.0, "V rms", SRC_BRENNA_2020,
     note="first step: reduce pipeline AC voltage below 15 V rms (as reported for ISO 18086)",
     pending_standard=_PENDING_ISO18086,
+    evidence_class="reproduced-by-secondary",
+    evidence_source=BRENNA + "; s2.1, PDF p3",
 )
 AC_CURRENT_DENSITY_LIMIT_A_M2: Final = ProvisionalValue(
     30.0, "A/m2", SRC_BRENNA_2020,
     note="i_ac < 30 A/m2 on a 1 cm2 coupon over a representative time (e.g. 24 h)",
     pending_standard=_PENDING_ISO18086,
+    evidence_class="reproduced-by-secondary",
+    evidence_source=PATERLINI,
 )
 DC_CURRENT_DENSITY_LIMIT_A_M2: Final = ProvisionalValue(
     1.0, "A/m2", SRC_BRENNA_2020,
     note="alternatively, average cathodic i_dc < 1 A/m2 when i_ac > 30 A/m2",
     pending_standard=_PENDING_ISO18086,
+    evidence_class="reproduced-by-secondary",
+    evidence_source=PATERLINI,
 )
 AC_DC_RATIO_LIMIT: Final = ProvisionalValue(
     3.0, "dimensionless", SRC_BRENNA_2020,
     note="alternatively, i_ac / i_dc < 3 over a representative time",
     pending_standard=_PENDING_ISO18086,
+    evidence_class="reproduced-by-secondary",
+    evidence_source=BRENNA + "; s2.3 / s3; " + PATERLINI,
 )
 COUPON_AREA_M2: Final = ProvisionalValue(
     1.0e-4, "m2", SRC_BRENNA_2020,
     note="criteria are defined on a 1 cm2 coupon or probe",
     pending_standard=_PENDING_ISO18086,
+    evidence_class="reproduced-by-secondary",
+    evidence_source=BRENNA + "; s2.2 / s3, PDF pp3 and 10",
 )
 STEEL_RESISTIVITY_OHM_M: Final = ProvisionalValue(
     2.0e-7, "ohm-m", SRC_F103_2010,
     note="carbon-steel line-pipe default; replace with the project linepipe value",
     pending_standard="project linepipe specification (material resistivity)",
+    evidence_class="inferred", evidence_source=CROSSWALK,
 )
 
 #: Every provisional default of this module, keyed by constant name.
@@ -341,14 +359,14 @@ def dc_shift_limit_mV(
 ) -> float:
     """Maximum positive potential shift for a structure without CP [mV].
 
-    Provisional band table (Lynch 2016, reproducing EN 50162 Table 1):
+    Provisional band table (EN 50162 official preview, Table 1, printed p10):
 
     ============================  =====================  =====================
     Soil resistivity rho [ohm-m]  incl. IR drop [mV]     excl. IR drop [mV]
     ============================  =====================  =====================
     rho < 15                      20                     20
-    15 <= rho < 200               1.5 * rho              20
-    rho >= 200                    300                    20
+    15 <= rho <= 200              1.5 * rho              20
+    rho > 200                     300                    20
     ============================  =====================  =====================
     """
     require_experimental(
@@ -360,7 +378,7 @@ def dc_shift_limit_mV(
         return DC_SHIFT_LIMIT_IR_FREE_MV.value
     if rho < DC_RHO_BAND_LOW_OHM_M.value:
         return DC_SHIFT_LIMIT_LOW_RHO_MV.value
-    if rho < DC_RHO_BAND_HIGH_OHM_M.value:
+    if rho <= DC_RHO_BAND_HIGH_OHM_M.value:
         return DC_SHIFT_SLOPE_MV_PER_OHM_M.value * rho
     return DC_SHIFT_LIMIT_HIGH_RHO_MV.value
 
@@ -667,7 +685,7 @@ def _dc_limit_keys(rho: float, basis: ShiftBasis) -> list[str]:
         return ["DC_SHIFT_LIMIT_IR_FREE_MV"]
     if rho < DC_RHO_BAND_LOW_OHM_M.value:
         return ["DC_RHO_BAND_LOW_OHM_M", "DC_SHIFT_LIMIT_LOW_RHO_MV"]
-    if rho < DC_RHO_BAND_HIGH_OHM_M.value:
+    if rho <= DC_RHO_BAND_HIGH_OHM_M.value:
         return ["DC_RHO_BAND_LOW_OHM_M", "DC_RHO_BAND_HIGH_OHM_M", "DC_SHIFT_SLOPE_MV_PER_OHM_M"]
     return ["DC_RHO_BAND_HIGH_OHM_M", "DC_SHIFT_LIMIT_HIGH_RHO_MV"]
 

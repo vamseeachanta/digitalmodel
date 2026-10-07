@@ -5,15 +5,13 @@ See docs/domains/hull_library/parametric-form.md for the SAC feasibility contrac
 """
 
 from dataclasses import dataclass
-from functools import lru_cache
 from itertools import product
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from scipy.integrate import simpson
-from scipy.optimize import brentq
-from scipy.special import betainc
 
+from .parametric_form_ends import end_curve, end_parameters, solve_sac
 from .parametric_hull import ParametricRange
 from .profile_schema import HullProfile, HullStation, HullType
 
@@ -34,11 +32,42 @@ class MonohullFormParameters(BaseModel):
     flare_deg: float = Field(default=0, ge=-15, le=30)
     bow_fullness: float = Field(default=2, ge=1, le=4)
     stern_fullness: float = Field(default=2, ge=1, le=4)
+    entrance_angle_deg: float | None = Field(default=None, ge=5, le=60)
+    run_angle_deg: float | None = Field(default=None, ge=5, le=60)
     transom_fraction: float = Field(default=0, ge=0, le=0.95)
     n_stations: int = Field(default=41, ge=9)
     n_waterlines: int = Field(default=21, ge=5)
     box: bool = False
     wigley: bool = False
+
+    @model_validator(mode="after")
+    def _resolve_end_angles(self):
+        for name, fullness in (
+            ("entrance_angle_deg", self.bow_fullness),
+            ("run_angle_deg", self.stern_fullness),
+        ):
+            slope = (
+                2 * self.beam / self.length_bp
+                if self.wigley
+                else fullness
+                * self.beam
+                / ((1 - self.parallel_midbody_fraction) * self.length_bp)
+            )
+            default = float(np.rad2deg(np.arctan(slope)))
+            supplied = getattr(self, name)
+            if self.wigley:
+                if not 5 <= default <= 60 or (
+                    supplied is not None and not np.isclose(supplied, default)
+                ):
+                    raise ValueError(
+                        "wigley end angle must equal atan(2*beam/length_bp) within 5..60 degrees"
+                    )
+            else:
+                default = float(np.clip(default, 5, 60))
+            if supplied is None:
+                object.__setattr__(self, name, default)
+                self.__pydantic_fields_set__.discard(name)
+        return self
 
     @model_validator(mode="after")
     def _validate_geometry(self):
@@ -120,57 +149,8 @@ def midship_area(params):
     return 2 * area
 
 
-def _end_parameters(p, run):
-    middle, transom = p.parallel_midbody_fraction, p.transom_fraction**2
-    cp = p.cb * p.beam * p.draft / midship_area(p)
-    mean = (cp - middle - run * transom) / (1 - middle - run * transom)
-    if not 0 < mean < 1:
-        raise ValueError(
-            "cb unreachable with parallel_midbody_fraction and transom_fraction"
-        )
-    b = np.array([p.stern_fullness, p.bow_fullness]) + 1
-    a = b * (1 - mean) / mean
-    first = (1 - a * (a + 1) / ((a + b) * (a + b + 1))) / 2
-    return mean, a, b, first
-
-
-def _sac_centroid(p, run):
-    mean, _, _, first = _end_parameters(p, run)
-    middle, transom = p.parallel_midbody_fraction, p.transom_fraction**2
-    entrance = 1 - middle - run
-    moment = run**2 * (transom / 2 + (1 - transom) * first[0])
-    moment += middle * (run + middle / 2) + entrance * mean - entrance**2 * first[1]
-    cp = p.cb * p.beam * p.draft / midship_area(p)
-    return moment / cp - 0.5
-
-
-@lru_cache(maxsize=128)
-def _solve_sac(p):
-    """Solve only the run length; enforce a full section at geometric midships."""
-    middle, transom = p.parallel_midbody_fraction, p.transom_fraction**2
-    cp = p.cb * p.beam * p.draft / midship_area(p)
-    low, high = max(1e-8, 0.5 - middle), min(0.5, 1 - middle - 1e-8)
-    if transom:
-        high = min(high, (cp - middle) / transom - 1e-8)
-    if high < low or cp <= middle or cp >= 1:
-        raise ValueError(
-            "cb unreachable with parallel_midbody_fraction/transom_fraction"
-        )
-
-    def residual(run):
-        return _sac_centroid(p, run) - p.lcb_fraction
-
-    if abs(residual(low)) < 1e-12:
-        return low
-    if high == low or residual(low) * residual(high) > 0:
-        raise ValueError(
-            "lcb_fraction unreachable with cb, fullness and parallel_midbody_fraction"
-        )
-    return brentq(residual, low, high, xtol=1e-12)
-
-
 def sectional_area_curve(params, x):
-    """Three-segment SAC; beta ends have exactly calibrated volume and centroid."""
+    """Three-segment SAC with finite end slopes and calibrated exact moments."""
     p, x = params, np.asarray(x, dtype=float)
     if not np.isfinite(x).all() or np.any((x < 0) | (x > p.length_bp)):
         raise ValueError("x must be finite and within [0, length_bp]")
@@ -179,22 +159,25 @@ def sectional_area_curve(params, x):
         return np.full_like(u, area)
     if p.wigley:
         return area * (1 - (2 * u - 1) ** 2)
-    run = _solve_sac(p)
-    _, a, b, _ = _end_parameters(p, run)
+    cp = p.cb * p.beam * p.draft / area
+    run = solve_sac(p, cp)
+    coefficients = end_parameters(p, run, cp)
     entrance = 1 - p.parallel_midbody_fraction - run
-    aft = p.transom_fraction**2 + (1 - p.transom_fraction**2) * betainc(
-        a[0], b[0], np.clip(u / run, 0, 1)
+    aft = p.transom_fraction**2 + (1 - p.transom_fraction**2) * end_curve(
+        u / run, coefficients, 0
     )
-    fore = betainc(a[1], b[1], np.clip((1 - u) / entrance, 0, 1))
+    fore = end_curve((1 - u) / entrance, coefficients, 1)
     return area * np.where(u < run, aft, np.where(u > 1 - entrance, fore, 1))
 
 
-def _grid(count, scale):
-    return scale * (1 - np.cos(np.linspace(0, np.pi, count))) / 2
+def _grid(count, scale, *, stations=False):
+    t = np.linspace(0, 1, count)
+    cosine = (1 - np.cos(np.pi * t)) / 2
+    return scale * (0.25 * t + 0.75 * cosine if stations else cosine)
 
 
 def station_offsets(params, x):
-    """Area-preserving sections on a cosine grid; pointed ends retain 0.5% breadth."""
+    """Area-preserving sections with exact pointed tips and finite waterline slopes."""
     p = params
     area = float(sectional_area_curve(p, x))
     z = _grid(p.n_waterlines, p.draft)
@@ -203,7 +186,7 @@ def station_offsets(params, x):
         y = base * area / midship_area(p)
     else:
         ratio = area / midship_area(p)
-        run = _solve_sac(p)
+        run = solve_sac(p, p.cb * p.beam * p.draft / midship_area(p))
         if x / p.length_bp < run and p.transom_fraction:
             width = np.sqrt(ratio)
             if area < width * p.beam / 2 * (z[-1] - z[-2]):
@@ -214,18 +197,9 @@ def station_offsets(params, x):
             blend = (1 - width) * base_area / (base_area - narrow_area)
             y = width * ((1 - blend) * base + blend * narrow)
         else:
-            distance = max(
-                0,
-                (x / p.length_bp - run - p.parallel_midbody_fraction)
-                / (1 - run - p.parallel_midbody_fraction),
-            )
-            blend = distance**2 * (3 - 2 * distance) * (1 - ratio)
-            shape = base * ((1 - blend) + blend * z / p.draft)
-            y = shape * area / (2 * simpson(shape, x=z)) if area else shape * 0
+            y = base * ratio
         if ratio > 1 - 1e-12:
             y = base
-    if not p.box and (not p.transom_fraction or x >= p.length_bp / 2):
-        y = np.sqrt((0.005 * base) ** 2 + (1 - 0.005**2) * y**2)
     if np.any(y < -1e-10) or np.max(y) > 1.05 * p.beam / 2 + 1e-10:
         raise ValueError("cb/section blend produces invalid half-breadths")
     return list(zip(z.tolist(), np.maximum(y, 0).tolist()))
@@ -302,7 +276,7 @@ def generate_profile(params, name="parametric_monohull") -> HullProfile:
             HullStation(
                 x_position=float(x), waterline_offsets=station_offsets(p, float(x))
             )
-            for x in _grid(p.n_stations, p.length_bp)
+            for x in _grid(p.n_stations, p.length_bp, stations=True)
         ],
     )
     profile.block_coefficient = _check_resolution(p, profile)
@@ -340,7 +314,9 @@ def _form_combinations(base, ranges):
     keys = list(ranges)
     for values in product(*(ranges[key].values() for key in keys)):
         combo = dict(zip(keys, values))
-        yield combo, MonohullFormParameters.model_validate(base.model_dump() | combo)
+        yield combo, MonohullFormParameters.model_validate(
+            base.model_dump(exclude_unset=True) | combo
+        )
 
 
 def sweep_forms(
