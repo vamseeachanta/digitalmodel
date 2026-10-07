@@ -344,7 +344,7 @@ def _verdict_appendix(cases,screening,flags=None):
         for c in criteria:
             status=_criterion_status(case,c['id']);label=escape(str(c.get('label',c['id'])))
             util=max((x['utilization'] for x in case['checks'] if x['id']==c['id'] and _finite(x.get('utilization'))),default=None)
-            text={'WITHIN_ASSUMPTIONS':f'Acceptable against {label}','EXCEEDS_ASSUMPTIONS':f'Not acceptable against {label}',
+            text={'WITHIN_ASSUMPTIONS':f'Within provisional {label}','EXCEEDS_ASSUMPTIONS':f'Exceeds provisional {label}',
                   'NOT_EVALUATED':'Not evaluated'}[status]
             cells.append(text+(f' ({util:.3f})' if util is not None else ''))
         label=f"{case['index']:03d}"+(f" (solved at {flags[case['index']]:g} s)" if flags and case['index'] in flags else '')

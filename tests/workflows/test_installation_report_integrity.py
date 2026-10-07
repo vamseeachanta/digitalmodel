@@ -52,9 +52,22 @@ def test_pdf_emits_per_criterion_verdicts_in_appendix_order():
     headings = re.findall(r'^Appendix ([A-D])\.', text, re.MULTILINE)
     assert headings == ['A', 'B', 'C', 'D']
     assert 'Table C-1.' in text
-    assert 'Acceptable against Master-link proxy' in ' '.join(text.split())
-    assert 'Not acceptable against Master-link proxy' in ' '.join(text.split())
+    flat = ' '.join(text.split())
+    assert 'Within provisional Master-link proxy' in flat
+    assert 'Exceeds provisional Master-link proxy' in flat
     assert 'Not evaluated' in text
+
+
+@pytest.mark.parametrize('edition', ['html', 'pdf'])
+def test_provisional_criteria_never_rendered_as_acceptance(edition):
+    """Acceptance is NOT EVALUATED; verdicts against provisional criteria must not read as acceptance."""
+    data, screen = summary(), payload()
+    if edition == 'html':
+        text = html_report.render_html(data, config={}, screening=screen)
+    else:
+        text = ' '.join(pdf_text(data, screen).split())
+    assert 'Acceptable against' not in text
+    assert 'acceptable against' not in text.lower()
 
 
 def test_html_contents_resolve_all_emitted_appendices_and_labels_are_unique():

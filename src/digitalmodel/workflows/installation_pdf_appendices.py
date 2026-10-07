@@ -24,8 +24,8 @@ def _criterion_rows(cases, criteria):
         for criterion in criteria:
             status = _criterion_status(case, criterion['id'])
             label = str(criterion.get('label', criterion['id']))
-            wording = {'WITHIN_ASSUMPTIONS': f'Acceptable against {label}',
-                       'EXCEEDS_ASSUMPTIONS': f'Not acceptable against {label}',
+            wording = {'WITHIN_ASSUMPTIONS': f'Within provisional {label}',
+                       'EXCEEDS_ASSUMPTIONS': f'Exceeds provisional {label}',
                        'NOT_EVALUATED': 'Not evaluated'}[status]
             utilization = max((check['utilization'] for check in case['checks']
                 if check['id'] == criterion['id'] and _finite(check.get('utilization'))), default=None)

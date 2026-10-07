@@ -321,8 +321,9 @@ def test_appendix_per_cell_verdicts_are_conditional_and_complete():
     html = mudmat.render_html(summary(), config={}, screening=payload())
     appendix = html[html.index('id="appendix-c"'):]
     assert appendix.count('<tr>') - 1 == 4
-    assert 'Acceptable against Master-link proxy' in appendix
-    assert 'Not acceptable against Master-link proxy' in appendix
+    assert 'Within provisional Master-link proxy' in appendix
+    assert 'Exceeds provisional Master-link proxy' in appendix
+    assert 'cceptable against' not in appendix
     assert 'Not evaluated' in appendix
     assert 'conditional on confirmation of component capacities' in appendix
     assert 'id="appendix-c"' in html and 'href="#appendix-c"' in html or 'Appendix C' in html
@@ -330,7 +331,7 @@ def test_appendix_per_cell_verdicts_are_conditional_and_complete():
 
 def test_no_screening_means_no_verdicts():
     html = mudmat.render_html(summary(), config={})
-    assert 'Acceptable against' not in html and 'id="appendix-c"' not in html
+    assert 'Within provisional' not in html and 'id="appendix-c"' not in html
 
 
 def test_allowable_rows_shared_by_html_and_pdf():
