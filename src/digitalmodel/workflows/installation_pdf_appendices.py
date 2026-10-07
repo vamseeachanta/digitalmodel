@@ -10,11 +10,11 @@ from digitalmodel.workflows.vessel_capability_layout import (
 
 
 def validate_pdf_screening(summary, payload):
-    """Permit explicit conditional preview while retaining causal fit and score checks."""
+    """Bind screening exactly as the HTML edition does; wave preview is rejected there."""
     mode = payload.get('demo', {}).get('default_mode')
     if mode not in ('history_only', 'wave_preview'):
         raise ValueError('Full report requires an explicit supported forecast mode')
-    return bind_screening(summary, payload, allow_wave_preview=mode == 'wave_preview')
+    return bind_screening(summary, payload)
 
 
 def _criterion_rows(cases, criteria):

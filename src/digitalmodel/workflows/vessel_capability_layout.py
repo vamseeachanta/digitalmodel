@@ -166,12 +166,22 @@ def _bind_alert(channel,now,horizon):
         raise ValueError('Stored alert outcome differs from withheld truth')
 
 
-def bind_screening(summary,screening,*,allow_wave_preview=False):
-    """Reject screening evidence that is not case-for-case bound to the source snapshot."""
+WAVE_PREVIEW_UNSUPPORTED=('Wave-preview forecast mode is not supported until preview timing checks exist; '
+                          'screening forecast must be causal history-only')
+
+
+def bind_screening(summary,screening):
+    """Reject screening evidence that is not case-for-case bound to the source snapshot.
+
+    Both issued editions call this binder. Wave-preview payloads are rejected because
+    _bind_forecast does not yet check preview timing against NOW and the horizon.
+    """
     if screening.get('engineering_acceptance')!='NOT EVALUATED':
         raise ValueError('Screening payload must retain engineering acceptance NOT EVALUATED')
     mode=screening.get('demo',{}).get('default_mode')
-    if mode!='history_only' and not (allow_wave_preview and mode=='wave_preview'):
+    if mode=='wave_preview':
+        raise ValueError(WAVE_PREVIEW_UNSUPPORTED)
+    if mode!='history_only':
         raise ValueError('Screening forecast must be causal history-only')
     source={row['index']:row for row in summary['cases']};screened={row['index']:row for row in screening['cases']}
     if len(source)!=len(summary['cases']) or len(screened)!=len(screening['cases']) or not source or set(source)!=set(screened):

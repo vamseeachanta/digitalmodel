@@ -80,13 +80,42 @@ def test_html_contents_resolve_all_emitted_appendices_and_labels_are_unique():
     assert len(labels) == len(set(labels))
 
 
-def test_valid_wave_preview_remains_explicitly_conditional():
+def _wave_preview_input():
     data, screen = summary(), payload()
     screen['demo']['default_mode'] = 'wave_preview'
     for channel in screen['demo']['scenarios'][0]['frames'][0]['channels']:
         channel['wave_preview'] = channel['forecast'].copy()
-    text = pdf_text(data, screen)
-    assert 'The simulated future wave trace is supplied input.' in ' '.join(text.split())
+    raw = json.dumps(data).encode()
+    screen['provenance']['summary'] = {'sha256': hashlib.sha256(raw).hexdigest()}
+    return data, screen, raw
+
+
+def _render(edition, data, screen, raw, stream):
+    if edition == 'html':
+        return html_report.render_html(data, config={}, screening=screen)
+    return render_full_pdf(data, screen, stream, summary_bytes=raw)
+
+
+def test_pdf_rejects_wave_preview_before_output():
+    """Preview timing is not bound by bind_screening, so the PDF must not issue it."""
+    data, screen, raw = _wave_preview_input()
+    stream = BytesIO()
+    with pytest.raises(ValueError, match='not supported until preview timing checks exist'):
+        render_full_pdf(data, screen, stream, summary_bytes=raw)
+    assert stream.getvalue() == b''
+
+
+def test_both_editions_reject_the_same_wave_preview_input_identically():
+    errors = {}
+    for edition in ('html', 'pdf'):
+        data, screen, raw = _wave_preview_input()
+        stream = BytesIO()
+        with pytest.raises(ValueError) as caught:
+            _render(edition, data, screen, raw, stream)
+        assert stream.getvalue() == b''
+        errors[edition] = (type(caught.value), str(caught.value))
+    assert errors['html'] == errors['pdf']
+    assert 'not supported until preview timing checks exist' in errors['pdf'][1]
 
 
 def test_unsupported_forecast_mode_is_rejected_before_output():
