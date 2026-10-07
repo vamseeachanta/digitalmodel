@@ -130,4 +130,4 @@ assumptions:
   - "Zero or negative stress ranges are skipped"
 references:
   - "Miner, M.A. (1945) Cumulative Damage in Fatigue, J. Applied Mechanics, 12(3), A159-A164"
-  - "DNV-RP-C203 (2016) Section 3 — Damage accumulation"
+  - "DNV-RP-C203 (edition not established) Section 3 — Damage accumulation"

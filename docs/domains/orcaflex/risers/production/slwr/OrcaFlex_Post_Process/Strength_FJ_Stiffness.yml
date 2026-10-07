@@ -6,11 +6,11 @@ default:
 
 Files: 
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\SLWR_Extreme\Static\SLWR_16OD_SE1200_HE1500_1LC_GA2_Driving.sim
+    Name: ..\SLWR_Extreme\Static\SLWR_16OD_SE1200_HE1500_1LC_GA2_Driving.sim
     Label: Basecase, FJ Stiffness
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\FlexJoint_Stiffness\SLWR_16OD_SE1200_HE1500_FJ_X1p5.sim
+    Name: ..\FlexJoint_Stiffness\SLWR_16OD_SE1200_HE1500_FJ_X1p5.sim
     Label: 1.5times FJ Stiffness
     ObjectName: SLWR
 

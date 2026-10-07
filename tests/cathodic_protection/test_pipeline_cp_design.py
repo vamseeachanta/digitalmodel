@@ -5,7 +5,6 @@ Extends the existing pipeline_cp module with potential criteria checks,
 soil resistivity corrections, and end-to-end design workflow.
 """
 
-import math
 
 import pytest
 

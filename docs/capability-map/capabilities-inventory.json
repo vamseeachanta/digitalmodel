@@ -75,6 +75,11 @@
   "pdf_gaps": [],
   "recent": [
     {
+      "date": "2026-09-26",
+      "id": "ffs",
+      "pr": 2204
+    },
+    {
       "date": "2026-07-06",
       "id": "cfd",
       "pr": 1442
@@ -108,17 +113,15 @@
       "date": "2026-07-04",
       "id": "geotechnical",
       "pr": 1394
-    },
-    {
-      "date": "2026-07-04",
-      "id": "production-engineering",
-      "pr": 1396
     }
   ],
   "schema_version": "1.0",
   "sections": [
     {
-      "added": "unknown",
+      "added": {
+        "date": "2026-09-26",
+        "pr": 2204
+      },
       "cluster": "structures-ffs",
       "explorers": [
         "docs/api/ffs/riser-joint-acceptance-explorer.html"

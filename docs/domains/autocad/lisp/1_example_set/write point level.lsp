@@ -1,5 +1,5 @@
 ;;this programe is designed by engineer motee malazee
-;for any question don't hesitate address :e.mail:motee@albawaba.com:syria.lattakia.b.o.pox 2886
+;for any question don't hesitate address :e.mail:[email removed]:syria.lattakia.b.o.pox 2886
 ;tel:0096341437033
 ;usefull of this program suppose you have topographic drawing and you want to print level
 ;(z-coordinate)of a point near the point this program provide this service and make layer for

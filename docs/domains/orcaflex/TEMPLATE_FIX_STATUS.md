@@ -210,7 +210,7 @@ cp projects/modules/calm/baltic_039m/.../\{01-09\}_*.yml templates/base_files/
 **Working Reference Files** (OrcaFlex 11.5e compatible):
 - `projects/modules/calm/baltic_039m/TEST_OPERABILITY/orcaflex/base_files/_01*.yml`
 - `projects/modules/calm/baltic_039m/TEST_OPERABILITY/orcaflex/base_files/env/*.yml`
-- `D:\1522\ctr7\rev_a09\base_files\*.yml`
+- `<project-root>
 
 **Generated Files** (current - not yet working):
 - `tests/output/test_cli_base/*.yml`

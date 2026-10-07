@@ -572,7 +572,7 @@ python scripts/generate_calm_buoy_project.py \
 
 ## Contact & Support
 
-**Repository:** `D:\workspace-hub\digitalmodel`
+**Repository:** `<private-data>\digitalmodel`
 
 **Documentation:**
 - Quick Start: `docs/CALM_BUOY_QUICK_START.md`

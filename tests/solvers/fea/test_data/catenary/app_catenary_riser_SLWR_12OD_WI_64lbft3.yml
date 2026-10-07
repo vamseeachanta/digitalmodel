@@ -1,10 +1,10 @@
 Analysis:
-  fe_filename: C:\Users\achantv\OneDrive\OneDrive - Occidental Petroleum Corporation\Temp\KM\CODapp_catenary_riser_SLWR_12OD_WI_64lbft3_SLWR_FE_Wave1.yml
-  fe_folder: C:\Users\achantv\OneDrive\OneDrive - Occidental Petroleum Corporation\Temp\KM\COD
+  fe_filename: <private-data>\CODapp_catenary_riser_SLWR_12OD_WI_64lbft3_SLWR_FE_Wave1.yml
+  fe_folder: <private-data>\COD
   file_name: app_catenary_riser_SLWR_12OD_WI_64lbft3
   file_name_for_overwrite: app_catenary_riser_SLWR_12OD_WI_64lbft3
-  log_folder: C:\Users\achantv\OneDrive\OneDrive - Occidental Petroleum Corporation\Temp\KM\COD\logs\
-  result_folder: C:\Users\achantv\OneDrive\OneDrive - Occidental Petroleum Corporation\Temp\KM\COD\results\
+  log_folder: <private-data>\
+  result_folder: <private-data>\
   start_time: 2019-06-06 14:18:39.616264
 BuoyPipe:
   BuoyancySection: &id001

@@ -6,15 +6,15 @@ default:
 
 Files: 
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\SLWR_Extreme\Static\SLWR_16OD_SE1200_HE1500_1LC_GA2_Driving.sim
+    Name: ..\SLWR_Extreme\Static\SLWR_16OD_SE1200_HE1500_1LC_GA2_Driving.sim
     Label: Higher Catenary Base Case
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\ConfigurationSensitivity\SLWR_16OD_SE0500_HE0800_100yr Wave, Far BeamSea PS.sim
+    Name: ..\ConfigurationSensitivity\SLWR_16OD_SE0500_HE0800_100yr Wave, Far BeamSea PS.sim
     Label: Lower Catenary
     ObjectName: SLWR
   - 
-    Name: C:\Users\AceEngineer\Dropbox\Engineering\0173 KM Riser Analysis\ANL\Extreme\Rev3\ConfigurationSensitivity\SCR_16OD_SCR_100yr Wave, Far BeamSea PS.sim
+    Name: ..\ConfigurationSensitivity\SCR_16OD_SCR_100yr Wave, Far BeamSea PS.sim
     Label: Steel Catenary Riser
     ObjectName: SCR 
 

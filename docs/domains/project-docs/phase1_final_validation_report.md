@@ -1,7 +1,7 @@
 # Phase 1 Implementation - Final Validation Report
 
 **Report Date:** 2025-10-03
-**Excel Source:** D:\workspace-hub\_temp\marine_analysis_data.xlsm
+**Excel Source:** <private-data>\marine_analysis_data.xlsm
 **Phase:** Phase 1 (Mooring Analysis + Wave Spectra)
 
 ---

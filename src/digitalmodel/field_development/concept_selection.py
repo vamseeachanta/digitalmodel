@@ -313,7 +313,7 @@ def concept_selection(
 ) -> ConceptSelectionResult:
     """Rank offshore host facility options for a deepwater field development.
 
-    Uses GoM benchmarks (Perdido, Mars, Atlantis, Thunder Horse, Appomattox,
+    Uses GoM benchmarks (GoM-UD-Spar, Mars, Atlantis, Thunder Horse, Appomattox,
     Whale, Mad Dog, Stones, Lucius, Ursa) to score TLP, Spar, Semi,
     FPSO, and Subsea Tieback options.
 
@@ -424,7 +424,7 @@ def concept_selection(
         f"{dist_str} from nearest infrastructure. "
         f"Recommended host: {selected.value} "
         f"(composite score {options[0].score:.1f}/100). "
-        f"GoM analogues considered: Perdido (Spar, 2438 m), "
+        f"GoM analogues considered: GoM-UD-Spar (Spar, 2438 m), "
         f"Mars (TLP, 896 m), Atlantis (Semi, 2150 m), "
         f"Thunder Horse (Semi, 1844 m), Stones (ETLP, 2900 m)."
         f"{empirical_note}"

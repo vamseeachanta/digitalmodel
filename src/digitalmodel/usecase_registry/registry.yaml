@@ -122,7 +122,7 @@ usecases:
     template: examples/workflows/aqwa-diffraction-deck-prep/spec.yml
     analysis: [diffraction]
     readiness: ready
-    notes: AQWA backend deck; run_aqwa op (#939). Lane allowlist=deckhand #490.
+    notes: AQWA backend deck; run_aqwa op (#939).
 
   # --- OrcaFlex (global / strength / fatigue) ------------------------------
   - id: orcaflex-strength-post

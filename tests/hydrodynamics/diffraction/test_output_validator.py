@@ -170,11 +170,20 @@ class TestFrequencyCoverage:
     def test_insufficient_freq_count_flagged(
         self, mock_diffraction_results: DiffractionResults
     ):
-        # conftest has 10 frequencies which is < 20
+        frequencies = mock_diffraction_results.raos.surge.frequencies
+        sparse_values = frequencies.values[:2]
+        frequencies.values = sparse_values
+        frequencies.periods = 2.0 * np.pi / sparse_values
+        frequencies.count = len(sparse_values)
+        frequencies.min_freq = float(sparse_values[0])
+        frequencies.max_freq = float(sparse_values[-1])
         v = OutputValidator(mock_diffraction_results)
         issues = v._validate_frequency_coverage()
         disc_issues = issues["discretization"]
-        assert any("insufficient" in i.lower() or "Only" in i for i in disc_issues)
+        assert disc_issues == [
+            f"Only {len(sparse_values)} frequencies - may be insufficient "
+            "for accurate interpolation"
+        ]
 
 
 # ---------------------------------------------------------------------------

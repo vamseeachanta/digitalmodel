@@ -4,11 +4,11 @@ File refinements to be made for calm buoy files based on following:
 
 The base files should be referenced again  (avoids multiple copies and redundant changes/updates).
 
-Example file path: J:\B1522 McDermott Woodfibre FST Eng Completion\ACMA Work\CTR 07 Hydrodynamic and Mooring Load Analysis\03_orcaflex\rev_a08\base_files
+Example file path: <project-root> the FST project Eng Completion\ACMA Work\<CTR> Hydrodynamic and Mooring Load Analysis\03_orcaflex\rev_a08\base_files
 
 
 The env files should be simple and standalone and in reuse state. See below example:
-J:\B1522 McDermott Woodfibre FST Eng Completion\ACMA Work\CTR 07 Hydrodynamic and Mooring Load Analysis\03_orcaflex\rev_a08\base_files\env
+<project-root> the FST project Eng Completion\ACMA Work\<CTR> Hydrodynamic and Mooring Load Analysis\03_orcaflex\rev_a08\base_files\env
 
 
 Before proceeding further, where was the wave data in below file obtained from? Is there a simpler definition that is sufficiently accurate and will also help easily compare files.
@@ -26,7 +26,7 @@ projects\TEST_OPERABILITY\orcaflex\base_files\env\waves_000deg_1yr.yml
 
 The 1 year analysis file for a given return period and heading should reference base files and env files. 
 Naming of files can be such that it can be flat structure if needed. See below example:
-J:\B1522 McDermott Woodfibre FST Eng Completion\ACMA Work\CTR 07 Hydrodynamic and Mooring Load Analysis\03_orcaflex\rev_a08\03c_100yr
+<project-root> the FST project Eng Completion\ACMA Work\<CTR> Hydrodynamic and Mooring Load Analysis\03_orcaflex\rev_a08\03c_100yr
 
 
 with the latest file strucure, review below folder to see if any of the files are no longer needed and can be archived or deleted:

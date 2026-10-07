@@ -20,6 +20,9 @@ from scipy.interpolate import interp1d
 
 logger = logging.getLogger(__name__)
 
+from digitalmodel.hydrodynamics.hull_library.curvature_screen import (
+    CurvatureSignature,
+)
 from digitalmodel.hydrodynamics.hull_library.mesh_generator import (
     HullMeshGenerator,
     MeshGeneratorConfig,
@@ -106,9 +109,17 @@ class MotionResponse(BaseModel):
 class HullCatalogEntry(BaseModel):
     """A hull in the catalog with its profile and variations."""
 
+    curvature_signature_brep: CurvatureSignature | None = None
     hull_id: str
     profile: HullProfile
     variations: list[HullVariation] = Field(default_factory=list)
+    curvature_signature: Optional[CurvatureSignature] = Field(
+        default=None,
+        description=(
+            "HullProd curvature signature of the generated mesh (#2170 D2); "
+            "None until screen_hull() runs with the optional curvature extra"
+        ),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -198,6 +209,49 @@ class HullCatalog:
         """
         entry = self.get_hull(hull_id)
         return self._mesh_generator.generate(entry.profile, config)
+
+    def screen_hull(
+        self,
+        hull_id: str,
+        config: Optional[MeshGeneratorConfig] = None,
+        representation: str = "mesh",
+    ) -> CurvatureSignature:
+        """Compute and store the HullProd curvature signature for a hull (#2170 D2).
+
+        Generates the mesh with *config*, screens it with ``lref = length_bp`` and
+        the hull type, stores the result on the catalog entry and returns it.
+
+        Raises:
+            KeyError: If *hull_id* is not registered.
+            ImportError: If the optional ``hullprod`` dependency is missing.
+        """
+        if representation not in ("mesh", "brep", "both"):
+            raise ValueError("representation must be mesh, brep or both")
+        if representation != "mesh":
+            from .curvature_screen import screen_profile
+
+            entry = self.get_hull(hull_id)
+            result = screen_profile(entry.profile, config, representation=representation)
+            if representation == "brep":
+                entry.curvature_signature_brep = result.signature
+            else:
+                entry.curvature_signature = result.signature
+                entry.curvature_signature_brep = CurvatureSignature.model_validate(
+                    result.provenance["brep_signature"]
+                )
+            return result.signature
+        from .curvature_screen import screen_panel_mesh
+
+        entry = self.get_hull(hull_id)
+        mesh = self._mesh_generator.generate(entry.profile, config)
+        result = screen_panel_mesh(
+            mesh,
+            lref=float(entry.profile.length_bp),
+            hull_type=entry.profile.hull_type,
+            keep_fields=False,
+        )
+        entry.curvature_signature = result.signature
+        return result.signature
 
     # ------------------------------------------------------------------
     # Public API -- motion response

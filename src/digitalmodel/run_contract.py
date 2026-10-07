@@ -3,10 +3,9 @@
 Issue #1631. ``python -m digitalmodel <input.yml>`` had no failure exit path
 for the engine contract: ``__main__.main()`` ended with a bare ``engine()``
 whose return value was discarded, so the command exited 0 no matter what the
-engine concluded, on any host, licensed or not. Deckhand consumes that command
-through a thin ``subprocess.run`` wrapper
-(``deckhand/src/deckhand/licensed_run_agent_runtime.py:37-50``), so the exit
-status is the entire success signal. Twelve licensed runs drained with
+engine concluded, on any host, licensed or not. A runner that invokes that
+command through a thin ``subprocess.run`` wrapper sees only the exit status, so
+it is the entire success signal. Twelve licensed runs drained with
 ``returncode: 0``; two of them carried a validator ``FAIL``.
 
 This module owns the mapping in one place rather than letting each workflow
@@ -114,7 +113,7 @@ class RunVerdict:
 
 
 def exit_status_for(verdict: RunVerdict) -> int:
-    """Map a verdict to the process exit status Deckhand observes."""
+    """Map a verdict to the process exit status a calling runner observes."""
     return EXIT_REFUSED if verdict.is_refusal() else EXIT_SUCCESS
 
 

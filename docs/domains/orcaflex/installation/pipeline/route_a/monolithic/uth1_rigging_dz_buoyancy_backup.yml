@@ -1,7 +1,7 @@
 ﻿%YAML 1.1
 # Type: Model
 # Program: OrcaFlex 11.2d
-# File: C:\Users\\Documents\github\rock-oil-field\s7\deepwater_field_c\infield\1.ini\uth1_rigging_dz_buoyancy.yml
+# File: <private-data>/uth1_rigging_dz_buoyancy.yml
 # Created: 11:40 AM on 6/6/2023
 # User: 
 # Machine: 
@@ -716,10 +716,10 @@ Lines:
     EndBY: -0.6546748848574441
     EndBZ: -913.2028482555613
     NumberOfSections: 5
-    LineType[2]: InfUmbVenice-4.13in-cardona
+    LineType[2]: InfUmb-4.13in-UmbA
     Length[2]: 10
     TargetSegmentLength[2]: 0.5
-    LineType[3]: InfUmbVenice-4.13in-cardona
+    LineType[3]: InfUmb-4.13in-UmbA
     Length[3]: 894.5
     ExpansionFactor[3]: ~
     TargetSegmentLength[3]: 1
@@ -728,7 +728,7 @@ Lines:
     ReactsToWake[3]: No
     WakeModel[3]: (none)
     DisturbanceVessel[3]: (none)
-    LineType[4]: InfUmbVenice-4.13in-cardona
+    LineType[4]: InfUmb-4.13in-UmbA
     Length[4]: 10
     ExpansionFactor[4]: ~
     TargetSegmentLength[4]: 0.5
@@ -795,7 +795,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
       - LineType: Soft_sling_basketMBL40
         Length: 4
         ExpansionFactor: ~
@@ -804,7 +804,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
       - LineType: Shackle_Bolt_Type_25TeWLL
         Length: 0.313
         ExpansionFactor: ~
@@ -813,7 +813,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
     Attachments: []
     DecoupleLateralAndAxialSeabedFriction: No
     ResistanceProfiles: []
@@ -901,7 +901,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
       - LineType: Hook.Nautilus22te
         Length: 0.68
         ExpansionFactor: ~
@@ -910,7 +910,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
       - LineType: Soft_sling_MBL20
         Length: 3
         ExpansionFactor: ~
@@ -919,7 +919,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
       - LineType: Masterlink1.5in
         Length: 0.2
         ExpansionFactor: ~
@@ -928,7 +928,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
     Attachments: []
     DecoupleLateralAndAxialSeabedFriction: No
     ResistanceProfiles: []
@@ -1004,7 +1004,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
       - LineType: Hook.Nautilus22te
         Length: 0.68
         ExpansionFactor: ~
@@ -1013,7 +1013,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
       - LineType: Soft_sling_MBL20
         Length: 3
         ExpansionFactor: ~
@@ -1022,7 +1022,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
       - LineType: Masterlink1.5in
         Length: 0.2
         ExpansionFactor: ~
@@ -1031,7 +1031,7 @@ Lines:
         PreBend: [0, 0]
         ReactsToWake: No
         WakeModel: (none)
-        DisturbanceVessel: SevenArctic
+        DisturbanceVessel: iv02
     Attachments: []
     DecoupleLateralAndAxialSeabedFriction: No
     ResistanceProfiles: []

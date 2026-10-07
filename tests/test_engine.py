@@ -562,7 +562,7 @@ class TestAllModuleBasenames:
         ("rao_analysis", "RAOAnalysis"),
         ("ship_design", "ShipDesign"),
         ("ship_design_aqwa", "ShipDesign"),
-        ("cathodic_protection", "CathodicProtection"),
+        ("cathodic_protection", "run_cathodic_protection"),
         ("transformation", "Transformation"),
         ("pipe_capacity", "PipeCapacity"),
         ("viv_analysis", "VIVAnalysis"),
@@ -582,7 +582,7 @@ class TestAllModuleBasenames:
             "CopyAndPasteFiles": "digitalmodel.engine.CopyAndPasteFiles",
             "RAOAnalysis": "digitalmodel.engine.RAOAnalysis",
             "ShipDesign": "digitalmodel.engine.ShipDesign",
-            "CathodicProtection": "digitalmodel.engine.CathodicProtection",
+            "run_cathodic_protection": "digitalmodel.engine.run_cathodic_protection",
             "Transformation": "digitalmodel.engine.Transformation",
             "PipeCapacity": "digitalmodel.engine.PipeCapacity",
             "VIVAnalysis": "digitalmodel.engine.VIVAnalysis",
@@ -600,6 +600,9 @@ class TestAllModuleBasenames:
                 mock_instance.iterate_all_cfgs.return_value = cfg
             elif basename == "rao_analysis":
                 mock_instance.read_orcaflex_displacement_raos.return_value = cfg
+            elif basename == "cathodic_protection":
+                # #2210: a plain function (engine adapter), not a class with router()
+                mock_module.return_value = cfg
             else:
                 mock_instance.router.return_value = cfg
 
