@@ -6,8 +6,10 @@ minima of a sign-criterion demand) gives the most probable extreme (MPM) and its
 status is set on the MPM. The governing seed is the seed with the largest observed utilisation (smallest demand
 for a minimum), and its time is the time of the coincident row that set it.
 
-Status: ``PASS`` (utilisation <= 1, or the sign criterion holds), ``FAIL``, ``NOT_EVALUATED`` (reason given).
-A missing channel is recorded in ``missing_channel``; the caller fails the step on any such record (plan 8).
+Status: ``PASS`` (utilisation <= 1, or the sign criterion holds), ``FAIL``, ``NOT_EVALUATED`` (reason given),
+``SCREENING`` (a value reported for information and excluded from the verdict, e.g. CR-10 on a regular wave under
+W510 / R02). A missing channel is recorded in ``missing_channel``; the caller fails the step on any such record
+(plan 8).
 """
 
 from __future__ import annotations
@@ -19,7 +21,7 @@ from digitalmodel.drilling_riser.postprocess.channels import MissingChannel, w5
 from digitalmodel.drilling_riser.postprocess.checks import CHECKS, U_TOL, CheckValue, NotEvaluated, evaluate_doc
 from digitalmodel.drilling_riser.postprocess.extremes import gumbel_fit
 
-STATUSES = ("PASS", "FAIL", "NOT_EVALUATED")
+STATUSES = ("PASS", "FAIL", "NOT_EVALUATED", "SCREENING")
 
 
 @dataclass
@@ -95,9 +97,22 @@ def evaluate_case(docs: dict[int | None, dict], row: dict, ctx: dict, *, seeds_e
             return CaseCheck(rid, "NOT_EVALUATED", str(e), missing_channel=e.channel, seed=seed)
         except NotEvaluated as e:
             return CaseCheck(rid, "NOT_EVALUATED", str(e), seed=seed)
+    if any(v.screening for v in values.values()):
+        return _screening(row, values)
     if list(values) == [None]:
         return _single(row, values[None])
     return _combine(row, values)
+
+
+def _screening(row: dict, values: dict[int | None, CheckValue]) -> CaseCheck:
+    """A screening value (e.g. CR-10 on a regular wave, W510 / R02): reported with its utilisation, no verdict."""
+    gov = max(values, key=lambda s: (values[s].u if values[s].u is not None else float("-inf")))
+    v = values[gov]
+    reason = (f"screening only, not used for the verdict: demand {_fmt(v.demand)} {v.unit} against "
+              f"{_fmt(v.allowable)} {v.unit}" + ("" if v.u is None else f" (U = {v.u:.3f})"))
+    return CaseCheck(row_id=row["id"], status="SCREENING", reason=reason, u=v.u, demand=v.demand,
+                     allowable=v.allowable, unit=v.unit, location=v.location, seed=gov, time_s=v.time_s,
+                     detail=v.detail)
 
 
 def _combine(row: dict, values: dict[int, CheckValue]) -> CaseCheck:
@@ -152,13 +167,14 @@ def _order_key(c: CaseCheck) -> float:
 
 def summarise(results: Iterable[tuple[str, CaseCheck]]) -> dict[str, dict[str, Any]]:
     """Per row: counts by status, governing case (largest utilisation, or smallest margin for a sign criterion),
-    row status (FAIL if any case fails, PASS if every evaluated case passes, NOT_EVALUATED if none evaluated)."""
+    row status (FAIL if any case fails, PASS if every evaluated case passes, NOT_EVALUATED if none evaluated).
+    ``SCREENING`` cases are counted (the key appears only when present) but never govern and never set the row\n    status."""
     out: dict[str, dict[str, Any]] = {}
     for case_id, c in results:
-        s = out.setdefault(c.row_id, {"counts": {k: 0 for k in STATUSES}, "governing": None, "max_u": None,
+        s = out.setdefault(c.row_id, {"counts": {k: 0 for k in STATUSES[:3]}, "governing": None, "max_u": None,
                                       "_key": float("-inf")})
-        s["counts"][c.status] += 1
-        if c.status == "NOT_EVALUATED":
+        s["counts"][c.status] = s["counts"].get(c.status, 0) + 1  # SCREENING appears only when present
+        if c.status in ("NOT_EVALUATED", "SCREENING"):
             continue
         k = _order_key(c)
         if k > s["_key"]:

@@ -33,7 +33,11 @@ from digitalmodel.drilling_riser.postprocess.channels import (
 )
 from digitalmodel.drilling_riser.postprocess.pressure import REFERENCE as PRESSURE_REFERENCE
 from digitalmodel.drilling_riser.postprocess.pressure import burst_pressure_mpa, collapse_pressure_mpa
-from digitalmodel.drilling_riser.postprocess.stress_range import stress_range_limit_ksi
+from digitalmodel.drilling_riser.postprocess.stress_range import (
+    SIGNIFICANT_DEFINITION,
+    classify_stations,
+    stress_range_limit_ksi,
+)
 
 G = 9.80665
 KIP_KN = 4.4482216152605  # 1 kip in kN
@@ -57,9 +61,12 @@ class CheckValue:
     time_s: float | None = None
     passed: bool | None = None
     detail: dict[str, Any] = field(default_factory=dict)
+    screening: bool = False  # reported for information only, not part of the verdict (status SCREENING)
 
     def __post_init__(self) -> None:
-        if self.passed is None and self.u is not None:
+        if self.screening:
+            self.passed = None
+        elif self.passed is None and self.u is not None:
             self.passed = self.u <= 1.0 + U_TOL
 
 
@@ -252,11 +259,82 @@ def conductor_bending(w, row, ctx) -> CheckValue:
     return best
 
 
+CR10_DETAIL_BY_KIND = {"coupling": "riser coupling weld", "body": "riser girth weld"}
+CR10_BASIS = {"irregular": ("sig", "significant"), "regular": ("max", "screening (max - min)")}
+
+
+def _cr10_limits(row) -> dict[str, float]:
+    saf = row["limit"].get("saf") or {}
+    return ({d: stress_range_limit_ksi(float(s)) * KSI_KPA / 1000.0 for d, s in saf.items()}
+            or {"nominal (SAF <= 1.5)": float(row["limit"]["value_if_saf_le_1_5"])})
+
+
+def _dyn_stress_range_joints(w, row, ctx, wave: str) -> CheckValue:
+    """W510 (owner decisions 2026-10-07). R02: irregular seas (CON-I1) evaluate CR-10 on the significant range;
+    regular waves (CON-R1) give a screening value on the max - min range that takes no part in the verdict.
+    R03: ``SIGNIFICANT_DEFINITION`` (H1/3 of rainflow ranges). With ``cr10_stations`` in the context (keyword
+    arguments of :func:`stress_range.classify_stations`) each result point takes the SAF of its kind (coupling or
+    joint body), the excluded section is dropped and the first-pup hot spot is reported in ``detail`` without
+    governing; without it the whole line is taken against the lowest allowable range."""
+    if wave not in CR10_BASIS:
+        raise ValueError(f"wave_kind must be one of {sorted(CR10_BASIS)}, got {wave!r}")
+    kind_key, basis = CR10_BASIS[wave]
+    line = ctx.get("stress_line", "Riser")
+    series = range_series(w, line, "zz_range", kind_key)
+    limits = _cr10_limits(row)
+    detail: dict[str, Any] = {"basis": basis, "wave_kind": wave, "channel": f"range_graphs.{line}.zz_range_{kind_key}",
+                              "definition": SIGNIFICANT_DEFINITION if wave == "irregular" else None,
+                              "limits_mpa": limits}
+    st = ctx.get("cr10_stations")
+    if st:
+        try:
+            kinds = classify_stations([a for a, _ in series], **st)
+        except ValueError as e:
+            raise NotEvaluated(f"CR-10 station map: {e}") from None
+        detail_of = {**CR10_DETAIL_BY_KIND, **(ctx.get("cr10_detail_by_kind") or {})}
+        cap_of = {k: limits[d] for k, d in detail_of.items() if d in limits}
+        if not cap_of:
+            raise NotEvaluated(f"no SAF in the register row for the station kinds {sorted(detail_of)}")
+        best, by_kind, hot = None, {}, None
+        for (arc, v), k in zip(series, kinds):
+            mpa = v / 1000.0
+            if k == "hot_spot":
+                hot = {"arc_m": arc, "demand": mpa, "unit": "MPa", "use": "W7 fatigue hot spot; not used for CR-10",
+                       **{f"u_{kk}": mpa / cap for kk, cap in cap_of.items()}}
+                continue
+            if k not in cap_of:  # excluded
+                continue
+            u = mpa / cap_of[k]
+            if k not in by_kind or u > by_kind[k]["u"]:
+                by_kind[k] = {"u": u, "demand": mpa, "arc_m": arc}
+            if best is None or u > best[0]:
+                best = (u, mpa, arc, k)
+        if best is None:
+            raise NotEvaluated("no riser-joint station on the stress-range axis")
+        u, mpa, arc, k = best
+        detail.update({"by_kind": by_kind, "hot_spot": hot, "stations": st})
+        return CheckValue(demand=mpa, allowable=cap_of[k], unit="MPa", u=u,
+                          location=f"{line} arc {arc:.1f} m ({k}, {detail_of[k]})", detail=detail,
+                          screening=wave == "regular")
+    arc, v = max(series, key=lambda p: p[1])
+    mpa = v / 1000.0
+    by = {d: mpa / cap for d, cap in limits.items()}
+    gov = max(by, key=by.get)
+    detail["by_detail"] = by
+    return CheckValue(demand=mpa, allowable=limits[gov], unit="MPa", u=by[gov],
+                      location=f"{line} arc {arc:.1f} m ({gov})", detail=detail, screening=wave == "regular")
+
+
 def dyn_stress_range(w, row, ctx) -> CheckValue:
     """CR-10: outer-fibre axial stress range (double amplitude) along the riser against the allowable range of each
-    weld detail (10 ksi if SAF <= 1.5, else 15/SAF ksi); the detail with the largest utilisation governs."""
+    weld detail (10 ksi if SAF <= 1.5, else 15/SAF ksi); the detail with the largest utilisation governs.
+
+    With ``wave_kind`` in the context (``irregular`` or ``regular``) the W510 joint evaluation applies
+    (:func:`_dyn_stress_range_joints`); without it the W501 whole-line max - min path is kept unchanged."""
     if not is_dynamic(w):
         raise NotEvaluated("static case: no dynamic stress range")
+    if ctx.get("wave_kind") is not None:
+        return _dyn_stress_range_joints(w, row, ctx, ctx["wave_kind"])
     line = ctx.get("stress_line", "Riser")
     v, arc = range_extreme(w, line, "zz_range", "max")
     mpa = v / 1000.0
