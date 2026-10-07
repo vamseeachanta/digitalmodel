@@ -1,0 +1,371 @@
+{
+  "compatibility_variants": [
+    "DNV_RP_F103_2010",
+    "ABS_gn_ships_2018_legacy"
+  ],
+  "excluded_routes": {
+    "DNV_RP_B401_offshore_legacy": "Deprecated; no report builder",
+    "DNV_RP_F103_2010_legacy": "Deprecated; no report builder"
+  },
+  "outside_structure_design_scope": [
+    "experimental ICCP",
+    "stray current",
+    "galvanic",
+    "survey/depletion assessment"
+  ],
+  "phase_scope": "S09 wet-storage and operating ledgers cover the sea family only; other installed families have component-local results.",
+  "rows": [
+    {
+      "calculation_result": "FAIL",
+      "children": [],
+      "engineering_review": "pending",
+      "fixture": "jacket.yml",
+      "id": "S01",
+      "pack_state": "verified",
+      "report": "cases/S01/report.html",
+      "route": "DNV_RP_B401_offshore",
+      "source_class": "synthetic_repository_regression",
+      "source_revision": "bf638ed1",
+      "title": "Jacket",
+      "use_status": "client-use-with-eor-check",
+      "verification": {
+        "passed": true,
+        "scope": "citation resolution, comment binding, child links and file checksums"
+      },
+      "visual_review": "deferred_by_owner"
+    },
+    {
+      "calculation_result": "FAIL",
+      "children": [],
+      "engineering_review": "pending",
+      "fixture": "monopile.yml",
+      "id": "S02",
+      "pack_state": "verified",
+      "report": "cases/S02/report.html",
+      "route": "DNV_RP_B401_offshore",
+      "source_class": "synthetic_repository_regression",
+      "source_revision": "bf638ed1",
+      "title": "Monopile",
+      "use_status": "client-use-with-eor-check",
+      "verification": {
+        "passed": true,
+        "scope": "citation resolution, comment binding, child links and file checksums"
+      },
+      "visual_review": "deferred_by_owner"
+    },
+    {
+      "calculation_result": "FAIL",
+      "children": [],
+      "engineering_review": "pending",
+      "fixture": "manifold.yml",
+      "id": "S03",
+      "pack_state": "verified",
+      "report": "cases/S03/report.html",
+      "route": "DNV_RP_B401_offshore",
+      "source_class": "synthetic_repository_regression",
+      "source_revision": "bf638ed1",
+      "title": "Subsea manifold",
+      "use_status": "client-use-with-eor-check",
+      "verification": {
+        "passed": true,
+        "scope": "citation resolution, comment binding, child links and file checksums"
+      },
+      "visual_review": "deferred_by_owner"
+    },
+    {
+      "calculation_result": "PASS",
+      "children": [],
+      "engineering_review": "pending",
+      "fixture": "ships.yml",
+      "id": "S04",
+      "pack_state": "verified",
+      "report": "cases/S04/report.html",
+      "route": "ABS_gn_ships_2018",
+      "source_class": "synthetic_repository_regression",
+      "source_revision": "bf638ed1",
+      "title": "Ship hull",
+      "use_status": "client-use-with-eor-check",
+      "verification": {
+        "passed": true,
+        "scope": "citation resolution, comment binding, child links and file checksums"
+      },
+      "visual_review": "deferred_by_owner"
+    },
+    {
+      "calculation_result": "PASS",
+      "children": [],
+      "engineering_review": "pending",
+      "fixture": "fpso.yml",
+      "id": "S05",
+      "pack_state": "verified",
+      "report": "cases/S05/report.html",
+      "route": "ABS_gn_offshore_2018",
+      "source_class": "synthetic_repository_regression",
+      "source_revision": "bf638ed1",
+      "title": "Floating offshore structure",
+      "use_status": "legacy-uncited-independent-check-required",
+      "verification": {
+        "passed": true,
+        "scope": "citation resolution, comment binding, child links and file checksums"
+      },
+      "visual_review": "deferred_by_owner"
+    },
+    {
+      "calculation_result": "PASS",
+      "children": [],
+      "engineering_review": "pending",
+      "fixture": "pipeline.yml",
+      "id": "S06",
+      "pack_state": "verified",
+      "report": "cases/S06/report.html",
+      "route": "DNV_RP_F103",
+      "source_class": "synthetic_repository_regression",
+      "source_revision": "bf638ed1",
+      "title": "Bracelet pipeline",
+      "use_status": "client-use-with-eor-check",
+      "verification": {
+        "passed": true,
+        "scope": "citation resolution, comment binding, child links and file checksums"
+      },
+      "visual_review": "deferred_by_owner"
+    },
+    {
+      "calculation_result": "PASS",
+      "children": [],
+      "engineering_review": "pending",
+      "fixture": "anode_bank.yml",
+      "id": "S07",
+      "pack_state": "verified",
+      "report": "cases/S07/report.html",
+      "route": "DNV_RP_F103_anode_bank",
+      "source_class": "synthetic_repository_regression",
+      "source_revision": "bf638ed1",
+      "title": "Terminal-bank flowline",
+      "use_status": "engineering-validation-required",
+      "verification": {
+        "passed": true,
+        "scope": "citation resolution, comment binding, child links and file checksums"
+      },
+      "visual_review": "deferred_by_owner"
+    },
+    {
+      "calculation_result": "FAIL",
+      "children": [],
+      "engineering_review": "pending",
+      "fixture": "multi_component_riser.yml",
+      "id": "S08",
+      "pack_state": "verified",
+      "report": "cases/S08/report.html",
+      "route": "DNV_RP_B401_offshore",
+      "source_class": "synthetic_repository_regression",
+      "source_revision": "bf638ed1",
+      "title": "Multi-component riser",
+      "use_status": "client-use-with-eor-check",
+      "verification": {
+        "passed": true,
+        "scope": "citation resolution, comment binding, child links and file checksums"
+      },
+      "visual_review": "deferred_by_owner"
+    },
+    {
+      "calculation_result": "FAIL",
+      "children": [
+        {
+          "anchor": "child-component-0",
+          "input_pointer": "/riser_base_assessment/components/0",
+          "label": "base",
+          "result_pointer": "/riser_base_assessment/components/base"
+        },
+        {
+          "anchor": "child-component-1",
+          "input_pointer": "/riser_base_assessment/components/1",
+          "label": "foundation",
+          "result_pointer": "/riser_base_assessment/components/foundation"
+        },
+        {
+          "anchor": "child-component-2",
+          "input_pointer": "/riser_base_assessment/components/2",
+          "label": "mudmat",
+          "result_pointer": "/riser_base_assessment/components/mudmat"
+        },
+        {
+          "anchor": "child-component-3",
+          "input_pointer": "/riser_base_assessment/components/3",
+          "label": "hatch",
+          "result_pointer": "/riser_base_assessment/components/hatch"
+        },
+        {
+          "anchor": "child-family-0",
+          "input_pointer": "/anode_families/0",
+          "label": "sea family",
+          "result_pointer": "/anode_families/sea"
+        },
+        {
+          "anchor": "child-family-1",
+          "input_pointer": "/anode_families/1",
+          "label": "mud family",
+          "result_pointer": "/anode_families/mud"
+        },
+        {
+          "anchor": "child-family-2",
+          "input_pointer": "/anode_families/2",
+          "label": "hatch family",
+          "result_pointer": "/anode_families/hatch"
+        },
+        {
+          "anchor": "child-family-3",
+          "input_pointer": "/anode_families/3",
+          "label": "concrete family",
+          "result_pointer": "/anode_families/concrete"
+        },
+        {
+          "anchor": "child-phase-0-family-0",
+          "input_pointer": "/riser_base_assessment/phases/0/families/0",
+          "label": "storage / sea",
+          "result_pointer": "/riser_base_assessment/phases/0/families/sea"
+        },
+        {
+          "anchor": "child-phase-1-family-0",
+          "input_pointer": "/riser_base_assessment/phases/1/families/0",
+          "label": "operation / sea",
+          "result_pointer": "/riser_base_assessment/phases/1/families/sea"
+        },
+        {
+          "anchor": "child-retrofit",
+          "input_pointer": "/riser_base_assessment/retrofit",
+          "label": "Retrofit disposition",
+          "result_pointer": "/riser_base_assessment/retrofit"
+        }
+      ],
+      "engineering_review": "pending",
+      "fixture": "riser_base_phased.yml",
+      "id": "S09",
+      "pack_state": "verified",
+      "report": "cases/S09/report.html",
+      "route": "DNV_RP_B401_offshore",
+      "source_class": "synthetic_repository_regression",
+      "source_revision": "bf638ed1",
+      "title": "Phased riser base and retrofit",
+      "use_status": "client-use-with-eor-check",
+      "verification": {
+        "passed": true,
+        "scope": "citation resolution, comment binding, child links and file checksums"
+      },
+      "visual_review": "deferred_by_owner"
+    },
+    {
+      "calculation_result": "PASS",
+      "children": [
+        {
+          "anchor": "child-component-0",
+          "input_pointer": "/riser_base_assessment/components/0",
+          "label": "base",
+          "result_pointer": "/riser_base_assessment/components/base"
+        },
+        {
+          "anchor": "child-family-0",
+          "input_pointer": "/anode_families/0",
+          "label": "sea family",
+          "result_pointer": "/anode_families/sea"
+        },
+        {
+          "anchor": "child-phase-0-family-0",
+          "input_pointer": "/riser_base_assessment/phases/0/families/0",
+          "label": "installation / sea",
+          "result_pointer": "/riser_base_assessment/phases/0/families/sea"
+        }
+      ],
+      "engineering_review": "pending",
+      "fixture": "temporary_service.yml",
+      "id": "S10",
+      "pack_state": "verified",
+      "report": "cases/S10/report.html",
+      "route": "DNV_RP_B401_offshore",
+      "source_class": "synthetic_repository_regression",
+      "source_revision": "bf638ed1",
+      "title": "Temporary service",
+      "use_status": "client-use-with-eor-check",
+      "verification": {
+        "passed": true,
+        "scope": "citation resolution, comment binding, child links and file checksums"
+      },
+      "visual_review": "deferred_by_owner"
+    },
+    {
+      "calculation_result": "PASS",
+      "children": [],
+      "engineering_review": "pending",
+      "fixture": "mixed_family.yml",
+      "id": "S11",
+      "pack_state": "verified",
+      "report": "cases/S11/report.html",
+      "route": "DNV_RP_B401_offshore",
+      "source_class": "synthetic_repository_regression",
+      "source_revision": "bf638ed1",
+      "title": "Concrete, buried and seawater families",
+      "use_status": "client-use-with-eor-check",
+      "verification": {
+        "passed": true,
+        "scope": "citation resolution, comment binding, child links and file checksums"
+      },
+      "visual_review": "deferred_by_owner"
+    },
+    {
+      "engineering_review": "pending",
+      "id": "A",
+      "pack_state": "blocked",
+      "private_data_release": "not_authorized",
+      "public_source": "https://github.com/vamseeachanta/digitalmodel/issues/1852#issuecomment-5893200921",
+      "reason": "Historical numerical acceptance deferred",
+      "report": null,
+      "title": "Hybrid-riser buoyancy"
+    },
+    {
+      "engineering_review": "pending",
+      "id": "B",
+      "pack_state": "blocked",
+      "private_data_release": "not_authorized",
+      "public_source": "https://github.com/vamseeachanta/digitalmodel/issues/1852#issuecomment-5893200921",
+      "reason": "Source exception needs qualification",
+      "report": null,
+      "title": "Temporary riser and foundation"
+    },
+    {
+      "engineering_review": "pending",
+      "id": "C",
+      "pack_state": "blocked",
+      "private_data_release": "not_authorized",
+      "public_source": "https://github.com/vamseeachanta/digitalmodel/issues/1852#issuecomment-5893200921",
+      "reason": "Rebuilt ABS route; private data not released",
+      "report": null,
+      "title": "Coated floating-storage hull"
+    },
+    {
+      "engineering_review": "pending",
+      "id": "D",
+      "pack_state": "blocked",
+      "private_data_release": "not_authorized",
+      "public_source": "https://github.com/vamseeachanta/digitalmodel/issues/1852#issuecomment-5893200921",
+      "reason": "Current private comparison required",
+      "report": null,
+      "title": "Walking-mitigation mattress"
+    },
+    {
+      "engineering_review": "pending",
+      "id": "E",
+      "pack_state": "blocked",
+      "private_data_release": "not_authorized",
+      "public_source": "https://github.com/vamseeachanta/digitalmodel/issues/1852#issuecomment-5893200921",
+      "reason": "Field-joint infill evidence missing; acceptance unverified",
+      "report": null,
+      "title": "Bracelet pipeline"
+    }
+  ],
+  "summary": {
+    "complete": false,
+    "engineering_acceptance": "pending",
+    "manual_visual_review": "deferred_by_owner",
+    "required": 16,
+    "verified": 11
+  }
+}

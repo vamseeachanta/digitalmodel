@@ -8,6 +8,11 @@ discipline: cathodic_protection
 
 # Floating Storage Terminal Hull — ABS GN Ships 2017 Cathodic Protection Specification
 
+> The narrative tables retain the abstracted source calculation record. The executable
+> block identifies the 1,350 mA/m2 bare-equivalent density as a project value outside
+> Table 3. Owner decision 2026-10-01 accepts the route's three recorded interpretations;
+> the rebuilt result is `client-use-with-eor-check`.
+
 ## Source
 Standard: ABS, Guidance Notes on Cathodic Protection of Ships, December 2017 (primary);
            DNV-RP-B401, October 2010 amended April 2011 (used for resistivity chart, Annex A
@@ -120,7 +125,7 @@ Note: fcf formula: (1 + 0.01/100)^2 × (1 + 0.01)^(5-2) = 1.0001^2 × 1.01^3 ≈
 ### Anode Weight Calculation
 | Parameter | Value | Unit | Reference |
 |-----------|-------|------|-----------|
-| Anode current capacity, Q | 2 500 | A·h/kg | ABS §2, Table 4 |
+| Anode current capacity, Q | 2 500 | A·h/kg | ABS §3/4.3, Table 4 |
 | Anode utilisation factor (u) | 0.825 | — | ABS §2, §7.3 |
 | Total net anode weight required (NWm, based on Icm) | 4 713 | kg | Icm × tf × 8760 / (Q × u) |
 | Total net anode weight required | 4.7 | mt | — |
@@ -210,16 +215,13 @@ Note: fcf formula: (1 + 0.01/100)^2 × (1 + 0.01)^(5-2) = 1.0001^2 × 1.01^3 ≈
 | Total gross weight of anodes | 14.4 | mt | — |
 | Anode life (calculated) | 7.1 | yr | > 5 yr design life: pass |
 
-**Reproduction note (this branch, `ABS_gn_ships_2018` route, cfg below):** the code returns
-Ici / Icm / Icf = 145.5 / 149.9 / 152.9 A (source 146 / 222 / 298 A). The route's compound
-model gives fcf = 1.0510, a 5.1 % rise on the coated density, where the source applies
-fcf = 2.05 % as a fraction of the uncoated density (icf = 27.7 mA/m²). The route sizes the
-mass on Icm with a temperature-corrected capacity of 2162 Ah/kg, giving 3682 kg and 127.0
-anodes on the mass basis (source 4 713 kg at Q = 2500 Ah/kg and 460 anodes, final current
-governing over 230 locations). Rai = 0.4194 Ω matches the tabulated 0.419 Ω; the route reports
-the same value for Raf because no depleted geometry is supplied (source 0.3807 Ω). The
-tabulated source values are left as extracted. The ABS ships route is not affected by the
-#2207 DNV-RP-B401/F103 tables; these values are unchanged after #2207.
+**Reproduction note (rebuilt `ABS_gn_ships_2018` route):** with the explicit project
+bare-equivalent density and layout inputs, the code returns 145.5 / 221.9 / 298.3 A,
+4 712.2 kg required mass, 0.4194 / 0.3808 ohm initial/final resistance, and 460 selected
+anodes. These reproduce the displayed source values within rounding. The 1,350 mA/m2
+bare-equivalent density is outside Table 3. Owner decision 2026-10-01 accepts the
+arithmetic-mean coating treatment and depleted long-flush resistance reading. The derived
+core area remains a required project input subject to the deliverable's EOR check.
 
 ## Anode Bill of Materials (Section 4.5)
 ```
@@ -272,11 +274,13 @@ cfg = {
             "area_coverage": 100.0,                # % coated
             "coating_initial_breakdown_factor": 1.0,    # % (High durability, ABS Table 4)
             "coating_initial_breakdown_duration": 2.0,  # years
-            "coating_yearly_breakdown_factor": 1.0,     # %/yr (High durability)
             "coating_breakdown_factor_max": 2.05,  # % final (5-yr, High durability)
         },
         "design_current": {
-            "coated_steel_mA_m2": 13.5,            # mA/m² (ABS §2, Table 3)
+            "dynamic_bare_steel_mA_m2": 1350.0,  # project value; outside Table 3
+            "static_bare_steel_mA_m2": 1350.0,
+            "dynamic_time_fraction": 0.5,
+            "coated_steel_mA_m2": 13.5,            # project initial coated density
             "uncoated_steel_mA_m2": 200.0,         # mA/m²
         },
         "anode": {
@@ -284,14 +288,22 @@ cfg = {
             "protection_potential": 0.8,           # V (magnitude, Ag/AgCl)
             "closed_circuit_anode_potential": -1.09, # V vs Ag/AgCl
             "anode_Utilisation_factor": 0.825,
+            "anode_density": 2750.0,
             "physical_properties": {
                 "net_weight": 29.0,                # kg
+                "core_cross_section_m2": 0.01625,
             },
             "geometry": {
                 "type": "long_flush",
                 "length_m": 0.65,                  # m
                 "width_m": 0.125,                  # m
             },
+        },
+        "layout": {
+            "actual_max_spacing_m": 8.0, "selected_locations": 230,
+            "anodes_per_location": 2, "high_current_or_low_resistivity": False,
+            "mechanical_damage_risk": False, "uniform_distribution_confirmed": True,
+            "bilge_damage_avoided": True, "bilge_keel_fitted": False,
         },
     }
 }
@@ -344,13 +356,13 @@ print("Rai / Raf (ohm): {:.4f} / {:.4f}".format(
   in the router — the ABS route currently expects resistivity as a direct input, which is
   correct here.
 - The anode current capacity (A·h/kg) for the specific aluminium-zinc-indium-cadmium alloy
-  is 2 500 A·h/kg per ABS Section 7, Subsection 2, Table 4. The existing test uses an
+  is 2 500 A·h/kg per ABS Section 3/4.3, Table 4. The existing test uses an
   implicit value via the ABS table look-up; confirm cathodic_protection.py uses 2 500 A·h/kg
   for aluminium alloy (not 2 000 A·h/kg used in the DNV B401 example calc).
-- The ABS coating breakdown model (multiplicative annual-rate per ABS §2, Table 4) is
-  distinct from the DNV linear model. Confirm cathodic_protection.py implements the
-  ABS multiplicative formula: fcf = (1 + fci/100)^di × (1 + fc/100)^(tf - di).
-- Anode current capacity (Q = 2 500 A·h/kg) is referenced to ABS §2, Table 4, but the
+- ABS Table 4 gives initial and annual percentages but no time-development equation. Owner
+  decision 2026-10-01 accepts the arithmetic mean of the selected project initial and
+  maximum factors for this route.
+- Anode current capacity (Q = 2 500 A·h/kg) is referenced to ABS §3/4.3, Table 4, but the
   exact alloy composition (Al-Zn-In-Cd) is not in the ABS table — it matches the generic
   aluminium alloy capacity. Confirm with supplier datasheet if a non-standard value applies.
 - The specification covers the external hull only. Mooring jacket CP is not in scope and

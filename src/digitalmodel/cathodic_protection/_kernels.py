@@ -152,7 +152,26 @@ def anode_mass(
     _require_positive("life_years", life_years)
     _require_positive("capacity_Ah_kg", capacity_Ah_kg)
     _require_fraction("utilisation", utilisation)
-    return (I_mean_A * life_years * HOURS_PER_YEAR) / (capacity_Ah_kg * utilisation)
+    return anode_mass_from_current_years(
+        I_mean_A * life_years, capacity_Ah_kg, utilisation
+    )
+
+
+def anode_mass_from_current_years(
+    current_years_A_year: float,
+    capacity_Ah_kg: float,
+    utilisation: float,
+) -> float:
+    """Net mass from integrated mean-current exposure (B401 Sec. 7.7, Eq. 2).
+
+    ``M_a = sum(I_cm * t_f) * 8760 / (u * epsilon)`` permits one physical
+    anode family to protect components with different design lives without
+    replacing those lives by an undocumented maximum or average.
+    """
+    _require_non_negative("current_years_A_year", current_years_A_year)
+    _require_positive("capacity_Ah_kg", capacity_Ah_kg)
+    _require_fraction("utilisation", utilisation)
+    return current_years_A_year * HOURS_PER_YEAR / (capacity_Ah_kg * utilisation)
 
 
 def mass_consumed(I_mean_A: float, elapsed_years: float, capacity_Ah_kg: float) -> float:
@@ -247,6 +266,63 @@ def anodes_for_current(current_demand_A: float, anode_output_A: float) -> int:
     _require_non_negative("current_demand_A", current_demand_A)
     _require_positive("anode_output_A", anode_output_A)
     return math.ceil(current_demand_A / anode_output_A)
+
+
+# ---------------------------------------------------------------------------
+# Pipeline-end bank attenuation (DNV-RP-F103 Sec. 6.7)
+# ---------------------------------------------------------------------------
+
+
+def pipeline_steel_area(outer_diameter_m: float, wall_thickness_m: float) -> float:
+    """Metallic cross-section ``pi*d*(D-d)`` used by F103 Eq. (12)."""
+    diameter = _require_positive("outer_diameter_m", outer_diameter_m)
+    thickness = _require_positive("wall_thickness_m", wall_thickness_m)
+    if 2.0 * thickness >= diameter:
+        raise ValueError("wall_thickness_m must be less than half outer_diameter_m")
+    return math.pi * thickness * (diameter - thickness)
+
+
+def longitudinal_resistance_per_m(
+    steel_resistivity_ohm_m: float, outer_diameter_m: float, wall_thickness_m: float
+) -> float:
+    """Longitudinal line resistance ``rho/[pi*d*(D-d)]`` [ohm/m]."""
+    rho = _require_positive("steel_resistivity_ohm_m", steel_resistivity_ohm_m)
+    return rho / pipeline_steel_area(outer_diameter_m, wall_thickness_m)
+
+
+def parallel_resistance(branch_resistances_ohm: list[float]) -> float:
+    """Ideal parallel resistance ``1/R=sum(1/R_j)``."""
+    if not branch_resistances_ohm:
+        raise ValueError("branch_resistances_ohm must not be empty")
+    values = [
+        _require_positive("branch_resistances_ohm", value)
+        for value in branch_resistances_ohm
+    ]
+    return 1.0 / sum(1.0 / value for value in values)
+
+
+def conservative_metallic_drop(
+    resistance_per_m_ohm: float, demand_per_m_A: float, length_m: float
+) -> float:
+    """Conservative F103 Eq. (15) drop ``R' * q * L**2`` [V]."""
+    resistance = _require_non_negative("resistance_per_m_ohm", resistance_per_m_ohm)
+    demand = _require_non_negative("demand_per_m_A", demand_per_m_A)
+    length = _require_non_negative("length_m", length_m)
+    return resistance * demand * length**2
+
+
+def positive_quadratic_root(a: float, b: float, c: float) -> float:
+    """Return the positive root of ``a*x**2+b*x+c=0`` or fail closed."""
+    a_value = _require_positive("a", a)
+    if not math.isfinite(b) or not math.isfinite(c):
+        raise ValueError("b and c must be finite")
+    discriminant = b * b - 4.0 * a_value * c
+    if discriminant < 0.0:
+        raise ValueError("quadratic has no real protection length")
+    root = (-b + math.sqrt(discriminant)) / (2.0 * a_value)
+    if root <= 0.0:
+        raise ValueError("quadratic has no positive protection length")
+    return root
 
 
 # ---------------------------------------------------------------------------
@@ -408,6 +484,7 @@ __all__ = [
     "anode_count",
     "anode_current_output",
     "anode_mass",
+    "anode_mass_from_current_years",
     "anodes_for_current",
     "coating_breakdown_final",
     "coating_breakdown_linear",
@@ -418,6 +495,11 @@ __all__ = [
     "long_flush",
     "long_slender_standoff",
     "mass_consumed",
+    "pipeline_steel_area",
+    "longitudinal_resistance_per_m",
+    "parallel_resistance",
+    "conservative_metallic_drop",
+    "positive_quadratic_root",
     "resistance_proximity_factor",
     "short_flush_or_bracelet",
     "short_slender_standoff",

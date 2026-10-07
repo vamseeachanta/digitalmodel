@@ -4,10 +4,12 @@
 
 from __future__ import annotations
 
+import importlib
 import json
 import sys
 from collections.abc import Iterator
 from pathlib import Path
+from types import ModuleType
 
 import pytest
 
@@ -66,18 +68,54 @@ def test_register_and_build_spec() -> None:
     assert spec.sections[0].blocks[0].markdown == "Mass 42 kg."
 
 
-def test_build_spec_imports_domain_adapters_on_demand() -> None:
+def test_build_spec_imports_domain_adapters_on_demand(monkeypatch: pytest.MonkeyPatch) -> None:
     # "cathodic_protection.anode_design" lives in
     # digitalmodel.cathodic_protection.report_adapters; the registry was
     # cleared by the fixture, so build_spec must import it (a fresh import
     # registers only when the module is not cached).
     assert "cathodic_protection.anode_design" not in ADAPTERS
-    sys.modules.pop("digitalmodel.cathodic_protection.report_adapters", None)
-    with pytest.raises(ValueError, match="cfg\['results'\]"):
+    module_name = "digitalmodel.cathodic_protection.report_adapters"
+    package = importlib.import_module("digitalmodel.cathodic_protection")
+    # Import also assigns the child module on its parent package. Track an
+    # initially missing attribute as well as an existing module identity.
+    monkeypatch.setattr(package, "report_adapters", None, raising=False)
+    # Track even an initially absent module so teardown removes the fresh import
+    # along with clean_registry restoring the previous registry.
+    monkeypatch.setitem(sys.modules, module_name, None)
+    monkeypatch.delitem(sys.modules, module_name)
+    with pytest.raises(ValueError, match=r"cfg\['results'\]"):
         build_spec("cathodic_protection.anode_design", {"inputs": {}})
     assert "cathodic_protection.anode_design" in ADAPTERS
     assert "cathodic_protection.assessment" in ADAPTERS
     assert import_domain_adapters("no_such_domain_xyz") is False
+
+
+@pytest.mark.parametrize("cached", [False, True])
+@pytest.mark.parametrize("parent_attribute", [False, True])
+def test_on_demand_import_restores_package_and_cache(monkeypatch, cached, parent_attribute):
+    module_name = "digitalmodel.cathodic_protection.report_adapters"
+    package = importlib.import_module("digitalmodel.cathodic_protection")
+    # A sentinel models a cached module without introducing a new registration
+    # side effect during setup when the adapter was initially absent.
+    original = sys.modules.get(module_name) or ModuleType(module_name)
+    if cached:
+        monkeypatch.setitem(sys.modules, module_name, original)
+    else:
+        monkeypatch.delitem(sys.modules, module_name, raising=False)
+    if parent_attribute:
+        monkeypatch.setattr(package, "report_adapters", original, raising=False)
+    else:
+        monkeypatch.delattr(package, "report_adapters", raising=False)
+    with pytest.MonkeyPatch.context() as import_patch:
+        test_build_spec_imports_domain_adapters_on_demand(import_patch)
+    if cached:
+        assert sys.modules[module_name] is original
+    else:
+        assert module_name not in sys.modules
+    if parent_attribute:
+        assert package.report_adapters is original
+    else:
+        assert not hasattr(package, "report_adapters")
 
 
 def test_registration_validates_key_and_duplicates() -> None:

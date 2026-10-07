@@ -1,0 +1,86 @@
+{
+  "calculation_result": "FAIL",
+  "children": [
+    {
+      "anchor": "child-component-0",
+      "input_pointer": "/riser_base_assessment/components/0",
+      "label": "base",
+      "result_pointer": "/riser_base_assessment/components/base"
+    },
+    {
+      "anchor": "child-component-1",
+      "input_pointer": "/riser_base_assessment/components/1",
+      "label": "foundation",
+      "result_pointer": "/riser_base_assessment/components/foundation"
+    },
+    {
+      "anchor": "child-component-2",
+      "input_pointer": "/riser_base_assessment/components/2",
+      "label": "mudmat",
+      "result_pointer": "/riser_base_assessment/components/mudmat"
+    },
+    {
+      "anchor": "child-component-3",
+      "input_pointer": "/riser_base_assessment/components/3",
+      "label": "hatch",
+      "result_pointer": "/riser_base_assessment/components/hatch"
+    },
+    {
+      "anchor": "child-family-0",
+      "input_pointer": "/anode_families/0",
+      "label": "sea family",
+      "result_pointer": "/anode_families/sea"
+    },
+    {
+      "anchor": "child-family-1",
+      "input_pointer": "/anode_families/1",
+      "label": "mud family",
+      "result_pointer": "/anode_families/mud"
+    },
+    {
+      "anchor": "child-family-2",
+      "input_pointer": "/anode_families/2",
+      "label": "hatch family",
+      "result_pointer": "/anode_families/hatch"
+    },
+    {
+      "anchor": "child-family-3",
+      "input_pointer": "/anode_families/3",
+      "label": "concrete family",
+      "result_pointer": "/anode_families/concrete"
+    },
+    {
+      "anchor": "child-phase-0-family-0",
+      "input_pointer": "/riser_base_assessment/phases/0/families/0",
+      "label": "storage / sea",
+      "result_pointer": "/riser_base_assessment/phases/0/families/sea"
+    },
+    {
+      "anchor": "child-phase-1-family-0",
+      "input_pointer": "/riser_base_assessment/phases/1/families/0",
+      "label": "operation / sea",
+      "result_pointer": "/riser_base_assessment/phases/1/families/sea"
+    },
+    {
+      "anchor": "child-retrofit",
+      "input_pointer": "/riser_base_assessment/retrofit",
+      "label": "Retrofit disposition",
+      "result_pointer": "/riser_base_assessment/retrofit"
+    }
+  ],
+  "engineering_review": "pending",
+  "fixture": "riser_base_phased.yml",
+  "id": "S09",
+  "pack_state": "verified",
+  "report": "cases/S09/report.html",
+  "route": "DNV_RP_B401_offshore",
+  "source_class": "synthetic_repository_regression",
+  "source_revision": "bf638ed1",
+  "title": "Phased riser base and retrofit",
+  "use_status": "client-use-with-eor-check",
+  "verification": {
+    "passed": true,
+    "scope": "citation resolution, comment binding, child links and file checksums"
+  },
+  "visual_review": "deferred_by_owner"
+}

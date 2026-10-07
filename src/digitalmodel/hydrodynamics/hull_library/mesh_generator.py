@@ -499,27 +499,89 @@ class HullMeshGenerator:
             return np.empty((0, panels.shape[1]), dtype=panels.dtype)
         return panels[np.array(keep)]
 
+    @staticmethod
+    def _winding_components(panel_vertices):
+        """Propagate edge-direction parity by BFS on each manifold component."""
+        edges = {}
+        neighbors = [[] for _ in panel_vertices]
+        for i, vertices in enumerate(panel_vertices):
+            for a, b in zip(vertices, vertices[1:] + vertices[:1]):
+                edges.setdefault((min(a, b), max(a, b)), []).append((i, a < b))
+        for incidence in edges.values():
+            if len(incidence) > 2:
+                raise ValueError("Cannot orient a non-manifold shared edge")
+            if len(incidence) == 2:
+                (i, forward_i), (j, forward_j) = incidence
+                same = forward_i == forward_j
+                neighbors[i].append((j, same))
+                neighbors[j].append((i, same))
+
+        flip_mask = np.zeros(len(panel_vertices), dtype=bool)
+        visited = np.zeros(len(panel_vertices), dtype=bool)
+        components = []
+        for seed in range(len(panel_vertices)):
+            if visited[seed]:
+                continue
+            component = [seed]
+            visited[seed] = True
+            # Appending while iterating visits panels in breadth-first order.
+            for i in component:
+                for j, same in neighbors[i]:
+                    required = flip_mask[i] ^ same
+                    if visited[j]:
+                        if flip_mask[j] != required:
+                            raise ValueError("Panel winding is not orientable")
+                        continue
+                    visited[j] = True
+                    flip_mask[j] = required
+                    component.append(j)
+            components.append(component)
+        return components, flip_mask
+
+    @staticmethod
+    def _apply_panel_winding(mesh, panel_vertices, flip_mask):
+        """Reverse about the first vertex, retaining quad diagonals and padding."""
+        for i, vertices in enumerate(panel_vertices):
+            ordered = vertices[:1] + vertices[:0:-1] if flip_mask[i] else vertices
+            valid = mesh.panels[i] >= 0
+            # Keep collapsed triangles' first three corners distinct so the
+            # PanelMesh normal calculation does not fall back to an arbitrary +z.
+            mesh.panels[i, valid] = ordered + [ordered[-1]] * (
+                np.count_nonzero(valid) - len(ordered)
+            )
+        mesh._compute_normals()
+        mesh._compute_centers()
+
     def _orient_normals_outward(self, mesh: PanelMesh) -> None:
-        """Ensure all panel normals point outward (away from hull interior).
+        """Make winding consistent, then choose one outward sign per component.
 
-        For a closed hull, the centroid of all vertices is inside. Each
-        panel's normal should point away from this centroid.
+        Per-panel centroid tests can create folds on open or concave hulls.
+        Shared-edge propagation preserves continuity; only the area-weighted
+        component score selects the global sign. Flips count net reversals of
+        the input winding, including any final component reversal.
         """
-        centroid = np.mean(mesh.vertices, axis=0)
-
-        flip_mask = np.zeros(mesh.n_panels, dtype=bool)
-        for i in range(mesh.n_panels):
-            center = mesh.panel_centers[i]
-            normal = mesh.normals[i]
-            to_outside = center - centroid
-            if np.dot(normal, to_outside) < 0:
-                flip_mask[i] = True
-
-        if np.any(flip_mask):
-            # Flip normals
-            mesh.normals[flip_mask] = -mesh.normals[flip_mask]
-            # Reverse winding of those panels
-            mesh.panels[flip_mask] = mesh.panels[flip_mask, ::-1]
+        panel_vertices = [
+            list(dict.fromkeys(int(i) for i in panel if i >= 0))
+            for panel in mesh.panels
+        ]
+        components, flip_mask = self._winding_components(panel_vertices)
+        self._apply_panel_winding(mesh, panel_vertices, flip_mask)
+        global_flip = False
+        for component in components:
+            indices = np.unique(mesh.panels[component])
+            centroid = np.mean(mesh.vertices[indices[indices >= 0]], axis=0)
+            outward = mesh.panel_centers[component] - centroid
+            dots = np.einsum("ij,ij->i", mesh.normals[component], outward)
+            if np.sum(mesh.panel_areas[component] * dots) < 0:
+                flip_mask[component] = ~flip_mask[component]
+                global_flip = True
+        if global_flip:
+            self._apply_panel_winding(mesh, panel_vertices, flip_mask)
+        mesh.metadata["winding"] = {
+            "components": len(components),
+            "flipped_panels": int(np.count_nonzero(flip_mask)),
+            "method": "adjacency_bfs",
+        }
 
 
 __all__ = [
