@@ -27,6 +27,22 @@ def test_audit_events_requires_every_expected_channel(tmp_path, defect):
     result = audit_case(row, expected_channels=('tension',))
     assert result['status'] == ('VERIFIED' if defect == 'none' else 'FAILED')
     assert result['channels_verified'] == (1 if defect == 'none' else 0)
+    assert result['audited_channels'] == ['tension']
+
+
+def test_audit_validator_binds_channel_identities():
+    from digitalmodel.workflows.installation_event_audit import audit_binding_errors
+    row = dict(trace_sha256='t', metadata_sha256='m', channels={
+        'a': dict(variable='Effective tension'), 'b': dict(variable='Effective tension'), 'z': dict(variable='Z')})
+    good = dict(status='VERIFIED', errors=[], trace_sha256='t', metadata_sha256='m', channels_verified=2)
+    assert audit_binding_errors(good, row) == []
+    assert audit_binding_errors(dict(good, audited_channels=['b', 'a']), row) == []
+    for bad in (dict(good, channels_verified=3), dict(good, channels_verified=None), dict(good, channels_verified=2.0),
+                dict(good, audited_channels=['a', 'z']), dict(good, audited_channels=['a', 'a']),
+                dict(good, audited_channels=['a', 'b', 'q'], channels_verified=3), dict(good, audited_channels='ab'),
+                dict(good, status='FAILED'), dict(good, errors=None), dict(good, trace_sha256='old')):
+        assert audit_binding_errors(bad, row), bad
+    assert audit_binding_errors(dict(good, channels_verified=0), dict(row, channels={'z': dict(variable='Z')}))
 
 
 def test_truncated_report_is_rejected(tmp_path):

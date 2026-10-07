@@ -18,8 +18,54 @@ EXPECTED_CHANNELS = tuple(f'{name}_end_{end}' for name in
                           for end in ('A', 'B'))
 
 
+def tension_channels(row):
+    """Channel identities an event audit must verify: the row's effective-tension channels.
+
+    Tension events exist only on effective-tension channels; a row's other channels carry no events.
+    This is the set the audit producers pass to audit_case (vessel_capability_report._audit_profile).
+    """
+    return {key for key, channel in (row.get('channels') or {}).items()
+            if isinstance(channel, dict) and channel.get('variable') == 'Effective tension'}
+
+
+def audit_binding_errors(audit, row):
+    """Why one event audit does not prove complete tension-event verification of one result row (empty when it does).
+
+    Shared by the base-audit coverage rule and the supplemental-audit check of the composite.
+    """
+    errors = []
+    if audit.get('status') != 'VERIFIED' or audit.get('errors') != []:
+        errors.append('is not VERIFIED')
+    if any(not row.get(key) or audit.get(key) != row[key] for key in ('trace_sha256', 'metadata_sha256')):
+        errors.append('does not bind trace and metadata')
+    expected = tension_channels(row)
+    count = audit.get('channels_verified')
+    if not expected:
+        errors.append('has no effective-tension channel to verify in the result row')
+    if isinstance(count, bool) or not isinstance(count, int):
+        errors.append('does not record an integer channels_verified')
+        return errors
+    audited = audit.get('audited_channels')
+    if audited is None:
+        # Compatibility path: audits retained before audited_channels was recorded carry only a count.
+        # The count must equal the row's effective-tension channel set, the set the producer verified.
+        if count != len(expected):
+            errors.append(f'verified {count} channels; the result row has {len(expected)} effective-tension channels')
+        return errors
+    if not isinstance(audited, list) or any(not isinstance(name, str) for name in audited) or len(set(audited)) != len(audited):
+        errors.append('audited_channels must be a list of distinct channel names')
+        return errors
+    names = set(audited)
+    if names != expected or not names <= set(row.get('channels') or {}):
+        errors.append('audited channels differ from the effective-tension channels of the result row')
+    if count != len(names):
+        errors.append(f'verified {count} channels but lists {len(names)}')
+    return errors
+
+
 def audit_case(row, expected_channels=EXPECTED_CHANNELS):
-    result = dict(index=row['index'], status='FAILED', channels_verified=0, errors=[])
+    result = dict(index=row['index'], status='FAILED', channels_verified=0, errors=[],
+                  audited_channels=list(expected_channels))
     try:
         directory = Path(row['run_dir']) / 'installation_traces'
         metadata_path, trace_path = directory / 'metadata.json', directory / 'traces.npz'

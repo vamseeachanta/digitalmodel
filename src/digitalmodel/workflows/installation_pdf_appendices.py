@@ -5,14 +5,15 @@ from reportlab.lib.pagesizes import A4
 from reportlab.platypus import SimpleDocTemplate
 
 from digitalmodel.workflows.vessel_capability_layout import (
-    bind_screening, _criterion_status, _finite,
+    bind_screening, reject_wave_preview, _criterion_status, _finite,
 )
 
 
 def validate_pdf_screening(summary, payload):
-    """Bind screening exactly as the HTML edition does; wave preview is rejected there."""
+    """Bind screening exactly as the HTML edition does; any preview-bearing payload is rejected identically."""
+    reject_wave_preview(payload)
     mode = payload.get('demo', {}).get('default_mode')
-    if mode not in ('history_only', 'wave_preview'):
+    if mode not in ('history_only',):
         raise ValueError('Full report requires an explicit supported forecast mode')
     return bind_screening(summary, payload)
 

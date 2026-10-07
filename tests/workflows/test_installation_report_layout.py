@@ -114,12 +114,36 @@ def test_audit_claims_and_unlinked_design_context_explicit():
 
 
 def audited_summary():
+    from tests.workflows.test_mudmat_sensitivity_reporting import realistic_channels
     data=summary()
     data['cases']=[dict(index=0,status='VERIFIED',hs_m=1.,tp_s=8.,run_dir='run',simulation_sha256='a',
-        trace_sha256='b',metadata_sha256='d',channels={'load':dict(position='End A',units='kN',minimum=0.,maximum=1.)})]
+        trace_sha256='b',metadata_sha256='d',channels=realistic_channels(1.))]
     data['counts']={'VERIFIED':1}
-    data['event_audits']=[dict(index=0,status='VERIFIED',errors=[],channels_verified=1,trace_sha256='b',metadata_sha256='d')]
+    data['event_audits']=[dict(index=0,status='VERIFIED',errors=[],channels_verified=16,trace_sha256='b',metadata_sha256='d')]
     return data
+
+
+@pytest.mark.parametrize('count',[0,None,15,True])
+def test_base_audit_claim_requires_every_tension_channel(count):
+    """A VERIFIED, bound audit that verified too few (or an unrecorded number of) channels must not support the claim."""
+    data=audited_summary()
+    if count is None:data['event_audits'][0].pop('channels_verified')
+    else:data['event_audits'][0]['channels_verified']=count
+    html=mudmat.render_html(data)
+    assert 'source audit records' not in html
+    assert 'source event audit is not established' in html
+
+
+@pytest.mark.parametrize('listed',['full','wrong_identity','short','extra'])
+def test_base_audit_claim_with_audited_channel_list(listed):
+    from tests.workflows.test_mudmat_sensitivity_reporting import TENSION_CHANNELS
+    data=audited_summary();audit=data['event_audits'][0]
+    names={'full':list(TENSION_CHANNELS),'wrong_identity':list(TENSION_CHANNELS[:15])+['profile_016'],
+           'short':list(TENSION_CHANNELS[:15]),'extra':list(TENSION_CHANNELS)+['profile_999']}[listed]
+    audit.update(audited_channels=names,channels_verified=len(names))
+    html=mudmat.render_html(data)
+    assert ('source audit records' in html)==(listed=='full')
+    assert ('source event audit is not established' in html)==(listed!='full')
 
 
 @pytest.mark.parametrize('defect',['unbound','partial','trace','failed','counts'])

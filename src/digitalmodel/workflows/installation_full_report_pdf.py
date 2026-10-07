@@ -168,26 +168,16 @@ def _design_extra(story, items):
                "Table 2a. Arrangement design inputs. Model readback is not material or drawing certification.")
 
 
-def _history_only(payload):
-    return payload.get("demo", {}).get("default_mode") == "history_only"
-
-
+# validate_pdf_screening admits only history-only payloads without preview data, so the statements below are history-only.
 def _monitoring_statement(payload):
-    if _history_only(payload):
-        return ("The monitoring illustration predicts the next two minutes using only samples available at NOW in a SIMULATED record. "
-                "Held-out prediction errors do not validate offshore wave prediction or field operating decisions.")
-    return ("The monitoring illustration supplies a simulated future irregular-wave record to a load surrogate fitted using past data. "
-            "Conditional prediction performance does not validate offshore wave prediction or field operating decisions.")
+    return ("The monitoring illustration predicts the next two minutes using only samples available at NOW in a SIMULATED record. "
+            "Held-out prediction errors do not validate offshore wave prediction or field operating decisions.")
 
 
 def _method_statement(payload):
-    if _history_only(payload):
-        return ("The monitoring illustration separates recorded history from a two-minute causal forecast at the displayed NOW line. "
-                "The history-only predictor uses only samples available at NOW; no future wave or load sample is supplied. "
-                "Withheld future response is used only for error assessment, with persistence and history-mean comparators.")
-    return ("The monitoring illustration separates recorded history from a two-minute conditional forecast at the displayed NOW line. "
-            "The simulated future wave trace is supplied input. The load surrogate is fitted to past data. "
-            "Withheld future load response is used for error assessment, with persistence and history-mean comparators.")
+    return ("The monitoring illustration separates recorded history from a two-minute causal forecast at the displayed NOW line. "
+            "The history-only predictor uses only samples available at NOW; no future wave or load sample is supplied. "
+            "Withheld future response is used only for error assessment, with persistence and history-mean comparators.")
 
 
 def _method(story, payload):
@@ -250,8 +240,7 @@ def _validation_references(story, summary, payload):
         ["Equipment capacity and drawing reconciliation", "Pending qualification."],
         ["Slack, snap and interference", "Pending stiffness/model-form, geometric and convergence assessment."],
         ["RAO range and warnings", "Warnings require disposition; completion alone does not establish adequacy."],
-        ["Forecast field validation", "Not established; causal SIMULATED demonstration only." if _history_only(payload)
-         else "Not established; conditional simulated preview only."],
+        ["Forecast field validation", "Not established; causal SIMULATED demonstration only."],
     ], [200, 307], "Table 6. Validation and qualification register.")
     config = payload.get("_report_config", {})
     notes = list(config.get("decisions", [])) + list(config.get("supplements", []))

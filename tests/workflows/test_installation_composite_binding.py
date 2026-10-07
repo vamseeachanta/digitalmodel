@@ -6,7 +6,7 @@ import json
 import pytest
 
 from digitalmodel.workflows.installation_composite_summary import build_composite
-from tests.workflows.test_mudmat_sensitivity_reporting import _summaries, _sub
+from tests.workflows.test_mudmat_sensitivity_reporting import TENSION_CHANNELS, _summaries, _sub
 
 
 def _save(path, value):
@@ -181,12 +181,47 @@ def test_time_step_before_proof_requires_finite_number(tmp_path, defect):
         _compose(paths)
 
 
-def test_supplemental_audit_must_cover_every_channel(tmp_path):
+@pytest.mark.parametrize('case', ['sixteen', 'sixteen_retained', 'fifteen', 'fifteen_listed', 'fifteen_retained',
+                                  'wrong_identity', 'extra_identity', 'zero', 'missing_count', 'boolean_count'])
+def test_supplemental_audit_must_cover_every_channel(tmp_path, case):
+    """The audited set is the row's 16 effective-tension channels, not all 51 result channels."""
     paths = _summaries(tmp_path)
     other = json.loads(paths['supplement'].read_bytes())
-    other['event_audits'][0]['channels_verified'] = len(other['cases'][1]['channels']) + 15
+    audit, row = other['event_audits'][0], other['cases'][1]
+    assert len(row['channels']) == 51 and audit['channels_verified'] == 16
+    non_tension = next(k for k, v in row['channels'].items() if v['variable'] != 'Effective tension')
+    if case == 'sixteen_retained': audit.pop('audited_channels')
+    if case == 'fifteen': audit['channels_verified'] = 15
+    if case == 'fifteen_listed': audit.update(channels_verified=15, audited_channels=list(TENSION_CHANNELS[:15]))
+    if case == 'fifteen_retained': audit.pop('audited_channels'); audit['channels_verified'] = 15
+    if case == 'wrong_identity': audit['audited_channels'] = list(TENSION_CHANNELS[:15]) + [non_tension]
+    if case == 'extra_identity':
+        audit.update(channels_verified=17, audited_channels=list(TENSION_CHANNELS) + ['profile_999'])
+    if case == 'zero': audit['channels_verified'] = 0
+    if case == 'missing_count': audit.pop('channels_verified')
+    if case == 'boolean_count': audit.pop('audited_channels'); audit['channels_verified'] = True
     _save(paths['supplement'], other)
+    if case.startswith('sixteen'):
+        result = _compose(paths)
+        assert [a['index'] for a in result['event_audits']] == [0, 1]
+        return
     with pytest.raises(ValueError, match='audit'):
+        _compose(paths)
+
+
+@pytest.mark.parametrize('defect', ['zero', 'missing', 'fifteen', 'wrong_identity'])
+def test_base_audit_must_cover_every_tension_channel(tmp_path, defect):
+    """A base audit for a cell that is not substituted is held to the same channel rule."""
+    paths = _summaries(tmp_path)
+    base = json.loads(paths['base'].read_bytes())
+    audit = base['event_audits'][0]
+    if defect == 'zero': audit['channels_verified'] = 0
+    if defect == 'missing': audit.pop('channels_verified')
+    if defect == 'fifteen': audit['channels_verified'] = 15
+    if defect == 'wrong_identity':
+        audit['audited_channels'] = list(TENSION_CHANNELS[:15]) + ['profile_016']
+    _save(paths['base'], base)
+    with pytest.raises(ValueError, match='coverage incomplete: case 0 event audit'):
         _compose(paths)
 
 

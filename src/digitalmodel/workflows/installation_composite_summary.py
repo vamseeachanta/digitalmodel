@@ -14,6 +14,7 @@ import json
 import math
 from pathlib import Path
 
+from digitalmodel.workflows.installation_event_audit import audit_binding_errors
 from digitalmodel.workflows.installation_partial_report import component_envelopes
 from digitalmodel.workflows.vessel_capability_layout import event_audit_coverage_errors
 from digitalmodel.workflows.vessel_capability_report import critical_periods
@@ -74,14 +75,9 @@ def _supplemental_audit(other, row):
     if len(audits) != 1:
         raise ValueError('Substitution requires exactly one supplemental event audit')
     audit = audits[0]
-    count = audit.get('channels_verified')
-    if audit.get('status') != 'VERIFIED' or audit.get('errors') != [] or isinstance(count, bool) or not isinstance(count, int) or count <= 0:
-        raise ValueError('Supplemental event audit is not verified')
-    if count != len(row.get('channels') or {}):
-        raise ValueError('Supplemental event audit does not cover every result channel')
-    for key in ('trace_sha256', 'metadata_sha256'):
-        if not row.get(key) or audit.get(key) != row[key]:
-            raise ValueError('Supplemental event audit does not bind result trace and metadata')
+    errors = audit_binding_errors(audit, row)
+    if errors:
+        raise ValueError('Supplemental event audit ' + '; '.join(errors))
     return copy.deepcopy(audit)
 
 

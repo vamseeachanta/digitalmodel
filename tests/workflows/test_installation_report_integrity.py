@@ -118,6 +118,43 @@ def test_both_editions_reject_the_same_wave_preview_input_identically():
     assert 'not supported until preview timing checks exist' in errors['pdf'][1]
 
 
+def _history_only_with_preview(location):
+    """A history_only payload that still carries preview data must not publish an unchecked benchmark."""
+    data, screen = summary(), payload()
+    assert screen['demo']['default_mode'] == 'history_only'
+    channel = screen['demo']['scenarios'][0]['frames'][0]['channels'][0]
+    if location == 'channel_preview':
+        channel['wave_preview'] = dict(times=[361, 480], values=[175.0, 150.0])
+    if location == 'channel_metrics':
+        channel['wave_preview_metrics'] = {'oracle_wave_fir': {'rmse': 5.5}}
+    if location == 'channel_both':
+        channel['wave_preview'] = dict(times=[361, 480], values=[175.0, 150.0])
+        channel['wave_preview_metrics'] = {'oracle_wave_fir': {'rmse': 5.5}, 'autoregression': {'rmse': 28.022},
+                                           'persistence': {'rmse': 55.7}, 'history_mean': {'rmse': 28.106}}
+    if location == 'frame':
+        screen['demo']['scenarios'][0]['frames'][0]['wave_preview'] = dict(times=[361], values=[1.0])
+    if location == 'demo':
+        screen['demo']['wave_preview_metrics'] = None
+    if location == 'top_level':
+        screen['wave_preview'] = []
+    raw = json.dumps(data).encode()
+    screen['provenance']['summary'] = {'sha256': hashlib.sha256(raw).hexdigest()}
+    return data, screen, raw
+
+
+@pytest.mark.parametrize('location', ['channel_preview', 'channel_metrics', 'channel_both', 'frame', 'demo', 'top_level'])
+def test_history_only_payload_carrying_preview_is_rejected_by_both_editions(location):
+    errors = {}
+    for edition in ('html', 'pdf'):
+        data, screen, raw = _history_only_with_preview(location)
+        stream = BytesIO()
+        with pytest.raises(ValueError, match='not supported until preview timing checks exist') as caught:
+            _render(edition, data, screen, raw, stream)
+        assert stream.getvalue() == b''
+        errors[edition] = (type(caught.value), str(caught.value))
+    assert errors['html'] == errors['pdf']
+
+
 def test_unsupported_forecast_mode_is_rejected_before_output():
     data, screen = summary(), payload()
     screen['demo']['default_mode'] = 'unsupported'

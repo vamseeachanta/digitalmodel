@@ -73,7 +73,7 @@ def test_placeholders_retained_without_screening():
     assert 'Not established.</strong>' in html and 'forecast validation remains pending' in html
 
 
-@pytest.mark.parametrize('defect',['coverage','coordinates','unverified','acceptance','noncausal'])
+@pytest.mark.parametrize('defect',['coverage','coordinates','unverified','acceptance','noncausal','preview_keys'])
 def test_unbound_screening_rejected(defect):
     screen=payload()
     if defect=='coverage':screen['cases'].pop()
@@ -81,6 +81,7 @@ def test_unbound_screening_rejected(defect):
     if defect=='unverified':screen['cases'][1]['status']='WITHIN_ASSUMPTIONS'
     if defect=='acceptance':screen['engineering_acceptance']='ACCEPTED'
     if defect=='noncausal':screen['demo']['default_mode']='wave_preview'
+    if defect=='preview_keys':screen['demo']['scenarios'][0]['frames'][0]['channels'][0]['wave_preview']=dict(times=[361],values=[1.])
     with pytest.raises(ValueError):mudmat.render_html(summary(),config={},screening=screen)
 
 
@@ -285,17 +286,16 @@ def _with_alerts(screen, outcome_override=None):
                               observed_exceedance=True, outcome=outcome_override or 'miss',
                               calibration_windows=25, first_band_crossing_s=None,
                               scoring='withheld truth used only for post-hoc scoring')
-    load['wave_preview'] = dict(times=[361, 480], values=[175.0, 150.0])
-    load['wave_preview_metrics'] = {'oracle_wave_fir': {'rmse': 5.5}, 'autoregression': {'rmse': 28.022},
-                                    'persistence': {'rmse': 55.7}, 'history_mean': {'rmse': 28.106}}
     return screen
 
 
-def test_alert_scoring_and_conditional_benchmark_rendered():
+def test_alert_scoring_rendered_without_preview_benchmark():
+    """Preview-bearing payloads are rejected (see test_installation_report_integrity), so no benchmark table is issued."""
     html = mudmat.render_html(summary(), config={}, screening=_with_alerts(payload()))
-    for text in ('Selected after inspection', '0.120', 'miss', 'hits 0, misses 1, false alarms 0, correct negatives 0',
-                 'conditional', 'supplied future waves', '5.500', 'crosses'):
+    for text in ('Selected after inspection', '0.120', 'miss', 'hits 0, misses 1, false alarms 0, correct negatives 0'):
         assert text in html
+    for text in ('Conditional wave-preview benchmark', 'supplied future waves', 'Wave-preview RMSE'):
+        assert text not in html
 
 
 @pytest.mark.parametrize('defect', ['outcome', 'observed', 'probability'])

@@ -15,14 +15,29 @@ from digitalmodel.workflows.installation_full_report_pdf import render_full_pdf
 import tests.workflows.test_vessel_capability_screening as screening_fixture
 
 
+TENSION_CHANNELS = tuple(f'profile_{i:03d}' for i in range(16))
+_OTHER_VARIABLES = (('Tension', 'kN'), ('Z', 'm'), ('Declination', 'deg'), ('span_m', 'm'), ('Acceleration', 'm/s^2'))
+
+
+def realistic_channels(peak=50.0):
+    """A retained row: 16 effective-tension line ends (events exist only there) plus 35 other channels, 51 in all."""
+    channels = {name: dict(object=f'Line#{i // 2 + 1}', variable='Effective tension', units='kN',
+                           position=('End A', 'End B')[i % 2], minimum=0., maximum=peak)
+                for i, name in enumerate(TENSION_CHANNELS)}
+    for i in range(35):
+        variable, units = _OTHER_VARIABLES[i % len(_OTHER_VARIABLES)]
+        channels[f'profile_{16 + i:03d}'] = dict(object=f'Body#{i}', variable=variable, units=units,
+                                                 position='Reference point', minimum=-1., maximum=1.)
+    return channels
+
+
 def _row(index, status, hs, tp, peak=50.0, step=0.05):
     row = dict(index=index, status=status, hs_m=hs, tp_s=tp, seed=7)
     if status == 'VERIFIED':
         row.update(settings=dict(duration_s=600, fixed_time_step_s=step, hs_m=hs, tp_s=tp, seed=7,
                                  buildup_s=80, sample_interval_s=.1, gamma=3.3, components=200, max_time_step_s=.1),
                    peak_tension_kN=peak, maximum_low_tension_duration_s=1.0, run_dir='run', simulation_sha256='a',
-                   trace_sha256='b', metadata_sha256='d', channels={'load': dict(position='End A', units='kN', minimum=0., maximum=peak,
-                                                            variable='Effective tension', object='Sling')})
+                   trace_sha256='b', metadata_sha256='d', channels=realistic_channels(peak))
     return row
 
 
@@ -43,9 +58,12 @@ def _summaries(tmp_path):
     supplement['cases'][1]['run_dir'] = 'quarter'
     for data in (base, supplement):
         data['campaign_snapshot']['matrix_sha256'] = data['matrix_sha256']
-        data['event_audits'] = [dict(index=row['index'], status='VERIFIED', errors=[], channels_verified=len(row['channels']),
+        data['event_audits'] = [dict(index=row['index'], status='VERIFIED', errors=[], channels_verified=16,
                                     trace_sha256=row['trace_sha256'], metadata_sha256=row['metadata_sha256'])
                                 for row in data['cases'] if row['status'] == 'VERIFIED']
+    # The base carries retained-format audits (no audited_channels); the supplement carries the current format.
+    for audit in supplement['event_audits']:
+        audit['audited_channels'] = list(TENSION_CHANNELS)
     paths = {}
     variant = dict(source_master_sha256='M0', master_sha256='M1', seed=None,
                    source_matrix_sha256=base['matrix_sha256'], matrix_sha256=supplement['matrix_sha256'],

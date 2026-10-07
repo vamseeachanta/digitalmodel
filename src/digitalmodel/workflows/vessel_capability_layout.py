@@ -4,6 +4,7 @@ import json
 import math
 import re
 
+from digitalmodel.workflows.installation_event_audit import audit_binding_errors
 from digitalmodel.workflows.installation_partial_report import STYLE, _table, _grid, _envelope_table, _case_details
 from digitalmodel.workflows.installation_report_layout import report_cover, appendix_labels
 
@@ -69,11 +70,7 @@ def event_audit_coverage_errors(summary):
         matches=[a for a in audits if isinstance(a,dict) and a.get('index')==row.get('index')]
         if len(matches)!=1:
             errors.append(f"case {row.get('index')} has {len(matches)} event audits; exactly one is required");continue
-        audit=matches[0]
-        if audit.get('status')!='VERIFIED' or audit.get('errors')!=[]:
-            errors.append(f"case {row.get('index')} event audit is not VERIFIED")
-        if any(not row.get(k) or audit.get(k)!=row[k] for k in ('trace_sha256','metadata_sha256')):
-            errors.append(f"case {row.get('index')} event audit does not bind trace and metadata")
+        errors+=[f"case {row.get('index')} event audit {error}" for error in audit_binding_errors(matches[0],row)]
     return errors
 
 
@@ -170,18 +167,36 @@ WAVE_PREVIEW_UNSUPPORTED=('Wave-preview forecast mode is not supported until pre
                           'screening forecast must be causal history-only')
 
 
+_PREVIEW_KEYS=('wave_preview','wave_preview_metrics')
+
+
+def _carries_preview(value):
+    if isinstance(value,dict):
+        return any(key in value for key in _PREVIEW_KEYS) or any(_carries_preview(v) for v in value.values())
+    if isinstance(value,list):
+        return any(_carries_preview(v) for v in value)
+    return False
+
+
+def reject_wave_preview(screening):
+    """Reject any preview-bearing payload, whatever its default_mode and wherever the preview keys sit.
+
+    _bind_forecast does not yet check preview timing against NOW and the horizon, so preview data
+    must not reach either edition, not even under a history_only default.
+    """
+    if screening.get('demo',{}).get('default_mode')=='wave_preview' or _carries_preview(screening):
+        raise ValueError(WAVE_PREVIEW_UNSUPPORTED)
+
+
 def bind_screening(summary,screening):
     """Reject screening evidence that is not case-for-case bound to the source snapshot.
 
-    Both issued editions call this binder. Wave-preview payloads are rejected because
-    _bind_forecast does not yet check preview timing against NOW and the horizon.
+    Both issued editions call this binder. Preview-bearing payloads are rejected (reject_wave_preview).
     """
     if screening.get('engineering_acceptance')!='NOT EVALUATED':
         raise ValueError('Screening payload must retain engineering acceptance NOT EVALUATED')
-    mode=screening.get('demo',{}).get('default_mode')
-    if mode=='wave_preview':
-        raise ValueError(WAVE_PREVIEW_UNSUPPORTED)
-    if mode!='history_only':
+    reject_wave_preview(screening)
+    if screening.get('demo',{}).get('default_mode')!='history_only':
         raise ValueError('Screening forecast must be causal history-only')
     source={row['index']:row for row in summary['cases']};screened={row['index']:row for row in screening['cases']}
     if len(source)!=len(summary['cases']) or len(screened)!=len(screening['cases']) or not source or set(source)!=set(screened):
@@ -410,7 +425,7 @@ def _screening_forecast(screening):
     text+='Forecast skill over naive baselines is therefore reported as measured, not assumed. Offshore forecast validation is not established.</p>'
     text+=_table(['Case','NOW (s)','Channel','Units','Autoregression RMSE','Persistence RMSE','History-mean RMSE','RMSE ratio to history mean (-)'],rows)
     text+='<p class="caption">Table 5-8. Held-out 120 s forecast errors at the preselected origins. A ratio below 1.000 indicates lower error than the history-mean baseline.</p>'
-    text+=_alerts(screening)+_conditional(screening)
+    text+=_alerts(screening)
     text+=''.join('<p>'+escape(str(item))+'</p>' for item in screening.get('limitations',[]))
     return text
 
@@ -435,26 +450,6 @@ def _alerts(screening):
     text+='Back-test windows overlap and are not independent trials; the traces are sampled at the monitoring interval, so short peaks between samples are not seen.</p>'
     text+=_table(['Case','NOW (s)','Channel','Provisional limit (kN)','Window probability (-)','Alert','Observed exceedance','Outcome'],rows)
     return text+'<p class="caption">Table 5-9. Causal probability-of-exceedance alerts over the next 120 s, scored post hoc.</p>'
-
-
-def _conditional(screening):
-    rows=[]
-    for scenario in screening['demo']['scenarios']:
-        for frame in scenario['frames']:
-            for channel in frame['channels']:
-                metrics,preview=channel.get('wave_preview_metrics'),channel.get('wave_preview')
-                if not metrics or not preview or channel.get('assumed_limit') is None:continue
-                limit=channel['assumed_limit']
-                crosses=max(preview['values'])>limit
-                observed=max(channel['truth']['values'])>limit if channel.get('truth',{}).get('values') else None
-                rows.append([f"{scenario['case_index']:03d}",f"{frame['now_s']:g}",escape(str(channel.get('label',channel['id']))),
-                    f"{metrics['oracle_wave_fir']['rmse']:.3f}",f"{metrics['autoregression']['rmse']:.3f}",
-                    'crosses' if crosses else 'stays below','-' if observed is None else ('yes' if observed else 'no')])
-    if not rows:return ''
-    text='<h4>Conditional wave-preview benchmark</h4><p>This comparison is conditional: a linear wave-to-load filter is given the actual '
-    text+='supplied future waves, as a radar wave preview would provide. It measures the potential value of a wave preview, not a forecast that can be made at NOW.</p>'
-    text+=_table(['Case','NOW (s)','Channel','Wave-preview RMSE (kN)','History-only RMSE (kN)','Wave-preview prediction vs limit','Observed exceedance'],rows)
-    return text+'<p class="caption">Table 5-10. Conditional wave-preview benchmark against the history-only forecast over the same 120 s windows.</p>'
 
 
 def _results(summary,screening=None):
