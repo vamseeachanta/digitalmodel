@@ -395,8 +395,12 @@ def run_openfoam(work_dir: Path, n_procs: int) -> dict:
 
 # --------------------------------------------------------------------- pack
 
+# OrcaFlex threads above the line count only add overhead: on a 64-core host the
+# 8-riser case took 2x longer at 64 threads than at 1, so the parallel variant is
+# one thread per riser.
+
 CASES = {
-    "orcaflex": lambda: Case("orcaflex_risers", "orcaflex", [1, "all"], run_orcaflex,
+    "orcaflex": lambda: Case("orcaflex_risers", "orcaflex", [1, 8], run_orcaflex,
                              orcaflex_version, rel_tol=1e-6, abs_tol=1e-6),
     "orcawave": lambda: Case("orcawave_barge", "orcawave", [1, "all"], run_orcawave,
                              orcawave_version, rel_tol=1e-6, abs_tol=1e-9),
