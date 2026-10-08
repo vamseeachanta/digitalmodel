@@ -1,4 +1,4 @@
-[submodule "src/external/assetutilities"]
-	path = src/external/assetutilities
-	url = https://github.com/vamseeachanta/assetutilities.git
-	branch = main
+# assetutilities is a sibling-repo dependency, not a git submodule.
+# Development: clone vamseeachanta/assetutilities alongside this repo;
+# [tool.uv.sources] in pyproject.toml resolves it as an editable path.
+# CI: UV_NO_SOURCES=true falls back to the PyPI-published version.

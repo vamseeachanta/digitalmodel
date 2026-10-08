@@ -23,15 +23,12 @@ test:
 	@pytest -n auto --dist loadscope
 
 lint:
-	@echo "🔍 Running linters (parallel)..."
-	@echo "Running flake8..." & flake8 . & \
-	echo "Running mypy..." & mypy . & \
-	echo "Running pylint..." & pylint . & \
-	wait
+	@echo "Running linters (parallel)..."
+	@ruff check src/ & mypy src/ & wait
 
 format:
-	@echo "✨ Formatting code (parallel)..."
-	@black . & isort . & wait
+	@echo "Formatting code..."
+	@ruff format src/ && ruff check --fix src/
 
 clean:
 	@echo "🧹 Cleaning (parallel)..."

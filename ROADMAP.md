@@ -113,10 +113,10 @@ Module IDs reference `docs/registry/module-routing.yaml`. Maturity levels (produ
 
 ### Candidates for Removal
 
-These stub modules contain no engineering value and clutter the namespace:
-- `specialized/digitalmarketing` -- non-engineering, no source files
-- `specialized/finance` -- utility/exploratory code, not engineering-grade
-- `specialized/project_management` -- minimal implementation, no package init
+~~These stub modules contain no engineering value and clutter the namespace:~~
+- `specialized/digitalmarketing` -- retained: actively imported by engine.py despite earlier characterization
+- ~~`specialized/finance`~~ -- removed (2026-09-10)
+- ~~`specialized/project_management`~~ -- removed (2026-09-10)
 
 ## Tech Debt
 
@@ -124,11 +124,11 @@ These stub modules contain no engineering value and clutter the namespace:
 
 1. **0/150 structural tests runnable.** Three import path issues block all `marine_engineering` tests (see `tests/structural/analysis/TEST_STATUS_DASHBOARD.md`): (a) missing `extract_hydro_coefficients` module, (b) incorrect `RAOPlotter` import path, (c) PYTHONPATH not configured for test discovery. Estimated fix: 1-2 hours.
 
-2. **pyproject.toml version mismatch.** `version = "0.1.1"` in pyproject.toml, but README states "Version: 3.0.0" and CHANGELOG last entry is v2.0.0. Must be resolved before PyPI publishing.
+2. ~~**pyproject.toml version mismatch.**~~ Closed — pyproject.toml, __init__.py, and CHANGELOG now all read 2.1.0 (2026-09-10).
 
 ### Category B -- Degrades Developer Experience
 
-3. **Bloated pyproject.toml dependencies.** 170+ dependencies including packages irrelevant to engineering calculations: celery, redis, newrelic, gunicorn, boto3, fastapi, alembic, asyncpg, aiofiles, aiosqlite. These inflate install time and attack surface.
+3. ~~**Bloated pyproject.toml dependencies.**~~ Closed — runtime dependencies pruned to ~50 AST-verified imports; dev/test tools moved to extras (#1632).
 
 4. **Duplicate module paths.** Catenary solver exists in 4 locations: `subsea/catenary` (stub), `subsea/catenary_riser`, `marine_ops/marine_analysis`, `marine_ops/marine_engineering`. Canonical location unclear.
 
@@ -140,7 +140,7 @@ These stub modules contain no engineering value and clutter the namespace:
 
 7. ~~**No VISION.md at repo root.**~~ Closed — Phase 6 delivered `docs/vision/CALCULATIONS-VISION.md` as the canonical library vision document (2026-03-29).
 
-8. **Stub modules with no engineering value.** `specialized/digitalmarketing`, `specialized/finance`, `specialized/project_management` -- see Candidates for Removal above.
+8. ~~**Stub modules with no engineering value.**~~ Partially closed — `specialized/finance` and `specialized/project_management` removed (2026-09-10). `specialized/digitalmarketing` retained: actively imported by engine.py.
 
 ## Document Intelligence Pipeline
 
