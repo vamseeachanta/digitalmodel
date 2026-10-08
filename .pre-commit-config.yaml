@@ -2,30 +2,15 @@
 # See https://pre-commit.com for more information
 
 repos:
-  # Core Python formatting and linting
+  # Core Python formatting and linting (ruff replaces black + isort + flake8)
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.8
+    rev: v0.8.6
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
         types_or: [python, pyi]
       - id: ruff-format
         types_or: [python, pyi]
-
-  # Black formatter (alternative to ruff format)
-  - repo: https://github.com/psf/black
-    rev: 23.12.1
-    hooks:
-      - id: black
-        language_version: python3.11
-        args: [--line-length=88]
-
-  # Import sorting
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
-    hooks:
-      - id: isort
-        args: [--profile=black, --line-length=88]
 
   # Type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
@@ -91,9 +76,11 @@ repos:
   - repo: https://github.com/nbQA-dev/nbQA
     rev: 1.7.1
     hooks:
-      - id: nbqa-black
-      - id: nbqa-isort
       - id: nbqa-ruff
+      - id: nbqa-ruff
+        entry: nbqa ruff-format
+        alias: nbqa-ruff-format
+        name: nbqa-ruff-format
 
   # Documentation links
   - repo: https://github.com/tcort/markdown-link-check

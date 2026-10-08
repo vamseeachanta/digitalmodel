@@ -250,9 +250,15 @@ line-length = 88
 target-version = ['py311', 'py312']
 include = '\.pyi?$'
 
-[tool.isort]
-profile = "black"
-line_length = 88
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["digitalmodel"]
 
 [tool.mypy]
 python_version = "3.11"
