@@ -122,7 +122,7 @@ Module IDs reference `docs/registry/module-routing.yaml`. Maturity levels (produ
 
 ### Category A -- Blocks Current Work
 
-1. **0/150 structural tests runnable.** Three import path issues block all `marine_engineering` tests (see `tests/structural/analysis/TEST_STATUS_DASHBOARD.md`): (a) missing `extract_hydro_coefficients` module, (b) incorrect `RAOPlotter` import path, (c) PYTHONPATH not configured for test discovery. Estimated fix: 1-2 hours.
+1. ~~**0/150 structural tests runnable.**~~ Largely closed — 1,750 structural tests now collect successfully. Issues (b) RAOPlotter import and (c) PYTHONPATH were fixed previously; issue (a) `extract_hydro_coefficients` bare import fixed in `validate_phase2.py` (2026-10-08). The `TEST_STATUS_DASHBOARD.md` is stale (generated 2025-10-03).
 
 2. ~~**pyproject.toml version mismatch.**~~ Closed — pyproject.toml, __init__.py, and CHANGELOG now all read 2.1.0 (2026-09-10).
 
@@ -130,9 +130,9 @@ Module IDs reference `docs/registry/module-routing.yaml`. Maturity levels (produ
 
 3. ~~**Bloated pyproject.toml dependencies.**~~ Closed — runtime dependencies pruned to ~50 AST-verified imports; dev/test tools moved to extras (#1632).
 
-4. **Duplicate module paths.** Catenary solver exists in 4 locations: `subsea/catenary` (stub), `subsea/catenary_riser`, `marine_ops/marine_analysis`, `marine_ops/marine_engineering`. Canonical location unclear.
+4. **Duplicate module paths.** Catenary solver canonical location is `marine_ops/marine_analysis/catenary/` (2,125 lines, ~40 import sites, proper BVP solver). `marine_ops/marine_engineering/` is a pure re-export facade. `subsea/catenary_riser/` is a complementary riser-specific domain layer with its own CLI. `subsea/catenary/` never existed.
 
-5. **Stale coverage metrics.** `coverage.json` dates from January 2026. Coverage numbers in documentation may not reflect current state.
+5. ~~**Stale coverage metrics.**~~ Closed — stale `coverage.json` removed; CI generates fresh coverage on every run.
 
 ### Category C -- Aspirational (not blocking, not in roadmap)
 

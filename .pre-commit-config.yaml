@@ -231,6 +231,17 @@ repos:
         pass_filenames: false
         stages: [pre-commit]
 
+  # Engineering writing register (Level 3 — diff-scoped, blocks new violations)
+  - repo: local
+    hooks:
+      - id: engineering-register
+        name: Engineering writing register
+        language: system
+        entry: python scripts/enforcement/check-engineering-register.py
+        types_or: [markdown, rst]
+        pass_filenames: true
+        stages: [pre-commit]
+
 # Configuration for specific tools
 ci:
   autofix_commit_msg: |

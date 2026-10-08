@@ -51,6 +51,12 @@ benchmark:
 	@time $(MAKE) all
 	@echo "Parallel processing is MANDATORY for efficiency!"
 
+check-register:
+	@python scripts/enforcement/check-engineering-register.py docs/ src/
+
+check-register-self-test:
+	@python scripts/enforcement/check-engineering-register.py --self-test
+
 # Git Management Commands (MANDATORY)
 .PHONY: git-sync git-commit git-push git-pr git-clean git-status git-flow
 
