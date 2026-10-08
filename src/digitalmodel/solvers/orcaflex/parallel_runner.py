@@ -355,9 +355,38 @@ def reextract(case: dict, *, adapter: str, out_dir: str | Path, ledger_record: d
 # --------------------------------------------------------------------------- parent
 
 
+def campaign_cases(records: Iterable[dict]) -> list[dict]:
+    """Map native ok/not_run/other statuses to completed/unrun/failed campaign rows.
+
+    Native failure statuses identify failure classes; input records remain unchanged.
+    """
+    rows = []
+    for record in records:
+        native = record["status"]
+        status = "completed" if native == "ok" else "unrun" if native == "not_run" else "failed"
+        row = {"id": record["case_id"], "status": status}
+        if status == "failed":
+            row["failure_class"] = record.get("failure_class") or native
+        rows.append(row)
+    return rows
+
+
+def write_stop_record(path: Path | None, reason: str | None, records: Iterable[dict]) -> None:
+    """Write the opt-in campaign disposition beside batch outputs at the caller's path."""
+    if path is None:
+        return
+    from digitalmodel.workflows.campaign_state import classify_stop
+
+    record = classify_stop(reason, campaign_cases(records))
+    payload = {"disposition": record.disposition.value, "reason": record.reason,
+               "failed_ids": record.failed_ids, "untouched_ids": record.untouched_ids,
+               "clears_when": record.clears_when, "auto_resume_allowed": record.auto_resume_allowed}
+    Path(path).write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+
+
 def run_cases(cases: Iterable[dict], *, adapter: str, out_dir: Path | str, max_workers: int = DEFAULT_MAX_WORKERS,
               max_attempts: int = 3, keep_sim: bool = False, pin: str = "11.6", expected_dll: str = "11.6c",
-              threads: int = 1, on_record=None) -> dict:
+              threads: int = 1, on_record=None, stop_record_path: Path | None = None) -> dict:
     """Run ``cases`` on ``max_workers`` processes; returns the final record per case and the stop reason.
 
     At most ``max_workers`` cases are in flight: a case is submitted only when a worker slot is free, so a stop
@@ -427,5 +456,7 @@ def run_cases(cases: Iterable[dict], *, adapter: str, out_dir: Path | str, max_w
     finally:
         pool.shutdown(wait=not broken, cancel_futures=True)
     results = [final[c["case_id"]] for c in cases if c["case_id"] in final]
+    if stop_record_path is not None:
+        write_stop_record(stop_record_path, guard.stop_reason, results)
     return {"results": results, "stop_reason": guard.stop_reason, "workers": workers,
             "wall_s": round(time.perf_counter() - t0, 3)}
