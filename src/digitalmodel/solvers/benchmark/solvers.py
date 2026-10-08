@@ -366,6 +366,9 @@ def run_openfoam(work_dir: Path, n_procs: int) -> dict:
     else:
         shutil.rmtree(case / "constant" / "polyMesh", ignore_errors=True)
         shutil.copytree(cache / "polyMesh", case / "constant" / "polyMesh")
+    # serial snappyHexMesh leaves cellLevel/pointLevel in 0/; start both the
+    # fresh and the cached path from the same initial fields
+    shutil.rmtree(case / "0", ignore_errors=True)
     shutil.copytree(case / "0.orig", case / "0")
     check = _foam(case, "checkMesh -constant", "checkMesh")
     mesh_s = _now() - start
