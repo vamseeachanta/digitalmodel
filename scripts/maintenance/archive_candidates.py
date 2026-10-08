@@ -9,7 +9,9 @@ docs/archive/ARCHIVE-MOVE-PLAN-2026-10-08.md. The PR #2146 list is
 `git diff --name-only --diff-filter=D 7e71d6b2 48ff7b64`.
 
 Additions for owner decision M06 (2026-10-08):
-- candidates referenced by any file under src/ or tests/ are dropped from the list;
+- candidates that src/ or tests/ explicitly read are dropped from the list (explicit
+  path, exact filename, or a resolvable glob pattern; narrowed by owner decision C02 so
+  a bare directory mention no longer excludes everything under it);
 - candidates are deduplicated by git-blob SHA-256 and mapped to a content-addressed
   store (`/mnt/ace/digitalmodel/blobs/sha256/<aa>/<sha256>.<ext>`, one copy per blob);
 - every tracked model YAML (OrcaFlex native, OrcaWave, modular spec) outside src/ and
@@ -99,26 +101,332 @@ def blob_map(rows):
     return out
 
 
-# --- src/ and tests/ reference exclusion --------------------------------------
+# --- src/ and tests/ reference exclusion (owner decision C02) -----------------
+#
+# A candidate is excluded only on explicit evidence that code reads that file:
+#   path     - its repo path appears in src/ or tests/ text, or a Python path expression
+#              (literal, Path(__file__).parents[n] / "...", os.path.join) resolves to it;
+#   filename - its exact filename appears as a whole token in src/ or tests/ text;
+#   glob     - a glob / rglob / iterdir / listdir / walk pattern in code, anchored on a
+#              resolvable repo directory, matches it (only the matching files).
+# A bare directory mention is not evidence for anything under it.
 
-MIN_DIR_DEPTH = 4  # a directory path is evidence only when it is this specific
+GLOB_CHARS = set("*?[")
+_PATH_CLASSES = {"Path", "PurePath", "PosixPath", "PurePosixPath", "WindowsPath", "PureWindowsPath"}
+_IDENTITY_FUNCS = {"str", "fspath", "abspath", "realpath", "normpath", "expanduser"}
+_IDENTITY_METHODS = {"resolve", "absolute", "expanduser", "as_posix"}
+_MAX_VALUES = 16
 
 
-def reference_patterns(path, basename_unique):
-    """Fixed strings whose presence in src/ or tests/ marks `path` as referenced by code."""
-    parts = path.split("/")
-    pats = {path}
-    if len(parts) >= 2:
-        pats.add("/".join(parts[-2:]))
-    if basename_unique:
-        pats.add(parts[-1])
-    for i in range(MIN_DIR_DEPTH, len(parts)):
-        pats.add("/".join(parts[:i]))
-    return pats
+def glob_match(pattern, path):
+    """pathlib-style glob over '/' segments: '*' stays within a segment, '**' spans any."""
+    import fnmatch
+    pp, sp = pattern.split("/"), path.split("/")
+
+    def m(i, j):
+        if i == len(pp):
+            return j == len(sp)
+        if pp[i] == "**":
+            return any(m(i + 1, k) for k in range(j, len(sp) + 1))
+        return j < len(sp) and fnmatch.fnmatchcase(sp[j], pp[i]) and m(i + 1, j + 1)
+    return m(0, 0)
 
 
-def referenced_by_code(path, hits, basename_unique):
-    return bool(reference_patterns(path, basename_unique) & hits)
+def _norm(p):
+    out = []
+    for s in p.replace("\\", "/").split("/"):
+        if s in ("", "."):
+            continue
+        if s == "..":
+            if not out:
+                return None          # leaves the repository
+            out.pop()
+        else:
+            out.append(s)
+    return "/".join(out)
+
+
+class _Repo:
+    def __init__(self, tracked):
+        self.top = {p.split("/")[0] for p in tracked}
+        self.dirs = {""}
+        for p in tracked:
+            parts = p.split("/")
+            for i in range(1, len(parts)):
+                self.dirs.add("/".join(parts[:i]))
+
+    def anchor(self, s):
+        """Repo-relative form of a path string, or None when it is not provably in the repo."""
+        s = s.replace("\\", "/")
+        parts = [x for x in s.split("/") if x not in ("", ".")]
+        if not parts:
+            return None
+        absolute = s.startswith("/") or (len(parts[0]) == 2 and parts[0][1] == ":")
+        if not absolute:
+            return _norm(s) if parts[0] in self.top else None
+        for i in range(len(parts)):  # absolute path to some other checkout of this repo
+            if parts[i] in self.top and (len(parts) == i + 1 or "/".join(parts[i:i + 2]) in self.dirs
+                                         or _norm("/".join(parts[i:])) in self.dirs):
+                return _norm("/".join(parts[i:]))
+        return None
+
+
+def _module_file(dotted, level, cur, files):
+    if level:
+        base = cur.split("/")[:-level]
+        dotted_path = "/".join(base + ([*dotted.split(".")] if dotted else []))
+        cands = [dotted_path + ".py", dotted_path + "/__init__.py"]
+    else:
+        d = dotted.replace(".", "/")
+        cands = [d + ".py", d + "/__init__.py", "src/" + d + ".py", "src/" + d + "/__init__.py"]
+    return next((c for c in cands if c in files), None)
+
+
+class _PyRefs:
+    """Static evaluation of path expressions in one Python module."""
+
+    def __init__(self, path, tree, ctx):
+        import ast
+        self.ast, self.path, self.ctx = ast, path, ctx
+        self.env = collections.defaultdict(list)
+        self.imports = {}
+        for n in ast.walk(tree):
+            if isinstance(n, ast.Assign):
+                for t in n.targets:
+                    if isinstance(t, ast.Name):
+                        self.env[t.id].append(n.value)
+            elif isinstance(n, ast.AnnAssign) and isinstance(n.target, ast.Name) and n.value is not None:
+                self.env[n.target.id].append(n.value)
+            elif isinstance(n, ast.ImportFrom):
+                mf = _module_file(n.module or "", n.level, path, ctx["py"])
+                if mf:
+                    for a in n.names:
+                        self.imports[a.asname or a.name] = (mf, a.name)
+        self.tree = tree
+
+    # values are ("p", repo_rel) for paths rooted at __file__, ("s", text) otherwise
+    def to_path(self, v):
+        return v[1] if v[0] == "p" else self.ctx["repo"].anchor(v[1])
+
+    def _join(self, a, b):
+        if b[0] == "p":
+            return b
+        s = b[1].replace("\\", "/")
+        if s.startswith("/") or (len(s) > 1 and s[1] == ":"):
+            return ("s", s)
+        if a[0] == "p":
+            r = _norm(a[1] + "/" + s)
+            return ("p", r) if r is not None else None
+        return ("s", (a[1].rstrip("/") + "/" + s) if a[1] else s)
+
+    def _parent(self, v, n=1):
+        for _ in range(n):
+            if v[0] == "p":
+                if v[1] == "":
+                    return None
+                v = ("p", v[1].rsplit("/", 1)[0] if "/" in v[1] else "")
+            else:
+                v = ("s", v[1].rstrip("/").rsplit("/", 1)[0] if "/" in v[1] else "")
+        return v
+
+    def ev(self, node, depth=0, seen=frozenset()):
+        ast = self.ast
+        if depth > 25:
+            return set()
+        r = set()
+        e = lambda x: self.ev(x, depth + 1, seen)  # noqa: E731
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            r.add(("s", node.value))
+        elif isinstance(node, ast.JoinedStr):
+            if all(isinstance(v, ast.Constant) for v in node.values):
+                r.add(("s", "".join(str(v.value) for v in node.values)))
+        elif isinstance(node, ast.Name):
+            if node.id == "__file__":
+                r.add(("p", self.path))
+            elif node.id not in seen:
+                for x in self.env.get(node.id, []):
+                    r |= self.ev(x, depth + 1, seen | {node.id})
+                if not r and node.id in self.imports:
+                    mf, name = self.imports[node.id]
+                    other = self.ctx["module"](mf)
+                    if other is not None and other is not self:
+                        r |= {v for x in other.env.get(name, []) for v in other.ev(x, depth + 1)}
+        elif isinstance(node, ast.BinOp) and isinstance(node.op, ast.Div):
+            for a in e(node.left):
+                for b in e(node.right):
+                    j = self._join(a, b)
+                    if j:
+                        r.add(j)
+        elif isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+            for a in e(node.left):
+                for b in e(node.right):
+                    if a[0] == "s" and b[0] == "s":
+                        r.add(("s", a[1] + b[1]))
+        elif isinstance(node, ast.Attribute) and node.attr == "parent":
+            r |= {p for v in e(node.value) if (p := self._parent(v))}
+        elif (isinstance(node, ast.Subscript) and isinstance(node.value, ast.Attribute)
+              and node.value.attr == "parents" and isinstance(node.slice, ast.Constant)
+              and isinstance(node.slice.value, int)):
+            r |= {p for v in e(node.value.value) if (p := self._parent(v, node.slice.value + 1))}
+        elif isinstance(node, ast.Call):
+            f = node.func
+            fname = f.id if isinstance(f, ast.Name) else f.attr if isinstance(f, ast.Attribute) else None
+            recv_is_module = isinstance(f, ast.Attribute) and isinstance(f.value, (ast.Name, ast.Attribute))
+            if fname in _PATH_CLASSES or (fname == "join" and recv_is_module and self._is_ospath(f.value)):
+                if not node.args:
+                    r.add(("p", ""))            # Path() is the working directory: the repo root
+                else:
+                    vals = e(node.args[0])
+                    for arg in node.args[1:]:
+                        av = e(arg)
+                        vals = {j for a in vals for b in av if (j := self._join(a, b))}
+                    r |= vals
+            elif fname == "cwd" and isinstance(f, ast.Attribute):
+                r.add(("p", ""))
+            elif fname == "dirname" and node.args:
+                r |= {p for v in e(node.args[0]) if (p := self._parent(v))}
+            elif fname in _IDENTITY_FUNCS and node.args and (
+                    not isinstance(f, ast.Attribute) or fname == "fspath" or self._is_ospath(f.value)):
+                r |= e(node.args[0])
+            elif isinstance(f, ast.Attribute) and fname in _IDENTITY_METHODS:
+                r |= e(f.value)
+            elif isinstance(f, ast.Attribute) and fname == "joinpath":
+                vals = e(f.value)
+                for arg in node.args:
+                    av = e(arg)
+                    vals = {j for a in vals for b in av if (j := self._join(a, b))}
+                r |= vals
+        if len(r) > _MAX_VALUES:
+            r = set(sorted(r)[:_MAX_VALUES])
+        return r
+
+    def _is_ospath(self, node):
+        ast = self.ast
+        if isinstance(node, ast.Attribute):
+            return node.attr == "path"          # os.path
+        return isinstance(node, ast.Name) and node.id in ("path", "posixpath", "ntpath", "osp")
+
+    def scan(self):
+        """Yield ("path", repo_rel) for resolved file paths and ("glob", pattern) for read patterns."""
+        ast = self.ast
+        for n in ast.walk(self.tree):
+            vals = None
+            if isinstance(n, ast.Call):
+                f = n.func
+                fname = f.id if isinstance(f, ast.Name) else f.attr if isinstance(f, ast.Attribute) else None
+                if isinstance(f, ast.Attribute) and fname in ("glob", "rglob", "iterdir") and not (
+                        isinstance(f.value, ast.Name) and f.value.id == "glob"):
+                    pats = {("s", "*")} if fname == "iterdir" else (self.ev(n.args[0]) if n.args else set())
+                    for rv in self.ev(f.value):
+                        base = self.to_path(rv)
+                        if base is None:
+                            continue
+                        for pv in pats:
+                            if pv[0] != "s" or not pv[1]:
+                                continue
+                            mid = "/**/" if fname == "rglob" else "/"
+                            yield "glob", (base + mid + pv[1]).lstrip("/")
+                    continue
+                recursive = any(k.arg == "recursive" and isinstance(k.value, ast.Constant) and k.value.value
+                                for k in n.keywords)
+                if fname in ("glob", "iglob") and n.args:
+                    for v in self.ev(n.args[0]):
+                        p = self.to_path(v)
+                        if p is not None and GLOB_CHARS & set(p):
+                            yield "glob", p if recursive else re.sub(r"(^|/)\*\*(?=/|$)", r"\1*", p)
+                    continue
+                if fname in ("listdir", "scandir", "walk") and n.args:
+                    for v in self.ev(n.args[0]):
+                        p = self.to_path(v)
+                        if p is not None:
+                            yield "glob", (p + ("/**" if fname == "walk" else "/*")).lstrip("/")
+                    continue
+                if fname in _PATH_CLASSES or fname == "join" or fname == "joinpath":
+                    vals = self.ev(n)
+            elif isinstance(n, ast.BinOp) and isinstance(n.op, ast.Div):
+                vals = self.ev(n)
+            elif isinstance(n, ast.Constant) and isinstance(n.value, str) and len(n.value) < 512:
+                vals = {("s", n.value)}
+            for v in vals or ():
+                p = self.to_path(v)
+                if p is None:
+                    continue
+                yield ("glob" if GLOB_CHARS & set(p) else "path"), p
+
+
+_TEXT_TOKEN = re.compile(r"[^\s'\"`,;()<>{}|=]+")
+
+
+def explicit_references(code_texts, candidates, tracked):
+    """Map each candidate that code in `code_texts` ({repo path: text}, src/ and tests/)
+    explicitly reads to {"evidence", "matched", "source"}. See the rule above."""
+    import ast
+    repo = _Repo(tracked)
+    cand_set = set(candidates)
+    by_base = collections.defaultdict(list)
+    for p in candidates:
+        by_base[os.path.basename(p)].append(p)
+    found = {}
+    rank = {"path": 0, "filename": 1, "glob": 2}
+
+    def add(p, ev, matched, src):
+        cur = found.get(p)
+        if cur is None or (rank[ev], src) < (rank[cur["evidence"]], cur["source"]):
+            found[p] = {"evidence": ev, "matched": matched, "source": src}
+
+    names = sorted(by_base, key=len, reverse=True)
+    name_re = re.compile(r"(?<![A-Za-z0-9_.\-])(" + "|".join(map(re.escape, names)) + r")(?![A-Za-z0-9_\-])") \
+        if names else None
+
+    py_files = {p for p in code_texts if p.endswith(".py")}
+    modules = {}
+    ctx = {"repo": repo, "py": py_files}
+
+    def module(p):
+        if p not in modules:
+            modules[p] = None
+            try:
+                modules[p] = _PyRefs(p, ast.parse(code_texts[p]), ctx)
+            except (SyntaxError, ValueError, RecursionError):
+                pass
+        return modules[p]
+    ctx["module"] = module
+
+    patterns = []
+    for src in sorted(code_texts):
+        text = code_texts[src].replace("\\\\", "/").replace("\\", "/")
+        if name_re is not None:
+            for b in set(name_re.findall(text)):
+                for p in by_base[b]:
+                    add(p, "path" if p in text else "filename", p if p in text else b, src)
+        if src in py_files:
+            mod = module(src)
+            if mod is not None:
+                try:
+                    for kind, p in mod.scan():
+                        if kind == "path" and p in cand_set:
+                            add(p, "path", p, src)
+                        elif kind == "glob":
+                            patterns.append((p, src))
+                except RecursionError:
+                    pass
+        else:
+            for tok in _TEXT_TOKEN.findall(text):
+                if GLOB_CHARS & set(tok) and "/" in tok:
+                    p = repo.anchor(tok)
+                    if p is not None:
+                        patterns.append((p, src))
+    for pat, src in sorted(set(patterns)):
+        prefix = []
+        for seg in pat.split("/"):
+            if GLOB_CHARS & set(seg) or seg == "**":
+                break
+            prefix.append(seg)
+        pre = "/".join(prefix)
+        for p in candidates:
+            if (not pre or p.startswith(pre + "/")) and glob_match(pat, p):
+                add(p, "glob", pat, src)
+    return found
 
 
 # --- model YAML feature inventory ---------------------------------------------
@@ -329,20 +637,22 @@ def main(argv=None):
             rule_cands.append(p)
     print("rule candidates", len(rule_cands), file=sys.stderr)
 
-    # drop anything referenced by src/ or tests/ (one git grep over code for every pattern)
+    # drop candidates that src/ or tests/ explicitly read (owner decision C02)
     base_count = collections.Counter(os.path.basename(p) for p in all_paths)
-    pats_by_path = {p: reference_patterns(p, base_count[os.path.basename(p)] == 1) for p in rule_cands}
-    all_pats = sorted(set().union(*pats_by_path.values()))
-    r = subprocess.run(["git", "-c", "core.quotepath=false", "-C", REPO, "grep", "-I", "-h", "-o", "-F",
-                        "-f", "-", "--", *CODE_PREFIXES],
-                       input=("\n".join(all_pats) + "\n").encode("utf-8"), capture_output=True)
-    hits = {l.strip() for l in r.stdout.decode("utf-8", "replace").replace("\\", "/").splitlines()}
-    hits &= set(all_pats)
+    code_files = [x.decode("utf-8") for x in git("grep", "-I", "-l", "-z", "-e", "", "--", *CODE_PREFIXES)
+                  .split(b"\0") if x]
+    code_texts = {}
+    for cf in code_files:
+        with open(os.path.join(REPO, cf), "rb") as f:
+            code_texts[cf] = f.read().decode("utf-8", "replace")
+    refs_found = explicit_references(code_texts, rule_cands, all_paths)
     excluded = []
     for p in rule_cands:
-        m = sorted(pats_by_path[p] & hits)
-        if m:
-            excluded.append({"path": p, "matched": m[0], "blob_size_bytes": blob_size[p]})
+        if p in refs_found:
+            x = refs_found[p]
+            excluded.append({"path": p, "evidence": x["evidence"], "matched": x["matched"],
+                             "source": x["source"], "blob_size_bytes": blob_size[p],
+                             "basename_unique": base_count[os.path.basename(p)] == 1})
     excl_set = {x["path"] for x in excluded}
     cands = [p for p in rule_cands if p not in excl_set]
     cand_set = set(cands)
@@ -461,8 +771,11 @@ def main(argv=None):
             "size_gate_bytes_exclusive": SIZE_GATE,
             "excluded_prefixes": list(EXCLUDED_PREFIXES),
             "excluded_if_referenced_from": list(CODE_PREFIXES),
-            "reference_evidence": ("full path, last two path components, the basename when it is unique "
-                                   f"among tracked files, or any ancestor directory at depth >= {MIN_DIR_DEPTH}"),
+            "reference_evidence": (
+                "explicit file references only (owner decision C02, 2026-10-08): the file's repo path "
+                "appears in src/ or tests/ text or a Python path expression resolves to it; its exact "
+                "filename appears as a whole token; or a glob/rglob/iterdir/listdir/walk pattern anchored "
+                "on a resolvable repo directory matches it. A bare directory mention excludes nothing."),
             "scope": "git ls-files (tracked only); extension match case-insensitive; size gate on git blob size",
             "source": "recovered from PR #2146 (head 48ff7b64) against its merge base 7e71d6b2",
         },
@@ -470,6 +783,14 @@ def main(argv=None):
         "rule_matches": len(rule_cands),
         "excluded_referenced_by_src_or_tests": {
             "files": len(excluded), "blob_size_bytes": sum(x["blob_size_bytes"] for x in excluded),
+            "by_evidence": {ev: {"files": sum(x["evidence"] == ev for x in excluded),
+                                 "blob_size_bytes": sum(x["blob_size_bytes"] for x in excluded
+                                                        if x["evidence"] == ev)}
+                            for ev in ("path", "filename", "glob")},
+            "filename_only_with_non_unique_basename": {
+                "files": sum(x["evidence"] == "filename" and not x["basename_unique"] for x in excluded),
+                "blob_size_bytes": sum(x["blob_size_bytes"] for x in excluded
+                                       if x["evidence"] == "filename" and not x["basename_unique"])},
             "paths": excluded},
         "totals": {"files": len(rows), "size_bytes": sum(row["size_bytes"] for row in rows),
                    "blob_size_bytes": sum(row["blob_size_bytes"] for row in rows)},

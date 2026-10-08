@@ -57,23 +57,104 @@ def test_blob_map_maps_every_path_to_one_blob():
 
 # --- src/tests reference exclusion --------------------------------------------
 
-def test_reference_patterns_include_path_tail_dirs_and_unique_basename():
-    pats = ac.reference_patterns("docs/domains/orcaflex/library/model_library/a01/spec.yml",
-                                 basename_unique=False)
-    assert "docs/domains/orcaflex/library/model_library/a01/spec.yml" in pats
-    assert "a01/spec.yml" in pats
-    assert "spec.yml" not in pats                      # generic basename alone is not evidence
-    assert "docs/domains/orcaflex/library/model_library" in pats   # directory reference
-    assert "docs/domains" not in pats                  # too shallow to be evidence
-    pats_u = ac.reference_patterns("docs/x/y/unique_name.yml", basename_unique=True)
-    assert "unique_name.yml" in pats_u
+# Owner decision C02 (2026-10-08): explicit file references only. A bare directory
+# mention no longer excludes everything under it; a directory counts only when code
+# reads files from it by pattern, and then only the matching files are excluded.
+
+D = "docs/a/b/c/d"
+TRACKED = [f"{D}/model.dat", f"{D}/other.dat", f"{D}/run.sim", f"{D}/sub/deep.sim",
+           f"{D}/named_only.png", f"{D}/xmodel2.dat", "docs/x/y/z/w/lonely.pdf",
+           "docs/x/y/z/w/sub/lonelier.pdf", "src/pkg/mod.py", "tests/test_a.py"]
+CANDS = [p for p in TRACKED if not p.startswith(("src/", "tests/"))]
 
 
-def test_referenced_by_code_matches_any_pattern():
-    hits = {"a01/spec.yml"}
-    assert ac.referenced_by_code("docs/domains/orcaflex/library/model_library/a01/spec.yml",
-                                 hits, basename_unique=False)
-    assert not ac.referenced_by_code("docs/q/r/s/t.yml", hits, basename_unique=False)
+def _refs(code):
+    return ac.explicit_references(code, CANDS, TRACKED)
+
+
+def test_explicit_repo_path_excludes_only_that_file():
+    r = _refs({"tests/test_a.py": f'P = "{D}/model.dat"\n'})
+    assert set(r) == {f"{D}/model.dat"}
+    assert r[f"{D}/model.dat"]["evidence"] == "path"
+    assert r[f"{D}/model.dat"]["source"] == "tests/test_a.py"
+
+
+def test_path_join_to_a_file_is_an_explicit_path():
+    code = ('from pathlib import Path\n'
+            'REPO = Path(__file__).resolve().parents[1]\n'
+            'F = REPO / "docs" / "a" / "b/c" / "d" / "other.dat"\n')
+    r = _refs({"tests/test_a.py": code})
+    assert set(r) == {f"{D}/other.dat"}
+    assert r[f"{D}/other.dat"]["evidence"] == "path"
+
+
+def test_filename_only_mention_excludes_by_exact_filename():
+    r = _refs({"src/pkg/mod.py": "# reads named_only.png at runtime\n"})
+    assert set(r) == {f"{D}/named_only.png"}
+    assert r[f"{D}/named_only.png"]["evidence"] == "filename"
+
+
+def test_filename_must_match_whole_name_not_a_substring():
+    # "model2.dat" is not "xmodel2.dat"; "xmodel.dat" is not "model.dat"
+    r = _refs({"src/pkg/mod.py": 'a = "model2.dat"; b = "xmodel.dat"\n'})
+    assert r == {}
+
+
+def test_glob_from_a_resolved_directory_excludes_only_matching_files():
+    code = ('from pathlib import Path\n'
+            'REPO = Path(__file__).resolve().parents[1]\n'
+            f'DATA = REPO / "{D}"\n'
+            'SIMS = sorted(DATA.glob("*.sim"))\n')
+    r = _refs({"tests/test_a.py": code})
+    assert set(r) == {f"{D}/run.sim"}           # not sub/deep.sim, not the .dat files
+    assert r[f"{D}/run.sim"]["evidence"] == "glob"
+    assert r[f"{D}/run.sim"]["matched"] == f"{D}/*.sim"
+
+
+def test_rglob_and_walk_are_recursive_patterns():
+    code = ('import os\nfrom pathlib import Path\n'
+            f'A = Path("{D}")\n'
+            'x = list(A.rglob("*.sim"))\n'
+            'for _ in os.walk("docs/x/y/z/w"):\n    pass\n')
+    r = _refs({"tests/test_a.py": code})
+    assert set(r) == {f"{D}/run.sim", f"{D}/sub/deep.sim",
+                      "docs/x/y/z/w/lonely.pdf", "docs/x/y/z/w/sub/lonelier.pdf"}
+
+
+def test_glob_module_with_joined_literal_pattern():
+    code = ('import glob, os\n'
+            f'files = glob.glob(os.path.join("{D}", "*.dat"))\n')
+    r = _refs({"src/pkg/mod.py": code})
+    assert set(r) == {f"{D}/model.dat", f"{D}/other.dat", f"{D}/xmodel2.dat"}
+
+
+def test_glob_literal_in_a_config_fixture():
+    r = _refs({"tests/fixtures/cfg.yml": f"inputs: {D}/*.sim\n"})
+    assert set(r) == {f"{D}/run.sim"}
+
+
+def test_bare_directory_mention_does_not_exclude():
+    code = ('from pathlib import Path\n'
+            'ROOT = Path("docs/x/y/z/w")      # named, never read by pattern\n'
+            f'# see {D} for the inputs\n'
+            f'OTHER = "{D}/sub"\n')
+    r = _refs({"tests/test_a.py": code, "tests/fixtures/notes.md": f"Data lives in {D}/\n"})
+    assert r == {}
+
+
+def test_unanchored_pattern_is_not_evidence():
+    # "*.dat" with no resolvable directory cannot be shown to read any candidate
+    r = _refs({"src/pkg/mod.py": 'import glob\nfiles = glob.glob("*.dat")\nP = some_dir().glob("*.sim")\n'})
+    assert r == {}
+
+
+def test_glob_match_semantics():
+    assert ac.glob_match("a/*.sim", "a/run.sim")
+    assert not ac.glob_match("a/*.sim", "a/sub/run.sim")
+    assert ac.glob_match("a/**/*.sim", "a/run.sim")
+    assert ac.glob_match("a/**/*.sim", "a/b/c/run.sim")
+    assert ac.glob_match("a/**", "a/b/c.txt")
+    assert not ac.glob_match("a/*/x.yml", "a/x.yml")
 
 
 # --- model YAML features ------------------------------------------------------

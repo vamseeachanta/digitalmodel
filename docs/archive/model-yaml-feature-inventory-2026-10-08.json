@@ -1,6 +1,6 @@
 {
  "generated": "2026-10-08",
- "base_commit": "c4563b11e66db5b5aa1466d1e6752f7da135adfc",
+ "base_commit": "9aa78711a1ec4b05b160603e53fa15db8e814706",
  "definition": {
   "scope": "every tracked *.yml/*.yaml outside src/ and tests/ that parses as an OrcaFlex native model, an OrcaWave model or a modular spec",
   "feature_kinds": {
@@ -23,10 +23,10 @@
   "unique_features": 665,
   "files_with_unique_features": 72,
   "feature_cover_files": 167,
-  "candidates_that_are_model_yaml": 39,
-  "candidates_with_unique_features": 4,
-  "features_only_in_candidates": 68,
-  "candidates_kept_for_feature": 7
+  "candidates_that_are_model_yaml": 84,
+  "candidates_with_unique_features": 0,
+  "features_only_in_candidates": 23,
+  "candidates_kept_for_feature": 4
  },
  "parse_failures": [
   "docs/domains/orcaflex/library/model_library/a05_catenary_with_semisub/modular/includes/20_generic_objects.yml",
@@ -4764,7 +4764,7 @@
   },
   "docs/domains/orcaflex/mooring/reference/spec.yml": {
    "kind": "spec",
-   "is_archive_candidate": true,
+   "is_archive_candidate": false,
    "unique_features": [
     "key:generic/lines/properties/Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo",
     "key:generic/lines/properties/ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth",
@@ -4794,7 +4794,7 @@
   },
   "docs/domains/orcaflex/reference/spec.yml": {
    "kind": "spec",
-   "is_archive_candidate": true,
+   "is_archive_candidate": false,
    "unique_features": [
     "key:environment/raw_properties/CurrentMethod",
     "key:environment/raw_properties/SimulationTimeOrigin",
@@ -4805,7 +4805,7 @@
   },
   "docs/domains/orcaflex/regional/spec.yml": {
    "kind": "spec",
-   "is_archive_candidate": true,
+   "is_archive_candidate": false,
    "unique_features": [
     "key:generic/general_properties/Pen",
     "key:generic/line_types/properties/APIRP1111Delta",
@@ -5063,7 +5063,7 @@
   },
   "docs/domains/orcaflex/training/hulls/spec.yml": {
    "kind": "spec",
-   "is_archive_candidate": true,
+   "is_archive_candidate": false,
    "unique_features": [
     "value:generic/variable_data_sources/data_type=kinematicviscosity"
    ]
@@ -5413,66 +5413,18 @@
   "key:Lines/LinePen",
   "key:Lines/NodePen",
   "key:Lines/SegmentPenMode",
+  "key:VariableData/BendingConnectionStiffness",
+  "key:VariableData/BendingConnectionStiffness/IndependentValue, DependentValue",
+  "key:VariableData/BendingConnectionStiffness/Name",
   "key:VesselTypes/*/SeaStateRAOs/SeaStateRAODirection, SeaStateRAOPeriodOrFrequency, SeaStateRAOX, SeaStateRAOY, SeaStateRAOZ, SeaStateRAOPotentialAmp, SeaStateRAOPotentialPhase, SeaStateRAOGradientXAmp, SeaStateRAOGradientXPhase, SeaStateRAOGradientYAmp, SeaStateRAOGradientYPhase, SeaStateRAOGradientZAmp, SeaStateRAOGradientZPhase",
-  "key:environment/raw_properties/CurrentMethod",
-  "key:environment/raw_properties/Seabed3DDataSource",
-  "key:environment/raw_properties/Seabed3DInterpolationMethod",
-  "key:environment/raw_properties/Seabed3DShowDataPoints",
-  "key:environment/raw_properties/Seabed3DX, Seabed3DY, Seabed3DZ",
-  "key:environment/raw_properties/SeabedMinimumEdgeTriangulationAngle",
-  "key:environment/raw_properties/SimulationTimeOrigin",
-  "key:generic/general_properties/Pen",
-  "key:generic/line_types/properties/APIRP1111Delta",
-  "key:generic/line_types/properties/APIRP1111E",
-  "key:generic/line_types/properties/APIRP1111Fa",
-  "key:generic/line_types/properties/APIRP1111Fbs",
-  "key:generic/line_types/properties/APIRP1111Fc",
-  "key:generic/line_types/properties/APIRP1111S",
-  "key:generic/line_types/properties/APIRP1111SAF",
-  "key:generic/line_types/properties/APIRP1111U",
-  "key:generic/lines/properties/Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination, ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo",
-  "key:generic/lines/properties/ConnectionInitialArclength, ConnectionPayoutRate, ConnectionShortestViableSegmentFactor, ConnectionApplyRamp, ConnectionUseSmoothGrowth",
-  "key:generic/lines/properties/ConnectionxBendingStiffness, ConnectionyBendingStiffness",
-  "key:generic/lines/properties/ContentsFlowRate",
-  "key:generic/lines/properties/ContentsPressure",
-  "key:generic/lines/properties/ContentsPressureRefZ",
-  "key:generic/lines/properties/ContentsTemperature",
-  "key:generic/lines/properties/CoveredSectionsWarnIfLineLeavesCover",
-  "key:generic/lines/properties/DecoupleLateralAndAxialSeabedFriction",
-  "key:generic/lines/properties/DragFormulation",
-  "key:generic/lines/properties/DrawNodesAsDiscs",
-  "key:generic/lines/properties/DynamicsVIV",
-  "key:generic/lines/properties/IncludeAxialContentsInertia",
-  "key:generic/lines/properties/LengthAndEndOrientations",
-  "key:generic/lines/properties/LinePen",
-  "key:generic/lines/properties/NodePen",
-  "key:generic/lines/properties/PreBendSpecifiedBy",
-  "key:generic/lines/properties/PyModel",
-  "key:generic/lines/properties/SegmentPenMode",
-  "key:generic/lines/properties/StaticsVIV",
-  "key:generic/lines/properties/WaveCalculationMethod",
-  "key:generic/support_types/properties/ContactPen",
   "value:Environment/WindType=esdu spectrum",
   "value:Lines/ContentsMethod=uniform",
-  "value:Lines/SegmentPenMode=use whole line pen",
-  "value:environment/raw_properties/CurrentMethod=interpolated",
-  "value:environment/raw_properties/Seabed3DInterpolationMethod=cubic polynomial",
-  "value:environment/raw_properties/Seabed3DInterpolationMethod=linear",
-  "value:generic/lines/properties/DragFormulation=standard",
-  "value:generic/lines/properties/SegmentPenMode=use whole line pen",
-  "value:generic/lines/properties/WaveCalculationMethod=specified by environment",
-  "value:generic/variable_data_sources/data_type=kinematicviscosity",
-  "value:generic/vessels/properties/SuperimposedMotion=displacement raos + harmonic motion",
-  "value:metadata/structure=reference",
-  "value:metadata/structure=regional"
+  "value:Lines/SegmentPenMode=use whole line pen"
  ],
  "candidates_kept_for_feature": [
   "docs/domains/orcaflex/aqwa/to_orcaflex/multibody_test1/orcaflex/template_fsts.yml",
   "docs/domains/orcaflex/mooring/reference/monolithic/S00_nIV_nLine_va.yml",
-  "docs/domains/orcaflex/mooring/reference/spec.yml",
   "docs/domains/orcaflex/reference/monolithic/v_LV108_1stEnd-Step09.yml",
-  "docs/domains/orcaflex/reference/spec.yml",
-  "docs/domains/orcaflex/regional/spec.yml",
-  "docs/domains/orcaflex/training/hulls/spec.yml"
+  "docs/domains/orcaflex/risers/production/slwr-2/app_catenary_riser_SCR_06OD_GI_SE0050_HE0100_TA10_20lbft3_SCR_FE_100yr Current, Deep Reversal_FE.yml"
  ]
 }
