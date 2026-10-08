@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Bounded active-process name resolution</title>
+<body><h1>Resolve incomplete Windows process names with retained identity evidence</h1>
+<p>Issue: <a href="https://github.com/vamseeachanta/digitalmodel/issues/2121">digitalmodel 2121</a>.
+Scope: T2; single source writer with independent Claude plan/code review. The user selected option 1
+to investigate a narrowly scoped identity rule. Standing non-destructive analysis authority will apply.</p>
+<h2>Observed basis and existing implementation</h2>
+<p>The failure record <code>SOLVERS-fluid-discovery-ac17000b-r1.json</code>, SHA-256
+<code>13e99d0f84b0aaca5ff4f13a6799ada9e81a3d66b0bc332ec69c088e1db55633</code>, will supply
+the reproduction. The separate management comparison will remain diagnostic evidence, not resource authority.
+The existing <code>cylinder_absence_collection</code> query, strict parser, timestamp join and normalization
+will be reused. No identifier or name-specific allowlist will be introduced.</p>
+<p>Microsoft documents identifier reuse and the creation-time field in
+<a href="https://learn.microsoft.com/en-us/windows/win32/cimwin32prov/win32-process">Win32_Process</a>;
+its <a href="https://learn.microsoft.com/en-us/windows/win32/wmisdk/cim-datetime">date/time format</a>
+will support the existing six-digit fractional-second interpretation. The existing maximum join difference
+of one microsecond will be preserved as a software matching tolerance, not an engineering safety criterion.</p>
+<h2>Proposed rule and bounded execution</h2>
+<p>A new per-collection ActiveNameResolution object will be defined in <code>cylinder_active_names.py</code>.
+It will lazily import the existing absence resolver, avoiding new module-level import cycles.
+During initial observation A only, it will query exactly the blank-name identifiers, at most 64,
+using the existing pinned Windows PowerShell executable, retained encoded script and two-second timeout.
+There will be at most one query per collection and no retry. With no blank names, no subprocess will run.</p>
+<p>The exact returned identifier set, nonblank bounded names, matching parent identifiers and creation-time
+join will be required. The existing one-microsecond limit will remain fail-closed; it will not be claimed
+to bound every combination of float representation and provider quantization. A valid process may therefore
+refuse. The original decimal timestamp and raw management timestamp will both be retained for exact
+recomputation of the observed difference. No tolerance will be widened in this scope.
+Later observations B and C will not query again: every still-blank identifier will
+have to match the initial resolved identifier, parent and creation time. The adapter will explicitly compare
+the current parent against the cached management parent before calling the existing normalizer, which
+rechecks creation time but does not itself check the parent. New blank identities, missing or
+duplicate returned rows, changed parent/birth values, malformed timestamps, errors and timeouts will refuse.
+Nonblank names will remain as observed and will participate in the existing identity comparison.</p>
+<p>Only blank names and the existing empty-image-string-to-null normalization will change the derived rows.
+No executable path will be invented. Names resolving to solver or message-passing executables, and their
+descendants or explicitly selected identities, will enter the existing detailed selection and ownership
+checks. Initial and final selection, detailed-check initial rows and population reconciliation will receive
+normalized inventories. Live detail and stability reads will remain unmodified. A selected solver whose
+live name is still blank will deliberately refuse as an identity mismatch; name resolution will not make
+inaccessible selected-process details acceptable. An unchanged unselected process with an unavailable image path will retain existing treatment;
+its disappearance or change will still require the existing completeness checks. A name will not establish
+system trust, absence of competing solver resources, licence ownership or engineering qualification.</p>
+<h2>Evidence and integration</h2>
+<p>The adapter will copy every raw observed inventory before normalization and retain the original query
+receipt, including output/error bytes, executable/script digests, returned rows and timing.
+Success and failure will expose a new <code>name_resolution</code> record with its own
+<code>active-name-resolution-1</code> schema, original inventories, query receipt and completed-stage count.
+The query will start as the existing explicit no-query receipt inside that versioned adapter record.
+Interpreter-identity failure or more than 64 blank identifiers will refuse with performed=false and zero
+completed stages; no partial PID batch will be used. Query transport errors will retain their full receipt.
+The stage call site will wrap resolver errors before the generic collector handler, retaining the rejected
+raw inventory and events with <code>pid</code>, <code>change=blank_process_name</code> and
+<code>disposition=REFUSED_INCOMPLETE</code>. This wrapper will also apply to B/C new-blank failures,
+even though no query runs in those stages. The outer handler will attach the adapter record exclusively
+under <code>name_resolution</code>, never flatten a query receipt into collector-owned fields.
+Collector-owned failed-stage and completed-inventory fields will remain separate. The completed inventory
+list will be authoritative; a successful snapshot will require the name-resolution completed count to
+equal its length, with equality tested on failure paths too. Rejected raw observations
+will not be appended as completed normalized inventories. No final-stage blank name will silently inherit
+a result from another identifier or another collection.</p>
+<p>The existing within-observation parent-table refusal and A/B/C population reconciliation will remain
+unchanged. Query subprocesses may affect host observation timing; current scheduling/freshness limits will
+remain requirements. Resolver-induced added processes will receive ordinary population reconciliation;
+an added helper with an unavailable image will cause REFUSED_INCOMPLETE, explicitly covered by a synthetic
+test. No query-helper exemption, automatic warm-up or retry will be introduced. Timing failure will refuse rather than extend those limits. The existing subprocess
+transport/output-parser bounds will remain unchanged; no broader query or fallback provider will be added.</p>
+<h2>Tests and acceptance</h2>
+<ul><li>Test-first synthetic cases will cover one successful bound name query, zero queries when unnecessary,
+immutable inputs, all raw/derived evidence, and reuse only for the same identity in B/C.</li>
+<li>Refusal cases will include mismatched, missing, duplicate or extra returned identifiers; wrong parent,
+creation mismatch beyond the existing tolerance, malformed time, blank result, timeout and error output;
+existing resolver tests will remain in the regression.</li>
+<li>New blank identities after A, parent or birth changes in B/C, and renamed nonblank observations will refuse.
+An initially blank solver name will remain selected; no process will be exempted by a Secure System label.</li>
+<li>Integration tests will retain query evidence through A/B/C failures and parent-table failures, and will
+preserve accurate normalized inventory completion counts. Static checks, legal scan and exact code review
+will precede one bounded production observation.</li></ul>
+<p>Existing active-population blank-name refusal tests will be updated to inject a failed synthetic query
+at A, preserving refusal when resolution fails and avoiding live queries in tests. B/C unknown-blank cases
+will retain their refusal assertions. The historical "No secondary name resolution" limitation assertion
+will be replaced by an explicit bounded-resolution limitation. Existing absence-resolver tests will remain unchanged.</p>
+<h2>Review-driven evidence integration</h2>
+<p>Integer-keyed working parent maps will be projected through the existing canonical parent-map evidence
+format before returning successful or rejected snapshots. Working maps used by identity reconciliation
+will remain unchanged. Tests will canonicalize both success and refusal evidence and pass a synthetic
+collected snapshot through the existing conditional classifier. Synthetic detail reads will not establish
+live resource clearance.</p>
+<p>One bounded read-only observation will be attempted after code review and regression pass. Acceptance
+of the observation artifact will require one recorded call, retained query and population evidence,
+unchanged source pins, and an explicit collected or refused outcome; it will not require a successful
+resource classification. Helper-process churn frequency is unmeasured and will remain unknown. A refusal
+will stop the attempt, retain its evidence, and trigger factual diagnosis without an automatic retry or exemption.</p>
+<p>The shared absence collector will additionally project integer-keyed maps inside its retained identity-read
+failure record at the public failure boundary, preserving numeric internal maps. Three stage-specific refusal
+regressions will exercise the actual collection failure transport. Successful active snapshots will retain
+name_resolution under population_check; failures will retain it at the failure-evidence root. Raw blank-name
+events will describe candidates, while refusal_reason will carry the actual validation error.</p>
+<h2>Limits and ownership</h2>
+<p>SOLVERS will own the adapter, active collector integration and focused tests. Source and review artifacts
+will remain in digitalmodel; retained diagnostics will remain provisional until reviewed intake into the
+existing private result owner. The canonical result matrix, native attempt ledger, CFD controls and original
+observations will remain unchanged. This correction will not itself launch a solver or authorize reuse.</p>
+<table><tr><th>Term</th><th>Description</th></tr><tr><td>A/B/C</td><td>Initial, intermediate and final process observations within one collection</td></tr>
+<tr><td>PID</td><td>Operating-system process identifier, which may be reused</td></tr><tr><td>WMI</td><td>Windows Management Instrumentation</td></tr></table>
+<p>Table 1. Process-observation terms used by the implementation.</p></body></html>

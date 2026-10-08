@@ -1,0 +1,25 @@
+{
+  "issue": "https://github.com/vamseeachanta/digitalmodel/issues/2121",
+  "status": "blocked-draft; needs scope decision before further plan revision",
+  "reviewed_tree": "3848892a39fb02e925b37fbda95a4a83f3a864d4",
+  "reviewed_plan_sha256": "8a64b15171a26702f8333006f722790bef7fe64033ce00aebb11383526cdc020",
+  "consensus": "NOT ESTABLISHED",
+  "claude_verdict": "MAJOR",
+  "codex_verdict": "MINOR",
+  "blocking_findings": [
+    {
+      "id": "D1",
+      "disposition": "OPEN: specify a bounded admissible method, adjudicator and decision rule for recovery feasibility; no independent FE implementation or native solve is authorized by current planning task."
+    },
+    {
+      "id": "D2",
+      "disposition": "OPEN: lock an independent adequacy requirement and prevent initial or later tolerance relaxation based on observed capability; any relaxed candidate band will require amended review and matching user approval."
+    }
+  ],
+  "other_findings": "D3-D10 retained in verbatim Claude final receipt for next revision; no blanket acceptance of numerical/source premises or proposed remedies. CX3 must be resolved at criterion freeze.",
+  "generalizable_followup": "https://github.com/vamseeachanta/digitalmodel/issues/2122",
+  "recommendation": "Plan a four-attempt native feasibility canary (one physical case at three meshes plus zero control) against unchanged candidate tolerances, with explicit approval before execution; compare this bounded option with the proposed new independent offline FE implementation before changing scope. No canary authorized.",
+  "review_coverage": "All eleven technical/review/verification artifacts at reviewed_tree received both current provider reviews. Final verbatim verdict receipts and this status are subsequent factual captures; a final blocked banner/index change only records the unresolved gate and does not assert fresh technical approval.",
+  "publication_boundary": "No status:plan-review or status:plan-approved claim. No B1 implementation, native solve, qualified results or lookup promotion.",
+  "residue": "Scoped audit: expected SOLVERS coordination evidence and adjacent worktrees preserved; no task-created solver outputs or persistent sessions."
+}

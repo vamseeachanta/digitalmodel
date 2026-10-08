@@ -1,0 +1,22 @@
+{
+  "provider": "Claude",
+  "status": "UNAVAILABLE",
+  "target_revision": "57b661af89c3fe44cd7e8a0a2105813466fd75e3",
+  "revision_kind": "Git tree",
+  "target_artifact_count": 13,
+  "attempts": [
+    {
+      "timeout_seconds": 300,
+      "outcome": "process timeout; no structured verdict returned"
+    },
+    {
+      "timeout_seconds": 600,
+      "outcome": "single retry on identical artifact bytes; process timeout; no structured verdict returned"
+    }
+  ],
+  "observed_utc": "2026-09-14T12:03:51.006436+00:00",
+  "bundle_sha256": "adc8f12df9268a1869092771fafee9bc1634021ffc63febe038bd9d4aa6aef00",
+  "coverage": "No completed Claude review of this exact revision; not APPROVE and not INVALID_OUTPUT from an existing parsed verdict. Earlier checkpoint R2 MAJOR applies to tree082ed61b only.",
+  "disposition": "Preserve frozen corrections and Codex APPROVE; B1 approval blocked pending completed independent Claude review. No further automatic retry.",
+  "authorization": "No ANSYS implementation or native execution; only planning corrections and verification helper/tests."
+}

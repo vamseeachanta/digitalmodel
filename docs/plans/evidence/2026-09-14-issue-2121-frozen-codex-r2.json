@@ -1,0 +1,112 @@
+{
+  "provider": "Codex",
+  "reviewer": "independent parametric_scope worker",
+  "verdict": "APPROVE",
+  "reviewed_revision": "ec502ca6a5fdb151b74c083d350cd32f8f2ce199",
+  "reviewed_revision_kind": "frozen Git tree",
+  "reviewed_files": [
+    {
+      "path": "docs/plans/2026-09-13-issue-2121-ansys-cylinder-campaign.html",
+      "sha256": "f50c1f1bbb78b758f600271447fa61f6ff43389c86adb5afe02fc364bfa4df44"
+    },
+    {
+      "path": "docs/plans/README.md",
+      "sha256": "72fd817132c456ee8977da76e6b9228286bc3cd0c37766297e2ac7311a20efd7"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-proposal.json",
+      "sha256": "cba6ed62d375fd4c7772b1283471495e50ad8aa1d28b519db9671cabc0a0b8c3"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-scope.json",
+      "sha256": "b9919e2bd5fd241c56772a7aed373c99f9d70b586fc5baa78eccea2377a49bde"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-canary-verification.json",
+      "sha256": "fca78ad963af7c0495461e7a086fd426fd9fb5a935049d06524e07fce057c335"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-13-issue-2121-vendor-source-metadata.json",
+      "sha256": "25c0fde670b38dc7e3a4413cf79911e718b550467b6a9ebb3fffdbe7d4df4648"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-claude-r1.json",
+      "sha256": "067a261029c77cf79622872f10c44a49ed51233a1b588147d5e96a40030c66fa"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-claude-r2.json",
+      "sha256": "9f9e1d765719dc03517756ed03510b0b9f406ac70c12d35961f6869b21e5e934"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-codex-r1.json",
+      "sha256": "3696285441c87f3c65978c27c46a9f7eb7abff3f29c6e27e1019014240a8e64f"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-checkpoint-codex-r2.json",
+      "sha256": "6d6a75230be8bdd6f6ace6113cc79708331c6681f092ed98f7a16a50e9421d6f"
+    },
+    {
+      "path": "docs/plans/evidence/2026-09-14-issue-2121-diagnostic-characterization.json",
+      "sha256": "9893804445f2d79321e41d4750dd83cbc132d006b0b94b221e80f3715800009a"
+    },
+    {
+      "path": "docs/plans/evidence/register_json_prose.py",
+      "sha256": "8511cd91f5eb489867510ece719409fbf47f83a7392d1c0dbad96f2cdbf5da69"
+    },
+    {
+      "path": "tests/docs/test_register_json_prose.py",
+      "sha256": "284342dae5de94679352bbb95bb78893493014da5ef9f2b77753696345f130b7"
+    }
+  ],
+  "findings": [],
+  "finding_dispositions": [
+    {
+      "id": "K1",
+      "disposition": "Resolved",
+      "basis": "Explicit unary plus/minus, integer literals, grouping and whitespace normalization remove the grammar ambiguity. These rules are included in the precommitted brief and B1 identity-test requirements before the single checker invocation."
+    },
+    {
+      "id": "K2",
+      "disposition": "Resolved",
+      "basis": "HTML distinguishes the supplied output-schema description from expressions and derivation returned by the checker; no response expressions are supplied in the brief."
+    },
+    {
+      "id": "K3",
+      "disposition": "Resolved",
+      "basis": "Audit in /SOLU precedes the exact FINISH; /CONFIG,STAT; /SOLU; SOLVE sequence. Load, constraint, selection and solution-control mutation in the window is forbidden and covered by proposed B1 deck tests."
+    },
+    {
+      "id": "K4",
+      "disposition": "Resolved; original absence-of-reproduction assertion overstated",
+      "basis": "A committed-tree fixture adds direct test coverage. Both current and published four-input extractions were independently reproduced in this review. Prior Codex R3 also recorded an actual 54177-byte reproduction, so historical reproduction was not merely asserted."
+    }
+  ],
+  "verified": [
+    "All thirteen supplied bundle contents and raw SHA-256 digests match the exact Git tree. Eight artifact hashes are unchanged from the prior exact R3 review; five changed files were assessed for the bounded corrections and verification consistency.",
+    "Current four-input extraction reproduced 55411 UTF-8 bytes and SHA-256 6ec16a8b47315fd72abb46d543456962a6469862c07f12f085aff9318099c0ca; all input hashes and lengths match.",
+    "Published commit 4bcf77b2c28abad45e925a1641f29e4203c8d370 extraction reproduced 54177 bytes and SHA-256 fbba9e66663fab67c0229324139a469106545855f9e92a3fb619987565f24f5e; all four published input hashes and lengths match.",
+    "All five regenerated verification mirror hashes match the current tree, including the frozen Claude R1 historical receipt. Self-receipt exclusion and pre-regeneration tree identity are explicit.",
+    "Three helper tests passed independently during the bounded correction review. The tested helper/test working bytes were subsequently compared against this exact frozen tree after CRLF normalization and match.",
+    "Four-attempt scope, fixed numerical limits, independent checker gate, explicit unverified native stream assumption, mandatory stops and separate B1/B2 authorization remain consistent. No lookup promotion or native-success claim is introduced."
+  ],
+  "checks": [
+    {
+      "command": "python -B -m pytest tests/docs/test_register_json_prose.py -q -p no:cacheprovider",
+      "result": "3 passed in 1.86s",
+      "exit_code": 0,
+      "native_runs": 0
+    }
+  ],
+  "limitations": [
+    "Planning and verification-tooling review only. This verdict does not authorize B1 implementation or B2 native execution; native feasibility and numerical accuracy remain unestablished.",
+    "No fresh native runs, legal scanner execution, browser rendering or routing-suite rerun was performed in this bounded checkpoint. Their receipts were reviewed without treating them as newly executed checks.",
+    "The thirteen-file scope is the supplied bundle, not every file in the Git tree. Historical reviews remain historical; current byte agreement does not create a new provider review."
+  ],
+  "cleanup": {
+    "classification": "EXPECTED",
+    "repository_mutations": "None",
+    "private_output": "SOLVERS-2121-frozen-codex-r2.json",
+    "other_residue": "Pytest-managed temporary fixture directories from the earlier bounded test run; bytecode and cache provider disabled",
+    "completion_audit_owner": "Parent orchestrator under subagent exemption"
+  }
+}
