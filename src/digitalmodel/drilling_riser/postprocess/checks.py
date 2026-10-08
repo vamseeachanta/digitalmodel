@@ -293,7 +293,11 @@ def _cr10_hot_spot(series, kinds, hot_spot_m, cap_of) -> dict[str, Any] | None:
 
 def _cr10_governing(stations: list[dict], line: str, detail: dict, *, screening: bool,
                     combine: str | None) -> CheckValue:
-    """The station with the largest utilisation, with the largest per kind in ``detail["by_kind"]``."""
+    """The station with the largest utilisation, with the largest per kind in ``detail["by_kind"]``. A non-finite
+    value at any station leaves CR-10 NOT_EVALUATED (``max`` would otherwise skip it silently)."""
+    bad = [s["arc_m"] for s in stations if not (math.isfinite(s["demand"]) and math.isfinite(s["u"]))]
+    if bad:
+        raise NotEvaluated(f"CR-10: stress range not finite at {len(bad)} station(s), first at arc {bad[0]} m")
     by_kind: dict[str, dict] = {}
     for s in stations:
         if s["kind"] not in by_kind or s["u"] > by_kind[s["kind"]]["u"]:
@@ -319,8 +323,11 @@ def cr10_station_mean(values: dict) -> CheckValue:
     for j, s0 in enumerate(first.detail["station_values"]):
         d = sum(values[k].detail["station_values"][j]["demand"] for k in seeds) / n
         stations.append({**s0, "demand": d, "u": d / s0["allowable"]})
-    line = first.detail["channel"].split(".")[1]
+    line = first.detail["line"]
     detail = {k: v for k, v in first.detail.items() if k not in ("station_values", "by_kind", "hot_spot")}
+    if "by_detail" in detail:  # whole-line path: recompute from the mean, not seed 1
+        peak = max(s["demand"] for s in stations)
+        detail["by_detail"] = {d: peak / cap for d, cap in detail["limits_mpa"].items()}
     hots = [values[k].detail.get("hot_spot") for k in seeds]
     if all(hots):
         hd = sum(h["demand"] for h in hots) / n
@@ -347,7 +354,10 @@ def _dyn_stress_range_joints(w, row, ctx, wave: str) -> CheckValue:
     line = ctx.get("stress_line", "Riser")
     series = range_series(w, line, "zz_range", kind_key)
     limits = _cr10_limits(row)
-    detail: dict[str, Any] = {"basis": basis, "wave_kind": wave, "channel": f"range_graphs.{line}.zz_range_{kind_key}",
+    detail: dict[str, Any] = {"basis": basis, "wave_kind": wave, "line": line,
+                              "channel": f"range_graphs.{line}.zz_range_{kind_key}",
+                              "theta_grid_note": "24 theta positions 15 deg apart: the bending part may be under-read "
+                                                 "by up to 1 - cos 7.5 deg = 0.86 %",
                               "definition": SIGNIFICANT_DEFINITION if wave == "irregular" else None,
                               "limits_mpa": limits}
     st = ctx.get("cr10_stations")
@@ -358,8 +368,9 @@ def _dyn_stress_range_joints(w, row, ctx, wave: str) -> CheckValue:
             raise NotEvaluated(f"CR-10 station map: {e}") from None
         detail_of = {**CR10_DETAIL_BY_KIND, **(ctx.get("cr10_detail_by_kind") or {})}
         cap_of = {k: limits[d] for k, d in detail_of.items() if d in limits}
-        if not cap_of:
-            raise NotEvaluated(f"no SAF in the register row for the station kinds {sorted(detail_of)}")
+        lacking = sorted({detail_of.get(k, k) for k in kinds if k in ("coupling", "body") and k not in cap_of})
+        if lacking:  # a station kind on the line without an allowable must not drop out of the verdict
+            raise NotEvaluated(f"no SAF in the register row for {', '.join(lacking)}")
         stations = [{"arc_m": arc, "kind": k, "detail": detail_of[k], "demand": v / 1000.0, "allowable": cap_of[k],
                      "u": v / 1000.0 / cap_of[k]} for (arc, v), k in zip(series, kinds) if k in cap_of]
         if not stations:
@@ -371,7 +382,8 @@ def _dyn_stress_range_joints(w, row, ctx, wave: str) -> CheckValue:
     gov = min(limits, key=limits.get)  # one demand per point: the lowest allowable governs
     stations = [{"arc_m": arc, "kind": "whole line", "detail": gov, "demand": v / 1000.0, "allowable": limits[gov],
                  "u": v / 1000.0 / limits[gov]} for arc, v in series]
-    peak = max(stations, key=lambda s: s["demand"])["demand"]
+    finite = [s["demand"] for s in stations if math.isfinite(s["demand"])]
+    peak = max(finite) if finite else float("nan")
     detail.update({"by_detail": {d: peak / cap for d, cap in limits.items()}, "station_values": stations})
     return _cr10_governing(stations, line, detail, screening=wave == "regular",
                            combine="station_mean" if wave == "irregular" else None)

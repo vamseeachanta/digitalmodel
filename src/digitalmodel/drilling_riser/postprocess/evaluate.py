@@ -95,7 +95,7 @@ def evaluate_case(docs: dict[int | None, dict], row: dict, ctx: dict, *, seeds_e
                 parts.append(f"missing seeds {missing}")
             if extra:
                 parts.append(f"unexpected seeds {extra}")
-            return CaseCheck(rid, "NOT_EVALUATED", "; ".join(parts) + "; the Gumbel fit needs every seed",
+            return CaseCheck(rid, "NOT_EVALUATED", "; ".join(parts) + "; the seed combination needs every seed",
                              detail={"missing_seeds": missing, "unexpected_seeds": extra})
     values: dict[int | None, CheckValue] = {}
     for seed, doc in sorted(docs.items(), key=lambda kv: (kv[0] is None, kv[0])):
@@ -106,6 +106,9 @@ def evaluate_case(docs: dict[int | None, dict], row: dict, ctx: dict, *, seeds_e
         except NotEvaluated as e:
             return CaseCheck(rid, "NOT_EVALUATED", str(e), seed=seed)
     if any(v.screening for v in values.values()):
+        if list(values) != [None]:  # a labelling slip must not take an irregular sea out of the verdict
+            return CaseCheck(rid, "NOT_EVALUATED", f"regular-wave screening requested on a seeded case "
+                                                   f"({len(values)} seeds); check the case's wave kind")
         return _screening(row, values)
     if list(values) == [None]:
         return _single(row, values[None])
@@ -198,7 +201,8 @@ def _order_key(c: CaseCheck) -> float:
 def summarise(results: Iterable[tuple[str, CaseCheck]]) -> dict[str, dict[str, Any]]:
     """Per row: counts by status, governing case (largest utilisation, or smallest margin for a sign criterion),
     row status (FAIL if any case fails, PASS if every evaluated case passes, NOT_EVALUATED if none evaluated).
-    ``SCREENING`` cases are counted (the key appears only when present) but never govern and never set the row\n    status."""
+    ``SCREENING`` cases are counted (the key appears only when present) but never govern and never set the row
+    status."""
     out: dict[str, dict[str, Any]] = {}
     for case_id, c in results:
         s = out.setdefault(c.row_id, {"counts": {k: 0 for k in STATUSES[:3]}, "governing": None, "max_u": None,

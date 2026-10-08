@@ -92,6 +92,9 @@ def merge_stress_range(doc: dict[str, Any], supp: dict[str, Any]) -> dict[str, A
     in place; a /2 document also adds the significant range ``zz_range_sig`` on the same axis."""
     if supp.get("schema") not in (SCHEMA, SCHEMA_SIG):
         raise ValueError(f"unsupported stress-range schema {supp.get('schema')!r}")
+    if supp.get("theta_check_ok") is False:
+        raise ValueError(f"theta reconstruction check failed (max relative deviation "
+                         f"{supp.get('theta_check_max_rel')}); the significant range is not used")
     rgs = doc["channels"]["w5"].setdefault("range_graphs", {})
     for ln, s in supp["lines"].items():
         rg = rgs.setdefault(ln, {})
@@ -114,6 +117,10 @@ def turning_points(series) -> "Any":
     import numpy as np
 
     x = np.asarray(series, dtype=float)
+    if x.ndim != 1:
+        raise ValueError(f"a stress history must be one-dimensional, got shape {x.shape}")
+    if not np.all(np.isfinite(x)):
+        raise ValueError("stress history holds non-finite values (NaN or infinity)")
     if x.size < 3:
         return x
     keep = np.r_[True, x[1:] != x[:-1]]
@@ -220,15 +227,24 @@ def classify_stations(arcs: Sequence[float], *, sections_m: Sequence[float], joi
         kinds[near] = "hot_spot"
     couplings = coupling_positions(sections_m, joint_length_m)
     for c in couplings:
-        below = [i for i, x in enumerate(a) if x <= c + _ARC_TOL]
-        above = [i for i, x in enumerate(a) if x >= c - _ARC_TOL]
-        for idx in ((max(below, key=lambda i: a[i]),) if below else ()) + \
-                   ((min(above, key=lambda i: a[i]),) if above else ()):
+        # every point on the coupling (duplicates included, one per side of a section boundary); else the nearest
+        # point (all duplicates at that arc) on each side
+        idxs = [i for i, x in enumerate(a) if abs(x - c) <= _ARC_TOL]
+        if not idxs:
+            below = [x for x in a if x < c]
+            above = [x for x in a if x > c]
+            near = ([max(below)] if below else []) + ([min(above)] if above else [])
+            idxs = [i for i, x in enumerate(a) if x in near]
+        for idx in idxs:
             if kinds[idx] == "body":
                 kinds[idx] = "coupling"
     for c in (float(v) for v in pup_side_couplings_m):
         if not any(abs(c - p) <= 1e-3 for p in couplings):
             raise ValueError(f"pup-side station at {c} m: no coupling at that arc length")
+        borders = [abs(c - exclude_below_m) <= 1e-3] + \
+            ([abs(c - exclude_above_m) <= 1e-3] if exclude_above_m is not None else [])
+        if not any(borders):
+            raise ValueError(f"pup-side station at {c} m: the coupling does not border the excluded section")
         kept = [i for i in range(len(a)) if kinds[i] != "excluded"]
         near = min(kept, key=lambda i: abs(a[i] - c)) if kept else None
         if near is None or abs(a[near] - c) > pup_side_tol_m:
@@ -253,7 +269,7 @@ def extract_significant(model, ofx, *, lines: Iterable[str] = LINES, thetas: Ite
                            "definition": SIGNIFICANT_DEFINITION,
                            "counter": "global_model.fatigue_channels.half_cycles (turning points)",
                            "units": {KEY: "kPa", KEY_SIG: "kPa"}, "thetas_deg": thetas, "lines": {}}
-    worst_dev = 0.0
+    worst_dev, checked = 0.0, 0
     for ln in lines:
         line = model[ln]
         arc = [float(v) for v in line.RangeGraph(VAR, period, ofx.oeLine(RadialPos=ofx.rpOuter, Theta=0.0)).X]
@@ -268,6 +284,7 @@ def extract_significant(model, ofx, *, lines: Iterable[str] = LINES, thetas: Ite
                 rec = theta_histories(h[:, 0], h[:, 1], h[:, 2], thetas=[45.0])[45.0]
                 scale = max(float(np.max(np.abs(h[:, 3]))), 1.0)
                 worst_dev = max(worst_dev, float(np.max(np.abs(rec - h[:, 3]))) / scale)
+                checked += 1
             s, t, sp = significant_over_theta(hs)
             sig.append(s)
             th_sig.append(t)
@@ -276,7 +293,8 @@ def extract_significant(model, ofx, *, lines: Iterable[str] = LINES, thetas: Ite
         out["lines"][ln] = {"arc_m": arc, KEY_SIG: sig, "theta_sig_deg": th_sig, KEY: span,
                             "span_over_sig": ratio}
     out["theta_check_max_rel"] = worst_dev
-    out["theta_check_ok"] = worst_dev <= check_rtol
+    out["theta_check_points"] = checked
+    out["theta_check_ok"] = checked > 0 and worst_dev <= check_rtol  # nothing checked is not a pass
     return out
 
 

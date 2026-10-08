@@ -305,6 +305,123 @@ def test_seed_mean_reports_the_hot_spot_mean():
     assert r.detail["hot_spot"]["demand"] == pytest.approx(125.0)
 
 
+# ---------------------------------------------------------------- review r1 (PR #2292) regressions
+
+
+@pytest.mark.parametrize("bad", [[0.0, 10.0, float("nan"), 0.0], [0.0, float("inf"), 1.0, 0.0]])
+def test_non_finite_histories_are_refused(bad):
+    with pytest.raises(ValueError):
+        turning_points(bad)
+    with pytest.raises(ValueError):
+        significant_range(bad)
+
+
+def test_a_station_kind_without_an_allowable_is_not_evaluated():
+    row = {**ROW, "limit": {"value_if_saf_le_1_5": 68.948, "saf": {"riser girth weld": 1.245}}}
+    r = evaluate_case({None: _doc(ARCS, sig=[1.0, 1.0, 10e3, 60e3, 1.0])}, row, IRR)
+    assert r.status == "NOT_EVALUATED" and "riser coupling weld" in r.reason
+
+
+def test_duplicate_points_on_a_coupling_are_all_coupling_stations():
+    # two result points exactly at the 21.336 m coupling (one per side of the section boundary)
+    arcs = [18.796, 19.812, 21.336, 21.336, 25.0]
+    kinds = classify_stations(arcs, **STATIONS)
+    assert kinds[2] == "coupling" and kinds[3] == "coupling"
+    r = evaluate_case({None: _doc(arcs, sig=[1.0, 1.0, 10e3, 50e3, 1.0])}, ROW, IRR)
+    assert r.status == "FAIL" and r.u == pytest.approx(50.0 / COUPLING_MPA)
+
+
+def test_a_failed_theta_check_is_refused_at_merge():
+    line = {"arc_m": [0.0, 1.0], "zz_range_max": [1.0, 2.0], "zz_range_sig": [0.5, 1.0]}
+    doc = {"channels": {"w5": {"range_graphs": {}}}}
+    with pytest.raises(ValueError):
+        merge_stress_range(doc, {"schema": SCHEMA_SIG, "theta_check_ok": False, "lines": {"Riser": line}})
+    assert "Riser" not in doc["channels"]["w5"]["range_graphs"]
+
+
+def test_a_non_finite_station_value_is_not_evaluated():
+    one = evaluate_case({None: _doc(ARCS, sig=[1.0, 1.0, 1.0, float("nan"), 10e3])}, ROW, IRR)
+    assert one.status == "NOT_EVALUATED" and "finite" in one.reason
+    seeds = {s: _doc(ARCS, sig=[1.0, 1.0, 1.0, float("nan") if s == 2 else 10e3, 10e3]) for s in range(1, 4)}
+    r = evaluate_case(seeds, ROW, IRR, seeds_expected=3)
+    assert r.status == "NOT_EVALUATED" and "finite" in r.reason
+
+
+def test_a_seeded_case_cannot_be_screened_as_a_regular_wave():
+    seeds = {s: _doc(ARCS, mx=[1.0, 1.0, 300e3, 1.0, 1.0]) for s in range(1, 4)}
+    r = evaluate_case(seeds, ROW, REG, seeds_expected=3)
+    assert r.status == "NOT_EVALUATED" and "regular" in r.reason
+
+
+def test_seed_mean_detail_has_no_stale_single_seed_values():
+    seeds = {s: _doc(ARCS, sig=[1.0, 1.0, 1.0, 10e3 * s, 1.0]) for s in range(1, 5)}
+    r = evaluate_case(seeds, ROW, {"stress_line": "Riser", "wave_kind": "irregular"}, seeds_expected=4)
+    assert r.detail["by_detail"]["riser coupling weld"] == pytest.approx(25.0 / COUPLING_MPA)
+    assert r.detail["line"] == "Riser"
+
+
+def test_pup_side_coupling_must_border_the_excluded_section():
+    # 21.336 m is a coupling but both its sides are kept: not a pup-side station
+    with pytest.raises(ValueError):
+        classify_stations([18.796, 20.828, 22.352], **{**STATIONS, "pup_side_couplings_m": [21.336]})
+
+
+class _FakeOfx:
+    """Minimal OrcFxAPI stand-in: ZZ stress at (arc, theta) = a + b cos(theta) + c sin(theta) over time."""
+
+    rpOuter = "outer"
+
+    def __init__(self, arcs, t, bad_45=False):
+        self.arcs, self.t, self.bad_45 = arcs, t, bad_45
+
+    def Period(self, n):
+        return ("period", n)
+
+    def oeLine(self, **kw):
+        return kw
+
+    def TimeHistorySpecification(self, line, var, oe):
+        return oe
+
+    def hist(self, arc, theta):
+        a = 100.0 + arc
+        b = 50.0 * np.sin(0.7 * self.t)
+        c = (20.0 + arc) * np.sin(0.31 * self.t + 0.4)
+        h = a + b * math.cos(math.radians(theta)) + c * math.sin(math.radians(theta))
+        return h + (5.0 if self.bad_45 and theta == 45.0 else 0.0)
+
+    def GetMultipleTimeHistories(self, specs, period):
+        return np.column_stack([self.hist(s["ArcLength"], s["Theta"]) for s in specs])  # samples x specs
+
+
+class _FakeLine:
+    def __init__(self, arcs):
+        self.arcs = arcs
+
+    def RangeGraph(self, var, period, oe):
+        return type("RG", (), {"X": self.arcs})()
+
+
+def test_extract_significant_against_a_fake_model():
+    from digitalmodel.drilling_riser.postprocess.stress_range import extract_significant
+
+    arcs = [0.0, 5.0]
+    t = np.arange(0.0, 600.0, 0.1)
+    ofx = _FakeOfx(arcs, t)
+    doc = extract_significant({"Riser": _FakeLine(arcs)}, ofx, check_every=1)
+    assert doc["schema"] == SCHEMA_SIG and doc["theta_check_ok"] is True
+    line = doc["lines"]["Riser"]
+    for i, arc in enumerate(arcs):
+        hs = {th: ofx.hist(arc, th) for th in range(0, 360, 15)}
+        expect = max(significant_range(h) for h in hs.values())
+        assert line["zz_range_sig"][i] == pytest.approx(expect)
+        assert line["zz_range_max"][i] == pytest.approx(max(h.max() - h.min() for h in hs.values()))
+    bad = extract_significant({"Riser": _FakeLine(arcs)}, _FakeOfx(arcs, t, bad_45=True), check_every=1)
+    assert bad["theta_check_ok"] is False
+    unchecked = extract_significant({"Riser": _FakeLine(arcs)}, ofx, check_every=0)
+    assert unchecked["theta_check_ok"] is False  # nothing checked is not a pass
+
+
 # ---------------------------------------------------------------- W04: pup-side station of the 18.288 m coupling
 
 PUP = {**STATIONS, "pup_side_couplings_m": [18.288]}
