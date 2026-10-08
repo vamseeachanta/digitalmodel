@@ -147,7 +147,7 @@ def test_payload_title_and_preview_defaults(monkeypatch):
     monkeypatch.setattr(envelopes, 'build_envelope', lambda *args: {'cells': [], 'boundaries': []})
     monkeypatch.setattr(module, 'resolve_channels', lambda *args: [])
     calls = []
-    def scenario(*args, include_wave_preview=True):
+    def scenario(*args, include_wave_preview):
         calls.append(include_wave_preview)
         return {}
     monkeypatch.setattr(module, '_scenario', scenario)
@@ -155,18 +155,32 @@ def test_payload_title_and_preview_defaults(monkeypatch):
               'limitations': [], 'snapshot': {}}
     old = module.prepare_payload({}, {'checks': []}, config)
     assert old['title'].startswith('Jumper installation')
-    assert calls == [True]
+    # Both report editions reject preview payloads, so an unset flag must not build one.
+    assert calls == [False]
     config.update(title='Mudmat installation', include_wave_preview=False)
     new = module.prepare_payload({}, {'checks': []}, config)
     assert new['title'] == 'Mudmat installation'
     assert new['demo']['default_mode'] == 'history_only'
-    assert calls == [True, False]
+    assert calls == [False, False]
+    config['include_wave_preview'] = True
+    module.prepare_payload({}, {'checks': []}, config)
+    assert calls == [False, False, True]
+    config.pop('include_wave_preview')
     config['default_mode'] = 'wave_preview'
     with pytest.raises(ValueError, match='preview'):
         module.prepare_payload({}, {'checks': []}, config)
     config.update(default_mode='history_only', include_wave_preview='false')
     with pytest.raises(ValueError, match='boolean'):
         module.prepare_payload({}, {'checks': []}, config)
+
+
+def test_scenario_default_omits_wave_preview(tmp_path, monkeypatch):
+    from digitalmodel.workflows import installation_monitoring_demo as module
+    summary, specs = _profile_evidence(tmp_path)
+    monkeypatch.setattr(module, 'add_wave_preview',
+                        lambda *args: pytest.fail('Default scenario must not build a wave preview'))
+    result = module._scenario(summary, {'hs_m': 1., 'tp_s': 8.}, specs)
+    assert all('wave_preview' not in c for f in result['frames'] for c in f['channels'])
 
 
 def test_profile_scenario_preserves_metadata_identity_gate(tmp_path):

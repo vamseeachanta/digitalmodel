@@ -95,6 +95,22 @@ def test_report_narrative_makes_no_preview_or_oracle_claim(tmp_path):
     assert 'preview/forecast mode' not in text and '120 s history-only forecast, with NOW divider' in text
 
 
+def test_forecast_caveat_survives_browser_badge_update(tmp_path):
+    """renderFrame() overwrites the static #mode-notice badge; the history-only text it writes must keep the caveat."""
+    source, data = inputs(tmp_path)
+    output = tmp_path / 'full.html'
+    generate_report(source, data, output, {})
+    text = output.read_text(encoding='utf-8')
+    static = re.search(r'<p id="mode-notice"[^>]*>(.*?)</p>', text, re.S)
+    assert static and 'offshore forecast accuracy not validated' in static[1]
+    assignments = re.findall(r"byId\('mode-notice'\)\.textContent=(.*?);\n", text)
+    assert len(assignments) == 1
+    branches = re.fullmatch(r"forecastMode==='wave_preview'\?'(.*?)':'(.*?)'", assignments[0])
+    assert branches, assignments[0]
+    assert 'offshore forecast accuracy not validated' in branches[2]
+    assert 'not validated' in branches[1]
+
+
 def test_dashboard_extraction_fails_closed_on_unrecognized_markup():
     with pytest.raises(ValueError):
         dashboard_parts('<html>unexpected</html>')

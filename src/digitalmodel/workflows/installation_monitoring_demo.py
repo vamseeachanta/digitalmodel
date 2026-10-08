@@ -125,7 +125,7 @@ def add_wave_preview(frames, arrays):
     return frames
 
 
-def _scenario(summary, selection, channels, *, include_wave_preview=True, exceedance=None):
+def _scenario(summary, selection, channels, *, include_wave_preview=False, exceedance=None):
     cases = [c for c in summary['cases'] if c['hs_m'] == selection['hs_m']
              and c['tp_s'] == selection['tp_s'] and c['status'] == 'VERIFIED']
     if len(cases) != 1:
@@ -151,7 +151,8 @@ def _scenario(summary, selection, channels, *, include_wave_preview=True, exceed
 
 def prepare_payload(summary, criteria, demo_config):
     from digitalmodel.workflows.installation_assumed_envelope import build_envelope
-    include_preview = demo_config.get('include_wave_preview', True)
+    # Both report editions reject preview-bearing payloads, so the preview is opt-in only.
+    include_preview = demo_config.get('include_wave_preview', False)
     if type(include_preview) is not bool:
         raise ValueError('include_wave_preview must be boolean')
     if not include_preview and demo_config['default_mode'] != 'history_only':
